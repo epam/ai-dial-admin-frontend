@@ -7,7 +7,7 @@ import classNames from 'classnames';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import ValidityStatus from '@/src/components/EntityView/Status/ValidityStatus';
 import { EntitiesI18nKey, EntityFieldsI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { EntityValidityState } from '@/src/models/dial/base-entity';
 import { Asset, AssetToolset } from '@/src/models/dial/deployment-asset';
@@ -76,7 +76,7 @@ const AssetHeader: FC<Props> = ({ view, asset }) => {
           <DialButton
             onClick={() => openFolderStorageInNewTab(asset.folderId)}
             className="text-secondary"
-            iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
+            iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
           />
         </div>
       </LabelledText>

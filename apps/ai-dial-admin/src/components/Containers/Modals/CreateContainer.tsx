@@ -1,6 +1,15 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import classNames from 'classnames';
-import { ButtonVariant, DialButton, DialLoader, DialPopup, DialSteps, Step, StepStatus } from '@epam/ai-dial-ui-kit';
+import {
+  ButtonVariant,
+  DialButton,
+  DialLoader,
+  DialNeutralButton,
+  DialPopup,
+  DialSteps,
+  Step,
+  StepStatus,
+} from '@epam/ai-dial-ui-kit';
 import { IconArrowNarrowLeft } from '@tabler/icons-react';
 import { Container } from '@/src/models/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -19,7 +28,7 @@ import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import ContainerProperties from '@/src/components/Containers/Fields/ContainerProperties';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { IMAGES_LIST_FOR_CONTAINER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 
 interface Props {
@@ -200,11 +209,11 @@ const CreateContainer: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
             variant={ButtonVariant.Tertiary}
             label={t(ButtonsI18nKey.Back)}
             onClick={onPrevStep}
-            iconBefore={<IconArrowNarrowLeft {...BASE_ICON_PROPS} />}
+            iconBefore={<IconArrowNarrowLeft {...BASE_BUTTON_ICON_PROPS} />}
           />
         )}
         <div className="flex flex-row gap-2">
-          <DialButton variant={ButtonVariant.Secondary} label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+          <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
           {currentStepId === steps.at(-1)?.id ? (
             <DialButton
               variant={ButtonVariant.Primary}

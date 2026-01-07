@@ -5,6 +5,7 @@ import { FC, useState } from 'react';
 import {
   ButtonVariant,
   DialButton,
+  DialNeutralButton,
   DialPopup,
   DialRadioGroup,
   PopupSize,
@@ -54,7 +55,7 @@ const ExportModal: FC<Props> = ({ isModalOpen, route, onClose, onApply }) => {
         />
       </div>
       <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
         <DialButton
           variant={ButtonVariant.Primary}
           label={t(ButtonsI18nKey.Export)}

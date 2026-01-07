@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
 import AddVersionModal from '@/src/components/Assets/Modals/AddVersionModal';
@@ -75,15 +75,9 @@ const ModifiedEntityButtons = <T extends object>({
   return (
     <>
       <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
-        <DialButton
-          variant={ButtonVariant.Secondary}
-          className={buttonsClassName}
-          label={t(ButtonsI18nKey.Discard)}
-          onClick={onDiscard}
-        />
+        <DialNeutralButton className={buttonsClassName} label={t(ButtonsI18nKey.Discard)} onClick={onDiscard} />
         {isAssetWithVersion(view) && (
-          <DialButton
-            variant={ButtonVariant.Secondary}
+          <DialNeutralButton
             className={buttonsClassName}
             label={t(ButtonsI18nKey.SaveAsNewVersion)}
             onClick={() => setIsModalOpen(true)}

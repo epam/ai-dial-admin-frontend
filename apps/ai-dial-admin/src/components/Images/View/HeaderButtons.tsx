@@ -3,7 +3,7 @@ import classNames from 'classnames';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { IconBlocks, IconPlus, IconTrashX } from '@tabler/icons-react';
-import { ButtonVariant, DialButton, DialSwitch } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialNeutralButton, DialSwitch } from '@epam/ai-dial-ui-kit';
 
 import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -21,7 +21,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { validateImage } from '@/src/utils/deployments/images';
 import { showEditorErrorNotifications } from '@/src/components/EntityView/JsonEditor/utils';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 
 import VersionsSelect from '@/src/components/Deployments/Common/VersionsSelect/VersionsSelect';
@@ -221,12 +221,7 @@ const HeaderButtons: FC<Props> = ({
       <div className={containerClassNames}>
         {isChanged ? (
           <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
-            <DialButton
-              variant={ButtonVariant.Secondary}
-              className={buttonsClassNames}
-              label={t(ButtonsI18nKey.Discard)}
-              onClick={onDiscard}
-            />
+            <DialNeutralButton className={buttonsClassNames} label={t(ButtonsI18nKey.Discard)} onClick={onDiscard} />
             <DialButton
               variant={allowEditing && !forceNewVersion ? ButtonVariant.Secondary : ButtonVariant.Primary}
               className={buttonsClassNames}
@@ -252,28 +247,25 @@ const HeaderButtons: FC<Props> = ({
                 onChange={onVersionChange}
                 onClick={onOpenCreteNewVersionModal}
               />
-              <DialButton
-                variant={ButtonVariant.Secondary}
+              <DialNeutralButton
                 className={buttonsClassNames}
                 label={t(ButtonsI18nKey.Delete)}
-                iconBefore={<IconTrashX {...BASE_ICON_PROPS} />}
+                iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
                 onClick={onOpenDeleteModal}
               />
               {image.buildStatus === IMAGE_STATUS.BUILT && (
-                <DialButton
-                  variant={ButtonVariant.Secondary}
+                <DialNeutralButton
                   className={buttonsClassNames}
                   label={t(CreateI18nKey.CreateContainer, { type: getTranslatedType(getRouteByType(image.$type), t) })}
-                  iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+                  iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
                   onClick={onOpenCreateModal}
                 />
               )}
               {allowEditing && (
-                <DialButton
-                  variant={ButtonVariant.Secondary}
+                <DialNeutralButton
                   className={buttonsClassNames}
                   label={t(ButtonsI18nKey.Install)}
-                  iconBefore={<IconBlocks {...BASE_ICON_PROPS} />}
+                  iconBefore={<IconBlocks {...BASE_BUTTON_ICON_PROPS} />}
                   onClick={onOpenInstallModal}
                   disabled={image.buildStatus === IMAGE_STATUS.BUILDING}
                 />

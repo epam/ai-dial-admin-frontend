@@ -8,7 +8,7 @@ import { useI18n } from '@/src/locales/client';
 import ListView from '@/src/components/ListView/ListView';
 import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import ResetFiltersButton from '@/src/components/EntityListView/HeaderButtons/ResetFiltersButton';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { CONTAINER_EVENTS } from '@/src/constants/grid-columns/grid-columns';
 
 interface Props {
@@ -63,7 +63,7 @@ const Events: FC<Props> = ({ route, events }) => {
               <DialButton
                 variant={ButtonVariant.Tertiary}
                 label={t(ButtonsI18nKey.Columns)}
-                iconBefore={<IconColumns2 {...BASE_ICON_PROPS} />}
+                iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} />}
                 onClick={onToggleColumnsPanel}
               />
             </>

@@ -17,7 +17,7 @@ import {
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getResetOperation } from '@/src/constants/grid-columns/actions';
 import { RolesI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialRole } from '@/src/models/dial/role';
 import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
@@ -128,7 +128,7 @@ const RoleSharing: FC<Props> = ({ isSkipRefresh, selectedRole, onChangeRole }) =
         {isResetAvailable && (
           <DialButton
             variant={ButtonVariant.Tertiary}
-            iconBefore={<IconReload {...BASE_ICON_PROPS} />}
+            iconBefore={<IconReload {...BASE_BUTTON_ICON_PROPS} />}
             label={t(RolesI18nKey.ResetToDefaultLimits)}
             onClick={onResetAllSharingToDefault}
           />

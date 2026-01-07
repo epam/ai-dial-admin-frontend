@@ -9,7 +9,7 @@ import { previewJsonConfigs, previewZipConfig } from '@/src/app/[lang]/import-co
 import ConfigurationGrid from '@/src/components/ImportConfig/ConfigurationPreview/ConfigurationGrid';
 import { getConfigurationPreview } from '@/src/components/ImportConfig/ConfigurationPreview/ConfigurationPreview.utils';
 import { ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
@@ -71,7 +71,7 @@ const ConfigurationPreview: FC<Props> = ({ files, importBody, fileType, onImport
           variant={ButtonVariant.Primary}
           label={t(ButtonsI18nKey.Import)}
           disabled={isLoading || !files}
-          iconBefore={<IconDownload {...BASE_ICON_PROPS} />}
+          iconBefore={<IconDownload {...BASE_BUTTON_ICON_PROPS} />}
           onClick={onImportFile}
         />
       </div>

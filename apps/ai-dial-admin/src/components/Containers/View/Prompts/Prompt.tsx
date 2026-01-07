@@ -2,7 +2,7 @@ import { FC, useCallback, useState } from 'react';
 import { ColDef } from 'ag-grid-community';
 import { useI18n } from '@/src/locales/client';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { Prompt as PromptType } from '@/src/models/deployments/containers';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import Grid from '@/src/components/Grid/Grid';
@@ -31,7 +31,7 @@ const Prompt: FC<Props> = ({ prompt }) => {
     <div className="flex flex-col border-primary border p-4">
       <button className="flex items-center" onClick={toggleCollapse}>
         <i className="text-icon-secondary">
-          {isCollapsed ? <IconChevronRight {...BASE_ICON_PROPS} /> : <IconChevronDown {...BASE_ICON_PROPS} />}
+          {isCollapsed ? <IconChevronRight {...BASE_BUTTON_ICON_PROPS} /> : <IconChevronDown {...BASE_BUTTON_ICON_PROPS} />}
         </i>
         <h3 className="mx-2">{prompt.name}</h3>
       </button>

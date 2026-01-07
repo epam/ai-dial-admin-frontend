@@ -4,7 +4,7 @@ import { IconPlus } from '@tabler/icons-react';
 import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { EntityDefaults } from '@/src/models/dial/base-entity';
 import { DefaultTemp } from '@/src/models/dial/defaults';
@@ -73,7 +73,7 @@ const Defaults: FC<Props> = ({ entity, onChangeEntity }) => {
         <DialButton
           variant={ButtonVariant.Tertiary}
           label={t(ButtonsI18nKey.AddDefault)}
-          iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+          iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
           onClick={onAddItem}
         />
       </div>

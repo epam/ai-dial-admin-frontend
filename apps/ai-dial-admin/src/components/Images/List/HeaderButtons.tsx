@@ -15,7 +15,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { createImage } from '@/src/app/actions/deployments';
 import { getErrorNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 
 import ResetFiltersButton from '@/src/components/EntityListView/HeaderButtons/ResetFiltersButton';
@@ -72,14 +72,14 @@ const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, gridApi }) => {
         <DialButton
           variant={ButtonVariant.Tertiary}
           label={t(ButtonsI18nKey.Columns)}
-          iconBefore={<IconColumns2 {...BASE_ICON_PROPS} />}
+          iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} />}
           onClick={onToggleColumnsPanel}
         />
 
         <DialButton
           variant={ButtonVariant.Primary}
           label={isTabletScreen ? '' : t(ButtonsI18nKey.Add)}
-          iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+          iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
           onClick={() => handleModalOpen()}
         />
       </div>

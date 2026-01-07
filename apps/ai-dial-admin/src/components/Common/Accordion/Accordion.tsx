@@ -2,7 +2,7 @@ import { FC, ReactNode, useCallback, useState } from 'react';
 import classNames from 'classnames';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 
 interface Props {
   title: string;
@@ -32,9 +32,9 @@ const Accordion: FC<Props> = ({
       <div className="flex flex-row justify-between">
         <button className="flex items-center" onClick={toggleCollapse}>
           {isCollapsed ? (
-            <IconChevronRight className="text-secondary" {...BASE_ICON_PROPS} />
+            <IconChevronRight className="text-secondary" {...BASE_BUTTON_ICON_PROPS} />
           ) : (
-            <IconChevronDown className="text-secondary" {...BASE_ICON_PROPS} />
+            <IconChevronDown className="text-secondary" {...BASE_BUTTON_ICON_PROPS} />
           )}
 
           <h3 className="mx-2">{title}</h3>

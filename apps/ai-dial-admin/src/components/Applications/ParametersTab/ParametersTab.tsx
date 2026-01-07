@@ -20,7 +20,7 @@ import SchemaUiRenderer from '@/src/components/Common/SchemaUIRenderer/SchemaUIR
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import FrameRenderer from '@/src/components/FrameRenderer/FrameRenderer';
 import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useI18n } from '@/src/locales/client';
@@ -176,7 +176,7 @@ const ApplicationParametersTab: FC<Props> = ({
             {paramsView === ParamsView.TABLE && (
               <DialButton
                 variant={ButtonVariant.Primary}
-                iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+                iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
                 label={t(ButtonsI18nKey.Add)}
                 onClick={() => setIsAddClicked(true)}
               />

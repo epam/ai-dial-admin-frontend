@@ -5,7 +5,7 @@ import { FC, useCallback, useRef, useState } from 'react';
 import RangePicker from '@/src/components/Common/RangePicker/RangePicker';
 import { timePeriodOptionsConfig } from '@/src/constants/global-time-filter';
 import { TelemetryI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { TimeRange } from '@/src/models/time-range';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
@@ -74,7 +74,7 @@ const TimeFilter: FC<Props> = ({ timePeriod, onTimePeriodChange, timeRange, onTi
         <div className="flex flex-col w-full">
           <button className="flex items-center p-3 border-b border-b-secondary" onClick={onClick} aria-label="button">
             <i className="mr-3">
-              {showCustomRange ? <IconChevronDown {...BASE_ICON_PROPS} /> : <IconChevronRight {...BASE_ICON_PROPS} />}
+              {showCustomRange ? <IconChevronDown {...BASE_BUTTON_ICON_PROPS} /> : <IconChevronRight {...BASE_BUTTON_ICON_PROPS} />}
             </i>
             <p className="small text-primary">{t(TelemetryI18nKey.CustomTimeRage)}</p>
           </button>

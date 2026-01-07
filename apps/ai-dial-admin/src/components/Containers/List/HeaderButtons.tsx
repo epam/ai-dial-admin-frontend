@@ -14,7 +14,7 @@ import { createContainer } from '@/src/app/actions/deployments';
 import { getErrorNotification } from '@/src/utils/notification';
 import ResetFiltersButton from '@/src/components/EntityListView/HeaderButtons/ResetFiltersButton';
 import { ButtonsI18nKey, ContainersI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import CreateContainer from '@/src/components/Containers/Modals/CreateContainer';
 import { getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
@@ -73,13 +73,13 @@ const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, names, gridApi })
         <DialButton
           variant={ButtonVariant.Tertiary}
           label={t(ButtonsI18nKey.Columns)}
-          iconBefore={<IconColumns2 {...BASE_ICON_PROPS} />}
+          iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} />}
           onClick={onToggleColumnsPanel}
         />
         <DialButton
           variant={ButtonVariant.Primary}
           label={isTabletScreen ? '' : t(ButtonsI18nKey.Create)}
-          iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+          iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
           onClick={() => handleModalOpen()}
         />
       </div>

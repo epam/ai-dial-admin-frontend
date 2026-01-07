@@ -24,7 +24,7 @@ import FilterControl from '@/src/components/ActivityAudit/View/DiffReport/Filter
 import JsonView from '@/src/components/ActivityAudit/View/JsonView';
 import { mergeEntityMaps } from '@/src/components/ActivityAudit/View/utils/generate-diffs';
 import { ActivityAuditI18nKey, MenuI18nKey, RollbackI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_SIZE } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { ActivityAuditDiff, DialActivity } from '@/src/models/activity-audit';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
@@ -168,7 +168,7 @@ const SystemRollback: FC = () => {
             </div>
           </div>
           <DialButton
-            iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
+            iconBefore={<IconRestore {...BASE_BUTTON_ICON_SIZE} />}
             variant={ButtonVariant.Primary}
             label={t(RollbackI18nKey.System)}
             onClick={() => setIsRollBackModalOpen(true)}

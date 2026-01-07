@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import { ButtonVariant, DialButton, DialPopup } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialNeutralButton, DialPopup } from '@epam/ai-dial-ui-kit';
 
 import { Container } from '@/src/models/deployments/containers';
 import { Image } from '@/src/models/deployments/images';
@@ -61,7 +61,7 @@ const CreateContainer: FC<Props> = ({ onClose, isModalOpen, modalTitle, names, o
         />
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
         <DialButton
           variant={ButtonVariant.Primary}
           label={t(ButtonsI18nKey.Create)}

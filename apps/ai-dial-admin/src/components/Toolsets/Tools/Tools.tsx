@@ -16,7 +16,7 @@ import { getAssetTools } from '@/src/app/[lang]/assets-toolsets/actions';
 import { getTools } from '@/src/app/[lang]/toolsets/actions';
 import Search from '@/src/components/Common/Search/Search';
 import { ButtonsI18nKey, EntitiesI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { Tool, Toolset } from '@/src/models/dial/toolset';
 import { isEqual, uniq } from 'lodash';
@@ -198,7 +198,7 @@ const ToolsView: FC<Props> = ({ selectedToolset, isAssetToolset, readonly, origi
                   <DialButton
                     variant={ButtonVariant.Primary}
                     label={t(ButtonsI18nKey.Add)}
-                    iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+                    iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
                     onClick={onOpenModal}
                   />
                 )}

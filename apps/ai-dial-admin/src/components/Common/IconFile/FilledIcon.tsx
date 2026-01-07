@@ -5,7 +5,7 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import IconGalleryModal from '@/src/components/IconGallery/IconGalleryModal';
 import { ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -34,13 +34,13 @@ const FilledIcon: FC<Props> = ({ disabled, fileUrl, onChange }) => {
           key: 'change-icon',
           label: t(EntitiesI18nKey.ChangeIcon),
           onClick: () => setIsModalOpen(true),
-          icon: <IconRefreshDot {...BASE_ICON_PROPS} />,
+          icon: <IconRefreshDot {...BASE_BUTTON_ICON_PROPS} />,
         },
         {
           key: 'remove-icon',
           label: t(ButtonsI18nKey.Delete),
           onClick: () => onChange(''),
-          icon: <IconTrashX {...BASE_ICON_PROPS} />,
+          icon: <IconTrashX {...BASE_BUTTON_ICON_PROPS} />,
         },
       ],
     };

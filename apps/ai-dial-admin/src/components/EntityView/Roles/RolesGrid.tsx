@@ -6,7 +6,7 @@ import { DialSwitch, DialButton, ButtonVariant, DialNoDataContent } from '@epam/
 
 import Grid from '@/src/components/Grid/Grid';
 import { ButtonsI18nKey, EntitiesI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialRole } from '@/src/models/dial/role';
@@ -105,7 +105,7 @@ const RolesGrid: FC<Props> = ({
           {isResetAvailable(entity) && (
             <DialButton
               variant={ButtonVariant.Tertiary}
-              iconBefore={<IconReload {...BASE_ICON_PROPS} />}
+              iconBefore={<IconReload {...BASE_BUTTON_ICON_PROPS} />}
               label={t(RolesI18nKey.ResetToDefaultLimits)}
               onClick={onResetAllRolesToDefault}
             />
@@ -113,7 +113,7 @@ const RolesGrid: FC<Props> = ({
           {!entity.isPublic && (
             <DialButton
               variant={ButtonVariant.Primary}
-              iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+              iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
               label={t(ButtonsI18nKey.Add)}
               onClick={onOpenAddModal}
             />

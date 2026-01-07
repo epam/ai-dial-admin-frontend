@@ -5,7 +5,7 @@ import { CoreVersionModalI18nKey } from '@/src/constants/i18n';
 import { CoreVersions } from '@/src/models/core-version';
 import { DefinitionType } from './types';
 import { ReactElement } from 'react';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 
 export const getCoreVersionElement = (
   coreVersions: CoreVersions,
@@ -153,7 +153,7 @@ export const getIconAfter = (
         })}
         triggerClassName="flex-1 cursor-pointer"
       >
-        <IconAlertTriangleFilled fill="#F4CE46" {...BASE_ICON_PROPS} className="mx-1" />
+        <IconAlertTriangleFilled fill="#F4CE46" {...BASE_BUTTON_ICON_PROPS} className="mx-1" />
       </DialTooltip>
     );
   }

@@ -3,7 +3,7 @@ import { FC, useCallback } from 'react';
 import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { getSuccessNotification } from '@/src/utils/notification';
@@ -35,7 +35,7 @@ const CopyButton: FC<Props> = ({ label, field, className, isFullButton = false }
       className={className}
       aria-label="copy"
       onClick={onClick}
-      iconBefore={<IconCopy {...BASE_ICON_PROPS} />}
+      iconBefore={<IconCopy {...BASE_BUTTON_ICON_PROPS} />}
       {...props}
     />
   );

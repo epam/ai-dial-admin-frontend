@@ -12,7 +12,7 @@ import Grid from '@/src/components/Grid/Grid';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { DESCRIPTION_COLUMN, DISPLAY_NAME_COLUMN, NAME_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, EntitiesI18nKey, InterceptorsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
@@ -168,7 +168,7 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
   const button = (
     <DialButton
       variant={ButtonVariant.Primary}
-      iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+      iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
       label={t(ButtonsI18nKey.Add)}
       onClick={() => setIsModalOpen(true)}
     />

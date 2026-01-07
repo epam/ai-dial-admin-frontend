@@ -5,7 +5,7 @@ import { ImageVersion } from '@/src/models/deployments/images';
 import { useI18n } from '@/src/locales/client';
 import { getVersionsList } from '@/src/utils/deployments/images';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 
 interface Props {
   versions: ImageVersion[];
@@ -39,7 +39,7 @@ const VersionsSelect: FC<Props> = ({ onChange, versions, selected, variant = Sel
             variant={ButtonVariant.Tertiary}
             label={t(ButtonsI18nKey.Create)}
             onClick={onClick}
-            iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+            iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
           />
         )
       }

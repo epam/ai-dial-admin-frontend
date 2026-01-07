@@ -16,14 +16,14 @@ import {
 import { GridApi, IRowNode } from 'ag-grid-community';
 
 import OpenPopup from '@/public/images/icons/open-pop-up.svg';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
 import { ActionMenuOperation } from '@/src/types/action-menu-operations';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 
 export function getResourceRollbackOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
   return {
-    icon: <IconRefreshDot {...BASE_ICON_PROPS} />,
+    icon: <IconRefreshDot {...BASE_BUTTON_ICON_PROPS} />,
     id: ActionMenuOperation.Resource_rollback,
     onClick,
   };
@@ -31,7 +31,7 @@ export function getResourceRollbackOperation<T>(onClick: (entity?: T) => void): 
 
 export function getDeleteOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
   return {
-    icon: <IconTrashX {...BASE_ICON_PROPS} />,
+    icon: <IconTrashX {...BASE_BUTTON_ICON_PROPS} />,
     id: ActionMenuOperation.Delete,
     onClick,
   };
@@ -42,7 +42,7 @@ export function getRemoveOperation<T>(
   hidden?: (api: GridApi, node: IRowNode) => boolean,
 ): ActionMenuOperationDeclaration<T> {
   return {
-    icon: <IconTrash {...BASE_ICON_PROPS} />,
+    icon: <IconTrash {...BASE_BUTTON_ICON_PROPS} />,
     id: ActionMenuOperation.Remove,
     onClick,
     hidden,
@@ -54,7 +54,7 @@ export function getResetOperation<T>(
   hidden?: (api: GridApi, node: IRowNode) => boolean,
 ): ActionMenuOperationDeclaration<T> {
   return {
-    icon: <IconReload {...BASE_ICON_PROPS} />,
+    icon: <IconReload {...BASE_BUTTON_ICON_PROPS} />,
     id: ActionMenuOperation.Reset_to_default_limits,
     hidden,
     onClick,
@@ -66,7 +66,7 @@ export function getSetNoLimitsOperation<T>(
   hidden?: (api: GridApi, node: IRowNode) => boolean,
 ): ActionMenuOperationDeclaration<T> {
   return {
-    icon: <IconInfinity {...BASE_ICON_PROPS} />,
+    icon: <IconInfinity {...BASE_BUTTON_ICON_PROPS} />,
     id: ActionMenuOperation.Set_no_limits,
     hidden,
     onClick,
@@ -75,7 +75,7 @@ export function getSetNoLimitsOperation<T>(
 
 export function getDuplicateOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
   return {
-    icon: <IconCopy {...BASE_ICON_PROPS} />,
+    icon: <IconCopy {...BASE_BUTTON_ICON_PROPS} />,
     id: ActionMenuOperation.Duplicate,
     onClick,
   };
@@ -86,7 +86,7 @@ export function getOpenInNewTabOperation<T>(
   hidden?: (api: GridApi, node: IRowNode) => boolean,
 ): ActionMenuOperationDeclaration<T> {
   return {
-    icon: <IconExternalLink {...BASE_ICON_PROPS} />,
+    icon: <IconExternalLink {...BASE_BUTTON_ICON_PROPS} />,
     id: ActionMenuOperation.Open_in_new_tab,
     onClick,
     hidden,
@@ -98,7 +98,7 @@ export function getViewDetailsOperation<T>(
   hidden?: (api: GridApi, node: IRowNode) => boolean,
 ): ActionMenuOperationDeclaration<T> {
   return {
-    icon: <OpenPopup {...BASE_ICON_PROPS} />,
+    icon: <OpenPopup {...BASE_BUTTON_ICON_PROPS} />,
     id: ActionMenuOperation.View_details,
     onClick,
     hidden,
@@ -107,7 +107,7 @@ export function getViewDetailsOperation<T>(
 
 export function getMoveOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
   return {
-    icon: <IconFolderShare {...BASE_ICON_PROPS} />,
+    icon: <IconFolderShare {...BASE_BUTTON_ICON_PROPS} />,
     id: ActionMenuOperation.Move,
     onClick,
   };
@@ -115,7 +115,7 @@ export function getMoveOperation<T>(onClick: (entity?: T) => void): ActionMenuOp
 
 export function getDownloadOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
   return {
-    icon: <IconDownload {...BASE_ICON_PROPS} />,
+    icon: <IconDownload {...BASE_BUTTON_ICON_PROPS} />,
     id: ActionMenuOperation.Download,
     onClick,
   };
@@ -126,7 +126,7 @@ export function getPreviewOperation<T>(
   hidden?: (api: GridApi, node: IRowNode) => boolean,
 ): ActionMenuOperationDeclaration<T> {
   return {
-    icon: <IconEye {...BASE_ICON_PROPS} />,
+    icon: <IconEye {...BASE_BUTTON_ICON_PROPS} />,
     id: ActionMenuOperation.Preview,
     onClick,
     hidden,
@@ -135,7 +135,7 @@ export function getPreviewOperation<T>(
 
 export function getCompareChangesOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
   return {
-    icon: <IconReplace {...BASE_ICON_PROPS} />,
+    icon: <IconReplace {...BASE_BUTTON_ICON_PROPS} />,
     id: ActionMenuOperation.Compare_changes,
     onClick,
   };
@@ -143,7 +143,7 @@ export function getCompareChangesOperation<T>(onClick: (entity?: T) => void): Ac
 
 export function getRunOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
   return {
-    icon: <IconPlayerPlay {...BASE_ICON_PROPS} />,
+    icon: <IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} />,
     id: ActionMenuOperation.Run,
     onClick,
     hidden: (_: GridApi, node: IRowNode) => {
@@ -158,7 +158,7 @@ export function getRunOperation<T>(onClick: (entity?: T) => void): ActionMenuOpe
 
 export function getStopOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
   return {
-    icon: <IconPlayerPause {...BASE_ICON_PROPS} />,
+    icon: <IconPlayerPause {...BASE_BUTTON_ICON_PROPS} />,
     id: ActionMenuOperation.Stop,
     onClick,
     hidden: (_: GridApi, node: IRowNode) => {

@@ -4,7 +4,7 @@ import { FC, MouseEvent, useCallback, useEffect, useState } from 'react';
 
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { TelemetryData, TelemetryQuery } from '@/src/models/telemetry';
@@ -102,7 +102,7 @@ const List: FC<Props> = ({ route, getData, query, columnDefs, title, emptyDataTi
           <DialButton
             variant={ButtonVariant.Tertiary}
             label={t(ButtonsI18nKey.Columns)}
-            iconBefore={<IconColumns2 {...BASE_ICON_PROPS} />}
+            iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} />}
             onClick={onToggleColumnsPanel}
           />
         )}

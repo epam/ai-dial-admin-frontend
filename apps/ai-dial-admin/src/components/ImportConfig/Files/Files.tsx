@@ -15,7 +15,7 @@ import {
 import { isLargeFile } from '@/src/components/EntityListView/Import/utils';
 import { BasicI18nKey, ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { IMPORT_RESOLUTIONS } from '@/src/constants/import';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 
@@ -82,7 +82,7 @@ const Files: FC<Props> = ({
           variant={ButtonVariant.Primary}
           label={t(ButtonsI18nKey.Next)}
           disabled={!isFilesValid}
-          iconAfter={<IconArrowNarrowRight {...BASE_ICON_PROPS} />}
+          iconAfter={<IconArrowNarrowRight {...BASE_BUTTON_ICON_PROPS} />}
           onClick={onNextStep}
         />
       </div>

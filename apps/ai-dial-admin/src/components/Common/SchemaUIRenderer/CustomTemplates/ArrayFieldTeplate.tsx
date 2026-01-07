@@ -8,7 +8,7 @@ import classNames from 'classnames';
 import { WidgetHeader } from '@/src/components/Common/SchemaUIRenderer/Components/WidgetHeader';
 import { WidgetToggler } from '@/src/components/Common/SchemaUIRenderer/Components/WidgetToggler';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 
 export const ArrayFieldTemplate: FC<ArrayFieldTemplateProps> = ({
@@ -51,7 +51,7 @@ export const ArrayFieldTemplate: FC<ArrayFieldTemplateProps> = ({
             onClick={onAddClick}
             label={`${t(ButtonsI18nKey.Add)} ${title}`}
             className="w-fit"
-            iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+            iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
           />
         )}
       </fieldset>

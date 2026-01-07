@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonVariant, DialButton, DialConfirmationPopup, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { DialConfirmationPopup, DialNeutralButton, DialTooltip } from '@epam/ai-dial-ui-kit';
 import { IconRefresh, IconRestore } from '@tabler/icons-react';
 import { GridApi, GridOptions, IDatasource, IGetRowsParams } from 'ag-grid-community';
 import classNames from 'classnames';
@@ -20,7 +20,7 @@ import ListView from '@/src/components/ListView/ListView';
 import { ACTIONS_COLUMN_CEL_ID, CACHE_LIMIT, PAGE_SIZE } from '@/src/constants/ag-grid';
 import { DEFAULT_TIME_PERIOD } from '@/src/constants/global-time-filter';
 import { ButtonsI18nKey, RollbackI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialActivity } from '@/src/models/activity-audit';
@@ -241,16 +241,14 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh }) => {
             timeRange={timeRange}
             onTimeRangeChange={onTimeRangeChange}
           />
-          <DialButton
-            variant={ButtonVariant.Secondary}
+          <DialNeutralButton
             label={t(ButtonsI18nKey.Refresh)}
-            iconBefore={<IconRefresh {...BASE_ICON_PROPS} />}
+            iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}
             onClick={onRefresh}
           />
           {!entity && (
-            <DialButton
-              iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
-              variant={ButtonVariant.Secondary}
+            <DialNeutralButton
+              iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} />}
               label={t(RollbackI18nKey.System)}
               onClick={systemRollback}
             />

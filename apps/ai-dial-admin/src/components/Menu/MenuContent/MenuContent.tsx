@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { FC } from 'react';
 
 import { MenuI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getActualMenuItems } from '@/src/utils/env/get-menu-items';
@@ -67,17 +67,17 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
     <div className={classNames(actionsClassName, 'justify-start')}>
       <MenuAction
         tooltip={t(MenuI18nKey.ImportConfig)}
-        icon={<IconDownload {...BASE_ICON_PROPS} widths={24} height={24} />}
+        icon={<IconDownload {...BASE_BUTTON_ICON_PROPS} widths={24} height={24} />}
         onClick={handleImport}
       />
       <MenuAction
         tooltip={t(MenuI18nKey.ExportConfig)}
-        icon={<IconUpload {...BASE_ICON_PROPS} widths={24} height={24} />}
+        icon={<IconUpload {...BASE_BUTTON_ICON_PROPS} widths={24} height={24} />}
         onClick={handleExport}
       />
       <MenuAction
         tooltip={t(MenuI18nKey.SystemProperties)}
-        icon={<IconWorldCog {...BASE_ICON_PROPS} widths={24} height={24} />}
+        icon={<IconWorldCog {...BASE_BUTTON_ICON_PROPS} widths={24} height={24} />}
         onClick={openProperties}
       />
     </div>

@@ -2,7 +2,14 @@ import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 're
 import classNames from 'classnames';
 import { IconPlayerPause, IconPlayerPlay, IconPlus, IconTrashX } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
-import { ButtonVariant, DialButton, DialButtonDropdown, DialSwitch, DropdownItem } from '@epam/ai-dial-ui-kit';
+import {
+  ButtonVariant,
+  DialButton,
+  DialButtonDropdown,
+  DialNeutralButton,
+  DialSwitch,
+  DropdownItem,
+} from '@epam/ai-dial-ui-kit';
 import { ApplicationRoute } from '@/src/types/routes';
 import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 import { BaseEntity } from '@/src/models/dial/base-entity';
@@ -29,7 +36,7 @@ import {
 } from '@/src/utils/deployments/entity';
 import { validateContainer } from '@/src/utils/deployments/containers';
 import { showEditorErrorNotifications } from '@/src/components/EntityView/JsonEditor/utils';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { createPortal } from 'react-dom';
 import DeleteModal from '@/src/components/Deployments/Modals/Delete';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
@@ -218,12 +225,7 @@ const HeaderButtons = <T extends Container>({
       <div className={containerClassNames}>
         {isChanged ? (
           <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
-            <DialButton
-              variant={ButtonVariant.Secondary}
-              className={buttonsClassNames}
-              label={t(ButtonsI18nKey.Discard)}
-              onClick={onDiscard}
-            />
+            <DialNeutralButton className={buttonsClassNames} label={t(ButtonsI18nKey.Discard)} onClick={onDiscard} />
             <DialButton
               variant={ButtonVariant.Primary}
               className={buttonsClassNames}
@@ -244,41 +246,37 @@ const HeaderButtons = <T extends Container>({
                       variant={ButtonVariant.Secondary}
                     />
                   ) : (
-                    <DialButton
-                      variant={ButtonVariant.Secondary}
+                    <DialNeutralButton
                       className={buttonsClassNames}
                       label={t(CreateI18nKey.CreateEntity, { entity: getTranslatedEntity(route, t) })}
-                      iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+                      iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
                       onClick={onOpenCreateModal}
                     />
                   )}
                 </>
               )}
 
-              <DialButton
-                variant={ButtonVariant.Secondary}
+              <DialNeutralButton
                 className={buttonsClassNames}
                 label={t(ButtonsI18nKey.Delete)}
-                iconBefore={<IconTrashX {...BASE_ICON_PROPS} />}
+                iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
                 onClick={onOpenDeleteModal}
               />
               <>
                 {container.status === CONTAINER_STATUS.RUNNING ||
                 container.status === CONTAINER_STATUS.PENDING ||
                 container.status === CONTAINER_STATUS.FAILED ? (
-                  <DialButton
-                    variant={ButtonVariant.Secondary}
+                  <DialNeutralButton
                     className={buttonsClassNames}
                     label={t(ButtonsI18nKey.Stop)}
-                    iconBefore={<IconPlayerPause {...BASE_ICON_PROPS} />}
+                    iconBefore={<IconPlayerPause {...BASE_BUTTON_ICON_PROPS} />}
                     onClick={handleStopContainer}
                   />
                 ) : (
-                  <DialButton
-                    variant={ButtonVariant.Secondary}
+                  <DialNeutralButton
                     className={buttonsClassNames}
                     label={t(ButtonsI18nKey.Run)}
-                    iconBefore={<IconPlayerPlay {...BASE_ICON_PROPS} />}
+                    iconBefore={<IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} />}
                     onClick={handleRunContainer}
                   />
                 )}

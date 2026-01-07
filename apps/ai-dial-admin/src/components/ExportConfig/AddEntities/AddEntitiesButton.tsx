@@ -2,13 +2,13 @@
 import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import AddEntitiesModal from '@/src/components/ExportConfig/AddEntities/AddEntitiesModal';
 import { getActualColDefs, isEntityWithDependency, isEntityWithTopics } from '@/src/components/ExportConfig/utils';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { EntityType } from '@/src/types/entity-type';
@@ -83,10 +83,9 @@ const AddEntitiesButton: FC<Props> = ({
 
   return (
     <>
-      <DialButton
+      <DialNeutralButton
         label={buttonTitle}
-        iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-        variant={ButtonVariant.Secondary}
+        iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
         onClick={() => onClick(selectedTab)}
       />
 

@@ -13,7 +13,7 @@ import { getErrorNotification } from '@/src/utils/notification';
 import { BasicI18nKey, ContainersI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { getTranslatedType } from '@/src/utils/deployments/entity';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
@@ -72,7 +72,7 @@ const Properties: FC<Props> = ({ container, setContainer, image, route, names, o
                 textClassName="text-primary text-base font-normal"
                 className="text-secondary whitespace-nowrap"
                 onClick={handleModalOpen}
-                iconAfter={<OpenPopup {...BASE_ICON_PROPS} className="inline" />}
+                iconAfter={<OpenPopup {...BASE_BUTTON_ICON_PROPS} className="inline" />}
               />
             </DialLabelledText>
           )}

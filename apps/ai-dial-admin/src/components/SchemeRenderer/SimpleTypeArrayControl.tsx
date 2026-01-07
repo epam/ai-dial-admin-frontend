@@ -6,7 +6,7 @@ import { IconPlus } from '@tabler/icons-react';
 import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { simpleControlTypes } from './constants';
 import { SchemeParameterControl } from './models';
@@ -29,7 +29,7 @@ const SimpleTypeArrayControl: FC<Props> = ({ control, type }) => {
           disabled={true}
           variant={ButtonVariant.Tertiary}
           label={t(ButtonsI18nKey.Add)}
-          iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+          iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
         />
       </div>
     </div>

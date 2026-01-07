@@ -1,17 +1,17 @@
-import { FC, ReactNode, useCallback, useMemo } from 'react';
+import { DialNeutralButton, DialTooltip } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
-import { ButtonVariant, DialButton, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { FC, ReactNode, useCallback, useMemo } from 'react';
 
 import { EntityFieldsI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useI18n } from '@/src/locales/client';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ActionType } from '@/src/models/dial/publications';
 import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { useI18n } from '@/src/locales/client';
 
-import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import Accordion from '@/src/components/Common/Accordion/Accordion';
+import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 
 function formatPromptText(input?: string): ReactNode {
   const parts = input?.split(/({{.*?}})/) || [];
@@ -44,10 +44,9 @@ const PromptsProperties: FC<Props> = ({ prompt, action, collapsed }) => {
     return (
       <div className="flex justify-end gap-4">
         {action === ActionType.DELETE && (
-          <DialButton
-            variant={ButtonVariant.Secondary}
+          <DialNeutralButton
             label={t(PublicationsI18nKey.OpenPrompt)}
-            iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
+            iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
             onClick={openPrompt}
           />
         )}

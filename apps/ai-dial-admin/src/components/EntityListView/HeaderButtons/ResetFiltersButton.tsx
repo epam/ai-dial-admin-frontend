@@ -5,7 +5,7 @@ import { GridApi } from 'ag-grid-community';
 import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -47,7 +47,7 @@ const ResetFiltersButton: FC<Props> = ({ gridApi }) => {
     <DialButton
       label={t(ButtonsI18nKey.ResetFilters)}
       variant={ButtonVariant.Tertiary}
-      iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
+      iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} />}
       onClick={resetFilters}
     />
   );

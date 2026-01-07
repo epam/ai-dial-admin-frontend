@@ -2,7 +2,7 @@
 
 import { FC, useEffect, useState } from 'react';
 
-import { ButtonVariant, DialButton, DialTabs } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialNeutralButton, DialTabs } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
@@ -38,12 +38,7 @@ const Header: FC<Props> = ({ isChanged, onSave, onDiscard, activeTab, onChangeTa
       </div>
       {isChanged && (
         <div className="flex flex-row gap-3 p-3 lg:p-0">
-          <DialButton
-            variant={ButtonVariant.Secondary}
-            className={buttonsClassNames}
-            label={t(ButtonsI18nKey.Discard)}
-            onClick={onDiscard}
-          />
+          <DialNeutralButton className={buttonsClassNames} label={t(ButtonsI18nKey.Discard)} onClick={onDiscard} />
           <DialButton
             variant={ButtonVariant.Primary}
             className={buttonsClassNames}

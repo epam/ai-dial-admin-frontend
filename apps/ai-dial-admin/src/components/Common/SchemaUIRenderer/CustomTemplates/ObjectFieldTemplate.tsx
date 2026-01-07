@@ -6,7 +6,7 @@ import { IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { WidgetHeader } from '@/src/components/Common/SchemaUIRenderer/Components/WidgetHeader';
 import { WidgetToggler } from '@/src/components/Common/SchemaUIRenderer/Components/WidgetToggler';
@@ -32,7 +32,7 @@ export const ObjectFieldTemplate: FC<ObjectFieldTemplateProps> = (props) => {
             onClick={onAddClick(schema)}
             label={t(ButtonsI18nKey.AddAdditionalProperties)}
             className="w-fit mt-2"
-            iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+            iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
           />
         )}
       </fieldset>

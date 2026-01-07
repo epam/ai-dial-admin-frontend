@@ -3,7 +3,7 @@ import { IconEqual } from '@tabler/icons-react';
 import Contains from '@/public/images/icons/filter/contains.svg';
 import Regex from '@/public/images/icons/regex.svg';
 import { FoldersI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { DialRule, RuleDiffStatus, RuleDiffModel, RuleFunction, RuleSource } from '@/src/models/dial/rule';
 import { JSX } from 'react';
 import { SelectOption } from '@epam/ai-dial-ui-kit';
@@ -44,7 +44,7 @@ export const getOperationItems = (t: (t: string) => string): SelectOption[] => {
  */
 export const getOperationIcon = (operation: RuleFunction): JSX.Element | undefined => {
   if (operation === RuleFunction.EQUAL) {
-    return <IconEqual {...BASE_ICON_PROPS} />;
+    return <IconEqual {...BASE_BUTTON_ICON_PROPS} />;
   }
   if (operation === RuleFunction.CONTAIN) {
     return <Contains />;

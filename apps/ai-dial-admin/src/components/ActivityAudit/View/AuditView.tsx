@@ -5,10 +5,10 @@ import { FC, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import {
-  ButtonVariant,
   DialButton,
   DialConfirmationPopup,
   DialEllipsisTooltip,
+  DialNeutralButton,
   DialSwitch,
   DialTooltip,
 } from '@epam/ai-dial-ui-kit';
@@ -21,7 +21,7 @@ import FilterControl from '@/src/components/ActivityAudit/View/DiffReport/Filter
 import ViewHeader from '@/src/components/ActivityAudit/View/Header/Header';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import { ButtonsI18nKey, EntityFieldsI18nKey, RollbackI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialActivity } from '@/src/models/activity-audit';
@@ -143,9 +143,8 @@ const AuditView: FC<Props> = ({
             <div className="flex flex-row items-center gap-4 flex-wrap">
               <CompareControl compareView={compareView} setCompareView={setCompareView} />
               <FilterControl diffView={diffView} setDiffView={setDiffView} />
-              <DialButton
-                iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
-                variant={ButtonVariant.Secondary}
+              <DialNeutralButton
+                iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} />}
                 label={t(RollbackI18nKey.Resource)}
                 onClick={onOpenModal}
               />
@@ -165,11 +164,11 @@ const AuditView: FC<Props> = ({
               {isModalView && (
                 <>
                   <h3 className="flex flex-row items-center gap-x-3">
-                    <DialTooltip tooltip={activity.activityId}>{activity.activityId}</DialTooltip>
+                    <DialTooltip tooltip={activity.activityId}>{activity.activityId}</DialTooltip>s
                     <DialButton
                       onClick={() => openActivityInNewTab(activity)}
                       className="text-secondary"
-                      iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
+                      iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
                     />
                   </h3>
                   <div className="flex flex-row gap-3 items-center justify-end">
