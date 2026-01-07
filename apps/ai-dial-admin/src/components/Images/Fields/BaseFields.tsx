@@ -1,4 +1,4 @@
-import { FC, useMemo, useState } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
 import classNames from 'classnames';
 import { debounce } from 'lodash';
 import { DialTextInputField } from '@epam/ai-dial-ui-kit';
@@ -29,6 +29,10 @@ const BaseFields: FC<Props> = ({ image, setImage, isModal }) => {
   const [versionsMap, setVersionsMap] = useState<Record<string, string[]>>({});
   const [versionError, setVersionError] = useState<FieldError | null>(null);
 
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!image.name });
+  }, [dispatch, image, t, versionsMap]);
+
   const verifyVersion = useMemo(
     () =>
       debounce((name?: string) => {
@@ -40,9 +44,15 @@ const BaseFields: FC<Props> = ({ image, setImage, isModal }) => {
               setVersionsMap(versionMap);
               const error = getSemanticVersionError(versionMap, { name }, t, image.version);
               setVersionError(error);
+              dispatch({
+                type: ValidationActionType.SetField,
+                field: 'version',
+                isValid: !error,
+              });
             } else {
               setVersionsMap({});
               setVersionError(null);
+              dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: true });
             }
           });
         } else {
@@ -50,7 +60,7 @@ const BaseFields: FC<Props> = ({ image, setImage, isModal }) => {
           setVersionError(null);
         }
       }, 500),
-    [image.version, t],
+    [dispatch, image.version, t],
   );
 
   return (
