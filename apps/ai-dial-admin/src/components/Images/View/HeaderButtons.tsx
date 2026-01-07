@@ -1,34 +1,34 @@
-import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
-import classNames from 'classnames';
-import { createPortal } from 'react-dom';
-import { useRouter } from 'next/navigation';
+import { DialNeutralButton, DialPrimaryButton, DialSwitch } from '@epam/ai-dial-ui-kit';
 import { IconBlocks, IconPlus, IconTrashX } from '@tabler/icons-react';
-import { ButtonVariant, DialButton, DialNeutralButton, DialPrimaryButton, DialSwitch } from '@epam/ai-dial-ui-kit';
+import classNames from 'classnames';
+import { useRouter } from 'next/navigation';
+import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 
-import { Image, ImageVersion } from '@/src/models/deployments/images';
-import { ApplicationRoute } from '@/src/types/routes';
-import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
-import { IMAGE_STATUS } from '@/src/types/deployments/images';
-import { ModalType } from '@/src/components/EntityListView/Components/Modals';
-import { Container } from '@/src/models/deployments/containers';
-import { ButtonsI18nKey, ContainersI18nKey, CreateI18nKey, EntitiesI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
-import { useNotification } from '@/src/context/NotificationContext';
-import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
-import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { createContainer, createImage, deleteImage, installImage } from '@/src/app/actions/deployments';
-import { getRouteByType, getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
-import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { validateImage } from '@/src/utils/deployments/images';
+import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import { showEditorErrorNotifications } from '@/src/components/EntityView/JsonEditor/utils';
-import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
+import { ButtonsI18nKey, ContainersI18nKey, CreateI18nKey, EntitiesI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useNotification } from '@/src/context/NotificationContext';
+import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
+import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
+import { Container } from '@/src/models/deployments/containers';
+import { Image, ImageVersion } from '@/src/models/deployments/images';
+import { IMAGE_STATUS } from '@/src/types/deployments/images';
+import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getRouteByType, getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
+import { validateImage } from '@/src/utils/deployments/images';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 
 import VersionsSelect from '@/src/components/Deployments/Common/VersionsSelect/VersionsSelect';
-import CreateContainer from '@/src/components/Images/Modals/CreateContainer';
 import Delete from '@/src/components/Deployments/Modals/Delete';
-import NewVersion from '@/src/components/Images/Modals/NewVersion';
+import CreateContainer from '@/src/components/Images/Modals/CreateContainer';
 import Install from '@/src/components/Images/Modals/Install';
+import NewVersion from '@/src/components/Images/Modals/NewVersion';
 
 interface Props {
   route: ApplicationRoute;
@@ -222,12 +222,19 @@ const HeaderButtons: FC<Props> = ({
         {isChanged ? (
           <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
             <DialNeutralButton className={buttonsClassNames} label={t(ButtonsI18nKey.Discard)} onClick={onDiscard} />
-            <DialButton
-              variant={allowEditing && !forceNewVersion ? ButtonVariant.Secondary : ButtonVariant.Primary}
-              className={buttonsClassNames}
-              label={t(ButtonsI18nKey.SaveAsNewVersion)}
-              onClick={onOpenSaveNewVersionModal}
-            />
+            {allowEditing && !forceNewVersion ? (
+              <DialNeutralButton
+                className={buttonsClassNames}
+                label={t(ButtonsI18nKey.SaveAsNewVersion)}
+                onClick={onOpenSaveNewVersionModal}
+              />
+            ) : (
+              <DialPrimaryButton
+                className={buttonsClassNames}
+                label={t(ButtonsI18nKey.SaveAsNewVersion)}
+                onClick={onOpenSaveNewVersionModal}
+              />
+            )}
             {allowEditing && !forceNewVersion && (
               <DialPrimaryButton
                 className={buttonsClassNames}
