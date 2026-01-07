@@ -130,6 +130,10 @@
     "react-dom": "19.1.2",
     "@modern-js/utils": "2.69.5"
   },
+  "engines": {
+    "node": ">=24.12.0",
+    "npm": ">=11.6.2"
+  },
   "browser": {
     "fs": false,
     "net": false,
