@@ -18,8 +18,8 @@ const backgroundsColors = {
 
   'model-icon': 'var(--bg-model-icon, #FFFFFF)', // TODO: use?
 
-  // TODO: need review
-  'accent-primary': 'var(--bg-accent-primary, #5C8DEA)',
+  // TODO: need review - no des
+  'accent-primary': 'var(--bg-accent-primary, #74A4FF)',
   'accent-secondary': 'var(--bg-accent-secondary, #37BABC)',
   'accent-tertiary': 'var(--bg-accent-tertiary, #A972FF)',
 
@@ -62,7 +62,6 @@ const borderColors = {
 
   // TODO: need review
   hover: 'var(--stroke-hover, #F3F4F6)',
-  'red-900': 'var(--red-900, #402027)',
 };
 
 const textColors = {
@@ -95,7 +94,6 @@ const buttonsTextColors = {
 
   // TODO: old names, need to remove
   'controls-primary': 'var(--controls-primary, #FCFCFC)',
-  'controls-accent': 'var(--controls-accent, #5c8dea)',
   'controls-disable': 'var(--controls-disable, #333942)',
 };
 

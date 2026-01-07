@@ -36,7 +36,7 @@ export const EDITOR_THEMES_CONFIG: Record<EDITOR_THEMES, JSONEditorThemeConfig> 
     inherit: false,
     rules: [
       { token: 'string.key.json', foreground: '#37BABC' },
-      { token: 'string.value.json', foreground: '#5C8DEA' },
+      { token: 'string.value.json', foreground: '#74A4FF' },
       { token: 'number', foreground: '#D97C27' },
       { token: 'keyword.json', foreground: '#F4CE46' },
       { token: 'delimiter', foreground: '#F3F4F6' },
