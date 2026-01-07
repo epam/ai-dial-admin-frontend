@@ -44,9 +44,15 @@ const BaseFields: FC<Props> = ({ image, setImage, isModal }) => {
               setVersionsMap(versionMap);
               const error = getSemanticVersionError(versionMap, { name }, t, image.version);
               setVersionError(error);
+              dispatch({
+                type: ValidationActionType.SetField,
+                field: 'version',
+                isValid: !error,
+              });
             } else {
               setVersionsMap({});
               setVersionError(null);
+              dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: true });
             }
           });
         } else {
@@ -54,7 +60,7 @@ const BaseFields: FC<Props> = ({ image, setImage, isModal }) => {
           setVersionError(null);
         }
       }, 500),
-    [image.version, t],
+    [dispatch, image.version, t],
   );
 
   return (
