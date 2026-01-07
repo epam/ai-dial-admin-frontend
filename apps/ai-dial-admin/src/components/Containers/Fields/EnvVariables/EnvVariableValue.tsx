@@ -79,20 +79,23 @@ const EnvVariableValueField: FC<Props> = ({ value, index, onValueChange, mountTy
 
   const onClearFile = useCallback(() => {
     onValueChange({
-      $type: VALUE_TYPE.SIMPLE,
+      $type: mountType === MOUNT_TYPE.SECURE_FILE ? VALUE_TYPE.FILE : VALUE_TYPE.SIMPLE,
       value: '',
+      fileContent: '',
+      fileName: '',
     });
-  }, [onValueChange]);
+  }, [mountType, onValueChange]);
 
   const onChangeValue = useCallback(
     (newValue?: string) => {
       onValueChange({
-        $type: VALUE_TYPE.SIMPLE,
+        ...value,
         value: getValueByMountType(newValue as string, mountType as MOUNT_TYPE),
       });
     },
-    [mountType, onValueChange],
+    [mountType, onValueChange, value],
   );
+
   return (
     <div className="flex items-end w-full relative pr-[50px]">
       {value.$type === VALUE_TYPE.SIMPLE && (
@@ -119,18 +122,27 @@ const EnvVariableValueField: FC<Props> = ({ value, index, onValueChange, mountTy
       {value.$type === VALUE_TYPE.FILE && (
         <div className="flex flex-col flex-1 max-w-full">
           <Field fieldTitle={fieldName} />
-          <div className="flex border border-primary px-3 py-1 rounded justify-between">
-            <DialTooltip tooltip={value.fileName}>
-              <DialButton
-                className="flex text-accent-primary w-full items-center"
-                onClick={handleFileDownload}
-                iconBefore={<DialFileIcon extension={getNameExtensionFromFile(value.fileName as string).extension} />}
-                label={value.fileName}
-                textClassName="truncate flex-1 min-w-0 text-left items-center"
-              />
-            </DialTooltip>
-            <DialButton iconBefore={<IconX {...BASE_ICON_PROPS} />} onClick={onClearFile} />
-          </div>
+          {value.fileName && value.fileContent ? (
+            <div className="flex border border-primary px-3 py-1 rounded justify-between">
+              <DialTooltip tooltip={value.fileName}>
+                <DialButton
+                  className="flex text-accent-primary w-full items-center"
+                  onClick={handleFileDownload}
+                  iconBefore={<DialFileIcon extension={getNameExtensionFromFile(value.fileName as string).extension} />}
+                  label={value.fileName}
+                  textClassName="truncate flex-1 min-w-0 text-left items-center"
+                />
+              </DialTooltip>
+              <DialButton iconBefore={<IconX {...BASE_ICON_PROPS} />} onClick={onClearFile} />
+            </div>
+          ) : (
+            <DialTextInputField
+              elementId={`value ${index}`}
+              value={t(EnvVariablesI18nKey.NoFileSelected)}
+              placeholder={t(EnvVariablesI18nKey.NoFileSelected)}
+              disabled={true}
+            />
+          )}
         </div>
       )}
 
