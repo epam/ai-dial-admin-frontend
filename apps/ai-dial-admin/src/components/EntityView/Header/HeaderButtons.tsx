@@ -3,14 +3,14 @@
 import { Dispatch, ReactNode, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import AssetVersionControl from '@/src/components/Assets/Deployments/AssetVersionControl';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
@@ -134,11 +134,10 @@ const HeaderButtons = <T extends object>({
                 )}
                 <div className={classNames('flex-1 flex flex-row gap-x-4', isSimple && 'justify-center')}>
                   <div className="flex flex-row gap-x-4">
-                    <DialButton
-                      variant={ButtonVariant.Secondary}
+                    <DialNeutralButton
                       className={classNames(buttonsClassName, isSimple && 'min-w-[150px] lg:min-w-0')}
                       label={t(ButtonsI18nKey.Delete)}
-                      iconBefore={<IconTrashX {...BASE_ICON_PROPS} />}
+                      iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
                       onClick={onOpenModal}
                     />
                   </div>

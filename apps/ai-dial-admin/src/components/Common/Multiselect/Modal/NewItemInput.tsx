@@ -3,7 +3,7 @@ import classNames from 'classnames';
 import { FC } from 'react';
 import { DialInput } from '@epam/ai-dial-ui-kit';
 
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import DraggableItem from '@/src/components/Common/DraggableItem/DraggableItem';
 
 interface Props {
@@ -43,7 +43,7 @@ const NewItemInput: FC<Props> = ({
           className={classNames('cursor-pointer', !value ? 'text-secondary' : 'text-error')}
           onClick={() => onRemoveItem(index)}
         >
-          <IconTrash {...BASE_ICON_PROPS} />
+          <IconTrash {...BASE_BUTTON_ICON_PROPS} />
         </div>
       </div>
     );

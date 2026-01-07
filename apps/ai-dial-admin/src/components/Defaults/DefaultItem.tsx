@@ -14,7 +14,7 @@ import {
   EntityPlaceholdersI18nKey,
   TypeI18nKey,
 } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DefaultsValue } from '@/src/models/dial/defaults';
 import { BooleanType } from '@/src/types/boolean';
@@ -163,7 +163,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
         onClick={() => onRemove(index)}
         aria-label="remove"
       >
-        <IconTrash {...BASE_ICON_PROPS} />
+        <IconTrash {...BASE_BUTTON_ICON_PROPS} />
       </button>
     </div>
   );

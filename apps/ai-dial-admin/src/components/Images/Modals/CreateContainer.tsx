@@ -1,13 +1,13 @@
+import { DialNeutralButton, DialPopup, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useState } from 'react';
-import { ButtonVariant, DialButton, DialPopup } from '@epam/ai-dial-ui-kit';
 
-import { Container } from '@/src/models/deployments/containers';
-import { Image } from '@/src/models/deployments/images';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
+import { useI18n } from '@/src/locales/client';
+import { Container } from '@/src/models/deployments/containers';
+import { Image } from '@/src/models/deployments/images';
 import { getContainerTemplate, validateContainer } from '@/src/utils/deployments/containers';
 import { getRouteByType } from '@/src/utils/deployments/entity';
-import { useI18n } from '@/src/locales/client';
 
 import ContainerProperties from '@/src/components/Containers/Fields/ContainerProperties';
 
@@ -61,9 +61,8 @@ const CreateContainer: FC<Props> = ({ onClose, isModalOpen, modalTitle, names, o
         />
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialButton
-          variant={ButtonVariant.Primary}
+        <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialPrimaryButton
           label={t(ButtonsI18nKey.Create)}
           onClick={() => {
             onCreate(container);

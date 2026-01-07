@@ -1,5 +1,5 @@
 import { FC, useEffect, useState } from 'react';
-import { ButtonVariant, DialButton, DialPopup, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialPrimaryButton, DialNeutralButton, DialPopup, DialTextInputField } from '@epam/ai-dial-ui-kit';
 import { useI18n } from '@/src/locales/client';
 import { BasicI18nKey, ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { FieldError } from '@/src/models/error';
@@ -46,9 +46,8 @@ const DuplicateModal: FC<Props> = ({ title, isModalOpen, currentName, onClose, o
         />
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialButton
-          variant={ButtonVariant.Primary}
+        <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialPrimaryButton
           label={t(ButtonsI18nKey.Duplicate)}
           onClick={() => {
             onApply(name);

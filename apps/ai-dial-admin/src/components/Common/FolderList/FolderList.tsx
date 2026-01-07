@@ -15,7 +15,7 @@ import {
 } from '@/src/components/Common/FolderCreate/Components/Operations';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { EntitiesI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { RuleFolderContextType } from '@/src/context/RuleFolderContext';
 import { useI18n } from '@/src/locales/client';
@@ -216,13 +216,23 @@ const FolderList: FC<Props> = ({
                 <div className="flex-1 flex flex-row truncate" onClick={() => folderContext?.toggleFolder(node)}>
                   <div className={classNames(iconClassName, 'flex items-center justify-center')}>
                     {isExpanded ? (
-                      <IconCaretDownFilled {...BASE_ICON_PROPS} widths={10} height={10} className="flex-shrink-0" />
+                      <IconCaretDownFilled
+                        {...BASE_BUTTON_ICON_PROPS}
+                        widths={10}
+                        height={10}
+                        className="flex-shrink-0"
+                      />
                     ) : (
-                      <IconCaretRightFilled {...BASE_ICON_PROPS} widths={10} height={10} className="flex-shrink-0" />
+                      <IconCaretRightFilled
+                        {...BASE_BUTTON_ICON_PROPS}
+                        widths={10}
+                        height={10}
+                        className="flex-shrink-0"
+                      />
                     )}
                   </div>
                   <IconFolder
-                    {...BASE_ICON_PROPS}
+                    {...BASE_BUTTON_ICON_PROPS}
                     className={classNames(
                       'flex-shrink-0 mr-2',
                       isMoveError && 'text-error',
@@ -235,9 +245,15 @@ const FolderList: FC<Props> = ({
                 {showFolderActions && (
                   <div className="invisible group-hover:visible text-primary mx-2 flex flex-row gap-2">
                     {isAssetView(view) && (
-                      <ActionsDropdown items={folderCreateItems(node)} icon={<IconPlus {...BASE_ICON_PROPS} />} />
+                      <ActionsDropdown
+                        items={folderCreateItems(node)}
+                        icon={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
+                      />
                     )}
-                    <ActionsDropdown items={folderManageItems(node)} icon={<IconDotsVertical {...BASE_ICON_PROPS} />} />
+                    <ActionsDropdown
+                      items={folderManageItems(node)}
+                      icon={<IconDotsVertical {...BASE_BUTTON_ICON_PROPS} />}
+                    />
                   </div>
                 )}
               </div>

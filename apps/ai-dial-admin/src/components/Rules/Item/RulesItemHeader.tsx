@@ -6,7 +6,7 @@ import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import { FoldersI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -32,9 +32,9 @@ const RulesItemHeader: FC<Props> = ({ children, folderName, isCollapsed, isAlway
     >
       {!isAlwaysToggled &&
         (isCollapsed ? (
-          <IconChevronRight className="text-secondary" {...BASE_ICON_PROPS} />
+          <IconChevronRight className="text-secondary" {...BASE_BUTTON_ICON_PROPS} />
         ) : (
-          <IconChevronDown className="text-secondary" {...BASE_ICON_PROPS} />
+          <IconChevronDown className="text-secondary" {...BASE_BUTTON_ICON_PROPS} />
         ))}
       <h3 className={classNames(!isAlwaysToggled && 'mx-2')}>{folderName || t(FoldersI18nKey.Permissions)}</h3>
       {children}

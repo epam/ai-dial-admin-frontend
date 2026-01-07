@@ -1,12 +1,12 @@
 import { ChangeEvent, FC, memo, useCallback, useRef } from 'react';
 import { IconFileArrowRight, IconX } from '@tabler/icons-react';
 import {
-  ButtonVariant,
   DialButton,
   DialTextInputField,
   DialPasswordInputField,
   DialTooltip,
   DialFileIcon,
+  DialNeutralButton,
 } from '@epam/ai-dial-ui-kit';
 import { EnvVariableValue } from '@/src/models/deployments/variables';
 import { MOUNT_TYPE, VALUE_TYPE } from '@/src/types/deployments/variables';
@@ -14,7 +14,7 @@ import { useI18n } from '@/src/locales/client';
 import { EntityPlaceholdersI18nKey, EnvVariablesI18nKey } from '@/src/constants/i18n';
 import { getValueByMountType } from '@/src/utils/deployments/variables';
 import Field from '@/src/components/Common/Field/Field';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 
 interface Props {
@@ -133,7 +133,7 @@ const EnvVariableValueField: FC<Props> = ({ value, index, onValueChange, mountTy
                   textClassName="truncate flex-1 min-w-0 text-left items-center"
                 />
               </DialTooltip>
-              <DialButton iconBefore={<IconX {...BASE_ICON_PROPS} />} onClick={onClearFile} />
+              <DialButton iconBefore={<IconX {...BASE_BUTTON_ICON_PROPS} />} onClick={onClearFile} />
             </div>
           ) : (
             <DialTextInputField
@@ -146,9 +146,8 @@ const EnvVariableValueField: FC<Props> = ({ value, index, onValueChange, mountTy
         </div>
       )}
 
-      <DialButton
-        variant={ButtonVariant.Secondary}
-        iconBefore={<IconFileArrowRight {...BASE_ICON_PROPS} />}
+      <DialNeutralButton
+        iconBefore={<IconFileArrowRight {...BASE_BUTTON_ICON_PROPS} />}
         onClick={handleFileInputClick}
         className="absolute right-0"
       />

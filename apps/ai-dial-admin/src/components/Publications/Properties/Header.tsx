@@ -1,12 +1,18 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonVariant, DialConfirmationPopup, DialButton, DialTextAreaField, DialSwitch } from '@epam/ai-dial-ui-kit';
+import {
+  DialPrimaryButton,
+  DialConfirmationPopup,
+  DialTextAreaField,
+  DialSwitch,
+  DialNeutralButton,
+} from '@epam/ai-dial-ui-kit';
 import { IconCircleX, IconWorldOff, IconWorldShare } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import { ButtonsI18nKey, EntitiesI18nKey, ErrorI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
@@ -71,28 +77,25 @@ const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action, isJ
     <>
       <div className={containerClassName}>
         <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
-          <DialButton
-            variant={ButtonVariant.Secondary}
+          <DialNeutralButton
             className={buttonsClassName}
             label={t(ButtonsI18nKey.Decline)}
             onClick={() => setIsOpenDeclineModal(true)}
-            iconBefore={<IconCircleX {...BASE_ICON_PROPS} />}
+            iconBefore={<IconCircleX {...BASE_BUTTON_ICON_PROPS} />}
           />
           {action === ActionType.ADD ? (
-            <DialButton
-              variant={ButtonVariant.Primary}
+            <DialPrimaryButton
               className={classNames(buttonsClassName, approveButtonClassName)}
               label={t(ButtonsI18nKey.Publish)}
               onClick={() => setIsOpenApproveModal(true)}
-              iconBefore={<IconWorldShare {...BASE_ICON_PROPS} />}
+              iconBefore={<IconWorldShare {...BASE_BUTTON_ICON_PROPS} />}
             />
           ) : (
-            <DialButton
-              variant={ButtonVariant.Primary}
+            <DialPrimaryButton
               className={classNames(buttonsClassName, approveButtonClassName)}
               label={t(ButtonsI18nKey.Unpublish)}
               onClick={() => setIsOpenApproveModal(true)}
-              iconBefore={<IconWorldOff {...BASE_ICON_PROPS} />}
+              iconBefore={<IconWorldOff {...BASE_BUTTON_ICON_PROPS} />}
             />
           )}
           {route !== ApplicationRoute.FilePublications && (

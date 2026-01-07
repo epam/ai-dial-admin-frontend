@@ -1,11 +1,11 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import { ErrorI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import Path from './Path';
@@ -83,10 +83,9 @@ const Paths: FC<Props> = ({ title, optional, readonly, paths, disableValidation,
       ))}
       {!readonly && (
         <div>
-          <DialButton
-            variant={ButtonVariant.Secondary}
+          <DialNeutralButton
             label={t(RoutesI18nKey.AddPaths)}
-            iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+            iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
             onClick={onAddPath}
           />
         </div>

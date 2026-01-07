@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { ButtonVariant, DialButton, DialInputPopup, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { DialInputPopup, DialNeutralButton, DialSelectField } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -8,17 +8,17 @@ import Field from '@/src/components/Common/Field/Field';
 import SelectRunnerModal from '@/src/components/SourceField/Template/SelectRunnerModal';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { CreateI18nKey, EntitiesI18nKey, SourceI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
+import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import { ServerActionResponse } from '@/src/models/server-action';
-import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props<T> {
   entity: T;
@@ -129,9 +129,8 @@ const Templates = <T extends DialModel | DialInterceptor>({
               </DialInputPopup>
             </div>
             {entity.source?.runnerName && (
-              <DialButton
-                variant={ButtonVariant.Secondary}
-                iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
+              <DialNeutralButton
+                iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
                 className={classNames(errorText ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
                 label={t(SourceI18nKey.OpenTemplate)}
                 onClick={() => openTemplate()}

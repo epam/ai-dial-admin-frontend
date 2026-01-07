@@ -1,7 +1,7 @@
 import { FC } from 'react';
 
 import { SettingsModalI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { IconSettings } from '@tabler/icons-react';
 
@@ -13,7 +13,7 @@ const SettingsItem: FC<Props> = ({ onClick }) => {
   const t = useI18n();
   return (
     <div className="flex gap-3 items-center cursor-pointer" onClick={onClick}>
-      <IconSettings {...BASE_ICON_PROPS} className="text-secondary" />
+      <IconSettings {...BASE_BUTTON_ICON_PROPS} className="text-secondary" />
       <span>{t(SettingsModalI18nKey.Settings)}</span>
     </div>
   );
