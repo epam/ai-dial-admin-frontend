@@ -74,7 +74,11 @@ const TimeFilter: FC<Props> = ({ timePeriod, onTimePeriodChange, timeRange, onTi
         <div className="flex flex-col w-full">
           <button className="flex items-center p-3 border-b border-b-secondary" onClick={onClick} aria-label="button">
             <i className="mr-3">
-              {showCustomRange ? <IconChevronDown {...BASE_BUTTON_ICON_PROPS} /> : <IconChevronRight {...BASE_BUTTON_ICON_PROPS} />}
+              {showCustomRange ? (
+                <IconChevronDown {...BASE_BUTTON_ICON_PROPS} />
+              ) : (
+                <IconChevronRight {...BASE_BUTTON_ICON_PROPS} />
+              )}
             </i>
             <p className="small text-primary">{t(TelemetryI18nKey.CustomTimeRage)}</p>
           </button>

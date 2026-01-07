@@ -216,9 +216,19 @@ const FolderList: FC<Props> = ({
                 <div className="flex-1 flex flex-row truncate" onClick={() => folderContext?.toggleFolder(node)}>
                   <div className={classNames(iconClassName, 'flex items-center justify-center')}>
                     {isExpanded ? (
-                      <IconCaretDownFilled {...BASE_BUTTON_ICON_PROPS} widths={10} height={10} className="flex-shrink-0" />
+                      <IconCaretDownFilled
+                        {...BASE_BUTTON_ICON_PROPS}
+                        widths={10}
+                        height={10}
+                        className="flex-shrink-0"
+                      />
                     ) : (
-                      <IconCaretRightFilled {...BASE_BUTTON_ICON_PROPS} widths={10} height={10} className="flex-shrink-0" />
+                      <IconCaretRightFilled
+                        {...BASE_BUTTON_ICON_PROPS}
+                        widths={10}
+                        height={10}
+                        className="flex-shrink-0"
+                      />
                     )}
                   </div>
                   <IconFolder
@@ -235,9 +245,15 @@ const FolderList: FC<Props> = ({
                 {showFolderActions && (
                   <div className="invisible group-hover:visible text-primary mx-2 flex flex-row gap-2">
                     {isAssetView(view) && (
-                      <ActionsDropdown items={folderCreateItems(node)} icon={<IconPlus {...BASE_BUTTON_ICON_PROPS} />} />
+                      <ActionsDropdown
+                        items={folderCreateItems(node)}
+                        icon={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
+                      />
                     )}
-                    <ActionsDropdown items={folderManageItems(node)} icon={<IconDotsVertical {...BASE_BUTTON_ICON_PROPS} />} />
+                    <ActionsDropdown
+                      items={folderManageItems(node)}
+                      icon={<IconDotsVertical {...BASE_BUTTON_ICON_PROPS} />}
+                    />
                   </div>
                 )}
               </div>

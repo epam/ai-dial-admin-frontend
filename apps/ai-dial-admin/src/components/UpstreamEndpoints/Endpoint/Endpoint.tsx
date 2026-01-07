@@ -177,7 +177,11 @@ const Endpoint: FC<Props> = ({
           onClick={onRemove}
           aria-label="remove"
         >
-          {isTablet ? <IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-primary" /> : <IconTrash {...BASE_BUTTON_ICON_PROPS} />}
+          {isTablet ? (
+            <IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-primary" />
+          ) : (
+            <IconTrash {...BASE_BUTTON_ICON_PROPS} />
+          )}
         </button>
       )}
     </div>

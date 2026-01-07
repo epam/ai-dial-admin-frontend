@@ -31,7 +31,11 @@ const Tool: FC<Props> = ({ tool }) => {
     <div className="flex flex-col border-primary border p-4">
       <button className="flex items-center" onClick={toggleCollapse}>
         <i className="text-icon-secondary">
-          {isCollapsed ? <IconChevronRight {...BASE_BUTTON_ICON_PROPS} /> : <IconChevronDown {...BASE_BUTTON_ICON_PROPS} />}
+          {isCollapsed ? (
+            <IconChevronRight {...BASE_BUTTON_ICON_PROPS} />
+          ) : (
+            <IconChevronDown {...BASE_BUTTON_ICON_PROPS} />
+          )}
         </i>
         <h3 className="mx-2">{tool.name}</h3>
       </button>

@@ -97,9 +97,7 @@ const Containers: FC<Props> = ({ image, route, versions }) => {
         emptyDataDescription={!installed ? t(EntitiesI18nKey.NoRelatedContainersDescription) : ''}
         storageKey={`${route}/related`}
       >
-        {installed && (
-          <DialPrimaryButton label={t(ButtonsI18nKey.Add)} onClick={handleModalOpen} />
-        )}
+        {installed && <DialPrimaryButton label={t(ButtonsI18nKey.Add)} onClick={handleModalOpen} />}
       </ListView>
       {isModalOpen &&
         createPortal(

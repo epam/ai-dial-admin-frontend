@@ -94,7 +94,11 @@ const EnvVariable: FC<Props> = ({
             <div className="flex flex-col justify-center cursor-pointer" onClick={toggleCollapse}>
               <h3 className="small flex items-center">
                 <i className="text-icon-primary mr-2 ">
-                  {isCollapsed ? <IconChevronRight {...BASE_BUTTON_ICON_PROPS} /> : <IconChevronDown {...BASE_BUTTON_ICON_PROPS} />}
+                  {isCollapsed ? (
+                    <IconChevronRight {...BASE_BUTTON_ICON_PROPS} />
+                  ) : (
+                    <IconChevronDown {...BASE_BUTTON_ICON_PROPS} />
+                  )}
                 </i>
                 {t(EnvVariablesI18nKey.EnvVariable)} {index + 1}
               </h3>
