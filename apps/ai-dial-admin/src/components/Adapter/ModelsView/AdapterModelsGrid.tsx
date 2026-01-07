@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
-import { ENTITY_BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import Grid from '@/src/components/Grid/Grid';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
@@ -23,7 +23,7 @@ const AdapterModelsGrid: FC<Props> = ({ models }) => {
   };
 
   const rowData = models || [];
-  const columnDefs = [...ENTITY_BASE_COLUMNS, ACTION_COLUMN([getOpenInNewTabOperation(open)])];
+  const columnDefs = [...BASE_COLUMNS, ACTION_COLUMN([getOpenInNewTabOperation(open)])];
 
   return (
     <div className="h-full flex flex-col">
