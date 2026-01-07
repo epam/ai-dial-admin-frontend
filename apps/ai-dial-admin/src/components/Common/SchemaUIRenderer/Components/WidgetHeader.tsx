@@ -3,7 +3,7 @@ import { FC } from 'react';
 import { DialTooltip } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle } from '@tabler/icons-react';
 
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 
 interface Props {
   label?: string;
@@ -19,7 +19,7 @@ export const WidgetHeader: FC<Props> = ({ label, title, description, defaultHead
         <p className="small pb-3">{title || label}</p>
         {description && (
           <DialTooltip tooltip={description || ''}>
-            <IconInfoCircle {...BASE_ICON_PROPS} className="text-secondary" />
+            <IconInfoCircle {...BASE_BUTTON_ICON_PROPS} className="text-secondary" />
           </DialTooltip>
         )}
       </div>

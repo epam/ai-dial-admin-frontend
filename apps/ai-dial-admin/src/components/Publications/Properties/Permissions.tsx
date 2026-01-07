@@ -1,8 +1,8 @@
 import { FC, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { IconReplace, IconBrandStackshare } from '@tabler/icons-react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { IconBrandStackshare, IconReplace } from '@tabler/icons-react';
 
 import { getRules } from '@/src/app/[lang]/folders-storage/actions';
 import RulesCompare from '@/src/components/Publications/Popup/RulesCompare';
@@ -10,15 +10,15 @@ import RulesStructure from '@/src/components/Publications/Popup/RulesStructure';
 import RulesItem from '@/src/components/Rules/Item/RulesItem';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { ButtonsI18nKey, CompareI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useNotification } from '@/src/context/NotificationContext';
 import { useRuleFolder } from '@/src/context/RuleFolderContext';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialRule } from '@/src/models/dial/rule';
-import { addTrailingSlash } from '@/src/utils/url';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
-import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { getErrorNotification } from '@/src/utils/notification';
-import { useNotification } from '@/src/context/NotificationContext';
+import { addTrailingSlash } from '@/src/utils/url';
 
 interface Props {
   rules: DialRule[];
@@ -64,18 +64,16 @@ const PublicationPermissions: FC<Props> = ({ rules, folderId, showCompare }) => 
     <RulesItem rules={rules} indentIndex={0} isAlwaysToggled={true}>
       <div className="flex gap-4">
         {showStructureButton && (
-          <DialButton
-            variant={ButtonVariant.Secondary}
+          <DialNeutralButton
             label={t(ButtonsI18nKey.ReviewStructure)}
-            iconBefore={<IconBrandStackshare {...BASE_ICON_PROPS} />}
+            iconBefore={<IconBrandStackshare {...BASE_BUTTON_ICON_PROPS} />}
             onClick={() => setIsStructureModalOpen(true)}
           />
         )}
         {showCompareButton && (
-          <DialButton
-            variant={ButtonVariant.Secondary}
+          <DialNeutralButton
             label={t(CompareI18nKey.CompareChanges)}
-            iconBefore={<IconReplace {...BASE_ICON_PROPS} />}
+            iconBefore={<IconReplace {...BASE_BUTTON_ICON_PROPS} />}
             onClick={() => setIsCompareModalOpen(true)}
           />
         )}

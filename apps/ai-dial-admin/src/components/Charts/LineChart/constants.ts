@@ -52,5 +52,5 @@ export const lineChartDefaultOptions: EChartsOption = {
     top: 10,
     borderColor: '',
   },
-  color: '#5C8DEA',
+  color: '#74A4FF',
 };

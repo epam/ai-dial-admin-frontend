@@ -7,7 +7,7 @@ import { auditResourceRoute } from '@/src/components/ActivityAudit/View/Header/c
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import { getFormattedResourceType } from '@/src/constants/grid-columns/formatters';
 import { ActivityAuditI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { DialActivity } from '@/src/models/activity-audit';
 import { ActivityAuditResourceType, ActivityAuditType } from '@/src/types/activity-audit';
@@ -49,7 +49,7 @@ const ViewHeader: FC<Props> = ({ activity, children }) => {
                 <DialButton
                   onClick={() => openResourceInNewTab(activity)}
                   className="text-secondary"
-                  iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
+                  iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
                 />
               )}
             </div>

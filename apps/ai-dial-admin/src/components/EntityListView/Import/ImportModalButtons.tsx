@@ -2,11 +2,11 @@
 
 import { FC } from 'react';
 
-import { ButtonVariant, DialButton, Step, StepStatus } from '@epam/ai-dial-ui-kit';
+import { DialPrimaryButton, DialNeutralButton, Step, StepStatus } from '@epam/ai-dial-ui-kit';
 import { IconArrowNarrowLeft, IconArrowNarrowRight } from '@tabler/icons-react';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -31,25 +31,22 @@ const ImportModalButtons: FC<Props> = ({ steps, currentStep, onChangeStep, onFin
   return (
     <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
       {currentStep?.id !== steps[0]?.id && (
-        <DialButton
-          variant={ButtonVariant.Secondary}
+        <DialNeutralButton
           label={t(ButtonsI18nKey.Previous)}
           onClick={onPrevStep}
-          iconBefore={<IconArrowNarrowLeft {...BASE_ICON_PROPS} />}
+          iconBefore={<IconArrowNarrowLeft {...BASE_BUTTON_ICON_PROPS} />}
         />
       )}
       {currentStep?.id !== steps.at(-1)?.id && (
-        <DialButton
-          variant={ButtonVariant.Primary}
+        <DialPrimaryButton
           label={t(ButtonsI18nKey.Next)}
           onClick={onNextStep}
-          iconAfter={<IconArrowNarrowRight {...BASE_ICON_PROPS} />}
+          iconAfter={<IconArrowNarrowRight {...BASE_BUTTON_ICON_PROPS} />}
           disabled={currentStep?.status !== StepStatus.VALID}
         />
       )}
       {currentStep?.id === steps.at(-1)?.id && (
-        <DialButton
-          variant={ButtonVariant.Primary}
+        <DialPrimaryButton
           label={t(ButtonsI18nKey.Finish)}
           disabled={steps.some((s) => s.status !== StepStatus.VALID)}
           onClick={onFinishClick}

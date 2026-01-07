@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { ButtonVariant, DialButton, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { DialPrimaryButton, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import { RJSFSchema } from '@rjsf/utils';
 import { IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
@@ -20,7 +20,7 @@ import SchemaUiRenderer from '@/src/components/Common/SchemaUIRenderer/SchemaUIR
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import FrameRenderer from '@/src/components/FrameRenderer/FrameRenderer';
 import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useI18n } from '@/src/locales/client';
@@ -174,9 +174,8 @@ const ApplicationParametersTab: FC<Props> = ({
           </div>
           <div className="flex flex-row gap-4">
             {paramsView === ParamsView.TABLE && (
-              <DialButton
-                variant={ButtonVariant.Primary}
-                iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+              <DialPrimaryButton
+                iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
                 label={t(ButtonsI18nKey.Add)}
                 onClick={() => setIsAddClicked(true)}
               />

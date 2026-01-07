@@ -1,13 +1,13 @@
 'use client';
 
-import { ButtonVariant, DialButton, DialInputPopup, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
+import { DialInputPopup, DialNeutralButton, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import classNames from 'classnames';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import Field from '@/src/components/Common/Field/Field';
 import { ButtonsI18nKey, EntitiesI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
@@ -102,10 +102,9 @@ const AppRunners: FC<Props> = ({ selectedValue, runners, onChangeValue, isEntity
         </DialInputPopup>
       </div>
       {selectedValue && (
-        <DialButton
-          variant={ButtonVariant.Secondary}
+        <DialNeutralButton
           label={t(ButtonsI18nKey.OpenAppRunner)}
-          iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
+          iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
           onClick={openInNewTab}
         />
       )}

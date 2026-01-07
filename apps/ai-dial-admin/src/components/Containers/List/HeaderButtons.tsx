@@ -4,7 +4,7 @@ import { FC, MouseEvent, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { IconColumns2, IconPlus } from '@tabler/icons-react';
 import { GridApi } from 'ag-grid-community';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 import { ApplicationRoute } from '@/src/types/routes';
 import { useI18n } from '@/src/locales/client';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
@@ -14,7 +14,7 @@ import { createContainer } from '@/src/app/actions/deployments';
 import { getErrorNotification } from '@/src/utils/notification';
 import ResetFiltersButton from '@/src/components/EntityListView/HeaderButtons/ResetFiltersButton';
 import { ButtonsI18nKey, ContainersI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import CreateContainer from '@/src/components/Containers/Modals/CreateContainer';
 import { getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
@@ -70,16 +70,14 @@ const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, names, gridApi })
     <>
       <div className="flex gap-4">
         <ResetFiltersButton gridApi={gridApi} />
-        <DialButton
-          variant={ButtonVariant.Tertiary}
+        <DialGhostButton
           label={t(ButtonsI18nKey.Columns)}
-          iconBefore={<IconColumns2 {...BASE_ICON_PROPS} />}
+          iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} />}
           onClick={onToggleColumnsPanel}
         />
-        <DialButton
-          variant={ButtonVariant.Primary}
+        <DialPrimaryButton
           label={isTabletScreen ? '' : t(ButtonsI18nKey.Create)}
-          iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+          iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
           onClick={() => handleModalOpen()}
         />
       </div>

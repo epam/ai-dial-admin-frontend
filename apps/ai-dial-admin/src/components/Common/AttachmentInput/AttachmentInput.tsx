@@ -2,15 +2,15 @@
 
 import { ChangeEventHandler, FC, KeyboardEvent, useCallback, useEffect, useRef, useState } from 'react';
 
+import { DialNeutralButton, DialTag } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 import { isEqual } from 'lodash';
-import { ButtonVariant, DialButton, DialTag } from '@epam/ai-dial-ui-kit';
 
 import Field from '@/src/components/Common/Field/Field';
-import { AttachmentsI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
 import { ALL_ATTACHMENTS } from '@/src/constants/dial-base-entity';
+import { AttachmentsI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { useI18n } from '@/src/locales/client';
 
 import Suggestions from './Suggestions';
 
@@ -226,20 +226,10 @@ const AttachmentInput: FC<Props> = ({
             </div>
           </div>
           {!allSelected && (
-            <DialButton
-              variant={ButtonVariant.Secondary}
-              label={t(AttachmentsI18nKey.UseAll)}
-              onClick={handleSelectAll}
-              disabled={disable}
-            />
+            <DialNeutralButton label={t(AttachmentsI18nKey.UseAll)} onClick={handleSelectAll} disabled={disable} />
           )}
           {!!selected.length && (
-            <DialButton
-              variant={ButtonVariant.Secondary}
-              label={t(ButtonsI18nKey.None)}
-              onClick={handleSelectNone}
-              disabled={disable}
-            />
+            <DialNeutralButton label={t(ButtonsI18nKey.None)} onClick={handleSelectNone} disabled={disable} />
           )}
         </div>
       )}

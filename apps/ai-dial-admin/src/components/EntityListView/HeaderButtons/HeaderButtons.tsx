@@ -4,7 +4,7 @@ import { Dispatch, MouseEvent, SetStateAction, useCallback, useRef, useState } f
 
 import { IconColumns2, IconFileArrowLeft, IconPlus, IconSquareCheck } from '@tabler/icons-react';
 import { GridApi } from 'ag-grid-community';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton, DialNeutralButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 
 import CreateAdapter from '@/src/components/Adapter/Modals/CreateAdapter';
 import CreateAppRunner from '@/src/components/ApplicationRunners/Modals/CreateAppRunner';
@@ -14,7 +14,7 @@ import { getImportResults } from '@/src/components/EntityListView/Import/utils';
 import CreateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Create';
 import CreateKey from '@/src/components/Keys/Modals/CreateKey';
 import { ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
@@ -193,10 +193,9 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
     <div className="flex gap-4">
       <ResetFiltersButton gridApi={gridApi} />
       {showColumnsButton && (
-        <DialButton
-          variant={ButtonVariant.Tertiary}
+        <DialGhostButton
           label={t(ButtonsI18nKey.Columns)}
-          iconBefore={<IconColumns2 {...BASE_ICON_PROPS} />}
+          iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} />}
           onClick={onToggleColumnsPanel}
         />
       )}
@@ -204,25 +203,22 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
         <>
           {isAssetView(route) && (
             <>
-              <DialButton
-                variant={ButtonVariant.Secondary}
+              <DialNeutralButton
                 label={isTabletScreen ? '' : t(ButtonsI18nKey.BulkActions)}
-                iconBefore={<IconSquareCheck {...BASE_ICON_PROPS} />}
+                iconBefore={<IconSquareCheck {...BASE_BUTTON_ICON_PROPS} />}
                 onClick={() => setIsBulkView?.(true)}
               />
-              <DialButton
-                variant={ButtonVariant.Secondary}
+              <DialNeutralButton
                 label={isTabletScreen ? '' : t(ButtonsI18nKey.Import)}
-                iconBefore={<IconFileArrowLeft {...BASE_ICON_PROPS} />}
+                iconBefore={<IconFileArrowLeft {...BASE_BUTTON_ICON_PROPS} />}
                 onClick={() => handleModalOpen(ModalType.import)}
               />
             </>
           )}
           {!!createEntity && (
-            <DialButton
-              variant={ButtonVariant.Primary}
+            <DialPrimaryButton
               label={isTabletScreen ? '' : t(ButtonsI18nKey.Create)}
-              iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+              iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
               onClick={() => handleModalOpen(ModalType.create)}
             />
           )}

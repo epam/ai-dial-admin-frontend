@@ -2,7 +2,7 @@
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonVariant, DialButton, DialLoader, DialSwitch, DialTabs } from '@epam/ai-dial-ui-kit';
+import { DialLoader, DialPrimaryButton, DialSwitch, DialTabs } from '@epam/ai-dial-ui-kit';
 import { IconRestore } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
 
@@ -24,7 +24,7 @@ import FilterControl from '@/src/components/ActivityAudit/View/DiffReport/Filter
 import JsonView from '@/src/components/ActivityAudit/View/JsonView';
 import { mergeEntityMaps } from '@/src/components/ActivityAudit/View/utils/generate-diffs';
 import { ActivityAuditI18nKey, MenuI18nKey, RollbackI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { ActivityAuditDiff, DialActivity } from '@/src/models/activity-audit';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
@@ -167,9 +167,8 @@ const SystemRollback: FC = () => {
               <OpenPopup />
             </div>
           </div>
-          <DialButton
-            iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
-            variant={ButtonVariant.Primary}
+          <DialPrimaryButton
+            iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} />}
             label={t(RollbackI18nKey.System)}
             onClick={() => setIsRollBackModalOpen(true)}
           />

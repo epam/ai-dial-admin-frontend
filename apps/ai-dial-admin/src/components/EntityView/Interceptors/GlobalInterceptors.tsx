@@ -1,7 +1,7 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonVariant, DialButton, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { DialPrimaryButton, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { RowDragEvent } from 'ag-grid-community';
 
@@ -9,7 +9,7 @@ import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import Grid from '@/src/components/Grid/Grid';
 import { DESCRIPTION_COLUMN, DISPLAY_NAME_COLUMN, NAME_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, EntitiesI18nKey, InterceptorsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -88,9 +88,8 @@ const GlobalInterceptors: FC<Props> = ({ interceptors, currentInterceptors, onCh
   }, [onRowDragEnd]);
 
   const button = (
-    <DialButton
-      variant={ButtonVariant.Primary}
-      iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+    <DialPrimaryButton
+      iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
       label={t(ButtonsI18nKey.Add)}
       onClick={() => setIsModalOpen(true)}
     />

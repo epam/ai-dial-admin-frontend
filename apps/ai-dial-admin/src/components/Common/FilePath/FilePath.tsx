@@ -1,12 +1,12 @@
 import { ChangeEvent, FC, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconFolderShare } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
@@ -60,12 +60,11 @@ const FilePath: FC<Props> = ({ label, placeholder, disabled, value, modalTitle, 
             className="dial-input dial-input-field py-2 px-3"
           />
         </div>
-        <DialButton
+        <DialNeutralButton
           disabled={disabled}
-          variant={ButtonVariant.Secondary}
           onClick={onOpenFilePathModal}
           label={t(ButtonsI18nKey.Move)}
-          iconBefore={<IconFolderShare {...BASE_ICON_PROPS} />}
+          iconBefore={<IconFolderShare {...BASE_BUTTON_ICON_PROPS} />}
         />
       </div>
       {isModalOpen &&
