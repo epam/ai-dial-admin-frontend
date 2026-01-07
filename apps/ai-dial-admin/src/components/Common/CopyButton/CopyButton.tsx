@@ -1,6 +1,6 @@
 import { IconCopy } from '@tabler/icons-react';
 import { FC, useCallback } from 'react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -27,7 +27,7 @@ const CopyButton: FC<Props> = ({ label, field, className, isFullButton = false }
   }, [field, label, showNotification, t]);
 
   const props = isFullButton
-    ? { variant: ButtonVariant.Secondary, label: t(ButtonsI18nKey.Copy) }
+    ? { variant: ButtonVariant.Neutral, appearance: ButtonAppearance.Outlined, label: t(ButtonsI18nKey.Copy) }
     : { className: 'cursor-pointer text-secondary hover:text-accent-primary' };
 
   return (
