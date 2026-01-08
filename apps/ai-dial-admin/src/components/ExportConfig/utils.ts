@@ -50,10 +50,6 @@ export const getActualColDefs = (
     columns = [DISPLAY_NAME_COLUMN_WITH_SORT, DISPLAY_VERSION_COLUMN, DESCRIPTION_COLUMN, NAME_COLUMN];
   }
 
-  if (type === EntityType.APPLICATION) {
-    columns = [...BASE_COLUMNS];
-  }
-
   if (
     type === EntityType.ROLE ||
     type === EntityType.INTERCEPTOR ||
