@@ -3,7 +3,7 @@ import { FC } from 'react';
 import { IconLoader } from '@tabler/icons-react';
 
 import { CoreSyncI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { EntitySyncStatus } from '@/src/types/entity-sync-status';
 
@@ -18,7 +18,7 @@ const StatusText: FC<Props> = ({ status }) => {
     <>
       {status === EntitySyncStatus.IN_PROGRESS && (
         <>
-          <IconLoader {...BASE_ICON_PROPS} />
+          <IconLoader {...BASE_BUTTON_ICON_PROPS} />
           <span>{t(CoreSyncI18nKey.InProgress)}</span>
         </>
       )}

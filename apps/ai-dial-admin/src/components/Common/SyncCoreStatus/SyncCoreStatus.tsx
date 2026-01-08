@@ -9,7 +9,7 @@ import { getCoreSyncStatus } from '@/src/app/actions';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { CoreSyncI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { CoreSyncStatus } from '@/src/models/core-sync-status';
 import { EntitySyncStatus } from '@/src/types/entity-sync-status';
@@ -79,7 +79,7 @@ const CoreSyncEntityStatus: FC<Props> = ({ view, name }) => {
         <div className="flex flex-row gap-x-2 items-center">
           <StatusText status={coreSyncStatus?.status} />
           <DialButton
-            iconAfter={<OpenPopup {...BASE_ICON_PROPS} className="cursor-pointer text-secondary" />}
+            iconAfter={<OpenPopup {...BASE_BUTTON_ICON_PROPS} className="cursor-pointer text-secondary" />}
             onClick={() => setIsModalOpen(true)}
           />
         </div>
