@@ -130,6 +130,7 @@ export const TOPICS_COLUMN: ColDef = {
     topics: getTopics(params.data),
   }),
   filterValueGetter: (params) => getTopics(params.data),
+  tooltipValueGetter: (params) => getTopics(params.data)?.join(', ') || null,
 };
 
 export const INTERCEPTOR_STATUS_COLUMN: ColDef = {
