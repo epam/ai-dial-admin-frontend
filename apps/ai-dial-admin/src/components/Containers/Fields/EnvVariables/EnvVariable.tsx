@@ -83,30 +83,25 @@ const EnvVariable: FC<Props> = ({
 
   const onChangeMountType = useCallback(
     (mountType: string | string[]) => {
-      dispatch({
-        type: ValidationActionType.SetField,
-        field: `variable_${index}`,
-        isValid: mountType === MOUNT_TYPE.SECURE_FILE ? !!variable.value.fileContent : !!variable.value.value,
-      });
       updateVariable({
         ...variable,
         mountType: mountType as MOUNT_TYPE,
-        value: { ...variable.value, $type: mountType === MOUNT_TYPE.SECURE_FILE ? VALUE_TYPE.FILE : VALUE_TYPE.SIMPLE },
+        value: {
+          $type: mountType === MOUNT_TYPE.SECURE_FILE ? VALUE_TYPE.FILE : VALUE_TYPE.SIMPLE,
+          value: mountType === MOUNT_TYPE.SECURE_FILE ? '' : variable.value.value || '',
+          fileContent: '',
+          fileName: '',
+        },
       });
     },
-    [dispatch, index, updateVariable, variable],
+    [updateVariable, variable],
   );
 
   const onValueChange = useCallback(
     (value: EnvVariableValue) => {
-      dispatch({
-        type: ValidationActionType.SetField,
-        field: `variable_${index}`,
-        isValid: variable.mountType === MOUNT_TYPE.SECURE_FILE ? !!value.fileContent : !!value.value,
-      });
       updateVariable({ ...variable, value });
     },
-    [dispatch, index, updateVariable, variable],
+    [updateVariable, variable],
   );
 
   const toggleCollapse = useCallback(() => {
