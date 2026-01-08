@@ -2,9 +2,9 @@ import { FC } from 'react';
 import { DialLabelledText } from '@epam/ai-dial-ui-kit';
 
 import { Image } from '@/src/models/deployments/images';
-import { EntitiesI18nKey, EntityFieldsI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
-import { SOURCE_TYPES } from '@/src/constants/deployments/images';
+import { IMAGE_TYPE_I18N_KEYS, SOURCE_TYPES } from '@/src/constants/deployments/images';
 import { useI18n } from '@/src/locales/client';
 
 import ImageFields from '@/src/components/Images/Fields/ImageFields';
@@ -26,7 +26,7 @@ const Properties: FC<Props> = ({ image, setImage, originalName }) => {
     <div className="flex flex-col pt-3 w-full divide-y divide-primary min-h-0 flex-1">
       <div className="flex gap-10 overflow-y-scroll">
         <LabelledText label={t(EntityFieldsI18nKey.id)} text={originalName} tooltip={originalName} copyable={true} />
-        <DialLabelledText label={t(EntityFieldsI18nKey.type)} text={t(ImagesI18nKey.Image)} />
+        <DialLabelledText label={t(EntityFieldsI18nKey.type)} text={t(IMAGE_TYPE_I18N_KEYS[image.$type])} />
         <DialLabelledText
           label={t(EntityFieldsI18nKey.createdAt)}
           text={formatDateTimeToLocalString(image?.createdAt)}
