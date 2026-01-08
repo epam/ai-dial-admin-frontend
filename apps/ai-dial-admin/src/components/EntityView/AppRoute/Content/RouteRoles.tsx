@@ -1,5 +1,6 @@
 'use client';
-import { ButtonVariant, DialButton, DialNoDataContent, DialSwitch } from '@epam/ai-dial-ui-kit';
+
+import { DialNeutralButton, DialNoDataContent, DialSwitch } from '@epam/ai-dial-ui-kit';
 import { IconPlus, IconReplace } from '@tabler/icons-react';
 import { FC, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -10,7 +11,7 @@ import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getOpenInNewTabOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, EntitiesI18nKey, RolesI18nKey, RoutesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialRole } from '@/src/models/dial/role';
 import { DialRoleLimitsMap } from '@/src/models/dial/role-limits';
@@ -113,9 +114,8 @@ const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, o
         <div className="flex flex-row items-center w-full mt-4 mb-4 justify-between h-[38px]">
           <h1> {t(TabsI18nKey.Roles)}</h1>
           {!route.isPublic && !readonly && (
-            <DialButton
-              variant={ButtonVariant.Secondary}
-              iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+            <DialNeutralButton
+              iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
               label={t(ButtonsI18nKey.Add)}
               onClick={onOpenAddModal}
             />

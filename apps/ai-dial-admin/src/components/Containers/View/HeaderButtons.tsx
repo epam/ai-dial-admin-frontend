@@ -2,7 +2,14 @@ import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 're
 import classNames from 'classnames';
 import { IconPlayerPause, IconPlayerPlay, IconPlus, IconTrashX } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
-import { ButtonVariant, DialButton, DialButtonDropdown, DialSwitch, DropdownItem } from '@epam/ai-dial-ui-kit';
+import {
+  ButtonVariant,
+  DialButtonDropdown,
+  DialNeutralButton,
+  DialPrimaryButton,
+  DialSwitch,
+  DropdownItem,
+} from '@epam/ai-dial-ui-kit';
 import { ApplicationRoute } from '@/src/types/routes';
 import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 import { BaseEntity } from '@/src/models/dial/base-entity';
@@ -29,14 +36,15 @@ import {
 } from '@/src/utils/deployments/entity';
 import { validateContainer } from '@/src/utils/deployments/containers';
 import { showEditorErrorNotifications } from '@/src/components/EntityView/JsonEditor/utils';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { createPortal } from 'react-dom';
-import DeleteModal from '@/src/components/Common/DeploymentsModals/Delete';
+import DeleteModal from '@/src/components/Deployments/Modals/Delete';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
 import CreateAsset from '@/src/components/Assets/Deployments/CreateAsset';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { DialFile } from '@/src/models/dial/file';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 
 interface Props<T> {
   route: ApplicationRoute;
@@ -80,6 +88,7 @@ const HeaderButtons = <T extends Container>({
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
+  const { isValid } = useSaveValidationContext();
   const { visualizerConnector } = useAppContext();
   const visualizerConnectorRef = useRef(visualizerConnector);
 
@@ -216,24 +225,18 @@ const HeaderButtons = <T extends Container>({
       <div className={containerClassNames}>
         {isChanged ? (
           <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
-            <DialButton
-              variant={ButtonVariant.Secondary}
-              className={buttonsClassNames}
-              label={t(ButtonsI18nKey.Discard)}
-              onClick={onDiscard}
-            />
-            <DialButton
-              variant={ButtonVariant.Primary}
+            <DialNeutralButton className={buttonsClassNames} label={t(ButtonsI18nKey.Discard)} onClick={onDiscard} />
+            <DialPrimaryButton
               className={buttonsClassNames}
               label={t(isRedeployRequired ? ButtonsI18nKey.SaveAndRedeploy : ButtonsI18nKey.Save)}
               onClick={onTryToSave}
-              disabled={(jsonEditorEnabled && !isValidJSON) || !isValidEntity()}
+              disabled={(jsonEditorEnabled && !isValidJSON) || !isValidEntity() || !isValid}
             />
           </div>
         ) : (
           <div className="flex flex-row items-center w-full">
             <div className="flex flex-row gap-3">
-              {container.status && (
+              {container.status === CONTAINER_STATUS.RUNNING && (
                 <>
                   {route === ApplicationRoute.McpDeployments ? (
                     <DialButtonDropdown
@@ -242,43 +245,37 @@ const HeaderButtons = <T extends Container>({
                       variant={ButtonVariant.Secondary}
                     />
                   ) : (
-                    <DialButton
-                      variant={ButtonVariant.Secondary}
+                    <DialNeutralButton
                       className={buttonsClassNames}
                       label={t(CreateI18nKey.CreateEntity, { entity: getTranslatedEntity(route, t) })}
-                      iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+                      iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
                       onClick={onOpenCreateModal}
                     />
                   )}
                 </>
               )}
 
-              <DialButton
-                variant={ButtonVariant.Secondary}
+              <DialNeutralButton
                 className={buttonsClassNames}
                 label={t(ButtonsI18nKey.Delete)}
-                iconBefore={<IconTrashX {...BASE_ICON_PROPS} />}
+                iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
                 onClick={onOpenDeleteModal}
               />
               <>
                 {container.status === CONTAINER_STATUS.RUNNING ||
                 container.status === CONTAINER_STATUS.PENDING ||
                 container.status === CONTAINER_STATUS.FAILED ? (
-                  <DialButton
-                    variant={ButtonVariant.Secondary}
+                  <DialNeutralButton
                     className={buttonsClassNames}
                     label={t(ButtonsI18nKey.Stop)}
-                    iconBefore={<IconPlayerPause {...BASE_ICON_PROPS} />}
-                    disabled={container.status === CONTAINER_STATUS.PENDING}
+                    iconBefore={<IconPlayerPause {...BASE_BUTTON_ICON_PROPS} />}
                     onClick={handleStopContainer}
                   />
                 ) : (
-                  <DialButton
-                    variant={ButtonVariant.Secondary}
+                  <DialNeutralButton
                     className={buttonsClassNames}
                     label={t(ButtonsI18nKey.Run)}
-                    iconBefore={<IconPlayerPlay {...BASE_ICON_PROPS} />}
-                    disabled={container.status === CONTAINER_STATUS.STOPPING}
+                    iconBefore={<IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} />}
                     onClick={handleRunContainer}
                   />
                 )}

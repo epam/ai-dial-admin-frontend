@@ -1,23 +1,29 @@
+import {
+  AlertVariant,
+  DialAlert,
+  DialLoader,
+  DialNeutralButton,
+  DialPopup,
+  DialPrimaryButton,
+} from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useState } from 'react';
-import { AlertVariant, ButtonVariant, DialAlert, DialButton, DialLoader, DialPopup } from '@epam/ai-dial-ui-kit';
 
-import { ApplicationRoute } from '@/src/types/routes';
-import { Image, ImageVersion } from '@/src/models/deployments/images';
-import { useI18n } from '@/src/locales/client';
-import { useNotification } from '@/src/context/NotificationContext';
-import { ACTION_COLUMN, RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
 import { getImageVersions } from '@/src/app/actions/deployments';
-import { getErrorNotification } from '@/src/utils/notification';
-import { IMAGE_STATUS } from '@/src/types/deployments/images';
-import Grid from '@/src/components/Grid/Grid';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
-import { ButtonsI18nKey, ContainersI18nKey } from '@/src/constants/i18n';
+import Grid from '@/src/components/Grid/Grid';
+import { ACTION_COLUMN, RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
 import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
-import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
 import { CHANGE_IMAGE_VERSION } from '@/src/constants/grid-columns/grid-columns';
+import { ButtonsI18nKey, ContainersI18nKey } from '@/src/constants/i18n';
+import { useNotification } from '@/src/context/NotificationContext';
+import { useI18n } from '@/src/locales/client';
+import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
+import { IMAGE_STATUS } from '@/src/types/deployments/images';
+import { ApplicationRoute } from '@/src/types/routes';
 import { getTranslatedDeploymentType } from '@/src/utils/deployments/entity';
+import { getErrorNotification } from '@/src/utils/notification';
+import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 
 interface Props {
   isModalOpen: boolean;
@@ -46,12 +52,9 @@ const ChangeContainerImage: FC<Props> = ({
   const [loading, setLoading] = useState(false);
   const [isValid, setIsValid] = useState(false);
 
-  const onOpenInNewTabAction = useCallback(
-    (image?: Image) => {
-      onOpenInNewTab(route, image, DEPLOYMENT_ENTITY.images);
-    },
-    [route],
-  );
+  const onOpenInNewTabAction = useCallback((image?: Image) => {
+    onOpenInNewTab(ApplicationRoute.Images, image);
+  }, []);
 
   const columnDefs = [...CHANGE_IMAGE_VERSION(t), ACTION_COLUMN([getOpenInNewTabOperation(onOpenInNewTabAction)])];
 
@@ -128,9 +131,8 @@ const ChangeContainerImage: FC<Props> = ({
         </div>
       </>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialButton
-          variant={ButtonVariant.Primary}
+        <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialPrimaryButton
           label={t(ButtonsI18nKey.Apply)}
           onClick={() => {
             onApply(id);

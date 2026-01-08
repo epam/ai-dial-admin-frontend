@@ -115,6 +115,10 @@ export const MENU_CONFIGURATION = (
           key: MenuI18nKey.ModelDeployments,
           href: ApplicationRoute.ModelDeployments,
         },
+        {
+          key: MenuI18nKey.Images,
+          href: ApplicationRoute.Images,
+        },
       ],
     },
     {

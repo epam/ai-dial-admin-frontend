@@ -1,6 +1,6 @@
 import { FC } from 'react';
 
-import { ButtonVariant, DialButton, DialRemoveButton } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton, DialRemoveButton } from '@epam/ai-dial-ui-kit';
 import type { ArrayFieldTemplateProps } from '@rjsf/utils';
 import { IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
@@ -8,7 +8,7 @@ import classNames from 'classnames';
 import { WidgetHeader } from '@/src/components/Common/SchemaUIRenderer/Components/WidgetHeader';
 import { WidgetToggler } from '@/src/components/Common/SchemaUIRenderer/Components/WidgetToggler';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 
 export const ArrayFieldTemplate: FC<ArrayFieldTemplateProps> = ({
@@ -46,12 +46,11 @@ export const ArrayFieldTemplate: FC<ArrayFieldTemplateProps> = ({
         </ul>
 
         {canAdd && !readonly && (
-          <DialButton
-            variant={ButtonVariant.Tertiary}
+          <DialGhostButton
             onClick={onAddClick}
             label={`${t(ButtonsI18nKey.Add)} ${title}`}
             className="w-fit"
-            iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+            iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
           />
         )}
       </fieldset>

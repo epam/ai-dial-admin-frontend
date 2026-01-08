@@ -10,7 +10,7 @@ import { getPathError } from '@/src/utils/deployments/validation';
 import { useI18n } from '@/src/locales/client';
 
 import Transport from '@/src/components/Containers/Fields/Transport/Transport';
-import PortField from '@/src/components/Common/PortField/PortField';
+import PortField from '@/src/components/Containers/Fields/PortField/PortField';
 import Accordion from '@/src/components/Common/Accordion/Accordion';
 
 interface Props {
@@ -75,7 +75,7 @@ const EndpointConfiguration: FC<Props> = ({ container, setContainer, route }) =>
             />
           </div>
         )}
-        <PortField route={route} container={container} setContainer={setContainer} />
+        <PortField container={container} setContainer={setContainer} />
       </div>
     </Accordion>
   );

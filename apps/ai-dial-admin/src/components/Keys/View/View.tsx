@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonVariant, DialButton, DialConfirmationPopup, DialTabs } from '@epam/ai-dial-ui-kit';
+import { DialPrimaryButton, DialConfirmationPopup, DialTabs } from '@epam/ai-dial-ui-kit';
 import { IconRefresh } from '@tabler/icons-react';
 import { cloneDeep } from 'lodash';
 
@@ -16,7 +16,7 @@ import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, EntitiesI18nKey, KeysI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
@@ -205,10 +205,9 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
             selectedFormat={selectedFormat}
             onChangeSelectedFormat={setSelectedFormat}
           >
-            <DialButton
-              variant={ButtonVariant.Primary}
+            <DialPrimaryButton
               label={t(ButtonsI18nKey.Rotate)}
-              iconBefore={<IconRefresh {...BASE_ICON_PROPS} />}
+              iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}
               onClick={() => setIsRotateModalOpen(true)}
             />
           </HeaderButtons>

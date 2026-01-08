@@ -4,7 +4,7 @@ import { DialTooltip } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle } from '@tabler/icons-react';
 import classNames from 'classnames';
 
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useI18n } from '@/src/locales/client';
 import { ValidityState } from '@/src/models/dial/base-entity';
@@ -28,7 +28,7 @@ const ValidityStatus: FC<Props> = ({ validityState, isHideHint }) => {
       <div>{title}</div>
       {!isHideHint && !validityState?.valid && (
         <DialTooltip tooltip={validityState?.message || ''}>
-          <IconInfoCircle {...BASE_ICON_PROPS} />
+          <IconInfoCircle {...BASE_BUTTON_ICON_PROPS} />
         </DialTooltip>
       )}
     </div>

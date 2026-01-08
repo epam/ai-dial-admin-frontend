@@ -12,7 +12,7 @@ import {
   ErrorI18nKey,
   UpstreamEndpointsI18nKey,
 } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { DialEndpointExtraData, DialModelEndpoint } from '@/src/models/dial/model';
@@ -101,9 +101,9 @@ const Endpoint: FC<Props> = ({
           <div className="flex flex-col justify-center cursor-pointer" onClick={toggleCollapse}>
             <h3 className="small flex items-center">
               {isCollapsed ? (
-                <IconChevronRight className="text-primary" {...BASE_ICON_PROPS} />
+                <IconChevronRight className="text-primary" {...BASE_BUTTON_ICON_PROPS} />
               ) : (
-                <IconChevronDown className="text-primary" {...BASE_ICON_PROPS} />
+                <IconChevronDown className="text-primary" {...BASE_BUTTON_ICON_PROPS} />
               )}
               {t(UpstreamEndpointsI18nKey.Upstream)} {index + 1}
             </h3>
@@ -177,7 +177,11 @@ const Endpoint: FC<Props> = ({
           onClick={onRemove}
           aria-label="remove"
         >
-          {isTablet ? <IconTrashX {...BASE_ICON_PROPS} className="text-primary" /> : <IconTrash {...BASE_ICON_PROPS} />}
+          {isTablet ? (
+            <IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-primary" />
+          ) : (
+            <IconTrash {...BASE_BUTTON_ICON_PROPS} />
+          )}
         </button>
       )}
     </div>

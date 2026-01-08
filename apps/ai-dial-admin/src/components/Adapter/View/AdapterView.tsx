@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonVariant, DialButton, DialTabs } from '@epam/ai-dial-ui-kit';
+import { DialNeutralButton, DialTabs } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { cloneDeep } from 'lodash';
 
@@ -18,21 +18,21 @@ import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialModelType } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
+import { getViewHeaderClassName } from '@/src/utils/entities/view';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getAdapterTabs } from '@/src/utils/tabs/utils';
 import AdapterProperties from './AdapterProperties';
-import { useProtectedRequest } from '@/src/hooks/use-protected-request';
-import { getViewHeaderClassName } from '@/src/utils/entities/view';
 
 interface Props {
   etag: string;
@@ -127,10 +127,9 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
           isJsonEditorEnabled={isJsonEditorEnabled}
           onToggleJsonEditor={onToggleJsonEditor}
         >
-          <DialButton
-            variant={ButtonVariant.Secondary}
+          <DialNeutralButton
             label={`${t(ButtonsI18nKey.Create)} ${t(CreateI18nKey.Model)}`}
-            iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+            iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
             onClick={() => setIsModalOpen(true)}
           />
         </HeaderButtons>

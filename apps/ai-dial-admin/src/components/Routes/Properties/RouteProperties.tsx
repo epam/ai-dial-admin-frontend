@@ -166,7 +166,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
   return (
     <div className="h-full flex flex-col w-full gap-y-8">
       <DisplayNameControl
-        displayName={route.displayName || route.name}
+        displayName={route.displayName}
         required={true}
         isFullWidth={false}
         onChange={onChangeDisplayName}

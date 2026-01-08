@@ -1,11 +1,11 @@
 import { IconPlus } from '@tabler/icons-react';
 import { FC, useCallback, useEffect, useState } from 'react';
-import { ButtonVariant, DialButton, DialCollapsibleSidebar } from '@epam/ai-dial-ui-kit';
+import { DialPrimaryButton, DialCollapsibleSidebar } from '@epam/ai-dial-ui-kit';
 
 import RouteContent from '@/src/components/EntityView/AppRoute/Content/RouteContent';
 import CreateRoute from '@/src/components/EntityView/AppRoute/CreateRoute';
 import { ButtonsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialRole } from '@/src/models/dial/role';
@@ -98,9 +98,8 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
             <div className="flex flex-row flex-wrap justify-between items-center mb-6">
               <h1>{t(TabsI18nKey.Routes)}</h1>
               {!readonly && (
-                <DialButton
-                  variant={ButtonVariant.Primary}
-                  iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+                <DialPrimaryButton
+                  iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
                   label={t(ButtonsI18nKey.Add)}
                   onClick={handleModalOpen}
                 />

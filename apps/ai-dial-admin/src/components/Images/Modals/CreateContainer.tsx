@@ -1,13 +1,15 @@
+import { DialNeutralButton, DialPopup, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useState } from 'react';
-import { ButtonVariant, DialButton, DialPopup } from '@epam/ai-dial-ui-kit';
+
+import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { useAppContext } from '@/src/context/AppContext';
+import { useI18n } from '@/src/locales/client';
 import { Container } from '@/src/models/deployments/containers';
 import { Image } from '@/src/models/deployments/images';
-import { ApplicationRoute } from '@/src/types/routes';
-import { useI18n } from '@/src/locales/client';
-import { useAppContext } from '@/src/context/AppContext';
 import { getContainerTemplate, validateContainer } from '@/src/utils/deployments/containers';
+import { getRouteByType } from '@/src/utils/deployments/entity';
+
 import ContainerProperties from '@/src/components/Containers/Fields/ContainerProperties';
-import { ButtonsI18nKey } from '@/src/constants/i18n';
 
 interface Props {
   isModalOpen: boolean;
@@ -15,14 +17,15 @@ interface Props {
   onClose: () => void;
   onCreate: (container: Container) => void;
   image: Image;
-  route: ApplicationRoute;
   names?: string[];
 }
 
-const CreateContainer: FC<Props> = ({ onClose, isModalOpen, modalTitle, route, names, onCreate, image }) => {
+const CreateContainer: FC<Props> = ({ onClose, isModalOpen, modalTitle, names, onCreate, image }) => {
   const t = useI18n();
   const { resourcesDefaults } = useAppContext();
-  const [container, setContainer] = useState<Container>(getContainerTemplate(route, resourcesDefaults) as Container);
+  const [container, setContainer] = useState<Container>(
+    getContainerTemplate(getRouteByType(image.$type), resourcesDefaults) as Container,
+  );
   const [isValid, setIsValid] = useState(false);
 
   const onChange = useCallback((container: Container) => {
@@ -30,8 +33,8 @@ const CreateContainer: FC<Props> = ({ onClose, isModalOpen, modalTitle, route, n
   }, []);
 
   useEffect(() => {
-    setIsValid(validateContainer(container, route, names || []));
-  }, [container, names, route, t]);
+    setIsValid(validateContainer(container, getRouteByType(image.$type), names || []));
+  }, [container, image.$type, names, t]);
 
   useEffect(() => {
     setContainer((prev) => ({
@@ -49,12 +52,17 @@ const CreateContainer: FC<Props> = ({ onClose, isModalOpen, modalTitle, route, n
       className="lg:max-w-[55%] md:max-w-[75%]"
     >
       <div className="flex flex-col py-4 px-6 overflow-auto max-h-[400px]">
-        <ContainerProperties container={container} setContainer={onChange} isModal={true} route={route} names={names} />
+        <ContainerProperties
+          container={container}
+          setContainer={onChange}
+          isModal={true}
+          route={getRouteByType(image.$type)}
+          names={names}
+        />
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialButton
-          variant={ButtonVariant.Primary}
+        <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialPrimaryButton
           label={t(ButtonsI18nKey.Create)}
           onClick={() => {
             onCreate(container);

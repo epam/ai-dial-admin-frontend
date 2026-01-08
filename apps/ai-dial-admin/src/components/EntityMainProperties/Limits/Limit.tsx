@@ -4,7 +4,7 @@ import Big from 'big.js';
 import { FC, useCallback } from 'react';
 
 import { RolesI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { UNLIMITED_VALUE } from '@/src/constants/role';
 import { useI18n } from '@/src/locales/client';
 import { DialRoleLimits } from '@/src/models/dial/role-limits';
@@ -41,7 +41,7 @@ const LimitControl: FC<Props> = ({ limits, controlClassName, isCostInputs, onCha
             : ''
       }
       onChange={(value) => onChangeLimit(value, fieldKey)}
-      iconBefore={isCostInputs ? <IconCurrencyDollar className="text-secondary" {...BASE_ICON_PROPS} /> : null}
+      iconBefore={isCostInputs ? <IconCurrencyDollar className="text-secondary" {...BASE_BUTTON_ICON_PROPS} /> : null}
       {...props}
     />
   );

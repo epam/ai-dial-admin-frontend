@@ -1,43 +1,16 @@
-import classNames from 'classnames';
 import { isEqual } from 'lodash';
 import { SelectOption } from '@epam/ai-dial-ui-kit';
-import {
-  INTERCEPTOR_IMAGE_TEMPLATE,
-  MCP_IMAGE_TEMPLATE,
-  MODEL_IMAGE_TEMPLATE,
-  SOURCES,
-  STATUS_CLASSNAMES,
-} from '@/src/constants/deployments/images';
-import { IMAGE_SOURCE_TYPE, IMAGE_STATUS, IMAGE_TYPE } from '@/src/types/deployments/images';
+import { STATUS_CLASSNAMES } from '@/src/constants/deployments/images';
+import { IMAGE_SOURCE_TYPE, IMAGE_STATUS, IMAGE_TRANSPORT_TYPE, IMAGE_TYPE } from '@/src/types/deployments/images';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 import { Image, ImageGroup, ImageVersion } from '@/src/models/deployments/images';
 import { getDeploymentsURIError, getDeploymentsURLError } from '@/src/utils/deployments/validation';
 
-export const getSourcesTypes = (t: (key: string) => string) => {
-  return SOURCES.map((source) => {
-    return {
-      ...source,
-      label: t(source.label),
-    };
-  });
-};
+import StatusIcon from '@/src/components/Deployments/Common/StatusIndicator/StatusIcon';
 
 export function getActionClass(action: IMAGE_STATUS | CONTAINER_STATUS): string {
   return STATUS_CLASSNAMES[action];
-}
-
-export function getImageTemplate(route: ApplicationRoute): Image | null {
-  switch (route) {
-    case ApplicationRoute.InterceptorDeployments:
-      return INTERCEPTOR_IMAGE_TEMPLATE;
-    case ApplicationRoute.McpDeployments:
-      return MCP_IMAGE_TEMPLATE;
-    case ApplicationRoute.ModelDeployments:
-      return MODEL_IMAGE_TEMPLATE;
-    default:
-      return null;
-  }
 }
 
 export function getImageType(route: ApplicationRoute): string {
@@ -101,7 +74,7 @@ export const getVersionsList = (versions: ImageVersion[]): SelectOption[] => {
     return {
       value: id,
       label: version,
-      icon: <span className={classNames('flex w-2 h-2 mr-1 rounded no-user-select', getActionClass(status))} />,
+      icon: <StatusIcon status={status} />,
     };
   });
 };
@@ -129,4 +102,15 @@ export const updateSelectedVersion = (images: ImageGroup[], id: string) => {
     }
     return image;
   });
+};
+
+export const setTransport = (image: Image) => {
+  const updatedImage = { ...image };
+  if (updatedImage.$type === IMAGE_TYPE.INTERCEPTOR) {
+    delete updatedImage.transportType;
+  } else {
+    updatedImage.transportType = IMAGE_TRANSPORT_TYPE.LOCAL;
+  }
+
+  return updatedImage;
 };

@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useRef, useState } from 'react';
 
-import { ButtonVariant, DialButton, DialTabs } from '@epam/ai-dial-ui-kit';
+import { DialNeutralButton, DialTabs } from '@epam/ai-dial-ui-kit';
 import { IconRefresh } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -12,7 +12,7 @@ import List from '@/src/components/UsageLog/List/List';
 import { DEFAULT_TIME_PERIOD } from '@/src/constants/global-time-filter';
 import { USAGE_LOG_CONVERSATIONS_COLUMNS, USAGE_LOG_TRACES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { CONVERSATIONS_QUERY, TRACES_QUERY } from '@/src/constants/telemetry';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
@@ -89,10 +89,9 @@ const UsageLog: FC<Props> = ({ route, entity, entityView }) => {
             timeRange={timeRange}
             onTimeRangeChange={onTimeRangeChange}
           />
-          <DialButton
-            variant={ButtonVariant.Secondary}
+          <DialNeutralButton
             label={t(ButtonsI18nKey.Refresh)}
-            iconBefore={<IconRefresh {...BASE_ICON_PROPS} />}
+            iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}
             onClick={onRefresh}
           />
         </div>

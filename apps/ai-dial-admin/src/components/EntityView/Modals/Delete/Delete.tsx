@@ -103,8 +103,8 @@ const DeleteConfirmationModal = <T extends Artefact>({
     } else {
       entityKeys =
         selectedVersion !== AllVersionValue
-          ? [getEntityPath(view, entity, true, undefined, selectedVersion)]
-          : existingVersions?.map((version) => getEntityPath(view, entity, true, undefined, version)) || [];
+          ? [getEntityPath(view, entity, true, selectedVersion)]
+          : existingVersions?.map((version) => getEntityPath(view, entity, true, version)) || [];
     }
 
     const promises = entityKeys.map((entityKey) => getReqRef.current(removeEntity, entityKey, etag));

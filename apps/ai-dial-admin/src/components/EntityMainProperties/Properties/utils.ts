@@ -40,7 +40,7 @@ export const getVersionError = (
       return t(ErrorI18nKey.Version);
     }
 
-    if (versionsMap[model.displayName as string]?.includes(model.displayVersion as string)) {
+    if (versionsMap[model.displayName as string]?.includes(model.displayVersion || '')) {
       return t(ErrorI18nKey.Unique);
     }
   }

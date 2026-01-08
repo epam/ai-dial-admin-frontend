@@ -1,27 +1,27 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { ButtonVariant, DialButton, DialInputPopup, DialSelectField } from '@epam/ai-dial-ui-kit';
-import classNames from 'classnames';
+import { DialInputPopup, DialNeutralButton, DialSelectField } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
+import classNames from 'classnames';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
-import { ApplicationRoute } from '@/src/types/routes';
-import { DialModel } from '@/src/models/dial/model';
+import { CreateI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { useNotification } from '@/src/context/NotificationContext';
+import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
+import { DialModel } from '@/src/models/dial/model';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { CreateI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
-import { useNotification } from '@/src/context/NotificationContext';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
-import { useI18n } from '@/src/locales/client';
-import { BASE_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 
-import SelectAdapterModal from '@/src/components/SourceField/Adapters/SelectAdapterModal';
 import Field from '@/src/components/Common/Field/Field';
+import SelectAdapterModal from '@/src/components/SourceField/Adapters/SelectAdapterModal';
 import ModelEndpoint from '@/src/components/SourceField/Endpoints/ModelEndpoint';
-import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
+import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 
 interface Props<T> {
   entity: T;
@@ -134,9 +134,8 @@ const Adapters = <T extends DialModel | DialInterceptor>({
               </DialInputPopup>
             </div>
             {entity.source?.adapterName && (
-              <DialButton
-                iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
-                variant={ButtonVariant.Secondary}
+              <DialNeutralButton
+                iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
                 className={classNames(errorText ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
                 label={t(SourceI18nKey.OpenAdapter)}
                 onClick={() => openAdapter()}

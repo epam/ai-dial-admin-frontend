@@ -2,7 +2,7 @@ import { useRouter } from 'next/navigation';
 import { Dispatch, FC, SetStateAction, useCallback, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonVariant, DialButton, DialSelect, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton, DialNeutralButton, DialSelect, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
 import { IconPlus, IconReplace } from '@tabler/icons-react';
 
 import { getApp } from '@/src/app/[lang]/assets-applications/actions';
@@ -12,7 +12,7 @@ import AddVersionModal from '@/src/components/Assets/Modals/AddVersionModal';
 import CompareVersions from '@/src/components/Assets/Modals/CompareVersions';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import { ButtonsI18nKey, CompareI18nKey, EntityFieldsI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
@@ -133,10 +133,9 @@ const AssetVersionControl: FC<Props> = ({
           onChange={(v) => onChangeVersion(v as string)}
           footer={
             !isDeployment && (
-              <DialButton
+              <DialGhostButton
                 className="w-full min-h-[34px] h-[34px]"
-                variant={ButtonVariant.Tertiary}
-                iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+                iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
                 label={t(ButtonsI18nKey.Create)}
               />
             )
@@ -145,9 +144,8 @@ const AssetVersionControl: FC<Props> = ({
         />
 
         {!isDeployment && !!assets?.length && assets.length > 1 && (
-          <DialButton
-            variant={ButtonVariant.Secondary}
-            iconBefore={<IconReplace {...BASE_ICON_PROPS} />}
+          <DialNeutralButton
+            iconBefore={<IconReplace {...BASE_BUTTON_ICON_PROPS} />}
             label={t(CompareI18nKey.CompareVersions)}
             onClick={() => handleModalOpen(ModalType.compareVersions)}
           />

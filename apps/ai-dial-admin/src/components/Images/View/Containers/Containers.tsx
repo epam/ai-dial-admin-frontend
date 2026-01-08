@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
 import { useI18n } from '@/src/locales/client';
@@ -16,7 +16,6 @@ import { createPortal } from 'react-dom';
 import AddContainerToImage from '@/src/components/Images/Modals/AddContainerToImage';
 import { getTranslatedType } from '@/src/utils/deployments/entity';
 import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
-import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { IMAGE_DEPENDENCIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 
@@ -46,7 +45,8 @@ const Containers: FC<Props> = ({ image, route, versions }) => {
 
   const onOpenInNewTabAction = useCallback(
     (container?: Container) => {
-      onOpenInNewTab(route, container, DEPLOYMENT_ENTITY.containers);
+      //TODO: route by type
+      onOpenInNewTab(route, container);
     },
     [route],
   );
@@ -95,11 +95,9 @@ const Containers: FC<Props> = ({ image, route, versions }) => {
         }
         emptyDataTitle={t(EntitiesI18nKey.NoRelatedContainers)}
         emptyDataDescription={!installed ? t(EntitiesI18nKey.NoRelatedContainersDescription) : ''}
-        storageKey={`${route}/related/${DEPLOYMENT_ENTITY.images}`}
+        storageKey={`${route}/related`}
       >
-        {installed && (
-          <DialButton variant={ButtonVariant.Primary} label={t(ButtonsI18nKey.Add)} onClick={handleModalOpen} />
-        )}
+        {installed && <DialPrimaryButton label={t(ButtonsI18nKey.Add)} onClick={handleModalOpen} />}
       </ListView>
       {isModalOpen &&
         createPortal(

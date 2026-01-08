@@ -47,70 +47,95 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
   }, [names]);
 
   const [displayNameError, setDisplayNameError] = useState<string | undefined>(void 0);
-
-  const isVersionOptional = useMemo(() => {
-    return !namesConfiguration.names.includes(clonedEntity.displayName as string);
-  }, [clonedEntity.displayName, namesConfiguration.names]);
-
-  const versionError = useMemo(() => {
-    return getVersionError(isVersionOptional, clonedEntity as DialModel, namesConfiguration.versionsMap, t);
-  }, [clonedEntity, isVersionOptional, namesConfiguration.versionsMap, t]);
-
+  const [versionError, setVersionError] = useState<string | undefined>(void 0);
+  const [isVersionOptional, setIsVersionOptional] = useState<boolean>(true);
   const [isUniqueNameError, setIsUniqueNameError] = useState<boolean | undefined>(void 0);
 
-  const onChangeVersion = useCallback(
-    (displayVersion?: string) => {
-      setEntity({ ...(clonedEntity as DialModel), displayVersion });
+  const onValidateVersion = useCallback(
+    (fields: Partial<ClonedEntity>, isVersionOptional: boolean, initial?: boolean) => {
+      const error = getVersionError(
+        isVersionOptional,
+        { ...(clonedEntity as DialModel), ...fields },
+        namesConfiguration.versionsMap,
+        t,
+      );
+      if (!initial) {
+        setVersionError(error);
+      }
+      dispatch({ type: ValidationActionType.SetField, field: 'displayVersion', isValid: !error });
     },
-    [setEntity, clonedEntity],
+    [clonedEntity, dispatch, namesConfiguration.versionsMap, t],
   );
 
-  const onChangeDisplayName = useCallback(
-    (displayName?: string) => {
+  const onValidateDisplayName = useCallback(
+    (displayName: string) => {
       const error = getDisplayNameError(
         view,
-        displayName || '',
+        displayName,
         namesConfiguration.names,
         t,
         (entity as DialModel).displayVersion,
       );
       setDisplayNameError(error);
+      dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !error });
+    },
+    [dispatch, entity, namesConfiguration.names, t, view],
+  );
 
-      dispatch({
-        type: ValidationActionType.SetField,
-        field: 'displayName',
-        isValid: !error,
-      });
+  const handleValidateEntityDisplayName = useCallback(
+    (displayName?: string, initial?: boolean) => {
+      const isVersionOptional = !namesConfiguration.names.includes(displayName || '');
+      onValidateDisplayName(displayName || '');
+
+      if (view === ApplicationRoute.Models) {
+        onValidateVersion({ displayName }, isVersionOptional, initial);
+      }
+
+      setIsVersionOptional(isVersionOptional);
+    },
+    [namesConfiguration.names, onValidateDisplayName, onValidateVersion, view],
+  );
+
+  const onChangeVersion = useCallback(
+    (displayVersion?: string) => {
+      onValidateVersion({ displayVersion }, isVersionOptional);
+      setEntity({ ...(clonedEntity as DialModel), displayVersion });
+    },
+    [clonedEntity, isVersionOptional, onValidateVersion],
+  );
+
+  const onChangeDisplayName = useCallback(
+    (displayName?: string, initial?: boolean) => {
+      handleValidateEntityDisplayName(displayName, initial);
 
       setEntity({ ...clonedEntity, displayName });
     },
-    [view, namesConfiguration.names, t, entity, dispatch, clonedEntity],
+    [clonedEntity, handleValidateEntityDisplayName],
   );
 
   // initial validation (disable save when no values entered yet)
   useEffect(() => {
-    onChangeDisplayName(clonedEntity.displayName);
-    dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!clonedEntity.name });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    handleValidateEntityDisplayName(clonedEntity.displayName, true);
 
-  useEffect(() => {
-    if (view === ApplicationRoute.Models) {
-      dispatch({ type: ValidationActionType.SetField, field: 'displayVersion', isValid: !versionError });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [versionError, (entity as DialModel).displayVersion, t, view, dispatch]);
+    dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!clonedEntity.name });
+  }, [clonedEntity.displayName, clonedEntity.name, dispatch, handleValidateEntityDisplayName]);
 
   const onDuplicateClick = useCallback(async () => {
     const isUnique = RoutesForCheckingUniqueName.includes(view)
       ? await checkIsUniqueDeploymentName(clonedEntity.name as string)
       : true;
+
     setIsUniqueNameError(!isUnique);
 
     if (!isUnique) return;
 
     onDuplicate(clonedEntity);
   }, [view, clonedEntity, onDuplicate]);
+
+  const onIdChange = useCallback(async (entity: ClonedEntity) => {
+    setEntity(entity);
+    setIsUniqueNameError(false);
+  }, []);
 
   return (
     <DialFormPopup
@@ -132,7 +157,7 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
           <IdControl
             entity={clonedEntity}
             isUniqueNameError={isUniqueNameError}
-            onChangeEntity={setEntity}
+            onChangeEntity={onIdChange}
             names={names}
           />
           <DisplayNameControl

@@ -83,10 +83,13 @@ const EntityFeatures = <T extends { features?: DialFeatures }>({
       {switchKeys.map((key) => {
         const { value, isReadonly } = getReadOnlyValues(key, appRunner);
         return (
-          <DialTooltip tooltip={isReadonly ? t(FeaturesI18nKey.AppRunnerInherited) : ''} placement="bottom-start">
+          <DialTooltip
+            key={key}
+            tooltip={isReadonly ? t(FeaturesI18nKey.AppRunnerInherited) : ''}
+            placement="bottom-start"
+          >
             <DialSwitch
               disabled={isReadonly}
-              key={key}
               isOn={(isReadonly ? value : entity?.features?.[key]) as boolean}
               label={t(FeaturesI18nKey[key as keyof typeof FeaturesI18nKey])}
               switchId={key}

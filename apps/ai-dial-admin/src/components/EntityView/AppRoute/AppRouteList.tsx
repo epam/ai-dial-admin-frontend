@@ -5,7 +5,7 @@ import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
 import ActionsDropdown from '@/src/components/Common/ActionsDropdown/ActionsDropdown';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialAppRoute } from '@/src/models/dial/route';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
@@ -24,7 +24,7 @@ const AppRouteList: FC<Props> = ({ readonly, routes, activeRoute, onRemove, onCl
 
   const getOperation = (onClick: () => void): ActionMenuOperationDeclaration<DialAppRoute> => {
     return {
-      icon: <IconTrash {...BASE_ICON_PROPS} />,
+      icon: <IconTrash {...BASE_BUTTON_ICON_PROPS} />,
       id: ActionMenuOperation.Delete,
       onClick,
     };
@@ -54,7 +54,7 @@ const AppRouteList: FC<Props> = ({ readonly, routes, activeRoute, onRemove, onCl
                   <div className="invisible group-hover:visible text-primary mx-2 flex flex-row gap-2">
                     <ActionsDropdown
                       items={[getOperation(() => onRemove(route.name))]}
-                      icon={<IconDotsVertical {...BASE_ICON_PROPS} />}
+                      icon={<IconDotsVertical {...BASE_BUTTON_ICON_PROPS} />}
                     />
                   </div>
                 )}

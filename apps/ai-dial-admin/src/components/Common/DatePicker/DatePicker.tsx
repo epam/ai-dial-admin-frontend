@@ -2,7 +2,7 @@ import { IconChevronLeft, IconChevronRight, IconCalendarEvent } from '@tabler/ic
 import { FC, useCallback } from 'react';
 import ReactDatePicker, { DatePickerProps } from 'react-datepicker';
 
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import 'react-datepicker/dist/react-datepicker.css';
 
 type PickerProps = Omit<DatePickerProps, 'date'>;
@@ -41,14 +41,14 @@ const DatePicker: FC<Props> = ({ id, label, date, dateFormat, placeholder, showT
         calendarStartDay={1}
         selected={date}
         onChange={onChange}
-        previousMonthButtonLabel={<IconChevronLeft {...BASE_ICON_PROPS} />}
-        nextMonthButtonLabel={<IconChevronRight {...BASE_ICON_PROPS} />}
+        previousMonthButtonLabel={<IconChevronLeft {...BASE_BUTTON_ICON_PROPS} />}
+        nextMonthButtonLabel={<IconChevronRight {...BASE_BUTTON_ICON_PROPS} />}
         formatWeekDay={customWeekdayFormat}
         showTimeInput={showTimeInput}
         timeInputLabel=""
         shouldCloseOnSelect={true}
         showIcon
-        icon={<IconCalendarEvent {...BASE_ICON_PROPS} />}
+        icon={<IconCalendarEvent {...BASE_BUTTON_ICON_PROPS} />}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         {...(props as any)}
       />

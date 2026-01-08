@@ -2,13 +2,13 @@ import { IconPlus } from '@tabler/icons-react';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ButtonVariant, DialButton, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { DialPrimaryButton, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import Grid from '@/src/components/Grid/Grid';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialKey } from '@/src/models/dial/key';
@@ -123,9 +123,8 @@ const AddEntitiesView: FC<Props> = ({
             {viewTitle || t(TabsI18nKey.Entities)}: {data.length}
           </h1>
           {onAdd && (
-            <DialButton
-              variant={ButtonVariant.Primary}
-              iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+            <DialPrimaryButton
+              iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
               label={t(ButtonsI18nKey.Add)}
               onClick={onOpenModal}
             />

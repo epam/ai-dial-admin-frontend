@@ -1,7 +1,7 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { DialSwitch } from '@epam/ai-dial-ui-kit';
 import { v4 as uuidv4 } from 'uuid';
-import { ButtonVariant, DialButton, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton, DialTextInputField } from '@epam/ai-dial-ui-kit';
 import { IconSparkles } from '@tabler/icons-react';
 
 import ValidityPeriod from '@/src/components/Keys/Modals/ValidityPeriod';
@@ -97,8 +97,7 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
           <div className="flex-1">
             <IdControl entity={entity} names={names} onChangeEntity={onChangeKey} />
           </div>
-          <DialButton
-            variant={ButtonVariant.Tertiary}
+          <DialGhostButton
             className="ml-2 h-[34px]"
             iconBefore={<IconSparkles />}
             label={t(ButtonsI18nKey.Generate)}

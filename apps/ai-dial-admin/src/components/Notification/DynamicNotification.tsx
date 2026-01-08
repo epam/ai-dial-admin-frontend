@@ -6,7 +6,7 @@ import { DialButton } from '@epam/ai-dial-ui-kit';
 
 import { NotificationIcons } from '@/src/components/Notification/Notification';
 import { BasicI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { FileDetails, NotificationConfig, NotificationIconColor } from '@/src/models/notification';
 
@@ -87,10 +87,10 @@ const File: FC<FileDetails> = ({ name, progress, failed, complete, onCancel }) =
         {failed && (
           <span className="flex flex-row items-center">
             <p className="tiny text-error mx-1">{t(BasicI18nKey.Failed)}</p>
-            <IconExclamationCircle className="text-error" {...BASE_ICON_PROPS} />
+            <IconExclamationCircle className="text-error" {...BASE_BUTTON_ICON_PROPS} />
           </span>
         )}
-        {complete && <IconCircleCheck className="dial-tiny text-accent-secondary" {...BASE_ICON_PROPS} />}
+        {complete && <IconCircleCheck className="dial-tiny text-accent-secondary" {...BASE_BUTTON_ICON_PROPS} />}
       </div>
     </div>
   );

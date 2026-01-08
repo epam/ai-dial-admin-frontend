@@ -1,3 +1,4 @@
+'use client';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { CellClickedEvent, GridApi, GridOptions } from 'ag-grid-community';
@@ -26,8 +27,8 @@ import { getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/depl
 import { IMAGE_BUILD_POLL_INTERVAL } from '@/src/constants/deployments/images';
 import ListView from '@/src/components/ListView/ListView';
 import HeaderButtons from '@/src/components/Containers/List/HeaderButtons';
-import Duplicate from '@/src/components/Common/DeploymentsModals/Duplicate';
-import Delete from '@/src/components/Common/DeploymentsModals/Delete';
+import Duplicate from '@/src/components/Deployments/Modals/Duplicate';
+import Delete from '@/src/components/Deployments/Modals/Delete';
 import {
   getDeleteOperation,
   getDuplicateOperation,
@@ -36,7 +37,6 @@ import {
   getStopOperation,
 } from '@/src/constants/grid-columns/actions';
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
 import { CONTAINERS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 
 interface Props {
@@ -65,7 +65,7 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
   const gridOptions: GridOptions = {
     onCellClicked: (e: CellClickedEvent) => {
       if (e.colDef.field !== ACTIONS_COLUMN_CEL_ID) {
-        router.push(getUrnForEntity(route, e.data, DEPLOYMENT_ENTITY.containers));
+        router.push(getUrnForEntity(route, e.data));
       }
     },
   };
@@ -123,7 +123,7 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
 
   const onOpenInNewTabAction = useCallback(
     (container?: Container) => {
-      onOpenInNewTab(route, container, DEPLOYMENT_ENTITY.containers);
+      onOpenInNewTab(route, container);
     },
     [route],
   );
@@ -274,7 +274,7 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
         })}
         showColumnsPanel={showColumnsPanel}
         toggleColumnsPanel={toggleColumnsPanel}
-        storageKey={`${route}/${DEPLOYMENT_ENTITY.containers}`}
+        storageKey={`${route}`}
         onGridReady={onGridReady}
       >
         <HeaderButtons
