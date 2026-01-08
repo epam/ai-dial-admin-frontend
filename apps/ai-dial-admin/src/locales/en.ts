@@ -20,6 +20,16 @@ export default {
     Settings: 'Settings',
     Theme: 'Theme',
   },
+  CoreSync: {
+    SyncStatus: 'Sync status',
+    SyncWithCore: 'Sync with core',
+    InProgress: 'In progress...',
+    Partially: 'Partially synced',
+    Fully: 'Fully synced',
+    Format: 'JSON format',
+    Core: 'Core',
+    Admin: 'Admin',
+  },
   CoreVersionModal: {
     Title: 'Target Core Version',
     DefinitionType: 'Definition type',
@@ -1148,8 +1158,8 @@ export default {
     ImagesSaveSuccessDescription: '{type} Image updates have been saved in version {version}.',
     ImageTransportLocal: 'Local (STDIO)',
     ImageTransportRemote: 'Remote (HTTP/SSE)',
-    ImageTypeMCP: 'MCP',
-    ImageTypeInterceptor: 'Interceptor',
+    ImageTypeMCP: 'MCP image',
+    ImageTypeInterceptor: 'Interceptor image',
   },
   Containers: {
     'ContainersListTitle#zero': '{type} {entityType}s',

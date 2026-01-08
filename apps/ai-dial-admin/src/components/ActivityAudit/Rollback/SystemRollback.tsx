@@ -21,7 +21,7 @@ import { SYSTEM_ROLLBACK_ENTITIES, SYSTEM_ROLLBACK_TAB_NAME } from '@/src/compon
 import { getSystemRollbackColumns } from '@/src/components/ActivityAudit/Rollback/utils';
 import DiffLegend from '@/src/components/ActivityAudit/View/DiffReport/DiffLegend';
 import FilterControl from '@/src/components/ActivityAudit/View/DiffReport/FilterControl';
-import JsonView from '@/src/components/ActivityAudit/View/JsonView';
+import JsonView from '@/src/components/Common/JsonView/JsonView';
 import { mergeEntityMaps } from '@/src/components/ActivityAudit/View/utils/generate-diffs';
 import { ActivityAuditI18nKey, MenuI18nKey, RollbackI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';

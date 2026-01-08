@@ -258,7 +258,7 @@ const InterceptorView: FC<Props> = ({
           <>
             {activeTab === EntityViewTab.Properties && (
               <>
-                <EntityHeader entity={selectedInterceptor} />
+                <EntityHeader entity={selectedInterceptor} view={ApplicationRoute.Interceptors} />
                 <div className="flex-1 min-h-0 pt-8">
                   <InterceptorProperties
                     selectedInterceptor={selectedInterceptor}

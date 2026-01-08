@@ -685,6 +685,9 @@ export const IMAGES_LIST_FOR_CONTAINER_COLUMNS = (onChange: (id: string) => void
 export const IMAGES_LIST_COLUMNS = (t: (key: string) => string): ColDef[] => [
   { field: 'name', headerName: 'Name', hide: false },
   { field: 'version', headerName: 'Version', hide: false },
+  { field: 'description', headerName: 'Description', hide: false },
+  { field: 'id', headerName: 'ID', hide: false },
+  TOPICS_COLUMN,
   {
     field: '$type',
     headerName: 'Type',
@@ -695,7 +698,28 @@ export const IMAGES_LIST_COLUMNS = (t: (key: string) => string): ColDef[] => [
       return t(IMAGE_TYPE_I18N_KEYS[value as IMAGE_TYPE]) || value;
     },
   },
-  { field: 'description', headerName: 'Description', hide: false },
+  {
+    field: 'source.$type',
+    headerName: 'Source',
+    hide: true,
+    valueFormatter: ({ value }) => t(IMAGE_SOURCE_TYPE_I18N_KEYS[value as IMAGE_SOURCE_TYPE]) || value,
+    tooltipValueGetter: ({ value }) => t(IMAGE_SOURCE_TYPE_I18N_KEYS[value as IMAGE_SOURCE_TYPE]) || value,
+    filterValueGetter: (params) => {
+      const value = params.data[params.colDef.field || ''];
+      return t(IMAGE_SOURCE_TYPE_I18N_KEYS[value as IMAGE_SOURCE_TYPE]) || value;
+    },
+  },
+  {
+    field: 'transportType',
+    headerName: 'Transport type',
+    hide: true,
+    valueFormatter: ({ value }) => t(IMAGE_TRANSPORT_I18N_KEYS[value as IMAGE_TRANSPORT_TYPE]) || value,
+    tooltipValueGetter: ({ value }) => t(IMAGE_TRANSPORT_I18N_KEYS[value as IMAGE_TRANSPORT_TYPE]) || value,
+    filterValueGetter: (params) => {
+      const value = params.data[params.colDef.field || ''];
+      return t(IMAGE_TRANSPORT_I18N_KEYS[value as IMAGE_TRANSPORT_TYPE]) || value;
+    },
+  },
   {
     field: 'buildStatus',
     headerName: 'Status',
@@ -719,37 +743,6 @@ export const IMAGES_LIST_COLUMNS = (t: (key: string) => string): ColDef[] => [
     valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
     tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
     filterValueGetter: (params) => formatDateTimeToLocalString(params.data[params.colDef.field || '']),
-  },
-  {
-    field: 'topics',
-    headerName: 'Topics',
-    hide: false,
-    cellRenderer: (params: ICellRendererParams) => <TopicsCellRenderer topics={params.data?.topics || []} />,
-    tooltipValueGetter: ({ value }) => (value?.length ? value.join(', ') : null),
-    filterValueGetter: (params) =>
-      params.data[params.colDef.field || ''].length ? params.data[params.colDef.field || ''].join(' ') : '',
-  },
-  {
-    field: 'source.$type',
-    headerName: 'Source',
-    hide: true,
-    valueFormatter: ({ value }) => t(IMAGE_SOURCE_TYPE_I18N_KEYS[value as IMAGE_SOURCE_TYPE]) || value,
-    tooltipValueGetter: ({ value }) => t(IMAGE_SOURCE_TYPE_I18N_KEYS[value as IMAGE_SOURCE_TYPE]) || value,
-    filterValueGetter: (params) => {
-      const value = params.data[params.colDef.field || ''];
-      return t(IMAGE_SOURCE_TYPE_I18N_KEYS[value as IMAGE_SOURCE_TYPE]) || value;
-    },
-  },
-  {
-    field: 'transportType',
-    headerName: 'Transport type',
-    hide: true,
-    valueFormatter: ({ value }) => t(IMAGE_TRANSPORT_I18N_KEYS[value as IMAGE_TRANSPORT_TYPE]) || value,
-    tooltipValueGetter: ({ value }) => t(IMAGE_TRANSPORT_I18N_KEYS[value as IMAGE_TRANSPORT_TYPE]) || value,
-    filterValueGetter: (params) => {
-      const value = params.data[params.colDef.field || ''];
-      return t(IMAGE_TRANSPORT_I18N_KEYS[value as IMAGE_TRANSPORT_TYPE]) || value;
-    },
   },
 ];
 
