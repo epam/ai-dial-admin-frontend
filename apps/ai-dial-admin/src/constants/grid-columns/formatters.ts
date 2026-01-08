@@ -22,7 +22,7 @@ export const getFormattedResourceType = (value: string, t: (key: string) => stri
 };
 
 export const getTopics = (data?: { topics?: string[]; descriptionKeywords?: string[] }) => {
-  return data?.topics || data?.descriptionKeywords || [];
+  return data?.topics || data?.descriptionKeywords || null;
 };
 
 export const formatAttachment = (value: string, t: (stringToTranslate: string) => string) => {

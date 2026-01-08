@@ -4,12 +4,15 @@ import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import classNames from 'classnames';
 
 interface Props {
-  topics: string[];
+  topics?: string[];
 }
 
 const GAP_WIDTH = 8;
 
 const TopicsCellRenderer: FC<Props> = ({ topics }) => {
+  if (!topics) {
+    return;
+  }
   const containerRef = useRef<HTMLDivElement>(null);
   const topicsRef = useRef<HTMLDivElement[]>([]);
   const hiddenCountRef = useRef<HTMLDivElement | null>(null);
