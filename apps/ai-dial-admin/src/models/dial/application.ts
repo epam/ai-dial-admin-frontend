@@ -8,6 +8,7 @@ export interface DialApplication extends ChatEntity, EntityValidityState {
   viewerUrl?: string;
   editorUrl?: string;
   routes?: DialRoute[];
+  displayVersion?: string;
   dependencies?: string[];
   applicationProperties?: Record<string, DefaultsValue>;
   applicationPropertiesTemp?: ApplicationPropertiesTemp[];

@@ -20,6 +20,6 @@ export const isBuildersView = (view?: ApplicationRoute): boolean => {
   );
 };
 
-export const isViewWithDisplayVersion = (view?: ApplicationRoute) => {
+export const isEntitiesWithDisplayVersion = (view?: ApplicationRoute) => {
   return view === ApplicationRoute.Models || view === ApplicationRoute.Applications;
 };
