@@ -62,7 +62,7 @@ const Paths: FC<Props> = ({ title, optional, readonly, paths, disableValidation,
       }
 
       if (newPaths?.length === 0) {
-        newPaths = [''];
+        newPaths.push('');
       }
       onChangePaths(newPaths);
     },
