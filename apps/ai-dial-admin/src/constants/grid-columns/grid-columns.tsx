@@ -110,9 +110,16 @@ export const DISPLAY_NAME_COLUMN: ColDef = {
   headerName: 'Display Name',
   hide: false,
 };
-const DISPLAY_NAME_COLUMN_WITH_SORT: ColDef = { ...DISPLAY_NAME_COLUMN, sort: 'asc' };
+export const DISPLAY_NAME_COLUMN_WITH_SORT: ColDef = { ...DISPLAY_NAME_COLUMN, sort: 'asc' };
 export const NAME_COLUMN: ColDef = { field: 'name', colId: 'name', headerName: 'ID', hide: false };
 const NAME_COLUMN_WITH_SORT: ColDef = { ...NAME_COLUMN, sort: 'asc' };
+export const DISPLAY_VERSION_COLUMN: ColDef = {
+  field: 'displayVersion',
+  colId: 'displayVersion',
+  headerName: 'Version',
+  hide: false,
+  valueFormatter: (params) => params.value,
+};
 
 export const TOPICS_COLUMN: ColDef = {
   field: 'topics',
@@ -192,19 +199,12 @@ export const SIMPLE_ENTITY_COLUMNS: ColDef[] = [
   UPDATED_AT_COLUMN,
 ];
 
-export const ENTITY_BASE_COLUMNS: ColDef[] = [NAME_COLUMN, DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN];
 export const DEPENDENCIES_COLUMNS = [NAME_COLUMN, DISPLAY_NAME_COLUMN, VERSION_COLUMN, DESCRIPTION_COLUMN];
 export const BASE_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN, NAME_COLUMN];
 
 export const MODELS_COLUMNS = (t: (str: string) => string, view?: ApplicationRoute): ColDef[] => [
   DISPLAY_NAME_COLUMN_WITH_SORT,
-  {
-    field: 'displayVersion',
-    colId: 'displayVersion',
-    headerName: 'Version',
-    hide: false,
-    valueFormatter: (params) => params.value,
-  },
+  DISPLAY_VERSION_COLUMN,
   DESCRIPTION_COLUMN,
   NAME_COLUMN,
   ...SOURCE_FIELD_COLUMNS(t, view),
@@ -432,9 +432,9 @@ export const TELEMETRY_COLUMNS: ColDef[] = [
 export const TELEMETRY_GRID_COLUMNS: ColDef[] = [NAME_COLUMN, ...TELEMETRY_COLUMNS];
 
 export const USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
-  { field: 'completion_time', headerName: 'Completion Time', ...dateTimeColumn },
-  { field: 'trace_id', headerName: 'Trace ID' },
-  { field: 'topic', headerName: 'Topic' },
+  { field: 'completion_time', headerName: 'Completion Time', hide: false, ...dateTimeColumn },
+  { field: 'trace_id', headerName: 'Trace ID', hide: false },
+  { field: 'topic', headerName: 'Topic', hide: false },
   { field: 'reactions', headerName: 'Reactions', hide: true }, // TODO: not implemented
   {
     field: 'cached_prompt_tokens',
@@ -445,21 +445,25 @@ export const USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
   {
     field: 'prompt_tokens',
     headerName: 'Prompt Tokens',
+    hide: false,
     ...numericColumn,
   },
   {
     field: 'completion_tokens',
     headerName: 'Completion Tokens',
+    hide: false,
     ...numericColumn,
   },
   {
     field: 'deployment_price',
     headerName: 'Deployment Price',
+    hide: false,
     ...priceColumn,
   },
   {
     field: 'price',
     headerName: 'Total Price',
+    hide: false,
     ...priceColumn,
   },
   {
@@ -468,26 +472,26 @@ export const USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
     hide: true,
     ...numericColumn,
   },
-  { field: 'deployment', headerName: 'Deployment ID' },
+  { field: 'deployment', headerName: 'Deployment ID', hide: false },
   { field: 'parent_deployment', headerName: 'Parent Deployment ID', hide: true },
   { field: 'model', headerName: 'Model', hide: true },
-  { field: 'project_id', headerName: 'Project' },
+  { field: 'project_id', headerName: 'Project', hide: false },
   { field: 'upstream', headerName: 'Upstream', hide: true },
   { field: 'execution_path', headerName: 'Execution Path', hide: true },
-  { field: 'user_hash', headerName: 'User' },
+  { field: 'user_hash', headerName: 'User', hide: false },
   { field: 'user_title', headerName: 'User Title', hide: true },
   { field: 'language', headerName: 'Language', hide: true },
   { field: 'duration', headerName: 'Duration', hide: true },
   { field: 'response_id', headerName: 'Response ID', hide: true },
   { field: 'chat_id', headerName: 'Conversation ID', hide: true },
   { field: 'core_span_id', headerName: 'Core span ID', hide: true },
-  { field: 'core_parent_span_id', headerName: 'Core parent span ID' },
+  { field: 'core_parent_span_id', headerName: 'Core parent span ID', hide: false },
 ];
 
 export const USAGE_LOG_CONVERSATIONS_COLUMNS: ColDef[] = [
-  { field: 'completion_time', headerName: 'Last activity', ...dateTimeColumn },
-  { field: 'chat_id', headerName: 'Conversation ID' },
-  { field: 'topic', headerName: 'Topic' },
+  { field: 'completion_time', headerName: 'Last activity', hide: false, ...dateTimeColumn },
+  { field: 'chat_id', headerName: 'Conversation ID', hide: false },
+  { field: 'topic', headerName: 'Topic', hide: false },
   {
     field: 'cached_prompt_tokens',
     headerName: 'Cached Prompt Tokens',
@@ -497,16 +501,19 @@ export const USAGE_LOG_CONVERSATIONS_COLUMNS: ColDef[] = [
   {
     field: 'prompt_tokens',
     headerName: 'Prompt Tokens',
+    hide: false,
     ...numericColumn,
   },
   {
     field: 'completion_tokens',
     headerName: 'Completion Tokens',
+    hide: false,
     ...numericColumn,
   },
   {
     field: 'deployment_price',
     headerName: 'Total Price',
+    hide: false,
     ...priceColumn,
   },
   {
@@ -516,9 +523,9 @@ export const USAGE_LOG_CONVERSATIONS_COLUMNS: ColDef[] = [
     ...numericColumn,
   },
 
-  { field: 'deployment', headerName: 'Deployment ID' },
-  { field: 'project_id', headerName: 'Project' },
-  { field: 'user_hash', headerName: 'User' },
+  { field: 'deployment', headerName: 'Deployment ID', hide: false },
+  { field: 'project_id', headerName: 'Project', hide: false },
+  { field: 'user_hash', headerName: 'User', hide: false },
   { field: 'user_title', headerName: 'User Title', hide: true },
   { field: 'language', headerName: 'Language', hide: true },
 ];

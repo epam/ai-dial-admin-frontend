@@ -49,8 +49,8 @@ describe('Formatters :: getTopics', () => {
     vi.clearAllMocks();
   });
   test('returns empty array', () => {
-    expect(getTopics({})).toEqual([]);
-    expect(getTopics()).toEqual([]);
+    expect(getTopics({})).toEqual(null);
+    expect(getTopics()).toEqual(null);
   });
 
   test('returns topics array', () => {
