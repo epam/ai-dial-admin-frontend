@@ -22,7 +22,7 @@ const ToolsetProperties: FC<Props> = ({ names, selectedToolset, onChangeToolset 
 
   return (
     <div className="w-full flex flex-col">
-      <EntityHeader entity={selectedToolset} />
+      <EntityHeader entity={selectedToolset} view={ApplicationRoute.Toolsets} />
       <div className="flex-1 min-h-0 pt-8 gap-y-8 flex flex-col">
         <DeploymentProperties
           entity={selectedToolset}

@@ -59,7 +59,7 @@ const PropertiesContent: FC<Props> = ({ applicationSchemes, names, view, selecte
       {isDeploymentAsset(view) ? (
         <AssetHeader asset={selectedEntity as DeploymentAsset} view={view} />
       ) : (
-        <EntityHeader entity={selectedEntity} />
+        <EntityHeader entity={selectedEntity} view={view} />
       )}
       <div className="flex-1 min-h-0 pt-8">{getPropertiesView()}</div>
     </div>

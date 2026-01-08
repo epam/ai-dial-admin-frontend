@@ -20,6 +20,16 @@ export default {
     Settings: 'Settings',
     Theme: 'Theme',
   },
+  CoreSync: {
+    SyncStatus: 'Sync status',
+    SyncWithCore: 'Sync with core',
+    InProgress: 'In progress...',
+    Partially: 'Partially synced',
+    Fully: 'Fully synced',
+    Format: 'JSON format',
+    Core: 'Core',
+    Admin: 'Admin',
+  },
   CoreVersionModal: {
     Title: 'Target Core Version',
     DefinitionType: 'Definition type',

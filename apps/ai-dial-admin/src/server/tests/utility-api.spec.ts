@@ -115,4 +115,23 @@ describe('Server :: UtilityApi', () => {
       }),
     );
   });
+
+  test('should get core cync status', async () => {
+    fetch.mockResponseOnce(
+      JSON.stringify({
+        currentState: {},
+        configState: {},
+        status: '',
+      }),
+    );
+
+    const result = await instance.getEntitySyncStatus('', TOKEN_MOCK, 'etag');
+    expect(result.response).toEqual(
+      JSON.stringify({
+        currentState: {},
+        configState: {},
+        status: '',
+      }),
+    );
+  });
 });
