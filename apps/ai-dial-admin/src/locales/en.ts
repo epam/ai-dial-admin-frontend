@@ -1148,8 +1148,8 @@ export default {
     ImagesSaveSuccessDescription: '{type} Image updates have been saved in version {version}.',
     ImageTransportLocal: 'Local (STDIO)',
     ImageTransportRemote: 'Remote (HTTP/SSE)',
-    ImageTypeMCP: 'MCP',
-    ImageTypeInterceptor: 'Interceptor',
+    ImageTypeMCP: 'MCP image',
+    ImageTypeInterceptor: 'Interceptor image',
   },
   Containers: {
     'ContainersListTitle#zero': '{type} {entityType}s',
