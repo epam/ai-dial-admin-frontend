@@ -53,12 +53,16 @@ const Paths: FC<Props> = ({ title, optional, readonly, paths, disableValidation,
 
   const onChangePath = useCallback(
     (index: number, value?: string) => {
-      const newPaths = [...(paths || [])];
+      let newPaths = [...(paths || [])];
 
       if (!value) {
         newPaths.splice(index, 1);
       } else {
         newPaths[index] = value;
+      }
+
+      if (newPaths?.length === 0) {
+        newPaths.push('');
       }
       onChangePaths(newPaths);
     },
