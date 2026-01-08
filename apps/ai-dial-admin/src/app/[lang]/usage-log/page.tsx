@@ -18,5 +18,5 @@ export default async function Page() {
     return redirect(SIGN_IN_LINK);
   }
 
-  return <UsageLog route={ApplicationRoute.UsageLog} />;
+  return <UsageLog className="bg-layer-2 rounded py-4 px-6" route={ApplicationRoute.UsageLog} />;
 }

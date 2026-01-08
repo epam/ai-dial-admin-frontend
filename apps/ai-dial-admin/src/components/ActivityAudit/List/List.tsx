@@ -234,18 +234,23 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh }) => {
         view={!entity ? ApplicationRoute.ActivityAudit : void 0}
       >
         <div className={classNames('flex gap-4', entity ? 'flex-1 justify-between' : 'justify-end')}>
-          <ResetFiltersButton gridApi={gridApi} />
+          {!entity && <ResetFiltersButton gridApi={gridApi} />}
           <TimeFilter
             timePeriod={timePeriod as string}
             onTimePeriodChange={onTimePeriodChange}
             timeRange={timeRange}
             onTimeRangeChange={onTimeRangeChange}
           />
-          <DialNeutralButton
-            label={t(ButtonsI18nKey.Refresh)}
-            iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}
-            onClick={onRefresh}
-          />
+
+          <div className="flex flex-row gap-x-4">
+            {entity && <ResetFiltersButton gridApi={gridApi} />}
+            <DialNeutralButton
+              label={t(ButtonsI18nKey.Refresh)}
+              iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}
+              onClick={onRefresh}
+            />
+          </div>
+
           {!entity && (
             <DialNeutralButton
               iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} />}
