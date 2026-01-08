@@ -86,7 +86,7 @@ const EnvVariable: FC<Props> = ({
       dispatch({
         type: ValidationActionType.SetField,
         field: `variable_${index}`,
-        isValid: mountType === MOUNT_TYPE.SECURE_FILE ? !!variable.value.value : !!variable.value.fileContent,
+        isValid: mountType === MOUNT_TYPE.SECURE_FILE ? !!variable.value.fileContent : !!variable.value.value,
       });
       updateVariable({
         ...variable,
@@ -99,9 +99,14 @@ const EnvVariable: FC<Props> = ({
 
   const onValueChange = useCallback(
     (value: EnvVariableValue) => {
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: `variable_${index}`,
+        isValid: variable.mountType === MOUNT_TYPE.SECURE_FILE ? !!value.fileContent : !!value.value,
+      });
       updateVariable({ ...variable, value });
     },
-    [updateVariable, variable],
+    [dispatch, index, updateVariable, variable],
   );
 
   const toggleCollapse = useCallback(() => {
