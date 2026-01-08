@@ -48,6 +48,7 @@ const RangePicker: FC<Props> = ({ onChange, timeRange }) => {
       <DatePicker
         id="start-date"
         label={t(BasicI18nKey.From)}
+        className="dial-input"
         date={startDate}
         setDate={onStartDateChange}
         startDate={startDate}
@@ -55,6 +56,7 @@ const RangePicker: FC<Props> = ({ onChange, timeRange }) => {
       />
       <DatePicker
         id="end-date"
+        className="dial-input"
         label={t(BasicI18nKey.To)}
         date={endDate}
         setDate={onEndDateChange}
