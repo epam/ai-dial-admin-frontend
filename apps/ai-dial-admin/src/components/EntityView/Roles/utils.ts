@@ -1,6 +1,7 @@
-import { ColDef, Column, GridApi, IRowNode } from 'ag-grid-community';
+import { ColDef, Column, GridApi, ICellRendererParams, IRowNode } from 'ag-grid-community';
 
 import { RolesGridData } from '@/src/components/EntityView/Roles/models';
+import EmptyCellRenderer from '@/src/components/Grid/CellRenderers/EmptyCellRenderer';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import { sharingTypes } from '@/src/components/Roles/constants';
 import { ACTION_COLUMN, NO_BORDER_CLASS } from '@/src/constants/ag-grid';
@@ -11,13 +12,13 @@ import {
   getSetNoLimitsOperation,
 } from '@/src/constants/grid-columns/actions';
 import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { RolesI18nKey } from '@/src/constants/i18n';
+import { MenuI18nKey, RolesI18nKey } from '@/src/constants/i18n';
+import { UNLIMITED_VALUE } from '@/src/constants/role';
 import { EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialRole } from '@/src/models/dial/role';
 import { DialRoleLimits } from '@/src/models/dial/role-limits';
 import { ApplicationRoute } from '@/src/types/routes';
 import { cellRenderParams } from './constants';
-import { UNLIMITED_VALUE } from '@/src/constants/role';
 
 export const getNoAvailableTitle = (view: ApplicationRoute) => {
   if (view === ApplicationRoute.Models) return RolesI18nKey.NotAvailableModel;
@@ -76,6 +77,16 @@ const mapRoleData = (
   month: getLimitData(limit?.month, entity?.defaultRoleLimit?.month),
 });
 
+const editableCellRendererSelector = (params: ICellRendererParams) => {
+  const { type } = params.data || {};
+
+  if (!type || (type !== MenuI18nKey.Routes && type !== MenuI18nKey.Toolsets)) {
+    return { component: EditableCellRenderer };
+  }
+
+  return { component: EmptyCellRenderer };
+};
+
 export const LIMIT_COLUMNS = (
   defaultValues?: DialRoleLimits,
   onChange?: (value: number, data: DialRole, token: string) => void,
@@ -84,7 +95,7 @@ export const LIMIT_COLUMNS = (
     headerName: 'Tokens per minute',
     field: 'minute',
     cellClass: NO_BORDER_CLASS,
-    cellRenderer: EditableCellRenderer,
+    cellRendererSelector: editableCellRendererSelector,
     cellRendererParams: {
       ...cellRenderParams,
       defaultValue: defaultValues?.minute,
@@ -95,7 +106,7 @@ export const LIMIT_COLUMNS = (
     headerName: 'Tokens per day',
     field: 'day',
     cellClass: NO_BORDER_CLASS,
-    cellRenderer: EditableCellRenderer,
+    cellRendererSelector: editableCellRendererSelector,
     cellRendererParams: {
       ...cellRenderParams,
       defaultValue: defaultValues?.day,
@@ -106,7 +117,7 @@ export const LIMIT_COLUMNS = (
     headerName: 'Tokens per week',
     field: 'week',
     cellClass: NO_BORDER_CLASS,
-    cellRenderer: EditableCellRenderer,
+    cellRendererSelector: editableCellRendererSelector,
     cellRendererParams: {
       ...cellRenderParams,
       defaultValue: defaultValues?.week,
@@ -117,7 +128,7 @@ export const LIMIT_COLUMNS = (
     headerName: 'Tokens per month',
     field: 'month',
     cellClass: NO_BORDER_CLASS,
-    cellRenderer: EditableCellRenderer,
+    cellRendererSelector: editableCellRendererSelector,
     cellRendererParams: {
       ...cellRenderParams,
       defaultValue: defaultValues?.month,

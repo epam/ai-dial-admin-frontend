@@ -9,6 +9,7 @@ import { cloneDeep } from 'lodash';
 import { getCoreRole, removeRole, updateCoreRole, updateRole } from '@/src/app/[lang]/roles/actions';
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
 import {
+  ENTITY_COLUMNS,
   getEntitiesForRole,
   getRelevantKeysForRole,
   ROLES_ENTITIES_COLUMNS,
@@ -23,33 +24,37 @@ import { EntitiesI18nKey, KeysI18nKey, TabsI18nKey } from '@/src/constants/i18n'
 import { UNLIMITED_VALUE } from '@/src/constants/role';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication } from '@/src/models/dial/application';
 import { DialKey } from '@/src/models/dial/key';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
 import { DialRoleLimits } from '@/src/models/dial/role-limits';
+import { DialRoute } from '@/src/models/dial/route';
+import { Toolset } from '@/src/models/dial/toolset';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
+import { getViewHeaderClassName } from '@/src/utils/entities/view';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getRoleTabs } from '@/src/utils/tabs/utils';
 import RoleProperties from './Properties';
-import { useProtectedRequest } from '@/src/hooks/use-protected-request';
-import { getViewHeaderClassName } from '@/src/utils/entities/view';
 
 interface Props {
   originalRole: DialRole;
   names: string[];
   models: DialModel[];
   applications: DialApplication[];
+  toolsets?: Toolset[];
+  routes?: DialRoute[];
   keys: DialKey[];
   etag: string;
 }
 
-const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications, keys }) => {
+const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications, keys, toolsets, routes }) => {
   const t = useI18n();
   const router = useRouter();
   const getReqRef = useRef(useProtectedRequest());
@@ -295,9 +300,12 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
           <AddEntitiesView
             models={models}
             applications={applications}
+            toolsets={toolsets}
+            routes={routes}
             onAdd={onAddEntities}
             onRemove={onRemoveEntity}
-            customColumns={ROLES_ENTITIES_COLUMNS(t, onChangeRoleToken)}
+            customColumns={ENTITY_COLUMNS(t)}
+            additionalColumns={ROLES_ENTITIES_COLUMNS(onChangeRoleToken)}
             customActions={[getSetNoLimitsOperation(onSetNoLimits, isSetNoLimitsHidden)]}
             getRelevantDataForEntity={getEntitiesForRole.bind(this, selectedRole)}
             isSkipRefresh={isSkipRefresh}
