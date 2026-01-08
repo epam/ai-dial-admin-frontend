@@ -16,7 +16,6 @@ import { EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialRole } from '@/src/models/dial/role';
 import { DialRoleLimits } from '@/src/models/dial/role-limits';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { cellRenderParams } from './constants';
 import { UNLIMITED_VALUE } from '@/src/constants/role';
 
@@ -215,8 +214,27 @@ export const getRolesColumnDefs = (
 export const isResetAvailable = (entity: EntityRoleLimits): boolean => {
   return (
     entity.roleLimits != null &&
-    Object.values(entity.roleLimits).some((limit) => !isEqualSkippingUndefined(limit, entity.defaultRoleLimit))
+    Object.values(entity.roleLimits).some((limit) => !isLimitSameAsDefault(limit, entity.defaultRoleLimit))
   );
+};
+
+export const isLimitSameAsDefault = (limit: DialRoleLimits, defaultLimit?: DialRoleLimits): boolean => {
+  const limitKeys = Object.keys(limit ?? {}) as Array<keyof DialRoleLimits>;
+  const defaultKeys = defaultLimit ? (Object.keys(defaultLimit) as Array<keyof DialRoleLimits>) : [];
+
+  if (defaultLimit) {
+    if (limitKeys.some((key) => !defaultKeys.includes(key as keyof DialRoleLimits))) {
+      return false;
+    }
+  }
+
+  for (const key of defaultKeys) {
+    if (key in limit && limit[key] !== defaultLimit![key]) {
+      return false;
+    }
+  }
+
+  return true;
 };
 
 export const isSetNoLimitsHidden = (api: GridApi, node: IRowNode) => {
