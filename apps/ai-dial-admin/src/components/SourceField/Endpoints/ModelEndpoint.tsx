@@ -28,15 +28,19 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
   ];
 
   const [postfix, setPostfix] = useState('');
-  const [name, setName] = useState('');
+  const [endpoint, setEndpoint] = useState('');
   const [endpointError, setEndpointError] = useState<FieldError | null>(null);
+
   const fullValue = useMemo(() => {
-    return prefix ? `${addTrailingSlash(prefix)}${removeSlash(entity.endpoint || '')}` : entity.endpoint || '';
-  }, [entity.endpoint, prefix]);
+    if (prefix) {
+      return `${addTrailingSlash(prefix)}${removeSlash(endpoint)}`;
+    }
+    return entity.endpoint || '';
+  }, [entity.endpoint, prefix, endpoint]);
 
   const onChangePath = useCallback(
     (value?: string) => {
-      setName(value || '');
+      setEndpoint(value || '');
       onChange({
         ...entity,
         source: { ...(entity.source as SOURCE_FIELD), completionEndpointPath: `${value || ''}${postfix}` },
@@ -49,7 +53,7 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
     (value?: string) => {
       const error = getUrlError(value, t, true);
       setEndpointError(error);
-      setName(value || '');
+      setEndpoint(value || '');
       onChange({
         ...entity,
         endpoint: `${value || ''}${postfix}`,
@@ -60,25 +64,25 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
 
   const onChangeType = useCallback(
     (type: string) => {
-      const endpoint = `${name}${getEndpointPostfix(type as DialModelType)}`;
+      const value = `${endpoint}${getEndpointPostfix(type as DialModelType)}`;
       if (prefix) {
         onChange({
           ...entity,
           source: {
             ...(entity.source as SOURCE_FIELD),
-            completionEndpointPath: endpoint,
+            completionEndpointPath: value,
           },
           type: type as DialModelType,
         });
       } else {
         onChange({
           ...entity,
-          endpoint,
+          endpoint: value,
           type: type as DialModelType,
         });
       }
     },
-    [name, prefix, onChange, entity],
+    [endpoint, prefix, onChange, entity],
   );
 
   useEffect(() => {
@@ -88,7 +92,7 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
       : entity.endpoint?.split(postfix)[0] || '';
 
     setPostfix(postfix);
-    setName(name);
+    setEndpoint(name);
   }, [isModal, entity, prefix]);
 
   return (
@@ -107,7 +111,7 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
       {prefix ? (
         <ComplexInput
           elementId="endpoint"
-          value={name}
+          value={endpoint}
           fullValue={fullValue}
           fieldTitle={t(EntityFieldsI18nKey.endpoint)}
           suffix={postfix}
@@ -118,7 +122,7 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
       ) : (
         <ComplexInput
           elementId="endpoint"
-          value={name}
+          value={endpoint}
           fullValue={fullValue}
           fieldTitle={t(EntityFieldsI18nKey.endpoint)}
           suffix={postfix}
