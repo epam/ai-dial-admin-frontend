@@ -54,7 +54,7 @@ export const getImportResults = (
     if (result.status === ImportStatus.SKIP) {
       skipped.push(result.targetPath);
     }
-    if (result.status === ImportStatus.ERROR) {
+    if (result.status === ImportStatus.ERROR || result.status === ImportStatus.FAILED) {
       failed.push(result.targetPath);
     }
   });
