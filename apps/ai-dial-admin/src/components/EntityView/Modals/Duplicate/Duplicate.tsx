@@ -140,7 +140,7 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
   return (
     <DialFormPopup
       onClose={onClose}
-      header={t(getCloneTitle(view, t))}
+      title={t(getCloneTitle(view, t))}
       portalId="CloneEntity"
       open={isModalOpen}
       onSubmit={onDuplicateClick}
