@@ -19,6 +19,7 @@ import EntityDiff from '@/src/components/ActivityAudit/View/DiffReport/EntityDif
 import FilterControl from '@/src/components/ActivityAudit/View/DiffReport/FilterControl';
 import ViewHeader from '@/src/components/ActivityAudit/View/Header/Header';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
+import JsonView from '@/src/components/Common/JsonView/JsonView';
 import { ButtonsI18nKey, EntityFieldsI18nKey, RollbackI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -37,7 +38,6 @@ import {
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import JsonView from './JsonView';
 import { generateCurrentResource } from './utils/generate-diffs';
 
 interface Props {

@@ -64,6 +64,17 @@ export enum SettingsModalI18nKey {
   Theme = 'SettingsModal.Theme',
 }
 
+export enum CoreSyncI18nKey {
+  SyncStatus = 'CoreSync.SyncStatus',
+  SyncWithCore = 'CoreSync.SyncWithCore',
+  InProgress = 'CoreSync.InProgress',
+  Partially = 'CoreSync.Partially',
+  Fully = 'CoreSync.Fully',
+  Format = 'CoreSync.Format',
+  Core = 'CoreSync.Core',
+  Admin = 'CoreSync.Admin',
+}
+
 export enum CoreVersionModalI18nKey {
   Title = 'CoreVersionModal.Title',
   DefinitionType = 'CoreVersionModal.DefinitionType',
