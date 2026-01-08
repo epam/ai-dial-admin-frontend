@@ -20,6 +20,7 @@ import {
 } from '@/src/utils/entities/duplicate-entity';
 import { getNamesConfigurations } from '@/src/utils/entities/filter-names';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
+import { isViewWithDisplayVersion } from '@/src/utils/is-asset-view';
 
 type ClonedEntity = BaseEntity | DialModel;
 interface Props {
@@ -167,7 +168,7 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
             names={names}
           />
 
-          {view === ApplicationRoute.Models && (
+          {isViewWithDisplayVersion(view) && (
             <VersionControl
               view={view}
               title={t(EntityFieldsI18nKey.displayVersion)}
