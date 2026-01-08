@@ -11,10 +11,10 @@ interface Props {
 export const WidgetToggler: FC<Props> = ({ children, title, isRoot }) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
-    <div className="flex w-full relative">
+    <div className="flex w-full relative" onClick={() => setIsOpen(!isOpen)}>
       {!isRoot && (
-        <button className="absolute right-0 top-0 p-2" onClick={() => setIsOpen(!isOpen)}>
-          {isOpen ? <IconChevronUp size="24" /> : <IconChevronDown size="24" />}
+        <button className="absolute right-0 top-0 p-2">
+          {isOpen ? <IconChevronUp size="24" stroke={2} /> : <IconChevronDown size="24" stroke={2} />}
         </button>
       )}
       <div className={classNames('w-full', !isOpen && !isRoot && 'hidden')}>{children}</div>

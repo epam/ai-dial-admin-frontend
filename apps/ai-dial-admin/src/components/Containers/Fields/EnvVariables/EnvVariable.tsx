@@ -1,21 +1,22 @@
 'use client';
 
+import { DialRemoveButton, DialSelectField, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, useCallback, useEffect, useState } from 'react';
-import { IconChevronDown, IconChevronRight, IconTrash } from '@tabler/icons-react';
-import { DialButton, DialSelectField, DialTextInputField } from '@epam/ai-dial-ui-kit';
-import { EnvironmentVariable, EnvVariableValue } from '@/src/models/deployments/variables';
-import { useI18n } from '@/src/locales/client';
-import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
-import { mountTypeDropdownItems } from '@/src/constants/deployments/variables';
-import { FieldError } from '@/src/models/error';
-import { getVariableNameError } from '@/src/utils/deployments/validation';
-import { MOUNT_TYPE, VALUE_TYPE } from '@/src/types/deployments/variables';
+
 import DraggableItem from '@/src/components/Common/DraggableItem/DraggableItem';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-import { EntityPlaceholdersI18nKey, EnvVariablesI18nKey } from '@/src/constants/i18n';
 import EnvVariableValueField from '@/src/components/Containers/Fields/EnvVariables/EnvVariableValue';
+import { mountTypeDropdownItems } from '@/src/constants/deployments/variables';
+import { EntityPlaceholdersI18nKey, EnvVariablesI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
+import { useI18n } from '@/src/locales/client';
+import { EnvironmentVariable, EnvVariableValue } from '@/src/models/deployments/variables';
+import { FieldError } from '@/src/models/error';
+import { MOUNT_TYPE, VALUE_TYPE } from '@/src/types/deployments/variables';
+import { getVariableNameError } from '@/src/utils/deployments/validation';
 
 interface Props {
   index: number;
@@ -175,11 +176,7 @@ const EnvVariable: FC<Props> = ({
           </div>
         </div>
         {(numVariables !== 1 || Object.keys(variable).length !== 0) && (
-          <DialButton
-            className="text-error mt-3 lg:mt-6"
-            onClick={onRemove}
-            iconBefore={<IconTrash {...BASE_BUTTON_ICON_PROPS} />}
-          />
+          <DialRemoveButton onClick={onRemove} className="mt-3 lg:mt-6" />
         )}
       </div>
     </DraggableItem>

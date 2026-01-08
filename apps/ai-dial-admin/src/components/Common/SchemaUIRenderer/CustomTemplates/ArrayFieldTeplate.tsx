@@ -31,15 +31,9 @@ export const ArrayFieldTemplate: FC<ArrayFieldTemplateProps> = ({
             const { children, hasRemove, onDropIndexClick, schema } = item;
             const isString = schema.type === 'string';
             return (
-              <li key={key} className={classNames('flex w-full gap-3 items-start', isString && 'lg:w-[45%]')}>
+              <li key={key} className={classNames('flex w-full gap-3 items-center', isString && 'lg:w-[45%]')}>
                 {children}
-                {hasRemove && !readonly && (
-                  <DialRemoveButton
-                    onClick={onDropIndexClick(key)}
-                    iconClassName="text-error"
-                    className="border rounded border-primary justify-start p-2"
-                  />
-                )}
+                {hasRemove && !readonly && <DialRemoveButton onClick={onDropIndexClick(key)} />}
               </li>
             );
           })}
