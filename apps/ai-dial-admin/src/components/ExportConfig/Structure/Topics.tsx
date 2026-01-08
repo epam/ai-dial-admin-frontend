@@ -36,6 +36,7 @@ const ExportTopics: FC<Props> = ({ selectedTopics, setSelectedTopics }) => {
     <DialLoader />
   ) : (
     <DialSelectField
+      listClassName="w-[200px]"
       captionDescription={t(ExportI18nKey.TopicsCaption)}
       elementId="topics"
       fieldTitle={t(EntityFieldsI18nKey.topics)}
