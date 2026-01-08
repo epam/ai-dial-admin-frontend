@@ -130,6 +130,7 @@ export const TOPICS_COLUMN: ColDef = {
     topics: getTopics(params.data),
   }),
   filterValueGetter: (params) => getTopics(params.data),
+  tooltipValueGetter: (params) => getTopics(params.data)?.join(', ') || null,
 };
 
 export const INTERCEPTOR_STATUS_COLUMN: ColDef = {
@@ -216,10 +217,24 @@ export const MODELS_COLUMNS = (t: (str: string) => string, view?: ApplicationRou
   ATTACHMENT_COLUMN(t),
   { field: 'maxInputAttachments', headerName: 'Max attachment number', hide: true },
   { field: 'tokenizerModel', headerName: 'Tokenizer model', hide: true },
-  { field: 'forwardAuthToken', headerName: 'Forward auth token', hide: true },
-  { field: 'limits.maxTotalTokens', headerName: 'Interaction limit', hide: true },
-  { field: 'pricing.prompt', headerName: 'Prompt price', hide: true },
-  { field: 'pricing.completion', headerName: 'Completion price', hide: true },
+  {
+    field: 'limits.maxTotalTokens',
+    headerName: 'Interaction limit',
+    hide: true,
+    tooltipValueGetter: (params) => params.data?.limits?.maxTotalTokens,
+  },
+  {
+    field: 'pricing.prompt',
+    headerName: 'Prompt price',
+    hide: true,
+    tooltipValueGetter: (params) => params.data?.pricing?.prompt,
+  },
+  {
+    field: 'pricing.completion',
+    headerName: 'Completion price',
+    hide: true,
+    tooltipValueGetter: (params) => params.data?.pricing?.completion,
+  },
 ];
 
 export const APPLICATIONS_COLUMNS = (t: (str: string) => string): ColDef[] => [
@@ -230,7 +245,6 @@ export const APPLICATIONS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   VALIDITY_STATUS_COLUMN(t),
   ATTACHMENT_COLUMN(t),
   { field: 'maxInputAttachments', headerName: 'Max attachment number', hide: true },
-  { field: 'forwardAuthToken', headerName: 'Forward auth token', hide: true },
 ];
 
 export const ACTIVITY_AUDIT_COLUMNS = (t: (s: string) => string, isSingleEntity?: boolean): ColDef[] => {
