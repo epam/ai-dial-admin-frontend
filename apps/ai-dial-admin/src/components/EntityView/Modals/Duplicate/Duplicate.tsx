@@ -75,12 +75,12 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
         displayName,
         namesConfiguration.names,
         t,
-        (entity as DialModel).displayVersion,
+        (clonedEntity as DialModel).displayVersion,
       );
       setDisplayNameError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !error });
     },
-    [dispatch, entity, namesConfiguration.names, t, view],
+    [dispatch, clonedEntity, namesConfiguration.names, t, view],
   );
 
   const handleValidateEntityDisplayName = useCallback(
@@ -101,8 +101,9 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
     (displayVersion?: string) => {
       onValidateVersion({ displayVersion }, isVersionOptional);
       setEntity({ ...(clonedEntity as DialModel), displayVersion });
+      handleValidateEntityDisplayName(clonedEntity.displayName);
     },
-    [clonedEntity, isVersionOptional, onValidateVersion],
+    [clonedEntity, handleValidateEntityDisplayName, isVersionOptional, onValidateVersion],
   );
 
   const onChangeDisplayName = useCallback(

@@ -74,4 +74,3 @@ describe('Utils :: isViewWithDisplayVersion', () => {
     expect(result).toBeFalsy();
   });
 });
-
