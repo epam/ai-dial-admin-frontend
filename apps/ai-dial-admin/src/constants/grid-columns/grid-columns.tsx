@@ -110,9 +110,16 @@ export const DISPLAY_NAME_COLUMN: ColDef = {
   headerName: 'Display Name',
   hide: false,
 };
-const DISPLAY_NAME_COLUMN_WITH_SORT: ColDef = { ...DISPLAY_NAME_COLUMN, sort: 'asc' };
+export const DISPLAY_NAME_COLUMN_WITH_SORT: ColDef = { ...DISPLAY_NAME_COLUMN, sort: 'asc' };
 export const NAME_COLUMN: ColDef = { field: 'name', colId: 'name', headerName: 'ID', hide: false };
 const NAME_COLUMN_WITH_SORT: ColDef = { ...NAME_COLUMN, sort: 'asc' };
+export const DISPLAY_VERSION_COLUMN: ColDef = {
+  field: 'displayVersion',
+  colId: 'displayVersion',
+  headerName: 'Version',
+  hide: false,
+  valueFormatter: (params) => params.value,
+};
 
 export const TOPICS_COLUMN: ColDef = {
   field: 'topics',
@@ -192,19 +199,12 @@ export const SIMPLE_ENTITY_COLUMNS: ColDef[] = [
   UPDATED_AT_COLUMN,
 ];
 
-export const ENTITY_BASE_COLUMNS: ColDef[] = [NAME_COLUMN, DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN];
 export const DEPENDENCIES_COLUMNS = [NAME_COLUMN, DISPLAY_NAME_COLUMN, VERSION_COLUMN, DESCRIPTION_COLUMN];
 export const BASE_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN, NAME_COLUMN];
 
 export const MODELS_COLUMNS = (t: (str: string) => string, view?: ApplicationRoute): ColDef[] => [
   DISPLAY_NAME_COLUMN_WITH_SORT,
-  {
-    field: 'displayVersion',
-    colId: 'displayVersion',
-    headerName: 'Version',
-    hide: false,
-    valueFormatter: (params) => params.value,
-  },
+  DISPLAY_VERSION_COLUMN,
   DESCRIPTION_COLUMN,
   NAME_COLUMN,
   ...SOURCE_FIELD_COLUMNS(t, view),
