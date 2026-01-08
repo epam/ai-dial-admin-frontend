@@ -687,15 +687,7 @@ export const IMAGES_LIST_COLUMNS = (t: (key: string) => string): ColDef[] => [
   { field: 'version', headerName: 'Version', hide: false },
   { field: 'description', headerName: 'Description', hide: false },
   { field: 'id', headerName: 'ID', hide: false },
-  {
-    field: 'topics',
-    headerName: 'Topics',
-    hide: false,
-    cellRenderer: (params: ICellRendererParams) => <TopicsCellRenderer topics={params.data?.topics || []} />,
-    tooltipValueGetter: ({ value }) => (value?.length ? value.join(', ') : null),
-    filterValueGetter: (params) =>
-      params.data[params.colDef.field || ''].length ? params.data[params.colDef.field || ''].join(' ') : '',
-  },
+  TOPICS_COLUMN,
   {
     field: '$type',
     headerName: 'Type',
