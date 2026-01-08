@@ -88,7 +88,7 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
       const isVersionOptional = !namesConfiguration.names.includes(displayName || '');
       onValidateDisplayName(displayName || '');
 
-      if (view === ApplicationRoute.Models) {
+      if (isEntitiesWithDisplayVersion(view)) {
         onValidateVersion({ displayName }, isVersionOptional, initial);
       }
 
