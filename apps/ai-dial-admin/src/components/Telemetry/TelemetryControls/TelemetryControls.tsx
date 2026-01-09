@@ -35,7 +35,7 @@ const TelemetryControls: FC<Props> = ({
 }) => {
   return (
     <div className="flex w-full justify-between flex-wrap">
-      <div className="flex flex-wrap mb-1 md:mb-0 lg:mb-0">
+      <div className="flex gap-x-3 items-center flex-wrap mb-1 md:mb-0 lg:mb-0">
         <TimeFilter
           timePeriod={timePeriod}
           onTimePeriodChange={onTimePeriodChange}
