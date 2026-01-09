@@ -1,5 +1,8 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  ButtonAppearance,
+  ButtonVariant,
+  DialButton,
   DialNumberInputField,
   DialRadioGroup,
   DialSelectField,
@@ -22,7 +25,10 @@ import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey, RoutesI18
 import { useI18n } from '@/src/locales/client';
 import { DialAppRoute, DialRoute, RouteOutput, RoutePermission } from '@/src/models/dial/route';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { IconRefresh } from '@tabler/icons-react';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { ORDER_DEFAULT_VALUE } from '@/src/constants/routes';
 
 interface Props {
   route: DialRoute | DialAppRoute;
@@ -52,6 +58,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
 
   const [statusError, setStatusError] = useState('');
   const [bodyError, setBodyError] = useState('');
+  const [orderError, setOrderError] = useState('');
 
   const [isUpstreamsRequired, setIsUpstreamsRequired] = useState(!route.response);
 
@@ -160,6 +167,24 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
     [route, updateRoute],
   );
 
+  const onChangeOrder = useCallback(
+    (order?: string | number) => {
+      updateRoute({ ...route, order: order ? +order : undefined });
+      dispatch({ type: ValidationActionType.SetField, field: 'order', isValid: !!order });
+      setOrderError(order ? '' : t(ErrorI18nKey.RequiredField));
+    },
+    [route, updateRoute, dispatch, t],
+  );
+
+  const onRefreshOrder = useCallback(() => {
+    updateRoute({
+      ...route,
+      order: ORDER_DEFAULT_VALUE,
+    });
+    dispatch({ type: ValidationActionType.SetField, field: 'order', isValid: true });
+    setOrderError('');
+  }, [route, updateRoute, dispatch]);
+
   return (
     <div className="h-full flex flex-col w-full gap-y-8">
       <DisplayNameControl
@@ -251,18 +276,30 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
           onChange={(values) => onChangePermissions(values as string[])}
         />
       )}
-      <DialNumberInputField
-        elementId="order"
-        disabled={readonly}
-        containerClassName={STANDARD_CONTROL_WIDTH}
-        fieldTitle={t(EntityFieldsI18nKey.order)}
-        placeholder={t(EntityPlaceholdersI18nKey.Order)}
-        value={route.order}
-        min={0}
-        onChange={(order) => {
-          updateRoute({ ...route, order: order ? +order : undefined });
-        }}
-      />
+      <div className={classNames('flex gap-x-2 flex-row items-start', STANDARD_CONTROL_WIDTH)}>
+        <DialNumberInputField
+          elementId="order"
+          disabled={readonly}
+          containerClassName={'w-[50%]'}
+          fieldTitle={t(EntityFieldsI18nKey.order)}
+          placeholder={t(EntityPlaceholdersI18nKey.Order)}
+          value={route.order}
+          min={0}
+          onChange={onChangeOrder}
+          errorText={orderError}
+          invalid={!!orderError}
+        />
+        {route.order !== ORDER_DEFAULT_VALUE && (
+          <DialButton
+            className="dial-tertiary-button mt-6"
+            variant={ButtonVariant.Primary}
+            appearance={ButtonAppearance.Link}
+            label={t(ButtonsI18nKey.ResetToDefault)}
+            iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}
+            onClick={onRefreshOrder}
+          />
+        )}
+      </div>
     </div>
   );
 };

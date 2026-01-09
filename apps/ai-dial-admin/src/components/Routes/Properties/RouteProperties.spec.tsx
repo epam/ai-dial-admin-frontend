@@ -1,7 +1,14 @@
-import { CreateI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
+import {
+  ButtonsI18nKey,
+  CreateI18nKey,
+  EntityFieldsI18nKey,
+  EntityPlaceholdersI18nKey,
+  RoutesI18nKey,
+} from '@/src/constants/i18n';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import RouteProperties from './RouteProperties';
+import { ORDER_DEFAULT_VALUE } from '@/src/constants/routes';
 
 describe('RouteProperties', () => {
   const baseRoute = {
@@ -60,6 +67,17 @@ describe('RouteProperties', () => {
         response: expect.objectContaining({ body: 'newBody' }),
       }),
     );
+  });
+
+  test('should render reset button if order changes', async () => {
+    const updateRoute = vi.fn();
+    render(<RouteProperties route={baseRoute} isAppRoute={true} updateRoute={updateRoute} />);
+    fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Order), { target: { value: '1' } });
+    const resetBtn = await screen.findByText(ButtonsI18nKey.ResetToDefault);
+    expect(resetBtn).toBeInTheDocument();
+
+    fireEvent.click(resetBtn);
+    expect(updateRoute).toHaveBeenCalledWith(expect.objectContaining({ order: ORDER_DEFAULT_VALUE }));
   });
 
   test('calls updateRoute when order changes', () => {
