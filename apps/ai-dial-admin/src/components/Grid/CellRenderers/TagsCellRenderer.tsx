@@ -10,6 +10,9 @@ interface Props {
 const GAP_WIDTH = 8;
 
 const TagsCellRenderer: FC<Props> = ({ items }) => {
+  if (!items) {
+    return;
+  }
   const containerRef = useRef<HTMLDivElement>(null);
   const itemsRef = useRef<HTMLDivElement[]>([]);
   const hiddenCountRef = useRef<HTMLDivElement | null>(null);
