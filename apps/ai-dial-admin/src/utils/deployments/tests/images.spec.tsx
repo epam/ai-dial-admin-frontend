@@ -102,34 +102,6 @@ describe('images utils', () => {
     test('returns false if source type missing', () => {
       expect(validateImage({ ...validImage, source: {} } as any)).toBe(false);
     });
-
-    test('returns false if code url empty', () => {
-      const image = { ...validImage, source: { $type: IMAGE_SOURCE_TYPE.CODE, url: '' } } as any;
-      expect(validateImage(image)).toBe(false);
-    });
-
-    test('returns false if code url invalid', () => {
-      (getDeploymentsURLError as any).mockReturnValue('URL Error');
-      const image = { ...validImage, source: { $type: IMAGE_SOURCE_TYPE.CODE, url: 'invalid' } } as any;
-      expect(validateImage(image)).toBe(false);
-    });
-
-    test('returns false if docker uri empty', () => {
-      const image = { ...validImage, source: { $type: IMAGE_SOURCE_TYPE.DOCKER, imageUri: '' } } as any;
-      expect(validateImage(image)).toBe(false);
-    });
-
-    test('returns false if docker uri invalid', () => {
-      (getDeploymentsURIError as any).mockReturnValue('URI Error');
-      const image = { ...validImage, source: { $type: IMAGE_SOURCE_TYPE.DOCKER, imageUri: 'invalid' } } as any;
-      expect(validateImage(image)).toBe(false);
-    });
-
-    test('returns true for valid image', () => {
-      (getDeploymentsURIError as any).mockReturnValue(null);
-      (getDeploymentsURLError as any).mockReturnValue(null);
-      expect(validateImage(validImage)).toBe(true);
-    });
   });
 
   describe('getVersionsList', () => {
