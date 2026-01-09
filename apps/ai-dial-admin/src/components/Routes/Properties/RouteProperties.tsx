@@ -74,11 +74,6 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
   }, [dispatch, route.methods]);
 
   useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'order', isValid: !!route.order });
-    setOrderError(route.order ? '' : t(ErrorI18nKey.RequiredField));
-  }, [dispatch, route.order, t]);
-
-  useEffect(() => {
     if (isAppRoute) {
       dispatch({
         type: ValidationActionType.SetField,
@@ -177,8 +172,10 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
   const onChangeOrder = useCallback(
     (order?: string | number) => {
       updateRoute({ ...route, order: order ? +order : undefined });
+      dispatch({ type: ValidationActionType.SetField, field: 'order', isValid: !!order });
+      setOrderError(order ? '' : t(ErrorI18nKey.RequiredField));
     },
-    [route, updateRoute],
+    [route, updateRoute, dispatch, t],
   );
 
   const onRefreshOrder = useCallback(() => {
@@ -186,7 +183,9 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
       ...route,
       order: ORDER_DEFAULT_VALUE,
     });
-  }, [route, updateRoute]);
+    dispatch({ type: ValidationActionType.SetField, field: 'order', isValid: true });
+    setOrderError('');
+  }, [route, updateRoute, dispatch]);
 
   return (
     <div className="h-full flex flex-col w-full gap-y-8">

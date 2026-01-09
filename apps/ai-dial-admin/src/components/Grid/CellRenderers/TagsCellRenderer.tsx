@@ -9,15 +9,18 @@ interface Props {
 
 const GAP_WIDTH = 8;
 
-const TilesCellRenderer: FC<Props> = ({ items }) => {
+const TagsCellRenderer: FC<Props> = ({ items }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const itemsRef = useRef<HTMLDivElement[]>([]);
   const hiddenCountRef = useRef<HTMLDivElement | null>(null);
   const [visibleCount, setVisibleCount] = useState(items.length);
 
-  const setItemRef = (index: number) => (el: HTMLDivElement | null) => {
-    if (el) itemsRef.current[index] = el;
-  };
+  const setItemRef = useCallback(
+    (index: number) => (el: HTMLDivElement | null) => {
+      if (el) itemsRef.current[index] = el;
+    },
+    [],
+  );
 
   const recalculateVisibleItems = useCallback(() => {
     const container = containerRef.current;
@@ -98,4 +101,4 @@ const TilesCellRenderer: FC<Props> = ({ items }) => {
   );
 };
 
-export default TilesCellRenderer;
+export default TagsCellRenderer;

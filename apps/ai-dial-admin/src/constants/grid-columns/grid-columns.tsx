@@ -31,7 +31,7 @@ import VersionsSelect from '@/src/components/Common/VersionsSelect/VersionsSelec
 import { SelectVariant } from '@epam/ai-dial-ui-kit';
 import { ImageVersion } from '@/src/models/deployments/images';
 import { formatDeploymentImageName } from '@/src/utils/formatting/deployments';
-import TilesCellRenderer from '@/src/components/Grid/CellRenderers/TilesCellRenderer';
+import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRenderer';
 
 const stringFilter: Partial<ColDef> = {
   filterParams: {
@@ -112,7 +112,7 @@ export const TOPICS_COLUMN: ColDef = {
   field: 'topics',
   colId: 'topics',
   headerName: 'Topics',
-  cellRenderer: TilesCellRenderer,
+  cellRenderer: TagsCellRenderer,
   cellRendererParams: (params: { data?: { topics?: string[]; descriptionKeywords?: string[] } }) => ({
     items: getTopics(params.data),
   }),
@@ -190,7 +190,7 @@ export const PATHS_COLUMN: ColDef = {
   field: 'paths',
   colId: 'paths',
   headerName: 'Paths',
-  cellRenderer: TilesCellRenderer,
+  cellRenderer: TagsCellRenderer,
   cellRendererParams: (params: { data?: { paths?: string[] } }) => ({
     items: params.data?.paths,
   }),
@@ -644,7 +644,7 @@ export const BASE_IMAGE_LIST_COLUMNS: ColDef[] = [
     field: 'topics',
     headerName: 'Topics',
     hide: false,
-    cellRenderer: (params: ICellRendererParams) => <TilesCellRenderer items={params.data?.topics || []} />,
+    cellRenderer: (params: ICellRendererParams) => <TagsCellRenderer items={params.data?.topics || []} />,
     tooltipValueGetter: ({ value }) => (value?.length ? value.join(', ') : null),
     filterValueGetter: (params) =>
       params.data[params.colDef.field || ''].length ? params.data[params.colDef.field || ''].join(' ') : '',
@@ -699,7 +699,7 @@ export const IMAGES_LIST_FOR_CONTAINER_COLUMNS = (onChange: (id: string) => void
       headerName: 'Topics',
       hide: false,
       cellRenderer: (params: ICellRendererParams) => (
-        <TilesCellRenderer
+        <TagsCellRenderer
           items={params.data.availableVersions.find((v: ImageVersion) => v.id === params.data.selectedId).topics || []}
         />
       ),

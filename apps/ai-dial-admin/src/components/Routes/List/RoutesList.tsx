@@ -23,7 +23,7 @@ const RoutesList: FC<Props> = ({ data }) => {
       route={ApplicationRoute.Routes}
       onCreateEntity={createRoute}
       onRemoveEntity={removeRoute}
-      showColumnsButton={true}
+      showColumnsButton
     />
   );
 };
