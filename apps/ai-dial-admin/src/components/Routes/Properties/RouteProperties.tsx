@@ -280,7 +280,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
         <DialNumberInputField
           elementId="order"
           disabled={readonly}
-          containerClassName={'w-[50%]'}
+          containerClassName="w-[50%]"
           fieldTitle={t(EntityFieldsI18nKey.order)}
           placeholder={t(EntityPlaceholdersI18nKey.Order)}
           value={route.order}
