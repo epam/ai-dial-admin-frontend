@@ -1,5 +1,6 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  ButtonAppearance,
   ButtonVariant,
   DialButton,
   DialNumberInputField,
@@ -24,7 +25,7 @@ import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey, RoutesI18
 import { useI18n } from '@/src/locales/client';
 import { DialAppRoute, DialRoute, RouteOutput, RoutePermission } from '@/src/models/dial/route';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { BASE_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { IconRefresh } from '@tabler/icons-react';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { ORDER_DEFAULT_VALUE } from '@/src/constants/routes';
@@ -291,9 +292,10 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
         {route.order !== ORDER_DEFAULT_VALUE && (
           <DialButton
             className="dial-tertiary-button mt-6"
-            variant={ButtonVariant.Secondary}
+            variant={ButtonVariant.Primary}
+            appearance={ButtonAppearance.Link}
             label={t(ButtonsI18nKey.ResetToDefault)}
-            iconBefore={<IconRefresh {...BASE_ICON_PROPS} />}
+            iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}
             onClick={onRefreshOrder}
           />
         )}
