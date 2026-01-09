@@ -2,7 +2,7 @@ import { FC, useEffect, useState } from 'react';
 import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import { ColDef } from 'ag-grid-community';
 import { Resource } from '@/src/models/deployments/containers';
-import TopicsCellRenderer from '@/src/components/Grid/CellRenderers/TopicCellRenderer';
+import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRenderer';
 import { useI18n } from '@/src/locales/client';
 import { getContainerResources } from '@/src/app/actions/deployments';
 import Grid from '@/src/components/Grid/Grid';
@@ -23,7 +23,7 @@ const RESOURCES_COLUMNS: ColDef[] = [
     filter: false,
     sortable: false,
     cellRenderer: (data: { data?: Resource }) => (
-      <TopicsCellRenderer topics={data.data?.mimeType ? [data.data?.mimeType] : []} />
+      <TagsCellRenderer items={data.data?.mimeType ? [data.data?.mimeType] : []} />
     ),
   },
 ];
