@@ -107,7 +107,7 @@ const getTemplate = (type: CONTAINER_TYPE, defaults?: ResourcesDefaults): Contai
   if (type === CONTAINER_TYPE.MCP) {
     return {
       ...template,
-      transport: CONTAINER_TRANSPORT.SSE,
+      transport: CONTAINER_TRANSPORT.HTTP,
     };
   }
 

@@ -95,7 +95,7 @@ describe('containers utils', () => {
     test('returns template for McpDeployments', () => {
       const template = getContainerTemplate(ApplicationRoute.McpDeployments);
       expect(template?.$type).toBe(CONTAINER_TYPE.MCP);
-      expect(template?.transport).toBe(CONTAINER_TRANSPORT.SSE);
+      expect(template?.transport).toBe(CONTAINER_TRANSPORT.HTTP);
     });
 
     test('returns template for Interceptors', () => {
