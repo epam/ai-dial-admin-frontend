@@ -15,7 +15,11 @@ export const isValidHttpUrl = (value: string) => {
     return false;
   }
 
-  return url && (url.protocol === 'http:' || url.protocol === 'https:');
+  return (
+    url &&
+    ((url.protocol === 'http:' && value.startsWith('http://')) ||
+      (url.protocol === 'https:' && value.startsWith('https://')))
+  );
 };
 
 export const isValidEndpoint = (value: string) => {
