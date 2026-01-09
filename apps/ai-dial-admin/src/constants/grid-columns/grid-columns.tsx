@@ -264,7 +264,10 @@ export const MODELS_COLUMNS = (t: (str: string) => string, view?: ApplicationRou
 ];
 
 export const APPLICATIONS_COLUMNS = (t: (str: string) => string): ColDef[] => [
-  ...BASE_COLUMNS,
+  DISPLAY_NAME_COLUMN_WITH_SORT,
+  DISPLAY_VERSION_COLUMN,
+  DESCRIPTION_COLUMN,
+  NAME_COLUMN,
   { field: 'endpoint', headerName: 'Endpoint', hide: false },
   TOPICS_COLUMN,
   AUTHOR_COLUMN,
