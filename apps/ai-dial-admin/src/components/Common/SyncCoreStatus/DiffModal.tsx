@@ -71,7 +71,7 @@ const CoreSyncDiffModal: FC<Props> = ({
         ) : newStatus?.status === EntitySyncStatus.FULLY_SYNCED ? (
           <div className="flex flex-col gap-y-2 items-center justify-center h-[250px] pb-7">
             <IconCircleCheck stroke={1} size={60} className="text-secondary" />
-            <div className="text-sm">Fully synced</div>
+            <div className="text-sm">{t(CoreSyncI18nKey.Fully)}</div>
           </div>
         ) : (
           <div className="flex flex-col h-[80vh] flex-1">
