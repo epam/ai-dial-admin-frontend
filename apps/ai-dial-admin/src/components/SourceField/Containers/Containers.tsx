@@ -1,4 +1,4 @@
-import { ButtonVariant, DialButton, DialInputPopup, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { DialInputPopup, DialNeutralButton, DialSelectField } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -8,12 +8,11 @@ import SelectContainerModal from '@/src/components/SourceField/Containers/Select
 import Endpoints from '@/src/components/SourceField/Endpoints/Endpoints';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { CreateI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, SourceI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
-import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
 import { Container } from '@/src/models/deployments/containers';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
@@ -88,7 +87,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
         : view === ApplicationRoute.Interceptors
           ? ApplicationRoute.InterceptorDeployments
           : ApplicationRoute.McpDeployments;
-    onOpenInNewTab(route, selectedContainer, DEPLOYMENT_ENTITY.containers);
+    onOpenInNewTab(route, selectedContainer);
   }, [selectedContainer, view]);
 
   useEffect(() => {
@@ -147,11 +146,10 @@ const Containers = <T extends DialInterceptor | DialModel>({
               </DialInputPopup>
             </div>
             {entity.source?.containerId && featureFlags.deploymentsEnabled && (
-              <DialButton
-                iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
+              <DialNeutralButton
+                iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
                 className={classNames(errorText ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
                 label={t(SourceI18nKey.OpenContainer)}
-                variant={ButtonVariant.Secondary}
                 onClick={() => openContainer()}
               />
             )}

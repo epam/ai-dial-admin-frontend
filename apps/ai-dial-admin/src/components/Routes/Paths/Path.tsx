@@ -46,11 +46,7 @@ const Path: FC<Props> = ({
           : '';
   }, [disableValidation, isEmptyPath, index, isAllEmptyValues, optional, t, isInvalidPath]);
 
-  const removeButtonClassName = classNames(
-    'cursor-pointer flex-shrink-0 ml-2',
-    index === 0 ? 'mt-8' : 'mt-2',
-    index === 0 && allPaths?.length === 1 ? 'text-secondary' : 'text-error',
-  );
+  const removeButtonClassName = classNames('cursor-pointer flex-shrink-0 ml-2 text-error', !!error && 'mt-[-5px]');
 
   useEffect(() => {
     setIsEmptyPath(path === '');
@@ -66,7 +62,7 @@ const Path: FC<Props> = ({
   }, [error]);
 
   return (
-    <div className="flex flex-row items-start">
+    <div className="flex flex-row items-center">
       <div className="flex-1">
         <DialTextInputField
           elementId={`path-${index}`}

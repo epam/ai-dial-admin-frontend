@@ -1,9 +1,7 @@
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 import {
   getActionClass,
-  getImageTemplate,
   getImageType,
-  getSourcesTypes,
   getUniqueLatestImages,
   getVersionsList,
   isValidVersion,
@@ -26,39 +24,10 @@ describe('images utils', () => {
     vi.clearAllMocks();
   });
 
-  describe('getSourcesTypes', () => {
-    test('returns sources with translated labels', () => {
-      const sources = getSourcesTypes(t);
-      expect(sources.length).toBeGreaterThan(0);
-      expect(sources[0]).toHaveProperty('label');
-    });
-  });
-
   describe('getActionClass', () => {
     test('returns class for status', () => {
       expect(getActionClass(IMAGE_STATUS.BUILT)).toBeDefined();
       expect(getActionClass(CONTAINER_STATUS.RUNNING)).toBeDefined();
-    });
-  });
-
-  describe('getImageTemplate', () => {
-    test('returns template for InterceptorDeployments', () => {
-      const template = getImageTemplate(ApplicationRoute.InterceptorDeployments);
-      expect(template?.$type).toBe(IMAGE_TYPE.INTERCEPTOR);
-    });
-
-    test('returns template for McpDeployments', () => {
-      const template = getImageTemplate(ApplicationRoute.McpDeployments);
-      expect(template?.$type).toBe(IMAGE_TYPE.MCP);
-    });
-
-    test('returns template for ModelDeployments', () => {
-      const template = getImageTemplate(ApplicationRoute.ModelDeployments);
-      expect(template?.$type).toBe(IMAGE_TYPE.MODEL);
-    });
-
-    test('returns null for unknown route', () => {
-      expect(getImageTemplate('unknown' as ApplicationRoute)).toBeNull();
     });
   });
 

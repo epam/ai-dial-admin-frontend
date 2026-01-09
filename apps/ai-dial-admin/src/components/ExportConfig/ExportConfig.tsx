@@ -2,8 +2,7 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
-  ButtonVariant,
-  DialButton,
+  DialPrimaryButton,
   DialNoDataContent,
   DialRadioGroup,
   RadioButtonWithContent,
@@ -17,7 +16,7 @@ import PreviewModal from '@/src/components/ExportConfig/Preview/PreviewModal';
 import ExportDependencies from '@/src/components/ExportConfig/Structure/Dependencies';
 import { fulDependenciesConfig, getComponents, getComponentTypes } from '@/src/components/ExportConfig/utils';
 import { ButtonsI18nKey, ExportI18nKey, ImportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
@@ -154,9 +153,8 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
       <div className="flex flex-col w-full h-full rounded p-4 bg-layer-2">
         <div className="mb-4 flex flex-row items-center justify-between">
           <h1>{t(MenuI18nKey.ExportConfig)}</h1>
-          <DialButton
-            variant={ButtonVariant.Primary}
-            iconBefore={<IconUpload {...BASE_ICON_PROPS} />}
+          <DialPrimaryButton
+            iconBefore={<IconUpload {...BASE_BUTTON_ICON_PROPS} />}
             label={t(ButtonsI18nKey.Export)}
             disabled={isExportDisable}
             onClick={onTryExport}

@@ -13,7 +13,7 @@ import { EntityViewTab, getDeploymentsViewTabs } from '@/src/utils/tabs/utils';
 import { JSONEditorError } from '@/src/types/editor';
 import { validateImageChanged } from '@/src/utils/deployments/images';
 import { getImage, getImageVersions, updateImage } from '@/src/app/actions/deployments';
-import { getTranslatedType } from '@/src/utils/deployments/entity';
+import { getRouteByType, getTranslatedType } from '@/src/utils/deployments/entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { ImagesI18nKey } from '@/src/constants/i18n';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
@@ -24,18 +24,19 @@ import Containers from '@/src/components/Images/View/Containers/Containers';
 import BuildLog from '@/src/components/Images/View/BuildLog/BuildLog';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { BaseEntity } from '@/src/models/dial/base-entity';
-import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
 import { getViewHeaderClassName } from '@/src/utils/entities/view';
+import { Container } from '@/src/models/deployments/containers';
 
 interface Props {
   image: Image;
   route: ApplicationRoute;
   imagesNames: string[];
-  containerNames: string[];
+  containerNames?: string[];
   versions: ImageVersion[];
+  dependencies: Container[];
 }
 
-const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versions }) => {
+const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versions, dependencies }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -60,9 +61,9 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedImage.name]);
+  }, [selectedImage.name, selectedImage.buildStatus]);
 
-  const tabs = getDeploymentsViewTabs(route, t, DEPLOYMENT_ENTITY.images, selectedImage.buildStatus);
+  const tabs = getDeploymentsViewTabs(route, t, selectedImage.buildStatus);
 
   const onChangeActiveTab = useCallback(
     (tab: string) => {
@@ -100,7 +101,7 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
   const onSave = useCallback(() => {
     updateImage(selectedImage).then((res) => {
       if (res.success) {
-        const type = getTranslatedType(route, t);
+        const type = getTranslatedType(getRouteByType(image.$type), t);
         showNotification(
           getSuccessNotification(
             t(ImagesI18nKey.ImagesUpdateSuccess, { type }),
@@ -112,7 +113,7 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [image.name, route, router, selectedImage, showNotification, t]);
+  }, [image.$type, image.name, router, selectedImage, showNotification, t]);
 
   const onChangeImage = useCallback(
     (image: Image) => {
@@ -135,7 +136,6 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
               buildStatus: updatedImage.buildStatus,
               id: updatedImage.id,
             }));
-            //showImageInstallingNotification(updatedImage, getTranslatedType(route, t));
             if (updatedImage.buildStatus !== IMAGE_STATUS.BUILDING && interval) {
               clearInterval(interval);
             }
@@ -172,6 +172,7 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
             imagesNames={imagesNames}
             containerNames={containerNames}
             versions={imageVersions}
+            dependencies={dependencies}
           />
         </div>
         <div className="flex-1 overflow-auto mt-3 min-h-0">
@@ -187,7 +188,7 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
           ) : (
             <>
               {activeTab === EntityViewTab.Properties && (
-                <Properties image={selectedImage} setImage={onChangeImage} route={route} originalName={image.name} />
+                <Properties image={selectedImage} setImage={onChangeImage} originalName={image.name} />
               )}
               {activeTab === EntityViewTab.RelatedContainers && (
                 <Containers image={selectedImage} route={route} versions={imageVersions} />

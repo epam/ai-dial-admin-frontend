@@ -3,6 +3,7 @@ import {
   isDisableRole,
   getNoAvailableTitle,
   isResetAvailable,
+  isLimitSameAsDefault,
 } from '@/src/components/EntityView/Roles/utils';
 import { ApplicationRoute } from '@/src/types/routes';
 import { RolesI18nKey } from '@/src/constants/i18n';
@@ -22,7 +23,51 @@ describe('getNoAvailableTitle', () => {
   });
 });
 
-describe('Roles View :: isResetAvailable', () => {
+describe('isLimitSameAsDefault', () => {
+  const defaultLimit = {
+    enabled: true,
+    day: '1',
+    minute: '2',
+  };
+
+  test('returns true when limit is exact subset with same values', () => {
+    const limit = { enabled: true, day: '1' };
+
+    expect(isLimitSameAsDefault(limit, defaultLimit)).toBe(true);
+  });
+
+  test('returns true when limit matches default exactly', () => {
+    const limit = { enabled: true, day: '1', minute: '2' };
+
+    expect(isLimitSameAsDefault(limit, defaultLimit)).toBe(true);
+  });
+
+  test('returns false when value differs', () => {
+    const limit = { enabled: true, day: '2' };
+
+    expect(isLimitSameAsDefault(limit, defaultLimit)).toBe(false);
+  });
+
+  test('returns false when enabled differs', () => {
+    const limit = { enabled: false };
+
+    expect(isLimitSameAsDefault(limit, defaultLimit)).toBe(false);
+  });
+
+  test('returns false when extra key exists', () => {
+    const limit = { enabled: true, day: '1', week: '3' };
+
+    expect(isLimitSameAsDefault(limit, defaultLimit)).toBe(false);
+  });
+
+  test('returns true when defaultLimit is undefined and limit has no extra rules', () => {
+    const limit = {};
+
+    expect(isLimitSameAsDefault(limit, undefined)).toBe(true);
+  });
+});
+
+describe('isResetAvailable', () => {
   test('Should return true', () => {
     const res = isResetAvailable({
       defaultRoleLimit: { day: '2', minute: '2' },
@@ -40,7 +85,7 @@ describe('Roles View :: isResetAvailable', () => {
   });
 });
 
-describe('Roles View :: isDisableRole', () => {
+describe('isDisableRole', () => {
   test('returns true if roleLimits is empty object and isPublic is falsy', () => {
     const entity = { roleLimits: {}, isPublic: false };
     expect(isDisableRole(entity)).toBe(true);
@@ -67,7 +112,7 @@ describe('Roles View :: isDisableRole', () => {
   });
 });
 
-describe('Roles View :: getRolesGridData', () => {
+describe('getRolesGridData', () => {
   test('Should return role for isPublic true with limits and shares', () => {
     const res = getRolesGridData(
       {

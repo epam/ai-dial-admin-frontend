@@ -3,9 +3,8 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 import { IconArrowNarrowRight } from '@tabler/icons-react';
 import {
-  ButtonVariant,
+  DialPrimaryButton,
   RadioButtonWithContent,
-  DialButton,
   DialRadioGroup,
   RadioGroupOrientation,
   DialLoadFileAreaField,
@@ -15,7 +14,7 @@ import {
 import { isLargeFile } from '@/src/components/EntityListView/Import/utils';
 import { BasicI18nKey, ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { IMPORT_RESOLUTIONS } from '@/src/constants/import';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 
@@ -78,11 +77,10 @@ const Files: FC<Props> = ({
     <div className="flex flex-col flex-1 min-h-0 rounded border border-primary p-6 mt-8">
       <div className="mb-2 flex flex-row justify-between">
         <h1>{t(ImportI18nKey.Files)}</h1>
-        <DialButton
-          variant={ButtonVariant.Primary}
+        <DialPrimaryButton
           label={t(ButtonsI18nKey.Next)}
           disabled={!isFilesValid}
-          iconAfter={<IconArrowNarrowRight {...BASE_ICON_PROPS} />}
+          iconAfter={<IconArrowNarrowRight {...BASE_BUTTON_ICON_PROPS} />}
           onClick={onNextStep}
         />
       </div>

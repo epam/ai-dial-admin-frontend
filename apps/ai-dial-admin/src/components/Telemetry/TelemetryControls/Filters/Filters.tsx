@@ -1,15 +1,15 @@
-import React, { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react';
+import { DialGhostButton, SelectOption } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
-import { ButtonVariant, DialButton, SelectOption } from '@epam/ai-dial-ui-kit';
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react';
 
 import AddFilter from '@/src/components/Telemetry/TelemetryControls/Filters/AddFilter';
 import Filter from '@/src/components/Telemetry/TelemetryControls/Filters/Filter';
-import { FilterData, TelemetryQuery } from '@/src/models/telemetry';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { ServerActionResponse } from '@/src/models/server-action';
-import { ENTITY_QUERY, PROJECT_QUERY } from '@/src/constants/telemetry';
 import { TelemetryI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { ENTITY_QUERY, PROJECT_QUERY } from '@/src/constants/telemetry';
 import { useI18n } from '@/src/locales/client';
+import { ServerActionResponse } from '@/src/models/server-action';
+import { FilterData, TelemetryQuery } from '@/src/models/telemetry';
 import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
@@ -95,11 +95,7 @@ const Filters: FC<Props> = ({ filters, setFilters, getData, route }) => {
           />
         ))}
       <AddFilter addFilter={addFilter} dropdownData={{ projects, entities }} route={route}>
-        <DialButton
-          label={t(TelemetryI18nKey.AddFilter)}
-          iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-          variant={ButtonVariant.Tertiary}
-        />
+        <DialGhostButton label={t(TelemetryI18nKey.AddFilter)} iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />} />
       </AddFilter>
     </>
   );

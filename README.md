@@ -20,20 +20,25 @@ Once you have Node.js and npm installed, follow these steps to set up your devel
    git clone https://github.com/epam/ai-dial-admin-frontend.git
    ```
 
-2. Install project dependencies:
+2. Setup Node JS version
+
+   Recommended version of Node JS `24.12.0`\
+   Use `nvm` to switch to the supported version of Node JS
+
+3. Install project dependencies:
 
    ```bash
    npm install
    ```
 
-3. Create `.env.local` file in the `\apps\ai-dial-admin` project directory and add the required variables with appropriate values. These two are the only required environment variables.
+4. Create `.env.local` file in the `\apps\ai-dial-admin` project directory and add the required variables with appropriate values. These two are the only required environment variables.
 
    ```bash
    DIAL_ADMIN_API_URL="ADD_VALUE_HERE"
    NEXTAUTH_SECRET="ADD_VALUE_HERE"
    ```
 
-4. To start the development server, run:
+5. To start the development server, run:
 
    ```bash
    npm start

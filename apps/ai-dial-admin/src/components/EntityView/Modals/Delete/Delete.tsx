@@ -103,8 +103,8 @@ const DeleteConfirmationModal = <T extends Artefact>({
     } else {
       entityKeys =
         selectedVersion !== AllVersionValue
-          ? [getEntityPath(view, entity, true, undefined, selectedVersion)]
-          : existingVersions?.map((version) => getEntityPath(view, entity, true, undefined, version)) || [];
+          ? [getEntityPath(view, entity, true, selectedVersion)]
+          : existingVersions?.map((version) => getEntityPath(view, entity, true, version)) || [];
     }
 
     const promises = entityKeys.map((entityKey) => getReqRef.current(removeEntity, entityKey, etag));
@@ -183,7 +183,7 @@ const DeleteConfirmationModal = <T extends Artefact>({
               <DialEllipsisTooltip text={name} />
             </div>
           )}
-          {existingVersions && existingVersions.length > 0 && (
+          {existingVersions && existingVersions.length > 0 ? (
             <div className="text-primary dial-small flex flex-row items-center gap-x-1">
               <span className="text-secondary">{t(EntityFieldsI18nKey.displayVersion)}:</span>
               <DialSelect
@@ -194,6 +194,12 @@ const DeleteConfirmationModal = <T extends Artefact>({
                 value={selectedVersion}
               />
             </div>
+          ) : (
+            entity.displayVersion && (
+              <div className="text-primary dial-small">
+                <span className="text-secondary">{t(EntityFieldsI18nKey.displayVersion)}:</span> {entity.displayVersion}
+              </div>
+            )
           )}
         </div>
         {isBuildersView(view) && <RelatedArtefacts entity={entity} view={view} />}

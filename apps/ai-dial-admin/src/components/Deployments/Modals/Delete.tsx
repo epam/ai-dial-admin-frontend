@@ -1,6 +1,6 @@
 import { FC, useMemo } from 'react';
 import classNames from 'classnames';
-import { ButtonVariant, DialButton, DialPopup } from '@epam/ai-dial-ui-kit';
+import { DialPrimaryButton, DialNeutralButton, DialPopup } from '@epam/ai-dial-ui-kit';
 import { ApplicationRoute } from '@/src/types/routes';
 import { Container } from '@/src/models/deployments/containers';
 import { useI18n } from '@/src/locales/client';
@@ -51,9 +51,8 @@ const DeleteModal: FC<Props> = ({ title, description, isModalOpen, onClose, onAp
         )}
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialButton
-          variant={ButtonVariant.Primary}
+        <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialPrimaryButton
           label={t(ButtonsI18nKey.Delete)}
           onClick={() => {
             onApply();

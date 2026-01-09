@@ -108,11 +108,8 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
       const newRoute = handleRouteOutputChange(route, output);
       updateRoute(newRoute);
       setIsUpstreamsRequired(output !== RouteOutput.RESPONSE);
-      if (output === RouteOutput.RESPONSE) {
-        setStatusError(t(ErrorI18nKey.RequiredField));
-
-        setBodyError(t(ErrorI18nKey.RequiredField));
-      }
+      setStatusError(output === RouteOutput.RESPONSE ? t(ErrorI18nKey.RequiredField) : '');
+      setBodyError(output === RouteOutput.RESPONSE ? t(ErrorI18nKey.RequiredField) : '');
     },
     [route, t, updateRoute],
   );

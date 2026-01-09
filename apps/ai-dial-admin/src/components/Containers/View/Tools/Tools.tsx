@@ -30,9 +30,10 @@ const Tools: FC<Props> = ({ containerId }) => {
         const res = await getContainerTools(containerId);
         if (!res.success) {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
-        }
-        if (res.response) {
-          setTools((res.response as { tools: Tool[] }).tools);
+        } else {
+          if (res.response) {
+            setTools((res.response as { tools: Tool[] }).tools);
+          }
         }
         setLoading(false);
       }
@@ -77,7 +78,7 @@ const Tools: FC<Props> = ({ containerId }) => {
     return <DialLoader size={40} />;
   }
 
-  if (!loading && !tools?.length) {
+  if (!loading && (!tools?.length || !tools)) {
     return <DialNoDataContent title={t(EntitiesI18nKey.NoTools)} />;
   }
 

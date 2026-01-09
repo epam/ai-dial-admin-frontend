@@ -9,25 +9,36 @@ import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 import { ENTITY_TRANSPORT } from '@/src/constants/deployments/containers';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
+import { IMAGE_TYPE } from '@/src/types/deployments/images';
 
 export const getEntityRoute = (route: ApplicationRoute) => {
   if (route === ApplicationRoute.McpDeployments) {
     return ApplicationRoute.Toolsets;
-  } else if (route === ApplicationRoute.InterceptorDeployments) {
-    return ApplicationRoute.Interceptors;
-  } else {
-    return ApplicationRoute.Models;
   }
+  if (route === ApplicationRoute.InterceptorDeployments) {
+    return ApplicationRoute.Interceptors;
+  }
+  return ApplicationRoute.Models;
+};
+
+export const getRouteByType = (type: IMAGE_TYPE): ApplicationRoute => {
+  if (type === IMAGE_TYPE.MCP) {
+    return ApplicationRoute.McpDeployments;
+  }
+  if (type === IMAGE_TYPE.INTERCEPTOR) {
+    return ApplicationRoute.InterceptorDeployments;
+  }
+  return ApplicationRoute.ModelDeployments;
 };
 
 export const getTranslatedType = (route: ApplicationRoute, t: (key: string) => string) => {
   if (route === ApplicationRoute.McpDeployments) {
     return t(EntitiesI18nKey.MCP);
-  } else if (route === ApplicationRoute.InterceptorDeployments) {
-    return t(EntitiesI18nKey.Interceptor);
-  } else {
-    return t(EntitiesI18nKey.Model);
   }
+  if (route === ApplicationRoute.InterceptorDeployments) {
+    return t(EntitiesI18nKey.Interceptor);
+  }
+  return t(EntitiesI18nKey.Model);
 };
 
 export const getTranslatedDeploymentType = (route: ApplicationRoute, t: (key: string) => string): string => {
@@ -41,11 +52,11 @@ export const getTranslatedDeploymentType = (route: ApplicationRoute, t: (key: st
 export const getTranslatedEntity = (route: ApplicationRoute, t: (key: string) => string) => {
   if (route === ApplicationRoute.McpDeployments) {
     return t(EntitiesI18nKey.Toolset);
-  } else if (route === ApplicationRoute.InterceptorDeployments) {
-    return t(EntitiesI18nKey.Interceptor);
-  } else {
-    return t(EntitiesI18nKey.Model);
   }
+  if (route === ApplicationRoute.InterceptorDeployments) {
+    return t(EntitiesI18nKey.Interceptor);
+  }
+  return t(EntitiesI18nKey.Model);
 };
 
 export const getIdFormat = (name: string) => {

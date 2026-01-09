@@ -1,14 +1,14 @@
 import { FC, MouseEvent, useCallback, useEffect, useState } from 'react';
 import { GridApi } from 'ag-grid-community';
 import { IconColumns2 } from '@tabler/icons-react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton } from '@epam/ai-dial-ui-kit';
 import { ApplicationRoute } from '@/src/types/routes';
 import { KubEvent } from '@/src/models/deployments/containers';
 import { useI18n } from '@/src/locales/client';
 import ListView from '@/src/components/ListView/ListView';
 import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import ResetFiltersButton from '@/src/components/EntityListView/HeaderButtons/ResetFiltersButton';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { CONTAINER_EVENTS } from '@/src/constants/grid-columns/grid-columns';
 
 interface Props {
@@ -55,15 +55,15 @@ const Events: FC<Props> = ({ route, events }) => {
         showColumnsPanel={showColumnsPanel}
         toggleColumnsPanel={toggleColumnsPanel}
         onGridReady={onGridReady}
+        storageKey={`${route}/events`}
       >
         <div className="flex gap-4">
           {!!events.length && (
             <>
               <ResetFiltersButton gridApi={gridApi} />
-              <DialButton
-                variant={ButtonVariant.Tertiary}
+              <DialGhostButton
                 label={t(ButtonsI18nKey.Columns)}
-                iconBefore={<IconColumns2 {...BASE_ICON_PROPS} />}
+                iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} />}
                 onClick={onToggleColumnsPanel}
               />
             </>

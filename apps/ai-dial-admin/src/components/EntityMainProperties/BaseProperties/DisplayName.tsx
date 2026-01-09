@@ -27,7 +27,7 @@ const DisplayNameControl: FC<Props> = ({ displayName, isFullWidth = true, onChan
 
   const validateDisplayName = useCallback(
     (displayName?: string) => {
-      const error = getErrorForName(displayName, names, t, false, true, true);
+      const error = getErrorForName(displayName, names, t, false, false, true);
       setDisplayNameError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !error });
     },
@@ -36,9 +36,13 @@ const DisplayNameControl: FC<Props> = ({ displayName, isFullWidth = true, onChan
 
   // initial validation
   useEffect(() => {
-    validateDisplayName(displayName);
+    if (displayName) {
+      validateDisplayName(displayName);
+    } else {
+      dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !!displayName });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [displayName]);
 
   const onChangeDisplayName = useCallback(
     (value?: string) => {

@@ -3,7 +3,7 @@ import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { getModels } from '@/src/app/[lang]/models/actions';
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
 import { getRelevantModelsForAdapter } from '@/src/components/AddEntitiesTab/utils';
-import { ENTITY_BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -71,7 +71,7 @@ const AdapterModels: FC<Props> = ({ adapter, onChangeAdapter }) => {
       getRelevantDataForEntity={getRelevantModelsForAdapter.bind(this, adapter)}
       onAdd={onAddModels}
       onRemove={onRemoveModel}
-      customColumns={ENTITY_BASE_COLUMNS}
+      customColumns={BASE_COLUMNS}
     />
   );
 };

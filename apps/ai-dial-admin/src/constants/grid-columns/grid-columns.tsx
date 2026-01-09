@@ -1,9 +1,13 @@
 import { ColDef, ICellRendererParams, ITextFilterParams, ValueGetterParams, ITooltipParams } from 'ag-grid-community';
 
-import ValidityStatusCellRenderer from '@/src/components/Grid/CellRenderers/ValidityStatusCellRenderer';
-import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
-import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
-import { ACTION_COLUMN, NO_BORDER_CLASS } from '@/src/constants/ag-grid';
+import { DialPrompt } from '@/src/models/dial/prompt';
+import { Publication } from '@/src/models/dial/publications';
+import { GridFilterType } from '@/src/types/grid-filter';
+import { ApplicationRoute } from '@/src/types/routes';
+import { CONTAINER_STATUS, KubEventType, MODEL_TYPE } from '@/src/types/deployments/containers';
+import { IMAGE_SOURCE_TYPE, IMAGE_STATUS, IMAGE_TRANSPORT_TYPE, IMAGE_TYPE } from '@/src/types/deployments/images';
+import { SelectVariant } from '@epam/ai-dial-ui-kit';
+import { ImageVersion } from '@/src/models/deployments/images';
 import {
   formatAttachment,
   getFormattedResourceType,
@@ -13,25 +17,27 @@ import {
   sourceTypeFormatter,
   sourceValueFormatter,
 } from '@/src/constants/grid-columns/formatters';
-import { DialPrompt } from '@/src/models/dial/prompt';
-import { Publication } from '@/src/models/dial/publications';
-import { GridFilterType } from '@/src/types/grid-filter';
-import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getDeleteOperation, getDuplicateOperation, getMoveOperation, getOpenInNewTabOperation } from './actions';
-import HeaderWithHintButton from '@/src/components/Grid/HeaderComponents/HeaderWithHintButton';
 import { getValidityStatus } from '@/src/components/EntityView/Status/utils';
 import { isAssetWithVersion } from '@/src/utils/is-asset-view';
-import DeploymentStatusIndicator from '@/src/components/Common/DeploymentStatusIndicator/DeploymentStatusIndicator';
-import { STATUS_I18N_KEYS, TRANSPORT_TYPES } from '@/src/constants/deployments/images';
-import { CONTAINER_STATUS, KubEventType, MODEL_TYPE } from '@/src/types/deployments/containers';
-import { EVENT_TYPES, MODEL_TYPES, POD_OBJECT_KIND } from '@/src/constants/deployments/containers';
-import { IMAGE_STATUS } from '@/src/types/deployments/images';
-import VersionsSelect from '@/src/components/Common/VersionsSelect/VersionsSelect';
-import { SelectVariant } from '@epam/ai-dial-ui-kit';
-import { ImageVersion } from '@/src/models/deployments/images';
 import { formatDeploymentImageName } from '@/src/utils/formatting/deployments';
+import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
+import { ACTION_COLUMN, NO_BORDER_CLASS } from '@/src/constants/ag-grid';
+import {
+  IMAGE_SOURCE_TYPE_I18N_KEYS,
+  IMAGE_TRANSPORT_I18N_KEYS,
+  IMAGE_TYPE_I18N_KEYS,
+  STATUS_I18N_KEYS,
+} from '@/src/constants/deployments/images';
+import { EVENT_TYPES, MODEL_TYPES, POD_OBJECT_KIND } from '@/src/constants/deployments/containers';
+
+import ValidityStatusCellRenderer from '@/src/components/Grid/CellRenderers/ValidityStatusCellRenderer';
+import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRenderer';
+import HeaderWithHintButton from '@/src/components/Grid/HeaderComponents/HeaderWithHintButton';
+import StatusIndicator from '@/src/components/Deployments/Common/StatusIndicator/StatusIndicator';
+import VersionsSelect from '@/src/components/Deployments/Common/VersionsSelect/VersionsSelect';
 
 const stringFilter: Partial<ColDef> = {
   filterParams: {
@@ -104,9 +110,16 @@ export const DISPLAY_NAME_COLUMN: ColDef = {
   headerName: 'Display Name',
   hide: false,
 };
-const DISPLAY_NAME_COLUMN_WITH_SORT: ColDef = { ...DISPLAY_NAME_COLUMN, sort: 'asc' };
+export const DISPLAY_NAME_COLUMN_WITH_SORT: ColDef = { ...DISPLAY_NAME_COLUMN, sort: 'asc' };
 export const NAME_COLUMN: ColDef = { field: 'name', colId: 'name', headerName: 'ID', hide: false };
 const NAME_COLUMN_WITH_SORT: ColDef = { ...NAME_COLUMN, sort: 'asc' };
+export const DISPLAY_VERSION_COLUMN: ColDef = {
+  field: 'displayVersion',
+  colId: 'displayVersion',
+  headerName: 'Version',
+  hide: false,
+  valueFormatter: (params) => params.value,
+};
 
 export const TOPICS_COLUMN: ColDef = {
   field: 'topics',
@@ -117,6 +130,7 @@ export const TOPICS_COLUMN: ColDef = {
     items: getTopics(params.data),
   }),
   filterValueGetter: (params) => getTopics(params.data),
+  tooltipValueGetter: (params) => getTopics(params.data)?.join(', ') || null,
 };
 
 export const INTERCEPTOR_STATUS_COLUMN: ColDef = {
@@ -203,28 +217,12 @@ export const SIMPLE_ENTITY_COLUMNS: ColDef[] = [
   UPDATED_AT_COLUMN,
 ];
 
-export const ROUTES_COLUMNS: ColDef[] = [
-  DISPLAY_NAME_COLUMN,
-  DESCRIPTION_COLUMN,
-  NAME_COLUMN_WITH_SORT,
-  PATHS_COLUMN,
-  ORDER_COLUMN,
-  UPDATED_AT_COLUMN,
-];
-
-export const ENTITY_BASE_COLUMNS: ColDef[] = [NAME_COLUMN, DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN];
 export const DEPENDENCIES_COLUMNS = [NAME_COLUMN, DISPLAY_NAME_COLUMN, VERSION_COLUMN, DESCRIPTION_COLUMN];
 export const BASE_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN, NAME_COLUMN];
 
 export const MODELS_COLUMNS = (t: (str: string) => string, view?: ApplicationRoute): ColDef[] => [
   DISPLAY_NAME_COLUMN_WITH_SORT,
-  {
-    field: 'displayVersion',
-    colId: 'displayVersion',
-    headerName: 'Version',
-    hide: false,
-    valueFormatter: (params) => params.value,
-  },
+  DISPLAY_VERSION_COLUMN,
   DESCRIPTION_COLUMN,
   NAME_COLUMN,
   ...SOURCE_FIELD_COLUMNS(t, view),
@@ -236,10 +234,24 @@ export const MODELS_COLUMNS = (t: (str: string) => string, view?: ApplicationRou
   ATTACHMENT_COLUMN(t),
   { field: 'maxInputAttachments', headerName: 'Max attachment number', hide: true },
   { field: 'tokenizerModel', headerName: 'Tokenizer model', hide: true },
-  { field: 'forwardAuthToken', headerName: 'Forward auth token', hide: true },
-  { field: 'limits.maxTotalTokens', headerName: 'Interaction limit', hide: true },
-  { field: 'pricing.prompt', headerName: 'Prompt price', hide: true },
-  { field: 'pricing.completion', headerName: 'Completion price', hide: true },
+  {
+    field: 'limits.maxTotalTokens',
+    headerName: 'Interaction limit',
+    hide: true,
+    tooltipValueGetter: (params) => params.data?.limits?.maxTotalTokens,
+  },
+  {
+    field: 'pricing.prompt',
+    headerName: 'Prompt price',
+    hide: true,
+    tooltipValueGetter: (params) => params.data?.pricing?.prompt,
+  },
+  {
+    field: 'pricing.completion',
+    headerName: 'Completion price',
+    hide: true,
+    tooltipValueGetter: (params) => params.data?.pricing?.completion,
+  },
 ];
 
 export const APPLICATIONS_COLUMNS = (t: (str: string) => string): ColDef[] => [
@@ -250,7 +262,6 @@ export const APPLICATIONS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   VALIDITY_STATUS_COLUMN(t),
   ATTACHMENT_COLUMN(t),
   { field: 'maxInputAttachments', headerName: 'Max attachment number', hide: true },
-  { field: 'forwardAuthToken', headerName: 'Forward auth token', hide: true },
 ];
 
 export const ACTIVITY_AUDIT_COLUMNS = (t: (s: string) => string, isSingleEntity?: boolean): ColDef[] => {
@@ -452,9 +463,9 @@ export const TELEMETRY_COLUMNS: ColDef[] = [
 export const TELEMETRY_GRID_COLUMNS: ColDef[] = [NAME_COLUMN, ...TELEMETRY_COLUMNS];
 
 export const USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
-  { field: 'completion_time', headerName: 'Completion Time', ...dateTimeColumn },
-  { field: 'trace_id', headerName: 'Trace ID' },
-  { field: 'topic', headerName: 'Topic' },
+  { field: 'completion_time', headerName: 'Completion Time', hide: false, ...dateTimeColumn },
+  { field: 'trace_id', headerName: 'Trace ID', hide: false },
+  { field: 'topic', headerName: 'Topic', hide: false },
   { field: 'reactions', headerName: 'Reactions', hide: true }, // TODO: not implemented
   {
     field: 'cached_prompt_tokens',
@@ -465,21 +476,25 @@ export const USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
   {
     field: 'prompt_tokens',
     headerName: 'Prompt Tokens',
+    hide: false,
     ...numericColumn,
   },
   {
     field: 'completion_tokens',
     headerName: 'Completion Tokens',
+    hide: false,
     ...numericColumn,
   },
   {
     field: 'deployment_price',
     headerName: 'Deployment Price',
+    hide: false,
     ...priceColumn,
   },
   {
     field: 'price',
     headerName: 'Total Price',
+    hide: false,
     ...priceColumn,
   },
   {
@@ -488,26 +503,26 @@ export const USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
     hide: true,
     ...numericColumn,
   },
-  { field: 'deployment', headerName: 'Deployment ID' },
+  { field: 'deployment', headerName: 'Deployment ID', hide: false },
   { field: 'parent_deployment', headerName: 'Parent Deployment ID', hide: true },
   { field: 'model', headerName: 'Model', hide: true },
-  { field: 'project_id', headerName: 'Project' },
+  { field: 'project_id', headerName: 'Project', hide: false },
   { field: 'upstream', headerName: 'Upstream', hide: true },
   { field: 'execution_path', headerName: 'Execution Path', hide: true },
-  { field: 'user_hash', headerName: 'User' },
+  { field: 'user_hash', headerName: 'User', hide: false },
   { field: 'user_title', headerName: 'User Title', hide: true },
   { field: 'language', headerName: 'Language', hide: true },
   { field: 'duration', headerName: 'Duration', hide: true },
   { field: 'response_id', headerName: 'Response ID', hide: true },
   { field: 'chat_id', headerName: 'Conversation ID', hide: true },
   { field: 'core_span_id', headerName: 'Core span ID', hide: true },
-  { field: 'core_parent_span_id', headerName: 'Core parent span ID' },
+  { field: 'core_parent_span_id', headerName: 'Core parent span ID', hide: false },
 ];
 
 export const USAGE_LOG_CONVERSATIONS_COLUMNS: ColDef[] = [
-  { field: 'completion_time', headerName: 'Last activity', ...dateTimeColumn },
-  { field: 'chat_id', headerName: 'Conversation ID' },
-  { field: 'topic', headerName: 'Topic' },
+  { field: 'completion_time', headerName: 'Last activity', hide: false, ...dateTimeColumn },
+  { field: 'chat_id', headerName: 'Conversation ID', hide: false },
+  { field: 'topic', headerName: 'Topic', hide: false },
   {
     field: 'cached_prompt_tokens',
     headerName: 'Cached Prompt Tokens',
@@ -517,16 +532,19 @@ export const USAGE_LOG_CONVERSATIONS_COLUMNS: ColDef[] = [
   {
     field: 'prompt_tokens',
     headerName: 'Prompt Tokens',
+    hide: false,
     ...numericColumn,
   },
   {
     field: 'completion_tokens',
     headerName: 'Completion Tokens',
+    hide: false,
     ...numericColumn,
   },
   {
     field: 'deployment_price',
     headerName: 'Total Price',
+    hide: false,
     ...priceColumn,
   },
   {
@@ -536,9 +554,9 @@ export const USAGE_LOG_CONVERSATIONS_COLUMNS: ColDef[] = [
     ...numericColumn,
   },
 
-  { field: 'deployment', headerName: 'Deployment ID' },
-  { field: 'project_id', headerName: 'Project' },
-  { field: 'user_hash', headerName: 'User' },
+  { field: 'deployment', headerName: 'Deployment ID', hide: false },
+  { field: 'project_id', headerName: 'Project', hide: false },
+  { field: 'user_hash', headerName: 'User', hide: false },
   { field: 'user_title', headerName: 'User Title', hide: true },
   { field: 'language', headerName: 'Language', hide: true },
 ];
@@ -580,7 +598,7 @@ export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, rou
     field: 'status',
     headerName: 'Status',
     hide: false,
-    cellRenderer: (params: ICellRendererParams) => <DeploymentStatusIndicator status={params.data.status} />,
+    cellRenderer: (params: ICellRendererParams) => <StatusIndicator status={params.data.status} />,
     tooltipValueGetter: ({ value }) => t(STATUS_I18N_KEYS[value as CONTAINER_STATUS]),
     filterValueGetter: (params) => t(STATUS_I18N_KEYS[params.data[params.colDef.field || ''] as CONTAINER_STATUS]),
   },
@@ -610,7 +628,7 @@ export const CONTAINER_EVENTS = (t: (key: string, options?: Record<string, strin
     field: 'eventType',
     headerName: 'Type',
     hide: false,
-    cellRenderer: (params: ICellRendererParams) => <DeploymentStatusIndicator status={params.data.eventType} />,
+    cellRenderer: (params: ICellRendererParams) => <StatusIndicator status={params.data.eventType} />,
     tooltipValueGetter: ({ value }) => t(EVENT_TYPES[value as KubEventType]),
     filterValueGetter: (params) => t(EVENT_TYPES[params.data[params.colDef.field || ''] as KubEventType]),
     maxWidth: 150,
@@ -636,21 +654,6 @@ export const CONTAINER_EVENTS = (t: (key: string, options?: Record<string, strin
   },
 ];
 
-export const BASE_IMAGE_LIST_COLUMNS: ColDef[] = [
-  { field: 'name', headerName: 'Name', hide: false },
-  { field: 'version', headerName: 'Version', hide: false },
-  { field: 'description', headerName: 'Description', hide: false },
-  {
-    field: 'topics',
-    headerName: 'Topics',
-    hide: false,
-    cellRenderer: (params: ICellRendererParams) => <TagsCellRenderer items={params.data?.topics || []} />,
-    tooltipValueGetter: ({ value }) => (value?.length ? value.join(', ') : null),
-    filterValueGetter: (params) =>
-      params.data[params.colDef.field || ''].length ? params.data[params.colDef.field || ''].join(' ') : '',
-  },
-];
-
 export const CHANGE_IMAGE_VERSION = (t: (key: string) => string): ColDef[] => [
   { field: 'name', headerName: 'Name', hide: false },
   { field: 'version', headerName: 'Version', hide: false },
@@ -659,7 +662,7 @@ export const CHANGE_IMAGE_VERSION = (t: (key: string) => string): ColDef[] => [
     field: 'buildStatus',
     headerName: 'Status',
     hide: false,
-    cellRenderer: (params: ICellRendererParams) => <DeploymentStatusIndicator status={params.data?.status} />,
+    cellRenderer: (params: ICellRendererParams) => <StatusIndicator status={params.data?.status} />,
     tooltipValueGetter: ({ value }) => t(STATUS_I18N_KEYS[value as IMAGE_STATUS]),
     filterValueGetter: (params) => t(STATUS_I18N_KEYS[params.data[params.colDef.field || ''] as IMAGE_STATUS]),
   },
@@ -711,12 +714,48 @@ export const IMAGES_LIST_FOR_CONTAINER_COLUMNS = (onChange: (id: string) => void
 };
 
 export const IMAGES_LIST_COLUMNS = (t: (key: string) => string): ColDef[] => [
-  ...BASE_IMAGE_LIST_COLUMNS,
+  { field: 'name', headerName: 'Name', hide: false },
+  { field: 'version', headerName: 'Version', hide: false },
+  { field: 'description', headerName: 'Description', hide: false },
+  { field: 'id', headerName: 'ID', hide: false },
+  TOPICS_COLUMN,
+  {
+    field: '$type',
+    headerName: 'Type',
+    valueFormatter: ({ value }) => t(IMAGE_TYPE_I18N_KEYS[value as IMAGE_TYPE]) || value,
+    tooltipValueGetter: ({ value }) => t(IMAGE_TYPE_I18N_KEYS[value as IMAGE_TYPE]) || value,
+    filterValueGetter: (params) => {
+      const value = params.data[params.colDef.field || ''];
+      return t(IMAGE_TYPE_I18N_KEYS[value as IMAGE_TYPE]) || value;
+    },
+  },
+  {
+    field: 'source.$type',
+    headerName: 'Source',
+    hide: true,
+    valueFormatter: ({ value }) => t(IMAGE_SOURCE_TYPE_I18N_KEYS[value as IMAGE_SOURCE_TYPE]) || value,
+    tooltipValueGetter: ({ value }) => t(IMAGE_SOURCE_TYPE_I18N_KEYS[value as IMAGE_SOURCE_TYPE]) || value,
+    filterValueGetter: (params) => {
+      const value = params.data[params.colDef.field || ''];
+      return t(IMAGE_SOURCE_TYPE_I18N_KEYS[value as IMAGE_SOURCE_TYPE]) || value;
+    },
+  },
+  {
+    field: 'transportType',
+    headerName: 'Transport type',
+    hide: true,
+    valueFormatter: ({ value }) => t(IMAGE_TRANSPORT_I18N_KEYS[value as IMAGE_TRANSPORT_TYPE]) || value,
+    tooltipValueGetter: ({ value }) => t(IMAGE_TRANSPORT_I18N_KEYS[value as IMAGE_TRANSPORT_TYPE]) || value,
+    filterValueGetter: (params) => {
+      const value = params.data[params.colDef.field || ''];
+      return t(IMAGE_TRANSPORT_I18N_KEYS[value as IMAGE_TRANSPORT_TYPE]) || value;
+    },
+  },
   {
     field: 'buildStatus',
     headerName: 'Status',
     hide: false,
-    cellRenderer: (params: ICellRendererParams) => <DeploymentStatusIndicator status={params.data?.buildStatus} />,
+    cellRenderer: (params: ICellRendererParams) => <StatusIndicator status={params.data?.buildStatus} />,
     tooltipValueGetter: ({ value }) => t(STATUS_I18N_KEYS[value as IMAGE_STATUS]),
     filterValueGetter: (params) => t(STATUS_I18N_KEYS[params.data[params.colDef.field || ''] as IMAGE_STATUS]),
   },
@@ -736,25 +775,7 @@ export const IMAGES_LIST_COLUMNS = (t: (key: string) => string): ColDef[] => [
     tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
     filterValueGetter: (params) => formatDateTimeToLocalString(params.data[params.colDef.field || '']),
   },
-  { field: 'source.$type', headerName: 'Source', hide: true },
-  { field: 'license', headerName: 'License', hide: true },
 ];
-
-export const MCP_IMAGES_LIST_COLUMNS = (t: (key: string) => string): ColDef[] => {
-  return [
-    ...IMAGES_LIST_COLUMNS(t),
-    {
-      field: 'transportType',
-      headerName: 'Transport type',
-      hide: true,
-      valueFormatter: ({ value }) => TRANSPORT_TYPES.find((transport) => transport.id === value)?.name || value,
-      tooltipValueGetter: ({ value }) => TRANSPORT_TYPES.find((transport) => transport.id === value)?.name || value,
-      filterValueGetter: (params) =>
-        TRANSPORT_TYPES.find((transport) => transport.id === params.data[params.colDef.field || ''])?.name ||
-        params.data[params.colDef.field || ''],
-    },
-  ];
-};
 
 export const IMAGE_DEPENDENCIES_COLUMNS = (t: (key: string) => string): ColDef[] => [
   { field: 'name', headerName: 'Name', hide: false },
@@ -764,7 +785,7 @@ export const IMAGE_DEPENDENCIES_COLUMNS = (t: (key: string) => string): ColDef[]
     field: 'status',
     headerName: 'Status',
     hide: false,
-    cellRenderer: (params: ICellRendererParams) => <DeploymentStatusIndicator status={params.data.status} />,
+    cellRenderer: (params: ICellRendererParams) => <StatusIndicator status={params.data.status} />,
     tooltipValueGetter: ({ value }) => t(STATUS_I18N_KEYS[value as IMAGE_STATUS]),
     filterValueGetter: (params) => t(STATUS_I18N_KEYS[params.data[params.colDef.field || ''] as IMAGE_STATUS]),
   },

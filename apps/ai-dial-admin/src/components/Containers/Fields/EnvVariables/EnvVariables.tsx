@@ -2,14 +2,14 @@ import React, { FC, useCallback, useMemo } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { IconPlus } from '@tabler/icons-react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 
 import { EnvironmentVariable } from '@/src/models/deployments/variables';
 import { MOUNT_TYPE, VALUE_TYPE } from '@/src/types/deployments/variables';
 import { EntityFieldsI18nKey, EnvVariablesI18nKey } from '@/src/constants/i18n';
 import { Container } from '@/src/models/deployments/containers';
 import { useI18n } from '@/src/locales/client';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 
 import Accordion from '@/src/components/Common/Accordion/Accordion';
 import EnvVariable from './EnvVariable';
@@ -108,11 +108,10 @@ const EnvVariables: FC<Props> = ({ container, setContainer }) => {
           </div>
         </DndProvider>
         <div>
-          <DialButton
-            variant={ButtonVariant.Secondary}
+          <DialNeutralButton
             className="mb-2"
             label={t(EnvVariablesI18nKey.AddVariable)}
-            iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+            iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
             onClick={onAddVariable}
           />
         </div>

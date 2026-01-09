@@ -10,12 +10,12 @@ import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { mountTypeDropdownItems } from '@/src/constants/deployments/variables';
 import { FieldError } from '@/src/models/error';
 import { getVariableNameError } from '@/src/utils/deployments/validation';
-import { MOUNT_TYPE } from '@/src/types/deployments/variables';
+import { MOUNT_TYPE, VALUE_TYPE } from '@/src/types/deployments/variables';
 import DraggableItem from '@/src/components/Common/DraggableItem/DraggableItem';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { EntityPlaceholdersI18nKey, EnvVariablesI18nKey } from '@/src/constants/i18n';
 import EnvVariableValueField from '@/src/components/Containers/Fields/EnvVariables/EnvVariableValue';
-import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
   index: number;
@@ -38,7 +38,7 @@ const EnvVariable: FC<Props> = ({
 }) => {
   const t = useI18n();
   const isTablet = useIsTabletScreen();
-  const { resetCounter } = useSaveValidationContext();
+  const { dispatch, resetCounter } = useSaveValidationContext();
 
   const mountTypeItems = mountTypeDropdownItems(t);
 
@@ -46,8 +46,15 @@ const EnvVariable: FC<Props> = ({
   const [variableNameError, setVariableNameError] = useState<FieldError | null>(null);
 
   useEffect(() => {
-    setVariableNameError(getVariableNameError(variable.name as string, t));
-  }, [resetCounter, t, variable.name]);
+    if (resetCounter || (variable.name !== null && variable.name?.length > 0)) {
+      const error = getVariableNameError(variable.name as string, t);
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: `variable_${index}`,
+        isValid: !error,
+      });
+    }
+  }, [dispatch, index, resetCounter, t, variable.name]);
 
   const onRemove = useCallback(() => {
     removeVariable(index);
@@ -55,10 +62,16 @@ const EnvVariable: FC<Props> = ({
 
   const onChangeName = useCallback(
     (name?: string) => {
-      setVariableNameError(getVariableNameError(name as string, t));
+      const error = getVariableNameError(name as string, t);
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: `variable_${index}`,
+        isValid: !error,
+      });
+      setVariableNameError(error);
       updateVariable({ ...variable, name: name as string });
     },
-    [t, updateVariable, variable],
+    [dispatch, index, t, updateVariable, variable],
   );
 
   const onChangeDescription = useCallback(
@@ -68,9 +81,18 @@ const EnvVariable: FC<Props> = ({
     [variable, updateVariable],
   );
 
-  const onChangeSensitive = useCallback(
+  const onChangeMountType = useCallback(
     (mountType: string | string[]) => {
-      updateVariable({ ...variable, mountType: mountType as MOUNT_TYPE });
+      updateVariable({
+        ...variable,
+        mountType: mountType as MOUNT_TYPE,
+        value: {
+          $type: mountType === MOUNT_TYPE.SECURE_FILE ? VALUE_TYPE.FILE : VALUE_TYPE.SIMPLE,
+          value: mountType === MOUNT_TYPE.SECURE_FILE ? '' : variable.value.value || '',
+          fileContent: '',
+          fileName: '',
+        },
+      });
     },
     [updateVariable, variable],
   );
@@ -94,7 +116,11 @@ const EnvVariable: FC<Props> = ({
             <div className="flex flex-col justify-center cursor-pointer" onClick={toggleCollapse}>
               <h3 className="small flex items-center">
                 <i className="text-icon-primary mr-2 ">
-                  {isCollapsed ? <IconChevronRight {...BASE_ICON_PROPS} /> : <IconChevronDown {...BASE_ICON_PROPS} />}
+                  {isCollapsed ? (
+                    <IconChevronRight {...BASE_BUTTON_ICON_PROPS} />
+                  ) : (
+                    <IconChevronDown {...BASE_BUTTON_ICON_PROPS} />
+                  )}
                 </i>
                 {t(EnvVariablesI18nKey.EnvVariable)} {index + 1}
               </h3>
@@ -138,7 +164,7 @@ const EnvVariable: FC<Props> = ({
                 elementId="mountType"
                 options={mountTypeItems}
                 fieldTitle={t(EnvVariablesI18nKey.MountType)}
-                onChange={onChangeSensitive}
+                onChange={onChangeMountType}
               />
             </div>
           </div>
@@ -147,7 +173,7 @@ const EnvVariable: FC<Props> = ({
           <DialButton
             className="text-error mt-3 lg:mt-6"
             onClick={onRemove}
-            iconBefore={<IconTrash {...BASE_ICON_PROPS} />}
+            iconBefore={<IconTrash {...BASE_BUTTON_ICON_PROPS} />}
           />
         )}
       </div>

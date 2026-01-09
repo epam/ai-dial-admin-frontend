@@ -20,6 +20,16 @@ export default {
     Settings: 'Settings',
     Theme: 'Theme',
   },
+  CoreSync: {
+    SyncStatus: 'Sync status',
+    SyncWithCore: 'Sync with core',
+    InProgress: 'In progress...',
+    Partially: 'Partially synced',
+    Fully: 'Fully synced',
+    Format: 'JSON format',
+    Core: 'Core',
+    Admin: 'Admin',
+  },
   CoreVersionModal: {
     Title: 'Target Core Version',
     DefinitionType: 'Definition type',
@@ -111,6 +121,7 @@ export default {
     InterceptorDeployments: 'Interceptor Deployments',
     ModelDeployments: 'Model Servings',
     InterceptorTemplates: 'Interceptor Templates',
+    Images: 'Images',
 
     EntitiesDescription: 'Centralized space to configure and oversee key components of your AI ecosystem.',
     AccessManagementDescription:
@@ -1116,9 +1127,9 @@ export default {
     SuccessLogoutDescription: 'Access to the list of available tools has been revoked. Log in to restore it.',
   },
   Images: {
-    'ImagesListTitle#zero': '{type} images',
-    'ImagesListTitle#other': '{type} images: {count}',
-    AddModalTitle: 'Adding {type} Image',
+    'ImagesListTitle#zero': 'Images',
+    'ImagesListTitle#other': 'Images: {count}',
+    AddModalTitle: 'Adding Image',
     DuplicateModalTitle: 'Duplicate {type} Image',
     DeleteModalTitle: 'Confirm Deleting {type} Image',
     DeleteModalDescription: 'Are you sure, you want to delete this {type} Image?',
@@ -1145,6 +1156,10 @@ export default {
     ImagesUpdateSuccessDescription: '{type} Image {name} has been updated.',
     ImagesSaveSuccess: '{type} Image version saved successfully',
     ImagesSaveSuccessDescription: '{type} Image updates have been saved in version {version}.',
+    ImageTransportLocal: 'Local (STDIO)',
+    ImageTransportRemote: 'Remote (HTTP/SSE)',
+    ImageTypeMCP: 'MCP image',
+    ImageTypeInterceptor: 'Interceptor image',
   },
   Containers: {
     'ContainersListTitle#zero': '{type} {entityType}s',
@@ -1192,6 +1207,7 @@ export default {
     MountTypeContent: 'Content',
     MountTypeSecureFile: 'Secure file',
     MountTypeSecureContent: 'Secure content',
+    NoFileSelected: 'No file selected',
   },
   Applications: {
     Import: 'Import Applications',

@@ -1,40 +1,34 @@
-import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { DialNeutralButton, DialPrimaryButton, DialSwitch } from '@epam/ai-dial-ui-kit';
+import { IconBlocks, IconPlus, IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { useRouter } from 'next/navigation';
-import { IconBlocks, IconPlus, IconTrashX } from '@tabler/icons-react';
-import { ButtonVariant, DialButton, DialSwitch } from '@epam/ai-dial-ui-kit';
-import { Image, ImageVersion } from '@/src/models/deployments/images';
-import { ApplicationRoute } from '@/src/types/routes';
-import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
-import { IMAGE_STATUS } from '@/src/types/deployments/images';
-import { useI18n } from '@/src/locales/client';
-import { useNotification } from '@/src/context/NotificationContext';
-import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
-import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
+import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
+
+import { createContainer, createImage, deleteImage, installImage } from '@/src/app/actions/deployments';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
-import { Container } from '@/src/models/deployments/containers';
-import {
-  createContainer,
-  createImage,
-  deleteImage,
-  getImageContainers,
-  installImage,
-} from '@/src/app/actions/deployments';
-import { getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
-import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { validateImage } from '@/src/utils/deployments/images';
 import { showEditorErrorNotifications } from '@/src/components/EntityView/JsonEditor/utils';
 import { ButtonsI18nKey, ContainersI18nKey, CreateI18nKey, EntitiesI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
-import Page403 from '@/src/components/Page403/Page403';
-import VersionsSelect from '@/src/components/Common/VersionsSelect/VersionsSelect';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import Delete from '@/src/components/Common/DeploymentsModals/Delete';
-import CreateContainer from '@/src/components/Images/Modals/CreateContainer';
-import NewVersion from '@/src/components/Images/Modals/NewVersion';
-import Install from '@/src/components/Images/Modals/Install';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useNotification } from '@/src/context/NotificationContext';
+import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
+import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
+import { useI18n } from '@/src/locales/client';
+import { Container } from '@/src/models/deployments/containers';
+import { Image, ImageVersion } from '@/src/models/deployments/images';
+import { IMAGE_STATUS } from '@/src/types/deployments/images';
+import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getRouteByType, getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
+import { validateImage } from '@/src/utils/deployments/images';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
+
+import VersionsSelect from '@/src/components/Deployments/Common/VersionsSelect/VersionsSelect';
+import Delete from '@/src/components/Deployments/Modals/Delete';
+import CreateContainer from '@/src/components/Images/Modals/CreateContainer';
+import Install from '@/src/components/Images/Modals/Install';
+import NewVersion from '@/src/components/Images/Modals/NewVersion';
 
 interface Props {
   route: ApplicationRoute;
@@ -50,8 +44,9 @@ interface Props {
   toggleJsonEditor?: () => void;
   setErrorNotifications?: (notification: JSONEditorErrorNotification[]) => void;
   imagesNames: string[];
-  containerNames: string[];
+  containerNames?: string[];
   versions: ImageVersion[];
+  dependencies: Container[];
 }
 
 const HeaderButtons: FC<Props> = ({
@@ -69,6 +64,7 @@ const HeaderButtons: FC<Props> = ({
   children,
   containerNames,
   versions,
+  dependencies,
 }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
@@ -84,8 +80,7 @@ const HeaderButtons: FC<Props> = ({
   const [containerClassNames, setContainerClassNames] = useState(staticContainerClassnames);
   const [buttonsClassNames, setButtonsClassNames] = useState('');
   const [editorClassNames, setEditorClassNames] = useState(staticEditorClassNames);
-  const [dependencies, setDependencies] = useState<Container[]>([]);
-  const [forbidden, setForbidden] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const allowEditing = useMemo(() => {
     return image.buildStatus !== IMAGE_STATUS.BUILT && image.buildStatus !== IMAGE_STATUS.BUILDING;
@@ -97,28 +92,15 @@ const HeaderButtons: FC<Props> = ({
     return isNameChanged && versions.some((v: ImageVersion) => v.version === image.version);
   }, [image.name, image.version, originalImageName, versions]);
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const handleModalClose = useCallback(() => {
-    setIsModalOpen(false);
-  }, []);
-
-  const handleModalOpen = useCallback(() => {
+  const onOpenModal = useCallback((modalType: ModalType) => {
     setIsModalOpen(true);
+    setModalType(modalType);
   }, []);
-
-  const onOpenModal = useCallback(
-    (modalType: ModalType) => {
-      handleModalOpen();
-      setModalType(modalType);
-    },
-    [handleModalOpen],
-  );
 
   const onCloseModal = useCallback(() => {
-    handleModalClose();
+    setIsModalOpen(false);
     setModalType(void 0);
-  }, [handleModalClose]);
+  }, []);
 
   const onInstallImage = useCallback(
     (image: Image) => {
@@ -182,13 +164,13 @@ const HeaderButtons: FC<Props> = ({
     (container: Container) => {
       createContainer(container).then((res) => {
         if (res.success) {
-          router.push(getUrnForEntity(route, res.response, DEPLOYMENT_ENTITY.containers));
+          router.push(getUrnForEntity(getRouteByType(image.$type), res.response));
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
         }
       });
     },
-    [route, router, showNotification],
+    [router, showNotification, image.$type],
   );
 
   const onSaveAsNewVersion = useCallback(
@@ -202,7 +184,7 @@ const HeaderButtons: FC<Props> = ({
               t(ImagesI18nKey.ImagesSaveSuccessDescription, { type, version: image.version }),
             ),
           );
-          router.push(getUrnForEntity(route, res.response, DEPLOYMENT_ENTITY.images));
+          router.push(getUrnForEntity(route, res.response));
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
         }
@@ -213,27 +195,10 @@ const HeaderButtons: FC<Props> = ({
 
   const onVersionChange = useCallback(
     (id: string) => {
-      router.push(getUrnForEntity(route, { id }, DEPLOYMENT_ENTITY.images));
+      router.push(getUrnForEntity(route, { id }));
     },
     [route, router],
   );
-
-  useEffect(() => {
-    if (image) {
-      const fetchDependencies = async () => {
-        const { response, success, status } = await getImageContainers(image?.id as string);
-        if (!success && status === 403) {
-          setForbidden(true);
-          return;
-        }
-        setDependencies((response as Container[]) || []);
-      };
-
-      fetchDependencies().catch((error) => {
-        showNotification(getErrorNotification(error.message));
-      });
-    }
-  }, [image, showNotification]);
 
   useEffect(() => {
     setContainerClassNames(
@@ -251,30 +216,27 @@ const HeaderButtons: FC<Props> = ({
     );
   }, [isTablet, isMobile]);
 
-  if (forbidden) {
-    return <Page403 />;
-  }
-
   return (
     <>
       <div className={containerClassNames}>
         {isChanged ? (
           <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
-            <DialButton
-              variant={ButtonVariant.Secondary}
-              className={buttonsClassNames}
-              label={t(ButtonsI18nKey.Discard)}
-              onClick={onDiscard}
-            />
-            <DialButton
-              variant={allowEditing && !forceNewVersion ? ButtonVariant.Secondary : ButtonVariant.Primary}
-              className={buttonsClassNames}
-              label={t(ButtonsI18nKey.SaveAsNewVersion)}
-              onClick={onOpenSaveNewVersionModal}
-            />
+            <DialNeutralButton className={buttonsClassNames} label={t(ButtonsI18nKey.Discard)} onClick={onDiscard} />
+            {allowEditing && !forceNewVersion ? (
+              <DialNeutralButton
+                className={buttonsClassNames}
+                label={t(ButtonsI18nKey.SaveAsNewVersion)}
+                onClick={onOpenSaveNewVersionModal}
+              />
+            ) : (
+              <DialPrimaryButton
+                className={buttonsClassNames}
+                label={t(ButtonsI18nKey.SaveAsNewVersion)}
+                onClick={onOpenSaveNewVersionModal}
+              />
+            )}
             {allowEditing && !forceNewVersion && (
-              <DialButton
-                variant={ButtonVariant.Primary}
+              <DialPrimaryButton
                 className={buttonsClassNames}
                 label={t(ButtonsI18nKey.Save)}
                 onClick={onTryToSave}
@@ -291,28 +253,25 @@ const HeaderButtons: FC<Props> = ({
                 onChange={onVersionChange}
                 onClick={onOpenCreteNewVersionModal}
               />
-              <DialButton
-                variant={ButtonVariant.Secondary}
+              <DialNeutralButton
                 className={buttonsClassNames}
                 label={t(ButtonsI18nKey.Delete)}
-                iconBefore={<IconTrashX {...BASE_ICON_PROPS} />}
+                iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
                 onClick={onOpenDeleteModal}
               />
               {image.buildStatus === IMAGE_STATUS.BUILT && (
-                <DialButton
-                  variant={ButtonVariant.Secondary}
+                <DialNeutralButton
                   className={buttonsClassNames}
-                  label={t(CreateI18nKey.CreateContainer, { type: getTranslatedType(route, t) })}
-                  iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+                  label={t(CreateI18nKey.CreateContainer, { type: getTranslatedType(getRouteByType(image.$type), t) })}
+                  iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
                   onClick={onOpenCreateModal}
                 />
               )}
               {allowEditing && (
-                <DialButton
-                  variant={ButtonVariant.Secondary}
+                <DialNeutralButton
                   className={buttonsClassNames}
                   label={t(ButtonsI18nKey.Install)}
-                  iconBefore={<IconBlocks {...BASE_ICON_PROPS} />}
+                  iconBefore={<IconBlocks {...BASE_BUTTON_ICON_PROPS} />}
                   onClick={onOpenInstallModal}
                   disabled={image.buildStatus === IMAGE_STATUS.BUILDING}
                 />
@@ -340,8 +299,10 @@ const HeaderButtons: FC<Props> = ({
             onClose={onCloseModal}
             onApply={onDelete}
             dependencies={dependencies}
-            title={t(ImagesI18nKey.DeleteModalTitle, { type: getTranslatedType(route, t) })}
-            description={t(ImagesI18nKey.DeleteModalDescription, { type: getTranslatedType(route, t) })}
+            title={t(ImagesI18nKey.DeleteModalTitle, { type: getTranslatedType(getRouteByType(image.$type), t) })}
+            description={t(ImagesI18nKey.DeleteModalDescription, {
+              type: getTranslatedType(getRouteByType(image.$type), t),
+            })}
             route={route}
           />,
           document.body,
@@ -353,10 +314,9 @@ const HeaderButtons: FC<Props> = ({
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
             modalTitle={t(ContainersI18nKey.CreateModalTitle, {
-              type: getTranslatedType(route, t),
+              type: getTranslatedType(getRouteByType(image.$type), t),
               entityType: getTranslatedDeploymentType(route, t),
             })}
-            route={route}
             image={image}
             onCreate={onCreateContainer}
             names={containerNames}
@@ -396,7 +356,7 @@ const HeaderButtons: FC<Props> = ({
         createPortal(
           <Install
             image={image}
-            title={t(ImagesI18nKey.InstallModalTitle, { type: getTranslatedType(route, t) })}
+            title={t(ImagesI18nKey.InstallModalTitle, { type: getTranslatedType(getRouteByType(image.$type), t) })}
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
             onApply={onInstallImage}

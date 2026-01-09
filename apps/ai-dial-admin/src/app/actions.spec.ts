@@ -4,7 +4,13 @@ import { utilityApi } from '@/src/app/api/api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { checkIsUniqueDeploymentName, getAppProcessStatus, getCoreVersions, setCoreVersion } from './actions';
+import {
+  checkIsUniqueDeploymentName,
+  getAppProcessStatus,
+  getCoreSyncStatus,
+  getCoreVersions,
+  setCoreVersion,
+} from './actions';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -62,6 +68,16 @@ describe('Server actions', () => {
 
     expect(getUserToken).toHaveBeenCalled();
     expect(utilityApi.setCoreVersion).toHaveBeenCalledWith({ coreConfigVersion: 'version' }, TOKEN_MOCK);
+    expect(result).toBe(null);
+  });
+
+  test('Should call getCoreSyncStatus action', async () => {
+    (utilityApi.getEntitySyncStatus as any).mockResolvedValue(null);
+
+    const result = await getCoreSyncStatus('url', 'etag');
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(utilityApi.getEntitySyncStatus).toHaveBeenCalledWith('url', TOKEN_MOCK, 'etag');
     expect(result).toBe(null);
   });
 });

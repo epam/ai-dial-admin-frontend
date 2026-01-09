@@ -170,7 +170,7 @@ describe('ConfigurationPreview.utils', () => {
     expect(cols[1].field).toBe('displayName');
   });
 
-  test('getComponentColDefs returns ENTITY_BASE_COLUMNS for unknown type', () => {
+  test('getComponentColDefs returns BASE_COLUMNS for unknown type', () => {
     const cols = getComponentColDefs('UNKNOWN', t, compare);
     expect(cols[0].field).toBe('action');
     expect(cols[1].field).toBe('displayName');

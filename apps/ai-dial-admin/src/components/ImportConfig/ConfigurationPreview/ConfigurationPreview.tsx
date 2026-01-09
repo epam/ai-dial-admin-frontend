@@ -2,14 +2,14 @@
 
 import { FC, useEffect, useRef, useState } from 'react';
 
-import { ButtonVariant, DialButton, DialLoader, DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
+import { DialPrimaryButton, DialLoader, DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
 import { IconDownload } from '@tabler/icons-react';
 
 import { previewJsonConfigs, previewZipConfig } from '@/src/app/[lang]/import-config/actions';
 import ConfigurationGrid from '@/src/components/ImportConfig/ConfigurationPreview/ConfigurationGrid';
 import { getConfigurationPreview } from '@/src/components/ImportConfig/ConfigurationPreview/ConfigurationPreview.utils';
 import { ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
@@ -67,11 +67,10 @@ const ConfigurationPreview: FC<Props> = ({ files, importBody, fileType, onImport
     <div className="flex flex-col flex-1 min-h-0 rounded border border-primary py-4 px-6 mt-8">
       <div className="mb-2 flex flex-row justify-between">
         <h1>{t(ImportI18nKey.Configuration)}</h1>
-        <DialButton
-          variant={ButtonVariant.Primary}
+        <DialPrimaryButton
           label={t(ButtonsI18nKey.Import)}
           disabled={isLoading || !files}
-          iconBefore={<IconDownload {...BASE_ICON_PROPS} />}
+          iconBefore={<IconDownload {...BASE_BUTTON_ICON_PROPS} />}
           onClick={onImportFile}
         />
       </div>

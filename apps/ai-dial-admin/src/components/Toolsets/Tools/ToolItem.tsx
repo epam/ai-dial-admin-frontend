@@ -1,12 +1,12 @@
 'use client';
 
-import { FC } from 'react';
-import { ButtonVariant, DialSwitch, DialButton } from '@epam/ai-dial-ui-kit';
+import { DialNeutralButton, DialSwitch } from '@epam/ai-dial-ui-kit';
 import { IconTrash } from '@tabler/icons-react';
+import { FC } from 'react';
 
-import { useI18n } from '@/src/locales/client';
 import { ButtonsI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useI18n } from '@/src/locales/client';
 
 interface Props {
   tool: string;
@@ -34,10 +34,9 @@ const ToolItem: FC<Props> = ({ tool, isAddedManual, onRemoveTool, isEnabled, rea
         <div className="flex flex-row items-center">
           {isAddedManual && (
             <div className="invisible group-hover:visible">
-              <DialButton
-                variant={ButtonVariant.Secondary}
+              <DialNeutralButton
                 label={t(ButtonsI18nKey.Delete)}
-                iconBefore={<IconTrash {...BASE_ICON_PROPS} />}
+                iconBefore={<IconTrash {...BASE_BUTTON_ICON_PROPS} />}
                 onClick={() => onRemoveTool?.(tool)}
               />
             </div>

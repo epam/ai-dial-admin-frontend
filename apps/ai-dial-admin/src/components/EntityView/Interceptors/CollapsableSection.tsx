@@ -3,7 +3,7 @@ import React, { FC, ReactNode, useCallback, useState } from 'react';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import classNames from 'classnames';
 
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 
 interface Props {
   title: string;
@@ -25,9 +25,9 @@ const CollapsableSection: FC<Props> = ({ title, children, headerButton }) => {
         <button className="flex flex-1 items-center justify-between" onClick={toggleCollapse}>
           <div className="flex flex-row">
             {isCollapsed ? (
-              <IconChevronRight className="text-secondary" {...BASE_ICON_PROPS} />
+              <IconChevronRight className="text-secondary" {...BASE_BUTTON_ICON_PROPS} />
             ) : (
-              <IconChevronDown className="text-secondary" {...BASE_ICON_PROPS} />
+              <IconChevronDown className="text-secondary" {...BASE_BUTTON_ICON_PROPS} />
             )}
             <h3 className="mx-2">{title}</h3>
           </div>

@@ -49,6 +49,7 @@ export enum MenuI18nKey {
   ModelDeployments = 'Menu.ModelDeployments',
   InterceptorTemplates = 'Menu.InterceptorTemplates',
   ActivityAudit = 'Menu.ActivityAudit',
+  Images = 'Menu.Images',
 }
 
 export enum AuthI18nKey {
@@ -61,6 +62,17 @@ export enum AuthI18nKey {
 export enum SettingsModalI18nKey {
   Settings = 'SettingsModal.Settings',
   Theme = 'SettingsModal.Theme',
+}
+
+export enum CoreSyncI18nKey {
+  SyncStatus = 'CoreSync.SyncStatus',
+  SyncWithCore = 'CoreSync.SyncWithCore',
+  InProgress = 'CoreSync.InProgress',
+  Partially = 'CoreSync.Partially',
+  Fully = 'CoreSync.Fully',
+  Format = 'CoreSync.Format',
+  Core = 'CoreSync.Core',
+  Admin = 'CoreSync.Admin',
 }
 
 export enum CoreVersionModalI18nKey {
@@ -1127,6 +1139,10 @@ export enum ImagesI18nKey {
   ImagesUpdateSuccessDescription = 'Images.ImagesUpdateSuccessDescription',
   ImagesSaveSuccess = 'Images.ImagesSaveSuccess',
   ImagesSaveSuccessDescription = 'Images.ImagesSaveSuccessDescription',
+  ImageTransportLocal = 'Images.ImageTransportLocal',
+  ImageTransportRemote = 'Images.ImageTransportRemote',
+  ImageTypeMCP = 'Images.ImageTypeMCP',
+  ImageTypeInterceptor = 'Images.ImageTypeInterceptor',
 }
 
 export enum ContainersI18nKey {
@@ -1176,6 +1192,7 @@ export enum EnvVariablesI18nKey {
   MountTypeContent = 'EnvVariables.MountTypeContent',
   MountTypeSecureFile = 'EnvVariables.MountTypeSecureFile',
   MountTypeSecureContent = 'EnvVariables.MountTypeSecureContent',
+  NoFileSelected = 'EnvVariables.NoFileSelected',
 }
 
 export enum ApplicationsI18nKey {

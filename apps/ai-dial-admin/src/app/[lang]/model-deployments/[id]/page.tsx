@@ -1,29 +1,21 @@
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import { SIGN_IN_LINK } from '@/src/constants/auth';
+import { ApplicationRoute } from '@/src/types/routes';
+import { Container } from '@/src/models/deployments/containers';
+import { DialModel } from '@/src/models/dial/model';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { ApplicationRoute } from '@/src/types/routes';
-import { Image, ImageVersion } from '@/src/models/deployments/images';
-import { Container } from '@/src/models/deployments/containers';
-import {
-  getContainer,
-  getImage,
-  getImageVersions,
-  getModelContainers,
-  getModelImages,
-} from '@/src/app/actions/deployments';
-import Page403 from '@/src/components/Page403/Page403';
-import { logger } from '@/src/server/logger';
-import ImageView from '@/src/components/Images/View/ImageView';
+import { getContainer, getModelContainers } from '@/src/app/actions/deployments';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
-import ContainerView from '@/src/components/Containers/View/ContainerView';
-import { DialModel } from '@/src/models/dial/model';
-import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
 import { createModel } from '@/src/app/[lang]/models/actions';
 import { modelsApi } from '@/src/app/api/api';
+import { SIGN_IN_LINK } from '@/src/constants/auth';
+import { logger } from '@/src/server/logger';
+
+import Page403 from '@/src/components/Page403/Page403';
+import ContainerView from '@/src/components/Containers/View/ContainerView';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,102 +33,44 @@ export default async function Page(params: Params) {
     return redirect(SIGN_IN_LINK);
   }
 
-  const entityType = (await params.searchParams).entityType;
-
   if (isInvalidSession) {
-    return redirect(`/?route=${ApplicationRoute.ModelDeployments}/${(await params.params).id}?type=${entityType}`);
+    return redirect(`/?route=${ApplicationRoute.ModelDeployments}/${(await params.params).id}`);
   }
+  let container: Container | null = null;
+  let containers: Container[] | null = null;
+  let models: DialModel[] | null = null;
 
-  if (entityType === DEPLOYMENT_ENTITY.images) {
-    let image: Image | null = null;
-    let images: Image[] | null = null;
-    let containers: Container[] | null = null;
-    let versions: ImageVersion[] | null = null;
+  try {
+    const containerResponse = await getContainer((await params.params).id);
+    const containersResponse = await getModelContainers();
 
-    try {
-      const imageResponse = await getImage((await params.params).id);
-      const imagesResponse = await getModelImages();
-      if (!imageResponse.success || !imagesResponse.success) {
-        if (imageResponse.status === 403 || imagesResponse.status === 403) {
-          return <Page403 />;
-        }
-        redirect(ApplicationRoute.ModelDeployments);
+    if (!containerResponse.success || !containersResponse.success) {
+      if (containerResponse.status === 403 || containersResponse.status === 403) {
+        return <Page403 />;
       }
-      image = imageResponse.response as Image;
-      images = imagesResponse.response as Image[];
-
-      const containersResponse = await getModelContainers();
-      const versionsResponse = await getImageVersions(image.name);
-
-      if (!containersResponse.success || !versionsResponse.success) {
-        if (containersResponse.status === 403 || versionsResponse.status === 403) {
-          return <Page403 />;
-        }
-        redirect(ApplicationRoute.ModelDeployments);
-      }
-      versions = versionsResponse.response as ImageVersion[];
-
-      containers = containersResponse.response as Container[];
-    } catch (e) {
-      logger.error(`Getting interceptor image error: ${e}`);
-    }
-
-    if (!image) {
       redirect(ApplicationRoute.ModelDeployments);
     }
+    container = containerResponse.response as Container;
+    containers = containersResponse.response as Container[];
 
-    return (
-      <SaveValidationContextProvider>
-        <ImageView
-          image={image}
-          route={ApplicationRoute.ModelDeployments}
-          imagesNames={images?.map((image) => image.name).filter((name) => name !== image.name) || []}
-          containerNames={containers?.map((container) => container.name) || []}
-          versions={versions || []}
-        />
-      </SaveValidationContextProvider>
-    );
+    models = await modelsApi.getModelsList(token);
+  } catch (e) {
+    logger.error(`Getting interceptor container error ${e}`);
   }
 
-  if (entityType === DEPLOYMENT_ENTITY.containers) {
-    let container: Container | null = null;
-    let containers: Container[] | null = null;
-    let models: DialModel[] | null = null;
-
-    try {
-      const containerResponse = await getContainer((await params.params).id);
-      const containersResponse = await getModelContainers();
-
-      if (!containerResponse.success || !containersResponse.success) {
-        if (containerResponse.status === 403 || containersResponse.status === 403) {
-          return <Page403 />;
-        }
-        redirect(ApplicationRoute.ModelDeployments);
-      }
-      container = containerResponse.response as Container;
-      containers = containersResponse.response as Container[];
-
-      models = await modelsApi.getModelsList(token);
-    } catch (e) {
-      logger.error(`Getting interceptor container error ${e}`);
-    }
-
-    if (!container) {
-      redirect(ApplicationRoute.ModelDeployments);
-    }
-
-    return (
-      <SaveValidationContextProvider>
-        <ContainerView
-          container={container}
-          route={ApplicationRoute.ModelDeployments}
-          names={containers?.map((container) => container.name).filter((name) => name !== container.name) || []}
-          createEntity={createModel}
-          entityNames={models?.map((model) => model.name as string) || []}
-        />
-      </SaveValidationContextProvider>
-    );
+  if (!container) {
+    redirect(ApplicationRoute.ModelDeployments);
   }
 
-  return redirect(ApplicationRoute.ModelDeployments);
+  return (
+    <SaveValidationContextProvider>
+      <ContainerView
+        container={container}
+        route={ApplicationRoute.ModelDeployments}
+        names={containers?.map((container) => container.name).filter((name) => name !== container.name) || []}
+        createEntity={createModel}
+        entityNames={models?.map((model) => model.name as string) || []}
+      />
+    </SaveValidationContextProvider>
+  );
 }

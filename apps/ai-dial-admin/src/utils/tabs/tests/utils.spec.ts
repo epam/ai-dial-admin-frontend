@@ -8,9 +8,9 @@ import {
   attachmentsTab,
   auditTab,
   buildLogTab,
-  containersTab,
   conversationsTab,
   dependenciesTab,
+  deploymentsToolsTab,
   entitiesTab,
   eventsTab,
   executionLogTab,
@@ -30,7 +30,6 @@ import {
   getToolsetTabs,
   getUsageLogTabs,
   getViewTabs,
-  imagesTab,
   interceptorsTab,
   keysTab,
   modelsTab,
@@ -42,11 +41,9 @@ import {
   resourcesTab,
   rolesTab,
   toolsTab,
-  deploymentsToolsTab,
   tracesTab,
 } from '../utils';
 
-import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 
@@ -193,25 +190,19 @@ describe('Entities :: tabs', () => {
     ]);
   });
 
-  test('returns correct tabs for deployments listings', () => {
-    expect(getDeploymentsViewTabs(ApplicationRoute.McpDeployments, t)).toEqual([containersTab(t), imagesTab(t)]);
-  });
-
   test('returns correct tabs for deployment images', () => {
-    const entityType = DEPLOYMENT_ENTITY.images;
     const status = IMAGE_STATUS.BUILT;
 
-    expect(getDeploymentsViewTabs(ApplicationRoute.McpDeployments, t, entityType, status)).toEqual([
+    expect(getDeploymentsViewTabs(ApplicationRoute.Images, t, status)).toEqual([
       propertiesTab(t),
       buildLogTab(t, status),
       relatedContainersTab(t, status),
     ]);
   });
   test('returns correct tabs for deployment mcp containers', () => {
-    const entityType = DEPLOYMENT_ENTITY.containers;
     const status = CONTAINER_STATUS.RUNNING;
 
-    expect(getDeploymentsViewTabs(ApplicationRoute.McpDeployments, t, entityType, status)).toEqual([
+    expect(getDeploymentsViewTabs(ApplicationRoute.McpDeployments, t, status)).toEqual([
       propertiesTab(t),
       deploymentsToolsTab(t, status),
       resourcesTab(t, status),
@@ -222,20 +213,12 @@ describe('Entities :: tabs', () => {
   });
 
   test('returns correct tabs for deployment mcp containers', () => {
-    const entityType = DEPLOYMENT_ENTITY.containers;
     const status = CONTAINER_STATUS.RUNNING;
 
-    expect(getDeploymentsViewTabs(ApplicationRoute.ModelDeployments, t, entityType, status)).toEqual([
+    expect(getDeploymentsViewTabs(ApplicationRoute.ModelDeployments, t, status)).toEqual([
       propertiesTab(t),
       executionLogTab(t),
       eventsTab(t),
     ]);
-  });
-
-  test('returns empty tabs for ApplicationPublications', () => {
-    const entityType = DEPLOYMENT_ENTITY.containers;
-    const status = CONTAINER_STATUS.RUNNING;
-
-    expect(getDeploymentsViewTabs('unknown', t, 'unknown', status)).toEqual([]);
   });
 });

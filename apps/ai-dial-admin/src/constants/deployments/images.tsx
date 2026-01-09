@@ -1,18 +1,47 @@
-import { SelectOption } from '@epam/ai-dial-ui-kit';
+import { RadioButtonWithContent, SelectOption } from '@epam/ai-dial-ui-kit';
 import { IMAGE_SOURCE_TYPE, IMAGE_STATUS, IMAGE_TRANSPORT_TYPE, IMAGE_TYPE } from '@/src/types/deployments/images';
-import { Image } from '@/src/models/deployments/images';
+import { Image, ImageSource } from '@/src/models/deployments/images';
 import { ContainersI18nKey, ImagesI18nKey, KubEventsI18nKey } from '@/src/constants/i18n';
 import { CONTAINER_STATUS, KubEventType } from '@/src/types/deployments/containers';
+import { getRouteByType, getTranslatedType } from '@/src/utils/deployments/entity';
 
-export const SOURCES: SelectOption[] = [
-  { label: ImagesI18nKey.SourceDocker, value: IMAGE_SOURCE_TYPE.DOCKER },
-  { label: ImagesI18nKey.SourceCode, value: IMAGE_SOURCE_TYPE.CODE },
+export const SOURCE_TYPES = (t: (key: string) => string): SelectOption[] => [
+  { label: t(ImagesI18nKey.SourceDocker), value: IMAGE_SOURCE_TYPE.DOCKER },
+  { label: t(ImagesI18nKey.SourceCode), value: IMAGE_SOURCE_TYPE.CODE },
 ];
 
-export const TRANSPORT_TYPES: { id: IMAGE_TRANSPORT_TYPE; name: string }[] = [
-  { name: 'Local (STDIO)', id: IMAGE_TRANSPORT_TYPE.LOCAL },
-  { name: 'Remote (HTTP/SSE)', id: IMAGE_TRANSPORT_TYPE.REMOTE },
+export const IMAGE_TYPES = (t: (key: string, options?: Record<string, string | number>) => string): SelectOption[] => [
+  {
+    label: t(ContainersI18nKey.ContainerImage, { type: getTranslatedType(getRouteByType(IMAGE_TYPE.MCP), t) }),
+    value: IMAGE_TYPE.MCP,
+  },
+  {
+    label: t(ContainersI18nKey.ContainerImage, { type: getTranslatedType(getRouteByType(IMAGE_TYPE.INTERCEPTOR), t) }),
+    value: IMAGE_TYPE.INTERCEPTOR,
+  },
 ];
+
+export const TRANSPORT_TYPES = (
+  t: (key: string, options?: Record<string, string | number>) => string,
+): RadioButtonWithContent[] => [
+  { name: t(ImagesI18nKey.ImageTransportLocal), id: IMAGE_TRANSPORT_TYPE.LOCAL },
+  { name: t(ImagesI18nKey.ImageTransportRemote), id: IMAGE_TRANSPORT_TYPE.REMOTE },
+];
+
+export const IMAGE_TRANSPORT_I18N_KEYS: Record<IMAGE_TRANSPORT_TYPE, string> = {
+  [IMAGE_TRANSPORT_TYPE.LOCAL]: ImagesI18nKey.ImageTransportLocal,
+  [IMAGE_TRANSPORT_TYPE.REMOTE]: ImagesI18nKey.ImageTransportRemote,
+};
+
+export const IMAGE_SOURCE_TYPE_I18N_KEYS: Record<IMAGE_SOURCE_TYPE, string> = {
+  [IMAGE_SOURCE_TYPE.DOCKER]: ImagesI18nKey.SourceDocker,
+  [IMAGE_SOURCE_TYPE.CODE]: ImagesI18nKey.SourceCode,
+};
+
+export const IMAGE_TYPE_I18N_KEYS: Record<IMAGE_TYPE, string> = {
+  [IMAGE_TYPE.MCP]: ImagesI18nKey.ImageTypeMCP,
+  [IMAGE_TYPE.INTERCEPTOR]: ImagesI18nKey.ImageTypeInterceptor,
+};
 
 export const STATUS_I18N_KEYS: Record<IMAGE_STATUS | CONTAINER_STATUS | KubEventType, string> = {
   [IMAGE_STATUS.BUILT]: ImagesI18nKey.Installed,
@@ -44,47 +73,26 @@ export const STATUS_CLASSNAMES: Record<IMAGE_STATUS | CONTAINER_STATUS | KubEven
   [KubEventType.WARNING]: 'bg-red-400',
 };
 
-export const MCP_IMAGE_TEMPLATE: Image = {
+export const LOADING_STATUSES = [CONTAINER_STATUS.PENDING, CONTAINER_STATUS.STOPPING, IMAGE_STATUS.BUILDING];
+
+export const IMAGE_TEMPLATE: Image = {
   id: '',
   $type: IMAGE_TYPE.MCP,
   version: '1.0.0',
   name: '',
   description: '',
   source: {
-    $type: SOURCES[0].value as IMAGE_SOURCE_TYPE,
+    $type: IMAGE_SOURCE_TYPE.DOCKER,
     imageUri: '',
-    url: '',
   },
   transportType: IMAGE_TRANSPORT_TYPE.LOCAL,
   topics: [],
   buildStatus: IMAGE_STATUS.NOT_BUILT,
 };
 
-export const INTERCEPTOR_IMAGE_TEMPLATE: Image = {
-  id: '',
-  $type: IMAGE_TYPE.INTERCEPTOR,
-  version: '1.0.0',
-  name: '',
-  description: '',
-  source: {
-    $type: IMAGE_SOURCE_TYPE.DOCKER,
-    imageUri: '',
-  },
-  topics: [],
-  buildStatus: IMAGE_STATUS.NOT_BUILT,
-};
-export const MODEL_IMAGE_TEMPLATE: Image = {
-  id: '',
-  $type: IMAGE_TYPE.MODEL,
-  version: '1.0.0',
-  name: '',
-  description: '',
-  source: {
-    $type: IMAGE_SOURCE_TYPE.DOCKER,
-    imageUri: '',
-  },
-  topics: [],
-  buildStatus: IMAGE_STATUS.NOT_BUILT,
+export const DEFAULT_IMAGE_SOURCE: ImageSource = {
+  $type: IMAGE_SOURCE_TYPE.DOCKER,
+  imageUri: '',
 };
 
 export const IMAGE_BUILD_POLL_INTERVAL = 5000;

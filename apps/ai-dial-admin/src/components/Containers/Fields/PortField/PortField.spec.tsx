@@ -18,7 +18,7 @@ describe('Common components :: PortField', () => {
   } as Container;
 
   test('updates containerPort on change', async () => {
-    render(<PortField route={ApplicationRoute.McpDeployments} container={mockContainer} setContainer={vi.fn()} />);
+    render(<PortField container={mockContainer} setContainer={vi.fn()} />);
 
     expect(screen.getByRole('spinbutton')).toBeInTheDocument();
   });
@@ -26,7 +26,6 @@ describe('Common components :: PortField', () => {
   test('renders grpc port for ModelDeployments and updates it', async () => {
     render(
       <PortField
-        route={ApplicationRoute.ModelDeployments}
         container={{
           ...mockContainer,
           $type: CONTAINER_TYPE.NIM,

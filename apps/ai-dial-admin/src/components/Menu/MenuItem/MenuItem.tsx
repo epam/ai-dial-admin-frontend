@@ -6,7 +6,7 @@ import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
 import { DialTooltip } from '@epam/ai-dial-ui-kit';
 
 import { MenuGroupConfiguration } from '../menu-configuration';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 
 import MenuItemContent from './MenuItemContent';
@@ -43,7 +43,7 @@ const MenuItem: FC<Props> = ({ config, activeMenuItem, isOpenByDefault = false, 
           </div>
           {isSidebarOpen && (
             <div className={classNames('ml-4', iconClassName)}>
-              {isOpen ? <IconChevronUp {...BASE_ICON_PROPS} /> : <IconChevronDown {...BASE_ICON_PROPS} />}
+              {isOpen ? <IconChevronUp {...BASE_BUTTON_ICON_PROPS} /> : <IconChevronDown {...BASE_BUTTON_ICON_PROPS} />}
             </div>
           )}
         </button>

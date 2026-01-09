@@ -13,13 +13,15 @@ import { getErrorNotification } from '@/src/utils/notification';
 import { BasicI18nKey, ContainersI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { getTranslatedType } from '@/src/utils/deployments/entity';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
-import DeploymentStatusIndicator from '@/src/components/Common/DeploymentStatusIndicator/DeploymentStatusIndicator';
+
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import ContainerProperties from '@/src/components/Containers/Fields/ContainerProperties';
 import ChangeContainerImage from '@/src/components/Containers/Modals/ChangeContainerImage';
 import ServingProperties from '@/src/components/Containers/Fields/ServingProperties';
+import StatusIndicator from '@/src/components/Deployments/Common/StatusIndicator/StatusIndicator';
+import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 
 interface Props {
   container: Container;
@@ -62,7 +64,7 @@ const Properties: FC<Props> = ({ container, setContainer, image, route, names, o
     <>
       <div className="flex flex-col pt-3 divide-y divide-primary w-full">
         <div className="flex gap-10 overflow-y-scroll">
-          <DialLabelledText label={t(EntityFieldsI18nKey.id)} text={originalName} />
+          <LabelledText label={t(EntityFieldsI18nKey.id)} text={originalName} tooltip={originalName} copyable={true} />
           <DialLabelledText label={t(EntityFieldsI18nKey.type)} text={t(ContainersI18nKey.Container)} />
           {image && (
             <DialLabelledText label={t(ContainersI18nKey.ContainerImage, { type: getTranslatedType(route, t) })}>
@@ -71,7 +73,7 @@ const Properties: FC<Props> = ({ container, setContainer, image, route, names, o
                 textClassName="text-primary text-base font-normal"
                 className="text-secondary whitespace-nowrap"
                 onClick={handleModalOpen}
-                iconAfter={<OpenPopup {...BASE_ICON_PROPS} className="inline" />}
+                iconAfter={<OpenPopup {...BASE_BUTTON_ICON_PROPS} className="inline" />}
               />
             </DialLabelledText>
           )}
@@ -84,7 +86,7 @@ const Properties: FC<Props> = ({ container, setContainer, image, route, names, o
             text={formatDateTimeToLocalString(container?.updatedAt)}
           />
           <DialLabelledText label={t(EntityFieldsI18nKey.status)}>
-            <DeploymentStatusIndicator status={container.status} />
+            <StatusIndicator status={container.status} />
           </DialLabelledText>
           {container.status === CONTAINER_STATUS.RUNNING && container.url && (
             <DialLabelledText label={t(BasicI18nKey.URL)}>
