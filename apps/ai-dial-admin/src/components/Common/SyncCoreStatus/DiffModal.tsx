@@ -74,7 +74,7 @@ const CoreSyncDiffModal: FC<Props> = ({
             <div className="text-sm">Fully synced</div>
           </div>
         ) : (
-          <div className="flex flex-col h-[880px] flex-1">
+          <div className="flex flex-col h-[80vh] flex-1">
             <div className="flex flex-row gap-x-10">
               <LabelledText label={t(CoreSyncI18nKey.SyncStatus)}>
                 <div className="flex flex-row gap-x-2 items-center">
