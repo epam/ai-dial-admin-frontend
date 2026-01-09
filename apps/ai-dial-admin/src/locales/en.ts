@@ -1060,15 +1060,15 @@ export default {
     NameExists: 'This ID already exists.',
     DisplayNameExists: 'This display name already exists.',
     Unique: 'This field must be unique.',
-    Version: 'For a model with this Display name, specifying a version is mandatory.',
+    Version: 'For a entity with this Display name, specifying a version is mandatory.',
     NameVersionCombination: 'This combination of name and version already exists. Specify another',
     Length: 'User can add any characters, but not more than {number}.',
     MinMaxLength: 'User can add any allowed characters, but not less than {min} and not more than {max}.',
     MaxNumberError: 'Max allowed number of attachments is {max}',
     ForbiddenChars: 'Name must not contain forbidden characters: {list}',
     KeyValueExists: 'This value already exists.',
-    DisplayNameErrorModel:
-      'This name is used by versionless model. Specify version for model with this display name to group models.',
+    DisplayNameErrorVersion:
+      'This name is used by versionless entity. Specify version for entity with this display name to group entities.',
     EditorErrorLine: 'The error line is {line}',
     CommentError: 'Comment must be at least 15 characters long',
     Name: 'This name already exists.',

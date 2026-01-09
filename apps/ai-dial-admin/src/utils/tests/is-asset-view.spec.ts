@@ -1,4 +1,4 @@
-import { isAssetView, isAssetWithVersion, isBuildersView } from '../is-asset-view';
+import { isAssetView, isAssetWithVersion, isBuildersView, isEntitiesWithDisplayVersion } from '../is-asset-view';
 import { describe, expect, test } from 'vitest';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -59,6 +59,18 @@ describe('Utils :: isAssetWithVersion', () => {
 
   test('Should return false', () => {
     const result = isAssetWithVersion(ApplicationRoute.Models);
+    expect(result).toBeFalsy();
+  });
+});
+
+describe('Utils :: isViewWithDisplayVersion', () => {
+  test('Should return true', () => {
+    expect(isEntitiesWithDisplayVersion(ApplicationRoute.Models)).toBeTruthy();
+    expect(isEntitiesWithDisplayVersion(ApplicationRoute.Applications)).toBeTruthy();
+  });
+
+  test('Should return false', () => {
+    const result = isEntitiesWithDisplayVersion(ApplicationRoute.Keys);
     expect(result).toBeFalsy();
   });
 });
