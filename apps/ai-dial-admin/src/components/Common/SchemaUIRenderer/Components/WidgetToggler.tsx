@@ -11,9 +11,9 @@ interface Props {
 export const WidgetToggler: FC<Props> = ({ children, title, isRoot }) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
-    <div className="flex w-full relative" onClick={() => setIsOpen(!isOpen)}>
+    <div className="flex w-full relative">
       {!isRoot && (
-        <button className="absolute right-0 top-0 p-2">
+        <button className="absolute right-0 top-0 p-2" onClick={() => setIsOpen(!isOpen)}>
           {isOpen ? <IconChevronUp size="24" stroke={2} /> : <IconChevronDown size="24" stroke={2} />}
         </button>
       )}
