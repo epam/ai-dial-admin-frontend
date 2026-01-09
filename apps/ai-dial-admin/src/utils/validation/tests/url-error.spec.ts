@@ -11,6 +11,10 @@ describe('isValidHttpUrl', () => {
   });
 
   test('returns false for invalid URLs', () => {
+    expect(isValidHttpUrl('https:/sub.domain.com/path?query=1')).toBe(false);
+    expect(isValidHttpUrl('https:sub.domain.com/path?query=1')).toBe(false);
+    expect(isValidHttpUrl('http:/example.com')).toBe(false);
+    expect(isValidHttpUrl('http:example.com')).toBe(false);
     expect(isValidHttpUrl('ftp://example.com')).toBe(false);
     expect(isValidHttpUrl('not-a-url')).toBe(false);
     expect(isValidHttpUrl('')).toBe(false);

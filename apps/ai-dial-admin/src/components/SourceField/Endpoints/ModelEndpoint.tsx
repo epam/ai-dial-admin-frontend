@@ -5,7 +5,6 @@ import { DialRadioGroup, RadioGroupOrientation, RadioButtonWithContent } from '@
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
 import { DialModel, DialModelType } from '@/src/models/dial/model';
 import { SOURCE_FIELD } from '@/src/components/SourceField/types';
-import { FieldError } from '@/src/models/error';
 import { getUrlError } from '@/src/utils/validation/url-error';
 import { useI18n } from '@/src/locales/client';
 import ComplexInput from '@/src/components/Common/ComplexInput/ComplexInput';
@@ -29,7 +28,10 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
 
   const [postfix, setPostfix] = useState('');
   const [endpoint, setEndpoint] = useState('');
-  const [endpointError, setEndpointError] = useState<FieldError | null>(null);
+
+  const endpointError = useMemo(() => {
+    return getUrlError(entity.endpoint, t, true);
+  }, [entity.endpoint, t]);
 
   const fullValue = useMemo(() => {
     if (prefix) {
@@ -51,15 +53,13 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
 
   const onChangeEndpoint = useCallback(
     (value?: string) => {
-      const error = getUrlError(value, t, true);
-      setEndpointError(error);
       setEndpoint(value || '');
       onChange({
         ...entity,
         endpoint: `${value || ''}${postfix}`,
       });
     },
-    [entity, onChange, postfix, t],
+    [entity, onChange, postfix],
   );
 
   const onChangeType = useCallback(
