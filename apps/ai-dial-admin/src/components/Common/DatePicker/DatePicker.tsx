@@ -48,6 +48,7 @@ const DatePicker: FC<Props> = ({ id, label, date, dateFormat, placeholder, showT
         timeInputLabel=""
         shouldCloseOnSelect={true}
         showIcon
+        toggleCalendarOnIconClick
         icon={<IconCalendarEvent {...BASE_BUTTON_ICON_PROPS} />}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         {...(props as any)}
