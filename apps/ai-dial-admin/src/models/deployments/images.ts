@@ -13,7 +13,6 @@ export interface Image {
   createdAt?: number;
   updatedAt?: number;
   author?: string;
-  license?: string;
   logs?: string[];
 }
 

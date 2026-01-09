@@ -62,7 +62,7 @@ const Path: FC<Props> = ({
   }, [error]);
 
   return (
-    <div className="flex flex-row items-center">
+    <div className={classNames('flex flex-row', index === 0 ? 'items-end' : 'items-center')}>
       <div className="flex-1">
         <DialTextInputField
           elementId={`path-${index}`}

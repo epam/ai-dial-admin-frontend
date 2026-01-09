@@ -19,3 +19,7 @@ export const isBuildersView = (view?: ApplicationRoute): boolean => {
     view === ApplicationRoute.InterceptorTemplates
   );
 };
+
+export const isEntitiesWithDisplayVersion = (view?: ApplicationRoute) => {
+  return view === ApplicationRoute.Models || view === ApplicationRoute.Applications;
+};

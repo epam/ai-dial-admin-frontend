@@ -807,7 +807,7 @@ export enum ErrorI18nKey {
   WarningEndpoint = 'Error.WarningEndpoint',
   ServerError = 'Error.ServerError',
   DescriptionLength = 'Error.DescriptionLength',
-  DisplayNameErrorModel = 'Error.DisplayNameErrorModel',
+  DisplayNameErrorVersion = 'Error.DisplayNameErrorVersion',
   NameExists = 'Error.NameExists',
   DisplayNameExists = 'Error.DisplayNameExists',
   Unique = 'Error.Unique',
