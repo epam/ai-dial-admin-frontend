@@ -65,6 +65,7 @@ const EntityFeatures = <T extends { features?: DialFeatures }>({
               label={t(FeaturesI18nKey[key as keyof typeof FeaturesI18nKey])}
               text={value}
               tooltip={t(FeaturesI18nKey.AppRunnerInherited)}
+              copyable
             />
           );
         }

@@ -88,13 +88,6 @@ const TimeFilter: FC<Props> = ({ timePeriod, onTimePeriodChange, timeRange, onTi
       onChange={(v) => onItemSelect(v as string)}
     />
   );
-
-  //       selectedValue={
-  //         timePeriodOptionsConfig.find((item) => item.id === value) || {
-  //           id: 'Custom',
-  //           name: `${value}`,
-  //         }
-  //       }
 };
 
 export default TimeFilter;

@@ -26,7 +26,7 @@ export const URLWidget: FC<WidgetProps> = ({
     return !invalid || readonly ? '' : t(ErrorI18nKey.RequiredField);
   }, [invalid, readonly, t]);
   return (
-    <div className="flex flex-col w-full bg-layer-2 py-[18px] pl-[18px]">
+    <div className="flex flex-col w-full bg-layer-2 p-[18px] rounded">
       <WidgetHeader label={label} title={schema.title} description={schema.description} />
       <DialTextInputField
         containerClassName="flex w-full max-w-[600px]"

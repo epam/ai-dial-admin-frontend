@@ -1,27 +1,26 @@
-import { FC, useCallback, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { DialButton, DialLabelledText, DialTooltip } from '@epam/ai-dial-ui-kit';
 import OpenPopup from '@/public/images/icons/open-pop-up.svg';
+import { updateContainer } from '@/src/app/actions/deployments';
+import { BasicI18nKey, ContainersI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useNotification } from '@/src/context/NotificationContext';
+import { useI18n } from '@/src/locales/client';
 import { Container } from '@/src/models/deployments/containers';
 import { Image } from '@/src/models/deployments/images';
-import { ApplicationRoute } from '@/src/types/routes';
-import { useI18n } from '@/src/locales/client';
-import { useRouter } from 'next/navigation';
-import { useNotification } from '@/src/context/NotificationContext';
-import { updateContainer } from '@/src/app/actions/deployments';
-import { getErrorNotification } from '@/src/utils/notification';
-import { BasicI18nKey, ContainersI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
+import { ApplicationRoute } from '@/src/types/routes';
 import { getTranslatedType } from '@/src/utils/deployments/entity';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
+import { getErrorNotification } from '@/src/utils/notification';
+import { DialLabelledText } from '@epam/ai-dial-ui-kit';
+import { useRouter } from 'next/navigation';
+import { FC, useCallback, useState } from 'react';
+import { createPortal } from 'react-dom';
 
-import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
-import ContainerProperties from '@/src/components/Containers/Fields/ContainerProperties';
-import ChangeContainerImage from '@/src/components/Containers/Modals/ChangeContainerImage';
-import ServingProperties from '@/src/components/Containers/Fields/ServingProperties';
-import StatusIndicator from '@/src/components/Deployments/Common/StatusIndicator/StatusIndicator';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
+import ContainerProperties from '@/src/components/Containers/Fields/ContainerProperties';
+import ServingProperties from '@/src/components/Containers/Fields/ServingProperties';
+import ChangeContainerImage from '@/src/components/Containers/Modals/ChangeContainerImage';
+import StatusIndicator from '@/src/components/Deployments/Common/StatusIndicator/StatusIndicator';
 
 interface Props {
   container: Container;
@@ -67,15 +66,11 @@ const Properties: FC<Props> = ({ container, setContainer, image, route, names, o
           <LabelledText label={t(EntityFieldsI18nKey.id)} text={originalName} tooltip={originalName} copyable={true} />
           <DialLabelledText label={t(EntityFieldsI18nKey.type)} text={t(ContainersI18nKey.Container)} />
           {image && (
-            <DialLabelledText label={t(ContainersI18nKey.ContainerImage, { type: getTranslatedType(route, t) })}>
-              <DialButton
-                label={`${image.name} (${image.version})`}
-                textClassName="text-primary text-base font-normal"
-                className="text-secondary whitespace-nowrap"
-                onClick={handleModalOpen}
-                iconAfter={<OpenPopup {...BASE_BUTTON_ICON_PROPS} className="inline" />}
-              />
-            </DialLabelledText>
+            <DialLabelledText
+              label={t(ContainersI18nKey.ContainerImage, { type: getTranslatedType(route, t) })}
+              text={`${image.name} (${image.version})`}
+              postfix={<OpenPopup {...BASE_BUTTON_ICON_PROPS} className="inline" onClick={handleModalOpen} />}
+            />
           )}
           <DialLabelledText
             label={t(EntityFieldsI18nKey.createdAt)}
@@ -89,14 +84,7 @@ const Properties: FC<Props> = ({ container, setContainer, image, route, names, o
             <StatusIndicator status={container.status} />
           </DialLabelledText>
           {container.status === CONTAINER_STATUS.RUNNING && container.url && (
-            <DialLabelledText label={t(BasicI18nKey.URL)}>
-              <p className="flex items-center gap-2 max-w-[360px]">
-                <DialTooltip tooltip={container.url}>
-                  <span className="truncate">{container.url}</span>
-                </DialTooltip>
-                <CopyButton field={container.url} label={t(BasicI18nKey.URL)} />
-              </p>
-            </DialLabelledText>
+            <LabelledText label={t(BasicI18nKey.URL)} text={container.url} copyable />
           )}
         </div>
         <div className="mt-8 pt-8">

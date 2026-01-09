@@ -40,7 +40,7 @@ export const TextWidget: FC<WidgetProps> = ({
       value={value}
     />
   ) : (
-    <div className="flex flex-col w-full bg-layer-2 py-[18px] pl-[18px]">
+    <div className="flex flex-col w-full bg-layer-2 rounded p-[18px]">
       <WidgetHeader label={label} title={schema.title} description={schema.description} />
       {schema.type === 'string' && (
         <DialTextInputField
