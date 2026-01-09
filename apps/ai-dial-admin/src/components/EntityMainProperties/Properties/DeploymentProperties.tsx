@@ -24,6 +24,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getNamesConfigurations } from '@/src/utils/entities/filter-names';
 import AdditionalProperties from './AdditionalProperties';
 import { getDisplayNameError, getVersionError } from './utils';
+import { isEntitiesWithDisplayVersion } from '@/src/utils/is-asset-view';
 
 interface Props {
   view: ApplicationRoute;
@@ -108,7 +109,7 @@ const DeploymentProperties: FC<Props> = ({
   }, [dispatch, entity.displayName, onValidationDisplayName]);
 
   useEffect(() => {
-    if (view === ApplicationRoute.Models) {
+    if (isEntitiesWithDisplayVersion(view)) {
       dispatch({ type: ValidationActionType.SetField, field: 'displayVersion', isValid: !versionError });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -134,7 +135,7 @@ const DeploymentProperties: FC<Props> = ({
           .map((name) => ({ value: name, label: name }))}
         containerClassName={!isEntityImmutable ? 'w-full' : STANDARD_CONTROL_WIDTH}
       />
-      {view === ApplicationRoute.Models && (
+      {isEntitiesWithDisplayVersion(view) && (
         <VersionControl
           view={view}
           title={t(EntityFieldsI18nKey.displayVersion)}

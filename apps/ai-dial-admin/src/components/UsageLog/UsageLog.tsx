@@ -28,9 +28,10 @@ interface Props {
   route: ApplicationRoute;
   entity?: BaseEntity;
   entityView?: EntityViewTab;
+  className?: string;
 }
 
-const UsageLog: FC<Props> = ({ route, entity, entityView }) => {
+const UsageLog: FC<Props> = ({ route, className, entity, entityView }) => {
   const t = useI18n();
   const tabs = getUsageLogTabs(t);
   const getReqRef = useRef(useProtectedRequest());
@@ -75,7 +76,7 @@ const UsageLog: FC<Props> = ({ route, entity, entityView }) => {
   }, [timePeriod]);
 
   return (
-    <div className="flex flex-col h-full w-full bg-layer-2 rounded py-4 px-6">
+    <div className={classNames('flex flex-col h-full w-full', className)}>
       <div className="flex flex-row h-[38px] justify-between mb-4">
         {!entityView && (
           <div className="flex-1 min-w-0">

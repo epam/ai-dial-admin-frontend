@@ -20,6 +20,7 @@ import {
 } from '@/src/utils/entities/duplicate-entity';
 import { getNamesConfigurations } from '@/src/utils/entities/filter-names';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
+import { isEntitiesWithDisplayVersion } from '@/src/utils/is-asset-view';
 
 type ClonedEntity = BaseEntity | DialModel;
 interface Props {
@@ -74,12 +75,12 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
         displayName,
         namesConfiguration.names,
         t,
-        (entity as DialModel).displayVersion,
+        (clonedEntity as DialModel).displayVersion,
       );
       setDisplayNameError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !error });
     },
-    [dispatch, entity, namesConfiguration.names, t, view],
+    [dispatch, clonedEntity, namesConfiguration.names, t, view],
   );
 
   const handleValidateEntityDisplayName = useCallback(
@@ -87,7 +88,7 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
       const isVersionOptional = !namesConfiguration.names.includes(displayName || '');
       onValidateDisplayName(displayName || '');
 
-      if (view === ApplicationRoute.Models) {
+      if (isEntitiesWithDisplayVersion(view)) {
         onValidateVersion({ displayName }, isVersionOptional, initial);
       }
 
@@ -100,8 +101,9 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
     (displayVersion?: string) => {
       onValidateVersion({ displayVersion }, isVersionOptional);
       setEntity({ ...(clonedEntity as DialModel), displayVersion });
+      handleValidateEntityDisplayName(clonedEntity.displayName);
     },
-    [clonedEntity, isVersionOptional, onValidateVersion],
+    [clonedEntity, handleValidateEntityDisplayName, isVersionOptional, onValidateVersion],
   );
 
   const onChangeDisplayName = useCallback(
@@ -167,7 +169,7 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
             names={names}
           />
 
-          {view === ApplicationRoute.Models && (
+          {isEntitiesWithDisplayVersion(view) && (
             <VersionControl
               view={view}
               title={t(EntityFieldsI18nKey.displayVersion)}

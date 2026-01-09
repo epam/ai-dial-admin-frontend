@@ -16,9 +16,9 @@ describe('EntityMainProperties :: errors :: getDisplayNameError', () => {
     expect(result).toBe(ErrorI18nKey.MinMaxLength);
   });
 
-  test('returns DisplayNameErrorModel if view is Models, name exists in names, and no version', () => {
+  test('returns DisplayNameErrorVersion if view is Models, name exists in names, and no version', () => {
     const result = getDisplayNameError(ApplicationRoute.Models, 'foo', ['foo', 'bar'], mockT, '');
-    expect(result).toBe(ErrorI18nKey.DisplayNameErrorModel);
+    expect(result).toBe(ErrorI18nKey.DisplayNameErrorVersion);
   });
 
   test('returns empty string if view is Models, name exists in names, but version is present', () => {
@@ -29,12 +29,6 @@ describe('EntityMainProperties :: errors :: getDisplayNameError', () => {
   test('returns empty string if view is Models, name does not exist in names', () => {
     const result = getDisplayNameError(ApplicationRoute.Models, 'baz', ['foo', 'bar'], mockT, '');
     expect(result).toBe('');
-  });
-
-  test('returns empty string for non-Models view', () => {
-    const result = getDisplayNameError(ApplicationRoute.Applications, 'foo', ['foo', 'bar'], mockT, '');
-    expect(result).toBe(ErrorI18nKey.DisplayNameExists);
-    expect(getDisplayNameError(ApplicationRoute.Applications, 'foo1', ['foo', 'bar'], mockT, '')).toBe('');
   });
 
   test('returns empty string for non-Models view', () => {

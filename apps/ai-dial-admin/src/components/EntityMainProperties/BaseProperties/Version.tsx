@@ -8,6 +8,7 @@ import { getVersionControlError } from '@/src/utils/validation/version-error';
 import { useI18n } from '@/src/locales/client';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getControlClassName } from '@/src/utils/entities/view';
+import { isEntitiesWithDisplayVersion } from '@/src/utils/is-asset-view';
 
 interface Props {
   version?: string;
@@ -42,7 +43,7 @@ const VersionControl: FC<Props> = ({
 
   const onChangeVersion = useCallback(
     (version?: string) => {
-      if (view !== ApplicationRoute.Models) {
+      if (!isEntitiesWithDisplayVersion(view)) {
         const error = getVersionControlError(version, optional, hideError, t);
         setVersionError(error);
         dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: !error });
@@ -53,7 +54,7 @@ const VersionControl: FC<Props> = ({
   );
 
   useEffect(() => {
-    if (view !== ApplicationRoute.Models) {
+    if (!isEntitiesWithDisplayVersion(view)) {
       dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: !!version });
     }
   }, [version, optional, view, dispatch]);
