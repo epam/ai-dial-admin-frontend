@@ -98,7 +98,6 @@ describe('Assets application :: server actions', () => {
         version: '1.0',
         displayVersion: '1.0',
       },
-
       ResourceType.APPLICATION,
       'etag',
     );

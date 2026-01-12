@@ -26,10 +26,12 @@ import {
   getPublicationTabs,
   getRoleTabs,
   getRouteTabs,
+  getSystemPropertiesTabs,
   getTabsForAsset,
   getToolsetTabs,
   getUsageLogTabs,
   getViewTabs,
+  globalInterceptorsTab,
   interceptorsTab,
   keysTab,
   modelsTab,
@@ -178,6 +180,10 @@ describe('Entities :: tabs', () => {
       appRouteTab(t),
       auditTab(t),
     ]);
+  });
+
+  test('returns correct tabs for system properties', () => {
+    expect(getSystemPropertiesTabs(t)).toEqual([globalInterceptorsTab(t)]);
   });
 
   test('returns correct tabs for interceptor', () => {
