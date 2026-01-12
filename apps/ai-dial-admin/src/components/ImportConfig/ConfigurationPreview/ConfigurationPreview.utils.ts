@@ -155,7 +155,7 @@ export const getComponentColDefs = (
   }
 
   if (type === EntityType.APPLICATION_TYPE_SCHEMA) {
-    return [getComponentActionColumn(), ...LIST_RUNNER_COLUMNS, actionColumn];
+    return [getComponentActionColumn(), ...LIST_RUNNER_COLUMNS(t), actionColumn];
   }
 
   if (type === EntityType.KEY) {
