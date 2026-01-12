@@ -6,8 +6,9 @@ import { Image } from '@/src/models/deployments/images';
 
 import BaseDirectoryField from '@/src/components/Images/Fields/SourceFields/BaseDirectoryField';
 import BranchFields from '@/src/components/Images/Fields/SourceFields/BranchFields';
-import SourceAddressField from '@/src/components/Images/Fields/SourceFields/SourceAddressField';
 import SourceTypeFields from '@/src/components/Images/Fields/SourceFields/SourceTypeFields';
+import CodeURL from '@/src/components/Images/Fields/SourceFields/CodeURL/CodeURL';
+import DockerURI from '@/src/components/Images/Fields/SourceFields/DockerURI/DockerURI';
 
 interface Props {
   image: Image;
@@ -22,7 +23,10 @@ const SourceFields: FC<Props> = ({ image, setImage, isModal }) => {
         {(isModal || image.$type === IMAGE_TYPE.MCP) && (
           <SourceTypeFields image={image} setImage={setImage} isModal={isModal} />
         )}
-        <SourceAddressField image={image} setImage={setImage} />
+        <div className="flex w-full">
+          {image.source?.$type === IMAGE_SOURCE_TYPE.CODE && <CodeURL image={image} setImage={setImage} />}
+          {image.source?.$type === IMAGE_SOURCE_TYPE.DOCKER && <DockerURI image={image} setImage={setImage} />}
+        </div>
       </div>
       {image.source?.$type === IMAGE_SOURCE_TYPE.CODE && (
         <div className={classNames('flex flex-col', isModal ? 'gap-4' : 'gap-8')}>

@@ -1,11 +1,10 @@
 import { isEqual } from 'lodash';
 import { SelectOption } from '@epam/ai-dial-ui-kit';
 import { STATUS_CLASSNAMES } from '@/src/constants/deployments/images';
-import { IMAGE_SOURCE_TYPE, IMAGE_STATUS, IMAGE_TRANSPORT_TYPE, IMAGE_TYPE } from '@/src/types/deployments/images';
+import { IMAGE_STATUS, IMAGE_TRANSPORT_TYPE, IMAGE_TYPE } from '@/src/types/deployments/images';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 import { Image, ImageGroup, ImageVersion } from '@/src/models/deployments/images';
-import { getDeploymentsURIError, getDeploymentsURLError } from '@/src/utils/deployments/validation';
 
 import StatusIcon from '@/src/components/Deployments/Common/StatusIndicator/StatusIcon';
 
@@ -54,16 +53,6 @@ export function validateImage(image: Image): boolean {
 
   if (!image.source?.$type) {
     return false;
-  }
-
-  if (image.source.$type === IMAGE_SOURCE_TYPE.CODE) {
-    if (!image.source.url?.trim() || getDeploymentsURLError(image.source.url)) {
-      return false;
-    }
-  } else if (image.source.$type === IMAGE_SOURCE_TYPE.DOCKER) {
-    if (!image.source.imageUri?.trim() || getDeploymentsURIError(image.source.imageUri)) {
-      return false;
-    }
   }
 
   return true;
