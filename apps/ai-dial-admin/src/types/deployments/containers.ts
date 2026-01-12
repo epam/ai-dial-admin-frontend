@@ -48,3 +48,8 @@ export type SERVING_SOURCE = {
 export enum MODEL_FORMAT {
   HF = 'huggingface',
 }
+
+export interface ContainerResources {
+  limits?: Record<string, string>;
+  requests?: Record<string, string>;
+}
