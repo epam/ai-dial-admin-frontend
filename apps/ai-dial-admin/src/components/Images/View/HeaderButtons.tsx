@@ -307,7 +307,7 @@ const HeaderButtons: FC<Props> = ({
             description={t(ImagesI18nKey.DeleteModalDescription, {
               type: getTranslatedType(getRouteByType(image.$type), t),
             })}
-            route={route}
+            route={getRouteByType(image.$type)}
           />,
           document.body,
         )}
