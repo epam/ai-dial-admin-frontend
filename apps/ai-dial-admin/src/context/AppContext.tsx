@@ -14,11 +14,11 @@ export interface AppContextType {
   visualizerConnector?: VisualizerConnector | null;
   setVisualizerConnector?: Dispatch<SetStateAction<VisualizerConnector | null>>;
   featureFlags: Record<string, boolean>;
-  hintSidebar: {
+  sidebar: {
     show: boolean;
     content: ReactNode | null;
-    showHintSidebar: (c: ReactNode) => void;
-    closeHintSidebar: () => void;
+    showSidebar: (c: ReactNode) => void;
+    closeSidebar: () => void;
   };
   disableDeploymentsJSONEditor?: boolean;
   resourcesDefaults?: ResourcesDefaults;
@@ -57,12 +57,12 @@ export const AppContextProvider = ({
     setUserMenuOpen(!userMenuOpen);
   };
 
-  const showHintSidebar = (c: ReactNode) => {
+  const showSidebar = (c: ReactNode) => {
     setContent(c);
     setShow(true);
   };
 
-  const closeHintSidebar = () => {
+  const closeSidebar = () => {
     setContent(null);
     setShow(false);
   };
@@ -76,7 +76,7 @@ export const AppContextProvider = ({
     visualizerConnector,
     setVisualizerConnector,
     featureFlags,
-    hintSidebar: { show, content, showHintSidebar, closeHintSidebar },
+    sidebar: { show, content, showSidebar, closeSidebar },
     disableDeploymentsJSONEditor,
     resourcesDefaults,
   };

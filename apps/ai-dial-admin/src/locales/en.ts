@@ -1125,6 +1125,7 @@ export default {
     SuccessLoginDescription: 'List of available tools is in the Tools Overview tab',
     SuccessLogout: 'Toolset logged out successfully',
     SuccessLogoutDescription: 'Access to the list of available tools has been revoked. Log in to restore it.',
+    TryOut: 'Try out',
   },
   Images: {
     'ImagesListTitle#zero': 'Images',

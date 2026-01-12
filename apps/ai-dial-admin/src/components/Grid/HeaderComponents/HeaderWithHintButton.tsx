@@ -5,7 +5,7 @@ import { IconInfoCircle } from '@tabler/icons-react';
 import { DialButton } from '@epam/ai-dial-ui-kit';
 
 import { useAppContext } from '@/src/context/AppContext';
-import Hint from '@/src/components/Common/HintSIdebar/Hint';
+import Hint from '@/src/components/Common/Sidebar/Hint';
 
 interface Props {
   hintTitle: string;
@@ -14,14 +14,14 @@ interface Props {
 }
 
 const HeaderWithHintButton: FC<Props> = ({ displayName, hintText, hintTitle }) => {
-  const { showHintSidebar } = useAppContext().hintSidebar;
+  const { showSidebar } = useAppContext().sidebar;
 
   const onClick = useCallback(
     (e: MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation();
-      showHintSidebar(<Hint title={hintTitle} text={hintText} />);
+      showSidebar(<Hint title={hintTitle} text={hintText} />);
     },
-    [hintText, hintTitle, showHintSidebar],
+    [hintText, hintTitle, showSidebar],
   );
 
   return (

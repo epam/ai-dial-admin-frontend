@@ -1109,6 +1109,7 @@ export enum ToolsetI18nKey {
   SuccessLoginDescription = 'Toolset.SuccessLoginDescription',
   SuccessLogout = 'Toolset.SuccessLogout',
   SuccessLogoutDescription = 'Toolset.SuccessLogoutDescription',
+  TryOut = 'Toolset.TryOut',
 }
 
 export enum ImagesI18nKey {
