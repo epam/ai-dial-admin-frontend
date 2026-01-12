@@ -46,7 +46,7 @@ const SelectAppRunnerModal: FC<Props> = ({ selectedId, sourceEntities, isModalOp
     >
       <div className="flex flex-col px-6 py-4 h-full">
         <Grid
-          columnDefs={LIST_RUNNER_COLUMNS.map((col) => ({ ...col, sort: void 0 }))}
+          columnDefs={LIST_RUNNER_COLUMNS(t).map((col) => ({ ...col, sort: void 0 }))}
           additionalGridOptions={{
             rowSelection: { mode: 'singleRow', enableClickSelection: true },
             selectionColumnDef: {
