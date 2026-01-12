@@ -135,7 +135,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
               onChange={onChangeRegex}
               errorText={errorText}
               invalid={!!errorText}
-              elementClassName="h-[38px]"
+              elementClassName="h-[40px]"
             />
           ) : (
             <DialTagInput
