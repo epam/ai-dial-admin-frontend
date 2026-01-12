@@ -63,7 +63,7 @@ export const getActualColDefs = (
     columns = [...KEYS_COLUMNS(t)];
   }
   if (type === EntityType.APPLICATION_TYPE_SCHEMA) {
-    columns = [...LIST_RUNNER_COLUMNS];
+    columns = [...LIST_RUNNER_COLUMNS(t)];
   }
   if (type === EntityType.ADAPTER) {
     columns = [...SIMPLE_ENTITY_COLUMNS];

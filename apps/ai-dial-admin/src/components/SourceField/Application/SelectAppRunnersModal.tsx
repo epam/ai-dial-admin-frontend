@@ -66,7 +66,7 @@ const SelectAppRunnerModal: FC<Props> = ({ selectedId, sourceEntities, isModalOp
             },
             onGridReady: (event) => {
               event.api?.updateGridOptions({
-                columnDefs: LIST_RUNNER_COLUMNS,
+                columnDefs: LIST_RUNNER_COLUMNS(t),
                 rowData: [
                   {
                     ['dial:applicationTypeDisplayName']: t(BasicI18nKey.None),
