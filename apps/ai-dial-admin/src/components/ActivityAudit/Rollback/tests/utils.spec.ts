@@ -43,6 +43,11 @@ describe('getSystemRollbackColumns', () => {
     expect(cols.length).toEqual(10);
   });
 
+  test('returns SIMPLE_ENTITY_COLUMNS for INTERCEPTOR TEMPLATE', () => {
+    const cols = getSystemRollbackColumns(ActivityAuditResourceType.INTERCEPTOR_TEMPLATE, t);
+    expect(cols).toEqual(SIMPLE_ENTITY_COLUMNS);
+  });
+
   test('returns KEYS_COLUMNS for KEY', () => {
     const res = KEYS_COLUMNS(t);
     const cols = getSystemRollbackColumns(ActivityAuditResourceType.KEY, t);
