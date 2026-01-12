@@ -26,12 +26,16 @@ const EndpointConfiguration: FC<Props> = ({ container, setContainer, route }) =>
   const [pathError, setPathError] = React.useState<FieldError | null>(null);
 
   useEffect(() => {
-    if (container.mcpEndpointPath) {
-      if (resetCounter || container.mcpEndpointPath?.length > 0) {
-        setPathError(getPathError(container.mcpEndpointPath, t));
-      }
+    if (resetCounter || (container.mcpEndpointPath != null && container.mcpEndpointPath?.length > 0)) {
+      const error = getPathError(container.mcpEndpointPath as string, t);
+      setPathError(error);
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'mcpEndpointPath',
+        isValid: !error,
+      });
     }
-  }, [container.mcpEndpointPath, resetCounter, t]);
+  }, [container.mcpEndpointPath, dispatch, resetCounter, t]);
 
   const onPathChange = useCallback(
     (mcpEndpointPath?: string) => {

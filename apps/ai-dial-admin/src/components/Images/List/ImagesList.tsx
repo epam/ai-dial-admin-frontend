@@ -98,11 +98,14 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
     [onOpenModal],
   );
 
-  const onOpenInNewTabAction = useCallback((image?: Image) => {
-    if (image?.$type) {
-      onOpenInNewTab(getRouteByType(image.$type), image);
-    }
-  }, []);
+  const onOpenInNewTabAction = useCallback(
+    (image?: Image) => {
+      if (image?.$type) {
+        onOpenInNewTab(route, image);
+      }
+    },
+    [route],
+  );
 
   useEffect(() => {
     if (currentImage) {
@@ -214,7 +217,7 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
             dependencies={dependencies}
             title={t(ImagesI18nKey.DeleteModalTitle, { type: getTranslatedType(route, t) })}
             description={t(ImagesI18nKey.DeleteModalDescription, { type: getTranslatedType(route, t) })}
-            route={route}
+            route={getRouteByType(currentImage.$type)}
           />,
           document.body,
         )}

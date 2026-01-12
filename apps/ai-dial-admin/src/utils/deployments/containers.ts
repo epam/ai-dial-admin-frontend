@@ -7,6 +7,7 @@ import {
   CONTAINER_STATUS,
   CONTAINER_TRANSPORT,
   CONTAINER_TYPE,
+  ContainerResources,
   MODEL_FORMAT,
   MODEL_SOURCE_TYPE,
 } from '@/src/types/deployments/containers';
@@ -23,6 +24,13 @@ export const normalizeEnvironmentVariables = (envs?: EnvironmentVariable[]): Env
   });
 };
 
+const normalizeResources = (resources?: ContainerResources): ContainerResources => {
+  return {
+    requests: { ...(resources?.requests ?? {}) },
+    limits: { ...(resources?.limits ?? {}) },
+  };
+};
+
 export const getContainerRedeploySnapshot = (container: Container): ContainerRedeploySnapshot => {
   return {
     imageDefinitionId: container.imageDefinitionId,
@@ -30,6 +38,7 @@ export const getContainerRedeploySnapshot = (container: Container): ContainerRed
     containerPort: container.containerPort,
     containerGrpcPort: container.containerGrpcPort,
     envs: normalizeEnvironmentVariables(container.metadata?.envs),
+    resources: normalizeResources(container.resources),
   };
 };
 

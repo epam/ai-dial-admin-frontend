@@ -77,7 +77,7 @@ const UsageLog: FC<Props> = ({ route, className, entity, entityView }) => {
 
   return (
     <div className={classNames('flex flex-col h-full w-full', className)}>
-      <div className="flex flex-row h-[38px] justify-between mb-4">
+      <div className="flex flex-row h-[40px] justify-between mb-4">
         {!entityView && (
           <div className="flex-1 min-w-0">
             <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
