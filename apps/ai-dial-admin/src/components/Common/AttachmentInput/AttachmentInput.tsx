@@ -204,7 +204,7 @@ const AttachmentInput: FC<Props> = ({
             disable && 'pointer-events-none',
           )}
         >
-          <div className={classNames('dial-input min-h-[38px] p-[6px]', CONTROL_WITH_BUTTON_WIDTH)}>
+          <div className={classNames('dial-input min-h-[40px] p-[6px]', CONTROL_WITH_BUTTON_WIDTH)}>
             <div
               ref={containerRef}
               className={classNames('flex flex-wrap items-start gap-2', wraps ? 'flex-col-reverse' : 'flex-row')}

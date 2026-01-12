@@ -123,7 +123,7 @@ const Endpoint: FC<Props> = ({
             disabled={readonly}
             id={`upstreamEndpoints-${index}`}
             endpoint={endpoint.endpoint}
-            elementClassName="h-[38px]"
+            elementClassName="h-[40px]"
             placeholder={t(EntityPlaceholdersI18nKey.UpstreamEndpoint)}
             fieldTitle={isFirstLine || isTablet ? t(UpstreamEndpointsI18nKey.Endpoints) : ''}
             onChange={onChangeEndPointUrl}
@@ -147,7 +147,7 @@ const Endpoint: FC<Props> = ({
             value={endpoint.weight}
             fieldTitle={isFirstLine || isTablet ? t(EntityFieldsI18nKey.weight) : ''}
             containerClassName="w-[120px]"
-            elementClassName="h-[38px]"
+            elementClassName="h-[40px]"
             placeholder={t(EntityPlaceholdersI18nKey.Weight)}
             onChange={onChangeWeight}
           />
@@ -158,7 +158,7 @@ const Endpoint: FC<Props> = ({
             value={endpoint.tier}
             fieldTitle={isFirstLine || isTablet ? t(EntityFieldsI18nKey.tier) : ''}
             containerClassName="w-[120px]"
-            elementClassName="h-[38px]"
+            elementClassName="h-[40px]"
             placeholder={t(EntityPlaceholdersI18nKey.Tier)}
             onChange={onChangeTier}
           />
