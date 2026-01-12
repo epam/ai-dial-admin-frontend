@@ -6,7 +6,6 @@ import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
 import { ErrorType } from '@/src/types/error-type';
 import { EntityFieldsI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
-import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import Accordion from '@/src/components/Common/Accordion/Accordion';
 
 interface Props {
@@ -49,7 +48,6 @@ const ResourcesFields: FC<Props> = ({ container, setContainer, route }) => {
             elementId="cpuRequest"
             fieldTitle={t(EntityFieldsI18nKey.CPURequest)}
             value={convertCoresToMilliCores(container.resources?.requests?.cpu)}
-            disabled={container.status === CONTAINER_STATUS.RUNNING}
             errorText={cpuRequestError?.text}
             invalid={!!cpuRequestError}
             suffix="m"
@@ -71,7 +69,6 @@ const ResourcesFields: FC<Props> = ({ container, setContainer, route }) => {
             elementId="cpuLimit"
             fieldTitle={t(EntityFieldsI18nKey.CPULimit)}
             value={convertCoresToMilliCores(container.resources?.limits?.cpu)}
-            disabled={container.status === CONTAINER_STATUS.RUNNING}
             errorText={cpuLimitError?.text}
             invalid={!!cpuLimitError}
             suffix="m"
@@ -95,7 +92,6 @@ const ResourcesFields: FC<Props> = ({ container, setContainer, route }) => {
             elementId="memoryRequest"
             fieldTitle={t(EntityFieldsI18nKey.MemoryRequest)}
             value={convertMemoryToMb(container.resources?.requests?.memory)}
-            disabled={container.status === CONTAINER_STATUS.RUNNING}
             suffix="Mb"
             onChange={(memoryRequest) => {
               setContainer({
@@ -114,7 +110,6 @@ const ResourcesFields: FC<Props> = ({ container, setContainer, route }) => {
             elementId="memoryLimit"
             fieldTitle={t(EntityFieldsI18nKey.MemoryLimit)}
             value={convertMemoryToMb(container.resources?.limits?.memory)}
-            disabled={container.status === CONTAINER_STATUS.RUNNING}
             suffix="Mb"
             onChange={(memoryLimit) => {
               setContainer({
@@ -136,7 +131,6 @@ const ResourcesFields: FC<Props> = ({ container, setContainer, route }) => {
               elementId="gpuRequest"
               fieldTitle={t(EntityFieldsI18nKey.GPURequest)}
               value={container.resources?.requests?.['nvidia.com/gpu']}
-              disabled={container.status === CONTAINER_STATUS.RUNNING}
               onChange={(gpuRequest) => {
                 setContainer({
                   ...container,
@@ -154,24 +148,6 @@ const ResourcesFields: FC<Props> = ({ container, setContainer, route }) => {
                 });
               }}
             />
-            {/*<DialNumberInputField
-          elementId="gpuLimit"
-          fieldTitle={t(FieldsI18nKey.GPULimit)}
-          value={container.resources?.limits?.['nvidia.com/gpu']}
-          disabled={container.status === CONTAINER_STATUS.RUNNING}
-          onChange={(gpuLimit: number) => {
-            setContainer({
-              ...container,
-              resources: {
-                ...container.resources,
-                limits: {
-                  ...container.resources?.limits,
-                  ['nvidia.com/gpu']: `${gpuLimit}`,
-                },
-              },
-            });
-          }}
-        />*/}
           </div>
         )}
       </div>
