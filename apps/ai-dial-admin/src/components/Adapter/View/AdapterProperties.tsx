@@ -11,6 +11,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { getErrorForDisplayName } from '@/src/utils/validation/name-error';
 import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
+import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
 
 interface Props {
   entity: DialAdapter;
@@ -73,6 +74,8 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
         isFullWidth={!isEntityImmutable}
         onChange={onChangeEndpoint}
       />
+
+      {isEntityImmutable && <TopicsControl entity={entity} onChange={onChangeAdapter} />}
     </div>
   );
 };

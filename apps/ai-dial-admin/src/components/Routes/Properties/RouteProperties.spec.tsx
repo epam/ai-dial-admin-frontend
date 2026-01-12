@@ -23,7 +23,7 @@ describe('RouteProperties', () => {
   };
 
   test('renders all fields for app route', () => {
-    render(<RouteProperties route={baseRoute} isAppRoute={true} updateRoute={vi.fn()} />);
+    render(<RouteProperties route={baseRoute} isAppRoute={true} onChange={vi.fn()} />);
     expect(screen.getByText(EntityFieldsI18nKey.displayName)).toBeInTheDocument();
     expect(screen.getByText(EntityFieldsI18nKey.paths)).toBeInTheDocument();
     expect(screen.getByText(EntityFieldsI18nKey.rewritePath)).toBeInTheDocument();
@@ -36,13 +36,13 @@ describe('RouteProperties', () => {
   });
 
   test('renders description field for non-app route', () => {
-    render(<RouteProperties route={baseRoute} isAppRoute={true} updateRoute={vi.fn()} />);
+    render(<RouteProperties route={baseRoute} isAppRoute={true} onChange={vi.fn()} />);
     expect(screen.getByText(EntityFieldsI18nKey.displayName)).toBeInTheDocument();
   });
 
   test('calls updateRoute when displayname changes', () => {
     const updateRoute = vi.fn();
-    render(<RouteProperties route={baseRoute} isAppRoute={false} updateRoute={updateRoute} />);
+    render(<RouteProperties route={baseRoute} isAppRoute={false} onChange={updateRoute} />);
     fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.DisplayName), {
       target: { value: 'newName' },
     });
@@ -51,7 +51,7 @@ describe('RouteProperties', () => {
 
   test('calls updateRoute when description changes', () => {
     const updateRoute = vi.fn();
-    render(<RouteProperties route={{ ...baseRoute, response: void 0 }} isAppRoute={false} updateRoute={updateRoute} />);
+    render(<RouteProperties route={{ ...baseRoute, response: void 0 }} isAppRoute={false} onChange={updateRoute} />);
     fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Description), {
       target: { value: 'newDesc' },
     });
@@ -60,7 +60,7 @@ describe('RouteProperties', () => {
 
   test('calls updateRoute when body changes', () => {
     const updateRoute = vi.fn();
-    render(<RouteProperties route={baseRoute} isAppRoute={true} updateRoute={updateRoute} />);
+    render(<RouteProperties route={baseRoute} isAppRoute={true} onChange={updateRoute} />);
     fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Body), { target: { value: 'newBody' } });
     expect(updateRoute).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -71,7 +71,7 @@ describe('RouteProperties', () => {
 
   test('should render reset button if order changes', async () => {
     const updateRoute = vi.fn();
-    render(<RouteProperties route={baseRoute} isAppRoute={true} updateRoute={updateRoute} />);
+    render(<RouteProperties route={baseRoute} isAppRoute={true} onChange={updateRoute} />);
     fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Order), { target: { value: '1' } });
     const resetBtn = await screen.findByText(ButtonsI18nKey.ResetToDefault);
     expect(resetBtn).toBeInTheDocument();
@@ -82,7 +82,7 @@ describe('RouteProperties', () => {
 
   test('calls updateRoute when order changes', () => {
     const updateRoute = vi.fn();
-    render(<RouteProperties route={baseRoute} isAppRoute={true} updateRoute={updateRoute} />);
+    render(<RouteProperties route={baseRoute} isAppRoute={true} onChange={updateRoute} />);
     fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Order), { target: { value: '7' } });
     expect(updateRoute).toHaveBeenCalledWith(expect.objectContaining({ order: 7 }));
     fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Order), { target: { value: null } });

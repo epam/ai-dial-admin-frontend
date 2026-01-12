@@ -3,6 +3,7 @@
 import { FC } from 'react';
 
 import EntityProperties from '@/src/components/EntityMainProperties/Properties/EntityProperties';
+import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import { DialRole } from '@/src/models/dial/role';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -21,6 +22,7 @@ const RoleProperties: FC<Props> = ({ selectedRole, names, isSkipRefresh, onChang
     <div className="w-full flex flex-col gap-y-8">
       <EntityHeader entity={selectedRole} view={ApplicationRoute.Roles} />
       <EntityProperties entity={selectedRole} onChangeEntity={onChangeRole} names={names} isEntityImmutable={true} />
+      <TopicsControl entity={selectedRole} onChange={onChangeRole} />
       <RoleCostLimit selectedRole={selectedRole} onChangeRole={onChangeRole} />
       <RoleSharing selectedRole={selectedRole} onChangeRole={onChangeRole} isSkipRefresh={isSkipRefresh} />
     </div>

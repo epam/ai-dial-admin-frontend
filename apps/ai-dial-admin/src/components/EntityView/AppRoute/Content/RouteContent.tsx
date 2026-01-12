@@ -34,7 +34,7 @@ const RouteContent: FC<Props> = ({ route, readonly, onChangeRoute, ...props }) =
 
       <div className="flex-1 min-h-0 overflow-auto mt-4 lg:mt-0">
         {activeTab === EntityViewTab.Properties && (
-          <RouteProperties route={route} updateRoute={onChangeRoute} isAppRoute={true} readonly={readonly} />
+          <RouteProperties route={route} onChange={onChangeRoute} isAppRoute={true} readonly={readonly} />
         )}
 
         {activeTab === EntityViewTab.Attachments && (
