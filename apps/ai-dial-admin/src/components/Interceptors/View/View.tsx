@@ -283,7 +283,7 @@ const InterceptorView: FC<Props> = ({
             {activeTab === EntityViewTab.ApplicationRunners && (
               <AddEntitiesView
                 viewTitle={t(TabsI18nKey.ApplicationRunners)}
-                customColumns={RUNNERS_COLUMNS}
+                customColumns={RUNNERS_COLUMNS(t)}
                 modalTitle={t(EntitiesI18nKey.AddApplicationRunner)}
                 emptyDataTitle={t(EntitiesI18nKey.NoApplicationRunners)}
                 appRunners={appRunners}

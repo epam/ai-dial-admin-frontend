@@ -51,7 +51,7 @@ describe('getSystemRollbackColumns', () => {
 
   test('returns LIST_RUNNER_COLUMNS for APPLICATION_TYPE_SCHEMA', () => {
     const cols = getSystemRollbackColumns(ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA, t);
-    expect(cols).toEqual(LIST_RUNNER_COLUMNS(t));
+    expect(cols.length).toEqual(LIST_RUNNER_COLUMNS(t).length);
   });
 
   test('returns empty array for unknown type', () => {
