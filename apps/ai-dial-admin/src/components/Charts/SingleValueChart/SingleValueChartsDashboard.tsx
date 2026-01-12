@@ -19,7 +19,7 @@ const SingleValueChartsDashboard: FC<Props> = ({ getData, refreshTime }) => {
   ];
   return (
     <div className="flex flex-shrink-0">
-      <div className="grid grid-cols-2 gap-y-8 w-full">
+      <div className="grid grid-cols-2 gap-8 w-full">
         {config.map(({ title, query, unit }, index) => (
           <SingleValueChart
             key={index}

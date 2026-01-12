@@ -14,7 +14,7 @@ import ListView from '@/src/components/ListView/ListView';
 import { ButtonsI18nKey, ContainersI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { createPortal } from 'react-dom';
 import AddContainerToImage from '@/src/components/Images/Modals/AddContainerToImage';
-import { getTranslatedType } from '@/src/utils/deployments/entity';
+import { getRouteByType, getTranslatedType } from '@/src/utils/deployments/entity';
 import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { IMAGE_DEPENDENCIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
@@ -45,10 +45,9 @@ const Containers: FC<Props> = ({ image, route, versions }) => {
 
   const onOpenInNewTabAction = useCallback(
     (container?: Container) => {
-      //TODO: route by type
-      onOpenInNewTab(route, container);
+      onOpenInNewTab(getRouteByType(image.$type), container);
     },
-    [route],
+    [image.$type],
   );
 
   const updateImageId = useCallback(
