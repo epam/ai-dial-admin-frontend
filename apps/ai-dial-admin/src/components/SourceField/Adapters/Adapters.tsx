@@ -64,7 +64,7 @@ const Adapters = <T extends DialModel | DialInterceptor>({
           $type: entity.source?.$type || SOURCE_TYPE.ADAPTER,
           adapterName: name,
           completionEndpointPath:
-            entity.source?.completionEndpointPath || getEndpointPostfix((entity as DialModel).type),
+            entity.source?.completionEndpointPath || `${entity.name}${getEndpointPostfix((entity as DialModel).type)}`,
         },
       });
       onCloseModal();
