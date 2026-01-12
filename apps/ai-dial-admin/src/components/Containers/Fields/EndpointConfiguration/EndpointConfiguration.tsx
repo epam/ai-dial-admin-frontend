@@ -26,10 +26,8 @@ const EndpointConfiguration: FC<Props> = ({ container, setContainer, route }) =>
   const [pathError, setPathError] = React.useState<FieldError | null>(null);
 
   useEffect(() => {
-    if (container.mcpEndpointPath) {
-      if (resetCounter || container.mcpEndpointPath?.length > 0) {
-        setPathError(getPathError(container.mcpEndpointPath, t));
-      }
+    if (resetCounter || (container.mcpEndpointPath != null && container.mcpEndpointPath?.length > 0)) {
+      setPathError(getPathError(container.mcpEndpointPath as string, t));
     }
   }, [container.mcpEndpointPath, resetCounter, t]);
 
