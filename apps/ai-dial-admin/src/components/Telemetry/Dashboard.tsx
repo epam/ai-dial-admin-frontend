@@ -21,7 +21,7 @@ interface Props {
   route: ApplicationRoute;
   initTimeFilter?: string;
   entity?: BaseEntity;
-  onChangeTimeFilter: (filter: string) => void;
+  onChangeTimeFilter?: (filter: string) => void;
 }
 
 const Dashboard: FC<Props> = ({ route, entity, initTimeFilter, onChangeTimeFilter }) => {
