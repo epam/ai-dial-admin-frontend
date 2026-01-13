@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Tool from '../Tool';
-import { Tool as ToolType } from '@/src/models/deployments/containers';
+import { Tool as ToolType } from '@/src/models/dial/toolset';
 
 describe('Tool', () => {
   const mockTool: ToolType = {
@@ -35,8 +35,8 @@ describe('Tool', () => {
     const user = userEvent.setup();
     render(<Tool tool={mockTool} />);
 
-    const button = screen.getByRole('button');
-    await user.click(button);
+    const button = screen.getAllByRole('button');
+    await user.click(button[0]);
 
     expect(screen.getByText('Test tool description')).toBeInTheDocument();
   });
@@ -45,11 +45,11 @@ describe('Tool', () => {
     const user = userEvent.setup();
     render(<Tool tool={mockTool} />);
 
-    const button = screen.getByRole('button');
-    await user.click(button);
+    const button = screen.getAllByRole('button');
+    await user.click(button[0]);
     expect(screen.getByText('Test tool description')).toBeInTheDocument();
 
-    await user.click(button);
+    await user.click(button[0]);
     expect(screen.queryByText('Test tool description')).not.toBeInTheDocument();
   });
 

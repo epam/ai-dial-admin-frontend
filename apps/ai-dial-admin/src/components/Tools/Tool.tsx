@@ -52,7 +52,7 @@ const Tool: FC<Props> = ({ tool, isAddedManual, isMcpToolset, isAssetToolset, to
 
   return (
     <div className="flex flex-col border-primary border px-4 py-2">
-      <div className="flex items-center justify-between cursor-pointer group" onClick={toggleCollapse}>
+      <div className="flex items-center justify-between cursor-pointer group" onClick={toggleCollapse} role="button">
         <div className="flex items-center">
           <i className="text-icon-secondary">
             {isCollapsed ? (
