@@ -1065,7 +1065,7 @@ export default {
     Length: 'User can add any characters, but not more than {number}.',
     MinMaxLength: 'User can add any allowed characters, but not less than {min} and not more than {max}.',
     MaxNumberError: 'Max allowed number of attachments is {max}',
-    ForbiddenChars: 'Name must not contain forbidden characters: {list}',
+    ForbiddenChars: 'Value must not contain forbidden characters: {list}',
     KeyValueExists: 'This value already exists.',
     DisplayNameErrorVersion:
       'This name is used by versionless entity. Specify version for entity with this display name to group entities.',
@@ -1079,7 +1079,7 @@ export default {
     VariableError: 'User can add only characters, numbers or underscore',
     VariableStartError: 'Name must start with a letter or underscore',
     HFModelName: 'Invalid Hugging Face model name.',
-    ContainSpace: 'Name must not contain spaces.',
+    ContainSpace: 'Value must not contain spaces.',
   },
   Source: {
     OpenTemplate: 'Open template',

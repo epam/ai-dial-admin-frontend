@@ -71,6 +71,12 @@ export const getErrorForName = (
         text: t ? tWithArgs(ErrorI18nKey.ForbiddenChars, { list: FORBIDDEN_NAME_SYMBOLS.join(' ') }) : '',
       };
     }
+    if (name?.includes(' ')) {
+      return {
+        type: ErrorType.INVALID,
+        text: t ? t(ErrorI18nKey.ContainSpace) : '',
+      };
+    }
   }
 
   return null;
