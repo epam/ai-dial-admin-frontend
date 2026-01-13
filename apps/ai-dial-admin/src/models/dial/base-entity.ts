@@ -11,6 +11,7 @@ export interface BaseEntity extends ModifiedEntity {
   name?: string;
   displayName?: string;
   description?: string;
+  topics?: string[];
 }
 
 export interface EntityDefaults {
@@ -35,7 +36,6 @@ export interface ChatEntity extends BaseEntity, ModifiedEntity, EntityAttachment
   iconUrl?: string;
   author?: string;
   features?: DialFeatures;
-  topics?: string[];
   forwardAuthToken?: boolean;
   maxRetryAttempts?: number;
   interceptors?: string[];

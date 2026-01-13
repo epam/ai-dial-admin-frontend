@@ -1,20 +1,20 @@
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { DialSwitch } from '@epam/ai-dial-ui-kit';
-import { v4 as uuidv4 } from 'uuid';
-import { DialGhostButton, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton, DialSwitch, DialTextInputField } from '@epam/ai-dial-ui-kit';
 import { IconSparkles } from '@tabler/icons-react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 
-import ValidityPeriod from '@/src/components/Keys/Modals/ValidityPeriod';
-import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
-import { DialKey } from '@/src/models/dial/key';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
 import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
+import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
+import ValidityPeriod from '@/src/components/Keys/Modals/ValidityPeriod';
 import KeyGenerateField from '@/src/components/Keys/View/Properties/KeyGenerateField';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { MAX_NAME_SYMBOLS } from '@/src/constants/validation';
+import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { MAX_NAME_SYMBOLS } from '@/src/constants/validation';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useI18n } from '@/src/locales/client';
+import { DialKey } from '@/src/models/dial/key';
 import { getControlClassName } from '@/src/utils/entities/view';
 
 interface Props {
@@ -140,12 +140,15 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
       <KeyGenerateField isKeyImmutable={isKeyImmutable} keys={keys} selectedKey={entity} changeKey={onChange} />
 
       {isKeyImmutable && (
-        <DialSwitch
-          isOn={entity.secured}
-          label={t(EntityFieldsI18nKey.secured)}
-          switchId="secured"
-          onChange={onChangeSecured}
-        />
+        <>
+          <DialSwitch
+            isOn={entity.secured}
+            label={t(EntityFieldsI18nKey.secured)}
+            switchId="secured"
+            onChange={onChangeSecured}
+          />
+          <TopicsControl entity={entity} onChange={onChangeKey} />
+        </>
       )}
 
       {!isKeyImmutable && <ValidityPeriod onChange={onChangeExpiresAt} />}

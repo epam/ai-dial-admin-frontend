@@ -217,12 +217,15 @@ export const SIMPLE_ENTITY_COLUMNS: ColDef[] = [
   UPDATED_AT_COLUMN,
 ];
 
+export const SIMPLE_ENTITY_COLUMNS_WITH_TOPICS: ColDef[] = [...SIMPLE_ENTITY_COLUMNS, TOPICS_COLUMN];
+
 export const ROUTES_COLUMNS: ColDef[] = [
   DISPLAY_NAME_COLUMN,
   DESCRIPTION_COLUMN,
   NAME_COLUMN_WITH_SORT,
   PATHS_COLUMN,
   ORDER_COLUMN,
+  TOPICS_COLUMN,
   UPDATED_AT_COLUMN,
 ];
 
@@ -326,6 +329,7 @@ export const KEYS_COLUMNS = (t: (str: string) => string): ColDef[] => [
     ...dateTimeColumn,
   },
   VALIDITY_STATUS_COLUMN(t),
+  TOPICS_COLUMN,
   {
     headerName: 'Project',
     field: 'project',
@@ -352,7 +356,7 @@ export const RUNNERS_COLUMNS: ColDef[] = [
 
 export const LIST_RUNNER_COLUMNS: ColDef[] = [...RUNNERS_COLUMNS, TOPICS_COLUMN, UPDATED_AT_COLUMN];
 
-export const INTERCEPTOR_TEMPLATES_COLUMNS: ColDef[] = [...BASE_COLUMNS, UPDATED_AT_COLUMN];
+export const INTERCEPTOR_TEMPLATES_COLUMNS: ColDef[] = [...BASE_COLUMNS, TOPICS_COLUMN, UPDATED_AT_COLUMN];
 
 export const ASSETS_COLUMNS: ColDef[] = [{ field: 'version', headerName: 'Version' }, AUTHOR_COLUMN, UPDATED_AT_COLUMN];
 
