@@ -5,18 +5,18 @@ import { Container, Pod, Prompt, Resource } from '@/src/models/deployments/conta
 import { API } from '@/src/server/api';
 
 export const BASE_CONTAINERS_URL = `${API}/deployments`;
-export const SERVER_CONTAINERS_URL = (id?: string) => `${BASE_CONTAINERS_URL}?imageDefinitionId=${id || ''}`;
+export const SERVER_CONTAINERS_URL = (id: string) => `${BASE_CONTAINERS_URL}?imageDefinitionId=${id}`;
 export const CONTAINER_URL = (id?: string) => `${BASE_CONTAINERS_URL}/${id || ''}`;
 export const DUPLICATE_CONTAINER_URL = `${BASE_CONTAINERS_URL}/duplicate`;
-export const RUN_CONTAINER_URL = (id?: string) => `${BASE_CONTAINERS_URL}/${id || ''}/deploy`;
-export const STOP_CONTAINER_URL = (id?: string) => `${BASE_CONTAINERS_URL}/${id || ''}/undeploy`;
+export const RUN_CONTAINER_URL = (id: string) => `${BASE_CONTAINERS_URL}/${id}/deploy`;
+export const STOP_CONTAINER_URL = (id: string) => `${BASE_CONTAINERS_URL}/${id}/undeploy`;
 export const CONTAINER_DETAILS_URL = `${BASE_CONTAINERS_URL}/mcp`;
-export const CONTAINER_TOOLS_URL = (id?: string) => `${CONTAINER_DETAILS_URL}/${id || ''}/tools`;
-export const CONTAINER_RESOURCES_URL = (id?: string) => `${CONTAINER_DETAILS_URL}/${id || ''}/resources`;
-export const CONTAINER_PROMPTS_URL = (id?: string) => `${CONTAINER_DETAILS_URL}/${id || ''}/prompts`;
-export const CONTAINER_PODS_URL = (id?: string) => `${BASE_CONTAINERS_URL}/${id || ''}/pods`;
-export const CONTAINER_LOGS_URL = (containerId?: string, podId?: string) =>
-  `${BASE_CONTAINERS_URL}/${containerId || ''}/pods/${podId || ''}/logs`;
+export const CONTAINER_TOOLS_URL = (id: string) => `${CONTAINER_DETAILS_URL}/${id}/tools`;
+export const CONTAINER_RESOURCES_URL = (id: string) => `${CONTAINER_DETAILS_URL}/${id}/resources`;
+export const CONTAINER_PROMPTS_URL = (id: string) => `${CONTAINER_DETAILS_URL}/${id}/prompts`;
+export const CONTAINER_PODS_URL = (id: string) => `${BASE_CONTAINERS_URL}/${id}/pods`;
+export const CONTAINER_LOGS_URL = (containerId: string, podId: string) =>
+  `${BASE_CONTAINERS_URL}/${containerId}/pods/${podId}/logs`;
 export const CONTAINER_EVENTS_URL = (containerId?: string) =>
   `${BASE_CONTAINERS_URL}/${containerId || ''}/events/stream`;
 export const CHANGE_IMAGE_ID = `${BASE_CONTAINERS_URL}/change-image`;

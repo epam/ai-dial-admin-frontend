@@ -11,7 +11,7 @@ import {
 import { ActivityAuditResourceType } from '@/src/types/activity-audit';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { ApplicationRoute } from '@/src/types/routes';
-import { EntitiesI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, MenuI18nKey, SourceI18nKey } from '@/src/constants/i18n';
 
 const t = (s: string) => s;
 
@@ -24,6 +24,11 @@ describe('Formatters :: getFormattedResourceType', () => {
   test('Should return Application Runner', () => {
     const res = getFormattedResourceType(ActivityAuditResourceType.INTERCEPTOR_TEMPLATE, t);
     expect(res).toBe(EntitiesI18nKey.InterceptorTemplate);
+  });
+
+  test('Should return System Properties', () => {
+    const res = getFormattedResourceType(ActivityAuditResourceType.SYSTEM_PROPERTIES, t);
+    expect(res).toBe(MenuI18nKey.SystemProperties);
   });
 
   test('Should return Application', () => {
@@ -51,6 +56,7 @@ describe('Formatters :: getTopics', () => {
   test('returns empty array', () => {
     expect(getTopics({})).toEqual(null);
     expect(getTopics()).toEqual(null);
+    expect(getTopics({ topics: [] })).toEqual(null);
   });
 
   test('returns topics array', () => {

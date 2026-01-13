@@ -247,6 +247,11 @@ describe('validation utils', () => {
         type: ErrorType.EMPTY,
         text: ErrorI18nKey.RequiredProperty,
       });
+
+      expect(getErrorForHfModelName('   ')).toEqual({
+        type: ErrorType.EMPTY,
+        text: '',
+      });
     });
 
     test('returns invalid error when format is not <user>/<model>', () => {
@@ -258,6 +263,11 @@ describe('validation utils', () => {
         type: ErrorType.INVALID,
         text: ErrorI18nKey.HFModelName,
       });
+
+      expect(getErrorForHfModelName('user/model/extra')).toEqual({
+        type: ErrorType.INVALID,
+        text: '',
+      });
       expect(getErrorForHfModelName('/model', t)).toEqual({
         type: ErrorType.INVALID,
         text: ErrorI18nKey.HFModelName,
@@ -265,6 +275,11 @@ describe('validation utils', () => {
       expect(getErrorForHfModelName('user/', t)).toEqual({
         type: ErrorType.INVALID,
         text: ErrorI18nKey.HFModelName,
+      });
+
+      expect(getErrorForHfModelName('user/')).toEqual({
+        type: ErrorType.INVALID,
+        text: '',
       });
     });
 
@@ -289,6 +304,10 @@ describe('validation utils', () => {
       expect(getErrorForHfModelName('us_er/model', t)).toEqual({
         type: ErrorType.INVALID,
         text: ErrorI18nKey.HFModelName,
+      });
+      expect(getErrorForHfModelName('us_er/model')).toEqual({
+        type: ErrorType.INVALID,
+        text: '',
       });
     });
 
@@ -324,6 +343,10 @@ describe('validation utils', () => {
       expect(getErrorForHfModelName('user/model.ipynb', t)).toEqual({
         type: ErrorType.INVALID,
         text: ErrorI18nKey.HFModelName,
+      });
+      expect(getErrorForHfModelName('user/model.ipynb')).toEqual({
+        type: ErrorType.INVALID,
+        text: '',
       });
     });
   });

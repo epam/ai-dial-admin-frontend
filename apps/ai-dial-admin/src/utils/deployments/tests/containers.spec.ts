@@ -224,8 +224,8 @@ describe('containers utils', () => {
 
       expect(() => normalizeEnvironmentVariables([envB, envUndefinedName, envA])).not.toThrow();
 
-      const normalized = normalizeEnvironmentVariables([envB, envUndefinedName, envA]);
-      expect(normalized).toHaveLength(3);
+      const normalized = normalizeEnvironmentVariables([envB, envB, envUndefinedName, envA]);
+      expect(normalized).toHaveLength(4);
       expect(normalized[0]).toBe(envUndefinedName);
       expect(normalized[1]).toBe(envA);
       expect(normalized[2]).toBe(envB);

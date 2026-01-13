@@ -16,7 +16,6 @@ export async function createPrompt(prompt: DialPrompt) {
 
 export async function updatePrompt(prompt: DialPrompt, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-
   return assetsApi.updateAssetWithEtag(token, prompt, ResourceType.PROMPT, etag);
 }
 
