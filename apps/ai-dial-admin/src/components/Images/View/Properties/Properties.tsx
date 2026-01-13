@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { DialLabelledText } from '@epam/ai-dial-ui-kit';
 
-import { Image } from '@/src/models/deployments/images';
+import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { IMAGE_TYPE_I18N_KEYS, SOURCE_TYPES } from '@/src/constants/deployments/images';
@@ -15,9 +15,10 @@ interface Props {
   image: Image;
   setImage: (server: Image) => void;
   originalName: string;
+  setImageVersions: (versions: ImageVersion[]) => void;
 }
 
-const Properties: FC<Props> = ({ image, setImage, originalName }) => {
+const Properties: FC<Props> = ({ image, setImage, originalName, setImageVersions }) => {
   const t = useI18n();
 
   const sourcesList = SOURCE_TYPES(t);
@@ -44,7 +45,7 @@ const Properties: FC<Props> = ({ image, setImage, originalName }) => {
         </DialLabelledText>
       </div>
       <div className="mt-8 pt-8">
-        <ImageFields image={image} setImage={setImage} />
+        <ImageFields image={image} setImage={setImage} setImageVersions={setImageVersions} />
       </div>
     </div>
   );
