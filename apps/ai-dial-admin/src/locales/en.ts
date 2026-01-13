@@ -1079,6 +1079,7 @@ export default {
     VariableError: 'User can add only characters, numbers or underscore',
     VariableStartError: 'Name must start with a letter or underscore',
     HFModelName: 'Invalid Hugging Face model name.',
+    ContainSpace: 'Name must not contain spaces.',
   },
   Source: {
     OpenTemplate: 'Open template',

@@ -9,6 +9,14 @@ import {
   NON_DEPLOYMENT_ASSETS_COLUMNS,
   PUBLICATION_COLUMNS,
   TELEMETRY_GRID_COLUMNS,
+  APPLICATIONS_COLUMNS,
+  ACTIVITY_AUDIT_COLUMNS,
+  IMAGE_DEPENDENCIES_COLUMNS,
+  IMAGES_LIST_COLUMNS,
+  CHANGE_IMAGE_VERSION,
+  IMAGES_LIST_FOR_CONTAINER_COLUMNS,
+  CONTAINERS_COLUMNS,
+  CONTAINER_EVENTS,
 } from '../grid-columns';
 import { describe, expect, test, vi } from 'vitest';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -29,6 +37,14 @@ describe('Constants :: grid columns', () => {
     expect(cols.some((c) => c.field === 'pricing.prompt')).toBe(true);
   });
 
+  test('APPLICATIONS_COLUMNS returns expected columns', () => {
+    const t = (s: string) => s;
+    const cols = APPLICATIONS_COLUMNS(t);
+    expect(Array.isArray(cols)).toBe(true);
+    expect(cols.some((c) => c.field === 'maxInputAttachments')).toBe(true);
+    expect(cols.some((c) => c.field === 'endpoint')).toBe(true);
+  });
+
   test('KEYS_COLUMNS returns expected columns', () => {
     const t = (s: string) => s;
     expect(Array.isArray(KEYS_COLUMNS(t))).toBe(true);
@@ -40,6 +56,68 @@ describe('Constants :: grid columns', () => {
     expect(Array.isArray(ASSETS_COLUMNS)).toBe(true);
     expect(ASSETS_COLUMNS.some((c) => c.field === 'author')).toBe(true);
     expect(ASSETS_COLUMNS.some((c) => c.field === 'version')).toBe(true);
+  });
+
+  test('ACTIVITY_AUDIT_COLUMNS returns expected columns', () => {
+    const t = (s: string) => s;
+    const cols1 = ACTIVITY_AUDIT_COLUMNS(t);
+    expect(Array.isArray(cols1)).toBe(true);
+    expect(cols1.some((c) => c.field === 'activityType')).toBe(true);
+    expect(cols1.some((c) => c.field === 'resourceId')).toBe(true);
+
+    const cols2 = ACTIVITY_AUDIT_COLUMNS(t, true);
+    expect(Array.isArray(cols2)).toBe(true);
+    expect(cols2.some((c) => c.field === 'activityType')).toBe(true);
+    expect(cols2.some((c) => c.field === 'activityId')).toBe(true);
+  });
+
+  test('IMAGE_DEPENDENCIES_COLUMNS returns expected columns', () => {
+    const t = (s: string) => s;
+    const cols1 = IMAGE_DEPENDENCIES_COLUMNS(t);
+    expect(Array.isArray(cols1)).toBe(true);
+    expect(cols1.some((c) => c.field === 'name')).toBe(true);
+    expect(cols1.some((c) => c.field === 'description')).toBe(true);
+    expect(cols1.find((c) => c.field === 'status')?.cellRenderer).toBeDefined();
+  });
+
+  test('IMAGES_LIST_COLUMNS returns expected columns', () => {
+    const t = (s: string) => s;
+    const cols1 = IMAGES_LIST_COLUMNS(t);
+    expect(Array.isArray(cols1)).toBe(true);
+    expect(cols1.some((c) => c.field === 'name')).toBe(true);
+    expect(cols1.some((c) => c.field === 'description')).toBe(true);
+  });
+
+  test('CHANGE_IMAGE_VERSION returns expected columns', () => {
+    const t = (s: string) => s;
+    const cols1 = CHANGE_IMAGE_VERSION(t);
+    expect(Array.isArray(cols1)).toBe(true);
+    expect(cols1.some((c) => c.field === 'name')).toBe(true);
+    expect(cols1.some((c) => c.field === 'version')).toBe(true);
+  });
+
+  test('IMAGES_LIST_FOR_CONTAINER_COLUMNS returns expected columns', () => {
+    const t = (s: string) => s;
+    const cols1 = IMAGES_LIST_FOR_CONTAINER_COLUMNS(t);
+    expect(Array.isArray(cols1)).toBe(true);
+    expect(cols1.some((c) => c.field === 'name')).toBe(true);
+    expect(cols1.some((c) => c.field === 'versions')).toBe(true);
+  });
+
+  test('CONTAINERS_COLUMNS returns expected columns', () => {
+    const t = (s: string) => s;
+    const cols1 = CONTAINERS_COLUMNS(t, 'type', ApplicationRoute.ModelDeployments);
+    expect(Array.isArray(cols1)).toBe(true);
+    expect(cols1.some((c) => c.field === 'name')).toBe(true);
+    expect(cols1.some((c) => c.field === 'description')).toBe(true);
+  });
+
+  test('CONTAINER_EVENTS returns expected columns', () => {
+    const t = (s: string) => s;
+    const cols1 = CONTAINER_EVENTS(t);
+    expect(Array.isArray(cols1)).toBe(true);
+    expect(cols1.some((c) => c.field === 'eventType')).toBe(true);
+    expect(cols1.some((c) => c.field === 'message')).toBe(true);
   });
 
   test('DEPLOYMENT_ASSETS_COLUMNS returns expected columns', () => {

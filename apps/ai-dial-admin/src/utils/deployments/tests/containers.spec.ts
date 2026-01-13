@@ -184,6 +184,36 @@ describe('containers utils', () => {
       const b: Container = { ...baseContainer, metadata: { envs: [env2 as any] } };
       expect(getContainerRedeploySnapshot(a)).not.toEqual(getContainerRedeploySnapshot(b));
     });
+
+    test('detects resources change via snapshot inequality', () => {
+      const a: Container = {
+        ...baseContainer,
+        resources: {
+          requests: { cpu: '1', memory: '1', 'nvidia.com/gpu': '1' },
+          limits: { cpu: '2', memory: '2', 'nvidia.com/gpu': '1' },
+        },
+      };
+      const b: Container = {
+        ...baseContainer,
+        resources: {
+          requests: { cpu: '1', memory: '1', 'nvidia.com/gpu': '2' },
+          limits: { cpu: '2', memory: '2', 'nvidia.com/gpu': '1' },
+        },
+      };
+      expect(getContainerRedeploySnapshot(a)).not.toEqual(getContainerRedeploySnapshot(b));
+    });
+
+    test('treats missing and empty resources as equivalent', () => {
+      const a: Container = {
+        ...baseContainer,
+        resources: undefined,
+      };
+      const b: Container = {
+        ...baseContainer,
+        resources: { requests: {}, limits: {} },
+      };
+      expect(getContainerRedeploySnapshot(a)).toEqual(getContainerRedeploySnapshot(b));
+    });
   });
 
   describe('normalizeEnvironmentVariables', () => {
@@ -194,8 +224,8 @@ describe('containers utils', () => {
 
       expect(() => normalizeEnvironmentVariables([envB, envUndefinedName, envA])).not.toThrow();
 
-      const normalized = normalizeEnvironmentVariables([envB, envUndefinedName, envA]);
-      expect(normalized).toHaveLength(3);
+      const normalized = normalizeEnvironmentVariables([envB, envB, envUndefinedName, envA]);
+      expect(normalized).toHaveLength(4);
       expect(normalized[0]).toBe(envUndefinedName);
       expect(normalized[1]).toBe(envA);
       expect(normalized[2]).toBe(envB);

@@ -13,6 +13,7 @@ import {
   getPrompt,
   getPrompts,
   importPrompts,
+  updatePrompt,
 } from './actions';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { ResourceType } from '@/src/types/resource-type';
@@ -125,6 +126,35 @@ describe('Assets Prompt :: server actions', () => {
     const result = await exportPrompts(['test']);
     expect(getUserToken).toHaveBeenCalled();
     expect(assetsApi.exportAssets).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.PROMPT, ['test'], void 0);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call updatePrompt action', async () => {
+    (assetsApi.updateAssetWithEtag as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await updatePrompt(
+      {
+        folderId: 'public',
+        nodeType: DialFileNodeType.FOLDER,
+        path: 'test',
+        version: '1.0',
+        content: 'content',
+      },
+      'etag',
+    );
+    expect(getUserToken).toHaveBeenCalled();
+    expect(assetsApi.updateAssetWithEtag).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      {
+        folderId: 'public',
+        nodeType: DialFileNodeType.FOLDER,
+        path: 'test',
+        version: '1.0',
+        content: 'content',
+      },
+      ResourceType.PROMPT,
+      'etag',
+    );
     expect(result).toBe(RESPONSE_MOCK);
   });
 

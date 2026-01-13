@@ -6,6 +6,7 @@ import { FieldError } from '@/src/models/error';
 import { getPromptVersionError } from '@/src/utils/validation/version-error';
 import { isValidHttpUrl } from '@/src/utils/validation/url-error';
 import { MAX_NAME_SYMBOLS } from '@/src/constants/validation';
+import { getErrorForName } from '../validation/name-error';
 
 const VARIABLE_REGEX = /^[A-Za-z_][A-Za-z0-9_]*$/;
 const VARIABLE_START_REGEX = /^[A-Za-z_]/;
@@ -202,4 +203,15 @@ export const getErrorForHfModelName = (
   }
 
   return null;
+};
+
+export const getErrorForDeploymentName = (name?: string, names?: string[], t?: (str: string) => string) => {
+  if (name?.includes(' ')) {
+    return {
+      type: ErrorType.INVALID,
+      text: t ? t(ErrorI18nKey.ContainSpace) : '',
+    };
+  }
+
+  return getErrorForName(name, names, t);
 };
