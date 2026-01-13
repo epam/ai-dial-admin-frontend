@@ -18,19 +18,11 @@ export const getCurrentTraceIds = () => {
   };
 };
 
-export const logWithTrace = (msg: string, level: 'info' | 'error' | 'warn' = 'info') => {
-  const traceIds = getCurrentTraceIds();
-  logger[level]({ ...traceIds }, msg);
-};
-
-export const logErrorText = (message: string, context: Record<string, unknown> = {}) => {
-  logError({}, message, context);
-};
-
-export const logError = (error: unknown, message: string, context: Record<string, unknown> = {}) => {
+export const errorObjLog = (error: unknown, message: string) => {
   const errorMessage = (error as { message: string }).message
     ? (error as { message: string }).message
     : 'Unknown error';
+
   const errorStack = (error as { error: string }) ? (error as { error: string }).error : 'No stack trace available';
   const traceIds = getCurrentTraceIds();
 
@@ -41,8 +33,19 @@ export const logError = (error: unknown, message: string, context: Record<string
         message: errorMessage,
         stack: errorStack,
       },
-      ...context,
     },
     message,
   );
+};
+
+export const errorLog = (message: string) => {
+  logger.error({ ...getCurrentTraceIds() }, message);
+};
+
+export const infoLog = (message: string) => {
+  logger.info({ ...getCurrentTraceIds() }, message);
+};
+
+export const warnLog = (message: string) => {
+  logger.warn({ ...getCurrentTraceIds() }, message);
 };

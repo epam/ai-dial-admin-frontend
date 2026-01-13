@@ -8,7 +8,7 @@ import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialFileNodeType } from '@/src/models/dial/file';
-import { logError } from '@/src/server/logger';
+import { errorObjLog } from '@/src/server/logger';
 import { ResourceType } from '@/src/types/resource-type';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -59,7 +59,7 @@ export default async function Page(params: {
       (p) => p.nodeType === DialFileNodeType.ITEM && p.name === name,
     ) || []) as AssetToolset[];
   } catch (e) {
-    logError(e, 'Failed to fetch toolset view data');
+    errorObjLog(e, 'Failed to fetch toolset view data');
   }
   if (toolset == null) {
     redirect(ApplicationRoute.AssetsToolsets);

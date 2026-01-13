@@ -7,7 +7,7 @@ import Page403 from '@/src/components/Page403/Page403';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { logError } from '@/src/server/logger';
+import { errorObjLog } from '@/src/server/logger';
 import { InterceptorStatus } from '@/src/types/interceptor-status';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
@@ -40,7 +40,7 @@ export default async function Page() {
         status: global?.includes(item.name as string) ? InterceptorStatus.GLOBAL : InterceptorStatus.LOCAL,
       })) || [];
   } catch (e) {
-    logError(e, 'Failed to fetch interceptor data');
+    errorObjLog(e, 'Failed to fetch interceptor data');
   }
 
   return (

@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 
 import { adaptersApi, modelsApi } from '@/src/app/api/api';
 import { DialAdapter } from '@/src/models/dial/adapter';
-import { logError } from '@/src/server/logger';
+import { errorObjLog } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -29,7 +29,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     });
     models = await modelsApi.getModelsList(token);
   } catch (e) {
-    logError(e, 'Failed to fetch adapter view data');
+    errorObjLog(e, 'Failed to fetch adapter view data');
   }
 
   if (adapter == null) {

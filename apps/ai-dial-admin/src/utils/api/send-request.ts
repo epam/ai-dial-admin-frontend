@@ -1,4 +1,4 @@
-import { logError } from '@/src/server/logger';
+import { errorObjLog } from '@/src/server/logger';
 export const CACHE: RequestInit = { cache: 'no-store' };
 
 export const sendRequest = async <T extends object>(
@@ -15,7 +15,7 @@ export const sendRequest = async <T extends object>(
       headers,
     });
   } catch (e) {
-    logError(e, 'Send request failed');
+    errorObjLog(e, 'Send request failed');
     return new Promise(() => null);
   }
 };

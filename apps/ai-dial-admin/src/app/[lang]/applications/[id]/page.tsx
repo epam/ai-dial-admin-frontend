@@ -15,7 +15,7 @@ import { DialApplication, DialApplicationScheme } from '@/src/models/dial/applic
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
-import { logError } from '@/src/server/logger';
+import { errorObjLog } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -56,7 +56,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
       return <Page403 />;
     }
   } catch (e) {
-    logError(e, 'Failed to fetch application view data');
+    errorObjLog(e, 'Failed to fetch application view data');
   }
 
   if (application == null) {
