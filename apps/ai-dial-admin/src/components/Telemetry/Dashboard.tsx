@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useRef, useState } from 'react';
+import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
 import LineChart from '@/src/components/Charts/LineChart/LineChart';
 import SingleValueChartsDashboard from '@/src/components/Charts/SingleValueChart/SingleValueChartsDashboard';
 import TelemetryGrid from '@/src/components/Telemetry/TelemetryGrid';
@@ -19,16 +19,24 @@ import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   route: ApplicationRoute;
+  initTimeFilter?: string;
   entity?: BaseEntity;
+  onChangeTimeFilter: (filter: string) => void;
 }
 
-const Dashboard: FC<Props> = ({ route, entity }) => {
+const Dashboard: FC<Props> = ({ route, entity, initTimeFilter, onChangeTimeFilter }) => {
   const t = useI18n();
   const [filters, setFilters] = useState<FilterData[]>([]);
   const [refreshTime, setRefreshTime] = useState(DEFAULT_REFRESH_TIME);
-  const [timePeriod, setTimePeriod] = useState(DEFAULT_TIME_PERIOD);
+  const [timePeriod, setTimePeriod] = useState(initTimeFilter);
   const [timeRange, setTimeRange] = useState<TimeRange>(getTimeRangeById(DEFAULT_TIME_PERIOD));
   const getReqRef = useRef(useProtectedRequest());
+
+  useEffect(() => {
+    if (!timePeriod) {
+      setTimePeriod(initTimeFilter || DEFAULT_TIME_PERIOD);
+    }
+  }, [initTimeFilter, timePeriod]);
 
   const getData = useCallback(
     (query: TelemetryQuery) => {
@@ -50,10 +58,14 @@ const Dashboard: FC<Props> = ({ route, entity }) => {
     [setRefreshTime],
   );
 
-  const onTimePeriodChange = useCallback((period: string) => {
-    setTimePeriod(period);
-    setTimeRange(getTimeRangeById(period));
-  }, []);
+  const onTimePeriodChange = useCallback(
+    (period: string) => {
+      setTimePeriod(period);
+      onChangeTimeFilter?.(period);
+      setTimeRange(getTimeRangeById(period));
+    },
+    [onChangeTimeFilter],
+  );
 
   const onTimeRangeChange = useCallback((range: TimeRange) => {
     setTimeRange(range);
@@ -62,18 +74,20 @@ const Dashboard: FC<Props> = ({ route, entity }) => {
   return (
     <div role="dashboards" className="flex flex-1 flex-col min-h-0 overflow-auto">
       <div className="flex w-full mb-6">
-        <TelemetryControls
-          selectedRefreshValue={refreshTime}
-          onRefreshTimeChange={onRefreshTimeChange}
-          timePeriod={timePeriod}
-          onTimePeriodChange={onTimePeriodChange}
-          onTimeRangeChange={onTimeRangeChange}
-          filters={filters}
-          timeRange={timeRange}
-          setFilters={setFilters}
-          getData={getData}
-          route={route}
-        />
+        {timePeriod && (
+          <TelemetryControls
+            selectedRefreshValue={refreshTime}
+            onRefreshTimeChange={onRefreshTimeChange}
+            timePeriod={timePeriod}
+            onTimePeriodChange={onTimePeriodChange}
+            onTimeRangeChange={onTimeRangeChange}
+            filters={filters}
+            timeRange={timeRange}
+            setFilters={setFilters}
+            getData={getData}
+            route={route}
+          />
+        )}
       </div>
       <div className="flex flex-col flex-1 min-h-0 overflow-auto">
         <div className="flex flex-col md:flex-row mb-6">

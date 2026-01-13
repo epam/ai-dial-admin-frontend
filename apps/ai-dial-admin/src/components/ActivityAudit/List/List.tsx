@@ -46,9 +46,11 @@ interface Props {
   entity?: BaseEntity | DialApplicationScheme;
   entityType?: string;
   refresh?: boolean;
+  initTimeFilter?: string;
+  onChangeTimeFilter: (filter: string) => void;
 }
 
-const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh }) => {
+const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, initTimeFilter, onChangeTimeFilter }) => {
   const t = useI18n();
   const router = useRouter();
 
@@ -59,10 +61,16 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh }) => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
-  const [timePeriod, setTimePeriod] = useState<string | null>(DEFAULT_TIME_PERIOD);
+  const [timePeriod, setTimePeriod] = useState<string | null | undefined>(initTimeFilter);
   const [timeRange, setTimeRange] = useState<TimeRange>(getTimeRangeById(DEFAULT_TIME_PERIOD));
 
   const [selectedActivity, setSelectedActivity] = useState<DialActivity | undefined>(void 0);
+
+  useEffect(() => {
+    if (!timePeriod) {
+      setTimePeriod(initTimeFilter || DEFAULT_TIME_PERIOD);
+    }
+  }, [initTimeFilter, timePeriod]);
 
   const onCloseModal = useCallback(() => {
     setIsRollbackModalOpen(false);
@@ -166,9 +174,10 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh }) => {
   const onTimePeriodChange = useCallback(
     (period: string) => {
       setTimePeriod(period);
+      onChangeTimeFilter?.(period);
       onRefresh();
     },
-    [onRefresh],
+    [onRefresh, onChangeTimeFilter],
   );
 
   const onTimeRangeChange = useCallback(
