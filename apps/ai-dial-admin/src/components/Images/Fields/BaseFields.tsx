@@ -33,6 +33,15 @@ const BaseFields: FC<Props> = ({ image, setImage, isModal, setImageVersions }) =
   const [versionError, setVersionError] = useState<FieldError | null>(null);
 
   useEffect(() => {
+    dispatch({
+      type: ValidationActionType.SetField,
+      field: 'name',
+      isValid: !!image.name,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
     if (resetCounter || (image.name != null && image.name.length > 0)) {
       const error = getErrorForName(image.name, [], t);
       setNameError(error);
@@ -72,6 +81,11 @@ const BaseFields: FC<Props> = ({ image, setImage, isModal, setImageVersions }) =
         } else {
           setVersionsMap({});
           setVersionError(null);
+          dispatch({
+            type: ValidationActionType.SetField,
+            field: 'version',
+            isValid: true,
+          });
         }
       }, 500),
     [dispatch, image.version, setImageVersions, t],
@@ -85,6 +99,11 @@ const BaseFields: FC<Props> = ({ image, setImage, isModal, setImageVersions }) =
         placeholder={t(EntityPlaceholdersI18nKey.Name)}
         value={image.name}
         onChange={(name?: string) => {
+          dispatch({
+            type: ValidationActionType.SetField,
+            field: 'version',
+            isValid: false,
+          });
           const error = getErrorForName(name, [], t);
           dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !error });
           setNameError(error);
