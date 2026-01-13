@@ -5,7 +5,7 @@ import { TokenEndpointHandler } from 'next-auth/providers';
 import { TokenSet } from 'openid-client';
 
 import { Token, UserSession } from '@/src/models/auth';
-import { errorObjLog, logger } from '@/src/server/logger';
+import { errorObjLog, warnLog } from '@/src/server/logger';
 import { NextClient, RefreshToken } from './nextauth-client';
 
 const waitRefreshTokenTimeout = 5;
@@ -104,7 +104,7 @@ export async function refreshAccessToken(token: Token) {
     }
 
     if (!refreshedTokens.refresh_token) {
-      logger.warn(`Auth provider didn't provide new refresh token. Sub: ${displayedTokenSub}`);
+      warnLog(`Auth provider didn't provide new refresh token. Sub: ${displayedTokenSub}`);
     }
 
     if (!refreshedTokens.refresh_token && !token.refreshToken) {
@@ -127,7 +127,7 @@ export async function refreshAccessToken(token: Token) {
     });
     return returnToken;
   } catch (error: unknown) {
-    logger.error(error, `Error when refreshing token: ${(error as Error).message}. Sub: ${displayedTokenSub}`);
+    errorObjLog(error, `Error when refreshing token: ${(error as Error).message}. Sub: ${displayedTokenSub}`);
 
     return {
       ...token,
