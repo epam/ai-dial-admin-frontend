@@ -8,7 +8,7 @@ import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { FieldError } from '@/src/models/error';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getImageVersions } from '@/src/app/actions/deployments';
-import { getSemanticVersionError } from '@/src/utils/deployments/validation';
+import { getErrorForDeploymentName, getSemanticVersionError } from '@/src/utils/deployments/validation';
 import { getVersionsPerName } from '@/src/components/Assets/utils';
 import { useI18n } from '@/src/locales/client';
 
@@ -20,26 +20,39 @@ interface Props {
   image: Image;
   setImage: (entity: Image) => void;
   isModal?: boolean;
+  setImageVersions?: (versions: ImageVersion[]) => void;
 }
 
-const BaseFields: FC<Props> = ({ image, setImage, isModal }) => {
+const BaseFields: FC<Props> = ({ image, setImage, isModal, setImageVersions }) => {
   const t = useI18n();
-  const { dispatch } = useSaveValidationContext();
+  const { dispatch, resetCounter } = useSaveValidationContext();
 
+  const [nameError, setNameError] = useState<FieldError | null>(null);
   const [versionsMap, setVersionsMap] = useState<Record<string, string[]>>({});
   const [versionError, setVersionError] = useState<FieldError | null>(null);
 
   useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!image.name });
-  }, [dispatch, image, t, versionsMap]);
+    if (resetCounter || (image.name != null && image.name.length > 0)) {
+      const error = getErrorForDeploymentName(image.name, [], t);
+      setNameError(error);
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'name',
+        isValid: !error,
+      });
+    }
+  }, [dispatch, image, resetCounter, t, versionsMap]);
 
   const verifyVersion = useMemo(
     () =>
-      debounce((name?: string) => {
-        if (name) {
+      debounce((name?: string, error?: FieldError | null) => {
+        if (name && !error) {
           getImageVersions(name).then(({ success, response }) => {
             const data = response as ImageVersion[];
             if (success && data.length > 0) {
+              if (setImageVersions) {
+                setImageVersions(data as ImageVersion[]);
+              }
               const versionMap = getVersionsPerName(data);
               setVersionsMap(versionMap);
               const error = getSemanticVersionError(versionMap, { name }, t, image.version);
@@ -60,7 +73,7 @@ const BaseFields: FC<Props> = ({ image, setImage, isModal }) => {
           setVersionError(null);
         }
       }, 500),
-    [dispatch, image.version, t],
+    [dispatch, image.version, setImageVersions, t],
   );
 
   return (
@@ -71,12 +84,17 @@ const BaseFields: FC<Props> = ({ image, setImage, isModal }) => {
         placeholder={t(EntityPlaceholdersI18nKey.Name)}
         value={image.name}
         onChange={(name?: string) => {
-          verifyVersion(name);
+          const error = getErrorForDeploymentName(name, [], t);
+          dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !error });
+          setNameError(error);
+          verifyVersion(name, error);
           setImage({
             ...image,
             name: name || '',
           });
         }}
+        errorText={nameError?.text}
+        invalid={!!nameError}
       />
       {isModal && (
         <DialTextInputField
