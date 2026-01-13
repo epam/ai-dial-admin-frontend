@@ -30,7 +30,7 @@ interface Props {
   entityView?: EntityViewTab;
   className?: string;
   initTimeFilter?: string;
-  onChangeTimeFilter: (filter: string) => void;
+  onChangeTimeFilter?: (filter: string) => void;
 }
 
 const UsageLog: FC<Props> = ({ route, className, entity, entityView, onChangeTimeFilter, initTimeFilter }) => {
@@ -84,7 +84,7 @@ const UsageLog: FC<Props> = ({ route, className, entity, entityView, onChangeTim
   );
 
   const onRefresh = useCallback(() => {
-    setTimeRange(getTimeRangeById(timePeriod));
+    setTimeRange(getTimeRangeById(timePeriod || ''));
   }, [timePeriod]);
 
   return (

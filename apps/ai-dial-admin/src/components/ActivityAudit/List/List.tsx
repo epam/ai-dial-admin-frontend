@@ -47,7 +47,7 @@ interface Props {
   entityType?: string;
   refresh?: boolean;
   initTimeFilter?: string;
-  onChangeTimeFilter: (filter: string) => void;
+  onChangeTimeFilter?: (filter: string) => void;
 }
 
 const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, initTimeFilter, onChangeTimeFilter }) => {
