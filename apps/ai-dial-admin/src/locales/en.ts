@@ -71,6 +71,8 @@ export default {
     No: 'No',
     DuplicateCopyPostfix: '(Copy)',
     URL: 'URL',
+    Request: 'Request',
+    Response: 'Response',
   },
   Menu: {
     Entities: 'Entities',
@@ -395,6 +397,7 @@ export default {
     Install: 'Install',
     Run: 'Run',
     AddPort: 'Add Port',
+    SendRequest: 'Send Request',
   },
   Compare: {
     CompareChanges: 'Compare changes',

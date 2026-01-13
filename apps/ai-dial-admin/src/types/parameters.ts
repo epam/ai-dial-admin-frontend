@@ -2,6 +2,7 @@ export enum ParamsView {
   TABLE = 'Table',
   FORM = 'Form',
   UI = 'Ui',
+  JSON = 'JSON',
 }
 
 export enum ParamsFields {

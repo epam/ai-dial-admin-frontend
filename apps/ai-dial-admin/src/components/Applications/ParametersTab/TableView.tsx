@@ -12,7 +12,7 @@ import { BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ApplicationPropertiesTemp } from '@/src/models/dial/application';
 import { BooleanType } from '@/src/types/boolean';
-import { ParamsFields } from './types';
+import { ParamsFields } from '@/src/types/parameters';
 import { getAppPropertiesColumns } from './utils';
 
 interface Props {

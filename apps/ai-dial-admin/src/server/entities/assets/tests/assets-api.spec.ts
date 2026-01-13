@@ -446,4 +446,18 @@ describe('Toolset', () => {
       }),
     );
   });
+
+  test('Should call tryOutTool', async () => {
+    fetchMock.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
+
+    await instance.tryOutTool({ path: 'test' }, TOKEN_MOCK);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${TEST_URL}${ResourceBasePaths[ResourceType.TOOLSET]}/call-tool`,
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ path: 'test' }),
+      }),
+    );
+  });
 });

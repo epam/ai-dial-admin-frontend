@@ -116,6 +116,8 @@ export enum BasicI18nKey {
   No = 'Basic.No',
   DuplicateCopyPostfix = 'Basic.DuplicateCopyPostfix',
   URL = 'Basic.URL',
+  Request = 'Basic.Request',
+  Response = 'Basic.Response',
 }
 
 export enum EntitiesI18nKey {
@@ -309,6 +311,7 @@ export enum ButtonsI18nKey {
   Install = 'Buttons.Install',
   Run = 'Buttons.Run',
   AddPort = 'Buttons.AddPort',
+  SendRequest = 'Buttons.SendRequest',
 }
 
 export enum UpdateI18nKey {

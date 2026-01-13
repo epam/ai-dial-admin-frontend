@@ -13,7 +13,7 @@ import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor'
 import EntityRolesModal from '@/src/components/EntityView/Modals/EmptyRoles/EmptyRoles';
 import EntityRoles from '@/src/components/EntityView/Roles/Roles';
 import { isDisableRole } from '@/src/components/EntityView/Roles/utils';
-import ToolsView from '@/src/components/Toolsets/Tools/Tools';
+import Tools from '@/src/components/Tools/Tools';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -29,7 +29,6 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { EntityViewTab, getToolsetTabs } from '@/src/utils/tabs/utils';
 import ToolsetProperties from './Properties';
 import { getViewHeaderClassName } from '@/src/utils/entities/view';
-
 interface Props {
   etag: string;
   names: string[];
@@ -187,7 +186,7 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
             )}
 
             {activeTab === EntityViewTab.Tools && (
-              <ToolsView
+              <Tools
                 originalToolset={originalToolset}
                 selectedToolset={selectedToolset}
                 onChangeToolset={onChangeToolset}

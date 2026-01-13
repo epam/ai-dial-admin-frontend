@@ -57,5 +57,16 @@ export enum ToolsetAuthType {
 
 export interface Tool {
   name: string;
-  description: string;
+  description?: string;
+  inputSchema?: {
+    type: string;
+    properties: Record<string, unknown>;
+  };
+  annotations?: {
+    title?: string;
+    readOnlyHint?: boolean;
+    destructiveHint?: boolean;
+    idempotentHint?: boolean;
+    openWorldHint?: boolean;
+  };
 }
