@@ -8,13 +8,14 @@ import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { FieldError } from '@/src/models/error';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getImageVersions } from '@/src/app/actions/deployments';
-import { getErrorForDeploymentName, getSemanticVersionError } from '@/src/utils/deployments/validation';
+import { getSemanticVersionError } from '@/src/utils/deployments/validation';
 import { getVersionsPerName } from '@/src/components/Assets/utils';
 import { useI18n } from '@/src/locales/client';
 
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 import Maintainer from '@/src/components/EntityMainProperties/BaseProperties/Maintainer';
 import TopicField from '@/src/components/Images/Fields/TopicField';
+import { getErrorForName } from '@/src/utils/validation/name-error';
 
 interface Props {
   image: Image;
@@ -33,7 +34,7 @@ const BaseFields: FC<Props> = ({ image, setImage, isModal, setImageVersions }) =
 
   useEffect(() => {
     if (resetCounter || (image.name != null && image.name.length > 0)) {
-      const error = getErrorForDeploymentName(image.name, [], t);
+      const error = getErrorForName(image.name, [], t);
       setNameError(error);
       dispatch({
         type: ValidationActionType.SetField,
@@ -84,7 +85,7 @@ const BaseFields: FC<Props> = ({ image, setImage, isModal, setImageVersions }) =
         placeholder={t(EntityPlaceholdersI18nKey.Name)}
         value={image.name}
         onChange={(name?: string) => {
-          const error = getErrorForDeploymentName(name, [], t);
+          const error = getErrorForName(name, [], t);
           dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !error });
           setNameError(error);
           verifyVersion(name, error);
