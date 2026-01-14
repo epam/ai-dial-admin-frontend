@@ -1,7 +1,7 @@
 'use client';
 
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react';
-import { cloneDeep, isEqual } from 'lodash';
+import { cloneDeep } from 'lodash';
 import { useRouter } from 'next/navigation';
 import { DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
 import { Container, KubEvent } from '@/src/models/deployments/containers';
@@ -36,6 +36,7 @@ import { BaseEntity } from '@/src/models/dial/base-entity';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { getViewHeaderClassName } from '@/src/utils/entities/view';
 import { getContainerRedeploySnapshot } from '@/src/utils/deployments/containers';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 interface Props {
   container: Container;
@@ -119,10 +120,13 @@ const ContainerView: FC<Props> = ({
   useEffect(() => {
     const { status: __status, url: __URL, ...compareContainer } = container;
     const { status: __selectedStatus, url: __selectedURL, ...compareSelectedContainer } = selectedContainer;
-    setIsChanged(!isEqual(compareContainer, compareSelectedContainer));
+    setIsChanged(!isEqualSkippingUndefined(compareContainer, compareSelectedContainer));
     setIsRedeployRequired(
       container.status === CONTAINER_STATUS.RUNNING &&
-        !isEqual(getContainerRedeploySnapshot(container), getContainerRedeploySnapshot(selectedContainer)),
+        !isEqualSkippingUndefined(
+          getContainerRedeploySnapshot(container),
+          getContainerRedeploySnapshot(selectedContainer),
+        ),
     );
   }, [container, selectedContainer]);
 

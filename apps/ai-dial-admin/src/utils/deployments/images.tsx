@@ -1,10 +1,10 @@
-import { isEqual } from 'lodash';
 import { SelectOption } from '@epam/ai-dial-ui-kit';
 import { STATUS_CLASSNAMES } from '@/src/constants/deployments/images';
 import { IMAGE_STATUS, IMAGE_TRANSPORT_TYPE, IMAGE_TYPE } from '@/src/types/deployments/images';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 import { Image, ImageGroup, ImageVersion } from '@/src/models/deployments/images';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 import StatusIcon from '@/src/components/Deployments/Common/StatusIndicator/StatusIcon';
 
@@ -35,7 +35,7 @@ export const isValidVersion = (imageData: ImageGroup): boolean => {
 export function validateImageChanged(originalImage: Image, updatedImage: Image) {
   const { updatedAt: __originalUpdatedAt, buildStatus: __originalBuiltStatus, ...original } = originalImage;
   const { updatedAt: __updatedUpdatedAt, buildStatus: __updatedBuiltStatus, ...updated } = updatedImage;
-  return !isEqual(original, updated);
+  return !isEqualSkippingUndefined(original, updated);
 }
 
 export function validateImage(image: Image): boolean {
