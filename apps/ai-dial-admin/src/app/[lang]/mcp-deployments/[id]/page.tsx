@@ -10,7 +10,7 @@ import { Image } from '@/src/models/deployments/images';
 import { Container } from '@/src/models/deployments/containers';
 import { getContainer, getImage, getMCPContainers } from '@/src/app/actions/deployments';
 import Page403 from '@/src/components/Page403/Page403';
-import { logger } from '@/src/server/logger';
+import { errorObjLog } from '@/src/server/logger';
 import { Toolset } from '@/src/models/dial/toolset';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import ContainerView from '@/src/components/Containers/View/ContainerView';
@@ -67,7 +67,7 @@ export default async function Page(params: Params) {
     image = imageResponse.response as Image;
     toolsets = await toolSetsApi.getToolsetList(token);
   } catch (e) {
-    logger.error(`Getting interceptor container error ${e}`);
+    errorObjLog(e, 'Failed to fetch mcp container page');
   }
 
   if (!container || !image) {

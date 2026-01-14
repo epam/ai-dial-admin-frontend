@@ -6,7 +6,7 @@ import Page403 from '@/src/components/Page403/Page403';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
-import { logError } from '@/src/server/logger';
+import { errorObjLog } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -43,7 +43,7 @@ export default async function Page(params: {
       (p) => p.nodeType === DialFileNodeType.ITEM && p.name === name,
     ) || []) as DialPrompt[];
   } catch (e) {
-    logError(e, 'Failed to fetch prompt view data');
+    errorObjLog(e, 'Failed to fetch prompt view data');
   }
   if (prompt == null) {
     redirect(ApplicationRoute.Prompts);

@@ -13,7 +13,7 @@ import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
-import { logError } from '@/src/server/logger';
+import { errorObjLog } from '@/src/server/logger';
 import { ResourceType } from '@/src/types/resource-type';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -68,7 +68,7 @@ export default async function Page(params: {
     applicationSchemes = await applicationRunnersApi.getApplicationSchemesList(token);
     interceptors = await interceptorsApi.getInterceptorsList(token);
   } catch (e) {
-    logError(e, 'Failed to fetch app view data');
+    errorObjLog(e, 'Failed to fetch app view data');
   }
   if (app == null) {
     redirect(ApplicationRoute.AssetsApplications);

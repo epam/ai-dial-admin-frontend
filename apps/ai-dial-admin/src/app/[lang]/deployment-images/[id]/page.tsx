@@ -8,7 +8,7 @@ import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getImage, getImageContainers, getImages, getImageVersions } from '@/src/app/actions/deployments';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
-import { logger } from '@/src/server/logger';
+import { errorObjLog } from '@/src/server/logger';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 
 import Page403 from '@/src/components/Page403/Page403';
@@ -44,19 +44,19 @@ export default async function Page(params: Params) {
     const imageResponse = await getImage((await params.params).id);
     const imagesResponse = await getImages();
     const versionsResponse = await getImageVersions(imageResponse.response.name);
-    const dependeinciesResponses = await getImageContainers((await params.params).id);
+    const dependenciesResponses = await getImageContainers((await params.params).id);
 
     if (
       !imageResponse.success ||
       !imagesResponse.success ||
       !versionsResponse.success ||
-      !dependeinciesResponses.success
+      !dependenciesResponses.success
     ) {
       if (
         imageResponse.status === 403 ||
         imagesResponse.status === 403 ||
         versionsResponse.status === 403 ||
-        dependeinciesResponses.status === 403
+        dependenciesResponses.status === 403
       ) {
         return <Page403 />;
       }
@@ -65,9 +65,9 @@ export default async function Page(params: Params) {
     image = imageResponse.response as Image;
     images = imagesResponse.response as Image[];
     versions = versionsResponse.response as ImageVersion[];
-    dependencies = dependeinciesResponses.response as Container[];
+    dependencies = dependenciesResponses.response as Container[];
   } catch (e) {
-    logger.error(`Getting interceptor image error: ${e}`);
+    errorObjLog(e, 'Failed to fetch interceptor image page');
   }
 
   if (!image) {

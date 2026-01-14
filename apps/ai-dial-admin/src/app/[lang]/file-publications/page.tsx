@@ -7,7 +7,7 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
-import { logError } from '@/src/server/logger';
+import { errorObjLog } from '@/src/server/logger';
 import Page403 from '@/src/components/Page403/Page403';
 import { ApplicationRoute } from '@/src/types/routes';
 import PublicationsList from '@/src/components/Publications/List/List';
@@ -31,7 +31,7 @@ export default async function Page() {
       return <Page403 />;
     }
   } catch (e) {
-    logError(e, 'Failed to fetch file publications view data');
+    errorObjLog(e, 'Failed to fetch file publications view data');
   }
 
   return <PublicationsList data={data || []} route={ApplicationRoute.FilePublications} />;

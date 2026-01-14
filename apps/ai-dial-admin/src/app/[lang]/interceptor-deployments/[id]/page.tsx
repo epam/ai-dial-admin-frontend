@@ -10,7 +10,7 @@ import { Image } from '@/src/models/deployments/images';
 import { Container } from '@/src/models/deployments/containers';
 import { getContainer, getImage, getInterceptorContainers } from '@/src/app/actions/deployments';
 import Page403 from '@/src/components/Page403/Page403';
-import { logger } from '@/src/server/logger';
+import { errorObjLog } from '@/src/server/logger';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import ContainerView from '@/src/components/Containers/View/ContainerView';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
@@ -65,7 +65,7 @@ export default async function Page(params: Params) {
     image = imageResponse.response as Image;
     interceptors = await interceptorsApi.getInterceptorsList(token);
   } catch (e) {
-    logger.error(`Getting interceptor container error: ${e}`);
+    errorObjLog(e, 'Failed to fetch interceptor container page');
   }
 
   if (!container || !image) {
