@@ -159,7 +159,7 @@ const Tools: FC<Props> = ({
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 relative">
       <div className="flex flex-row items-center mb-3">
         <h1 className="mr-4">
           {t(ToolsetI18nKey.Tools)}

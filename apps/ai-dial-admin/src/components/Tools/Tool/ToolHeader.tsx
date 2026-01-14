@@ -50,7 +50,10 @@ const ToolHeader: FC<Props> = ({ tool, toolSetName, isCollapsed, isAddedManual, 
         <DialButton
           appearance={ButtonAppearance.Outlined}
           variant={ButtonVariant.Neutral}
-          className={classNames('flex items-center justify-center', isCollapsed && 'invisible group-hover:visible')}
+          className={classNames(
+            'flex items-center justify-center',
+            isCollapsed && 'invisible group-hover/accordion:visible',
+          )}
           iconBefore={<IconPlayerPlay size={20} />}
           onClick={openTryOutSidebar}
           label={t(ToolsetI18nKey.TryOut)}
