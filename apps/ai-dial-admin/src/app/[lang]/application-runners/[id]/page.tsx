@@ -9,7 +9,7 @@ import { AppsFolderProvider } from '@/src/context/assets/AppsFolderContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialRole } from '@/src/models/dial/role';
-import { logError } from '@/src/server/logger';
+import { errorObjLog } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { filterDisplayNames } from '@/src/utils/entities/filter-names';
@@ -40,7 +40,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     applications = await applicationsApi.getApplicationsList(token);
     interceptors = await interceptorsApi.getInterceptorsList(token);
   } catch (e) {
-    logError(e, 'Failed to fetch application runner data');
+    errorObjLog(e, 'Failed to fetch application runner data');
   }
 
   if (applicationScheme == null) {

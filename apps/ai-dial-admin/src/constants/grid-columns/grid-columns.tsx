@@ -670,20 +670,6 @@ export const CONTAINER_EVENTS = (t: (key: string, options?: Record<string, strin
   },
 ];
 
-export const CHANGE_IMAGE_VERSION = (t: (key: string) => string): ColDef[] => [
-  { field: 'name', headerName: 'Name', hide: false },
-  { field: 'version', headerName: 'Version', hide: false },
-  { field: 'id', headerName: 'ID', hide: false },
-  {
-    field: 'buildStatus',
-    headerName: 'Status',
-    hide: false,
-    cellRenderer: (params: ICellRendererParams) => <StatusIndicator status={params.data?.status} />,
-    tooltipValueGetter: ({ value }) => t(STATUS_I18N_KEYS[value as IMAGE_STATUS]),
-    filterValueGetter: (params) => t(STATUS_I18N_KEYS[params.data[params.colDef.field || ''] as IMAGE_STATUS]),
-  },
-];
-
 export const IMAGES_LIST_FOR_CONTAINER_COLUMNS = (onChange: (id: string) => void): ColDef[] => {
   return [
     { field: 'name', headerName: 'Name', hide: false },

@@ -7,7 +7,7 @@ import ToolsetsList from '@/src/components/Toolsets/List';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { Toolset } from '@/src/models/dial/toolset';
-import { logError } from '@/src/server/logger';
+import { errorObjLog } from '@/src/server/logger';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -31,7 +31,7 @@ export default async function Page() {
       return <Page403 />;
     }
   } catch (e) {
-    logError(e, 'Failed to fetch toolsets view data');
+    errorObjLog(e, 'Failed to fetch toolsets view data');
   }
 
   return (

@@ -12,7 +12,7 @@ import { SaveValidationContextProvider } from '@/src/context/SaveValidationConte
 import { createModel } from '@/src/app/[lang]/models/actions';
 import { modelsApi } from '@/src/app/api/api';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
-import { logger } from '@/src/server/logger';
+import { errorObjLog } from '@/src/server/logger';
 
 import Page403 from '@/src/components/Page403/Page403';
 import ContainerView from '@/src/components/Containers/View/ContainerView';
@@ -55,7 +55,7 @@ export default async function Page(params: Params) {
 
     models = await modelsApi.getModelsList(token);
   } catch (e) {
-    logger.error(`Getting interceptor container error ${e}`);
+    errorObjLog(e, 'Failed to fetch interceptor container page');
   }
 
   if (!container) {

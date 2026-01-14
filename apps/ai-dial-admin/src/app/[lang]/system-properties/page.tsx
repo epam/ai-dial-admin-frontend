@@ -6,7 +6,7 @@ import Page403 from '@/src/components/Page403/Page403';
 import SystemProperties from '@/src/components/SystemProperties/SystemProperties';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { logError } from '@/src/server/logger';
+import { errorObjLog } from '@/src/server/logger';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -35,7 +35,7 @@ export default async function Page() {
       return <Page403 />;
     }
   } catch (e) {
-    logError(e, 'Failed to fetch interceptors view data');
+    errorObjLog(e, 'Failed to fetch interceptors view data');
   }
 
   if (isInvalidSession) {

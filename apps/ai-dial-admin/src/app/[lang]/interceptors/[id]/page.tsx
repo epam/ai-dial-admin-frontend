@@ -12,7 +12,7 @@ import { DialApplication, DialApplicationScheme } from '@/src/models/dial/applic
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
-import { logError } from '@/src/server/logger';
+import { errorObjLog } from '@/src/server/logger';
 import { InterceptorStatus } from '@/src/types/interceptor-status';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -64,7 +64,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
       return <Page403 />;
     }
   } catch (e) {
-    logError(e, 'Failed to fetch interceptor view data');
+    errorObjLog(e, 'Failed to fetch interceptor view data');
   }
 
   if (interceptor == null) {

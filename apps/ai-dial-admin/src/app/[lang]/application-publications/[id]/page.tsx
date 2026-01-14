@@ -7,7 +7,7 @@ import PublicationView from '@/src/components/Publications/View/View';
 import { approvePublication, declinePublication } from '@/src/app/actions/publications';
 import { applicationRunnersApi, publicationsApi } from '@/src/app/api/api';
 import { Publication } from '@/src/models/dial/publications';
-import { logError } from '@/src/server/logger';
+import { errorObjLog } from '@/src/server/logger';
 import Page403 from '@/src/components/Page403/Page403';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
@@ -27,7 +27,7 @@ export default async function Page(params: { searchParams: Promise<{ path: strin
       return <Page403 />;
     }
   } catch (e) {
-    logError(e, 'Failed to fetch application publication view data');
+    errorObjLog(e, 'Failed to fetch application publication view data');
   }
 
   if (data == null) {

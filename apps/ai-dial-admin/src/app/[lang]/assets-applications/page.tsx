@@ -10,7 +10,7 @@ import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { AppsFolderProvider } from '@/src/context/assets/AppsFolderContext';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import Page403 from '@/src/components/Page403/Page403';
-import { logError } from '@/src/server/logger';
+import { errorObjLog } from '@/src/server/logger';
 import { applicationRunnersApi } from '@/src/app/api/api';
 
 export const dynamic = 'force-dynamic';
@@ -32,7 +32,7 @@ export default async function Page() {
       return <Page403 />;
     }
   } catch (e) {
-    logError(e, 'Failed to fetch applications data');
+    errorObjLog(e, 'Failed to fetch applications data');
   }
 
   return (
