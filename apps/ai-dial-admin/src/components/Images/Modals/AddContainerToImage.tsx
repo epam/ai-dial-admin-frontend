@@ -1,41 +1,60 @@
-import { FC, useEffect, useMemo, useState } from 'react';
-import { AlertVariant, DialAlert, DialFormPopup, DialNoDataContent, PopupSize } from '@epam/ai-dial-ui-kit';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  AlertVariant,
+  DialAlert,
+  DialFormPopup,
+  DialLoader,
+  DialNoDataContent,
+  DialSwitch,
+  PopupSize,
+} from '@epam/ai-dial-ui-kit';
+import { GridApi, GridOptions, SelectionChangedEvent } from 'ag-grid-community';
+
 import { Container } from '@/src/models/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
-import { ImageVersion } from '@/src/models/deployments/images';
-import { useI18n } from '@/src/locales/client';
-import { useNotification } from '@/src/context/NotificationContext';
-import { GridApi, GridOptions, SelectionChangedEvent } from 'ag-grid-community';
-import { CHECKBOX_COL_DEF } from '@/src/constants/ag-grid';
-import { getContainers } from '@/src/app/actions/deployments';
-import { getImageType } from '@/src/utils/deployments/images';
-import { getErrorNotification } from '@/src/utils/notification';
-import { ButtonsI18nKey, ContainersI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
-import { getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
-import Grid from '@/src/components/Grid/Grid';
-import { IMAGE_DEPENDENCIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
+import { Image, ImageVersion } from '@/src/models/deployments/images';
+import { ButtonsI18nKey, ContainersI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { useNotification } from '@/src/context/NotificationContext';
+import { getContainers } from '@/src/app/actions/deployments';
+import { getErrorNotification } from '@/src/utils/notification';
+import { getRouteByType, getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
+import { IMAGE_DEPENDENCIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { getImageType } from '@/src/utils/deployments/images';
+import { useI18n } from '@/src/locales/client';
+import { CHECKBOX_COL_DEF } from '@/src/constants/ag-grid';
+
+import Grid from '@/src/components/Grid/Grid';
 
 interface Props {
   title: string;
   isModalOpen: boolean;
-  imageId: string;
+  image: Image;
   onClose: () => void;
   onApply: (entities: Container[]) => void;
   route: ApplicationRoute;
   versions: ImageVersion[];
 }
 
-const AddContainerToImage: FC<Props> = ({ title, isModalOpen, onClose, onApply, imageId, route, versions }) => {
+const AddContainerToImage: FC<Props> = ({ title, isModalOpen, onClose, onApply, image, route, versions }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
 
+  const [isLoading, setIsLoading] = useState(false);
+  const [showRelated, setShowRelated] = useState(true);
+  const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const [dependencies, setDependencies] = useState<Container[]>([]);
+  const [displayedDependencies, setDisplayedDependencies] = useState<Container[]>([]);
   const [selectedEntities, setSelectedEntities] = useState<Container[]>([]);
+
   const imageVersionsIds = useMemo(
-    () => versions.map((image) => image.id).filter((id) => id !== imageId),
-    [imageId, versions],
+    () => versions.map((image) => image.id).filter((id) => id !== image.id),
+    [image.id, versions],
   );
+
+  const toggleShowRelated = useCallback(() => {
+    setShowRelated((prev) => !prev);
+  }, []);
 
   const onSelectionChanged = (event: SelectionChangedEvent) => {
     const selectedRows = event.api.getSelectedRows();
@@ -54,26 +73,42 @@ const AddContainerToImage: FC<Props> = ({ title, isModalOpen, onClose, onApply, 
     onSelectionChanged: onSelectionChanged,
   };
 
-  const columnDefs = [...IMAGE_DEPENDENCIES_COLUMNS(t)];
-
-  useEffect(() => {
-    getContainers(getImageType(route)).then(({ success, response, requestId, errorMessage, errorHeader }) => {
-      if (success) {
-        setDependencies(
-          (response as Container[]).filter((container) => imageVersionsIds.includes(container.imageDefinitionId)) || [],
-        );
-      } else {
-        showNotification(getErrorNotification(errorHeader, errorMessage, requestId, 5000));
-      }
-    });
-  }, [imageVersionsIds, route, showNotification]);
+  const columnDefs = [...IMAGE_DEPENDENCIES_COLUMNS(t, true)];
 
   const onGridReady = (api: GridApi) => {
     api?.updateGridOptions({
       columnDefs,
-      rowData: dependencies,
+      rowData: displayedDependencies,
     });
+    setGridApi(api);
   };
+
+  useEffect(() => {
+    setIsLoading(true);
+    getContainers(getImageType(getRouteByType(image.$type))).then(
+      ({ success, response, requestId, errorMessage, errorHeader }) => {
+        if (success) {
+          setDependencies((response as Container[]) || []);
+        } else {
+          showNotification(getErrorNotification(errorHeader, errorMessage, requestId, 5000));
+        }
+        setIsLoading(false);
+      },
+    );
+  }, [image, route, showNotification]);
+
+  useEffect(() => {
+    const displayed = dependencies.filter((container) => {
+      if (showRelated) {
+        return imageVersionsIds.includes(container.imageDefinitionId);
+      }
+      return container.imageDefinitionId !== image.id;
+    });
+    setDisplayedDependencies(displayed);
+    gridApi?.updateGridOptions({
+      rowData: displayed,
+    });
+  }, [dependencies, gridApi, image.id, imageVersionsIds, showRelated]);
 
   return (
     <DialFormPopup
@@ -89,24 +124,35 @@ const AddContainerToImage: FC<Props> = ({ title, isModalOpen, onClose, onApply, 
       disableSubmitButton={!selectedEntities.length}
       onCancel={onClose}
     >
-      <div className="flex h-full flex-col px-6 py-4 min-h-0">
-        {!dependencies.length ? (
-          <DialNoDataContent
-            title={t(EntitiesI18nKey.NoContainersType, {
-              type: getTranslatedType(route, t),
-              entityType: getTranslatedDeploymentType(route, t),
-            })}
-          />
-        ) : (
-          <div className="flex flex-col gap-4 h-full min-h-0">
-            <Grid additionalGridOptions={additionalGridOptions} onGridReady={onGridReady} />
-            {selectedEntities.some((conainer) => conainer.status === CONTAINER_STATUS.RUNNING) && (
-              <DialAlert
-                message={t(ContainersI18nKey.ContainersRestartWarning, {
-                  entityType: getTranslatedDeploymentType(route, t),
+      <div className="flex flex-col px-6 py-4 min-h-0 h-full">
+        {isLoading && <DialLoader size={24} />}
+        {!isLoading && (
+          <div className="flex flex-col gap-4  min-h-0 h-full">
+            <DialSwitch
+              switchId={'related-containers'}
+              onChange={toggleShowRelated}
+              isOn={showRelated}
+              label={t(ContainersI18nKey.ShowRelatedContainers)}
+            />
+            {!displayedDependencies.length ? (
+              <DialNoDataContent
+                title={t(EntitiesI18nKey.NoContainersType, {
+                  type: getTranslatedType(getRouteByType(image.$type), t),
+                  entityType: getTranslatedDeploymentType(getRouteByType(image.$type), t),
                 })}
-                variant={AlertVariant.Warning}
               />
+            ) : (
+              <div className="flex flex-col gap-4 h-full min-h-0">
+                <Grid additionalGridOptions={additionalGridOptions} onGridReady={onGridReady} />
+                {selectedEntities.some((container) => container.status === CONTAINER_STATUS.RUNNING) && (
+                  <DialAlert
+                    message={t(ContainersI18nKey.ContainersRestartWarning, {
+                      entityType: getTranslatedDeploymentType(route, t),
+                    })}
+                    variant={AlertVariant.Warning}
+                  />
+                )}
+              </div>
             )}
           </div>
         )}

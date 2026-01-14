@@ -1179,6 +1179,7 @@ export enum ContainersI18nKey {
   Pod = 'Containers.Pod',
   ContainerRestartWarning = 'Containers.ContainerRestartWarning',
   ContainersRestartWarning = 'Containers.ContainersRestartWarning',
+  ShowRelatedContainers = 'Containers.ShowRelatedContainers',
 }
 
 export enum KubEventsI18nKey {

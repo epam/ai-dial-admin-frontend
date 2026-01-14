@@ -115,7 +115,7 @@ const CreateContainer: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
     [container, images],
   );
 
-  const colDefs = useMemo(() => IMAGES_LIST_FOR_CONTAINER_COLUMNS(onVersionsChange), [onVersionsChange]);
+  const colDefs = useMemo(() => IMAGES_LIST_FOR_CONTAINER_COLUMNS(onVersionsChange, true), [onVersionsChange]);
 
   useEffect(() => {
     if (currentStepId === CreateSteps.IMAGE) {

@@ -670,12 +670,15 @@ export const CONTAINER_EVENTS = (t: (key: string, options?: Record<string, strin
   },
 ];
 
-export const IMAGES_LIST_FOR_CONTAINER_COLUMNS = (onChange: (id: string) => void): ColDef[] => {
+export const IMAGES_LIST_FOR_CONTAINER_COLUMNS = (
+  onChange: (id: string) => void,
+  showTopicsColumn?: boolean,
+): ColDef[] => {
   return [
     { field: 'name', headerName: 'Name', hide: false },
     {
       field: 'versions',
-      headerName: 'Versions',
+      headerName: 'Version',
       hide: false,
       maxWidth: 150,
       minWidth: 150,
@@ -699,19 +702,26 @@ export const IMAGES_LIST_FOR_CONTAINER_COLUMNS = (onChange: (id: string) => void
       valueGetter: (params) =>
         params.data.availableVersions.find((v: ImageVersion) => v.id === params.data.selectedId).description,
     },
-    {
-      field: 'topics',
-      headerName: 'Topics',
-      hide: false,
-      cellRenderer: (params: ICellRendererParams) => (
-        <TagsCellRenderer
-          items={params.data.availableVersions.find((v: ImageVersion) => v.id === params.data.selectedId).topics || []}
-        />
-      ),
-      tooltipValueGetter: ({ value }) => (value?.length ? value.join(', ') : null),
-      filterValueGetter: (params) =>
-        params.data[params.colDef.field || ''].length ? params.data[params.colDef.field || ''].join(' ') : '',
-    },
+    { field: 'selectedId', headerName: 'ID', hide: false },
+    ...(showTopicsColumn
+      ? [
+          {
+            field: 'topics',
+            headerName: 'Topics',
+            hide: false,
+            cellRenderer: (params: ICellRendererParams) => (
+              <TagsCellRenderer
+                items={
+                  params.data.availableVersions.find((v: ImageVersion) => v.id === params.data.selectedId).topics || []
+                }
+              />
+            ),
+            tooltipValueGetter: ({ value }) => (value?.length ? value.join(', ') : null),
+            filterValueGetter: (params) =>
+              params.data[params.colDef.field || ''].length ? params.data[params.colDef.field || ''].join(' ') : '',
+          } as ColDef,
+        ]
+      : []),
   ];
 };
 
@@ -779,10 +789,23 @@ export const IMAGES_LIST_COLUMNS = (t: (key: string) => string): ColDef[] => [
   },
 ];
 
-export const IMAGE_DEPENDENCIES_COLUMNS = (t: (key: string) => string): ColDef[] => [
+export const IMAGE_DEPENDENCIES_COLUMNS = (t: (key: string) => string, showImageColumn?: boolean): ColDef[] => [
   { field: 'name', headerName: 'Name', hide: false },
   { field: 'description', headerName: 'Description', hide: false },
   { field: 'id', headerName: 'ID', hide: false },
+  ...(showImageColumn
+    ? [
+        {
+          field: 'imageDefinitionId',
+          headerName: `Image`,
+          hide: false,
+          cellRenderer: (params: ICellRendererParams) => formatDeploymentImageName(params.data) ?? params.value,
+          tooltipValueGetter: (params: ITooltipParams) => formatDeploymentImageName(params.data) ?? params.value,
+          filterValueGetter: (params: ValueGetterParams) =>
+            formatDeploymentImageName(params.data) ?? params.data[params.colDef.field || ''],
+        },
+      ]
+    : []),
   {
     field: 'status',
     headerName: 'Status',
