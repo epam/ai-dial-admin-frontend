@@ -13,7 +13,6 @@ import {
   ACTIVITY_AUDIT_COLUMNS,
   IMAGE_DEPENDENCIES_COLUMNS,
   IMAGES_LIST_COLUMNS,
-  CHANGE_IMAGE_VERSION,
   IMAGES_LIST_FOR_CONTAINER_COLUMNS,
   CONTAINERS_COLUMNS,
   CONTAINER_EVENTS,
@@ -86,14 +85,6 @@ describe('Constants :: grid columns', () => {
     expect(Array.isArray(cols1)).toBe(true);
     expect(cols1.some((c) => c.field === 'name')).toBe(true);
     expect(cols1.some((c) => c.field === 'description')).toBe(true);
-  });
-
-  test('CHANGE_IMAGE_VERSION returns expected columns', () => {
-    const t = (s: string) => s;
-    const cols1 = CHANGE_IMAGE_VERSION(t);
-    expect(Array.isArray(cols1)).toBe(true);
-    expect(cols1.some((c) => c.field === 'name')).toBe(true);
-    expect(cols1.some((c) => c.field === 'version')).toBe(true);
   });
 
   test('IMAGES_LIST_FOR_CONTAINER_COLUMNS returns expected columns', () => {

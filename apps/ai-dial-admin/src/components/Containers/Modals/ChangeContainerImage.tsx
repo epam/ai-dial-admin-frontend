@@ -6,24 +6,25 @@ import {
   DialPopup,
   DialPrimaryButton,
 } from '@epam/ai-dial-ui-kit';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { getImageVersions } from '@/src/app/actions/deployments';
-import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
-import Grid from '@/src/components/Grid/Grid';
-import { ACTION_COLUMN, RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
-import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
-import { CHANGE_IMAGE_VERSION } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, ContainersI18nKey } from '@/src/constants/i18n';
-import { useNotification } from '@/src/context/NotificationContext';
-import { useI18n } from '@/src/locales/client';
-import { Image, ImageVersion } from '@/src/models/deployments/images';
+import { Image, ImageGroup } from '@/src/models/deployments/images';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
-import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
+import { useNotification } from '@/src/context/NotificationContext';
+import { getImagesWithVersions } from '@/src/app/actions/deployments';
+import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
+import { IMAGES_LIST_FOR_CONTAINER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { getTranslatedDeploymentType } from '@/src/utils/deployments/entity';
 import { getErrorNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { getImageType, isValidVersion, updateSelectedVersion } from '@/src/utils/deployments/images';
+import { ACTION_COLUMN, RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
+import { useI18n } from '@/src/locales/client';
+
+import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
+import Grid from '@/src/components/Grid/Grid';
 
 interface Props {
   isModalOpen: boolean;
@@ -48,7 +49,7 @@ const ChangeContainerImage: FC<Props> = ({
   const { showNotification } = useNotification();
 
   const [id, setId] = useState(image.id);
-  const [images, setImages] = useState<ImageVersion[]>([]);
+  const [images, setImages] = useState<ImageGroup[]>([]);
   const [loading, setLoading] = useState(false);
   const [isValid, setIsValid] = useState(false);
 
@@ -56,24 +57,41 @@ const ChangeContainerImage: FC<Props> = ({
     onOpenInNewTab(ApplicationRoute.Images, image);
   }, []);
 
-  const columnDefs = [...CHANGE_IMAGE_VERSION(t), ACTION_COLUMN([getOpenInNewTabOperation(onOpenInNewTabAction)])];
+  const onVersionsChange = useCallback(
+    (id: string) => {
+      setImages(updateSelectedVersion(images, id));
+      setId(id);
+    },
+    [images],
+  );
+
+  const colDefs = useMemo(
+    () => [
+      ...IMAGES_LIST_FOR_CONTAINER_COLUMNS(onVersionsChange),
+      ACTION_COLUMN([getOpenInNewTabOperation(onOpenInNewTabAction)]),
+    ],
+    [onOpenInNewTabAction, onVersionsChange],
+  );
 
   useEffect(() => {
     const fetchData = async () => {
-      const res = await getImageVersions(image.name);
+      setLoading(true);
+      const res = await getImagesWithVersions(getImageType(route));
       if (res.success) {
         setLoading(false);
-        setImages(res.response as []);
+        setImages(updateSelectedVersion(res.response as [], image.id));
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     };
 
     fetchData().catch((err) => console.error(err));
-  }, [showNotification, setLoading, route, image.name]);
+  }, [showNotification, setLoading, route, image.name, image.id]);
 
   useEffect(() => {
-    setIsValid(images.find((image) => image.id === id)?.status === IMAGE_STATUS.BUILT && id !== image.id);
+    if (images.length) {
+      setIsValid(isValidVersion(images?.find((i) => i.selectedId === id) as ImageGroup) && id !== image.id);
+    }
   }, [id, image.id, images]);
 
   return (
@@ -84,52 +102,53 @@ const ChangeContainerImage: FC<Props> = ({
       open={isModalOpen}
       className="lg:max-w-[55%] md:max-w-[75%]"
     >
-      <>
+      <div className="flex flex-col py-4 px-6">
         {loading && <DialLoader size={24} />}
-        <div className="flex flex-col py-4 px-6">
-          {!loading && !!images.length && (
-            <div className="flex flex-col gap-4 overflow-auto max-h-[400px]">
-              <Grid
-                rowData={images}
-                columnDefs={columnDefs}
-                additionalGridOptions={{
-                  rowSelection: { mode: 'singleRow', enableClickSelection: true },
-                  selectionColumnDef: {
-                    ...RADIO_BUTTON_COL_DEF,
-                    cellRenderer: (data: { data?: { id: string; name: string }; name: string }) => (
-                      <RadioButtonRenderer inputId={data.data?.name || data.name} isChecked={data.data?.id === id} />
-                    ),
-                  },
-                  onRowSelected: (event) => {
-                    if (event.node.isSelected()) {
-                      setId(event.data?.id);
+        {!loading && !!images.length && (
+          <div className="flex flex-col gap-4 overflow-auto max-h-[400px]">
+            <Grid
+              rowData={images}
+              columnDefs={colDefs}
+              additionalGridOptions={{
+                rowSelection: { mode: 'singleRow', enableClickSelection: true },
+                selectionColumnDef: {
+                  ...RADIO_BUTTON_COL_DEF,
+                  cellRenderer: (data: { data?: { selectedId: string; name: string }; name: string }) => (
+                    <RadioButtonRenderer
+                      inputId={data.data?.name || data.name}
+                      isChecked={data.data?.selectedId === id}
+                    />
+                  ),
+                },
+                onRowSelected: (event) => {
+                  if (event.node.isSelected()) {
+                    setId(event.data?.selectedId);
+                  }
+                },
+                onGridReady: (event) => {
+                  event.api?.updateGridOptions({
+                    rowData: images,
+                    columnDefs: colDefs,
+                  });
+                  event.api.forEachNode((node) => {
+                    if (node.data.selectedId === id && isValidVersion(node.data as ImageGroup)) {
+                      node.setSelected(true);
                     }
-                  },
-                  onGridReady: (event) => {
-                    event.api?.updateGridOptions({
-                      rowData: images,
-                      columnDefs: columnDefs,
-                    });
-                    event.api.forEachNode((node) => {
-                      if (node.data.id === image.id) {
-                        node.setSelected(true);
-                      }
-                    });
-                  },
-                }}
+                  });
+                },
+              }}
+            />
+            {containerStatus === CONTAINER_STATUS.RUNNING && (
+              <DialAlert
+                message={t(ContainersI18nKey.ContainerRestartWarning, {
+                  entityType: getTranslatedDeploymentType(route, t),
+                })}
+                variant={AlertVariant.Warning}
               />
-              {containerStatus === CONTAINER_STATUS.RUNNING && (
-                <DialAlert
-                  message={t(ContainersI18nKey.ContainerRestartWarning, {
-                    entityType: getTranslatedDeploymentType(route, t),
-                  })}
-                  variant={AlertVariant.Warning}
-                />
-              )}
-            </div>
-          )}
-        </div>
-      </>
+            )}
+          </div>
+        )}
+      </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
         <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
         <DialPrimaryButton

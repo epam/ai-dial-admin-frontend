@@ -71,42 +71,45 @@ const CreateEntity = <T extends CreatePromptEntity>({
   );
   const [isUniqueNameError, setIsUniqueNameError] = useState<boolean | undefined>(void 0);
 
-  const onCreate = useCallback(async () => {
-    const entity = {
-      ...currentEntity,
-      name: currentEntity.name?.trim(),
-    };
+  const onCreate = useCallback(
+    async (updatedEntity: T) => {
+      const entity = {
+        ...updatedEntity,
+        name: updatedEntity.name?.trim(),
+      };
 
-    const isUnique = RoutesForCheckingUniqueName.includes(route)
-      ? await checkIsUniqueDeploymentName(entity.name as string)
-      : true;
+      const isUnique = RoutesForCheckingUniqueName.includes(route)
+        ? await checkIsUniqueDeploymentName(entity.name as string)
+        : true;
 
-    setIsUniqueNameError(!isUnique);
+      setIsUniqueNameError(!isUnique);
 
-    if (!isUnique) return;
+      if (!isUnique) return;
 
-    if (isAssetView(route)) {
-      entity.folderId = folderContext?.filePath;
-    }
-    getReqRef.current(createEntity, entity).then((res) => {
-      if (res.success) {
-        if (isAssetView(route)) {
-          folderContext?.fetchFiles(folderContext?.filePath);
-        }
-        showNotification(
-          getSuccessNotification(
-            getCreateNotificationTitle(route, t),
-            getCreateNotificationDescription(route, entity.name, t),
-          ),
-        );
-        const originalRoute = route.split('/')[1];
-        router.push(`${initialValues ? '/' : ''}${originalRoute}/${getEntityPath(route, res.response || entity)}`);
-        onClose();
-      } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+      if (isAssetView(route)) {
+        entity.folderId = folderContext?.filePath;
       }
-    });
-  }, [currentEntity, route, createEntity, folderContext, showNotification, t, router, initialValues, onClose]);
+      getReqRef.current(createEntity, entity).then((res) => {
+        if (res.success) {
+          if (isAssetView(route)) {
+            folderContext?.fetchFiles(folderContext?.filePath);
+          }
+          showNotification(
+            getSuccessNotification(
+              getCreateNotificationTitle(route, t),
+              getCreateNotificationDescription(route, entity.name, t),
+            ),
+          );
+          const originalRoute = route.split('/')[1];
+          router.push(`${initialValues ? '/' : ''}${originalRoute}/${getEntityPath(route, res.response || entity)}`);
+          onClose();
+        } else {
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+        }
+      });
+    },
+    [route, createEntity, folderContext, showNotification, t, router, initialValues, onClose],
+  );
 
   useEffect(() => {
     setIsUniqueNameError(void 0);
@@ -151,7 +154,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
       header={getCreateEntityTitle(route, t)}
       portalId="CreateEntity"
       open={isModalOpen}
-      onSubmit={onCreate}
+      onSubmit={() => onCreate(currentEntity)}
       onCancel={onClose}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
       submitLabel={t(ButtonsI18nKey.Create)}
