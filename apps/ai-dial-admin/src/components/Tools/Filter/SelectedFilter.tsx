@@ -4,7 +4,7 @@ import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
 import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
 import { FC, useMemo } from 'react';
 
-import { ToolFilter } from '@/src/components/Toolsets/Tools/type';
+import { ToolFilter } from '@/src/components/Tools/type';
 import { BasicI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 

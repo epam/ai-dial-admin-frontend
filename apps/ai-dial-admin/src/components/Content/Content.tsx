@@ -4,7 +4,7 @@ import { FC, ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { getAppProcessStatus, getCoreVersions } from '@/src/app/actions';
 import Breadcrumbs from '@/src/components/Breadcrumbs/Breadcrumbs';
 import Blackout from '@/src/components/Common/Blackout/Blackout';
-import HintSidebar from '@/src/components/Common/HintSIdebar/HintSidebar';
+import Sidebar from '@/src/components/Common/Sidebar/Sidebar';
 import Footer from '@/src/components/Footer/Footer';
 import UserMobile from '@/src/components/Header/User/UserMobile';
 import { ErrorI18nKey } from '@/src/constants/i18n';
@@ -81,11 +81,11 @@ const Content: FC<Props> = ({ children, beVersion, isEnableAuth }) => {
       <Blackout />
       <UserMobile isEnableAuth={isEnableAuth} />
       <div className="flex flex-row h-full w-full">
-        <div className="h-full w-full lg:p-6 py-6 md:px-6 px-0 flex flex-col">
+        <div className="h-full min-w-0 flex-1 lg:p-6 py-6 md:px-6 px-0 flex flex-col">
           {isTabletScreen && <Breadcrumbs mobile={true} />}
           {children}
         </div>
-        <HintSidebar />
+        <Sidebar />
       </div>
       <Footer beVersion={beVersion} coreVersions={coreVersions} onChangeCoreVersion={setCoreVersions} />
     </div>

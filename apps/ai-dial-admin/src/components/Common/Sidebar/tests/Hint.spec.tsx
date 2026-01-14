@@ -1,11 +1,11 @@
 import { describe, expect, test, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
-import Hint from '@/src/components/Common/HintSIdebar/Hint';
+import Hint from '@/src/components/Common/Sidebar/Hint';
 
 vi.mock('@/src/context/AppContext', () => ({
   useAppContext: vi.fn(() => {
-    return { hintSidebar: { closeHintSidebar: () => undefined } };
+    return { sidebar: { closeSidebar: () => undefined } };
   }),
 }));
 

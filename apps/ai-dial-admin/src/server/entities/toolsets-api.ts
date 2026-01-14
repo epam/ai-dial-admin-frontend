@@ -10,6 +10,7 @@ export const TOOLSETS_URL = `${API}/toolSets`;
 export const TOOLSET_URL = (name?: string) => `${TOOLSETS_URL}/${name || ''}`;
 export const CORE_TOOLSET_URL = (name: string) => `${TOOLSETS_URL}/core/${name}`;
 export const TOOLS_URL = (name: string) => `${TOOLSET_URL(name)}/discovered-tools`;
+export const TOOLS_TRY_OUT_URL = (name: string) => `${TOOLSET_URL(name)}/call-tool`;
 
 export class ToolsetsApi extends BaseApi {
   getToolsetList(token: JWT | null): Promise<Toolset[] | null> {
@@ -22,6 +23,14 @@ export class ToolsetsApi extends BaseApi {
 
   getTools(name: string, token: JWT | null): Promise<Tool[] | null> {
     return this.get(TOOLS_URL(name), token).then((res) => (res as { tools: Tool[] })?.tools || []);
+  }
+
+  tryOutTool(
+    name: string,
+    body: Record<string, unknown>,
+    token: JWT | null,
+  ): Promise<ServerActionResponse<Record<string, unknown>>> {
+    return this.postAction(TOOLS_TRY_OUT_URL(name), body, token);
   }
 
   removeToolset(token: JWT | null, name?: string): Promise<ServerActionResponse> {

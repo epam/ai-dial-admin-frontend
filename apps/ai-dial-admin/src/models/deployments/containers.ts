@@ -32,22 +32,6 @@ export interface Container {
   modelFormat?: string;
 }
 
-export interface Tool {
-  name: string;
-  description?: string;
-  inputSchema: {
-    type: string;
-    properties: Record<string, unknown>;
-  };
-  annotations?: {
-    title?: string;
-    readOnlyHint?: boolean;
-    destructiveHint?: boolean;
-    idempotentHint?: boolean;
-    openWorldHint?: boolean;
-  };
-}
-
 export interface Resource {
   uri: string;
   name: string;

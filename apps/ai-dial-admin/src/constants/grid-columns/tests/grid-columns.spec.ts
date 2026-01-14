@@ -73,10 +73,14 @@ describe('Constants :: grid columns', () => {
   test('IMAGE_DEPENDENCIES_COLUMNS returns expected columns', () => {
     const t = (s: string) => s;
     const cols1 = IMAGE_DEPENDENCIES_COLUMNS(t);
+    const cols2 = IMAGE_DEPENDENCIES_COLUMNS(t, true);
     expect(Array.isArray(cols1)).toBe(true);
     expect(cols1.some((c) => c.field === 'name')).toBe(true);
     expect(cols1.some((c) => c.field === 'description')).toBe(true);
+    expect(cols1.some((c) => c.field === 'image')).toBe(false);
     expect(cols1.find((c) => c.field === 'status')?.cellRenderer).toBeDefined();
+    expect(Array.isArray(cols2)).toBe(true);
+    expect(cols2.some((c) => c.field === 'imageDefinitionId')).toBe(true);
   });
 
   test('IMAGES_LIST_COLUMNS returns expected columns', () => {
@@ -90,9 +94,13 @@ describe('Constants :: grid columns', () => {
   test('IMAGES_LIST_FOR_CONTAINER_COLUMNS returns expected columns', () => {
     const t = (s: string) => s;
     const cols1 = IMAGES_LIST_FOR_CONTAINER_COLUMNS(t);
+    const cols2 = IMAGES_LIST_FOR_CONTAINER_COLUMNS(t, true);
     expect(Array.isArray(cols1)).toBe(true);
     expect(cols1.some((c) => c.field === 'name')).toBe(true);
     expect(cols1.some((c) => c.field === 'versions')).toBe(true);
+    expect(cols1.some((c) => c.field === 'topics')).toBe(false);
+    expect(Array.isArray(cols2)).toBe(true);
+    expect(cols2.some((c) => c.field === 'topics')).toBe(true);
   });
 
   test('CONTAINERS_COLUMNS returns expected columns', () => {

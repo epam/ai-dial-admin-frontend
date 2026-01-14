@@ -71,6 +71,8 @@ export default {
     No: 'No',
     DuplicateCopyPostfix: '(Copy)',
     URL: 'URL',
+    Request: 'Request',
+    Response: 'Response',
   },
   Menu: {
     Entities: 'Entities',
@@ -395,6 +397,7 @@ export default {
     Install: 'Install',
     Run: 'Run',
     AddPort: 'Add Port',
+    SendRequest: 'Send Request',
   },
   Compare: {
     CompareChanges: 'Compare changes',
@@ -1126,6 +1129,7 @@ export default {
     SuccessLoginDescription: 'List of available tools is in the Tools Overview tab',
     SuccessLogout: 'Toolset logged out successfully',
     SuccessLogoutDescription: 'Access to the list of available tools has been revoked. Log in to restore it.',
+    TryOut: 'Try out',
   },
   Images: {
     'ImagesListTitle#zero': 'Images',
@@ -1192,6 +1196,7 @@ export default {
     Pod: 'Pod',
     ContainerRestartWarning: '{entityType} will be restarted after changing image version.',
     ContainersRestartWarning: '{entityType} with "Running" status will be restarted.',
+    ShowRelatedContainers: 'Show containers related to this image',
   },
   KubEvents: {
     Normal: 'Normal',

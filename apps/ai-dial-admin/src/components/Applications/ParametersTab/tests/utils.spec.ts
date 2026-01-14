@@ -1,6 +1,6 @@
 import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test, vi } from 'vitest';
-import { ParamsView } from '../types';
+import { ParamsView } from '@/src/types/parameters';
 import {
   getAppRunner,
   getFrameConfig,

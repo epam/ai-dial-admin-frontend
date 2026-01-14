@@ -17,6 +17,7 @@ import {
   signOutToolset,
   importToolsets,
   exportToolsets,
+  tryOutAssetTool,
 } from './actions';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { ResourceType } from '@/src/types/resource-type';
@@ -199,6 +200,15 @@ describe('Assets Toolset :: server actions', () => {
       ImportFileType.ARCHIVE,
       ResourceType.TOOLSET,
     );
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call tryOutAssetTool action', async () => {
+    (assetsApi.tryOutTool as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await tryOutAssetTool({});
+    expect(getUserToken).toHaveBeenCalled();
+    expect(assetsApi.tryOutTool).toHaveBeenCalledWith({}, TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

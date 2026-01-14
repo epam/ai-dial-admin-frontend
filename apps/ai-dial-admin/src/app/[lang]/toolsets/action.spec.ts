@@ -4,7 +4,15 @@ import { toolSetsApi } from '@/src/app/api/api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { createToolset, getCoreToolset, getTools, removeToolset, updateCoreToolset, updateToolset } from './actions';
+import {
+  createToolset,
+  getCoreToolset,
+  getTools,
+  removeToolset,
+  tryOutTool,
+  updateCoreToolset,
+  updateToolset,
+} from './actions';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -75,6 +83,15 @@ describe('Toolsets :: server actions', () => {
     const result = await updateCoreToolset({ name: 'test' }, 'test', 'etag');
     expect(getUserToken).toHaveBeenCalled();
     expect(toolSetsApi.updateCoreToolset).toHaveBeenCalledWith({ name: 'test' }, 'test', 'etag', TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call tryOutTool action', async () => {
+    (toolSetsApi.tryOutTool as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await tryOutTool('testSet', { name: 'test' });
+    expect(getUserToken).toHaveBeenCalled();
+    expect(toolSetsApi.tryOutTool).toHaveBeenCalledWith('testSet', { name: 'test' }, TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 });
