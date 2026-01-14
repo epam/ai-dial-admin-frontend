@@ -41,3 +41,8 @@ export async function createToolset(toolSet: Toolset) {
     token,
   );
 }
+
+export async function tryOutTool(name: string, body: Record<string, unknown>) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return toolSetsApi.tryOutTool(name, body, token);
+}

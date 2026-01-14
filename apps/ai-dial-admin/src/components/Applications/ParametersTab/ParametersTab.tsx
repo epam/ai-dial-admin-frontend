@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialPrimaryButton, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { DialNoDataContent, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 import { RJSFSchema } from '@rjsf/utils';
 import { IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
@@ -30,10 +30,10 @@ import { DialApplicationResource } from '@/src/models/dial/application-resource'
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DefaultsValue } from '@/src/models/dial/defaults';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
+import { ParamsView } from '@/src/types/parameters';
 import { ApplicationRoute } from '@/src/types/routes';
 import TableView from './TableView';
 import ViewControl from './ViewControl';
-import { ParamsView } from './types';
 
 interface Props {
   entity?: DialApplication | DialApplicationResource;

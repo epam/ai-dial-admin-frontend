@@ -2,7 +2,14 @@ import { DialToolset } from '@/src/models/dial/toolset';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
-import { CORE_TOOLSET_URL, TOOLSETS_URL, TOOLSET_URL, TOOLS_URL, ToolsetsApi } from '../toolsets-api';
+import {
+  CORE_TOOLSET_URL,
+  TOOLSETS_URL,
+  TOOLSET_URL,
+  TOOLS_TRY_OUT_URL,
+  TOOLS_URL,
+  ToolsetsApi,
+} from '../toolsets-api';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
@@ -133,6 +140,18 @@ describe('Server :: ToolsetsApi', () => {
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${TOOLSET_URL(mockToolset.name)}`,
       expect.objectContaining({ method: 'DELETE' }),
+    );
+  });
+
+  test('Should calls tryOutTool with POST method', async () => {
+    const mockResponse = { success: true };
+    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+
+    await instance.tryOutTool(mockToolset.name, {}, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TOOLS_TRY_OUT_URL(mockToolset.name)}`,
+      expect.objectContaining({ method: 'POST' }),
     );
   });
 });

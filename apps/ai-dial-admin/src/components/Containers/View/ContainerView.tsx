@@ -26,7 +26,7 @@ import { getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/depl
 import { IMAGE_BUILD_POLL_INTERVAL } from '@/src/constants/deployments/images';
 import HeaderButtons from '@/src/components/Containers/View/HeaderButtons';
 import Properties from '@/src/components/Containers/View/Properties/Properties';
-import Tools from '@/src/components/Containers/View/Tools/Tools';
+import Tools from '@/src/components/Tools/Tools';
 import Resources from '@/src/components/Containers/View/Resources/Resources';
 import Prompts from '@/src/components/Containers/View/Prompts/Prompts';
 import Metrics from '@/src/components/Containers/View/Metrics/Metrics';
@@ -277,7 +277,7 @@ const ContainerView: FC<Props> = ({
                   originalName={container.name}
                 />
               )}
-              {activeTab === EntityViewTab.Tools && <Tools containerId={selectedContainer.id} />}
+              {activeTab === EntityViewTab.Tools && <Tools containerId={selectedContainer.id} isMcpToolset />}
               {activeTab === EntityViewTab.Resources && <Resources containerId={selectedContainer.id} />}
               {activeTab === EntityViewTab.Prompts && <Prompts containerId={selectedContainer.id} />}
               {activeTab === EntityViewTab.Metrics && <Metrics />}

@@ -14,11 +14,11 @@ import { WidgetToggler } from '@/src/components/Common/SchemaUIRenderer/Componen
 export const ObjectFieldTemplate: FC<ObjectFieldTemplateProps> = (props) => {
   const { title, properties, schema, uiSchema, formData, onAddClick, readonly } = props;
   const t = useI18n();
-  const isRoot = schema['dial:applicationTypeDisplayName'];
+  const isRoot = schema['dial:applicationTypeDisplayName'] || schema.isRoot;
 
   return (schema?.additionalProperties as any)?.oneOf ? null : (
     <WidgetToggler title={title} isRoot={isRoot}>
-      <fieldset className={classNames('py-6 pl-6 w-full', isRoot ? 'bg-layer-0 pr-6' : 'bg-layer-1')}>
+      <fieldset className={classNames('w-full', isRoot ? 'bg-layer-0' : 'bg-layer-1 pl-6 py-6')}>
         {title && <WidgetHeader title={title} defaultHeader={true} description={schema.description} />}
         <div className="space-y-3">
           {properties.map((prop) => (

@@ -11,13 +11,13 @@ interface Props {
 }
 
 const Hint: FC<Props> = ({ title, text }) => {
-  const { closeHintSidebar } = useAppContext().hintSidebar;
+  const { closeSidebar } = useAppContext().sidebar;
 
   return (
-    <div className="flex flex-col w-full gap-y-8">
+    <div className="flex flex-col gap-y-8 w-[400px]">
       <div className="flex items-center justify-between">
         <h3 className="text-primary overflow-ellipsis">{title}</h3>
-        <DialCloseButton onClose={closeHintSidebar} />
+        <DialCloseButton onClose={closeSidebar} />
       </div>
       <div className="overflow-y-scroll">
         <p className="small text-primary">{text}</p>

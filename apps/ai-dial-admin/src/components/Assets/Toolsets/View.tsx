@@ -19,7 +19,7 @@ import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/compon
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import ViewContent from '@/src/components/EntityView/View/Content/ViewContent';
-import ToolsView from '@/src/components/Toolsets/Tools/Tools';
+import Tools from '@/src/components/Tools/Tools';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { ToolsetI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -310,7 +310,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
               )}
 
               {activeTab === EntityViewTab.Tools && (
-                <ToolsView
+                <Tools
                   isAssetToolset={true}
                   originalToolset={originalToolset}
                   selectedToolset={selectedToolset}

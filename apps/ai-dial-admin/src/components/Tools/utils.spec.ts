@@ -8,22 +8,22 @@ describe('getFilteredTools', () => {
 
   test('returns enabled tools', () => {
     const result = getFilteredTools(tools, [ToolFilter.Enabled], availableTools);
-    expect(result).toEqual(['toolA', 'toolC']);
+    expect(result).toEqual([{ name: 'toolA' }, { name: 'toolC' }]);
   });
 
   test('returns disabled tools', () => {
     const result = getFilteredTools(tools, [ToolFilter.Disabled], availableTools);
-    expect(result).toEqual(['toolD']);
+    expect(result).toEqual([{ name: 'toolD' }]);
   });
 
   test('returns auto detected tools', () => {
     const result = getFilteredTools(tools, [ToolFilter.AutoDetected], availableTools);
-    expect(result).toEqual(['toolA', 'toolC', 'toolD']);
+    expect(result).toEqual([{ name: 'toolA' }, { name: 'toolC' }, { name: 'toolD' }]);
   });
 
   test('returns added manually tools', () => {
     const result = getFilteredTools(tools, [ToolFilter.AddedManually], availableTools);
-    expect(result).toEqual(['toolB']);
+    expect(result).toEqual([{ name: 'toolB' }]);
   });
 
   test('returns unique tools when multiple filters', () => {
@@ -32,7 +32,7 @@ describe('getFilteredTools', () => {
       [ToolFilter.Enabled, ToolFilter.Disabled, ToolFilter.AutoDetected, ToolFilter.AddedManually],
       availableTools,
     );
-    expect(result.sort()).toEqual(['toolA', 'toolB', 'toolC', 'toolD'].sort());
+    expect(result).toEqual([{ name: 'toolA' }, { name: 'toolC' }, { name: 'toolD' }, { name: 'toolB' }]);
   });
 
   test('returns empty array if no filters', () => {

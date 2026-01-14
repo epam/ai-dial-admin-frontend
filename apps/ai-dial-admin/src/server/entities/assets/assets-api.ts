@@ -211,4 +211,9 @@ export class AssetsApi extends BaseApi {
 
     return this.postAction(url, getToolsetBasicBody(toolset, type), token);
   }
+
+  tryOutTool(body: Record<string, unknown>, token: JWT | null) {
+    const url = `${ResourceBasePaths[ResourceType.TOOLSET]}/call-tool`;
+    return this.postAction(url, body, token);
+  }
 }
