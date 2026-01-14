@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import Tool from '../Tool';
+import Tool from '../Tool/Tool';
 import { Tool as ToolType } from '@/src/models/dial/toolset';
 
 describe('Tool', () => {

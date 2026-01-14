@@ -16,7 +16,7 @@ import { useI18n } from '@/src/locales/client';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { Tool, Toolset } from '@/src/models/dial/toolset';
 import { getErrorNotification } from '@/src/utils/notification';
-import ToolComponent from './Tool';
+import ToolComponent from './Tool/Tool';
 
 const filtersConfiguration = [
   ToolFilter.Enabled,
