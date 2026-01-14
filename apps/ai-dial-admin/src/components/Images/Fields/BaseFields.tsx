@@ -15,31 +15,54 @@ import { useI18n } from '@/src/locales/client';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 import Maintainer from '@/src/components/EntityMainProperties/BaseProperties/Maintainer';
 import TopicField from '@/src/components/Images/Fields/TopicField';
+import { getErrorForName } from '@/src/utils/validation/name-error';
 
 interface Props {
   image: Image;
   setImage: (entity: Image) => void;
   isModal?: boolean;
+  setImageVersions?: (versions: ImageVersion[]) => void;
 }
 
-const BaseFields: FC<Props> = ({ image, setImage, isModal }) => {
+const BaseFields: FC<Props> = ({ image, setImage, isModal, setImageVersions }) => {
   const t = useI18n();
-  const { dispatch } = useSaveValidationContext();
+  const { dispatch, resetCounter } = useSaveValidationContext();
 
+  const [nameError, setNameError] = useState<FieldError | null>(null);
   const [versionsMap, setVersionsMap] = useState<Record<string, string[]>>({});
   const [versionError, setVersionError] = useState<FieldError | null>(null);
 
   useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!image.name });
-  }, [dispatch, image, t, versionsMap]);
+    dispatch({
+      type: ValidationActionType.SetField,
+      field: 'name',
+      isValid: !!image.name,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (resetCounter || (image.name != null && image.name.length > 0)) {
+      const error = getErrorForName(image.name, [], t);
+      setNameError(error);
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'name',
+        isValid: !error,
+      });
+    }
+  }, [dispatch, image, resetCounter, t, versionsMap]);
 
   const verifyVersion = useMemo(
     () =>
-      debounce((name?: string) => {
-        if (name) {
+      debounce((name?: string, error?: FieldError | null) => {
+        if (name && !error) {
           getImageVersions(name).then(({ success, response }) => {
             const data = response as ImageVersion[];
             if (success && data.length > 0) {
+              if (setImageVersions) {
+                setImageVersions(data as ImageVersion[]);
+              }
               const versionMap = getVersionsPerName(data);
               setVersionsMap(versionMap);
               const error = getSemanticVersionError(versionMap, { name }, t, image.version);
@@ -58,9 +81,14 @@ const BaseFields: FC<Props> = ({ image, setImage, isModal }) => {
         } else {
           setVersionsMap({});
           setVersionError(null);
+          dispatch({
+            type: ValidationActionType.SetField,
+            field: 'version',
+            isValid: true,
+          });
         }
       }, 500),
-    [dispatch, image.version, t],
+    [dispatch, image.version, setImageVersions, t],
   );
 
   return (
@@ -71,12 +99,22 @@ const BaseFields: FC<Props> = ({ image, setImage, isModal }) => {
         placeholder={t(EntityPlaceholdersI18nKey.Name)}
         value={image.name}
         onChange={(name?: string) => {
-          verifyVersion(name);
+          dispatch({
+            type: ValidationActionType.SetField,
+            field: 'version',
+            isValid: false,
+          });
+          const error = getErrorForName(name, [], t);
+          dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !error });
+          setNameError(error);
+          verifyVersion(name, error);
           setImage({
             ...image,
             name: name || '',
           });
         }}
+        errorText={nameError?.text}
+        invalid={!!nameError}
       />
       {isModal && (
         <DialTextInputField

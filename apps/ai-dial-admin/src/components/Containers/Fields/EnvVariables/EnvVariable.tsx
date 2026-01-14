@@ -47,8 +47,9 @@ const EnvVariable: FC<Props> = ({
   const [variableNameError, setVariableNameError] = useState<FieldError | null>(null);
 
   useEffect(() => {
-    if (resetCounter || (variable.name !== null && variable.name?.length > 0)) {
+    if (resetCounter || (variable.name != null && variable.name?.length > 0)) {
       const error = getVariableNameError(variable.name as string, t);
+      setVariableNameError(error);
       dispatch({
         type: ValidationActionType.SetField,
         field: `variable_${index}`,

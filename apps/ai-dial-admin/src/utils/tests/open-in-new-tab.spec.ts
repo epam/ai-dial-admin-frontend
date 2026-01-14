@@ -62,6 +62,9 @@ describe('Entity list view :: getEntityPath', () => {
 
   test('Should return path field for Prompts when remove passed', () => {
     expect(getEntityPath(ApplicationRoute.Prompts, data, true)).toEqual('path');
+    expect(
+      getEntityPath(ApplicationRoute.Prompts, { ...data, name: 'name', folderId: 'folder' }, true, '1.0.0'),
+    ).toEqual('foldername__1.0.0');
     expect(getEntityPath(ApplicationRoute.Prompts, { ...data, path: void 0 }, true)).toBeUndefined;
   });
 
@@ -73,6 +76,11 @@ describe('Entity list view :: getEntityPath', () => {
   test('Should return name field for toolset publication', () => {
     const result = getEntityPath(ApplicationRoute.ToolsetPublications, { ...data, requestName: 'requestName' }, true);
     expect(result).toEqual('requestName?path=path');
+  });
+
+  test('Should return name field for McpDeployments', () => {
+    const result = getEntityPath(ApplicationRoute.McpDeployments, { ...data, id: 'test-id' });
+    expect(result).toEqual('test-id');
   });
 
   test('Should return name field for file publication', () => {

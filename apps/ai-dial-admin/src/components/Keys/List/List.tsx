@@ -27,7 +27,7 @@ const KeysList: FC<Props> = ({ data }) => {
       route={ApplicationRoute.Keys}
       onCreateEntity={createKey}
       onRemoveEntity={removeKey}
-      showColumnsButton={true}
+      showColumnsButton
     />
   );
 };

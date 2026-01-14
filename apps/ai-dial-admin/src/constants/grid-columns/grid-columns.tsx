@@ -34,7 +34,7 @@ import { EVENT_TYPES, MODEL_TYPES, POD_OBJECT_KIND } from '@/src/constants/deplo
 
 import ValidityStatusCellRenderer from '@/src/components/Grid/CellRenderers/ValidityStatusCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
-import TopicsCellRenderer from '@/src/components/Grid/CellRenderers/TopicCellRenderer';
+import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRenderer';
 import HeaderWithHintButton from '@/src/components/Grid/HeaderComponents/HeaderWithHintButton';
 import StatusIndicator from '@/src/components/Deployments/Common/StatusIndicator/StatusIndicator';
 import VersionsSelect from '@/src/components/Deployments/Common/VersionsSelect/VersionsSelect';
@@ -125,9 +125,9 @@ export const TOPICS_COLUMN: ColDef = {
   field: 'topics',
   colId: 'topics',
   headerName: 'Topics',
-  cellRenderer: TopicsCellRenderer,
+  cellRenderer: TagsCellRenderer,
   cellRendererParams: (params: { data?: { topics?: string[]; descriptionKeywords?: string[] } }) => ({
-    topics: getTopics(params.data),
+    items: getTopics(params.data),
   }),
   filterValueGetter: (params) => getTopics(params.data),
   tooltipValueGetter: (params) => getTopics(params.data)?.join(', ') || null,
@@ -193,10 +193,39 @@ export const TYPE_COLUMN = (t: (str: string) => string): ColDef => {
   };
 };
 
+export const ORDER_COLUMN: ColDef = {
+  field: 'order',
+  colId: 'order',
+  headerName: 'Order',
+  hide: false,
+};
+
+export const PATHS_COLUMN: ColDef = {
+  field: 'paths',
+  colId: 'paths',
+  headerName: 'Paths',
+  cellRenderer: TagsCellRenderer,
+  cellRendererParams: (params: { data?: { paths?: string[] } }) => ({
+    items: params.data?.paths,
+  }),
+};
+
 export const SIMPLE_ENTITY_COLUMNS: ColDef[] = [
   DISPLAY_NAME_COLUMN,
   DESCRIPTION_COLUMN,
   NAME_COLUMN_WITH_SORT,
+  UPDATED_AT_COLUMN,
+];
+
+export const SIMPLE_ENTITY_COLUMNS_WITH_TOPICS: ColDef[] = [...SIMPLE_ENTITY_COLUMNS, TOPICS_COLUMN];
+
+export const ROUTES_COLUMNS: ColDef[] = [
+  DISPLAY_NAME_COLUMN,
+  DESCRIPTION_COLUMN,
+  NAME_COLUMN_WITH_SORT,
+  PATHS_COLUMN,
+  ORDER_COLUMN,
+  TOPICS_COLUMN,
   UPDATED_AT_COLUMN,
 ];
 
@@ -238,7 +267,10 @@ export const MODELS_COLUMNS = (t: (str: string) => string, view?: ApplicationRou
 ];
 
 export const APPLICATIONS_COLUMNS = (t: (str: string) => string): ColDef[] => [
-  ...BASE_COLUMNS,
+  DISPLAY_NAME_COLUMN_WITH_SORT,
+  DISPLAY_VERSION_COLUMN,
+  DESCRIPTION_COLUMN,
+  NAME_COLUMN,
   { field: 'endpoint', headerName: 'Endpoint', hide: false },
   TOPICS_COLUMN,
   AUTHOR_COLUMN,
@@ -297,6 +329,7 @@ export const KEYS_COLUMNS = (t: (str: string) => string): ColDef[] => [
     ...dateTimeColumn,
   },
   VALIDITY_STATUS_COLUMN(t),
+  TOPICS_COLUMN,
   {
     headerName: 'Project',
     field: 'project',
@@ -323,7 +356,7 @@ export const RUNNERS_COLUMNS: ColDef[] = [
 
 export const LIST_RUNNER_COLUMNS: ColDef[] = [...RUNNERS_COLUMNS, TOPICS_COLUMN, UPDATED_AT_COLUMN];
 
-export const INTERCEPTOR_TEMPLATES_COLUMNS: ColDef[] = [...BASE_COLUMNS, UPDATED_AT_COLUMN];
+export const INTERCEPTOR_TEMPLATES_COLUMNS: ColDef[] = [...BASE_COLUMNS, TOPICS_COLUMN, UPDATED_AT_COLUMN];
 
 export const ASSETS_COLUMNS: ColDef[] = [{ field: 'version', headerName: 'Version' }, AUTHOR_COLUMN, UPDATED_AT_COLUMN];
 
@@ -685,8 +718,8 @@ export const IMAGES_LIST_FOR_CONTAINER_COLUMNS = (onChange: (id: string) => void
       headerName: 'Topics',
       hide: false,
       cellRenderer: (params: ICellRendererParams) => (
-        <TopicsCellRenderer
-          topics={params.data.availableVersions.find((v: ImageVersion) => v.id === params.data.selectedId).topics || []}
+        <TagsCellRenderer
+          items={params.data.availableVersions.find((v: ImageVersion) => v.id === params.data.selectedId).topics || []}
         />
       ),
       tooltipValueGetter: ({ value }) => (value?.length ? value.join(', ') : null),

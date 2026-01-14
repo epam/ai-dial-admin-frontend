@@ -95,8 +95,6 @@ const ModelSourceFields: FC<Props> = ({ container, setContainer }) => {
     if (resetCounter || (value && value.length > 0)) {
       const error = getSourceError(value, container.source?.$type);
       setImageRefError(error);
-    } else {
-      setImageRefError(null);
     }
   }, [container.source, resetCounter, getSourceError]);
 

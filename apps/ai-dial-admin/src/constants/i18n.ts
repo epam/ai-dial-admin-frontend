@@ -835,6 +835,7 @@ export enum ErrorI18nKey {
   VariableError = 'Error.VariableError',
   VariableStartError = 'Error.VariableStartError',
   HFModelName = 'Error.HFModelName',
+  ContainSpace = 'Error.ContainSpace',
 }
 
 export enum SourceI18nKey {

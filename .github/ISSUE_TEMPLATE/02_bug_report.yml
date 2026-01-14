@@ -2,6 +2,8 @@
 name: 🐛 Bug report
 description: Problems and issues with code in EPAM AI DIAL Admin
 labels: ["bug"]
+projects: ["epam/68"]
+type: "Bug"
 body:
   - type: markdown
     attributes:

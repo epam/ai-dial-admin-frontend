@@ -6,6 +6,8 @@ import {
   getEntityRoute,
   getEntityTemplate,
   getIdFormat,
+  getRouteByType,
+  getTranslatedDeploymentType,
   getTranslatedEntity,
   getTranslatedType,
   splitFolderId,
@@ -16,11 +18,37 @@ import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 import { CONTAINER_TRANSPORT } from '@/src/types/deployments/containers';
 import { ENTITY_TRANSPORT } from '@/src/constants/deployments/containers';
 import { DialModelType } from '@/src/models/dial/model';
+import { IMAGE_TYPE } from '../../../types/deployments/images';
 
 vi.mock('@/src/utils/models/model-endpoint');
 
 describe('entity utils', () => {
   const t = (key: string) => key;
+
+  describe('getRouteByType', () => {
+    test('returns McpDeployments for MCP', () => {
+      expect(getRouteByType(IMAGE_TYPE.MCP)).toBe(ApplicationRoute.McpDeployments);
+    });
+    test('returns InterceptorDeployments for INTERCEPTOR', () => {
+      expect(getRouteByType(IMAGE_TYPE.INTERCEPTOR)).toBe(ApplicationRoute.InterceptorDeployments);
+    });
+
+    test('returns ModelDeployments for INTERCEPTOR', () => {
+      expect(getRouteByType('any' as any)).toBe(ApplicationRoute.ModelDeployments);
+    });
+  });
+
+  describe('getTranslatedDeploymentType', () => {
+    test('returns EntitiesI18nKey.Serving for ModelDeployments', () => {
+      expect(getTranslatedDeploymentType(ApplicationRoute.ModelDeployments, (t) => t)).toBe(EntitiesI18nKey.Serving);
+    });
+
+    test('returns EntitiesI18nKey.Container for InterceptorDeployments', () => {
+      expect(getTranslatedDeploymentType(ApplicationRoute.InterceptorDeployments, (t) => t)).toBe(
+        EntitiesI18nKey.Container,
+      );
+    });
+  });
 
   describe('getEntityRoute', () => {
     test('returns Toolsets for McpDeployments', () => {

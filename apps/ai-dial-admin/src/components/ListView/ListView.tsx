@@ -62,7 +62,7 @@ const ListView = <T extends object>({
 
   return (
     <div className={classNames('flex flex-col bg-layer-2 rounded flex-1 min-h-0', title && 'py-4 px-6')}>
-      <div className="flex flex-row flex-wrap justify-between mb-4 items-center h-[38px]">
+      <div className="flex flex-row flex-wrap justify-between mb-4 items-center h-[40px]">
         {title && <h1>{title}</h1>}
         {children}
       </div>

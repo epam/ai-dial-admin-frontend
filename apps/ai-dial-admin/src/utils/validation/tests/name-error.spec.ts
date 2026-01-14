@@ -167,6 +167,15 @@ describe('getErrorForName', () => {
       text: 'Translated Text',
     });
   });
+
+  test('Should return INVALID error for name with space', () => {
+    const res1 = getErrorForName('name with space', ['names'], mockT);
+
+    expect(res1).toEqual({
+      type: ErrorType.INVALID,
+      text: 'Translated Text',
+    });
+  });
 });
 
 describe('getErrorForDisplayName', () => {

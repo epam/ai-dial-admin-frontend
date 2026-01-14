@@ -69,7 +69,7 @@ const Properties: FC<Props> = ({ container, setContainer, image, route, names, o
             <DialLabelledText
               label={t(ContainersI18nKey.ContainerImage, { type: getTranslatedType(route, t) })}
               text={`${image.name} (${image.version})`}
-              postfix={<OpenPopup {...BASE_BUTTON_ICON_PROPS} className="inline" onClick={handleModalOpen} />}
+              postfix={<OpenPopup {...BASE_BUTTON_ICON_PROPS} className="inline ml-2" onClick={handleModalOpen} />}
             />
           )}
           <DialLabelledText

@@ -29,7 +29,7 @@ const PropertiesContent: FC<Props> = ({ applicationSchemes, names, view, selecte
     }
 
     if (view === ApplicationRoute.Routes) {
-      return <RouteProperties route={selectedEntity as DialRoute} updateRoute={onChangeEntity} />;
+      return <RouteProperties route={selectedEntity as DialRoute} onChange={onChangeEntity} />;
     }
 
     if (isDeploymentAsset(view)) {

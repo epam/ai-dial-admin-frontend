@@ -40,7 +40,12 @@ describe('getSystemRollbackColumns', () => {
 
   test('returns SIMPLE_ENTITY_COLUMNS for APPLICATION', () => {
     const cols = getSystemRollbackColumns(ActivityAuditResourceType.APPLICATION, t);
-    expect(cols.length).toEqual(9);
+    expect(cols.length).toEqual(10);
+  });
+
+  test('returns SIMPLE_ENTITY_COLUMNS for INTERCEPTOR TEMPLATE', () => {
+    const cols = getSystemRollbackColumns(ActivityAuditResourceType.INTERCEPTOR_TEMPLATE, t);
+    expect(cols).toEqual(SIMPLE_ENTITY_COLUMNS);
   });
 
   test('returns KEYS_COLUMNS for KEY', () => {

@@ -13,6 +13,7 @@ import { useI18n } from '@/src/locales/client';
 import { ApplicationRoute } from '@/src/types/routes';
 import { TabOrientation } from '@/src/types/tab';
 import { EntityViewTab, getAuditTabs } from '@/src/utils/tabs/utils';
+import { DEFAULT_TIME_PERIOD } from '@/src/constants/global-time-filter';
 
 interface Props {
   entity: BaseEntity;
@@ -25,6 +26,7 @@ const EntityAudit: FC<Props> = ({ entity, view }) => {
   const { featureFlags } = useAppContext();
   const tabs = getAuditTabs(t, featureFlags, view);
   const [activeTab, setActiveTab] = useState(tabs[0].id);
+  const [timeFilter, setTimeFilter] = useState(DEFAULT_TIME_PERIOD);
 
   return (
     <div className="flex flex-row gap-4 h-full w-full">
@@ -40,11 +42,35 @@ const EntityAudit: FC<Props> = ({ entity, view }) => {
         </div>
       </div>
       <div className="flex flex-col flex-1 min-h-0 w-full relative">
-        {activeTab === EntityViewTab.Dashboard && <Dashboard entity={entity} route={view} />}
-        {activeTab === EntityViewTab.Traces && <UsageLog entity={entity} route={view} entityView={activeTab} />}
-        {activeTab === EntityViewTab.Conversations && <UsageLog entity={entity} route={view} entityView={activeTab} />}
+        {activeTab === EntityViewTab.Dashboard && (
+          <Dashboard initTimeFilter={timeFilter} onChangeTimeFilter={setTimeFilter} entity={entity} route={view} />
+        )}
+        {activeTab === EntityViewTab.Traces && (
+          <UsageLog
+            initTimeFilter={timeFilter}
+            onChangeTimeFilter={setTimeFilter}
+            entity={entity}
+            route={view}
+            entityView={activeTab}
+          />
+        )}
+        {activeTab === EntityViewTab.Conversations && (
+          <UsageLog
+            initTimeFilter={timeFilter}
+            onChangeTimeFilter={setTimeFilter}
+            entity={entity}
+            route={view}
+            entityView={activeTab}
+          />
+        )}
         {activeTab === EntityViewTab.Activities && (
-          <ActivityAuditList entity={entity} entityType={routeAuditResource[view]} refresh={true} />
+          <ActivityAuditList
+            initTimeFilter={timeFilter}
+            onChangeTimeFilter={setTimeFilter}
+            entity={entity}
+            entityType={routeAuditResource[view]}
+            refresh
+          />
         )}
       </div>
     </div>

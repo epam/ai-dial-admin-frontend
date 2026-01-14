@@ -29,6 +29,7 @@ import Delete from '@/src/components/Deployments/Modals/Delete';
 import CreateContainer from '@/src/components/Images/Modals/CreateContainer';
 import Install from '@/src/components/Images/Modals/Install';
 import NewVersion from '@/src/components/Images/Modals/NewVersion';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 
 interface Props {
   route: ApplicationRoute;
@@ -71,6 +72,7 @@ const HeaderButtons: FC<Props> = ({
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
   const router = useRouter();
+  const { isValid } = useSaveValidationContext();
 
   const staticContainerClassnames = 'flex flex-row gap-3 divide-x divide-primary';
   const staticEditorClassNames = 'pl-6';
@@ -227,12 +229,14 @@ const HeaderButtons: FC<Props> = ({
                 className={buttonsClassNames}
                 label={t(ButtonsI18nKey.SaveAsNewVersion)}
                 onClick={onOpenSaveNewVersionModal}
+                disabled={(jsonEditorEnabled && !isValidJSON) || !isValidEntity() || !isValid}
               />
             ) : (
               <DialPrimaryButton
                 className={buttonsClassNames}
                 label={t(ButtonsI18nKey.SaveAsNewVersion)}
                 onClick={onOpenSaveNewVersionModal}
+                disabled={(jsonEditorEnabled && !isValidJSON) || !isValidEntity() || !isValid}
               />
             )}
             {allowEditing && !forceNewVersion && (
@@ -240,7 +244,7 @@ const HeaderButtons: FC<Props> = ({
                 className={buttonsClassNames}
                 label={t(ButtonsI18nKey.Save)}
                 onClick={onTryToSave}
-                disabled={(jsonEditorEnabled && !isValidJSON) || !isValidEntity()}
+                disabled={(jsonEditorEnabled && !isValidJSON) || !isValidEntity() || !isValid}
               />
             )}
           </div>
@@ -303,7 +307,7 @@ const HeaderButtons: FC<Props> = ({
             description={t(ImagesI18nKey.DeleteModalDescription, {
               type: getTranslatedType(getRouteByType(image.$type), t),
             })}
-            route={route}
+            route={getRouteByType(image.$type)}
           />,
           document.body,
         )}

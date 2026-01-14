@@ -16,6 +16,7 @@ import ForwardAuthTokenField from '@/src/components/EntityMainProperties/Forward
 import EntityProperties from '@/src/components/EntityMainProperties/Properties/EntityProperties';
 import SourceField from '@/src/components/SourceField/SourceField';
 import { getInterceptorContainers } from '@/src/app/actions/deployments';
+import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
 
 interface Props {
   selectedInterceptor: DialInterceptor;
@@ -42,7 +43,7 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
         entity={selectedInterceptor}
         onChangeEntity={onChangeInterceptor}
       />
-
+      <TopicsControl entity={selectedInterceptor} onChange={onChangeInterceptor} />
       <SourceField
         view={ApplicationRoute.Interceptors}
         entity={selectedInterceptor}

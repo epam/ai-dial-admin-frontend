@@ -5,6 +5,7 @@ import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import BaseProperties from '@/src/components/InterceptorTemplates/Properties/BaseProperties';
 import CompletionEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/CompletionEndpoint';
 import ConfigurationEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ConfigurationEndpointControl';
+import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
 
 interface Props {
   template: InterceptorTemplate;
@@ -34,6 +35,7 @@ const ExtendedProperties: FC<Props> = ({ template, onChange }) => {
         endpoint={template?.configurationEndpoint}
         onChange={onChangeConfigurationEndpoint}
       />
+      <TopicsControl entity={template} onChange={onChange} />
     </div>
   );
 };

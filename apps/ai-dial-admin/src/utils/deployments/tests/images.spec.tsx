@@ -1,19 +1,19 @@
-import { describe, expect, test, vi, beforeEach } from 'vitest';
+import { Image } from '@/src/models/deployments/images';
+import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
+import { IMAGE_SOURCE_TYPE, IMAGE_STATUS, IMAGE_TRANSPORT_TYPE, IMAGE_TYPE } from '@/src/types/deployments/images';
+import { ApplicationRoute } from '@/src/types/routes';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   getActionClass,
   getImageType,
   getUniqueLatestImages,
   getVersionsList,
   isValidVersion,
+  setTransport,
   updateSelectedVersion,
   validateImage,
   validateImageChanged,
 } from '../images';
-import { ApplicationRoute } from '@/src/types/routes';
-import { IMAGE_SOURCE_TYPE, IMAGE_STATUS, IMAGE_TYPE } from '@/src/types/deployments/images';
-import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
-import { getDeploymentsURIError, getDeploymentsURLError } from '@/src/utils/deployments/validation';
-import { Image } from '@/src/models/deployments/images';
 
 vi.mock('@/src/utils/deployments/validation');
 
@@ -103,31 +103,7 @@ describe('images utils', () => {
       expect(validateImage({ ...validImage, source: {} } as any)).toBe(false);
     });
 
-    test('returns false if code url empty', () => {
-      const image = { ...validImage, source: { $type: IMAGE_SOURCE_TYPE.CODE, url: '' } } as any;
-      expect(validateImage(image)).toBe(false);
-    });
-
-    test('returns false if code url invalid', () => {
-      (getDeploymentsURLError as any).mockReturnValue('URL Error');
-      const image = { ...validImage, source: { $type: IMAGE_SOURCE_TYPE.CODE, url: 'invalid' } } as any;
-      expect(validateImage(image)).toBe(false);
-    });
-
-    test('returns false if docker uri empty', () => {
-      const image = { ...validImage, source: { $type: IMAGE_SOURCE_TYPE.DOCKER, imageUri: '' } } as any;
-      expect(validateImage(image)).toBe(false);
-    });
-
-    test('returns false if docker uri invalid', () => {
-      (getDeploymentsURIError as any).mockReturnValue('URI Error');
-      const image = { ...validImage, source: { $type: IMAGE_SOURCE_TYPE.DOCKER, imageUri: 'invalid' } } as any;
-      expect(validateImage(image)).toBe(false);
-    });
-
-    test('returns true for valid image', () => {
-      (getDeploymentsURIError as any).mockReturnValue(null);
-      (getDeploymentsURLError as any).mockReturnValue(null);
+    test('returns true', () => {
       expect(validateImage(validImage)).toBe(true);
     });
   });
@@ -178,6 +154,33 @@ describe('images utils', () => {
       ] as any;
       const result = updateSelectedVersion(images, 'v2');
       expect(result[0].selectedId).toBe('v1');
+    });
+  });
+
+  describe('setTransport', () => {
+    const image = {
+      transportType: IMAGE_TRANSPORT_TYPE.REMOTE,
+      $type: IMAGE_TYPE.INTERCEPTOR,
+      buildStatus: IMAGE_STATUS.NOT_BUILT,
+      id: 'id',
+      name: 'name',
+    };
+    test('updates image and delete transportType if type is IMAGE_TYPE.INTERCEPTOR', () => {
+      expect(
+        setTransport({
+          ...image,
+          $type: IMAGE_TYPE.INTERCEPTOR,
+        } as any).transportType,
+      ).toBeUndefined();
+    });
+
+    test('updates image with transportType is LOCAL if type is IMAGE_TYPE.MCP', () => {
+      expect(
+        setTransport({
+          ...image,
+          $type: IMAGE_TYPE.MCP,
+        } as any).transportType,
+      ).toBe(IMAGE_TRANSPORT_TYPE.LOCAL);
     });
   });
 });

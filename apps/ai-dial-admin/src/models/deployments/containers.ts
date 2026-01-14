@@ -2,6 +2,7 @@ import {
   CONTAINER_STATUS,
   CONTAINER_TRANSPORT,
   CONTAINER_TYPE,
+  ContainerResources,
   KubEventType,
   SERVING_SOURCE,
 } from '@/src/types/deployments/containers';
@@ -16,10 +17,7 @@ export interface Container {
   containerPorts?: number[];
   containerPort?: number;
   containerGrpcPort?: number;
-  resources?: {
-    limits?: Record<string, string>;
-    requests?: Record<string, string>;
-  };
+  resources?: ContainerResources;
   status: CONTAINER_STATUS;
   url?: string;
   createdAt?: number;
@@ -87,4 +85,5 @@ export interface ContainerRedeploySnapshot {
   containerPort?: number;
   containerGrpcPort?: number;
   envs: EnvironmentVariable[];
+  resources?: ContainerResources;
 }

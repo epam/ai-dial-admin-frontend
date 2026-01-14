@@ -68,7 +68,7 @@ const ConfigContent: FC<Props> = ({
       <div className="flex-1 min-h-0 mt-4">
         <div className="h-full flex flex-col">
           {selectedTab && (
-            <div className="flex flex-row justify-between items-center h-[38px] mb-4">
+            <div className="flex flex-row justify-between items-center h-[40px] mb-4">
               <h3>
                 {`${selectedTabTitle}: `}
                 {itemsCount}

@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { DialNeutralButton, DialTabs } from '@epam/ai-dial-ui-kit';
 import { IconRefresh } from '@tabler/icons-react';
@@ -29,16 +29,24 @@ interface Props {
   entity?: BaseEntity;
   entityView?: EntityViewTab;
   className?: string;
+  initTimeFilter?: string;
+  onChangeTimeFilter?: (filter: string) => void;
 }
 
-const UsageLog: FC<Props> = ({ route, className, entity, entityView }) => {
+const UsageLog: FC<Props> = ({ route, className, entity, entityView, onChangeTimeFilter, initTimeFilter }) => {
   const t = useI18n();
   const tabs = getUsageLogTabs(t);
   const getReqRef = useRef(useProtectedRequest());
 
   const [activeTab, setActiveTab] = useState(entityView || EntityViewTab.Traces);
-  const [timePeriod, setTimePeriod] = useState(DEFAULT_TIME_PERIOD);
+  const [timePeriod, setTimePeriod] = useState<string | undefined>();
   const [timeRange, setTimeRange] = useState<TimeRange>(getTimeRangeById(DEFAULT_TIME_PERIOD));
+
+  useEffect(() => {
+    if (!timePeriod) {
+      setTimePeriod(initTimeFilter || DEFAULT_TIME_PERIOD);
+    }
+  }, [initTimeFilter, timePeriod]);
 
   const getData = useCallback(
     (query: TelemetryQuery) => {
@@ -53,10 +61,14 @@ const UsageLog: FC<Props> = ({ route, className, entity, entityView }) => {
     [entity?.name, timeRange],
   );
 
-  const onTimePeriodChange = useCallback((period: string) => {
-    setTimePeriod(period);
-    setTimeRange(getTimeRangeById(period));
-  }, []);
+  const onTimePeriodChange = useCallback(
+    (period: string) => {
+      setTimePeriod(period);
+      onChangeTimeFilter?.(period);
+      setTimeRange(getTimeRangeById(period));
+    },
+    [onChangeTimeFilter],
+  );
 
   const onTimeRangeChange = useCallback((range: TimeRange) => {
     setTimeRange(range);
@@ -72,24 +84,26 @@ const UsageLog: FC<Props> = ({ route, className, entity, entityView }) => {
   );
 
   const onRefresh = useCallback(() => {
-    setTimeRange(getTimeRangeById(timePeriod));
+    setTimeRange(getTimeRangeById(timePeriod || ''));
   }, [timePeriod]);
 
   return (
     <div className={classNames('flex flex-col h-full w-full', className)}>
-      <div className="flex flex-row h-[38px] justify-between mb-4">
+      <div className="flex flex-row h-[40px] justify-between mb-4">
         {!entityView && (
           <div className="flex-1 min-w-0">
             <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
           </div>
         )}
         <div className={classNames('flex items-center gap-4', entityView && 'justify-between w-full')}>
-          <TimeFilter
-            timePeriod={timePeriod}
-            onTimePeriodChange={onTimePeriodChange}
-            timeRange={timeRange}
-            onTimeRangeChange={onTimeRangeChange}
-          />
+          {timePeriod && (
+            <TimeFilter
+              timePeriod={timePeriod}
+              onTimePeriodChange={onTimePeriodChange}
+              timeRange={timeRange}
+              onTimeRangeChange={onTimeRangeChange}
+            />
+          )}
           <DialNeutralButton
             label={t(ButtonsI18nKey.Refresh)}
             iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}

@@ -1,5 +1,8 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  ButtonAppearance,
+  ButtonVariant,
+  DialButton,
   DialNumberInputField,
   DialRadioGroup,
   DialSelectField,
@@ -22,16 +25,20 @@ import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey, RoutesI18
 import { useI18n } from '@/src/locales/client';
 import { DialAppRoute, DialRoute, RouteOutput, RoutePermission } from '@/src/models/dial/route';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { IconRefresh } from '@tabler/icons-react';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { ORDER_DEFAULT_VALUE } from '@/src/constants/routes';
+import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
 
 interface Props {
   route: DialRoute | DialAppRoute;
   isAppRoute?: boolean;
   readonly?: boolean;
-  updateRoute: (route: DialRoute | DialAppRoute) => void;
+  onChange: (route: DialRoute | DialAppRoute) => void;
 }
 
-const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }) => {
+const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, onChange }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
 
@@ -52,6 +59,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
 
   const [statusError, setStatusError] = useState('');
   const [bodyError, setBodyError] = useState('');
+  const [orderError, setOrderError] = useState('');
 
   const [isUpstreamsRequired, setIsUpstreamsRequired] = useState(!route.response);
 
@@ -85,32 +93,32 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
 
   const onChangeDisplayName = useCallback(
     (displayName?: string) => {
-      updateRoute({ ...route, displayName });
+      onChange({ ...route, displayName });
     },
-    [route, updateRoute],
+    [route, onChange],
   );
 
   const onChangeRewritePath = useCallback(
     (rewritePath: boolean) => {
-      updateRoute({ ...route, rewritePath });
+      onChange({ ...route, rewritePath });
     },
-    [route, updateRoute],
+    [route, onChange],
   );
 
   const onChangeOutput = useCallback(
     (output: string) => {
       const newRoute = handleRouteOutputChange(route, output);
-      updateRoute(newRoute);
+      onChange(newRoute);
       setIsUpstreamsRequired(output !== RouteOutput.RESPONSE);
       setStatusError(output === RouteOutput.RESPONSE ? t(ErrorI18nKey.RequiredField) : '');
       setBodyError(output === RouteOutput.RESPONSE ? t(ErrorI18nKey.RequiredField) : '');
     },
-    [route, t, updateRoute],
+    [route, t, onChange],
   );
 
   const onChangeStatus = useCallback(
     (status?: number | string) => {
-      updateRoute({
+      onChange({
         ...route,
         response: {
           ...route.response,
@@ -119,12 +127,12 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
       });
       setStatusError(status && +status >= 100 && +status <= 999 ? '' : t(ErrorI18nKey.InvalidStatus));
     },
-    [route, updateRoute, t],
+    [route, onChange, t],
   );
 
   const onChangeBody = useCallback(
     (body?: string) => {
-      updateRoute({
+      onChange({
         ...route,
         response: {
           ...route.response,
@@ -133,32 +141,50 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
       });
       setBodyError(body ? '' : t(ErrorI18nKey.RequiredField));
     },
-    [route, t, updateRoute],
+    [route, t, onChange],
   );
 
   const onChangeMethods = useCallback(
     (methods: string[]) => {
-      updateRoute({ ...route, methods });
+      onChange({ ...route, methods });
     },
-    [route, updateRoute],
+    [route, onChange],
   );
 
   const onChangePermissions = useCallback(
     (values: string[]) => {
-      updateRoute({
+      onChange({
         ...route,
         permissions: values as RoutePermission[],
       });
     },
-    [route, updateRoute],
+    [route, onChange],
   );
 
   const onChangePaths = useCallback(
     (paths: string[]) => {
-      updateRoute({ ...route, paths });
+      onChange({ ...route, paths });
     },
-    [route, updateRoute],
+    [route, onChange],
   );
+
+  const onChangeOrder = useCallback(
+    (order?: string | number) => {
+      onChange({ ...route, order: order ? +order : undefined });
+      dispatch({ type: ValidationActionType.SetField, field: 'order', isValid: !!order });
+      setOrderError(order ? '' : t(ErrorI18nKey.RequiredField));
+    },
+    [route, onChange, dispatch, t],
+  );
+
+  const onRefreshOrder = useCallback(() => {
+    onChange({
+      ...route,
+      order: ORDER_DEFAULT_VALUE,
+    });
+    dispatch({ type: ValidationActionType.SetField, field: 'order', isValid: true });
+    setOrderError('');
+  }, [route, onChange, dispatch]);
 
   return (
     <div className="h-full flex flex-col w-full gap-y-8">
@@ -169,7 +195,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
         onChange={onChangeDisplayName}
         disabled={readonly}
       />
-      {!isAppRoute && <DescriptionControl entity={route} onChangeEntity={updateRoute} isFullWidth={false} />}
+      {!isAppRoute && <DescriptionControl entity={route} onChangeEntity={onChange} isFullWidth={false} />}
       <Paths
         title={t(EntityFieldsI18nKey.paths)}
         paths={route.paths}
@@ -179,7 +205,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
       <DialSwitch
         isOn={route.rewritePath}
         label={t(EntityFieldsI18nKey.rewritePath)}
-        switchId="RewritePath"
+        switchId="rewritePath"
         disabled={readonly}
         onChange={onChangeRewritePath}
       />
@@ -194,6 +220,8 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
         className={STANDARD_CONTROL_WIDTH}
         errorText={route.methods?.length ? '' : t(ErrorI18nKey.EmptyField)}
       />
+
+      {!isAppRoute && <TopicsControl entity={route} onChange={onChange} />}
       <DialRadioGroup
         radioButtons={outputRadio}
         activeRadioButton={route.response ? outputRadio[1].id : outputRadio[0].id}
@@ -232,11 +260,11 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
         <UpstreamEndpoints
           readonly={readonly}
           entity={route}
-          onChangeEntity={updateRoute}
+          onChangeEntity={onChange}
           required={isUpstreamsRequired}
         />
       </div>
-      <MaxRetryAttempts readonly={readonly} entity={route} onChangeEntity={updateRoute} />
+      <MaxRetryAttempts readonly={readonly} entity={route} onChangeEntity={onChange} />
       {isAppRoute && (
         <DialSelectField
           disabled={readonly}
@@ -251,18 +279,30 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
           onChange={(values) => onChangePermissions(values as string[])}
         />
       )}
-      <DialNumberInputField
-        elementId="order"
-        disabled={readonly}
-        containerClassName={STANDARD_CONTROL_WIDTH}
-        fieldTitle={t(EntityFieldsI18nKey.order)}
-        placeholder={t(EntityPlaceholdersI18nKey.Order)}
-        value={route.order}
-        min={0}
-        onChange={(order) => {
-          updateRoute({ ...route, order: order ? +order : undefined });
-        }}
-      />
+      <div className={classNames('flex gap-x-2 flex-row items-start', STANDARD_CONTROL_WIDTH)}>
+        <DialNumberInputField
+          elementId="order"
+          disabled={readonly}
+          containerClassName="w-[50%]"
+          fieldTitle={t(EntityFieldsI18nKey.order)}
+          placeholder={t(EntityPlaceholdersI18nKey.Order)}
+          value={route.order}
+          min={0}
+          onChange={onChangeOrder}
+          errorText={orderError}
+          invalid={!!orderError}
+        />
+        {route.order !== ORDER_DEFAULT_VALUE && (
+          <DialButton
+            className="dial-tertiary-button mt-6"
+            variant={ButtonVariant.Primary}
+            appearance={ButtonAppearance.Link}
+            label={t(ButtonsI18nKey.ResetToDefault)}
+            iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}
+            onClick={onRefreshOrder}
+          />
+        )}
+      </div>
     </div>
   );
 };
