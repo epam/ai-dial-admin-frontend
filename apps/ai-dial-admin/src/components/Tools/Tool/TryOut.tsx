@@ -43,7 +43,7 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset }) => {
 
   const [responseView, setResponseView] = useState(ParamsView.FORM);
   const [requestBody, setRequestBody] = useState<Record<string, unknown>>({});
-  const [response, setResponse] = useState<string>('');
+  const [response, setResponse] = useState<Record<string, unknown>>({});
 
   const [isRequestSend, setIsRequestSend] = useState(false);
 
@@ -74,7 +74,7 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset }) => {
         })
       : tryOutTool(toolSetName, { name: tool?.name, arguments: requestBody })
     ).then((res) => {
-      setResponse(JSON.stringify((res.success ? res.response : { error: res.errorMessage }) || {}, null, 2));
+      setResponse(res.success ? res.response : { error: res.errorMessage });
       setIsRequestSend(false);
     });
   }, [isAssetToolset, requestBody, tool?.name, toolSetName]);
@@ -125,13 +125,7 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset }) => {
         <Divider />
         <div className="flex-1 basis-0 min-h-0 flex flex-col">
           <h3 className="mb-4">{t(BasicI18nKey.Response)}</h3>
-          {isRequestSend ? (
-            <DialLoader />
-          ) : (
-            <div className="flex flex-1 border border-primary rounded p-2 overflow-y-auto whitespace-pre">
-              {response}
-            </div>
-          )}
+          {isRequestSend ? <DialLoader /> : <JsonEditor entity={response} readonly={true} />}
         </div>
       </div>
     </div>
