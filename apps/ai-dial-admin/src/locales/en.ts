@@ -1196,6 +1196,7 @@ export default {
     Pod: 'Pod',
     ContainerRestartWarning: '{entityType} will be restarted after changing image version.',
     ContainersRestartWarning: '{entityType} with "Running" status will be restarted.',
+    ShowRelatedContainers: 'Show containers related to this image',
   },
   KubEvents: {
     Normal: 'Normal',

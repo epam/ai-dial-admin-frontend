@@ -104,8 +104,8 @@ const Containers: FC<Props> = ({ image, route, versions }) => {
             isModalOpen={isModalOpen}
             onClose={handleModalClose}
             onApply={updateImageId}
-            title={t(ContainersI18nKey.AddModalTitle, { type: getTranslatedType(route, t) })}
-            imageId={image.id}
+            title={t(ContainersI18nKey.AddModalTitle, { type: getTranslatedType(getRouteByType(image.$type), t) })}
+            image={image}
             route={route}
             versions={versions}
           />,
