@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
-import { logError } from '@/src/server/logger';
+import { errorObjLog } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
@@ -34,7 +34,7 @@ export default async function Page() {
       return <Page403 />;
     }
   } catch (e) {
-    logError(e, 'Failed to fetch interceptor templates view data');
+    errorObjLog(e, 'Failed to fetch interceptor templates view data');
   }
 
   return (

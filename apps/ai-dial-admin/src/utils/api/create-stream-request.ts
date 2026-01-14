@@ -1,7 +1,7 @@
 import { JWT } from 'next-auth/jwt';
 
 import { imageTypes } from '@/src/constants/file';
-import { logError } from '@/src/server/logger';
+import { errorObjLog } from '@/src/server/logger';
 import { getAuthorizationHeader } from '@/src/utils/auth/api-headers';
 import { sendRequest } from './send-request';
 
@@ -24,7 +24,7 @@ export const streamRequest = async (
     headers.append('Content-Disposition', isPreview ? 'inline' : `attachment; filename=${fileName}`);
     return new Response(stream, { headers });
   } catch (e) {
-    logError(e, 'Stream request failed');
+    errorObjLog(e, 'Stream request failed');
     return new Promise(() => null);
   }
 };

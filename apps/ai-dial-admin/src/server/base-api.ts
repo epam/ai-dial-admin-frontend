@@ -3,7 +3,7 @@ import { JWT } from 'next-auth/jwt';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { streamRequest } from '@/src/utils/api/create-stream-request';
 import { ErrorObject, getError, getErrorMessage, getParsedError } from '@/src/utils/api/error';
-import { logger } from './logger';
+import { errorLog } from './logger';
 import { sendRequest } from '@/src/utils/api/send-request';
 import { getApiHeaders, getAuthorizationHeader } from '@/src/utils/auth/api-headers';
 import { fileRequest } from '@/src/utils/api/file-request';
@@ -118,16 +118,16 @@ export class BaseApi {
       (res) => {
         if (isFailedRequest(res)) {
           const traceparent = res.headers.get('traceparent');
-          logger.error(`Request status ${res.status}`);
-          logger.error(`Request error Url  ${res.url}`);
-          logger.error(`Request error traceparent  ${traceparent}`);
+          errorLog(`Request status ${res.status}`);
+          errorLog(`Request error Url  ${res.url}`);
+          errorLog(`Request error traceparent  ${traceparent}`);
 
           if (res.status === 403) {
             return void 0;
           }
 
           return res.text().then((error) => {
-            logger.error(`Request error ${res.status} ${error}`);
+            errorLog(`Request error ${res.status} ${error}`);
             return null;
           });
         }
@@ -177,14 +177,14 @@ export class BaseApi {
   }
 
   private setLoggerRequestInfoError(res: Response) {
-    logger.error(`Request status ${res.status}`);
-    logger.error(`Request error Url  ${res.url}`);
+    errorLog(`Request status ${res.status}`);
+    errorLog(`Request error Url  ${res.url}`);
   }
 
   private setLoggerRequestError(error: string, res: Response) {
     const errObject = getParsedError(error);
-    logger.error(`Request error ${res.status}`);
-    logger.error(`${errObject.error} ${errObject.message}`);
+    errorLog(`Request error ${res.status}`);
+    errorLog(`${errObject.error} ${errObject.message}`);
   }
 }
 

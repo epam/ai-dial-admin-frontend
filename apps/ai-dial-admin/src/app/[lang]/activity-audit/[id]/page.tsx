@@ -11,7 +11,7 @@ import Page403 from '@/src/components/Page403/Page403';
 import { DialActivity } from '@/src/models/activity-audit';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { FilterDto, PageDto } from '@/src/models/request';
-import { logError } from '@/src/server/logger';
+import { errorObjLog } from '@/src/server/logger';
 import { ActivityAuditEntity } from '@/src/types/activity-audit';
 import { SortDirectionDto } from '@/src/types/request';
 import { getRevisionRouteForEntityType } from '@/src/utils/audit/get-revision-route';
@@ -73,7 +73,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
       previousRevision = await activityAuditApi.getRevisionDetails(`${route}${activity.revision - 1}`, token);
     }
   } catch (e) {
-    logError(e, 'Failed to fetch activity view data');
+    errorObjLog(e, 'Failed to fetch activity view data');
   }
 
   if (activity == null) {
