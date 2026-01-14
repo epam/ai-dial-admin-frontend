@@ -4,7 +4,7 @@ import { ButtonAppearance, ButtonVariant, DialButton } from '@epam/ai-dial-ui-ki
 import { IconPlayerPlay } from '@tabler/icons-react';
 import classNames from 'classnames';
 
-import TryOut from '@/src/components/Common/Sidebar/TryOut';
+import TryOut from '@/src/components/Tools/Tool/TryOut';
 import { ToolsetI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';

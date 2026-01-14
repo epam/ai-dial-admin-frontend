@@ -13,6 +13,7 @@ import {
 } from '@epam/ai-dial-ui-kit';
 import { RJSFSchema } from '@rjsf/utils';
 
+import { tryOutAssetTool } from '@/src/app/[lang]/assets-toolsets/actions';
 import { tryOutTool } from '@/src/app/[lang]/toolsets/actions';
 import Divider from '@/src/components/Common/Divider/Divider';
 import SchemaUiRenderer from '@/src/components/Common/SchemaUIRenderer/SchemaUIRenderer';
@@ -29,7 +30,6 @@ import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
 import { Tool } from '@/src/models/dial/toolset';
 import { ParamsView } from '@/src/types/parameters';
-import { tryOutAssetTool } from '@/src/app/[lang]/assets-toolsets/actions';
 
 interface Props {
   tool?: Tool;
