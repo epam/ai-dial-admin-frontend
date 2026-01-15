@@ -8,8 +8,6 @@ export const getCoreSyncStatusUrl = (type?: ApplicationRoute, id?: string): stri
       return `/applications/${id}/sync-state`;
     case ApplicationRoute.Interceptors:
       return `/interceptors/${id}/sync-state`;
-    case ApplicationRoute.Keys:
-      return `/keys/${id}/sync-state`;
     case ApplicationRoute.Roles:
       return `/roles/${id}/sync-state`;
     case ApplicationRoute.Routes:

@@ -10,6 +10,7 @@ import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { CoreSyncI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { CoreSyncStatus } from '@/src/models/core-sync-status';
 import { EntitySyncStatus } from '@/src/types/entity-sync-status';
@@ -25,7 +26,7 @@ interface Props {
 
 const CoreSyncEntityStatus: FC<Props> = ({ view, name }) => {
   const t = useI18n();
-
+  const { resetCounter } = useSaveValidationContext();
   const [coreSyncStatus, setCoreSyncStatus] = useState<CoreSyncStatus | undefined>();
   const [etag, setEtag] = useState<string>(DEFAULT_ETAG);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -53,7 +54,6 @@ const CoreSyncEntityStatus: FC<Props> = ({ view, name }) => {
 
     const fetchStatus = async () => {
       const data = await getCoreSyncStatus(getCoreSyncStatusUrl(view, name), etag);
-
       setEtag(data?.etag || DEFAULT_ETAG);
       setCoreSyncStatus(data?.response);
     };
@@ -72,6 +72,12 @@ const CoreSyncEntityStatus: FC<Props> = ({ view, name }) => {
       }
     };
   }, [name, view, etag, coreSyncStatus, validStatus]);
+
+  useEffect(() => {
+    if (resetCounter) {
+      setCoreSyncStatus(void 0);
+    }
+  }, [resetCounter]);
 
   return (
     <div className={classNames(showStatus ? 'block' : 'hidden')}>
