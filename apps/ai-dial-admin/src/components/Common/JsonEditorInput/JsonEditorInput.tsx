@@ -14,9 +14,18 @@ interface Props {
   disabled?: boolean;
   inputClassName?: string;
   onChangeValue: (json: object) => void;
+  disableValidation?: boolean;
 }
 
-const JsonEditorInput: FC<Props> = ({ value, disabled, fieldTitle, elementId, inputClassName, onChangeValue }) => {
+const JsonEditorInput: FC<Props> = ({
+  value,
+  disabled,
+  fieldTitle,
+  elementId,
+  inputClassName,
+  onChangeValue,
+  disableValidation,
+}) => {
   const t = useI18n();
   const [isValid, setIsValid] = useState(false);
   const [jsonValue, setJsonValue] = useState<string | undefined>(undefined);
@@ -81,7 +90,7 @@ const JsonEditorInput: FC<Props> = ({ value, disabled, fieldTitle, elementId, in
           onSubmit={onApply}
           cancelLabel={t(ButtonsI18nKey.Cancel)}
           onCancel={onCloseModal}
-          disableSubmitButton={!isValid}
+          disableSubmitButton={!isValid && !disableValidation}
         >
           <div className="px-6 py-4 h-[540px] max-h-[35vh]">
             <JsonEditorBase value={jsonValue} onChange={onChangeJsonValue} onValidateJSON={onValidateJSON} />

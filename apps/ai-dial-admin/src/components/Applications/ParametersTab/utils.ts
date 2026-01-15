@@ -237,6 +237,7 @@ export const getAppPropertiesColumns = (
             component: JsonEditorCellRenderer,
             params: {
               onChange: onChangeJSON,
+              disableValidation: true,
             },
           };
         } else if (params.data.type == 'boolean') {
