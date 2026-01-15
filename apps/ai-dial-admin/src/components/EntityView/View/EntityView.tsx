@@ -200,6 +200,7 @@ const EntityView: FC<Props> = ({
 
     req.then((res) => {
       if (res.success) {
+        dispatch({ type: ValidationActionType.Reset });
         setCoreEntity(null);
         showNotification(
           getSuccessNotification(
@@ -219,6 +220,7 @@ const EntityView: FC<Props> = ({
     originalEntity.name,
     etag,
     updateEntity,
+    dispatch,
     showNotification,
     view,
     t,

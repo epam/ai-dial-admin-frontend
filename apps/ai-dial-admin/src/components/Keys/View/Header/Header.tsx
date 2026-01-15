@@ -1,12 +1,10 @@
 import { FC } from 'react';
 
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
-import CoreSyncEntityStatus from '@/src/components/Common/SyncCoreStatus/SyncCoreStatus';
 import ValidityStatus from '@/src/components/EntityView/Status/ValidityStatus';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
-import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 
 interface Props {
@@ -33,7 +31,6 @@ const KeyViewHeader: FC<Props> = ({ selectedKey }) => {
       <LabelledText label={t(EntityFieldsI18nKey.status)}>
         <ValidityStatus validityState={selectedKey.validityState} />
       </LabelledText>
-      <CoreSyncEntityStatus view={ApplicationRoute.Keys} name={selectedKey.name} />
     </div>
   );
 };
