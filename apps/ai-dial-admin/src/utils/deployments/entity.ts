@@ -67,7 +67,7 @@ export const getEntityId = (container: Container, route: ApplicationRoute, t: (k
 };
 
 export const getEntityName = (container: Container, route: ApplicationRoute, t: (key: string) => string) => {
-  return `${container.name} ${getTranslatedEntity(route, t)}`;
+  return `${container.displayName} ${getTranslatedEntity(route, t)}`;
 };
 
 export const getEntityTemplate = (
@@ -80,7 +80,7 @@ export const getEntityTemplate = (
     name: getEntityId(container, route, t),
     displayName: getEntityName(container, route, t),
     description: '',
-    source: { $type: SOURCE_TYPE.CONTAINER, containerId: container.id },
+    source: { $type: SOURCE_TYPE.CONTAINER, containerId: container.name },
   };
 
   if (route === ApplicationRoute.ModelDeployments) {

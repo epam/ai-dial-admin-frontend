@@ -586,7 +586,7 @@ export const SOURCE_CONTAINERS_COLUMNS: ColDef[] = [
 ];
 
 export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, route: ApplicationRoute): ColDef[] => [
-  { field: 'name', headerName: 'Name', hide: false },
+  { field: 'displayName', headerName: 'Display name', hide: false },
   { field: 'description', headerName: 'Description', hide: false },
   ...(route === ApplicationRoute.ModelDeployments
     ? [
@@ -618,7 +618,7 @@ export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, rou
     tooltipValueGetter: ({ value }) => t(STATUS_I18N_KEYS[value as CONTAINER_STATUS]),
     filterValueGetter: (params) => t(STATUS_I18N_KEYS[params.data[params.colDef.field || ''] as CONTAINER_STATUS]),
   },
-  { field: 'id', headerName: 'ID', hide: true },
+  { field: 'name', headerName: 'ID', hide: true },
   { field: 'url', headerName: 'Container URL', hide: true },
   { field: 'author', headerName: 'Maintainer', hide: true },
   {
@@ -790,9 +790,9 @@ export const IMAGES_LIST_COLUMNS = (t: (key: string) => string): ColDef[] => [
 ];
 
 export const IMAGE_DEPENDENCIES_COLUMNS = (t: (key: string) => string, showImageColumn?: boolean): ColDef[] => [
-  { field: 'name', headerName: 'Name', hide: false },
+  { field: 'displayName', headerName: 'Name', hide: false },
   { field: 'description', headerName: 'Description', hide: false },
-  { field: 'id', headerName: 'ID', hide: false },
+  { field: 'name', headerName: 'ID', hide: false },
   ...(showImageColumn
     ? [
         {
@@ -811,7 +811,7 @@ export const IMAGE_DEPENDENCIES_COLUMNS = (t: (key: string) => string, showImage
     headerName: 'Status',
     hide: false,
     cellRenderer: (params: ICellRendererParams) => <StatusIndicator status={params.data.status} />,
-    tooltipValueGetter: ({ value }) => t(STATUS_I18N_KEYS[value as IMAGE_STATUS]),
-    filterValueGetter: (params) => t(STATUS_I18N_KEYS[params.data[params.colDef.field || ''] as IMAGE_STATUS]),
+    tooltipValueGetter: ({ value }) => t(STATUS_I18N_KEYS[value as CONTAINER_STATUS]),
+    filterValueGetter: (params) => t(STATUS_I18N_KEYS[params.data[params.colDef.field || ''] as CONTAINER_STATUS]),
   },
 ];

@@ -1,8 +1,6 @@
 import { EnvironmentVariable } from '@/src/models/deployments/variables';
-import { getPathError, getVariableNameError } from '@/src/utils/deployments/validation';
 import { Container, ContainerRedeploySnapshot, ResourcesDefaults } from '@/src/models/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getErrorForName } from '@/src/utils/validation/name-error';
 import {
   CONTAINER_STATUS,
   CONTAINER_TRANSPORT,
@@ -42,43 +40,6 @@ export const getContainerRedeploySnapshot = (container: Container): ContainerRed
   };
 };
 
-const isValidVariables = (variables: EnvironmentVariable[]) => {
-  return variables.every((env) => !getVariableNameError(env.name));
-};
-
-export function validateContainer(container: Container, route: ApplicationRoute, names: string[]): boolean {
-  if (!container.name?.trim() || names.includes(container.name.trim()) || getErrorForName(container.name, names)) {
-    return false;
-  }
-
-  if (container.metadata.envs && container.metadata.envs.length) {
-    return isValidVariables(container.metadata.envs);
-  }
-  if (container.mcpEndpointPath && getPathError(container.mcpEndpointPath)) {
-    return false;
-  }
-
-  if (!container.transport && route === ApplicationRoute.McpDeployments) {
-    return false;
-  }
-
-  if (route === ApplicationRoute.ModelDeployments) {
-    if (
-      !(
-        container.resources?.requests?.cpu?.trim() &&
-        container.resources?.requests?.memory?.trim() &&
-        container.resources?.requests?.['nvidia.com/gpu']?.trim() &&
-        container.resources?.limits?.cpu?.trim() &&
-        container.resources?.limits?.memory?.trim() &&
-        container.resources?.limits?.['nvidia.com/gpu']?.trim()
-      )
-    ) {
-      return false;
-    }
-  }
-  return true;
-}
-
 export const getContainerTemplate = (route: ApplicationRoute, defaults?: ResourcesDefaults): Container | null => {
   switch (route) {
     case ApplicationRoute.ModelDeployments:
@@ -96,6 +57,7 @@ const getTemplate = (type: CONTAINER_TYPE, defaults?: ResourcesDefaults): Contai
   const template = {
     $type: type,
     imageDefinitionId: '',
+    displayName: '',
     name: '',
     description: '',
     status: CONTAINER_STATUS.NOT_DEPLOYED,

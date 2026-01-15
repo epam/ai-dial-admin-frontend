@@ -52,7 +52,7 @@ const Containers: FC<Props> = ({ image, route, versions }) => {
 
   const updateImageId = useCallback(
     (containers: Container[]) => {
-      const ids = containers.map((c) => c.id as string);
+      const ids = containers.map((c) => c.name as string);
       updateContainersImageId(ids, image.id).then((res) => {
         if (!res.success) {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage));

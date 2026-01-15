@@ -131,8 +131,8 @@ const ContainerView: FC<Props> = ({
   }, [container, selectedContainer]);
 
   useEffect(() => {
-    if (selectedContainer.id) {
-      const eventSource = new EventSource(`/api/events?id=${selectedContainer.id}`);
+    if (selectedContainer.name) {
+      const eventSource = new EventSource(`/api/events?id=${selectedContainer.name}`);
 
       eventSource.addEventListener('event', (event) => {
         const data = JSON.parse(event.data) as KubEvent;
@@ -153,7 +153,7 @@ const ContainerView: FC<Props> = ({
         eventSource.close();
       };
     }
-  }, [selectedContainer.id]);
+  }, [selectedContainer.name]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -163,7 +163,7 @@ const ContainerView: FC<Props> = ({
       selectedContainer.status === CONTAINER_STATUS.STOPPING
     ) {
       interval = setInterval(async () => {
-        const { response, success, requestId } = await getContainer(selectedContainer.id as string);
+        const { response, success, requestId } = await getContainer(selectedContainer.name as string);
         if (success && response) {
           const updatedContainer = response as Container;
           setSelectedContainer((prev) => ({
@@ -252,7 +252,6 @@ const ContainerView: FC<Props> = ({
             toggleJsonEditor={toggleJsonEditor}
             jsonErrors={jsonErrors}
             hideJsonEditor={disableDeploymentsJSONEditor}
-            names={names}
             createEntity={createEntity}
             createEntityAsAsset={createEntityAsAsset}
             entityNames={entityNames}
@@ -281,12 +280,12 @@ const ContainerView: FC<Props> = ({
                   originalName={container.name}
                 />
               )}
-              {activeTab === EntityViewTab.Tools && <Tools containerId={selectedContainer.id} isMcpToolset />}
-              {activeTab === EntityViewTab.Resources && <Resources containerId={selectedContainer.id} />}
-              {activeTab === EntityViewTab.Prompts && <Prompts containerId={selectedContainer.id} />}
+              {activeTab === EntityViewTab.Tools && <Tools containerId={selectedContainer.name} isMcpToolset />}
+              {activeTab === EntityViewTab.Resources && <Resources containerId={selectedContainer.name} />}
+              {activeTab === EntityViewTab.Prompts && <Prompts containerId={selectedContainer.name} />}
               {activeTab === EntityViewTab.Metrics && <Metrics />}
               {activeTab === EntityViewTab.ExecutionLog && (
-                <ExecutionLog containerId={selectedContainer.id} route={route} />
+                <ExecutionLog containerId={selectedContainer.name} route={route} />
               )}
               {activeTab === EntityViewTab.Events && <Events route={route} events={events} />}
             </>
