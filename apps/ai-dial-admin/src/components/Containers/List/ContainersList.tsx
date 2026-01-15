@@ -130,15 +130,15 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
 
   const onContainerStatusChange = useCallback(
     (container?: Container) => {
-      if (container?.id) {
+      if (container?.name) {
         if (
           container.status !== CONTAINER_STATUS.RUNNING &&
           container.status !== CONTAINER_STATUS.PENDING &&
           container.status !== CONTAINER_STATUS.FAILED
         ) {
-          runContainer(container.id).then(refreshCb(router, showNotification));
+          runContainer(container.name).then(refreshCb(router, showNotification));
         } else {
-          stopContainer(container.id).then(refreshCb(router, showNotification));
+          stopContainer(container.name).then(refreshCb(router, showNotification));
         }
       }
     },
@@ -149,7 +149,7 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
     (name: string) => {
       if (currentContainer) {
         setNames((prev) => [...prev, name]);
-        duplicateContainer(currentContainer.id as string, name).then((res) => {
+        duplicateContainer(currentContainer.name as string, name).then((res) => {
           if (res.success) {
             router.refresh();
             setCurrentContainer(null);
@@ -164,8 +164,8 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
   );
 
   const onDelete = useCallback(() => {
-    if (currentContainer?.id) {
-      deleteContainer(currentContainer.id).then(refreshCb(router, showNotification));
+    if (currentContainer?.name) {
+      deleteContainer(currentContainer.name).then(refreshCb(router, showNotification));
     }
   }, [currentContainer, router, showNotification]);
 
@@ -197,7 +197,7 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
 
     if (pendingContainers.length) {
       interval = setInterval(async () => {
-        const results = (await Promise.allSettled(pendingContainers.map((c) => getContainer(c?.id as string)))) || [];
+        const results = (await Promise.allSettled(pendingContainers.map((c) => getContainer(c?.name as string)))) || [];
 
         results.forEach((res) => {
           if (res.status === 'fulfilled') {
@@ -296,7 +296,7 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
             onApply={onDuplicate}
-            currentName={currentContainer.name}
+            currentName={currentContainer.displayName}
             names={names}
           />,
           document.body,

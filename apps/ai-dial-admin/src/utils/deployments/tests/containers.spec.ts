@@ -1,13 +1,6 @@
 import { describe, expect, test, vi, beforeEach } from 'vitest';
-import {
-  getContainerRedeploySnapshot,
-  getContainerTemplate,
-  normalizeEnvironmentVariables,
-  validateContainer,
-} from '../containers';
+import { getContainerRedeploySnapshot, getContainerTemplate, normalizeEnvironmentVariables } from '../containers';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getPathError, getVariableNameError } from '@/src/utils/deployments/validation';
-import { getErrorForName } from '@/src/utils/validation/name-error';
 import { CONTAINER_STATUS, CONTAINER_TRANSPORT, CONTAINER_TYPE } from '@/src/types/deployments/containers';
 import { Container } from '@/src/models/deployments/containers';
 import { MOUNT_TYPE, VALUE_TYPE } from '@/src/types/deployments/variables';
@@ -18,71 +11,6 @@ vi.mock('@/src/utils/validation/name-error');
 describe('containers utils', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  describe('validateContainer', () => {
-    const validContainer: Container = {
-      name: 'valid-container',
-      metadata: { envs: [] },
-      mcpEndpointPath: '/valid/path',
-      transport: CONTAINER_TRANSPORT.SSE,
-      resources: {
-        requests: { cpu: '1', memory: '1', 'nvidia.com/gpu': '1' },
-        limits: { cpu: '1', memory: '1', 'nvidia.com/gpu': '1' },
-      },
-    } as any;
-
-    beforeEach(() => {
-      (getErrorForName as any).mockReturnValue(null);
-      (getVariableNameError as any).mockReturnValue(null);
-      (getPathError as any).mockReturnValue(null);
-    });
-
-    test('returns false if name is empty', () => {
-      expect(validateContainer({ ...validContainer, name: '' }, ApplicationRoute.ModelDeployments, [])).toBe(false);
-    });
-
-    test('returns false if name is duplicate', () => {
-      expect(
-        validateContainer({ ...validContainer, name: 'duplicate' }, ApplicationRoute.ModelDeployments, ['duplicate']),
-      ).toBe(false);
-    });
-
-    test('returns false if name has error', () => {
-      (getErrorForName as any).mockReturnValue('Name Error');
-      expect(validateContainer(validContainer, ApplicationRoute.ModelDeployments, [])).toBe(false);
-    });
-
-    test('returns false if variables are invalid', () => {
-      (getVariableNameError as any).mockReturnValue('Variable Error');
-      const container = { ...validContainer, metadata: { envs: [{ name: 'invalid' }] } } as any;
-      expect(validateContainer(container, ApplicationRoute.ModelDeployments, [])).toBe(false);
-    });
-
-    test('returns false if mcpEndpointPath has error', () => {
-      (getPathError as any).mockReturnValue('Path Error');
-      expect(validateContainer(validContainer, ApplicationRoute.ModelDeployments, [])).toBe(false);
-    });
-
-    test('returns false if transport missing for McpDeployments', () => {
-      const container = { ...validContainer, transport: undefined };
-      expect(validateContainer(container, ApplicationRoute.McpDeployments, [])).toBe(false);
-    });
-
-    test('returns false if resources missing for ModelDeployments', () => {
-      const container = {
-        ...validContainer,
-        resources: { requests: { cpu: '' } }, // Missing other resources
-      } as any;
-      expect(validateContainer(container, ApplicationRoute.ModelDeployments, [])).toBe(false);
-    });
-
-    test('returns true for valid container', () => {
-      (getErrorForName as any).mockReturnValue(null);
-      (getVariableNameError as any).mockReturnValue(null);
-      (getPathError as any).mockReturnValue(null);
-      expect(validateContainer(validContainer, ApplicationRoute.ModelDeployments, [])).toBe(true);
-    });
   });
 
   describe('getContainerTemplate', () => {
@@ -125,7 +53,8 @@ describe('containers utils', () => {
   describe('getContainerRedeploySnapshot', () => {
     const baseContainer: Container = {
       $type: CONTAINER_TYPE.NIM,
-      name: 'c1',
+      name: 'container-1',
+      displayName: 'c1',
       imageDefinitionId: 'img-1',
       status: CONTAINER_STATUS.NOT_DEPLOYED,
       metadata: {},

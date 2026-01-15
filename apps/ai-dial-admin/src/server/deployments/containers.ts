@@ -59,7 +59,7 @@ export class ContainersApi extends BaseApi {
   }
 
   updateContainer(container: Container, token: JWT | null): Promise<ServerActionResponse> {
-    return this.putAction(CONTAINER_URL(container.id), container, token);
+    return this.putAction(CONTAINER_URL(container.name), container, token);
   }
 
   updateContainersImageId(

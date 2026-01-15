@@ -16,7 +16,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { useI18n } from '@/src/locales/client';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useAppContext } from '@/src/context/AppContext';
-import { getContainerTemplate, validateContainer } from '@/src/utils/deployments/containers';
+import { getContainerTemplate } from '@/src/utils/deployments/containers';
 import { CREATE_CONTAINER_STEPS } from '@/src/constants/deployments/containers';
 import { ImageGroup } from '@/src/models/deployments/images';
 import { CreateSteps } from '@/src/types/deployments/containers';
@@ -30,6 +30,7 @@ import ContainerProperties from '@/src/components/Containers/Fields/ContainerPro
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { IMAGES_LIST_FOR_CONTAINER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 
 interface Props {
   isModalOpen: boolean;
@@ -44,13 +45,13 @@ const CreateContainer: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
   const t = useI18n();
   const { showNotification } = useNotification();
   const { resourcesDefaults } = useAppContext();
+  const { isValid } = useSaveValidationContext();
 
   const [container, setContainer] = useState<Container>(getContainerTemplate(route, resourcesDefaults) as Container);
   const [steps, setSteps] = useState(CREATE_CONTAINER_STEPS(route, t));
   const [currentStepId, setCurrentStep] = useState(steps[0].id);
   const [images, setImages] = useState<ImageGroup[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [isValid, setIsValid] = useState(false);
 
   const setStepsState = useCallback(
     (status?: StepStatus) => {
@@ -65,16 +66,12 @@ const CreateContainer: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
   const onChange = useCallback(
     (container: Container) => {
       if (currentStepId === CreateSteps.PROPERTIES) {
-        setStepsState(validateContainer(container, route, names) ? StepStatus.VALID : StepStatus.ERROR);
+        setStepsState(isValid ? StepStatus.VALID : StepStatus.ERROR);
         setContainer(container);
       }
     },
-    [currentStepId, names, route, setStepsState],
+    [currentStepId, isValid, setStepsState],
   );
-
-  useEffect(() => {
-    setIsValid(validateContainer(container, route, names || []));
-  }, [container, names, route]);
 
   useEffect(() => {
     const fetchData = async () => {

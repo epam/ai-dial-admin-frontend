@@ -104,7 +104,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
   }, [getContainers]);
 
   useEffect(() => {
-    setSelectedContainer(containers?.find((container) => container.id === entity.source?.containerId) || null);
+    setSelectedContainer(containers?.find((container) => container.name === entity.source?.containerId) || null);
   }, [containers, selectedContainer, entity]);
 
   return (
@@ -114,10 +114,13 @@ const Containers = <T extends DialInterceptor | DialModel>({
           <div className="flex flex-col w-full">
             <DialSelectField
               searchable={true}
-              options={containers.map((container) => ({ value: container.id as string, label: container.name }))}
+              options={containers.map((container) => ({
+                value: container.name as string,
+                label: container.displayName,
+              }))}
               onChange={(container) => onSelect(container as string)}
               elementId="source-type"
-              value={containers.find((container) => container.id === entity.source?.containerId)?.id}
+              value={containers.find((container) => container.name === entity.source?.containerId)?.displayName}
               placeholder={t(CreateI18nKey.SelectContainer)}
               fieldTitle={t(EntityFieldsI18nKey.container)}
               readonly={!featureFlags.deploymentsEnabled}
@@ -130,7 +133,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
               <DialInputPopup
                 open={isModalOpen}
                 onOpen={onOpenModal}
-                selectedValue={selectedContainer?.name}
+                selectedValue={selectedContainer?.displayName}
                 elementId="containers"
                 emptyValueText={t(EntitiesI18nKey.NoContainers)}
                 disabled={!featureFlags.deploymentsEnabled}
