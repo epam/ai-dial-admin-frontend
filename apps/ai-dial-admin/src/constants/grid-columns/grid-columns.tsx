@@ -748,7 +748,7 @@ export const IMAGES_LIST_COLUMNS = (t: (key: string) => string): ColDef[] => [
     valueFormatter: ({ value }) => t(IMAGE_SOURCE_TYPE_I18N_KEYS[value as IMAGE_SOURCE_TYPE]) || value,
     tooltipValueGetter: ({ value }) => t(IMAGE_SOURCE_TYPE_I18N_KEYS[value as IMAGE_SOURCE_TYPE]) || value,
     filterValueGetter: (params) => {
-      const value = params.data[params.colDef.field || ''];
+      const value = params.data.source.$type;
       return t(IMAGE_SOURCE_TYPE_I18N_KEYS[value as IMAGE_SOURCE_TYPE]) || value;
     },
   },
