@@ -32,7 +32,6 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
     'cursor-pointer',
     index === 0 ? 'mt-[24px]' : 'flex items-center',
     errorText && 'pb-[18px]',
-    (!rule.function || !rule.source || !(rule.targets.length > 0)) && 'pointer-events-none opacity-60',
   );
 
   const setError = useCallback(
