@@ -8,6 +8,7 @@ import { FieldError } from '@/src/models/error';
 import { addTrailingSlash, removeSlash } from '@/src/utils/url';
 import { getUrlError } from '@/src/utils/validation/url-error';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import ReadonlyField from '@/src/components/Common/ReadonlyField/ReadonlyField';
 
 export interface EndpointControlProps {
   endpoint?: string | null;
@@ -91,6 +92,13 @@ const EndpointControl: FC<Props> = ({
       copyable={true}
       fullValue={fullValue}
       {...props}
+    />
+  ) : props.disabled ? (
+    <ReadonlyField
+      containerClassName={isFullWidth ? 'w-full' : STANDARD_CONTROL_WIDTH}
+      elementId={id}
+      title={props.fieldTitle}
+      value={endpoint || ''}
     />
   ) : (
     <DialTextInputField
