@@ -87,54 +87,36 @@ const editableCellRendererSelector = (params: ICellRendererParams) => {
   return { component: EmptyCellRenderer };
 };
 
+const createLimitColumn = (
+  headerName: string,
+  field: keyof DialRoleLimits,
+  defaultValue: string | null | undefined,
+  onChange?: (value: number, data: DialRole, token: string) => void,
+  otherFields: Array<keyof DialRoleLimits> = [],
+) => ({
+  headerName,
+  field,
+  cellClass: NO_BORDER_CLASS,
+  cellRendererSelector: editableCellRendererSelector,
+  cellRendererParams: (params: { data?: DialRoleLimits }) => {
+    const hasOtherValue = otherFields.some((f) => params.data?.[f]);
+    return {
+      ...cellRenderParams,
+      defaultValue,
+      onChange,
+      showMaxValue: hasOtherValue && !params.data?.[field],
+    };
+  },
+});
+
 export const LIMIT_COLUMNS = (
   defaultValues?: DialRoleLimits,
   onChange?: (value: number, data: DialRole, token: string) => void,
 ) => [
-  {
-    headerName: 'Tokens per minute',
-    field: 'minute',
-    cellClass: NO_BORDER_CLASS,
-    cellRendererSelector: editableCellRendererSelector,
-    cellRendererParams: {
-      ...cellRenderParams,
-      defaultValue: defaultValues?.minute,
-      onChange,
-    },
-  },
-  {
-    headerName: 'Tokens per day',
-    field: 'day',
-    cellClass: NO_BORDER_CLASS,
-    cellRendererSelector: editableCellRendererSelector,
-    cellRendererParams: {
-      ...cellRenderParams,
-      defaultValue: defaultValues?.day,
-      onChange,
-    },
-  },
-  {
-    headerName: 'Tokens per week',
-    field: 'week',
-    cellClass: NO_BORDER_CLASS,
-    cellRendererSelector: editableCellRendererSelector,
-    cellRendererParams: {
-      ...cellRenderParams,
-      defaultValue: defaultValues?.week,
-      onChange,
-    },
-  },
-  {
-    headerName: 'Tokens per month',
-    field: 'month',
-    cellClass: NO_BORDER_CLASS,
-    cellRendererSelector: editableCellRendererSelector,
-    cellRendererParams: {
-      ...cellRenderParams,
-      defaultValue: defaultValues?.month,
-      onChange,
-    },
-  },
+  createLimitColumn('Tokens per minute', 'minute', defaultValues?.minute, onChange, ['day', 'week', 'month']),
+  createLimitColumn('Tokens per day', 'day', defaultValues?.day, onChange, ['minute', 'week', 'month']),
+  createLimitColumn('Tokens per week', 'week', defaultValues?.week, onChange, ['minute', 'day', 'month']),
+  createLimitColumn('Tokens per month', 'month', defaultValues?.month, onChange, ['minute', 'day', 'week']),
 ];
 
 export const SHARING_COLUMNS = (
