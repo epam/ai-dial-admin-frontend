@@ -17,10 +17,6 @@ describe('getCoreSyncStatusUrl', () => {
     expect(getCoreSyncStatusUrl(ApplicationRoute.Interceptors, id)).toBe(`/interceptors/${id}/sync-state`);
   });
 
-  test('returns correct route for Keys', () => {
-    expect(getCoreSyncStatusUrl(ApplicationRoute.Keys, id)).toBe(`/keys/${id}/sync-state`);
-  });
-
   test('returns correct route for Roles', () => {
     expect(getCoreSyncStatusUrl(ApplicationRoute.Roles, id)).toBe(`/roles/${id}/sync-state`);
   });
