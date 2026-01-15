@@ -59,6 +59,7 @@ const getTemplate = (type: CONTAINER_TYPE, defaults?: ResourcesDefaults): Contai
     imageDefinitionId: '',
     displayName: '',
     name: '',
+    description: '',
     status: CONTAINER_STATUS.NOT_DEPLOYED,
     metadata: {
       envs: [],
