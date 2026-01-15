@@ -34,7 +34,6 @@ import {
   getTranslatedEntity,
   getTranslatedType,
 } from '@/src/utils/deployments/entity';
-import { validateContainer } from '@/src/utils/deployments/containers';
 import { showEditorErrorNotifications } from '@/src/components/EntityView/JsonEditor/utils';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { createPortal } from 'react-dom';
@@ -59,7 +58,6 @@ interface Props<T> {
   onSave: () => void;
   toggleJsonEditor?: () => void;
   setErrorNotifications?: (notification: JSONEditorErrorNotification[]) => void;
-  names: string[];
   createEntity: (entity: BaseEntity) => Promise<ServerActionResponse>;
   createEntityAsAsset?: (entity: Asset) => Promise<ServerActionResponse>;
   entityNames: string[];
@@ -79,7 +77,6 @@ const HeaderButtons = <T extends Container>({
   setErrorNotifications,
   hideJsonEditor,
   children,
-  names,
   createEntity,
   createEntityAsAsset,
   entityNames,
@@ -127,8 +124,8 @@ const HeaderButtons = <T extends Container>({
   }, [handleModalClose]);
 
   const handleRunContainer = useCallback(() => {
-    if (container.id) {
-      runContainer(container.id).then((res) => {
+    if (container.name) {
+      runContainer(container.name).then((res) => {
         if (res.success) {
           router.refresh();
         } else {
@@ -139,8 +136,8 @@ const HeaderButtons = <T extends Container>({
   }, [container, router, showNotification]);
 
   const handleStopContainer = useCallback(() => {
-    if (container.id) {
-      stopContainer(container.id).then((res) => {
+    if (container.name) {
+      stopContainer(container.name).then((res) => {
         if (res.success) {
           router.refresh();
         } else {
@@ -150,13 +147,9 @@ const HeaderButtons = <T extends Container>({
     }
   }, [container, router, showNotification]);
 
-  const isValidEntity = () => {
-    return validateContainer(container, route, names);
-  };
-
   const onDelete = useCallback(() => {
-    if (container.id) {
-      deleteContainer(container.id).then((res) => {
+    if (container.name) {
+      deleteContainer(container.name).then((res) => {
         if (res.success) {
           onCloseModal();
           router.push(route);
@@ -165,7 +158,7 @@ const HeaderButtons = <T extends Container>({
         }
       });
     }
-  }, [container.id, onCloseModal, route, router, showNotification]);
+  }, [container.name, onCloseModal, route, router, showNotification]);
 
   const onTryToSave = useCallback(() => {
     if (jsonErrors?.length) {
@@ -230,7 +223,7 @@ const HeaderButtons = <T extends Container>({
               className={buttonsClassNames}
               label={t(isRedeployRequired ? ButtonsI18nKey.SaveAndRedeploy : ButtonsI18nKey.Save)}
               onClick={onTryToSave}
-              disabled={(jsonEditorEnabled && !isValidJSON) || !isValidEntity() || !isValid}
+              disabled={(jsonEditorEnabled && !isValidJSON) || !isValid || !isValid}
             />
           </div>
         ) : (
