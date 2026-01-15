@@ -16,6 +16,7 @@ interface EditableCellRendererParams extends ICellRendererParams {
   valueFormatter?: (value: number | string) => string;
   onChange?: (value: number | string, data: unknown, column: string, index?: number) => void;
   getDefaultPlaceholder?: (node: IRowNode, colDef?: ColDef) => string;
+  showMaxValue?: boolean;
 }
 
 const EditableCellRenderer = ({
@@ -31,6 +32,7 @@ const EditableCellRenderer = ({
   colDef,
   data,
   node,
+  showMaxValue,
 }: EditableCellRendererParams) => {
   const t = useI18n();
   const initialPlaceholder = placeholder ? t(placeholder) : '';
@@ -39,22 +41,18 @@ const EditableCellRenderer = ({
 
   const [inputValue, setInputValue] = useState(initialValue);
 
-  const isEmptyValue = useMemo(() => {
-    return inputValue == null;
-  }, [inputValue]);
-
   const isMaxValue = useMemo(() => {
-    return inputValue === UNLIMITED_VALUE || inputValue === UNLIMITED_ACCEPTED_USERS;
-  }, [inputValue]);
+    return inputValue === UNLIMITED_VALUE || inputValue === UNLIMITED_ACCEPTED_USERS || showMaxValue;
+  }, [inputValue, showMaxValue]);
 
   const showTriangle = useMemo(() => {
-    const value = isEmptyValue || isMaxValue ? void 0 : inputValue;
+    const value = !inputValue || isMaxValue ? void 0 : inputValue;
     return getDefaultPlaceholder ? value : defaultValue !== value;
-  }, [defaultValue, getDefaultPlaceholder, inputValue, isEmptyValue, isMaxValue]);
+  }, [defaultValue, getDefaultPlaceholder, inputValue, isMaxValue]);
 
   const correctValue = useMemo(() => {
-    return isEmptyValue || isMaxValue ? '' : inputValue;
-  }, [inputValue, isEmptyValue, isMaxValue]);
+    return !inputValue || isMaxValue ? '' : inputValue;
+  }, [inputValue, isMaxValue]);
 
   const correctPlaceholder = useMemo(() => {
     return isMaxValue ? t(RolesI18nKey.Unlimited) : translatedPlaceholder;
