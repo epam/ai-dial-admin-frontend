@@ -244,12 +244,14 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, initTimeFil
       >
         <div className={classNames('flex gap-4', entity ? 'flex-1 justify-between' : 'justify-end')}>
           {!entity && <ResetFiltersButton gridApi={gridApi} />}
-          <TimeFilter
-            timePeriod={timePeriod as string}
-            onTimePeriodChange={onTimePeriodChange}
-            timeRange={timeRange}
-            onTimeRangeChange={onTimeRangeChange}
-          />
+          {timePeriod && (
+            <TimeFilter
+              timePeriod={timePeriod as string}
+              onTimePeriodChange={onTimePeriodChange}
+              timeRange={timeRange}
+              onTimeRangeChange={onTimeRangeChange}
+            />
+          )}
 
           <div className="flex flex-row gap-x-4">
             {entity && <ResetFiltersButton gridApi={gridApi} />}
