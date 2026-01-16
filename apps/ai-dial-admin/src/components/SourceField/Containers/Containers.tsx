@@ -143,7 +143,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
                   selectedId={entity.source?.containerId}
                   onClose={onCloseModal}
                   onApply={onSelect}
-                  interceptorContainers={containers}
+                  containers={containers}
                   isModalOpen={isModalOpen}
                 />
               </DialInputPopup>
