@@ -13,14 +13,12 @@ import CompareVersions from '@/src/components/Assets/Modals/CompareVersions';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import { ButtonsI18nKey, CompareI18nKey, EntityFieldsI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { Asset, DeploymentAsset } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isDeploymentAsset } from '@/src/utils/is-asset-view';
-import { getErrorNotification } from '@/src/utils/notification';
 import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
 
 interface Props {
@@ -45,7 +43,6 @@ const AssetVersionControl: FC<Props> = ({
   const t = useI18n();
 
   const router = useRouter();
-  const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -71,11 +68,12 @@ const AssetVersionControl: FC<Props> = ({
         router.push(`${view}/${path}`);
       } else {
         const path = modifyNameVersionInPrompt(asset.path, void 0, version);
-        onChangeAsset?.({
+        const newAsset = {
           ...asset,
           version,
           path,
-        });
+        };
+        onChangeAsset?.(newAsset);
       }
     },
     [asset, onChangeAsset, router, view],
@@ -95,11 +93,11 @@ const AssetVersionControl: FC<Props> = ({
           const newVersionAsset = res.response as DeploymentAsset;
           changeAssetForNewVersion(version, newVersionAsset);
         } else {
-          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+          changeAssetForNewVersion(version);
         }
       });
     },
-    [asset, view, etag, changeAssetForNewVersion, showNotification],
+    [asset, view, etag, changeAssetForNewVersion],
   );
 
   const handleModalClose = useCallback(() => {
