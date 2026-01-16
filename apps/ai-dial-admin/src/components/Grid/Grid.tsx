@@ -30,6 +30,7 @@ import {
   TextFilterModule,
   themeBalham,
   TooltipModule,
+  ScrollApiModule,
 } from 'ag-grid-community';
 import { AgGridReact } from 'ag-grid-react';
 import { useCallback, useEffect, useState } from 'react';
@@ -64,6 +65,7 @@ ModuleRegistry.registerModules([
   InfiniteRowModelModule,
   RowStyleModule,
   EventApiModule,
+  ScrollApiModule,
 ]);
 
 const GRID_THEME_COLORS = {
