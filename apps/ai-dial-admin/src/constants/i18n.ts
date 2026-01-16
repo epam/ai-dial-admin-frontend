@@ -312,6 +312,8 @@ export enum ButtonsI18nKey {
   Run = 'Buttons.Run',
   AddPort = 'Buttons.AddPort',
   SendRequest = 'Buttons.SendRequest',
+  ManageTool = 'Buttons.ManageTool',
+  Confirm = 'Buttons.Confirm',
 }
 
 export enum UpdateI18nKey {
@@ -1078,6 +1080,7 @@ export enum EntityFieldsI18nKey {
   Resources = 'EntityFields.Resources',
   EnvironmentVariables = 'EntityFields.EnvironmentVariables',
   EndpointConfiguration = 'EntityFields.EndpointConfiguration',
+  ToolName = 'EntityFields.ToolName',
 }
 
 export enum ToolsetI18nKey {
@@ -1114,6 +1117,10 @@ export enum ToolsetI18nKey {
   SuccessLogout = 'Toolset.SuccessLogout',
   SuccessLogoutDescription = 'Toolset.SuccessLogoutDescription',
   TryOut = 'Toolset.TryOut',
+  ManageTools = 'Toolset.ManageTools',
+  AvailableForYou = 'Toolset.AvailableForYou',
+  OtherInAToolset = 'Toolset.OtherInAToolset',
+  CustomToolDescription = 'Toolset.CustomToolDescription',
 }
 
 export enum ImagesI18nKey {

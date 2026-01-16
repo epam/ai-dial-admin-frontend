@@ -398,6 +398,8 @@ export default {
     Run: 'Run',
     AddPort: 'Add Port',
     SendRequest: 'Send Request',
+    ManageTool: 'Manage tool',
+    Confirm: 'Confirm',
   },
   Compare: {
     CompareChanges: 'Compare changes',
@@ -980,6 +982,7 @@ export default {
     Resources: 'Resources',
     EnvironmentVariables: 'Environment Variables',
     EndpointConfiguration: 'Endpoint Configuration',
+    ToolName: 'Tool name',
   },
   EntityPlaceholders: {
     Project: 'Enter project',
@@ -1130,6 +1133,11 @@ export default {
     SuccessLogout: 'Toolset logged out successfully',
     SuccessLogoutDescription: 'Access to the list of available tools has been revoked. Log in to restore it.',
     TryOut: 'Try out',
+    ManageTools: 'Manage tools',
+    AvailableForYou: 'Available for you',
+    OtherInAToolset: 'Others in a toolset',
+    CustomToolDescription:
+      'You can add tools from the toolset to which you don’t have direct access. Enter exact names to add them.',
   },
   Images: {
     'ImagesListTitle#zero': 'Images',

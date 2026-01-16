@@ -1,6 +1,13 @@
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { AlertVariant, DialAlert, DialLoader, DialNoDataContent, DialSwitch } from '@epam/ai-dial-ui-kit';
+import {
+  AlertVariant,
+  DialAlert,
+  DialLoader,
+  DialNoDataContent,
+  DialPrimaryButton,
+  DialSwitch,
+} from '@epam/ai-dial-ui-kit';
 import { isEqual } from 'lodash';
 
 import { getAssetTools } from '@/src/app/[lang]/assets-toolsets/actions';
@@ -10,13 +17,16 @@ import Search from '@/src/components/Common/Search/Search';
 import ToolsFilter from '@/src/components/Tools/Filter/ToolsFilter';
 import { ToolFilter } from '@/src/components/Tools/type';
 import { getFilteredTools } from '@/src/components/Tools/utils';
-import { EntitiesI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntitiesI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { Tool, Toolset } from '@/src/models/dial/toolset';
 import { getErrorNotification } from '@/src/utils/notification';
 import ToolComponent from './Tool/Tool';
+import ManageToolsModal from './ManageToolsModal/ManageToolsModal';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { IconPencilMinus } from '@tabler/icons-react';
 
 const filtersConfiguration = [
   ToolFilter.Enabled,
@@ -54,6 +64,7 @@ const Tools: FC<Props> = ({
   const [displayTools, setDisplayTools] = useState<Tool[] | null>(null);
   const [search, setSearch] = useState<string>('');
   const [selectedFilters, setSelectedFilters] = useState(filtersConfiguration);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const isNotSavedToolset = useMemo(() => {
     return originalToolset?.endpoint !== selectedToolset?.endpoint;
@@ -77,6 +88,14 @@ const Tools: FC<Props> = ({
     },
     [setSelectedFilters],
   );
+
+  const onOpenModal = useCallback(() => {
+    setIsModalOpen(true);
+  }, [setIsModalOpen]);
+
+  const onCloseModal = useCallback(() => {
+    setIsModalOpen(false);
+  }, [setIsModalOpen]);
 
   useEffect(() => {
     if (selectedToolset?.name && !isMcpToolset) {
@@ -189,16 +208,25 @@ const Tools: FC<Props> = ({
           <Search onChange={(search) => setSearch(search)} />
         </div>
 
-        {!useAllTools && !isMcpToolset && (
-          <div className="flex items-center gap-x-6">
-            <ToolsFilter
-              isAllSelected={isEqual(filtersConfiguration, selectedFilters)}
-              onSelectAll={onSelectAll}
-              selectedFilters={selectedFilters}
-              onSelectFilter={onSelectFilter}
+        <div className="flex flex-row gap-4">
+          {!useAllTools && !isMcpToolset && (
+            <div className="flex items-center gap-x-6">
+              <ToolsFilter
+                isAllSelected={isEqual(filtersConfiguration, selectedFilters)}
+                onSelectAll={onSelectAll}
+                selectedFilters={selectedFilters}
+                onSelectFilter={onSelectFilter}
+              />
+            </div>
+          )}
+          {!readonly && (
+            <DialPrimaryButton
+              label={t(ButtonsI18nKey.ManageTool)}
+              iconBefore={<IconPencilMinus {...BASE_BUTTON_ICON_PROPS} />}
+              onClick={onOpenModal}
             />
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <div className="flex flex-col gap-6">
@@ -220,6 +248,15 @@ const Tools: FC<Props> = ({
         <DialAlert variant={AlertVariant.Info} message={t(ToolsetI18nKey.ToolsWarning)} />
       )}
       {!useAllTools && !readonly && <span className="tiny text-secondary">{t(ToolsetI18nKey.Warning)}</span>}
+      {isModalOpen && (
+        <ManageToolsModal
+          isModalOpen={isModalOpen}
+          onClose={onCloseModal}
+          tools={tools || []}
+          originalToolset={selectedToolset || {}}
+          onConfirm={onChangeToolset}
+        />
+      )}
     </div>
   );
 };
