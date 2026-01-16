@@ -12,13 +12,13 @@ import Grid from '@/src/components/Grid/Grid';
 
 interface Props {
   selectedId?: string;
-  interceptorContainers?: Container[];
+  containers?: Container[];
   isModalOpen: boolean;
   onClose: () => void;
   onApply: (id?: string) => void;
 }
 
-const SelectContainerModal: FC<Props> = ({ selectedId, interceptorContainers, isModalOpen, onClose, onApply }) => {
+const SelectContainerModal: FC<Props> = ({ selectedId, containers, isModalOpen, onClose, onApply }) => {
   const t = useI18n();
 
   const [selectedContainer, setSelectedContainer] = useState(selectedId);
@@ -44,25 +44,25 @@ const SelectContainerModal: FC<Props> = ({ selectedId, interceptorContainers, is
             rowSelection: { mode: 'singleRow', enableClickSelection: true },
             selectionColumnDef: {
               ...RADIO_BUTTON_COL_DEF,
-              cellRenderer: (data: { data?: { id: string; name: string; image: string }; id: string }) => (
+              cellRenderer: (data: { data?: { name: string; image: string }; name: string }) => (
                 <RadioButtonRenderer
-                  inputId={data.data?.id || data.id}
-                  isChecked={data.data?.id === selectedContainer}
+                  inputId={data.data?.name || data.name}
+                  isChecked={data.data?.name === selectedContainer}
                 />
               ),
             },
             onRowSelected: (event) => {
               if (event.node.isSelected()) {
-                setSelectedContainer(event.data.id);
+                setSelectedContainer(event.data.name);
               }
             },
             onGridReady: (event) => {
               event.api?.updateGridOptions({
                 columnDefs: SOURCE_CONTAINERS_COLUMNS,
-                rowData: interceptorContainers,
+                rowData: containers,
               });
               event.api.forEachNode((node) => {
-                if (node.data.id === selectedContainer) {
+                if (node.data.name === selectedContainer) {
                   node.setSelected(true);
                 }
               });
