@@ -37,7 +37,7 @@ const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action, isJ
   const [keys, setKeys] = useState<Record<string, string>>({});
 
   const staticContainerClassName = 'flex flex-row gap-3 divide-x divide-primary';
-  const approveButtonClassName = `${action === ActionType.ADD ? '' : 'bg-red-400'}`;
+  const approveButtonClassName = `${action === ActionType.ADD || action === ActionType.ADD_IF_ABSENT ? '' : 'bg-red-400'}`;
 
   const [containerClassName, setContainerClassName] = useState(staticContainerClassName);
   const [buttonsClassName, setButtonsClassName] = useState('');
@@ -83,14 +83,16 @@ const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action, isJ
             onClick={() => setIsOpenDeclineModal(true)}
             iconBefore={<IconCircleX {...BASE_BUTTON_ICON_PROPS} />}
           />
-          {action === ActionType.ADD ? (
-            <DialPrimaryButton
-              className={classNames(buttonsClassName, approveButtonClassName)}
-              label={t(ButtonsI18nKey.Publish)}
-              onClick={() => setIsOpenApproveModal(true)}
-              iconBefore={<IconWorldShare {...BASE_BUTTON_ICON_PROPS} />}
-            />
-          ) : (
+          {action === ActionType.ADD ||
+            (action === ActionType.ADD_IF_ABSENT && (
+              <DialPrimaryButton
+                className={classNames(buttonsClassName, approveButtonClassName)}
+                label={t(ButtonsI18nKey.Publish)}
+                onClick={() => setIsOpenApproveModal(true)}
+                iconBefore={<IconWorldShare {...BASE_BUTTON_ICON_PROPS} />}
+              />
+            ))}
+          {action === ActionType.DELETE && (
             <DialPrimaryButton
               className={classNames(buttonsClassName, approveButtonClassName)}
               label={t(ButtonsI18nKey.Unpublish)}
@@ -118,7 +120,11 @@ const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action, isJ
               setIsOpenApproveModal(false);
             }}
             confirmClassName={approveButtonClassName}
-            confirmLabel={t(action === ActionType.ADD ? ButtonsI18nKey.Publish : ButtonsI18nKey.Unpublish)}
+            confirmLabel={t(
+              action === ActionType.ADD || action === ActionType.ADD_IF_ABSENT
+                ? ButtonsI18nKey.Publish
+                : ButtonsI18nKey.Unpublish,
+            )}
             description={t(keys.ApproveDescription)}
           />,
           document.body,

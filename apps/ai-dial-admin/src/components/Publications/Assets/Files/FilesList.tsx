@@ -37,7 +37,7 @@ const FilesList: FC<Props> = ({ files, action }) => {
   };
 
   const isOpenActionHidden = () => {
-    return action === ActionType.ADD;
+    return action === ActionType.ADD || action === ActionType.ADD_IF_ABSENT;
   };
 
   const rowData =

@@ -32,5 +32,6 @@ export interface ToolsetPublication extends Publication {
 
 export enum ActionType {
   ADD = 'add',
+  ADD_IF_ABSENT = 'add_if_absent',
   DELETE = 'delete',
 }
