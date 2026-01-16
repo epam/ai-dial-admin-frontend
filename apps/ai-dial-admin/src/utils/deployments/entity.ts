@@ -87,8 +87,9 @@ export const getEntityTemplate = (
     (template as DialModel).type = DialModelType.Chat;
     template.source = {
       ...(template.source as SOURCE_FIELD),
-      completionEndpointPath: `${template.name}${getEndpointPostfix((template as DialModel).type)}`,
+      completionEndpointPath: `openai/v1${getEndpointPostfix((template as DialModel).type)}`,
     };
+    (template as DialModel).overrideName = container.name;
     (template as DialModel).displayVersion = '';
   }
 

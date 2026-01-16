@@ -121,7 +121,7 @@ describe('entity utils', () => {
       const container = { displayName: 'MyContainer', name: '123' } as any;
       const template = getEntityTemplate(ApplicationRoute.ModelDeployments, container, t) as any;
       expect(template.type).toBe(DialModelType.Chat);
-      expect(template.source.completionEndpointPath).toBe('mycontainer_entities.model/chat');
+      expect(template.source.completionEndpointPath).toBe('openai/v1/chat');
     });
 
     test('configures transport for McpDeployments', () => {
