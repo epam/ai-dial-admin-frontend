@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
   DialCloseButton,
@@ -60,6 +60,10 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset }) => {
     ];
   }, [t]);
 
+  const isEmptyRequest = useMemo(() => {
+    return tool?.inputSchema && Object.keys(tool?.inputSchema).length === 0;
+  }, [tool?.inputSchema]);
+
   const sendRequest = useCallback(() => {
     setIsRequestSend(true);
     (isAssetToolset
@@ -82,6 +86,10 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset }) => {
   const onChangeConfiguration = useCallback((config: Record<string, unknown>) => {
     setRequestBody(config);
   }, []);
+
+  useEffect(() => {
+    setResponse({});
+  }, [tool?.name]);
 
   return (
     <div className="flex flex-col gap-y-8 w-[800px] h-full min-h-0">
@@ -107,10 +115,13 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset }) => {
               options={items}
               value={responseView}
               onChange={(v) => setResponseView(v as ParamsView)}
+              disabled={!isEmptyRequest}
             />
           </div>
           <div className="flex-1 basis-0 min-h-0 overflow-y-auto flex flex-col">
-            {responseView === ParamsView.FORM ? (
+            {!isEmptyRequest ? (
+              <div className="flex-1 flex items-center justify-center">{t(EntitiesI18nKey.NoInputs)}</div>
+            ) : responseView === ParamsView.FORM ? (
               <SchemaUiRenderer
                 schema={{ ...(tool?.inputSchema as RJSFSchema), isRoot: true }}
                 onChangeConfiguration={onChangeConfiguration}

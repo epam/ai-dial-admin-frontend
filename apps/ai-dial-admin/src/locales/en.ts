@@ -169,6 +169,7 @@ export default {
     NoConfigurationSchema: 'No Configuration Scheme',
     NoToolsets: 'No Toolsets',
     NoTools: 'No Tools',
+    NoInputs: 'No inputs',
     // add entity or entities
     AddModel: 'Add Model',
     AddApplication: 'Add Application',
