@@ -1,5 +1,5 @@
 import { ActionType } from '@/src/models/dial/publications';
-import { getActionClassName, getModalsTranslations } from '../publications';
+import { getActionClassName, getModalsTranslations, isAddAction } from '../publications';
 import { ApplicationRoute } from '@/src/types/routes';
 import { PublicationsI18nKey } from '@/src/constants/i18n';
 import { describe, expect, test } from 'vitest';
@@ -8,6 +8,21 @@ describe('Utils :: publications :: getActionClass', () => {
   test('Should correctly return action class name', () => {
     expect(getActionClassName('add' as ActionType)).toBeTruthy();
     expect(getActionClassName('delete' as ActionType)).toBeTruthy();
+  });
+});
+
+describe('isAddAction', () => {
+  test('should return true for ADD action', () => {
+    const result = isAddAction(ActionType.ADD);
+    expect(result).toBeTruthy();
+  });
+  test('should return true for ADD_IF_ABSENT action', () => {
+    const result = isAddAction(ActionType.ADD_IF_ABSENT);
+    expect(result).toBeTruthy();
+  });
+  test('should return true for DELETE action', () => {
+    const result = isAddAction(ActionType.DELETE);
+    expect(result).toBeFalsy();
   });
 });
 

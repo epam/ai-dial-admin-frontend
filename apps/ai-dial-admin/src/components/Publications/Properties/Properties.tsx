@@ -65,7 +65,7 @@ const BasePublicationProperties: FC<Props> = ({ view, publication, children, app
         <PublicationPermissions
           rules={publication.rules || []}
           folderId={decodeURIComponent(publication.folderId)}
-          showCompare={publication.action === ActionType.ADD}
+          showCompare={publication.action === ActionType.ADD || publication.action === ActionType.ADD_IF_ABSENT}
         />
       </div>
     </div>

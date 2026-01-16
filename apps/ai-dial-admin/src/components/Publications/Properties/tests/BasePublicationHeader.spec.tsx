@@ -53,7 +53,7 @@ describe('BasePublicationHeader', () => {
         onApprove={vi.fn()}
         onDecline={vi.fn()}
         route={ApplicationRoute.PromptPublications}
-        action={ActionType.REMOVE}
+        action={ActionType.DELETE}
       />,
     );
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Unpublish })).toBeInTheDocument();
