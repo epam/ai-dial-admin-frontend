@@ -83,15 +83,14 @@ const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action, isJ
             onClick={() => setIsOpenDeclineModal(true)}
             iconBefore={<IconCircleX {...BASE_BUTTON_ICON_PROPS} />}
           />
-          {action === ActionType.ADD ||
-            (action === ActionType.ADD_IF_ABSENT && (
-              <DialPrimaryButton
-                className={classNames(buttonsClassName, approveButtonClassName)}
-                label={t(ButtonsI18nKey.Publish)}
-                onClick={() => setIsOpenApproveModal(true)}
-                iconBefore={<IconWorldShare {...BASE_BUTTON_ICON_PROPS} />}
-              />
-            ))}
+          {(action === ActionType.ADD || action === ActionType.ADD_IF_ABSENT) && (
+            <DialPrimaryButton
+              className={classNames(buttonsClassName, approveButtonClassName)}
+              label={t(ButtonsI18nKey.Publish)}
+              onClick={() => setIsOpenApproveModal(true)}
+              iconBefore={<IconWorldShare {...BASE_BUTTON_ICON_PROPS} />}
+            />
+          )}
           {action === ActionType.DELETE && (
             <DialPrimaryButton
               className={classNames(buttonsClassName, approveButtonClassName)}
