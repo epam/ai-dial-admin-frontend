@@ -13,7 +13,7 @@ import {
 } from '@/src/constants/grid-columns/actions';
 import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { MenuI18nKey, RolesI18nKey } from '@/src/constants/i18n';
-import { UNLIMITED_VALUE } from '@/src/constants/role';
+import { NO_LIMITS_KEY, UNLIMITED_VALUE } from '@/src/constants/role';
 import { EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialRole } from '@/src/models/dial/role';
 import { DialRoleLimits } from '@/src/models/dial/role-limits';
@@ -99,12 +99,12 @@ const createLimitColumn = (
   cellClass: NO_BORDER_CLASS,
   cellRendererSelector: editableCellRendererSelector,
   cellRendererParams: (params: { data?: DialRoleLimits }) => {
-    const hasOtherValue = otherFields.some((f) => params.data?.[f]);
+    const hasOtherValue = otherFields.some((f) => params.data?.[f] && params.data?.[f] !== NO_LIMITS_KEY);
     return {
       ...cellRenderParams,
       defaultValue,
       onChange,
-      showMaxValue: hasOtherValue && !params.data?.[field],
+      showMaxValue: hasOtherValue && (!params.data?.[field] || params.data?.[field] === NO_LIMITS_KEY),
     };
   },
 });
