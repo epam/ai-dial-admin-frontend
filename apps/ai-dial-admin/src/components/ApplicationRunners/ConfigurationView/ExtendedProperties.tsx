@@ -7,10 +7,10 @@ import EditorUrlControl from '@/src/components/EntityMainProperties/BaseProperti
 import ViewerUrlControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ViewerUrl';
 import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
 import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
-import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, TypeI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
-import { DialApplicationScheme, TypeBucketCopy, TypeEntity } from '@/src/models/dial/application';
+import { DialApplicationScheme, TypeBucketCopy } from '@/src/models/dial/application';
 
 interface Props {
   runner: DialApplicationScheme;
@@ -19,11 +19,6 @@ interface Props {
 
 const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
   const t = useI18n();
-  const types: SelectOption[] = [
-    { value: BasicI18nKey.None, label: t(BasicI18nKey.None) },
-    { value: TypeEntity.OBJECT, label: t(TypeI18nKey.Object) },
-    { value: TypeEntity.BOOLEAN, label: t(TypeI18nKey.Boolean) },
-  ];
 
   const typeBucketCopy: SelectOption[] = [
     { value: TypeBucketCopy.ENABLED, label: t(BasicI18nKey.Enabled) },
@@ -83,18 +78,6 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
         containerClassName={STANDARD_CONTROL_WIDTH}
         onChange={(title?: string) => {
           onChangeRunner({ ...runner, title });
-        }}
-      />
-
-      <DialSelectField
-        value={runner.type || BasicI18nKey.None}
-        elementId="type"
-        className="w-[180px]"
-        options={types}
-        fieldTitle={t(EntityFieldsI18nKey.type)}
-        placeholder={t(EntityPlaceholdersI18nKey.Type)}
-        onChange={(type) => {
-          onChangeRunner({ ...runner, type: type === BasicI18nKey.None ? void 0 : (type as TypeEntity) });
         }}
       />
 
