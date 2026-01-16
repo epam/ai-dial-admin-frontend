@@ -6,10 +6,11 @@ import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
 import { Container } from '@/src/models/deployments/containers';
 import { Image } from '@/src/models/deployments/images';
-import { getContainerTemplate, validateContainer } from '@/src/utils/deployments/containers';
+import { getContainerTemplate } from '@/src/utils/deployments/containers';
 import { getRouteByType } from '@/src/utils/deployments/entity';
 
 import ContainerProperties from '@/src/components/Containers/Fields/ContainerProperties';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 
 interface Props {
   isModalOpen: boolean;
@@ -23,18 +24,15 @@ interface Props {
 const CreateContainer: FC<Props> = ({ onClose, isModalOpen, modalTitle, names, onCreate, image }) => {
   const t = useI18n();
   const { resourcesDefaults } = useAppContext();
+  const { isValid } = useSaveValidationContext();
+
   const [container, setContainer] = useState<Container>(
     getContainerTemplate(getRouteByType(image.$type), resourcesDefaults) as Container,
   );
-  const [isValid, setIsValid] = useState(false);
 
   const onChange = useCallback((container: Container) => {
     setContainer(container);
   }, []);
-
-  useEffect(() => {
-    setIsValid(validateContainer(container, getRouteByType(image.$type), names || []));
-  }, [container, image.$type, names, t]);
 
   useEffect(() => {
     setContainer((prev) => ({

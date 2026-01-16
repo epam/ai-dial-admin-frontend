@@ -131,14 +131,14 @@ describe('ContainersApi', () => {
 
   test('create, update, delete and run/stop container calls correct endpoints', async () => {
     fetch.mockResponseOnce(JSON.stringify({}));
-    await instance.createContainer({ id: 'c1' } as any, TOKEN_MOCK);
+    await instance.createContainer({ name: 'c1' } as any, TOKEN_MOCK);
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining(BASE_CONTAINERS_URL),
       expect.objectContaining({ method: 'POST' }),
     );
 
     fetch.mockResponseOnce(JSON.stringify({}));
-    await instance.updateContainer({ id: 'c1' } as any, TOKEN_MOCK);
+    await instance.updateContainer({ name: 'c1' } as any, TOKEN_MOCK);
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining(CONTAINER_URL('c1')),
       expect.objectContaining({ method: 'PUT' }),

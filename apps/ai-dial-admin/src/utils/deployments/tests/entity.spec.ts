@@ -94,14 +94,14 @@ describe('entity utils', () => {
 
   describe('getEntityId', () => {
     test('generates id based on container name and route', () => {
-      const container = { name: 'MyContainer' } as any;
+      const container = { displayName: 'MyContainer' } as any;
       expect(getEntityId(container, ApplicationRoute.ModelDeployments, t)).toBe('mycontainer_entities.model');
     });
   });
 
   describe('getEntityName', () => {
     test('generates name based on container name and route', () => {
-      const container = { name: 'MyContainer' } as any;
+      const container = { displayName: 'MyContainer' } as any;
       expect(getEntityName(container, ApplicationRoute.ModelDeployments, t)).toBe(
         `MyContainer ${EntitiesI18nKey.Model}`,
       );
@@ -110,7 +110,7 @@ describe('entity utils', () => {
 
   describe('getEntityTemplate', () => {
     test('returns basic template', () => {
-      const container = { name: 'MyContainer', id: '123' } as any;
+      const container = { displayName: 'MyContainer', name: '123' } as any;
       const template = getEntityTemplate(ApplicationRoute.InterceptorDeployments, container, t);
       expect(template.name).toBe('mycontainer_entities.interceptor');
       expect(template.source?.containerId).toBe('123');
@@ -118,14 +118,14 @@ describe('entity utils', () => {
 
     test('configures model specific fields for ModelDeployments', () => {
       (getEndpointPostfix as any).mockReturnValue('/chat');
-      const container = { name: 'MyContainer', id: '123' } as any;
+      const container = { displayName: 'MyContainer', name: '123' } as any;
       const template = getEntityTemplate(ApplicationRoute.ModelDeployments, container, t) as any;
       expect(template.type).toBe(DialModelType.Chat);
       expect(template.source.completionEndpointPath).toBe('mycontainer_entities.model/chat');
     });
 
     test('configures transport for McpDeployments', () => {
-      const container = { name: 'MyContainer', id: '123' } as any;
+      const container = { displayName: 'MyContainer', name: '123' } as any;
       const template = getEntityTemplate(ApplicationRoute.McpDeployments, container, t, CONTAINER_TRANSPORT.SSE) as any;
       expect(template.transport).toBe(ENTITY_TRANSPORT[CONTAINER_TRANSPORT.SSE]);
     });
@@ -133,7 +133,7 @@ describe('entity utils', () => {
 
   describe('getAssetTemplate', () => {
     test('returns asset template', () => {
-      const container = { name: 'MyContainer', url: 'http://url' } as any;
+      const container = { displayName: 'MyContainer', url: 'http://url' } as any;
       const template = getAssetTemplate(ApplicationRoute.McpDeployments, container, t, CONTAINER_TRANSPORT.SSE);
       expect(template.name).toBe('mycontainer_entities.toolset');
       expect(template.endpoint).toBe('http://url');
@@ -141,7 +141,7 @@ describe('entity utils', () => {
     });
 
     test('configures transport for McpDeployments', () => {
-      const container = { name: 'MyContainer', url: 'http://url' } as any;
+      const container = { displayName: 'MyContainer', url: 'http://url' } as any;
       const template = getAssetTemplate(ApplicationRoute.McpDeployments, container, t, CONTAINER_TRANSPORT.SSE) as any;
       expect(template.transport).toBe(ENTITY_TRANSPORT[CONTAINER_TRANSPORT.SSE]);
     });

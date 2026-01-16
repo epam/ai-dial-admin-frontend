@@ -53,8 +53,8 @@ const ChangeContainerImage: FC<Props> = ({
   const [loading, setLoading] = useState(false);
   const [isValid, setIsValid] = useState(false);
 
-  const onOpenInNewTabAction = useCallback((image?: Image) => {
-    onOpenInNewTab(ApplicationRoute.Images, image);
+  const onOpenInNewTabAction = useCallback((image?: ImageGroup) => {
+    onOpenInNewTab(ApplicationRoute.Images, { id: image?.selectedId });
   }, []);
 
   const onVersionsChange = useCallback(

@@ -11,7 +11,7 @@ import { EnvironmentVariable } from '@/src/models/deployments/variables';
 export interface Container {
   $type: CONTAINER_TYPE;
   name: string;
-  id?: string;
+  displayName: string;
   imageDefinitionId: string;
   description?: string;
   containerPorts?: number[];

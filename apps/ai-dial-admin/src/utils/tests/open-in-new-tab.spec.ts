@@ -79,7 +79,7 @@ describe('Entity list view :: getEntityPath', () => {
   });
 
   test('Should return name field for McpDeployments', () => {
-    const result = getEntityPath(ApplicationRoute.McpDeployments, { ...data, id: 'test-id' });
+    const result = getEntityPath(ApplicationRoute.McpDeployments, { ...data, name: 'test-id' });
     expect(result).toEqual('test-id');
   });
 
@@ -94,7 +94,7 @@ describe('Entity list view :: getEntityPath', () => {
   });
 
   test('Should return id field for InterceptorDeployments', () => {
-    const res1 = getEntityPath(ApplicationRoute.InterceptorDeployments, { data, id: 'id' }, void 0);
+    const res1 = getEntityPath(ApplicationRoute.InterceptorDeployments, { data, name: 'id' }, void 0);
     expect(res1).toEqual('id');
   });
   test('Should return id field for Images', () => {
