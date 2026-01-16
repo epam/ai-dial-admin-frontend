@@ -925,6 +925,8 @@ export enum EntityPlaceholdersI18nKey {
   BaseDirectory = 'EntityPlaceholders.BaseDirectory',
   ContainerPort = 'EntityPlaceholders.ContainerPort',
   ContainerEndpointPath = 'EntityPlaceholders.ContainerEndpointPath',
+  Command = 'EntityPlaceholders.Command',
+  Arguments = 'EntityPlaceholders.Arguments',
 }
 
 export enum EntityFieldsI18nKey {
@@ -1079,6 +1081,8 @@ export enum EntityFieldsI18nKey {
   globalInterceptors = 'EntityFields.globalInterceptors',
   HFModelName = 'EntityFields.HFModelName',
   Resources = 'EntityFields.Resources',
+  Configuration = 'EntityFields.Configuration',
+  Command = 'EntityFields.Command',
   EnvironmentVariables = 'EntityFields.EnvironmentVariables',
   EndpointConfiguration = 'EntityFields.EndpointConfiguration',
   ToolName = 'EntityFields.ToolName',
