@@ -18,7 +18,7 @@ import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { ActionType } from '@/src/models/dial/publications';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getModalsTranslations } from '@/src/utils/publications';
+import { getModalsTranslations, isAddAction } from '@/src/utils/publications';
 
 interface Props {
   onApprove: () => void;
@@ -37,7 +37,7 @@ const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action, isJ
   const [keys, setKeys] = useState<Record<string, string>>({});
 
   const staticContainerClassName = 'flex flex-row gap-3 divide-x divide-primary';
-  const approveButtonClassName = `${action === ActionType.ADD || action === ActionType.ADD_IF_ABSENT ? '' : 'bg-red-400'}`;
+  const approveButtonClassName = `${isAddAction(action) ? '' : 'bg-red-400'}`;
 
   const [containerClassName, setContainerClassName] = useState(staticContainerClassName);
   const [buttonsClassName, setButtonsClassName] = useState('');
@@ -83,7 +83,7 @@ const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action, isJ
             onClick={() => setIsOpenDeclineModal(true)}
             iconBefore={<IconCircleX {...BASE_BUTTON_ICON_PROPS} />}
           />
-          {(action === ActionType.ADD || action === ActionType.ADD_IF_ABSENT) && (
+          {isAddAction(action) && (
             <DialPrimaryButton
               className={classNames(buttonsClassName, approveButtonClassName)}
               label={t(ButtonsI18nKey.Publish)}
@@ -119,11 +119,7 @@ const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action, isJ
               setIsOpenApproveModal(false);
             }}
             confirmClassName={approveButtonClassName}
-            confirmLabel={t(
-              action === ActionType.ADD || action === ActionType.ADD_IF_ABSENT
-                ? ButtonsI18nKey.Publish
-                : ButtonsI18nKey.Unpublish,
-            )}
+            confirmLabel={t(isAddAction(action) ? ButtonsI18nKey.Publish : ButtonsI18nKey.Unpublish)}
             description={t(keys.ApproveDescription)}
           />,
           document.body,
