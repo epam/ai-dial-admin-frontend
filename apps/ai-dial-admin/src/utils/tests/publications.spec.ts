@@ -14,15 +14,15 @@ describe('Utils :: publications :: getActionClass', () => {
 describe('isAddAction', () => {
   test('should return true for ADD action', () => {
     const result = isAddAction(ActionType.ADD);
-    expect(result).toBeTruthy()
+    expect(result).toBeTruthy();
   });
   test('should return true for ADD_IF_ABSENT action', () => {
     const result = isAddAction(ActionType.ADD_IF_ABSENT);
-    expect(result).toBeTruthy()
+    expect(result).toBeTruthy();
   });
   test('should return true for DELETE action', () => {
     const result = isAddAction(ActionType.DELETE);
-    expect(result).toBeFalsy()
+    expect(result).toBeFalsy();
   });
 });
 
