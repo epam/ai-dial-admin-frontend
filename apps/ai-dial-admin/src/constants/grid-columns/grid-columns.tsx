@@ -694,6 +694,9 @@ export const IMAGES_LIST_FOR_CONTAINER_COLUMNS = (
           </div>
         );
       },
+      filterValueGetter: (params) => {
+        return params.data.availableVersions.map((v: ImageVersion) => v.version);
+      },
     },
     {
       field: 'description',

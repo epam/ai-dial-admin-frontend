@@ -1,11 +1,4 @@
-import {
-  AlertVariant,
-  DialAlert,
-  DialLoader,
-  DialNeutralButton,
-  DialPopup,
-  DialPrimaryButton,
-} from '@epam/ai-dial-ui-kit';
+import { AlertVariant, DialAlert, DialFormPopup, DialLoader } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { ButtonsI18nKey, ContainersI18nKey } from '@/src/constants/i18n';
@@ -95,17 +88,23 @@ const ChangeContainerImage: FC<Props> = ({
   }, [id, image.id, images]);
 
   return (
-    <DialPopup
+    <DialFormPopup
       onClose={onClose}
       header={modalTitle}
       portalId="ChangeContainerImageModal"
       open={isModalOpen}
-      className="lg:max-w-[55%] md:max-w-[75%]"
+      className="lg:max-w-[55%] md:max-w-[75%] h-[600px]"
+      disableSubmitButton={!isValid}
+      submitLabel={t(ButtonsI18nKey.Apply)}
+      onSubmit={() => {
+        onApply(id);
+        onClose();
+      }}
     >
-      <div className="flex flex-col py-4 px-6">
+      <div className="flex flex-col py-4 px-6 min-h-0 h-full">
         {loading && <DialLoader size={24} />}
         {!loading && !!images.length && (
-          <div className="flex flex-col gap-4 overflow-auto max-h-[400px]">
+          <div className="flex flex-col gap-4 min-h-0 h-full">
             <Grid
               rowData={images}
               columnDefs={colDefs}
@@ -133,6 +132,7 @@ const ChangeContainerImage: FC<Props> = ({
                   event.api.forEachNode((node) => {
                     if (node.data.selectedId === id && isValidVersion(node.data as ImageGroup)) {
                       node.setSelected(true);
+                      event.api.ensureNodeVisible(node, 'middle');
                     }
                   });
                 },
@@ -149,18 +149,7 @@ const ChangeContainerImage: FC<Props> = ({
           </div>
         )}
       </div>
-      <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialPrimaryButton
-          label={t(ButtonsI18nKey.Apply)}
-          onClick={() => {
-            onApply(id);
-            onClose();
-          }}
-          disabled={!isValid}
-        />
-      </div>
-    </DialPopup>
+    </DialFormPopup>
   );
 };
 
