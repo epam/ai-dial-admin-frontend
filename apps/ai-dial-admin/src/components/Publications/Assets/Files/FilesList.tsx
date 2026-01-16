@@ -13,6 +13,7 @@ import {
   getPreviewOperation,
 } from '@/src/constants/grid-columns/actions';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { isAddAction } from '@/src/utils/publications';
 
 interface Props {
   files: Partial<DialFile | string>[];
@@ -37,7 +38,7 @@ const FilesList: FC<Props> = ({ files, action }) => {
   };
 
   const isOpenActionHidden = () => {
-    return action === ActionType.ADD;
+    return isAddAction(action);
   };
 
   const rowData =
