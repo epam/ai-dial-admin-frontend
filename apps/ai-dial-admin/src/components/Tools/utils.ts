@@ -28,14 +28,3 @@ export const getFilteredTools = (tools: string[], selectedFilters: ToolFilter[],
 
   return [...availableTools, ...customTools].filter((t) => filteredTools.includes(t.name));
 };
-
-export const generateUniqueName = (arr: string[]) => {
-  let baseName = 'Untitled';
-  let name = baseName;
-  let counter = 2;
-  while (arr.includes(name)) {
-    name = `${baseName}-${counter}`;
-    counter++;
-  }
-  return name;
-};

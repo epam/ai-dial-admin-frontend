@@ -13,16 +13,17 @@ import {
   DialPrimaryButton,
   PopupSize,
 } from '@epam/ai-dial-ui-kit';
-import Search from '../../Common/Search/Search';
+import Search from '@/src/components/Common/Search/Search';
 import { Tool, Toolset } from '@/src/models/dial/toolset';
 import { IconPlus } from '@tabler/icons-react';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-import { generateUniqueName } from '../utils';
+import { generateUniqueName, getCustomToolErrorType } from './utils';
 import ToolSwitcher from './ToolSwitcher';
 import AddNewTool from './AddNewTool';
-import ToolContent from '../Tool/ToolContent';
+import ToolContent from '@/src/components/Tools/Tool/ToolContent';
 import { ErrorType } from '@/src/types/error-type';
 import { CustomToolConfig, ToolConfig } from './types';
+import { defaultToolName } from './constants';
 
 interface Props {
   isModalOpen: boolean;
@@ -41,15 +42,16 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalToolset, onCl
     }));
   });
   const [customToolsConfig, setCustomToolsConfig] = useState<CustomToolConfig[]>(() => {
-    return (originalToolset.allowedTools || [])
-      .filter((toolName) => {
-        return !tools.some((tool) => tool.name === toolName);
-      })
-      .map((toolName) => ({
-        name: toolName,
-        isAllowed: true,
-        error: null,
-      }));
+    return (originalToolset.allowedTools || []).reduce((acc, curr) => {
+      if (!tools.some((tool) => tool.name === curr)) {
+        acc.push({
+          name: curr,
+          isAllowed: true,
+          error: null,
+        });
+      }
+      return acc;
+    }, [] as CustomToolConfig[]);
   });
   const [pattern, setPattern] = useState<string>('');
   const [activeToolIndex, setActiveToolIndex] = useState<number | null>(null);
@@ -73,30 +75,21 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalToolset, onCl
   const validateCustomToolNames = useCallback(
     (newCustomToolsConfig: CustomToolConfig[]) => {
       const customToolNames = newCustomToolsConfig.map((tool) => tool.name);
-      const allToolNames = [...toolNames, ...customToolNames];
       let isCustomToolsValid = true;
+
       newCustomToolsConfig.forEach((customTool) => {
-        const allTools = [...allToolNames];
-        const currentToolIndex = allTools.findIndex((tool) => tool === customTool.name);
-        if (currentToolIndex !== -1) {
-          allTools.splice(currentToolIndex, 1);
-        }
-        if (!customTool.name) {
-          customTool.error = {
-            type: ErrorType.EMPTY,
-            text: t(ErrorI18nKey.EmptyField),
-          };
+        const errorType = getCustomToolErrorType(customTool.name, [...toolNames, ...customToolNames]);
+        if (errorType) {
           isCustomToolsValid = false;
-        } else if (allTools.includes(customTool.name)) {
           customTool.error = {
-            type: ErrorType.EXISTING,
-            text: t(ErrorI18nKey.Unique),
+            type: errorType,
+            text: errorType === ErrorType.EMPTY ? t(ErrorI18nKey.EmptyField) : t(ErrorI18nKey.Unique),
           };
-          isCustomToolsValid = false;
         } else {
           customTool.error = null;
         }
       });
+
       setIsValid(isCustomToolsValid);
       setCustomToolsConfig(newCustomToolsConfig);
     },
@@ -119,7 +112,10 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalToolset, onCl
   );
 
   const addNewCustomTool = useCallback(() => {
-    const customToolName = generateUniqueName(customToolsConfig.map((tool) => tool.name));
+    const customToolName = generateUniqueName(
+      customToolsConfig.map((tool) => tool.name),
+      defaultToolName,
+    );
     setCustomToolsConfig([...customToolsConfig, { name: customToolName, isAllowed: true, error: null }]);
     setActiveCustomToolIndex(customToolsConfig.length);
     setActiveToolIndex(null);
