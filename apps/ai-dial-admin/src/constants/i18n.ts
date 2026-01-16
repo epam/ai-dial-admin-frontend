@@ -147,6 +147,7 @@ export enum EntitiesI18nKey {
   NoInterceptorTemplates = 'Entities.NoInterceptorTemplates',
   NoToolsets = 'Entities.NoToolsets',
   NoTools = 'Entities.NoTools',
+  NoInputs = 'Entities.NoInputs',
   NoDependencies = 'Entities.NoDependencies',
   NoConfigurationSchema = 'Entities.NoConfigurationSchema',
   AddModel = 'Entities.AddModel',
