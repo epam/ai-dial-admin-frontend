@@ -18,7 +18,7 @@ export const getToolsetSignInBody = (
 
 export const getToolsetBasicBody = (toolset: Toolset, level: ToolsetAuthCredentialLevel) => {
   return {
-    url: (toolset as AssetToolset).path ? `toolsets/${toolset as AssetToolset}` : toolset.name,
+    url: (toolset as AssetToolset).path ? `toolsets/${(toolset as AssetToolset).path}` : toolset.name,
     credentialsLevel: level,
     authenticationType: toolset.authSettings?.authenticationType,
   };
