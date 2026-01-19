@@ -14,6 +14,7 @@ interface Props<T> {
   names?: string[];
   isUrlId?: boolean;
   isUniqueNameError?: boolean;
+  isDeploymentId?: boolean;
   disabled?: boolean;
   onChangeEntity?: (entity: T) => void;
 }
@@ -25,6 +26,7 @@ const IdControl = <T extends { name?: string }>({
   names,
   isUrlId,
   isUniqueNameError,
+  isDeploymentId,
   disabled,
   onChangeEntity,
 }: Props<T>) => {
@@ -34,11 +36,13 @@ const IdControl = <T extends { name?: string }>({
 
   const validateName = useCallback(
     (name?: string) => {
-      const error = isUrlId ? getErrorForUrlId(name, names, t) : getErrorForName(name, names, t, isUniqueNameError);
+      const error = isUrlId
+        ? getErrorForUrlId(name, names, t)
+        : getErrorForName(name, names, t, isUniqueNameError, true, false, isDeploymentId);
       setNameError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !error });
     },
-    [dispatch, isUniqueNameError, isUrlId, names, t],
+    [dispatch, isDeploymentId, isUniqueNameError, isUrlId, names, t],
   );
 
   const onChangeName = useCallback(
