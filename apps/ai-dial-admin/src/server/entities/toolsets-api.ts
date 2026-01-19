@@ -13,7 +13,7 @@ export const CORE_TOOLSET_URL = (name: string) => `${TOOLSETS_URL}/core/${name}`
 export const TOOLS_URL = (name: string) => `${TOOLSET_URL(name)}/discovered-tools`;
 export const TOOLS_TRY_OUT_URL = (name: string) => `${TOOLSET_URL(name)}/call-tool`;
 export const TOOLSET_SIGN_IN_URL = `${TOOLSETS_URL}/sign-in`;
-export const TOOLSET_SIGN_OUT_URL = `${TOOLSETS_URL}/call-tool`;
+export const TOOLSET_SIGN_OUT_URL = `${TOOLSETS_URL}/sign-out`;
 
 export class ToolsetsApi extends BaseApi {
   getToolsetList(token: JWT | null): Promise<Toolset[] | null> {
