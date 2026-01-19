@@ -65,14 +65,14 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
       },
     ];
 
-    if (enableExportConfigMap) {
+    if (enableExportConfigMap && selectedExportType !== ExportType.Custom) {
       formats.push({
         id: ExportFormat.ACTIVE_CONFIG,
         name: t(ExportI18nKey.ActiveConfig),
       });
     }
     return formats;
-  }, [enableExportConfigMap, t]);
+  }, [enableExportConfigMap, t, selectedExportType]);
 
   const exportRequest = useMemo(() => {
     return {
@@ -90,6 +90,9 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
 
   const onChangeExportFormat = useCallback((key: string) => {
     setSelectedExportFormat(key as ExportFormat);
+    if (key === ExportFormat.ACTIVE_CONFIG) {
+      setSelectedExportType(ExportType.Full);
+    }
   }, []);
 
   const onExport = useCallback(
