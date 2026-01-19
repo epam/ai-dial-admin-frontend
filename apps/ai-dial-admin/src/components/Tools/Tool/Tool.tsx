@@ -25,6 +25,7 @@ const Tool: FC<Props> = ({ tool, isAddedManual, isMcpToolset, isAssetToolset, to
           isAssetToolset={isAssetToolset}
         />
       }
+      containerClassName="px-4 py-2"
     >
       <ToolContent tool={tool} />
     </Accordion>
