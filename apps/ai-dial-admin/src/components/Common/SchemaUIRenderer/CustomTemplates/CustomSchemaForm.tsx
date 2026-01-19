@@ -1,16 +1,17 @@
 import { withTheme } from '@rjsf/core';
 
-import { ArrayFieldTemplate } from '@/src/components/Common/SchemaUIRenderer/CustomTemplates/ArrayFieldTeplate';
-import { ObjectFieldTemplate } from '@/src/components/Common/SchemaUIRenderer/CustomTemplates/ObjectFieldTemplate';
 import AnyOfField from './AnyOfField';
+import { ArrayFieldItemTemplate } from './ArrayFieldItemTemplate';
+import { ArrayFieldTemplate } from './ArrayFieldTemplate';
 import { CheckboxWidget } from './CheckboxWidget';
 import { FieldTemplate } from './FieldTemplate';
+import { ObjectFieldTemplate } from './ObjectFieldTemplate';
 import { PasswordWidget } from './PasswordWidget';
+import { SelectWidget } from './SelectWidget';
 import { TextWidget } from './TextWidget';
 import { TitleTemplate } from './TitleTemplate';
 import { URLWidget } from './UrlWidget';
 import { WrapIfAdditionalTemplate } from './WrapIfAdditionalTemplate';
-import { SelectWidget } from './SelectWidget';
 
 export const Theme = {
   templates: {
@@ -19,6 +20,7 @@ export const Theme = {
     ArrayFieldTemplate,
     FieldTemplate,
     WrapIfAdditionalTemplate,
+    ArrayFieldItemTemplate,
   },
   widgets: { TextWidget, URLWidget, SelectWidget, CheckboxWidget, PasswordWidget },
   fields: { AnyOfField, OneOfField: AnyOfField },
