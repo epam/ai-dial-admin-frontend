@@ -1091,6 +1091,7 @@ export default {
     VariableStartError: 'Name must start with a letter or underscore',
     HFModelName: 'Invalid Hugging Face model name.',
     ContainSpace: 'Field must not contain spaces.',
+    AllowedChars: 'Field must contain only lowercase Latin letters, numbers and hyphens',
   },
   Source: {
     OpenTemplate: 'Open template',
