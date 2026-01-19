@@ -55,7 +55,14 @@ const BaseFields: FC<Props> = ({ container, setContainer, names, isModal }) => {
 
   return (
     <div className="flex flex-col gap-8">
-      {isModal && <IdControl entity={container} onChangeEntity={onChangeName} isUniqueNameError={isUniqueNameError} />}
+      {isModal && (
+        <IdControl
+          entity={container}
+          onChangeEntity={onChangeName}
+          isUniqueNameError={isUniqueNameError}
+          isDeploymentId={true}
+        />
+      )}
       <DisplayNameControl displayName={container.displayName} required={true} onChange={onChangeDisplayName} />
       <DescriptionControl entity={container} onChangeEntity={setContainer} isFullWidth={isModal} />
       {!isModal && <Maintainer entity={container} onChangeEntity={setContainer} />}

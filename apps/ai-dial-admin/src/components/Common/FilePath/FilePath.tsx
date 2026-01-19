@@ -24,7 +24,6 @@ interface Props {
 
 const FilePath: FC<Props> = ({ label, placeholder, disabled, value, modalTitle, onChange, context }) => {
   const t = useI18n();
-  const [filePath, setFilePath] = useState(value);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const onInputChange = (event: ChangeEvent<HTMLInputElement>): void => {
@@ -32,7 +31,6 @@ const FilePath: FC<Props> = ({ label, placeholder, disabled, value, modalTitle, 
   };
 
   const onPathChange = (value: string) => {
-    setFilePath(value);
     onChange(value);
   };
 
@@ -54,7 +52,7 @@ const FilePath: FC<Props> = ({ label, placeholder, disabled, value, modalTitle, 
           <input
             disabled={disabled}
             type="text"
-            value={filePath}
+            value={value}
             onChange={onInputChange}
             placeholder={placeholder}
             className="dial-input dial-input-field py-2 px-3"

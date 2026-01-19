@@ -36,14 +36,14 @@ const BaseFields: FC<Props> = ({ image, setImage, isModal, setImageVersions }) =
     dispatch({
       type: ValidationActionType.SetField,
       field: 'name',
-      isValid: !!image.name,
+      isValid: !getErrorForName(image.name, [], t, false, false),
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (resetCounter || (image.name != null && image.name.length > 0)) {
-      const error = getErrorForName(image.name, [], t);
+      const error = getErrorForName(image.name, [], t, false, false);
       setNameError(error);
       dispatch({
         type: ValidationActionType.SetField,
@@ -104,7 +104,7 @@ const BaseFields: FC<Props> = ({ image, setImage, isModal, setImageVersions }) =
             field: 'version',
             isValid: false,
           });
-          const error = getErrorForName(name, [], t);
+          const error = getErrorForName(name, [], t, false, false);
           dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !error });
           setNameError(error);
           verifyVersion(name, error);
