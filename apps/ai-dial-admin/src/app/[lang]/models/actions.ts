@@ -57,7 +57,7 @@ export async function createModel(model: DialModel) {
       type,
       source: {
         ...model.source,
-        completionEndpointPath: `${model.name}${getEndpointPostfix(type)}`,
+        completionEndpointPath: model.source?.completionEndpointPath ?? `${model.name}${getEndpointPostfix(type)}`,
       } as SOURCE_FIELD,
     },
     token,
