@@ -66,7 +66,7 @@ export const getErrorForName = (
 
   if (checkForbiddenChars) {
     if (isDeploymentId) {
-      if (!name?.match(/^[a-z0-9-_]+$/)) {
+      if (!name?.match(/^[a-z0-9-]+$/)) {
         return {
           type: ErrorType.INVALID,
           text: t ? tWithArgs(ErrorI18nKey.AllowedChars) : '',
