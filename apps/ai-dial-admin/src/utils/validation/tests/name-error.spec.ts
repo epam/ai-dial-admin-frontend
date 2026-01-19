@@ -176,6 +176,15 @@ describe('getErrorForName', () => {
       text: 'Translated Text',
     });
   });
+
+  test('Should return INVALID error for deployment id with invalid chars', () => {
+    const res = getErrorForName('test_id', [], mockT, false, true, false, true);
+
+    expect(res).toEqual({
+      type: ErrorType.INVALID,
+      text: 'Translated Text',
+    });
+  });
 });
 
 describe('getErrorForDisplayName', () => {

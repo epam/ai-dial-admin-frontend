@@ -36,6 +36,7 @@ export const SelectWidget: FC<WidgetProps> = ({
         value={selectedIndexes === void 0 ? emptyValue : selectedIndexes}
         onChange={handleChange}
         className="max-w-[600px]"
+        listClassName="w-[600px]"
       />
     </div>
   );
