@@ -47,7 +47,7 @@ export class ToolsetsApi extends BaseApi {
   }
 
   signOutToolset(toolset: Toolset, type: ToolsetAuthCredentialLevel, token: JWT | null) {
-    return this.postAction(TOOLSET_SIGN_IN_URL, getToolsetBasicBody(toolset, type), token);
+    return this.postAction(TOOLSET_SIGN_OUT_URL, getToolsetBasicBody(toolset, type), token);
   }
 
   removeToolset(token: JWT | null, name?: string): Promise<ServerActionResponse> {
