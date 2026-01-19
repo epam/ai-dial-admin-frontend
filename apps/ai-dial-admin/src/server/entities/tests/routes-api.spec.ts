@@ -1,5 +1,5 @@
 import { DialRoute } from '@/src/models/dial/route';
-import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
+import { RESPONSE_MOCK, TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 import { RoutesApi, ROUTES_URL } from '../routes-api';
@@ -41,8 +41,7 @@ describe('Server :: RoutesApi', () => {
   });
 
   test('Should calls createRoute', async () => {
-    const mockResponse = { success: true };
-    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.createRoute(mockRoute, TOKEN_MOCK);
 
@@ -57,8 +56,7 @@ describe('Server :: RoutesApi', () => {
 
   test('Should call updateRoute', async () => {
     const updatedRoute = { ...mockRoute, description: 'Updated' };
-    const mockResponse = { success: true };
-    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.updateRoute(updatedRoute, TOKEN_MOCK, 'etag123');
 
@@ -73,8 +71,7 @@ describe('Server :: RoutesApi', () => {
 
   test('Should call updateRoute', async () => {
     const updatedRoute = { ...mockRoute, description: 'Updated' };
-    const mockResponse = { success: true };
-    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.updateRoute({ ...updatedRoute, name: void 0 }, TOKEN_MOCK, 'etag123');
 
@@ -88,8 +85,7 @@ describe('Server :: RoutesApi', () => {
   });
 
   test('Should update core route', async () => {
-    const mockResponse = { success: true };
-    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     const updatedRoute = { ...mockRoute, description: 'Updated' };
     await instance.updateCoreRoute(updatedRoute, 'route', 'etag123', TOKEN_MOCK);
@@ -104,8 +100,7 @@ describe('Server :: RoutesApi', () => {
   });
 
   test('Should calls a core route by name', async () => {
-    const mockResponse = { success: true };
-    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.getCoreRoute('admin', TOKEN_MOCK);
 
@@ -116,8 +111,7 @@ describe('Server :: RoutesApi', () => {
   });
 
   test('Should call removeRoute', async () => {
-    const mockResponse = { success: true };
-    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.removeRoute(TOKEN_MOCK, 'route-1');
 
