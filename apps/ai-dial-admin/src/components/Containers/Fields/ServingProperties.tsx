@@ -9,6 +9,7 @@ import ModelSourceFields from '@/src/components/Containers/Fields/ModelSourceFie
 import EnvVariables from '@/src/components/Containers/Fields/EnvVariables/EnvVariables';
 import ResourcesFields from '@/src/components/Containers/Fields/Resources/ResourcesFields';
 import EndpointConfiguration from '@/src/components/Containers/Fields/EndpointConfiguration/EndpointConfiguration';
+import Configuration from '@/src/components/Containers/Fields/Configuration/Configuration';
 
 interface Props {
   container: Container;
@@ -32,6 +33,7 @@ const ServingProperties: FC<Props> = ({ container, setContainer, names, isModal,
           <EndpointConfiguration container={container} setContainer={setContainer} route={route} />
           <EnvVariables container={container} setContainer={setContainer} />
           <ResourcesFields container={container} setContainer={setContainer} route={route} />
+          <Configuration container={container} setContainer={setContainer} />
         </div>
       )}
     </div>

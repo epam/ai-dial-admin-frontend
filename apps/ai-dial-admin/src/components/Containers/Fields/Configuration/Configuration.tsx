@@ -1,0 +1,43 @@
+import { FC } from 'react';
+import { DialTextInputField } from '@epam/ai-dial-ui-kit';
+
+import { Container } from '@/src/models/deployments/containers';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
+
+import Accordion from '@/src/components/Common/Accordion/Accordion';
+
+interface Props {
+  container: Container;
+  setContainer: (container: Container) => void;
+}
+
+const Configuration: FC<Props> = ({ container, setContainer }) => {
+  const t = useI18n();
+
+  return (
+    <Accordion title={t(EntityFieldsI18nKey.Configuration)}>
+      <div className="flex flex-col gap-6">
+        <DialTextInputField
+          elementId={'command'}
+          fieldTitle={t(EntityFieldsI18nKey.Command)}
+          value={container.command}
+          onChange={(command?: string) => setContainer({ ...container, command })}
+          placeholder={t(EntityPlaceholdersI18nKey.Command)}
+          optional={true}
+        />
+
+        <DialTextInputField
+          elementId={'args'}
+          fieldTitle={t(EntityFieldsI18nKey.Arguments)}
+          value={container.args}
+          onChange={(args?: string) => setContainer({ ...container, args })}
+          placeholder={t(EntityPlaceholdersI18nKey.Arguments)}
+          optional={true}
+        />
+      </div>
+    </Accordion>
+  );
+};
+
+export default Configuration;
