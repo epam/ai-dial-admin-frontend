@@ -17,18 +17,33 @@ const StatusText: FC<Props> = ({ status }) => {
 
   return (
     <>
+      {status === EntitySyncStatus.FULLY_SYNCED && (
+        <>
+          <div className="w-[10px] h-[10px] rounded-full bg-accent-secondary"></div>
+          <DialTooltip tooltip={t(CoreSyncI18nKey.Synced)}>
+            <span>{t(CoreSyncI18nKey.Synced)}</span>
+          </DialTooltip>
+        </>
+      )}
       {status === EntitySyncStatus.IN_PROGRESS && (
         <>
           <IconLoader {...BASE_BUTTON_ICON_PROPS} />
           <span>{t(CoreSyncI18nKey.InProgress)}</span>
         </>
       )}
-
       {status === EntitySyncStatus.IN_PROGRESS_TOO_LONG && (
         <>
           <div className="w-[10px] h-[10px] rounded-full bg-orange-400"></div>
           <DialTooltip tooltip={t(CoreSyncI18nKey.Partially)}>
             <span>{t(CoreSyncI18nKey.Partially)}</span>
+          </DialTooltip>
+        </>
+      )}
+      {status === EntitySyncStatus.UNKNOWN && (
+        <>
+          <div className="w-[10px] h-[10px] rounded-full bg-secondary"></div>
+          <DialTooltip tooltip={t(CoreSyncI18nKey.Unknown)}>
+            <span>{t(CoreSyncI18nKey.Unknown)}</span>
           </DialTooltip>
         </>
       )}
