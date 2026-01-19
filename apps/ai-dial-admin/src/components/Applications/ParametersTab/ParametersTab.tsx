@@ -209,15 +209,17 @@ const ApplicationParametersTab: FC<Props> = ({
           {!scheme || !scheme?.properties || !Object.keys(scheme.properties).length ? (
             <DialNoDataContent title={t(EntitiesI18nKey.NoConfigurationSchema)} />
           ) : (
-            <SchemaUiRenderer
-              schema={scheme as RJSFSchema}
-              data={entity?.applicationProperties}
-              onChangeConfiguration={onChangeConfiguration}
-              onGetSchemeDefaults={onGetSchemeDefaults}
-              readonly={
-                view === ApplicationRoute.ApplicationPublications || view === ApplicationRoute.ApplicationRunners
-              }
-            />
+            <div className="flex-1 min-h-0 p-4 bg-layer-0">
+              <SchemaUiRenderer
+                schema={scheme as RJSFSchema}
+                data={entity?.applicationProperties}
+                onChangeConfiguration={onChangeConfiguration}
+                onGetSchemeDefaults={onGetSchemeDefaults}
+                readonly={
+                  view === ApplicationRoute.ApplicationPublications || view === ApplicationRoute.ApplicationRunners
+                }
+              />
+            </div>
           )}
         </div>
         {paramsView === ParamsView.UI && (
