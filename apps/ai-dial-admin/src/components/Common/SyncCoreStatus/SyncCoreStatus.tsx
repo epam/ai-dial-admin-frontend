@@ -30,20 +30,19 @@ const CoreSyncEntityStatus: FC<Props> = ({ view, name }) => {
   const [coreSyncStatus, setCoreSyncStatus] = useState<CoreSyncStatus | undefined>();
   const [etag, setEtag] = useState<string>(DEFAULT_ETAG);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const showStatus = useMemo(() => {
-    return (
-      coreSyncStatus &&
-      coreSyncStatus.status &&
-      (coreSyncStatus.status === EntitySyncStatus.IN_PROGRESS ||
-        coreSyncStatus.status === EntitySyncStatus.IN_PROGRESS_TOO_LONG)
-    );
-  }, [coreSyncStatus]);
 
   const validStatus = useMemo(() => {
     return (
       coreSyncStatus?.status === EntitySyncStatus.IN_PROGRESS_TOO_LONG ||
       coreSyncStatus?.status === EntitySyncStatus.FULLY_SYNCED ||
       coreSyncStatus?.status === EntitySyncStatus.UNKNOWN
+    );
+  }, [coreSyncStatus?.status]);
+
+  const diffStatus = useMemo(() => {
+    return (
+      coreSyncStatus?.status === EntitySyncStatus.IN_PROGRESS_TOO_LONG ||
+      coreSyncStatus?.status === EntitySyncStatus.IN_PROGRESS
     );
   }, [coreSyncStatus?.status]);
 
@@ -80,14 +79,16 @@ const CoreSyncEntityStatus: FC<Props> = ({ view, name }) => {
   }, [resetCounter]);
 
   return (
-    <div className={classNames(showStatus ? 'block' : 'hidden')}>
+    <div className={classNames(coreSyncStatus?.status ? 'block' : 'hidden')}>
       <LabelledText label={t(CoreSyncI18nKey.SyncWithCore)}>
         <div className="flex flex-row gap-x-2 items-center">
           <StatusText status={coreSyncStatus?.status} />
-          <DialButton
-            iconAfter={<OpenPopup {...BASE_BUTTON_ICON_PROPS} className="cursor-pointer text-secondary" />}
-            onClick={() => setIsModalOpen(true)}
-          />
+          {diffStatus && (
+            <DialButton
+              iconAfter={<OpenPopup {...BASE_BUTTON_ICON_PROPS} className="cursor-pointer text-secondary" />}
+              onClick={() => setIsModalOpen(true)}
+            />
+          )}
         </div>
         {isModalOpen &&
           createPortal(
