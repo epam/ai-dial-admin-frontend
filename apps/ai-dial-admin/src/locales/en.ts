@@ -981,6 +981,8 @@ export default {
     globalInterceptors: 'Global Interceptors',
     HFModelName: 'Hugging Face model name',
     Resources: 'Resources',
+    Configuration: 'Configuration',
+    Command: 'Command',
     EnvironmentVariables: 'Environment Variables',
     EndpointConfiguration: 'Endpoint Configuration',
     ToolName: 'Tool name',
@@ -1043,6 +1045,8 @@ export default {
     BaseDirectory: 'Enter the directory path containing Dockerfile',
     ContainerPort: 'Enter port',
     ContainerEndpointPath: 'Enter container endpoint path',
+    Arguments: 'e.g. --arg1 value1 --arg2 value2',
+    Command: 'e.g. /path/to/executable --option',
   },
   Error: {
     ServerError: 'Server Error',
