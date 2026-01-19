@@ -41,6 +41,7 @@ export const CheckboxWidget: FC<WidgetProps> = ({ value, onChange, label, schema
       {label && <WidgetHeader title={label} defaultHeader={true} description={schema.description} />}
       <DialSelect
         className="max-w-[200px]"
+        listClassName="w-[200px]"
         options={booleans || []}
         value={boolValue}
         onChange={(value) => onChange(value === BooleanType.true)}
