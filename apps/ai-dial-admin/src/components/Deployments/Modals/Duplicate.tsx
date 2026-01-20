@@ -1,62 +1,81 @@
-import { FC, useEffect, useState } from 'react';
-import { DialPrimaryButton, DialNeutralButton, DialPopup, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { FC, useCallback, useEffect, useState } from 'react';
+import { DialFormPopup } from '@epam/ai-dial-ui-kit';
+
+import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { Container } from '@/src/models/deployments/containers';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
-import { BasicI18nKey, ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { FieldError } from '@/src/models/error';
-import { getErrorForName } from '@/src/utils/validation/name-error';
+
+import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
+import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
 
 interface Props {
   title: string;
   isModalOpen: boolean;
-  currentName: string;
+  container: Container;
   onClose: () => void;
-  onApply: (name: string) => void;
+  onApply: (name: Container) => void;
   names: string[];
 }
 
-const DuplicateModal: FC<Props> = ({ title, isModalOpen, currentName, onClose, onApply, names }) => {
+const DuplicateModal: FC<Props> = ({ title, isModalOpen, container, onClose, onApply, names }) => {
   const t = useI18n();
-  const [name, setName] = useState(`${currentName} ${t(BasicI18nKey.DuplicateCopyPostfix)}`);
-  const [nameError, setNameError] = useState<FieldError | null>(null);
+  const { dispatch, isValid } = useSaveValidationContext();
+
+  const [duplicate, setDuplicate] = useState<Container>({
+    ...container,
+    name: `${container.name}-copy`,
+    displayName: `${container.displayName} ${t(BasicI18nKey.DuplicateCopyPostfix)})`,
+  });
+  const [isUniqueNameError, setIsUniqueNameError] = useState<boolean>(false);
+
+  const onChangeName = useCallback(
+    (container: Container) => {
+      const error = names?.includes(container.name);
+      dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !error });
+      setIsUniqueNameError(!!error);
+      setDuplicate(container);
+    },
+    [dispatch, names, setDuplicate],
+  );
+
+  const onChangeDisplayName = useCallback(
+    (displayName?: string) => {
+      setDuplicate({ ...duplicate, displayName: displayName || '' });
+    },
+    [duplicate, setDuplicate],
+  );
 
   useEffect(() => {
-    setNameError(getErrorForName(name, names, t));
-  }, [name, names, t]);
+    const error = names?.includes(duplicate.name);
+    dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !error });
+    setIsUniqueNameError(!!error);
+  }, [duplicate.name, dispatch, names, t]);
 
   return (
-    <DialPopup
+    <DialFormPopup
       onClose={onClose}
       header={title}
-      portalId="DuplicateImageModal"
+      portalId="DuplicateContainerModal"
       open={isModalOpen}
       className="flex flex-col lg:max-w-[55%] md:max-w-[75%]"
+      onSubmit={() => {
+        onApply(duplicate);
+        onClose();
+      }}
+      submitLabel={t(ButtonsI18nKey.Duplicate)}
+      disableSubmitButton={!isValid}
     >
-      <div className="flex flex-col h-full overflow-auto px-6 py-4">
-        <DialTextInputField
-          elementId="name"
-          fieldTitle={t(EntityFieldsI18nKey.name)}
-          placeholder={t(EntityPlaceholdersI18nKey.Name)}
-          value={name}
-          errorText={nameError?.text}
-          invalid={!!nameError}
-          onChange={(name?: string) => {
-            setNameError(getErrorForName(name, names, t));
-            setName(name as string);
-          }}
+      <div className="flex flex-col h-full overflow-auto px-6 py-4 gap-4">
+        <IdControl
+          entity={duplicate}
+          onChangeEntity={onChangeName}
+          isUniqueNameError={isUniqueNameError}
+          isDeploymentId={true}
         />
+        <DisplayNameControl displayName={duplicate.displayName} required={true} onChange={onChangeDisplayName} />
       </div>
-      <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialPrimaryButton
-          label={t(ButtonsI18nKey.Duplicate)}
-          onClick={() => {
-            onApply(name);
-            onClose();
-          }}
-          disabled={!!nameError}
-        />
-      </div>
-    </DialPopup>
+    </DialFormPopup>
   );
 };
 
