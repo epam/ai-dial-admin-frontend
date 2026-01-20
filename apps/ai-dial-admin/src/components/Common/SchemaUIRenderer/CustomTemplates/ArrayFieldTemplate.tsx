@@ -1,9 +1,8 @@
 import { FC } from 'react';
 
-import { DialGhostButton, DialRemoveButton } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton } from '@epam/ai-dial-ui-kit';
 import type { ArrayFieldTemplateProps } from '@rjsf/utils';
 import { IconPlus } from '@tabler/icons-react';
-import classNames from 'classnames';
 
 import { WidgetHeader } from '@/src/components/Common/SchemaUIRenderer/Components/WidgetHeader';
 import { WidgetToggler } from '@/src/components/Common/SchemaUIRenderer/Components/WidgetToggler';
@@ -20,24 +19,12 @@ export const ArrayFieldTemplate: FC<ArrayFieldTemplateProps> = ({
   schema,
 }) => {
   const t = useI18n();
-
   return (
     <WidgetToggler title={title}>
       <fieldset className="flex flex-col py-6 pl-6 gap-3 bg-layer-1 w-full">
         {title && <WidgetHeader title={title} defaultHeader={true} description={schema.description} />}
 
-        <ul className="flex flex-col w-full gap-3">
-          {items.map((item, key) => {
-            const { children, hasRemove, onDropIndexClick, schema } = item;
-            const isString = schema.type === 'string';
-            return (
-              <li key={key} className={classNames('flex w-full gap-3 items-start', isString && 'lg:w-[45%]')}>
-                {children}
-                {hasRemove && !readonly && <DialRemoveButton onClick={onDropIndexClick(key)} />}
-              </li>
-            );
-          })}
-        </ul>
+        <ul className="flex flex-col w-full gap-3">{items.map((item) => item)}</ul>
 
         {canAdd && !readonly && (
           <DialGhostButton

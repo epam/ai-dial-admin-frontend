@@ -70,6 +70,8 @@ export enum CoreSyncI18nKey {
   InProgress = 'CoreSync.InProgress',
   Partially = 'CoreSync.Partially',
   Fully = 'CoreSync.Fully',
+  Synced = 'CoreSync.Synced',
+  Unknown = 'CoreSync.Unknown',
   Format = 'CoreSync.Format',
   Core = 'CoreSync.Core',
   Admin = 'CoreSync.Admin',
@@ -839,6 +841,7 @@ export enum ErrorI18nKey {
   VariableStartError = 'Error.VariableStartError',
   HFModelName = 'Error.HFModelName',
   ContainSpace = 'Error.ContainSpace',
+  AllowedChars = 'Error.AllowedChars',
 }
 
 export enum SourceI18nKey {

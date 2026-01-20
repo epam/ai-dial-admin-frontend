@@ -45,6 +45,7 @@ export const getErrorForName = (
   isUniqueNameError?: boolean,
   checkForbiddenChars = true,
   isDisplayName = false,
+  isDeploymentId = false,
 ) => {
   const isIncludesName = name && names?.includes(name);
   if (isIncludesName || isUniqueNameError) {
@@ -64,6 +65,14 @@ export const getErrorForName = (
   }
 
   if (checkForbiddenChars) {
+    if (isDeploymentId) {
+      if (!name?.match(/^[a-z0-9-]+$/)) {
+        return {
+          type: ErrorType.INVALID,
+          text: t ? tWithArgs(ErrorI18nKey.AllowedChars) : '',
+        };
+      }
+    }
     const hasForbiddenChars = hasInvalidCharacters(name);
     if (hasForbiddenChars) {
       return {

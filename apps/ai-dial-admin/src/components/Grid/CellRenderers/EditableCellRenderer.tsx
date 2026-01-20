@@ -45,14 +45,14 @@ const EditableCellRenderer = ({
     return inputValue === UNLIMITED_VALUE || inputValue === UNLIMITED_ACCEPTED_USERS || showMaxValue;
   }, [inputValue, showMaxValue]);
 
-  const showTriangle = useMemo(() => {
-    const value = !inputValue || isMaxValue ? void 0 : inputValue;
-    return getDefaultPlaceholder ? value : defaultValue !== value;
-  }, [defaultValue, getDefaultPlaceholder, inputValue, isMaxValue]);
-
   const correctValue = useMemo(() => {
-    return !inputValue || isMaxValue ? '' : inputValue;
-  }, [inputValue, isMaxValue]);
+    return !inputValue || isMaxValue ? defaultValue || '' : inputValue;
+  }, [defaultValue, inputValue, isMaxValue]);
+
+  const showTriangle = useMemo(() => {
+    const value = !correctValue || isMaxValue ? void 0 : correctValue;
+    return getDefaultPlaceholder ? value : defaultValue != value;
+  }, [defaultValue, getDefaultPlaceholder, correctValue, isMaxValue]);
 
   const correctPlaceholder = useMemo(() => {
     return isMaxValue ? t(RolesI18nKey.Unlimited) : translatedPlaceholder;

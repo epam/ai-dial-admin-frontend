@@ -12,7 +12,7 @@ import { WidgetHeader } from '@/src/components/Common/SchemaUIRenderer/Component
 import { WidgetToggler } from '@/src/components/Common/SchemaUIRenderer/Components/WidgetToggler';
 
 export const ObjectFieldTemplate: FC<ObjectFieldTemplateProps> = (props) => {
-  const { title, properties, schema, uiSchema, formData, onAddClick, readonly } = props;
+  const { title, properties, schema, uiSchema, formData, readonly, onAddProperty } = props;
   const t = useI18n();
   const isRoot = schema['dial:applicationTypeDisplayName'] || schema.isRoot;
 
@@ -28,7 +28,7 @@ export const ObjectFieldTemplate: FC<ObjectFieldTemplateProps> = (props) => {
 
         {canExpand(schema, uiSchema, formData) && !readonly && (
           <DialGhostButton
-            onClick={onAddClick(schema)}
+            onClick={onAddProperty}
             label={t(ButtonsI18nKey.AddAdditionalProperties)}
             className="w-fit mt-2"
             iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
