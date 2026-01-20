@@ -1,19 +1,17 @@
 import { cookies, headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
 import { rolesApi, toolSetsApi } from '@/src/app/api/api';
-import Page403 from '@/src/components/Page403/Page403';
 import ToolsetView from '@/src/components/Toolsets/View/View';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
+import { DialRole } from '@/src/models/dial/role';
 import { Toolset } from '@/src/models/dial/toolset';
 import { errorObjLog } from '@/src/server/logger';
-import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
-import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { DialRole } from '@/src/models/dial/role';
 import { filterNames } from '@/src/utils/entities/filter-names';
-import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { isValueTruthy } from '@/src/utils/types';
+import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,15 +40,12 @@ export default async function Page(params: {
     const searchParams = await params.searchParams;
     oAuthCode = searchParams.code;
     isUser = isValueTruthy(searchParams.isUser);
-    if (toolSet === void 0 || toolSets === void 0 || roles === void 0) {
-      return <Page403 />;
-    }
   } catch (e) {
     errorObjLog(e, 'Failed to fetch toolSet view data');
   }
 
   if (toolSet == null) {
-    redirect(ApplicationRoute.Toolsets);
+    notFound();
   }
 
   const names = filterNames(toolSets, toolSet?.name);

@@ -1,19 +1,18 @@
 import { cookies, headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
 import { rolesApi, routesApi } from '@/src/app/api/api';
 import EntityView from '@/src/components/EntityView/View/EntityView';
-import { DialRoute } from '@/src/models/dial/route';
-import { ApplicationRoute } from '@/src/types/routes';
-import { getUserToken } from '@/src/utils/auth/auth-request';
-import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { getCoreRoute, removeRoute, updateCoreRoute, updateRoute } from '../actions';
-import { DialRole } from '@/src/models/dial/role';
-import { errorObjLog } from '@/src/server/logger';
-import Page403 from '@/src/components/Page403/Page403';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
+import { DialRole } from '@/src/models/dial/role';
+import { DialRoute } from '@/src/models/dial/route';
+import { errorObjLog } from '@/src/server/logger';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getUserToken } from '@/src/utils/auth/auth-request';
 import { filterNames } from '@/src/utils/entities/filter-names';
+import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { getCoreRoute, removeRoute, updateCoreRoute, updateRoute } from '../actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,16 +30,12 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
       return res?.response as DialRoute | null;
     });
     roles = (await rolesApi.getRolesList(token)) || [];
-
-    if (routes === void 0 || route === void 0 || roles === void 0) {
-      return <Page403 />;
-    }
   } catch (e) {
     errorObjLog(e, 'Failed to fetch route view data');
   }
 
   if (route == null) {
-    redirect(ApplicationRoute.Routes);
+    notFound();
   }
 
   const names = filterNames(routes, route?.name);

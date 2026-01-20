@@ -1,10 +1,9 @@
 import { cookies, headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
 import { getInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
 import { applicationRunnersApi, applicationsApi, interceptorsApi, modelsApi, utilityApi } from '@/src/app/api/api';
 import InterceptorView from '@/src/components/Interceptors/View/View';
-import Page403 from '@/src/components/Page403/Page403';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
@@ -14,7 +13,6 @@ import { DialModel } from '@/src/models/dial/model';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { errorObjLog } from '@/src/server/logger';
 import { InterceptorStatus } from '@/src/types/interceptor-status';
-import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { filterNames } from '@/src/utils/entities/filter-names';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -59,16 +57,12 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
         },
       );
     }
-
-    if (interceptors === void 0 || models === void 0 || applications === void 0 || interceptor === void 0) {
-      return <Page403 />;
-    }
   } catch (e) {
     errorObjLog(e, 'Failed to fetch interceptor view data');
   }
 
   if (interceptor == null) {
-    redirect(ApplicationRoute.Interceptors);
+    notFound();
   }
 
   const names = filterNames(interceptors, interceptor?.name);

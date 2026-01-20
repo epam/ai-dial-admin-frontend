@@ -5,7 +5,6 @@ import { ContainersI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import { getContainerPods } from '@/src/app/actions/deployments';
-import Page403 from '@/src/components/Page403/Page403';
 import LogViewer from '@/src/components/Common/LogViewer/LogViewer';
 import { getTranslatedDeploymentType } from '@/src/utils/deployments/entity';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -64,9 +63,6 @@ const ExecutionLog: FC<Props> = ({ containerId, route }) => {
     const fetchPods = async () => {
       if (containerId) {
         const data = await getContainerPods(containerId);
-        if (data === void 0) {
-          return <Page403 />;
-        }
         setPods(data || []);
       }
     };
