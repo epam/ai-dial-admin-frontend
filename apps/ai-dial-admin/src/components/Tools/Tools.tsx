@@ -70,6 +70,17 @@ const Tools: FC<Props> = ({
     return originalToolset?.endpoint !== selectedToolset?.endpoint;
   }, [originalToolset, selectedToolset]);
 
+  const manualAddedTools = useMemo(() => {
+    return (selectedToolset?.allowedTools || []).reduce((acc, curr) => {
+      if (!tools?.some((tool) => tool.name === curr)) {
+        acc.push({
+          name: curr,
+        });
+      }
+      return acc;
+    }, [] as Tool[]);
+  }, [tools, selectedToolset]);
+
   const onSelectAll = useCallback(() => {
     if (isEqual(filtersConfiguration, selectedFilters)) {
       setSelectedFilters([]);
@@ -96,6 +107,18 @@ const Tools: FC<Props> = ({
   const onCloseModal = useCallback(() => {
     setIsModalOpen(false);
   }, [setIsModalOpen]);
+
+  const onUseAllToolsSwitch = useCallback(
+    (value: boolean) => {
+      setUseAllTools(value);
+      const allAvailableToolNames = tools?.map((tool) => tool.name) || [];
+      onChangeToolset?.({
+        ...selectedToolset,
+        allowedTools: !value ? [] : [...allAvailableToolNames],
+      });
+    },
+    [onChangeToolset, tools, selectedToolset],
+  );
 
   useEffect(() => {
     if (selectedToolset?.name && !isMcpToolset) {
@@ -129,35 +152,44 @@ const Tools: FC<Props> = ({
   }, [isMcpToolset, containerId, showNotification]);
 
   useEffect(() => {
-    setUseAllTools(!selectedToolset?.allowedTools || selectedToolset?.allowedTools.length === 0);
-  }, [selectedToolset]);
-
-  useEffect(() => {
-    if (!tools?.length) return;
+    if (!tools?.length && !manualAddedTools?.length) {
+      setDisplayTools([]);
+      return;
+    }
 
     if (debounceTimeout.current) {
       clearTimeout(debounceTimeout.current);
     }
 
     debounceTimeout.current = setTimeout(() => {
+      const allTools = [...(tools || []), ...manualAddedTools];
+
       if (search.length) {
         const searchText = search.toLowerCase().trim();
 
         setDisplayTools(
           isMcpToolset
-            ? tools.filter(
+            ? allTools.filter(
                 (tool) =>
                   tool.name.toLowerCase().includes(searchText) ||
                   tool.description?.toLowerCase().includes(searchText) ||
                   JSON.stringify(tool.inputSchema?.properties)?.toLowerCase().includes(searchText) ||
                   JSON.stringify(tool.annotations)?.toLowerCase().includes(searchText),
               )
-            : getFilteredTools(selectedToolset?.allowedTools || [], selectedFilters, tools).filter(
-                (tool) => tool.name.toLowerCase().includes(searchText) && tool.name !== '',
-              ),
+            : getFilteredTools(
+                selectedToolset?.allowedTools || [],
+                useAllTools ? [...filtersConfiguration] : selectedFilters,
+                tools || [],
+              ).filter((tool) => tool.name.toLowerCase().includes(searchText) && tool.name !== ''),
         );
       } else {
-        setDisplayTools(tools);
+        setDisplayTools(
+          getFilteredTools(
+            selectedToolset?.allowedTools || [],
+            useAllTools ? [...filtersConfiguration] : selectedFilters,
+            tools || [],
+          ),
+        );
       }
     }, 300);
 
@@ -167,7 +199,7 @@ const Tools: FC<Props> = ({
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, tools]);
+  }, [search, tools, manualAddedTools, selectedFilters]);
 
   if (loading) {
     return <DialLoader size={40} />;
@@ -186,16 +218,7 @@ const Tools: FC<Props> = ({
             switchId="useAllTools"
             label={t(ToolsetI18nKey.UseAllTools)}
             isOn={useAllTools}
-            onChange={(value) =>
-              onChangeToolset?.({
-                ...selectedToolset,
-                allowedTools: value
-                  ? []
-                  : originalToolset?.allowedTools?.length
-                    ? [...originalToolset.allowedTools]
-                    : [''],
-              })
-            }
+            onChange={onUseAllToolsSwitch}
           />
         )}
       </div>
@@ -215,7 +238,7 @@ const Tools: FC<Props> = ({
               />
             </div>
           )}
-          {!readonly && !isMcpToolset && (
+          {!readonly && !isMcpToolset && !useAllTools && (
             <DialPrimaryButton
               label={t(ButtonsI18nKey.ManageTool)}
               iconBefore={<IconPencilMinus {...BASE_BUTTON_ICON_PROPS} />}
@@ -225,12 +248,12 @@ const Tools: FC<Props> = ({
         </div>
       </div>
 
-      {!tools?.length ? (
+      {!displayTools?.length ? (
         <div className="flex-1">
           <DialNoDataContent title={t(EntitiesI18nKey.NoTools)} />
         </div>
       ) : (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-1 flex-col gap-6">
           {displayTools?.map((tool, index) => {
             return (
               <ToolComponent
