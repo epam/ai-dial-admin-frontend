@@ -10,7 +10,6 @@ import { useI18n } from '@/src/locales/client';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useAppContext } from '@/src/context/AppContext';
 import { EntityViewTab, getDeploymentsViewTabs } from '@/src/utils/tabs/utils';
-import { JSONEditorError } from '@/src/types/editor';
 import { validateImageChanged } from '@/src/utils/deployments/images';
 import { getImage, updateImage } from '@/src/app/actions/deployments';
 import { getRouteByType, getTranslatedType } from '@/src/utils/deployments/entity';
@@ -26,6 +25,7 @@ import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor'
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { getViewHeaderClassName } from '@/src/utils/entities/view';
 import { Container } from '@/src/models/deployments/containers';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
   image: Image;
@@ -41,12 +41,12 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
   const router = useRouter();
   const { showNotification } = useNotification();
   const { disableDeploymentsJSONEditor } = useAppContext();
+  const { dispatch } = useSaveValidationContext();
 
   const [selectedImage, setSelectedImage] = useState<Image>(cloneDeep(image));
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
   const [isChanged, setIsChanged] = useState<boolean>(false);
-  const [jsonErrors, setJsonErrors] = useState<JSONEditorError[]>([]);
   const [key, setKey] = useState(0);
   const [imageVersions, setImageVersions] = useState<ImageVersion[]>(versions);
 
@@ -75,7 +75,7 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
 
   const onDiscard = useCallback(() => {
     if (jsonEditorEnabled) {
-      setJsonErrors([]);
+      dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
       setIsChanged(false);
       // TODO: Revisit solution
       // Due to we can't set invalid JSON as variable, we can't update entity in error state.
@@ -83,7 +83,7 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
       setKey((prevKey) => prevKey + 1);
     }
     setSelectedImage(cloneDeep(image));
-  }, [jsonEditorEnabled, image]);
+  }, [jsonEditorEnabled, image, dispatch]);
 
   const onSave = useCallback(() => {
     updateImage(selectedImage).then((res) => {
@@ -154,7 +154,6 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
             onDiscard={onDiscard}
             jsonEditorEnabled={jsonEditorEnabled}
             toggleJsonEditor={toggleJsonEditor}
-            jsonErrors={jsonErrors}
             hideJsonEditor={disableDeploymentsJSONEditor}
             imagesNames={imagesNames}
             containerNames={containerNames}
