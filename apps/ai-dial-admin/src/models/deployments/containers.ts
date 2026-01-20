@@ -30,6 +30,8 @@ export interface Container {
   };
   source?: SERVING_SOURCE;
   modelFormat?: string;
+  command?: string;
+  args?: string;
 }
 
 export interface Resource {

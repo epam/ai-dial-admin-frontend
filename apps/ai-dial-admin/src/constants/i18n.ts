@@ -70,6 +70,8 @@ export enum CoreSyncI18nKey {
   InProgress = 'CoreSync.InProgress',
   Partially = 'CoreSync.Partially',
   Fully = 'CoreSync.Fully',
+  Synced = 'CoreSync.Synced',
+  Unknown = 'CoreSync.Unknown',
   Format = 'CoreSync.Format',
   Core = 'CoreSync.Core',
   Admin = 'CoreSync.Admin',
@@ -839,6 +841,7 @@ export enum ErrorI18nKey {
   VariableStartError = 'Error.VariableStartError',
   HFModelName = 'Error.HFModelName',
   ContainSpace = 'Error.ContainSpace',
+  AllowedChars = 'Error.AllowedChars',
 }
 
 export enum SourceI18nKey {
@@ -925,6 +928,8 @@ export enum EntityPlaceholdersI18nKey {
   BaseDirectory = 'EntityPlaceholders.BaseDirectory',
   ContainerPort = 'EntityPlaceholders.ContainerPort',
   ContainerEndpointPath = 'EntityPlaceholders.ContainerEndpointPath',
+  Command = 'EntityPlaceholders.Command',
+  Arguments = 'EntityPlaceholders.Arguments',
 }
 
 export enum EntityFieldsI18nKey {
@@ -1079,6 +1084,8 @@ export enum EntityFieldsI18nKey {
   globalInterceptors = 'EntityFields.globalInterceptors',
   HFModelName = 'EntityFields.HFModelName',
   Resources = 'EntityFields.Resources',
+  Configuration = 'EntityFields.Configuration',
+  Command = 'EntityFields.Command',
   EnvironmentVariables = 'EntityFields.EnvironmentVariables',
   EndpointConfiguration = 'EntityFields.EndpointConfiguration',
   ToolName = 'EntityFields.ToolName',

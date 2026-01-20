@@ -36,10 +36,10 @@ const Accordion: FC<Props> = ({
   );
 
   return (
-    <div className={classNames('flex flex-col p-4 rounded border border-primary', containerClassName)}>
+    <div className={classNames('flex flex-col rounded border border-primary gap-4', containerClassName)}>
       {title && (
         <div className="flex flex-row justify-between">
-          <button className="flex items-center" onClick={toggleCollapse}>
+          <button className="flex p-4 items-center w-full" onClick={toggleCollapse}>
             {icon}
             <h3 className="mx-2">{title}</h3>
           </button>
@@ -52,7 +52,7 @@ const Accordion: FC<Props> = ({
           {cloneElement(header, { isCollapsed })}
         </div>
       )}
-      <div className={classNames('flex flex-col px-6 pt-4', isCollapsed && 'hidden', contentClassName)}>{children}</div>
+      <div className={classNames('flex flex-col px-6 pb-4', isCollapsed && 'hidden', contentClassName)}>{children}</div>
     </div>
   );
 };
