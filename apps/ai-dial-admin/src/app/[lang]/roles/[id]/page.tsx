@@ -1,22 +1,20 @@
 import { cookies, headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
 import { applicationsApi, keysApi, modelsApi, rolesApi, routesApi, toolSetsApi } from '@/src/app/api/api';
 import RolesView from '@/src/components/Roles/View/View';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialApplication } from '@/src/models/dial/application';
+import { DialKey } from '@/src/models/dial/key';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
-import { ApplicationRoute } from '@/src/types/routes';
-import { getUserToken } from '@/src/utils/auth/auth-request';
-import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { DialKey } from '@/src/models/dial/key';
-import { errorObjLog } from '@/src/server/logger';
-import Page403 from '@/src/components/Page403/Page403';
-import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
-import { filterNames } from '@/src/utils/entities/filter-names';
-import { DEFAULT_ETAG } from '@/src/constants/api-headers';
-import { Toolset } from '@/src/models/dial/toolset';
 import { DialRoute } from '@/src/models/dial/route';
+import { Toolset } from '@/src/models/dial/toolset';
+import { errorObjLog } from '@/src/server/logger';
+import { getUserToken } from '@/src/utils/auth/auth-request';
+import { filterNames } from '@/src/utils/entities/filter-names';
+import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,24 +42,12 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
       etag = res?.etag || DEFAULT_ETAG;
       return res?.response as DialApplication | null;
     });
-
-    if (
-      roles === void 0 ||
-      models === void 0 ||
-      keys === void 0 ||
-      applications === void 0 ||
-      role === void 0 ||
-      routes === void 0 ||
-      toolsets === void 0
-    ) {
-      return <Page403 />;
-    }
   } catch (e) {
     errorObjLog(e, 'Failed to fetch role view data');
   }
 
   if (role == null) {
-    redirect(ApplicationRoute.Roles);
+    notFound();
   }
 
   const names = filterNames(roles, role?.name);

@@ -1,14 +1,11 @@
 import { cookies, headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
 import { interceptorsApi, utilityApi } from '@/src/app/api/api';
-import Page403 from '@/src/components/Page403/Page403';
 import SystemProperties from '@/src/components/SystemProperties/SystemProperties';
-import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { errorObjLog } from '@/src/server/logger';
 import { getUserToken } from '@/src/utils/auth/auth-request';
-import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { GlobalSettings } from '@/src/models/system-properties';
@@ -16,9 +13,7 @@ import { GlobalSettings } from '@/src/models/system-properties';
 export const dynamic = 'force-dynamic';
 
 export default async function Page() {
-  const isEnableAuth = getIsEnableAuthToggle();
-  const token = await getUserToken(isEnableAuth, headers(), cookies());
-  const isInvalidSession = await getIsInvalidSession(isEnableAuth, token);
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
   let interceptors: DialInterceptor[] | null = [];
   let globalSettings: GlobalSettings | null = null;
@@ -30,16 +25,12 @@ export default async function Page() {
       etag = res?.etag || DEFAULT_ETAG;
       return res?.response as GlobalSettings;
     });
-
-    if (interceptors === void 0) {
-      return <Page403 />;
-    }
   } catch (e) {
     errorObjLog(e, 'Failed to fetch interceptors view data');
   }
 
-  if (isInvalidSession) {
-    return redirect(SIGN_IN_LINK);
+  if (globalSettings == null) {
+    notFound();
   }
 
   return <SystemProperties interceptors={interceptors || []} globalSettings={globalSettings} etag={etag} />;

@@ -26,6 +26,7 @@ export const EXPORT_CONFIG_MAP_URL = `${EXPORT_CONFIG_URL}/raw/core`;
 export const EXPORT_PREVIEW_CONFIG_URL = `${EXPORT_CONFIG_URL}/preview`;
 export const RELOAD_CONFIG_URL = `${CONFIG_URL}/sync/status`;
 export const DEPLOYMENT_URL = (name: string) => `${API}/deployments/${name}`;
+export const SECURITY_INFO_URL = `${API}/security-info`;
 
 export class UtilityApi extends BaseApi {
   getBeVersion(token: JWT | null): Promise<string | null> {
@@ -82,5 +83,9 @@ export class UtilityApi extends BaseApi {
 
   getEntitySyncStatus(url: string, token: JWT | null, etag: string): Promise<ServerActionResponse<CoreSyncStatus>> {
     return this.getActionWithMatchEtag(`${API}${url}`, etag, token);
+  }
+
+  getSecurityInfo(token: JWT | null): Promise<ServerActionResponse> {
+    return this.getAction(SECURITY_INFO_URL, token);
   }
 }

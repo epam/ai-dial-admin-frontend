@@ -1,9 +1,8 @@
 import { cookies, headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
 import { approvePublication, declinePublication } from '@/src/app/actions/publications';
 import { publicationsApi } from '@/src/app/api/api';
-import Page403 from '@/src/components/Page403/Page403';
 import PublicationView from '@/src/components/Publications/View/View';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { Publication } from '@/src/models/dial/publications';
@@ -21,15 +20,12 @@ export default async function Page(params: { searchParams: Promise<{ path: strin
 
   try {
     data = await publicationsApi.getPublication(token, (await params.searchParams).path);
-    if (data === void 0) {
-      return <Page403 />;
-    }
   } catch (e) {
     errorObjLog(e, 'Failed to fetch publication prompt view data');
   }
 
   if (data == null) {
-    redirect(ApplicationRoute.PromptPublications);
+    notFound();
   }
 
   return (

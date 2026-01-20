@@ -1,11 +1,16 @@
-import { Inter } from 'next/font/google';
-import { ReactNode } from 'react';
 import { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import { cookies, headers } from 'next/headers';
+import { ReactNode } from 'react';
+
 import classNames from 'classnames';
 
-import { getIconPath } from '@/src/utils/themes/icon-path';
-import { themesApi } from './api/api';
 import '@/src/app/[lang]/global.scss';
+import Page403 from '@/src/components/Page403/Page403';
+import { getUserToken } from '@/src/utils/auth/auth-request';
+import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { getIconPath } from '@/src/utils/themes/icon-path';
+import { themesApi, utilityApi } from './api/api';
 
 export const metadata: Metadata = {
   title: process.env.APP_NAME || 'AI Dial Admin',
@@ -19,6 +24,8 @@ const inter = Inter({
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const themesConfig = await themesApi.getThemesConfiguration();
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  const isSecure = await utilityApi.getSecurityInfo(token);
 
   return (
     <html>
@@ -35,7 +42,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           type="image/png"
         />
       </head>
-      <body className={classNames(inter.variable, 'font min-w-[360px]')}>{children}</body>
+      <body className={classNames(inter.variable, 'font min-w-[360px]')}>
+        {isSecure.success ? children : <Page403 />}
+      </body>
     </html>
   );
 }

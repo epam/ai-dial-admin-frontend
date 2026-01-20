@@ -1,18 +1,16 @@
 import { cookies, headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
+import { assetsApi } from '@/src/app/api/api';
 import PromptView from '@/src/components/Assets/Prompts/View';
-import Page403 from '@/src/components/Page403/Page403';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { errorObjLog } from '@/src/server/logger';
-import { ApplicationRoute } from '@/src/types/routes';
+import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { assetsApi } from '@/src/app/api/api';
-import { ResourceType } from '@/src/types/resource-type';
-import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,9 +34,6 @@ export default async function Page(params: {
       return res?.response as DialPrompt | null;
     });
 
-    if (prompt === void 0) {
-      return <Page403 />;
-    }
     prompts = ((await assetsApi.getAssetList(token, `${prompt?.folderId}/`, ResourceType.PROMPT))?.filter(
       (p) => p.nodeType === DialFileNodeType.ITEM && p.name === name,
     ) || []) as DialPrompt[];
@@ -46,7 +41,7 @@ export default async function Page(params: {
     errorObjLog(e, 'Failed to fetch prompt view data');
   }
   if (prompt == null) {
-    redirect(ApplicationRoute.Prompts);
+    notFound();
   }
 
   return (
