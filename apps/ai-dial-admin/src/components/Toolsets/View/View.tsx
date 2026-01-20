@@ -1,12 +1,20 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DialTabs } from '@epam/ai-dial-ui-kit';
+import { DialNeutralButton, DialTabs } from '@epam/ai-dial-ui-kit';
 import { cloneDeep } from 'lodash';
+import { IconLogin, IconLogout } from '@tabler/icons-react';
 
-import { getCoreToolset, removeToolset, updateCoreToolset, updateToolset } from '@/src/app/[lang]/toolsets/actions';
+import {
+  getCoreToolset,
+  removeToolset,
+  signInToolset,
+  signOutToolset,
+  updateCoreToolset,
+  updateToolset,
+} from '@/src/app/[lang]/toolsets/actions';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
@@ -20,7 +28,7 @@ import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialRole } from '@/src/models/dial/role';
-import { Toolset } from '@/src/models/dial/toolset';
+import { Toolset, ToolsetAuthCredentialLevel, ToolsetAuthType } from '@/src/models/dial/toolset';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
@@ -29,14 +37,28 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { EntityViewTab, getToolsetTabs } from '@/src/utils/tabs/utils';
 import ToolsetProperties from './Properties';
 import { getViewHeaderClassName } from '@/src/utils/entities/view';
+import { ToolsetI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import {
+  encodeToolsetRedirectState,
+  isLoggedInToToolset,
+  isUserLoggedInToToolset,
+} from '@/src/utils/toolset/toolset-auth';
+import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
+import LoginPopup from '../../Assets/Toolsets/LoginPopup';
+
+let isSignInProcessed = false;
+
 interface Props {
   etag: string;
   names: string[];
   roles?: DialRole[] | null;
   originalToolset: Toolset;
+  oAuthCode?: string | null;
+  isUserLevel?: boolean;
 }
 
-const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
+const ToolsetView: FC<Props> = ({ names, isUserLevel, oAuthCode, etag, roles, originalToolset }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -47,6 +69,7 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [selectedToolset, setSelectedToolset] = useState(cloneDeep(originalToolset));
   const [isChanged, setIsChanged] = useState(false);
   const [isJsonEditorEnabled, setIsJsonEditorEnabled] = useState(false);
@@ -54,6 +77,10 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
   const [key, setKey] = useState(0);
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
   const [coreToolset, setCoreToolset] = useState<Toolset | null>(null);
+
+  const isToolsetSignedIn = useMemo(() => {
+    return isLoggedInToToolset(selectedToolset);
+  }, [selectedToolset]);
 
   useEffect(() => {
     const name = originalToolset?.name;
@@ -150,6 +177,86 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
     }
   }, [isJsonEditorEnabled, onSave, selectedFormat, selectedToolset]);
 
+  const signIn = useCallback(
+    (type: ToolsetAuthCredentialLevel, apiKeyValue?: string, code?: string) => {
+      isSignInProcessed = true;
+      getReqRef.current(signInToolset, selectedToolset, type, apiKeyValue, code).then((res) => {
+        isSignInProcessed = false;
+        if (!res.success) {
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+        } else {
+          showNotification(
+            getSuccessNotification(t(ToolsetI18nKey.SuccessLogin), t(ToolsetI18nKey.SuccessLoginDescription)),
+          );
+        }
+        router.push(getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset));
+      });
+    },
+    [router, selectedToolset, showNotification, t],
+  );
+
+  const onLogin = useCallback(
+    (type: ToolsetAuthCredentialLevel, apiKeyValue: string) => {
+      const authSettings = selectedToolset.authSettings;
+      if (authSettings && authSettings?.authenticationType === ToolsetAuthType.OAUTH) {
+        const callbackUrl = `${window.location.pathname}${window.location.search}`;
+        const state = {
+          callbackUrl,
+          toolsetId: selectedToolset.name,
+          credentialsLevel: authSettings.authenticationType,
+        };
+
+        const url = new URL(authSettings.authorizationEndpoint as string);
+        url.searchParams.set('response_type', 'code');
+        url.searchParams.set('client_id', authSettings.clientId as string);
+
+        url.searchParams.set(
+          'redirect_uri',
+          `${window.location.origin}${getUrnForEntity(ApplicationRoute.Toolsets, selectedToolset)}?isUser=${type === ToolsetAuthCredentialLevel.USER}`,
+        );
+        if (authSettings.codeChallenge) {
+          url.searchParams.set('code_challenge', authSettings.codeChallenge);
+        }
+        if (authSettings.codeChallengeMethod) {
+          url.searchParams.set('code_challenge_method', authSettings.codeChallengeMethod);
+        }
+
+        url.searchParams.set('state', encodeToolsetRedirectState(state));
+        if (authSettings.scopesSupported) {
+          url.searchParams.set('scope', authSettings.scopesSupported?.join(' '));
+        }
+
+        window.location.assign(url.toString());
+      } else {
+        signIn(type, apiKeyValue);
+      }
+    },
+    [selectedToolset, signIn],
+  );
+
+  const onLogout = useCallback(() => {
+    const level = isUserLoggedInToToolset(selectedToolset)
+      ? ToolsetAuthCredentialLevel.USER
+      : ToolsetAuthCredentialLevel.GLOBAL;
+    getReqRef.current(signOutToolset, selectedToolset, level).then((res) => {
+      if (res.success) {
+        router.push(getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset));
+        showNotification(
+          getSuccessNotification(t(ToolsetI18nKey.SuccessLogout), t(ToolsetI18nKey.SuccessLogoutDescription)),
+        );
+      } else {
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+      }
+    });
+  }, [router, selectedToolset, showNotification, t]);
+
+  useEffect(() => {
+    if (oAuthCode && !isSignInProcessed) {
+      signIn(isUserLevel ? ToolsetAuthCredentialLevel.USER : ToolsetAuthCredentialLevel.GLOBAL, void 0, oAuthCode);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={getViewHeaderClassName(isJsonEditorEnabled)}>
@@ -169,7 +276,22 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
           onToggleJsonEditor={onToggleJsonEditor}
           selectedFormat={selectedFormat}
           onChangeSelectedFormat={setSelectedFormat}
-        />
+        >
+          {selectedToolset.authSettings?.authenticationType !== ToolsetAuthType.NONE &&
+            (isToolsetSignedIn ? (
+              <DialNeutralButton
+                label={t(ToolsetI18nKey.LogOut)}
+                iconBefore={<IconLogout {...BASE_BUTTON_ICON_PROPS} />}
+                onClick={onLogout}
+              />
+            ) : (
+              <DialNeutralButton
+                label={t(ToolsetI18nKey.LogIn)}
+                iconBefore={<IconLogin {...BASE_BUTTON_ICON_PROPS} />}
+                onClick={() => setIsLoginModalOpen(true)}
+              />
+            ))}
+        </HeaderButtons>
       </div>
       <div className="flex-1 overflow-auto min-h-0">
         {isJsonEditorEnabled ? (
@@ -212,6 +334,14 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
                 onConfirm={() => onSave()}
                 onClose={() => setIsModalOpen(false)}
                 onCancel={() => setIsModalOpen(false)}
+              />
+            )}
+            {isLoginModalOpen && (
+              <LoginPopup
+                type={selectedToolset.authSettings?.authenticationType}
+                isModalOpen={isLoginModalOpen}
+                onClose={() => setIsLoginModalOpen(false)}
+                onLogin={onLogin}
               />
             )}
           </>

@@ -64,7 +64,11 @@ const DeploymentProperties: FC<Props> = ({ asset, view, runners, onChange }) => 
         {view === ApplicationRoute.AssetsToolsets && (
           <>
             <ToolsetEndpoint entity={asset as AssetToolset} onChange={onChange as (entity: Toolset) => void} />
-            <Authentication toolset={asset as AssetToolset} onChange={onChange as (entity: Toolset) => void} />
+            <Authentication
+              toolset={asset as AssetToolset}
+              view={ApplicationRoute.AssetsToolsets}
+              onChange={onChange as (entity: Toolset) => void}
+            />
             <DialSwitch
               isOn={(asset as AssetToolset).forwardPerRequestKey}
               label={t(EntityFieldsI18nKey.forwardPerRequestKey)}

@@ -9,10 +9,13 @@ import {
   getCoreToolset,
   getTools,
   removeToolset,
+  signInToolset,
+  signOutToolset,
   tryOutTool,
   updateCoreToolset,
   updateToolset,
 } from './actions';
+import { ToolsetAuthCredentialLevel } from '../../../models/dial/toolset';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -92,6 +95,34 @@ describe('Toolsets :: server actions', () => {
     const result = await tryOutTool('testSet', { name: 'test' });
     expect(getUserToken).toHaveBeenCalled();
     expect(toolSetsApi.tryOutTool).toHaveBeenCalledWith('testSet', { name: 'test' }, TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call signInToolset action', async () => {
+    (toolSetsApi.signInToolset as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await signInToolset({ name: 'name' }, ToolsetAuthCredentialLevel.GLOBAL, 'key', 'code');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(toolSetsApi.signInToolset).toHaveBeenCalledWith(
+      { name: 'name' },
+      ToolsetAuthCredentialLevel.GLOBAL,
+      TOKEN_MOCK,
+      'key',
+      'code',
+    );
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call signOutToolset action', async () => {
+    (toolSetsApi.signOutToolset as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await signOutToolset({ name: 'name' }, ToolsetAuthCredentialLevel.GLOBAL);
+    expect(getUserToken).toHaveBeenCalled();
+    expect(toolSetsApi.signOutToolset).toHaveBeenCalledWith(
+      { name: 'name' },
+      ToolsetAuthCredentialLevel.GLOBAL,
+      TOKEN_MOCK,
+    );
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

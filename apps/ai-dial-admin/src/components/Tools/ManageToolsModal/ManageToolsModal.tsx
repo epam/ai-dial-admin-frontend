@@ -245,7 +245,7 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalToolset, onCl
             )}
           </div>
         </DialCollapsibleSidebar>
-        <div className="border border-primary px-4 py-4 w-full overflow-y-scroll">
+        <div className="border border-primary px-4 py-4 w-full overflow-auto">
           {activeCustomToolIndex !== null && (
             <AddNewTool
               toolName={customToolsConfig[activeCustomToolIndex].name}

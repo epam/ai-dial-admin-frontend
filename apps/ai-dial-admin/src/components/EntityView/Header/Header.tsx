@@ -10,6 +10,9 @@ import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
+import { AuthHeader } from '@/src/components/Toolsets/View/Auth/AuthHeader';
+import { Toolset } from '@/src/models/dial/toolset';
+
 interface Props {
   entity?: ChatEntity | DialApplicationScheme | null;
   view?: ApplicationRoute;
@@ -27,6 +30,7 @@ const EntityHeader: FC<Props> = ({ entity, view }) => {
       <LabelledText label={t(EntityFieldsI18nKey.id)} text={id || ''} copyable={true} />
       <LabelledText label={t(EntityFieldsI18nKey.updatedAt)} text={formatDateTimeToLocalString(entity?.updatedAt)} />
       <LabelledText label={t(EntityFieldsI18nKey.createdAt)} text={formatDateTimeToLocalString(entity?.createdAt)} />
+      {view === ApplicationRoute.Toolsets && <AuthHeader toolset={entity as Toolset} />}
       {status && <LabelledText label={t(EntityFieldsI18nKey.status)} text={status} />}
       {validityState && (
         <LabelledText label={t(EntityFieldsI18nKey.status)}>
