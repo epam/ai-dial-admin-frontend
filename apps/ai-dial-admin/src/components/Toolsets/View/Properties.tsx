@@ -41,7 +41,7 @@ const ToolsetProperties: FC<Props> = ({ names, selectedToolset, onChangeToolset 
           }}
         />
         <MaxRetryAttempts entity={selectedToolset} onChangeEntity={onChangeToolset} />
-        <Authentication toolset={selectedToolset} onChange={onChangeToolset} />
+        <Authentication toolset={selectedToolset} view={ApplicationRoute.Toolsets} onChange={onChangeToolset} />
       </div>
     </div>
   );
