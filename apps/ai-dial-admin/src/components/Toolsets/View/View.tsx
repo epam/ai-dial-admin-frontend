@@ -69,6 +69,7 @@ const ToolsetView: FC<Props> = ({ names, isUserLevel, oAuthCode, etag, roles, or
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [selectedToolset, setSelectedToolset] = useState(cloneDeep(originalToolset));
   const [isChanged, setIsChanged] = useState(false);
   const [isJsonEditorEnabled, setIsJsonEditorEnabled] = useState(false);
@@ -287,7 +288,7 @@ const ToolsetView: FC<Props> = ({ names, isUserLevel, oAuthCode, etag, roles, or
               <DialNeutralButton
                 label={t(ToolsetI18nKey.LogIn)}
                 iconBefore={<IconLogin {...BASE_BUTTON_ICON_PROPS} />}
-                onClick={() => setIsModalOpen(true)}
+                onClick={() => setIsLoginModalOpen(true)}
               />
             ))}
         </HeaderButtons>
@@ -335,11 +336,11 @@ const ToolsetView: FC<Props> = ({ names, isUserLevel, oAuthCode, etag, roles, or
                 onCancel={() => setIsModalOpen(false)}
               />
             )}
-            {isModalOpen && (
+            {isLoginModalOpen && (
               <LoginPopup
                 type={selectedToolset.authSettings?.authenticationType}
-                isModalOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
+                isModalOpen={isLoginModalOpen}
+                onClose={() => setIsLoginModalOpen(false)}
                 onLogin={onLogin}
               />
             )}
