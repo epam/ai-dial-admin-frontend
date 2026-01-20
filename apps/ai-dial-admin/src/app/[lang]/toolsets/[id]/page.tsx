@@ -10,11 +10,15 @@ import { Toolset } from '@/src/models/dial/toolset';
 import { errorObjLog } from '@/src/server/logger';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { filterNames } from '@/src/utils/entities/filter-names';
+import { isValueTruthy } from '@/src/utils/types';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Page(params: { params: Promise<{ id: string }> }) {
+export default async function Page(params: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ code?: string; isUser?: string }>;
+}) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
   let etag = DEFAULT_ETAG;
@@ -22,6 +26,8 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   let toolSets: Toolset[] | null = null;
 
   let roles: DialRole[] | null = null;
+  let oAuthCode = null;
+  let isUser = false;
 
   try {
     toolSet = await toolSetsApi.getToolset((await params.params).id, token, etag).then((res) => {
@@ -31,6 +37,9 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
     toolSets = await toolSetsApi.getToolsetList(token);
     roles = await rolesApi.getRolesList(token);
+    const searchParams = await params.searchParams;
+    oAuthCode = searchParams.code;
+    isUser = isValueTruthy(searchParams.isUser);
   } catch (e) {
     errorObjLog(e, 'Failed to fetch toolSet view data');
   }
@@ -43,7 +52,14 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   return (
     <SaveValidationContextProvider>
-      <ToolsetView names={names} originalToolset={toolSet} roles={roles} etag={etag} />
+      <ToolsetView
+        oAuthCode={oAuthCode}
+        isUserLevel={isUser}
+        names={names}
+        originalToolset={toolSet}
+        roles={roles}
+        etag={etag}
+      />
     </SaveValidationContextProvider>
   );
 }

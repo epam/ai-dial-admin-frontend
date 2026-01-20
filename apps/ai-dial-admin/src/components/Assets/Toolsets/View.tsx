@@ -48,6 +48,7 @@ import { addTrailingSlash } from '@/src/utils/url';
 import LoginPopup from './LoginPopup';
 import { getViewHeaderClassName } from '@/src/utils/entities/view';
 let isSignInProcessed = false;
+
 interface Props {
   etag: string;
   oAuthCode?: string | null;

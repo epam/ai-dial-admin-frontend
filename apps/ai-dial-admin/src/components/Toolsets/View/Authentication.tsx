@@ -14,6 +14,7 @@ import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 interface Props {
   toolset: Toolset;
   disabled?: boolean;
+  view: ApplicationRoute;
   onChange?: (entity: Toolset) => void;
 }
 
@@ -22,7 +23,7 @@ export interface AuthConfig {
   title: string;
   icon?: ReactNode;
 }
-const Authentication: FC<Props> = ({ disabled, toolset, onChange, ...props }) => {
+const Authentication: FC<Props> = ({ disabled, view, toolset, onChange, ...props }) => {
   const t = useI18n();
   const selectedAuthType = useMemo(() => toolset.authSettings?.authenticationType || ToolsetAuthType.NONE, [toolset]);
 
@@ -41,12 +42,12 @@ const Authentication: FC<Props> = ({ disabled, toolset, onChange, ...props }) =>
           authenticationType,
           redirectUri:
             authenticationType === ToolsetAuthType.OAUTH
-              ? `${window.location.origin}${getUrnForEntity(ApplicationRoute.AssetsToolsets, toolset)}`
+              ? `${window.location.origin}${getUrnForEntity(view, toolset)}`
               : void 0,
         },
       });
     },
-    [onChange, toolset],
+    [onChange, toolset, view],
   );
 
   return (

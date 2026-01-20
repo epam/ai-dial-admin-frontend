@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { containersApi, imagesApi, topicApi } from '@/src/app/api/api';
-import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
+import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
   createContainer,
   createImage,
@@ -107,14 +107,13 @@ describe('Deployments actions', () => {
     });
 
     test('deleteImage calls imagesApi.deleteImage with id and token', async () => {
-      const mockResponse = { success: true };
-      (imagesApi.deleteImage as any).mockResolvedValue(mockResponse);
+      (imagesApi.deleteImage as any).mockResolvedValue(RESPONSE_MOCK);
 
       const result = await deleteImage('image-1');
 
       expect(getUserToken).toHaveBeenCalled();
       expect(imagesApi.deleteImage).toHaveBeenCalledWith('image-1', TOKEN_MOCK);
-      expect(result).toBe(mockResponse);
+      expect(result).toBe(RESPONSE_MOCK);
     });
 
     test('updateImage calls imagesApi.updateImage with image and token', async () => {
@@ -130,14 +129,13 @@ describe('Deployments actions', () => {
     });
 
     test('installImage calls imagesApi.installImage with id and token', async () => {
-      const mockResponse = { success: true };
-      (imagesApi.installImage as any).mockResolvedValue(mockResponse);
+      (imagesApi.installImage as any).mockResolvedValue(RESPONSE_MOCK);
 
       const result = await installImage('image-1');
 
       expect(getUserToken).toHaveBeenCalled();
       expect(imagesApi.installImage).toHaveBeenCalledWith('image-1', TOKEN_MOCK);
-      expect(result).toBe(mockResponse);
+      expect(result).toBe(RESPONSE_MOCK);
     });
 
     test('getImageLogs calls imagesApi.getImageLogs with id and token', async () => {
@@ -255,47 +253,43 @@ describe('Deployments actions', () => {
     });
 
     test('updateContainersImageId calls containersApi.updateContainersImageId with deployments, imageId and token', async () => {
-      const mockResponse = { success: true };
-      (containersApi.updateContainersImageId as any).mockResolvedValue(mockResponse);
+      (containersApi.updateContainersImageId as any).mockResolvedValue(RESPONSE_MOCK);
 
       const result = await updateContainersImageId(['c1', 'c2'], 'img-1');
 
       expect(getUserToken).toHaveBeenCalled();
       expect(containersApi.updateContainersImageId).toHaveBeenCalledWith(['c1', 'c2'], 'img-1', TOKEN_MOCK);
-      expect(result).toBe(mockResponse);
+      expect(result).toBe(RESPONSE_MOCK);
     });
 
     test('deleteContainer calls containersApi.deleteContainer with containerId and token', async () => {
-      const mockResponse = { success: true };
-      (containersApi.deleteContainer as any).mockResolvedValue(mockResponse);
+      (containersApi.deleteContainer as any).mockResolvedValue(RESPONSE_MOCK);
 
       const result = await deleteContainer('container-1');
 
       expect(getUserToken).toHaveBeenCalled();
       expect(containersApi.deleteContainer).toHaveBeenCalledWith('container-1', TOKEN_MOCK);
-      expect(result).toBe(mockResponse);
+      expect(result).toBe(RESPONSE_MOCK);
     });
 
     test('runContainer calls containersApi.runContainer with containerId and token', async () => {
-      const mockResponse = { success: true };
-      (containersApi.runContainer as any).mockResolvedValue(mockResponse);
+      (containersApi.runContainer as any).mockResolvedValue(RESPONSE_MOCK);
 
       const result = await runContainer('container-1');
 
       expect(getUserToken).toHaveBeenCalled();
       expect(containersApi.runContainer).toHaveBeenCalledWith('container-1', TOKEN_MOCK);
-      expect(result).toBe(mockResponse);
+      expect(result).toBe(RESPONSE_MOCK);
     });
 
     test('stopContainer calls containersApi.stopContainer with containerId and token', async () => {
-      const mockResponse = { success: true };
-      (containersApi.stopContainer as any).mockResolvedValue(mockResponse);
+      (containersApi.stopContainer as any).mockResolvedValue(RESPONSE_MOCK);
 
       const result = await stopContainer('container-1');
 
       expect(getUserToken).toHaveBeenCalled();
       expect(containersApi.stopContainer).toHaveBeenCalledWith('container-1', TOKEN_MOCK);
-      expect(result).toBe(mockResponse);
+      expect(result).toBe(RESPONSE_MOCK);
     });
 
     test('getContainerTools calls containersApi.getContainerTools with containerId and token', async () => {
