@@ -18,7 +18,6 @@ import {
   getOpenInNewTabOperation,
 } from '@/src/constants/grid-columns/actions';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
-import Page403 from '@/src/components/Page403/Page403';
 import ListView from '@/src/components/ListView/ListView';
 import { EntitiesI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
 import { getRouteByType, getTranslatedType } from '@/src/utils/deployments/entity';
@@ -43,7 +42,6 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
   const [modalType, setModalType] = useState<ModalType>();
   const [showColumnsPanel, setShowColumnsPanel] = useState(false);
   const [dependencies, setDependencies] = useState<Container[]>([]);
-  const [forbidden, setForbidden] = useState(false);
 
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
 
@@ -112,7 +110,6 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
       const fetchDependencies = async () => {
         const { response, success, status } = await getImageContainers(currentImage?.id as string);
         if (!success && status === 403) {
-          setForbidden(true);
           return;
         }
         setDependencies((response as Container[]) || []);
@@ -172,10 +169,6 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
     window.addEventListener('click', closeColumnsPanel);
     return () => window.removeEventListener('click', closeColumnsPanel);
   }, [closeColumnsPanel]);
-
-  if (forbidden) {
-    return <Page403 />;
-  }
 
   return (
     <>

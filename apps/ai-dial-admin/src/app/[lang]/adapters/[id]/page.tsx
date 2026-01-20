@@ -1,17 +1,16 @@
 import { cookies, headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
 import { adaptersApi, modelsApi } from '@/src/app/api/api';
-import { DialAdapter } from '@/src/models/dial/adapter';
-import { errorObjLog } from '@/src/server/logger';
-import { ApplicationRoute } from '@/src/types/routes';
-import { getUserToken } from '@/src/utils/auth/auth-request';
-import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import AdapterView from '@/src/components/Adapter/View/AdapterView';
-import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
-import { filterDisplayNames } from '@/src/utils/entities/filter-names';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
+import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialModel } from '@/src/models/dial/model';
+import { errorObjLog } from '@/src/server/logger';
+import { getUserToken } from '@/src/utils/auth/auth-request';
+import { filterDisplayNames } from '@/src/utils/entities/filter-names';
+import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,7 +32,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   }
 
   if (adapter == null) {
-    redirect(ApplicationRoute.Adapters);
+    notFound();
   }
 
   return (

@@ -1,10 +1,9 @@
 import { cookies, headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
 import { getCoreModel, removeModel, updateCoreModel, updateModel } from '@/src/app/[lang]/models/actions';
 import { interceptorsApi, modelsApi, rolesApi } from '@/src/app/api/api';
 import EntityView from '@/src/components/EntityView/View/EntityView';
-import Page403 from '@/src/components/Page403/Page403';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
@@ -35,15 +34,12 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     });
     roles = await rolesApi.getRolesList(token);
     interceptors = await interceptorsApi.getInterceptorsList(token);
-    if (models === void 0 || model === void 0 || roles === void 0 || interceptors === void 0) {
-      return <Page403 />;
-    }
   } catch (e) {
     errorObjLog(e, 'Failed to fetch model view data');
   }
 
   if (model == null) {
-    redirect(ApplicationRoute.Models);
+    notFound();
   }
   const names = filterDisplayNamesWithVersions(models, model);
 
