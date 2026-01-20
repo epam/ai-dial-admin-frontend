@@ -11,7 +11,6 @@ import {
   DropdownItem,
 } from '@epam/ai-dial-ui-kit';
 import { ApplicationRoute } from '@/src/types/routes';
-import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { Asset } from '@/src/models/dial/deployment-asset';
@@ -43,7 +42,7 @@ import CreateAsset from '@/src/components/Assets/Deployments/CreateAsset';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { DialFile } from '@/src/models/dial/file';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
-import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props<T> {
   route: ApplicationRoute;
@@ -51,13 +50,11 @@ interface Props<T> {
   isChanged: boolean;
   isRedeployRequired: boolean;
   jsonEditorEnabled: boolean;
-  jsonErrors: JSONEditorError[] | null;
   hideJsonEditor?: boolean;
   children?: ReactNode;
   onDiscard: () => void;
   onSave: () => void;
   toggleJsonEditor?: () => void;
-  setErrorNotifications?: (notification: JSONEditorErrorNotification[]) => void;
   createEntity: (entity: BaseEntity) => Promise<ServerActionResponse>;
   createEntityAsAsset?: (entity: Asset) => Promise<ServerActionResponse>;
   entityNames: string[];
@@ -73,8 +70,6 @@ const HeaderButtons = <T extends Container>({
   onSave,
   jsonEditorEnabled,
   toggleJsonEditor,
-  jsonErrors,
-  setErrorNotifications,
   hideJsonEditor,
   children,
   createEntity,
@@ -85,12 +80,12 @@ const HeaderButtons = <T extends Container>({
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
-  const { isValid } = useSaveValidationContext();
+  const { isValid, jsonErrors } = useSaveValidationContext();
+  const { dispatch } = useSaveValidationContext();
   const { visualizerConnector } = useAppContext();
   const visualizerConnectorRef = useRef(visualizerConnector);
 
   const [modalType, setModalType] = useState<ModalType>();
-  const [isValidJSON, setIsValidJSON] = useState<boolean>(true);
 
   const staticContainerClassnames = 'flex flex-row gap-3 divide-x divide-primary';
   const staticEditorClassNames = 'pl-6';
@@ -162,13 +157,17 @@ const HeaderButtons = <T extends Container>({
 
   const onTryToSave = useCallback(() => {
     if (jsonErrors?.length) {
-      setIsValidJSON(false);
-      const errorNotifications = showEditorErrorNotifications({ errors: jsonErrors, showNotification, t });
-      setErrorNotifications?.(errorNotifications);
+      const errors = jsonErrors;
+      const errorNotifications = showEditorErrorNotifications({
+        errors,
+        showNotification,
+        t,
+      });
+      dispatch({ type: ValidationActionType.SetJsonEditorNotifications, errors: errorNotifications });
     } else {
       onSave();
     }
-  }, [onSave, setErrorNotifications, showNotification, t, jsonErrors]);
+  }, [jsonErrors, showNotification, t, dispatch, onSave]);
 
   const onOpenDeleteModal = useCallback(() => {
     onOpenModal(ModalType.delete);
@@ -223,7 +222,7 @@ const HeaderButtons = <T extends Container>({
               className={buttonsClassNames}
               label={t(isRedeployRequired ? ButtonsI18nKey.SaveAndRedeploy : ButtonsI18nKey.Save)}
               onClick={onTryToSave}
-              disabled={(jsonEditorEnabled && !isValidJSON) || !isValid || !isValid}
+              disabled={jsonEditorEnabled ? false : !isValid}
             />
           </div>
         ) : (

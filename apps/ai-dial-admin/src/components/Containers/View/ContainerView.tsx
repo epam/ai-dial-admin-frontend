@@ -17,7 +17,6 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useAppContext } from '@/src/context/AppContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { EntityViewTab, getDeploymentsViewTabs } from '@/src/utils/tabs/utils';
-import { JSONEditorError } from '@/src/types/editor';
 import { getContainer, updateContainer } from '@/src/app/actions/deployments';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { CONTAINER_STATUS, KubEventType } from '@/src/types/deployments/containers';
@@ -69,7 +68,6 @@ const ContainerView: FC<Props> = ({
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
   const [isChanged, setIsChanged] = useState<boolean>(false);
   const [isRedeployRequired, setIsRedeployRequired] = useState<boolean>(false);
-  const [jsonErrors, setJsonErrors] = useState<JSONEditorError[]>([]);
   const [key, setKey] = useState(0);
   const [events, setEvents] = useState<KubEvent[]>([]);
 
@@ -92,7 +90,7 @@ const ContainerView: FC<Props> = ({
 
   const onDiscard = useCallback(() => {
     if (jsonEditorEnabled) {
-      setJsonErrors([]);
+      dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
       setIsChanged(false);
       // TODO: Revisit solution
       // Due to we can't set invalid JSON as variable, we can't update entity in error state.
@@ -250,7 +248,6 @@ const ContainerView: FC<Props> = ({
             onDiscard={onDiscard}
             jsonEditorEnabled={jsonEditorEnabled}
             toggleJsonEditor={toggleJsonEditor}
-            jsonErrors={jsonErrors}
             hideJsonEditor={disableDeploymentsJSONEditor}
             createEntity={createEntity}
             createEntityAsAsset={createEntityAsAsset}

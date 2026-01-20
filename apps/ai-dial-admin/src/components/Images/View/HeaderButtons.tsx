@@ -17,7 +17,6 @@ import { useI18n } from '@/src/locales/client';
 import { Container } from '@/src/models/deployments/containers';
 import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
-import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getRouteByType, getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
 import { validateImage } from '@/src/utils/deployments/images';
@@ -29,7 +28,7 @@ import Delete from '@/src/components/Deployments/Modals/Delete';
 import CreateContainer from '@/src/components/Images/Modals/CreateContainer';
 import Install from '@/src/components/Images/Modals/Install';
 import NewVersion from '@/src/components/Images/Modals/NewVersion';
-import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
   route: ApplicationRoute;
@@ -37,13 +36,11 @@ interface Props {
   originalImageName: string;
   isChanged: boolean;
   jsonEditorEnabled: boolean;
-  jsonErrors: JSONEditorError[] | null;
   hideJsonEditor?: boolean;
   children?: ReactNode;
   onDiscard: () => void;
   onSave: () => void;
   toggleJsonEditor?: () => void;
-  setErrorNotifications?: (notification: JSONEditorErrorNotification[]) => void;
   imagesNames: string[];
   containerNames?: string[];
   versions: ImageVersion[];
@@ -59,8 +56,6 @@ const HeaderButtons: FC<Props> = ({
   onSave,
   jsonEditorEnabled,
   toggleJsonEditor,
-  jsonErrors,
-  setErrorNotifications,
   hideJsonEditor,
   children,
   containerNames,
@@ -72,13 +67,12 @@ const HeaderButtons: FC<Props> = ({
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
   const router = useRouter();
-  const { isValid } = useSaveValidationContext();
+  const { isValid, jsonErrors, dispatch } = useSaveValidationContext();
 
   const staticContainerClassnames = 'flex flex-row gap-3 divide-x divide-primary';
   const staticEditorClassNames = 'pl-6';
 
   const [modalType, setModalType] = useState<ModalType>();
-  const [isValidJSON, setIsValidJSON] = useState<boolean>(true);
   const [containerClassNames, setContainerClassNames] = useState(staticContainerClassnames);
   const [buttonsClassNames, setButtonsClassNames] = useState('');
   const [editorClassNames, setEditorClassNames] = useState(staticEditorClassNames);
@@ -154,13 +148,17 @@ const HeaderButtons: FC<Props> = ({
 
   const onTryToSave = useCallback(() => {
     if (jsonErrors?.length) {
-      setIsValidJSON(false);
-      const errorNotifications = showEditorErrorNotifications({ errors: jsonErrors, showNotification, t });
-      setErrorNotifications?.(errorNotifications);
+      const errors = jsonErrors;
+      const errorNotifications = showEditorErrorNotifications({
+        errors,
+        showNotification,
+        t,
+      });
+      dispatch({ type: ValidationActionType.SetJsonEditorNotifications, errors: errorNotifications });
     } else {
       onSave();
     }
-  }, [onSave, setErrorNotifications, showNotification, t, jsonErrors]);
+  }, [jsonErrors, showNotification, t, dispatch, onSave]);
 
   const onCreateContainer = useCallback(
     (container: Container) => {
@@ -229,14 +227,14 @@ const HeaderButtons: FC<Props> = ({
                 className={buttonsClassNames}
                 label={t(ButtonsI18nKey.SaveAsNewVersion)}
                 onClick={onOpenSaveNewVersionModal}
-                disabled={(jsonEditorEnabled && !isValidJSON) || !isValidEntity() || !isValid}
+                disabled={jsonEditorEnabled ? false : !isValidEntity() || !isValid}
               />
             ) : (
               <DialPrimaryButton
                 className={buttonsClassNames}
                 label={t(ButtonsI18nKey.SaveAsNewVersion)}
                 onClick={onOpenSaveNewVersionModal}
-                disabled={(jsonEditorEnabled && !isValidJSON) || !isValidEntity() || !isValid}
+                disabled={jsonEditorEnabled ? false : !isValidEntity() || !isValid}
               />
             )}
             {allowEditing && !forceNewVersion && (
@@ -244,7 +242,7 @@ const HeaderButtons: FC<Props> = ({
                 className={buttonsClassNames}
                 label={t(ButtonsI18nKey.Save)}
                 onClick={onTryToSave}
-                disabled={(jsonEditorEnabled && !isValidJSON) || !isValidEntity() || !isValid}
+                disabled={jsonEditorEnabled ? false : !isValidEntity() || !isValid}
               />
             )}
           </div>
