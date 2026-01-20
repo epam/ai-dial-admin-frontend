@@ -146,15 +146,15 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
   );
 
   const onDuplicate = useCallback(
-    (name: string) => {
+    (container: Container) => {
       if (currentContainer) {
-        setNames((prev) => [...prev, name]);
-        duplicateContainer(currentContainer.name as string, name).then((res) => {
+        setNames((prev) => [...prev, container.name]);
+        duplicateContainer(currentContainer.name, container.name, container.displayName).then((res) => {
           if (res.success) {
             router.refresh();
             setCurrentContainer(null);
           } else {
-            setNames((prev) => prev.filter((n) => n !== name));
+            setNames((prev) => prev.filter((n) => n !== container.name));
             showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
           }
         });
@@ -296,7 +296,7 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
             onApply={onDuplicate}
-            currentName={currentContainer.displayName}
+            container={currentContainer}
             names={names}
           />,
           document.body,

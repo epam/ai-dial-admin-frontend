@@ -92,9 +92,9 @@ export async function createContainer(instance: Container) {
   return containersApi.createContainer(instance, token);
 }
 
-export async function duplicateContainer(id: string, name: string) {
+export async function duplicateContainer(name: string, newName: string, newDisplayName: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return containersApi.duplicateContainer(id, name, token);
+  return containersApi.duplicateContainer(name, newName, newDisplayName, token);
 }
 
 export async function updateContainer(container: Container) {

@@ -51,11 +51,16 @@ export class ContainersApi extends BaseApi {
   }
 
   duplicateContainer(
-    sourceDeploymentId: string,
+    sourceDeploymentName: string,
     newDeploymentName: string,
+    newDeploymentDisplayName: string,
     token: JWT | null,
   ): Promise<ServerActionResponse> {
-    return this.postAction(DUPLICATE_CONTAINER_URL, { sourceDeploymentId, newDeploymentName }, token);
+    return this.postAction(
+      DUPLICATE_CONTAINER_URL,
+      { sourceDeploymentName, newDeploymentName, newDeploymentDisplayName },
+      token,
+    );
   }
 
   updateContainer(container: Container, token: JWT | null): Promise<ServerActionResponse> {
