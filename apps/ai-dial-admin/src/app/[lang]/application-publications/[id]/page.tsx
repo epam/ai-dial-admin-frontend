@@ -1,16 +1,16 @@
 import { cookies, headers } from 'next/headers';
-import { getUserToken } from '@/src/utils/auth/auth-request';
-import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { redirect } from 'next/navigation';
-import { ApplicationRoute } from '@/src/types/routes';
-import PublicationView from '@/src/components/Publications/View/View';
+import { notFound } from 'next/navigation';
+
 import { approvePublication, declinePublication } from '@/src/app/actions/publications';
 import { applicationRunnersApi, publicationsApi } from '@/src/app/api/api';
+import PublicationView from '@/src/components/Publications/View/View';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
+import { DialApplicationScheme } from '@/src/models/dial/application';
 import { Publication } from '@/src/models/dial/publications';
 import { errorObjLog } from '@/src/server/logger';
-import Page403 from '@/src/components/Page403/Page403';
-import { DialApplicationScheme } from '@/src/models/dial/application';
-import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getUserToken } from '@/src/utils/auth/auth-request';
+import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,15 +23,12 @@ export default async function Page(params: { searchParams: Promise<{ path: strin
   try {
     data = await publicationsApi.getPublication(token, (await params.searchParams).path);
     applicationSchemes = await applicationRunnersApi.getApplicationSchemesList(token);
-    if (data === void 0) {
-      return <Page403 />;
-    }
   } catch (e) {
     errorObjLog(e, 'Failed to fetch application publication view data');
   }
 
   if (data == null) {
-    redirect(ApplicationRoute.ApplicationPublications);
+    notFound();
   }
 
   return (

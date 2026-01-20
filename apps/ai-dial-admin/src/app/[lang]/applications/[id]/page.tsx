@@ -1,5 +1,5 @@
 import { cookies, headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
 import {
   getCoreApplication,
@@ -9,7 +9,7 @@ import {
 } from '@/src/app/[lang]/applications/actions';
 import { applicationRunnersApi, applicationsApi, interceptorsApi, modelsApi, rolesApi } from '@/src/app/api/api';
 import EntityView from '@/src/components/EntityView/View/EntityView';
-import Page403 from '@/src/components/Page403/Page403';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
@@ -18,9 +18,8 @@ import { DialRole } from '@/src/models/dial/role';
 import { errorObjLog } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
-import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { filterDisplayNamesWithVersions } from '@/src/utils/entities/filter-names';
-import { DEFAULT_ETAG } from '@/src/constants/api-headers';
+import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,21 +45,12 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     applicationSchemes = await applicationRunnersApi.getApplicationSchemesList(token);
     roles = await rolesApi.getRolesList(token);
     interceptors = await interceptorsApi.getInterceptorsList(token);
-    if (
-      applications === void 0 ||
-      application === void 0 ||
-      applicationSchemes === void 0 ||
-      roles === void 0 ||
-      interceptors === void 0
-    ) {
-      return <Page403 />;
-    }
   } catch (e) {
     errorObjLog(e, 'Failed to fetch application view data');
   }
 
   if (application == null) {
-    redirect(ApplicationRoute.Applications);
+    notFound();
   }
 
   const names = filterDisplayNamesWithVersions(applications, application);

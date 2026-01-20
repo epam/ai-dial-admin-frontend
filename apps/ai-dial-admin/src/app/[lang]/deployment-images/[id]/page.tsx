@@ -1,19 +1,12 @@
-import { cookies, headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
-import { ApplicationRoute } from '@/src/types/routes';
-import { Image, ImageVersion } from '@/src/models/deployments/images';
-import { getUserToken } from '@/src/utils/auth/auth-request';
-import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
-import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getImage, getImageContainers, getImages, getImageVersions } from '@/src/app/actions/deployments';
-import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
-import { errorObjLog } from '@/src/server/logger';
-import { SIGN_IN_LINK } from '@/src/constants/auth';
-
-import Page403 from '@/src/components/Page403/Page403';
 import ImageView from '@/src/components/Images/View/ImageView';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { Container } from '@/src/models/deployments/containers';
+import { Image, ImageVersion } from '@/src/models/deployments/images';
+import { errorObjLog } from '@/src/server/logger';
+import { ApplicationRoute } from '@/src/types/routes';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,18 +16,6 @@ interface Params {
 }
 
 export default async function Page(params: Params) {
-  const isEnableAuth = getIsEnableAuthToggle();
-  const token = await getUserToken(isEnableAuth, headers(), cookies());
-  const isInvalidSession = await getIsInvalidSession(isEnableAuth, token);
-
-  if (isInvalidSession) {
-    return redirect(SIGN_IN_LINK);
-  }
-
-  if (isInvalidSession) {
-    return redirect(`/?route=${ApplicationRoute.Images}/${(await params.params).id}`);
-  }
-
   let image: Image | null = null;
   let images: Image[] | null = null;
   let versions: ImageVersion[] | null = null;
@@ -46,22 +27,6 @@ export default async function Page(params: Params) {
     const versionsResponse = await getImageVersions(imageResponse.response.name);
     const dependenciesResponses = await getImageContainers((await params.params).id);
 
-    if (
-      !imageResponse.success ||
-      !imagesResponse.success ||
-      !versionsResponse.success ||
-      !dependenciesResponses.success
-    ) {
-      if (
-        imageResponse.status === 403 ||
-        imagesResponse.status === 403 ||
-        versionsResponse.status === 403 ||
-        dependenciesResponses.status === 403
-      ) {
-        return <Page403 />;
-      }
-      redirect(ApplicationRoute.Images);
-    }
     image = imageResponse.response as Image;
     images = imagesResponse.response as Image[];
     versions = versionsResponse.response as ImageVersion[];
@@ -71,7 +36,7 @@ export default async function Page(params: Params) {
   }
 
   if (!image) {
-    redirect(ApplicationRoute.Images);
+    notFound();
   }
 
   return (

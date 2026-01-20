@@ -10,7 +10,6 @@ import {
 } from '@/src/app/[lang]/assets-toolsets/actions';
 import { filterLatestVersions, getVersionsPerName } from '@/src/components/Assets/utils';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
-import Page403 from '@/src/components/Page403/Page403';
 import { DEPLOYMENT_ASSETS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
@@ -21,13 +20,10 @@ import { filterNames } from '@/src/utils/entities/filter-names';
 
 const ToolsetsList: FC = () => {
   const { data } = useToolsetFolder();
-  if (data == null) {
-    return <Page403 />;
-  }
   const names = filterNames(data);
 
   const versionsMap = getVersionsPerName(data || []);
-  const filteredData = filterLatestVersions(data);
+  const filteredData = filterLatestVersions(data || []);
 
   return (
     <BaseEntityList

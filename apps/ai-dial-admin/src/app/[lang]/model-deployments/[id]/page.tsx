@@ -1,21 +1,17 @@
 import { cookies, headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
-import { ApplicationRoute } from '@/src/types/routes';
+import { createModel } from '@/src/app/[lang]/models/actions';
+import { getContainer, getModelContainers } from '@/src/app/actions/deployments';
+import { modelsApi } from '@/src/app/api/api';
+import ContainerView from '@/src/components/Containers/View/ContainerView';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { Container } from '@/src/models/deployments/containers';
 import { DialModel } from '@/src/models/dial/model';
-import { getUserToken } from '@/src/utils/auth/auth-request';
-import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
-import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { getContainer, getModelContainers } from '@/src/app/actions/deployments';
-import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
-import { createModel } from '@/src/app/[lang]/models/actions';
-import { modelsApi } from '@/src/app/api/api';
-import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { errorObjLog } from '@/src/server/logger';
-
-import Page403 from '@/src/components/Page403/Page403';
-import ContainerView from '@/src/components/Containers/View/ContainerView';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getUserToken } from '@/src/utils/auth/auth-request';
+import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,17 +21,8 @@ interface Params {
 }
 
 export default async function Page(params: Params) {
-  const isEnableAuth = getIsEnableAuthToggle();
-  const token = await getUserToken(isEnableAuth, headers(), cookies());
-  const isInvalidSession = await getIsInvalidSession(isEnableAuth, token);
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
-  if (isInvalidSession) {
-    return redirect(SIGN_IN_LINK);
-  }
-
-  if (isInvalidSession) {
-    return redirect(`/?route=${ApplicationRoute.ModelDeployments}/${(await params.params).id}`);
-  }
   let container: Container | null = null;
   let containers: Container[] | null = null;
   let models: DialModel[] | null = null;
@@ -45,10 +32,7 @@ export default async function Page(params: Params) {
     const containersResponse = await getModelContainers();
 
     if (!containerResponse.success || !containersResponse.success) {
-      if (containerResponse.status === 403 || containersResponse.status === 403) {
-        return <Page403 />;
-      }
-      redirect(ApplicationRoute.ModelDeployments);
+      notFound();
     }
     container = containerResponse.response as Container;
     containers = containersResponse.response as Container[];
@@ -59,7 +43,7 @@ export default async function Page(params: Params) {
   }
 
   if (!container) {
-    redirect(ApplicationRoute.ModelDeployments);
+    notFound();
   }
 
   return (
