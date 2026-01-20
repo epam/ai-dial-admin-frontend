@@ -116,7 +116,7 @@ describe('Server :: UtilityApi', () => {
     );
   });
 
-  test('should get core cync status', async () => {
+  test('should get core sync status', async () => {
     fetch.mockResponseOnce(
       JSON.stringify({
         currentState: {},
@@ -133,5 +133,12 @@ describe('Server :: UtilityApi', () => {
         status: '',
       }),
     );
+  });
+
+  test('should get core security info', async () => {
+    fetch.mockResponseOnce(JSON.stringify({}));
+
+    const result = await instance.getSecurityInfo(TOKEN_MOCK);
+    expect(result.response).toEqual(JSON.stringify({}));
   });
 });
