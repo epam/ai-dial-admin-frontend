@@ -15,20 +15,34 @@ interface Props {
 
 const Tool: FC<Props> = ({ tool, isAddedManual, isMcpToolset, isAssetToolset, toolSetName }) => {
   return (
-    <Accordion
-      header={
-        <ToolHeader
-          tool={tool}
-          toolSetName={toolSetName}
-          isAddedManual={isAddedManual}
-          isMcpToolset={isMcpToolset}
-          isAssetToolset={isAssetToolset}
-        />
-      }
-      containerClassName="px-4 py-2"
-    >
-      <ToolContent tool={tool} />
-    </Accordion>
+    <>
+      {isAddedManual ? (
+        <div className="flex flex-col rounded border border-primary px-4 pl-[36px] py-4">
+          <ToolHeader
+            tool={tool}
+            toolSetName={toolSetName}
+            isAddedManual={isAddedManual}
+            isMcpToolset={isMcpToolset}
+            isAssetToolset={isAssetToolset}
+          />
+        </div>
+      ) : (
+        <Accordion
+          header={
+            <ToolHeader
+              tool={tool}
+              toolSetName={toolSetName}
+              isAddedManual={isAddedManual}
+              isMcpToolset={isMcpToolset}
+              isAssetToolset={isAssetToolset}
+            />
+          }
+          containerClassName={isMcpToolset ? 'px-4 py-4' : 'px-4 py-2'}
+        >
+          <ToolContent tool={tool} />
+        </Accordion>
+      )}
+    </>
   );
 };
 
