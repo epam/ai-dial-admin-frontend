@@ -235,10 +235,15 @@ describe('Deployments actions', () => {
       const mockResponse = { id: '2', name: 'duplicated' };
       (containersApi.duplicateContainer as any).mockResolvedValue(mockResponse);
 
-      const result = await duplicateContainer('container-1', 'duplicated');
+      const result = await duplicateContainer('container-1', 'container-2', 'duplicated');
 
       expect(getUserToken).toHaveBeenCalled();
-      expect(containersApi.duplicateContainer).toHaveBeenCalledWith('container-1', 'duplicated', TOKEN_MOCK);
+      expect(containersApi.duplicateContainer).toHaveBeenCalledWith(
+        'container-1',
+        'container-2',
+        'duplicated',
+        TOKEN_MOCK,
+      );
       expect(result).toBe(mockResponse);
     });
 

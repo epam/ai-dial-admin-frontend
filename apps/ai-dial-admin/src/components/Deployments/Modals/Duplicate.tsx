@@ -66,7 +66,7 @@ const DuplicateModal: FC<Props> = ({ title, isModalOpen, container, onClose, onA
       submitLabel={t(ButtonsI18nKey.Duplicate)}
       disableSubmitButton={!isValid}
     >
-      <div className="flex flex-col h-full overflow-auto px-6 py-4">
+      <div className="flex flex-col h-full overflow-auto px-6 py-4 gap-4">
         <IdControl
           entity={duplicate}
           onChangeEntity={onChangeName}
