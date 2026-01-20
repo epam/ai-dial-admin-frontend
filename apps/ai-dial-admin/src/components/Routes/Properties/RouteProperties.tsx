@@ -85,9 +85,9 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
 
   const onChangeDisplayName = useCallback(
     (displayName?: string) => {
-      updateRoute({ ...route, displayName });
+      updateRoute(isAppRoute ? { ...route, name: displayName } : { ...route, displayName });
     },
-    [route, updateRoute],
+    [updateRoute, isAppRoute, route],
   );
 
   const onChangeRewritePath = useCallback(
@@ -166,7 +166,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
   return (
     <div className="h-full flex flex-col w-full gap-y-8">
       <DisplayNameControl
-        displayName={route.displayName}
+        displayName={isAppRoute ? route.name : route.displayName}
         required={true}
         isFullWidth={false}
         onChange={onChangeDisplayName}
