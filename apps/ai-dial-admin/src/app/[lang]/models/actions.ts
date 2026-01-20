@@ -8,7 +8,7 @@ import { DialModel, DialModelType } from '@/src/models/dial/model';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { convertDefaultsToRecord } from '@/src/components/Defaults/utils';
-import { SOURCE_FIELD } from '@/src/components/SourceField/types';
+import { SOURCE_FIELD, SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 
 export async function getModels() {
@@ -57,7 +57,10 @@ export async function createModel(model: DialModel) {
       type,
       source: {
         ...model.source,
-        completionEndpointPath: model.source?.completionEndpointPath ?? `${model.name}${getEndpointPostfix(type)}`,
+        completionEndpointPath:
+          model.source?.$type === SOURCE_TYPE.CONTAINER
+            ? model.source.completionEndpointPath
+            : `${model.name}${getEndpointPostfix(type)}`,
       } as SOURCE_FIELD,
     },
     token,

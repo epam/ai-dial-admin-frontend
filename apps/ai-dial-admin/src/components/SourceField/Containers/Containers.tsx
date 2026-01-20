@@ -71,8 +71,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
         },
       };
       if (view === ApplicationRoute.Models) {
-        updatedEntity.source.completionEndpointPath =
-          entity.source?.completionEndpointPath || getEndpointPostfix((entity as DialModel).type);
+        updatedEntity.source.completionEndpointPath = `openai/v1${getEndpointPostfix((entity as DialModel).type)}`;
       }
       onChange(updatedEntity);
       onCloseModal();

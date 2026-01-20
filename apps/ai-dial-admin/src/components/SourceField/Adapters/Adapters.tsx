@@ -11,7 +11,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { DialModel, DialModelType } from '@/src/models/dial/model';
+import { DialModel } from '@/src/models/dial/model';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
@@ -63,7 +63,8 @@ const Adapters = <T extends DialModel | DialInterceptor>({
           ...entity.source,
           $type: entity.source?.$type || SOURCE_TYPE.ADAPTER,
           adapterName: name,
-          completionEndpointPath: `${name}${(entity as DialModel).type ? getEndpointPostfix((entity as DialModel).type) : getEndpointPostfix(DialModelType.Chat)}`,
+          completionEndpointPath:
+            entity.source?.completionEndpointPath || `${entity.name}${getEndpointPostfix((entity as DialModel).type)}`,
         },
       });
       onCloseModal();
