@@ -47,7 +47,7 @@ export async function updateModel(model: DialModel, etag: string) {
   return modelsApi.updateModel(newModel, token, etag);
 }
 
-export async function createModel(model: DialModel) {
+export async function createModel(model: DialModel, duplicate?: boolean) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   const type = model.type || DialModelType.Chat;
   return modelsApi.createModel(
@@ -58,8 +58,8 @@ export async function createModel(model: DialModel) {
       source: {
         ...model.source,
         completionEndpointPath:
-          model.source?.$type === SOURCE_TYPE.CONTAINER
-            ? model.source.completionEndpointPath
+          model.source?.$type === SOURCE_TYPE.CONTAINER || duplicate
+            ? model.source?.completionEndpointPath
             : `${model.name}${getEndpointPostfix(type)}`,
       } as SOURCE_FIELD,
     },
