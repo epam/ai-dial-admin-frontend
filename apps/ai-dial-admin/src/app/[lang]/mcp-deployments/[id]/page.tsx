@@ -15,6 +15,7 @@ import { errorObjLog } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { decodeVariables } from '@/src/utils/deployments/variables';
 
 export const dynamic = 'force-dynamic';
 
@@ -59,7 +60,7 @@ export default async function Page(params: Params) {
     <SaveValidationContextProvider>
       <ToolsetFolderProvider>
         <ContainerView
-          container={container}
+          container={decodeVariables(container)}
           image={image}
           route={ApplicationRoute.McpDeployments}
           names={containers?.map((container) => container.name).filter((name) => name !== container.name) || []}

@@ -46,8 +46,8 @@ const EditableCellRenderer = ({
   }, [inputValue, showMaxValue]);
 
   const correctValue = useMemo(() => {
-    return !inputValue || isMaxValue ? defaultValue || '' : inputValue;
-  }, [defaultValue, inputValue, isMaxValue]);
+    return !inputValue || isMaxValue ? '' : inputValue;
+  }, [inputValue, isMaxValue]);
 
   const showTriangle = useMemo(() => {
     const value = !correctValue || isMaxValue ? void 0 : correctValue;
