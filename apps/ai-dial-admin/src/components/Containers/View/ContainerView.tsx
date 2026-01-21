@@ -144,7 +144,7 @@ const ContainerView: FC<Props> = ({
             });
           });
         }
-        setEvents((prev) => [...prev, data]);
+        setEvents((prev) => [...prev, data].sort((a, b) => b.firstTimestamp - a.firstTimestamp));
       });
 
       return () => {
