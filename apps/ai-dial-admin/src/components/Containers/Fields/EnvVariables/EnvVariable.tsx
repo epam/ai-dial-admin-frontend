@@ -15,7 +15,7 @@ import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { EnvironmentVariable, EnvVariableValue } from '@/src/models/deployments/variables';
 import { FieldError } from '@/src/models/error';
-import { MOUNT_TYPE, VALUE_TYPE } from '@/src/types/deployments/variables';
+import { MOUNT_TYPE } from '@/src/types/deployments/variables';
 import { getVariableNameError } from '@/src/utils/deployments/validation';
 
 interface Props {
@@ -88,12 +88,6 @@ const EnvVariable: FC<Props> = ({
       updateVariable({
         ...variable,
         mountType: mountType as MOUNT_TYPE,
-        value: {
-          $type: mountType === MOUNT_TYPE.SECURE_FILE ? VALUE_TYPE.FILE : VALUE_TYPE.SIMPLE,
-          value: mountType === MOUNT_TYPE.SECURE_FILE ? '' : variable.value.value || '',
-          fileContent: '',
-          fileName: '',
-        },
       });
     },
     [updateVariable, variable],
