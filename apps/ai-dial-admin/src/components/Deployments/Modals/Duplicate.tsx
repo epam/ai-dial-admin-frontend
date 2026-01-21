@@ -25,7 +25,7 @@ const DuplicateModal: FC<Props> = ({ title, isModalOpen, container, onClose, onA
   const [duplicate, setDuplicate] = useState<Container>({
     ...container,
     name: `${container.name}-copy`,
-    displayName: `${container.displayName} ${t(BasicI18nKey.DuplicateCopyPostfix)})`,
+    displayName: `${container.displayName} ${t(BasicI18nKey.DuplicateCopyPostfix)}`,
   });
   const [isUniqueNameError, setIsUniqueNameError] = useState<boolean>(false);
 
