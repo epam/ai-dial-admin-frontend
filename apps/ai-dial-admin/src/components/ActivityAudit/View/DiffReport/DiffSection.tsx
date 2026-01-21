@@ -40,7 +40,11 @@ const DiffSection: FC<Props> = ({ sections, name, type, diffView, compareView })
       title={title}
       contentClassName="gap-y-8"
       containerClassName="bg-layer-3"
-      actionButtons={<DiffLegend added={added} changed={changed} removed={removed} />}
+      actionButtons={
+        <div className="mr-4 flex items-center">
+          <DiffLegend added={added} changed={changed} removed={removed} />
+        </div>
+      }
     >
       {validSections.map(({ index, currentData, compareData }) => (
         <div key={index} className="flex flex-row gap-8">
