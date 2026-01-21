@@ -189,7 +189,7 @@ const ToolsetView: FC<Props> = ({ names, isUserLevel, oAuthCode, etag, roles, or
             getSuccessNotification(t(ToolsetI18nKey.SuccessLogin), t(ToolsetI18nKey.SuccessLoginDescription)),
           );
         }
-        router.push(getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset));
+        router.push(getUrnForEntity(ApplicationRoute.Toolsets, selectedToolset));
       });
     },
     [router, selectedToolset, showNotification, t],
@@ -240,7 +240,7 @@ const ToolsetView: FC<Props> = ({ names, isUserLevel, oAuthCode, etag, roles, or
       : ToolsetAuthCredentialLevel.GLOBAL;
     getReqRef.current(signOutToolset, selectedToolset, level).then((res) => {
       if (res.success) {
-        router.push(getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset));
+        router.push(getUrnForEntity(ApplicationRoute.Toolsets, selectedToolset));
         showNotification(
           getSuccessNotification(t(ToolsetI18nKey.SuccessLogout), t(ToolsetI18nKey.SuccessLogoutDescription)),
         );
