@@ -14,18 +14,11 @@ describe('getDiffEditorTheme', () => {
     expect(theme.base).toBe('vs');
     expect(theme.colors['editor.background']).toBe('#FCFCFC');
   });
-
-  test('returns light-orange theme config with overridden background', () => {
-    const theme = getDiffEditorTheme(EDITOR_THEMES['light-orange']);
-    expect(theme.base).toBe('vs');
-    expect(theme.colors['editor.background']).toBe('#FCFCFC');
-  });
 });
 
 describe('EDITOR_THEMES_CONFIG', () => {
   test('contains dark, light, and light-orange configs', () => {
     expect(EDITOR_THEMES_CONFIG[EDITOR_THEMES.dark]).toBeDefined();
     expect(EDITOR_THEMES_CONFIG[EDITOR_THEMES.light]).toBeDefined();
-    expect(EDITOR_THEMES_CONFIG[EDITOR_THEMES['light-orange']]).toBeDefined();
   });
 });

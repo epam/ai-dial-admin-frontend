@@ -59,6 +59,7 @@ const Authentication: FC<Props> = ({ disabled, view, toolset, onChange, ...props
             config={authOptions.find((option) => option.id === selectedAuthType)!}
             isSelected={true}
             disabled={true}
+            view={view}
             authSettings={toolset.authSettings}
             {...props}
           />
@@ -66,6 +67,7 @@ const Authentication: FC<Props> = ({ disabled, view, toolset, onChange, ...props
           authOptions.map((option) => (
             <AuthTypeSection
               key={option.id}
+              view={view}
               config={option}
               isSelected={option.id === selectedAuthType}
               onClick={onChangeAuthType}

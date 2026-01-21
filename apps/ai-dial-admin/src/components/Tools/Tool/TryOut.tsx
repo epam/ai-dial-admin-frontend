@@ -89,6 +89,7 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset }) => {
 
   useEffect(() => {
     setResponse({});
+    setRequestBody({});
   }, [tool?.name]);
 
   return (
@@ -99,7 +100,7 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset }) => {
           <DialPrimaryButton
             label={t(ButtonsI18nKey.SendRequest)}
             onClick={() => sendRequest()}
-            disabled={responseView !== ParamsView.FORM || isRequestSend}
+            disabled={isRequestSend}
           />
           <DialCloseButton onClose={closeSidebar} />
         </div>
@@ -129,7 +130,7 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset }) => {
                 data={requestBody}
               />
             ) : (
-              <JsonEditor entity={tool?.inputSchema?.properties as Record<string, unknown>} readonly={true} />
+              <JsonEditor entity={requestBody} />
             )}
           </div>
         </div>
