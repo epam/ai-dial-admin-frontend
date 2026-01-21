@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import AuthTypeSection from '../AuthTypeSection';
 import { ToolsetAuthType } from '@/src/models/dial/toolset';
 import { EntityPlaceholdersI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
+import { ApplicationRoute } from '../../../../../types/routes';
 
 const baseConfig = {
   id: ToolsetAuthType.API_KEY,
@@ -40,13 +41,20 @@ describe('AuthTypeSection', () => {
   });
 
   test('shows OAuth radio group when selected and OAUTH', () => {
-    render(<AuthTypeSection config={oauthConfig} isSelected={true} />);
+    render(<AuthTypeSection view={ApplicationRoute.AssetsToolsets} config={oauthConfig} isSelected={true} />);
     expect(screen.getByText('OAuth')).toBeInTheDocument();
     expect(screen.getByText(ToolsetI18nKey.WithLogin)).toBeInTheDocument();
   });
 
   test('shows OAuthSection when With_config_and_login selected', () => {
-    render(<AuthTypeSection config={oauthConfig} isSelected={true} authSettings={{ clientId: 'client' }} />);
+    render(
+      <AuthTypeSection
+        view={ApplicationRoute.AssetsToolsets}
+        config={oauthConfig}
+        isSelected={true}
+        authSettings={{ clientId: 'client' }}
+      />,
+    );
     expect(screen.getByText('OAuth')).toBeInTheDocument();
     expect(screen.getByText(ToolsetI18nKey.WithLoginAndConfig)).toBeInTheDocument();
   });
