@@ -203,3 +203,26 @@ export const getErrorForHfModelName = (
 
   return null;
 };
+
+export const getCPUError = (
+  value: number,
+  t?: (key: string, options?: Record<string, string | number>) => string,
+): FieldError | null => {
+  if (value < 1) {
+    return { type: ErrorType.INVALID, text: t ? t(ErrorI18nKey.CpuError) : '' };
+  }
+
+  return null;
+};
+
+export const getResourcesConflictError = (
+  request: number,
+  limit: number,
+  t?: (key: string, options?: Record<string, string | number>) => string,
+): FieldError | null => {
+  if (request > limit) {
+    return { type: ErrorType.INVALID, text: t ? t(ErrorI18nKey.CpuRequestError) : '' };
+  }
+
+  return null;
+};
