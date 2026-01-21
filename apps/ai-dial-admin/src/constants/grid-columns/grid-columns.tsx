@@ -49,6 +49,7 @@ const stringFilter: Partial<ColDef> = {
     ],
     maxNumConditions: 1,
     buttons: ['reset', 'apply'],
+    closeOnApply: true,
   } as ITextFilterParams,
 };
 
