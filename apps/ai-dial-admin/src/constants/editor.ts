@@ -25,7 +25,6 @@ export const getDiffEditorTheme = (theme: EDITOR_THEMES): JSONEditorThemeConfig 
     case EDITOR_THEMES.dark:
       return { ...template, colors: { ...template.colors, 'editor.background': '#222932' } };
     case EDITOR_THEMES.light:
-    case EDITOR_THEMES['light-orange']:
       return { ...template, colors: { ...template.colors, 'editor.background': '#FCFCFC' } };
   }
 };
@@ -48,27 +47,6 @@ export const EDITOR_THEMES_CONFIG: Record<EDITOR_THEMES, JSONEditorThemeConfig> 
     },
   },
   [EDITOR_THEMES.light]: {
-    base: 'vs',
-    inherit: false,
-    rules: [
-      { token: 'string.key.json', foreground: '#009D9F' },
-      { token: 'string.value.json', foreground: '#2764D9' },
-      { token: 'number', foreground: '#B25500' },
-      { token: 'keyword.json', foreground: '#3F3D25' },
-      { token: 'delimiter', foreground: '#141A23' },
-      { token: 'delimiter.bracket.json', foreground: '#843EF3' },
-      { token: 'delimiter.parenthesis', foreground: '#843EF3' },
-    ],
-    colors: {
-      ...DEFAULT_COLORS,
-      'editor.foreground': '#141A23',
-      'editor.background': '#F3F4F6',
-      'editorCursor.foreground': '#141A23',
-      'diffEditor.insertedTextBackground': '#CEEBEE',
-      'diffEditor.removedTextBackground': '#F3D6D8',
-    },
-  },
-  [EDITOR_THEMES['light-orange']]: {
     base: 'vs',
     inherit: false,
     rules: [
