@@ -15,6 +15,7 @@ import {
   updateCoreModel,
   updateModel,
 } from './actions';
+import { DialModel } from '@/src/models/dial/model';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -91,6 +92,33 @@ describe('Models :: server actions', () => {
         name: 'test',
         source: {
           completionEndpointPath: 'test/chat/completions',
+        },
+        type: 'chat',
+        defaultRoleLimit: {
+          day: null,
+          minute: null,
+          month: null,
+          week: null,
+        },
+      },
+      TOKEN_MOCK,
+    );
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call createModel action with old completionEndpointPath', async () => {
+    (modelsApi.createModel as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await createModel(
+      { name: 'test', source: { completionEndpointPath: 'endpoint/path' } } as DialModel,
+      true,
+    );
+    expect(getUserToken).toHaveBeenCalled();
+    expect(modelsApi.createModel).toHaveBeenCalledWith(
+      {
+        name: 'test',
+        source: {
+          completionEndpointPath: 'endpoint/path',
         },
         type: 'chat',
         defaultRoleLimit: {
