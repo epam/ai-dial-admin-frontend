@@ -8,6 +8,7 @@ import { ToolsetAuthSettings, ToolsetAuthType } from '@/src/models/dial/toolset'
 import { AuthConfig } from '../Authentication';
 import ApiKeySection from './ApiKeySection';
 import OAuthSection from './OAuthSection';
+import { ApplicationRoute } from '@/src/types/routes';
 
 enum AuthType {
   With_login = 'With_login',
@@ -18,12 +19,22 @@ interface Props {
   config: AuthConfig;
   isSelected: boolean;
   disabled?: boolean;
+  view: ApplicationRoute;
   onClick?: (type: ToolsetAuthType) => void;
   authSettings?: ToolsetAuthSettings;
   onChange?: (authSettings: ToolsetAuthSettings) => void;
 }
 
-const AuthTypeSection: FC<Props> = ({ disabled, config, isSelected, onClick, authSettings, onChange, ...props }) => {
+const AuthTypeSection: FC<Props> = ({
+  disabled,
+  config,
+  view,
+  isSelected,
+  onClick,
+  authSettings,
+  onChange,
+  ...props
+}) => {
   const t = useI18n();
 
   const [selectedAuthType, setSelectedAuthType] = useState(AuthType.With_login);
@@ -52,6 +63,12 @@ const AuthTypeSection: FC<Props> = ({ disabled, config, isSelected, onClick, aut
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (view === ApplicationRoute.Toolsets) {
+      setSelectedAuthType(AuthType.With_config_and_login);
+    }
+  }, [view]);
+
   const handleOnClick = useCallback(() => {
     onClick?.(config.id);
   }, [config.id, onClick]);
@@ -75,7 +92,7 @@ const AuthTypeSection: FC<Props> = ({ disabled, config, isSelected, onClick, aut
       </div>
       {isSelected && config.id !== ToolsetAuthType.NONE && (
         <div className="flex flex-col gap-4 border-t border-tertiary p-4">
-          {config.id === ToolsetAuthType.OAUTH && (
+          {config.id === ToolsetAuthType.OAUTH && view === ApplicationRoute.AssetsToolsets && (
             <DialRadioGroup
               elementId="auth"
               disabled={disabled}
