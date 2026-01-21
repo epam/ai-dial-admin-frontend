@@ -99,7 +99,7 @@ describe('Server :: FoldersApi', () => {
     await instance.createFolder(TOKEN_MOCK, formData, ImportFileType.FILES, ApplicationRoute.Files);
 
     expect(fetchMock).toHaveBeenCalledWith(
-      `${TEST_URL}${ResourceBasePaths[ResourceType.FILE]}/${ResourceOperation.IMPORT_JSON}`,
+      `${TEST_URL}${ResourceBasePaths[ResourceType.FILE]}/${ResourceOperation.IMPORT}`,
       expect.objectContaining({
         method: 'POST',
         body: formData,
