@@ -12,7 +12,6 @@ import { EnvVariableValue } from '@/src/models/deployments/variables';
 import { MOUNT_TYPE, VALUE_TYPE } from '@/src/types/deployments/variables';
 import { useI18n } from '@/src/locales/client';
 import { EntityPlaceholdersI18nKey, EnvVariablesI18nKey } from '@/src/constants/i18n';
-import { getValueByMountType } from '@/src/utils/deployments/variables';
 import Field from '@/src/components/Common/Field/Field';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
@@ -79,21 +78,21 @@ const EnvVariableValueField: FC<Props> = ({ value, index, onValueChange, mountTy
 
   const onClearFile = useCallback(() => {
     onValueChange({
-      $type: mountType === MOUNT_TYPE.SECURE_FILE ? VALUE_TYPE.FILE : VALUE_TYPE.SIMPLE,
+      $type: VALUE_TYPE.SIMPLE,
       value: '',
       fileContent: '',
       fileName: '',
     });
-  }, [mountType, onValueChange]);
+  }, [onValueChange]);
 
   const onChangeValue = useCallback(
     (newValue?: string) => {
       onValueChange({
         ...value,
-        value: getValueByMountType(newValue as string, mountType as MOUNT_TYPE),
+        value: newValue,
       });
     },
-    [mountType, onValueChange, value],
+    [onValueChange, value],
   );
 
   return (
@@ -111,7 +110,7 @@ const EnvVariableValueField: FC<Props> = ({ value, index, onValueChange, mountTy
           ) : (
             <DialTextInputField
               elementId={`value ${index}`}
-              value={getValueByMountType(value.value as string, mountType as MOUNT_TYPE)}
+              value={value.value}
               placeholder={t(EntityPlaceholdersI18nKey.Value)}
               fieldTitle={fieldName}
               onChange={onChangeValue}
@@ -122,27 +121,18 @@ const EnvVariableValueField: FC<Props> = ({ value, index, onValueChange, mountTy
       {value.$type === VALUE_TYPE.FILE && (
         <div className="flex flex-col flex-1 max-w-full">
           <Field fieldTitle={fieldName} />
-          {value.fileName && value.fileContent ? (
-            <div className="flex border border-primary px-3 py-1 rounded justify-between">
-              <DialTooltip tooltip={value.fileName}>
-                <div
-                  className="flex flex-row gap-x-3 text-accent-primary w-full items-center"
-                  onClick={handleFileDownload}
-                >
-                  <DialFileIcon extension={getNameExtensionFromFile(value.fileName as string).extension} />
-                  <p className="truncate flex-1 min-w-0 text-left items-center">{value.fileName}</p>
-                </div>
-              </DialTooltip>
-              <DialButton iconBefore={<IconX {...BASE_BUTTON_ICON_PROPS} />} onClick={onClearFile} />
-            </div>
-          ) : (
-            <DialTextInputField
-              elementId={`value ${index}`}
-              value={t(EnvVariablesI18nKey.NoFileSelected)}
-              placeholder={t(EnvVariablesI18nKey.NoFileSelected)}
-              disabled={true}
-            />
-          )}
+          <div className="flex border border-primary px-3 py-1 rounded justify-between">
+            <DialTooltip tooltip={value.fileName}>
+              <div
+                className="flex flex-row gap-x-3 text-accent-primary w-full items-center"
+                onClick={handleFileDownload}
+              >
+                <DialFileIcon extension={getNameExtensionFromFile(value.fileName as string).extension} />
+                <p className="truncate flex-1 min-w-0 text-left items-center">{value.fileName}</p>
+              </div>
+            </DialTooltip>
+            <DialButton iconBefore={<IconX {...BASE_BUTTON_ICON_PROPS} />} onClick={onClearFile} />
+          </div>
         </div>
       )}
 

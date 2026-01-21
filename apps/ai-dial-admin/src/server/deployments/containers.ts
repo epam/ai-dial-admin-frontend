@@ -3,6 +3,7 @@ import { BaseApi } from '@/src/server/base-api';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { Container, Pod, Prompt, Resource } from '@/src/models/deployments/containers';
 import { API } from '@/src/server/api';
+import { encodeVariables } from '@/src/utils/deployments/variables';
 
 export const BASE_CONTAINERS_URL = `${API}/deployments`;
 export const SERVER_CONTAINERS_URL = (id: string) => `${BASE_CONTAINERS_URL}?imageDefinitionId=${id}`;
@@ -47,7 +48,7 @@ export class ContainersApi extends BaseApi {
   }
 
   createContainer(container: Container, token: JWT | null): Promise<ServerActionResponse> {
-    return this.postAction(BASE_CONTAINERS_URL, container, token);
+    return this.postAction(BASE_CONTAINERS_URL, encodeVariables(container), token);
   }
 
   duplicateContainer(
@@ -64,7 +65,7 @@ export class ContainersApi extends BaseApi {
   }
 
   updateContainer(container: Container, token: JWT | null): Promise<ServerActionResponse> {
-    return this.putAction(CONTAINER_URL(container.name), container, token);
+    return this.putAction(CONTAINER_URL(container.name), encodeVariables(container), token);
   }
 
   updateContainersImageId(
