@@ -123,7 +123,6 @@ export class AssetsApi extends BaseApi {
     return Promise.all(requests);
   }
 
-  // currently for files - json /import, for prompts - json /import/json need fix from BE when application added
   importAssets(
     token: JWT | null,
     body: FormData,

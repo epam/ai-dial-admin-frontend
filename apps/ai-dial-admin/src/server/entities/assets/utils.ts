@@ -18,7 +18,7 @@ export const buildCreateFolderUrl = (filetype?: string, view?: ApplicationRoute)
   if (view === ApplicationRoute.Files) {
     return filetype === ImportFileType.ARCHIVE
       ? buildAssetUrl(ResourceType.FILE, ResourceOperation.IMPORT_ZIP)
-      : buildAssetUrl(ResourceType.FILE, ResourceOperation.IMPORT_JSON);
+      : buildAssetUrl(ResourceType.FILE, ResourceOperation.IMPORT);
   }
 
   if (view === ApplicationRoute.AssetsApplications) {
