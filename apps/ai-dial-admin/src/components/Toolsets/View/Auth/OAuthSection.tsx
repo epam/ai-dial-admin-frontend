@@ -7,7 +7,6 @@ import EndpointControl from '@/src/components/EntityMainProperties/BasePropertie
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ToolsetAuthSettings, ToolsetCodeChallengeMethod } from '@/src/models/dial/toolset';
-import { ApplicationRoute } from '@/src/types/routes';
 
 enum AuthType {
   DYNAMIC = 'dynamic',
@@ -17,11 +16,10 @@ enum AuthType {
 interface Props {
   authSettings?: ToolsetAuthSettings;
   disabled?: boolean;
-  view: ApplicationRoute;
   onChange?: (entity: ToolsetAuthSettings) => void;
 }
 
-const OAuthSection: FC<Props> = ({ view, disabled, authSettings, onChange }) => {
+const OAuthSection: FC<Props> = ({ disabled, authSettings, onChange }) => {
   const t = useI18n();
 
   const types: SelectOption[] = [{ value: AuthType.EXISTING, label: t(ToolsetI18nKey.ExistingClient) }];
