@@ -221,7 +221,7 @@ export const getResourcesConflictError = (
   t?: (key: string, options?: Record<string, string | number>) => string,
 ): FieldError | null => {
   if (request > limit) {
-    return { type: ErrorType.INVALID, text: t ? t(ErrorI18nKey.CpuRequestError) : '' };
+    return { type: ErrorType.INVALID, text: t ? t(ErrorI18nKey.LimitRequestError) : '' };
   }
 
   return null;
