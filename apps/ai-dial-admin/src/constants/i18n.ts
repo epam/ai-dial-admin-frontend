@@ -839,6 +839,7 @@ export enum ErrorI18nKey {
   HFModelName = 'Error.HFModelName',
   ContainSpace = 'Error.ContainSpace',
   AllowedChars = 'Error.AllowedChars',
+  LimitRequestError = 'Error.LimitRequestError',
 }
 
 export enum SourceI18nKey {
