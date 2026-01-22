@@ -42,15 +42,13 @@ const PromptsProperties: FC<Props> = ({ prompt, action, collapsed }) => {
 
   const actionButtons = useMemo(() => {
     return (
-      <div className="flex justify-end gap-4">
-        {action === ActionType.DELETE && (
-          <DialNeutralButton
-            label={t(PublicationsI18nKey.OpenPrompt)}
-            iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
-            onClick={openPrompt}
-          />
-        )}
-      </div>
+      action === ActionType.DELETE && (
+        <DialNeutralButton
+          label={t(PublicationsI18nKey.OpenPrompt)}
+          iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
+          onClick={openPrompt}
+        />
+      )
     );
   }, [action, openPrompt, t]);
 
