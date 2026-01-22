@@ -1,7 +1,7 @@
 import { DialInputPopup, DialNeutralButton, DialSelectField } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import Field from '@/src/components/Common/Field/Field';
 import SelectContainerModal from '@/src/components/SourceField/Containers/SelectContainerModal';
@@ -49,6 +49,10 @@ const Containers = <T extends DialInterceptor | DialModel>({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [containers, setContainers] = useState<Container[]>([]);
   const [selectedContainer, setSelectedContainer] = useState<Container | null>(null);
+
+  const selectedContainerName = useMemo(() => {
+    return containers.find((container) => container.name === entity.source?.containerId)?.displayName;
+  }, [containers, entity.source?.containerId]);
 
   const onOpenModal = useCallback(() => {
     setIsModalOpen(true);
@@ -119,7 +123,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
               }))}
               onChange={(container) => onSelect(container as string)}
               elementId="source-type"
-              value={containers.find((container) => container.name === entity.source?.containerId)?.displayName}
+              value={selectedContainerName}
               placeholder={t(CreateI18nKey.SelectContainer)}
               fieldTitle={t(EntityFieldsI18nKey.container)}
               readonly={!featureFlags.deploymentsEnabled}
