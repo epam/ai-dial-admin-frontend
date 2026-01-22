@@ -111,13 +111,12 @@ const Tools: FC<Props> = ({
   const onUseAllToolsSwitch = useCallback(
     (value: boolean) => {
       setUseAllTools(value);
-      const allAvailableToolNames = tools?.map((tool) => tool.name) || [];
       onChangeToolset?.({
         ...selectedToolset,
-        allowedTools: !value ? [] : [...allAvailableToolNames],
+        allowedTools: !value ? [''] : [],
       });
     },
-    [onChangeToolset, tools, selectedToolset],
+    [onChangeToolset, selectedToolset],
   );
 
   useEffect(() => {
@@ -163,6 +162,7 @@ const Tools: FC<Props> = ({
 
     debounceTimeout.current = setTimeout(() => {
       const allTools = [...(tools || []), ...manualAddedTools];
+      const allowedTools = selectedToolset?.allowedTools?.filter((toolName) => toolName !== '') || [];
 
       if (search.length) {
         const searchText = search.toLowerCase().trim();
@@ -177,18 +177,14 @@ const Tools: FC<Props> = ({
                   JSON.stringify(tool.annotations)?.toLowerCase().includes(searchText),
               )
             : getFilteredTools(
-                selectedToolset?.allowedTools || [],
+                allowedTools,
                 useAllTools ? [...filtersConfiguration] : selectedFilters,
                 tools || [],
               ).filter((tool) => tool.name.toLowerCase().includes(searchText) && tool.name !== ''),
         );
       } else {
         setDisplayTools(
-          getFilteredTools(
-            selectedToolset?.allowedTools || [],
-            useAllTools ? [...filtersConfiguration] : selectedFilters,
-            tools || [],
-          ),
+          getFilteredTools(allowedTools, useAllTools ? [...filtersConfiguration] : selectedFilters, tools || []),
         );
       }
     }, 300);
@@ -200,6 +196,19 @@ const Tools: FC<Props> = ({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, tools, manualAddedTools, selectedFilters]);
+
+  useEffect(() => {
+    const isAllToolsAllowed =
+      selectedToolset?.allowedTools &&
+      tools &&
+      tools.every((tool) => selectedToolset.allowedTools?.includes(tool.name));
+
+    if (selectedToolset?.allowedTools?.length === 0 || isAllToolsAllowed) {
+      setUseAllTools(true);
+    } else {
+      setUseAllTools(false);
+    }
+  }, [selectedToolset, tools]);
 
   if (loading) {
     return <DialLoader size={40} />;
