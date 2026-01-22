@@ -43,7 +43,7 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalToolset, onCl
   });
   const [customToolsConfig, setCustomToolsConfig] = useState<CustomToolConfig[]>(() => {
     return (originalToolset.allowedTools || []).reduce((acc, curr) => {
-      if (!tools.some((tool) => tool.name === curr)) {
+      if (!tools.some((tool) => tool.name === curr || curr === '')) {
         acc.push({
           name: curr,
           isAllowed: true,
@@ -162,7 +162,7 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalToolset, onCl
     const uniqueAllowedTools = [...new Set([...allowedTools, ...allowedCustomTools])];
     onConfirm?.({
       ...originalToolset,
-      allowedTools: uniqueAllowedTools,
+      allowedTools: uniqueAllowedTools?.length ? uniqueAllowedTools : [''],
     });
     onClose();
   }, [originalToolset, onConfirm, onClose, toolsConfig, customToolsConfig]);
