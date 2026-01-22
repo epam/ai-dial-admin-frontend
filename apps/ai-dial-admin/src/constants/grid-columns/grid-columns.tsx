@@ -620,6 +620,7 @@ export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, rou
     tooltipValueGetter: ({ value }) => t(STATUS_I18N_KEYS[value as CONTAINER_STATUS]),
     filterValueGetter: (params) => t(STATUS_I18N_KEYS[params.data[params.colDef.field || ''] as CONTAINER_STATUS]),
   },
+  { field: 'url', headerName: 'Container URL', hide: true },
   { field: 'author', headerName: 'Maintainer', hide: true },
   {
     field: 'createdAt',
