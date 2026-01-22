@@ -43,7 +43,7 @@ interface Props<T> {
   onChangeModalType: (value?: ModalType) => void;
   onChangeCurrentEntity: (value?: T) => void;
   onChangeIsBulkView: (value: boolean) => void;
-  onCreateEntity?: (entity: T) => Promise<ServerActionResponse>;
+  onCreateEntity?: (entity: T, duplicate?: boolean) => Promise<ServerActionResponse>;
   onRemoveEntity: (entity: string) => Promise<ServerActionResponse>;
   onMoveFiles?: (paths: string[], newPath: string) => Promise<ServerActionResponse[]>;
   onBulkDelete?: (paths: { path: string }[]) => Promise<ServerActionResponse>;
@@ -104,7 +104,7 @@ const Actions = <T extends object>({
     (clonedEntity: T) => {
       const duplicate = async () => {
         const preparedEntity = preparePathForAsset(clonedEntity, route);
-        const res = await getReqRef.current(onCreateEntity, preparedEntity as T);
+        const res = await getReqRef.current(onCreateEntity, preparedEntity as T, true);
         if (res?.success) {
           handleModalClose();
           onChangeCurrentEntity(void 0);

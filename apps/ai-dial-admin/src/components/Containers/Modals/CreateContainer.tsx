@@ -52,6 +52,7 @@ const CreateContainer: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
   const [currentStepId, setCurrentStep] = useState(steps[0].id);
   const [images, setImages] = useState<ImageGroup[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [filters, setFilters] = useState<{ [key: string]: string }>({});
 
   const setStepsState = useCallback(
     (status?: StepStatus) => {
@@ -154,6 +155,9 @@ const CreateContainer: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
                         />
                       ),
                     },
+                    onFilterChanged: (event) => {
+                      setFilters(event.api.getFilterModel());
+                    },
                     onRowSelected: (event) => {
                       if (event.node.isSelected()) {
                         setContainer({
@@ -168,6 +172,7 @@ const CreateContainer: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
                         rowData: images,
                         columnDefs: colDefs,
                       });
+                      event.api.setFilterModel(filters);
                       event.api.forEachNode((node) => {
                         if (
                           node.data.selectedId === container.imageDefinitionId &&

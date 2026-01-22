@@ -41,7 +41,7 @@
     "classnames": "^2.5.1",
     "echarts": "^5.6.0",
     "echarts-for-react": "^3.0.5",
-    "lodash": "^4.17.21",
+    "lodash": "^4.17.23",
     "monaco-editor": "^0.52.2",
     "next": "15.5.9",
     "next-auth": "^4.24.13",
