@@ -273,6 +273,7 @@ const Tools: FC<Props> = ({
                   isMcpToolset={isMcpToolset}
                   isAssetToolset={isAssetToolset}
                   toolSetName={(isAssetToolset ? (selectedToolset as AssetToolset)?.path : selectedToolset?.name) || ''}
+                  isEnable={useAllTools || selectedToolset?.allowedTools?.includes(tool.name)}
                 />
               );
             })}

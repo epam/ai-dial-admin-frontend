@@ -1091,6 +1091,7 @@ export default {
     HFModelName: 'Invalid Hugging Face model name.',
     ContainSpace: 'Field must not contain spaces.',
     AllowedChars: 'Field must contain only lowercase Latin letters, numbers and hyphens',
+    LimitRequestError: 'Requested resource bigger than limit',
   },
   Source: {
     OpenTemplate: 'Open template',
