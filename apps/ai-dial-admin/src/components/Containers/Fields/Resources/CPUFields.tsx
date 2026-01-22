@@ -22,32 +22,36 @@ const CPUFields: FC<Props> = ({ container, setContainer }) => {
 
   useEffect(() => {
     if (resetCounter || (container.resources?.requests?.cpu && Number(container.resources?.requests?.cpu) < 0)) {
+      const error =
+        getCPUError(Number(container.resources?.requests?.cpu), t) ??
+        getResourcesConflictError(
+          Number(container.resources?.requests?.cpu),
+          Number(container.resources?.limits?.cpu),
+          t,
+        );
+      setRequestError(error);
       dispatch({
         type: ValidationActionType.SetField,
         field: 'cpuRequest',
-        isValid:
-          !getCPUError(Number(container.resources?.requests?.cpu), t) ||
-          !getResourcesConflictError(
-            Number(container.resources?.requests?.cpu),
-            Number(container.resources?.limits?.cpu),
-            t,
-          ),
+        isValid: !error,
       });
     }
   }, [container.resources, dispatch, resetCounter, t]);
 
   useEffect(() => {
     if (resetCounter || (container.resources?.limits?.cpu && Number(container.resources?.limits?.cpu) < 0)) {
+      const error =
+        getCPUError(Number(container.resources?.limits?.cpu), t) ??
+        getResourcesConflictError(
+          Number(container.resources?.requests?.cpu),
+          Number(container.resources?.limits?.cpu),
+          t,
+        );
+      setLimitError(error);
       dispatch({
         type: ValidationActionType.SetField,
         field: 'cpuLimit',
-        isValid:
-          !getCPUError(Number(container.resources?.limits?.cpu), t) ||
-          !getResourcesConflictError(
-            Number(container.resources?.requests?.cpu),
-            Number(container.resources?.limits?.cpu),
-            t,
-          ),
+        isValid: !error,
       });
     }
   }, [container.resources, dispatch, resetCounter, t]);
@@ -77,6 +81,14 @@ const CPUFields: FC<Props> = ({ container, setContainer }) => {
               Number(container.resources?.limits?.cpu),
               t,
             );
+          if (!error) {
+            setLimitError(error);
+            dispatch({
+              type: ValidationActionType.SetField,
+              field: 'cpuLimit',
+              isValid: !error,
+            });
+          }
           setRequestError(error);
           dispatch({
             type: ValidationActionType.SetField,
@@ -111,10 +123,18 @@ const CPUFields: FC<Props> = ({ container, setContainer }) => {
               convertMilliCoresToCores(cpuLimit as number),
               t,
             );
+          if (!error) {
+            setRequestError(error);
+            dispatch({
+              type: ValidationActionType.SetField,
+              field: 'cpuRequest',
+              isValid: !error,
+            });
+          }
           setLimitError(error);
           dispatch({
             type: ValidationActionType.SetField,
-            field: 'cpuRequest',
+            field: 'cpuLimit',
             isValid: !error,
           });
           setContainer({
