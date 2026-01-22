@@ -91,7 +91,7 @@ describe('Server :: FoldersApi', () => {
     );
   });
 
-  test('calls postFiles with JSON url if type is not ARCHIVE', async () => {
+  test('calls postFiles with IMPORT url if type is not ARCHIVE', async () => {
     fetchMock.mockResponseOnce({});
 
     const formData = new FormData();
