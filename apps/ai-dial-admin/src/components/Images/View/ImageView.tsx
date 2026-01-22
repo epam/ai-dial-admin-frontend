@@ -138,7 +138,7 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [selectedImage, route, t, router]);
+  }, [selectedImage, route, t]);
 
   return (
     <>
