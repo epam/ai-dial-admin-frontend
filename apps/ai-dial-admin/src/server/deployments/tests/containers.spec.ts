@@ -94,7 +94,7 @@ describe('ContainersApi', () => {
 
   test('calls duplicateContainer with correct URL and method', async () => {
     fetch.mockResponseOnce(JSON.stringify(['container2']));
-    await instance.duplicateContainer('id', 'name', TOKEN_MOCK);
+    await instance.duplicateContainer('id', 'new-id', 'new-name', TOKEN_MOCK);
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining(DUPLICATE_CONTAINER_URL),
       expect.objectContaining({ method: 'POST' }),

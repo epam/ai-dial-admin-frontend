@@ -12,6 +12,7 @@ import { errorObjLog } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { decodeVariables } from '@/src/utils/deployments/variables';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,7 +50,7 @@ export default async function Page(params: Params) {
   return (
     <SaveValidationContextProvider>
       <ContainerView
-        container={container}
+        container={decodeVariables(container)}
         route={ApplicationRoute.ModelDeployments}
         names={containers?.map((container) => container.name).filter((name) => name !== container.name) || []}
         createEntity={createModel}

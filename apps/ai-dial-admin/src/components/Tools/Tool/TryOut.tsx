@@ -61,7 +61,7 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset }) => {
   }, [t]);
 
   const isEmptyRequest = useMemo(() => {
-    return tool?.inputSchema && Object.keys(tool?.inputSchema).length === 0;
+    return !tool?.inputSchema || (tool?.inputSchema && Object.keys(tool?.inputSchema.properties).length === 0);
   }, [tool?.inputSchema]);
 
   const sendRequest = useCallback(() => {
@@ -89,6 +89,7 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset }) => {
 
   useEffect(() => {
     setResponse({});
+    setRequestBody({});
   }, [tool?.name]);
 
   return (
@@ -99,7 +100,7 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset }) => {
           <DialPrimaryButton
             label={t(ButtonsI18nKey.SendRequest)}
             onClick={() => sendRequest()}
-            disabled={responseView !== ParamsView.FORM || isRequestSend}
+            disabled={isRequestSend}
           />
           <DialCloseButton onClose={closeSidebar} />
         </div>
@@ -115,11 +116,11 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset }) => {
               options={items}
               value={responseView}
               onChange={(v) => setResponseView(v as ParamsView)}
-              disabled={!isEmptyRequest}
+              disabled={isEmptyRequest}
             />
           </div>
           <div className="flex-1 basis-0 min-h-0 overflow-y-auto flex flex-col">
-            {!isEmptyRequest ? (
+            {isEmptyRequest ? (
               <div className="flex-1 flex items-center justify-center">{t(EntitiesI18nKey.NoInputs)}</div>
             ) : responseView === ParamsView.FORM ? (
               <SchemaUiRenderer
@@ -129,7 +130,7 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset }) => {
                 data={requestBody}
               />
             ) : (
-              <JsonEditor entity={tool?.inputSchema?.properties as Record<string, unknown>} readonly={true} />
+              <JsonEditor entity={requestBody} />
             )}
           </div>
         </div>

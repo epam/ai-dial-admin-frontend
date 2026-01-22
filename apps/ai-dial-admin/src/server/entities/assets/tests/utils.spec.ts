@@ -31,7 +31,7 @@ describe('buildCreateFolderUrl', () => {
     );
   });
   test('returns correct url for Files json', () => {
-    expect(buildCreateFolderUrl(ImportFileType.JSON, ApplicationRoute.Files)).toContain(ResourceOperation.IMPORT_JSON);
+    expect(buildCreateFolderUrl(ImportFileType.JSON, ApplicationRoute.Files)).toContain(ResourceOperation.IMPORT);
   });
   test('returns correct url for AssetsApplications archive', () => {
     expect(buildCreateFolderUrl(ImportFileType.ARCHIVE, ApplicationRoute.AssetsApplications)).toContain(
