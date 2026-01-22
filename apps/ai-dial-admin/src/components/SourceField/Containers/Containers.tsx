@@ -51,7 +51,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
   const [selectedContainer, setSelectedContainer] = useState<Container | null>(null);
 
   const selectedContainerName = useMemo(() => {
-    return containers.find((container) => container.name === entity.source?.containerId)?.displayName;
+    return containers.find((container) => container.name === entity.source?.containerId)?.name;
   }, [containers, entity.source?.containerId]);
 
   const onOpenModal = useCallback(() => {
