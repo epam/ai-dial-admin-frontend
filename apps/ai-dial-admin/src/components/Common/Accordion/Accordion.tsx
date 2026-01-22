@@ -36,7 +36,7 @@ const Accordion: FC<Props> = ({
   );
 
   return (
-    <div className={classNames('flex flex-col rounded border border-primary gap-4', containerClassName)}>
+    <div className={classNames('flex flex-col rounded border border-primary gap-4 p-4', containerClassName)}>
       {title && (
         <div className="flex flex-row justify-between">
           <button className="flex items-center w-full" onClick={toggleCollapse}>
