@@ -23,7 +23,7 @@ const CPUFields: FC<Props> = ({ container, setContainer }) => {
   useEffect(() => {
     if (resetCounter || (container.resources?.requests?.cpu && Number(container.resources?.requests?.cpu) < 0)) {
       const error =
-        getCPUError(Number(container.resources?.requests?.cpu), t) ??
+        getCPUError(Number(convertCoresToMilliCores(container.resources?.requests?.cpu)), t) ??
         getResourcesConflictError(
           Number(container.resources?.requests?.cpu),
           Number(container.resources?.limits?.cpu),
@@ -41,7 +41,7 @@ const CPUFields: FC<Props> = ({ container, setContainer }) => {
   useEffect(() => {
     if (resetCounter || (container.resources?.limits?.cpu && Number(container.resources?.limits?.cpu) < 0)) {
       const error =
-        getCPUError(Number(container.resources?.limits?.cpu), t) ??
+        getCPUError(Number(convertCoresToMilliCores(container.resources?.limits?.cpu)), t) ??
         getResourcesConflictError(
           Number(container.resources?.requests?.cpu),
           Number(container.resources?.limits?.cpu),
