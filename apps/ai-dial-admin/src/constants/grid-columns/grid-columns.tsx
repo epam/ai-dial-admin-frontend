@@ -589,6 +589,7 @@ export const SOURCE_CONTAINERS_COLUMNS: ColDef[] = [
 export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, route: ApplicationRoute): ColDef[] => [
   { field: 'displayName', headerName: 'Display name', hide: false },
   { field: 'description', headerName: 'Description', hide: false },
+  { field: 'name', headerName: 'ID', hide: false },
   ...(route === ApplicationRoute.ModelDeployments
     ? [
         {
@@ -619,7 +620,6 @@ export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, rou
     tooltipValueGetter: ({ value }) => t(STATUS_I18N_KEYS[value as CONTAINER_STATUS]),
     filterValueGetter: (params) => t(STATUS_I18N_KEYS[params.data[params.colDef.field || ''] as CONTAINER_STATUS]),
   },
-  { field: 'name', headerName: 'ID', hide: true },
   { field: 'url', headerName: 'Container URL', hide: true },
   { field: 'author', headerName: 'Maintainer', hide: true },
   {
@@ -633,7 +633,7 @@ export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, rou
   {
     field: 'updatedAt',
     headerName: 'Update time',
-    hide: false,
+    hide: true,
     valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
     tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
     filterValueGetter: (params) => formatDateTimeToLocalString(params.data[params.colDef.field || '']),

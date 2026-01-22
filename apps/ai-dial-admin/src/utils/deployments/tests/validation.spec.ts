@@ -9,6 +9,8 @@ import {
   isValidDockerUri,
   isValidSSHRepo,
   getVariableNameError,
+  getCPUError,
+  getResourcesConflictError,
 } from '../validation';
 import { ErrorType } from '@/src/types/error-type';
 import { ErrorI18nKey } from '@/src/constants/i18n';
@@ -348,6 +350,26 @@ describe('validation utils', () => {
         type: ErrorType.INVALID,
         text: '',
       });
+    });
+  });
+
+  describe('CPU and resources validation', () => {
+    test('getCPUError returns invalid for values less than 1 and null otherwise', () => {
+      expect(getCPUError(0.5, t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.CpuError,
+      });
+
+      expect(getCPUError(1, t)).toBeNull();
+    });
+
+    test('getResourcesConflictError returns invalid when request > limit and null otherwise', () => {
+      expect(getResourcesConflictError(2, 1, t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.LimitRequestError,
+      });
+
+      expect(getResourcesConflictError(1, 1, t)).toBeNull();
     });
   });
 });
