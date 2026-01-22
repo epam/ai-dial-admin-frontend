@@ -7,7 +7,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useRouter } from 'next/navigation';
 import { Container } from '@/src/models/deployments/containers';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
-import { getImageContainers, updateContainersImageId } from '@/src/app/actions/deployments';
+import { getContainer, getImageContainers, updateContainersImageId } from '@/src/app/actions/deployments';
 import { getErrorNotification } from '@/src/utils/notification';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import ListView from '@/src/components/ListView/ListView';
@@ -18,6 +18,8 @@ import { getRouteByType, getTranslatedType } from '@/src/utils/deployments/entit
 import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { IMAGE_DEPENDENCIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
+import { IMAGE_BUILD_POLL_INTERVAL } from '@/src/constants/deployments/images';
 
 interface Props {
   image: Image;
@@ -78,6 +80,34 @@ const Containers: FC<Props> = ({ image, route, versions }) => {
       }
     });
   }, [image, showNotification]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+
+    const pendingContainers = containers.filter(
+      (c) => c.status === CONTAINER_STATUS.PENDING || c.status === CONTAINER_STATUS.STOPPING,
+    );
+
+    if (pendingContainers.length) {
+      interval = setInterval(async () => {
+        const results = (await Promise.allSettled(pendingContainers.map((c) => getContainer(c?.name as string)))) || [];
+
+        results.forEach((res) => {
+          if (res.status === 'fulfilled') {
+            const container = res.value.response as Container;
+            if (container?.status !== CONTAINER_STATUS.PENDING && container?.status !== CONTAINER_STATUS.STOPPING) {
+              router.refresh();
+            }
+          }
+        });
+      }, IMAGE_BUILD_POLL_INTERVAL);
+    }
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [showNotification, route, t, router, containers]);
 
   return (
     <div className="flex h-full">
