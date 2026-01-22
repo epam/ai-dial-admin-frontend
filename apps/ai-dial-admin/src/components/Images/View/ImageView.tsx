@@ -50,6 +50,10 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
   const [key, setKey] = useState(0);
   const [imageVersions, setImageVersions] = useState<ImageVersion[]>(versions);
 
+  useEffect(() => {
+    setImageVersions(versions);
+  }, [versions]);
+
   const tabs = getDeploymentsViewTabs(route, t, selectedImage.buildStatus);
 
   const onChangeActiveTab = useCallback(
