@@ -8,7 +8,7 @@ import {
 } from '@/src/types/deployments/containers';
 import { ToolsetTransport } from '@/src/types/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
-import { ContainersI18nKey, KubEventsI18nKey } from '@/src/constants/i18n';
+import { ContainersI18nKey, ErrorI18nKey, KubEventsI18nKey } from '@/src/constants/i18n';
 import { getTranslatedType } from '@/src/utils/deployments/entity';
 
 export const POD_OBJECT_KIND = 'pod';
@@ -61,4 +61,14 @@ export const DEFAULT_SCALING = {
   strategy: {
     $type: SCALING_STRATEGY_TYPE.REQUESTS,
   },
+};
+
+export const RESTART_REASONS = (
+  t: (key: string, options?: Record<string, string | number>) => string,
+): Record<string, string> => {
+  return {
+    ['StartError']: t(ErrorI18nKey.FailedToStart),
+    ['OOMKilled']: t(ErrorI18nKey.RunOutOfMemory),
+    ['Error']: t(ErrorI18nKey.ExitedWithError),
+  };
 };
