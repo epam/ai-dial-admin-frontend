@@ -226,7 +226,7 @@ const Tools: FC<Props> = ({
           />
         )}
       </div>
-      <div className="flex flex-row items-center mb-3 justify-between">
+      <div className="flex flex-row items-center mb-3 gap-x-4 justify-between">
         <div className="w-[480px]">
           <Search onChange={(search) => setSearch(search)} />
         </div>
