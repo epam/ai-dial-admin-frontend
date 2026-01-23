@@ -3,6 +3,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 import { Container } from '@/src/models/deployments/containers';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getErrorForDisplayName, getErrorForName } from '@/src/utils/validation/name-error';
+import { isEditDisabled } from '@/src/utils/deployments/containers';
 import { useI18n } from '@/src/locales/client';
 
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
@@ -61,11 +62,22 @@ const BaseFields: FC<Props> = ({ container, setContainer, names, isModal }) => {
           onChangeEntity={onChangeName}
           isUniqueNameError={isUniqueNameError}
           isDeploymentId={true}
+          disabled={isEditDisabled(container)}
         />
       )}
-      <DisplayNameControl displayName={container.displayName} required={true} onChange={onChangeDisplayName} />
-      <DescriptionControl entity={container} onChangeEntity={setContainer} isFullWidth={isModal} />
-      {!isModal && <Maintainer entity={container} onChangeEntity={setContainer} />}
+      <DisplayNameControl
+        displayName={container.displayName}
+        required={true}
+        onChange={onChangeDisplayName}
+        disabled={isEditDisabled(container)}
+      />
+      <DescriptionControl
+        entity={container}
+        onChangeEntity={setContainer}
+        isFullWidth={isModal}
+        disabled={isEditDisabled(container)}
+      />
+      {!isModal && <Maintainer entity={container} onChangeEntity={setContainer} disabled={isEditDisabled(container)} />}
     </div>
   );
 };

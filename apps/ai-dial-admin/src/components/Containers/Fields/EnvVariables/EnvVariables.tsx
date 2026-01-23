@@ -13,6 +13,7 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 
 import Accordion from '@/src/components/Common/Accordion/Accordion';
 import EnvVariable from './EnvVariable';
+import { isEditDisabled } from '@/src/utils/deployments/containers';
 
 interface Props {
   container: Container;
@@ -102,6 +103,7 @@ const EnvVariables: FC<Props> = ({ container, setContainer }) => {
                   removeVariable={onRemoveVariable}
                   findColumn={findColumn}
                   moveColumn={moveColumn}
+                  disabled={isEditDisabled(container)}
                 />
               );
             })}
@@ -113,6 +115,7 @@ const EnvVariables: FC<Props> = ({ container, setContainer }) => {
             label={t(EnvVariablesI18nKey.AddVariable)}
             iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
             onClick={onAddVariable}
+            disabled={isEditDisabled(container)}
           />
         </div>
       </div>

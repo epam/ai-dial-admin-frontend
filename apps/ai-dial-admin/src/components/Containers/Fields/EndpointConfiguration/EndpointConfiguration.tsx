@@ -12,6 +12,7 @@ import { useI18n } from '@/src/locales/client';
 import Transport from '@/src/components/Containers/Fields/Transport/Transport';
 import PortField from '@/src/components/Containers/Fields/PortField/PortField';
 import Accordion from '@/src/components/Common/Accordion/Accordion';
+import { isEditDisabled } from '@/src/utils/deployments/containers';
 
 interface Props {
   container: Container;
@@ -76,6 +77,7 @@ const EndpointConfiguration: FC<Props> = ({ container, setContainer, route }) =>
               invalid={!!pathError}
               optional={true}
               onChange={onPathChange}
+              disabled={isEditDisabled(container)}
             />
           </div>
         )}
