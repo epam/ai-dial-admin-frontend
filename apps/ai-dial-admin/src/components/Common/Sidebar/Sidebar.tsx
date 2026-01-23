@@ -6,7 +6,7 @@ const Sidebar = () => {
 
   if (!show || !content) return null;
 
-  return <aside className="flex flex-shrink-0 max-w-full bg-layer-0 p-4">{content}</aside>;
+  return <aside className="flex flex-shrink-0 w-[50%] max-w-[800px] bg-layer-0 p-4">{content}</aside>;
 };
 
 export default Sidebar;
