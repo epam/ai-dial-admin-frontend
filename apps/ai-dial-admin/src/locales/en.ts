@@ -1110,7 +1110,7 @@ export default {
     AddTools: 'Add tools',
     UseAllTools: 'Use all available tools',
     AddedManually: 'Added manually',
-    View: 'View',
+    Filter: 'Filter',
     Import: 'Import Toolsets',
     Export: 'Export Toolsets',
     ToolsetPaths: 'Toolset paths',
