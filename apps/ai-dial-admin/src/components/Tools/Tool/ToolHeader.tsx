@@ -31,18 +31,22 @@ const ToolHeader: FC<Props> = ({
   isEnable = true,
 }) => {
   const t = useI18n();
-  const { showSidebar } = useAppContext().sidebar;
+  const { sidebar, sidebarOpen, toggleSidebar } = useAppContext();
 
   const openTryOutSidebar = useCallback(
     (e: MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation();
-      showSidebar(
+      sidebar.showSidebar(
         <SaveValidationContextProvider>
           <TryOut tool={tool} toolSetName={toolSetName} isAssetToolset={isAssetToolset} />
         </SaveValidationContextProvider>,
       );
+      if (sidebarOpen) {
+        sidebar.toggleIsMenuClosed?.();
+        toggleSidebar(e);
+      }
     },
-    [isAssetToolset, showSidebar, tool, toolSetName],
+    [isAssetToolset, sidebar, sidebarOpen, toggleSidebar, tool, toolSetName],
   );
 
   return (
