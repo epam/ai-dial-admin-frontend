@@ -98,6 +98,17 @@ const ApplicationParametersTab: FC<Props> = ({
     }
   }, [entity, frameConfig, view]);
 
+  const rjsfSchema = useMemo(
+    () =>
+      ({
+        $defs: scheme?.$defs,
+        properties: scheme?.properties,
+        required: scheme?.required,
+        isRoot: true,
+      }) as RJSFSchema,
+    [scheme],
+  );
+
   const viewItems = generateViewItems(t, view, !!targetUrl, !!frameConfig);
   const [paramsView, setParamsView] = useState(getInitialParamsView(view, !!targetUrl));
 
@@ -211,7 +222,7 @@ const ApplicationParametersTab: FC<Props> = ({
           ) : (
             <div className="flex-1 min-h-0 p-4 bg-layer-0">
               <SchemaUiRenderer
-                schema={scheme as RJSFSchema}
+                schema={rjsfSchema}
                 data={entity?.applicationProperties}
                 onChangeConfiguration={onChangeConfiguration}
                 onGetSchemeDefaults={onGetSchemeDefaults}
