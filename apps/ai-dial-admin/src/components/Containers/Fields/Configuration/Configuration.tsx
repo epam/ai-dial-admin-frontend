@@ -6,6 +6,7 @@ import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/
 import { useI18n } from '@/src/locales/client';
 
 import Accordion from '@/src/components/Common/Accordion/Accordion';
+import { isEditDisabled } from '@/src/utils/deployments/containers';
 
 interface Props {
   container: Container;
@@ -25,6 +26,7 @@ const Configuration: FC<Props> = ({ container, setContainer }) => {
           onChange={(command?: string) => setContainer({ ...container, command })}
           placeholder={t(EntityPlaceholdersI18nKey.Command)}
           optional={true}
+          disabled={isEditDisabled(container)}
         />
 
         <DialTextInputField
@@ -34,6 +36,7 @@ const Configuration: FC<Props> = ({ container, setContainer }) => {
           onChange={(args?: string) => setContainer({ ...container, args })}
           placeholder={t(EntityPlaceholdersI18nKey.Arguments)}
           optional={true}
+          disabled={isEditDisabled(container)}
         />
       </div>
     </Accordion>

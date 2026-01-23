@@ -26,6 +26,7 @@ interface Props {
   removeVariable: (index: number) => void;
   findColumn?: (name: string) => number;
   moveColumn?: (name: string, atIndex: number) => void;
+  disabled?: boolean;
 }
 
 const EnvVariable: FC<Props> = ({
@@ -36,6 +37,7 @@ const EnvVariable: FC<Props> = ({
   removeVariable,
   findColumn,
   moveColumn,
+  disabled,
 }) => {
   const t = useI18n();
   const isTablet = useIsTabletScreen();
@@ -137,6 +139,7 @@ const EnvVariable: FC<Props> = ({
               invalid={!!variableNameError}
               optional={false}
               onChange={onChangeName}
+              disabled={disabled}
             />
             <DialTextInputField
               elementId={`description ${index}`}
@@ -145,6 +148,7 @@ const EnvVariable: FC<Props> = ({
               fieldTitle={t(EnvVariablesI18nKey.Description)}
               optional={true}
               onChange={onChangeDescription}
+              disabled={disabled}
             />
             <div className="lg:min-w-[350px] lg:max-w-[350px]">
               <EnvVariableValueField
@@ -152,6 +156,7 @@ const EnvVariable: FC<Props> = ({
                 onValueChange={onValueChange}
                 index={index}
                 mountType={variable.mountType}
+                disabled={disabled}
               />
             </div>
             <div className="lg:min-w-[160px]">
@@ -161,6 +166,7 @@ const EnvVariable: FC<Props> = ({
                 options={mountTypeItems}
                 fieldTitle={t(EnvVariablesI18nKey.MountType)}
                 onChange={onChangeMountType}
+                disabled={disabled}
               />
             </div>
           </div>

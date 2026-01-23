@@ -9,6 +9,7 @@ import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import Accordion from '@/src/components/Common/Accordion/Accordion';
 import CPUFields from '@/src/components/Containers/Fields/Resources/CPUFields';
 import MemoryFields from '@/src/components/Containers/Fields/Resources/MemoryFields';
+import { isEditDisabled } from '@/src/utils/deployments/containers';
 
 interface Props {
   container: Container;
@@ -30,6 +31,7 @@ const ResourcesFields: FC<Props> = ({ container, setContainer, route }) => {
               elementId="gpuRequest"
               fieldTitle={t(EntityFieldsI18nKey.GPURequest)}
               value={container.resources?.requests?.['nvidia.com/gpu']}
+              disabled={isEditDisabled(container)}
               onChange={(gpuRequest) => {
                 setContainer({
                   ...container,

@@ -105,3 +105,7 @@ const getTemplate = (type: CONTAINER_TYPE, defaults?: ResourcesDefaults): Contai
 
   return template;
 };
+
+export const isEditDisabled = (container: Container): boolean => {
+  return container.status === CONTAINER_STATUS.PENDING || container.status === CONTAINER_STATUS.STOPPING;
+};

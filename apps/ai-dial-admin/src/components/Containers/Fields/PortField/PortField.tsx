@@ -5,6 +5,7 @@ import { Container } from '@/src/models/deployments/containers';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { MODEL_SOURCE_TYPE } from '@/src/types/deployments/containers';
 import { useI18n } from '@/src/locales/client';
+import { isEditDisabled } from '@/src/utils/deployments/containers';
 
 interface Props {
   container: Container;
@@ -34,6 +35,7 @@ const PortField: FC<Props> = ({ container, setContainer }) => {
             });
           }
         }}
+        disabled={isEditDisabled(container)}
         min={1}
         max={65535}
       />
@@ -56,6 +58,7 @@ const PortField: FC<Props> = ({ container, setContainer }) => {
               });
             }
           }}
+          disabled={isEditDisabled(container)}
           min={1}
           max={65535}
         />
