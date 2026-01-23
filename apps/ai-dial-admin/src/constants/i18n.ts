@@ -575,6 +575,7 @@ export enum RoutesI18nKey {
 export enum PublicationsI18nKey {
   DeclineReason = 'Publications.ReasonTitle',
   DeclineReasonPlaceholder = 'Publications.ReasonPlaceholder',
+  Warning = 'Publications.Warning',
 
   // prompt publications
   PromptPublishApproveModalTitle = 'Publications.Prompt.PublishApproveModalTitle',
