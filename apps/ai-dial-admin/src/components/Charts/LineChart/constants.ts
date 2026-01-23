@@ -25,7 +25,7 @@ export const lineChartDefaultOptions = (t: (key: string) => string): EChartsOpti
           width: 1,
         },
       },
-      formatter: (params) => {
+      formatter: (params: { axisValue: string; value: string; color: string }[]) => {
         const { axisValue, value, color } = params[0];
 
         return `
