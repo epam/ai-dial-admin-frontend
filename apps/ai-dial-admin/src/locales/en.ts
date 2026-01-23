@@ -593,6 +593,7 @@ export default {
   Publications: {
     ReasonTitle: 'Reason',
     ReasonPlaceholder: 'Describe the reason for decline',
+    Warning: 'This request refers to an item that is no longer available or has changed since the request was created.',
     Prompt: {
       PublishApproveModalTitle: 'Publish Prompt',
       UnpublishApproveModalTitle: 'Unpublish Prompt',
@@ -989,6 +990,9 @@ export default {
     EndpointConfiguration: 'Endpoint Configuration',
     ToolName: 'Tool name',
     Autoscaling: 'Autoscaling',
+    Restarts: 'Restarts',
+    LastRestartedAt: 'Last restarted at',
+    LastReason: 'Last reason',
   },
   EntityPlaceholders: {
     Project: 'Enter project',
@@ -1094,6 +1098,9 @@ export default {
     AllowedChars: 'Field must contain only lowercase Latin letters, numbers and hyphens',
     LimitRequestError: 'Requested resource bigger than limit',
     ReplicasError: 'Invalid replicas configuration',
+    FailedToStart: 'Failed to start',
+    RunOutOfMemory: 'Run out of memory',
+    ExitedWithError: 'Exited with an error',
   },
   Source: {
     OpenTemplate: 'Open template',

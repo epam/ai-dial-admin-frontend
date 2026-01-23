@@ -70,6 +70,10 @@ export interface Argument {
 export interface Pod {
   name: string;
   createdAt: number;
+  restartCount?: number;
+  lastTerminationReason?: string;
+  lastExitCode?: string;
+  lastFinishedAt?: number;
 }
 
 export interface ResourcesDefaults {
