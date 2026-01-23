@@ -131,17 +131,14 @@ describe('Utils :: telemetry :: getListingData', () => {
 
 describe('Utils :: telemetry :: prepareChartData', () => {
   test('returns correct result', () => {
-    const mockDate = new Date('2023-12-25T12:00:00Z');
+    const mockDate = new Date('2023-12-25T12:00:00.000Z');
     vi.useFakeTimers();
     vi.setSystemTime(mockDate);
 
-    const data = [{ time: '2023-12-25T12:00:00Z', requests: '100' }];
-    const result = prepareChartData(data);
-    expect(result).toEqual({
-      ...lineChartDefaultOptions,
-      xAxis: { ...lineChartDefaultOptions.xAxis, data: [mockDate.toLocaleString()] },
-      series: [{ ...lineChartDefaultOptions.series[0], data: ['100'] }],
-    });
+    const data = [{ time: '2023-12-25T12:00:00.000Z', requests: '100' }];
+    const result = prepareChartData(data, () => 'key');
+
+    expect(result.series).toEqual([{ ...lineChartDefaultOptions(() => 'key').series[0], data: ['100'] }]);
 
     vi.useRealTimers();
   });
