@@ -111,5 +111,26 @@ export const prepareEntityForDuplicate = async <T>(
     };
   }
 
+  if (route === ApplicationRoute.Adapters) {
+    return {
+      ...entity,
+      models: [],
+    };
+  }
+
+  if (route === ApplicationRoute.ApplicationRunners) {
+    return {
+      ...entity,
+      applications: [],
+    };
+  }
+
+  if (route === ApplicationRoute.InterceptorTemplates) {
+    return {
+      ...entity,
+      interceptors: [],
+    };
+  }
+
   return entity;
 };
