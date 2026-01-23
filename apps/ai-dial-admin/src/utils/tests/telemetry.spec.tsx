@@ -136,7 +136,7 @@ describe('Utils :: telemetry :: prepareChartData', () => {
     vi.setSystemTime(mockDate);
 
     const data = [{ time: '2023-12-25T12:00:00Z', requests: '100' }];
-    const result = prepareChartData(data);
+    const result = prepareChartData(data, () => 'key');
     expect(result).toEqual({
       ...lineChartDefaultOptions,
       xAxis: { ...lineChartDefaultOptions.xAxis, data: [mockDate.toLocaleString()] },
