@@ -80,7 +80,7 @@ const Content: FC<Props> = ({ children, beVersion, isEnableAuth }) => {
     <div className="flex-1 min-h-0 min-w-0 relative">
       <Blackout />
       <UserMobile isEnableAuth={isEnableAuth} />
-      <div className="flex flex-row h-full w-full">
+      <div className="flex flex-row h-full w-full relative">
         <div className="h-full min-w-0 flex-1 lg:p-6 py-6 md:px-6 px-0 flex flex-col">
           {isTabletScreen && <Breadcrumbs mobile={true} />}
           {children}

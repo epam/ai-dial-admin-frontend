@@ -8,7 +8,7 @@ import { ResourcesDefaults } from '@/src/models/deployments/containers';
 export interface AppContextType {
   themeUrl?: string;
   sidebarOpen: boolean;
-  toggleSidebar: (e: MouseEvent<HTMLButtonElement>) => void;
+  toggleSidebar: (e?: MouseEvent<HTMLButtonElement>) => void;
   userMenuOpen: boolean;
   toggleUserMenu: () => void;
   visualizerConnector?: VisualizerConnector | null;
@@ -19,6 +19,8 @@ export interface AppContextType {
     content: ReactNode | null;
     showSidebar: (c: ReactNode) => void;
     closeSidebar: () => void;
+    isMenuClosed?: boolean;
+    toggleIsMenuClosed?: () => void;
   };
   disableDeploymentsJSONEditor?: boolean;
   resourcesDefaults?: ResourcesDefaults;
@@ -47,14 +49,20 @@ export const AppContextProvider = ({
   const [show, setShow] = useState(false);
   const [content, setContent] = useState<ReactNode | null>(null);
 
-  const toggleSidebar = (e: MouseEvent<HTMLButtonElement>) => {
-    e.currentTarget.blur();
+  const [isMenuClosed, setIsMenuClosed] = useState(false);
+
+  const toggleSidebar = (e?: MouseEvent<HTMLButtonElement>) => {
+    e?.currentTarget.blur();
     setToLocalStorage(LOCAL_STORAGE_SIDEBAR_OPEN_KEY, String(!sidebarOpen));
     setSidebarOpen(!sidebarOpen);
   };
 
   const toggleUserMenu = () => {
     setUserMenuOpen(!userMenuOpen);
+  };
+
+  const toggleIsMenuClosed = () => {
+    setIsMenuClosed(!isMenuClosed);
   };
 
   const showSidebar = (c: ReactNode) => {
@@ -76,7 +84,7 @@ export const AppContextProvider = ({
     visualizerConnector,
     setVisualizerConnector,
     featureFlags,
-    sidebar: { show, content, showSidebar, closeSidebar },
+    sidebar: { show, content, showSidebar, closeSidebar, isMenuClosed, toggleIsMenuClosed },
     disableDeploymentsJSONEditor,
     resourcesDefaults,
   };
