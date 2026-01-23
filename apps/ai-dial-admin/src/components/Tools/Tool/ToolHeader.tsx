@@ -18,18 +18,9 @@ interface Props {
   isAddedManual?: boolean;
   isMcpToolset?: boolean;
   isAssetToolset?: boolean;
-  isEnable?: boolean;
 }
 
-const ToolHeader: FC<Props> = ({
-  tool,
-  toolSetName,
-  isCollapsed,
-  isAddedManual,
-  isMcpToolset,
-  isAssetToolset,
-  isEnable = true,
-}) => {
+const ToolHeader: FC<Props> = ({ tool, toolSetName, isCollapsed, isAddedManual, isMcpToolset, isAssetToolset }) => {
   const t = useI18n();
   const { sidebar, sidebarOpen, toggleSidebar } = useAppContext();
 
@@ -59,7 +50,7 @@ const ToolHeader: FC<Props> = ({
           </span>
         )}
       </div>
-      {!isAddedManual && !isMcpToolset && isEnable && (
+      {!isAddedManual && !isMcpToolset && (
         <DialButton
           appearance={ButtonAppearance.Outlined}
           variant={ButtonVariant.Neutral}

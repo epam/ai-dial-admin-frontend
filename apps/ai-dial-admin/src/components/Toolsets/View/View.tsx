@@ -293,7 +293,7 @@ const ToolsetView: FC<Props> = ({ names, isUserLevel, oAuthCode, etag, roles, or
             ))}
         </HeaderButtons>
       </div>
-      <div className="flex-1 overflow-auto min-h-0">
+      <div className="flex-1 overflow-hidden min-h-0">
         {isJsonEditorEnabled ? (
           <EntityJsonEditor
             key={key}

@@ -5,7 +5,7 @@ import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
 import { FC, useMemo } from 'react';
 
 import { ToolFilter } from '@/src/components/Tools/type';
-import { BasicI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
+import { ToolsetI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -21,18 +21,12 @@ const SelectedFilter: FC<Props> = ({ selectedFilters, isDropdownOpen }) => {
   const title = useMemo(() => {
     return selectedFilters?.length === 4
       ? t(ToolsetI18nKey.AllTools)
-      : selectedFilters
-          ?.map(
-            (filter) =>
-              t(ToolsetI18nKey[filter as keyof typeof ToolsetI18nKey]) ||
-              t(BasicI18nKey[filter as keyof typeof BasicI18nKey]),
-          )
-          ?.join(', ');
+      : selectedFilters?.map((filter) => t(ToolsetI18nKey[filter as keyof typeof ToolsetI18nKey]))?.join(', ');
   }, [selectedFilters, t]);
 
   return (
     <div className="bg-layer-4 cursor-pointer h-[22px] px-1 small rounded flex items-center justify-center max-w-[150px]">
-      {t(ToolsetI18nKey.View)}:
+      {t(ToolsetI18nKey.Filter)}:
       <DialEllipsisTooltip text={title} className="mx-1" />
       {icon}
     </div>

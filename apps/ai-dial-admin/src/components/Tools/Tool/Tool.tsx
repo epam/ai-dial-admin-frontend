@@ -11,10 +11,9 @@ interface Props {
   isMcpToolset?: boolean;
   isAssetToolset?: boolean;
   toolSetName: string;
-  isEnable?: boolean;
 }
 
-const Tool: FC<Props> = ({ tool, isAddedManual, isMcpToolset, isAssetToolset, toolSetName, isEnable }) => {
+const Tool: FC<Props> = ({ tool, isAddedManual, isMcpToolset, isAssetToolset, toolSetName }) => {
   return (
     <>
       {isAddedManual ? (
@@ -36,10 +35,9 @@ const Tool: FC<Props> = ({ tool, isAddedManual, isMcpToolset, isAssetToolset, to
               isAddedManual={isAddedManual}
               isMcpToolset={isMcpToolset}
               isAssetToolset={isAssetToolset}
-              isEnable={isEnable}
             />
           }
-          containerClassName={isMcpToolset || !isEnable ? 'px-4 py-4' : 'px-4 py-2'}
+          containerClassName={isMcpToolset ? 'px-4 py-4' : 'px-4 py-2'}
         >
           <ToolContent tool={tool} />
         </Accordion>

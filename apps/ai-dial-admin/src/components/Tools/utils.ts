@@ -10,16 +10,8 @@ export const getFilteredTools = (tools: string[], selectedFilters: ToolFilter[],
     return acc;
   }, []);
 
-  if (selectedFilters.includes(ToolFilter.Enabled)) {
-    filteredTools.push(...availableToolsKeys.filter((t) => tools.includes(t)));
-  }
-
-  if (selectedFilters.includes(ToolFilter.Disabled)) {
-    filteredTools.push(...availableToolsKeys.filter((t) => !tools.includes(t)));
-  }
-
   if (selectedFilters.includes(ToolFilter.AutoDetected)) {
-    filteredTools.push(...availableToolsKeys);
+    filteredTools.push(...availableToolsKeys.filter((t) => tools.includes(t)));
   }
 
   if (selectedFilters.includes(ToolFilter.AddedManually)) {

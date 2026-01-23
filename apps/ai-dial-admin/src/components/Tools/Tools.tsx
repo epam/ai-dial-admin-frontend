@@ -28,12 +28,7 @@ import ManageToolsModal from './ManageToolsModal/ManageToolsModal';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { IconPencilMinus } from '@tabler/icons-react';
 
-const filtersConfiguration = [
-  ToolFilter.Enabled,
-  ToolFilter.Disabled,
-  ToolFilter.AutoDetected,
-  ToolFilter.AddedManually,
-];
+const filtersConfiguration = [ToolFilter.AutoDetected, ToolFilter.AddedManually];
 
 interface Props {
   containerId?: string;
@@ -72,7 +67,7 @@ const Tools: FC<Props> = ({
 
   const manualAddedTools = useMemo(() => {
     return (selectedToolset?.allowedTools || []).reduce((acc, curr) => {
-      if (!tools?.some((tool) => tool.name === curr)) {
+      if (!tools?.some((tool) => tool.name === curr) && curr !== '') {
         acc.push({
           name: curr,
         });
@@ -163,6 +158,7 @@ const Tools: FC<Props> = ({
     debounceTimeout.current = setTimeout(() => {
       const allTools = [...(tools || []), ...manualAddedTools];
       const allowedTools = selectedToolset?.allowedTools?.filter((toolName) => toolName !== '') || [];
+      const allToolNames = allTools.map((tool) => tool.name);
 
       if (search.length) {
         const searchText = search.toLowerCase().trim();
@@ -177,14 +173,18 @@ const Tools: FC<Props> = ({
                   JSON.stringify(tool.annotations)?.toLowerCase().includes(searchText),
               )
             : getFilteredTools(
-                allowedTools,
+                useAllTools ? allToolNames : allowedTools,
                 useAllTools ? [...filtersConfiguration] : selectedFilters,
                 tools || [],
               ).filter((tool) => tool.name.toLowerCase().includes(searchText) && tool.name !== ''),
         );
       } else {
         setDisplayTools(
-          getFilteredTools(allowedTools, useAllTools ? [...filtersConfiguration] : selectedFilters, tools || []),
+          getFilteredTools(
+            useAllTools ? allToolNames : allowedTools,
+            useAllTools ? [...filtersConfiguration] : selectedFilters,
+            tools || [],
+          ),
         );
       }
     }, 300);
@@ -195,20 +195,15 @@ const Tools: FC<Props> = ({
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, tools, manualAddedTools, selectedFilters]);
+  }, [search, tools, manualAddedTools, selectedFilters, useAllTools]);
 
   useEffect(() => {
-    const isAllToolsAllowed =
-      selectedToolset?.allowedTools &&
-      tools &&
-      tools.every((tool) => selectedToolset.allowedTools?.includes(tool.name));
-
-    if (selectedToolset?.allowedTools?.length === 0 || isAllToolsAllowed) {
+    if (originalToolset?.allowedTools?.length === 0) {
       setUseAllTools(true);
     } else {
       setUseAllTools(false);
     }
-  }, [selectedToolset, tools]);
+  }, [originalToolset]);
 
   if (loading) {
     return <DialLoader size={40} />;
@@ -273,7 +268,6 @@ const Tools: FC<Props> = ({
                   isMcpToolset={isMcpToolset}
                   isAssetToolset={isAssetToolset}
                   toolSetName={(isAssetToolset ? (selectedToolset as AssetToolset)?.path : selectedToolset?.name) || ''}
-                  isEnable={useAllTools || selectedToolset?.allowedTools?.includes(tool.name)}
                 />
               );
             })}
