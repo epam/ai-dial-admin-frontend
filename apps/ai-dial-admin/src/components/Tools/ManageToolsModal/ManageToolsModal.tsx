@@ -43,7 +43,7 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalToolset, onCl
   });
   const [customToolsConfig, setCustomToolsConfig] = useState<CustomToolConfig[]>(() => {
     return (originalToolset.allowedTools || []).reduce((acc, curr) => {
-      if (!tools.some((tool) => tool.name === curr || curr === '')) {
+      if (!tools.some((tool) => tool.name === curr) && curr !== '') {
         acc.push({
           name: curr,
           isAllowed: true,
@@ -214,7 +214,7 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalToolset, onCl
             )}
           </div>
           <div>
-            <div className="flex flex-row justify-between items-center mt-2">
+            <div className="flex flex-row justify-between items-center mt-2 pr-[4px]">
               <span className="dial-tiny text-secondary">{t(ToolsetI18nKey.OtherInAToolset)}</span>
               <DialPrimaryButton
                 appearance={ButtonAppearance.Link}

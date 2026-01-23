@@ -18,31 +18,26 @@ interface Props {
   isAddedManual?: boolean;
   isMcpToolset?: boolean;
   isAssetToolset?: boolean;
-  isEnable?: boolean;
 }
 
-const ToolHeader: FC<Props> = ({
-  tool,
-  toolSetName,
-  isCollapsed,
-  isAddedManual,
-  isMcpToolset,
-  isAssetToolset,
-  isEnable = true,
-}) => {
+const ToolHeader: FC<Props> = ({ tool, toolSetName, isCollapsed, isAddedManual, isMcpToolset, isAssetToolset }) => {
   const t = useI18n();
-  const { showSidebar } = useAppContext().sidebar;
+  const { sidebar, sidebarOpen, toggleSidebar } = useAppContext();
 
   const openTryOutSidebar = useCallback(
     (e: MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation();
-      showSidebar(
+      sidebar.showSidebar(
         <SaveValidationContextProvider>
           <TryOut tool={tool} toolSetName={toolSetName} isAssetToolset={isAssetToolset} />
         </SaveValidationContextProvider>,
       );
+      if (sidebarOpen) {
+        sidebar.toggleIsMenuClosed?.();
+        toggleSidebar(e);
+      }
     },
-    [isAssetToolset, showSidebar, tool, toolSetName],
+    [isAssetToolset, sidebar, sidebarOpen, toggleSidebar, tool, toolSetName],
   );
 
   return (
@@ -55,7 +50,7 @@ const ToolHeader: FC<Props> = ({
           </span>
         )}
       </div>
-      {!isAddedManual && !isMcpToolset && isEnable && (
+      {!isAddedManual && !isMcpToolset && (
         <DialButton
           appearance={ButtonAppearance.Outlined}
           variant={ButtonVariant.Neutral}

@@ -7,6 +7,7 @@ import { FieldError } from '@/src/models/error';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getResourcesConflictError, getCPUError } from '@/src/utils/deployments/validation';
 import { useI18n } from '@/src/locales/client';
+import { isEditDisabled } from '@/src/utils/deployments/containers';
 
 interface Props {
   container: Container;
@@ -73,6 +74,7 @@ const CPUFields: FC<Props> = ({ container, setContainer }) => {
         errorText={requestError?.text}
         invalid={!!requestError}
         suffix="m"
+        disabled={isEditDisabled(container)}
         onChange={(cpuRequest) => {
           const error =
             getCPUError(cpuRequest as number, t) ??
@@ -115,6 +117,7 @@ const CPUFields: FC<Props> = ({ container, setContainer }) => {
         suffix="m"
         errorText={limitError?.text}
         invalid={!!limitError}
+        disabled={isEditDisabled(container)}
         onChange={(cpuLimit?: number | string) => {
           const error =
             getCPUError(cpuLimit as number, t) ??

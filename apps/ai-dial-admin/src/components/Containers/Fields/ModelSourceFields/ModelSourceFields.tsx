@@ -8,6 +8,7 @@ import { FieldError } from '@/src/models/error';
 import { getDeploymentsURIError, getErrorForHfModelName } from '@/src/utils/deployments/validation';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { DEFAULT_SCALING } from '@/src/constants/deployments/containers';
+import { isEditDisabled } from '@/src/utils/deployments/containers';
 
 interface Props {
   container: Container;
@@ -109,6 +110,7 @@ const ModelSourceFields: FC<Props> = ({ container, setContainer }) => {
         options={SERVING_TYPES}
         value={container.source?.$type}
         onChange={($type) => onChangeModelSourceType($type as MODEL_SOURCE_TYPE)}
+        disabled={isEditDisabled(container)}
       />
       {container.source?.$type === MODEL_SOURCE_TYPE.NIM ? (
         <DialTextInputField
@@ -118,6 +120,7 @@ const ModelSourceFields: FC<Props> = ({ container, setContainer }) => {
           errorText={imageRefError?.text}
           invalid={!!imageRefError}
           onChange={onChangeImageRef}
+          disabled={isEditDisabled(container)}
         />
       ) : (
         <DialTextInputField
@@ -127,6 +130,7 @@ const ModelSourceFields: FC<Props> = ({ container, setContainer }) => {
           errorText={imageRefError?.text}
           invalid={!!imageRefError}
           onChange={onChangeImageRef}
+          disabled={isEditDisabled(container)}
         />
       )}
     </div>

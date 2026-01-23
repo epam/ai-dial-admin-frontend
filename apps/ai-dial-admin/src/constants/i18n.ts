@@ -1097,7 +1097,7 @@ export enum ToolsetI18nKey {
   UseAllTools = 'Toolset.UseAllTools',
   AddedManually = 'Toolset.AddedManually',
   Warning = 'Toolset.Warning',
-  View = 'Toolset.View',
+  Filter = 'Toolset.Filter',
   AllTools = 'Toolset.AllTools',
   ToolsetPath = 'Toolset.ToolsetPaths',
   AutoDetected = 'Toolset.AutoDetected',

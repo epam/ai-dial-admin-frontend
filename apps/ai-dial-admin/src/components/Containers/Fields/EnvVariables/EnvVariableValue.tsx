@@ -21,9 +21,10 @@ interface Props {
   onValueChange: (value: EnvVariableValue) => void;
   index: number;
   mountType?: MOUNT_TYPE;
+  disabled?: boolean;
 }
 
-const EnvVariableValueField: FC<Props> = ({ value, index, onValueChange, mountType }) => {
+const EnvVariableValueField: FC<Props> = ({ value, index, onValueChange, mountType, disabled }) => {
   const t = useI18n();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const fieldName = t(EnvVariablesI18nKey.Value);
@@ -106,6 +107,7 @@ const EnvVariableValueField: FC<Props> = ({ value, index, onValueChange, mountTy
               placeholder={t(EntityPlaceholdersI18nKey.Value)}
               fieldTitle={fieldName}
               onChange={onChangeValue}
+              disabled={disabled}
             />
           ) : (
             <DialTextInputField
@@ -114,6 +116,7 @@ const EnvVariableValueField: FC<Props> = ({ value, index, onValueChange, mountTy
               placeholder={t(EntityPlaceholdersI18nKey.Value)}
               fieldTitle={fieldName}
               onChange={onChangeValue}
+              disabled={disabled}
             />
           )}
         </div>
@@ -131,7 +134,7 @@ const EnvVariableValueField: FC<Props> = ({ value, index, onValueChange, mountTy
                 <p className="truncate flex-1 min-w-0 text-left items-center">{value.fileName}</p>
               </div>
             </DialTooltip>
-            <DialButton iconBefore={<IconX {...BASE_BUTTON_ICON_PROPS} />} onClick={onClearFile} />
+            <DialButton iconBefore={<IconX {...BASE_BUTTON_ICON_PROPS} />} onClick={onClearFile} disabled={disabled} />
           </div>
         </div>
       )}

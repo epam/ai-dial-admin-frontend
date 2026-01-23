@@ -33,8 +33,14 @@ export const convertDefaultsToRecord = (
 
   for (const { key, value, type } of defaults) {
     const correctValue =
-      type === 'number' ? (value != null && value !== '' ? Number(value) : undefined) : String(value);
-    if (key && (typeof correctValue === 'number' ? !isNaN(correctValue) : correctValue)) {
+      type === 'number'
+        ? value != null && value !== ''
+          ? Number(value)
+          : undefined
+        : type === 'string'
+          ? String(value)
+          : value;
+    if (key && (typeof correctValue === 'number' ? !isNaN(correctValue) : correctValue != null)) {
       record[key] = value;
     }
   }
