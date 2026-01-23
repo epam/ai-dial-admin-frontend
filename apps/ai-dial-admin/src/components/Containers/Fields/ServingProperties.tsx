@@ -10,6 +10,8 @@ import EnvVariables from '@/src/components/Containers/Fields/EnvVariables/EnvVar
 import ResourcesFields from '@/src/components/Containers/Fields/Resources/ResourcesFields';
 import EndpointConfiguration from '@/src/components/Containers/Fields/EndpointConfiguration/EndpointConfiguration';
 import Configuration from '@/src/components/Containers/Fields/Configuration/Configuration';
+import Autoscaling from '@/src/components/Containers/Fields/AutoScale/AutoScale';
+import { MODEL_SOURCE_TYPE } from '@/src/types/deployments/containers';
 
 interface Props {
   container: Container;
@@ -31,6 +33,9 @@ const ServingProperties: FC<Props> = ({ container, setContainer, names, isModal,
       {!isModal && (
         <div className="flex flex-col gap-y-8">
           <EndpointConfiguration container={container} setContainer={setContainer} route={route} />
+          {container.source?.$type === MODEL_SOURCE_TYPE.HF && (
+            <Autoscaling container={container} setContainer={setContainer} />
+          )}
           <EnvVariables container={container} setContainer={setContainer} />
           <ResourcesFields container={container} setContainer={setContainer} route={route} />
           <Configuration container={container} setContainer={setContainer} />

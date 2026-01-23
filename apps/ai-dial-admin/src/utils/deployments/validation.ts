@@ -226,3 +226,14 @@ export const getResourcesConflictError = (
 
   return null;
 };
+
+export const getReplicasError = (
+  min?: number,
+  max?: number,
+  t?: (key: string, options?: Record<string, string | number>) => string,
+): FieldError | null => {
+  if (min && max && min > max) {
+    return { type: ErrorType.INVALID, text: t ? t(ErrorI18nKey.ReplicasError) : '' };
+  }
+  return null;
+};
