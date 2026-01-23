@@ -10,6 +10,7 @@ import { AUTOSCALE_OPTIONS } from '@/src/constants/deployments/containers';
 import { useI18n } from '@/src/locales/client';
 
 import Accordion from '@/src/components/Common/Accordion/Accordion';
+import { isEditDisabled } from '@/src/utils/deployments/containers';
 
 interface Props {
   container: Container;
@@ -117,6 +118,7 @@ const Autoscaling: FC<Props> = ({ container, setContainer }) => {
             onChange={onScaleDelayChange}
             fieldTitle={t(ContainersI18nKey.ScaleToZero)}
             containerClassName="max-w-[280px]"
+            disabled={isEditDisabled(container)}
           />
           <div className="flex gap-4">
             <DialNumberInputField
@@ -125,7 +127,8 @@ const Autoscaling: FC<Props> = ({ container, setContainer }) => {
               onChange={onMinScaleChange}
               containerClassName="max-w-[80px]"
               disabled={
-                !!container.scaling?.scaleToZeroDelaySeconds && container.scaling?.scaleToZeroDelaySeconds !== 0
+                (!!container.scaling?.scaleToZeroDelaySeconds && container.scaling?.scaleToZeroDelaySeconds !== 0) ||
+                isEditDisabled(container)
               }
               label={t(ContainersI18nKey.MinReplicas)}
             />
@@ -138,6 +141,7 @@ const Autoscaling: FC<Props> = ({ container, setContainer }) => {
               label={t(ContainersI18nKey.MaxReplicas)}
               errorText={replicasError?.text}
               invalid={!!replicasError}
+              disabled={isEditDisabled(container)}
             />
           </div>
         </div>
@@ -149,6 +153,7 @@ const Autoscaling: FC<Props> = ({ container, setContainer }) => {
               onChange={onThresholdChange}
               elementContainerClassName="max-w-[80px]"
               label={t(ContainersI18nKey.Threshold)}
+              disabled={isEditDisabled(container)}
             />
           </div>
         )}
