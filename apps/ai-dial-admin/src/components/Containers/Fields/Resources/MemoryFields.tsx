@@ -23,28 +23,32 @@ const MemoryFields: FC<Props> = ({ container, setContainer }) => {
 
   useEffect(() => {
     if (resetCounter || (container.resources?.requests?.memory && Number(container.resources?.requests?.memory) < 0)) {
+      const error = getResourcesConflictError(
+        Number(container.resources?.requests?.cpu),
+        Number(container.resources?.limits?.cpu),
+        t,
+      );
+      setRequestError(error);
       dispatch({
         type: ValidationActionType.SetField,
         field: 'memoryRequest',
-        isValid: !getResourcesConflictError(
-          Number(container.resources?.requests?.cpu),
-          Number(container.resources?.limits?.cpu),
-          t,
-        ),
+        isValid: !error,
       });
     }
   }, [container.resources, dispatch, resetCounter, t]);
 
   useEffect(() => {
     if (resetCounter || (container.resources?.limits?.cpu && Number(container.resources?.limits?.cpu) < 0)) {
+      const error = getResourcesConflictError(
+        Number(container.resources?.requests?.cpu),
+        Number(container.resources?.limits?.cpu),
+        t,
+      );
+      setLimitError(error);
       dispatch({
         type: ValidationActionType.SetField,
         field: 'memoryLimit',
-        isValid: !getResourcesConflictError(
-          Number(container.resources?.requests?.cpu),
-          Number(container.resources?.limits?.cpu),
-          t,
-        ),
+        isValid: !error,
       });
     }
   }, [container.resources, dispatch, resetCounter, t]);
