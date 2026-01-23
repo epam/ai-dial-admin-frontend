@@ -1,5 +1,4 @@
 'use client';
-import { usePathname } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
@@ -39,10 +38,7 @@ interface Props {
 
 const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset }) => {
   const t = useI18n();
-  const pathname = usePathname();
   const { sidebar, toggleSidebar } = useAppContext();
-
-  const [currentPath, setCurrentPath] = useState('');
 
   const [responseView, setResponseView] = useState(ParamsView.FORM);
   const [requestBody, setRequestBody] = useState<Record<string, unknown>>({});
@@ -102,17 +98,6 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset }) => {
     setResponse({});
     setRequestBody({});
   }, [tool?.name]);
-
-  useEffect(() => {
-    if (!currentPath) {
-      setCurrentPath(pathname);
-    } else {
-      if (currentPath !== pathname) {
-        close();
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
 
   return (
     <div className="flex flex-col gap-y-8 w-full h-full min-h-0">
