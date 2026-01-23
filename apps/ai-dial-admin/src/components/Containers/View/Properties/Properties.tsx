@@ -61,8 +61,8 @@ const Properties: FC<Props> = ({ container, setContainer, image, route, names, o
 
   return (
     <>
-      <div className="flex flex-col pt-3 divide-y divide-primary w-full">
-        <div className="flex gap-10 overflow-y-scroll">
+      <div className="flex flex-col w-full">
+        <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-primary">
           <LabelledText label={t(EntityFieldsI18nKey.id)} text={originalName} tooltip={originalName} copyable={true} />
           <DialLabelledText label={t(EntityFieldsI18nKey.type)} text={t(ContainersI18nKey.Container)} />
           {image && (
@@ -87,7 +87,7 @@ const Properties: FC<Props> = ({ container, setContainer, image, route, names, o
             <LabelledText label={t(BasicI18nKey.URL)} text={container.url} copyable />
           )}
         </div>
-        <div className="mt-8 pt-8">
+        <div className="pt-8">
           {route === ApplicationRoute.ModelDeployments ? (
             <ServingProperties container={container} setContainer={setContainer} names={names} route={route} />
           ) : (
