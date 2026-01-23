@@ -1,4 +1,3 @@
-import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { SelectOption } from '@epam/ai-dial-ui-kit';
 import Big from 'big.js';
 import { EChartsOption } from 'echarts-for-react/src/types';
