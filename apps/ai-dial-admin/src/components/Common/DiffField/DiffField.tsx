@@ -24,7 +24,7 @@ const DiffField: FC<Props> = ({ original, modified, fieldTitle, className, langu
   }
 
   return (
-    <div className={classNames('flex flex-col w-full flex-1 relative', className)}>
+    <div className={classNames('flex flex-col w-full flex-1 relative bg-layer-2 pt-2 pl-3', className)}>
       <Field fieldTitle={fieldTitle} />
       <DiffEditor
         keepCurrentModifiedModel={true}
@@ -35,6 +35,7 @@ const DiffField: FC<Props> = ({ original, modified, fieldTitle, className, langu
         beforeMount={handleBeforeMount}
         height="100%"
         width="100%"
+        className="diff-section"
         theme={currentTheme}
         options={diffEditorOptions}
       />
