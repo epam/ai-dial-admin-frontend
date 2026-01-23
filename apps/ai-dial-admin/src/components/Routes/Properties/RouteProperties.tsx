@@ -177,7 +177,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, onChange }) =
     [route, onChange, dispatch, t],
   );
 
-  const onRefreshOrder = useCallback(() => {
+  const onResetOrder = useCallback(() => {
     onChange({
       ...route,
       order: ORDER_DEFAULT_VALUE,
@@ -279,7 +279,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, onChange }) =
           onChange={(values) => onChangePermissions(values as string[])}
         />
       )}
-      <div className={classNames('flex gap-x-2 flex-row items-start', STANDARD_CONTROL_WIDTH)}>
+      <div className={classNames('flex gap-x-2 flex-row items-end', STANDARD_CONTROL_WIDTH)}>
         <DialNumberInputField
           elementId="order"
           disabled={readonly}
@@ -294,12 +294,12 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, onChange }) =
         />
         {route.order !== ORDER_DEFAULT_VALUE && (
           <DialButton
-            className="dial-tertiary-button mt-6"
+            className="dial-tertiary-button mb-2.5"
             variant={ButtonVariant.Primary}
             appearance={ButtonAppearance.Link}
             label={t(ButtonsI18nKey.ResetToDefault)}
             iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}
-            onClick={onRefreshOrder}
+            onClick={onResetOrder}
           />
         )}
       </div>
