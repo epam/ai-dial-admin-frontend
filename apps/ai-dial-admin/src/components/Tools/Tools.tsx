@@ -252,27 +252,31 @@ const Tools: FC<Props> = ({
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col gap-6 overflow-y-auto min-h-0 mb-3">
-        {!displayTools?.length ? (
-          <div className="flex items-center justify-center h-full">
-            <DialNoDataContent title={t(EntitiesI18nKey.NoTools)} />
-          </div>
-        ) : (
-          <div className="flex flex-col gap-6">
-            {displayTools?.map((tool, index) => {
-              return (
-                <ToolComponent
-                  tool={tool}
-                  key={index}
-                  isAddedManual={!tools?.some((t) => t.name === tool.name)}
-                  isMcpToolset={isMcpToolset}
-                  isAssetToolset={isAssetToolset}
-                  toolSetName={(isAssetToolset ? (selectedToolset as AssetToolset)?.path : selectedToolset?.name) || ''}
-                />
-              );
-            })}
-          </div>
-        )}
+      <div className="flex-1 min-h-0 mb-3">
+        <div className="flex flex-col gap-6 overflow-y-auto h-full">
+          {!displayTools?.length ? (
+            <div className="flex items-center justify-center h-full">
+              <DialNoDataContent title={t(EntitiesI18nKey.NoTools)} />
+            </div>
+          ) : (
+            <div className="flex flex-col gap-6">
+              {displayTools?.map((tool, index) => {
+                return (
+                  <ToolComponent
+                    tool={tool}
+                    key={index}
+                    isAddedManual={!tools?.some((t) => t.name === tool.name)}
+                    isMcpToolset={isMcpToolset}
+                    isAssetToolset={isAssetToolset}
+                    toolSetName={
+                      (isAssetToolset ? (selectedToolset as AssetToolset)?.path : selectedToolset?.name) || ''
+                    }
+                  />
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       {isNotSavedToolset && !readonly && (
