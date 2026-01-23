@@ -4,6 +4,7 @@ import {
   CONTAINER_TYPE,
   ContainerResources,
   KubEventType,
+  SCALING_STRATEGY_TYPE,
   SERVING_SOURCE,
 } from '@/src/types/deployments/containers';
 import { EnvironmentVariable } from '@/src/models/deployments/variables';
@@ -32,6 +33,19 @@ export interface Container {
   modelFormat?: string;
   command?: string;
   args?: string;
+  scaling?: Autoscaling;
+}
+
+export interface Autoscaling {
+  minReplicas?: number;
+  maxReplicas?: number;
+  scaleToZeroDelaySeconds?: number;
+  strategy?: AutoscalingStrategy;
+}
+
+export interface AutoscalingStrategy {
+  $type: SCALING_STRATEGY_TYPE;
+  threshold?: number;
 }
 
 export interface Resource {

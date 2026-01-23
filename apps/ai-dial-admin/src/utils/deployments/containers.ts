@@ -9,6 +9,7 @@ import {
   MODEL_FORMAT,
   MODEL_SOURCE_TYPE,
 } from '@/src/types/deployments/containers';
+import { DEFAULT_SCALING } from '@/src/constants/deployments/containers';
 
 export const normalizeContainerPorts = (ports?: number[]): number[] => {
   return [...(ports ?? [])].slice().sort((a, b) => a - b);
@@ -100,6 +101,7 @@ const getTemplate = (type: CONTAINER_TYPE, defaults?: ResourcesDefaults): Contai
           'nvidia.com/gpu': defaults?.GPU_LIMIT || '1',
         },
       },
+      scaling: DEFAULT_SCALING,
     };
   }
 
