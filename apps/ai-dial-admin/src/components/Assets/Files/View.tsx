@@ -21,6 +21,9 @@ import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
 import FileProperties from './Properties';
 import { getViewHeaderClassName } from '@/src/utils/entities/view';
+import { useNotification } from '@/src/context/NotificationContext';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 
 interface Props {
   originalFile: DialFile;
@@ -35,6 +38,8 @@ const FileView: FC<Props> = ({ originalFile }) => {
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedFile, setSelectedFile] = useState(cloneDeep(originalFile));
   const [isChanged, setIsChanged] = useState(false);
+
+  const { showNotification } = useNotification();
 
   useEffect(() => {
     setSelectedFile(cloneDeep(originalFile));
@@ -58,6 +63,12 @@ const FileView: FC<Props> = ({ originalFile }) => {
   const onSave = useCallback(() => {
     moveFiles([originalFile.path], selectedFile.folderId).then((r) => {
       if (r.every((response) => response.success)) {
+        showNotification(
+          getSuccessNotification(
+            getUpdateNotificationTitle(ApplicationRoute.Files, t),
+            getUpdateNotificationDescription(ApplicationRoute.Files, originalFile.name, t),
+          ),
+        );
         router.push(
           getUrnForEntity(ApplicationRoute.Files, {
             name: getNameExtensionFromFile(originalFile.name as string).name,
@@ -65,9 +76,12 @@ const FileView: FC<Props> = ({ originalFile }) => {
           }),
         );
         fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
+      } else {
+        const error = r.find((r) => !r.success);
+        showNotification(getErrorNotification(error?.errorHeader, error?.errorMessage, error?.requestId));
       }
     });
-  }, [originalFile, selectedFile, router, fetchFiles]);
+  }, [originalFile.path, originalFile.name, selectedFile.folderId, showNotification, t, router, fetchFiles]);
 
   const onChangeEntity = useCallback(
     (entity: DialFile) => {
