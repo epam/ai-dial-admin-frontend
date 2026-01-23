@@ -7,6 +7,7 @@ import { Container } from '@/src/models/deployments/containers';
 import { FieldError } from '@/src/models/error';
 import { getDeploymentsURIError, getErrorForHfModelName } from '@/src/utils/deployments/validation';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { DEFAULT_SCALING } from '@/src/constants/deployments/containers';
 
 interface Props {
   container: Container;
@@ -64,8 +65,10 @@ const ModelSourceFields: FC<Props> = ({ container, setContainer }) => {
 
       if ($type === MODEL_SOURCE_TYPE.HF) {
         updated.modelFormat = MODEL_FORMAT.HF;
+        updated.scaling = DEFAULT_SCALING;
       } else {
         delete updated.modelFormat;
+        delete updated.scaling;
       }
 
       if (container.source?.imageRef) {

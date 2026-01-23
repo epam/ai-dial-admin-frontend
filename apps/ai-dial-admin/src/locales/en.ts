@@ -988,6 +988,7 @@ export default {
     EnvironmentVariables: 'Environment Variables',
     EndpointConfiguration: 'Endpoint Configuration',
     ToolName: 'Tool name',
+    Autoscaling: 'Autoscaling',
   },
   EntityPlaceholders: {
     Project: 'Enter project',
@@ -1092,6 +1093,7 @@ export default {
     ContainSpace: 'Field must not contain spaces.',
     AllowedChars: 'Field must contain only lowercase Latin letters, numbers and hyphens',
     LimitRequestError: 'Requested resource bigger than limit',
+    ReplicasError: 'Invalid replicas configuration',
   },
   Source: {
     OpenTemplate: 'Open template',
@@ -1211,6 +1213,18 @@ export default {
     ContainerRestartWarning: '{entityType} will be restarted after changing image version.',
     ContainersRestartWarning: '{entityType} with "Running" status will be restarted.',
     ShowRelatedContainers: 'Show containers related to this image',
+    Autoscaling: {
+      ScaleToZeroNever: 'Never automatically scale to zero',
+      ScaleToZeroAfter15Minutes: 'After 15 minutes with no activity',
+      ScaleToZeroAfter30Minutes: 'After 30 minutes with no activity',
+      ScaleToZeroAfter1Hour: 'After 1 hour with no activity',
+      ScaleToZeroAfter2Hours: 'After 2 hours with no activity',
+      ScaleToZeroAfter6Hours: 'After 6 hours with no activity',
+      ScaleToZero: 'Automatic scale-to-zero',
+      Threshold: 'Pending requests to trigger autoscaling',
+      MaxReplicas: 'Max replicas',
+      MinReplicas: 'Min replicas',
+    },
   },
   KubEvents: {
     Normal: 'Normal',

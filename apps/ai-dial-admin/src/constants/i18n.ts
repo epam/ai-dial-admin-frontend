@@ -840,6 +840,7 @@ export enum ErrorI18nKey {
   ContainSpace = 'Error.ContainSpace',
   AllowedChars = 'Error.AllowedChars',
   LimitRequestError = 'Error.LimitRequestError',
+  ReplicasError = 'Error.ReplicasError',
 }
 
 export enum SourceI18nKey {
@@ -1087,6 +1088,7 @@ export enum EntityFieldsI18nKey {
   EnvironmentVariables = 'EntityFields.EnvironmentVariables',
   EndpointConfiguration = 'EntityFields.EndpointConfiguration',
   ToolName = 'EntityFields.ToolName',
+  Autoscaling = 'EntityFields.Autoscaling',
 }
 
 export enum ToolsetI18nKey {
@@ -1193,6 +1195,16 @@ export enum ContainersI18nKey {
   ContainerRestartWarning = 'Containers.ContainerRestartWarning',
   ContainersRestartWarning = 'Containers.ContainersRestartWarning',
   ShowRelatedContainers = 'Containers.ShowRelatedContainers',
+  ScaleToZeroNever = 'Containers.Autoscaling.ScaleToZeroNever',
+  ScaleToZeroAfter15Minutes = 'Containers.Autoscaling.ScaleToZeroAfter15Minutes',
+  ScaleToZeroAfter30Minutes = 'Containers.Autoscaling.ScaleToZeroAfter30Minutes',
+  ScaleToZeroAfter1Hour = 'Containers.Autoscaling.ScaleToZeroAfter1Hour',
+  ScaleToZeroAfter2Hours = 'Containers.Autoscaling.ScaleToZeroAfter2Hours',
+  ScaleToZeroAfter6Hours = 'Containers.Autoscaling.ScaleToZeroAfter6Hours',
+  Threshold = 'Containers.Autoscaling.Threshold',
+  MaxReplicas = 'Containers.Autoscaling.MaxReplicas',
+  MinReplicas = 'Containers.Autoscaling.MinReplicas',
+  ScaleToZero = 'Containers.Autoscaling.ScaleToZero',
 }
 
 export enum KubEventsI18nKey {
