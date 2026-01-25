@@ -40,7 +40,7 @@ interface Props {
 
 const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, onChange }) => {
   const t = useI18n();
-  const { dispatch } = useSaveValidationContext();
+  const { dispatch, resetCounter } = useSaveValidationContext();
 
   const outputRadio: RadioButtonWithContent[] = [
     { id: RouteOutput.UPSTREAMS, name: t(EntityFieldsI18nKey.upstreams) },
@@ -74,6 +74,13 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, onChange }) =
   useEffect(() => {
     dispatch({ type: ValidationActionType.SetField, field: 'methods', isValid: !!route.methods?.length });
   }, [dispatch, route.methods]);
+
+  useEffect(() => {
+    if (resetCounter) {
+      setStatusError('');
+      setBodyError('');
+    }
+  }, [resetCounter]);
 
   useEffect(() => {
     if (isAppRoute) {
