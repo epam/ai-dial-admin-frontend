@@ -18,15 +18,16 @@ import ToolsFilter from '@/src/components/Tools/Filter/ToolsFilter';
 import { ToolFilter } from '@/src/components/Tools/type';
 import { getFilteredTools } from '@/src/components/Tools/utils';
 import { ButtonsI18nKey, EntitiesI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { Tool, Toolset } from '@/src/models/dial/toolset';
 import { getErrorNotification } from '@/src/utils/notification';
-import ToolComponent from './Tool/Tool';
-import ManageToolsModal from './ManageToolsModal/ManageToolsModal';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { IconPencilMinus } from '@tabler/icons-react';
+import ManageToolsModal from './ManageToolsModal/ManageToolsModal';
+import ToolComponent from './Tool/Tool';
 
 const filtersConfiguration = [ToolFilter.AutoDetected, ToolFilter.AddedManually];
 
@@ -52,6 +53,7 @@ const Tools: FC<Props> = ({
   const t = useI18n();
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
   const { showNotification } = useNotification();
+  const { sidebar } = useAppContext();
   const [useAllTools, setUseAllTools] = useState(false);
 
   const [loading, setLoading] = useState<boolean>(false);
@@ -204,6 +206,11 @@ const Tools: FC<Props> = ({
       setUseAllTools(false);
     }
   }, [originalToolset]);
+
+  useEffect(() => {
+    return () => sidebar.closeSidebar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (loading) {
     return <DialLoader size={40} />;

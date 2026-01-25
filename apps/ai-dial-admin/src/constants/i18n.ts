@@ -575,6 +575,7 @@ export enum RoutesI18nKey {
 export enum PublicationsI18nKey {
   DeclineReason = 'Publications.ReasonTitle',
   DeclineReasonPlaceholder = 'Publications.ReasonPlaceholder',
+  Warning = 'Publications.Warning',
 
   // prompt publications
   PromptPublishApproveModalTitle = 'Publications.Prompt.PublishApproveModalTitle',
@@ -841,6 +842,9 @@ export enum ErrorI18nKey {
   AllowedChars = 'Error.AllowedChars',
   LimitRequestError = 'Error.LimitRequestError',
   ReplicasError = 'Error.ReplicasError',
+  FailedToStart = 'Error.FailedToStart',
+  RunOutOfMemory = 'Error.RunOutOfMemory',
+  ExitedWithError = 'Error.ExitedWithError',
 }
 
 export enum SourceI18nKey {
@@ -1089,6 +1093,9 @@ export enum EntityFieldsI18nKey {
   EndpointConfiguration = 'EntityFields.EndpointConfiguration',
   ToolName = 'EntityFields.ToolName',
   Autoscaling = 'EntityFields.Autoscaling',
+  Restarts = 'EntityFields.Restarts',
+  LastRestartedAt = 'EntityFields.LastRestartedAt',
+  LastReason = 'EntityFields.LastReason',
 }
 
 export enum ToolsetI18nKey {
