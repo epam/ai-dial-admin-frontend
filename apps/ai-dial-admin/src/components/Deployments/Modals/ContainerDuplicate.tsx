@@ -3,7 +3,7 @@ import { DialFormPopup } from '@epam/ai-dial-ui-kit';
 
 import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { Container } from '@/src/models/deployments/containers';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 
 import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
@@ -18,13 +18,13 @@ interface Props {
   names: string[];
 }
 
-const DuplicateModal: FC<Props> = ({ title, isModalOpen, container, onClose, onApply, names }) => {
+const ContainerDuplicate: FC<Props> = ({ title, isModalOpen, container, onClose, onApply, names }) => {
   const t = useI18n();
   const { dispatch, isValid } = useSaveValidationContext();
 
   const [duplicate, setDuplicate] = useState<Container>({
     ...container,
-    name: `${container.name}-copy`,
+    name: `${container.name.slice(0, 31)}-copy`,
     displayName: `${container.displayName} ${t(BasicI18nKey.DuplicateCopyPostfix)}`,
   });
   const [isUniqueNameError, setIsUniqueNameError] = useState<boolean>(false);
@@ -32,11 +32,10 @@ const DuplicateModal: FC<Props> = ({ title, isModalOpen, container, onClose, onA
   const onChangeName = useCallback(
     (container: Container) => {
       const error = names?.includes(container.name);
-      dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !error });
       setIsUniqueNameError(!!error);
       setDuplicate(container);
     },
-    [dispatch, names, setDuplicate],
+    [names, setDuplicate],
   );
 
   const onChangeDisplayName = useCallback(
@@ -48,7 +47,6 @@ const DuplicateModal: FC<Props> = ({ title, isModalOpen, container, onClose, onA
 
   useEffect(() => {
     const error = names?.includes(duplicate.name);
-    dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !error });
     setIsUniqueNameError(!!error);
   }, [duplicate.name, dispatch, names, t]);
 
@@ -64,7 +62,7 @@ const DuplicateModal: FC<Props> = ({ title, isModalOpen, container, onClose, onA
         onClose();
       }}
       submitLabel={t(ButtonsI18nKey.Duplicate)}
-      disableSubmitButton={!isValid}
+      disableSubmitButton={!isValid || isUniqueNameError}
     >
       <div className="flex flex-col h-full overflow-auto px-6 py-4 gap-4">
         <IdControl
@@ -79,4 +77,4 @@ const DuplicateModal: FC<Props> = ({ title, isModalOpen, container, onClose, onA
   );
 };
 
-export default DuplicateModal;
+export default ContainerDuplicate;
