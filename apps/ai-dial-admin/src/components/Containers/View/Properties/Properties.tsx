@@ -29,9 +29,10 @@ interface Props {
   route: ApplicationRoute;
   names: string[];
   originalName: string;
+  restarts: number;
 }
 
-const Properties: FC<Props> = ({ container, setContainer, image, route, names, originalName }) => {
+const Properties: FC<Props> = ({ container, setContainer, image, route, names, originalName, restarts }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -86,6 +87,7 @@ const Properties: FC<Props> = ({ container, setContainer, image, route, names, o
           {container.status === CONTAINER_STATUS.RUNNING && container.url && (
             <LabelledText label={t(BasicI18nKey.URL)} text={container.url} copyable />
           )}
+          {!!restarts && <LabelledText label={t(EntityFieldsI18nKey.Restarts)} text={`${restarts}`} />}
         </div>
         <div className="mt-8 pt-8">
           {route === ApplicationRoute.ModelDeployments ? (

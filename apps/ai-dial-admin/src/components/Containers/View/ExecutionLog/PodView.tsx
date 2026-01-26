@@ -17,12 +17,17 @@ interface Props {
 const PodView: FC<Props> = ({ pod, containerId }) => {
   const t = useI18n();
   const [logs, setLogs] = useState('');
+  const [podData, setPodData] = useState(pod);
+
+  useEffect(() => {
+    setPodData(pod);
+  }, [pod]);
 
   const restartReasons = RESTART_REASONS(t);
 
   useEffect(() => {
     if (containerId) {
-      const eventSource = new EventSource(`/api/sse?entity=container&id=${containerId}&podName=${pod.name}`);
+      const eventSource = new EventSource(`/api/sse?entity=container&id=${containerId}&podName=${podData.name}`);
 
       eventSource.addEventListener('logs', (event) => {
         setLogs((prev) => prev + event.data + '\n');
@@ -32,27 +37,28 @@ const PodView: FC<Props> = ({ pod, containerId }) => {
         eventSource.close();
       };
     }
-  }, [pod, containerId]);
+  }, [podData, containerId]);
 
   return (
-    <>
-      {!!pod.restartCount && (
+    <div className="flex flex-col h-full">
+      {!!podData.restartCount && (
         <div className="flex gap-4">
-          <LabelledText label={t(EntityFieldsI18nKey.Restarts)} text={pod.restartCount?.toString()} />
+          <LabelledText label={t(EntityFieldsI18nKey.Restarts)} text={podData.restartCount?.toString()} />
           <LabelledText
             label={t(EntityFieldsI18nKey.LastRestartedAt)}
-            text={formatDateTimeToLocalString(pod.lastFinishedAt)}
+            text={formatDateTimeToLocalString(podData.lastFinishedAt)}
           />
           <LabelledText
+            className="max-w-[350px]"
             label={t(EntityFieldsI18nKey.LastReason)}
-            text={restartReasons[pod.lastTerminationReason as string]}
+            text={restartReasons[podData.lastTerminationReason as string]}
           />
         </div>
       )}
-      <div className="h-full mt-3">
+      <div className="flex-1 min-h-0 mt-3">
         <LogViewer logs={logs} />
       </div>
-    </>
+    </div>
   );
 };
 

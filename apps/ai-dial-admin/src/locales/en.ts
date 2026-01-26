@@ -1099,8 +1099,8 @@ export default {
     LimitRequestError: 'Requested resource bigger than limit',
     ReplicasError: 'Invalid replicas configuration',
     FailedToStart: 'Failed to start',
-    RunOutOfMemory: 'Run out of memory',
-    ExitedWithError: 'Exited with an error',
+    RunOutOfMemory: 'Stopped due to insufficient memory',
+    ExitedWithError: 'Failed during execution',
   },
   Source: {
     OpenTemplate: 'Open template',
