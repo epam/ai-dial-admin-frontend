@@ -182,11 +182,13 @@ const Tools: FC<Props> = ({
         );
       } else {
         setDisplayTools(
-          getFilteredTools(
-            useAllTools ? allToolNames : allowedTools,
-            useAllTools ? [...filtersConfiguration] : selectedFilters,
-            tools || [],
-          ),
+          isMcpToolset
+            ? allTools
+            : getFilteredTools(
+                useAllTools ? allToolNames : allowedTools,
+                useAllTools ? [...filtersConfiguration] : selectedFilters,
+                tools || [],
+              ),
         );
       }
     }, 300);
