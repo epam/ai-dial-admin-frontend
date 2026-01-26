@@ -120,6 +120,7 @@ const ToolsetView: FC<Props> = ({ names, isUserLevel, oAuthCode, etag, roles, or
       // Force JSON Editor re-render to show originalEntity on discard.
       setKey((prevKey) => prevKey + 1);
     }
+    dispatch({ type: ValidationActionType.Reset });
     setSelectedToolset(originalToolset);
     setIsSkipRefresh(false);
   }, [isJsonEditorEnabled, originalToolset, dispatch]);
@@ -151,6 +152,7 @@ const ToolsetView: FC<Props> = ({ names, isUserLevel, oAuthCode, etag, roles, or
     req.then((res) => {
       if (res.success) {
         setCoreToolset(null);
+        dispatch({ type: ValidationActionType.Reset });
         showNotification(
           getSuccessNotification(
             getUpdateNotificationTitle(ApplicationRoute.Toolsets, t),
@@ -163,7 +165,7 @@ const ToolsetView: FC<Props> = ({ names, isUserLevel, oAuthCode, etag, roles, or
       }
       setIsModalOpen(false);
     });
-  }, [selectedFormat, selectedToolset, originalToolset.name, etag, showNotification, t, router]);
+  }, [selectedFormat, selectedToolset, originalToolset.name, etag, dispatch, showNotification, t, router]);
 
   const onTryToSave = useCallback(() => {
     if (
