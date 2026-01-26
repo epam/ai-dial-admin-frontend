@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 import { DialNumberInputField } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
@@ -57,6 +57,76 @@ const MemoryFields: FC<Props> = ({ container, setContainer }) => {
     return String(Math.round(Number(value) / (1024 * 1024)));
   }
 
+  const onChangeMemoryRequest = useCallback(
+    (memoryRequest?: number | string) => {
+      const error = getResourcesConflictError(
+        (memoryRequest as number) * 1024 * 1024,
+        Number(container.resources?.limits?.memory),
+        t,
+      );
+      setRequestError(error);
+      if (!error) {
+        setLimitError(error);
+        dispatch({
+          type: ValidationActionType.SetField,
+          field: 'memoryLimit',
+          isValid: !error,
+        });
+      }
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'memoryRequest',
+        isValid: !error,
+      });
+      setContainer({
+        ...container,
+        resources: {
+          ...container.resources,
+          requests: {
+            ...container.resources?.requests,
+            memory: `${(memoryRequest as number) * 1024 * 1024}`,
+          },
+        },
+      });
+    },
+    [container, dispatch, setContainer, t],
+  );
+
+  const onChangeMemoryLimit = useCallback(
+    (memoryLimit?: number | string) => {
+      const error = getResourcesConflictError(
+        Number(container.resources?.requests?.memory),
+        (memoryLimit as number) * 1024 * 1024,
+        t,
+      );
+      if (!error) {
+        setRequestError(error);
+        dispatch({
+          type: ValidationActionType.SetField,
+          field: 'memoryRequest',
+          isValid: !error,
+        });
+      }
+      setLimitError(error);
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'memoryLimit',
+        isValid: !error,
+      });
+      setContainer({
+        ...container,
+        resources: {
+          ...container.resources,
+          limits: {
+            ...container.resources?.limits,
+            memory: `${(memoryLimit as number) * 1024 * 1024}`,
+          },
+        },
+      });
+    },
+    [container, dispatch, setContainer, t],
+  );
+
   return (
     <div className="flex gap-2 flex-col lg:flex-row">
       <DialNumberInputField
@@ -67,37 +137,8 @@ const MemoryFields: FC<Props> = ({ container, setContainer }) => {
         errorText={requestError?.text}
         invalid={!!requestError}
         disabled={isEditDisabled(container)}
-        onChange={(memoryRequest) => {
-          const error = getResourcesConflictError(
-            (memoryRequest as number) * 1024 * 1024,
-            Number(container.resources?.limits?.memory),
-            t,
-          );
-          setRequestError(error);
-          if (!error) {
-            setLimitError(error);
-            dispatch({
-              type: ValidationActionType.SetField,
-              field: 'memoryLimit',
-              isValid: !error,
-            });
-          }
-          dispatch({
-            type: ValidationActionType.SetField,
-            field: 'memoryRequest',
-            isValid: !error,
-          });
-          setContainer({
-            ...container,
-            resources: {
-              ...container.resources,
-              requests: {
-                ...container.resources?.requests,
-                memory: `${(memoryRequest as number) * 1024 * 1024}`,
-              },
-            },
-          });
-        }}
+        containerClassName="w-[220px]"
+        onChange={onChangeMemoryRequest}
       />
       <DialNumberInputField
         elementId="memoryLimit"
@@ -105,39 +146,10 @@ const MemoryFields: FC<Props> = ({ container, setContainer }) => {
         value={convertMemoryToMb(container.resources?.limits?.memory)}
         suffix="Mb"
         errorText={limitError?.text}
+        containerClassName="w-[220px]"
         invalid={!!limitError}
         disabled={isEditDisabled(container)}
-        onChange={(memoryLimit) => {
-          const error = getResourcesConflictError(
-            Number(container.resources?.requests?.memory),
-            (memoryLimit as number) * 1024 * 1024,
-            t,
-          );
-          if (!error) {
-            setRequestError(error);
-            dispatch({
-              type: ValidationActionType.SetField,
-              field: 'memoryRequest',
-              isValid: !error,
-            });
-          }
-          setLimitError(error);
-          dispatch({
-            type: ValidationActionType.SetField,
-            field: 'memoryLimit',
-            isValid: !error,
-          });
-          setContainer({
-            ...container,
-            resources: {
-              ...container.resources,
-              limits: {
-                ...container.resources?.limits,
-                memory: `${(memoryLimit as number) * 1024 * 1024}`,
-              },
-            },
-          });
-        }}
+        onChange={onChangeMemoryLimit}
       />
     </div>
   );

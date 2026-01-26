@@ -22,13 +22,14 @@ const ResourcesFields: FC<Props> = ({ container, setContainer, route }) => {
 
   return (
     <Accordion title={t(EntityFieldsI18nKey.Resources)}>
-      <div className="flex flex-col gap-x-2 gap-y-4 lg:max-w-[35%]">
+      <div className="flex flex-col gap-x-2 gap-y-6">
         <CPUFields container={container} setContainer={setContainer} />
         <MemoryFields container={container} setContainer={setContainer} />
         {route === ApplicationRoute.ModelDeployments && (
           <div className="flex gap-2 flex-col lg:flex-row">
             <DialNumberInputField
               elementId="gpuRequest"
+              containerClassName="w-[220px]"
               fieldTitle={t(EntityFieldsI18nKey.GPURequest)}
               value={container.resources?.requests?.['nvidia.com/gpu']}
               disabled={isEditDisabled(container)}

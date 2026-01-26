@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 import { DialNumberInputField } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
@@ -65,6 +65,81 @@ const CPUFields: FC<Props> = ({ container, setContainer }) => {
     return String(Math.round(Number(value) * 1000));
   }
 
+  const onChangeCpuRequest = useCallback(
+    (cpuRequest?: string | number) => {
+      const error =
+        getCPUError(cpuRequest as number, t) ??
+        getResourcesConflictError(
+          convertMilliCoresToCores(cpuRequest as number),
+          Number(container.resources?.limits?.cpu),
+          t,
+        );
+      if (!error) {
+        setLimitError(error);
+        dispatch({
+          type: ValidationActionType.SetField,
+          field: 'cpuLimit',
+          isValid: !error,
+        });
+      }
+      setRequestError(error);
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'cpuRequest',
+        isValid: !error,
+      });
+
+      setContainer({
+        ...container,
+        resources: {
+          ...container.resources,
+          requests: {
+            ...container.resources?.requests,
+            cpu: `${convertMilliCoresToCores(cpuRequest as number)}`,
+          },
+        },
+      });
+    },
+    [container, dispatch, setContainer, t],
+  );
+
+  const onChangeCpuLimit = useCallback(
+    (cpuLimit?: number | string) => {
+      const error =
+        getCPUError(cpuLimit as number, t) ??
+        getResourcesConflictError(
+          Number(container.resources?.requests?.cpu),
+          convertMilliCoresToCores(cpuLimit as number),
+          t,
+        );
+      if (!error) {
+        setRequestError(error);
+        dispatch({
+          type: ValidationActionType.SetField,
+          field: 'cpuRequest',
+          isValid: !error,
+        });
+      }
+      setLimitError(error);
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'cpuLimit',
+        isValid: !error,
+      });
+      setContainer({
+        ...container,
+        resources: {
+          ...container.resources,
+          limits: {
+            ...container.resources?.limits,
+            cpu: `${convertMilliCoresToCores(cpuLimit as number)}`,
+          },
+        },
+      });
+    },
+    [container, dispatch, setContainer, t],
+  );
+
   return (
     <div className="flex flex-col lg:flex-row gap-2">
       <DialNumberInputField
@@ -72,85 +147,22 @@ const CPUFields: FC<Props> = ({ container, setContainer }) => {
         fieldTitle={t(EntityFieldsI18nKey.CPURequest)}
         value={convertCoresToMilliCores(container.resources?.requests?.cpu)}
         errorText={requestError?.text}
+        containerClassName="w-[220px]"
         invalid={!!requestError}
         suffix="m"
         disabled={isEditDisabled(container)}
-        onChange={(cpuRequest) => {
-          const error =
-            getCPUError(cpuRequest as number, t) ??
-            getResourcesConflictError(
-              convertMilliCoresToCores(cpuRequest as number),
-              Number(container.resources?.limits?.cpu),
-              t,
-            );
-          if (!error) {
-            setLimitError(error);
-            dispatch({
-              type: ValidationActionType.SetField,
-              field: 'cpuLimit',
-              isValid: !error,
-            });
-          }
-          setRequestError(error);
-          dispatch({
-            type: ValidationActionType.SetField,
-            field: 'cpuRequest',
-            isValid: !error,
-          });
-
-          setContainer({
-            ...container,
-            resources: {
-              ...container.resources,
-              requests: {
-                ...container.resources?.requests,
-                cpu: `${convertMilliCoresToCores(cpuRequest as number)}`,
-              },
-            },
-          });
-        }}
+        onChange={onChangeCpuRequest}
       />
       <DialNumberInputField
         elementId="cpuLimit"
+        containerClassName="w-[220px]"
         fieldTitle={t(EntityFieldsI18nKey.CPULimit)}
         value={convertCoresToMilliCores(container.resources?.limits?.cpu)}
         suffix="m"
         errorText={limitError?.text}
         invalid={!!limitError}
         disabled={isEditDisabled(container)}
-        onChange={(cpuLimit?: number | string) => {
-          const error =
-            getCPUError(cpuLimit as number, t) ??
-            getResourcesConflictError(
-              Number(container.resources?.requests?.cpu),
-              convertMilliCoresToCores(cpuLimit as number),
-              t,
-            );
-          if (!error) {
-            setRequestError(error);
-            dispatch({
-              type: ValidationActionType.SetField,
-              field: 'cpuRequest',
-              isValid: !error,
-            });
-          }
-          setLimitError(error);
-          dispatch({
-            type: ValidationActionType.SetField,
-            field: 'cpuLimit',
-            isValid: !error,
-          });
-          setContainer({
-            ...container,
-            resources: {
-              ...container.resources,
-              limits: {
-                ...container.resources?.limits,
-                cpu: `${convertMilliCoresToCores(cpuLimit as number)}`,
-              },
-            },
-          });
-        }}
+        onChange={onChangeCpuLimit}
       />
     </div>
   );

@@ -8,7 +8,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getPathError } from '@/src/utils/deployments/validation';
 import { useI18n } from '@/src/locales/client';
-
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import Transport from '@/src/components/Containers/Fields/Transport/Transport';
 import PortField from '@/src/components/Containers/Fields/PortField/PortField';
 import Accordion from '@/src/components/Common/Accordion/Accordion';
@@ -64,7 +64,7 @@ const EndpointConfiguration: FC<Props> = ({ container, setContainer, route }) =>
 
   return (
     <Accordion title={t(EntityFieldsI18nKey.EndpointConfiguration)}>
-      <div className="flex flex-col gap-y-6 lg:w-[35%]">
+      <div className="flex flex-col gap-y-6">
         {route === ApplicationRoute.McpDeployments && (
           <div className="flex gap-4">
             <Transport container={container} setContainer={setContainer} />
@@ -78,6 +78,7 @@ const EndpointConfiguration: FC<Props> = ({ container, setContainer, route }) =>
               optional={true}
               onChange={onPathChange}
               disabled={isEditDisabled(container)}
+              containerClassName={STANDARD_CONTROL_WIDTH}
             />
           </div>
         )}
