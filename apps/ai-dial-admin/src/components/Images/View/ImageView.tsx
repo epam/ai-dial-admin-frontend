@@ -122,11 +122,7 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
         if (success) {
           const updatedImage = response as Image;
           if (updatedImage) {
-            setSelectedImage((prev) => ({
-              ...prev,
-              buildStatus: updatedImage.buildStatus,
-              id: updatedImage.id,
-            }));
+            router.refresh();
             if (updatedImage.buildStatus !== IMAGE_STATUS.BUILDING && interval) {
               clearInterval(interval);
             }
@@ -138,7 +134,7 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [selectedImage, route, t]);
+  }, [selectedImage, route, t, router]);
 
   return (
     <>
