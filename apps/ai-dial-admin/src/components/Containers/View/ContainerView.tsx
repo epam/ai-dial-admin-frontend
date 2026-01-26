@@ -4,7 +4,7 @@ import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from '
 import { cloneDeep } from 'lodash';
 import { useRouter } from 'next/navigation';
 import { DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
-import { Container, KubEvent } from '@/src/models/deployments/containers';
+import { Container, KubEvent, Pod } from '@/src/models/deployments/containers';
 import { Image } from '@/src/models/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
 import { DialModel } from '@/src/models/dial/model';
@@ -17,7 +17,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useAppContext } from '@/src/context/AppContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { EntityViewTab, getDeploymentsViewTabs } from '@/src/utils/tabs/utils';
-import { getContainer, updateContainer } from '@/src/app/actions/deployments';
+import { getContainer, getContainerPods, updateContainer } from '@/src/app/actions/deployments';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { CONTAINER_STATUS, KubEventType } from '@/src/types/deployments/containers';
 import { ContainersI18nKey } from '@/src/constants/i18n';
@@ -70,6 +70,8 @@ const ContainerView: FC<Props> = ({
   const [isRedeployRequired, setIsRedeployRequired] = useState<boolean>(false);
   const [key, setKey] = useState(0);
   const [events, setEvents] = useState<KubEvent[]>([]);
+  const [restarts, setRestarts] = useState(0);
+  const [pods, setPods] = useState<Pod[]>([]);
 
   useEffect(() => {
     setTabs(getDeploymentsViewTabs(route, t, container.status));
@@ -152,6 +154,28 @@ const ContainerView: FC<Props> = ({
       };
     }
   }, [selectedContainer.name]);
+
+  useEffect(() => {
+    if (!selectedContainer.name) {
+      setPods([]);
+      setRestarts(0);
+      return;
+    }
+
+    const fetchPods = async () => {
+      const data = await getContainerPods(selectedContainer.name);
+      setPods(data || []);
+      const totalRestarts = data?.reduce((sum, p) => sum + (p.restartCount || 0), 0);
+      setRestarts(totalRestarts || 0);
+    };
+
+    fetchPods();
+    const intervalId = window.setInterval(fetchPods, 60 * 1000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [selectedContainer.name, setRestarts]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -275,6 +299,7 @@ const ContainerView: FC<Props> = ({
                   route={route}
                   names={names}
                   originalName={container.name}
+                  restarts={restarts}
                 />
               )}
               {activeTab === EntityViewTab.Tools && <Tools containerId={selectedContainer.name} isMcpToolset />}
@@ -282,7 +307,7 @@ const ContainerView: FC<Props> = ({
               {activeTab === EntityViewTab.Prompts && <Prompts containerId={selectedContainer.name} />}
               {activeTab === EntityViewTab.Metrics && <Metrics />}
               {activeTab === EntityViewTab.ExecutionLog && (
-                <ExecutionLog containerId={selectedContainer.name} route={route} />
+                <ExecutionLog containerId={selectedContainer.name} route={route} pods={pods} />
               )}
               {activeTab === EntityViewTab.Events && <Events route={route} events={events} />}
             </>
