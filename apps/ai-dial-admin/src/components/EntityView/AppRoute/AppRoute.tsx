@@ -72,6 +72,7 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
           attachmentPaths: { requestBody: [''], responseBody: [''] },
         } as DialAppRoute,
       ]);
+      setActiveRoute(name);
     },
     [handleModalClose, onChangeRoutes, routes],
   );
