@@ -78,9 +78,10 @@ const defaultOptions: EditorOptions = {
   smoothScrolling: true,
   overviewRulerLanes: 0,
   scrollbar: {
-    horizontal: 'hidden',
     verticalScrollbarSize: 6,
     verticalSliderSize: 6,
+    horizontalScrollbarSize: 6,
+    horizontalSliderSize: 6,
   },
 };
 
