@@ -369,8 +369,14 @@ export const NON_DEPLOYMENT_ASSETS_COLUMNS: ColDef[] = [
 ];
 
 export const FILES_COLUMNS: ColDef[] = [
-  { field: 'name', colId: 'name', headerName: 'Display Name', valueFormatter: ({ value }) => value },
-  { field: 'extension', headerName: 'Extension' },
+  {
+    field: 'name',
+    colId: 'name',
+    headerName: 'Display Name',
+    valueFormatter: ({ value }) => value,
+    tooltipValueGetter: () => '',
+  },
+  { field: 'extension', headerName: 'Extension', tooltipValueGetter: () => '' },
   AUTHOR_COLUMN,
 ];
 
