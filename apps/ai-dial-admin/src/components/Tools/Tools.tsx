@@ -219,7 +219,7 @@ const Tools: FC<Props> = ({
   }
 
   return (
-    <div className="flex flex-col relative h-full">
+    <div className="flex flex-col relative h-full overflow-hidden">
       <div className="flex flex-row items-center mb-3">
         <h1 className="mr-4">
           {t(ToolsetI18nKey.Tools)}
