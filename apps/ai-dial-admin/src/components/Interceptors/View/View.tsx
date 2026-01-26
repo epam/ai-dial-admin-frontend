@@ -125,6 +125,7 @@ const InterceptorView: FC<Props> = ({
       // Force JSON Editor re-render to show originalEntity on discard.
       setKey((prevKey) => prevKey + 1);
     }
+    dispatch({ type: ValidationActionType.Reset });
     setSelectedInterceptor(originalInterceptor);
   }, [isJsonEditorEnabled, originalInterceptor, dispatch]);
 
@@ -195,6 +196,7 @@ const InterceptorView: FC<Props> = ({
 
     req.then((res) => {
       if (res.success) {
+        dispatch({ type: ValidationActionType.Reset });
         setCoreInterceptor(null);
         showNotification(
           getSuccessNotification(
@@ -207,7 +209,7 @@ const InterceptorView: FC<Props> = ({
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
-  }, [selectedFormat, selectedInterceptor, originalInterceptor.name, etag, showNotification, t, router]);
+  }, [selectedFormat, selectedInterceptor, originalInterceptor.name, etag, dispatch, showNotification, t, router]);
 
   const onChangeConfiguration = useCallback(
     (data: Record<string, unknown>) => {

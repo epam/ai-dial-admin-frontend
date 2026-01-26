@@ -123,6 +123,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names,
       // Force JSON Editor re-render to show originalEntity on discard.
       setKey((prevKey) => prevKey + 1);
     }
+    dispatch({ type: ValidationActionType.Reset });
     setSelectedRunner(cloneDeep(originalScheme));
   }, [isJsonEditorEnabled, originalScheme, dispatch]);
 
@@ -148,6 +149,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names,
 
     req.then((res) => {
       if (res.success) {
+        dispatch({ type: ValidationActionType.Reset });
         setCoreRunner(null);
         showNotification(
           getSuccessNotification(
@@ -160,7 +162,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names,
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
-  }, [selectedFormat, selectedRunner, originalScheme.$id, etag, showNotification, t, router]);
+  }, [selectedFormat, selectedRunner, originalScheme.$id, etag, dispatch, showNotification, t, router]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
