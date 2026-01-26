@@ -24,7 +24,7 @@ const ContainerDuplicate: FC<Props> = ({ title, isModalOpen, container, onClose,
 
   const [duplicate, setDuplicate] = useState<Container>({
     ...container,
-    name: `${container.name}-copy`,
+    name: `${container.name.slice(0, 31)}-copy`,
     displayName: `${container.displayName} ${t(BasicI18nKey.DuplicateCopyPostfix)}`,
   });
   const [isUniqueNameError, setIsUniqueNameError] = useState<boolean>(false);
