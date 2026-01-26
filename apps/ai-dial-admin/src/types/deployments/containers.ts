@@ -39,6 +39,11 @@ export enum MODEL_TYPE {
   HF = 'inference',
 }
 
+export enum SCALING_STRATEGY_TYPE {
+  REQUESTS = 'pending_requests',
+  HARDWARE = 'hardware_usage',
+}
+
 export type SERVING_SOURCE = {
   $type: MODEL_SOURCE_TYPE;
   imageRef?: string;

@@ -120,7 +120,8 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
     handleValidateEntityDisplayName(clonedEntity.displayName, true);
 
     dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!clonedEntity.name });
-  }, [clonedEntity.displayName, clonedEntity.name, dispatch, handleValidateEntityDisplayName]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onDuplicateClick = useCallback(async () => {
     const isUnique = RoutesForCheckingUniqueName.includes(view)

@@ -1,17 +1,19 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 import { DialNoDataContent, DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
+
 import { Pod } from '@/src/models/deployments/containers';
 import { ContainersI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
-import { getContainerPods } from '@/src/app/actions/deployments';
-import LogViewer from '@/src/components/Common/LogViewer/LogViewer';
-import { getTranslatedDeploymentType } from '@/src/utils/deployments/entity';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getTranslatedDeploymentType } from '@/src/utils/deployments/entity';
+import { useI18n } from '@/src/locales/client';
+
+import PodView from '@/src/components/Containers/View/ExecutionLog/PodView';
 
 interface Props {
   containerId?: string;
   route: ApplicationRoute;
+  pods: Pod[];
 }
 
 function getPodsTabs(pods: Pod[], t: (key: string) => string): TabModel[] {
@@ -21,12 +23,11 @@ function getPodsTabs(pods: Pod[], t: (key: string) => string): TabModel[] {
   }));
 }
 
-const ExecutionLog: FC<Props> = ({ containerId, route }) => {
+const ExecutionLog: FC<Props> = ({ containerId, route, pods }) => {
   const t = useI18n();
-  const [pods, setPods] = useState<Pod[]>([]);
-  const [activeTab, setActiveTab] = useState<string>('');
+
   const [tabs, setTabs] = useState<TabModel[]>([]);
-  const [logs, setLogs] = useState('');
+  const [activeTab, setActiveTab] = useState<string>('');
 
   const onChangeActiveTab = useCallback(
     (tab: string) => {
@@ -45,31 +46,6 @@ const ExecutionLog: FC<Props> = ({ containerId, route }) => {
     }
   }, [pods, t]);
 
-  useEffect(() => {
-    if (containerId && activeTab) {
-      const eventSource = new EventSource(`/api/sse?entity=container&id=${containerId}&podName=${activeTab}`);
-
-      eventSource.addEventListener('logs', (event) => {
-        setLogs((prev) => prev + event.data + '\n');
-      });
-
-      return () => {
-        eventSource.close();
-      };
-    }
-  }, [activeTab, containerId]);
-
-  useEffect(() => {
-    const fetchPods = async () => {
-      if (containerId) {
-        const data = await getContainerPods(containerId);
-        setPods(data || []);
-      }
-    };
-
-    fetchPods();
-  }, [containerId]);
-
   return (
     <div className="flex h-full">
       {!tabs.length ? (
@@ -78,10 +54,10 @@ const ExecutionLog: FC<Props> = ({ containerId, route }) => {
         />
       ) : (
         <div className="flex-1 overflow-auto mt-3 min-h-0">
-          {tabs.length > 1 && <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />}
-          <div className="h-full mt-3">
-            <LogViewer logs={logs} />
-          </div>
+          {tabs.length > 1 && (
+            <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} desktopTabClassName="mb-4" />
+          )}
+          <PodView pod={pods.find((pod) => pod.name === activeTab) as Pod} containerId={containerId} />
         </div>
       )}
     </div>
