@@ -10,8 +10,8 @@ const getDate = (year: number, month: number, day: number, h = 0, m = 0, s = 0) 
 describe('RangePicker', () => {
   test('renders start and end date pickers and button', () => {
     render(<RangePicker timeRange={null} onChange={vi.fn()} />);
-    expect(screen.getByLabelText(BasicI18nKey.From)).toBeInTheDocument();
-    expect(screen.getByLabelText(BasicI18nKey.To)).toBeInTheDocument();
+    expect(screen.getByText(BasicI18nKey.From)).toBeInTheDocument();
+    expect(screen.getByText(BasicI18nKey.To)).toBeInTheDocument();
     expect(screen.getByText(ButtonsI18nKey.Apply)).toBeInTheDocument();
   });
 
