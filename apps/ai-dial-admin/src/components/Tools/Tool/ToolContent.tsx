@@ -29,7 +29,11 @@ const ToolContent: FC<Props> = ({ tool }) => {
             <p className="small text-secondary">{t(ContainersI18nKey.InputSchema)}</p>
           </div>
           <div className="flex h-[400px]">
-            <JsonEditor entity={tool.inputSchema.properties} readonly={true} />
+            <JsonEditor
+              entity={tool.inputSchema.properties}
+              options={{ stickyScroll: { enabled: false } }}
+              readonly={true}
+            />
           </div>
         </div>
       )}
