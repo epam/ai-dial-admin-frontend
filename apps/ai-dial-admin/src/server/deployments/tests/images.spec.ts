@@ -35,9 +35,9 @@ describe('ImagesApi', () => {
     );
 
     fetch.mockResponseOnce(JSON.stringify([]));
-    await instance.getImageVersions('img1', TOKEN_MOCK);
+    await instance.getImageVersions('img1', 'INTERCEPTOR', TOKEN_MOCK);
     expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining(IMAGE_VERSIONS_URL('img1')),
+      expect.stringContaining(IMAGE_VERSIONS_URL('img1', 'INTERCEPTOR')),
       expect.objectContaining({ method: 'GET' }),
     );
   });

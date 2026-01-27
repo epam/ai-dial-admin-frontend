@@ -17,9 +17,9 @@ export async function getImage(id: string) {
   return imagesApi.getImage(id, token);
 }
 
-export async function getImageVersions(name: string) {
+export async function getImageVersions(name: string, type: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return imagesApi.getImageVersions(name, token);
+  return imagesApi.getImageVersions(name, type, token);
 }
 
 export async function getImagesWithVersions(type: string) {

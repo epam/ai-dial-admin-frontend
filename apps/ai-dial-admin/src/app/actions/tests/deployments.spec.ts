@@ -76,10 +76,10 @@ describe('Deployments actions', () => {
       const mockResponse = [{ id: 'v1', version: '1.0.0' }];
       (imagesApi.getImageVersions as any).mockResolvedValue(mockResponse);
 
-      const result = await getImageVersions('test-image');
+      const result = await getImageVersions('test-image', 'MCP');
 
       expect(getUserToken).toHaveBeenCalled();
-      expect(imagesApi.getImageVersions).toHaveBeenCalledWith('test-image', TOKEN_MOCK);
+      expect(imagesApi.getImageVersions).toHaveBeenCalledWith('test-image', 'MCP', TOKEN_MOCK);
       expect(result).toBe(mockResponse);
     });
 

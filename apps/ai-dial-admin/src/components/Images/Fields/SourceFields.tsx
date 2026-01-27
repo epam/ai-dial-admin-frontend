@@ -14,14 +14,15 @@ interface Props {
   image: Image;
   setImage: (image: Image) => void;
   isModal?: boolean;
+  verifyVersion: (image: Image) => void;
 }
 
-const SourceFields: FC<Props> = ({ image, setImage, isModal }) => {
+const SourceFields: FC<Props> = ({ image, setImage, isModal, verifyVersion }) => {
   return (
     <div className={classNames('flex flex-col', isModal ? 'gap-4' : 'lg:w-[35%] gap-8')}>
       <div className={classNames('flex gap-4', isModal ? 'flex-col' : 'flex-row')}>
         {(isModal || image.$type === IMAGE_TYPE.MCP) && (
-          <SourceTypeFields image={image} setImage={setImage} isModal={isModal} />
+          <SourceTypeFields image={image} setImage={setImage} isModal={isModal} verifyVersion={verifyVersion} />
         )}
         <div className="flex w-full">
           {image.source?.$type === IMAGE_SOURCE_TYPE.CODE && <CodeURL image={image} setImage={setImage} />}
