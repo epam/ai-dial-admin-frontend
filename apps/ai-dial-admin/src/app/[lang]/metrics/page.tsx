@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { errorObjLog } from '@/src/server/logger';
-import TestSuitsList from '@/src/components/TestSuits/List/List';
+import MetricsList from '@/src/components/Metrics/List/List';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,12 +17,12 @@ export default async function Page() {
   try {
     data = [];
   } catch (e) {
-    errorObjLog(e, 'Failed to fetch test suits');
+    errorObjLog(e, 'Failed to fetch metrics');
   }
 
   if (data == null) {
     notFound();
   }
 
-  return <TestSuitsList data={data || []} />;
+  return <MetricsList data={data || []} />;
 }

@@ -836,3 +836,13 @@ export const TEST_SUITS_COLUMN = (): ColDef[] => [
 
   // TODO: add columns
 ];
+
+// TODO: update columns
+export const RUNS_COLUMN = (): ColDef[] => [
+  { field: 'displayName', colId: 'displayName', headerName: 'Display Name', hide: false },
+];
+
+// TODO: update columns
+export const METRICS_COLUMN = (): ColDef[] => [
+  { field: 'displayName', colId: 'displayName', headerName: 'Display Name', hide: false },
+];
