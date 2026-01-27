@@ -134,7 +134,7 @@ export const TOPICS_COLUMN: ColDef = {
   tooltipValueGetter: (params) => getTopics(params.data)?.join(', ') || null,
 };
 
-export const INTERCEPTOR_STATUS_COLUMN: ColDef = {
+export const BASE_STATUS_COLUMN: ColDef = {
   field: 'status',
   headerName: 'Status',
   hide: false,
@@ -142,8 +142,7 @@ export const INTERCEPTOR_STATUS_COLUMN: ColDef = {
 
 export const VALIDITY_STATUS_COLUMN = (t: (str: string) => string): ColDef => {
   return {
-    headerName: 'Status',
-    field: 'status',
+    ...BASE_STATUS_COLUMN,
     cellRenderer: ValidityStatusCellRenderer,
     filterValueGetter: ({ data }) => getValidityStatus(data?.validityState, t).title,
   };
@@ -619,9 +618,7 @@ export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, rou
         },
       ]),
   {
-    field: 'status',
-    headerName: 'Status',
-    hide: false,
+    ...BASE_STATUS_COLUMN,
     cellRenderer: (params: ICellRendererParams) => <StatusIndicator status={params.data.status} />,
     tooltipValueGetter: ({ value }) => t(STATUS_I18N_KEYS[value as CONTAINER_STATUS]),
     filterValueGetter: (params) => t(STATUS_I18N_KEYS[params.data[params.colDef.field || ''] as CONTAINER_STATUS]),
@@ -817,11 +814,25 @@ export const IMAGE_DEPENDENCIES_COLUMNS = (t: (key: string) => string, showImage
       ]
     : []),
   {
-    field: 'status',
-    headerName: 'Status',
-    hide: false,
+    ...BASE_STATUS_COLUMN,
     cellRenderer: (params: ICellRendererParams) => <StatusIndicator status={params.data.status} />,
     tooltipValueGetter: ({ value }) => t(STATUS_I18N_KEYS[value as CONTAINER_STATUS]),
     filterValueGetter: (params) => t(STATUS_I18N_KEYS[params.data[params.colDef.field || ''] as CONTAINER_STATUS]),
   },
+];
+
+export const TEST_SUITS_COLUMN = (): ColDef[] => [
+  { field: 'displayName', colId: 'displayName', headerName: 'Display Name', hide: false }, // TODO: check field after supporting BE
+  DESCRIPTION_COLUMN,
+  { field: 'application', headerName: 'Application' },
+  {
+    ...BASE_STATUS_COLUMN,
+  },
+  {
+    field: 'time',
+    headerName: 'Last run start at',
+    ...dateTimeColumn,
+  },
+
+  // TODO: add columns
 ];
