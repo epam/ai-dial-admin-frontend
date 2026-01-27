@@ -1,33 +1,53 @@
 export enum ApplicationRoute {
   Home = '/home',
+  SystemProperties = '/system-properties',
+  ImportConfig = '/import-config',
+  ExportConfig = '/export-config',
+  Forbidden = '/forbidden',
+
+  // Entities
   Models = '/models',
-  Adapters = '/adapters',
   Applications = '/applications',
+  Interceptors = '/interceptors',
+  Toolsets = '/toolsets',
+  Routes = '/routes',
+
+  // Builders
+  Adapters = '/adapters',
+  ApplicationRunners = '/application-runners',
+  InterceptorTemplates = '/interceptor-templates',
+
+  // Assets
   AssetsApplications = '/assets-applications',
   AssetsToolsets = '/assets-toolsets',
-  ApplicationRunners = '/application-runners',
-  ApplicationPublications = '/application-publications',
-  Interceptors = '/interceptors',
-  Roles = '/roles',
-  Keys = '/keys',
   Prompts = '/prompts',
   Files = '/files',
-  Routes = '/routes',
-  Dashboard = '/dashboard',
-  UsageLog = '/usage-log',
-  Toolsets = '/toolsets',
+
+  // Publications
+  FoldersStorage = '/folders-storage',
+  ApplicationPublications = '/application-publications',
   ToolsetPublications = '/toolset-publications',
   PromptPublications = '/prompt-publications',
   FilePublications = '/file-publications',
-  ImportConfig = '/import-config',
-  ExportConfig = '/export-config',
-  FoldersStorage = '/folders-storage',
+
+  // Access Management
+  Roles = '/roles',
+  Keys = '/keys',
+
+  // Activity
+  Dashboard = '/dashboard',
+  UsageLog = '/usage-log',
   ActivityAudit = '/activity-audit',
-  Forbidden = '/forbidden',
-  InterceptorTemplates = '/interceptor-templates',
+
+  // Deployments
   InterceptorDeployments = '/interceptor-deployments',
   ModelDeployments = '/model-deployments',
   McpDeployments = '/mcp-deployments',
-  SystemProperties = '/system-properties',
   Images = '/deployment-images',
+
+  // evaluations
+  Playground = '/playground',
+  TestSuits = '/test-suits',
+  Runs = '/runs',
+  Metrics = '/metrics',
 }
