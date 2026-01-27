@@ -54,6 +54,7 @@ const RangePicker: FC<Props> = ({ onChange, timeRange }) => {
         setDate={onStartDateChange}
         startDate={startDate}
         endDate={endDate}
+        maxDate={endDate === null ? void 0 : endDate}
         popperPlacement="bottom"
         popperModifiers={[
           {
