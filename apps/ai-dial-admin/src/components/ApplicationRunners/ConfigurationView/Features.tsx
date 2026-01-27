@@ -24,7 +24,7 @@ const AppRunnerFeatures: FC<Props> = ({ runner, onChangeRunner }) => {
   );
 
   return (
-    <div className="flex flex-col gap-y-8 h-full lg:w-[35%]">
+    <div className="flex flex-col gap-y-8 h-full">
       <ConfigurationEndpointControl
         endpoint={runner['dial:applicationTypeConfigurationEndpoint']}
         onChange={(value?: string) => {
