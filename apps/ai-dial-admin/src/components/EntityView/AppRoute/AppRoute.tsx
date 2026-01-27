@@ -130,7 +130,9 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
           )}
         </div>
       </div>
-      {isModalOpen && <CreateRoute isModalOpen={isModalOpen} onClose={handleModalClose} onCreate={onCreate} />}
+      {isModalOpen && (
+        <CreateRoute isModalOpen={isModalOpen} onClose={handleModalClose} onCreate={onCreate} routes={routes} />
+      )}
     </>
   );
 };
