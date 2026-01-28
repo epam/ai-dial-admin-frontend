@@ -34,15 +34,16 @@ const PodView: FC<Props> = ({ pod, containerId }) => {
       });
 
       return () => {
-        eventSource.close();
+        eventSource?.close();
+        setLogs('');
       };
     }
   }, [podData, containerId]);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col flex-1 min-h-0 h-full gap-4">
       {!!podData.restartCount && (
-        <div className="flex gap-4">
+        <div className="flex gap-10">
           <LabelledText label={t(EntityFieldsI18nKey.Restarts)} text={podData.restartCount?.toString()} />
           <LabelledText
             label={t(EntityFieldsI18nKey.LastRestartedAt)}
@@ -55,7 +56,7 @@ const PodView: FC<Props> = ({ pod, containerId }) => {
           />
         </div>
       )}
-      <div className="flex-1 min-h-0 mt-3">
+      <div className="flex flex-1 min-h-0 h-full">
         <LogViewer logs={logs} />
       </div>
     </div>

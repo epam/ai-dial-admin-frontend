@@ -1206,6 +1206,7 @@ export enum ContainersI18nKey {
   ContainerStopSuccess = 'Containers.ContainerStopSuccess',
   ContainerSuccessDescription = 'Containers.ContainerSuccessDescription',
   Pod = 'Containers.Pod',
+  Pods = 'Containers.Pods',
   ContainerRestartWarning = 'Containers.ContainerRestartWarning',
   ContainersRestartWarning = 'Containers.ContainersRestartWarning',
   ShowRelatedContainers = 'Containers.ShowRelatedContainers',
