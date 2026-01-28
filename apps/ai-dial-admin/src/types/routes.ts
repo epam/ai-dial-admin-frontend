@@ -45,9 +45,9 @@ export enum ApplicationRoute {
   McpDeployments = '/mcp-deployments',
   Images = '/deployment-images',
 
-  // // evaluations
-  // Playground = '/playground',
-  // TestSuits = '/test-suits',
-  // Runs = '/runs',
-  // Metrics = '/metrics',
+  // evaluations
+  Playground = '/playground',
+  TestSuits = '/test-suits',
+  Runs = '/runs',
+  Metrics = '/metrics',
 }

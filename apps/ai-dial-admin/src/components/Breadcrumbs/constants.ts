@@ -234,4 +234,39 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig | null>
       { name: 'Id', href: false },
     ],
   },
+  [ApplicationRoute.Playground]: {
+    segments: [
+      {
+        name: 'Playground',
+        i18nKey: MenuI18nKey.Playground,
+      },
+    ],
+  },
+  [ApplicationRoute.TestSuits]: {
+    segments: [
+      {
+        name: 'TestSuits',
+        i18nKey: MenuI18nKey.TestSuits,
+      },
+      { name: 'Id', href: false },
+    ],
+  },
+  [ApplicationRoute.Runs]: {
+    segments: [
+      {
+        name: 'Runs',
+        i18nKey: MenuI18nKey.Runs,
+      },
+      { name: 'Id', href: false },
+    ],
+  },
+  [ApplicationRoute.Metrics]: {
+    segments: [
+      {
+        name: 'Metrics',
+        i18nKey: MenuI18nKey.Metrics,
+      },
+      { name: 'Id', href: false },
+    ],
+  },
 };
