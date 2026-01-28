@@ -46,8 +46,9 @@ const DisplayNameControl: FC<Props> = ({ displayName, isFullWidth = true, onChan
 
   const onChangeDisplayName = useCallback(
     (value?: string) => {
-      validateDisplayName(value);
-      onChange?.(value);
+      const trimmed = value?.trimStart();
+      validateDisplayName(trimmed);
+      onChange?.(trimmed);
     },
     [onChange, validateDisplayName],
   );

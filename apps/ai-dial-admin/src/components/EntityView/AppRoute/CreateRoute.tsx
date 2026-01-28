@@ -1,9 +1,8 @@
 import { DialFormPopup, DialTextInputField, PopupSize } from '@epam/ai-dial-ui-kit';
-import { FC, useCallback, useMemo, useState } from 'react';
+import { FC, useCallback, useState } from 'react';
 
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DialAppRoute } from '@/src/models/dial/route';
 import { FieldError } from '@/src/models/error';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getCreateEntityTitle } from '@/src/utils/entities/create-entity';
@@ -11,20 +10,16 @@ import { getErrorForName } from '@/src/utils/validation/name-error';
 
 interface Props {
   isModalOpen: boolean;
-  routes?: DialAppRoute[];
+  routeNames?: string[];
   onCreate: (name: string) => void;
   onClose: () => void;
 }
 
-const CreateRoute: FC<Props> = ({ isModalOpen, routes, onClose, onCreate }) => {
+const CreateRoute: FC<Props> = ({ isModalOpen, routeNames, onClose, onCreate }) => {
   const t = useI18n();
 
   const [name, setName] = useState('');
   const [nameError, setNameError] = useState<FieldError | null>(null);
-
-  const routeNames = useMemo(() => {
-    return routes?.map((r) => r.name || '');
-  }, [routes]);
 
   const validateName = useCallback(
     (name?: string) => {
