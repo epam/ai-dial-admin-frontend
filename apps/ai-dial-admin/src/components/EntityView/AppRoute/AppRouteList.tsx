@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { IconDotsVertical, IconTrash } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { DialEllipsisTooltip, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
 import ActionsDropdown from '@/src/components/Common/ActionsDropdown/ActionsDropdown';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
@@ -13,13 +13,13 @@ import { ActionMenuOperation } from '@/src/types/action-menu-operations';
 
 interface Props {
   readonly?: boolean;
-  activeRoute?: string;
+  activeRouteIndex: number | null;
   routes?: DialAppRoute[];
-  onClick: (route?: string) => void;
+  onClick: (index: number) => void;
   onRemove: (route?: string) => void;
 }
 
-const AppRouteList: FC<Props> = ({ readonly, routes, activeRoute, onRemove, onClick }) => {
+const AppRouteList: FC<Props> = ({ readonly, routes, activeRouteIndex, onRemove, onClick }) => {
   const t = useI18n();
 
   const getOperation = (onClick: () => void): ActionMenuOperationDeclaration<DialAppRoute> => {
@@ -32,9 +32,9 @@ const AppRouteList: FC<Props> = ({ readonly, routes, activeRoute, onRemove, onCl
 
   return (
     <div className="flex-1 min-h-0 flex flex-col relative gap-y-4 overflow-auto">
-      {!activeRoute && <DialNoDataContent title={t(EntitiesI18nKey.NoAppRoutes)} />}
-      {activeRoute && !!routes?.length
-        ? routes.map((route) => {
+      {activeRouteIndex == null && <DialNoDataContent title={t(EntitiesI18nKey.NoAppRoutes)} />}
+      {activeRouteIndex != null && !!routes?.length
+        ? routes.map((route, index) => {
             return (
               <button
                 key={route.name}
@@ -42,13 +42,13 @@ const AppRouteList: FC<Props> = ({ readonly, routes, activeRoute, onRemove, onCl
                 className={classNames(
                   'rounded group pl-3 py-2 flex flex-row gap-2 h-[32px] w-full',
                   'cursor-pointer small hover:text-accent-primary',
-                  activeRoute === route.name
+                  activeRouteIndex === index
                     ? 'bg-accent-primary-alpha border-l-2 border-l-accent-primary'
                     : 'text-primary',
                 )}
               >
-                <span className="flex-1 min-w-0 mr-0 text-left" onClick={() => onClick(route.name)}>
-                  {route.name}
+                <span className="flex-1 min-w-0 mr-0 text-left truncate" onClick={() => onClick(index)}>
+                  <DialEllipsisTooltip className="" text={route.name} />
                 </span>
                 {!readonly && (
                   <div className="invisible group-hover:visible text-primary mx-2 flex flex-row gap-2">

@@ -27,18 +27,13 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
   const { dispatch } = useSaveValidationContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const [activeRoute, setActiveRoute] = useState<string | undefined>(undefined);
   const [activeRouteIndex, setActiveRouteIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!activeRoute && routes?.length) {
-      setActiveRoute(routes[0]?.name || '');
+    if (activeRouteIndex == null && routes?.length) {
+      setActiveRouteIndex(0);
     }
-  }, [routes, activeRoute]);
-
-  useEffect(() => {
-    setActiveRouteIndex((routes || []).findIndex((route) => route.name === activeRoute));
-  }, [activeRoute, routes]);
+  }, [routes, activeRouteIndex]);
 
   const handleModalClose = useCallback(() => {
     setIsModalOpen(false);
@@ -52,7 +47,6 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
     (route: DialAppRoute) => {
       if (routes) {
         routes[activeRouteIndex as number] = route;
-        setActiveRoute(route.name);
         onChangeRoutes([...(routes || [])]);
       }
     },
@@ -72,7 +66,7 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
           attachmentPaths: { requestBody: [''], responseBody: [''] },
         } as DialAppRoute,
       ]);
-      setActiveRoute(name);
+      setActiveRouteIndex(routes?.length || 0 + 1);
     },
     [handleModalClose, onChangeRoutes, routes],
   );
@@ -110,8 +104,8 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
             <AppRouteList
               readonly={readonly}
               routes={routes}
-              activeRoute={activeRoute}
-              onClick={(tab) => setActiveRoute(tab)}
+              activeRouteIndex={activeRouteIndex}
+              onClick={(index) => setActiveRouteIndex(index)}
               onRemove={onRemoveRoute}
             />
           </div>
