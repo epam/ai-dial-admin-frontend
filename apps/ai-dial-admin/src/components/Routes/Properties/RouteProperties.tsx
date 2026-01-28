@@ -35,10 +35,11 @@ interface Props {
   route: DialRoute | DialAppRoute;
   isAppRoute?: boolean;
   readonly?: boolean;
+  routeNames?: string[];
   onChange: (route: DialRoute | DialAppRoute) => void;
 }
 
-const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, onChange }) => {
+const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, onChange }) => {
   const t = useI18n();
   const { dispatch, resetCounter } = useSaveValidationContext();
 
@@ -201,6 +202,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, onChange }) =
         isFullWidth={false}
         onChange={onChangeDisplayName}
         disabled={readonly}
+        names={isAppRoute ? routeNames || [] : void 0}
       />
       {!isAppRoute && <DescriptionControl entity={route} onChangeEntity={onChange} isFullWidth={false} />}
       <Paths

@@ -113,7 +113,7 @@ const DuplicateImageModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
       open={isModalOpen}
       className={containerClassName}
     >
-      <div className="flex flex-col h-full overflow-auto px-6 py-4 gap-x-8">
+      <div className="flex flex-col h-full overflow-auto px-6 py-4 gap-y-8">
         <DialRadioGroup
           radioButtons={duplicationTypes}
           activeRadioButton={duplicationType}
