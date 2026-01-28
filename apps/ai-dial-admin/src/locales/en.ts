@@ -742,7 +742,8 @@ export default {
     AttributePlaceholder: 'Select attributes',
     OperationTitle: 'Operation',
     OperationPlaceholder: 'Select operation',
-    ValuePlaceholder: 'Enter values, separated by commas',
+    ValuePlaceholder: 'Enter values',
+    ValueCaption: 'Separate values by comma or Enter button',
     RegexPlaceholder: 'Enter RegEx',
     Function: {
       Equal: 'Equal',

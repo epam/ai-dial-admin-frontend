@@ -722,6 +722,7 @@ export enum FoldersI18nKey {
   OperationTitle = 'Folder.OperationTitle',
   OperationPlaceholder = 'Folder.OperationPlaceholder',
   ValuePlaceholder = 'Folder.ValuePlaceholder',
+  ValueCaption = 'Folder.ValueCaption',
   RegexPlaceholder = 'Folder.RegexPlaceholder',
   equal = 'Folder.Function.Equal',
   contain = 'Folder.Function.Contain',

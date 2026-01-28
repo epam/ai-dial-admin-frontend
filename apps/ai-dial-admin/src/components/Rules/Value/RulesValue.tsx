@@ -27,7 +27,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
   const functionItems = getOperationItems(t);
   const attributeItems = getAttributeItems(t, attributes);
 
-  const inputClassName = classNames('flex-shrink-0', errorText && 'pb-[18px]');
+  const inputClassName = classNames('flex-shrink-0 pb-[18px]');
   const iconClassName = classNames(
     'cursor-pointer',
     index === 0 ? 'mt-[24px]' : 'flex items-center',
@@ -141,6 +141,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
               elementId="rule-values"
               fieldTitle={isFirstLine ? t(BasicI18nKey.Value) : ''}
               placeholder={t(FoldersI18nKey.ValuePlaceholder)}
+              captionDescription={t(FoldersI18nKey.ValueCaption)}
               initialTags={rule.targets}
               onChange={onChangeTags}
               errorText={errorText}
