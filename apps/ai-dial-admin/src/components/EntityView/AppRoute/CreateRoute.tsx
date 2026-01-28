@@ -36,8 +36,9 @@ const CreateRoute: FC<Props> = ({ isModalOpen, routes, onClose, onCreate }) => {
 
   const onChangeName = useCallback(
     (name?: string) => {
-      setName(name || '');
-      validateName(name);
+      const trimmedValue = name?.trimStart() || '';
+      setName(trimmedValue);
+      validateName(trimmedValue);
     },
     [validateName],
   );

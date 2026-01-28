@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { IconDotsVertical, IconTrash } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { DialEllipsisTooltip, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
 import ActionsDropdown from '@/src/components/Common/ActionsDropdown/ActionsDropdown';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
@@ -47,8 +47,8 @@ const AppRouteList: FC<Props> = ({ readonly, routes, activeRoute, onRemove, onCl
                     : 'text-primary',
                 )}
               >
-                <span className="flex-1 min-w-0 mr-0 text-left" onClick={() => onClick(route.name)}>
-                  {route.name}
+                <span className="flex-1 min-w-0 mr-0 text-left truncate" onClick={() => onClick(route.name)}>
+                  <DialEllipsisTooltip className="" text={route.name} />
                 </span>
                 {!readonly && (
                   <div className="invisible group-hover:visible text-primary mx-2 flex flex-row gap-2">
