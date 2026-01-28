@@ -1,5 +1,5 @@
 import { IconPlus } from '@tabler/icons-react';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { DialPrimaryButton, DialCollapsibleSidebar } from '@epam/ai-dial-ui-kit';
 
 import RouteContent from '@/src/components/EntityView/AppRoute/Content/RouteContent';
@@ -27,18 +27,17 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
   const { dispatch } = useSaveValidationContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const [activeRoute, setActiveRoute] = useState<string | undefined>(undefined);
   const [activeRouteIndex, setActiveRouteIndex] = useState<number | null>(null);
 
-  useEffect(() => {
-    if (!activeRoute && routes?.length) {
-      setActiveRoute(routes[0]?.name || '');
-    }
-  }, [routes, activeRoute]);
+  const routeNames = useMemo(() => {
+    return routes?.map((r) => r.name || '');
+  }, [routes]);
 
   useEffect(() => {
-    setActiveRouteIndex((routes || []).findIndex((route) => route.name === activeRoute));
-  }, [activeRoute, routes]);
+    if (activeRouteIndex == null && routes?.length) {
+      setActiveRouteIndex(0);
+    }
+  }, [routes, activeRouteIndex]);
 
   const handleModalClose = useCallback(() => {
     setIsModalOpen(false);
@@ -52,7 +51,6 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
     (route: DialAppRoute) => {
       if (routes) {
         routes[activeRouteIndex as number] = route;
-        setActiveRoute(route.name);
         onChangeRoutes([...(routes || [])]);
       }
     },
@@ -72,7 +70,7 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
           attachmentPaths: { requestBody: [''], responseBody: [''] },
         } as DialAppRoute,
       ]);
-      setActiveRoute(name);
+      setActiveRouteIndex(routes?.length || 0 + 1);
     },
     [handleModalClose, onChangeRoutes, routes],
   );
@@ -110,8 +108,8 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
             <AppRouteList
               readonly={readonly}
               routes={routes}
-              activeRoute={activeRoute}
-              onClick={(tab) => setActiveRoute(tab)}
+              activeRouteIndex={activeRouteIndex}
+              onClick={(index) => setActiveRouteIndex(index)}
               onRemove={onRemoveRoute}
             />
           </div>
@@ -126,12 +124,13 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
               parentRoles={Object.keys(parentRoleLimits || {})}
               onChangeRoute={onChangeRoute}
               readonly={readonly}
+              routeNames={routeNames?.filter((_, index) => index !== activeRouteIndex)}
             />
           )}
         </div>
       </div>
       {isModalOpen && (
-        <CreateRoute isModalOpen={isModalOpen} onClose={handleModalClose} onCreate={onCreate} routes={routes} />
+        <CreateRoute isModalOpen={isModalOpen} onClose={handleModalClose} onCreate={onCreate} routeNames={routeNames} />
       )}
     </>
   );
