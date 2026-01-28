@@ -1,6 +1,7 @@
 import { JSONEditorThemeConfig, EDITOR_THEMES, EditorOptions } from '@/src/types/editor';
 
 const DEFAULT_COLORS = {
+  focusBorder: '#00000000',
   'editor.foreground': '#F3F4F6',
   'editor.background': '#141A23',
   'editorCursor.foreground': '#F3F4F6',
