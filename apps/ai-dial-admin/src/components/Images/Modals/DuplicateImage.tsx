@@ -25,6 +25,8 @@ import {
 import { getImageVersions } from '@/src/app/actions/deployments';
 import { getSemanticVersionError } from '@/src/utils/deployments/validation';
 import { getVersionsPerName } from '@/src/components/Assets/utils';
+import { getRouteByType } from '@/src/utils/deployments/entity';
+import { getImageType } from '@/src/utils/deployments/images';
 
 interface Props {
   title: string;
@@ -76,7 +78,7 @@ const DuplicateImageModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
   const verifyVersion = useMemo(
     () =>
       debounce((name: string) => {
-        getImageVersions(name).then(({ success, response }) => {
+        getImageVersions(name, getImageType(getRouteByType(copyImage.$type))).then(({ success, response }) => {
           const data = response as ImageVersion[];
           if (success && data.length > 0) {
             const versionMap = getVersionsPerName(data);
@@ -94,7 +96,7 @@ const DuplicateImageModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
   );
 
   useEffect(() => {
-    getImageVersions(image.name).then(({ success, response }) => {
+    getImageVersions(image.name, getImageType(getRouteByType(image.$type))).then(({ success, response }) => {
       const data = response as ImageVersion[];
       if (success && data.length > 0) {
         const versionMap = getVersionsPerName(data);

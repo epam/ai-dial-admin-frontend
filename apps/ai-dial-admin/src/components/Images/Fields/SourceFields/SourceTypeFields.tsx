@@ -12,22 +12,25 @@ interface Props {
   image: Image;
   setImage: (image: Image) => void;
   isModal?: boolean;
+  verifyVersion: (image: Image) => void;
 }
 
-const SourceTypeFields: FC<Props> = ({ image, setImage, isModal }) => {
+const SourceTypeFields: FC<Props> = ({ image, setImage, isModal, verifyVersion }) => {
   const t = useI18n();
   const sourcesList = SOURCE_TYPES(t);
   const imageTypesList = IMAGE_TYPES(t);
 
   const onImageTypeChange = useCallback(
     ($type: string | string[]) => {
-      setImage({
+      const updated = {
         ...setTransport(image),
         $type: $type as IMAGE_TYPE,
         source: DEFAULT_IMAGE_SOURCE,
-      });
+      };
+      verifyVersion(updated);
+      setImage(updated);
     },
-    [image, setImage],
+    [image, setImage, verifyVersion],
   );
 
   const onSourceTypeChange = useCallback(
