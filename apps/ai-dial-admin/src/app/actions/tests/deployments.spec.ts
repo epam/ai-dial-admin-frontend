@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { containersApi, imagesApi, topicApi } from '@/src/app/api/api';
+import { containersApi, imagesApi, topicApi, whitelistApi } from '@/src/app/api/api';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
   createContainer,
@@ -31,6 +31,8 @@ import {
   updateContainer,
   updateContainersImageId,
   updateImage,
+  getGlobalWhitelist,
+  updateGlobalWhitelist,
 } from '../deployments';
 import { ResourceType } from '@/src/types/resource-type';
 
@@ -351,6 +353,30 @@ describe('Deployments actions', () => {
 
       expect(getUserToken).toHaveBeenCalled();
       expect(topicApi.getTopics).toHaveBeenCalledWith(TOKEN_MOCK);
+      expect(result).toBe(mockResponse);
+    });
+  });
+
+  describe('Whitelist actions', () => {
+    test(' calls whitelistApi.getGlobalWhitelist with token', async () => {
+      const mockResponse = ['github.com'];
+      (whitelistApi.getGlobalWhitelist as any).mockResolvedValue(mockResponse);
+
+      const result = await getGlobalWhitelist();
+
+      expect(getUserToken).toHaveBeenCalled();
+      expect(whitelistApi.getGlobalWhitelist).toHaveBeenCalledWith(TOKEN_MOCK);
+      expect(result).toBe(mockResponse);
+    });
+
+    test(' calls whitelistApi.updateGlobalWhitelist with token', async () => {
+      const mockResponse = ['github.com'];
+      (whitelistApi.updateGlobalWhitelist as any).mockResolvedValue(mockResponse);
+
+      const result = await updateGlobalWhitelist(mockResponse);
+
+      expect(getUserToken).toHaveBeenCalled();
+      expect(whitelistApi.updateGlobalWhitelist).toHaveBeenCalledWith(mockResponse, TOKEN_MOCK);
       expect(result).toBe(mockResponse);
     });
   });

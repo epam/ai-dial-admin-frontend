@@ -409,6 +409,7 @@ export default {
     SendRequest: 'Send Request',
     ManageTool: 'Manage tool',
     Confirm: 'Confirm',
+    GlobalFirewall: 'Global firewall',
   },
   Compare: {
     CompareChanges: 'Compare changes',
@@ -1061,6 +1062,7 @@ export default {
     ContainerEndpointPath: 'Enter container endpoint path',
     Arguments: 'e.g. --arg1 value1 --arg2 value2',
     Command: 'e.g. /path/to/executable --option',
+    Domain: 'Enter domain',
   },
   Error: {
     ServerError: 'Server Error',
@@ -1108,6 +1110,7 @@ export default {
     FailedToStart: 'Failed to start',
     RunOutOfMemory: 'Stopped due to insufficient memory',
     ExitedWithError: 'Failed during execution',
+    InvalidWhitelistDomain: 'Invalid domain name',
   },
   Source: {
     OpenTemplate: 'Open template',
@@ -1266,5 +1269,10 @@ export default {
   ValidityStatus: {
     Invalid: 'Invalid',
     Valid: 'Valid',
+  },
+  Deployments: {
+    GlobalWhitelist: 'Global domain whitelist',
+    GlobalFirewall: 'Global Firewall',
+    AddDomain: 'Add domain',
   },
 } as const;

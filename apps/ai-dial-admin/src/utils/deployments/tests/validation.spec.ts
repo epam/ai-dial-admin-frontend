@@ -11,6 +11,7 @@ import {
   getVariableNameError,
   getCPUError,
   getResourcesConflictError,
+  getWhitelistDomainError,
 } from '../validation';
 import { ErrorType } from '@/src/types/error-type';
 import { ErrorI18nKey } from '@/src/constants/i18n';
@@ -370,6 +371,25 @@ describe('validation utils', () => {
       });
 
       expect(getResourcesConflictError(1, 1, t)).toBeNull();
+    });
+  });
+
+  describe('Whitelist domain validation', () => {
+    test('empty error', () => {
+      expect(getWhitelistDomainError('', t)).toEqual({
+        type: ErrorType.EMPTY,
+        text: ErrorI18nKey.RequiredProperty,
+      });
+    });
+
+    test('empty error', () => {
+      expect(getWhitelistDomainError('asd', t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.InvalidWhitelistDomain,
+      });
+    });
+    test('valid value', () => {
+      expect(getWhitelistDomainError('github.com')).toBeNull();
     });
   });
 });

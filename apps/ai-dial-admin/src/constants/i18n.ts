@@ -323,6 +323,7 @@ export enum ButtonsI18nKey {
   SendRequest = 'Buttons.SendRequest',
   ManageTool = 'Buttons.ManageTool',
   Confirm = 'Buttons.Confirm',
+  GlobalFirewall = 'Buttons.GlobalFirewall',
 }
 
 export enum UpdateI18nKey {
@@ -852,6 +853,7 @@ export enum ErrorI18nKey {
   FailedToStart = 'Error.FailedToStart',
   RunOutOfMemory = 'Error.RunOutOfMemory',
   ExitedWithError = 'Error.ExitedWithError',
+  InvalidWhitelistDomain = 'Error.InvalidWhitelistDomain',
 }
 
 export enum SourceI18nKey {
@@ -940,6 +942,7 @@ export enum EntityPlaceholdersI18nKey {
   ContainerEndpointPath = 'EntityPlaceholders.ContainerEndpointPath',
   Command = 'EntityPlaceholders.Command',
   Arguments = 'EntityPlaceholders.Arguments',
+  Domain = 'EntityPlaceholders.Domain',
 }
 
 export enum EntityFieldsI18nKey {
@@ -1220,6 +1223,12 @@ export enum ContainersI18nKey {
   MaxReplicas = 'Containers.Autoscaling.MaxReplicas',
   MinReplicas = 'Containers.Autoscaling.MinReplicas',
   ScaleToZero = 'Containers.Autoscaling.ScaleToZero',
+}
+
+export enum DeploymentsI18nKey {
+  GlobalWhitelist = 'Deployments.GlobalWhitelist',
+  GlobalFirewall = 'Deployments.GlobalFirewall',
+  AddDomain = 'Deployments.AddDomain',
 }
 
 export enum KubEventsI18nKey {
