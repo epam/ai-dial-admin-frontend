@@ -49,7 +49,7 @@ export const getEntityPath = (
     case ApplicationRoute.ActivityAudit:
       return (data as DialActivity).activityId;
 
-    case ApplicationRoute.McpDeployments:
+    case ApplicationRoute.McpContainers:
     case ApplicationRoute.InterceptorDeployments:
     case ApplicationRoute.ModelServings:
       return `${encodeURIComponent((data as { name: string }).name)}`;

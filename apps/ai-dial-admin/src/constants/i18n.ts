@@ -44,7 +44,7 @@ export enum MenuI18nKey {
   Home = 'Menu.Home',
   Homepage = 'Menu.Homepage',
   FoldersStorage = 'Menu.FoldersStorage',
-  MCPDeployments = 'Menu.MCPDeployments',
+  McpContainers = 'Menu.McpContainers',
   InterceptorDeployments = 'Menu.InterceptorDeployments',
   ModelServings = 'Menu.ModelServings',
   InterceptorTemplates = 'Menu.InterceptorTemplates',
@@ -859,7 +859,7 @@ export enum SourceI18nKey {
   InterceptorTemplate = 'Source.InterceptorTemplate',
   ModelDeployment = 'Source.ModelDeployment',
   InterceptorDeployment = 'Source.InterceptorDeployment',
-  MCPDeployment = 'Source.MCPDeployment',
+  McpContainer = 'Source.McpContainer',
   Endpoint = 'Source.Endpoint',
   Adapter = 'Source.Adapter',
 }

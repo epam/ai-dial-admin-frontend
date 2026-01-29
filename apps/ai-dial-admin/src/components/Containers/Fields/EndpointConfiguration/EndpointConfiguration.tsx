@@ -65,7 +65,7 @@ const EndpointConfiguration: FC<Props> = ({ container, setContainer, route }) =>
   return (
     <Accordion title={t(EntityFieldsI18nKey.EndpointConfiguration)}>
       <div className="flex flex-col gap-y-6 lg:w-[35%]">
-        {route === ApplicationRoute.McpDeployments && (
+        {route === ApplicationRoute.McpContainers && (
           <div className="flex gap-4">
             <Transport container={container} setContainer={setContainer} />
             <DialTextInputField

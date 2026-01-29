@@ -11,11 +11,11 @@ describe('grid utils', () => {
       expect(getAdminEntityPath(ApplicationRoute.InterceptorDeployments, {})).toBe(`${ApplicationRoute.Interceptors}/`);
     });
 
-    test('returns correct path for McpDeployments', () => {
+    test('returns correct path for McpContainers', () => {
       const data = { name: 'my-mcp' };
-      const result = getAdminEntityPath(ApplicationRoute.McpDeployments, data);
+      const result = getAdminEntityPath(ApplicationRoute.McpContainers, data);
       expect(result).toBe(`${ApplicationRoute.Toolsets}/my-mcp`);
-      expect(getAdminEntityPath(ApplicationRoute.McpDeployments, {})).toBe(`${ApplicationRoute.Toolsets}/`);
+      expect(getAdminEntityPath(ApplicationRoute.McpContainers, {})).toBe(`${ApplicationRoute.Toolsets}/`);
     });
 
     test('returns correct path for ModelServings', () => {
@@ -39,13 +39,13 @@ describe('grid utils', () => {
   });
 
   describe('getAdminAssetPath', () => {
-    test('returns correct path for McpDeployments', () => {
+    test('returns correct path for McpContainers', () => {
       const data = {
         folderId: 'folders/',
         name: 'asset-name',
         version: '1.0.0',
       };
-      const result = getAdminAssetPath(ApplicationRoute.McpDeployments, data);
+      const result = getAdminAssetPath(ApplicationRoute.McpContainers, data);
       const expectedPath = encodeURIComponent('folders/asset-name__1.0.0');
       const expectedName = encodeURIComponent('asset-name');
       expect(result).toBe(`${ApplicationRoute.AssetsToolsets}/${expectedName}?path=${expectedPath}`);

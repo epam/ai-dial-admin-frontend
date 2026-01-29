@@ -135,11 +135,11 @@ const CreateContainer: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
       open={isModalOpen}
       size={PopupSize.Lg}
     >
-      <div className="flex flex-col py-4 px-6 overflow-auto gap-y-6">
+      <div className="flex flex-col py-4 px-6 overflow-auto gap-y-6 h-[450px]">
         <DialSteps steps={steps} currentStep={currentStepId} onChangeStep={setCurrentStep} />
         <>
           {currentStepId === CreateSteps.IMAGE && (
-            <div className="h-[400px]">
+            <>
               {loading && <DialLoader size={40} />}
               {!loading && !!images.length && (
                 <Grid
@@ -186,7 +186,7 @@ const CreateContainer: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
                   }}
                 />
               )}
-            </div>
+            </>
           )}
         </>
         <>

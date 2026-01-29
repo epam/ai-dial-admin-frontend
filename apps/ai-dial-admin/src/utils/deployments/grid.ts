@@ -4,7 +4,7 @@ export const getAdminEntityPath = (route: ApplicationRoute, data: unknown): stri
   switch (route) {
     case ApplicationRoute.InterceptorDeployments:
       return `${ApplicationRoute.Interceptors}/${encodeURIComponent((data as { name: string }).name || '')}`;
-    case ApplicationRoute.McpDeployments:
+    case ApplicationRoute.McpContainers:
       return `${ApplicationRoute.Toolsets}/${encodeURIComponent((data as { name: string }).name || '')}`;
     case ApplicationRoute.ModelServings:
       return `${ApplicationRoute.Models}/${encodeURIComponent((data as { name: string }).name || '')}`;
@@ -17,7 +17,7 @@ export const getAdminAssetPath = (route: ApplicationRoute, data: unknown): strin
   const asset = data as { folderId: string; name: string; version: string };
   const path = `${asset.folderId}${asset.name}__${asset.version}`;
   switch (route) {
-    case ApplicationRoute.McpDeployments:
+    case ApplicationRoute.McpContainers:
       return `${ApplicationRoute.AssetsToolsets}/${encodeURIComponent(asset.name)}?path=${encodeURIComponent(path)}`;
     default:
       return '';

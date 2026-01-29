@@ -60,7 +60,7 @@ export const sourceTypeFormatter = (value: string, t: (key: string) => string, v
       case ApplicationRoute.Interceptors:
         return t(SourceI18nKey.InterceptorDeployment);
       case ApplicationRoute.Toolsets:
-        return t(SourceI18nKey.MCPDeployment);
+        return t(SourceI18nKey.McpContainer);
       default:
         return value;
     }

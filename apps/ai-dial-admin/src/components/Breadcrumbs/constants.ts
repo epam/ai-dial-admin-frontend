@@ -216,11 +216,11 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig | null>
       { name: 'Id', href: false },
     ],
   },
-  [ApplicationRoute.McpDeployments]: {
+  [ApplicationRoute.McpContainers]: {
     segments: [
       {
-        name: 'McpDeployments',
-        i18nKey: MenuI18nKey.MCPDeployments,
+        name: 'McpContainers',
+        i18nKey: MenuI18nKey.McpContainers,
       },
       { name: 'Id', href: false },
     ],

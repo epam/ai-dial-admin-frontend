@@ -12,7 +12,7 @@ import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { IMAGE_TYPE } from '@/src/types/deployments/images';
 
 export const getEntityRoute = (route: ApplicationRoute) => {
-  if (route === ApplicationRoute.McpDeployments) {
+  if (route === ApplicationRoute.McpContainers) {
     return ApplicationRoute.Toolsets;
   }
   if (route === ApplicationRoute.InterceptorDeployments) {
@@ -23,7 +23,7 @@ export const getEntityRoute = (route: ApplicationRoute) => {
 
 export const getRouteByType = (type: IMAGE_TYPE): ApplicationRoute => {
   if (type === IMAGE_TYPE.MCP) {
-    return ApplicationRoute.McpDeployments;
+    return ApplicationRoute.McpContainers;
   }
   if (type === IMAGE_TYPE.INTERCEPTOR) {
     return ApplicationRoute.InterceptorDeployments;
@@ -32,7 +32,7 @@ export const getRouteByType = (type: IMAGE_TYPE): ApplicationRoute => {
 };
 
 export const getTranslatedType = (route: ApplicationRoute, t: (key: string) => string) => {
-  if (route === ApplicationRoute.McpDeployments) {
+  if (route === ApplicationRoute.McpContainers) {
     return t(EntitiesI18nKey.MCP);
   }
   if (route === ApplicationRoute.InterceptorDeployments) {
@@ -49,7 +49,7 @@ export const getTranslatedDeploymentType = (route: ApplicationRoute, t: (key: st
 };
 
 export const getTranslatedEntity = (route: ApplicationRoute, t: (key: string) => string) => {
-  if (route === ApplicationRoute.McpDeployments) {
+  if (route === ApplicationRoute.McpContainers) {
     return t(EntitiesI18nKey.Toolset);
   }
   if (route === ApplicationRoute.InterceptorDeployments) {
@@ -93,7 +93,7 @@ export const getEntityTemplate = (
     (template as DialModel).displayVersion = '';
   }
 
-  if (route === ApplicationRoute.McpDeployments) {
+  if (route === ApplicationRoute.McpContainers) {
     if (transport) {
       (template as Toolset).transport = ENTITY_TRANSPORT[transport];
     }

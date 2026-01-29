@@ -45,7 +45,7 @@ export const getContainerTemplate = (route: ApplicationRoute, defaults?: Resourc
   switch (route) {
     case ApplicationRoute.ModelServings:
       return getTemplate(CONTAINER_TYPE.HF, defaults);
-    case ApplicationRoute.McpDeployments:
+    case ApplicationRoute.McpContainers:
       return getTemplate(CONTAINER_TYPE.MCP, defaults);
     case ApplicationRoute.InterceptorDeployments:
       return getTemplate(CONTAINER_TYPE.INTERCEPTOR, defaults);

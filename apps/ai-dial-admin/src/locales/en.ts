@@ -122,7 +122,7 @@ export default {
     SystemProperties: 'System Properties',
 
     Deployments: 'Deployments',
-    MCPDeployments: 'MCP Deployments',
+    McpContainers: 'MCP Containers',
     InterceptorDeployments: 'Interceptor Deployments',
     ModelServings: 'Model Servings',
     InterceptorTemplates: 'Interceptor Templates',
@@ -1114,7 +1114,7 @@ export default {
     InterceptorTemplate: 'Interceptor template',
     ModelDeployment: 'Deployment model',
     InterceptorDeployment: 'Interceptor deployment',
-    MCPDeployment: 'MCP deployment',
+    McpContainer: 'MCP Container',
     Endpoint: 'Endpoint',
     Adapter: 'Adapter',
   },

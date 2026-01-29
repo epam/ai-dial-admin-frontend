@@ -26,8 +26,8 @@ describe('entity utils', () => {
   const t = (key: string) => key;
 
   describe('getRouteByType', () => {
-    test('returns McpDeployments for MCP', () => {
-      expect(getRouteByType(IMAGE_TYPE.MCP)).toBe(ApplicationRoute.McpDeployments);
+    test('returns McpContainers for MCP', () => {
+      expect(getRouteByType(IMAGE_TYPE.MCP)).toBe(ApplicationRoute.McpContainers);
     });
     test('returns InterceptorDeployments for INTERCEPTOR', () => {
       expect(getRouteByType(IMAGE_TYPE.INTERCEPTOR)).toBe(ApplicationRoute.InterceptorDeployments);
@@ -51,8 +51,8 @@ describe('entity utils', () => {
   });
 
   describe('getEntityRoute', () => {
-    test('returns Toolsets for McpDeployments', () => {
-      expect(getEntityRoute(ApplicationRoute.McpDeployments)).toBe(ApplicationRoute.Toolsets);
+    test('returns Toolsets for McpContainers', () => {
+      expect(getEntityRoute(ApplicationRoute.McpContainers)).toBe(ApplicationRoute.Toolsets);
     });
     test('returns Interceptors for InterceptorDeployments', () => {
       expect(getEntityRoute(ApplicationRoute.InterceptorDeployments)).toBe(ApplicationRoute.Interceptors);
@@ -63,8 +63,8 @@ describe('entity utils', () => {
   });
 
   describe('getTranslatedType', () => {
-    test('returns MCP for McpDeployments', () => {
-      expect(getTranslatedType(ApplicationRoute.McpDeployments, t)).toBe(EntitiesI18nKey.MCP);
+    test('returns MCP for McpContainers', () => {
+      expect(getTranslatedType(ApplicationRoute.McpContainers, t)).toBe(EntitiesI18nKey.MCP);
     });
     test('returns Interceptor for InterceptorDeployments', () => {
       expect(getTranslatedType(ApplicationRoute.InterceptorDeployments, t)).toBe(EntitiesI18nKey.Interceptor);
@@ -75,8 +75,8 @@ describe('entity utils', () => {
   });
 
   describe('getTranslatedEntity', () => {
-    test('returns Toolset for McpDeployments', () => {
-      expect(getTranslatedEntity(ApplicationRoute.McpDeployments, t)).toBe(EntitiesI18nKey.Toolset);
+    test('returns Toolset for McpContainers', () => {
+      expect(getTranslatedEntity(ApplicationRoute.McpContainers, t)).toBe(EntitiesI18nKey.Toolset);
     });
     test('returns Interceptor for Interceptors', () => {
       expect(getTranslatedEntity(ApplicationRoute.InterceptorDeployments, t)).toBe(EntitiesI18nKey.Interceptor);
@@ -124,9 +124,9 @@ describe('entity utils', () => {
       expect(template.source.completionEndpointPath).toBe('openai/v1/chat');
     });
 
-    test('configures transport for McpDeployments', () => {
+    test('configures transport for McpContainers', () => {
       const container = { displayName: 'MyContainer', name: '123' } as any;
-      const template = getEntityTemplate(ApplicationRoute.McpDeployments, container, t, CONTAINER_TRANSPORT.SSE) as any;
+      const template = getEntityTemplate(ApplicationRoute.McpContainers, container, t, CONTAINER_TRANSPORT.SSE) as any;
       expect(template.transport).toBe(ENTITY_TRANSPORT[CONTAINER_TRANSPORT.SSE]);
     });
   });
@@ -134,15 +134,15 @@ describe('entity utils', () => {
   describe('getAssetTemplate', () => {
     test('returns asset template', () => {
       const container = { displayName: 'MyContainer', url: 'http://url' } as any;
-      const template = getAssetTemplate(ApplicationRoute.McpDeployments, container, t, CONTAINER_TRANSPORT.SSE);
+      const template = getAssetTemplate(ApplicationRoute.McpContainers, container, t, CONTAINER_TRANSPORT.SSE);
       expect(template.name).toBe('mycontainer_entities.toolset');
       expect(template.endpoint).toBe('http://url');
       expect(template.transport).toBe(CONTAINER_TRANSPORT.SSE);
     });
 
-    test('configures transport for McpDeployments', () => {
+    test('configures transport for McpContainers', () => {
       const container = { displayName: 'MyContainer', url: 'http://url' } as any;
-      const template = getAssetTemplate(ApplicationRoute.McpDeployments, container, t, CONTAINER_TRANSPORT.SSE) as any;
+      const template = getAssetTemplate(ApplicationRoute.McpContainers, container, t, CONTAINER_TRANSPORT.SSE) as any;
       expect(template.transport).toBe(ENTITY_TRANSPORT[CONTAINER_TRANSPORT.SSE]);
     });
   });

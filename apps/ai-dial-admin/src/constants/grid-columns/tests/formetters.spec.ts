@@ -142,8 +142,8 @@ describe('Formatters :: sourceTypeFormatter', () => {
     );
     expect(sourceTypeFormatter(SOURCE_TYPE.CONTAINER, t, ApplicationRoute.Models)).toBe(SourceI18nKey.ModelDeployment);
 
-    expect(sourceTypeFormatter(SOURCE_TYPE.CONTAINER, t, ApplicationRoute.Toolsets)).toBe(SourceI18nKey.MCPDeployment);
-    expect(sourceTypeFormatter(SOURCE_TYPE.CONTAINER, t, ApplicationRoute.Application)).toBe(SOURCE_TYPE.CONTAINER);
+    expect(sourceTypeFormatter(SOURCE_TYPE.CONTAINER, t, ApplicationRoute.Toolsets)).toBe(SourceI18nKey.McpContainers);
+    expect(sourceTypeFormatter(SOURCE_TYPE.CONTAINER, t, ApplicationRoute.Applications)).toBe(SOURCE_TYPE.CONTAINER);
   });
 
   test('formats source type for unknown type', () => {

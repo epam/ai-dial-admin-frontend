@@ -45,6 +45,11 @@ const nextConfig = {
         destination: '/model-servings/:path',
         permanent: true, // 308 Permanent Redirect (good for SEO)
       },
+      {
+        source: '/:prefix/mcp-deployments/:path',
+        destination: '/mcp-containers/:path',
+        permanent: true, // 308 Permanent Redirect (good for SEO)
+      },
     ];
   },
   nx: {},

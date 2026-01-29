@@ -78,8 +78,8 @@ describe('Entity list view :: getEntityPath', () => {
     expect(result).toEqual('requestName?path=path');
   });
 
-  test('Should return name field for McpDeployments', () => {
-    const result = getEntityPath(ApplicationRoute.McpDeployments, { ...data, name: 'test-id' });
+  test('Should return name field for McpContainers', () => {
+    const result = getEntityPath(ApplicationRoute.McpContainers, { ...data, name: 'test-id' });
     expect(result).toEqual('test-id');
   });
 

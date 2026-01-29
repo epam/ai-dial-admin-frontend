@@ -20,8 +20,8 @@ describe('containers utils', () => {
       expect(template?.resources?.requests?.['nvidia.com/gpu']).toBe('1');
     });
 
-    test('returns template for McpDeployments', () => {
-      const template = getContainerTemplate(ApplicationRoute.McpDeployments);
+    test('returns template for McpContainers', () => {
+      const template = getContainerTemplate(ApplicationRoute.McpContainers);
       expect(template?.$type).toBe(CONTAINER_TYPE.MCP);
       expect(template?.transport).toBe(CONTAINER_TRANSPORT.HTTP);
     });

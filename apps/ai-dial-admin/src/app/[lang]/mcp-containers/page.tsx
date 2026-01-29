@@ -27,7 +27,7 @@ export default async function Page() {
 
   return (
     <SaveValidationContextProvider>
-      <ContainersList route={ApplicationRoute.McpDeployments} containersList={containers} />
+      <ContainersList route={ApplicationRoute.McpContainers} containersList={containers} />
     </SaveValidationContextProvider>
   );
 }
