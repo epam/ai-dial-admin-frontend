@@ -881,6 +881,7 @@ export enum BooleanI18nKey {
 export enum EntityPlaceholdersI18nKey {
   Project = 'EntityPlaceholders.Project',
   TypeBucketCopy = 'EntityPlaceholders.TypeBucketCopy',
+  HFModelName = 'EntityPlaceholders.HFModelName',
   ContactPoint = 'EntityPlaceholders.ContactPoint',
   Endpoint = 'EntityPlaceholders.Endpoint',
   EditorUrl = 'EntityPlaceholders.EditorUrl',

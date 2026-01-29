@@ -1031,6 +1031,7 @@ export default {
     Path: 'Enter path',
     Status: 'Enter status',
     TypeBucketCopy: 'Select Bucket copy',
+    HFModelName: 'Enter Hugging Face model name',
     Body: 'Enter Body',
     Order: 'Enter order number',
     ConfigurationEndpoint: 'Enter configuration endpoint',

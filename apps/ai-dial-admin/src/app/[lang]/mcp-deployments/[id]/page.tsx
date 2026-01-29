@@ -49,7 +49,7 @@ export default async function Page(params: Params) {
     image = imageResponse.response as Image;
     toolsets = await toolSetsApi.getToolsetList(token);
   } catch (e) {
-    errorObjLog(e, 'Failed to fetch mcp containers page');
+    errorObjLog(e, 'Failed to fetch mcp container page');
   }
 
   if (!container || !image) {
