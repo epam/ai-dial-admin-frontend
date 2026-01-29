@@ -6,10 +6,10 @@ import { API } from '@/src/server/api';
 import { TestSuits } from '@/src/models/evaluation/test-suit';
 
 export const TEST_SUITS_URL = `${API}/test-suites`;
-export const TEST_SUIT_URL = (id?: string) => `${TEST_SUITS_URL}/${id || ''}`;
+export const TEST_SUIT_URL = (id: string) => `${TEST_SUITS_URL}/${id}`;
 
 export class TestSuitsApi extends BaseApi {
-  getTestSuits(token: JWT | null): Promise<TestSuits[]> {
+  getTestSuits(token: JWT | null): Promise<TestSuits[] | null> {
     return this.get<TestSuits[]>(TEST_SUITS_URL, token);
   }
 
