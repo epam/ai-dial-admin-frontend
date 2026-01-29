@@ -297,7 +297,7 @@ export const getDeploymentsViewTabs = (
   if (route === ApplicationRoute.Images) {
     return [propertiesTab(t), buildLogTab(t, status as IMAGE_STATUS), relatedContainersTab(t, status as IMAGE_STATUS)];
   } else {
-    if (route === ApplicationRoute.InterceptorDeployments || route === ApplicationRoute.ModelServings) {
+    if (route === ApplicationRoute.InterceptorContainers || route === ApplicationRoute.ModelServings) {
       return [propertiesTab(t), /* metricsTab(t, status as CONTAINER_STATUS),*/ executionLogTab(t), eventsTab(t)];
     } else {
       return [

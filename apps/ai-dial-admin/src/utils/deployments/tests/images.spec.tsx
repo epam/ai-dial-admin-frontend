@@ -33,7 +33,7 @@ describe('images utils', () => {
 
   describe('getImageType', () => {
     test('returns correct type string', () => {
-      expect(getImageType(ApplicationRoute.InterceptorDeployments)).toBe('INTERCEPTOR');
+      expect(getImageType(ApplicationRoute.InterceptorContainers)).toBe('INTERCEPTOR');
       expect(getImageType(ApplicationRoute.McpContainers)).toBe('MCP');
       expect(getImageType(ApplicationRoute.ModelServings)).toBe('NIM');
       expect(getImageType('unknown' as ApplicationRoute)).toBe('');

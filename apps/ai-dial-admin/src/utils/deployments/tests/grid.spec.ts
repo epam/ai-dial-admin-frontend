@@ -4,11 +4,11 @@ import { ApplicationRoute } from '@/src/types/routes';
 
 describe('grid utils', () => {
   describe('getAdminEntityPath', () => {
-    test('returns correct path for InterceptorDeployments', () => {
+    test('returns correct path for InterceptorContainers', () => {
       const data = { name: 'my-interceptor' };
-      const result = getAdminEntityPath(ApplicationRoute.InterceptorDeployments, data);
+      const result = getAdminEntityPath(ApplicationRoute.InterceptorContainers, data);
       expect(result).toBe(`${ApplicationRoute.Interceptors}/my-interceptor`);
-      expect(getAdminEntityPath(ApplicationRoute.InterceptorDeployments, {})).toBe(`${ApplicationRoute.Interceptors}/`);
+      expect(getAdminEntityPath(ApplicationRoute.InterceptorContainers, {})).toBe(`${ApplicationRoute.Interceptors}/`);
     });
 
     test('returns correct path for McpContainers', () => {

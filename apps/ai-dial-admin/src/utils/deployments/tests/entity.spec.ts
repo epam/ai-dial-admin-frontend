@@ -29,8 +29,8 @@ describe('entity utils', () => {
     test('returns McpContainers for MCP', () => {
       expect(getRouteByType(IMAGE_TYPE.MCP)).toBe(ApplicationRoute.McpContainers);
     });
-    test('returns InterceptorDeployments for INTERCEPTOR', () => {
-      expect(getRouteByType(IMAGE_TYPE.INTERCEPTOR)).toBe(ApplicationRoute.InterceptorDeployments);
+    test('returns InterceptorContainers for INTERCEPTOR', () => {
+      expect(getRouteByType(IMAGE_TYPE.INTERCEPTOR)).toBe(ApplicationRoute.InterceptorContainers);
     });
 
     test('returns ModelServings for INTERCEPTOR', () => {
@@ -43,8 +43,8 @@ describe('entity utils', () => {
       expect(getTranslatedDeploymentType(ApplicationRoute.ModelServings, (t) => t)).toBe(EntitiesI18nKey.Serving);
     });
 
-    test('returns EntitiesI18nKey.Container for InterceptorDeployments', () => {
-      expect(getTranslatedDeploymentType(ApplicationRoute.InterceptorDeployments, (t) => t)).toBe(
+    test('returns EntitiesI18nKey.Container for InterceptorContainers', () => {
+      expect(getTranslatedDeploymentType(ApplicationRoute.InterceptorContainers, (t) => t)).toBe(
         EntitiesI18nKey.Container,
       );
     });
@@ -54,8 +54,8 @@ describe('entity utils', () => {
     test('returns Toolsets for McpContainers', () => {
       expect(getEntityRoute(ApplicationRoute.McpContainers)).toBe(ApplicationRoute.Toolsets);
     });
-    test('returns Interceptors for InterceptorDeployments', () => {
-      expect(getEntityRoute(ApplicationRoute.InterceptorDeployments)).toBe(ApplicationRoute.Interceptors);
+    test('returns Interceptors for InterceptorContainers', () => {
+      expect(getEntityRoute(ApplicationRoute.InterceptorContainers)).toBe(ApplicationRoute.Interceptors);
     });
     test('returns Models for other routes', () => {
       expect(getEntityRoute(ApplicationRoute.ModelServings)).toBe(ApplicationRoute.Models);
@@ -66,8 +66,8 @@ describe('entity utils', () => {
     test('returns MCP for McpContainers', () => {
       expect(getTranslatedType(ApplicationRoute.McpContainers, t)).toBe(EntitiesI18nKey.MCP);
     });
-    test('returns Interceptor for InterceptorDeployments', () => {
-      expect(getTranslatedType(ApplicationRoute.InterceptorDeployments, t)).toBe(EntitiesI18nKey.Interceptor);
+    test('returns Interceptor for InterceptorContainers', () => {
+      expect(getTranslatedType(ApplicationRoute.InterceptorContainers, t)).toBe(EntitiesI18nKey.Interceptor);
     });
     test('returns Model for other routes', () => {
       expect(getTranslatedType(ApplicationRoute.ModelServings, t)).toBe(EntitiesI18nKey.Model);
@@ -79,7 +79,7 @@ describe('entity utils', () => {
       expect(getTranslatedEntity(ApplicationRoute.McpContainers, t)).toBe(EntitiesI18nKey.Toolset);
     });
     test('returns Interceptor for Interceptors', () => {
-      expect(getTranslatedEntity(ApplicationRoute.InterceptorDeployments, t)).toBe(EntitiesI18nKey.Interceptor);
+      expect(getTranslatedEntity(ApplicationRoute.InterceptorContainers, t)).toBe(EntitiesI18nKey.Interceptor);
     });
     test('returns Model for other routes', () => {
       expect(getTranslatedEntity(ApplicationRoute.ModelServings, t)).toBe(EntitiesI18nKey.Model);
@@ -111,7 +111,7 @@ describe('entity utils', () => {
   describe('getEntityTemplate', () => {
     test('returns basic template', () => {
       const container = { displayName: 'MyContainer', name: '123' } as any;
-      const template = getEntityTemplate(ApplicationRoute.InterceptorDeployments, container, t);
+      const template = getEntityTemplate(ApplicationRoute.InterceptorContainers, container, t);
       expect(template.name).toBe('mycontainer_entities.interceptor');
       expect(template.source?.containerId).toBe('123');
     });

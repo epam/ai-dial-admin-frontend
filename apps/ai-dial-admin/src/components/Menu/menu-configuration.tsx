@@ -110,8 +110,8 @@ export const MENU_CONFIGURATION = (
           href: ApplicationRoute.McpContainers,
         },
         {
-          key: MenuI18nKey.InterceptorDeployments,
-          href: ApplicationRoute.InterceptorDeployments,
+          key: MenuI18nKey.InterceptorContainers,
+          href: ApplicationRoute.InterceptorContainers,
         },
         {
           key: MenuI18nKey.Images,

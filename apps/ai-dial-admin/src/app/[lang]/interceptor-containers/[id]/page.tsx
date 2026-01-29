@@ -59,7 +59,7 @@ export default async function Page(params: Params) {
       <ContainerView
         container={decodeVariables(container)}
         image={image}
-        route={ApplicationRoute.InterceptorDeployments}
+        route={ApplicationRoute.InterceptorContainers}
         names={containers?.map((container) => container.name).filter((name) => name !== container.name) || []}
         createEntity={createInterceptor}
         entityNames={interceptors?.map((interceptor) => interceptor.name as string) || []}

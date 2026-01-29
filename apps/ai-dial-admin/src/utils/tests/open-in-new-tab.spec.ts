@@ -93,8 +93,8 @@ describe('Entity list view :: getEntityPath', () => {
     expect(result).toEqual('id');
   });
 
-  test('Should return id field for InterceptorDeployments', () => {
-    const res1 = getEntityPath(ApplicationRoute.InterceptorDeployments, { data, name: 'id' }, void 0);
+  test('Should return id field for InterceptorContainers', () => {
+    const res1 = getEntityPath(ApplicationRoute.InterceptorContainers, { data, name: 'id' }, void 0);
     expect(res1).toEqual('id');
   });
   test('Should return id field for Images', () => {

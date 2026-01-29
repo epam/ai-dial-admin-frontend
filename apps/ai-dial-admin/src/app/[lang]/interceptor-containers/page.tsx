@@ -5,21 +5,28 @@ import ContainersList from '@/src/components/Containers/List/ContainersList';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { Container } from '@/src/models/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
+import { ServerActionResponse } from '@/src/models/server-action';
+import { errorObjLog } from '@/src/server/logger';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page() {
-  const containersResponse = await getInterceptorContainers();
+  let containersResponse: ServerActionResponse<Container[]> | null = null;
 
-  if (!containersResponse.success) {
-    notFound();
+  try {
+    containersResponse = await getInterceptorContainers();
+  } catch (e) {
+    errorObjLog(e, 'Failed to interceptor containers data');
   }
 
-  const containers = containersResponse.response as Container[];
+  if (!containersResponse || !containersResponse.success) {
+    notFound();
+  }
+  const containers = containersResponse.response || [];
 
   return (
     <SaveValidationContextProvider>
-      <ContainersList route={ApplicationRoute.InterceptorDeployments} containersList={containers} />
+      <ContainersList route={ApplicationRoute.InterceptorContainers} containersList={containers} />
     </SaveValidationContextProvider>
   );
 }

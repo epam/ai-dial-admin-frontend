@@ -40,7 +40,7 @@ export enum ApplicationRoute {
   ActivityAudit = '/activity-audit',
 
   // Deployments
-  InterceptorDeployments = '/interceptor-deployments',
+  InterceptorContainers = '/interceptor-containers',
   ModelServings = '/model-servings',
   McpContainers = '/mcp-containers',
   Images = '/deployment-images',

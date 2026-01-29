@@ -138,11 +138,11 @@ describe('Formatters :: sourceTypeFormatter', () => {
 
   test('formats source type for CONTAINER type', () => {
     expect(sourceTypeFormatter(SOURCE_TYPE.CONTAINER, t, ApplicationRoute.Interceptors)).toBe(
-      SourceI18nKey.InterceptorDeployment,
+      SourceI18nKey.InterceptorContainer,
     );
     expect(sourceTypeFormatter(SOURCE_TYPE.CONTAINER, t, ApplicationRoute.Models)).toBe(SourceI18nKey.ModelDeployment);
 
-    expect(sourceTypeFormatter(SOURCE_TYPE.CONTAINER, t, ApplicationRoute.Toolsets)).toBe(SourceI18nKey.McpContainers);
+    expect(sourceTypeFormatter(SOURCE_TYPE.CONTAINER, t, ApplicationRoute.Toolsets)).toBe(SourceI18nKey.McpContainer);
     expect(sourceTypeFormatter(SOURCE_TYPE.CONTAINER, t, ApplicationRoute.Applications)).toBe(SOURCE_TYPE.CONTAINER);
   });
 

@@ -31,16 +31,6 @@ const nextConfig = {
   async redirects() {
     return [
       {
-        source: '/:prefix/publications-file',
-        destination: '/file-publications',
-        permanent: true, // 308 Permanent Redirect (good for SEO)
-      },
-      {
-        source: '/:prefix/publications-prompt',
-        destination: '/prompt-publications',
-        permanent: true, // 308 Permanent Redirect (good for SEO)
-      },
-      {
         source: '/:prefix/model-deployments/:path',
         destination: '/model-servings/:path',
         permanent: true, // 308 Permanent Redirect (good for SEO)
@@ -48,6 +38,24 @@ const nextConfig = {
       {
         source: '/:prefix/mcp-deployments/:path',
         destination: '/mcp-containers/:path',
+        permanent: true, // 308 Permanent Redirect (good for SEO)
+      },
+
+      {
+        source: '/:prefix/mcp-deployments',
+        destination: '/mcp-containers',
+        permanent: true, // 308 Permanent Redirect (good for SEO)
+      },
+
+      {
+        source: '/:prefix/interceptor-deployments/:path',
+        destination: '/interceptor-containers/:path',
+        permanent: true, // 308 Permanent Redirect (good for SEO)
+      },
+
+      {
+        source: '/:prefix/interceptor-deployments',
+        destination: '/interceptor-containers',
         permanent: true, // 308 Permanent Redirect (good for SEO)
       },
     ];

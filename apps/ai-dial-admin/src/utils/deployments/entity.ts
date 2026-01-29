@@ -15,7 +15,7 @@ export const getEntityRoute = (route: ApplicationRoute) => {
   if (route === ApplicationRoute.McpContainers) {
     return ApplicationRoute.Toolsets;
   }
-  if (route === ApplicationRoute.InterceptorDeployments) {
+  if (route === ApplicationRoute.InterceptorContainers) {
     return ApplicationRoute.Interceptors;
   }
   return ApplicationRoute.Models;
@@ -26,7 +26,7 @@ export const getRouteByType = (type: IMAGE_TYPE): ApplicationRoute => {
     return ApplicationRoute.McpContainers;
   }
   if (type === IMAGE_TYPE.INTERCEPTOR) {
-    return ApplicationRoute.InterceptorDeployments;
+    return ApplicationRoute.InterceptorContainers;
   }
   return ApplicationRoute.ModelServings;
 };
@@ -35,7 +35,7 @@ export const getTranslatedType = (route: ApplicationRoute, t: (key: string) => s
   if (route === ApplicationRoute.McpContainers) {
     return t(EntitiesI18nKey.MCP);
   }
-  if (route === ApplicationRoute.InterceptorDeployments) {
+  if (route === ApplicationRoute.InterceptorContainers) {
     return t(EntitiesI18nKey.Interceptor);
   }
   return t(EntitiesI18nKey.Model);
@@ -52,7 +52,7 @@ export const getTranslatedEntity = (route: ApplicationRoute, t: (key: string) =>
   if (route === ApplicationRoute.McpContainers) {
     return t(EntitiesI18nKey.Toolset);
   }
-  if (route === ApplicationRoute.InterceptorDeployments) {
+  if (route === ApplicationRoute.InterceptorContainers) {
     return t(EntitiesI18nKey.Interceptor);
   }
   return t(EntitiesI18nKey.Model);

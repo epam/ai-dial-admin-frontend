@@ -198,11 +198,11 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig | null>
       { name: 'Id', href: false },
     ],
   },
-  [ApplicationRoute.InterceptorDeployments]: {
+  [ApplicationRoute.InterceptorContainers]: {
     segments: [
       {
-        name: 'InterceptorDeployments',
-        i18nKey: MenuI18nKey.InterceptorDeployments,
+        name: 'InterceptorContainers',
+        i18nKey: MenuI18nKey.InterceptorContainers,
       },
       { name: 'Id', href: false },
     ],

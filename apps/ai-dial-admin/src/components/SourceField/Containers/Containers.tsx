@@ -88,7 +88,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
       view === ApplicationRoute.Models
         ? ApplicationRoute.ModelServings
         : view === ApplicationRoute.Interceptors
-          ? ApplicationRoute.InterceptorDeployments
+          ? ApplicationRoute.InterceptorContainers
           : ApplicationRoute.McpContainers;
     onOpenInNewTab(route, selectedContainer);
   }, [selectedContainer, view]);
