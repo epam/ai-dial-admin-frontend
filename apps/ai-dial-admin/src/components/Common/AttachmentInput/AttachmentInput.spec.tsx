@@ -35,11 +35,12 @@ describe('Common components - AttachmentInput', () => {
     renderComponent({ initialValues: ['pdf'] });
 
     expect(screen.getByText('PDF')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: AttachmentsI18nKey.UseAll })).toBeInTheDocument();
+    expect(screen.getByLabelText(AttachmentsI18nKey.SpecificAttachments)).toBeChecked();
   });
 
   test('filters suggestions while typing and adds one on click', async () => {
     renderComponent();
+    await userEvent.click(screen.getByLabelText(AttachmentsI18nKey.SpecificAttachments));
 
     const input = screen.getByRole('textbox');
     await userEvent.type(input, 'doc');
@@ -57,15 +58,17 @@ describe('Common components - AttachmentInput', () => {
   test('selects all items with the “Select all” button and resets on remove', async () => {
     renderComponent();
 
-    const allButton = screen.getByRole('button', { name: AttachmentsI18nKey.UseAll });
+    const allRadio = screen.getByLabelText(AttachmentsI18nKey.AllAttachments);
 
-    await userEvent.click(allButton);
+    await userEvent.click(allRadio);
 
     expect(onChange).toHaveBeenLastCalledWith(['*/*']);
   });
 
   test('opens suggestion list when clicked', async () => {
     renderComponent();
+
+    await userEvent.click(screen.getByLabelText(AttachmentsI18nKey.SpecificAttachments));
 
     const input = screen.getByPlaceholderText(placeHolder);
 
@@ -81,6 +84,8 @@ describe('Common components - AttachmentInput', () => {
   test('toggles suggestion list when user click on input and when input lost focus', async () => {
     renderComponent();
 
+    await userEvent.click(screen.getByLabelText(AttachmentsI18nKey.SpecificAttachments));
+
     const input = screen.getByPlaceholderText(placeHolder);
 
     await userEvent.click(input);
@@ -95,31 +100,28 @@ describe('Common components - AttachmentInput', () => {
 
     await waitFor(() => {
       expect(screen.queryByText('PDF')).not.toBeInTheDocument();
-      expect(screen.queryByText('PDF')).not.toBeInTheDocument();
-      expect(screen.queryByText('PDF')).not.toBeInTheDocument();
+      expect(screen.queryByText('DOC')).not.toBeInTheDocument();
+      expect(screen.queryByText('ZIP')).not.toBeInTheDocument();
     });
   });
 
-  test('clears All Value - Tag selection when tag close button clicked', async () => {
+  test('clears All selection when switching to Specific', async () => {
     renderComponent();
 
-    const useAllButton = screen.getByRole('button', { name: AttachmentsI18nKey.UseAll });
+    const allRadio = screen.getByLabelText(AttachmentsI18nKey.AllAttachments);
 
-    fireEvent.click(useAllButton);
+    await userEvent.click(allRadio);
 
     await waitFor(() => {
-      expect(screen.getByText(ALL_VALUES_LABEL)).toBeInTheDocument();
+      expect(onChange).toHaveBeenLastCalledWith(['*/*']);
     });
 
-    const allValuesClearBtn = screen.getByRole('button');
-
-    await userEvent.click(allValuesClearBtn);
+    await userEvent.click(screen.getByLabelText(AttachmentsI18nKey.SpecificAttachments));
 
     await waitFor(() => {
-      expect(screen.queryByText(ALL_VALUES_LABEL)).not.toBeInTheDocument();
+      expect(onChange).toHaveBeenLastCalledWith([]);
 
       const input = screen.getByPlaceholderText(placeHolder);
-
       expect(input).toBeInTheDocument();
     });
   });

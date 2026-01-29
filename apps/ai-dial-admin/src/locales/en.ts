@@ -464,12 +464,11 @@ export default {
     Sharing: 'Sharing',
   },
   Attachments: {
-    Attachments: 'Attachments',
+    Attachments: 'Attachment types',
     AllAttachments: 'All attachments types',
-    CustomAttachments: 'Custom attachments types',
+    NoAttachments: 'No attachments',
+    SpecificAttachments: 'Specific attachments types',
     MaxNumber: 'Attachments max number',
-    UseAllAttachment: 'Use all attachment types',
-    UseAll: 'Use all',
   },
   Tabs: {
     Properties: 'Properties',
