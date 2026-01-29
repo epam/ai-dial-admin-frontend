@@ -18,16 +18,16 @@ interface Props {
   verifyVersion: (image: Image) => void;
 }
 
-const SourceFields: FC<Props> = ({ image, setImage, isModal, verifyVersion }) => {
+const SourceFields: FC<Props> = ({ image, setImage, isModal = false, verifyVersion }) => {
   const className = useMemo(() => getControlClassName(isModal), [isModal]);
 
   return (
     <div className="flex flex-col gap-y-8">
-      <div className={classNames('flex gap-y-8', isModal ? 'flex-col' : 'flex-row')}>
+      <div className={classNames('flex', isModal ? 'flex-col gap-y-8' : 'flex-row gap-x-4', className)}>
         {(isModal || image.$type === IMAGE_TYPE.MCP) && (
           <SourceTypeFields image={image} setImage={setImage} isModal={isModal} verifyVersion={verifyVersion} />
         )}
-        <div className={classNames('flex-1 gap-x-4', className)}>
+        <div className="flex-1">
           {image.source?.$type === IMAGE_SOURCE_TYPE.CODE && <CodeURL image={image} setImage={setImage} />}
           {image.source?.$type === IMAGE_SOURCE_TYPE.DOCKER && <DockerURI image={image} setImage={setImage} />}
         </div>
