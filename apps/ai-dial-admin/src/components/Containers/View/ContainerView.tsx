@@ -165,7 +165,7 @@ const ContainerView: FC<Props> = ({
     const fetchPods = async () => {
       const data = await getContainerPods(selectedContainer.name);
       setPods(data || []);
-      const totalRestarts = data?.reduce((sum, p) => sum + (p.restartCount || 0), 0);
+      const totalRestarts = data?.reduce((sum, p) => sum + (p?.restartCount || 0), 0);
       setRestarts(totalRestarts || 0);
     };
 
