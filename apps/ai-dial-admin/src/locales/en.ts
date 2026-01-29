@@ -469,6 +469,7 @@ export default {
     NoAttachments: 'No attachments',
     SpecificAttachments: 'Specific attachments types',
     MaxNumber: 'Attachments max number',
+    CaptionDescription: 'Choose from suggested MIME types or add a new one using <type>/<subtype>.',
   },
   Tabs: {
     Properties: 'Properties',

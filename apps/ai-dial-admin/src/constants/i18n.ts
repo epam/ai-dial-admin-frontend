@@ -413,6 +413,7 @@ export enum AttachmentsI18nKey {
   NoAttachments = 'Attachments.NoAttachments',
   SpecificAttachments = 'Attachments.SpecificAttachments',
   MaxNumber = 'Attachments.MaxNumber',
+  CaptionDescription = 'Attachments.CaptionDescription',
 }
 
 export enum KeysI18nKey {

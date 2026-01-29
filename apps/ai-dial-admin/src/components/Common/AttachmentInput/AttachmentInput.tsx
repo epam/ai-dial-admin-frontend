@@ -183,10 +183,6 @@ const AttachmentInput: FC<Props> = ({
     setShowSuggestions(true);
   }, []);
 
-  const handleInputClick = useCallback(() => {
-    setShowSuggestions(true);
-  }, []);
-
   const handleInputBlur = useCallback(() => {
     setShowSuggestions(false);
   }, []);
@@ -228,7 +224,7 @@ const AttachmentInput: FC<Props> = ({
       </div>
 
       {selectedRadio === AttachmentType.SPECIFIC && (
-        <div className={classNames('flex flex-row gap-2 items-center', STANDARD_CONTROL_WIDTH)}>
+        <div className={classNames('flex flex-col', STANDARD_CONTROL_WIDTH)}>
           <div className={classNames('dial-input min-h-[40px] p-[6px]', CONTROL_WITH_BUTTON_WIDTH)}>
             <div
               ref={containerRef}
@@ -241,7 +237,6 @@ const AttachmentInput: FC<Props> = ({
                 <input
                   value={inputValue}
                   onChange={handleInputChange}
-                  onClick={handleInputClick}
                   onBlur={handleInputBlur}
                   onKeyDown={handleKeyDown}
                   className="outline-none border-none w-full flex-1 p-1 dial-input"
@@ -250,16 +245,17 @@ const AttachmentInput: FC<Props> = ({
               </div>
             </div>
           </div>
-        </div>
-      )}
 
-      {shouldShowSuggestions && (
-        <Suggestions
-          suggestions={filteredSuggestions}
-          highlightIndex={highlight}
-          onSelectSuggestion={addAttachment}
-          onHightLightSuggestion={handleSetHightLight}
-        />
+          {shouldShowSuggestions && (
+            <Suggestions
+              suggestions={filteredSuggestions}
+              highlightIndex={highlight}
+              onSelectSuggestion={addAttachment}
+              onHightLightSuggestion={handleSetHightLight}
+            />
+          )}
+          <div className="text-secondary tiny pt-2">{t(AttachmentsI18nKey.CaptionDescription)}</div>
+        </div>
       )}
     </div>
   );

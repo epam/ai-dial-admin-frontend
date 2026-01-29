@@ -65,14 +65,14 @@ describe('Common components - AttachmentInput', () => {
     expect(onChange).toHaveBeenLastCalledWith(['*/*']);
   });
 
-  test('opens suggestion list when clicked', async () => {
+  test('opens suggestion list when typing', async () => {
     renderComponent();
 
     await userEvent.click(screen.getByLabelText(AttachmentsI18nKey.SpecificAttachments));
 
     const input = screen.getByPlaceholderText(placeHolder);
 
-    await userEvent.click(input);
+    await userEvent.type(input, 'p');
 
     await waitFor(() => {
       expect(screen.getByText('PDF')).toBeInTheDocument();
@@ -81,14 +81,14 @@ describe('Common components - AttachmentInput', () => {
     });
   });
 
-  test('toggles suggestion list when user click on input and when input lost focus', async () => {
+  test('toggles suggestion list based on typing and blur', async () => {
     renderComponent();
 
     await userEvent.click(screen.getByLabelText(AttachmentsI18nKey.SpecificAttachments));
 
     const input = screen.getByPlaceholderText(placeHolder);
 
-    await userEvent.click(input);
+    await userEvent.type(input, 'p');
 
     await waitFor(() => {
       expect(screen.getByText('PDF')).toBeInTheDocument();
