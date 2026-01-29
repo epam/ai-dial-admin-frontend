@@ -1,11 +1,10 @@
 import { forwardRef, useCallback, useEffect, useState } from 'react';
-import { DialTextInputField } from '@epam/ai-dial-ui-kit';
-import { EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
+import { DialRemoveButton, DialTextInputField } from '@epam/ai-dial-ui-kit';
+
 import { FieldError } from '@/src/models/error';
-import classNames from 'classnames';
-import { IconTrash } from '@tabler/icons-react';
+import { EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useI18n } from '@/src/locales/client';
 
 interface Props {
   item: string;
@@ -49,16 +48,7 @@ const Item = forwardRef<HTMLLIElement, Props>(({ item, index, onChange, onRemove
         invalid={!!error}
         errorText={error?.text}
       />
-      <button
-        className={classNames(
-          'flex p-2 cursor-pointer',
-          !item ? 'text-secondary' : 'text-error',
-          !!error && 'self-baseline',
-        )}
-        onClick={() => onRemove(index)}
-      >
-        <IconTrash size={24} stroke={2} />
-      </button>
+      <DialRemoveButton onClick={() => onRemove(index)} className={error ? 'self-baseline' : ''} />
     </li>
   );
 });

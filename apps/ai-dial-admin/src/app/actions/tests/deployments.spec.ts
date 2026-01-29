@@ -358,7 +358,7 @@ describe('Deployments actions', () => {
   });
 
   describe('Whitelist actions', () => {
-    test(' calls whitelistApi.getGlobalWhitelist with token', async () => {
+    test('calls whitelistApi.getGlobalWhitelist with token', async () => {
       const mockResponse = ['github.com'];
       (whitelistApi.getGlobalWhitelist as any).mockResolvedValue(mockResponse);
 
@@ -369,7 +369,7 @@ describe('Deployments actions', () => {
       expect(result).toBe(mockResponse);
     });
 
-    test(' calls whitelistApi.updateGlobalWhitelist with token', async () => {
+    test('calls whitelistApi.updateGlobalWhitelist with token', async () => {
       const mockResponse = ['github.com'];
       (whitelistApi.updateGlobalWhitelist as any).mockResolvedValue(mockResponse);
 

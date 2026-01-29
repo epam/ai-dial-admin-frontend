@@ -45,8 +45,8 @@ const ItemsList: FC<Props> = ({ items, setItems, addItemLabel, validate }) => {
   }, [items]);
 
   return (
-    <div className="flex flex-col gap-4 w-full h-full">
-      <ul className="flex flex-col gap-4 overflow-scroll">
+    <div className="flex flex-col items-start gap-4 h-full">
+      <ul className="flex flex-col gap-4 w-full overflow-scroll">
         {items.map((item, index) => (
           <Item
             item={item}
@@ -58,13 +58,8 @@ const ItemsList: FC<Props> = ({ items, setItems, addItemLabel, validate }) => {
           />
         ))}
       </ul>
-      <div className="flex">
-        <DialGhostButton
-          iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-          label={addItemLabel}
-          onClick={onAddItem}
-        />
-      </div>
+
+      <DialGhostButton iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />} label={addItemLabel} onClick={onAddItem} />
     </div>
   );
 };
