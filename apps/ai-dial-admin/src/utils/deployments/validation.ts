@@ -19,6 +19,8 @@ const HF_MODEL_MAX_LENGTH = 96;
 const HF_USERNAME_ALLOWED_REGEX = /^[A-Za-z0-9-]+$/;
 const HF_MODEL_ALLOWED_REGEX = /^[A-Za-z0-9_.-]+$/;
 
+const WHITELIST_DOMAIN_REGEX = /^((?!-)[A-Za-z0-9-]{1,63}(?<!-)\.)+[A-Za-z]{2,}$/;
+
 export const getVariableNameError = (name: string, t?: (str: string) => string) => {
   if (!name) {
     return {
@@ -235,5 +237,27 @@ export const getReplicasError = (
   if (min && max && min > max) {
     return { type: ErrorType.INVALID, text: t ? t(ErrorI18nKey.ReplicasError) : '' };
   }
+  return null;
+};
+
+export const getWhitelistDomainError = (
+  value?: string,
+  t?: (key: string, options?: Record<string, string | number>) => string,
+): FieldError | null => {
+  const trimmed = value?.trim() ?? '';
+  if (!trimmed) {
+    return {
+      type: ErrorType.EMPTY,
+      text: t ? t(ErrorI18nKey.RequiredProperty) : '',
+    };
+  }
+
+  if (!WHITELIST_DOMAIN_REGEX.test(value as string)) {
+    return {
+      type: ErrorType.INVALID,
+      text: t ? t(ErrorI18nKey.InvalidWhitelistDomain) : '',
+    };
+  }
+
   return null;
 };

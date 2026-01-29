@@ -102,6 +102,12 @@ global.console = {
   warn: vi.fn(),
 };
 
+Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+  configurable: true,
+  writable: true,
+  value: () => {}, // empty placeholder
+});
+
 afterEach(() => {
   cleanup();
 });

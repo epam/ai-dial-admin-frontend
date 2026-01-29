@@ -1,18 +1,20 @@
 'use client';
 
-import { MouseEvent, FC, useCallback, useState } from 'react';
+import { FC, MouseEvent, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import { IconPlus, IconColumns2 } from '@tabler/icons-react';
+import { IconColumns2, IconPlus } from '@tabler/icons-react';
+import Cloud from '@/public/images/icons/cloud.svg';
 import { GridApi } from 'ag-grid-community';
 import { DialGhostButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 
 import { ApplicationRoute } from '@/src/types/routes';
 import { Image } from '@/src/models/deployments/images';
 import { ButtonsI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
+import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useNotification } from '@/src/context/NotificationContext';
-import { createImage } from '@/src/app/actions/deployments';
+import { createImage, getGlobalWhitelist, updateGlobalWhitelist } from '@/src/app/actions/deployments';
 import { getErrorNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -20,6 +22,7 @@ import { useI18n } from '@/src/locales/client';
 
 import ResetFiltersButton from '@/src/components/EntityListView/HeaderButtons/ResetFiltersButton';
 import AddImageModal from '@/src/components/Images/Modals/AddImage';
+import GlobalWhitelist from '@/src/components/Deployments/Modals/GlobalWhitelist';
 
 interface Props {
   toggleColumnsPanel: () => void;
@@ -34,12 +37,15 @@ const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, gridApi }) => {
   const router = useRouter();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalType, setModalType] = useState<ModalType>();
 
   const handleModalClose = useCallback(() => {
     setIsModalOpen(false);
+    setModalType(void 0);
   }, []);
 
-  const handleModalOpen = useCallback(() => {
+  const handleModalOpen = useCallback((modalType: ModalType) => {
+    setModalType(modalType);
     setIsModalOpen(true);
   }, []);
 
@@ -68,6 +74,11 @@ const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, gridApi }) => {
   return (
     <>
       <div className="flex gap-4">
+        <DialGhostButton
+          label={t(ButtonsI18nKey.GlobalFirewall)}
+          iconBefore={<Cloud {...BASE_BUTTON_ICON_PROPS} />}
+          onClick={() => handleModalOpen(ModalType.globalFirewall)}
+        />
         <ResetFiltersButton gridApi={gridApi} />
         <DialGhostButton
           label={t(ButtonsI18nKey.Columns)}
@@ -78,11 +89,24 @@ const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, gridApi }) => {
         <DialPrimaryButton
           label={isTabletScreen ? '' : t(ButtonsI18nKey.Add)}
           iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-          onClick={() => handleModalOpen()}
+          onClick={() => handleModalOpen(ModalType.addImage)}
         />
       </div>
 
       {isModalOpen &&
+        modalType === ModalType.globalFirewall &&
+        createPortal(
+          <GlobalWhitelist
+            isModalOpen={isModalOpen}
+            onClose={handleModalClose}
+            onApply={(domains) => updateGlobalWhitelist(domains)}
+            getDomains={getGlobalWhitelist}
+          />,
+          document.body,
+        )}
+
+      {isModalOpen &&
+        modalType === ModalType.addImage &&
         createPortal(
           <AddImageModal
             isModalOpen={isModalOpen}

@@ -34,6 +34,8 @@ export enum ModalType {
   saveNewVersion = 'saveNewVersion',
   createNewVersion = 'createNewVersion',
   install = 'install',
+  globalFirewall = 'globalFirewall',
+  addImage = 'addImage',
 }
 
 interface Props {
