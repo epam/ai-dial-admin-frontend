@@ -1,21 +1,29 @@
+import { notFound } from 'next/navigation';
+
 import { getImages } from '@/src/app/actions/deployments';
 import ImagesList from '@/src/components/Images/List/ImagesList';
-import Page404 from '@/src/components/Page404/Page404';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { Image } from '@/src/models/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUniqueLatestImages } from '@/src/utils/deployments/images';
+import { errorObjLog } from '@/src/server/logger';
+import { ServerActionResponse } from '@/src/models/server-action';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page() {
-  const imagesResponse = await getImages();
+  let imagesResponse: ServerActionResponse<Image[]> | null = null;
 
-  if (!imagesResponse.success) {
-    return <Page404 />;
+  try {
+    imagesResponse = await getImages();
+  } catch (e) {
+    errorObjLog(e, 'Failed to images');
   }
 
-  const images = imagesResponse.response as Image[];
+  if (!imagesResponse || !imagesResponse.success) {
+    notFound();
+  }
+  const images = imagesResponse.response || [];
 
   return (
     <SaveValidationContextProvider>

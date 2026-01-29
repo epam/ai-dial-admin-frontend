@@ -177,7 +177,7 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
         view={route}
         columnDefs={columnDefs}
         additionalGridOptions={gridOptions}
-        title={t(ImagesI18nKey.ImagesListTitle, { count: imagesList.length })}
+        title={t(ImagesI18nKey.ImagesListTitle)}
         emptyDataTitle={t(EntitiesI18nKey.NoImages, { type: getTranslatedType(route, t) })}
         showColumnsPanel={showColumnsPanel}
         toggleColumnsPanel={toggleColumnsPanel}

@@ -264,7 +264,6 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
         columnDefs={columnDefs}
         additionalGridOptions={gridOptions}
         title={t(ContainersI18nKey.ContainersListTitle, {
-          count: containersList.length,
           type: getTranslatedType(route, t),
           entityType: getTranslatedDeploymentType(route, t),
         })}

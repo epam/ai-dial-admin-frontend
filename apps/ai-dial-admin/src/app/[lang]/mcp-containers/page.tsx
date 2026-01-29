@@ -6,21 +6,28 @@ import { getMCPContainers } from '@/src/app/actions/deployments';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 
 import ContainersList from '@/src/components/Containers/List/ContainersList';
+import { ServerActionResponse } from '@/src/models/server-action';
+import { errorObjLog } from '@/src/server/logger';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page() {
-  const containersResponse = await getMCPContainers();
+  let containersResponse: ServerActionResponse<Container[]> | null = null;
 
-  if (!containersResponse.success) {
-    notFound();
+  try {
+    containersResponse = await getMCPContainers();
+  } catch (e) {
+    errorObjLog(e, 'Failed to mcp containers data');
   }
 
-  const containers = containersResponse.response as Container[];
+  if (!containersResponse || !containersResponse.success) {
+    notFound();
+  }
+  const containers = containersResponse.response || [];
 
   return (
     <SaveValidationContextProvider>
-      <ContainersList route={ApplicationRoute.McpDeployments} containersList={containers} />
+      <ContainersList route={ApplicationRoute.McpContainers} containersList={containers} />
     </SaveValidationContextProvider>
   );
 }

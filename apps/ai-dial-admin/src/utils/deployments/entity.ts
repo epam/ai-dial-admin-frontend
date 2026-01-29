@@ -12,10 +12,10 @@ import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { IMAGE_TYPE } from '@/src/types/deployments/images';
 
 export const getEntityRoute = (route: ApplicationRoute) => {
-  if (route === ApplicationRoute.McpDeployments) {
+  if (route === ApplicationRoute.McpContainers) {
     return ApplicationRoute.Toolsets;
   }
-  if (route === ApplicationRoute.InterceptorDeployments) {
+  if (route === ApplicationRoute.InterceptorContainers) {
     return ApplicationRoute.Interceptors;
   }
   return ApplicationRoute.Models;
@@ -23,36 +23,36 @@ export const getEntityRoute = (route: ApplicationRoute) => {
 
 export const getRouteByType = (type: IMAGE_TYPE): ApplicationRoute => {
   if (type === IMAGE_TYPE.MCP) {
-    return ApplicationRoute.McpDeployments;
+    return ApplicationRoute.McpContainers;
   }
   if (type === IMAGE_TYPE.INTERCEPTOR) {
-    return ApplicationRoute.InterceptorDeployments;
+    return ApplicationRoute.InterceptorContainers;
   }
-  return ApplicationRoute.ModelDeployments;
+  return ApplicationRoute.ModelServings;
 };
 
 export const getTranslatedType = (route: ApplicationRoute, t: (key: string) => string) => {
-  if (route === ApplicationRoute.McpDeployments) {
+  if (route === ApplicationRoute.McpContainers) {
     return t(EntitiesI18nKey.MCP);
   }
-  if (route === ApplicationRoute.InterceptorDeployments) {
+  if (route === ApplicationRoute.InterceptorContainers) {
     return t(EntitiesI18nKey.Interceptor);
   }
   return t(EntitiesI18nKey.Model);
 };
 
 export const getTranslatedDeploymentType = (route: ApplicationRoute, t: (key: string) => string): string => {
-  if (route === ApplicationRoute.ModelDeployments) {
+  if (route === ApplicationRoute.ModelServings) {
     return t(EntitiesI18nKey.Serving);
   }
   return t(EntitiesI18nKey.Container);
 };
 
 export const getTranslatedEntity = (route: ApplicationRoute, t: (key: string) => string) => {
-  if (route === ApplicationRoute.McpDeployments) {
+  if (route === ApplicationRoute.McpContainers) {
     return t(EntitiesI18nKey.Toolset);
   }
-  if (route === ApplicationRoute.InterceptorDeployments) {
+  if (route === ApplicationRoute.InterceptorContainers) {
     return t(EntitiesI18nKey.Interceptor);
   }
   return t(EntitiesI18nKey.Model);
@@ -83,7 +83,7 @@ export const getEntityTemplate = (
     source: { $type: SOURCE_TYPE.CONTAINER, containerId: container.name },
   };
 
-  if (route === ApplicationRoute.ModelDeployments) {
+  if (route === ApplicationRoute.ModelServings) {
     (template as DialModel).type = DialModelType.Chat;
     template.source = {
       ...(template.source as SOURCE_FIELD),
@@ -93,7 +93,7 @@ export const getEntityTemplate = (
     (template as DialModel).displayVersion = '';
   }
 
-  if (route === ApplicationRoute.McpDeployments) {
+  if (route === ApplicationRoute.McpContainers) {
     if (transport) {
       (template as Toolset).transport = ENTITY_TRANSPORT[transport];
     }

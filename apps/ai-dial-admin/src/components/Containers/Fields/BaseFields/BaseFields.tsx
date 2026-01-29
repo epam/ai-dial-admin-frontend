@@ -18,7 +18,7 @@ interface Props {
   names?: string[];
 }
 
-const BaseFields: FC<Props> = ({ container, setContainer, names, isModal }) => {
+const BaseFields: FC<Props> = ({ container, setContainer, names, isModal = false }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
 
@@ -55,7 +55,7 @@ const BaseFields: FC<Props> = ({ container, setContainer, names, isModal }) => {
   );
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-y-8">
       {isModal && (
         <IdControl
           entity={container}
@@ -69,6 +69,7 @@ const BaseFields: FC<Props> = ({ container, setContainer, names, isModal }) => {
         displayName={container.displayName}
         required={true}
         onChange={onChangeDisplayName}
+        isFullWidth={isModal}
         disabled={isEditDisabled(container)}
       />
       <DescriptionControl
