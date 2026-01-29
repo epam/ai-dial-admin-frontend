@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import { useRouter } from 'next/navigation';
@@ -198,67 +197,67 @@ const ToolsetView: FC<Props> = ({ names, isUserLevel, oAuthCode, etag, roles, or
     [router, selectedToolset, showNotification, t],
   );
 
-  // const onLogin = useCallback(
-  //   (type: ToolsetAuthCredentialLevel, apiKeyValue: string) => {
-  //     const authSettings = selectedToolset.authSettings;
-  //     if (authSettings && authSettings?.authenticationType === ToolsetAuthType.OAUTH) {
-  //       const callbackUrl = `${window.location.pathname}${window.location.search}`;
-  //       const state = {
-  //         callbackUrl,
-  //         toolsetId: selectedToolset.name,
-  //         credentialsLevel: authSettings.authenticationType,
-  //       };
+  const onLogin = useCallback(
+    (type: ToolsetAuthCredentialLevel, apiKeyValue: string) => {
+      const authSettings = selectedToolset.authSettings;
+      if (authSettings && authSettings?.authenticationType === ToolsetAuthType.OAUTH) {
+        const callbackUrl = `${window.location.pathname}${window.location.search}`;
+        const state = {
+          callbackUrl,
+          toolsetId: selectedToolset.name,
+          credentialsLevel: authSettings.authenticationType,
+        };
 
-  //       const url = new URL(authSettings.authorizationEndpoint as string);
-  //       url.searchParams.set('response_type', 'code');
-  //       url.searchParams.set('client_id', authSettings.clientId as string);
+        const url = new URL(authSettings.authorizationEndpoint as string);
+        url.searchParams.set('response_type', 'code');
+        url.searchParams.set('client_id', authSettings.clientId as string);
 
-  //       url.searchParams.set(
-  //         'redirect_uri',
-  //         `${window.location.origin}${getUrnForEntity(ApplicationRoute.Toolsets, selectedToolset)}?isUser=${type === ToolsetAuthCredentialLevel.USER}`,
-  //       );
-  //       if (authSettings.codeChallenge) {
-  //         url.searchParams.set('code_challenge', authSettings.codeChallenge);
-  //       }
-  //       if (authSettings.codeChallengeMethod) {
-  //         url.searchParams.set('code_challenge_method', authSettings.codeChallengeMethod);
-  //       }
+        url.searchParams.set(
+          'redirect_uri',
+          `${window.location.origin}${getUrnForEntity(ApplicationRoute.Toolsets, selectedToolset)}?isUser=${type === ToolsetAuthCredentialLevel.USER}`,
+        );
+        if (authSettings.codeChallenge) {
+          url.searchParams.set('code_challenge', authSettings.codeChallenge);
+        }
+        if (authSettings.codeChallengeMethod) {
+          url.searchParams.set('code_challenge_method', authSettings.codeChallengeMethod);
+        }
 
-  //       url.searchParams.set('state', encodeToolsetRedirectState(state));
-  //       if (authSettings.scopesSupported) {
-  //         url.searchParams.set('scope', authSettings.scopesSupported?.join(' '));
-  //       }
+        url.searchParams.set('state', encodeToolsetRedirectState(state));
+        if (authSettings.scopesSupported) {
+          url.searchParams.set('scope', authSettings.scopesSupported?.join(' '));
+        }
 
-  //       window.location.assign(url.toString());
-  //     } else {
-  //       signIn(type, apiKeyValue);
-  //     }
-  //   },
-  //   [selectedToolset, signIn],
-  // );
+        window.location.assign(url.toString());
+      } else {
+        signIn(type, apiKeyValue);
+      }
+    },
+    [selectedToolset, signIn],
+  );
 
-  // const onLogout = useCallback(() => {
-  //   const level = isUserLoggedInToToolset(selectedToolset)
-  //     ? ToolsetAuthCredentialLevel.USER
-  //     : ToolsetAuthCredentialLevel.GLOBAL;
-  //   getReqRef.current(signOutToolset, selectedToolset, level).then((res) => {
-  //     if (res.success) {
-  //       router.push(getUrnForEntity(ApplicationRoute.Toolsets, selectedToolset));
-  //       showNotification(
-  //         getSuccessNotification(t(ToolsetI18nKey.SuccessLogout), t(ToolsetI18nKey.SuccessLogoutDescription)),
-  //       );
-  //     } else {
-  //       showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
-  //     }
-  //   });
-  // }, [router, selectedToolset, showNotification, t]);
+  const onLogout = useCallback(() => {
+    const level = isUserLoggedInToToolset(selectedToolset)
+      ? ToolsetAuthCredentialLevel.USER
+      : ToolsetAuthCredentialLevel.GLOBAL;
+    getReqRef.current(signOutToolset, selectedToolset, level).then((res) => {
+      if (res.success) {
+        router.push(getUrnForEntity(ApplicationRoute.Toolsets, selectedToolset));
+        showNotification(
+          getSuccessNotification(t(ToolsetI18nKey.SuccessLogout), t(ToolsetI18nKey.SuccessLogoutDescription)),
+        );
+      } else {
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+      }
+    });
+  }, [router, selectedToolset, showNotification, t]);
 
-  // useEffect(() => {
-  //   if (oAuthCode && !isSignInProcessed) {
-  //     signIn(isUserLevel ? ToolsetAuthCredentialLevel.USER : ToolsetAuthCredentialLevel.GLOBAL, void 0, oAuthCode);
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, []);
+  useEffect(() => {
+    if (oAuthCode && !isSignInProcessed) {
+      signIn(isUserLevel ? ToolsetAuthCredentialLevel.USER : ToolsetAuthCredentialLevel.GLOBAL, void 0, oAuthCode);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
@@ -280,7 +279,7 @@ const ToolsetView: FC<Props> = ({ names, isUserLevel, oAuthCode, etag, roles, or
           selectedFormat={selectedFormat}
           onChangeSelectedFormat={setSelectedFormat}
         >
-          {/* {selectedToolset.authSettings?.authenticationType !== ToolsetAuthType.NONE &&
+          {selectedToolset.authSettings?.authenticationType !== ToolsetAuthType.NONE &&
             (isToolsetSignedIn ? (
               <DialNeutralButton
                 label={t(ToolsetI18nKey.LogOut)}
@@ -293,7 +292,7 @@ const ToolsetView: FC<Props> = ({ names, isUserLevel, oAuthCode, etag, roles, or
                 iconBefore={<IconLogin {...BASE_BUTTON_ICON_PROPS} />}
                 onClick={() => setIsLoginModalOpen(true)}
               />
-            ))} */}
+            ))}
         </HeaderButtons>
       </div>
       <div className="flex-1 overflow-auto min-h-0">
@@ -339,14 +338,14 @@ const ToolsetView: FC<Props> = ({ names, isUserLevel, oAuthCode, etag, roles, or
                 onCancel={() => setIsModalOpen(false)}
               />
             )}
-            {/* {isLoginModalOpen && (
+            {isLoginModalOpen && (
               <LoginPopup
                 type={selectedToolset.authSettings?.authenticationType}
                 isModalOpen={isLoginModalOpen}
                 onClose={() => setIsLoginModalOpen(false)}
                 onLogin={onLogin}
               />
-            )} */}
+            )}
           </>
         )}
       </div>

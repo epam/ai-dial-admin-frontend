@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { ChatEntity, EntityValidityState } from '@/src/models/dial/base-entity';
 import { FC } from 'react';
 
@@ -31,7 +30,7 @@ const EntityHeader: FC<Props> = ({ entity, view }) => {
       <LabelledText label={t(EntityFieldsI18nKey.id)} text={id || ''} copyable={true} />
       <LabelledText label={t(EntityFieldsI18nKey.updatedAt)} text={formatDateTimeToLocalString(entity?.updatedAt)} />
       <LabelledText label={t(EntityFieldsI18nKey.createdAt)} text={formatDateTimeToLocalString(entity?.createdAt)} />
-      {/* {view === ApplicationRoute.Toolsets && <AuthHeader toolset={entity as Toolset} />} */}
+      {view === ApplicationRoute.Toolsets && <AuthHeader toolset={entity as Toolset} />}
       {status && <LabelledText label={t(EntityFieldsI18nKey.status)} text={status} />}
       {validityState && (
         <LabelledText label={t(EntityFieldsI18nKey.status)}>
