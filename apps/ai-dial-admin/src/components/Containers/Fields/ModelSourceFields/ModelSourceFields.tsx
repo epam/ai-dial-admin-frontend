@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { DialSelectField, DialTextInputField } from '@epam/ai-dial-ui-kit';
 import {
   ContainersI18nKey,
@@ -14,15 +14,18 @@ import { getDeploymentsURIError, getErrorForHfModelName } from '@/src/utils/depl
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { DEFAULT_SCALING } from '@/src/constants/deployments/containers';
 import { isEditDisabled } from '@/src/utils/deployments/containers';
+import { getControlClassName } from '@/src/utils/entities/view';
 
 interface Props {
   container: Container;
+  isFullWidth?: boolean;
   setContainer: (container: Container) => void;
 }
 
-const ModelSourceFields: FC<Props> = ({ container, setContainer }) => {
+const ModelSourceFields: FC<Props> = ({ container, setContainer, isFullWidth = false }) => {
   const t = useI18n();
   const { dispatch, resetCounter } = useSaveValidationContext();
+  const containerClassName = useMemo(() => getControlClassName(isFullWidth), [isFullWidth]);
 
   const [imageRefError, setImageRefError] = useState<FieldError | null>(null);
 
@@ -108,12 +111,13 @@ const ModelSourceFields: FC<Props> = ({ container, setContainer }) => {
   }, [container.source, resetCounter, getSourceError]);
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-y-8">
       <DialSelectField
         elementId="modelSourceType"
         fieldTitle={t(EntitiesI18nKey.SourceType)}
         options={SERVING_TYPES}
         value={container.source?.$type}
+        containerClassName="w-[180px]"
         onChange={($type) => onChangeModelSourceType($type as MODEL_SOURCE_TYPE)}
         disabled={isEditDisabled(container)}
       />
@@ -126,6 +130,7 @@ const ModelSourceFields: FC<Props> = ({ container, setContainer }) => {
           errorText={imageRefError?.text}
           invalid={!!imageRefError}
           onChange={onChangeImageRef}
+          containerClassName={containerClassName}
           disabled={isEditDisabled(container)}
         />
       ) : (
@@ -136,6 +141,7 @@ const ModelSourceFields: FC<Props> = ({ container, setContainer }) => {
           value={container.source?.modelName}
           errorText={imageRefError?.text}
           invalid={!!imageRefError}
+          containerClassName={containerClassName}
           onChange={onChangeImageRef}
           disabled={isEditDisabled(container)}
         />

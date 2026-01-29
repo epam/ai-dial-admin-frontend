@@ -69,6 +69,7 @@ const CPUFields: FC<Props> = ({ container, setContainer }) => {
     <div className="flex flex-col lg:flex-row gap-2">
       <DialNumberInputField
         elementId="cpuRequest"
+        containerClassName="w-[180px]"
         fieldTitle={t(EntityFieldsI18nKey.CPURequest)}
         value={convertCoresToMilliCores(container.resources?.requests?.cpu)}
         errorText={requestError?.text}
@@ -111,6 +112,7 @@ const CPUFields: FC<Props> = ({ container, setContainer }) => {
         }}
       />
       <DialNumberInputField
+        containerClassName="w-[180px]"
         elementId="cpuLimit"
         fieldTitle={t(EntityFieldsI18nKey.CPULimit)}
         value={convertCoresToMilliCores(container.resources?.limits?.cpu)}
