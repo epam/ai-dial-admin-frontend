@@ -10,6 +10,7 @@ import Field from '@/src/components/Common/Field/Field';
 import { ALL_ATTACHMENTS } from '@/src/constants/dial-base-entity';
 import { AttachmentsI18nKey } from '@/src/constants/i18n';
 import { CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import Suggestions from './Suggestions';
 
@@ -46,25 +47,29 @@ const AttachmentInput: FC<Props> = ({
   onChange,
 }) => {
   const t = useI18n();
-
+  const { resetCounter } = useSaveValidationContext();
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const initialSelected = initialValues
-    .map((val) => availableItems.find((o) => o.value === val) || { label: val, value: val })
-    .filter(Boolean) as AttachmentOption[];
+  const initialSelected = useMemo(() => {
+    return initialValues
+      .map((val) => availableItems.find((o) => o.value === val) || { label: val, value: val })
+      .filter(Boolean) as AttachmentOption[];
+  }, [availableItems, initialValues]);
+
+  const initialRadio = useMemo(() => {
+    return initialValues.length === 0
+      ? AttachmentType.NONE
+      : isEqual(initialSelected, ALL_ATTACHMENTS_VALUE)
+        ? AttachmentType.ALL
+        : AttachmentType.SPECIFIC;
+  }, [initialSelected, initialValues.length]);
 
   const [selected, setSelected] = useState<AttachmentOption[]>(initialSelected);
   const [inputValue, setInputValue] = useState('');
   const [wraps, setWraps] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [highlight, setHighlight] = useState(0);
-  const [selectedRadio, setSelectedRadio] = useState<AttachmentType>(
-    initialValues.length === 0
-      ? AttachmentType.NONE
-      : isEqual(initialSelected, ALL_ATTACHMENTS_VALUE)
-        ? AttachmentType.ALL
-        : AttachmentType.SPECIFIC,
-  );
+  const [selectedRadio, setSelectedRadio] = useState<AttachmentType>(initialRadio);
 
   const filteredSuggestions = useMemo(() => {
     return availableItems
@@ -76,6 +81,18 @@ const AttachmentInput: FC<Props> = ({
       )
       .slice(0, 5);
   }, [availableItems, inputValue, selected]);
+
+  const shouldShowSuggestions = useMemo(() => {
+    return selectedRadio === AttachmentType.SPECIFIC && showSuggestions && filteredSuggestions.length > 0;
+  }, [filteredSuggestions.length, selectedRadio, showSuggestions]);
+
+  useEffect(() => {
+    if (resetCounter) {
+      setSelected(initialSelected);
+      setSelectedRadio(initialRadio);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resetCounter]);
 
   useEffect(() => {
     const observer = new ResizeObserver(() => {
@@ -186,9 +203,6 @@ const AttachmentInput: FC<Props> = ({
   const handleInputBlur = useCallback(() => {
     setShowSuggestions(false);
   }, []);
-
-  const shouldShowSuggestions =
-    selectedRadio === AttachmentType.SPECIFIC && showSuggestions && filteredSuggestions.length > 0;
 
   return (
     <div className="flex flex-col w-full relative gap-3">
