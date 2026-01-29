@@ -56,7 +56,6 @@ const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
         initialValues={entity.inputAttachmentTypes}
         fieldTitle={t(AttachmentsI18nKey.Attachments)}
         placeholder={t(EntityPlaceholdersI18nKey.AttachmentsTypes)}
-        allValueLabel={t(AttachmentsI18nKey.UseAllAttachment)}
         availableItems={mimeMapping}
         onChange={(values) => onChangeAttachmentTypes(values)}
       />

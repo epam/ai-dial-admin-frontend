@@ -1,18 +1,23 @@
 'use client';
 
-import { ChangeEventHandler, FC, KeyboardEvent, useCallback, useEffect, useRef, useState } from 'react';
+import { ChangeEventHandler, FC, KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DialNeutralButton, DialTag } from '@epam/ai-dial-ui-kit';
+import { DialRadioButton, DialTag } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 import { isEqual } from 'lodash';
 
 import Field from '@/src/components/Common/Field/Field';
 import { ALL_ATTACHMENTS } from '@/src/constants/dial-base-entity';
-import { AttachmentsI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { AttachmentsI18nKey } from '@/src/constants/i18n';
 import { CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
-
 import Suggestions from './Suggestions';
+
+export enum AttachmentType {
+  NONE = 'none',
+  ALL = 'all',
+  SPECIFIC = 'specific',
+}
 
 export interface AttachmentOption {
   label: string;
@@ -24,10 +29,8 @@ export interface Props {
   initialValues?: string[];
   placeholder?: string;
   fieldTitle?: string;
-  allValueLabel?: string;
   elementId?: string;
   optional?: boolean;
-  disable?: boolean;
   onChange?: (values: string[]) => void;
 }
 
@@ -38,10 +41,8 @@ const AttachmentInput: FC<Props> = ({
   initialValues = [],
   fieldTitle,
   placeholder,
-  allValueLabel,
   elementId,
   optional,
-  disable,
   onChange,
 }) => {
   const t = useI18n();
@@ -57,6 +58,24 @@ const AttachmentInput: FC<Props> = ({
   const [wraps, setWraps] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [highlight, setHighlight] = useState(0);
+  const [selectedRadio, setSelectedRadio] = useState<AttachmentType>(
+    initialValues.length === 0
+      ? AttachmentType.NONE
+      : isEqual(initialSelected, ALL_ATTACHMENTS_VALUE)
+        ? AttachmentType.ALL
+        : AttachmentType.SPECIFIC,
+  );
+
+  const filteredSuggestions = useMemo(() => {
+    return availableItems
+      .filter(
+        (opt) =>
+          !selected.some((s) => s.value === opt.value) &&
+          (opt.label.toLowerCase().includes(inputValue.toLowerCase()) ||
+            opt.value.toLowerCase().includes(inputValue.toLowerCase())),
+      )
+      .slice(0, 5);
+  }, [availableItems, inputValue, selected]);
 
   useEffect(() => {
     const observer = new ResizeObserver(() => {
@@ -73,23 +92,12 @@ const AttachmentInput: FC<Props> = ({
     return () => observer?.disconnect?.();
   }, []);
 
-  const allSelected = isEqual(selected, ALL_ATTACHMENTS_VALUE);
-
   const fireChange = useCallback(
     (items: AttachmentOption[]) => {
       onChange?.(items.map((i) => i.value));
     },
     [onChange],
   );
-
-  const filteredSuggestions = availableItems
-    .filter(
-      (opt) =>
-        !selected.some((s) => s.value === opt.value) &&
-        (opt.label.toLowerCase().includes(inputValue.toLowerCase()) ||
-          opt.value.toLowerCase().includes(inputValue.toLowerCase())),
-    )
-    .slice(0, 5);
 
   const setValues = useCallback(
     (value: AttachmentOption[]) => {
@@ -123,27 +131,23 @@ const AttachmentInput: FC<Props> = ({
 
   const removeAttachment = useCallback(
     (index: number) => {
-      if (allSelected) {
-        setValues([]);
-        return;
-      }
-
       setValues(selected.filter((_, i) => i !== index));
     },
-    [allSelected, selected, setValues],
+    [selected, setValues],
   );
 
-  const handleSelectAll = useCallback(() => {
-    if (allSelected) {
-      return;
-    }
+  const handleRadioChange = useCallback(
+    (option: AttachmentType) => {
+      setSelectedRadio(option);
 
-    setValues(ALL_ATTACHMENTS_VALUE);
-  }, [allSelected, setValues]);
-
-  const handleSelectNone = useCallback(() => {
-    setValues([]);
-  }, [setValues]);
+      if (option === AttachmentType.NONE || option === AttachmentType.SPECIFIC) {
+        setValues([]);
+      } else if (option === AttachmentType.ALL) {
+        setValues(ALL_ATTACHMENTS_VALUE);
+      }
+    },
+    [setValues],
+  );
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -179,31 +183,48 @@ const AttachmentInput: FC<Props> = ({
     setShowSuggestions(true);
   }, []);
 
-  const handleInputClick = useCallback(() => {
-    setShowSuggestions(true);
-  }, []);
-
   const handleInputBlur = useCallback(() => {
     setShowSuggestions(false);
   }, []);
 
-  const shouldShowSuggestions = !allSelected && showSuggestions && filteredSuggestions.length > 0;
+  const shouldShowSuggestions =
+    selectedRadio === AttachmentType.SPECIFIC && showSuggestions && filteredSuggestions.length > 0;
 
   return (
-    <div className="flex flex-col w-full relative">
+    <div className="flex flex-col w-full relative gap-3">
       <Field fieldTitle={fieldTitle} optional={optional} htmlFor={elementId} />
-      {allSelected ? (
-        <div className="flex">
-          <DialTag key="all-values" tag={allValueLabel || ''} remove={handleSelectNone} />
-        </div>
-      ) : (
-        <div
-          className={classNames(
-            'flex flex-row gap-2 items-center',
-            STANDARD_CONTROL_WIDTH,
-            disable && 'pointer-events-none',
-          )}
-        >
+
+      <div className="flex flex-col gap-3">
+        <DialRadioButton
+          inputId={`${elementId}-none`}
+          name={`${elementId}-attachment-options`}
+          value={AttachmentType.NONE}
+          checked={selectedRadio === AttachmentType.NONE}
+          onChange={() => handleRadioChange(AttachmentType.NONE)}
+          label={t(AttachmentsI18nKey.NoAttachments)}
+        />
+
+        <DialRadioButton
+          inputId={`${elementId}-all`}
+          name={`${elementId}-attachment-options`}
+          value={AttachmentType.ALL}
+          checked={selectedRadio === AttachmentType.ALL}
+          onChange={() => handleRadioChange(AttachmentType.ALL)}
+          label={t(AttachmentsI18nKey.AllAttachments)}
+        />
+
+        <DialRadioButton
+          inputId={`${elementId}-specific`}
+          name={`${elementId}-attachment-options`}
+          value={AttachmentType.SPECIFIC}
+          checked={selectedRadio === AttachmentType.SPECIFIC}
+          onChange={() => handleRadioChange(AttachmentType.SPECIFIC)}
+          label={t(AttachmentsI18nKey.SpecificAttachments)}
+        />
+      </div>
+
+      {selectedRadio === AttachmentType.SPECIFIC && (
+        <div className={classNames('flex flex-col', STANDARD_CONTROL_WIDTH)}>
           <div className={classNames('dial-input min-h-[40px] p-[6px]', CONTROL_WITH_BUTTON_WIDTH)}>
             <div
               ref={containerRef}
@@ -216,7 +237,6 @@ const AttachmentInput: FC<Props> = ({
                 <input
                   value={inputValue}
                   onChange={handleInputChange}
-                  onClick={handleInputClick}
                   onBlur={handleInputBlur}
                   onKeyDown={handleKeyDown}
                   className="outline-none border-none w-full flex-1 p-1 dial-input"
@@ -225,22 +245,17 @@ const AttachmentInput: FC<Props> = ({
               </div>
             </div>
           </div>
-          {!allSelected && (
-            <DialNeutralButton label={t(AttachmentsI18nKey.UseAll)} onClick={handleSelectAll} disabled={disable} />
-          )}
-          {!!selected.length && (
-            <DialNeutralButton label={t(ButtonsI18nKey.None)} onClick={handleSelectNone} disabled={disable} />
-          )}
-        </div>
-      )}
 
-      {shouldShowSuggestions && (
-        <Suggestions
-          suggestions={filteredSuggestions}
-          highlightIndex={highlight}
-          onSelectSuggestion={addAttachment}
-          onHightLightSuggestion={handleSetHightLight}
-        />
+          {shouldShowSuggestions && (
+            <Suggestions
+              suggestions={filteredSuggestions}
+              highlightIndex={highlight}
+              onSelectSuggestion={addAttachment}
+              onHightLightSuggestion={handleSetHightLight}
+            />
+          )}
+          <div className="text-secondary tiny pt-2">{t(AttachmentsI18nKey.CaptionDescription)}</div>
+        </div>
       )}
     </div>
   );
