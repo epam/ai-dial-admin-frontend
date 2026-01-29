@@ -218,7 +218,7 @@ describe('Entities :: tabs', () => {
     ]);
   });
 
-  test('returns correct tabs for deployment mcp containers', () => {
+  test('returns correct tabs for model containers', () => {
     const status = CONTAINER_STATUS.RUNNING;
 
     expect(getDeploymentsViewTabs(ApplicationRoute.ModelDeployments, t, status)).toEqual([

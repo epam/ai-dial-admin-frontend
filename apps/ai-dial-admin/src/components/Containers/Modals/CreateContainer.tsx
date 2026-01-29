@@ -7,6 +7,7 @@ import {
   DialPopup,
   DialPrimaryButton,
   DialSteps,
+  PopupSize,
   Step,
   StepStatus,
 } from '@epam/ai-dial-ui-kit';
@@ -51,7 +52,7 @@ const CreateContainer: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
   const [steps, setSteps] = useState(CREATE_CONTAINER_STEPS(route, t));
   const [currentStepId, setCurrentStep] = useState(steps[0].id);
   const [images, setImages] = useState<ImageGroup[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState<{ [key: string]: string }>({});
 
   const setStepsState = useCallback(
@@ -84,7 +85,7 @@ const CreateContainer: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     };
-
+    setLoading(true);
     fetchData();
   }, [showNotification, setLoading, route]);
 
@@ -132,14 +133,14 @@ const CreateContainer: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
       header={modalTitle}
       portalId="AddContainerModal"
       open={isModalOpen}
-      className="lg:max-w-[75%] md:max-w-[90%]"
+      size={PopupSize.Lg}
     >
-      <div className="flex flex-col py-4 px-6 overflow-auto max-h-[400px]">
+      <div className="flex flex-col py-4 px-6 overflow-auto gap-y-6">
         <DialSteps steps={steps} currentStep={currentStepId} onChangeStep={setCurrentStep} />
         <>
           {currentStepId === CreateSteps.IMAGE && (
-            <>
-              {loading && <DialLoader size={24} />}
+            <div className="h-[400px]">
+              {loading && <DialLoader size={40} />}
               {!loading && !!images.length && (
                 <Grid
                   rowData={images}
@@ -185,7 +186,7 @@ const CreateContainer: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
                   }}
                 />
               )}
-            </>
+            </div>
           )}
         </>
         <>

@@ -12,7 +12,7 @@ const iconColors: Record<string, string> = {
   [MenuI18nKey.Entities]: 'text-accent-primary',
   [MenuI18nKey.Builders]: 'text-accent-secondary',
   [MenuI18nKey.Assets]: 'text-accent-tertiary',
-  [MenuI18nKey.MLOps]: 'text-accent-primary',
+  [MenuI18nKey.Deployments]: 'text-accent-primary',
   [MenuI18nKey.AccessManagement]: 'text-accent-secondary',
   [MenuI18nKey.Approvals]: 'text-accent-tertiary',
   [MenuI18nKey.Audit]: 'text-accent-primary',

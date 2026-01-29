@@ -82,7 +82,6 @@ export default {
     Assets: 'Assets',
     AssetsDescription:
       'Centralized hub for managing reusable resources, ensuring seamless access and efficient utilization across your workflow.',
-    Tools: 'Tools',
     Builders: 'Builders',
     BuildersDescription:
       'Customize behavior, manage interactions, and optimize performance to ensure seamless operation.',
@@ -91,7 +90,6 @@ export default {
     Metrics: 'Metrics',
     TestSuits: 'Test Suits',
     Runs: 'Runs',
-    Deployments: 'Deployments',
     Evaluation: 'Evaluation',
     Audit: 'Audit',
     Home: 'Home',
@@ -123,7 +121,7 @@ export default {
     ExportConfig: 'Export Config',
     SystemProperties: 'System Properties',
 
-    MLOps: 'Deployments',
+    Deployments: 'Deployments',
     MCPDeployments: 'MCP Deployments',
     InterceptorDeployments: 'Interceptor Deployments',
     ModelDeployments: 'Model Servings',
@@ -133,8 +131,6 @@ export default {
     EntitiesDescription: 'Centralized space to configure and oversee key components of your AI ecosystem.',
     AccessManagementDescription:
       'Control who can access and modify AI resources, ensuring security and efficiency across your organization.',
-    ToolsDescription:
-      'Essential utilities to optimize and refine your AI applications. All in one place to streamline development and execution.',
     ApprovalsDescription: 'Oversee the approval process to maintain control and compliance across deployments.',
     AuditDescription:
       'Track key metrics on the Dashboard and review detailed Usage Logs to ensure optimal performance, reliability, and efficiency.',
@@ -1197,8 +1193,7 @@ export default {
     ImageTypeInterceptor: 'Interceptor image',
   },
   Containers: {
-    'ContainersListTitle#zero': '{type} {entityType}s',
-    'ContainersListTitle#other': '{type} {entityType}s: {count}',
+    ContainersListTitle: '{type} {entityType}s',
     'RelatedContainersListTitle#zero': 'Related containers',
     'RelatedContainersListTitle#other': 'Related containers: {count}',
     CreateModalTitle: 'Creating {type} {entityType}',
