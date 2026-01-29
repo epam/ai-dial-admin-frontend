@@ -1160,7 +1160,7 @@ export default {
   },
   Images: {
     ImagesListTitle: 'Images',
-    AddModalTitle: 'Adding Image',
+    AddModalTitle: 'Add Image',
     DuplicateModalTitle: 'Duplicate {type} Image',
     DeleteModalTitle: 'Confirm Deleting {type} Image',
     DeleteModalDescription: 'Are you sure, you want to delete this {type} Image?',
