@@ -21,7 +21,7 @@ describe('ContainerResourcesFields', () => {
 
   test('renders component', () => {
     const { container } = render(
-      <ResourcesFields container={mockContainer} setContainer={vi.fn()} route={ApplicationRoute.McpDeployments} />,
+      <ResourcesFields container={mockContainer} setContainer={vi.fn()} route={ApplicationRoute.McpContainers} />,
     );
 
     expect(container).toBeTruthy();

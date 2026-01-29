@@ -82,7 +82,6 @@ export default {
     Assets: 'Assets',
     AssetsDescription:
       'Centralized hub for managing reusable resources, ensuring seamless access and efficient utilization across your workflow.',
-    Tools: 'Tools',
     Builders: 'Builders',
     BuildersDescription:
       'Customize behavior, manage interactions, and optimize performance to ensure seamless operation.',
@@ -91,7 +90,6 @@ export default {
     Metrics: 'Metrics',
     TestSuits: 'Test Suits',
     Runs: 'Runs',
-    Deployments: 'Deployments',
     Evaluation: 'Evaluation',
     Audit: 'Audit',
     Home: 'Home',
@@ -123,18 +121,16 @@ export default {
     ExportConfig: 'Export Config',
     SystemProperties: 'System Properties',
 
-    MLOps: 'Deployments',
-    MCPDeployments: 'MCP Deployments',
-    InterceptorDeployments: 'Interceptor Deployments',
-    ModelDeployments: 'Model Servings',
+    Deployments: 'Deployments',
+    McpContainers: 'MCP Containers',
+    InterceptorContainers: 'Interceptor Containers',
+    ModelServings: 'Model Servings',
     InterceptorTemplates: 'Interceptor Templates',
     Images: 'Images',
 
     EntitiesDescription: 'Centralized space to configure and oversee key components of your AI ecosystem.',
     AccessManagementDescription:
       'Control who can access and modify AI resources, ensuring security and efficiency across your organization.',
-    ToolsDescription:
-      'Essential utilities to optimize and refine your AI applications. All in one place to streamline development and execution.',
     ApprovalsDescription: 'Oversee the approval process to maintain control and compliance across deployments.',
     AuditDescription:
       'Track key metrics on the Dashboard and review detailed Usage Logs to ensure optimal performance, reliability, and efficiency.',
@@ -464,12 +460,12 @@ export default {
     Sharing: 'Sharing',
   },
   Attachments: {
-    Attachments: 'Attachments',
+    Attachments: 'Attachment types',
     AllAttachments: 'All attachments types',
-    CustomAttachments: 'Custom attachments types',
+    NoAttachments: 'No attachments',
+    SpecificAttachments: 'Specific attachments types',
     MaxNumber: 'Attachments max number',
-    UseAllAttachment: 'Use all attachment types',
-    UseAll: 'Use all',
+    CaptionDescription: 'Choose from suggested MIME types or add a new one using <type>/<subtype>.',
   },
   Tabs: {
     Properties: 'Properties',
@@ -1035,6 +1031,7 @@ export default {
     Path: 'Enter path',
     Status: 'Enter status',
     TypeBucketCopy: 'Select Bucket copy',
+    HFModelName: 'Enter Hugging Face model name',
     Body: 'Enter Body',
     Order: 'Enter order number',
     ConfigurationEndpoint: 'Enter configuration endpoint',
@@ -1116,8 +1113,8 @@ export default {
     Container: 'Container',
     InterceptorTemplate: 'Interceptor template',
     ModelDeployment: 'Deployment model',
-    InterceptorDeployment: 'Interceptor deployment',
-    MCPDeployment: 'MCP deployment',
+    InterceptorContainer: 'Interceptor Container',
+    McpContainer: 'MCP Container',
     Endpoint: 'Endpoint',
     Adapter: 'Adapter',
   },
@@ -1162,9 +1159,8 @@ export default {
       'You can add tools from the toolset to which you don’t have direct access. Enter exact names to add them.',
   },
   Images: {
-    'ImagesListTitle#zero': 'Images',
-    'ImagesListTitle#other': 'Images: {count}',
-    AddModalTitle: 'Adding Image',
+    ImagesListTitle: 'Images',
+    AddModalTitle: 'Add Image',
     DuplicateModalTitle: 'Duplicate {type} Image',
     DeleteModalTitle: 'Confirm Deleting {type} Image',
     DeleteModalDescription: 'Are you sure, you want to delete this {type} Image?',
@@ -1197,8 +1193,7 @@ export default {
     ImageTypeInterceptor: 'Interceptor image',
   },
   Containers: {
-    'ContainersListTitle#zero': '{type} {entityType}s',
-    'ContainersListTitle#other': '{type} {entityType}s: {count}',
+    ContainersListTitle: '{type} {entityType}s',
     'RelatedContainersListTitle#zero': 'Related containers',
     'RelatedContainersListTitle#other': 'Related containers: {count}',
     CreateModalTitle: 'Creating {type} {entityType}',

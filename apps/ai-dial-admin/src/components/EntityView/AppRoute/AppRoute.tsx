@@ -24,7 +24,7 @@ interface Props {
 
 const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunnerView, routes, onChangeRoutes }) => {
   const t = useI18n();
-  const { dispatch } = useSaveValidationContext();
+  const { dispatch, isValid } = useSaveValidationContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [activeRouteIndex, setActiveRouteIndex] = useState<number | null>(null);
@@ -102,6 +102,7 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
                   iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
                   label={t(ButtonsI18nKey.Add)}
                   onClick={handleModalOpen}
+                  disabled={!isValid}
                 />
               )}
             </div>

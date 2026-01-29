@@ -1,6 +1,11 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 import { DialSelectField, DialTextInputField } from '@epam/ai-dial-ui-kit';
-import { ContainersI18nKey, EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
+import {
+  ContainersI18nKey,
+  EntitiesI18nKey,
+  EntityFieldsI18nKey,
+  EntityPlaceholdersI18nKey,
+} from '@/src/constants/i18n';
 import { CONTAINER_TYPE, MODEL_FORMAT, MODEL_SOURCE_TYPE, SERVING_SOURCE } from '@/src/types/deployments/containers';
 import { useI18n } from '@/src/locales/client';
 import { Container } from '@/src/models/deployments/containers';
@@ -116,6 +121,7 @@ const ModelSourceFields: FC<Props> = ({ container, setContainer }) => {
         <DialTextInputField
           elementId="imageRef"
           fieldTitle={t(EntityFieldsI18nKey.ImageURI)}
+          placeholder={t(EntityPlaceholdersI18nKey.URI)}
           value={container.source?.imageRef}
           errorText={imageRefError?.text}
           invalid={!!imageRefError}
@@ -126,6 +132,7 @@ const ModelSourceFields: FC<Props> = ({ container, setContainer }) => {
         <DialTextInputField
           elementId="modelName"
           fieldTitle={t(EntityFieldsI18nKey.HFModelName)}
+          placeholder={t(EntityPlaceholdersI18nKey.HFModelName)}
           value={container.source?.modelName}
           errorText={imageRefError?.text}
           invalid={!!imageRefError}

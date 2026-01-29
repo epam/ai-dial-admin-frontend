@@ -14,11 +14,11 @@ export function getActionClass(action: IMAGE_STATUS | CONTAINER_STATUS): string 
 
 export function getImageType(route: ApplicationRoute): string {
   switch (route) {
-    case ApplicationRoute.InterceptorDeployments:
+    case ApplicationRoute.InterceptorContainers:
       return 'INTERCEPTOR';
-    case ApplicationRoute.McpDeployments:
+    case ApplicationRoute.McpContainers:
       return 'MCP';
-    case ApplicationRoute.ModelDeployments:
+    case ApplicationRoute.ModelServings:
       return 'NIM';
     default:
       return '';

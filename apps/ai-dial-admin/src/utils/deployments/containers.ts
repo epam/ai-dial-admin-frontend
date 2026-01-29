@@ -43,11 +43,11 @@ export const getContainerRedeploySnapshot = (container: Container): ContainerRed
 
 export const getContainerTemplate = (route: ApplicationRoute, defaults?: ResourcesDefaults): Container | null => {
   switch (route) {
-    case ApplicationRoute.ModelDeployments:
+    case ApplicationRoute.ModelServings:
       return getTemplate(CONTAINER_TYPE.HF, defaults);
-    case ApplicationRoute.McpDeployments:
+    case ApplicationRoute.McpContainers:
       return getTemplate(CONTAINER_TYPE.MCP, defaults);
-    case ApplicationRoute.InterceptorDeployments:
+    case ApplicationRoute.InterceptorContainers:
       return getTemplate(CONTAINER_TYPE.INTERCEPTOR, defaults);
     default:
       return null;

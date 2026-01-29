@@ -34,8 +34,6 @@ export enum MenuI18nKey {
   MCPDescription = 'Menu.MCPDescription',
   Dashboard = 'Menu.Dashboard',
   UsageLog = 'Menu.UsageLog',
-  Tools = 'Menu.Tools',
-  ToolsDescription = 'Menu.ToolsDescription',
   PromptPublications = 'Menu.PromptPublications',
   ToolsetPublications = 'Menu.ToolsetPublications',
   ApplicationPublications = 'Menu.ApplicationPublications',
@@ -46,10 +44,9 @@ export enum MenuI18nKey {
   Home = 'Menu.Home',
   Homepage = 'Menu.Homepage',
   FoldersStorage = 'Menu.FoldersStorage',
-  MLOps = 'Menu.MLOps',
-  MCPDeployments = 'Menu.MCPDeployments',
-  InterceptorDeployments = 'Menu.InterceptorDeployments',
-  ModelDeployments = 'Menu.ModelDeployments',
+  McpContainers = 'Menu.McpContainers',
+  InterceptorContainers = 'Menu.InterceptorContainers',
+  ModelServings = 'Menu.ModelServings',
   InterceptorTemplates = 'Menu.InterceptorTemplates',
   ActivityAudit = 'Menu.ActivityAudit',
   Images = 'Menu.Images',
@@ -410,10 +407,10 @@ export enum ModelViewI18nKey {
 export enum AttachmentsI18nKey {
   Attachments = 'Attachments.Attachments',
   AllAttachments = 'Attachments.AllAttachments',
-  CustomAttachments = 'Attachments.CustomAttachments',
+  NoAttachments = 'Attachments.NoAttachments',
+  SpecificAttachments = 'Attachments.SpecificAttachments',
   MaxNumber = 'Attachments.MaxNumber',
-  UseAll = 'Attachments.UseAll',
-  UseAllAttachment = 'Attachments.UseAllAttachment',
+  CaptionDescription = 'Attachments.CaptionDescription',
 }
 
 export enum KeysI18nKey {
@@ -861,8 +858,8 @@ export enum SourceI18nKey {
   Container = 'Source.Container',
   InterceptorTemplate = 'Source.InterceptorTemplate',
   ModelDeployment = 'Source.ModelDeployment',
-  InterceptorDeployment = 'Source.InterceptorDeployment',
-  MCPDeployment = 'Source.MCPDeployment',
+  InterceptorContainer = 'Source.InterceptorContainer',
+  McpContainer = 'Source.McpContainer',
   Endpoint = 'Source.Endpoint',
   Adapter = 'Source.Adapter',
 }
@@ -884,6 +881,7 @@ export enum BooleanI18nKey {
 export enum EntityPlaceholdersI18nKey {
   Project = 'EntityPlaceholders.Project',
   TypeBucketCopy = 'EntityPlaceholders.TypeBucketCopy',
+  HFModelName = 'EntityPlaceholders.HFModelName',
   ContactPoint = 'EntityPlaceholders.ContactPoint',
   Endpoint = 'EntityPlaceholders.Endpoint',
   EditorUrl = 'EntityPlaceholders.EditorUrl',

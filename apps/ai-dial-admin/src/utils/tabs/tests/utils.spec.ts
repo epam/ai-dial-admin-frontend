@@ -208,7 +208,7 @@ describe('Entities :: tabs', () => {
   test('returns correct tabs for deployment mcp containers', () => {
     const status = CONTAINER_STATUS.RUNNING;
 
-    expect(getDeploymentsViewTabs(ApplicationRoute.McpDeployments, t, status)).toEqual([
+    expect(getDeploymentsViewTabs(ApplicationRoute.McpContainers, t, status)).toEqual([
       propertiesTab(t),
       deploymentsToolsTab(t, status),
       resourcesTab(t, status),
@@ -218,10 +218,10 @@ describe('Entities :: tabs', () => {
     ]);
   });
 
-  test('returns correct tabs for deployment mcp containers', () => {
+  test('returns correct tabs for model containers', () => {
     const status = CONTAINER_STATUS.RUNNING;
 
-    expect(getDeploymentsViewTabs(ApplicationRoute.ModelDeployments, t, status)).toEqual([
+    expect(getDeploymentsViewTabs(ApplicationRoute.ModelServings, t, status)).toEqual([
       propertiesTab(t),
       executionLogTab(t),
       eventsTab(t),

@@ -55,7 +55,7 @@ const BaseFields: FC<Props> = ({ container, setContainer, names, isModal = false
   );
 
   return (
-    <div className="flex flex-col gap-н-8">
+    <div className="flex flex-col gap-y-8">
       {isModal && (
         <IdControl
           entity={container}

@@ -90,7 +90,7 @@ const Properties: FC<Props> = ({ container, setContainer, image, route, names, o
           {!!restarts && <LabelledText label={t(EntityFieldsI18nKey.Restarts)} text={`${restarts}`} />}
         </div>
         <div className="mt-8 pt-8">
-          {route === ApplicationRoute.ModelDeployments ? (
+          {route === ApplicationRoute.ModelServings ? (
             <ServingProperties container={container} setContainer={setContainer} names={names} route={route} />
           ) : (
             <ContainerProperties container={container} setContainer={setContainer} route={route} names={names} />

@@ -1,13 +1,14 @@
 import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
-import { createModel } from '@/src/app/[lang]/models/actions';
-import { getContainer, getModelContainers } from '@/src/app/actions/deployments';
-import { modelsApi } from '@/src/app/api/api';
+import { createInterceptor } from '@/src/app/[lang]/interceptors/actions';
+import { getContainer, getImage, getInterceptorContainers } from '@/src/app/actions/deployments';
+import { interceptorsApi } from '@/src/app/api/api';
 import ContainerView from '@/src/components/Containers/View/ContainerView';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { Container } from '@/src/models/deployments/containers';
-import { DialModel } from '@/src/models/dial/model';
+import { Image } from '@/src/models/deployments/images';
+import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { errorObjLog } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -26,11 +27,12 @@ export default async function Page(params: Params) {
 
   let container: Container | null = null;
   let containers: Container[] | null = null;
-  let models: DialModel[] | null = null;
+  let image: Image | null = null;
+  let interceptors: DialInterceptor[] | null = null;
 
   try {
     const containerResponse = await getContainer((await params.params).id);
-    const containersResponse = await getModelContainers();
+    const containersResponse = await getInterceptorContainers();
 
     if (!containerResponse.success || !containersResponse.success) {
       notFound();
@@ -38,12 +40,17 @@ export default async function Page(params: Params) {
     container = containerResponse.response as Container;
     containers = containersResponse.response as Container[];
 
-    models = await modelsApi.getModelsList(token);
+    const imageResponse = await getImage(container?.imageDefinitionId as string);
+    if (!imageResponse.success) {
+      notFound();
+    }
+    image = imageResponse.response as Image;
+    interceptors = await interceptorsApi.getInterceptorsList(token);
   } catch (e) {
     errorObjLog(e, 'Failed to fetch interceptor container page');
   }
 
-  if (!container) {
+  if (!container || !image) {
     notFound();
   }
 
@@ -51,10 +58,11 @@ export default async function Page(params: Params) {
     <SaveValidationContextProvider>
       <ContainerView
         container={decodeVariables(container)}
-        route={ApplicationRoute.ModelDeployments}
+        image={image}
+        route={ApplicationRoute.InterceptorContainers}
         names={containers?.map((container) => container.name).filter((name) => name !== container.name) || []}
-        createEntity={createModel}
-        entityNames={models?.map((model) => model.name as string) || []}
+        createEntity={createInterceptor}
+        entityNames={interceptors?.map((interceptor) => interceptor.name as string) || []}
       />
     </SaveValidationContextProvider>
   );
