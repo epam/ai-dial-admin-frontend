@@ -45,7 +45,6 @@ const ResourcesFields: FC<Props> = ({ container, setContainer, route }) => {
       <div className="flex flex-col gap-x-2 gap-y-8">
         <CPUFields container={container} setContainer={setContainer} />
         <MemoryFields container={container} setContainer={setContainer} />
-
         {route === ApplicationRoute.ModelServings && (
           <div className="flex gap-2 flex-col lg:flex-row">
             <DialNumberInputField

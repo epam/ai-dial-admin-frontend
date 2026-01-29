@@ -407,10 +407,10 @@ export enum ModelViewI18nKey {
 export enum AttachmentsI18nKey {
   Attachments = 'Attachments.Attachments',
   AllAttachments = 'Attachments.AllAttachments',
-  CustomAttachments = 'Attachments.CustomAttachments',
+  NoAttachments = 'Attachments.NoAttachments',
+  SpecificAttachments = 'Attachments.SpecificAttachments',
   MaxNumber = 'Attachments.MaxNumber',
-  UseAll = 'Attachments.UseAll',
-  UseAllAttachment = 'Attachments.UseAllAttachment',
+  CaptionDescription = 'Attachments.CaptionDescription',
 }
 
 export enum KeysI18nKey {
