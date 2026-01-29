@@ -58,6 +58,18 @@ const nextConfig = {
         destination: '/interceptor-containers',
         permanent: true, // 308 Permanent Redirect (good for SEO)
       },
+
+      {
+        source: '/:prefix/deployment-images/:path',
+        destination: '/images/:path',
+        permanent: true, // 308 Permanent Redirect (good for SEO)
+      },
+
+      {
+        source: '/:prefix/deployment-images',
+        destination: '/images',
+        permanent: true, // 308 Permanent Redirect (good for SEO)
+      },
     ];
   },
   nx: {},

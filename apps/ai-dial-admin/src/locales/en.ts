@@ -1159,8 +1159,7 @@ export default {
       'You can add tools from the toolset to which you don’t have direct access. Enter exact names to add them.',
   },
   Images: {
-    'ImagesListTitle#zero': 'Images',
-    'ImagesListTitle#other': 'Images: {count}',
+    ImagesListTitle: 'Images',
     AddModalTitle: 'Adding Image',
     DuplicateModalTitle: 'Duplicate {type} Image',
     DeleteModalTitle: 'Confirm Deleting {type} Image',
