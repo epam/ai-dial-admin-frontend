@@ -63,9 +63,8 @@ const Properties: FC<Props> = ({ container, setContainer, image, route, names, o
   return (
     <>
       <div className="flex flex-col h-full w-full">
-        <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-primary">
+        <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-primary overflow-auto">
           <LabelledText label={t(EntityFieldsI18nKey.id)} text={originalName} tooltip={originalName} copyable={true} />
-          <DialLabelledText label={t(EntityFieldsI18nKey.type)} text={t(ContainersI18nKey.Container)} />
           {image && (
             <DialLabelledText
               label={t(ContainersI18nKey.ContainerImage, { type: getTranslatedType(route, t) })}
