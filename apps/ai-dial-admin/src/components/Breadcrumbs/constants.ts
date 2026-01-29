@@ -207,11 +207,11 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig | null>
       { name: 'Id', href: false },
     ],
   },
-  [ApplicationRoute.ModelDeployments]: {
+  [ApplicationRoute.ModelServings]: {
     segments: [
       {
-        name: 'ModelDeployments',
-        i18nKey: MenuI18nKey.ModelDeployments,
+        name: 'ModelServings',
+        i18nKey: MenuI18nKey.ModelServings,
       },
       { name: 'Id', href: false },
     ],

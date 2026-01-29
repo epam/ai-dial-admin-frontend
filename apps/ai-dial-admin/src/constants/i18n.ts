@@ -46,7 +46,7 @@ export enum MenuI18nKey {
   FoldersStorage = 'Menu.FoldersStorage',
   MCPDeployments = 'Menu.MCPDeployments',
   InterceptorDeployments = 'Menu.InterceptorDeployments',
-  ModelDeployments = 'Menu.ModelDeployments',
+  ModelServings = 'Menu.ModelServings',
   InterceptorTemplates = 'Menu.InterceptorTemplates',
   ActivityAudit = 'Menu.ActivityAudit',
   Images = 'Menu.Images',

@@ -23,7 +23,7 @@ describe('Common components :: PortField', () => {
     expect(screen.getByRole('spinbutton')).toBeInTheDocument();
   });
 
-  test('renders grpc port for ModelDeployments and updates it', async () => {
+  test('renders grpc port for ModelServings and updates it', async () => {
     render(
       <PortField
         container={{

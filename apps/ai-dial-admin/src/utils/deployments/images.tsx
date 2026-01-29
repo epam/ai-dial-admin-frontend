@@ -18,7 +18,7 @@ export function getImageType(route: ApplicationRoute): string {
       return 'INTERCEPTOR';
     case ApplicationRoute.McpDeployments:
       return 'MCP';
-    case ApplicationRoute.ModelDeployments:
+    case ApplicationRoute.ModelServings:
       return 'NIM';
     default:
       return '';

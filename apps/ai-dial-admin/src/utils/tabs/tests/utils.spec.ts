@@ -221,7 +221,7 @@ describe('Entities :: tabs', () => {
   test('returns correct tabs for model containers', () => {
     const status = CONTAINER_STATUS.RUNNING;
 
-    expect(getDeploymentsViewTabs(ApplicationRoute.ModelDeployments, t, status)).toEqual([
+    expect(getDeploymentsViewTabs(ApplicationRoute.ModelServings, t, status)).toEqual([
       propertiesTab(t),
       executionLogTab(t),
       eventsTab(t),

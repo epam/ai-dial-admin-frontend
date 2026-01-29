@@ -102,8 +102,8 @@ export const MENU_CONFIGURATION = (
       icon: <IconTools width={iconSize} height={iconSize} />,
       items: [
         {
-          key: MenuI18nKey.ModelDeployments,
-          href: ApplicationRoute.ModelDeployments,
+          key: MenuI18nKey.ModelServings,
+          href: ApplicationRoute.ModelServings,
         },
         {
           key: MenuI18nKey.MCPDeployments,

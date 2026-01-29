@@ -18,16 +18,16 @@ describe('grid utils', () => {
       expect(getAdminEntityPath(ApplicationRoute.McpDeployments, {})).toBe(`${ApplicationRoute.Toolsets}/`);
     });
 
-    test('returns correct path for ModelDeployments', () => {
+    test('returns correct path for ModelServings', () => {
       const data = { name: 'my-model' };
-      const result = getAdminEntityPath(ApplicationRoute.ModelDeployments, data);
+      const result = getAdminEntityPath(ApplicationRoute.ModelServings, data);
       expect(result).toBe(`${ApplicationRoute.Models}/my-model`);
-      expect(getAdminEntityPath(ApplicationRoute.ModelDeployments, {})).toBe(`${ApplicationRoute.Models}/`);
+      expect(getAdminEntityPath(ApplicationRoute.ModelServings, {})).toBe(`${ApplicationRoute.Models}/`);
     });
 
     test('encodes name in path', () => {
       const data = { name: 'my/model' };
-      const result = getAdminEntityPath(ApplicationRoute.ModelDeployments, data);
+      const result = getAdminEntityPath(ApplicationRoute.ModelServings, data);
       expect(result).toBe(`${ApplicationRoute.Models}/my%2Fmodel`);
     });
 
@@ -57,7 +57,7 @@ describe('grid utils', () => {
         name: 'asset-name',
         version: '1.0.0',
       };
-      const result = getAdminAssetPath(ApplicationRoute.ModelDeployments, data);
+      const result = getAdminAssetPath(ApplicationRoute.ModelServings, data);
       expect(result).toBe('');
     });
   });

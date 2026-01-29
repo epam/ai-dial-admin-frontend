@@ -86,7 +86,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
   const openContainer = useCallback(() => {
     const route =
       view === ApplicationRoute.Models
-        ? ApplicationRoute.ModelDeployments
+        ? ApplicationRoute.ModelServings
         : view === ApplicationRoute.Interceptors
           ? ApplicationRoute.InterceptorDeployments
           : ApplicationRoute.McpDeployments;

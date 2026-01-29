@@ -6,7 +6,7 @@ export const getAdminEntityPath = (route: ApplicationRoute, data: unknown): stri
       return `${ApplicationRoute.Interceptors}/${encodeURIComponent((data as { name: string }).name || '')}`;
     case ApplicationRoute.McpDeployments:
       return `${ApplicationRoute.Toolsets}/${encodeURIComponent((data as { name: string }).name || '')}`;
-    case ApplicationRoute.ModelDeployments:
+    case ApplicationRoute.ModelServings:
       return `${ApplicationRoute.Models}/${encodeURIComponent((data as { name: string }).name || '')}`;
     default:
       return '';

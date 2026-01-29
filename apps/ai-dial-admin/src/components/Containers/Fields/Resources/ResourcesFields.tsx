@@ -25,7 +25,7 @@ const ResourcesFields: FC<Props> = ({ container, setContainer, route }) => {
       <div className="flex flex-col gap-x-2 gap-y-4 lg:max-w-[35%]">
         <CPUFields container={container} setContainer={setContainer} />
         <MemoryFields container={container} setContainer={setContainer} />
-        {route === ApplicationRoute.ModelDeployments && (
+        {route === ApplicationRoute.ModelServings && (
           <div className="flex gap-2 flex-col lg:flex-row">
             <DialNumberInputField
               elementId="gpuRequest"

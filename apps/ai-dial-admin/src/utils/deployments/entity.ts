@@ -28,7 +28,7 @@ export const getRouteByType = (type: IMAGE_TYPE): ApplicationRoute => {
   if (type === IMAGE_TYPE.INTERCEPTOR) {
     return ApplicationRoute.InterceptorDeployments;
   }
-  return ApplicationRoute.ModelDeployments;
+  return ApplicationRoute.ModelServings;
 };
 
 export const getTranslatedType = (route: ApplicationRoute, t: (key: string) => string) => {
@@ -42,7 +42,7 @@ export const getTranslatedType = (route: ApplicationRoute, t: (key: string) => s
 };
 
 export const getTranslatedDeploymentType = (route: ApplicationRoute, t: (key: string) => string): string => {
-  if (route === ApplicationRoute.ModelDeployments) {
+  if (route === ApplicationRoute.ModelServings) {
     return t(EntitiesI18nKey.Serving);
   }
   return t(EntitiesI18nKey.Container);
@@ -83,7 +83,7 @@ export const getEntityTemplate = (
     source: { $type: SOURCE_TYPE.CONTAINER, containerId: container.name },
   };
 
-  if (route === ApplicationRoute.ModelDeployments) {
+  if (route === ApplicationRoute.ModelServings) {
     (template as DialModel).type = DialModelType.Chat;
     template.source = {
       ...(template.source as SOURCE_FIELD),

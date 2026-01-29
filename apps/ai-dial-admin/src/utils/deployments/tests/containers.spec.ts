@@ -14,8 +14,8 @@ describe('containers utils', () => {
   });
 
   describe('getContainerTemplate', () => {
-    test('returns template for ModelDeployments', () => {
-      const template = getContainerTemplate(ApplicationRoute.ModelDeployments);
+    test('returns template for ModelServings', () => {
+      const template = getContainerTemplate(ApplicationRoute.ModelServings);
       expect(template?.$type).toBe(CONTAINER_TYPE.HF);
       expect(template?.resources?.requests?.['nvidia.com/gpu']).toBe('1');
     });
@@ -44,7 +44,7 @@ describe('containers utils', () => {
         GPU_REQUEST: '2',
         GPU_LIMIT: '2',
       };
-      const template = getContainerTemplate(ApplicationRoute.ModelDeployments, defaults);
+      const template = getContainerTemplate(ApplicationRoute.ModelServings, defaults);
       expect(template?.resources?.requests?.cpu).toBe('2');
       expect(template?.resources?.requests?.memory).toBe(`${4096 * 1024 * 1024}`);
     });

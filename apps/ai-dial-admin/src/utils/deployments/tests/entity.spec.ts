@@ -33,14 +33,14 @@ describe('entity utils', () => {
       expect(getRouteByType(IMAGE_TYPE.INTERCEPTOR)).toBe(ApplicationRoute.InterceptorDeployments);
     });
 
-    test('returns ModelDeployments for INTERCEPTOR', () => {
-      expect(getRouteByType('any' as any)).toBe(ApplicationRoute.ModelDeployments);
+    test('returns ModelServings for INTERCEPTOR', () => {
+      expect(getRouteByType('any' as any)).toBe(ApplicationRoute.ModelServings);
     });
   });
 
   describe('getTranslatedDeploymentType', () => {
-    test('returns EntitiesI18nKey.Serving for ModelDeployments', () => {
-      expect(getTranslatedDeploymentType(ApplicationRoute.ModelDeployments, (t) => t)).toBe(EntitiesI18nKey.Serving);
+    test('returns EntitiesI18nKey.Serving for ModelServings', () => {
+      expect(getTranslatedDeploymentType(ApplicationRoute.ModelServings, (t) => t)).toBe(EntitiesI18nKey.Serving);
     });
 
     test('returns EntitiesI18nKey.Container for InterceptorDeployments', () => {
@@ -58,7 +58,7 @@ describe('entity utils', () => {
       expect(getEntityRoute(ApplicationRoute.InterceptorDeployments)).toBe(ApplicationRoute.Interceptors);
     });
     test('returns Models for other routes', () => {
-      expect(getEntityRoute(ApplicationRoute.ModelDeployments)).toBe(ApplicationRoute.Models);
+      expect(getEntityRoute(ApplicationRoute.ModelServings)).toBe(ApplicationRoute.Models);
     });
   });
 
@@ -70,7 +70,7 @@ describe('entity utils', () => {
       expect(getTranslatedType(ApplicationRoute.InterceptorDeployments, t)).toBe(EntitiesI18nKey.Interceptor);
     });
     test('returns Model for other routes', () => {
-      expect(getTranslatedType(ApplicationRoute.ModelDeployments, t)).toBe(EntitiesI18nKey.Model);
+      expect(getTranslatedType(ApplicationRoute.ModelServings, t)).toBe(EntitiesI18nKey.Model);
     });
   });
 
@@ -82,7 +82,7 @@ describe('entity utils', () => {
       expect(getTranslatedEntity(ApplicationRoute.InterceptorDeployments, t)).toBe(EntitiesI18nKey.Interceptor);
     });
     test('returns Model for other routes', () => {
-      expect(getTranslatedEntity(ApplicationRoute.ModelDeployments, t)).toBe(EntitiesI18nKey.Model);
+      expect(getTranslatedEntity(ApplicationRoute.ModelServings, t)).toBe(EntitiesI18nKey.Model);
     });
   });
 
@@ -95,14 +95,14 @@ describe('entity utils', () => {
   describe('getEntityId', () => {
     test('generates id based on container name and route', () => {
       const container = { displayName: 'MyContainer' } as any;
-      expect(getEntityId(container, ApplicationRoute.ModelDeployments, t)).toBe('mycontainer_entities.model');
+      expect(getEntityId(container, ApplicationRoute.ModelServings, t)).toBe('mycontainer_entities.model');
     });
   });
 
   describe('getEntityName', () => {
     test('generates name based on container name and route', () => {
       const container = { displayName: 'MyContainer' } as any;
-      expect(getEntityName(container, ApplicationRoute.ModelDeployments, t)).toBe(
+      expect(getEntityName(container, ApplicationRoute.ModelServings, t)).toBe(
         `MyContainer ${EntitiesI18nKey.Model}`,
       );
     });
@@ -116,10 +116,10 @@ describe('entity utils', () => {
       expect(template.source?.containerId).toBe('123');
     });
 
-    test('configures model specific fields for ModelDeployments', () => {
+    test('configures model specific fields for ModelServings', () => {
       (getEndpointPostfix as any).mockReturnValue('/chat');
       const container = { displayName: 'MyContainer', name: '123' } as any;
-      const template = getEntityTemplate(ApplicationRoute.ModelDeployments, container, t) as any;
+      const template = getEntityTemplate(ApplicationRoute.ModelServings, container, t) as any;
       expect(template.type).toBe(DialModelType.Chat);
       expect(template.source.completionEndpointPath).toBe('openai/v1/chat');
     });

@@ -595,7 +595,7 @@ export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, rou
   { field: 'displayName', headerName: 'Display name', hide: false },
   { field: 'description', headerName: 'Description', hide: false },
   { field: 'name', headerName: 'ID', hide: false },
-  ...(route === ApplicationRoute.ModelDeployments
+  ...(route === ApplicationRoute.ModelServings
     ? [
         {
           field: 'type',

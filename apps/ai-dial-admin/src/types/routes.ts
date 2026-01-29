@@ -41,7 +41,7 @@ export enum ApplicationRoute {
 
   // Deployments
   InterceptorDeployments = '/interceptor-deployments',
-  ModelDeployments = '/model-deployments',
+  ModelServings = '/model-servings',
   McpDeployments = '/mcp-deployments',
   Images = '/deployment-images',
 

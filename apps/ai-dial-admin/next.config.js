@@ -40,6 +40,11 @@ const nextConfig = {
         destination: '/prompt-publications',
         permanent: true, // 308 Permanent Redirect (good for SEO)
       },
+      {
+        source: '/:prefix/model-deployments/:path',
+        destination: '/model-servings/:path',
+        permanent: true, // 308 Permanent Redirect (good for SEO)
+      },
     ];
   },
   nx: {},

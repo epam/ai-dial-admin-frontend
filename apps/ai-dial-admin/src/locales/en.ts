@@ -124,7 +124,7 @@ export default {
     Deployments: 'Deployments',
     MCPDeployments: 'MCP Deployments',
     InterceptorDeployments: 'Interceptor Deployments',
-    ModelDeployments: 'Model Servings',
+    ModelServings: 'Model Servings',
     InterceptorTemplates: 'Interceptor Templates',
     Images: 'Images',
 

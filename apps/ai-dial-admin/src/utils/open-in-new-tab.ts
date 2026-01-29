@@ -51,7 +51,7 @@ export const getEntityPath = (
 
     case ApplicationRoute.McpDeployments:
     case ApplicationRoute.InterceptorDeployments:
-    case ApplicationRoute.ModelDeployments:
+    case ApplicationRoute.ModelServings:
       return `${encodeURIComponent((data as { name: string }).name)}`;
     case ApplicationRoute.Images:
       return `${encodeURIComponent((data as { id: string }).id)}`;
