@@ -17,7 +17,7 @@ export default async function Page() {
   try {
     imagesResponse = await getImages();
   } catch (e) {
-    errorObjLog(e, 'Failed to interceptor containers data');
+    errorObjLog(e, 'Failed to images');
   }
 
   if (!imagesResponse || !imagesResponse.success) {

@@ -102,9 +102,7 @@ describe('entity utils', () => {
   describe('getEntityName', () => {
     test('generates name based on container name and route', () => {
       const container = { displayName: 'MyContainer' } as any;
-      expect(getEntityName(container, ApplicationRoute.ModelServings, t)).toBe(
-        `MyContainer ${EntitiesI18nKey.Model}`,
-      );
+      expect(getEntityName(container, ApplicationRoute.ModelServings, t)).toBe(`MyContainer ${EntitiesI18nKey.Model}`);
     });
   });
 
