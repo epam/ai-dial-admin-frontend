@@ -1,4 +1,4 @@
-import { DialNeutralButton, DialPopup, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { DialConfirmationPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
@@ -42,14 +42,22 @@ const CreateContainer: FC<Props> = ({ onClose, isModalOpen, modalTitle, names, o
   }, [image]);
 
   return (
-    <DialPopup
+    <DialConfirmationPopup
       onClose={onClose}
       header={modalTitle}
       portalId="createContainerModal"
       open={isModalOpen}
-      className="lg:max-w-[55%] md:max-w-[75%]"
+      size={PopupSize.Lg}
+      cancelLabel={t(ButtonsI18nKey.Cancel)}
+      confirmLabel={t(ButtonsI18nKey.Create)}
+      onCancel={onClose}
+      disableConfirmButton={!isValid}
+      onConfirm={() => {
+        onCreate(container);
+        onClose();
+      }}
     >
-      <div className="flex flex-col py-4 px-6 overflow-auto max-h-[400px]">
+      <div className="flex flex-col py-4 px-6 overflow-auto">
         <ContainerProperties
           container={container}
           setContainer={onChange}
@@ -58,18 +66,7 @@ const CreateContainer: FC<Props> = ({ onClose, isModalOpen, modalTitle, names, o
           names={names}
         />
       </div>
-      <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialPrimaryButton
-          label={t(ButtonsI18nKey.Create)}
-          onClick={() => {
-            onCreate(container);
-            onClose();
-          }}
-          disabled={!isValid}
-        />
-      </div>
-    </DialPopup>
+    </DialConfirmationPopup>
   );
 };
 

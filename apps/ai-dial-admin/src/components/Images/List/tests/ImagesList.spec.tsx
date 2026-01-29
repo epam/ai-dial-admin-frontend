@@ -7,7 +7,7 @@ import { EntitiesI18nKey } from '@/src/constants/i18n';
 
 describe('ImagesList', () => {
   test('root component renders', () => {
-    render(<ImagesList route={ApplicationRoute.McpDeployments} imagesList={[]} />);
+    render(<ImagesList route={ApplicationRoute.McpContainers} imagesList={[]} />);
 
     expect(screen.getByText(EntitiesI18nKey.NoImages)).toBeInTheDocument();
   });

@@ -25,13 +25,13 @@ describe('ContainersList', () => {
   ];
 
   test('renders with containers', () => {
-    render(<ContainersList route={ApplicationRoute.ModelDeployments} containersList={mockContainers} />);
+    render(<ContainersList route={ApplicationRoute.ModelServings} containersList={mockContainers} />);
 
     expect(screen.getByRole('table')).toBeInTheDocument();
   });
 
   test('renders with empty list', () => {
-    render(<ContainersList route={ApplicationRoute.ModelDeployments} containersList={[]} />);
+    render(<ContainersList route={ApplicationRoute.ModelServings} containersList={[]} />);
 
     expect(screen.getByText(EntitiesI18nKey.NoContainersType)).toBeInTheDocument();
   });

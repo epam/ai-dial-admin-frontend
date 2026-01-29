@@ -230,7 +230,7 @@ const HeaderButtons = <T extends Container>({
             <div className="flex flex-row gap-3">
               {container.status === CONTAINER_STATUS.RUNNING && (
                 <>
-                  {route === ApplicationRoute.McpDeployments ? (
+                  {route === ApplicationRoute.McpContainers ? (
                     <DialButtonDropdown
                       label={t(ButtonsI18nKey.Create)}
                       items={createToolsetOptions}

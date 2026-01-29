@@ -84,7 +84,7 @@ const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, names, gridApi })
 
       {isModalOpen &&
         createPortal(
-          route === ApplicationRoute.ModelDeployments ? (
+          route === ApplicationRoute.ModelServings ? (
             <CreateServing
               isModalOpen={isModalOpen}
               onClose={handleModalClose}

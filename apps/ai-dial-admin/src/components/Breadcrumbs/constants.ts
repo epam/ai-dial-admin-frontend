@@ -198,29 +198,29 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig | null>
       { name: 'Id', href: false },
     ],
   },
-  [ApplicationRoute.InterceptorDeployments]: {
+  [ApplicationRoute.InterceptorContainers]: {
     segments: [
       {
-        name: 'InterceptorDeployments',
-        i18nKey: MenuI18nKey.InterceptorDeployments,
+        name: 'InterceptorContainers',
+        i18nKey: MenuI18nKey.InterceptorContainers,
       },
       { name: 'Id', href: false },
     ],
   },
-  [ApplicationRoute.ModelDeployments]: {
+  [ApplicationRoute.ModelServings]: {
     segments: [
       {
-        name: 'ModelDeployments',
-        i18nKey: MenuI18nKey.ModelDeployments,
+        name: 'ModelServings',
+        i18nKey: MenuI18nKey.ModelServings,
       },
       { name: 'Id', href: false },
     ],
   },
-  [ApplicationRoute.McpDeployments]: {
+  [ApplicationRoute.McpContainers]: {
     segments: [
       {
-        name: 'McpDeployments',
-        i18nKey: MenuI18nKey.MCPDeployments,
+        name: 'McpContainers',
+        i18nKey: MenuI18nKey.McpContainers,
       },
       { name: 'Id', href: false },
     ],
