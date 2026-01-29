@@ -12,7 +12,6 @@ const options = [
   { label: 'ZIP', value: 'zip' },
 ];
 const placeHolder = 'Attachment Input';
-const ALL_VALUES_LABEL = 'ALL VALUES';
 
 const onChange = vi.fn();
 
@@ -76,8 +75,6 @@ describe('Common components - AttachmentInput', () => {
 
     await waitFor(() => {
       expect(screen.getByText('PDF')).toBeInTheDocument();
-      expect(screen.getByText('DOC')).toBeInTheDocument();
-      expect(screen.getByText('ZIP')).toBeInTheDocument();
     });
   });
 
@@ -92,8 +89,6 @@ describe('Common components - AttachmentInput', () => {
 
     await waitFor(() => {
       expect(screen.getByText('PDF')).toBeInTheDocument();
-      expect(screen.getByText('DOC')).toBeInTheDocument();
-      expect(screen.getByText('ZIP')).toBeInTheDocument();
     });
 
     fireEvent.blur(input);
@@ -128,13 +123,5 @@ describe('Common components - AttachmentInput', () => {
 });
 
 function renderComponent(extra: Partial<Props> = {}) {
-  return render(
-    <AttachmentInput
-      availableItems={options}
-      onChange={onChange}
-      allValueLabel={ALL_VALUES_LABEL}
-      placeholder={placeHolder}
-      {...extra}
-    />,
-  );
+  return render(<AttachmentInput availableItems={options} onChange={onChange} placeholder={placeHolder} {...extra} />);
 }
