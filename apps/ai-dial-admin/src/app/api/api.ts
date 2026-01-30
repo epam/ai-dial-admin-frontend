@@ -98,7 +98,6 @@ export const topicApi = new TopicApi({
   host: process.env.DIAL_DEPLOYMENTS_API_URL,
 });
 
-console.log('Deployment API URL:', process.env.DIAL_DEPLOYMENTS_API_URL);
 export const testSuitsApi = new TestSuitsApi({
   host: process.env.DIAL_EVAL_API_URL,
 });
