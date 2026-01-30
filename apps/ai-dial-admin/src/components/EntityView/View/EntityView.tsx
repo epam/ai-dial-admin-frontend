@@ -4,8 +4,10 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { DialTabs } from '@epam/ai-dial-ui-kit';
+import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 
+import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { ModalType } from '@/src/components/EntityView/Modals/constants';
@@ -26,6 +28,7 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
+import { getViewHeaderClassName } from '@/src/utils/entities/view';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getViewTabs } from '@/src/utils/tabs/utils';
@@ -36,8 +39,6 @@ import {
 } from '@epam/ai-dial-shared';
 import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
 import ViewContent from './Content/ViewContent';
-import { getViewHeaderClassName } from '@/src/utils/entities/view';
-import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
 
 interface Props {
   view: ApplicationRoute;
@@ -68,7 +69,7 @@ const EntityView: FC<Props> = ({
   ...props
 }) => {
   const t = useI18n();
-  const { dispatch } = useSaveValidationContext();
+  const { dispatch, isValid } = useSaveValidationContext();
 
   const tabs = getViewTabs(t, view);
   const router = useRouter();
@@ -305,7 +306,13 @@ const EntityView: FC<Props> = ({
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
         <div className={getViewHeaderClassName(isJsonEditorEnabled)}>
           {!isJsonEditorEnabled && (
-            <div className="flex-1 min-w-0 mr-3">
+            <div
+              className={classNames(
+                'flex-1 min-w-0 mr-3',
+                //prevent change tab when AppRoutes tab include errors
+                activeTab === EntityViewTab.Routes && !isValid && 'pointer-events-none',
+              )}
+            >
               <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
             </div>
           )}
