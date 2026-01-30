@@ -1258,3 +1258,9 @@ export enum ApplicationsI18nKey {
   Export = 'Applications.Export',
   ApplicationPaths = 'Applications.ApplicationPaths',
 }
+
+export enum TestSuitsI18nKey {
+  CreateTestSuit = 'TestSuits.CreateTestSuit',
+  Application = 'TestSuits.Application',
+  Methods = 'TestSuits.Methods',
+}

@@ -7,7 +7,7 @@ import { KubEvent } from '@/src/models/deployments/containers';
 import { useI18n } from '@/src/locales/client';
 import ListView from '@/src/components/ListView/ListView';
 import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
-import ResetFiltersButton from '@/src/components/EntityListView/HeaderButtons/ResetFiltersButton';
+import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { CONTAINER_EVENTS } from '@/src/constants/grid-columns/grid-columns';
 
