@@ -45,10 +45,11 @@ const Events: FC<Props> = ({ route, events }) => {
   );
 
   return (
-    <div className="flex h-full">
+    <div className="h-full flex">
       <ListView
         view={route}
         data={events}
+        allowPadding={false}
         columnDefs={CONTAINER_EVENTS(t)}
         title={t(TabsI18nKey.Events)}
         emptyDataTitle={t(EntitiesI18nKey.NoEvents)}

@@ -4,6 +4,7 @@ import { DialTextInputField } from '@epam/ai-dial-ui-kit';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { Image } from '@/src/models/deployments/images';
 import { useI18n } from '@/src/locales/client';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 
 interface Props {
   image: Image;
@@ -34,6 +35,7 @@ const BaseDirectoryField: FC<Props> = ({ image, setImage }) => {
       value={image.source.baseDirectory}
       disabled={false}
       optional={true}
+      containerClassName={STANDARD_CONTROL_WIDTH}
       onChange={onChange}
     />
   );

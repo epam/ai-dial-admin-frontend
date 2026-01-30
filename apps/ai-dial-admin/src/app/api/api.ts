@@ -19,6 +19,7 @@ import { ImagesApi } from '@/src/server/deployments/images';
 import { ContainersApi } from '@/src/server/deployments/containers';
 import { TopicApi } from '@/src/server/deployments/topics';
 import { TestSuitsApi } from '@/src/server/eval/test-suits-api';
+import { WhitelistApi } from '@/src/server/deployments/whitelist';
 
 export const modelsApi = new ModelsApi({
   host: process.env.DIAL_ADMIN_API_URL,
@@ -97,7 +98,10 @@ export const imagesApi = new ImagesApi({
 export const topicApi = new TopicApi({
   host: process.env.DIAL_DEPLOYMENTS_API_URL,
 });
-
 export const testSuitsApi = new TestSuitsApi({
   host: process.env.DIAL_EVAL_API_URL,
+});
+
+export const whitelistApi = new WhitelistApi({
+  host: process.env.DIAL_DEPLOYMENTS_API_URL,
 });

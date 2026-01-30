@@ -24,8 +24,8 @@ const Properties: FC<Props> = ({ image, setImage, originalName, setImageVersions
   const sourcesList = SOURCE_TYPES(t);
 
   return (
-    <div className="flex flex-col pt-3 w-full divide-y divide-primary min-h-0 flex-1">
-      <div className="flex gap-10 overflow-y-scroll">
+    <div className="flex flex-col h-full w-full">
+      <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-primary">
         <LabelledText label={t(EntityFieldsI18nKey.id)} text={originalName} tooltip={originalName} copyable={true} />
         <DialLabelledText label={t(EntityFieldsI18nKey.type)} text={t(IMAGE_TYPE_I18N_KEYS[image.$type])} />
         <DialLabelledText
@@ -44,7 +44,7 @@ const Properties: FC<Props> = ({ image, setImage, originalName, setImageVersions
           <StatusIndicator status={image.buildStatus} />
         </DialLabelledText>
       </div>
-      <div className="mt-8 pt-8">
+      <div className="flex-1 min-h-0 pt-8">
         <ImageFields image={image} setImage={setImage} setImageVersions={setImageVersions} />
       </div>
     </div>

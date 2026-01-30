@@ -1,5 +1,4 @@
-import { FC, useEffect, useState } from 'react';
-import classNames from 'classnames';
+import { FC, useEffect, useMemo, useState } from 'react';
 import { DialTextInputField } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -12,7 +11,9 @@ import { useI18n } from '@/src/locales/client';
 
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 import Maintainer from '@/src/components/EntityMainProperties/BaseProperties/Maintainer';
-import TopicField from '@/src/components/Images/Fields/TopicField';
+import { getControlClassName } from '@/src/utils/entities/view';
+import TopicsControl from '../../EntityMainProperties/BaseProperties/Topics';
+import { ApplicationRoute } from '../../../types/routes';
 
 interface Props {
   image: Image;
@@ -27,7 +28,7 @@ interface Props {
 const BaseFields: FC<Props> = ({
   image,
   setImage,
-  isModal,
+  isModal = false,
   versionsMap,
   versionError,
   setVersionError,
@@ -37,6 +38,7 @@ const BaseFields: FC<Props> = ({
   const { dispatch, resetCounter } = useSaveValidationContext();
 
   const [nameError, setNameError] = useState<FieldError | null>(null);
+  const containerClassName = useMemo(() => getControlClassName(isModal), [isModal]);
 
   useEffect(() => {
     dispatch({
@@ -60,12 +62,13 @@ const BaseFields: FC<Props> = ({
   }, [dispatch, image, resetCounter, t, versionsMap]);
 
   return (
-    <div className={classNames('flex flex-col gap-4', !isModal && 'lg:w-[35%] gap-8')}>
+    <div className="flex flex-col gap-y-8">
       <DialTextInputField
         fieldTitle={t(EntityFieldsI18nKey.name)}
         elementId="name"
         placeholder={t(EntityPlaceholdersI18nKey.Name)}
         value={image.name}
+        containerClassName={containerClassName}
         onChange={(name?: string) => {
           dispatch({
             type: ValidationActionType.SetField,
@@ -87,7 +90,7 @@ const BaseFields: FC<Props> = ({
       />
       {isModal && (
         <DialTextInputField
-          elementContainerClassName="max-w-[120px]"
+          containerClassName="w-[120px]"
           fieldTitle={t(EntityFieldsI18nKey.version)}
           elementId="version"
           placeholder={t(EntityPlaceholdersI18nKey.Version)}
@@ -113,7 +116,7 @@ const BaseFields: FC<Props> = ({
       {!isModal && (
         <>
           <Maintainer entity={image} onChangeEntity={setImage} />
-          <TopicField image={image} setImage={setImage} />
+          <TopicsControl entity={image} onChange={setImage} view={ApplicationRoute.Images} />
         </>
       )}
     </div>

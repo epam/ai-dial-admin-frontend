@@ -20,8 +20,10 @@ const operations = [RuleFunction.EQUAL, RuleFunction.CONTAIN, RuleFunction.REGEX
 export const getAttributeItems = (t: (t: string) => string, attributes?: string[]): SelectOption[] => {
   return (
     attributes?.map((a) => {
-      const name = t(FoldersI18nKey[RuleSource[a as keyof typeof RuleSource]]);
-      return { value: a, label: name };
+      const value = a.trim();
+      const name = RuleSource[value as keyof typeof RuleSource];
+      const label = name && name in FoldersI18nKey ? t(FoldersI18nKey[name as keyof typeof FoldersI18nKey]) : value;
+      return { value, label };
     }) || []
   );
 };

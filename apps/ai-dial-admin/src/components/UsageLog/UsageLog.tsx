@@ -45,6 +45,7 @@ const UsageLog: FC<Props> = ({ route, className, entity, entityView, onChangeTim
   useEffect(() => {
     if (!timePeriod) {
       setTimePeriod(initTimeFilter || DEFAULT_TIME_PERIOD);
+      setTimeRange(getTimeRangeById(initTimeFilter || DEFAULT_TIME_PERIOD));
     }
   }, [initTimeFilter, timePeriod]);
 
