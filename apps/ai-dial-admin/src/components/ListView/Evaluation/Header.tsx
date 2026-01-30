@@ -7,17 +7,16 @@ import { DialGhostButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconColumns2, IconPlus } from '@tabler/icons-react';
 import { GridApi } from 'ag-grid-community';
 
-import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
+import CreateTestSuit from '@/src/components/TestSuits/Modals/Create/CreateTestSuit';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
+import { TestSuits } from '@/src/models/evaluation/test-suit';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
-import { TestSuits } from '@/src/models/evaluation/test-suit';
-import CreateTestSuit from '@/src/components/TestSuits/Modals/Create/CreateTestSuit';
-import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 
 interface Props<T> {
   route: ApplicationRoute;
@@ -31,15 +30,13 @@ const HeaderButtons = <T extends object>({ route, names, gridApi, toggleColumnsP
   const t = useI18n();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalType, setModalType] = useState<ModalType>();
   const isTabletScreen = useIsTabletScreen();
-  const handleModalClose = useCallback(() => {
+
+  const onModalClose = useCallback(() => {
     setIsModalOpen(false);
-    setModalType(void 0);
   }, []);
 
-  const handleModalOpen = useCallback((modalType: ModalType) => {
-    setModalType(modalType);
+  const onModalOpen = useCallback(() => {
     setIsModalOpen(true);
   }, []);
 
@@ -57,11 +54,11 @@ const HeaderButtons = <T extends object>({ route, names, gridApi, toggleColumnsP
       onCreateEntity?.(entity).then((res) => {
         if (res.success) {
           // TODO: add notification about successful creation
-          handleModalClose();
+          onModalClose();
         }
       });
     },
-    [handleModalClose, onCreateEntity],
+    [onModalClose, onCreateEntity],
   );
 
   const getCreateModal = () => {
@@ -70,7 +67,7 @@ const HeaderButtons = <T extends object>({ route, names, gridApi, toggleColumnsP
         {route === ApplicationRoute.TestSuits && (
           <CreateTestSuit
             isModalOpen={isModalOpen}
-            onClose={handleModalClose}
+            onClose={onModalClose}
             names={names || []}
             onCreate={onCreate as (suit: TestSuits) => void}
           />
@@ -93,10 +90,10 @@ const HeaderButtons = <T extends object>({ route, names, gridApi, toggleColumnsP
       <DialPrimaryButton
         label={isTabletScreen ? '' : t(ButtonsI18nKey.Create)}
         iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-        onClick={() => handleModalOpen(ModalType.create)}
+        onClick={onModalOpen}
       />
 
-      {isModalOpen && modalType === ModalType.create && createPortal(getCreateModal(), document.body)}
+      {isModalOpen && createPortal(getCreateModal(), document.body)}
     </div>
   );
 };

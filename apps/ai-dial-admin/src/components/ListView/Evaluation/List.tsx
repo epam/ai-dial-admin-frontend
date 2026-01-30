@@ -1,16 +1,18 @@
-import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import { useCallback, useState } from 'react';
+import { createPortal } from 'react-dom';
 
-import { CellClickedEvent } from 'ag-grid-community';
+import { CellClickedEvent, ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import { useRouter } from 'next/navigation';
 
 import ListView from '@/src/components/ListView/ListView';
 import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
-import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
+import { getDeleteOperation, getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
 import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+
+import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 import { emptyDataTitleMap, listViewTitleMap } from '../constants';
 import HeaderButtons from './Header';
 
@@ -23,11 +25,20 @@ interface Props<T> {
   onRemoveEntity: (entity: string) => Promise<ServerActionResponse>;
 }
 
-const EvaluationListView = <T extends object>({ names, data, baseColumns, route, onCreateEntity }: Props<T>) => {
+const EvaluationListView = <T extends object>({
+  names,
+  data,
+  baseColumns,
+  route,
+  onCreateEntity,
+  onRemoveEntity,
+}: Props<T>) => {
   const t = useI18n();
   const router = useRouter();
 
   const [showColumnsPanel, setShowColumnsPanel] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentEntity, setCurrentEntity] = useState<T | undefined>(undefined);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
 
   const gridOptions: GridOptions = {
@@ -37,6 +48,14 @@ const EvaluationListView = <T extends object>({ names, data, baseColumns, route,
       }
     },
   };
+
+  const onModalClose = useCallback(() => {
+    setIsModalOpen(false);
+  }, []);
+
+  const onModalOpen = useCallback(() => {
+    setIsModalOpen(true);
+  }, []);
 
   const onGridReady = useCallback((api: GridApi) => {
     setGridApi(api);
@@ -49,10 +68,18 @@ const EvaluationListView = <T extends object>({ names, data, baseColumns, route,
     [route],
   );
 
+  const onOpenDeleteModal = useCallback(
+    (entity?: T) => {
+      setCurrentEntity(entity);
+      onModalOpen();
+    },
+    [onModalOpen],
+  );
+
   const actionColumn = ACTION_COLUMN([
     getOpenInNewTabOperation(onOpenInNewTabAction),
     // getDuplicateOperation(onDuplicateAction), // TODO: implement duplication for evaluations
-    // getDeleteOperation(onDeleteAction), // TODO: implement duplication for evaluations
+    getDeleteOperation(onOpenDeleteModal),
   ]);
 
   const columnDefs = [...baseColumns, actionColumn];
@@ -81,6 +108,17 @@ const EvaluationListView = <T extends object>({ names, data, baseColumns, route,
           gridApi={gridApi}
         />
       </ListView>
+
+      {isModalOpen &&
+        createPortal(
+          <DeleteConfirmationModal
+            entity={currentEntity}
+            view={route}
+            onCloseModal={onModalClose}
+            onRemoveEntity={onRemoveEntity}
+          />,
+          document.body,
+        )}
     </>
   );
 };
