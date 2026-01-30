@@ -212,6 +212,7 @@ describe('Entities :: tabs', () => {
 
     expect(getDeploymentsViewTabs(ApplicationRoute.McpContainers, t, status)).toEqual([
       propertiesTab(t),
+      firewallTab(t),
       deploymentsToolsTab(t, status),
       resourcesTab(t, status),
       promptsTab(t, status),
@@ -225,6 +226,7 @@ describe('Entities :: tabs', () => {
 
     expect(getDeploymentsViewTabs(ApplicationRoute.ModelServings, t, status)).toEqual([
       propertiesTab(t),
+      firewallTab(t),
       executionLogTab(t),
       eventsTab(t),
     ]);

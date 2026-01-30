@@ -1,5 +1,5 @@
 import { ApplicationRoute } from '@/src/types/routes';
-import { EntitiesI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
 import { Container } from '@/src/models/deployments/containers';
 import { CONTAINER_TRANSPORT } from '@/src/types/deployments/containers';
 import { SOURCE_FIELD, SOURCE_TYPE } from '@/src/components/SourceField/types';
@@ -19,6 +19,16 @@ export const getEntityRoute = (route: ApplicationRoute) => {
     return ApplicationRoute.Interceptors;
   }
   return ApplicationRoute.Models;
+};
+
+export const getDeploymentEntityKey = (route: ApplicationRoute, t: (key: string) => string) => {
+  if (route === ApplicationRoute.McpContainers || route === ApplicationRoute.InterceptorContainers) {
+    return t(EntitiesI18nKey.Container);
+  }
+  if (route === ApplicationRoute.ModelServings) {
+    return t(EntitiesI18nKey.Serving);
+  }
+  return t(ImagesI18nKey.ImageWhitelistType);
 };
 
 export const getRouteByType = (type: IMAGE_TYPE): ApplicationRoute => {

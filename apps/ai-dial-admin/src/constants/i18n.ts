@@ -1184,6 +1184,7 @@ export enum ImagesI18nKey {
   ImageTransportRemote = 'Images.ImageTransportRemote',
   ImageTypeMCP = 'Images.ImageTypeMCP',
   ImageTypeInterceptor = 'Images.ImageTypeInterceptor',
+  ImageWhitelistType = 'Images.ImageWhitelistType',
 }
 
 export enum ContainersI18nKey {
@@ -1231,7 +1232,7 @@ export enum ContainersI18nKey {
 
 export enum DeploymentsI18nKey {
   GlobalWhitelist = 'Deployments.GlobalWhitelist',
-  ImageWhitelist = 'Deployments.ImageWhitelist',
+  SpecificWhitelist = 'Deployments.SpecificWhitelist',
   GlobalFirewall = 'Deployments.GlobalFirewall',
   AddDomain = 'Deployments.AddDomain',
 }

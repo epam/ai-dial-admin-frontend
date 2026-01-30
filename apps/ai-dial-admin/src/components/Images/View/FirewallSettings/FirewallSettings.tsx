@@ -12,7 +12,7 @@ interface Props {
 }
 
 const FirewallSettings: FC<Props> = ({ image, setImage, route }) => {
-  return <Whitelists route={route} image={image} setImage={setImage} />;
+  return <Whitelists route={route} entity={image} setEntity={(image) => setImage(image as Image)} />;
 };
 
 export default FirewallSettings;
