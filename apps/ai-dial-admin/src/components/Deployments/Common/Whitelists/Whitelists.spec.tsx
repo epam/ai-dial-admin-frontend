@@ -22,7 +22,7 @@ describe('Common Whitelists component', () => {
   test('component rendered correctly', async () => {
     render(<Whitelists entity={image as Image} route={ApplicationRoute.Images} setEntity={setImage} />);
 
-    expect(screen.getByRole('textbox', { value: 'test.com' }));
+    expect(screen.getByRole('textbox')).toHaveValue('test.com');
 
     await waitFor(() => {
       expect(screen.getByText('asd.com')).toBeInTheDocument();
