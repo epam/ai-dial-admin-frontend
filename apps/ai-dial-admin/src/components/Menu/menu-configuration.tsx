@@ -7,7 +7,6 @@ import {
   IconRocket,
   IconSettings2,
   IconShieldCog,
-  IconTools,
 } from '@tabler/icons-react';
 
 import Approvals from '@/public/images/icons/menu/approvals.svg';
