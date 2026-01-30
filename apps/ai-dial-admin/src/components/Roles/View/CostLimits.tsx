@@ -53,6 +53,7 @@ const RoleCostLimit: FC<Props> = ({ selectedRole, onChangeRole }) => {
         <div className="mt-3 pl-[46px]">
           <LimitsControl
             limits={selectedRole.costLimit}
+            controlClassName="max-w-[240px]"
             isCostInputs={true}
             onChangeLimits={(costLimit) => onChangeRole({ ...selectedRole, costLimit })}
           />
