@@ -453,6 +453,11 @@ export enum RolesI18nKey {
   NotAvailableApplication = 'Roles.NotAvailableApplication',
   NotAvailableToolSet = 'Roles.NotAvailableToolSet',
   Sharing = 'Roles.Sharing',
+  PerMinute = 'Roles.CostLimits.Minute',
+  PerDay = 'Roles.CostLimits.Day',
+  PerWeek = 'Roles.CostLimits.Week',
+  PerMonth = 'Roles.CostLimits.Month',
+  NoLimits = 'Roles.NoLimits',
 }
 
 export enum ForwardTokenI18nKey {

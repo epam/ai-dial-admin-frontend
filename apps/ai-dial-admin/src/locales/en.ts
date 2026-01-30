@@ -459,6 +459,13 @@ export default {
     SaveWithEmptyRolesDescription: 'Entity without assigned roles will not be available to end-users.',
     SaveProceedWithConfiguration: 'Are you sure you want to proceed with this configuration?',
     Sharing: 'Sharing',
+    CostLimits: {
+      Minute: 'Per minute',
+      Day: 'Per day',
+      Week: 'Per week',
+      Month: 'Per month',
+    },
+    NoLimits: 'No limits',
   },
   Attachments: {
     Attachments: 'Attachment types',

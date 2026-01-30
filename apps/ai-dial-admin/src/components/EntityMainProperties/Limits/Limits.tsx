@@ -1,6 +1,6 @@
 import { FC } from 'react';
 
-import { EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { RolesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialRoleLimits } from '@/src/models/dial/role-limits';
 import LimitControl from './Limit';
@@ -21,7 +21,7 @@ const LimitsControl: FC<Props> = ({ limits, onChangeLimits, ...props }) => {
         elementId="minute"
         fieldKey="minute"
         limits={limits}
-        fieldTitle={t(EntityFieldsI18nKey.minute)}
+        fieldTitle={t(RolesI18nKey.PerMinute)}
         onChange={onChangeLimits}
         {...props}
       />
@@ -30,7 +30,7 @@ const LimitsControl: FC<Props> = ({ limits, onChangeLimits, ...props }) => {
         elementId="day"
         fieldKey="day"
         limits={limits}
-        fieldTitle={t(EntityFieldsI18nKey.day)}
+        fieldTitle={t(RolesI18nKey.PerDay)}
         onChange={onChangeLimits}
         {...props}
       />
@@ -39,7 +39,7 @@ const LimitsControl: FC<Props> = ({ limits, onChangeLimits, ...props }) => {
         elementId="week"
         fieldKey="week"
         limits={limits}
-        fieldTitle={t(EntityFieldsI18nKey.week)}
+        fieldTitle={t(RolesI18nKey.PerWeek)}
         onChange={onChangeLimits}
         {...props}
       />
@@ -48,7 +48,7 @@ const LimitsControl: FC<Props> = ({ limits, onChangeLimits, ...props }) => {
         elementId="month"
         fieldKey="month"
         limits={limits}
-        fieldTitle={t(EntityFieldsI18nKey.month)}
+        fieldTitle={t(RolesI18nKey.PerMonth)}
         onChange={onChangeLimits}
         {...props}
       />
