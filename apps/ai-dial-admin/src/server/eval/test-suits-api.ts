@@ -10,7 +10,7 @@ export const TEST_SUIT_URL = (id: string) => `${TEST_SUITS_URL}/${id}`;
 
 export class TestSuitsApi extends BaseApi {
   getTestSuits(token: JWT | null): Promise<TestSuits[] | null> {
-    return this.get<TestSuits[]>(TEST_SUITS_URL, token);
+    return this.get<{ content: TestSuits[] }>(TEST_SUITS_URL, token).then((res) => res?.content);
   }
 
   getTestSuit(id: string, token: JWT | null): Promise<ServerActionResponse> {

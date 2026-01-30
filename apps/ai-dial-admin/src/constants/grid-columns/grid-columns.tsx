@@ -822,7 +822,7 @@ export const IMAGE_DEPENDENCIES_COLUMNS = (t: (key: string) => string, showImage
 ];
 
 export const TEST_SUITS_COLUMN = (): ColDef[] => [
-  { field: 'displayName', colId: 'displayName', headerName: 'Display Name', hide: false }, // TODO: check field after supporting BE
+  { field: 'name', colId: 'name', headerName: 'Display Name', hide: false }, // TODO: check field after supporting BE
   DESCRIPTION_COLUMN,
   { field: 'application', headerName: 'Application' },
   {

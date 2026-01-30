@@ -4,6 +4,7 @@ import {
   IconFlask,
   IconFolders,
   IconHammer,
+  IconRocket,
   IconSettings2,
   IconShieldCog,
   IconTools,
@@ -99,7 +100,7 @@ export const MENU_CONFIGURATION = (
     {
       key: MenuI18nKey.Deployments,
       descriptionKey: MenuI18nKey.MCPDescription,
-      icon: <IconTools width={iconSize} height={iconSize} />,
+      icon: <IconRocket width={iconSize} height={iconSize} />,
       items: [
         {
           key: MenuI18nKey.ModelServings,
