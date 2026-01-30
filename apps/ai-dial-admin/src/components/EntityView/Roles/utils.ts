@@ -122,6 +122,18 @@ export const LIMIT_COLUMNS = (
   createLimitColumn('Tokens per month', 'month', defaultValues, onChange, ['minute', 'day', 'week']),
 ];
 
+const integerValueFormatter = (v: string | number) => {
+  if (v === null || v === undefined) return '';
+  const s = String(v);
+  if (s === '') return '';
+  let digits = s.replace(/\D+/g, '');
+  if (digits.length > 1) {
+    digits = digits.replace(/^0+/, '');
+    if (digits === '') return '0';
+  }
+  return digits;
+};
+
 export const SHARING_COLUMNS = (
   t: (stringToTranslate: string) => string,
   onChange?: (value: number, data: DialRole, token: string) => void,
@@ -147,7 +159,7 @@ export const SHARING_COLUMNS = (
       ...cellRenderParams,
       getDefaultPlaceholder,
       onChange,
-      valueFormatter: (v: string) => v,
+      valueFormatter: integerValueFormatter,
     },
   },
   {
@@ -162,7 +174,7 @@ export const SHARING_COLUMNS = (
       ...cellRenderParams,
       getDefaultPlaceholder,
       onChange,
-      valueFormatter: (v: string) => v,
+      valueFormatter: integerValueFormatter,
     },
   },
 ];
