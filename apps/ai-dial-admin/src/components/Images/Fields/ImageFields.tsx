@@ -1,5 +1,4 @@
 import { FC, useMemo, useState } from 'react';
-import classNames from 'classnames';
 
 import { Image, ImageVersion } from '@/src/models/deployments/images';
 
@@ -71,28 +70,20 @@ const ImageFields: FC<Props> = ({ image, setImage, isModal, setImageVersions }) 
   );
 
   return (
-    <div className="flex flex-col w-full h-full gap-8">
-      <div className={classNames('flex flex-col gap-4', !isModal && 'divide-y divide-primary gap-8')}>
-        <div>
-          <BaseFields
-            image={image}
-            setImage={setImage}
-            isModal={isModal}
-            verifyVersion={verifyVersion}
-            versionError={versionError}
-            setVersionError={(error: FieldError | null) => setVersionError(error)}
-            versionsMap={versionsMap}
-          />
-        </div>
-        <div className={classNames(!isModal && 'pt-8')}>
-          <SourceFields image={image} setImage={setImage} isModal={isModal} verifyVersion={verifyVersion} />
-        </div>
+    <div className="flex flex-col w-full h-full gap-y-8">
+      <div className="pb-8 border-b border-primary">
+        <BaseFields
+          image={image}
+          setImage={setImage}
+          isModal={isModal}
+          versionsMap={versionsMap}
+          versionError={versionError}
+          setVersionError={setVersionError}
+          verifyVersion={verifyVersion}
+        />
       </div>
-      {!isModal && (
-        <>
-          <TransportField image={image} setImage={setImage} />
-        </>
-      )}
+      <SourceFields image={image} setImage={setImage} isModal={isModal} verifyVersion={verifyVersion} />
+      {!isModal && <TransportField image={image} setImage={setImage} />}
     </div>
   );
 };
