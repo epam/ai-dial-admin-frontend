@@ -4,9 +4,9 @@ import {
   IconFlask,
   IconFolders,
   IconHammer,
+  IconRocket,
   IconSettings2,
   IconShieldCog,
-  IconTools,
 } from '@tabler/icons-react';
 
 import Approvals from '@/public/images/icons/menu/approvals.svg';
@@ -99,7 +99,7 @@ export const MENU_CONFIGURATION = (
     {
       key: MenuI18nKey.Deployments,
       descriptionKey: MenuI18nKey.MCPDescription,
-      icon: <IconTools width={iconSize} height={iconSize} />,
+      icon: <IconRocket width={iconSize} height={iconSize} />,
       items: [
         {
           key: MenuI18nKey.ModelServings,

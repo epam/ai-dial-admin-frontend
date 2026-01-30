@@ -5,17 +5,18 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { errorObjLog } from '@/src/server/logger';
 import TestSuitsList from '@/src/components/TestSuits/List/List';
+import { TestSuits } from '@/src/models/evaluation/test-suit';
+import { testSuitsApi } from '@/src/app/api/api';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page() {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
-  let data: object[] | null = null;
+  let data: TestSuits[] | null = null;
 
   try {
-    data = [];
+    data = await testSuitsApi.getTestSuits(token);
   } catch (e) {
     errorObjLog(e, 'Failed to fetch test suits');
   }

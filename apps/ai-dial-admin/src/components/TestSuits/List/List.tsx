@@ -6,13 +6,14 @@ import { TEST_SUITS_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import { ApplicationRoute } from '@/src/types/routes';
 import { removeSuit, createSuit } from '@/src/app/[lang]/test-suits/actions';
+import { TestSuits } from '@/src/models/evaluation/test-suit';
 
 interface Props {
-  data: object[]; // TODO: add type
+  data: TestSuits[];
 }
 
 const TestSuitsList: FC<Props> = ({ data }) => {
-  const names = [] as string[]; // TODO: add getting name
+  const names = data.map((suit) => suit.id);
   const columns = useMemo(() => {
     return TEST_SUITS_COLUMN();
   }, []);
