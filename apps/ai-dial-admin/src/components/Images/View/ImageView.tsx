@@ -4,28 +4,31 @@ import React, { Dispatch, FC, SetStateAction, useCallback, useEffect, useState }
 import { useRouter } from 'next/navigation';
 import { cloneDeep } from 'lodash';
 import { DialTabs } from '@epam/ai-dial-ui-kit';
+
 import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
-import { useI18n } from '@/src/locales/client';
+import { ImagesI18nKey } from '@/src/constants/i18n';
+import { IMAGE_STATUS } from '@/src/types/deployments/images';
+import { BaseEntity } from '@/src/models/dial/base-entity';
+import { Container } from '@/src/models/deployments/containers';
+import { EntityViewTab, getDeploymentsViewTabs } from '@/src/utils/tabs/utils';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useAppContext } from '@/src/context/AppContext';
-import { EntityViewTab, getDeploymentsViewTabs } from '@/src/utils/tabs/utils';
 import { validateImageChanged } from '@/src/utils/deployments/images';
 import { getImage, updateImage } from '@/src/app/actions/deployments';
 import { getRouteByType, getTranslatedType } from '@/src/utils/deployments/entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { ImagesI18nKey } from '@/src/constants/i18n';
-import { IMAGE_STATUS } from '@/src/types/deployments/images';
+import { getViewHeaderClassName } from '@/src/utils/entities/view';
 import { IMAGE_BUILD_POLL_INTERVAL } from '@/src/constants/deployments/images';
+import { useI18n } from '@/src/locales/client';
+
 import HeaderButtons from '@/src/components/Images/View/HeaderButtons';
 import Properties from '@/src/components/Images/View/Properties/Properties';
 import Containers from '@/src/components/Images/View/Containers/Containers';
-import BuildLog from '@/src/components/Images/View/BuildLog/BuildLog';
+import InstallationLog from '@/src/components/Images/View/InstallationLog/InstallationLog';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
-import { BaseEntity } from '@/src/models/dial/base-entity';
-import { getViewHeaderClassName } from '@/src/utils/entities/view';
-import { Container } from '@/src/models/deployments/containers';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import FirewallSettings from '@/src/components/Images/View/FirewallSettings/FirewallSettings';
 
 interface Props {
   image: Image;
@@ -184,7 +187,10 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
               {activeTab === EntityViewTab.RelatedContainers && (
                 <Containers image={selectedImage} route={route} versions={imageVersions} />
               )}
-              {activeTab === EntityViewTab.BuildLog && <BuildLog imageBuildId={selectedImage.id} />}
+              {activeTab === EntityViewTab.InstallationLog && <InstallationLog imageBuildId={selectedImage.id} />}
+              {activeTab === EntityViewTab.Firewall && (
+                <FirewallSettings image={selectedImage} setImage={setSelectedImage} route={route} />
+              )}
             </>
           )}
         </div>

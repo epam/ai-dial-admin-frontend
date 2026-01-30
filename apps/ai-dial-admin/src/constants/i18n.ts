@@ -520,7 +520,7 @@ export enum TabsI18nKey {
   Tools = 'Tabs.Tools',
   ParameterSchema = 'Tabs.ParameterSchema',
   ApplicationRunners = 'Tabs.ApplicationRunners',
-  BuildLog = 'Tabs.BuildLog',
+  InstallationLog = 'Tabs.InstallationLog',
   Instances = 'Tabs.Instances',
   Resources = 'Tabs.Resources',
   Prompts = 'Tabs.Prompts',
@@ -530,6 +530,7 @@ export enum TabsI18nKey {
   Containers = 'Tabs.Containers',
   RelatedContainers = 'Tabs.RelatedContainers',
   Events = 'Tabs.Events',
+  Firewall = 'Tabs.Firewall',
 }
 
 export enum InterceptorsI18nKey {
@@ -1230,6 +1231,7 @@ export enum ContainersI18nKey {
 
 export enum DeploymentsI18nKey {
   GlobalWhitelist = 'Deployments.GlobalWhitelist',
+  ImageWhitelist = 'Deployments.ImageWhitelist',
   GlobalFirewall = 'Deployments.GlobalFirewall',
   AddDomain = 'Deployments.AddDomain',
 }

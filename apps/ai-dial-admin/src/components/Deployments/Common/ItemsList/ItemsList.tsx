@@ -12,9 +12,10 @@ interface Props {
   setItems: (items: string[]) => void;
   addItemLabel?: string;
   validate?: (item?: string) => FieldError | null;
+  isModal?: boolean;
 }
 
-const ItemsList: FC<Props> = ({ items, setItems, addItemLabel, validate }) => {
+const ItemsList: FC<Props> = ({ items, setItems, addItemLabel, validate, isModal = false }) => {
   const lastItemRef = useRef<HTMLLIElement | null>(null);
 
   const onChangeItem = useCallback(
@@ -55,6 +56,7 @@ const ItemsList: FC<Props> = ({ items, setItems, addItemLabel, validate }) => {
             onRemove={onRemoveItem}
             validate={validate}
             ref={index === items.length - 1 ? lastItemRef : null}
+            isModal={isModal}
           />
         ))}
       </ul>

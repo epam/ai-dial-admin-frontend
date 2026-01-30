@@ -1,9 +1,10 @@
-import { forwardRef, useCallback, useEffect, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 import { DialRemoveButton, DialTextInputField } from '@epam/ai-dial-ui-kit';
 
 import { FieldError } from '@/src/models/error';
 import { EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { getControlClassName } from '@/src/utils/entities/view';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -12,13 +13,16 @@ interface Props {
   onChange: (item: string | undefined, index: number) => void;
   onRemove: (index: number) => void;
   validate?: (item?: string) => FieldError | null;
+  isModal: boolean;
 }
 
-const Item = forwardRef<HTMLLIElement, Props>(({ item, index, onChange, onRemove, validate }, ref) => {
+const Item = forwardRef<HTMLLIElement, Props>(({ item, index, onChange, onRemove, validate, isModal }, ref) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
 
   const [error, setError] = useState<FieldError | null>(null);
+
+  const containerClassName = useMemo(() => getControlClassName(isModal), [isModal]);
 
   const onChangeItem = useCallback(
     (value: string | undefined, index: number) => {
@@ -43,6 +47,7 @@ const Item = forwardRef<HTMLLIElement, Props>(({ item, index, onChange, onRemove
       <DialTextInputField
         elementId={`item-${index}`}
         value={item}
+        containerClassName={containerClassName}
         placeholder={t(EntityPlaceholdersI18nKey.Domain)}
         onChange={(v) => onChangeItem(v, index)}
         invalid={!!error}
