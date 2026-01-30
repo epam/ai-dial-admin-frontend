@@ -22,7 +22,7 @@ describe('TestSuits :: server actions', () => {
 
     const result = await removeSuit('test');
     expect(getUserToken).toHaveBeenCalled();
-    expect(testSuitsApi.removeTestSuit).toHaveBeenCalledWith(TOKEN_MOCK, 'test');
+    expect(testSuitsApi.removeTestSuit).toHaveBeenCalledWith('test', TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 

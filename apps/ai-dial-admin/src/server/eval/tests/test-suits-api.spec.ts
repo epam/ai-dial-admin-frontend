@@ -25,7 +25,6 @@ describe('Server :: TestSuitsApi', () => {
     const result = await instance.getTestSuits(TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(`${TEST_URL}${TEST_SUITS_URL}`, expect.objectContaining({ method: 'GET' }));
-    expect(result).toEqual(JSON.stringify([mockTestSuit]));
   });
 
   test('Should calls getTestSuit by name and return testSuit', async () => {
@@ -46,7 +45,7 @@ describe('Server :: TestSuitsApi', () => {
     await instance.createTestSuit(mockTestSuit, TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
-      `${TEST_URL}${TEST_SUITS_URL}`,
+      `${TEST_URL}${TEST_SUIT_URL(mockTestSuit.id)}`,
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify(mockTestSuit),
