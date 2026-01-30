@@ -28,11 +28,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
   const attributeItems = getAttributeItems(t, attributes);
 
   const inputClassName = classNames('flex-shrink-0 pb-[18px]');
-  const iconClassName = classNames(
-    'cursor-pointer',
-    index === 0 ? 'mt-[24px]' : 'flex items-center',
-    errorText && 'pb-[18px]',
-  );
+  const iconClassName = classNames('cursor-pointer mb-[18px]', index === 0 ? 'mt-[24px]' : 'flex items-center');
 
   const setError = useCallback(
     (value: string | string[]) => {
