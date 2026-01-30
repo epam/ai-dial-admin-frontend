@@ -492,7 +492,7 @@ export default {
     Attachments: 'Attachments',
     ParameterSchema: 'Parameter Scheme',
     ApplicationRunners: 'Application Runners',
-    BuildLog: 'Build log',
+    InstallationLog: 'Installation log',
     Instances: 'Instances',
     Resources: 'Resources',
     Prompts: 'Prompts',
@@ -502,6 +502,7 @@ export default {
     Containers: 'Containers',
     RelatedContainers: 'Related Containers',
     Events: 'Events',
+    Firewall: 'Firewall settings',
   },
   ForwardToken: {
     ForwardTokenModalTitle: 'Forward Auth Token',
@@ -1267,6 +1268,7 @@ export default {
   },
   Deployments: {
     GlobalWhitelist: 'Global domain whitelist',
+    ImageWhitelist: 'Image-specific domain whitelist',
     GlobalFirewall: 'Global Firewall',
     AddDomain: 'Add domain',
   },

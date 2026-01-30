@@ -11,13 +11,13 @@ describe('Common Item component', () => {
   const user = userEvent.setup();
 
   test('component rendered correctly', () => {
-    render(<Item item={'item'} index={1} onChange={onChange} onRemove={onRemove} />);
+    render(<Item item={'item'} index={1} onChange={onChange} onRemove={onRemove} isModal={false} />);
 
     expect(screen.getByRole('listitem')).toBeInTheDocument();
   });
 
   test('onChange called', async () => {
-    render(<Item item={''} index={1} onChange={onChange} onRemove={onRemove} />);
+    render(<Item item={''} index={1} onChange={onChange} onRemove={onRemove} isModal={false} />);
 
     const input = screen.getByRole('textbox');
     expect(input).toBeInTheDocument();
@@ -31,7 +31,7 @@ describe('Common Item component', () => {
   });
 
   test('onRemove called', async () => {
-    render(<Item item={''} index={1} onChange={onChange} onRemove={onRemove} />);
+    render(<Item item={''} index={1} onChange={onChange} onRemove={onRemove} isModal={false} />);
 
     const button = screen.getByRole('button');
     expect(button).toBeInTheDocument();
