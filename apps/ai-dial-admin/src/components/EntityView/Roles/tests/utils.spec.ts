@@ -4,6 +4,7 @@ import {
   getNoAvailableTitle,
   isResetAvailable,
   isLimitSameAsDefault,
+  integerValueFormatter,
 } from '@/src/components/EntityView/Roles/utils';
 import { ApplicationRoute } from '@/src/types/routes';
 import { RolesI18nKey } from '@/src/constants/i18n';
@@ -266,5 +267,35 @@ describe('getRolesGridData', () => {
         week: undefined,
       },
     ]);
+  });
+});
+
+describe('integerValueFormatter', () => {
+  test('returns empty string for null and undefined', () => {
+    // @ts-ignore
+    expect(integerValueFormatter(null)).toBe('');
+    // @ts-ignore
+    expect(integerValueFormatter(undefined)).toBe('');
+  });
+
+  test('returns empty string for empty input or non-digits', () => {
+    expect(integerValueFormatter('')).toBe('');
+    expect(integerValueFormatter('abc')).toBe('');
+  });
+
+  test('preserves numeric strings and numbers', () => {
+    expect(integerValueFormatter('123')).toBe('123');
+    expect(integerValueFormatter(123)).toBe('123');
+  });
+
+  test('strips non-digit characters', () => {
+    expect(integerValueFormatter('a1b2c3')).toBe('123');
+  });
+
+  test('handles leading zeros: single zero stays, multi zeros trimmed', () => {
+    expect(integerValueFormatter('0')).toBe('0');
+    expect(integerValueFormatter('05')).toBe('5');
+    expect(integerValueFormatter('000')).toBe('0');
+    expect(integerValueFormatter('0a1')).toBe('1');
   });
 });

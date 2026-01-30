@@ -122,8 +122,8 @@ export const LIMIT_COLUMNS = (
   createLimitColumn('Tokens per month', 'month', defaultValues, onChange, ['minute', 'day', 'week']),
 ];
 
-const integerValueFormatter = (v: string | number) => {
-  if (v === null || v === undefined) return '';
+export const integerValueFormatter = (v: string | number) => {
+  if (v == null) return '';
   const s = String(v);
   if (s === '') return '';
   let digits = s.replace(/\D+/g, '');
