@@ -114,6 +114,7 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
       // Force JSON Editor re-render to show originalEntity on discard.
       setKey((prevKey) => prevKey + 1);
     }
+    dispatch({ type: ValidationActionType.Reset });
     setIsSkipRefresh(false);
     setSelectedRole(originalRole);
   }, [isJsonEditorEnabled, originalRole, dispatch]);
@@ -194,6 +195,7 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
 
     req.then((res) => {
       if (res.success) {
+        dispatch({ type: ValidationActionType.Reset });
         setCoreRole(null);
         showNotification(
           getSuccessNotification(
@@ -206,7 +208,7 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
-  }, [selectedFormat, selectedRole, originalRole.name, etag, showNotification, t, router]);
+  }, [selectedFormat, selectedRole, originalRole.name, etag, dispatch, showNotification, t, router]);
 
   const onChangeRoleToken = useCallback(
     (value: number, data: DialRole, token: string) => {
