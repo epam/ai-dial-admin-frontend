@@ -4,6 +4,7 @@ import { IMAGE_TEMPLATE } from '@/src/constants/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
 
 import Whitelists from '@/src/components/Deployments/Common/Whitelists/Whitelists';
+import { Image } from '@/src/models/deployments/images';
 
 vi.mock('@/src/app/actions/deployments.ts', () => ({
   getGlobalWhitelist: vi.fn(() =>
@@ -19,9 +20,9 @@ describe('Common Whitelists component', () => {
   const image = { ...IMAGE_TEMPLATE, allowedDomains: ['test.com'] };
 
   test('component rendered correctly', async () => {
-    render(<Whitelists image={image} route={ApplicationRoute.Images} setImage={setImage} />);
+    render(<Whitelists entity={image as Image} route={ApplicationRoute.Images} setEntity={setImage} />);
 
-    expect(screen.getByRole('textbox', { value: 'test.com' }));
+    expect(screen.getByRole('textbox')).toHaveValue('test.com');
 
     await waitFor(() => {
       expect(screen.getByText('asd.com')).toBeInTheDocument();

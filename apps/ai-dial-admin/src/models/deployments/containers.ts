@@ -34,6 +34,7 @@ export interface Container {
   command?: string;
   args?: string;
   scaling?: Autoscaling;
+  allowedDomains?: string[];
 }
 
 export interface Autoscaling {

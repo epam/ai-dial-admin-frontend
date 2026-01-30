@@ -1202,6 +1202,7 @@ export default {
     ImageTransportRemote: 'Remote (HTTP/SSE)',
     ImageTypeMCP: 'MCP image',
     ImageTypeInterceptor: 'Interceptor image',
+    ImageWhitelistType: 'Image-specific',
   },
   Containers: {
     ContainersListTitle: '{type} {entityType}s',
@@ -1275,7 +1276,7 @@ export default {
   },
   Deployments: {
     GlobalWhitelist: 'Global domain whitelist',
-    ImageWhitelist: 'Image-specific domain whitelist',
+    SpecificWhitelist: '{type} domain whitelist',
     GlobalFirewall: 'Global Firewall',
     AddDomain: 'Add domain',
   },

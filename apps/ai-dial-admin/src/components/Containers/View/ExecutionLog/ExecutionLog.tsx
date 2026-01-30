@@ -20,7 +20,7 @@ function getPodsTabs(pods: Pod[], t: (key: string) => string): TabModel[] {
   return pods.map((pod: Pod, index) => ({
     id: pod?.name || `${index}`,
     label: (
-      <div className="flex w-full text-tiny justify-between">
+      <div className="flex w-full tiny justify-between">
         {`${t(ContainersI18nKey.Pod)} ${index + 1}`}
         {!!pod?.restartCount && (
           <p>

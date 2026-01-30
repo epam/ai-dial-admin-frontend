@@ -309,14 +309,14 @@ export const getDeploymentsViewTabs = (
     ];
   } else {
     if (route === ApplicationRoute.InterceptorContainers || route === ApplicationRoute.ModelServings) {
-      return [propertiesTab(t), /* metricsTab(t, status as CONTAINER_STATUS),*/ executionLogTab(t), eventsTab(t)];
+      return [propertiesTab(t), firewallTab(t), executionLogTab(t), eventsTab(t)];
     } else {
       return [
         propertiesTab(t),
+        firewallTab(t),
         deploymentsToolsTab(t, status as CONTAINER_STATUS),
         resourcesTab(t, status as CONTAINER_STATUS),
         promptsTab(t, status as CONTAINER_STATUS),
-        //metricsTab(t, status as CONTAINER_STATUS),
         executionLogTab(t),
         eventsTab(t),
       ];
