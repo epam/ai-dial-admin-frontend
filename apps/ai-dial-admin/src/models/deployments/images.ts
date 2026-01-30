@@ -14,6 +14,7 @@ export interface Image {
   updatedAt?: number;
   author?: string;
   logs?: string[];
+  allowedDomains?: string[];
 }
 
 export interface ImageGroup {
