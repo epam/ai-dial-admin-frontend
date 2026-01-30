@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, useCallback } from 'react';
 import { DialNumberInputField } from '@epam/ai-dial-ui-kit';
 
 import { Container } from '@/src/models/deployments/containers';
@@ -20,34 +20,40 @@ interface Props {
 const ResourcesFields: FC<Props> = ({ container, setContainer, route }) => {
   const t = useI18n();
 
+  const onChangeGpuRequest = useCallback(
+    (gpuRequest?: string | number) => {
+      setContainer({
+        ...container,
+        resources: {
+          ...container.resources,
+          requests: {
+            ...container.resources?.requests,
+            ['nvidia.com/gpu']: `${gpuRequest}`,
+          },
+          limits: {
+            ...container.resources?.limits,
+            ['nvidia.com/gpu']: `${gpuRequest}`,
+          },
+        },
+      });
+    },
+    [container, setContainer],
+  );
+
   return (
     <Accordion title={t(EntityFieldsI18nKey.Resources)}>
-      <div className="flex flex-col gap-x-2 gap-y-4 lg:max-w-[35%]">
+      <div className="flex flex-col gap-x-2 gap-y-8">
         <CPUFields container={container} setContainer={setContainer} />
         <MemoryFields container={container} setContainer={setContainer} />
         {route === ApplicationRoute.ModelServings && (
           <div className="flex gap-2 flex-col lg:flex-row">
             <DialNumberInputField
               elementId="gpuRequest"
+              containerClassName="w-[180px]"
               fieldTitle={t(EntityFieldsI18nKey.GPURequest)}
               value={container.resources?.requests?.['nvidia.com/gpu']}
               disabled={isEditDisabled(container)}
-              onChange={(gpuRequest) => {
-                setContainer({
-                  ...container,
-                  resources: {
-                    ...container.resources,
-                    requests: {
-                      ...container.resources?.requests,
-                      ['nvidia.com/gpu']: `${gpuRequest}`,
-                    },
-                    limits: {
-                      ...container.resources?.limits,
-                      ['nvidia.com/gpu']: `${gpuRequest}`,
-                    },
-                  },
-                });
-              }}
+              onChange={onChangeGpuRequest}
             />
           </div>
         )}

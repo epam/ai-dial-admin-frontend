@@ -13,6 +13,7 @@ import Transport from '@/src/components/Containers/Fields/Transport/Transport';
 import PortField from '@/src/components/Containers/Fields/PortField/PortField';
 import Accordion from '@/src/components/Common/Accordion/Accordion';
 import { isEditDisabled } from '@/src/utils/deployments/containers';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 
 interface Props {
   container: Container;
@@ -64,13 +65,14 @@ const EndpointConfiguration: FC<Props> = ({ container, setContainer, route }) =>
 
   return (
     <Accordion title={t(EntityFieldsI18nKey.EndpointConfiguration)}>
-      <div className="flex flex-col gap-y-6 lg:w-[35%]">
+      <div className="flex flex-col gap-y-8">
         {route === ApplicationRoute.McpContainers && (
           <div className="flex gap-4">
             <Transport container={container} setContainer={setContainer} />
             <DialTextInputField
               fieldTitle={t(EntityFieldsI18nKey.ContainerEndpointPath)}
               elementId="mcpEndpointPath"
+              containerClassName={STANDARD_CONTROL_WIDTH}
               placeholder={t(EntityPlaceholdersI18nKey.ContainerEndpointPath)}
               value={container.mcpEndpointPath || ''}
               errorText={pathError?.text}

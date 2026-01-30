@@ -65,6 +65,7 @@ const MemoryFields: FC<Props> = ({ container, setContainer }) => {
         value={convertMemoryToMb(container.resources?.requests?.memory)}
         suffix="Mb"
         errorText={requestError?.text}
+        containerClassName="w-[180px]"
         invalid={!!requestError}
         disabled={isEditDisabled(container)}
         onChange={(memoryRequest) => {
@@ -107,6 +108,7 @@ const MemoryFields: FC<Props> = ({ container, setContainer }) => {
         errorText={limitError?.text}
         invalid={!!limitError}
         disabled={isEditDisabled(container)}
+        containerClassName="w-[180px]"
         onChange={(memoryLimit) => {
           const error = getResourcesConflictError(
             Number(container.resources?.requests?.memory),

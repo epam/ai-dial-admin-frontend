@@ -1,17 +1,21 @@
-import { FC, useCallback } from 'react';
+import { FC, useCallback, useMemo } from 'react';
 import { DialTextInputField } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { Image } from '@/src/models/deployments/images';
 import { useI18n } from '@/src/locales/client';
+import classNames from 'classnames';
+import { getControlClassName } from '@/src/utils/entities/view';
 
 interface Props {
   image: Image;
+  isModal?: boolean;
   setImage: (image: Image) => void;
 }
 
-const BranchFields: FC<Props> = ({ image, setImage }) => {
+const BranchFields: FC<Props> = ({ image, isModal = false, setImage }) => {
   const t = useI18n();
+  const className = useMemo(() => getControlClassName(isModal), [isModal]);
 
   const onBranchChange = useCallback(
     (branchName?: string) => {
@@ -40,7 +44,7 @@ const BranchFields: FC<Props> = ({ image, setImage }) => {
   );
 
   return (
-    <div className="flex gap-4">
+    <div className={classNames('flex flex-row gap-x-4', className)}>
       <DialTextInputField
         fieldTitle={t(EntityFieldsI18nKey.BranchName)}
         elementId="branch"
