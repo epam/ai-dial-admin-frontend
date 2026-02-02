@@ -1,15 +1,18 @@
-import { ColDef, ICellRendererParams, ITextFilterParams, ValueGetterParams, ITooltipParams } from 'ag-grid-community';
+import { ColDef, ICellRendererParams, ITextFilterParams, ITooltipParams, ValueGetterParams } from 'ag-grid-community';
 
-import { DialPrompt } from '@/src/models/dial/prompt';
-import { Publication } from '@/src/models/dial/publications';
-import { GridFilterType } from '@/src/types/grid-filter';
-import { ApplicationRoute } from '@/src/types/routes';
-import { CONTAINER_STATUS, KubEventType, MODEL_TYPE } from '@/src/types/deployments/containers';
-import { IMAGE_SOURCE_TYPE, IMAGE_STATUS, IMAGE_TRANSPORT_TYPE, IMAGE_TYPE } from '@/src/types/deployments/images';
-import { SelectVariant } from '@epam/ai-dial-ui-kit';
-import { ImageVersion } from '@/src/models/deployments/images';
+import { getValidityStatus } from '@/src/components/EntityView/Status/utils';
+import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
+import { ACTION_COLUMN, NO_BORDER_CLASS } from '@/src/constants/ag-grid';
+import { EVENT_TYPES, MODEL_TYPES, POD_OBJECT_KIND } from '@/src/constants/deployments/containers';
+import {
+  IMAGE_SOURCE_TYPE_I18N_KEYS,
+  IMAGE_TRANSPORT_I18N_KEYS,
+  IMAGE_TYPE_I18N_KEYS,
+  STATUS_I18N_KEYS,
+} from '@/src/constants/deployments/images';
 import {
   formatAttachment,
+  formatRequired,
   getFormattedResourceType,
   getTopics,
   numberValueFormatter,
@@ -17,27 +20,25 @@ import {
   sourceTypeFormatter,
   sourceValueFormatter,
 } from '@/src/constants/grid-columns/formatters';
+import { ImageVersion } from '@/src/models/deployments/images';
+import { DialPrompt } from '@/src/models/dial/prompt';
+import { Publication } from '@/src/models/dial/publications';
+import { CONTAINER_STATUS, KubEventType, MODEL_TYPE } from '@/src/types/deployments/containers';
+import { IMAGE_SOURCE_TYPE, IMAGE_STATUS, IMAGE_TRANSPORT_TYPE, IMAGE_TYPE } from '@/src/types/deployments/images';
+import { GridFilterType } from '@/src/types/grid-filter';
+import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
-import { getDeleteOperation, getDuplicateOperation, getMoveOperation, getOpenInNewTabOperation } from './actions';
-import { getValidityStatus } from '@/src/components/EntityView/Status/utils';
-import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 import { formatDeploymentImageName } from '@/src/utils/formatting/deployments';
-import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
-import { ACTION_COLUMN, NO_BORDER_CLASS } from '@/src/constants/ag-grid';
-import {
-  IMAGE_SOURCE_TYPE_I18N_KEYS,
-  IMAGE_TRANSPORT_I18N_KEYS,
-  IMAGE_TYPE_I18N_KEYS,
-  STATUS_I18N_KEYS,
-} from '@/src/constants/deployments/images';
-import { EVENT_TYPES, MODEL_TYPES, POD_OBJECT_KIND } from '@/src/constants/deployments/containers';
+import { isAssetWithVersion } from '@/src/utils/is-asset-view';
+import { SelectVariant } from '@epam/ai-dial-ui-kit';
+import { getDeleteOperation, getDuplicateOperation, getMoveOperation, getOpenInNewTabOperation } from './actions';
 
-import ValidityStatusCellRenderer from '@/src/components/Grid/CellRenderers/ValidityStatusCellRenderer';
-import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
-import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRenderer';
-import HeaderWithHintButton from '@/src/components/Grid/HeaderComponents/HeaderWithHintButton';
 import StatusIndicator from '@/src/components/Deployments/Common/StatusIndicator/StatusIndicator';
 import VersionsSelect from '@/src/components/Deployments/Common/VersionsSelect/VersionsSelect';
+import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
+import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRenderer';
+import ValidityStatusCellRenderer from '@/src/components/Grid/CellRenderers/ValidityStatusCellRenderer';
+import HeaderWithHintButton from '@/src/components/Grid/HeaderComponents/HeaderWithHintButton';
 
 const stringFilter: Partial<ColDef> = {
   filterParams: {
@@ -845,4 +846,20 @@ export const RUNS_COLUMN = (): ColDef[] => [
 // TODO: update columns
 export const METRICS_COLUMN = (): ColDef[] => [
   { field: 'displayName', colId: 'displayName', headerName: 'Display Name', hide: false },
+];
+
+export const TOOL_SCHEMA_COLUMNS = (t: (key: string) => string): ColDef[] => [
+  { field: 'field', headerName: 'Field', floatingFilter: false, filter: false, sortable: false },
+  { field: 'description', headerName: 'Description', floatingFilter: false, filter: false, sortable: false },
+  { field: 'type', headerName: 'Type', floatingFilter: false, filter: false, sortable: false },
+  {
+    field: 'required',
+    headerName: 'Required',
+    floatingFilter: false,
+    filter: false,
+    sortable: false,
+    cellDataType: false,
+    valueFormatter: ({ value }) => formatRequired(value, t),
+    tooltipValueGetter: ({ value }) => formatRequired(value, t),
+  },
 ];

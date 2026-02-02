@@ -1,7 +1,7 @@
 import Big from 'big.js';
 
 import { ALL_ATTACHMENTS } from '@/src/constants/dial-base-entity';
-import { AttachmentsI18nKey, EntitiesI18nKey, MenuI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import { AttachmentsI18nKey, BasicI18nKey, EntitiesI18nKey, MenuI18nKey, SourceI18nKey } from '@/src/constants/i18n';
 import { ActivityAuditResourceType } from '@/src/types/activity-audit';
 import { formatNumberByDelimiter } from '@/src/utils/formatting/number-formatting';
 import { SOURCE_FIELD, SOURCE_TYPE } from '@/src/components/SourceField/types';
@@ -88,4 +88,8 @@ export const sourceValueFormatter = (data?: { source: SOURCE_FIELD; endpoint?: s
   } else {
     return value;
   }
+};
+
+export const formatRequired = (value: string, t: (stringToTranslate: string) => string) => {
+  return value ? t(BasicI18nKey.Yes) : t(BasicI18nKey.No);
 };
