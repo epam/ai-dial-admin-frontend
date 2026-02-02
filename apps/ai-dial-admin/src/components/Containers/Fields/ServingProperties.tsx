@@ -33,7 +33,9 @@ const ServingProperties: FC<Props> = ({ container, setContainer, names, isModal,
           )}
           <EnvVariables container={container} setContainer={setContainer} />
           <ResourcesFields container={container} setContainer={setContainer} route={route} />
-          <Configuration container={container} setContainer={setContainer} />
+          {container.source?.$type === MODEL_SOURCE_TYPE.HF && (
+            <Configuration container={container} setContainer={setContainer} />
+          )}
         </div>
       )}
     </div>
