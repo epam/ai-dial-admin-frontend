@@ -21,7 +21,6 @@ const Item = forwardRef<HTMLLIElement, Props>(
   ({ item, index, onChange, onRemove, validate, isModal, disabled }, ref) => {
     const t = useI18n();
     const { dispatch } = useSaveValidationContext();
-
     const [error, setError] = useState<FieldError | null>(null);
 
     const containerClassName = useMemo(() => getControlClassName(isModal), [isModal]);
@@ -56,7 +55,11 @@ const Item = forwardRef<HTMLLIElement, Props>(
           errorText={error?.text}
           disabled={disabled}
         />
-        <DialRemoveButton onClick={() => onRemove(index)} className={error ? 'self-baseline' : ''} />
+        <DialRemoveButton
+          onClick={() => onRemove(index)}
+          className={error ? 'self-baseline' : ''}
+          disabled={disabled}
+        />
       </li>
     );
   },

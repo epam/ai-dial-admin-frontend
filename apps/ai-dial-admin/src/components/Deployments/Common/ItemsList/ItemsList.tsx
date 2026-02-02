@@ -6,6 +6,7 @@ import { FieldError } from '@/src/models/error';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 
 import Item from '@/src/components/Deployments/Common/ItemsList/Item';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
   items: string[];
@@ -18,6 +19,15 @@ interface Props {
 
 const ItemsList: FC<Props> = ({ items, setItems, addItemLabel, validate, isModal = false, disabled = false }) => {
   const lastItemRef = useRef<HTMLLIElement | null>(null);
+  const { dispatch, resetCounter } = useSaveValidationContext();
+
+  useEffect(() => {
+    if (validate && (resetCounter || (items != null && items.length > 0))) {
+      items.forEach((item, index) => {
+        dispatch({ type: ValidationActionType.SetField, field: `item-${index}`, isValid: !validate(item) });
+      });
+    }
+  }, [dispatch, items, resetCounter, validate]);
 
   const onChangeItem = useCallback(
     (item: string | undefined, index: number) => {
