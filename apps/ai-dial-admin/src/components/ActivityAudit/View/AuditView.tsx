@@ -5,7 +5,7 @@ import { FC, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import {
-  DialButton,
+  DialIconButton,
   DialConfirmationPopup,
   DialEllipsisTooltip,
   DialNeutralButton,
@@ -164,10 +164,10 @@ const AuditView: FC<Props> = ({
                 <>
                   <h3 className="flex flex-row items-center gap-x-3">
                     <DialEllipsisTooltip text={activity.activityId} />
-                    <DialButton
+                    <DialIconButton
                       onClick={() => openActivityInNewTab(activity)}
-                      className="text-secondary"
-                      iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
+                      className="text-secondary w-auto h-auto p-0"
+                      icon={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
                     />
                   </h3>
                   <div className="flex flex-row gap-3 items-center justify-end">

@@ -8,7 +8,7 @@ export default {
     ViewDocumentation: 'View our documentation',
     QuickActions: 'Quick Actions',
     SiteMap: 'Site map',
-    OpenDial: 'Open EPAM DIAL',
+    OpenDial: 'Open EPAM DIAL Chat',
   },
   Auth: {
     Login: 'Login',
@@ -88,7 +88,7 @@ export default {
     Approvals: 'Approvals',
     Playground: 'Playground',
     Metrics: 'Metrics',
-    TestSuits: 'Test Suits',
+    TestSuites: 'Test Suites',
     Runs: 'Runs',
     Evaluation: 'Evaluation',
     Audit: 'Audit',
@@ -144,7 +144,7 @@ export default {
     // no data
     NoApplications: 'No Applications',
     NoInterceptors: 'No Interceptors',
-    NoTestSuits: 'No Test Suits',
+    NoTestSuites: 'No Test Suites',
     NoRuns: 'No Runs',
     NoMetrics: 'No Metrics',
     NoLocalInterceptors: 'No Local Interceptors',
@@ -1215,6 +1215,7 @@ export default {
     DeleteModalDescription: 'Are you sure, you want to delete this {entityType}?',
     Container: 'Container',
     InputSchema: 'Input schema',
+    OutputSchema: 'Output schema',
     Annotations: 'Annotations',
     ContainerImage: '{type} Image',
     ContainerProperties: 'Properties',
@@ -1279,5 +1280,10 @@ export default {
     SpecificWhitelist: '{type} domain whitelist',
     GlobalFirewall: 'Global Firewall',
     AddDomain: 'Add domain',
+  },
+  TestSuites: {
+    CreateTestSuite: 'Create Test Suite',
+    Application: 'Application',
+    Methods: 'Methods',
   },
 } as const;

@@ -1,7 +1,7 @@
 import { Dispatch, FC, SetStateAction, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialButton } from '@epam/ai-dial-ui-kit';
+import { DialIconButton } from '@epam/ai-dial-ui-kit';
 import { IconPencilMinus } from '@tabler/icons-react';
 
 import { useI18n } from '@/src/locales/client';
@@ -48,11 +48,10 @@ const Footer: FC<Props> = ({ beVersion, coreVersions, onChangeCoreVersion }) => 
         Core:
         <span className="flex flex-row hover:text-accent-primary group/version" onClick={() => setIsModalOpen(true)}>
           {coreVersion}
-          <DialButton
+          <DialIconButton
             disabled={!coreVersions}
-            iconAfter={
-              <IconPencilMinus size={14} className="text-primary ml-2 group-hover/version:text-accent-primary" />
-            }
+            className="p-0 h-auto w-auto"
+            icon={<IconPencilMinus size={14} className="text-primary ml-2 group-hover/version:text-accent-primary" />}
           />
         </span>
       </span>

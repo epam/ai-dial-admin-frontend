@@ -28,13 +28,14 @@ const Dashboard: FC<Props> = ({ route, entity, initTimeFilter, onChangeTimeFilte
   const t = useI18n();
   const [filters, setFilters] = useState<FilterData[]>([]);
   const [refreshTime, setRefreshTime] = useState(DEFAULT_REFRESH_TIME);
-  const [timePeriod, setTimePeriod] = useState(initTimeFilter);
+  const [timePeriod, setTimePeriod] = useState<string | undefined>();
   const [timeRange, setTimeRange] = useState<TimeRange>(getTimeRangeById(DEFAULT_TIME_PERIOD));
   const getReqRef = useRef(useProtectedRequest());
 
   useEffect(() => {
     if (!timePeriod) {
       setTimePeriod(initTimeFilter || DEFAULT_TIME_PERIOD);
+      setTimeRange(getTimeRangeById(initTimeFilter || DEFAULT_TIME_PERIOD));
     }
   }, [initTimeFilter, timePeriod]);
 

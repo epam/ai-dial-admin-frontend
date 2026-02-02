@@ -1,7 +1,7 @@
 'use client';
 
 import { FC, ReactNode, useEffect, useState } from 'react';
-import { DialButton } from '@epam/ai-dial-ui-kit';
+import { DialIconButton } from '@epam/ai-dial-ui-kit';
 
 import SidebarClose from '@/public/images/icons/sidebar-close.svg';
 import SidebarOpen from '@/public/images/icons/sidebar-open.svg';
@@ -27,11 +27,11 @@ const Header: FC<Props> = ({ isEnableAuth }) => {
   return (
     <header className="z-40 flex w-full border-b border-tertiary bg-layer-3 relative justify-between">
       <div className="flex">
-        <DialButton
+        <DialIconButton
           aria-label="menu"
-          className="py-3 px-5 border-r border-r-tertiary text-secondary focus-within:outline-offset-[-1px] focus:text-accent-primary hover:text-accent-primary"
+          className="py-3 px-5 border-r w-auto h-auto border-r-tertiary text-secondary focus-within:outline-offset-[-1px] focus:text-accent-primary hover:text-accent-primary"
           onClick={toggleSidebar}
-          iconBefore={sidebarIcon}
+          icon={sidebarIcon}
         />
       </div>
       <Logo />

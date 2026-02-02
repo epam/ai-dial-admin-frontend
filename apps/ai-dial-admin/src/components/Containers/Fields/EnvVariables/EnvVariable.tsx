@@ -108,7 +108,7 @@ const EnvVariable: FC<Props> = ({
 
   return (
     <DraggableItem id={variable.name || ''} findItem={findColumn} moveItem={moveColumn}>
-      <div className="flex flex-row gap-2 w-full relative">
+      <div className="flex flex-row gap-2 flex-1 relative">
         <div className="flex w-full flex-1 flex-col rounded border border-primary p-3 lg:border-none lg:p-0 lg:flex-initial">
           {isTablet && (
             <div className="flex flex-col justify-center cursor-pointer" onClick={toggleCollapse}>

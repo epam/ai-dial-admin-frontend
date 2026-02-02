@@ -14,8 +14,8 @@ import { getActivityAuditColumns, getGridFilters } from '@/src/components/Activi
 import ActivityDetails from '@/src/components/ActivityAudit/Modals/Details';
 import { SYSTEM_ROLLBACK_ID } from '@/src/components/ActivityAudit/Rollback/constants';
 import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
-import { emptyDataTitleMap, listViewTitleMap } from '@/src/components/EntityListView/constants';
-import ResetFiltersButton from '@/src/components/EntityListView/HeaderButtons/ResetFiltersButton';
+import { emptyDataTitleMap, listViewTitleMap } from '@/src/components/ListView/constants';
+import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
 import ListView from '@/src/components/ListView/ListView';
 import { ACTIONS_COLUMN_CEL_ID, CACHE_LIMIT, PAGE_SIZE } from '@/src/constants/ag-grid';
 import { DEFAULT_TIME_PERIOD } from '@/src/constants/global-time-filter';
@@ -95,7 +95,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, initTimeFil
   const gridDataSource: IDatasource = useMemo(
     () => ({
       getRows: (params: IGetRowsParams) => {
-        const actualTimeRange = timePeriod ? getTimeRangeById(timePeriod) : timeRange;
+        const actualTimeRange = timeRange;
         gridApi?.setGridOption('loading', true);
         const page = Math.floor(params.startRow / PAGE_SIZE);
         const sorts = getRequestSorts(params.sortModel);
@@ -134,7 +134,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, initTimeFil
           });
       },
     }),
-    [timePeriod, timeRange, gridApi, entity, entityType, router],
+    [timeRange, gridApi, entity, entityType, router],
   );
 
   useEffect(() => {
