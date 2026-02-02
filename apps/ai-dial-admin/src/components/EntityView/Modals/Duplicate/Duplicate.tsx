@@ -101,9 +101,8 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
     (displayVersion?: string) => {
       onValidateVersion({ displayVersion }, isVersionOptional);
       setEntity({ ...(clonedEntity as DialModel), displayVersion });
-      handleValidateEntityDisplayName(clonedEntity.displayName);
     },
-    [clonedEntity, handleValidateEntityDisplayName, isVersionOptional, onValidateVersion],
+    [clonedEntity, isVersionOptional, onValidateVersion],
   );
 
   const onChangeDisplayName = useCallback(

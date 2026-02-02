@@ -18,14 +18,14 @@ import { getControlClassName } from '@/src/utils/entities/view';
 
 interface Props {
   container: Container;
-  isFullWidth?: boolean;
   setContainer: (container: Container) => void;
+  isModal?: boolean;
 }
 
-const ModelSourceFields: FC<Props> = ({ container, setContainer, isFullWidth = false }) => {
+const ModelSourceFields: FC<Props> = ({ container, setContainer, isModal = false }) => {
   const t = useI18n();
   const { dispatch, resetCounter } = useSaveValidationContext();
-  const containerClassName = useMemo(() => getControlClassName(isFullWidth), [isFullWidth]);
+  const containerClassName = useMemo(() => getControlClassName(isModal), [isModal]);
 
   const [imageRefError, setImageRefError] = useState<FieldError | null>(null);
 
@@ -112,15 +112,17 @@ const ModelSourceFields: FC<Props> = ({ container, setContainer, isFullWidth = f
 
   return (
     <div className="flex flex-col gap-y-8">
-      <DialSelectField
-        elementId="modelSourceType"
-        fieldTitle={t(EntitiesI18nKey.SourceType)}
-        options={SERVING_TYPES}
-        value={container.source?.$type}
-        containerClassName="w-[180px]"
-        onChange={($type) => onChangeModelSourceType($type as MODEL_SOURCE_TYPE)}
-        disabled={isEditDisabled(container)}
-      />
+      {isModal && (
+        <DialSelectField
+          elementId="modelSourceType"
+          fieldTitle={t(EntitiesI18nKey.SourceType)}
+          options={SERVING_TYPES}
+          value={container.source?.$type}
+          containerClassName="w-[180px]"
+          onChange={($type) => onChangeModelSourceType($type as MODEL_SOURCE_TYPE)}
+          disabled={isEditDisabled(container)}
+        />
+      )}
       {container.source?.$type === MODEL_SOURCE_TYPE.NIM ? (
         <DialTextInputField
           elementId="imageRef"
