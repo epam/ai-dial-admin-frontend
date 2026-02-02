@@ -13,7 +13,7 @@ interface Props {
 }
 
 const TestSuitesList: FC<Props> = ({ data }) => {
-  const names = data.map((suite) => suite.id);
+  const names = data.map((suite) => suite.id || '');
   const columns = useMemo(() => {
     return TEST_SUITES_COLUMN();
   }, []);
