@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   formatAttachment,
+  formatRequired,
   getFormattedResourceType,
   getTopics,
   numberValueFormatter,
@@ -148,5 +149,19 @@ describe('Formatters :: sourceTypeFormatter', () => {
 
   test('formats source type for unknown type', () => {
     expect(sourceTypeFormatter('UNKNOWN' as SOURCE_TYPE, t)).toBe('UNKNOWN');
+  });
+});
+
+describe('formatRequired', () => {
+  test('returns translated Yes when value is truthy', () => {
+    const t = (key: string) => key;
+    const res = formatRequired('non-empty', t);
+    expect(res).toBe(BasicI18nKey.Yes);
+  });
+
+  test('returns translated No when value is falsy', () => {
+    const t = (key: string) => key;
+    const res = formatRequired('', t);
+    expect(res).toBe(BasicI18nKey.No);
   });
 });

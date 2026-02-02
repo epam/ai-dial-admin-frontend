@@ -12,6 +12,7 @@ import {
 } from '@/src/constants/deployments/images';
 import {
   formatAttachment,
+  formatRequired,
   getFormattedResourceType,
   getTopics,
   numberValueFormatter,
@@ -38,7 +39,6 @@ import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRe
 import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRenderer';
 import ValidityStatusCellRenderer from '@/src/components/Grid/CellRenderers/ValidityStatusCellRenderer';
 import HeaderWithHintButton from '@/src/components/Grid/HeaderComponents/HeaderWithHintButton';
-import { formatRequired } from '@/src/utils/formatting/boolean';
 
 const stringFilter: Partial<ColDef> = {
   filterParams: {
