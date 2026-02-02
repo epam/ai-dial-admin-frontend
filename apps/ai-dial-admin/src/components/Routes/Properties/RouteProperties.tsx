@@ -1,9 +1,8 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ButtonAppearance,
-  ButtonVariant,
-  DialButton,
   DialNumberInputField,
+  DialPrimaryButton,
   DialRadioGroup,
   DialSelectField,
   DialSwitch,
@@ -302,9 +301,8 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
           invalid={!!orderError}
         />
         {route.order !== ORDER_DEFAULT_VALUE && (
-          <DialButton
-            className="dial-tertiary-button mb-2.5"
-            variant={ButtonVariant.Primary}
+          <DialPrimaryButton
+            className=" mb-2.5"
             appearance={ButtonAppearance.Link}
             label={t(ButtonsI18nKey.ResetToDefault)}
             iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}

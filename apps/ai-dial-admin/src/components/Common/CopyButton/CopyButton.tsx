@@ -1,12 +1,13 @@
 import { IconCopy } from '@tabler/icons-react';
 import { FC, useCallback } from 'react';
-import { ButtonAppearance, ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, ButtonVariant, DialIconButton } from '@epam/ai-dial-ui-kit';
 
 import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { getSuccessNotification } from '@/src/utils/notification';
+import classNames from 'classnames';
 
 interface Props {
   label: string;
@@ -31,11 +32,11 @@ const CopyButton: FC<Props> = ({ label, field, className, isFullButton = false }
     : { className: 'cursor-pointer text-secondary hover:text-accent-primary' };
 
   return (
-    <DialButton
-      className={className}
+    <DialIconButton
+      className={classNames(className, 'p-0 h-auto w-auto')}
       aria-label="copy"
       onClick={onClick}
-      iconBefore={<IconCopy {...BASE_BUTTON_ICON_PROPS} />}
+      icon={<IconCopy {...BASE_BUTTON_ICON_PROPS} />}
       {...props}
     />
   );
