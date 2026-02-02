@@ -8,7 +8,7 @@ export default {
     ViewDocumentation: 'View our documentation',
     QuickActions: 'Quick Actions',
     SiteMap: 'Site map',
-    OpenDial: 'Open EPAM DIAL',
+    OpenDial: 'Open EPAM DIAL Chat',
   },
   Auth: {
     Login: 'Login',
