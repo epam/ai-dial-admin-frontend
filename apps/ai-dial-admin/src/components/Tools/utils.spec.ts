@@ -1,6 +1,7 @@
 import { describe, test, expect } from 'vitest';
 import { ToolFilter } from './type';
-import { getFilteredTools } from './utils';
+import { convertSchemaToTable, formatRequired, getFilteredTools } from './utils';
+import { BasicI18nKey } from '@/src/constants/i18n';
 
 describe('getFilteredTools', () => {
   const tools = ['toolA', 'toolB', 'toolC'];
@@ -24,5 +25,48 @@ describe('getFilteredTools', () => {
   test('returns empty array if no filters', () => {
     const result = getFilteredTools(tools, [], availableTools);
     expect(result).toEqual([]);
+  });
+});
+
+describe('convertSchemaToTable', () => {
+  test('returns empty array when no schema provided', () => {
+    // @ts-ignore
+    expect(convertSchemaToTable()).toEqual([]);
+  });
+
+  test('returns empty array when properties missing', () => {
+    const schema: any = { title: 'Empty' };
+    expect(convertSchemaToTable(schema)).toEqual([]);
+  });
+
+  test('converts schema properties to table rows with required flags', () => {
+    const schema: any = {
+      properties: {
+        fieldA: { description: 'Description A', type: 'string' },
+        fieldB: { description: 'Description B', type: 'number' },
+      },
+      required: ['fieldA'],
+    };
+
+    const result = convertSchemaToTable(schema);
+
+    expect(result).toEqual([
+      { field: 'fieldA', description: 'Description A', type: 'string', required: true },
+      { field: 'fieldB', description: 'Description B', type: 'number', required: false },
+    ]);
+  });
+});
+
+describe('formatRequired', () => {
+  test('returns translated Yes when value is truthy', () => {
+    const t = (key: string) => key; 
+    const res = formatRequired('non-empty', t);
+    expect(res).toBe(BasicI18nKey.Yes);
+  });
+
+  test('returns translated No when value is falsy', () => {
+    const t = (key: string) => key;
+    const res = formatRequired('', t);
+    expect(res).toBe(BasicI18nKey.No);
   });
 });

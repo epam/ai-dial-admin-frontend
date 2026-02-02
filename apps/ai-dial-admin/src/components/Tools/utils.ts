@@ -1,5 +1,6 @@
+import { BasicI18nKey } from '@/src/constants/i18n';
+import { Tool, ToolSchema } from '@/src/models/dial/toolset';
 import { ToolFilter } from './type';
-import { Tool } from '@/src/models/dial/toolset';
 
 export const getFilteredTools = (tools: string[], selectedFilters: ToolFilter[], availableTools: Tool[]) => {
   const filteredTools: string[] = [];
@@ -19,4 +20,23 @@ export const getFilteredTools = (tools: string[], selectedFilters: ToolFilter[],
   }
 
   return [...availableTools, ...customTools].filter((t) => filteredTools.includes(t.name));
+};
+
+export const convertSchemaToTable = (schema?: ToolSchema) => {
+  if (!schema) return [];
+
+  const { properties, required = [] } = schema;
+
+  if (!properties) return [];
+
+  return Object.entries(properties).map(([field, property]: [string, any]) => ({
+    field,
+    description: property?.description,
+    type: property?.type,
+    required: required.includes(field),
+  }));
+};
+
+export const formatRequired = (value: string, t: (stringToTranslate: string) => string) => {
+  return value ? t(BasicI18nKey.Yes) : t(BasicI18nKey.No);
 };
