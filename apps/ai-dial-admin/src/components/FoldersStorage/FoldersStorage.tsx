@@ -1,7 +1,7 @@
 'use client';
 
 import { FC } from 'react';
-import { DialButton, DialCollapsibleSidebar, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { DialCollapsibleSidebar, DialIconButton, DialTooltip } from '@epam/ai-dial-ui-kit';
 
 import FolderCollapse from '@/public/images/icons/folder-collapse.svg';
 import FolderList from '@/src/components/Common/FolderList/FolderList';
@@ -42,10 +42,10 @@ const FoldersStorage: FC<Props> = ({ initialPath }) => {
               tooltip={isCollapseDisable ? '' : t(FoldersI18nKey.CollapseAll)}
               placement="top"
             >
-              <DialButton
+              <DialIconButton
                 className={isCollapseDisable ? 'text-controls-disable' : 'hover:text-accent-primary'}
                 onClick={collapseFolders}
-                iconBefore={<FolderCollapse width={24} height={24} />}
+                icon={<FolderCollapse width={24} height={24} />}
                 disabled={isCollapseDisable}
               />
             </DialTooltip>
