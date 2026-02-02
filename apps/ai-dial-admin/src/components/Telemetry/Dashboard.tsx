@@ -35,6 +35,7 @@ const Dashboard: FC<Props> = ({ route, entity, initTimeFilter, onChangeTimeFilte
   useEffect(() => {
     if (!timePeriod) {
       setTimePeriod(initTimeFilter || DEFAULT_TIME_PERIOD);
+      setTimeRange(getTimeRangeById(initTimeFilter || DEFAULT_TIME_PERIOD));
     }
   }, [initTimeFilter, timePeriod]);
 
