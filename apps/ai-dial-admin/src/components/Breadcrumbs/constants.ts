@@ -242,11 +242,11 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig | null>
       },
     ],
   },
-  [ApplicationRoute.TestSuits]: {
+  [ApplicationRoute.TestSuites]: {
     segments: [
       {
-        name: 'TestSuits',
-        i18nKey: MenuI18nKey.TestSuits,
+        name: 'TestSuites',
+        i18nKey: MenuI18nKey.TestSuites,
       },
       { name: 'Id', href: false },
     ],

@@ -14,7 +14,7 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
-import { TestSuits } from '@/src/models/evaluation/test-suit';
+import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -64,12 +64,12 @@ const HeaderButtons = <T extends object>({ route, names, gridApi, toggleColumnsP
   const getCreateModal = () => {
     return (
       <SaveValidationContextProvider>
-        {route === ApplicationRoute.TestSuits && (
-          <CreateTestSuit
+        {route === ApplicationRoute.TestSuites && (
+          <CreateTestSuite
             isModalOpen={isModalOpen}
             onClose={onModalClose}
             names={names || []}
-            onCreate={onCreate as (suit: TestSuits) => void}
+            onCreate={onCreate as (suite: TestSuite) => void}
           />
         )}
       </SaveValidationContextProvider>

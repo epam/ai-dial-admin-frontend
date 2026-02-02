@@ -1,4 +1,4 @@
-import { TabsI18nKey, TestSuitsI18nKey } from '@/src/constants/i18n';
+import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { Step } from '@epam/ai-dial-ui-kit';
 
 export enum TestSuitTab {
@@ -15,12 +15,12 @@ export const TEST_SUIT_STEPS = (t: (key: string) => string) => {
     },
     {
       id: TestSuitTab.Application,
-      name: t(TestSuitsI18nKey.Application),
+      name: t(TestSuitesI18nKey.Application),
     },
 
     {
       id: TestSuitTab.Methods,
-      name: t(TestSuitsI18nKey.Methods),
+      name: t(TestSuitesI18nKey.Methods),
     },
   ] as Step[];
 };

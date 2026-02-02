@@ -1,4 +1,4 @@
-export interface TestSuits {
+export interface TestSuite {
   id: string;
   name?: string;
   description?: string;

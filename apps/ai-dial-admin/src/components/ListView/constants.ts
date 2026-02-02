@@ -21,7 +21,7 @@ export const listViewTitleMap: Record<string, MenuI18nKey> = {
   [ApplicationRoute.InterceptorTemplates]: MenuI18nKey.InterceptorTemplates,
   [ApplicationRoute.Toolsets]: MenuI18nKey.Toolsets,
   [ApplicationRoute.AssetsToolsets]: MenuI18nKey.Toolsets,
-  [ApplicationRoute.TestSuits]: MenuI18nKey.TestSuits,
+  [ApplicationRoute.TestSuites]: MenuI18nKey.TestSuites,
   [ApplicationRoute.Metrics]: MenuI18nKey.Metrics,
   [ApplicationRoute.Runs]: MenuI18nKey.Runs,
 };
@@ -46,7 +46,7 @@ export const emptyDataTitleMap: Record<string, EntitiesI18nKey> = {
   [ApplicationRoute.ActivityAudit]: EntitiesI18nKey.NoActivityAudit,
   [ApplicationRoute.InterceptorTemplates]: EntitiesI18nKey.NoInterceptorTemplates,
   [ApplicationRoute.Toolsets]: EntitiesI18nKey.NoToolsets,
-  [ApplicationRoute.TestSuits]: EntitiesI18nKey.NoTestSuits,
+  [ApplicationRoute.TestSuites]: EntitiesI18nKey.NoTestSuites,
   [ApplicationRoute.Metrics]: EntitiesI18nKey.NoMetrics,
   [ApplicationRoute.Runs]: EntitiesI18nKey.NoRuns,
 };
