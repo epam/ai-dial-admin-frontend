@@ -2,8 +2,8 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
-  DialPrimaryButton,
   DialNoDataContent,
+  DialPrimaryButton,
   DialRadioGroup,
   RadioButtonWithContent,
   RadioGroupOrientation,
@@ -93,6 +93,7 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
     if (key === ExportFormat.ACTIVE_CONFIG) {
       setSelectedExportType(ExportType.Full);
     }
+    setCustomExportData({});
   }, []);
 
   const onExport = useCallback(
