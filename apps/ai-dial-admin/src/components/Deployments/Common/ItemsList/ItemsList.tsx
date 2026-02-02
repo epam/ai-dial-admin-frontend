@@ -12,9 +12,11 @@ interface Props {
   setItems: (items: string[]) => void;
   addItemLabel?: string;
   validate?: (item?: string) => FieldError | null;
+  isModal?: boolean;
+  disabled?: boolean;
 }
 
-const ItemsList: FC<Props> = ({ items, setItems, addItemLabel, validate }) => {
+const ItemsList: FC<Props> = ({ items, setItems, addItemLabel, validate, isModal = false, disabled = false }) => {
   const lastItemRef = useRef<HTMLLIElement | null>(null);
 
   const onChangeItem = useCallback(
@@ -55,11 +57,18 @@ const ItemsList: FC<Props> = ({ items, setItems, addItemLabel, validate }) => {
             onRemove={onRemoveItem}
             validate={validate}
             ref={index === items.length - 1 ? lastItemRef : null}
+            isModal={isModal}
+            disabled={disabled}
           />
         ))}
       </ul>
 
-      <DialGhostButton iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />} label={addItemLabel} onClick={onAddItem} />
+      <DialGhostButton
+        iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
+        label={addItemLabel}
+        onClick={onAddItem}
+        disabled={disabled}
+      />
     </div>
   );
 };

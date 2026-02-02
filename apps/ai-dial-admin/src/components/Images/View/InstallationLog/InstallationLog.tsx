@@ -5,7 +5,7 @@ interface Props {
   imageBuildId?: string;
 }
 
-const BuildLog: FC<Props> = ({ imageBuildId }) => {
+const InstallationLog: FC<Props> = ({ imageBuildId }) => {
   const [logs, setLogs] = useState<string>('');
 
   useEffect(() => {
@@ -31,4 +31,4 @@ const BuildLog: FC<Props> = ({ imageBuildId }) => {
   );
 };
 
-export default BuildLog;
+export default InstallationLog;

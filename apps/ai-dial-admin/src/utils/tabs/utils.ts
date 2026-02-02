@@ -31,7 +31,7 @@ export enum EntityViewTab {
   ApplicationRunners = 'ApplicationRunners',
   Images = 'Images',
   Containers = 'Containers',
-  BuildLog = 'Build log',
+  InstallationLog = 'Installation log',
   Instances = 'Instances',
   Resources = 'Resources',
   Prompts = 'Prompts',
@@ -39,6 +39,7 @@ export enum EntityViewTab {
   ExecutionLog = 'Execution log',
   RelatedContainers = 'Related Containers',
   Events = 'Events',
+  Firewall = 'Firewall',
 }
 
 export const propertiesTab = (t: (stringToTranslate: string) => string) => ({
@@ -151,9 +152,9 @@ export const applicationRunnersTab = (t: (stringToTranslate: string) => string) 
   label: t(TabsI18nKey.ApplicationRunners),
 });
 
-export const buildLogTab = (t: (stringToTranslate: string) => string, status?: IMAGE_STATUS) => ({
-  id: EntityViewTab.BuildLog,
-  label: t(TabsI18nKey.BuildLog),
+export const installationLogTab = (t: (stringToTranslate: string) => string, status?: IMAGE_STATUS) => ({
+  id: EntityViewTab.InstallationLog,
+  label: t(TabsI18nKey.InstallationLog),
   disabled: status === IMAGE_STATUS.NOT_BUILT,
 });
 
@@ -189,6 +190,11 @@ export const executionLogTab = (t: (stringToTranslate: string) => string) => ({
 export const eventsTab = (t: (stringToTranslate: string) => string) => ({
   id: EntityViewTab.Events,
   label: t(TabsI18nKey.Events),
+});
+
+export const firewallTab = (t: (stringToTranslate: string) => string) => ({
+  id: EntityViewTab.Firewall,
+  label: t(TabsI18nKey.Firewall),
 });
 
 export const relatedContainersTab = (t: (stringToTranslate: string) => string, status?: IMAGE_STATUS) => ({
@@ -295,17 +301,22 @@ export const getDeploymentsViewTabs = (
   status?: CONTAINER_STATUS | IMAGE_STATUS,
 ): TabModel[] => {
   if (route === ApplicationRoute.Images) {
-    return [propertiesTab(t), buildLogTab(t, status as IMAGE_STATUS), relatedContainersTab(t, status as IMAGE_STATUS)];
+    return [
+      propertiesTab(t),
+      firewallTab(t),
+      relatedContainersTab(t, status as IMAGE_STATUS),
+      installationLogTab(t, status as IMAGE_STATUS),
+    ];
   } else {
     if (route === ApplicationRoute.InterceptorContainers || route === ApplicationRoute.ModelServings) {
-      return [propertiesTab(t), /* metricsTab(t, status as CONTAINER_STATUS),*/ executionLogTab(t), eventsTab(t)];
+      return [propertiesTab(t), firewallTab(t), executionLogTab(t), eventsTab(t)];
     } else {
       return [
         propertiesTab(t),
+        firewallTab(t),
         deploymentsToolsTab(t, status as CONTAINER_STATUS),
         resourcesTab(t, status as CONTAINER_STATUS),
         promptsTab(t, status as CONTAINER_STATUS),
-        //metricsTab(t, status as CONTAINER_STATUS),
         executionLogTab(t),
         eventsTab(t),
       ];

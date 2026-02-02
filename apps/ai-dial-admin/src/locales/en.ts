@@ -499,7 +499,7 @@ export default {
     Attachments: 'Attachments',
     ParameterSchema: 'Parameter Scheme',
     ApplicationRunners: 'Application Runners',
-    BuildLog: 'Build log',
+    InstallationLog: 'Installation log',
     Instances: 'Instances',
     Resources: 'Resources',
     Prompts: 'Prompts',
@@ -509,6 +509,7 @@ export default {
     Containers: 'Containers',
     RelatedContainers: 'Related Containers',
     Events: 'Events',
+    Firewall: 'Firewall settings',
   },
   ForwardToken: {
     ForwardTokenModalTitle: 'Forward Auth Token',
@@ -1201,6 +1202,7 @@ export default {
     ImageTransportRemote: 'Remote (HTTP/SSE)',
     ImageTypeMCP: 'MCP image',
     ImageTypeInterceptor: 'Interceptor image',
+    ImageWhitelistType: 'Image-specific',
   },
   Containers: {
     ContainersListTitle: '{type} {entityType}s',
@@ -1274,6 +1276,7 @@ export default {
   },
   Deployments: {
     GlobalWhitelist: 'Global domain whitelist',
+    SpecificWhitelist: '{type} domain whitelist',
     GlobalFirewall: 'Global Firewall',
     AddDomain: 'Add domain',
   },

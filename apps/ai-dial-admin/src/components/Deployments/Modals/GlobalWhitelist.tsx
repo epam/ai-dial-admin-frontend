@@ -56,6 +56,7 @@ const GlobalWhitelist: FC<Props> = ({ onClose, isModalOpen, onApply, getDomains 
             setItems={setDomains}
             addItemLabel={t(DeploymentsI18nKey.AddDomain)}
             validate={(value) => getWhitelistDomainError(value, t)}
+            isModal={true}
           />
         </div>
       </div>

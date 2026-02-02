@@ -7,7 +7,6 @@ import {
   appRouteTab,
   attachmentsTab,
   auditTab,
-  buildLogTab,
   conversationsTab,
   dependenciesTab,
   deploymentsToolsTab,
@@ -16,6 +15,7 @@ import {
   executionLogTab,
   featuresTab,
   filesTab,
+  firewallTab,
   getAdapterTabs,
   getAppRunnerTabs,
   getAuditTabs,
@@ -33,6 +33,7 @@ import {
   getViewTabs,
   globalInterceptorsTab,
   interceptorsTab,
+  installationLogTab,
   keysTab,
   modelsTab,
   parameterSchemaTab,
@@ -201,8 +202,9 @@ describe('Entities :: tabs', () => {
 
     expect(getDeploymentsViewTabs(ApplicationRoute.Images, t, status)).toEqual([
       propertiesTab(t),
-      buildLogTab(t, status),
+      firewallTab(t),
       relatedContainersTab(t, status),
+      installationLogTab(t, status),
     ]);
   });
   test('returns correct tabs for deployment mcp containers', () => {
@@ -210,6 +212,7 @@ describe('Entities :: tabs', () => {
 
     expect(getDeploymentsViewTabs(ApplicationRoute.McpContainers, t, status)).toEqual([
       propertiesTab(t),
+      firewallTab(t),
       deploymentsToolsTab(t, status),
       resourcesTab(t, status),
       promptsTab(t, status),
@@ -223,6 +226,7 @@ describe('Entities :: tabs', () => {
 
     expect(getDeploymentsViewTabs(ApplicationRoute.ModelServings, t, status)).toEqual([
       propertiesTab(t),
+      firewallTab(t),
       executionLogTab(t),
       eventsTab(t),
     ]);

@@ -36,6 +36,7 @@ import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor'
 import { getViewHeaderClassName } from '@/src/utils/entities/view';
 import { getContainerRedeploySnapshot } from '@/src/utils/deployments/containers';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
+import FirewallSettings from '@/src/components/Containers/View/FirewallSettings/FirewallSettings';
 
 interface Props {
   container: Container;
@@ -63,7 +64,7 @@ const ContainerView: FC<Props> = ({
   const { dispatch } = useSaveValidationContext();
 
   const [tabs, setTabs] = useState<TabModel[]>(getDeploymentsViewTabs(route, t, container.status));
-  const [selectedContainer, setSelectedContainer] = useState(cloneDeep(container));
+  const [selectedContainer, setSelectedContainer] = useState<Container>(cloneDeep(container));
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
   const [isChanged, setIsChanged] = useState<boolean>(false);
@@ -310,6 +311,9 @@ const ContainerView: FC<Props> = ({
                 <ExecutionLog containerId={selectedContainer.name} route={route} pods={pods} />
               )}
               {activeTab === EntityViewTab.Events && <Events route={route} events={events} />}
+              {activeTab === EntityViewTab.Firewall && (
+                <FirewallSettings route={route} container={selectedContainer} setContainer={setSelectedContainer} />
+              )}
             </>
           )}
         </div>
