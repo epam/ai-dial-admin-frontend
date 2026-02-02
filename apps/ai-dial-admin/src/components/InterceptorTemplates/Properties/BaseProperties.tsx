@@ -2,7 +2,7 @@ import { FC } from 'react';
 
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
-import IdControl from '@/src/components/BaseControls/Id';
+import IdControl from '@/src/components/BaseControls/Id/Id';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 
 interface Props {

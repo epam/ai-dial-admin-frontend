@@ -8,7 +8,7 @@ import { useI18n } from '@/src/locales/client';
 
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import Maintainer from '@/src/components/BaseControls/Maintainer';
-import IdControl from '@/src/components/BaseControls/Id';
+import IdControl from '@/src/components/BaseControls/Id/Id';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 
 interface Props {

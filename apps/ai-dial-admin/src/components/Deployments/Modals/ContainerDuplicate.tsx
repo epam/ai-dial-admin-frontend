@@ -6,7 +6,7 @@ import { Container } from '@/src/models/deployments/containers';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 
-import IdControl from '@/src/components/BaseControls/Id';
+import IdControl from '@/src/components/BaseControls/Id/Id';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 
 interface Props {

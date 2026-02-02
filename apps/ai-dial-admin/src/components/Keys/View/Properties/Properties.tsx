@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
-import IdControl from '@/src/components/BaseControls/Id';
+import IdControl from '@/src/components/BaseControls/Id/Id';
 import TopicsControl from '@/src/components/BaseControls/Topics';
 import ValidityPeriod from '@/src/components/Keys/Modals/ValidityPeriod';
 import KeyGenerateField from '@/src/components/Keys/View/Properties/KeyGenerateField';

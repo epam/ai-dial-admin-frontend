@@ -4,7 +4,7 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { checkIsUniqueDeploymentName } from '@/src/app/actions';
 import { RoutesForCheckingUniqueName } from '@/src/components/EntityListView/CreateEntity/constants';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
-import IdControl from '@/src/components/BaseControls/Id';
+import IdControl from '@/src/components/BaseControls/Id/Id';
 import VersionControl from '@/src/components/BaseControls/Version';
 import { getDisplayNameError, getVersionError } from '@/src/components/EntityMainProperties/Properties/utils';
 import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';

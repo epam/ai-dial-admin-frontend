@@ -3,7 +3,7 @@ import { FC, useCallback } from 'react';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import CompletionEndpointControl from '@/src/components/BaseControls/Endpoint/CompletionEndpoint';
-import IdControl from '@/src/components/BaseControls/Id';
+import IdControl from '@/src/components/BaseControls/Id/Id';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import AppRunnerExtendedProperties from './ExtendedProperties';
 
