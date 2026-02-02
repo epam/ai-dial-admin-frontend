@@ -8,7 +8,7 @@ import { IconColumns2, IconPlus } from '@tabler/icons-react';
 import { GridApi } from 'ag-grid-community';
 
 import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
-import CreateTestSuit from '@/src/components/TestSuits/Modals/Create/CreateTestSuit';
+import CreateTestSuite from '@/src/components/TestSuites/Modals/Create/CreateTestSuite';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';

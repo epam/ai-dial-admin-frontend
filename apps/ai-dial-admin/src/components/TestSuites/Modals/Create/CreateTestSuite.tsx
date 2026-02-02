@@ -14,7 +14,7 @@ interface Props {
   isModalOpen: boolean;
   names: string[];
   onClose: () => void;
-  onCreate: (suit: TestSuite) => void;
+  onCreate: (suite: TestSuite) => void;
 }
 
 const CreateTestSuit: FC<Props> = ({ names, onClose, isModalOpen, onCreate }) => {
