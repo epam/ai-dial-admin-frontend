@@ -12,7 +12,7 @@ import {
 import { ActivityAuditResourceType } from '@/src/types/activity-audit';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { ApplicationRoute } from '@/src/types/routes';
-import { EntitiesI18nKey, MenuI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, EntitiesI18nKey, MenuI18nKey, SourceI18nKey } from '@/src/constants/i18n';
 
 const t = (s: string) => s;
 
