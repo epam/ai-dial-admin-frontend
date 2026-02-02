@@ -2,16 +2,16 @@
 
 import { FC, useCallback, useEffect } from 'react';
 
-import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
-import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
-import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
+import DescriptionControl from '@/src/components/BaseControls/Description';
+import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
+import IdControl from '@/src/components/BaseControls/Id';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { getErrorForDisplayName } from '@/src/utils/validation/name-error';
-import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
-import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
+import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
+import TopicsControl from '@/src/components/BaseControls/Topics';
 
 interface Props {
   entity: DialAdapter;

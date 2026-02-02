@@ -3,7 +3,7 @@ import { FC } from 'react';
 import { DialPasswordInputField, DialSelectField, DialTextInputField, SelectOption } from '@epam/ai-dial-ui-kit';
 
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
-import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
+import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ToolsetAuthSettings, ToolsetCodeChallengeMethod } from '@/src/models/dial/toolset';

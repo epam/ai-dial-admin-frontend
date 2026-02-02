@@ -1,10 +1,10 @@
 import { FC } from 'react';
 
-import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
-import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
-import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
+import DescriptionControl from '@/src/components/BaseControls/Description';
+import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
+import IconControl from '@/src/components/BaseControls/Icon';
 import { DialApplicationResource } from '@/src/models/dial/application-resource';
-import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
+import TopicsControl from '@/src/components/BaseControls/Topics';
 
 interface Props {
   application: DialApplicationResource;

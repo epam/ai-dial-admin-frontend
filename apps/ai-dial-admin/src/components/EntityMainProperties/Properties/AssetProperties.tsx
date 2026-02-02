@@ -1,9 +1,9 @@
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
-import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
-import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
-import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
+import DescriptionControl from '@/src/components/BaseControls/Description';
+import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
+import IdControl from '@/src/components/BaseControls/Id';
+import VersionControl from '@/src/components/BaseControls/Version';
 import ApplicationSource from '@/src/components/SourceField/Application/ApplicationSource';
 import ToolsetEndpoint from '@/src/components/SourceField/Endpoints/ToolsetEndpoint';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';

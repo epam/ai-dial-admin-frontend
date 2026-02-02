@@ -3,10 +3,10 @@ import { IconSparkles } from '@tabler/icons-react';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
-import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
-import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
-import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
-import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
+import DescriptionControl from '@/src/components/BaseControls/Description';
+import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
+import IdControl from '@/src/components/BaseControls/Id';
+import TopicsControl from '@/src/components/BaseControls/Topics';
 import ValidityPeriod from '@/src/components/Keys/Modals/ValidityPeriod';
 import KeyGenerateField from '@/src/components/Keys/View/Properties/KeyGenerateField';
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';

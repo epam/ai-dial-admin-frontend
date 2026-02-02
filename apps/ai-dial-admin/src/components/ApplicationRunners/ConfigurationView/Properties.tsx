@@ -1,9 +1,9 @@
 import { FC, useCallback } from 'react';
 
-import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
-import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
-import CompletionEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/CompletionEndpoint';
-import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
+import DescriptionControl from '@/src/components/BaseControls/Description';
+import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
+import CompletionEndpointControl from '@/src/components/BaseControls/Endpoint/CompletionEndpoint';
+import IdControl from '@/src/components/BaseControls/Id';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import AppRunnerExtendedProperties from './ExtendedProperties';
 

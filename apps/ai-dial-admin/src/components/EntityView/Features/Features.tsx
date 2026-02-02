@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import { DialSwitch, DialTooltip } from '@epam/ai-dial-ui-kit';
 
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
-import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
+import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import { FeaturesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
