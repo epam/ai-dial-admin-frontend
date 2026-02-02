@@ -95,7 +95,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, initTimeFil
   const gridDataSource: IDatasource = useMemo(
     () => ({
       getRows: (params: IGetRowsParams) => {
-        const actualTimeRange = timePeriod ? getTimeRangeById(timePeriod) : timeRange;
+        const actualTimeRange = timeRange;
         gridApi?.setGridOption('loading', true);
         const page = Math.floor(params.startRow / PAGE_SIZE);
         const sorts = getRequestSorts(params.sortModel);
@@ -134,7 +134,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, initTimeFil
           });
       },
     }),
-    [timePeriod, timeRange, gridApi, entity, entityType, router],
+    [timeRange, gridApi, entity, entityType, router],
   );
 
   useEffect(() => {
