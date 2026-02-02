@@ -6,7 +6,7 @@ import { FC, useMemo } from 'react';
 
 interface Props {
   view: string;
-  changeView: (v: string) => void;
+  changeView: (v: ParamsView) => void;
 }
 
 const ViewSelector: FC<Props> = ({ view, changeView }) => {
@@ -30,7 +30,7 @@ const ViewSelector: FC<Props> = ({ view, changeView }) => {
       variant={SelectVariant.Secondary}
       options={items}
       value={view}
-      onChange={(v) => changeView(v as string)}
+      onChange={(v) => changeView(v as ParamsView)}
     />
   );
 };

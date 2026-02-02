@@ -1,4 +1,3 @@
-import { BasicI18nKey } from '@/src/constants/i18n';
 import { Tool, ToolSchema } from '@/src/models/dial/toolset';
 import { ToolFilter } from './type';
 
@@ -35,8 +34,4 @@ export const convertSchemaToTable = (schema?: ToolSchema) => {
     type: property?.type,
     required: required.includes(field),
   }));
-};
-
-export const formatRequired = (value: string, t: (stringToTranslate: string) => string) => {
-  return value ? t(BasicI18nKey.Yes) : t(BasicI18nKey.No);
 };

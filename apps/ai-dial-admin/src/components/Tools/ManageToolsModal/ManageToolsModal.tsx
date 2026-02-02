@@ -39,7 +39,7 @@ interface Props {
 
 const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalToolset, onClose, onConfirm }) => {
   const t = useI18n();
-  const [view, setView] = useState<string>(ParamsView.TABLE);
+  const [view, setView] = useState(ParamsView.TABLE);
 
   const [toolsConfig, setToolsConfig] = useState<ToolConfig[]>(() => {
     return tools.map((tool) => ({

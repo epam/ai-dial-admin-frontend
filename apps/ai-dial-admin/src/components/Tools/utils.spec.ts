@@ -1,7 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import { ToolFilter } from './type';
-import { convertSchemaToTable, formatRequired, getFilteredTools } from './utils';
-import { BasicI18nKey } from '@/src/constants/i18n';
+import { convertSchemaToTable, getFilteredTools } from './utils';
 
 describe('getFilteredTools', () => {
   const tools = ['toolA', 'toolB', 'toolC'];
@@ -54,19 +53,5 @@ describe('convertSchemaToTable', () => {
       { field: 'fieldA', description: 'Description A', type: 'string', required: true },
       { field: 'fieldB', description: 'Description B', type: 'number', required: false },
     ]);
-  });
-});
-
-describe('formatRequired', () => {
-  test('returns translated Yes when value is truthy', () => {
-    const t = (key: string) => key; 
-    const res = formatRequired('non-empty', t);
-    expect(res).toBe(BasicI18nKey.Yes);
-  });
-
-  test('returns translated No when value is falsy', () => {
-    const t = (key: string) => key;
-    const res = formatRequired('', t);
-    expect(res).toBe(BasicI18nKey.No);
   });
 });

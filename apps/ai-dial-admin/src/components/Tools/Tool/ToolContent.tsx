@@ -3,8 +3,9 @@ import { FC, useMemo } from 'react';
 import { ColDef } from 'ag-grid-community';
 
 import JsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
-import { convertSchemaToTable, formatRequired } from '@/src/components/Tools/utils';
+import { convertSchemaToTable } from '@/src/components/Tools/utils';
 import TableView from '@/src/components/Tools/View/TableView';
+import { TOOL_SCHEMA_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ContainersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Tool as ToolType } from '@/src/models/dial/toolset';
@@ -22,23 +23,7 @@ const TOOL_ANNOTATION_COLUMNS: ColDef[] = [
 
 const ToolContent: FC<Props> = ({ tool, view }) => {
   const t = useI18n();
-  const SCHEMA_COLUMNS: ColDef[] = useMemo(() => {
-    return [
-      { field: 'field', headerName: 'Field', floatingFilter: false, filter: false, sortable: false },
-      { field: 'description', headerName: 'Description', floatingFilter: false, filter: false, sortable: false },
-      { field: 'type', headerName: 'Type', floatingFilter: false, filter: false, sortable: false },
-      {
-        field: 'required',
-        headerName: 'Required',
-        floatingFilter: false,
-        filter: false,
-        sortable: false,
-        cellDataType: false,
-        valueFormatter: ({ value }) => formatRequired(value, t),
-        tooltipValueGetter: ({ value }) => formatRequired(value, t),
-      },
-    ];
-  }, [t]);
+  const SCHEMA_COLUMNS: ColDef[] = useMemo(() => TOOL_SCHEMA_COLUMNS(t), [t]);
 
   const annotations = useMemo(() => {
     return tool.annotations

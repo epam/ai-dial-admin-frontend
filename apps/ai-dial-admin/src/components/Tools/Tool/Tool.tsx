@@ -16,7 +16,7 @@ interface Props {
 }
 
 const Tool: FC<Props> = ({ tool, isAddedManual, isMcpToolset, isAssetToolset, toolSetName }) => {
-  const [view, setView] = useState<string>(ParamsView.TABLE);
+  const [view, setView] = useState(ParamsView.TABLE);
 
   return (
     <>
