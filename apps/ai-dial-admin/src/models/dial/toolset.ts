@@ -55,13 +55,16 @@ export enum ToolsetAuthType {
   OAUTH = 'oauth',
 }
 
+export interface ToolSchema {
+  type: string;
+  properties: Record<string, unknown>;
+  required?: string[];
+}
+
 export interface Tool {
   name: string;
   description?: string;
-  inputSchema?: {
-    type: string;
-    properties: Record<string, unknown>;
-  };
+  inputSchema?: ToolSchema;
   annotations?: {
     title?: string;
     readOnlyHint?: boolean;
@@ -69,4 +72,5 @@ export interface Tool {
     idempotentHint?: boolean;
     openWorldHint?: boolean;
   };
+  outputSchema?: ToolSchema;
 }
