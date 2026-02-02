@@ -10,7 +10,7 @@ import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { TEST_SUIT_STEPS, TestSuitTab } from './constants';
 import TestSuiteProperties from './Properties';
 import Applications from './Applications';
-import Methods from './Methods/Methods';
+import Methods from '@/src/components/TestSuites/Methods/Methods';
 
 interface Props {
   isModalOpen: boolean;
@@ -68,7 +68,7 @@ const CreateTestSuit: FC<Props> = ({ names, onClose, isModalOpen, onCreate }) =>
             <Applications selectedApplication={selectedApplication} onChange={setSelectedApplication} />
           )}
 
-          {currentStepId === TestSuitTab.Methods && <Methods />}
+          {currentStepId === TestSuitTab.Methods && <Methods methods={['/api', 'aaaa', 'sss']} />}
         </div>
       </div>
 
