@@ -5,6 +5,7 @@ import { Image } from '@/src/models/deployments/images';
 import { Container } from '@/src/models/deployments/containers';
 import { DeploymentsI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getGlobalWhitelist } from '@/src/app/actions/deployments';
 import { getWhitelistDomainError } from '@/src/utils/deployments/validation';
 import { getDeploymentEntityKey } from '@/src/utils/deployments/entity';
@@ -22,6 +23,8 @@ interface Props {
 
 const Whitelists: FC<Props> = ({ entity, setEntity, route, disabled }) => {
   const t = useI18n();
+  const { dispatch, resetCounter } = useSaveValidationContext();
+
   const [globalWhitelist, setGlobalWhitelist] = useState<string[]>([]);
 
   const setItems = useCallback(
@@ -42,9 +45,23 @@ const Whitelists: FC<Props> = ({ entity, setEntity, route, disabled }) => {
     });
   }, []);
 
+  useEffect(() => {
+    if (resetCounter || entity.allowedDomains !== null) {
+      entity.allowedDomains?.forEach((item, index) => {
+        dispatch({
+          type: ValidationActionType.SetField,
+          field: `item-${index}`,
+          isValid: entity.allowedDomains?.length === 0 ? true : !getWhitelistDomainError(item, t),
+        });
+      });
+    }
+  }, [dispatch, entity.allowedDomains, resetCounter, t]);
+
+  const validate = useCallback((value?: string) => getWhitelistDomainError(value, t), [t]);
+
   return (
     <div className="flex flex-col gap-8">
-      {route === ApplicationRoute.Images && (
+      {route === ApplicationRoute.Images && !!globalWhitelist.length && (
         <div className="flex flex-col gap-2">
           <p className="tiny text-secondary">{t(DeploymentsI18nKey.GlobalWhitelist)}</p>
           <ul>
@@ -67,7 +84,7 @@ const Whitelists: FC<Props> = ({ entity, setEntity, route, disabled }) => {
           items={entity?.allowedDomains || []}
           setItems={setItems}
           addItemLabel={t(DeploymentsI18nKey.AddDomain)}
-          validate={(value) => getWhitelistDomainError(value, t)}
+          validate={validate}
           disabled={disabled}
         />
       </div>
