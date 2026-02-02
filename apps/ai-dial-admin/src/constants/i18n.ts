@@ -552,6 +552,7 @@ export enum TelemetryI18nKey {
   CustomTimeRage = 'Telemetry.CustomTimeRage',
   Custom = 'Telemetry.Custom',
   UniqueUsers = 'Telemetry.UniqueUsers',
+  Requests = 'Telemetry.Requests',
   RequestCount = 'Telemetry.RequestCount',
   TotalTokens = 'Telemetry.TotalTokens',
   Money = 'Telemetry.Money',
