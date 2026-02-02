@@ -1280,4 +1280,9 @@ export default {
     GlobalFirewall: 'Global Firewall',
     AddDomain: 'Add domain',
   },
+  TestSuits: {
+    CreateTestSuite: 'Create Test Suite',
+    Application: 'Application',
+    Methods: 'Methods',
+  },
 } as const;

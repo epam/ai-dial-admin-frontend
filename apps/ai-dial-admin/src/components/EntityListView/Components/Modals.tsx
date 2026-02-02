@@ -105,9 +105,9 @@ const Modals: FC<Props> = ({
             entity={entity as object}
             view={route}
             onCloseModal={onClose}
-            context={getAssetContext}
+            getAssetContext={getAssetContext}
             existingVersions={existingVersions}
-            removeEntity={onRemove as (entity: string) => Promise<ServerActionResponse>}
+            onRemoveEntity={onRemove as (entity: string) => Promise<ServerActionResponse>}
           />,
           document.body,
         )}
