@@ -22,7 +22,7 @@ interface Props<T> {
   route: ApplicationRoute;
   baseColumns: ColDef[];
   onCreateEntity?: (entity: T) => Promise<ServerActionResponse>;
-  onRemoveEntity: (entity: string) => Promise<ServerActionResponse>;
+  onRemoveEntity?: (entity: string) => Promise<ServerActionResponse>;
 }
 
 const EvaluationListView = <T extends object>({
@@ -110,6 +110,7 @@ const EvaluationListView = <T extends object>({
       </ListView>
 
       {isModalOpen &&
+        onRemoveEntity &&
         createPortal(
           <DeleteConfirmationModal
             entity={currentEntity}
