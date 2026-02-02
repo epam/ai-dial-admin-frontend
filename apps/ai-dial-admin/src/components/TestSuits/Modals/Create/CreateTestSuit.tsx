@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { DialPopup, DialSteps, PopupSize } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useMemo, useState } from 'react';
 
