@@ -21,9 +21,9 @@ export default async function Page() {
     errorObjLog(e, 'Failed to fetch test suites');
   }
 
-  if (data == null) {
-    notFound();
-  }
+  // if (data == null) {
+  //   notFound();
+  // }
 
-  return <TestSuitesList data={data || []} />;
+  return <TestSuitesList data={[{ name: 'name' }]} />;
 }

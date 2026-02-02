@@ -45,6 +45,10 @@ import {
   rolesTab,
   toolsTab,
   tracesTab,
+  getTestSuiteTabs,
+  testCasesTab,
+  runsTab,
+  trendsTab,
 } from '../utils';
 
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
@@ -219,6 +223,10 @@ describe('Entities :: tabs', () => {
       executionLogTab(t),
       eventsTab(t),
     ]);
+  });
+
+  test('returns correct tabs for test suite', () => {
+    expect(getTestSuiteTabs(t)).toEqual([propertiesTab(t), testCasesTab(t), runsTab(t), trendsTab(t)]);
   });
 
   test('returns correct tabs for model containers', () => {

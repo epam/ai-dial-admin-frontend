@@ -89,25 +89,25 @@ export const assetsApi = new AssetsApi({
 });
 
 export const containersApi = new ContainersApi({
-  host: process.env.DIAL_DEPLOYMENTS_API_URL,
+  host: 'http://localhost:60614/',
 });
 
 export const imagesApi = new ImagesApi({
-  host: process.env.DIAL_DEPLOYMENTS_API_URL,
+  host: 'http://localhost:60614/',
 });
 
 export const topicApi = new TopicApi({
-  host: process.env.DIAL_DEPLOYMENTS_API_URL,
+  host: 'http://localhost:60614/',
 });
 
 export const whitelistApi = new WhitelistApi({
-  host: process.env.DIAL_DEPLOYMENTS_API_URL,
+  host: 'http://localhost:60614/',
 });
 
 export const testSuitesApi = new TestSuitesApi({
-  host: process.env.DIAL_EVAL_API_URL,
+  host: 'https://eval-swagger.aks.dev.dial.parts/',
 });
 
 export const metricsApi = new MetricsApi({
-  host: process.env.DIAL_EVAL_API_URL,
+  host: 'https://eval-swagger.aks.dev.dial.parts/api/',
 });
