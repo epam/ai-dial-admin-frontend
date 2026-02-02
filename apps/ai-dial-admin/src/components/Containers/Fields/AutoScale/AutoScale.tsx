@@ -129,7 +129,7 @@ const Autoscaling: FC<Props> = ({ container, setContainer }) => {
               disabled={
                 (!!container.scaling?.scaleToZeroDelaySeconds && container.scaling?.scaleToZeroDelaySeconds !== 0) ||
                 isEditDisabled(container)
-              }szss
+              }
               label={t(ContainersI18nKey.MinReplicas)}
             />
             <DialNumberInputField
