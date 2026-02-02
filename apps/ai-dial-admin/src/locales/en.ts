@@ -88,7 +88,7 @@ export default {
     Approvals: 'Approvals',
     Playground: 'Playground',
     Metrics: 'Metrics',
-    TestSuits: 'Test Suits',
+    TestSuites: 'Test Suites',
     Runs: 'Runs',
     Evaluation: 'Evaluation',
     Audit: 'Audit',
@@ -144,7 +144,7 @@ export default {
     // no data
     NoApplications: 'No Applications',
     NoInterceptors: 'No Interceptors',
-    NoTestSuits: 'No Test Suits',
+    NoTestSuites: 'No Test Suites',
     NoRuns: 'No Runs',
     NoMetrics: 'No Metrics',
     NoLocalInterceptors: 'No Local Interceptors',
@@ -1281,7 +1281,7 @@ export default {
     GlobalFirewall: 'Global Firewall',
     AddDomain: 'Add domain',
   },
-  TestSuits: {
+  TestSuites: {
     CreateTestSuite: 'Create Test Suite',
     Application: 'Application',
     Methods: 'Methods',

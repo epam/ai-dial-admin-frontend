@@ -5,16 +5,16 @@ import { FC, useCallback, useMemo, useState } from 'react';
 import { useI18n } from '@/src/locales/client';
 
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
-import { TestSuitsI18nKey } from '@/src/constants/i18n';
-import { TestSuits } from '@/src/models/evaluation/test-suit';
+import { TestSuitesI18nKey } from '@/src/constants/i18n';
+import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { TEST_SUIT_STEPS } from './constants';
-import TestSuitProperties from './Properties';
+import TestSuiteProperties from './Properties';
 
 interface Props {
   isModalOpen: boolean;
   names: string[];
   onClose: () => void;
-  onCreate: (suit: TestSuits) => void;
+  onCreate: (suite: TestSuite) => void;
 }
 
 const CreateTestSuit: FC<Props> = ({ names, onClose, isModalOpen, onCreate }) => {
@@ -22,7 +22,7 @@ const CreateTestSuit: FC<Props> = ({ names, onClose, isModalOpen, onCreate }) =>
 
   const [steps, setSteps] = useState(TEST_SUIT_STEPS(t));
   const [currentStepId, setCurrentStep] = useState(steps[0].id);
-  const [testSuit, setTestSuit] = useState<TestSuits>({} as TestSuits);
+  const [testSuit, setTestSuit] = useState<TestSuite>({} as TestSuite);
 
   const currentStep = useMemo(() => steps.find((step) => step.id === currentStepId), [steps, currentStepId]);
 
@@ -31,15 +31,15 @@ const CreateTestSuit: FC<Props> = ({ names, onClose, isModalOpen, onCreate }) =>
   return (
     <DialPopup
       onClose={onClose}
-      header={t(TestSuitsI18nKey.CreateTestSuit)}
-      portalId="CreateTestSuitModal"
+      header={t(TestSuitesI18nKey.CreateTestSuite)}
+      portalId="CreateTestSuiteModal"
       open={isModalOpen}
       size={PopupSize.Lg}
     >
       <div className="flex flex-col py-4 px-6 overflow-auto gap-y-6 h-[450px]">
         <DialSteps steps={steps} currentStep={currentStepId} onChangeStep={setCurrentStep} />
         <div className="flex-1 min-h-0">
-          <TestSuitProperties testSuit={testSuit} names={names} onChangeTestSuit={setTestSuit} />
+          <TestSuiteProperties testSuite={testSuit} names={names} onChangeTestSuite={setTestSuit} />
         </div>
       </div>
       <StepperModalButtons

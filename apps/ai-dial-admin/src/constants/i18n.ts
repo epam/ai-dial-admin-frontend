@@ -25,7 +25,7 @@ export enum MenuI18nKey {
   Prompts = 'Menu.Prompts',
   Files = 'Menu.Files',
   Runs = 'Menu.Runs',
-  TestSuits = 'Menu.TestSuits',
+  TestSuites = 'Menu.TestSuites',
   Metrics = 'Menu.Metrics',
   Audit = 'Menu.Audit',
   Toolsets = 'Menu.Toolsets',
@@ -130,7 +130,7 @@ export enum EntitiesI18nKey {
   NoFiles = 'Entities.NoFiles',
   NoPublications = 'Entities.NoPublications',
   NoInterceptors = 'Entities.NoInterceptors',
-  NoTestSuits = 'Entities.NoTestSuits',
+  NoTestSuites = 'Entities.NoTestSuites',
   NoRuns = 'Entities.NoRuns',
   NoMetrics = 'Entities.NoMetrics',
   NoLocalInterceptors = 'Entities.NoLocalInterceptors',
@@ -1263,8 +1263,8 @@ export enum ApplicationsI18nKey {
   ApplicationPaths = 'Applications.ApplicationPaths',
 }
 
-export enum TestSuitsI18nKey {
-  CreateTestSuit = 'TestSuits.CreateTestSuit',
-  Application = 'TestSuits.Application',
-  Methods = 'TestSuits.Methods',
+export enum TestSuitesI18nKey {
+  CreateTestSuite = 'TestSuites.CreateTestSuite',
+  Application = 'TestSuites.Application',
+  Methods = 'TestSuites.Methods',
 }
