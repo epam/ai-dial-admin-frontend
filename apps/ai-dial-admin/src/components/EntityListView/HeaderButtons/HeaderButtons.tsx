@@ -30,7 +30,7 @@ import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
 import { getErrorNotification, getPrepareNotification } from '@/src/utils/notification';
-import ResetFiltersButton from './ResetFiltersButton';
+import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
 import { getFormDataForImport, getImportFunction, getImportTitle } from './utils';
 import { Asset } from '@/src/models/dial/deployment-asset';
 import { isAssetView } from '@/src/utils/is-asset-view';

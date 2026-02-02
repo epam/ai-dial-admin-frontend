@@ -12,7 +12,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { Container } from '@/src/models/deployments/containers';
 import { createContainer } from '@/src/app/actions/deployments';
 import { getErrorNotification } from '@/src/utils/notification';
-import ResetFiltersButton from '@/src/components/EntityListView/HeaderButtons/ResetFiltersButton';
+import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
 import { ButtonsI18nKey, ContainersI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import CreateContainer from '@/src/components/Containers/Modals/CreateContainer';
