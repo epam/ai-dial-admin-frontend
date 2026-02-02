@@ -153,10 +153,10 @@ const HeaderButtons = <T extends object>({
         createPortal(
           <DeleteConfirmationModal
             entity={entity}
-            removeEntity={onRemove}
+            onRemoveEntity={onRemove}
             view={view}
             onCloseModal={onCloseModal}
-            context={getAssetContext}
+            getAssetContext={getAssetContext}
             isSelectedView={true}
             existingVersions={existingVersions}
             etag={etag}

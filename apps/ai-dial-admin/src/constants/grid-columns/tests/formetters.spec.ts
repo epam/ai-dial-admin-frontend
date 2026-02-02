@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   formatAttachment,
+  formatRequired,
   getFormattedResourceType,
   getTopics,
   numberValueFormatter,
@@ -11,7 +12,7 @@ import {
 import { ActivityAuditResourceType } from '@/src/types/activity-audit';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { ApplicationRoute } from '@/src/types/routes';
-import { EntitiesI18nKey, MenuI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, EntitiesI18nKey, MenuI18nKey, SourceI18nKey } from '@/src/constants/i18n';
 
 const t = (s: string) => s;
 
@@ -148,5 +149,19 @@ describe('Formatters :: sourceTypeFormatter', () => {
 
   test('formats source type for unknown type', () => {
     expect(sourceTypeFormatter('UNKNOWN' as SOURCE_TYPE, t)).toBe('UNKNOWN');
+  });
+});
+
+describe('formatRequired', () => {
+  test('returns translated Yes when value is truthy', () => {
+    const t = (key: string) => key;
+    const res = formatRequired('non-empty', t);
+    expect(res).toBe(BasicI18nKey.Yes);
+  });
+
+  test('returns translated No when value is falsy', () => {
+    const t = (key: string) => key;
+    const res = formatRequired('', t);
+    expect(res).toBe(BasicI18nKey.No);
   });
 });

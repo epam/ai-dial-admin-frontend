@@ -3,7 +3,7 @@ import { GridOptions } from 'ag-grid-community';
 import { useRouter } from 'next/navigation';
 import { useCallback } from 'react';
 
-import { emptyDataTitleMap, listViewTitleMap } from '@/src/components/EntityListView/constants';
+import { emptyDataTitleMap, listViewTitleMap } from '@/src/components/ListView/constants';
 import ListView from '@/src/components/ListView/ListView';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { getPublicationColumns } from '@/src/constants/grid-columns/grid-columns';

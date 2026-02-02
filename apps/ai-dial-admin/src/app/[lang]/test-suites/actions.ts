@@ -2,22 +2,22 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { testSuitsApi } from '@/src/app/api/api';
+import { testSuitesApi } from '@/src/app/api/api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { TestSuits } from '@/src/models/evaluation/test-suit';
+import { TestSuite } from '@/src/models/evaluation/test-suite';
 
-export async function removeSuit(id: string) {
+export async function removeTestSuite(id: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return testSuitsApi.removeTestSuit(id, token);
+  return testSuitesApi.removeTestSuite(id, token);
 }
 
-export async function createSuit(suit: TestSuits) {
+export async function createTestSuite(suite: TestSuite) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return testSuitsApi.createTestSuit(suit, token);
+  return testSuitesApi.createTestSuite(suite, token);
 }
 
-export async function updateTestSuit(suit: TestSuits) {
+export async function updateTestSuite(suite: TestSuite) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return testSuitsApi.updateTestSuit(suit, token);
+  return testSuitesApi.updateTestSuite(suite, token);
 }

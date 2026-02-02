@@ -38,40 +38,44 @@ interface Artefact {
 }
 interface Props<T> {
   view: ApplicationRoute;
-  entity: T;
+  entity?: T;
   existingVersions?: string[];
   isSelectedView?: boolean;
-  resetCurrentEntity?: () => void;
-  removeEntity: (entity: string) => Promise<ServerActionResponse>;
-  onCloseModal: () => void;
-  context?: () => AssetsFolderContext<DialFile>;
   etag?: string;
+  onResetEntity?: () => void;
+  onRemoveEntity: (entity: string) => Promise<ServerActionResponse>;
+  onCloseModal: () => void;
+  getAssetContext?: () => AssetsFolderContext<DialFile>;
 }
 
 const DeleteConfirmationModal = <T extends Artefact>({
   view,
   entity,
-  removeEntity,
-  onCloseModal,
-  context,
-  isSelectedView,
-  resetCurrentEntity,
   existingVersions,
   etag,
+  onRemoveEntity,
+  onCloseModal,
+  getAssetContext,
+  isSelectedView,
+  onResetEntity,
 }: Props<T>) => {
-  const [selectedVersion, setSelectedVersion] = useState<string | undefined>(entity?.version);
+  if (!entity) {
+    return null;
+  }
+  const t = useI18n();
+  const router = useRouter();
+  const { showNotification } = useNotification();
+  const folderContext = getAssetContext?.();
+  const getReqRef = useRef(useProtectedRequest());
+  const modalSize = isBuildersView(view) ? PopupSize.Md : PopupSize.Sm;
+
+  const [selectedVersion, setSelectedVersion] = useState(entity?.version);
+
   const name = useMemo(
     () => (isAssetView(view) ? entity.name : entity.displayName || entity['dial:applicationTypeDisplayName']),
     [entity, view],
   );
   const id = useMemo(() => (isAssetView(view) ? void 0 : entity.name || entity.$id), [entity.$id, entity.name, view]);
-
-  const t = useI18n();
-  const router = useRouter();
-  const { showNotification } = useNotification();
-  const folderContext = context?.();
-  const getReqRef = useRef(useProtectedRequest());
-  const modalSize = isBuildersView(view) ? PopupSize.Md : PopupSize.Sm;
 
   const showSuccessNotification = useCallback(
     (entityKey: string) => {
@@ -98,6 +102,7 @@ const DeleteConfirmationModal = <T extends Artefact>({
 
   const onConfirmRemoving = useCallback(() => {
     let entityKeys: string[];
+
     if (!selectedVersion) {
       entityKeys = [getEntityPath(view, entity, true)];
     } else {
@@ -107,7 +112,7 @@ const DeleteConfirmationModal = <T extends Artefact>({
           : existingVersions?.map((version) => getEntityPath(view, entity, true, version)) || [];
     }
 
-    const promises = entityKeys.map((entityKey) => getReqRef.current(removeEntity, entityKey, etag));
+    const promises = entityKeys.map((entityKey) => getReqRef.current(onRemoveEntity, entityKey, etag));
 
     Promise.all(promises)
       .then((resArr) => {
@@ -124,7 +129,7 @@ const DeleteConfirmationModal = <T extends Artefact>({
 
         if (isAllSuccess) {
           onCloseModal();
-          resetCurrentEntity?.();
+          onResetEntity?.();
           if (isAssetView(view)) {
             folderContext?.fetchFiles(folderContext?.filePath);
           }
@@ -141,9 +146,9 @@ const DeleteConfirmationModal = <T extends Artefact>({
   }, [
     view,
     entity,
-    removeEntity,
+    onRemoveEntity,
     onCloseModal,
-    resetCurrentEntity,
+    onResetEntity,
     showSuccessNotification,
     isSelectedView,
     router,

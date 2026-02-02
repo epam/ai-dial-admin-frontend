@@ -19,7 +19,7 @@ import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import Actions from './Components/Actions';
 import { ModalType } from './Components/Modals';
-import { emptyDataTitleMap, listViewTitleMap } from './constants';
+import { emptyDataTitleMap, listViewTitleMap } from '../ListView/constants';
 import EntityListHeaderButtons from './HeaderButtons/HeaderButtons';
 
 interface Props<T> {

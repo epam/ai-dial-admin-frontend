@@ -47,7 +47,7 @@ export enum ApplicationRoute {
 
   // evaluations
   Playground = '/playground',
-  TestSuits = '/test-suits',
+  TestSuites = '/test-suites',
   Runs = '/runs',
   Metrics = '/metrics',
 }

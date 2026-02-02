@@ -1,7 +1,7 @@
 import { FC, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialButton } from '@epam/ai-dial-ui-kit';
+import { DialIconButton } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
 import OpenPopup from '@/public/images/icons/open-pop-up.svg';
@@ -84,9 +84,10 @@ const CoreSyncEntityStatus: FC<Props> = ({ view, name }) => {
         <div className="flex flex-row gap-x-2 items-center">
           <StatusText status={coreSyncStatus?.status} />
           {diffStatus && (
-            <DialButton
-              iconAfter={<OpenPopup {...BASE_BUTTON_ICON_PROPS} className="cursor-pointer text-secondary" />}
+            <DialIconButton
+              icon={<OpenPopup {...BASE_BUTTON_ICON_PROPS} className="cursor-pointer text-secondary" />}
               onClick={() => setIsModalOpen(true)}
+              className="w-auto h-auto p-0"
             />
           )}
         </div>
