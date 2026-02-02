@@ -1215,6 +1215,7 @@ export default {
     DeleteModalDescription: 'Are you sure, you want to delete this {entityType}?',
     Container: 'Container',
     InputSchema: 'Input schema',
+    OutputSchema: 'Output schema',
     Annotations: 'Annotations',
     ContainerImage: '{type} Image',
     ContainerProperties: 'Properties',

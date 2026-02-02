@@ -1,7 +1,9 @@
-import { FC } from 'react';
+import { FC, useState } from 'react';
 
 import Accordion from '@/src/components/Common/Accordion/Accordion';
+import ViewSelector from '@/src/components/Tools/View/ViewSelector';
 import { Tool as ToolType } from '@/src/models/dial/toolset';
+import { ParamsView } from '@/src/types/parameters';
 import ToolContent from './ToolContent';
 import ToolHeader from './ToolHeader';
 
@@ -14,6 +16,8 @@ interface Props {
 }
 
 const Tool: FC<Props> = ({ tool, isAddedManual, isMcpToolset, isAssetToolset, toolSetName }) => {
+  const [view, setView] = useState<string>(ParamsView.TABLE);
+
   return (
     <>
       {isAddedManual ? (
@@ -30,6 +34,7 @@ const Tool: FC<Props> = ({ tool, isAddedManual, isMcpToolset, isAssetToolset, to
         <Accordion
           header={
             <ToolHeader
+              viewSelector={<ViewSelector view={view} changeView={setView} />}
               tool={tool}
               toolSetName={toolSetName}
               isAddedManual={isAddedManual}
@@ -37,9 +42,9 @@ const Tool: FC<Props> = ({ tool, isAddedManual, isMcpToolset, isAssetToolset, to
               isAssetToolset={isAssetToolset}
             />
           }
-          containerClassName={isMcpToolset ? 'px-4 py-4' : 'px-4 py-2'}
+          containerClassName={isMcpToolset ? '' : 'px-4 py-2'}
         >
-          <ToolContent tool={tool} />
+          <ToolContent tool={tool} view={view} />
         </Accordion>
       )}
     </>

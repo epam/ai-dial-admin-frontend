@@ -2,8 +2,6 @@
 
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import { ButtonsI18nKey, EntitiesI18nKey, ErrorI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
 import {
   ButtonAppearance,
   DialCollapsibleSidebar,
@@ -13,17 +11,23 @@ import {
   DialPrimaryButton,
   PopupSize,
 } from '@epam/ai-dial-ui-kit';
-import Search from '@/src/components/Common/Search/Search';
-import { Tool, Toolset } from '@/src/models/dial/toolset';
 import { IconPlus } from '@tabler/icons-react';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-import { generateUniqueName, getCustomToolErrorType } from './utils';
-import ToolSwitcher from './ToolSwitcher';
-import AddNewTool from './AddNewTool';
+
+import Search from '@/src/components/Common/Search/Search';
 import ToolContent from '@/src/components/Tools/Tool/ToolContent';
+import ViewSelector from '@/src/components/Tools/View/ViewSelector';
+import { ButtonsI18nKey, EntitiesI18nKey, ErrorI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useI18n } from '@/src/locales/client';
+import { Tool, Toolset } from '@/src/models/dial/toolset';
 import { ErrorType } from '@/src/types/error-type';
-import { CustomToolConfig, ToolConfig } from './types';
+import { ParamsView } from '@/src/types/parameters';
+
+import AddNewTool from './AddNewTool';
 import { defaultToolName } from './constants';
+import ToolSwitcher from './ToolSwitcher';
+import { CustomToolConfig, ToolConfig } from './types';
+import { generateUniqueName, getCustomToolErrorType } from './utils';
 
 interface Props {
   isModalOpen: boolean;
@@ -35,6 +39,8 @@ interface Props {
 
 const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalToolset, onClose, onConfirm }) => {
   const t = useI18n();
+  const [view, setView] = useState<string>(ParamsView.TABLE);
+
   const [toolsConfig, setToolsConfig] = useState<ToolConfig[]>(() => {
     return tools.map((tool) => ({
       ...tool,
@@ -256,8 +262,11 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalToolset, onCl
           )}
           {activeToolIndex !== null && (
             <>
-              <h2 className="mt-2">{tools[activeToolIndex].name}</h2>
-              <ToolContent tool={tools[activeToolIndex]} />
+              <div className="flex flex-row justify-between">
+                <h2 className="mt-2">{tools[activeToolIndex].name}</h2>
+                <ViewSelector view={view} changeView={setView} />
+              </div>
+              <ToolContent tool={tools[activeToolIndex]} view={view} />
             </>
           )}
         </div>

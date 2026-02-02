@@ -1198,6 +1198,7 @@ export enum ContainersI18nKey {
   DeleteModalDescription = 'Containers.DeleteModalDescription',
   Container = 'Containers.Container',
   InputSchema = 'Containers.InputSchema',
+  OutputSchema = 'Containers.OutputSchema',
   Annotations = 'Containers.Annotations',
   ContainerImage = 'Containers.ContainerImage',
   ContainerProperties = 'Containers.ContainerProperties',
