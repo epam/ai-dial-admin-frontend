@@ -3,9 +3,8 @@
 import { FC } from 'react';
 
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
-import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
+import { TestSuite } from '@/src/models/evaluation/test-suite';
 
 interface Props {
   testSuite: TestSuite;
@@ -16,15 +15,18 @@ interface Props {
 const TestSuiteProperties: FC<Props> = ({ testSuite, names, onChangeTestSuite }) => {
   return (
     <div className="w-full flex flex-col gap-y-8">
-      <IdControl entity={testSuite} onChangeEntity={onChangeTestSuite} />
+      {/* TODO: ask BE team */}
+      {/* <IdControl entity={testSuite} onChangeEntity={onChangeTestSuite} /> */}
 
       <DisplayNameControl
         displayName={testSuite.name}
         names={names}
+        required={true}
+        isFullWidth={false}
         onChange={(name) => onChangeTestSuite({ ...testSuite, name })}
       />
 
-      <DescriptionControl entity={testSuite} onChangeEntity={onChangeTestSuite} />
+      <DescriptionControl isFullWidth={false} entity={testSuite} onChangeEntity={onChangeTestSuite} />
     </div>
   );
 };

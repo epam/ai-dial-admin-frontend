@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { DialPopup, DialSteps, PopupSize } from '@epam/ai-dial-ui-kit';
-import { FC, useCallback, useMemo, useState } from 'react';
+import { DialPopup, DialSteps, PopupSize, StepStatus } from '@epam/ai-dial-ui-kit';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useI18n } from '@/src/locales/client';
 
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
-import { TEST_SUIT_STEPS } from './constants';
+import { TEST_SUIT_STEPS, TestSuitTab } from './constants';
 import TestSuiteProperties from './Properties';
 
 interface Props {
@@ -28,6 +28,14 @@ const CreateTestSuit: FC<Props> = ({ names, onClose, isModalOpen, onCreate }) =>
 
   const onFinishClick = useCallback(() => {}, []);
 
+  useEffect(() => {
+    setSteps((prev) =>
+      prev.map((step) =>
+        step.id === TestSuitTab.Properties ? { ...step, status: testSuit.name ? StepStatus.VALID : void 0 } : step,
+      ),
+    );
+  }, [testSuit, currentStepId]);
+
   return (
     <DialPopup
       onClose={onClose}
@@ -42,6 +50,7 @@ const CreateTestSuit: FC<Props> = ({ names, onClose, isModalOpen, onCreate }) =>
           <TestSuiteProperties testSuite={testSuit} names={names} onChangeTestSuite={setTestSuit} />
         </div>
       </div>
+
       <StepperModalButtons
         onClose={onClose}
         onFinishClick={onFinishClick}

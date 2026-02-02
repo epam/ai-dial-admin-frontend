@@ -843,9 +843,11 @@ export const RUNS_COLUMN = (): ColDef[] => [
   { field: 'displayName', colId: 'displayName', headerName: 'Display Name', hide: false },
 ];
 
-// TODO: update columns
 export const METRICS_COLUMN = (): ColDef[] => [
-  { field: 'displayName', colId: 'displayName', headerName: 'Display Name', hide: false },
+  { field: 'id', colId: 'id', headerName: 'ID', hide: false },
+  { field: 'name', colId: 'name', headerName: 'Name', hide: false },
+  DESCRIPTION_COLUMN,
+  CREATED_AT_COLUMN,
 ];
 
 export const TOOL_SCHEMA_COLUMNS = (t: (key: string) => string): ColDef[] => [
