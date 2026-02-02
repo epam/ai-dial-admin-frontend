@@ -156,7 +156,7 @@ export const MENU_CONFIGURATION = (
       key: MenuI18nKey.Evaluation,
       descriptionKey: MenuI18nKey.EvaluationDescription,
       icon: <IconFlask width={iconSize} height={iconSize} />,
-      items: [],
+      items: [{ key: MenuI18nKey.TestSuits, href: ApplicationRoute.TestSuits }],
     },
     {
       key: MenuI18nKey.Audit,

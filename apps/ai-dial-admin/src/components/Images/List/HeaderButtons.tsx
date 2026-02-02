@@ -20,7 +20,7 @@ import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 
-import ResetFiltersButton from '@/src/components/EntityListView/HeaderButtons/ResetFiltersButton';
+import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
 import AddImageModal from '@/src/components/Images/Modals/AddImage';
 import GlobalWhitelist from '@/src/components/Deployments/Modals/GlobalWhitelist';
 
