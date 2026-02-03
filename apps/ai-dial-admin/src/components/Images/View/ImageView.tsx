@@ -89,6 +89,7 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
       // Force JSON Editor re-render to show originalEntity on discard.
       setKey((prevKey) => prevKey + 1);
     }
+    dispatch({ type: ValidationActionType.Reset });
     setSelectedImage(cloneDeep(image));
   }, [jsonEditorEnabled, image, dispatch]);
 
