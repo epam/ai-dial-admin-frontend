@@ -5,7 +5,7 @@ import { DialSwitch } from '@epam/ai-dial-ui-kit';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import MdEditor from '@/src/components/Common/MdEditor/MdEditor';
-import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
+import DescriptionControl from '@/src/components/BaseControls/Description';
 import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';

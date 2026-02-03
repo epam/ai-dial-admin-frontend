@@ -6,9 +6,9 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
 import { getMCPContainers, getModelContainers } from '@/src/app/actions/deployments';
-import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
-import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
-import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
+import DescriptionControl from '@/src/components/BaseControls/Description';
+import IdControl from '@/src/components/BaseControls/Id/Id';
+import VersionControl from '@/src/components/BaseControls/Version';
 import ApplicationSource from '@/src/components/SourceField/Application/ApplicationSource';
 import SourceField from '@/src/components/SourceField/SourceField';
 import { getSourceItems } from '@/src/components/SourceField/constants';
