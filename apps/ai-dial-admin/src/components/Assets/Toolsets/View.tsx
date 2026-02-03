@@ -269,7 +269,8 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
             etag={etag}
             getAssetContext={useToolsetFolder as () => AssetsFolderContext<DialFile | AssetToolset>}
           >
-            {selectedToolset.authSettings?.authenticationType !== ToolsetAuthType.NONE &&
+            {selectedToolset.authSettings?.authenticationType &&
+              selectedToolset.authSettings?.authenticationType !== ToolsetAuthType.NONE &&
               (isToolsetSignedIn ? (
                 <DialNeutralButton
                   label={t(ToolsetI18nKey.LogOut)}
