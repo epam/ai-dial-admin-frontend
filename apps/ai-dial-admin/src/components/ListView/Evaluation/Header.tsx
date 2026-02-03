@@ -77,7 +77,7 @@ const HeaderButtons = <T extends object>({ route, gridApi, toggleColumnsPanel, o
   return (
     <div className="flex gap-4">
       <ResetFiltersButton gridApi={gridApi} />
-      {gridApi?.getRenderedNodes().length && (
+      {!!gridApi?.getRenderedNodes().length && (
         <DialGhostButton
           label={t(ButtonsI18nKey.Columns)}
           iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} />}
