@@ -200,8 +200,8 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
             onDiscard={onDiscard}
             onRemove={removeKey}
             onSave={onTryToSaveKey}
-            isJsonEditorEnabled={isJsonEditorEnabled}
-            onToggleJsonEditor={onToggleJsonEditor}
+            isEditorEnabled={isJsonEditorEnabled}
+            onToggleEditor={onToggleJsonEditor}
             selectedFormat={selectedFormat}
             onChangeSelectedFormat={setSelectedFormat}
           >

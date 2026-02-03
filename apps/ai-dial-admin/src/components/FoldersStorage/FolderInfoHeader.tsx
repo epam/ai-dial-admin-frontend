@@ -1,48 +1,22 @@
 'use client';
 
-import { FC, useEffect, useState } from 'react';
+import { FC } from 'react';
 
-import classNames from 'classnames';
-import { DialPrimaryButton, DialNeutralButton } from '@epam/ai-dial-ui-kit';
-
-import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
-import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
-import { useI18n } from '@/src/locales/client';
+import ChangedEntityButtons from '../EntityHeaderControls/Buttons/ChangedEntityButtons';
 
 interface Props {
   isChanged: boolean;
   isSaveDisable: boolean;
   title: string;
-  save: () => void;
-  discard: () => void;
+  onSave: () => void;
+  onDiscard: () => void;
 }
 
-const FolderInfoHeader: FC<Props> = ({ isChanged, isSaveDisable, title, save, discard }) => {
-  const t = useI18n();
-  const isTablet = useIsOnlyTabletScreen();
-  const isMobile = useIsMobileScreen();
-
-  const [buttonsClassName, setButtonsClassName] = useState('');
-
-  useEffect(() => {
-    setButtonsClassName(classNames((isTablet || isMobile) && 'w-1/2 flex justify-center'));
-  }, [isTablet, isMobile]);
-
+const FolderInfoHeader: FC<Props> = ({ isChanged, isSaveDisable, title, onSave, onDiscard }) => {
   return (
     <div className="flex justify-between items-center">
       <h2>{title}</h2>
-      {isChanged && (
-        <div className="flex flex-row gap-3 p-3 lg:p-0">
-          <DialNeutralButton className={buttonsClassName} label={t(ButtonsI18nKey.Discard)} onClick={discard} />
-          <DialPrimaryButton
-            className={buttonsClassName}
-            label={t(ButtonsI18nKey.Save)}
-            onClick={save}
-            disabled={isSaveDisable}
-          />
-        </div>
-      )}
+      {isChanged && <ChangedEntityButtons onDiscard={onDiscard} onSave={onSave} disableSave={isSaveDisable} />}
     </div>
   );
 };

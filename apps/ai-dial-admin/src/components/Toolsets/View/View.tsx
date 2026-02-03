@@ -274,8 +274,8 @@ const ToolsetView: FC<Props> = ({ names, isUserLevel, oAuthCode, etag, roles, or
           onDiscard={onDiscard}
           onSave={onTryToSave}
           onRemove={removeToolset}
-          isJsonEditorEnabled={isJsonEditorEnabled}
-          onToggleJsonEditor={onToggleJsonEditor}
+          isEditorEnabled={isJsonEditorEnabled}
+          onToggleEditor={onToggleJsonEditor}
           selectedFormat={selectedFormat}
           onChangeSelectedFormat={setSelectedFormat}
         >

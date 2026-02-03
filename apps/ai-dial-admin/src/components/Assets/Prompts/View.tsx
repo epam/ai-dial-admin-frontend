@@ -158,8 +158,8 @@ const PromptView: FC<Props> = ({ originalPrompt, etag, prompts }) => {
           onSave={onSave}
           onDiscard={onDiscard}
           onRemove={removePrompt}
-          isJsonEditorEnabled={isJsonEditorEnabled}
-          onToggleJsonEditor={onToggleJsonEditor}
+          isEditorEnabled={isJsonEditorEnabled}
+          onToggleEditor={onToggleJsonEditor}
           assets={prompts as Asset[]}
           addedVersions={addedVersions}
           setAddedVersions={setAddedVersions}
