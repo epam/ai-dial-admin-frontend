@@ -1,10 +1,7 @@
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useState } from 'react';
 
 import { Container } from '@/src/models/deployments/containers';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { getErrorForDisplayName, getErrorForName } from '@/src/utils/validation/name-error';
 import { isEditDisabled } from '@/src/utils/deployments/containers';
-import { useI18n } from '@/src/locales/client';
 
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import Maintainer from '@/src/components/BaseControls/Maintainer';
@@ -19,32 +16,15 @@ interface Props {
 }
 
 const BaseFields: FC<Props> = ({ container, setContainer, names, isModal = false }) => {
-  const t = useI18n();
-  const { dispatch } = useSaveValidationContext();
-
   const [isUniqueNameError, setIsUniqueNameError] = useState<boolean>(false);
-
-  useEffect(() => {
-    dispatch({
-      type: ValidationActionType.SetField,
-      field: 'name',
-      isValid: !getErrorForName(container.name, names, t),
-    });
-    dispatch({
-      type: ValidationActionType.SetField,
-      field: 'displayName',
-      isValid: !getErrorForDisplayName(container.displayName, true, t),
-    });
-  }, [container.name, dispatch, isModal, names, t, container.displayName]);
 
   const onChangeName = useCallback(
     (container: Container) => {
       const error = names?.includes(container.name);
-      dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !error });
       setIsUniqueNameError(!!error);
       setContainer(container);
     },
-    [dispatch, names, setContainer],
+    [names, setContainer],
   );
 
   const onChangeDisplayName = useCallback(
