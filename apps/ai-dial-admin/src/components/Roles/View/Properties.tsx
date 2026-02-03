@@ -3,7 +3,7 @@
 import { FC } from 'react';
 
 import EntityProperties from '@/src/components/EntityMainProperties/Properties/EntityProperties';
-import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
+import TopicsControl from '@/src/components/BaseControls/Topics';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import { DialRole } from '@/src/models/dial/role';
 import { ApplicationRoute } from '@/src/types/routes';

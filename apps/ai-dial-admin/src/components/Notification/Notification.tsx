@@ -28,7 +28,7 @@ const Notification: FC<NotificationConfig> = ({ type, title, description, reques
           aria-label="close"
           className="absolute right-0 w-auto h-auto p-0"
           onClick={onClose}
-          iconBefore={<IconX height={18} width={18} />}
+          icon={<IconX height={18} width={18} />}
         />
       </div>
       {description ? <p className="tiny text-secondary break-words whitespace-pre-wrap mt-2">{description}</p> : null}

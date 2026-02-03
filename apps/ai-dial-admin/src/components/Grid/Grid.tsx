@@ -172,6 +172,7 @@ const Grid = <T extends object>({
         theme={themeBalham.withPart(colorSchemeDark).withParams({ ...GRID_THEME_COLORS })}
         autoSizeStrategy={{ type: 'fitGridWidth' }}
         tooltipShowDelay={500}
+        suppressDragLeaveHidesColumns={true}
         defaultColDef={{
           minWidth: 150,
           floatingFilter: true,
