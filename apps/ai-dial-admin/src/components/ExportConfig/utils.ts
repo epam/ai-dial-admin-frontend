@@ -1,7 +1,6 @@
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
 
 import {
-  KEYS_COLUMNS,
   LIST_RUNNER_COLUMNS,
   SIMPLE_ENTITY_COLUMNS,
   BASE_COLUMNS,
@@ -9,6 +8,7 @@ import {
   NAME_COLUMN,
   DISPLAY_NAME_COLUMN_WITH_SORT,
   DISPLAY_VERSION_COLUMN,
+  BASE_KEYS_COLUMNS,
 } from '@/src/constants/grid-columns/grid-columns';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { ExportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
@@ -60,7 +60,7 @@ export const getActualColDefs = (
     columns = [...SIMPLE_ENTITY_COLUMNS];
   }
   if (type === EntityType.KEY) {
-    columns = [...KEYS_COLUMNS(t)];
+    columns = [...BASE_KEYS_COLUMNS];
   }
   if (type === EntityType.APPLICATION_TYPE_SCHEMA) {
     columns = [...LIST_RUNNER_COLUMNS];
