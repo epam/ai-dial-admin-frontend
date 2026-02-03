@@ -1,4 +1,4 @@
-import { DialNeutralButton, DialPrimaryButton, DialSwitch } from '@epam/ai-dial-ui-kit';
+import { DialNeutralButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconBlocks, IconPlus, IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { useRouter } from 'next/navigation';
@@ -8,7 +8,7 @@ import { createPortal } from 'react-dom';
 import { createContainer, createImage, deleteImage, installImage } from '@/src/app/actions/deployments';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import { showEditorErrorNotifications } from '@/src/components/EntityView/JsonEditor/utils';
-import { ButtonsI18nKey, ContainersI18nKey, CreateI18nKey, EntitiesI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, ContainersI18nKey, CreateI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
@@ -25,6 +25,7 @@ import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 
 import VersionsSelect from '@/src/components/Deployments/Common/VersionsSelect/VersionsSelect';
 import Delete from '@/src/components/Deployments/Modals/Delete';
+import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
 import CreateContainer from '@/src/components/Images/Modals/CreateContainer';
 import Install from '@/src/components/Images/Modals/Install';
 import NewVersion from '@/src/components/Images/Modals/NewVersion';
@@ -70,12 +71,10 @@ const HeaderButtons: FC<Props> = ({
   const { isValid, jsonErrors, dispatch } = useSaveValidationContext();
 
   const staticContainerClassnames = 'flex flex-row gap-3 divide-x divide-primary';
-  const staticEditorClassNames = 'pl-6';
 
   const [modalType, setModalType] = useState<ModalType>();
   const [containerClassNames, setContainerClassNames] = useState(staticContainerClassnames);
   const [buttonsClassNames, setButtonsClassNames] = useState('');
-  const [editorClassNames, setEditorClassNames] = useState(staticEditorClassNames);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const allowEditing = useMemo(() => {
@@ -208,12 +207,6 @@ const HeaderButtons: FC<Props> = ({
       ),
     );
     setButtonsClassNames(classNames(isTablet || isMobile ? 'w-1/2 flex justify-center' : ''));
-    setEditorClassNames(
-      classNames(
-        staticEditorClassNames,
-        isTablet ? 'ml-3 pl-3 border-l-tertiary border-l h-full flex items-center' : isMobile ? 'hidden' : '',
-      ),
-    );
   }, [isTablet, isMobile]);
 
   return (
@@ -247,7 +240,7 @@ const HeaderButtons: FC<Props> = ({
             )}
           </div>
         ) : (
-          <div className="flex flex-row items-center w-full">
+          <div className="flex flex-row items-center w-full gap-x-4">
             <div className="flex-1 flex flex-row gap-3">
               <VersionsSelect
                 selected={image.id}
@@ -280,16 +273,7 @@ const HeaderButtons: FC<Props> = ({
               )}
               {children}
             </div>
-            {!hideJsonEditor && (
-              <div className={editorClassNames}>
-                <DialSwitch
-                  isOn={jsonEditorEnabled}
-                  label={t(EntitiesI18nKey.JSONEditor)}
-                  switchId="jsonEditor"
-                  onChange={toggleJsonEditor}
-                />
-              </div>
-            )}
+            {!hideJsonEditor && <JsonToggles isEditorEnabled={jsonEditorEnabled} onToggleEditor={toggleJsonEditor} />}
           </div>
         )}
       </div>

@@ -510,6 +510,9 @@ export default {
     RelatedContainers: 'Related Containers',
     Events: 'Events',
     Firewall: 'Firewall settings',
+    TestCases: 'Test Cases',
+    Runs: 'Runs',
+    Trends: 'Trends',
   },
   ForwardToken: {
     ForwardTokenModalTitle: 'Forward Auth Token',

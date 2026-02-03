@@ -531,6 +531,9 @@ export enum TabsI18nKey {
   RelatedContainers = 'Tabs.RelatedContainers',
   Events = 'Tabs.Events',
   Firewall = 'Tabs.Firewall',
+  TestCases = 'Tabs.TestCases',
+  Runs = 'Tabs.Runs',
+  Trends = 'Tabs.Trends',
 }
 
 export enum InterceptorsI18nKey {

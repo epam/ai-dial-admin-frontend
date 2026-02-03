@@ -266,8 +266,8 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
             onSave={onSave}
             onDiscard={onDiscard}
             onRemove={onRemove}
-            isJsonEditorEnabled={isJsonEditorEnabled}
-            onToggleJsonEditor={onToggleJsonEditor}
+            isEditorEnabled={isJsonEditorEnabled}
+            onToggleEditor={onToggleJsonEditor}
             assets={toolsets || []}
             etag={etag}
             getAssetContext={useToolsetFolder as () => AssetsFolderContext<DialFile | AssetToolset>}

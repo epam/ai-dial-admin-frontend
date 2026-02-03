@@ -9,6 +9,8 @@ import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { TEST_SUIT_STEPS, TestSuitTab } from './constants';
 import TestSuiteProperties from './Properties';
+import Applications from './Applications';
+import Methods from '@/src/components/TestSuites/Methods/Methods';
 
 interface Props {
   isModalOpen: boolean;
@@ -23,6 +25,7 @@ const CreateTestSuit: FC<Props> = ({ names, onClose, isModalOpen, onCreate }) =>
   const [steps, setSteps] = useState(TEST_SUIT_STEPS(t));
   const [currentStepId, setCurrentStep] = useState(steps[0].id);
   const [testSuit, setTestSuit] = useState<TestSuite>({} as TestSuite);
+  const [selectedApplication, setSelectedApplication] = useState<string>('');
 
   const currentStep = useMemo(() => steps.find((step) => step.id === currentStepId), [steps, currentStepId]);
 
@@ -36,6 +39,16 @@ const CreateTestSuit: FC<Props> = ({ names, onClose, isModalOpen, onCreate }) =>
     );
   }, [testSuit, currentStepId]);
 
+  useEffect(() => {
+    setSteps((prev) =>
+      prev.map((step) =>
+        step.id === TestSuitTab.Application
+          ? { ...step, status: selectedApplication ? StepStatus.VALID : void 0 }
+          : step,
+      ),
+    );
+  }, [selectedApplication, currentStepId]);
+
   return (
     <DialPopup
       onClose={onClose}
@@ -44,10 +57,18 @@ const CreateTestSuit: FC<Props> = ({ names, onClose, isModalOpen, onCreate }) =>
       open={isModalOpen}
       size={PopupSize.Lg}
     >
-      <div className="flex flex-col py-4 px-6 overflow-auto gap-y-6 h-[450px]">
+      <div className="flex flex-col py-4 px-6 overflow-auto gap-y-6 h-[600px]">
         <DialSteps steps={steps} currentStep={currentStepId} onChangeStep={setCurrentStep} />
         <div className="flex-1 min-h-0">
-          <TestSuiteProperties testSuite={testSuit} names={names} onChangeTestSuite={setTestSuit} />
+          {currentStepId === TestSuitTab.Properties && (
+            <TestSuiteProperties testSuite={testSuit} names={names} onChangeTestSuite={setTestSuit} />
+          )}
+
+          {currentStepId === TestSuitTab.Application && (
+            <Applications selectedApplication={selectedApplication} onChange={setSelectedApplication} />
+          )}
+
+          {currentStepId === TestSuitTab.Methods && <Methods methods={['/api', 'aaaa', 'sss']} />}
         </div>
       </div>
 

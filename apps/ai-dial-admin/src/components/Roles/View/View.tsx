@@ -272,8 +272,8 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
           onDiscard={onDiscard}
           onSave={onSave}
           onRemove={removeRole}
-          isJsonEditorEnabled={isJsonEditorEnabled}
-          onToggleJsonEditor={onToggleJsonEditor}
+          isEditorEnabled={isJsonEditorEnabled}
+          onToggleEditor={onToggleJsonEditor}
           selectedFormat={selectedFormat}
           onChangeSelectedFormat={setSelectedFormat}
         />

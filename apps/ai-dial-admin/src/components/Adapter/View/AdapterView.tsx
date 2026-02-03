@@ -124,8 +124,8 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
           onDiscard={onDiscard}
           onSave={onSave}
           onRemove={removeAdapter}
-          isJsonEditorEnabled={isJsonEditorEnabled}
-          onToggleJsonEditor={onToggleJsonEditor}
+          isEditorEnabled={isJsonEditorEnabled}
+          onToggleEditor={onToggleJsonEditor}
         >
           <DialNeutralButton
             label={`${t(ButtonsI18nKey.Create)} ${t(CreateI18nKey.Model)}`}

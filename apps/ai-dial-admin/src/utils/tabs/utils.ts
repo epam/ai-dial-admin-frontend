@@ -40,6 +40,9 @@ export enum EntityViewTab {
   RelatedContainers = 'Related Containers',
   Events = 'Events',
   Firewall = 'Firewall',
+  TestCases = 'TestCases',
+  Runs = 'Runs',
+  Trends = 'Trends',
 }
 
 export const propertiesTab = (t: (stringToTranslate: string) => string) => ({
@@ -203,6 +206,21 @@ export const relatedContainersTab = (t: (stringToTranslate: string) => string, s
   disabled: status === IMAGE_STATUS.NOT_BUILT,
 });
 
+export const testCasesTab = (t: (stringToTranslate: string) => string) => ({
+  id: EntityViewTab.TestCases,
+  label: t(TabsI18nKey.TestCases),
+});
+
+export const trendsTab = (t: (stringToTranslate: string) => string) => ({
+  id: EntityViewTab.Trends,
+  label: t(TabsI18nKey.Trends),
+});
+
+export const runsTab = (t: (stringToTranslate: string) => string) => ({
+  id: EntityViewTab.Runs,
+  label: t(TabsI18nKey.Runs),
+});
+
 export const getViewTabs = (t: (stringToTranslate: string) => string, view: ApplicationRoute): TabModel[] => {
   if (view === ApplicationRoute.Routes) {
     return [propertiesTab(t), rolesTab(t), auditTab(t)];
@@ -326,4 +344,8 @@ export const getDeploymentsViewTabs = (
 
 export const getSystemPropertiesTabs = (t: (stringToTranslate: string) => string): TabModel[] => {
   return [globalInterceptorsTab(t)];
+};
+
+export const getTestSuiteTabs = (t: (key: string) => string): TabModel[] => {
+  return [propertiesTab(t), testCasesTab(t), runsTab(t), trendsTab(t)];
 };
