@@ -40,6 +40,7 @@ const ToolHeader: FC<Props> = ({
         <SaveValidationContextProvider>
           <TryOut tool={tool} toolSetName={toolSetName} isAssetToolset={isAssetToolset} />
         </SaveValidationContextProvider>,
+        'w-[50%] max-w-[800px]',
       );
       if (sidebarOpen) {
         sidebar.toggleIsMenuClosed?.();
