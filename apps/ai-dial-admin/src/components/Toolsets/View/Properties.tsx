@@ -10,7 +10,6 @@ import { useI18n } from '@/src/locales/client';
 import { Toolset } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
-import Authentication from './Authentication';
 
 interface Props {
   selectedToolset: Toolset;
@@ -41,7 +40,7 @@ const ToolsetProperties: FC<Props> = ({ names, selectedToolset, onChangeToolset 
           }}
         />
         <MaxRetryAttempts entity={selectedToolset} onChangeEntity={onChangeToolset} />
-        <Authentication toolset={selectedToolset} view={ApplicationRoute.Toolsets} onChange={onChangeToolset} />
+        {/* <Authentication toolset={selectedToolset} view={ApplicationRoute.Toolsets} onChange={onChangeToolset} /> */}
       </div>
     </div>
   );
