@@ -564,6 +564,7 @@ export default {
     CustomTimeRage: 'Custom Time Range',
     Custom: 'Custom',
     UniqueUsers: 'Unique users',
+    Requests: 'Requests',
     RequestCount: 'Request count',
     TotalTokens: 'Total tokens',
     Money: 'Money',

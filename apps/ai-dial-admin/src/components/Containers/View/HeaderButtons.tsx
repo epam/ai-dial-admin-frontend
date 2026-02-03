@@ -3,6 +3,7 @@ import classNames from 'classnames';
 import { IconPlayerPause, IconPlayerPlay, IconPlus, IconTrashX } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import {
+  ButtonAppearance,
   ButtonVariant,
   DialButtonDropdown,
   DialNeutralButton,
@@ -234,7 +235,8 @@ const HeaderButtons = <T extends Container>({
                     <DialButtonDropdown
                       label={t(ButtonsI18nKey.Create)}
                       items={createToolsetOptions}
-                      variant={ButtonVariant.Secondary}
+                      variant={ButtonVariant.Neutral}
+                      appearance={ButtonAppearance.Outlined}
                     />
                   ) : (
                     <DialNeutralButton
