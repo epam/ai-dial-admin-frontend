@@ -5,11 +5,9 @@ import { FC, useCallback, useState } from 'react';
 import { DialTabs } from '@epam/ai-dial-ui-kit';
 import { cloneDeep } from 'lodash';
 
-import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { useI18n } from '@/src/locales/client';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
-import { ApplicationRoute } from '@/src/types/routes';
 import { getViewHeaderClassName } from '@/src/utils/entities/view';
 import { EntityViewTab, getTestSuiteTabs } from '@/src/utils/tabs/utils';
 
@@ -25,7 +23,9 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite }) => {
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedTestSuite, setSelectedTestSuite] = useState(cloneDeep(originalTestSuite));
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isChanged, setIsChanged] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
 
   const onChangeActiveTab = useCallback(

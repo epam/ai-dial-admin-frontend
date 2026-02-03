@@ -14,7 +14,7 @@ interface Props {
 const Methods: FC<Props> = ({ methods }) => {
   const t = useI18n();
 
-  const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
+  const [selectedMethod] = useState<string | null>(null);
 
   return (
     <div className="w-full flex flex-row h-full">
