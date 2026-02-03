@@ -79,15 +79,6 @@ const ContainerView: FC<Props> = ({
     setTabs(getDeploymentsViewTabs(route, t, container.status));
   }, [container.status, route, t]);
 
-  const onChangeActiveTab = useCallback(
-    (tab: string) => {
-      if (tab !== activeTab) {
-        setActiveTab(tab as EntityViewTab);
-      }
-    },
-    [activeTab],
-  );
-
   const toggleJsonEditor = useCallback(() => {
     setJsonEditorEnabled((prev) => !prev);
   }, [setJsonEditorEnabled]);
@@ -264,7 +255,7 @@ const ContainerView: FC<Props> = ({
             tabs={tabs}
             isEditorEnabled={jsonEditorEnabled}
             activeTab={activeTab}
-            onChangeActiveTab={onChangeActiveTab}
+            onChangeActiveTab={setActiveTab}
           />
 
           <HeaderButtons

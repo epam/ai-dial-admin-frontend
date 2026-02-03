@@ -90,13 +90,6 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
     }
   }, [selectedToolset, originalToolset]);
 
-  const onChangeActiveTab = useCallback(
-    (tab: string) => {
-      setActiveTab(tab as EntityViewTab);
-    },
-    [setActiveTab],
-  );
-
   const onDiscard = useCallback(() => {
     if (isJsonEditorEnabled) {
       dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
@@ -259,7 +252,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
             tabs={tabs}
             isEditorEnabled={isJsonEditorEnabled}
             activeTab={activeTab}
-            onChangeActiveTab={onChangeActiveTab}
+            onChangeActiveTab={setActiveTab}
           />
 
           <HeaderButtons

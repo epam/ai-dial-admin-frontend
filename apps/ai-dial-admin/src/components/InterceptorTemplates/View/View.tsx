@@ -60,13 +60,6 @@ const View: FC<Props> = ({ etag, template, names }) => {
     };
   }, [selectedTemplate.name]);
 
-  const onChangeActiveTab = useCallback(
-    (tab: string) => {
-      setActiveTab(tab as EntityViewTab);
-    },
-    [setActiveTab],
-  );
-
   const onSave = useCallback(() => {
     getReqRef.current(updateInterceptorTemplate, selectedTemplate, etag).then((res) => {
       if (res.success) {
@@ -100,7 +93,7 @@ const View: FC<Props> = ({ etag, template, names }) => {
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={getViewHeaderClassName()}>
-        <Tabs tabs={tabs} activeTab={activeTab} onChangeActiveTab={onChangeActiveTab} />
+        <Tabs tabs={tabs} activeTab={activeTab} onChangeActiveTab={setActiveTab} />
         <HeaderButtons
           view={ApplicationRoute.InterceptorTemplates}
           entity={selectedTemplate}

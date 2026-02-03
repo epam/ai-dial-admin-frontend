@@ -1,15 +1,15 @@
 'use client';
 
-import { FC, useCallback, useState } from 'react';
+import { FC, useState } from 'react';
 
 import { cloneDeep } from 'lodash';
 
+import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { useI18n } from '@/src/locales/client';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { getViewHeaderClassName } from '@/src/utils/entities/view';
 import { EntityViewTab, getTestSuiteTabs } from '@/src/utils/tabs/utils';
-import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
 
 interface Props {
   names: string[];
@@ -28,22 +28,10 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite }) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
 
-  const onChangeActiveTab = useCallback(
-    (tab: string) => {
-      setActiveTab(tab as EntityViewTab);
-    },
-    [setActiveTab],
-  );
-
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={getViewHeaderClassName(isEditorEnabled)}>
-        <Tabs
-          tabs={tabs}
-          isEditorEnabled={isEditorEnabled}
-          activeTab={activeTab}
-          onChangeActiveTab={onChangeActiveTab}
-        />
+        <Tabs tabs={tabs} isEditorEnabled={isEditorEnabled} activeTab={activeTab} onChangeActiveTab={setActiveTab} />
       </div>
       <div className="flex-1 overflow-auto min-h-0">
         {isEditorEnabled ? (

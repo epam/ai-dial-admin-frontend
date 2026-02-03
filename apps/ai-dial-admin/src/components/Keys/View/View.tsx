@@ -83,13 +83,6 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
     setIsChanged(selectedFormat === ExportFormat.CORE ? !isEqualCoreKey : !isEqualAdminKey);
   }, [selectedFormat, originalKey, selectedKey, coreKey]);
 
-  const onChangeActiveTab = useCallback(
-    (tab: string) => {
-      setActiveTab(tab as EntityViewTab);
-    },
-    [setActiveTab],
-  );
-
   const onDiscard = useCallback(() => {
     if (isJsonEditorEnabled) {
       dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
@@ -193,7 +186,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
             tabs={tabs}
             isEditorEnabled={isJsonEditorEnabled}
             activeTab={activeTab}
-            onChangeActiveTab={onChangeActiveTab}
+            onChangeActiveTab={setActiveTab}
           />
           <HeaderButtons
             view={ApplicationRoute.Keys}

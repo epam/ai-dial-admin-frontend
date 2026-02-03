@@ -110,13 +110,6 @@ const InterceptorView: FC<Props> = ({
     setIsChanged(selectedFormat === ExportFormat.CORE ? !isEqualCoreInterceptor : !isEqualAdminInterceptor);
   }, [selectedFormat, originalInterceptor, selectedInterceptor, coreInterceptor]);
 
-  const onChangeActiveTab = useCallback(
-    (tab: string) => {
-      setActiveTab(tab as EntityViewTab);
-    },
-    [setActiveTab],
-  );
-
   const onDiscard = useCallback(() => {
     if (isJsonEditorEnabled) {
       dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
@@ -231,7 +224,7 @@ const InterceptorView: FC<Props> = ({
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={getViewHeaderClassName(isJsonEditorEnabled)}>
-        <Tabs tabs={tabs} activeTab={activeTab} onChangeActiveTab={onChangeActiveTab} />
+        <Tabs tabs={tabs} activeTab={activeTab} onChangeActiveTab={setActiveTab} />
 
         <HeaderButtons
           view={ApplicationRoute.Interceptors}

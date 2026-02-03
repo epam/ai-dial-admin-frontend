@@ -64,13 +64,6 @@ const PromptView: FC<Props> = ({ originalPrompt, etag, prompts }) => {
     }
   }, [selectedPrompt, originalPrompt]);
 
-  const onChangeActiveTab = useCallback(
-    (tab: string) => {
-      setActiveTab(tab as EntityViewTab);
-    },
-    [setActiveTab],
-  );
-
   const onDiscard = useCallback(() => {
     if (isJsonEditorEnabled) {
       dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
@@ -149,7 +142,7 @@ const PromptView: FC<Props> = ({ originalPrompt, etag, prompts }) => {
           tabs={tabs}
           isEditorEnabled={isJsonEditorEnabled}
           activeTab={activeTab}
-          onChangeActiveTab={onChangeActiveTab}
+          onChangeActiveTab={setActiveTab}
         />
 
         <HeaderButtons

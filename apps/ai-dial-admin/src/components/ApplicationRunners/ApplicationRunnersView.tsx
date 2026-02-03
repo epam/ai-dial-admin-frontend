@@ -108,13 +108,6 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names,
     setIsChanged(selectedFormat === ExportFormat.CORE ? !isEqualCoreRunner : !isEqualAdminRunner);
   }, [selectedFormat, originalScheme, selectedRunner, coreRunner]);
 
-  const onChangeActiveTab = useCallback(
-    (tab: string) => {
-      setActiveTab(tab as EntityViewTab);
-    },
-    [setActiveTab],
-  );
-
   const onDiscard = useCallback(() => {
     if (isJsonEditorEnabled) {
       dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
@@ -172,7 +165,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names,
           tabs={tabs}
           isEditorEnabled={isJsonEditorEnabled}
           activeTab={activeTab}
-          onChangeActiveTab={onChangeActiveTab}
+          onChangeActiveTab={setActiveTab}
         />
 
         <HeaderButtons

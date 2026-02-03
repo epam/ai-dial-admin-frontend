@@ -59,15 +59,6 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
 
   const tabs = getDeploymentsViewTabs(route, t, selectedImage.buildStatus);
 
-  const onChangeActiveTab = useCallback(
-    (tab: string) => {
-      if (tab !== activeTab) {
-        setActiveTab(tab as EntityViewTab);
-      }
-    },
-    [activeTab],
-  );
-
   useEffect(() => {
     setSelectedImage(cloneDeep(image));
   }, [image]);
@@ -143,12 +134,7 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
     <>
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
         <div className={getViewHeaderClassName(isEditorEnabled)}>
-          <Tabs
-            tabs={tabs}
-            isEditorEnabled={isEditorEnabled}
-            activeTab={activeTab}
-            onChangeActiveTab={onChangeActiveTab}
-          />
+          <Tabs tabs={tabs} isEditorEnabled={isEditorEnabled} activeTab={activeTab} onChangeActiveTab={setActiveTab} />
 
           <HeaderButtons
             route={route}

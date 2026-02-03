@@ -65,13 +65,6 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
     setIsChanged(!isEqualSkippingUndefined(originalAdapter, selectedAdapter));
   }, [selectedAdapter, originalAdapter]);
 
-  const onChangeActiveTab = useCallback(
-    (tab: string) => {
-      setActiveTab(tab as EntityViewTab);
-    },
-    [setActiveTab],
-  );
-
   const onDiscard = useCallback(() => {
     if (isJsonEditorEnabled) {
       dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
@@ -117,7 +110,7 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
           tabs={tabs}
           isEditorEnabled={isJsonEditorEnabled}
           activeTab={activeTab}
-          onChangeActiveTab={onChangeActiveTab}
+          onChangeActiveTab={setActiveTab}
         />
 
         <HeaderButtons

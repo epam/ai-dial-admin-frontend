@@ -98,13 +98,6 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
     entityRef.current = selectedRole;
   }, [selectedRole]);
 
-  const onChangeActiveTab = useCallback(
-    (tab: string) => {
-      setActiveTab(tab as EntityViewTab);
-    },
-    [setActiveTab],
-  );
-
   const onDiscard = useCallback(() => {
     if (isJsonEditorEnabled) {
       dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
@@ -264,7 +257,7 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
           tabs={tabs}
           isEditorEnabled={isJsonEditorEnabled}
           activeTab={activeTab}
-          onChangeActiveTab={onChangeActiveTab}
+          onChangeActiveTab={setActiveTab}
         />
 
         <HeaderButtons

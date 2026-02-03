@@ -79,13 +79,6 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
     }
   }, [selectedApp, originalApp]);
 
-  const onChangeActiveTab = useCallback(
-    (tab: string) => {
-      setActiveTab(tab as EntityViewTab);
-    },
-    [setActiveTab],
-  );
-
   const onDiscard = useCallback(() => {
     if (isJsonEditorEnabled) {
       dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
@@ -170,7 +163,7 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
           tabs={tabs}
           isEditorEnabled={isJsonEditorEnabled}
           activeTab={activeTab}
-          onChangeActiveTab={onChangeActiveTab}
+          onChangeActiveTab={setActiveTab}
         />
 
         <HeaderButtons
