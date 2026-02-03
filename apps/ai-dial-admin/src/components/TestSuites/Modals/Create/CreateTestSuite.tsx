@@ -14,12 +14,11 @@ import Methods from '@/src/components/TestSuites/Methods/Methods';
 
 interface Props {
   isModalOpen: boolean;
-  names: string[];
   onClose: () => void;
   onCreate: (suite: TestSuite) => void;
 }
 
-const CreateTestSuit: FC<Props> = ({ names, onClose, isModalOpen, onCreate }) => {
+const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate }) => {
   const t = useI18n();
 
   const [steps, setSteps] = useState(TEST_SUIT_STEPS(t));
@@ -29,7 +28,9 @@ const CreateTestSuit: FC<Props> = ({ names, onClose, isModalOpen, onCreate }) =>
 
   const currentStep = useMemo(() => steps.find((step) => step.id === currentStepId), [steps, currentStepId]);
 
-  const onFinishClick = useCallback(() => {}, []);
+  const onFinishClick = useCallback(() => {
+    onCreate(testSuit);
+  }, [onCreate, testSuit]);
 
   useEffect(() => {
     setSteps((prev) =>
@@ -61,7 +62,7 @@ const CreateTestSuit: FC<Props> = ({ names, onClose, isModalOpen, onCreate }) =>
         <DialSteps steps={steps} currentStep={currentStepId} onChangeStep={setCurrentStep} />
         <div className="flex-1 min-h-0">
           {currentStepId === TestSuitTab.Properties && (
-            <TestSuiteProperties testSuite={testSuit} names={names} onChangeTestSuite={setTestSuit} />
+            <TestSuiteProperties testSuite={testSuit} onChangeTestSuite={setTestSuit} />
           )}
 
           {currentStepId === TestSuitTab.Application && (

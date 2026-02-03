@@ -21,12 +21,11 @@ import { ApplicationRoute } from '@/src/types/routes';
 interface Props<T> {
   route: ApplicationRoute;
   gridApi?: GridApi | null;
-  names: string[];
   toggleColumnsPanel: () => void;
   onCreateEntity?: (entity: T) => Promise<ServerActionResponse>;
 }
 
-const HeaderButtons = <T extends object>({ route, names, gridApi, toggleColumnsPanel, onCreateEntity }: Props<T>) => {
+const HeaderButtons = <T extends object>({ route, gridApi, toggleColumnsPanel, onCreateEntity }: Props<T>) => {
   const t = useI18n();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -68,7 +67,6 @@ const HeaderButtons = <T extends object>({ route, names, gridApi, toggleColumnsP
           <CreateTestSuite
             isModalOpen={isModalOpen}
             onClose={onModalClose}
-            names={names || []}
             onCreate={onCreate as (suite: TestSuite) => void}
           />
         )}

@@ -8,11 +8,10 @@ import { TestSuite } from '@/src/models/evaluation/test-suite';
 
 interface Props {
   testSuite: TestSuite;
-  names: string[];
   onChangeTestSuite: (testSuite: TestSuite) => void;
 }
 
-const TestSuiteProperties: FC<Props> = ({ testSuite, names, onChangeTestSuite }) => {
+const TestSuiteProperties: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
   return (
     <div className="w-full flex flex-col gap-y-8">
       {/* TODO: ask BE team */}
@@ -20,7 +19,6 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, names, onChangeTestSuite })
 
       <DisplayNameControl
         displayName={testSuite.name}
-        names={names}
         required={true}
         isFullWidth={false}
         onChange={(name) => onChangeTestSuite({ ...testSuite, name })}

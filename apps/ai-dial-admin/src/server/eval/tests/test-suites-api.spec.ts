@@ -1,7 +1,7 @@
 import { RESPONSE_MOCK, TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
-import { TEST_SUITES_URL, TEST_SUITE_URL, TestSuitesApi } from '../test-suites-api';
+import { TEST_CASES_URL, TEST_CASE_URL, TEST_SUITES_URL, TEST_SUITE_URL, TestSuitesApi } from '../test-suites-api';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 
 const fetch = createFetchMock(vi);
@@ -22,9 +22,12 @@ describe('Server :: TestSuiteApi', () => {
   test('Should calls getTestSuites and return list', async () => {
     fetch.mockResponseOnce(JSON.stringify([mockTestSuite]));
 
-    await instance.getTestSuites(TOKEN_MOCK);
+    await instance.getTestSuites(0, 10, TOKEN_MOCK);
 
-    expect(fetch).toHaveBeenCalledWith(`${TEST_URL}${TEST_SUITES_URL}`, expect.objectContaining({ method: 'GET' }));
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_SUITES_URL}?page=0&size=10&includeTotalCount=true`,
+      expect.objectContaining({ method: 'GET' }),
+    );
   });
 
   test('Should calls getTestSuite by name and return testSuite', async () => {
@@ -83,11 +86,38 @@ describe('Server :: TestSuiteApi', () => {
   test('Should calls removeTestSuite with DELETE method', async () => {
     fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
-    await instance.removeTestSuite(mockTestSuite.id, TOKEN_MOCK);
+    await instance.removeTestSuite(mockTestSuite.id || '', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${TEST_SUITE_URL(mockTestSuite.id)}`,
       expect.objectContaining({ method: 'DELETE' }),
+    );
+  });
+
+  test('Should calls getTestCases', async () => {
+    fetch.mockResponseOnce(JSON.stringify([mockTestSuite]));
+    await instance.getTestCases('id', 0, 10, TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_CASES_URL('id')}?page=0&size=10&includeTotalCount=true`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
+  test('Should calls getTestCase', async () => {
+    fetch.mockResponseOnce(JSON.stringify(mockTestSuite));
+    await instance.getTestCase('id', 'testCaseId', TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_CASE_URL('id', 'testCaseId')}`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
+  test('Should calls getTestCase', async () => {
+    fetch.mockResponseOnce(JSON.stringify(mockTestSuite));
+    await instance.getTestCase('id', void 0 as any, TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_CASE_URL('id', '')}`,
+      expect.objectContaining({ method: 'GET' }),
     );
   });
 });

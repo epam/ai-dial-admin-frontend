@@ -848,7 +848,7 @@ export const RUNS_COLUMN = (): ColDef[] => [
   { field: 'displayName', colId: 'displayName', headerName: 'Display Name', hide: false },
 ];
 
-export const METRICS_COLUMN = (): ColDef[] => [
+export const METRICS_COLUMN: ColDef[] = [
   { field: 'id', colId: 'id', headerName: 'ID', hide: false },
   { field: 'name', colId: 'name', headerName: 'Name', hide: false },
   DESCRIPTION_COLUMN,
