@@ -1,23 +1,39 @@
-import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import classNames from 'classnames';
+import {
+  ButtonAppearance,
+  ButtonVariant,
+  DialButtonDropdown,
+  DialNeutralButton,
+  DropdownItem,
+} from '@epam/ai-dial-ui-kit';
 import { IconPlayerPause, IconPlayerPlay, IconPlus, IconTrashX } from '@tabler/icons-react';
+import classNames from 'classnames';
 import { useRouter } from 'next/navigation';
-import { ButtonVariant, DialButtonDropdown, DialNeutralButton, DropdownItem } from '@epam/ai-dial-ui-kit';
-import { ApplicationRoute } from '@/src/types/routes';
-import { BaseEntity } from '@/src/models/dial/base-entity';
-import { ServerActionResponse } from '@/src/models/server-action';
-import { Asset } from '@/src/models/dial/deployment-asset';
-import { CONTAINER_STATUS, CONTAINER_TRANSPORT } from '@/src/types/deployments/containers';
-import { Container } from '@/src/models/deployments/containers';
-import { useI18n } from '@/src/locales/client';
-import { useNotification } from '@/src/context/NotificationContext';
-import { useAppContext } from '@/src/context/AppContext';
-import { ModalType } from '@/src/components/EntityListView/Components/Modals';
-import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
-import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
+import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
 import { deleteContainer, runContainer, stopContainer } from '@/src/app/actions/deployments';
-import { getErrorNotification } from '@/src/utils/notification';
+import CreateAsset from '@/src/components/Assets/Deployments/CreateAsset';
+import DeleteModal from '@/src/components/Deployments/Modals/Delete';
+import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
+import { ModalType } from '@/src/components/EntityListView/Components/Modals';
+import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
+import { showEditorErrorNotifications } from '@/src/components/EntityView/JsonEditor/utils';
 import { ButtonsI18nKey, ContainersI18nKey, CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useAppContext } from '@/src/context/AppContext';
+import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
+import { useNotification } from '@/src/context/NotificationContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
+import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
+import { useI18n } from '@/src/locales/client';
+import { Container } from '@/src/models/deployments/containers';
+import { BaseEntity } from '@/src/models/dial/base-entity';
+import { Asset } from '@/src/models/dial/deployment-asset';
+import { DialFile } from '@/src/models/dial/file';
+import { ServerActionResponse } from '@/src/models/server-action';
+import { CONTAINER_STATUS, CONTAINER_TRANSPORT } from '@/src/types/deployments/containers';
+import { ApplicationRoute } from '@/src/types/routes';
 import {
   getAssetTemplate,
   getEntityRoute,
@@ -26,17 +42,8 @@ import {
   getTranslatedEntity,
   getTranslatedType,
 } from '@/src/utils/deployments/entity';
-import { showEditorErrorNotifications } from '@/src/components/EntityView/JsonEditor/utils';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { getErrorNotification } from '@/src/utils/notification';
 import { createPortal } from 'react-dom';
-import DeleteModal from '@/src/components/Deployments/Modals/Delete';
-import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
-import CreateAsset from '@/src/components/Assets/Deployments/CreateAsset';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
-import { DialFile } from '@/src/models/dial/file';
-import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
 import ChangedEntityButtons from '../../EntityHeaderControls/Buttons/ChangedEntityButtons';
 
 interface Props<T> {
@@ -218,7 +225,8 @@ const HeaderButtons = <T extends Container>({
                     <DialButtonDropdown
                       label={t(ButtonsI18nKey.Create)}
                       items={createToolsetOptions}
-                      variant={ButtonVariant.Secondary}
+                      variant={ButtonVariant.Neutral}
+                      appearance={ButtonAppearance.Outlined}
                     />
                   ) : (
                     <DialNeutralButton

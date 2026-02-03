@@ -55,7 +55,7 @@ export const lineChartDefaultOptions = (t: (key: string) => string): EChartsOpti
           "></span>
 
           <span>
-            ${t(TelemetryI18nKey.UniqueUsers)}:
+            ${t(TelemetryI18nKey.Requests)}:
             <b>${value}</b>
           </span>
         </div>
@@ -91,7 +91,7 @@ export const lineChartDefaultOptions = (t: (key: string) => string): EChartsOpti
         fontSize: 12,
         fontWeight: 500,
       },
-      name: t(TelemetryI18nKey.UniqueUsers),
+      name: t(TelemetryI18nKey.Requests),
       axisLabel: {
         color: '#7F8792',
       },
