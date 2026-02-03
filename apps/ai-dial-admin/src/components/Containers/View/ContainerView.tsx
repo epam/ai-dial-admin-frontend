@@ -3,7 +3,7 @@
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react';
 import { cloneDeep } from 'lodash';
 import { useRouter } from 'next/navigation';
-import { DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
+import { TabModel } from '@epam/ai-dial-ui-kit';
 import { Container, KubEvent, Pod } from '@/src/models/deployments/containers';
 import { Image } from '@/src/models/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -37,6 +37,7 @@ import { getViewHeaderClassName } from '@/src/utils/entities/view';
 import { getContainerRedeploySnapshot } from '@/src/utils/deployments/containers';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import FirewallSettings from '@/src/components/Containers/View/FirewallSettings/FirewallSettings';
+import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
 
 interface Props {
   container: Container;
@@ -77,15 +78,6 @@ const ContainerView: FC<Props> = ({
   useEffect(() => {
     setTabs(getDeploymentsViewTabs(route, t, container.status));
   }, [container.status, route, t]);
-
-  const onChangeActiveTab = useCallback(
-    (tab: string) => {
-      if (tab !== activeTab) {
-        setActiveTab(tab as EntityViewTab);
-      }
-    },
-    [activeTab],
-  );
 
   const toggleJsonEditor = useCallback(() => {
     setJsonEditorEnabled((prev) => !prev);
@@ -259,11 +251,13 @@ const ContainerView: FC<Props> = ({
     <>
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
         <div className={getViewHeaderClassName(jsonEditorEnabled)}>
-          {!jsonEditorEnabled && (
-            <div className="flex-1 min-h-0 relative">
-              <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
-            </div>
-          )}
+          <Tabs
+            tabs={tabs}
+            isEditorEnabled={jsonEditorEnabled}
+            activeTab={activeTab}
+            onChangeActiveTab={setActiveTab}
+          />
+
           <HeaderButtons
             route={route}
             container={selectedContainer}

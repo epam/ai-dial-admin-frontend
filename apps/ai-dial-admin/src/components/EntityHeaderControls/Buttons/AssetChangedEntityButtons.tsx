@@ -9,30 +9,24 @@ import classNames from 'classnames';
 import AddVersionModal from '@/src/components/Assets/Modals/AddVersionModal';
 import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
 import { ButtonsI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
-import { useNotification } from '@/src/context/NotificationContext';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
-import { ApplicationRoute } from '@/src/types/routes';
-import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 import { generateNewInitialVersion } from '@/src/utils/prompts/versions';
-import { showEditorErrorNotifications } from '@/src/components/EntityHeaderControls/Buttons/utils';
 
 interface Props {
-  view: ApplicationRoute;
-  entity: { version?: string };
+  version?: string;
   existingVersions?: string[];
   isEditorEnabled?: boolean;
   onDiscard: () => void;
   onSave: (newVersion?: string) => void;
 }
 
-const ModifiedEntityButtons: FC<Props> = ({ view, entity, isEditorEnabled, onDiscard, onSave, existingVersions }) => {
+const AssetChangedEntityButtons: FC<Props> = ({ version, isEditorEnabled, onDiscard, onSave, existingVersions }) => {
   const t = useI18n();
-  const { showNotification } = useNotification();
 
-  const { isValid, jsonErrors, dispatch } = useSaveValidationContext();
+  const { isValid } = useSaveValidationContext();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -48,14 +42,9 @@ const ModifiedEntityButtons: FC<Props> = ({ view, entity, isEditorEnabled, onDis
         setIsModalOpen(false);
       }
 
-      if (jsonErrors?.length) {
-        const errorNotifications = showEditorErrorNotifications(jsonErrors, showNotification, t);
-        dispatch({ type: ValidationActionType.SetJsonEditorNotifications, errors: errorNotifications });
-      } else {
-        onSave(newVersion);
-      }
+      onSave(newVersion);
     },
-    [jsonErrors, showNotification, t, dispatch, onSave],
+    [onSave],
   );
 
   useEffect(() => {
@@ -70,14 +59,12 @@ const ModifiedEntityButtons: FC<Props> = ({ view, entity, isEditorEnabled, onDis
         disableSave={isDisableSave}
         saveLabel={t(ButtonsI18nKey.Save)}
       >
-        {isAssetWithVersion(view) && (
-          <DialNeutralButton
-            className={buttonsClassName}
-            label={t(ButtonsI18nKey.SaveAsNewVersion)}
-            onClick={() => setIsModalOpen(true)}
-            disabled={isDisableSave}
-          />
-        )}
+        <DialNeutralButton
+          className={buttonsClassName}
+          label={t(ButtonsI18nKey.SaveAsNewVersion)}
+          onClick={() => setIsModalOpen(true)}
+          disabled={isDisableSave}
+        />
       </ChangedEntityButtons>
 
       {isModalOpen &&
@@ -85,7 +72,7 @@ const ModifiedEntityButtons: FC<Props> = ({ view, entity, isEditorEnabled, onDis
           <AddVersionModal
             heading={t(PromptsI18nKey.NewVersionSave)}
             isModalOpen={isModalOpen}
-            prefilledVersion={generateNewInitialVersion(entity.version)}
+            prefilledVersion={generateNewInitialVersion(version)}
             existingVersions={existingVersions || []}
             onClose={() => setIsModalOpen(false)}
             onConfirm={onTryToSave}
@@ -96,4 +83,4 @@ const ModifiedEntityButtons: FC<Props> = ({ view, entity, isEditorEnabled, onDis
   );
 };
 
-export default ModifiedEntityButtons;
+export default AssetChangedEntityButtons;

@@ -22,7 +22,7 @@ const Header: FC<Props> = ({ isChanged, onSave, onDiscard, activeTab, onChangeTa
 
   return (
     <div className="flex flex-row justify-between min-h-[34px]">
-      <div className="min-w-0 mr-3">
+      <div className="min-w-0 mr-3 flex-1">
         <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeTab} />
       </div>
       {isChanged && <ChangedEntityButtons onDiscard={onDiscard} onSave={onSave} />}
