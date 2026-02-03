@@ -109,7 +109,7 @@ const EnvVariable: FC<Props> = ({
   return (
     <DraggableItem id={variable.name || ''} findItem={findColumn} moveItem={moveColumn}>
       <div className="flex flex-row gap-2 flex-1 relative">
-        <div className="flex w-full flex-1 flex-col rounded border border-primary p-3 lg:border-none lg:p-0 lg:flex-initial">
+        <div className="flex min-w-0 flex-1 flex-col rounded border border-primary p-3 lg:border-none lg:p-0 lg:flex-initial">
           {isTablet && (
             <div className="flex flex-col justify-center cursor-pointer" onClick={toggleCollapse}>
               <h3 className="small flex items-center">
@@ -134,18 +134,20 @@ const EnvVariable: FC<Props> = ({
               elementId={`name ${index}`}
               value={variable.name}
               placeholder={t(EntityPlaceholdersI18nKey.Name)}
-              fieldTitle={t(EnvVariablesI18nKey.Name)}
+              fieldTitle={index === 0 ? t(EnvVariablesI18nKey.Name) : ''}
               errorText={variableNameError?.text}
               invalid={!!variableNameError}
               optional={false}
+              containerClassName="min-w-[100px]"
               onChange={onChangeName}
               disabled={disabled}
             />
             <DialTextInputField
               elementId={`description ${index}`}
+              containerClassName="min-w-[150px]"
               value={variable.description}
               placeholder={t(EntityPlaceholdersI18nKey.Description)}
-              fieldTitle={t(EnvVariablesI18nKey.Description)}
+              fieldTitle={index === 0 ? t(EnvVariablesI18nKey.Description) : ''}
               optional={true}
               onChange={onChangeDescription}
               disabled={disabled}
@@ -159,20 +161,19 @@ const EnvVariable: FC<Props> = ({
                 disabled={disabled}
               />
             </div>
-            <div className="lg:min-w-[160px]">
-              <DialSelectField
-                value={variable.mountType || mountTypeItems[0].value}
-                elementId="mountType"
-                options={mountTypeItems}
-                fieldTitle={t(EnvVariablesI18nKey.MountType)}
-                onChange={onChangeMountType}
-                disabled={disabled}
-              />
-            </div>
+            <DialSelectField
+              className="min-w-[160px]"
+              value={variable.mountType || mountTypeItems[0].value}
+              elementId="mountType"
+              options={mountTypeItems}
+              fieldTitle={index === 0 ? t(EnvVariablesI18nKey.MountType) : ''}
+              onChange={onChangeMountType}
+              disabled={disabled}
+            />
           </div>
         </div>
         {(numVariables !== 1 || Object.keys(variable).length !== 0) && (
-          <DialRemoveButton onClick={onRemove} className="mt-3 lg:mt-6" />
+          <DialRemoveButton onClick={onRemove} className={index === 0 ? 'mt-3 lg:mt-6' : ''} />
         )}
       </div>
     </DraggableItem>
