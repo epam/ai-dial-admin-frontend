@@ -1,10 +1,10 @@
 import { FC } from 'react';
 
-import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
-import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
-import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
+import DescriptionControl from '@/src/components/BaseControls/Description';
+import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
+import IconControl from '@/src/components/BaseControls/Icon';
 import { DialToolsetResource } from '@/src/models/dial/application-resource';
-import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
+import TopicsControl from '@/src/components/BaseControls/Topics';
 import ToolsetEndpoint from '@/src/components/SourceField/Endpoints/ToolsetEndpoint';
 import Authentication from '@/src/components/Toolsets/View/Authentication';
 import { ApplicationRoute } from '@/src/types/routes';
