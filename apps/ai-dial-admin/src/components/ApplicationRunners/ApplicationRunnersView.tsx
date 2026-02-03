@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonVariant, DialButtonDropdown, DialTabs, DropdownItem } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, ButtonVariant, DialButtonDropdown, DialTabs, DropdownItem } from '@epam/ai-dial-ui-kit';
 import { cloneDeep } from 'lodash';
 
 import {
@@ -184,7 +184,12 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names,
           selectedFormat={selectedFormat}
           onChangeSelectedFormat={setSelectedFormat}
         >
-          <DialButtonDropdown label={t(ButtonsI18nKey.Create)} items={items} variant={ButtonVariant.Secondary} />
+          <DialButtonDropdown
+            label={t(ButtonsI18nKey.Create)}
+            items={items}
+            variant={ButtonVariant.Neutral}
+            appearance={ButtonAppearance.Outlined}
+          />
         </HeaderButtons>
       </div>
       <div className="flex-1 overflow-auto min-h-0">

@@ -39,28 +39,42 @@ const ItemsList: FC<Props> = ({ items, setItems, addItemLabel, validate, isModal
   );
 
   const onAddItem = useCallback(() => {
-    setItems([...items, '']);
+    const list = [...(items || []), ''];
+    setItems(list.length === 1 ? [...list, ''] : list);
   }, [items, setItems]);
 
   useEffect(() => {
     lastItemRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }, [items]);
+  }, []);
 
   return (
     <div className="flex flex-col items-start gap-4 h-full">
       <ul className="flex flex-col gap-4 w-full overflow-scroll">
-        {items.map((item, index) => (
+        {items == null || items.length === 0 ? (
           <Item
-            item={item}
-            index={index}
+            item={''}
+            index={0}
             onChange={onChangeItem}
             onRemove={onRemoveItem}
             validate={validate}
-            ref={index === items.length - 1 ? lastItemRef : null}
             isModal={isModal}
+            ref={null}
             disabled={disabled}
           />
-        ))}
+        ) : (
+          items?.map((item, index) => (
+            <Item
+              item={item}
+              index={index}
+              onChange={onChangeItem}
+              onRemove={onRemoveItem}
+              validate={validate}
+              ref={index === items.length - 1 ? lastItemRef : null}
+              isModal={isModal}
+              disabled={disabled}
+            />
+          ))
+        )}
       </ul>
 
       <DialGhostButton
