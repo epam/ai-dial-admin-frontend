@@ -77,7 +77,7 @@ const priceColumn: Partial<ColDef> = {
         'The calculated price is an approximation. Since different models, applications, and configurations may have varying token usage and processing costs, it’s not possible to determine the exact final price in advance. \n' +
         'The estimate gives you a general idea of expected costs, but the actual price may differ depending on how the chat unfolds (e.g., message length, complexity, model type, or additional features used).',
       hintTitle: 'Total Price',
-    }, // TODO: Update when source of hints will be defined
+    },
   },
   valueFormatter: ({ value }) => `$${priceValueFormatter(value)}`,
   filterValueGetter: (params) => priceValueFormatter(params.data[params.colDef.field || '']),
@@ -511,6 +511,7 @@ export const USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
   {
     field: 'deployment_price',
     headerName: 'Deployment Price',
+    minWidth: 180,
     hide: false,
     ...priceColumn,
   },
