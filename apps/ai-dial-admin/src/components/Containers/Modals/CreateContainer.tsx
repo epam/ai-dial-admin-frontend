@@ -66,16 +66,6 @@ const CreateContainer: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
     [currentStepId],
   );
 
-  const onChange = useCallback(
-    (container: Container) => {
-      if (currentStepId === CreateSteps.PROPERTIES) {
-        setStepsState(isValid ? StepStatus.VALID : StepStatus.ERROR);
-        setContainer(container);
-      }
-    },
-    [currentStepId, isValid, setStepsState],
-  );
-
   useEffect(() => {
     const fetchData = async () => {
       const res = await getImagesWithVersions(getImageType(route));
@@ -131,6 +121,12 @@ const CreateContainer: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
       }
     }
   }, [container.imageDefinitionId, names, route, currentStepId, setStepsState, images]);
+
+  useEffect(() => {
+    if (currentStepId === CreateSteps.PROPERTIES) {
+      setStepsState(isValid ? StepStatus.VALID : StepStatus.ERROR);
+    }
+  }, [currentStepId, isValid, setStepsState]);
 
   return (
     <DialPopup
@@ -198,7 +194,7 @@ const CreateContainer: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
           {currentStepId === CreateSteps.PROPERTIES && (
             <ContainerProperties
               container={container}
-              setContainer={onChange}
+              setContainer={setContainer}
               isModal={true}
               route={route}
               names={names}
