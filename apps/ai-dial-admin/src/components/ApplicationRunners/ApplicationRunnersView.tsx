@@ -179,8 +179,8 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names,
           onDiscard={onDiscard}
           onSave={onSave}
           onRemove={removeApplicationScheme}
-          isJsonEditorEnabled={isJsonEditorEnabled}
-          onToggleJsonEditor={onToggleJsonEditor}
+          isEditorEnabled={isJsonEditorEnabled}
+          onToggleEditor={onToggleJsonEditor}
           selectedFormat={selectedFormat}
           onChangeSelectedFormat={setSelectedFormat}
         >

@@ -1,9 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialPrimaryButton, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
 import AddVersionModal from '@/src/components/Assets/Modals/AddVersionModal';
@@ -18,6 +18,7 @@ import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 import { generateNewInitialVersion } from '@/src/utils/prompts/versions';
+import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
 
 interface Props<T> {
   view: ApplicationRoute;
@@ -47,6 +48,8 @@ const ModifiedEntityButtons = <T extends object>({
   const isMobile = useIsMobileScreen();
   const [buttonsClassName, setButtonsClassName] = useState('');
 
+  const isDisableSave = useMemo(() => (isJsonEditorEnabled ? false : !isValid), [isJsonEditorEnabled, isValid]);
+
   const onTryToSave = useCallback(
     (newVersion?: string) => {
       if (newVersion) {
@@ -74,23 +77,22 @@ const ModifiedEntityButtons = <T extends object>({
 
   return (
     <>
-      <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
-        <DialNeutralButton className={buttonsClassName} label={t(ButtonsI18nKey.Discard)} onClick={onDiscard} />
+      <ChangedEntityButtons
+        onDiscard={onDiscard}
+        onSave={onTryToSave}
+        disableSave={isDisableSave}
+        saveLabel={t(ButtonsI18nKey.Save)}
+      >
         {isAssetWithVersion(view) && (
           <DialNeutralButton
             className={buttonsClassName}
             label={t(ButtonsI18nKey.SaveAsNewVersion)}
             onClick={() => setIsModalOpen(true)}
-            disabled={isJsonEditorEnabled ? false : !isValid}
+            disabled={isDisableSave}
           />
         )}
-        <DialPrimaryButton
-          className={buttonsClassName}
-          label={t(ButtonsI18nKey.Save)}
-          onClick={() => onTryToSave()}
-          disabled={isJsonEditorEnabled ? false : !isValid}
-        />
-      </div>
+      </ChangedEntityButtons>
+
       {isModalOpen &&
         createPortal(
           <AddVersionModal

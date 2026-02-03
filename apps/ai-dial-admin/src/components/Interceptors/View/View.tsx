@@ -242,8 +242,8 @@ const InterceptorView: FC<Props> = ({
           onDiscard={onDiscard}
           onSave={onSave}
           onRemove={removeInterceptor}
-          isJsonEditorEnabled={isJsonEditorEnabled}
-          onToggleJsonEditor={onToggleJsonEditor}
+          isEditorEnabled={isJsonEditorEnabled}
+          onToggleEditor={onToggleJsonEditor}
           selectedFormat={selectedFormat}
           onChangeSelectedFormat={setSelectedFormat}
         />

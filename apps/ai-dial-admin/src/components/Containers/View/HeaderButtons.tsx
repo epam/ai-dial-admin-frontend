@@ -2,14 +2,7 @@ import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 're
 import classNames from 'classnames';
 import { IconPlayerPause, IconPlayerPlay, IconPlus, IconTrashX } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
-import {
-  ButtonVariant,
-  DialButtonDropdown,
-  DialNeutralButton,
-  DialPrimaryButton,
-  DialSwitch,
-  DropdownItem,
-} from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButtonDropdown, DialNeutralButton, DropdownItem } from '@epam/ai-dial-ui-kit';
 import { ApplicationRoute } from '@/src/types/routes';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -43,6 +36,8 @@ import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { DialFile } from '@/src/models/dial/file';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
+import ChangedEntityButtons from '../../EntityHeaderControls/Buttons/ChangedEntityButtons';
 
 interface Props<T> {
   route: ApplicationRoute;
@@ -88,12 +83,10 @@ const HeaderButtons = <T extends Container>({
   const [modalType, setModalType] = useState<ModalType>();
 
   const staticContainerClassnames = 'flex flex-row gap-3 divide-x divide-primary';
-  const staticEditorClassNames = 'pl-6';
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
   const [containerClassNames, setContainerClassNames] = useState(staticContainerClassnames);
   const [buttonsClassNames, setButtonsClassNames] = useState('');
-  const [editorClassNames, setEditorClassNames] = useState(staticEditorClassNames);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -200,12 +193,6 @@ const HeaderButtons = <T extends Container>({
       ),
     );
     setButtonsClassNames(classNames(isTablet || isMobile ? 'w-1/2 flex justify-center' : ''));
-    setEditorClassNames(
-      classNames(
-        staticEditorClassNames,
-        isTablet ? 'ml-3 pl-3 border-l-tertiary border-l h-full flex items-center' : isMobile ? 'hidden' : '',
-      ),
-    );
   }, [isTablet, isMobile]);
 
   useEffect(() => {
@@ -216,17 +203,14 @@ const HeaderButtons = <T extends Container>({
     <>
       <div className={containerClassNames}>
         {isChanged ? (
-          <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
-            <DialNeutralButton className={buttonsClassNames} label={t(ButtonsI18nKey.Discard)} onClick={onDiscard} />
-            <DialPrimaryButton
-              className={buttonsClassNames}
-              label={t(isRedeployRequired ? ButtonsI18nKey.SaveAndRedeploy : ButtonsI18nKey.Save)}
-              onClick={onTryToSave}
-              disabled={jsonEditorEnabled ? false : !isValid}
-            />
-          </div>
+          <ChangedEntityButtons
+            onDiscard={onDiscard}
+            onSave={onTryToSave}
+            disableSave={jsonEditorEnabled ? false : !isValid}
+            saveLabel={t(isRedeployRequired ? ButtonsI18nKey.SaveAndRedeploy : ButtonsI18nKey.Save)}
+          />
         ) : (
-          <div className="flex flex-row items-center w-full">
+          <div className="flex flex-row items-center w-full gap-x-4">
             <div className="flex flex-row gap-3">
               {container.status === CONTAINER_STATUS.RUNNING && (
                 <>
@@ -274,16 +258,7 @@ const HeaderButtons = <T extends Container>({
               </>
               {children}
             </div>
-            {!hideJsonEditor && (
-              <div className={editorClassNames}>
-                <DialSwitch
-                  isOn={jsonEditorEnabled}
-                  label={t(EntitiesI18nKey.JSONEditor)}
-                  switchId="jsonEditor"
-                  onChange={toggleJsonEditor}
-                />
-              </div>
-            )}
+            {!hideJsonEditor && <JsonToggles isEditorEnabled={jsonEditorEnabled} onToggleEditor={toggleJsonEditor} />}
           </div>
         )}
       </div>

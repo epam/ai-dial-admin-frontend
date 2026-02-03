@@ -27,7 +27,6 @@ const EntityHeader: FC<Props> = ({ entity, view }) => {
 
   return (
     <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-primary">
-      <LabelledText label={t(EntityFieldsI18nKey.id)} text={id || ''} copyable={true} />
       <LabelledText label={t(EntityFieldsI18nKey.updatedAt)} text={formatDateTimeToLocalString(entity?.updatedAt)} />
       <LabelledText label={t(EntityFieldsI18nKey.createdAt)} text={formatDateTimeToLocalString(entity?.createdAt)} />
       {view === ApplicationRoute.Toolsets && <AuthHeader toolset={entity as Toolset} />}

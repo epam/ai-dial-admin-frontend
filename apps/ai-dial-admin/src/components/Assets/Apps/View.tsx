@@ -180,8 +180,8 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
           onSave={onSave}
           onDiscard={onDiscard}
           onRemove={onRemove}
-          isJsonEditorEnabled={isJsonEditorEnabled}
-          onToggleJsonEditor={onToggleJsonEditor}
+          isEditorEnabled={isJsonEditorEnabled}
+          onToggleEditor={onToggleJsonEditor}
           assets={assets}
           etag={etag}
           onHideFormatSelector={() => isHideJsonSelector}
