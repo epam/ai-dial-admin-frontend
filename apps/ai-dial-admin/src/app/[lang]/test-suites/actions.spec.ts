@@ -87,7 +87,7 @@ describe('TestSuites :: server actions', () => {
     (testSuitesApi.getTestCase as any).mockResolvedValue(RESPONSE_MOCK);
     const result = await getTestCase('test');
     expect(getUserToken).toHaveBeenCalled();
-    expect(testSuitesApi.getTestCase).toHaveBeenCalledWith('test', '', TOKEN_MOCK);
+    expect(testSuitesApi.getTestCase).toHaveBeenCalledWith('test', void 0, TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 });
