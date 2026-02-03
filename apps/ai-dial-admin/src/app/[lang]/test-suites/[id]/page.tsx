@@ -25,15 +25,15 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     errorObjLog(e, 'Failed to fetch test suite view data');
   }
 
-  // if (testSuite == null) {
-  //   notFound();
-  // }
+  if (testSuite == null) {
+    notFound();
+  }
 
   const names = filterNames(testSuites, testSuite?.name);
 
   return (
     <SaveValidationContextProvider>
-      <TestSuiteView names={names} originalTestSuite={{ name: 'name' }} />
+      <TestSuiteView names={names} originalTestSuite={testSuite} />
     </SaveValidationContextProvider>
   );
 }
