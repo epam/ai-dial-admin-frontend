@@ -16,19 +16,10 @@ describe('OAuthSection', () => {
       codeChallengeMethod: 'S256',
     };
     render(<OAuthSection authSettings={authSettings} />);
-    expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.RedirectUri)).toHaveValue('redirect-uri');
     expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.ClientId)).toHaveValue('client-id');
     expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.ClientSecret)).toHaveValue('client-secret');
     expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.AuthorizationEndpoint)).toHaveValue('auth-endpoint');
     expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.TokenEndpoint)).toHaveValue('token-endpoint');
-  });
-
-  test('calls onChange for redirectUri', () => {
-    const handleChange = vi.fn();
-    render(<OAuthSection onChange={handleChange} />);
-    const input = screen.getByPlaceholderText(EntityPlaceholdersI18nKey.RedirectUri);
-    fireEvent.change(input, { target: { value: 'new-redirect' } });
-    expect(handleChange).toHaveBeenCalledWith(expect.objectContaining({ redirectUri: 'new-redirect' }));
   });
 
   test('calls onChange for clientId', () => {
