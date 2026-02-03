@@ -12,7 +12,7 @@ import PropertiesTabContent from '../Properties/TabContent';
 interface Props {
   activeTab: EntityViewTab;
   selectedTemplate: InterceptorTemplate;
-  onChange: (adapter: InterceptorTemplate) => void;
+  onChange: (template: InterceptorTemplate) => void;
 }
 
 const TabsContent: FC<Props> = ({ activeTab, selectedTemplate, onChange }) => {

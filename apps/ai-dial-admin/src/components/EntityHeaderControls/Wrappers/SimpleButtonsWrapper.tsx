@@ -17,7 +17,7 @@ import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
-import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props<T> {
   view: ApplicationRoute;
@@ -47,7 +47,7 @@ const SimpleButtonsWrapper = <T extends object>({
 }: Props<T>) => {
   const t = useI18n();
 
-  const { isValid } = useSaveValidationContext();
+  const { isValid, dispatch } = useSaveValidationContext();
 
   const staticContainerClassName = 'flex flex-row gap-3 divide-x divide-primary lg:h-[35px]';
 
@@ -77,11 +77,19 @@ const SimpleButtonsWrapper = <T extends object>({
     setButtonsClassName(classNames((isTablet || isMobile) && 'w-1/2 flex justify-center'));
   }, [isTablet, isMobile]);
 
+  const onStartDiscard = useCallback(() => {
+    if (isEditorEnabled) {
+      dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
+    }
+
+    onDiscard?.();
+  }, [dispatch, isEditorEnabled, onDiscard]);
+
   return (
     <>
       <div className={containerClassName}>
         {isChanged ? (
-          <ChangedEntityButtons disableSave={isDisableSave} onDiscard={onDiscard} onSave={onSave} />
+          <ChangedEntityButtons disableSave={isDisableSave} onDiscard={onStartDiscard} onSave={onSave} />
         ) : (
           <div className="flex flex-row items-center w-full gap-x-4">
             {!isEditorEnabled && (

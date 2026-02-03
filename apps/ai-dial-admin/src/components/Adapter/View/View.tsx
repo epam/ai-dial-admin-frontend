@@ -10,13 +10,13 @@ import { cloneDeep } from 'lodash';
 
 import { removeAdapter, updateAdapter } from '@/src/app/[lang]/adapters/actions';
 import { createModel } from '@/src/app/[lang]/models/actions';
+import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
@@ -27,7 +27,6 @@ import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getAdapterTabs } from '@/src/utils/tabs/utils';
-import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import TabsContent from './TabsContent';
 
 interface Props {
@@ -40,7 +39,7 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
-  const { dispatch } = useSaveValidationContext();
+
   const getReqRef = useRef(useProtectedRequest());
 
   const tabs = getAdapterTabs(t);
@@ -60,19 +59,8 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
   }, [selectedAdapter, originalAdapter]);
 
   const onDiscard = useCallback(() => {
-    if (isEditorEnabled) {
-      dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
-    }
-
-    setSelectedAdapter(originalAdapter);
-  }, [isEditorEnabled, originalAdapter, dispatch]);
-
-  const onChangeAdapter = useCallback(
-    (entity: DialAdapter) => {
-      setSelectedAdapter(entity);
-    },
-    [setSelectedAdapter],
-  );
+    setSelectedAdapter(cloneDeep(originalAdapter));
+  }, [originalAdapter]);
 
   const onToggleEditor = useCallback(() => {
     setIsEditorEnabled((prev) => !prev);
@@ -125,7 +113,7 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
           />
         ) : (
           <>
-            <TabsContent activeTab={activeTab} selectedAdapter={selectedAdapter} onChangeAdapter={onChangeAdapter} />
+            <TabsContent activeTab={activeTab} selectedAdapter={selectedAdapter} onChangeAdapter={setSelectedAdapter} />
 
             {isModalOpen &&
               createPortal(

@@ -325,7 +325,8 @@ export default {
     Entities: {
       Model: 'Model',
       Application: 'Application',
-      Toolsets: 'Toolsets',
+      Toolset: 'Toolset',
+      TestSuite: 'Test Suite',
       Interceptor: 'Interceptor',
       Route: 'Route',
       Role: 'Role',

@@ -87,10 +87,6 @@ const View: FC<Props> = ({ etag, template, names }) => {
     setIsChanged(!isEqualSkippingUndefined(restTemplate, restSelectedTemplate));
   }, [template, selectedTemplate]);
 
-  const onChange = useCallback((template: InterceptorTemplate) => {
-    setSelectedTemplate(template);
-  }, []);
-
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <SimpleEntityHeader
@@ -122,8 +118,7 @@ const View: FC<Props> = ({ etag, template, names }) => {
           />
         ) : (
           <>
-            {' '}
-            <TabsContent activeTab={activeTab} selectedTemplate={selectedTemplate} onChange={onChange} />
+            <TabsContent activeTab={activeTab} selectedTemplate={selectedTemplate} onChange={setSelectedTemplate} />
             {isModalOpen &&
               createPortal(
                 <CreateEntity

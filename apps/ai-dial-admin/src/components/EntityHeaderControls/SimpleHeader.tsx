@@ -29,7 +29,7 @@ interface Props<T> {
   onRemove: (entity: string) => Promise<ServerActionResponse>;
 }
 
-const SimpleEntityHeader = <T extends { name?: string }>({
+const SimpleEntityHeader = <T extends { id?: string; name?: string }>({
   isEditorEnabled,
   children,
   tabs,
@@ -40,7 +40,7 @@ const SimpleEntityHeader = <T extends { name?: string }>({
   return (
     <div className="flex flex-col gap-y-4 mb-8">
       <div className={getHeaderClassName(isEditorEnabled)}>
-        <ReadonlyId value={props.entity.name || ''} />
+        <ReadonlyId value={props.entity.id || props.entity.name || ''} />
         <SimpleButtonsWrapper isEditorEnabled={isEditorEnabled} {...props}>
           {children}
         </SimpleButtonsWrapper>

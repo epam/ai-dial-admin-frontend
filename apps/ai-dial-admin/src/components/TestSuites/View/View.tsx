@@ -1,15 +1,21 @@
 'use client';
 
-import { FC, useState } from 'react';
+import { FC, useCallback, useState } from 'react';
 
 import { cloneDeep } from 'lodash';
+import { useRouter } from 'next/navigation';
 
-import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
+import { removeTestSuite, updateTestSuite } from '@/src/app/[lang]/test-suites/actions';
+import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
+import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
-import { getViewHeaderClassName } from '@/src/utils/entities/view';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getTestSuiteTabs } from '@/src/utils/tabs/utils';
+import TabsContent from './TabsContent';
 
 interface Props {
   names: string[];
@@ -18,21 +24,56 @@ interface Props {
 
 const TestSuiteView: FC<Props> = ({ originalTestSuite }) => {
   const t = useI18n();
+  const router = useRouter();
+  const { showNotification } = useNotification();
 
   const tabs = getTestSuiteTabs(t);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedTestSuite, setSelectedTestSuite] = useState(cloneDeep(originalTestSuite));
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isChanged, setIsChanged] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
+
+  const onToggleEditor = useCallback(() => {
+    setIsEditorEnabled((prev) => !prev);
+  }, [setIsEditorEnabled]);
+
+  const onDiscard = useCallback(() => {
+    setSelectedTestSuite(cloneDeep(originalTestSuite));
+  }, [originalTestSuite]);
+
+  const onSave = useCallback(() => {
+    updateTestSuite(selectedTestSuite).then((res) => {
+      if (res.success) {
+        showNotification(
+          getSuccessNotification(
+            getUpdateNotificationTitle(ApplicationRoute.TestSuites, t),
+            getUpdateNotificationDescription(ApplicationRoute.TestSuites, selectedTestSuite.id, t),
+          ),
+        );
+        router.refresh();
+      } else {
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+      }
+    });
+  }, [selectedTestSuite, showNotification, router, t]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-      <div className={getViewHeaderClassName(isEditorEnabled)}>
-        <Tabs tabs={tabs} isEditorEnabled={isEditorEnabled} activeTab={activeTab} onChangeActiveTab={setActiveTab} />
-      </div>
+      <SimpleEntityHeader
+        view={ApplicationRoute.TestSuites}
+        entity={selectedTestSuite}
+        isChanged={isChanged}
+        onDiscard={onDiscard}
+        onSave={onSave}
+        tabs={tabs}
+        isEditorEnabled={isEditorEnabled}
+        activeTab={activeTab}
+        onChangeActiveTab={setActiveTab}
+        onToggleEditor={onToggleEditor}
+        onRemove={removeTestSuite}
+      />
+
       <div className="flex-1 overflow-auto min-h-0">
         {isEditorEnabled ? (
           <EntityJsonEditor
@@ -41,12 +82,7 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite }) => {
             setIsChanged={setIsChanged}
           />
         ) : (
-          <>
-            {activeTab === EntityViewTab.Properties && <div>Properties</div>}
-            {activeTab === EntityViewTab.TestCases && <div>Test Cases</div>}
-            {activeTab === EntityViewTab.Runs && <div>Runs</div>}
-            {activeTab === EntityViewTab.Trends && <div>Trends</div>}
-          </>
+          <TabsContent activeTab={activeTab} selectedTestSuite={selectedTestSuite} onChange={setSelectedTestSuite} />
         )}
       </div>
     </div>
