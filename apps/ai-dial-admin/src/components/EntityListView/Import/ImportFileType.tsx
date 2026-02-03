@@ -17,6 +17,7 @@ import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isAssetView } from '@/src/utils/is-asset-view';
 import { getIgnorePathTitles } from '@/src/utils/import/get-ignore-path-title';
+import { APPLICATION_ZIP_TYPES_STR } from '@/src/constants/request-headers';
 
 interface Props {
   files: File[];
@@ -91,7 +92,7 @@ const ImportFileTypeSelector: FC<Props> = ({
             iconBeforeInput={<DialFileIcon extension="zip" className="text-secondary" />}
             fileFormatError={t(ImportI18nKey.ArchiveFileFormatError)}
             fileCountError={t(ImportI18nKey.ArchiveDescription)}
-            acceptTypes="application/zip, .zip, application/x-zip-compressed"
+            acceptTypes={APPLICATION_ZIP_TYPES_STR}
             onChange={onChangeFile}
           />
         )}
