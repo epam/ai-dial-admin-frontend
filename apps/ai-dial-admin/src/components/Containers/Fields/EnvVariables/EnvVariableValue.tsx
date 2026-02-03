@@ -27,7 +27,7 @@ interface Props {
 const EnvVariableValueField: FC<Props> = ({ value, index, onValueChange, mountType, disabled }) => {
   const t = useI18n();
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const fieldName = t(EnvVariablesI18nKey.Value);
+  const fieldName = index === 0 ? t(EnvVariablesI18nKey.Value) : '';
 
   const handleFileUpload = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
