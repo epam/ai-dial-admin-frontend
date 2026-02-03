@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialPrimaryButton, DialConfirmationPopup, DialTabs } from '@epam/ai-dial-ui-kit';
+import { DialPrimaryButton, DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
 import { IconRefresh } from '@tabler/icons-react';
 import { cloneDeep } from 'lodash';
 
@@ -34,7 +34,7 @@ import KeyViewHeader from './Header/Header';
 import KeyProperties from './Properties/Properties';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { getViewHeaderClassName } from '@/src/utils/entities/view';
-import Tabs from '../../EntityHeaderControls/Tabs/HeaderTabs';
+import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
 
 interface Props {
   originalKey: DialKey;
