@@ -9,11 +9,11 @@ import { EntityViewTab } from '@/src/utils/tabs/utils';
 interface Props {
   tabs: TabModel[];
   activeTab: EntityViewTab;
-  isEditorEnabled: boolean;
+  isEditorEnabled?: boolean;
   onChangeActiveTab: (tab: EntityViewTab) => void;
 }
 
-const Tabs: FC<Props> = ({ isEditorEnabled, tabs, activeTab, onChangeActiveTab }) => {
+const Tabs: FC<Props> = ({ isEditorEnabled = false, tabs, activeTab, onChangeActiveTab }) => {
   const onChange = useCallback(
     (tab: string) => {
       if (tab !== activeTab) {

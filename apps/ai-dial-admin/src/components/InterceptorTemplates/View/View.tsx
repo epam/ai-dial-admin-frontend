@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialNeutralButton, DialTabs } from '@epam/ai-dial-ui-kit';
+import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { cloneDeep } from 'lodash';
 
@@ -29,6 +29,7 @@ import { getViewHeaderClassName } from '@/src/utils/entities/view';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getInterceptorTemplateTabs } from '@/src/utils/tabs/utils';
+import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
 
 interface Props {
   etag: string;
@@ -99,9 +100,7 @@ const View: FC<Props> = ({ etag, template, names }) => {
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={getViewHeaderClassName()}>
-        <div className="flex-1 min-w-0">
-          <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
-        </div>
+        <Tabs tabs={tabs} activeTab={activeTab} onChangeActiveTab={onChangeActiveTab} />
         <HeaderButtons
           view={ApplicationRoute.InterceptorTemplates}
           entity={selectedTemplate}

@@ -34,6 +34,7 @@ import KeyViewHeader from './Header/Header';
 import KeyProperties from './Properties/Properties';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { getViewHeaderClassName } from '@/src/utils/entities/view';
+import Tabs from '../../EntityHeaderControls/Tabs/HeaderTabs';
 
 interface Props {
   originalKey: DialKey;
@@ -188,11 +189,12 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
     <>
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
         <div className={getViewHeaderClassName(isJsonEditorEnabled)}>
-          {!isJsonEditorEnabled && (
-            <div className="flex-1 min-w-0">
-              <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
-            </div>
-          )}
+          <Tabs
+            tabs={tabs}
+            isEditorEnabled={isJsonEditorEnabled}
+            activeTab={activeTab}
+            onChangeActiveTab={onChangeActiveTab}
+          />
           <HeaderButtons
             view={ApplicationRoute.Keys}
             entity={selectedKey}
