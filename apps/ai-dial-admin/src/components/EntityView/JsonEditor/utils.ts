@@ -1,39 +1,10 @@
 import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
-import { Notification } from '@/src/models/notification';
-import { ErrorI18nKey } from '@/src/constants/i18n';
-import { getErrorNotification } from '@/src/utils/notification';
 
-export const showEditorErrorNotifications = ({
-  errors,
-  showNotification,
-  t,
-}: {
-  errors: JSONEditorError[];
-  showNotification: (notification: Notification) => string;
-  t: (key: string, options?: Record<string, string | number>) => string;
-}) => {
-  return errors.map((error) => {
-    const id = showNotification(
-      getErrorNotification(
-        error.message,
-        t(ErrorI18nKey.EditorErrorLine, { line: error.startLineNumber }),
-        void 0,
-        null,
-      ),
-    );
-    return { id, ...error };
-  });
-};
-
-export const clearResolvedErrors = ({
-  errorNotifications,
-  errors,
-  removeNotification,
-}: {
-  errorNotifications: JSONEditorErrorNotification[];
-  errors?: JSONEditorError[];
-  removeNotification: (id: string) => void;
-}) => {
+export const clearResolvedErrors = (
+  errorNotifications: JSONEditorErrorNotification[],
+  removeNotification: (id: string) => void,
+  errors?: JSONEditorError[],
+) => {
   errorNotifications?.forEach((notification) => {
     const persist = errors?.find((error) => {
       return error.message === notification?.message && error.startLineNumber === notification?.startLineNumber;
