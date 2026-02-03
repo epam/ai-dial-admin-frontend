@@ -2,9 +2,9 @@ import { FC, useCallback, useMemo, useState } from 'react';
 
 import { DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 
-import CompletionEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/CompletionEndpoint';
-import EditorUrlControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/EditorUrl';
-import ViewerUrlControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ViewerUrl';
+import CompletionEndpointControl from '@/src/components/BaseControls/Endpoint/CompletionEndpoint';
+import EditorUrlControl from '@/src/components/BaseControls/Endpoint/EditorUrl';
+import ViewerUrlControl from '@/src/components/BaseControls/Endpoint/ViewerUrl';
 import AppRunners from '@/src/components/SourceField/Application/AppRunners';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';

@@ -9,7 +9,7 @@ import { ToolsetTransport } from '@/src/types/toolset';
 import { useI18n } from '@/src/locales/client';
 
 import ReadonlyField from '@/src/components/Common/ReadonlyField/ReadonlyField';
-import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
+import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 
 interface Props {

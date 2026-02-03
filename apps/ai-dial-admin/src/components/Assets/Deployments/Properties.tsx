@@ -4,11 +4,11 @@ import { DialSwitch } from '@epam/ai-dial-ui-kit';
 
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import Defaults from '@/src/components/Defaults/Defaults';
-import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
-import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
-import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
-import MaxRetryAttempts from '@/src/components/EntityMainProperties/BaseProperties/MaxRetryAttempts';
-import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
+import DescriptionControl from '@/src/components/BaseControls/Description';
+import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
+import IconControl from '@/src/components/BaseControls/Icon';
+import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
+import TopicsControl from '@/src/components/BaseControls/Topics';
 import EntityAttachments from '@/src/components/EntityMainProperties/EntityAttachments/EntityAttachments';
 import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
 import ApplicationSource from '@/src/components/SourceField/Application/ApplicationSource';
