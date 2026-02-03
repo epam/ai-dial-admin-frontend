@@ -17,7 +17,7 @@ import {
 import Field from '@/src/components/Common/Field/Field';
 import { CreateFolderSteps } from '@/src/components/Common/FolderCreate/constants';
 import { BasicI18nKey, ButtonsI18nKey, FoldersI18nKey, ImportI18nKey } from '@/src/constants/i18n';
-import { APPLICATION_ZIP_TYPE } from '@/src/constants/request-headers';
+import { APPLICATION_ZIP_TYPES, APPLICATION_ZIP_TYPES_STR } from '@/src/constants/request-headers';
 import { useI18n } from '@/src/locales/client';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -109,7 +109,7 @@ const FolderCreateSetup: FC<Props> = ({
   const onChangeFile = useCallback(
     (files: File[]) => {
       if (fileType === ImportFileType.ARCHIVE) {
-        if (files.length === 0 || files[0].type === APPLICATION_ZIP_TYPE) {
+        if (files.length === 0 || APPLICATION_ZIP_TYPES.includes(files[0].type)) {
           setZipFile(files[0]);
         }
       } else {
@@ -172,7 +172,7 @@ const FolderCreateSetup: FC<Props> = ({
               iconBeforeInput={<DialFileIcon extension="zip" className="text-secondary" />}
               fileFormatError={t(ImportI18nKey.ArchiveFileFormatError)}
               fileCountError={t(ImportI18nKey.ArchiveDescription)}
-              acceptTypes="application/zip, .zip, application/x-zip-compressed"
+              acceptTypes={APPLICATION_ZIP_TYPES_STR}
               onChange={onChangeFile}
               multiple={false}
             />
