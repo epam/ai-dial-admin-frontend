@@ -3,8 +3,8 @@
 import { DialTextInputField } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback } from 'react';
 
-import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
-import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
+import IconControl from '@/src/components/BaseControls/Icon';
+import TopicsControl from '@/src/components/BaseControls/Topics';
 import EntityAttachments from '@/src/components/EntityMainProperties/EntityAttachments/EntityAttachments';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';

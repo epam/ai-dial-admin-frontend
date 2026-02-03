@@ -6,10 +6,10 @@ import { getErrorForDisplayName, getErrorForName } from '@/src/utils/validation/
 import { isEditDisabled } from '@/src/utils/deployments/containers';
 import { useI18n } from '@/src/locales/client';
 
-import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
-import Maintainer from '@/src/components/EntityMainProperties/BaseProperties/Maintainer';
-import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
-import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
+import DescriptionControl from '@/src/components/BaseControls/Description';
+import Maintainer from '@/src/components/BaseControls/Maintainer';
+import IdControl from '@/src/components/BaseControls/Id/Id';
+import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 
 interface Props {
   container: Container;

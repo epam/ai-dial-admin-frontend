@@ -2,11 +2,11 @@ import { FC, useCallback } from 'react';
 
 import { DialSelectField, DialTextInputField, SelectOption } from '@epam/ai-dial-ui-kit';
 
-import CompletionEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/CompletionEndpoint';
-import EditorUrlControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/EditorUrl';
-import ViewerUrlControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ViewerUrl';
-import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
-import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
+import CompletionEndpointControl from '@/src/components/BaseControls/Endpoint/CompletionEndpoint';
+import EditorUrlControl from '@/src/components/BaseControls/Endpoint/EditorUrl';
+import ViewerUrlControl from '@/src/components/BaseControls/Endpoint/ViewerUrl';
+import IconControl from '@/src/components/BaseControls/Icon';
+import TopicsControl from '@/src/components/BaseControls/Topics';
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';

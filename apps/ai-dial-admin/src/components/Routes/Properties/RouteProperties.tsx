@@ -15,9 +15,9 @@ import classNames from 'classnames';
 
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import UpstreamEndpoints from '@/src/components/UpstreamEndpoints/UpstreamEndpoints';
-import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
-import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
-import MaxRetryAttempts from '@/src/components/EntityMainProperties/BaseProperties/MaxRetryAttempts';
+import DescriptionControl from '@/src/components/BaseControls/Description';
+import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
+import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
 import Paths from '@/src/components/Routes/Paths/Paths';
 import { handleRouteOutputChange } from '@/src/components/Routes/utils';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
@@ -28,7 +28,7 @@ import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/
 import { IconRefresh } from '@tabler/icons-react';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { ORDER_DEFAULT_VALUE } from '@/src/constants/routes';
-import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
+import TopicsControl from '@/src/components/BaseControls/Topics';
 
 interface Props {
   route: DialRoute | DialAppRoute;
