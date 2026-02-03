@@ -107,4 +107,5 @@ export interface ContainerRedeploySnapshot {
   containerGrpcPort?: number;
   envs: EnvironmentVariable[];
   resources?: ContainerResources;
+  allowedDomains?: string[];
 }

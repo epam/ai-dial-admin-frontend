@@ -1,5 +1,6 @@
 import { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 import { DialRemoveButton, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import classNames from 'classnames';
 
 import { FieldError } from '@/src/models/error';
 import { EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -15,10 +16,11 @@ interface Props {
   validate?: (item?: string) => FieldError | null;
   isModal: boolean;
   disabled: boolean;
+  isPlaceholder?: boolean;
 }
 
 const Item = forwardRef<HTMLLIElement, Props>(
-  ({ item, index, onChange, onRemove, validate, isModal, disabled }, ref) => {
+  ({ item, index, onChange, onRemove, validate, isModal, disabled, isPlaceholder = false }, ref) => {
     const t = useI18n();
     const { dispatch, resetCounter } = useSaveValidationContext();
     const [error, setError] = useState<FieldError | null>(null);
@@ -28,7 +30,7 @@ const Item = forwardRef<HTMLLIElement, Props>(
     useEffect(() => {
       if (resetCounter) {
         if (validate) {
-          const error = validate?.(item);
+          const error = isPlaceholder ? null : validate?.(item);
           setError(error);
           dispatch({
             type: ValidationActionType.SetField,
@@ -37,7 +39,7 @@ const Item = forwardRef<HTMLLIElement, Props>(
           });
         }
       }
-    }, [dispatch, index, item, resetCounter, validate]);
+    }, [dispatch, index, isPlaceholder, item, resetCounter, validate]);
 
     const onChangeItem = useCallback(
       (value: string | undefined, index: number) => {
@@ -58,7 +60,11 @@ const Item = forwardRef<HTMLLIElement, Props>(
     }, [dispatch, index]);
 
     return (
-      <li className="flex flex-row gap-2 items-center w-full" key={`item-${index}`} ref={ref}>
+      <li
+        className={classNames('flex flex-row gap-2 w-full', error ? 'items-start' : 'items-center')}
+        key={`item-${index}`}
+        ref={ref}
+      >
         <DialTextInputField
           elementId={`item-${index}`}
           value={item}
@@ -72,7 +78,6 @@ const Item = forwardRef<HTMLLIElement, Props>(
         <DialRemoveButton
           onClick={() => onRemove(index)}
           iconClassName={item.length === 0 ? 'text-secondary' : ''}
-          className={error ? 'self-baseline' : ''}
           disabled={disabled}
         />
       </li>
