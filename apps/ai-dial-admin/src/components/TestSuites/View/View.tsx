@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import { FC, useCallback, useState } from 'react';
@@ -12,7 +11,7 @@ import { useI18n } from '@/src/locales/client';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getViewHeaderClassName } from '@/src/utils/entities/view';
-import { EntityViewTab, getAdapterTabs } from '@/src/utils/tabs/utils';
+import { EntityViewTab, getTestSuiteTabs } from '@/src/utils/tabs/utils';
 
 interface Props {
   names: string[];
@@ -22,7 +21,7 @@ interface Props {
 const TestSuiteView: FC<Props> = ({ originalTestSuite }) => {
   const t = useI18n();
 
-  const tabs = getAdapterTabs(t);
+  const tabs = getTestSuiteTabs(t);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedTestSuite, setSelectedTestSuite] = useState(cloneDeep(originalTestSuite));
@@ -57,7 +56,7 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite }) => {
           // onChangeSelectedFormat={setSelectedFormat}
         /> */}
       </div>
-      {/* <div className="flex-1 overflow-auto min-h-0">
+      <div className="flex-1 overflow-auto min-h-0">
         {isJsonEditorEnabled ? (
           <EntityJsonEditor
             entity={selectedTestSuite}
@@ -65,14 +64,14 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite }) => {
             setIsChanged={setIsChanged}
           />
         ) : (
-          // <>
-          //   {activeTab === EntityViewTab.Properties && <div>Properties</div>}
-          //   {activeTab === EntityViewTab.TestCases && <div>Test Cases</div>}
-          //   {activeTab === EntityViewTab.Runs && <div>Runs</div>}
-          //   {activeTab === EntityViewTab.Trends && <div>Trends</div>}
-          // </>
+          <>
+            {activeTab === EntityViewTab.Properties && <div>Properties</div>}
+            {activeTab === EntityViewTab.TestCases && <div>Test Cases</div>}
+            {activeTab === EntityViewTab.Runs && <div>Runs</div>}
+            {activeTab === EntityViewTab.Trends && <div>Trends</div>}
+          </>
         )}
-      </div> */}
+      </div>
     </div>
   );
 };
