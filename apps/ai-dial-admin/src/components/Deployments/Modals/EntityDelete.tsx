@@ -18,7 +18,7 @@ interface Props {
   dependencies?: Container[];
 }
 
-const ImageDeleteModal: FC<Props> = ({ title, description, isModalOpen, onClose, onApply, dependencies, route }) => {
+const EntityDeleteModal: FC<Props> = ({ title, description, isModalOpen, onClose, onApply, dependencies, route }) => {
   const t = useI18n();
 
   const containerClassNames = useMemo(() => {
@@ -59,4 +59,4 @@ const ImageDeleteModal: FC<Props> = ({ title, description, isModalOpen, onClose,
   );
 };
 
-export default ImageDeleteModal;
+export default EntityDeleteModal;

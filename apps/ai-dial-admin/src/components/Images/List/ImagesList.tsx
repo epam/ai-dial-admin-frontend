@@ -27,7 +27,7 @@ import { getUniqueImagesNames } from '@/src/utils/deployments/images';
 
 import ListView from '@/src/components/ListView/ListView';
 import HeaderButtons from '@/src/components/Images/List/HeaderButtons';
-import ImageDeleteModal from '@/src/components/Deployments/Modals/ImageDelete';
+import EntityDeleteModal from '@/src/components/Deployments/Modals/EntityDelete';
 import ImageDuplicateModal from '@/src/components/Deployments/Modals/ImageDuplicate';
 
 interface Props {
@@ -208,7 +208,7 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
         modalType === ModalType.delete &&
         currentImage &&
         createPortal(
-          <ImageDeleteModal
+          <EntityDeleteModal
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
             onApply={onDelete}

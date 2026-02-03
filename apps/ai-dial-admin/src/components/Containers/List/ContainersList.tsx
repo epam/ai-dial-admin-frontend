@@ -28,7 +28,7 @@ import { IMAGE_BUILD_POLL_INTERVAL } from '@/src/constants/deployments/images';
 import ListView from '@/src/components/ListView/ListView';
 import HeaderButtons from '@/src/components/Containers/List/HeaderButtons';
 import ContainerDuplicate from '@/src/components/Deployments/Modals/ContainerDuplicate';
-import Delete from '@/src/components/Deployments/Modals/Delete';
+import EntityDeleteModal from '@/src/components/Deployments/Modals/EntityDelete';
 import {
   getDeleteOperation,
   getDuplicateOperation,
@@ -304,7 +304,7 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
         modalType === ModalType.delete &&
         currentContainer &&
         createPortal(
-          <Delete
+          <EntityDeleteModal
             title={t(ContainersI18nKey.DeleteModalTitle, {
               type: getTranslatedType(route, t),
               entityType: getTranslatedDeploymentType(route, t),
