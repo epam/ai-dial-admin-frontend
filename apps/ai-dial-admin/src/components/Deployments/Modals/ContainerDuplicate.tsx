@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import { DialFormPopup } from '@epam/ai-dial-ui-kit';
+import { DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
 
 import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { Container } from '@/src/models/deployments/containers';
@@ -20,7 +20,7 @@ interface Props {
 
 const ContainerDuplicate: FC<Props> = ({ title, isModalOpen, container, onClose, onApply, names }) => {
   const t = useI18n();
-  const { dispatch, isValid } = useSaveValidationContext();
+  const { isValid } = useSaveValidationContext();
 
   const [duplicate, setDuplicate] = useState<Container>({
     ...container,
@@ -48,21 +48,21 @@ const ContainerDuplicate: FC<Props> = ({ title, isModalOpen, container, onClose,
   useEffect(() => {
     const error = names?.includes(duplicate.name);
     setIsUniqueNameError(!!error);
-  }, [duplicate.name, dispatch, names, t]);
+  }, [duplicate.name, names, t]);
 
   return (
-    <DialFormPopup
+    <DialConfirmationPopup
       onClose={onClose}
       header={title}
       portalId="DuplicateContainerModal"
       open={isModalOpen}
       className="flex flex-col lg:max-w-[55%] md:max-w-[75%]"
-      onSubmit={() => {
+      onConfirm={() => {
         onApply(duplicate);
         onClose();
       }}
-      submitLabel={t(ButtonsI18nKey.Duplicate)}
-      disableSubmitButton={!isValid || isUniqueNameError}
+      confirmLabel={t(ButtonsI18nKey.Duplicate)}
+      disableConfirmButton={!isValid || isUniqueNameError}
     >
       <div className="flex flex-col h-full overflow-auto px-6 py-4 gap-y-8">
         <IdControl
@@ -73,7 +73,7 @@ const ContainerDuplicate: FC<Props> = ({ title, isModalOpen, container, onClose,
         />
         <DisplayNameControl displayName={duplicate.displayName} required={true} onChange={onChangeDisplayName} />
       </div>
-    </DialFormPopup>
+    </DialConfirmationPopup>
   );
 };
 

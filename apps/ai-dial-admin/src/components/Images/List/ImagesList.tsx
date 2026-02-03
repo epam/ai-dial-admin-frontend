@@ -18,15 +18,17 @@ import {
   getOpenInNewTabOperation,
 } from '@/src/constants/grid-columns/actions';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
-import ListView from '@/src/components/ListView/ListView';
 import { EntitiesI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
 import { getRouteByType, getTranslatedType } from '@/src/utils/deployments/entity';
-import HeaderButtons from '@/src/components/Images/List/HeaderButtons';
-import DuplicateImage from '@/src/components/Images/Modals/DuplicateImage';
-import Delete from '@/src/components/Deployments/Modals/Delete';
 import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { IMAGES_LIST_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { getUniqueImagesNames } from '@/src/utils/deployments/images';
+
+import ListView from '@/src/components/ListView/ListView';
+import HeaderButtons from '@/src/components/Images/List/HeaderButtons';
+import ImageDeleteModal from '@/src/components/Deployments/Modals/ImageDelete';
+import ImageDuplicateModal from '@/src/components/Deployments/Modals/ImageDuplicate';
 
 interface Props {
   route: ApplicationRoute;
@@ -178,7 +180,7 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
         columnDefs={columnDefs}
         additionalGridOptions={gridOptions}
         title={t(ImagesI18nKey.ImagesListTitle)}
-        emptyDataTitle={t(EntitiesI18nKey.NoImages, { type: getTranslatedType(route, t) })}
+        emptyDataTitle={t(EntitiesI18nKey.NoImages)}
         showColumnsPanel={showColumnsPanel}
         toggleColumnsPanel={toggleColumnsPanel}
         storageKey={`${route}/${DEPLOYMENT_ENTITY.images}`}
@@ -190,12 +192,15 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
         modalType === ModalType.duplicate &&
         currentImage &&
         createPortal(
-          <DuplicateImage
+          <ImageDuplicateModal
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
             onApply={onDuplicate}
             image={currentImage}
-            title={t(ImagesI18nKey.DuplicateModalTitle, { type: getTranslatedType(route, t) })}
+            names={getUniqueImagesNames(imagesList, currentImage.$type)}
+            title={t(ImagesI18nKey.DuplicateModalTitle, {
+              type: getTranslatedType(getRouteByType(currentImage.$type), t),
+            })}
           />,
           document.body,
         )}
@@ -203,13 +208,17 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
         modalType === ModalType.delete &&
         currentImage &&
         createPortal(
-          <Delete
+          <ImageDeleteModal
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
             onApply={onDelete}
             dependencies={dependencies}
-            title={t(ImagesI18nKey.DeleteModalTitle, { type: getTranslatedType(route, t) })}
-            description={t(ImagesI18nKey.DeleteModalDescription, { type: getTranslatedType(route, t) })}
+            title={t(ImagesI18nKey.DeleteModalTitle, {
+              type: getTranslatedType(getRouteByType(currentImage.$type), t),
+            })}
+            description={t(ImagesI18nKey.DeleteModalDescription, {
+              type: getTranslatedType(getRouteByType(currentImage.$type), t),
+            })}
             route={getRouteByType(currentImage.$type)}
           />,
           document.body,
