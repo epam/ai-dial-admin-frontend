@@ -29,7 +29,7 @@ const CopyButton: FC<Props> = ({ label, field, className, isFullButton = false }
 
   const props = isFullButton
     ? { variant: ButtonVariant.Neutral, appearance: ButtonAppearance.Outlined, label: t(ButtonsI18nKey.Copy) }
-    : { className: 'cursor-pointer text-secondary hover:text-accent-primary' };
+    : { className: 'cursor-pointer text-secondary hover:text-accent-primary p-0 h-auto w-auto' };
 
   return (
     <DialIconButton
