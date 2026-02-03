@@ -310,6 +310,7 @@ export default {
       Key: 'Key',
       Prompt: 'Prompt',
       File: 'File',
+      TestSuite: 'Test Suite',
       Adapter: 'Adapter',
       InterceptorTemplate: 'Interceptor Template',
       ApplicationRunner: 'Application Runner',

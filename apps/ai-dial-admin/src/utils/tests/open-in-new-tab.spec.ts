@@ -25,6 +25,13 @@ describe('getUrnForEntity', () => {
     expect(urn).toBe(`/${originalRoute}/${encodeURIComponent('modelId')}`);
   });
 
+  test('returns correct URN for TestSuites', () => {
+    const entity = { id: 'test' };
+    const urn = getUrnForEntity(ApplicationRoute.TestSuites, entity);
+    const originalRoute = ApplicationRoute.TestSuites.split('/')?.[1];
+    expect(urn).toBe(`/${originalRoute}/${encodeURIComponent('test')}`);
+  });
+
   test('returns correct URN for default case', () => {
     const entity = { name: 'DefaultName' };
     const urn = getUrnForEntity('OtherRoute' as any, entity);

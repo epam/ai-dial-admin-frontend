@@ -375,6 +375,7 @@ export enum CreateI18nKey {
   InterceptorTemplate = 'CreateEntity.Entities.InterceptorTemplate',
   ApplicationRunner = 'CreateEntity.Entities.ApplicationRunner',
   AssetApplication = 'CreateEntity.Entities.AssetApplication',
+  TestSuite = 'CreateEntity.Entities.TestSuite',
 }
 
 export enum UpstreamEndpointsI18nKey {

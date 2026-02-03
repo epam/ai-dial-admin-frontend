@@ -40,7 +40,7 @@ export class TestSuitesApi extends BaseApi {
   }
 
   createTestSuite(suite: TestSuite, token: JWT | null): Promise<ServerActionResponse> {
-    return this.postAction(TEST_SUITE_URL(suite.id), suite, token);
+    return this.postAction(TEST_SUITES_URL, suite, token);
   }
 
   removeTestSuite(id: string, token: JWT | null): Promise<ServerActionResponse> {
