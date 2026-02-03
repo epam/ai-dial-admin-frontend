@@ -9,10 +9,10 @@ import { getSemanticVersionError } from '@/src/utils/deployments/validation';
 import { getErrorForName } from '@/src/utils/validation/name-error';
 import { useI18n } from '@/src/locales/client';
 
-import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
-import Maintainer from '@/src/components/EntityMainProperties/BaseProperties/Maintainer';
+import DescriptionControl from '@/src/components/BaseControls/Description';
+import Maintainer from '@/src/components/BaseControls/Maintainer';
 import { getControlClassName } from '@/src/utils/entities/view';
-import TopicsControl from '../../EntityMainProperties/BaseProperties/Topics';
+import TopicsControl from '../../BaseControls/Topics';
 import { ApplicationRoute } from '../../../types/routes';
 
 interface Props {

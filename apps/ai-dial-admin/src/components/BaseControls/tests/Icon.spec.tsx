@@ -1,7 +1,7 @@
 import { BasicI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
-import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
+import IconControl from '@/src/components/BaseControls/Icon';
 
 describe('EntityIcon', () => {
   test('renders Field and FilledIcon when iconUrl is present', () => {
