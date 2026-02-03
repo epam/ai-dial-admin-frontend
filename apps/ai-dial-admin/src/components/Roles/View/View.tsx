@@ -61,7 +61,7 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
 
-  const tabs: TabModel[] = getRoleTabs(t);
+  const tabs = getRoleTabs(t);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedRole, setSelectedRole] = useState(cloneDeep(originalRole));
