@@ -302,7 +302,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
         />
         {route.order !== ORDER_DEFAULT_VALUE && (
           <DialPrimaryButton
-            className=" mb-2.5"
+            className="mb-2.5"
             appearance={ButtonAppearance.Link}
             label={t(ButtonsI18nKey.ResetToDefault)}
             iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}

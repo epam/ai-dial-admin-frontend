@@ -60,6 +60,7 @@ const ItemsList: FC<Props> = ({ items, setItems, addItemLabel, validate, isModal
             isModal={isModal}
             ref={null}
             disabled={disabled}
+            isPlaceholder={true}
           />
         ) : (
           items?.map((item, index) => (

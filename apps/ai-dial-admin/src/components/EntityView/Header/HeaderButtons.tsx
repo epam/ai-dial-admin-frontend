@@ -114,7 +114,7 @@ const HeaderButtons = <T extends object>({
             onDiscard={onDiscard}
             onSave={onSave}
             view={view}
-            isJsonEditorEnabled={isEditorEnabled}
+            isEditorEnabled={isEditorEnabled}
             existingVersions={existingVersions}
           />
         ) : (

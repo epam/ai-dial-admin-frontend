@@ -16,14 +16,13 @@ import DeleteModal from '@/src/components/Deployments/Modals/Delete';
 import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
-import { showEditorErrorNotifications } from '@/src/components/EntityView/JsonEditor/utils';
 import { ButtonsI18nKey, ContainersI18nKey, CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
@@ -82,8 +81,7 @@ const HeaderButtons = <T extends Container>({
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
-  const { isValid, jsonErrors } = useSaveValidationContext();
-  const { dispatch } = useSaveValidationContext();
+  const { isValid } = useSaveValidationContext();
   const { visualizerConnector } = useAppContext();
   const visualizerConnectorRef = useRef(visualizerConnector);
 
@@ -155,20 +153,6 @@ const HeaderButtons = <T extends Container>({
     }
   }, [container.name, onCloseModal, route, router, showNotification]);
 
-  const onTryToSave = useCallback(() => {
-    if (jsonErrors?.length) {
-      const errors = jsonErrors;
-      const errorNotifications = showEditorErrorNotifications({
-        errors,
-        showNotification,
-        t,
-      });
-      dispatch({ type: ValidationActionType.SetJsonEditorNotifications, errors: errorNotifications });
-    } else {
-      onSave();
-    }
-  }, [jsonErrors, showNotification, t, dispatch, onSave]);
-
   const onOpenDeleteModal = useCallback(() => {
     onOpenModal(ModalType.delete);
   }, [onOpenModal]);
@@ -212,7 +196,7 @@ const HeaderButtons = <T extends Container>({
         {isChanged ? (
           <ChangedEntityButtons
             onDiscard={onDiscard}
-            onSave={onTryToSave}
+            onSave={onSave}
             disableSave={jsonEditorEnabled ? false : !isValid}
             saveLabel={t(isRedeployRequired ? ButtonsI18nKey.SaveAndRedeploy : ButtonsI18nKey.Save)}
           />

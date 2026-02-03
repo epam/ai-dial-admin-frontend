@@ -61,7 +61,7 @@ const EntityJsonEditor = <T extends object>({
     (errors?: JSONEditorError[]) => {
       // 768 - validation $schema field. $schema uses in App Runner and it'e not real JSON scheme
       const filteredErrors = errors?.filter((error) => error.code !== '768');
-      clearResolvedErrors({ errorNotifications: jsonErrorNotifications, errors: filteredErrors, removeNotification });
+      clearResolvedErrors(jsonErrorNotifications, removeNotification, filteredErrors);
       setJsonErrors?.(filteredErrors ?? []);
     },
     [setJsonErrors, jsonErrorNotifications, removeNotification],

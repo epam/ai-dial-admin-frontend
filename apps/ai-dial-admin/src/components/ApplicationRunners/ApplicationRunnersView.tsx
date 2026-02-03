@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonAppearance, ButtonVariant, DialButtonDropdown, DialTabs, DropdownItem } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, ButtonVariant, DialButtonDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
 import { cloneDeep } from 'lodash';
 
 import {
@@ -47,6 +47,7 @@ import { EntityViewTab, getAppRunnerTabs } from '@/src/utils/tabs/utils';
 import AppRunnerApplications from './ConfigurationView/Applications';
 import AppRunnerFeatures from './ConfigurationView/Features';
 import SchemeProperties from './ConfigurationView/Properties';
+import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
 
 interface Props {
   etag: string;
@@ -107,13 +108,6 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names,
     setIsChanged(selectedFormat === ExportFormat.CORE ? !isEqualCoreRunner : !isEqualAdminRunner);
   }, [selectedFormat, originalScheme, selectedRunner, coreRunner]);
 
-  const onChangeActiveTab = useCallback(
-    (tab: string) => {
-      setActiveTab(tab as EntityViewTab);
-    },
-    [setActiveTab],
-  );
-
   const onDiscard = useCallback(() => {
     if (isJsonEditorEnabled) {
       dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
@@ -167,11 +161,13 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names,
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={getViewHeaderClassName(isJsonEditorEnabled)}>
-        {!isJsonEditorEnabled && (
-          <div className="flex-1 min-w-0">
-            <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
-          </div>
-        )}
+        <Tabs
+          tabs={tabs}
+          isEditorEnabled={isJsonEditorEnabled}
+          activeTab={activeTab}
+          onChangeActiveTab={setActiveTab}
+        />
+
         <HeaderButtons
           view={ApplicationRoute.ApplicationRunners}
           entity={selectedRunner}

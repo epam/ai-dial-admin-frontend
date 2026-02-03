@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialNeutralButton, DialTabs } from '@epam/ai-dial-ui-kit';
+import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { cloneDeep } from 'lodash';
 
@@ -33,6 +33,7 @@ import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getAdapterTabs } from '@/src/utils/tabs/utils';
 import AdapterProperties from './AdapterProperties';
+import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
 
 interface Props {
   etag: string;
@@ -63,13 +64,6 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
   useEffect(() => {
     setIsChanged(!isEqualSkippingUndefined(originalAdapter, selectedAdapter));
   }, [selectedAdapter, originalAdapter]);
-
-  const onChangeActiveTab = useCallback(
-    (tab: string) => {
-      setActiveTab(tab as EntityViewTab);
-    },
-    [setActiveTab],
-  );
 
   const onDiscard = useCallback(() => {
     if (isJsonEditorEnabled) {
@@ -112,11 +106,13 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={getViewHeaderClassName(isJsonEditorEnabled)}>
-        {!isJsonEditorEnabled && (
-          <div className="flex-1 min-w-0">
-            <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
-          </div>
-        )}
+        <Tabs
+          tabs={tabs}
+          isEditorEnabled={isJsonEditorEnabled}
+          activeTab={activeTab}
+          onChangeActiveTab={setActiveTab}
+        />
+
         <HeaderButtons
           view={ApplicationRoute.Adapters}
           entity={selectedAdapter}

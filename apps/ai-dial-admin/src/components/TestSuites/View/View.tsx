@@ -1,10 +1,10 @@
 'use client';
 
-import { FC, useCallback, useState } from 'react';
+import { FC, useState } from 'react';
 
-import { DialTabs } from '@epam/ai-dial-ui-kit';
 import { cloneDeep } from 'lodash';
 
+import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { useI18n } from '@/src/locales/client';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
@@ -27,21 +27,10 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite }) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
 
-  const onChangeActiveTab = useCallback(
-    (tab: string) => {
-      setActiveTab(tab as EntityViewTab);
-    },
-    [setActiveTab],
-  );
-
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={getViewHeaderClassName(isEditorEnabled)}>
-        {!isEditorEnabled && (
-          <div className="flex-1 min-w-0">
-            <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
-          </div>
-        )}
+        <Tabs tabs={tabs} isEditorEnabled={isEditorEnabled} activeTab={activeTab} onChangeActiveTab={setActiveTab} />
       </div>
       <div className="flex-1 overflow-auto min-h-0">
         {isEditorEnabled ? (
