@@ -71,8 +71,9 @@ const EvaluationListView = <T extends object>({
             if (res == null || res.content.length === 0) {
               params.successCallback([], 0);
             } else {
-              params.successCallback(res.content || [], res.total);
+              params.successCallback(res.content || [], res.totalElements);
             }
+            gridApi?.setGridOption('loading', false);
           })
           .catch(() => {
             params.failCallback();

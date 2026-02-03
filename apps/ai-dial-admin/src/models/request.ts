@@ -20,6 +20,7 @@ export interface FilterDto {
 export interface EvaluationPageData<T> {
   page: number;
   size: number;
-  total: number;
+  totalElements: number;
+  totalPages: number;
   content: T[];
 }

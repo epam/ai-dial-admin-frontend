@@ -23,7 +23,19 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate }) => {
 
   const [steps, setSteps] = useState(TEST_SUIT_STEPS(t));
   const [currentStepId, setCurrentStep] = useState(steps[0].id);
-  const [testSuit, setTestSuit] = useState<TestSuite>({} as TestSuite);
+  // TODO: mock data, replace after support deployments API
+  const [testSuit, setTestSuit] = useState<TestSuite>({
+    id: 'test-suite-001',
+    name: 'My Test Suite',
+    deploymentRef: {
+      id: 'deploy-001',
+      name: 'Production',
+    },
+    endpointRef: {
+      method: 'POST',
+      relativeUrl: '/chat/completions',
+    },
+  } as TestSuite);
   const [selectedApplication, setSelectedApplication] = useState<string>('');
 
   const currentStep = useMemo(() => steps.find((step) => step.id === currentStepId), [steps, currentStepId]);
