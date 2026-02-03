@@ -14,16 +14,19 @@ export interface AppContextType {
   visualizerConnector?: VisualizerConnector | null;
   setVisualizerConnector?: Dispatch<SetStateAction<VisualizerConnector | null>>;
   featureFlags: Record<string, boolean>;
-  sidebar: {
-    show: boolean;
-    content: ReactNode | null;
-    showSidebar: (c: ReactNode) => void;
-    closeSidebar: () => void;
-    isMenuClosed?: boolean;
-    toggleIsMenuClosed?: () => void;
-  };
+  sidebar: AppContextSidebar;
   disableDeploymentsJSONEditor?: boolean;
   resourcesDefaults?: ResourcesDefaults;
+}
+
+interface AppContextSidebar {
+  show: boolean;
+  content: ReactNode | null;
+  isMenuClosed?: boolean;
+  className?: string;
+  showSidebar: (content: ReactNode, className?: string) => void;
+  closeSidebar: () => void;
+  toggleIsMenuClosed?: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -48,6 +51,7 @@ export const AppContextProvider = ({
   const [visualizerConnector, setVisualizerConnector] = useState<VisualizerConnector | null>(null);
   const [show, setShow] = useState(false);
   const [content, setContent] = useState<ReactNode | null>(null);
+  const [sideBarClassName, setSideBarClassName] = useState<string | undefined>(undefined);
 
   const [isMenuClosed, setIsMenuClosed] = useState(false);
 
@@ -65,8 +69,9 @@ export const AppContextProvider = ({
     setIsMenuClosed(!isMenuClosed);
   };
 
-  const showSidebar = (c: ReactNode) => {
+  const showSidebar = (c: ReactNode, className?: string) => {
     setContent(c);
+    setSideBarClassName(className);
     setShow(true);
   };
 
@@ -84,7 +89,15 @@ export const AppContextProvider = ({
     visualizerConnector,
     setVisualizerConnector,
     featureFlags,
-    sidebar: { show, content, showSidebar, closeSidebar, isMenuClosed, toggleIsMenuClosed },
+    sidebar: {
+      show,
+      content,
+      showSidebar,
+      className: sideBarClassName,
+      closeSidebar,
+      isMenuClosed,
+      toggleIsMenuClosed,
+    },
     disableDeploymentsJSONEditor,
     resourcesDefaults,
   };
