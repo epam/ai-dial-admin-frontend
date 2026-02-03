@@ -1,7 +1,7 @@
 import { DialFormPopup } from '@epam/ai-dial-ui-kit';
 import { FC, useState } from 'react';
 
-import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
+import VersionControl from '@/src/components/BaseControls/Version';
 import { ButtonsI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';

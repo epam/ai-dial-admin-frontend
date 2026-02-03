@@ -4,8 +4,8 @@ import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialFeatures } from '@/src/models/dial/features';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 
-import CompletionEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/CompletionEndpoint';
-import ConfigurationEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ConfigurationEndpointControl';
+import CompletionEndpointControl from '@/src/components/BaseControls/Endpoint/CompletionEndpoint';
+import ConfigurationEndpointControl from '@/src/components/BaseControls/Endpoint/ConfigurationEndpointControl';
 
 interface Props {
   entity: DialInterceptor;
