@@ -95,7 +95,7 @@ const EvaluationListView = <T extends object>({
         additionalGridOptions={gridOptions}
         title={t(listViewTitleMap[route])}
         emptyDataTitle={t(emptyDataTitleMap[route])}
-        showColumnsPanel
+        showColumnsPanel={showColumnsPanel}
         toggleColumnsPanel={toggleColumnsPanel}
         storageKey={route}
         onGridReady={onGridReady}

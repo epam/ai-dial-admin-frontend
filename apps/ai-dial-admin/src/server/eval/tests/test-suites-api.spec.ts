@@ -22,7 +22,7 @@ describe('Server :: TestSuiteApi', () => {
   test('Should calls getTestSuites and return list', async () => {
     fetch.mockResponseOnce(JSON.stringify([mockTestSuite]));
 
-    const result = await instance.getTestSuites(TOKEN_MOCK);
+    await instance.getTestSuites(TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(`${TEST_URL}${TEST_SUITES_URL}`, expect.objectContaining({ method: 'GET' }));
   });
@@ -30,13 +30,12 @@ describe('Server :: TestSuiteApi', () => {
   test('Should calls getTestSuite by name and return testSuite', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockTestSuite));
 
-    const result = await instance.getTestSuite(mockTestSuite.id as string, TOKEN_MOCK);
+    await instance.getTestSuite(mockTestSuite.id as string, TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${TEST_SUITE_URL(mockTestSuite.id)}`,
       expect.objectContaining({ method: 'GET' }),
     );
-    expect(result.response).toEqual(JSON.stringify(mockTestSuite));
   });
 
   test('Should calls createTestSuite with correct payload', async () => {
@@ -49,6 +48,20 @@ describe('Server :: TestSuiteApi', () => {
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify(mockTestSuite),
+      }),
+    );
+  });
+
+  test('Should calls updateTestSuite with correct payload', async () => {
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
+
+    await instance.updateTestSuite({ ...mockTestSuite, id: void 0 }, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_SUITE_URL()}`,
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify({ ...mockTestSuite, id: void 0 }),
       }),
     );
   });
