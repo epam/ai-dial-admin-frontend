@@ -157,21 +157,19 @@ const EntityView: FC<Props> = ({
   }, [handleMessage]);
 
   const onChangeActiveTab = useCallback(
-    (tab: string) => {
-      if (tab !== activeTab) {
-        if (tab === EntityViewTab.Parameters && isChanged && view === ApplicationRoute.Applications) {
-          setNextTab(tab);
-          handleModalOpen(ModalType.entity);
-        } else if (
-          activeTab === EntityViewTab.Parameters &&
-          (isIframeChanged || isChanged) &&
-          (view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications)
-        ) {
-          setNextTab(tab);
-          handleModalOpen(ModalType.parameters);
-        } else {
-          setActiveTab(tab as EntityViewTab);
-        }
+    (tab: EntityViewTab) => {
+      if (tab === EntityViewTab.Parameters && isChanged && view === ApplicationRoute.Applications) {
+        setNextTab(tab);
+        handleModalOpen(ModalType.entity);
+      } else if (
+        activeTab === EntityViewTab.Parameters &&
+        (isIframeChanged || isChanged) &&
+        (view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications)
+      ) {
+        setNextTab(tab);
+        handleModalOpen(ModalType.parameters);
+      } else {
+        setActiveTab(tab);
       }
     },
     [activeTab, handleModalOpen, isChanged, isIframeChanged, view],
