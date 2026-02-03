@@ -19,6 +19,8 @@ const HF_MODEL_MAX_LENGTH = 96;
 const HF_USERNAME_ALLOWED_REGEX = /^[A-Za-z0-9-]+$/;
 const HF_MODEL_ALLOWED_REGEX = /^[A-Za-z0-9_.-]+$/;
 
+const MIN_DOMAIN_NAME_LENGTH = 3;
+const MAX_DOMAIN_NAME_LENGTH = 253;
 const WHITELIST_DOMAIN_REGEX = /^((?!-)[A-Za-z0-9-]{1,63}(?<!-)\.)+[A-Za-z]{2,}$/;
 
 export const getVariableNameError = (name: string, t?: (str: string) => string) => {
@@ -249,6 +251,13 @@ export const getWhitelistDomainError = (
     return {
       type: ErrorType.EMPTY,
       text: t ? t(ErrorI18nKey.RequiredProperty) : '',
+    };
+  }
+
+  if ((value as string).length > MAX_DOMAIN_NAME_LENGTH || (value as string).length < MIN_DOMAIN_NAME_LENGTH) {
+    return {
+      type: ErrorType.LENGTH,
+      text: t ? t(ErrorI18nKey.MinMaxLength, { min: MIN_DOMAIN_NAME_LENGTH, max: MAX_DOMAIN_NAME_LENGTH }) : '',
     };
   }
 
