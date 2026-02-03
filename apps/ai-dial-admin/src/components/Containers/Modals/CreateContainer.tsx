@@ -32,6 +32,7 @@ import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { IMAGES_LIST_FOR_CONTAINER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
+import { IMAGE_STATUS } from '@/src/types/deployments/images';
 
 interface Props {
   isModalOpen: boolean;
@@ -80,7 +81,11 @@ const CreateContainer: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
       const res = await getImagesWithVersions(getImageType(route));
       if (res.success) {
         setLoading(false);
-        setImages(res.response as []);
+        setImages(
+          (res.response as ImageGroup[]).filter((group) =>
+            group.availableVersions.some((v) => v.status === IMAGE_STATUS.BUILT),
+          ),
+        );
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }

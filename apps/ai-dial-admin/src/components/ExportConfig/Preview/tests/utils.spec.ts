@@ -16,6 +16,8 @@ describe('Export Config Utils :: getPreviewTabs', () => {
     const mockEntities: any[] = [{ id: 'e1' }, { id: 'e2' }, { id: 'e3' }];
     entitiesUtils.getApplicationsForEntitiesGrid.mockReturnValue([]);
     entitiesUtils.getModelsForEntitiesGrid.mockReturnValue(mockEntities);
+    entitiesUtils.getRolesForEntitiesGrid.mockReturnValue([{ id: 'e1' }]);
+    entitiesUtils.getKeysForEntitiesGrid.mockReturnValue([{ id: 'e1' }, { id: 'e1' }]);
     entitiesUtils.getRoutesForEntitiesGrid.mockReturnValue([]);
     entitiesUtils.getToolsetsForEntitiesGrid.mockReturnValue([]);
 
@@ -69,6 +71,8 @@ describe('Export Config Utils :: getPreviewTabs', () => {
   });
 
   test('should handle interceptors and files correctly', () => {
+    const mockEntities = [{ id: 'int1' }];
+    entitiesUtils.getInterceptorsForEntitiesGrid.mockReturnValue(mockEntities);
     const data = {
       interceptors: [{ id: 'int1' }],
       files: [{ id: 'file1' }],
@@ -90,6 +94,9 @@ describe('Export Config Utils :: getPreviewTabs', () => {
       adapters: [{ id: 'adapter1' }],
     };
 
+    const mockEntities = [{ id: 'adapter1' }];
+    entitiesUtils.getAdaptersForEntitiesGrid.mockReturnValue(mockEntities);
+
     const { tabs, convertedData } = getPreviewTabs(data, false, ExportFormat.ADMIN, t);
 
     expect(tabs).toEqual([{ id: 'ADAPTER', label: 'translated(Menu.Adapters): 1' }]);
@@ -110,7 +117,7 @@ describe('Export Config Utils :: getPreviewTabs', () => {
       routes: [{ id: 'route1' }],
     };
 
-    const { tabs, convertedData } = getPreviewTabs(data, false, ExportFormat.ADMIN, t);
+    const { tabs } = getPreviewTabs(data, false, ExportFormat.ADMIN, t);
 
     expect(tabs).toEqual([
       { id: 'APPLICATION', label: 'translated(Menu.Applications): 1' },
