@@ -310,7 +310,7 @@ export const ACTIVITY_AUDIT_COLUMNS = (t: (s: string) => string, isSingleEntity?
   return columns;
 };
 
-export const KEYS_COLUMNS = (t: (str: string) => string): ColDef[] => [
+export const BASE_KEYS_COLUMNS: ColDef[] = [
   DISPLAY_NAME_COLUMN,
   DESCRIPTION_COLUMN,
   NAME_COLUMN_WITH_SORT,
@@ -328,6 +328,10 @@ export const KEYS_COLUMNS = (t: (str: string) => string): ColDef[] => [
     headerName: 'Expiration time',
     ...dateTimeColumn,
   },
+];
+
+export const KEYS_COLUMNS = (t: (str: string) => string): ColDef[] => [
+  ...BASE_KEYS_COLUMNS,
   VALIDITY_STATUS_COLUMN(t),
   TOPICS_COLUMN,
   {
