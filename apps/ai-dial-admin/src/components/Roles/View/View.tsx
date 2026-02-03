@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
-import { DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
 import { cloneDeep } from 'lodash';
 
 import { getCoreRole, removeRole, updateCoreRole, updateRole } from '@/src/app/[lang]/roles/actions';
@@ -42,6 +41,7 @@ import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getRoleTabs } from '@/src/utils/tabs/utils';
 import RoleProperties from './Properties';
+import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
 
 interface Props {
   originalRole: DialRole;
@@ -260,11 +260,13 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={getViewHeaderClassName(isJsonEditorEnabled)}>
-        {!isJsonEditorEnabled && (
-          <div className="flex-1 min-w-0">
-            <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
-          </div>
-        )}
+        <Tabs
+          tabs={tabs}
+          isEditorEnabled={isJsonEditorEnabled}
+          activeTab={activeTab}
+          onChangeActiveTab={onChangeActiveTab}
+        />
+
         <HeaderButtons
           view={ApplicationRoute.Roles}
           entity={selectedRole}

@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
-import { DialTabs } from '@epam/ai-dial-ui-kit';
 import { cloneDeep } from 'lodash';
 
 import { createPrompt, getPrompts, movePrompts, removePrompt } from '@/src/app/[lang]/prompts/actions';
@@ -30,6 +29,7 @@ import { addTrailingSlash } from '@/src/utils/url';
 import PromptProperties from './Properties';
 import { Asset } from '@/src/models/dial/deployment-asset';
 import { getViewHeaderClassName } from '@/src/utils/entities/view';
+import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
 
 interface Props {
   originalPrompt: DialPrompt;
@@ -145,11 +145,13 @@ const PromptView: FC<Props> = ({ originalPrompt, etag, prompts }) => {
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={getViewHeaderClassName(isJsonEditorEnabled)}>
-        {!isJsonEditorEnabled && (
-          <div className="flex-1 min-w-0">
-            <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
-          </div>
-        )}
+        <Tabs
+          tabs={tabs}
+          isEditorEnabled={isJsonEditorEnabled}
+          activeTab={activeTab}
+          onChangeActiveTab={onChangeActiveTab}
+        />
+
         <HeaderButtons
           view={ApplicationRoute.Prompts}
           entity={selectedPrompt}

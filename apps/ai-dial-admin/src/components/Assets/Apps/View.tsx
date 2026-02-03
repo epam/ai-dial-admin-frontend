@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation';
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DialTabs } from '@epam/ai-dial-ui-kit';
 import { cloneDeep } from 'lodash';
 
 import { getApps, moveApps, removeApp, updateApp } from '@/src/app/[lang]/assets-applications/actions';
@@ -34,6 +33,7 @@ import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
 import { addTrailingSlash } from '@/src/utils/url';
 import { getViewHeaderClassName } from '@/src/utils/entities/view';
 import { getAppRunner } from '../../Applications/ParametersTab/utils';
+import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
 
 interface Props {
   etag: string;
@@ -166,11 +166,13 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={getViewHeaderClassName(isJsonEditorEnabled)}>
-        {!isJsonEditorEnabled && (
-          <div className="flex-1 min-w-0">
-            <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
-          </div>
-        )}
+        <Tabs
+          tabs={tabs}
+          isEditorEnabled={isJsonEditorEnabled}
+          activeTab={activeTab}
+          onChangeActiveTab={onChangeActiveTab}
+        />
+
         <HeaderButtons
           activeTab={activeTab}
           view={ApplicationRoute.AssetsApplications}
