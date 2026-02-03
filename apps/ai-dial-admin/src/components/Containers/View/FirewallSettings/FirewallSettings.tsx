@@ -5,6 +5,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 
 import Whitelists from '@/src/components/Deployments/Common/Whitelists/Whitelists';
 import { isEditDisabled } from '@/src/utils/deployments/containers';
+import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 
 interface Props {
   container: Container;
@@ -18,7 +19,7 @@ const FirewallSettings: FC<Props> = ({ container, setContainer, route }) => {
       route={route}
       entity={container}
       setEntity={(container) => setContainer(container as Container)}
-      disabled={isEditDisabled(container)}
+      disabled={isEditDisabled(container) || container.status === CONTAINER_STATUS.RUNNING}
     />
   );
 };

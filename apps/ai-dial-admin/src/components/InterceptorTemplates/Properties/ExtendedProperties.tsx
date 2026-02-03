@@ -3,9 +3,9 @@ import { FC, useCallback } from 'react';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 
 import BaseProperties from '@/src/components/InterceptorTemplates/Properties/BaseProperties';
-import CompletionEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/CompletionEndpoint';
-import ConfigurationEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ConfigurationEndpointControl';
-import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
+import CompletionEndpointControl from '@/src/components/BaseControls/Endpoint/CompletionEndpoint';
+import ConfigurationEndpointControl from '@/src/components/BaseControls/Endpoint/ConfigurationEndpointControl';
+import TopicsControl from '@/src/components/BaseControls/Topics';
 
 interface Props {
   template: InterceptorTemplate;

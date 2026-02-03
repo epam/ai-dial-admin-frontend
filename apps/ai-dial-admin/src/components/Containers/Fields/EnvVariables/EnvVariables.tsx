@@ -88,7 +88,7 @@ const EnvVariables: FC<Props> = ({ container, setContainer }) => {
     <Accordion title={t(EntityFieldsI18nKey.EnvironmentVariables)}>
       <div className="flex flex-col gap-y-2">
         <DndProvider backend={HTML5Backend}>
-          <div className="flex flex-col gap-2 lg:pr-2">
+          <div className="flex flex-col gap-2 lg:pr-2 overflow-auto">
             {variables?.map((variable, index) => {
               const handleUpdateVariable = (updatedVariable: EnvironmentVariable) =>
                 onUpdateVariable(updatedVariable, index);

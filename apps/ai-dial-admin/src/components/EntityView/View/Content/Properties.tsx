@@ -1,9 +1,9 @@
 import { FC } from 'react';
 
 import Defaults from '@/src/components/Defaults/Defaults';
-import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
-import MaxRetryAttempts from '@/src/components/EntityMainProperties/BaseProperties/MaxRetryAttempts';
-import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
+import IconControl from '@/src/components/BaseControls/Icon';
+import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
+import TopicsControl from '@/src/components/BaseControls/Topics';
 import EntityAttachments from '@/src/components/EntityMainProperties/EntityAttachments/EntityAttachments';
 import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
 import Properties from '@/src/components/EntityMainProperties/Properties/Properties';

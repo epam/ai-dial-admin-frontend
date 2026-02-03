@@ -20,11 +20,24 @@ interface Props {
 const Item = forwardRef<HTMLLIElement, Props>(
   ({ item, index, onChange, onRemove, validate, isModal, disabled }, ref) => {
     const t = useI18n();
-    const { dispatch } = useSaveValidationContext();
-
+    const { dispatch, resetCounter } = useSaveValidationContext();
     const [error, setError] = useState<FieldError | null>(null);
 
     const containerClassName = useMemo(() => getControlClassName(isModal), [isModal]);
+
+    useEffect(() => {
+      if (resetCounter) {
+        if (validate) {
+          const error = validate?.(item);
+          setError(error);
+          dispatch({
+            type: ValidationActionType.SetField,
+            field: `item-${index}`,
+            isValid: !error,
+          });
+        }
+      }
+    }, [dispatch, index, item, resetCounter, validate]);
 
     const onChangeItem = useCallback(
       (value: string | undefined, index: number) => {
@@ -56,7 +69,12 @@ const Item = forwardRef<HTMLLIElement, Props>(
           errorText={error?.text}
           disabled={disabled}
         />
-        <DialRemoveButton onClick={() => onRemove(index)} className={error ? 'self-baseline' : ''} />
+        <DialRemoveButton
+          onClick={() => onRemove(index)}
+          iconClassName={item.length === 0 ? 'text-secondary' : ''}
+          className={error ? 'self-baseline' : ''}
+          disabled={disabled}
+        />
       </li>
     );
   },

@@ -1,7 +1,7 @@
 import { ChangeEvent, FC, memo, useCallback, useRef } from 'react';
 import { IconFileArrowRight, IconX } from '@tabler/icons-react';
 import {
-  DialButton,
+  DialIconButton,
   DialTextInputField,
   DialPasswordInputField,
   DialTooltip,
@@ -27,7 +27,7 @@ interface Props {
 const EnvVariableValueField: FC<Props> = ({ value, index, onValueChange, mountType, disabled }) => {
   const t = useI18n();
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const fieldName = t(EnvVariablesI18nKey.Value);
+  const fieldName = index === 0 ? t(EnvVariablesI18nKey.Value) : '';
 
   const handleFileUpload = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
@@ -134,7 +134,12 @@ const EnvVariableValueField: FC<Props> = ({ value, index, onValueChange, mountTy
                 <p className="truncate flex-1 min-w-0 text-left items-center">{value.fileName}</p>
               </div>
             </DialTooltip>
-            <DialButton iconBefore={<IconX {...BASE_BUTTON_ICON_PROPS} />} onClick={onClearFile} disabled={disabled} />
+            <DialIconButton
+              icon={<IconX {...BASE_BUTTON_ICON_PROPS} />}
+              onClick={onClearFile}
+              disabled={disabled}
+              className="w-auto h-auto p-0"
+            />
           </div>
         </div>
       )}

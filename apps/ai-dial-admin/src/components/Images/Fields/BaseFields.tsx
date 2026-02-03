@@ -1,4 +1,4 @@
-import { FC, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { DialTextInputField } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -9,10 +9,10 @@ import { getSemanticVersionError } from '@/src/utils/deployments/validation';
 import { getErrorForName } from '@/src/utils/validation/name-error';
 import { useI18n } from '@/src/locales/client';
 
-import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
-import Maintainer from '@/src/components/EntityMainProperties/BaseProperties/Maintainer';
+import DescriptionControl from '@/src/components/BaseControls/Description';
+import Maintainer from '@/src/components/BaseControls/Maintainer';
 import { getControlClassName } from '@/src/utils/entities/view';
-import TopicsControl from '../../EntityMainProperties/BaseProperties/Topics';
+import TopicsControl from '../../BaseControls/Topics';
 import { ApplicationRoute } from '../../../types/routes';
 
 interface Props {
@@ -61,6 +61,43 @@ const BaseFields: FC<Props> = ({
     }
   }, [dispatch, image, resetCounter, t, versionsMap]);
 
+  const onChangeVersion = useCallback(
+    (version?: string) => {
+      const error = getSemanticVersionError(versionsMap, image as { name: string }, t, version);
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'version',
+        isValid: !error,
+      });
+      setVersionError(error);
+      setImage({
+        ...image,
+        version: version || '',
+      });
+    },
+    [dispatch, image, setImage, setVersionError, t, versionsMap],
+  );
+
+  const onChangeName = useCallback(
+    (name?: string) => {
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'version',
+        isValid: false,
+      });
+      const error = getErrorForName(name, [], t, false, false);
+      dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !error });
+      setNameError(error);
+      const updated = {
+        ...image,
+        name: name || '',
+      };
+      verifyVersion(updated);
+      setImage(updated);
+    },
+    [dispatch, image, setImage, setNameError, t, verifyVersion],
+  );
+
   return (
     <div className="flex flex-col gap-y-8">
       <DialTextInputField
@@ -69,47 +106,20 @@ const BaseFields: FC<Props> = ({
         placeholder={t(EntityPlaceholdersI18nKey.Name)}
         value={image.name}
         containerClassName={containerClassName}
-        onChange={(name?: string) => {
-          dispatch({
-            type: ValidationActionType.SetField,
-            field: 'version',
-            isValid: false,
-          });
-          const error = getErrorForName(name, [], t, false, false);
-          dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !error });
-          setNameError(error);
-          const updated = {
-            ...image,
-            name: name || '',
-          };
-          verifyVersion(updated);
-          setImage(updated);
-        }}
+        onChange={onChangeName}
         errorText={nameError?.text}
         invalid={!!nameError}
       />
       {isModal && (
         <DialTextInputField
-          containerClassName="w-[120px]"
+          elementContainerClassName="w-[120px]"
           fieldTitle={t(EntityFieldsI18nKey.version)}
           elementId="version"
           placeholder={t(EntityPlaceholdersI18nKey.Version)}
           value={image.version}
           errorText={versionError?.text}
           invalid={!!versionError}
-          onChange={(version?: string) => {
-            const error = getSemanticVersionError(versionsMap, image as { name: string }, t, version);
-            dispatch({
-              type: ValidationActionType.SetField,
-              field: 'version',
-              isValid: !error,
-            });
-            setVersionError(error);
-            setImage({
-              ...image,
-              version: version || '',
-            });
-          }}
+          onChange={onChangeVersion}
         />
       )}
       <DescriptionControl entity={image} onChangeEntity={setImage} isFullWidth={isModal} />

@@ -2,9 +2,9 @@ import { DialFormPopup, DialRadioGroup, RadioButtonWithContent, RadioGroupOrient
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import FilePath from '@/src/components/Common/FilePath/FilePath';
-import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
-import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
-import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
+import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
+import IdControl from '@/src/components/BaseControls/Id/Id';
+import VersionControl from '@/src/components/BaseControls/Version';
 import { BasicI18nKey, ButtonsI18nKey, EntitiesI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';

@@ -11,12 +11,12 @@ import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ApplicationRoute } from '@/src/types/routes';
 
 import Defaults from '@/src/components/Defaults/Defaults';
-import MaintainerControl from '@/src/components/EntityMainProperties/BaseProperties/Maintainer';
+import MaintainerControl from '@/src/components/BaseControls/Maintainer';
 import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
 import EntityProperties from '@/src/components/EntityMainProperties/Properties/EntityProperties';
 import SourceField from '@/src/components/SourceField/SourceField';
 import { getInterceptorContainers } from '@/src/app/actions/deployments';
-import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
+import TopicsControl from '@/src/components/BaseControls/Topics';
 
 interface Props {
   selectedInterceptor: DialInterceptor;

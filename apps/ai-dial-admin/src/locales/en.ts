@@ -567,6 +567,7 @@ export default {
     CustomTimeRage: 'Custom Time Range',
     Custom: 'Custom',
     UniqueUsers: 'Unique users',
+    Requests: 'Requests',
     RequestCount: 'Request count',
     TotalTokens: 'Total tokens',
     Money: 'Money',
@@ -1119,6 +1120,7 @@ export default {
     RunOutOfMemory: 'Stopped due to insufficient memory',
     ExitedWithError: 'Failed during execution',
     InvalidWhitelistDomain: 'Invalid domain name',
+    NotSemanticVersion: 'Version must follow semantic versioning (e.g., 1.0.0)',
   },
   Source: {
     OpenTemplate: 'Open template',

@@ -1,7 +1,7 @@
 import { FC, useCallback } from 'react';
 import { DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 
-import PriceControl from '@/src/components/EntityMainProperties/BaseProperties/Price';
+import PriceControl from '@/src/components/BaseControls/Price';
 import { BasicI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialModel, PricingType } from '@/src/models/dial/model';

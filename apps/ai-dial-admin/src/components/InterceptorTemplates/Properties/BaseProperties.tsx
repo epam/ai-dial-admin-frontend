@@ -1,8 +1,8 @@
 import { FC } from 'react';
 
-import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
-import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
-import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
+import DescriptionControl from '@/src/components/BaseControls/Description';
+import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
+import IdControl from '@/src/components/BaseControls/Id/Id';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 
 interface Props {
