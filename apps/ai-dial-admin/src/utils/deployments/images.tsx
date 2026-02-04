@@ -82,6 +82,10 @@ export function getUniqueLatestImages(images: Image[]): Image[] {
   return Array.from(map.values());
 }
 
+export function getUniqueImagesNames(images: Image[], type: IMAGE_TYPE): string[] {
+  return [...new Set(images.filter((img) => img.$type === type).map((img) => img.name))];
+}
+
 export const updateSelectedVersion = (images: ImageGroup[], id: string) => {
   return images.map((image) => {
     if (image?.availableVersions) {
