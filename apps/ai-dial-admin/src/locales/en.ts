@@ -674,8 +674,6 @@ export default {
     Skip: 'Skip',
     EditManually: 'Edit manually',
     Files: 'Files',
-    ConfigImported: 'Config imported successfully',
-    ConfigImportedDescription: 'Changes have been delivered to the system',
     DropFiles: 'Drop JSON core files here',
     DropZip: 'Drop zip config file here',
     Configuration: 'Configuration',
@@ -713,6 +711,12 @@ export default {
     Changes: 'Changes',
     FileSizeErrorHeader: 'File size limit error',
     FileSizeErrorDescription: 'Size of files is more than {size}',
+    Notifications: {
+      ConfigImported: 'Config imported successfully',
+      ConfigImportedDescription: 'Changes have been delivered to the system',
+      Importing: 'Config importing in progress',
+      ImportingDescription: 'You will be notified when the process is complete',
+    },
   },
   Export: {
     Config: 'Config',

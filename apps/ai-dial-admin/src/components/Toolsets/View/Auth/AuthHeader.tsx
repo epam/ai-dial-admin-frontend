@@ -4,7 +4,7 @@ import classNames from 'classnames';
 import { EntityFieldsI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import { isAdminLoggedInToToolset, isUserLoggedInToToolset } from '@/src/utils/toolset/toolset-auth';
-import { Toolset } from '@/src/models/dial/toolset';
+import { Toolset, ToolsetAuthType } from '@/src/models/dial/toolset';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -12,6 +12,9 @@ interface Props {
 }
 
 export const AuthHeader: FC<Props> = ({ toolset }) => {
+  if (!toolset.authSettings?.authenticationType || toolset.authSettings.authenticationType === ToolsetAuthType.NONE) {
+    return null;
+  }
   const t = useI18n();
 
   const isUserLoggedIn = isUserLoggedInToToolset(toolset);
