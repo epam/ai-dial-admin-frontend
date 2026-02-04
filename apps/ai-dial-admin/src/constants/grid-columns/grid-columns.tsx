@@ -44,15 +44,28 @@ import HeaderWithHintButton from '@/src/components/Grid/HeaderComponents/HeaderW
 
 const stringFilter: Partial<ColDef> = {
   filterParams: {
+    maxNumConditions: 1,
+    buttons: ['reset', 'apply'],
+    closeOnApply: true,
+  } as ITextFilterParams,
+};
+
+const auditStringFilter: Partial<ColDef> = {
+  filterParams: {
+    ...stringFilter.filterParams,
     filterOptions: [
       GridFilterType.CONTAINS,
       GridFilterType.NOT_CONTAINS,
       GridFilterType.EQUALS,
       GridFilterType.NOT_EQUAL,
     ],
-    maxNumConditions: 1,
-    buttons: ['reset', 'apply'],
-    closeOnApply: true,
+  } as ITextFilterParams,
+};
+
+const evalStringFilter: Partial<ColDef> = {
+  filterParams: {
+    ...stringFilter.filterParams,
+    filterOptions: [GridFilterType.EQUALS],
   } as ITextFilterParams,
 };
 
@@ -284,16 +297,16 @@ export const APPLICATIONS_COLUMNS = (t: (str: string) => string): ColDef[] => [
 
 export const ACTIVITY_AUDIT_COLUMNS = (t: (s: string) => string, isSingleEntity?: boolean): ColDef[] => {
   const columns: ColDef[] = [
-    { field: 'activityType', headerName: 'Activity type', ...stringFilter },
+    { field: 'activityType', headerName: 'Activity type', ...auditStringFilter },
     {
       field: 'resourceType',
       headerName: 'Resource type',
       valueFormatter: ({ value }) => getFormattedResourceType(value, t),
       tooltipValueGetter: ({ value }) => getFormattedResourceType(value, t),
       filterValueGetter: (params) => getFormattedResourceType(params.data[params.colDef.field || ''], t),
-      ...stringFilter,
+      ...auditStringFilter,
     },
-    { field: 'resourceId', headerName: 'Resource identifier', ...stringFilter },
+    { field: 'resourceId', headerName: 'Resource identifier', ...auditStringFilter },
     {
       field: 'epochTimestampMs',
       headerName: 'Time',
@@ -302,8 +315,8 @@ export const ACTIVITY_AUDIT_COLUMNS = (t: (s: string) => string, isSingleEntity?
       floatingFilter: false,
       filter: false,
     },
-    { field: 'initiatedEmail', headerName: 'Initiated', ...stringFilter },
-    { field: 'activityId', headerName: 'Activity ID', ...stringFilter },
+    { field: 'initiatedEmail', headerName: 'Initiated', ...auditStringFilter },
+    { field: 'activityId', headerName: 'Activity ID', ...auditStringFilter },
   ];
 
   if (isSingleEntity) {
@@ -633,22 +646,8 @@ export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, rou
   },
   { field: 'url', headerName: 'Container URL', hide: true },
   { field: 'author', headerName: 'Maintainer', hide: true },
-  {
-    field: 'createdAt',
-    headerName: 'Create time',
-    hide: true,
-    valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
-    tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
-    filterValueGetter: (params) => formatDateTimeToLocalString(params.data[params.colDef.field || '']),
-  },
-  {
-    field: 'updatedAt',
-    headerName: 'Update time',
-    hide: true,
-    valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
-    tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
-    filterValueGetter: (params) => formatDateTimeToLocalString(params.data[params.colDef.field || '']),
-  },
+  CREATED_AT_COLUMN,
+  UPDATED_AT_COLUMN,
 ];
 
 export const CONTAINER_EVENTS = (t: (key: string, options?: Record<string, string | number>) => string): ColDef[] => [
@@ -786,22 +785,8 @@ export const IMAGES_LIST_COLUMNS = (t: (key: string) => string): ColDef[] => [
     tooltipValueGetter: ({ value }) => t(STATUS_I18N_KEYS[value as IMAGE_STATUS]),
     filterValueGetter: (params) => t(STATUS_I18N_KEYS[params.data[params.colDef.field || ''] as IMAGE_STATUS]),
   },
-  {
-    field: 'createdAt',
-    headerName: 'Create time',
-    hide: true,
-    valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
-    tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
-    filterValueGetter: (params) => formatDateTimeToLocalString(params.data[params.colDef.field || '']),
-  },
-  {
-    field: 'updatedAt',
-    headerName: 'Update time',
-    hide: false,
-    valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
-    tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
-    filterValueGetter: (params) => formatDateTimeToLocalString(params.data[params.colDef.field || '']),
-  },
+  CREATED_AT_COLUMN,
+  UPDATED_AT_COLUMN,
 ];
 
 export const IMAGE_DEPENDENCIES_COLUMNS = (t: (key: string) => string, showImageColumn?: boolean): ColDef[] => [
@@ -830,26 +815,34 @@ export const IMAGE_DEPENDENCIES_COLUMNS = (t: (key: string) => string, showImage
 ];
 
 export const TEST_SUITES_COLUMN: ColDef[] = [
-  { field: 'name', colId: 'name', headerName: 'Display Name', hide: false },
-  DESCRIPTION_COLUMN,
+  { field: 'name', colId: 'name', headerName: 'Display Name', hide: false, ...evalStringFilter },
+  { ...DESCRIPTION_COLUMN, sortable: false, filter: false },
+  { field: 'id', colId: 'id', headerName: 'ID', hide: false, filter: false },
   {
     field: 'application',
     headerName: 'Application',
     hide: false,
+    sortable: false,
+    filter: false,
     valueGetter: (params) => params.data?.deploymentRef?.name || '',
   },
   CREATED_AT_COLUMN,
   UPDATED_AT_COLUMN,
+  { field: 'createdBy', headerName: 'Created By', hide: false, ...evalStringFilter },
   {
     field: 'method',
     headerName: 'Method',
+    sortable: false,
     hide: true,
+    filter: false,
     valueGetter: (params) => params.data?.endpointRef?.method || '',
   },
   {
     field: 'url',
     headerName: 'URL',
+    sortable: false,
     hide: true,
+    filter: false,
     valueGetter: (params) => params.data?.endpointRef?.relativeUrl || '',
   },
 ];

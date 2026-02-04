@@ -62,10 +62,10 @@ const HeaderButtons = <T extends { id?: string }>({ route, gridApi, toggleColumn
           showNotification(
             getSuccessNotification(
               getCreateNotificationTitle(route, t),
-              getCreateNotificationDescription(route, entity.id, t),
+              getCreateNotificationDescription(route, res.response.id, t),
             ),
           );
-          router.push(getUrnForEntity(route, entity));
+          router.push(getUrnForEntity(route, res.response));
           onModalClose();
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));

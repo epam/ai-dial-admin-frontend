@@ -61,17 +61,17 @@ describe('TestSuites :: server actions', () => {
 
   test('Should call getTestSuites action', async () => {
     (testSuitesApi.getTestSuites as any).mockResolvedValue([RESPONSE_MOCK]);
-    const result = await getTestSuites(1, 10);
+    const result = await getTestSuites(1, 10, [], []);
     expect(getUserToken).toHaveBeenCalled();
-    expect(testSuitesApi.getTestSuites).toHaveBeenCalledWith(1, 10, TOKEN_MOCK);
+    expect(testSuitesApi.getTestSuites).toHaveBeenCalledWith(1, 10, [], [], TOKEN_MOCK);
     expect(result).toEqual([RESPONSE_MOCK]);
   });
 
   test('Should call getTestCases action', async () => {
     (testSuitesApi.getTestCases as any).mockResolvedValue([RESPONSE_MOCK]);
-    const result = await getTestCases('test', 1, 10);
+    const result = await getTestCases('test', 1, 10, [], []);
     expect(getUserToken).toHaveBeenCalled();
-    expect(testSuitesApi.getTestCases).toHaveBeenCalledWith('test', 1, 10, TOKEN_MOCK);
+    expect(testSuitesApi.getTestCases).toHaveBeenCalledWith('test', 1, 10, [], [], TOKEN_MOCK);
     expect(result).toEqual([RESPONSE_MOCK]);
   });
 
