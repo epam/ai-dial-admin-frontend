@@ -73,7 +73,7 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate }) => {
         <DialSteps steps={steps} currentStep={currentStepId} onChangeStep={setCurrentStep} />
         <div className="flex-1 min-h-0">
           {currentStepId === TestSuitTab.Properties && (
-            <TestSuiteProperties testSuite={testSuite} onChangeTestSuite={setTestSuite} />
+            <TestSuiteProperties testSuite={testSuite} onChange={setTestSuite} isModal={true} />
           )}
 
           {currentStepId === TestSuitTab.Application && (
