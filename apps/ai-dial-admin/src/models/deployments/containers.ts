@@ -109,3 +109,7 @@ export interface ContainerRedeploySnapshot {
   resources?: ContainerResources;
   allowedDomains?: string[];
 }
+
+export interface HuggingFaceModel {
+  id: string;
+}

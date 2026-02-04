@@ -43,7 +43,7 @@ interface Props {
   names: string[];
 }
 
-const CreateContainer: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply, route, names }) => {
+const ContainerCreate: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply, route, names }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
   const { resourcesDefaults } = useAppContext();
@@ -240,4 +240,4 @@ const CreateContainer: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
   );
 };
 
-export default CreateContainer;
+export default ContainerCreate;

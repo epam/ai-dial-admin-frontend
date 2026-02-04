@@ -36,7 +36,7 @@ interface Props {
   versions: ImageVersion[];
 }
 
-const AddContainerToImage: FC<Props> = ({ title, isModalOpen, onClose, onApply, image, route, versions }) => {
+const ImageAddContainer: FC<Props> = ({ title, isModalOpen, onClose, onApply, image, route, versions }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
 
@@ -161,4 +161,4 @@ const AddContainerToImage: FC<Props> = ({ title, isModalOpen, onClose, onApply, 
   );
 };
 
-export default AddContainerToImage;
+export default ImageAddContainer;

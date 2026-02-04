@@ -1,5 +1,5 @@
 import { FC, useState } from 'react';
-import { DialFormPopup } from '@epam/ai-dial-ui-kit';
+import { DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
 
 import { Image } from '@/src/models/deployments/images';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
@@ -16,28 +16,28 @@ interface Props {
   onApply: (image: Image) => void;
 }
 
-const AddImageModal: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply }) => {
+const ImageAdd: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply }) => {
   const t = useI18n();
   const { isValid } = useSaveValidationContext();
 
   const [image, setImage] = useState<Image>(IMAGE_TEMPLATE as Image);
 
   return (
-    <DialFormPopup
+    <DialConfirmationPopup
       portalId="AddImageModal"
       header={modalTitle}
       open={isModalOpen}
       onClose={onClose}
-      submitLabel={t(ButtonsI18nKey.Add)}
+      confirmLabel={t(ButtonsI18nKey.Add)}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
-      onSubmit={() => onApply(image)}
-      disableSubmitButton={!isValid}
+      onConfirm={() => onApply(image)}
+      disableConfirmButton={!isValid}
     >
       <div className="flex px-6 py-4">
         <ImageFields image={image} setImage={setImage} isModal={true} />
       </div>
-    </DialFormPopup>
+    </DialConfirmationPopup>
   );
 };
 
-export default AddImageModal;
+export default ImageAdd;
