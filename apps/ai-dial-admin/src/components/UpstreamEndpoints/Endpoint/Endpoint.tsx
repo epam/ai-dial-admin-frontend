@@ -2,10 +2,11 @@
 
 import { FC, useCallback, useState } from 'react';
 
-import { IconChevronDown, IconChevronRight, IconTrash, IconTrashX } from '@tabler/icons-react';
+import { DialNumberInputField, DialPasswordInputField, DialRemoveButton, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { DialPasswordInputField, DialTooltip, DialNumberInputField } from '@epam/ai-dial-ui-kit';
 
+import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import {
   EntityFieldsI18nKey,
   EntityPlaceholdersI18nKey,
@@ -17,14 +18,12 @@ import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { DialEndpointExtraData, DialModelEndpoint } from '@/src/models/dial/model';
 import { isDangerEndpoint } from '@/src/utils/validation/url-error';
-import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import ExtraDataField from '../ExtraData/ExtraDataField';
 import WarningIcon from './WarningIcon';
 
 interface Props {
   index: number;
   readonly?: boolean;
-  numEndpoints: number;
   endpoint: DialModelEndpoint;
   isKeyOptional?: boolean;
   required?: boolean;
@@ -38,7 +37,6 @@ const Endpoint: FC<Props> = ({
   endpoint,
   isKeyOptional,
   required,
-  numEndpoints,
   updateEndpoint,
   removeEndpoint,
 }) => {
@@ -47,6 +45,8 @@ const Endpoint: FC<Props> = ({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [endpointWarning, setEndpointWarning] = useState('');
   const isTablet = useIsTabletScreen();
+
+  const removeButtonClassName = index === 0 ? 'mt-[22px]' : 'mt-[-5px]';
 
   const onChangeEndPointUrl = useCallback(
     (url?: string) => {
@@ -95,8 +95,8 @@ const Endpoint: FC<Props> = ({
   }, []);
 
   return (
-    <div className="flex gap-4 items-start lg:gap-2 w-full">
-      <div className="flex flex-1 flex-col rounded border border-primary p-3 lg:border-none lg:p-0 lg:flex-initial">
+    <div className="flex gap-4 items-center lg:gap-2 w-full">
+      <div className="flex flex-1 min-w-0 flex-col rounded border border-primary p-3 lg:border-none lg:p-0 lg:flex-initial">
         {isTablet && (
           <div className="flex flex-col justify-center cursor-pointer" onClick={toggleCollapse}>
             <h3 className="small flex items-center">
@@ -171,18 +171,10 @@ const Endpoint: FC<Props> = ({
           />
         </div>
       </div>
-      {(numEndpoints !== 1 || Object.keys(endpoint).length !== 0) && !readonly && (
-        <button
-          className={classNames('text-error cursor-pointer mt-[10px]', index === 0 && !isTablet && 'lg:mt-[32px]')}
-          onClick={onRemove}
-          aria-label="remove"
-        >
-          {isTablet ? (
-            <IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-primary" />
-          ) : (
-            <IconTrash {...BASE_BUTTON_ICON_PROPS} />
-          )}
-        </button>
+      {!readonly && (
+        <div className="w-[40px] flex-shrink-0">
+          <DialRemoveButton onClick={onRemove} className={removeButtonClassName} />
+        </div>
       )}
     </div>
   );

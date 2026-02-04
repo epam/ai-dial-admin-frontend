@@ -19,7 +19,7 @@ const Hint: FC<Props> = ({ title, text }) => {
         <h3 className="text-primary overflow-ellipsis">{title}</h3>
         <DialCloseButton onClose={closeSidebar} />
       </div>
-      <div className="overflow-y-scroll">
+      <div className="overflow-y-auto">
         <p className="small text-primary">{text}</p>
       </div>
     </div>

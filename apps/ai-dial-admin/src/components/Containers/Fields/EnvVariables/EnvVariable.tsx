@@ -20,7 +20,6 @@ import { getVariableNameError } from '@/src/utils/deployments/validation';
 
 interface Props {
   index: number;
-  numVariables: number;
   variable: EnvironmentVariable;
   updateVariable: (variable: EnvironmentVariable) => void;
   removeVariable: (index: number) => void;
@@ -32,7 +31,6 @@ interface Props {
 const EnvVariable: FC<Props> = ({
   index,
   variable,
-  numVariables,
   updateVariable,
   removeVariable,
   findColumn,
@@ -172,9 +170,9 @@ const EnvVariable: FC<Props> = ({
             />
           </div>
         </div>
-        {(numVariables !== 1 || Object.keys(variable).length !== 0) && (
+        <div className="w-[40px] flex-shrink-0">
           <DialRemoveButton onClick={onRemove} className={index === 0 ? 'mt-3 lg:mt-6' : ''} />
-        )}
+        </div>
       </div>
     </DraggableItem>
   );
