@@ -1,20 +1,15 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { DialSelectField, DialTextInputField } from '@epam/ai-dial-ui-kit';
-import {
-  ContainersI18nKey,
-  EntitiesI18nKey,
-  EntityFieldsI18nKey,
-  EntityPlaceholdersI18nKey,
-} from '@/src/constants/i18n';
-import { CONTAINER_TYPE, MODEL_FORMAT, MODEL_SOURCE_TYPE, SERVING_SOURCE } from '@/src/types/deployments/containers';
-import { useI18n } from '@/src/locales/client';
+import { DialTextInputField } from '@epam/ai-dial-ui-kit';
+
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { MODEL_SOURCE_TYPE, SERVING_SOURCE } from '@/src/types/deployments/containers';
 import { Container } from '@/src/models/deployments/containers';
 import { FieldError } from '@/src/models/error';
 import { getDeploymentsURIError, getErrorForHfModelName } from '@/src/utils/deployments/validation';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { DEFAULT_SCALING } from '@/src/constants/deployments/containers';
 import { isEditDisabled } from '@/src/utils/deployments/containers';
 import { getControlClassName } from '@/src/utils/entities/view';
+import { useI18n } from '@/src/locales/client';
 
 interface Props {
   container: Container;
@@ -28,11 +23,6 @@ const ModelSourceFields: FC<Props> = ({ container, setContainer, isModal = false
   const containerClassName = useMemo(() => getControlClassName(isModal), [isModal]);
 
   const [imageRefError, setImageRefError] = useState<FieldError | null>(null);
-
-  const SERVING_TYPES = [
-    { value: MODEL_SOURCE_TYPE.HF, label: t(ContainersI18nKey.ModelTypeHF) },
-    { value: MODEL_SOURCE_TYPE.NIM, label: t(ContainersI18nKey.ModelTypeNIM) },
-  ];
 
   const getSourceError = useCallback(
     (modelName?: string, $type?: MODEL_SOURCE_TYPE) => {
@@ -61,34 +51,6 @@ const ModelSourceFields: FC<Props> = ({ container, setContainer, isModal = false
     [container, setContainer, dispatch, getSourceError],
   );
 
-  const onChangeModelSourceType = useCallback(
-    ($type?: MODEL_SOURCE_TYPE) => {
-      const updated = {
-        ...container,
-        $type: $type === MODEL_SOURCE_TYPE.HF ? CONTAINER_TYPE.HF : CONTAINER_TYPE.NIM,
-        source: {
-          ...container.source,
-          $type: $type as MODEL_SOURCE_TYPE,
-        },
-      };
-
-      if ($type === MODEL_SOURCE_TYPE.HF) {
-        updated.modelFormat = MODEL_FORMAT.HF;
-        updated.scaling = DEFAULT_SCALING;
-      } else {
-        delete updated.modelFormat;
-        delete updated.scaling;
-      }
-
-      if (container.source?.imageRef) {
-        const error = getSourceError(container.source?.imageRef, $type);
-        setImageRefError(error);
-      }
-      setContainer(updated);
-    },
-    [container, setContainer, getSourceError],
-  );
-
   useEffect(() => {
     const source = container.source;
     const value = source?.$type === MODEL_SOURCE_TYPE.HF ? source?.modelName : source?.imageRef;
@@ -112,17 +74,6 @@ const ModelSourceFields: FC<Props> = ({ container, setContainer, isModal = false
 
   return (
     <div className="flex flex-col gap-y-8">
-      {isModal && (
-        <DialSelectField
-          elementId="modelSourceType"
-          fieldTitle={t(EntitiesI18nKey.SourceType)}
-          options={SERVING_TYPES}
-          value={container.source?.$type}
-          containerClassName="w-[180px]"
-          onChange={($type) => onChangeModelSourceType($type as MODEL_SOURCE_TYPE)}
-          disabled={isEditDisabled(container)}
-        />
-      )}
       {container.source?.$type === MODEL_SOURCE_TYPE.NIM ? (
         <DialTextInputField
           elementId="imageRef"

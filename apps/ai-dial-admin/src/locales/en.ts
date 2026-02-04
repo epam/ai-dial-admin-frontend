@@ -226,6 +226,7 @@ export default {
     Toolset: 'Toolset',
     AssetToolset: 'Asset Toolset',
     Serving: 'Serving',
+    ModelServing: `{type} model serving`,
     Container: 'Container',
   },
   DeleteEntity: {
@@ -294,7 +295,7 @@ export default {
       Container: 'Create {type} Container',
       Entity: 'Create {entity}',
       EntityAsAsset: 'Create Assets {entity}',
-      Serving: 'Create Model Serving',
+      Serving: `Create {type} Model Serving`,
     },
     Notification: {
       Title: '{entity} created successfully',

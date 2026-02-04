@@ -202,6 +202,7 @@ export enum EntitiesI18nKey {
   NoResources = 'Entities.NoResources',
   NoEvents = 'Entities.NoEvents',
   Serving = 'Entities.Serving',
+  ModelServing = 'Entities.ModelServing',
   Container = 'Entities.Container',
 }
 
