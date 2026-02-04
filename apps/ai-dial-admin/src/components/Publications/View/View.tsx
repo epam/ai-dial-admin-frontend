@@ -68,6 +68,7 @@ const PublicationView = <T extends Publication>({
           route={view}
           isJsonView={isJsonView}
           setIsJsonView={setIsJsonView}
+          isDelete={!!publication.missingResources?.length}
         />
       </div>
       <div className="flex-1 overflow-auto min-h-0">
