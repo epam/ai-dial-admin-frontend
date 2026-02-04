@@ -13,7 +13,6 @@ import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
 import { DUPLICATION_TYPE } from '@/src/types/deployments/images';
 import {
-  BasicI18nKey,
   ButtonsI18nKey,
   EntitiesI18nKey,
   EntityFieldsI18nKey,
@@ -95,15 +94,12 @@ const ImageDuplicateModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
       } else {
         setCopyImage({
           ...copyImage,
-          name:
-            copyImage.name === initialName
-              ? `${copyImage.name} ${t(BasicI18nKey.DuplicateCopyPostfix)}`
-              : copyImage.name,
+          name: copyImage.name === initialName ? `${copyImage.name}-copy` : copyImage.name,
           version: originalVersion,
         });
       }
     },
-    [copyImage, initialName, originalVersion, t],
+    [copyImage, initialName, originalVersion],
   );
 
   const onChangeName = useCallback(
@@ -114,7 +110,7 @@ const ImageDuplicateModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
         names,
         t,
         duplicationType === DUPLICATION_TYPE.ENTITY && isUniqNameError,
-        false,
+        true,
       );
       setNameError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !error });
@@ -140,7 +136,7 @@ const ImageDuplicateModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
       [],
       t,
       duplicationType === DUPLICATION_TYPE.ENTITY && isUniqNameError,
-      false,
+      true,
     );
     const versionError = getSemanticVersionError(versionsMap, copyImage as { name: string }, t, copyImage.version);
     setNameError(nameError);
