@@ -1,31 +1,20 @@
 'use client';
 
-import { FC, useCallback, useState, useRef, useEffect } from 'react';
+import { FC, useCallback, useState, useEffect } from 'react';
 
 import { useI18n } from '@/src/locales/client';
-import { createFolderWithFiles } from '@/src/app/[lang]/folders-storage/actions';
+import { changeFolder, createFolderWithFiles, removeFolder } from '@/src/app/[lang]/folders-storage/actions';
 import { ImportResult } from '@/src/models/import';
 import { getImportResults } from '@/src/components/EntityListView/Import/utils';
 
-// import { bulkDeleteFiles, moveFiles, removeFile } from '@/src/app/[lang]/files/actions';
-// import { FILES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-// import BaseEntityList from '@/src/components/EntityListView/EntityListView';
+import { bulkDeleteFiles, moveFiles, exportFiles, importFiles } from '@/src/app/[lang]/files/actions';
 import Page403 from '@/src/components/Page403/Page403';
 import { useFileFolder } from '@/src/context/assets/FileFolderContext';
-// import { ApplicationRoute } from '@/src/types/routes';
-// import { getGridFileData } from '@/src/utils/files/grid-data';
 import { getFormDataForImport, getImportTitle } from '@/src/components/EntityListView/HeaderButtons/utils';
-import { useProtectedRequest } from '@/src/hooks/use-protected-request';
-// import { DialRule } from '@/src/models/dial/rule';
-// import { ImportResult } from '@/src/models/import';
-// import { ImportData } from '@/src/models/import-asset';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 import { getSuccessNotification } from '@/src/utils/notification';
 import { useNotification } from '@/src/context/NotificationContext';
-import {
-  // BasicI18nKey,
-  FoldersI18nKey,
-} from '@/src/constants/i18n';
+import { FoldersI18nKey } from '@/src/constants/i18n';
 import { getFolderName } from '@/src/utils/files/folder';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ROOT_FOLDER } from '@/src/constants/file';
@@ -37,7 +26,12 @@ import {
   UPDATED_AT_COLUMN,
   SIZE_COLUMN,
   DialCopiedItem,
+  DialDeletedItem,
 } from '@epam/ai-dial-ui-kit';
+import { DialFileNodeType } from '@/src/models/dial/file';
+import { ResourceType } from '@/src/types/resource-type';
+import { ServerActionResponse } from '@/src/models/server-action';
+import { downloadFile } from '@/src/utils/download';
 
 const FILES_GRID_COLUMNS = [NAME_COLUMN('Display name'), UPDATED_AT_COLUMN('Updated time'), SIZE_COLUMN('Size')];
 
@@ -57,13 +51,20 @@ const FilesList: FC<Props> = ({ view = ApplicationRoute.Files }) => {
     if (files == null || files?.length === 0) {
       fetchFiles(`${ROOT_FOLDER}/`);
     }
-  }, [files, fetchFiles]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [files]);
 
   const [path, setPath] = useState('');
   const [loadedPaths, setLoadedPaths] = useState(new Set(['']));
 
-  const getReqRef = useRef(useProtectedRequest());
   const { showNotification } = useNotification();
+
+  useEffect(() => {
+    if (path) {
+      fetchFiles?.(path, true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [path]);
 
   const handleCreateFolder = useCallback(
     async (file: DialUploadFileItem, parentPath: string) => {
@@ -73,20 +74,22 @@ const FilesList: FC<Props> = ({ view = ApplicationRoute.Files }) => {
       const emptyFile = new File(['1'], filename, {
         type: fileType,
       });
+      const newPath = `${parentPath.replaceAll('//', '/')}/`;
 
       const body = getFormDataForImport(
-        `${parentPath.replaceAll('//', '/')}/`,
+        newPath,
         [emptyFile],
         ImportFileType.FILES,
         ConflictResolutionPolicy.SKIP,
-        [],
+        void 0,
         false,
         ApplicationRoute.Files,
       ).body;
 
-      getReqRef.current(createFolderWithFiles, body, ImportFileType.FILES, view).then((res) => {
+      createFolderWithFiles(body, ImportFileType.FILES, view).then((res) => {
         if (res.success) {
-          fetchFiles?.(`${ROOT_FOLDER}/`, true);
+          fetchFiles?.(path, true);
+          setPath(path);
           const results = (res.response as { importResults: ImportResult[] }).importResults;
           const translatedType = t(getImportTitle(view)).toLowerCase();
           showNotification(getSuccessNotification(t(FoldersI18nKey.FolderCreateSuccess)));
@@ -95,6 +98,56 @@ const FilesList: FC<Props> = ({ view = ApplicationRoute.Files }) => {
       });
     },
     [fetchFiles, path, showNotification, t, view],
+  );
+
+  const handleImportFiles = useCallback(
+    async (files: DialUploadFileItem[], destinationFolder: string) => {
+      const promises: Promise<ServerActionResponse>[] = [];
+      files.forEach((file) => {
+        const body = getFormDataForImport(
+          destinationFolder,
+          [file.fileContent],
+          ImportFileType.FILES,
+          ConflictResolutionPolicy.SKIP,
+          [],
+          false,
+          view,
+        ).body;
+
+        promises.push(importFiles(body, ImportFileType.FILES));
+      });
+
+      Promise.all(promises).then((result) => {
+        const isSuccess = result.every((res) => res.success);
+        if (isSuccess) {
+          fetchFiles?.(`${ROOT_FOLDER}/`, true);
+          showNotification(getSuccessNotification(t(FoldersI18nKey.Import)));
+        }
+      });
+    },
+    [fetchFiles, showNotification, t, view],
+  );
+
+  const handleImportArchive = useCallback(
+    async (file: File, name: string, destinationFolder: string) => {
+      const body = getFormDataForImport(
+        destinationFolder,
+        [file],
+        ImportFileType.ARCHIVE,
+        ConflictResolutionPolicy.SKIP,
+        [],
+        false,
+        view,
+      ).body;
+
+      importFiles(body, ImportFileType.ARCHIVE).then((res) => {
+        if (res.success) {
+          fetchFiles?.(`${ROOT_FOLDER}/`, true);
+          showNotification(getSuccessNotification(t(FoldersI18nKey.Import)));
+        }
+      });
+    },
+    [fetchFiles, showNotification, t, view],
   );
 
   const handleOnPathChange = useCallback((nextPath: string | undefined) => {
@@ -106,21 +159,25 @@ const FilesList: FC<Props> = ({ view = ApplicationRoute.Files }) => {
     setLoadedPaths((prev) => new Set(prev).add(nextPath));
   }, []);
 
-  const handleUploadFiles = useCallback((files: DialUploadFileItem[], destinationFolder: string) => {
-    alert(
-      `Uploaded ${files.length} file(s) to ${destinationFolder}:\n${files
-        .map((f) => `${f.name} (${(f.fileContent.size / 1024).toFixed(2)} KB)`)
-        .join('\n')}`,
-    );
+  const handleFolderPopupPathChange = useCallback((nextPath: string | undefined) => {
+    console.log(nextPath);
   }, []);
 
-  const handleAddChild = useCallback((files: DialFile[]) => {
-    alert(`Adding child to: ${files.map((f) => f.name).join(',')}`);
-  }, []);
+  const handleAddChild = useCallback(
+    (files: DialFile[]) => {
+      const newPath = files[0].path + 'New Folder';
+      handleCreateFolder(files[0], newPath);
+    },
+    [handleCreateFolder],
+  );
 
-  const handleAddSibling = useCallback((files: DialFile[]) => {
-    alert(`Adding sibling to: ${files.map((f) => f.name).join(',')}`);
-  }, []);
+  const handleAddSibling = useCallback(
+    (files: DialFile[]) => {
+      const newPath = files[0].path.replace(/([^/]+)\/?$/, 'New Folder');
+      handleCreateFolder(files[0], newPath);
+    },
+    [handleCreateFolder],
+  );
 
   const handleCreateFolderValidate = useCallback((name: string) => {
     const forbiddenChars = /[<>:"/\\|?*]/;
@@ -139,14 +196,92 @@ const FilesList: FC<Props> = ({ view = ApplicationRoute.Files }) => {
     );
   }, []);
 
+  const handleDownloadFiles = useCallback(async (files: DialFile[]) => {
+    const filePaths = files.map((file) => file.path);
+    exportFiles(filePaths).then((res) => {
+      const { blob, fileName } = res as { blob: Blob; fileName: string };
+      downloadFile(blob, fileName);
+    });
+  }, []);
+
+  const handleDeleteFileNodes = useCallback(
+    async (fileNodes: DialDeletedItem[]) => {
+      const files = fileNodes.filter((file) => file.nodeType === DialFileNodeType.ITEM);
+      const folders = fileNodes.filter((file) => file.nodeType === DialFileNodeType.FOLDER);
+
+      const promises = [];
+      if (files.length > 0) {
+        const filePaths = files.map((file) => ({ path: file.sourceUrl }));
+        promises.push(bulkDeleteFiles(filePaths));
+      }
+      folders.forEach((folder) => {
+        promises.push(removeFolder(folder.sourceUrl));
+      });
+
+      Promise.all(promises).then((result) => {
+        const isSuccess = result.every((res) => res.success);
+        if (isSuccess) {
+          fetchFiles?.(`${ROOT_FOLDER}/`, true);
+        }
+      });
+    },
+    [fetchFiles],
+  );
+
+  const handleMoveToFiles = useCallback(
+    async (items: DialCopiedItem[], sourceFolder: string, destinationFolder: string) => {
+      const files = items.filter((file) => file.nodeType === DialFileNodeType.ITEM);
+      const folders = items.filter((file) => file.nodeType === DialFileNodeType.FOLDER);
+
+      const promises: (Promise<ServerActionResponse> | Promise<ServerActionResponse[]>)[] = [];
+      files.forEach((file) => {
+        if (sourceFolder !== destinationFolder) {
+          // Move file
+          const newPath = file.destinationUrl.replaceAll('//', '/').split('/').slice(0, -1).join('/');
+          promises.push(moveFiles([file.sourceUrl.replaceAll('//', '/')], newPath));
+        } else {
+          // Rename file
+        }
+      });
+      folders.forEach((folder) => {
+        promises.push(
+          changeFolder(
+            folder.sourceUrl.replaceAll('//', '/'),
+            folder.destinationUrl.replaceAll('//', '/'),
+            ResourceType.FILE,
+          ),
+        );
+      });
+
+      Promise.all(promises).then((result) => {
+        const isSuccess = result.every((res) => res.success);
+        if (isSuccess) {
+          fetchFiles?.(destinationFolder, true);
+          fetchFiles?.(sourceFolder, true);
+        }
+      });
+    },
+    [fetchFiles],
+  );
+
   return (
     <>
-      <h1>Files</h1>
       <DialFileManager
-        items={files as DialFile[]}
+        title={'Files'}
+        className={'bg-layer-2'}
         path={path}
+        defaultPath={`${ROOT_FOLDER}/`}
+        items={files as DialFile[]}
         filesLoading={isFetchingFiles}
         showNavigationPanel={false}
+        bulkActionsToolbarOptions={{
+          getSelectionLabel: (selectedCount: number) => `${selectedCount} item(s) selected`,
+          actionLabels: {
+            move: 'Move to',
+            download: 'Export',
+            delete: 'Delete',
+          },
+        }}
         toolbarOptions={{
           showHiddenFilesToggle: false,
           newActions: {
@@ -189,9 +324,18 @@ const FilesList: FC<Props> = ({ view = ApplicationRoute.Files }) => {
         onAddSibling={handleAddSibling}
         onCopyFiles={handleCopyFiles}
         onCreateFolder={handleCreateFolder}
-        onUploadFiles={handleUploadFiles}
+        onUploadFiles={handleImportFiles}
+        onUploadArchive={handleImportArchive}
+        onDownloadFiles={handleDownloadFiles}
         onCreateFolderValidate={handleCreateFolderValidate}
+        onDeleteFiles={handleDeleteFileNodes}
+        onMoveToFiles={handleMoveToFiles}
+        onFolderPopupPathChange={handleFolderPopupPathChange}
         folderCreationValidationMessages={{
+          emptyName: 'Please enter a folder name',
+          duplicateName: 'A folder with this name already exists in this location',
+        }}
+        renameValidationMessages={{
           emptyName: 'Please enter a folder name',
           duplicateName: 'A folder with this name already exists in this location',
         }}
