@@ -382,8 +382,15 @@ describe('validation utils', () => {
       });
     });
 
+    test('length error', () => {
+      expect(getWhitelistDomainError('a.c', t)).toEqual({
+        type: ErrorType.LENGTH,
+        text: ErrorI18nKey.MinMaxLength,
+      });
+    });
+
     test('empty error', () => {
-      expect(getWhitelistDomainError('asd', t)).toEqual({
+      expect(getWhitelistDomainError('asdf', t)).toEqual({
         type: ErrorType.INVALID,
         text: ErrorI18nKey.InvalidWhitelistDomain,
       });
