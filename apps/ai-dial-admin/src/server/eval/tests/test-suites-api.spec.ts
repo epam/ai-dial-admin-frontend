@@ -47,7 +47,7 @@ describe('Server :: TestSuiteApi', () => {
     await instance.createTestSuite(mockTestSuite, TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
-      `${TEST_URL}${TEST_SUITE_URL(mockTestSuite.id)}`,
+      `${TEST_URL}${TEST_SUITES_URL}`,
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify(mockTestSuite),
