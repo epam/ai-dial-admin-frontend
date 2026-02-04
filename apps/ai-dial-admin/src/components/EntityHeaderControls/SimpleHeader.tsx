@@ -40,7 +40,7 @@ const SimpleEntityHeader = <T extends { id?: string; name?: string }>({
   return (
     <div className="flex flex-col gap-y-4 mb-8">
       <div className={getHeaderClassName(isEditorEnabled)}>
-        <ReadonlyId value={props.entity.id || props.entity.name || ''} />
+        {!isEditorEnabled && <ReadonlyId value={props.entity.id || props.entity.name || ''} />}
         <SimpleButtonsWrapper isEditorEnabled={isEditorEnabled} {...props}>
           {children}
         </SimpleButtonsWrapper>
