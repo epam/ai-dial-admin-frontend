@@ -56,7 +56,7 @@ export const sourceTypeFormatter = (value: string, t: (key: string) => string, v
   } else if (value === SOURCE_TYPE.CONTAINER) {
     switch (view) {
       case ApplicationRoute.Models:
-        return t(SourceI18nKey.ModelDeployment);
+        return t(SourceI18nKey.ModelServing);
       case ApplicationRoute.Interceptors:
         return t(SourceI18nKey.InterceptorContainer);
       case ApplicationRoute.Toolsets:
@@ -65,7 +65,12 @@ export const sourceTypeFormatter = (value: string, t: (key: string) => string, v
         return value;
     }
   } else if (value === SOURCE_TYPE.ENDPOINTS) {
-    return t(SourceI18nKey.Endpoint);
+    switch (view) {
+      case ApplicationRoute.Models:
+        return t(SourceI18nKey.ExternalEndpoint);
+      default:
+        return t(SourceI18nKey.Endpoint);
+    }
   } else if (value === SOURCE_TYPE.RUNNER) {
     return t(SourceI18nKey.InterceptorTemplate);
   } else {

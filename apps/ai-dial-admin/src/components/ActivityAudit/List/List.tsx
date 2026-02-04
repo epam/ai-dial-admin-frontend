@@ -61,7 +61,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, initTimeFil
 
   const [isLoading, setIsLoading] = useState(false);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
-  const [timePeriod, setTimePeriod] = useState(initTimeFilter);
+  const [timePeriod, setTimePeriod] = useState<string | undefined>();
   const [timeRange, setTimeRange] = useState<TimeRange>(getTimeRangeById(DEFAULT_TIME_PERIOD));
 
   const [selectedActivity, setSelectedActivity] = useState<DialActivity | undefined>(void 0);
@@ -69,6 +69,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, initTimeFil
   useEffect(() => {
     if (!timePeriod) {
       setTimePeriod(initTimeFilter || DEFAULT_TIME_PERIOD);
+      setTimeRange(getTimeRangeById(initTimeFilter || DEFAULT_TIME_PERIOD));
     }
   }, [initTimeFilter, timePeriod]);
 
