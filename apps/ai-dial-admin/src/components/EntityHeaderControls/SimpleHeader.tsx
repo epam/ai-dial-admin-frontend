@@ -13,6 +13,11 @@ import ReadonlyId from '../BaseControls/Id/ReadonlyId';
 import SimpleButtonsWrapper from './Wrappers/SimpleButtonsWrapper';
 import { JsonConfiguration } from './models';
 
+interface Entity {
+  id?: string;
+  $id?: string;
+  name?: string;
+}
 interface Props<T> {
   entity: T;
   etag?: string;
@@ -29,7 +34,7 @@ interface Props<T> {
   onRemove: (entity: string) => Promise<ServerActionResponse>;
 }
 
-const SimpleEntityHeader = <T extends { id?: string; name?: string }>({
+const SimpleEntityHeader = <T extends Entity>({
   jsonConfiguration,
   children,
   tabs,
@@ -41,7 +46,7 @@ const SimpleEntityHeader = <T extends { id?: string; name?: string }>({
   return (
     <div className="flex flex-col gap-y-4 mb-8">
       <div className={getHeaderClassName(isEditorEnabled)}>
-        {!isEditorEnabled && <ReadonlyId value={props.entity.id || props.entity.name || ''} />}
+        {!isEditorEnabled && <ReadonlyId value={props.entity.id || props.entity.$id || props.entity.name || ''} />}
         <SimpleButtonsWrapper jsonConfiguration={jsonConfiguration} {...props}>
           {children}
         </SimpleButtonsWrapper>
