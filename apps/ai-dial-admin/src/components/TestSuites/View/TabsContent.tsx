@@ -12,7 +12,7 @@ interface Props {
   onChange: (testSuite: TestSuite) => void;
 }
 
-const TabsContent: FC<Props> = ({ activeTab }) => {
+const TabsContent: FC<Props> = ({ activeTab, onChange, selectedTestSuite }) => {
   return (
     <>
       {activeTab === EntityViewTab.Properties && (
