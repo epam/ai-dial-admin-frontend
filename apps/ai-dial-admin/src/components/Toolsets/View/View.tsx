@@ -275,8 +275,9 @@ const ToolsetView: FC<Props> = ({ names, isUserLevel, oAuthCode, etag, roles, or
           selectedFormat={selectedFormat}
           onChangeSelectedFormat={setSelectedFormat}
         >
-          {selectedToolset.authSettings?.authenticationType !== ToolsetAuthType.NONE &&
-            (isToolsetSignedIn ? (
+          {selectedToolset.authSettings?.authenticationType &&
+          selectedToolset.authSettings?.authenticationType !== ToolsetAuthType.NONE ? (
+            isToolsetSignedIn ? (
               <DialNeutralButton
                 label={t(ToolsetI18nKey.LogOut)}
                 iconBefore={<IconLogout {...BASE_BUTTON_ICON_PROPS} />}
@@ -288,7 +289,8 @@ const ToolsetView: FC<Props> = ({ names, isUserLevel, oAuthCode, etag, roles, or
                 iconBefore={<IconLogin {...BASE_BUTTON_ICON_PROPS} />}
                 onClick={() => setIsLoginModalOpen(true)}
               />
-            ))}
+            )
+          ) : null}
         </HeaderButtons>
       </div>
       <div className="flex-1 overflow-auto min-h-0">

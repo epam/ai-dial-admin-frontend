@@ -73,7 +73,7 @@ const Dashboard: FC<Props> = ({ route, entity, initTimeFilter, onChangeTimeFilte
   }, []);
 
   return (
-    <div role="dashboards" className="flex flex-1 flex-col min-h-0 overflow-auto">
+    <div role="dashboards" className="flex flex-1 flex-col min-h-0 min-w-0">
       <div className="flex w-full mb-6">
         {timePeriod && (
           <TelemetryControls
@@ -90,8 +90,8 @@ const Dashboard: FC<Props> = ({ route, entity, initTimeFilter, onChangeTimeFilte
           />
         )}
       </div>
-      <div className="flex flex-col flex-1 min-h-0 overflow-auto">
-        <div className="flex flex-col md:flex-row mb-6">
+      <div className="flex flex-col flex-1 min-h-0 min-w-0 overflow-auto">
+        <div className="flex flex-col md:flex-row mb-6 md:flex-wrap gap-6">
           <LineChart getData={getData} refreshTime={refreshTime} />
           <SingleValueChartsDashboard getData={getData} refreshTime={refreshTime} />
         </div>
