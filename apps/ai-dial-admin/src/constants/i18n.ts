@@ -332,7 +332,7 @@ export enum UpdateI18nKey {
   // Entities
   Model = 'UpdateEntity.Entities.Model',
   Application = 'UpdateEntity.Entities.Application',
-  Toolsets = 'UpdateEntity.Entities.Toolsets',
+  Toolset = 'UpdateEntity.Entities.Toolset',
   Route = 'UpdateEntity.Entities.Route',
   Interceptor = 'UpdateEntity.Entities.Interceptor',
   Role = 'UpdateEntity.Entities.Role',
@@ -340,6 +340,7 @@ export enum UpdateI18nKey {
   Prompt = 'UpdateEntity.Entities.Prompt',
   File = 'UpdateEntity.Entities.File',
   Adapter = 'UpdateEntity.Entities.Adapter',
+  TestSuite = 'UpdateEntity.Entities.TestSuite',
   InterceptorTemplate = 'UpdateEntity.Entities.InterceptorTemplate',
   ApplicationRunner = 'UpdateEntity.Entities.ApplicationRunner',
   SystemProperties = 'UpdateEntity.Entities.SystemProperties',

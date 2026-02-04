@@ -1,7 +1,7 @@
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
-import AdapterProperties from '../AdapterProperties';
+import AdapterProperties from '../Properties/Properties';
 
 describe('AdapterProperties', () => {
   const baseEntity = {
