@@ -1,5 +1,5 @@
 import { FC, useEffect, useState } from 'react';
-import { DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
+import { DialConfirmationPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey, DeploymentsI18nKey } from '@/src/constants/i18n';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -47,6 +47,7 @@ const GlobalWhitelist: FC<Props> = ({ onClose, isModalOpen, onApply, getDomains 
       onConfirm={handleSubmit}
       disableConfirmButton={!isValid || domains.some((domain) => !!getWhitelistDomainError(domain))}
       isLoading={isLoading}
+      size={PopupSize.Md}
     >
       <div className="flex flex-col py-4 px-6 gap-4">
         <p>{t(DeploymentsI18nKey.GlobalWhitelist)}</p>
