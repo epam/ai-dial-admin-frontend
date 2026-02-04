@@ -870,9 +870,11 @@ export enum SourceI18nKey {
   Container = 'Source.Container',
   InterceptorTemplate = 'Source.InterceptorTemplate',
   ModelDeployment = 'Source.ModelDeployment',
+  ModelServing = 'Source.ModelServing',
   InterceptorContainer = 'Source.InterceptorContainer',
   McpContainer = 'Source.McpContainer',
   Endpoint = 'Source.Endpoint',
+  ExternalEndpoint = 'Source.ExternalEndpoint',
   Adapter = 'Source.Adapter',
 }
 
