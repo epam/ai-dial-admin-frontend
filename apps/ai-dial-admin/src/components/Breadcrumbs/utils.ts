@@ -4,7 +4,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { breadcrumbConfig } from './constants';
 import { Breadcrumb } from './models';
 
-const IGNORE_BREADCRUMBS = [ApplicationRoute.Home, ApplicationRoute.Forbidden];
+const IGNORE_BREADCRUMBS = [ApplicationRoute.Home];
 const TRANSLATE_BREADCRUMBS = { [SYSTEM_ROLLBACK_ID]: RollbackI18nKey.System };
 
 export function getBreadcrumbs(pathname: string, currentLocale: string): Breadcrumb[] {

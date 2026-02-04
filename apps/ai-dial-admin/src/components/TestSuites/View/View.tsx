@@ -12,7 +12,6 @@ import { getViewHeaderClassName } from '@/src/utils/entities/view';
 import { EntityViewTab, getTestSuiteTabs } from '@/src/utils/tabs/utils';
 
 interface Props {
-  names: string[];
   originalTestSuite: TestSuite;
 }
 

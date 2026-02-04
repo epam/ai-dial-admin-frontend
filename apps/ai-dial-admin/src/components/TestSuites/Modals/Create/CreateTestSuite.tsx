@@ -14,30 +14,43 @@ import Methods from '@/src/components/TestSuites/Methods/Methods';
 
 interface Props {
   isModalOpen: boolean;
-  names: string[];
   onClose: () => void;
   onCreate: (suite: TestSuite) => void;
 }
 
-const CreateTestSuit: FC<Props> = ({ names, onClose, isModalOpen, onCreate }) => {
+const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate }) => {
   const t = useI18n();
 
   const [steps, setSteps] = useState(TEST_SUIT_STEPS(t));
   const [currentStepId, setCurrentStep] = useState(steps[0].id);
-  const [testSuit, setTestSuit] = useState<TestSuite>({} as TestSuite);
+  // TODO: mock data, replace after support deployments API
+  const [testSuite, setTestSuite] = useState<TestSuite>({
+    id: 'test-suite-001',
+    name: 'My Test Suite',
+    deploymentRef: {
+      id: 'deploy-001',
+      name: 'Production',
+    },
+    endpointRef: {
+      method: 'POST',
+      relativeUrl: '/chat/completions',
+    },
+  } as TestSuite);
   const [selectedApplication, setSelectedApplication] = useState<string>('');
 
   const currentStep = useMemo(() => steps.find((step) => step.id === currentStepId), [steps, currentStepId]);
 
-  const onFinishClick = useCallback(() => {}, []);
+  const onFinishClick = useCallback(() => {
+    onCreate(testSuite);
+  }, [onCreate, testSuite]);
 
   useEffect(() => {
     setSteps((prev) =>
       prev.map((step) =>
-        step.id === TestSuitTab.Properties ? { ...step, status: testSuit.name ? StepStatus.VALID : void 0 } : step,
+        step.id === TestSuitTab.Properties ? { ...step, status: testSuite.name ? StepStatus.VALID : void 0 } : step,
       ),
     );
-  }, [testSuit, currentStepId]);
+  }, [testSuite, currentStepId]);
 
   useEffect(() => {
     setSteps((prev) =>
@@ -61,7 +74,7 @@ const CreateTestSuit: FC<Props> = ({ names, onClose, isModalOpen, onCreate }) =>
         <DialSteps steps={steps} currentStep={currentStepId} onChangeStep={setCurrentStep} />
         <div className="flex-1 min-h-0">
           {currentStepId === TestSuitTab.Properties && (
-            <TestSuiteProperties testSuite={testSuit} names={names} onChangeTestSuite={setTestSuit} />
+            <TestSuiteProperties testSuite={testSuite} onChangeTestSuite={setTestSuite} />
           )}
 
           {currentStepId === TestSuitTab.Application && (
