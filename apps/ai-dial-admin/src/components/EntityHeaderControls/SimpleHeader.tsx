@@ -11,6 +11,7 @@ import { getHeaderClassName } from '@/src/utils/entities/view';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import ReadonlyId from '../BaseControls/Id/ReadonlyId';
 import SimpleButtonsWrapper from './Wrappers/SimpleButtonsWrapper';
+import { JsonConfiguration } from './models';
 
 interface Props<T> {
   entity: T;
@@ -18,30 +19,30 @@ interface Props<T> {
   view: ApplicationRoute;
   tabs: TabModel[];
   activeTab: EntityViewTab;
-  isEditorEnabled?: boolean;
   children?: ReactNode;
   isChanged: boolean;
+  jsonConfiguration: JsonConfiguration;
 
   onChangeActiveTab: (tab: EntityViewTab) => void;
-  onToggleEditor?: () => void;
   onDiscard: () => void;
   onSave: () => void;
   onRemove: (entity: string) => Promise<ServerActionResponse>;
 }
 
 const SimpleEntityHeader = <T extends { id?: string; name?: string }>({
-  isEditorEnabled,
+  jsonConfiguration,
   children,
   tabs,
   activeTab,
   onChangeActiveTab,
   ...props
 }: Props<T>) => {
+  const { isEditorEnabled } = jsonConfiguration;
   return (
     <div className="flex flex-col gap-y-4 mb-8">
       <div className={getHeaderClassName(isEditorEnabled)}>
         {!isEditorEnabled && <ReadonlyId value={props.entity.id || props.entity.name || ''} />}
-        <SimpleButtonsWrapper isEditorEnabled={isEditorEnabled} {...props}>
+        <SimpleButtonsWrapper jsonConfiguration={jsonConfiguration} {...props}>
           {children}
         </SimpleButtonsWrapper>
       </div>

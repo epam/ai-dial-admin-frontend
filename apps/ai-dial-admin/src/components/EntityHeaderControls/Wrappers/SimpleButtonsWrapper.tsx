@@ -8,21 +8,22 @@ import { IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
-import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
+import JsonToggleWithFormats from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggleWithFormats';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { JsonConfiguration } from '../models';
 
 interface Props<T> {
   view: ApplicationRoute;
   isChanged: boolean;
-  isEditorEnabled?: boolean;
+  jsonConfiguration: JsonConfiguration;
   children?: ReactNode;
   entity: T;
   etag?: string;
@@ -37,16 +38,15 @@ const SimpleButtonsWrapper = <T extends object>({
   view,
   entity,
   etag,
-  isEditorEnabled,
+  jsonConfiguration,
   children,
   isChanged,
   onDiscard,
   onSave,
-  onToggleEditor,
   onRemove,
 }: Props<T>) => {
   const t = useI18n();
-
+  const { isEditorEnabled } = jsonConfiguration;
   const { isValid, dispatch } = useSaveValidationContext();
 
   const staticContainerClassName = 'flex flex-row gap-3 divide-x divide-primary lg:h-[35px]';
@@ -103,7 +103,7 @@ const SimpleButtonsWrapper = <T extends object>({
                 {children}
               </div>
             )}
-            <JsonToggles onToggleEditor={onToggleEditor} isEditorEnabled={isEditorEnabled} />
+            <JsonToggleWithFormats view={view} {...jsonConfiguration} />
           </div>
         )}
       </div>

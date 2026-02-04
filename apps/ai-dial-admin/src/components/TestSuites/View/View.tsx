@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback, useMemo, useState } from 'react';
 
 import { cloneDeep } from 'lodash';
 import { useRouter } from 'next/navigation';
@@ -16,6 +16,7 @@ import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getTestSuiteTabs } from '@/src/utils/tabs/utils';
 import TabsContent from './TabsContent';
+import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 
 interface Props {
   originalTestSuite: TestSuite;
@@ -33,9 +34,13 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite }) => {
   const [isChanged, setIsChanged] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
 
-  const onToggleEditor = useCallback(() => {
-    setIsEditorEnabled((prev) => !prev);
-  }, [setIsEditorEnabled]);
+  const jsonConfiguration = useMemo<JsonConfiguration>(
+    () => ({
+      isEditorEnabled,
+      onToggleEditor: () => setIsEditorEnabled((prev) => !prev),
+    }),
+    [isEditorEnabled],
+  );
 
   const onDiscard = useCallback(() => {
     setSelectedTestSuite(cloneDeep(originalTestSuite));
@@ -66,10 +71,9 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite }) => {
         onDiscard={onDiscard}
         onSave={onSave}
         tabs={tabs}
-        isEditorEnabled={isEditorEnabled}
+        jsonConfiguration={jsonConfiguration}
         activeTab={activeTab}
         onChangeActiveTab={setActiveTab}
-        onToggleEditor={onToggleEditor}
         onRemove={removeTestSuite}
       />
 
