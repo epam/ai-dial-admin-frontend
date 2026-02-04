@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { containersApi, imagesApi, topicApi, whitelistApi } from '@/src/app/api/api';
+import { containersApi, huggingFaceApi, imagesApi, topicApi, whitelistApi } from '@/src/app/api/api';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
   createContainer,
@@ -33,6 +33,7 @@ import {
   updateImage,
   getGlobalWhitelist,
   updateGlobalWhitelist,
+  getHuggingFaceModels,
 } from '../deployments';
 import { ResourceType } from '@/src/types/resource-type';
 
@@ -377,6 +378,19 @@ describe('Deployments actions', () => {
 
       expect(getUserToken).toHaveBeenCalled();
       expect(whitelistApi.updateGlobalWhitelist).toHaveBeenCalledWith(mockResponse, TOKEN_MOCK);
+      expect(result).toBe(mockResponse);
+    });
+  });
+
+  describe('Huggingface actions', () => {
+    test('calls whitelistApi.getGlobalWhitelist with token', async () => {
+      const mockResponse = [{ id: 'model-1' }, { id: 'model-2' }];
+      (huggingFaceApi.getHuggingFaceModels as any).mockResolvedValue(mockResponse);
+
+      const result = await getHuggingFaceModels('');
+
+      expect(getUserToken).toHaveBeenCalled();
+      expect(huggingFaceApi.getHuggingFaceModels).toHaveBeenCalledWith('', TOKEN_MOCK);
       expect(result).toBe(mockResponse);
     });
   });
