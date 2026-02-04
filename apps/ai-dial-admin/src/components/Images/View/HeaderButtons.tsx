@@ -7,7 +7,6 @@ import { createPortal } from 'react-dom';
 
 import { createContainer, createImage, deleteImage, installImage } from '@/src/app/actions/deployments';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
-import { showEditorErrorNotifications } from '@/src/components/EntityView/JsonEditor/utils';
 import { ButtonsI18nKey, ContainersI18nKey, CreateI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -29,7 +28,7 @@ import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonTo
 import CreateContainer from '@/src/components/Images/Modals/CreateContainer';
 import Install from '@/src/components/Images/Modals/Install';
 import NewVersion from '@/src/components/Images/Modals/NewVersion';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 
 interface Props {
   route: ApplicationRoute;
@@ -68,7 +67,7 @@ const HeaderButtons: FC<Props> = ({
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
   const router = useRouter();
-  const { isValid, jsonErrors, dispatch } = useSaveValidationContext();
+  const { isValid } = useSaveValidationContext();
 
   const staticContainerClassnames = 'flex flex-row gap-3 divide-x divide-primary';
 
@@ -145,20 +144,6 @@ const HeaderButtons: FC<Props> = ({
     onOpenModal(ModalType.install);
   }, [onOpenModal]);
 
-  const onTryToSave = useCallback(() => {
-    if (jsonErrors?.length) {
-      const errors = jsonErrors;
-      const errorNotifications = showEditorErrorNotifications({
-        errors,
-        showNotification,
-        t,
-      });
-      dispatch({ type: ValidationActionType.SetJsonEditorNotifications, errors: errorNotifications });
-    } else {
-      onSave();
-    }
-  }, [jsonErrors, showNotification, t, dispatch, onSave]);
-
   const onCreateContainer = useCallback(
     (container: Container) => {
       createContainer(container).then((res) => {
@@ -234,7 +219,7 @@ const HeaderButtons: FC<Props> = ({
               <DialPrimaryButton
                 className={buttonsClassNames}
                 label={t(ButtonsI18nKey.Save)}
-                onClick={onTryToSave}
+                onClick={onSave}
                 disabled={jsonEditorEnabled ? false : !isValidEntity() || !isValid}
               />
             )}

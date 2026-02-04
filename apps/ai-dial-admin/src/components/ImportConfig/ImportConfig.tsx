@@ -5,7 +5,7 @@ import { DialSteps, StepStatus } from '@epam/ai-dial-ui-kit';
 
 import { importJsonConfigs, importZipConfig } from '@/src/app/[lang]/import-config/actions';
 import { IMPORT_CONFIG_STEPS } from '@/src/constants/import';
-import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { getErrorNotification, getPrepareNotification, getSuccessNotification } from '@/src/utils/notification';
 import { ImportI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { ImportFileType, ImportSteps } from '@/src/types/import';
@@ -17,7 +17,7 @@ import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 const ImportConfig: FC = () => {
   const t = useI18n();
-  const { showNotification } = useNotification();
+  const { showNotification, removeNotification } = useNotification();
 
   const [importBody, setImportBody] = useState<FormData>(new FormData());
   const [files, setFiles] = useState<File[]>([]);
@@ -28,10 +28,14 @@ const ImportConfig: FC = () => {
   const [currentStepId, setCurrentStep] = useState(steps[0].id);
 
   const onImportFile = useCallback(() => {
+    const prepareNotificationId = showNotification(
+      getPrepareNotification(t(ImportI18nKey.NotificationImporting), t(ImportI18nKey.NotificationImportingDescription)),
+    );
     (fileType == ImportFileType.ARCHIVE
       ? getReqRef.current(importZipConfig, importBody)
       : getReqRef.current(importJsonConfigs, importBody)
     ).then((res) => {
+      removeNotification(prepareNotificationId);
       if (res.success) {
         showNotification(
           getSuccessNotification(t(ImportI18nKey.ConfigImported), t(ImportI18nKey.ConfigImportedDescription)),
@@ -40,7 +44,7 @@ const ImportConfig: FC = () => {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
-  }, [showNotification, fileType, t, importBody]);
+  }, [showNotification, t, fileType, importBody, removeNotification]);
 
   const setStepsState = useCallback(
     (status: StepStatus) => {

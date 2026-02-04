@@ -68,6 +68,7 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
           upstreams: [],
           paths: [''],
           attachmentPaths: { requestBody: [''], responseBody: [''] },
+          maxRetryAttempts: 1,
         } as DialAppRoute,
       ]);
       setActiveRouteIndex(routes?.length || 0 + 1);

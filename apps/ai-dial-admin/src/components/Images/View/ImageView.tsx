@@ -3,7 +3,6 @@
 import React, { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { cloneDeep } from 'lodash';
-import { DialTabs } from '@epam/ai-dial-ui-kit';
 
 import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -29,6 +28,7 @@ import Containers from '@/src/components/Images/View/Containers/Containers';
 import InstallationLog from '@/src/components/Images/View/InstallationLog/InstallationLog';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import FirewallSettings from '@/src/components/Images/View/FirewallSettings/FirewallSettings';
+import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
 
 interface Props {
   image: Image;
@@ -48,7 +48,7 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
 
   const [selectedImage, setSelectedImage] = useState<Image>(cloneDeep(image));
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
-  const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
+  const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [isChanged, setIsChanged] = useState<boolean>(false);
   const [key, setKey] = useState(0);
   const [imageVersions, setImageVersions] = useState<ImageVersion[]>(versions);
@@ -59,15 +59,6 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
 
   const tabs = getDeploymentsViewTabs(route, t, selectedImage.buildStatus);
 
-  const onChangeActiveTab = useCallback(
-    (tab: string) => {
-      if (tab !== activeTab) {
-        setActiveTab(tab as EntityViewTab);
-      }
-    },
-    [activeTab],
-  );
-
   useEffect(() => {
     setSelectedImage(cloneDeep(image));
   }, [image]);
@@ -77,11 +68,11 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
   }, [selectedImage, image]);
 
   const toggleJsonEditor = useCallback(() => {
-    setJsonEditorEnabled((prev) => !prev);
-  }, [setJsonEditorEnabled]);
+    setIsEditorEnabled((prev) => !prev);
+  }, [setIsEditorEnabled]);
 
   const onDiscard = useCallback(() => {
-    if (jsonEditorEnabled) {
+    if (isEditorEnabled) {
       dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
       setIsChanged(false);
       // TODO: Revisit solution
@@ -89,8 +80,9 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
       // Force JSON Editor re-render to show originalEntity on discard.
       setKey((prevKey) => prevKey + 1);
     }
+    dispatch({ type: ValidationActionType.Reset });
     setSelectedImage(cloneDeep(image));
-  }, [jsonEditorEnabled, image, dispatch]);
+  }, [isEditorEnabled, image, dispatch]);
 
   const onSave = useCallback(() => {
     updateImage(selectedImage).then((res) => {
@@ -142,12 +134,9 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
   return (
     <>
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-        <div className={getViewHeaderClassName(jsonEditorEnabled)}>
-          {!jsonEditorEnabled && (
-            <div className="flex-1 min-h-0 relative">
-              <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
-            </div>
-          )}
+        <div className={getViewHeaderClassName(isEditorEnabled)}>
+          <Tabs tabs={tabs} isEditorEnabled={isEditorEnabled} activeTab={activeTab} onChangeActiveTab={setActiveTab} />
+
           <HeaderButtons
             route={route}
             image={selectedImage}
@@ -155,7 +144,7 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
             isChanged={isChanged}
             onSave={onSave}
             onDiscard={onDiscard}
-            jsonEditorEnabled={jsonEditorEnabled}
+            jsonEditorEnabled={isEditorEnabled}
             toggleJsonEditor={toggleJsonEditor}
             hideJsonEditor={disableDeploymentsJSONEditor}
             imagesNames={imagesNames}
@@ -165,7 +154,7 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
           />
         </div>
         <div className="flex-1 overflow-auto mt-3 min-h-0">
-          {jsonEditorEnabled ? (
+          {isEditorEnabled ? (
             <>
               <EntityJsonEditor
                 key={key}

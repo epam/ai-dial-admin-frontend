@@ -1,42 +1,34 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
 import AddVersionModal from '@/src/components/Assets/Modals/AddVersionModal';
-import { showEditorErrorNotifications } from '@/src/components/EntityView/JsonEditor/utils';
+import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
 import { ButtonsI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
-import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 import { generateNewInitialVersion } from '@/src/utils/prompts/versions';
-import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
+import { showEditorErrorNotifications } from '@/src/components/EntityHeaderControls/Buttons/utils';
 
-interface Props<T> {
+interface Props {
   view: ApplicationRoute;
-  entity: T;
+  entity: { version?: string };
   existingVersions?: string[];
-  isJsonEditorEnabled?: boolean;
+  isEditorEnabled?: boolean;
   onDiscard: () => void;
   onSave: (newVersion?: string) => void;
 }
 
-const ModifiedEntityButtons = <T extends object>({
-  view,
-  entity,
-  isJsonEditorEnabled,
-  onDiscard,
-  onSave,
-  existingVersions,
-}: Props<T>) => {
+const ModifiedEntityButtons: FC<Props> = ({ view, entity, isEditorEnabled, onDiscard, onSave, existingVersions }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
 
@@ -48,7 +40,7 @@ const ModifiedEntityButtons = <T extends object>({
   const isMobile = useIsMobileScreen();
   const [buttonsClassName, setButtonsClassName] = useState('');
 
-  const isDisableSave = useMemo(() => (isJsonEditorEnabled ? false : !isValid), [isJsonEditorEnabled, isValid]);
+  const isDisableSave = useMemo(() => (isEditorEnabled ? false : !isValid), [isEditorEnabled, isValid]);
 
   const onTryToSave = useCallback(
     (newVersion?: string) => {
@@ -57,12 +49,7 @@ const ModifiedEntityButtons = <T extends object>({
       }
 
       if (jsonErrors?.length) {
-        const errors = jsonErrors;
-        const errorNotifications = showEditorErrorNotifications({
-          errors,
-          showNotification,
-          t,
-        });
+        const errorNotifications = showEditorErrorNotifications(jsonErrors, showNotification, t);
         dispatch({ type: ValidationActionType.SetJsonEditorNotifications, errors: errorNotifications });
       } else {
         onSave(newVersion);
@@ -98,7 +85,7 @@ const ModifiedEntityButtons = <T extends object>({
           <AddVersionModal
             heading={t(PromptsI18nKey.NewVersionSave)}
             isModalOpen={isModalOpen}
-            prefilledVersion={generateNewInitialVersion((entity as DialPrompt).version)}
+            prefilledVersion={generateNewInitialVersion(entity.version)}
             existingVersions={existingVersions || []}
             onClose={() => setIsModalOpen(false)}
             onConfirm={onTryToSave}

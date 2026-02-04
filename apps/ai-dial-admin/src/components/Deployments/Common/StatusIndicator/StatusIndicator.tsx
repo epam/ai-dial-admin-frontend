@@ -1,3 +1,4 @@
+'use client';
 import { FC } from 'react';
 
 import { IMAGE_STATUS } from '@/src/types/deployments/images';

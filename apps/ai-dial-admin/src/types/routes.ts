@@ -3,7 +3,6 @@ export enum ApplicationRoute {
   SystemProperties = '/system-properties',
   ImportConfig = '/import-config',
   ExportConfig = '/export-config',
-  Forbidden = '/forbidden',
 
   // Entities
   Models = '/models',

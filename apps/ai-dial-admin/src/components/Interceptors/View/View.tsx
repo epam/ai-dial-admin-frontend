@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { AlertVariant, DialAlert, DialNoDataContent, DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
+import { AlertVariant, DialAlert, DialNoDataContent, TabModel } from '@epam/ai-dial-ui-kit';
 import { IconWorldStar } from '@tabler/icons-react';
 import { cloneDeep } from 'lodash';
 
@@ -44,6 +44,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { EntityViewTab, getInterceptorTabs } from '@/src/utils/tabs/utils';
 import InterceptorProperties from './Properties';
 import { getViewHeaderClassName } from '@/src/utils/entities/view';
+import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
 
 interface Props {
   originalInterceptor: DialInterceptor;
@@ -108,13 +109,6 @@ const InterceptorView: FC<Props> = ({
 
     setIsChanged(selectedFormat === ExportFormat.CORE ? !isEqualCoreInterceptor : !isEqualAdminInterceptor);
   }, [selectedFormat, originalInterceptor, selectedInterceptor, coreInterceptor]);
-
-  const onChangeActiveTab = useCallback(
-    (tab: string) => {
-      setActiveTab(tab as EntityViewTab);
-    },
-    [setActiveTab],
-  );
 
   const onDiscard = useCallback(() => {
     if (isJsonEditorEnabled) {
@@ -230,11 +224,8 @@ const InterceptorView: FC<Props> = ({
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={getViewHeaderClassName(isJsonEditorEnabled)}>
-        {!isJsonEditorEnabled && (
-          <div className="flex-1 min-w-0">
-            <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
-          </div>
-        )}
+        <Tabs tabs={tabs} activeTab={activeTab} onChangeActiveTab={setActiveTab} />
+
         <HeaderButtons
           view={ApplicationRoute.Interceptors}
           entity={selectedInterceptor}

@@ -3,9 +3,9 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DialNeutralButton, DialTabs } from '@epam/ai-dial-ui-kit';
-import { cloneDeep } from 'lodash';
+import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconLogin, IconLogout } from '@tabler/icons-react';
+import { cloneDeep } from 'lodash';
 
 import {
   getCoreToolset,
@@ -15,6 +15,8 @@ import {
   updateCoreToolset,
   updateToolset,
 } from '@/src/app/[lang]/toolsets/actions';
+import LoginPopup from '@/src/components/Assets/Toolsets/LoginPopup';
+import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
@@ -22,6 +24,8 @@ import EntityRolesModal from '@/src/components/EntityView/Modals/EmptyRoles/Empt
 import EntityRoles from '@/src/components/EntityView/Roles/Roles';
 import { isDisableRole } from '@/src/components/EntityView/Roles/utils';
 import Tools from '@/src/components/Tools/Tools';
+import { ToolsetI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -32,20 +36,17 @@ import { Toolset, ToolsetAuthCredentialLevel, ToolsetAuthType } from '@/src/mode
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
+import { getViewHeaderClassName } from '@/src/utils/entities/view';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { EntityViewTab, getToolsetTabs } from '@/src/utils/tabs/utils';
-import ToolsetProperties from './Properties';
-import { getViewHeaderClassName } from '@/src/utils/entities/view';
-import { ToolsetI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import {
   encodeToolsetRedirectState,
   isLoggedInToToolset,
   isUserLoggedInToToolset,
 } from '@/src/utils/toolset/toolset-auth';
-import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import LoginPopup from '../../Assets/Toolsets/LoginPopup';
+import ToolsetProperties from './Properties';
 
 let isSignInProcessed = false;
 
@@ -103,13 +104,6 @@ const ToolsetView: FC<Props> = ({ names, isUserLevel, oAuthCode, etag, roles, or
     const isEqualCoreToolset = isEqualSkippingUndefined(selectedToolset, coreToolset);
     setIsChanged(selectedFormat === ExportFormat.CORE ? !isEqualCoreToolset : !isEqualAdminToolset);
   }, [selectedFormat, originalToolset, selectedToolset, coreToolset]);
-
-  const onChangeActiveTab = useCallback(
-    (tab: string) => {
-      setActiveTab(tab as EntityViewTab);
-    },
-    [setActiveTab],
-  );
 
   const onDiscard = useCallback(() => {
     if (isJsonEditorEnabled) {
@@ -262,11 +256,13 @@ const ToolsetView: FC<Props> = ({ names, isUserLevel, oAuthCode, etag, roles, or
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={getViewHeaderClassName(isJsonEditorEnabled)}>
-        {!isJsonEditorEnabled && (
-          <div className="flex-1 min-w-0">
-            <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
-          </div>
-        )}
+        <Tabs
+          tabs={tabs}
+          isEditorEnabled={isJsonEditorEnabled}
+          activeTab={activeTab}
+          onChangeActiveTab={setActiveTab}
+        />
+
         <HeaderButtons
           view={ApplicationRoute.Toolsets}
           entity={selectedToolset}
@@ -279,8 +275,9 @@ const ToolsetView: FC<Props> = ({ names, isUserLevel, oAuthCode, etag, roles, or
           selectedFormat={selectedFormat}
           onChangeSelectedFormat={setSelectedFormat}
         >
-          {selectedToolset.authSettings?.authenticationType !== ToolsetAuthType.NONE &&
-            (isToolsetSignedIn ? (
+          {selectedToolset.authSettings?.authenticationType &&
+          selectedToolset.authSettings?.authenticationType !== ToolsetAuthType.NONE ? (
+            isToolsetSignedIn ? (
               <DialNeutralButton
                 label={t(ToolsetI18nKey.LogOut)}
                 iconBefore={<IconLogout {...BASE_BUTTON_ICON_PROPS} />}
@@ -292,7 +289,8 @@ const ToolsetView: FC<Props> = ({ names, isUserLevel, oAuthCode, etag, roles, or
                 iconBefore={<IconLogin {...BASE_BUTTON_ICON_PROPS} />}
                 onClick={() => setIsLoginModalOpen(true)}
               />
-            ))}
+            )
+          ) : null}
         </HeaderButtons>
       </div>
       <div className="flex-1 overflow-auto min-h-0">

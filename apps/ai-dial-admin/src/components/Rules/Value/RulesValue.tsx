@@ -61,18 +61,16 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
     (regex?: string) => {
       const newRule = { ...rule, targets: regex ? [regex] : [] };
       onChangeValue(newRule);
-      setError(regex || '');
     },
-    [onChangeValue, rule, setError],
+    [onChangeValue, rule],
   );
 
   const onChangeTags = useCallback(
     (targets: string[]) => {
       const newRule = { ...rule, targets };
       onChangeValue(newRule);
-      setError(targets);
     },
-    [onChangeValue, rule, setError],
+    [onChangeValue, rule],
   );
 
   useEffect(() => {
@@ -89,6 +87,11 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
     }
     return () => observer.disconnect();
   }, [setLastValueHeight]);
+
+  useEffect(() => {
+    setError(rule.targets);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rule.targets]);
 
   return (
     <>
@@ -120,7 +123,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
             onChange={(fun) => onChangeFunction(fun as string)}
           />
         </div>
-        <div className="w-full">
+        <div className="flex-1">
           {rule.function === RuleFunction.REGEX ? (
             <DialTextInputField
               elementId={`upstream-endpoints-${index}`}

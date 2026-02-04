@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DialNeutralButton, DialTabs } from '@epam/ai-dial-ui-kit';
+import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconLogin, IconLogout } from '@tabler/icons-react';
 import { cloneDeep } from 'lodash';
 
@@ -47,6 +47,8 @@ import {
 import { addTrailingSlash } from '@/src/utils/url';
 import LoginPopup from './LoginPopup';
 import { getViewHeaderClassName } from '@/src/utils/entities/view';
+import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
+
 let isSignInProcessed = false;
 
 interface Props {
@@ -87,13 +89,6 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
       setIsChanged(!isEqualSkippingUndefined(originalToolset, selectedToolset));
     }
   }, [selectedToolset, originalToolset]);
-
-  const onChangeActiveTab = useCallback(
-    (tab: string) => {
-      setActiveTab(tab as EntityViewTab);
-    },
-    [setActiveTab],
-  );
 
   const onDiscard = useCallback(() => {
     if (isJsonEditorEnabled) {
@@ -253,11 +248,13 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
     <>
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
         <div className={getViewHeaderClassName(isJsonEditorEnabled)}>
-          {!isJsonEditorEnabled && (
-            <div className="flex-1 min-w-0">
-              <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
-            </div>
-          )}
+          <Tabs
+            tabs={tabs}
+            isEditorEnabled={isJsonEditorEnabled}
+            activeTab={activeTab}
+            onChangeActiveTab={setActiveTab}
+          />
+
           <HeaderButtons
             view={ApplicationRoute.AssetsToolsets}
             entity={selectedToolset}
@@ -272,7 +269,8 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
             etag={etag}
             getAssetContext={useToolsetFolder as () => AssetsFolderContext<DialFile | AssetToolset>}
           >
-            {selectedToolset.authSettings?.authenticationType !== ToolsetAuthType.NONE &&
+            {selectedToolset.authSettings?.authenticationType &&
+              selectedToolset.authSettings?.authenticationType !== ToolsetAuthType.NONE &&
               (isToolsetSignedIn ? (
                 <DialNeutralButton
                   label={t(ToolsetI18nKey.LogOut)}

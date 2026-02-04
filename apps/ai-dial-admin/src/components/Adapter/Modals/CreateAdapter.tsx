@@ -3,7 +3,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { createAdapter } from '@/src/app/[lang]/adapters/actions';
-import AdapterProperties from '@/src/components/Adapter/View/AdapterProperties';
+import AdapterProperties from '@/src/components/Adapter/View/Properties/Properties';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
