@@ -31,7 +31,7 @@ describe('getRequestFilters', () => {
     };
 
     const expected: FilterDto[] = [{ column: 'age', value: '25', operator: FilterOperatorDto.EQUALS }];
-    F;
+
     expect(getRequestFilters(gridFilters)).toEqual(expected);
   });
 
