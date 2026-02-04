@@ -11,7 +11,7 @@ export const INTERCEPTOR_SOURCE_ITEMS: SelectOption[] = [
 export const MODELS_SOURCE_ITEMS: SelectOption[] = [
   // NOTE: Keep order
   { value: SOURCE_TYPE.ADAPTER, label: 'Adapter' },
-  { value: SOURCE_TYPE.CONTAINER, label: 'Model Container' },
+  { value: SOURCE_TYPE.CONTAINER, label: 'Model Serving' },
   { value: SOURCE_TYPE.ENDPOINTS, label: 'External Endpoint' },
 ];
 

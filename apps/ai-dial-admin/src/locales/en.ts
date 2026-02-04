@@ -1131,9 +1131,11 @@ export default {
     Container: 'Container',
     InterceptorTemplate: 'Interceptor template',
     ModelDeployment: 'Deployment model',
+    ModelServing: 'Model serving',
     InterceptorContainer: 'Interceptor Container',
     McpContainer: 'MCP Container',
     Endpoint: 'Endpoint',
+    ExternalEndpoint: 'External endpoint',
     Adapter: 'Adapter',
   },
   Toolset: {
