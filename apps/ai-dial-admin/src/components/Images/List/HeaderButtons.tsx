@@ -21,8 +21,8 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 
 import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
-import AddImageModal from '@/src/components/Images/Modals/AddImage';
 import GlobalWhitelist from '@/src/components/Deployments/Modals/GlobalWhitelist';
+import ImageAdd from '@/src/components/Deployments/Modals/ImageAdd';
 
 interface Props {
   toggleColumnsPanel: () => void;
@@ -108,7 +108,7 @@ const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, gridApi }) => {
       {isModalOpen &&
         modalType === ModalType.addImage &&
         createPortal(
-          <AddImageModal
+          <ImageAdd
             isModalOpen={isModalOpen}
             modalTitle={t(ImagesI18nKey.AddModalTitle)}
             onClose={handleModalClose}

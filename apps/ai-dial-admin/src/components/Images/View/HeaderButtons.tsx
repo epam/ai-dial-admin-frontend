@@ -21,14 +21,14 @@ import { getRouteByType, getTranslatedDeploymentType, getTranslatedType } from '
 import { validateImage } from '@/src/utils/deployments/images';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 
 import VersionsSelect from '@/src/components/Deployments/Common/VersionsSelect/VersionsSelect';
 import EntityDelete from '@/src/components/Deployments/Modals/EntityDelete';
 import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
-import CreateContainer from '@/src/components/Images/Modals/CreateContainer';
-import Install from '@/src/components/Images/Modals/Install';
-import NewVersion from '@/src/components/Images/Modals/NewVersion';
-import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
+import ImageCreateContainer from '@/src/components/Deployments/Modals/ImageCreateContainer';
+import ImageInstall from '@/src/components/Deployments/Modals/ImageInstall';
+import ImageNewVersion from '@/src/components/Deployments/Modals/ImageNewVersion';
 
 interface Props {
   route: ApplicationRoute;
@@ -281,7 +281,7 @@ const HeaderButtons: FC<Props> = ({
       {isModalOpen &&
         modalType === ModalType.create &&
         createPortal(
-          <CreateContainer
+          <ImageCreateContainer
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
             modalTitle={t(ContainersI18nKey.CreateModalTitle, {
@@ -297,7 +297,7 @@ const HeaderButtons: FC<Props> = ({
       {isModalOpen &&
         modalType === ModalType.saveNewVersion &&
         createPortal(
-          <NewVersion
+          <ImageNewVersion
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
             okLabel={t(ButtonsI18nKey.Save)}
@@ -311,7 +311,7 @@ const HeaderButtons: FC<Props> = ({
       {isModalOpen &&
         modalType === ModalType.createNewVersion &&
         createPortal(
-          <NewVersion
+          <ImageNewVersion
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
             okLabel={t(ButtonsI18nKey.Create)}
@@ -325,7 +325,7 @@ const HeaderButtons: FC<Props> = ({
       {isModalOpen &&
         modalType === ModalType.install &&
         createPortal(
-          <Install
+          <ImageInstall
             image={image}
             title={t(ImagesI18nKey.InstallModalTitle, { type: getTranslatedType(getRouteByType(image.$type), t) })}
             isModalOpen={isModalOpen}

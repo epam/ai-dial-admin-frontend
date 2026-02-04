@@ -19,7 +19,7 @@ import { createPortal } from 'react-dom';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import ContainerProperties from '@/src/components/Containers/Fields/ContainerProperties';
 import ServingProperties from '@/src/components/Containers/Fields/ServingProperties';
-import ChangeContainerImage from '@/src/components/Containers/Modals/ChangeContainerImage';
+import ContainerChangeImage from '@/src/components/Deployments/Modals/ContainerChangeImage';
 import StatusIndicator from '@/src/components/Deployments/Common/StatusIndicator/StatusIndicator';
 
 interface Props {
@@ -99,7 +99,7 @@ const Properties: FC<Props> = ({ container, setContainer, image, route, names, o
       {isModalOpen &&
         image &&
         createPortal(
-          <ChangeContainerImage
+          <ContainerChangeImage
             modalTitle={t(ContainersI18nKey.ContainerImage, { type: getTranslatedType(route, t) })}
             isModalOpen={isModalOpen}
             onClose={handleModalClose}

@@ -23,7 +23,7 @@ interface Props {
   names?: string[];
 }
 
-const CreateContainer: FC<Props> = ({ onClose, isModalOpen, modalTitle, names, onCreate, image }) => {
+const ImageCreateContainer: FC<Props> = ({ onClose, isModalOpen, modalTitle, names, onCreate, image }) => {
   const t = useI18n();
   const { resourcesDefaults } = useAppContext();
   const { isValid } = useSaveValidationContext();
@@ -74,4 +74,4 @@ const CreateContainer: FC<Props> = ({ onClose, isModalOpen, modalTitle, names, o
   );
 };
 
-export default CreateContainer;
+export default ImageCreateContainer;
