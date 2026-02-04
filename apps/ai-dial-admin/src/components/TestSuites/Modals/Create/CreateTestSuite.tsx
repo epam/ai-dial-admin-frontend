@@ -8,7 +8,7 @@ import StepperModalButtons from '@/src/components/Common/StepperModalButtons/Ste
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { TEST_SUIT_STEPS, TestSuitTab } from './constants';
-import TestSuiteProperties from './Properties';
+import TestSuiteProperties from '@/src/components/TestSuites/Properties/Properties';
 import Applications from './Applications';
 import Methods from '@/src/components/TestSuites/Methods/Methods';
 

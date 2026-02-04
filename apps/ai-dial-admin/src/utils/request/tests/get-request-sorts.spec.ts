@@ -1,7 +1,8 @@
 import { SortDirectionDto } from '@/src/types/request';
 import { SortModelItem } from 'ag-grid-community';
 import { describe, expect, test } from 'vitest';
-import { getRequestSorts } from '../get-request-sorts';
+import { getRequestSorts, getRequestSortsStr } from '../get-request-sorts';
+import { SortDto } from '@/src/models/request';
 
 describe('Request :: getRequestSorts', () => {
   test('should convert a single sort item to SortDto', () => {
@@ -28,5 +29,27 @@ describe('Request :: getRequestSorts', () => {
 
   test('should return an empty array when sortModel is empty', () => {
     expect(getRequestSorts([])).toEqual([]);
+  });
+});
+
+describe('Request :: getRequestSortsStr', () => {
+  test('should convert a single sort item to comma-separated string', () => {
+    const input: SortDto[] = [{ column: 'name', direction: SortDirectionDto.ASC }];
+
+    expect(getRequestSortsStr(input)).toBe('sort=name,ASC');
+  });
+
+  test('should convert multiple sort items to comma-separated string', () => {
+    const input: SortDto[] = [
+      { column: 'name', direction: SortDirectionDto.ASC },
+      { column: 'age', direction: SortDirectionDto.DESC },
+      { column: 'email', direction: SortDirectionDto.ASC },
+    ];
+
+    expect(getRequestSortsStr(input)).toBe('sort=name,ASC&sort=age,DESC&sort=email,ASC');
+  });
+
+  test('should return an empty string when sorts array is empty', () => {
+    expect(getRequestSortsStr([])).toBe('');
   });
 });
