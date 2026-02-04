@@ -1,6 +1,6 @@
 import { FC, useMemo } from 'react';
 import classNames from 'classnames';
-import { DialPrimaryButton, DialNeutralButton, DialPopup } from '@epam/ai-dial-ui-kit';
+import { DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
 import { ApplicationRoute } from '@/src/types/routes';
 import { Container } from '@/src/models/deployments/containers';
 import { useI18n } from '@/src/locales/client';
@@ -18,7 +18,7 @@ interface Props {
   dependencies?: Container[];
 }
 
-const DeleteModal: FC<Props> = ({ title, description, isModalOpen, onClose, onApply, dependencies, route }) => {
+const EntityDeleteModal: FC<Props> = ({ title, description, isModalOpen, onClose, onApply, dependencies, route }) => {
   const t = useI18n();
 
   const containerClassNames = useMemo(() => {
@@ -29,12 +29,17 @@ const DeleteModal: FC<Props> = ({ title, description, isModalOpen, onClose, onAp
   }, [dependencies]);
 
   return (
-    <DialPopup
+    <DialConfirmationPopup
       onClose={onClose}
       header={title}
       portalId="DeleteImageModal"
       open={isModalOpen}
       className={containerClassNames}
+      onConfirm={() => {
+        onApply();
+        onClose();
+      }}
+      confirmLabel={t(ButtonsI18nKey.Delete)}
     >
       <div className="flex flex-col h-full overflow-auto px-6 py-4">
         <p className="text-secondary small-150">{description}</p>
@@ -50,18 +55,8 @@ const DeleteModal: FC<Props> = ({ title, description, isModalOpen, onClose, onAp
           </>
         )}
       </div>
-      <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialPrimaryButton
-          label={t(ButtonsI18nKey.Delete)}
-          onClick={() => {
-            onApply();
-            onClose();
-          }}
-        />
-      </div>
-    </DialPopup>
+    </DialConfirmationPopup>
   );
 };
 
-export default DeleteModal;
+export default EntityDeleteModal;

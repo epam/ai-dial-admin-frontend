@@ -213,7 +213,7 @@ export default {
     SaveParametersTitle: 'Save Parameters',
     SaveParametersDescription: 'Save parameter changes before leaving. Unsaved changes will be lost.',
     // deployments
-    NoImages: 'No {type} Images',
+    NoImages: 'No Images',
     NoContainersType: 'No {type} {entityType}s',
     NoRelatedContainers: 'No Related Containers',
     NoRelatedContainersDescription: 'Install Image to add Containers',

@@ -1,5 +1,5 @@
 import { FC, useEffect, useState } from 'react';
-import { DialFormPopup } from '@epam/ai-dial-ui-kit';
+import { DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey, DeploymentsI18nKey } from '@/src/constants/i18n';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -39,13 +39,13 @@ const GlobalWhitelist: FC<Props> = ({ onClose, isModalOpen, onApply, getDomains 
   };
 
   return (
-    <DialFormPopup
+    <DialConfirmationPopup
       onClose={onClose}
       open={isModalOpen}
       header={t(DeploymentsI18nKey.GlobalFirewall)}
-      submitLabel={t(ButtonsI18nKey.Apply)}
-      onSubmit={handleSubmit}
-      disableSubmitButton={!isValid || domains.some((domain) => !!getWhitelistDomainError(domain))}
+      confirmLabel={t(ButtonsI18nKey.Apply)}
+      onConfirm={handleSubmit}
+      disableConfirmButton={!isValid || domains.some((domain) => !!getWhitelistDomainError(domain))}
       isLoading={isLoading}
     >
       <div className="flex flex-col py-4 px-6 gap-4">
@@ -60,7 +60,7 @@ const GlobalWhitelist: FC<Props> = ({ onClose, isModalOpen, onApply, getDomains 
           />
         </div>
       </div>
-    </DialFormPopup>
+    </DialConfirmationPopup>
   );
 };
 
