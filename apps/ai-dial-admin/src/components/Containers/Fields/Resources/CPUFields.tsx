@@ -7,6 +7,7 @@ import { FieldError } from '@/src/models/error';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getResourcesConflictError, getCPUError } from '@/src/utils/deployments/validation';
 import { useI18n } from '@/src/locales/client';
+import { isEditDisabled } from '@/src/utils/deployments/containers';
 
 interface Props {
   container: Container;
@@ -68,11 +69,13 @@ const CPUFields: FC<Props> = ({ container, setContainer }) => {
     <div className="flex flex-col lg:flex-row gap-2">
       <DialNumberInputField
         elementId="cpuRequest"
+        containerClassName="w-[180px]"
         fieldTitle={t(EntityFieldsI18nKey.CPURequest)}
         value={convertCoresToMilliCores(container.resources?.requests?.cpu)}
         errorText={requestError?.text}
         invalid={!!requestError}
         suffix="m"
+        disabled={isEditDisabled(container)}
         onChange={(cpuRequest) => {
           const error =
             getCPUError(cpuRequest as number, t) ??
@@ -109,12 +112,14 @@ const CPUFields: FC<Props> = ({ container, setContainer }) => {
         }}
       />
       <DialNumberInputField
+        containerClassName="w-[180px]"
         elementId="cpuLimit"
         fieldTitle={t(EntityFieldsI18nKey.CPULimit)}
         value={convertCoresToMilliCores(container.resources?.limits?.cpu)}
         suffix="m"
         errorText={limitError?.text}
         invalid={!!limitError}
+        disabled={isEditDisabled(container)}
         onChange={(cpuLimit?: number | string) => {
           const error =
             getCPUError(cpuLimit as number, t) ??

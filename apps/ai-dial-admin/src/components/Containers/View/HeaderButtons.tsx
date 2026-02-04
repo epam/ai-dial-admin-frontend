@@ -1,30 +1,38 @@
-import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import classNames from 'classnames';
-import { IconPlayerPause, IconPlayerPlay, IconPlus, IconTrashX } from '@tabler/icons-react';
-import { useRouter } from 'next/navigation';
 import {
+  ButtonAppearance,
   ButtonVariant,
   DialButtonDropdown,
   DialNeutralButton,
-  DialPrimaryButton,
-  DialSwitch,
   DropdownItem,
 } from '@epam/ai-dial-ui-kit';
-import { ApplicationRoute } from '@/src/types/routes';
-import { BaseEntity } from '@/src/models/dial/base-entity';
-import { ServerActionResponse } from '@/src/models/server-action';
-import { Asset } from '@/src/models/dial/deployment-asset';
-import { CONTAINER_STATUS, CONTAINER_TRANSPORT } from '@/src/types/deployments/containers';
-import { Container } from '@/src/models/deployments/containers';
-import { useI18n } from '@/src/locales/client';
-import { useNotification } from '@/src/context/NotificationContext';
-import { useAppContext } from '@/src/context/AppContext';
-import { ModalType } from '@/src/components/EntityListView/Components/Modals';
-import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
-import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
+import { IconPlayerPause, IconPlayerPlay, IconPlus, IconTrashX } from '@tabler/icons-react';
+import classNames from 'classnames';
+import { useRouter } from 'next/navigation';
+import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
 import { deleteContainer, runContainer, stopContainer } from '@/src/app/actions/deployments';
-import { getErrorNotification } from '@/src/utils/notification';
+import CreateAsset from '@/src/components/Assets/Deployments/CreateAsset';
+import EntityDelete from '@/src/components/Deployments/Modals/EntityDelete';
+import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
+import { ModalType } from '@/src/components/EntityListView/Components/Modals';
+import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
 import { ButtonsI18nKey, ContainersI18nKey, CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useAppContext } from '@/src/context/AppContext';
+import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
+import { useNotification } from '@/src/context/NotificationContext';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
+import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
+import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
+import { useI18n } from '@/src/locales/client';
+import { Container } from '@/src/models/deployments/containers';
+import { BaseEntity } from '@/src/models/dial/base-entity';
+import { Asset } from '@/src/models/dial/deployment-asset';
+import { DialFile } from '@/src/models/dial/file';
+import { ServerActionResponse } from '@/src/models/server-action';
+import { CONTAINER_STATUS, CONTAINER_TRANSPORT } from '@/src/types/deployments/containers';
+import { ApplicationRoute } from '@/src/types/routes';
 import {
   getAssetTemplate,
   getEntityRoute,
@@ -33,16 +41,9 @@ import {
   getTranslatedEntity,
   getTranslatedType,
 } from '@/src/utils/deployments/entity';
-import { showEditorErrorNotifications } from '@/src/components/EntityView/JsonEditor/utils';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { getErrorNotification } from '@/src/utils/notification';
 import { createPortal } from 'react-dom';
-import DeleteModal from '@/src/components/Deployments/Modals/Delete';
-import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
-import CreateAsset from '@/src/components/Assets/Deployments/CreateAsset';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
-import { DialFile } from '@/src/models/dial/file';
-import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import ChangedEntityButtons from '../../EntityHeaderControls/Buttons/ChangedEntityButtons';
 
 interface Props<T> {
   route: ApplicationRoute;
@@ -80,20 +81,17 @@ const HeaderButtons = <T extends Container>({
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
-  const { isValid, jsonErrors } = useSaveValidationContext();
-  const { dispatch } = useSaveValidationContext();
+  const { isValid } = useSaveValidationContext();
   const { visualizerConnector } = useAppContext();
   const visualizerConnectorRef = useRef(visualizerConnector);
 
   const [modalType, setModalType] = useState<ModalType>();
 
   const staticContainerClassnames = 'flex flex-row gap-3 divide-x divide-primary';
-  const staticEditorClassNames = 'pl-6';
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
   const [containerClassNames, setContainerClassNames] = useState(staticContainerClassnames);
   const [buttonsClassNames, setButtonsClassNames] = useState('');
-  const [editorClassNames, setEditorClassNames] = useState(staticEditorClassNames);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -155,20 +153,6 @@ const HeaderButtons = <T extends Container>({
     }
   }, [container.name, onCloseModal, route, router, showNotification]);
 
-  const onTryToSave = useCallback(() => {
-    if (jsonErrors?.length) {
-      const errors = jsonErrors;
-      const errorNotifications = showEditorErrorNotifications({
-        errors,
-        showNotification,
-        t,
-      });
-      dispatch({ type: ValidationActionType.SetJsonEditorNotifications, errors: errorNotifications });
-    } else {
-      onSave();
-    }
-  }, [jsonErrors, showNotification, t, dispatch, onSave]);
-
   const onOpenDeleteModal = useCallback(() => {
     onOpenModal(ModalType.delete);
   }, [onOpenModal]);
@@ -200,12 +184,6 @@ const HeaderButtons = <T extends Container>({
       ),
     );
     setButtonsClassNames(classNames(isTablet || isMobile ? 'w-1/2 flex justify-center' : ''));
-    setEditorClassNames(
-      classNames(
-        staticEditorClassNames,
-        isTablet ? 'ml-3 pl-3 border-l-tertiary border-l h-full flex items-center' : isMobile ? 'hidden' : '',
-      ),
-    );
   }, [isTablet, isMobile]);
 
   useEffect(() => {
@@ -216,25 +194,23 @@ const HeaderButtons = <T extends Container>({
     <>
       <div className={containerClassNames}>
         {isChanged ? (
-          <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
-            <DialNeutralButton className={buttonsClassNames} label={t(ButtonsI18nKey.Discard)} onClick={onDiscard} />
-            <DialPrimaryButton
-              className={buttonsClassNames}
-              label={t(isRedeployRequired ? ButtonsI18nKey.SaveAndRedeploy : ButtonsI18nKey.Save)}
-              onClick={onTryToSave}
-              disabled={jsonEditorEnabled ? false : !isValid}
-            />
-          </div>
+          <ChangedEntityButtons
+            onDiscard={onDiscard}
+            onSave={onSave}
+            disableSave={jsonEditorEnabled ? false : !isValid}
+            saveLabel={t(isRedeployRequired ? ButtonsI18nKey.SaveAndRedeploy : ButtonsI18nKey.Save)}
+          />
         ) : (
-          <div className="flex flex-row items-center w-full">
+          <div className="flex flex-row items-center w-full gap-x-4">
             <div className="flex flex-row gap-3">
               {container.status === CONTAINER_STATUS.RUNNING && (
                 <>
-                  {route === ApplicationRoute.McpDeployments ? (
+                  {route === ApplicationRoute.McpContainers ? (
                     <DialButtonDropdown
                       label={t(ButtonsI18nKey.Create)}
                       items={createToolsetOptions}
-                      variant={ButtonVariant.Secondary}
+                      variant={ButtonVariant.Neutral}
+                      appearance={ButtonAppearance.Outlined}
                     />
                   ) : (
                     <DialNeutralButton
@@ -274,23 +250,14 @@ const HeaderButtons = <T extends Container>({
               </>
               {children}
             </div>
-            {!hideJsonEditor && (
-              <div className={editorClassNames}>
-                <DialSwitch
-                  isOn={jsonEditorEnabled}
-                  label={t(EntitiesI18nKey.JSONEditor)}
-                  switchId="jsonEditor"
-                  onChange={toggleJsonEditor}
-                />
-              </div>
-            )}
+            {!hideJsonEditor && <JsonToggles isEditorEnabled={jsonEditorEnabled} onToggleEditor={toggleJsonEditor} />}
           </div>
         )}
       </div>
       {isModalOpen &&
         modalType === ModalType.delete &&
         createPortal(
-          <DeleteModal
+          <EntityDelete
             title={t(ContainersI18nKey.DeleteModalTitle, {
               type: getTranslatedType(route, t),
               entityType: getTranslatedDeploymentType(route, t),

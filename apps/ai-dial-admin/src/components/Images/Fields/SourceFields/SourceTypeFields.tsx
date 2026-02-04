@@ -12,22 +12,25 @@ interface Props {
   image: Image;
   setImage: (image: Image) => void;
   isModal?: boolean;
+  verifyVersion: (image: Image) => void;
 }
 
-const SourceTypeFields: FC<Props> = ({ image, setImage, isModal }) => {
+const SourceTypeFields: FC<Props> = ({ image, setImage, isModal, verifyVersion }) => {
   const t = useI18n();
   const sourcesList = SOURCE_TYPES(t);
   const imageTypesList = IMAGE_TYPES(t);
 
   const onImageTypeChange = useCallback(
     ($type: string | string[]) => {
-      setImage({
+      const updated = {
         ...setTransport(image),
         $type: $type as IMAGE_TYPE,
         source: DEFAULT_IMAGE_SOURCE,
-      });
+      };
+      verifyVersion(updated);
+      setImage(updated);
     },
-    [image, setImage],
+    [image, setImage, verifyVersion],
   );
 
   const onSourceTypeChange = useCallback(
@@ -43,11 +46,11 @@ const SourceTypeFields: FC<Props> = ({ image, setImage, isModal }) => {
   );
 
   return (
-    <div className="flex gap-4">
+    <div className="flex gap-x-4">
       {isModal && (
         <DialSelectField
           elementId="imagesType"
-          containerClassName="max-w-[192px]"
+          containerClassName="w-[220px]"
           value={image.$type}
           options={imageTypesList}
           fieldTitle={t(EntityFieldsI18nKey.type)}
@@ -57,7 +60,7 @@ const SourceTypeFields: FC<Props> = ({ image, setImage, isModal }) => {
       {image.$type === IMAGE_TYPE.MCP && (
         <DialSelectField
           elementId="sourceType"
-          containerClassName="max-w-[158px]"
+          containerClassName="w-[220px]"
           value={image.source.$type}
           options={sourcesList}
           fieldTitle={t(EntitiesI18nKey.SourceType)}

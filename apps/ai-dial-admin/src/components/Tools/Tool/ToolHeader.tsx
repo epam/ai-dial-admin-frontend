@@ -1,6 +1,6 @@
-import { FC, MouseEvent, useCallback } from 'react';
+import { FC, MouseEvent, ReactNode, useCallback } from 'react';
 
-import { ButtonAppearance, ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconPlayerPlay } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -18,7 +18,7 @@ interface Props {
   isAddedManual?: boolean;
   isMcpToolset?: boolean;
   isAssetToolset?: boolean;
-  isEnable?: boolean;
+  viewSelector?: ReactNode;
 }
 
 const ToolHeader: FC<Props> = ({
@@ -28,21 +28,26 @@ const ToolHeader: FC<Props> = ({
   isAddedManual,
   isMcpToolset,
   isAssetToolset,
-  isEnable = true,
+  viewSelector,
 }) => {
   const t = useI18n();
-  const { showSidebar } = useAppContext().sidebar;
+  const { sidebar, sidebarOpen, toggleSidebar } = useAppContext();
 
   const openTryOutSidebar = useCallback(
     (e: MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation();
-      showSidebar(
+      sidebar.showSidebar(
         <SaveValidationContextProvider>
           <TryOut tool={tool} toolSetName={toolSetName} isAssetToolset={isAssetToolset} />
         </SaveValidationContextProvider>,
+        'w-[50%] max-w-[800px]',
       );
+      if (sidebarOpen) {
+        sidebar.toggleIsMenuClosed?.();
+        toggleSidebar(e);
+      }
     },
-    [isAssetToolset, showSidebar, tool, toolSetName],
+    [isAssetToolset, sidebar, sidebarOpen, toggleSidebar, tool, toolSetName],
   );
 
   return (
@@ -55,18 +60,17 @@ const ToolHeader: FC<Props> = ({
           </span>
         )}
       </div>
-      {!isAddedManual && !isMcpToolset && isEnable && (
-        <DialButton
-          appearance={ButtonAppearance.Outlined}
-          variant={ButtonVariant.Neutral}
-          className={classNames(
-            'flex items-center justify-center',
-            isCollapsed && 'invisible group-hover/accordion:visible',
-          )}
-          iconBefore={<IconPlayerPlay size={20} />}
-          onClick={openTryOutSidebar}
-          label={t(ToolsetI18nKey.TryOut)}
-        />
+      {!isAddedManual && !isMcpToolset && (
+        <div className="flex flex-row items-center gap-4" onClick={(e) => e.stopPropagation()}>
+          {!isCollapsed && viewSelector}
+          {!isCollapsed && !!viewSelector && <div className="w-[1px] h-6 bg-layer-4"></div>}
+          <DialNeutralButton
+            className={classNames(isCollapsed && 'invisible group-hover/accordion:visible')}
+            iconBefore={<IconPlayerPlay size={20} />}
+            onClick={openTryOutSidebar}
+            label={t(ToolsetI18nKey.TryOut)}
+          />
+        </div>
       )}
     </div>
   );

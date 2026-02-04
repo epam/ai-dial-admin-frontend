@@ -19,6 +19,10 @@ const HF_MODEL_MAX_LENGTH = 96;
 const HF_USERNAME_ALLOWED_REGEX = /^[A-Za-z0-9-]+$/;
 const HF_MODEL_ALLOWED_REGEX = /^[A-Za-z0-9_.-]+$/;
 
+const MIN_DOMAIN_NAME_LENGTH = 4;
+const MAX_DOMAIN_NAME_LENGTH = 253;
+const WHITELIST_DOMAIN_REGEX = /^((?!-)[A-Za-z0-9-]{1,63}(?<!-)\.)+[A-Za-z]{2,}$/;
+
 export const getVariableNameError = (name: string, t?: (str: string) => string) => {
   if (!name) {
     return {
@@ -222,6 +226,46 @@ export const getResourcesConflictError = (
 ): FieldError | null => {
   if (request > limit) {
     return { type: ErrorType.INVALID, text: t ? t(ErrorI18nKey.LimitRequestError) : '' };
+  }
+
+  return null;
+};
+
+export const getReplicasError = (
+  min?: number,
+  max?: number,
+  t?: (key: string, options?: Record<string, string | number>) => string,
+): FieldError | null => {
+  if (min && max && min > max) {
+    return { type: ErrorType.INVALID, text: t ? t(ErrorI18nKey.ReplicasError) : '' };
+  }
+  return null;
+};
+
+export const getWhitelistDomainError = (
+  value?: string,
+  t?: (key: string, options?: Record<string, string | number>) => string,
+): FieldError | null => {
+  const trimmed = value?.trim() ?? '';
+  if (!trimmed) {
+    return {
+      type: ErrorType.EMPTY,
+      text: t ? t(ErrorI18nKey.RequiredProperty) : '',
+    };
+  }
+
+  if ((value as string).length > MAX_DOMAIN_NAME_LENGTH || (value as string).length < MIN_DOMAIN_NAME_LENGTH) {
+    return {
+      type: ErrorType.LENGTH,
+      text: t ? t(ErrorI18nKey.MinMaxLength, { min: MIN_DOMAIN_NAME_LENGTH, max: MAX_DOMAIN_NAME_LENGTH }) : '',
+    };
+  }
+
+  if (!WHITELIST_DOMAIN_REGEX.test(value as string)) {
+    return {
+      type: ErrorType.INVALID,
+      text: t ? t(ErrorI18nKey.InvalidWhitelistDomain) : '',
+    };
   }
 
   return null;

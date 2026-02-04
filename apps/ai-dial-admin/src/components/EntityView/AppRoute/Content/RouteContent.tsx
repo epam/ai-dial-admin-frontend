@@ -17,10 +17,11 @@ interface Props {
   roles: DialRole[];
   readonly?: boolean;
   parentRoles?: string[];
+  routeNames?: string[];
   onChangeRoute: (route: DialAppRoute) => void;
 }
 
-const RouteContent: FC<Props> = ({ route, readonly, onChangeRoute, ...props }) => {
+const RouteContent: FC<Props> = ({ route, readonly, routeNames, onChangeRoute, ...props }) => {
   const t = useI18n();
 
   const tabs = getRouteTabs(t);
@@ -34,7 +35,13 @@ const RouteContent: FC<Props> = ({ route, readonly, onChangeRoute, ...props }) =
 
       <div className="flex-1 min-h-0 overflow-auto mt-4 lg:mt-0">
         {activeTab === EntityViewTab.Properties && (
-          <RouteProperties route={route} onChange={onChangeRoute} isAppRoute={true} readonly={readonly} />
+          <RouteProperties
+            route={route}
+            onChange={onChangeRoute}
+            isAppRoute={true}
+            routeNames={routeNames}
+            readonly={readonly}
+          />
         )}
 
         {activeTab === EntityViewTab.Attachments && (

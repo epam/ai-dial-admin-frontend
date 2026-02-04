@@ -3,7 +3,7 @@ import { ReactNode } from 'react';
 
 import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import classNames from 'classnames';
-import { DialButton, DialCollapsibleSidebar, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { DialIconButton, DialCollapsibleSidebar, DialTooltip } from '@epam/ai-dial-ui-kit';
 
 import FolderCollapse from '@/public/images/icons/folder-collapse.svg';
 import ExportGrid from '@/src/components/Assets/ExportAssets/ExportGrid';
@@ -32,6 +32,7 @@ interface Props<T> {
   context?: () => AssetsFolderContext<DialFile>;
   onGridReady?: (gridApi: GridApi) => void;
   isBulkView?: boolean;
+  allowPadding?: boolean;
 }
 
 const ListView = <T extends object>({
@@ -49,6 +50,7 @@ const ListView = <T extends object>({
   context,
   onGridReady,
   isBulkView,
+  allowPadding = true,
 }: Props<T>) => {
   const t = useI18n();
   const folderContext = context?.();
@@ -61,7 +63,7 @@ const ListView = <T extends object>({
   };
 
   return (
-    <div className={classNames('flex flex-col bg-layer-2 rounded flex-1 min-h-0', title && 'py-4 px-6')}>
+    <div className={classNames('flex flex-col bg-layer-2 rounded flex-1 min-h-0', allowPadding && 'py-4 px-6')}>
       <div className="flex flex-row flex-wrap justify-between mb-4 items-center h-[40px]">
         {title && <h1>{title}</h1>}
         {children}
@@ -79,10 +81,13 @@ const ListView = <T extends object>({
                 tooltip={isCollapseDisable ? '' : t(FoldersI18nKey.CollapseAll)}
                 placement="top"
               >
-                <DialButton
-                  className={isCollapseDisable ? 'text-controls-disable' : 'hover:text-accent-primary'}
+                <DialIconButton
+                  className={classNames(
+                    isCollapseDisable ? 'text-controls-disable' : 'hover:text-accent-primary',
+                    'w-auto h-auto p-0',
+                  )}
                   onClick={collapseFolders}
-                  iconBefore={<FolderCollapse width={24} height={24} />}
+                  icon={<FolderCollapse width={24} height={24} />}
                   disabled={isCollapseDisable}
                 />
               </DialTooltip>

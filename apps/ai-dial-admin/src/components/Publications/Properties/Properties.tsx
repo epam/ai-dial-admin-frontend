@@ -1,18 +1,19 @@
-import { FC, ReactNode } from 'react';
+import { FC, ReactNode, useMemo } from 'react';
 
+import { AlertVariant, DialAlert } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
-import { EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, EntityFieldsI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
 import { ACTION_I18N_KEYS } from '@/src/constants/publications';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ActionType, ApplicationPublication, Publication } from '@/src/models/dial/publications';
+import { ApplicationRoute } from '@/src/types/routes';
 import { removeTrailingSlash } from '@/src/utils/files/path';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getActionClassName } from '@/src/utils/publications';
 import PublicationPermissions from './Permissions';
-import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
   view: ApplicationRoute;
@@ -31,6 +32,18 @@ const BasePublicationProperties: FC<Props> = ({ view, publication, children, app
   const application = (publication as ApplicationPublication).applicationResources?.[0];
   const runnerId = application?.applicationTypeSchemaId;
   const runner = applicationSchemes?.find((app) => app.$id === runnerId);
+
+  const warning = useMemo(() => {
+    if (publication.missingResources?.length) {
+      return (
+        <div className="flex flex-col gap-3">
+          <h3>{publication.missingResources[0].message}</h3>
+          <span className="text-sm">{t(PublicationsI18nKey.Warning)}</span>
+        </div>
+      );
+    }
+    return null;
+  }, [publication.missingResources, t]);
 
   return (
     <div className="h-full flex flex-col divide-y divide-primary w-full">
@@ -59,6 +72,7 @@ const BasePublicationProperties: FC<Props> = ({ view, publication, children, app
         />
       </div>
       <div className="flex-1 min-h-0 mt-8 pt-8 relative">
+        {warning && <DialAlert variant={AlertVariant.Warning} message={warning} />}
         <div className="flex flex-col gap-y-8 h-full overflow-auto">{children}</div>
       </div>
       <div className="mt-8 pt-8" id="publication-permissions">

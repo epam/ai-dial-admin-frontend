@@ -4,30 +4,30 @@ import { ApplicationRoute } from '@/src/types/routes';
 
 describe('grid utils', () => {
   describe('getAdminEntityPath', () => {
-    test('returns correct path for InterceptorDeployments', () => {
+    test('returns correct path for InterceptorContainers', () => {
       const data = { name: 'my-interceptor' };
-      const result = getAdminEntityPath(ApplicationRoute.InterceptorDeployments, data);
+      const result = getAdminEntityPath(ApplicationRoute.InterceptorContainers, data);
       expect(result).toBe(`${ApplicationRoute.Interceptors}/my-interceptor`);
-      expect(getAdminEntityPath(ApplicationRoute.InterceptorDeployments, {})).toBe(`${ApplicationRoute.Interceptors}/`);
+      expect(getAdminEntityPath(ApplicationRoute.InterceptorContainers, {})).toBe(`${ApplicationRoute.Interceptors}/`);
     });
 
-    test('returns correct path for McpDeployments', () => {
+    test('returns correct path for McpContainers', () => {
       const data = { name: 'my-mcp' };
-      const result = getAdminEntityPath(ApplicationRoute.McpDeployments, data);
+      const result = getAdminEntityPath(ApplicationRoute.McpContainers, data);
       expect(result).toBe(`${ApplicationRoute.Toolsets}/my-mcp`);
-      expect(getAdminEntityPath(ApplicationRoute.McpDeployments, {})).toBe(`${ApplicationRoute.Toolsets}/`);
+      expect(getAdminEntityPath(ApplicationRoute.McpContainers, {})).toBe(`${ApplicationRoute.Toolsets}/`);
     });
 
-    test('returns correct path for ModelDeployments', () => {
+    test('returns correct path for ModelServings', () => {
       const data = { name: 'my-model' };
-      const result = getAdminEntityPath(ApplicationRoute.ModelDeployments, data);
+      const result = getAdminEntityPath(ApplicationRoute.ModelServings, data);
       expect(result).toBe(`${ApplicationRoute.Models}/my-model`);
-      expect(getAdminEntityPath(ApplicationRoute.ModelDeployments, {})).toBe(`${ApplicationRoute.Models}/`);
+      expect(getAdminEntityPath(ApplicationRoute.ModelServings, {})).toBe(`${ApplicationRoute.Models}/`);
     });
 
     test('encodes name in path', () => {
       const data = { name: 'my/model' };
-      const result = getAdminEntityPath(ApplicationRoute.ModelDeployments, data);
+      const result = getAdminEntityPath(ApplicationRoute.ModelServings, data);
       expect(result).toBe(`${ApplicationRoute.Models}/my%2Fmodel`);
     });
 
@@ -39,13 +39,13 @@ describe('grid utils', () => {
   });
 
   describe('getAdminAssetPath', () => {
-    test('returns correct path for McpDeployments', () => {
+    test('returns correct path for McpContainers', () => {
       const data = {
         folderId: 'folders/',
         name: 'asset-name',
         version: '1.0.0',
       };
-      const result = getAdminAssetPath(ApplicationRoute.McpDeployments, data);
+      const result = getAdminAssetPath(ApplicationRoute.McpContainers, data);
       const expectedPath = encodeURIComponent('folders/asset-name__1.0.0');
       const expectedName = encodeURIComponent('asset-name');
       expect(result).toBe(`${ApplicationRoute.AssetsToolsets}/${expectedName}?path=${expectedPath}`);
@@ -57,7 +57,7 @@ describe('grid utils', () => {
         name: 'asset-name',
         version: '1.0.0',
       };
-      const result = getAdminAssetPath(ApplicationRoute.ModelDeployments, data);
+      const result = getAdminAssetPath(ApplicationRoute.ModelServings, data);
       expect(result).toBe('');
     });
   });

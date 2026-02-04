@@ -62,7 +62,7 @@ const ColumnsPanel: FC<Props> = ({
       <div ref={ref} className="flex-1 flex flex-col p-6 overflow-y-auto">
         <ul className="flex flex-col gap-4">
           {columns
-            .filter((col) => !col.suppressColumnsToolPanel)
+            .filter((col) => !col.suppressColumnsToolPanel && col.field && col.headerName)
             .map((col) => {
               return (
                 <li key={col.field}>

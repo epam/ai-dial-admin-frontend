@@ -2,8 +2,8 @@ import { FC, useCallback } from 'react';
 
 import { DialSwitch } from '@epam/ai-dial-ui-kit';
 
-import ConfigurationEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ConfigurationEndpointControl';
-import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
+import ConfigurationEndpointControl from '@/src/components/BaseControls/Endpoint/ConfigurationEndpointControl';
+import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, FeaturesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
@@ -24,7 +24,7 @@ const AppRunnerFeatures: FC<Props> = ({ runner, onChangeRunner }) => {
   );
 
   return (
-    <div className="flex flex-col gap-y-8 h-full lg:w-[35%]">
+    <div className="flex flex-col gap-y-8 h-full">
       <ConfigurationEndpointControl
         endpoint={runner['dial:applicationTypeConfigurationEndpoint']}
         onChange={(value?: string) => {

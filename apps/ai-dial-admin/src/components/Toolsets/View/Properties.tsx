@@ -3,7 +3,7 @@
 import { DialSwitch } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 
-import MaxRetryAttempts from '@/src/components/EntityMainProperties/BaseProperties/MaxRetryAttempts';
+import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
 import DeploymentProperties from '@/src/components/EntityMainProperties/Properties/DeploymentProperties';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import { useI18n } from '@/src/locales/client';

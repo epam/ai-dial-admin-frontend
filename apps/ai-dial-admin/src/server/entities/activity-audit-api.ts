@@ -4,7 +4,7 @@ import { DialActivity } from '@/src/models/activity-audit';
 import { ActivityAuditEntity } from '@/src/types/activity-audit';
 import { API } from '../api';
 import { BaseApi } from '../base-api';
-import { PageDto, SortDto, FilterDto } from '@/src/models/request';
+import { AuditPageData, SortDto, FilterDto } from '@/src/models/request';
 import { ActivityAuditRevision } from '@/src/components/ActivityAudit/models';
 import { ServerActionResponse } from '@/src/models/server-action';
 
@@ -19,7 +19,7 @@ export class ActivityAuditApi extends BaseApi {
     token: JWT | null,
     sorts: SortDto[],
     filters: FilterDto[],
-  ): Promise<PageDto<DialActivity> | null> {
+  ): Promise<AuditPageData<DialActivity> | null> {
     return this.post(
       ACTIVITIES_URL,
       {

@@ -1,7 +1,7 @@
 import { IconChevronDown, IconCircleCheck, IconExclamationCircle, IconLoader, IconX } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, ReactNode } from 'react';
-import { DialButton } from '@epam/ai-dial-ui-kit';
+import { DialIconButton } from '@epam/ai-dial-ui-kit';
 
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { NotificationConfig, NotificationIconColor, NotificationType } from '@/src/models/notification';
@@ -24,11 +24,11 @@ const Notification: FC<NotificationConfig> = ({ type, title, description, reques
           <i className={iconClassName}>{Icon}</i>
           <p className="small-text-semi truncate">{title}</p>
         </div>
-        <DialButton
+        <DialIconButton
           aria-label="close"
-          className="absolute right-0"
+          className="absolute right-0 w-auto h-auto p-0"
           onClick={onClose}
-          iconBefore={<IconX height={18} width={18} />}
+          icon={<IconX height={18} width={18} />}
         />
       </div>
       {description ? <p className="tiny text-secondary break-words whitespace-pre-wrap mt-2">{description}</p> : null}

@@ -4,11 +4,9 @@ import {
   IconFlask,
   IconFolders,
   IconHammer,
-  IconMessages,
   IconRocket,
   IconSettings2,
   IconShieldCog,
-  IconTools,
 } from '@tabler/icons-react';
 
 import Approvals from '@/public/images/icons/menu/approvals.svg';
@@ -99,21 +97,21 @@ export const MENU_CONFIGURATION = (
       ],
     },
     {
-      key: MenuI18nKey.MLOps,
+      key: MenuI18nKey.Deployments,
       descriptionKey: MenuI18nKey.MCPDescription,
-      icon: <IconTools width={iconSize} height={iconSize} />,
+      icon: <IconRocket width={iconSize} height={iconSize} />,
       items: [
         {
-          key: MenuI18nKey.MCPDeployments,
-          href: ApplicationRoute.McpDeployments,
+          key: MenuI18nKey.ModelServings,
+          href: ApplicationRoute.ModelServings,
         },
         {
-          key: MenuI18nKey.InterceptorDeployments,
-          href: ApplicationRoute.InterceptorDeployments,
+          key: MenuI18nKey.McpContainers,
+          href: ApplicationRoute.McpContainers,
         },
         {
-          key: MenuI18nKey.ModelDeployments,
-          href: ApplicationRoute.ModelDeployments,
+          key: MenuI18nKey.InterceptorContainers,
+          href: ApplicationRoute.InterceptorContainers,
         },
         {
           key: MenuI18nKey.Images,
@@ -130,12 +128,6 @@ export const MENU_CONFIGURATION = (
         { key: MenuI18nKey.Keys, href: ApplicationRoute.Keys },
         { key: MenuI18nKey.FoldersStorage, href: ApplicationRoute.FoldersStorage },
       ],
-    },
-    {
-      key: MenuI18nKey.Tools,
-      descriptionKey: MenuI18nKey.ToolsDescription,
-      icon: <IconTools width={iconSize} height={iconSize} />,
-      items: [],
     },
     {
       key: MenuI18nKey.Approvals,
@@ -161,22 +153,11 @@ export const MENU_CONFIGURATION = (
       ],
     },
     {
-      key: MenuI18nKey.Playground,
-      descriptionKey: MenuI18nKey.AccessManagementDescription,
-      icon: <IconMessages width={iconSize} height={iconSize} />,
-      items: [],
-    },
-    {
-      key: MenuI18nKey.Deployments,
-      descriptionKey: MenuI18nKey.DeploymentsDescription,
-      icon: <IconRocket width={iconSize} height={iconSize} />,
-      items: [],
-    },
-    {
       key: MenuI18nKey.Evaluation,
       descriptionKey: MenuI18nKey.EvaluationDescription,
       icon: <IconFlask width={iconSize} height={iconSize} />,
       items: [],
+      // items: [{ key: MenuI18nKey.TestSuits, href: ApplicationRoute.TestSuits }],
     },
     {
       key: MenuI18nKey.Audit,
@@ -200,7 +181,7 @@ export const MENU_CONFIGURATION = (
   ];
 
   if (!featureFlags.deploymentsEnabled) {
-    return config.filter((item) => item.key !== MenuI18nKey.MLOps);
+    return config.filter((item) => item.key !== MenuI18nKey.Deployments);
   }
 
   return config;

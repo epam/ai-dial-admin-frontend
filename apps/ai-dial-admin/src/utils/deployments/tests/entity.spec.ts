@@ -26,63 +26,63 @@ describe('entity utils', () => {
   const t = (key: string) => key;
 
   describe('getRouteByType', () => {
-    test('returns McpDeployments for MCP', () => {
-      expect(getRouteByType(IMAGE_TYPE.MCP)).toBe(ApplicationRoute.McpDeployments);
+    test('returns McpContainers for MCP', () => {
+      expect(getRouteByType(IMAGE_TYPE.MCP)).toBe(ApplicationRoute.McpContainers);
     });
-    test('returns InterceptorDeployments for INTERCEPTOR', () => {
-      expect(getRouteByType(IMAGE_TYPE.INTERCEPTOR)).toBe(ApplicationRoute.InterceptorDeployments);
+    test('returns InterceptorContainers for INTERCEPTOR', () => {
+      expect(getRouteByType(IMAGE_TYPE.INTERCEPTOR)).toBe(ApplicationRoute.InterceptorContainers);
     });
 
-    test('returns ModelDeployments for INTERCEPTOR', () => {
-      expect(getRouteByType('any' as any)).toBe(ApplicationRoute.ModelDeployments);
+    test('returns ModelServings for INTERCEPTOR', () => {
+      expect(getRouteByType('any' as any)).toBe(ApplicationRoute.ModelServings);
     });
   });
 
   describe('getTranslatedDeploymentType', () => {
-    test('returns EntitiesI18nKey.Serving for ModelDeployments', () => {
-      expect(getTranslatedDeploymentType(ApplicationRoute.ModelDeployments, (t) => t)).toBe(EntitiesI18nKey.Serving);
+    test('returns EntitiesI18nKey.Serving for ModelServings', () => {
+      expect(getTranslatedDeploymentType(ApplicationRoute.ModelServings, (t) => t)).toBe(EntitiesI18nKey.Serving);
     });
 
-    test('returns EntitiesI18nKey.Container for InterceptorDeployments', () => {
-      expect(getTranslatedDeploymentType(ApplicationRoute.InterceptorDeployments, (t) => t)).toBe(
+    test('returns EntitiesI18nKey.Container for InterceptorContainers', () => {
+      expect(getTranslatedDeploymentType(ApplicationRoute.InterceptorContainers, (t) => t)).toBe(
         EntitiesI18nKey.Container,
       );
     });
   });
 
   describe('getEntityRoute', () => {
-    test('returns Toolsets for McpDeployments', () => {
-      expect(getEntityRoute(ApplicationRoute.McpDeployments)).toBe(ApplicationRoute.Toolsets);
+    test('returns Toolsets for McpContainers', () => {
+      expect(getEntityRoute(ApplicationRoute.McpContainers)).toBe(ApplicationRoute.Toolsets);
     });
-    test('returns Interceptors for InterceptorDeployments', () => {
-      expect(getEntityRoute(ApplicationRoute.InterceptorDeployments)).toBe(ApplicationRoute.Interceptors);
+    test('returns Interceptors for InterceptorContainers', () => {
+      expect(getEntityRoute(ApplicationRoute.InterceptorContainers)).toBe(ApplicationRoute.Interceptors);
     });
     test('returns Models for other routes', () => {
-      expect(getEntityRoute(ApplicationRoute.ModelDeployments)).toBe(ApplicationRoute.Models);
+      expect(getEntityRoute(ApplicationRoute.ModelServings)).toBe(ApplicationRoute.Models);
     });
   });
 
   describe('getTranslatedType', () => {
-    test('returns MCP for McpDeployments', () => {
-      expect(getTranslatedType(ApplicationRoute.McpDeployments, t)).toBe(EntitiesI18nKey.MCP);
+    test('returns MCP for McpContainers', () => {
+      expect(getTranslatedType(ApplicationRoute.McpContainers, t)).toBe(EntitiesI18nKey.MCP);
     });
-    test('returns Interceptor for InterceptorDeployments', () => {
-      expect(getTranslatedType(ApplicationRoute.InterceptorDeployments, t)).toBe(EntitiesI18nKey.Interceptor);
+    test('returns Interceptor for InterceptorContainers', () => {
+      expect(getTranslatedType(ApplicationRoute.InterceptorContainers, t)).toBe(EntitiesI18nKey.Interceptor);
     });
     test('returns Model for other routes', () => {
-      expect(getTranslatedType(ApplicationRoute.ModelDeployments, t)).toBe(EntitiesI18nKey.Model);
+      expect(getTranslatedType(ApplicationRoute.ModelServings, t)).toBe(EntitiesI18nKey.Model);
     });
   });
 
   describe('getTranslatedEntity', () => {
-    test('returns Toolset for McpDeployments', () => {
-      expect(getTranslatedEntity(ApplicationRoute.McpDeployments, t)).toBe(EntitiesI18nKey.Toolset);
+    test('returns Toolset for McpContainers', () => {
+      expect(getTranslatedEntity(ApplicationRoute.McpContainers, t)).toBe(EntitiesI18nKey.Toolset);
     });
     test('returns Interceptor for Interceptors', () => {
-      expect(getTranslatedEntity(ApplicationRoute.InterceptorDeployments, t)).toBe(EntitiesI18nKey.Interceptor);
+      expect(getTranslatedEntity(ApplicationRoute.InterceptorContainers, t)).toBe(EntitiesI18nKey.Interceptor);
     });
     test('returns Model for other routes', () => {
-      expect(getTranslatedEntity(ApplicationRoute.ModelDeployments, t)).toBe(EntitiesI18nKey.Model);
+      expect(getTranslatedEntity(ApplicationRoute.ModelServings, t)).toBe(EntitiesI18nKey.Model);
     });
   });
 
@@ -95,38 +95,36 @@ describe('entity utils', () => {
   describe('getEntityId', () => {
     test('generates id based on container name and route', () => {
       const container = { displayName: 'MyContainer' } as any;
-      expect(getEntityId(container, ApplicationRoute.ModelDeployments, t)).toBe('mycontainer_entities.model');
+      expect(getEntityId(container, ApplicationRoute.ModelServings, t)).toBe('mycontainer_entities.model');
     });
   });
 
   describe('getEntityName', () => {
     test('generates name based on container name and route', () => {
       const container = { displayName: 'MyContainer' } as any;
-      expect(getEntityName(container, ApplicationRoute.ModelDeployments, t)).toBe(
-        `MyContainer ${EntitiesI18nKey.Model}`,
-      );
+      expect(getEntityName(container, ApplicationRoute.ModelServings, t)).toBe(`MyContainer ${EntitiesI18nKey.Model}`);
     });
   });
 
   describe('getEntityTemplate', () => {
     test('returns basic template', () => {
       const container = { displayName: 'MyContainer', name: '123' } as any;
-      const template = getEntityTemplate(ApplicationRoute.InterceptorDeployments, container, t);
+      const template = getEntityTemplate(ApplicationRoute.InterceptorContainers, container, t);
       expect(template.name).toBe('mycontainer_entities.interceptor');
       expect(template.source?.containerId).toBe('123');
     });
 
-    test('configures model specific fields for ModelDeployments', () => {
+    test('configures model specific fields for ModelServings', () => {
       (getEndpointPostfix as any).mockReturnValue('/chat');
       const container = { displayName: 'MyContainer', name: '123' } as any;
-      const template = getEntityTemplate(ApplicationRoute.ModelDeployments, container, t) as any;
+      const template = getEntityTemplate(ApplicationRoute.ModelServings, container, t) as any;
       expect(template.type).toBe(DialModelType.Chat);
       expect(template.source.completionEndpointPath).toBe('openai/v1/chat');
     });
 
-    test('configures transport for McpDeployments', () => {
+    test('configures transport for McpContainers', () => {
       const container = { displayName: 'MyContainer', name: '123' } as any;
-      const template = getEntityTemplate(ApplicationRoute.McpDeployments, container, t, CONTAINER_TRANSPORT.SSE) as any;
+      const template = getEntityTemplate(ApplicationRoute.McpContainers, container, t, CONTAINER_TRANSPORT.SSE) as any;
       expect(template.transport).toBe(ENTITY_TRANSPORT[CONTAINER_TRANSPORT.SSE]);
     });
   });
@@ -134,15 +132,15 @@ describe('entity utils', () => {
   describe('getAssetTemplate', () => {
     test('returns asset template', () => {
       const container = { displayName: 'MyContainer', url: 'http://url' } as any;
-      const template = getAssetTemplate(ApplicationRoute.McpDeployments, container, t, CONTAINER_TRANSPORT.SSE);
+      const template = getAssetTemplate(ApplicationRoute.McpContainers, container, t, CONTAINER_TRANSPORT.SSE);
       expect(template.name).toBe('mycontainer_entities.toolset');
       expect(template.endpoint).toBe('http://url');
       expect(template.transport).toBe(CONTAINER_TRANSPORT.SSE);
     });
 
-    test('configures transport for McpDeployments', () => {
+    test('configures transport for McpContainers', () => {
       const container = { displayName: 'MyContainer', url: 'http://url' } as any;
-      const template = getAssetTemplate(ApplicationRoute.McpDeployments, container, t, CONTAINER_TRANSPORT.SSE) as any;
+      const template = getAssetTemplate(ApplicationRoute.McpContainers, container, t, CONTAINER_TRANSPORT.SSE) as any;
       expect(template.transport).toBe(ENTITY_TRANSPORT[CONTAINER_TRANSPORT.SSE]);
     });
   });

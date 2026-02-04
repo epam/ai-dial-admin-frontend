@@ -1,6 +1,7 @@
 import { JSONEditorThemeConfig, EDITOR_THEMES, EditorOptions } from '@/src/types/editor';
 
 const DEFAULT_COLORS = {
+  focusBorder: '#00000000',
   'editor.foreground': '#F3F4F6',
   'editor.background': '#141A23',
   'editorCursor.foreground': '#F3F4F6',
@@ -78,9 +79,10 @@ const defaultOptions: EditorOptions = {
   smoothScrolling: true,
   overviewRulerLanes: 0,
   scrollbar: {
-    horizontal: 'hidden',
     verticalScrollbarSize: 6,
     verticalSliderSize: 6,
+    horizontalScrollbarSize: 6,
+    horizontalSliderSize: 6,
   },
 };
 

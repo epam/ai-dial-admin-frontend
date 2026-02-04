@@ -1,5 +1,4 @@
 'use client';
-
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
@@ -39,7 +38,7 @@ interface Props {
 
 const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset }) => {
   const t = useI18n();
-  const { closeSidebar } = useAppContext().sidebar;
+  const { sidebar, toggleSidebar } = useAppContext();
 
   const [responseView, setResponseView] = useState(ParamsView.FORM);
   const [requestBody, setRequestBody] = useState<Record<string, unknown>>({});
@@ -87,13 +86,21 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset }) => {
     setRequestBody(config);
   }, []);
 
+  const close = useCallback(() => {
+    if (sidebar.isMenuClosed) {
+      toggleSidebar();
+      sidebar.toggleIsMenuClosed?.();
+    }
+    sidebar.closeSidebar();
+  }, [sidebar, toggleSidebar]);
+
   useEffect(() => {
     setResponse({});
     setRequestBody({});
   }, [tool?.name]);
 
   return (
-    <div className="flex flex-col gap-y-8 w-[800px] h-full min-h-0">
+    <div className="flex flex-col gap-y-8 w-full h-full min-h-0">
       <div className="flex items-center justify-between">
         <h1 className="text-primary overflow-ellipsis">{t(ToolsetI18nKey.TryOut)}</h1>
         <div className="flex flex-row items-center gap-x-4">
@@ -102,7 +109,7 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset }) => {
             onClick={() => sendRequest()}
             disabled={isRequestSend}
           />
-          <DialCloseButton onClose={closeSidebar} />
+          <DialCloseButton onClose={close} />
         </div>
       </div>
       <div className="flex-1 flex flex-col gap-y-8 pb-2 min-h-0">
@@ -130,14 +137,18 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset }) => {
                 data={requestBody}
               />
             ) : (
-              <JsonEditor entity={requestBody} />
+              <JsonEditor entity={requestBody} options={{ stickyScroll: { enabled: false } }} />
             )}
           </div>
         </div>
         <Divider />
         <div className="flex-1 basis-0 min-h-0 flex flex-col">
           <h3 className="mb-4">{t(BasicI18nKey.Response)}</h3>
-          {isRequestSend ? <DialLoader /> : <JsonEditor entity={response} readonly={true} />}
+          {isRequestSend ? (
+            <DialLoader />
+          ) : (
+            <JsonEditor entity={response} options={{ stickyScroll: { enabled: false } }} readonly={true} />
+          )}
         </div>
       </div>
     </div>

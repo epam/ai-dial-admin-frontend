@@ -3,9 +3,9 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { checkIsUniqueDeploymentName } from '@/src/app/actions';
 import { RoutesForCheckingUniqueName } from '@/src/components/EntityListView/CreateEntity/constants';
-import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
-import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
-import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
+import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
+import IdControl from '@/src/components/BaseControls/Id/Id';
+import VersionControl from '@/src/components/BaseControls/Version';
 import { getDisplayNameError, getVersionError } from '@/src/components/EntityMainProperties/Properties/utils';
 import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -101,9 +101,8 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
     (displayVersion?: string) => {
       onValidateVersion({ displayVersion }, isVersionOptional);
       setEntity({ ...(clonedEntity as DialModel), displayVersion });
-      handleValidateEntityDisplayName(clonedEntity.displayName);
     },
-    [clonedEntity, handleValidateEntityDisplayName, isVersionOptional, onValidateVersion],
+    [clonedEntity, isVersionOptional, onValidateVersion],
   );
 
   const onChangeDisplayName = useCallback(
@@ -120,7 +119,8 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
     handleValidateEntityDisplayName(clonedEntity.displayName, true);
 
     dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!clonedEntity.name });
-  }, [clonedEntity.displayName, clonedEntity.name, dispatch, handleValidateEntityDisplayName]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onDuplicateClick = useCallback(async () => {
     const isUnique = RoutesForCheckingUniqueName.includes(view)

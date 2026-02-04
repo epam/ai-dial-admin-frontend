@@ -12,7 +12,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getListingData } from '@/src/utils/telemetry';
 import { IconColumns2 } from '@tabler/icons-react';
 
-import ResetFiltersButton from '@/src/components/EntityListView/HeaderButtons/ResetFiltersButton';
+import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
 import ListView from '@/src/components/ListView/ListView';
 
 interface Props {

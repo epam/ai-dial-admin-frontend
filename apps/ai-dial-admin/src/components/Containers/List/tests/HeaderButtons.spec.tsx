@@ -12,7 +12,7 @@ describe('HeaderButtons', () => {
 
   const defaultProps = {
     toggleColumnsPanel: mockToggleColumnsPanel,
-    route: ApplicationRoute.ModelDeployments,
+    route: ApplicationRoute.ModelServings,
     names: mockNames,
     gridApi: null,
   };

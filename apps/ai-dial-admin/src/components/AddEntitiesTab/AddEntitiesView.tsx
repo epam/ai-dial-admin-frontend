@@ -150,11 +150,7 @@ const AddEntitiesView: FC<Props> = ({
           <AddEntitiesGrid
             modalTitle={modalTitle || t(EntitiesI18nKey.AddEntities)}
             emptyTitle={emptyDataTitle || t(EntitiesI18nKey.NoEntities)}
-            columnDefs={columns.map((c) => {
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const { cellRenderer, ...definition } = c;
-              return definition;
-            })}
+            columnDefs={columns}
             isModalOpen={isModalOpen}
             entities={availableEntities}
             onClose={onCloseModal}

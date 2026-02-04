@@ -186,9 +186,6 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig | null>
       { name: 'Id', href: false },
     ],
   },
-  [ApplicationRoute.Forbidden]: {
-    segments: [{ name: 'Forbidden' }],
-  },
   [ApplicationRoute.InterceptorTemplates]: {
     segments: [
       {
@@ -198,29 +195,29 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig | null>
       { name: 'Id', href: false },
     ],
   },
-  [ApplicationRoute.InterceptorDeployments]: {
+  [ApplicationRoute.InterceptorContainers]: {
     segments: [
       {
-        name: 'InterceptorDeployments',
-        i18nKey: MenuI18nKey.InterceptorDeployments,
+        name: 'InterceptorContainers',
+        i18nKey: MenuI18nKey.InterceptorContainers,
       },
       { name: 'Id', href: false },
     ],
   },
-  [ApplicationRoute.ModelDeployments]: {
+  [ApplicationRoute.ModelServings]: {
     segments: [
       {
-        name: 'ModelDeployments',
-        i18nKey: MenuI18nKey.ModelDeployments,
+        name: 'ModelServings',
+        i18nKey: MenuI18nKey.ModelServings,
       },
       { name: 'Id', href: false },
     ],
   },
-  [ApplicationRoute.McpDeployments]: {
+  [ApplicationRoute.McpContainers]: {
     segments: [
       {
-        name: 'McpDeployments',
-        i18nKey: MenuI18nKey.MCPDeployments,
+        name: 'McpContainers',
+        i18nKey: MenuI18nKey.McpContainers,
       },
       { name: 'Id', href: false },
     ],
@@ -230,6 +227,41 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig | null>
       {
         name: 'Images',
         i18nKey: MenuI18nKey.Images,
+      },
+      { name: 'Id', href: false },
+    ],
+  },
+  [ApplicationRoute.Playground]: {
+    segments: [
+      {
+        name: 'Playground',
+        i18nKey: MenuI18nKey.Playground,
+      },
+    ],
+  },
+  [ApplicationRoute.TestSuites]: {
+    segments: [
+      {
+        name: 'TestSuites',
+        i18nKey: MenuI18nKey.TestSuites,
+      },
+      { name: 'Id', href: false },
+    ],
+  },
+  [ApplicationRoute.Runs]: {
+    segments: [
+      {
+        name: 'Runs',
+        i18nKey: MenuI18nKey.Runs,
+      },
+      { name: 'Id', href: false },
+    ],
+  },
+  [ApplicationRoute.Metrics]: {
+    segments: [
+      {
+        name: 'Metrics',
+        i18nKey: MenuI18nKey.Metrics,
       },
       { name: 'Id', href: false },
     ],

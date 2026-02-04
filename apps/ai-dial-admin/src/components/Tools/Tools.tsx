@@ -18,22 +18,18 @@ import ToolsFilter from '@/src/components/Tools/Filter/ToolsFilter';
 import { ToolFilter } from '@/src/components/Tools/type';
 import { getFilteredTools } from '@/src/components/Tools/utils';
 import { ButtonsI18nKey, EntitiesI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { Tool, Toolset } from '@/src/models/dial/toolset';
 import { getErrorNotification } from '@/src/utils/notification';
-import ToolComponent from './Tool/Tool';
-import ManageToolsModal from './ManageToolsModal/ManageToolsModal';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { IconPencilMinus } from '@tabler/icons-react';
+import ManageToolsModal from './ManageToolsModal/ManageToolsModal';
+import ToolComponent from './Tool/Tool';
 
-const filtersConfiguration = [
-  ToolFilter.Enabled,
-  ToolFilter.Disabled,
-  ToolFilter.AutoDetected,
-  ToolFilter.AddedManually,
-];
+const filtersConfiguration = [ToolFilter.AutoDetected, ToolFilter.AddedManually];
 
 interface Props {
   containerId?: string;
@@ -57,6 +53,7 @@ const Tools: FC<Props> = ({
   const t = useI18n();
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
   const { showNotification } = useNotification();
+  const { sidebar } = useAppContext();
   const [useAllTools, setUseAllTools] = useState(false);
 
   const [loading, setLoading] = useState<boolean>(false);
@@ -72,7 +69,7 @@ const Tools: FC<Props> = ({
 
   const manualAddedTools = useMemo(() => {
     return (selectedToolset?.allowedTools || []).reduce((acc, curr) => {
-      if (!tools?.some((tool) => tool.name === curr)) {
+      if (!tools?.some((tool) => tool.name === curr) && curr !== '') {
         acc.push({
           name: curr,
         });
@@ -163,6 +160,7 @@ const Tools: FC<Props> = ({
     debounceTimeout.current = setTimeout(() => {
       const allTools = [...(tools || []), ...manualAddedTools];
       const allowedTools = selectedToolset?.allowedTools?.filter((toolName) => toolName !== '') || [];
+      const allToolNames = allTools.map((tool) => tool.name);
 
       if (search.length) {
         const searchText = search.toLowerCase().trim();
@@ -177,14 +175,20 @@ const Tools: FC<Props> = ({
                   JSON.stringify(tool.annotations)?.toLowerCase().includes(searchText),
               )
             : getFilteredTools(
-                allowedTools,
+                useAllTools ? allToolNames : allowedTools,
                 useAllTools ? [...filtersConfiguration] : selectedFilters,
                 tools || [],
               ).filter((tool) => tool.name.toLowerCase().includes(searchText) && tool.name !== ''),
         );
       } else {
         setDisplayTools(
-          getFilteredTools(allowedTools, useAllTools ? [...filtersConfiguration] : selectedFilters, tools || []),
+          isMcpToolset
+            ? allTools
+            : getFilteredTools(
+                useAllTools ? allToolNames : allowedTools,
+                useAllTools ? [...filtersConfiguration] : selectedFilters,
+                tools || [],
+              ),
         );
       }
     }, 300);
@@ -195,27 +199,27 @@ const Tools: FC<Props> = ({
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, tools, manualAddedTools, selectedFilters]);
+  }, [search, tools, manualAddedTools, selectedFilters, useAllTools]);
 
   useEffect(() => {
-    const isAllToolsAllowed =
-      selectedToolset?.allowedTools &&
-      tools &&
-      tools.every((tool) => selectedToolset.allowedTools?.includes(tool.name));
-
-    if (selectedToolset?.allowedTools?.length === 0 || isAllToolsAllowed) {
+    if (originalToolset?.allowedTools?.length === 0) {
       setUseAllTools(true);
     } else {
       setUseAllTools(false);
     }
-  }, [selectedToolset, tools]);
+  }, [originalToolset]);
+
+  useEffect(() => {
+    return () => sidebar.closeSidebar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (loading) {
     return <DialLoader size={40} />;
   }
 
   return (
-    <div className="flex flex-col relative h-full">
+    <div className="flex flex-col relative h-full overflow-hidden">
       <div className="flex flex-row items-center mb-3">
         <h1 className="mr-4">
           {t(ToolsetI18nKey.Tools)}
@@ -231,7 +235,7 @@ const Tools: FC<Props> = ({
           />
         )}
       </div>
-      <div className="flex flex-row items-center mb-3 justify-between">
+      <div className="flex flex-row items-center mb-3 gap-x-4 justify-between">
         <div className="w-[480px]">
           <Search onChange={(search) => setSearch(search)} />
         </div>
@@ -257,28 +261,31 @@ const Tools: FC<Props> = ({
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col gap-6 overflow-y-auto min-h-0 mb-3">
-        {!displayTools?.length ? (
-          <div className="flex items-center justify-center h-full">
-            <DialNoDataContent title={t(EntitiesI18nKey.NoTools)} />
-          </div>
-        ) : (
-          <div className="flex flex-col gap-6">
-            {displayTools?.map((tool, index) => {
-              return (
-                <ToolComponent
-                  tool={tool}
-                  key={index}
-                  isAddedManual={!tools?.some((t) => t.name === tool.name)}
-                  isMcpToolset={isMcpToolset}
-                  isAssetToolset={isAssetToolset}
-                  toolSetName={(isAssetToolset ? (selectedToolset as AssetToolset)?.path : selectedToolset?.name) || ''}
-                  isEnable={useAllTools || selectedToolset?.allowedTools?.includes(tool.name)}
-                />
-              );
-            })}
-          </div>
-        )}
+      <div className="flex-1 min-h-0 mb-3">
+        <div className="flex flex-col gap-6 overflow-y-auto h-full">
+          {!displayTools?.length ? (
+            <div className="flex items-center justify-center h-full">
+              <DialNoDataContent title={t(EntitiesI18nKey.NoTools)} />
+            </div>
+          ) : (
+            <div className="flex flex-col gap-6">
+              {displayTools?.map((tool, index) => {
+                return (
+                  <ToolComponent
+                    tool={tool}
+                    key={index}
+                    isAddedManual={!tools?.some((t) => t.name === tool.name)}
+                    isMcpToolset={isMcpToolset}
+                    isAssetToolset={isAssetToolset}
+                    toolSetName={
+                      (isAssetToolset ? (selectedToolset as AssetToolset)?.path : selectedToolset?.name) || ''
+                    }
+                  />
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       {isNotSavedToolset && !readonly && (

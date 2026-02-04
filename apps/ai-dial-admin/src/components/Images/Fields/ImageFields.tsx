@@ -1,11 +1,19 @@
-import { FC } from 'react';
-import classNames from 'classnames';
+import { FC, useMemo, useState } from 'react';
 
 import { Image, ImageVersion } from '@/src/models/deployments/images';
 
 import BaseFields from '@/src/components/Images/Fields/BaseFields';
 import SourceFields from '@/src/components/Images/Fields/SourceFields';
 import TransportField from '@/src/components/Images/Fields/TransportField';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { FieldError } from '@/src/models/error';
+import { debounce } from 'lodash';
+import { getImageVersions } from '@/src/app/actions/deployments';
+import { getImageType } from '@/src/utils/deployments/images';
+import { getRouteByType } from '@/src/utils/deployments/entity';
+import { getVersionsPerName } from '@/src/components/Assets/utils';
+import { getSemanticVersionError } from '@/src/utils/deployments/validation';
+import { useI18n } from '@/src/locales/client';
 
 interface Props {
   image: Image;
@@ -15,21 +23,67 @@ interface Props {
 }
 
 const ImageFields: FC<Props> = ({ image, setImage, isModal, setImageVersions }) => {
+  const t = useI18n();
+  const { dispatch } = useSaveValidationContext();
+
+  const [versionsMap, setVersionsMap] = useState<Record<string, string[]>>({});
+  const [versionError, setVersionError] = useState<FieldError | null>(null);
+
+  const verifyVersion = useMemo(
+    () =>
+      debounce((updatedImage: Image) => {
+        if (updatedImage.name) {
+          getImageVersions(updatedImage.name, getImageType(getRouteByType(updatedImage.$type))).then(
+            ({ success, response }) => {
+              const data = response as ImageVersion[];
+              if (success && data.length > 0) {
+                if (setImageVersions) {
+                  setImageVersions(data as ImageVersion[]);
+                }
+                const versionMap = getVersionsPerName(data);
+                setVersionsMap(versionMap);
+                const error = getSemanticVersionError(versionMap, { name: updatedImage.name }, t, image.version);
+                setVersionError(error);
+                dispatch({
+                  type: ValidationActionType.SetField,
+                  field: 'version',
+                  isValid: !error,
+                });
+              } else {
+                setVersionsMap({});
+                setVersionError(null);
+                dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: true });
+              }
+            },
+          );
+        } else {
+          setVersionsMap({});
+          setVersionError(null);
+          dispatch({
+            type: ValidationActionType.SetField,
+            field: 'version',
+            isValid: true,
+          });
+        }
+      }, 500),
+    [dispatch, image.version, setImageVersions, t],
+  );
+
   return (
-    <div className="flex flex-col w-full h-full gap-8">
-      <div className={classNames('flex flex-col gap-4', !isModal && 'divide-y divide-primary gap-8')}>
-        <div>
-          <BaseFields image={image} setImage={setImage} isModal={isModal} setImageVersions={setImageVersions} />
-        </div>
-        <div className={classNames(!isModal && 'pt-8')}>
-          <SourceFields image={image} setImage={setImage} isModal={isModal} />
-        </div>
+    <div className="flex flex-col w-full h-full gap-y-8">
+      <div className="pb-8 border-b border-primary">
+        <BaseFields
+          image={image}
+          setImage={setImage}
+          isModal={isModal}
+          versionsMap={versionsMap}
+          versionError={versionError}
+          setVersionError={setVersionError}
+          verifyVersion={verifyVersion}
+        />
       </div>
-      {!isModal && (
-        <>
-          <TransportField image={image} setImage={setImage} />
-        </>
-      )}
+      <SourceFields image={image} setImage={setImage} isModal={isModal} verifyVersion={verifyVersion} />
+      {!isModal && <TransportField image={image} setImage={setImage} />}
     </div>
   );
 };

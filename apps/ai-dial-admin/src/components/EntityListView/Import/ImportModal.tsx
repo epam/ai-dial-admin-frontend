@@ -10,7 +10,7 @@ import {
   isLargeFile,
 } from '@/src/components/EntityListView/Import/utils';
 import { IMPORT_FILE_TYPES, IMPORT_RESOLUTIONS, IMPORT_STEPS } from '@/src/constants/import';
-import { APPLICATION_ZIP_TYPE } from '@/src/constants/request-headers';
+import { APPLICATION_ZIP_TYPES } from '@/src/constants/request-headers';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
@@ -125,7 +125,7 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, 
   const onChangeFile = useCallback(
     (files: File[]) => {
       if (fileType === FileType.ARCHIVE) {
-        if (files.length === 0 || files[0].type === APPLICATION_ZIP_TYPE) {
+        if (files.length === 0 || APPLICATION_ZIP_TYPES.includes(files[0].type)) {
           setZipFile(files[0]);
         }
       } else if (fileType === FileType.JSON) {

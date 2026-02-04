@@ -1,6 +1,6 @@
 import { FC, useCallback } from 'react';
 
-import { DialButton, DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
+import { DialEllipsisTooltip, DialIconButton } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
@@ -47,10 +47,10 @@ const AssetHeader: FC<Props> = ({ view, asset }) => {
       <LabelledText label={t(EntitiesI18nKey.FolderStorage)}>
         <div className="flex flex-row gap-1 items-center">
           <DialEllipsisTooltip text={removeTrailingSlash(asset.folderId)} />
-          <DialButton
+          <DialIconButton
+            className="p-0 h-auto w-auto text-secondary"
             onClick={() => openFolderStorageInNewTab(asset.folderId)}
-            className="text-secondary"
-            iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
+            icon={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
           />
         </div>
       </LabelledText>

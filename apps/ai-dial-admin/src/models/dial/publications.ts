@@ -12,6 +12,7 @@ export interface Publication {
   action: ActionType;
   folderId: string;
   rules?: DialRule[];
+  missingResources?: MissingResource[];
 }
 
 export interface PromptPublication extends Publication {
@@ -28,6 +29,12 @@ export interface ApplicationPublication extends Publication {
 
 export interface ToolsetPublication extends Publication {
   toolSetResources?: DialToolsetResource[];
+}
+
+export interface MissingResource {
+  message: string;
+  path: string;
+  resourceType: string;
 }
 
 export enum ActionType {

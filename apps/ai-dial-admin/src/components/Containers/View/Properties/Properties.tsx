@@ -19,7 +19,7 @@ import { createPortal } from 'react-dom';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import ContainerProperties from '@/src/components/Containers/Fields/ContainerProperties';
 import ServingProperties from '@/src/components/Containers/Fields/ServingProperties';
-import ChangeContainerImage from '@/src/components/Containers/Modals/ChangeContainerImage';
+import ContainerChangeImage from '@/src/components/Deployments/Modals/ContainerChangeImage';
 import StatusIndicator from '@/src/components/Deployments/Common/StatusIndicator/StatusIndicator';
 
 interface Props {
@@ -29,9 +29,10 @@ interface Props {
   route: ApplicationRoute;
   names: string[];
   originalName: string;
+  restarts: number;
 }
 
-const Properties: FC<Props> = ({ container, setContainer, image, route, names, originalName }) => {
+const Properties: FC<Props> = ({ container, setContainer, image, route, names, originalName, restarts }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -61,10 +62,9 @@ const Properties: FC<Props> = ({ container, setContainer, image, route, names, o
 
   return (
     <>
-      <div className="flex flex-col pt-3 divide-y divide-primary w-full">
-        <div className="flex gap-10 overflow-y-scroll">
+      <div className="flex flex-col h-full w-full">
+        <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-primary overflow-auto">
           <LabelledText label={t(EntityFieldsI18nKey.id)} text={originalName} tooltip={originalName} copyable={true} />
-          <DialLabelledText label={t(EntityFieldsI18nKey.type)} text={t(ContainersI18nKey.Container)} />
           {image && (
             <DialLabelledText
               label={t(ContainersI18nKey.ContainerImage, { type: getTranslatedType(route, t) })}
@@ -86,9 +86,10 @@ const Properties: FC<Props> = ({ container, setContainer, image, route, names, o
           {container.status === CONTAINER_STATUS.RUNNING && container.url && (
             <LabelledText label={t(BasicI18nKey.URL)} text={container.url} copyable />
           )}
+          {!!restarts && <LabelledText label={t(EntityFieldsI18nKey.Restarts)} text={`${restarts}`} />}
         </div>
-        <div className="mt-8 pt-8">
-          {route === ApplicationRoute.ModelDeployments ? (
+        <div className="flex-1 min-h-0 pt-8">
+          {route === ApplicationRoute.ModelServings ? (
             <ServingProperties container={container} setContainer={setContainer} names={names} route={route} />
           ) : (
             <ContainerProperties container={container} setContainer={setContainer} route={route} names={names} />
@@ -98,7 +99,7 @@ const Properties: FC<Props> = ({ container, setContainer, image, route, names, o
       {isModalOpen &&
         image &&
         createPortal(
-          <ChangeContainerImage
+          <ContainerChangeImage
             modalTitle={t(ContainersI18nKey.ContainerImage, { type: getTranslatedType(route, t) })}
             isModalOpen={isModalOpen}
             onClose={handleModalClose}

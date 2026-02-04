@@ -25,6 +25,13 @@ describe('getUrnForEntity', () => {
     expect(urn).toBe(`/${originalRoute}/${encodeURIComponent('modelId')}`);
   });
 
+  test('returns correct URN for TestSuites', () => {
+    const entity = { id: 'test' };
+    const urn = getUrnForEntity(ApplicationRoute.TestSuites, entity);
+    const originalRoute = ApplicationRoute.TestSuites.split('/')?.[1];
+    expect(urn).toBe(`/${originalRoute}/${encodeURIComponent('test')}`);
+  });
+
   test('returns correct URN for default case', () => {
     const entity = { name: 'DefaultName' };
     const urn = getUrnForEntity('OtherRoute' as any, entity);
@@ -78,8 +85,8 @@ describe('Entity list view :: getEntityPath', () => {
     expect(result).toEqual('requestName?path=path');
   });
 
-  test('Should return name field for McpDeployments', () => {
-    const result = getEntityPath(ApplicationRoute.McpDeployments, { ...data, name: 'test-id' });
+  test('Should return name field for McpContainers', () => {
+    const result = getEntityPath(ApplicationRoute.McpContainers, { ...data, name: 'test-id' });
     expect(result).toEqual('test-id');
   });
 
@@ -93,8 +100,8 @@ describe('Entity list view :: getEntityPath', () => {
     expect(result).toEqual('id');
   });
 
-  test('Should return id field for InterceptorDeployments', () => {
-    const res1 = getEntityPath(ApplicationRoute.InterceptorDeployments, { data, name: 'id' }, void 0);
+  test('Should return id field for InterceptorContainers', () => {
+    const res1 = getEntityPath(ApplicationRoute.InterceptorContainers, { data, name: 'id' }, void 0);
     expect(res1).toEqual('id');
   });
   test('Should return id field for Images', () => {

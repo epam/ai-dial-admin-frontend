@@ -2,7 +2,7 @@ import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
 import { adaptersApi, modelsApi } from '@/src/app/api/api';
-import AdapterView from '@/src/components/Adapter/View/AdapterView';
+import AdapterView from '@/src/components/Adapter/View/View';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialAdapter } from '@/src/models/dial/adapter';

@@ -6,7 +6,7 @@ import { EntitiesI18nKey } from '@/src/constants/i18n';
 
 describe('Events', () => {
   test('renders with empty events', () => {
-    render(<Events route={ApplicationRoute.McpDeployments} events={[]} />);
+    render(<Events route={ApplicationRoute.McpContainers} events={[]} />);
 
     expect(screen.getByText(EntitiesI18nKey.NoEvents)).toBeInTheDocument();
   });
@@ -22,7 +22,7 @@ describe('Events', () => {
       },
     ] as any;
 
-    render(<Events route={ApplicationRoute.McpDeployments} events={events} />);
+    render(<Events route={ApplicationRoute.McpContainers} events={events} />);
 
     expect(screen.getByRole('table')).toBeInTheDocument();
   });

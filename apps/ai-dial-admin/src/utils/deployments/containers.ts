@@ -1,6 +1,5 @@
 import { EnvironmentVariable } from '@/src/models/deployments/variables';
 import { Container, ContainerRedeploySnapshot, ResourcesDefaults } from '@/src/models/deployments/containers';
-import { ApplicationRoute } from '@/src/types/routes';
 import {
   CONTAINER_STATUS,
   CONTAINER_TRANSPORT,
@@ -9,6 +8,7 @@ import {
   MODEL_FORMAT,
   MODEL_SOURCE_TYPE,
 } from '@/src/types/deployments/containers';
+import { DEFAULT_SCALING } from '@/src/constants/deployments/containers';
 
 export const normalizeContainerPorts = (ports?: number[]): number[] => {
   return [...(ports ?? [])].slice().sort((a, b) => a - b);
@@ -37,23 +37,15 @@ export const getContainerRedeploySnapshot = (container: Container): ContainerRed
     containerGrpcPort: container.containerGrpcPort,
     envs: normalizeEnvironmentVariables(container.metadata?.envs),
     resources: normalizeResources(container.resources),
+    allowedDomains: container.allowedDomains,
   };
 };
 
-export const getContainerTemplate = (route: ApplicationRoute, defaults?: ResourcesDefaults): Container | null => {
-  switch (route) {
-    case ApplicationRoute.ModelDeployments:
-      return getTemplate(CONTAINER_TYPE.HF, defaults);
-    case ApplicationRoute.McpDeployments:
-      return getTemplate(CONTAINER_TYPE.MCP, defaults);
-    case ApplicationRoute.InterceptorDeployments:
-      return getTemplate(CONTAINER_TYPE.INTERCEPTOR, defaults);
-    default:
-      return null;
+export const getContainerTemplate = (type: CONTAINER_TYPE, defaults?: ResourcesDefaults): Container | null => {
+  if (!type) {
+    return null;
   }
-};
 
-const getTemplate = (type: CONTAINER_TYPE, defaults?: ResourcesDefaults): Container => {
   const template = {
     $type: type,
     imageDefinitionId: '',
@@ -100,8 +92,33 @@ const getTemplate = (type: CONTAINER_TYPE, defaults?: ResourcesDefaults): Contai
           'nvidia.com/gpu': defaults?.GPU_LIMIT || '1',
         },
       },
+      scaling: DEFAULT_SCALING,
+    };
+  }
+
+  if (type === CONTAINER_TYPE.NIM) {
+    return {
+      ...template,
+      source: {
+        $type: MODEL_SOURCE_TYPE.NIM,
+      },
+      resources: {
+        requests: {
+          ...template.resources?.requests,
+          'nvidia.com/gpu': defaults?.GPU_REQUEST || '1',
+        },
+        limits: {
+          ...template.resources?.limits,
+          'nvidia.com/gpu': defaults?.GPU_LIMIT || '1',
+        },
+      },
+      scaling: DEFAULT_SCALING,
     };
   }
 
   return template;
+};
+
+export const isEditDisabled = (container: Container): boolean => {
+  return container.status === CONTAINER_STATUS.PENDING || container.status === CONTAINER_STATUS.STOPPING;
 };

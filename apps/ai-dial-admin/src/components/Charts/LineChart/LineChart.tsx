@@ -30,7 +30,7 @@ const LineChart: FC<Props> = ({ getData, refreshTime }) => {
       if (response.success) {
         const data = getListingData(response.response as TelemetryData);
         setData(data);
-        setOptions(prepareChartData(data));
+        setOptions(prepareChartData(data, t));
       } else {
         setData(null);
       }
@@ -51,10 +51,10 @@ const LineChart: FC<Props> = ({ getData, refreshTime }) => {
     return () => {
       clearInterval(intervalId);
     };
-  }, [getData, refreshTime]);
+  }, [getData, t, refreshTime]);
 
   return (
-    <div className="flex flex-col w-full min-w-0 rounded-lg border border-primary p-4 md:mr-8 md:mb-0 mr-0 mb-8 min-h-[280px]">
+    <div className="flex flex-col flex-1 rounded-lg border border-primary p-4 min-h-[280px] min-w-[200px]">
       <h3 className="text-primary mb-4">{t(TelemetryI18nKey.SystemUsage)}</h3>
 
       {loading ? (

@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
-import { DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
 import { cloneDeep } from 'lodash';
 
 import { getCoreRole, removeRole, updateCoreRole, updateRole } from '@/src/app/[lang]/roles/actions';
@@ -42,6 +41,7 @@ import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getRoleTabs } from '@/src/utils/tabs/utils';
 import RoleProperties from './Properties';
+import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
 
 interface Props {
   originalRole: DialRole;
@@ -61,7 +61,7 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
 
-  const tabs: TabModel[] = getRoleTabs(t);
+  const tabs = getRoleTabs(t);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedRole, setSelectedRole] = useState(cloneDeep(originalRole));
@@ -98,13 +98,6 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
     entityRef.current = selectedRole;
   }, [selectedRole]);
 
-  const onChangeActiveTab = useCallback(
-    (tab: string) => {
-      setActiveTab(tab as EntityViewTab);
-    },
-    [setActiveTab],
-  );
-
   const onDiscard = useCallback(() => {
     if (isJsonEditorEnabled) {
       dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
@@ -114,6 +107,7 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
       // Force JSON Editor re-render to show originalEntity on discard.
       setKey((prevKey) => prevKey + 1);
     }
+    dispatch({ type: ValidationActionType.Reset });
     setIsSkipRefresh(false);
     setSelectedRole(originalRole);
   }, [isJsonEditorEnabled, originalRole, dispatch]);
@@ -194,6 +188,7 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
 
     req.then((res) => {
       if (res.success) {
+        dispatch({ type: ValidationActionType.Reset });
         setCoreRole(null);
         showNotification(
           getSuccessNotification(
@@ -206,7 +201,7 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
-  }, [selectedFormat, selectedRole, originalRole.name, etag, showNotification, t, router]);
+  }, [selectedFormat, selectedRole, originalRole.name, etag, dispatch, showNotification, t, router]);
 
   const onChangeRoleToken = useCallback(
     (value: number, data: DialRole, token: string) => {
@@ -258,11 +253,13 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={getViewHeaderClassName(isJsonEditorEnabled)}>
-        {!isJsonEditorEnabled && (
-          <div className="flex-1 min-w-0">
-            <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
-          </div>
-        )}
+        <Tabs
+          tabs={tabs}
+          isEditorEnabled={isJsonEditorEnabled}
+          activeTab={activeTab}
+          onChangeActiveTab={setActiveTab}
+        />
+
         <HeaderButtons
           view={ApplicationRoute.Roles}
           entity={selectedRole}
@@ -270,8 +267,8 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
           onDiscard={onDiscard}
           onSave={onSave}
           onRemove={removeRole}
-          isJsonEditorEnabled={isJsonEditorEnabled}
-          onToggleJsonEditor={onToggleJsonEditor}
+          isEditorEnabled={isJsonEditorEnabled}
+          onToggleEditor={onToggleJsonEditor}
           selectedFormat={selectedFormat}
           onChangeSelectedFormat={setSelectedFormat}
         />

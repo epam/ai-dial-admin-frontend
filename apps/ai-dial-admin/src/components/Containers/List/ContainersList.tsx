@@ -27,8 +27,8 @@ import { getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/depl
 import { IMAGE_BUILD_POLL_INTERVAL } from '@/src/constants/deployments/images';
 import ListView from '@/src/components/ListView/ListView';
 import HeaderButtons from '@/src/components/Containers/List/HeaderButtons';
-import Duplicate from '@/src/components/Deployments/Modals/Duplicate';
-import Delete from '@/src/components/Deployments/Modals/Delete';
+import ContainerDuplicate from '@/src/components/Deployments/Modals/ContainerDuplicate';
+import EntityDeleteModal from '@/src/components/Deployments/Modals/EntityDelete';
 import {
   getDeleteOperation,
   getDuplicateOperation,
@@ -264,7 +264,6 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
         columnDefs={columnDefs}
         additionalGridOptions={gridOptions}
         title={t(ContainersI18nKey.ContainersListTitle, {
-          count: containersList.length,
           type: getTranslatedType(route, t),
           entityType: getTranslatedDeploymentType(route, t),
         })}
@@ -288,7 +287,7 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
         modalType === ModalType.duplicate &&
         currentContainer &&
         createPortal(
-          <Duplicate
+          <ContainerDuplicate
             title={t(ContainersI18nKey.DuplicateModalTitle, {
               type: getTranslatedType(route, t),
               entityType: getTranslatedDeploymentType(route, t),
@@ -305,7 +304,7 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
         modalType === ModalType.delete &&
         currentContainer &&
         createPortal(
-          <Delete
+          <EntityDeleteModal
             title={t(ContainersI18nKey.DeleteModalTitle, {
               type: getTranslatedType(route, t),
               entityType: getTranslatedDeploymentType(route, t),

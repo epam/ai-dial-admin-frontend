@@ -105,7 +105,7 @@ describe('Constants :: grid columns', () => {
 
   test('CONTAINERS_COLUMNS returns expected columns', () => {
     const t = (s: string) => s;
-    const cols1 = CONTAINERS_COLUMNS(t, 'type', ApplicationRoute.ModelDeployments);
+    const cols1 = CONTAINERS_COLUMNS(t, 'type', ApplicationRoute.ModelServings);
     expect(Array.isArray(cols1)).toBe(true);
     expect(cols1.some((c) => c.field === 'name')).toBe(true);
     expect(cols1.some((c) => c.field === 'description')).toBe(true);

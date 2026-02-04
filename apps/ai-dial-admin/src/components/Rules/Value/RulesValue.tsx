@@ -27,12 +27,8 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
   const functionItems = getOperationItems(t);
   const attributeItems = getAttributeItems(t, attributes);
 
-  const inputClassName = classNames('flex-shrink-0', errorText && 'pb-[18px]');
-  const iconClassName = classNames(
-    'cursor-pointer',
-    index === 0 ? 'mt-[24px]' : 'flex items-center',
-    errorText && 'pb-[18px]',
-  );
+  const inputClassName = classNames('flex-shrink-0 pb-[18px]');
+  const iconClassName = classNames('cursor-pointer mb-[18px]', index === 0 ? 'mt-[24px]' : 'flex items-center');
 
   const setError = useCallback(
     (value: string | string[]) => {
@@ -65,18 +61,16 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
     (regex?: string) => {
       const newRule = { ...rule, targets: regex ? [regex] : [] };
       onChangeValue(newRule);
-      setError(regex || '');
     },
-    [onChangeValue, rule, setError],
+    [onChangeValue, rule],
   );
 
   const onChangeTags = useCallback(
     (targets: string[]) => {
       const newRule = { ...rule, targets };
       onChangeValue(newRule);
-      setError(targets);
     },
-    [onChangeValue, rule, setError],
+    [onChangeValue, rule],
   );
 
   useEffect(() => {
@@ -93,6 +87,11 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
     }
     return () => observer.disconnect();
   }, [setLastValueHeight]);
+
+  useEffect(() => {
+    setError(rule.targets);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rule.targets]);
 
   return (
     <>
@@ -124,7 +123,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
             onChange={(fun) => onChangeFunction(fun as string)}
           />
         </div>
-        <div className="w-full">
+        <div className="flex-1">
           {rule.function === RuleFunction.REGEX ? (
             <DialTextInputField
               elementId={`upstream-endpoints-${index}`}
@@ -141,6 +140,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
               elementId="rule-values"
               fieldTitle={isFirstLine ? t(BasicI18nKey.Value) : ''}
               placeholder={t(FoldersI18nKey.ValuePlaceholder)}
+              captionDescription={t(FoldersI18nKey.ValueCaption)}
               initialTags={rule.targets}
               onChange={onChangeTags}
               errorText={errorText}

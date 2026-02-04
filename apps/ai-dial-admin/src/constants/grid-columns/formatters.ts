@@ -1,7 +1,7 @@
 import Big from 'big.js';
 
 import { ALL_ATTACHMENTS } from '@/src/constants/dial-base-entity';
-import { AttachmentsI18nKey, EntitiesI18nKey, MenuI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import { AttachmentsI18nKey, BasicI18nKey, EntitiesI18nKey, MenuI18nKey, SourceI18nKey } from '@/src/constants/i18n';
 import { ActivityAuditResourceType } from '@/src/types/activity-audit';
 import { formatNumberByDelimiter } from '@/src/utils/formatting/number-formatting';
 import { SOURCE_FIELD, SOURCE_TYPE } from '@/src/components/SourceField/types';
@@ -56,16 +56,21 @@ export const sourceTypeFormatter = (value: string, t: (key: string) => string, v
   } else if (value === SOURCE_TYPE.CONTAINER) {
     switch (view) {
       case ApplicationRoute.Models:
-        return t(SourceI18nKey.ModelDeployment);
+        return t(SourceI18nKey.ModelServing);
       case ApplicationRoute.Interceptors:
-        return t(SourceI18nKey.InterceptorDeployment);
+        return t(SourceI18nKey.InterceptorContainer);
       case ApplicationRoute.Toolsets:
-        return t(SourceI18nKey.MCPDeployment);
+        return t(SourceI18nKey.McpContainer);
       default:
         return value;
     }
   } else if (value === SOURCE_TYPE.ENDPOINTS) {
-    return t(SourceI18nKey.Endpoint);
+    switch (view) {
+      case ApplicationRoute.Models:
+        return t(SourceI18nKey.ExternalEndpoint);
+      default:
+        return t(SourceI18nKey.Endpoint);
+    }
   } else if (value === SOURCE_TYPE.RUNNER) {
     return t(SourceI18nKey.InterceptorTemplate);
   } else {
@@ -88,4 +93,8 @@ export const sourceValueFormatter = (data?: { source: SOURCE_FIELD; endpoint?: s
   } else {
     return value;
   }
+};
+
+export const formatRequired = (value: string, t: (stringToTranslate: string) => string) => {
+  return value ? t(BasicI18nKey.Yes) : t(BasicI18nKey.No);
 };

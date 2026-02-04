@@ -1,8 +1,8 @@
-import React, { FC } from 'react';
-import classNames from 'classnames';
+import { FC } from 'react';
 
 import { ApplicationRoute } from '@/src/types/routes';
 import { Container } from '@/src/models/deployments/containers';
+import { MODEL_SOURCE_TYPE } from '@/src/types/deployments/containers';
 
 import BaseFields from '@/src/components/Containers/Fields/BaseFields/BaseFields';
 import ModelSourceFields from '@/src/components/Containers/Fields/ModelSourceFields/ModelSourceFields';
@@ -10,6 +10,7 @@ import EnvVariables from '@/src/components/Containers/Fields/EnvVariables/EnvVar
 import ResourcesFields from '@/src/components/Containers/Fields/Resources/ResourcesFields';
 import EndpointConfiguration from '@/src/components/Containers/Fields/EndpointConfiguration/EndpointConfiguration';
 import Configuration from '@/src/components/Containers/Fields/Configuration/Configuration';
+import Autoscaling from '@/src/components/Containers/Fields/AutoScale/AutoScale';
 
 interface Props {
   container: Container;
@@ -20,20 +21,21 @@ interface Props {
 }
 
 const ServingProperties: FC<Props> = ({ container, setContainer, names, isModal, route }) => {
-  const containerClassNames = classNames('flex flex-1 flex-col gap-8', !isModal && 'lg:w-[35%]');
-
   return (
-    <div className="flex flex-col gap-8">
-      <div className={containerClassNames}>
-        <BaseFields container={container} setContainer={setContainer} names={names} isModal={isModal} />
-        <ModelSourceFields container={container} setContainer={setContainer} />
-      </div>
+    <div className="flex flex-col gap-y-8">
+      <BaseFields container={container} setContainer={setContainer} names={names} isModal={isModal} />
+      <ModelSourceFields container={container} setContainer={setContainer} isModal={isModal} />
       {!isModal && (
         <div className="flex flex-col gap-y-8">
           <EndpointConfiguration container={container} setContainer={setContainer} route={route} />
+          {container.source?.$type === MODEL_SOURCE_TYPE.HF && (
+            <Autoscaling container={container} setContainer={setContainer} />
+          )}
           <EnvVariables container={container} setContainer={setContainer} />
           <ResourcesFields container={container} setContainer={setContainer} route={route} />
-          <Configuration container={container} setContainer={setContainer} />
+          {container.source?.$type === MODEL_SOURCE_TYPE.HF && (
+            <Configuration container={container} setContainer={setContainer} />
+          )}
         </div>
       )}
     </div>

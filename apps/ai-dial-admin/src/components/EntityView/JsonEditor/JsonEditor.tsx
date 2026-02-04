@@ -2,6 +2,8 @@
 
 import { Dispatch, SetStateAction, useCallback, useEffect, useState } from 'react';
 
+import { editor } from 'monaco-editor';
+
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import { clearResolvedErrors } from '@/src/components/EntityView/JsonEditor/utils';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -13,9 +15,16 @@ interface Props<T> {
   setSelectedEntity?: Dispatch<SetStateAction<T>>;
   setIsChanged?: Dispatch<SetStateAction<boolean>>;
   readonly?: boolean;
+  options?: editor.IStandaloneEditorConstructionOptions;
 }
 
-const EntityJsonEditor = <T extends object>({ entity, setSelectedEntity, setIsChanged, readonly }: Props<T>) => {
+const EntityJsonEditor = <T extends object>({
+  entity,
+  setSelectedEntity,
+  setIsChanged,
+  readonly,
+  options,
+}: Props<T>) => {
   const { dispatch, jsonErrorNotifications } = useSaveValidationContext();
   const { removeNotification } = useNotification();
   const [entityModel, setEntityModel] = useState<string>('');
@@ -52,7 +61,7 @@ const EntityJsonEditor = <T extends object>({ entity, setSelectedEntity, setIsCh
     (errors?: JSONEditorError[]) => {
       // 768 - validation $schema field. $schema uses in App Runner and it'e not real JSON scheme
       const filteredErrors = errors?.filter((error) => error.code !== '768');
-      clearResolvedErrors({ errorNotifications: jsonErrorNotifications, errors: filteredErrors, removeNotification });
+      clearResolvedErrors(jsonErrorNotifications, removeNotification, filteredErrors);
       setJsonErrors?.(filteredErrors ?? []);
     },
     [setJsonErrors, jsonErrorNotifications, removeNotification],
@@ -67,7 +76,10 @@ const EntityJsonEditor = <T extends object>({ entity, setSelectedEntity, setIsCh
       value={entityModel}
       onChange={onChangeJSON}
       onValidateJSON={onValidateJSON}
-      options={readonly ? { readOnly: true } : void 0}
+      options={{
+        ...(options ?? {}),
+        ...(readonly ? { readOnly: true } : {}),
+      }}
     />
   );
 };

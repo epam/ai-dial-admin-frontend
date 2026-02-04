@@ -1,6 +1,5 @@
-import { describe, expect, test, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { getContainerRedeploySnapshot, getContainerTemplate, normalizeEnvironmentVariables } from '../containers';
-import { ApplicationRoute } from '@/src/types/routes';
 import { CONTAINER_STATUS, CONTAINER_TRANSPORT, CONTAINER_TYPE } from '@/src/types/deployments/containers';
 import { Container } from '@/src/models/deployments/containers';
 import { MOUNT_TYPE, VALUE_TYPE } from '@/src/types/deployments/variables';
@@ -14,25 +13,21 @@ describe('containers utils', () => {
   });
 
   describe('getContainerTemplate', () => {
-    test('returns template for ModelDeployments', () => {
-      const template = getContainerTemplate(ApplicationRoute.ModelDeployments);
+    test('returns template for ModelServings', () => {
+      const template = getContainerTemplate(CONTAINER_TYPE.HF);
       expect(template?.$type).toBe(CONTAINER_TYPE.HF);
       expect(template?.resources?.requests?.['nvidia.com/gpu']).toBe('1');
     });
 
-    test('returns template for McpDeployments', () => {
-      const template = getContainerTemplate(ApplicationRoute.McpDeployments);
+    test('returns template for McpContainers', () => {
+      const template = getContainerTemplate(CONTAINER_TYPE.MCP);
       expect(template?.$type).toBe(CONTAINER_TYPE.MCP);
       expect(template?.transport).toBe(CONTAINER_TRANSPORT.HTTP);
     });
 
     test('returns template for Interceptors', () => {
-      const template = getContainerTemplate(ApplicationRoute.InterceptorDeployments);
+      const template = getContainerTemplate(CONTAINER_TYPE.INTERCEPTOR);
       expect(template?.$type).toBe(CONTAINER_TYPE.INTERCEPTOR);
-    });
-
-    test('returns null for unknown route', () => {
-      expect(getContainerTemplate('unknown' as ApplicationRoute)).toBeNull();
     });
 
     test('uses defaults if provided', () => {
@@ -44,7 +39,7 @@ describe('containers utils', () => {
         GPU_REQUEST: '2',
         GPU_LIMIT: '2',
       };
-      const template = getContainerTemplate(ApplicationRoute.ModelDeployments, defaults);
+      const template = getContainerTemplate(CONTAINER_TYPE.HF, defaults);
       expect(template?.resources?.requests?.cpu).toBe('2');
       expect(template?.resources?.requests?.memory).toBe(`${4096 * 1024 * 1024}`);
     });

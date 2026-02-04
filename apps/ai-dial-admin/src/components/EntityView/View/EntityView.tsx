@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialTabs } from '@epam/ai-dial-ui-kit';
 import { cloneDeep } from 'lodash';
 
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
@@ -38,6 +37,7 @@ import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
 import ViewContent from './Content/ViewContent';
 import { getViewHeaderClassName } from '@/src/utils/entities/view';
 import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
+import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
 
 interface Props {
   view: ApplicationRoute;
@@ -157,21 +157,19 @@ const EntityView: FC<Props> = ({
   }, [handleMessage]);
 
   const onChangeActiveTab = useCallback(
-    (tab: string) => {
-      if (tab !== activeTab) {
-        if (tab === EntityViewTab.Parameters && isChanged && view === ApplicationRoute.Applications) {
-          setNextTab(tab);
-          handleModalOpen(ModalType.entity);
-        } else if (
-          activeTab === EntityViewTab.Parameters &&
-          (isIframeChanged || isChanged) &&
-          (view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications)
-        ) {
-          setNextTab(tab);
-          handleModalOpen(ModalType.parameters);
-        } else {
-          setActiveTab(tab as EntityViewTab);
-        }
+    (tab: EntityViewTab) => {
+      if (tab === EntityViewTab.Parameters && isChanged && view === ApplicationRoute.Applications) {
+        setNextTab(tab);
+        handleModalOpen(ModalType.entity);
+      } else if (
+        activeTab === EntityViewTab.Parameters &&
+        (isIframeChanged || isChanged) &&
+        (view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications)
+      ) {
+        setNextTab(tab);
+        handleModalOpen(ModalType.parameters);
+      } else {
+        setActiveTab(tab);
       }
     },
     [activeTab, handleModalOpen, isChanged, isIframeChanged, view],
@@ -304,11 +302,13 @@ const EntityView: FC<Props> = ({
     <>
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
         <div className={getViewHeaderClassName(isJsonEditorEnabled)}>
-          {!isJsonEditorEnabled && (
-            <div className="flex-1 min-w-0 mr-3">
-              <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
-            </div>
-          )}
+          <Tabs
+            tabs={tabs}
+            isEditorEnabled={isJsonEditorEnabled}
+            activeTab={activeTab}
+            onChangeActiveTab={onChangeActiveTab}
+          />
+
           <HeaderButtons
             view={view}
             activeTab={activeTab}
@@ -317,8 +317,8 @@ const EntityView: FC<Props> = ({
             onSave={onTryToSave}
             onDiscard={onDiscard}
             onRemove={removeEntity}
-            isJsonEditorEnabled={isJsonEditorEnabled}
-            onToggleJsonEditor={onToggleJsonEditor}
+            isEditorEnabled={isJsonEditorEnabled}
+            onToggleEditor={onToggleJsonEditor}
             selectedFormat={selectedFormat}
             onChangeSelectedFormat={setSelectedFormat}
             etag={etag}

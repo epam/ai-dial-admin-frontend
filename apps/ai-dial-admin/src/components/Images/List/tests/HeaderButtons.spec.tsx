@@ -7,7 +7,7 @@ import { ButtonsI18nKey } from '@/src/constants/i18n';
 
 describe('HeaderButtons', () => {
   test('root component renders', () => {
-    render(<HeaderButtons route={ApplicationRoute.McpDeployments} toggleColumnsPanel={vi.fn()} gridApi={null} />);
+    render(<HeaderButtons route={ApplicationRoute.McpContainers} toggleColumnsPanel={vi.fn()} gridApi={null} />);
 
     expect(screen.getByText(ButtonsI18nKey.Columns)).toBeInTheDocument();
   });

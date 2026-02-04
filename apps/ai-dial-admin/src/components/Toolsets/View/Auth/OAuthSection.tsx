@@ -3,7 +3,7 @@ import { FC } from 'react';
 import { DialPasswordInputField, DialSelectField, DialTextInputField, SelectOption } from '@epam/ai-dial-ui-kit';
 
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
-import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
+import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ToolsetAuthSettings, ToolsetCodeChallengeMethod } from '@/src/models/dial/toolset';
@@ -32,32 +32,19 @@ const OAuthSection: FC<Props> = ({ disabled, authSettings, onChange }) => {
 
   return (
     <div className="flex flex-col pl-[26px]">
-      <div className="flex flex-row gap-x-4">
-        <DialSelectField
-          containerClassName="w-[192px]"
-          elementId="type"
-          disabled={disabled}
-          fieldTitle={t(ToolsetI18nKey.ClientRegistrationType)}
-          value={AuthType.EXISTING}
-          options={types}
-          onChange={(type) => {
-            onChange?.({
-              ...(authSettings || {}),
-              clientId: type === AuthType.EXISTING ? '' : undefined,
-            } as ToolsetAuthSettings);
-          }}
-        />
-        <div className="flex-1 min-w-0">
-          <DialTextInputField
-            elementId="redirectUri"
-            disabled={disabled}
-            fieldTitle={t(EntityFieldsI18nKey.redirectUri)}
-            value={authSettings?.redirectUri || ''}
-            placeholder={t(EntityPlaceholdersI18nKey.RedirectUri)}
-            onChange={(redirectUri) => onChange?.({ ...(authSettings || {}), redirectUri } as ToolsetAuthSettings)}
-          />
-        </div>
-      </div>
+      <DialSelectField
+        elementId="type"
+        disabled={disabled}
+        fieldTitle={t(ToolsetI18nKey.ClientRegistrationType)}
+        value={AuthType.EXISTING}
+        options={types}
+        onChange={(type) => {
+          onChange?.({
+            ...(authSettings || {}),
+            clientId: type === AuthType.EXISTING ? '' : undefined,
+          } as ToolsetAuthSettings);
+        }}
+      />
 
       <div className="flex flex-col gap-y-3 mt-3 w-full">
         <DialTextInputField
@@ -90,6 +77,7 @@ const OAuthSection: FC<Props> = ({ disabled, authSettings, onChange }) => {
         />
         <EndpointControl
           disabled={disabled}
+          required={true}
           id="authEndpoint"
           fieldTitle={t(EntityFieldsI18nKey.authorizationEndpoint)}
           endpoint={authSettings?.authorizationEndpoint || ''}

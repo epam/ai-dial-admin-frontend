@@ -6,7 +6,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 
 describe('ExecutionLog', () => {
   test('renders with empty logs', () => {
-    render(<ExecutionLog containerId="" route={ApplicationRoute.McpDeployments} />);
+    render(<ExecutionLog containerId="" pods={[]} route={ApplicationRoute.McpContainers} />);
 
     expect(screen.getByText(EntitiesI18nKey.NoContainerLogs)).toBeInTheDocument();
   });

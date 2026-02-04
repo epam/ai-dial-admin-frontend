@@ -22,13 +22,13 @@ describe('DependenciesList', () => {
   ];
 
   test('renders grid with containers', () => {
-    render(<DependenciesList containerList={mockContainers} route={ApplicationRoute.ModelDeployments} />);
+    render(<DependenciesList containerList={mockContainers} route={ApplicationRoute.ModelServings} />);
 
     expect(screen.getByRole('table')).toBeInTheDocument();
   });
 
   test('renders with empty list', () => {
-    render(<DependenciesList containerList={[]} route={ApplicationRoute.ModelDeployments} />);
+    render(<DependenciesList containerList={[]} route={ApplicationRoute.ModelServings} />);
 
     expect(screen.getByRole('table')).toBeInTheDocument();
   });

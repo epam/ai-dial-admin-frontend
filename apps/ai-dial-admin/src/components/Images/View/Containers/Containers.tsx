@@ -1,25 +1,27 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { createPortal } from 'react-dom';
+
 import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
-import { useI18n } from '@/src/locales/client';
-import { useNotification } from '@/src/context/NotificationContext';
-import { useRouter } from 'next/navigation';
 import { Container } from '@/src/models/deployments/containers';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
+import { ButtonsI18nKey, ContainersI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
+import { useNotification } from '@/src/context/NotificationContext';
+import { useRouter } from 'next/navigation';
 import { getContainer, getImageContainers, updateContainersImageId } from '@/src/app/actions/deployments';
 import { getErrorNotification } from '@/src/utils/notification';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
-import ListView from '@/src/components/ListView/ListView';
-import { ButtonsI18nKey, ContainersI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
-import { createPortal } from 'react-dom';
-import AddContainerToImage from '@/src/components/Images/Modals/AddContainerToImage';
 import { getRouteByType, getTranslatedType } from '@/src/utils/deployments/entity';
 import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { IMAGE_DEPENDENCIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { IMAGE_BUILD_POLL_INTERVAL } from '@/src/constants/deployments/images';
+import { useI18n } from '@/src/locales/client';
+
+import ListView from '@/src/components/ListView/ListView';
+import ImageAddContainer from '@/src/components/Deployments/Modals/ImageAddContainer';
 
 interface Props {
   image: Image;
@@ -130,7 +132,7 @@ const Containers: FC<Props> = ({ image, route, versions }) => {
       </ListView>
       {isModalOpen &&
         createPortal(
-          <AddContainerToImage
+          <ImageAddContainer
             isModalOpen={isModalOpen}
             onClose={handleModalClose}
             onApply={updateImageId}

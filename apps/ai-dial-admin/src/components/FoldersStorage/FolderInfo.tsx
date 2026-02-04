@@ -76,8 +76,8 @@ const FolderInfo: FC<Props> = ({ isReadonly }) => {
       <FolderInfoHeader
         isChanged={isChanged}
         title={currentFolder?.name as string}
-        save={onSave}
-        discard={onDiscard}
+        onSave={onSave}
+        onDiscard={onDiscard}
         isSaveDisable={isSaveDisable}
       />
       <RulesList rulesMap={editableRules} onChange={onChangeRules} isReadonly={isReadonly} />

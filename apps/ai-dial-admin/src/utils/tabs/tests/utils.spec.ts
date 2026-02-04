@@ -7,7 +7,6 @@ import {
   appRouteTab,
   attachmentsTab,
   auditTab,
-  buildLogTab,
   conversationsTab,
   dependenciesTab,
   deploymentsToolsTab,
@@ -16,6 +15,7 @@ import {
   executionLogTab,
   featuresTab,
   filesTab,
+  firewallTab,
   getAdapterTabs,
   getAppRunnerTabs,
   getAuditTabs,
@@ -33,6 +33,7 @@ import {
   getViewTabs,
   globalInterceptorsTab,
   interceptorsTab,
+  installationLogTab,
   keysTab,
   modelsTab,
   parameterSchemaTab,
@@ -44,6 +45,10 @@ import {
   rolesTab,
   toolsTab,
   tracesTab,
+  getTestSuiteTabs,
+  testCasesTab,
+  runsTab,
+  trendsTab,
 } from '../utils';
 
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
@@ -201,15 +206,17 @@ describe('Entities :: tabs', () => {
 
     expect(getDeploymentsViewTabs(ApplicationRoute.Images, t, status)).toEqual([
       propertiesTab(t),
-      buildLogTab(t, status),
+      firewallTab(t),
       relatedContainersTab(t, status),
+      installationLogTab(t, status),
     ]);
   });
   test('returns correct tabs for deployment mcp containers', () => {
     const status = CONTAINER_STATUS.RUNNING;
 
-    expect(getDeploymentsViewTabs(ApplicationRoute.McpDeployments, t, status)).toEqual([
+    expect(getDeploymentsViewTabs(ApplicationRoute.McpContainers, t, status)).toEqual([
       propertiesTab(t),
+      firewallTab(t),
       deploymentsToolsTab(t, status),
       resourcesTab(t, status),
       promptsTab(t, status),
@@ -218,11 +225,16 @@ describe('Entities :: tabs', () => {
     ]);
   });
 
-  test('returns correct tabs for deployment mcp containers', () => {
+  test('returns correct tabs for test suite', () => {
+    expect(getTestSuiteTabs(t)).toEqual([propertiesTab(t), testCasesTab(t), runsTab(t), trendsTab(t)]);
+  });
+
+  test('returns correct tabs for model containers', () => {
     const status = CONTAINER_STATUS.RUNNING;
 
-    expect(getDeploymentsViewTabs(ApplicationRoute.ModelDeployments, t, status)).toEqual([
+    expect(getDeploymentsViewTabs(ApplicationRoute.ModelServings, t, status)).toEqual([
       propertiesTab(t),
+      firewallTab(t),
       executionLogTab(t),
       eventsTab(t),
     ]);

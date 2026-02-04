@@ -5,7 +5,7 @@ import { createInterceptor, removeInterceptor } from '@/src/app/[lang]/intercept
 import {
   AUTHOR_COLUMN,
   SOURCE_FIELD_COLUMNS,
-  INTERCEPTOR_STATUS_COLUMN,
+  BASE_STATUS_COLUMN,
   SIMPLE_ENTITY_COLUMNS_WITH_TOPICS,
 } from '@/src/constants/grid-columns/grid-columns';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
@@ -24,7 +24,7 @@ const InterceptorsList: FC<Props> = ({ data }) => {
   const columns = useMemo(() => {
     return [
       ...SIMPLE_ENTITY_COLUMNS_WITH_TOPICS,
-      INTERCEPTOR_STATUS_COLUMN,
+      BASE_STATUS_COLUMN,
       ...SOURCE_FIELD_COLUMNS(t, ApplicationRoute.Interceptors),
       AUTHOR_COLUMN,
     ];

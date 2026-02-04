@@ -7,6 +7,7 @@ import { FieldError } from '@/src/models/error';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getResourcesConflictError } from '@/src/utils/deployments/validation';
 import { useI18n } from '@/src/locales/client';
+import { isEditDisabled } from '@/src/utils/deployments/containers';
 
 interface Props {
   container: Container;
@@ -64,7 +65,9 @@ const MemoryFields: FC<Props> = ({ container, setContainer }) => {
         value={convertMemoryToMb(container.resources?.requests?.memory)}
         suffix="Mb"
         errorText={requestError?.text}
+        containerClassName="w-[180px]"
         invalid={!!requestError}
+        disabled={isEditDisabled(container)}
         onChange={(memoryRequest) => {
           const error = getResourcesConflictError(
             (memoryRequest as number) * 1024 * 1024,
@@ -104,6 +107,8 @@ const MemoryFields: FC<Props> = ({ container, setContainer }) => {
         suffix="Mb"
         errorText={limitError?.text}
         invalid={!!limitError}
+        disabled={isEditDisabled(container)}
+        containerClassName="w-[180px]"
         onChange={(memoryLimit) => {
           const error = getResourcesConflictError(
             Number(container.resources?.requests?.memory),

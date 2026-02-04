@@ -5,7 +5,7 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { Image } from '@/src/models/deployments/images';
 import { Container } from '@/src/models/deployments/containers';
-import { containersApi, imagesApi, topicApi } from '@/src/app/api/api';
+import { containersApi, huggingFaceApi, imagesApi, topicApi, whitelistApi } from '@/src/app/api/api';
 
 export async function getImages() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -17,9 +17,9 @@ export async function getImage(id: string) {
   return imagesApi.getImage(id, token);
 }
 
-export async function getImageVersions(name: string) {
+export async function getImageVersions(name: string, type: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return imagesApi.getImageVersions(name, token);
+  return imagesApi.getImageVersions(name, type, token);
 }
 
 export async function getImagesWithVersions(type: string) {
@@ -140,4 +140,19 @@ export async function getContainerPrompts(containerId: string) {
 export async function getContainerPods(containerId: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return containersApi.getContainerPods(containerId, token);
+}
+
+export async function getGlobalWhitelist() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return whitelistApi.getGlobalWhitelist(token);
+}
+
+export async function updateGlobalWhitelist(domainList: string[]) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return whitelistApi.updateGlobalWhitelist(domainList, token);
+}
+
+export async function getHuggingFaceModels(search: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return huggingFaceApi.getHuggingFaceModels(search, token);
 }

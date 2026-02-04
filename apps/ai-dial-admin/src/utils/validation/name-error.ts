@@ -4,6 +4,7 @@ import {
   MAX_URL_ID_SYMBOLS,
   MIN_NAME_SYMBOLS,
   FORBIDDEN_NAME_SYMBOLS,
+  MAX_DEPLOYMENT_ID_SYMBOLS,
 } from '@/src/constants/validation';
 import { ErrorType } from '@/src/types/error-type';
 import { isValidHttpUrl } from './url-error';
@@ -56,11 +57,16 @@ export const getErrorForName = (
   }
 
   const tWithArgs = t as (str: string, args?: Record<string, string | number>) => string;
-  const isWrongLength = isWrongFieldLength(name || '');
+  const isWrongLength = isWrongFieldLength(name || '', isDeploymentId);
   if (isWrongLength) {
     return {
       type: ErrorType.LENGTH,
-      text: t ? tWithArgs(ErrorI18nKey.MinMaxLength, { min: MIN_NAME_SYMBOLS, max: MAX_NAME_SYMBOLS }) : '',
+      text: t
+        ? tWithArgs(ErrorI18nKey.MinMaxLength, {
+            min: MIN_NAME_SYMBOLS,
+            max: isDeploymentId ? MAX_DEPLOYMENT_ID_SYMBOLS : MAX_NAME_SYMBOLS,
+          })
+        : '',
     };
   }
 
@@ -104,8 +110,10 @@ export const getErrorForDisplayName = (name?: string, required?: boolean, t?: (s
   return null;
 };
 
-export const isWrongFieldLength = (value: string): boolean => {
-  return value.length < MIN_NAME_SYMBOLS || value.length > MAX_NAME_SYMBOLS;
+export const isWrongFieldLength = (value: string, isDeploymentId?: boolean): boolean => {
+  return (
+    value.length < MIN_NAME_SYMBOLS || value.length > (isDeploymentId ? MAX_DEPLOYMENT_ID_SYMBOLS : MAX_NAME_SYMBOLS)
+  );
 };
 
 export const hasInvalidCharacters = (value?: string): boolean => {

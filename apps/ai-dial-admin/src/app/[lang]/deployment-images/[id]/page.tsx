@@ -7,6 +7,8 @@ import { Container } from '@/src/models/deployments/containers';
 import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { errorObjLog } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getRouteByType } from '@/src/utils/deployments/entity';
+import { getImageType } from '@/src/utils/deployments/images';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,7 +26,10 @@ export default async function Page(params: Params) {
   try {
     const imageResponse = await getImage((await params.params).id);
     const imagesResponse = await getImages();
-    const versionsResponse = await getImageVersions(imageResponse.response.name);
+    const versionsResponse = await getImageVersions(
+      imageResponse.response.name,
+      getImageType(getRouteByType(imageResponse.response.$type)),
+    );
     const dependenciesResponses = await getImageContainers((await params.params).id);
 
     image = imageResponse.response as Image;

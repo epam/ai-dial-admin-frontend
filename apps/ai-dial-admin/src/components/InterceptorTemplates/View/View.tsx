@@ -4,18 +4,14 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialNeutralButton, DialTabs } from '@epam/ai-dial-ui-kit';
+import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { cloneDeep } from 'lodash';
 
 import { deleteInterceptorTemplate, updateInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
 import { createInterceptor } from '@/src/app/[lang]/interceptors/actions';
+import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
-import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
-import EntityHeader from '@/src/components/EntityView/Header/Header';
-import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
-import ExtendedProperties from '@/src/components/InterceptorTemplates/Properties/ExtendedProperties';
-import Interceptors from '@/src/components/InterceptorTemplates/View/Interceptors/Interceptors';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -25,10 +21,11 @@ import { useI18n } from '@/src/locales/client';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
-import { getViewHeaderClassName } from '@/src/utils/entities/view';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getInterceptorTemplateTabs } from '@/src/utils/tabs/utils';
+import TabsContent from './TabsContent';
+import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 
 interface Props {
   etag: string;
@@ -46,6 +43,7 @@ const View: FC<Props> = ({ etag, template, names }) => {
   const [isChanged, setIsChanged] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(cloneDeep(template));
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditorEnabled, setIsEditorEnabled] = useState(false);
 
   const tabs = getInterceptorTemplateTabs(t);
 
@@ -58,13 +56,6 @@ const View: FC<Props> = ({ etag, template, names }) => {
       },
     };
   }, [selectedTemplate.name]);
-
-  const onChangeActiveTab = useCallback(
-    (tab: string) => {
-      setActiveTab(tab as EntityViewTab);
-    },
-    [setActiveTab],
-  );
 
   const onSave = useCallback(() => {
     getReqRef.current(updateInterceptorTemplate, selectedTemplate, etag).then((res) => {
@@ -86,63 +77,62 @@ const View: FC<Props> = ({ etag, template, names }) => {
     setSelectedTemplate(cloneDeep(template));
   }, [template]);
 
+  const onToggleEditor = useCallback(() => {
+    setIsEditorEnabled((prev) => !prev);
+  }, [setIsEditorEnabled]);
+
   useEffect(() => {
     const { updatedAt: __updateTemplate, ...restTemplate } = template;
     const { updatedAt: __updateSelected, ...restSelectedTemplate } = selectedTemplate;
     setIsChanged(!isEqualSkippingUndefined(restTemplate, restSelectedTemplate));
   }, [template, selectedTemplate]);
 
-  const onChange = useCallback((template: InterceptorTemplate) => {
-    setSelectedTemplate(template);
-  }, []);
-
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-      <div className={getViewHeaderClassName()}>
-        <div className="flex-1 min-w-0">
-          <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
-        </div>
-        <HeaderButtons
-          view={ApplicationRoute.InterceptorTemplates}
-          entity={selectedTemplate}
-          isChanged={isChanged}
-          onSave={onSave}
-          onDiscard={onDiscard}
-          onRemove={deleteInterceptorTemplate}
-          isHideJsonEditor={true}
-        >
-          <DialNeutralButton
-            label={`${t(ButtonsI18nKey.Create)} ${t(CreateI18nKey.Interceptor)}`}
-            iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-            onClick={() => setIsModalOpen(true)}
-          />
-        </HeaderButtons>
-      </div>
+      <SimpleEntityHeader
+        view={ApplicationRoute.InterceptorTemplates}
+        entity={selectedTemplate}
+        isChanged={isChanged}
+        onDiscard={onDiscard}
+        onSave={onSave}
+        tabs={tabs}
+        isEditorEnabled={isEditorEnabled}
+        activeTab={activeTab}
+        onChangeActiveTab={setActiveTab}
+        onToggleEditor={onToggleEditor}
+        onRemove={deleteInterceptorTemplate}
+      >
+        <DialNeutralButton
+          label={`${t(ButtonsI18nKey.Create)} ${t(CreateI18nKey.Interceptor)}`}
+          iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
+          onClick={() => setIsModalOpen(true)}
+        />
+      </SimpleEntityHeader>
+
       <div className="flex-1 overflow-auto min-h-0">
-        {activeTab === EntityViewTab.Properties && (
+        {isEditorEnabled ? (
+          <EntityJsonEditor
+            entity={selectedTemplate}
+            setSelectedEntity={setSelectedTemplate}
+            setIsChanged={setIsChanged}
+          />
+        ) : (
           <>
-            <EntityHeader entity={selectedTemplate} />
-            <div className="flex-1 min-h-0 pt-8">
-              <ExtendedProperties template={selectedTemplate} onChange={onChange} />
-            </div>
+            <TabsContent activeTab={activeTab} selectedTemplate={selectedTemplate} onChange={setSelectedTemplate} />
+            {isModalOpen &&
+              createPortal(
+                <CreateEntity
+                  route={ApplicationRoute.Interceptors}
+                  isModalOpen={isModalOpen}
+                  createEntity={createInterceptor}
+                  onClose={() => setIsModalOpen(false)}
+                  names={names || []}
+                  initialValues={source}
+                />,
+                document.body,
+              )}
           </>
         )}
-        {activeTab === EntityViewTab.Interceptors && <Interceptors interceptorList={selectedTemplate.interceptors} />}
-        {activeTab === EntityViewTab.Audit && (
-          <EntityAudit entity={selectedTemplate} view={ApplicationRoute.InterceptorTemplates} />
-        )}
-        {isModalOpen &&
-          createPortal(
-            <CreateEntity
-              route={ApplicationRoute.Interceptors}
-              isModalOpen={isModalOpen}
-              createEntity={createInterceptor}
-              onClose={() => setIsModalOpen(false)}
-              names={names || []}
-              initialValues={source}
-            />,
-            document.body,
-          )}
       </div>
     </div>
   );

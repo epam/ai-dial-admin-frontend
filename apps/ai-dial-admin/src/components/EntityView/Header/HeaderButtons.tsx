@@ -23,15 +23,15 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
-import JsonToggles from './JsonToggle';
 import ModifiedEntityButtons from './ModifiedEntityButtons';
+import JsonToggleWithFormats from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggleWithFormats';
 
 interface Props<T> {
   view: ApplicationRoute;
   activeTab?: EntityViewTab;
   entity: T;
   isChanged: boolean;
-  isJsonEditorEnabled?: boolean;
+  isEditorEnabled?: boolean;
   isHideJsonEditor?: boolean;
   addedVersions?: string[];
   setAddedVersions?: Dispatch<SetStateAction<string[]>>;
@@ -45,7 +45,7 @@ interface Props<T> {
   onSave: (newVersion?: string) => void;
   onChangeSelectedFormat?: (format: ExportFormat) => void;
   onRemove: (entity: string) => Promise<ServerActionResponse>;
-  onToggleJsonEditor?: () => void;
+  onToggleEditor?: () => void;
   onHideFormatSelector?: () => void;
   getAssetContext?: () => AssetsFolderContext<DialFile>;
 }
@@ -55,7 +55,7 @@ const HeaderButtons = <T extends object>({
   entity,
   onChangeEntity,
   isChanged,
-  isJsonEditorEnabled,
+  isEditorEnabled,
   isHideJsonEditor,
   children,
   addedVersions,
@@ -114,12 +114,12 @@ const HeaderButtons = <T extends object>({
             onDiscard={onDiscard}
             onSave={onSave}
             view={view}
-            isJsonEditorEnabled={isJsonEditorEnabled}
+            isEditorEnabled={isEditorEnabled}
             existingVersions={existingVersions}
           />
         ) : (
           <div className="flex flex-row items-center w-full gap-x-4">
-            {!isJsonEditorEnabled && (
+            {!isEditorEnabled && (
               <div className={classNames('flex-1 flex flex-row gap-x-4', isSimple && 'justify-center')}>
                 {isAssetView && (
                   <AssetVersionControl
@@ -145,7 +145,7 @@ const HeaderButtons = <T extends object>({
                 </div>
               </div>
             )}
-            {!isHideJsonEditor && <JsonToggles view={view} isJsonEditorEnabled={isJsonEditorEnabled} {...props} />}
+            {!isHideJsonEditor && <JsonToggleWithFormats view={view} isEditorEnabled={isEditorEnabled} {...props} />}
           </div>
         )}
       </div>
@@ -153,10 +153,10 @@ const HeaderButtons = <T extends object>({
         createPortal(
           <DeleteConfirmationModal
             entity={entity}
-            removeEntity={onRemove}
+            onRemoveEntity={onRemove}
             view={view}
             onCloseModal={onCloseModal}
-            context={getAssetContext}
+            getAssetContext={getAssetContext}
             isSelectedView={true}
             existingVersions={existingVersions}
             etag={etag}

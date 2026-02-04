@@ -1,9 +1,8 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ButtonAppearance,
-  ButtonVariant,
-  DialButton,
   DialNumberInputField,
+  DialPrimaryButton,
   DialRadioGroup,
   DialSelectField,
   DialSwitch,
@@ -16,9 +15,9 @@ import classNames from 'classnames';
 
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import UpstreamEndpoints from '@/src/components/UpstreamEndpoints/UpstreamEndpoints';
-import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
-import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
-import MaxRetryAttempts from '@/src/components/EntityMainProperties/BaseProperties/MaxRetryAttempts';
+import DescriptionControl from '@/src/components/BaseControls/Description';
+import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
+import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
 import Paths from '@/src/components/Routes/Paths/Paths';
 import { handleRouteOutputChange } from '@/src/components/Routes/utils';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
@@ -29,18 +28,19 @@ import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/
 import { IconRefresh } from '@tabler/icons-react';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { ORDER_DEFAULT_VALUE } from '@/src/constants/routes';
-import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
+import TopicsControl from '@/src/components/BaseControls/Topics';
 
 interface Props {
   route: DialRoute | DialAppRoute;
   isAppRoute?: boolean;
   readonly?: boolean;
+  routeNames?: string[];
   onChange: (route: DialRoute | DialAppRoute) => void;
 }
 
-const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, onChange }) => {
+const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, onChange }) => {
   const t = useI18n();
-  const { dispatch } = useSaveValidationContext();
+  const { dispatch, resetCounter } = useSaveValidationContext();
 
   const outputRadio: RadioButtonWithContent[] = [
     { id: RouteOutput.UPSTREAMS, name: t(EntityFieldsI18nKey.upstreams) },
@@ -74,6 +74,13 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, onChange }) =
   useEffect(() => {
     dispatch({ type: ValidationActionType.SetField, field: 'methods', isValid: !!route.methods?.length });
   }, [dispatch, route.methods]);
+
+  useEffect(() => {
+    if (resetCounter) {
+      setStatusError('');
+      setBodyError('');
+    }
+  }, [resetCounter]);
 
   useEffect(() => {
     if (isAppRoute) {
@@ -177,7 +184,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, onChange }) =
     [route, onChange, dispatch, t],
   );
 
-  const onRefreshOrder = useCallback(() => {
+  const onResetOrder = useCallback(() => {
     onChange({
       ...route,
       order: ORDER_DEFAULT_VALUE,
@@ -194,6 +201,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, onChange }) =
         isFullWidth={false}
         onChange={onChangeDisplayName}
         disabled={readonly}
+        names={isAppRoute ? routeNames || [] : void 0}
       />
       {!isAppRoute && <DescriptionControl entity={route} onChangeEntity={onChange} isFullWidth={false} />}
       <Paths
@@ -279,7 +287,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, onChange }) =
           onChange={(values) => onChangePermissions(values as string[])}
         />
       )}
-      <div className={classNames('flex gap-x-2 flex-row items-start', STANDARD_CONTROL_WIDTH)}>
+      <div className={classNames('flex gap-x-2 flex-row items-end', STANDARD_CONTROL_WIDTH)}>
         <DialNumberInputField
           elementId="order"
           disabled={readonly}
@@ -293,13 +301,12 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, onChange }) =
           invalid={!!orderError}
         />
         {route.order !== ORDER_DEFAULT_VALUE && (
-          <DialButton
-            className="dial-tertiary-button mt-6"
-            variant={ButtonVariant.Primary}
+          <DialPrimaryButton
+            className="mb-2.5"
             appearance={ButtonAppearance.Link}
             label={t(ButtonsI18nKey.ResetToDefault)}
             iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}
-            onClick={onRefreshOrder}
+            onClick={onResetOrder}
           />
         )}
       </div>

@@ -1,130 +1,67 @@
-import { FC, useCallback, useEffect, useState } from 'react';
-import { DialSelectField, DialTextInputField } from '@epam/ai-dial-ui-kit';
-import { ContainersI18nKey, EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
-import { CONTAINER_TYPE, MODEL_FORMAT, MODEL_SOURCE_TYPE, SERVING_SOURCE } from '@/src/types/deployments/containers';
-import { useI18n } from '@/src/locales/client';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { DialTextInputField } from '@epam/ai-dial-ui-kit';
+
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { MODEL_SOURCE_TYPE, SERVING_SOURCE } from '@/src/types/deployments/containers';
 import { Container } from '@/src/models/deployments/containers';
 import { FieldError } from '@/src/models/error';
-import { getDeploymentsURIError, getErrorForHfModelName } from '@/src/utils/deployments/validation';
+import { getDeploymentsURIError } from '@/src/utils/deployments/validation';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { isEditDisabled } from '@/src/utils/deployments/containers';
+import { getControlClassName } from '@/src/utils/entities/view';
+import { useI18n } from '@/src/locales/client';
+import HFModelNameField from '@/src/components/Containers/Fields/HFModelNameField/HFModelNameField';
 
 interface Props {
   container: Container;
   setContainer: (container: Container) => void;
+  isModal?: boolean;
 }
 
-const ModelSourceFields: FC<Props> = ({ container, setContainer }) => {
+const ModelSourceFields: FC<Props> = ({ container, setContainer, isModal = false }) => {
   const t = useI18n();
   const { dispatch, resetCounter } = useSaveValidationContext();
+  const containerClassName = useMemo(() => getControlClassName(isModal), [isModal]);
 
   const [imageRefError, setImageRefError] = useState<FieldError | null>(null);
 
-  const SERVING_TYPES = [
-    { value: MODEL_SOURCE_TYPE.HF, label: t(ContainersI18nKey.ModelTypeHF) },
-    { value: MODEL_SOURCE_TYPE.NIM, label: t(ContainersI18nKey.ModelTypeNIM) },
-  ];
-
-  const getSourceError = useCallback(
-    (modelName?: string, $type?: MODEL_SOURCE_TYPE) => {
-      return $type === MODEL_SOURCE_TYPE.HF
-        ? getErrorForHfModelName(modelName, t)
-        : getDeploymentsURIError(modelName, t);
-    },
-    [t],
-  );
-
   const onChangeImageRef = useCallback(
     (value?: string) => {
-      const error = getSourceError(value, container.source?.$type as MODEL_SOURCE_TYPE);
+      const error = getDeploymentsURIError(value, t);
       setImageRefError(error);
-      if (container.source?.$type === MODEL_SOURCE_TYPE.HF) {
-        setContainer({ ...container, source: { ...container.source, modelName: value } as SERVING_SOURCE });
-      } else {
-        setContainer({ ...container, source: { ...container.source, imageRef: value } as SERVING_SOURCE });
-      }
       dispatch({
         type: ValidationActionType.SetField,
         field: 'modelSourceName',
         isValid: !error,
       });
+      setContainer({ ...container, source: { ...container.source, imageRef: value } as SERVING_SOURCE });
     },
-    [container, setContainer, dispatch, getSourceError],
-  );
-
-  const onChangeModelSourceType = useCallback(
-    ($type?: MODEL_SOURCE_TYPE) => {
-      const updated = {
-        ...container,
-        $type: $type === MODEL_SOURCE_TYPE.HF ? CONTAINER_TYPE.HF : CONTAINER_TYPE.NIM,
-        source: {
-          ...container.source,
-          $type: $type as MODEL_SOURCE_TYPE,
-        },
-      };
-
-      if ($type === MODEL_SOURCE_TYPE.HF) {
-        updated.modelFormat = MODEL_FORMAT.HF;
-      } else {
-        delete updated.modelFormat;
-      }
-
-      if (container.source?.imageRef) {
-        const error = getSourceError(container.source?.imageRef, $type);
-        setImageRefError(error);
-      }
-      setContainer(updated);
-    },
-    [container, setContainer, getSourceError],
+    [t, dispatch, setContainer, container],
   );
 
   useEffect(() => {
-    const source = container.source;
-    const value = source?.$type === MODEL_SOURCE_TYPE.HF ? source?.modelName : source?.imageRef;
-
-    dispatch({
-      type: ValidationActionType.SetField,
-      field: 'modelSourceName',
-      isValid: !getSourceError(value, container.source?.$type),
-    });
-  }, [container.source, dispatch, getSourceError, t]);
-
-  useEffect(() => {
-    const source = container.source;
-    const value = source?.$type === MODEL_SOURCE_TYPE.HF ? source?.modelName : source?.imageRef;
-
-    if (resetCounter || (value && value.length > 0)) {
-      const error = getSourceError(value, container.source?.$type);
+    if (resetCounter || (container.source?.imageRef && container.source?.imageRef.length > 0)) {
+      const error = getDeploymentsURIError(container.source?.imageRef);
       setImageRefError(error);
     }
-  }, [container.source, resetCounter, getSourceError]);
+  }, [container.source?.imageRef, resetCounter]);
 
   return (
-    <div className="flex flex-col gap-8">
-      <DialSelectField
-        elementId="modelSourceType"
-        fieldTitle={t(EntitiesI18nKey.SourceType)}
-        options={SERVING_TYPES}
-        value={container.source?.$type}
-        onChange={($type) => onChangeModelSourceType($type as MODEL_SOURCE_TYPE)}
-      />
+    <div className="flex flex-col gap-y-8">
       {container.source?.$type === MODEL_SOURCE_TYPE.NIM ? (
         <DialTextInputField
           elementId="imageRef"
           fieldTitle={t(EntityFieldsI18nKey.ImageURI)}
+          placeholder={t(EntityPlaceholdersI18nKey.URI)}
           value={container.source?.imageRef}
           errorText={imageRefError?.text}
           invalid={!!imageRefError}
           onChange={onChangeImageRef}
+          containerClassName={containerClassName}
+          disabled={isEditDisabled(container)}
         />
       ) : (
-        <DialTextInputField
-          elementId="modelName"
-          fieldTitle={t(EntityFieldsI18nKey.HFModelName)}
-          value={container.source?.modelName}
-          errorText={imageRefError?.text}
-          invalid={!!imageRefError}
-          onChange={onChangeImageRef}
-        />
+        <HFModelNameField container={container} setContainer={setContainer} isModal={isModal} />
       )}
     </div>
   );

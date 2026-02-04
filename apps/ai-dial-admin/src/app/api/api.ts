@@ -18,6 +18,10 @@ import { UtilityApi } from '@/src/server/utility-api';
 import { ImagesApi } from '@/src/server/deployments/images';
 import { ContainersApi } from '@/src/server/deployments/containers';
 import { TopicApi } from '@/src/server/deployments/topics';
+import { TestSuitesApi } from '@/src/server/eval/test-suites-api';
+import { WhitelistApi } from '@/src/server/deployments/whitelist';
+import { MetricsApi } from '@/src/server/eval/metrics-api';
+import { HuggingfaceApi } from '@/src/server/deployments/huggingface';
 
 export const modelsApi = new ModelsApi({
   host: process.env.DIAL_ADMIN_API_URL,
@@ -94,5 +98,21 @@ export const imagesApi = new ImagesApi({
 });
 
 export const topicApi = new TopicApi({
+  host: process.env.DIAL_DEPLOYMENTS_API_URL,
+});
+
+export const whitelistApi = new WhitelistApi({
+  host: process.env.DIAL_DEPLOYMENTS_API_URL,
+});
+
+export const testSuitesApi = new TestSuitesApi({
+  host: process.env.DIAL_EVAL_API_URL,
+});
+
+export const metricsApi = new MetricsApi({
+  host: process.env.DIAL_EVAL_API_URL,
+});
+
+export const huggingFaceApi = new HuggingfaceApi({
   host: process.env.DIAL_DEPLOYMENTS_API_URL,
 });

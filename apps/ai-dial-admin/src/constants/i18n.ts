@@ -24,6 +24,9 @@ export enum MenuI18nKey {
   Routes = 'Menu.Routes',
   Prompts = 'Menu.Prompts',
   Files = 'Menu.Files',
+  Runs = 'Menu.Runs',
+  TestSuites = 'Menu.TestSuites',
+  Metrics = 'Menu.Metrics',
   Audit = 'Menu.Audit',
   Toolsets = 'Menu.Toolsets',
   Conversations = 'Menu.Conversations',
@@ -31,8 +34,6 @@ export enum MenuI18nKey {
   MCPDescription = 'Menu.MCPDescription',
   Dashboard = 'Menu.Dashboard',
   UsageLog = 'Menu.UsageLog',
-  Tools = 'Menu.Tools',
-  ToolsDescription = 'Menu.ToolsDescription',
   PromptPublications = 'Menu.PromptPublications',
   ToolsetPublications = 'Menu.ToolsetPublications',
   ApplicationPublications = 'Menu.ApplicationPublications',
@@ -43,10 +44,9 @@ export enum MenuI18nKey {
   Home = 'Menu.Home',
   Homepage = 'Menu.Homepage',
   FoldersStorage = 'Menu.FoldersStorage',
-  MLOps = 'Menu.MLOps',
-  MCPDeployments = 'Menu.MCPDeployments',
-  InterceptorDeployments = 'Menu.InterceptorDeployments',
-  ModelDeployments = 'Menu.ModelDeployments',
+  McpContainers = 'Menu.McpContainers',
+  InterceptorContainers = 'Menu.InterceptorContainers',
+  ModelServings = 'Menu.ModelServings',
   InterceptorTemplates = 'Menu.InterceptorTemplates',
   ActivityAudit = 'Menu.ActivityAudit',
   Images = 'Menu.Images',
@@ -130,6 +130,9 @@ export enum EntitiesI18nKey {
   NoFiles = 'Entities.NoFiles',
   NoPublications = 'Entities.NoPublications',
   NoInterceptors = 'Entities.NoInterceptors',
+  NoTestSuites = 'Entities.NoTestSuites',
+  NoRuns = 'Entities.NoRuns',
+  NoMetrics = 'Entities.NoMetrics',
   NoLocalInterceptors = 'Entities.NoLocalInterceptors',
   NoGlobalInterceptors = 'Entities.NoGlobalInterceptors',
   NoRunnerInterceptors = 'Entities.NoRunnerInterceptors',
@@ -199,6 +202,7 @@ export enum EntitiesI18nKey {
   NoResources = 'Entities.NoResources',
   NoEvents = 'Entities.NoEvents',
   Serving = 'Entities.Serving',
+  ModelServing = 'Entities.ModelServing',
   Container = 'Entities.Container',
 }
 
@@ -317,6 +321,7 @@ export enum ButtonsI18nKey {
   SendRequest = 'Buttons.SendRequest',
   ManageTool = 'Buttons.ManageTool',
   Confirm = 'Buttons.Confirm',
+  GlobalFirewall = 'Buttons.GlobalFirewall',
 }
 
 export enum UpdateI18nKey {
@@ -328,7 +333,7 @@ export enum UpdateI18nKey {
   // Entities
   Model = 'UpdateEntity.Entities.Model',
   Application = 'UpdateEntity.Entities.Application',
-  Toolsets = 'UpdateEntity.Entities.Toolsets',
+  Toolset = 'UpdateEntity.Entities.Toolset',
   Route = 'UpdateEntity.Entities.Route',
   Interceptor = 'UpdateEntity.Entities.Interceptor',
   Role = 'UpdateEntity.Entities.Role',
@@ -336,6 +341,7 @@ export enum UpdateI18nKey {
   Prompt = 'UpdateEntity.Entities.Prompt',
   File = 'UpdateEntity.Entities.File',
   Adapter = 'UpdateEntity.Entities.Adapter',
+  TestSuite = 'UpdateEntity.Entities.TestSuite',
   InterceptorTemplate = 'UpdateEntity.Entities.InterceptorTemplate',
   ApplicationRunner = 'UpdateEntity.Entities.ApplicationRunner',
   SystemProperties = 'UpdateEntity.Entities.SystemProperties',
@@ -371,6 +377,7 @@ export enum CreateI18nKey {
   InterceptorTemplate = 'CreateEntity.Entities.InterceptorTemplate',
   ApplicationRunner = 'CreateEntity.Entities.ApplicationRunner',
   AssetApplication = 'CreateEntity.Entities.AssetApplication',
+  TestSuite = 'CreateEntity.Entities.TestSuite',
 }
 
 export enum UpstreamEndpointsI18nKey {
@@ -404,10 +411,10 @@ export enum ModelViewI18nKey {
 export enum AttachmentsI18nKey {
   Attachments = 'Attachments.Attachments',
   AllAttachments = 'Attachments.AllAttachments',
-  CustomAttachments = 'Attachments.CustomAttachments',
+  NoAttachments = 'Attachments.NoAttachments',
+  SpecificAttachments = 'Attachments.SpecificAttachments',
   MaxNumber = 'Attachments.MaxNumber',
-  UseAll = 'Attachments.UseAll',
-  UseAllAttachment = 'Attachments.UseAllAttachment',
+  CaptionDescription = 'Attachments.CaptionDescription',
 }
 
 export enum KeysI18nKey {
@@ -449,6 +456,11 @@ export enum RolesI18nKey {
   NotAvailableApplication = 'Roles.NotAvailableApplication',
   NotAvailableToolSet = 'Roles.NotAvailableToolSet',
   Sharing = 'Roles.Sharing',
+  PerMinute = 'Roles.CostLimits.Minute',
+  PerDay = 'Roles.CostLimits.Day',
+  PerWeek = 'Roles.CostLimits.Week',
+  PerMonth = 'Roles.CostLimits.Month',
+  NoLimits = 'Roles.NoLimits',
 }
 
 export enum ForwardTokenI18nKey {
@@ -511,7 +523,7 @@ export enum TabsI18nKey {
   Tools = 'Tabs.Tools',
   ParameterSchema = 'Tabs.ParameterSchema',
   ApplicationRunners = 'Tabs.ApplicationRunners',
-  BuildLog = 'Tabs.BuildLog',
+  InstallationLog = 'Tabs.InstallationLog',
   Instances = 'Tabs.Instances',
   Resources = 'Tabs.Resources',
   Prompts = 'Tabs.Prompts',
@@ -521,6 +533,10 @@ export enum TabsI18nKey {
   Containers = 'Tabs.Containers',
   RelatedContainers = 'Tabs.RelatedContainers',
   Events = 'Tabs.Events',
+  Firewall = 'Tabs.Firewall',
+  TestCases = 'Tabs.TestCases',
+  Runs = 'Tabs.Runs',
+  Trends = 'Tabs.Trends',
 }
 
 export enum InterceptorsI18nKey {
@@ -542,6 +558,7 @@ export enum TelemetryI18nKey {
   CustomTimeRage = 'Telemetry.CustomTimeRage',
   Custom = 'Telemetry.Custom',
   UniqueUsers = 'Telemetry.UniqueUsers',
+  Requests = 'Telemetry.Requests',
   RequestCount = 'Telemetry.RequestCount',
   TotalTokens = 'Telemetry.TotalTokens',
   Money = 'Telemetry.Money',
@@ -575,6 +592,7 @@ export enum RoutesI18nKey {
 export enum PublicationsI18nKey {
   DeclineReason = 'Publications.ReasonTitle',
   DeclineReasonPlaceholder = 'Publications.ReasonPlaceholder',
+  Warning = 'Publications.Warning',
 
   // prompt publications
   PromptPublishApproveModalTitle = 'Publications.Prompt.PublishApproveModalTitle',
@@ -629,8 +647,10 @@ export enum PromptsI18nKey {
 
 export enum ImportI18nKey {
   ConflictResolution = 'Import.ConflictResolution',
-  ConfigImported = 'Import.ConfigImported',
-  ConfigImportedDescription = 'Import.ConfigImportedDescription',
+  ConfigImported = 'Import.Notifications.ConfigImported',
+  ConfigImportedDescription = 'Import.Notifications.ConfigImportedDescription',
+  NotificationImporting = 'Import.Notifications.Importing',
+  NotificationImportingDescription = 'Import.Notifications.ImportingDescription',
   Override = 'Import.Override',
   Skip = 'Import.Skip',
   EditManually = 'Import.EditManually',
@@ -715,6 +735,7 @@ export enum FoldersI18nKey {
   OperationTitle = 'Folder.OperationTitle',
   OperationPlaceholder = 'Folder.OperationPlaceholder',
   ValuePlaceholder = 'Folder.ValuePlaceholder',
+  ValueCaption = 'Folder.ValueCaption',
   RegexPlaceholder = 'Folder.RegexPlaceholder',
   equal = 'Folder.Function.Equal',
   contain = 'Folder.Function.Contain',
@@ -840,6 +861,11 @@ export enum ErrorI18nKey {
   ContainSpace = 'Error.ContainSpace',
   AllowedChars = 'Error.AllowedChars',
   LimitRequestError = 'Error.LimitRequestError',
+  ReplicasError = 'Error.ReplicasError',
+  FailedToStart = 'Error.FailedToStart',
+  RunOutOfMemory = 'Error.RunOutOfMemory',
+  ExitedWithError = 'Error.ExitedWithError',
+  InvalidWhitelistDomain = 'Error.InvalidWhitelistDomain',
 }
 
 export enum SourceI18nKey {
@@ -849,9 +875,11 @@ export enum SourceI18nKey {
   Container = 'Source.Container',
   InterceptorTemplate = 'Source.InterceptorTemplate',
   ModelDeployment = 'Source.ModelDeployment',
-  InterceptorDeployment = 'Source.InterceptorDeployment',
-  MCPDeployment = 'Source.MCPDeployment',
+  ModelServing = 'Source.ModelServing',
+  InterceptorContainer = 'Source.InterceptorContainer',
+  McpContainer = 'Source.McpContainer',
   Endpoint = 'Source.Endpoint',
+  ExternalEndpoint = 'Source.ExternalEndpoint',
   Adapter = 'Source.Adapter',
 }
 
@@ -872,6 +900,7 @@ export enum BooleanI18nKey {
 export enum EntityPlaceholdersI18nKey {
   Project = 'EntityPlaceholders.Project',
   TypeBucketCopy = 'EntityPlaceholders.TypeBucketCopy',
+  HFModelName = 'EntityPlaceholders.HFModelName',
   ContactPoint = 'EntityPlaceholders.ContactPoint',
   Endpoint = 'EntityPlaceholders.Endpoint',
   EditorUrl = 'EntityPlaceholders.EditorUrl',
@@ -880,7 +909,6 @@ export enum EntityPlaceholdersI18nKey {
   Description = 'EntityPlaceholders.Description',
   DisplayName = 'EntityPlaceholders.DisplayName',
   Id = 'EntityPlaceholders.Id',
-  RedirectUri = 'EntityPlaceholders.RedirectUri',
   ClientId = 'EntityPlaceholders.ClientId',
   ClientSecret = 'EntityPlaceholders.ClientSecret',
   TokenEndpoint = 'EntityPlaceholders.TokenEndpoint',
@@ -928,6 +956,7 @@ export enum EntityPlaceholdersI18nKey {
   ContainerEndpointPath = 'EntityPlaceholders.ContainerEndpointPath',
   Command = 'EntityPlaceholders.Command',
   Arguments = 'EntityPlaceholders.Arguments',
+  Domain = 'EntityPlaceholders.Domain',
 }
 
 export enum EntityFieldsI18nKey {
@@ -1040,7 +1069,6 @@ export enum EntityFieldsI18nKey {
   clientId = 'EntityFields.clientId',
   clientSecret = 'EntityFields.clientSecret',
   codeChallengeMethod = 'EntityFields.codeChallengeMethod',
-  redirectUri = 'EntityFields.redirectUri',
   authorizationEndpoint = 'EntityFields.authorizationEndpoint',
   authenticationType = 'EntityFields.authenticationType',
   authentication = 'EntityFields.authentication',
@@ -1087,6 +1115,10 @@ export enum EntityFieldsI18nKey {
   EnvironmentVariables = 'EntityFields.EnvironmentVariables',
   EndpointConfiguration = 'EntityFields.EndpointConfiguration',
   ToolName = 'EntityFields.ToolName',
+  Autoscaling = 'EntityFields.Autoscaling',
+  Restarts = 'EntityFields.Restarts',
+  LastRestartedAt = 'EntityFields.LastRestartedAt',
+  LastReason = 'EntityFields.LastReason',
 }
 
 export enum ToolsetI18nKey {
@@ -1095,7 +1127,7 @@ export enum ToolsetI18nKey {
   UseAllTools = 'Toolset.UseAllTools',
   AddedManually = 'Toolset.AddedManually',
   Warning = 'Toolset.Warning',
-  View = 'Toolset.View',
+  Filter = 'Toolset.Filter',
   AllTools = 'Toolset.AllTools',
   ToolsetPath = 'Toolset.ToolsetPaths',
   AutoDetected = 'Toolset.AutoDetected',
@@ -1161,6 +1193,7 @@ export enum ImagesI18nKey {
   ImageTransportRemote = 'Images.ImageTransportRemote',
   ImageTypeMCP = 'Images.ImageTypeMCP',
   ImageTypeInterceptor = 'Images.ImageTypeInterceptor',
+  ImageWhitelistType = 'Images.ImageWhitelistType',
 }
 
 export enum ContainersI18nKey {
@@ -1174,6 +1207,7 @@ export enum ContainersI18nKey {
   DeleteModalDescription = 'Containers.DeleteModalDescription',
   Container = 'Containers.Container',
   InputSchema = 'Containers.InputSchema',
+  OutputSchema = 'Containers.OutputSchema',
   Annotations = 'Containers.Annotations',
   ContainerImage = 'Containers.ContainerImage',
   ContainerProperties = 'Containers.ContainerProperties',
@@ -1190,9 +1224,27 @@ export enum ContainersI18nKey {
   ContainerStopSuccess = 'Containers.ContainerStopSuccess',
   ContainerSuccessDescription = 'Containers.ContainerSuccessDescription',
   Pod = 'Containers.Pod',
+  Pods = 'Containers.Pods',
   ContainerRestartWarning = 'Containers.ContainerRestartWarning',
   ContainersRestartWarning = 'Containers.ContainersRestartWarning',
   ShowRelatedContainers = 'Containers.ShowRelatedContainers',
+  ScaleToZeroNever = 'Containers.Autoscaling.ScaleToZeroNever',
+  ScaleToZeroAfter15Minutes = 'Containers.Autoscaling.ScaleToZeroAfter15Minutes',
+  ScaleToZeroAfter30Minutes = 'Containers.Autoscaling.ScaleToZeroAfter30Minutes',
+  ScaleToZeroAfter1Hour = 'Containers.Autoscaling.ScaleToZeroAfter1Hour',
+  ScaleToZeroAfter2Hours = 'Containers.Autoscaling.ScaleToZeroAfter2Hours',
+  ScaleToZeroAfter6Hours = 'Containers.Autoscaling.ScaleToZeroAfter6Hours',
+  Threshold = 'Containers.Autoscaling.Threshold',
+  MaxReplicas = 'Containers.Autoscaling.MaxReplicas',
+  MinReplicas = 'Containers.Autoscaling.MinReplicas',
+  ScaleToZero = 'Containers.Autoscaling.ScaleToZero',
+}
+
+export enum DeploymentsI18nKey {
+  GlobalWhitelist = 'Deployments.GlobalWhitelist',
+  SpecificWhitelist = 'Deployments.SpecificWhitelist',
+  GlobalFirewall = 'Deployments.GlobalFirewall',
+  AddDomain = 'Deployments.AddDomain',
 }
 
 export enum KubEventsI18nKey {
@@ -1218,4 +1270,10 @@ export enum ApplicationsI18nKey {
   Import = 'Applications.Import',
   Export = 'Applications.Export',
   ApplicationPaths = 'Applications.ApplicationPaths',
+}
+
+export enum TestSuitesI18nKey {
+  CreateTestSuite = 'TestSuites.CreateTestSuite',
+  Application = 'TestSuites.Application',
+  Methods = 'TestSuites.Methods',
 }

@@ -3,7 +3,7 @@
 import { DialCheckbox, DialDropdown } from '@epam/ai-dial-ui-kit';
 import { FC, useState } from 'react';
 
-import { BasicI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
+import { ToolsetI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ToolFilter } from '../type';
 import SelectedFilter from './SelectedFilter';
@@ -34,23 +34,6 @@ const ToolsFilter: FC<Props> = ({ isAllSelected, onSelectFilter, selectedFilters
             />
           </div>
           <div className="flex flex-col pl-[20px]">
-            <div className="py-2 px-4">
-              <DialCheckbox
-                checked={selectedFilters.includes(ToolFilter.Enabled)}
-                id={ToolFilter.Enabled}
-                label={t(BasicI18nKey.Enabled)}
-                onChange={(value) => onSelectFilter(value, ToolFilter.Enabled)}
-              />
-            </div>
-            <div className="py-2 px-4">
-              <DialCheckbox
-                checked={selectedFilters.includes(ToolFilter.Disabled)}
-                id={ToolFilter.Disabled}
-                label={t(BasicI18nKey.Disabled)}
-                onChange={(value) => onSelectFilter(value, ToolFilter.Disabled)}
-              />
-            </div>
-
             <div className="py-2 px-4">
               <DialCheckbox
                 checked={selectedFilters.includes(ToolFilter.AutoDetected)}

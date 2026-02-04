@@ -14,11 +14,11 @@ export function getActionClass(action: IMAGE_STATUS | CONTAINER_STATUS): string 
 
 export function getImageType(route: ApplicationRoute): string {
   switch (route) {
-    case ApplicationRoute.InterceptorDeployments:
+    case ApplicationRoute.InterceptorContainers:
       return 'INTERCEPTOR';
-    case ApplicationRoute.McpDeployments:
+    case ApplicationRoute.McpContainers:
       return 'MCP';
-    case ApplicationRoute.ModelDeployments:
+    case ApplicationRoute.ModelServings:
       return 'NIM';
     default:
       return '';
@@ -69,16 +69,21 @@ export const getVersionsList = (versions: ImageVersion[]): SelectOption[] => {
 };
 
 export function getUniqueLatestImages(images: Image[]): Image[] {
-  const map = new Map();
+  const map = new Map<string, Image>();
 
   for (const img of images) {
-    const existing = map.get(img.name);
+    const key = `${img.name}|${img.$type}`;
+    const existing = map.get(key);
     if (!existing || existing.version < img.version) {
-      map.set(img.name, img);
+      map.set(key, img);
     }
   }
 
   return Array.from(map.values());
+}
+
+export function getUniqueImagesNames(images: Image[], type: IMAGE_TYPE): string[] {
+  return [...new Set(images.filter((img) => img.$type === type).map((img) => img.name))];
 }
 
 export const updateSelectedVersion = (images: ImageGroup[], id: string) => {

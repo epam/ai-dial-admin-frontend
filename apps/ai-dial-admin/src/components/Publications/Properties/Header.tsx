@@ -27,9 +27,10 @@ interface Props {
   action: ActionType;
   setIsJsonView: (value: boolean) => void;
   isJsonView: boolean;
+  isDelete?: boolean;
 }
 
-const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action, isJsonView, setIsJsonView }) => {
+const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action, isJsonView, setIsJsonView, isDelete }) => {
   const t = useI18n();
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
@@ -79,7 +80,7 @@ const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action, isJ
         <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
           <DialNeutralButton
             className={buttonsClassName}
-            label={t(ButtonsI18nKey.Decline)}
+            label={t(isDelete ? ButtonsI18nKey.Delete : ButtonsI18nKey.Decline)}
             onClick={() => setIsOpenDeclineModal(true)}
             iconBefore={<IconCircleX {...BASE_BUTTON_ICON_PROPS} />}
           />

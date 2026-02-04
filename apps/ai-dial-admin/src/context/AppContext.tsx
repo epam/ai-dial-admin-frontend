@@ -8,20 +8,25 @@ import { ResourcesDefaults } from '@/src/models/deployments/containers';
 export interface AppContextType {
   themeUrl?: string;
   sidebarOpen: boolean;
-  toggleSidebar: (e: MouseEvent<HTMLButtonElement>) => void;
+  toggleSidebar: (e?: MouseEvent<HTMLButtonElement>) => void;
   userMenuOpen: boolean;
   toggleUserMenu: () => void;
   visualizerConnector?: VisualizerConnector | null;
   setVisualizerConnector?: Dispatch<SetStateAction<VisualizerConnector | null>>;
   featureFlags: Record<string, boolean>;
-  sidebar: {
-    show: boolean;
-    content: ReactNode | null;
-    showSidebar: (c: ReactNode) => void;
-    closeSidebar: () => void;
-  };
+  sidebar: AppContextSidebar;
   disableDeploymentsJSONEditor?: boolean;
   resourcesDefaults?: ResourcesDefaults;
+}
+
+interface AppContextSidebar {
+  show: boolean;
+  content: ReactNode | null;
+  isMenuClosed?: boolean;
+  className?: string;
+  showSidebar: (content: ReactNode, className?: string) => void;
+  closeSidebar: () => void;
+  toggleIsMenuClosed?: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -46,9 +51,12 @@ export const AppContextProvider = ({
   const [visualizerConnector, setVisualizerConnector] = useState<VisualizerConnector | null>(null);
   const [show, setShow] = useState(false);
   const [content, setContent] = useState<ReactNode | null>(null);
+  const [sideBarClassName, setSideBarClassName] = useState<string | undefined>(undefined);
 
-  const toggleSidebar = (e: MouseEvent<HTMLButtonElement>) => {
-    e.currentTarget.blur();
+  const [isMenuClosed, setIsMenuClosed] = useState(false);
+
+  const toggleSidebar = (e?: MouseEvent<HTMLButtonElement>) => {
+    e?.currentTarget.blur();
     setToLocalStorage(LOCAL_STORAGE_SIDEBAR_OPEN_KEY, String(!sidebarOpen));
     setSidebarOpen(!sidebarOpen);
   };
@@ -57,8 +65,13 @@ export const AppContextProvider = ({
     setUserMenuOpen(!userMenuOpen);
   };
 
-  const showSidebar = (c: ReactNode) => {
+  const toggleIsMenuClosed = () => {
+    setIsMenuClosed(!isMenuClosed);
+  };
+
+  const showSidebar = (c: ReactNode, className?: string) => {
     setContent(c);
+    setSideBarClassName(className);
     setShow(true);
   };
 
@@ -76,7 +89,15 @@ export const AppContextProvider = ({
     visualizerConnector,
     setVisualizerConnector,
     featureFlags,
-    sidebar: { show, content, showSidebar, closeSidebar },
+    sidebar: {
+      show,
+      content,
+      showSidebar,
+      className: sideBarClassName,
+      closeSidebar,
+      isMenuClosed,
+      toggleIsMenuClosed,
+    },
     disableDeploymentsJSONEditor,
     resourcesDefaults,
   };

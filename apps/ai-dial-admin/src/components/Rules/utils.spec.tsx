@@ -134,7 +134,10 @@ describe('getAttributeItems', () => {
 
   test('returns translated attribute items', () => {
     const items = getAttributeItems(t, ['a', 'b']);
-    expect(items).toEqual([{ value: 'a' }, { value: 'b' }]);
+    expect(items).toEqual([
+      { label: 'a', value: 'a' },
+      { label: 'b', value: 'b' },
+    ]);
   });
 
   test('returns empty array if attributes is undefined', () => {

@@ -26,7 +26,7 @@ export const getAllAvailableDependencies = (type?: EntityType): EntityType[] => 
   }
 
   if (type === EntityType.APPLICATION) {
-    return [EntityType.MODEL, EntityType.APPLICATION, EntityType.APPLICATION_TYPE_SCHEMA, EntityType.INTERCEPTOR];
+    return [EntityType.APPLICATION_TYPE_SCHEMA, EntityType.INTERCEPTOR];
   }
 
   if (type === EntityType.APPLICATION_TYPE_SCHEMA) {

@@ -1,4 +1,4 @@
-import { DialNeutralButton, DialPrimaryButton, DialSwitch } from '@epam/ai-dial-ui-kit';
+import { DialNeutralButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconBlocks, IconPlus, IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { useRouter } from 'next/navigation';
@@ -7,8 +7,7 @@ import { createPortal } from 'react-dom';
 
 import { createContainer, createImage, deleteImage, installImage } from '@/src/app/actions/deployments';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
-import { showEditorErrorNotifications } from '@/src/components/EntityView/JsonEditor/utils';
-import { ButtonsI18nKey, ContainersI18nKey, CreateI18nKey, EntitiesI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, ContainersI18nKey, CreateI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
@@ -22,13 +21,14 @@ import { getRouteByType, getTranslatedDeploymentType, getTranslatedType } from '
 import { validateImage } from '@/src/utils/deployments/images';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 
 import VersionsSelect from '@/src/components/Deployments/Common/VersionsSelect/VersionsSelect';
-import Delete from '@/src/components/Deployments/Modals/Delete';
-import CreateContainer from '@/src/components/Images/Modals/CreateContainer';
-import Install from '@/src/components/Images/Modals/Install';
-import NewVersion from '@/src/components/Images/Modals/NewVersion';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import EntityDelete from '@/src/components/Deployments/Modals/EntityDelete';
+import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
+import ImageCreateContainer from '@/src/components/Deployments/Modals/ImageCreateContainer';
+import ImageInstall from '@/src/components/Deployments/Modals/ImageInstall';
+import ImageNewVersion from '@/src/components/Deployments/Modals/ImageNewVersion';
 
 interface Props {
   route: ApplicationRoute;
@@ -67,15 +67,13 @@ const HeaderButtons: FC<Props> = ({
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
   const router = useRouter();
-  const { isValid, jsonErrors, dispatch } = useSaveValidationContext();
+  const { isValid } = useSaveValidationContext();
 
   const staticContainerClassnames = 'flex flex-row gap-3 divide-x divide-primary';
-  const staticEditorClassNames = 'pl-6';
 
   const [modalType, setModalType] = useState<ModalType>();
   const [containerClassNames, setContainerClassNames] = useState(staticContainerClassnames);
   const [buttonsClassNames, setButtonsClassNames] = useState('');
-  const [editorClassNames, setEditorClassNames] = useState(staticEditorClassNames);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const allowEditing = useMemo(() => {
@@ -146,20 +144,6 @@ const HeaderButtons: FC<Props> = ({
     onOpenModal(ModalType.install);
   }, [onOpenModal]);
 
-  const onTryToSave = useCallback(() => {
-    if (jsonErrors?.length) {
-      const errors = jsonErrors;
-      const errorNotifications = showEditorErrorNotifications({
-        errors,
-        showNotification,
-        t,
-      });
-      dispatch({ type: ValidationActionType.SetJsonEditorNotifications, errors: errorNotifications });
-    } else {
-      onSave();
-    }
-  }, [jsonErrors, showNotification, t, dispatch, onSave]);
-
   const onCreateContainer = useCallback(
     (container: Container) => {
       createContainer(container).then((res) => {
@@ -208,12 +192,6 @@ const HeaderButtons: FC<Props> = ({
       ),
     );
     setButtonsClassNames(classNames(isTablet || isMobile ? 'w-1/2 flex justify-center' : ''));
-    setEditorClassNames(
-      classNames(
-        staticEditorClassNames,
-        isTablet ? 'ml-3 pl-3 border-l-tertiary border-l h-full flex items-center' : isMobile ? 'hidden' : '',
-      ),
-    );
   }, [isTablet, isMobile]);
 
   return (
@@ -241,13 +219,13 @@ const HeaderButtons: FC<Props> = ({
               <DialPrimaryButton
                 className={buttonsClassNames}
                 label={t(ButtonsI18nKey.Save)}
-                onClick={onTryToSave}
+                onClick={onSave}
                 disabled={jsonEditorEnabled ? false : !isValidEntity() || !isValid}
               />
             )}
           </div>
         ) : (
-          <div className="flex flex-row items-center w-full">
+          <div className="flex flex-row items-center w-full gap-x-4">
             <div className="flex-1 flex flex-row gap-3">
               <VersionsSelect
                 selected={image.id}
@@ -280,23 +258,14 @@ const HeaderButtons: FC<Props> = ({
               )}
               {children}
             </div>
-            {!hideJsonEditor && (
-              <div className={editorClassNames}>
-                <DialSwitch
-                  isOn={jsonEditorEnabled}
-                  label={t(EntitiesI18nKey.JSONEditor)}
-                  switchId="jsonEditor"
-                  onChange={toggleJsonEditor}
-                />
-              </div>
-            )}
+            {!hideJsonEditor && <JsonToggles isEditorEnabled={jsonEditorEnabled} onToggleEditor={toggleJsonEditor} />}
           </div>
         )}
       </div>
       {isModalOpen &&
         modalType === ModalType.delete &&
         createPortal(
-          <Delete
+          <EntityDelete
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
             onApply={onDelete}
@@ -312,7 +281,7 @@ const HeaderButtons: FC<Props> = ({
       {isModalOpen &&
         modalType === ModalType.create &&
         createPortal(
-          <CreateContainer
+          <ImageCreateContainer
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
             modalTitle={t(ContainersI18nKey.CreateModalTitle, {
@@ -328,7 +297,7 @@ const HeaderButtons: FC<Props> = ({
       {isModalOpen &&
         modalType === ModalType.saveNewVersion &&
         createPortal(
-          <NewVersion
+          <ImageNewVersion
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
             okLabel={t(ButtonsI18nKey.Save)}
@@ -342,7 +311,7 @@ const HeaderButtons: FC<Props> = ({
       {isModalOpen &&
         modalType === ModalType.createNewVersion &&
         createPortal(
-          <NewVersion
+          <ImageNewVersion
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
             okLabel={t(ButtonsI18nKey.Create)}
@@ -356,7 +325,7 @@ const HeaderButtons: FC<Props> = ({
       {isModalOpen &&
         modalType === ModalType.install &&
         createPortal(
-          <Install
+          <ImageInstall
             image={image}
             title={t(ImagesI18nKey.InstallModalTitle, { type: getTranslatedType(getRouteByType(image.$type), t) })}
             isModalOpen={isModalOpen}

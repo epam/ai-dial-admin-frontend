@@ -10,9 +10,9 @@ import { Toolset } from '@/src/models/dial/toolset';
 import { useI18n } from '@/src/locales/client';
 
 import ReadonlyField from '@/src/components/Common/ReadonlyField/ReadonlyField';
-import MaintainerControl from '@/src/components/EntityMainProperties/BaseProperties/Maintainer';
-import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
-import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
+import MaintainerControl from '@/src/components/BaseControls/Maintainer';
+import IconControl from '@/src/components/BaseControls/Icon';
+import TopicsControl from '@/src/components/BaseControls/Topics';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 
 interface Props {

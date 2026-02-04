@@ -9,7 +9,7 @@ type PickerProps = Omit<DatePickerProps, 'date'>;
 
 interface Props extends PickerProps {
   id: string;
-  label: string;
+  label?: string;
   date: Date | null;
   dateFormat?: string;
   placeholder?: string;
@@ -31,9 +31,11 @@ const DatePicker: FC<Props> = ({ id, label, date, dateFormat, placeholder, showT
 
   return (
     <div className="mb-4 cursor-pointer">
-      <label htmlFor={id}>
-        <p className="tiny text-secondary mb-2">{label}</p>
-      </label>
+      {label && (
+        <label htmlFor={id}>
+          <p className="tiny text-secondary mb-2">{label}</p>
+        </label>
+      )}
       <ReactDatePicker
         id={id}
         placeholderText={placeholder || 'MM-DD-YYYY'}

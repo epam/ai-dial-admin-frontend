@@ -38,12 +38,7 @@ describe('Export Config Utils :: getAllAvailableDependencies', () => {
 
   test('returns correct dependencies for APPLICATION', () => {
     const result = getAllAvailableDependencies(EntityType.APPLICATION);
-    expect(result).toEqual([
-      EntityType.MODEL,
-      EntityType.APPLICATION,
-      EntityType.APPLICATION_TYPE_SCHEMA,
-      EntityType.INTERCEPTOR,
-    ]);
+    expect(result).toEqual([EntityType.APPLICATION_TYPE_SCHEMA, EntityType.INTERCEPTOR]);
   });
 
   test('returns empty array for undefined input', () => {

@@ -11,3 +11,7 @@ export const getRequestSorts = (sortModel: SortModelItem[]): SortDto[] => {
       }) as SortDto,
   );
 };
+
+export const getRequestSortsStr = (sorts: SortDto[]): string => {
+  return sorts.map((sort) => `sort=${sort.column},${sort.direction}`).join('&');
+};

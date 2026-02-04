@@ -5,6 +5,7 @@ import DatePicker from '@/src/components/Common/DatePicker/DatePicker';
 import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { TimeRange } from '@/src/models/time-range';
+import { topOffset } from './constants';
 
 interface Props {
   timeRange: TimeRange | null;
@@ -45,24 +46,45 @@ const RangePicker: FC<Props> = ({ onChange, timeRange }) => {
 
   return (
     <div className="flex flex-col w-full p-3">
+      <p className="tiny text-secondary mb-2 cursor-default">{t(BasicI18nKey.From)}</p>
       <DatePicker
         id="start-date"
-        label={t(BasicI18nKey.From)}
         className="dial-input cursor-pointer"
         date={startDate}
         setDate={onStartDateChange}
         startDate={startDate}
         endDate={endDate}
+        maxDate={endDate === null ? void 0 : endDate}
+        popperPlacement="bottom"
+        popperModifiers={[
+          {
+            name: 'flip',
+            fn: (state) => {
+              const yPosition = state.rects.reference.y + state.rects.reference.height + topOffset;
+              return { ...state, y: yPosition };
+            },
+          },
+        ]}
       />
+      <p className="tiny text-secondary mb-2 cursor-default">{t(BasicI18nKey.To)}</p>
       <DatePicker
         id="end-date"
         className="dial-input cursor-pointer"
-        label={t(BasicI18nKey.To)}
         date={endDate}
         setDate={onEndDateChange}
         startDate={startDate}
         endDate={endDate}
         minDate={startDate === null ? void 0 : startDate} // minDate: Date | undefined
+        popperPlacement="bottom"
+        popperModifiers={[
+          {
+            name: 'flip',
+            fn: (state) => {
+              const yPosition = state.rects.reference.y + state.rects.reference.height + topOffset;
+              return { ...state, y: yPosition };
+            },
+          },
+        ]}
       />
       <DialPrimaryButton label={t(ButtonsI18nKey.Apply)} onClick={onClick} className="w-max" />
     </div>

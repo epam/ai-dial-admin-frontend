@@ -1,13 +1,13 @@
+import { FC, useCallback } from 'react';
+
 import { DialNumberInputField } from '@epam/ai-dial-ui-kit';
 import { IconCurrencyDollar } from '@tabler/icons-react';
-import Big from 'big.js';
-import { FC, useCallback } from 'react';
 
 import { RolesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-import { UNLIMITED_VALUE } from '@/src/constants/role';
 import { useI18n } from '@/src/locales/client';
 import { DialRoleLimits } from '@/src/models/dial/role-limits';
+import { getCorrectValue } from './utils';
 
 interface Props {
   controlClassName?: string;
@@ -24,7 +24,7 @@ const LimitControl: FC<Props> = ({ limits, controlClassName, isCostInputs, onCha
 
   const onChangeLimit = useCallback(
     (value: number | string | undefined, key: keyof DialRoleLimits) => {
-      onChange({ ...limits, [key]: value });
+      onChange({ ...limits, [key]: value?.toString() });
     },
     [limits, onChange],
   );
@@ -32,14 +32,8 @@ const LimitControl: FC<Props> = ({ limits, controlClassName, isCostInputs, onCha
   return (
     <DialNumberInputField
       containerClassName={controlClassName}
-      placeholder={t(RolesI18nKey.NotSpecified)}
-      value={
-        limits?.[fieldKey] === UNLIMITED_VALUE
-          ? ''
-          : (limits?.[fieldKey] as string)
-            ? new Big(limits?.[fieldKey] as string).toFixed()
-            : ''
-      }
+      placeholder={t(RolesI18nKey.NoLimits)}
+      value={getCorrectValue(limits?.[fieldKey])}
       onChange={(value) => onChangeLimit(value, fieldKey)}
       iconBefore={isCostInputs ? <IconCurrencyDollar className="text-secondary" {...BASE_BUTTON_ICON_PROPS} /> : null}
       {...props}
