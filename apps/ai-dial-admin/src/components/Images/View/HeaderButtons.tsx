@@ -24,7 +24,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 
 import VersionsSelect from '@/src/components/Deployments/Common/VersionsSelect/VersionsSelect';
-import Delete from '@/src/components/Deployments/Modals/Delete';
+import EntityDelete from '@/src/components/Deployments/Modals/EntityDelete';
 import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
 import CreateContainer from '@/src/components/Images/Modals/CreateContainer';
 import Install from '@/src/components/Images/Modals/Install';
@@ -280,7 +280,7 @@ const HeaderButtons: FC<Props> = ({
       {isModalOpen &&
         modalType === ModalType.delete &&
         createPortal(
-          <Delete
+          <EntityDelete
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
             onApply={onDelete}
