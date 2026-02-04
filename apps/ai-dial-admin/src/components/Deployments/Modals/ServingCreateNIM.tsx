@@ -1,14 +1,17 @@
 'use client';
 
 import { FC, useState } from 'react';
+import { DialFormPopup } from '@epam/ai-dial-ui-kit';
+
 import { Container } from '@/src/models/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
-import { DialFormPopup } from '@epam/ai-dial-ui-kit';
-import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { CONTAINER_TYPE } from '@/src/types/deployments/containers';
 import { getContainerTemplate } from '@/src/utils/deployments/containers';
 import { useAppContext } from '@/src/context/AppContext';
-import { useI18n } from '@/src/locales/client';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
+import { useI18n } from '@/src/locales/client';
+
 import ServingProperties from '@/src/components/Containers/Fields/ServingProperties';
 
 interface Props {
@@ -17,20 +20,23 @@ interface Props {
   onApply: (instance: Container) => void;
   route: ApplicationRoute;
   names: string[];
+  header: string;
 }
 
-const CreateServing: FC<Props> = ({ isModalOpen, onClose, onApply, route, names }) => {
+const ServingCreateNIM: FC<Props> = ({ isModalOpen, onClose, onApply, route, names, header }) => {
   const t = useI18n();
   const { resourcesDefaults } = useAppContext();
   const { isValid } = useSaveValidationContext();
 
-  const [container, setContainer] = useState<Container>(getContainerTemplate(route, resourcesDefaults) as Container);
+  const [container, setContainer] = useState<Container>(
+    getContainerTemplate(CONTAINER_TYPE.NIM, resourcesDefaults) as Container,
+  );
 
   return (
     <DialFormPopup
-      portalId="CreateServing"
+      portalId="CreateServingNIM"
       open={isModalOpen}
-      header={t(CreateI18nKey.CreateServing)}
+      header={header}
       onClose={onClose}
       onSubmit={() => onApply(container)}
       onCancel={onClose}
@@ -50,4 +56,4 @@ const CreateServing: FC<Props> = ({ isModalOpen, onClose, onApply, route, names 
   );
 };
 
-export default CreateServing;
+export default ServingCreateNIM;

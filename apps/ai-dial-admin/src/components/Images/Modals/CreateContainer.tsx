@@ -1,5 +1,5 @@
 import { DialConfirmationPopup, PopupSize } from '@epam/ai-dial-ui-kit';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
@@ -11,6 +11,8 @@ import { getRouteByType } from '@/src/utils/deployments/entity';
 
 import ContainerProperties from '@/src/components/Containers/Fields/ContainerProperties';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
+import { IMAGE_TYPE } from '@/src/types/deployments/images';
+import { CONTAINER_TYPE } from '@/src/types/deployments/containers';
 
 interface Props {
   isModalOpen: boolean;
@@ -25,10 +27,12 @@ const CreateContainer: FC<Props> = ({ onClose, isModalOpen, modalTitle, names, o
   const t = useI18n();
   const { resourcesDefaults } = useAppContext();
   const { isValid } = useSaveValidationContext();
-
-  const [container, setContainer] = useState<Container>(
-    getContainerTemplate(getRouteByType(image.$type), resourcesDefaults) as Container,
+  const type = useMemo(
+    () => (image.$type === IMAGE_TYPE.MCP ? CONTAINER_TYPE.MCP : CONTAINER_TYPE.INTERCEPTOR),
+    [image],
   );
+
+  const [container, setContainer] = useState<Container>(getContainerTemplate(type, resourcesDefaults) as Container);
 
   const onChange = useCallback((container: Container) => {
     setContainer(container);

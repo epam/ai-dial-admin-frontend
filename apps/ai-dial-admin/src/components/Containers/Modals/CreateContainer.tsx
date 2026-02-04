@@ -20,7 +20,7 @@ import { useAppContext } from '@/src/context/AppContext';
 import { getContainerTemplate } from '@/src/utils/deployments/containers';
 import { CREATE_CONTAINER_STEPS } from '@/src/constants/deployments/containers';
 import { ImageGroup } from '@/src/models/deployments/images';
-import { CreateSteps } from '@/src/types/deployments/containers';
+import { CONTAINER_TYPE, CreateSteps } from '@/src/types/deployments/containers';
 import { getImagesWithVersions } from '@/src/app/actions/deployments';
 import { getImageType, isValidVersion, updateSelectedVersion } from '@/src/utils/deployments/images';
 import { getErrorNotification } from '@/src/utils/notification';
@@ -48,8 +48,12 @@ const CreateContainer: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
   const { showNotification } = useNotification();
   const { resourcesDefaults } = useAppContext();
   const { isValid } = useSaveValidationContext();
+  const type = useMemo(
+    () => (route === ApplicationRoute.McpContainers ? CONTAINER_TYPE.MCP : CONTAINER_TYPE.INTERCEPTOR),
+    [route],
+  );
 
-  const [container, setContainer] = useState<Container>(getContainerTemplate(route, resourcesDefaults) as Container);
+  const [container, setContainer] = useState<Container>(getContainerTemplate(type, resourcesDefaults) as Container);
   const [steps, setSteps] = useState(CREATE_CONTAINER_STEPS(route, t));
   const [currentStepId, setCurrentStep] = useState(steps[0].id);
   const [images, setImages] = useState<ImageGroup[]>([]);

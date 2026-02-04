@@ -12,7 +12,7 @@ import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 're
 
 import { deleteContainer, runContainer, stopContainer } from '@/src/app/actions/deployments';
 import CreateAsset from '@/src/components/Assets/Deployments/CreateAsset';
-import DeleteModal from '@/src/components/Deployments/Modals/Delete';
+import EntityDelete from '@/src/components/Deployments/Modals/EntityDelete';
 import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
@@ -257,7 +257,7 @@ const HeaderButtons = <T extends Container>({
       {isModalOpen &&
         modalType === ModalType.delete &&
         createPortal(
-          <DeleteModal
+          <EntityDelete
             title={t(ContainersI18nKey.DeleteModalTitle, {
               type: getTranslatedType(route, t),
               entityType: getTranslatedDeploymentType(route, t),
