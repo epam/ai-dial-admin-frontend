@@ -16,11 +16,7 @@ const FolderInfoHeader: FC<Props> = ({ isChanged, isSaveDisable, title, onSave, 
   return (
     <div className="flex justify-between items-center">
       <h2 className="flex flex-1 w-full">{title}</h2>
-      {isChanged && (
-        <div>
-          <ChangedEntityButtons onDiscard={onDiscard} onSave={onSave} disableSave={isSaveDisable} />
-        </div>
-      )}
+      {isChanged && <ChangedEntityButtons onDiscard={onDiscard} onSave={onSave} disableSave={isSaveDisable} />}
     </div>
   );
 };

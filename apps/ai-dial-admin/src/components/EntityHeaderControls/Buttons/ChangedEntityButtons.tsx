@@ -44,7 +44,7 @@ const ChangedEntityButtons: FC<Props> = ({ disableSave, children, onDiscard, onS
   }, [jsonErrors, showNotification, t, dispatch, onSave]);
 
   return (
-    <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
+    <div className="flex flex-row gap-3 p-3 lg:p-0">
       <DialNeutralButton className={buttonsClassName} label={t(ButtonsI18nKey.Discard)} onClick={onDiscard} />
       {children}
       <DialPrimaryButton
