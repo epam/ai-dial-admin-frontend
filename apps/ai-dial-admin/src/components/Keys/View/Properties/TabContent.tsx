@@ -43,13 +43,7 @@ const PropertiesTabContent: FC<Props> = ({ selectedKey, onChange, names, keys })
     <div className="h-full flex flex-col w-full">
       <EntityInfoHeader id={selectedKey.name} entity={selectedKey} postfix={headerPostfix} />
       <div className="flex-1 min-h-0 pt-8">
-        <KeyProperties
-          entity={selectedKey}
-          names={names}
-          keys={keys}
-          onChangeKey={onChange}
-          isKeyImmutable={true}
-        ></KeyProperties>
+        <KeyProperties entity={selectedKey} names={names} keys={keys} onChangeKey={onChange} isKeyImmutable={true} />
       </div>
     </div>
   );

@@ -23,7 +23,7 @@ const PropertiesTabContent: FC<Props> = ({ isSkipRefresh, names, onChange, selec
           names={names}
           onChangeRole={onChange}
           isSkipRefresh={isSkipRefresh}
-        ></RoleProperties>
+        />
       </div>
     </div>
   );
