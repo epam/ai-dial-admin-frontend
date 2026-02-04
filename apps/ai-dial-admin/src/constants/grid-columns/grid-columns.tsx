@@ -1,5 +1,6 @@
 'use client';
 
+import { SelectVariant } from '@epam/ai-dial-ui-kit';
 import { ColDef, ICellRendererParams, ITextFilterParams, ITooltipParams, ValueGetterParams } from 'ag-grid-community';
 
 import { getValidityStatus } from '@/src/components/EntityView/Status/utils';
@@ -32,7 +33,6 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { formatDeploymentImageName } from '@/src/utils/formatting/deployments';
 import { isAssetWithVersion } from '@/src/utils/is-asset-view';
-import { SelectVariant } from '@epam/ai-dial-ui-kit';
 import { getDeleteOperation, getDuplicateOperation, getMoveOperation, getOpenInNewTabOperation } from './actions';
 
 import StatusIndicator from '@/src/components/Deployments/Common/StatusIndicator/StatusIndicator';
@@ -830,19 +830,28 @@ export const IMAGE_DEPENDENCIES_COLUMNS = (t: (key: string) => string, showImage
 ];
 
 export const TEST_SUITES_COLUMN: ColDef[] = [
-  { field: 'name', colId: 'name', headerName: 'Display Name', hide: false }, // TODO: check field after supporting BE
+  { field: 'name', colId: 'name', headerName: 'Display Name', hide: false },
   DESCRIPTION_COLUMN,
-  { field: 'application', headerName: 'Application' },
   {
-    ...BASE_STATUS_COLUMN,
+    field: 'application',
+    headerName: 'Application',
+    hide: false,
+    valueGetter: (params) => params.data?.deploymentRef?.name || '',
+  },
+  CREATED_AT_COLUMN,
+  UPDATED_AT_COLUMN,
+  {
+    field: 'method',
+    headerName: 'Method',
+    hide: true,
+    valueGetter: (params) => params.data?.endpointRef?.method || '',
   },
   {
-    field: 'time',
-    headerName: 'Last run start at',
-    ...dateTimeColumn,
+    field: 'url',
+    headerName: 'URL',
+    hide: true,
+    valueGetter: (params) => params.data?.endpointRef?.relativeUrl || '',
   },
-
-  // TODO: add columns
 ];
 
 // TODO: update columns
