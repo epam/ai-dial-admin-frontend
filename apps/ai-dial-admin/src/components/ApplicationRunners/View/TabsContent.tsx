@@ -2,6 +2,9 @@
 
 import { FC } from 'react';
 
+import AppRunnerApplications from '@/src/components/ApplicationRunners/ConfigurationView/Applications';
+import AppRunnerFeatures from '@/src/components/ApplicationRunners/ConfigurationView/Features';
+import PropertiesTabContent from '@/src/components/ApplicationRunners/ConfigurationView/TabContent';
 import ApplicationParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
 import EntityRoutes from '@/src/components/EntityView/AppRoute/AppRoute';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
@@ -12,9 +15,6 @@ import { DialRole } from '@/src/models/dial/role';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
-import AppRunnerApplications from '../ConfigurationView/Applications';
-import AppRunnerFeatures from '../ConfigurationView/Features';
-import PropertiesTabContent from '../ConfigurationView/TabContent';
 
 interface Props {
   activeTab: EntityViewTab;

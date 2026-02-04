@@ -12,6 +12,8 @@ import {
   updateCoreInterceptor,
   updateInterceptor,
 } from '@/src/app/[lang]/interceptors/actions';
+import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
+import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -27,8 +29,6 @@ import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getInterceptorTabs } from '@/src/utils/tabs/utils';
-import { JsonConfiguration } from '../../EntityHeaderControls/models';
-import SimpleEntityHeader from '../../EntityHeaderControls/SimpleHeader';
 import TabsContent from './TabsContent';
 
 interface Props {
