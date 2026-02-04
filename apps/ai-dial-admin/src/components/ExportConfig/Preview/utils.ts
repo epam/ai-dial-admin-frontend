@@ -10,6 +10,7 @@ import {
   getInterceptorsForEntitiesGrid,
   getKeysForEntitiesGrid,
   getToolsetsForEntitiesGrid,
+  getRunnersForEntitiesGrid,
 } from '@/src/utils/entities/entities-list-view';
 import { DialModel } from '@/src/models/dial/model';
 import { EntityType } from '@/src/types/entity-type';
@@ -52,7 +53,7 @@ export const getPreviewTabs = (
       }
 
       if (key === 'applicationRunners') {
-        convertedData[EntityType.APPLICATION_TYPE_SCHEMA] = data[key];
+        convertedData[EntityType.APPLICATION_TYPE_SCHEMA] = getRunnersForEntitiesGrid(data[key]);
         tabs.push({
           id: EntityType.APPLICATION_TYPE_SCHEMA,
           label: `${t(MenuI18nKey.ApplicationRunners)}: ${data[key].length}`,

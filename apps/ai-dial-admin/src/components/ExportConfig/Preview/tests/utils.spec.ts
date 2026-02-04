@@ -20,6 +20,7 @@ describe('Export Config Utils :: getPreviewTabs', () => {
     entitiesUtils.getKeysForEntitiesGrid.mockReturnValue([{ id: 'e1' }, { id: 'e1' }]);
     entitiesUtils.getRoutesForEntitiesGrid.mockReturnValue([]);
     entitiesUtils.getToolsetsForEntitiesGrid.mockReturnValue([]);
+    entitiesUtils.getRunnersForEntitiesGrid.mockReturnValue([{ id: 'e1' }]);
 
     const data = {
       roles: [{ id: 'role1' }],
