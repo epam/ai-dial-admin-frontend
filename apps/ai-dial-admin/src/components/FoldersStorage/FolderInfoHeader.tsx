@@ -15,8 +15,12 @@ interface Props {
 const FolderInfoHeader: FC<Props> = ({ isChanged, isSaveDisable, title, onSave, onDiscard }) => {
   return (
     <div className="flex justify-between items-center">
-      <h2>{title}</h2>
-      {isChanged && <ChangedEntityButtons onDiscard={onDiscard} onSave={onSave} disableSave={isSaveDisable} />}
+      <h2 className="flex flex-1 w-full">{title}</h2>
+      {isChanged && (
+        <div>
+          <ChangedEntityButtons onDiscard={onDiscard} onSave={onSave} disableSave={isSaveDisable} />
+        </div>
+      )}
     </div>
   );
 };
