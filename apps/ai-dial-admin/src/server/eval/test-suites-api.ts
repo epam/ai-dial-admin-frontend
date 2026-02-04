@@ -21,12 +21,8 @@ export class TestSuitesApi extends BaseApi {
     filters: FilterDto[],
     token: JWT | null,
   ): Promise<EvaluationPageData<TestSuite> | null> {
-    const filtersStr = getRequestFiltersStr(filters);
-    const sortsStr = getRequestSortsStr(sorts);
-    const str = `&${filtersStr}${sortsStr ? '&' : ''}${sortsStr}`;
-
     return this.get<EvaluationPageData<TestSuite>>(
-      `${TEST_SUITES_URL}?page=${page}&size=${size}&includeTotalCount=true${str}`,
+      `${TEST_SUITES_URL}?page=${page}&size=${size}&includeTotalCount=true${this.getFiltersAndSortsStr(sorts, filters)}`,
       token,
     );
   }
@@ -43,12 +39,8 @@ export class TestSuitesApi extends BaseApi {
     filters: FilterDto[],
     token: JWT | null,
   ): Promise<EvaluationPageData<TestCase> | null> {
-    const filtersStr = getRequestFiltersStr(filters);
-    const sortsStr = getRequestSortsStr(sorts);
-    const str = `&${filtersStr}${sortsStr ? '&' : ''}${sortsStr}`;
-
     return this.get<EvaluationPageData<TestCase>>(
-      `${TEST_CASES_URL(id)}?page=${page}&size=${size}&includeTotalCount=true${str}`,
+      `${TEST_CASES_URL(id)}?page=${page}&size=${size}&includeTotalCount=true${this.getFiltersAndSortsStr(sorts, filters)}`,
       token,
     );
   }
@@ -67,5 +59,11 @@ export class TestSuitesApi extends BaseApi {
 
   updateTestSuite(suite: TestSuite, token: JWT | null): Promise<ServerActionResponse> {
     return this.putAction(TEST_SUITE_URL(suite.id), suite, token);
+  }
+
+  private getFiltersAndSortsStr(sorts: SortDto[], filters: FilterDto[]): string {
+    const filtersStr = getRequestFiltersStr(filters);
+    const sortsStr = getRequestSortsStr(sorts);
+    return `${filtersStr || sortsStr ? '&' : ''}${filtersStr}${sortsStr ? '&' : ''}${sortsStr}`;
   }
 }
