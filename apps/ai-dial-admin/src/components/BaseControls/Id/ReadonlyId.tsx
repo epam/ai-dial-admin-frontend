@@ -11,7 +11,7 @@ interface Props {
 const ReadonlyId: FC<Props> = ({ value }) => {
   const t = useI18n();
 
-  return <LabelledText label={t(EntityFieldsI18nKey.id)} text={value || ''} copyable={true} />;
+  return <LabelledText copyLabel={t(EntityFieldsI18nKey.id)} text={value || ''} copyable={true} />;
 };
 
 export default ReadonlyId;

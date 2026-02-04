@@ -10,7 +10,7 @@ import { getSuccessNotification } from '@/src/utils/notification';
 import classNames from 'classnames';
 
 interface Props {
-  label: string;
+  label?: string;
   className?: string;
   field?: string;
   isFullButton?: boolean;
@@ -29,11 +29,12 @@ const CopyButton: FC<Props> = ({ label, field, className, isFullButton = false }
 
   const props = isFullButton
     ? { variant: ButtonVariant.Neutral, appearance: ButtonAppearance.Outlined, label: t(ButtonsI18nKey.Copy) }
-    : { className: 'cursor-pointer text-secondary hover:text-accent-primary p-0 h-auto w-auto' };
+    : { className: 'cursor-pointer text-secondary hover:text-accent-primary p-0 h-[20px] w-[20px]' };
 
   return (
     <DialIconButton
-      className={classNames(className, 'p-0 h-auto w-auto')}
+      className={classNames(className, 'p-0 h-[20px] w-[20px]')}
+      tooltipProps={{ triggerClassName: 'h-[20px] w-[20px]' }}
       aria-label="copy"
       onClick={onClick}
       icon={<IconCopy {...BASE_BUTTON_ICON_PROPS} />}
