@@ -22,7 +22,7 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 
 import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
-import CreateContainer from '@/src/components/Containers/Modals/CreateContainer';
+import ContainerCreate from '@/src/components/Deployments/Modals/ContainerCreate';
 import ServingCreateHF from '@/src/components/Deployments/Modals/ServingCreateHF';
 import ServingCreateNIM from '@/src/components/Deployments/Modals/ServingCreateNIM';
 
@@ -120,7 +120,7 @@ const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, names, gridApi })
       {isModalOpen &&
         modalType === ModalType.createContainer &&
         createPortal(
-          <CreateContainer
+          <ContainerCreate
             isModalOpen={isModalOpen}
             modalTitle={t(ContainersI18nKey.CreateModalTitle, {
               type: getTranslatedType(route, t),

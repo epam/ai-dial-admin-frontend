@@ -2,19 +2,30 @@
 
 import { FC } from 'react';
 
+import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import EntityInfoHeader from '@/src/components/EntityHeaderControls/Info/InfoHeader';
+import { EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
+import TestSuiteProperties from './Properties';
 
 interface Props {
   selectedTestSuite: TestSuite;
   onChange: (testSuite: TestSuite) => void;
 }
 
-const PropertiesTabContent: FC<Props> = ({ selectedTestSuite }) => {
+const PropertiesTabContent: FC<Props> = ({ selectedTestSuite, onChange }) => {
+  const t = useI18n();
+
   return (
     <div className="flex flex-col">
-      <EntityInfoHeader id={selectedTestSuite.id} entity={selectedTestSuite} />
-      <div className="flex-1 min-h-0 pt-8">Properties Content</div>
+      <EntityInfoHeader id={selectedTestSuite.id} entity={selectedTestSuite}>
+        <LabelledText copyable={true} label={t(EntityFieldsI18nKey.name)} text={selectedTestSuite.name} />
+      </EntityInfoHeader>
+
+      <div className="flex-1 min-h-0 pt-8">
+        <TestSuiteProperties testSuite={selectedTestSuite} onChange={onChange} />
+      </div>
     </div>
   );
 };

@@ -29,7 +29,7 @@ interface Props {
   containerStatus?: CONTAINER_STATUS;
 }
 
-const ChangeContainerImage: FC<Props> = ({
+const ContainerChangeImage: FC<Props> = ({
   onClose,
   isModalOpen,
   modalTitle,
@@ -153,4 +153,4 @@ const ChangeContainerImage: FC<Props> = ({
   );
 };
 
-export default ChangeContainerImage;
+export default ContainerChangeImage;
