@@ -22,7 +22,7 @@ describe('Server :: TestSuiteApi', () => {
   test('Should calls getTestSuites and return list', async () => {
     fetch.mockResponseOnce(JSON.stringify([mockTestSuite]));
 
-    await instance.getTestSuites(0, 10, TOKEN_MOCK);
+    await instance.getTestSuites(0, 10, [], [], TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${TEST_SUITES_URL}?page=0&size=10&includeTotalCount=true`,
@@ -96,7 +96,7 @@ describe('Server :: TestSuiteApi', () => {
 
   test('Should calls getTestCases', async () => {
     fetch.mockResponseOnce(JSON.stringify([mockTestSuite]));
-    await instance.getTestCases('id', 0, 10, TOKEN_MOCK);
+    await instance.getTestCases('id', 0, 10, [], [], TOKEN_MOCK);
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${TEST_CASES_URL('id')}?page=0&size=10&includeTotalCount=true`,
       expect.objectContaining({ method: 'GET' }),
