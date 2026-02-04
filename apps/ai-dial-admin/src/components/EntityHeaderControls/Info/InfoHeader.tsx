@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, ReactNode } from 'react';
 
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import CoreSyncEntityStatus from '@/src/components/Common/SyncCoreStatus/SyncCoreStatus';
@@ -11,13 +11,15 @@ interface Props {
   id?: string;
   entity?: { updatedAt?: string; createdAt?: string };
   view?: ApplicationRoute;
+  children?: ReactNode;
 }
 
-const EntityInfoHeader: FC<Props> = ({ id, entity, view }) => {
+const EntityInfoHeader: FC<Props> = ({ id, entity, view, children }) => {
   const t = useI18n();
 
   return (
     <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-primary">
+      {children}
       <LabelledText label={t(EntityFieldsI18nKey.updatedAt)} text={formatDateTimeToLocalString(entity?.updatedAt)} />
       <LabelledText label={t(EntityFieldsI18nKey.createdAt)} text={formatDateTimeToLocalString(entity?.createdAt)} />
 
