@@ -1,5 +1,5 @@
 import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
-import { Step } from '@epam/ai-dial-ui-kit';
+import { Step, StepStatus } from '@epam/ai-dial-ui-kit';
 
 export enum TestSuitTab {
   Properties = 'Properties',
@@ -21,6 +21,7 @@ export const TEST_SUIT_STEPS = (t: (key: string) => string) => {
     {
       id: TestSuitTab.Methods,
       name: t(TestSuitesI18nKey.Methods),
+      status: StepStatus.VALID,
     },
   ] as Step[];
 };

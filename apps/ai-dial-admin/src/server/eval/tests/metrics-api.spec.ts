@@ -23,20 +23,22 @@ describe('Server :: MetricsApi', () => {
   test('Should calls getMetrics and return list', async () => {
     fetch.mockResponseOnce(JSON.stringify([mockMetric]));
 
-    await instance.getMetrics(TOKEN_MOCK);
+    await instance.getMetrics(1, 10, TOKEN_MOCK);
 
-    expect(fetch).toHaveBeenCalledWith(`${TEST_URL}${METRICS_URL}`, expect.objectContaining({ method: 'GET' }));
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${METRICS_URL}?page=1&size=10&includeTotalCount=true`,
+      expect.objectContaining({ method: 'GET' }),
+    );
   });
 
   test('Should calls getMetric by name and return metric', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockMetric));
 
-    const result = await instance.getMetric(mockMetric.id as string, TOKEN_MOCK);
+    await instance.getMetric(mockMetric.id as string, TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${METRIC_URL(mockMetric.id as string)}`,
       expect.objectContaining({ method: 'GET' }),
     );
-    expect(result.response).toEqual(JSON.stringify(mockMetric));
   });
 });

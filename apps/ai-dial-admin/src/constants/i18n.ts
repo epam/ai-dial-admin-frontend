@@ -333,7 +333,7 @@ export enum UpdateI18nKey {
   // Entities
   Model = 'UpdateEntity.Entities.Model',
   Application = 'UpdateEntity.Entities.Application',
-  Toolsets = 'UpdateEntity.Entities.Toolsets',
+  Toolset = 'UpdateEntity.Entities.Toolset',
   Route = 'UpdateEntity.Entities.Route',
   Interceptor = 'UpdateEntity.Entities.Interceptor',
   Role = 'UpdateEntity.Entities.Role',
@@ -341,6 +341,7 @@ export enum UpdateI18nKey {
   Prompt = 'UpdateEntity.Entities.Prompt',
   File = 'UpdateEntity.Entities.File',
   Adapter = 'UpdateEntity.Entities.Adapter',
+  TestSuite = 'UpdateEntity.Entities.TestSuite',
   InterceptorTemplate = 'UpdateEntity.Entities.InterceptorTemplate',
   ApplicationRunner = 'UpdateEntity.Entities.ApplicationRunner',
   SystemProperties = 'UpdateEntity.Entities.SystemProperties',
@@ -376,6 +377,7 @@ export enum CreateI18nKey {
   InterceptorTemplate = 'CreateEntity.Entities.InterceptorTemplate',
   ApplicationRunner = 'CreateEntity.Entities.ApplicationRunner',
   AssetApplication = 'CreateEntity.Entities.AssetApplication',
+  TestSuite = 'CreateEntity.Entities.TestSuite',
 }
 
 export enum UpstreamEndpointsI18nKey {
@@ -873,9 +875,11 @@ export enum SourceI18nKey {
   Container = 'Source.Container',
   InterceptorTemplate = 'Source.InterceptorTemplate',
   ModelDeployment = 'Source.ModelDeployment',
+  ModelServing = 'Source.ModelServing',
   InterceptorContainer = 'Source.InterceptorContainer',
   McpContainer = 'Source.McpContainer',
   Endpoint = 'Source.Endpoint',
+  ExternalEndpoint = 'Source.ExternalEndpoint',
   Adapter = 'Source.Adapter',
 }
 

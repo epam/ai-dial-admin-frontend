@@ -186,9 +186,6 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig | null>
       { name: 'Id', href: false },
     ],
   },
-  [ApplicationRoute.Forbidden]: {
-    segments: [{ name: 'Forbidden' }],
-  },
   [ApplicationRoute.InterceptorTemplates]: {
     segments: [
       {

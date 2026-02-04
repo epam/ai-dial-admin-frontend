@@ -21,3 +21,23 @@ export async function updateTestSuite(suite: TestSuite) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return testSuitesApi.updateTestSuite(suite, token);
 }
+
+export async function getTestSuites(page: number, size: number) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.getTestSuites(page, size, token);
+}
+
+export async function getTestSuite(id: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.getTestSuite(id, token);
+}
+
+export async function getTestCases(id: string, page: number, size: number) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.getTestCases(id, page, size, token);
+}
+
+export async function getTestCase(id: string, testCaseId?: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.getTestCase(id, testCaseId, token);
+}

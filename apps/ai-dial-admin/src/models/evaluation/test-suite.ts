@@ -20,3 +20,7 @@ export interface TestSuiteEndpointRef {
   method?: string;
   relativeUrl?: string;
 }
+
+export interface TestCase {
+  name?: string;
+}

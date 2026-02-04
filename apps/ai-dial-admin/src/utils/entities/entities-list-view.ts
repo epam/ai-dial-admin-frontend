@@ -85,7 +85,9 @@ export const getKeysForEntitiesGrid = (keys?: DialKey[] | null): EntitiesGridDat
  * @param {?(DialApplicationScheme[] | null)} [runners] - DialApplicationScheme array
  * @returns {EntitiesGridData[]} - EntitiesGridData array
  */
-export const getRunnersForEntitiesGrid = (runners?: DialApplicationScheme[] | null): EntitiesGridData[] => {
+export const getRunnersForEntitiesGrid = (
+  runners?: DialApplicationScheme[] | EntitiesGridData[] | null,
+): EntitiesGridData[] => {
   return [...(runners || [])].map((runner) => ({
     ...runner,
     type: MenuI18nKey.ApplicationRunners,
