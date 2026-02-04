@@ -1,51 +1,43 @@
 'use client';
 
-import { FC, useCallback, useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
-import { useI18n } from '@/src/locales/client';
-import { changeFolder, createFolderWithFiles, removeFolder } from '@/src/app/[lang]/folders-storage/actions';
-import { ImportResult } from '@/src/models/import';
-import { getImportResults } from '@/src/components/EntityListView/Import/utils';
-
-import { bulkDeleteFiles, moveFiles, exportFiles, importFiles } from '@/src/app/[lang]/files/actions';
-import Page403 from '@/src/components/Page403/Page403';
-import { useFileFolder } from '@/src/context/assets/FileFolderContext';
-import { getFormDataForImport, getImportTitle } from '@/src/components/EntityListView/HeaderButtons/utils';
-import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
-import { getSuccessNotification } from '@/src/utils/notification';
-import { useNotification } from '@/src/context/NotificationContext';
-import { FoldersI18nKey } from '@/src/constants/i18n';
-import { getFolderName } from '@/src/utils/files/folder';
-import { ApplicationRoute } from '@/src/types/routes';
-import { ROOT_FOLDER } from '@/src/constants/file';
 import {
+  DialCopiedItem,
+  DialDeletedItem,
   DialFile,
   DialFileManager,
   DialUploadFileItem,
   NAME_COLUMN,
-  UPDATED_AT_COLUMN,
   SIZE_COLUMN,
-  DialCopiedItem,
-  DialDeletedItem,
+  UPDATED_AT_COLUMN,
 } from '@epam/ai-dial-ui-kit';
+
+import { bulkDeleteFiles, exportFiles, importFiles, moveFiles } from '@/src/app/[lang]/files/actions';
+import { changeFolder, createFolderWithFiles, removeFolder } from '@/src/app/[lang]/folders-storage/actions';
+import { getFormDataForImport, getImportTitle } from '@/src/components/EntityListView/HeaderButtons/utils';
+import { getImportResults } from '@/src/components/EntityListView/Import/utils';
+import { ROOT_FOLDER } from '@/src/constants/file';
+import { ButtonsI18nKey, FileManagerI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
+import { useFileFolder } from '@/src/context/assets/FileFolderContext';
+import { useNotification } from '@/src/context/NotificationContext';
+import { useI18n } from '@/src/locales/client';
 import { DialFileNodeType } from '@/src/models/dial/file';
-import { ResourceType } from '@/src/types/resource-type';
+import { ImportResult } from '@/src/models/import';
 import { ServerActionResponse } from '@/src/models/server-action';
+import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
+import { ResourceType } from '@/src/types/resource-type';
+import { ApplicationRoute } from '@/src/types/routes';
 import { downloadFile } from '@/src/utils/download';
+import { getFolderName } from '@/src/utils/files/folder';
+import { getSuccessNotification } from '@/src/utils/notification';
 
 const FILES_GRID_COLUMNS = [NAME_COLUMN('Display name'), UPDATED_AT_COLUMN('Updated time'), SIZE_COLUMN('Size')];
 
-interface Props {
-  view?: ApplicationRoute;
-}
-
-const FilesList: FC<Props> = ({ view = ApplicationRoute.Files }) => {
+const FilesList = () => {
   const t = useI18n();
-  const { files, fetchFiles, isFetchingFiles } = useFileFolder();
 
-  if (files == null) {
-    return <Page403 />;
-  }
+  const { files, fetchFiles, isFetchingFiles } = useFileFolder();
 
   useEffect(() => {
     if (files == null || files?.length === 0) {
@@ -86,18 +78,18 @@ const FilesList: FC<Props> = ({ view = ApplicationRoute.Files }) => {
         ApplicationRoute.Files,
       ).body;
 
-      createFolderWithFiles(body, ImportFileType.FILES, view).then((res) => {
+      createFolderWithFiles(body, ImportFileType.FILES, ApplicationRoute.Files).then((res) => {
         if (res.success) {
           fetchFiles?.(path, true);
           setPath(path);
           const results = (res.response as { importResults: ImportResult[] }).importResults;
-          const translatedType = t(getImportTitle(view)).toLowerCase();
+          const translatedType = t(getImportTitle(ApplicationRoute.Files)).toLowerCase();
           showNotification(getSuccessNotification(t(FoldersI18nKey.FolderCreateSuccess)));
           getImportResults(results, getFolderName(path) as string, translatedType, t, showNotification);
         }
       });
     },
-    [fetchFiles, path, showNotification, t, view],
+    [fetchFiles, path, showNotification, t],
   );
 
   const handleImportFiles = useCallback(
@@ -111,7 +103,7 @@ const FilesList: FC<Props> = ({ view = ApplicationRoute.Files }) => {
           ConflictResolutionPolicy.SKIP,
           [],
           false,
-          view,
+          ApplicationRoute.Files,
         ).body;
 
         promises.push(importFiles(body, ImportFileType.FILES));
@@ -125,7 +117,7 @@ const FilesList: FC<Props> = ({ view = ApplicationRoute.Files }) => {
         }
       });
     },
-    [fetchFiles, showNotification, t, view],
+    [fetchFiles, showNotification, t],
   );
 
   const handleImportArchive = useCallback(
@@ -137,7 +129,7 @@ const FilesList: FC<Props> = ({ view = ApplicationRoute.Files }) => {
         ConflictResolutionPolicy.SKIP,
         [],
         false,
-        view,
+        ApplicationRoute.Files,
       ).body;
 
       importFiles(body, ImportFileType.ARCHIVE).then((res) => {
@@ -147,7 +139,7 @@ const FilesList: FC<Props> = ({ view = ApplicationRoute.Files }) => {
         }
       });
     },
-    [fetchFiles, showNotification, t, view],
+    [fetchFiles, showNotification, t],
   );
 
   const handleOnPathChange = useCallback((nextPath: string | undefined) => {
@@ -267,19 +259,18 @@ const FilesList: FC<Props> = ({ view = ApplicationRoute.Files }) => {
   return (
     <>
       <DialFileManager
-        title={'Files'}
-        className={'bg-layer-2'}
+        // title={t(MenuI18nKey.Files)} // TODO: support UI kit
+        className="bg-layer-2 py-4 px-6"
         path={path}
         defaultPath={`${ROOT_FOLDER}/`}
-        items={files as DialFile[]}
+        items={files as []}
         filesLoading={isFetchingFiles}
         showNavigationPanel={false}
         bulkActionsToolbarOptions={{
-          getSelectionLabel: (selectedCount: number) => `${selectedCount} item(s) selected`,
+          getSelectionLabel: (selectedCount: number) => `${selectedCount} ${t(FileManagerI18nKey.SelectedItems)}`,
           actionLabels: {
-            move: 'Move to',
-            download: 'Export',
-            delete: 'Delete',
+            download: t(ButtonsI18nKey.Export),
+            delete: t(ButtonsI18nKey.Delete),
           },
         }}
         toolbarOptions={{
@@ -288,7 +279,7 @@ const FilesList: FC<Props> = ({ view = ApplicationRoute.Files }) => {
             newFolder: { label: 'Folder', icon: null },
             uploadFiles: { label: 'File', icon: null },
           },
-          newButtonLabel: 'Create',
+          newButtonLabel: t(ButtonsI18nKey.Create),
         }}
         treeOptions={{
           collapsed: false,
@@ -296,27 +287,20 @@ const FilesList: FC<Props> = ({ view = ApplicationRoute.Files }) => {
           loadedPaths,
           loadingPaths: isFetchingFiles ? new Set<string>([ROOT_FOLDER]) : new Set<string>(),
           actionLabels: {
-            addSibling: 'Add Sibling',
-            addChild: 'Add Child',
-            duplicate: 'Duplicate',
-            copy: 'Copy to',
-            move: 'Move to',
-            download: 'Download',
-            delete: 'Delete',
-            rename: 'Rename',
+            addSibling: t(FileManagerI18nKey.AddSibling),
+            addChild: t(FileManagerI18nKey.AddChild),
+            move: t(FileManagerI18nKey.Move),
+            download: t(ButtonsI18nKey.Download),
+            delete: t(ButtonsI18nKey.Delete),
+            rename: t(FileManagerI18nKey.Rename),
           },
         }}
         gridOptions={{
           columnDefs: FILES_GRID_COLUMNS,
           actionLabels: {
-            addSibling: 'Add Sibling',
-            addChild: 'Add Child',
-            duplicate: 'Duplicate',
-            copy: 'Copy to',
-            move: 'Move to',
-            download: 'Download',
-            delete: 'Delete',
-            rename: 'Rename',
+            move: t(FileManagerI18nKey.Move),
+            download: t(ButtonsI18nKey.Download),
+            delete: t(ButtonsI18nKey.Delete),
           },
         }}
         onPathChange={handleOnPathChange}
@@ -330,14 +314,14 @@ const FilesList: FC<Props> = ({ view = ApplicationRoute.Files }) => {
         onCreateFolderValidate={handleCreateFolderValidate}
         onDeleteFiles={handleDeleteFileNodes}
         onMoveToFiles={handleMoveToFiles}
-        onFolderPopupPathChange={handleFolderPopupPathChange}
+        // onFolderPopupPathChange={handleFolderPopupPathChange}
         folderCreationValidationMessages={{
-          emptyName: 'Please enter a folder name',
-          duplicateName: 'A folder with this name already exists in this location',
+          emptyName: t(FileManagerI18nKey.EnterFolderName),
+          duplicateName: t(FileManagerI18nKey.NameExists),
         }}
         renameValidationMessages={{
-          emptyName: 'Please enter a folder name',
-          duplicateName: 'A folder with this name already exists in this location',
+          emptyName: t(FileManagerI18nKey.EnterFolderName),
+          duplicateName: t(FileManagerI18nKey.NameExists),
         }}
       />
     </>

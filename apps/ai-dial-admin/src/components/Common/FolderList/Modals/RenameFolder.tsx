@@ -15,6 +15,7 @@ interface Props {
   onApply: (name: string) => void;
 }
 
+// TODO: remove after support FilesManager in all places with folders
 const RenameFolder: FC<Props> = ({ currentPath, siblings = [], isModalOpen, onClose, onApply }) => {
   const t = useI18n();
   const [newName, setNewName] = useState(getFolderName(currentPath) || '');

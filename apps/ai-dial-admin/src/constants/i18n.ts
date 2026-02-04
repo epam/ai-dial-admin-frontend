@@ -273,10 +273,10 @@ export enum ButtonsI18nKey {
   Cancel = 'Buttons.Cancel',
   Delete = 'Buttons.Delete',
   DeleteAll = 'Buttons.DeleteAll',
+  Download = 'Buttons.Download',
   Duplicate = 'Buttons.Duplicate',
   Save = 'Buttons.Save',
   SaveAndRedeploy = 'Buttons.SaveAndRedeploy',
-  Move = 'Buttons.Move',
   SaveAsNewVersion = 'Buttons.SaveAsNewVersion',
   Apply = 'Buttons.Apply',
   Browse = 'Buttons.Browse',
@@ -750,7 +750,7 @@ export enum FoldersI18nKey {
   FolderCreate = 'Folder.FolderCreate',
   FolderCreatePlaceholder = 'Folder.FolderCreatePlaceholder',
   FolderCreateSuccess = 'Folder.FolderCreateSuccess',
-  Rename = 'Folder.Rename',
+
   FolderName = 'Folder.FolderName',
   RenameFolderError = 'Folder.RenameFolderError',
   MoveFolderError = 'Folder.MoveFolderError',
@@ -1276,4 +1276,14 @@ export enum TestSuitesI18nKey {
   CreateTestSuite = 'TestSuites.CreateTestSuite',
   Application = 'TestSuites.Application',
   Methods = 'TestSuites.Methods',
+}
+
+export enum FileManagerI18nKey {
+  SelectedItems = 'FileManager.SelectedItems',
+  AddSibling = 'FileManager.AddSibling',
+  AddChild = 'FileManager.AddChild',
+  Rename = 'FileManager.Rename',
+  Move = 'FileManager.Move',
+  EnterFolderName = 'FileManager.EnterFolderName',
+  NameExists = 'FileManager.NameExists',
 }
