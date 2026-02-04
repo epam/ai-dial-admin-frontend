@@ -30,7 +30,7 @@ interface Props<T> {
   onCreateEntity?: (entity: T) => Promise<ServerActionResponse>;
 }
 
-const HeaderButtons = <T extends { id: string }>({ route, gridApi, toggleColumnsPanel, onCreateEntity }: Props<T>) => {
+const HeaderButtons = <T extends { id?: string }>({ route, gridApi, toggleColumnsPanel, onCreateEntity }: Props<T>) => {
   const t = useI18n();
   const router = useRouter();
 
