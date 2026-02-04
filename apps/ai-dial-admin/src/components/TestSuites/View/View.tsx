@@ -18,7 +18,6 @@ import { EntityViewTab, getTestSuiteTabs } from '@/src/utils/tabs/utils';
 import TabsContent from './TabsContent';
 
 interface Props {
-  names: string[];
   originalTestSuite: TestSuite;
 }
 

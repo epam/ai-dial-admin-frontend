@@ -376,6 +376,7 @@ export enum CreateI18nKey {
   InterceptorTemplate = 'CreateEntity.Entities.InterceptorTemplate',
   ApplicationRunner = 'CreateEntity.Entities.ApplicationRunner',
   AssetApplication = 'CreateEntity.Entities.AssetApplication',
+  TestSuite = 'CreateEntity.Entities.TestSuite',
 }
 
 export enum UpstreamEndpointsI18nKey {
@@ -645,8 +646,10 @@ export enum PromptsI18nKey {
 
 export enum ImportI18nKey {
   ConflictResolution = 'Import.ConflictResolution',
-  ConfigImported = 'Import.ConfigImported',
-  ConfigImportedDescription = 'Import.ConfigImportedDescription',
+  ConfigImported = 'Import.Notifications.ConfigImported',
+  ConfigImportedDescription = 'Import.Notifications.ConfigImportedDescription',
+  NotificationImporting = 'Import.Notifications.Importing',
+  NotificationImportingDescription = 'Import.Notifications.ImportingDescription',
   Override = 'Import.Override',
   Skip = 'Import.Skip',
   EditManually = 'Import.EditManually',
@@ -871,9 +874,11 @@ export enum SourceI18nKey {
   Container = 'Source.Container',
   InterceptorTemplate = 'Source.InterceptorTemplate',
   ModelDeployment = 'Source.ModelDeployment',
+  ModelServing = 'Source.ModelServing',
   InterceptorContainer = 'Source.InterceptorContainer',
   McpContainer = 'Source.McpContainer',
   Endpoint = 'Source.Endpoint',
+  ExternalEndpoint = 'Source.ExternalEndpoint',
   Adapter = 'Source.Adapter',
 }
 

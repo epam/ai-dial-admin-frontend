@@ -1,10 +1,17 @@
-import { ColDef } from 'ag-grid-community';
+import { ColDef, GridOptions } from 'ag-grid-community';
 
 import ActionColumn from '@/src/components/Grid/ActionColumn/ActionColumn';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
 
 export const PAGE_SIZE = 100;
 export const CACHE_LIMIT = 1000;
+
+export const infiniteGridOptions: Partial<GridOptions> = {
+  rowModelType: 'infinite',
+  cacheBlockSize: PAGE_SIZE,
+  blockLoadDebounceMillis: 200,
+  maxBlocksInCache: Math.floor(CACHE_LIMIT / PAGE_SIZE),
+};
 
 export const NO_BORDER_CLASS = 'ag-grid-no-border';
 export const NO_CHECKBOX_CLASS = 'ag-grid-no-checkbox';

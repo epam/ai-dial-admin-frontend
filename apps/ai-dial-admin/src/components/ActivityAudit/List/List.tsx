@@ -17,7 +17,7 @@ import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
 import { emptyDataTitleMap, listViewTitleMap } from '@/src/components/ListView/constants';
 import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
 import ListView from '@/src/components/ListView/ListView';
-import { ACTIONS_COLUMN_CEL_ID, CACHE_LIMIT, PAGE_SIZE } from '@/src/constants/ag-grid';
+import { ACTIONS_COLUMN_CEL_ID, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
 import { DEFAULT_TIME_PERIOD } from '@/src/constants/global-time-filter';
 import { ButtonsI18nKey, RollbackI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -61,7 +61,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, initTimeFil
 
   const [isLoading, setIsLoading] = useState(false);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
-  const [timePeriod, setTimePeriod] = useState(initTimeFilter);
+  const [timePeriod, setTimePeriod] = useState<string | undefined>();
   const [timeRange, setTimeRange] = useState<TimeRange>(getTimeRangeById(DEFAULT_TIME_PERIOD));
 
   const [selectedActivity, setSelectedActivity] = useState<DialActivity | undefined>(void 0);
@@ -69,6 +69,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, initTimeFil
   useEffect(() => {
     if (!timePeriod) {
       setTimePeriod(initTimeFilter || DEFAULT_TIME_PERIOD);
+      setTimeRange(getTimeRangeById(initTimeFilter || DEFAULT_TIME_PERIOD));
     }
   }, [initTimeFilter, timePeriod]);
 
@@ -119,9 +120,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, initTimeFil
 
         getActivities(PAGE_SIZE, page, sorts, filters)
           .then((res) => {
-            if (res === void 0) {
-              router.push(ApplicationRoute.Forbidden);
-            } else if (res == null || res.data.length === 0) {
+            if (res == null || res.data.length === 0) {
               params.successCallback([], 0);
             } else {
               params.successCallback(res.data || [], page + 1 === res.totalPages ? res.total : void 0);
@@ -134,7 +133,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, initTimeFil
           });
       },
     }),
-    [timeRange, gridApi, entity, entityType, router],
+    [timeRange, gridApi, entity, entityType],
   );
 
   useEffect(() => {
@@ -144,10 +143,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, initTimeFil
   }, [gridApi, gridDataSource]);
 
   const gridOptions: GridOptions = {
-    rowModelType: 'infinite',
-    cacheBlockSize: PAGE_SIZE,
-    blockLoadDebounceMillis: 200,
-    maxBlocksInCache: Math.floor(CACHE_LIMIT / PAGE_SIZE),
+    ...infiniteGridOptions,
     onCellClicked: (e) => {
       if (e.colDef.field !== ACTIONS_COLUMN_CEL_ID) {
         if (entity) {

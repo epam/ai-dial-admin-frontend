@@ -1,3 +1,5 @@
+'use client';
+
 import { FC } from 'react';
 import { DialGhostButton, DialSelect, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
