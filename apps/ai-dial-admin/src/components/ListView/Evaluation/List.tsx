@@ -68,7 +68,6 @@ const EvaluationListView = <T extends object>({
 
         getData(page, PAGE_SIZE, sorts, filters)
           .then((res) => {
-            console.log('Data loaded:', res);
             if (res == null || res.content.length === 0) {
               params.successCallback([], 0);
             } else {
