@@ -36,6 +36,9 @@ export enum ModalType {
   install = 'install',
   globalFirewall = 'globalFirewall',
   addImage = 'addImage',
+  createContainer = 'createContainer',
+  createServingHF = 'createServingHF',
+  createServingNIM = 'createServingNIM',
 }
 
 interface Props {

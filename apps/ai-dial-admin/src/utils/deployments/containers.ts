@@ -1,6 +1,5 @@
 import { EnvironmentVariable } from '@/src/models/deployments/variables';
 import { Container, ContainerRedeploySnapshot, ResourcesDefaults } from '@/src/models/deployments/containers';
-import { ApplicationRoute } from '@/src/types/routes';
 import {
   CONTAINER_STATUS,
   CONTAINER_TRANSPORT,
@@ -42,20 +41,11 @@ export const getContainerRedeploySnapshot = (container: Container): ContainerRed
   };
 };
 
-export const getContainerTemplate = (route: ApplicationRoute, defaults?: ResourcesDefaults): Container | null => {
-  switch (route) {
-    case ApplicationRoute.ModelServings:
-      return getTemplate(CONTAINER_TYPE.HF, defaults);
-    case ApplicationRoute.McpContainers:
-      return getTemplate(CONTAINER_TYPE.MCP, defaults);
-    case ApplicationRoute.InterceptorContainers:
-      return getTemplate(CONTAINER_TYPE.INTERCEPTOR, defaults);
-    default:
-      return null;
+export const getContainerTemplate = (type: CONTAINER_TYPE, defaults?: ResourcesDefaults): Container | null => {
+  if (!type) {
+    return null;
   }
-};
 
-const getTemplate = (type: CONTAINER_TYPE, defaults?: ResourcesDefaults): Container => {
   const template = {
     $type: type,
     imageDefinitionId: '',
@@ -92,6 +82,26 @@ const getTemplate = (type: CONTAINER_TYPE, defaults?: ResourcesDefaults): Contai
         $type: MODEL_SOURCE_TYPE.HF,
       },
       modelFormat: MODEL_FORMAT.HF,
+      resources: {
+        requests: {
+          ...template.resources?.requests,
+          'nvidia.com/gpu': defaults?.GPU_REQUEST || '1',
+        },
+        limits: {
+          ...template.resources?.limits,
+          'nvidia.com/gpu': defaults?.GPU_LIMIT || '1',
+        },
+      },
+      scaling: DEFAULT_SCALING,
+    };
+  }
+
+  if (type === CONTAINER_TYPE.NIM) {
+    return {
+      ...template,
+      source: {
+        $type: MODEL_SOURCE_TYPE.NIM,
+      },
       resources: {
         requests: {
           ...template.resources?.requests,
