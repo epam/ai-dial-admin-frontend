@@ -24,7 +24,7 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate }) => {
   const [steps, setSteps] = useState(TEST_SUIT_STEPS(t));
   const [currentStepId, setCurrentStep] = useState(steps[0].id);
   // TODO: mock data, replace after support deployments API
-  const [testSuit, setTestSuit] = useState<TestSuite>({
+  const [testSuite, setTestSuite] = useState<TestSuite>({
     id: 'test-suite-001',
     name: 'My Test Suite',
     deploymentRef: {
@@ -41,16 +41,16 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate }) => {
   const currentStep = useMemo(() => steps.find((step) => step.id === currentStepId), [steps, currentStepId]);
 
   const onFinishClick = useCallback(() => {
-    onCreate(testSuit);
-  }, [onCreate, testSuit]);
+    onCreate(testSuite);
+  }, [onCreate, testSuite]);
 
   useEffect(() => {
     setSteps((prev) =>
       prev.map((step) =>
-        step.id === TestSuitTab.Properties ? { ...step, status: testSuit.name ? StepStatus.VALID : void 0 } : step,
+        step.id === TestSuitTab.Properties ? { ...step, status: testSuite.name ? StepStatus.VALID : void 0 } : step,
       ),
     );
-  }, [testSuit, currentStepId]);
+  }, [testSuite, currentStepId]);
 
   useEffect(() => {
     setSteps((prev) =>
@@ -74,7 +74,7 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate }) => {
         <DialSteps steps={steps} currentStep={currentStepId} onChangeStep={setCurrentStep} />
         <div className="flex-1 min-h-0">
           {currentStepId === TestSuitTab.Properties && (
-            <TestSuiteProperties testSuite={testSuit} onChangeTestSuite={setTestSuit} />
+            <TestSuiteProperties testSuite={testSuite} onChangeTestSuite={setTestSuite} />
           )}
 
           {currentStepId === TestSuitTab.Application && (

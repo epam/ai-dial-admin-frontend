@@ -21,6 +21,6 @@ export interface TestSuiteEndpointRef {
   relativeUrl?: string;
 }
 
-export interface TestCases {
+export interface TestCase {
   name?: string;
 }
