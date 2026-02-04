@@ -40,7 +40,7 @@ const PropertiesTabContent: FC<Props> = ({ selectedKey, onChange, names, keys })
   }, [selectedKey.keyGeneratedAt, selectedKey.expiresAt, selectedKey.validityState, t]);
 
   return (
-    <div className="h-full flex flex-col divide-y divide-primary w-full">
+    <div className="h-full flex flex-col w-full">
       <EntityInfoHeader id={selectedKey.name} entity={selectedKey} postfix={headerPostfix} />
       <div className="flex-1 min-h-0 pt-8">
         <KeyProperties
