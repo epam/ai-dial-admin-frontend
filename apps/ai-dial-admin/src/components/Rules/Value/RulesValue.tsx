@@ -123,7 +123,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
             onChange={(fun) => onChangeFunction(fun as string)}
           />
         </div>
-        <div className={'flex-1'}>
+        <div className="flex-1">
           {rule.function === RuleFunction.REGEX ? (
             <DialTextInputField
               elementId={`upstream-endpoints-${index}`}
