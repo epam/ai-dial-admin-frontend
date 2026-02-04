@@ -15,7 +15,6 @@ export const safeDecodeJwt = (accessToken: string) => {
     return decodeJwt(accessToken);
   } catch (err) {
     errorObjLog(err, "Token couldn't be parsed as JWT");
-    // TODO: read roles from GCP token format
     return {};
   }
 };
@@ -151,6 +150,7 @@ export const callbacks: Partial<CallbacksOptions<Profile & { job_title?: string 
         refreshToken: options.account.refresh_token,
         providerId: options.account.provider,
         userId: options.user.id,
+        idToken: options.account.id_token,
       };
     }
 
