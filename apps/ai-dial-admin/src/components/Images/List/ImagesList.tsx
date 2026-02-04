@@ -127,14 +127,14 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
     (image: Image) => {
       createImage(image).then((res) => {
         if (res.success) {
-          router.refresh();
+          router.push(getUrnForEntity(route, res.response));
           setCurrentImage(null);
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
         }
       });
     },
-    [router, showNotification],
+    [route, router, showNotification],
   );
 
   const onDelete = useCallback(() => {
