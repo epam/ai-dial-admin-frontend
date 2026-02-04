@@ -25,7 +25,6 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate }) => {
   const [currentStepId, setCurrentStep] = useState(steps[0].id);
   // TODO: mock data, replace after support deployments API
   const [testSuite, setTestSuite] = useState<TestSuite>({
-    id: 'test-suite-001',
     name: 'My Test Suite',
     deploymentRef: {
       id: 'deploy-001',
