@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
-import ApiKeySection from '../ApiKeySection';
+import ApiKeySection from '../../View/Auth/ApiKeySection';
 import { EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 
 describe('ApiKeySection', () => {

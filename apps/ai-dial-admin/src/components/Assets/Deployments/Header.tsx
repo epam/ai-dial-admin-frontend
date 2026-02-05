@@ -14,7 +14,7 @@ import { DialFile } from '@/src/models/dial/file';
 import { ApplicationRoute } from '@/src/types/routes';
 import { removeTrailingSlash } from '@/src/utils/files/path';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
-import { AuthHeader } from '@/src/components/Toolsets/View/Auth/AuthHeader';
+import { AuthHeader } from '@/src/components/Toolsets/Auth/Sections/AuthHeader';
 import { Toolset } from '@/src/models/dial/toolset';
 
 interface Props {

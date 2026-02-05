@@ -13,7 +13,7 @@ import EntityAttachments from '@/src/components/EntityMainProperties/EntityAttac
 import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
 import ApplicationSource from '@/src/components/SourceField/Application/ApplicationSource';
 import ToolsetEndpoint from '@/src/components/SourceField/Endpoints/ToolsetEndpoint';
-import Authentication from '@/src/components/Toolsets/View/Authentication';
+import Authentication from '@/src/components/Toolsets/Auth/Authentication';
 import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';

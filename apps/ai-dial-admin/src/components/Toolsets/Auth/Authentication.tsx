@@ -6,10 +6,10 @@ import { EntityFieldsI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Toolset, ToolsetAuthType } from '@/src/models/dial/toolset';
 import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
-import AuthTypeSection from './Auth/AuthTypeSection';
 import Field from '@/src/components/Common/Field/Field';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
+import AuthTypeSection from './Sections/AuthTypeSection';
 
 interface Props {
   toolset: Toolset;
