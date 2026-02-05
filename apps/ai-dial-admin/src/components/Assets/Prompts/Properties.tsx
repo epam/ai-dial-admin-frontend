@@ -12,9 +12,9 @@ import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
-import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { JSONEditorError } from '@/src/types/editor';
+import { Asset } from '@/src/models/dial/deployment-asset';
 
 interface Props {
   prompt: DialPrompt;
@@ -110,7 +110,7 @@ const PromptProperties: FC<Props> = ({ prompt, onChangePrompt }) => {
           modalTitle={t(BasicI18nKey.MoveToFolder)}
           placeholder={t(EntityPlaceholdersI18nKey.Path)}
           onChange={onChangePath}
-          context={usePromptFolder as () => AssetsFolderContext<DialPrompt | DialFile>}
+          context={usePromptFolder as unknown as () => AssetsFolderContext<Asset>}
         />
       </div>
     </div>

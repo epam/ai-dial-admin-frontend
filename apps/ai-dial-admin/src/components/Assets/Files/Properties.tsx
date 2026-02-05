@@ -14,6 +14,8 @@ import { useFileFolder } from '@/src/context/assets/FileFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { getGridFileColumns, getGridFileData } from '@/src/utils/files/grid-data';
+import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { Asset } from '@/src/models/dial/deployment-asset';
 
 interface Props {
   file: DialFile;
@@ -63,7 +65,7 @@ const FileProperties: FC<Props> = ({ file, onChangeFile }) => {
           modalTitle={t(BasicI18nKey.MoveToFolder)}
           placeholder={t(EntityPlaceholdersI18nKey.Path)}
           onChange={onChangePath}
-          context={useFileFolder}
+          context={useFileFolder as unknown as () => AssetsFolderContext<Asset>}
         />
       </div>
     </div>

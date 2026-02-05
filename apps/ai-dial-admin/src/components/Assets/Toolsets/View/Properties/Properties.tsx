@@ -11,11 +11,9 @@ import FilePath from '@/src/components/Common/FilePath/FilePath';
 import ToolsetEndpoint from '@/src/components/SourceField/Endpoints/ToolsetEndpoint';
 import Authentication from '@/src/components/Toolsets/Auth/Authentication';
 import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
-import { DialFile } from '@/src/models/dial/file';
 import { Toolset, ToolsetAuthType } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -50,7 +48,7 @@ const Properties: FC<Props> = ({ selectedToolset, onChange }) => {
           modalTitle={t(BasicI18nKey.MoveToFolder)}
           placeholder={t(EntityPlaceholdersI18nKey.Path)}
           onChange={(folderId) => onChange?.({ ...selectedToolset, folderId })}
-          context={useToolsetFolder as () => AssetsFolderContext<AssetToolset | DialFile>}
+          context={useToolsetFolder}
         />
         <ToolsetEndpoint entity={selectedToolset} onChange={onChange as (entity: Toolset) => void} />
         <Authentication

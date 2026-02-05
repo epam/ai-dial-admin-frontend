@@ -10,7 +10,7 @@ import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
-import { DialFile } from '@/src/models/dial/file';
+import { Asset } from '@/src/models/dial/deployment-asset';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isAssetView, isAssetWithVersion } from '@/src/utils/is-asset-view';
@@ -22,7 +22,7 @@ interface Props {
   onChangeIsModalOpen: (value: boolean) => void;
   onChangeModalType: (value?: ModalType) => void;
   onChangeIsBulkView: (value: boolean) => void;
-  getAssetContext?: () => AssetsFolderContext<DialFile>;
+  getAssetContext?: () => AssetsFolderContext<Asset>;
   onExport?: (fileType?: ImportFileType) => void;
 }
 
