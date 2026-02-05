@@ -1,3 +1,5 @@
+import { exportApps } from '@/src/app/[lang]/assets-applications/actions';
+import { exportToolsets } from '@/src/app/[lang]/assets-toolsets/actions';
 import { exportFiles } from '@/src/app/[lang]/files/actions';
 import { exportPrompts } from '@/src/app/[lang]/prompts/actions';
 import DuplicateAdapter from '@/src/components/Adapter/Modals/DuplicateAdapter';
@@ -10,15 +12,12 @@ import { MenuI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { Asset } from '@/src/models/dial/deployment-asset';
-import { DialFile } from '@/src/models/dial/file';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isAssetWithVersion } from '@/src/utils/is-asset-view';
-import { prepareEntityForDuplicate } from './Components/utils';
 import { RefObject } from 'react';
-import { exportApps } from '@/src/app/[lang]/assets-applications/actions';
-import { exportToolsets } from '@/src/app/[lang]/assets-toolsets/actions';
+import { prepareEntityForDuplicate } from './Components/utils';
 
 export const getDuplicateModal = async <T extends object>(
   currentEntity: T | undefined,
@@ -30,7 +29,7 @@ export const getDuplicateModal = async <T extends object>(
   isModalOpen: boolean,
   handleModalClose: () => void,
   onDuplicate: (entity: BaseEntity) => Promise<ServerActionResponse>,
-  context?: () => AssetsFolderContext<DialFile | Asset>,
+  context?: () => AssetsFolderContext<Asset>,
 ) => {
   if (!currentEntity) return null;
   const preparedEntity = (await prepareEntityForDuplicate(route, currentEntity, entityRef)) as T;

@@ -3,13 +3,17 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { checkIsUniqueDeploymentName } from '@/src/app/actions';
+import Properties from '@/src/components/EntityMainProperties/Properties/Properties';
 import { isValidSourceField } from '@/src/components/SourceField/utils';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
+import { Asset } from '@/src/models/dial/deployment-asset';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRoute } from '@/src/models/dial/route';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -19,15 +23,10 @@ import {
   getCreateNotificationDescription,
   getCreateNotificationTitle,
 } from '@/src/utils/entities/create-entity';
+import { isAssetView } from '@/src/utils/is-asset-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
-import Properties from '@/src/components/EntityMainProperties/Properties/Properties';
 import { RoutesForCheckingUniqueName } from './constants';
-import { isAssetView } from '@/src/utils/is-asset-view';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
-import { Asset } from '@/src/models/dial/deployment-asset';
-import { DialFile } from '@/src/models/dial/file';
-import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface CreatePromptEntity extends BaseEntity {
   version?: string;
@@ -41,7 +40,7 @@ interface Props<T> {
   runners?: DialApplicationScheme[];
   versionsMap?: Record<string, string[]>;
   createEntity?: (entity: T) => Promise<ServerActionResponse>;
-  context?: () => AssetsFolderContext<Asset | DialFile>;
+  context?: () => AssetsFolderContext<Asset>;
   onClose: () => void;
   initialValues?: Partial<T>;
 }
