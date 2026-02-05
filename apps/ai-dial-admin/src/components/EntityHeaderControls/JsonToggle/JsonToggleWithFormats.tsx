@@ -9,6 +9,7 @@ import { useI18n } from '@/src/locales/client';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
 import JsonToggles from './JsonToggle';
+import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 
 const ONLY_ADMIN_ENTITIES = [
   ApplicationRoute.Adapters,
@@ -19,14 +20,10 @@ const ONLY_ADMIN_ENTITIES = [
   ApplicationRoute.AssetsToolsets,
 ];
 
-interface Props {
+interface Props extends JsonConfiguration {
   view: ApplicationRoute;
-  selectedFormat?: ExportFormat;
-  isEditorEnabled?: boolean;
 
-  onChangeSelectedFormat?: (format: ExportFormat) => void;
-  onToggleEditor?: () => void;
-  onHideFormatSelector?: () => void;
+  onHideFormatSelector?: () => void; // TODO: need? remove
 }
 
 const JsonToggleWithFormats: FC<Props> = ({

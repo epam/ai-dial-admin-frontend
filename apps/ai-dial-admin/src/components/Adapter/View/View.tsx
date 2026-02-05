@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
@@ -10,6 +10,7 @@ import { cloneDeep } from 'lodash';
 
 import { removeAdapter, updateAdapter } from '@/src/app/[lang]/adapters/actions';
 import { createModel } from '@/src/app/[lang]/models/actions';
+import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
@@ -50,6 +51,14 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const jsonConfiguration = useMemo<JsonConfiguration>(
+    () => ({
+      isEditorEnabled,
+      onToggleEditor: () => setIsEditorEnabled((prev) => !prev),
+    }),
+    [isEditorEnabled],
+  );
+
   useEffect(() => {
     setSelectedAdapter(cloneDeep(originalAdapter));
   }, [originalAdapter]);
@@ -61,10 +70,6 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
   const onDiscard = useCallback(() => {
     setSelectedAdapter(cloneDeep(originalAdapter));
   }, [originalAdapter]);
-
-  const onToggleEditor = useCallback(() => {
-    setIsEditorEnabled((prev) => !prev);
-  }, [setIsEditorEnabled]);
 
   const onSave = useCallback(() => {
     getReqRef.current(updateAdapter, selectedAdapter, etag).then((res) => {
@@ -91,10 +96,9 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
         onDiscard={onDiscard}
         onSave={onSave}
         tabs={tabs}
-        isEditorEnabled={isEditorEnabled}
+        jsonConfiguration={jsonConfiguration}
         activeTab={activeTab}
         onChangeActiveTab={setActiveTab}
-        onToggleEditor={onToggleEditor}
         onRemove={removeAdapter}
       >
         <DialNeutralButton
