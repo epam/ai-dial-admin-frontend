@@ -9,9 +9,9 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getHeaderClassName } from '@/src/utils/entities/view';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
-import ReadonlyId from '../BaseControls/Id/ReadonlyId';
+import ReadonlyId from '@/src/components/BaseControls/Id/ReadonlyId';
 import SimpleButtonsWrapper from './Wrappers/SimpleButtonsWrapper';
-import { JsonConfiguration } from './models';
+import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 
 interface Entity {
   id?: string;
