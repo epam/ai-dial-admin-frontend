@@ -874,3 +874,77 @@ export const TOOL_SCHEMA_COLUMNS = (t: (key: string) => string): ColDef[] => [
     tooltipValueGetter: ({ value }) => formatRequired(value, t),
   },
 ];
+
+export const HF_REGISTRY_COLUMNS: ColDef[] = [
+  { field: 'id', headerName: 'Model name', hide: false, sortable: false },
+  {
+    field: 'libraries',
+    headerName: 'Libraries',
+    hide: false,
+    cellRenderer: TagsCellRenderer,
+    cellRendererParams: (params: { data?: { libraries?: string[] } }) => ({
+      items: params.data?.libraries,
+    }),
+    sortable: false,
+    filter: false,
+    floatingFilter: false,
+  },
+  {
+    field: 'languages',
+    headerName: 'Languages',
+    hide: false,
+    cellRenderer: TagsCellRenderer,
+    cellRendererParams: (params: { data?: { languages?: string[] } }) => ({
+      items: params.data?.languages,
+    }),
+    sortable: false,
+    filter: false,
+    floatingFilter: false,
+  },
+  {
+    field: 'licenses',
+    headerName: 'Licenses',
+    hide: false,
+    cellRenderer: TagsCellRenderer,
+    cellRendererParams: (params: { data?: { licenses?: string[] } }) => ({
+      items: params.data?.licenses,
+    }),
+    sortable: false,
+    filter: false,
+    floatingFilter: false,
+  },
+  { field: 'author', headerName: 'Author', hide: false, sortable: false },
+  {
+    field: 'parameters',
+    headerName: 'Parameters',
+    hide: true,
+    ...numericColumn,
+    sortable: false,
+    filter: false,
+    floatingFilter: false,
+  },
+  {
+    field: 'tags',
+    headerName: 'Tags',
+    hide: true,
+    cellRenderer: TagsCellRenderer,
+    cellRendererParams: (params: { data?: { tags?: string[] } }) => ({
+      items: params.data?.tags,
+    }),
+    sortable: false,
+    filter: false,
+    floatingFilter: false,
+  },
+  {
+    field: 'datasets',
+    headerName: 'Trained datasets',
+    hide: true,
+    cellRenderer: TagsCellRenderer,
+    cellRendererParams: (params: { data?: { datasets?: string[] } }) => ({
+      items: params.data?.datasets,
+    }),
+    sortable: false,
+    filter: false,
+    floatingFilter: false,
+  },
+];

@@ -112,4 +112,16 @@ export interface ContainerRedeploySnapshot {
 
 export interface HuggingFaceModel {
   id: string;
+  author: string;
+  createdAt: string;
+  lastModified: string;
+  datasets: string[];
+  downloads: number;
+  languages: string[];
+  libraries: string[];
+  licenses: string[];
+  likes: number;
+  sha: string;
+  tags: string[];
+  parameters: number;
 }

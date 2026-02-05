@@ -155,6 +155,7 @@ export enum EntitiesI18nKey {
   NoInputs = 'Entities.NoInputs',
   NoDependencies = 'Entities.NoDependencies',
   NoConfigurationSchema = 'Entities.NoConfigurationSchema',
+  NoModelServings = 'Entities.NoModelServings',
   AddModel = 'Entities.AddModel',
   AddApplication = 'Entities.AddApplication',
   AddApplicationRunner = 'Entities.AddApplicationRunner',
@@ -322,6 +323,7 @@ export enum ButtonsI18nKey {
   ManageTool = 'Buttons.ManageTool',
   Confirm = 'Buttons.Confirm',
   GlobalFirewall = 'Buttons.GlobalFirewall',
+  HFRegistry = 'Buttons.HFRegistry',
 }
 
 export enum UpdateI18nKey {
@@ -1228,6 +1230,7 @@ export enum ContainersI18nKey {
   ContainerRestartWarning = 'Containers.ContainerRestartWarning',
   ContainersRestartWarning = 'Containers.ContainersRestartWarning',
   ShowRelatedContainers = 'Containers.ShowRelatedContainers',
+  SelectModelFromRegistry = 'Containers.SelectModelFromRegistry',
   ScaleToZeroNever = 'Containers.Autoscaling.ScaleToZeroNever',
   ScaleToZeroAfter15Minutes = 'Containers.Autoscaling.ScaleToZeroAfter15Minutes',
   ScaleToZeroAfter30Minutes = 'Containers.Autoscaling.ScaleToZeroAfter30Minutes',

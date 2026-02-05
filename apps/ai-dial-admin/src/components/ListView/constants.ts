@@ -24,6 +24,7 @@ export const listViewTitleMap: Record<string, MenuI18nKey> = {
   [ApplicationRoute.TestSuites]: MenuI18nKey.TestSuites,
   [ApplicationRoute.Metrics]: MenuI18nKey.Metrics,
   [ApplicationRoute.Runs]: MenuI18nKey.Runs,
+  [ApplicationRoute.ModelServings]: MenuI18nKey.ModelServings,
 };
 
 export const emptyDataTitleMap: Record<string, EntitiesI18nKey> = {
@@ -49,4 +50,5 @@ export const emptyDataTitleMap: Record<string, EntitiesI18nKey> = {
   [ApplicationRoute.TestSuites]: EntitiesI18nKey.NoTestSuites,
   [ApplicationRoute.Metrics]: EntitiesI18nKey.NoMetrics,
   [ApplicationRoute.Runs]: EntitiesI18nKey.NoRuns,
+  [ApplicationRoute.ModelServings]: EntitiesI18nKey.NoModelServings,
 };
