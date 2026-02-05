@@ -8,6 +8,7 @@ import {
   DialFile,
   DialFileManager,
   DialUploadFileItem,
+  GridSelectionMode,
   NAME_COLUMN,
   SIZE_COLUMN,
   UPDATED_AT_COLUMN,
@@ -297,6 +298,7 @@ const FilesList = () => {
         }}
         gridOptions={{
           columnDefs: FILES_GRID_COLUMNS,
+          selectionMode: GridSelectionMode.MULTIPLE,
           actionLabels: {
             move: t(FileManagerI18nKey.Move),
             download: t(ButtonsI18nKey.Download),
