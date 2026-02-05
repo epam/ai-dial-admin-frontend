@@ -49,7 +49,7 @@ const ItemsList: FC<Props> = ({ items, setItems, addItemLabel, validate, isModal
 
   return (
     <div className="flex flex-col items-start gap-4 h-full">
-      <ul className="flex flex-col gap-4 w-full overflow-scroll">
+      <ul className="flex flex-col gap-4 w-full overflow-auto">
         {items == null || items.length === 0 ? (
           <Item
             item={''}

@@ -60,7 +60,6 @@ const UpstreamEndpoints: FC<Props> = ({ readonly, entity, onChangeEntity, isKeyO
             index={0}
             isKeyOptional={isKeyOptional}
             required={required}
-            numEndpoints={1}
             updateEndpoint={(point) => onUpdateEndPoint(point, 0)}
             removeEndpoint={onRemoveEndpoint}
           />
@@ -73,7 +72,6 @@ const UpstreamEndpoints: FC<Props> = ({ readonly, entity, onChangeEntity, isKeyO
               index={index}
               isKeyOptional={isKeyOptional}
               required={required}
-              numEndpoints={entity.upstreams?.length || 0}
               updateEndpoint={(point) => onUpdateEndPoint(point, index)}
               removeEndpoint={onRemoveEndpoint}
             />

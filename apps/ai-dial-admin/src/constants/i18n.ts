@@ -204,6 +204,7 @@ export enum EntitiesI18nKey {
   Serving = 'Entities.Serving',
   ModelServing = 'Entities.ModelServing',
   Container = 'Entities.Container',
+  NoMethods = 'Entities.NoMethods',
 }
 
 export enum DeleteI18nKey {
@@ -227,6 +228,7 @@ export enum DeleteI18nKey {
   File = 'DeleteEntity.Entities.File',
   Adapter = 'DeleteEntity.Entities.Adapter',
   InterceptorTemplate = 'DeleteEntity.Entities.InterceptorTemplate',
+  TestSuite = 'DeleteEntity.Entities.TestSuite',
   ApplicationRunner = 'DeleteEntity.Entities.ApplicationRunner',
 
   // Bulk Delete

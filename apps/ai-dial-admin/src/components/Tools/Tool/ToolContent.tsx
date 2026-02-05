@@ -2,14 +2,14 @@ import { FC, useMemo } from 'react';
 
 import { ColDef } from 'ag-grid-community';
 
+import TableView from '@/src/components/Common/ViewSelector/TableView';
 import JsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
-import { convertSchemaToTable } from '@/src/components/Tools/utils';
-import TableView from '@/src/components/Tools/View/TableView';
 import { TOOL_SCHEMA_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ContainersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Tool as ToolType } from '@/src/models/dial/toolset';
 import { ParamsView } from '@/src/types/parameters';
+import { convertSchemaToTable } from '@/src/utils/schema';
 
 interface Props {
   tool: ToolType;

@@ -32,7 +32,7 @@ const EntityDeleteModal: FC<Props> = ({ title, description, isModalOpen, onClose
     <DialConfirmationPopup
       onClose={onClose}
       header={title}
-      portalId="DeleteImageModal"
+      portalId="EntityDeleteModal"
       open={isModalOpen}
       className={containerClassNames}
       onConfirm={() => {

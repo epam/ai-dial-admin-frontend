@@ -19,6 +19,8 @@ export interface TestSuiteDeploymentRef {
 export interface TestSuiteEndpointRef {
   method?: string;
   relativeUrl?: string;
+  requestBodySchema?: Record<string, unknown>;
+  responseBodySchema?: Record<string, unknown>;
 }
 
 export interface TestCase {

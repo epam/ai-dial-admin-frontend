@@ -34,7 +34,7 @@ const ServingCreateNIM: FC<Props> = ({ isModalOpen, onClose, onApply, route, nam
 
   return (
     <DialFormPopup
-      portalId="CreateServingNIM"
+      portalId="ServingCreateNIMModal"
       open={isModalOpen}
       header={header}
       onClose={onClose}

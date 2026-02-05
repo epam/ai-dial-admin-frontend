@@ -18,11 +18,10 @@ const ImageInstall: FC<Props> = ({ isModalOpen, title, onClose, onApply, image }
 
   return (
     <DialConfirmationPopup
+      portalId="ImageInstallModal"
       onClose={onClose}
       header={title}
-      portalId="BuildImageModal"
       open={isModalOpen}
-      className="md:max-w-[400px] lg:max-w-[400px]"
       confirmLabel={t(ButtonsI18nKey.Install)}
       onConfirm={() => {
         onApply(image);
