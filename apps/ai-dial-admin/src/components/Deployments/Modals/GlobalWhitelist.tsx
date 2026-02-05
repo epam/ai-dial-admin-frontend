@@ -40,6 +40,7 @@ const GlobalWhitelist: FC<Props> = ({ onClose, isModalOpen, onApply, getDomains 
 
   return (
     <DialConfirmationPopup
+      portalId={'GlobalWhitelistModal'}
       onClose={onClose}
       open={isModalOpen}
       header={t(DeploymentsI18nKey.GlobalFirewall)}

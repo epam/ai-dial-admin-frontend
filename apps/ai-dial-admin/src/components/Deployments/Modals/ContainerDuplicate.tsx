@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import { DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
+import { DialConfirmationPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { Container } from '@/src/models/deployments/containers';
@@ -56,13 +56,13 @@ const ContainerDuplicate: FC<Props> = ({ title, isModalOpen, container, onClose,
       header={title}
       portalId="DuplicateContainerModal"
       open={isModalOpen}
-      className="flex flex-col lg:max-w-[55%] md:max-w-[75%]"
       onConfirm={() => {
         onApply(duplicate);
         onClose();
       }}
       confirmLabel={t(ButtonsI18nKey.Duplicate)}
       disableConfirmButton={!isValid || isUniqueNameError}
+      size={PopupSize.Md}
     >
       <div className="flex flex-col h-full overflow-auto px-6 py-4 gap-y-8">
         <IdControl

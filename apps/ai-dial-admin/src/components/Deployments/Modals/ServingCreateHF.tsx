@@ -34,7 +34,7 @@ const ServingCreateHF: FC<Props> = ({ isModalOpen, onClose, onApply, route, name
 
   return (
     <DialFormPopup
-      portalId="CreateServingHF"
+      portalId="ServingCreateHFModal"
       open={isModalOpen}
       header={header}
       onClose={onClose}
