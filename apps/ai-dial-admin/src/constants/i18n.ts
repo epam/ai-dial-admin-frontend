@@ -1295,4 +1295,5 @@ export enum FileManagerI18nKey {
   Folder = 'FileManager.Folder',
   EnterFolderName = 'FileManager.EnterFolderName',
   NameExists = 'FileManager.NameExists',
+  ManagePermissions = 'FileManager.ManagePermissions',
 }
