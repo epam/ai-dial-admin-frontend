@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, MouseEvent, useCallback, useState } from 'react';
+import { Dispatch, FC, MouseEvent, SetStateAction, useCallback, useMemo, useState } from 'react';
 
 import { DialGhostButton } from '@epam/ai-dial-ui-kit';
 import { IconColumns2 } from '@tabler/icons-react';
@@ -9,30 +9,41 @@ import { GridOptions, RowSelectedEvent } from 'ag-grid-community';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import GridWithColumnsPanel from '@/src/components/Grid/GridWithColumnsPanel/GridWithColumnsPanel';
 import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
-import { APPLICATIONS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { DEPLOYMENTS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, EntitiesI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
-import { DialApplication } from '@/src/models/dial/application';
+import { Deployment } from '@/src/models/evaluation/deployment';
+import { TestSuite } from '@/src/models/evaluation/test-suite';
 
 interface Props {
-  selectedApplication?: string;
-  onChange: (id: string) => void;
+  deployments: Deployment[] | null;
+  selectedApplicationId?: string;
+  onChangeApplication: (deployment: Deployment) => void;
+  onChange: Dispatch<SetStateAction<TestSuite>>;
 }
 
-const Applications: FC<Props> = ({ selectedApplication, onChange }) => {
+const Applications: FC<Props> = ({ deployments, selectedApplicationId, onChangeApplication, onChange }) => {
   const t = useI18n();
 
   const [showColumnsPanel, setShowColumnsPanel] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [applications, setApplications] = useState<DialApplication[]>([
-    { name: 'a', applicationProperties: { name: 'App1' } },
-    { name: 'b', applicationProperties: { name: 'App2' } },
-  ]);
+
+  const data = useMemo(() => {
+    return deployments || [];
+  }, [deployments]);
 
   const onRowSelected = (event: RowSelectedEvent) => {
     if (event.node.isSelected()) {
-      onChange(event.data?.name || '');
+      onChangeApplication(event.data || '');
+      onChange((prev: TestSuite) => ({
+        ...prev,
+        deploymentRef: {
+          id: event.data.deploymentId,
+          name: event.data.displayName,
+          version: event.data.version,
+        },
+        endpointRef: void 0,
+      }));
     }
   };
 
@@ -44,10 +55,10 @@ const Applications: FC<Props> = ({ selectedApplication, onChange }) => {
     suppressRowClickSelection: true,
     selectionColumnDef: {
       ...RADIO_BUTTON_COL_DEF,
-      cellRenderer: (data: { data?: { name: string }; name: string }) => (
+      cellRenderer: (data: { data?: { deploymentId: string }; deploymentId: string }) => (
         <RadioButtonRenderer
-          inputId={data.data?.name || data.name}
-          isChecked={data.data?.name === selectedApplication}
+          inputId={data.data?.deploymentId || data.deploymentId}
+          isChecked={data.data?.deploymentId === selectedApplicationId}
         />
       ),
     },
@@ -79,8 +90,8 @@ const Applications: FC<Props> = ({ selectedApplication, onChange }) => {
 
       <div className="flex-1 min-h-0">
         <GridWithColumnsPanel
-          columnDefs={APPLICATIONS_COLUMNS(t)}
-          data={applications}
+          columnDefs={DEPLOYMENTS_COLUMNS(t)}
+          data={data}
           additionalGridOptions={{ ...additionalGridOptions }}
           emptyDataTitle={t(EntitiesI18nKey.NoApplications)}
           showColumnsPanel={showColumnsPanel}

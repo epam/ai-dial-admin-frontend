@@ -119,7 +119,13 @@ export const DESCRIPTION_COLUMN: ColDef = {
   hide: false,
 };
 
-export const VERSION_COLUMN: ColDef = { field: 'version', colId: 'version', headerName: 'Version' };
+export const VERSION_COLUMN: ColDef = {
+  field: 'version',
+  colId: 'version',
+  headerName: 'Version',
+  hide: false,
+  valueFormatter: (params) => params.value,
+};
 export const AUTHOR_COLUMN: ColDef = { field: 'author', colId: 'author', headerName: 'Author', hide: false };
 export const DISPLAY_NAME_COLUMN: ColDef = {
   field: 'displayName',
@@ -148,6 +154,7 @@ export const TOPICS_COLUMN: ColDef = {
   }),
   filterValueGetter: (params) => getTopics(params.data),
   tooltipValueGetter: (params) => getTopics(params.data)?.join(', ') || null,
+  hide: false,
 };
 
 export const BASE_STATUS_COLUMN: ColDef = {
@@ -291,6 +298,19 @@ export const APPLICATIONS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   TOPICS_COLUMN,
   AUTHOR_COLUMN,
   VALIDITY_STATUS_COLUMN(t),
+  ATTACHMENT_COLUMN(t),
+  { field: 'maxInputAttachments', headerName: 'Max attachment number', hide: true },
+];
+
+export const DEPLOYMENTS_COLUMNS = (t: (str: string) => string): ColDef[] => [
+  { field: '$type', headerName: 'Type', hide: false },
+  DISPLAY_NAME_COLUMN_WITH_SORT,
+  VERSION_COLUMN,
+  DESCRIPTION_COLUMN,
+  { field: 'deploymentId', headerName: 'ID', hide: false },
+  { field: 'endpoint', headerName: 'Endpoint', hide: false },
+  TOPICS_COLUMN,
+  { field: 'owner', headerName: 'Owner', hide: false },
   ATTACHMENT_COLUMN(t),
   { field: 'maxInputAttachments', headerName: 'Max attachment number', hide: true },
 ];

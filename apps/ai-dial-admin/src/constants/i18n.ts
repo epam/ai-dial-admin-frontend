@@ -204,6 +204,7 @@ export enum EntitiesI18nKey {
   Serving = 'Entities.Serving',
   ModelServing = 'Entities.ModelServing',
   Container = 'Entities.Container',
+  NoMethods = 'Entities.NoMethods',
 }
 
 export enum DeleteI18nKey {

@@ -4,13 +4,15 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useI18n } from '@/src/locales/client';
 
+import { getDeployments } from '@/src/app/[lang]/test-suites/actions';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
-import { TestSuitesI18nKey } from '@/src/constants/i18n';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
-import { TEST_SUIT_STEPS, TestSuitTab } from './constants';
-import TestSuiteProperties from '@/src/components/TestSuites/Properties/Properties';
-import Applications from './Applications';
 import Methods from '@/src/components/TestSuites/Methods/Methods';
+import TestSuiteProperties from '@/src/components/TestSuites/Properties/Properties';
+import { TestSuitesI18nKey } from '@/src/constants/i18n';
+import { Deployment } from '@/src/models/evaluation/deployment';
+import { TestSuite } from '@/src/models/evaluation/test-suite';
+import Applications from './Applications';
+import { TEST_SUIT_STEPS, TestSuitTab } from './constants';
 
 interface Props {
   isModalOpen: boolean;
@@ -23,25 +25,21 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate }) => {
 
   const [steps, setSteps] = useState(TEST_SUIT_STEPS(t));
   const [currentStepId, setCurrentStep] = useState(steps[0].id);
-  // TODO: mock data, replace after support deployments API
-  const [testSuite, setTestSuite] = useState<TestSuite>({
-    name: 'My Test Suite',
-    deploymentRef: {
-      id: 'deploy-001',
-      name: 'Production',
-    },
-    endpointRef: {
-      method: 'POST',
-      relativeUrl: '/chat/completions',
-    },
-  } as TestSuite);
-  const [selectedApplication, setSelectedApplication] = useState<string>('');
+  const [testSuite, setTestSuite] = useState<TestSuite>({} as TestSuite);
+  const [selectedApplication, setSelectedApplication] = useState<Deployment | null>(null);
+  const [deployments, setDeployments] = useState<Deployment[] | null>(null);
 
   const currentStep = useMemo(() => steps.find((step) => step.id === currentStepId), [steps, currentStepId]);
 
   const onFinishClick = useCallback(() => {
     onCreate(testSuite);
   }, [onCreate, testSuite]);
+
+  useEffect(() => {
+    if (!deployments) {
+      getDeployments().then((data) => setDeployments(data));
+    }
+  }, [deployments]);
 
   useEffect(() => {
     setSteps((prev) =>
@@ -56,10 +54,12 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate }) => {
       prev.map((step) =>
         step.id === TestSuitTab.Application
           ? { ...step, status: selectedApplication ? StepStatus.VALID : void 0 }
-          : step,
+          : step.id === TestSuitTab.Methods
+            ? { ...step, status: testSuite.endpointRef?.method ? StepStatus.VALID : void 0 }
+            : step,
       ),
     );
-  }, [selectedApplication, currentStepId]);
+  }, [selectedApplication, currentStepId, testSuite.endpointRef?.method]);
 
   return (
     <DialPopup
@@ -77,10 +77,17 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate }) => {
           )}
 
           {currentStepId === TestSuitTab.Application && (
-            <Applications selectedApplication={selectedApplication} onChange={setSelectedApplication} />
+            <Applications
+              deployments={deployments}
+              selectedApplicationId={selectedApplication?.deploymentId}
+              onChangeApplication={setSelectedApplication}
+              onChange={setTestSuite}
+            />
           )}
 
-          {currentStepId === TestSuitTab.Methods && <Methods methods={['/api', 'aaaa', 'sss']} />}
+          {currentStepId === TestSuitTab.Methods && (
+            <Methods selectedApplication={selectedApplication} testSuite={testSuite} onChange={setTestSuite} />
+          )}
         </div>
       </div>
 
