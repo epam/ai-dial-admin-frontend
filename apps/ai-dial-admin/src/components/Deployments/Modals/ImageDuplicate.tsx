@@ -3,6 +3,7 @@ import {
   DialConfirmationPopup,
   DialRadioGroup,
   DialTextInputField,
+  PopupSize,
   RadioButtonWithContent,
   RadioGroupOrientation,
 } from '@epam/ai-dial-ui-kit';
@@ -39,8 +40,6 @@ interface Props {
 const ImageDuplicateModal: FC<Props> = ({ title, isModalOpen, image, onClose, onApply, names }) => {
   const t = useI18n();
   const { dispatch, isValid } = useSaveValidationContext();
-
-  const containerClassName = 'flex flex-col lg:max-w-[55%] md:max-w-[75%]';
   const initialName = image.name;
   const originalVersion = image.version;
 
@@ -173,13 +172,13 @@ const ImageDuplicateModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
       header={title}
       portalId="ImageDuplicateModal"
       open={isModalOpen}
-      className={containerClassName}
       onConfirm={() => {
         onApply(copyImage);
         onClose();
       }}
       confirmLabel={t(ButtonsI18nKey.Duplicate)}
       disableConfirmButton={!isValid}
+      size={PopupSize.Md}
     >
       <div className="flex flex-col h-full overflow-auto px-6 py-4 gap-y-8">
         <DialRadioGroup

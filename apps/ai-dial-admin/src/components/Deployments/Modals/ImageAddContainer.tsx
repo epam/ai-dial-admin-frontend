@@ -114,7 +114,7 @@ const ImageAddContainer: FC<Props> = ({ title, isModalOpen, onClose, onApply, im
     <DialFormPopup
       onClose={onClose}
       header={title}
-      portalId="AddEntity"
+      portalId="ImageAddContainerModal"
       open={isModalOpen}
       className="h-[800px]"
       size={PopupSize.Lg}
