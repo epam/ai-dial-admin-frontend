@@ -11,10 +11,7 @@ import {
 import { filterLatestVersions, getVersionsPerName } from '@/src/components/Assets/utils';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import { DEPLOYMENT_ASSETS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
-import { DialFile } from '@/src/models/dial/file';
-import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { filterNames } from '@/src/utils/entities/filter-names';
 
@@ -36,7 +33,7 @@ const ToolsetsList: FC = () => {
       onCreateEntity={createToolset}
       onMoveFiles={moveToolsets}
       onBulkDelete={bulkDeleteToolsets}
-      getAssetContext={useToolsetFolder as () => AssetsFolderContext<AssetToolset | DialFile>}
+      getAssetContext={useToolsetFolder}
     />
   );
 };
