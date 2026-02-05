@@ -6,20 +6,20 @@ import CoreSyncEntityStatus from '@/src/components/Common/SyncCoreStatus/SyncCor
 import ValidityStatus from '@/src/components/EntityView/Status/ValidityStatus';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 
 interface Props {
-  entity?: ChatEntity | DialApplicationScheme | null;
+  entity?: ChatEntity | null;
   view?: ApplicationRoute;
 }
 
+// TODO: remove this component after review all selecte view
 const EntityHeader: FC<Props> = ({ entity, view }) => {
   const t = useI18n();
 
-  const id = (entity as ChatEntity)?.name || (entity as DialApplicationScheme)?.$id;
+  const id = (entity as ChatEntity)?.name;
   const status = (entity as DialInterceptor)?.status;
   const validityState = (entity as EntityValidityState)?.validityState;
 

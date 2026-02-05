@@ -28,7 +28,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 interface Props {
   view: ApplicationRoute;
   asset: DeploymentAsset;
-  runners: DialApplicationScheme[];
+  runners?: DialApplicationScheme[];
   onChange: (asset: DeploymentAsset) => void;
 }
 

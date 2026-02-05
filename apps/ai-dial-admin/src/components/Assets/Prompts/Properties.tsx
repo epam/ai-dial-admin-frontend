@@ -2,10 +2,11 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { DialSwitch } from '@epam/ai-dial-ui-kit';
 
+import AssetHeader from '@/src/components/Assets/Deployments/Header';
+import DescriptionControl from '@/src/components/BaseControls/Description';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import MdEditor from '@/src/components/Common/MdEditor/MdEditor';
-import DescriptionControl from '@/src/components/BaseControls/Description';
 import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
@@ -14,8 +15,6 @@ import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { JSONEditorError } from '@/src/types/editor';
-import { ApplicationRoute } from '@/src/types/routes';
-import AssetHeader from '@/src/components/Assets/Deployments/Header';
 
 interface Props {
   prompt: DialPrompt;
@@ -83,7 +82,7 @@ const PromptProperties: FC<Props> = ({ prompt, onChangePrompt }) => {
 
   return (
     <div className="h-full flex flex-col w-full">
-      <AssetHeader asset={prompt} view={ApplicationRoute.Prompts} />
+      <AssetHeader asset={prompt} />
 
       <div className="flex flex-col gap-y-8 mt-8">
         <DescriptionControl entity={prompt} onChangeEntity={onChangePrompt} isFullWidth={false} />

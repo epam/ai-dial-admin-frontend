@@ -2,6 +2,7 @@ import { FC, useCallback } from 'react';
 
 import { GridApi, IRowNode } from 'ag-grid-community';
 
+import AssetHeader from '@/src/components/Assets/Deployments/Header';
 import Field from '@/src/components/Common/Field/Field';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import Grid from '@/src/components/Grid/Grid';
@@ -12,9 +13,7 @@ import { BasicI18nKey, EntitiesI18nKey, EntityPlaceholdersI18nKey } from '@/src/
 import { useFileFolder } from '@/src/context/assets/FileFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
-import { ApplicationRoute } from '@/src/types/routes';
 import { getGridFileColumns, getGridFileData } from '@/src/utils/files/grid-data';
-import AssetHeader from '@/src/components/Assets/Deployments/Header';
 
 interface Props {
   file: DialFile;
@@ -51,7 +50,7 @@ const FileProperties: FC<Props> = ({ file, onChangeFile }) => {
 
   return (
     <div className="h-full flex flex-col w-full">
-      <AssetHeader asset={file} view={ApplicationRoute.Files} />
+      <AssetHeader asset={file} />
 
       <div className="flex flex-col gap-y-8 mt-8">
         <div className="flex flex-col">

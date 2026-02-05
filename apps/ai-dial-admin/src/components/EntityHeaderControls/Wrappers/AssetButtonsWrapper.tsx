@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
@@ -8,7 +8,7 @@ import { IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
-import JsonToggleWithFormats from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggleWithFormats';
+import { showEditorErrorNotifications } from '@/src/components/EntityHeaderControls/Buttons/utils';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -17,25 +17,21 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
-import { ServerActionResponse } from '@/src/models/server-action';
-import { ApplicationRoute } from '@/src/types/routes';
-import { showEditorErrorNotifications } from '@/src/components/EntityHeaderControls/Buttons/utils';
-import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
+import { AssetsFolderContext } from '../../../context/assets/AssetsFolderContext';
+import { Asset } from '../../../models/dial/deployment-asset';
+import AssetVersionControl from '../../Assets/Deployments/AssetVersionControl';
+import JsonToggles from '../JsonToggle/JsonToggle';
+import { SimpleButtonsWrapperProps } from './SimpleButtonsWrapper';
 
-export interface SimpleButtonsWrapperProps<T> {
-  view: ApplicationRoute;
-  isChanged: boolean;
-  jsonConfiguration: JsonConfiguration;
-  children?: ReactNode;
-  entity: T;
-  etag?: string;
-
-  onDiscard: () => void;
-  onSave: () => void;
-  onRemove: (entity: string) => Promise<ServerActionResponse>;
+export interface AssetButtonsWrapperProps extends SimpleButtonsWrapperProps<Asset> {
+  assets?: Asset[];
+  getAssetContext?: () => AssetsFolderContext<Asset>;
+  addedVersions?: string[];
+  onChangeAsset?: (asset: Asset) => void;
+  onChangeAddedVersion?: (version: string[]) => void;
 }
 
-const SimpleButtonsWrapper = <T extends object>({
+const AssetButtonsWrapper: FC<AssetButtonsWrapperProps> = ({
   view,
   entity,
   etag,
@@ -45,11 +41,20 @@ const SimpleButtonsWrapper = <T extends object>({
   onDiscard,
   onSave,
   onRemove,
-}: SimpleButtonsWrapperProps<T>) => {
+  assets,
+  getAssetContext,
+  onChangeAddedVersion,
+  addedVersions,
+  onChangeAsset,
+}) => {
   const t = useI18n();
   const { isEditorEnabled } = jsonConfiguration;
   const { isValid, dispatch, jsonErrors } = useSaveValidationContext();
   const { showNotification } = useNotification();
+
+  const existingVersions = useMemo(() => {
+    return assets?.map((asset) => asset.version) || [];
+  }, [assets]);
 
   const staticContainerClassName = 'flex flex-row gap-3 divide-x divide-primary lg:h-[35px]';
 
@@ -103,6 +108,15 @@ const SimpleButtonsWrapper = <T extends object>({
           <div className="flex flex-row items-center w-full gap-x-4">
             {!isEditorEnabled && (
               <div className="flex-1 flex flex-row gap-x-4 justify-center">
+                <AssetVersionControl
+                  view={view}
+                  asset={entity}
+                  addedVersions={addedVersions || []}
+                  onChangeAddedVersion={onChangeAddedVersion}
+                  assets={assets}
+                  onChangeAsset={onChangeAsset}
+                  etag={etag}
+                />
                 <DialNeutralButton
                   className={buttonsClassName}
                   label={t(ButtonsI18nKey.Delete)}
@@ -112,7 +126,7 @@ const SimpleButtonsWrapper = <T extends object>({
                 {children}
               </div>
             )}
-            <JsonToggleWithFormats view={view} {...jsonConfiguration} />
+            <JsonToggles isEditorEnabled={isEditorEnabled} onToggleEditor={jsonConfiguration.onToggleEditor} />
           </div>
         )}
       </div>
@@ -123,7 +137,9 @@ const SimpleButtonsWrapper = <T extends object>({
             onRemoveEntity={onRemove}
             view={view}
             onCloseModal={onCloseModal}
+            getAssetContext={getAssetContext}
             isSelectedView={true}
+            existingVersions={existingVersions}
             etag={etag}
           />,
           document.body,
@@ -132,4 +148,4 @@ const SimpleButtonsWrapper = <T extends object>({
   );
 };
 
-export default SimpleButtonsWrapper;
+export default AssetButtonsWrapper;

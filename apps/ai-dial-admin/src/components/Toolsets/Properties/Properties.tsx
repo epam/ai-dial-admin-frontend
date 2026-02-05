@@ -21,7 +21,7 @@ const ToolsetProperties: FC<Props> = ({ names, selectedToolset, onChangeToolset 
   const t = useI18n();
 
   return (
-    <div className="pt-8 gap-y-8 flex flex-col">
+    <div className="gap-y-8 flex flex-col">
       <DeploymentProperties
         entity={selectedToolset}
         onChangeEntity={onChangeToolset}

@@ -7,7 +7,7 @@ import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconLogin, IconLogout } from '@tabler/icons-react';
 
 import { signInToolset, signOutToolset } from '@/src/app/[lang]/toolsets/actions';
-import LoginPopup from '@/src/components/Assets/Toolsets/LoginPopup';
+import LoginPopup from '@/src/components/Toolsets/Auth/LoginPopup';
 import { ToolsetI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -24,7 +24,7 @@ import {
 } from '@/src/utils/toolset/toolset-auth';
 import { getIsUser, setIsUser } from './utils';
 
-export const TOOLSET_AUTH_REDIRECT_URL = '/auth/toolset-signin';
+export const TOOLSET_AUTH_REDIRECT_URL = '/toolset-signin';
 
 let isSignInProcessed = false;
 
