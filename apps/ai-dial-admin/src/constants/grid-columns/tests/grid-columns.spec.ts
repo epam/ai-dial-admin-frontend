@@ -28,7 +28,7 @@ vi.mock('@/src/constants/ag-grid', () => ({
 describe('Constants :: grid columns', () => {
   test('MODELS_COLUMNS returns expected columns', () => {
     const t = (s: string) => s;
-    const cols = MODELS_COLUMNS(t, ApplicationRoute.Models);
+    const cols = MODELS_COLUMNS(t);
     expect(Array.isArray(cols)).toBe(true);
     expect(cols.some((c) => c.field === 'source.$type')).toBe(true);
     expect(cols.some((c) => c.field === 'endpoint')).toBe(true);
