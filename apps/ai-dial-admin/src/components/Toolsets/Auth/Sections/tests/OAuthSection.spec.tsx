@@ -2,7 +2,7 @@ import { ToolsetAuthSettings } from '@/src/models/dial/toolset';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import { EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import OAuthSection from '../../View/Auth/OAuthSection';
+import OAuthSection from '../OAuthSection';
 
 describe('OAuthSection', () => {
   test('renders all input fields with correct values', () => {

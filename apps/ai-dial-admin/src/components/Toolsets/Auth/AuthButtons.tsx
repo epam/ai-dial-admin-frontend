@@ -22,16 +22,18 @@ import {
   isLoggedInToToolset,
   isUserLoggedInToToolset,
 } from '@/src/utils/toolset/toolset-auth';
+import { getIsUser, setIsUser } from './utils';
+
+export const TOOLSET_AUTH_REDIRECT_URL = '/auth/toolset-signin';
 
 let isSignInProcessed = false;
 
 interface Props {
   oAuthCode?: string | null;
-  isUserLevel?: boolean;
   selectedToolset: Toolset;
 }
 
-const AuthButtons: FC<Props> = ({ selectedToolset, isUserLevel, oAuthCode }) => {
+const AuthButtons: FC<Props> = ({ selectedToolset, oAuthCode }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -75,10 +77,8 @@ const AuthButtons: FC<Props> = ({ selectedToolset, isUserLevel, oAuthCode }) => 
         url.searchParams.set('response_type', 'code');
         url.searchParams.set('client_id', authSettings.clientId as string);
 
-        url.searchParams.set(
-          'redirect_uri',
-          `${window.location.origin}${getUrnForEntity(ApplicationRoute.Toolsets, selectedToolset)}?isUser=${type === ToolsetAuthCredentialLevel.USER}`,
-        );
+        setIsUser(type);
+        url.searchParams.set('redirect_uri', `${window.location.origin}${TOOLSET_AUTH_REDIRECT_URL}`);
         if (authSettings.codeChallenge) {
           url.searchParams.set('code_challenge', authSettings.codeChallenge);
         }
@@ -117,7 +117,7 @@ const AuthButtons: FC<Props> = ({ selectedToolset, isUserLevel, oAuthCode }) => 
 
   useEffect(() => {
     if (oAuthCode && !isSignInProcessed) {
-      signIn(isUserLevel ? ToolsetAuthCredentialLevel.USER : ToolsetAuthCredentialLevel.GLOBAL, void 0, oAuthCode);
+      signIn(getIsUser() ? ToolsetAuthCredentialLevel.USER : ToolsetAuthCredentialLevel.GLOBAL, void 0, oAuthCode);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

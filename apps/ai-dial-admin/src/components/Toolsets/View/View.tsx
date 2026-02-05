@@ -33,10 +33,9 @@ interface Props {
   roles?: DialRole[] | null;
   originalToolset: Toolset;
   oAuthCode?: string | null;
-  isUserLevel?: boolean;
 }
 
-const ToolsetView: FC<Props> = ({ names, isUserLevel, oAuthCode, etag, roles, originalToolset }) => {
+const ToolsetView: FC<Props> = ({ names, oAuthCode, etag, roles, originalToolset }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -163,7 +162,7 @@ const ToolsetView: FC<Props> = ({ names, isUserLevel, oAuthCode, etag, roles, or
         onChangeActiveTab={setActiveTab}
         onRemove={removeToolset}
       >
-        <AuthButtons selectedToolset={selectedToolset} isUserLevel={isUserLevel} oAuthCode={oAuthCode} />
+        <AuthButtons selectedToolset={selectedToolset} oAuthCode={oAuthCode} />
       </SimpleEntityHeader>
 
       <div className="flex-1 overflow-auto min-h-0">
