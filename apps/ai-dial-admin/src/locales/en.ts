@@ -174,6 +174,7 @@ export default {
     NoToolsets: 'No Toolsets',
     NoTools: 'No Tools',
     NoInputs: 'No inputs',
+    NoMethods: 'No Methods',
     // add entity or entities
     AddModel: 'Add Model',
     AddApplication: 'Add Application',
