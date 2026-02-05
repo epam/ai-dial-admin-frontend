@@ -227,6 +227,7 @@ export enum DeleteI18nKey {
   File = 'DeleteEntity.Entities.File',
   Adapter = 'DeleteEntity.Entities.Adapter',
   InterceptorTemplate = 'DeleteEntity.Entities.InterceptorTemplate',
+  TestSuite = 'DeleteEntity.Entities.TestSuite',
   ApplicationRunner = 'DeleteEntity.Entities.ApplicationRunner',
 
   // Bulk Delete

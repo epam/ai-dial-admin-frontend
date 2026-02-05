@@ -10,8 +10,10 @@ import { cloneDeep } from 'lodash';
 
 import { deleteInterceptorTemplate, updateInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
 import { createInterceptor } from '@/src/app/[lang]/interceptors/actions';
+import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
+import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -25,7 +27,6 @@ import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getInterceptorTemplateTabs } from '@/src/utils/tabs/utils';
 import TabsContent from './TabsContent';
-import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 
 interface Props {
   etag: string;
@@ -46,6 +47,14 @@ const View: FC<Props> = ({ etag, template, names }) => {
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
 
   const tabs = getInterceptorTemplateTabs(t);
+
+  const jsonConfiguration = useMemo<JsonConfiguration>(
+    () => ({
+      isEditorEnabled,
+      onToggleEditor: () => setIsEditorEnabled((prev) => !prev),
+    }),
+    [isEditorEnabled],
+  );
 
   // todo change when source field will be added to create interceptor template modal
   const source = useMemo(() => {
@@ -77,10 +86,6 @@ const View: FC<Props> = ({ etag, template, names }) => {
     setSelectedTemplate(cloneDeep(template));
   }, [template]);
 
-  const onToggleEditor = useCallback(() => {
-    setIsEditorEnabled((prev) => !prev);
-  }, [setIsEditorEnabled]);
-
   useEffect(() => {
     const { updatedAt: __updateTemplate, ...restTemplate } = template;
     const { updatedAt: __updateSelected, ...restSelectedTemplate } = selectedTemplate;
@@ -96,10 +101,9 @@ const View: FC<Props> = ({ etag, template, names }) => {
         onDiscard={onDiscard}
         onSave={onSave}
         tabs={tabs}
-        isEditorEnabled={isEditorEnabled}
+        jsonConfiguration={jsonConfiguration}
         activeTab={activeTab}
         onChangeActiveTab={setActiveTab}
-        onToggleEditor={onToggleEditor}
         onRemove={deleteInterceptorTemplate}
       >
         <DialNeutralButton

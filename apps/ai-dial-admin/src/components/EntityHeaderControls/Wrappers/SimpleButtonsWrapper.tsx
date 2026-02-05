@@ -8,21 +8,24 @@ import { IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
-import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
+import JsonToggleWithFormats from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggleWithFormats';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useNotification } from '@/src/context/NotificationContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { showEditorErrorNotifications } from '@/src/components/EntityHeaderControls/Buttons/utils';
+import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 
 interface Props<T> {
   view: ApplicationRoute;
   isChanged: boolean;
-  isEditorEnabled?: boolean;
+  jsonConfiguration: JsonConfiguration;
   children?: ReactNode;
   entity: T;
   etag?: string;
@@ -37,17 +40,17 @@ const SimpleButtonsWrapper = <T extends object>({
   view,
   entity,
   etag,
-  isEditorEnabled,
+  jsonConfiguration,
   children,
   isChanged,
   onDiscard,
   onSave,
-  onToggleEditor,
   onRemove,
 }: Props<T>) => {
   const t = useI18n();
-
-  const { isValid, dispatch } = useSaveValidationContext();
+  const { isEditorEnabled } = jsonConfiguration;
+  const { isValid, dispatch, jsonErrors } = useSaveValidationContext();
+  const { showNotification } = useNotification();
 
   const staticContainerClassName = 'flex flex-row gap-3 divide-x divide-primary lg:h-[35px]';
 
@@ -78,18 +81,25 @@ const SimpleButtonsWrapper = <T extends object>({
   }, [isTablet, isMobile]);
 
   const onStartDiscard = useCallback(() => {
-    if (isEditorEnabled) {
-      dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
-    }
+    dispatch({ type: ValidationActionType.Reset });
 
     onDiscard?.();
-  }, [dispatch, isEditorEnabled, onDiscard]);
+  }, [dispatch, onDiscard]);
+
+  const onTryToSave = useCallback(() => {
+    if (jsonErrors?.length) {
+      const errorNotifications = showEditorErrorNotifications(jsonErrors, showNotification, t);
+      dispatch({ type: ValidationActionType.SetJsonEditorNotifications, errors: errorNotifications });
+    } else {
+      onSave?.();
+    }
+  }, [jsonErrors, showNotification, t, dispatch, onSave]);
 
   return (
     <>
       <div className={containerClassName}>
         {isChanged ? (
-          <ChangedEntityButtons disableSave={isDisableSave} onDiscard={onStartDiscard} onSave={onSave} />
+          <ChangedEntityButtons disableSave={isDisableSave} onDiscard={onStartDiscard} onSave={onTryToSave} />
         ) : (
           <div className="flex flex-row items-center w-full gap-x-4">
             {!isEditorEnabled && (
@@ -103,7 +113,7 @@ const SimpleButtonsWrapper = <T extends object>({
                 {children}
               </div>
             )}
-            <JsonToggles onToggleEditor={onToggleEditor} isEditorEnabled={isEditorEnabled} />
+            <JsonToggleWithFormats view={view} {...jsonConfiguration} />
           </div>
         )}
       </div>
