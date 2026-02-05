@@ -8,6 +8,7 @@ import {
   DialFile,
   DialFileManager,
   DialUploadFileItem,
+  GridSelectionMode,
   NAME_COLUMN,
   SIZE_COLUMN,
   UPDATED_AT_COLUMN,
@@ -18,7 +19,7 @@ import { changeFolder, createFolderWithFiles, removeFolder } from '@/src/app/[la
 import { getFormDataForImport, getImportTitle } from '@/src/components/EntityListView/HeaderButtons/utils';
 import { getImportResults } from '@/src/components/EntityListView/Import/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { ButtonsI18nKey, FileManagerI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, FileManagerI18nKey, FoldersI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { useFileFolder } from '@/src/context/assets/FileFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -30,43 +31,56 @@ import { ResourceType } from '@/src/types/resource-type';
 import { ApplicationRoute } from '@/src/types/routes';
 import { downloadFile } from '@/src/utils/download';
 import { getFolderName } from '@/src/utils/files/folder';
-import { getSuccessNotification } from '@/src/utils/notification';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { getParentPathByFullPath } from '../utils';
+import Modals, { ModalType } from '../../EntityListView/Components/Modals';
+import { ImportData } from '@/src/models/import-asset';
 
 const FILES_GRID_COLUMNS = [NAME_COLUMN('Display name'), UPDATED_AT_COLUMN('Updated time'), SIZE_COLUMN('Size')];
 
 const FilesList = () => {
-  const t = useI18n();
+  const [path, setPath] = useState('');
+  const [loadedPaths, setLoadedPaths] = useState(new Set(['']));
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [importFolder, setImportFolder] = useState<DialFile | null>(null);
 
+  const t = useI18n();
+  const { showNotification } = useNotification();
   const { files, fetchFiles, isFetchingFiles } = useFileFolder();
 
   useEffect(() => {
     if (files == null || files?.length === 0) {
       fetchFiles(`${ROOT_FOLDER}/`);
+      setLoadedPaths(new Set([`${ROOT_FOLDER}/`]));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [files]);
 
-  const [path, setPath] = useState('');
-  const [loadedPaths, setLoadedPaths] = useState(new Set(['']));
+  const getEmptyFile = useCallback(() => {
+    const filename = '.dial_folder';
+    const fileType = 'text/plain';
 
-  const { showNotification } = useNotification();
+    const emptyFile = new File(['1'], filename, {
+      type: fileType,
+    });
 
-  useEffect(() => {
-    if (path) {
-      fetchFiles?.(path, true);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [path]);
+    const uploadFileItem: DialUploadFileItem = {
+      fileContent: emptyFile,
+      name: filename,
+    };
+
+    return uploadFileItem;
+  }, []);
 
   const handleCreateFolder = useCallback(
-    async (file: DialUploadFileItem, parentPath: string) => {
+    async (file: DialUploadFileItem, folderPath: string) => {
       // file arg is not used, because folder with empty file is not created
-      const filename = '.dial-folder';
+      const filename = '.dial_folder';
       const fileType = 'text/plain';
       const emptyFile = new File(['1'], filename, {
         type: fileType,
       });
-      const newPath = `${parentPath.replaceAll('//', '/')}/`;
+      const newPath = `${folderPath.replaceAll('//', '/')}/`;
 
       const body = getFormDataForImport(
         newPath,
@@ -80,8 +94,8 @@ const FilesList = () => {
 
       createFolderWithFiles(body, ImportFileType.FILES, ApplicationRoute.Files).then((res) => {
         if (res.success) {
-          fetchFiles?.(path, true);
-          setPath(path);
+          const patentPath = getParentPathByFullPath(newPath) || `${ROOT_FOLDER}/`;
+          fetchFiles?.(patentPath, true);
           const results = (res.response as { importResults: ImportResult[] }).importResults;
           const translatedType = t(getImportTitle(ApplicationRoute.Files)).toLowerCase();
           showNotification(getSuccessNotification(t(FoldersI18nKey.FolderCreateSuccess)));
@@ -92,12 +106,29 @@ const FilesList = () => {
     [fetchFiles, path, showNotification, t],
   );
 
+  const handleAddChild = useCallback(
+    (files: DialFile[]) => {
+      const newPath = files[0].path + 'New Folder';
+      handleCreateFolder(getEmptyFile(), newPath);
+    },
+    [handleCreateFolder, getEmptyFile],
+  );
+
+  const handleAddSibling = useCallback(
+    (files: DialFile[]) => {
+      const newPath = files[0].path.replace(/([^/]+)\/?$/, 'New Folder');
+      handleCreateFolder(getEmptyFile(), newPath);
+    },
+    [handleCreateFolder, getEmptyFile],
+  );
+
   const handleImportFiles = useCallback(
     async (files: DialUploadFileItem[], destinationFolder: string) => {
       const promises: Promise<ServerActionResponse>[] = [];
+      const destinationFolderPath = destinationFolder ? destinationFolder : `${ROOT_FOLDER}/`;
       files.forEach((file) => {
         const body = getFormDataForImport(
-          destinationFolder,
+          destinationFolderPath,
           [file.fileContent],
           ImportFileType.FILES,
           ConflictResolutionPolicy.SKIP,
@@ -112,8 +143,10 @@ const FilesList = () => {
       Promise.all(promises).then((result) => {
         const isSuccess = result.every((res) => res.success);
         if (isSuccess) {
-          fetchFiles?.(`${ROOT_FOLDER}/`, true);
+          fetchFiles?.(destinationFolderPath, true);
           showNotification(getSuccessNotification(t(FoldersI18nKey.Import)));
+        } else {
+          showNotification(getErrorNotification(result[0]?.errorHeader, result[0]?.errorMessage, result[0]?.requestId));
         }
       });
     },
@@ -122,8 +155,9 @@ const FilesList = () => {
 
   const handleImportArchive = useCallback(
     async (file: File, name: string, destinationFolder: string) => {
+      const destinationFolderPath = destinationFolder ? destinationFolder : `${ROOT_FOLDER}/`;
       const body = getFormDataForImport(
-        destinationFolder,
+        destinationFolderPath,
         [file],
         ImportFileType.ARCHIVE,
         ConflictResolutionPolicy.SKIP,
@@ -134,42 +168,48 @@ const FilesList = () => {
 
       importFiles(body, ImportFileType.ARCHIVE).then((res) => {
         if (res.success) {
-          fetchFiles?.(`${ROOT_FOLDER}/`, true);
+          fetchFiles?.(destinationFolderPath, true);
           showNotification(getSuccessNotification(t(FoldersI18nKey.Import)));
+        } else {
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
       });
     },
     [fetchFiles, showNotification, t],
   );
 
-  const handleOnPathChange = useCallback((nextPath: string | undefined) => {
-    if (!nextPath) {
+  const handleOnPathChange = useCallback(
+    (nextPath: string | undefined) => {
+      if (!nextPath) {
+        return;
+      }
+
+      if (!loadedPaths.has(nextPath)) {
+        fetchFiles?.(nextPath, true);
+      }
+      setPath(nextPath);
+      setLoadedPaths((prev) => new Set(prev).add(nextPath));
+    },
+    [fetchFiles, loadedPaths],
+  );
+
+  const handleFolderPopupPathChange = useCallback(
+    (nextPath: string | undefined) => {
+      if (nextPath && !loadedPaths.has(nextPath)) {
+        setLoadedPaths((prev) => new Set(prev).add(nextPath));
+        fetchFiles?.(nextPath, true);
+      }
+    },
+    [loadedPaths, fetchFiles],
+  );
+
+  const handleManagePermissions = useCallback((path?: string) => {
+    if (!path) {
       return;
     }
 
-    setPath(nextPath);
-    setLoadedPaths((prev) => new Set(prev).add(nextPath));
+    window.open(`${ApplicationRoute.FoldersStorage}?path=${encodeURIComponent(path)}`, '_blank');
   }, []);
-
-  const handleFolderPopupPathChange = useCallback((nextPath: string | undefined) => {
-    console.log(nextPath);
-  }, []);
-
-  const handleAddChild = useCallback(
-    (files: DialFile[]) => {
-      const newPath = files[0].path + 'New Folder';
-      handleCreateFolder(files[0], newPath);
-    },
-    [handleCreateFolder],
-  );
-
-  const handleAddSibling = useCallback(
-    (files: DialFile[]) => {
-      const newPath = files[0].path.replace(/([^/]+)\/?$/, 'New Folder');
-      handleCreateFolder(files[0], newPath);
-    },
-    [handleCreateFolder],
-  );
 
   const handleCreateFolderValidate = useCallback((name: string) => {
     const forbiddenChars = /[<>:"/\\|?*]/;
@@ -180,16 +220,9 @@ const FilesList = () => {
     return null;
   }, []);
 
-  const handleCopyFiles = useCallback((items: DialCopiedItem[], destinationFolder: string) => {
-    alert(
-      `Copied ${items.length} file(s) to ${destinationFolder}:\n${items
-        .map((f) => `${f.sourceUrl} -> ${f.destinationUrl} (overwrite: ${f.overwrite})`)
-        .join('\n')}`,
-    );
-  }, []);
-
   const handleDownloadFiles = useCallback(async (files: DialFile[]) => {
     const filePaths = files.map((file) => file.path);
+
     exportFiles(filePaths).then((res) => {
       const { blob, fileName } = res as { blob: Blob; fileName: string };
       downloadFile(blob, fileName);
@@ -213,7 +246,8 @@ const FilesList = () => {
       Promise.all(promises).then((result) => {
         const isSuccess = result.every((res) => res.success);
         if (isSuccess) {
-          fetchFiles?.(`${ROOT_FOLDER}/`, true);
+          const parentPath = getParentPathByFullPath(fileNodes[0]?.sourceUrl) || `${ROOT_FOLDER}/`;
+          fetchFiles?.(parentPath, true);
         }
       });
     },
@@ -246,7 +280,7 @@ const FilesList = () => {
       });
 
       Promise.all(promises).then((result) => {
-        const isSuccess = result.every((res) => res.success);
+        const isSuccess = result.every((res) => (Array.isArray(res) ? res.every((r) => r.success) : res.success));
         if (isSuccess) {
           fetchFiles?.(destinationFolder, true);
           fetchFiles?.(sourceFolder, true);
@@ -256,10 +290,52 @@ const FilesList = () => {
     [fetchFiles],
   );
 
+  const handleModalOpen = useCallback((currentPath?: string, currentFolder?: DialFile) => {
+    setIsModalOpen(true);
+    setImportFolder(currentFolder || null);
+  }, []);
+
+  const handleModalClose = useCallback(() => {
+    setIsModalOpen(false);
+    setImportFolder(null);
+  }, []);
+
+  const onImport = useCallback(
+    (
+      fileType: ImportFileType,
+      file: ImportData,
+      conflictResolutionStrategy: string,
+      path: string,
+      ignorePaths?: boolean,
+    ) => {
+      let destinationFolder = importFolder?.path ? importFolder.path : `${ROOT_FOLDER}/`;
+      const { body } = getFormDataForImport(
+        destinationFolder,
+        file,
+        fileType,
+        conflictResolutionStrategy,
+        void 0,
+        ignorePaths,
+        ApplicationRoute.Files,
+      );
+      importFiles(body, fileType).then((res) => {
+        if (res.success) {
+          fetchFiles?.(destinationFolder, true);
+          showNotification(getSuccessNotification(t(FoldersI18nKey.Import)));
+        } else {
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+        }
+      });
+
+      handleModalClose();
+    },
+    [handleModalClose, showNotification, t, fetchFiles, importFolder],
+  );
+
   return (
     <>
       <DialFileManager
-        // title={t(MenuI18nKey.Files)} // TODO: support UI kit
+        title={t(MenuI18nKey.Files)}
         className="bg-layer-2 py-4 px-6"
         path={path}
         defaultPath={`${ROOT_FOLDER}/`}
@@ -269,6 +345,7 @@ const FilesList = () => {
         bulkActionsToolbarOptions={{
           getSelectionLabel: (selectedCount: number) => `${selectedCount} ${t(FileManagerI18nKey.SelectedItems)}`,
           actionLabels: {
+            move: t(FileManagerI18nKey.Move),
             download: t(ButtonsI18nKey.Export),
             delete: t(ButtonsI18nKey.Delete),
           },
@@ -293,20 +370,25 @@ const FilesList = () => {
             download: t(ButtonsI18nKey.Download),
             delete: t(ButtonsI18nKey.Delete),
             rename: t(FileManagerI18nKey.Rename),
+            managePermissions: t(FileManagerI18nKey.ManagePermissions),
           },
         }}
         gridOptions={{
           columnDefs: FILES_GRID_COLUMNS,
+          selectionMode: GridSelectionMode.MULTIPLE,
           actionLabels: {
+            addSibling: t(FileManagerI18nKey.AddSibling),
+            addChild: t(FileManagerI18nKey.AddChild),
             move: t(FileManagerI18nKey.Move),
             download: t(ButtonsI18nKey.Download),
+            managePermissions: t(FileManagerI18nKey.ManagePermissions),
+            rename: t(FileManagerI18nKey.Rename),
             delete: t(ButtonsI18nKey.Delete),
           },
         }}
         onPathChange={handleOnPathChange}
         onAddChild={handleAddChild}
         onAddSibling={handleAddSibling}
-        onCopyFiles={handleCopyFiles}
         onCreateFolder={handleCreateFolder}
         onUploadFiles={handleImportFiles}
         onUploadArchive={handleImportArchive}
@@ -314,7 +396,8 @@ const FilesList = () => {
         onCreateFolderValidate={handleCreateFolderValidate}
         onDeleteFiles={handleDeleteFileNodes}
         onMoveToFiles={handleMoveToFiles}
-        // onFolderPopupPathChange={handleFolderPopupPathChange}
+        onFolderPopupPathChange={handleFolderPopupPathChange}
+        onManagePermissions={handleManagePermissions}
         folderCreationValidationMessages={{
           emptyName: t(FileManagerI18nKey.EnterFolderName),
           duplicateName: t(FileManagerI18nKey.NameExists),
@@ -323,6 +406,15 @@ const FilesList = () => {
           emptyName: t(FileManagerI18nKey.EnterFolderName),
           duplicateName: t(FileManagerI18nKey.NameExists),
         }}
+        isRenameFileAvailable={false}
+        customUploadFileAction={handleModalOpen}
+      />
+      <Modals
+        route={ApplicationRoute.Files}
+        isModalOpen={isModalOpen}
+        modalType={ModalType.import}
+        onImport={onImport}
+        onClose={handleModalClose}
       />
     </>
   );

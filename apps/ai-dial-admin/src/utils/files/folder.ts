@@ -52,7 +52,6 @@ export const mergeFiles = <T extends DialFile>(
       {
         name: getFolderName(targetPath),
         path: targetPath,
-        parentPath: targetPath.replace(/\/[^/]+\/?$/, ''),
         nodeType: DialFileNodeType.FOLDER,
         permissions: ['WRITE', 'READ'],
         items: fillChildren(newFiles as T[]),

@@ -55,3 +55,11 @@ export const addNewVersion = (entity: Asset, version: string) => {
     version,
   };
 };
+
+export const getParentPathByFullPath = (fullPath: string) => {
+  let normalized = fullPath.endsWith('/') && fullPath !== '/' ? fullPath.slice(0, -1) : fullPath;
+  const lastSlash = normalized.lastIndexOf('/');
+  if (lastSlash === -1) return '';
+
+  return normalized.slice(0, lastSlash + 1);
+};

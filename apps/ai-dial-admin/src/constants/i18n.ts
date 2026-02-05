@@ -1286,4 +1286,5 @@ export enum FileManagerI18nKey {
   Move = 'FileManager.Move',
   EnterFolderName = 'FileManager.EnterFolderName',
   NameExists = 'FileManager.NameExists',
+  ManagePermissions = 'FileManager.ManagePermissions',
 }
