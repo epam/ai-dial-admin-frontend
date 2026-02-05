@@ -271,14 +271,15 @@ const FilesList = () => {
           getSelectionLabel: (selectedCount: number) => `${selectedCount} ${t(FileManagerI18nKey.SelectedItems)}`,
           actionLabels: {
             download: t(ButtonsI18nKey.Export),
+            move: t(FileManagerI18nKey.Move),
             delete: t(ButtonsI18nKey.Delete),
           },
         }}
         toolbarOptions={{
           showHiddenFilesToggle: false,
           newActions: {
-            newFolder: { label: 'Folder', icon: null },
-            uploadFiles: { label: 'File', icon: null },
+            newFolder: { label: t(FileManagerI18nKey.Folder), icon: null },
+            uploadFiles: { label: t(FileManagerI18nKey.File), icon: null },
           },
           newButtonLabel: t(ButtonsI18nKey.Create),
         }}
@@ -304,6 +305,7 @@ const FilesList = () => {
             move: t(FileManagerI18nKey.Move),
             download: t(ButtonsI18nKey.Download),
             delete: t(ButtonsI18nKey.Delete),
+            rename: t(FileManagerI18nKey.Rename),
           },
         }}
         onPathChange={handleOnPathChange}
