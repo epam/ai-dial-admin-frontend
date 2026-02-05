@@ -18,7 +18,7 @@ const Logo: FC = () => {
           aria-label="Admin logo"
           style={{ backgroundImage: `url(${getIconPath(currentThemeLogo)})` }}
           className="bg-right bg-no-repeat min-w-[110px] h-full bg-contain"
-        ></Link>
+        />
       ) : null}
       <Link className="relative" href="/" aria-label="Admin title">
         <h2 className="ml-2 absolute top-[12px]">{t('Admin')}</h2>

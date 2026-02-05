@@ -62,6 +62,7 @@ const validationReducer = (state: ValidationState, action: ValidationAction): Va
     case ValidationActionType.Reset: {
       return {
         ...state,
+        jsonErrors: null,
         fieldValidations: new Map(),
         isValid: true,
         resetCounter: state.resetCounter + 1,

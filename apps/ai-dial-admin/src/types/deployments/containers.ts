@@ -40,7 +40,7 @@ export enum MODEL_TYPE {
 }
 
 export enum SCALING_STRATEGY_TYPE {
-  REQUESTS = 'pending_requests',
+  REQUESTS = 'active_requests',
   HARDWARE = 'hardware_usage',
 }
 

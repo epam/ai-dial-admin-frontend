@@ -1,8 +1,10 @@
+import { FC, useMemo } from 'react';
+
+import { DialSelect, SelectOption, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
+
 import { CompareI18nKey, EntitiesI18nKey, TypeI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ParamsView } from '@/src/types/parameters';
-import { DialSelect, SelectOption, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
-import { FC, useMemo } from 'react';
 
 interface Props {
   view: string;

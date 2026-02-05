@@ -6,6 +6,8 @@ import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
   createTestSuite,
+  getDeployment,
+  getDeployments,
   getTestCase,
   getTestCases,
   getTestSuite,
@@ -88,6 +90,22 @@ describe('TestSuites :: server actions', () => {
     const result = await getTestCase('test');
     expect(getUserToken).toHaveBeenCalled();
     expect(testSuitesApi.getTestCase).toHaveBeenCalledWith('test', void 0, TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getDeployments action ', async () => {
+    (testSuitesApi.getDeployments as any).mockResolvedValue(RESPONSE_MOCK);
+    const result = await getDeployments();
+    expect(getUserToken).toHaveBeenCalled();
+    expect(testSuitesApi.getDeployments).toHaveBeenCalledWith(TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getDeployment action ', async () => {
+    (testSuitesApi.getDeployment as any).mockResolvedValue(RESPONSE_MOCK);
+    const result = await getDeployment('id', 'type');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(testSuitesApi.getDeployment).toHaveBeenCalledWith('id', 'type', TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

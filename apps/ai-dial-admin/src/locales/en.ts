@@ -175,6 +175,7 @@ export default {
     NoTools: 'No Tools',
     NoInputs: 'No inputs',
     NoModelServings: 'No Model Servings',
+    NoMethods: 'No Methods',
     // add entity or entities
     AddModel: 'Add Model',
     AddApplication: 'Add Application',
@@ -251,6 +252,7 @@ export default {
     },
     Entities: {
       Model: 'Model',
+      TestSuite: 'Test Suite',
       Application: 'Application',
       Toolset: 'Toolset',
       Interceptor: 'Interceptor',

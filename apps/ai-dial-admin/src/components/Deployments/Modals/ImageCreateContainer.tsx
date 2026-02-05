@@ -49,7 +49,7 @@ const ImageCreateContainer: FC<Props> = ({ onClose, isModalOpen, modalTitle, nam
     <DialConfirmationPopup
       onClose={onClose}
       header={modalTitle}
-      portalId="createContainerModal"
+      portalId="ImageCreateContainerModal"
       open={isModalOpen}
       size={PopupSize.Lg}
       cancelLabel={t(ButtonsI18nKey.Cancel)}

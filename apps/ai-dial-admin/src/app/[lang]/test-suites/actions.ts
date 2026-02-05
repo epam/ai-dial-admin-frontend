@@ -42,3 +42,13 @@ export async function getTestCase(id: string, testCaseId?: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return testSuitesApi.getTestCase(id, testCaseId, token);
 }
+
+export async function getDeployments() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.getDeployments(token);
+}
+
+export async function getDeployment(id: string, type: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.getDeployment(id, type, token);
+}
