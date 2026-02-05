@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
   DialCopiedItem,
@@ -55,6 +55,8 @@ const FilesList = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [files]);
+
+  const managerLabel = useMemo(() => <h1 className="text-primary">{t(MenuI18nKey.Files)}</h1>, [t]);
 
   const getEmptyFile = useCallback(() => {
     const filename = '.dial_folder';
@@ -335,7 +337,7 @@ const FilesList = () => {
   return (
     <>
       <DialFileManager
-        title={t(MenuI18nKey.Files)}
+        managerLabel={managerLabel}
         className="bg-layer-2 py-4 px-6"
         path={path}
         defaultPath={`${ROOT_FOLDER}/`}
