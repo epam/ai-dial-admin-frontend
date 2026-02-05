@@ -23,13 +23,14 @@ import ImportConflicts from './ImportConflicts';
 import ImportFileTypeSelector from './ImportFileType';
 import ImportModalButtons from './ImportModalButtons';
 import { getJsonFileName } from '@/src/utils/import/get-json-name';
+import { Asset } from '@/src/models/dial/deployment-asset';
 
 const MAX_FILES_COUNT = 30;
 
 interface Props {
   isModalOpen: boolean;
   route?: ApplicationRoute;
-  getAssetContext?: () => AssetsFolderContext<DialFile>;
+  getAssetContext?: () => AssetsFolderContext<Asset>;
   onClose: () => void;
   onApply?: (fileType: FileType, file: ImportData, resolution: string, path: string, ignorePaths?: boolean) => void;
 }

@@ -1,8 +1,8 @@
 'use client';
 
 import { DialLoader } from '@epam/ai-dial-ui-kit';
-import { useRouter } from 'next/router';
-import { FC } from 'react';
+import { useRouter } from 'next/navigation';
+import { FC, useEffect } from 'react';
 
 import { getUrl } from './utils';
 
@@ -12,7 +12,12 @@ interface Props {
 export const AuthPage: FC<Props> = ({ oAuthCode }) => {
   const router = useRouter();
 
-  router.push(`${getUrl()}code=${oAuthCode ?? ''}`);
+  useEffect(() => {
+    const url = getUrl();
+    if (url) {
+      router.push(`${url}code=${oAuthCode ?? ''}`);
+    }
+  }, [oAuthCode, router]);
 
   return <DialLoader size={44} />;
 };

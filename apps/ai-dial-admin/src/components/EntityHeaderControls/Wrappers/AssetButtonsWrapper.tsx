@@ -17,8 +17,8 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
-import { AssetsFolderContext } from '../../../context/assets/AssetsFolderContext';
-import { Asset } from '../../../models/dial/deployment-asset';
+import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { Asset } from '@/src/models/dial/deployment-asset';
 import AssetVersionControl from '../../Assets/Deployments/AssetVersionControl';
 import JsonToggles from '../JsonToggle/JsonToggle';
 import { SimpleButtonsWrapperProps } from './SimpleButtonsWrapper';

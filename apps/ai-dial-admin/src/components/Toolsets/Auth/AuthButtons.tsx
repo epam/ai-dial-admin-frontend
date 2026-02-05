@@ -57,10 +57,10 @@ const AuthButtons: FC<Props> = ({ selectedToolset, oAuthCode, view }) => {
             getSuccessNotification(t(ToolsetI18nKey.SuccessLogin), t(ToolsetI18nKey.SuccessLoginDescription)),
           );
         }
-        router.push(getUrnForEntity(ApplicationRoute.Toolsets, selectedToolset));
+        router.push(getUrnForEntity(view, selectedToolset));
       });
     },
-    [router, selectedToolset, showNotification, t],
+    [router, selectedToolset, showNotification, t, view],
   );
 
   const onLogin = useCallback(
@@ -107,7 +107,7 @@ const AuthButtons: FC<Props> = ({ selectedToolset, oAuthCode, view }) => {
       : ToolsetAuthCredentialLevel.GLOBAL;
     getReqRef.current(signOutToolset, selectedToolset, level).then((res) => {
       if (res.success) {
-        router.push(getUrnForEntity(ApplicationRoute.Toolsets, selectedToolset));
+        router.push(getUrnForEntity(view, selectedToolset));
         showNotification(
           getSuccessNotification(t(ToolsetI18nKey.SuccessLogout), t(ToolsetI18nKey.SuccessLogoutDescription)),
         );
@@ -115,7 +115,7 @@ const AuthButtons: FC<Props> = ({ selectedToolset, oAuthCode, view }) => {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
-  }, [router, selectedToolset, showNotification, t]);
+  }, [router, selectedToolset, view, showNotification, t]);
 
   useEffect(() => {
     if (oAuthCode && !isSignInProcessed) {

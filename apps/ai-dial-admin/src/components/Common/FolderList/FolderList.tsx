@@ -28,12 +28,13 @@ import { getFolderNameAndPath, isFolder } from '@/src/utils/files/path';
 import { isAssetView } from '@/src/utils/is-asset-view';
 import FolderListModals, { ModalType } from './Modals/FolderListModals';
 import { generateFolderListFromBulkPaths } from './utils';
+import { Asset } from '@/src/models/dial/deployment-asset';
 
 interface Props {
   disableAutoFetch?: boolean;
   initialPath?: string;
   view?: ApplicationRoute;
-  context?: () => AssetsFolderContext<DialFile> | RuleFolderContextType;
+  context?: () => AssetsFolderContext<Asset> | RuleFolderContextType;
   isFolderMove?: boolean;
   folderPath?: string;
   isFolderDelete?: boolean;

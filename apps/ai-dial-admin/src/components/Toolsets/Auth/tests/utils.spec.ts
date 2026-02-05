@@ -1,5 +1,6 @@
-import { getIsUser, setIsUser } from '../utils';
 import { ToolsetAuthCredentialLevel } from '@/src/models/dial/toolset';
+import { beforeEach, describe, expect, test } from 'vitest';
+import { getIsUser, setIsUser } from '../utils';
 
 describe('setIsUser', () => {
   beforeEach(() => {

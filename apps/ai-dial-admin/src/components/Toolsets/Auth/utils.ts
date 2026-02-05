@@ -32,10 +32,7 @@ export const setUrl = (view: ApplicationRoute, selectedToolset: Toolset) => {
 };
 
 export const getUrl = () => {
-  if (typeof window !== 'undefined') {
-    const url = localStorage.getItem(urlKey);
-    localStorage.removeItem(urlKey);
-    return url;
-  }
-  return null;
+  const url = localStorage.getItem(urlKey);
+  localStorage.removeItem(urlKey);
+  return url;
 };
