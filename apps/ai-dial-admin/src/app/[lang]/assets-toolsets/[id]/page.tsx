@@ -12,18 +12,16 @@ import { errorObjLog } from '@/src/server/logger';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { isValueTruthy } from '@/src/utils/types';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page(params: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ path: string; code?: string; isUser?: string }>;
+  searchParams: Promise<{ path: string; code?: string }>;
 }) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
   let oAuthCode = null;
-  let isUser = false;
   let etag = DEFAULT_ETAG;
 
   let toolsets: AssetToolset[] = [];
@@ -32,7 +30,6 @@ export default async function Page(params: {
   try {
     const searchParams = await params.searchParams;
     oAuthCode = searchParams.code;
-    isUser = isValueTruthy(searchParams.isUser);
     const path = decodeURIComponent(searchParams.path);
     const name = decodeURIComponent((await params.params).id);
 
@@ -54,13 +51,7 @@ export default async function Page(params: {
   return (
     <SaveValidationContextProvider>
       <ToolsetFolderProvider>
-        <ToolsetView
-          oAuthCode={oAuthCode}
-          isUserLevel={isUser}
-          etag={etag}
-          originalToolset={toolset}
-          toolsets={toolsets || []}
-        />
+        <ToolsetView oAuthCode={oAuthCode} etag={etag} originalToolset={toolset} toolsets={toolsets || []} />
       </ToolsetFolderProvider>
     </SaveValidationContextProvider>
   );

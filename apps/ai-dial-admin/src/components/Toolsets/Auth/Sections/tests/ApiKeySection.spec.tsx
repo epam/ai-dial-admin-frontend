@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
-import ApiKeySection from '../../View/Auth/ApiKeySection';
 import { EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import ApiKeySection from '../ApiKeySection';
 
 describe('ApiKeySection', () => {
   test('renders input with correct value and placeholder', () => {

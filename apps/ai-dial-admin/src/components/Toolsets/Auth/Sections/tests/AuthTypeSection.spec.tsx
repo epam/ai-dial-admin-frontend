@@ -2,7 +2,7 @@ import { describe, it, expect, vi, test } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ToolsetAuthType } from '@/src/models/dial/toolset';
 import { EntityPlaceholdersI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
-import { ApplicationRoute } from '../../../../../types/routes';
+import { ApplicationRoute } from '@/src/types/routes';
 import AuthTypeSection from '../AuthTypeSection';
 
 const baseConfig = {

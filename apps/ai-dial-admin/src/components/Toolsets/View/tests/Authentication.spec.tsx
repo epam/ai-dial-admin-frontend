@@ -1,8 +1,8 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, expect, test, vi } from 'vitest';
-import Authentication from '../../Auth/Authentication';
-import { ToolsetAuthType, Toolset } from '@/src/models/dial/toolset';
 import { EntityFieldsI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
+import { Toolset, ToolsetAuthType } from '@/src/models/dial/toolset';
+import { render, screen } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
+import Authentication from '../../Auth/Authentication';
 
 const baseToolset: Toolset = {
   authSettings: { authenticationType: ToolsetAuthType.API_KEY },
