@@ -1,15 +1,6 @@
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
 
-import {
-  LIST_RUNNER_COLUMNS,
-  SIMPLE_ENTITY_COLUMNS,
-  BASE_COLUMNS,
-  DESCRIPTION_COLUMN,
-  NAME_COLUMN,
-  DISPLAY_NAME_COLUMN_WITH_SORT,
-  DISPLAY_VERSION_COLUMN,
-  BASE_KEYS_COLUMNS,
-} from '@/src/constants/grid-columns/grid-columns';
+import { LIST_RUNNER_COLUMNS, BASE_COLUMNS, BASE_KEYS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { ExportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
@@ -57,7 +48,7 @@ export const getActualColDefs = (
     type === EntityType.ROUTE ||
     type === EntityType.INTERCEPTOR_RUNNER
   ) {
-    columns = [...SIMPLE_ENTITY_COLUMNS];
+    columns = [...BASE_COLUMNS];
   }
   if (type === EntityType.KEY) {
     columns = [...BASE_KEYS_COLUMNS];
@@ -66,7 +57,7 @@ export const getActualColDefs = (
     columns = [...LIST_RUNNER_COLUMNS];
   }
   if (type === EntityType.ADAPTER) {
-    columns = [...SIMPLE_ENTITY_COLUMNS];
+    columns = [...BASE_COLUMNS];
   }
 
   if (remove && isEntityWithDependency(type)) {

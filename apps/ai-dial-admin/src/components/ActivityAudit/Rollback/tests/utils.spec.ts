@@ -1,4 +1,4 @@
-import { KEYS_COLUMNS, LIST_RUNNER_COLUMNS, SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { KEYS_COLUMNS, LIST_RUNNER_COLUMNS, BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ActivityAuditResourceType } from '@/src/types/activity-audit';
 import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test } from 'vitest';
@@ -8,44 +8,44 @@ describe('getSystemRollbackColumns', () => {
   const t = (s: string) => `t:${s}`;
   const view = ApplicationRoute.Models;
 
-  test('returns SIMPLE_ENTITY_COLUMNS for ADAPTER', () => {
-    const cols = getSystemRollbackColumns(ActivityAuditResourceType.ADAPTER, t, view);
-    expect(cols).toEqual(SIMPLE_ENTITY_COLUMNS);
+  test('returns BASE_COLUMNS for ADAPTER', () => {
+    const cols = getSystemRollbackColumns(ActivityAuditResourceType.ADAPTER, t);
+    expect(cols).toEqual(BASE_COLUMNS);
   });
 
-  test('returns SIMPLE_ENTITY_COLUMNS for INTERCEPTOR', () => {
+  test('returns BASE_COLUMNS for INTERCEPTOR', () => {
     const cols = getSystemRollbackColumns(ActivityAuditResourceType.INTERCEPTOR, t);
-    expect(cols).toEqual(SIMPLE_ENTITY_COLUMNS);
+    expect(cols).toEqual(BASE_COLUMNS);
   });
 
-  test('returns SIMPLE_ENTITY_COLUMNS for ROLE', () => {
+  test('returns BASE_COLUMNS for ROLE', () => {
     const cols = getSystemRollbackColumns(ActivityAuditResourceType.ROLE, t);
-    expect(cols).toEqual(SIMPLE_ENTITY_COLUMNS);
+    expect(cols).toEqual(BASE_COLUMNS);
   });
 
-  test('returns SIMPLE_ENTITY_COLUMNS for ROUTE', () => {
+  test('returns BASE_COLUMNS for ROUTE', () => {
     const cols = getSystemRollbackColumns(ActivityAuditResourceType.ROUTE, t);
-    expect(cols).toEqual(SIMPLE_ENTITY_COLUMNS);
+    expect(cols).toEqual(BASE_COLUMNS);
   });
 
-  test('returns SIMPLE_ENTITY_COLUMNS for TOOLSET', () => {
+  test('returns BASE_COLUMNS for TOOLSET', () => {
     const cols = getSystemRollbackColumns(ActivityAuditResourceType.TOOLSET, t);
-    expect(cols).toEqual(SIMPLE_ENTITY_COLUMNS);
+    expect(cols).toEqual(BASE_COLUMNS);
   });
 
-  test('returns SIMPLE_ENTITY_COLUMNS for MODEL', () => {
+  test('returns BASE_COLUMNS for MODEL', () => {
     const cols = getSystemRollbackColumns(ActivityAuditResourceType.MODEL, t);
     expect(cols.length).toEqual(17);
   });
 
-  test('returns SIMPLE_ENTITY_COLUMNS for APPLICATION', () => {
+  test('returns BASE_COLUMNS for APPLICATION', () => {
     const cols = getSystemRollbackColumns(ActivityAuditResourceType.APPLICATION, t);
     expect(cols.length).toEqual(10);
   });
 
-  test('returns SIMPLE_ENTITY_COLUMNS for INTERCEPTOR TEMPLATE', () => {
+  test('returns BASE_COLUMNS for INTERCEPTOR TEMPLATE', () => {
     const cols = getSystemRollbackColumns(ActivityAuditResourceType.INTERCEPTOR_TEMPLATE, t);
-    expect(cols).toEqual(SIMPLE_ENTITY_COLUMNS);
+    expect(cols).toEqual(BASE_COLUMNS);
   });
 
   test('returns KEYS_COLUMNS for KEY', () => {

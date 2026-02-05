@@ -9,7 +9,7 @@ import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import Grid from '@/src/components/Grid/Grid';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getOpenInNewTabOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
-import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, EntitiesI18nKey, RolesI18nKey, RoutesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
@@ -91,7 +91,7 @@ const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, o
       actions.push(getRemoveOperation(onRemoveRole));
     }
 
-    return [...SIMPLE_ENTITY_COLUMNS, ACTION_COLUMN(actions)];
+    return [...BASE_COLUMNS, ACTION_COLUMN(actions)];
   }, [route, onRemoveRole]);
 
   return (

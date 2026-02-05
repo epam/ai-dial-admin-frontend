@@ -1,6 +1,6 @@
 'use client';
 
-import { FC } from 'react';
+import { FC, useMemo } from 'react';
 
 import { createModel, removeModel } from '@/src/app/[lang]/models/actions';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
@@ -18,11 +18,12 @@ const ModelsList: FC<Props> = ({ data }) => {
   const names = filterDisplayNamesWithVersions(data);
 
   const t = useI18n();
+  const columns = useMemo(() => MODELS_COLUMNS(t), [t]);
 
   return (
     <BaseEntityList
       names={names}
-      baseColumns={MODELS_COLUMNS(t, ApplicationRoute.Models)}
+      baseColumns={columns}
       data={data}
       route={ApplicationRoute.Models}
       onCreateEntity={createModel}
