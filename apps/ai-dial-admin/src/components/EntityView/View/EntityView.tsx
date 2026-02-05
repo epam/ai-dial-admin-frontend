@@ -92,10 +92,10 @@ const EntityView: FC<Props> = ({
   const isHideJsonSelector = useMemo(() => {
     const scheme = getAppRunner(selectedEntity as DialApplication, applicationSchemes);
 
-    return (
+    return !!(
       activeTab === EntityViewTab.Parameters &&
       view === ApplicationRoute.Applications &&
-      (scheme?.['dial:applicationTypeEditorUrl'] || (selectedEntity as DialApplication).editorUrl)
+      (!!scheme?.['dial:applicationTypeEditorUrl'] || !!(selectedEntity as DialApplication).editorUrl)
     );
   }, [activeTab, applicationSchemes, selectedEntity, view]);
 

@@ -45,7 +45,7 @@ interface Props<T> {
   onChangeSelectedFormat?: (format: ExportFormat) => void;
   onRemove: (entity: string) => Promise<ServerActionResponse>;
   onToggleEditor?: () => void;
-  onHideFormatSelector?: () => void;
+  onHideFormatSelector?: () => boolean;
   getAssetContext?: () => AssetsFolderContext<Asset>;
 }
 
@@ -125,7 +125,7 @@ const HeaderButtons = <T extends object>({
                     view={view}
                     asset={entity as Asset}
                     addedVersions={addedVersions || []}
-                    setAddedVersions={setAddedVersions}
+                    onChangeAddedVersion={setAddedVersions}
                     assets={assets}
                     onChangeAsset={onChangeEntity as (entity: Asset) => void}
                     etag={etag}
