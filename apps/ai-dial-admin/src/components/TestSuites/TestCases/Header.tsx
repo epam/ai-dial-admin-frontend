@@ -18,9 +18,7 @@ import { useI18n } from '@/src/locales/client';
 import AddTestCase from './AddTestCase';
 import ImportFileModal from './Import/ImportFile';
 
-interface Props {}
-
-const HeaderButtons: FC<Props> = ({}) => {
+const HeaderButtons = () => {
   const t = useI18n();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
