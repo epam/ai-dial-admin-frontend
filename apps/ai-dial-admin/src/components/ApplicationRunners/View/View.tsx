@@ -29,7 +29,6 @@ import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { Asset } from '@/src/models/dial/deployment-asset';
-import { DialFile } from '@/src/models/dial/file';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialRole } from '@/src/models/dial/role';
 import { ExportFormat } from '@/src/types/export';
@@ -196,7 +195,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
               isModalOpen={isCreateAssetAppModalOpen}
               onClose={() => setIsCreateAssetAppModalOpen(false)}
               onCreate={createApp}
-              context={useAppsFolder as () => AssetsFolderContext<DialFile | Asset>}
+              context={useAppsFolder as () => AssetsFolderContext<Asset>}
               initialValues={{ applicationTypeSchemaId: selectedRunner.$id }}
             />,
             document.body,
