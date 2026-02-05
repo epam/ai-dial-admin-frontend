@@ -297,6 +297,7 @@ const FilesList = () => {
           },
         }}
         gridOptions={{
+          alternateOddRowColors: true,
           columnDefs: FILES_GRID_COLUMNS,
           selectionMode: GridSelectionMode.MULTIPLE,
           actionLabels: {
