@@ -2,15 +2,17 @@
 
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
+import { getTestCases } from '@/src/app/[lang]/test-suites/actions';
+import ListView from '@/src/components/ListView/ListView';
+import { ACTION_COLUMN, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
+import { getDeleteOperation } from '@/src/constants/grid-columns/actions';
+import { TEST_CASES_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { getRequestFilters } from '@/src/utils/request/get-request-filters';
+import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { GridApi, GridOptions, IDatasource, IGetRowsParams } from 'ag-grid-community';
-import { getTestCases } from '../../../app/[lang]/test-suites/actions';
-import { infiniteGridOptions, PAGE_SIZE } from '../../../constants/ag-grid';
-import { getRequestFilters } from '../../../utils/request/get-request-filters';
-import { getRequestSorts } from '../../../utils/request/get-request-sorts';
-import ListView from '../../ListView/ListView';
 import HeaderButtons from './Header';
 
 interface Props {
@@ -18,7 +20,7 @@ interface Props {
   onChange: (testSuite: TestSuite) => void;
 }
 
-const TestCases: FC<Props> = ({ selectedTestSuite, onChange }) => {
+const TestCases: FC<Props> = ({ selectedTestSuite }) => {
   const t = useI18n();
 
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
@@ -70,26 +72,20 @@ const TestCases: FC<Props> = ({ selectedTestSuite, onChange }) => {
   //   [route],
   // );
 
-  // const onOpenDeleteModal = useCallback(
-  //   (entity?: T) => {
-  //     setCurrentEntity(entity);
-  //     onModalOpen();
-  //   },
-  //   [onModalOpen],
-  // );
+  const onOpenDeleteModal = useCallback(() => {
+    // TODO: implement delete modal
+  }, []);
 
-  // const actionColumn = ACTION_COLUMN([
-  //   getOpenInNewTabOperation(onOpenInNewTabAction),
-  //   // getDuplicateOperation(onDuplicateAction), // TODO: implement duplication for evaluations
-  //   getDeleteOperation(onOpenDeleteModal),
-  // ]);
+  // TODO: drag and drop
+  // select
+  const actionColumn = ACTION_COLUMN([getDeleteOperation(onOpenDeleteModal)]);
 
-  // const columnDefs = [...baseColumns, actionColumn];
+  const columnDefs = [...TEST_CASES_COLUMN, actionColumn];
 
   return (
     <div className="h-full w-full flex">
       <ListView
-        columnDefs={[]}
+        columnDefs={columnDefs}
         additionalGridOptions={gridOptions}
         title={t(TestSuitesI18nKey.TestCases)}
         emptyDataTitle={t(TestSuitesI18nKey.NoTestCases)}
