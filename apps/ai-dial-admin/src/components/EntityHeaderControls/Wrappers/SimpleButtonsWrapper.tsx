@@ -19,8 +19,8 @@ import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
-import { showEditorErrorNotifications } from '../Buttons/utils';
-import { JsonConfiguration } from '../models';
+import { showEditorErrorNotifications } from '@/src/components/EntityHeaderControls/Buttons/utils';
+import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 
 interface Props<T> {
   view: ApplicationRoute;

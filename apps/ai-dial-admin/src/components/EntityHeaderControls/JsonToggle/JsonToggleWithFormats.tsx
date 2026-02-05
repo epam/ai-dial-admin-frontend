@@ -9,7 +9,7 @@ import { useI18n } from '@/src/locales/client';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
 import JsonToggles from './JsonToggle';
-import { JsonConfiguration } from '../models';
+import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 
 const ONLY_ADMIN_ENTITIES = [
   ApplicationRoute.Adapters,
