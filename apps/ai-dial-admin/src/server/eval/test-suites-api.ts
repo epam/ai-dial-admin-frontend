@@ -34,7 +34,7 @@ export class TestSuitesApi extends BaseApi {
   }
 
   getTestCases(
-    id: string,
+    id: string | undefined,
     page: number,
     size: number,
     sorts: SortDto[],
