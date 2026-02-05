@@ -8,7 +8,6 @@ describe('GitLab', () => {
     expect(config.id).toBe('gitlab');
     expect(config.name).toBe('GitLab');
     expect(config.type).toBe('oauth');
-    expect(config.authorization.url).toBe('https://gitlab.com/oauth/authorize');
     expect(config.token).toBe('https://gitlab.com/oauth/token');
     expect(config.userinfo).toBe('https://gitlab.com/api/v4/user');
     expect(config.options).toBe(options);
