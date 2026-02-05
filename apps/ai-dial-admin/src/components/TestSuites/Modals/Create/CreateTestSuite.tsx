@@ -43,23 +43,19 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate }) => {
 
   useEffect(() => {
     setSteps((prev) =>
-      prev.map((step) =>
-        step.id === TestSuitTab.Properties ? { ...step, status: testSuite.name ? StepStatus.VALID : void 0 } : step,
-      ),
+      prev.map((step) => {
+        if (step.id === TestSuitTab.Application) {
+          return { ...step, status: selectedApplication ? StepStatus.VALID : void 0 };
+        }
+        if (step.id === TestSuitTab.Methods) {
+          return { ...step, status: testSuite.endpointRef?.method ? StepStatus.VALID : void 0 };
+        }
+        return step.id === TestSuitTab.Properties
+          ? { ...step, status: testSuite.name ? StepStatus.VALID : void 0 }
+          : step;
+      }),
     );
-  }, [testSuite, currentStepId]);
-
-  useEffect(() => {
-    setSteps((prev) =>
-      prev.map((step) =>
-        step.id === TestSuitTab.Application
-          ? { ...step, status: selectedApplication ? StepStatus.VALID : void 0 }
-          : step.id === TestSuitTab.Methods
-            ? { ...step, status: testSuite.endpointRef?.method ? StepStatus.VALID : void 0 }
-            : step,
-      ),
-    );
-  }, [selectedApplication, currentStepId, testSuite.endpointRef?.method]);
+  }, [selectedApplication, currentStepId, testSuite.endpointRef?.method, testSuite.name]);
 
   return (
     <DialPopup

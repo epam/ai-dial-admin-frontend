@@ -9,7 +9,7 @@ import { GridOptions, RowSelectedEvent } from 'ag-grid-community';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import GridWithColumnsPanel from '@/src/components/Grid/GridWithColumnsPanel/GridWithColumnsPanel';
 import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
-import { DEPLOYMENTS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { EVALUATION_DEPLOYMENTS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, EntitiesI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
@@ -90,7 +90,7 @@ const Applications: FC<Props> = ({ deployments, selectedApplicationId, onChangeA
 
       <div className="flex-1 min-h-0">
         <GridWithColumnsPanel
-          columnDefs={DEPLOYMENTS_COLUMNS(t)}
+          columnDefs={EVALUATION_DEPLOYMENTS_COLUMNS(t)}
           data={data}
           additionalGridOptions={{ ...additionalGridOptions }}
           emptyDataTitle={t(EntitiesI18nKey.NoApplications)}
