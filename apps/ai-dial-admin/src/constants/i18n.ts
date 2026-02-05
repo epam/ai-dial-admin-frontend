@@ -1278,4 +1278,7 @@ export enum TestSuitesI18nKey {
   Methods = 'TestSuites.Methods',
   TestCases = 'TestSuites.TestCases',
   NoTestCases = 'TestSuites.NoTestCases',
+  FromPC = 'TestSuites.FromPC',
+  ImportFromPC = 'TestSuites.ImportFromPC',
+  FromDial = 'TestSuites.FromDial',
 }

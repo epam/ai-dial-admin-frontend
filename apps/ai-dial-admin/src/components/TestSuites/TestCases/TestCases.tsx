@@ -11,6 +11,7 @@ import { infiniteGridOptions, PAGE_SIZE } from '../../../constants/ag-grid';
 import { getRequestFilters } from '../../../utils/request/get-request-filters';
 import { getRequestSorts } from '../../../utils/request/get-request-sorts';
 import ListView from '../../ListView/ListView';
+import HeaderButtons from './Header';
 
 interface Props {
   selectedTestSuite: TestSuite;
@@ -86,20 +87,18 @@ const TestCases: FC<Props> = ({ selectedTestSuite, onChange }) => {
   // const columnDefs = [...baseColumns, actionColumn];
 
   return (
-    <ListView
-      columnDefs={[]}
-      additionalGridOptions={gridOptions}
-      title={t(TestSuitesI18nKey.TestCases)}
-      emptyDataTitle={t(TestSuitesI18nKey.NoTestCases)}
-      onGridReady={onGridReady}
-    >
-      {/* <HeaderButtons
-        route={route}
-        toggleColumnsPanel={toggleColumnsPanel}
-        onCreateEntity={onCreateEntity}
-        gridApi={gridApi}
-      /> */}
-    </ListView>
+    <div className="h-full w-full flex">
+      <ListView
+        columnDefs={[]}
+        additionalGridOptions={gridOptions}
+        title={t(TestSuitesI18nKey.TestCases)}
+        emptyDataTitle={t(TestSuitesI18nKey.NoTestCases)}
+        onGridReady={onGridReady}
+        allowPadding={false}
+      >
+        <HeaderButtons />
+      </ListView>
+    </div>
   );
 };
 
