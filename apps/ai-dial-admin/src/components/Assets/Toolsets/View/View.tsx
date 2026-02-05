@@ -136,7 +136,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
         onRemove={onRemove}
         getAssetContext={useToolsetFolder}
       >
-        <AuthButtons selectedToolset={selectedToolset} oAuthCode={oAuthCode} />
+        <AuthButtons view={ApplicationRoute.AssetsToolsets} selectedToolset={selectedToolset} oAuthCode={oAuthCode} />
       </AssetHeader>
 
       <div className="flex-1 overflow-auto min-h-0">

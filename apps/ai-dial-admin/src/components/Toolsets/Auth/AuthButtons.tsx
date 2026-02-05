@@ -22,18 +22,19 @@ import {
   isLoggedInToToolset,
   isUserLoggedInToToolset,
 } from '@/src/utils/toolset/toolset-auth';
-import { getIsUser, setIsUser } from './utils';
+import { getIsUser, setIsUser, setUrl } from './utils';
 
 export const TOOLSET_AUTH_REDIRECT_URL = '/toolset-signin';
 
 let isSignInProcessed = false;
 
 interface Props {
+  view: ApplicationRoute;
   oAuthCode?: string | null;
   selectedToolset: Toolset;
 }
 
-const AuthButtons: FC<Props> = ({ selectedToolset, oAuthCode }) => {
+const AuthButtons: FC<Props> = ({ selectedToolset, oAuthCode, view }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -78,6 +79,7 @@ const AuthButtons: FC<Props> = ({ selectedToolset, oAuthCode }) => {
         url.searchParams.set('client_id', authSettings.clientId as string);
 
         setIsUser(type);
+        setUrl(view, selectedToolset);
         url.searchParams.set('redirect_uri', `${window.location.origin}${TOOLSET_AUTH_REDIRECT_URL}`);
         if (authSettings.codeChallenge) {
           url.searchParams.set('code_challenge', authSettings.codeChallenge);
@@ -96,7 +98,7 @@ const AuthButtons: FC<Props> = ({ selectedToolset, oAuthCode }) => {
         signIn(type, apiKeyValue);
       }
     },
-    [selectedToolset, signIn],
+    [selectedToolset, signIn, view],
   );
 
   const onLogout = useCallback(() => {

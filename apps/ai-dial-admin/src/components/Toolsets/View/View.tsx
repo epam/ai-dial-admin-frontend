@@ -162,7 +162,7 @@ const ToolsetView: FC<Props> = ({ names, oAuthCode, etag, roles, originalToolset
         onChangeActiveTab={setActiveTab}
         onRemove={removeToolset}
       >
-        <AuthButtons selectedToolset={selectedToolset} oAuthCode={oAuthCode} />
+        <AuthButtons selectedToolset={selectedToolset} oAuthCode={oAuthCode} view={ApplicationRoute.Toolsets} />
       </SimpleEntityHeader>
 
       <div className="flex-1 overflow-auto min-h-0">
