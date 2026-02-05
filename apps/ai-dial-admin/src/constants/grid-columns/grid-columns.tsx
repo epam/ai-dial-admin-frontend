@@ -873,6 +873,13 @@ export const TEST_SUITES_COLUMN: ColDef[] = [
   },
 ];
 
+export const TEST_CASES_COLUMN: ColDef[] = [
+  { field: 'name', colId: 'name', headerName: 'Display Name' },
+  { field: 'name', colId: 'name', headerName: 'Test case name' },
+  { field: 'parameters', colId: 'parameters', headerName: 'Parameters' },
+  { field: 'parameters', colId: 'parameters', headerName: 'Parameters' },
+];
+
 // TODO: update columns
 export const RUNS_COLUMN = (): ColDef[] => [
   { field: 'displayName', colId: 'displayName', headerName: 'Display Name', hide: false },

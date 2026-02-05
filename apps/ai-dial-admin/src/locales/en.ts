@@ -1299,5 +1299,10 @@ export default {
     CreateTestSuite: 'Create Test Suite',
     Application: 'Application',
     Methods: 'Methods',
+    TestCases: 'Test Cases',
+    NoTestCases: 'No Test Cases',
+    FromPC: 'From PC storage',
+    FromDial: 'From DIAL files system',
+    ImportFromPC: 'Import from PC storage',
   },
 } as const;
