@@ -353,8 +353,8 @@ const FilesList = () => {
         toolbarOptions={{
           showHiddenFilesToggle: false,
           newActions: {
-            newFolder: { label: 'Folder', icon: null },
-            uploadFiles: { label: 'File', icon: null },
+            newFolder: { label: t(FileManagerI18nKey.Folder), icon: null },
+            uploadFiles: { label: t(FileManagerI18nKey.File), icon: null },
           },
           newButtonLabel: t(ButtonsI18nKey.Create),
         }}
@@ -374,6 +374,7 @@ const FilesList = () => {
           },
         }}
         gridOptions={{
+          alternateOddRowColors: true,
           columnDefs: FILES_GRID_COLUMNS,
           selectionMode: GridSelectionMode.MULTIPLE,
           actionLabels: {

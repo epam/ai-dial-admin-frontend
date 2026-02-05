@@ -1,7 +1,7 @@
 import { DialFormPopup, DialTextInputField, PopupSize } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import { ButtonsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, FileManagerI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { getFolderName } from '@/src/utils/files/folder';
 import { changeFolderName } from '@/src/utils/files/path';
@@ -41,7 +41,7 @@ const RenameFolder: FC<Props> = ({ currentPath, siblings = [], isModalOpen, onCl
   return (
     <DialFormPopup
       onClose={onClose}
-      header={t(FoldersI18nKey.Rename)}
+      header={t(FileManagerI18nKey.Rename)}
       portalId="FolderRename"
       open={isModalOpen}
       dividers={true}

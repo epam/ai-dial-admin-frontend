@@ -1303,6 +1303,8 @@ export default {
     AddSibling: 'Add sibling',
     Rename: 'Rename',
     Move: 'Move to',
+    File: 'File',
+    Folder: 'Folder',
     EnterFolderName: 'Please enter a folder name',
     NameExists: 'A folder with this name already exists in this location',
     ManagePermissions: 'Manage Permissions',
