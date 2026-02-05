@@ -779,7 +779,7 @@ export default {
     FileReview: 'File Review',
     FolderCreate: 'Create Folder',
     FolderCreatePlaceholder: 'Enter folder name',
-    FolderCreateSuccess: 'Folder created successfully',
+
     FolderName: 'Folder name',
     RenameFolderError: 'This name is used by another folder in the current directory.',
     MoveFolderError: 'This folder contains subfolder with the same name.',
@@ -1315,5 +1315,11 @@ export default {
     EnterFolderName: 'Please enter a folder name',
     NameExists: 'A folder with this name already exists in this location',
     ManagePermissions: 'Manage Permissions',
+    Notifications: {
+      CreateFolder: {
+        Title: 'Folder created successfully',
+        Description: 'You can now add files to this folder.',
+      },
+    },
   },
 } as const;

@@ -9,7 +9,7 @@ import { getResourceTypeByView } from '@/src/components/Common/FolderList/utils'
 import { getFormDataForImport, getImportTitle } from '@/src/components/EntityListView/HeaderButtons/utils';
 import { getImportResults } from '@/src/components/EntityListView/Import/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { BasicI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -66,7 +66,12 @@ const FolderListModals: FC<Props> = ({ isModalOpen, modalType, view, selectedFol
           folderContext?.fetchFiles?.(`${ROOT_FOLDER}/`, true);
           const results = (res.response as { importResults: ImportResult[] }).importResults;
           const translatedType = t(getImportTitle(view)).toLowerCase();
-          showNotification(getSuccessNotification(t(FoldersI18nKey.FolderCreateSuccess)));
+          showNotification(
+            getSuccessNotification(
+              t(FileManagerI18nKey.CreateFolderSuccessTitle),
+              t(FileManagerI18nKey.CreateFolderSuccessDescription),
+            ),
+          );
           getImportResults(results, getFolderName(path) as string, translatedType, t, showNotification);
         }
       });

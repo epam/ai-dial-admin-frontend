@@ -42,7 +42,7 @@ export const getImportResults = (
   folderName: string,
   type: string,
   t: (t: string, options?: Record<string, string | number>) => string,
-  showNotification: (config: Notification) => string,
+  showNotification?: (config: Notification) => string,
 ) => {
   let success = 0;
   const skipped: string[] = [];
@@ -59,7 +59,7 @@ export const getImportResults = (
     }
   });
 
-  if (success > 0) {
+  if (success > 0 && showNotification) {
     showNotification(
       getSuccessNotification(
         t(ImportI18nKey.SuccessTitle, { number: success, type }),
@@ -67,7 +67,7 @@ export const getImportResults = (
       ),
     );
   }
-  if (failed.length > 0) {
+  if (failed.length > 0 && showNotification) {
     showNotification(
       getErrorNotification(
         t(ImportI18nKey.ErrorTitle, { number: failed.length, type }),
@@ -75,7 +75,7 @@ export const getImportResults = (
       ),
     );
   }
-  if (skipped.length > 0) {
+  if (skipped.length > 0 && showNotification) {
     showNotification(
       getErrorNotification(
         t(ImportI18nKey.SkipTitle, { number: skipped.length, type }),

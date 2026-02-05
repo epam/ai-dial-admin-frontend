@@ -100,8 +100,13 @@ const FilesList = () => {
           fetchFiles?.(patentPath, true);
           const results = (res.response as { importResults: ImportResult[] }).importResults;
           const translatedType = t(getImportTitle(ApplicationRoute.Files)).toLowerCase();
-          showNotification(getSuccessNotification(t(FoldersI18nKey.FolderCreateSuccess)));
-          getImportResults(results, getFolderName(path) as string, translatedType, t, showNotification);
+          showNotification(
+            getSuccessNotification(
+              t(FileManagerI18nKey.CreateFolderSuccessTitle),
+              t(FileManagerI18nKey.CreateFolderSuccessDescription),
+            ),
+          );
+          getImportResults(results, getFolderName(path) as string, translatedType, t);
         }
       });
     },

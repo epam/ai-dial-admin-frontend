@@ -751,7 +751,6 @@ export enum FoldersI18nKey {
   FileReview = 'Folder.FileReview',
   FolderCreate = 'Folder.FolderCreate',
   FolderCreatePlaceholder = 'Folder.FolderCreatePlaceholder',
-  FolderCreateSuccess = 'Folder.FolderCreateSuccess',
 
   FolderName = 'Folder.FolderName',
   RenameFolderError = 'Folder.RenameFolderError',
@@ -1296,4 +1295,8 @@ export enum FileManagerI18nKey {
   EnterFolderName = 'FileManager.EnterFolderName',
   NameExists = 'FileManager.NameExists',
   ManagePermissions = 'FileManager.ManagePermissions',
+
+  // Notifications
+  CreateFolderSuccessTitle = 'FileManager.Notifications.CreateFolder.Title',
+  CreateFolderSuccessDescription = 'FileManager.Notifications.CreateFolder.Description',
 }
