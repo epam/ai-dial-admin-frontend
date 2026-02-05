@@ -33,7 +33,13 @@ export async function getTestSuite(id: string) {
   return testSuitesApi.getTestSuite(id, token);
 }
 
-export async function getTestCases(id: string, page: number, size: number, sorts: SortDto[], filters: FilterDto[]) {
+export async function getTestCases(
+  id: string | undefined,
+  page: number,
+  size: number,
+  sorts: SortDto[],
+  filters: FilterDto[],
+) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return testSuitesApi.getTestCases(id, page, size, sorts, filters, token);
 }

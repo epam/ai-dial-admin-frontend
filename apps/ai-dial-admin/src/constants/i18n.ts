@@ -1276,4 +1276,6 @@ export enum TestSuitesI18nKey {
   CreateTestSuite = 'TestSuites.CreateTestSuite',
   Application = 'TestSuites.Application',
   Methods = 'TestSuites.Methods',
+  TestCases = 'TestSuites.TestCases',
+  NoTestCases = 'TestSuites.NoTestCases',
 }
