@@ -20,6 +20,7 @@ const deleteEntityMap: Record<string, DeleteI18nKey> = {
   [ApplicationRoute.Files]: DeleteI18nKey.File,
   [ApplicationRoute.Adapters]: DeleteI18nKey.Adapter,
   [ApplicationRoute.InterceptorTemplates]: DeleteI18nKey.InterceptorTemplate,
+  [ApplicationRoute.TestSuites]: DeleteI18nKey.TestSuite,
 };
 
 const bulkDeleteEntityMap: Record<string, DeleteI18nKey> = {

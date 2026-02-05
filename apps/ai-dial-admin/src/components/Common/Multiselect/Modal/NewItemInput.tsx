@@ -1,9 +1,6 @@
-import { IconTrash } from '@tabler/icons-react';
-import classNames from 'classnames';
+import { DialInput, DialRemoveButton } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
-import { DialInput } from '@epam/ai-dial-ui-kit';
 
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import DraggableItem from '@/src/components/Common/DraggableItem/DraggableItem';
 
 interface Props {
@@ -30,7 +27,7 @@ const NewItemInput: FC<Props> = ({
   const getItemContent = () => {
     return (
       <div className="flex flex-row gap-x-2 items-center w-full">
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <DialInput
             elementId={`item-${index}`}
             value={value}
@@ -38,13 +35,7 @@ const NewItemInput: FC<Props> = ({
             onChange={(v) => onChangeItem(v, index)}
           />
         </div>
-
-        <div
-          className={classNames('cursor-pointer', !value ? 'text-secondary' : 'text-error')}
-          onClick={() => onRemoveItem(index)}
-        >
-          <IconTrash {...BASE_BUTTON_ICON_PROPS} />
-        </div>
+        <DialRemoveButton disabled={!value} onClick={() => onRemoveItem(index)} />
       </div>
     );
   };
