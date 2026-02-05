@@ -10,6 +10,7 @@ import { ToolsetTransport } from '@/src/types/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ContainersI18nKey, ErrorI18nKey, KubEventsI18nKey } from '@/src/constants/i18n';
 import { getTranslatedType } from '@/src/utils/deployments/entity';
+import { Autoscaling } from '@/src/models/deployments/containers';
 
 export const POD_OBJECT_KIND = 'pod';
 
@@ -55,11 +56,12 @@ export const AUTOSCALE_OPTIONS = (
   { label: t(ContainersI18nKey.ScaleToZeroAfter6Hours), value: '21600' },
 ];
 
-export const DEFAULT_SCALING = {
+export const DEFAULT_SCALING: Autoscaling = {
   minReplicas: 1,
   maxReplicas: 1,
   strategy: {
     $type: SCALING_STRATEGY_TYPE.REQUESTS,
+    threshold: 2,
   },
 };
 

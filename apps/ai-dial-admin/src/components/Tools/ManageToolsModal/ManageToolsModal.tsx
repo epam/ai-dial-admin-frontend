@@ -14,8 +14,8 @@ import {
 import { IconPlus } from '@tabler/icons-react';
 
 import Search from '@/src/components/Common/Search/Search';
+import ViewSelector from '@/src/components/Common/ViewSelector/ViewSelector';
 import ToolContent from '@/src/components/Tools/Tool/ToolContent';
-import ViewSelector from '@/src/components/Tools/View/ViewSelector';
 import { ButtonsI18nKey, EntitiesI18nKey, ErrorI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';

@@ -98,7 +98,6 @@ const EnvVariables: FC<Props> = ({ container, setContainer }) => {
                   key={`variable${index}`}
                   variable={variable}
                   index={index}
-                  numVariables={variables?.length || 0}
                   updateVariable={handleUpdateVariable}
                   removeVariable={onRemoveVariable}
                   findColumn={findColumn}

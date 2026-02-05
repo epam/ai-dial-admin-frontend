@@ -33,7 +33,13 @@ export async function getTestSuite(id: string) {
   return testSuitesApi.getTestSuite(id, token);
 }
 
-export async function getTestCases(id: string, page: number, size: number, sorts: SortDto[], filters: FilterDto[]) {
+export async function getTestCases(
+  id: string | undefined,
+  page: number,
+  size: number,
+  sorts: SortDto[],
+  filters: FilterDto[],
+) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return testSuitesApi.getTestCases(id, page, size, sorts, filters, token);
 }
@@ -41,4 +47,14 @@ export async function getTestCases(id: string, page: number, size: number, sorts
 export async function getTestCase(id: string, testCaseId?: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return testSuitesApi.getTestCase(id, testCaseId, token);
+}
+
+export async function getDeployments() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.getDeployments(token);
+}
+
+export async function getDeployment(id: string, type: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.getDeployment(id, type, token);
 }

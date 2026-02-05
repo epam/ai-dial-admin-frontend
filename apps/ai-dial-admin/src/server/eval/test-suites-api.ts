@@ -1,17 +1,19 @@
 import { JWT } from 'next-auth/jwt';
 
-import { BaseApi } from '@/src/server/base-api';
-import { ServerActionResponse } from '@/src/models/server-action';
-import { API } from '@/src/server/api';
+import { Deployment } from '@/src/models/evaluation/deployment';
 import { TestCase, TestSuite } from '@/src/models/evaluation/test-suite';
 import { EvaluationPageData, FilterDto, SortDto } from '@/src/models/request';
+import { ServerActionResponse } from '@/src/models/server-action';
+import { API } from '@/src/server/api';
+import { BaseApi } from '@/src/server/base-api';
+import { getRequestFiltersStr } from '@/src/utils/request/get-request-filters';
 import { getRequestSortsStr } from '@/src/utils/request/get-request-sorts';
-import { getRequestFiltersStr } from '../../utils/request/get-request-filters';
 
 export const TEST_SUITES_URL = `${API}/test-suites`;
 export const TEST_SUITE_URL = (id?: string) => `${TEST_SUITES_URL}/${id || ''}`;
 export const TEST_CASES_URL = (id?: string) => `${TEST_SUITE_URL(id)}/test-cases`;
 export const TEST_CASE_URL = (id?: string, testCaseId?: string) => `${TEST_CASES_URL(id)}/${testCaseId || ''}`;
+export const DEPLOYMENTS_URL = `${API}/deployments`;
 
 export class TestSuitesApi extends BaseApi {
   getTestSuites(
@@ -32,7 +34,7 @@ export class TestSuitesApi extends BaseApi {
   }
 
   getTestCases(
-    id: string,
+    id: string | undefined,
     page: number,
     size: number,
     sorts: SortDto[],
@@ -65,5 +67,13 @@ export class TestSuitesApi extends BaseApi {
     const filtersStr = getRequestFiltersStr(filters);
     const sortsStr = getRequestSortsStr(sorts);
     return `${filtersStr || sortsStr ? '&' : ''}${filtersStr}${sortsStr ? '&' : ''}${sortsStr}`;
+  }
+
+  getDeployments(token: JWT | null): Promise<Deployment[] | null> {
+    return this.get(DEPLOYMENTS_URL, token);
+  }
+
+  getDeployment(id: string, type: string, token: JWT | null): Promise<Deployment | null> {
+    return this.get(`${DEPLOYMENTS_URL}/${type}/${id}`, token);
   }
 }

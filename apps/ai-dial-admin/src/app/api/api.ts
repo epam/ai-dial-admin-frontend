@@ -23,6 +23,7 @@ import { WhitelistApi } from '@/src/server/deployments/whitelist';
 import { MetricsApi } from '@/src/server/eval/metrics-api';
 import { HuggingfaceApi } from '@/src/server/deployments/huggingface';
 
+// Admin APIs
 export const modelsApi = new ModelsApi({
   host: process.env.DIAL_ADMIN_API_URL,
 });

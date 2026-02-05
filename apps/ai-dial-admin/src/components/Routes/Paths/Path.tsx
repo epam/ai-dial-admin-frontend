@@ -46,10 +46,6 @@ const Path: FC<Props> = ({
           : '';
   }, [disableValidation, isEmptyPath, index, isAllEmptyValues, optional, t, isInvalidPath]);
 
-  const removeButtonClassName = classNames(
-    'cursor-pointer flex-shrink-0 ml-2 text-error',
-    !!error && (index === 0 ? 'mt-[22px]' : 'mt-[-5px]'),
-  );
   const alignmentClassName =
     index === 0 ? (error ? 'items-start' : 'items-end') : error ? 'items-start' : 'items-center';
 
@@ -67,8 +63,8 @@ const Path: FC<Props> = ({
   }, [error]);
 
   return (
-    <div className={classNames('flex flex-row', alignmentClassName)}>
-      <div className="flex-1">
+    <div className={classNames('flex flex-row gap-x-2', alignmentClassName)}>
+      <div className="flex-1 min-w-0">
         <DialTextInputField
           elementId={`path-${index}`}
           value={path}
@@ -80,7 +76,9 @@ const Path: FC<Props> = ({
           invalid={!!error}
         />
       </div>
-      {!readonly && <DialRemoveButton onClick={() => onRemove(index)} className={removeButtonClassName} />}
+      {!readonly && (
+        <DialRemoveButton onClick={() => onRemove(index)} className={error && index === 0 ? 'mt-[22px]' : ''} />
+      )}
     </div>
   );
 };

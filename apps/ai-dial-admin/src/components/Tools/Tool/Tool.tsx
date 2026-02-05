@@ -1,7 +1,7 @@
 import { FC, useState } from 'react';
 
 import Accordion from '@/src/components/Common/Accordion/Accordion';
-import ViewSelector from '@/src/components/Tools/View/ViewSelector';
+import ViewSelector from '@/src/components/Common/ViewSelector/ViewSelector';
 import { Tool as ToolType } from '@/src/models/dial/toolset';
 import { ParamsView } from '@/src/types/parameters';
 import ToolContent from './ToolContent';

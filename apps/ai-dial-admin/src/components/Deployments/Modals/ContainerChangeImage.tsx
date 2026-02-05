@@ -91,7 +91,7 @@ const ContainerChangeImage: FC<Props> = ({
     <DialFormPopup
       onClose={onClose}
       header={modalTitle}
-      portalId="ChangeContainerImageModal"
+      portalId="ContainerChangeImageModal"
       open={isModalOpen}
       className="lg:max-w-[55%] md:max-w-[75%] h-[600px]"
       disableSubmitButton={!isValid}

@@ -50,11 +50,10 @@ const ImageNewVersion: FC<Props> = ({ isModalOpen, title, onClose, onApply, imag
 
   return (
     <DialConfirmationPopup
+      portalId="ImageNewVersionModal"
       onClose={onClose}
       header={title}
-      portalId="BuildImageModal"
       open={isModalOpen}
-      className="md:max-w-[330px] lg:max-w-[330px]"
       onConfirm={() => {
         onApply({ ...image, version });
         onClose();

@@ -1,4 +1,4 @@
-import { Tool, ToolSchema } from '@/src/models/dial/toolset';
+import { Tool } from '@/src/models/dial/toolset';
 import { ToolFilter } from './type';
 
 export const getFilteredTools = (tools: string[], selectedFilters: ToolFilter[], availableTools: Tool[]) => {
@@ -19,19 +19,4 @@ export const getFilteredTools = (tools: string[], selectedFilters: ToolFilter[],
   }
 
   return [...availableTools, ...customTools].filter((t) => filteredTools.includes(t.name));
-};
-
-export const convertSchemaToTable = (schema?: ToolSchema) => {
-  if (!schema) return [];
-
-  const { properties, required = [] } = schema;
-
-  if (!properties) return [];
-
-  return Object.entries(properties).map(([field, property]: [string, any]) => ({
-    field,
-    description: property?.description,
-    type: property?.type,
-    required: required.includes(field),
-  }));
 };
