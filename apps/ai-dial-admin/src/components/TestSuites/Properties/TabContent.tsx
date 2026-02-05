@@ -1,6 +1,6 @@
 'use client';
 
-import { FC } from 'react';
+import { FC, useMemo } from 'react';
 
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import EntityInfoHeader from '@/src/components/EntityHeaderControls/Info/InfoHeader';
@@ -17,11 +17,13 @@ interface Props {
 const PropertiesTabContent: FC<Props> = ({ selectedTestSuite, onChange }) => {
   const t = useI18n();
 
+  const headerPrefix = useMemo(() => {
+    return <LabelledText copyable={true} label={t(EntityFieldsI18nKey.name)} text={selectedTestSuite.name} />;
+  }, [selectedTestSuite.name, t]);
+
   return (
     <div className="flex flex-col">
-      <EntityInfoHeader id={selectedTestSuite.id} entity={selectedTestSuite}>
-        <LabelledText copyable={true} label={t(EntityFieldsI18nKey.name)} text={selectedTestSuite.name} />
-      </EntityInfoHeader>
+      <EntityInfoHeader id={selectedTestSuite.id} entity={selectedTestSuite} prefix={headerPrefix} />
 
       <div className="flex-1 min-h-0 pt-8">
         <TestSuiteProperties testSuite={selectedTestSuite} onChange={onChange} />

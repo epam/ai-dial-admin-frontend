@@ -2,7 +2,7 @@ import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
 import { applicationRunnersApi, applicationsApi, interceptorsApi, rolesApi } from '@/src/app/api/api';
-import ApplicationRunnersView from '@/src/components/ApplicationRunners/ApplicationRunnersView';
+import ApplicationRunnersView from '@/src/components/ApplicationRunners/View/View';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { AppsFolderProvider } from '@/src/context/assets/AppsFolderContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
@@ -31,9 +31,9 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
       etag = res?.etag || DEFAULT_ETAG;
       return res?.response as DialApplicationScheme | null;
     });
-    roles = await rolesApi.getRolesList(token);
+    roles = (await rolesApi.getRolesList(token)) || [];
     applications = await applicationsApi.getApplicationsList(token);
-    interceptors = await interceptorsApi.getInterceptorsList(token);
+    interceptors = (await interceptorsApi.getInterceptorsList(token)) || [];
   } catch (e) {
     errorObjLog(e, 'Failed to fetch application runner data');
   }

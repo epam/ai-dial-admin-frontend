@@ -75,11 +75,7 @@ const Item = forwardRef<HTMLLIElement, Props>(
           errorText={error?.text}
           disabled={disabled}
         />
-        <DialRemoveButton
-          onClick={() => onRemove(index)}
-          iconClassName={item.length === 0 ? 'text-secondary' : ''}
-          disabled={disabled}
-        />
+        <DialRemoveButton onClick={() => onRemove(index)} disabled={disabled} />
       </li>
     );
   },

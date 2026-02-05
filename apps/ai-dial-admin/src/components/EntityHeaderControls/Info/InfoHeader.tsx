@@ -11,18 +11,19 @@ interface Props {
   id?: string;
   entity?: { updatedAt?: string; createdAt?: string };
   view?: ApplicationRoute;
-  children?: ReactNode;
+  prefix?: ReactNode;
+  postfix?: ReactNode;
 }
 
-const EntityInfoHeader: FC<Props> = ({ id, entity, view, children }) => {
+const EntityInfoHeader: FC<Props> = ({ id, entity, view, prefix, postfix }) => {
   const t = useI18n();
 
   return (
     <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-primary">
-      {children}
+      {prefix}
       <LabelledText label={t(EntityFieldsI18nKey.updatedAt)} text={formatDateTimeToLocalString(entity?.updatedAt)} />
       <LabelledText label={t(EntityFieldsI18nKey.createdAt)} text={formatDateTimeToLocalString(entity?.createdAt)} />
-
+      {postfix}
       <CoreSyncEntityStatus view={view} name={id} />
     </div>
   );
