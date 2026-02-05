@@ -25,7 +25,6 @@ describe('Endpoint', () => {
       <Endpoint
         index={0}
         readonly={false}
-        numEndpoints={2}
         endpoint={baseEndpoint as any}
         updateEndpoint={updateEndpoint}
         removeEndpoint={removeEndpoint}
@@ -45,7 +44,6 @@ describe('Endpoint', () => {
       <Endpoint
         index={0}
         readonly={false}
-        numEndpoints={1}
         endpoint={baseEndpoint as any}
         updateEndpoint={updateEndpoint}
         removeEndpoint={removeEndpoint}
@@ -62,7 +60,6 @@ describe('Endpoint', () => {
       <Endpoint
         index={0}
         readonly={false}
-        numEndpoints={1}
         endpoint={baseEndpoint as any}
         updateEndpoint={updateEndpoint}
         removeEndpoint={removeEndpoint}
@@ -83,7 +80,6 @@ describe('Endpoint', () => {
       <Endpoint
         index={0}
         readonly={false}
-        numEndpoints={2}
         endpoint={baseEndpoint as any}
         updateEndpoint={updateEndpoint}
         removeEndpoint={removeEndpoint}
@@ -98,7 +94,6 @@ describe('Endpoint', () => {
       <Endpoint
         index={0}
         readonly={true}
-        numEndpoints={2}
         endpoint={baseEndpoint as any}
         updateEndpoint={updateEndpoint}
         removeEndpoint={removeEndpoint}
