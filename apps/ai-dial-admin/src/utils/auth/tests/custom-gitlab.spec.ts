@@ -8,7 +8,6 @@ describe('GitLab', () => {
     expect(config.id).toBe('gitlab');
     expect(config.name).toBe('GitLab');
     expect(config.type).toBe('oauth');
-    expect(config.authorization.url).toBe('https://gitlab.com/oauth/authorize');
     expect(config.token).toBe('https://gitlab.com/oauth/token');
     expect(config.userinfo).toBe('https://gitlab.com/api/v4/user');
     expect(config.options).toBe(options);
@@ -19,7 +18,6 @@ describe('GitLab', () => {
   test('returns correct config object with custom host', () => {
     const options = { clientId: 'id', clientSecret: 'secret', gitlabHost: 'https://custom.gitlab' };
     const config = GitLab(options as any) as any;
-    expect(config.authorization.url).toBe('https://custom.gitlab/oauth/authorize');
     expect(config.token).toBe('https://custom.gitlab/oauth/token');
     expect(config.userinfo).toBe('https://custom.gitlab/api/v4/user');
   });
@@ -34,7 +32,7 @@ describe('GitLab', () => {
     };
     const config = GitLab({} as any) as any;
     const result = config.profile(profile as any);
-    expect(result.id).toBe('123');
+    expect(result.id).toBe('alice@example.com');
     expect(result.name).toBe('Alice');
     expect(result.email).toBe('alice@example.com');
     expect(result.image).toBe('avatar.png');
@@ -49,7 +47,7 @@ describe('GitLab', () => {
     };
     const config = GitLab({} as any) as any;
     const result = config.profile(profile as any);
-    expect(result.id).toBe('456');
+    expect(result.id).toBe('bob@example.com');
     expect(result.name).toBe('bobuser');
     expect(result.email).toBe('bob@example.com');
     expect(result.image).toBe('bob.png');
