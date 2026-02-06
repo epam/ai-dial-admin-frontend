@@ -6,13 +6,13 @@ import EntityInfoHeader from '@/src/components/EntityHeaderControls/Info/InfoHea
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import SchemeProperties from './Properties';
 
-interface Props {
+export interface PropertiesProps {
   selectedRunner: DialApplicationScheme;
   names: string[];
   onChange: (runner: DialApplicationScheme) => void;
 }
 
-const PropertiesTabContent: FC<Props> = ({ selectedRunner, names, onChange }) => {
+const PropertiesTabContent: FC<PropertiesProps> = ({ selectedRunner, names, onChange }) => {
   return (
     <div className="h-full flex flex-col w-full">
       <EntityInfoHeader id={selectedRunner.$id} entity={selectedRunner} />

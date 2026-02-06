@@ -13,6 +13,7 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { filterNames } from '@/src/utils/entities/filter-names';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getCoreRoute, removeRoute, updateCoreRoute, updateRoute } from '../actions';
+import RouteView from '../../../../components/Routes/View/View';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,17 +43,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   return (
     <SaveValidationContextProvider>
-      <EntityView
-        view={ApplicationRoute.Routes}
-        names={names}
-        originalEntity={route}
-        roles={roles}
-        etag={etag}
-        removeEntity={removeRoute}
-        updateEntity={updateRoute}
-        getCoreEntity={getCoreRoute}
-        updateCoreEntity={updateCoreRoute}
-      />
+      <RouteView originalRoute={route} names={names} etag={etag} roles={roles} />
     </SaveValidationContextProvider>
   );
 }

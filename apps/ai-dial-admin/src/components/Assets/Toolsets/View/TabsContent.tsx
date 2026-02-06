@@ -6,13 +6,11 @@ import Tools from '@/src/components/Tools/Tools';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { Toolset } from '@/src/models/dial/toolset';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
-import PropertiesTabContent from './Properties/TabContent';
+import PropertiesTabContent, { PropertiesProps } from './Properties/TabContent';
 
-interface Props {
+interface Props extends PropertiesProps {
   activeTab: EntityViewTab;
-  selectedToolset: AssetToolset;
   originalToolset: AssetToolset;
-  onChange: (toolset: AssetToolset) => void;
 }
 
 const TabsContent: FC<Props> = ({ activeTab, onChange, selectedToolset, originalToolset }) => {

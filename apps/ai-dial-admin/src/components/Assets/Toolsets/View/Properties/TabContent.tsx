@@ -10,13 +10,14 @@ import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import Properties from './Properties';
+import { ApplicationRoute } from '@/src/types/routes';
 
-interface Props {
+export interface PropertiesProps {
   selectedToolset: AssetToolset;
   onChange: (toolset: AssetToolset) => void;
 }
 
-const PropertiesTabContent: FC<Props> = ({ selectedToolset, onChange }) => {
+const PropertiesTabContent: FC<PropertiesProps> = ({ selectedToolset, onChange }) => {
   const t = useI18n();
 
   const headerPostfix = useMemo(() => {
@@ -39,6 +40,7 @@ const PropertiesTabContent: FC<Props> = ({ selectedToolset, onChange }) => {
       <EntityInfoHeader
         id={selectedToolset.name}
         entity={selectedToolset}
+        view={ApplicationRoute.AssetsToolsets}
         prefix={headerPrefix}
         postfix={headerPostfix}
       />

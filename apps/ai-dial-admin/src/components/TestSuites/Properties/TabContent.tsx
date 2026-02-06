@@ -8,13 +8,14 @@ import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import TestSuiteProperties from './Properties';
+import { ApplicationRoute } from '@/src/types/routes';
 
-interface Props {
+export interface PropertiesProps {
   selectedTestSuite: TestSuite;
   onChange: (testSuite: TestSuite) => void;
 }
 
-const PropertiesTabContent: FC<Props> = ({ selectedTestSuite, onChange }) => {
+const PropertiesTabContent: FC<PropertiesProps> = ({ selectedTestSuite, onChange }) => {
   const t = useI18n();
 
   const headerPrefix = useMemo(() => {
@@ -23,7 +24,12 @@ const PropertiesTabContent: FC<Props> = ({ selectedTestSuite, onChange }) => {
 
   return (
     <div className="flex flex-col">
-      <EntityInfoHeader id={selectedTestSuite.id} entity={selectedTestSuite} prefix={headerPrefix} />
+      <EntityInfoHeader
+        id={selectedTestSuite.id}
+        entity={selectedTestSuite}
+        prefix={headerPrefix}
+        view={ApplicationRoute.TestSuites}
+      />
 
       <div className="flex-1 min-h-0 pt-8">
         <TestSuiteProperties testSuite={selectedTestSuite} onChange={onChange} />

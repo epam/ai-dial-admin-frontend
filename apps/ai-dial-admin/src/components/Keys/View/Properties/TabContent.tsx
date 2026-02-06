@@ -10,15 +10,16 @@ import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import ValidityStatus from '@/src/components/EntityView/Status/ValidityStatus';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { useI18n } from '@/src/locales/client';
+import { ApplicationRoute } from '@/src/types/routes';
 
-interface Props {
+export interface PropertiesProps {
   names: string[];
   keys: string[];
   selectedKey: DialKey;
   onChange: (key: DialKey) => void;
 }
 
-const PropertiesTabContent: FC<Props> = ({ selectedKey, onChange, names, keys }) => {
+const PropertiesTabContent: FC<PropertiesProps> = ({ selectedKey, onChange, names, keys }) => {
   const t = useI18n();
 
   const headerPostfix = useMemo(() => {
@@ -41,7 +42,12 @@ const PropertiesTabContent: FC<Props> = ({ selectedKey, onChange, names, keys })
 
   return (
     <div className="h-full flex flex-col w-full">
-      <EntityInfoHeader id={selectedKey.name} entity={selectedKey} postfix={headerPostfix} />
+      <EntityInfoHeader
+        id={selectedKey.name}
+        entity={selectedKey}
+        postfix={headerPostfix}
+        view={ApplicationRoute.Keys}
+      />
       <div className="flex-1 min-h-0 pt-8">
         <KeyProperties entity={selectedKey} names={names} keys={keys} onChangeKey={onChange} isKeyImmutable={true} />
       </div>

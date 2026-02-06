@@ -4,15 +4,12 @@ import { FC } from 'react';
 
 import AdapterModels from '@/src/components/Adapter/ModelsView/AdapterModels';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
-import { DialAdapter } from '@/src/models/dial/adapter';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
-import PropertiesTabContent from './Properties/TabContent';
+import PropertiesTabContent, { PropertiesProps } from './Properties/TabContent';
 
-interface Props {
+interface Props extends PropertiesProps {
   activeTab: EntityViewTab;
-  selectedAdapter: DialAdapter;
-  onChangeAdapter: (adapter: DialAdapter) => void;
 }
 
 const TabsContent: FC<Props> = ({ activeTab, selectedAdapter, onChangeAdapter }) => {

@@ -8,23 +8,18 @@ import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DialKey } from '@/src/models/dial/key';
 import { DialRole } from '@/src/models/dial/role';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import { cloneDeep } from 'lodash';
-import PropertiesTabContent from './Properties/TabContent';
+import PropertiesTabContent, { PropertiesProps } from './Properties/TabContent';
 
-interface Props {
+interface Props extends PropertiesProps {
   selectedFormat: ExportFormat;
   activeTab: EntityViewTab;
-  selectedKey: DialKey;
   roles: DialRole[];
-  names: string[];
-  keys: string[];
-  onChange: (key: DialKey) => void;
 }
 
 const TabsContent: FC<Props> = ({ activeTab, roles, selectedKey, onChange, selectedFormat, ...props }) => {

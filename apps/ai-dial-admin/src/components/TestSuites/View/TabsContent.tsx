@@ -2,15 +2,12 @@
 
 import { FC } from 'react';
 
-import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
-import PropertiesTabContent from '../Properties/TabContent';
+import PropertiesTabContent, { PropertiesProps } from '../Properties/TabContent';
 import TestCases from '../TestCases/TestCases';
 
-interface Props {
+interface Props extends PropertiesProps {
   activeTab: EntityViewTab;
-  selectedTestSuite: TestSuite;
-  onChange: (testSuite: TestSuite) => void;
 }
 
 const TabsContent: FC<Props> = ({ activeTab, onChange, selectedTestSuite }) => {

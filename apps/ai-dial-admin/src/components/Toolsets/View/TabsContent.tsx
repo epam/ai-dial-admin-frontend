@@ -10,17 +10,14 @@ import { Toolset } from '@/src/models/dial/toolset';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
-import PropertiesTabContent from '../Properties/TabContent';
+import PropertiesTabContent, { PropertiesProps } from '../Properties/TabContent';
 
-interface Props {
+interface Props extends PropertiesProps {
   selectedFormat: ExportFormat;
   activeTab: EntityViewTab;
-  selectedToolset: Toolset;
   originalToolset: Toolset;
-  names: string[];
   isSkipRefresh: boolean;
   roles?: DialRole[] | null;
-  onChange: (toolset: Toolset) => void;
 }
 
 const TabsContent: FC<Props> = ({

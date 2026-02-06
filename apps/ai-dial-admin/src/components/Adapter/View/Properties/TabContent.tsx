@@ -6,12 +6,12 @@ import { DialAdapter } from '@/src/models/dial/adapter';
 import EntityInfoHeader from '@/src/components/EntityHeaderControls/Info/InfoHeader';
 import AdapterProperties from './Properties';
 
-interface Props {
+export interface PropertiesProps {
   selectedAdapter: DialAdapter;
   onChangeAdapter: (adapter: DialAdapter) => void;
 }
 
-const PropertiesTabContent: FC<Props> = ({ selectedAdapter, onChangeAdapter }) => {
+const PropertiesTabContent: FC<PropertiesProps> = ({ selectedAdapter, onChangeAdapter }) => {
   return (
     <div className="flex flex-col">
       <EntityInfoHeader id={selectedAdapter.name} entity={selectedAdapter} />

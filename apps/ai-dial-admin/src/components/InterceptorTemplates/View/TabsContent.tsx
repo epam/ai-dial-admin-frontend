@@ -4,15 +4,12 @@ import { FC } from 'react';
 
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import Interceptors from '@/src/components/InterceptorTemplates/View/Interceptors/Interceptors';
-import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
-import PropertiesTabContent from '../Properties/TabContent';
+import PropertiesTabContent, { PropertiesProps } from '../Properties/TabContent';
 
-interface Props {
+interface Props extends PropertiesProps {
   activeTab: EntityViewTab;
-  selectedTemplate: InterceptorTemplate;
-  onChange: (template: InterceptorTemplate) => void;
 }
 
 const TabsContent: FC<Props> = ({ activeTab, selectedTemplate, onChange }) => {

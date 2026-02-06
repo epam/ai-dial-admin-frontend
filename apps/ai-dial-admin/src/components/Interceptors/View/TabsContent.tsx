@@ -17,23 +17,20 @@ import { EntityViewTab } from '@/src/utils/tabs/utils';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import EntitiesTabContent from './EntitiesTabContent';
 import ParameterSchema from './ParameterSchema/ParameterSchema';
-import PropertiesTabContent from './Properties/TabContent';
+import PropertiesTabContent, { PropertiesProps } from './Properties/TabContent';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DefaultsValue } from '@/src/models/dial/defaults';
 import { DialModel } from '@/src/models/dial/model';
 
-interface Props {
-  names: string[];
+interface Props extends PropertiesProps {
   activeTab: EntityViewTab;
   selectedFormat: ExportFormat;
-  selectedInterceptor: DialInterceptor;
   originalInterceptor: DialInterceptor;
   models: DialModel[];
   applications: DialApplication[];
   interceptorTemplate?: InterceptorTemplate | null;
   appRunners: DialApplicationScheme[];
-  onChange: (interceptor: DialInterceptor) => void;
 }
 
 const TabsContent: FC<Props> = ({
