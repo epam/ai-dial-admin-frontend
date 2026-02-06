@@ -7,14 +7,14 @@ import { DialRole } from '@/src/models/dial/role';
 import RoleProperties from './Properties';
 import { ApplicationRoute } from '@/src/types/routes';
 
-export interface PropertiesProps {
+interface Props {
   selectedRole: DialRole;
   names: string[];
   isSkipRefresh: boolean;
   onChange: (role: DialRole) => void;
 }
 
-const PropertiesTabContent: FC<PropertiesProps> = ({ isSkipRefresh, names, onChange, selectedRole }) => {
+const PropertiesTabContent: FC<Props> = ({ isSkipRefresh, names, onChange, selectedRole }) => {
   return (
     <div className="h-full flex flex-col w-full">
       <EntityInfoHeader id={selectedRole.name} entity={selectedRole} view={ApplicationRoute.Roles} />

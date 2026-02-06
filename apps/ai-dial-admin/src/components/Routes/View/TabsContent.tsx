@@ -11,7 +11,7 @@ import { DialRoute } from '@/src/models/dial/route';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
-import RouteProperties from './Properties/RouteProperties';
+import RouteProperties from '@/src/components/Routes/View/Properties/RouteProperties';
 
 interface Props {
   selectedFormat: ExportFormat;

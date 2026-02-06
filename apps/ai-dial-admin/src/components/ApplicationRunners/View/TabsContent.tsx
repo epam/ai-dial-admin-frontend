@@ -15,7 +15,7 @@ import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
-import SchemeProperties from '../ConfigurationView/Properties';
+import SchemeProperties from '@/src/components/ApplicationRunners/ConfigurationView/Properties';
 
 interface Props {
   activeTab: EntityViewTab;

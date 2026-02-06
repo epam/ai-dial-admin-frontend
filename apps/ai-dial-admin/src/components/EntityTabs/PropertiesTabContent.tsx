@@ -5,7 +5,7 @@ import { ReactNode } from 'react';
 import EntityInfoHeader from '@/src/components/EntityHeaderControls/Info/InfoHeader';
 import { ApplicationRoute } from '@/src/types/routes';
 
-export interface PropertiesProps<T> {
+interface Props<T> {
   id?: string;
   entity: T;
   view: ApplicationRoute;
@@ -14,7 +14,7 @@ export interface PropertiesProps<T> {
   headerPrefix?: ReactNode;
 }
 
-const PropertiesTabContent = <T extends object>({ children, ...props }: PropertiesProps<T>) => {
+const PropertiesTabContent = <T extends object>({ children, ...props }: Props<T>) => {
   return (
     <div className="flex flex-col">
       <EntityInfoHeader {...props} />

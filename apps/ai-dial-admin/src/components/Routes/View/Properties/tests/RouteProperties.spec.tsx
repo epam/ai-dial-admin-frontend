@@ -7,7 +7,7 @@ import {
 } from '@/src/constants/i18n';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
-import RouteProperties from '../../Properties/RouteProperties';
+import RouteProperties from '@/src/components/Routes/View/Properties/RouteProperties';
 import { ORDER_DEFAULT_VALUE } from '@/src/constants/routes';
 
 describe('RouteProperties', () => {
