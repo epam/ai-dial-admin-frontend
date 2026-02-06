@@ -6,7 +6,6 @@ import { DialCollapsibleSidebar } from '@epam/ai-dial-ui-kit';
 
 import { getDeployment } from '@/src/app/[lang]/test-suites/actions';
 import { CHAT_COMPLETION_METHOD } from '@/src/components/TestSuites/constants/chat-completion-method';
-import { CHAT_COMPLETION_RELATIVE_URL } from '@/src/components/TestSuites/constants/methods';
 import { generateMethodPathCombinations } from '@/src/components/TestSuites/utils/method';
 import { MenuI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -69,7 +68,7 @@ const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange }) => {
           <span className="dial-tiny text-secondary block">{t(TestSuitesI18nKey.ChatInterface)}</span>
           <MethodItem
             key="chat-completion"
-            item={{ method: 'POST', relativeUrl: CHAT_COMPLETION_RELATIVE_URL }}
+            item={CHAT_COMPLETION_METHOD}
             index={0}
             isActive={activeMethodIndex === 0}
             onClick={onMethodClick}
