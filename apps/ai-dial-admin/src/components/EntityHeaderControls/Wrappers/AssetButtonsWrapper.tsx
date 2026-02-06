@@ -19,7 +19,7 @@ import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { Asset } from '@/src/models/dial/deployment-asset';
-import AssetVersionControl from '../../Assets/Deployments/AssetVersionControl';
+import AssetVersionControl from '@/src/components/Assets/Deployments/AssetVersionControl';
 import JsonToggles from '../JsonToggle/JsonToggle';
 import { SimpleButtonsWrapperProps } from './SimpleButtonsWrapper';
 

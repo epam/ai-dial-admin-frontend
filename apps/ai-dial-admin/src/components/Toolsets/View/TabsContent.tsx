@@ -10,7 +10,7 @@ import { Toolset } from '@/src/models/dial/toolset';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
-import PropertiesTabContent, { PropertiesProps } from '../Properties/TabContent';
+import PropertiesTabContent, { PropertiesProps } from '@/src/components/Toolsets/Properties/TabContent';
 
 interface Props extends PropertiesProps {
   selectedFormat: ExportFormat;
