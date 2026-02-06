@@ -12,6 +12,8 @@ import {
   getTestCases,
   getTestSuite,
   getTestSuites,
+  importTestCase,
+  importTestCasePreview,
   removeTestSuite,
   updateTestSuite,
 } from './actions';
@@ -106,6 +108,22 @@ describe('TestSuites :: server actions', () => {
     const result = await getDeployment('id', 'type');
     expect(getUserToken).toHaveBeenCalled();
     expect(testSuitesApi.getDeployment).toHaveBeenCalledWith('id', 'type', TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call importTestCase action ', async () => {
+    (testSuitesApi.importTestCase as any).mockResolvedValue(RESPONSE_MOCK);
+    const result = await importTestCase('id', new FormData());
+    expect(getUserToken).toHaveBeenCalled();
+    expect(testSuitesApi.importTestCase).toHaveBeenCalledWith('id', new FormData(), TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call importTestCasePreview action ', async () => {
+    (testSuitesApi.importTestCasePreview as any).mockResolvedValue(RESPONSE_MOCK);
+    const result = await importTestCasePreview('id', new FormData());
+    expect(getUserToken).toHaveBeenCalled();
+    expect(testSuitesApi.importTestCasePreview).toHaveBeenCalledWith('id', new FormData(), TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 });
