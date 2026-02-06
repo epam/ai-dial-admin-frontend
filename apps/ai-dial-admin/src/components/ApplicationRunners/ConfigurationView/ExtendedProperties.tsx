@@ -85,6 +85,9 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
         value={runner['dial:applicationTypeBucketCopy'] || TypeBucketCopy.DISABLED}
         elementId="typeCopy"
         className="w-[180px]"
+        childrenClassName="w-[180px]"
+        containerClassName="w-[180px]"
+        listClassName="w-[180px]"
         options={typeBucketCopy}
         fieldTitle={t(EntityFieldsI18nKey['dial:applicationTypeBucketCopy'])}
         placeholder={t(EntityPlaceholdersI18nKey.TypeBucketCopy)}
