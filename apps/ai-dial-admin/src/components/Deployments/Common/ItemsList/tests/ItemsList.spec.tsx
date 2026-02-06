@@ -31,6 +31,7 @@ describe('Common ItemsList component', () => {
       expect(setItems).toHaveBeenCalledWith(['item-2']);
     });
   });
+
   test('add correctly', async () => {
     const setItems = vi.fn();
     render(<ItemsList items={['item', 'item-2']} setItems={setItems} addItemLabel={'ADD'} />);
