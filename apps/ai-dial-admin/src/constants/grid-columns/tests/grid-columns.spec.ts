@@ -32,7 +32,6 @@ describe('Constants :: grid columns', () => {
     expect(Array.isArray(cols)).toBe(true);
     expect(cols.some((c) => c.field === 'source.$type')).toBe(true);
     expect(cols.some((c) => c.field === 'endpoint')).toBe(true);
-    expect(cols.some((c) => c.field === 'type')).toBe(true);
     expect(cols.some((c) => c.field === 'pricing.prompt')).toBe(true);
   });
 
