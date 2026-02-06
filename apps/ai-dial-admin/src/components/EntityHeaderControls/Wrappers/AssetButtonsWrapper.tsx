@@ -19,15 +19,15 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
-import { Asset } from '@/src/models/dial/deployment-asset';
+import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import AssetChangedEntityButtons from '../Buttons/AssetChangedEntityButtons';
 import { SimpleButtonsWrapperProps } from './SimpleButtonsWrapper';
 
-export interface AssetButtonsWrapperProps extends Omit<SimpleButtonsWrapperProps<Asset>, 'onSave'> {
-  assets?: Asset[] | null;
-  getAssetContext?: () => AssetsFolderContext<Asset>;
+export interface AssetButtonsWrapperProps extends Omit<SimpleButtonsWrapperProps<AssetWithVersion>, 'onSave'> {
+  assets?: AssetWithVersion[] | null;
+  getAssetContext?: () => AssetsFolderContext;
   addedVersions?: string[];
-  onChangeAsset?: (asset: Asset) => void;
+  onChangeAsset?: (asset: AssetWithVersion) => void;
   onSave?: (version?: string) => void;
   onChangeAddedVersion?: (version: string[]) => void;
 }
@@ -49,7 +49,7 @@ const AssetButtonsWrapper: FC<AssetButtonsWrapperProps> = ({
   onChangeAsset,
 }) => {
   const t = useI18n();
-  const { isEditorEnabled } = jsonConfiguration;
+  const isEditorEnabled = jsonConfiguration?.isEditorEnabled;
   const { dispatch, jsonErrors } = useSaveValidationContext();
   const { showNotification } = useNotification();
 
@@ -135,7 +135,7 @@ const AssetButtonsWrapper: FC<AssetButtonsWrapperProps> = ({
                 {children}
               </div>
             )}
-            <JsonToggles isEditorEnabled={isEditorEnabled} onToggleEditor={jsonConfiguration.onToggleEditor} />
+            <JsonToggles isEditorEnabled={isEditorEnabled} onToggleEditor={jsonConfiguration?.onToggleEditor} />
           </div>
         )}
       </div>

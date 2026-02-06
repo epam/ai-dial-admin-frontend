@@ -11,7 +11,7 @@ import DuplicateKey from '@/src/components/Keys/Modals/DuplicateKey';
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { BaseEntity } from '@/src/models/dial/base-entity';
-import { Asset } from '@/src/models/dial/deployment-asset';
+import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -29,7 +29,7 @@ export const getDuplicateModal = async <T extends object>(
   isModalOpen: boolean,
   handleModalClose: () => void,
   onDuplicate: (entity: BaseEntity) => Promise<ServerActionResponse>,
-  context?: () => AssetsFolderContext<Asset>,
+  context?: () => AssetsFolderContext,
 ) => {
   if (!currentEntity) return null;
   const preparedEntity = (await prepareEntityForDuplicate(route, currentEntity, entityRef)) as T;
@@ -86,7 +86,7 @@ export const getDuplicateModal = async <T extends object>(
       <DuplicateAsset
         context={context}
         view={route}
-        entity={preparedEntity as Asset}
+        entity={preparedEntity as AssetWithVersion}
         versionsMap={versionsMap}
         onDuplicate={onDuplicate}
         isModalOpen={isModalOpen}

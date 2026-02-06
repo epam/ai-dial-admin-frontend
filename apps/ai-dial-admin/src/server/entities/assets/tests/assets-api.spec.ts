@@ -4,11 +4,11 @@ import createFetchMock from 'vitest-fetch-mock';
 import { Asset } from '@/src/models/dial/deployment-asset';
 import { DialFile, DialFileNodeType } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
+import { ToolsetAuthCredentialLevel } from '@/src/models/dial/toolset';
 import { ImportFileType } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
 import { RESPONSE_MOCK, TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { AssetsApi } from '../assets-api';
-import { ToolsetAuthCredentialLevel } from '@/src/models/dial/toolset';
 import { ResourceBasePaths } from '../constants';
 
 const fetch = createFetchMock(vi);

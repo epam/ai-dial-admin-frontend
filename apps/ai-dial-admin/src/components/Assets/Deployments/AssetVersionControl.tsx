@@ -15,7 +15,7 @@ import { ButtonsI18nKey, CompareI18nKey, EntityFieldsI18nKey, PromptsI18nKey } f
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
-import { Asset, DeploymentAsset } from '@/src/models/dial/deployment-asset';
+import { AssetWithVersion, DeploymentAsset } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isDeploymentAsset } from '@/src/utils/is-asset-view';
@@ -24,9 +24,9 @@ import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
 interface Props {
   view: ApplicationRoute;
   etag?: string;
-  asset: Asset;
-  assets?: Asset[] | null;
-  onChangeAsset?: (asset: Asset) => void;
+  asset: AssetWithVersion;
+  assets?: AssetWithVersion[] | null;
+  onChangeAsset?: (asset: AssetWithVersion) => void;
   addedVersions: string[];
   onChangeAddedVersion?: (version: string[]) => void;
 }
@@ -61,7 +61,7 @@ const AssetVersionControl: FC<Props> = ({
   }, [addedVersions, versions]);
 
   const changeAssetForNewVersion = useCallback(
-    (version: string, newAsset?: Asset | null) => {
+    (version: string, newAsset?: AssetWithVersion | null) => {
       if (newAsset) {
         onChangeAsset?.({} as DeploymentAsset);
         const path = `${encodeURIComponent(newAsset.name as string)}?path=${encodeURIComponent(newAsset.path)}`;

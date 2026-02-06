@@ -8,7 +8,7 @@ import FilePath from '@/src/components/Common/FilePath/FilePath';
 import { BasicI18nKey, ButtonsI18nKey, EntitiesI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
-import { Asset } from '@/src/models/dial/deployment-asset';
+import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DuplicationTypes } from '@/src/types/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { duplicateEntityMap, getClonedEntityName, getCloneTitle } from '@/src/utils/entities/duplicate-entity';
@@ -19,11 +19,11 @@ import { addTrailingSlash } from '@/src/utils/url';
 interface Props {
   view: ApplicationRoute;
   isModalOpen: boolean;
-  entity: Asset;
+  entity: AssetWithVersion;
   versionsMap: Record<string, string[]>;
-  context?: () => AssetsFolderContext<Asset>;
+  context?: () => AssetsFolderContext;
   onClose: () => void;
-  onDuplicate: (entity: Asset) => void;
+  onDuplicate: (entity: AssetWithVersion) => void;
 }
 
 const DuplicateAsset: FC<Props> = ({ view, isModalOpen, entity, versionsMap, context, onDuplicate, onClose }) => {
@@ -37,7 +37,7 @@ const DuplicateAsset: FC<Props> = ({ view, isModalOpen, entity, versionsMap, con
     { id: DuplicationTypes.ENTITY, name: t(EntitiesI18nKey.NewEntity, { entity: t(duplicateEntityMap[view]) }) },
   ];
 
-  const [clonedAsset, setClonedAsset] = useState<Asset>({
+  const [clonedAsset, setClonedAsset] = useState<AssetWithVersion>({
     ...entity,
     name: getClonedEntityName(entity.name, duplicationType === DuplicationTypes.VERSION),
     displayName: isDeploymentAsset(view) ? entity.displayName : void 0,

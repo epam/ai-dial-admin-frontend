@@ -5,15 +5,16 @@ import ValidityStatus from '@/src/components/EntityView/Status/ValidityStatus';
 import { EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { EntityValidityState } from '@/src/models/dial/base-entity';
-import { Asset } from '@/src/models/dial/deployment-asset';
+import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import FoldersStorageLabel from '../Header/FolderStorage';
 
 interface Props {
-  asset: Asset | DialFile;
+  asset: AssetWithVersion | DialFile;
 }
 
+// TODO: remove
 const AssetHeader: FC<Props> = ({ asset }) => {
   const t = useI18n();
   const validityState = (asset as EntityValidityState)?.validityState;

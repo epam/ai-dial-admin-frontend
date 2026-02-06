@@ -6,9 +6,8 @@ import { bulkDeletePrompts, createPrompt, movePrompts, removePrompt } from '@/sr
 import { filterLatestVersions, getVersionsPerName } from '@/src/components/Assets/utils';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import { NON_DEPLOYMENT_ASSETS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
-import { Asset } from '@/src/models/dial/deployment-asset';
+import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { filterNames } from '@/src/utils/entities/filter-names';
 
@@ -16,8 +15,8 @@ const PromptsList: FC = () => {
   const { data } = usePromptFolder();
   const names = filterNames(data);
 
-  const versionsMap = getVersionsPerName(data || []);
-  const filteredData = filterLatestVersions(data || []);
+  const versionsMap = getVersionsPerName((data || []) as AssetWithVersion[]);
+  const filteredData = filterLatestVersions((data || []) as AssetWithVersion[]);
 
   return (
     <BaseEntityList
@@ -30,7 +29,7 @@ const PromptsList: FC = () => {
       onRemoveEntity={removePrompt}
       onMoveFiles={movePrompts}
       onBulkDelete={bulkDeletePrompts}
-      getAssetContext={usePromptFolder as unknown as () => AssetsFolderContext<Asset>}
+      getAssetContext={usePromptFolder}
     />
   );
 };
