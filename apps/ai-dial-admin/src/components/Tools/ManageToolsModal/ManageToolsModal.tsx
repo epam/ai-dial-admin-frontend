@@ -106,15 +106,19 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalToolset, onCl
     (index: number, isCustom: boolean) => {
       if (isCustom) {
         const newCustomToolsConfig = structuredClone(customToolsConfig);
-        newCustomToolsConfig[index].isAllowed = !newCustomToolsConfig[index].isAllowed;
+        const toggledToolName = filteredCustomTools[index].name;
+        const originalIndex = customToolsConfig.findIndex((tool) => tool.name === toggledToolName);
+        newCustomToolsConfig[originalIndex].isAllowed = !newCustomToolsConfig[originalIndex].isAllowed;
         setCustomToolsConfig(newCustomToolsConfig);
       } else {
         const newToolsConfig = structuredClone(toolsConfig);
-        newToolsConfig[index].isAllowed = !newToolsConfig[index].isAllowed;
+        const toggledToolName = filteredTools[index].name;
+        const originalIndex = toolsConfig.findIndex((tool) => tool.name === toggledToolName);
+        newToolsConfig[originalIndex].isAllowed = !newToolsConfig[originalIndex].isAllowed;
         setToolsConfig(newToolsConfig);
       }
     },
-    [toolsConfig, customToolsConfig],
+    [toolsConfig, customToolsConfig, filteredCustomTools, filteredTools],
   );
 
   const addNewCustomTool = useCallback(() => {
@@ -263,10 +267,10 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalToolset, onCl
           {activeToolIndex !== null && (
             <>
               <div className="flex flex-row justify-between">
-                <h2 className="mt-2">{tools[activeToolIndex].name}</h2>
+                <h2 className="mt-2">{filteredTools[activeToolIndex].name}</h2>
                 <ViewSelector view={view} changeView={setView} />
               </div>
-              <ToolContent tool={tools[activeToolIndex]} view={view} />
+              <ToolContent tool={filteredTools[activeToolIndex]} view={view} />
             </>
           )}
         </div>
