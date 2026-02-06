@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { getContainerRedeploySnapshot, getContainerTemplate, normalizeEnvironmentVariables } from '../containers';
+import {
+  getContainerRedeploySnapshot,
+  getContainerTemplate,
+  isEditDisabled,
+  normalizeEnvironmentVariables,
+} from '../containers';
 import { CONTAINER_STATUS, CONTAINER_TRANSPORT, CONTAINER_TYPE } from '@/src/types/deployments/containers';
 import { Container } from '@/src/models/deployments/containers';
 import { MOUNT_TYPE, VALUE_TYPE } from '@/src/types/deployments/variables';
@@ -28,6 +33,18 @@ describe('containers utils', () => {
     test('returns template for Interceptors', () => {
       const template = getContainerTemplate(CONTAINER_TYPE.INTERCEPTOR);
       expect(template?.$type).toBe(CONTAINER_TYPE.INTERCEPTOR);
+    });
+
+    test('returns template for NIM', () => {
+      expect(getContainerTemplate(CONTAINER_TYPE.NIM)?.$type).toBe(CONTAINER_TYPE.NIM);
+      expect(getContainerTemplate(CONTAINER_TYPE.NIM, { GPU_REQUEST: '2', GPU_LIMIT: '2' })?.$type).toBe(
+        CONTAINER_TYPE.NIM,
+      );
+    });
+
+    test('returns template for McpContainers', () => {
+      const template = getContainerTemplate();
+      expect(template).toBeNull();
     });
 
     test('uses defaults if provided', () => {
@@ -153,6 +170,18 @@ describe('containers utils', () => {
       expect(normalized[0]).toBe(envUndefinedName);
       expect(normalized[1]).toBe(envA);
       expect(normalized[2]).toBe(envB);
+    });
+  });
+
+  describe('isEditDisabled for containers', () => {
+    test('should be true', () => {
+      expect(isEditDisabled({ status: CONTAINER_STATUS.PENDING })).toBeTruthy();
+      expect(isEditDisabled({ status: CONTAINER_STATUS.STOPPING })).toBeTruthy();
+    });
+
+    test('should be false', () => {
+      expect(isEditDisabled({ status: CONTAINER_STATUS.FAILED })).toBeFalsy();
+      expect(isEditDisabled({ status: CONTAINER_STATUS.FAILED })).toBeFalsy();
     });
   });
 });

@@ -34,6 +34,10 @@ export class TestSuitesApi extends BaseApi {
   }
 
   importTestCase(id: string, file: FormData, token: JWT | null): Promise<ServerActionResponse> {
+    return this.postFiles(`${TEST_CASES_URL(id)}/import`, file, token);
+  }
+
+  importTestCasePreview(id: string, file: FormData, token: JWT | null): Promise<ServerActionResponse> {
     return this.postFiles(`${TEST_CASES_URL(id)}/import/preview`, file, token);
   }
 

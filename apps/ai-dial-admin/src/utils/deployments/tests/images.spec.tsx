@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   getActionClass,
   getImageType,
+  getUniqueImagesNames,
   getUniqueLatestImages,
   getVersionsList,
   isValidVersion,
@@ -181,6 +182,218 @@ describe('images utils', () => {
           $type: IMAGE_TYPE.MCP,
         } as any).transportType,
       ).toBe(IMAGE_TRANSPORT_TYPE.LOCAL);
+    });
+  });
+
+  describe('getUniqueImagesNames', () => {
+    const createMockImage = (name: string, type: IMAGE_TYPE): Image =>
+      ({
+        name,
+        $type: type,
+        version: '1.0.0',
+        source: { $type: 'docker' },
+      }) as Image;
+
+    test('should return empty array when images array is empty', () => {
+      const result = getUniqueImagesNames([], IMAGE_TYPE.NIM);
+
+      expect(result).toEqual([]);
+    });
+
+    test('should return unique names for NIM type images', () => {
+      const images: Image[] = [
+        createMockImage('nim-image-1', IMAGE_TYPE.NIM),
+        createMockImage('nim-image-2', IMAGE_TYPE.NIM),
+        createMockImage('nim-image-1', IMAGE_TYPE.NIM),
+      ];
+
+      const result = getUniqueImagesNames(images, IMAGE_TYPE.NIM);
+
+      expect(result).toEqual(['nim-image-1', 'nim-image-2']);
+      expect(result).toHaveLength(2);
+    });
+
+    test('should return unique names for MCP type images', () => {
+      const images: Image[] = [
+        createMockImage('mcp-image-1', IMAGE_TYPE.MCP),
+        createMockImage('mcp-image-2', IMAGE_TYPE.MCP),
+        createMockImage('mcp-image-1', IMAGE_TYPE.MCP),
+      ];
+
+      const result = getUniqueImagesNames(images, IMAGE_TYPE.MCP);
+
+      expect(result).toEqual(['mcp-image-1', 'mcp-image-2']);
+      expect(result).toHaveLength(2);
+    });
+
+    test('should return unique names for INTERCEPTOR type images', () => {
+      const images: Image[] = [
+        createMockImage('interceptor-1', IMAGE_TYPE.INTERCEPTOR),
+        createMockImage('interceptor-2', IMAGE_TYPE.INTERCEPTOR),
+        createMockImage('interceptor-1', IMAGE_TYPE.INTERCEPTOR),
+      ];
+
+      const result = getUniqueImagesNames(images, IMAGE_TYPE.INTERCEPTOR);
+
+      expect(result).toEqual(['interceptor-1', 'interceptor-2']);
+      expect(result).toHaveLength(2);
+    });
+
+    test('should filter out images of different type', () => {
+      const images: Image[] = [
+        createMockImage('nim-image', IMAGE_TYPE.NIM),
+        createMockImage('mcp-image', IMAGE_TYPE.MCP),
+        createMockImage('interceptor-image', IMAGE_TYPE.INTERCEPTOR),
+      ];
+
+      const resultNim = getUniqueImagesNames(images, IMAGE_TYPE.NIM);
+      const resultMcp = getUniqueImagesNames(images, IMAGE_TYPE.MCP);
+      const resultInterceptor = getUniqueImagesNames(images, IMAGE_TYPE.INTERCEPTOR);
+
+      expect(resultNim).toEqual(['nim-image']);
+      expect(resultMcp).toEqual(['mcp-image']);
+      expect(resultInterceptor).toEqual(['interceptor-image']);
+    });
+
+    test('should return empty array when no images match the type', () => {
+      const images: Image[] = [
+        createMockImage('nim-image', IMAGE_TYPE.NIM),
+        createMockImage('mcp-image', IMAGE_TYPE.MCP),
+      ];
+
+      const result = getUniqueImagesNames(images, IMAGE_TYPE.INTERCEPTOR);
+
+      expect(result).toEqual([]);
+    });
+
+    test('should handle single image', () => {
+      const images: Image[] = [createMockImage('single-image', IMAGE_TYPE.NIM)];
+
+      const result = getUniqueImagesNames(images, IMAGE_TYPE.NIM);
+
+      expect(result).toEqual(['single-image']);
+    });
+
+    test('should handle multiple duplicate names', () => {
+      const images: Image[] = [
+        createMockImage('duplicate', IMAGE_TYPE.NIM),
+        createMockImage('duplicate', IMAGE_TYPE.NIM),
+        createMockImage('duplicate', IMAGE_TYPE.NIM),
+        createMockImage('duplicate', IMAGE_TYPE.NIM),
+      ];
+
+      const result = getUniqueImagesNames(images, IMAGE_TYPE.NIM);
+
+      expect(result).toEqual(['duplicate']);
+      expect(result).toHaveLength(1);
+    });
+
+    test('should preserve order of first occurrence', () => {
+      const images: Image[] = [
+        createMockImage('image-a', IMAGE_TYPE.NIM),
+        createMockImage('image-b', IMAGE_TYPE.NIM),
+        createMockImage('image-c', IMAGE_TYPE.NIM),
+        createMockImage('image-b', IMAGE_TYPE.NIM),
+        createMockImage('image-a', IMAGE_TYPE.NIM),
+      ];
+
+      const result = getUniqueImagesNames(images, IMAGE_TYPE.NIM);
+
+      expect(result).toEqual(['image-a', 'image-b', 'image-c']);
+    });
+
+    test('should handle mixed types with duplicates', () => {
+      const images: Image[] = [
+        createMockImage('shared-name', IMAGE_TYPE.NIM),
+        createMockImage('shared-name', IMAGE_TYPE.MCP),
+        createMockImage('shared-name', IMAGE_TYPE.NIM),
+        createMockImage('unique-nim', IMAGE_TYPE.NIM),
+        createMockImage('unique-mcp', IMAGE_TYPE.MCP),
+      ];
+
+      const resultNim = getUniqueImagesNames(images, IMAGE_TYPE.NIM);
+      const resultMcp = getUniqueImagesNames(images, IMAGE_TYPE.MCP);
+
+      expect(resultNim).toEqual(['shared-name', 'unique-nim']);
+      expect(resultMcp).toEqual(['shared-name', 'unique-mcp']);
+    });
+
+    test('should handle images with similar but not identical names', () => {
+      const images: Image[] = [
+        createMockImage('image', IMAGE_TYPE.NIM),
+        createMockImage('image-1', IMAGE_TYPE.NIM),
+        createMockImage('image-2', IMAGE_TYPE.NIM),
+        createMockImage('image', IMAGE_TYPE.NIM),
+      ];
+
+      const result = getUniqueImagesNames(images, IMAGE_TYPE.NIM);
+
+      expect(result).toEqual(['image', 'image-1', 'image-2']);
+      expect(result).toHaveLength(3);
+    });
+
+    test('should handle images with special characters in names', () => {
+      const images: Image[] = [
+        createMockImage('image-with-dash', IMAGE_TYPE.NIM),
+        createMockImage('image_with_underscore', IMAGE_TYPE.NIM),
+        createMockImage('image.with.dot', IMAGE_TYPE.NIM),
+        createMockImage('image-with-dash', IMAGE_TYPE.NIM),
+      ];
+
+      const result = getUniqueImagesNames(images, IMAGE_TYPE.NIM);
+
+      expect(result).toEqual(['image-with-dash', 'image_with_underscore', 'image.with.dot']);
+      expect(result).toHaveLength(3);
+    });
+
+    test('should handle large number of images', () => {
+      const images: Image[] = Array.from({ length: 1000 }, (_, i) =>
+        createMockImage(`image-${i % 100}`, IMAGE_TYPE.NIM),
+      );
+
+      const result = getUniqueImagesNames(images, IMAGE_TYPE.NIM);
+
+      expect(result).toHaveLength(100);
+      expect(result).toContain('image-0');
+      expect(result).toContain('image-99');
+    });
+
+    test('should return unique names case-sensitively', () => {
+      const images: Image[] = [
+        createMockImage('ImageName', IMAGE_TYPE.NIM),
+        createMockImage('imagename', IMAGE_TYPE.NIM),
+        createMockImage('IMAGENAME', IMAGE_TYPE.NIM),
+      ];
+
+      const result = getUniqueImagesNames(images, IMAGE_TYPE.NIM);
+
+      expect(result).toEqual(['ImageName', 'imagename', 'IMAGENAME']);
+      expect(result).toHaveLength(3);
+    });
+
+    test('should handle images with empty string names', () => {
+      const images: Image[] = [
+        createMockImage('', IMAGE_TYPE.NIM),
+        createMockImage('valid-name', IMAGE_TYPE.NIM),
+        createMockImage('', IMAGE_TYPE.NIM),
+      ];
+
+      const result = getUniqueImagesNames(images, IMAGE_TYPE.NIM);
+
+      expect(result).toEqual(['', 'valid-name']);
+      expect(result).toHaveLength(2);
+    });
+
+    test('should maintain Set behavior for deduplication', () => {
+      const images: Image[] = [
+        createMockImage('test', IMAGE_TYPE.NIM),
+        createMockImage('test', IMAGE_TYPE.NIM),
+        createMockImage('test', IMAGE_TYPE.NIM),
+      ];
+
+      const result = getUniqueImagesNames(images, IMAGE_TYPE.NIM);
+
+      expect(new Set(result).size).toBe(result.length);
     });
   });
 });
