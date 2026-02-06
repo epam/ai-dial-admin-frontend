@@ -70,10 +70,10 @@ describe('Entities :: tabs', () => {
       propertiesTab(t),
       featuresTab(t),
       parametersTab(t),
-      rolesTab(t),
-      interceptorsTab(t),
       dependenciesTab(t),
       appRouteTab(t),
+      rolesTab(t),
+      interceptorsTab(t),
       auditTab(t),
     ]);
   });
