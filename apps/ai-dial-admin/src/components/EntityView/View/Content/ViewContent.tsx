@@ -3,9 +3,9 @@ import { Dispatch, FC, SetStateAction, useMemo } from 'react';
 
 import ApplicationParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
 import ApplicationAppRoutes from '@/src/components/EntityView/AppRoute/ApplicationAppRoutes';
-import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
+import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
 import EntityDependencies from '@/src/components/EntityView/Dependencies/Dependencies';
-import EntityFeatures from '@/src/components/EntityView/Features/Features';
+import EntityFeatures from '@/src/components/EntityTabs/Features/Features';
 import EntityInterceptors from '@/src/components/EntityView/Interceptors/Interceptors';
 import EntityRoles from '@/src/components/EntityView/Roles/Roles';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';

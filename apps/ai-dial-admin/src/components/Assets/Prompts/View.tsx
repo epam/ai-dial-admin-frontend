@@ -9,7 +9,7 @@ import { createPrompt, getPrompts, movePrompts, removePrompt } from '@/src/app/[
 import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
 import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
-import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
+import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';

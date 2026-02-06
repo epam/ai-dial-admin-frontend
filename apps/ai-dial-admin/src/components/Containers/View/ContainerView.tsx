@@ -32,7 +32,7 @@ import Metrics from '@/src/components/Containers/View/Metrics/Metrics';
 import ExecutionLog from '@/src/components/Containers/View/ExecutionLog/ExecutionLog';
 import Events from '@/src/components/Containers/View/Events/Events';
 import { BaseEntity } from '@/src/models/dial/base-entity';
-import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
+import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { getViewHeaderClassName } from '@/src/utils/entities/view';
 import { getContainerRedeploySnapshot } from '@/src/utils/deployments/containers';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';

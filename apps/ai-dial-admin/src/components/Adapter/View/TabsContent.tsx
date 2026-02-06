@@ -4,7 +4,7 @@ import { FC } from 'react';
 
 import AdapterModels from '@/src/components/Adapter/ModelsView/AdapterModels';
 import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
-import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
+import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';

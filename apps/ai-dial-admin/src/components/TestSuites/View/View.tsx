@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 
 import { removeTestSuite, updateTestSuite } from '@/src/app/[lang]/test-suites/actions';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
-import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
+import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { TestSuite } from '@/src/models/evaluation/test-suite';

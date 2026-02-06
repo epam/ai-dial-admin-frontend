@@ -16,7 +16,7 @@ import { tryOutAssetTool } from '@/src/app/[lang]/assets-toolsets/actions';
 import { tryOutTool } from '@/src/app/[lang]/toolsets/actions';
 import Divider from '@/src/components/Common/Divider/Divider';
 import SchemaUiRenderer from '@/src/components/Common/SchemaUIRenderer/SchemaUIRenderer';
-import JsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
+import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import {
   BasicI18nKey,
   ButtonsI18nKey,
