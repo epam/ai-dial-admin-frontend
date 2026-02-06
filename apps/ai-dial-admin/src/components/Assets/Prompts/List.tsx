@@ -10,13 +10,14 @@ import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { filterNames } from '@/src/utils/entities/filter-names';
+import { DialPrompt } from '@/src/models/dial/prompt';
 
 const PromptsList: FC = () => {
   const { data } = usePromptFolder();
   const names = filterNames(data);
 
   const versionsMap = getVersionsPerName((data || []) as AssetWithVersion[]);
-  const filteredData = filterLatestVersions((data || []) as AssetWithVersion[]);
+  const filteredData = filterLatestVersions((data || []) as AssetWithVersion[]) as DialPrompt[];
 
   return (
     <BaseEntityList
