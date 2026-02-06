@@ -36,58 +36,58 @@ import TableView from './TableView';
 import ViewControl from './ViewControl';
 
 interface Props {
-  entity?: DialApplication | DialApplicationResource;
-  onChangeEntity?: (entity: BaseEntity, isSkipRefresh?: boolean) => void;
+  application?: DialApplication | DialApplicationResource;
   applicationSchemes?: DialApplicationScheme[] | null;
-  isJsonEditorEnabled?: boolean;
+  isEditorEnabled?: boolean;
   view?: ApplicationRoute;
   isChanged?: boolean;
   isSkipRefresh?: boolean;
-  onSave?: () => void;
-  key?: number;
   setIsChanged?: Dispatch<SetStateAction<boolean>>;
-  setSelectedEntity?: Dispatch<SetStateAction<BaseEntity>>;
+  setSelectedApplication?: Dispatch<SetStateAction<DialApplication | DialApplicationResource>>;
+  onSave?: () => void;
+  onChange?: (application: DialApplication | DialApplicationResource, isSkipRefresh?: boolean) => void;
 }
 
-const ApplicationParametersTab: FC<Props> = ({
-  entity,
-  onChangeEntity,
+const ParametersTab: FC<Props> = ({
+  application,
+  onChange,
   applicationSchemes,
-  isJsonEditorEnabled,
+  isEditorEnabled,
   view,
   isChanged,
   isSkipRefresh,
   onSave,
-  key,
   setIsChanged,
-  setSelectedEntity,
+  setSelectedApplication,
 }) => {
   const t = useI18n();
   const { data: session } = useSession();
   const { currentTheme } = useTheme();
   const { dispatch } = useSaveValidationContext();
-  const scheme = getAppRunner(entity as DialApplication, applicationSchemes);
+  const scheme = getAppRunner(application as DialApplication, applicationSchemes);
 
   const [appPropertiesTemp, setAppPropertiesTemp] = useState<ApplicationPropertiesTemp[] | undefined>();
   const [schemeProperties, setSchemeProperties] = useState<ApplicationPropertiesTemp[]>([]);
   const [isAddClicked, setIsAddClicked] = useState(false);
 
   if (!scheme && !appPropertiesTemp) {
-    setAppPropertiesTemp(convertAppPropertiesToArray(entity?.applicationProperties || {}));
+    setAppPropertiesTemp(convertAppPropertiesToArray(application?.applicationProperties || {}));
   }
 
   const frameConfig = useMemo(() => {
     if (scheme) {
       return getFrameConfig(scheme, currentTheme, session as UserSession);
-    } else if (entity?.editorUrl) {
-      return getFrameConfig(entity, currentTheme, session as UserSession);
+    } else if (application?.editorUrl) {
+      return getFrameConfig(application, currentTheme, session as UserSession);
     }
     return null;
-  }, [currentTheme, entity, scheme, session]);
+  }, [currentTheme, application, scheme, session]);
 
   const targetUrl = useMemo(() => {
     const id =
-      view === ApplicationRoute.AssetsApplications ? `applications/${(entity as AssetApp).path}` : entity?.name;
+      view === ApplicationRoute.AssetsApplications
+        ? `applications/${(application as AssetApp).path}`
+        : application?.name;
     try {
       const iframeUrl = `${frameConfig?.host}?authProvider=${frameConfig?.providerId}&theme=${frameConfig?.theme}&id=${id}`;
       return new URL(iframeUrl);
@@ -96,7 +96,7 @@ const ApplicationParametersTab: FC<Props> = ({
         return null;
       }
     }
-  }, [entity, frameConfig, view]);
+  }, [application, frameConfig, view]);
 
   const rjsfSchema = useMemo(
     () =>
@@ -118,58 +118,58 @@ const ApplicationParametersTab: FC<Props> = ({
 
   const onGetSchemeDefaults = useCallback(
     (data: Record<string, DefaultsValue>) => {
-      if (entity?.applicationPropertiesTemp) {
-        setAppPropertiesTemp(entity.applicationPropertiesTemp || []);
+      if (application?.applicationPropertiesTemp) {
+        setAppPropertiesTemp(application.applicationPropertiesTemp || []);
       } else {
         const schemeProps = convertJsonSchema(scheme as unknown as DialApplicationScheme, data);
-        const appProperties = convertAppPropertiesToArray(entity?.applicationProperties || {}, schemeProps);
+        const appProperties = convertAppPropertiesToArray(application?.applicationProperties || {}, schemeProps);
         setSchemeProperties(schemeProps);
         setAppPropertiesTemp(appProperties);
       }
     },
-    [entity?.applicationProperties, entity?.applicationPropertiesTemp, scheme],
+    [application?.applicationProperties, application?.applicationPropertiesTemp, scheme],
   );
 
   const onChangeProperties = useCallback(
     (props?: ApplicationPropertiesTemp[], isSkipRefresh?: boolean) => {
       const newEntity = {
-        ...entity,
+        ...application,
         applicationPropertiesTemp: props,
       } as unknown as BaseEntity;
-      onChangeEntity?.(newEntity, isSkipRefresh);
+      onChange?.(newEntity, isSkipRefresh);
       const isValid = !props?.some((p) => !p.key || p.value === void 0 || p.value === '');
       dispatch({ type: ValidationActionType.SetField, field: 'applicationProperties', isValid });
     },
-    [dispatch, entity, onChangeEntity],
+    [dispatch, application, onChange],
   );
 
   const onChangeConfiguration = useCallback(
     (data: Record<string, DefaultsValue>) => {
       if (paramsView === ParamsView.FORM) {
         const newEntity = {
-          ...entity,
+          ...application,
           applicationProperties: {
             ...data,
           },
         } as unknown as BaseEntity;
         onGetSchemeDefaults(data);
-        onChangeEntity?.(newEntity);
+        onChange?.(newEntity);
       }
     },
-    [entity, onChangeEntity, onGetSchemeDefaults, paramsView],
+    [application, onChange, onGetSchemeDefaults, paramsView],
   );
 
   useEffect(() => {
     const properties =
-      entity?.applicationPropertiesTemp ||
-      convertAppPropertiesToArray(entity?.applicationProperties || {}, schemeProperties);
+      application?.applicationPropertiesTemp ||
+      convertAppPropertiesToArray(application?.applicationProperties || {}, schemeProperties);
     setAppPropertiesTemp(properties);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entity?.applicationPropertiesTemp, entity?.applicationProperties]);
+  }, [application?.applicationPropertiesTemp, application?.applicationProperties]);
 
   return (
     <div className="flex flex-col w-full h-full">
-      {!isJsonEditorEnabled && (
+      {!isEditorEnabled && (
         <div className="flex flex-row justify-between mb-2">
           <div className="flex flex-row gap-4 items-center">
             <h1>{t(TabsI18nKey.Parameters)}</h1>
@@ -195,11 +195,10 @@ const ApplicationParametersTab: FC<Props> = ({
         </div>
       )}
       <div className="flex-1 min-h-0">
-        {paramsView !== ParamsView.UI && isJsonEditorEnabled && (
+        {paramsView !== ParamsView.UI && isEditorEnabled && (
           <EntityJsonEditor
-            key={key}
-            entity={entity as BaseEntity}
-            setSelectedEntity={setSelectedEntity as Dispatch<SetStateAction<BaseEntity>>}
+            entity={application as BaseEntity}
+            setSelectedEntity={setSelectedApplication}
             setIsChanged={setIsChanged}
           />
         )}
@@ -214,7 +213,7 @@ const ApplicationParametersTab: FC<Props> = ({
         )}
         <div
           className={classNames(
-            paramsView === ParamsView.FORM && !isJsonEditorEnabled ? 'block w-full h-full overflow-y-auto' : 'hidden',
+            paramsView === ParamsView.FORM && !isEditorEnabled ? 'block w-full h-full overflow-y-auto' : 'hidden',
           )}
         >
           {!scheme || !scheme?.properties || !Object.keys(scheme.properties).length ? (
@@ -223,7 +222,7 @@ const ApplicationParametersTab: FC<Props> = ({
             <div className="flex-1 min-h-0 p-4 bg-layer-0">
               <SchemaUiRenderer
                 schema={rjsfSchema}
-                data={entity?.applicationProperties}
+                data={application?.applicationProperties}
                 onChangeConfiguration={onChangeConfiguration}
                 onGetSchemeDefaults={onGetSchemeDefaults}
                 readonly={
@@ -237,7 +236,7 @@ const ApplicationParametersTab: FC<Props> = ({
           <FrameRenderer
             iframeUrl={targetUrl?.href ?? ''}
             name={frameConfig?.name}
-            isJsonEditorEnabled={isJsonEditorEnabled}
+            isJsonEditorEnabled={isEditorEnabled}
           />
         )}
       </div>
@@ -245,4 +244,4 @@ const ApplicationParametersTab: FC<Props> = ({
   );
 };
 
-export default ApplicationParametersTab;
+export default ParametersTab;

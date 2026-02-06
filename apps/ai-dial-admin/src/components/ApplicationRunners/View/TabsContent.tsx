@@ -4,7 +4,7 @@ import { FC } from 'react';
 
 import AppRunnerApplications from '@/src/components/ApplicationRunners/ConfigurationView/Applications';
 import AppRunnerFeatures from '@/src/components/ApplicationRunners/ConfigurationView/Features';
-import ApplicationParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
+import ParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
 import EntityRoutes from '@/src/components/EntityView/AppRoute/AppRoute';
 import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
 import EntityInterceptors from '@/src/components/EntityView/Interceptors/Interceptors';
@@ -50,7 +50,7 @@ const TabsContent: FC<Props> = ({
         )}
 
         {activeTab === EntityViewTab.Parameters && (
-          <ApplicationParametersTab view={ApplicationRoute.ApplicationRunners} entity={selectedRunner} />
+          <ParametersTab view={ApplicationRoute.ApplicationRunners} application={selectedRunner} />
         )}
 
         {activeTab === EntityViewTab.Features && (
