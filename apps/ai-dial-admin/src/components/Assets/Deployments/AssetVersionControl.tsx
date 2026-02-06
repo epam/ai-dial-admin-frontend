@@ -25,7 +25,7 @@ interface Props {
   view: ApplicationRoute;
   etag?: string;
   asset: Asset;
-  assets?: Asset[];
+  assets?: Asset[] | null;
   onChangeAsset?: (asset: Asset) => void;
   addedVersions: string[];
   onChangeAddedVersion?: (version: string[]) => void;

@@ -1,34 +1,30 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { cloneDeep } from 'lodash';
 
 import { createPrompt, getPrompts, movePrompts, removePrompt } from '@/src/app/[lang]/prompts/actions';
 import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
-import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
-import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
+import AssetHeader from '@/src/components/EntityHeaderControls/AssetHeader';
+import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
-import { Asset } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
-import { getViewHeaderClassName } from '@/src/utils/entities/view';
 import { changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
 import { addTrailingSlash } from '@/src/utils/url';
-import PromptProperties from './Properties';
+import TabsContent from './TabsContent';
 
 interface Props {
   originalPrompt: DialPrompt;
@@ -43,15 +39,21 @@ const PromptView: FC<Props> = ({ originalPrompt, etag, prompts }) => {
   const { fetchFiles } = usePromptFolder();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
-  const { dispatch } = useSaveValidationContext();
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedPrompt, setSelectedPrompt] = useState(cloneDeep(originalPrompt));
   const [isChanged, setIsChanged] = useState(false);
-  const [isJsonEditorEnabled, setIsJsonEditorEnabled] = useState(false);
+  const [isEditorEnabled, setIsEditorEnabled] = useState(false);
 
-  const [key, setKey] = useState(0);
   const [addedVersions, setAddedVersions] = useState<string[]>([]);
+
+  const jsonConfiguration = useMemo<JsonConfiguration>(
+    () => ({
+      isEditorEnabled,
+      onToggleEditor: () => setIsEditorEnabled((prev) => !prev),
+    }),
+    [isEditorEnabled],
+  );
 
   useEffect(() => {
     setSelectedPrompt(cloneDeep(originalPrompt));
@@ -64,17 +66,9 @@ const PromptView: FC<Props> = ({ originalPrompt, etag, prompts }) => {
   }, [selectedPrompt, originalPrompt]);
 
   const onDiscard = useCallback(() => {
-    if (isJsonEditorEnabled) {
-      dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
-      setIsChanged(false);
-      // TODO: Revisit solution
-      // Due to we can't set invalid JSON as variable, we can't update entity in error state.
-      // Force JSON Editor re-render to show originalEntity on discard.
-      setKey((prevKey) => prevKey + 1);
-    }
     setSelectedPrompt(cloneDeep(originalPrompt));
     setAddedVersions([]);
-  }, [isJsonEditorEnabled, originalPrompt, dispatch]);
+  }, [originalPrompt]);
 
   const onSave = useCallback(
     (newVersion?: string) => {
@@ -123,57 +117,30 @@ const PromptView: FC<Props> = ({ originalPrompt, etag, prompts }) => {
     [selectedPrompt, originalPrompt, etag, showNotification, t, router, fetchFiles],
   );
 
-  const onChangeEntity = useCallback(
-    (entity: DialPrompt) => {
-      setSelectedPrompt(entity);
-    },
-    [setSelectedPrompt],
-  );
-
-  const onToggleJsonEditor = useCallback(() => {
-    setIsJsonEditorEnabled((prev) => !prev);
-  }, [setIsJsonEditorEnabled]);
-
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-      <div className={getViewHeaderClassName(isJsonEditorEnabled)}>
-        <Tabs
-          tabs={tabs}
-          isEditorEnabled={isJsonEditorEnabled}
-          activeTab={activeTab}
-          onChangeActiveTab={setActiveTab}
-        />
+      <AssetHeader
+        view={ApplicationRoute.Prompts}
+        entity={selectedPrompt}
+        isChanged={isChanged}
+        onDiscard={onDiscard}
+        onSave={onSave}
+        tabs={tabs}
+        assets={prompts}
+        jsonConfiguration={jsonConfiguration}
+        activeTab={activeTab}
+        onChangeActiveTab={setActiveTab}
+        onRemove={removePrompt}
+        addedVersions={addedVersions}
+        setAddedVersions={setAddedVersions}
+        getAssetContext={usePromptFolder}
+      />
 
-        <HeaderButtons
-          view={ApplicationRoute.Prompts}
-          entity={selectedPrompt}
-          onChangeEntity={onChangeEntity}
-          isChanged={isChanged}
-          onSave={onSave}
-          onDiscard={onDiscard}
-          onRemove={removePrompt}
-          isEditorEnabled={isJsonEditorEnabled}
-          onToggleEditor={onToggleJsonEditor}
-          assets={prompts as Asset[]}
-          addedVersions={addedVersions}
-          setAddedVersions={setAddedVersions}
-          getAssetContext={usePromptFolder as unknown as () => AssetsFolderContext<Asset>}
-        />
-      </div>
       <div className="flex-1 overflow-auto min-h-0">
-        {isJsonEditorEnabled ? (
-          <EntityJsonEditor
-            key={key}
-            entity={selectedPrompt}
-            setSelectedEntity={setSelectedPrompt}
-            setIsChanged={setIsChanged}
-          />
+        {isEditorEnabled ? (
+          <EntityJsonEditor entity={selectedPrompt} setSelectedEntity={setSelectedPrompt} setIsChanged={setIsChanged} />
         ) : (
-          <>
-            {activeTab === EntityViewTab.Properties && (
-              <PromptProperties prompt={selectedPrompt} onChangePrompt={onChangeEntity} />
-            )}
-          </>
+          <TabsContent activeTab={activeTab} onChangePrompt={setSelectedPrompt} selectedPrompt={selectedPrompt} />
         )}
       </div>
     </div>

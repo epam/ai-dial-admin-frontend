@@ -24,7 +24,7 @@ import AssetChangedEntityButtons from '../Buttons/AssetChangedEntityButtons';
 import { SimpleButtonsWrapperProps } from './SimpleButtonsWrapper';
 
 export interface AssetButtonsWrapperProps extends Omit<SimpleButtonsWrapperProps<Asset>, 'onSave'> {
-  assets?: Asset[];
+  assets?: Asset[] | null;
   getAssetContext?: () => AssetsFolderContext<Asset>;
   addedVersions?: string[];
   onChangeAsset?: (asset: Asset) => void;
