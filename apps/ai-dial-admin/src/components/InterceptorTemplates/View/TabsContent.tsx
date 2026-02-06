@@ -7,7 +7,7 @@ import Interceptors from '@/src/components/InterceptorTemplates/View/Interceptor
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
-import PropertiesTabContent from '../../EntityTabs/PropertiesTabContent';
+import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
 import ExtendedProperties from '../Properties/ExtendedProperties';
 
 interface Props {

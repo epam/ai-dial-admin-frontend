@@ -22,7 +22,7 @@ import { EntityViewTab } from '@/src/utils/tabs/utils';
 import EntitiesTabContent from './EntitiesTabContent';
 import ParameterSchema from './ParameterSchema/ParameterSchema';
 import InterceptorProperties from './Properties/Properties';
-import PropertiesTabContent from '../../EntityTabs/PropertiesTabContent';
+import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
 
 interface Props {
   activeTab: EntityViewTab;

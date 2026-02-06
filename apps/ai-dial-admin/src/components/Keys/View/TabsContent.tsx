@@ -18,7 +18,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import { cloneDeep } from 'lodash';
-import PropertiesTabContent from '../../EntityTabs/PropertiesTabContent';
+import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
 import KeyProperties from './Properties/Properties';
 
 interface Props {
