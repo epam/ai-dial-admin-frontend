@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { describe, test, expect, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
@@ -17,7 +16,18 @@ describe('Common Item component', () => {
   });
 
   test('onChange called', async () => {
-    render(<Item item={''} index={1} onChange={onChange} onRemove={onRemove} isModal={false} disabled={false} />);
+    const validate = vi.fn();
+    render(
+      <Item
+        item={''}
+        index={1}
+        onChange={onChange}
+        onRemove={onRemove}
+        isModal={false}
+        disabled={false}
+        validate={validate}
+      />,
+    );
 
     const input = screen.getByRole('textbox');
     expect(input).toBeInTheDocument();
@@ -27,6 +37,7 @@ describe('Common Item component', () => {
 
     await waitFor(() => {
       expect(onChange).toHaveBeenCalledWith('new-item', 1);
+      expect(validate).toHaveBeenCalled();
     });
   });
 
