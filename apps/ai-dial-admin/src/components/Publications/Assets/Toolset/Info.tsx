@@ -6,7 +6,7 @@ import IconControl from '@/src/components/BaseControls/Icon';
 import { DialToolsetResource } from '@/src/models/dial/application-resource';
 import TopicsControl from '@/src/components/BaseControls/Topics';
 import ToolsetEndpoint from '@/src/components/SourceField/Endpoints/ToolsetEndpoint';
-import Authentication from '@/src/components/Toolsets/View/Authentication';
+import Authentication from '@/src/components/Toolsets/Auth/Authentication';
 import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {

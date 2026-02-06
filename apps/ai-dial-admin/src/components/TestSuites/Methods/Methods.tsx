@@ -5,8 +5,9 @@ import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState
 import { DialCollapsibleSidebar } from '@epam/ai-dial-ui-kit';
 
 import { getDeployment } from '@/src/app/[lang]/test-suites/actions';
+import { CHAT_COMPLETION_METHOD } from '@/src/components/TestSuites/constants/chat-completion-method';
 import { generateMethodPathCombinations } from '@/src/components/TestSuites/utils/method';
-import { MenuI18nKey } from '@/src/constants/i18n';
+import { MenuI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Deployment } from '@/src/models/evaluation/deployment';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
@@ -33,13 +34,20 @@ const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange }) => {
   const onMethodClick = useCallback(
     (index: number) => {
       setActiveMethodIndex(index);
-      onChange((prev: TestSuite) => ({
-        ...prev,
-        endpointRef: {
-          method: methods[index].method,
-          relativeUrl: methods[index].relativeUrl,
-        },
-      }));
+      if (index === 0) {
+        onChange((prev: TestSuite) => ({
+          ...prev,
+          endpointRef: CHAT_COMPLETION_METHOD,
+        }));
+      } else {
+        onChange((prev: TestSuite) => ({
+          ...prev,
+          endpointRef: {
+            method: methods[index].method,
+            relativeUrl: methods[index].relativeUrl,
+          },
+        }));
+      }
     },
     [methods, onChange],
   );
@@ -57,12 +65,21 @@ const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange }) => {
     <div className="w-full flex flex-row h-full gap-2">
       <DialCollapsibleSidebar containerClassName="border border-primary" title={t(MenuI18nKey.Applications)}>
         <div className="flex flex-col gap-y-1">
+          <span className="dial-tiny text-secondary block">{t(TestSuitesI18nKey.ChatInterface)}</span>
+          <MethodItem
+            key="chat-completion"
+            item={CHAT_COMPLETION_METHOD}
+            index={0}
+            isActive={activeMethodIndex === 0}
+            onClick={onMethodClick}
+          />
+          {!!methods.length && <span className="dial-tiny text-secondary block">{t(TestSuitesI18nKey.Other)}</span>}
           {methods.map((method, index) => (
             <MethodItem
               key={(method?.relativeUrl || '') + method.method}
               item={method}
-              index={index}
-              isActive={activeMethodIndex === index}
+              index={index + 1}
+              isActive={activeMethodIndex === index + 1}
               onClick={onMethodClick}
             />
           ))}
@@ -70,12 +87,19 @@ const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange }) => {
       </DialCollapsibleSidebar>
 
       <div className="flex-1 min-w-0 border border-primary rounded">
-        {!!methods.length && (
+        {
           <MethodInfo
-            endpoint={activeMethodIndex != null ? { ...testSuite.endpointRef, ...methods[activeMethodIndex] } : {}}
+            endpoint={
+              activeMethodIndex != null
+                ? {
+                    ...testSuite.endpointRef,
+                    ...(activeMethodIndex === 0 ? CHAT_COMPLETION_METHOD : methods[activeMethodIndex]),
+                  }
+                : {}
+            }
             onChange={onChange}
           />
-        )}
+        }
       </div>
     </div>
   );

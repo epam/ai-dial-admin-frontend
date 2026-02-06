@@ -1,7 +1,7 @@
 import { FC, useEffect, useRef, useState } from 'react';
 
-import { GridApi, GridReadyEvent } from 'ag-grid-community';
 import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { GridApi, GridReadyEvent } from 'ag-grid-community';
 
 import Grid from '@/src/components/Grid/Grid';
 import { CHECKBOX_COL_DEF } from '@/src/constants/ag-grid';
@@ -10,6 +10,7 @@ import { BasicI18nKey } from '@/src/constants/i18n';
 import { STRINGS_DELIMITER } from '@/src/constants/prompt';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
+import { Asset } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -17,7 +18,7 @@ import { changeExportGridData, getExportGridData } from './export';
 
 interface Props {
   route?: ApplicationRoute;
-  context?: () => AssetsFolderContext<DialFile>;
+  context?: () => AssetsFolderContext<Asset>;
 }
 
 const ExportGrid: FC<Props> = ({ route, context }) => {

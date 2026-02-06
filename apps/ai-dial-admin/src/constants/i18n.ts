@@ -1282,6 +1282,8 @@ export enum TestSuitesI18nKey {
   FromPC = 'TestSuites.FromPC',
   ImportFromPC = 'TestSuites.ImportFromPC',
   FromDial = 'TestSuites.FromDial',
+  Other = 'TestSuites.Other',
+  ChatInterface = 'TestSuites.ChatInterface',
 }
 
 export enum FileManagerI18nKey {

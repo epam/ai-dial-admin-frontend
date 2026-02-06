@@ -1,1 +1,1 @@
-export const isValueTruthy = (value?: string): boolean => value === 'true';
+export const isValueTruthy = (value?: string | null): boolean => value === 'true';

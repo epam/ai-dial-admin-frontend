@@ -7,7 +7,7 @@ import { getModelsTokenizers } from '@/src/app/[lang]/models/actions';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import Grid from '@/src/components/Grid/Grid';
 import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
-import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { useNotification } from '@/src/context/NotificationContext';
 import { DialTokenizer } from '@/src/models/dial/model';
 import { getErrorNotification } from '@/src/utils/notification';
@@ -43,7 +43,7 @@ const TokenizedModelsGrid: FC<Props> = ({ onSelectModelId, selectedModel }) => {
     <DialLoader size={40} />
   ) : (
     <Grid
-      columnDefs={SIMPLE_ENTITY_COLUMNS}
+      columnDefs={BASE_COLUMNS}
       rowData={data}
       additionalGridOptions={{
         rowSelection: { mode: 'singleRow' },
@@ -61,7 +61,7 @@ const TokenizedModelsGrid: FC<Props> = ({ onSelectModelId, selectedModel }) => {
         },
         onGridReady: (event) => {
           event.api?.updateGridOptions({
-            columnDefs: SIMPLE_ENTITY_COLUMNS,
+            columnDefs: BASE_COLUMNS,
             rowData: data,
           });
           event.api.forEachNode((node) => {

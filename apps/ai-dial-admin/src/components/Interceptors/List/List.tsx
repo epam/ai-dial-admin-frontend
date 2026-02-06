@@ -2,17 +2,12 @@
 import { FC, useMemo } from 'react';
 
 import { createInterceptor, removeInterceptor } from '@/src/app/[lang]/interceptors/actions';
-import {
-  AUTHOR_COLUMN,
-  SOURCE_FIELD_COLUMNS,
-  BASE_STATUS_COLUMN,
-  SIMPLE_ENTITY_COLUMNS_WITH_TOPICS,
-} from '@/src/constants/grid-columns/grid-columns';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
+import { INTERCEPTORS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { useI18n } from '@/src/locales/client';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { filterNames } from '@/src/utils/entities/filter-names';
-import { useI18n } from '@/src/locales/client';
 
 interface Props {
   data: DialInterceptor[];
@@ -21,14 +16,7 @@ interface Props {
 const InterceptorsList: FC<Props> = ({ data }) => {
   const t = useI18n();
   const names = filterNames(data);
-  const columns = useMemo(() => {
-    return [
-      ...SIMPLE_ENTITY_COLUMNS_WITH_TOPICS,
-      BASE_STATUS_COLUMN,
-      ...SOURCE_FIELD_COLUMNS(t, ApplicationRoute.Interceptors),
-      AUTHOR_COLUMN,
-    ];
-  }, [t]);
+  const columns = useMemo(() => INTERCEPTORS_COLUMNS(t), [t]);
 
   return (
     <BaseEntityList

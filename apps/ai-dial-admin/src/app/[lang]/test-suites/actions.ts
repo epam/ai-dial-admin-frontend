@@ -33,6 +33,16 @@ export async function getTestSuite(id: string) {
   return testSuitesApi.getTestSuite(id, token);
 }
 
+export async function importTestCase(id: string, file: FormData) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.importTestCase(id, file, token);
+}
+
+export async function importTestCasePreview(id: string, file: FormData) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.importTestCasePreview(id, file, token);
+}
+
 export async function getTestCases(
   id: string | undefined,
   page: number,

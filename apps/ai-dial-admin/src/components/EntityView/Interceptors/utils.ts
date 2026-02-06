@@ -3,7 +3,7 @@ import { ColDef } from 'ag-grid-community';
 import { ACTION_COLUMN, DRAGGABLE_COL_DEF, UTILITY_COLUMN } from '@/src/constants/ag-grid';
 import { getOpenInNewTabOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import { BaseEntity } from '@/src/models/dial/base-entity';
-import { NAME_COLUMN, DESCRIPTION_COLUMN, DISPLAY_NAME_COLUMN } from '@/src/constants/grid-columns/grid-columns';
+import { NAME_COLUMN, DESCRIPTION_COLUMN, DISPLAY_NAME_COLUMN } from '@/src/constants/grid-columns/base-columns';
 
 export const getInterceptorsGridData = (interceptors?: BaseEntity[], interceptorNames?: string[]): BaseEntity[] => {
   return (

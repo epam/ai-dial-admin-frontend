@@ -135,6 +135,7 @@ describe('Formatters :: sourceTypeFormatter', () => {
 
   test('formats source type for ENDPOINT type', () => {
     expect(sourceTypeFormatter(SOURCE_TYPE.ENDPOINTS, t)).toBe(SourceI18nKey.Endpoint);
+    expect(sourceTypeFormatter(SOURCE_TYPE.ENDPOINTS, t, ApplicationRoute.Models)).toBe(SourceI18nKey.ExternalEndpoint);
   });
 
   test('formats source type for CONTAINER type', () => {

@@ -7,20 +7,16 @@ import { cloneDeep } from 'lodash';
 
 import { getApps, moveApps, removeApp, updateApp } from '@/src/app/[lang]/assets-applications/actions';
 import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
-import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import ViewContent from '@/src/components/EntityView/View/Content/ViewContent';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
-import { DialFile } from '@/src/models/dial/file';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -31,9 +27,9 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
 import { addTrailingSlash } from '@/src/utils/url';
-import { getViewHeaderClassName } from '@/src/utils/entities/view';
-import { getAppRunner } from '../../Applications/ParametersTab/utils';
-import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
+import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
+import AssetHeader from '@/src/components/EntityHeaderControls/AssetHeader';
+import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 
 interface Props {
   etag: string;
@@ -52,22 +48,27 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
   const { fetchFiles } = useAppsFolder();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
-  const { dispatch } = useSaveValidationContext();
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedApp, setSelectedApp] = useState(cloneDeep(originalApp));
   const [isChanged, setIsChanged] = useState(false);
-  const [isJsonEditorEnabled, setIsJsonEditorEnabled] = useState(false);
+  const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [isSkipRefresh, setIsSkipRefresh] = useState(true);
-  const [key, setKey] = useState(0);
 
-  const isHideJsonSelector = useMemo(() => {
-    const scheme = getAppRunner(selectedApp, schemes);
+  const jsonConfiguration = useMemo<JsonConfiguration>(
+    () => ({
+      isEditorEnabled,
+      isHideJsonSelector: () => {
+        const scheme = getAppRunner(selectedApp, schemes);
 
-    return (
-      activeTab === EntityViewTab.Parameters && (scheme?.['dial:applicationTypeEditorUrl'] || selectedApp.editorUrl)
-    );
-  }, [activeTab, schemes, selectedApp]);
+        return (
+          activeTab === EntityViewTab.Parameters && (scheme?.['dial:applicationTypeEditorUrl'] || selectedApp.editorUrl)
+        );
+      },
+      onToggleEditor: () => setIsEditorEnabled((prev) => !prev),
+    }),
+    [activeTab, isEditorEnabled, schemes, selectedApp],
+  );
 
   useEffect(() => {
     setSelectedApp(cloneDeep(originalApp));
@@ -80,18 +81,9 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
   }, [selectedApp, originalApp]);
 
   const onDiscard = useCallback(() => {
-    if (isJsonEditorEnabled) {
-      dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
-      setIsChanged(false);
-      // TODO: Revisit solution
-      // Due to we can't set invalid JSON as variable, we can't update entity in error state.
-      // Force JSON Editor re-render to show originalEntity on discard.
-      setKey((prevKey) => prevKey + 1);
-    }
-    dispatch({ type: ValidationActionType.Reset });
     setIsSkipRefresh(false);
     setSelectedApp(cloneDeep(originalApp));
-  }, [isJsonEditorEnabled, originalApp, dispatch]);
+  }, [originalApp]);
 
   const onSave = useCallback(
     (newVersion?: string) => {
@@ -145,10 +137,6 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
     [setSelectedApp],
   );
 
-  const onToggleJsonEditor = useCallback(() => {
-    setIsJsonEditorEnabled((prev) => !prev);
-  }, [setIsJsonEditorEnabled]);
-
   const onRemove = useCallback(
     (entity: string) => {
       return removeApp(entity, etag);
@@ -158,39 +146,24 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-      <div className={getViewHeaderClassName(isJsonEditorEnabled)}>
-        <Tabs
-          tabs={tabs}
-          isEditorEnabled={isJsonEditorEnabled}
-          activeTab={activeTab}
-          onChangeActiveTab={setActiveTab}
-        />
+      <AssetHeader
+        view={ApplicationRoute.AssetsApplications}
+        entity={selectedApp}
+        isChanged={isChanged}
+        onDiscard={onDiscard}
+        onSave={onSave}
+        tabs={tabs}
+        assets={assets}
+        jsonConfiguration={jsonConfiguration}
+        activeTab={activeTab}
+        onChangeActiveTab={setActiveTab}
+        onRemove={onRemove}
+        getAssetContext={useAppsFolder}
+      />
 
-        <HeaderButtons
-          activeTab={activeTab}
-          view={ApplicationRoute.AssetsApplications}
-          entity={selectedApp}
-          onChangeEntity={onChangeEntity}
-          isChanged={isChanged}
-          onSave={onSave}
-          onDiscard={onDiscard}
-          onRemove={onRemove}
-          isEditorEnabled={isJsonEditorEnabled}
-          onToggleEditor={onToggleJsonEditor}
-          assets={assets}
-          etag={etag}
-          onHideFormatSelector={() => isHideJsonSelector}
-          getAssetContext={useAppsFolder as () => AssetsFolderContext<DialFile | AssetApp>}
-        />
-      </div>
       <div className="flex-1 overflow-auto min-h-0">
-        {isJsonEditorEnabled && !(ApplicationRoute.AssetsApplications && activeTab === EntityViewTab.Parameters) ? (
-          <EntityJsonEditor
-            key={key}
-            entity={selectedApp}
-            setSelectedEntity={setSelectedApp}
-            setIsChanged={setIsChanged}
-          />
+        {isEditorEnabled && !(activeTab === EntityViewTab.Parameters) ? (
+          <EntityJsonEditor entity={selectedApp} setSelectedEntity={setSelectedApp} setIsChanged={setIsChanged} />
         ) : (
           <ViewContent
             activeTab={activeTab}
@@ -201,12 +174,11 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
             interceptors={interceptors}
             view={ApplicationRoute.AssetsApplications}
             selectedEntity={selectedApp}
-            isJsonEditorEnabled={isJsonEditorEnabled}
+            isJsonEditorEnabled={isEditorEnabled}
             isSkipRefresh={isSkipRefresh}
             isChanged={isChanged}
             onSave={onSave}
             onChangeEntity={onChangeEntity as (entity: BaseEntity) => void}
-            key={key}
             setIsChanged={setIsChanged}
             setSelectedEntity={setSelectedApp as Dispatch<SetStateAction<BaseEntity>>}
           />

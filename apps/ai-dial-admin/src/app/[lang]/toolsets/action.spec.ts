@@ -15,7 +15,7 @@ import {
   updateCoreToolset,
   updateToolset,
 } from './actions';
-import { ToolsetAuthCredentialLevel } from '../../../models/dial/toolset';
+import { ToolsetAuthCredentialLevel } from '@/src/models/dial/toolset';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');

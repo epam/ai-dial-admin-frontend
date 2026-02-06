@@ -1,6 +1,6 @@
-import { ToolSchema } from '@/src/models/dial/toolset';
+import { DialScheme } from '@/src/models/dial/scheme';
 
-export const convertSchemaToTable = (schema?: ToolSchema) => {
+export const convertSchemaToTable = (schema?: DialScheme) => {
   if (!schema) return [];
 
   const { properties, required = [] } = schema;

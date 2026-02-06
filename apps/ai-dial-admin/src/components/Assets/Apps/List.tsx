@@ -7,10 +7,7 @@ import { filterLatestVersions, getVersionsPerName } from '@/src/components/Asset
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import { DEPLOYMENT_ASSETS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { AssetApp } from '@/src/models/dial/deployment-asset';
-import { DialFile } from '@/src/models/dial/file';
 import { ApplicationRoute } from '@/src/types/routes';
 import { filterNames } from '@/src/utils/entities/filter-names';
 
@@ -37,7 +34,7 @@ const AppsList: FC<Props> = ({ runners }) => {
       onCreateEntity={createApp}
       onMoveFiles={moveApps}
       onBulkDelete={bulkDeleteApps}
-      getAssetContext={useAppsFolder as () => AssetsFolderContext<AssetApp | DialFile>}
+      getAssetContext={useAppsFolder}
     />
   );
 };
