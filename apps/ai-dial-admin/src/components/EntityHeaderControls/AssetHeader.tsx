@@ -23,7 +23,7 @@ const AssetHeader: FC<Props> = ({ jsonConfiguration, children, tabs, activeTab, 
   return (
     <div className="flex flex-col gap-y-4 mb-8">
       <div className={getHeaderClassName(isEditorEnabled)}>
-        {!isEditorEnabled && <ReadonlyId value={props.entity.id || ''} />}
+        {!isEditorEnabled && <ReadonlyId value={props.entity.name || ''} />}
         <AssetButtonsWrapper jsonConfiguration={jsonConfiguration} {...props}>
           {children}
         </AssetButtonsWrapper>
