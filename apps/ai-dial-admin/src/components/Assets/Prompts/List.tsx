@@ -10,6 +10,7 @@ import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { filterNames } from '@/src/utils/entities/filter-names';
+import { DialPrompt } from '@/src/models/dial/prompt';
 
 const PromptsList: FC = () => {
   const { data } = usePromptFolder();
@@ -23,7 +24,7 @@ const PromptsList: FC = () => {
       baseColumns={NON_DEPLOYMENT_ASSETS_COLUMNS}
       names={names}
       versionsMap={versionsMap}
-      data={filteredData}
+      data={filteredData as DialPrompt[]}
       route={ApplicationRoute.Prompts}
       onCreateEntity={createPrompt}
       onRemoveEntity={removePrompt}

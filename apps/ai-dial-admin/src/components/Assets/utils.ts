@@ -1,15 +1,14 @@
-import { AssetWithVersion, AssetApp } from '@/src/models/dial/deployment-asset';
-import { DialPrompt } from '@/src/models/dial/prompt';
-import { compareVersions, modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
 import { ImageVersion } from '@/src/models/deployments/images';
+import { AssetApp, AssetWithVersion } from '@/src/models/dial/deployment-asset';
+import { compareVersions, modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
 
 export const filterLatestVersions = (data: AssetWithVersion[]) => {
-  const latestVersions: Record<string, DialPrompt> = {};
+  const latestVersions: Record<string, AssetWithVersion> = {};
 
   data?.forEach((item) => {
     const name = item.name as string;
     if (!latestVersions[name] || compareVersions(item.version, latestVersions[name].version) > 0) {
-      latestVersions[name] = item as DialPrompt;
+      latestVersions[name] = item as AssetWithVersion;
     }
   });
 

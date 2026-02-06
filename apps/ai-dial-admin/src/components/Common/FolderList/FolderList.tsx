@@ -171,7 +171,7 @@ const FolderList: FC<Props> = ({
     return { baseClassName, selectedClassName, iconClassName };
   };
 
-  const renderTree = (nodes: Asset[], level: number, rootFolderPath?: string) => {
+  const renderTree = (nodes: Asset[] | undefined, level: number, rootFolderPath?: string) => {
     if (rootFolderPath) {
       const findRootNode = (nodes: Asset[]): Asset | null => {
         for (const node of nodes) {
@@ -186,7 +186,7 @@ const FolderList: FC<Props> = ({
         return null;
       };
 
-      const rootNode = findRootNode(nodes);
+      const rootNode = findRootNode(nodes || []);
       if (!rootNode) return null;
       return renderTree([rootNode], level);
     }
@@ -288,7 +288,7 @@ const FolderList: FC<Props> = ({
         isModalOpen={isModalOpen}
         modalType={modalType}
         selectedFolder={selectedFolder}
-        context={context}
+        context={context as () => AssetsFolderContext}
         handleClose={handleModalClose}
       />
     </div>
