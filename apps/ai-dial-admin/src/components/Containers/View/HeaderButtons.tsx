@@ -13,6 +13,7 @@ import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 're
 import { deleteContainer, runContainer, stopContainer } from '@/src/app/actions/deployments';
 import CreateAsset from '@/src/components/Assets/Deployments/CreateAsset';
 import EntityDelete from '@/src/components/Deployments/Modals/EntityDelete';
+import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
 import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
@@ -41,7 +42,6 @@ import {
 } from '@/src/utils/deployments/entity';
 import { getErrorNotification } from '@/src/utils/notification';
 import { createPortal } from 'react-dom';
-import ChangedEntityButtons from '../../EntityHeaderControls/Buttons/ChangedEntityButtons';
 
 interface Props<T> {
   route: ApplicationRoute;

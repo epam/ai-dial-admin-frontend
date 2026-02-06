@@ -12,8 +12,8 @@ import { useI18n } from '@/src/locales/client';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import Maintainer from '@/src/components/BaseControls/Maintainer';
 import { getControlClassName } from '@/src/utils/entities/view';
-import TopicsControl from '../../BaseControls/Topics';
-import { ApplicationRoute } from '../../../types/routes';
+import TopicsControl from '@/src/components/BaseControls/Topics';
+import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
   image: Image;

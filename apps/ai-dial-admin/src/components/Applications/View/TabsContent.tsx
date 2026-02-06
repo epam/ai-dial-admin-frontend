@@ -5,11 +5,9 @@ import { Dispatch, FC, SetStateAction, useMemo } from 'react';
 import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
 import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
 import EntityFeatures from '@/src/components/EntityTabs/Features/Features';
-import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
 import ApplicationAppRoutes from '@/src/components/EntityView/AppRoute/ApplicationAppRoutes';
 import EntityInterceptors from '@/src/components/EntityView/Interceptors/Interceptors';
 import EntityRoles from '@/src/components/EntityView/Roles/Roles';
-import EntityProperties from '@/src/components/EntityView/View/Content/Properties';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
@@ -18,6 +16,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import ParametersTab from '../ParametersTab/ParametersTab';
 import Dependencies from './Dependencies/Dependencies';
+import TabContent from './Properties/TabContent';
 
 interface Props {
   view: ApplicationRoute;
@@ -65,19 +64,13 @@ const TabsContent: FC<Props> = ({
   return (
     <>
       {activeTab === EntityViewTab.Properties && (
-        <PropertiesTabContent
-          entity={selectedApplication}
-          view={ApplicationRoute.Applications}
-          id={selectedApplication.name}
-        >
-          <EntityProperties
-            entity={selectedApplication}
-            runners={applicationSchemes || []}
-            names={names}
-            view={view}
-            onChangeEntity={onChangeApplication}
-          />
-        </PropertiesTabContent>
+        <TabContent
+          selectedApp={selectedApplication}
+          applicationSchemes={applicationSchemes || []}
+          names={names}
+          view={view}
+          onChange={onChangeApplication}
+        />
       )}
 
       {activeTab === EntityViewTab.Features && (

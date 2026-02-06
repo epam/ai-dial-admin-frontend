@@ -5,15 +5,29 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { cloneDeep } from 'lodash';
 
+import {
+  getCoreApplication,
+  removeApplication,
+  updateApplication,
+  updateCoreApplication,
+} from '@/src/app/[lang]/applications/actions';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import { ModalType } from '@/src/components/EntityView/Modals/constants';
+import EntityViewModals from '@/src/components/EntityView/Modals/EntityViewModals';
 import { isDisableRole } from '@/src/components/EntityView/Roles/utils';
+import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
+import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
+import { DialAttachmentData } from '@/src/models/attachment-data';
+import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { EntityRoleLimits } from '@/src/models/dial/base-entity';
+import { DialInterceptor } from '@/src/models/dial/interceptor';
+import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -27,20 +41,6 @@ import {
   VisualizerConnectorRequests,
 } from '@epam/ai-dial-shared';
 import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
-import {
-  getCoreApplication,
-  removeApplication,
-  updateApplication,
-  updateCoreApplication,
-} from '../../../app/[lang]/applications/actions';
-import { APPLICATION_JSON_TYPE } from '../../../constants/request-headers';
-import { useAppContext } from '../../../context/AppContext';
-import { DialAttachmentData } from '../../../models/attachment-data';
-import { DialApplication, DialApplicationScheme } from '../../../models/dial/application';
-import { DialInterceptor } from '../../../models/dial/interceptor';
-import { DialModel } from '../../../models/dial/model';
-import { ModalType } from '../../EntityView/Modals/constants';
-import EntityViewModals from '../../EntityView/Modals/EntityViewModals';
 import TabsContent from './TabsContent';
 
 interface Props {

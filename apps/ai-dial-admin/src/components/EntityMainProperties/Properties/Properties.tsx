@@ -19,6 +19,8 @@ interface Props<T> {
   initialValues?: Partial<T>;
 }
 
+// TODO: remove this component and use EntityProperties and DeploymentProperties directly in the views
+
 const Properties = <T extends object>({
   view,
   runners,
@@ -46,6 +48,7 @@ const Properties = <T extends object>({
   return (
     <DeploymentProperties
       entity={entity}
+      scscsc
       view={view}
       runners={runners}
       isUniqueNameError={isUniqueNameError}

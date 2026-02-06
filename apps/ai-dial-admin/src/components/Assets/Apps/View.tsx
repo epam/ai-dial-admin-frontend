@@ -7,6 +7,7 @@ import { cloneDeep } from 'lodash';
 
 import { getApps, moveApps, removeApp, updateApp } from '@/src/app/[lang]/assets-applications/actions';
 import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
+import TabsContent from '@/src/components/Applications/View/TabsContent';
 import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
 import AssetHeader from '@/src/components/EntityHeaderControls/AssetHeader';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
@@ -28,7 +29,6 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
 import { addTrailingSlash } from '@/src/utils/url';
-import TabsContent from '../../Applications/View/TabsContent';
 
 interface Props {
   etag: string;
