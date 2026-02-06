@@ -8,7 +8,7 @@ import { getDeployment } from '@/src/app/[lang]/test-suites/actions';
 import { CHAT_COMPLETION_METHOD } from '@/src/components/TestSuites/constants/chat-completion-method';
 import { CHAT_COMPLETION_RELATIVE_URL } from '@/src/components/TestSuites/constants/methods';
 import { generateMethodPathCombinations } from '@/src/components/TestSuites/utils/method';
-import { MenuI18nKey } from '@/src/constants/i18n';
+import { MenuI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Deployment } from '@/src/models/evaluation/deployment';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
@@ -66,7 +66,7 @@ const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange }) => {
     <div className="w-full flex flex-row h-full gap-2">
       <DialCollapsibleSidebar containerClassName="border border-primary" title={t(MenuI18nKey.Applications)}>
         <div className="flex flex-col gap-y-1">
-          <span className="dial-tiny text-secondary block">Chat interface</span>
+          <span className="dial-tiny text-secondary block">{t(TestSuitesI18nKey.ChatInterface)}</span>
           <MethodItem
             key="chat-completion"
             item={{ method: 'POST', relativeUrl: CHAT_COMPLETION_RELATIVE_URL }}
@@ -74,7 +74,7 @@ const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange }) => {
             isActive={activeMethodIndex === 0}
             onClick={onMethodClick}
           />
-          {!!methods.length && <span className="dial-tiny text-secondary block">Other</span>}
+          {!!methods.length && <span className="dial-tiny text-secondary block">{t(TestSuitesI18nKey.Other)}</span>}
           {methods.map((method, index) => (
             <MethodItem
               key={(method?.relativeUrl || '') + method.method}
