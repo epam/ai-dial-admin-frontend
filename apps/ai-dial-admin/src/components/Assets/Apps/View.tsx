@@ -27,9 +27,9 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
 import { addTrailingSlash } from '@/src/utils/url';
-import { getAppRunner } from '../../Applications/ParametersTab/utils';
-import AssetHeader from '../../EntityHeaderControls/AssetHeader';
-import { JsonConfiguration } from '../../EntityHeaderControls/models';
+import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
+import AssetHeader from '@/src/components/EntityHeaderControls/AssetHeader';
+import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 
 interface Props {
   etag: string;

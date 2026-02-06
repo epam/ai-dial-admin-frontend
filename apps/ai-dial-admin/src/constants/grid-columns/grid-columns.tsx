@@ -668,10 +668,8 @@ export const TEST_SUITES_COLUMN: ColDef[] = [
 ];
 
 export const TEST_CASES_COLUMN: ColDef[] = [
-  { field: 'name', colId: 'name', headerName: 'Display Name' },
-  { field: 'name', colId: 'name', headerName: 'Test case name' },
-  { field: 'parameters', colId: 'parameters', headerName: 'Parameters' },
-  { field: 'parameters', colId: 'parameters', headerName: 'Parameters' },
+  { field: 'id', colId: 'id', headerName: 'ID' },
+  { field: 'testCaseName', colId: 'testCaseName', headerName: 'Test case name' },
 ];
 
 // TODO: update columns

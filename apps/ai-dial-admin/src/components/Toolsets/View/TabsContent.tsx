@@ -1,25 +1,27 @@
 'use client';
 
-import { FC } from 'react';
+import { FC, useMemo } from 'react';
 
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import EntityRoles from '@/src/components/EntityView/Roles/Roles';
 import Tools from '@/src/components/Tools/Tools';
+import { AuthHeader } from '@/src/components/Toolsets/Auth/Sections/AuthHeader';
 import { DialRole } from '@/src/models/dial/role';
 import { Toolset } from '@/src/models/dial/toolset';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
-import PropertiesTabContent from '../Properties/TabContent';
+import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
+import ToolsetProperties from '../Properties/Properties';
 
 interface Props {
   selectedFormat: ExportFormat;
   activeTab: EntityViewTab;
-  selectedToolset: Toolset;
   originalToolset: Toolset;
-  names: string[];
   isSkipRefresh: boolean;
   roles?: DialRole[] | null;
+  selectedToolset: Toolset;
+  names: string[];
   onChange: (toolset: Toolset) => void;
 }
 
@@ -33,11 +35,22 @@ const TabsContent: FC<Props> = ({
   originalToolset,
   selectedFormat,
 }) => {
+  const headerPostfix = useMemo(() => {
+    return <AuthHeader toolset={selectedToolset} />;
+  }, [selectedToolset]);
+
   return (
     selectedFormat === ExportFormat.ADMIN && (
       <>
         {activeTab === EntityViewTab.Properties && (
-          <PropertiesTabContent selectedToolset={selectedToolset} onChange={onChange} names={names} />
+          <PropertiesTabContent
+            entity={selectedToolset}
+            view={ApplicationRoute.Toolsets}
+            id={selectedToolset.name}
+            headerPostfix={headerPostfix}
+          >
+            <ToolsetProperties selectedToolset={selectedToolset} onChangeToolset={onChange} names={names} />
+          </PropertiesTabContent>
         )}
 
         {activeTab === EntityViewTab.Tools && (

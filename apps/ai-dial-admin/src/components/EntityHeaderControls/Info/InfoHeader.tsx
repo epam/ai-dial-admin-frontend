@@ -10,7 +10,7 @@ import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 interface Props {
   id?: string;
   entity?: { updatedAt?: string; createdAt?: string };
-  view?: ApplicationRoute;
+  view: ApplicationRoute;
   prefix?: ReactNode;
   postfix?: ReactNode;
 }
