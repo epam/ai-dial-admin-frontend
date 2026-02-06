@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { FC, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import {
@@ -18,7 +18,10 @@ import { useI18n } from '@/src/locales/client';
 import AddTestCase from './AddTestCase';
 import ImportFileModal from './Import/ImportFile';
 
-const HeaderButtons = () => {
+interface Props {
+  selectedTestSuiteId: string;
+}
+const HeaderButtons: FC<Props> = ({ selectedTestSuiteId }) => {
   const t = useI18n();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -57,6 +60,7 @@ const HeaderButtons = () => {
       {isImportModalOpen &&
         createPortal(
           <ImportFileModal
+            selectedTestSuiteId={selectedTestSuiteId}
             isModalOpen={isImportModalOpen}
             onClose={() => setIsImportModalOpen(false)}
             onApply={() => {}}

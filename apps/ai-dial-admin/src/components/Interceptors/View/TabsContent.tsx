@@ -10,20 +10,21 @@ import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import { RUNNERS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
+import { DefaultsValue } from '@/src/models/dial/defaults';
+import { DialInterceptor } from '@/src/models/dial/interceptor';
+import { DialModel } from '@/src/models/dial/model';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
+import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
-import { DialInterceptor } from '@/src/models/dial/interceptor';
 import EntitiesTabContent from './EntitiesTabContent';
 import ParameterSchema from './ParameterSchema/ParameterSchema';
-import PropertiesTabContent, { PropertiesProps } from './Properties/TabContent';
-import { InterceptorTemplate } from '@/src/models/interceptor-template';
-import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { DefaultsValue } from '@/src/models/dial/defaults';
-import { DialModel } from '@/src/models/dial/model';
+import InterceptorProperties from './Properties/Properties';
+import PropertiesTabContent from '../../EntityTabs/PropertiesTabContent';
 
-interface Props extends PropertiesProps {
+interface Props {
   activeTab: EntityViewTab;
   selectedFormat: ExportFormat;
   originalInterceptor: DialInterceptor;
@@ -31,6 +32,9 @@ interface Props extends PropertiesProps {
   applications: DialApplication[];
   interceptorTemplate?: InterceptorTemplate | null;
   appRunners: DialApplicationScheme[];
+  names: string[];
+  selectedInterceptor: DialInterceptor;
+  onChange: (interceptor: DialInterceptor) => void;
 }
 
 const TabsContent: FC<Props> = ({
@@ -88,7 +92,17 @@ const TabsContent: FC<Props> = ({
     selectedFormat === ExportFormat.ADMIN && (
       <>
         {activeTab === EntityViewTab.Properties && (
-          <PropertiesTabContent selectedInterceptor={selectedInterceptor} onChange={onChange} names={names} />
+          <PropertiesTabContent
+            entity={selectedInterceptor}
+            view={ApplicationRoute.Interceptors}
+            id={selectedInterceptor.name}
+          >
+            <InterceptorProperties
+              selectedInterceptor={selectedInterceptor}
+              onChangeInterceptor={onChange}
+              names={names}
+            />
+          </PropertiesTabContent>
         )}
         {activeTab === EntityViewTab.ParameterSchema && (
           <ParameterSchema
