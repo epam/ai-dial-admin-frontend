@@ -12,14 +12,13 @@ import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { Asset } from '@/src/models/dial/deployment-asset';
-import { DialFile } from '@/src/models/dial/file';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { emptyDataTitleMap, listViewTitleMap } from '../ListView/constants';
 import Actions from './Components/Actions';
 import { ModalType } from './Components/Modals';
-import { emptyDataTitleMap, listViewTitleMap } from '../ListView/constants';
 import EntityListHeaderButtons from './HeaderButtons/HeaderButtons';
 
 interface Props<T> {
@@ -35,7 +34,7 @@ interface Props<T> {
   onRemoveEntity: (entity: string) => Promise<ServerActionResponse>;
   onMoveFiles?: (paths: string[], newPath: string) => Promise<ServerActionResponse[]>;
   onBulkDelete?: (paths: { path: string }[]) => Promise<ServerActionResponse>;
-  getAssetContext?: () => AssetsFolderContext<DialFile | Asset>;
+  getAssetContext?: () => AssetsFolderContext<Asset>;
 }
 
 const BaseEntityList = <T extends object>({

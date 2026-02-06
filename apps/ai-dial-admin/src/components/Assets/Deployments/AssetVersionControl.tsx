@@ -1,5 +1,5 @@
 import { useRouter } from 'next/navigation';
-import { Dispatch, FC, SetStateAction, useCallback, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { DialGhostButton, DialNeutralButton, DialSelect, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
@@ -26,9 +26,9 @@ interface Props {
   etag?: string;
   asset: Asset;
   assets?: Asset[];
-  onChangeAsset?: (key: Asset) => void;
+  onChangeAsset?: (asset: Asset) => void;
   addedVersions: string[];
-  setAddedVersions?: Dispatch<SetStateAction<string[]>>;
+  onChangeAddedVersion?: (version: string[]) => void;
 }
 
 const AssetVersionControl: FC<Props> = ({
@@ -38,7 +38,7 @@ const AssetVersionControl: FC<Props> = ({
   assets,
   onChangeAsset,
   addedVersions,
-  setAddedVersions,
+  onChangeAddedVersion,
 }) => {
   const t = useI18n();
 
@@ -112,11 +112,11 @@ const AssetVersionControl: FC<Props> = ({
 
   const onAddVersion = useCallback(
     (version: string) => {
-      setAddedVersions?.((prev) => [...new Set([...prev, version])]);
+      onChangeAddedVersion?.([...new Set([...addedVersions, version])]);
       onChangeVersion(version);
       setIsModalOpen(false);
     },
-    [onChangeVersion, setAddedVersions],
+    [addedVersions, onChangeVersion, onChangeAddedVersion],
   );
 
   return (

@@ -19,7 +19,6 @@ import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEnt
 import { ButtonsI18nKey, ContainersI18nKey, CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
@@ -29,7 +28,6 @@ import { useI18n } from '@/src/locales/client';
 import { Container } from '@/src/models/deployments/containers';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { Asset } from '@/src/models/dial/deployment-asset';
-import { DialFile } from '@/src/models/dial/file';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { CONTAINER_STATUS, CONTAINER_TRANSPORT } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -295,7 +293,7 @@ const HeaderButtons = <T extends Container>({
             onClose={onCloseModal}
             initialValues={getAssetTemplate(route, container, t, transport as CONTAINER_TRANSPORT)}
             onCreate={createEntityAsAsset}
-            context={useToolsetFolder as () => AssetsFolderContext<DialFile | Asset>}
+            context={useToolsetFolder}
           />,
           document.body,
         )}

@@ -11,12 +11,11 @@ import { BasicI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
-import { DialFile } from '@/src/models/dial/file';
+import { Asset } from '@/src/models/dial/deployment-asset';
 import { ImportData } from '@/src/models/import-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
-import { Asset } from '@/src/models/dial/deployment-asset';
 
 export enum ModalType {
   create = 'create',
@@ -63,7 +62,7 @@ interface Props {
   onMove?: (path: string) => void;
   onDeleteBulk?: () => void;
   onClose: () => void;
-  getAssetContext?: () => AssetsFolderContext<Asset | DialFile>;
+  getAssetContext?: () => AssetsFolderContext<Asset>;
 }
 
 const Modals: FC<Props> = ({

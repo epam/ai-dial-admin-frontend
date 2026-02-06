@@ -1,29 +1,27 @@
 import { DialFormPopup, DialRadioGroup, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import FilePath from '@/src/components/Common/FilePath/FilePath';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import IdControl from '@/src/components/BaseControls/Id/Id';
 import VersionControl from '@/src/components/BaseControls/Version';
+import FilePath from '@/src/components/Common/FilePath/FilePath';
 import { BasicI18nKey, ButtonsI18nKey, EntitiesI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { Asset } from '@/src/models/dial/deployment-asset';
-import { DialFile } from '@/src/models/dial/file';
-import { DialPrompt } from '@/src/models/dial/prompt';
 import { DuplicationTypes } from '@/src/types/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { duplicateEntityMap, getClonedEntityName, getCloneTitle } from '@/src/utils/entities/duplicate-entity';
-import { addTrailingSlash } from '@/src/utils/url';
 import { isDeploymentAsset } from '@/src/utils/is-asset-view';
 import { checkNameVersionCombination, getInitialVersion } from '@/src/utils/prompts/versions';
+import { addTrailingSlash } from '@/src/utils/url';
 
 interface Props {
   view: ApplicationRoute;
   isModalOpen: boolean;
   entity: Asset;
   versionsMap: Record<string, string[]>;
-  context?: () => AssetsFolderContext<DialFile | Asset>;
+  context?: () => AssetsFolderContext<Asset>;
   onClose: () => void;
   onDuplicate: (entity: Asset) => void;
 }
@@ -130,7 +128,7 @@ const DuplicateAsset: FC<Props> = ({ view, isModalOpen, entity, versionsMap, con
             modalTitle={t(BasicI18nKey.MoveToFolder)}
             placeholder={t(EntityPlaceholdersI18nKey.Path)}
             onChange={onChangePath}
-            context={context as () => AssetsFolderContext<DialPrompt | DialFile>}
+            context={context}
           />
         )}
       </div>

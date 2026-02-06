@@ -12,7 +12,6 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { Asset } from '@/src/models/dial/deployment-asset';
-import { DialFile } from '@/src/models/dial/file';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import {
@@ -28,7 +27,7 @@ interface Props {
   view: ApplicationRoute;
   isModalOpen: boolean;
   initialValues?: Partial<Asset>;
-  context?: () => AssetsFolderContext<DialFile | Asset>;
+  context?: () => AssetsFolderContext<Asset>;
   onClose: () => void;
   onCreate: (entity: Asset) => Promise<ServerActionResponse>;
 }

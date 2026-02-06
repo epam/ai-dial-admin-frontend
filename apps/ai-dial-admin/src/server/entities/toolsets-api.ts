@@ -5,7 +5,7 @@ import { API } from '../api';
 import { BaseApi } from '../base-api';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
-import { getToolsetBasicBody, getToolsetSignInBody } from '../../utils/toolset/toolset-auth';
+import { getToolsetBasicBody, getToolsetSignInBody } from '@/src/utils/toolset/toolset-auth';
 
 export const TOOLSETS_URL = `${API}/toolSets`;
 export const TOOLSET_URL = (name?: string) => `${TOOLSETS_URL}/${name || ''}`;

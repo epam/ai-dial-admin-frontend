@@ -4,34 +4,24 @@ import { ReactNode } from 'react';
 
 import { TabModel } from '@epam/ai-dial-ui-kit';
 
+import ReadonlyId from '@/src/components/BaseControls/Id/ReadonlyId';
 import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
-import { ServerActionResponse } from '@/src/models/server-action';
-import { ApplicationRoute } from '@/src/types/routes';
 import { getHeaderClassName } from '@/src/utils/entities/view';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
-import ReadonlyId from '@/src/components/BaseControls/Id/ReadonlyId';
-import SimpleButtonsWrapper from './Wrappers/SimpleButtonsWrapper';
-import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
+import SimpleButtonsWrapper, { SimpleButtonsWrapperProps } from './Wrappers/SimpleButtonsWrapper';
 
 interface Entity {
   id?: string;
   $id?: string;
   name?: string;
 }
-interface Props<T> {
-  entity: T;
-  etag?: string;
-  view: ApplicationRoute;
+
+interface Props<T> extends SimpleButtonsWrapperProps<T> {
   tabs: TabModel[];
   activeTab: EntityViewTab;
   children?: ReactNode;
-  isChanged: boolean;
-  jsonConfiguration: JsonConfiguration;
 
   onChangeActiveTab: (tab: EntityViewTab) => void;
-  onDiscard: () => void;
-  onSave: () => void;
-  onRemove: (entity: string) => Promise<ServerActionResponse>;
 }
 
 const SimpleEntityHeader = <T extends Entity>({

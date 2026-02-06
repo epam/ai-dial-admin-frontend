@@ -2,7 +2,6 @@
 
 import { useCallback, useMemo, useRef, useState } from 'react';
 
-import { useRouter } from 'next/navigation';
 import {
   ConfirmationPopupVariant,
   DialConfirmationPopup,
@@ -12,21 +11,22 @@ import {
   SelectSize,
   SelectVariant,
 } from '@epam/ai-dial-ui-kit';
+import { useRouter } from 'next/navigation';
 
 import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
-import { DialFile } from '@/src/models/dial/file';
+import { Asset } from '@/src/models/dial/deployment-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
+import { isAssetView, isBuildersView } from '@/src/utils/is-asset-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
-import { getConfirmation, getNotificationDescription, getNotificationTitle, getTitle } from './utils';
-import { isAssetView, isBuildersView } from '@/src/utils/is-asset-view';
-import RelatedArtefacts from './RelatedArtefact';
-import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { AllVersionValue } from './constants';
+import RelatedArtefacts from './RelatedArtefact';
+import { getConfirmation, getNotificationDescription, getNotificationTitle, getTitle } from './utils';
 
 interface Artefact {
   name?: string;
@@ -45,7 +45,7 @@ interface Props<T> {
   onResetEntity?: () => void;
   onRemoveEntity: (entity: string) => Promise<ServerActionResponse>;
   onCloseModal: () => void;
-  getAssetContext?: () => AssetsFolderContext<DialFile>;
+  getAssetContext?: () => AssetsFolderContext<Asset>;
 }
 
 const DeleteConfirmationModal = <T extends Artefact>({

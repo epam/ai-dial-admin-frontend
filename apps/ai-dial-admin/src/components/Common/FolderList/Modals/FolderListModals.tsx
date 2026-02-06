@@ -14,7 +14,6 @@ import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
-import { DialFile } from '@/src/models/dial/file';
 import { DialFolder } from '@/src/models/dial/folder';
 import { DialRule } from '@/src/models/dial/rule';
 import { ImportResult } from '@/src/models/import';
@@ -24,6 +23,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { findFolderSiblings, getFolderName } from '@/src/utils/files/folder';
 import { getFolderNameAndPath } from '@/src/utils/files/path';
 import { getSuccessNotification } from '@/src/utils/notification';
+import { Asset } from '../../../../models/dial/deployment-asset';
 import DeleteFolder from './DeleteFolder';
 import RenameFolder from './RenameFolder';
 
@@ -40,7 +40,7 @@ interface Props {
   view?: ApplicationRoute;
   selectedFolder?: string;
   handleClose: () => void;
-  context?: () => AssetsFolderContext<DialFile>;
+  context?: () => AssetsFolderContext<Asset>;
 }
 
 const FolderListModals: FC<Props> = ({ isModalOpen, modalType, view, selectedFolder = '', handleClose, context }) => {

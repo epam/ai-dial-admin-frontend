@@ -7,6 +7,7 @@ import { cloneDeep } from 'lodash';
 
 import { createPrompt, getPrompts, movePrompts, removePrompt } from '@/src/app/[lang]/prompts/actions';
 import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
+import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { ROOT_FOLDER } from '@/src/constants/file';
@@ -16,10 +17,11 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
-import { DialFile } from '@/src/models/dial/file';
+import { Asset } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
+import { getViewHeaderClassName } from '@/src/utils/entities/view';
 import { changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
@@ -27,9 +29,6 @@ import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
 import { addTrailingSlash } from '@/src/utils/url';
 import PromptProperties from './Properties';
-import { Asset } from '@/src/models/dial/deployment-asset';
-import { getViewHeaderClassName } from '@/src/utils/entities/view';
-import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
 
 interface Props {
   originalPrompt: DialPrompt;
@@ -158,7 +157,7 @@ const PromptView: FC<Props> = ({ originalPrompt, etag, prompts }) => {
           assets={prompts as Asset[]}
           addedVersions={addedVersions}
           setAddedVersions={setAddedVersions}
-          getAssetContext={usePromptFolder as () => AssetsFolderContext<DialFile | DialPrompt>}
+          getAssetContext={usePromptFolder as unknown as () => AssetsFolderContext<Asset>}
         />
       </div>
       <div className="flex-1 overflow-auto min-h-0">
