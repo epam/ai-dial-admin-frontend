@@ -13,8 +13,8 @@ export const generateMethodPathCombinations = (input?: Record<string, DialRoute>
       continue;
     }
 
-    methods.forEach((method) => {
-      paths.forEach((path) => {
+    paths.forEach((path) => {
+      methods.forEach((method) => {
         result.push({
           method,
           relativeUrl: path,

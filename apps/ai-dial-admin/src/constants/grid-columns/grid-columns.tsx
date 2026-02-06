@@ -699,3 +699,20 @@ export const TOOL_SCHEMA_COLUMNS = (t: (key: string) => string): ColDef[] => [
     tooltipValueGetter: ({ value }) => formatRequired(value, t),
   },
 ];
+
+export const PARAMETERS_SCHEMA_COLUMNS = (t: (key: string) => string): ColDef[] => [
+  { field: 'name', headerName: 'Name', floatingFilter: false, filter: false, sortable: false },
+  { field: 'in', headerName: 'In', floatingFilter: false, filter: false, sortable: false },
+  { field: 'description', headerName: 'Description', floatingFilter: false, filter: false, sortable: false },
+  { field: 'schema.type', headerName: 'Type', floatingFilter: false, filter: false, sortable: false },
+  {
+    field: 'required',
+    headerName: 'Required',
+    floatingFilter: false,
+    filter: false,
+    sortable: false,
+    cellDataType: false,
+    valueFormatter: ({ value }) => formatRequired(value, t),
+    tooltipValueGetter: ({ value }) => formatRequired(value, t),
+  },
+];
