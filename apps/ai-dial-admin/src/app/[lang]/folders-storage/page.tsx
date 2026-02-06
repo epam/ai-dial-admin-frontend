@@ -8,7 +8,7 @@ export default async function Page(params: { searchParams: Promise<{ path: strin
 
   return (
     <SaveValidationContextProvider>
-      <FoldersStorage initialPath={initialPath && decodeURIComponent(initialPath)} />;
+      <FoldersStorage initialPath={initialPath && decodeURIComponent(initialPath)} />
     </SaveValidationContextProvider>
   );
 }

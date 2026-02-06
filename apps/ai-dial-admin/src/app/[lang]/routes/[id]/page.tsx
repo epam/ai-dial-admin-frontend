@@ -2,17 +2,15 @@ import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
 import { rolesApi, routesApi } from '@/src/app/api/api';
-import EntityView from '@/src/components/EntityView/View/EntityView';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialRole } from '@/src/models/dial/role';
 import { DialRoute } from '@/src/models/dial/route';
 import { errorObjLog } from '@/src/server/logger';
-import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { filterNames } from '@/src/utils/entities/filter-names';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { getCoreRoute, removeRoute, updateCoreRoute, updateRoute } from '../actions';
+import RouteView from '@/src/components/Routes/View/View';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,17 +40,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   return (
     <SaveValidationContextProvider>
-      <EntityView
-        view={ApplicationRoute.Routes}
-        names={names}
-        originalEntity={route}
-        roles={roles}
-        etag={etag}
-        removeEntity={removeRoute}
-        updateEntity={updateRoute}
-        getCoreEntity={getCoreRoute}
-        updateCoreEntity={updateCoreRoute}
-      />
+      <RouteView originalRoute={route} names={names} etag={etag} roles={roles} />
     </SaveValidationContextProvider>
   );
 }

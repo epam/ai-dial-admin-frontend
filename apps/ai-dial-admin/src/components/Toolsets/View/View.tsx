@@ -24,7 +24,7 @@ import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getToolsetTabs } from '@/src/utils/tabs/utils';
-import AuthButtons from '../Auth/AuthButtons';
+import AuthButtons from '@/src/components/Toolsets/Auth/AuthButtons';
 import TabsContent from './TabsContent';
 
 interface Props {

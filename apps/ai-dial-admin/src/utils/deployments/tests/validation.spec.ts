@@ -12,6 +12,7 @@ import {
   getCPUError,
   getResourcesConflictError,
   getWhitelistDomainError,
+  getReplicasError,
 } from '../validation';
 import { ErrorType } from '@/src/types/error-type';
 import { ErrorI18nKey } from '@/src/constants/i18n';
@@ -361,6 +362,11 @@ describe('validation utils', () => {
         text: ErrorI18nKey.CpuError,
       });
 
+      expect(getCPUError(0.5)).toEqual({
+        type: ErrorType.INVALID,
+        text: '',
+      });
+
       expect(getCPUError(1, t)).toBeNull();
     });
 
@@ -368,6 +374,11 @@ describe('validation utils', () => {
       expect(getResourcesConflictError(2, 1, t)).toEqual({
         type: ErrorType.INVALID,
         text: ErrorI18nKey.LimitRequestError,
+      });
+
+      expect(getResourcesConflictError(2, 1)).toEqual({
+        type: ErrorType.INVALID,
+        text: '',
       });
 
       expect(getResourcesConflictError(1, 1, t)).toBeNull();
@@ -380,12 +391,22 @@ describe('validation utils', () => {
         type: ErrorType.EMPTY,
         text: ErrorI18nKey.RequiredProperty,
       });
+
+      expect(getWhitelistDomainError()).toEqual({
+        type: ErrorType.EMPTY,
+        text: '',
+      });
     });
 
     test('length error', () => {
       expect(getWhitelistDomainError('a.c', t)).toEqual({
         type: ErrorType.LENGTH,
         text: ErrorI18nKey.MinMaxLength,
+      });
+
+      expect(getWhitelistDomainError('a.c')).toEqual({
+        type: ErrorType.LENGTH,
+        text: '',
       });
     });
 
@@ -394,9 +415,133 @@ describe('validation utils', () => {
         type: ErrorType.INVALID,
         text: ErrorI18nKey.InvalidWhitelistDomain,
       });
+
+      expect(getWhitelistDomainError('asdf')).toEqual({
+        type: ErrorType.INVALID,
+        text: '',
+      });
     });
     test('valid value', () => {
       expect(getWhitelistDomainError('github.com')).toBeNull();
+    });
+  });
+
+  describe('getReplicasError', () => {
+    const mockT = vi.fn((key: string) => `Translated: ${key}`);
+
+    test('should return null when min is undefined', () => {
+      const result = getReplicasError(undefined, 10, mockT);
+      expect(result).toBeNull();
+    });
+
+    test('should return null when max is undefined', () => {
+      const result = getReplicasError(5, undefined, mockT);
+      expect(result).toBeNull();
+    });
+
+    test('should return null when both min and max are undefined', () => {
+      const result = getReplicasError(undefined, undefined, mockT);
+      expect(result).toBeNull();
+    });
+
+    test('should return null when min equals max', () => {
+      const result = getReplicasError(5, 5, mockT);
+      expect(result).toBeNull();
+    });
+
+    test('should return null when min is less than max', () => {
+      const result = getReplicasError(3, 10, mockT);
+      expect(result).toBeNull();
+    });
+
+    test('should return error when min is greater than max', () => {
+      const result = getReplicasError(10, 5, mockT);
+
+      expect(result).toEqual({
+        type: ErrorType.INVALID,
+        text: `Translated: ${ErrorI18nKey.ReplicasError}`,
+      });
+      expect(mockT).toHaveBeenCalledWith(ErrorI18nKey.ReplicasError);
+    });
+
+    test('should return error with empty text when t is not provided and min > max', () => {
+      const result = getReplicasError(10, 5);
+
+      expect(result).toEqual({
+        type: ErrorType.INVALID,
+        text: '',
+      });
+    });
+
+    test('should return error with translated text when t is provided and min > max', () => {
+      const result = getReplicasError(15, 3, mockT);
+
+      expect(result).toEqual({
+        type: ErrorType.INVALID,
+        text: `Translated: ${ErrorI18nKey.ReplicasError}`,
+      });
+    });
+
+    test('should handle large numbers when min > max', () => {
+      const result = getReplicasError(1000, 999, mockT);
+
+      expect(result).toEqual({
+        type: ErrorType.INVALID,
+        text: `Translated: ${ErrorI18nKey.ReplicasError}`,
+      });
+    });
+
+    test('should handle large numbers when min < max', () => {
+      const result = getReplicasError(999, 1000, mockT);
+      expect(result).toBeNull();
+    });
+
+    test('should return null when min is 0 and max is positive', () => {
+      const result = getReplicasError(0, 10, mockT);
+      expect(result).toBeNull();
+    });
+
+    test('should return null when both are 0', () => {
+      const result = getReplicasError(0, 0, mockT);
+      expect(result).toBeNull();
+    });
+
+    test('should handle negative min with positive max', () => {
+      const result = getReplicasError(-5, 10, mockT);
+      expect(result).toBeNull();
+    });
+
+    test('should handle negative min greater than negative max', () => {
+      const result = getReplicasError(-5, -10, mockT);
+
+      expect(result).toEqual({
+        type: ErrorType.INVALID,
+        text: `Translated: ${ErrorI18nKey.ReplicasError}`,
+      });
+    });
+
+    test('should return null when only min is provided (max undefined)', () => {
+      const result = getReplicasError(5, undefined, mockT);
+      expect(result).toBeNull();
+    });
+
+    test('should return null when only max is provided (min undefined)', () => {
+      const result = getReplicasError(undefined, 10, mockT);
+      expect(result).toBeNull();
+    });
+
+    test('should handle min = 0 and max undefined', () => {
+      const result = getReplicasError(0, undefined, mockT);
+      expect(result).toBeNull();
+    });
+
+    test('should handle very small difference (min > max by 1)', () => {
+      const result = getReplicasError(6, 5, mockT);
+
+      expect(result).toEqual({
+        type: ErrorType.INVALID,
+        text: `Translated: ${ErrorI18nKey.ReplicasError}`,
+      });
     });
   });
 });

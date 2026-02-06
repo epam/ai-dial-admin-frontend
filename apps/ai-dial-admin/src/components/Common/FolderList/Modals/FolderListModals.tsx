@@ -23,7 +23,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { findFolderSiblings, getFolderName } from '@/src/utils/files/folder';
 import { getFolderNameAndPath } from '@/src/utils/files/path';
 import { getSuccessNotification } from '@/src/utils/notification';
-import { Asset } from '../../../../models/dial/deployment-asset';
+import { Asset } from '@/src/models/dial/deployment-asset';
 import DeleteFolder from './DeleteFolder';
 import RenameFolder from './RenameFolder';
 
