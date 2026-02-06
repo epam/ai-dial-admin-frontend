@@ -48,7 +48,6 @@ const Properties = <T extends object>({
   return (
     <DeploymentProperties
       entity={entity}
-      scscsc
       view={view}
       runners={runners}
       isUniqueNameError={isUniqueNameError}
