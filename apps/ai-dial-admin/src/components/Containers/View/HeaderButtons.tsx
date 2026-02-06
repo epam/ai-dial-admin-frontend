@@ -27,7 +27,7 @@ import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { Container } from '@/src/models/deployments/containers';
 import { BaseEntity } from '@/src/models/dial/base-entity';
-import { Asset } from '@/src/models/dial/deployment-asset';
+import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { CONTAINER_STATUS, CONTAINER_TRANSPORT } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -55,7 +55,7 @@ interface Props<T> {
   onSave: () => void;
   toggleJsonEditor?: () => void;
   createEntity: (entity: BaseEntity) => Promise<ServerActionResponse>;
-  createEntityAsAsset?: (entity: Asset) => Promise<ServerActionResponse>;
+  createEntityAsAsset?: (entity: AssetWithVersion) => Promise<ServerActionResponse>;
   entityNames: string[];
   transport?: CONTAINER_TRANSPORT;
 }

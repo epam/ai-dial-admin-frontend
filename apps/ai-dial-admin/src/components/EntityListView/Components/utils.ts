@@ -7,7 +7,7 @@ import { getPrompt } from '@/src/app/[lang]/prompts/actions';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { DialApplication } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
-import { Asset, AssetApp, AssetToolset } from '@/src/models/dial/deployment-asset';
+import { AssetWithVersion, AssetApp, AssetToolset } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isAssetWithVersion } from '@/src/utils/is-asset-view';
@@ -36,13 +36,14 @@ export const getData = async <T>(route: ApplicationRoute, ref: RefObject<T | und
   return null;
 };
 
-export const getCorrectPath = (entity?: Asset | null) => `${entity?.folderId}${entity?.name}__${entity?.version}`;
+export const getCorrectPath = (entity?: AssetWithVersion | null) =>
+  `${entity?.folderId}${entity?.name}__${entity?.version}`;
 
 export const preparePathForAsset = (entity: BaseEntity, route: ApplicationRoute) => {
   if (isAssetWithVersion(route)) {
     return {
       ...entity,
-      path: getCorrectPath(entity as Asset),
+      path: getCorrectPath(entity as AssetWithVersion),
     };
   }
   return entity;
