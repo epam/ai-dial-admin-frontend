@@ -10,7 +10,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import TestCases from '../TestCases/TestCases';
 import TestSuiteProperties from '../Properties/Properties';
-import PropertiesTabContent from '../../EntityTabs/PropertiesTabContent';
+import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
 
 interface Props {
   activeTab: EntityViewTab;
