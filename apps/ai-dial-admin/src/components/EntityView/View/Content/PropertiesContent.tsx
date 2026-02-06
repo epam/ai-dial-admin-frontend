@@ -6,11 +6,9 @@ import DeploymentProperties from '@/src/components/Assets/Deployments/Properties
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import EntityProperties from '@/src/components/EntityView/View/Content/Properties';
 import ModelProperties from '@/src/components/ModelView/ModelProperties/ModelProperties';
-import RouteProperties from '@/src/components/Routes/Properties/RouteProperties';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DeploymentAsset } from '@/src/models/dial/deployment-asset';
-import { DialRoute } from '@/src/models/dial/route';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isDeploymentAsset } from '@/src/utils/is-asset-view';
 
@@ -26,10 +24,6 @@ const PropertiesContent: FC<Props> = ({ applicationSchemes, names, view, selecte
   const getPropertiesView = useCallback(() => {
     if (view === ApplicationRoute.Models) {
       return <ModelProperties model={selectedEntity} modelsNames={names} onChangeModel={onChangeEntity} />;
-    }
-
-    if (view === ApplicationRoute.Routes) {
-      return <RouteProperties route={selectedEntity as DialRoute} onChange={onChangeEntity} />;
     }
 
     if (isDeploymentAsset(view)) {

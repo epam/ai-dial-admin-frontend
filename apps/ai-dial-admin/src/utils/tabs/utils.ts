@@ -221,11 +221,11 @@ export const runsTab = (t: (stringToTranslate: string) => string) => ({
   label: t(TabsI18nKey.Runs),
 });
 
-export const getViewTabs = (t: (stringToTranslate: string) => string, view: ApplicationRoute): TabModel[] => {
-  if (view === ApplicationRoute.Routes) {
-    return [propertiesTab(t), rolesTab(t), auditTab(t)];
-  }
+export const getRouteTabs = (t: (stringToTranslate: string) => string): TabModel[] => {
+  return [propertiesTab(t), rolesTab(t), auditTab(t)];
+};
 
+export const getViewTabs = (t: (stringToTranslate: string) => string, view: ApplicationRoute): TabModel[] => {
   const tabs: TabModel[] = [propertiesTab(t), featuresTab(t), rolesTab(t), interceptorsTab(t)];
 
   if (view === ApplicationRoute.Applications) {
@@ -255,7 +255,7 @@ export const getAppRunnerTabs = (t: (stringToTranslate: string) => string): TabM
   ];
 };
 
-export const getRouteTabs = (t: (stringToTranslate: string) => string): TabModel[] => {
+export const getAppRouteTabs = (t: (stringToTranslate: string) => string): TabModel[] => {
   return [propertiesTab(t), attachmentsTab(t), rolesTab(t)];
 };
 

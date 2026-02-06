@@ -60,7 +60,10 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset }) => {
   }, [t]);
 
   const isEmptyRequest = useMemo(() => {
-    return !tool?.inputSchema || (tool?.inputSchema && Object.keys(tool?.inputSchema.properties).length === 0);
+    return (
+      !tool?.inputSchema ||
+      (tool?.inputSchema && (!tool?.inputSchema.properties || Object.keys(tool?.inputSchema.properties).length === 0))
+    );
   }, [tool?.inputSchema]);
 
   const sendRequest = useCallback(() => {

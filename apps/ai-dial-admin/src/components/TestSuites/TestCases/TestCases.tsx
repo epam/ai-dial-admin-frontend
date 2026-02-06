@@ -92,7 +92,7 @@ const TestCases: FC<Props> = ({ selectedTestSuite }) => {
         onGridReady={onGridReady}
         allowPadding={false}
       >
-        <HeaderButtons />
+        <HeaderButtons selectedTestSuiteId={selectedTestSuite.id as string} />
       </ListView>
     </div>
   );

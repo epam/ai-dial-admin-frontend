@@ -1,34 +1,56 @@
 'use client';
 
-import { FC, useCallback } from 'react';
+import { FC, useCallback, useMemo } from 'react';
 
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
 import { getRelevantRolesForKey } from '@/src/components/AddEntitiesTab/utils';
+import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
+import ValidityStatus from '@/src/components/EntityView/Status/ValidityStatus';
 import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { EntitiesI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, EntityFieldsI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
 import { DialRole } from '@/src/models/dial/role';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
+import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import { cloneDeep } from 'lodash';
-import PropertiesTabContent from './Properties/TabContent';
+import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
+import KeyProperties from './Properties/Properties';
 
 interface Props {
   selectedFormat: ExportFormat;
   activeTab: EntityViewTab;
-  selectedKey: DialKey;
   roles: DialRole[];
   names: string[];
   keys: string[];
+  selectedKey: DialKey;
   onChange: (key: DialKey) => void;
 }
 
-const TabsContent: FC<Props> = ({ activeTab, roles, selectedKey, onChange, selectedFormat, ...props }) => {
+const TabsContent: FC<Props> = ({ activeTab, roles, selectedKey, onChange, selectedFormat, keys, names }) => {
   const t = useI18n();
+
+  const headerPostfix = useMemo(() => {
+    return (
+      <>
+        <LabelledText
+          label={t(EntityFieldsI18nKey.keyGeneratedAt)}
+          text={formatDateTimeToLocalString(selectedKey.keyGeneratedAt)}
+        />
+        <LabelledText
+          label={t(EntityFieldsI18nKey.expiresAt)}
+          text={formatDateTimeToLocalString(selectedKey.expiresAt)}
+        />
+        <LabelledText label={t(EntityFieldsI18nKey.status)}>
+          <ValidityStatus validityState={selectedKey.validityState} />
+        </LabelledText>
+      </>
+    );
+  }, [selectedKey.keyGeneratedAt, selectedKey.expiresAt, selectedKey.validityState, t]);
 
   const onAddRoles = useCallback(
     (rows: EntitiesGridData[]) => {
@@ -55,7 +77,20 @@ const TabsContent: FC<Props> = ({ activeTab, roles, selectedKey, onChange, selec
     selectedFormat === ExportFormat.ADMIN && (
       <>
         {activeTab === EntityViewTab.Properties && (
-          <PropertiesTabContent selectedKey={selectedKey} onChange={onChange} {...props} />
+          <PropertiesTabContent
+            entity={selectedKey}
+            view={ApplicationRoute.Keys}
+            id={selectedKey.name}
+            headerPostfix={headerPostfix}
+          >
+            <KeyProperties
+              entity={selectedKey}
+              names={names}
+              keys={keys}
+              onChangeKey={onChange}
+              isKeyImmutable={true}
+            />
+          </PropertiesTabContent>
         )}
         {activeTab === EntityViewTab.Roles && (
           <AddEntitiesView

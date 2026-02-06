@@ -5,7 +5,7 @@ export interface DialScheme {
 }
 
 export interface DialSchemeProperty {
-  title: string;
+  title?: string;
   type?: string;
   anyOf?: DialSchemePropertyType[];
   oneOf?: DialSchemePropertyType[];

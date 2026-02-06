@@ -151,8 +151,8 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
         setNames((prev) => [...prev, container.name]);
         duplicateContainer(currentContainer.name, container.name, container.displayName).then((res) => {
           if (res.success) {
-            router.refresh();
             setCurrentContainer(null);
+            router.push(getUrnForEntity(route, res.response));
           } else {
             setNames((prev) => prev.filter((n) => n !== container.name));
             showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
@@ -160,7 +160,7 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
         });
       }
     },
-    [currentContainer, router, showNotification],
+    [currentContainer, route, router, showNotification],
   );
 
   const onDelete = useCallback(() => {

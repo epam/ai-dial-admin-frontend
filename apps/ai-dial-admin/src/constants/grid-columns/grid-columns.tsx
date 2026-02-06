@@ -668,10 +668,8 @@ export const TEST_SUITES_COLUMN: ColDef[] = [
 ];
 
 export const TEST_CASES_COLUMN: ColDef[] = [
-  { field: 'name', colId: 'name', headerName: 'Display Name' },
-  { field: 'name', colId: 'name', headerName: 'Test case name' },
-  { field: 'parameters', colId: 'parameters', headerName: 'Parameters' },
-  { field: 'parameters', colId: 'parameters', headerName: 'Parameters' },
+  { field: 'id', colId: 'id', headerName: 'ID' },
+  { field: 'testCaseName', colId: 'testCaseName', headerName: 'Test case name' },
 ];
 
 // TODO: update columns
@@ -690,6 +688,23 @@ export const TOOL_SCHEMA_COLUMNS = (t: (key: string) => string): ColDef[] => [
   { field: 'field', headerName: 'Field', floatingFilter: false, filter: false, sortable: false },
   { field: 'description', headerName: 'Description', floatingFilter: false, filter: false, sortable: false },
   { field: 'type', headerName: 'Type', floatingFilter: false, filter: false, sortable: false },
+  {
+    field: 'required',
+    headerName: 'Required',
+    floatingFilter: false,
+    filter: false,
+    sortable: false,
+    cellDataType: false,
+    valueFormatter: ({ value }) => formatRequired(value, t),
+    tooltipValueGetter: ({ value }) => formatRequired(value, t),
+  },
+];
+
+export const PARAMETERS_SCHEMA_COLUMNS = (t: (key: string) => string): ColDef[] => [
+  { field: 'name', headerName: 'Name', floatingFilter: false, filter: false, sortable: false },
+  { field: 'in', headerName: 'In', floatingFilter: false, filter: false, sortable: false },
+  { field: 'description', headerName: 'Description', floatingFilter: false, filter: false, sortable: false },
+  { field: 'schema.type', headerName: 'Type', floatingFilter: false, filter: false, sortable: false },
   {
     field: 'required',
     headerName: 'Required',

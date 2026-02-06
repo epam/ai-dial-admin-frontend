@@ -2,6 +2,7 @@ export const CHAT_COMPLETION_METHOD = {
   method: 'POST',
   operationId: 'sendChatCompletionRequest',
   summary: '/openai/deployments/{Deployment Name}/chat/completions',
+  relativeUrl: '/chat/completions',
   description:
     'This API is based on the OpenAI Azure API and extended to support working with advanced DIAL agents and applications.',
   parameters: [
@@ -22,7 +23,6 @@ export const CHAT_COMPLETION_METHOD = {
       },
       required: true,
       description: 'The API version to use for this request. Follows the `YYYY-MM-DD[-preview]` format.',
-      example: '2024-10-21',
     },
     {
       name: 'X-CACHE-POLICY',
@@ -36,541 +36,511 @@ export const CHAT_COMPLETION_METHOD = {
       },
     },
   ],
-  requestBody: {
-    required: true,
-    content: {
-      'application/json': {
-        schema: {
+  requestBodySchema: {
+    type: 'object',
+    properties: {
+      model: {
+        type: 'string',
+        description: 'The name of the model to use.',
+      },
+      messages: {
+        type: 'array',
+        minItems: 1,
+        description: 'A list of messages comprising the conversation so far.',
+        items: {
+          oneOf: [
+            {
+              type: 'object',
+              title: 'Developer message',
+              description: 'Developer-provided instructions that the model should follow.',
+              properties: {
+                content: { oneOf: [{ type: 'string' }] },
+                custom_fields: {
+                  type: 'object',
+                  properties: {
+                    cache_breakpoint: {
+                      type: 'object',
+                      properties: {
+                        expire_at: { type: 'string' },
+                      },
+                    },
+                  },
+                },
+                role: { type: 'string', enum: ['developer'] },
+                name: { type: 'string' },
+              },
+              required: ['content', 'role'],
+            },
+            {
+              type: 'object',
+              title: 'System message',
+              properties: {
+                content: { oneOf: [{ type: 'string' }] },
+                custom_fields: { type: 'object' },
+                role: { type: 'string', enum: ['system'] },
+                name: { type: 'string' },
+              },
+              required: ['content', 'role'],
+            },
+            {
+              type: 'object',
+              title: 'User message',
+              properties: {
+                content: { oneOf: [{ type: 'string' }] },
+                custom_content: {
+                  type: 'object',
+                  properties: {
+                    attachments: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          type: { type: 'string', default: 'text/markdown' },
+                          title: { type: 'string' },
+                          data: { type: 'string' },
+                          url: { type: 'string' },
+                          reference_type: { type: 'string' },
+                          reference_url: { type: 'string' },
+                        },
+                      },
+                    },
+                    form_value: { type: 'object', additionalProperties: true },
+                  },
+                },
+                custom_fields: { type: 'object' },
+                role: { type: 'string', enum: ['user'] },
+                name: { type: 'string' },
+              },
+              required: ['content', 'role'],
+            },
+            {
+              type: 'object',
+              title: 'Assistant message',
+              properties: {
+                content: { type: 'string' },
+                custom_content: {
+                  type: 'object',
+                  properties: {
+                    state: { type: 'object', additionalProperties: true },
+                    attachments: {
+                      type: 'array',
+                      items: { type: 'object' },
+                    },
+                    form_schema: { type: 'object', additionalProperties: true },
+                  },
+                },
+                custom_fields: { type: 'object' },
+                refusal: { type: 'string' },
+                role: { type: 'string', enum: ['assistant'] },
+                name: { type: 'string' },
+                tool_calls: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      id: { type: 'string' },
+                      type: { type: 'string', enum: ['function'] },
+                      function: {
+                        type: 'object',
+                        properties: {
+                          name: { type: 'string' },
+                          arguments: { type: 'string' },
+                        },
+                        required: ['name', 'arguments'],
+                      },
+                    },
+                    required: ['id', 'type', 'function'],
+                  },
+                },
+                function_call: {
+                  type: 'object',
+                  properties: { arguments: {} },
+                },
+              },
+              required: ['role'],
+            },
+            {
+              type: 'object',
+              title: 'Tool message',
+              properties: {
+                role: { type: 'string', enum: ['tool'] },
+                content: { oneOf: [{ type: 'string' }] },
+                custom_fields: { type: 'object' },
+                tool_call_id: { type: 'string' },
+              },
+              required: ['role', 'content', 'tool_call_id'],
+            },
+            {
+              type: 'object',
+              title: 'Function message',
+              properties: {
+                role: { type: 'string', enum: ['function'] },
+                content: { type: 'string' },
+                custom_fields: { type: 'object' },
+                name: { type: 'string' },
+              },
+              required: ['role', 'content', 'name'],
+            },
+          ],
+        },
+      },
+      functions: {
+        description: 'Deprecated in favor of `tools`. A list of functions the model may generate JSON inputs for.',
+        type: 'array',
+        minItems: 1,
+        maxItems: 128,
+        items: {
           type: 'object',
           properties: {
-            model: {
-              type: 'string',
-              description: 'The name of the model to use.',
-            },
-            messages: {
-              type: 'array',
-              minItems: 1,
-              description: 'A list of messages comprising the conversation so far.',
-              items: {
-                $ref: '#/components/schemas/ChatCompletionRequestMessage',
+            description: { type: 'string' },
+            name: { type: 'string' },
+            parameters: { type: 'object', additionalProperties: true },
+            strict: { type: 'boolean', default: false },
+          },
+          required: ['name'],
+        },
+      },
+      function_call: {
+        description: 'Deprecated in favor of `tool_choice`. Controls which (if any) `function` is called by the model.',
+        oneOf: [
+          { type: 'string', enum: ['none', 'auto'] },
+          { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] },
+        ],
+      },
+      tools: {
+        type: 'array',
+        description: 'A list of tools the model may call.',
+        items: {
+          type: 'object',
+          properties: {
+            type: { type: 'string', enum: ['function'] },
+            function: {
+              type: 'object',
+              properties: {
+                description: { type: 'string' },
+                name: { type: 'string' },
+                parameters: { type: 'object', additionalProperties: true },
+                strict: { type: 'boolean', default: false },
               },
+              required: ['name'],
             },
-            functions: {
-              deprecated: true,
-              description:
-                'Deprecated in favor of `tools`.\n\nA list of functions the model may generate JSON inputs for.',
-              type: 'array',
-              minItems: 1,
-              maxItems: 128,
-              items: {
-                $ref: '#/components/schemas/ChatCompletionFunction',
-              },
+            custom_fields: { type: 'object' },
+          },
+          required: ['type', 'function'],
+        },
+      },
+      tool_choice: {
+        oneOf: [
+          { type: 'string', enum: ['none', 'auto', 'required'] },
+          {
+            type: 'object',
+            properties: {
+              type: { type: 'string', enum: ['function'] },
+              function: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] },
             },
-            function_call: {
-              deprecated: true,
-              description:
-                'Deprecated in favor of `tool_choice`.\n\nControls which (if any) `function` is called by the model.\n\n`none` means the model will not call a `function` and instead generates a `message`.\n\n`auto` means the model can pick between generating a `message` or calling a `function`.\n\nSpecifying a particular function via `{"name": "my_function"}` forces the model to call that function.\n\n`none` is the default when no functions are present. `auto` is the default if functions are present.',
-              oneOf: [
-                {
+            required: ['type', 'function'],
+          },
+        ],
+      },
+      addons: {
+        type: 'array',
+        items: {
+          oneOf: [
+            { type: 'object', properties: { name: { type: 'string' } } },
+            { type: 'object', properties: { url: { type: 'string' } } },
+          ],
+        },
+        description: 'A list of Addons the Assistant can use.',
+      },
+      stream: {
+        description: 'If set, partial message deltas will be sent.',
+        type: 'boolean',
+        default: false,
+      },
+      temperature: { type: 'number', minimum: 0, maximum: 2, default: 1 },
+      top_p: { type: 'number', minimum: 0, maximum: 1, default: 1 },
+      n: { type: 'integer', minimum: 1, maximum: 128, default: 1 },
+      parallel_tool_calls: { type: 'boolean', default: true },
+      stop: {
+        oneOf: [{ type: 'string' }, { type: 'array', minItems: 1, maxItems: 4, items: { type: 'string' } }],
+      },
+      max_tokens: { type: 'integer', description: 'The maximum number of tokens to generate by the Assistant.' },
+      max_prompt_tokens: {
+        type: 'integer',
+        description: 'Maximum number of prompt tokens to handle in a request.',
+      },
+      max_completion_tokens: { type: 'integer' },
+      presence_penalty: { type: 'number', minimum: -2, maximum: 2, default: 0 },
+      frequency_penalty: { type: 'number', minimum: -2, maximum: 2, default: 0 },
+      logit_bias: { type: 'object', additionalProperties: true, default: null },
+      seed: { type: 'integer', minimum: -Number.MAX_SAFE_INTEGER, maximum: Number.MAX_SAFE_INTEGER },
+      user: { type: 'string' },
+      response_format: {
+        oneOf: [
+          { type: 'object', properties: { type: { type: 'string', enum: ['text'] } }, required: ['type'] },
+          {
+            type: 'object',
+            properties: { type: { type: 'string', enum: ['json_object'] } },
+            required: ['type'],
+          },
+          {
+            type: 'object',
+            properties: {
+              type: { type: 'string', enum: ['json_schema'] },
+              json_schema: { type: 'object', additionalProperties: true },
+            },
+            required: ['type', 'json_schema'],
+          },
+        ],
+      },
+      custom_fields: { type: 'object', additionalProperties: true },
+    },
+    required: ['messages'],
+  },
+  responseBodySchema: {
+    type: 'object',
+    properties: {
+      id: {
+        type: 'string',
+        description: 'The ID of the response.',
+      },
+      object: {
+        type: 'string',
+        description: 'Object type. Always is `chat.completion` for non-streaming.',
+      },
+      created: {
+        type: 'integer',
+        description: 'The response timestamp. The time in seconds since the epoch.',
+      },
+      model: {
+        type: 'string',
+        description: 'The name of the model that generated the response. May not be the same as the deployment name.',
+      },
+      choices: {
+        type: 'array',
+        description: 'List of generated messages. Contains _n_ items.',
+        items: {
+          type: 'object',
+          properties: {
+            index: {
+              type: 'integer',
+              description: 'The index of the choice from `0` to `n - 1`.',
+            },
+            message: {
+              type: 'object',
+              description: 'The Assistant message.',
+              properties: {
+                role: {
+                  type: 'string',
+                  enum: ['assistant'],
+                  description: 'The role of the author of the response message.',
+                },
+                refusal: {
+                  type: 'string',
+                  description: 'The refusal message generated by the model.',
+                },
+                content: {
                   type: 'string',
                   description:
-                    '`none` means the model will not call a function and instead generates a message. `auto` means the model can pick between generating a message or calling a function.',
-                  enum: ['none', 'auto'],
+                    'The contents of the message. `content` is set for all messages except messages with tool calls, function calls and refusals.',
                 },
-                {
-                  $ref: '#/components/schemas/ChatCompletionFunctionCallOption',
-                },
-              ],
-            },
-            tools: {
-              type: 'array',
-              description:
-                'A list of tools the model may call. Currently, only `functions` are supported as a tool. Use this to provide a list of `functions` the model may generate JSON inputs for. A max of 128 functions are supported.',
-              items: {
-                $ref: '#/components/schemas/ChatCompletionTool',
-              },
-            },
-            tool_choice: {
-              $ref: '#/components/schemas/ChatCompletionToolChoiceOption',
-            },
-            addons: {
-              type: 'array',
-              items: {
-                $ref: '#/components/schemas/ChatCompletionAddon',
-              },
-              description: 'A list of Addons the Assistant can use.',
-              deprecated: true,
-            },
-            stream: {
-              description:
-                'If set, partial message deltas will be sent. Tokens will be sent as data-only server-sent events as they become available, with the stream terminated by a `data: [DONE]` message.',
-              type: 'boolean',
-              nullable: true,
-              default: false,
-            },
-            temperature: {
-              type: 'number',
-              description:
-                'What sampling temperature to use, between 0 and 2. Higher values such as 0.8 make the output more random, while lower values like 0.2 make it more focused and deterministic.',
-              minimum: 0,
-              maximum: 2,
-              default: 1,
-            },
-            top_p: {
-              type: 'number',
-              description:
-                'An alternative to sampling with temperature, called nucleus sampling, where the Assistant considers the results of the tokens with `top_p` probability mass. A value of 0.1 implies that only the tokens representing the top 10% probability mass are taken into consideration.',
-              minimum: 0,
-              maximum: 1,
-              default: 1,
-            },
-            n: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 128,
-              default: 1,
-              example: 1,
-              nullable: true,
-              description:
-                'How many chat completion choices to generate for each input message. Note that you will be charged based on the number of generated tokens across all of the choices. Keep `n` as `1` to minimize costs.',
-            },
-            parallel_tool_calls: {
-              $ref: '#/components/schemas/ParallelToolCalls',
-            },
-            stop: {
-              oneOf: [
-                {
-                  type: 'string',
-                  nullable: true,
-                },
-                {
-                  type: 'array',
-                  minItems: 1,
-                  maxItems: 4,
-                  items: {
-                    type: 'string',
+                custom_content: {
+                  type: 'object',
+                  description: 'The custom content of a message.',
+                  properties: {
+                    attachments: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          index: {
+                            type: 'integer',
+                            description:
+                              'In streaming chat completion responses, each attachment includes an `index` field',
+                          },
+                          type: {
+                            type: 'string',
+                            default: 'text/markdown',
+                            description: 'The content type of the attachment. Should be one of the MIME types.',
+                          },
+                          title: {
+                            type: 'string',
+                            description: 'The title of the attachment.',
+                          },
+                          data: {
+                            type: 'string',
+                            description: 'Should follow the format described in the MIME standard for `type`.',
+                          },
+                          url: {
+                            type: 'string',
+                            description:
+                              'The content of `url` should follow the format described in the MIME standard for `type`.',
+                          },
+                          reference_type: {
+                            type: 'string',
+                            description: 'The content type of `reference_url`. Should be one of the MIME types.',
+                          },
+                          reference_url: {
+                            type: 'string',
+                            description:
+                              'If `reference_type` is specified, the content of `reference_url` should follow the format described in the MIME standard for `reference_type`.',
+                          },
+                        },
+                        required: ['index'],
+                      },
+                      description: 'List of attachments.',
+                    },
+                    stages: {
+                      type: 'array',
+                      readOnly: true,
+                      items: {
+                        type: 'object',
+                        properties: {
+                          index: {
+                            type: 'integer',
+                          },
+                          name: {
+                            type: 'string',
+                            description: 'The name of the stage.',
+                          },
+                          content: {
+                            type: 'string',
+                            description: 'The contents of the stage.',
+                          },
+                          attachments: {
+                            type: 'array',
+                            items: {
+                              type: 'object',
+                            },
+                            description: 'List of attachments to the stage.',
+                          },
+                          status: {
+                            type: 'string',
+                            description: 'The execution status of the stage.',
+                          },
+                        },
+                        required: ['index', 'name', 'status'],
+                      },
+                      description: 'The intermediate stages that the Assistant went through to generate the response.',
+                    },
+                    state: {
+                      type: 'object',
+                      additionalProperties: true,
+                      description:
+                        'The internal state of the Assistant. This field can have an arbitrary set of fields with an arbitrary structure. In case of a streaming, the state is published fully in one chunk.',
+                    },
                   },
                 },
-              ],
-              description: 'Up to 4 sequences where the Assistant will stop generating further tokens.',
+                tool_calls: {
+                  type: 'array',
+                  description: 'The tool calls generated by the model, such as function calls.',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      id: {
+                        type: 'string',
+                        description: 'The ID of the `tool` call.',
+                      },
+                      type: {
+                        type: 'string',
+                        enum: ['function'],
+                        description: 'The type of the `tool` call, in this case `function`.',
+                      },
+                      function: {
+                        type: 'object',
+                        description: 'The `function` that the model called.',
+                        properties: {
+                          name: {
+                            type: 'string',
+                            description: 'The name of the `function` to call.',
+                          },
+                          arguments: {
+                            type: 'string',
+                            description:
+                              'The arguments to call the `function` with, as generated by the model in JSON format.',
+                          },
+                        },
+                        required: ['name', 'arguments'],
+                      },
+                    },
+                    required: ['id', 'type', 'function'],
+                  },
+                },
+                function_call: {
+                  type: 'object',
+                  description:
+                    'Deprecated and replaced by `tool_calls`. The name and arguments of a `function` that should be called, as generated by the model.',
+                  properties: {
+                    name: {
+                      type: 'string',
+                      description: 'The name of the `function` to call.',
+                    },
+                    arguments: {
+                      type: 'string',
+                      description:
+                        'The arguments to call the `function` with, as generated by the model in JSON format.',
+                    },
+                  },
+                  required: ['name', 'arguments'],
+                },
+              },
+              required: ['role', 'content', 'refusal'],
             },
-            max_tokens: {
-              type: 'integer',
-              description: 'The maximum number of tokens to generate by the Assistant.',
-              default: null,
-            },
-            max_prompt_tokens: {
-              type: 'integer',
-              description:
-                'The maximum number of prompt tokens to handle in a request. The feature is supported only by the model adapters and the Assistant. Given this parameter an adapter truncates the list of the messages to fit into this limit and passes the truncated list to the actual model.\n\nThe default strategy for truncation is to preserve all system messages and the last message. Whatever else could fit within the limit is added to the final list of messages, prioritizing the most recent messages in the chat over the earlier ones.\n\nThe list of indices of the messages that were discarded is returned in the `statistics.discarded_messages` field of the response.',
-              default: null,
-            },
-            max_completion_tokens: {
-              description:
-                'Note the parameter is only supported in OpenAI models.\n\nAn upper bound for the number of tokens that can be generated for a completion, including visible output tokens and reasoning tokens.',
-              type: 'integer',
-              nullable: true,
-            },
-            presence_penalty: {
-              type: 'number',
-              description:
-                "A number between `-2.0` and `2.0`. Positive values impose a penalty on new tokens based on their appearance in the current text, thereby increasing the model's tendency to introduce new topics in its responses.",
-              minimum: -2,
-              maximum: 2,
-              default: 0,
-            },
-            frequency_penalty: {
-              type: 'number',
-              description:
-                "A number between `-2.0` and `2.0`. Positive values apply a penalty to new tokens according to their existing frequency in the preceding text, thereby reducing the model's propensity to repeat the exact same line.",
-              minimum: -2,
-              maximum: 2,
-              default: 0,
-            },
-            logit_bias: {
-              type: 'object',
-              additionalProperties: true,
-              description:
-                'Modifies the likelihood of specified tokens appearing in the completion.\n\nAccepts a JSON object that maps tokens (specified by their token ID in the tokenizer) to an associated bias value from `-100` to `100`. Mathematically, the bias is added to the `logits` generated by the model prior to sampling. The exact effect will vary per model, but values between `-1` and `1` should decrease or increase the likelihood of a selection; values like `-100` or `100` should result in a ban or exclusive selection of the relevant token.',
-              default: null,
-            },
-            seed: {
-              type: 'integer',
-              minimum: '-9223372036854775808',
-              maximum: '9223372036854775807',
-              nullable: true,
-              description:
-                'This feature is in Beta.\n\nIf specified, our system will make a best effort to sample deterministically, such that repeated requests with the same `seed` and parameters should return the same result.\nDeterminism is not guaranteed, and you should refer to the `system_fingerprint` response parameter to monitor changes in the backend.',
-            },
-            user: {
+            finish_reason: {
               type: 'string',
-              description: 'A unique identifier representing the end-user.',
-            },
-            response_format: {
               description:
-                'An object specifying the format that the model must output. Compatible with GPT-4o, GPT-4o mini, GPT-4 Turbo and all GPT-3.5 Turbo models newer than `gpt-3.5-turbo-1106`.\n\nSetting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured Outputs which guarantees the model will match your supplied JSON schema.\n\nSetting to `{ "type": "json_object" }` enables JSON mode, which guarantees the message the model generates is valid JSON.\n\nImportant: when using JSON mode, you must also instruct the model to produce JSON yourself via a system or user message. Without this, the model may generate an unending stream of whitespace until the generation reaches the token limit, resulting in a long-running and seemingly "stuck" request. Also note that the message content may be partially cut off if `finish_reason="length"`, which indicates the generation exceeded `max_tokens` or the conversation exceeded the max context length.\n\nNote: JSON mode is not supported by all models.',
-              oneOf: [
-                {
-                  $ref: '#/components/schemas/ResponseFormatText',
-                },
-                {
-                  $ref: '#/components/schemas/ResponseFormatJsonObject',
-                },
-                {
-                  $ref: '#/components/schemas/ResponseFormatJsonSchema',
-                },
-              ],
-            },
-            custom_fields: {
-              $ref: '#/components/schemas/ChatCompletionsCustomFields',
+                'The reason indicating the completion of the choice generation process. The possible reasons:\n\n* `stop`: Successful generation.\n* `length`: The generation was stopped because it surpassed the available number of tokens.\n* `function_call`: The Assistant decided to call a function.\n* `tool_calls`: The Assistant decided to call a tool.\n* `content_filter`: Omitted content due to a flag from content filters.',
             },
           },
-          required: ['messages'],
+          required: ['index', 'message', 'finish_reason'],
         },
-        examples: {
-          'Chat Model': {
-            value: {
-              messages: [
-                {
-                  role: 'user',
-                  content: 'Hello!',
-                },
-              ],
-            },
+      },
+      usage: {
+        type: 'object',
+        description:
+          'This field contains information about the tokens from the model that were used to generate the response.',
+        properties: {
+          prompt_tokens: {
+            type: 'integer',
+            description: 'The number of tokens in the request to the model.',
           },
-          'Chat Model Streaming': {
-            value: {
-              stream: true,
-              messages: [
-                {
-                  role: 'user',
-                  content: 'Hello!',
-                },
-              ],
-            },
+          completion_tokens: {
+            type: 'integer',
+            description: 'The number of tokens in the response from the model.',
+          },
+          total_tokens: {
+            type: 'integer',
+            description: 'The sum of prompt and completion tokens.',
           },
         },
       },
-    },
-  },
-  responses: {
-    '200': {
-      description: 'Success',
-      content: {
-        'application/json': {
-          schema: {
-            $ref: '#/components/schemas/CreateChatCompletionResponse',
-          },
-          examples: {
-            'Chat Model': {
-              value: {
-                id: 'chatcmpl-8mt8AF8xkczUdRv250bpmU6KqMfAb',
-                choices: [
-                  {
-                    finish_reason: 'stop',
-                    index: 0,
-                    message: {
-                      role: 'assistant',
-                      content:
-                        'ChatGPT is an advanced conversational AI model built on the GPT-3.5 architecture. It is a Large Language Model (LLM) that can engage in context-aware, human-like interactions. It is a suitable testbed for creativity and has demonstrated remarkable capabilities in understanding and generating human-like text. It heavily relies on in-context examples and has a strong bias toward using or not using certain tools.',
-                      refusal: null,
-                    },
-                  },
-                ],
-                created: 1706662358,
-                model: 'gpt-4',
-                object: 'chat.completion',
-                usage: {
-                  completion_tokens: 0,
-                  prompt_tokens: 9,
-                  total_tokens: 18,
-                },
-              },
+      statistics: {
+        type: 'object',
+        description: 'The Assistant work statistics.',
+        properties: {
+          usage_per_model: {
+            type: 'array',
+            description:
+              'Statistics of tokens used in models by the Assistant. In case of streaming, the statistics is published fully in one chunk.',
+            items: {
+              type: 'object',
             },
           },
-        },
-        'text/event-stream': {
-          schema: {
+          discarded_messages: {
             type: 'array',
             items: {
-              $ref: '#/components/schemas/CreateChatCompletionStreamResponse',
+              type: 'integer',
             },
-          },
-          examples: {
-            'Chat Model Streaming': {
-              value: [
-                {
-                  id: 'chatcmpl-8nCUKwNc1iEHEUuOhsU48eODcNWCL',
-                  choices: [
-                    {
-                      delta: {
-                        content: '',
-                        role: 'assistant',
-                      },
-                      finish_reason: null,
-                      index: 0,
-                    },
-                  ],
-                  created: 1706736768,
-                  model: 'gpt-4',
-                  object: 'chat.completion.chunk',
-                },
-                {
-                  id: 'chatcmpl-8nCUKwNc1iEHEUuOhsU48eODcNWCL',
-                  choices: [
-                    {
-                      delta: {
-                        content: 'Hello',
-                      },
-                      finish_reason: null,
-                      index: 0,
-                    },
-                  ],
-                  created: 1706736768,
-                  model: 'gpt-4',
-                  object: 'chat.completion.chunk',
-                },
-                {
-                  id: 'chatcmpl-8nCUKwNc1iEHEUuOhsU48eODcNWCL',
-                  choices: [
-                    {
-                      delta: {
-                        content: '!',
-                      },
-                      finish_reason: null,
-                      index: 0,
-                    },
-                  ],
-                  created: 1706736768,
-                  model: 'gpt-4',
-                  object: 'chat.completion.chunk',
-                },
-                {
-                  id: 'chatcmpl-8nCUKwNc1iEHEUuOhsU48eODcNWCL',
-                  choices: [
-                    {
-                      delta: {
-                        content: ' How',
-                      },
-                      finish_reason: null,
-                      index: 0,
-                    },
-                  ],
-                  created: 1706736768,
-                  model: 'gpt-4',
-                  object: 'chat.completion.chunk',
-                },
-                {
-                  id: 'chatcmpl-8nCUKwNc1iEHEUuOhsU48eODcNWCL',
-                  choices: [
-                    {
-                      delta: {
-                        content: ' can',
-                      },
-                      finish_reason: null,
-                      index: 0,
-                    },
-                  ],
-                  created: 1706736768,
-                  model: 'gpt-4',
-                  object: 'chat.completion.chunk',
-                },
-                {
-                  id: 'chatcmpl-8nCUKwNc1iEHEUuOhsU48eODcNWCL',
-                  choices: [
-                    {
-                      delta: {
-                        content: ' I',
-                      },
-                      finish_reason: null,
-                      index: 0,
-                    },
-                  ],
-                  created: 1706736768,
-                  model: 'gpt-4',
-                  object: 'chat.completion.chunk',
-                },
-                {
-                  id: 'chatcmpl-8nCUKwNc1iEHEUuOhsU48eODcNWCL',
-                  choices: [
-                    {
-                      delta: {
-                        content: ' assist',
-                      },
-                      finish_reason: null,
-                      index: 0,
-                    },
-                  ],
-                  created: 1706736768,
-                  model: 'gpt-4',
-                  object: 'chat.completion.chunk',
-                },
-                {
-                  id: 'chatcmpl-8nCUKwNc1iEHEUuOhsU48eODcNWCL',
-                  choices: [
-                    {
-                      delta: {
-                        content: ' you',
-                      },
-                      finish_reason: null,
-                      index: 0,
-                    },
-                  ],
-                  created: 1706736768,
-                  model: 'gpt-4',
-                  object: 'chat.completion.chunk',
-                },
-                {
-                  id: 'chatcmpl-8nCUKwNc1iEHEUuOhsU48eODcNWCL',
-                  choices: [
-                    {
-                      delta: {
-                        content: ' today',
-                      },
-                      finish_reason: null,
-                      index: 0,
-                    },
-                  ],
-                  created: 1706736768,
-                  model: 'gpt-4',
-                  object: 'chat.completion.chunk',
-                },
-                {
-                  id: 'chatcmpl-8nCUKwNc1iEHEUuOhsU48eODcNWCL',
-                  choices: [
-                    {
-                      delta: {
-                        content: '?',
-                      },
-                      finish_reason: null,
-                      index: 0,
-                    },
-                  ],
-                  created: 1706736768,
-                  model: 'gpt-4',
-                  object: 'chat.completion.chunk',
-                },
-                {
-                  id: 'chatcmpl-8nCUKwNc1iEHEUuOhsU48eODcNWCL',
-                  choices: [
-                    {
-                      delta: {
-                        content: '',
-                      },
-                      finish_reason: 'stop',
-                      index: 0,
-                    },
-                  ],
-                  created: 1706736768,
-                  model: 'gpt-4',
-                  object: 'chat.completion.chunk',
-                  usage: {
-                    completion_tokens: 9,
-                    prompt_tokens: 9,
-                    total_tokens: 18,
-                  },
-                },
-              ],
-            },
+            description:
+              'The list of indices of messages that were discarded by the Assistant. Returned only when `max_prompt_tokens` was set in the request.',
           },
         },
       },
-    },
-    '401': {
-      description: 'Invalid Authentication',
-      content: {
-        'application/json': {
-          schema: {
-            type: 'object',
-            properties: {
-              error: {
-                $ref: '#/components/schemas/Error',
-              },
-            },
-          },
-        },
-      },
-    },
-    '404': {
-      description:
-        "Not found\n\nReturned either when:\n1. The deployment called `{Deployment Name}` doesn't exist. Check the DIAL listing to verify that the deployment does actually exist.\n2. The `api-version` query parameter points to an API version that doesn't exist. This is relevant only for deployments based on Azure OpenAI models.",
-      content: {
-        'application/json': {
-          schema: {
-            type: 'object',
-            properties: {
-              error: {
-                $ref: '#/components/schemas/Error',
-              },
-            },
-          },
-        },
-      },
-    },
-    '429': {
-      description: 'Rate limit reached.',
-      content: {
-        'application/json': {
-          schema: {
-            type: 'object',
-            properties: {
-              error: {
-                $ref: '#/components/schemas/Error',
-              },
-            },
-          },
-        },
-      },
-    },
-    '500': {
-      description: 'The server had an error while processing your request.',
-      content: {
-        'application/json': {
-          schema: {
-            type: 'object',
-            properties: {
-              error: {
-                $ref: '#/components/schemas/Error',
-              },
-            },
-          },
-        },
-      },
-    },
-    '503': {
-      description: 'The engine is currently overloaded, please try again later.',
-      content: {
-        'application/json': {
-          schema: {
-            type: 'object',
-            properties: {
-              error: {
-                $ref: '#/components/schemas/Error',
-              },
-            },
-          },
-        },
+      system_fingerprint: {
+        type: 'string',
+        description:
+          'Can be used in conjunction with the `seed` request parameter to understand when backend changes have been made that might impact determinism.',
       },
     },
   },
-  'x-codeSamples': [
-    {
-      lang: 'cURL',
-      label: 'CURL',
-      source:
-        'curl https://chat.<company>.com/openai/deployments/gpt-4/chat/completions?api-version=2023-12-01-preview \\\n  -H "Content-Type: application/json" \\\n  -H "Api-Key: DIAL_API_KEY" \\\n  -d \'{\n    "messages": [{"role": "user", "content": "Hello!"}]\n  }\'',
-    },
-    {
-      lang: 'Python',
-      label: 'Python (LangChain 0.1.4)',
-      source:
-        'from langchain_openai import AzureChatOpenAI\nfrom langchain.schema import HumanMessage\n\nmodel = AzureChatOpenAI(\n    openai_api_version="2023-12-01-preview",\n    azure_deployment="gpt-4",\n    azure_endpoint="https://chat.<company>.com",\n    api_key="DIAL_API_KEY"\n)\n\nresponse = model.invoke(\n    [\n        HumanMessage(\n            content="Hello!"\n        )\n    ]\n)',
-    },
-    {
-      lang: 'Python',
-      label: 'Python (OpenAI Library 1.10)',
-      source:
-        'from openai import AzureOpenAI\n\nclient = AzureOpenAI(\n    api_version="2023-12-01-preview",\n    azure_endpoint="https://chat.<company>.com",\n    api_key="DIAL_API_KEY"\n)\n\nresponse = client.chat.completions.create(\n    model="gpt-4",\n    messages=[\n        {\n            "role": "user",\n            "content": "Hello!",\n        }\n    ]\n)',
-    },
-  ],
 };
