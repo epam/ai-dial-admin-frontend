@@ -58,7 +58,7 @@ const ToolContent: FC<Props> = ({ tool, view }) => {
             />
           )}
           {!!outputSchema.length && (
-            <TableView title={t(ContainersI18nKey.InputSchema)} columnDefs={SCHEMA_COLUMNS} rowData={outputSchema} />
+            <TableView title={t(ContainersI18nKey.OutputSchema)} columnDefs={SCHEMA_COLUMNS} rowData={outputSchema} />
           )}
         </>
       ) : (
