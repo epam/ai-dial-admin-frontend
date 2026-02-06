@@ -1,3 +1,5 @@
+import { DialScheme } from '@/src/models/dial/scheme';
+
 export interface TestSuite {
   id?: string;
   name?: string;
@@ -19,8 +21,9 @@ export interface TestSuiteDeploymentRef {
 export interface TestSuiteEndpointRef {
   method?: string;
   relativeUrl?: string;
-  requestBodySchema?: Record<string, unknown>;
-  responseBodySchema?: Record<string, unknown>;
+  parameters?: Record<string, unknown>[];
+  requestBodySchema?: DialScheme;
+  responseBodySchema?: DialScheme;
 }
 
 export interface TestCase {
