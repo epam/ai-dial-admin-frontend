@@ -1,4 +1,5 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 import { DialEllipsisTooltip, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import { IconCaretDownFilled, IconCaretRightFilled, IconDotsVertical, IconFolder, IconPlus } from '@tabler/icons-react';
@@ -52,6 +53,7 @@ const FolderList: FC<Props> = ({
   isBulkDelete,
 }) => {
   const t = useI18n();
+  const router = useRouter();
   const folderContext = context?.();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -88,7 +90,7 @@ const FolderList: FC<Props> = ({
       getManageFolderOperation(() => openFolderStorage(node.path)),
       getDeleteFolderOperation(() => openDeleteFolderModalState(node)),
     ];
-    return node.name === ROOT_FOLDER ? [items[2]] : items;
+    return node.name === ROOT_FOLDER ? [] : items;
   };
 
   const handleModalClose = useCallback(() => {
@@ -102,7 +104,7 @@ const FolderList: FC<Props> = ({
   }, []);
 
   const openFolderStorage = (path: string) => {
-    window.open(`${ApplicationRoute.FoldersStorage}?path=${encodeURIComponent(path)}`, '_blank');
+    router.push(`${ApplicationRoute.FoldersStorage}?path=${encodeURIComponent(path)}`);
   };
 
   const openCreateFolderModal = useCallback(
