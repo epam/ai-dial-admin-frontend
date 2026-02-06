@@ -2,7 +2,7 @@ import { DialLoader } from '@epam/ai-dial-ui-kit';
 import { FC, useEffect, useState } from 'react';
 
 import Grid from '@/src/components/Grid/Grid';
-import { DISPLAY_NAME_COLUMN, NAME_COLUMN } from '@/src/constants/grid-columns/grid-columns';
+import { DISPLAY_NAME_COLUMN, NAME_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { ApplicationRoute } from '@/src/types/routes';

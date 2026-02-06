@@ -1,8 +1,8 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
+import { DialEllipsisTooltip, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import { IconCaretDownFilled, IconCaretRightFilled, IconDotsVertical, IconFolder, IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { DialEllipsisTooltip, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
 import ActionsDropdown from '@/src/components/Common/ActionsDropdown/ActionsDropdown';
 import {
@@ -19,13 +19,14 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { RuleFolderContextType } from '@/src/context/RuleFolderContext';
 import { useI18n } from '@/src/locales/client';
+import { Asset } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
 import { DialFolder } from '@/src/models/dial/folder';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
-import { addTrailingSlash } from '@/src/utils/url';
 import { getFolderNameAndPath, isFolder } from '@/src/utils/files/path';
 import { isAssetView } from '@/src/utils/is-asset-view';
+import { addTrailingSlash } from '@/src/utils/url';
 import FolderListModals, { ModalType } from './Modals/FolderListModals';
 import { generateFolderListFromBulkPaths } from './utils';
 
@@ -33,7 +34,7 @@ interface Props {
   disableAutoFetch?: boolean;
   initialPath?: string;
   view?: ApplicationRoute;
-  context?: () => AssetsFolderContext<DialFile> | RuleFolderContextType;
+  context?: () => AssetsFolderContext<Asset> | RuleFolderContextType;
   isFolderMove?: boolean;
   folderPath?: string;
   isFolderDelete?: boolean;
@@ -61,9 +62,9 @@ const FolderList: FC<Props> = ({
   const folderData = useMemo(() => {
     return isBulkDelete
       ? generateFolderListFromBulkPaths(
-          Object.keys((folderContext as AssetsFolderContext<DialFile>)?.bulkSelectedData) || [],
+          Object.keys((folderContext as AssetsFolderContext<Asset>)?.bulkSelectedData) || [],
         )
-      : (folderContext?.files as DialFile[]);
+      : (folderContext?.files as Asset[]);
   }, [folderContext, isBulkDelete]);
 
   const rootFolder = useMemo(() => {
@@ -123,7 +124,7 @@ const FolderList: FC<Props> = ({
   const openMoveFolderModal = useCallback(
     (node: DialFolder) => {
       if (folderContext?.expandedFolders.has(node.path)) {
-        folderContext.toggleFolder(node);
+        folderContext.toggleFolder(node as Asset);
       }
       setSelectedFolder(node.path);
       handleModalOpen(ModalType.move);
@@ -133,7 +134,7 @@ const FolderList: FC<Props> = ({
 
   const openDeleteFolderModalState = useCallback(
     (node: DialFolder) => {
-      folderContext?.toggleFolder(node);
+      folderContext?.toggleFolder(node as Asset);
       setSelectedFolder(node.path);
       handleModalOpen(ModalType.delete);
     },
@@ -163,7 +164,7 @@ const FolderList: FC<Props> = ({
     const iconClassName =
       !node.items?.some((c) => isFolder(c.nodeType)) &&
       (isBulkDelete
-        ? (folderContext as AssetsFolderContext<DialFile>)?.bulkSelectedData[node.path]
+        ? (folderContext as AssetsFolderContext<Asset>)?.bulkSelectedData[node.path]
         : folderContext?.fetchedFoldersData[node.path])
         ? 'text-transparent'
         : '';
@@ -213,7 +214,10 @@ const FolderList: FC<Props> = ({
                   isMoveError && 'bg-error border-l-error',
                 )}
               >
-                <div className="flex-1 flex flex-row truncate" onClick={() => folderContext?.toggleFolder(node)}>
+                <div
+                  className="flex-1 flex flex-row truncate"
+                  onClick={() => folderContext?.toggleFolder(node as Asset)}
+                >
                   <div className={classNames(iconClassName, 'flex items-center justify-center')}>
                     {isExpanded ? (
                       <IconCaretDownFilled
@@ -284,7 +288,7 @@ const FolderList: FC<Props> = ({
         isModalOpen={isModalOpen}
         modalType={modalType}
         selectedFolder={selectedFolder}
-        context={context as () => AssetsFolderContext<DialFile>}
+        context={context as () => AssetsFolderContext<Asset>}
         handleClose={handleModalClose}
       />
     </div>

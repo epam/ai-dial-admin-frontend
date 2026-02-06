@@ -8,8 +8,8 @@ import EntityProperties from '@/src/components/EntityView/View/Content/Propertie
 import ModelProperties from '@/src/components/ModelView/ModelProperties/ModelProperties';
 import RouteProperties from '@/src/components/Routes/Properties/RouteProperties';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { DeploymentAsset } from '@/src/models/dial/deployment-asset';
 import { BaseEntity } from '@/src/models/dial/base-entity';
+import { DeploymentAsset } from '@/src/models/dial/deployment-asset';
 import { DialRoute } from '@/src/models/dial/route';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isDeploymentAsset } from '@/src/utils/is-asset-view';
@@ -57,7 +57,7 @@ const PropertiesContent: FC<Props> = ({ applicationSchemes, names, view, selecte
   return (
     <div className="flex flex-col h-full w-full">
       {isDeploymentAsset(view) ? (
-        <AssetHeader asset={selectedEntity as DeploymentAsset} view={view} />
+        <AssetHeader asset={selectedEntity as DeploymentAsset} />
       ) : (
         <EntityHeader entity={selectedEntity} view={view} />
       )}

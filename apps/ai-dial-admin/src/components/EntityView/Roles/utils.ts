@@ -11,7 +11,7 @@ import {
   getResetOperation,
   getSetNoLimitsOperation,
 } from '@/src/constants/grid-columns/actions';
-import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { MenuI18nKey, RolesI18nKey } from '@/src/constants/i18n';
 import { NO_LIMITS_KEY, UNLIMITED_VALUE } from '@/src/constants/role';
 import { EntityRoleLimits } from '@/src/models/dial/base-entity';
@@ -200,7 +200,7 @@ export const getRolesColumnDefs = (
   view: ApplicationRoute,
 ): ColDef[] => {
   const actions = [getOpenInNewTabOperation(open)];
-  const colDefs = [...SIMPLE_ENTITY_COLUMNS.slice(0, 3)];
+  const colDefs = [...BASE_COLUMNS.slice(0, 3)];
 
   if (view !== ApplicationRoute.Routes && view !== ApplicationRoute.Toolsets) {
     actions.push(

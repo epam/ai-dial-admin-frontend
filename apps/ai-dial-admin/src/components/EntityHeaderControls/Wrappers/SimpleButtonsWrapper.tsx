@@ -22,7 +22,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { showEditorErrorNotifications } from '@/src/components/EntityHeaderControls/Buttons/utils';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 
-interface Props<T> {
+export interface SimpleButtonsWrapperProps<T> {
   view: ApplicationRoute;
   isChanged: boolean;
   jsonConfiguration: JsonConfiguration;
@@ -32,7 +32,6 @@ interface Props<T> {
 
   onDiscard: () => void;
   onSave: () => void;
-  onToggleEditor?: () => void;
   onRemove: (entity: string) => Promise<ServerActionResponse>;
 }
 
@@ -46,7 +45,7 @@ const SimpleButtonsWrapper = <T extends object>({
   onDiscard,
   onSave,
   onRemove,
-}: Props<T>) => {
+}: SimpleButtonsWrapperProps<T>) => {
   const t = useI18n();
   const { isEditorEnabled } = jsonConfiguration;
   const { isValid, dispatch, jsonErrors } = useSaveValidationContext();

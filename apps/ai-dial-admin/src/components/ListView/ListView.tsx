@@ -1,9 +1,9 @@
 'use client';
 import { ReactNode } from 'react';
 
+import { DialCollapsibleSidebar, DialIconButton, DialTooltip } from '@epam/ai-dial-ui-kit';
 import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import classNames from 'classnames';
-import { DialIconButton, DialCollapsibleSidebar, DialTooltip } from '@epam/ai-dial-ui-kit';
 
 import FolderCollapse from '@/public/images/icons/folder-collapse.svg';
 import ExportGrid from '@/src/components/Assets/ExportAssets/ExportGrid';
@@ -13,9 +13,9 @@ import { ROOT_FOLDER } from '@/src/constants/file';
 import { FoldersI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
-import { DialFile } from '@/src/models/dial/file';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isAssetView } from '@/src/utils/is-asset-view';
+import { Asset } from '../../models/dial/deployment-asset';
 
 interface Props<T> {
   emptyDataTitle: string;
@@ -29,7 +29,7 @@ interface Props<T> {
   view?: ApplicationRoute;
   storageKey?: string;
   toggleColumnsPanel?: () => void;
-  context?: () => AssetsFolderContext<DialFile>;
+  context?: () => AssetsFolderContext<Asset>;
   onGridReady?: (gridApi: GridApi) => void;
   isBulkView?: boolean;
   allowPadding?: boolean;
@@ -59,7 +59,7 @@ const ListView = <T extends object>({
     (folderContext?.expandedFolders.size === 1 && folderContext?.expandedFolders.has(`${ROOT_FOLDER}/`));
 
   const collapseFolders = () => {
-    folderContext?.toggleFolder({ path: `${ROOT_FOLDER}/` } as DialFile, true, true);
+    folderContext?.toggleFolder({ path: `${ROOT_FOLDER}/` } as Asset, true, true);
   };
 
   return (

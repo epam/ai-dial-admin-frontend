@@ -2,33 +2,31 @@ import { FC } from 'react';
 
 import { DialSwitch } from '@epam/ai-dial-ui-kit';
 
-import FilePath from '@/src/components/Common/FilePath/FilePath';
-import Defaults from '@/src/components/Defaults/Defaults';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import IconControl from '@/src/components/BaseControls/Icon';
 import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
 import TopicsControl from '@/src/components/BaseControls/Topics';
+import FilePath from '@/src/components/Common/FilePath/FilePath';
+import Defaults from '@/src/components/Defaults/Defaults';
 import EntityAttachments from '@/src/components/EntityMainProperties/EntityAttachments/EntityAttachments';
 import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
 import ApplicationSource from '@/src/components/SourceField/Application/ApplicationSource';
 import ToolsetEndpoint from '@/src/components/SourceField/Endpoints/ToolsetEndpoint';
-import Authentication from '@/src/components/Toolsets/View/Authentication';
+import Authentication from '@/src/components/Toolsets/Auth/Authentication';
 import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { AssetApp, AssetToolset, DeploymentAsset } from '@/src/models/dial/deployment-asset';
-import { DialFile } from '@/src/models/dial/file';
+import { AssetToolset, DeploymentAsset } from '@/src/models/dial/deployment-asset';
 import { Toolset, ToolsetAuthType } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
   view: ApplicationRoute;
   asset: DeploymentAsset;
-  runners: DialApplicationScheme[];
+  runners?: DialApplicationScheme[];
   onChange: (asset: DeploymentAsset) => void;
 }
 
@@ -55,11 +53,7 @@ const DeploymentProperties: FC<Props> = ({ asset, view, runners, onChange }) => 
           modalTitle={t(BasicI18nKey.MoveToFolder)}
           placeholder={t(EntityPlaceholdersI18nKey.Path)}
           onChange={(folderId) => onChange?.({ ...asset, folderId })}
-          context={
-            view === ApplicationRoute.AssetsApplications
-              ? (useAppsFolder as () => AssetsFolderContext<AssetApp | DialFile>)
-              : (useToolsetFolder as () => AssetsFolderContext<AssetToolset | DialFile>)
-          }
+          context={view === ApplicationRoute.AssetsApplications ? useAppsFolder : useToolsetFolder}
         />
         {view === ApplicationRoute.AssetsToolsets && (
           <>
