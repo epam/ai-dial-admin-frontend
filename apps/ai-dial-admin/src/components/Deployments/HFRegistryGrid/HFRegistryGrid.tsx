@@ -1,8 +1,11 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { GridApi, GridOptions, IDatasource, IGetRowsParams } from 'ag-grid-community';
+import { isEqual } from 'lodash';
 
 import { ApplicationRoute } from '@/src/types/routes';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { FilterDto, SortDto } from '@/src/models/request';
+import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { getHuggingFaceModels } from '@/src/app/actions/deployments';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 import { DialGhostButton } from '@epam/ai-dial-ui-kit';
@@ -16,8 +19,6 @@ import { useI18n } from '@/src/locales/client';
 import ListView from '@/src/components/ListView/ListView';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
-import { isEqual } from 'lodash';
-import { FilterDto } from '@/src/models/request';
 
 interface Props {
   route: ApplicationRoute;
@@ -49,24 +50,26 @@ const HfRegistryGrid: FC<Props> = ({ route, modelName, setModelName }) => {
   const gridDataSource: IDatasource = useMemo(() => {
     let nextPageUrl = '';
     let filters: FilterDto[] = [];
+    let sorts: SortDto[] = [];
     return {
       getRows: (params: IGetRowsParams) => {
         gridApi?.setGridOption('loading', true);
-        //const sorts = getRequestSorts(params.sortModel);
+        const currentSorts = getRequestSorts(params.sortModel);
         const currentFilters = getRequestFilters(params.filterModel);
-        if (!isEqual(filters, currentFilters)) {
+        if (!isEqual(filters, currentFilters) || !isEqual(sorts, currentSorts)) {
           nextPageUrl = '';
         }
         filters = currentFilters;
-        //console.log(sorts);
-        //console.log(getRequestSortsStr(sorts));
+        sorts = currentSorts;
+
+        const requestFilters = Object.fromEntries(
+          currentFilters.map(({ column, value }) => [column === 'id' ? 'search' : column, encodeURIComponent(value)]),
+        );
 
         getHuggingFaceModels({
           pageUrl: nextPageUrl,
-          ...Object.fromEntries(
-            currentFilters.map(({ column, value }) => [column === 'id' ? 'search' : column, encodeURIComponent(value)]),
-          ),
-          //sort: getRequestSortsStr(sorts),
+          sort: sorts.length ? sorts[0].column : '',
+          ...requestFilters,
         })
           .then(({ response, success }) => {
             if (success) {
@@ -104,15 +107,6 @@ const HfRegistryGrid: FC<Props> = ({ route, modelName, setModelName }) => {
   const onGridReady = useCallback((api: GridApi) => {
     setGridApi(api);
   }, []);
-
-  useEffect(() => {
-    if (modelName && gridApi)
-      gridApi.forEachNode((node) => {
-        if (modelName && node.data?.id === modelName) {
-          node.setSelected(true);
-        }
-      });
-  }, [gridApi, modelName]);
 
   const columnDefs = [...HF_REGISTRY_COLUMNS];
   const toggleColumnsPanel = () => setShowColumnsPanel(!showColumnsPanel);

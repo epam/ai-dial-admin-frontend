@@ -50,6 +50,8 @@ import {
 } from './base-columns';
 import { dateTimeColumn, numericColumn, priceColumn } from './configs';
 import { auditStringFilter, evalStringFilter } from './filters';
+import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
+import { formatNumberWithExponent } from '@/src/utils/formatting/number-formatting';
 
 export const BASE_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN, NAME_COLUMN];
 
@@ -712,6 +714,7 @@ export const HF_REGISTRY_COLUMNS: ColDef[] = [
     cellRendererParams: (params: { data?: { libraries?: string[] } }) => ({
       items: params.data?.libraries,
     }),
+    tooltipValueGetter: ({ value }) => (value?.length ? value.join(', ') : null),
     sortable: false,
     filter: false,
     floatingFilter: false,
@@ -724,6 +727,7 @@ export const HF_REGISTRY_COLUMNS: ColDef[] = [
     cellRendererParams: (params: { data?: { languages?: string[] } }) => ({
       items: params.data?.languages,
     }),
+    tooltipValueGetter: ({ value }) => (value?.length ? value.join(', ') : null),
     sortable: false,
     filter: false,
     floatingFilter: false,
@@ -736,6 +740,7 @@ export const HF_REGISTRY_COLUMNS: ColDef[] = [
     cellRendererParams: (params: { data?: { licenses?: string[] } }) => ({
       items: params.data?.licenses,
     }),
+    tooltipValueGetter: ({ value }) => (value?.length ? value.join(', ') : null),
     sortable: false,
     filter: false,
     floatingFilter: false,
@@ -745,7 +750,12 @@ export const HF_REGISTRY_COLUMNS: ColDef[] = [
     field: 'parameters',
     headerName: 'Parameters',
     hide: true,
-    ...numericColumn,
+    cellClass: 'align-right',
+    headerClass: 'align-right',
+    comparator: numberValueComparator,
+    valueFormatter: ({ value }) => (value ? formatNumberWithExponent(value) : ''),
+    tooltipValueGetter: ({ value }) => (value ? formatNumberWithExponent(value) : ''),
+    filterValueGetter: (params) => formatNumberWithExponent(params.data[params.colDef.field || '']),
     sortable: false,
     filter: false,
     floatingFilter: false,
@@ -758,6 +768,7 @@ export const HF_REGISTRY_COLUMNS: ColDef[] = [
     cellRendererParams: (params: { data?: { tags?: string[] } }) => ({
       items: params.data?.tags,
     }),
+    tooltipValueGetter: ({ value }) => (value?.length ? value.join(', ') : null),
     sortable: false,
     filter: false,
     floatingFilter: false,
@@ -770,8 +781,46 @@ export const HF_REGISTRY_COLUMNS: ColDef[] = [
     cellRendererParams: (params: { data?: { datasets?: string[] } }) => ({
       items: params.data?.datasets,
     }),
+    tooltipValueGetter: ({ value }) => (value?.length ? value.join(', ') : null),
     sortable: false,
     filter: false,
     floatingFilter: false,
+  },
+  {
+    field: 'createdAt',
+    headerName: 'Created at',
+    hide: true,
+    sortingOrder: ['desc', null],
+    filter: false,
+    floatingFilter: false,
+    ...dateTimeColumn,
+  },
+  {
+    field: 'lastModified',
+    headerName: 'Last modified',
+    hide: true,
+    sortingOrder: ['desc', null],
+    filter: false,
+    floatingFilter: false,
+    ...dateTimeColumn,
+  },
+  {
+    field: 'likes',
+    headerName: 'Likes',
+    hide: false,
+    sortingOrder: ['desc', null],
+    filter: false,
+    floatingFilter: false,
+    ...numericColumn,
+  },
+  {
+    field: 'downloads',
+    headerName: 'Downloads',
+    hide: false,
+    sort: 'desc',
+    sortingOrder: ['desc', null],
+    filter: false,
+    floatingFilter: false,
+    ...numericColumn,
   },
 ];

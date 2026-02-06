@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey, ContainersI18nKey } from '@/src/constants/i18n';
@@ -18,6 +18,8 @@ const HFRegistryModal: FC<Props> = ({ isModalOpen, onClose, onApply, preselected
   const t = useI18n();
   const [selectedModelName, setSelectedModelName] = useState<string>(preselectedModelName ?? '');
 
+  useEffect(() => {}, []);
+
   return (
     <DialFormPopup
       portalId="HFRegistryModal"
@@ -29,6 +31,7 @@ const HFRegistryModal: FC<Props> = ({ isModalOpen, onClose, onApply, preselected
         onApply(selectedModelName);
         onClose();
       }}
+      disableSubmitButton={!selectedModelName}
       className={'h-[800px]'}
       size={PopupSize.Lg}
     >
