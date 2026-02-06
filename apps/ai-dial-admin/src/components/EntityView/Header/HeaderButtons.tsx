@@ -8,6 +8,7 @@ import { IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import AssetVersionControl from '@/src/components/Assets/Deployments/AssetVersionControl';
+import JsonToggleWithFormats from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggleWithFormats';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -16,7 +17,6 @@ import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { Asset } from '@/src/models/dial/deployment-asset';
-import { DialFile } from '@/src/models/dial/file';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -24,7 +24,6 @@ import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import ModifiedEntityButtons from './ModifiedEntityButtons';
-import JsonToggleWithFormats from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggleWithFormats';
 
 interface Props<T> {
   view: ApplicationRoute;
@@ -46,8 +45,8 @@ interface Props<T> {
   onChangeSelectedFormat?: (format: ExportFormat) => void;
   onRemove: (entity: string) => Promise<ServerActionResponse>;
   onToggleEditor?: () => void;
-  onHideFormatSelector?: () => void;
-  getAssetContext?: () => AssetsFolderContext<DialFile>;
+  onHideFormatSelector?: () => boolean;
+  getAssetContext?: () => AssetsFolderContext<Asset>;
 }
 
 const HeaderButtons = <T extends object>({
@@ -126,7 +125,7 @@ const HeaderButtons = <T extends object>({
                     view={view}
                     asset={entity as Asset}
                     addedVersions={addedVersions || []}
-                    setAddedVersions={setAddedVersions}
+                    onChangeAddedVersion={setAddedVersions}
                     assets={assets}
                     onChangeAsset={onChangeEntity as (entity: Asset) => void}
                     etag={etag}

@@ -2,9 +2,9 @@
 
 import { Dispatch, MouseEvent, SetStateAction, useCallback, useRef, useState } from 'react';
 
+import { DialGhostButton, DialNeutralButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconColumns2, IconFileArrowLeft, IconPlus, IconSquareCheck } from '@tabler/icons-react';
 import { GridApi } from 'ag-grid-community';
-import { DialGhostButton, DialNeutralButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 
 import CreateAdapter from '@/src/components/Adapter/Modals/CreateAdapter';
 import CreateAppRunner from '@/src/components/ApplicationRunners/Modals/CreateAppRunner';
@@ -13,29 +13,28 @@ import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEnt
 import { getImportResults } from '@/src/components/EntityListView/Import/utils';
 import CreateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Create';
 import CreateKey from '@/src/components/Keys/Modals/CreateKey';
+import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
+import { MAX_FILE_SIZE_MB } from '@/src/constants/file';
 import { ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
-import { DialFile } from '@/src/models/dial/file';
+import { Asset } from '@/src/models/dial/deployment-asset';
 import { ImportResult } from '@/src/models/import';
 import { ImportData } from '@/src/models/import-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
-import { getErrorNotification, getPrepareNotification } from '@/src/utils/notification';
-import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
-import { getFormDataForImport, getImportFunction, getImportTitle } from './utils';
-import { Asset } from '@/src/models/dial/deployment-asset';
 import { isAssetView } from '@/src/utils/is-asset-view';
-import { MAX_FILE_SIZE_MB } from '@/src/constants/file';
-import { useProtectedRequest } from '@/src/hooks/use-protected-request';
+import { getErrorNotification, getPrepareNotification } from '@/src/utils/notification';
+import { getFormDataForImport, getImportFunction, getImportTitle } from './utils';
 
 interface Props<T> {
   names?: string[];
@@ -47,7 +46,7 @@ interface Props<T> {
   gridApi?: GridApi | null;
   toggleColumnsPanel: () => void;
   createEntity?: (entity: T) => Promise<ServerActionResponse>;
-  context?: () => AssetsFolderContext<Asset | DialFile>;
+  context?: () => AssetsFolderContext<Asset>;
   setIsBulkView?: Dispatch<SetStateAction<boolean>>;
   isBulkView?: boolean;
 }

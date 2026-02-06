@@ -22,8 +22,6 @@ const ONLY_ADMIN_ENTITIES = [
 
 interface Props extends JsonConfiguration {
   view: ApplicationRoute;
-
-  onHideFormatSelector?: () => void; // TODO: need? remove
 }
 
 const JsonToggleWithFormats: FC<Props> = ({
