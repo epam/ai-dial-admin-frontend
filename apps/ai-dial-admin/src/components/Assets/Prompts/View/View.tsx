@@ -132,7 +132,7 @@ const PromptView: FC<Props> = ({ originalPrompt, etag, prompts }) => {
         onChangeActiveTab={setActiveTab}
         onRemove={removePrompt}
         addedVersions={addedVersions}
-        setAddedVersions={setAddedVersions}
+        onChangeAddedVersion={setAddedVersions}
         getAssetContext={usePromptFolder}
       />
 
