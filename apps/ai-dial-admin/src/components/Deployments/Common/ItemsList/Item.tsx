@@ -75,7 +75,9 @@ const Item = forwardRef<HTMLLIElement, Props>(
           errorText={error?.text}
           disabled={disabled}
         />
-        <DialRemoveButton onClick={() => onRemove(index)} disabled={disabled} />
+        <div className="w-[40px] flex-shrink-0">
+          <DialRemoveButton onClick={() => onRemove(index)} disabled={disabled} />
+        </div>
       </li>
     );
   },

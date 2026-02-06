@@ -5,7 +5,7 @@ import { FC, useCallback } from 'react';
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
 import { getRelevantRolesForKey } from '@/src/components/AddEntitiesTab/utils';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
-import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialRole } from '@/src/models/dial/role';
@@ -55,7 +55,7 @@ const TabsContent: FC<Props> = ({ activeTab, roles, selectedKey, onChange, selec
         {activeTab === EntityViewTab.Roles && (
           <AddEntitiesView
             viewTitle={t(TabsI18nKey.Roles)}
-            customColumns={SIMPLE_ENTITY_COLUMNS}
+            customColumns={BASE_COLUMNS}
             modalTitle={t(RolesI18nKey.AddRoles)}
             emptyDataTitle={t(EntitiesI18nKey.NoRoles)}
             roles={roles}

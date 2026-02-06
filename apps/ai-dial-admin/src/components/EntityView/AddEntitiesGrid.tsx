@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 import Grid from '@/src/components/Grid/Grid';
 import { CHECKBOX_COL_DEF } from '@/src/constants/ag-grid';
-import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 interface Props<T> {
@@ -18,7 +18,7 @@ interface Props<T> {
 }
 
 const AddEntitiesGrid = <T extends object>({
-  columnDefs = SIMPLE_ENTITY_COLUMNS,
+  columnDefs = BASE_COLUMNS,
   isModalOpen,
   modalTitle,
   emptyTitle,
