@@ -1,10 +1,9 @@
 'use client';
 
-import { createFolderContext } from './AssetsFolderContext';
 import { getFiles } from '@/src/app/[lang]/files/actions';
-import { DialFile } from '@/src/models/dial/file';
+import { createFolderContext } from './AssetsFolderContext';
 
-export const { Provider: FileFolderProvider, useFolderContext: useFileFolder } = createFolderContext<DialFile>(
+export const { Provider: FileFolderProvider, useFolderContext: useFileFolder } = createFolderContext(
   getFiles,
   'useFileFolder',
 );
