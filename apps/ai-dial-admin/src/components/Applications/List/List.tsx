@@ -1,5 +1,5 @@
 'use client';
-import { FC } from 'react';
+import { FC, useMemo } from 'react';
 
 import { createApplication, removeApplication } from '@/src/app/[lang]/applications/actions';
 import { APPLICATIONS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
@@ -18,12 +18,14 @@ const ApplicationsList: FC<Props> = ({ data, runners }) => {
   const names = filterDisplayNamesWithVersions(data);
   const t = useI18n();
 
+  const columns = useMemo(() => APPLICATIONS_COLUMNS(t), [t]);
+
   return (
     <BaseEntityList
       data={data}
       runners={runners}
       names={names}
-      baseColumns={APPLICATIONS_COLUMNS(t)}
+      baseColumns={columns}
       route={ApplicationRoute.Applications}
       onCreateEntity={createApplication}
       onRemoveEntity={removeApplication}

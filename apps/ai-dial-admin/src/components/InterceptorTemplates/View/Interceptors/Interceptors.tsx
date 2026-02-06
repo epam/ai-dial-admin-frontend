@@ -5,7 +5,7 @@ import { getInterceptorsList } from '@/src/app/[lang]/interceptors/actions';
 import Grid from '@/src/components/Grid/Grid';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
-import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -29,7 +29,7 @@ const Interceptors: FC<Props> = ({ interceptorList }) => {
     onOpenInNewTab(ApplicationRoute.Interceptors, interceptor);
   }, []);
 
-  const colDefs = [...SIMPLE_ENTITY_COLUMNS, ACTION_COLUMN([getOpenInNewTabOperation(onOpen)])];
+  const colDefs = [...BASE_COLUMNS, ACTION_COLUMN([getOpenInNewTabOperation(onOpen)])];
 
   useEffect(() => {
     const fetchInterceptors = async () => {
