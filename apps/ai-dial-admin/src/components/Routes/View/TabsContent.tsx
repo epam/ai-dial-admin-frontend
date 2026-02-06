@@ -2,19 +2,24 @@
 
 import { FC } from 'react';
 
+import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
+import EntityRoles from '@/src/components/EntityView/Roles/Roles';
+import { EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialRole } from '@/src/models/dial/role';
+import { DialRoute } from '@/src/models/dial/route';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
-import { EntityRoleLimits } from '../../../models/dial/base-entity';
-import EntityRoles from '../../EntityView/Roles/Roles';
-import PropertiesTabContent, { PropertiesProps } from './Properties/TabContent';
+import RouteProperties from './Properties/RouteProperties';
 
-interface Props extends PropertiesProps {
+interface Props {
   selectedFormat: ExportFormat;
   activeTab: EntityViewTab;
   roles: DialRole[];
+  route: DialRoute;
+  routeNames: string[];
+  onChangeRoute: (route: DialRoute) => void;
 }
 
 const TabsContent: FC<Props> = ({ activeTab, route, roles, routeNames, onChangeRoute, selectedFormat }) => {
@@ -22,7 +27,9 @@ const TabsContent: FC<Props> = ({ activeTab, route, roles, routeNames, onChangeR
     selectedFormat === ExportFormat.ADMIN && (
       <>
         {activeTab === EntityViewTab.Properties && (
-          <PropertiesTabContent route={route} routeNames={routeNames} onChangeRoute={onChangeRoute} />
+          <PropertiesTabContent entity={route} view={ApplicationRoute.Routes} id={route.name}>
+            <RouteProperties route={route} onChange={onChangeRoute} routeNames={routeNames} />
+          </PropertiesTabContent>
         )}
         {activeTab === EntityViewTab.Roles && (
           <EntityRoles
