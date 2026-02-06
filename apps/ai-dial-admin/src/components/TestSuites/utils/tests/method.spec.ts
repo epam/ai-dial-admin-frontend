@@ -15,10 +15,10 @@ describe('generateMethodPathCombinations', () => {
 
     expect(result).toEqual([
       { method: 'HEAD', relativeUrl: '/e' },
-      { method: 'HEAD', relativeUrl: '/r' },
       { method: 'POST', relativeUrl: '/e' },
-      { method: 'POST', relativeUrl: '/r' },
       { method: 'GET', relativeUrl: '/e' },
+      { method: 'HEAD', relativeUrl: '/r' },
+      { method: 'POST', relativeUrl: '/r' },
       { method: 'GET', relativeUrl: '/r' },
     ]);
   });

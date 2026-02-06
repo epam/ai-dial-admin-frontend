@@ -25,7 +25,7 @@ import {
   getKeyTabs,
   getPublicationTabs,
   getRoleTabs,
-  getRouteTabs,
+  getAppRouteTabs,
   getSystemPropertiesTabs,
   getTabsForAsset,
   getToolsetTabs,
@@ -49,6 +49,7 @@ import {
   testCasesTab,
   runsTab,
   trendsTab,
+  getRouteTabs,
 } from '../utils';
 
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
@@ -91,7 +92,7 @@ describe('Entities :: tabs', () => {
   });
 
   test('Should return tabs for routes', () => {
-    const res = getViewTabs(t, ApplicationRoute.Routes);
+    const res = getRouteTabs(t);
     expect(res).toEqual([propertiesTab(t), rolesTab(t), auditTab(t)]);
   });
 
@@ -152,7 +153,7 @@ describe('Entities :: tabs', () => {
   });
 
   test('returns correct tabs for routes', () => {
-    expect(getRouteTabs(t)).toEqual([propertiesTab(t), attachmentsTab(t), rolesTab(t)]);
+    expect(getAppRouteTabs(t)).toEqual([propertiesTab(t), attachmentsTab(t), rolesTab(t)]);
   });
 
   test('returns correct tabs for roles', () => {

@@ -1304,5 +1304,7 @@ export default {
     FromPC: 'From PC storage',
     FromDial: 'From DIAL files system',
     ImportFromPC: 'Import from PC storage',
+    Other: 'Other',
+    ChatInterface: 'Chat interface',
   },
 } as const;
