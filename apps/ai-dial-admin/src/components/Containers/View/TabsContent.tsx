@@ -76,7 +76,7 @@ const TabsContent: FC<Props> = ({
         {selectedContainer.status === CONTAINER_STATUS.RUNNING && selectedContainer.url && (
           <LabelledText label={t(BasicI18nKey.URL)} text={selectedContainer.url} copyable />
         )}
-        {!!restarts && <LabelledText label={t(EntityFieldsI18nKey.Restarts)} text={`${restarts}`} />} */
+        {!!restarts && <LabelledText label={t(EntityFieldsI18nKey.Restarts)} text={`${restarts}`} />}
       </>
     );
   }, [restarts, selectedContainer.status, selectedContainer.url, t]);

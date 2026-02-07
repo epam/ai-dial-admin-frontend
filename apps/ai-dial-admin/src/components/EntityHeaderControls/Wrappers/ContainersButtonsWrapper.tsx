@@ -191,54 +191,56 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
           />
         ) : (
           <div className="flex flex-row items-center w-full gap-x-4">
-            <div className="flex flex-row gap-3">
-              {container.status === CONTAINER_STATUS.RUNNING && (
+            {jsonConfiguration.isEditorEnabled && (
+              <div className="flex flex-row gap-3">
+                {container.status === CONTAINER_STATUS.RUNNING && (
+                  <>
+                    {route === ApplicationRoute.McpContainers ? (
+                      <DialButtonDropdown
+                        label={t(ButtonsI18nKey.Create)}
+                        items={createToolsetOptions}
+                        variant={ButtonVariant.Neutral}
+                        appearance={ButtonAppearance.Outlined}
+                      />
+                    ) : (
+                      <DialNeutralButton
+                        className={buttonsClassNames}
+                        label={t(CreateI18nKey.CreateEntity, { entity: getTranslatedEntity(route, t) })}
+                        iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
+                        onClick={onOpenCreateModal}
+                      />
+                    )}
+                  </>
+                )}
+
+                <DialNeutralButton
+                  className={buttonsClassNames}
+                  label={t(ButtonsI18nKey.Delete)}
+                  iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
+                  onClick={onOpenDeleteModal}
+                />
                 <>
-                  {route === ApplicationRoute.McpContainers ? (
-                    <DialButtonDropdown
-                      label={t(ButtonsI18nKey.Create)}
-                      items={createToolsetOptions}
-                      variant={ButtonVariant.Neutral}
-                      appearance={ButtonAppearance.Outlined}
+                  {container.status === CONTAINER_STATUS.RUNNING ||
+                  container.status === CONTAINER_STATUS.PENDING ||
+                  container.status === CONTAINER_STATUS.FAILED ? (
+                    <DialNeutralButton
+                      className={buttonsClassNames}
+                      label={t(ButtonsI18nKey.Stop)}
+                      iconBefore={<IconPlayerPause {...BASE_BUTTON_ICON_PROPS} />}
+                      onClick={handleStopContainer}
                     />
                   ) : (
                     <DialNeutralButton
                       className={buttonsClassNames}
-                      label={t(CreateI18nKey.CreateEntity, { entity: getTranslatedEntity(route, t) })}
-                      iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-                      onClick={onOpenCreateModal}
+                      label={t(ButtonsI18nKey.Run)}
+                      iconBefore={<IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} />}
+                      onClick={handleRunContainer}
                     />
                   )}
                 </>
-              )}
-
-              <DialNeutralButton
-                className={buttonsClassNames}
-                label={t(ButtonsI18nKey.Delete)}
-                iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
-                onClick={onOpenDeleteModal}
-              />
-              <>
-                {container.status === CONTAINER_STATUS.RUNNING ||
-                container.status === CONTAINER_STATUS.PENDING ||
-                container.status === CONTAINER_STATUS.FAILED ? (
-                  <DialNeutralButton
-                    className={buttonsClassNames}
-                    label={t(ButtonsI18nKey.Stop)}
-                    iconBefore={<IconPlayerPause {...BASE_BUTTON_ICON_PROPS} />}
-                    onClick={handleStopContainer}
-                  />
-                ) : (
-                  <DialNeutralButton
-                    className={buttonsClassNames}
-                    label={t(ButtonsI18nKey.Run)}
-                    iconBefore={<IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} />}
-                    onClick={handleRunContainer}
-                  />
-                )}
-              </>
-              {children}
-            </div>
+                {children}
+              </div>
+            )}
             {!jsonConfiguration.hideJsonEditorButton && <JsonToggles {...jsonConfiguration} />}
           </div>
         )}
