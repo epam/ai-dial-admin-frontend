@@ -87,23 +87,6 @@ const TestCases: FC<Props> = ({ selectedTestSuite }) => {
     setGridApi(api);
   }, []);
 
-  // const onOpenInNewTabAction = useCallback(
-  //   (entity?: T) => {
-  //     onOpenInNewTab(route, entity);
-  //   },
-  //   [route],
-  // );
-
-  const onOpenDeleteModal = useCallback(() => {
-    // TODO: implement delete modal
-  }, []);
-
-  // TODO: drag and drop
-  // select
-  // const actionColumn = ACTION_COLUMN([getDeleteOperation(onOpenDeleteModal)]);
-
-  // const columnDefs = [...TEST_CASES_COLUMN, actionColumn];
-
   return (
     <div className="h-full w-full flex">
       <ListView
