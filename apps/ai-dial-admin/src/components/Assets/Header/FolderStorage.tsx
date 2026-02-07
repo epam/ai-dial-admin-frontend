@@ -34,6 +34,7 @@ const FoldersStorageLabel: FC<Props> = ({ asset }) => {
       postfix={
         <DialIconButton
           className="p-0 h-[20px] w-[20px] text-secondary"
+          tooltipProps={{ triggerClassName: 'h-[20px] w-[20px]' }}
           onClick={() => openFolderStorageInNewTab(asset.folderId)}
           icon={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
         />
