@@ -82,7 +82,9 @@ const CoreSyncEntityStatus: FC<Props> = ({ view, name }) => {
     <div className={classNames(coreSyncStatus?.status ? 'block' : 'hidden')}>
       <LabelledText label={t(CoreSyncI18nKey.SyncWithCore)}>
         <div className="flex flex-row gap-x-2 items-center">
-          <StatusText status={coreSyncStatus?.status} />
+          <div className="flex-1 min-w-0">
+            <StatusText status={coreSyncStatus?.status} />
+          </div>
           {diffStatus && (
             <DialIconButton
               icon={<OpenPopup {...BASE_BUTTON_ICON_PROPS} className="cursor-pointer text-secondary" />}
@@ -91,20 +93,20 @@ const CoreSyncEntityStatus: FC<Props> = ({ view, name }) => {
             />
           )}
         </div>
-        {isModalOpen &&
-          createPortal(
-            <CoreSyncDiffModal
-              isModalOpen={isModalOpen}
-              onClose={() => setIsModalOpen(false)}
-              view={view}
-              name={name}
-              etag={etag}
-              coreSyncStatus={coreSyncStatus}
-              onCoreSyncStatusChange={setCoreSyncStatus}
-            />,
-            document.body,
-          )}
       </LabelledText>
+      {isModalOpen &&
+        createPortal(
+          <CoreSyncDiffModal
+            isModalOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            view={view}
+            name={name}
+            etag={etag}
+            coreSyncStatus={coreSyncStatus}
+            onCoreSyncStatusChange={setCoreSyncStatus}
+          />,
+          document.body,
+        )}
     </div>
   );
 };

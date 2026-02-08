@@ -11,7 +11,6 @@ import { listViewTitleMap } from '@/src/components/ListView/constants';
 import { BasicI18nKey, ButtonsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
-import { Asset } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -21,7 +20,7 @@ interface Props {
   view?: ApplicationRoute;
   selectedFolder?: string;
   isBulkDelete?: boolean;
-  context?: () => AssetsFolderContext<Asset>;
+  context?: () => AssetsFolderContext;
   onClose: () => void;
   onApply?: () => void;
 }

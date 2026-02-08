@@ -16,7 +16,7 @@ import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
-import { Asset } from '@/src/models/dial/deployment-asset';
+import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -36,7 +36,7 @@ interface Props<T> {
   setAddedVersions?: Dispatch<SetStateAction<string[]>>;
   selectedFormat?: ExportFormat;
   children?: ReactNode;
-  assets?: Asset[];
+  assets?: AssetWithVersion[];
   etag?: string;
 
   onChangeEntity?: (entity: T) => void;
@@ -46,7 +46,7 @@ interface Props<T> {
   onRemove: (entity: string) => Promise<ServerActionResponse>;
   onToggleEditor?: () => void;
   onHideFormatSelector?: () => boolean;
-  getAssetContext?: () => AssetsFolderContext<Asset>;
+  getAssetContext?: () => AssetsFolderContext;
 }
 
 const HeaderButtons = <T extends object>({
@@ -123,11 +123,11 @@ const HeaderButtons = <T extends object>({
                 {isAssetView && (
                   <AssetVersionControl
                     view={view}
-                    asset={entity as Asset}
+                    asset={entity as AssetWithVersion}
                     addedVersions={addedVersions || []}
                     onChangeAddedVersion={setAddedVersions}
                     assets={assets}
-                    onChangeAsset={onChangeEntity as (entity: Asset) => void}
+                    onChangeAsset={onChangeEntity as (entity: AssetWithVersion) => void}
                     etag={etag}
                   />
                 )}

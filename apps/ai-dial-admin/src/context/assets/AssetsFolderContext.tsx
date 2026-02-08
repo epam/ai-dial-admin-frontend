@@ -1,34 +1,35 @@
 'use client';
 import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useState } from 'react';
 
-import { DialFile, DialFileNodeType } from '@/src/models/dial/file';
+import { Asset } from '@/src/models/dial/deployment-asset';
+import { DialFileNodeType } from '@/src/models/dial/file';
 import { mergeFiles } from '@/src/utils/files/folder';
 
-export interface AssetsFolderContext<T extends DialFile> {
+export interface AssetsFolderContext {
   fetchFiles: (path: string, refreshData?: boolean, resetFolder?: boolean) => void;
-  files: T[];
+  files: Asset[];
   expandedFolders: Set<string>;
   filePath: string;
-  toggleFolder: (folder: T, skipFetch?: boolean, collapseAll?: boolean) => void;
-  data: T[] | null;
-  fetchedFoldersData: Record<string, T[]>;
-  bulkSelectedData: Record<string, T[]>;
-  setBulkSelectedData: Dispatch<SetStateAction<Record<string, T[]>>>;
+  toggleFolder: (folder: Asset, skipFetch?: boolean, collapseAll?: boolean) => void;
+  data: Asset[] | null;
+  fetchedFoldersData: Record<string, Asset[]>;
+  bulkSelectedData: Record<string, Asset[]>;
+  setBulkSelectedData: Dispatch<SetStateAction<Record<string, Asset[]>>>;
 }
 
-export function createFolderContext<T extends DialFile>(
-  getFilesFunc: (path: string) => Promise<T[] | null | undefined>,
+export function createFolderContext(
+  getFilesFunc: (path: string) => Promise<Asset[] | null | undefined>,
   contextName: string,
 ) {
-  const Context = createContext<AssetsFolderContext<T> | undefined>(undefined);
+  const Context = createContext<AssetsFolderContext | undefined>(undefined);
 
   const Provider = ({ children }: { children: ReactNode }) => {
-    const [files, setFiles] = useState<T[]>([]);
+    const [files, setFiles] = useState<Asset[]>([]);
     const [filePath, setFilePath] = useState('');
     const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
-    const [fetchedFoldersData, setFetchedFoldersData] = useState<Record<string, T[]>>({});
-    const [bulkSelectedData, setBulkSelectedData] = useState<Record<string, T[]>>({});
-    const [data, setData] = useState<T[] | null>([]);
+    const [fetchedFoldersData, setFetchedFoldersData] = useState<Record<string, Asset[]>>({});
+    const [bulkSelectedData, setBulkSelectedData] = useState<Record<string, Asset[]>>({});
+    const [data, setData] = useState<Asset[] | null>([]);
 
     const fetchFiles = (path: string, refreshData?: boolean, resetFolder?: boolean) => {
       getFilesFunc(path).then((fetched) => {
@@ -38,7 +39,7 @@ export function createFolderContext<T extends DialFile>(
         }
 
         setFiles((prevFiles) => {
-          const newFiles = mergeFiles(prevFiles, fetched, path) as T[];
+          const newFiles = mergeFiles(prevFiles, fetched, path) as Asset[];
           if (prevFiles.length === 0 || refreshData) {
             toggleFolder(newFiles[0], true, refreshData);
           }
@@ -46,7 +47,7 @@ export function createFolderContext<T extends DialFile>(
           return newFiles;
         });
 
-        const folderItems = fetched?.filter((f) => f.nodeType === DialFileNodeType.ITEM) as T[];
+        const folderItems = fetched?.filter((f) => f.nodeType === DialFileNodeType.ITEM) as Asset[];
         setData(folderItems);
         setFetchedFoldersData((prev) => (refreshData ? { [path]: folderItems } : { ...prev, [path]: folderItems }));
 
@@ -56,7 +57,7 @@ export function createFolderContext<T extends DialFile>(
       });
     };
 
-    const toggleFolder = (folder: T, skipFetch?: boolean, collapseAll?: boolean) => {
+    const toggleFolder = (folder: Asset, skipFetch?: boolean, collapseAll?: boolean) => {
       const folderPath = folder.path;
       const newExpanded = new Set(collapseAll ? [] : expandedFolders);
 
@@ -77,7 +78,7 @@ export function createFolderContext<T extends DialFile>(
       setExpandedFolders(newExpanded);
     };
 
-    const value: AssetsFolderContext<T> = {
+    const value: AssetsFolderContext = {
       fetchFiles,
       files,
       expandedFolders,
@@ -92,7 +93,7 @@ export function createFolderContext<T extends DialFile>(
     return <Context.Provider value={value}>{children}</Context.Provider>;
   };
 
-  const useFolderContext = (): AssetsFolderContext<T> => {
+  const useFolderContext = (): AssetsFolderContext => {
     const context = useContext(Context);
     if (!context) {
       throw new Error(`${contextName} must be used within its Provider`);

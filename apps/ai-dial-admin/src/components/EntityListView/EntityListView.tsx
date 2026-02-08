@@ -11,7 +11,6 @@ import { ENTITIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { Asset } from '@/src/models/dial/deployment-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isAssetWithVersion } from '@/src/utils/is-asset-view';
@@ -34,7 +33,7 @@ interface Props<T> {
   onRemoveEntity: (entity: string) => Promise<ServerActionResponse>;
   onMoveFiles?: (paths: string[], newPath: string) => Promise<ServerActionResponse[]>;
   onBulkDelete?: (paths: { path: string }[]) => Promise<ServerActionResponse>;
-  getAssetContext?: () => AssetsFolderContext<Asset>;
+  getAssetContext?: () => AssetsFolderContext;
 }
 
 const BaseEntityList = <T extends object>({

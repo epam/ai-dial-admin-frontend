@@ -2,19 +2,16 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { DialSwitch } from '@epam/ai-dial-ui-kit';
 
-import AssetHeader from '@/src/components/Assets/Deployments/Header';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import MdEditor from '@/src/components/Common/MdEditor/MdEditor';
 import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { JSONEditorError } from '@/src/types/editor';
-import { Asset } from '@/src/models/dial/deployment-asset';
 
 interface Props {
   prompt: DialPrompt;
@@ -81,38 +78,34 @@ const PromptProperties: FC<Props> = ({ prompt, onChangePrompt }) => {
   }, [isJSONContentMode, prompt.content]);
 
   return (
-    <div className="h-full flex flex-col w-full">
-      <AssetHeader asset={prompt} />
-
-      <div className="flex flex-col gap-y-8 mt-8">
-        <DescriptionControl entity={prompt} onChangeEntity={onChangePrompt} isFullWidth={false} />
-        <div>
-          <div className="flex justify-between mb-2">
-            <div className="tiny mb-2 text-secondary">{t(EntityFieldsI18nKey.content)}</div>
-            <DialSwitch
-              isOn={isJSONContentMode}
-              label="JSON"
-              switchId="content_json_mode"
-              onChange={onChangeContentMode}
-            />
-          </div>
-          {isJSONContentMode ? (
-            <div className="h-[300px] border border-primary rounded">
-              <JsonEditorBase value={jsonValue} onChange={onChangeJsonValue} onValidateJSON={onValidateJSON} />
-            </div>
-          ) : (
-            <MdEditor content={prompt.content} onChangeContent={onChangeContent} />
-          )}
+    <div className="flex flex-col gap-y-8">
+      <DescriptionControl entity={prompt} onChangeEntity={onChangePrompt} isFullWidth={false} />
+      <div>
+        <div className="flex justify-between mb-2">
+          <div className="tiny mb-2 text-secondary">{t(EntityFieldsI18nKey.content)}</div>
+          <DialSwitch
+            isOn={isJSONContentMode}
+            label="JSON"
+            switchId="content_json_mode"
+            onChange={onChangeContentMode}
+          />
         </div>
-        <FilePath
-          value={prompt.folderId}
-          label={t(EntitiesI18nKey.FolderStorage)}
-          modalTitle={t(BasicI18nKey.MoveToFolder)}
-          placeholder={t(EntityPlaceholdersI18nKey.Path)}
-          onChange={onChangePath}
-          context={usePromptFolder as unknown as () => AssetsFolderContext<Asset>}
-        />
+        {isJSONContentMode ? (
+          <div className="h-[300px] border border-primary rounded">
+            <JsonEditorBase value={jsonValue} onChange={onChangeJsonValue} onValidateJSON={onValidateJSON} />
+          </div>
+        ) : (
+          <MdEditor content={prompt.content} onChangeContent={onChangeContent} />
+        )}
       </div>
+      <FilePath
+        value={prompt.folderId}
+        label={t(EntitiesI18nKey.FolderStorage)}
+        modalTitle={t(BasicI18nKey.MoveToFolder)}
+        placeholder={t(EntityPlaceholdersI18nKey.Path)}
+        onChange={onChangePath}
+        context={usePromptFolder}
+      />
     </div>
   );
 };
