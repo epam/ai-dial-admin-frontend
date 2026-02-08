@@ -10,6 +10,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
 import { FieldError } from '@/src/models/error';
 import { getErrorForKey } from './utils';
+import CopyButton from '../../../Common/CopyButton/CopyButton';
 
 interface Props {
   isKeyImmutable?: boolean;
@@ -50,12 +51,7 @@ const KeyGenerateField: FC<Props> = ({ isKeyImmutable, keys, selectedKey, change
         />
       </div>
       {isKeyImmutable ? (
-        <DialNeutralButton
-          className="ml-2 h-[34px]"
-          iconBefore={<IconCopy {...BASE_BUTTON_ICON_PROPS} />}
-          label={t(ButtonsI18nKey.Copy)}
-          onClick={() => navigator.clipboard.writeText(selectedKey.key || '')}
-        />
+        <CopyButton className="ml-2" label={t(ButtonsI18nKey.Copy)} field={selectedKey.key} isFullButton={true} />
       ) : (
         <DialGhostButton
           className="ml-2 h-[34px]"
