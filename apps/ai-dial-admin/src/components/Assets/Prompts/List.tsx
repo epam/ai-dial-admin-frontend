@@ -24,7 +24,7 @@ const PromptsList: FC = () => {
       baseColumns={NON_DEPLOYMENT_ASSETS_COLUMNS}
       names={names}
       versionsMap={versionsMap}
-      data={filteredData}
+      data={filteredData as DialPrompt[]}
       route={ApplicationRoute.Prompts}
       onCreateEntity={createPrompt}
       onRemoveEntity={removePrompt}
