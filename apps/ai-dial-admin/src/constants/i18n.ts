@@ -274,6 +274,7 @@ export enum ButtonsI18nKey {
   Update = 'Buttons.Update',
   Cancel = 'Buttons.Cancel',
   Delete = 'Buttons.Delete',
+  Change = 'Buttons.Change',
   DeleteAll = 'Buttons.DeleteAll',
   Duplicate = 'Buttons.Duplicate',
   Save = 'Buttons.Save',
@@ -1285,4 +1286,5 @@ export enum TestSuitesI18nKey {
   FromDial = 'TestSuites.FromDial',
   Other = 'TestSuites.Other',
   ChatInterface = 'TestSuites.ChatInterface',
+  Preview = 'TestSuites.Preview',
 }
