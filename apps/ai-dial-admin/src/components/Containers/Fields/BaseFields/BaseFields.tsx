@@ -20,7 +20,7 @@ const BaseFields: FC<Props> = ({ container, setContainer, names, isModal = false
 
   const onChangeName = useCallback(
     (container: Container) => {
-      const error = names?.includes(container.name);
+      const error = names?.includes(container.name || '');
       setIsUniqueNameError(!!error);
       setContainer(container);
     },
