@@ -28,7 +28,6 @@ import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import BulkButtons from './BulkButtons';
 import Modals, { ModalType } from './Modals';
 import { preparePathForAsset } from './utils';
-import { Asset } from '@/src/models/dial/deployment-asset';
 
 interface Props<T> {
   names?: string[];
@@ -48,7 +47,7 @@ interface Props<T> {
   onRemoveEntity: (entity: string) => Promise<ServerActionResponse>;
   onMoveFiles?: (paths: string[], newPath: string) => Promise<ServerActionResponse[]>;
   onBulkDelete?: (paths: { path: string }[]) => Promise<ServerActionResponse>;
-  getAssetContext?: () => AssetsFolderContext<Asset>;
+  getAssetContext?: () => AssetsFolderContext;
 }
 
 const Actions = <T extends object>({
