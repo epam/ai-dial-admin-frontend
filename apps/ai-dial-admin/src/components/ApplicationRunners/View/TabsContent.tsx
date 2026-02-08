@@ -42,7 +42,7 @@ const TabsContent: FC<Props> = ({
         {activeTab === EntityViewTab.Properties && (
           <PropertiesTabContent
             entity={selectedRunner}
-            view={ApplicationRoute.AssetsApplications}
+            view={ApplicationRoute.ApplicationRunners}
             id={selectedRunner.$id}
           >
             <SchemeProperties names={names} runner={selectedRunner} isImmutable={true} onChangeRunner={onChange} />
@@ -50,7 +50,7 @@ const TabsContent: FC<Props> = ({
         )}
 
         {activeTab === EntityViewTab.Parameters && (
-          <ApplicationParametersTab view={ApplicationRoute.AssetsApplications} entity={selectedRunner} />
+          <ApplicationParametersTab view={ApplicationRoute.ApplicationRunners} entity={selectedRunner} />
         )}
 
         {activeTab === EntityViewTab.Features && (
