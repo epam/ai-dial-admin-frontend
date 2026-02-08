@@ -9,7 +9,7 @@ import { BasicI18nKey, ButtonsI18nKey, ImportI18nKey, TestSuitesI18nKey } from '
 import { useI18n } from '@/src/locales/client';
 import { TestCase } from '@/src/models/evaluation/test-suite';
 import { getTestCaseColumns } from '../../utils/columns';
-import Grid from '@/src/Grid/Grid';
+import Grid from '@/src/components/Grid/Grid';
 import SelectedFile from './SelectedFile';
 
 interface Props {
