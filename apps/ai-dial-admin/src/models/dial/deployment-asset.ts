@@ -21,4 +21,5 @@ export interface AssetToolset extends DialFile, Toolset {
 }
 
 export type DeploymentAsset = AssetApp | AssetToolset;
-export type Asset = DeploymentAsset | DialPrompt;
+export type AssetWithVersion = DeploymentAsset | DialPrompt;
+export type Asset = AssetWithVersion | DialFile;

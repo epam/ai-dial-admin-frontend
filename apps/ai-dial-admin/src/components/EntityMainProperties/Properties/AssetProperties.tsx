@@ -10,7 +10,7 @@ import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { Asset } from '@/src/models/dial/deployment-asset';
+import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isDeploymentAsset } from '@/src/utils/is-asset-view';
@@ -18,13 +18,13 @@ import { getPromptVersionError } from '@/src/utils/validation/version-error';
 
 interface Props {
   view?: ApplicationRoute;
-  entity: Asset;
+  entity: AssetWithVersion;
   names: string[];
   isEntityImmutable?: boolean;
   versionsMap?: Record<string, string[]>;
   onChangeEntity: (entity: object) => void;
   runners?: DialApplicationScheme[];
-  initialValues?: Partial<Asset>;
+  initialValues?: Partial<AssetWithVersion>;
 }
 
 const AssetProperties: FC<Props> = ({
