@@ -69,16 +69,16 @@ const MethodInfo: FC<Props> = ({ testSuite, onChangeTestSuite, selectedAppType }
     [onChangeTestSuite, testSuite],
   );
 
-  const [tempSuite, setTempSuite] = useState(structuredClone(testSuite));
+  const [currentSuite, setCurrentSuite] = useState(structuredClone(testSuite));
 
-  const confirmTemp = useCallback(() => {
-    onChangeTestSuite(tempSuite);
+  const onConfirm = useCallback(() => {
+    onChangeTestSuite(currentSuite);
     setIsMethodModalOpen(false);
-  }, [onChangeTestSuite, tempSuite]);
+  }, [onChangeTestSuite, currentSuite]);
 
-  const disableConfirmTemp = useMemo(() => {
-    return !tempSuite.endpointRef?.method || !tempSuite.endpointRef?.relativeUrl;
-  }, [tempSuite.endpointRef?.method, tempSuite.endpointRef?.relativeUrl]);
+  const disableConfirm = useMemo(() => {
+    return !currentSuite.endpointRef?.method || !currentSuite.endpointRef?.relativeUrl;
+  }, [currentSuite.endpointRef?.method, currentSuite.endpointRef?.relativeUrl]);
 
   return (testSuite?.endpointRef && !!Object.keys(testSuite?.endpointRef).length) || testSuite ? (
     <div className="flex flex-col gap-4 p-4 h-full w-full relative">
@@ -144,8 +144,8 @@ const MethodInfo: FC<Props> = ({ testSuite, onChangeTestSuite, selectedAppType }
             onClose={() => setIsMethodModalOpen(false)}
             confirmLabel={t(ButtonsI18nKey.Confirm)}
             cancelLabel={t(ButtonsI18nKey.Cancel)}
-            onConfirm={confirmTemp}
-            disableConfirmButton={disableConfirmTemp}
+            onConfirm={onConfirm}
+            disableConfirmButton={disableConfirm}
             size={PopupSize.Lg}
             className="h-[800px]"
           >
@@ -156,8 +156,8 @@ const MethodInfo: FC<Props> = ({ testSuite, onChangeTestSuite, selectedAppType }
                     $type: selectedAppType as string,
                     deploymentId: testSuite?.deploymentRef?.id as string,
                   }}
-                  testSuite={tempSuite}
-                  onChange={setTempSuite}
+                  testSuite={currentSuite}
+                  onChange={setCurrentSuite}
                 />
               </div>
 

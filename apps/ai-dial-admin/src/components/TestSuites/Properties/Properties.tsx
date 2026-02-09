@@ -19,7 +19,7 @@ import { Deployment } from '@/src/models/evaluation/deployment';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import SelectApplicationModal from './SelectApplicationModal';
+import SelectApplicationModal from '../Modals/SelectApplication/SelectApplicationModal';
 
 interface Props {
   isModal?: boolean;
