@@ -42,8 +42,12 @@ export const getImportResults = (
   folderName: string,
   type: string,
   t: (t: string, options?: Record<string, string | number>) => string,
-  showNotification: (config: Notification) => string,
+  showNotification?: (config: Notification) => string,
 ) => {
+  if (!showNotification) {
+    return;
+  }
+
   let success = 0;
   const skipped: string[] = [];
   const failed: string[] = [];

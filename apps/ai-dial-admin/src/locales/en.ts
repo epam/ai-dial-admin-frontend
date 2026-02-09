@@ -366,8 +366,8 @@ export default {
     Update: 'Update',
     Change: 'Change',
     Save: 'Save',
+    Download: 'Download',
     SaveAndRedeploy: 'Save & redeploy',
-    Move: 'Move',
     Remove: 'Remove',
     SaveAsNewVersion: 'Save as new version',
     Discard: 'Discard',
@@ -783,8 +783,7 @@ export default {
     FileReview: 'File Review',
     FolderCreate: 'Create Folder',
     FolderCreatePlaceholder: 'Enter folder name',
-    FolderCreateSuccess: 'Folder created successfully',
-    Rename: 'Rename',
+
     FolderName: 'Folder name',
     RenameFolderError: 'This name is used by another folder in the current directory.',
     MoveFolderError: 'This folder contains subfolder with the same name.',
@@ -1316,5 +1315,23 @@ export default {
     ChangeMethod: 'Change method',
     MethodChangeWarning:
       'Changing the method will significantly affect the test suite, including configuration and results. Existing settings may be updated or reset.',
+  },
+  FileManager: {
+    SelectedItems: 'item(s) selected',
+    AddChild: 'Add child',
+    AddSibling: 'Add sibling',
+    Rename: 'Rename',
+    Move: 'Move to',
+    File: 'File',
+    Folder: 'Folder',
+    EnterFolderName: 'Please enter a folder name',
+    NameExists: 'A folder with this name already exists in this location',
+    ManagePermissions: 'Manage Permissions',
+    Notifications: {
+      CreateFolder: {
+        Title: 'Folder created successfully',
+        Description: 'You can now add files to this folder.',
+      },
+    },
   },
 } as const;
