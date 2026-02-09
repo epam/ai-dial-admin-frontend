@@ -11,6 +11,7 @@ export interface Image extends BaseEntity {
   transportType?: IMAGE_TRANSPORT_TYPE;
   author?: string;
   logs?: string[];
+  allowedDomains?: string[];
 }
 
 export interface ImageGroup {

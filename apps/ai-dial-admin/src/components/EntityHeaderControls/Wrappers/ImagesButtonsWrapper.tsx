@@ -195,21 +195,12 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
         {isChanged ? (
           <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
             <DialNeutralButton className={buttonsClassNames} label={t(ButtonsI18nKey.Discard)} onClick={onDiscard} />
-            {allowEditing && !forceNewVersion ? (
-              <DialNeutralButton
-                className={buttonsClassNames}
-                label={t(ButtonsI18nKey.SaveAsNewVersion)}
-                onClick={onOpenSaveNewVersionModal}
-                disabled={isDisableSave}
-              />
-            ) : (
-              <DialPrimaryButton
-                className={buttonsClassNames}
-                label={t(ButtonsI18nKey.SaveAsNewVersion)}
-                onClick={onOpenSaveNewVersionModal}
-                disabled={isDisableSave}
-              />
-            )}
+            <DialPrimaryButton
+              className={buttonsClassNames}
+              label={t(ButtonsI18nKey.SaveAsNewVersion)}
+              onClick={onOpenSaveNewVersionModal}
+              disabled={isDisableSave}
+            />
             {allowEditing && !forceNewVersion && (
               <DialPrimaryButton
                 className={buttonsClassNames}
