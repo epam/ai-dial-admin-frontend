@@ -10,6 +10,7 @@ import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models'
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialRole } from '@/src/models/dial/role';
@@ -32,6 +33,7 @@ interface Props {
 const RouteView: FC<Props> = ({ originalRoute, etag, names, roles }) => {
   const t = useI18n();
   const router = useRouter();
+  const { dispatch } = useSaveValidationContext();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
   const tabs = getRouteTabs(t);
@@ -95,6 +97,7 @@ const RouteView: FC<Props> = ({ originalRoute, etag, names, roles }) => {
         : getReqRef.current(updateRoute, selectedRoute, etag);
     req.then((res) => {
       if (res.success) {
+        dispatch({ type: ValidationActionType.Reset });
         setCoreRoute(null);
         showNotification(
           getSuccessNotification(
@@ -107,7 +110,7 @@ const RouteView: FC<Props> = ({ originalRoute, etag, names, roles }) => {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
-  }, [selectedFormat, selectedRoute, originalRoute.name, etag, showNotification, t, router]);
+  }, [selectedFormat, selectedRoute, originalRoute.name, etag, dispatch, showNotification, t, router]);
 
   return (
     <>
