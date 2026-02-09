@@ -57,7 +57,7 @@ const ImportFileModal: FC<Props> = ({ selectedTestSuiteId, isModalOpen, onClose,
       cancelLabel={t(ButtonsI18nKey.Cancel)}
     >
       <div className="flex px-6 py-4 flex-col h-[800px]">
-        {!testCases && (
+        {!testCases && !isLoading && (
           <DialLoadFileArea
             acceptTypes="text/csv"
             emptyTextFirstLine={t(ImportI18nKey.DropAnyFile)}
@@ -71,7 +71,7 @@ const ImportFileModal: FC<Props> = ({ selectedTestSuiteId, isModalOpen, onClose,
         {testCases && !isLoading && (
           <div className="flex flex-col h-full">
             <SelectedFile file={selectedFile} onChangeFile={onChangeFile} />
-            <span className="dial-small-sime-text mb-2 mt-4 text-secondary">{t(TestSuitesI18nKey.Preview)}</span>
+            <span className="dial-small-sime-text mb-1 mt-4 text-secondary">{t(TestSuitesI18nKey.Preview)}:</span>
             <div className="flex-1 min-h-0">
               <Grid columnDefs={columnDefs} rowData={testCases || []} />
             </div>

@@ -16,10 +16,11 @@ describe('getGridDataFromImportPreview', () => {
 
     const result = getGridDataFromImportPreview(importPreview);
 
-    expect(result.colDefs).toEqual([
-      { field: 'name', headerName: 'Name' },
-      { field: 'age', headerName: 'Age' },
-    ]);
+    expect(result.colDefs.length).toBe(4); // TEST_CASES_COLUMN (2) + detectedColumns (2)
+    expect(result.colDefs[0]).toEqual({ field: 'id', colId: 'id', headerName: 'ID' });
+    expect(result.colDefs[1]).toEqual({ field: 'testCaseName', colId: 'testCaseName', headerName: 'Test case name' });
+    expect(result.colDefs[2]).toEqual({ field: 'name', headerName: 'Name' });
+    expect(result.colDefs[3]).toEqual({ field: 'age', headerName: 'Age' });
   });
 
   test('should map sampleRows with facts and parameters to rowData correctly', () => {
@@ -85,7 +86,9 @@ describe('getGridDataFromImportPreview', () => {
 
     const result = getGridDataFromImportPreview(importPreview);
 
-    expect(result.colDefs).toEqual([]);
+    expect(result.colDefs.length).toBe(2); // Only TEST_CASES_COLUMN
+    expect(result.colDefs[0]).toEqual({ field: 'id', colId: 'id', headerName: 'ID' });
+    expect(result.colDefs[1]).toEqual({ field: 'testCaseName', colId: 'testCaseName', headerName: 'Test case name' });
     expect(result.rowData).toEqual([]);
   });
 
@@ -99,7 +102,8 @@ describe('getGridDataFromImportPreview', () => {
 
     const result = getGridDataFromImportPreview(importPreview);
 
-    expect(result.colDefs).toEqual([{ field: 'name', headerName: 'Name' }]);
+    expect(result.colDefs.length).toBe(3); // TEST_CASES_COLUMN (2) + detectedColumns (1)
+    expect(result.colDefs[2]).toEqual({ field: 'name', headerName: 'Name' });
     expect(result.rowData).toEqual([]);
   });
 
@@ -154,6 +158,6 @@ describe('getGridDataFromImportPreview', () => {
     const result = getGridDataFromImportPreview(importPreview);
 
     // parameters.value should override facts.value due to spread order
-    expect(result.rowData[0].value).toBe(200);
+    expect((result.rowData[0] as any).value).toBe(200);
   });
 });

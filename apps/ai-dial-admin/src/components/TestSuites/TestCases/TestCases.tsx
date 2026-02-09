@@ -11,9 +11,9 @@ import { TestCase, TestSuite } from '@/src/models/evaluation/test-suite';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { ColDef, GridApi, GridOptions, IDatasource, IGetRowsParams } from 'ag-grid-community';
-import HeaderButtons from './Header';
 import { getTestCaseColumns } from '../utils/columns';
 import { getTestCaseGridData } from '../utils/data';
+import HeaderButtons from './Header';
 
 interface Props {
   selectedTestSuite: TestSuite;
@@ -50,15 +50,26 @@ const TestCases: FC<Props> = ({ selectedTestSuite }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTestSuite.id]);
 
+  const onSetData = useCallback(
+    (data: Record<string, unknown>[], totalElements: number, params: IGetRowsParams) => {
+      params.successCallback(data, totalElements);
+      if (totalElements === 0) {
+        gridApi?.showNoRowsOverlay();
+      }
+      gridApi?.setGridOption('loading', false);
+    },
+    [gridApi],
+  );
+
   const gridDataSource: IDatasource = useMemo(
     () => ({
       getRows: (params: IGetRowsParams) => {
+        gridApi?.hideOverlay();
         gridApi?.setGridOption('loading', true);
         const page = Math.floor(params.startRow / PAGE_SIZE);
         if (page === 0) {
-          gridApi?.setGridOption('loading', false);
           const data = getTestCaseGridData(testCases);
-          params.successCallback(data, totalElements);
+          onSetData(data, totalElements, params);
           return;
         }
         const sorts = getRequestSorts(params.sortModel);
@@ -66,12 +77,9 @@ const TestCases: FC<Props> = ({ selectedTestSuite }) => {
 
         getTestCases(selectedTestSuite.id, page, PAGE_SIZE, sorts, filters)
           .then((res) => {
-            if (res == null || res.content.length === 0) {
-              params.successCallback([], 0);
-            } else {
-              params.successCallback(getTestCaseGridData(res.content || []), res.totalElements);
-            }
-            gridApi?.setGridOption('loading', false);
+            const data = res == null || res.content.length === 0 ? [] : getTestCaseGridData(res?.content || []);
+
+            onSetData(data, res?.totalElements || 0, params);
           })
           .catch(() => {
             params.failCallback();
@@ -79,7 +87,7 @@ const TestCases: FC<Props> = ({ selectedTestSuite }) => {
           });
       },
     }),
-    [gridApi, selectedTestSuite.id, testCases, totalElements],
+    [gridApi, onSetData, selectedTestSuite.id, testCases, totalElements],
   );
 
   useEffect(() => {
