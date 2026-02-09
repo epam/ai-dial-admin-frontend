@@ -32,9 +32,7 @@ vi.mock('../MethodItem', () => ({
 
 vi.mock('../MethodInfo', () => ({
   __esModule: true,
-  default: ({ testSuite }: any) => (
-    <div data-testid="method-info">{JSON.stringify(testSuite?.endpointRef)}</div>
-  ),
+  default: ({ testSuite }: any) => <div data-testid="method-info">{JSON.stringify(testSuite?.endpointRef)}</div>,
 }));
 
 describe('Methods component', () => {
