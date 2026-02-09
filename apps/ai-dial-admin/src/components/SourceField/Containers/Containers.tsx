@@ -119,7 +119,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
               searchable={true}
               options={containers.map((container) => ({
                 value: container.name as string,
-                label: container.displayName,
+                label: container.displayName as string,
               }))}
               onChange={(container) => onSelect(container as string)}
               elementId="source-type"
