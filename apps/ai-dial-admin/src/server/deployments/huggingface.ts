@@ -4,11 +4,14 @@ import { BaseApi } from '@/src/server/base-api';
 import { ServerActionResponse } from '@/src/models/server-action';
 
 export const HUGGINGFACE_MODELS_BASE = `${API}/huggingface/models`;
-export const HUGGINGFACE_MODELS_SEARCH = (search: string) =>
-  search ? `${HUGGINGFACE_MODELS_BASE}?search=${search}` : `${HUGGINGFACE_MODELS_BASE}`;
+export const HUGGINGFACE_MODELS = (params: Record<string, string>) => {
+  const queryString = new URLSearchParams(params).toString();
+
+  return `${HUGGINGFACE_MODELS_BASE}?${queryString}`;
+};
 
 export class HuggingfaceApi extends BaseApi {
-  getHuggingFaceModels(search: string, token: JWT | null): Promise<ServerActionResponse> {
-    return this.getAction(HUGGINGFACE_MODELS_SEARCH(search), token);
+  getHuggingFaceModels(params: Record<string, string>, token: JWT | null): Promise<ServerActionResponse> {
+    return this.getAction(HUGGINGFACE_MODELS(params), token);
   }
 }

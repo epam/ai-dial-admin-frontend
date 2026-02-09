@@ -1,11 +1,12 @@
-import { DialGhostButton, DialNeutralButton, DialPasswordInputField } from '@epam/ai-dial-ui-kit';
-import { IconCopy, IconSparkles } from '@tabler/icons-react';
+import { DialGhostButton, DialPasswordInputField } from '@epam/ai-dial-ui-kit';
+import { IconSparkles } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, useCallback, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
+import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
 import { FieldError } from '@/src/models/error';
@@ -50,12 +51,7 @@ const KeyGenerateField: FC<Props> = ({ isKeyImmutable, keys, selectedKey, change
         />
       </div>
       {isKeyImmutable ? (
-        <DialNeutralButton
-          className="ml-2 h-[34px]"
-          iconBefore={<IconCopy {...BASE_BUTTON_ICON_PROPS} />}
-          label={t(ButtonsI18nKey.Copy)}
-          onClick={() => navigator.clipboard.writeText(selectedKey.key || '')}
-        />
+        <CopyButton className="ml-2" label={t(ButtonsI18nKey.Copy)} field={selectedKey.key} isFullButton={true} />
       ) : (
         <DialGhostButton
           className="ml-2 h-[34px]"

@@ -24,7 +24,7 @@ const ServingProperties: FC<Props> = ({ container, setContainer, names, isModal,
   return (
     <div className="flex flex-col gap-y-8">
       <BaseFields container={container} setContainer={setContainer} names={names} isModal={isModal} />
-      <ModelSourceFields container={container} setContainer={setContainer} isModal={isModal} />
+      <ModelSourceFields container={container} setContainer={setContainer} isModal={isModal} route={route} />
       {!isModal && (
         <div className="flex flex-col gap-y-8">
           <EndpointConfiguration container={container} setContainer={setContainer} route={route} />
