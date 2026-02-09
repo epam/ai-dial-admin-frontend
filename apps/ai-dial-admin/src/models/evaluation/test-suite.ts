@@ -28,4 +28,5 @@ export interface TestSuiteEndpointRef {
 
 export interface TestCase {
   name?: string;
+  facts?: Record<string, unknown>;
 }
