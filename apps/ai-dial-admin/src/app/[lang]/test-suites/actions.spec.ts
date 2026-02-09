@@ -49,17 +49,17 @@ describe('TestSuites :: server actions', () => {
 
   test('Should call updateTestSuite action', async () => {
     (testSuitesApi.updateTestSuite as any).mockResolvedValue(RESPONSE_MOCK);
-    const result = await updateTestSuite({ id: 'test', description: 'test' });
+    const result = await updateTestSuite({ id: 'test', description: 'test' }, 'etag');
     expect(getUserToken).toHaveBeenCalled();
-    expect(testSuitesApi.updateTestSuite).toHaveBeenCalledWith({ id: 'test', description: 'test' }, TOKEN_MOCK);
+    expect(testSuitesApi.updateTestSuite).toHaveBeenCalledWith({ id: 'test', description: 'test' }, 'etag', TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 
   test('Should call getTestSuite action with undefined description', async () => {
     (testSuitesApi.getTestSuite as any).mockResolvedValue(RESPONSE_MOCK);
-    const result = await getTestSuite('test');
+    const result = await getTestSuite('test', 'etag');
     expect(getUserToken).toHaveBeenCalled();
-    expect(testSuitesApi.getTestSuite).toHaveBeenCalledWith('test', TOKEN_MOCK);
+    expect(testSuitesApi.getTestSuite).toHaveBeenCalledWith('test', 'etag', TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 

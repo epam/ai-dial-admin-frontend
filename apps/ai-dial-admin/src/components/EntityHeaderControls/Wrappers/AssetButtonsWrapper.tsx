@@ -96,10 +96,12 @@ const AssetButtonsWrapper: FC<AssetButtonsWrapperProps> = ({
         const errorNotifications = showEditorErrorNotifications(jsonErrors, showNotification, t);
         dispatch({ type: ValidationActionType.SetJsonEditorNotifications, errors: errorNotifications });
       } else {
-        onSave?.(version);
+        const isAddedVersion = !!addedVersions?.includes(entity.version);
+        const newVersion = entity.version;
+        onSave?.(version || (isAddedVersion ? newVersion : void 0));
       }
     },
-    [jsonErrors, showNotification, t, dispatch, onSave],
+    [jsonErrors, showNotification, t, dispatch, addedVersions, entity.version, onSave],
   );
 
   return (

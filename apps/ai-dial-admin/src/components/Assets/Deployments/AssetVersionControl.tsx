@@ -18,7 +18,6 @@ import { useI18n } from '@/src/locales/client';
 import { AssetWithVersion, DeploymentAsset } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isDeploymentAsset } from '@/src/utils/is-asset-view';
 import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
 
 interface Props {
@@ -47,10 +46,6 @@ const AssetVersionControl: FC<Props> = ({
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType>();
-
-  const isDeployment = useMemo(() => {
-    return isDeploymentAsset(view);
-  }, [view]);
 
   const versions = useMemo(() => {
     return assets?.map((asset) => asset.version) || [];
@@ -130,18 +125,16 @@ const AssetVersionControl: FC<Props> = ({
           value={asset.version}
           onChange={(v) => onChangeVersion(v as string)}
           footer={
-            !isDeployment && (
-              <DialGhostButton
-                className="w-full min-h-[34px] h-[34px]"
-                iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-                label={t(ButtonsI18nKey.Create)}
-              />
-            )
+            <DialGhostButton
+              className="w-full min-h-[34px] h-[34px]"
+              iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
+              label={t(ButtonsI18nKey.Create)}
+            />
           }
           onFooterClick={() => handleModalOpen(ModalType.addVersion)}
         />
 
-        {!isDeployment && !!assets?.length && assets.length > 1 && (
+        {!!assets?.length && assets.length > 1 && (
           <DialNeutralButton
             iconBefore={<IconReplace {...BASE_BUTTON_ICON_PROPS} />}
             label={t(CompareI18nKey.CompareVersions)}

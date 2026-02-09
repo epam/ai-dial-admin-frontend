@@ -80,7 +80,7 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate }) => {
           )}
 
           {currentStepId === TestSuitTab.Methods && (
-            <Methods selectedApplication={selectedApplication} testSuite={testSuite} onChange={setTestSuite} />
+            <Methods selectedApplication={selectedApplication} testSuite={testSuite} onChange={setTestSuite} isCreate />
           )}
         </div>
       </div>

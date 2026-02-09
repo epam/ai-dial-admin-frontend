@@ -313,6 +313,7 @@ export enum ButtonsI18nKey {
   Close = 'Buttons.Close',
   OpenAdapter = 'Buttons.OpenAdapter',
   OpenAppRunner = 'Buttons.OpenAppRunner',
+  Open = 'Buttons.Open',
   None = 'Buttons.None',
   BulkActions = 'Buttons.BulkActions',
   AddAdditionalProperties = 'Buttons.AddAdditionalProperties',
@@ -1282,6 +1283,8 @@ export enum TestSuitesI18nKey {
   CreateTestSuite = 'TestSuites.CreateTestSuite',
   Application = 'TestSuites.Application',
   Methods = 'TestSuites.Methods',
+  Method = 'TestSuites.Method',
+  ChangeMethod = 'TestSuites.ChangeMethod',
   TestCases = 'TestSuites.TestCases',
   NoTestCases = 'TestSuites.NoTestCases',
   FromPC = 'TestSuites.FromPC',
@@ -1290,4 +1293,5 @@ export enum TestSuitesI18nKey {
   Other = 'TestSuites.Other',
   ChatInterface = 'TestSuites.ChatInterface',
   Preview = 'TestSuites.Preview',
+  MethodChangeWarning = 'TestSuites.MethodChangeWarning',
 }
