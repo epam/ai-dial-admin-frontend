@@ -400,6 +400,7 @@ export default {
     Close: 'Close',
     OpenAppRunner: 'Open Application Runner',
     OpenAdapter: 'Open Adapter',
+    Open: 'Open',
     None: 'None',
     BulkActions: 'Bulk actions',
     AddAdditionalProperties: 'Add additional properties',
@@ -1303,6 +1304,7 @@ export default {
     CreateTestSuite: 'Create Test Suite',
     Application: 'Application',
     Methods: 'Methods',
+    Method: 'Method',
     TestCases: 'Test Cases',
     NoTestCases: 'No Test Cases',
     FromPC: 'From PC storage',
@@ -1311,5 +1313,8 @@ export default {
     Other: 'Other',
     ChatInterface: 'Chat interface',
     Preview: 'Preview',
+    ChangeMethod: 'Change method',
+    MethodChangeWarning:
+      'Changing the method will significantly affect the test suite, including configuration and results. Existing settings may be updated or reset.',
   },
 } as const;
