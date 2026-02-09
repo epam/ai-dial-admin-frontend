@@ -11,7 +11,12 @@ import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/
 import JsonToggleWithFormats from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggleWithFormats';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import {
+  BASE_BUTTON_ICON_PROPS,
+  SELECT_ENTITY_HEADER_CLASS,
+  SELECT_ENTITY_MOBILE_HEADER_BUTTONS_CLASS,
+  SELECT_ENTITY_MOBILE_HEADER_CLASS,
+} from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
@@ -51,13 +56,11 @@ const SimpleButtonsWrapper = <T extends object>({
   const { isValid, dispatch, jsonErrors } = useSaveValidationContext();
   const { showNotification } = useNotification();
 
-  const staticContainerClassName = 'flex flex-row gap-3 divide-x divide-primary lg:h-[35px]';
-
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [containerClassName, setContainerClassName] = useState(staticContainerClassName);
+  const [containerClassName, setContainerClassName] = useState(SELECT_ENTITY_HEADER_CLASS);
   const [buttonsClassName, setButtonsClassName] = useState('');
   const isDisableSave = useMemo(() => (isEditorEnabled ? false : !isValid), [isEditorEnabled, isValid]);
 
@@ -71,12 +74,9 @@ const SimpleButtonsWrapper = <T extends object>({
 
   useEffect(() => {
     setContainerClassName(
-      classNames(
-        staticContainerClassName,
-        (isTablet || isMobile) && 'fixed bottom-0 left-0 right-0 h-[62px] bg-layer-3 px-6',
-      ),
+      classNames(SELECT_ENTITY_HEADER_CLASS, (isTablet || isMobile) && SELECT_ENTITY_MOBILE_HEADER_CLASS),
     );
-    setButtonsClassName(classNames((isTablet || isMobile) && 'w-1/2 flex justify-center'));
+    setButtonsClassName(classNames((isTablet || isMobile) && SELECT_ENTITY_MOBILE_HEADER_BUTTONS_CLASS));
   }, [isTablet, isMobile]);
 
   const onStartDiscard = useCallback(() => {

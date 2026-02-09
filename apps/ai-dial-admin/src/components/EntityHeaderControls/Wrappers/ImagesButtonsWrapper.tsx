@@ -14,7 +14,12 @@ import ImageNewVersion from '@/src/components/Deployments/Modals/ImageNewVersion
 import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import { ButtonsI18nKey, ContainersI18nKey, CreateI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import {
+  BASE_BUTTON_ICON_PROPS,
+  SELECT_ENTITY_HEADER_CLASS,
+  SELECT_ENTITY_MOBILE_HEADER_BUTTONS_CLASS,
+  SELECT_ENTITY_MOBILE_HEADER_CLASS,
+} from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
@@ -68,10 +73,8 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
     [jsonConfiguration?.isEditorEnabled, image, isValid],
   );
 
-  const staticContainerClassnames = 'flex flex-row gap-3 divide-x divide-primary';
-
   const [modalType, setModalType] = useState<ModalType>();
-  const [containerClassNames, setContainerClassNames] = useState(staticContainerClassnames);
+  const [containerClassNames, setContainerClassNames] = useState(SELECT_ENTITY_HEADER_CLASS);
   const [buttonsClassNames, setButtonsClassNames] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -181,12 +184,9 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
 
   useEffect(() => {
     setContainerClassNames(
-      classNames(
-        staticContainerClassnames,
-        isTablet || isMobile ? 'fixed bottom-0 left-0 right-0 h-[62px] bg-layer-3 px-6' : '',
-      ),
+      classNames(SELECT_ENTITY_HEADER_CLASS, (isTablet || isMobile) && SELECT_ENTITY_MOBILE_HEADER_CLASS),
     );
-    setButtonsClassNames(classNames(isTablet || isMobile ? 'w-1/2 flex justify-center' : ''));
+    setButtonsClassNames(classNames((isTablet || isMobile) && SELECT_ENTITY_MOBILE_HEADER_BUTTONS_CLASS));
   }, [isTablet, isMobile]);
 
   return (
@@ -221,40 +221,42 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
           </div>
         ) : (
           <div className="flex flex-row items-center w-full gap-x-4">
-            <div className="flex-1 flex flex-row gap-3">
-              <VersionsSelect
-                selected={image.id}
-                versions={versions}
-                onChange={onVersionChange}
-                onClick={onOpenCreteNewVersionModal}
-              />
-              <DialNeutralButton
-                className={buttonsClassNames}
-                label={t(ButtonsI18nKey.Delete)}
-                iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
-                onClick={onOpenDeleteModal}
-              />
-              {image.buildStatus === IMAGE_STATUS.BUILT && (
+            {!jsonConfiguration?.isEditorEnabled && (
+              <div className="flex-1 flex flex-row gap-3">
+                <VersionsSelect
+                  selected={image.id}
+                  versions={versions}
+                  onChange={onVersionChange}
+                  onClick={onOpenCreteNewVersionModal}
+                />
                 <DialNeutralButton
                   className={buttonsClassNames}
-                  label={t(CreateI18nKey.CreateContainer, {
-                    type: getTranslatedType(getRouteByType(image.$type), t),
-                  })}
-                  iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-                  onClick={onOpenCreateModal}
+                  label={t(ButtonsI18nKey.Delete)}
+                  iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
+                  onClick={onOpenDeleteModal}
                 />
-              )}
-              {allowEditing && (
-                <DialNeutralButton
-                  className={buttonsClassNames}
-                  label={t(ButtonsI18nKey.Install)}
-                  iconBefore={<IconBlocks {...BASE_BUTTON_ICON_PROPS} />}
-                  onClick={onOpenInstallModal}
-                  disabled={image.buildStatus === IMAGE_STATUS.BUILDING}
-                />
-              )}
-              {children}
-            </div>
+                {image.buildStatus === IMAGE_STATUS.BUILT && (
+                  <DialNeutralButton
+                    className={buttonsClassNames}
+                    label={t(CreateI18nKey.CreateContainer, {
+                      type: getTranslatedType(getRouteByType(image.$type), t),
+                    })}
+                    iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
+                    onClick={onOpenCreateModal}
+                  />
+                )}
+                {allowEditing && (
+                  <DialNeutralButton
+                    className={buttonsClassNames}
+                    label={t(ButtonsI18nKey.Install)}
+                    iconBefore={<IconBlocks {...BASE_BUTTON_ICON_PROPS} />}
+                    onClick={onOpenInstallModal}
+                    disabled={image.buildStatus === IMAGE_STATUS.BUILDING}
+                  />
+                )}
+                {children}
+              </div>
+            )}
             {!jsonConfiguration?.hideJsonEditorButton && <JsonToggles {...jsonConfiguration} />}{' '}
           </div>
         )}

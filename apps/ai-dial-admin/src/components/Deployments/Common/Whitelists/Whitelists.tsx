@@ -32,7 +32,7 @@ const Whitelists: FC<Props> = ({ entity, setEntity, route, disabled }) => {
       setEntity({
         ...entity,
         allowedDomains,
-      });
+      } as Container);
     },
     [entity, setEntity],
   );
