@@ -29,8 +29,8 @@ export class TestSuitesApi extends BaseApi {
     );
   }
 
-  getTestSuite(id: string, token: JWT | null): Promise<TestSuite | null> {
-    return this.get(TEST_SUITE_URL(id), token);
+  getTestSuite(id: string, etag: string, token: JWT | null): Promise<ServerActionResponse<TestSuite> | null> {
+    return this.getActionWithEtag(TEST_SUITE_URL(id), etag, token);
   }
 
   importTestCase(id: string, file: FormData, token: JWT | null): Promise<ServerActionResponse> {
@@ -67,8 +67,8 @@ export class TestSuitesApi extends BaseApi {
     return this.deleteAction(TEST_SUITE_URL(id), token);
   }
 
-  updateTestSuite(suite: TestSuite, token: JWT | null): Promise<ServerActionResponse> {
-    return this.putAction(TEST_SUITE_URL(suite.id), suite, token);
+  updateTestSuite(suite: TestSuite, etag: string, token: JWT | null): Promise<ServerActionResponse> {
+    return this.putActionWithEtag(TEST_SUITE_URL(suite.id), suite, token, etag);
   }
 
   private getFiltersAndSortsStr(sorts: SortDto[], filters: FilterDto[]): string {

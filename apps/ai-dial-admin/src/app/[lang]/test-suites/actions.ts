@@ -18,9 +18,9 @@ export async function createTestSuite(suite: TestSuite) {
   return testSuitesApi.createTestSuite(suite, token);
 }
 
-export async function updateTestSuite(suite: TestSuite) {
+export async function updateTestSuite(suite: TestSuite, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return testSuitesApi.updateTestSuite(suite, token);
+  return testSuitesApi.updateTestSuite(suite, etag, token);
 }
 
 export async function getTestSuites(page: number, size: number, sorts: SortDto[], filters: FilterDto[]) {
@@ -28,9 +28,9 @@ export async function getTestSuites(page: number, size: number, sorts: SortDto[]
   return testSuitesApi.getTestSuites(page, size, sorts, filters, token);
 }
 
-export async function getTestSuite(id: string) {
+export async function getTestSuite(id: string, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return testSuitesApi.getTestSuite(id, token);
+  return testSuitesApi.getTestSuite(id, etag, token);
 }
 
 export async function importTestCase(id: string, file: FormData) {

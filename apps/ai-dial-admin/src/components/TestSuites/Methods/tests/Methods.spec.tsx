@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import Methods from '../Methods';
 
@@ -32,7 +32,7 @@ vi.mock('../MethodItem', () => ({
 
 vi.mock('../MethodInfo', () => ({
   __esModule: true,
-  default: ({ endpoint }: any) => <div data-testid="method-info">{JSON.stringify(endpoint)}</div>,
+  default: ({ testSuite }: any) => <div data-testid="method-info">{JSON.stringify(testSuite?.endpointRef)}</div>,
 }));
 
 describe('Methods component', () => {
@@ -44,16 +44,22 @@ describe('Methods component', () => {
     onChange.mockClear();
   });
 
-  test('renders chat-completion item and generated methods', () => {
+  test('renders chat-completion item and generated methods', async () => {
     render(<Methods testSuite={baseTestSuite} selectedApplication={selectedApplication} onChange={onChange} />);
 
-    expect(screen.getByTestId('method-0')).toBeInTheDocument();
-    expect(screen.getByTestId('method-1')).toBeInTheDocument();
-    expect(screen.getByTestId('method-2')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId('method-0')).toBeInTheDocument();
+      expect(screen.getByTestId('method-1')).toBeInTheDocument();
+      expect(screen.getByTestId('method-2')).toBeInTheDocument();
+    });
   });
 
-  test('clicking generated method calls onChange updater with correct endpointRef', () => {
+  test('clicking generated method calls onChange updater with correct endpointRef', async () => {
     render(<Methods testSuite={baseTestSuite} selectedApplication={selectedApplication} onChange={onChange} />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('method-1')).toBeInTheDocument();
+    });
 
     const genMethodButton = screen.getByTestId('method-1');
     fireEvent.click(genMethodButton);
@@ -61,13 +67,17 @@ describe('Methods component', () => {
     expect(onChange).toHaveBeenCalledTimes(1);
 
     const updater = onChange.mock.calls[0][0];
-    const newState = updater({ some: 'state' });
+    const newState = updater(baseTestSuite);
 
     expect(newState.endpointRef).toEqual({ method: 'POST', relativeUrl: '/data' });
   });
 
-  test('clicking chat-completion item sets endpointRef to CHAT_COMPLETION_METHOD', () => {
+  test('clicking chat-completion item sets endpointRef to CHAT_COMPLETION_METHOD', async () => {
     render(<Methods testSuite={baseTestSuite} selectedApplication={selectedApplication} onChange={onChange} />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('method-0')).toBeInTheDocument();
+    });
 
     const chatButton = screen.getByTestId('method-0');
     fireEvent.click(chatButton);
@@ -75,7 +85,7 @@ describe('Methods component', () => {
     expect(onChange).toHaveBeenCalledTimes(1);
 
     const updater = onChange.mock.calls[0][0];
-    const newState = updater({});
+    const newState = updater(baseTestSuite);
 
     expect(newState.endpointRef).toBeDefined();
   });

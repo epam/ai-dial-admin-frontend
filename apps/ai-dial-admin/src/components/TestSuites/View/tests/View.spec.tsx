@@ -1,13 +1,20 @@
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import { render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 import TestSuiteView from '../View';
 
 // Mock the actions
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
   updateTestSuite: vi.fn(),
   removeTestSuite: vi.fn(),
+  getDeployments: vi.fn().mockResolvedValue([
+    {
+      deploymentId: 'deployment-1',
+      $type: 'some-app-type',
+      name: 'Deployment 1',
+    },
+  ]),
 }));
 
 // Mock next/navigation
@@ -86,7 +93,7 @@ describe('TestSuiteView', () => {
   });
 
   test('renders TestSuiteView with initial state', () => {
-    render(<TestSuiteView originalTestSuite={mockTestSuite} />);
+    render(<TestSuiteView originalTestSuite={mockTestSuite} etag="etag" />);
 
     expect(screen.getByText('Entity: Test Suite 1')).toBeInTheDocument();
     expect(screen.getByText('Changed: false')).toBeInTheDocument();

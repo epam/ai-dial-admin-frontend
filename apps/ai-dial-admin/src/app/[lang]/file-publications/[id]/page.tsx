@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { approvePublication, declinePublication } from '@/src/app/actions/publications';
 import { publicationsApi } from '@/src/app/api/api';
 import PublicationView from '@/src/components/Publications/View/View';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { Publication } from '@/src/models/dial/publications';
 import { errorObjLog } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -28,11 +29,13 @@ export default async function Page(params: { searchParams: Promise<{ path: strin
   }
 
   return (
-    <PublicationView
-      publication={data as Publication}
-      view={ApplicationRoute.FilePublications}
-      approvePublication={approvePublication}
-      declinePublication={declinePublication}
-    />
+    <SaveValidationContextProvider>
+      <PublicationView
+        publication={data as Publication}
+        view={ApplicationRoute.FilePublications}
+        approvePublication={approvePublication}
+        declinePublication={declinePublication}
+      />
+    </SaveValidationContextProvider>
   );
 }
