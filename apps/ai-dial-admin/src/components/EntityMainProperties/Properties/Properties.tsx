@@ -19,6 +19,8 @@ interface Props<T> {
   initialValues?: Partial<T>;
 }
 
+// TODO: remove this component and use EntityProperties and DeploymentProperties directly in the views
+
 const Properties = <T extends object>({
   view,
   runners,

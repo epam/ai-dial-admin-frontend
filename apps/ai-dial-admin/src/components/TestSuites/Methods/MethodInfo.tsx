@@ -16,7 +16,7 @@ import { ColDef } from 'ag-grid-community';
 
 import TableView from '@/src/components/Common/ViewSelector/TableView';
 import ViewSelector from '@/src/components/Common/ViewSelector/ViewSelector';
-import JsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
+import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { PARAMETERS_SCHEMA_COLUMNS, TOOL_SCHEMA_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import {
   ButtonsI18nKey,

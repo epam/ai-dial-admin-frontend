@@ -82,7 +82,7 @@ const CoreSyncEntityStatus: FC<Props> = ({ view, name }) => {
     <div className={classNames(coreSyncStatus?.status ? 'block' : 'hidden')}>
       <LabelledText label={t(CoreSyncI18nKey.SyncWithCore)}>
         <div className="flex flex-row gap-x-2 items-center">
-          <div className="flex-1 min-w-0">
+          <div className="flex flex-row gap-x-2 items-center flex-1 min-w-0">
             <StatusText status={coreSyncStatus?.status} />
           </div>
           {diffStatus && (

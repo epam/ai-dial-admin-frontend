@@ -3,7 +3,7 @@ import { FC, useMemo } from 'react';
 import { ColDef } from 'ag-grid-community';
 
 import TableView from '@/src/components/Common/ViewSelector/TableView';
-import JsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
+import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { TOOL_SCHEMA_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ContainersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';

@@ -2,7 +2,7 @@ import { FC } from 'react';
 import Editor, { Monaco } from '@monaco-editor/react';
 import { useTheme } from '@/src/context/ThemeContext';
 import { getDiffEditorTheme } from '@/src/constants/editor';
-import { EDITOR_THEMES } from '../../../types/editor';
+import { EDITOR_THEMES } from '@/src/types/editor';
 
 interface Props {
   logs: string;
