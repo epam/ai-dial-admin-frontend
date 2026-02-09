@@ -2,9 +2,13 @@
 
 import { FC, useCallback, useMemo } from 'react';
 
-import { DialNumberInputField, DialSelectField, DialTextInputField, SelectOption } from '@epam/ai-dial-ui-kit';
-import { IconTrash } from '@tabler/icons-react';
-import classNames from 'classnames';
+import {
+  DialNumberInputField,
+  DialRemoveButton,
+  DialSelectField,
+  DialTextInputField,
+  SelectOption,
+} from '@epam/ai-dial-ui-kit';
 
 import JsonEditorInput from '@/src/components/Common/JsonEditorInput/JsonEditorInput';
 import {
@@ -14,7 +18,6 @@ import {
   EntityPlaceholdersI18nKey,
   TypeI18nKey,
 } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DefaultsValue } from '@/src/models/dial/defaults';
 import { BooleanType } from '@/src/types/boolean';
@@ -157,14 +160,9 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
           />
         </div>
       </div>
-
-      <button
-        className={classNames('text-error cursor-pointer mt-[10px]', index === 0 && 'lg:mt-[32px]')}
-        onClick={() => onRemove(index)}
-        aria-label="remove"
-      >
-        <IconTrash {...BASE_BUTTON_ICON_PROPS} />
-      </button>
+      <div className="w-[40px] flex-shrink-0 mt-[10px]">
+        <DialRemoveButton onClick={() => onRemove(index)} />
+      </div>
     </div>
   );
 };
