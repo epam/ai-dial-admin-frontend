@@ -16,6 +16,7 @@ export interface TestSuite {
 export interface TestSuiteDeploymentRef {
   id?: string;
   name?: string;
+  version?: string;
 }
 
 export interface TestSuiteEndpointRef {

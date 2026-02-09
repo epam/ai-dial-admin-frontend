@@ -10,26 +10,30 @@ import { generateMethodPathCombinations } from '@/src/components/TestSuites/util
 import { MenuI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Deployment } from '@/src/models/evaluation/deployment';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { TestSuite, TestSuiteEndpointRef } from '@/src/models/evaluation/test-suite';
 import MethodInfo from './MethodInfo';
 import MethodItem from './MethodItem';
 
 interface Props {
   testSuite: TestSuite;
-  selectedApplication?: Deployment | null;
   onChange: Dispatch<SetStateAction<TestSuite>>;
+  selectedApplication?: Deployment | null;
+  isCreate?: boolean;
 }
 
-const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange }) => {
+const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange, isCreate }) => {
   const t = useI18n();
 
   const [activeMethodIndex, setActiveMethodIndex] = useState<number | null>();
   const [fullApplication, setFullApplication] = useState<Deployment | null>();
+  const [methods, setMethods] = useState<TestSuiteEndpointRef[]>([]);
 
-  const methods = useMemo(
-    () => generateMethodPathCombinations(selectedApplication?.routes),
-    [selectedApplication?.routes],
-  );
+  const methodInfo = useMemo(() => {
+    if (activeMethodIndex != null) {
+      return isCreate ? (activeMethodIndex === 0 ? CHAT_COMPLETION_METHOD : methods[activeMethodIndex]) : {};
+    }
+    return {};
+  }, [activeMethodIndex, isCreate, methods]);
 
   const onMethodClick = useCallback(
     (index: number) => {
@@ -57,9 +61,15 @@ const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange }) => {
       const { deploymentId, $type } = selectedApplication;
       getDeployment(deploymentId, $type).then((data) => {
         setFullApplication(data);
+        const methods = generateMethodPathCombinations(data?.routes);
+        setMethods(methods);
+        const index = methods.findIndex(
+          (m) => m.method === testSuite.endpointRef?.method && m.relativeUrl === testSuite.endpointRef?.relativeUrl,
+        );
+        setActiveMethodIndex(index === -1 ? 0 : index);
       });
     }
-  }, [fullApplication, selectedApplication]);
+  }, [fullApplication, selectedApplication, testSuite.endpointRef?.method, testSuite.endpointRef?.relativeUrl]);
 
   return (
     <div className="w-full flex flex-row h-full gap-2">
@@ -89,15 +99,17 @@ const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange }) => {
       <div className="flex-1 min-w-0 border border-primary rounded">
         {
           <MethodInfo
-            endpoint={
-              activeMethodIndex != null
-                ? {
-                    ...testSuite.endpointRef,
-                    ...(activeMethodIndex === 0 ? CHAT_COMPLETION_METHOD : methods[activeMethodIndex]),
-                  }
-                : {}
-            }
-            onChange={onChange}
+            testSuite={{
+              ...testSuite,
+              endpointRef:
+                activeMethodIndex != null
+                  ? {
+                      ...testSuite.endpointRef,
+                      ...methodInfo,
+                    }
+                  : {},
+            }}
+            onChangeTestSuite={onChange}
           />
         }
       </div>

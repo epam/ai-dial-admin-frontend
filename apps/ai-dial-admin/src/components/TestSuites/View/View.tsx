@@ -1,11 +1,11 @@
 'use client';
 
-import { FC, useCallback, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { cloneDeep } from 'lodash';
 import { useRouter } from 'next/navigation';
 
 import { removeTestSuite, updateTestSuite } from '@/src/app/[lang]/test-suites/actions';
+import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -13,16 +13,17 @@ import { useI18n } from '@/src/locales/client';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getTestSuiteTabs } from '@/src/utils/tabs/utils';
 import TabsContent from './TabsContent';
-import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 
 interface Props {
   originalTestSuite: TestSuite;
+  etag: string;
 }
 
-const TestSuiteView: FC<Props> = ({ originalTestSuite }) => {
+const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -30,7 +31,7 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite }) => {
   const tabs = getTestSuiteTabs(t);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
-  const [selectedTestSuite, setSelectedTestSuite] = useState(cloneDeep(originalTestSuite));
+  const [selectedTestSuite, setSelectedTestSuite] = useState(structuredClone(originalTestSuite));
   const [isChanged, setIsChanged] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
 
@@ -42,12 +43,20 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite }) => {
     [isEditorEnabled],
   );
 
+  useEffect(() => {
+    setIsChanged(!isEqualSkippingUndefined(originalTestSuite, selectedTestSuite));
+  }, [originalTestSuite, selectedTestSuite]);
+
+  useEffect(() => {
+    setSelectedTestSuite(structuredClone(originalTestSuite));
+  }, [originalTestSuite]);
+
   const onDiscard = useCallback(() => {
-    setSelectedTestSuite(cloneDeep(originalTestSuite));
+    setSelectedTestSuite(structuredClone(originalTestSuite));
   }, [originalTestSuite]);
 
   const onSave = useCallback(() => {
-    updateTestSuite(selectedTestSuite).then((res) => {
+    updateTestSuite(selectedTestSuite, etag).then((res) => {
       if (res.success) {
         showNotification(
           getSuccessNotification(
@@ -60,7 +69,7 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite }) => {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
-  }, [selectedTestSuite, showNotification, router, t]);
+  }, [selectedTestSuite, etag, showNotification, t, router]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
