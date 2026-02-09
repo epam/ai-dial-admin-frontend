@@ -16,11 +16,10 @@ describe('getGridDataFromImportPreview', () => {
 
     const result = getGridDataFromImportPreview(importPreview);
 
-    expect(result.colDefs.length).toBe(4); // TEST_CASES_COLUMN (2) + detectedColumns (2)
-    expect(result.colDefs[0]).toEqual({ field: 'id', colId: 'id', headerName: 'ID' });
-    expect(result.colDefs[1]).toEqual({ field: 'testCaseName', colId: 'testCaseName', headerName: 'Test case name' });
-    expect(result.colDefs[2]).toEqual({ field: 'name', headerName: 'Name' });
-    expect(result.colDefs[3]).toEqual({ field: 'age', headerName: 'Age' });
+    expect(result.colDefs.length).toBe(3); // testCaseName + detectedColumns (2)
+    expect(result.colDefs[0]).toEqual({ field: 'testCaseName', colId: 'testCaseName', headerName: 'Test case name' });
+    expect(result.colDefs[1]).toEqual({ field: 'name', headerName: 'Name' });
+    expect(result.colDefs[2]).toEqual({ field: 'age', headerName: 'Age' });
   });
 
   test('should map sampleRows with facts and parameters to rowData correctly', () => {

@@ -1,11 +1,10 @@
 import { ColDef } from 'ag-grid-community';
 
 import { ImportPreview } from './models';
-import { TEST_CASES_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 
 export const getGridDataFromImportPreview = (importPreview: ImportPreview) => {
   const colDefs: ColDef[] = [
-    ...TEST_CASES_COLUMN,
+    { field: 'testCaseName', colId: 'testCaseName', headerName: 'Test case name' },
     ...importPreview.detectedColumns.map((col) => ({
       field: col.fieldName,
       headerName: col.headerName,
