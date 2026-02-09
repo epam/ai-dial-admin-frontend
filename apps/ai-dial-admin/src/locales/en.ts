@@ -174,6 +174,7 @@ export default {
     NoToolsets: 'No Toolsets',
     NoTools: 'No Tools',
     NoInputs: 'No inputs',
+    NoModelServings: 'No Model Servings',
     NoMethods: 'No Methods',
     // add entity or entities
     AddModel: 'Add Model',
@@ -412,6 +413,7 @@ export default {
     ManageTool: 'Manage tool',
     Confirm: 'Confirm',
     GlobalFirewall: 'Global firewall',
+    HFRegistry: 'Select from registry',
   },
   Compare: {
     CompareChanges: 'Compare changes',
@@ -1251,6 +1253,7 @@ export default {
     ContainerRestartWarning: '{entityType} will be restarted after changing image version.',
     ContainersRestartWarning: '{entityType} with "Running" status will be restarted.',
     ShowRelatedContainers: 'Show containers related to this image',
+    SelectModelFromRegistry: 'Select model source from registry',
     Autoscaling: {
       ScaleToZeroNever: 'Never automatically scale to zero',
       ScaleToZeroAfter15Minutes: 'After 15 minutes with no activity',
