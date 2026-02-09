@@ -9,12 +9,14 @@ import { IconPlayerPause, IconPlayerPlay, IconPlus, IconTrashX } from '@tabler/i
 import classNames from 'classnames';
 import { useRouter } from 'next/navigation';
 import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { deleteContainer, runContainer, stopContainer } from '@/src/app/actions/deployments';
 import CreateAsset from '@/src/components/Assets/Deployments/CreateAsset';
 import EntityDelete from '@/src/components/Deployments/Modals/EntityDelete';
 import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
 import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
+import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
 import { ButtonsI18nKey, ContainersI18nKey, CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
@@ -40,8 +42,6 @@ import {
   getTranslatedType,
 } from '@/src/utils/deployments/entity';
 import { getErrorNotification } from '@/src/utils/notification';
-import { createPortal } from 'react-dom';
-import { JsonConfiguration } from '../models';
 
 export interface ContainersButtonsWrapperProps {
   route: ApplicationRoute;

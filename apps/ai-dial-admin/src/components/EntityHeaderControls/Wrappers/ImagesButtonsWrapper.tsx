@@ -28,7 +28,7 @@ import { getRouteByType, getTranslatedDeploymentType, getTranslatedType } from '
 import { validateImage } from '@/src/utils/deployments/images';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import { JsonConfiguration } from '../models';
+import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 
 export interface ImagesButtonsWrapperProps {
   image: Image;
