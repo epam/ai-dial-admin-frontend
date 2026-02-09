@@ -40,7 +40,7 @@ describe('Server :: TestSuiteApi', () => {
   test('Should calls getTestSuite by name and return testSuite', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockTestSuite));
 
-    await instance.getTestSuite(mockTestSuite.id as string, TOKEN_MOCK);
+    await instance.getTestSuite(mockTestSuite.id as string, 'etag', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${TEST_SUITE_URL(mockTestSuite.id)}`,
@@ -65,7 +65,7 @@ describe('Server :: TestSuiteApi', () => {
   test('Should calls updateTestSuite with correct payload', async () => {
     fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
-    await instance.updateTestSuite({ ...mockTestSuite, id: void 0 }, TOKEN_MOCK);
+    await instance.updateTestSuite({ ...mockTestSuite, id: void 0 }, 'etag', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${TEST_SUITE_URL()}`,
@@ -79,7 +79,7 @@ describe('Server :: TestSuiteApi', () => {
   test('Should calls updateTestSuite with correct payload', async () => {
     fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
-    await instance.updateTestSuite(mockTestSuite, TOKEN_MOCK);
+    await instance.updateTestSuite(mockTestSuite, 'etag', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${TEST_SUITE_URL(mockTestSuite.id)}`,
