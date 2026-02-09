@@ -5,7 +5,7 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { cloneDeep } from 'lodash';
 
-import { createPrompt, getPrompts, movePrompts, removePrompt } from '@/src/app/[lang]/prompts/actions';
+import { createPrompt, getPrompts, movePrompts, removePrompt, updatePrompt } from '@/src/app/[lang]/prompts/actions';
 import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
 import AssetHeader from '@/src/components/EntityHeaderControls/AssetHeader';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
@@ -15,8 +15,10 @@ import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
+import { Asset } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -74,16 +76,21 @@ const PromptView: FC<Props> = ({ originalPrompt, etag, prompts }) => {
     (newVersion?: string) => {
       const isNeedToMove = getIsNeedToMove(selectedPrompt, originalPrompt);
       let updatedEntity = getEntityForUpdate(selectedPrompt, originalPrompt);
-
+      let updateFunction = updatePrompt;
       if (newVersion) {
         updatedEntity = addNewVersion(updatedEntity as DialPrompt, newVersion);
+        updateFunction = createPrompt;
       }
-      getReqRef.current(createPrompt, updatedEntity as DialPrompt, etag).then((res) => {
+      getReqRef.current(updateFunction, updatedEntity as DialPrompt, etag).then((res) => {
         if (res.success) {
           showNotification(
             getSuccessNotification(
-              getUpdateNotificationTitle(ApplicationRoute.Prompts, t),
-              getUpdateNotificationDescription(ApplicationRoute.Prompts, updatedEntity.name, t),
+              newVersion
+                ? getCreateNotificationTitle(ApplicationRoute.Prompts, t)
+                : getUpdateNotificationTitle(ApplicationRoute.Prompts, t),
+              newVersion
+                ? getCreateNotificationDescription(ApplicationRoute.Prompts, updatedEntity.name, t)
+                : getUpdateNotificationDescription(ApplicationRoute.Prompts, updatedEntity.name, t),
             ),
           );
           if (isNeedToMove) {
@@ -134,6 +141,7 @@ const PromptView: FC<Props> = ({ originalPrompt, etag, prompts }) => {
         addedVersions={addedVersions}
         onChangeAddedVersion={setAddedVersions}
         getAssetContext={usePromptFolder}
+        onChangeAsset={setSelectedPrompt as (asset: Asset) => void}
       />
 
       <div className="flex-1 overflow-auto min-h-0">

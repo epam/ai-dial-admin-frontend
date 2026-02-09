@@ -5,7 +5,13 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { cloneDeep } from 'lodash';
 
-import { getToolsets, moveToolsets, removeToolset, updateToolset } from '@/src/app/[lang]/assets-toolsets/actions';
+import {
+  createToolset,
+  getToolsets,
+  moveToolsets,
+  removeToolset,
+  updateToolset,
+} from '@/src/app/[lang]/assets-toolsets/actions';
 import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
 import AssetHeader from '@/src/components/EntityHeaderControls/AssetHeader';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
@@ -16,8 +22,9 @@ import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
-import { AssetToolset } from '@/src/models/dial/deployment-asset';
+import { Asset, AssetToolset } from '@/src/models/dial/deployment-asset';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -73,15 +80,21 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
     (newVersion?: string) => {
       const isNeedToMove = getIsNeedToMove(selectedToolset, originalToolset);
       let updatedEntity = getEntityForUpdate(selectedToolset, originalToolset);
+      let updateFunction = updateToolset;
       if (newVersion) {
         updatedEntity = addNewVersion(updatedEntity, newVersion);
+        updateFunction = createToolset;
       }
-      getReqRef.current(updateToolset, updatedEntity, etag).then((res) => {
+      getReqRef.current(updateFunction, updatedEntity, etag).then((res) => {
         if (res.success) {
           showNotification(
             getSuccessNotification(
-              getUpdateNotificationTitle(ApplicationRoute.AssetsToolsets, t),
-              getUpdateNotificationDescription(ApplicationRoute.AssetsToolsets, updatedEntity.name, t),
+              newVersion
+                ? getCreateNotificationTitle(ApplicationRoute.AssetsToolsets, t)
+                : getUpdateNotificationTitle(ApplicationRoute.AssetsToolsets, t),
+              newVersion
+                ? getCreateNotificationDescription(ApplicationRoute.AssetsToolsets, updatedEntity.name, t)
+                : getUpdateNotificationDescription(ApplicationRoute.AssetsToolsets, updatedEntity.name, t),
             ),
           );
           if (isNeedToMove) {
@@ -135,6 +148,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
         onChangeActiveTab={setActiveTab}
         onRemove={onRemove}
         getAssetContext={useToolsetFolder}
+        onChangeAsset={setSelectedToolset as (asset: Asset) => void}
       >
         <AuthButtons view={ApplicationRoute.AssetsToolsets} selectedToolset={selectedToolset} oAuthCode={oAuthCode} />
       </AssetHeader>
