@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
   DialCopiedItem,
@@ -9,9 +9,6 @@ import {
   DialFileManager,
   DialUploadFileItem,
   GridSelectionMode,
-  NAME_COLUMN,
-  SIZE_COLUMN,
-  UPDATED_AT_COLUMN,
 } from '@epam/ai-dial-ui-kit';
 
 import { bulkDeleteFiles, exportFiles, importFiles, moveFiles } from '@/src/app/[lang]/files/actions';
@@ -32,11 +29,17 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { downloadFile } from '@/src/utils/download';
 import { getFolderName } from '@/src/utils/files/folder';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { getParentPathByFullPath } from '../utils';
-import Modals, { ModalType } from '../../EntityListView/Components/Modals';
+import { getParentPathByFullPath } from '@/src/components/Assets/utils';
+import Modals, { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import { ImportData } from '@/src/models/import-asset';
-
-const FILES_GRID_COLUMNS = [NAME_COLUMN('Display name'), UPDATED_AT_COLUMN('Updated time'), SIZE_COLUMN('Size')];
+import {
+  BulkActionLabels,
+  FILES_GRID_COLUMNS,
+  GridActionLabels,
+  ToolbarOptionLabels,
+  TreeActionLabels,
+} from './constants';
+import { NewAction } from '@epam/ai-dial-ui-kit/dist/src/components/FileManager/FileManager';
 
 const FilesList = () => {
   const [path, setPath] = useState('');
@@ -56,8 +59,9 @@ const FilesList = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [files]);
 
-  const managerLabel = useMemo(() => <h1 className="text-primary">{t(MenuI18nKey.Files)}</h1>, [t]);
+  const managerLabel = useMemo(() => <h1 className="text-primary leading-[48px]">{t(MenuI18nKey.Files)}</h1>, [t]);
 
+  // TODO: move common functions into context files
   const getEmptyFile = useCallback(() => {
     const filename = '.dial_folder';
     const fileType = 'text/plain';
@@ -339,6 +343,26 @@ const FilesList = () => {
     [handleModalClose, showNotification, t, fetchFiles, importFolder],
   );
 
+  const getActionLabels = useCallback(
+    (actionLabels: { key: string; label: string }[]) => {
+      return actionLabels.reduce((acc: { [key: string]: string }, item) => {
+        acc[item.key] = t(item.label);
+        return acc;
+      }, {});
+    },
+    [t],
+  );
+
+  const getActionLabelsWithIcon = useCallback(
+    (actionLabels: { key: string; label: string; icon: ReactNode }[]) => {
+      return actionLabels.reduce((acc: { [key: string]: NewAction }, item) => {
+        acc[item.key] = { label: t(item.label), icon: item.icon };
+        return acc;
+      }, {});
+    },
+    [t],
+  );
+
   return (
     <>
       <DialFileManager
@@ -351,18 +375,11 @@ const FilesList = () => {
         showNavigationPanel={false}
         bulkActionsToolbarOptions={{
           getSelectionLabel: (selectedCount: number) => `${selectedCount} ${t(FileManagerI18nKey.SelectedItems)}`,
-          actionLabels: {
-            move: t(FileManagerI18nKey.Move),
-            download: t(ButtonsI18nKey.Export),
-            delete: t(ButtonsI18nKey.Delete),
-          },
+          actionLabels: getActionLabels(BulkActionLabels),
         }}
         toolbarOptions={{
           showHiddenFilesToggle: false,
-          newActions: {
-            newFolder: { label: t(FileManagerI18nKey.Folder), icon: null },
-            uploadFiles: { label: t(FileManagerI18nKey.File), icon: null },
-          },
+          newActions: getActionLabelsWithIcon(ToolbarOptionLabels),
           newButtonLabel: t(ButtonsI18nKey.Create),
         }}
         treeOptions={{
@@ -370,29 +387,13 @@ const FilesList = () => {
           expandedPaths: new Set<string>([`${ROOT_FOLDER}/`]),
           loadedPaths,
           loadingPaths: isFetchingFiles ? new Set<string>([ROOT_FOLDER]) : new Set<string>(),
-          actionLabels: {
-            addSibling: t(FileManagerI18nKey.AddSibling),
-            addChild: t(FileManagerI18nKey.AddChild),
-            move: t(FileManagerI18nKey.Move),
-            download: t(ButtonsI18nKey.Download),
-            delete: t(ButtonsI18nKey.Delete),
-            rename: t(FileManagerI18nKey.Rename),
-            managePermissions: t(FileManagerI18nKey.ManagePermissions),
-          },
+          actionLabels: getActionLabels(TreeActionLabels),
         }}
         gridOptions={{
           alternateOddRowColors: true,
           columnDefs: FILES_GRID_COLUMNS,
           selectionMode: GridSelectionMode.MULTIPLE,
-          actionLabels: {
-            addSibling: t(FileManagerI18nKey.AddSibling),
-            addChild: t(FileManagerI18nKey.AddChild),
-            move: t(FileManagerI18nKey.Move),
-            download: t(ButtonsI18nKey.Download),
-            managePermissions: t(FileManagerI18nKey.ManagePermissions),
-            rename: t(FileManagerI18nKey.Rename),
-            delete: t(ButtonsI18nKey.Delete),
-          },
+          actionLabels: getActionLabels(GridActionLabels),
         }}
         onPathChange={handleOnPathChange}
         onAddChild={handleAddChild}

@@ -1,6 +1,13 @@
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { describe, expect, test } from 'vitest';
-import { addNewVersion, filterLatestVersions, getEntityForUpdate, getIsNeedToMove, getVersionsPerName } from '../utils';
+import {
+  addNewVersion,
+  filterLatestVersions,
+  getEntityForUpdate,
+  getIsNeedToMove,
+  getParentPathByFullPath,
+  getVersionsPerName,
+} from '../utils';
 
 describe('filterLatestVersions', () => {
   test('Should return only latest versions', () => {
@@ -98,5 +105,28 @@ describe('addNewVersion', () => {
       path: 'somePath__newVersion',
       version: 'newVersion',
     });
+  });
+});
+
+describe('getParentPathByFullPath', () => {
+  test('should return empty string if there is no parent path', () => {
+    const fullPath = '/';
+    const result = getParentPathByFullPath(fullPath);
+
+    expect(result).toBe('/');
+  });
+
+  test('should return parent path for file', () => {
+    const fullPath = '/parent/child.txt';
+    const result = getParentPathByFullPath(fullPath);
+
+    expect(result).toBe('/parent/');
+  });
+
+  test('should return parent path for folder', () => {
+    const fullPath = '/parent/child/';
+    const result = getParentPathByFullPath(fullPath);
+
+    expect(result).toBe('/parent/');
   });
 });
