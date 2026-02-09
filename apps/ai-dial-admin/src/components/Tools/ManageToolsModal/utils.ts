@@ -1,4 +1,5 @@
 import { ErrorType } from '@/src/types/error-type';
+import { CustomToolConfig, ToolConfig } from './types';
 
 export const generateUniqueName = (names: string[], defaultName: string) => {
   let name = defaultName;
@@ -27,4 +28,23 @@ export const getCustomToolErrorType = (customToolName: string, allTools: string[
   }
 
   return errorType;
+};
+
+export const getToggledToolsConfig = (
+  items: CustomToolConfig[] | ToolConfig[],
+  filteredItems: CustomToolConfig[] | ToolConfig[],
+  index: number,
+) => {
+  const updatedItems = items?.length ? structuredClone(items) : [];
+  const toggledItem = filteredItems[index];
+  if (!toggledItem) {
+    return updatedItems;
+  }
+
+  const originalIndex = updatedItems.findIndex((item) => item.id === toggledItem.id);
+
+  if (originalIndex !== -1) {
+    updatedItems[originalIndex].isAllowed = !updatedItems[originalIndex].isAllowed;
+  }
+  return updatedItems;
 };

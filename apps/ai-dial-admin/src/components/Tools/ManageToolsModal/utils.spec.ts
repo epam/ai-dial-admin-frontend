@@ -1,6 +1,7 @@
 import { describe, test, expect } from 'vitest';
 import { ErrorType } from '@/src/types/error-type';
-import { generateUniqueName, getCustomToolErrorType } from './utils';
+import { generateUniqueName, getCustomToolErrorType, getToggledToolsConfig } from './utils';
+import { CustomToolConfig } from './types';
 
 describe('generateUniqueName', () => {
   const defaultName = 'Untitled';
@@ -37,5 +38,63 @@ describe('getCustomToolErrorType', () => {
     const allTools = ['1', '2', '3', '4', '1'];
     const result = getCustomToolErrorType(toolName, allTools);
     expect(result).toEqual(ErrorType.EXISTING);
+  });
+});
+
+describe('getToggledToolsConfig', () => {
+  test('should toggle target item', () => {
+    const items = [
+      {
+        id: '1',
+        name: 'tool1',
+        isAllowed: true,
+        error: null,
+      },
+      {
+        id: '2',
+        name: 'tool2',
+        isAllowed: true,
+        error: null,
+      },
+      {
+        id: '3',
+        name: 'tool3',
+        isAllowed: true,
+        error: null,
+      },
+    ];
+    const filteredItems = [
+      {
+        id: '2',
+        name: 'tool2',
+        isAllowed: true,
+        error: null,
+      },
+    ];
+    const index = 0;
+    const result = getToggledToolsConfig(items, filteredItems, index);
+    expect(result[1].isAllowed).toBe(false);
+  });
+  test('Should leave the same value if item does not exist', () => {
+    const items = [
+      {
+        id: '1',
+        name: 'tool1',
+        isAllowed: true,
+        error: null,
+      },
+    ];
+    const filteredItems = [] as CustomToolConfig[];
+    const index = 4;
+    const result = getToggledToolsConfig(items, filteredItems, index);
+    expect(result).toEqual(items);
+  });
+
+  test('Should return empty array if no items', () => {
+    const items = [] as CustomToolConfig[];
+    const filteredItems = [] as CustomToolConfig[];
+    const index = -1;
+    const result = getToggledToolsConfig(items, filteredItems, index);
+    expect(result).toEqual(items);
   });
 });

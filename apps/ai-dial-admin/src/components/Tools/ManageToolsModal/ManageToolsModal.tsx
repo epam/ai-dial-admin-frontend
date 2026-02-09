@@ -27,7 +27,7 @@ import AddNewTool from './AddNewTool';
 import { defaultToolName } from './constants';
 import ToolSwitcher from './ToolSwitcher';
 import { CustomToolConfig, ToolConfig } from './types';
-import { generateUniqueName, getCustomToolErrorType } from './utils';
+import { generateUniqueName, getCustomToolErrorType, getToggledToolsConfig } from './utils';
 import { v4 as uuidv4 } from 'uuid';
 
 interface Props {
@@ -105,20 +105,6 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalToolset, onCl
     [t, toolNames],
   );
 
-  const getToggledToolsConfig = useCallback(
-    (items: CustomToolConfig[] | ToolConfig[], filteredItems: CustomToolConfig[] | ToolConfig[], index: number) => {
-      const updatedItems = structuredClone(items);
-      const toggledItem = filteredItems[index];
-      const originalIndex = updatedItems.findIndex((item) => item.id === toggledItem.id);
-
-      if (originalIndex !== -1) {
-        updatedItems[originalIndex].isAllowed = !updatedItems[originalIndex].isAllowed;
-      }
-      return updatedItems;
-    },
-    [],
-  );
-
   const toggleTool = useCallback(
     (index: number, isCustom: boolean) => {
       if (isCustom) {
@@ -129,7 +115,7 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalToolset, onCl
         setToolsConfig(newToolsConfig as ToolConfig[]);
       }
     },
-    [toolsConfig, customToolsConfig, filteredCustomTools, filteredTools, getToggledToolsConfig],
+    [toolsConfig, customToolsConfig, filteredCustomTools, filteredTools],
   );
 
   const addNewCustomTool = useCallback(() => {
