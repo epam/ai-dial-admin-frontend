@@ -5,7 +5,7 @@ import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useRef, 
 
 import { cloneDeep } from 'lodash';
 
-import { getApps, moveApps, removeApp, updateApp } from '@/src/app/[lang]/assets-applications/actions';
+import { createApp, getApps, moveApps, removeApp, updateApp } from '@/src/app/[lang]/assets-applications/actions';
 import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
 import TabsContent from '@/src/components/Applications/View/TabsContent';
 import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
@@ -18,10 +18,11 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { AssetApp } from '@/src/models/dial/deployment-asset';
+import { Asset, AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -88,15 +89,22 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
     (newVersion?: string) => {
       const isNeedToMove = getIsNeedToMove(selectedApp, originalApp);
       let updatedEntity = getEntityForUpdate(selectedApp, originalApp);
+      let updateFunction = updateApp;
+
       if (newVersion) {
         updatedEntity = addNewVersion(updatedEntity, newVersion);
+        updateFunction = createApp;
       }
-      getReqRef.current(updateApp, updatedEntity, etag).then((res) => {
+      getReqRef.current(updateFunction, updatedEntity, etag).then((res) => {
         if (res.success) {
           showNotification(
             getSuccessNotification(
-              getUpdateNotificationTitle(ApplicationRoute.AssetsApplications, t),
-              getUpdateNotificationDescription(ApplicationRoute.AssetsApplications, updatedEntity.name, t),
+              newVersion
+                ? getCreateNotificationTitle(ApplicationRoute.AssetsApplications, t)
+                : getUpdateNotificationTitle(ApplicationRoute.AssetsApplications, t),
+              newVersion
+                ? getCreateNotificationDescription(ApplicationRoute.AssetsApplications, updatedEntity.name, t)
+                : getUpdateNotificationDescription(ApplicationRoute.AssetsApplications, updatedEntity.name, t),
             ),
           );
           if (isNeedToMove) {
@@ -158,6 +166,7 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
         onChangeActiveTab={setActiveTab}
         onRemove={onRemove}
         getAssetContext={useAppsFolder}
+        onChangeAsset={setSelectedApp as (asset: Asset) => void}
       />
 
       <div className="flex-1 overflow-auto min-h-0">
