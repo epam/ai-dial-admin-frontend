@@ -2,7 +2,7 @@ import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
 import { assetsApi } from '@/src/app/api/api';
-import PromptView from '@/src/components/Assets/Prompts/View';
+import PromptView from '@/src/components/Assets/Prompts/View/View';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialFileNodeType } from '@/src/models/dial/file';

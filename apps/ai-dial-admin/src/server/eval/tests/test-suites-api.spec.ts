@@ -142,4 +142,22 @@ describe('Server :: TestSuiteApi', () => {
       expect.objectContaining({ method: 'GET' }),
     );
   });
+
+  test('Should call importTestCase', async () => {
+    fetch.mockResponseOnce(JSON.stringify(mockTestSuite));
+    await instance.importTestCase('id', new FormData(), TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_CASES_URL('id')}/import`,
+      expect.objectContaining({ method: 'POST' }),
+    );
+  });
+
+  test('Should call importTestCasePreview', async () => {
+    fetch.mockResponseOnce(JSON.stringify(mockTestSuite));
+    await instance.importTestCasePreview('id', new FormData(), TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_CASES_URL('id')}/import/preview`,
+      expect.objectContaining({ method: 'POST' }),
+    );
+  });
 });

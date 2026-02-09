@@ -50,6 +50,8 @@ import {
 } from './base-columns';
 import { dateTimeColumn, numericColumn, priceColumn } from './configs';
 import { auditStringFilter, evalStringFilter } from './filters';
+import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
+import { formatNumberWithExponent } from '@/src/utils/formatting/number-formatting';
 
 export const BASE_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN, NAME_COLUMN];
 
@@ -668,10 +670,8 @@ export const TEST_SUITES_COLUMN: ColDef[] = [
 ];
 
 export const TEST_CASES_COLUMN: ColDef[] = [
-  { field: 'name', colId: 'name', headerName: 'Display Name' },
-  { field: 'name', colId: 'name', headerName: 'Test case name' },
-  { field: 'parameters', colId: 'parameters', headerName: 'Parameters' },
-  { field: 'parameters', colId: 'parameters', headerName: 'Parameters' },
+  { field: 'id', colId: 'id', headerName: 'ID' },
+  { field: 'testCaseName', colId: 'testCaseName', headerName: 'Test case name' },
 ];
 
 // TODO: update columns
@@ -699,5 +699,141 @@ export const TOOL_SCHEMA_COLUMNS = (t: (key: string) => string): ColDef[] => [
     cellDataType: false,
     valueFormatter: ({ value }) => formatRequired(value, t),
     tooltipValueGetter: ({ value }) => formatRequired(value, t),
+  },
+];
+
+export const PARAMETERS_SCHEMA_COLUMNS = (t: (key: string) => string): ColDef[] => [
+  { field: 'name', headerName: 'Name', floatingFilter: false, filter: false, sortable: false },
+  { field: 'in', headerName: 'In', floatingFilter: false, filter: false, sortable: false },
+  { field: 'description', headerName: 'Description', floatingFilter: false, filter: false, sortable: false },
+  { field: 'schema.type', headerName: 'Type', floatingFilter: false, filter: false, sortable: false },
+  {
+    field: 'required',
+    headerName: 'Required',
+    floatingFilter: false,
+    filter: false,
+    sortable: false,
+    cellDataType: false,
+    valueFormatter: ({ value }) => formatRequired(value, t),
+    tooltipValueGetter: ({ value }) => formatRequired(value, t),
+  },
+];
+
+export const HF_REGISTRY_COLUMNS: ColDef[] = [
+  { field: 'id', headerName: 'Model name', hide: false, sortable: false },
+  {
+    field: 'libraries',
+    headerName: 'Libraries',
+    hide: false,
+    cellRenderer: TagsCellRenderer,
+    cellRendererParams: (params: { data?: { libraries?: string[] } }) => ({
+      items: params.data?.libraries,
+    }),
+    tooltipValueGetter: ({ value }) => (value?.length ? value.join(', ') : null),
+    sortable: false,
+    filter: false,
+    floatingFilter: false,
+  },
+  {
+    field: 'languages',
+    headerName: 'Languages',
+    hide: false,
+    cellRenderer: TagsCellRenderer,
+    cellRendererParams: (params: { data?: { languages?: string[] } }) => ({
+      items: params.data?.languages,
+    }),
+    tooltipValueGetter: ({ value }) => (value?.length ? value.join(', ') : null),
+    sortable: false,
+    filter: false,
+    floatingFilter: false,
+  },
+  {
+    field: 'licenses',
+    headerName: 'Licenses',
+    hide: false,
+    cellRenderer: TagsCellRenderer,
+    cellRendererParams: (params: { data?: { licenses?: string[] } }) => ({
+      items: params.data?.licenses,
+    }),
+    tooltipValueGetter: ({ value }) => (value?.length ? value.join(', ') : null),
+    sortable: false,
+    filter: false,
+    floatingFilter: false,
+  },
+  { field: 'author', headerName: 'Author', hide: false, sortable: false },
+  {
+    field: 'parameters',
+    headerName: 'Parameters',
+    hide: true,
+    cellClass: 'align-right',
+    headerClass: 'align-right',
+    comparator: numberValueComparator,
+    valueFormatter: ({ value }) => (value ? formatNumberWithExponent(value) : ''),
+    tooltipValueGetter: ({ value }) => (value ? formatNumberWithExponent(value) : ''),
+    filterValueGetter: (params) => formatNumberWithExponent(params.data[params.colDef.field || '']),
+    sortable: false,
+    filter: false,
+    floatingFilter: false,
+  },
+  {
+    field: 'tags',
+    headerName: 'Tags',
+    hide: true,
+    cellRenderer: TagsCellRenderer,
+    cellRendererParams: (params: { data?: { tags?: string[] } }) => ({
+      items: params.data?.tags,
+    }),
+    tooltipValueGetter: ({ value }) => (value?.length ? value.join(', ') : null),
+    sortable: false,
+    filter: false,
+    floatingFilter: false,
+  },
+  {
+    field: 'datasets',
+    headerName: 'Trained datasets',
+    hide: true,
+    cellRenderer: TagsCellRenderer,
+    cellRendererParams: (params: { data?: { datasets?: string[] } }) => ({
+      items: params.data?.datasets,
+    }),
+    tooltipValueGetter: ({ value }) => (value?.length ? value.join(', ') : null),
+    sortable: false,
+    filter: false,
+    floatingFilter: false,
+  },
+  {
+    ...CREATED_AT_COLUMN,
+    hide: true,
+    sortingOrder: ['desc', null],
+    filter: false,
+    floatingFilter: false,
+  },
+  {
+    field: 'lastModified',
+    headerName: 'Last modified',
+    hide: true,
+    sortingOrder: ['desc', null],
+    filter: false,
+    floatingFilter: false,
+    ...dateTimeColumn,
+  },
+  {
+    field: 'likes',
+    headerName: 'Likes',
+    hide: false,
+    sortingOrder: ['desc', null],
+    filter: false,
+    floatingFilter: false,
+    ...numericColumn,
+  },
+  {
+    field: 'downloads',
+    headerName: 'Downloads',
+    hide: false,
+    sort: 'desc',
+    sortingOrder: ['desc', null],
+    filter: false,
+    floatingFilter: false,
+    ...numericColumn,
   },
 ];

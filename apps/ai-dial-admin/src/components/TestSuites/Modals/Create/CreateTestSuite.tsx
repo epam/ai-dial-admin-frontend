@@ -1,14 +1,14 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { DialPopup, DialSteps, PopupSize, StepStatus } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useI18n } from '@/src/locales/client';
+import { DialPopup, DialSteps, PopupSize, StepStatus } from '@epam/ai-dial-ui-kit';
 
+import { useI18n } from '@/src/locales/client';
 import { getDeployments } from '@/src/app/[lang]/test-suites/actions';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 import Methods from '@/src/components/TestSuites/Methods/Methods';
 import TestSuiteProperties from '@/src/components/TestSuites/Properties/Properties';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { Deployment } from '@/src/models/evaluation/deployment';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import Applications from './Applications';
@@ -22,7 +22,7 @@ interface Props {
 
 const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate }) => {
   const t = useI18n();
-
+  const { isValid } = useSaveValidationContext();
   const [steps, setSteps] = useState(TEST_SUIT_STEPS(t));
   const [currentStepId, setCurrentStep] = useState(steps[0].id);
   const [testSuite, setTestSuite] = useState<TestSuite>({} as TestSuite);
@@ -50,12 +50,10 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate }) => {
         if (step.id === TestSuitTab.Methods) {
           return { ...step, status: testSuite.endpointRef?.method ? StepStatus.VALID : void 0 };
         }
-        return step.id === TestSuitTab.Properties
-          ? { ...step, status: testSuite.name ? StepStatus.VALID : void 0 }
-          : step;
+        return step.id === TestSuitTab.Properties ? { ...step, status: isValid ? StepStatus.VALID : void 0 } : step;
       }),
     );
-  }, [selectedApplication, currentStepId, testSuite.endpointRef?.method, testSuite.name]);
+  }, [selectedApplication, currentStepId, testSuite.endpointRef?.method, testSuite.name, isValid]);
 
   return (
     <DialPopup

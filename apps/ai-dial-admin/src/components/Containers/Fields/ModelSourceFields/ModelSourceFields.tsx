@@ -11,14 +11,16 @@ import { isEditDisabled } from '@/src/utils/deployments/containers';
 import { getControlClassName } from '@/src/utils/entities/view';
 import { useI18n } from '@/src/locales/client';
 import HFModelNameField from '@/src/components/Containers/Fields/HFModelNameField/HFModelNameField';
+import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
   container: Container;
   setContainer: (container: Container) => void;
   isModal?: boolean;
+  route: ApplicationRoute;
 }
 
-const ModelSourceFields: FC<Props> = ({ container, setContainer, isModal = false }) => {
+const ModelSourceFields: FC<Props> = ({ container, setContainer, isModal = false, route }) => {
   const t = useI18n();
   const { dispatch, resetCounter } = useSaveValidationContext();
   const containerClassName = useMemo(() => getControlClassName(isModal), [isModal]);
@@ -61,7 +63,7 @@ const ModelSourceFields: FC<Props> = ({ container, setContainer, isModal = false
           disabled={isEditDisabled(container)}
         />
       ) : (
-        <HFModelNameField container={container} setContainer={setContainer} isModal={isModal} />
+        <HFModelNameField container={container} setContainer={setContainer} isModal={isModal} route={route} />
       )}
     </div>
   );

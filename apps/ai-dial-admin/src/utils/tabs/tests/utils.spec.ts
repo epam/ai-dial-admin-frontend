@@ -17,23 +17,26 @@ import {
   filesTab,
   firewallTab,
   getAdapterTabs,
+  getApplicationTabs,
+  getAppRouteTabs,
   getAppRunnerTabs,
   getAuditTabs,
   getDeploymentsViewTabs,
   getInterceptorTabs,
   getInterceptorTemplateTabs,
   getKeyTabs,
+  getModelsTabs,
   getPublicationTabs,
   getRoleTabs,
   getRouteTabs,
   getSystemPropertiesTabs,
   getTabsForAsset,
+  getTestSuiteTabs,
   getToolsetTabs,
   getUsageLogTabs,
-  getViewTabs,
   globalInterceptorsTab,
-  interceptorsTab,
   installationLogTab,
+  interceptorsTab,
   keysTab,
   modelsTab,
   parameterSchemaTab,
@@ -43,55 +46,40 @@ import {
   relatedContainersTab,
   resourcesTab,
   rolesTab,
+  runsTab,
+  testCasesTab,
   toolsTab,
   tracesTab,
-  getTestSuiteTabs,
-  testCasesTab,
-  runsTab,
   trendsTab,
 } from '../utils';
 
-import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
+import { IMAGE_STATUS } from '@/src/types/deployments/images';
 
 const t = vi.fn((id) => id);
 
 describe('Entities :: tabs', () => {
   test('Should return tabs for models', () => {
-    const res = getViewTabs(t, ApplicationRoute.Models);
+    const res = getModelsTabs(t);
     expect(res).toEqual([propertiesTab(t), featuresTab(t), rolesTab(t), interceptorsTab(t), auditTab(t)]);
   });
 
   test('Should return tabs for application', () => {
-    const res = getViewTabs(t, ApplicationRoute.Applications);
+    const res = getApplicationTabs(t);
     expect(res).toEqual([
       propertiesTab(t),
       featuresTab(t),
       parametersTab(t),
-      rolesTab(t),
-      interceptorsTab(t),
       dependenciesTab(t),
       appRouteTab(t),
-      auditTab(t),
-    ]);
-  });
-
-  test('Should return tabs for application with editor', () => {
-    const res = getViewTabs(t, ApplicationRoute.Applications);
-    expect(res).toEqual([
-      propertiesTab(t),
-      featuresTab(t),
-      parametersTab(t),
       rolesTab(t),
       interceptorsTab(t),
-      dependenciesTab(t),
-      appRouteTab(t),
       auditTab(t),
     ]);
   });
 
   test('Should return tabs for routes', () => {
-    const res = getViewTabs(t, ApplicationRoute.Routes);
+    const res = getRouteTabs(t);
     expect(res).toEqual([propertiesTab(t), rolesTab(t), auditTab(t)]);
   });
 
@@ -152,7 +140,7 @@ describe('Entities :: tabs', () => {
   });
 
   test('returns correct tabs for routes', () => {
-    expect(getRouteTabs(t)).toEqual([propertiesTab(t), attachmentsTab(t), rolesTab(t)]);
+    expect(getAppRouteTabs(t)).toEqual([propertiesTab(t), attachmentsTab(t), rolesTab(t)]);
   });
 
   test('returns correct tabs for roles', () => {

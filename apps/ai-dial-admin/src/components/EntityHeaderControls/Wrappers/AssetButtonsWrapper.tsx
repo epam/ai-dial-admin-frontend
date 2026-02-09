@@ -7,27 +7,28 @@ import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 
-import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
+import AssetVersionControl from '@/src/components/Assets/Deployments/AssetVersionControl';
 import { showEditorErrorNotifications } from '@/src/components/EntityHeaderControls/Buttons/utils';
+import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
-import { Asset } from '@/src/models/dial/deployment-asset';
-import AssetVersionControl from '../../Assets/Deployments/AssetVersionControl';
-import JsonToggles from '../JsonToggle/JsonToggle';
+import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
+import AssetChangedEntityButtons from '../Buttons/AssetChangedEntityButtons';
 import { SimpleButtonsWrapperProps } from './SimpleButtonsWrapper';
 
-export interface AssetButtonsWrapperProps extends SimpleButtonsWrapperProps<Asset> {
-  assets?: Asset[];
-  getAssetContext?: () => AssetsFolderContext<Asset>;
+export interface AssetButtonsWrapperProps extends Omit<SimpleButtonsWrapperProps<AssetWithVersion>, 'onSave'> {
+  assets?: AssetWithVersion[] | null;
+  getAssetContext?: () => AssetsFolderContext;
   addedVersions?: string[];
-  onChangeAsset?: (asset: Asset) => void;
+  onChangeAsset?: (asset: AssetWithVersion) => void;
+  onSave?: (version?: string) => void;
   onChangeAddedVersion?: (version: string[]) => void;
 }
 
@@ -48,8 +49,8 @@ const AssetButtonsWrapper: FC<AssetButtonsWrapperProps> = ({
   onChangeAsset,
 }) => {
   const t = useI18n();
-  const { isEditorEnabled } = jsonConfiguration;
-  const { isValid, dispatch, jsonErrors } = useSaveValidationContext();
+  const isEditorEnabled = jsonConfiguration?.isEditorEnabled;
+  const { dispatch, jsonErrors } = useSaveValidationContext();
   const { showNotification } = useNotification();
 
   const existingVersions = useMemo(() => {
@@ -64,7 +65,6 @@ const AssetButtonsWrapper: FC<AssetButtonsWrapperProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [containerClassName, setContainerClassName] = useState(staticContainerClassName);
   const [buttonsClassName, setButtonsClassName] = useState('');
-  const isDisableSave = useMemo(() => (isEditorEnabled ? false : !isValid), [isEditorEnabled, isValid]);
 
   const onOpenModal = useCallback(() => {
     setIsModalOpen(true);
@@ -90,20 +90,29 @@ const AssetButtonsWrapper: FC<AssetButtonsWrapperProps> = ({
     onDiscard?.();
   }, [dispatch, onDiscard]);
 
-  const onTryToSave = useCallback(() => {
-    if (jsonErrors?.length) {
-      const errorNotifications = showEditorErrorNotifications(jsonErrors, showNotification, t);
-      dispatch({ type: ValidationActionType.SetJsonEditorNotifications, errors: errorNotifications });
-    } else {
-      onSave?.();
-    }
-  }, [jsonErrors, showNotification, t, dispatch, onSave]);
+  const onTryToSave = useCallback(
+    (version?: string) => {
+      if (jsonErrors?.length) {
+        const errorNotifications = showEditorErrorNotifications(jsonErrors, showNotification, t);
+        dispatch({ type: ValidationActionType.SetJsonEditorNotifications, errors: errorNotifications });
+      } else {
+        onSave?.(version);
+      }
+    },
+    [jsonErrors, showNotification, t, dispatch, onSave],
+  );
 
   return (
     <>
       <div className={containerClassName}>
         {isChanged ? (
-          <ChangedEntityButtons disableSave={isDisableSave} onDiscard={onStartDiscard} onSave={onTryToSave} />
+          <AssetChangedEntityButtons
+            version={entity.version}
+            existingVersions={existingVersions}
+            onDiscard={onStartDiscard}
+            isEditorEnabled={isEditorEnabled}
+            onSave={onTryToSave}
+          />
         ) : (
           <div className="flex flex-row items-center w-full gap-x-4">
             {!isEditorEnabled && (
@@ -126,7 +135,7 @@ const AssetButtonsWrapper: FC<AssetButtonsWrapperProps> = ({
                 {children}
               </div>
             )}
-            <JsonToggles isEditorEnabled={isEditorEnabled} onToggleEditor={jsonConfiguration.onToggleEditor} />
+            <JsonToggles isEditorEnabled={isEditorEnabled} onToggleEditor={jsonConfiguration?.onToggleEditor} />
           </div>
         )}
       </div>

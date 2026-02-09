@@ -45,205 +45,208 @@ export enum EntityViewTab {
   Trends = 'Trends',
 }
 
-export const propertiesTab = (t: (stringToTranslate: string) => string) => ({
+export const propertiesTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Properties,
   label: t(TabsI18nKey.Properties),
 });
 
-export const featuresTab = (t: (stringToTranslate: string) => string) => ({
+export const featuresTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Features,
   label: t(TabsI18nKey.Features),
 });
 
-export const rolesTab = (t: (stringToTranslate: string) => string) => ({
+export const rolesTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Roles,
   label: t(TabsI18nKey.Roles),
 });
 
-export const interceptorsTab = (t: (stringToTranslate: string) => string) => ({
+export const interceptorsTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Interceptors,
   label: t(TabsI18nKey.Interceptors),
 });
 
-export const globalInterceptorsTab = (t: (stringToTranslate: string) => string) => ({
+export const globalInterceptorsTab = (t: (key: string) => string) => ({
   id: EntityViewTab.GlobalInterceptors,
   label: t(TabsI18nKey.GlobalInterceptors),
 });
 
-export const parametersTab = (t: (stringToTranslate: string) => string) => ({
+export const parametersTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Parameters,
   label: t(TabsI18nKey.Parameters),
 });
 
-export const auditTab = (t: (stringToTranslate: string) => string) => ({
+export const auditTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Audit,
   label: t(TabsI18nKey.Audit),
 });
 
-export const modelsTab = (t: (stringToTranslate: string) => string) => ({
+export const modelsTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Models,
   label: t(TabsI18nKey.Models),
 });
 
-export const dashboardTab = (t: (stringToTranslate: string) => string) => ({
+export const dashboardTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Dashboard,
   label: t(TabsI18nKey.Dashboard),
 });
 
-export const activitiesTab = (t: (stringToTranslate: string) => string) => ({
+export const activitiesTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Activities,
   label: t(TabsI18nKey.Activities),
 });
 
-export const dependenciesTab = (t: (stringToTranslate: string) => string) => ({
+export const dependenciesTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Dependencies,
   label: t(TabsI18nKey.Dependencies),
 });
 
-export const appRouteTab = (t: (stringToTranslate: string) => string) => ({
+export const appRouteTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Routes,
   label: t(TabsI18nKey.Routes),
 });
 
-export const tracesTab = (t: (stringToTranslate: string) => string) => ({
+export const tracesTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Traces,
   label: t(TabsI18nKey.Traces),
 });
 
-export const conversationsTab = (t: (stringToTranslate: string) => string) => ({
+export const conversationsTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Conversations,
   label: t(TabsI18nKey.Conversations),
 });
 
-export const attachmentsTab = (t: (stringToTranslate: string) => string) => ({
+export const attachmentsTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Attachments,
   label: t(TabsI18nKey.Attachments),
 });
 
-export const toolsTab = (t: (stringToTranslate: string) => string) => ({
+export const toolsTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Tools,
   label: t(TabsI18nKey.Tools),
 });
 
-export const parameterSchemaTab = (t: (stringToTranslate: string) => string) => ({
+export const parameterSchemaTab = (t: (key: string) => string) => ({
   id: EntityViewTab.ParameterSchema,
   label: t(TabsI18nKey.ParameterSchema),
 });
 
-export const entitiesTab = (t: (stringToTranslate: string) => string) => ({
+export const entitiesTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Entities,
   label: t(TabsI18nKey.Entities),
 });
 
-export const keysTab = (t: (stringToTranslate: string) => string) => ({
+export const keysTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Keys,
   label: t(TabsI18nKey.Keys),
 });
 
-export const filesTab = (t: (stringToTranslate: string) => string) => ({
+export const filesTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Files,
   label: t(TabsI18nKey.Files),
 });
 
-export const applicationsTab = (t: (stringToTranslate: string) => string) => ({
+export const applicationsTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Applications,
   label: t(TabsI18nKey.Applications),
 });
 
-export const applicationRunnersTab = (t: (stringToTranslate: string) => string) => ({
+export const applicationRunnersTab = (t: (key: string) => string) => ({
   id: EntityViewTab.ApplicationRunners,
   label: t(TabsI18nKey.ApplicationRunners),
 });
 
-export const installationLogTab = (t: (stringToTranslate: string) => string, status?: IMAGE_STATUS) => ({
+export const installationLogTab = (t: (key: string) => string, status?: IMAGE_STATUS) => ({
   id: EntityViewTab.InstallationLog,
   label: t(TabsI18nKey.InstallationLog),
   disabled: status === IMAGE_STATUS.NOT_BUILT,
 });
 
-export const deploymentsToolsTab = (t: (stringToTranslate: string) => string, status?: CONTAINER_STATUS) => ({
+export const deploymentsToolsTab = (t: (key: string) => string, status?: CONTAINER_STATUS) => ({
   id: EntityViewTab.Tools,
   label: t(TabsI18nKey.Tools),
   disabled: status !== CONTAINER_STATUS.RUNNING,
 });
 
-export const resourcesTab = (t: (stringToTranslate: string) => string, status?: CONTAINER_STATUS) => ({
+export const resourcesTab = (t: (key: string) => string, status?: CONTAINER_STATUS) => ({
   id: EntityViewTab.Resources,
   label: t(TabsI18nKey.Resources),
   disabled: status !== CONTAINER_STATUS.RUNNING,
 });
 
-export const promptsTab = (t: (stringToTranslate: string) => string, status?: CONTAINER_STATUS) => ({
+export const promptsTab = (t: (key: string) => string, status?: CONTAINER_STATUS) => ({
   id: EntityViewTab.Prompts,
   label: t(TabsI18nKey.Prompts),
   disabled: status !== CONTAINER_STATUS.RUNNING,
 });
 
-export const metricsTab = (t: (stringToTranslate: string) => string, status?: CONTAINER_STATUS) => ({
+export const metricsTab = (t: (key: string) => string, status?: CONTAINER_STATUS) => ({
   id: EntityViewTab.Metrics,
   label: t(TabsI18nKey.Metrics),
   disabled: status !== CONTAINER_STATUS.RUNNING,
 });
 
-export const executionLogTab = (t: (stringToTranslate: string) => string) => ({
+export const executionLogTab = (t: (key: string) => string) => ({
   id: EntityViewTab.ExecutionLog,
   label: t(TabsI18nKey.ExecutionLog),
 });
 
-export const eventsTab = (t: (stringToTranslate: string) => string) => ({
+export const eventsTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Events,
   label: t(TabsI18nKey.Events),
 });
 
-export const firewallTab = (t: (stringToTranslate: string) => string) => ({
+export const firewallTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Firewall,
   label: t(TabsI18nKey.Firewall),
 });
 
-export const relatedContainersTab = (t: (stringToTranslate: string) => string, status?: IMAGE_STATUS) => ({
+export const relatedContainersTab = (t: (key: string) => string, status?: IMAGE_STATUS) => ({
   id: EntityViewTab.RelatedContainers,
   label: t(TabsI18nKey.RelatedContainers),
   disabled: status === IMAGE_STATUS.NOT_BUILT,
 });
 
-export const testCasesTab = (t: (stringToTranslate: string) => string) => ({
+export const testCasesTab = (t: (key: string) => string) => ({
   id: EntityViewTab.TestCases,
   label: t(TabsI18nKey.TestCases),
 });
 
-export const trendsTab = (t: (stringToTranslate: string) => string) => ({
+export const trendsTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Trends,
   label: t(TabsI18nKey.Trends),
 });
 
-export const runsTab = (t: (stringToTranslate: string) => string) => ({
+export const runsTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Runs,
   label: t(TabsI18nKey.Runs),
 });
 
-export const getViewTabs = (t: (stringToTranslate: string) => string, view: ApplicationRoute): TabModel[] => {
-  if (view === ApplicationRoute.Routes) {
-    return [propertiesTab(t), rolesTab(t), auditTab(t)];
-  }
-
-  const tabs: TabModel[] = [propertiesTab(t), featuresTab(t), rolesTab(t), interceptorsTab(t)];
-
-  if (view === ApplicationRoute.Applications) {
-    tabs.splice(2, 0, parametersTab(t));
-    tabs.push(dependenciesTab(t));
-    tabs.push(appRouteTab(t));
-  }
-
-  tabs.push(auditTab(t));
-
-  return tabs;
+export const getRouteTabs = (t: (key: string) => string): TabModel[] => {
+  return [propertiesTab(t), rolesTab(t), auditTab(t)];
 };
 
-export const getAdapterTabs = (t: (stringToTranslate: string) => string): TabModel[] => {
+export const getApplicationTabs = (t: (key: string) => string): TabModel[] => {
+  return [
+    propertiesTab(t),
+    featuresTab(t),
+    parametersTab(t),
+    dependenciesTab(t),
+    appRouteTab(t),
+    rolesTab(t),
+    interceptorsTab(t),
+    auditTab(t),
+  ];
+};
+
+export const getModelsTabs = (t: (key: string) => string): TabModel[] => {
+  return [propertiesTab(t), featuresTab(t), rolesTab(t), interceptorsTab(t), auditTab(t)];
+};
+
+export const getAdapterTabs = (t: (key: string) => string): TabModel[] => {
   return [propertiesTab(t), modelsTab(t), auditTab(t)];
 };
 
-export const getAppRunnerTabs = (t: (stringToTranslate: string) => string): TabModel[] => {
+export const getAppRunnerTabs = (t: (key: string) => string): TabModel[] => {
   return [
     propertiesTab(t),
     featuresTab(t),
@@ -255,39 +258,39 @@ export const getAppRunnerTabs = (t: (stringToTranslate: string) => string): TabM
   ];
 };
 
-export const getRouteTabs = (t: (stringToTranslate: string) => string): TabModel[] => {
+export const getAppRouteTabs = (t: (key: string) => string): TabModel[] => {
   return [propertiesTab(t), attachmentsTab(t), rolesTab(t)];
 };
 
-export const getRoleTabs = (t: (stringToTranslate: string) => string): TabModel[] => {
+export const getRoleTabs = (t: (key: string) => string): TabModel[] => {
   return [propertiesTab(t), entitiesTab(t), keysTab(t), auditTab(t)];
 };
 
-export const getInterceptorTabs = (t: (stringToTranslate: string) => string): TabModel[] => {
+export const getInterceptorTabs = (t: (key: string) => string): TabModel[] => {
   return [propertiesTab(t), parameterSchemaTab(t), entitiesTab(t), applicationRunnersTab(t), auditTab(t)];
 };
 
-export const getToolsetTabs = (t: (stringToTranslate: string) => string): TabModel[] => {
+export const getToolsetTabs = (t: (key: string) => string): TabModel[] => {
   return [propertiesTab(t), toolsTab(t), rolesTab(t), auditTab(t)];
 };
 
-export const getInterceptorTemplateTabs = (t: (stringToTranslate: string) => string): TabModel[] => {
+export const getInterceptorTemplateTabs = (t: (key: string) => string): TabModel[] => {
   return [propertiesTab(t), interceptorsTab(t), auditTab(t)];
 };
 
-export const getKeyTabs = (t: (stringToTranslate: string) => string): TabModel[] => {
+export const getKeyTabs = (t: (key: string) => string): TabModel[] => {
   return [propertiesTab(t), rolesTab(t), auditTab(t)];
 };
 
-export const getPublicationTabs = (t: (stringToTranslate: string) => string): TabModel[] => {
+export const getPublicationTabs = (t: (key: string) => string): TabModel[] => {
   return [propertiesTab(t), parametersTab(t), filesTab(t)];
 };
 
-export const getUsageLogTabs = (t: (stringToTranslate: string) => string): TabModel[] => {
+export const getUsageLogTabs = (t: (key: string) => string): TabModel[] => {
   return [tracesTab(t), conversationsTab(t)];
 };
 
-export const getTabsForAsset = (t: (stringToTranslate: string) => string, view: ApplicationRoute): TabModel[] => {
+export const getTabsForAsset = (t: (key: string) => string, view: ApplicationRoute): TabModel[] => {
   if (view === ApplicationRoute.AssetsApplications) {
     return [propertiesTab(t), featuresTab(t), parametersTab(t), interceptorsTab(t), dependenciesTab(t)];
   }
@@ -298,7 +301,7 @@ export const getTabsForAsset = (t: (stringToTranslate: string) => string, view: 
 };
 
 export const getAuditTabs = (
-  t: (stringToTranslate: string) => string,
+  t: (key: string) => string,
   featureFlags: Record<string, boolean>,
   view: ApplicationRoute,
 ): TabModel[] => {
@@ -315,7 +318,7 @@ export const getAuditTabs = (
 
 export const getDeploymentsViewTabs = (
   route: ApplicationRoute,
-  t: (stringToTranslate: string) => string,
+  t: (key: string) => string,
   status?: CONTAINER_STATUS | IMAGE_STATUS,
 ): TabModel[] => {
   if (route === ApplicationRoute.Images) {
@@ -342,7 +345,7 @@ export const getDeploymentsViewTabs = (
   }
 };
 
-export const getSystemPropertiesTabs = (t: (stringToTranslate: string) => string): TabModel[] => {
+export const getSystemPropertiesTabs = (t: (key: string) => string): TabModel[] => {
   return [globalInterceptorsTab(t)];
 };
 

@@ -2,7 +2,7 @@ import { JWT } from 'next-auth/jwt';
 
 import { DEFAULT_ETAG, IF_MATCH, IF_NONE_MATCH } from '@/src/constants/api-headers';
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { Asset, AssetToolset } from '@/src/models/dial/deployment-asset';
+import { Asset, AssetToolset, AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Tool, ToolsetAuthCredentialLevel } from '@/src/models/dial/toolset';
@@ -17,11 +17,7 @@ import { ResourceBasePaths, ResourceOperation } from './constants';
 import { buildAssetUrl } from './utils';
 
 export class AssetsApi extends BaseApi {
-  async getAssetList(
-    token: JWT | null,
-    path: string,
-    type: ResourceType,
-  ): Promise<(Asset | DialFile)[] | null | undefined> {
+  async getAssetList(token: JWT | null, path: string, type: ResourceType): Promise<Asset[] | null | undefined> {
     const url = buildAssetUrl(type, ResourceOperation.LIST);
     if (type === ResourceType.FILE) {
       return this.post(ResourceBasePaths[type], { path }, token).then((response) =>
@@ -68,7 +64,7 @@ export class AssetsApi extends BaseApi {
 
   updateAssetWithEtag(
     token: JWT | null,
-    asset: Asset,
+    asset: AssetWithVersion,
     type: ResourceType,
     etag: string,
   ): Promise<ServerActionResponse> {
@@ -76,12 +72,12 @@ export class AssetsApi extends BaseApi {
     return this.postAction(url, { ...asset }, token, { [IF_MATCH]: etag });
   }
 
-  updateAsset(token: JWT | null, asset: Asset, type: ResourceType): Promise<ServerActionResponse> {
+  updateAsset(token: JWT | null, asset: AssetWithVersion, type: ResourceType): Promise<ServerActionResponse> {
     const url = buildAssetUrl(type, ResourceOperation.UPDATE);
     return this.postAction(url, { ...asset }, token);
   }
 
-  createAsset(asset: Asset, type: ResourceType, token: JWT | null): Promise<ServerActionResponse> {
+  createAsset(asset: AssetWithVersion, type: ResourceType, token: JWT | null): Promise<ServerActionResponse> {
     const url = buildAssetUrl(type, ResourceOperation.CREATE);
     return this.postAction(url, { ...asset, folderId: asset.folderId || ROOT_FOLDER }, token);
   }

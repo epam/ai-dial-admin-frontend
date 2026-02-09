@@ -16,7 +16,7 @@ import { tryOutAssetTool } from '@/src/app/[lang]/assets-toolsets/actions';
 import { tryOutTool } from '@/src/app/[lang]/toolsets/actions';
 import Divider from '@/src/components/Common/Divider/Divider';
 import SchemaUiRenderer from '@/src/components/Common/SchemaUIRenderer/SchemaUIRenderer';
-import JsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
+import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import {
   BasicI18nKey,
   ButtonsI18nKey,
@@ -60,7 +60,10 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset }) => {
   }, [t]);
 
   const isEmptyRequest = useMemo(() => {
-    return !tool?.inputSchema || (tool?.inputSchema && Object.keys(tool?.inputSchema.properties).length === 0);
+    return (
+      !tool?.inputSchema ||
+      (tool?.inputSchema && (!tool?.inputSchema.properties || Object.keys(tool?.inputSchema.properties).length === 0))
+    );
   }, [tool?.inputSchema]);
 
   const sendRequest = useCallback(() => {

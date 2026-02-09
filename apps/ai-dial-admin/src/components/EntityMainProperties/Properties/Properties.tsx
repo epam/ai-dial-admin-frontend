@@ -5,7 +5,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import { isAssetView } from '@/src/utils/is-asset-view';
 import AssetProperties from './AssetProperties';
-import { Asset } from '@/src/models/dial/deployment-asset';
+import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 
 interface Props<T> {
   view: ApplicationRoute;
@@ -18,6 +18,8 @@ interface Props<T> {
   onChangeEntity: (entity: object) => void;
   initialValues?: Partial<T>;
 }
+
+// TODO: remove this component and use EntityProperties and DeploymentProperties directly in the views
 
 const Properties = <T extends object>({
   view,
@@ -33,7 +35,13 @@ const Properties = <T extends object>({
 
   if (isAssetView(view)) {
     return (
-      <AssetProperties view={view} runners={runners} versionsMap={versionsMap} entity={entity as Asset} {...props} />
+      <AssetProperties
+        view={view}
+        runners={runners}
+        versionsMap={versionsMap}
+        entity={entity as AssetWithVersion}
+        {...props}
+      />
     );
   }
 

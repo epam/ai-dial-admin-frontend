@@ -13,7 +13,7 @@ import { createModel } from '@/src/app/[lang]/models/actions';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
-import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
+import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';

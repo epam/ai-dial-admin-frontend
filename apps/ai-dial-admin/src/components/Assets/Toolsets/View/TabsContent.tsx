@@ -1,25 +1,57 @@
 'use client';
 
-import { FC } from 'react';
+import { FC, useMemo } from 'react';
 
+import FoldersStorageLabel from '@/src/components/Assets/Header/FolderStorage';
+import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import Tools from '@/src/components/Tools/Tools';
+import { AuthHeader } from '@/src/components/Toolsets/Auth/Sections/AuthHeader';
+import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { Toolset } from '@/src/models/dial/toolset';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
-import PropertiesTabContent from './Properties/TabContent';
+import { ApplicationRoute } from '@/src/types/routes';
+import { useI18n } from '@/src/locales/client';
+import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
+import Properties from './Properties/Properties';
 
 interface Props {
   activeTab: EntityViewTab;
-  selectedToolset: AssetToolset;
   originalToolset: AssetToolset;
+  selectedToolset: AssetToolset;
   onChange: (toolset: AssetToolset) => void;
 }
 
 const TabsContent: FC<Props> = ({ activeTab, onChange, selectedToolset, originalToolset }) => {
+  const t = useI18n();
+
+  const headerPostfix = useMemo(() => {
+    return (
+      <>
+        <AuthHeader toolset={selectedToolset} />
+        <FoldersStorageLabel asset={selectedToolset} />
+      </>
+    );
+  }, [selectedToolset]);
+
+  const headerPrefix = useMemo(() => {
+    return selectedToolset.author ? (
+      <LabelledText label={t(EntitiesI18nKey.Author)} text={selectedToolset.author} />
+    ) : null;
+  }, [selectedToolset.author, t]);
+
   return (
     <>
       {activeTab === EntityViewTab.Properties && (
-        <PropertiesTabContent selectedToolset={selectedToolset} onChange={onChange} />
+        <PropertiesTabContent
+          entity={selectedToolset}
+          view={ApplicationRoute.AssetsToolsets}
+          id={selectedToolset.name}
+          headerPostfix={headerPostfix}
+          headerPrefix={headerPrefix}
+        >
+          <Properties selectedToolset={selectedToolset} onChange={onChange} />
+        </PropertiesTabContent>
       )}
 
       {activeTab === EntityViewTab.Tools && (

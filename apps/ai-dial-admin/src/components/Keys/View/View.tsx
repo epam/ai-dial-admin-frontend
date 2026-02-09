@@ -10,7 +10,7 @@ import { cloneDeep } from 'lodash';
 
 import { getCoreKey, removeKey, updateCoreKey, updateKey } from '@/src/app/[lang]/keys/actions';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
-import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
+import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { ButtonsI18nKey, KeysI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';

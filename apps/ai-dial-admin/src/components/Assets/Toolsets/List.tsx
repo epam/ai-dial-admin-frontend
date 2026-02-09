@@ -14,13 +14,14 @@ import { DEPLOYMENT_ASSETS_COLUMNS } from '@/src/constants/grid-columns/grid-col
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { ApplicationRoute } from '@/src/types/routes';
 import { filterNames } from '@/src/utils/entities/filter-names';
+import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 
 const ToolsetsList: FC = () => {
   const { data } = useToolsetFolder();
   const names = filterNames(data);
 
-  const versionsMap = getVersionsPerName(data || []);
-  const filteredData = filterLatestVersions(data || []);
+  const versionsMap = getVersionsPerName((data || []) as AssetWithVersion[]);
+  const filteredData = filterLatestVersions((data || []) as AssetWithVersion[]);
 
   return (
     <BaseEntityList

@@ -1,43 +1,34 @@
 'use client';
 
-import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react';
+import { TabModel } from '@epam/ai-dial-ui-kit';
 import { cloneDeep } from 'lodash';
 import { useRouter } from 'next/navigation';
-import { TabModel } from '@epam/ai-dial-ui-kit';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+
+import { getContainer, getContainerPods, updateContainer } from '@/src/app/actions/deployments';
+import ContainersHeader from '@/src/components/EntityHeaderControls/ContainersHeader';
+import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
+import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import { IMAGE_BUILD_POLL_INTERVAL } from '@/src/constants/deployments/images';
+import { ContainersI18nKey } from '@/src/constants/i18n';
+import { useAppContext } from '@/src/context/AppContext';
+import { useNotification } from '@/src/context/NotificationContext';
+import { useI18n } from '@/src/locales/client';
 import { Container, KubEvent, Pod } from '@/src/models/deployments/containers';
 import { Image } from '@/src/models/deployments/images';
-import { ApplicationRoute } from '@/src/types/routes';
+import { AssetToolset } from '@/src/models/dial/deployment-asset';
+import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { Toolset } from '@/src/models/dial/toolset';
-import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { AssetToolset } from '@/src/models/dial/deployment-asset';
-import { useI18n } from '@/src/locales/client';
-import { useNotification } from '@/src/context/NotificationContext';
-import { useAppContext } from '@/src/context/AppContext';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { EntityViewTab, getDeploymentsViewTabs } from '@/src/utils/tabs/utils';
-import { getContainer, getContainerPods, updateContainer } from '@/src/app/actions/deployments';
-import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { CONTAINER_STATUS, KubEventType } from '@/src/types/deployments/containers';
-import { ContainersI18nKey } from '@/src/constants/i18n';
-import { getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
-import { IMAGE_BUILD_POLL_INTERVAL } from '@/src/constants/deployments/images';
-import HeaderButtons from '@/src/components/Containers/View/HeaderButtons';
-import Properties from '@/src/components/Containers/View/Properties/Properties';
-import Tools from '@/src/components/Tools/Tools';
-import Resources from '@/src/components/Containers/View/Resources/Resources';
-import Prompts from '@/src/components/Containers/View/Prompts/Prompts';
-import Metrics from '@/src/components/Containers/View/Metrics/Metrics';
-import ExecutionLog from '@/src/components/Containers/View/ExecutionLog/ExecutionLog';
-import Events from '@/src/components/Containers/View/Events/Events';
-import { BaseEntity } from '@/src/models/dial/base-entity';
-import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
-import { getViewHeaderClassName } from '@/src/utils/entities/view';
+import { ApplicationRoute } from '@/src/types/routes';
 import { getContainerRedeploySnapshot } from '@/src/utils/deployments/containers';
+import { getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
-import FirewallSettings from '@/src/components/Containers/View/FirewallSettings/FirewallSettings';
-import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { EntityViewTab, getDeploymentsViewTabs } from '@/src/utils/tabs/utils';
+import TabsContent from './TabsContent';
 
 interface Props {
   container: Container;
@@ -49,25 +40,16 @@ interface Props {
   entityNames: string[];
 }
 
-const ContainerView: FC<Props> = ({
-  container,
-  route,
-  image,
-  names,
-  createEntity,
-  createEntityAsAsset,
-  entityNames,
-}) => {
+const ContainerView: FC<Props> = ({ container, route, createEntity, createEntityAsAsset, entityNames, ...props }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
   const { disableDeploymentsJSONEditor } = useAppContext();
-  const { dispatch } = useSaveValidationContext();
 
   const [tabs, setTabs] = useState<TabModel[]>(getDeploymentsViewTabs(route, t, container.status));
   const [selectedContainer, setSelectedContainer] = useState<Container>(cloneDeep(container));
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
-  const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
+  const [isEditorEnabled, setIsEditorEnabled] = useState<boolean>(false);
   const [isChanged, setIsChanged] = useState<boolean>(false);
   const [isRedeployRequired, setIsRedeployRequired] = useState<boolean>(false);
   const [key, setKey] = useState(0);
@@ -79,22 +61,25 @@ const ContainerView: FC<Props> = ({
     setTabs(getDeploymentsViewTabs(route, t, container.status));
   }, [container.status, route, t]);
 
-  const toggleJsonEditor = useCallback(() => {
-    setJsonEditorEnabled((prev) => !prev);
-  }, [setJsonEditorEnabled]);
+  const jsonConfiguration = useMemo<JsonConfiguration>(
+    () => ({
+      isEditorEnabled,
+      onToggleEditor: () => setIsEditorEnabled((prev) => !prev),
+      hideJsonEditorButton: disableDeploymentsJSONEditor,
+    }),
+    [disableDeploymentsJSONEditor, isEditorEnabled],
+  );
 
   const onDiscard = useCallback(() => {
-    if (jsonEditorEnabled) {
-      dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
+    if (isEditorEnabled) {
       setIsChanged(false);
       // TODO: Revisit solution
       // Due to we can't set invalid JSON as variable, we can't update entity in error state.
       // Force JSON Editor re-render to show originalEntity on discard.
       setKey((prevKey) => prevKey + 1);
     }
-    dispatch({ type: ValidationActionType.Reset });
     setSelectedContainer(cloneDeep(container));
-  }, [container, dispatch, jsonEditorEnabled]);
+  }, [container, isEditorEnabled]);
 
   const onSave = useCallback(() => {
     updateContainer(selectedContainer).then((res) => {
@@ -156,7 +141,7 @@ const ContainerView: FC<Props> = ({
     }
 
     const fetchPods = async () => {
-      const data = await getContainerPods(selectedContainer.name);
+      const data = await getContainerPods(selectedContainer.name as string);
       setPods(data || []);
       const totalRestarts = data?.reduce((sum, p) => sum + (p?.restartCount || 0), 0);
       setRestarts(totalRestarts || 0);
@@ -250,65 +235,41 @@ const ContainerView: FC<Props> = ({
   return (
     <>
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-        <div className={getViewHeaderClassName(jsonEditorEnabled)}>
-          <Tabs
-            tabs={tabs}
-            isEditorEnabled={jsonEditorEnabled}
-            activeTab={activeTab}
-            onChangeActiveTab={setActiveTab}
-          />
+        <ContainersHeader
+          tabs={tabs}
+          activeTab={activeTab}
+          onChangeActiveTab={setActiveTab}
+          route={route}
+          container={selectedContainer}
+          isChanged={isChanged}
+          isRedeployRequired={isRedeployRequired}
+          onSave={onSave}
+          onDiscard={onDiscard}
+          jsonConfiguration={jsonConfiguration}
+          createEntity={createEntity}
+          createEntityAsAsset={createEntityAsAsset}
+          entityNames={entityNames}
+        />
 
-          <HeaderButtons
-            route={route}
-            container={selectedContainer}
-            isChanged={isChanged}
-            isRedeployRequired={isRedeployRequired}
-            onSave={onSave}
-            onDiscard={onDiscard}
-            jsonEditorEnabled={jsonEditorEnabled}
-            toggleJsonEditor={toggleJsonEditor}
-            hideJsonEditor={disableDeploymentsJSONEditor}
-            createEntity={createEntity}
-            createEntityAsAsset={createEntityAsAsset}
-            entityNames={entityNames}
-            transport={container.transport}
-          />
-        </div>
         <div className="flex-1 overflow-auto min-h-0">
-          {jsonEditorEnabled ? (
-            <>
-              <EntityJsonEditor
-                key={key}
-                entity={selectedContainer as BaseEntity}
-                setSelectedEntity={setSelectedContainer as Dispatch<SetStateAction<BaseEntity>>}
-                setIsChanged={setIsChanged}
-              />
-            </>
+          {isEditorEnabled ? (
+            <EntityJsonEditor
+              key={key}
+              entity={selectedContainer}
+              setSelectedEntity={setSelectedContainer}
+              setIsChanged={setIsChanged}
+            />
           ) : (
-            <>
-              {activeTab === EntityViewTab.Properties && (
-                <Properties
-                  container={selectedContainer}
-                  setContainer={setSelectedContainer}
-                  image={image}
-                  route={route}
-                  names={names}
-                  originalName={container.name}
-                  restarts={restarts}
-                />
-              )}
-              {activeTab === EntityViewTab.Tools && <Tools containerId={selectedContainer.name} isMcpToolset />}
-              {activeTab === EntityViewTab.Resources && <Resources containerId={selectedContainer.name} />}
-              {activeTab === EntityViewTab.Prompts && <Prompts containerId={selectedContainer.name} />}
-              {activeTab === EntityViewTab.Metrics && <Metrics />}
-              {activeTab === EntityViewTab.ExecutionLog && (
-                <ExecutionLog containerId={selectedContainer.name} route={route} pods={pods} />
-              )}
-              {activeTab === EntityViewTab.Events && <Events route={route} events={events} />}
-              {activeTab === EntityViewTab.Firewall && (
-                <FirewallSettings route={route} container={selectedContainer} setContainer={setSelectedContainer} />
-              )}
-            </>
+            <TabsContent
+              activeTab={activeTab}
+              route={route}
+              selectedContainer={selectedContainer}
+              events={events}
+              onChange={setSelectedContainer}
+              pods={pods}
+              restarts={restarts}
+              {...props}
+            />
           )}
         </div>
       </div>

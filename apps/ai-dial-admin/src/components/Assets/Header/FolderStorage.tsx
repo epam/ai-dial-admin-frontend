@@ -6,13 +6,14 @@ import { IconExternalLink } from '@tabler/icons-react';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useCurrentLocale, useI18n } from '@/src/locales/client';
-import { Asset } from '@/src/models/dial/deployment-asset';
+import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
+import { Publication } from '@/src/models/dial/publications';
 import { ApplicationRoute } from '@/src/types/routes';
 import { removeTrailingSlash } from '@/src/utils/files/path';
 
 interface Props {
-  asset: Asset | DialFile;
+  asset: AssetWithVersion | DialFile | Publication;
 }
 
 const FoldersStorageLabel: FC<Props> = ({ asset }) => {
@@ -33,6 +34,7 @@ const FoldersStorageLabel: FC<Props> = ({ asset }) => {
       postfix={
         <DialIconButton
           className="p-0 h-[20px] w-[20px] text-secondary"
+          tooltipProps={{ triggerClassName: 'h-[20px] w-[20px]' }}
           onClick={() => openFolderStorageInNewTab(asset.folderId)}
           icon={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
         />

@@ -2,7 +2,7 @@ import { FC, useEffect, useState } from 'react';
 
 import { DialTabs } from '@epam/ai-dial-ui-kit';
 
-import ApplicationParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
+import ParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
 import FilesProperties from '@/src/components/Publications/Assets/Files/FilesProperties';
 
 import { useI18n } from '@/src/locales/client';
@@ -37,8 +37,8 @@ const ApplicationProperties: FC<Props> = ({ publication, applicationSchemes }) =
       <div className="flex-1 min-h-0 pt-[25px] lg:pt-0">
         {selectedTab === EntityViewTab.Properties && <ApplicationInfo application={application} />}
         {selectedTab === EntityViewTab.Parameters && (
-          <ApplicationParametersTab
-            entity={application}
+          <ParametersTab
+            application={application}
             view={ApplicationRoute.ApplicationPublications}
             applicationSchemes={applicationSchemes}
           />

@@ -18,7 +18,6 @@ import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
-import { Asset } from '@/src/models/dial/deployment-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isAssetView, isBuildersView } from '@/src/utils/is-asset-view';
@@ -45,7 +44,7 @@ interface Props<T> {
   onResetEntity?: () => void;
   onRemoveEntity: (entity: string) => Promise<ServerActionResponse>;
   onCloseModal: () => void;
-  getAssetContext?: () => AssetsFolderContext<Asset>;
+  getAssetContext?: () => AssetsFolderContext;
 }
 
 const DeleteConfirmationModal = <T extends Artefact>({

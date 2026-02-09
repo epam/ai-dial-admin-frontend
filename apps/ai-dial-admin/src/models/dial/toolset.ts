@@ -1,6 +1,7 @@
 import { SOURCE_FIELD } from '@/src/components/SourceField/types';
 import { BaseEntity, EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { ToolsetTransport } from '@/src/types/toolset';
+import { DialScheme } from './scheme';
 
 export interface Toolset extends BaseEntity, EntityRoleLimits {
   transport?: ToolsetTransport;
@@ -55,16 +56,10 @@ export enum ToolsetAuthType {
   OAUTH = 'oauth',
 }
 
-export interface ToolSchema {
-  type: string;
-  properties: Record<string, unknown>;
-  required?: string[];
-}
-
 export interface Tool {
   name: string;
   description?: string;
-  inputSchema?: ToolSchema;
+  inputSchema?: DialScheme;
   annotations?: {
     title?: string;
     readOnlyHint?: boolean;
@@ -72,5 +67,5 @@ export interface Tool {
     idempotentHint?: boolean;
     openWorldHint?: boolean;
   };
-  outputSchema?: ToolSchema;
+  outputSchema?: DialScheme;
 }

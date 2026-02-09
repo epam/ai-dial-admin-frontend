@@ -1,6 +1,7 @@
 import { describe, expect, test, vi } from 'vitest';
 import {
   getAssetTemplate,
+  getDeploymentEntityKey,
   getEntityId,
   getEntityName,
   getEntityRoute,
@@ -13,12 +14,12 @@ import {
   splitFolderId,
 } from '../entity';
 import { ApplicationRoute } from '@/src/types/routes';
-import { EntitiesI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
 import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 import { CONTAINER_TRANSPORT } from '@/src/types/deployments/containers';
 import { ENTITY_TRANSPORT } from '@/src/constants/deployments/containers';
 import { DialModelType } from '@/src/models/dial/model';
-import { IMAGE_TYPE } from '../../../types/deployments/images';
+import { IMAGE_TYPE } from '@/src/types/deployments/images';
 
 vi.mock('@/src/utils/models/model-endpoint');
 
@@ -165,6 +166,38 @@ describe('entity utils', () => {
         base: 'bucket/',
         path: '',
       });
+    });
+  });
+
+  describe('getDeploymentEntityKey', () => {
+    const mockT = vi.fn((key: string) => `Translated: ${key}`);
+
+    test('should return translated Container key for McpContainers route', () => {
+      const result = getDeploymentEntityKey(ApplicationRoute.McpContainers, mockT);
+
+      expect(result).toBe(`Translated: ${EntitiesI18nKey.Container}`);
+      expect(mockT).toHaveBeenCalledWith(EntitiesI18nKey.Container);
+    });
+
+    test('should return translated Container key for InterceptorContainers route', () => {
+      const result = getDeploymentEntityKey(ApplicationRoute.InterceptorContainers, mockT);
+
+      expect(result).toBe(`Translated: ${EntitiesI18nKey.Container}`);
+      expect(mockT).toHaveBeenCalledWith(EntitiesI18nKey.Container);
+    });
+
+    test('should return translated Serving key for ModelServings route', () => {
+      const result = getDeploymentEntityKey(ApplicationRoute.ModelServings, mockT);
+
+      expect(result).toBe(`Translated: ${EntitiesI18nKey.Serving}`);
+      expect(mockT).toHaveBeenCalledWith(EntitiesI18nKey.Serving);
+    });
+
+    test('should return translated Serving key for Images route', () => {
+      const result = getDeploymentEntityKey(ApplicationRoute.Images, mockT);
+
+      expect(result).toBe(`Translated: ${ImagesI18nKey.ImageWhitelistType}`);
+      expect(mockT).toHaveBeenCalledWith(ImagesI18nKey.ImageWhitelistType);
     });
   });
 });

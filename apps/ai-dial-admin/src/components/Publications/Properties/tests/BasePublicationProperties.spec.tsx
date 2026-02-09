@@ -30,7 +30,6 @@ describe('BasePublicationProperties', () => {
     );
     expect(screen.getByText(EntitiesI18nKey.Action)).toBeInTheDocument();
     expect(screen.getByText(EntitiesI18nKey.Author)).toBeInTheDocument();
-    expect(screen.getByText(EntityFieldsI18nKey.createdAt)).toBeInTheDocument();
     expect(screen.getByText(EntitiesI18nKey.FolderStorage)).toBeInTheDocument();
   });
 

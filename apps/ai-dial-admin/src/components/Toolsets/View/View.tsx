@@ -8,7 +8,7 @@ import { cloneDeep } from 'lodash';
 import { getCoreToolset, removeToolset, updateCoreToolset, updateToolset } from '@/src/app/[lang]/toolsets/actions';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
-import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
+import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import EntityRolesModal from '@/src/components/EntityView/Modals/EmptyRoles/EmptyRoles';
 import { isDisableRole } from '@/src/components/EntityView/Roles/utils';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -24,7 +24,7 @@ import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getToolsetTabs } from '@/src/utils/tabs/utils';
-import AuthButtons from '../Auth/AuthButtons';
+import AuthButtons from '@/src/components/Toolsets/Auth/AuthButtons';
 import TabsContent from './TabsContent';
 
 interface Props {

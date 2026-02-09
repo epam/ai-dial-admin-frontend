@@ -19,18 +19,17 @@ import { FileImportMap } from '@/src/models/file';
 import { ImportData, ParsedAssets } from '@/src/models/import-asset';
 import { ConflictResolutionPolicy, ImportFileType as FileType, ImportSteps } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getJsonFileName } from '@/src/utils/import/get-json-name';
 import ImportConflicts from './ImportConflicts';
 import ImportFileTypeSelector from './ImportFileType';
 import ImportModalButtons from './ImportModalButtons';
-import { getJsonFileName } from '@/src/utils/import/get-json-name';
-import { Asset } from '@/src/models/dial/deployment-asset';
 
 const MAX_FILES_COUNT = 30;
 
 interface Props {
   isModalOpen: boolean;
   route?: ApplicationRoute;
-  getAssetContext?: () => AssetsFolderContext<Asset>;
+  getAssetContext?: () => AssetsFolderContext;
   onClose: () => void;
   onApply?: (fileType: FileType, file: ImportData, resolution: string, path: string, ignorePaths?: boolean) => void;
 }

@@ -9,7 +9,7 @@ import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Toolset } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
-import Authentication from '../Auth/Authentication';
+import Authentication from '@/src/components/Toolsets/Auth/Authentication';
 
 interface Props {
   selectedToolset: Toolset;

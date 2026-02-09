@@ -51,7 +51,7 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
   const { visualizerConnector } = useAppContext();
   const visualizerConnectorRef = useRef(visualizerConnector);
 
-  const [names, setNames] = useState(containersList.map((container) => container.name));
+  const [names, setNames] = useState(containersList.map((container) => container.name || ''));
   const [currentContainer, setCurrentContainer] = useState<Container | null>(null);
   const [modalType, setModalType] = useState<ModalType>();
   const [showColumnsPanel, setShowColumnsPanel] = useState(false);
@@ -148,19 +148,21 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
   const onDuplicate = useCallback(
     (container: Container) => {
       if (currentContainer) {
-        setNames((prev) => [...prev, container.name]);
-        duplicateContainer(currentContainer.name, container.name, container.displayName).then((res) => {
-          if (res.success) {
-            router.refresh();
-            setCurrentContainer(null);
-          } else {
-            setNames((prev) => prev.filter((n) => n !== container.name));
-            showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
-          }
-        });
+        setNames((prev) => [...prev, container.name || '']);
+        duplicateContainer(currentContainer.name || '', container.name || '', container.displayName || '').then(
+          (res) => {
+            if (res.success) {
+              setCurrentContainer(null);
+              router.push(getUrnForEntity(route, res.response));
+            } else {
+              setNames((prev) => prev.filter((n) => n !== container.name));
+              showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+            }
+          },
+        );
       }
     },
-    [currentContainer, router, showNotification],
+    [currentContainer, route, router, showNotification],
   );
 
   const onDelete = useCallback(() => {
@@ -279,7 +281,7 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
         <HeaderButtons
           toggleColumnsPanel={toggleColumnsPanel}
           route={route}
-          names={containersList.map((container) => container.name) || []}
+          names={containersList.map((container) => container.name as string) || []}
           gridApi={gridApi}
         />
       </ListView>

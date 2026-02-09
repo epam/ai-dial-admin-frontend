@@ -13,7 +13,6 @@ import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
-import { Asset } from '@/src/models/dial/deployment-asset';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRoute } from '@/src/models/dial/route';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -40,7 +39,7 @@ interface Props<T> {
   runners?: DialApplicationScheme[];
   versionsMap?: Record<string, string[]>;
   createEntity?: (entity: T) => Promise<ServerActionResponse>;
-  context?: () => AssetsFolderContext<Asset>;
+  context?: () => AssetsFolderContext;
   onClose: () => void;
   initialValues?: Partial<T>;
 }
