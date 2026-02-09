@@ -5,7 +5,7 @@ import { Dispatch, SetStateAction, useCallback, useEffect, useState } from 'reac
 import { editor } from 'monaco-editor';
 
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
-import { clearResolvedErrors } from '@/src/components/EntityView/JsonEditor/utils';
+import { clearResolvedErrors } from '@/src/components/EntityTabs/JsonEditor/utils';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { JSONEditorError } from '@/src/types/editor';

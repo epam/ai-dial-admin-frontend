@@ -6,7 +6,7 @@ import { cloneDeep } from 'lodash';
 
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
 import { getRelevantAppRunnersForInterceptor } from '@/src/components/AddEntitiesTab/utils';
-import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
+import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
 import { RUNNERS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';

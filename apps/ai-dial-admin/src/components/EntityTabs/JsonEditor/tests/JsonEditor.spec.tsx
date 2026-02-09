@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
-import JSONEditor from './JsonEditor';
+import JSONEditor from '../JsonEditor';
 
 const entity = { id: '1', name: 'Test Entity' };
 const mockSetSelectedEntity = vi.fn();

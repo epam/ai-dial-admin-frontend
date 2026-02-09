@@ -3,7 +3,7 @@
 import { FC } from 'react';
 
 import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
-import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
+import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
 import EntityRoles from '@/src/components/EntityView/Roles/Roles';
 import { EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialRole } from '@/src/models/dial/role';

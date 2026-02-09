@@ -32,8 +32,8 @@ export default defineConfig(() => ({
       reportsDirectory: '../../coverage/apps/ai-dial-admin',
       provider: 'v8' as const,
       thresholds: {
-        branches: 50,
-        functions: 50,
+        branches: 70,
+        functions: 60,
         lines: 50,
         statements: 50,
       },

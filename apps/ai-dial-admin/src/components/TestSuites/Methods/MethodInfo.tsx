@@ -7,7 +7,7 @@ import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
 import TableView from '@/src/components/Common/ViewSelector/TableView';
 import ViewSelector from '@/src/components/Common/ViewSelector/ViewSelector';
-import JsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
+import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { PARAMETERS_SCHEMA_COLUMNS, TOOL_SCHEMA_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ContainersI18nKey, EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
