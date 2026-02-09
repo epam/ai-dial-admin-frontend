@@ -2,7 +2,6 @@ import { FC, useCallback } from 'react';
 
 import { GridApi, IRowNode } from 'ag-grid-community';
 
-import AssetHeader from '@/src/components/Assets/Deployments/Header';
 import Field from '@/src/components/Common/Field/Field';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import Grid from '@/src/components/Grid/Grid';
@@ -14,8 +13,6 @@ import { useFileFolder } from '@/src/context/assets/FileFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { getGridFileColumns, getGridFileData } from '@/src/utils/files/grid-data';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
-import { Asset } from '@/src/models/dial/deployment-asset';
 
 interface Props {
   file: DialFile;
@@ -51,23 +48,19 @@ const FileProperties: FC<Props> = ({ file, onChangeFile }) => {
   );
 
   return (
-    <div className="h-full flex flex-col w-full">
-      <AssetHeader asset={file} />
-
-      <div className="flex flex-col gap-y-8 mt-8">
-        <div className="flex flex-col">
-          <Field fieldTitle={t(EntitiesI18nKey.Source)} />
-          <Grid columnDefs={columnDefs} rowData={rowData} />
-        </div>
-        <FilePath
-          value={file.folderId}
-          label={t(EntitiesI18nKey.FolderStorage)}
-          modalTitle={t(BasicI18nKey.MoveToFolder)}
-          placeholder={t(EntityPlaceholdersI18nKey.Path)}
-          onChange={onChangePath}
-          context={useFileFolder as unknown as () => AssetsFolderContext<Asset>}
-        />
+    <div className="flex flex-col gap-y-8">
+      <div className="flex flex-col">
+        <Field fieldTitle={t(EntitiesI18nKey.Source)} />
+        <Grid columnDefs={columnDefs} rowData={rowData} />
       </div>
+      <FilePath
+        value={file.folderId}
+        label={t(EntitiesI18nKey.FolderStorage)}
+        modalTitle={t(BasicI18nKey.MoveToFolder)}
+        placeholder={t(EntityPlaceholdersI18nKey.Path)}
+        onChange={onChangePath}
+        context={useFileFolder}
+      />
     </div>
   );
 };

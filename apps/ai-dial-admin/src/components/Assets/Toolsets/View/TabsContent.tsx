@@ -45,7 +45,7 @@ const TabsContent: FC<Props> = ({ activeTab, onChange, selectedToolset, original
       {activeTab === EntityViewTab.Properties && (
         <PropertiesTabContent
           entity={selectedToolset}
-          view={ApplicationRoute.ApplicationRunners}
+          view={ApplicationRoute.AssetsToolsets}
           id={selectedToolset.name}
           headerPostfix={headerPostfix}
           headerPrefix={headerPrefix}

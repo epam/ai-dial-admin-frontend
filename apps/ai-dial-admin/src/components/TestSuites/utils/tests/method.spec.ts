@@ -13,6 +13,7 @@ describe('generateMethodPathCombinations', () => {
 
     const result = generateMethodPathCombinations(input);
 
+    expect(generateMethodPathCombinations()).toEqual([]);
     expect(result).toEqual([
       { method: 'HEAD', relativeUrl: '/e' },
       { method: 'POST', relativeUrl: '/e' },
