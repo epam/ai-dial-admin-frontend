@@ -364,6 +364,7 @@ export default {
     Duplicate: 'Duplicate',
     Create: 'Create',
     Update: 'Update',
+    Change: 'Change',
     Save: 'Save',
     SaveAndRedeploy: 'Save & redeploy',
     Move: 'Move',
@@ -1309,5 +1310,6 @@ export default {
     ImportFromPC: 'Import from PC storage',
     Other: 'Other',
     ChatInterface: 'Chat interface',
+    Preview: 'Preview',
   },
 } as const;
