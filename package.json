@@ -42,7 +42,6 @@
     "dompurify": "^3.3.1",
     "echarts": "^6.0.0",
     "echarts-for-react": "^3.0.6",
-    "github-markdown-css": "^5.9.0",
     "gray-matter": "^4.0.3",
     "lodash": "^4.17.23",
     "monaco-editor": "^0.52.2",
