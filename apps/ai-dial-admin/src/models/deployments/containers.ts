@@ -8,21 +8,17 @@ import {
   SERVING_SOURCE,
 } from '@/src/types/deployments/containers';
 import { EnvironmentVariable } from '@/src/models/deployments/variables';
+import { BaseEntity } from '../dial/base-entity';
 
-export interface Container {
+export interface Container extends BaseEntity {
   $type: CONTAINER_TYPE;
-  name: string;
-  displayName: string;
   imageDefinitionId: string;
-  description?: string;
   containerPorts?: number[];
   containerPort?: number;
   containerGrpcPort?: number;
   resources?: ContainerResources;
   status: CONTAINER_STATUS;
   url?: string;
-  createdAt?: number;
-  updatedAt?: number;
   author?: string;
   mcpEndpointPath?: string | null;
   transport?: CONTAINER_TRANSPORT;

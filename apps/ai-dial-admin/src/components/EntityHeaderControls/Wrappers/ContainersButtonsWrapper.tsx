@@ -8,7 +8,7 @@ import {
 import { IconPlayerPause, IconPlayerPlay, IconPlus, IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { useRouter } from 'next/navigation';
-import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { deleteContainer, runContainer, stopContainer } from '@/src/app/actions/deployments';
 import CreateAsset from '@/src/components/Assets/Deployments/CreateAsset';
@@ -19,7 +19,6 @@ import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
 import { ButtonsI18nKey, ContainersI18nKey, CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-import { useAppContext } from '@/src/context/AppContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
@@ -28,7 +27,7 @@ import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { Container } from '@/src/models/deployments/containers';
 import { BaseEntity } from '@/src/models/dial/base-entity';
-import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
+import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { CONTAINER_STATUS, CONTAINER_TRANSPORT } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -42,46 +41,42 @@ import {
 } from '@/src/utils/deployments/entity';
 import { getErrorNotification } from '@/src/utils/notification';
 import { createPortal } from 'react-dom';
+import { JsonConfiguration } from '../models';
 
-interface Props<T> {
+export interface ContainersButtonsWrapperProps {
   route: ApplicationRoute;
-  container: T;
+  container: Container;
   isChanged: boolean;
   isRedeployRequired: boolean;
-  jsonEditorEnabled: boolean;
-  hideJsonEditor?: boolean;
   children?: ReactNode;
+  entityNames: string[];
+  jsonConfiguration: JsonConfiguration;
+  transport?: CONTAINER_TRANSPORT;
+
   onDiscard: () => void;
   onSave: () => void;
-  toggleJsonEditor?: () => void;
   createEntity: (entity: BaseEntity) => Promise<ServerActionResponse>;
-  createEntityAsAsset?: (entity: AssetWithVersion) => Promise<ServerActionResponse>;
-  entityNames: string[];
-  transport?: CONTAINER_TRANSPORT;
+  createEntityAsAsset?: (entity: AssetToolset) => Promise<ServerActionResponse>;
 }
 
-const HeaderButtons = <T extends Container>({
+const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
   route,
   container,
   isChanged,
   isRedeployRequired,
   onDiscard,
   onSave,
-  jsonEditorEnabled,
-  toggleJsonEditor,
-  hideJsonEditor,
+  jsonConfiguration,
   children,
   createEntity,
   createEntityAsAsset,
   entityNames,
   transport,
-}: Props<T>) => {
+}) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
   const { isValid } = useSaveValidationContext();
-  const { visualizerConnector } = useAppContext();
-  const visualizerConnectorRef = useRef(visualizerConnector);
 
   const [modalType, setModalType] = useState<ModalType>();
 
@@ -184,10 +179,6 @@ const HeaderButtons = <T extends Container>({
     setButtonsClassNames(classNames(isTablet || isMobile ? 'w-1/2 flex justify-center' : ''));
   }, [isTablet, isMobile]);
 
-  useEffect(() => {
-    visualizerConnectorRef.current = visualizerConnector;
-  }, [visualizerConnector]);
-
   return (
     <>
       <div className={containerClassNames}>
@@ -195,60 +186,62 @@ const HeaderButtons = <T extends Container>({
           <ChangedEntityButtons
             onDiscard={onDiscard}
             onSave={onSave}
-            disableSave={jsonEditorEnabled ? false : !isValid}
+            disableSave={!isValid}
             saveLabel={t(isRedeployRequired ? ButtonsI18nKey.SaveAndRedeploy : ButtonsI18nKey.Save)}
           />
         ) : (
           <div className="flex flex-row items-center w-full gap-x-4">
-            <div className="flex flex-row gap-3">
-              {container.status === CONTAINER_STATUS.RUNNING && (
+            {jsonConfiguration.isEditorEnabled && (
+              <div className="flex flex-row gap-3">
+                {container.status === CONTAINER_STATUS.RUNNING && (
+                  <>
+                    {route === ApplicationRoute.McpContainers ? (
+                      <DialButtonDropdown
+                        label={t(ButtonsI18nKey.Create)}
+                        items={createToolsetOptions}
+                        variant={ButtonVariant.Neutral}
+                        appearance={ButtonAppearance.Outlined}
+                      />
+                    ) : (
+                      <DialNeutralButton
+                        className={buttonsClassNames}
+                        label={t(CreateI18nKey.CreateEntity, { entity: getTranslatedEntity(route, t) })}
+                        iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
+                        onClick={onOpenCreateModal}
+                      />
+                    )}
+                  </>
+                )}
+
+                <DialNeutralButton
+                  className={buttonsClassNames}
+                  label={t(ButtonsI18nKey.Delete)}
+                  iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
+                  onClick={onOpenDeleteModal}
+                />
                 <>
-                  {route === ApplicationRoute.McpContainers ? (
-                    <DialButtonDropdown
-                      label={t(ButtonsI18nKey.Create)}
-                      items={createToolsetOptions}
-                      variant={ButtonVariant.Neutral}
-                      appearance={ButtonAppearance.Outlined}
+                  {container.status === CONTAINER_STATUS.RUNNING ||
+                  container.status === CONTAINER_STATUS.PENDING ||
+                  container.status === CONTAINER_STATUS.FAILED ? (
+                    <DialNeutralButton
+                      className={buttonsClassNames}
+                      label={t(ButtonsI18nKey.Stop)}
+                      iconBefore={<IconPlayerPause {...BASE_BUTTON_ICON_PROPS} />}
+                      onClick={handleStopContainer}
                     />
                   ) : (
                     <DialNeutralButton
                       className={buttonsClassNames}
-                      label={t(CreateI18nKey.CreateEntity, { entity: getTranslatedEntity(route, t) })}
-                      iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-                      onClick={onOpenCreateModal}
+                      label={t(ButtonsI18nKey.Run)}
+                      iconBefore={<IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} />}
+                      onClick={handleRunContainer}
                     />
                   )}
                 </>
-              )}
-
-              <DialNeutralButton
-                className={buttonsClassNames}
-                label={t(ButtonsI18nKey.Delete)}
-                iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
-                onClick={onOpenDeleteModal}
-              />
-              <>
-                {container.status === CONTAINER_STATUS.RUNNING ||
-                container.status === CONTAINER_STATUS.PENDING ||
-                container.status === CONTAINER_STATUS.FAILED ? (
-                  <DialNeutralButton
-                    className={buttonsClassNames}
-                    label={t(ButtonsI18nKey.Stop)}
-                    iconBefore={<IconPlayerPause {...BASE_BUTTON_ICON_PROPS} />}
-                    onClick={handleStopContainer}
-                  />
-                ) : (
-                  <DialNeutralButton
-                    className={buttonsClassNames}
-                    label={t(ButtonsI18nKey.Run)}
-                    iconBefore={<IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} />}
-                    onClick={handleRunContainer}
-                  />
-                )}
-              </>
-              {children}
-            </div>
-            {!hideJsonEditor && <JsonToggles isEditorEnabled={jsonEditorEnabled} onToggleEditor={toggleJsonEditor} />}
+                {children}
+              </div>
+            )}
+            {!jsonConfiguration.hideJsonEditorButton && <JsonToggles {...jsonConfiguration} />}
           </div>
         )}
       </div>
@@ -301,4 +294,4 @@ const HeaderButtons = <T extends Container>({
   );
 };
 
-export default HeaderButtons;
+export default ContainersButtonsWrapper;
