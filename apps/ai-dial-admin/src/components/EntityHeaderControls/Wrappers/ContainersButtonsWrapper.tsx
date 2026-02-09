@@ -9,16 +9,23 @@ import { IconPlayerPause, IconPlayerPlay, IconPlus, IconTrashX } from '@tabler/i
 import classNames from 'classnames';
 import { useRouter } from 'next/navigation';
 import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { deleteContainer, runContainer, stopContainer } from '@/src/app/actions/deployments';
 import CreateAsset from '@/src/components/Assets/Deployments/CreateAsset';
 import EntityDelete from '@/src/components/Deployments/Modals/EntityDelete';
 import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
 import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
+import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
 import { ButtonsI18nKey, ContainersI18nKey, CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import {
+  BASE_BUTTON_ICON_PROPS,
+  SELECT_ENTITY_HEADER_CLASS,
+  SELECT_ENTITY_MOBILE_HEADER_BUTTONS_CLASS,
+  SELECT_ENTITY_MOBILE_HEADER_CLASS,
+} from '@/src/constants/main-layout';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
@@ -40,8 +47,6 @@ import {
   getTranslatedType,
 } from '@/src/utils/deployments/entity';
 import { getErrorNotification } from '@/src/utils/notification';
-import { createPortal } from 'react-dom';
-import { JsonConfiguration } from '../models';
 
 export interface ContainersButtonsWrapperProps {
   route: ApplicationRoute;
@@ -80,10 +85,9 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
 
   const [modalType, setModalType] = useState<ModalType>();
 
-  const staticContainerClassnames = 'flex flex-row gap-3 divide-x divide-primary';
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
-  const [containerClassNames, setContainerClassNames] = useState(staticContainerClassnames);
+  const [containerClassNames, setContainerClassNames] = useState(SELECT_ENTITY_HEADER_CLASS);
   const [buttonsClassNames, setButtonsClassNames] = useState('');
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -171,12 +175,9 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
 
   useEffect(() => {
     setContainerClassNames(
-      classNames(
-        staticContainerClassnames,
-        isTablet || isMobile ? 'fixed bottom-0 left-0 right-0 h-[62px] bg-layer-3 px-6' : '',
-      ),
+      classNames(SELECT_ENTITY_HEADER_CLASS, (isTablet || isMobile) && SELECT_ENTITY_MOBILE_HEADER_CLASS),
     );
-    setButtonsClassNames(classNames(isTablet || isMobile ? 'w-1/2 flex justify-center' : ''));
+    setButtonsClassNames(classNames((isTablet || isMobile) && SELECT_ENTITY_MOBILE_HEADER_BUTTONS_CLASS));
   }, [isTablet, isMobile]);
 
   return (
