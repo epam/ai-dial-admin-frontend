@@ -28,13 +28,7 @@ const HeaderButtons: FC<Props> = ({ selectedTestSuiteId }) => {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   const items: DropdownItem[] = useMemo(() => {
-    return [
-      { key: 'storage', label: t(TestSuitesI18nKey.FromPC), onClick: () => setIsImportModalOpen(true) },
-      // {
-      //   key: 'dial-storage',
-      //   label: t(TestSuitesI18nKey.FromDial),
-      // },
-    ];
+    return [{ key: 'storage', label: t(TestSuitesI18nKey.FromPC), onClick: () => setIsImportModalOpen(true) }];
   }, [t]);
 
   return (

@@ -14,10 +14,11 @@ interface Props {
 
 const AddTestCase: FC<Props> = ({ isModalOpen, onClose, onAdd }) => {
   const t = useI18n();
+  // TODO: add implementation of add test case form
   return (
     <DialFormPopup
       onClose={onClose}
-      header={'AddTestCase'}
+      header={'add test case'}
       portalId="AddTestCase"
       className="h-[660px]"
       open={isModalOpen}
