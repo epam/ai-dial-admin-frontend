@@ -54,8 +54,6 @@ const ImportFileModal: FC<Props> = ({ selectedTestSuiteId, isModalOpen, onClose,
       <div className="flex px-6 py-4 flex-col h-[800px]">
         {!testCases && (
           <DialLoadFileArea
-            elementId="ss"
-            fieldTitle="dds"
             acceptTypes="/"
             emptyTextFirstLine={t(ImportI18nKey.DropAnyFile)}
             emptyTextSecondLine={t(BasicI18nKey.Or)}
