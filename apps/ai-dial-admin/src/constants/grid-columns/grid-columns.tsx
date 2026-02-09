@@ -802,13 +802,11 @@ export const HF_REGISTRY_COLUMNS: ColDef[] = [
     floatingFilter: false,
   },
   {
-    field: 'createdAt',
-    headerName: 'Created at',
+    ...CREATED_AT_COLUMN,
     hide: true,
     sortingOrder: ['desc', null],
     filter: false,
     floatingFilter: false,
-    ...dateTimeColumn,
   },
   {
     field: 'lastModified',
