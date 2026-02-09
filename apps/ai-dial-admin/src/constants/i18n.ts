@@ -1293,6 +1293,9 @@ export enum TestSuitesI18nKey {
   ChatInterface = 'TestSuites.ChatInterface',
   Preview = 'TestSuites.Preview',
   MethodChangeWarning = 'TestSuites.MethodChangeWarning',
+  ImportSuccess = 'TestSuites.ImportSuccess',
+  ImportFailed = 'TestSuites.ImportFailed',
+  ImportSuccessDescription = 'TestSuites.ImportSuccessDescription',
 }
 
 export enum FileManagerI18nKey {

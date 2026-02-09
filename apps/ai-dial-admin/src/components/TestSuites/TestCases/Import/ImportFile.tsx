@@ -2,7 +2,7 @@
 
 import { DialFormPopup, DialLoader, DialLoadFileArea, PopupSize } from '@epam/ai-dial-ui-kit';
 import { ColDef } from 'ag-grid-community';
-import { FC, useState } from 'react';
+import { FC, useCallback, useState } from 'react';
 
 import { importTestCasePreview } from '@/src/app/[lang]/test-suites/actions';
 import Grid from '@/src/components/Grid/Grid';
@@ -17,7 +17,7 @@ interface Props {
   selectedTestSuiteId: string;
   isModalOpen: boolean;
   onClose: () => void;
-  onApply: () => void;
+  onApply: (file: File) => void;
 }
 
 const ImportFileModal: FC<Props> = ({ selectedTestSuiteId, isModalOpen, onClose, onApply }) => {
@@ -31,8 +31,10 @@ const ImportFileModal: FC<Props> = ({ selectedTestSuiteId, isModalOpen, onClose,
   const onChangeFile = (files: File[]) => {
     const body = new FormData();
 
-    body.append('file', files[0] as File);
-    setSelectedFile(files[0] as File);
+    const file = files[0] as File;
+    body.append('file', file);
+    setSelectedFile(file);
+
     setIsLoading(true);
 
     importTestCasePreview(selectedTestSuiteId, body).then((res) => {
@@ -44,6 +46,13 @@ const ImportFileModal: FC<Props> = ({ selectedTestSuiteId, isModalOpen, onClose,
     });
   };
 
+  const onImportApply = useCallback(() => {
+    if (selectedFile) {
+      onApply(selectedFile);
+    }
+    onClose();
+  }, [selectedFile, onApply, onClose]);
+
   return (
     <DialFormPopup
       onClose={onClose}
@@ -51,7 +60,7 @@ const ImportFileModal: FC<Props> = ({ selectedTestSuiteId, isModalOpen, onClose,
       header={t(TestSuitesI18nKey.ImportFromPC)}
       portalId="ImportFileModal"
       size={PopupSize.Lg}
-      onSubmit={onApply}
+      onSubmit={onImportApply}
       onCancel={onClose}
       submitLabel={t(ButtonsI18nKey.Confirm)}
       cancelLabel={t(ButtonsI18nKey.Cancel)}

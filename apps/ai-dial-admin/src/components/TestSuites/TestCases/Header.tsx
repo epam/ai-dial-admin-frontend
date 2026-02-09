@@ -20,8 +20,9 @@ import ImportFileModal from './Import/ImportFile';
 
 interface Props {
   selectedTestSuiteId: string;
+  onApplyImport: (file: File) => void;
 }
-const HeaderButtons: FC<Props> = ({ selectedTestSuiteId }) => {
+const HeaderButtons: FC<Props> = ({ selectedTestSuiteId, onApplyImport }) => {
   const t = useI18n();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -57,7 +58,7 @@ const HeaderButtons: FC<Props> = ({ selectedTestSuiteId }) => {
             selectedTestSuiteId={selectedTestSuiteId}
             isModalOpen={isImportModalOpen}
             onClose={() => setIsImportModalOpen(false)}
-            onApply={() => {}}
+            onApply={onApplyImport}
           />,
           document.body,
         )}

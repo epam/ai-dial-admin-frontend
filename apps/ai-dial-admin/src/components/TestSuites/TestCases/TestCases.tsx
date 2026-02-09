@@ -2,12 +2,14 @@
 
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { getTestCases } from '@/src/app/[lang]/test-suites/actions';
+import { getTestCases, importTestCase } from '@/src/app/[lang]/test-suites/actions';
 import ListView from '@/src/components/ListView/ListView';
 import { infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
+import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { TestCase, TestSuite } from '@/src/models/evaluation/test-suite';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { ColDef, GridApi, GridOptions, IDatasource, IGetRowsParams } from 'ag-grid-community';
@@ -22,6 +24,8 @@ interface Props {
 
 const TestCases: FC<Props> = ({ selectedTestSuite }) => {
   const t = useI18n();
+  const { showNotification } = useNotification();
+
   let isLoading = false;
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const [testCases, setTestCases] = useState<TestCase[] | null>(null);
@@ -87,7 +91,8 @@ const TestCases: FC<Props> = ({ selectedTestSuite }) => {
           });
       },
     }),
-    [gridApi, onSetData, selectedTestSuite.id, testCases, totalElements],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [gridApi, selectedTestSuite.id, testCases, totalElements],
   );
 
   useEffect(() => {
@@ -100,6 +105,28 @@ const TestCases: FC<Props> = ({ selectedTestSuite }) => {
     setGridApi(api);
   }, []);
 
+  const onApplyImport = useCallback(
+    (file: File) => {
+      const body = new FormData();
+
+      body.append('file', file);
+
+      importTestCase(selectedTestSuite.id || '', body).then((res) => {
+        if (res?.success) {
+          showNotification(
+            getSuccessNotification(t(TestSuitesI18nKey.ImportSuccess), t(TestSuitesI18nKey.ImportSuccessDescription)),
+          );
+          gridApi?.setGridOption('datasource', gridDataSource);
+        } else {
+          showNotification(
+            getErrorNotification(t(TestSuitesI18nKey.ImportFailed), res?.errorMessage || 'Unknown error'),
+          );
+        }
+      });
+    },
+    [gridApi, gridDataSource, selectedTestSuite.id, showNotification, t],
+  );
+
   return (
     <div className="h-full w-full flex">
       <ListView
@@ -110,7 +137,7 @@ const TestCases: FC<Props> = ({ selectedTestSuite }) => {
         onGridReady={onGridReady}
         allowPadding={false}
       >
-        <HeaderButtons selectedTestSuiteId={selectedTestSuite.id as string} />
+        <HeaderButtons selectedTestSuiteId={selectedTestSuite.id as string} onApplyImport={onApplyImport} />
       </ListView>
     </div>
   );
