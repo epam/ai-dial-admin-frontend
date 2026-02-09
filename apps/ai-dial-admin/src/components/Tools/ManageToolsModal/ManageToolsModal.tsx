@@ -28,6 +28,7 @@ import { defaultToolName } from './constants';
 import ToolSwitcher from './ToolSwitcher';
 import { CustomToolConfig, ToolConfig } from './types';
 import { generateUniqueName, getCustomToolErrorType } from './utils';
+import { v4 as uuidv4 } from 'uuid';
 
 interface Props {
   isModalOpen: boolean;
@@ -45,12 +46,14 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalToolset, onCl
     return tools.map((tool) => ({
       ...tool,
       isAllowed: (originalToolset.allowedTools || []).includes(tool.name),
+      id: uuidv4(),
     }));
   });
   const [customToolsConfig, setCustomToolsConfig] = useState<CustomToolConfig[]>(() => {
     return (originalToolset.allowedTools || []).reduce((acc, curr) => {
       if (!tools.some((tool) => tool.name === curr) && curr !== '') {
         acc.push({
+          id: uuidv4(),
           name: curr,
           isAllowed: true,
           error: null,
@@ -60,8 +63,8 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalToolset, onCl
     }, [] as CustomToolConfig[]);
   });
   const [pattern, setPattern] = useState<string>('');
-  const [activeToolIndex, setActiveToolIndex] = useState<number | null>(null);
-  const [activeCustomToolIndex, setActiveCustomToolIndex] = useState<number | null>(null);
+  const [activeTool, setActiveTool] = useState<ToolConfig | null>(null);
+  const [activeCustomTool, setActiveCustomTool] = useState<CustomToolConfig | null>(null);
   const [isValid, setIsValid] = useState(true);
 
   const filteredTools = useMemo(() => {
@@ -102,23 +105,31 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalToolset, onCl
     [t, toolNames],
   );
 
+  const getToggledToolsConfig = useCallback(
+    (items: CustomToolConfig[] | ToolConfig[], filteredItems: CustomToolConfig[] | ToolConfig[], index: number) => {
+      const updatedItems = structuredClone(items);
+      const toggledItem = filteredItems[index];
+      const originalIndex = updatedItems.findIndex((item) => item.id === toggledItem.id);
+
+      if (originalIndex !== -1) {
+        updatedItems[originalIndex].isAllowed = !updatedItems[originalIndex].isAllowed;
+      }
+      return updatedItems;
+    },
+    [],
+  );
+
   const toggleTool = useCallback(
     (index: number, isCustom: boolean) => {
       if (isCustom) {
-        const newCustomToolsConfig = structuredClone(customToolsConfig);
-        const toggledToolName = filteredCustomTools[index].name;
-        const originalIndex = customToolsConfig.findIndex((tool) => tool.name === toggledToolName);
-        newCustomToolsConfig[originalIndex].isAllowed = !newCustomToolsConfig[originalIndex].isAllowed;
-        setCustomToolsConfig(newCustomToolsConfig);
+        const newToolsConfig = getToggledToolsConfig(customToolsConfig, filteredCustomTools, index);
+        setCustomToolsConfig(newToolsConfig as CustomToolConfig[]);
       } else {
-        const newToolsConfig = structuredClone(toolsConfig);
-        const toggledToolName = filteredTools[index].name;
-        const originalIndex = toolsConfig.findIndex((tool) => tool.name === toggledToolName);
-        newToolsConfig[originalIndex].isAllowed = !newToolsConfig[originalIndex].isAllowed;
-        setToolsConfig(newToolsConfig);
+        const newToolsConfig = getToggledToolsConfig(toolsConfig, filteredTools, index);
+        setToolsConfig(newToolsConfig as ToolConfig[]);
       }
     },
-    [toolsConfig, customToolsConfig, filteredCustomTools, filteredTools],
+    [toolsConfig, customToolsConfig, filteredCustomTools, filteredTools, getToggledToolsConfig],
   );
 
   const addNewCustomTool = useCallback(() => {
@@ -126,44 +137,51 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalToolset, onCl
       customToolsConfig.map((tool) => tool.name),
       defaultToolName,
     );
-    setCustomToolsConfig([...customToolsConfig, { name: customToolName, isAllowed: true, error: null }]);
-    setActiveCustomToolIndex(customToolsConfig.length);
-    setActiveToolIndex(null);
+    const newCustomTool = { name: customToolName, isAllowed: true, error: null, id: uuidv4() };
+    setCustomToolsConfig([...customToolsConfig, newCustomTool]);
+    setActiveCustomTool(newCustomTool);
+    setActiveTool(null);
   }, [customToolsConfig]);
 
   const onCustomToolDelete = useCallback(() => {
-    if (activeCustomToolIndex === null) {
+    if (activeCustomTool === null) {
       return;
     }
 
-    const newCustomToolsConfig = structuredClone(customToolsConfig);
-    newCustomToolsConfig.splice(activeCustomToolIndex, 1);
+    const newCustomToolsConfig = customToolsConfig.filter((tool) => tool.id !== activeCustomTool.id);
     validateCustomToolNames(newCustomToolsConfig);
-    setActiveCustomToolIndex(null);
-  }, [activeCustomToolIndex, customToolsConfig, validateCustomToolNames]);
+    setActiveCustomTool(null);
+  }, [activeCustomTool, customToolsConfig, validateCustomToolNames]);
 
   const onCustomToolNameChange = useCallback(
     (value: string) => {
-      if (activeCustomToolIndex === null) {
+      if (activeCustomTool === null) {
         return;
       }
 
       const newCustomToolsConfig = structuredClone(customToolsConfig);
-      newCustomToolsConfig[activeCustomToolIndex].name = value;
+      const targetTool = newCustomToolsConfig.find((tool) => tool.id === activeCustomTool.id);
+      if (targetTool) {
+        targetTool.name = value;
+        setActiveCustomTool(targetTool);
+      }
       validateCustomToolNames(newCustomToolsConfig);
     },
-    [activeCustomToolIndex, customToolsConfig, validateCustomToolNames],
+    [activeCustomTool, customToolsConfig, validateCustomToolNames],
   );
 
-  const onToolClick = useCallback((index: number, isCustomTool: boolean) => {
-    if (isCustomTool) {
-      setActiveToolIndex(null);
-      setActiveCustomToolIndex(index);
-    } else {
-      setActiveToolIndex(index);
-      setActiveCustomToolIndex(null);
-    }
-  }, []);
+  const onToolClick = useCallback(
+    (index: number, isCustomTool: boolean) => {
+      if (isCustomTool) {
+        setActiveTool(null);
+        setActiveCustomTool(filteredCustomTools[index]);
+      } else {
+        setActiveTool(filteredTools[index]);
+        setActiveCustomTool(null);
+      }
+    },
+    [filteredCustomTools, filteredTools],
+  );
 
   const onConfirmChanges = useCallback(() => {
     const allowedTools = toolsConfig.filter((tool) => tool.isAllowed).map((tool) => tool.name);
@@ -211,7 +229,7 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalToolset, onCl
                     isCustomTool={false}
                     toolName={tool.name}
                     isOn={tool.isAllowed}
-                    isActive={index === activeToolIndex}
+                    isActive={tool.id === activeTool?.id}
                     onClick={onToolClick}
                     onSwitch={toggleTool}
                   />
@@ -242,7 +260,7 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalToolset, onCl
                     isCustomTool
                     toolName={tool.name}
                     isOn={tool.isAllowed}
-                    isActive={index === activeCustomToolIndex}
+                    isActive={tool.id === activeCustomTool?.id}
                     onClick={onToolClick}
                     onSwitch={toggleTool}
                   />
@@ -256,21 +274,21 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalToolset, onCl
           </div>
         </DialCollapsibleSidebar>
         <div className="border border-primary px-4 py-4 w-full overflow-auto">
-          {activeCustomToolIndex !== null && (
+          {activeCustomTool && (
             <AddNewTool
-              toolName={customToolsConfig[activeCustomToolIndex].name}
+              toolName={activeCustomTool.name}
               onDelete={onCustomToolDelete}
               onChange={onCustomToolNameChange}
-              error={customToolsConfig[activeCustomToolIndex].error}
+              error={activeCustomTool.error}
             />
           )}
-          {activeToolIndex !== null && (
+          {activeTool && (
             <>
               <div className="flex flex-row justify-between">
-                <h2 className="mt-2">{filteredTools[activeToolIndex].name}</h2>
+                <h2 className="mt-2">{activeTool.name}</h2>
                 <ViewSelector view={view} changeView={setView} />
               </div>
-              <ToolContent tool={filteredTools[activeToolIndex]} view={view} />
+              <ToolContent tool={activeTool} view={view} />
             </>
           )}
         </div>
