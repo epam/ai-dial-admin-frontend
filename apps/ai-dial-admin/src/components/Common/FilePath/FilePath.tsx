@@ -9,7 +9,6 @@ import { FileManagerI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
-import { Asset } from '@/src/models/dial/deployment-asset';
 import FilePathModal from './FilePathModal';
 
 interface Props {
@@ -19,7 +18,7 @@ interface Props {
   disabled?: boolean;
   value?: string;
   onChange: (value: string) => void;
-  context?: () => AssetsFolderContext<Asset>;
+  context?: () => AssetsFolderContext;
 }
 
 const FilePath: FC<Props> = ({ label, placeholder, disabled, value, modalTitle, onChange, context }) => {

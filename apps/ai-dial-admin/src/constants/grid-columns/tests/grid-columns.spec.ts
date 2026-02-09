@@ -16,6 +16,7 @@ import {
   IMAGES_LIST_FOR_CONTAINER_COLUMNS,
   CONTAINERS_COLUMNS,
   CONTAINER_EVENTS,
+  HF_REGISTRY_COLUMNS,
 } from '../grid-columns';
 import { describe, expect, test, vi } from 'vitest';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -167,5 +168,17 @@ describe('Constants :: grid columns', () => {
     expect(PROJECT_GRID_COLUMNS.some((c) => c.field === 'name')).toBe(true);
     expect(PROJECT_GRID_COLUMNS.some((c) => c.field === 'requests')).toBe(true);
     expect(PROJECT_GRID_COLUMNS.some((c) => c.field === 'cost')).toBe(true);
+  });
+
+  test('HF_REGISTRY_COLUMNS returns expected columns', () => {
+    expect(Array.isArray(HF_REGISTRY_COLUMNS)).toBe(true);
+    expect(HF_REGISTRY_COLUMNS.some((c) => c.field === 'id')).toBe(true);
+    expect(HF_REGISTRY_COLUMNS.some((c) => c.field === 'libraries')).toBe(true);
+    expect(HF_REGISTRY_COLUMNS.some((c) => c.field === 'languages')).toBe(true);
+    expect(HF_REGISTRY_COLUMNS.some((c) => c.field === 'licenses')).toBe(true);
+    expect(HF_REGISTRY_COLUMNS.some((c) => c.field === 'author')).toBe(true);
+    expect(HF_REGISTRY_COLUMNS.some((c) => c.field === 'parameters')).toBe(true);
+    expect(HF_REGISTRY_COLUMNS.some((c) => c.field === 'tags')).toBe(true);
+    expect(HF_REGISTRY_COLUMNS.some((c) => c.field === 'datasets')).toBe(true);
   });
 });

@@ -14,10 +14,10 @@ interface Props<T> {
   headerPrefix?: ReactNode;
 }
 
-const PropertiesTabContent = <T extends object>({ children, ...props }: Props<T>) => {
+const PropertiesTabContent = <T extends object>({ children, headerPrefix, headerPostfix, ...props }: Props<T>) => {
   return (
     <div className="flex flex-col">
-      <EntityInfoHeader {...props} />
+      <EntityInfoHeader prefix={headerPrefix} postfix={headerPostfix} {...props} />
 
       <div className="flex-1 min-h-0 pt-8">{children}</div>
     </div>

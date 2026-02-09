@@ -19,16 +19,14 @@ import CreateAsset from '@/src/components/Assets/Deployments/CreateAsset';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
-import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
+import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { Asset } from '@/src/models/dial/deployment-asset';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialRole } from '@/src/models/dial/role';
 import { ExportFormat } from '@/src/types/export';
@@ -195,7 +193,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
               isModalOpen={isCreateAssetAppModalOpen}
               onClose={() => setIsCreateAssetAppModalOpen(false)}
               onCreate={createApp}
-              context={useAppsFolder as () => AssetsFolderContext<Asset>}
+              context={useAppsFolder}
               initialValues={{ applicationTypeSchemaId: selectedRunner.$id }}
             />,
             document.body,

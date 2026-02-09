@@ -32,7 +32,7 @@ const SimpleEntityHeader = <T extends Entity>({
   onChangeActiveTab,
   ...props
 }: Props<T>) => {
-  const { isEditorEnabled } = jsonConfiguration;
+  const isEditorEnabled = jsonConfiguration?.isEditorEnabled;
   return (
     <div className="flex flex-col gap-y-4 mb-8">
       <div className={getHeaderClassName(isEditorEnabled)}>

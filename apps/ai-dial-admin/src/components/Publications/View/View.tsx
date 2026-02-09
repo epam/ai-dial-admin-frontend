@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
 
-import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
+import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import BasePublicationHeader from '@/src/components/Publications/Properties/Header';
 import PublicationProperties from '@/src/components/Publications/View/Properties';
 import { useNotification } from '@/src/context/NotificationContext';

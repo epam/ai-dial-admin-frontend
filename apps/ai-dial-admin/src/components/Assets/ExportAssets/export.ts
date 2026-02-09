@@ -4,16 +4,19 @@ import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getGridFileData } from '@/src/utils/files/grid-data';
 import { isAssetWithVersion } from '@/src/utils/is-asset-view';
-import { Asset } from '@/src/models/dial/deployment-asset';
+import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 
 /**
  * Converts array of Assets into correct row data, joining multiple versions of prompts into one
  *
- * @param {Asset[]} assets - Asset array
- * @param {?Asset[]} [exportedAssets] - Asset array of already selected for import
- * @returns {Asset[]} - Asset array
+ * @param {AssetWithVersion[]} assets - Asset array
+ * @param {?AssetWithVersion[]} [exportedAssets] - Asset array of already selected for import
+ * @returns {AssetWithVersion[]} - Asset array
  */
-export const generateRowDataForExportGrid = (assets: Asset[], exportedAssets?: Asset[]): Asset[] => {
+export const generateRowDataForExportGrid = (
+  assets: AssetWithVersion[],
+  exportedAssets?: AssetWithVersion[],
+): AssetWithVersion[] => {
   const assetMap = assets?.reduce((map, asset) => {
     const exported = exportedAssets?.filter((p) => p.name === asset.name);
     const isAddVersion = exported?.some((p) => p.version === asset.version);
@@ -35,7 +38,7 @@ export const generateRowDataForExportGrid = (assets: Asset[], exportedAssets?: A
     }
 
     return map;
-  }, new Map<string, Asset>());
+  }, new Map<string, AssetWithVersion>());
 
   return assetMap ? Array.from(assetMap.values()) : [];
 };
@@ -78,19 +81,25 @@ export const changeExportData = <T extends DialFile | DialPrompt>(
 /**
  * Function which generate correct data for exporting assets
  *
- * @param {Asset[]} selectedAsset - array of selected assets
- * @param {Record<string, Asset[]>} fetchedFoldersData - correct data which should be added for export
+ * @param {AssetWithVersion[]} selectedAsset - array of selected assets
+ * @param {Record<string, AssetWithVersion[]>} fetchedFoldersData - correct data which should be added for export
  * @param {string} filePath - current folder path
- * @param {Record<string, Asset[]>} exportedAsset  - array of already selected items for export
- * @returns {Record<string, Asset[]>} - export Asset map
+ * @param {Record<string, AssetWithVersion[]>} exportedAsset  - array of already selected items for export
+ * @returns {Record<string, AssetWithVersion[]>} - export Asset map
  */
 export const changeExportAssetData = (
-  selectedAsset: Asset[],
-  fetchedFoldersData: Record<string, Asset[]>,
+  selectedAsset: AssetWithVersion[],
+  fetchedFoldersData: Record<string, AssetWithVersion[]>,
   filePath: string,
-  exportedAsset: Record<string, Asset[]>,
-): Record<string, Asset[]> => {
-  return changeExportData<Asset>(selectedAsset, fetchedFoldersData, filePath, exportedAsset, findAssetVersions);
+  exportedAsset: Record<string, AssetWithVersion[]>,
+): Record<string, AssetWithVersion[]> => {
+  return changeExportData<AssetWithVersion>(
+    selectedAsset,
+    fetchedFoldersData,
+    filePath,
+    exportedAsset,
+    findAssetVersions,
+  );
 };
 
 /**
@@ -114,14 +123,14 @@ export const changeExportFileData = (
 /**
  * Function which find all selected asset version for export
  *
- * @param {Asset} asset - selected Asset
- * @param {Asset[]} fetched - all assets from folder
- * @returns {Asset[]} - Asset array with all selected version
+ * @param {AssetWithVersion} asset - selected Asset
+ * @param {AssetWithVersion[]} fetched - all assets from folder
+ * @returns {AssetWithVersion[]} - Asset array with all selected version
  */
-export const findAssetVersions = (asset: Asset, fetched: Asset[]): Asset[] => {
+export const findAssetVersions = (asset: AssetWithVersion, fetched: AssetWithVersion[]): AssetWithVersion[] => {
   const versions = asset.version.split(STRINGS_DELIMITER);
   return versions
-    .map((version) => fetched.find((p) => p.name === asset.name && p.version === version) as Asset)
+    .map((version) => fetched.find((p) => p.name === asset.name && p.version === version) as AssetWithVersion)
     .filter(Boolean);
 };
 
@@ -187,17 +196,17 @@ export const getExportGridData = (
  */
 export const changeExportGridData = (
   route?: ApplicationRoute,
-  fetched?: Record<string, (Asset | DialFile)[]>,
-  selected?: Record<string, (Asset | DialFile)[]>,
+  fetched?: Record<string, (AssetWithVersion | DialFile)[]>,
+  selected?: Record<string, (AssetWithVersion | DialFile)[]>,
   selectedRows?: (DialPrompt | DialFile)[],
   filePath?: string,
-): Record<string, Asset[]> => {
+): Record<string, AssetWithVersion[]> => {
   if (isAssetWithVersion(route)) {
     return changeExportAssetData(
-      selectedRows as Asset[],
-      fetched as Record<string, Asset[]>,
+      selectedRows as AssetWithVersion[],
+      fetched as Record<string, AssetWithVersion[]>,
       filePath as string,
-      selected as Record<string, Asset[]>,
+      selected as Record<string, AssetWithVersion[]>,
     );
   }
 

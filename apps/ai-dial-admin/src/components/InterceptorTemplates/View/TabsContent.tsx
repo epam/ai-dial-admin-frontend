@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 
-import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
+import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
 import Interceptors from '@/src/components/InterceptorTemplates/View/Interceptors/Interceptors';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { ApplicationRoute } from '@/src/types/routes';

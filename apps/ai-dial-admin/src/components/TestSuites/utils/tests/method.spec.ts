@@ -13,6 +13,7 @@ describe('generateMethodPathCombinations', () => {
 
     const result = generateMethodPathCombinations(input);
 
+    expect(generateMethodPathCombinations()).toEqual([]);
     expect(result).toEqual([
       { method: 'HEAD', relativeUrl: '/e' },
       { method: 'POST', relativeUrl: '/e' },
@@ -136,13 +137,7 @@ describe('generateMethodPathCombinations', () => {
   });
 
   test('should handle routes with missing paths property', () => {
-    const input: Record<string, DialRoute> = {
-      route1: {
-        methods: ['GET'],
-      } as DialRoute,
-    };
-
-    const result = generateMethodPathCombinations(input);
+    const result = generateMethodPathCombinations();
 
     expect(result).toEqual([]);
   });

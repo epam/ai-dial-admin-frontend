@@ -8,6 +8,7 @@ import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import { DEPLOYMENT_ASSETS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { DialApplicationScheme } from '@/src/models/dial/application';
+import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { filterNames } from '@/src/utils/entities/filter-names';
 
@@ -19,8 +20,8 @@ const AppsList: FC<Props> = ({ runners }) => {
   const { data } = useAppsFolder();
   const names = filterNames(data);
 
-  const versionsMap = getVersionsPerName(data || []);
-  const filteredData = filterLatestVersions(data || []);
+  const versionsMap = getVersionsPerName((data || []) as AssetWithVersion[]);
+  const filteredData = filterLatestVersions((data || []) as AssetWithVersion[]);
 
   return (
     <BaseEntityList

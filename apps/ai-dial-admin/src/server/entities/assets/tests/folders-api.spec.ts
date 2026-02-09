@@ -17,7 +17,7 @@ import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 import { ResourceBasePaths, ResourceOperation } from '../constants';
-import { ResourceType } from '../../../../types/resource-type';
+import { ResourceType } from '@/src/types/resource-type';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();

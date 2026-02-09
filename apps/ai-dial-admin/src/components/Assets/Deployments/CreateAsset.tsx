@@ -11,7 +11,7 @@ import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
-import { Asset } from '@/src/models/dial/deployment-asset';
+import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import {
@@ -26,10 +26,10 @@ import { getEntityPath } from '@/src/utils/open-in-new-tab';
 interface Props {
   view: ApplicationRoute;
   isModalOpen: boolean;
-  initialValues?: Partial<Asset>;
-  context?: () => AssetsFolderContext<Asset>;
+  initialValues?: Partial<AssetWithVersion>;
+  context?: () => AssetsFolderContext;
   onClose: () => void;
-  onCreate: (entity: Asset) => Promise<ServerActionResponse>;
+  onCreate: (entity: AssetWithVersion) => Promise<ServerActionResponse>;
 }
 
 const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onCreate, onClose }) => {
@@ -41,9 +41,12 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onC
   const filePath = folderContext?.filePath as string;
   const data = folderContext?.data || [];
   const names = filterNames(data);
-  const versionsMap = getVersionsPerName(data as Asset[]);
+  const versionsMap = getVersionsPerName(data as AssetWithVersion[]);
 
-  const [currentEntity, setCurrentEntity] = useState<Asset>({ ...initialValues, version: '1.0.0' } as Asset);
+  const [currentEntity, setCurrentEntity] = useState<AssetWithVersion>({
+    ...initialValues,
+    version: '1.0.0',
+  } as AssetWithVersion);
 
   const onSubmit = useCallback(async () => {
     onCreate(currentEntity).then((res) => {
@@ -68,7 +71,7 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onC
   }, [folderContext, currentEntity, initialValues, onClose, onCreate, router, showNotification, t, view]);
 
   const onChangeEntity = useCallback((entity: object) => {
-    setCurrentEntity(entity as Asset);
+    setCurrentEntity(entity as AssetWithVersion);
   }, []);
 
   useEffect(() => {

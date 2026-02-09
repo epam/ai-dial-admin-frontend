@@ -21,8 +21,12 @@ const EntityInfoHeader: FC<Props> = ({ id, entity, view, prefix, postfix }) => {
   return (
     <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-primary">
       {prefix}
-      <LabelledText label={t(EntityFieldsI18nKey.updatedAt)} text={formatDateTimeToLocalString(entity?.updatedAt)} />
-      <LabelledText label={t(EntityFieldsI18nKey.createdAt)} text={formatDateTimeToLocalString(entity?.createdAt)} />
+      {entity?.updatedAt && (
+        <LabelledText label={t(EntityFieldsI18nKey.updatedAt)} text={formatDateTimeToLocalString(entity?.updatedAt)} />
+      )}
+      {entity?.createdAt && (
+        <LabelledText label={t(EntityFieldsI18nKey.createdAt)} text={formatDateTimeToLocalString(entity?.createdAt)} />
+      )}
       {postfix}
       <CoreSyncEntityStatus view={view} name={id} />
     </div>

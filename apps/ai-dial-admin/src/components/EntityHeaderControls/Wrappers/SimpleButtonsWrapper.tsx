@@ -25,7 +25,7 @@ import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models'
 export interface SimpleButtonsWrapperProps<T> {
   view: ApplicationRoute;
   isChanged: boolean;
-  jsonConfiguration: JsonConfiguration;
+  jsonConfiguration?: JsonConfiguration;
   children?: ReactNode;
   entity: T;
   etag?: string;
@@ -47,7 +47,7 @@ const SimpleButtonsWrapper = <T extends object>({
   onRemove,
 }: SimpleButtonsWrapperProps<T>) => {
   const t = useI18n();
-  const { isEditorEnabled } = jsonConfiguration;
+  const isEditorEnabled = jsonConfiguration?.isEditorEnabled;
   const { isValid, dispatch, jsonErrors } = useSaveValidationContext();
   const { showNotification } = useNotification();
 
@@ -112,7 +112,7 @@ const SimpleButtonsWrapper = <T extends object>({
                 {children}
               </div>
             )}
-            <JsonToggleWithFormats view={view} {...jsonConfiguration} />
+            {jsonConfiguration && <JsonToggleWithFormats view={view} {...jsonConfiguration} />}
           </div>
         )}
       </div>
