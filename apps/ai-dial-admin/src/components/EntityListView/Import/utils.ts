@@ -44,6 +44,10 @@ export const getImportResults = (
   t: (t: string, options?: Record<string, string | number>) => string,
   showNotification?: (config: Notification) => string,
 ) => {
+  if (!showNotification) {
+    return;
+  }
+
   let success = 0;
   const skipped: string[] = [];
   const failed: string[] = [];
@@ -59,7 +63,7 @@ export const getImportResults = (
     }
   });
 
-  if (success > 0 && showNotification) {
+  if (success > 0) {
     showNotification(
       getSuccessNotification(
         t(ImportI18nKey.SuccessTitle, { number: success, type }),
@@ -67,7 +71,7 @@ export const getImportResults = (
       ),
     );
   }
-  if (failed.length > 0 && showNotification) {
+  if (failed.length > 0) {
     showNotification(
       getErrorNotification(
         t(ImportI18nKey.ErrorTitle, { number: failed.length, type }),
@@ -75,7 +79,7 @@ export const getImportResults = (
       ),
     );
   }
-  if (skipped.length > 0 && showNotification) {
+  if (skipped.length > 0) {
     showNotification(
       getErrorNotification(
         t(ImportI18nKey.SkipTitle, { number: skipped.length, type }),

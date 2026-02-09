@@ -39,7 +39,6 @@ import {
   ToolbarOptionLabels,
   TreeActionLabels,
 } from './constants';
-import { NewAction } from '@epam/ai-dial-ui-kit/dist/src/components/FileManager/FileManager';
 
 const FilesList = () => {
   const [path, setPath] = useState('');
@@ -355,7 +354,7 @@ const FilesList = () => {
 
   const getActionLabelsWithIcon = useCallback(
     (actionLabels: { key: string; label: string; icon: ReactNode }[]) => {
-      return actionLabels.reduce((acc: { [key: string]: NewAction }, item) => {
+      return actionLabels.reduce((acc: { [key: string]: { label?: ReactNode; icon?: ReactNode } }, item) => {
         acc[item.key] = { label: t(item.label), icon: item.icon };
         return acc;
       }, {});
