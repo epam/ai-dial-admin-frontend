@@ -5,7 +5,6 @@ import FolderList from '@/src/components/Common/FolderList/FolderList';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
-import { Asset } from '@/src/models/dial/deployment-asset';
 import { DialFolder } from '@/src/models/dial/folder';
 import { checkPaths, checkSelectedPath, removeTrailingSlash } from '@/src/utils/files/path';
 
@@ -15,7 +14,7 @@ interface Props {
   initialPath?: string;
   onClose: () => void;
   onApply: (filePath: string) => void;
-  context?: () => AssetsFolderContext<Asset>;
+  context?: () => AssetsFolderContext;
   isFolderMove?: boolean;
 }
 

@@ -4,12 +4,12 @@ import classNames from 'classnames';
 import { FC, useCallback, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
+import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
 import { FieldError } from '@/src/models/error';
-import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import { getErrorForKey } from './utils';
 
 interface Props {

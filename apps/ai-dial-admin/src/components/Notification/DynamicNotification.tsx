@@ -54,7 +54,7 @@ const DynamicNotification: FC<NotificationConfig> = ({ type, title, onClose, dow
             icon={Icon}
           />
           <DialIconButton
-            className="absolute right-0 w-auto h-auto p-0"
+            className="absolute right-0 w-auto h-auto p-0 top-0"
             onClick={onClose}
             icon={<IconX height={18} width={18} />}
           />

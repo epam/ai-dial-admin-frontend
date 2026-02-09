@@ -11,7 +11,6 @@ import { BasicI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
-import { Asset } from '@/src/models/dial/deployment-asset';
 import { ImportData } from '@/src/models/import-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
@@ -62,7 +61,7 @@ interface Props {
   onMove?: (path: string) => void;
   onDeleteBulk?: () => void;
   onClose: () => void;
-  getAssetContext?: () => AssetsFolderContext<Asset>;
+  getAssetContext?: () => AssetsFolderContext;
 }
 
 const Modals: FC<Props> = ({

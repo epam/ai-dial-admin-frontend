@@ -63,7 +63,9 @@ export default async function Page(params: Params) {
           container={decodeVariables(container)}
           image={image}
           route={ApplicationRoute.McpContainers}
-          names={containers?.map((container) => container.name).filter((name) => name !== container.name) || []}
+          names={
+            containers?.map((container) => container.name as string).filter((name) => name !== container.name) || []
+          }
           createEntity={createToolset}
           createEntityAsAsset={createAssetToolset}
           entityNames={toolsets?.map((toolset) => toolset.name as string) || []}

@@ -1,0 +1,360 @@
+import { describe, expect, test } from 'vitest';
+import { getTestCaseGridData } from '../data';
+import { TestCase } from '@/src/models/evaluation/test-suite';
+
+describe('getTestCaseGridData', () => {
+  test('should return empty array when test cases array is empty', () => {
+    const testCases: TestCase[] = [];
+
+    const result = getTestCaseGridData(testCases);
+
+    expect(result).toEqual([]);
+    expect(result.length).toBe(0);
+  });
+
+  test('should return test case without modification when it has no facts', () => {
+    const testCases: TestCase[] = [
+      {
+        name: 'Test Case 1',
+      },
+    ];
+
+    const result = getTestCaseGridData(testCases);
+
+    expect(result).toEqual([
+      {
+        name: 'Test Case 1',
+      },
+    ]);
+  });
+
+  test('should return test case without modification when facts is undefined', () => {
+    const testCases: TestCase[] = [
+      {
+        name: 'Test Case 1',
+        facts: undefined,
+      },
+    ];
+
+    const result = getTestCaseGridData(testCases);
+
+    expect(result).toEqual([
+      {
+        name: 'Test Case 1',
+        facts: undefined,
+      },
+    ]);
+  });
+
+  test('should return test case without modification when facts is empty object', () => {
+    const testCases: TestCase[] = [
+      {
+        name: 'Test Case 1',
+        facts: {},
+      },
+    ];
+
+    const result = getTestCaseGridData(testCases);
+
+    expect(result).toEqual([
+      {
+        name: 'Test Case 1',
+        facts: {},
+      },
+    ]);
+  });
+
+  test('should spread facts into the result object', () => {
+    const testCases: TestCase[] = [
+      {
+        name: 'Test Case 1',
+        facts: {
+          temperature: 0.7,
+          maxTokens: 100,
+        },
+      },
+    ];
+
+    const result = getTestCaseGridData(testCases);
+
+    expect(result).toEqual([
+      {
+        name: 'Test Case 1',
+        facts: {
+          temperature: 0.7,
+          maxTokens: 100,
+        },
+        temperature: 0.7,
+        maxTokens: 100,
+      },
+    ]);
+  });
+
+  test('should handle single fact', () => {
+    const testCases: TestCase[] = [
+      {
+        name: 'Test Case 1',
+        facts: {
+          prompt: 'test prompt',
+        },
+      },
+    ];
+
+    const result = getTestCaseGridData(testCases);
+
+    expect(result).toEqual([
+      {
+        name: 'Test Case 1',
+        facts: {
+          prompt: 'test prompt',
+        },
+        prompt: 'test prompt',
+      },
+    ]);
+  });
+
+  test('should process multiple test cases', () => {
+    const testCases: TestCase[] = [
+      {
+        name: 'Test Case 1',
+        facts: {
+          temperature: 0.7,
+        },
+      },
+      {
+        name: 'Test Case 2',
+        facts: {
+          temperature: 0.5,
+          model: 'gpt-4',
+        },
+      },
+    ];
+
+    const result = getTestCaseGridData(testCases);
+
+    expect(result.length).toBe(2);
+    expect(result[0]).toEqual({
+      name: 'Test Case 1',
+      facts: {
+        temperature: 0.7,
+      },
+      temperature: 0.7,
+    });
+    expect(result[1]).toEqual({
+      name: 'Test Case 2',
+      facts: {
+        temperature: 0.5,
+        model: 'gpt-4',
+      },
+      temperature: 0.5,
+      model: 'gpt-4',
+    });
+  });
+
+  test('should handle different fact values across test cases', () => {
+    const testCases: TestCase[] = [
+      {
+        name: 'Case 1',
+        facts: {
+          param1: 'value1',
+        },
+      },
+      {
+        name: 'Case 2',
+        facts: {
+          param2: 'value2',
+        },
+      },
+      {
+        name: 'Case 3',
+        facts: {},
+      },
+    ];
+
+    const result = getTestCaseGridData(testCases);
+
+    expect(result.length).toBe(3);
+    expect(result[0].param1).toBe('value1');
+    expect(result[0]).not.toHaveProperty('param2');
+    expect(result[1].param2).toBe('value2');
+    expect(result[1]).not.toHaveProperty('param1');
+    expect(result[2]).not.toHaveProperty('param1');
+    expect(result[2]).not.toHaveProperty('param2');
+  });
+
+  test('should handle various data types in facts', () => {
+    const testCases: TestCase[] = [
+      {
+        name: 'Test Case 1',
+        facts: {
+          stringFact: 'text',
+          numberFact: 42,
+          booleanFact: true,
+          arrayFact: [1, 2, 3],
+          objectFact: { nested: 'value' },
+        },
+      },
+    ];
+
+    const result = getTestCaseGridData(testCases);
+
+    expect(result[0].stringFact).toBe('text');
+    expect(result[0].numberFact).toBe(42);
+    expect(result[0].booleanFact).toBe(true);
+    expect(result[0].arrayFact).toEqual([1, 2, 3]);
+    expect(result[0].objectFact).toEqual({ nested: 'value' });
+  });
+
+  test('should preserve all test case properties', () => {
+    const testCases: TestCase[] = [
+      {
+        name: 'Test Case 1',
+        facts: {
+          temperature: 0.7,
+        },
+      },
+    ];
+
+    const result = getTestCaseGridData(testCases);
+
+    expect(result[0].name).toBe('Test Case 1');
+    expect(result[0].facts).toEqual({ temperature: 0.7 });
+    expect(result[0].temperature).toBe(0.7);
+  });
+
+  test('should handle facts with special characters in keys', () => {
+    const testCases: TestCase[] = [
+      {
+        name: 'Test Case 1',
+        facts: {
+          'fact-with-dash': 'value1',
+          fact_with_underscore: 'value2',
+          'fact.with.dot': 'value3',
+        },
+      },
+    ];
+
+    const result = getTestCaseGridData(testCases);
+
+    expect(result[0]['fact-with-dash']).toBe('value1');
+    expect(result[0]['fact_with_underscore']).toBe('value2');
+    expect(result[0]['fact.with.dot']).toBe('value3');
+  });
+
+  test('should handle null and undefined values in facts', () => {
+    const testCases: TestCase[] = [
+      {
+        name: 'Test Case 1',
+        facts: {
+          nullValue: null,
+          undefinedValue: undefined,
+        },
+      },
+    ];
+
+    const result = getTestCaseGridData(testCases);
+
+    expect(result[0].nullValue).toBeNull();
+    expect(result[0].undefinedValue).toBeUndefined();
+  });
+
+  test('should handle facts overriding test case properties', () => {
+    const testCases: TestCase[] = [
+      {
+        name: 'Test Case 1',
+        facts: {
+          name: 'Overridden Name',
+        },
+      },
+    ];
+
+    const result = getTestCaseGridData(testCases);
+
+    // Facts are spread after testCase, so they override
+    expect(result[0].name).toBe('Overridden Name');
+    expect(result[0].facts).toEqual({ name: 'Overridden Name' });
+  });
+
+  test('should handle large number of facts', () => {
+    const facts: Record<string, unknown> = {};
+    for (let i = 0; i < 50; i++) {
+      facts[`fact${i}`] = `value${i}`;
+    }
+
+    const testCases: TestCase[] = [
+      {
+        name: 'Test Case 1',
+        facts,
+      },
+    ];
+
+    const result = getTestCaseGridData(testCases);
+
+    expect(result.length).toBe(1);
+    expect(result[0].fact0).toBe('value0');
+    expect(result[0].fact49).toBe('value49');
+    expect(Object.keys(result[0]).length).toBeGreaterThan(50); // facts object + 50 spread facts + name
+  });
+
+  test('should handle mixed test cases with and without facts', () => {
+    const testCases: TestCase[] = [
+      {
+        name: 'Case 1',
+        facts: {
+          param: 'value',
+        },
+      },
+      {
+        name: 'Case 2',
+      },
+      {
+        name: 'Case 3',
+        facts: {
+          another: 'test',
+        },
+      },
+    ];
+
+    const result = getTestCaseGridData(testCases);
+
+    expect(result.length).toBe(3);
+    expect(result[0].param).toBe('value');
+    expect(result[1]).not.toHaveProperty('param');
+    expect(result[2].another).toBe('test');
+  });
+
+  test('should not mutate original test cases', () => {
+    const testCases: TestCase[] = [
+      {
+        name: 'Test Case 1',
+        facts: {
+          temperature: 0.7,
+        },
+      },
+    ];
+
+    const originalTestCases = JSON.parse(JSON.stringify(testCases));
+    getTestCaseGridData(testCases);
+
+    expect(testCases).toEqual(originalTestCases);
+  });
+
+  test('should handle zero values in facts', () => {
+    const testCases: TestCase[] = [
+      {
+        name: 'Test Case 1',
+        facts: {
+          zeroNumber: 0,
+          emptyString: '',
+          falseBool: false,
+        },
+      },
+    ];
+
+    const result = getTestCaseGridData(testCases);
+
+    expect(result[0].zeroNumber).toBe(0);
+    expect(result[0].emptyString).toBe('');
+    expect(result[0].falseBool).toBe(false);
+  });
+});

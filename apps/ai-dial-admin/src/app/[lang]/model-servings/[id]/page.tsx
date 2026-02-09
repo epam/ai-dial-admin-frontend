@@ -52,7 +52,7 @@ export default async function Page(params: Params) {
       <ContainerView
         container={decodeVariables(container)}
         route={ApplicationRoute.ModelServings}
-        names={containers?.map((container) => container.name).filter((name) => name !== container.name) || []}
+        names={containers?.map((container) => container.name || '').filter((name) => name !== container.name) || []}
         createEntity={createModel}
         entityNames={models?.map((model) => model.name as string) || []}
       />
