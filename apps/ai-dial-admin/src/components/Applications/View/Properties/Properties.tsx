@@ -31,7 +31,7 @@ const EntityProperties: FC<Props> = ({ runners, view, ...props }) => {
       <TopicsControl {...props} onChange={props.onChangeEntity} />
       <ApplicationSource {...props} runners={runners} isEntityImmutable={true} />
       <EntityAttachments {...props} />
-      && <Defaults {...props} />
+      <Defaults {...props} />
       <ForwardAuthTokenField view={view} {...props} />
       <MaxRetryAttempts {...props} />
     </div>
