@@ -1,4 +1,3 @@
-import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { DialEllipsisTooltip, DialNoDataContent } from '@epam/ai-dial-ui-kit';
@@ -53,7 +52,6 @@ const FolderList: FC<Props> = ({
   isBulkDelete,
 }) => {
   const t = useI18n();
-  const router = useRouter();
   const folderContext = context?.();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -102,7 +100,7 @@ const FolderList: FC<Props> = ({
   }, []);
 
   const openFolderStorage = (path: string) => {
-    router.push(`${ApplicationRoute.FoldersStorage}?path=${encodeURIComponent(path)}`);
+    window.open(`${ApplicationRoute.FoldersStorage}?path=${encodeURIComponent(path)}`, '_blank');
   };
 
   const openCreateFolderModal = useCallback(
