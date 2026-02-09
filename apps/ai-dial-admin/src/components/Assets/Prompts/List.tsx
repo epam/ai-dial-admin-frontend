@@ -17,7 +17,7 @@ const PromptsList: FC = () => {
   const names = filterNames(data);
 
   const versionsMap = getVersionsPerName((data || []) as AssetWithVersion[]);
-  const filteredData = filterLatestVersions((data || []) as AssetWithVersion[]);
+  const filteredData = filterLatestVersions((data || []) as AssetWithVersion[]) as DialPrompt[];
 
   return (
     <BaseEntityList

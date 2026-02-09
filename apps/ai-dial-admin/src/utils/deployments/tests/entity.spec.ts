@@ -19,7 +19,7 @@ import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 import { CONTAINER_TRANSPORT } from '@/src/types/deployments/containers';
 import { ENTITY_TRANSPORT } from '@/src/constants/deployments/containers';
 import { DialModelType } from '@/src/models/dial/model';
-import { IMAGE_TYPE } from '../../../types/deployments/images';
+import { IMAGE_TYPE } from '@/src/types/deployments/images';
 
 vi.mock('@/src/utils/models/model-endpoint');
 
