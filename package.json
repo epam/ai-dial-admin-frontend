@@ -39,8 +39,11 @@
     "ag-grid-react": "^34.3.1",
     "big.js": "^7.0.1",
     "classnames": "^2.5.1",
+    "dompurify": "^3.3.1",
     "echarts": "^6.0.0",
     "echarts-for-react": "^3.0.6",
+    "github-markdown-css": "^5.9.0",
+    "gray-matter": "^4.0.3",
     "lodash": "^4.17.23",
     "monaco-editor": "^0.52.2",
     "next": "15.5.10",
@@ -54,6 +57,8 @@
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "19.1.2",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
     "uuid": "^13.0.0"
   },
   "devDependencies": {

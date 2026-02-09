@@ -156,3 +156,7 @@ export async function getHuggingFaceModels(params: Record<string, string>) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return huggingFaceApi.getHuggingFaceModels(params, token);
 }
+export async function getModelDetails(modelName: string, sha: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return huggingFaceApi.getModelDetails(modelName, sha, token);
+}

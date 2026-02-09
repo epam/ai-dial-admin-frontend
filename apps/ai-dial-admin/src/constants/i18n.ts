@@ -1234,6 +1234,7 @@ export enum ContainersI18nKey {
   ContainersRestartWarning = 'Containers.ContainersRestartWarning',
   ShowRelatedContainers = 'Containers.ShowRelatedContainers',
   SelectModelFromRegistry = 'Containers.SelectModelFromRegistry',
+  NoDescriptionAvailable = 'Containers.NoDescriptionAvailable',
   ScaleToZeroNever = 'Containers.Autoscaling.ScaleToZeroNever',
   ScaleToZeroAfter15Minutes = 'Containers.Autoscaling.ScaleToZeroAfter15Minutes',
   ScaleToZeroAfter30Minutes = 'Containers.Autoscaling.ScaleToZeroAfter30Minutes',
