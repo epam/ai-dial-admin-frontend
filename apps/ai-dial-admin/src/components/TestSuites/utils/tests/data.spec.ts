@@ -12,6 +12,13 @@ describe('getTestCaseGridData', () => {
     expect(result.length).toBe(0);
   });
 
+  test('should return empty array when test cases array is empty', () => {
+    const result = getTestCaseGridData();
+
+    expect(result).toEqual([]);
+    expect(result.length).toBe(0);
+  });
+
   test('should return test case without modification when it has no facts', () => {
     const testCases: TestCase[] = [
       {

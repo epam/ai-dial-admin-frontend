@@ -22,9 +22,9 @@ interface Props {
 
 const TestCases: FC<Props> = ({ selectedTestSuite }) => {
   const t = useI18n();
-
+  let isLoading = false;
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
-  const [testCases, setTestCases] = useState<TestCase[]>([]);
+  const [testCases, setTestCases] = useState<TestCase[] | null>(null);
   const [columnDefs, setColumnDefs] = useState<ColDef[]>([]);
   const [totalElements, setTotalElements] = useState(0);
 
@@ -33,11 +33,14 @@ const TestCases: FC<Props> = ({ selectedTestSuite }) => {
   };
 
   useEffect(() => {
-    if (testCases.length === 0) {
+    if (!testCases && !isLoading) {
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      isLoading = true;
       getTestCases(selectedTestSuite.id, 0, PAGE_SIZE, [], []).then((res) => {
-        if (testCases.length > 0) {
+        if (testCases) {
           return;
         }
+        isLoading = false;
         const testCasesData = (res?.content || []) as TestCase[];
         setTotalElements(res?.totalElements || 0);
         setTestCases(testCasesData);
@@ -53,7 +56,9 @@ const TestCases: FC<Props> = ({ selectedTestSuite }) => {
         gridApi?.setGridOption('loading', true);
         const page = Math.floor(params.startRow / PAGE_SIZE);
         if (page === 0) {
-          params.successCallback(getTestCaseGridData(testCases), totalElements);
+          gridApi?.setGridOption('loading', false);
+          const data = getTestCaseGridData(testCases);
+          params.successCallback(data, totalElements);
           return;
         }
         const sorts = getRequestSorts(params.sortModel);

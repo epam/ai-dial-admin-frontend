@@ -1,16 +1,17 @@
 'use client';
 
-import { DialFormPopup, DialLoadFileArea, PopupSize } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, DialLoader, DialLoadFileArea, PopupSize } from '@epam/ai-dial-ui-kit';
 import { ColDef } from 'ag-grid-community';
 import { FC, useState } from 'react';
 
 import { importTestCasePreview } from '@/src/app/[lang]/test-suites/actions';
+import Grid from '@/src/components/Grid/Grid';
 import { BasicI18nKey, ButtonsI18nKey, ImportI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { TestCase } from '@/src/models/evaluation/test-suite';
-import { getTestCaseColumns } from '../../utils/columns';
-import Grid from '@/src/components/Grid/Grid';
 import SelectedFile from './SelectedFile';
+import { ImportPreview } from './models';
+import { getGridDataFromImportPreview } from './utils';
 
 interface Props {
   selectedTestSuiteId: string;
@@ -22,6 +23,7 @@ interface Props {
 const ImportFileModal: FC<Props> = ({ selectedTestSuiteId, isModalOpen, onClose, onApply }) => {
   const t = useI18n();
 
+  const [isLoading, setIsLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [testCases, setTestCases] = useState<TestCase[] | null>(null);
   const [columnDefs, setColumnDefs] = useState<ColDef[]>([]);
@@ -31,11 +33,14 @@ const ImportFileModal: FC<Props> = ({ selectedTestSuiteId, isModalOpen, onClose,
 
     body.append('file', files[0] as File);
     setSelectedFile(files[0] as File);
+    setIsLoading(true);
 
     importTestCasePreview(selectedTestSuiteId, body).then((res) => {
-      const testCasesData = (res?.response.content || []) as TestCase[];
-      setTestCases(testCasesData);
-      setColumnDefs(getTestCaseColumns(testCasesData));
+      setIsLoading(false);
+      const testCasesData = (res?.response || []) as ImportPreview;
+      const { colDefs, rowData } = getGridDataFromImportPreview(testCasesData);
+      setTestCases(rowData);
+      setColumnDefs(colDefs);
     });
   };
 
@@ -54,7 +59,7 @@ const ImportFileModal: FC<Props> = ({ selectedTestSuiteId, isModalOpen, onClose,
       <div className="flex px-6 py-4 flex-col h-[800px]">
         {!testCases && (
           <DialLoadFileArea
-            acceptTypes="/"
+            acceptTypes="text/csv"
             emptyTextFirstLine={t(ImportI18nKey.DropAnyFile)}
             emptyTextSecondLine={t(BasicI18nKey.Or)}
             emptyButtonLabel={t(ButtonsI18nKey.Browse)}
@@ -62,10 +67,11 @@ const ImportFileModal: FC<Props> = ({ selectedTestSuiteId, isModalOpen, onClose,
             multiple={false}
           />
         )}
-        {testCases && (
-          <div className="flex flex-col">
+        {isLoading && <DialLoader size={44} />}
+        {testCases && !isLoading && (
+          <div className="flex flex-col h-full">
             <SelectedFile file={selectedFile} onChangeFile={onChangeFile} />
-            <span className="dial-small font-semibold mb-2">{t(TestSuitesI18nKey.Preview)}</span>
+            <span className="dial-small-sime-text mb-2 mt-4 text-secondary">{t(TestSuitesI18nKey.Preview)}</span>
             <div className="flex-1 min-h-0">
               <Grid columnDefs={columnDefs} rowData={testCases || []} />
             </div>
