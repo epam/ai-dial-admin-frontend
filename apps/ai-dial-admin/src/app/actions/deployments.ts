@@ -152,7 +152,7 @@ export async function updateGlobalWhitelist(domainList: string[]) {
   return whitelistApi.updateGlobalWhitelist(domainList, token);
 }
 
-export async function getHuggingFaceModels(search: string) {
+export async function getHuggingFaceModels(params: Record<string, string>) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return huggingFaceApi.getHuggingFaceModels(search, token);
+  return huggingFaceApi.getHuggingFaceModels(params, token);
 }
