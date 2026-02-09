@@ -1,50 +1,41 @@
 'use client';
 
-import React, { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { cloneDeep } from 'lodash';
+import { useRouter } from 'next/navigation';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Image, ImageVersion } from '@/src/models/deployments/images';
-import { ApplicationRoute } from '@/src/types/routes';
-import { ImagesI18nKey } from '@/src/constants/i18n';
-import { IMAGE_STATUS } from '@/src/types/deployments/images';
-import { BaseEntity } from '@/src/models/dial/base-entity';
-import { Container } from '@/src/models/deployments/containers';
-import { EntityViewTab, getDeploymentsViewTabs } from '@/src/utils/tabs/utils';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { useNotification } from '@/src/context/NotificationContext';
-import { useAppContext } from '@/src/context/AppContext';
-import { validateImageChanged } from '@/src/utils/deployments/images';
 import { getImage, updateImage } from '@/src/app/actions/deployments';
-import { getRouteByType, getTranslatedType } from '@/src/utils/deployments/entity';
-import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { getViewHeaderClassName } from '@/src/utils/entities/view';
 import { IMAGE_BUILD_POLL_INTERVAL } from '@/src/constants/deployments/images';
+import { ImagesI18nKey } from '@/src/constants/i18n';
+import { useAppContext } from '@/src/context/AppContext';
+import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
+import { Container } from '@/src/models/deployments/containers';
+import { Image, ImageVersion } from '@/src/models/deployments/images';
+import { IMAGE_STATUS } from '@/src/types/deployments/images';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getRouteByType, getTranslatedType } from '@/src/utils/deployments/entity';
+import { validateImageChanged } from '@/src/utils/deployments/images';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { EntityViewTab, getDeploymentsViewTabs } from '@/src/utils/tabs/utils';
 
-import HeaderButtons from '@/src/components/Images/View/HeaderButtons';
-import Properties from '@/src/components/Images/View/Properties/Properties';
-import Containers from '@/src/components/Images/View/Containers/Containers';
-import InstallationLog from '@/src/components/Images/View/InstallationLog/InstallationLog';
+import ImagesHeader from '@/src/components/EntityHeaderControls/ImagesHeader';
+import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
-import FirewallSettings from '@/src/components/Images/View/FirewallSettings/FirewallSettings';
-import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
+import TabsContent from './TabsContent';
 
 interface Props {
   image: Image;
-  route: ApplicationRoute;
-  imagesNames: string[];
   containerNames?: string[];
   versions: ImageVersion[];
   dependencies: Container[];
 }
 
-const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versions, dependencies }) => {
+const ImageView: FC<Props> = ({ image, containerNames, versions, dependencies }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
   const { disableDeploymentsJSONEditor } = useAppContext();
-  const { dispatch } = useSaveValidationContext();
 
   const [selectedImage, setSelectedImage] = useState<Image>(cloneDeep(image));
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
@@ -53,11 +44,20 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
   const [key, setKey] = useState(0);
   const [imageVersions, setImageVersions] = useState<ImageVersion[]>(versions);
 
+  const jsonConfiguration = useMemo<JsonConfiguration>(
+    () => ({
+      isEditorEnabled,
+      onToggleEditor: () => setIsEditorEnabled((prev) => !prev),
+      hideJsonEditorButton: disableDeploymentsJSONEditor,
+    }),
+    [disableDeploymentsJSONEditor, isEditorEnabled],
+  );
+
   useEffect(() => {
     setImageVersions(versions);
   }, [versions]);
 
-  const tabs = getDeploymentsViewTabs(route, t, selectedImage.buildStatus);
+  const tabs = getDeploymentsViewTabs(ApplicationRoute.Images, t, selectedImage.buildStatus);
 
   useEffect(() => {
     setSelectedImage(cloneDeep(image));
@@ -67,22 +67,15 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
     setIsChanged(validateImageChanged(image, selectedImage));
   }, [selectedImage, image]);
 
-  const toggleJsonEditor = useCallback(() => {
-    setIsEditorEnabled((prev) => !prev);
-  }, [setIsEditorEnabled]);
-
   const onDiscard = useCallback(() => {
     if (isEditorEnabled) {
-      dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
-      setIsChanged(false);
       // TODO: Revisit solution
       // Due to we can't set invalid JSON as variable, we can't update entity in error state.
       // Force JSON Editor re-render to show originalEntity on discard.
       setKey((prevKey) => prevKey + 1);
     }
-    dispatch({ type: ValidationActionType.Reset });
     setSelectedImage(cloneDeep(image));
-  }, [isEditorEnabled, image, dispatch]);
+  }, [isEditorEnabled, image]);
 
   const onSave = useCallback(() => {
     updateImage(selectedImage).then((res) => {
@@ -91,7 +84,7 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
         showNotification(
           getSuccessNotification(
             t(ImagesI18nKey.ImagesUpdateSuccess, { type }),
-            t(ImagesI18nKey.ImagesUpdateSuccessDescription, { type, name: image.name }),
+            t(ImagesI18nKey.ImagesUpdateSuccessDescription, { type, name: image.name || '' }),
           ),
         );
         router.refresh();
@@ -100,13 +93,6 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
       }
     });
   }, [image.$type, image.name, router, selectedImage, showNotification, t]);
-
-  const onChangeImage = useCallback(
-    (image: Image) => {
-      setSelectedImage(image);
-    },
-    [setSelectedImage],
-  );
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -129,62 +115,44 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [selectedImage, route, t, router]);
+  }, [selectedImage, t, router]);
 
   return (
-    <>
-      <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-        <div className={getViewHeaderClassName(isEditorEnabled)}>
-          <Tabs tabs={tabs} isEditorEnabled={isEditorEnabled} activeTab={activeTab} onChangeActiveTab={setActiveTab} />
+    <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
+      <ImagesHeader
+        tabs={tabs}
+        originalImageName={image.name || ''}
+        activeTab={activeTab}
+        onChangeActiveTab={setActiveTab}
+        jsonConfiguration={jsonConfiguration}
+        image={selectedImage}
+        isChanged={isChanged}
+        onSave={onSave}
+        onDiscard={onDiscard}
+        containerNames={containerNames}
+        versions={imageVersions}
+        dependencies={dependencies}
+      />
 
-          <HeaderButtons
-            route={route}
-            image={selectedImage}
-            originalImageName={image.name}
-            isChanged={isChanged}
-            onSave={onSave}
-            onDiscard={onDiscard}
-            jsonEditorEnabled={isEditorEnabled}
-            toggleJsonEditor={toggleJsonEditor}
-            hideJsonEditor={disableDeploymentsJSONEditor}
-            imagesNames={imagesNames}
-            containerNames={containerNames}
-            versions={imageVersions}
-            dependencies={dependencies}
+      <div className="flex-1 overflow-auto mt-3 min-h-0">
+        {isEditorEnabled ? (
+          <EntityJsonEditor
+            key={key}
+            entity={selectedImage}
+            setSelectedEntity={setSelectedImage}
+            setIsChanged={setIsChanged}
           />
-        </div>
-        <div className="flex-1 overflow-auto mt-3 min-h-0">
-          {isEditorEnabled ? (
-            <>
-              <EntityJsonEditor
-                key={key}
-                entity={selectedImage as BaseEntity}
-                setSelectedEntity={setSelectedImage as Dispatch<SetStateAction<BaseEntity>>}
-                setIsChanged={setIsChanged}
-              />
-            </>
-          ) : (
-            <>
-              {activeTab === EntityViewTab.Properties && (
-                <Properties
-                  image={selectedImage}
-                  setImage={onChangeImage}
-                  originalName={image.name}
-                  setImageVersions={setImageVersions}
-                />
-              )}
-              {activeTab === EntityViewTab.RelatedContainers && (
-                <Containers image={selectedImage} route={route} versions={imageVersions} />
-              )}
-              {activeTab === EntityViewTab.InstallationLog && <InstallationLog imageBuildId={selectedImage.id} />}
-              {activeTab === EntityViewTab.Firewall && (
-                <FirewallSettings image={selectedImage} setImage={setSelectedImage} route={route} />
-              )}
-            </>
-          )}
-        </div>
+        ) : (
+          <TabsContent
+            activeTab={activeTab}
+            imageVersions={imageVersions}
+            onChange={setSelectedImage}
+            selectedImage={selectedImage}
+            onChangeVersions={setImageVersions}
+          />
+        )}
       </div>
-    </>
+    </div>
   );
 };
 

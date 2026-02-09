@@ -1,19 +1,16 @@
 import { IMAGE_SOURCE_TYPE, IMAGE_STATUS, IMAGE_TRANSPORT_TYPE, IMAGE_TYPE } from '@/src/types/deployments/images';
-import { ModifiedEntity } from '../dial/base-entity';
+import { BaseEntity } from '../dial/base-entity';
 
-export interface Image extends ModifiedEntity {
+export interface Image extends BaseEntity {
   $type: IMAGE_TYPE;
   id: string;
   buildStatus: IMAGE_STATUS;
-  name: string;
-  description?: string;
   version: string;
   topics?: string[];
   source: ImageSource;
   transportType?: IMAGE_TRANSPORT_TYPE;
   author?: string;
   logs?: string[];
-  allowedDomains?: string[];
 }
 
 export interface ImageGroup {

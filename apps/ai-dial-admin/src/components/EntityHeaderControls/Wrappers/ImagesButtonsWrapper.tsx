@@ -6,10 +6,17 @@ import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom';
 
 import { createContainer, createImage, deleteImage, installImage } from '@/src/app/actions/deployments';
+import VersionsSelect from '@/src/components/Deployments/Common/VersionsSelect/VersionsSelect';
+import EntityDelete from '@/src/components/Deployments/Modals/EntityDelete';
+import ImageCreateContainer from '@/src/components/Deployments/Modals/ImageCreateContainer';
+import ImageInstall from '@/src/components/Deployments/Modals/ImageInstall';
+import ImageNewVersion from '@/src/components/Deployments/Modals/ImageNewVersion';
+import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import { ButtonsI18nKey, ContainersI18nKey, CreateI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
@@ -21,46 +28,33 @@ import { getRouteByType, getTranslatedDeploymentType, getTranslatedType } from '
 import { validateImage } from '@/src/utils/deployments/images';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
+import { JsonConfiguration } from '../models';
 
-import VersionsSelect from '@/src/components/Deployments/Common/VersionsSelect/VersionsSelect';
-import EntityDelete from '@/src/components/Deployments/Modals/EntityDelete';
-import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
-import ImageCreateContainer from '@/src/components/Deployments/Modals/ImageCreateContainer';
-import ImageInstall from '@/src/components/Deployments/Modals/ImageInstall';
-import ImageNewVersion from '@/src/components/Deployments/Modals/ImageNewVersion';
-
-interface Props {
-  route: ApplicationRoute;
+export interface ImagesButtonsWrapperProps {
   image: Image;
   originalImageName: string;
   isChanged: boolean;
-  jsonEditorEnabled: boolean;
-  hideJsonEditor?: boolean;
   children?: ReactNode;
-  onDiscard: () => void;
-  onSave: () => void;
-  toggleJsonEditor?: () => void;
-  imagesNames: string[];
   containerNames?: string[];
   versions: ImageVersion[];
   dependencies: Container[];
+  jsonConfiguration?: JsonConfiguration;
+
+  onDiscard: () => void;
+  onSave: () => void;
 }
 
-const HeaderButtons: FC<Props> = ({
-  route,
+const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
+  dependencies,
   image,
   originalImageName,
   isChanged,
   onDiscard,
   onSave,
-  jsonEditorEnabled,
-  toggleJsonEditor,
-  hideJsonEditor,
   children,
   containerNames,
   versions,
-  dependencies,
+  jsonConfiguration,
 }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
@@ -68,6 +62,11 @@ const HeaderButtons: FC<Props> = ({
   const isMobile = useIsMobileScreen();
   const router = useRouter();
   const { isValid } = useSaveValidationContext();
+
+  const isDisableSave = useMemo(
+    () => (jsonConfiguration?.isEditorEnabled ? false : !validateImage(image) || !isValid),
+    [jsonConfiguration?.isEditorEnabled, image, isValid],
+  );
 
   const staticContainerClassnames = 'flex flex-row gap-3 divide-x divide-primary';
 
@@ -109,20 +108,16 @@ const HeaderButtons: FC<Props> = ({
     [router, showNotification],
   );
 
-  const isValidEntity = () => {
-    return validateImage(image);
-  };
-
   const onDelete = useCallback(() => {
     deleteImage(image.id).then((res) => {
       if (res.success) {
         onCloseModal();
-        router.push(route);
+        router.push(ApplicationRoute.Images);
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [image.id, onCloseModal, route, router, showNotification]);
+  }, [image.id, onCloseModal, router, showNotification]);
 
   const onOpenDeleteModal = useCallback(() => {
     onOpenModal(ModalType.delete);
@@ -161,27 +156,27 @@ const HeaderButtons: FC<Props> = ({
     (image: Image) => {
       createImage(image).then((res) => {
         if (res.success) {
-          const type = getTranslatedType(route, t);
+          const type = getTranslatedType(ApplicationRoute.Images, t);
           showNotification(
             getSuccessNotification(
               t(ImagesI18nKey.ImagesSaveSuccess, { type }),
               t(ImagesI18nKey.ImagesSaveSuccessDescription, { type, version: image.version }),
             ),
           );
-          router.push(getUrnForEntity(route, res.response));
+          router.push(getUrnForEntity(ApplicationRoute.Images, res.response));
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
         }
       });
     },
-    [route, router, showNotification, t],
+    [router, showNotification, t],
   );
 
   const onVersionChange = useCallback(
     (id: string) => {
-      router.push(getUrnForEntity(route, { id }));
+      router.push(getUrnForEntity(ApplicationRoute.Images, { id }));
     },
-    [route, router],
+    [router],
   );
 
   useEffect(() => {
@@ -205,14 +200,14 @@ const HeaderButtons: FC<Props> = ({
                 className={buttonsClassNames}
                 label={t(ButtonsI18nKey.SaveAsNewVersion)}
                 onClick={onOpenSaveNewVersionModal}
-                disabled={jsonEditorEnabled ? false : !isValidEntity() || !isValid}
+                disabled={isDisableSave}
               />
             ) : (
               <DialPrimaryButton
                 className={buttonsClassNames}
                 label={t(ButtonsI18nKey.SaveAsNewVersion)}
                 onClick={onOpenSaveNewVersionModal}
-                disabled={jsonEditorEnabled ? false : !isValidEntity() || !isValid}
+                disabled={isDisableSave}
               />
             )}
             {allowEditing && !forceNewVersion && (
@@ -220,7 +215,7 @@ const HeaderButtons: FC<Props> = ({
                 className={buttonsClassNames}
                 label={t(ButtonsI18nKey.Save)}
                 onClick={onSave}
-                disabled={jsonEditorEnabled ? false : !isValidEntity() || !isValid}
+                disabled={isDisableSave}
               />
             )}
           </div>
@@ -242,7 +237,9 @@ const HeaderButtons: FC<Props> = ({
               {image.buildStatus === IMAGE_STATUS.BUILT && (
                 <DialNeutralButton
                   className={buttonsClassNames}
-                  label={t(CreateI18nKey.CreateContainer, { type: getTranslatedType(getRouteByType(image.$type), t) })}
+                  label={t(CreateI18nKey.CreateContainer, {
+                    type: getTranslatedType(getRouteByType(image.$type), t),
+                  })}
                   iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
                   onClick={onOpenCreateModal}
                 />
@@ -258,7 +255,7 @@ const HeaderButtons: FC<Props> = ({
               )}
               {children}
             </div>
-            {!hideJsonEditor && <JsonToggles isEditorEnabled={jsonEditorEnabled} onToggleEditor={toggleJsonEditor} />}
+            {!jsonConfiguration?.hideJsonEditorButton && <JsonToggles {...jsonConfiguration} />}{' '}
           </div>
         )}
       </div>
@@ -286,7 +283,7 @@ const HeaderButtons: FC<Props> = ({
             onClose={onCloseModal}
             modalTitle={t(ContainersI18nKey.CreateModalTitle, {
               type: getTranslatedType(getRouteByType(image.$type), t),
-              entityType: getTranslatedDeploymentType(route, t),
+              entityType: getTranslatedDeploymentType(ApplicationRoute.Images, t),
             })}
             image={image}
             onCreate={onCreateContainer}
@@ -338,4 +335,4 @@ const HeaderButtons: FC<Props> = ({
   );
 };
 
-export default HeaderButtons;
+export default ImagesButtonsWrapper;
