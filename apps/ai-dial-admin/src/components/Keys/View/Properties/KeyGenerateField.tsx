@@ -1,8 +1,8 @@
 import { DialGhostButton, DialNeutralButton, DialPasswordInputField } from '@epam/ai-dial-ui-kit';
 import { IconCopy, IconSparkles } from '@tabler/icons-react';
+import classNames from 'classnames';
 import { FC, useCallback, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import classNames from 'classnames';
 
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';

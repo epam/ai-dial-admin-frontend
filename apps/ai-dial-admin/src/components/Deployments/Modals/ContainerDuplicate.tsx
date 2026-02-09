@@ -24,14 +24,14 @@ const ContainerDuplicate: FC<Props> = ({ title, isModalOpen, container, onClose,
 
   const [duplicate, setDuplicate] = useState<Container>({
     ...container,
-    name: `${container.name.slice(0, 31)}-copy`,
+    name: `${container.name?.slice(0, 31)}-copy`,
     displayName: `${container.displayName} ${t(BasicI18nKey.DuplicateCopyPostfix)}`,
   });
   const [isUniqueNameError, setIsUniqueNameError] = useState<boolean>(false);
 
   const onChangeName = useCallback(
     (container: Container) => {
-      const error = names?.includes(container.name);
+      const error = names?.includes(container.name || '');
       setIsUniqueNameError(!!error);
       setDuplicate(container);
     },
@@ -46,7 +46,7 @@ const ContainerDuplicate: FC<Props> = ({ title, isModalOpen, container, onClose,
   );
 
   useEffect(() => {
-    const error = names?.includes(duplicate.name);
+    const error = names?.includes(duplicate.name || '');
     setIsUniqueNameError(!!error);
   }, [duplicate.name, names, t]);
 
