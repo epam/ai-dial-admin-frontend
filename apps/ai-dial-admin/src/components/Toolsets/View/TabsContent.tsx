@@ -2,7 +2,7 @@
 
 import { FC, useMemo } from 'react';
 
-import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
+import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
 import EntityRoles from '@/src/components/EntityView/Roles/Roles';
 import Tools from '@/src/components/Tools/Tools';
 import { AuthHeader } from '@/src/components/Toolsets/Auth/Sections/AuthHeader';

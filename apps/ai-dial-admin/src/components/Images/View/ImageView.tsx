@@ -26,7 +26,7 @@ import HeaderButtons from '@/src/components/Images/View/HeaderButtons';
 import Properties from '@/src/components/Images/View/Properties/Properties';
 import Containers from '@/src/components/Images/View/Containers/Containers';
 import InstallationLog from '@/src/components/Images/View/InstallationLog/InstallationLog';
-import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
+import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import FirewallSettings from '@/src/components/Images/View/FirewallSettings/FirewallSettings';
 import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
 

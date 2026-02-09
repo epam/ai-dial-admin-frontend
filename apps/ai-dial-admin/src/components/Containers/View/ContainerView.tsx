@@ -8,7 +8,7 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { getContainer, getContainerPods, updateContainer } from '@/src/app/actions/deployments';
 import ContainersHeader from '@/src/components/EntityHeaderControls/ContainersHeader';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
-import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
+import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { IMAGE_BUILD_POLL_INTERVAL } from '@/src/constants/deployments/images';
 import { ContainersI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';

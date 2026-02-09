@@ -5,7 +5,7 @@ import { FC, useCallback, useMemo } from 'react';
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
 import { getRelevantRolesForKey } from '@/src/components/AddEntitiesTab/utils';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
-import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
+import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
 import ValidityStatus from '@/src/components/EntityView/Status/ValidityStatus';
 import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, EntityFieldsI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';

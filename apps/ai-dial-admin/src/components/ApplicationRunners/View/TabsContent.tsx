@@ -4,9 +4,9 @@ import { FC } from 'react';
 
 import AppRunnerApplications from '@/src/components/ApplicationRunners/ConfigurationView/Applications';
 import AppRunnerFeatures from '@/src/components/ApplicationRunners/ConfigurationView/Features';
-import ApplicationParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
+import ParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
 import EntityRoutes from '@/src/components/EntityView/AppRoute/AppRoute';
-import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
+import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
 import EntityInterceptors from '@/src/components/EntityView/Interceptors/Interceptors';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
@@ -42,7 +42,7 @@ const TabsContent: FC<Props> = ({
         {activeTab === EntityViewTab.Properties && (
           <PropertiesTabContent
             entity={selectedRunner}
-            view={ApplicationRoute.ApplicationRunners}
+            view={ApplicationRoute.AssetsApplications}
             id={selectedRunner.$id}
           >
             <SchemeProperties names={names} runner={selectedRunner} isImmutable={true} onChangeRunner={onChange} />
@@ -50,7 +50,7 @@ const TabsContent: FC<Props> = ({
         )}
 
         {activeTab === EntityViewTab.Parameters && (
-          <ApplicationParametersTab view={ApplicationRoute.ApplicationRunners} entity={selectedRunner} />
+          <ParametersTab view={ApplicationRoute.ApplicationRunners} application={selectedRunner} />
         )}
 
         {activeTab === EntityViewTab.Features && (

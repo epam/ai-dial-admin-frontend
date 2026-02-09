@@ -18,13 +18,13 @@ import AddDependenciesButton from './AddDependenciesModal/AddDependenciesButton'
 import { getDependenciesData } from './utils';
 
 interface Props {
-  entity: DialApplication;
+  application: DialApplication;
   applications: DialApplication[];
   models: DialModel[];
-  onChangeEntity: (entity: DialApplication) => void;
+  onChange: (application: DialApplication) => void;
 }
 
-const EntityDependencies: FC<Props> = ({ entity, applications, models, onChangeEntity }) => {
+const Dependencies: FC<Props> = ({ application, applications, models, onChange }) => {
   const t = useI18n();
   const [rowData, setRowData] = useState<EntitiesGridData[]>([]);
   const [availableModels, setAvailableModels] = useState<DialModel[]>([]);
@@ -32,27 +32,27 @@ const EntityDependencies: FC<Props> = ({ entity, applications, models, onChangeE
 
   const onAddDependency = useCallback(
     (name: string) => {
-      const dependencies = entity.dependencies || [];
+      const dependencies = application.dependencies || [];
       dependencies?.push(name);
-      onChangeEntity({
-        ...entity,
+      onChange({
+        ...application,
         dependencies,
       });
     },
-    [entity, onChangeEntity],
+    [application, onChange],
   );
 
   const onRemoveDependency = useCallback(
     (_?: DialApplication, index?: number) => {
       if (index != null) {
-        entity.dependencies?.splice(index, 1);
+        application.dependencies?.splice(index, 1);
       }
-      onChangeEntity({
-        ...entity,
-        dependencies: entity.dependencies,
+      onChange({
+        ...application,
+        dependencies: application.dependencies,
       });
     },
-    [entity, onChangeEntity],
+    [application, onChange],
   );
 
   const onOpen = (entity?: EntitiesGridData) => {
@@ -68,28 +68,28 @@ const EntityDependencies: FC<Props> = ({ entity, applications, models, onChangeE
 
   useEffect(() => {
     const { data, filteredModels, filteredApplications } = getDependenciesData(
-      entity.dependencies || [],
+      application.dependencies || [],
       models,
       applications,
     );
     setRowData(data);
     setAvailableModels(filteredModels);
     setAvailableApplications(filteredApplications);
-  }, [applications, entity, models]);
+  }, [applications, application, models]);
 
   return (
     <div className="h-full flex flex-col">
       <div className="mb-4 flex flex-row items-center justify-between">
         <h1>
-          {t(TabsI18nKey.Dependencies)}: {entity.dependencies?.length || 0}
+          {t(TabsI18nKey.Dependencies)}: {application.dependencies?.length || 0}
         </h1>
         <AddDependenciesButton
           availableModels={availableModels}
-          availableApplications={availableApplications?.filter((a) => a.name !== entity.name)}
+          availableApplications={availableApplications?.filter((a) => a.name !== application.name)}
           addDependency={onAddDependency}
         />
       </div>
-      {!entity.dependencies?.length ? (
+      {!application.dependencies?.length ? (
         <DialNoDataContent title={t(EntitiesI18nKey.NoDependencies)} />
       ) : (
         <Grid columnDefs={columns} rowData={rowData} />
@@ -98,4 +98,4 @@ const EntityDependencies: FC<Props> = ({ entity, applications, models, onChangeE
   );
 };
 
-export default EntityDependencies;
+export default Dependencies;

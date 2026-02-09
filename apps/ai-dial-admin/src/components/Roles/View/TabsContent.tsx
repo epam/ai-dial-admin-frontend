@@ -10,7 +10,7 @@ import {
   getRelevantKeysForRole,
   ROLES_ENTITIES_COLUMNS,
 } from '@/src/components/AddEntitiesTab/utils';
-import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
+import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
 import { isSetNoLimitsHidden } from '@/src/components/EntityView/Roles/utils';
 import { getSetNoLimitsOperation } from '@/src/constants/grid-columns/actions';
 import { KEYS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';

@@ -6,16 +6,18 @@ import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useRef, 
 import { cloneDeep } from 'lodash';
 
 import { getApps, moveApps, removeApp, updateApp } from '@/src/app/[lang]/assets-applications/actions';
+import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
+import TabsContent from '@/src/components/Applications/View/TabsContent';
 import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
-import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
-import ViewContent from '@/src/components/EntityView/View/Content/ViewContent';
+import AssetHeader from '@/src/components/EntityHeaderControls/AssetHeader';
+import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
+import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { BaseEntity } from '@/src/models/dial/base-entity';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
@@ -27,9 +29,6 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
 import { addTrailingSlash } from '@/src/utils/url';
-import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
-import AssetHeader from '@/src/components/EntityHeaderControls/AssetHeader';
-import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 
 interface Props {
   etag: string;
@@ -165,7 +164,7 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
         {isEditorEnabled && !(activeTab === EntityViewTab.Parameters) ? (
           <EntityJsonEditor entity={selectedApp} setSelectedEntity={setSelectedApp} setIsChanged={setIsChanged} />
         ) : (
-          <ViewContent
+          <TabsContent
             activeTab={activeTab}
             names={[]}
             models={models}
@@ -173,14 +172,14 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
             applicationSchemes={schemes}
             interceptors={interceptors}
             view={ApplicationRoute.AssetsApplications}
-            selectedEntity={selectedApp}
-            isJsonEditorEnabled={isEditorEnabled}
+            selectedApplication={selectedApp}
+            isEditorEnabled={isEditorEnabled}
             isSkipRefresh={isSkipRefresh}
             isChanged={isChanged}
             onSave={onSave}
-            onChangeEntity={onChangeEntity as (entity: BaseEntity) => void}
+            onChangeApplication={onChangeEntity as (application: DialApplication) => void}
             setIsChanged={setIsChanged}
-            setSelectedEntity={setSelectedApp as Dispatch<SetStateAction<BaseEntity>>}
+            setSelectedApplication={setSelectedApp as Dispatch<SetStateAction<DialApplication>>}
           />
         )}
       </div>

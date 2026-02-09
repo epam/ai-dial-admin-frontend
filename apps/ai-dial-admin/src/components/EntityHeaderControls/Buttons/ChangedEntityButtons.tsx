@@ -36,7 +36,7 @@ const ChangedEntityButtons: FC<Props> = ({ disableSave, children, onDiscard, onS
       <DialPrimaryButton
         className={buttonsClassName}
         label={saveLabel || t(ButtonsI18nKey.Save)}
-        onClick={onSave}
+        onClick={() => onSave?.()}
         disabled={disableSave}
       />
     </div>
