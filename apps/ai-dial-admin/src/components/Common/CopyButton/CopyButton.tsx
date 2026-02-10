@@ -10,25 +10,30 @@ import { getSuccessNotification } from '@/src/utils/notification';
 import classNames from 'classnames';
 
 interface Props {
-  label?: string;
+  buttonLabel?: string;
+  valueLabel?: string;
   className?: string;
-  field?: string;
-  isFullButton?: boolean;
+  value?: string;
 }
 
-const CopyButton: FC<Props> = ({ label, field, className, isFullButton = false }) => {
+const CopyButton: FC<Props> = ({ buttonLabel, value, valueLabel, className }) => {
   const { showNotification } = useNotification();
   const t = useI18n();
 
   const onClick = useCallback(() => {
-    if (field) {
-      navigator.clipboard.writeText(field);
-      showNotification(getSuccessNotification(`${label} ${t(BasicI18nKey.CopiedSuccessfully)}`));
+    if (valueLabel && value) {
+      navigator.clipboard.writeText(value);
+      showNotification(getSuccessNotification(`${valueLabel} ${t(BasicI18nKey.CopiedSuccessfully)}`));
     }
-  }, [field, label, showNotification, t]);
+  }, [value, valueLabel, showNotification, t]);
 
-  return isFullButton ? (
-    <DialNeutralButton onClick={onClick} aria-label="copy" iconBefore={<IconCopy {...BASE_BUTTON_ICON_PROPS} />} />
+  return buttonLabel ? (
+    <DialNeutralButton
+      label={buttonLabel}
+      onClick={onClick}
+      aria-label="copy"
+      iconBefore={<IconCopy {...BASE_BUTTON_ICON_PROPS} />}
+    />
   ) : (
     <DialIconButton
       className={classNames('cursor-pointer text-secondary hover:text-accent-primary p-0 h-[20px] w-[20px]', className)}

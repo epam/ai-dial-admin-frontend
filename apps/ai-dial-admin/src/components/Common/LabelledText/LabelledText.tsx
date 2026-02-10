@@ -20,7 +20,7 @@ const LabelledText: FC<Props> = ({ label, text, children, tooltip, copyable, cop
       label={label}
       text={text}
       tooltip={tooltip}
-      postfix={copyable ? <CopyButton field={text || ''} label={copyLabel || label} /> : null}
+      postfix={copyable ? <CopyButton value={text || ''} valueLabel={copyLabel || label} /> : null}
     >
       {children}
     </DialLabelledText>
