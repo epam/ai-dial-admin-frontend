@@ -75,7 +75,7 @@ export const getErrorForName = (
       if (!name?.match(/^[a-z0-9-]+$/)) {
         return {
           type: ErrorType.INVALID,
-          text: t ? tWithArgs(ErrorI18nKey.AllowedChars) : '',
+          text: t ? tWithArgs(ErrorI18nKey.SpecialChars) : '',
         };
       }
     }

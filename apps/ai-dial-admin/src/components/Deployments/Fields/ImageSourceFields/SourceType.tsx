@@ -15,7 +15,7 @@ interface Props {
   verifyVersion: (image: Image) => void;
 }
 
-const SourceTypeFields: FC<Props> = ({ image, setImage, isModal, verifyVersion }) => {
+const SourceType: FC<Props> = ({ image, setImage, isModal, verifyVersion }) => {
   const t = useI18n();
   const sourcesList = SOURCE_TYPES(t);
   const imageTypesList = IMAGE_TYPES(t);
@@ -71,4 +71,4 @@ const SourceTypeFields: FC<Props> = ({ image, setImage, isModal, verifyVersion }
   );
 };
 
-export default SourceTypeFields;
+export default SourceType;

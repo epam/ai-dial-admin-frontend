@@ -6,13 +6,13 @@ import {
   getMaintainerError,
   getPathError,
   getSemanticVersionError,
-  isValidDockerUri,
-  isValidSSHRepo,
   getVariableNameError,
   getCPUError,
   getResourcesConflictError,
   getWhitelistDomainError,
   getReplicasError,
+  getImageNameError,
+  getBaseDirectoryError,
 } from '../validation';
 import { ErrorType } from '@/src/types/error-type';
 import { ErrorI18nKey } from '@/src/constants/i18n';
@@ -76,47 +76,69 @@ describe('validation utils', () => {
   describe('getSemanticVersionError', () => {
     test('returns error for invalid semantic version', () => {
       (semver.valid as any).mockReturnValue(null);
-      expect(getSemanticVersionError({}, {} as any, t, 'invalid')).toEqual({
-        text: ErrorI18nKey.NotSemanticVersion,
+      expect(getSemanticVersionError({ image: ['1.0.0'] }, 'image', t, 'invalid')).toEqual({
         type: ErrorType.INVALID,
+        text: ErrorI18nKey.NotSemanticVersion,
       });
     });
 
     test('returns error from getPromptVersionError if present', () => {
       (semver.valid as any).mockReturnValue('1.0.0');
-      (getPromptVersionError as any).mockReturnValue('Custom Error');
-      expect(getSemanticVersionError({}, {} as any, t, '1.0.0')).toEqual({
-        text: 'Custom Error',
+      expect(getSemanticVersionError({ image: ['1.0.0'] }, 'image', t, '')).toEqual({
+        text: ErrorI18nKey.RequiredField,
+        type: ErrorType.EMPTY,
+      });
+    });
+
+    test('returns error from getPromptVersionError if present', () => {
+      (semver.valid as any).mockReturnValue('1.0.0');
+      expect(getSemanticVersionError({ image: ['1.0.0'] }, 'image', t, '1.0.0')).toEqual({
+        text: ErrorI18nKey.NameVersionCombination,
         type: ErrorType.INVALID,
       });
     });
 
-    test('returns null if valid and no prompt version error', () => {
-      (semver.valid as any).mockReturnValue('1.0.0');
-      (getPromptVersionError as any).mockReturnValue(null);
-      expect(getSemanticVersionError({}, {} as any, t, '1.0.0')).toBeNull();
+    test('returns null if valid ', () => {
+      (semver.valid as any).mockReturnValue('1.0.1');
+      expect(getSemanticVersionError({ image: ['1.0.0'] }, 'image', t, '1.0.1')).toBeNull();
     });
   });
 
-  describe('isValidDockerUri', () => {
-    test('returns true for valid docker uri', () => {
-      expect(isValidDockerUri('nginx:latest')).toBe(true);
-      expect(isValidDockerUri('my-registry.com/image:tag')).toBe(true);
+  describe('getImageNameError', () => {
+    test('returns true for valid image name', () => {
+      expect(getImageNameError('Image!', t)).toEqual({
+        text: ErrorI18nKey.SpecialChars,
+        type: ErrorType.INVALID,
+      });
+      expect(getImageNameError('I', t)).toEqual({
+        text: ErrorI18nKey.MinMaxLength,
+        type: ErrorType.LENGTH,
+      });
+      expect(getImageNameError('I')).toEqual({
+        text: '',
+        type: ErrorType.LENGTH,
+      });
     });
 
-    test('returns false for invalid docker uri', () => {
-      expect(isValidDockerUri('invalid uri')).toBe(false);
+    test('returns false for invalid image name', () => {
+      expect(getImageNameError('image_- good')).toBeNull();
     });
   });
 
-  describe('isValidSSHRepo', () => {
-    test('returns true for valid ssh repo', () => {
-      expect(isValidSSHRepo('git@github.com:user/repo.git')).toBe(true);
-      expect(isValidSSHRepo('ssh://user@host.xz:port/path/to/repo.git')).toBe(true);
+  describe('getBaseDirectoryError', () => {
+    test('returns true for valid base directory', () => {
+      expect(getBaseDirectoryError('/path', t)).toEqual({
+        text: ErrorI18nKey.BaseDirectoryError,
+        type: ErrorType.INVALID,
+      });
+      expect(getBaseDirectoryError('path/', t)).toEqual({
+        text: ErrorI18nKey.BaseDirectoryError,
+        type: ErrorType.INVALID,
+      });
     });
 
-    test('returns false for invalid ssh repo', () => {
-      expect(isValidSSHRepo('https://github.com/user/repo.git')).toBe(false);
+    test('returns false for invalid base directory', () => {
+      expect(getBaseDirectoryError('path')).toBeNull();
     });
   });
 
