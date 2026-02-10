@@ -137,7 +137,7 @@ const AuditView: FC<Props> = ({
           <div className="flex flex-row flex-wrap justify-between mb-6 gap-3">
             <h1 className="flex flex-row items-center gap-x-3">
               <DialEllipsisTooltip text={activity.activityId} />
-              <CopyButton field={activity.activityId} label={t(EntityFieldsI18nKey.id)} />
+              <CopyButton value={activity.activityId} valueLabel={t(EntityFieldsI18nKey.id)} />
             </h1>
             <div className="flex flex-row items-center gap-4 flex-wrap">
               <CompareControl compareView={compareView} setCompareView={setCompareView} />
