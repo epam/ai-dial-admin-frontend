@@ -9,6 +9,7 @@ import DraggableItem from '@/src/components/Common/DraggableItem/DraggableItem';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import CloseButton from '@/src/components/Common/CloseButton/CloseButton';
 import { useI18n } from '@/src/locales/client';
+import { COLUMN_PANEL_PREFIX } from '@/src/constants/grid-columns/grid-columns';
 
 interface Props {
   columns: ColDef[];
@@ -35,7 +36,7 @@ const ColumnsPanel: FC<Props> = ({
   const ref = useRef<HTMLDivElement | null>(null);
 
   const onCheckedChange = useCallback(
-    (_value?: boolean, id?: string) => toggleColumnVisibility?.(id),
+    (_value?: boolean, id?: string) => toggleColumnVisibility?.(id?.replace(COLUMN_PANEL_PREFIX, '')),
     [toggleColumnVisibility],
   );
 
@@ -69,7 +70,7 @@ const ColumnsPanel: FC<Props> = ({
                   <DraggableItem id={col.field || ''} findItem={findColumn} moveItem={moveColumn}>
                     <DialCheckbox
                       label={col.headerName}
-                      id={col.field || ''}
+                      id={`${COLUMN_PANEL_PREFIX}${col.field}`}
                       checked={!col.hide}
                       onChange={onCheckedChange}
                     />
