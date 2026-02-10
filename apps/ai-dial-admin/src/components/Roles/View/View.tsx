@@ -55,7 +55,6 @@ const RolesView: FC<Props> = ({ originalRole, etag, keys, ...props }) => {
   const [isSkipRefresh, setIsSkipRefresh] = useState(true);
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
   const [coreRole, setCoreRole] = useState<DialKey | null>(null);
-  const entityRef = useRef(selectedRole);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -90,10 +89,6 @@ const RolesView: FC<Props> = ({ originalRole, etag, keys, ...props }) => {
 
     setIsChanged(selectedFormat === ExportFormat.CORE ? !isEqualCoreRole : !isEqualAdminRole);
   }, [selectedFormat, originalRole, selectedRole, coreRole]);
-
-  useEffect(() => {
-    entityRef.current = selectedRole;
-  }, [selectedRole]);
 
   const onDiscard = useCallback(() => {
     if (isEditorEnabled) {
@@ -156,7 +151,6 @@ const RolesView: FC<Props> = ({ originalRole, etag, keys, ...props }) => {
           <TabsContent
             isSkipRefresh={isSkipRefresh}
             activeTab={activeTab}
-            originalRole={entityRef.current}
             selectedFormat={selectedFormat}
             selectedRole={selectedRole}
             keys={keys}

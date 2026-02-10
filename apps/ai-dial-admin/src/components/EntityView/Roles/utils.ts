@@ -246,6 +246,9 @@ export const isLimitSameAsDefault = (limit: DialRoleLimits, defaultLimit?: DialR
 };
 
 export const isSetNoLimitsHidden = (api: GridApi, node: IRowNode) => {
+  if (node.data.type === MenuI18nKey.Routes || node.data.type === MenuI18nKey.Toolsets) {
+    return true;
+  }
   const month = api.getCellValue({
     colKey: api.getColumn('month') as Column,
     rowNode: node,
@@ -262,7 +265,6 @@ export const isSetNoLimitsHidden = (api: GridApi, node: IRowNode) => {
     colKey: api.getColumn('day') as Column,
     rowNode: node,
   });
-
   return day === UNLIMITED_VALUE && minute === UNLIMITED_VALUE && month === UNLIMITED_VALUE && week === UNLIMITED_VALUE;
 };
 

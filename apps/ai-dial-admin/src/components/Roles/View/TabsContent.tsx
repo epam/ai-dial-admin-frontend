@@ -1,7 +1,7 @@
 'use client';
 
 import { cloneDeep } from 'lodash';
-import { FC, useCallback } from 'react';
+import { FC, useCallback, useEffect, useRef } from 'react';
 
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
 import {
@@ -33,7 +33,6 @@ import RoleProperties from './Properties/Properties';
 
 interface Props {
   selectedRole: DialRole;
-  originalRole: DialRole;
   activeTab: EntityViewTab;
   selectedFormat: ExportFormat;
   keys: DialKey[];
@@ -48,7 +47,6 @@ interface Props {
 
 const TabsContent: FC<Props> = ({
   activeTab,
-  originalRole,
   selectedFormat,
   isSkipRefresh,
   onChange,
@@ -58,6 +56,11 @@ const TabsContent: FC<Props> = ({
   ...props
 }) => {
   const t = useI18n();
+  const entityRef = useRef(selectedRole);
+
+  useEffect(() => {
+    entityRef.current = selectedRole;
+  }, [selectedRole]);
 
   const onAddKeys = useCallback(
     (rows: EntitiesGridData[]) => {
@@ -82,7 +85,7 @@ const TabsContent: FC<Props> = ({
   const onSetNoLimits = useCallback(
     (role?: DialRole) => {
       if (role) {
-        const limits = originalRole.limits ?? {};
+        const limits = entityRef.current.limits ?? {};
         const updatedLimits = {
           ...limits,
           [role?.name as string]: {
@@ -95,19 +98,19 @@ const TabsContent: FC<Props> = ({
         };
 
         const updatedEntity = {
-          ...originalRole,
+          ...entityRef.current,
           limits: updatedLimits,
         };
         onChange(updatedEntity);
       }
     },
-    [onChange, originalRole],
+    [onChange],
   );
 
   const onChangeRoleToken = useCallback(
     (value: number, data: DialRole, token: string) => {
       const name = data.name as string;
-      const limits = originalRole.limits ?? {};
+      const limits = entityRef.current.limits ?? {};
       const updatedLimits = {
         ...limits,
         [name]: {
@@ -117,13 +120,13 @@ const TabsContent: FC<Props> = ({
       };
 
       const updatedEntity = {
-        ...originalRole,
+        ...entityRef.current,
         limits: updatedLimits,
       };
 
       onChange(updatedEntity, true);
     },
-    [onChange, originalRole],
+    [onChange],
   );
 
   const onRemoveEntity = useCallback(
