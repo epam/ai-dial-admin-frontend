@@ -16,6 +16,7 @@ export interface DialFile extends ModifiedEntity {
   nextToken?: string;
   extension?: string;
   id?: string;
+  permissions?: string[];
 }
 
 export enum DialFileNodeType {

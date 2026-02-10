@@ -26,6 +26,9 @@ export const fillChildren = (files: DialFile[]): DialFile[] => {
       return {
         ...file,
         name: getFolderName(file.path),
+        parentPath: `${file.path.replace(/\/[^/]+\/?$/, '')}/`,
+        // TODO: Remove When we get real permissions
+        permissions: ['WRITE', 'READ'],
       };
     }),
   ];
@@ -51,6 +54,8 @@ export const mergeFiles = <T extends DialFile>(
         name: getFolderName(targetPath),
         path: targetPath,
         nodeType: DialFileNodeType.FOLDER,
+        // TODO: Remove When we get real permissions
+        permissions: ['WRITE', 'READ'],
         items: fillChildren(newFiles as T[]),
       } as T,
     ];

@@ -6,6 +6,7 @@ import { DialFileNodeType } from '@/src/models/dial/file';
 import { mergeFiles } from '@/src/utils/files/folder';
 
 export interface AssetsFolderContext {
+  isFetchingFiles: boolean;
   fetchFiles: (path: string, refreshData?: boolean, resetFolder?: boolean) => void;
   files: Asset[];
   expandedFolders: Set<string>;
@@ -29,32 +30,37 @@ export function createFolderContext(
     const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
     const [fetchedFoldersData, setFetchedFoldersData] = useState<Record<string, Asset[]>>({});
     const [bulkSelectedData, setBulkSelectedData] = useState<Record<string, Asset[]>>({});
+    const [isFetchingFiles, setIsFetchingFiles] = useState(false);
+
     const [data, setData] = useState<Asset[] | null>([]);
 
     const fetchFiles = (path: string, refreshData?: boolean, resetFolder?: boolean) => {
-      getFilesFunc(path).then((fetched) => {
-        if (fetched === undefined) {
-          setData(null);
-          return;
-        }
-
-        setFiles((prevFiles) => {
-          const newFiles = mergeFiles(prevFiles, fetched, path) as Asset[];
-          if (prevFiles.length === 0 || refreshData) {
-            toggleFolder(newFiles[0], true, refreshData);
+      setIsFetchingFiles(true);
+      getFilesFunc(path)
+        .then((fetched) => {
+          if (fetched === undefined) {
+            setData(null);
+            return;
           }
 
-          return newFiles;
-        });
+          setFiles((prevFiles) => {
+            const newFiles = mergeFiles(prevFiles, fetched, path) as Asset[];
+            if (prevFiles.length === 0 || refreshData) {
+              toggleFolder(newFiles[0], true, refreshData);
+            }
 
-        const folderItems = fetched?.filter((f) => f.nodeType === DialFileNodeType.ITEM) as Asset[];
-        setData(folderItems);
-        setFetchedFoldersData((prev) => (refreshData ? { [path]: folderItems } : { ...prev, [path]: folderItems }));
+            return newFiles;
+          });
 
-        if (!filePath || resetFolder) {
-          setFilePath(path);
-        }
-      });
+          const folderItems = fetched?.filter((f) => f.nodeType === DialFileNodeType.ITEM) as Asset[];
+          setData(folderItems);
+          setFetchedFoldersData((prev) => (refreshData ? { [path]: folderItems } : { ...prev, [path]: folderItems }));
+
+          if (!filePath || resetFolder) {
+            setFilePath(path);
+          }
+        })
+        .finally(() => setIsFetchingFiles(false));
     };
 
     const toggleFolder = (folder: Asset, skipFetch?: boolean, collapseAll?: boolean) => {
@@ -79,6 +85,7 @@ export function createFolderContext(
     };
 
     const value: AssetsFolderContext = {
+      isFetchingFiles,
       fetchFiles,
       files,
       expandedFolders,

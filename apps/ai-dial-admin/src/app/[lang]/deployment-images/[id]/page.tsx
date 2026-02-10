@@ -1,12 +1,11 @@
 import { notFound } from 'next/navigation';
 
-import { getImage, getImageContainers, getImages, getImageVersions } from '@/src/app/actions/deployments';
+import { getImage, getImageContainers, getImageVersions } from '@/src/app/actions/deployments';
 import ImageView from '@/src/components/Images/View/ImageView';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { Container } from '@/src/models/deployments/containers';
 import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { errorObjLog } from '@/src/server/logger';
-import { ApplicationRoute } from '@/src/types/routes';
 import { getRouteByType } from '@/src/utils/deployments/entity';
 import { getImageType } from '@/src/utils/deployments/images';
 
@@ -19,13 +18,12 @@ interface Params {
 
 export default async function Page(params: Params) {
   let image: Image | null = null;
-  let images: Image[] | null = null;
   let versions: ImageVersion[] | null = null;
   let dependencies: Container[] | null = null;
 
   try {
     const imageResponse = await getImage((await params.params).id);
-    const imagesResponse = await getImages();
+
     const versionsResponse = await getImageVersions(
       imageResponse.response.name,
       getImageType(getRouteByType(imageResponse.response.$type)),
@@ -33,7 +31,6 @@ export default async function Page(params: Params) {
     const dependenciesResponses = await getImageContainers((await params.params).id);
 
     image = imageResponse.response as Image;
-    images = imagesResponse.response as Image[];
     versions = versionsResponse.response as ImageVersion[];
     dependencies = dependenciesResponses.response as Container[];
   } catch (e) {
@@ -46,13 +43,7 @@ export default async function Page(params: Params) {
 
   return (
     <SaveValidationContextProvider>
-      <ImageView
-        image={image}
-        route={ApplicationRoute.Images}
-        imagesNames={images?.map((image) => image.name).filter((name) => name !== image.name) || []}
-        versions={versions || []}
-        dependencies={dependencies || []}
-      />
+      <ImageView image={image} versions={versions || []} dependencies={dependencies || []} />
     </SaveValidationContextProvider>
   );
 }

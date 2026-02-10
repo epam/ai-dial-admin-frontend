@@ -11,6 +11,7 @@ import {
   ROLES_ENTITIES_COLUMNS,
 } from '@/src/components/AddEntitiesTab/utils';
 import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
+import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
 import { isSetNoLimitsHidden } from '@/src/components/EntityView/Roles/utils';
 import { getSetNoLimitsOperation } from '@/src/constants/grid-columns/actions';
 import { KEYS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
@@ -164,12 +165,14 @@ const TabsContent: FC<Props> = ({
     selectedFormat === ExportFormat.ADMIN && (
       <>
         {activeTab === EntityViewTab.Properties && (
-          <RoleProperties
-            selectedRole={selectedRole}
-            names={names}
-            onChangeRole={onChange}
-            isSkipRefresh={isSkipRefresh}
-          />
+          <PropertiesTabContent entity={selectedRole} id={selectedRole.name} view={ApplicationRoute.Roles}>
+            <RoleProperties
+              selectedRole={selectedRole}
+              names={names}
+              onChangeRole={onChange}
+              isSkipRefresh={isSkipRefresh}
+            />
+          </PropertiesTabContent>
         )}
         {activeTab === EntityViewTab.Entities && (
           <AddEntitiesView

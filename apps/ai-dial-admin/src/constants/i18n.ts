@@ -277,10 +277,10 @@ export enum ButtonsI18nKey {
   Delete = 'Buttons.Delete',
   Change = 'Buttons.Change',
   DeleteAll = 'Buttons.DeleteAll',
+  Download = 'Buttons.Download',
   Duplicate = 'Buttons.Duplicate',
   Save = 'Buttons.Save',
   SaveAndRedeploy = 'Buttons.SaveAndRedeploy',
-  Move = 'Buttons.Move',
   SaveAsNewVersion = 'Buttons.SaveAsNewVersion',
   Apply = 'Buttons.Apply',
   Browse = 'Buttons.Browse',
@@ -755,8 +755,7 @@ export enum FoldersI18nKey {
   FileReview = 'Folder.FileReview',
   FolderCreate = 'Folder.FolderCreate',
   FolderCreatePlaceholder = 'Folder.FolderCreatePlaceholder',
-  FolderCreateSuccess = 'Folder.FolderCreateSuccess',
-  Rename = 'Folder.Rename',
+
   FolderName = 'Folder.FolderName',
   RenameFolderError = 'Folder.RenameFolderError',
   MoveFolderError = 'Folder.MoveFolderError',
@@ -1295,4 +1294,21 @@ export enum TestSuitesI18nKey {
   ChatInterface = 'TestSuites.ChatInterface',
   Preview = 'TestSuites.Preview',
   MethodChangeWarning = 'TestSuites.MethodChangeWarning',
+}
+
+export enum FileManagerI18nKey {
+  SelectedItems = 'FileManager.SelectedItems',
+  AddSibling = 'FileManager.AddSibling',
+  AddChild = 'FileManager.AddChild',
+  Rename = 'FileManager.Rename',
+  Move = 'FileManager.Move',
+  File = 'FileManager.File',
+  Folder = 'FileManager.Folder',
+  EnterFolderName = 'FileManager.EnterFolderName',
+  NameExists = 'FileManager.NameExists',
+  ManagePermissions = 'FileManager.ManagePermissions',
+
+  // Notifications
+  CreateFolderSuccessTitle = 'FileManager.Notifications.CreateFolder.Title',
+  CreateFolderSuccessDescription = 'FileManager.Notifications.CreateFolder.Description',
 }
