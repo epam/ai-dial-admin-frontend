@@ -45,18 +45,24 @@
       @apply hidden;
     }
 
-    h1, h2, h3, h4, h5, h6 {
-     @apply mt-4 font-bold
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      @apply mt-4 font-bold;
     }
 
     p {
-     @apply mt-3
+      @apply mt-3;
     }
 
     a {
       @apply text-accent-primary;
 
-      &:hover, &:focus {
+      &:hover,
+      &:focus {
         @apply underline;
       }
     }
@@ -76,7 +82,8 @@
     table {
       @apply border-collapse mt-4;
 
-      td, th {
+      td,
+      th {
         @apply border border-solid border-primary px-3 py-2;
       }
     }
