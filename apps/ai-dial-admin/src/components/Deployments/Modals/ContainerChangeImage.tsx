@@ -17,7 +17,7 @@ import { ACTION_COLUMN, RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
 import { useI18n } from '@/src/locales/client';
 
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
-import Grid from '@/src/components/Grid/Grid';
+import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
 
 interface Props {
   isModalOpen: boolean;
@@ -105,7 +105,7 @@ const ContainerChangeImage: FC<Props> = ({
         {loading && <DialLoader size={24} />}
         {!loading && !!images.length && (
           <div className="flex flex-col gap-4 min-h-0 h-full">
-            <Grid
+            <AgGridWrapper
               rowData={images}
               columnDefs={colDefs}
               additionalGridOptions={{

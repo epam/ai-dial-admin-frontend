@@ -8,7 +8,7 @@ import { useI18n } from '@/src/locales/client';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
-import Grid from '@/src/components/Grid/Grid';
+import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
 
 interface Props {
   selected?: string;
@@ -38,7 +38,7 @@ const SelectRunnerModal: FC<Props> = ({ selected, runners, isModalOpen, onClose,
       onCancel={onClose}
     >
       <div className="flex flex-col px-6 py-4 h-full">
-        <Grid
+        <AgGridWrapper
           columnDefs={BASE_COLUMNS}
           additionalGridOptions={{
             rowSelection: { mode: 'singleRow', enableClickSelection: true },

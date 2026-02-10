@@ -6,7 +6,7 @@ import { CHECKBOX_COL_DEF } from '@/src/constants/ag-grid';
 import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import GridView from '@/src/components/Grid/GridWithColumnsPanel/GridWithColumnsPanel';
+import GridView from '@/src/components/Grid/GridView/GridView';
 
 interface Props<T> {
   isModalOpen: boolean;

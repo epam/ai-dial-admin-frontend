@@ -4,7 +4,7 @@ import { GridApi, GridReadyEvent, IRowNode } from 'ag-grid-community';
 
 import { DefaultItemType } from '@/src/components/Defaults/types';
 import { getValueByType } from '@/src/components/Defaults/utils';
-import GridView from '@/src/components/Grid/GridWithColumnsPanel/GridWithColumnsPanel';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import { BasicI18nKey } from '@/src/constants/i18n';
@@ -140,7 +140,7 @@ const TableView: FC<Props> = ({ properties, isSkipRefresh, onChangeProperties, i
     }
   });
 
-  return <GridView emptyDataTitle={t(BasicI18nKey.NoParameters)} additionalGridOptions={{ onGridReady }} />;
+  return <GridView emptyDataTitle={t(BasicI18nKey.NoParameters)} onGridReady={onGridReady} />;
 };
 
 export default TableView;

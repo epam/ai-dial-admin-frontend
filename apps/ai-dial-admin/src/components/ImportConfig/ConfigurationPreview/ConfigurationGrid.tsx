@@ -18,7 +18,7 @@ import { ActivityAuditEntity } from '@/src/types/activity-audit';
 import { EntityType } from '@/src/types/entity-type';
 import { getEmptyDataTitleI18nKey } from '@/src/utils/entities/get-empty-data-title';
 import { getEntitiesList } from '@/src/utils/entities/get-entities-list';
-import GridView from '../../Grid/GridWithColumnsPanel/GridWithColumnsPanel';
+import GridView from '@/src/components/Grid/GridView/GridView';
 
 interface Props {
   selectedTab: EntityType;

@@ -1,12 +1,12 @@
 import { FC, useEffect, useMemo, useState } from 'react';
 
-import { DialCollapsibleSidebar, DialFormPopup, DialNoDataContent, PopupSize } from '@epam/ai-dial-ui-kit';
+import { DialCollapsibleSidebar, DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 
 import FolderList from '@/src/components/Common/FolderList/FolderList';
 import { generatePromptRowDataForDelete } from '@/src/components/Common/FolderList/utils';
 import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRenderer';
-import Grid from '@/src/components/Grid/Grid';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { listViewTitleMap } from '@/src/components/ListView/constants';
 import { BasicI18nKey, ButtonsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
@@ -114,15 +114,7 @@ const DeleteFolder: FC<Props> = ({ isModalOpen, view, selectedFolder, isBulkDele
             />
           </DialCollapsibleSidebar>
           <div className="flex-1 min-h-0">
-            {rowData.length ? (
-              <Grid
-                additionalGridOptions={{
-                  onGridReady,
-                }}
-              />
-            ) : (
-              <DialNoDataContent title={t(BasicI18nKey.NoData)} />
-            )}
+            <GridView emptyDataTitle={t(BasicI18nKey.NoData)} onGridReady={onGridReady} />
           </div>
         </div>
       </div>

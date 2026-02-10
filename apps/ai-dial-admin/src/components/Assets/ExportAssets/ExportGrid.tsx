@@ -1,10 +1,8 @@
 import { FC, useEffect, useRef, useState } from 'react';
 
-import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
-import { GridApi, GridReadyEvent } from 'ag-grid-community';
+import { GridApi, GridOptions, GridReadyEvent } from 'ag-grid-community';
 
-import Grid from '@/src/components/Grid/Grid';
-import { CHECKBOX_COL_DEF } from '@/src/constants/ag-grid';
+import { MULTI_ROW_SELECTION } from '@/src/constants/ag-grid';
 import { EXPORT_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { STRINGS_DELIMITER } from '@/src/constants/prompt';
@@ -13,6 +11,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
+import GridView from '../../Grid/GridView/GridView';
 import { changeExportGridData, getExportGridData } from './export';
 
 interface Props {
@@ -116,38 +115,26 @@ const ExportGrid: FC<Props> = ({ route, context }) => {
     setRowData(rowData);
   }, [filePath, folderContext?.fetchedFoldersData, folderContext?.bulkSelectedData, route]);
 
+  const gridOptions: GridOptions = {
+    ...MULTI_ROW_SELECTION,
+    onSelectionChanged: (event) => {
+      setIsSkipRefresh(true);
+      const selectedRows = event.api.getSelectedRows();
+      folderContext?.setBulkSelectedData(
+        changeExportGridData(
+          route,
+          folderContext?.fetchedFoldersData,
+          folderContext?.bulkSelectedData,
+          selectedRows,
+          folderContext?.filePath,
+        ),
+      );
+    },
+  };
+
   return (
     <div className="flex-1 min-h-0">
-      {rowData.length ? (
-        <Grid
-          additionalGridOptions={{
-            rowSelection: {
-              mode: 'multiRow',
-              headerCheckbox: true,
-              selectAll: 'filtered',
-            },
-            selectionColumnDef: {
-              ...CHECKBOX_COL_DEF,
-            },
-            onSelectionChanged: (event) => {
-              setIsSkipRefresh(true);
-              const selectedRows = event.api.getSelectedRows();
-              folderContext?.setBulkSelectedData(
-                changeExportGridData(
-                  route,
-                  folderContext?.fetchedFoldersData,
-                  folderContext?.bulkSelectedData,
-                  selectedRows,
-                  folderContext?.filePath,
-                ),
-              );
-            },
-            onGridReady,
-          }}
-        />
-      ) : (
-        <DialNoDataContent title={t(BasicI18nKey.NoData)} />
-      )}
+      <GridView emptyDataTitle={t(BasicI18nKey.NoData)} additionalGridOptions={gridOptions} onGridReady={onGridReady} />
     </div>
   );
 };

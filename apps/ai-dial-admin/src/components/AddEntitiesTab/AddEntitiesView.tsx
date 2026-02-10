@@ -6,7 +6,7 @@ import { createPortal } from 'react-dom';
 
 import { ENTITY_COLUMNS, getAvailableEntities, getEntitiesGridData } from '@/src/components/AddEntitiesTab/utils';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
-import GridView from '@/src/components/Grid/GridWithColumnsPanel/GridWithColumnsPanel';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getOpenInNewTabOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
@@ -139,10 +139,7 @@ const AddEntitiesView: FC<Props> = ({
             />
           )}
         </div>
-        <GridView
-          additionalGridOptions={{ onGridReady }}
-          emptyDataTitle={emptyDataTitle || t(EntitiesI18nKey.NoEntities)}
-        />
+        <GridView onGridReady={onGridReady} emptyDataTitle={emptyDataTitle || t(EntitiesI18nKey.NoEntities)} />
       </div>
       {isModalOpen &&
         createPortal(

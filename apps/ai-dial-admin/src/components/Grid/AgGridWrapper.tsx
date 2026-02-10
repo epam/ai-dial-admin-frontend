@@ -45,7 +45,7 @@ export interface AgGridProps<T> {
   rowData?: T[] | null;
   additionalGridOptions?: GridOptions;
   storageKey?: string;
-  onGridReady?: (gridApi: GridApi) => void;
+  onGridReady?: (gridApi: GridReadyEvent) => void;
 }
 
 ModuleRegistry.registerModules([
@@ -126,10 +126,10 @@ const AgGridWrapper = <T extends object>({
     }
   };
 
-  const onGridReady = (e: GridReadyEvent) => {
-    setGridApi(e.api);
-    gridReadyCb?.(e.api);
-    e.api.sizeColumnsToFit();
+  const onGridReady = (event: GridReadyEvent) => {
+    setGridApi(event.api);
+    gridReadyCb?.(event);
+    event.api.sizeColumnsToFit();
 
     const defaultSorts =
       columnDefs
@@ -142,8 +142,8 @@ const AgGridWrapper = <T extends object>({
             }) as ColumnState,
         ) || [];
     const columns = columnDefs?.map((col) => ({ ...col, sort: undefined }));
-    e.api?.updateGridOptions({ columnDefs: columns, rowData });
-    setGridColumnsState(e, defaultSorts);
+    event.api?.updateGridOptions({ columnDefs: columns, rowData });
+    setGridColumnsState(event, defaultSorts);
   };
 
   useEffect(() => {

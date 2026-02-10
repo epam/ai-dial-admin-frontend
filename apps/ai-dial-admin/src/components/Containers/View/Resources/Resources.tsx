@@ -5,7 +5,7 @@ import { Resource } from '@/src/models/deployments/containers';
 import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRenderer';
 import { useI18n } from '@/src/locales/client';
 import { getContainerResources } from '@/src/app/actions/deployments';
-import Grid from '@/src/components/Grid/Grid';
+import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 
 interface Props {
@@ -52,7 +52,7 @@ const Resources: FC<Props> = ({ containerId }) => {
   if (!loading && !resources?.length) {
     return <DialNoDataContent title={t(EntitiesI18nKey.NoResources)} />;
   }
-  return resources && <Grid columnDefs={RESOURCES_COLUMNS} rowData={resources} />;
+  return resources && <AgGridWrapper columnDefs={RESOURCES_COLUMNS} rowData={resources} />;
 };
 
 export default Resources;

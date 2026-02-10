@@ -24,7 +24,7 @@ import {
   generateFileRowDataForImportGrid,
   generateAssetRowDataForImportGrid,
 } from '@/src/components/EntityListView/Import/utils';
-import Grid from '@/src/components/Grid/Grid';
+import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
 import { FoldersI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { FileImportGridData, FileImportMap } from '@/src/models/file';
@@ -195,7 +195,7 @@ const FolderCreateReview: FC<Props> = ({
         {t(MenuI18nKey.Files)}: {count || 0}
       </div>
       <div className="min-h-0 flex-1">
-        <Grid additionalGridOptions={{ onGridReady, onCellValueChanged }} />
+        <AgGridWrapper additionalGridOptions={{ onGridReady, onCellValueChanged }} />
       </div>
     </div>
   );

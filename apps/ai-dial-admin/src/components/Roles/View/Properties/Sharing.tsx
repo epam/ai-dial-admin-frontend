@@ -6,7 +6,7 @@ import { IconReload } from '@tabler/icons-react';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 
 import { SHARING_COLUMNS } from '@/src/components/EntityView/Roles/utils';
-import Grid from '@/src/components/Grid/Grid';
+import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
 import { SharingGridData } from '@/src/components/Roles/models';
 import {
   getDefaultPlaceholder,
@@ -133,7 +133,7 @@ const RoleSharing: FC<Props> = ({ isSkipRefresh, selectedRole, onChangeRole }) =
           />
         )}
       </div>
-      <Grid additionalGridOptions={{ onGridReady }} />
+      <AgGridWrapper additionalGridOptions={{ onGridReady }} />
     </div>
   );
 };

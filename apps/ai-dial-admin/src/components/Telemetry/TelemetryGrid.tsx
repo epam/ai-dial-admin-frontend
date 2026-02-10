@@ -8,7 +8,7 @@ import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { TelemetryData, TelemetryQuery } from '@/src/models/telemetry';
 import { getGridData } from '@/src/utils/telemetry';
-import GridView from '../Grid/GridWithColumnsPanel/GridWithColumnsPanel';
+import GridView from '@/src/components/Grid/GridView/GridView';
 
 const additionalGridOptions: GridOptions = {
   defaultColDef: {

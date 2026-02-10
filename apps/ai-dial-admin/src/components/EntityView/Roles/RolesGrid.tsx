@@ -1,10 +1,10 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
+import { DialGhostButton, DialPrimaryButton, DialSwitch } from '@epam/ai-dial-ui-kit';
 import { IconPlus, IconReload } from '@tabler/icons-react';
 import { GridApi, GridReadyEvent, IRowNode } from 'ag-grid-community';
-import { DialSwitch, DialPrimaryButton, DialNoDataContent, DialGhostButton } from '@epam/ai-dial-ui-kit';
 
-import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { ButtonsI18nKey, EntitiesI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
@@ -12,7 +12,6 @@ import { EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialRole } from '@/src/models/dial/role';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getRolesColumnDefs, getRolesGridData, isResetAvailable } from './utils';
-import GridView from '../../Grid/GridWithColumnsPanel/GridWithColumnsPanel';
 
 interface Props {
   entity: EntityRoleLimits;
@@ -121,7 +120,8 @@ const RolesGrid: FC<Props> = ({
       </div>
       <GridView
         emptyDataTitle={t(EntitiesI18nKey.NoRoles)}
-        additionalGridOptions={{ onGridReady, suppressCellFocus: true, suppressHeaderFocus: true }}
+        onGridReady={onGridReady}
+        additionalGridOptions={{ suppressCellFocus: true, suppressHeaderFocus: true }}
       />
     </div>
   );

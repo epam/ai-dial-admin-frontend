@@ -8,7 +8,7 @@ import { useI18n } from '@/src/locales/client';
 import { Container } from '@/src/models/deployments/containers';
 
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
-import Grid from '@/src/components/Grid/Grid';
+import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
 
 interface Props {
   selectedId?: string;
@@ -38,7 +38,7 @@ const SelectContainerModal: FC<Props> = ({ selectedId, containers, isModalOpen, 
       onCancel={onClose}
     >
       <div className="flex flex-col px-6 py-4 h-full">
-        <Grid
+        <AgGridWrapper
           columnDefs={SOURCE_CONTAINERS_COLUMNS}
           additionalGridOptions={{
             rowSelection: { mode: 'singleRow', enableClickSelection: true },

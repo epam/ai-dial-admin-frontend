@@ -5,7 +5,7 @@ import { DialLoader } from '@epam/ai-dial-ui-kit';
 
 import { getModelsTokenizers } from '@/src/app/[lang]/models/actions';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
-import Grid from '@/src/components/Grid/Grid';
+import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
 import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
 import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -42,7 +42,7 @@ const TokenizedModelsGrid: FC<Props> = ({ onSelectModelId, selectedModel }) => {
   return isLoading ? (
     <DialLoader size={40} />
   ) : (
-    <Grid
+    <AgGridWrapper
       columnDefs={BASE_COLUMNS}
       rowData={data}
       additionalGridOptions={{

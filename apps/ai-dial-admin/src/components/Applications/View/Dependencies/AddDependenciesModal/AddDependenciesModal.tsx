@@ -2,9 +2,10 @@
 import { FC, useState } from 'react';
 
 import { DialFormPopup, DialNoDataContent, PopupSize } from '@epam/ai-dial-ui-kit';
+import { GridOptions } from 'ag-grid-community';
 
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
-import Grid from '@/src/components/Grid/Grid';
+import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
 import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
 import { DEPENDENCIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
@@ -24,6 +25,21 @@ const AddDependenciesModal: FC<Props> = ({ isModalOpen, entities, entityType, on
   const t = useI18n();
 
   const [selectedEntityName, setSelectedEntityName] = useState<string | undefined>();
+
+  const gridOptions: GridOptions = {
+    rowSelection: { mode: 'singleRow', enableClickSelection: true },
+    selectionColumnDef: {
+      ...RADIO_BUTTON_COL_DEF,
+      cellRenderer: (data: { data?: EntitiesGridData; id: string }) => (
+        <RadioButtonRenderer inputId={data.data?.name as string} isChecked={data.data?.name === selectedEntityName} />
+      ),
+    },
+    onRowSelected: (event) => {
+      if (event.node.isSelected()) {
+        setSelectedEntityName(event.data.name);
+      }
+    },
+  };
 
   return (
     <DialFormPopup
@@ -46,27 +62,7 @@ const AddDependenciesModal: FC<Props> = ({ isModalOpen, entities, entityType, on
           />
         ) : (
           <div className="flex-1 flex flex-col min-h-0 w-full">
-            <Grid
-              columnDefs={DEPENDENCIES_COLUMNS}
-              rowData={entities}
-              additionalGridOptions={{
-                rowSelection: { mode: 'singleRow', enableClickSelection: true },
-                selectionColumnDef: {
-                  ...RADIO_BUTTON_COL_DEF,
-                  cellRenderer: (data: { data?: EntitiesGridData; id: string }) => (
-                    <RadioButtonRenderer
-                      inputId={data.data?.name as string}
-                      isChecked={data.data?.name === selectedEntityName}
-                    />
-                  ),
-                },
-                onRowSelected: (event) => {
-                  if (event.node.isSelected()) {
-                    setSelectedEntityName(event.data.name);
-                  }
-                },
-              }}
-            />
+            <AgGridWrapper columnDefs={DEPENDENCIES_COLUMNS} rowData={entities} additionalGridOptions={gridOptions} />
           </div>
         )}
       </div>

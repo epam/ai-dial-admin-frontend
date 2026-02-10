@@ -7,7 +7,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialApplication } from '@/src/models/dial/application';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
-import GridView from '../../Grid/GridWithColumnsPanel/GridWithColumnsPanel';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import CollapsableSection from './CollapsableSection';
 import { getInterceptorsGridData } from './utils';
 

@@ -5,7 +5,7 @@ import { getImagesWithVersions } from '@/src/app/actions/deployments';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 import ContainerProperties from '@/src/components/Containers/Fields/ContainerProperties';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
-import Grid from '@/src/components/Grid/Grid';
+import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
 import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
 import { CREATE_CONTAINER_STEPS } from '@/src/constants/deployments/containers';
 import { IMAGES_LIST_FOR_CONTAINER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
@@ -134,7 +134,7 @@ const ContainerCreate: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
             <>
               {loading && <DialLoader size={40} />}
               {!loading && !!images.length && (
-                <Grid
+                <AgGridWrapper
                   rowData={images}
                   columnDefs={colDefs}
                   additionalGridOptions={{

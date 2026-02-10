@@ -3,7 +3,7 @@ import { GridApi, IRowNode } from 'ag-grid-community';
 import { FILES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { DialFile } from '@/src/models/dial/file';
 import { ActionType } from '@/src/models/dial/publications';
-import Grid from '@/src/components/Grid/Grid';
+import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
 import { ApplicationRoute } from '@/src/types/routes';
 import { FILE_DOWNLOAD, FILE_PREVIEW, PREVIEW_EXTENSIONS } from '@/src/constants/file';
 import { getGridFileColumns, getGridFileData, getGridFileDataFromString } from '@/src/utils/files/grid-data';
@@ -52,7 +52,7 @@ const FilesList: FC<Props> = ({ files, action }) => {
 
   const columnDefs = getGridFileColumns(FILES_COLUMNS, actions);
 
-  return <Grid columnDefs={columnDefs} rowData={rowData} />;
+  return <AgGridWrapper columnDefs={columnDefs} rowData={rowData} />;
 };
 
 export default FilesList;

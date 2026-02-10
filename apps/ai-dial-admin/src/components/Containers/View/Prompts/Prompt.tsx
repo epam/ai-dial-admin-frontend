@@ -5,7 +5,7 @@ import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { Prompt as PromptType } from '@/src/models/deployments/containers';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
-import Grid from '@/src/components/Grid/Grid';
+import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
 import classNames from 'classnames';
 
 interface Props {
@@ -49,7 +49,7 @@ const Prompt: FC<Props> = ({ prompt }) => {
         {!!prompt.arguments?.length && (
           <div>
             <p className="small text-secondary">{t(EntityFieldsI18nKey.Arguments)}</p>
-            <Grid
+            <AgGridWrapper
               columnDefs={PROMPT_ARGUMENT_COLUMNS}
               rowData={prompt.arguments.map((argument) => {
                 return { ...argument, required: String(argument.required) };

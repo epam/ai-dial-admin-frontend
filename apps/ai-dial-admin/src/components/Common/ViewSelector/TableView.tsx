@@ -2,7 +2,8 @@ import { FC } from 'react';
 
 import { ColDef } from 'ag-grid-community';
 
-import Grid from '@/src/components/Grid/Grid';
+import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
+import GridView from '@/src/components/Grid/GridView/GridView';
 
 interface Props {
   title: string;
@@ -16,7 +17,8 @@ const TableView: FC<Props> = ({ title, columnDefs, rowData }) => {
       <div className="flex flex-row justify-between mb-2">
         <p className="small text-secondary">{title}</p>
       </div>
-      <Grid columnDefs={columnDefs} rowData={rowData} />
+      <GridView emptyDataTitle={t(EntitiesI18nKey.NoDependencies)} columnDefs={columnDefs} rowData={rowData} />
+      <AgGridWrapper columnDefs={columnDefs} rowData={rowData} />
     </div>
   );
 };

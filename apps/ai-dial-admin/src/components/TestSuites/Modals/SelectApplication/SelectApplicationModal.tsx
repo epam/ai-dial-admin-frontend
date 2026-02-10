@@ -3,7 +3,7 @@ import { FC, useState } from 'react';
 import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
-import Grid from '@/src/components/Grid/Grid';
+import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
 import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
 import { EVALUATION_DEPLOYMENTS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
@@ -38,7 +38,7 @@ const SelectApplicationModal: FC<Props> = ({ selected, apps, isModalOpen, onClos
       onCancel={onClose}
     >
       <div className="flex flex-col px-6 py-4 h-full">
-        <Grid
+        <AgGridWrapper
           columnDefs={EVALUATION_DEPLOYMENTS_COLUMNS(t)}
           additionalGridOptions={{
             rowSelection: { mode: 'singleRow', enableClickSelection: true },

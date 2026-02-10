@@ -8,7 +8,7 @@ import classNames from 'classnames';
 import FolderCollapse from '@/public/images/icons/folder-collapse.svg';
 import ExportGrid from '@/src/components/Assets/ExportAssets/ExportGrid';
 import FolderList from '@/src/components/Common/FolderList/FolderList';
-import GridWithColumnsPanel from '@/src/components/Grid/GridWithColumnsPanel/GridWithColumnsPanel';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { FoldersI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
@@ -99,7 +99,7 @@ const ListView = <T extends object>({
         {isBulkView ? (
           <ExportGrid context={context} route={view} />
         ) : (
-          <GridWithColumnsPanel
+          <GridView
             columnDefs={columnDefs}
             data={data}
             additionalGridOptions={{ ...additionalGridOptions }}

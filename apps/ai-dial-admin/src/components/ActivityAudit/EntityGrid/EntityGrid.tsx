@@ -6,7 +6,7 @@ import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
 import ActivityDetails from '@/src/components/ActivityAudit/Modals/Details';
 import { getCurrentAndRollbackEntities, getColumnsByParameter } from '@/src/components/ActivityAudit/EntityGrid/utils';
-import Grid from '@/src/components/Grid/Grid';
+import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ActivityAuditDiff, DialActivity } from '@/src/models/activity-audit';
@@ -96,7 +96,7 @@ const AuditEntityGrid: FC<Props> = ({
     </div>
   ) : (
     <div className="w-full h-full relative">
-      <Grid
+      <AgGridWrapper
         additionalGridOptions={{
           domLayout: 'autoHeight',
           onGridReady,
