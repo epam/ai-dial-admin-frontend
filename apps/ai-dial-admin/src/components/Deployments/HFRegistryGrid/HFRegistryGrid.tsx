@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { GridApi, GridOptions, IDatasource, IGetRowsParams } from 'ag-grid-community';
+import { CellClickedEvent, ColDef, GridApi, GridOptions, IDatasource, IGetRowsParams } from 'ag-grid-community';
 import { isEqual } from 'lodash';
 
 import { ApplicationRoute } from '@/src/types/routes';
@@ -9,9 +9,9 @@ import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { getHuggingFaceModels } from '@/src/app/actions/deployments';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 import { DialGhostButton } from '@epam/ai-dial-ui-kit';
-import { IconColumns2 } from '@tabler/icons-react';
+import { IconColumns2, IconFileDescription } from '@tabler/icons-react';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-import { infiniteGridOptions, RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
+import { infiniteGridOptions, RADIO_BUTTON_COL_DEF, UTILITY_COLUMN } from '@/src/constants/ag-grid';
 import { HF_REGISTRY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { emptyDataTitleMap, listViewTitleMap } from '@/src/components/ListView/constants';
 import { useI18n } from '@/src/locales/client';
@@ -24,9 +24,10 @@ interface Props {
   route: ApplicationRoute;
   modelName: string;
   setModelName: (name: string) => void;
+  showModelDescription: (name: string, sha: string) => void;
 }
 
-const HfRegistryGrid: FC<Props> = ({ route, modelName, setModelName }) => {
+const HfRegistryGrid: FC<Props> = ({ route, modelName, setModelName, showModelDescription }) => {
   const t = useI18n();
   const [showColumnsPanel, setShowColumnsPanel] = useState(false);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
@@ -43,6 +44,11 @@ const HfRegistryGrid: FC<Props> = ({ route, modelName, setModelName }) => {
     onRowSelected: (event) => {
       if (event.node.isSelected()) {
         setModelName(event.data?.id);
+      }
+    },
+    onCellClicked: (event: CellClickedEvent) => {
+      if (event.colDef.field === 'detailsColumn') {
+        showModelDescription(event.data?.id, event.data?.sha);
       }
     },
   };
@@ -108,7 +114,18 @@ const HfRegistryGrid: FC<Props> = ({ route, modelName, setModelName }) => {
     setGridApi(api);
   }, []);
 
-  const columnDefs = [...HF_REGISTRY_COLUMNS];
+  const columnDefs = [
+    ...HF_REGISTRY_COLUMNS,
+    {
+      ...UTILITY_COLUMN,
+      field: 'detailsColumn',
+      cellRenderer: () => <IconFileDescription className="text-secondary" />,
+      cellClass: 'relative',
+      pinned: 'right',
+      lockPinned: true,
+    } as ColDef,
+  ];
+
   const toggleColumnsPanel = () => setShowColumnsPanel(!showColumnsPanel);
 
   return (
@@ -122,6 +139,7 @@ const HfRegistryGrid: FC<Props> = ({ route, modelName, setModelName }) => {
       toggleColumnsPanel={toggleColumnsPanel}
       storageKey={`${route}/registry`}
       onGridReady={onGridReady}
+      allowPadding={false}
     >
       <div className="flex gap-4 items-end">
         <ResetFiltersButton gridApi={gridApi} />
