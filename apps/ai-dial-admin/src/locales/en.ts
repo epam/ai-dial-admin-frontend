@@ -1314,6 +1314,9 @@ export default {
     ChatInterface: 'Chat interface',
     Preview: 'Preview',
     ChangeMethod: 'Change method',
+    ImportSuccess: 'Test cases imported successfully',
+    ImportSuccessDescription: 'You can now see them in the list of test cases',
+    ImportFailed: 'Test cases import failed',
     MethodChangeWarning:
       'Changing the method will significantly affect the test suite, including configuration and results. Existing settings may be updated or reset.',
   },
