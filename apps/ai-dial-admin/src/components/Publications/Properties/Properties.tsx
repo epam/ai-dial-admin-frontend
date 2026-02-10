@@ -67,7 +67,7 @@ const BasePublicationProperties: FC<Props> = ({ view, publication, children, app
   }, [view, t, indicatorClassName, publication.action, publication.author, runnerId, runner]);
 
   return (
-    <div className="h-full flex flex-col divide-y divide-primary w-full">
+    <div className="h-full flex flex-col w-full">
       <EntityInfoHeader view={view} prefix={prefix} postfix={<FoldersStorageLabel asset={publication} />} />
 
       <div className="flex-1 min-h-0 mt-8 relative">
