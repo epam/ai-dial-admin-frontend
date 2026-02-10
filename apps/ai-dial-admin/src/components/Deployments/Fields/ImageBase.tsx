@@ -5,7 +5,7 @@ import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/
 import { Image } from '@/src/models/deployments/images';
 import { FieldError } from '@/src/models/error';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { getSemanticVersionError } from '@/src/utils/deployments/validation';
+import { getSemanticVersionError, getImageNameError } from '@/src/utils/deployments/validation';
 import { getErrorForName } from '@/src/utils/validation/name-error';
 import { useI18n } from '@/src/locales/client';
 
@@ -25,7 +25,7 @@ interface Props {
   verifyVersion: (image: Image) => void;
 }
 
-const BaseFields: FC<Props> = ({
+const ImageBase: FC<Props> = ({
   image,
   setImage,
   isModal = false,
@@ -46,12 +46,11 @@ const BaseFields: FC<Props> = ({
       field: 'name',
       isValid: !getErrorForName(image.name, [], t, false, false),
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [dispatch, image.name, t]);
 
   useEffect(() => {
     if (resetCounter || (image.name != null && image.name.length > 0)) {
-      const error = getErrorForName(image.name, [], t, false, false);
+      const error = getImageNameError(image.name, t);
       setNameError(error);
       dispatch({
         type: ValidationActionType.SetField,
@@ -63,7 +62,7 @@ const BaseFields: FC<Props> = ({
 
   const onChangeVersion = useCallback(
     (version?: string) => {
-      const error = getSemanticVersionError(versionsMap, image as { name: string }, t, version);
+      const error = getSemanticVersionError(versionsMap, image.name, t, version);
       dispatch({
         type: ValidationActionType.SetField,
         field: 'version',
@@ -133,4 +132,4 @@ const BaseFields: FC<Props> = ({
   );
 };
 
-export default BaseFields;
+export default ImageBase;
