@@ -13,7 +13,7 @@ interface Props {
   setImage: (image: Image) => void;
 }
 
-const BranchFields: FC<Props> = ({ image, isModal = false, setImage }) => {
+const Branch: FC<Props> = ({ image, isModal = false, setImage }) => {
   const t = useI18n();
   const className = useMemo(() => getControlClassName(isModal), [isModal]);
 
@@ -67,4 +67,4 @@ const BranchFields: FC<Props> = ({ image, isModal = false, setImage }) => {
   );
 };
 
-export default BranchFields;
+export default Branch;
