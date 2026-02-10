@@ -12,7 +12,7 @@ interface Props {
   setImage: (image: Image) => void;
 }
 
-const TransportField: FC<Props> = ({ image, setImage }) => {
+const ImageTransport: FC<Props> = ({ image, setImage }) => {
   const t = useI18n();
 
   const imageTransports = TRANSPORT_TYPES(t);
@@ -38,4 +38,4 @@ const TransportField: FC<Props> = ({ image, setImage }) => {
   );
 };
 
-export default TransportField;
+export default ImageTransport;
