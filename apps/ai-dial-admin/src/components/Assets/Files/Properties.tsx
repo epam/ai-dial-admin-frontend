@@ -4,7 +4,7 @@ import { GridApi, IRowNode } from 'ag-grid-community';
 
 import Field from '@/src/components/Common/Field/Field';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
-import Grid from '@/src/components/Grid/Grid';
+import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
 import { FILE_DOWNLOAD, FILE_PREVIEW, PREVIEW_EXTENSIONS } from '@/src/constants/file';
 import { getDownloadOperation, getPreviewOperation } from '@/src/constants/grid-columns/actions';
 import { FILES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
@@ -51,7 +51,7 @@ const FileProperties: FC<Props> = ({ file, onChangeFile }) => {
     <div className="flex flex-col gap-y-8">
       <div className="flex flex-col">
         <Field fieldTitle={t(EntitiesI18nKey.Source)} />
-        <Grid columnDefs={columnDefs} rowData={rowData} />
+        <AgGridWrapper columnDefs={columnDefs} rowData={rowData} />
       </div>
       <FilePath
         value={file.folderId}

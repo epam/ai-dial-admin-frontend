@@ -1,12 +1,13 @@
-import { DialFormPopup, DialNoDataContent, PopupSize } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 import { ColDef, GridOptions, SelectionChangedEvent } from 'ag-grid-community';
 import { useState } from 'react';
 
-import Grid from '@/src/components/Grid/Grid';
 import { CHECKBOX_COL_DEF } from '@/src/constants/ag-grid';
 import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import GridView from '@/src/components/Grid/GridWithColumnsPanel/GridWithColumnsPanel';
+
 interface Props<T> {
   isModalOpen: boolean;
   modalTitle: string;
@@ -42,7 +43,7 @@ const AddEntitiesGrid = <T extends object>({
     selectionColumnDef: {
       ...CHECKBOX_COL_DEF,
     },
-    onSelectionChanged: onSelectionChanged,
+    onSelectionChanged,
   };
 
   return (
@@ -60,11 +61,12 @@ const AddEntitiesGrid = <T extends object>({
       onCancel={onClose}
     >
       <div className="flex h-full flex-col px-6 py-4 min-h-0">
-        {!entities.length ? (
-          <DialNoDataContent title={emptyTitle} />
-        ) : (
-          <Grid columnDefs={columnDefs} rowData={entities} additionalGridOptions={additionalGridOptions} />
-        )}
+        <GridView
+          emptyDataTitle={emptyTitle}
+          columnDefs={columnDefs}
+          rowData={entities}
+          additionalGridOptions={additionalGridOptions}
+        />
       </div>
     </DialFormPopup>
   );

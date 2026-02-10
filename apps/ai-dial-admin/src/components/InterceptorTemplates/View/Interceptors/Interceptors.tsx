@@ -1,8 +1,7 @@
-import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { getInterceptorsList } from '@/src/app/[lang]/interceptors/actions';
-import Grid from '@/src/components/Grid/Grid';
+import GridView from '@/src/components/Grid/GridWithColumnsPanel/GridWithColumnsPanel';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
 import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
@@ -49,15 +48,7 @@ const Interceptors: FC<Props> = ({ interceptorList }) => {
     fetchInterceptors();
   }, [interceptorList, showNotification]);
 
-  return (
-    <>
-      {!interceptorList?.length || !interceptors.length ? (
-        <DialNoDataContent title={t(EntitiesI18nKey.NoInterceptors)} />
-      ) : (
-        <Grid columnDefs={colDefs} rowData={interceptors} />
-      )}
-    </>
-  );
+  return <GridView emptyDataTitle={t(EntitiesI18nKey.NoInterceptors)} columnDefs={colDefs} rowData={interceptors} />;
 };
 
 export default Interceptors;

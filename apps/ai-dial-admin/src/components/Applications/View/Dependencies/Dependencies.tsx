@@ -1,12 +1,10 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
-
-import Grid from '@/src/components/Grid/Grid';
+import GridView from '@/src/components/Grid/GridWithColumnsPanel/GridWithColumnsPanel';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getOpenInNewTabOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
-import { DEPENDENCIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { TYPE_COLUMN } from '@/src/constants/grid-columns/base-columns';
+import { DEPENDENCIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, MenuI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication } from '@/src/models/dial/application';
@@ -89,11 +87,7 @@ const Dependencies: FC<Props> = ({ application, applications, models, onChange }
           addDependency={onAddDependency}
         />
       </div>
-      {!application.dependencies?.length ? (
-        <DialNoDataContent title={t(EntitiesI18nKey.NoDependencies)} />
-      ) : (
-        <Grid columnDefs={columns} rowData={rowData} />
-      )}
+      <GridView emptyDataTitle={t(EntitiesI18nKey.NoDependencies)} columnDefs={columns} rowData={rowData} />;
     </div>
   );
 };

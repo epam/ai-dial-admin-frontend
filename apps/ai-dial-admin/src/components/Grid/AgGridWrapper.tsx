@@ -38,11 +38,11 @@ import { useCallback, useEffect, useState } from 'react';
 import { baseColumnComparator } from './comparators/base-column-comparator';
 import { ROW_HEIGHT } from './constants';
 import FloatingFilter from './FloatingFilter/FloatingFilter';
-import { getColumnsStateFromStorage, GridModel, saveColumnsStateToStorage } from './grid-columns';
+import { getColumnsStateFromStorage, GridModel, saveColumnsStateToStorage } from './utils';
 
-interface Props<T> {
+export interface AgGridProps<T> {
   columnDefs?: ColDef[];
-  rowData?: T[];
+  rowData?: T[] | null;
   additionalGridOptions?: GridOptions;
   storageKey?: string;
   onGridReady?: (gridApi: GridApi) => void;
@@ -88,13 +88,13 @@ const GRID_THEME_COLORS = {
   },
 };
 
-const Grid = <T extends object>({
+const AgGridWrapper = <T extends object>({
   columnDefs,
   rowData,
   additionalGridOptions,
   storageKey,
   onGridReady: gridReadyCb,
-}: Props<T>) => {
+}: AgGridProps<T>) => {
   const [gridApi, setGridApi] = useState<GridApi>();
 
   const onStateChanged = useCallback(
@@ -205,4 +205,4 @@ const Grid = <T extends object>({
   );
 };
 
-export default Grid;
+export default AgGridWrapper;

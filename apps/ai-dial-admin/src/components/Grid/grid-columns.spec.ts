@@ -1,6 +1,6 @@
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storage';
-import { saveColumnVisibilityToStorage, getColumnVisibilityFromStorage } from './grid-columns';
+import { saveColumnVisibilityToStorage, getColumnVisibilityFromStorage } from './utils';
 import { describe, expect, test, vi } from 'vitest';
 
 vi.mock('@/src/utils/local-storage', () => ({

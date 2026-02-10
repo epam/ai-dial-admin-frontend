@@ -1,11 +1,10 @@
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import { GridApi, GridReadyEvent, IRowNode } from 'ag-grid-community';
 
 import { DefaultItemType } from '@/src/components/Defaults/types';
 import { getValueByType } from '@/src/components/Defaults/utils';
-import Grid from '@/src/components/Grid/Grid';
+import GridView from '@/src/components/Grid/GridWithColumnsPanel/GridWithColumnsPanel';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import { BasicI18nKey } from '@/src/constants/i18n';
@@ -141,11 +140,7 @@ const TableView: FC<Props> = ({ properties, isSkipRefresh, onChangeProperties, i
     }
   });
 
-  return !properties.length ? (
-    <DialNoDataContent title={t(BasicI18nKey.NoParameters)} />
-  ) : (
-    <Grid additionalGridOptions={{ onGridReady }} />
-  );
+  return <GridView emptyDataTitle={t(BasicI18nKey.NoParameters)} additionalGridOptions={{ onGridReady }} />;
 };
 
 export default TableView;
