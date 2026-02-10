@@ -3,8 +3,6 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { cloneDeep } from 'lodash';
-
 import { createPrompt, getPrompts, movePrompts, removePrompt, updatePrompt } from '@/src/app/[lang]/prompts/actions';
 import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
 import AssetHeader from '@/src/components/EntityHeaderControls/AssetHeader';
@@ -43,7 +41,7 @@ const PromptView: FC<Props> = ({ originalPrompt, etag, prompts }) => {
   const getReqRef = useRef(useProtectedRequest());
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
-  const [selectedPrompt, setSelectedPrompt] = useState(cloneDeep(originalPrompt));
+  const [selectedPrompt, setSelectedPrompt] = useState(structuredClone(originalPrompt));
   const [isChanged, setIsChanged] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
 
@@ -58,7 +56,7 @@ const PromptView: FC<Props> = ({ originalPrompt, etag, prompts }) => {
   );
 
   useEffect(() => {
-    setSelectedPrompt(cloneDeep(originalPrompt));
+    setSelectedPrompt(structuredClone(originalPrompt));
   }, [originalPrompt]);
 
   useEffect(() => {
@@ -68,7 +66,7 @@ const PromptView: FC<Props> = ({ originalPrompt, etag, prompts }) => {
   }, [selectedPrompt, originalPrompt]);
 
   const onDiscard = useCallback(() => {
-    setSelectedPrompt(cloneDeep(originalPrompt));
+    setSelectedPrompt(structuredClone(originalPrompt));
     setAddedVersions([]);
   }, [originalPrompt]);
 
@@ -94,16 +92,15 @@ const PromptView: FC<Props> = ({ originalPrompt, etag, prompts }) => {
             ),
           );
           if (isNeedToMove) {
-            const responsePrompt = res.response as DialPrompt;
-            getPrompts(addTrailingSlash(responsePrompt.folderId)).then((prompts) => {
-              const pathsToMove = getListOfPathsToMove(responsePrompt, null, prompts || []);
+            getPrompts(addTrailingSlash(updatedEntity.folderId)).then((prompts) => {
+              const pathsToMove = getListOfPathsToMove(updatedEntity, null, prompts || []);
               const newPath = removeTrailingSlash(selectedPrompt.folderId);
               movePrompts(pathsToMove, newPath).then((r) => {
                 if (r.every((response) => response.success)) {
                   router.push(
                     getUrnForEntity(ApplicationRoute.Prompts, {
-                      name: (res.response as DialPrompt).name,
-                      path: changePath((res.response as DialPrompt).path, newPath),
+                      name: updatedEntity.name,
+                      path: changePath(updatedEntity.path, newPath),
                     }),
                   );
                   fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
@@ -112,8 +109,7 @@ const PromptView: FC<Props> = ({ originalPrompt, etag, prompts }) => {
             });
           } else {
             fetchFiles(updatedEntity.folderId);
-
-            router.push(getUrnForEntity(ApplicationRoute.Prompts, res.response));
+            router.push(getUrnForEntity(ApplicationRoute.Prompts, updatedEntity));
           }
           router.refresh();
         } else {
