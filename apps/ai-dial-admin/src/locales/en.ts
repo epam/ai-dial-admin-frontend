@@ -1254,7 +1254,7 @@ export default {
     ContainersRestartWarning: '{entityType} with "Running" status will be restarted.',
     ShowRelatedContainers: 'Show containers related to this image',
     SelectModelFromRegistry: 'Select model source from registry',
-    NoDescriptionAvailable: 'No model description available',
+    NoDescriptionAvailable: 'No description available for the chosen model',
     Autoscaling: {
       ScaleToZeroNever: 'Never automatically scale to zero',
       ScaleToZeroAfter15Minutes: 'After 15 minutes with no activity',

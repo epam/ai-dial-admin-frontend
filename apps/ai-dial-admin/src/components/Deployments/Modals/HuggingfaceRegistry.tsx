@@ -1,12 +1,5 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import {
-  DialCloseButton,
-  DialFormPopup,
-  DialLoader,
-  DialNoDataContent,
-  DialTooltip,
-  PopupSize,
-} from '@epam/ai-dial-ui-kit';
+import { DialCloseButton, DialFormPopup, DialLoader, DialNoDataContent, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey, ContainersI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -34,7 +27,6 @@ const HFRegistryModal: FC<Props> = ({ isModalOpen, onClose, onApply, preselected
   useEffect(() => {
     if (isDescriptionShown && descriptionModelData.modelName && descriptionModelData.sha) {
       setIsLoading(true);
-      setIsDescriptionShown(true);
       getModelDetails(descriptionModelData.modelName, descriptionModelData.sha).then(({ response, success }) => {
         if (success) {
           setDescriptionData(response as string);
@@ -44,10 +36,11 @@ const HFRegistryModal: FC<Props> = ({ isModalOpen, onClose, onApply, preselected
         setIsLoading(false);
       });
     }
-  }, [descriptionModelData.modelName, descriptionModelData.sha, isDescriptionShown]);
+  }, [descriptionModelData, isDescriptionShown]);
 
   const showModelDescription = useCallback((modelName: string, sha: string) => {
     setDescriptionModelData({ modelName, sha });
+    setIsDescriptionShown(true);
   }, []);
 
   return (
@@ -72,12 +65,9 @@ const HFRegistryModal: FC<Props> = ({ isModalOpen, onClose, onApply, preselected
           setModelName={setSelectedModelName}
           showModelDescription={showModelDescription}
         />
-        {isDescriptionShown && descriptionModelData.modelName && (
+        {isDescriptionShown && descriptionModelData.modelName && descriptionModelData.sha && (
           <div className="flex flex-col  lg:w-[420px] p-4 border border-primary rounded h-full">
-            <div className="flex flex-row justify-between items-center">
-              <h3 className="flex-1 min-w-0 mr-3 truncate">
-                <DialTooltip tooltip={descriptionModelData.modelName}>{descriptionModelData.modelName}</DialTooltip>
-              </h3>
+            <div className="flex flex-row justify-end items-center">
               <DialCloseButton onClose={() => setIsDescriptionShown(false)} />
             </div>
             {isLoading ? (
