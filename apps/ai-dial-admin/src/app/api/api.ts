@@ -90,6 +90,7 @@ export const assetsApi = new AssetsApi({
   host: process.env.DIAL_ADMIN_API_URL,
 });
 
+// Deployments management APIs
 export const containersApi = new ContainersApi({
   host: process.env.DIAL_DEPLOYMENTS_API_URL,
 });
@@ -106,14 +107,15 @@ export const whitelistApi = new WhitelistApi({
   host: process.env.DIAL_DEPLOYMENTS_API_URL,
 });
 
+export const huggingFaceApi = new HuggingfaceApi({
+  host: process.env.DIAL_DEPLOYMENTS_API_URL,
+});
+
+/// Evaluation APIs
 export const testSuitesApi = new TestSuitesApi({
   host: process.env.DIAL_EVAL_API_URL,
 });
 
 export const metricsApi = new MetricsApi({
   host: process.env.DIAL_EVAL_API_URL,
-});
-
-export const huggingFaceApi = new HuggingfaceApi({
-  host: process.env.DIAL_DEPLOYMENTS_API_URL,
 });

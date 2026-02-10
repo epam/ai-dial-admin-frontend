@@ -102,7 +102,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
   );
 
   return (
-    <div className="flex gap-4 items-start">
+    <div className="flex gap-x-3 items-end">
       <div className="flex flex-row gap-x-4 items-center">
         <div className="min-w-[187px]">
           <DialTextInputField
