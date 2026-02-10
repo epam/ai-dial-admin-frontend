@@ -1,9 +1,9 @@
 import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 import { FC, useState } from 'react';
 
-import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
-import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
+import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
+import { SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
 import { LIST_RUNNER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { BasicI18nKey, ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -48,9 +48,9 @@ const SelectAppRunnerModal: FC<Props> = ({ selectedId, sourceEntities, isModalOp
         <AgGridWrapper
           columnDefs={LIST_RUNNER_COLUMNS.map((col) => ({ ...col, sort: void 0 }))}
           additionalGridOptions={{
-            rowSelection: { mode: 'singleRow', enableClickSelection: true },
+            ...SINGLE_ROW_SELECTION,
             selectionColumnDef: {
-              ...RADIO_BUTTON_COL_DEF,
+              ...SINGLE_ROW_SELECTION.selectionColumnDef,
               cellRenderer: (data: { data?: DialApplicationScheme | DialAdapter; id: string }) => {
                 const runner = data.data as DialApplicationScheme;
                 const adapter = data.data as DialAdapter;

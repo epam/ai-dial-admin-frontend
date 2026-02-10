@@ -4,9 +4,9 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { getImagesWithVersions } from '@/src/app/actions/deployments';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 import ContainerProperties from '@/src/components/Containers/Fields/ContainerProperties';
-import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
-import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
+import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
+import { SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
 import { CREATE_CONTAINER_STEPS } from '@/src/constants/deployments/containers';
 import { IMAGES_LIST_FOR_CONTAINER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { useAppContext } from '@/src/context/AppContext';
@@ -138,9 +138,9 @@ const ContainerCreate: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
                   rowData={images}
                   columnDefs={colDefs}
                   additionalGridOptions={{
-                    rowSelection: { mode: 'singleRow', enableClickSelection: true },
+                    ...SINGLE_ROW_SELECTION,
                     selectionColumnDef: {
-                      ...RADIO_BUTTON_COL_DEF,
+                      ...SINGLE_ROW_SELECTION.selectionColumnDef,
                       cellRenderer: (data: { data?: { selectedId: string; name: string }; name: string }) => (
                         <RadioButtonRenderer
                           inputId={data.data?.name || data.name}

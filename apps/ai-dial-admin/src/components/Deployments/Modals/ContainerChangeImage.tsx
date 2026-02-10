@@ -13,7 +13,7 @@ import { getTranslatedDeploymentType } from '@/src/utils/deployments/entity';
 import { getErrorNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { getImageType, isValidVersion, updateSelectedVersion } from '@/src/utils/deployments/images';
-import { ACTION_COLUMN, RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
+import { ACTION_COLUMN, RADIO_BUTTON_COL_DEF, SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
 import { useI18n } from '@/src/locales/client';
 
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
@@ -109,9 +109,9 @@ const ContainerChangeImage: FC<Props> = ({
               rowData={images}
               columnDefs={colDefs}
               additionalGridOptions={{
-                rowSelection: { mode: 'singleRow', enableClickSelection: true },
+                ...SINGLE_ROW_SELECTION,
                 selectionColumnDef: {
-                  ...RADIO_BUTTON_COL_DEF,
+                  ...SINGLE_ROW_SELECTION.selectionColumnDef,
                   cellRenderer: (data: { data?: { selectedId: string; name: string }; name: string }) => (
                     <RadioButtonRenderer
                       inputId={data.data?.name || data.name}

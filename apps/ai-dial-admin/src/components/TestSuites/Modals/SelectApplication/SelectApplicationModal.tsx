@@ -2,9 +2,9 @@ import { FC, useState } from 'react';
 
 import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 
-import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
-import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
+import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
+import { SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
 import { EVALUATION_DEPLOYMENTS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -41,9 +41,9 @@ const SelectApplicationModal: FC<Props> = ({ selected, apps, isModalOpen, onClos
         <AgGridWrapper
           columnDefs={EVALUATION_DEPLOYMENTS_COLUMNS(t)}
           additionalGridOptions={{
-            rowSelection: { mode: 'singleRow', enableClickSelection: true },
+            ...SINGLE_ROW_SELECTION,
             selectionColumnDef: {
-              ...RADIO_BUTTON_COL_DEF,
+              ...SINGLE_ROW_SELECTION.selectionColumnDef,
               cellRenderer: (data: { data?: { deploymentId: string }; deploymentId: string }) => (
                 <RadioButtonRenderer
                   inputId={data.data?.deploymentId || data.deploymentId}

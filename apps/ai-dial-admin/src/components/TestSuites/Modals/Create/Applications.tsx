@@ -8,7 +8,7 @@ import { GridOptions, RowSelectedEvent } from 'ag-grid-community';
 
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import GridView from '@/src/components/Grid/GridView/GridView';
-import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
+import { SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
 import { EVALUATION_DEPLOYMENTS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, EntitiesI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -48,13 +48,10 @@ const Applications: FC<Props> = ({ deployments, selectedApplicationId, onChangeA
   };
 
   const additionalGridOptions: GridOptions = {
-    rowSelection: {
-      mode: 'singleRow',
-      enableClickSelection: true,
-    },
     suppressRowClickSelection: true,
+    ...SINGLE_ROW_SELECTION,
     selectionColumnDef: {
-      ...RADIO_BUTTON_COL_DEF,
+      ...SINGLE_ROW_SELECTION.selectionColumnDef,
       cellRenderer: (data: { data?: { deploymentId: string }; deploymentId: string }) => (
         <RadioButtonRenderer
           inputId={data.data?.deploymentId || data.deploymentId}
@@ -99,8 +96,8 @@ const Applications: FC<Props> = ({ deployments, selectedApplicationId, onChangeA
       <div className="flex-1 min-h-0">
         <GridView
           columnDefs={EVALUATION_DEPLOYMENTS_COLUMNS(t)}
-          data={data}
-          additionalGridOptions={{ ...additionalGridOptions }}
+          rowData={data}
+          additionalGridOptions={additionalGridOptions}
           emptyDataTitle={t(EntitiesI18nKey.NoApplications)}
           showColumnsPanel={showColumnsPanel}
           toggleColumnsPanel={toggleColumnsPanel}

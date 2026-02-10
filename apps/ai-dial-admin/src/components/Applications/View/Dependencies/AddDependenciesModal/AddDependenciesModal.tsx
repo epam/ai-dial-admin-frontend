@@ -4,9 +4,9 @@ import { FC, useState } from 'react';
 import { DialFormPopup, DialNoDataContent, PopupSize } from '@epam/ai-dial-ui-kit';
 import { GridOptions } from 'ag-grid-community';
 
-import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
-import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
+import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
+import { SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
 import { DEPENDENCIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -27,9 +27,9 @@ const AddDependenciesModal: FC<Props> = ({ isModalOpen, entities, entityType, on
   const [selectedEntityName, setSelectedEntityName] = useState<string | undefined>();
 
   const gridOptions: GridOptions = {
-    rowSelection: { mode: 'singleRow', enableClickSelection: true },
+    ...SINGLE_ROW_SELECTION,
     selectionColumnDef: {
-      ...RADIO_BUTTON_COL_DEF,
+      ...SINGLE_ROW_SELECTION.selectionColumnDef,
       cellRenderer: (data: { data?: EntitiesGridData; id: string }) => (
         <RadioButtonRenderer inputId={data.data?.name as string} isChecked={data.data?.name === selectedEntityName} />
       ),
