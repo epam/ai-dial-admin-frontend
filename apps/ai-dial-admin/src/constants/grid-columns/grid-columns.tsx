@@ -53,6 +53,8 @@ import { auditStringFilter, evalStringFilter } from './filters';
 import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
 import { formatNumberWithExponent } from '@/src/utils/formatting/number-formatting';
 
+export const COLUMN_PANEL_PREFIX = 'column_';
+
 export const BASE_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN, NAME_COLUMN];
 
 export const BASE_COLUMNS_WITH_TOPICS: ColDef[] = [...BASE_COLUMNS, TOPICS_COLUMN, UPDATED_AT_COLUMN];
