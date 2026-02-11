@@ -2,7 +2,7 @@
 import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import { ColDef } from 'ag-grid-community';
 import classNames from 'classnames';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
@@ -16,6 +16,7 @@ import { getColumnVisibilityFromStorage, saveColumnVisibilityToStorage } from '.
 interface Props<T> extends AgGridProps<T> {
   emptyDataTitle: string;
   emptyDataDescription?: string;
+  getIsEmptyData?: () => boolean;
 
   showColumnsPanel?: boolean;
   toggleColumnsPanel?: () => void;
@@ -31,6 +32,7 @@ const GridView = <T extends object>({
   storageKey,
   toggleColumnsPanel,
   onGridReady,
+  getIsEmptyData,
 }: Props<T>) => {
   const staticPanelContainerClassName = classNames(
     'left-0 top-0 w-full h-full bg-blackout z-50',
@@ -46,6 +48,11 @@ const GridView = <T extends object>({
   const [showResetButton, setShowResetButton] = useState(false);
   const [panelContainerClassName, setPanelContainerClassName] = useState(staticPanelContainerClassName);
   const [panelClassName, setPanelClassName] = useState(staticPanelClassName);
+
+  const isEmptyData = useMemo(
+    () => (getIsEmptyData ? getIsEmptyData() : rowData == null || rowData.length === 0),
+    [getIsEmptyData, rowData],
+  );
 
   useEffect(() => {
     if (currentColDefs == null || currentColDefs.length === 0) {
@@ -86,7 +93,7 @@ const GridView = <T extends object>({
     [currentColDefs, columnDefs, storageKey],
   );
 
-  const resetToDefault = () => {
+  const onResetToDefault = () => {
     setCurrentColDefs([...(columnDefs || [])]);
 
     if (storageKey) {
@@ -95,14 +102,14 @@ const GridView = <T extends object>({
     setShowResetButton(false);
   };
 
-  const findColumn = useCallback(
+  const onFindColumn = useCallback(
     (field?: string) => currentColDefs.findIndex((c) => c.field === field),
     [currentColDefs],
   );
 
-  const moveColumn = useCallback(
+  const onMoveColumn = useCallback(
     (field: string, atIndex: number) => {
-      const index = findColumn(field);
+      const index = onFindColumn(field);
       const updatedColDefs = [...currentColDefs];
       const [removedColDef] = updatedColDefs.splice(index, 1);
       updatedColDefs.splice(atIndex, 0, removedColDef);
@@ -112,12 +119,12 @@ const GridView = <T extends object>({
       setCurrentColDefs(updatedColDefs);
       setShowResetButton(checkColDefsChanges(updatedColDefs, columnDefs || []));
     },
-    [findColumn, currentColDefs, setShowResetButton, columnDefs, storageKey],
+    [onFindColumn, currentColDefs, setShowResetButton, columnDefs, storageKey],
   );
 
   return (
     <div className="w-full h-full relative">
-      {rowData != null && rowData?.length === 0 ? (
+      {isEmptyData ? (
         <DialNoDataContent title={emptyDataTitle} description={emptyDataDescription} containerClassName="small" />
       ) : (
         <>
@@ -135,11 +142,11 @@ const GridView = <T extends object>({
                   columns={currentColDefs}
                   showResetButton={showResetButton}
                   panelClassName={panelClassName}
-                  onReset={resetToDefault}
+                  onReset={onResetToDefault}
                   toggleColumnsPanel={toggleColumnsPanel}
                   toggleColumnVisibility={toggleColumnVisibility}
-                  onFind={findColumn}
-                  onMove={moveColumn}
+                  onFind={onFindColumn}
+                  onMove={onMoveColumn}
                 />
               </DndProvider>
             </div>

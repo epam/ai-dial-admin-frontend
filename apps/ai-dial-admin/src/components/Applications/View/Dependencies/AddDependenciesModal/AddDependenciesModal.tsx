@@ -1,11 +1,11 @@
 'use client';
 import { FC, useState } from 'react';
 
-import { DialFormPopup, DialNoDataContent, PopupSize } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 import { GridOptions } from 'ag-grid-community';
 
-import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
 import { DEPENDENCIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
@@ -56,15 +56,14 @@ const AddDependenciesModal: FC<Props> = ({ isModalOpen, entities, entityType, on
       disableSubmitButton={!selectedEntityName}
     >
       <div className="flex h-full flex-col px-6 py-4 min-h-0">
-        {!entities.length ? (
-          <DialNoDataContent
-            title={t(entityType === EntityType.MODEL ? EntitiesI18nKey.NoModels : EntitiesI18nKey.NoApplications)}
-          />
-        ) : (
-          <div className="flex-1 flex flex-col min-h-0 w-full">
-            <AgGridWrapper columnDefs={DEPENDENCIES_COLUMNS} rowData={entities} additionalGridOptions={gridOptions} />
-          </div>
-        )}
+        <GridView
+          columnDefs={DEPENDENCIES_COLUMNS}
+          rowData={entities}
+          additionalGridOptions={gridOptions}
+          emptyDataTitle={t(
+            entityType === EntityType.MODEL ? EntitiesI18nKey.NoModels : EntitiesI18nKey.NoApplications,
+          )}
+        />
       </div>
     </DialFormPopup>
   );
