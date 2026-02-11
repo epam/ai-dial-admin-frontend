@@ -48,7 +48,14 @@ const Interceptors: FC<Props> = ({ interceptorList }) => {
     fetchInterceptors();
   }, [interceptorList, showNotification]);
 
-  return <GridView emptyDataTitle={t(EntitiesI18nKey.NoInterceptors)} columnDefs={colDefs} rowData={interceptors} />;
+  return (
+    <GridView
+      emptyDataProps={{ title: t(EntitiesI18nKey.NoInterceptors) }}
+      getIsEmptyData={() => !interceptorList?.length || !interceptors.length}
+      columnDefs={colDefs}
+      rowData={interceptors}
+    />
+  );
 };
 
 export default Interceptors;

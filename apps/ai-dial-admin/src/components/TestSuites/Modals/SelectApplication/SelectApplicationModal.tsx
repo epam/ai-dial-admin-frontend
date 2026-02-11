@@ -65,7 +65,7 @@ const SelectApplicationModal: FC<Props> = ({ selected, apps, isModalOpen, onClos
     >
       <div className="flex flex-col px-6 py-4 h-full">
         <GridView
-          emptyDataTitle={t(EntitiesI18nKey.NoApplications)}
+          emptyDataProps={{ title: t(EntitiesI18nKey.NoApplications) }}
           rowData={apps}
           columnDefs={EVALUATION_DEPLOYMENTS_COLUMNS(t)}
           additionalGridOptions={options}

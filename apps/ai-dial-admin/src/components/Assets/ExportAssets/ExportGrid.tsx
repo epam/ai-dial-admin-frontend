@@ -134,7 +134,11 @@ const ExportGrid: FC<Props> = ({ route, context }) => {
 
   return (
     <div className="flex-1 min-h-0">
-      <GridView emptyDataTitle={t(BasicI18nKey.NoData)} additionalGridOptions={gridOptions} onGridReady={onGridReady} />
+      <GridView
+        emptyDataProps={{ title: t(BasicI18nKey.NoData) }}
+        additionalGridOptions={gridOptions}
+        onGridReady={onGridReady}
+      />
     </div>
   );
 };

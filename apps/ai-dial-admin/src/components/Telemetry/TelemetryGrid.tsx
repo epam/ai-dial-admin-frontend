@@ -64,7 +64,7 @@ const TelemetryGrid: FC<Props> = ({ columnDefs, title, getData, query, refreshTi
         <DialLoader size={24} />
       ) : (
         <GridView
-          emptyDataTitle={t(BasicI18nKey.NoData)}
+          emptyDataProps={{ title: t(BasicI18nKey.NoData) }}
           rowData={data}
           columnDefs={columnDefs}
           additionalGridOptions={additionalGridOptions}

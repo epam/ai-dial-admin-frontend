@@ -175,7 +175,9 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
 
   const localInterceptors = (
     <GridView
-      emptyDataTitle={isCollapsableView ? t(EntitiesI18nKey.NoLocalInterceptors) : t(EntitiesI18nKey.NoInterceptors)}
+      emptyDataProps={{
+        title: isCollapsableView ? t(EntitiesI18nKey.NoLocalInterceptors) : t(EntitiesI18nKey.NoInterceptors),
+      }}
       columnDefs={localColumns}
       rowData={rowData}
       additionalGridOptions={additionalGridOptions}

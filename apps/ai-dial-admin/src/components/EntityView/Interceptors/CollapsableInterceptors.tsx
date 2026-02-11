@@ -37,7 +37,7 @@ const CollapsableInterceptors = <T extends { interceptors?: string[]; 'dial:appl
     <div className="h-full flex flex-col gap-5">
       <CollapsableSection title={`${t(InterceptorsI18nKey.Global)}: ${globalInterceptors?.length || 0}`}>
         <GridView
-          emptyDataTitle={t(EntitiesI18nKey.NoGlobalInterceptors)}
+          emptyDataProps={{ title: t(EntitiesI18nKey.NoGlobalInterceptors) }}
           columnDefs={globalColumns}
           rowData={getInterceptorsGridData(interceptors, globalInterceptors)}
         />
@@ -45,7 +45,7 @@ const CollapsableInterceptors = <T extends { interceptors?: string[]; 'dial:appl
       {((entity as DialApplication).customAppSchemaId || (entity as unknown as AssetApp).applicationTypeSchemaId) && (
         <CollapsableSection title={`${t(InterceptorsI18nKey.Runner)}: ${runnerInterceptors?.length || 0}`}>
           <GridView
-            emptyDataTitle={t(EntitiesI18nKey.NoRunnerInterceptors)}
+            emptyDataProps={{ title: t(EntitiesI18nKey.NoRunnerInterceptors) }}
             columnDefs={runnerColumns}
             rowData={getInterceptorsGridData(interceptors, runnerInterceptors)}
           />

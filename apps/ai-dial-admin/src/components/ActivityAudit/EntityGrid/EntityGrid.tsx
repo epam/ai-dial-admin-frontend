@@ -6,7 +6,7 @@ import { CellClickedEvent, ColDef, GridApi, GridOptions, GridReadyEvent } from '
 
 import { getColumnsByParameter, getCurrentAndRollbackEntities } from '@/src/components/ActivityAudit/EntityGrid/utils';
 import ActivityDetails from '@/src/components/ActivityAudit/Modals/Details';
-import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ActivityAuditDiff, DialActivity } from '@/src/models/activity-audit';
@@ -100,7 +100,7 @@ const AuditEntityGrid: FC<Props> = ({
     </div>
   ) : (
     <div className="w-full h-full relative">
-      <AgGridWrapper additionalGridOptions={options} />
+      <GridView additionalGridOptions={options} emptyDataProps={{ title: t(EntitiesI18nKey.NoResource) }} />
       {isModalOpen &&
         createPortal(
           <ActivityDetails

@@ -87,7 +87,7 @@ const Dependencies: FC<Props> = ({ application, applications, models, onChange }
           addDependency={onAddDependency}
         />
       </div>
-      <GridView emptyDataTitle={t(EntitiesI18nKey.NoDependencies)} columnDefs={columns} rowData={rowData} />;
+      <GridView emptyDataProps={{ title: t(EntitiesI18nKey.NoDependencies) }} columnDefs={columns} rowData={rowData} />;
     </div>
   );
 };

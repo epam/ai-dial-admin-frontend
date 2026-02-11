@@ -79,7 +79,7 @@ const ConfigurationGrid: FC<Props> = ({ selectedTab, tabData, currentState, prev
 
   return (
     <>
-      <GridView columnDefs={colDefs} rowData={rowData} emptyDataTitle={t(emptyDataTitleI18nkKey)} />
+      <GridView columnDefs={colDefs} rowData={rowData} emptyDataProps={{ title: t(emptyDataTitleI18nkKey) }} />
       {isModalOpen &&
         createPortal(
           <ActivityDetails

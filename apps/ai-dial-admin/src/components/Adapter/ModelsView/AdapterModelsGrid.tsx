@@ -32,7 +32,7 @@ const AdapterModelsGrid: FC<Props> = ({ models }) => {
         </h1>
       </div>
 
-      <GridView columnDefs={columnDefs} rowData={rowData} emptyDataTitle={t(EntitiesI18nKey.NoModels)} />
+      <GridView columnDefs={columnDefs} rowData={rowData} emptyDataProps={{ title: t(EntitiesI18nKey.NoModels) }} />
     </div>
   );
 };

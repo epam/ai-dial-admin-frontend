@@ -98,7 +98,7 @@ const Applications: FC<Props> = ({ deployments, selectedApplicationId, onChangeA
           columnDefs={EVALUATION_DEPLOYMENTS_COLUMNS(t)}
           rowData={data}
           additionalGridOptions={additionalGridOptions}
-          emptyDataTitle={t(EntitiesI18nKey.NoApplications)}
+          emptyDataProps={{ title: t(EntitiesI18nKey.NoApplications) }}
           showColumnsPanel={showColumnsPanel}
           toggleColumnsPanel={toggleColumnsPanel}
         />

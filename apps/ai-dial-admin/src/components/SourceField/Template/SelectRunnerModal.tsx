@@ -62,7 +62,7 @@ const SelectRunnerModal: FC<Props> = ({ selected, runners, isModalOpen, onClose,
     >
       <div className="flex flex-col px-6 py-4 h-full">
         <GridView
-          emptyDataTitle={t(EntitiesI18nKey.NoTemplates)}
+          emptyDataProps={{ title: t(EntitiesI18nKey.NoTemplates) }}
           columnDefs={BASE_COLUMNS}
           rowData={runners}
           additionalGridOptions={options}

@@ -143,7 +143,7 @@ const TableView: FC<Props> = ({ properties, isSkipRefresh, onChangeProperties, i
   return (
     <GridView
       getIsEmptyData={() => !properties.length}
-      emptyDataTitle={t(BasicI18nKey.NoParameters)}
+      emptyDataProps={{ title: t(BasicI18nKey.NoParameters) }}
       onGridReady={onGridReady}
     />
   );

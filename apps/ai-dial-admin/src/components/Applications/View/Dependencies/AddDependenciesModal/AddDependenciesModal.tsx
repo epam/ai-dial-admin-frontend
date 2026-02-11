@@ -60,9 +60,9 @@ const AddDependenciesModal: FC<Props> = ({ isModalOpen, entities, entityType, on
           columnDefs={DEPENDENCIES_COLUMNS}
           rowData={entities}
           additionalGridOptions={gridOptions}
-          emptyDataTitle={t(
-            entityType === EntityType.MODEL ? EntitiesI18nKey.NoModels : EntitiesI18nKey.NoApplications,
-          )}
+          emptyDataProps={{
+            title: t(entityType === EntityType.MODEL ? EntitiesI18nKey.NoModels : EntitiesI18nKey.NoApplications),
+          }}
         />
       </div>
     </DialFormPopup>

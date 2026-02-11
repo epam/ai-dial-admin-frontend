@@ -123,7 +123,11 @@ const RolesGrid: FC<Props> = ({
           )}
         </div>
       </div>
-      <GridView emptyDataTitle={t(EntitiesI18nKey.NoRoles)} onGridReady={onGridReady} additionalGridOptions={options} />
+      <GridView
+        emptyDataProps={{ title: t(EntitiesI18nKey.NoRoles) }}
+        onGridReady={onGridReady}
+        additionalGridOptions={options}
+      />
     </div>
   );
 };

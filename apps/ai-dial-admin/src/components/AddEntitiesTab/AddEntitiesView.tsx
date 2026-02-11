@@ -142,7 +142,7 @@ const AddEntitiesView: FC<Props> = ({
         <GridView
           getIsEmptyData={() => !data?.length}
           onGridReady={onGridReady}
-          emptyDataTitle={emptyDataTitle || t(EntitiesI18nKey.NoEntities)}
+          emptyDataProps={{ title: emptyDataTitle || t(EntitiesI18nKey.NoEntities) }}
         />
       </div>
       {isModalOpen &&

@@ -97,7 +97,7 @@ const GlobalInterceptors: FC<Props> = ({ interceptors, currentInterceptors, onCh
 
   const localInterceptors = (
     <GridView
-      emptyDataTitle={t(EntitiesI18nKey.NoGlobalInterceptors)}
+      emptyDataProps={{ title: t(EntitiesI18nKey.NoGlobalInterceptors) }}
       columnDefs={columns}
       rowData={rowData}
       additionalGridOptions={additionalGridOptions}
