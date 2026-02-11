@@ -599,6 +599,7 @@ export enum PublicationsI18nKey {
   DeclineReason = 'Publications.ReasonTitle',
   DeclineReasonPlaceholder = 'Publications.ReasonPlaceholder',
   Warning = 'Publications.Warning',
+  Publication = 'Publications.Publication',
 
   // prompt publications
   PromptPublishApproveModalTitle = 'Publications.Prompt.PublishApproveModalTitle',
