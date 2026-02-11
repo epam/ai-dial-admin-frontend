@@ -34,16 +34,16 @@ const BasePublicationProperties: FC<Props> = ({ view, publication, children, app
   const runner = applicationSchemes?.find((app) => app.$id === runnerId);
 
   const warning = useMemo(() => {
-    if (publication.missingResources?.length) {
+    if (publication.resourceIssues?.length) {
       return (
         <div className="flex flex-col gap-3">
-          <h3>{publication.missingResources[0].message}</h3>
+          <h3>{publication.resourceIssues[0].message}</h3>
           <span className="text-sm">{t(PublicationsI18nKey.Warning)}</span>
         </div>
       );
     }
     return null;
-  }, [publication.missingResources, t]);
+  }, [publication.resourceIssues, t]);
 
   const prefix = useMemo(() => {
     return (
