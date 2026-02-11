@@ -1,9 +1,10 @@
-import { GridSelectionMode } from '@epam/ai-dial-ui-kit';
+import { DialUploadFileItem, GridSelectionMode } from '@epam/ai-dial-ui-kit';
 import { ColDef } from 'ag-grid-community';
 
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { ReactNode } from 'react';
+import { CREATE_FOLDER_FORBIDDEN_CHARS } from './constants';
 
 const gridActionLabels = [
   {
@@ -140,4 +141,32 @@ const getActionLabelsWithIcon = (
     acc[item.key] = { label: t(item.label), icon: item.icon };
     return acc;
   }, {});
+};
+
+export const createEmptyFile = () => {
+  const fileName = '.dial_folder';
+  const fileType = 'text/plain';
+
+  const emptyFile = new File(['1'], fileName, {
+    type: fileType,
+  });
+  return { emptyFile, fileName, fileType };
+};
+
+export const getEmptyFile = () => {
+  const { emptyFile, fileName } = createEmptyFile();
+
+  const uploadFileItem: DialUploadFileItem = {
+    fileContent: emptyFile,
+    name: fileName,
+  };
+
+  return uploadFileItem;
+};
+
+export const validateCreateFolder = (name: string, t: (key: string) => string): string | null => {
+  if (CREATE_FOLDER_FORBIDDEN_CHARS.test(name)) {
+    return t(FileManagerI18nKey.CreateFolderValidate);
+  }
+  return null;
 };

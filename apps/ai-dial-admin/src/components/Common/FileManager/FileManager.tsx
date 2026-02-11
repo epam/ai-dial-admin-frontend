@@ -24,13 +24,16 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import {
+  createEmptyFile,
   getBulkActionsToolbarOptions,
   getGridOptions,
   getToolbarOptions,
   getTreeOptions,
   getValidationMessages,
+  validateCreateFolder,
 } from './utils';
 import { downloadFile } from '@/src/utils/download';
+import { NEW_FOLDER_NAME } from './constants';
 
 interface Props {
   view: ApplicationRoute;
@@ -59,30 +62,11 @@ const FileManager: FC<Props> = ({ label, columnDefs, view, getContext, ...props 
   const managerLabel = useMemo(() => <h1 className="text-primary leading-[48px]">{label}</h1>, [label]);
 
   // TODO: move common functions into context files
-  const getEmptyFile = useCallback(() => {
-    const filename = '.dial_folder';
-    const fileType = 'text/plain';
-
-    const emptyFile = new File(['1'], filename, {
-      type: fileType,
-    });
-
-    const uploadFileItem: DialUploadFileItem = {
-      fileContent: emptyFile,
-      name: filename,
-    };
-
-    return uploadFileItem;
-  }, []);
 
   const handleCreateFolder = useCallback(
-    async (_: DialUploadFileItem, folderPath: string) => {
+    async (_: DialUploadFileItem | undefined, folderPath: string) => {
       // file arg is not used, because folder with empty file is not created
-      const filename = '.dial_folder';
-      const fileType = 'text/plain';
-      const emptyFile = new File(['1'], filename, {
-        type: fileType,
-      });
+      const { emptyFile } = createEmptyFile();
       const newPath = `${folderPath.replaceAll('//', '/')}/`;
 
       const body = getFormDataForImport(
@@ -116,18 +100,18 @@ const FileManager: FC<Props> = ({ label, columnDefs, view, getContext, ...props 
 
   const handleAddChild = useCallback(
     (files: DialFile[]) => {
-      const newPath = files[0].path + 'New Folder';
-      handleCreateFolder(getEmptyFile(), newPath);
+      const newPath = files[0].path + NEW_FOLDER_NAME;
+      handleCreateFolder(void 0, newPath);
     },
-    [handleCreateFolder, getEmptyFile],
+    [handleCreateFolder],
   );
 
   const handleAddSibling = useCallback(
     (files: DialFile[]) => {
-      const newPath = files[0].path.replace(/([^/]+)\/?$/, 'New Folder');
-      handleCreateFolder(getEmptyFile(), newPath);
+      const newPath = files[0].path.replace(/([^/]+)\/?$/, NEW_FOLDER_NAME);
+      handleCreateFolder(void 0, newPath);
     },
-    [handleCreateFolder, getEmptyFile],
+    [handleCreateFolder],
   );
 
   const handleImportFiles = useCallback(
@@ -219,14 +203,12 @@ const FileManager: FC<Props> = ({ label, columnDefs, view, getContext, ...props 
     window.open(`${ApplicationRoute.FoldersStorage}?path=${encodeURIComponent(path)}`, '_blank');
   }, []);
 
-  const handleCreateFolderValidate = useCallback((name: string) => {
-    const forbiddenChars = /[<>:"/\\|?*]/;
-    if (forbiddenChars.test(name)) {
-      return 'Folder name contains forbidden characters: < > : " / \\ | ? *';
-    }
-
-    return null;
-  }, []);
+  const handleCreateFolderValidate = useCallback(
+    (name: string) => {
+      return validateCreateFolder(name, t);
+    },
+    [t],
+  );
 
   const handleDownloadFiles = useCallback(async (files: DialFile[]) => {
     const filePaths = files.map((file) => file.path);
