@@ -127,6 +127,7 @@ const RolesGrid: FC<Props> = ({
         emptyDataProps={{ title: t(EntitiesI18nKey.NoRoles) }}
         onGridReady={onGridReady}
         additionalGridOptions={options}
+        getIsEmptyData={() => !data.length}
       />
     </div>
   );
