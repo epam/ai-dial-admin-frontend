@@ -11,6 +11,7 @@ import { DialErrorText, DialFileIcon, DialIconButton, DialTooltip } from '@epam/
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import { IconX } from '@tabler/icons-react';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { downloadFile } from '@/src/utils/download';
 
 interface Props {
   value: EnvVariableValue;
@@ -39,15 +40,7 @@ const ValueFile: FC<Props> = ({ value, index, fieldName, onValueChange, disabled
     if (!value.fileContent || !value.fileName) return;
 
     const blob = new Blob([atob(value.fileContent)]);
-
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = value.fileName;
-    link.click();
-
-    setTimeout(() => {
-      URL.revokeObjectURL(link.href);
-    }, 100);
+    downloadFile(blob, value.fileName);
   }, [value]);
 
   useEffect(() => {
