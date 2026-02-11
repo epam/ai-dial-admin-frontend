@@ -108,28 +108,30 @@ const PublicationHeader: FC<Props> = ({
               iconBefore={<IconCircleX {...BASE_BUTTON_ICON_PROPS} />}
             />
           ) : (
-            <DialNeutralButton
-              className={buttonsClassName}
-              label={t(ButtonsI18nKey.Decline)}
-              onClick={() => setIsOpenDeclineModal(true)}
-              iconBefore={<IconCircleX {...BASE_BUTTON_ICON_PROPS} />}
-            />
-          )}
-          {isAddAction(action) && (
-            <DialPrimaryButton
-              className={classNames(buttonsClassName, approveButtonClassName)}
-              label={t(ButtonsI18nKey.Publish)}
-              onClick={() => setIsOpenApproveModal(true)}
-              iconBefore={<IconWorldShare {...BASE_BUTTON_ICON_PROPS} />}
-            />
-          )}
-          {action === ActionType.DELETE && (
-            <DialPrimaryButton
-              className={classNames(buttonsClassName, approveButtonClassName)}
-              label={t(ButtonsI18nKey.Unpublish)}
-              onClick={() => setIsOpenApproveModal(true)}
-              iconBefore={<IconWorldOff {...BASE_BUTTON_ICON_PROPS} />}
-            />
+            <>
+              <DialNeutralButton
+                className={buttonsClassName}
+                label={t(ButtonsI18nKey.Decline)}
+                onClick={() => setIsOpenDeclineModal(true)}
+                iconBefore={<IconCircleX {...BASE_BUTTON_ICON_PROPS} />}
+              />
+              {isAddAction(action) && (
+                <DialPrimaryButton
+                  className={classNames(buttonsClassName, approveButtonClassName)}
+                  label={t(ButtonsI18nKey.Publish)}
+                  onClick={() => setIsOpenApproveModal(true)}
+                  iconBefore={<IconWorldShare {...BASE_BUTTON_ICON_PROPS} />}
+                />
+              )}
+              {action === ActionType.DELETE && (
+                <DialPrimaryButton
+                  className={classNames(buttonsClassName, approveButtonClassName)}
+                  label={t(ButtonsI18nKey.Unpublish)}
+                  onClick={() => setIsOpenApproveModal(true)}
+                  iconBefore={<IconWorldOff {...BASE_BUTTON_ICON_PROPS} />}
+                />
+              )}
+            </>
           )}
 
           <DialSwitch
