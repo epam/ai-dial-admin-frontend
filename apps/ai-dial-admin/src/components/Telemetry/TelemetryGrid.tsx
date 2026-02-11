@@ -1,14 +1,14 @@
-import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { DialLoader } from '@epam/ai-dial-ui-kit';
 import { ColDef, GridOptions } from 'ag-grid-community';
 import { FC, useEffect, useState } from 'react';
 
-import Grid from '@/src/components/Grid/Grid';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { refreshOptionsConfig } from '@/src/constants/telemetry';
 import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { TelemetryData, TelemetryQuery } from '@/src/models/telemetry';
 import { getGridData } from '@/src/utils/telemetry';
+import GridView from '@/src/components/Grid/GridView/GridView';
 
 const additionalGridOptions: GridOptions = {
   defaultColDef: {
@@ -63,13 +63,12 @@ const TelemetryGrid: FC<Props> = ({ columnDefs, title, getData, query, refreshTi
       {loading ? (
         <DialLoader size={24} />
       ) : (
-        <>
-          {!data?.length ? (
-            <DialNoDataContent title={t(BasicI18nKey.NoData)} />
-          ) : (
-            <Grid rowData={data} columnDefs={columnDefs} additionalGridOptions={additionalGridOptions} />
-          )}
-        </>
+        <GridView
+          emptyDataProps={{ title: t(BasicI18nKey.NoData) }}
+          rowData={data}
+          columnDefs={columnDefs}
+          additionalGridOptions={additionalGridOptions}
+        />
       )}
     </div>
   );

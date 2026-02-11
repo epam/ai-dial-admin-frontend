@@ -77,3 +77,24 @@ export const DRAGGABLE_COL_DEF: ColDef = {
   cellClass: NO_BORDER_CLASS,
   rowDrag: true,
 };
+
+export const MULTI_ROW_SELECTION: Partial<GridOptions> = {
+  rowSelection: {
+    mode: 'multiRow',
+    headerCheckbox: true,
+    selectAll: 'filtered',
+  },
+  selectionColumnDef: {
+    ...CHECKBOX_COL_DEF,
+  },
+};
+
+export const SINGLE_ROW_SELECTION: Partial<GridOptions> = {
+  rowSelection: {
+    mode: 'singleRow',
+    enableClickSelection: true,
+  },
+  selectionColumnDef: {
+    ...RADIO_BUTTON_COL_DEF,
+  },
+};

@@ -1,14 +1,15 @@
 import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 import { FC, useState } from 'react';
 
-import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
+import { SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
 import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
-import Grid from '@/src/components/Grid/Grid';
+import { GridOptions } from 'ag-grid-community';
+import GridView from '@/src/components/Grid/GridView/GridView';
 
 interface Props {
   selected?: string;
@@ -22,6 +23,28 @@ const SelectRunnerModal: FC<Props> = ({ selected, runners, isModalOpen, onClose,
   const t = useI18n();
 
   const [selectedRunner, setSelectedRunner] = useState(selected);
+
+  const options: GridOptions = {
+    ...SINGLE_ROW_SELECTION,
+    selectionColumnDef: {
+      ...SINGLE_ROW_SELECTION.selectionColumnDef,
+      cellRenderer: (data: { data?: { name: string }; name: string }) => (
+        <RadioButtonRenderer inputId={data.data?.name || data.name} isChecked={data.data?.name === selectedRunner} />
+      ),
+    },
+    onRowSelected: (event) => {
+      if (event.node.isSelected()) {
+        setSelectedRunner(event.data.name);
+      }
+    },
+    onGridReady: (event) => {
+      event.api.forEachNode((node) => {
+        if (node.data.name === selectedRunner) {
+          node.setSelected(true);
+        }
+      });
+    },
+  };
 
   return (
     <DialFormPopup
@@ -38,36 +61,11 @@ const SelectRunnerModal: FC<Props> = ({ selected, runners, isModalOpen, onClose,
       onCancel={onClose}
     >
       <div className="flex flex-col px-6 py-4 h-full">
-        <Grid
+        <GridView
+          emptyDataProps={{ title: t(EntitiesI18nKey.NoTemplates) }}
           columnDefs={BASE_COLUMNS}
-          additionalGridOptions={{
-            rowSelection: { mode: 'singleRow', enableClickSelection: true },
-            selectionColumnDef: {
-              ...RADIO_BUTTON_COL_DEF,
-              cellRenderer: (data: { data?: { name: string }; name: string }) => (
-                <RadioButtonRenderer
-                  inputId={data.data?.name || data.name}
-                  isChecked={data.data?.name === selectedRunner}
-                />
-              ),
-            },
-            onRowSelected: (event) => {
-              if (event.node.isSelected()) {
-                setSelectedRunner(event.data.name);
-              }
-            },
-            onGridReady: (event) => {
-              event.api?.updateGridOptions({
-                columnDefs: BASE_COLUMNS,
-                rowData: runners,
-              });
-              event.api.forEachNode((node) => {
-                if (node.data.name === selectedRunner) {
-                  node.setSelected(true);
-                }
-              });
-            },
-          }}
+          rowData={runners}
+          additionalGridOptions={options}
         />
       </div>
     </DialFormPopup>

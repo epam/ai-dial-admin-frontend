@@ -15,22 +15,22 @@ interface Props {
   columns: ColDef[];
   showResetButton: boolean;
   panelClassName: string;
-  resetToDefault: () => void;
+  onReset: () => void;
   toggleColumnsPanel?: () => void;
   toggleColumnVisibility: (id?: string) => void;
-  findColumn?: (field: string) => number;
-  moveColumn?: (field: string, atIndex: number) => void;
+  onFind?: (field: string) => number;
+  onMove?: (field: string, atIndex: number) => void;
 }
 
 const ColumnsPanel: FC<Props> = ({
   columns,
   showResetButton,
   panelClassName,
-  resetToDefault,
+  onReset,
   toggleColumnsPanel,
   toggleColumnVisibility,
-  findColumn,
-  moveColumn,
+  onFind,
+  onMove,
 }) => {
   const t = useI18n();
   const ref = useRef<HTMLDivElement | null>(null);
@@ -55,7 +55,7 @@ const ColumnsPanel: FC<Props> = ({
         <h3 className="flex-1 min-w-0 mr-3">{t(ButtonsI18nKey.Columns)}</h3>
         <div className="flex">
           {showResetButton && (
-            <DialGhostButton className="mr-4" label={t(ButtonsI18nKey.ResetToDefault)} onClick={resetToDefault} />
+            <DialGhostButton className="mr-4" label={t(ButtonsI18nKey.ResetToDefault)} onClick={onReset} />
           )}
           {toggleColumnsPanel && <CloseButton onClose={toggleColumnsPanel} />}
         </div>
@@ -67,7 +67,7 @@ const ColumnsPanel: FC<Props> = ({
             .map((col) => {
               return (
                 <li key={col.field}>
-                  <DraggableItem id={col.field || ''} findItem={findColumn} moveItem={moveColumn}>
+                  <DraggableItem id={col.field || ''} findItem={onFind} moveItem={onMove}>
                     <DialCheckbox
                       label={col.headerName}
                       id={`${COLUMN_PANEL_PREFIX}${col.field}`}

@@ -1,14 +1,13 @@
 import { FC } from 'react';
-import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
-import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import Grid from '@/src/components/Grid/Grid';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
+import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
+import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialModel } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 
 interface Props {
@@ -32,11 +31,8 @@ const AdapterModelsGrid: FC<Props> = ({ models }) => {
           {t(TabsI18nKey.Models)}: {rowData.length}
         </h1>
       </div>
-      {!rowData?.length ? (
-        <DialNoDataContent title={t(EntitiesI18nKey.NoModels)} />
-      ) : (
-        <Grid columnDefs={columnDefs} rowData={rowData} />
-      )}
+
+      <GridView columnDefs={columnDefs} rowData={rowData} emptyDataProps={{ title: t(EntitiesI18nKey.NoModels) }} />
     </div>
   );
 };

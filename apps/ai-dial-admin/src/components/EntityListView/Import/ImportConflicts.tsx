@@ -1,7 +1,7 @@
 'use client';
 import { Dispatch, FC, SetStateAction, useCallback } from 'react';
 
-import { CellValueChangedEvent, ColDef, GridReadyEvent, RowClassRules } from 'ag-grid-community';
+import { CellValueChangedEvent, ColDef, GridOptions, GridReadyEvent, RowClassRules } from 'ag-grid-community';
 import { DialRadioGroup, RadioGroupOrientation, RadioButtonWithContent, StepStatus } from '@epam/ai-dial-ui-kit';
 
 import {
@@ -13,7 +13,7 @@ import {
   isErrorFileNode,
   isErrorPromptNode,
 } from '@/src/components/EntityListView/Import/utils';
-import Grid from '@/src/components/Grid/Grid';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { ImportI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
@@ -98,6 +98,11 @@ const ImportConflicts: FC<Props> = ({
     });
   };
 
+  const options: GridOptions = {
+    onGridReady,
+    onCellValueChanged,
+  };
+
   return (
     <div className="flex flex-col min-h-0">
       <h3 className="pt-6 pb-4">{t(ImportI18nKey.ConflictResolution)}</h3>
@@ -114,7 +119,7 @@ const ImportConflicts: FC<Props> = ({
             {t(getImportTitle(route))}: {fileCount}
           </div>
           <div className="min-h-0">
-            <Grid additionalGridOptions={{ onGridReady, onCellValueChanged }} />
+            <GridView additionalGridOptions={options} onGridReady={onGridReady} />
           </div>
         </div>
       )}

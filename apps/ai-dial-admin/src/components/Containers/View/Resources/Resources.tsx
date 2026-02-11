@@ -1,12 +1,11 @@
-import { FC, useEffect, useState } from 'react';
-import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
-import { ColDef } from 'ag-grid-community';
-import { Resource } from '@/src/models/deployments/containers';
-import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRenderer';
-import { useI18n } from '@/src/locales/client';
 import { getContainerResources } from '@/src/app/actions/deployments';
-import Grid from '@/src/components/Grid/Grid';
+import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRenderer';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
+import { Resource } from '@/src/models/deployments/containers';
+import { ColDef } from 'ag-grid-community';
+import { FC, useEffect, useState } from 'react';
 
 interface Props {
   containerId?: string;
@@ -49,10 +48,14 @@ const Resources: FC<Props> = ({ containerId }) => {
     fetchResources().catch((error) => console.error(`Getting container resources error: ${error}`));
   }, [containerId]);
 
-  if (!loading && !resources?.length) {
-    return <DialNoDataContent title={t(EntitiesI18nKey.NoResources)} />;
-  }
-  return resources && <Grid columnDefs={RESOURCES_COLUMNS} rowData={resources} />;
+  return (
+    <GridView
+      getIsEmptyData={() => !loading && !resources?.length}
+      emptyDataProps={{ title: t(EntitiesI18nKey.NoResources) }}
+      columnDefs={RESOURCES_COLUMNS}
+      rowData={resources}
+    />
+  );
 };
 
 export default Resources;

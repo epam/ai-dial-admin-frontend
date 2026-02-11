@@ -1,24 +1,32 @@
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { CellClickedEvent, ColDef, GridApi, GridOptions, IDatasource, IGetRowsParams } from 'ag-grid-community';
+import {
+  CellClickedEvent,
+  ColDef,
+  GridApi,
+  GridOptions,
+  GridReadyEvent,
+  IDatasource,
+  IGetRowsParams,
+} from 'ag-grid-community';
 import { isEqual } from 'lodash';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { ApplicationRoute } from '@/src/types/routes';
-import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { FilterDto, SortDto } from '@/src/models/request';
-import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { getHuggingFaceModels } from '@/src/app/actions/deployments';
+import { emptyDataTitleMap, listViewTitleMap } from '@/src/components/ListView/constants';
+import { infiniteGridOptions, SINGLE_ROW_SELECTION, UTILITY_COLUMN } from '@/src/constants/ag-grid';
+import { HF_REGISTRY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useI18n } from '@/src/locales/client';
+import { FilterDto, SortDto } from '@/src/models/request';
+import { ApplicationRoute } from '@/src/types/routes';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
+import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { DialGhostButton } from '@epam/ai-dial-ui-kit';
 import { IconColumns2, IconFileDescription } from '@tabler/icons-react';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-import { infiniteGridOptions, RADIO_BUTTON_COL_DEF, UTILITY_COLUMN } from '@/src/constants/ag-grid';
-import { HF_REGISTRY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { emptyDataTitleMap, listViewTitleMap } from '@/src/components/ListView/constants';
-import { useI18n } from '@/src/locales/client';
 
-import ListView from '@/src/components/ListView/ListView';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
+import ListView from '@/src/components/ListView/ListView';
 
 interface Props {
   route: ApplicationRoute;
@@ -34,9 +42,9 @@ const HfRegistryGrid: FC<Props> = ({ route, modelName, setModelName, showModelDe
 
   const gridOptions: GridOptions = {
     ...infiniteGridOptions,
-    rowSelection: { mode: 'singleRow', enableClickSelection: true },
+    ...SINGLE_ROW_SELECTION,
     selectionColumnDef: {
-      ...RADIO_BUTTON_COL_DEF,
+      ...SINGLE_ROW_SELECTION.selectionColumnDef,
       cellRenderer: (data: { data?: { id: string } }) => (
         <RadioButtonRenderer inputId={data.data?.id as string} isChecked={data.data?.id === modelName} />
       ),
@@ -110,7 +118,7 @@ const HfRegistryGrid: FC<Props> = ({ route, modelName, setModelName, showModelDe
     }
   }, [gridApi, gridDataSource]);
 
-  const onGridReady = useCallback((api: GridApi) => {
+  const onGridReady = useCallback(({ api }: GridReadyEvent) => {
     setGridApi(api);
   }, []);
 

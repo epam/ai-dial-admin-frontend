@@ -1,9 +1,10 @@
-import { describe, expect, test } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import DependenciesList from '../DependenciesList';
-import { ApplicationRoute } from '@/src/types/routes';
 import { Container } from '@/src/models/deployments/containers';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
+import { ApplicationRoute } from '@/src/types/routes';
+import { render, screen } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
+import { EntitiesI18nKey } from '../../../../constants/i18n';
+import DependenciesList from '../DependenciesList';
 
 describe('DependenciesList', () => {
   const mockContainers: Container[] = [
@@ -30,6 +31,6 @@ describe('DependenciesList', () => {
   test('renders with empty list', () => {
     render(<DependenciesList containerList={[]} route={ApplicationRoute.ModelServings} />);
 
-    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(screen.getByText(EntitiesI18nKey.NoContainers)).toBeInTheDocument();
   });
 });
