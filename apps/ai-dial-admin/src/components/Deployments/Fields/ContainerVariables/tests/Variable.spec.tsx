@@ -1,7 +1,7 @@
 import { describe, expect, test, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import EnvVariable from '../EnvVariable';
+import Variable from '@/src/components/Deployments/Fields/ContainerVariables/Variable';
 import { EnvironmentVariable } from '@/src/models/deployments/variables';
 import { MOUNT_TYPE, VALUE_TYPE } from '@/src/types/deployments/variables';
 
@@ -25,18 +25,18 @@ describe('EnvVariable', () => {
   };
 
   test.skip('renders variable name input', () => {
-    render(<EnvVariable {...defaultProps} />);
+    render(<Variable {...defaultProps} />);
     expect(screen.getByDisplayValue('TEST_VAR')).toBeInTheDocument();
   });
 
   test.skip('renders variable description input', () => {
-    render(<EnvVariable {...defaultProps} />);
+    render(<Variable {...defaultProps} />);
     expect(screen.getByDisplayValue('Test variable description')).toBeInTheDocument();
   });
 
   test.skip('calls updateVariable when name changes', async () => {
     const user = userEvent.setup();
-    render(<EnvVariable {...defaultProps} />);
+    render(<Variable {...defaultProps} />);
 
     const nameInput = screen.getByDisplayValue('TEST_VAR');
     await user.clear(nameInput);
@@ -47,7 +47,7 @@ describe('EnvVariable', () => {
 
   test.skip('calls updateVariable when description changes', async () => {
     const user = userEvent.setup();
-    render(<EnvVariable {...defaultProps} />);
+    render(<Variable {...defaultProps} />);
 
     const descInput = screen.getByDisplayValue('Test variable description');
     await user.clear(descInput);
@@ -58,7 +58,7 @@ describe('EnvVariable', () => {
 
   test.skip('calls removeVariable when delete button is clicked', async () => {
     const user = userEvent.setup();
-    render(<EnvVariable {...defaultProps} />);
+    render(<Variable {...defaultProps} />);
 
     const deleteButton = screen.getByRole('button', { name: /trash/i });
     await user.click(deleteButton);
@@ -72,7 +72,7 @@ describe('EnvVariable', () => {
       numVariables: 1,
       variable: {} as EnvironmentVariable,
     };
-    render(<EnvVariable {...props} />);
+    render(<Variable {...props} />);
 
     expect(screen.queryByRole('button', { name: /trash/i })).not.toBeInTheDocument();
   });
@@ -82,7 +82,7 @@ describe('EnvVariable', () => {
       ...defaultProps,
       variable: {} as EnvironmentVariable,
     };
-    render(<EnvVariable {...props} />);
+    render(<Variable {...props} />);
 
     expect(screen.getByRole('button', { name: /trash/i })).toBeInTheDocument();
   });

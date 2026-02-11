@@ -10,8 +10,8 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { isEditDisabled } from '@/src/utils/deployments/containers';
 import { getControlClassName } from '@/src/utils/entities/view';
 import { useI18n } from '@/src/locales/client';
-import HFModelNameField from '@/src/components/Containers/Fields/HFModelNameField/HFModelNameField';
 import { ApplicationRoute } from '@/src/types/routes';
+import HFModelNameField from '@/src/components/Deployments/Fields/ContainerSource/HFModelNameField';
 
 interface Props {
   container: Container;
@@ -20,7 +20,7 @@ interface Props {
   route: ApplicationRoute;
 }
 
-const ModelSourceFields: FC<Props> = ({ container, setContainer, isModal = false, route }) => {
+const ContainerSource: FC<Props> = ({ container, setContainer, isModal = false, route }) => {
   const t = useI18n();
   const { dispatch, resetCounter } = useSaveValidationContext();
   const containerClassName = useMemo(() => getControlClassName(isModal), [isModal]);
@@ -69,4 +69,4 @@ const ModelSourceFields: FC<Props> = ({ container, setContainer, isModal = false
   );
 };
 
-export default ModelSourceFields;
+export default ContainerSource;

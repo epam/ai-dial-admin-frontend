@@ -13,7 +13,7 @@ interface Props {
   setContainer: (container: Container) => void;
 }
 
-const Configuration: FC<Props> = ({ container, setContainer }) => {
+const ContainerConfiguration: FC<Props> = ({ container, setContainer }) => {
   const t = useI18n();
 
   return (
@@ -43,4 +43,4 @@ const Configuration: FC<Props> = ({ container, setContainer }) => {
   );
 };
 
-export default Configuration;
+export default ContainerConfiguration;

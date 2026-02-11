@@ -8,19 +8,19 @@ import { EnvironmentVariable } from '@/src/models/deployments/variables';
 import { MOUNT_TYPE, VALUE_TYPE } from '@/src/types/deployments/variables';
 import { EntityFieldsI18nKey, EnvVariablesI18nKey } from '@/src/constants/i18n';
 import { Container } from '@/src/models/deployments/containers';
+import { isEditDisabled } from '@/src/utils/deployments/containers';
 import { useI18n } from '@/src/locales/client';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 
 import Accordion from '@/src/components/Common/Accordion/Accordion';
-import EnvVariable from './EnvVariable';
-import { isEditDisabled } from '@/src/utils/deployments/containers';
+import Variable from '@/src/components/Deployments/Fields/ContainerVariables/Variable';
 
 interface Props {
   container: Container;
   setContainer: (container: Container) => void;
 }
 
-const EnvVariables: FC<Props> = ({ container, setContainer }) => {
+const ContainerVariables: FC<Props> = ({ container, setContainer }) => {
   const t = useI18n();
 
   const variables = useMemo(() => container.metadata?.envs || [], [container]);
@@ -94,7 +94,7 @@ const EnvVariables: FC<Props> = ({ container, setContainer }) => {
                 onUpdateVariable(updatedVariable, index);
 
               return (
-                <EnvVariable
+                <Variable
                   key={`variable${index}`}
                   variable={variable}
                   index={index}
@@ -122,4 +122,4 @@ const EnvVariables: FC<Props> = ({ container, setContainer }) => {
   );
 };
 
-export default EnvVariables;
+export default ContainerVariables;

@@ -11,8 +11,7 @@ import { getContainerTemplate } from '@/src/utils/deployments/containers';
 import { useAppContext } from '@/src/context/AppContext';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
-
-import ServingProperties from '@/src/components/Containers/Fields/ServingProperties';
+import ContainerFields from '@/src/components/Containers/Fields/ContainerFields';
 
 interface Props {
   isModalOpen: boolean;
@@ -21,20 +20,19 @@ interface Props {
   route: ApplicationRoute;
   names: string[];
   header: string;
+  type: CONTAINER_TYPE;
 }
 
-const ServingCreateNIM: FC<Props> = ({ isModalOpen, onClose, onApply, route, names, header }) => {
+const ServingCreate: FC<Props> = ({ isModalOpen, onClose, onApply, route, names, header, type }) => {
   const t = useI18n();
   const { resourcesDefaults } = useAppContext();
   const { isValid } = useSaveValidationContext();
 
-  const [container, setContainer] = useState<Container>(
-    getContainerTemplate(CONTAINER_TYPE.NIM, resourcesDefaults) as Container,
-  );
+  const [container, setContainer] = useState<Container>(getContainerTemplate(type, resourcesDefaults) as Container);
 
   return (
     <DialFormPopup
-      portalId="ServingCreateNIMModal"
+      portalId="ServingCreateModal"
       open={isModalOpen}
       header={header}
       onClose={onClose}
@@ -44,16 +42,10 @@ const ServingCreateNIM: FC<Props> = ({ isModalOpen, onClose, onApply, route, nam
       disableSubmitButton={!isValid}
     >
       <div className="flex flex-col px-6 py-4 gap-4 h-full">
-        <ServingProperties
-          container={container}
-          setContainer={setContainer}
-          route={route}
-          names={names}
-          isModal={true}
-        />
+        <ContainerFields container={container} setContainer={setContainer} route={route} names={names} isModal={true} />
       </div>
     </DialFormPopup>
   );
 };
 
-export default ServingCreateNIM;
+export default ServingCreate;

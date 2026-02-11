@@ -1,7 +1,8 @@
 import { describe, expect, test, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import EnvVariableValue from '../EnvVariableValue';
 import { MOUNT_TYPE, VALUE_TYPE } from '@/src/types/deployments/variables';
+
+import Value from '@/src/components/Deployments/Fields/ContainerVariables/Value';
 
 describe('EnvVariableValue', () => {
   const defaultProps = {
@@ -12,7 +13,7 @@ describe('EnvVariableValue', () => {
   };
 
   test('renders simple value input', () => {
-    render(<EnvVariableValue {...defaultProps} />);
+    render(<Value {...defaultProps} />);
 
     expect(screen.getByDisplayValue('test-value')).toBeInTheDocument();
   });

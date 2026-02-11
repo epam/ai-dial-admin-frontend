@@ -861,7 +861,6 @@ export enum ErrorI18nKey {
   ImageSourceURI = 'Error.ImageSourceURI',
   PathError = 'Error.PathError',
   VariableError = 'Error.VariableError',
-  VariableStartError = 'Error.VariableStartError',
   HFModelName = 'Error.HFModelName',
   ContainSpace = 'Error.ContainSpace',
   SpecialChars = 'Error.SpecialChars',
@@ -872,6 +871,9 @@ export enum ErrorI18nKey {
   RunOutOfMemory = 'Error.RunOutOfMemory',
   ExitedWithError = 'Error.ExitedWithError',
   InvalidWhitelistDomain = 'Error.InvalidWhitelistDomain',
+  PortError = 'Error.PortError',
+  MemoryError = 'Error.MemoryError',
+  GPUError = 'Error.GPUError',
 }
 
 export enum SourceI18nKey {

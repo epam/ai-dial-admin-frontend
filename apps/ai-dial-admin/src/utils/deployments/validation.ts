@@ -11,13 +11,16 @@ import { checkNameVersionCombination } from '@/src/utils/prompts/versions';
 const IMAGE_NAME_REGEX = /^[A-Za-z0-9 _-]+$/;
 const IMAGE_BASE_DIRECTORY_REGEX = /^[^/].*[^/]$|^[^/]+$/;
 
-// Variables
-const VARIABLE_REGEX = /^[A-Za-z_][A-Za-z0-9_]*$/;
-const VARIABLE_START_REGEX = /^[A-Za-z_]/;
+// Image source
 const DOCKER_IMAGE_REGEX =
   /^(?:[a-zA-Z0-9.-]+(?::[0-9]+)?\/)?[a-z0-9]+(?:[._-][a-z0-9]+)*(?:\/[a-z0-9]+(?:[._-][a-z0-9]+)*)*(?::[\w][\w.-]{0,127})?(?:@sha256:[a-f0-9]{64})?$/;
 const SSH_REPO_REGEX =
   /^(?:ssh:\/\/)?[A-Za-z0-9._-]+@[A-Za-z0-9._-]+(?::\d+)?[:/][A-Za-z0-9._-]+(?:\/[A-Za-z0-9._-]+)*(?:\.git)?$/;
+
+// Variables
+const MIN_VARIABLE_NAME_SYMBOLS = 1;
+const MAX_VARIABLE_NAME_SYMBOLS = 253;
+const VARIABLE_NAME_REGEX = /^[-._a-zA-Z0-9]+$/;
 
 // HF model name
 const HF_USERNAME_MAX_LENGTH = 42;
@@ -55,7 +58,10 @@ export const getImageNameError = (
   return null;
 };
 
-export const getVariableNameError = (name: string, t?: (str: string) => string) => {
+export const getVariableNameError = (
+  name: string,
+  t?: (str: string, args?: Record<string, string | number>) => string,
+) => {
   if (!name) {
     return {
       type: ErrorType.EMPTY,
@@ -63,14 +69,19 @@ export const getVariableNameError = (name: string, t?: (str: string) => string) 
     };
   }
 
-  if (!VARIABLE_START_REGEX.test(name)) {
+  if (name.length < MIN_VARIABLE_NAME_SYMBOLS || name.length > MAX_VARIABLE_NAME_SYMBOLS) {
     return {
-      type: ErrorType.INVALID,
-      text: t ? t(ErrorI18nKey.VariableStartError) : '',
+      type: ErrorType.LENGTH,
+      text: t
+        ? t(ErrorI18nKey.MinMaxLength, {
+            min: MIN_VARIABLE_NAME_SYMBOLS,
+            max: MAX_VARIABLE_NAME_SYMBOLS,
+          })
+        : '',
     };
   }
 
-  if (!VARIABLE_REGEX.test(name)) {
+  if (!name.match(VARIABLE_NAME_REGEX)) {
     return {
       type: ErrorType.INVALID,
       text: t ? t(ErrorI18nKey.VariableError) : '',
@@ -195,8 +206,7 @@ const isValidHfUsername = (username: string): boolean => {
   if (username.length === 0 || username.length > HF_USERNAME_MAX_LENGTH) return false;
   if (!HF_USERNAME_ALLOWED_REGEX.test(username)) return false;
   if (username.startsWith('-') || username.endsWith('-')) return false;
-  if (username.includes('--')) return false;
-  return true;
+  return !username.includes('--');
 };
 
 const isValidHfModelName = (modelName: string): boolean => {
@@ -206,8 +216,7 @@ const isValidHfModelName = (modelName: string): boolean => {
   if (modelName.startsWith('.') || modelName.endsWith('.')) return false;
   if (modelName.includes('--')) return false;
   if (modelName.includes('..')) return false;
-  if (endsWithAny(modelName, ['.git', '.ipynb'])) return false;
-  return true;
+  return !endsWithAny(modelName, ['.git', '.ipynb']);
 };
 
 /**
@@ -256,24 +265,51 @@ export const getErrorForHfModelName = (
   return null;
 };
 
-export const getCPUError = (
-  value: number,
+export const getCPUValueError = (
+  value: string,
   t?: (key: string, options?: Record<string, string | number>) => string,
 ): FieldError | null => {
-  if (value < 1) {
+  const num = Number(value);
+  if (num < 1) {
     return { type: ErrorType.INVALID, text: t ? t(ErrorI18nKey.CpuError) : '' };
   }
 
   return null;
 };
 
-export const getResourcesConflictError = (
-  request: number,
-  limit: number,
+export const getGpuError = (
+  value?: string,
   t?: (key: string, options?: Record<string, string | number>) => string,
 ): FieldError | null => {
-  if (request > limit) {
-    return { type: ErrorType.INVALID, text: t ? t(ErrorI18nKey.LimitRequestError) : '' };
+  const num = Number(value);
+  if (num < 1) {
+    return { type: ErrorType.INVALID, text: t ? t(ErrorI18nKey.GPUError) : '' };
+  }
+
+  return null;
+};
+
+export const getMemoryValueError = (
+  value: string,
+  t?: (key: string, options?: Record<string, string | number>) => string,
+): FieldError | null => {
+  const num = Number(value);
+  if (num <= 0) {
+    return { type: ErrorType.INVALID, text: t ? t(ErrorI18nKey.MemoryError) : '' };
+  }
+
+  return null;
+};
+
+export const getResourcesConflictError = (
+  request?: string,
+  limit?: string,
+  t?: (key: string, options?: Record<string, string | number>) => string,
+): FieldError | null => {
+  const requestNum = Number(request);
+  const limitNum = Number(limit);
+  if (request && limit && requestNum > limitNum) {
+    return { type: ErrorType.CONFLICT, text: t ? t(ErrorI18nKey.LimitRequestError) : '' };
   }
 
   return null;
@@ -313,6 +349,43 @@ export const getWhitelistDomainError = (
     return {
       type: ErrorType.INVALID,
       text: t ? t(ErrorI18nKey.InvalidWhitelistDomain) : '',
+    };
+  }
+
+  return null;
+};
+
+export const getPortError = (value: number, t?: (key: string, options?: Record<string, string | number>) => string) => {
+  if (value < 1 || value > 65535) {
+    return {
+      type: ErrorType.INVALID,
+      text: t ? t(ErrorI18nKey.PortError) : '',
+    };
+  }
+
+  return null;
+};
+
+export const getFileNameError = (
+  name?: string,
+  t?: (key: string, options?: Record<string, string | number>) => string,
+) => {
+  if (name && (name.length < MIN_VARIABLE_NAME_SYMBOLS || name.length > MAX_VARIABLE_NAME_SYMBOLS)) {
+    return {
+      type: ErrorType.LENGTH,
+      text: t
+        ? t(ErrorI18nKey.MinMaxLength, {
+            min: MIN_VARIABLE_NAME_SYMBOLS,
+            max: MAX_VARIABLE_NAME_SYMBOLS,
+          })
+        : '',
+    };
+  }
+
+  if (name && !name.match(VARIABLE_NAME_REGEX)) {
+    return {
+      type: ErrorType.INVALID,
+      text: t ? t(ErrorI18nKey.VariableError) : '',
     };
   }
 

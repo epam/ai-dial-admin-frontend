@@ -15,7 +15,7 @@ interface Props {
   names?: string[];
 }
 
-const BaseFields: FC<Props> = ({ container, setContainer, names, isModal = false }) => {
+const ContainerBase: FC<Props> = ({ container, setContainer, names, isModal = false }) => {
   const [isUniqueNameError, setIsUniqueNameError] = useState<boolean>(false);
 
   const onChangeName = useCallback(
@@ -63,4 +63,4 @@ const BaseFields: FC<Props> = ({ container, setContainer, names, isModal = false
   );
 };
 
-export default BaseFields;
+export default ContainerBase;

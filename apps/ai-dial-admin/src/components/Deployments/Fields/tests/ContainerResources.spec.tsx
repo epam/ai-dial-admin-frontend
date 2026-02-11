@@ -3,7 +3,7 @@ import { render } from '@testing-library/react';
 import { Container } from '@/src/models/deployments/containers';
 import { CONTAINER_STATUS, CONTAINER_TYPE } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
-import ResourcesFields from './ResourcesFields';
+import ContainerResources from '@/src/components/Deployments/Fields/ContainerResources';
 
 describe('ContainerResourcesFields', () => {
   const mockContainer: Container = {
@@ -21,7 +21,7 @@ describe('ContainerResourcesFields', () => {
 
   test('renders component', () => {
     const { container } = render(
-      <ResourcesFields container={mockContainer} setContainer={vi.fn()} route={ApplicationRoute.McpContainers} />,
+      <ContainerResources container={mockContainer} setContainer={vi.fn()} route={ApplicationRoute.McpContainers} />,
     );
 
     expect(container).toBeTruthy();

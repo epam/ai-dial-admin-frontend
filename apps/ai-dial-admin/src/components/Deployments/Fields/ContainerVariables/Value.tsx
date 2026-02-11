@@ -1,20 +1,14 @@
 import { ChangeEvent, FC, memo, useCallback, useRef } from 'react';
-import { IconFileArrowRight, IconX } from '@tabler/icons-react';
-import {
-  DialIconButton,
-  DialTextInputField,
-  DialPasswordInputField,
-  DialTooltip,
-  DialFileIcon,
-  DialNeutralButton,
-} from '@epam/ai-dial-ui-kit';
+import { IconFileArrowRight } from '@tabler/icons-react';
+import { DialTextInputField, DialPasswordInputField, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+
 import { EnvVariableValue } from '@/src/models/deployments/variables';
-import { MOUNT_TYPE, VALUE_TYPE } from '@/src/types/deployments/variables';
-import { useI18n } from '@/src/locales/client';
 import { EntityPlaceholdersI18nKey, EnvVariablesI18nKey } from '@/src/constants/i18n';
-import Field from '@/src/components/Common/Field/Field';
+import { MOUNT_TYPE, VALUE_TYPE } from '@/src/types/deployments/variables';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
+import { useI18n } from '@/src/locales/client';
+
+import ValueFile from '@/src/components/Deployments/Fields/ContainerVariables/ValueFile';
 
 interface Props {
   value: EnvVariableValue;
@@ -24,7 +18,7 @@ interface Props {
   disabled?: boolean;
 }
 
-const EnvVariableValueField: FC<Props> = ({ value, index, onValueChange, mountType, disabled }) => {
+const ContainerVariableValue: FC<Props> = ({ value, index, onValueChange, mountType, disabled }) => {
   const t = useI18n();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const fieldName = index === 0 ? t(EnvVariablesI18nKey.Value) : '';
@@ -62,30 +56,6 @@ const EnvVariableValueField: FC<Props> = ({ value, index, onValueChange, mountTy
     inputRef.current?.click();
   }, []);
 
-  const handleFileDownload = useCallback(() => {
-    if (!value.fileContent || !value.fileName) return;
-
-    const blob = new Blob([atob(value.fileContent)]);
-
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = value.fileName;
-    link.click();
-
-    setTimeout(() => {
-      URL.revokeObjectURL(link.href);
-    }, 100);
-  }, [value]);
-
-  const onClearFile = useCallback(() => {
-    onValueChange({
-      $type: VALUE_TYPE.SIMPLE,
-      value: '',
-      fileContent: '',
-      fileName: '',
-    });
-  }, [onValueChange]);
-
   const onChangeValue = useCallback(
     (newValue?: string) => {
       onValueChange({
@@ -122,26 +92,13 @@ const EnvVariableValueField: FC<Props> = ({ value, index, onValueChange, mountTy
         </div>
       )}
       {value.$type === VALUE_TYPE.FILE && (
-        <div className="flex flex-col flex-1 max-w-full">
-          <Field fieldTitle={fieldName} />
-          <div className="flex border border-primary px-3 py-1 rounded justify-between">
-            <DialTooltip tooltip={value.fileName}>
-              <div
-                className="flex flex-row gap-x-3 text-accent-primary w-full items-center"
-                onClick={handleFileDownload}
-              >
-                <DialFileIcon extension={getNameExtensionFromFile(value.fileName as string).extension} />
-                <p className="truncate flex-1 min-w-0 text-left items-center">{value.fileName}</p>
-              </div>
-            </DialTooltip>
-            <DialIconButton
-              icon={<IconX {...BASE_BUTTON_ICON_PROPS} />}
-              onClick={onClearFile}
-              disabled={disabled}
-              className="w-auto h-auto p-0"
-            />
-          </div>
-        </div>
+        <ValueFile
+          value={value}
+          index={index}
+          fieldName={fieldName}
+          onValueChange={onValueChange}
+          disabled={disabled}
+        />
       )}
 
       <DialNeutralButton
@@ -154,4 +111,4 @@ const EnvVariableValueField: FC<Props> = ({ value, index, onValueChange, mountTy
   );
 };
 
-export default memo(EnvVariableValueField);
+export default memo(ContainerVariableValue);

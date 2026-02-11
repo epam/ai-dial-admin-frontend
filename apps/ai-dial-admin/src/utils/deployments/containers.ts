@@ -122,3 +122,19 @@ export const getContainerTemplate = (type: CONTAINER_TYPE, defaults?: ResourcesD
 export const isEditDisabled = (container: Container): boolean => {
   return container.status === CONTAINER_STATUS.PENDING || container.status === CONTAINER_STATUS.STOPPING;
 };
+
+export const convertMilliCoresToCores = (value?: string): string => {
+  return String(parseFloat((Number(value) / 1000).toFixed(3)));
+};
+
+export const convertCoresToMilliCores = (value?: string): string => {
+  return String(Math.round(Number(value) * 1000));
+};
+
+export const convertMbToBytes = (value?: string): string => {
+  return String(Math.round(Number(value) * (1024 * 1024)));
+};
+
+export const convertBytesToMb = (value?: string): string => {
+  return String(Math.round(Number(value) / (1024 * 1024)));
+};

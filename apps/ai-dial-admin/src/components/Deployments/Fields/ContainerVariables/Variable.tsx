@@ -6,7 +6,6 @@ import classNames from 'classnames';
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import DraggableItem from '@/src/components/Common/DraggableItem/DraggableItem';
-import EnvVariableValueField from '@/src/components/Containers/Fields/EnvVariables/EnvVariableValue';
 import { mountTypeDropdownItems } from '@/src/constants/deployments/variables';
 import { EntityPlaceholdersI18nKey, EnvVariablesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -17,6 +16,7 @@ import { EnvironmentVariable, EnvVariableValue } from '@/src/models/deployments/
 import { FieldError } from '@/src/models/error';
 import { MOUNT_TYPE } from '@/src/types/deployments/variables';
 import { getVariableNameError } from '@/src/utils/deployments/validation';
+import Value from '@/src/components/Deployments/Fields/ContainerVariables/Value';
 
 interface Props {
   index: number;
@@ -28,15 +28,7 @@ interface Props {
   disabled?: boolean;
 }
 
-const EnvVariable: FC<Props> = ({
-  index,
-  variable,
-  updateVariable,
-  removeVariable,
-  findColumn,
-  moveColumn,
-  disabled,
-}) => {
+const Variable: FC<Props> = ({ index, variable, updateVariable, removeVariable, findColumn, moveColumn, disabled }) => {
   const t = useI18n();
   const isTablet = useIsTabletScreen();
   const { dispatch, resetCounter } = useSaveValidationContext();
@@ -45,6 +37,16 @@ const EnvVariable: FC<Props> = ({
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [variableNameError, setVariableNameError] = useState<FieldError | null>(null);
+
+  useEffect(() => {
+    const error = getVariableNameError(variable.name as string, t);
+    dispatch({
+      type: ValidationActionType.SetField,
+      field: `variable_${index}`,
+      isValid: !error,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (resetCounter || (variable.name != null && variable.name?.length > 0)) {
@@ -151,7 +153,7 @@ const EnvVariable: FC<Props> = ({
               disabled={disabled}
             />
             <div className="lg:min-w-[350px] lg:max-w-[350px]">
-              <EnvVariableValueField
+              <Value
                 value={variable.value}
                 onValueChange={onValueChange}
                 index={index}
@@ -178,4 +180,4 @@ const EnvVariable: FC<Props> = ({
   );
 };
 
-export default EnvVariable;
+export default Variable;

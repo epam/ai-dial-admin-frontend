@@ -1120,7 +1120,6 @@ export default {
     ImageSourceURI: 'Invalid Docker Image URI',
     PathError: 'Path should start with /',
     VariableError: 'User can add only characters, numbers or underscore',
-    VariableStartError: 'Name must start with a letter or underscore',
     HFModelName: 'Invalid Hugging Face model name',
     ContainSpace: 'Field must not contain spaces',
     SpecialChars: 'Field must not contain special symbols',
@@ -1132,6 +1131,9 @@ export default {
     ExitedWithError: 'Failed during execution',
     InvalidWhitelistDomain: 'Invalid domain name',
     NotSemanticVersion: 'Version must follow semantic versioning (e.g., 1.0.0)',
+    PortError: 'Port must be between 1 and 65535',
+    MemoryError: 'Memory should be greater than 1',
+    GPUError: 'GPU should be greater than 1',
   },
   Source: {
     OpenTemplate: 'Open template',

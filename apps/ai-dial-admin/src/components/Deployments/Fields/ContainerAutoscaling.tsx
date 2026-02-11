@@ -17,7 +17,7 @@ interface Props {
   setContainer: (container: Container) => void;
 }
 
-const Autoscaling: FC<Props> = ({ container, setContainer }) => {
+const ContainerAutoscaling: FC<Props> = ({ container, setContainer }) => {
   const t = useI18n();
   const { dispatch, resetCounter } = useSaveValidationContext();
   const scalingOptions = AUTOSCALE_OPTIONS(t);
@@ -162,4 +162,4 @@ const Autoscaling: FC<Props> = ({ container, setContainer }) => {
   );
 };
 
-export default Autoscaling;
+export default ContainerAutoscaling;

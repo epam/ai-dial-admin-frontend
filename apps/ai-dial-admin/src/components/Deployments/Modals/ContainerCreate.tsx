@@ -27,7 +27,7 @@ import { getErrorNotification } from '@/src/utils/notification';
 import Grid from '@/src/components/Grid/Grid';
 import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
-import ContainerProperties from '@/src/components/Containers/Fields/ContainerProperties';
+import ContainerFields from '@/src/components/Containers/Fields/ContainerFields';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { IMAGES_LIST_FOR_CONTAINER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
@@ -196,7 +196,7 @@ const ContainerCreate: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
         </>
         <>
           {currentStepId === CreateSteps.PROPERTIES && (
-            <ContainerProperties
+            <ContainerFields
               container={container}
               setContainer={setContainer}
               isModal={true}
