@@ -65,7 +65,8 @@ const GridView = <T extends object>({
         storageColumns ? storageColumns?.some((c, index) => c.hide !== columnDefs?.[index].hide) : false,
       );
     }
-  }, [currentColDefs, columnDefs, storageKey]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [columnDefs, storageKey]);
 
   useEffect(() => {
     setPanelContainerClassName(classNames(staticPanelContainerClassName, isMobile || isTablet ? 'fixed' : 'absolute'));
