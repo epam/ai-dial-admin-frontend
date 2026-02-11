@@ -1,6 +1,7 @@
 import pino from 'pino';
 import pretty from 'pino-pretty';
 import { context, trace } from '@opentelemetry/api';
+import { logs } from '@opentelemetry/api-logs';
 
 const stream = pretty({
   colorize: true,
@@ -9,6 +10,8 @@ const stream = pretty({
 });
 
 const logger = pino(stream);
+
+const otelLogger = logs.getLogger('otel-pino-logger');
 
 export const getCurrentTraceIds = () => {
   const span = trace.getSpan(context.active());
@@ -19,12 +22,15 @@ export const getCurrentTraceIds = () => {
 };
 
 export const errorObjLog = (error: unknown, message: string) => {
-  const errorMessage = (error as { message: string }).message
-    ? (error as { message: string }).message
-    : 'Unknown error';
-
-  const errorStack = (error as { error: string }) ? (error as { error: string }).error : 'No stack trace available';
   const traceIds = getCurrentTraceIds();
+
+  const errorMessage = (error as { message?: string })?.message ?? 'Unknown error';
+  const errorStack = (error as { stack?: string })?.stack ?? 'No stack trace available';
+
+  otelLogger.emit({
+    body: message,
+    ...traceIds,
+  });
 
   logger.error(
     {
@@ -37,15 +43,23 @@ export const errorObjLog = (error: unknown, message: string) => {
     message,
   );
 };
-
 export const errorLog = (message: string) => {
-  logger.error({ ...getCurrentTraceIds() }, message);
-};
+  const traceIds = getCurrentTraceIds();
 
-export const infoLog = (message: string) => {
-  logger.info({ ...getCurrentTraceIds() }, message);
+  otelLogger.emit({ body: message, ...traceIds });
+  logger.error({ ...traceIds }, message);
 };
 
 export const warnLog = (message: string) => {
-  logger.warn({ ...getCurrentTraceIds() }, message);
+  const traceIds = getCurrentTraceIds();
+
+  otelLogger.emit({ body: message, ...traceIds });
+  logger.warn({ ...traceIds }, message);
+};
+
+export const infoLog = (message: string) => {
+  const traceIds = getCurrentTraceIds();
+
+  otelLogger.emit({ body: message, ...traceIds });
+  logger.info({ ...traceIds }, message);
 };
