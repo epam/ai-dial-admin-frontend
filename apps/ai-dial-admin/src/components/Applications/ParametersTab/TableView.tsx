@@ -140,7 +140,13 @@ const TableView: FC<Props> = ({ properties, isSkipRefresh, onChangeProperties, i
     }
   });
 
-  return <GridView emptyDataTitle={t(BasicI18nKey.NoParameters)} onGridReady={onGridReady} />;
+  return (
+    <GridView
+      getIsEmptyData={() => !properties.length}
+      emptyDataTitle={t(BasicI18nKey.NoParameters)}
+      onGridReady={onGridReady}
+    />
+  );
 };
 
 export default TableView;

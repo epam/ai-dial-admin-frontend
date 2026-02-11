@@ -139,7 +139,11 @@ const AddEntitiesView: FC<Props> = ({
             />
           )}
         </div>
-        <GridView onGridReady={onGridReady} emptyDataTitle={emptyDataTitle || t(EntitiesI18nKey.NoEntities)} />
+        <GridView
+          getIsEmptyData={() => !data?.length}
+          onGridReady={onGridReady}
+          emptyDataTitle={emptyDataTitle || t(EntitiesI18nKey.NoEntities)}
+        />
       </div>
       {isModalOpen &&
         createPortal(
