@@ -100,14 +100,13 @@ const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action, isJ
               iconBefore={<IconWorldOff {...BASE_BUTTON_ICON_PROPS} />}
             />
           )}
-          {route !== ApplicationRoute.FilePublications && (
-            <DialSwitch
-              switchId="jsonView"
-              isOn={isJsonView}
-              onChange={() => setIsJsonView(!isJsonView)}
-              label={t(EntitiesI18nKey.JSONViewer)}
-            />
-          )}
+
+          <DialSwitch
+            switchId="jsonView"
+            isOn={isJsonView}
+            onChange={() => setIsJsonView(!isJsonView)}
+            label={t(EntitiesI18nKey.JSONViewer)}
+          />
         </div>
       </div>
       {isApproveModalOpen &&
