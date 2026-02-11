@@ -1,0 +1,92 @@
+import { FC, useCallback, useEffect, useState } from 'react';
+import { DialNumberInputField } from '@epam/ai-dial-ui-kit';
+
+import { Container } from '@/src/models/deployments/containers';
+import { ApplicationRoute } from '@/src/types/routes';
+import { EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { FieldError } from '@/src/models/error';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { getGpuError } from '@/src/utils/deployments/validation';
+import { isEditDisabled } from '@/src/utils/deployments/containers';
+import { useI18n } from '@/src/locales/client';
+
+import Accordion from '@/src/components/Common/Accordion/Accordion';
+import CPUFields from '@/src/components/Deployments/Fields/ContainerResources/CPUFields';
+import MemoryFields from '@/src/components/Deployments/Fields/ContainerResources/MemoryFields';
+
+interface Props {
+  container: Container;
+  setContainer: (container: Container) => void;
+  route: ApplicationRoute;
+}
+
+const ContainerResources: FC<Props> = ({ container, setContainer, route }) => {
+  const t = useI18n();
+  const { dispatch, resetCounter } = useSaveValidationContext();
+
+  const [error, setError] = useState<FieldError | null>(null);
+
+  const onChangeGpuRequest = useCallback(
+    (gpuRequest?: string | number) => {
+      const error = getGpuError(gpuRequest as string, t);
+      setError(error);
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'gpuRequest',
+        isValid: !error,
+      });
+      setContainer({
+        ...container,
+        resources: {
+          ...container.resources,
+          requests: {
+            ...container.resources?.requests,
+            ['nvidia.com/gpu']: gpuRequest !== void 0 ? `${gpuRequest}` : '',
+          },
+          limits: {
+            ...container.resources?.limits,
+            ['nvidia.com/gpu']: gpuRequest !== void 0 ? `${gpuRequest}` : '',
+          },
+        },
+      });
+    },
+    [container, dispatch, setContainer, t],
+  );
+
+  useEffect(() => {
+    if (resetCounter || container.resources?.requests?.['nvidia.com/gpu'] !== '') {
+      const error = getGpuError(container.resources?.requests?.['nvidia.com/gpu'], t);
+      setError(error);
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'gpuRequest',
+        isValid: !error,
+      });
+    }
+  }, [container.resources?.requests, dispatch, resetCounter, t]);
+
+  return (
+    <Accordion title={t(EntityFieldsI18nKey.Resources)}>
+      <div className="flex flex-col gap-x-2 gap-y-8">
+        <CPUFields container={container} setContainer={setContainer} />
+        <MemoryFields container={container} setContainer={setContainer} />
+        {route === ApplicationRoute.ModelServings && (
+          <div className="flex gap-2 flex-col lg:flex-row">
+            <DialNumberInputField
+              elementId="gpuRequest"
+              containerClassName="w-[180px]"
+              fieldTitle={t(EntityFieldsI18nKey.GPURequest)}
+              value={container.resources?.requests?.['nvidia.com/gpu'] || ''}
+              disabled={isEditDisabled(container)}
+              onChange={onChangeGpuRequest}
+              invalid={!!error}
+              errorText={error?.text}
+            />
+          </div>
+        )}
+      </div>
+    </Accordion>
+  );
+};
+
+export default ContainerResources;

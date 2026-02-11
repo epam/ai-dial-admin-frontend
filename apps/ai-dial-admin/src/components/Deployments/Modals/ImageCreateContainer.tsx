@@ -9,7 +9,7 @@ import { Image } from '@/src/models/deployments/images';
 import { getContainerTemplate } from '@/src/utils/deployments/containers';
 import { getRouteByType } from '@/src/utils/deployments/entity';
 
-import ContainerProperties from '@/src/components/Containers/Fields/ContainerProperties';
+import ContainerFields from '@/src/components/Containers/Fields/ContainerFields';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { IMAGE_TYPE } from '@/src/types/deployments/images';
 import { CONTAINER_TYPE } from '@/src/types/deployments/containers';
@@ -62,7 +62,7 @@ const ImageCreateContainer: FC<Props> = ({ onClose, isModalOpen, modalTitle, nam
       }}
     >
       <div className="flex flex-col py-4 px-6 overflow-auto">
-        <ContainerProperties
+        <ContainerFields
           container={container}
           setContainer={onChange}
           isModal={true}
