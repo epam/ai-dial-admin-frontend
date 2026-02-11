@@ -599,6 +599,7 @@ export enum PublicationsI18nKey {
   DeclineReason = 'Publications.ReasonTitle',
   DeclineReasonPlaceholder = 'Publications.ReasonPlaceholder',
   Warning = 'Publications.Warning',
+  Publication = 'Publications.Publication',
 
   // prompt publications
   PromptPublishApproveModalTitle = 'Publications.Prompt.PublishApproveModalTitle',
@@ -1313,6 +1314,7 @@ export enum FileManagerI18nKey {
   EnterFolderName = 'FileManager.EnterFolderName',
   NameExists = 'FileManager.NameExists',
   ManagePermissions = 'FileManager.ManagePermissions',
+  CreateFolderValidate = 'FileManager.CreateFolderValidate',
 
   // Notifications
   CreateFolderSuccessTitle = 'FileManager.Notifications.CreateFolder.Title',

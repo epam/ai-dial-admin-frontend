@@ -1,38 +1,31 @@
+import { DialLoader, DialPopup, DialSteps, PopupSize, StepStatus } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import classNames from 'classnames';
-import {
-  DialGhostButton,
-  DialLoader,
-  DialNeutralButton,
-  DialPopup,
-  DialPrimaryButton,
-  DialSteps,
-  PopupSize,
-  Step,
-  StepStatus,
-} from '@epam/ai-dial-ui-kit';
-import { IconArrowNarrowLeft } from '@tabler/icons-react';
-import { Container } from '@/src/models/deployments/containers';
-import { ApplicationRoute } from '@/src/types/routes';
-import { useI18n } from '@/src/locales/client';
-import { useNotification } from '@/src/context/NotificationContext';
-import { useAppContext } from '@/src/context/AppContext';
-import { getContainerTemplate } from '@/src/utils/deployments/containers';
-import { CREATE_CONTAINER_STEPS } from '@/src/constants/deployments/containers';
-import { ImageGroup } from '@/src/models/deployments/images';
-import { CONTAINER_TYPE, CreateSteps } from '@/src/types/deployments/containers';
+
 import { getImagesWithVersions } from '@/src/app/actions/deployments';
-import { getImageType, isValidVersion, updateSelectedVersion } from '@/src/utils/deployments/images';
-import { getErrorNotification } from '@/src/utils/notification';
+import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
+import ContainerProperties from '@/src/components/Containers/Fields/ContainerProperties';
+import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import Grid from '@/src/components/Grid/Grid';
 import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
+
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import ContainerFields from '@/src/components/Containers/Fields/ContainerFields';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { CREATE_CONTAINER_STEPS } from '@/src/constants/deployments/containers';
 import { IMAGES_LIST_FOR_CONTAINER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { useAppContext } from '@/src/context/AppContext';
+import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
+import { useI18n } from '@/src/locales/client';
+import { Container } from '@/src/models/deployments/containers';
+import { ImageGroup } from '@/src/models/deployments/images';
+import { CONTAINER_TYPE, CreateSteps } from '@/src/types/deployments/containers';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getContainerTemplate } from '@/src/utils/deployments/containers';
+import { getImageType, isValidVersion, updateSelectedVersion } from '@/src/utils/deployments/images';
+import { getErrorNotification } from '@/src/utils/notification';
 
 interface Props {
   isModalOpen: boolean;
@@ -88,16 +81,6 @@ const ContainerCreate: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
     fetchData();
   }, [showNotification, setLoading, route]);
 
-  const onNextStep = () => {
-    const stepIndex = steps.findIndex((s) => s.id === currentStepId);
-    setCurrentStep(steps[stepIndex + 1].id);
-  };
-
-  const onPrevStep = () => {
-    const stepIndex = steps.findIndex((s) => s.id === currentStepId);
-    setCurrentStep(steps[stepIndex - 1].id);
-  };
-
   const onFinishClick = () => {
     onApply(container);
   };
@@ -139,6 +122,15 @@ const ContainerCreate: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
       header={modalTitle}
       open={isModalOpen}
       size={PopupSize.Lg}
+      footer={
+        <StepperModalButtons
+          steps={steps}
+          currentStep={steps.find((s) => s.id === currentStepId)}
+          onChangeStep={setCurrentStep}
+          onFinishClick={onFinishClick}
+          onClose={onClose}
+        />
+      }
     >
       <div className="flex flex-col py-4 px-6 overflow-auto gap-y-6 h-[450px]">
         <DialSteps steps={steps} currentStep={currentStepId} onChangeStep={setCurrentStep} />
@@ -194,47 +186,16 @@ const ContainerCreate: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
             </>
           )}
         </>
-        <>
-          {currentStepId === CreateSteps.PROPERTIES && (
-            <ContainerFields
-              container={container}
-              setContainer={setContainer}
-              isModal={true}
-              route={route}
-              names={names}
-            />
-          )}
-        </>
-      </div>
-      <div
-        className={classNames(
-          'flex flex-row w-full items-center px-6 py-4',
-          currentStepId === steps[0]?.id ? 'justify-end' : 'justify-between',
-        )}
-      >
-        {currentStepId !== steps[0]?.id && (
-          <DialGhostButton
-            label={t(ButtonsI18nKey.Back)}
-            onClick={onPrevStep}
-            iconBefore={<IconArrowNarrowLeft {...BASE_BUTTON_ICON_PROPS} />}
+
+        {currentStepId === CreateSteps.PROPERTIES && (
+          <ContainerProperties
+            container={container}
+            setContainer={setContainer}
+            isModal={true}
+            route={route}
+            names={names}
           />
         )}
-        <div className="flex flex-row gap-2">
-          <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-          {currentStepId === steps.at(-1)?.id ? (
-            <DialPrimaryButton
-              label={t(ButtonsI18nKey.Finish)}
-              disabled={steps.some((s) => s.status !== StepStatus.VALID) || !isValid}
-              onClick={onFinishClick}
-            />
-          ) : (
-            <DialPrimaryButton
-              label={t(ButtonsI18nKey.Next)}
-              onClick={onNextStep}
-              disabled={(steps?.find((s) => s.id === currentStepId) as Step).status !== StepStatus.VALID}
-            />
-          )}
-        </div>
       </div>
     </DialPopup>
   );

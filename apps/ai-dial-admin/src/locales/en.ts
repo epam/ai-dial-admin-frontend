@@ -615,6 +615,7 @@ export default {
     Write: 'Write',
   },
   Publications: {
+    Publication: 'Publication',
     ReasonTitle: 'Reason',
     ReasonPlaceholder: 'Describe the reason for decline',
     Warning: 'This request refers to an item that is no longer available or has changed since the request was created.',
@@ -719,7 +720,7 @@ export default {
     FilePaths: 'File paths',
     Changes: 'Changes',
     FileSizeErrorHeader: 'File size limit error',
-    FileSizeErrorDescription: 'Size of files is more than {size}',
+    FileSizeErrorDescription: 'Size of files is more than {size} MB',
     Notifications: {
       ConfigImported: 'Config imported successfully',
       ConfigImportedDescription: 'Changes have been delivered to the system',
@@ -1340,5 +1341,6 @@ export default {
         Description: 'You can now add files to this folder.',
       },
     },
+    CreateFolderValidate: 'Folder name contains forbidden characters: < > : " / \\ | ? *',
   },
 } as const;

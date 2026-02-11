@@ -34,16 +34,16 @@ const BasePublicationProperties: FC<Props> = ({ view, publication, children, app
   const runner = applicationSchemes?.find((app) => app.$id === runnerId);
 
   const warning = useMemo(() => {
-    if (publication.missingResources?.length) {
+    if (publication.resourceIssues?.length) {
       return (
         <div className="flex flex-col gap-3">
-          <h3>{publication.missingResources[0].message}</h3>
+          <h3>{publication.resourceIssues[0].message}</h3>
           <span className="text-sm">{t(PublicationsI18nKey.Warning)}</span>
         </div>
       );
     }
     return null;
-  }, [publication.missingResources, t]);
+  }, [publication.resourceIssues, t]);
 
   const prefix = useMemo(() => {
     return (
@@ -67,21 +67,23 @@ const BasePublicationProperties: FC<Props> = ({ view, publication, children, app
   }, [view, t, indicatorClassName, publication.action, publication.author, runnerId, runner]);
 
   return (
-    <div className="h-full flex flex-col divide-y divide-primary w-full">
+    <div className="h-full flex flex-col w-full">
       <EntityInfoHeader view={view} prefix={prefix} postfix={<FoldersStorageLabel asset={publication} />} />
 
       <div className="flex-1 min-h-0 mt-8 relative">
         {warning && <DialAlert variant={AlertVariant.Warning} message={warning} />}
-        <div className="flex flex-col gap-y-8 h-full overflow-auto">{children}</div>
+        {!warning && <div className="flex flex-col gap-y-8 h-full overflow-auto">{children}</div>}
       </div>
 
-      <div className="pt-8" id="publication-permissions">
-        <PublicationPermissions
-          rules={publication.rules || []}
-          folderId={decodeURIComponent(publication.folderId)}
-          showCompare={publication.action === ActionType.ADD || publication.action === ActionType.ADD_IF_ABSENT}
-        />
-      </div>
+      {!warning && (
+        <div className="pt-8" id="publication-permissions">
+          <PublicationPermissions
+            rules={publication.rules || []}
+            folderId={decodeURIComponent(publication.folderId)}
+            showCompare={publication.action === ActionType.ADD || publication.action === ActionType.ADD_IF_ABSENT}
+          />
+        </div>
+      )}
     </div>
   );
 };

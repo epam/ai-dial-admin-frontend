@@ -11,7 +11,13 @@ import {
 import { IconCircleX, IconWorldOff, IconWorldShare } from '@tabler/icons-react';
 import classNames from 'classnames';
 
-import { ButtonsI18nKey, EntitiesI18nKey, ErrorI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
+import {
+  ButtonsI18nKey,
+  DeleteI18nKey,
+  EntitiesI18nKey,
+  ErrorI18nKey,
+  PublicationsI18nKey,
+} from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
@@ -23,6 +29,7 @@ import { getModalsTranslations, isAddAction } from '@/src/utils/publications';
 interface Props {
   onApprove: () => void;
   onDecline: (comment: string) => void;
+  onDelete: () => void;
   route: ApplicationRoute;
   action: ActionType;
   setIsJsonView: (value: boolean) => void;
@@ -30,7 +37,16 @@ interface Props {
   isDelete?: boolean;
 }
 
-const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action, isJsonView, setIsJsonView, isDelete }) => {
+const PublicationHeader: FC<Props> = ({
+  onApprove,
+  onDecline,
+  onDelete,
+  route,
+  action,
+  isJsonView,
+  setIsJsonView,
+  isDelete,
+}) => {
   const t = useI18n();
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
@@ -44,6 +60,7 @@ const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action, isJ
   const [buttonsClassName, setButtonsClassName] = useState('');
   const [isApproveModalOpen, setIsOpenApproveModal] = useState(false);
   const [isDeclineModalOpen, setIsOpenDeclineModal] = useState(false);
+  const [isDeleteModalOpen, setIsOpenDeleteModal] = useState(false);
   const [declineReason, setDeclineReason] = useState('');
   const isDeclineInvalid = useMemo(() => {
     const value = declineReason.trim();
@@ -74,42 +91,71 @@ const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action, isJ
     setIsOpenDeclineModal(false);
   }, [declineReason, onDecline]);
 
+  const remove = useCallback(() => {
+    onDelete();
+    setIsOpenDeleteModal(false);
+  }, [onDelete]);
+
   return (
     <>
       <div className={containerClassName}>
         <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
-          <DialNeutralButton
-            className={buttonsClassName}
-            label={t(isDelete ? ButtonsI18nKey.Delete : ButtonsI18nKey.Decline)}
-            onClick={() => setIsOpenDeclineModal(true)}
-            iconBefore={<IconCircleX {...BASE_BUTTON_ICON_PROPS} />}
+          {isDelete ? (
+            <DialNeutralButton
+              className={buttonsClassName}
+              label={t(ButtonsI18nKey.Delete)}
+              onClick={() => setIsOpenDeleteModal(true)}
+              iconBefore={<IconCircleX {...BASE_BUTTON_ICON_PROPS} />}
+            />
+          ) : (
+            <>
+              <DialNeutralButton
+                className={buttonsClassName}
+                label={t(ButtonsI18nKey.Decline)}
+                onClick={() => setIsOpenDeclineModal(true)}
+                iconBefore={<IconCircleX {...BASE_BUTTON_ICON_PROPS} />}
+              />
+              {isAddAction(action) && (
+                <DialPrimaryButton
+                  className={classNames(buttonsClassName, approveButtonClassName)}
+                  label={t(ButtonsI18nKey.Publish)}
+                  onClick={() => setIsOpenApproveModal(true)}
+                  iconBefore={<IconWorldShare {...BASE_BUTTON_ICON_PROPS} />}
+                />
+              )}
+              {action === ActionType.DELETE && (
+                <DialPrimaryButton
+                  className={classNames(buttonsClassName, approveButtonClassName)}
+                  label={t(ButtonsI18nKey.Unpublish)}
+                  onClick={() => setIsOpenApproveModal(true)}
+                  iconBefore={<IconWorldOff {...BASE_BUTTON_ICON_PROPS} />}
+                />
+              )}
+            </>
+          )}
+
+          <DialSwitch
+            switchId="jsonView"
+            isOn={isJsonView}
+            onChange={() => setIsJsonView(!isJsonView)}
+            label={t(EntitiesI18nKey.JSONViewer)}
           />
-          {isAddAction(action) && (
-            <DialPrimaryButton
-              className={classNames(buttonsClassName, approveButtonClassName)}
-              label={t(ButtonsI18nKey.Publish)}
-              onClick={() => setIsOpenApproveModal(true)}
-              iconBefore={<IconWorldShare {...BASE_BUTTON_ICON_PROPS} />}
-            />
-          )}
-          {action === ActionType.DELETE && (
-            <DialPrimaryButton
-              className={classNames(buttonsClassName, approveButtonClassName)}
-              label={t(ButtonsI18nKey.Unpublish)}
-              onClick={() => setIsOpenApproveModal(true)}
-              iconBefore={<IconWorldOff {...BASE_BUTTON_ICON_PROPS} />}
-            />
-          )}
-          {route !== ApplicationRoute.FilePublications && (
-            <DialSwitch
-              switchId="jsonView"
-              isOn={isJsonView}
-              onChange={() => setIsJsonView(!isJsonView)}
-              label={t(EntitiesI18nKey.JSONViewer)}
-            />
-          )}
         </div>
       </div>
+      {isDeleteModalOpen &&
+        createPortal(
+          <DialConfirmationPopup
+            open={isDeleteModalOpen}
+            header={t(DeleteI18nKey.Title, { entity: t(PublicationsI18nKey.Publication) })}
+            onConfirm={remove}
+            onClose={() => {
+              setIsOpenDeleteModal(false);
+            }}
+            confirmLabel={t(ButtonsI18nKey.Delete)}
+            description={t(DeleteI18nKey.Confirming, { entity: t(PublicationsI18nKey.Publication) })}
+          />,
+          document.body,
+        )}
       {isApproveModalOpen &&
         createPortal(
           <DialConfirmationPopup

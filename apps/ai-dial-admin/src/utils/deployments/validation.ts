@@ -11,6 +11,7 @@ import { checkNameVersionCombination } from '@/src/utils/prompts/versions';
 const IMAGE_NAME_REGEX = /^[A-Za-z0-9 _-]+$/;
 const IMAGE_BASE_DIRECTORY_REGEX = /^[^/].*[^/]$|^[^/]+$/;
 
+
 // Image source
 const DOCKER_IMAGE_REGEX =
   /^(?:[a-zA-Z0-9.-]+(?::[0-9]+)?\/)?[a-z0-9]+(?:[._-][a-z0-9]+)*(?:\/[a-z0-9]+(?:[._-][a-z0-9]+)*)*(?::[\w][\w.-]{0,127})?(?:@sha256:[a-f0-9]{64})?$/;
@@ -21,7 +22,6 @@ const SSH_REPO_REGEX =
 const MIN_VARIABLE_NAME_SYMBOLS = 1;
 const MAX_VARIABLE_NAME_SYMBOLS = 253;
 const VARIABLE_NAME_REGEX = /^[-._a-zA-Z0-9]+$/;
-
 // HF model name
 const HF_USERNAME_MAX_LENGTH = 42;
 const HF_MODEL_MAX_LENGTH = 96;
@@ -62,6 +62,7 @@ export const getVariableNameError = (
   name: string,
   t?: (str: string, args?: Record<string, string | number>) => string,
 ) => {
+
   if (!name) {
     return {
       type: ErrorType.EMPTY,

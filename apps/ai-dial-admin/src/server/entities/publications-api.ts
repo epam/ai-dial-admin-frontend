@@ -12,6 +12,7 @@ export const PUBLICATIONS_TOOLSET_URL = `${PUBLICATIONS_BASE_URL}?type=tool_set`
 export const PUBLICATION_GET_URL = `${PUBLICATIONS_BASE_URL}/get`;
 export const PUBLICATION_REJECT_URL = `${PUBLICATIONS_BASE_URL}/reject`;
 export const PUBLICATION_APPROVE_URL = `${PUBLICATIONS_BASE_URL}/approve`;
+export const PUBLICATION_DELETE_URL = `${PUBLICATIONS_BASE_URL}/delete`;
 
 export class PublicationsApi extends BaseApi {
   getApplicationPublicationsList(token: JWT | null): Promise<Publication[] | undefined> {
@@ -44,5 +45,9 @@ export class PublicationsApi extends BaseApi {
 
   approvePublication(token: JWT | null, path: string): Promise<ServerActionResponse> {
     return this.postAction(PUBLICATION_APPROVE_URL, { path }, token);
+  }
+
+  deletePublication(token: JWT | null, path: string): Promise<ServerActionResponse> {
+    return this.postAction(PUBLICATION_DELETE_URL, { path }, token);
   }
 }
