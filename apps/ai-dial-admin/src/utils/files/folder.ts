@@ -21,8 +21,8 @@ export const getFolderName = (path: string): string | undefined => {
  * @returns {DialFile[]} - DialFile array
  */
 export const fillChildren = (files: DialFile[]): DialFile[] => {
-  return [
-    ...files.map((file) => {
+  return files
+    .map((file) => {
       return {
         ...file,
         name: getFolderName(file.path),
@@ -30,8 +30,8 @@ export const fillChildren = (files: DialFile[]): DialFile[] => {
         // TODO: Remove When we get real permissions
         permissions: ['WRITE', 'READ'],
       };
-    }),
-  ];
+    })
+    .sort((a, b) => a.name?.toLowerCase().localeCompare(b.name?.toLowerCase() || '') || 0);
 };
 
 /**
@@ -60,6 +60,7 @@ export const mergeFiles = <T extends DialFile>(
       } as T,
     ];
   }
+
   return existingFiles.map((file) => {
     const currentPath = file.path;
 
