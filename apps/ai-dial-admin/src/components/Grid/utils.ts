@@ -25,7 +25,7 @@ export const saveColumnVisibilityToStorage = (colDefs: ColDef[], storageKey: str
   setToLocalStorage(`${COLUMNS_KEY}${storageKey}`, JSON.stringify(columns));
 };
 
-export const getColumnVisibilityFromStorage = (colDefs: ColDef[], storageKey: string): ColDef[] | null => {
+export const getColumnVisibilityFromStorage = (colDefs: ColDef[] | undefined, storageKey: string): ColDef[] | null => {
   const columns = getFromLocalStorage(`${COLUMNS_KEY}${storageKey}`);
   if (!columns) {
     return null;

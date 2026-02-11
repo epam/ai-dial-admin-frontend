@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
-import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
+import { ColDef, GridApi, GridOptions, GridReadyEvent } from 'ag-grid-community';
 
 import ListView from '@/src/components/ListView/ListView';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
@@ -71,7 +71,7 @@ const BaseEntityList = <T extends object>({
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const [isBulkView, setIsBulkView] = useState(false);
 
-  const onGridReady = useCallback((api: GridApi) => {
+  const onGridReady = useCallback(({ api }: GridReadyEvent) => {
     setGridApi(api);
   }, []);
 

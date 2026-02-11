@@ -1,40 +1,37 @@
 'use client';
-import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
+import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { ColDef } from 'ag-grid-community';
 import classNames from 'classnames';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
-import { checkColDefsChanges } from '@/src/components/Grid/comparators/base-column-comparator';
+import AgGridWrapper, { AgGridProps } from '@/src/components/Grid/AgGridWrapper';
 import ColumnsPanel from '@/src/components/Grid/ColumnsPanel/ColumnsPanel';
-import Grid from '@/src/components/Grid/Grid';
+import { checkColDefsChanges } from '@/src/components/Grid/comparators/base-column-comparator';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
-import { getColumnVisibilityFromStorage, saveColumnVisibilityToStorage } from '../grid-columns';
+import { getColumnVisibilityFromStorage, saveColumnVisibilityToStorage } from '../utils';
+import { DialNoDataContentProps } from '@epam/ai-dial-ui-kit/dist/src/components/NoDataContent/NoDataContent';
 
-interface Props<T> {
-  data?: T[];
-  columnDefs: ColDef[];
-  emptyDataTitle: string;
-  emptyDataDescription?: string;
-  additionalGridOptions?: GridOptions;
+interface Props<T> extends AgGridProps<T> {
+  emptyDataProps?: DialNoDataContentProps;
+  getIsEmptyData?: () => boolean;
+
   showColumnsPanel?: boolean;
-  storageKey?: string;
   toggleColumnsPanel?: () => void;
-  onGridReady?: (gridApi: GridApi) => void;
 }
 
-const GridWithColumnsPanel = <T extends object>({
-  data,
+const GridView = <T extends object>({
+  rowData,
   columnDefs,
-  emptyDataTitle,
-  emptyDataDescription,
+  emptyDataProps,
   additionalGridOptions,
   showColumnsPanel,
   storageKey,
   toggleColumnsPanel,
   onGridReady,
+  getIsEmptyData,
 }: Props<T>) => {
   const staticPanelContainerClassName = classNames(
     'left-0 top-0 w-full h-full bg-blackout z-50',
@@ -46,24 +43,30 @@ const GridWithColumnsPanel = <T extends object>({
   );
   const isMobile = useIsMobileScreen();
   const isTablet = useIsOnlyTabletScreen();
-  const [colDefs, setColDefs] = useState<ColDef[]>([]);
+  const [currentColDefs, setCurrentColDefs] = useState<ColDef[]>([]);
   const [showResetButton, setShowResetButton] = useState(false);
   const [panelContainerClassName, setPanelContainerClassName] = useState(staticPanelContainerClassName);
   const [panelClassName, setPanelClassName] = useState(staticPanelClassName);
 
+  const isEmptyData = useMemo(
+    () => (getIsEmptyData ? getIsEmptyData() : rowData == null || rowData.length === 0),
+    [getIsEmptyData, rowData],
+  );
+
   useEffect(() => {
-    if (colDefs == null || colDefs.length === 0) {
+    if (currentColDefs == null || currentColDefs.length === 0) {
       const storageColumns = storageKey ? getColumnVisibilityFromStorage(columnDefs, storageKey) : null;
-      setColDefs(
-        !(storageColumns && columnDefs.length > storageColumns?.length)
-          ? storageColumns || [...columnDefs]
+      setCurrentColDefs(
+        !(storageColumns && columnDefs && columnDefs.length > storageColumns?.length)
+          ? storageColumns || [...(columnDefs || [])]
           : [...columnDefs],
       );
       setShowResetButton(
-        storageColumns ? storageColumns?.some((c, index) => c.hide !== columnDefs[index].hide) : false,
+        storageColumns ? storageColumns?.some((c, index) => c.hide !== columnDefs?.[index].hide) : false,
       );
     }
-  }, [colDefs, columnDefs, storageKey]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [columnDefs, storageKey]);
 
   useEffect(() => {
     setPanelContainerClassName(classNames(staticPanelContainerClassName, isMobile || isTablet ? 'fixed' : 'absolute'));
@@ -80,51 +83,54 @@ const GridWithColumnsPanel = <T extends object>({
 
   const toggleColumnVisibility = useCallback(
     (id?: string) => {
-      const newColDefs = colDefs.map((c) => (c.field === id ? { ...c, hide: !c.hide } : c));
-      setColDefs(newColDefs);
+      const newColDefs = currentColDefs.map((c) => (c.field === id ? { ...c, hide: !c.hide } : c));
+      setCurrentColDefs(newColDefs);
       if (storageKey) {
         saveColumnVisibilityToStorage(newColDefs, storageKey);
       }
-      setShowResetButton(newColDefs.some((c, index) => c.hide !== columnDefs[index].hide));
+      setShowResetButton(newColDefs.some((c, index) => c.hide !== columnDefs?.[index].hide));
     },
-    [colDefs, columnDefs, storageKey],
+    [currentColDefs, columnDefs, storageKey],
   );
 
-  const resetToDefault = () => {
-    setColDefs([...columnDefs]);
+  const onResetToDefault = () => {
+    setCurrentColDefs([...(columnDefs || [])]);
 
     if (storageKey) {
-      saveColumnVisibilityToStorage(columnDefs, storageKey);
+      saveColumnVisibilityToStorage(columnDefs || [], storageKey);
     }
     setShowResetButton(false);
   };
 
-  const findColumn = useCallback((field?: string) => colDefs.findIndex((c) => c.field === field), [colDefs]);
+  const onFindColumn = useCallback(
+    (field?: string) => currentColDefs.findIndex((c) => c.field === field),
+    [currentColDefs],
+  );
 
-  const moveColumn = useCallback(
+  const onMoveColumn = useCallback(
     (field: string, atIndex: number) => {
-      const index = findColumn(field);
-      const updatedColDefs = [...colDefs];
+      const index = onFindColumn(field);
+      const updatedColDefs = [...currentColDefs];
       const [removedColDef] = updatedColDefs.splice(index, 1);
       updatedColDefs.splice(atIndex, 0, removedColDef);
       if (storageKey) {
         saveColumnVisibilityToStorage(updatedColDefs, storageKey);
       }
-      setColDefs(updatedColDefs);
-      setShowResetButton(checkColDefsChanges(updatedColDefs, columnDefs));
+      setCurrentColDefs(updatedColDefs);
+      setShowResetButton(checkColDefsChanges(updatedColDefs, columnDefs || []));
     },
-    [findColumn, colDefs, setShowResetButton, columnDefs, storageKey],
+    [onFindColumn, currentColDefs, setShowResetButton, columnDefs, storageKey],
   );
 
   return (
     <div className="w-full h-full relative">
-      {data != null && data?.length === 0 ? (
-        <DialNoDataContent title={emptyDataTitle} description={emptyDataDescription} containerClassName="small" />
+      {isEmptyData && emptyDataProps ? (
+        <DialNoDataContent {...emptyDataProps} />
       ) : (
         <>
-          <Grid
-            columnDefs={colDefs}
-            rowData={data}
+          <AgGridWrapper
+            columnDefs={currentColDefs}
+            rowData={rowData}
             additionalGridOptions={additionalGridOptions}
             storageKey={storageKey}
             onGridReady={onGridReady}
@@ -133,14 +139,14 @@ const GridWithColumnsPanel = <T extends object>({
             <div className={panelContainerClassName}>
               <DndProvider backend={HTML5Backend}>
                 <ColumnsPanel
-                  columns={colDefs}
+                  columns={currentColDefs}
                   showResetButton={showResetButton}
                   panelClassName={panelClassName}
-                  resetToDefault={resetToDefault}
+                  onReset={onResetToDefault}
                   toggleColumnsPanel={toggleColumnsPanel}
                   toggleColumnVisibility={toggleColumnVisibility}
-                  findColumn={findColumn}
-                  moveColumn={moveColumn}
+                  onFind={onFindColumn}
+                  onMove={onMoveColumn}
                 />
               </DndProvider>
             </div>
@@ -151,4 +157,4 @@ const GridWithColumnsPanel = <T extends object>({
   );
 };
 
-export default GridWithColumnsPanel;
+export default GridView;

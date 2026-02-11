@@ -12,7 +12,7 @@ import { TestCase, TestSuite } from '@/src/models/evaluation/test-suite';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
-import { ColDef, GridApi, GridOptions, IDatasource, IGetRowsParams } from 'ag-grid-community';
+import { ColDef, GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
 import { getTestCaseColumns } from '../utils/columns';
 import { getTestCaseGridData } from '../utils/data';
 import HeaderButtons from './Header';
@@ -101,7 +101,7 @@ const TestCases: FC<Props> = ({ selectedTestSuite }) => {
     }
   }, [gridApi, gridDataSource]);
 
-  const onGridReady = useCallback((api: GridApi) => {
+  const onGridReady = useCallback(({ api }: GridReadyEvent) => {
     setGridApi(api);
   }, []);
 

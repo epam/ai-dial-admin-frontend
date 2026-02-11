@@ -2,11 +2,10 @@
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
-import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
 import { getDataWithoutItem } from '@/src/components/ExportConfig/Content/utils';
 import { getActualColDefs, getFilteredData } from '@/src/components/ExportConfig/utils';
-import Grid from '@/src/components/Grid/Grid';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { EntityType } from '@/src/types/entity-type';
@@ -104,10 +103,12 @@ const ConfigContentGrid: FC<Props> = ({
     });
   };
 
-  return (isFull ? fullData.length === 0 : customData.length === 0) ? (
-    <DialNoDataContent title={t(emptyDataTitleI18nkKey)} />
-  ) : (
-    <Grid additionalGridOptions={{ onGridReady }} />
+  return (
+    <GridView
+      getIsEmptyData={() => (isFull ? fullData.length === 0 : customData.length === 0)}
+      emptyDataProps={{ title: t(emptyDataTitleI18nkKey) }}
+      onGridReady={onGridReady}
+    />
   );
 };
 

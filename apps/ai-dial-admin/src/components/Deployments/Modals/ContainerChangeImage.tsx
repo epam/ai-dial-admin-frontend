@@ -1,23 +1,24 @@
 import { AlertVariant, DialAlert, DialFormPopup, DialLoader } from '@epam/ai-dial-ui-kit';
+import { GridOptions } from 'ag-grid-community';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
+import { getImagesWithVersions } from '@/src/app/actions/deployments';
+import { ACTION_COLUMN, SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
+import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
+import { IMAGES_LIST_FOR_CONTAINER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, ContainersI18nKey } from '@/src/constants/i18n';
+import { useNotification } from '@/src/context/NotificationContext';
+import { useI18n } from '@/src/locales/client';
 import { Image, ImageGroup } from '@/src/models/deployments/images';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
-import { useNotification } from '@/src/context/NotificationContext';
-import { getImagesWithVersions } from '@/src/app/actions/deployments';
-import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
-import { IMAGES_LIST_FOR_CONTAINER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { getTranslatedDeploymentType } from '@/src/utils/deployments/entity';
+import { getImageType, isValidVersion, updateSelectedVersion } from '@/src/utils/deployments/images';
 import { getErrorNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import { getImageType, isValidVersion, updateSelectedVersion } from '@/src/utils/deployments/images';
-import { ACTION_COLUMN, RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
-import { useI18n } from '@/src/locales/client';
 
+import GridView from '@/src/components/Grid/GridView/GridView';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
-import Grid from '@/src/components/Grid/Grid';
 
 interface Props {
   isModalOpen: boolean;
@@ -87,6 +88,33 @@ const ContainerChangeImage: FC<Props> = ({
     }
   }, [id, image.id, images]);
 
+  const additionalGridOptions: GridOptions = {
+    ...SINGLE_ROW_SELECTION,
+    selectionColumnDef: {
+      ...SINGLE_ROW_SELECTION.selectionColumnDef,
+      cellRenderer: (data: { data?: { selectedId: string; name: string }; name: string }) => (
+        <RadioButtonRenderer inputId={data.data?.name || data.name} isChecked={data.data?.selectedId === id} />
+      ),
+    },
+    onRowSelected: (event) => {
+      if (event.node.isSelected()) {
+        setId(event.data?.selectedId);
+      }
+    },
+    onGridReady: (event) => {
+      event.api?.updateGridOptions({
+        rowData: images,
+        columnDefs: colDefs,
+      });
+      event.api.forEachNode((node) => {
+        if (node.data.selectedId === id && isValidVersion(node.data as ImageGroup)) {
+          node.setSelected(true);
+          event.api.ensureNodeVisible(node, 'middle');
+        }
+      });
+    },
+  };
+
   return (
     <DialFormPopup
       onClose={onClose}
@@ -105,39 +133,7 @@ const ContainerChangeImage: FC<Props> = ({
         {loading && <DialLoader size={24} />}
         {!loading && !!images.length && (
           <div className="flex flex-col gap-4 min-h-0 h-full">
-            <Grid
-              rowData={images}
-              columnDefs={colDefs}
-              additionalGridOptions={{
-                rowSelection: { mode: 'singleRow', enableClickSelection: true },
-                selectionColumnDef: {
-                  ...RADIO_BUTTON_COL_DEF,
-                  cellRenderer: (data: { data?: { selectedId: string; name: string }; name: string }) => (
-                    <RadioButtonRenderer
-                      inputId={data.data?.name || data.name}
-                      isChecked={data.data?.selectedId === id}
-                    />
-                  ),
-                },
-                onRowSelected: (event) => {
-                  if (event.node.isSelected()) {
-                    setId(event.data?.selectedId);
-                  }
-                },
-                onGridReady: (event) => {
-                  event.api?.updateGridOptions({
-                    rowData: images,
-                    columnDefs: colDefs,
-                  });
-                  event.api.forEachNode((node) => {
-                    if (node.data.selectedId === id && isValidVersion(node.data as ImageGroup)) {
-                      node.setSelected(true);
-                      event.api.ensureNodeVisible(node, 'middle');
-                    }
-                  });
-                },
-              }}
-            />
+            <GridView rowData={images} columnDefs={colDefs} additionalGridOptions={additionalGridOptions} />
             {containerStatus === CONTAINER_STATUS.RUNNING && (
               <DialAlert
                 message={t(ContainersI18nKey.ContainerRestartWarning, {

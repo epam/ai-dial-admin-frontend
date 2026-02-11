@@ -1,12 +1,13 @@
 import { DialLoader, DialPopup, DialSteps, PopupSize, StepStatus } from '@epam/ai-dial-ui-kit';
+import { GridOptions } from 'ag-grid-community';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getImagesWithVersions } from '@/src/app/actions/deployments';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 import ContainerProperties from '@/src/components/Containers/Fields/ContainerProperties';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
-import Grid from '@/src/components/Grid/Grid';
-import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
+import GridView from '@/src/components/Grid/GridView/GridView';
+import { SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
 import { CREATE_CONTAINER_STEPS } from '@/src/constants/deployments/containers';
 import { IMAGES_LIST_FOR_CONTAINER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { useAppContext } from '@/src/context/AppContext';
@@ -110,6 +111,43 @@ const ContainerCreate: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
     }
   }, [currentStepId, isValid, setStepsState]);
 
+  const options: GridOptions = {
+    ...SINGLE_ROW_SELECTION,
+    selectionColumnDef: {
+      ...SINGLE_ROW_SELECTION.selectionColumnDef,
+      cellRenderer: (data: { data?: { selectedId: string; name: string }; name: string }) => (
+        <RadioButtonRenderer
+          inputId={data.data?.name || data.name}
+          isChecked={data.data?.selectedId === container.imageDefinitionId}
+        />
+      ),
+    },
+    onFilterChanged: (event) => {
+      setFilters(event.api.getFilterModel());
+    },
+    onRowSelected: (event) => {
+      if (event.node.isSelected()) {
+        setContainer({
+          ...container,
+          containerPorts: event.data?.containerPorts || container.containerPorts,
+          imageDefinitionId: event.data?.selectedId,
+        });
+      }
+    },
+    onGridReady: (event) => {
+      event.api?.updateGridOptions({
+        rowData: images,
+        columnDefs: colDefs,
+      });
+      event.api.setFilterModel(filters);
+      event.api.forEachNode((node) => {
+        if (node.data.selectedId === container.imageDefinitionId && isValidVersion(node.data as ImageGroup)) {
+          node.setSelected(true);
+        }
+      });
+    },
+  };
+
   return (
     <DialPopup
       portalId="ContainerCreateModal"
@@ -134,49 +172,7 @@ const ContainerCreate: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
             <>
               {loading && <DialLoader size={40} />}
               {!loading && !!images.length && (
-                <Grid
-                  rowData={images}
-                  columnDefs={colDefs}
-                  additionalGridOptions={{
-                    rowSelection: { mode: 'singleRow', enableClickSelection: true },
-                    selectionColumnDef: {
-                      ...RADIO_BUTTON_COL_DEF,
-                      cellRenderer: (data: { data?: { selectedId: string; name: string }; name: string }) => (
-                        <RadioButtonRenderer
-                          inputId={data.data?.name || data.name}
-                          isChecked={data.data?.selectedId === container.imageDefinitionId}
-                        />
-                      ),
-                    },
-                    onFilterChanged: (event) => {
-                      setFilters(event.api.getFilterModel());
-                    },
-                    onRowSelected: (event) => {
-                      if (event.node.isSelected()) {
-                        setContainer({
-                          ...container,
-                          containerPorts: event.data?.containerPorts || container.containerPorts,
-                          imageDefinitionId: event.data?.selectedId,
-                        });
-                      }
-                    },
-                    onGridReady: (event) => {
-                      event.api?.updateGridOptions({
-                        rowData: images,
-                        columnDefs: colDefs,
-                      });
-                      event.api.setFilterModel(filters);
-                      event.api.forEachNode((node) => {
-                        if (
-                          node.data.selectedId === container.imageDefinitionId &&
-                          isValidVersion(node.data as ImageGroup)
-                        ) {
-                          node.setSelected(true);
-                        }
-                      });
-                    },
-                  }}
-                />
+                <GridView rowData={images} columnDefs={colDefs} additionalGridOptions={options} />
               )}
             </>
           )}

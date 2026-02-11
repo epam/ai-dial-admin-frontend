@@ -1,11 +1,12 @@
 'use client';
 import { FC, useState } from 'react';
 
-import { DialFormPopup, DialNoDataContent, PopupSize } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { GridOptions } from 'ag-grid-community';
 
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
-import Grid from '@/src/components/Grid/Grid';
-import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
+import GridView from '@/src/components/Grid/GridView/GridView';
+import { SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
 import { DEPENDENCIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -25,6 +26,21 @@ const AddDependenciesModal: FC<Props> = ({ isModalOpen, entities, entityType, on
 
   const [selectedEntityName, setSelectedEntityName] = useState<string | undefined>();
 
+  const gridOptions: GridOptions = {
+    ...SINGLE_ROW_SELECTION,
+    selectionColumnDef: {
+      ...SINGLE_ROW_SELECTION.selectionColumnDef,
+      cellRenderer: (data: { data?: EntitiesGridData; id: string }) => (
+        <RadioButtonRenderer inputId={data.data?.name as string} isChecked={data.data?.name === selectedEntityName} />
+      ),
+    },
+    onRowSelected: (event) => {
+      if (event.node.isSelected()) {
+        setSelectedEntityName(event.data.name);
+      }
+    },
+  };
+
   return (
     <DialFormPopup
       onClose={onClose}
@@ -40,35 +56,14 @@ const AddDependenciesModal: FC<Props> = ({ isModalOpen, entities, entityType, on
       disableSubmitButton={!selectedEntityName}
     >
       <div className="flex h-full flex-col px-6 py-4 min-h-0">
-        {!entities.length ? (
-          <DialNoDataContent
-            title={t(entityType === EntityType.MODEL ? EntitiesI18nKey.NoModels : EntitiesI18nKey.NoApplications)}
-          />
-        ) : (
-          <div className="flex-1 flex flex-col min-h-0 w-full">
-            <Grid
-              columnDefs={DEPENDENCIES_COLUMNS}
-              rowData={entities}
-              additionalGridOptions={{
-                rowSelection: { mode: 'singleRow', enableClickSelection: true },
-                selectionColumnDef: {
-                  ...RADIO_BUTTON_COL_DEF,
-                  cellRenderer: (data: { data?: EntitiesGridData; id: string }) => (
-                    <RadioButtonRenderer
-                      inputId={data.data?.name as string}
-                      isChecked={data.data?.name === selectedEntityName}
-                    />
-                  ),
-                },
-                onRowSelected: (event) => {
-                  if (event.node.isSelected()) {
-                    setSelectedEntityName(event.data.name);
-                  }
-                },
-              }}
-            />
-          </div>
-        )}
+        <GridView
+          columnDefs={DEPENDENCIES_COLUMNS}
+          rowData={entities}
+          additionalGridOptions={gridOptions}
+          emptyDataProps={{
+            title: t(entityType === EntityType.MODEL ? EntitiesI18nKey.NoModels : EntitiesI18nKey.NoApplications),
+          }}
+        />
       </div>
     </DialFormPopup>
   );
