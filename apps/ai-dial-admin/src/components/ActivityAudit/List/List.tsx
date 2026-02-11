@@ -6,7 +6,7 @@ import { createPortal } from 'react-dom';
 
 import { DialConfirmationPopup, DialNeutralButton, DialTooltip } from '@epam/ai-dial-ui-kit';
 import { IconRefresh, IconRestore } from '@tabler/icons-react';
-import { GridApi, GridOptions, IDatasource, IGetRowsParams } from 'ag-grid-community';
+import { GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
 import classNames from 'classnames';
 
 import { getActivities } from '@/src/app/[lang]/activity-audit/actions';
@@ -228,6 +228,10 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, initTimeFil
     router.push(`${ApplicationRoute.ActivityAudit}/${SYSTEM_ROLLBACK_ID}`);
   }, [router]);
 
+  const onGridReady = useCallback(({ api }: GridReadyEvent) => {
+    setGridApi(api);
+  }, []);
+
   return (
     <div role="activities" className="flex flex-col flex-1 min-h-0 w-full relative">
       <ListView
@@ -235,7 +239,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, initTimeFil
         columnDefs={columnDefs}
         title={!entity ? t(listViewTitleMap[ApplicationRoute.ActivityAudit]) : void 0}
         emptyDataTitle={t(emptyDataTitleMap[ApplicationRoute.ActivityAudit])}
-        onGridReady={setGridApi}
+        onGridReady={onGridReady}
         view={!entity ? ApplicationRoute.ActivityAudit : void 0}
       >
         <div className={classNames('flex gap-4', entity ? 'flex-1 justify-between' : 'justify-end')}>
