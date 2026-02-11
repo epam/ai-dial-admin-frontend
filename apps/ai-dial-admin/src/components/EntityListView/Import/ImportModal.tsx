@@ -3,6 +3,7 @@
 import { DialPopup, DialSteps, StepStatus } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useState } from 'react';
 
+import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 import {
   getModalTitle,
   getMultipleImportStatus,
@@ -22,7 +23,6 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getJsonFileName } from '@/src/utils/import/get-json-name';
 import ImportConflicts from './ImportConflicts';
 import ImportFileTypeSelector from './ImportFileType';
-import ImportModalButtons from './ImportModalButtons';
 
 const MAX_FILES_COUNT = 30;
 
@@ -219,11 +219,12 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, 
       className="h-[660px]"
       open={isModalOpen}
       footer={
-        <ImportModalButtons
+        <StepperModalButtons
           steps={steps}
           currentStep={steps.find((step) => step.id === currentStepId)}
           onChangeStep={setCurrentStepId}
           onFinishClick={onFinishClick}
+          onClose={onClose}
         />
       }
     >

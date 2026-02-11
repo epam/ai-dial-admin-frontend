@@ -14,12 +14,12 @@ import { FileImportMap } from '@/src/models/file';
 import { ImportData } from '@/src/models/import-asset';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
-import FolderCreateModalButtons from './FolderCreateModalButtons';
 import FolderCreatePermissions from './FolderCreatePermissions';
 import FolderCreateReview from './FolderCreateReview';
 import FolderCreateSetup from './FolderCreateSetup';
 import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 import { getJsonFileName } from '@/src/utils/import/get-json-name';
+import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 
 interface Props {
   isModalOpen: boolean;
@@ -88,10 +88,10 @@ const FolderCreateModal: FC<Props> = ({ isModalOpen, folderPath, view, onClose, 
       className="h-[660px]"
       size={PopupSize.Lg}
       footer={
-        <FolderCreateModalButtons
+        <StepperModalButtons
           steps={steps}
           currentStep={steps.find((s) => s.id === currentStepId)}
-          setCurrentStep={setCurrentStepId}
+          onChangeStep={setCurrentStepId}
           onFinishClick={onFinishClick}
           onClose={onClose}
         />
