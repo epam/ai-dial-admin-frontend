@@ -23,8 +23,7 @@ import { useI18n } from '@/src/locales/client';
 
 import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
 import ContainerCreate from '@/src/components/Deployments/Modals/ContainerCreate';
-import ServingCreateHF from '@/src/components/Deployments/Modals/ServingCreateHF';
-import ServingCreateNIM from '@/src/components/Deployments/Modals/ServingCreateNIM';
+import ServingCreate from '@/src/components/Deployments/Modals/ServingCreate';
 
 interface Props {
   toggleColumnsPanel: () => void;
@@ -136,26 +135,28 @@ const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, names, gridApi })
       {isModalOpen &&
         modalType === ModalType.createServingHF &&
         createPortal(
-          <ServingCreateHF
+          <ServingCreate
             header={t(CreateI18nKey.CreateServing, { type: t(ContainersI18nKey.ModelTypeHF) })}
             isModalOpen={isModalOpen}
             onClose={handleModalClose}
             onApply={onCreateContainer}
             route={route}
             names={names}
+            type={CONTAINER_TYPE.HF}
           />,
           document.body,
         )}
       {isModalOpen &&
         modalType === ModalType.createServingNIM &&
         createPortal(
-          <ServingCreateNIM
+          <ServingCreate
             header={t(CreateI18nKey.CreateServing, { type: t(ContainersI18nKey.ModelTypeNIM) })}
             isModalOpen={isModalOpen}
             onClose={handleModalClose}
             onApply={onCreateContainer}
             route={route}
             names={names}
+            type={CONTAINER_TYPE.NIM}
           />,
           document.body,
         )}

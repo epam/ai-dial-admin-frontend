@@ -4,7 +4,7 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getImagesWithVersions } from '@/src/app/actions/deployments';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
-import ContainerProperties from '@/src/components/Containers/Fields/ContainerProperties';
+import ContainerFields from '@/src/components/Containers/Fields/ContainerFields';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
@@ -177,8 +177,9 @@ const ContainerCreate: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
             </>
           )}
         </>
+
         {currentStepId === CreateSteps.PROPERTIES && (
-          <ContainerProperties
+          <ContainerFields
             container={container}
             setContainer={setContainer}
             isModal={true}

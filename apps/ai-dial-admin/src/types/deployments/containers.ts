@@ -55,6 +55,6 @@ export enum MODEL_FORMAT {
 }
 
 export interface ContainerResources {
-  limits?: Record<string, string>;
-  requests?: Record<string, string>;
+  limits?: Record<string, string | undefined>;
+  requests?: Record<string, string | undefined>;
 }
