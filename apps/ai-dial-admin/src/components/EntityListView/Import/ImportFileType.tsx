@@ -18,6 +18,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { isAssetView } from '@/src/utils/is-asset-view';
 import { getIgnorePathTitles } from '@/src/utils/import/get-ignore-path-title';
 import { APPLICATION_ZIP_TYPES_STR } from '@/src/constants/request-headers';
+import { MAX_FILE_SIZE_MB } from '@/src/constants/file';
 
 interface Props {
   files: File[];
@@ -44,7 +45,7 @@ const ImportFileTypeSelector: FC<Props> = ({
   setIgnorePaths,
   route,
 }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
 
   const ignorePathsTitle = useMemo(() => {
     return route ? getIgnorePathTitles(route, t) : '';
@@ -128,6 +129,8 @@ const ImportFileTypeSelector: FC<Props> = ({
             dynamicIcon={getFileIcon}
             errorText={t(ImportI18nKey.FileError)}
             maxFilesCount={maxFilesCount}
+            fileSizeError={t(ImportI18nKey.FileSizeErrorDescription, { size: MAX_FILE_SIZE_MB })}
+            maxFileSize={MAX_FILE_SIZE_MB}
           />
         )}
       </div>
