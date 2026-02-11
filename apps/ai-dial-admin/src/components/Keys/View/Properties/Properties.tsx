@@ -16,6 +16,7 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
 import { getControlClassName } from '@/src/utils/entities/view';
+import AccessRestrictionField from './AccessRestrictionField';
 
 interface Props {
   entity: DialKey;
@@ -74,6 +75,13 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
   const onChangeExpiresAt = useCallback(
     (expiresAt: string) => {
       onChangeKey({ ...entity, expiresAt });
+    },
+    [entity, onChangeKey],
+  );
+
+  const onChangeAccessRestriction = useCallback(
+    (allowedIpAddressRanges?: string[]) => {
+      onChangeKey({ ...entity, allowedIpAddressRanges });
     },
     [entity, onChangeKey],
   );
@@ -152,6 +160,14 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
       )}
 
       {!isKeyImmutable && <ValidityPeriod onChange={onChangeExpiresAt} />}
+
+      {isKeyImmutable && (
+        <AccessRestrictionField
+          elementId={'ip-access-restriction'}
+          onChange={onChangeAccessRestriction}
+          entity={entity}
+        />
+      )}
     </div>
   );
 };

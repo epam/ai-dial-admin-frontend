@@ -437,6 +437,10 @@ export enum KeysI18nKey {
   RotateKeyDescription = 'Keys.RotateKeyDescription',
   RotateKeySuccessTitle = 'Keys.RotateKeySuccessTitle',
   RotateKeySuccessDescription = 'Keys.RotateKeySuccessDescription',
+  RestrictionFieldLabel = 'Keys.RestrictionFieldLabel',
+  AllowAllRestriction = 'Keys.Restrictions.AllowAll',
+  BlockAllRestriction = 'Keys.Restrictions.BlockAll',
+  RangesRestriction = 'Keys.Restrictions.Ranges',
 }
 
 export enum ValidityStatusI18nKey {
@@ -872,6 +876,9 @@ export enum ErrorI18nKey {
   RunOutOfMemory = 'Error.RunOutOfMemory',
   ExitedWithError = 'Error.ExitedWithError',
   InvalidWhitelistDomain = 'Error.InvalidWhitelistDomain',
+  InvalidIpAddress = 'Error.InvalidIpAddress',
+  MinMaxMask = 'Error.MinMaxMask',
+  EmptyIpRangeField = 'Error.EmptyIpRangeField',
 }
 
 export enum SourceI18nKey {
@@ -963,6 +970,8 @@ export enum EntityPlaceholdersI18nKey {
   Command = 'EntityPlaceholders.Command',
   Arguments = 'EntityPlaceholders.Arguments',
   Domain = 'EntityPlaceholders.Domain',
+  Mask = 'EntityPlaceholders.Mask',
+  IpRange = 'EntityPlaceholders.IpRange',
 }
 
 export enum EntityFieldsI18nKey {
@@ -1125,6 +1134,8 @@ export enum EntityFieldsI18nKey {
   Restarts = 'EntityFields.Restarts',
   LastRestartedAt = 'EntityFields.LastRestartedAt',
   LastReason = 'EntityFields.LastReason',
+  Mask = 'EntityFields.Mask',
+  IpRange = 'EntityFields.IpRange',
 }
 
 export enum ToolsetI18nKey {
