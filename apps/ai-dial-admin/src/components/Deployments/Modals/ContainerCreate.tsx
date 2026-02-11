@@ -3,15 +3,10 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getImagesWithVersions } from '@/src/app/actions/deployments';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
-import ContainerProperties from '@/src/components/Containers/Fields/ContainerProperties';
-import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import Grid from '@/src/components/Grid/Grid';
 import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
-
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import ContainerFields from '@/src/components/Containers/Fields/ContainerFields';
-import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { CREATE_CONTAINER_STEPS } from '@/src/constants/deployments/containers';
 import { IMAGES_LIST_FOR_CONTAINER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { useAppContext } from '@/src/context/AppContext';
@@ -188,7 +183,7 @@ const ContainerCreate: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
         </>
 
         {currentStepId === CreateSteps.PROPERTIES && (
-          <ContainerProperties
+          <ContainerFields
             container={container}
             setContainer={setContainer}
             isModal={true}

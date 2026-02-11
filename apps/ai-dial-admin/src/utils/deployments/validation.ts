@@ -11,7 +11,6 @@ import { checkNameVersionCombination } from '@/src/utils/prompts/versions';
 const IMAGE_NAME_REGEX = /^[A-Za-z0-9 _-]+$/;
 const IMAGE_BASE_DIRECTORY_REGEX = /^[^/].*[^/]$|^[^/]+$/;
 
-
 // Image source
 const DOCKER_IMAGE_REGEX =
   /^(?:[a-zA-Z0-9.-]+(?::[0-9]+)?\/)?[a-z0-9]+(?:[._-][a-z0-9]+)*(?:\/[a-z0-9]+(?:[._-][a-z0-9]+)*)*(?::[\w][\w.-]{0,127})?(?:@sha256:[a-f0-9]{64})?$/;
@@ -62,7 +61,6 @@ export const getVariableNameError = (
   name: string,
   t?: (str: string, args?: Record<string, string | number>) => string,
 ) => {
-
   if (!name) {
     return {
       type: ErrorType.EMPTY,
