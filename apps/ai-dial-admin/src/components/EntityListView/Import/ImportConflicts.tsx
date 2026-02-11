@@ -13,7 +13,7 @@ import {
   isErrorFileNode,
   isErrorPromptNode,
 } from '@/src/components/EntityListView/Import/utils';
-import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { ImportI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
@@ -119,7 +119,7 @@ const ImportConflicts: FC<Props> = ({
             {t(getImportTitle(route))}: {fileCount}
           </div>
           <div className="min-h-0">
-            <AgGridWrapper additionalGridOptions={options} onGridReady={onGridReady} />
+            <GridView additionalGridOptions={options} onGridReady={onGridReady} />
           </div>
         </div>
       )}

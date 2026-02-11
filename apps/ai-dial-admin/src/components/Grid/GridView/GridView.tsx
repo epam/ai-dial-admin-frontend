@@ -12,10 +12,10 @@ import { checkColDefsChanges } from '@/src/components/Grid/comparators/base-colu
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { getColumnVisibilityFromStorage, saveColumnVisibilityToStorage } from '../utils';
+import { DialNoDataContentProps } from '@epam/ai-dial-ui-kit/dist/src/components/NoDataContent/NoDataContent';
 
 interface Props<T> extends AgGridProps<T> {
-  emptyDataTitle: string;
-  emptyDataDescription?: string;
+  emptyDataProps?: DialNoDataContentProps;
   getIsEmptyData?: () => boolean;
 
   showColumnsPanel?: boolean;
@@ -25,8 +25,7 @@ interface Props<T> extends AgGridProps<T> {
 const GridView = <T extends object>({
   rowData,
   columnDefs,
-  emptyDataTitle,
-  emptyDataDescription,
+  emptyDataProps,
   additionalGridOptions,
   showColumnsPanel,
   storageKey,
@@ -124,8 +123,8 @@ const GridView = <T extends object>({
 
   return (
     <div className="w-full h-full relative">
-      {isEmptyData ? (
-        <DialNoDataContent title={emptyDataTitle} description={emptyDataDescription} containerClassName="small" />
+      {isEmptyData && emptyDataProps ? (
+        <DialNoDataContent {...emptyDataProps} />
       ) : (
         <>
           <AgGridWrapper

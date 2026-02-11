@@ -1,7 +1,7 @@
 import { DialLoader } from '@epam/ai-dial-ui-kit';
 import { FC, useEffect, useState } from 'react';
 
-import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { DISPLAY_NAME_COLUMN, NAME_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
@@ -40,7 +40,7 @@ const RelatedArtefacts: FC<Props> = ({ entity, view }) => {
               <p>{getNoRelatedText(view, t)}</p>
             ) : (
               <div className="flex-1 min-h-0 mt-2">
-                <AgGridWrapper rowData={data} columnDefs={[DISPLAY_NAME_COLUMN, NAME_COLUMN]} />
+                <GridView rowData={data} columnDefs={[DISPLAY_NAME_COLUMN, NAME_COLUMN]} />
               </div>
             )}
           </>

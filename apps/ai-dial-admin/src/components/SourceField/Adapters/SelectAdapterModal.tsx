@@ -8,7 +8,7 @@ import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 
-import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 
 interface Props {
@@ -65,7 +65,7 @@ const SelectAdapterModal: FC<Props> = ({ selected, adapters, isModalOpen, onClos
       onCancel={onClose}
     >
       <div className="flex flex-col px-6 py-4 h-full">
-        <AgGridWrapper columnDefs={BASE_COLUMNS} additionalGridOptions={options} />
+        <GridView columnDefs={BASE_COLUMNS} additionalGridOptions={options} />
       </div>
     </DialFormPopup>
   );

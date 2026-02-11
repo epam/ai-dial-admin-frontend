@@ -5,7 +5,7 @@ import { DialFormPopup, DialNoDataContent, PopupSize } from '@epam/ai-dial-ui-ki
 import { ColDef, GridOptions, SelectionChangedEvent } from 'ag-grid-community';
 
 import { getButtonTitle } from '@/src/components/ExportConfig/AddEntities/utils';
-import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { MULTI_ROW_SELECTION } from '@/src/constants/ag-grid';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -66,7 +66,7 @@ const AddEntitiesModal: FC<Props> = ({ isModalOpen, selectedTab, entities, colum
         ) : (
           <div className="flex-1 flex flex-row min-h-0">
             <div className="flex-1">
-              <AgGridWrapper columnDefs={columnDefs} rowData={entities} additionalGridOptions={additionalGridOptions} />
+              <GridView columnDefs={columnDefs} rowData={entities} additionalGridOptions={additionalGridOptions} />
             </div>
             <Dependencies
               selectedTab={selectedTab}

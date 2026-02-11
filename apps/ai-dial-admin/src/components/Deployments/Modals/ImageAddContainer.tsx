@@ -24,7 +24,7 @@ import { getRouteByType, getTranslatedDeploymentType, getTranslatedType } from '
 import { getImageType } from '@/src/utils/deployments/images';
 import { getErrorNotification } from '@/src/utils/notification';
 
-import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
+import GridView from '@/src/components/Grid/GridView/GridView';
 
 interface Props {
   title: string;
@@ -136,7 +136,7 @@ const ImageAddContainer: FC<Props> = ({ title, isModalOpen, onClose, onApply, im
               />
             ) : (
               <div className="flex flex-col gap-4 h-full min-h-0">
-                <AgGridWrapper additionalGridOptions={additionalGridOptions} onGridReady={onGridReady} />
+                <GridView additionalGridOptions={additionalGridOptions} onGridReady={onGridReady} />
                 {selectedEntities.some((container) => container.status === CONTAINER_STATUS.RUNNING) && (
                   <DialAlert
                     message={t(ContainersI18nKey.ContainersRestartWarning, {

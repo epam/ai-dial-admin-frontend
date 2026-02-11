@@ -1,17 +1,17 @@
 'use client';
 
-import { FC, useEffect, useRef, useState } from 'react';
 import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { FC, useEffect, useRef, useState } from 'react';
 
 import { getModelsTokenizers } from '@/src/app/[lang]/models/actions';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
-import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
-import { RADIO_BUTTON_COL_DEF, SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
+import GridView from '@/src/components/Grid/GridView/GridView';
+import { SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
 import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { DialTokenizer } from '@/src/models/dial/model';
 import { getErrorNotification } from '@/src/utils/notification';
-import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { GridOptions } from 'ag-grid-community';
 
 interface Props {
@@ -70,7 +70,7 @@ const TokenizedModelsGrid: FC<Props> = ({ onSelectModelId, selectedModel }) => {
   return isLoading ? (
     <DialLoader size={40} />
   ) : (
-    <AgGridWrapper columnDefs={BASE_COLUMNS} rowData={data} additionalGridOptions={options} />
+    <GridView columnDefs={BASE_COLUMNS} rowData={data} additionalGridOptions={options} />
   );
 };
 

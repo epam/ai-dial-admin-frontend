@@ -8,7 +8,7 @@ import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Container } from '@/src/models/deployments/containers';
 
-import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 
 interface Props {
@@ -65,7 +65,7 @@ const SelectContainerModal: FC<Props> = ({ selectedId, containers, isModalOpen, 
       onCancel={onClose}
     >
       <div className="flex flex-col px-6 py-4 h-full">
-        <AgGridWrapper columnDefs={SOURCE_CONTAINERS_COLUMNS} additionalGridOptions={options} />
+        <GridView columnDefs={SOURCE_CONTAINERS_COLUMNS} additionalGridOptions={options} />
       </div>
     </DialFormPopup>
   );

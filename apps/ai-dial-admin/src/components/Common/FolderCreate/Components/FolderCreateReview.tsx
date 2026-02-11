@@ -2,7 +2,7 @@
 
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 
-import { DialNoDataContent, Step, StepStatus } from '@epam/ai-dial-ui-kit';
+import { Step, StepStatus } from '@epam/ai-dial-ui-kit';
 import { IconEyeOff } from '@tabler/icons-react';
 import { CellValueChangedEvent, ColDef, GridApi, GridOptions, GridReadyEvent, RowClassRules } from 'ag-grid-community';
 
@@ -24,7 +24,7 @@ import {
   generateAssetRowDataForImportGrid,
   generateFileRowDataForImportGrid,
 } from '@/src/components/EntityListView/Import/utils';
-import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { FoldersI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
@@ -191,15 +191,19 @@ const FolderCreateReview: FC<Props> = ({
     onCellValueChanged,
   };
 
-  return fileType === ImportFileType.ARCHIVE && view === ApplicationRoute.Files ? (
-    <DialNoDataContent title={t(FoldersI18nKey.NoPreviewArchive)} icon={<IconEyeOff width={50} height={50} />} />
-  ) : (
+  return (
     <div className="flex flex-col flex-1 min-h-0">
       <div>
         {t(MenuI18nKey.Files)}: {count || 0}
       </div>
+
       <div className="min-h-0 flex-1">
-        <AgGridWrapper onGridReady={onGridReady} additionalGridOptions={options} />
+        <GridView
+          getIsEmptyData={() => fileType === ImportFileType.ARCHIVE && view === ApplicationRoute.Files}
+          emptyDataProps={{ title: t(FoldersI18nKey.NoPreviewArchive), icon: <IconEyeOff size={50} /> }}
+          onGridReady={onGridReady}
+          additionalGridOptions={options}
+        />
       </div>
     </div>
   );

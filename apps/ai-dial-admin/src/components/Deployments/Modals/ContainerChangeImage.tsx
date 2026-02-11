@@ -17,7 +17,7 @@ import { getImageType, isValidVersion, updateSelectedVersion } from '@/src/utils
 import { getErrorNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 
-import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 
 interface Props {
@@ -133,7 +133,7 @@ const ContainerChangeImage: FC<Props> = ({
         {loading && <DialLoader size={24} />}
         {!loading && !!images.length && (
           <div className="flex flex-col gap-4 min-h-0 h-full">
-            <AgGridWrapper rowData={images} columnDefs={colDefs} additionalGridOptions={additionalGridOptions} />
+            <GridView rowData={images} columnDefs={colDefs} additionalGridOptions={additionalGridOptions} />
             {containerStatus === CONTAINER_STATUS.RUNNING && (
               <DialAlert
                 message={t(ContainersI18nKey.ContainerRestartWarning, {

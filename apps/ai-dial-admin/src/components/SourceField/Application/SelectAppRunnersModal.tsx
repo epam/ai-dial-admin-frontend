@@ -2,7 +2,7 @@ import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 import { FC, useState } from 'react';
 import { GridOptions } from 'ag-grid-community';
 
-import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import { SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
 import { LIST_RUNNER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
@@ -81,7 +81,7 @@ const SelectAppRunnerModal: FC<Props> = ({ selectedId, sourceEntities, isModalOp
       onCancel={onClose}
     >
       <div className="flex flex-col px-6 py-4 h-full">
-        <AgGridWrapper
+        <GridView
           columnDefs={LIST_RUNNER_COLUMNS.map((col) => ({ ...col, sort: void 0 }))}
           additionalGridOptions={options}
         />

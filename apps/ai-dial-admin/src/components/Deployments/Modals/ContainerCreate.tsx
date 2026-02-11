@@ -1,12 +1,12 @@
 import { DialLoader, DialPopup, DialSteps, PopupSize, StepStatus } from '@epam/ai-dial-ui-kit';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { GridOptions } from 'ag-grid-community';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getImagesWithVersions } from '@/src/app/actions/deployments';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 import ContainerProperties from '@/src/components/Containers/Fields/ContainerProperties';
-import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
 import { CREATE_CONTAINER_STEPS } from '@/src/constants/deployments/containers';
 import { IMAGES_LIST_FOR_CONTAINER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
@@ -172,7 +172,7 @@ const ContainerCreate: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
             <>
               {loading && <DialLoader size={40} />}
               {!loading && !!images.length && (
-                <AgGridWrapper rowData={images} columnDefs={colDefs} additionalGridOptions={options} />
+                <GridView rowData={images} columnDefs={colDefs} additionalGridOptions={options} />
               )}
             </>
           )}
