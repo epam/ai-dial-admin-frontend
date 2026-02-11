@@ -10,7 +10,7 @@ import { useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { EntityType } from '@/src/types/entity-type';
 import { getEmptyDataTitleI18nKey } from '@/src/utils/entities/get-empty-data-title';
-import GridView from '../../Grid/GridView/GridView';
+import GridView from '@/src/components/Grid/GridView/GridView';
 
 interface Props {
   selectedTab: EntityType;

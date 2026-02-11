@@ -11,7 +11,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
-import GridView from '../../Grid/GridView/GridView';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { changeExportGridData, getExportGridData } from './export';
 
 interface Props {

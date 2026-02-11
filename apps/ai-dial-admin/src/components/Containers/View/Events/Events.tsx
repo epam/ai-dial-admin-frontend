@@ -1,5 +1,5 @@
 import { FC, MouseEvent, useCallback, useEffect, useState } from 'react';
-import { GridApi } from 'ag-grid-community';
+import { GridApi, GridReadyEvent } from 'ag-grid-community';
 import { IconColumns2 } from '@tabler/icons-react';
 import { DialGhostButton } from '@epam/ai-dial-ui-kit';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -23,7 +23,7 @@ const Events: FC<Props> = ({ route, events }) => {
 
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
 
-  const onGridReady = useCallback((api: GridApi) => {
+  const onGridReady = useCallback(({ api }: GridReadyEvent) => {
     setGridApi(api);
   }, []);
 

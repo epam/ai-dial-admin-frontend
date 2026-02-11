@@ -9,7 +9,7 @@ import { EVALUATION_DEPLOYMENTS_COLUMNS } from '@/src/constants/grid-columns/gri
 import { ButtonsI18nKey, CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Deployment } from '@/src/models/evaluation/deployment';
-import GridView from '../../../Grid/GridView/GridView';
+import GridView from '@/src/components/Grid/GridView/GridView';
 
 interface Props {
   selected?: string;

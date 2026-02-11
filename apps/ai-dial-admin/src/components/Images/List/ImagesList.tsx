@@ -1,34 +1,34 @@
 'use client';
-import { FC, useCallback, useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { GridOptions, GridApi, CellClickedEvent } from 'ag-grid-community';
-import { useRouter } from 'next/navigation';
-import { ApplicationRoute } from '@/src/types/routes';
-import { Image } from '@/src/models/deployments/images';
-import { useI18n } from '@/src/locales/client';
-import { useNotification } from '@/src/context/NotificationContext';
-import { ModalType } from '@/src/components/EntityListView/Components/Modals';
-import { Container } from '@/src/models/deployments/containers';
 import { createImage, deleteImage, getImageContainers } from '@/src/app/actions/deployments';
-import { getErrorNotification } from '@/src/utils/notification';
+import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import {
   getDeleteOperation,
   getDuplicateOperation,
   getOpenInNewTabOperation,
 } from '@/src/constants/grid-columns/actions';
-import { IMAGE_STATUS } from '@/src/types/deployments/images';
-import { EntitiesI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
-import { getRouteByType, getTranslatedType } from '@/src/utils/deployments/entity';
-import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
-import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { IMAGES_LIST_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { EntitiesI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
+import { useNotification } from '@/src/context/NotificationContext';
+import { useI18n } from '@/src/locales/client';
+import { Container } from '@/src/models/deployments/containers';
+import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
+import { Image } from '@/src/models/deployments/images';
+import { IMAGE_STATUS } from '@/src/types/deployments/images';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getRouteByType, getTranslatedType } from '@/src/utils/deployments/entity';
 import { getUniqueImagesNames } from '@/src/utils/deployments/images';
+import { getErrorNotification } from '@/src/utils/notification';
+import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { CellClickedEvent, GridApi, GridOptions, GridReadyEvent } from 'ag-grid-community';
+import { useRouter } from 'next/navigation';
+import { FC, useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
-import ListView from '@/src/components/ListView/ListView';
-import HeaderButtons from '@/src/components/Images/List/HeaderButtons';
 import EntityDeleteModal from '@/src/components/Deployments/Modals/EntityDelete';
 import ImageDuplicateModal from '@/src/components/Deployments/Modals/ImageDuplicate';
+import HeaderButtons from '@/src/components/Images/List/HeaderButtons';
+import ListView from '@/src/components/ListView/ListView';
 
 interface Props {
   route: ApplicationRoute;
@@ -70,7 +70,7 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
     setModalType(void 0);
   }, [handleModalClose]);
 
-  const onGridReady = useCallback((api: GridApi) => {
+  const onGridReady = useCallback(({ api }: GridReadyEvent) => {
     setGridApi(api);
   }, []);
 

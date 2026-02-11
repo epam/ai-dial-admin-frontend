@@ -1,4 +1,12 @@
-import { CellClickedEvent, ColDef, GridApi, GridOptions, IDatasource, IGetRowsParams } from 'ag-grid-community';
+import {
+  CellClickedEvent,
+  ColDef,
+  GridApi,
+  GridOptions,
+  GridReadyEvent,
+  IDatasource,
+  IGetRowsParams,
+} from 'ag-grid-community';
 import { isEqual } from 'lodash';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -110,7 +118,7 @@ const HfRegistryGrid: FC<Props> = ({ route, modelName, setModelName, showModelDe
     }
   }, [gridApi, gridDataSource]);
 
-  const onGridReady = useCallback((api: GridApi) => {
+  const onGridReady = useCallback(({ api }: GridReadyEvent) => {
     setGridApi(api);
   }, []);
 

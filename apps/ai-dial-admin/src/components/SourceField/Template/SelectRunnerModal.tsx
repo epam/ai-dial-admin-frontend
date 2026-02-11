@@ -9,7 +9,7 @@ import { InterceptorTemplate } from '@/src/models/interceptor-template';
 
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import { GridOptions } from 'ag-grid-community';
-import GridView from '../../Grid/GridView/GridView';
+import GridView from '@/src/components/Grid/GridView/GridView';
 
 interface Props {
   selected?: string;
