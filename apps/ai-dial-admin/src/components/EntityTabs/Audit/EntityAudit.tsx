@@ -7,13 +7,15 @@ import ActivityAuditList from '@/src/components/ActivityAudit/List/List';
 import { routeAuditResource } from '@/src/components/ActivityAudit/View/Header/constants';
 import Dashboard from '@/src/components/Telemetry/Dashboard';
 import UsageLog from '@/src/components/UsageLog/UsageLog';
+import { DEFAULT_TIME_PERIOD } from '@/src/constants/global-time-filter';
 import { TabsI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
+import { TimeRange } from '@/src/models/time-range';
 import { ApplicationRoute } from '@/src/types/routes';
 import { TabOrientation } from '@/src/types/tab';
 import { EntityViewTab, getAuditTabs } from '@/src/utils/tabs/utils';
-import { DEFAULT_TIME_PERIOD } from '@/src/constants/global-time-filter';
+import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
 
 interface Props {
   entity: BaseEntity;
@@ -26,7 +28,7 @@ const EntityAudit: FC<Props> = ({ entity, view }) => {
   const { featureFlags } = useAppContext();
   const tabs = getAuditTabs(t, featureFlags, view);
   const [activeTab, setActiveTab] = useState(tabs[0].id);
-  const [timeFilter, setTimeFilter] = useState(DEFAULT_TIME_PERIOD);
+  const [timeFilter, setTimeFilter] = useState<TimeRange>(getTimeRangeById(DEFAULT_TIME_PERIOD));
 
   return (
     <div className="flex flex-row gap-4 h-full w-full">

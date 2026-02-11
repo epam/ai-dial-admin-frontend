@@ -29,8 +29,8 @@ interface Props {
   entity?: BaseEntity;
   entityView?: EntityViewTab;
   className?: string;
-  initTimeFilter?: string;
-  onChangeTimeFilter?: (filter: string) => void;
+  initTimeFilter?: TimeRange;
+  onChangeTimeFilter?: (filter: TimeRange) => void;
 }
 
 const UsageLog: FC<Props> = ({ route, className, entity, entityView, onChangeTimeFilter, initTimeFilter }) => {
@@ -44,8 +44,7 @@ const UsageLog: FC<Props> = ({ route, className, entity, entityView, onChangeTim
 
   useEffect(() => {
     if (!timePeriod) {
-      setTimePeriod(initTimeFilter || DEFAULT_TIME_PERIOD);
-      setTimeRange(getTimeRangeById(initTimeFilter || DEFAULT_TIME_PERIOD));
+      setTimeRange(initTimeFilter || getTimeRangeById(DEFAULT_TIME_PERIOD));
     }
   }, [initTimeFilter, timePeriod]);
 
@@ -65,15 +64,20 @@ const UsageLog: FC<Props> = ({ route, className, entity, entityView, onChangeTim
   const onTimePeriodChange = useCallback(
     (period: string) => {
       setTimePeriod(period);
-      onChangeTimeFilter?.(period);
-      setTimeRange(getTimeRangeById(period));
+      const newTimeRange = getTimeRangeById(period);
+      onChangeTimeFilter?.(newTimeRange);
+      setTimeRange(newTimeRange);
     },
     [onChangeTimeFilter],
   );
 
-  const onTimeRangeChange = useCallback((range: TimeRange) => {
-    setTimeRange(range);
-  }, []);
+  const onTimeRangeChange = useCallback(
+    (range: TimeRange) => {
+      onChangeTimeFilter?.(range);
+      setTimeRange(range);
+    },
+    [onChangeTimeFilter],
+  );
 
   const onChangeActiveTab = useCallback(
     (tab: string) => {

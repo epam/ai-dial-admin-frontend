@@ -46,8 +46,8 @@ interface Props {
   entity?: BaseEntity | DialApplicationScheme;
   entityType?: string;
   refresh?: boolean;
-  initTimeFilter?: string;
-  onChangeTimeFilter?: (filter: string) => void;
+  initTimeFilter?: TimeRange;
+  onChangeTimeFilter?: (filter: TimeRange) => void;
 }
 
 const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, initTimeFilter, onChangeTimeFilter }) => {
@@ -68,8 +68,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, initTimeFil
 
   useEffect(() => {
     if (!timePeriod) {
-      setTimePeriod(initTimeFilter || DEFAULT_TIME_PERIOD);
-      setTimeRange(getTimeRangeById(initTimeFilter || DEFAULT_TIME_PERIOD));
+      setTimeRange(initTimeFilter || getTimeRangeById(DEFAULT_TIME_PERIOD));
     }
   }, [initTimeFilter, timePeriod]);
 
@@ -170,8 +169,10 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, initTimeFil
   const onTimePeriodChange = useCallback(
     (period: string) => {
       setTimePeriod(period);
-      onChangeTimeFilter?.(period);
-      setTimeRange(getTimeRangeById(period));
+
+      const newTimeRange = getTimeRangeById(period);
+      onChangeTimeFilter?.(newTimeRange);
+      setTimeRange(newTimeRange);
       onRefresh();
     },
     [onRefresh, onChangeTimeFilter],
@@ -179,10 +180,11 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, initTimeFil
 
   const onTimeRangeChange = useCallback(
     (range: TimeRange) => {
+      onChangeTimeFilter?.(range);
       setTimeRange(range);
       onRefresh();
     },
-    [onRefresh],
+    [onRefresh, onChangeTimeFilter],
   );
 
   const resourceRollback = useCallback(() => {

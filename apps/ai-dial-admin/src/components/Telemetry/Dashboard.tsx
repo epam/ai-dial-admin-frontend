@@ -19,9 +19,9 @@ import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   route: ApplicationRoute;
-  initTimeFilter?: string;
+  initTimeFilter?: TimeRange;
   entity?: BaseEntity;
-  onChangeTimeFilter?: (filter: string) => void;
+  onChangeTimeFilter?: (filter: TimeRange) => void;
 }
 
 const Dashboard: FC<Props> = ({ route, entity, initTimeFilter, onChangeTimeFilter }) => {
@@ -34,8 +34,7 @@ const Dashboard: FC<Props> = ({ route, entity, initTimeFilter, onChangeTimeFilte
 
   useEffect(() => {
     if (!timePeriod) {
-      setTimePeriod(initTimeFilter || DEFAULT_TIME_PERIOD);
-      setTimeRange(getTimeRangeById(initTimeFilter || DEFAULT_TIME_PERIOD));
+      setTimeRange(initTimeFilter || getTimeRangeById(DEFAULT_TIME_PERIOD));
     }
   }, [initTimeFilter, timePeriod]);
 
@@ -62,15 +61,20 @@ const Dashboard: FC<Props> = ({ route, entity, initTimeFilter, onChangeTimeFilte
   const onTimePeriodChange = useCallback(
     (period: string) => {
       setTimePeriod(period);
-      onChangeTimeFilter?.(period);
-      setTimeRange(getTimeRangeById(period));
+      const newTimeRange = getTimeRangeById(period);
+      onChangeTimeFilter?.(newTimeRange);
+      setTimeRange(newTimeRange);
     },
     [onChangeTimeFilter],
   );
 
-  const onTimeRangeChange = useCallback((range: TimeRange) => {
-    setTimeRange(range);
-  }, []);
+  const onTimeRangeChange = useCallback(
+    (range: TimeRange) => {
+      onChangeTimeFilter?.(range);
+      setTimeRange(range);
+    },
+    [onChangeTimeFilter],
+  );
 
   return (
     <div role="dashboards" className="flex flex-1 flex-col min-h-0 min-w-0">
