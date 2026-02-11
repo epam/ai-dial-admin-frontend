@@ -7,16 +7,19 @@ import {
   getPathError,
   getSemanticVersionError,
   getVariableNameError,
-  getCPUError,
+  getCPUValueError,
   getResourcesConflictError,
   getWhitelistDomainError,
   getReplicasError,
   getImageNameError,
   getBaseDirectoryError,
+  getFileNameError,
+  getGpuError,
+  getMemoryValueError,
+  getPortError,
 } from '../validation';
 import { ErrorType } from '@/src/types/error-type';
 import { ErrorI18nKey } from '@/src/constants/i18n';
-import { getPromptVersionError } from '@/src/utils/validation/version-error';
 import { isValidHttpUrl } from '@/src/utils/validation/url-error';
 import semver from 'semver/preload';
 
@@ -44,28 +47,26 @@ describe('validation utils', () => {
       });
     });
 
-    test('returns error for invalid start character', () => {
-      expect(getVariableNameError('1variable', t)).toEqual({
-        type: ErrorType.INVALID,
-        text: ErrorI18nKey.VariableStartError,
+    test('returns error for invalid length character', () => {
+      expect(getVariableNameError('A'.repeat(254), t)).toEqual({
+        type: ErrorType.LENGTH,
+        text: ErrorI18nKey.MinMaxLength,
       });
 
-      expect(getVariableNameError('1variable')).toEqual({
-        type: ErrorType.INVALID,
+      expect(getVariableNameError('A'.repeat(254))).toEqual({
+        type: ErrorType.LENGTH,
         text: '',
       });
+
+      expect(getVariableNameError('variable')).toBeNull();
     });
 
     test('returns error for invalid characters', () => {
-      expect(getVariableNameError('var-iable', t)).toEqual({
+      expect(getVariableNameError('var%!iable', t)).toEqual({
         type: ErrorType.INVALID,
         text: ErrorI18nKey.VariableError,
       });
-
-      expect(getVariableNameError('var-iable')).toEqual({
-        type: ErrorType.INVALID,
-        text: '',
-      });
+      expect(getVariableNameError('VALID_VARIABLE_1')).toBeNull();
     });
 
     test('returns null for valid name', () => {
@@ -379,31 +380,98 @@ describe('validation utils', () => {
 
   describe('CPU and resources validation', () => {
     test('getCPUError returns invalid for values less than 1 and null otherwise', () => {
-      expect(getCPUError(0.5, t)).toEqual({
+      expect(getCPUValueError('0.5', t)).toEqual({
         type: ErrorType.INVALID,
         text: ErrorI18nKey.CpuError,
       });
 
-      expect(getCPUError(0.5)).toEqual({
+      expect(getCPUValueError('0.5')).toEqual({
         type: ErrorType.INVALID,
         text: '',
       });
 
-      expect(getCPUError(1, t)).toBeNull();
+      expect(getCPUValueError('1', t)).toBeNull();
     });
 
     test('getResourcesConflictError returns invalid when request > limit and null otherwise', () => {
-      expect(getResourcesConflictError(2, 1, t)).toEqual({
-        type: ErrorType.INVALID,
+      expect(getResourcesConflictError('2', '1', t)).toEqual({
+        type: ErrorType.CONFLICT,
         text: ErrorI18nKey.LimitRequestError,
       });
 
-      expect(getResourcesConflictError(2, 1)).toEqual({
-        type: ErrorType.INVALID,
+      expect(getResourcesConflictError('2', '1')).toEqual({
+        type: ErrorType.CONFLICT,
         text: '',
       });
 
-      expect(getResourcesConflictError(1, 1, t)).toBeNull();
+      expect(getResourcesConflictError('1', '1', t)).toBeNull();
+    });
+  });
+
+  describe('file name validation field validation', () => {
+    test('returns error for invalid length character', () => {
+      expect(getFileNameError('A'.repeat(254), t)).toEqual({
+        type: ErrorType.LENGTH,
+        text: ErrorI18nKey.MinMaxLength,
+      });
+
+      expect(getFileNameError('A'.repeat(254))).toEqual({
+        type: ErrorType.LENGTH,
+        text: '',
+      });
+
+      expect(getFileNameError('variable')).toBeNull();
+    });
+
+    test('returns error for invalid characters', () => {
+      expect(getFileNameError('var%!iable', t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.VariableError,
+      });
+      expect(getFileNameError('VALID_VARIABLE_1')).toBeNull();
+    });
+
+    test('returns null for valid name', () => {
+      expect(getFileNameError('VALID_VARIABLE_1', t)).toBeNull();
+    });
+  });
+
+  describe('GPU field validation', () => {
+    test('returns value error', () => {
+      expect(getGpuError('0.5', t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.GPUError,
+      });
+    });
+
+    test('returns null when valid', () => {
+      expect(getGpuError('1', t)).toBeNull();
+    });
+  });
+
+  describe('Memory field validation', () => {
+    test('returns value error', () => {
+      expect(getMemoryValueError('0', t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.MemoryError,
+      });
+    });
+
+    test('returns null when valid', () => {
+      expect(getMemoryValueError('1', t)).toBeNull();
+    });
+  });
+
+  describe('Port field validation', () => {
+    test('returns value error', () => {
+      expect(getPortError(65536, t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.PortError,
+      });
+    });
+
+    test('returns null when valid', () => {
+      expect(getPortError(1123, t)).toBeNull();
     });
   });
 

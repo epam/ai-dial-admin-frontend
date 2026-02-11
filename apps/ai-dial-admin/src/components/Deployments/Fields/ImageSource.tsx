@@ -5,11 +5,11 @@ import { IMAGE_SOURCE_TYPE, IMAGE_TYPE } from '@/src/types/deployments/images';
 import { Image } from '@/src/models/deployments/images';
 import { getControlClassName } from '@/src/utils/entities/view';
 
-import BaseDirectory from '@/src/components/Deployments/Fields/ImageSourceFields/BaseDirectory';
-import Branch from '@/src/components/Deployments/Fields/ImageSourceFields/Branch';
-import SourceType from '@/src/components/Deployments/Fields/ImageSourceFields/SourceType';
-import CodeURL from '@/src/components/Deployments/Fields/ImageSourceFields/CodeURL';
-import DockerURI from '@/src/components/Deployments/Fields/ImageSourceFields/DockerURI';
+import BaseDirectory from '@/src/components/Deployments/Fields/ImageSource/BaseDirectory';
+import Branch from '@/src/components/Deployments/Fields/ImageSource/Branch';
+import SourceType from '@/src/components/Deployments/Fields/ImageSource/SourceType';
+import CodeURL from '@/src/components/Deployments/Fields/ImageSource/CodeURL';
+import DockerURI from '@/src/components/Deployments/Fields/ImageSource/DockerURI';
 
 interface Props {
   image: Image;
