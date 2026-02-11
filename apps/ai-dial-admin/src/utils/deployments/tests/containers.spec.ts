@@ -1,9 +1,14 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
+  convertCoresToMilliCores,
+  convertMilliCoresToCores,
   getContainerRedeploySnapshot,
   getContainerTemplate,
   isEditDisabled,
   normalizeEnvironmentVariables,
+  convertMbToBytes,
+  convertBytesToMb,
+  normalizeContainerPorts,
 } from '../containers';
 import { CONTAINER_STATUS, CONTAINER_TRANSPORT, CONTAINER_TYPE } from '@/src/types/deployments/containers';
 import { Container } from '@/src/models/deployments/containers';
@@ -43,7 +48,7 @@ describe('containers utils', () => {
     });
 
     test('returns template for McpContainers', () => {
-      const template = getContainerTemplate();
+      const template = getContainerTemplate('' as CONTAINER_TYPE);
       expect(template).toBeNull();
     });
 
@@ -175,13 +180,40 @@ describe('containers utils', () => {
 
   describe('isEditDisabled for containers', () => {
     test('should be true', () => {
-      expect(isEditDisabled({ status: CONTAINER_STATUS.PENDING })).toBeTruthy();
-      expect(isEditDisabled({ status: CONTAINER_STATUS.STOPPING })).toBeTruthy();
+      expect(isEditDisabled({ status: CONTAINER_STATUS.PENDING } as Container)).toBeTruthy();
+      expect(isEditDisabled({ status: CONTAINER_STATUS.STOPPING } as Container)).toBeTruthy();
     });
 
     test('should be false', () => {
-      expect(isEditDisabled({ status: CONTAINER_STATUS.FAILED })).toBeFalsy();
-      expect(isEditDisabled({ status: CONTAINER_STATUS.FAILED })).toBeFalsy();
+      expect(isEditDisabled({ status: CONTAINER_STATUS.FAILED } as Container)).toBeFalsy();
+      expect(isEditDisabled({ status: CONTAINER_STATUS.STOPPED } as Container)).toBeFalsy();
+    });
+  });
+
+  describe('CPU values conversion', () => {
+    test('should convert cores to millicores', () => {
+      expect(convertCoresToMilliCores('1')).toBe('1000');
+    });
+
+    test('should convert millicores to cores', () => {
+      expect(convertMilliCoresToCores('1000')).toBe('1');
+    });
+  });
+
+  describe('Memory values conversion', () => {
+    test('should convert MB to Bytes', () => {
+      expect(convertMbToBytes('1')).toBe('1048576');
+    });
+
+    test('should convert Bytes to MB', () => {
+      expect(convertBytesToMb('1048576')).toBe('1');
+    });
+  });
+
+  describe('normalizeContainerPorts', () => {
+    test('should convert ContainerPorts', () => {
+      expect(normalizeContainerPorts(undefined)).toEqual([]);
+      expect(normalizeContainerPorts([80, 8080])).toEqual([80, 8080]);
     });
   });
 });
