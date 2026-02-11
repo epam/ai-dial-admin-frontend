@@ -720,7 +720,7 @@ export default {
     FilePaths: 'File paths',
     Changes: 'Changes',
     FileSizeErrorHeader: 'File size limit error',
-    FileSizeErrorDescription: 'Size of files is more than {size}',
+    FileSizeErrorDescription: 'Size of files is more than {size} MB',
     Notifications: {
       ConfigImported: 'Config imported successfully',
       ConfigImportedDescription: 'Changes have been delivered to the system',
@@ -1339,5 +1339,6 @@ export default {
         Description: 'You can now add files to this folder.',
       },
     },
+    CreateFolderValidate: 'Folder name contains forbidden characters: < > : " / \\ | ? *',
   },
 } as const;
