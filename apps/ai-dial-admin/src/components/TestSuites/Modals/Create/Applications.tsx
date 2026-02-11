@@ -59,7 +59,7 @@ const Applications: FC<Props> = ({ deployments, selectedApplicationId, onChangeA
         />
       ),
     },
-    onRowSelected: onRowSelected,
+    onRowSelected,
   };
 
   const toggleColumnsPanel = useCallback(() => setShowColumnsPanel(!showColumnsPanel), [showColumnsPanel]);

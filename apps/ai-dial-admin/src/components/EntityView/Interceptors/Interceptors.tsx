@@ -1,27 +1,26 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialPrimaryButton, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { RowDragEvent } from 'ag-grid-community';
 
 import { getApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
 import { getProperties } from '@/src/app/[lang]/system-properties/actions';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
-import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { DESCRIPTION_COLUMN, DISPLAY_NAME_COLUMN, NAME_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { ButtonsI18nKey, EntitiesI18nKey, InterceptorsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication } from '@/src/models/dial/application';
+import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import GridView from '../../Grid/GridView/GridView';
 import CollapsableInterceptors from './CollapsableInterceptors';
 import { getInterceptorsColumnDefs, getInterceptorsGridData } from './utils';
-import { AssetApp } from '@/src/models/dial/deployment-asset';
-import GridView from '../../Grid/GridView/GridView';
 
 interface Props<T> {
   entity: T;

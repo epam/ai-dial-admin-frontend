@@ -133,7 +133,7 @@ const RoleSharing: FC<Props> = ({ isSkipRefresh, selectedRole, onChangeRole }) =
           />
         )}
       </div>
-      <AgGridWrapper additionalGridOptions={{ onGridReady }} />
+      <AgGridWrapper onGridReady={onGridReady} />
     </div>
   );
 };

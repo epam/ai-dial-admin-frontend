@@ -1,23 +1,23 @@
 import { AlertVariant, DialAlert, DialFormPopup, DialLoader } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
+import { getImagesWithVersions } from '@/src/app/actions/deployments';
+import { ACTION_COLUMN, SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
+import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
+import { IMAGES_LIST_FOR_CONTAINER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, ContainersI18nKey } from '@/src/constants/i18n';
+import { useNotification } from '@/src/context/NotificationContext';
+import { useI18n } from '@/src/locales/client';
 import { Image, ImageGroup } from '@/src/models/deployments/images';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
-import { useNotification } from '@/src/context/NotificationContext';
-import { getImagesWithVersions } from '@/src/app/actions/deployments';
-import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
-import { IMAGES_LIST_FOR_CONTAINER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { getTranslatedDeploymentType } from '@/src/utils/deployments/entity';
+import { getImageType, isValidVersion, updateSelectedVersion } from '@/src/utils/deployments/images';
 import { getErrorNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import { getImageType, isValidVersion, updateSelectedVersion } from '@/src/utils/deployments/images';
-import { ACTION_COLUMN, RADIO_BUTTON_COL_DEF, SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
-import { useI18n } from '@/src/locales/client';
 
-import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
+import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 
 interface Props {
   isModalOpen: boolean;
