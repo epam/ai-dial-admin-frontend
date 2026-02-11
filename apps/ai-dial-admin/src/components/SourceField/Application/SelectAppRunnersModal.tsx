@@ -1,5 +1,6 @@
 import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 import { FC, useState } from 'react';
+import { GridOptions } from 'ag-grid-community';
 
 import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
@@ -30,6 +31,41 @@ const SelectAppRunnerModal: FC<Props> = ({ selectedId, sourceEntities, isModalOp
     return runner?.$id === id || adapter?.name === id;
   };
 
+  const options: GridOptions = {
+    ...SINGLE_ROW_SELECTION,
+    selectionColumnDef: {
+      ...SINGLE_ROW_SELECTION.selectionColumnDef,
+      cellRenderer: (data: { data?: DialApplicationScheme | DialAdapter; id: string }) => {
+        const runner = data.data as DialApplicationScheme;
+        const adapter = data.data as DialAdapter;
+        const isActive = isSelectedNode(data.data);
+
+        return <RadioButtonRenderer inputId={runner?.$id || adapter?.name || data.id} isChecked={isActive} />;
+      },
+    },
+    onRowSelected: (event) => {
+      if (event.node.isSelected()) {
+        setSelectedRunner(event.data.$id || event.data.name);
+      }
+    },
+    onGridReady: (event) => {
+      event.api?.updateGridOptions({
+        rowData: [
+          {
+            ['dial:applicationTypeDisplayName']: t(BasicI18nKey.None),
+            $id: t(BasicI18nKey.None),
+          },
+          ...(sourceEntities || []),
+        ],
+      });
+      event.api.forEachNode((node) => {
+        if (isSelectedNode(node.data)) {
+          node.setSelected(true);
+        }
+      });
+    },
+  };
+
   return (
     <DialFormPopup
       onClose={onClose}
@@ -47,41 +83,7 @@ const SelectAppRunnerModal: FC<Props> = ({ selectedId, sourceEntities, isModalOp
       <div className="flex flex-col px-6 py-4 h-full">
         <AgGridWrapper
           columnDefs={LIST_RUNNER_COLUMNS.map((col) => ({ ...col, sort: void 0 }))}
-          additionalGridOptions={{
-            ...SINGLE_ROW_SELECTION,
-            selectionColumnDef: {
-              ...SINGLE_ROW_SELECTION.selectionColumnDef,
-              cellRenderer: (data: { data?: DialApplicationScheme | DialAdapter; id: string }) => {
-                const runner = data.data as DialApplicationScheme;
-                const adapter = data.data as DialAdapter;
-                const isActive = isSelectedNode(data.data);
-
-                return <RadioButtonRenderer inputId={runner?.$id || adapter?.name || data.id} isChecked={isActive} />;
-              },
-            },
-            onRowSelected: (event) => {
-              if (event.node.isSelected()) {
-                setSelectedRunner(event.data.$id || event.data.name);
-              }
-            },
-            onGridReady: (event) => {
-              event.api?.updateGridOptions({
-                columnDefs: LIST_RUNNER_COLUMNS,
-                rowData: [
-                  {
-                    ['dial:applicationTypeDisplayName']: t(BasicI18nKey.None),
-                    $id: t(BasicI18nKey.None),
-                  },
-                  ...(sourceEntities || []),
-                ],
-              });
-              event.api.forEachNode((node) => {
-                if (isSelectedNode(node.data)) {
-                  node.setSelected(true);
-                }
-              });
-            },
-          }}
+          additionalGridOptions={options}
         />
       </div>
     </DialFormPopup>

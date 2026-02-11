@@ -1,5 +1,6 @@
 import { DialLoader, DialPopup, DialSteps, PopupSize, StepStatus } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { GridOptions } from 'ag-grid-community';
 
 import { getImagesWithVersions } from '@/src/app/actions/deployments';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
@@ -110,6 +111,43 @@ const ContainerCreate: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
     }
   }, [currentStepId, isValid, setStepsState]);
 
+  const options: GridOptions = {
+    ...SINGLE_ROW_SELECTION,
+    selectionColumnDef: {
+      ...SINGLE_ROW_SELECTION.selectionColumnDef,
+      cellRenderer: (data: { data?: { selectedId: string; name: string }; name: string }) => (
+        <RadioButtonRenderer
+          inputId={data.data?.name || data.name}
+          isChecked={data.data?.selectedId === container.imageDefinitionId}
+        />
+      ),
+    },
+    onFilterChanged: (event) => {
+      setFilters(event.api.getFilterModel());
+    },
+    onRowSelected: (event) => {
+      if (event.node.isSelected()) {
+        setContainer({
+          ...container,
+          containerPorts: event.data?.containerPorts || container.containerPorts,
+          imageDefinitionId: event.data?.selectedId,
+        });
+      }
+    },
+    onGridReady: (event) => {
+      event.api?.updateGridOptions({
+        rowData: images,
+        columnDefs: colDefs,
+      });
+      event.api.setFilterModel(filters);
+      event.api.forEachNode((node) => {
+        if (node.data.selectedId === container.imageDefinitionId && isValidVersion(node.data as ImageGroup)) {
+          node.setSelected(true);
+        }
+      });
+    },
+  };
+
   return (
     <DialPopup
       portalId="ContainerCreateModal"
@@ -134,49 +172,7 @@ const ContainerCreate: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
             <>
               {loading && <DialLoader size={40} />}
               {!loading && !!images.length && (
-                <AgGridWrapper
-                  rowData={images}
-                  columnDefs={colDefs}
-                  additionalGridOptions={{
-                    ...SINGLE_ROW_SELECTION,
-                    selectionColumnDef: {
-                      ...SINGLE_ROW_SELECTION.selectionColumnDef,
-                      cellRenderer: (data: { data?: { selectedId: string; name: string }; name: string }) => (
-                        <RadioButtonRenderer
-                          inputId={data.data?.name || data.name}
-                          isChecked={data.data?.selectedId === container.imageDefinitionId}
-                        />
-                      ),
-                    },
-                    onFilterChanged: (event) => {
-                      setFilters(event.api.getFilterModel());
-                    },
-                    onRowSelected: (event) => {
-                      if (event.node.isSelected()) {
-                        setContainer({
-                          ...container,
-                          containerPorts: event.data?.containerPorts || container.containerPorts,
-                          imageDefinitionId: event.data?.selectedId,
-                        });
-                      }
-                    },
-                    onGridReady: (event) => {
-                      event.api?.updateGridOptions({
-                        rowData: images,
-                        columnDefs: colDefs,
-                      });
-                      event.api.setFilterModel(filters);
-                      event.api.forEachNode((node) => {
-                        if (
-                          node.data.selectedId === container.imageDefinitionId &&
-                          isValidVersion(node.data as ImageGroup)
-                        ) {
-                          node.setSelected(true);
-                        }
-                      });
-                    },
-                  }}
-                />
+                <AgGridWrapper rowData={images} columnDefs={colDefs} additionalGridOptions={options} />
               )}
             </>
           )}

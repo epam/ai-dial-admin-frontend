@@ -2,7 +2,7 @@
 import { ReactNode } from 'react';
 
 import { DialCollapsibleSidebar, DialIconButton, DialTooltip } from '@epam/ai-dial-ui-kit';
-import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
+import { ColDef, GridOptions, GridReadyEvent } from 'ag-grid-community';
 import classNames from 'classnames';
 
 import FolderCollapse from '@/public/images/icons/folder-collapse.svg';
@@ -30,7 +30,7 @@ interface Props<T> {
   storageKey?: string;
   toggleColumnsPanel?: () => void;
   context?: () => AssetsFolderContext;
-  onGridReady?: (gridApi: GridApi) => void;
+  onGridReady?: (gridApi: GridReadyEvent) => void;
   isBulkView?: boolean;
   allowPadding?: boolean;
 }
@@ -101,7 +101,7 @@ const ListView = <T extends object>({
         ) : (
           <GridView
             columnDefs={columnDefs}
-            data={data}
+            rowData={data}
             additionalGridOptions={{ ...additionalGridOptions }}
             emptyDataTitle={emptyDataTitle}
             emptyDataDescription={emptyDataDescription}

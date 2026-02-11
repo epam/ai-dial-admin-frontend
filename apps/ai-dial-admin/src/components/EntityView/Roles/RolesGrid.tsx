@@ -2,7 +2,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { DialGhostButton, DialPrimaryButton, DialSwitch } from '@epam/ai-dial-ui-kit';
 import { IconPlus, IconReload } from '@tabler/icons-react';
-import { GridApi, GridReadyEvent, IRowNode } from 'ag-grid-community';
+import { GridApi, GridOptions, GridReadyEvent, IRowNode } from 'ag-grid-community';
 
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { ButtonsI18nKey, EntitiesI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
@@ -86,6 +86,11 @@ const RolesGrid: FC<Props> = ({
     [onChangeEntity, entity],
   );
 
+  const options: GridOptions = {
+    suppressCellFocus: true,
+    suppressHeaderFocus: true,
+  };
+
   return (
     <div className="h-full flex flex-col">
       <div className="mb-4 flex flex-row items-center justify-between h-[42px]">
@@ -118,11 +123,7 @@ const RolesGrid: FC<Props> = ({
           )}
         </div>
       </div>
-      <GridView
-        emptyDataTitle={t(EntitiesI18nKey.NoRoles)}
-        onGridReady={onGridReady}
-        additionalGridOptions={{ suppressCellFocus: true, suppressHeaderFocus: true }}
-      />
+      <GridView emptyDataTitle={t(EntitiesI18nKey.NoRoles)} onGridReady={onGridReady} additionalGridOptions={options} />
     </div>
   );
 };
