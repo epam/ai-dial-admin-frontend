@@ -5,7 +5,7 @@ import { ColDef } from 'ag-grid-community';
 import { FC, useCallback, useState } from 'react';
 
 import { importTestCasePreview } from '@/src/app/[lang]/test-suites/actions';
-import Grid from '@/src/components/Grid/Grid';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { BasicI18nKey, ButtonsI18nKey, ImportI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { TestCase } from '@/src/models/evaluation/test-suite';
@@ -82,7 +82,7 @@ const ImportFileModal: FC<Props> = ({ selectedTestSuiteId, isModalOpen, onClose,
             <SelectedFile file={selectedFile} onChangeFile={onChangeFile} />
             <span className="dial-small-sime-text mb-1 mt-4 text-secondary">{t(TestSuitesI18nKey.Preview)}:</span>
             <div className="flex-1 min-h-0">
-              <Grid columnDefs={columnDefs} rowData={testCases || []} />
+              <GridView columnDefs={columnDefs} rowData={testCases || []} />
             </div>
           </div>
         )}

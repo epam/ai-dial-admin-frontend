@@ -1,12 +1,12 @@
 import { FC, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { CellClickedEvent, ColDef, GridApi, GridReadyEvent, RowClassRules } from 'ag-grid-community';
 import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { CellClickedEvent, ColDef, GridApi, GridOptions, GridReadyEvent } from 'ag-grid-community';
 
+import { getColumnsByParameter, getCurrentAndRollbackEntities } from '@/src/components/ActivityAudit/EntityGrid/utils';
 import ActivityDetails from '@/src/components/ActivityAudit/Modals/Details';
-import { getCurrentAndRollbackEntities, getColumnsByParameter } from '@/src/components/ActivityAudit/EntityGrid/utils';
-import Grid from '@/src/components/Grid/Grid';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ActivityAuditDiff, DialActivity } from '@/src/models/activity-audit';
@@ -48,21 +48,6 @@ const AuditEntityGrid: FC<Props> = ({
     sort: void 0,
   }));
 
-  const rowClassRules: RowClassRules = {
-    'ag-error-row ag-error-border': (params) => {
-      return (params.data as ActivityAuditDiff).diffStatus === DiffStatus.REMOVED;
-    },
-    'ag-new-row ag-new-border': (params) => {
-      return (params.data as ActivityAuditDiff).diffStatus === DiffStatus.ADDED;
-    },
-    'ag-changed-row ag-changed-border': (params) => {
-      return (params.data as ActivityAuditDiff).diffStatus === DiffStatus.CHANGED;
-    },
-    'ag-empty-row': (params) => {
-      return (params.data as ActivityAuditDiff).diffStatus === DiffStatus.MIRROR;
-    },
-  };
-
   const onRowClicked = (e: CellClickedEvent) => {
     if (!e.data.diffStatus || e.data.diffStatus === DiffStatus.MIRROR) return;
     const id = e.data.name || e.data.key || e.data.$id;
@@ -79,7 +64,6 @@ const AuditEntityGrid: FC<Props> = ({
     event.api?.updateGridOptions({
       columnDefs,
       rowData: data,
-      rowClassRules,
     });
   };
 
@@ -90,19 +74,33 @@ const AuditEntityGrid: FC<Props> = ({
     });
   }, [columns, gridApi, columnDefs, diffView, data]);
 
+  const options: GridOptions = {
+    domLayout: 'autoHeight',
+    onGridReady,
+    onCellClicked: activity && onRowClicked,
+    rowClassRules: {
+      'ag-error-row ag-error-border': (params) => {
+        return (params.data as ActivityAuditDiff).diffStatus === DiffStatus.REMOVED;
+      },
+      'ag-new-row ag-new-border': (params) => {
+        return (params.data as ActivityAuditDiff).diffStatus === DiffStatus.ADDED;
+      },
+      'ag-changed-row ag-changed-border': (params) => {
+        return (params.data as ActivityAuditDiff).diffStatus === DiffStatus.CHANGED;
+      },
+      'ag-empty-row': (params) => {
+        return (params.data as ActivityAuditDiff).diffStatus === DiffStatus.MIRROR;
+      },
+    },
+  };
+
   return !data?.length ? (
     <div className="rounded border border-secondary h-full">
       <DialNoDataContent title={t(EntitiesI18nKey.NoResource)} />
     </div>
   ) : (
     <div className="w-full h-full relative">
-      <Grid
-        additionalGridOptions={{
-          domLayout: 'autoHeight',
-          onGridReady,
-          onCellClicked: activity && onRowClicked,
-        }}
-      />
+      <GridView additionalGridOptions={options} emptyDataProps={{ title: t(EntitiesI18nKey.NoResource) }} />
       {isModalOpen &&
         createPortal(
           <ActivityDetails

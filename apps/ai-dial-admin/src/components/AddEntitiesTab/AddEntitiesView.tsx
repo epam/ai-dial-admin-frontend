@@ -1,4 +1,4 @@
-import { DialNoDataContent, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
@@ -6,7 +6,7 @@ import { createPortal } from 'react-dom';
 
 import { ENTITY_COLUMNS, getAvailableEntities, getEntitiesGridData } from '@/src/components/AddEntitiesTab/utils';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
-import Grid from '@/src/components/Grid/Grid';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getOpenInNewTabOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
@@ -139,11 +139,11 @@ const AddEntitiesView: FC<Props> = ({
             />
           )}
         </div>
-        {!data?.length ? (
-          <DialNoDataContent title={emptyDataTitle || t(EntitiesI18nKey.NoEntities)} />
-        ) : (
-          <Grid additionalGridOptions={{ onGridReady }} />
-        )}
+        <GridView
+          getIsEmptyData={() => !data?.length}
+          onGridReady={onGridReady}
+          emptyDataProps={{ title: emptyDataTitle || t(EntitiesI18nKey.NoEntities) }}
+        />
       </div>
       {isModalOpen &&
         createPortal(

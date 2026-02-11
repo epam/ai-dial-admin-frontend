@@ -1,9 +1,10 @@
 import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 import { FC, useState } from 'react';
+import { GridOptions } from 'ag-grid-community';
 
+import GridView from '@/src/components/Grid/GridView/GridView';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
-import Grid from '@/src/components/Grid/Grid';
-import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
+import { SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
 import { LIST_RUNNER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { BasicI18nKey, ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -30,6 +31,41 @@ const SelectAppRunnerModal: FC<Props> = ({ selectedId, sourceEntities, isModalOp
     return runner?.$id === id || adapter?.name === id;
   };
 
+  const options: GridOptions = {
+    ...SINGLE_ROW_SELECTION,
+    selectionColumnDef: {
+      ...SINGLE_ROW_SELECTION.selectionColumnDef,
+      cellRenderer: (data: { data?: DialApplicationScheme | DialAdapter; id: string }) => {
+        const runner = data.data as DialApplicationScheme;
+        const adapter = data.data as DialAdapter;
+        const isActive = isSelectedNode(data.data);
+
+        return <RadioButtonRenderer inputId={runner?.$id || adapter?.name || data.id} isChecked={isActive} />;
+      },
+    },
+    onRowSelected: (event) => {
+      if (event.node.isSelected()) {
+        setSelectedRunner(event.data.$id || event.data.name);
+      }
+    },
+    onGridReady: (event) => {
+      event.api?.updateGridOptions({
+        rowData: [
+          {
+            ['dial:applicationTypeDisplayName']: t(BasicI18nKey.None),
+            $id: t(BasicI18nKey.None),
+          },
+          ...(sourceEntities || []),
+        ],
+      });
+      event.api.forEachNode((node) => {
+        if (isSelectedNode(node.data)) {
+          node.setSelected(true);
+        }
+      });
+    },
+  };
+
   return (
     <DialFormPopup
       onClose={onClose}
@@ -45,43 +81,9 @@ const SelectAppRunnerModal: FC<Props> = ({ selectedId, sourceEntities, isModalOp
       onCancel={onClose}
     >
       <div className="flex flex-col px-6 py-4 h-full">
-        <Grid
+        <GridView
           columnDefs={LIST_RUNNER_COLUMNS.map((col) => ({ ...col, sort: void 0 }))}
-          additionalGridOptions={{
-            rowSelection: { mode: 'singleRow', enableClickSelection: true },
-            selectionColumnDef: {
-              ...RADIO_BUTTON_COL_DEF,
-              cellRenderer: (data: { data?: DialApplicationScheme | DialAdapter; id: string }) => {
-                const runner = data.data as DialApplicationScheme;
-                const adapter = data.data as DialAdapter;
-                const isActive = isSelectedNode(data.data);
-
-                return <RadioButtonRenderer inputId={runner?.$id || adapter?.name || data.id} isChecked={isActive} />;
-              },
-            },
-            onRowSelected: (event) => {
-              if (event.node.isSelected()) {
-                setSelectedRunner(event.data.$id || event.data.name);
-              }
-            },
-            onGridReady: (event) => {
-              event.api?.updateGridOptions({
-                columnDefs: LIST_RUNNER_COLUMNS,
-                rowData: [
-                  {
-                    ['dial:applicationTypeDisplayName']: t(BasicI18nKey.None),
-                    $id: t(BasicI18nKey.None),
-                  },
-                  ...(sourceEntities || []),
-                ],
-              });
-              event.api.forEachNode((node) => {
-                if (isSelectedNode(node.data)) {
-                  node.setSelected(true);
-                }
-              });
-            },
-          }}
+          additionalGridOptions={options}
         />
       </div>
     </DialFormPopup>

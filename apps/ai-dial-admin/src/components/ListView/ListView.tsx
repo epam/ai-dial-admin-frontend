@@ -2,13 +2,13 @@
 import { ReactNode } from 'react';
 
 import { DialCollapsibleSidebar, DialIconButton, DialTooltip } from '@epam/ai-dial-ui-kit';
-import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
+import { ColDef, GridOptions, GridReadyEvent } from 'ag-grid-community';
 import classNames from 'classnames';
 
 import FolderCollapse from '@/public/images/icons/folder-collapse.svg';
 import ExportGrid from '@/src/components/Assets/ExportAssets/ExportGrid';
 import FolderList from '@/src/components/Common/FolderList/FolderList';
-import GridWithColumnsPanel from '@/src/components/Grid/GridWithColumnsPanel/GridWithColumnsPanel';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { FoldersI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
@@ -30,7 +30,7 @@ interface Props<T> {
   storageKey?: string;
   toggleColumnsPanel?: () => void;
   context?: () => AssetsFolderContext;
-  onGridReady?: (gridApi: GridApi) => void;
+  onGridReady?: (gridApi: GridReadyEvent) => void;
   isBulkView?: boolean;
   allowPadding?: boolean;
 }
@@ -99,12 +99,11 @@ const ListView = <T extends object>({
         {isBulkView ? (
           <ExportGrid context={context} route={view} />
         ) : (
-          <GridWithColumnsPanel
+          <GridView
             columnDefs={columnDefs}
-            data={data}
+            rowData={data}
             additionalGridOptions={{ ...additionalGridOptions }}
-            emptyDataTitle={emptyDataTitle}
-            emptyDataDescription={emptyDataDescription}
+            emptyDataProps={{ title: emptyDataTitle, description: emptyDataDescription }}
             showColumnsPanel={showColumnsPanel}
             toggleColumnsPanel={toggleColumnsPanel}
             storageKey={storageKey || view}

@@ -5,8 +5,8 @@ import { DialFormPopup, DialNoDataContent, PopupSize } from '@epam/ai-dial-ui-ki
 import { ColDef, GridOptions, SelectionChangedEvent } from 'ag-grid-community';
 
 import { getButtonTitle } from '@/src/components/ExportConfig/AddEntities/utils';
-import Grid from '@/src/components/Grid/Grid';
-import { CHECKBOX_COL_DEF } from '@/src/constants/ag-grid';
+import GridView from '@/src/components/Grid/GridView/GridView';
+import { MULTI_ROW_SELECTION } from '@/src/constants/ag-grid';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
@@ -42,14 +42,8 @@ const AddEntitiesModal: FC<Props> = ({ isModalOpen, selectedTab, entities, colum
   };
 
   const additionalGridOptions: GridOptions = {
-    rowSelection: {
-      mode: 'multiRow',
-      selectAll: 'all',
-    },
-    selectionColumnDef: {
-      ...CHECKBOX_COL_DEF,
-    },
-    onSelectionChanged: onSelectionChanged,
+    ...MULTI_ROW_SELECTION,
+    onSelectionChanged,
   };
 
   return (
@@ -72,7 +66,7 @@ const AddEntitiesModal: FC<Props> = ({ isModalOpen, selectedTab, entities, colum
         ) : (
           <div className="flex-1 flex flex-row min-h-0">
             <div className="flex-1">
-              <Grid columnDefs={columnDefs} rowData={entities} additionalGridOptions={additionalGridOptions} />
+              <GridView columnDefs={columnDefs} rowData={entities} additionalGridOptions={additionalGridOptions} />
             </div>
             <Dependencies
               selectedTab={selectedTab}
