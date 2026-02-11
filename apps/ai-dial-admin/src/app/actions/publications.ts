@@ -14,3 +14,8 @@ export async function approvePublication(path: string): Promise<ServerActionResp
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return publicationsApi.approvePublication(token, path);
 }
+
+export async function deletePublication(path: string): Promise<ServerActionResponse> {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return publicationsApi.deletePublication(token, path);
+}

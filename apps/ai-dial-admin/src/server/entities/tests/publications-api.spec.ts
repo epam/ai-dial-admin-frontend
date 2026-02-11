@@ -124,4 +124,20 @@ describe('Server :: Publications', () => {
       }),
     );
   });
+
+  test('Should calls deletePublication', async () => {
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
+
+    const path = '/delete/path';
+    await instance.deletePublication(TOKEN_MOCK, path);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/publications/delete'),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ path }),
+        headers: expect.anything(),
+      }),
+    );
+  });
 });
