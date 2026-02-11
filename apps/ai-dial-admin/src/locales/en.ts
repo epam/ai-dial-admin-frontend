@@ -615,6 +615,7 @@ export default {
     Write: 'Write',
   },
   Publications: {
+    Publication: 'Publication',
     ReasonTitle: 'Reason',
     ReasonPlaceholder: 'Describe the reason for decline',
     Warning: 'This request refers to an item that is no longer available or has changed since the request was created.',

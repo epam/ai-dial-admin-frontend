@@ -19,6 +19,7 @@ interface Props<T> {
   applicationSchemes?: DialApplicationScheme[] | null;
   approvePublication: (path: string) => Promise<ServerActionResponse>;
   declinePublication: (path: string, comment: string) => Promise<ServerActionResponse>;
+  deletePublication: (path: string) => Promise<ServerActionResponse>;
 }
 
 const PublicationView = <T extends Publication>({
@@ -27,6 +28,7 @@ const PublicationView = <T extends Publication>({
   approvePublication,
   applicationSchemes,
   declinePublication,
+  deletePublication,
 }: Props<T>) => {
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -55,6 +57,16 @@ const PublicationView = <T extends Publication>({
     [declinePublication, publication.path, router, showNotification, view],
   );
 
+  const onDelete = useCallback(() => {
+    deletePublication(publication.path).then((res) => {
+      if (res.success) {
+        router.push(view);
+      } else {
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+      }
+    });
+  }, [deletePublication, publication.path, router, showNotification, view]);
+
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className="flex flex-row justify-between min-h-[34px]">
@@ -64,11 +76,12 @@ const PublicationView = <T extends Publication>({
         <BasePublicationHeader
           onApprove={onApprove}
           onDecline={onDecline}
+          onDelete={onDelete}
           action={publication.action}
           route={view}
           isJsonView={isJsonView}
           setIsJsonView={setIsJsonView}
-          isDelete={!!publication.missingResources?.length}
+          isDelete={!!publication.resourceIssues?.length}
         />
       </div>
       <div className="flex-1 overflow-auto min-h-0">
