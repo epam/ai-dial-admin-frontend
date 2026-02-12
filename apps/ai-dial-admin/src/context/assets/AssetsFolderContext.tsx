@@ -8,9 +8,12 @@ import { mergeFiles } from '@/src/utils/files/folder';
 export interface AssetsFolderContext {
   isFetchingFiles: boolean;
   fetchFiles: (path: string, refreshData?: boolean, resetFolder?: boolean) => void;
+  fetchFolderHierarchy?: (path: string, fullTree?: boolean) => void;
   files: Asset[];
   expandedFolders: Set<string>;
+  setExpandedFolders: Dispatch<SetStateAction<Set<string>>>;
   filePath: string;
+  setFilePath: Dispatch<SetStateAction<string>>;
   toggleFolder: (folder: Asset, skipFetch?: boolean, collapseAll?: boolean) => void;
   data: Asset[] | null;
   fetchedFoldersData: Record<string, Asset[]>;
@@ -89,7 +92,9 @@ export function createFolderContext(
       fetchFiles,
       files,
       expandedFolders,
+      setExpandedFolders,
       filePath,
+      setFilePath,
       toggleFolder,
       data,
       fetchedFoldersData,
