@@ -17,6 +17,7 @@ interface Props<T> extends Omit<GridViewProps<T>, 'showColumnsPanel' | 'toggleCo
   listLabel?: string;
   className?: string;
   children?: ReactNode;
+  infoPanel?: ReactNode;
   isEnableColumnPanel?: boolean;
   isMainListView?: boolean;
 }
@@ -26,6 +27,7 @@ const ListEntities = <T extends object>({
   listLabel,
   isEnableColumnPanel = false,
   isMainListView = false,
+  infoPanel,
   children,
   onGridReady: onGridReadyCallback,
   ...props
@@ -73,23 +75,27 @@ const ListEntities = <T extends object>({
 
         <div className="flex gap-4">
           <ResetFiltersButton gridApi={gridApi} />
-          {isEnableColumnPanel && !!props.rowData?.length && (
-            <DialGhostButton
-              label={t(ButtonsI18nKey.Columns)}
-              iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} />}
-              onClick={onToggleColumnsPanel}
-            />
-          )}
+          {isEnableColumnPanel &&
+            (!!props.rowData?.length || props.additionalGridOptions?.rowModelType === 'infinite') && (
+              <DialGhostButton
+                label={t(ButtonsI18nKey.Columns)}
+                iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} />}
+                onClick={onToggleColumnsPanel}
+              />
+            )}
           {children}
         </div>
       </div>
-      <div className="flex-1 min-h-0">
-        <GridView
-          showColumnsPanel={showColumnsPanel}
-          toggleColumnsPanel={toggleColumnsPanel}
-          onGridReady={onGridReady}
-          {...props}
-        />
+      <div className="flex-1 min-h-0 flex flex-row">
+        <div className="flex-1 min-w-0">
+          <GridView
+            showColumnsPanel={showColumnsPanel}
+            toggleColumnsPanel={toggleColumnsPanel}
+            onGridReady={onGridReady}
+            {...props}
+          />
+        </div>
+        {infoPanel}
       </div>
     </div>
   );

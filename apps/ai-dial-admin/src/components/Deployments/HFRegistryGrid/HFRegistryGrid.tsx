@@ -8,7 +8,7 @@ import {
   IGetRowsParams,
 } from 'ag-grid-community';
 import { isEqual } from 'lodash';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getHuggingFaceModels } from '@/src/app/actions/deployments';
 import { emptyDataTitleMap, listViewTitleMap } from '@/src/components/ListView/constants';
@@ -27,11 +27,12 @@ import ListEntities from '@/src/components/ListView/List';
 interface Props {
   route: ApplicationRoute;
   modelName: string;
+  infoPanel?: ReactNode;
   setModelName: (name: string) => void;
   showModelDescription: (name: string, sha: string) => void;
 }
 
-const HfRegistryGrid: FC<Props> = ({ route, modelName, setModelName, showModelDescription }) => {
+const HfRegistryGrid: FC<Props> = ({ route, infoPanel, modelName, setModelName, showModelDescription }) => {
   const t = useI18n();
 
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
@@ -138,6 +139,7 @@ const HfRegistryGrid: FC<Props> = ({ route, modelName, setModelName, showModelDe
       storageKey={`${route}/registry`}
       additionalGridOptions={gridOptions}
       onGridReady={onGridReady}
+      infoPanel={infoPanel}
       isEnableColumnPanel
     />
   );

@@ -10,7 +10,7 @@ describe('Common Item component', () => {
   const user = userEvent.setup();
 
   test('component rendered correctly', () => {
-    render(<Item item={'item'} index={1} onChange={onChange} onRemove={onRemove} isModal={false} disabled={false} />);
+    render(<Item item="item" index={1} onChange={onChange} onRemove={onRemove} isModal={false} disabled={false} />);
 
     expect(screen.getByRole('listitem')).toBeInTheDocument();
   });
@@ -19,7 +19,7 @@ describe('Common Item component', () => {
     const validate = vi.fn();
     render(
       <Item
-        item={''}
+        item=""
         index={1}
         onChange={onChange}
         onRemove={onRemove}
@@ -42,7 +42,7 @@ describe('Common Item component', () => {
   });
 
   test('onRemove called', async () => {
-    render(<Item item={''} index={1} onChange={onChange} onRemove={onRemove} isModal={false} disabled={false} />);
+    render(<Item item="" index={1} onChange={onChange} onRemove={onRemove} isModal={false} disabled={false} />);
 
     const button = screen.getByRole('button');
     expect(button).toBeInTheDocument();

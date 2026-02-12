@@ -20,7 +20,7 @@ const ContainerConfiguration: FC<Props> = ({ container, setContainer }) => {
     <Accordion title={t(EntityFieldsI18nKey.Configuration)}>
       <div className="flex flex-col gap-6">
         <DialTextInputField
-          elementId={'command'}
+          elementId="command"
           fieldTitle={t(EntityFieldsI18nKey.Command)}
           value={container.command}
           onChange={(command?: string) => setContainer({ ...container, command })}
@@ -30,7 +30,7 @@ const ContainerConfiguration: FC<Props> = ({ container, setContainer }) => {
         />
 
         <DialTextInputField
-          elementId={'args'}
+          elementId="args"
           fieldTitle={t(EntityFieldsI18nKey.Arguments)}
           value={container.args}
           onChange={(args?: string) => setContainer({ ...container, args })}

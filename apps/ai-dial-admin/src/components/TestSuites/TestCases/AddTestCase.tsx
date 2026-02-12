@@ -18,7 +18,7 @@ const AddTestCase: FC<Props> = ({ isModalOpen, onClose, onAdd }) => {
   return (
     <DialFormPopup
       onClose={onClose}
-      header={'add test case'}
+      header="add test case"
       portalId="AddTestCase"
       className="h-[660px]"
       open={isModalOpen}
