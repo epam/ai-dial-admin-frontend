@@ -39,6 +39,71 @@ describe('Folder Utils :: fillChildren', () => {
       },
     ]);
   });
+
+  test('Should preserve existing children items for folders', () => {
+    const existingChildren = [
+      {
+        path: 'public/folder1',
+        nodeType: DialFileNodeType.FOLDER,
+        items: [
+          {
+            name: 'subfile',
+            path: 'public/folder1/subfile',
+            nodeType: DialFileNodeType.ITEM,
+          },
+        ],
+      },
+    ];
+    const res = fillChildren([{ path: 'public/folder1', nodeType: DialFileNodeType.FOLDER }], existingChildren);
+    expect(res[0].items).toEqual([
+      {
+        name: 'subfile',
+        path: 'public/folder1/subfile',
+        nodeType: DialFileNodeType.ITEM,
+      },
+    ]);
+  });
+
+  test('Should not add items to non-folder node types', () => {
+    const existingChildren = [
+      {
+        path: 'public/file.txt',
+        nodeType: DialFileNodeType.ITEM,
+        items: [
+          {
+            name: 'shouldNotExist',
+            path: 'public/file.txt/shouldNotExist',
+            nodeType: DialFileNodeType.ITEM,
+          },
+        ],
+      },
+    ];
+    const res = fillChildren([{ path: 'public/file.txt', nodeType: DialFileNodeType.ITEM }], existingChildren);
+    expect(res[0].items).toBeUndefined();
+  });
+
+  test('Should handle case when existingChildren is undefined', () => {
+    const res = fillChildren([{ path: 'public/folder1', nodeType: DialFileNodeType.FOLDER }], undefined);
+    expect(res[0].items).toBeUndefined();
+  });
+
+  test('Should handle case when existing children path does not match', () => {
+    const existingChildren = [
+      {
+        path: 'public/differentFolder',
+        nodeType: DialFileNodeType.FOLDER,
+        items: [
+          {
+            name: 'subfile',
+            path: 'public/differentFolder/subfile',
+            nodeType: DialFileNodeType.ITEM,
+          },
+        ],
+      },
+    ];
+    const res = fillChildren([{ path: 'public/folder1', nodeType: DialFileNodeType.FOLDER }], existingChildren);
+    expect(res[0].items).toBeUndefined();
+  });
 });
 
 describe('Folder Utils :: mergeFiles', () => {

@@ -6,7 +6,7 @@ import { Container, HuggingFaceModel } from '@/src/models/deployments/containers
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
 import { getControlClassName } from '@/src/utils/entities/view';
-import { SERVING_SOURCE } from '@/src/types/deployments/containers';
+import { CONTAINER_STATUS, SERVING_SOURCE } from '@/src/types/deployments/containers';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getErrorForHfModelName } from '@/src/utils/deployments/validation';
 import { debounce } from 'lodash';
@@ -95,13 +95,14 @@ const HfModelNameField: FC<Props> = ({ container, setContainer, isModal, route }
           options={modelOptions}
           error={modelNameError?.text}
           containerClassName={containerClassName}
-          disabled={isEditDisabled(container)}
+          disabled={isEditDisabled(container) || container.status === CONTAINER_STATUS.RUNNING}
         />
         <DialNeutralButton
           onClick={handleModalOpen}
           label={t(ButtonsI18nKey.HFRegistry)}
           iconBefore={<OpenPopup {...BASE_BUTTON_ICON_PROPS} />}
           className={classNames(modelNameError?.text ? 'self-center mb-1' : 'self-end', 'shrink-0')}
+          disabled={isEditDisabled(container) || container.status === CONTAINER_STATUS.RUNNING}
         />
       </div>
       {isModalOpen &&

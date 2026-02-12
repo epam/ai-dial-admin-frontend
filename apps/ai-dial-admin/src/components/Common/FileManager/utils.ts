@@ -76,7 +76,7 @@ const toolbarOptionLabels = [
   },
   {
     key: 'uploadFiles',
-    label: FileManagerI18nKey.File,
+    label: FileManagerI18nKey.Files,
     icon: null,
   },
 ];
@@ -107,18 +107,27 @@ export const getGridOptions = (columnDefs: ColDef[], t: (key: string) => string)
   actionLabels: getActionLabels(gridActionLabels, t),
 });
 
-export const getTreeOptions = (isFetchingFiles: boolean, loadedPaths: Set<string>, t: (key: string) => string) => ({
-  collapsed: false,
-  expandedPaths: new Set<string>([`${ROOT_FOLDER}/`]),
-  loadedPaths,
-  loadingPaths: isFetchingFiles ? new Set<string>([ROOT_FOLDER]) : new Set<string>(),
-  actionLabels: getActionLabels(treeActionLabels, t),
-});
+export const getTreeOptions = (
+  isFetchingFiles: boolean,
+  loadedPaths: Set<string>,
+  expandedPaths: Set<string>,
+  setExpanded: (paths: Set<string>) => void,
+  t: (key: string) => string,
+) => {
+  return {
+    collapsed: false,
+    expandedPaths: expandedPaths,
+    loadedPaths,
+    loadingPaths: isFetchingFiles ? new Set<string>([ROOT_FOLDER]) : new Set<string>(),
+    actionLabels: getActionLabels(treeActionLabels, t),
+    onExpandedPathsChange: setExpanded,
+  };
+};
 
 export const getToolbarOptions = (t: (key: string) => string) => ({
   showHiddenFilesToggle: false,
   newActions: getActionLabelsWithIcon(toolbarOptionLabels, t),
-  newButtonLabel: t(ButtonsI18nKey.Create),
+  newButtonLabel: t(ButtonsI18nKey.Add),
 });
 
 export const getBulkActionsToolbarOptions = (t: (key: string) => string) => ({

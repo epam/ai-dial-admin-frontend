@@ -71,7 +71,7 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
           maxRetryAttempts: 1,
         } as DialAppRoute,
       ]);
-      setActiveRouteIndex(routes?.length || 0 + 1);
+      setActiveRouteIndex(routes?.length || 0);
     },
     [handleModalClose, onChangeRoutes, routes],
   );

@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
+import { useState } from 'react';
 
 import { AttachmentsI18nKey } from '@/src/constants/i18n';
 
@@ -14,6 +15,26 @@ const options = [
 const placeHolder = 'Attachment Input';
 
 const onChange = vi.fn();
+
+// Wrapper component to simulate controlled behavior
+const ControlledAttachmentInput = (props: Partial<Props> & { initialValues?: string[] }) => {
+  const [values, setValues] = useState<string[] | undefined>(props.initialValues);
+
+  const handleChange = (newValues?: string[]) => {
+    setValues(newValues);
+    onChange(newValues);
+  };
+
+  return (
+    <AttachmentInput
+      {...props}
+      availableItems={options}
+      onChange={handleChange}
+      placeholder={placeHolder}
+      initialValues={values}
+    />
+  );
+};
 
 describe('Common components - AttachmentInput', () => {
   beforeAll(() => {
@@ -123,5 +144,5 @@ describe('Common components - AttachmentInput', () => {
 });
 
 function renderComponent(extra: Partial<Props> = {}) {
-  return render(<AttachmentInput availableItems={options} onChange={onChange} placeholder={placeHolder} {...extra} />);
+  return render(<ControlledAttachmentInput {...extra} />);
 }
