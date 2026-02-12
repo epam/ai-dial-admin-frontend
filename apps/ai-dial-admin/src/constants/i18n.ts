@@ -838,6 +838,7 @@ export enum ErrorI18nKey {
   UrlField = 'Error.UrlField',
   WarningEndpoint = 'Error.WarningEndpoint',
   ServerError = 'Error.ServerError',
+  Error = 'Error.Error',
   DescriptionLength = 'Error.DescriptionLength',
   DisplayNameErrorVersion = 'Error.DisplayNameErrorVersion',
   NameExists = 'Error.NameExists',

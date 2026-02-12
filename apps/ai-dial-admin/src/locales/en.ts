@@ -1085,6 +1085,7 @@ export default {
     Domain: 'Enter domain',
   },
   Error: {
+    Error: 'Error',
     ServerError: 'Server Error',
     EmptyField: 'This field could not be empty',
     RequiredField: 'This field is required',
