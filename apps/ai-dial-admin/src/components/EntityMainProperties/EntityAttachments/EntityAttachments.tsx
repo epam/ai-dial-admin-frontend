@@ -36,8 +36,8 @@ const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
   );
 
   const onChangeAttachmentTypes = useCallback(
-    (types: string[]) => {
-      if (types.length) {
+    (types?: string[]) => {
+      if (types) {
         onChangeEntity({ ...entity, inputAttachmentTypes: types });
       } else {
         onChangeEntity({
