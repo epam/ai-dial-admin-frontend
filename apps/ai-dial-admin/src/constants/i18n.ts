@@ -1315,6 +1315,7 @@ export enum FileManagerI18nKey {
   NameExists = 'FileManager.NameExists',
   ManagePermissions = 'FileManager.ManagePermissions',
   CreateFolderValidate = 'FileManager.CreateFolderValidate',
+  Preview = 'FileManager.Preview',
 
   // Notifications
   CreateFolderSuccessTitle = 'FileManager.Notifications.CreateFolder.Title',
