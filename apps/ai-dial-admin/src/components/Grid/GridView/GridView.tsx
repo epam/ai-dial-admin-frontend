@@ -88,12 +88,14 @@ const GridView = <T extends object>({
 
   const toggleColumnVisibility = useCallback(
     (id?: string) => {
-      const newColDefs = currentColDefs.map((c) => (c.field === id ? { ...c, hide: !c.hide } : c));
-      setCurrentColDefs(newColDefs);
-      if (storageKey) {
-        saveColumnVisibilityToStorage(newColDefs, storageKey);
+      if (currentColDefs) {
+        const newColDefs = currentColDefs?.map((c) => (c.field === id ? { ...c, hide: !c.hide } : c));
+        setCurrentColDefs(newColDefs);
+        if (storageKey) {
+          saveColumnVisibilityToStorage(newColDefs, storageKey);
+        }
+        setShowResetButton(newColDefs.some((c, index) => c.hide !== columnDefs?.[index].hide));
       }
-      setShowResetButton(newColDefs.some((c, index) => c.hide !== columnDefs?.[index].hide));
     },
     [currentColDefs, columnDefs, storageKey],
   );
