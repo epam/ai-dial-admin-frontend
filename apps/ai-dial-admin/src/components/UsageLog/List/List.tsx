@@ -11,11 +11,12 @@ import ListEntities from '@/src/components/ListView/List';
 
 interface Props {
   route: ApplicationRoute;
-  getData: (query: TelemetryQuery) => Promise<ServerActionResponse>;
   query: TelemetryQuery;
   columnDefs: ColDef[];
   listLabel: string;
   emptyDataTitle: string;
+
+  getData: (query: TelemetryQuery) => Promise<ServerActionResponse>;
 }
 
 const List: FC<Props> = ({ route, getData, query, columnDefs, listLabel, emptyDataTitle }) => {
@@ -51,6 +52,7 @@ const List: FC<Props> = ({ route, getData, query, columnDefs, listLabel, emptyDa
       emptyDataProps={{ title: emptyDataTitle }}
       storageKey={`${route}/${listLabel}`}
       isEnableColumnPanel
+      isMainListView
     />
   );
 };

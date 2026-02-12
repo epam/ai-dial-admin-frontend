@@ -139,6 +139,7 @@ const EvaluationListView = <T extends object>({
         listLabel={t(listViewTitleMap[route])}
         emptyDataProps={{ title: t(emptyDataTitleMap[route]) }}
         isEnableColumnPanel
+        isMainListView
         storageKey={route}
         onGridReady={onGridReady}
       >

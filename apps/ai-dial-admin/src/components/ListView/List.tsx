@@ -11,19 +11,21 @@ import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import ResetFiltersButton from './Header/ResetFiltersButton';
+import { mainListEntitiesViewClassName } from './constants';
 
 interface Props<T> extends Omit<GridViewProps<T>, 'showColumnsPanel' | 'toggleColumnsPanel'> {
   listLabel?: string;
   className?: string;
   children?: ReactNode;
   isEnableColumnPanel?: boolean;
+  isMainListView?: boolean;
 }
 
 // TODO: rename to List view
 const ListEntities = <T extends object>({
   listLabel,
   isEnableColumnPanel = false,
-  className = 'py-4 px-6',
+  isMainListView = false,
   children,
   onGridReady: onGridReadyCallback,
   ...props
@@ -60,7 +62,12 @@ const ListEntities = <T extends object>({
   }, [closeColumnsPanel]);
 
   return (
-    <div className={classNames('flex flex-col bg-layer-2 rounded w-full h-full', className)}>
+    <div
+      className={classNames(
+        'flex flex-col bg-layer-2 rounded w-full h-full',
+        isMainListView && mainListEntitiesViewClassName,
+      )}
+    >
       <div className="flex flex-row flex-wrap justify-between mb-4 items-center h-[40px]">
         {listLabel && <h1>{listLabel}</h1>}
 

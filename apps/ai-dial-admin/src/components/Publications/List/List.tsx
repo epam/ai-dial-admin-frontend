@@ -45,6 +45,7 @@ const PublicationsList = <T extends Publication>({ data, route }: Props<T>) => {
       columnDefs={gridColumns}
       listLabel={t(listViewTitleMap[route])}
       emptyDataProps={{ title: t(emptyDataTitleMap[route]) }}
+      isMainListView
     />
   );
 };
