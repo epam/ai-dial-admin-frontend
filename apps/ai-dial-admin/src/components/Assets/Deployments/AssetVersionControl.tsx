@@ -18,6 +18,7 @@ import { useI18n } from '@/src/locales/client';
 import { AssetWithVersion, DeploymentAsset } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
+import { isDeploymentAsset } from '@/src/utils/is-asset-view';
 import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
 
 interface Props {
@@ -134,7 +135,7 @@ const AssetVersionControl: FC<Props> = ({
           onFooterClick={() => handleModalOpen(ModalType.addVersion)}
         />
 
-        {!!assets?.length && assets.length > 1 && (
+        {!!assets?.length && assets.length > 1 && !isDeploymentAsset(view) && (
           <DialNeutralButton
             iconBefore={<IconReplace {...BASE_BUTTON_ICON_PROPS} />}
             label={t(CompareI18nKey.CompareVersions)}

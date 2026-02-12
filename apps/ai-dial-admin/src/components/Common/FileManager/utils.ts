@@ -80,7 +80,7 @@ const toolbarOptionLabels = [
   },
   {
     key: 'uploadFiles',
-    label: FileManagerI18nKey.File,
+    label: FileManagerI18nKey.Files,
     icon: null,
   },
 ];
@@ -131,7 +131,7 @@ export const getTreeOptions = (
 export const getToolbarOptions = (t: (key: string) => string) => ({
   showHiddenFilesToggle: false,
   newActions: getActionLabelsWithIcon(toolbarOptionLabels, t),
-  newButtonLabel: t(ButtonsI18nKey.Create),
+  newButtonLabel: t(ButtonsI18nKey.Add),
 });
 
 export const getBulkActionsToolbarOptions = (t: (key: string) => string) => ({
