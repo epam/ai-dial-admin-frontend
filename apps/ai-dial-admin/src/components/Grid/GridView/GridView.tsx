@@ -148,7 +148,7 @@ const GridView = <T extends object>({
             <div className={panelContainerClassName}>
               <DndProvider backend={HTML5Backend}>
                 <ColumnsPanel
-                  columns={currentColDefs}
+                  columns={currentColDefs || []}
                   showResetButton={showResetButton}
                   panelClassName={panelClassName}
                   onReset={onResetToDefault}

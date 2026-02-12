@@ -9,7 +9,7 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 interface Props {
   children: ReactNode;
   id: string;
-  findItem?: (field: string) => number;
+  findItem?: (field: string) => number | undefined;
   moveItem?: (field: string, atIndex: number) => void;
 }
 
