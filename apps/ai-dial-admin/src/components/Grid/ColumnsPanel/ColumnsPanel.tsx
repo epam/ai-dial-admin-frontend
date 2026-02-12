@@ -5,11 +5,11 @@ import { ColDef } from 'ag-grid-community';
 import { FC, useCallback, useRef } from 'react';
 import { useDrop } from 'react-dnd';
 
-import DraggableItem from '@/src/components/Common/DraggableItem/DraggableItem';
-import { ButtonsI18nKey } from '@/src/constants/i18n';
 import CloseButton from '@/src/components/Common/CloseButton/CloseButton';
-import { useI18n } from '@/src/locales/client';
+import DraggableItem from '@/src/components/Common/DraggableItem/DraggableItem';
 import { COLUMN_PANEL_PREFIX } from '@/src/constants/grid-columns/grid-columns';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
 
 interface Props {
   columns: ColDef[];
@@ -18,7 +18,7 @@ interface Props {
   onReset: () => void;
   toggleColumnsPanel?: () => void;
   toggleColumnVisibility: (id?: string) => void;
-  onFind?: (field: string) => number;
+  onFind?: (field: string) => number | undefined;
   onMove?: (field: string, atIndex: number) => void;
 }
 
