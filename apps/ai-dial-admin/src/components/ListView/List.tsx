@@ -4,7 +4,7 @@ import { DialGhostButton } from '@epam/ai-dial-ui-kit';
 import { IconColumns2 } from '@tabler/icons-react';
 import { GridApi, GridReadyEvent } from 'ag-grid-community';
 import classNames from 'classnames';
-import { MouseEvent, useCallback, useEffect, useState } from 'react';
+import { MouseEvent, ReactNode, useCallback, useEffect, useState } from 'react';
 
 import GridView, { GridViewProps } from '@/src/components/Grid/GridView/GridView';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
@@ -12,9 +12,10 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import ResetFiltersButton from './Header/ResetFiltersButton';
 
-interface Props<T> extends Omit<GridViewProps<T>, 'showColumnsPanel' | 'toggleColumnsPanel' | 'onGridReady'> {
+interface Props<T> extends Omit<GridViewProps<T>, 'showColumnsPanel' | 'toggleColumnsPanel'> {
   listLabel?: string;
   className?: string;
+  children?: ReactNode;
   isEnableColumnPanel?: boolean;
 }
 
@@ -23,6 +24,8 @@ const ListEntities = <T extends object>({
   listLabel,
   isEnableColumnPanel = false,
   className = 'py-4 px-6',
+  children,
+  onGridReady: onGridReadyCallback,
   ...props
 }: Props<T>) => {
   const t = useI18n();
@@ -43,9 +46,13 @@ const ListEntities = <T extends object>({
 
   const closeColumnsPanel = useCallback(() => setShowColumnsPanel(false), [setShowColumnsPanel]);
 
-  const onGridReady = useCallback(({ api }: GridReadyEvent) => {
-    setGridApi(api);
-  }, []);
+  const onGridReady = useCallback(
+    (event: GridReadyEvent) => {
+      setGridApi(event.api);
+      onGridReadyCallback?.(event);
+    },
+    [onGridReadyCallback],
+  );
 
   useEffect(() => {
     window.addEventListener('click', closeColumnsPanel);
@@ -66,6 +73,7 @@ const ListEntities = <T extends object>({
               onClick={onToggleColumnsPanel}
             />
           )}
+          {children}
         </div>
       </div>
       <div className="flex-1 min-h-0">
