@@ -17,8 +17,8 @@ interface Props {
 
 const HFRegistryModal: FC<Props> = ({ isModalOpen, onClose, onApply, preselectedModelName, route }) => {
   const t = useI18n();
-  const [selectedModelName, setSelectedModelName] = useState<string>(preselectedModelName ?? '');
-  const [isDescriptionShown, setIsDescriptionShown] = useState<boolean>(false);
+  const [selectedModelName, setSelectedModelName] = useState(preselectedModelName ?? '');
+  const [isDescriptionShown, setIsDescriptionShown] = useState(false);
   const [descriptionModelData, setDescriptionModelData] = useState<{ modelName?: string; sha?: string }>({});
 
   const showModelDescription = useCallback((modelName: string, sha: string) => {

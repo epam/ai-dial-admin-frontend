@@ -37,9 +37,9 @@ const ModelDescription: FC<Props> = ({ descriptionModelData, isDescriptionShown,
     descriptionModelData.modelName &&
     descriptionModelData.sha && (
       <div className="flex flex-col lg:w-[420px] p-4 border border-primary rounded h-full">
-        <div className="flex flex-row justify-end items-center">
-          <p>{t(ContainersI18nKey.ModelDetails)}</p>
-          <DialCloseButton onClose={() => onChangeIsDescriptionShown(false)} />
+        <div className="flex flex-row justify-between items-center mb-4">
+          <p className="dial-tiny-text text-secondary">{t(ContainersI18nKey.ModelDetails)}</p>
+          <DialCloseButton className="h-[24px]" size={24} onClose={() => onChangeIsDescriptionShown(false)} />
         </div>
         {isLoading ? (
           <DialLoader size={40} />

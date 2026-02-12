@@ -140,6 +140,7 @@ const HfRegistryGrid: FC<Props> = ({ route, infoPanel, modelName, setModelName, 
       additionalGridOptions={gridOptions}
       onGridReady={onGridReady}
       infoPanel={infoPanel}
+      isEmbedToModal
       isEnableColumnPanel
     />
   );
