@@ -25,7 +25,15 @@ const ControlledAttachmentInput = (props: Partial<Props> & { initialValues?: str
     onChange(newValues);
   };
 
-  return <AttachmentInput {...props} availableItems={options} onChange={handleChange} placeholder={placeHolder} initialValues={values} />;
+  return (
+    <AttachmentInput
+      {...props}
+      availableItems={options}
+      onChange={handleChange}
+      placeholder={placeHolder}
+      initialValues={values}
+    />
+  );
 };
 
 describe('Common components - AttachmentInput', () => {
