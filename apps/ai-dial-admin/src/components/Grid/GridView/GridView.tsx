@@ -14,7 +14,7 @@ import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { getColumnVisibilityFromStorage, saveColumnVisibilityToStorage } from '../utils';
 import { DialNoDataContentProps } from '@epam/ai-dial-ui-kit/dist/src/components/NoDataContent/NoDataContent';
 
-interface Props<T> extends AgGridProps<T> {
+export interface GridViewProps<T> extends AgGridProps<T> {
   emptyDataProps?: DialNoDataContentProps;
   getIsEmptyData?: () => boolean;
 
@@ -32,7 +32,7 @@ const GridView = <T extends object>({
   toggleColumnsPanel,
   onGridReady,
   getIsEmptyData,
-}: Props<T>) => {
+}: GridViewProps<T>) => {
   const staticPanelContainerClassName = classNames(
     'left-0 top-0 w-full h-full bg-blackout z-50',
     showColumnsPanel ? 'flex' : 'hidden',
@@ -49,8 +49,13 @@ const GridView = <T extends object>({
   const [panelClassName, setPanelClassName] = useState(staticPanelClassName);
 
   const isEmptyData = useMemo(
-    () => (getIsEmptyData ? getIsEmptyData() : rowData == null || rowData.length === 0),
-    [getIsEmptyData, rowData],
+    () =>
+      additionalGridOptions?.rowModelType === 'infinite'
+        ? false
+        : getIsEmptyData
+          ? getIsEmptyData()
+          : rowData == null || rowData.length === 0,
+    [additionalGridOptions?.rowModelType, getIsEmptyData, rowData],
   );
 
   useEffect(() => {
