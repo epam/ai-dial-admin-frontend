@@ -52,7 +52,9 @@ const Accordion: FC<Props> = ({
           {cloneElement(header, { isCollapsed })}
         </div>
       )}
-      <div className={classNames('flex flex-col px-6 pb-4', isCollapsed && 'hidden', contentClassName)}>{children}</div>
+      <div className={classNames('flex flex-col px-6 pb-4 overflow-auto', isCollapsed && 'hidden', contentClassName)}>
+        {children}
+      </div>
     </div>
   );
 };
