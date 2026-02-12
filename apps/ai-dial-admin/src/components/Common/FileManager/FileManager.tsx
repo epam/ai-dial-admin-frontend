@@ -5,13 +5,13 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { DialCopiedItem, DialDeletedItem, DialFile, DialFileManager, DialUploadFileItem } from '@epam/ai-dial-ui-kit';
 import { ColDef } from 'ag-grid-community';
 
-import { bulkDeleteFiles, exportFiles, importFiles, moveFiles } from '@/src/app/[lang]/files/actions';
+import { bulkDeleteFiles, exportFiles, moveFiles } from '@/src/app/[lang]/files/actions';
 import { changeFolder, createFolderWithFiles, removeFolder } from '@/src/app/[lang]/folders-storage/actions';
 import { getParentPathByFullPath } from '@/src/components/Assets/utils';
 import { getFormDataForImport, getImportTitle } from '@/src/components/EntityListView/HeaderButtons/utils';
 import { getImportResults } from '@/src/components/EntityListView/Import/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { FileManagerI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
+import { FileManagerI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -22,7 +22,7 @@ import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
-import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { getSuccessNotification } from '@/src/utils/notification';
 import {
   createEmptyFile,
   getBulkActionsToolbarOptions,
@@ -44,12 +44,12 @@ interface Props {
 }
 
 const FileManager: FC<Props> = ({ label, columnDefs, view, getContext, ...props }) => {
-  const [path, setPath] = useState('');
   const [loadedPaths, setLoadedPaths] = useState(new Set(['']));
 
   const t = useI18n();
   const { showNotification } = useNotification();
-  const { files, fetchFiles, isFetchingFiles } = getContext();
+  const { files, fetchFiles, isFetchingFiles, filePath, setFilePath, expandedFolders, setExpandedFolders } =
+    getContext();
 
   useEffect(() => {
     if (files == null || files?.length === 0) {
@@ -60,6 +60,21 @@ const FileManager: FC<Props> = ({ label, columnDefs, view, getContext, ...props 
   }, [files]);
 
   const managerLabel = useMemo(() => <h1 className="text-primary leading-[48px]">{label}</h1>, [label]);
+
+  const scrollToNewFolder = useCallback(() => {
+    let attempts = 0;
+    const maxAttempts = 20;
+    const scrollInterval = setInterval(() => {
+      const selectedElement = document.querySelector('[aria-selected="true"]');
+      if (selectedElement) {
+        selectedElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        clearInterval(scrollInterval);
+      } else if (attempts >= maxAttempts) {
+        clearInterval(scrollInterval);
+      }
+      attempts++;
+    }, 100);
+  }, []);
 
   // TODO: move common functions into context files
 
@@ -81,8 +96,14 @@ const FileManager: FC<Props> = ({ label, columnDefs, view, getContext, ...props 
 
       createFolderWithFiles(body, ImportFileType.FILES, view).then((res) => {
         if (res.success) {
-          const patentPath = getParentPathByFullPath(newPath) || `${ROOT_FOLDER}/`;
-          fetchFiles?.(patentPath, true);
+          const parentPath = getParentPathByFullPath(newPath) || `${ROOT_FOLDER}/`;
+
+          fetchFiles(parentPath);
+
+          const newExpanded = new Set(expandedFolders.add(parentPath).add(newPath));
+          setExpandedFolders(newExpanded);
+          setFilePath(newPath);
+          setLoadedPaths((prev) => new Set(prev).add(newPath));
           const results = (res.response as { importResults: ImportResult[] }).importResults;
           const translatedType = t(getImportTitle(view)).toLowerCase();
           showNotification(
@@ -91,11 +112,23 @@ const FileManager: FC<Props> = ({ label, columnDefs, view, getContext, ...props 
               t(FileManagerI18nKey.CreateFolderSuccessDescription),
             ),
           );
-          getImportResults(results, getFolderName(path) as string, translatedType, t);
+          getImportResults(results, getFolderName(filePath) as string, translatedType, t);
+
+          scrollToNewFolder();
         }
       });
     },
-    [fetchFiles, path, showNotification, t, view],
+    [
+      expandedFolders,
+      fetchFiles,
+      filePath,
+      scrollToNewFolder,
+      setExpandedFolders,
+      setFilePath,
+      showNotification,
+      t,
+      view,
+    ],
   );
 
   const handleAddChild = useCallback(
@@ -114,82 +147,33 @@ const FileManager: FC<Props> = ({ label, columnDefs, view, getContext, ...props 
     [handleCreateFolder],
   );
 
-  const handleImportFiles = useCallback(
-    async (files: DialUploadFileItem[], destinationFolder: string) => {
-      const promises: Promise<ServerActionResponse>[] = [];
-      const destinationFolderPath = destinationFolder ? destinationFolder : `${ROOT_FOLDER}/`;
-      files.forEach((file) => {
-        const body = getFormDataForImport(
-          destinationFolderPath,
-          [file.fileContent],
-          ImportFileType.FILES,
-          ConflictResolutionPolicy.SKIP,
-          [],
-          false,
-          view,
-        ).body;
-
-        promises.push(importFiles(body, ImportFileType.FILES));
-      });
-
-      Promise.all(promises).then((result) => {
-        const isSuccess = result.every((res) => res.success);
-        if (isSuccess) {
-          fetchFiles?.(destinationFolderPath, true);
-          showNotification(getSuccessNotification(t(FoldersI18nKey.Import)));
-        } else {
-          showNotification(getErrorNotification(result[0]?.errorHeader, result[0]?.errorMessage, result[0]?.requestId));
-        }
-      });
-    },
-    [fetchFiles, showNotification, t, view],
-  );
-
-  const handleImportArchive = useCallback(
-    async (file: File, _: string, destinationFolder: string) => {
-      const destinationFolderPath = destinationFolder ? destinationFolder : `${ROOT_FOLDER}/`;
-      const body = getFormDataForImport(
-        destinationFolderPath,
-        [file],
-        ImportFileType.ARCHIVE,
-        ConflictResolutionPolicy.SKIP,
-        [],
-        false,
-        view,
-      ).body;
-
-      importFiles(body, ImportFileType.ARCHIVE).then((res) => {
-        if (res.success) {
-          fetchFiles?.(destinationFolderPath, true);
-          showNotification(getSuccessNotification(t(FoldersI18nKey.Import)));
-        } else {
-          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
-        }
-      });
-    },
-    [fetchFiles, showNotification, t, view],
-  );
-
   const handleOnPathChange = useCallback(
     (nextPath: string | undefined) => {
       if (!nextPath) {
         return;
       }
+      const newExpanded = new Set(expandedFolders);
 
-      if (!loadedPaths.has(nextPath)) {
-        fetchFiles?.(nextPath, true);
+      if (newExpanded.has(nextPath)) {
+        newExpanded.delete(nextPath);
+      } else {
+        newExpanded.add(nextPath);
       }
-      setPath(nextPath);
+      if (!loadedPaths.has(nextPath)) {
+        fetchFiles(nextPath);
+      }
+      setFilePath(nextPath);
       setLoadedPaths((prev) => new Set(prev).add(nextPath));
+      setExpandedFolders(newExpanded);
     },
-    [fetchFiles, loadedPaths],
+    [expandedFolders, fetchFiles, loadedPaths, setExpandedFolders, setFilePath],
   );
 
   const handleFolderPopupPathChange = useCallback(
     (nextPath: string | undefined) => {
       if (nextPath && !loadedPaths.has(nextPath)) {
         setLoadedPaths((prev) => new Set(prev).add(nextPath));
-        fetchFiles?.(nextPath, true);
+        fetchFiles(nextPath);
       }
     },
     [loadedPaths, fetchFiles],
@@ -237,11 +221,12 @@ const FileManager: FC<Props> = ({ label, columnDefs, view, getContext, ...props 
         const isSuccess = result.every((res) => res.success);
         if (isSuccess) {
           const parentPath = getParentPathByFullPath(fileNodes[0]?.sourceUrl) || `${ROOT_FOLDER}/`;
-          fetchFiles?.(parentPath, true);
+          fetchFiles(parentPath);
+          setFilePath(parentPath);
         }
       });
     },
-    [fetchFiles],
+    [fetchFiles, setFilePath],
   );
 
   const handleMoveToFiles = useCallback(
@@ -272,8 +257,8 @@ const FileManager: FC<Props> = ({ label, columnDefs, view, getContext, ...props 
       Promise.all(promises).then((result) => {
         const isSuccess = result.every((res) => (Array.isArray(res) ? res.every((r) => r.success) : res.success));
         if (isSuccess) {
-          fetchFiles?.(destinationFolder, true);
-          fetchFiles?.(sourceFolder, true);
+          fetchFiles(destinationFolder);
+          fetchFiles(sourceFolder);
         }
       });
     },
@@ -284,21 +269,19 @@ const FileManager: FC<Props> = ({ label, columnDefs, view, getContext, ...props 
     <DialFileManager
       managerLabel={managerLabel}
       className="bg-layer-2 py-4 px-6"
-      path={path}
+      path={filePath}
       defaultPath={`${ROOT_FOLDER}/`}
       items={files as []}
       filesLoading={isFetchingFiles}
       showNavigationPanel={false}
       bulkActionsToolbarOptions={getBulkActionsToolbarOptions(t)}
       toolbarOptions={getToolbarOptions(t)}
-      treeOptions={getTreeOptions(isFetchingFiles, loadedPaths, t)}
+      treeOptions={getTreeOptions(isFetchingFiles, loadedPaths, expandedFolders, setExpandedFolders, t)}
       gridOptions={getGridOptions(columnDefs, t)}
       onPathChange={handleOnPathChange}
       onAddChild={handleAddChild}
       onAddSibling={handleAddSibling}
       onCreateFolder={handleCreateFolder}
-      onUploadFiles={handleImportFiles}
-      onUploadArchive={handleImportArchive}
       onDownloadFiles={handleDownloadFiles}
       onCreateFolderValidate={handleCreateFolderValidate}
       onDeleteFiles={handleDeleteFileNodes}
