@@ -10,7 +10,7 @@ import { changeFolder, createFolderWithFiles, removeFolder } from '@/src/app/[la
 import { getParentPathByFullPath } from '@/src/components/Assets/utils';
 import { getFormDataForImport, getImportTitle } from '@/src/components/EntityListView/HeaderButtons/utils';
 import { getImportResults } from '@/src/components/EntityListView/Import/utils';
-import { FILE_PREVIEW, ROOT_FOLDER } from '@/src/constants/file';
+import { FILE_PREVIEW, PREVIEW_EXTENSIONS, ROOT_FOLDER } from '@/src/constants/file';
 import { FileManagerI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -296,6 +296,7 @@ const FileManager: FC<Props> = ({ label, columnDefs, view, getContext, ...props 
       folderCreationValidationMessages={getValidationMessages(t)}
       renameValidationMessages={getValidationMessages(t)}
       isRenameFileAvailable={false}
+      previewExtensions={PREVIEW_EXTENSIONS}
       {...props}
     />
   );
