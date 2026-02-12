@@ -110,21 +110,23 @@ const GridView = <T extends object>({
   };
 
   const onFindColumn = useCallback(
-    (field?: string) => currentColDefs.findIndex((c) => c.field === field),
+    (field?: string) => currentColDefs?.findIndex((c) => c.field === field),
     [currentColDefs],
   );
 
   const onMoveColumn = useCallback(
     (field: string, atIndex: number) => {
       const index = onFindColumn(field);
-      const updatedColDefs = [...currentColDefs];
-      const [removedColDef] = updatedColDefs.splice(index, 1);
-      updatedColDefs.splice(atIndex, 0, removedColDef);
-      if (storageKey) {
-        saveColumnVisibilityToStorage(updatedColDefs, storageKey);
+      if (index) {
+        const updatedColDefs = [...(currentColDefs || [])];
+        const [removedColDef] = updatedColDefs.splice(index, 1);
+        updatedColDefs.splice(atIndex, 0, removedColDef);
+        if (storageKey) {
+          saveColumnVisibilityToStorage(updatedColDefs, storageKey);
+        }
+        setCurrentColDefs(updatedColDefs);
+        setShowResetButton(checkColDefsChanges(updatedColDefs, columnDefs || []));
       }
-      setCurrentColDefs(updatedColDefs);
-      setShowResetButton(checkColDefsChanges(updatedColDefs, columnDefs || []));
     },
     [onFindColumn, currentColDefs, setShowResetButton, columnDefs, storageKey],
   );
