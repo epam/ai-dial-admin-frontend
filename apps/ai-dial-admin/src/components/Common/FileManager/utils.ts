@@ -35,6 +35,10 @@ const gridActionLabels = [
     key: 'delete',
     label: ButtonsI18nKey.Delete,
   },
+  {
+    key: 'preview',
+    label: FileManagerI18nKey.Preview,
+  },
 ];
 
 const treeActionLabels = [
