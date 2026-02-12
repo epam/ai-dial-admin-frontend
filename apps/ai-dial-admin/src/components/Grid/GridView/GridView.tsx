@@ -43,7 +43,7 @@ const GridView = <T extends object>({
   );
   const isMobile = useIsMobileScreen();
   const isTablet = useIsOnlyTabletScreen();
-  const [currentColDefs, setCurrentColDefs] = useState<ColDef[]>([]);
+  const [currentColDefs, setCurrentColDefs] = useState<ColDef[] | undefined>(undefined);
   const [showResetButton, setShowResetButton] = useState(false);
   const [panelContainerClassName, setPanelContainerClassName] = useState(staticPanelContainerClassName);
   const [panelClassName, setPanelClassName] = useState(staticPanelClassName);
@@ -59,7 +59,7 @@ const GridView = <T extends object>({
   );
 
   useEffect(() => {
-    if (currentColDefs == null || currentColDefs.length === 0) {
+    if ((currentColDefs == null || currentColDefs.length === 0) && columnDefs) {
       const storageColumns = storageKey ? getColumnVisibilityFromStorage(columnDefs, storageKey) : null;
       setCurrentColDefs(
         !(storageColumns && columnDefs && columnDefs.length > storageColumns?.length)
