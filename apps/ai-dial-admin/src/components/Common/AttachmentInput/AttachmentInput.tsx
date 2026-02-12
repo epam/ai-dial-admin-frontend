@@ -49,8 +49,9 @@ const AttachmentInput: FC<Props> = ({
   const containerRef = useRef<HTMLDivElement>(null);
 
   const selected = useMemo(() => {
+    if (!initialValues) return [];
     return initialValues
-      ?.map((val) => availableItems.find((o) => o.value === val) || { label: val, value: val })
+      .map((val) => availableItems.find((o) => o.value === val) || { label: val, value: val })
       .filter(Boolean) as AttachmentOption[];
   }, [availableItems, initialValues]);
 
@@ -71,7 +72,7 @@ const AttachmentInput: FC<Props> = ({
     return availableItems
       .filter(
         (opt) =>
-          !selected?.some((s) => s.value === opt.value) &&
+          !selected.some((s) => s.value === opt.value) &&
           (opt.label.toLowerCase().includes(inputValue.toLowerCase()) ||
             opt.value.toLowerCase().includes(inputValue.toLowerCase())),
       )
