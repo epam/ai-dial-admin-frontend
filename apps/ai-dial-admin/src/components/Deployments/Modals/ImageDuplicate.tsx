@@ -48,7 +48,7 @@ const ImageDuplicateModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
     version: semver.inc(originalVersion, 'patch') || originalVersion,
   });
   const [duplicationType, setDuplicationType] = useState<string>(DUPLICATION_TYPE.VERSION);
-  const [isUniqNameError, setIsUniqNameError] = useState<boolean>(names?.includes(copyImage.name) ?? false);
+  const [isUniqNameError, setIsUniqNameError] = useState<boolean>(names?.includes(copyImage?.name || '') ?? false);
 
   const [nameError, setNameError] = useState<FieldError | null>(null);
   const [versionError, setVersionError] = useState<FieldError | null>(null);
@@ -67,12 +67,7 @@ const ImageDuplicateModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
           if (success && data.length > 0) {
             const versionMap = getVersionsPerName(data);
             setVersionsMap(versionMap);
-            const error = getSemanticVersionError(
-              versionMap,
-              { name } as { name: string },
-              t,
-              (copyImage as Image).version,
-            );
+            const error = getSemanticVersionError(versionMap, name, t, (copyImage as Image).version);
             setVersionError(error);
             dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: !error });
           } else {
@@ -121,7 +116,7 @@ const ImageDuplicateModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
 
   const onChangeVersion = useCallback(
     (version?: string) => {
-      const error = getSemanticVersionError(versionsMap, copyImage as { name: string }, t, version);
+      const error = getSemanticVersionError(versionsMap, copyImage.name, t, version);
       setVersionError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: !error });
       setCopyImage({ ...copyImage, version: version || '' });
@@ -137,7 +132,7 @@ const ImageDuplicateModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
       duplicationType === DUPLICATION_TYPE.ENTITY && isUniqNameError,
       true,
     );
-    const versionError = getSemanticVersionError(versionsMap, copyImage as { name: string }, t, copyImage.version);
+    const versionError = getSemanticVersionError(versionsMap, copyImage.name, t, copyImage.version);
     setNameError(nameError);
     setVersionError(versionError);
     dispatch({
@@ -153,7 +148,7 @@ const ImageDuplicateModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
   }, [copyImage, dispatch, duplicationType, isUniqNameError, names, t, versionsMap]);
 
   useEffect(() => {
-    getImageVersions(image.name, getImageType(getRouteByType(image.$type))).then(({ success, response }) => {
+    getImageVersions(image.name || '', getImageType(getRouteByType(image.$type))).then(({ success, response }) => {
       const data = response as ImageVersion[];
       if (success && data.length > 0) {
         const versionMap = getVersionsPerName(data);
@@ -163,7 +158,7 @@ const ImageDuplicateModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
   }, [image]);
 
   useEffect(() => {
-    setIsUniqNameError(names?.includes(copyImage.name) ?? false);
+    setIsUniqNameError(names?.includes(copyImage.name || '') ?? false);
   }, [copyImage.name, names]);
 
   return (

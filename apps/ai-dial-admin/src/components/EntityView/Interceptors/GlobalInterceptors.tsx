@@ -1,12 +1,11 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialPrimaryButton, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { RowDragEvent } from 'ag-grid-community';
 
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
-import Grid from '@/src/components/Grid/Grid';
 import { DESCRIPTION_COLUMN, DISPLAY_NAME_COLUMN, NAME_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { ButtonsI18nKey, EntitiesI18nKey, InterceptorsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -14,6 +13,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { getInterceptorsColumnDefs } from './utils';
 
 interface Props {
@@ -95,10 +95,13 @@ const GlobalInterceptors: FC<Props> = ({ interceptors, currentInterceptors, onCh
     />
   );
 
-  const localInterceptors = !globalInterceptors?.length ? (
-    <DialNoDataContent title={t(EntitiesI18nKey.NoGlobalInterceptors)} />
-  ) : (
-    <Grid columnDefs={columns} rowData={rowData} additionalGridOptions={additionalGridOptions} />
+  const localInterceptors = (
+    <GridView
+      emptyDataProps={{ title: t(EntitiesI18nKey.NoGlobalInterceptors) }}
+      columnDefs={columns}
+      rowData={rowData}
+      additionalGridOptions={additionalGridOptions}
+    />
   );
 
   return (

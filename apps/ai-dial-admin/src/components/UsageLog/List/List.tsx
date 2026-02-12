@@ -1,5 +1,5 @@
 import { DialGhostButton, DialLoader } from '@epam/ai-dial-ui-kit';
-import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
+import { ColDef, GridApi, GridOptions, GridReadyEvent } from 'ag-grid-community';
 import { FC, MouseEvent, useCallback, useEffect, useState } from 'react';
 
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
@@ -42,7 +42,7 @@ const List: FC<Props> = ({ route, getData, query, columnDefs, title, emptyDataTi
     },
   };
 
-  const onGridReady = useCallback((api: GridApi) => {
+  const onGridReady = useCallback(({ api }: GridReadyEvent) => {
     setGridApi(api);
   }, []);
 

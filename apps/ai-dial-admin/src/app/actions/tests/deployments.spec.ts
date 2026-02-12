@@ -34,6 +34,7 @@ import {
   getGlobalWhitelist,
   updateGlobalWhitelist,
   getHuggingFaceModels,
+  getModelDetails,
 } from '../deployments';
 import { ResourceType } from '@/src/types/resource-type';
 
@@ -387,10 +388,21 @@ describe('Deployments actions', () => {
       const mockResponse = [{ id: 'model-1' }, { id: 'model-2' }];
       (huggingFaceApi.getHuggingFaceModels as any).mockResolvedValue(mockResponse);
 
-      const result = await getHuggingFaceModels('');
+      const result = await getHuggingFaceModels({});
 
       expect(getUserToken).toHaveBeenCalled();
-      expect(huggingFaceApi.getHuggingFaceModels).toHaveBeenCalledWith('', TOKEN_MOCK);
+      expect(huggingFaceApi.getHuggingFaceModels).toHaveBeenCalledWith({}, TOKEN_MOCK);
+      expect(result).toBe(mockResponse);
+    });
+
+    test('calls whitelistApi.getModelDetails with token', async () => {
+      const mockResponse = [{ id: 'model-1' }, { id: 'model-2' }];
+      (huggingFaceApi.getModelDetails as any).mockResolvedValue(mockResponse);
+
+      const result = await getModelDetails('test', 'sha');
+
+      expect(getUserToken).toHaveBeenCalled();
+      expect(huggingFaceApi.getModelDetails).toHaveBeenCalledWith('test', 'sha', TOKEN_MOCK);
       expect(result).toBe(mockResponse);
     });
   });

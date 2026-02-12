@@ -1,14 +1,15 @@
 import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 import { FC, useState } from 'react';
+import { GridOptions } from 'ag-grid-community';
 
-import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
+import { SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
 import { SOURCE_CONTAINERS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Container } from '@/src/models/deployments/containers';
 
+import GridView from '@/src/components/Grid/GridView/GridView';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
-import Grid from '@/src/components/Grid/Grid';
 
 interface Props {
   selectedId?: string;
@@ -22,6 +23,32 @@ const SelectContainerModal: FC<Props> = ({ selectedId, containers, isModalOpen, 
   const t = useI18n();
 
   const [selectedContainer, setSelectedContainer] = useState(selectedId);
+
+  const options: GridOptions = {
+    ...SINGLE_ROW_SELECTION,
+    selectionColumnDef: {
+      ...SINGLE_ROW_SELECTION.selectionColumnDef,
+      cellRenderer: (data: { data?: { name: string; image: string }; name: string }) => (
+        <RadioButtonRenderer inputId={data.data?.name || data.name} isChecked={data.data?.name === selectedContainer} />
+      ),
+    },
+    onRowSelected: (event) => {
+      if (event.node.isSelected()) {
+        setSelectedContainer(event.data.name);
+      }
+    },
+    onGridReady: (event) => {
+      event.api?.updateGridOptions({
+        columnDefs: SOURCE_CONTAINERS_COLUMNS,
+        rowData: containers,
+      });
+      event.api.forEachNode((node) => {
+        if (node.data.name === selectedContainer) {
+          node.setSelected(true);
+        }
+      });
+    },
+  };
 
   return (
     <DialFormPopup
@@ -38,37 +65,7 @@ const SelectContainerModal: FC<Props> = ({ selectedId, containers, isModalOpen, 
       onCancel={onClose}
     >
       <div className="flex flex-col px-6 py-4 h-full">
-        <Grid
-          columnDefs={SOURCE_CONTAINERS_COLUMNS}
-          additionalGridOptions={{
-            rowSelection: { mode: 'singleRow', enableClickSelection: true },
-            selectionColumnDef: {
-              ...RADIO_BUTTON_COL_DEF,
-              cellRenderer: (data: { data?: { name: string; image: string }; name: string }) => (
-                <RadioButtonRenderer
-                  inputId={data.data?.name || data.name}
-                  isChecked={data.data?.name === selectedContainer}
-                />
-              ),
-            },
-            onRowSelected: (event) => {
-              if (event.node.isSelected()) {
-                setSelectedContainer(event.data.name);
-              }
-            },
-            onGridReady: (event) => {
-              event.api?.updateGridOptions({
-                columnDefs: SOURCE_CONTAINERS_COLUMNS,
-                rowData: containers,
-              });
-              event.api.forEachNode((node) => {
-                if (node.data.name === selectedContainer) {
-                  node.setSelected(true);
-                }
-              });
-            },
-          }}
-        />
+        <GridView columnDefs={SOURCE_CONTAINERS_COLUMNS} additionalGridOptions={options} />
       </div>
     </DialFormPopup>
   );

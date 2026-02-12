@@ -1,12 +1,8 @@
 import { FC, useMemo, useState } from 'react';
 
 import { Image, ImageVersion } from '@/src/models/deployments/images';
-
-import BaseFields from '@/src/components/Images/Fields/BaseFields';
-import SourceFields from '@/src/components/Images/Fields/SourceFields';
-import TransportField from '@/src/components/Images/Fields/TransportField';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { FieldError } from '@/src/models/error';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { debounce } from 'lodash';
 import { getImageVersions } from '@/src/app/actions/deployments';
 import { getImageType } from '@/src/utils/deployments/images';
@@ -14,6 +10,10 @@ import { getRouteByType } from '@/src/utils/deployments/entity';
 import { getVersionsPerName } from '@/src/components/Assets/utils';
 import { getSemanticVersionError } from '@/src/utils/deployments/validation';
 import { useI18n } from '@/src/locales/client';
+
+import ImageBase from '@/src/components/Deployments/Fields/ImageBase';
+import ImageSource from '@/src/components/Deployments/Fields/ImageSource';
+import ImageTransport from '@/src/components/Deployments/Fields/ImageTransport';
 
 interface Props {
   image: Image;
@@ -42,7 +42,7 @@ const ImageFields: FC<Props> = ({ image, setImage, isModal, setImageVersions }) 
                 }
                 const versionMap = getVersionsPerName(data);
                 setVersionsMap(versionMap);
-                const error = getSemanticVersionError(versionMap, { name: updatedImage.name }, t, image.version);
+                const error = getSemanticVersionError(versionMap, updatedImage.name, t, image.version);
                 setVersionError(error);
                 dispatch({
                   type: ValidationActionType.SetField,
@@ -72,7 +72,7 @@ const ImageFields: FC<Props> = ({ image, setImage, isModal, setImageVersions }) 
   return (
     <div className="flex flex-col w-full h-full gap-y-8">
       <div className="pb-8 border-b border-primary">
-        <BaseFields
+        <ImageBase
           image={image}
           setImage={setImage}
           isModal={isModal}
@@ -82,8 +82,8 @@ const ImageFields: FC<Props> = ({ image, setImage, isModal, setImageVersions }) 
           verifyVersion={verifyVersion}
         />
       </div>
-      <SourceFields image={image} setImage={setImage} isModal={isModal} verifyVersion={verifyVersion} />
-      {!isModal && <TransportField image={image} setImage={setImage} />}
+      <ImageSource image={image} setImage={setImage} isModal={isModal} verifyVersion={verifyVersion} />
+      {!isModal && <ImageTransport image={image} setImage={setImage} />}
     </div>
   );
 };

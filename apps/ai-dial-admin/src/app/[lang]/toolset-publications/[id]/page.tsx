@@ -1,7 +1,7 @@
 import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
-import { approvePublication, declinePublication } from '@/src/app/actions/publications';
+import { approvePublication, declinePublication, deletePublication } from '@/src/app/actions/publications';
 import { publicationsApi } from '@/src/app/api/api';
 import PublicationView from '@/src/components/Publications/View/View';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
@@ -35,6 +35,7 @@ export default async function Page(params: { searchParams: Promise<{ path: strin
         view={ApplicationRoute.ToolsetPublications}
         approvePublication={approvePublication}
         declinePublication={declinePublication}
+        deletePublication={deletePublication}
       />
     </SaveValidationContextProvider>
   );

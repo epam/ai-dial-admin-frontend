@@ -3,7 +3,7 @@
 import { FC } from 'react';
 
 import { DialGhostButton, DialNeutralButton, DialPrimaryButton, Step, StepStatus } from '@epam/ai-dial-ui-kit';
-import { IconArrowNarrowLeft } from '@tabler/icons-react';
+import { IconArrowNarrowLeft, IconArrowNarrowRight } from '@tabler/icons-react';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -32,21 +32,21 @@ const StepperModalButtons: FC<Props> = ({ steps, currentStep, onChangeStep, onFi
 
   return (
     <div className="flex flex-row items-center justify-between gap-2 px-6 py-4">
-      <div>
-        {currentStep?.id !== steps[0]?.id && (
-          <DialGhostButton
-            label={t(ButtonsI18nKey.Back)}
-            onClick={onPrevStep}
-            iconBefore={<IconArrowNarrowLeft {...BASE_BUTTON_ICON_PROPS} />}
-          />
-        )}
-      </div>
+      {currentStep?.id !== steps[0]?.id && (
+        <DialGhostButton
+          label={t(ButtonsI18nKey.Back)}
+          onClick={onPrevStep}
+          iconBefore={<IconArrowNarrowLeft {...BASE_BUTTON_ICON_PROPS} />}
+        />
+      )}
+
       <div className="flex gap-2">
         <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
         {currentStep?.id !== steps.at(-1)?.id && (
           <DialPrimaryButton
             label={t(ButtonsI18nKey.Next)}
             onClick={onNextStep}
+            iconAfter={<IconArrowNarrowRight {...BASE_BUTTON_ICON_PROPS} />}
             disabled={currentStep?.status !== StepStatus.VALID}
           />
         )}

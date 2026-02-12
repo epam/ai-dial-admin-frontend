@@ -53,6 +53,8 @@ import { auditStringFilter, evalStringFilter } from './filters';
 import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
 import { formatNumberWithExponent } from '@/src/utils/formatting/number-formatting';
 
+export const COLUMN_PANEL_PREFIX = 'column_';
+
 export const BASE_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN, NAME_COLUMN];
 
 export const BASE_COLUMNS_WITH_TOPICS: ColDef[] = [...BASE_COLUMNS, TOPICS_COLUMN, UPDATED_AT_COLUMN];
@@ -737,7 +739,7 @@ export const HF_REGISTRY_COLUMNS: ColDef[] = [
   {
     field: 'languages',
     headerName: 'Languages',
-    hide: false,
+    hide: true,
     cellRenderer: TagsCellRenderer,
     cellRendererParams: (params: { data?: { languages?: string[] } }) => ({
       items: params.data?.languages,
@@ -747,24 +749,11 @@ export const HF_REGISTRY_COLUMNS: ColDef[] = [
     filter: false,
     floatingFilter: false,
   },
-  {
-    field: 'licenses',
-    headerName: 'Licenses',
-    hide: false,
-    cellRenderer: TagsCellRenderer,
-    cellRendererParams: (params: { data?: { licenses?: string[] } }) => ({
-      items: params.data?.licenses,
-    }),
-    tooltipValueGetter: ({ value }) => (value?.length ? value.join(', ') : null),
-    sortable: false,
-    filter: false,
-    floatingFilter: false,
-  },
-  { field: 'author', headerName: 'Author', hide: false, sortable: false },
+  { field: 'author', headerName: 'Author', hide: true, sortable: false },
   {
     field: 'parameters',
     headerName: 'Parameters',
-    hide: true,
+    hide: false,
     cellClass: 'align-right',
     headerClass: 'align-right',
     comparator: numberValueComparator,
@@ -801,22 +790,7 @@ export const HF_REGISTRY_COLUMNS: ColDef[] = [
     filter: false,
     floatingFilter: false,
   },
-  {
-    ...CREATED_AT_COLUMN,
-    hide: true,
-    sortingOrder: ['desc', null],
-    filter: false,
-    floatingFilter: false,
-  },
-  {
-    field: 'lastModified',
-    headerName: 'Last modified',
-    hide: true,
-    sortingOrder: ['desc', null],
-    filter: false,
-    floatingFilter: false,
-    ...dateTimeColumn,
-  },
+
   {
     field: 'likes',
     headerName: 'Likes',
@@ -835,5 +809,34 @@ export const HF_REGISTRY_COLUMNS: ColDef[] = [
     filter: false,
     floatingFilter: false,
     ...numericColumn,
+  },
+  {
+    ...CREATED_AT_COLUMN,
+    hide: true,
+    sortingOrder: ['desc', null],
+    filter: false,
+    floatingFilter: false,
+  },
+  {
+    field: 'lastModified',
+    headerName: 'Last modified',
+    hide: false,
+    sortingOrder: ['desc', null],
+    filter: false,
+    floatingFilter: false,
+    ...dateTimeColumn,
+  },
+  {
+    field: 'licenses',
+    headerName: 'Licenses',
+    hide: false,
+    cellRenderer: TagsCellRenderer,
+    cellRendererParams: (params: { data?: { licenses?: string[] } }) => ({
+      items: params.data?.licenses,
+    }),
+    tooltipValueGetter: ({ value }) => (value?.length ? value.join(', ') : null),
+    sortable: false,
+    filter: false,
+    floatingFilter: false,
   },
 ];

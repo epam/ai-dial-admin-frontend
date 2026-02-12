@@ -1,7 +1,7 @@
 'use client';
 
 import { cloneDeep } from 'lodash';
-import { FC, useCallback } from 'react';
+import { FC, useCallback, useEffect, useRef } from 'react';
 
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
 import {
@@ -11,6 +11,7 @@ import {
   ROLES_ENTITIES_COLUMNS,
 } from '@/src/components/AddEntitiesTab/utils';
 import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
+import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
 import { isSetNoLimitsHidden } from '@/src/components/EntityView/Roles/utils';
 import { getSetNoLimitsOperation } from '@/src/constants/grid-columns/actions';
 import { KEYS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
@@ -32,7 +33,6 @@ import RoleProperties from './Properties/Properties';
 
 interface Props {
   selectedRole: DialRole;
-  originalRole: DialRole;
   activeTab: EntityViewTab;
   selectedFormat: ExportFormat;
   keys: DialKey[];
@@ -47,7 +47,6 @@ interface Props {
 
 const TabsContent: FC<Props> = ({
   activeTab,
-  originalRole,
   selectedFormat,
   isSkipRefresh,
   onChange,
@@ -57,6 +56,11 @@ const TabsContent: FC<Props> = ({
   ...props
 }) => {
   const t = useI18n();
+  const entityRef = useRef(selectedRole);
+
+  useEffect(() => {
+    entityRef.current = selectedRole;
+  }, [selectedRole]);
 
   const onAddKeys = useCallback(
     (rows: EntitiesGridData[]) => {
@@ -81,7 +85,7 @@ const TabsContent: FC<Props> = ({
   const onSetNoLimits = useCallback(
     (role?: DialRole) => {
       if (role) {
-        const limits = originalRole.limits ?? {};
+        const limits = entityRef.current.limits ?? {};
         const updatedLimits = {
           ...limits,
           [role?.name as string]: {
@@ -94,19 +98,19 @@ const TabsContent: FC<Props> = ({
         };
 
         const updatedEntity = {
-          ...originalRole,
+          ...entityRef.current,
           limits: updatedLimits,
         };
         onChange(updatedEntity);
       }
     },
-    [onChange, originalRole],
+    [onChange],
   );
 
   const onChangeRoleToken = useCallback(
     (value: number, data: DialRole, token: string) => {
       const name = data.name as string;
-      const limits = originalRole.limits ?? {};
+      const limits = entityRef.current.limits ?? {};
       const updatedLimits = {
         ...limits,
         [name]: {
@@ -116,13 +120,13 @@ const TabsContent: FC<Props> = ({
       };
 
       const updatedEntity = {
-        ...originalRole,
+        ...entityRef.current,
         limits: updatedLimits,
       };
 
       onChange(updatedEntity, true);
     },
-    [onChange, originalRole],
+    [onChange],
   );
 
   const onRemoveEntity = useCallback(
@@ -164,12 +168,14 @@ const TabsContent: FC<Props> = ({
     selectedFormat === ExportFormat.ADMIN && (
       <>
         {activeTab === EntityViewTab.Properties && (
-          <RoleProperties
-            selectedRole={selectedRole}
-            names={names}
-            onChangeRole={onChange}
-            isSkipRefresh={isSkipRefresh}
-          />
+          <PropertiesTabContent entity={selectedRole} id={selectedRole.name} view={ApplicationRoute.Roles}>
+            <RoleProperties
+              selectedRole={selectedRole}
+              names={names}
+              onChangeRole={onChange}
+              isSkipRefresh={isSkipRefresh}
+            />
+          </PropertiesTabContent>
         )}
         {activeTab === EntityViewTab.Entities && (
           <AddEntitiesView

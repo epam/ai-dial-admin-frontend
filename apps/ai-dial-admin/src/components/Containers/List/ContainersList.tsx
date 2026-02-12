@@ -1,7 +1,7 @@
 'use client';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { CellClickedEvent, GridApi, GridOptions } from 'ag-grid-community';
+import { CellClickedEvent, GridApi, GridOptions, GridReadyEvent } from 'ag-grid-community';
 import { useRouter } from 'next/navigation';
 import { ApplicationRoute } from '@/src/types/routes';
 import { Container } from '@/src/models/deployments/containers';
@@ -58,7 +58,7 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
 
-  const onGridReady = useCallback((api: GridApi) => {
+  const onGridReady = useCallback(({ api }: GridReadyEvent) => {
     setGridApi(api);
   }, []);
 

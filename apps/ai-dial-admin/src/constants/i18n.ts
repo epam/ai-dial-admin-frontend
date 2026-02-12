@@ -277,10 +277,10 @@ export enum ButtonsI18nKey {
   Delete = 'Buttons.Delete',
   Change = 'Buttons.Change',
   DeleteAll = 'Buttons.DeleteAll',
+  Download = 'Buttons.Download',
   Duplicate = 'Buttons.Duplicate',
   Save = 'Buttons.Save',
   SaveAndRedeploy = 'Buttons.SaveAndRedeploy',
-  Move = 'Buttons.Move',
   SaveAsNewVersion = 'Buttons.SaveAsNewVersion',
   Apply = 'Buttons.Apply',
   Browse = 'Buttons.Browse',
@@ -603,6 +603,7 @@ export enum PublicationsI18nKey {
   DeclineReason = 'Publications.ReasonTitle',
   DeclineReasonPlaceholder = 'Publications.ReasonPlaceholder',
   Warning = 'Publications.Warning',
+  Publication = 'Publications.Publication',
 
   // prompt publications
   PromptPublishApproveModalTitle = 'Publications.Prompt.PublishApproveModalTitle',
@@ -759,8 +760,7 @@ export enum FoldersI18nKey {
   FileReview = 'Folder.FileReview',
   FolderCreate = 'Folder.FolderCreate',
   FolderCreatePlaceholder = 'Folder.FolderCreatePlaceholder',
-  FolderCreateSuccess = 'Folder.FolderCreateSuccess',
-  Rename = 'Folder.Rename',
+
   FolderName = 'Folder.FolderName',
   RenameFolderError = 'Folder.RenameFolderError',
   MoveFolderError = 'Folder.MoveFolderError',
@@ -866,10 +866,10 @@ export enum ErrorI18nKey {
   ImageSourceURI = 'Error.ImageSourceURI',
   PathError = 'Error.PathError',
   VariableError = 'Error.VariableError',
-  VariableStartError = 'Error.VariableStartError',
   HFModelName = 'Error.HFModelName',
   ContainSpace = 'Error.ContainSpace',
-  AllowedChars = 'Error.AllowedChars',
+  SpecialChars = 'Error.SpecialChars',
+  BaseDirectoryError = 'Error.BaseDirectoryError',
   LimitRequestError = 'Error.LimitRequestError',
   ReplicasError = 'Error.ReplicasError',
   FailedToStart = 'Error.FailedToStart',
@@ -879,6 +879,9 @@ export enum ErrorI18nKey {
   InvalidIpAddress = 'Error.InvalidIpAddress',
   MinMaxMask = 'Error.MinMaxMask',
   EmptyIpRangeField = 'Error.EmptyIpRangeField',
+  PortError = 'Error.PortError',
+  MemoryError = 'Error.MemoryError',
+  GPUError = 'Error.GPUError',
 }
 
 export enum SourceI18nKey {
@@ -1246,6 +1249,7 @@ export enum ContainersI18nKey {
   ContainersRestartWarning = 'Containers.ContainersRestartWarning',
   ShowRelatedContainers = 'Containers.ShowRelatedContainers',
   SelectModelFromRegistry = 'Containers.SelectModelFromRegistry',
+  NoDescriptionAvailable = 'Containers.NoDescriptionAvailable',
   ScaleToZeroNever = 'Containers.Autoscaling.ScaleToZeroNever',
   ScaleToZeroAfter15Minutes = 'Containers.Autoscaling.ScaleToZeroAfter15Minutes',
   ScaleToZeroAfter30Minutes = 'Containers.Autoscaling.ScaleToZeroAfter30Minutes',
@@ -1305,4 +1309,26 @@ export enum TestSuitesI18nKey {
   ChatInterface = 'TestSuites.ChatInterface',
   Preview = 'TestSuites.Preview',
   MethodChangeWarning = 'TestSuites.MethodChangeWarning',
+  ImportSuccess = 'TestSuites.ImportSuccess',
+  ImportFailed = 'TestSuites.ImportFailed',
+  ImportSuccessDescription = 'TestSuites.ImportSuccessDescription',
+}
+
+export enum FileManagerI18nKey {
+  SelectedItems = 'FileManager.SelectedItems',
+  AddSibling = 'FileManager.AddSibling',
+  AddChild = 'FileManager.AddChild',
+  Rename = 'FileManager.Rename',
+  Move = 'FileManager.Move',
+  Files = 'FileManager.Files',
+  Folder = 'FileManager.Folder',
+  EnterFolderName = 'FileManager.EnterFolderName',
+  NameExists = 'FileManager.NameExists',
+  ManagePermissions = 'FileManager.ManagePermissions',
+  CreateFolderValidate = 'FileManager.CreateFolderValidate',
+  Preview = 'FileManager.Preview',
+
+  // Notifications
+  CreateFolderSuccessTitle = 'FileManager.Notifications.CreateFolder.Title',
+  CreateFolderSuccessDescription = 'FileManager.Notifications.CreateFolder.Description',
 }

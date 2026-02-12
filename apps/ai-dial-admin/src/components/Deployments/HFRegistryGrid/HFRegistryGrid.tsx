@@ -1,41 +1,50 @@
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { GridApi, GridOptions, IDatasource, IGetRowsParams } from 'ag-grid-community';
+import {
+  CellClickedEvent,
+  ColDef,
+  GridApi,
+  GridOptions,
+  GridReadyEvent,
+  IDatasource,
+  IGetRowsParams,
+} from 'ag-grid-community';
 import { isEqual } from 'lodash';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { ApplicationRoute } from '@/src/types/routes';
-import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { FilterDto, SortDto } from '@/src/models/request';
-import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { getHuggingFaceModels } from '@/src/app/actions/deployments';
-import { getRequestFilters } from '@/src/utils/request/get-request-filters';
-import { DialGhostButton } from '@epam/ai-dial-ui-kit';
-import { IconColumns2 } from '@tabler/icons-react';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-import { infiniteGridOptions, RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
-import { HF_REGISTRY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { emptyDataTitleMap, listViewTitleMap } from '@/src/components/ListView/constants';
+import { infiniteGridOptions, SINGLE_ROW_SELECTION, UTILITY_COLUMN } from '@/src/constants/ag-grid';
+import { HF_REGISTRY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
+import { FilterDto, SortDto } from '@/src/models/request';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getRequestFilters } from '@/src/utils/request/get-request-filters';
+import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
+import { DialGhostButton } from '@epam/ai-dial-ui-kit';
+import { IconColumns2, IconFileDescription } from '@tabler/icons-react';
 
-import ListView from '@/src/components/ListView/ListView';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
+import ListView from '@/src/components/ListView/ListView';
 
 interface Props {
   route: ApplicationRoute;
   modelName: string;
   setModelName: (name: string) => void;
+  showModelDescription: (name: string, sha: string) => void;
 }
 
-const HfRegistryGrid: FC<Props> = ({ route, modelName, setModelName }) => {
+const HfRegistryGrid: FC<Props> = ({ route, modelName, setModelName, showModelDescription }) => {
   const t = useI18n();
   const [showColumnsPanel, setShowColumnsPanel] = useState(false);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
 
   const gridOptions: GridOptions = {
     ...infiniteGridOptions,
-    rowSelection: { mode: 'singleRow', enableClickSelection: true },
+    ...SINGLE_ROW_SELECTION,
     selectionColumnDef: {
-      ...RADIO_BUTTON_COL_DEF,
+      ...SINGLE_ROW_SELECTION.selectionColumnDef,
       cellRenderer: (data: { data?: { id: string } }) => (
         <RadioButtonRenderer inputId={data.data?.id as string} isChecked={data.data?.id === modelName} />
       ),
@@ -43,6 +52,11 @@ const HfRegistryGrid: FC<Props> = ({ route, modelName, setModelName }) => {
     onRowSelected: (event) => {
       if (event.node.isSelected()) {
         setModelName(event.data?.id);
+      }
+    },
+    onCellClicked: (event: CellClickedEvent) => {
+      if (event.colDef.field === 'detailsColumn') {
+        showModelDescription(event.data?.id, event.data?.sha);
       }
     },
   };
@@ -104,11 +118,22 @@ const HfRegistryGrid: FC<Props> = ({ route, modelName, setModelName }) => {
     }
   }, [gridApi, gridDataSource]);
 
-  const onGridReady = useCallback((api: GridApi) => {
+  const onGridReady = useCallback(({ api }: GridReadyEvent) => {
     setGridApi(api);
   }, []);
 
-  const columnDefs = [...HF_REGISTRY_COLUMNS];
+  const columnDefs = [
+    ...HF_REGISTRY_COLUMNS,
+    {
+      ...UTILITY_COLUMN,
+      field: 'detailsColumn',
+      cellRenderer: () => <IconFileDescription className="text-secondary" />,
+      cellClass: 'relative',
+      pinned: 'right',
+      lockPinned: true,
+    } as ColDef,
+  ];
+
   const toggleColumnsPanel = () => setShowColumnsPanel(!showColumnsPanel);
 
   return (
@@ -122,6 +147,7 @@ const HfRegistryGrid: FC<Props> = ({ route, modelName, setModelName }) => {
       toggleColumnsPanel={toggleColumnsPanel}
       storageKey={`${route}/registry`}
       onGridReady={onGridReady}
+      allowPadding={false}
     >
       <div className="flex gap-4 items-end">
         <ResetFiltersButton gridApi={gridApi} />

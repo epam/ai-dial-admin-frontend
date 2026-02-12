@@ -29,7 +29,7 @@ const ImageNewVersion: FC<Props> = ({ isModalOpen, title, onClose, onApply, imag
 
   const validateVersion = useCallback(
     (version?: string) => {
-      const error = getSemanticVersionError(getVersionsPerName(versions), image as { name: string }, t, version);
+      const error = getSemanticVersionError(getVersionsPerName(versions), image.name, t, version);
       dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: !error });
       setVersionError(error);
     },

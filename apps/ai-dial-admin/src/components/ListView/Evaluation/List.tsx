@@ -3,7 +3,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { CellClickedEvent, ColDef, GridApi, GridOptions, IDatasource, IGetRowsParams } from 'ag-grid-community';
+import {
+  CellClickedEvent,
+  ColDef,
+  GridApi,
+  GridOptions,
+  GridReadyEvent,
+  IDatasource,
+  IGetRowsParams,
+} from 'ag-grid-community';
 import { useRouter } from 'next/navigation';
 
 import ListView from '@/src/components/ListView/ListView';
@@ -98,7 +106,7 @@ const EvaluationListView = <T extends object>({
     setIsModalOpen(true);
   }, []);
 
-  const onGridReady = useCallback((api: GridApi) => {
+  const onGridReady = useCallback(({ api }: GridReadyEvent) => {
     setGridApi(api);
   }, []);
 

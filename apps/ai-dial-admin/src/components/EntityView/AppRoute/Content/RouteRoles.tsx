@@ -6,7 +6,7 @@ import { FC, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
-import Grid from '@/src/components/Grid/Grid';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getOpenInNewTabOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
@@ -124,7 +124,7 @@ const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, o
         <div className="flex-1 min-h-0">
           <div className="h-full">
             {data.length > 0 ? (
-              <Grid columnDefs={columns} rowData={data} />
+              <GridView columnDefs={columns} rowData={data} />
             ) : iAppRunnerView && route.isPublic ? (
               <DialNoDataContent
                 icon={<IconReplace width={60} height={60} />}

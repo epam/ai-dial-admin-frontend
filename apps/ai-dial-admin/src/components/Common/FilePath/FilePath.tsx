@@ -5,7 +5,7 @@ import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconFolderShare } from '@tabler/icons-react';
 import classNames from 'classnames';
 
-import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { FileManagerI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
@@ -60,7 +60,7 @@ const FilePath: FC<Props> = ({ label, placeholder, disabled, value, modalTitle, 
         <DialNeutralButton
           disabled={disabled}
           onClick={onOpenFilePathModal}
-          label={t(ButtonsI18nKey.Move)}
+          label={t(FileManagerI18nKey.Move)}
           iconBefore={<IconFolderShare {...BASE_BUTTON_ICON_PROPS} />}
         />
       </div>

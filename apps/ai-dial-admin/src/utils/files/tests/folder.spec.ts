@@ -25,15 +25,98 @@ describe('Folder Utils :: fillChildren', () => {
   test('Should return correct folder array with names', () => {
     const res = fillChildren([{ path: 'public/folder1' }, { path: 'public/folder2' }]);
     expect(res).toEqual([
-      { path: 'public/folder1', name: 'folder1' },
-      { path: 'public/folder2', name: 'folder2' },
+      {
+        name: 'folder1',
+        parentPath: 'public/',
+        path: 'public/folder1',
+        permissions: ['WRITE', 'READ'],
+      },
+      {
+        name: 'folder2',
+        parentPath: 'public/',
+        path: 'public/folder2',
+        permissions: ['WRITE', 'READ'],
+      },
     ]);
+  });
+
+  test('Should preserve existing children items for folders', () => {
+    const existingChildren = [
+      {
+        path: 'public/folder1',
+        nodeType: DialFileNodeType.FOLDER,
+        items: [
+          {
+            name: 'subfile',
+            path: 'public/folder1/subfile',
+            nodeType: DialFileNodeType.ITEM,
+          },
+        ],
+      },
+    ];
+    const res = fillChildren([{ path: 'public/folder1', nodeType: DialFileNodeType.FOLDER }], existingChildren);
+    expect(res[0].items).toEqual([
+      {
+        name: 'subfile',
+        path: 'public/folder1/subfile',
+        nodeType: DialFileNodeType.ITEM,
+      },
+    ]);
+  });
+
+  test('Should not add items to non-folder node types', () => {
+    const existingChildren = [
+      {
+        path: 'public/file.txt',
+        nodeType: DialFileNodeType.ITEM,
+        items: [
+          {
+            name: 'shouldNotExist',
+            path: 'public/file.txt/shouldNotExist',
+            nodeType: DialFileNodeType.ITEM,
+          },
+        ],
+      },
+    ];
+    const res = fillChildren([{ path: 'public/file.txt', nodeType: DialFileNodeType.ITEM }], existingChildren);
+    expect(res[0].items).toBeUndefined();
+  });
+
+  test('Should handle case when existingChildren is undefined', () => {
+    const res = fillChildren([{ path: 'public/folder1', nodeType: DialFileNodeType.FOLDER }], undefined);
+    expect(res[0].items).toBeUndefined();
+  });
+
+  test('Should handle case when existing children path does not match', () => {
+    const existingChildren = [
+      {
+        path: 'public/differentFolder',
+        nodeType: DialFileNodeType.FOLDER,
+        items: [
+          {
+            name: 'subfile',
+            path: 'public/differentFolder/subfile',
+            nodeType: DialFileNodeType.ITEM,
+          },
+        ],
+      },
+    ];
+    const res = fillChildren([{ path: 'public/folder1', nodeType: DialFileNodeType.FOLDER }], existingChildren);
+    expect(res[0].items).toBeUndefined();
   });
 });
 
 describe('Folder Utils :: mergeFiles', () => {
   test('should create a new folder node if existingFiles is empty', () => {
-    const newFiles = [{ name: 'file1', path: 'somePath/folder/file1', nodeType: DialFileNodeType.ITEM }];
+    const newFiles = [
+      {
+        name: 'file1',
+        path: 'somePath/folder/file1',
+        parentPath: 'somePath/folder/',
+        nodeType: DialFileNodeType.ITEM,
+        permissions: ['WRITE', 'READ'],
+      },
+    ];
     const result = mergeFiles([], newFiles, 'somePath/folder');
 
     expect(result).toEqual([
@@ -41,7 +124,16 @@ describe('Folder Utils :: mergeFiles', () => {
         name: 'folder',
         path: 'somePath/folder',
         nodeType: DialFileNodeType.FOLDER,
-        items: [{ name: 'file1', path: 'somePath/folder/file1', nodeType: DialFileNodeType.ITEM }],
+        permissions: ['WRITE', 'READ'],
+        items: [
+          {
+            name: 'file1',
+            path: 'somePath/folder/file1',
+            nodeType: DialFileNodeType.ITEM,
+            parentPath: 'somePath/folder/',
+            permissions: ['WRITE', 'READ'],
+          },
+        ],
       },
     ]);
   });
@@ -54,14 +146,30 @@ describe('Folder Utils :: mergeFiles', () => {
         items: [],
       },
     ];
-    const newFiles = [{ name: 'file1', path: 'somePath/folder/file1', nodeType: DialFileNodeType.ITEM }];
+    const newFiles = [
+      {
+        name: 'file1',
+        path: 'somePath/folder/file1',
+        parentPath: 'somePath/folder/',
+        nodeType: DialFileNodeType.ITEM,
+        permissions: ['WRITE', 'READ'],
+      },
+    ];
     const result = mergeFiles(existing, newFiles, 'somePath/folder');
 
     expect(result[0]).toEqual({
       name: 'folder',
       path: 'somePath/folder',
       nodeType: DialFileNodeType.FOLDER,
-      items: [{ name: 'file1', path: 'somePath/folder/file1', nodeType: DialFileNodeType.ITEM }],
+      items: [
+        {
+          name: 'file1',
+          path: 'somePath/folder/file1',
+          nodeType: DialFileNodeType.ITEM,
+          parentPath: 'somePath/folder/',
+          permissions: ['WRITE', 'READ'],
+        },
+      ],
     });
   });
 
@@ -94,7 +202,13 @@ describe('Folder Utils :: mergeFiles', () => {
     const folder2 = result[0].items?.[0].items?.[0];
     expect(folder2?.path).toBe('somePath/folder1/folder2');
     expect(folder2?.items).toEqual([
-      { name: 'file2', path: 'somePath/folder1/folder2/file2', nodeType: DialFileNodeType.ITEM },
+      {
+        name: 'file2',
+        path: 'somePath/folder1/folder2/file2',
+        parentPath: 'somePath/folder1/folder2/',
+        nodeType: DialFileNodeType.ITEM,
+        permissions: ['WRITE', 'READ'],
+      },
     ]);
   });
 

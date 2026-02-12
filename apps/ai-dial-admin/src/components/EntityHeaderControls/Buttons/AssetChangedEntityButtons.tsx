@@ -9,7 +9,7 @@ import classNames from 'classnames';
 import AddVersionModal from '@/src/components/Assets/Modals/AddVersionModal';
 import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
 import { ButtonsI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
-import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
@@ -26,7 +26,7 @@ interface Props {
 const AssetChangedEntityButtons: FC<Props> = ({ version, isEditorEnabled, onDiscard, onSave, existingVersions }) => {
   const t = useI18n();
 
-  const { isValid } = useSaveValidationContext();
+  const { isValid, dispatch } = useSaveValidationContext();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -35,6 +35,12 @@ const AssetChangedEntityButtons: FC<Props> = ({ version, isEditorEnabled, onDisc
   const [buttonsClassName, setButtonsClassName] = useState('');
 
   const isDisableSave = useMemo(() => (isEditorEnabled ? false : !isValid), [isEditorEnabled, isValid]);
+
+  const onStartDiscard = useCallback(() => {
+    dispatch({ type: ValidationActionType.Reset });
+
+    onDiscard?.();
+  }, [dispatch, onDiscard]);
 
   const onTryToSave = useCallback(
     (newVersion?: string) => {
@@ -54,7 +60,7 @@ const AssetChangedEntityButtons: FC<Props> = ({ version, isEditorEnabled, onDisc
   return (
     <>
       <ChangedEntityButtons
-        onDiscard={onDiscard}
+        onDiscard={onStartDiscard}
         onSave={onTryToSave}
         disableSave={isDisableSave}
         saveLabel={t(ButtonsI18nKey.Save)}

@@ -1,4 +1,3 @@
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   AlertVariant,
   DialAlert,
@@ -8,23 +7,24 @@ import {
   DialSwitch,
   PopupSize,
 } from '@epam/ai-dial-ui-kit';
-import { GridApi, GridOptions, SelectionChangedEvent } from 'ag-grid-community';
+import { GridApi, GridOptions, GridReadyEvent, SelectionChangedEvent } from 'ag-grid-community';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Container } from '@/src/models/deployments/containers';
-import { ApplicationRoute } from '@/src/types/routes';
-import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
-import { Image, ImageVersion } from '@/src/models/deployments/images';
+import { getContainers } from '@/src/app/actions/deployments';
+import { MULTI_ROW_SELECTION } from '@/src/constants/ag-grid';
+import { IMAGE_DEPENDENCIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, ContainersI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
-import { getContainers } from '@/src/app/actions/deployments';
-import { getErrorNotification } from '@/src/utils/notification';
-import { getRouteByType, getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
-import { IMAGE_DEPENDENCIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { getImageType } from '@/src/utils/deployments/images';
 import { useI18n } from '@/src/locales/client';
-import { CHECKBOX_COL_DEF } from '@/src/constants/ag-grid';
+import { Container } from '@/src/models/deployments/containers';
+import { Image, ImageVersion } from '@/src/models/deployments/images';
+import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getRouteByType, getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
+import { getImageType } from '@/src/utils/deployments/images';
+import { getErrorNotification } from '@/src/utils/notification';
 
-import Grid from '@/src/components/Grid/Grid';
+import GridView from '@/src/components/Grid/GridView/GridView';
 
 interface Props {
   title: string;
@@ -62,20 +62,13 @@ const ImageAddContainer: FC<Props> = ({ title, isModalOpen, onClose, onApply, im
   };
 
   const additionalGridOptions: GridOptions = {
-    rowSelection: {
-      mode: 'multiRow',
-      headerCheckbox: true,
-      selectAll: 'filtered',
-    },
-    selectionColumnDef: {
-      ...CHECKBOX_COL_DEF,
-    },
-    onSelectionChanged: onSelectionChanged,
+    ...MULTI_ROW_SELECTION,
+    onSelectionChanged,
   };
 
   const columnDefs = [...IMAGE_DEPENDENCIES_COLUMNS(t, true)];
 
-  const onGridReady = (api: GridApi) => {
+  const onGridReady = ({ api }: GridReadyEvent) => {
     api?.updateGridOptions({
       columnDefs,
       rowData: displayedDependencies,
@@ -143,7 +136,7 @@ const ImageAddContainer: FC<Props> = ({ title, isModalOpen, onClose, onApply, im
               />
             ) : (
               <div className="flex flex-col gap-4 h-full min-h-0">
-                <Grid additionalGridOptions={additionalGridOptions} onGridReady={onGridReady} />
+                <GridView additionalGridOptions={additionalGridOptions} onGridReady={onGridReady} />
                 {selectedEntities.some((container) => container.status === CONTAINER_STATUS.RUNNING) && (
                   <DialAlert
                     message={t(ContainersI18nKey.ContainersRestartWarning, {

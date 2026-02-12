@@ -2,9 +2,9 @@
 
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 
-import { DialNoDataContent, Step, StepStatus } from '@epam/ai-dial-ui-kit';
+import { Step, StepStatus } from '@epam/ai-dial-ui-kit';
 import { IconEyeOff } from '@tabler/icons-react';
-import { CellValueChangedEvent, ColDef, GridApi, GridReadyEvent, RowClassRules } from 'ag-grid-community';
+import { CellValueChangedEvent, ColDef, GridApi, GridOptions, GridReadyEvent, RowClassRules } from 'ag-grid-community';
 
 import { previewAppZip, previewPromptZip, previewToolsetZip } from '@/src/app/[lang]/folders-storage/actions';
 import { CreateFolderSteps } from '@/src/components/Common/FolderCreate/constants';
@@ -12,8 +12,8 @@ import { ZipFilePreview } from '@/src/components/Common/FolderCreate/models';
 import {
   generateColumnsForImportGrid,
   generatePreviewData,
-  isErrorFileReview,
   isErrorAssetReview,
+  isErrorFileReview,
   isErrorRowForImport,
   readAllFiles,
   readJsonFiles,
@@ -21,19 +21,19 @@ import {
 import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';
 import {
   changeFilesMap,
-  generateFileRowDataForImportGrid,
   generateAssetRowDataForImportGrid,
+  generateFileRowDataForImportGrid,
 } from '@/src/components/EntityListView/Import/utils';
-import Grid from '@/src/components/Grid/Grid';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { FoldersI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { FileImportGridData, FileImportMap } from '@/src/models/file';
 import { AssetImportGridData } from '@/src/models/import-asset';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
-import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { isAssetWithVersion } from '@/src/utils/is-asset-view';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 interface Props {
   view?: ApplicationRoute;
@@ -187,15 +187,23 @@ const FolderCreateReview: FC<Props> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStepId, editedFileMap]);
 
-  return fileType === ImportFileType.ARCHIVE && view === ApplicationRoute.Files ? (
-    <DialNoDataContent title={t(FoldersI18nKey.NoPreviewArchive)} icon={<IconEyeOff width={50} height={50} />} />
-  ) : (
+  const options: GridOptions = {
+    onCellValueChanged,
+  };
+
+  return (
     <div className="flex flex-col flex-1 min-h-0">
       <div>
         {t(MenuI18nKey.Files)}: {count || 0}
       </div>
+
       <div className="min-h-0 flex-1">
-        <Grid additionalGridOptions={{ onGridReady, onCellValueChanged }} />
+        <GridView
+          getIsEmptyData={() => fileType === ImportFileType.ARCHIVE && view === ApplicationRoute.Files}
+          emptyDataProps={{ title: t(FoldersI18nKey.NoPreviewArchive), icon: <IconEyeOff size={50} /> }}
+          onGridReady={onGridReady}
+          additionalGridOptions={options}
+        />
       </div>
     </div>
   );

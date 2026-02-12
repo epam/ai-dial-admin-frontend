@@ -37,7 +37,7 @@ const KeyGenerateField: FC<Props> = ({ isKeyImmutable, keys, selectedKey, change
   };
 
   return (
-    <div className={classNames('flex items-end', !isKeyImmutable ? 'w-full' : STANDARD_CONTROL_WIDTH)}>
+    <div className={classNames('flex items-end gap-x-3', !isKeyImmutable ? 'w-full' : STANDARD_CONTROL_WIDTH)}>
       <div className={CONTROL_WITH_BUTTON_WIDTH}>
         <DialPasswordInputField
           elementId="key"
@@ -51,7 +51,11 @@ const KeyGenerateField: FC<Props> = ({ isKeyImmutable, keys, selectedKey, change
         />
       </div>
       {isKeyImmutable ? (
-        <CopyButton className="ml-2" label={t(ButtonsI18nKey.Copy)} field={selectedKey.key} isFullButton={true} />
+        <CopyButton
+          buttonLabel={t(ButtonsI18nKey.Copy)}
+          value={selectedKey.key}
+          valueLabel={t(EntityFieldsI18nKey.keyValue)}
+        />
       ) : (
         <DialGhostButton
           className="ml-2 h-[34px]"
