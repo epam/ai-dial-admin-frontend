@@ -10,7 +10,7 @@ import { changeFolder, createFolderWithFiles, removeFolder } from '@/src/app/[la
 import { getParentPathByFullPath } from '@/src/components/Assets/utils';
 import { getFormDataForImport, getImportTitle } from '@/src/components/EntityListView/HeaderButtons/utils';
 import { getImportResults } from '@/src/components/EntityListView/Import/utils';
-import { ROOT_FOLDER } from '@/src/constants/file';
+import { FILE_PREVIEW, ROOT_FOLDER } from '@/src/constants/file';
 import { FileManagerI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -265,6 +265,10 @@ const FileManager: FC<Props> = ({ label, columnDefs, view, getContext, ...props 
     [fetchFiles],
   );
 
+  const handlePreviewFile = useCallback((path?: string) => {
+    window.open(`/${FILE_PREVIEW}?path=${encodeURIComponent(path || '')}`, '_blank');
+  }, []);
+
   return (
     <DialFileManager
       managerLabel={managerLabel}
@@ -288,6 +292,7 @@ const FileManager: FC<Props> = ({ label, columnDefs, view, getContext, ...props 
       onMoveToFiles={handleMoveToFiles}
       onFolderPopupPathChange={handleFolderPopupPathChange}
       onManagePermissions={handleManagePermissions}
+      onPreview={handlePreviewFile}
       folderCreationValidationMessages={getValidationMessages(t)}
       renameValidationMessages={getValidationMessages(t)}
       isRenameFileAvailable={false}
