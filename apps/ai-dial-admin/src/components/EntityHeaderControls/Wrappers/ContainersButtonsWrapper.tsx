@@ -28,7 +28,7 @@ import {
 } from '@/src/constants/main-layout';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
-import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
@@ -81,7 +81,7 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
-  const { isValid } = useSaveValidationContext();
+  const { isValid, dispatch } = useSaveValidationContext();
 
   const [modalType, setModalType] = useState<ModalType>();
 
@@ -180,12 +180,18 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
     setButtonsClassNames(classNames((isTablet || isMobile) && SELECT_ENTITY_MOBILE_HEADER_BUTTONS_CLASS));
   }, [isTablet, isMobile]);
 
+  const onStartDiscard = useCallback(() => {
+    dispatch({ type: ValidationActionType.Reset });
+
+    onDiscard?.();
+  }, [dispatch, onDiscard]);
+
   return (
     <>
       <div className={containerClassNames}>
         {isChanged ? (
           <ChangedEntityButtons
-            onDiscard={onDiscard}
+            onDiscard={onStartDiscard}
             onSave={onSave}
             disableSave={!isValid}
             saveLabel={t(isRedeployRequired ? ButtonsI18nKey.SaveAndRedeploy : ButtonsI18nKey.Save)}
