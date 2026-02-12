@@ -58,7 +58,7 @@ const FilesList = () => {
 
       importFiles(body, fileType).then((res) => {
         if (res.success) {
-          fetchFiles?.(destinationFolder, true);
+          fetchFiles?.(destinationFolder);
           showNotification(getSuccessNotification(t(FoldersI18nKey.Import)));
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
