@@ -1,5 +1,5 @@
 'use client';
-import { createImage, deleteImage, getImageContainers } from '@/src/app/actions/deployments';
+import { createImage, deleteImage, getImageVersions } from '@/src/app/actions/deployments';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import {
@@ -11,13 +11,12 @@ import { IMAGES_LIST_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
-import { Container } from '@/src/models/deployments/containers';
 import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
-import { Image } from '@/src/models/deployments/images';
+import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getRouteByType, getTranslatedType } from '@/src/utils/deployments/entity';
-import { getUniqueImagesNames } from '@/src/utils/deployments/images';
+import { getImageType, getUniqueImagesNames } from '@/src/utils/deployments/images';
 import { getErrorNotification } from '@/src/utils/notification';
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { CellClickedEvent, GridApi, GridOptions, GridReadyEvent } from 'ag-grid-community';
@@ -25,7 +24,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import EntityDeleteModal from '@/src/components/Deployments/Modals/EntityDelete';
+import ImageDelete from '@/src/components/Deployments/Modals/ImageDelete';
 import ImageDuplicateModal from '@/src/components/Deployments/Modals/ImageDuplicate';
 import HeaderButtons from '@/src/components/Images/List/HeaderButtons';
 import ListView from '@/src/components/ListView/ListView';
@@ -43,7 +42,7 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
   const [currentImage, setCurrentImage] = useState<Image | null>(null);
   const [modalType, setModalType] = useState<ModalType>();
   const [showColumnsPanel, setShowColumnsPanel] = useState(false);
-  const [dependencies, setDependencies] = useState<Container[]>([]);
+  const [versions, setVersions] = useState<ImageVersion[]>([]);
 
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
 
@@ -109,17 +108,15 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
 
   useEffect(() => {
     if (currentImage) {
-      const fetchDependencies = async () => {
-        const { response, success, status } = await getImageContainers(currentImage?.id as string);
-        if (!success && status === 403) {
-          return;
-        }
-        setDependencies((response as Container[]) || []);
-      };
-
-      fetchDependencies().catch((error) => {
-        showNotification(getErrorNotification(error.message));
-      });
+      getImageVersions(currentImage?.name as string, getImageType(getRouteByType(currentImage.$type))).then(
+        ({ response, success, errorHeader, errorMessage }) => {
+          if (success) {
+            setVersions(response);
+          } else {
+            showNotification(getErrorNotification(errorHeader, errorMessage));
+          }
+        },
+      );
     }
   }, [currentImage, showNotification]);
 
@@ -136,18 +133,6 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
     },
     [route, router, showNotification],
   );
-
-  const onDelete = useCallback(() => {
-    if (currentImage?.id) {
-      deleteImage(currentImage.id).then((res) => {
-        if (res.success) {
-          router.refresh();
-        } else {
-          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
-        }
-      });
-    }
-  }, [currentImage, router, showNotification]);
 
   const actionColumn = ACTION_COLUMN([
     getOpenInNewTabOperation(onOpenInNewTabAction),
@@ -207,19 +192,19 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
       {isModalOpen &&
         modalType === ModalType.delete &&
         currentImage &&
+        versions &&
         createPortal(
-          <EntityDeleteModal
-            isModalOpen={isModalOpen}
-            onClose={onCloseModal}
-            onApply={onDelete}
-            dependencies={dependencies}
-            title={t(ImagesI18nKey.DeleteModalTitle, {
-              type: getTranslatedType(getRouteByType(currentImage.$type), t),
-            })}
-            description={t(ImagesI18nKey.DeleteModalDescription, {
-              type: getTranslatedType(getRouteByType(currentImage.$type), t),
-            })}
-            route={getRouteByType(currentImage.$type)}
+          <ImageDelete
+            onRemoveEntity={deleteImage}
+            view={ApplicationRoute.Images}
+            entity={{
+              ...currentImage,
+              name: currentImage.id,
+              displayName: currentImage.name,
+              versions: versions.map((v) => v.id),
+            }}
+            onCloseModal={onCloseModal}
+            existingVersions={versions}
           />,
           document.body,
         )}
