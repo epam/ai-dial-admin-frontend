@@ -1,27 +1,27 @@
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { Image, ImageVersion } from '@/src/models/deployments/images';
-import { ApplicationRoute } from '@/src/types/routes';
-import { Container } from '@/src/models/deployments/containers';
-import { IMAGE_STATUS } from '@/src/types/deployments/images';
-import { ButtonsI18nKey, ContainersI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
-import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
-import { useNotification } from '@/src/context/NotificationContext';
-import { useRouter } from 'next/navigation';
 import { getContainer, getImageContainers, updateContainersImageId } from '@/src/app/actions/deployments';
-import { getErrorNotification } from '@/src/utils/notification';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
-import { getRouteByType, getTranslatedType } from '@/src/utils/deployments/entity';
-import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
-import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import { IMAGE_DEPENDENCIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { IMAGE_BUILD_POLL_INTERVAL } from '@/src/constants/deployments/images';
+import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
+import { IMAGE_DEPENDENCIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { ButtonsI18nKey, ContainersI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
+import { Container } from '@/src/models/deployments/containers';
+import { Image, ImageVersion } from '@/src/models/deployments/images';
+import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
+import { IMAGE_STATUS } from '@/src/types/deployments/images';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getRouteByType, getTranslatedType } from '@/src/utils/deployments/entity';
+import { getErrorNotification } from '@/src/utils/notification';
+import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { useRouter } from 'next/navigation';
 
-import ListView from '@/src/components/ListView/ListView';
 import ImageAddContainer from '@/src/components/Deployments/Modals/ImageAddContainer';
+import ListEntities from '@/src/components/ListView/List';
 
 interface Props {
   image: Image;
@@ -112,24 +112,25 @@ const Containers: FC<Props> = ({ image, route, versions }) => {
   }, [showNotification, route, t, router, containers]);
 
   return (
-    <div className="flex h-full">
-      <ListView
-        data={containers}
-        view={route}
+    <>
+      <ListEntities
+        rowData={containers}
         columnDefs={columnDefs}
-        title={
+        listLabel={
           installed
             ? t(ContainersI18nKey.RelatedContainersListTitle, {
                 count: containers.length,
               })
             : ''
         }
-        emptyDataTitle={t(EntitiesI18nKey.NoRelatedContainers)}
-        emptyDataDescription={!installed ? t(EntitiesI18nKey.NoRelatedContainersDescription) : ''}
+        emptyDataProps={{
+          title: t(EntitiesI18nKey.NoRelatedContainers),
+          description: !installed ? t(EntitiesI18nKey.NoRelatedContainersDescription) : '',
+        }}
         storageKey={`${route}/related`}
       >
         {installed && <DialPrimaryButton label={t(ButtonsI18nKey.Add)} onClick={handleModalOpen} />}
-      </ListView>
+      </ListEntities>
       {isModalOpen &&
         createPortal(
           <ImageAddContainer
@@ -143,7 +144,7 @@ const Containers: FC<Props> = ({ image, route, versions }) => {
           />,
           document.body,
         )}
-    </div>
+    </>
   );
 };
 

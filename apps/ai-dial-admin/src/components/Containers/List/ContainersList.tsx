@@ -1,14 +1,10 @@
 'use client';
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { CellClickedEvent, GridApi, GridOptions, GridReadyEvent } from 'ag-grid-community';
+
+import { CellClickedEvent, GridOptions } from 'ag-grid-community';
 import { useRouter } from 'next/navigation';
-import { ApplicationRoute } from '@/src/types/routes';
-import { Container } from '@/src/models/deployments/containers';
-import { useI18n } from '@/src/locales/client';
-import { useNotification } from '@/src/context/NotificationContext';
-import { useAppContext } from '@/src/context/AppContext';
-import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
+import { FC, useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
+
 import {
   deleteContainer,
   duplicateContainer,
@@ -16,19 +12,13 @@ import {
   runContainer,
   stopContainer,
 } from '@/src/app/actions/deployments';
-import { ModalType } from '@/src/components/EntityListView/Components/Modals';
-import { ServerActionResponse } from '@/src/models/server-action';
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
-import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
-import { Notification } from '@/src/models/notification';
-import { ContainersI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
-import { getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
-import { IMAGE_BUILD_POLL_INTERVAL } from '@/src/constants/deployments/images';
-import ListView from '@/src/components/ListView/ListView';
 import HeaderButtons from '@/src/components/Containers/List/HeaderButtons';
 import ContainerDuplicate from '@/src/components/Deployments/Modals/ContainerDuplicate';
 import EntityDeleteModal from '@/src/components/Deployments/Modals/EntityDelete';
+import { ModalType } from '@/src/components/EntityListView/Components/Modals';
+import ListEntities from '@/src/components/ListView/List';
+import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
+import { IMAGE_BUILD_POLL_INTERVAL } from '@/src/constants/deployments/images';
 import {
   getDeleteOperation,
   getDuplicateOperation,
@@ -36,8 +26,19 @@ import {
   getRunOperation,
   getStopOperation,
 } from '@/src/constants/grid-columns/actions';
-import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { CONTAINERS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { ContainersI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { useNotification } from '@/src/context/NotificationContext';
+import { useI18n } from '@/src/locales/client';
+import { Container } from '@/src/models/deployments/containers';
+import { Notification } from '@/src/models/notification';
+import { ServerActionResponse } from '@/src/models/server-action';
+import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
 interface Props {
   route: ApplicationRoute;
@@ -48,19 +49,11 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
-  const { visualizerConnector } = useAppContext();
-  const visualizerConnectorRef = useRef(visualizerConnector);
 
   const [names, setNames] = useState(containersList.map((container) => container.name || ''));
   const [currentContainer, setCurrentContainer] = useState<Container | null>(null);
   const [modalType, setModalType] = useState<ModalType>();
-  const [showColumnsPanel, setShowColumnsPanel] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [gridApi, setGridApi] = useState<GridApi | null>(null);
-
-  const onGridReady = useCallback(({ api }: GridReadyEvent) => {
-    setGridApi(api);
-  }, []);
 
   const gridOptions: GridOptions = {
     onCellClicked: (e: CellClickedEvent) => {
@@ -182,14 +175,6 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
     ]),
   ];
 
-  const toggleColumnsPanel = () => setShowColumnsPanel(!showColumnsPanel);
-
-  const closeColumnsPanel = useCallback(() => setShowColumnsPanel(false), [setShowColumnsPanel]);
-
-  useEffect(() => {
-    visualizerConnectorRef.current = visualizerConnector;
-  }, [visualizerConnector]);
-
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
 
@@ -253,38 +238,26 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
     };
   }, [showNotification, route, t, router, containersList]);
 
-  useEffect(() => {
-    window.addEventListener('click', closeColumnsPanel);
-    return () => window.removeEventListener('click', closeColumnsPanel);
-  }, [closeColumnsPanel]);
-
   return (
     <>
-      <ListView
-        data={containersList}
-        view={route}
+      <ListEntities
+        rowData={containersList}
         columnDefs={columnDefs}
         additionalGridOptions={gridOptions}
-        title={t(ContainersI18nKey.ContainersListTitle, {
+        listLabel={t(ContainersI18nKey.ContainersListTitle, {
           type: getTranslatedType(route, t),
           entityType: getTranslatedDeploymentType(route, t),
         })}
-        emptyDataTitle={t(EntitiesI18nKey.NoContainersType, {
-          type: getTranslatedType(route, t),
-          entityType: getTranslatedDeploymentType(route, t),
-        })}
-        showColumnsPanel={showColumnsPanel}
-        toggleColumnsPanel={toggleColumnsPanel}
-        storageKey={`${route}`}
-        onGridReady={onGridReady}
+        emptyDataProps={{
+          title: t(EntitiesI18nKey.NoContainersType, {
+            type: getTranslatedType(route, t),
+            entityType: getTranslatedDeploymentType(route, t),
+          }),
+        }}
+        storageKey={route}
       >
-        <HeaderButtons
-          toggleColumnsPanel={toggleColumnsPanel}
-          route={route}
-          names={containersList.map((container) => container.name as string) || []}
-          gridApi={gridApi}
-        />
-      </ListView>
+        <HeaderButtons route={route} names={containersList.map((container) => container.name as string) || []} />
+      </ListEntities>
       {isModalOpen &&
         modalType === ModalType.duplicate &&
         currentContainer &&

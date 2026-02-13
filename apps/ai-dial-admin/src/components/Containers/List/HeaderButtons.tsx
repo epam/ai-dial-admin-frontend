@@ -1,38 +1,34 @@
 'use client';
 
-import { FC, MouseEvent, useCallback, useState } from 'react';
+import { DialButtonDropdown, DialPrimaryButton, DropdownItem } from '@epam/ai-dial-ui-kit';
+import { IconPlus } from '@tabler/icons-react';
+import { FC, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { DialButtonDropdown, DialGhostButton, DialPrimaryButton, DropdownItem } from '@epam/ai-dial-ui-kit';
-import { IconColumns2, IconPlus } from '@tabler/icons-react';
-import { GridApi } from 'ag-grid-community';
 
-import { ApplicationRoute } from '@/src/types/routes';
-import { Container } from '@/src/models/deployments/containers';
-import { ModalType } from '@/src/components/EntityListView/Components/Modals';
-import { CONTAINER_TYPE } from '@/src/types/deployments/containers';
-import { ButtonsI18nKey, ContainersI18nKey, CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
-import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
-import { useNotification } from '@/src/context/NotificationContext';
 import { createContainer } from '@/src/app/actions/deployments';
-import { getErrorNotification } from '@/src/utils/notification';
+import { ModalType } from '@/src/components/EntityListView/Components/Modals';
+import { ButtonsI18nKey, ContainersI18nKey, CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useNotification } from '@/src/context/NotificationContext';
+import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
+import { useI18n } from '@/src/locales/client';
+import { Container } from '@/src/models/deployments/containers';
+import { CONTAINER_TYPE } from '@/src/types/deployments/containers';
+import { ApplicationRoute } from '@/src/types/routes';
 import { getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
+import { getErrorNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { useRouter } from 'next/navigation';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-import { useI18n } from '@/src/locales/client';
 
-import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
 import ContainerCreate from '@/src/components/Deployments/Modals/ContainerCreate';
 import ServingCreate from '@/src/components/Deployments/Modals/ServingCreate';
 
 interface Props {
-  toggleColumnsPanel: () => void;
   route: ApplicationRoute;
   names: string[];
-  gridApi?: GridApi | null;
 }
 
-const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, names, gridApi }) => {
+const HeaderButtons: FC<Props> = ({ route, names }) => {
   const t = useI18n();
   const router = useRouter();
   const isTabletScreen = useIsTabletScreen();
@@ -87,24 +83,9 @@ const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, names, gridApi })
     [route, router, showNotification],
   );
 
-  const onToggleColumnsPanel = useCallback(
-    (e: MouseEvent<HTMLButtonElement>) => {
-      e.stopPropagation();
-
-      toggleColumnsPanel();
-    },
-    [toggleColumnsPanel],
-  );
-
   return (
     <>
       <div className="flex gap-4">
-        <ResetFiltersButton gridApi={gridApi} />
-        <DialGhostButton
-          label={t(ButtonsI18nKey.Columns)}
-          iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} />}
-          onClick={onToggleColumnsPanel}
-        />
         {route === ApplicationRoute.ModelServings ? (
           <DialButtonDropdown items={dropdownItems} label={isTabletScreen ? '' : t(ButtonsI18nKey.Create)} />
         ) : (
