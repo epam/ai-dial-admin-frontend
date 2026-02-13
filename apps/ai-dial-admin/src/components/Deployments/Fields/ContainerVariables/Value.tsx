@@ -105,6 +105,7 @@ const ContainerVariableValue: FC<Props> = ({ value, index, onValueChange, mountT
         iconBefore={<IconFileArrowRight {...BASE_BUTTON_ICON_PROPS} />}
         onClick={handleFileInputClick}
         className="absolute right-0"
+        disabled={disabled}
       />
       <input type="file" className="hidden" ref={inputRef} onChange={handleFileUpload} />
     </div>

@@ -28,7 +28,7 @@ const Port: FC<Props> = ({ container, setContainer }) => {
         const { containerPort: __, ...rest } = container;
         setContainer(rest);
       } else {
-        const error = getPortError(containerPort as number);
+        const error = getPortError(containerPort as number, t);
         setPortError(error);
         dispatch({ type: ValidationActionType.SetField, field: 'containerPort', isValid: !error });
         setContainer({
@@ -37,7 +37,7 @@ const Port: FC<Props> = ({ container, setContainer }) => {
         });
       }
     },
-    [container, dispatch, setContainer],
+    [container, dispatch, setContainer, t],
   );
 
   const onGRPCPortChange = useCallback(
@@ -46,7 +46,7 @@ const Port: FC<Props> = ({ container, setContainer }) => {
         const { containerGrpcPort: __, ...rest } = container;
         setContainer(rest);
       } else {
-        const error = getPortError(containerGrpcPort as number);
+        const error = getPortError(containerGrpcPort as number, t);
         setGrpcPortError(error);
         dispatch({ type: ValidationActionType.SetField, field: 'containerGrpcPort', isValid: !error });
         setContainer({
@@ -55,24 +55,24 @@ const Port: FC<Props> = ({ container, setContainer }) => {
         });
       }
     },
-    [container, dispatch, setContainer],
+    [container, dispatch, setContainer, t],
   );
 
   useEffect(() => {
     if (resetCounter || container.containerPort) {
-      const error = getPortError(container.containerPort as number);
+      const error = getPortError(container.containerPort as number, t);
       setPortError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'containerPort', isValid: !error });
     }
-  }, [container.containerPort, dispatch, resetCounter]);
+  }, [container.containerPort, dispatch, resetCounter, t]);
 
   useEffect(() => {
     if (resetCounter || container.containerGrpcPort) {
-      const error = getPortError(container.containerGrpcPort as number);
+      const error = getPortError(container.containerGrpcPort as number, t);
       setGrpcPortError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'containerGrpcPort', isValid: !error });
     }
-  }, [container.containerGrpcPort, dispatch, resetCounter]);
+  }, [container.containerGrpcPort, dispatch, resetCounter, t]);
 
   return (
     <div className="flex gap-4">

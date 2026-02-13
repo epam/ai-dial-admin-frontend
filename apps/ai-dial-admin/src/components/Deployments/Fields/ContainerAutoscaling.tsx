@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { DialNumberInputField, DialSelectField } from '@epam/ai-dial-ui-kit';
 
 import { AutoscalingStrategy, Container } from '@/src/models/deployments/containers';
@@ -10,7 +10,7 @@ import { AUTOSCALE_OPTIONS } from '@/src/constants/deployments/containers';
 import { useI18n } from '@/src/locales/client';
 
 import Accordion from '@/src/components/Common/Accordion/Accordion';
-import { isEditDisabled } from '@/src/utils/deployments/containers';
+import { isEditDisabled, isErrorPresent } from '@/src/utils/deployments/containers';
 
 interface Props {
   container: Container;
@@ -19,10 +19,19 @@ interface Props {
 
 const ContainerAutoscaling: FC<Props> = ({ container, setContainer }) => {
   const t = useI18n();
-  const { dispatch, resetCounter } = useSaveValidationContext();
-  const scalingOptions = AUTOSCALE_OPTIONS(t);
+  const { dispatch, resetCounter, isValid, errorFields } = useSaveValidationContext();
 
+  const scalingOptions = useMemo(() => AUTOSCALE_OPTIONS(t), [t]);
   const [replicasError, setReplicasError] = useState<FieldError | null>(null);
+  const [isSectionInvalid, setSectionInvalid] = useState(false);
+
+  useEffect(() => {
+    if (!isValid) {
+      setSectionInvalid(isErrorPresent(errorFields, ['scaling']));
+    } else {
+      setSectionInvalid(false);
+    }
+  }, [errorFields, isValid]);
 
   useEffect(() => {
     if (resetCounter || (container.scaling?.maxReplicas && container.scaling.maxReplicas)) {
@@ -108,7 +117,7 @@ const ContainerAutoscaling: FC<Props> = ({ container, setContainer }) => {
   );
 
   return (
-    <Accordion title={t(EntityFieldsI18nKey.Autoscaling)}>
+    <Accordion title={t(EntityFieldsI18nKey.Autoscaling)} errorIndicator={isSectionInvalid}>
       <div className="flex flex-col gap-6">
         <div className="flex gap-4 flex-col lg:flex-row">
           <DialSelectField
