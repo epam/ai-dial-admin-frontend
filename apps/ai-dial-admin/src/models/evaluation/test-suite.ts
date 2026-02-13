@@ -28,6 +28,11 @@ export interface TestSuiteEndpointRef {
 }
 
 export interface TestCase {
-  name?: string;
-  facts?: Record<string, unknown>;
+  testCaseName?: string;
+  updatedAt?: number;
+  valid?: boolean;
+  id: string;
+  enabled: boolean;
+  createdAt: number;
+  data?: Record<string, unknown>;
 }

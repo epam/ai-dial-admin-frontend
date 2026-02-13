@@ -1,8 +1,15 @@
 export interface ImportPreview {
+  autoDetectedSchema: AutoDetectedSchema[];
   detectedColumns: ColumnMapping[];
   sampleRows: RowMapping[];
   totalRows: number;
   warnings: ValidationWarning[];
+}
+
+export interface AutoDetectedSchema {
+  name: string;
+  type: string;
+  required: boolean;
 }
 
 export interface ColumnMapping {
@@ -15,8 +22,7 @@ export interface ColumnMapping {
 export interface RowMapping {
   enabled: boolean;
   valid: boolean;
-  facts: Record<string, string | number>;
-  parameters: Record<string, unknown>;
+  data: Record<string, string | number>;
   validationWarnings: RowValidationWarning[];
   testCaseName: string;
 }
@@ -25,7 +31,7 @@ export interface RowValidationWarning {
   code: string;
   message: string;
   path: string;
-  source: string;
+  fieldName: string;
 }
 
 export interface ValidationWarning {
