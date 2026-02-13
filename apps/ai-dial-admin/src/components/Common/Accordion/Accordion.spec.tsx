@@ -39,4 +39,14 @@ describe('Common components :: Accordion', () => {
     fireEvent.click(toggleButton);
     expect(content).toHaveClass('hidden');
   });
+
+  test('render error indicator', () => {
+    render(
+      <Accordion title={'title'} errorIndicator={true}>
+        <div>Child content</div>
+      </Accordion>,
+    );
+
+    expect(screen.getByRole('status')).toBeInTheDocument();
+  });
 });
