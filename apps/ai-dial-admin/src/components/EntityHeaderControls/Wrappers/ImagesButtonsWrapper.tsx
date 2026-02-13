@@ -7,7 +7,6 @@ import { createPortal } from 'react-dom';
 
 import { createContainer, createImage, deleteImage, installImage } from '@/src/app/actions/deployments';
 import VersionsSelect from '@/src/components/Deployments/Common/VersionsSelect/VersionsSelect';
-import EntityDelete from '@/src/components/Deployments/Modals/EntityDelete';
 import ImageCreateContainer from '@/src/components/Deployments/Modals/ImageCreateContainer';
 import ImageInstall from '@/src/components/Deployments/Modals/ImageInstall';
 import ImageNewVersion from '@/src/components/Deployments/Modals/ImageNewVersion';
@@ -34,6 +33,7 @@ import { validateImage } from '@/src/utils/deployments/images';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
+import ImageDelete from '@/src/components/Deployments/Modals/ImageDelete';
 
 export interface ImagesButtonsWrapperProps {
   image: Image;
@@ -42,15 +42,12 @@ export interface ImagesButtonsWrapperProps {
   children?: ReactNode;
   containerNames?: string[];
   versions: ImageVersion[];
-  dependencies: Container[];
   jsonConfiguration?: JsonConfiguration;
-
   onDiscard: () => void;
   onSave: () => void;
 }
 
 const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
-  dependencies,
   image,
   originalImageName,
   isChanged,
@@ -110,17 +107,6 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
     },
     [router, showNotification],
   );
-
-  const onDelete = useCallback(() => {
-    deleteImage(image.id).then((res) => {
-      if (res.success) {
-        onCloseModal();
-        router.push(ApplicationRoute.Images);
-      } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
-      }
-    });
-  }, [image.id, onCloseModal, router, showNotification]);
 
   const onOpenDeleteModal = useCallback(() => {
     onOpenModal(ModalType.delete);
@@ -253,18 +239,21 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
         )}
       </div>
       {isModalOpen &&
+        versions &&
         modalType === ModalType.delete &&
         createPortal(
-          <EntityDelete
-            isModalOpen={isModalOpen}
-            onClose={onCloseModal}
-            onApply={onDelete}
-            dependencies={dependencies}
-            title={t(ImagesI18nKey.DeleteModalTitle, { type: getTranslatedType(getRouteByType(image.$type), t) })}
-            description={t(ImagesI18nKey.DeleteModalDescription, {
-              type: getTranslatedType(getRouteByType(image.$type), t),
-            })}
-            route={getRouteByType(image.$type)}
+          <ImageDelete
+            onRemoveEntity={deleteImage}
+            view={ApplicationRoute.Images}
+            entity={{
+              ...image,
+              name: image.id,
+              displayName: image.name,
+              versions: versions.map((v) => v.id),
+            }}
+            onCloseModal={onCloseModal}
+            isSelectedView={true}
+            existingVersions={versions}
           />,
           document.body,
         )}
