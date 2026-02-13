@@ -1,13 +1,27 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 import { EntitiesI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
 import FilesProperties from '../FilesProperties';
+import { useFileFolder } from '@/src/context/assets/FileFolderContext';
 
 vi.mock('@/src/locales/client', () => ({
   useI18n: () => (k: string) => k,
 }));
 
+vi.mock('@/src/context/assets/FileFolderContext', () => ({
+  useFileFolder: vi.fn(),
+}));
+
 describe('FilesProperties', () => {
+  const mockFetchFiles = vi.fn();
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    (useFileFolder as Mock).mockReturnValue({
+      fetchFiles: mockFetchFiles,
+      files: [{}],
+    });
+  });
   test('renders files list title and files', () => {
     const publication = {
       files: [{ name: 'file1.txt' }, { name: 'file2.txt' }],
