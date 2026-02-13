@@ -43,7 +43,7 @@ import { getColumnsStateFromStorage, GridModel, saveColumnsStateToStorage } from
 export interface AgGridProps<T> {
   columnDefs?: ColDef[];
   rowData?: T[] | null;
-  additionalGridOptions?: GridOptions;
+  additionalGridOptions?: Omit<GridOptions, 'columnDefs' | 'rowData' | 'onGridReady'>;
   storageKey?: string;
   onGridReady?: (gridApi: GridReadyEvent) => void;
 }
