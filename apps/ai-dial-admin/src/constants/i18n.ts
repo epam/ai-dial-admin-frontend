@@ -231,6 +231,10 @@ export enum DeleteI18nKey {
   InterceptorTemplate = 'DeleteEntity.Entities.InterceptorTemplate',
   TestSuite = 'DeleteEntity.Entities.TestSuite',
   ApplicationRunner = 'DeleteEntity.Entities.ApplicationRunner',
+  McpContainer = 'DeleteEntity.Entities.McpContainer',
+  InterceptorContainer = 'DeleteEntity.Entities.InterceptorContainer',
+  ModelServing = 'DeleteEntity.Entities.ModelServing',
+  Image = 'DeleteEntity.Entities.Image',
 
   // Bulk Delete
   Applications = 'DeleteEntity.BulkDelete.Applications',
@@ -437,6 +441,10 @@ export enum KeysI18nKey {
   RotateKeyDescription = 'Keys.RotateKeyDescription',
   RotateKeySuccessTitle = 'Keys.RotateKeySuccessTitle',
   RotateKeySuccessDescription = 'Keys.RotateKeySuccessDescription',
+  RestrictionFieldLabel = 'Keys.RestrictionFieldLabel',
+  AllowAllRestriction = 'Keys.Restrictions.AllowAll',
+  BlockAllRestriction = 'Keys.Restrictions.BlockAll',
+  RangesRestriction = 'Keys.Restrictions.Ranges',
 }
 
 export enum ValidityStatusI18nKey {
@@ -838,6 +846,7 @@ export enum ErrorI18nKey {
   UrlField = 'Error.UrlField',
   WarningEndpoint = 'Error.WarningEndpoint',
   ServerError = 'Error.ServerError',
+  Error = 'Error.Error',
   DescriptionLength = 'Error.DescriptionLength',
   DisplayNameErrorVersion = 'Error.DisplayNameErrorVersion',
   NameExists = 'Error.NameExists',
@@ -872,6 +881,9 @@ export enum ErrorI18nKey {
   RunOutOfMemory = 'Error.RunOutOfMemory',
   ExitedWithError = 'Error.ExitedWithError',
   InvalidWhitelistDomain = 'Error.InvalidWhitelistDomain',
+  InvalidIpAddress = 'Error.InvalidIpAddress',
+  MinMaxMask = 'Error.MinMaxMask',
+  EmptyIpRangeField = 'Error.EmptyIpRangeField',
   PortError = 'Error.PortError',
   MemoryError = 'Error.MemoryError',
   GPUError = 'Error.GPUError',
@@ -966,6 +978,8 @@ export enum EntityPlaceholdersI18nKey {
   Command = 'EntityPlaceholders.Command',
   Arguments = 'EntityPlaceholders.Arguments',
   Domain = 'EntityPlaceholders.Domain',
+  Mask = 'EntityPlaceholders.Mask',
+  IpRange = 'EntityPlaceholders.IpRange',
 }
 
 export enum EntityFieldsI18nKey {
@@ -1128,6 +1142,8 @@ export enum EntityFieldsI18nKey {
   Restarts = 'EntityFields.Restarts',
   LastRestartedAt = 'EntityFields.LastRestartedAt',
   LastReason = 'EntityFields.LastReason',
+  Mask = 'EntityFields.Mask',
+  IpRange = 'EntityFields.IpRange',
 }
 
 export enum ToolsetI18nKey {

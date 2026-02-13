@@ -13,13 +13,12 @@ import { createPortal } from 'react-dom';
 
 import { deleteContainer, runContainer, stopContainer } from '@/src/app/actions/deployments';
 import CreateAsset from '@/src/components/Assets/Deployments/CreateAsset';
-import EntityDelete from '@/src/components/Deployments/Modals/EntityDelete';
 import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
 import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
-import { ButtonsI18nKey, ContainersI18nKey, CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import {
   BASE_BUTTON_ICON_PROPS,
   SELECT_ENTITY_HEADER_CLASS,
@@ -42,11 +41,10 @@ import {
   getAssetTemplate,
   getEntityRoute,
   getEntityTemplate,
-  getTranslatedDeploymentType,
   getTranslatedEntity,
-  getTranslatedType,
 } from '@/src/utils/deployments/entity';
 import { getErrorNotification } from '@/src/utils/notification';
+import Delete from '@/src/components/EntityView/Modals/Delete/Delete';
 
 export interface ContainersButtonsWrapperProps {
   route: ApplicationRoute;
@@ -137,19 +135,6 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
     }
   }, [container, router, showNotification]);
 
-  const onDelete = useCallback(() => {
-    if (container.name) {
-      deleteContainer(container.name).then((res) => {
-        if (res.success) {
-          onCloseModal();
-          router.push(route);
-        } else {
-          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
-        }
-      });
-    }
-  }, [container.name, onCloseModal, route, router, showNotification]);
-
   const onOpenDeleteModal = useCallback(() => {
     onOpenModal(ModalType.delete);
   }, [onOpenModal]);
@@ -208,6 +193,7 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
                         items={createToolsetOptions}
                         variant={ButtonVariant.Neutral}
                         appearance={ButtonAppearance.Outlined}
+                        disabled={!isValid}
                       />
                     ) : (
                       <DialNeutralButton
@@ -215,6 +201,7 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
                         label={t(CreateI18nKey.CreateEntity, { entity: getTranslatedEntity(route, t) })}
                         iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
                         onClick={onOpenCreateModal}
+                        disabled={!isValid}
                       />
                     )}
                   </>
@@ -255,18 +242,12 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
       {isModalOpen &&
         modalType === ModalType.delete &&
         createPortal(
-          <EntityDelete
-            title={t(ContainersI18nKey.DeleteModalTitle, {
-              type: getTranslatedType(route, t),
-              entityType: getTranslatedDeploymentType(route, t),
-            })}
-            description={t(ContainersI18nKey.DeleteModalDescription, {
-              entityType: getTranslatedDeploymentType(route, t),
-            })}
-            isModalOpen={isModalOpen}
-            onClose={onCloseModal}
-            onApply={onDelete}
-            route={route}
+          <Delete
+            onRemoveEntity={deleteContainer}
+            view={route}
+            entity={{ ...container }}
+            onCloseModal={onCloseModal}
+            isSelectedView={true}
           />,
           document.body,
         )}
