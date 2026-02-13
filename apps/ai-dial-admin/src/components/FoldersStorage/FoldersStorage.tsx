@@ -45,7 +45,7 @@ const FoldersStorage: FC<Props> = ({ initialPath }) => {
               <DialIconButton
                 className={isCollapseDisable ? 'text-controls-disable' : 'hover:text-accent-primary'}
                 onClick={collapseFolders}
-                icon={<FolderCollapse width={24} height={24} />}
+                icon={<FolderCollapse size={24} />}
                 disabled={isCollapseDisable}
               />
             </DialTooltip>

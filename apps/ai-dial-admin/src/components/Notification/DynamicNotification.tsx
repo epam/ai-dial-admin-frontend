@@ -48,13 +48,9 @@ const DynamicNotification: FC<NotificationConfig> = ({ type, title, onClose, dow
       <div className="flex flex-row w-full items-center [&:not(:only-child)]:mb-2 px-4">
         <div className="flex items-center relative w-full pr-5">
           <p className="small-text-semi truncate w-full">{title}</p>
+          <DialIconButton className={classNames(iconClassName, 'w-auto h-auto')} onClick={showDetails} icon={Icon} />
           <DialIconButton
-            className={classNames(iconClassName, 'w-auto h-auto p-0')}
-            onClick={showDetails}
-            icon={Icon}
-          />
-          <DialIconButton
-            className="absolute right-0 w-auto h-auto p-0 top-0"
+            className="absolute right-0 w-auto h-auto top-0"
             onClick={onClose}
             icon={<IconX height={18} width={18} />}
           />
@@ -89,7 +85,7 @@ const File: FC<FileDetails> = ({ name, progress, failed, complete, onCancel }) =
         {progress && !failed && !complete && (
           <div className="flex flex-row items-center truncate">
             <p className="tiny text-secondary mx-1">{fileProgress}</p>
-            <DialIconButton className="w-auto h-auto p-0" icon={<IconX height={18} width={18} />} onClick={onCancel} />
+            <DialIconButton className="w-auto h-auto" icon={<IconX height={18} width={18} />} onClick={onCancel} />
           </div>
         )}
         {failed && (
