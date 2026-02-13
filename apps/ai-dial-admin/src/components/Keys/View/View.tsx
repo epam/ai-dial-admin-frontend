@@ -173,6 +173,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, ...props }) => {
               activeTab={activeTab}
               selectedKey={selectedKey}
               onChange={setSelectedKey}
+              originalKey={originalKey}
               {...props}
             />
           )}
