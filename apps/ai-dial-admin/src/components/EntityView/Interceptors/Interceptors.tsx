@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { use, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { DialPrimaryButton } from '@epam/ai-dial-ui-kit';
@@ -103,27 +103,6 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
     [entity, entityInterceptors, isAppRunnerView, onChangeEntity],
   );
 
-  const onRemoveInterceptor = useCallback(
-    (_?: DialInterceptor, index?: number) => {
-      if (index != null) {
-        entityInterceptors?.splice(index, 1);
-
-        if (isAppRunnerView) {
-          onChangeEntity({
-            ...entity,
-            'dial:applicationTypeInterceptors': entityInterceptors,
-          });
-        } else {
-          onChangeEntity({
-            ...entity,
-            interceptors: entityInterceptors,
-          });
-        }
-      }
-    },
-    [entity, entityInterceptors, isAppRunnerView, onChangeEntity],
-  );
-
   const onRowDragEnd = useCallback(
     (event: RowDragEvent) => {
       const newRowData: string[] = [];
@@ -153,10 +132,23 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
 
   const runnerColumns = getInterceptorsColumnDefs(onOpen, void 0, globalInterceptors?.length);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const onRemoveInterceptor = (_?: DialInterceptor, index?: number) => {
+    if (index != null) {
+      if (isAppRunnerView) {
+        entity['dial:applicationTypeInterceptors']?.splice(index, 1);
+      } else {
+        entity.interceptors?.splice(index, 1);
+      }
+
+      onChangeEntity({ ...entity });
+    }
+  };
+
   const localColumns = useMemo(() => {
     return getInterceptorsColumnDefs(
       onOpen,
-      onRemoveInterceptor,
+      (_?: DialInterceptor, index?: number) => onRemoveInterceptor(_, index),
       (globalInterceptors?.length || 0) + (runnerInterceptors?.length || 0),
     );
   }, [onRemoveInterceptor, globalInterceptors?.length, runnerInterceptors?.length]);
@@ -173,17 +165,6 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
     />
   );
 
-  const localInterceptors = (
-    <GridView
-      emptyDataProps={{
-        title: isCollapsableView ? t(EntitiesI18nKey.NoLocalInterceptors) : t(EntitiesI18nKey.NoInterceptors),
-      }}
-      columnDefs={localColumns}
-      rowData={rowData}
-      additionalGridOptions={additionalGridOptions}
-    />
-  );
-
   return (
     <>
       {isCollapsableView ? (
@@ -193,7 +174,16 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
           globalColumns={globalColumns}
           runnerColumns={runnerColumns}
           runnerInterceptors={runnerInterceptors}
-          localInterceptors={localInterceptors}
+          localInterceptors={
+            <GridView
+              emptyDataProps={{
+                title: isCollapsableView ? t(EntitiesI18nKey.NoLocalInterceptors) : t(EntitiesI18nKey.NoInterceptors),
+              }}
+              columnDefs={localColumns}
+              rowData={rowData}
+              additionalGridOptions={additionalGridOptions}
+            />
+          }
           globalInterceptors={globalInterceptors}
           headerButton={button}
         />
