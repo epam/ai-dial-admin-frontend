@@ -28,12 +28,16 @@ const PodView: FC<Props> = ({ pod, containerId }) => {
   useEffect(() => {
     if (containerId) {
       const eventSource = new EventSource(`/api/sse?entity=container&id=${containerId}&podName=${podData.name}`);
-
-      eventSource.addEventListener('logs', (event) => {
+      const handleLogs = (event: MessageEvent) => {
         setLogs((prev) => prev + event.data + '\n');
-      });
+      };
+      const handleError = (event: MessageEvent) => console.error('EventSource error:', event);
+      eventSource.addEventListener('logs', handleLogs);
+      eventSource.addEventListener('error', handleLogs);
 
       return () => {
+        eventSource.removeEventListener('logs', handleLogs);
+        eventSource.removeEventListener('error', handleError);
         eventSource?.close();
         setLogs('');
       };
