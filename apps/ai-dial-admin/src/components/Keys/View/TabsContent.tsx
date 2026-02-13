@@ -28,10 +28,20 @@ interface Props {
   names: string[];
   keys: string[];
   selectedKey: DialKey;
+  originalKey: DialKey;
   onChange: (key: DialKey) => void;
 }
 
-const TabsContent: FC<Props> = ({ activeTab, roles, selectedKey, onChange, selectedFormat, keys, names }) => {
+const TabsContent: FC<Props> = ({
+  activeTab,
+  roles,
+  selectedKey,
+  originalKey,
+  onChange,
+  selectedFormat,
+  keys,
+  names,
+}) => {
   const t = useI18n();
 
   const headerPostfix = useMemo(() => {
@@ -84,6 +94,7 @@ const TabsContent: FC<Props> = ({ activeTab, roles, selectedKey, onChange, selec
             headerPostfix={headerPostfix}
           >
             <KeyProperties
+              originalEntity={originalKey}
               entity={selectedKey}
               names={names}
               keys={keys}

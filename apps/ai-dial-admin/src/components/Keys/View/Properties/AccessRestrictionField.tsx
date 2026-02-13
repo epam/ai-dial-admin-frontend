@@ -1,26 +1,16 @@
-import classNames from 'classnames';
-
-import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { useCallback, useEffect, useState } from 'react';
-import { IpRange, IpRangeError, IpRangeProperty, RestrictionType } from './types';
-import {
-  ButtonAppearance,
-  DialNumberInputField,
-  DialPrimaryButton,
-  DialRadioButton,
-  DialRemoveButton,
-  DialTextInputField,
-} from '@epam/ai-dial-ui-kit';
-import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, KeysI18nKey } from '@/src/constants/i18n';
+import { IpRange, IpRangeProperty, RestrictionType } from './types';
+import { DialRadioButton } from '@epam/ai-dial-ui-kit';
+import { KeysI18nKey } from '@/src/constants/i18n';
 import Field from '@/src/components/Common/Field/Field';
-import { IconPlus } from '@tabler/icons-react';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { getIpAddressError, getIPMaskError } from '@/src/utils/validation/ip-error';
+import RangeItems from './RangeItems';
 
 interface Props<T> {
   elementId?: string;
   entity: T;
+  originalEntity: T;
   onChange?: (allowedIpAddressRanges?: string[]) => void;
 }
 
@@ -28,54 +18,38 @@ const AccessRestrictionField = <T extends { allowedIpAddressRanges?: string[] }>
   elementId,
   onChange,
   entity,
+  originalEntity,
 }: Props<T>) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
-  const [selectedRadio, setSelectedRadio] = useState<RestrictionType>(() => {
+
+  const [selectedRadio, setSelectedRadio] = useState<RestrictionType>(RestrictionType.ALLOW_ALL);
+  const [ipRanges, setIpRanges] = useState<IpRange[]>([]);
+
+  const initialize = useCallback((entity: T) => {
     if (!entity.allowedIpAddressRanges) {
-      return RestrictionType.ALLOW_ALL;
+      setSelectedRadio(RestrictionType.ALLOW_ALL);
+      setIpRanges([]);
     } else if (entity.allowedIpAddressRanges.length === 0) {
-      return RestrictionType.BLOCK_ALL;
+      setSelectedRadio(RestrictionType.BLOCK_ALL);
+      setIpRanges([]);
     } else {
-      return RestrictionType.RANGES;
-    }
-  });
-  const [ipRanges, setIpRanges] = useState<IpRange[]>(() => {
-    if (!entity.allowedIpAddressRanges || entity.allowedIpAddressRanges.length === 0) {
-      return [];
-    } else {
-      return entity.allowedIpAddressRanges.map((range) => {
+      setSelectedRadio(RestrictionType.RANGES);
+      const ranges = entity.allowedIpAddressRanges.map((range) => {
         const [ip, mask] = range.split('/');
         return {
           ip,
           mask: mask ? parseInt(mask) : undefined,
         };
       });
+      setIpRanges(ranges);
     }
-  });
-  const [errors, setErrors] = useState<IpRangeError[]>([]);
+  }, []);
 
-  const validateRanges = useCallback(
-    (ranges: IpRange[]) => {
-      let isRangesValid = true;
-      const newErrors: IpRangeError[] = [];
-      ranges.forEach((range) => {
-        const ipError = range?.ip !== null ? getIpAddressError(range.ip, t, true) : null;
-        const maskError = range?.mask !== null ? getIPMaskError(range.mask, t, true, 0, 24) : null;
-        if (!range?.ip || !range?.mask || ipError || maskError) {
-          isRangesValid = false;
-        }
-        const rangeError = {
-          ip: ipError,
-          mask: maskError,
-        };
-        newErrors.push(rangeError);
-      });
-      setErrors(newErrors);
-      dispatch({ type: ValidationActionType.SetField, field: 'ipRanges', isValid: isRangesValid });
-    },
-    [t, dispatch],
-  );
+  useEffect(() => {
+    initialize(entity);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleRadioChange = useCallback(
     (option: RestrictionType) => {
@@ -85,11 +59,9 @@ const AccessRestrictionField = <T extends { allowedIpAddressRanges?: string[] }>
         dispatch({ type: ValidationActionType.SetField, field: 'ipRanges', isValid: true });
       } else if (option === RestrictionType.BLOCK_ALL) {
         dispatch({ type: ValidationActionType.SetField, field: 'ipRanges', isValid: true });
-      } else if (option === RestrictionType.RANGES) {
-        validateRanges(ipRanges);
       }
     },
-    [dispatch, ipRanges, validateRanges],
+    [dispatch],
   );
 
   const handleAddRange = useCallback(() => {
@@ -122,12 +94,8 @@ const AccessRestrictionField = <T extends { allowedIpAddressRanges?: string[] }>
   );
 
   useEffect(() => {
-    validateRanges(ipRanges);
-  }, [validateRanges, ipRanges]);
-
-  useEffect(() => {
     if (selectedRadio === RestrictionType.ALLOW_ALL) {
-      onChange?.(undefined);
+      onChange?.();
     } else if (selectedRadio === RestrictionType.BLOCK_ALL) {
       onChange?.([]);
     } else if (selectedRadio === RestrictionType.RANGES) {
@@ -136,6 +104,13 @@ const AccessRestrictionField = <T extends { allowedIpAddressRanges?: string[] }>
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedRadio, ipRanges]);
+
+  useEffect(() => {
+    // When discard need to reinitialize Fied
+    if (entity === originalEntity) {
+      initialize(entity);
+    }
+  }, [entity, originalEntity, initialize]);
 
   return (
     <div className="flex flex-col w-full relative gap-2">
@@ -171,51 +146,12 @@ const AccessRestrictionField = <T extends { allowedIpAddressRanges?: string[] }>
       </div>
 
       {selectedRadio === RestrictionType.RANGES && (
-        <div className={classNames('flex flex-col gap-2 pl-6 pt-2', STANDARD_CONTROL_WIDTH)}>
-          {ipRanges.map((range, index) => (
-            <div key={index} className="flex flex-row gap-1 items-start">
-              <DialTextInputField
-                containerClassName="flex w-full flex-1"
-                label={index === 0 ? t(EntityFieldsI18nKey.IpRange) : null}
-                placeholder={t(EntityPlaceholdersI18nKey.IpRange)}
-                elementId={`ip-${index}`}
-                onChange={(value) => {
-                  handleUpdateRange(IpRangeProperty.IP, value, index);
-                }}
-                invalid={!!errors?.[index]?.ip}
-                errorText={errors?.[index]?.ip?.text}
-                value={range.ip || ''}
-              />
-              <span className={classNames('text-secondary leading-[40px]', index === 0 && 'mt-6')}>/</span>
-              <DialNumberInputField
-                elementId={`mask-${index}`}
-                value={range.mask || undefined}
-                fieldTitle={index === 0 ? t(EntityFieldsI18nKey.Mask) : undefined}
-                containerClassName="w-[120px]"
-                elementClassName="h-[40px]"
-                placeholder={t(EntityPlaceholdersI18nKey.Mask)}
-                onChange={(value) => {
-                  handleUpdateRange(IpRangeProperty.MASK, value, index);
-                }}
-                invalid={!!errors?.[index]?.mask}
-                errorText={errors?.[index]?.mask?.text}
-              />
-              <DialRemoveButton
-                className={classNames(index === 0 && 'mt-6')}
-                onClick={() => {
-                  handleRemoveRange(index);
-                }}
-              />
-            </div>
-          ))}
-          <DialPrimaryButton
-            className="w-fit"
-            appearance={ButtonAppearance.Link}
-            iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-            label={t(ButtonsI18nKey.Add)}
-            onClick={handleAddRange}
-          />
-        </div>
+        <RangeItems
+          ranges={ipRanges}
+          onAddRange={handleAddRange}
+          onUpdateRange={handleUpdateRange}
+          onRemoveRange={handleRemoveRange}
+        />
       )}
     </div>
   );

@@ -20,13 +20,14 @@ import AccessRestrictionField from './AccessRestrictionField';
 
 interface Props {
   entity: DialKey;
+  originalEntity: DialKey;
   names: string[];
   keys: string[];
   isKeyImmutable?: boolean;
   onChangeKey: (key: DialKey) => void;
 }
 
-const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChangeKey }) => {
+const KeyProperties: FC<Props> = ({ entity, originalEntity, names, keys, isKeyImmutable, onChangeKey }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
   const containerClassName = getControlClassName(!isKeyImmutable);
@@ -163,9 +164,10 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
 
       {isKeyImmutable && (
         <AccessRestrictionField
-          elementId={'ip-access-restriction'}
+          elementId="ip-access-restriction"
           onChange={onChangeAccessRestriction}
           entity={entity}
+          originalEntity={originalEntity}
         />
       )}
     </div>
