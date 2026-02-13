@@ -100,7 +100,7 @@ const AuditEntityGrid: FC<Props> = ({
     </div>
   ) : (
     <div className="w-full h-full relative">
-      <GridView additionalGridOptions={options} emptyDataProps={{ title: t(EntitiesI18nKey.NoResource) }} />
+      <GridView additionalGridOptions={options} />
       {isModalOpen &&
         createPortal(
           <ActivityDetails

@@ -1095,6 +1095,7 @@ export default {
     IpRange: 'Enter IPv4 or IPv6 address',
   },
   Error: {
+    Error: 'Error',
     ServerError: 'Server Error',
     EmptyField: 'This field could not be empty',
     RequiredField: 'This field is required',

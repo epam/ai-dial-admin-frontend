@@ -7,7 +7,7 @@ import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { FieldError } from '@/src/models/error';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getGpuError } from '@/src/utils/deployments/validation';
-import { isEditDisabled } from '@/src/utils/deployments/containers';
+import { isEditDisabled, isErrorPresent } from '@/src/utils/deployments/containers';
 import { useI18n } from '@/src/locales/client';
 
 import Accordion from '@/src/components/Common/Accordion/Accordion';
@@ -22,9 +22,20 @@ interface Props {
 
 const ContainerResources: FC<Props> = ({ container, setContainer, route }) => {
   const t = useI18n();
-  const { dispatch, resetCounter } = useSaveValidationContext();
+  const { dispatch, resetCounter, errorFields, isValid } = useSaveValidationContext();
 
   const [error, setError] = useState<FieldError | null>(null);
+  const [isSectionInvalid, setSectionInvalid] = useState(false);
+
+  useEffect(() => {
+    if (!isValid) {
+      setSectionInvalid(
+        isErrorPresent(errorFields, ['gpuRequest', 'cpuRequest', 'cpuLimit', 'memoryRequest', 'memoryLimit']),
+      );
+    } else {
+      setSectionInvalid(false);
+    }
+  }, [errorFields, isValid]);
 
   const onChangeGpuRequest = useCallback(
     (gpuRequest?: string | number) => {
@@ -66,7 +77,7 @@ const ContainerResources: FC<Props> = ({ container, setContainer, route }) => {
   }, [container.resources?.requests, dispatch, resetCounter, t]);
 
   return (
-    <Accordion title={t(EntityFieldsI18nKey.Resources)}>
+    <Accordion title={t(EntityFieldsI18nKey.Resources)} errorIndicator={isSectionInvalid}>
       <div className="flex flex-col gap-x-2 gap-y-8">
         <CPUFields container={container} setContainer={setContainer} />
         <MemoryFields container={container} setContainer={setContainer} />

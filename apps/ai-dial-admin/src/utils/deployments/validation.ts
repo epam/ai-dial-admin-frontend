@@ -281,7 +281,7 @@ export const getGpuError = (
   t?: (key: string, options?: Record<string, string | number>) => string,
 ): FieldError | null => {
   const num = Number(value);
-  if (num < 1) {
+  if (num < 0) {
     return { type: ErrorType.INVALID, text: t ? t(ErrorI18nKey.GPUError) : '' };
   }
 

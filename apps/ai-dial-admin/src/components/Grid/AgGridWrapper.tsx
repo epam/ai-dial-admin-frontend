@@ -128,27 +128,33 @@ const AgGridWrapper = <T extends object>({
 
   const onGridReady = (event: GridReadyEvent) => {
     setGridApi(event.api);
-    gridReadyCb?.(event);
+
     event.api.sizeColumnsToFit();
 
-    const defaultSorts =
-      columnDefs
-        ?.filter((col) => col.sort)
-        .map(
-          (col) =>
-            ({
-              colId: col.field,
-              sort: col.sort,
-            }) as ColumnState,
-        ) || [];
-    const columns = columnDefs?.map((col) => ({ ...col, sort: undefined }));
-    event.api?.updateGridOptions({ columnDefs: columns, rowData });
-    setGridColumnsState(event, defaultSorts);
+    if (columnDefs) {
+      const defaultSorts =
+        columnDefs
+          ?.filter((col) => col.sort)
+          .map(
+            (col) =>
+              ({
+                colId: col.field,
+                sort: col.sort,
+              }) as ColumnState,
+          ) || [];
+      const columns = columnDefs?.map((col) => ({ ...col, sort: undefined }));
+      event.api?.updateGridOptions({ columnDefs: columns, rowData });
+      setGridColumnsState(event, defaultSorts);
+    }
+
+    gridReadyCb?.(event);
   };
 
   useEffect(() => {
-    const columns = columnDefs?.map((col) => ({ ...col, sort: undefined }));
-    gridApi?.updateGridOptions({ columnDefs: columns, rowData });
+    if (columnDefs) {
+      const columns = columnDefs?.map((col) => ({ ...col, sort: undefined }));
+      gridApi?.updateGridOptions({ columnDefs: columns, rowData });
+    }
   }, [columnDefs, gridApi, rowData]);
 
   const tooltipRenderer = (params: { value: string }) => {
