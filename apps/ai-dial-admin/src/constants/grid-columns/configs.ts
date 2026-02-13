@@ -22,17 +22,19 @@ export const numericColumn: Partial<ColDef> = {
   filterValueGetter: (params) => numberValueFormatter(params.data[params.colDef.field || '']),
 };
 
-export const priceColumn: Partial<ColDef> = {
-  ...numericColumn,
-  headerComponentParams: {
-    innerHeaderComponent: HeaderWithHintButton,
-    innerHeaderComponentParams: {
-      hintText:
-        'The calculated price is an approximation. Since different models, applications, and configurations may have varying token usage and processing costs, it’s not possible to determine the exact final price in advance. \n' +
-        'The estimate gives you a general idea of expected costs, but the actual price may differ depending on how the chat unfolds (e.g., message length, complexity, model type, or additional features used).',
-      hintTitle: 'Total Price',
+export const priceColumn = (title: string): Partial<ColDef> => {
+  return {
+    ...numericColumn,
+    headerComponentParams: {
+      innerHeaderComponent: HeaderWithHintButton,
+      innerHeaderComponentParams: {
+        hintText:
+          'The calculated price is an approximation. Since different models, applications, and configurations may have varying token usage and processing costs, it’s not possible to determine the exact final price in advance. \n' +
+          'The estimate gives you a general idea of expected costs, but the actual price may differ depending on how the chat unfolds (e.g., message length, complexity, model type, or additional features used).',
+        hintTitle: title,
+      },
     },
-  },
-  valueFormatter: ({ value }) => `$${priceValueFormatter(value)}`,
-  filterValueGetter: (params) => priceValueFormatter(params.data[params.colDef.field || '']),
+    valueFormatter: ({ value }) => `$${priceValueFormatter(value)}`,
+    filterValueGetter: (params) => priceValueFormatter(params.data[params.colDef.field || '']),
+  };
 };
