@@ -43,7 +43,7 @@ const GridView = <T extends object>({
   );
   const isMobile = useIsMobileScreen();
   const isTablet = useIsOnlyTabletScreen();
-  const [currentColDefs, setCurrentColDefs] = useState<ColDef[]>([]);
+  const [currentColDefs, setCurrentColDefs] = useState<ColDef[] | undefined>(undefined);
   const [showResetButton, setShowResetButton] = useState(false);
   const [panelContainerClassName, setPanelContainerClassName] = useState(staticPanelContainerClassName);
   const [panelClassName, setPanelClassName] = useState(staticPanelClassName);
@@ -59,7 +59,7 @@ const GridView = <T extends object>({
   );
 
   useEffect(() => {
-    if (currentColDefs == null || currentColDefs.length === 0) {
+    if ((currentColDefs == null || currentColDefs.length === 0) && columnDefs) {
       const storageColumns = storageKey ? getColumnVisibilityFromStorage(columnDefs, storageKey) : null;
       setCurrentColDefs(
         !(storageColumns && columnDefs && columnDefs.length > storageColumns?.length)
@@ -88,12 +88,14 @@ const GridView = <T extends object>({
 
   const toggleColumnVisibility = useCallback(
     (id?: string) => {
-      const newColDefs = currentColDefs.map((c) => (c.field === id ? { ...c, hide: !c.hide } : c));
-      setCurrentColDefs(newColDefs);
-      if (storageKey) {
-        saveColumnVisibilityToStorage(newColDefs, storageKey);
+      if (currentColDefs) {
+        const newColDefs = currentColDefs?.map((c) => (c.field === id ? { ...c, hide: !c.hide } : c));
+        setCurrentColDefs(newColDefs);
+        if (storageKey) {
+          saveColumnVisibilityToStorage(newColDefs, storageKey);
+        }
+        setShowResetButton(newColDefs.some((c, index) => c.hide !== columnDefs?.[index].hide));
       }
-      setShowResetButton(newColDefs.some((c, index) => c.hide !== columnDefs?.[index].hide));
     },
     [currentColDefs, columnDefs, storageKey],
   );
@@ -108,21 +110,23 @@ const GridView = <T extends object>({
   };
 
   const onFindColumn = useCallback(
-    (field?: string) => currentColDefs.findIndex((c) => c.field === field),
+    (field?: string) => currentColDefs?.findIndex((c) => c.field === field),
     [currentColDefs],
   );
 
   const onMoveColumn = useCallback(
     (field: string, atIndex: number) => {
       const index = onFindColumn(field);
-      const updatedColDefs = [...currentColDefs];
-      const [removedColDef] = updatedColDefs.splice(index, 1);
-      updatedColDefs.splice(atIndex, 0, removedColDef);
-      if (storageKey) {
-        saveColumnVisibilityToStorage(updatedColDefs, storageKey);
+      if (index) {
+        const updatedColDefs = [...(currentColDefs || [])];
+        const [removedColDef] = updatedColDefs.splice(index, 1);
+        updatedColDefs.splice(atIndex, 0, removedColDef);
+        if (storageKey) {
+          saveColumnVisibilityToStorage(updatedColDefs, storageKey);
+        }
+        setCurrentColDefs(updatedColDefs);
+        setShowResetButton(checkColDefsChanges(updatedColDefs, columnDefs || []));
       }
-      setCurrentColDefs(updatedColDefs);
-      setShowResetButton(checkColDefsChanges(updatedColDefs, columnDefs || []));
     },
     [onFindColumn, currentColDefs, setShowResetButton, columnDefs, storageKey],
   );
@@ -144,7 +148,7 @@ const GridView = <T extends object>({
             <div className={panelContainerClassName}>
               <DndProvider backend={HTML5Backend}>
                 <ColumnsPanel
-                  columns={currentColDefs}
+                  columns={currentColDefs || []}
                   showResetButton={showResetButton}
                   panelClassName={panelClassName}
                   onReset={onResetToDefault}

@@ -1,14 +1,13 @@
-import { FC, ReactNode, useCallback, useMemo } from 'react';
 import { IconBrandOauth, IconKey, IconLockOff } from '@tabler/icons-react';
 import classNames from 'classnames';
+import { FC, ReactNode, useCallback, useMemo } from 'react';
 
+import Field from '@/src/components/Common/Field/Field';
 import { EntityFieldsI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { Toolset, ToolsetAuthType } from '@/src/models/dial/toolset';
-import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
-import Field from '@/src/components/Common/Field/Field';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import AuthTypeSection from './Sections/AuthTypeSection';
 
 interface Props {
@@ -40,14 +39,10 @@ const Authentication: FC<Props> = ({ disabled, view, toolset, onChange, ...props
         forwardPerRequestKey: authenticationType === ToolsetAuthType.API_KEY ? false : toolset.forwardPerRequestKey,
         authSettings: {
           authenticationType,
-          redirectUri:
-            authenticationType === ToolsetAuthType.OAUTH
-              ? `${window.location.origin}${getUrnForEntity(view, toolset)}`
-              : void 0,
         },
       });
     },
-    [onChange, toolset, view],
+    [onChange, toolset],
   );
 
   return (
