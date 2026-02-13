@@ -48,7 +48,7 @@ const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange, isCreate
           ...prev,
           endpointRef: {
             method: methods[index].method,
-            relativePattern: methods[index].relativePattern,
+            relativeUrlPattern: methods[index].relativeUrlPattern,
           },
         }));
       }
@@ -65,12 +65,13 @@ const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange, isCreate
         setMethods(methods);
         const index = methods.findIndex(
           (m) =>
-            m.method === testSuite.endpointRef?.method && m.relativePattern === testSuite.endpointRef?.relativePattern,
+            m.method === testSuite.endpointRef?.method &&
+            m.relativeUrlPattern === testSuite.endpointRef?.relativeUrlPattern,
         );
         setActiveMethodIndex(index === -1 ? 0 : index);
       });
     }
-  }, [fullApplication, selectedApplication, testSuite.endpointRef?.method, testSuite.endpointRef?.relativePattern]);
+  }, [fullApplication, selectedApplication, testSuite.endpointRef?.method, testSuite.endpointRef?.relativeUrlPattern]);
 
   return (
     <div className="w-full flex flex-row h-full gap-2">
@@ -87,7 +88,7 @@ const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange, isCreate
           {!!methods.length && <span className="dial-tiny text-secondary block">{t(TestSuitesI18nKey.Other)}</span>}
           {methods.map((method, index) => (
             <MethodItem
-              key={(method?.relativePattern || '') + method.method}
+              key={(method?.relativeUrlPattern || '') + method.method}
               item={method}
               index={index + 1}
               isActive={activeMethodIndex === index + 1}

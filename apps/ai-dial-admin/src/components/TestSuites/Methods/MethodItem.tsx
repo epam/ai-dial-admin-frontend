@@ -29,7 +29,7 @@ const MethodItem: FC<Props> = ({ index, item, isActive, onClick }) => {
       <span className="tiny bg-layer-3 rounded p-1 border border-primary whitespace-nowrap max-w-[200px] overflow-hidden">
         {item.method}
       </span>
-      <span className="truncate text-primary dial-small ml-1">{item.relativePattern}</span>
+      <span className="truncate text-primary dial-small ml-1">{item.relativeUrlPattern}</span>
     </div>
   );
 };

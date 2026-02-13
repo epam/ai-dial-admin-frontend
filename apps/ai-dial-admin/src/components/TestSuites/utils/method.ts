@@ -17,7 +17,7 @@ export const generateMethodPathCombinations = (input?: Record<string, DialRoute>
       methods.forEach((method) => {
         result.push({
           method,
-          relativePattern: path,
+          relativeUrlPattern: path,
         });
       });
     });

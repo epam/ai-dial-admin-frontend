@@ -77,8 +77,8 @@ const MethodInfo: FC<Props> = ({ testSuite, onChangeTestSuite, selectedAppType }
   }, [onChangeTestSuite, currentSuite]);
 
   const disableConfirm = useMemo(() => {
-    return !currentSuite.endpointRef?.method || !currentSuite.endpointRef?.relativePattern;
-  }, [currentSuite.endpointRef?.method, currentSuite.endpointRef?.relativePattern]);
+    return !currentSuite.endpointRef?.method || !currentSuite.endpointRef?.relativeUrlPattern;
+  }, [currentSuite.endpointRef?.method, currentSuite.endpointRef?.relativeUrlPattern]);
 
   return (testSuite?.endpointRef && !!Object.keys(testSuite?.endpointRef).length) || testSuite ? (
     <div className="flex flex-col gap-4 p-4 h-full w-full relative">
@@ -89,7 +89,7 @@ const MethodInfo: FC<Props> = ({ testSuite, onChangeTestSuite, selectedAppType }
               {testSuite?.endpointRef.method}
             </span>
           )}
-          <span className="truncate text-primary ml-1">{testSuite?.endpointRef?.relativePattern}</span>
+          <span className="truncate text-primary ml-1">{testSuite?.endpointRef?.relativeUrlPattern}</span>
         </div>
         <div className="flex flex-row gap-4 items-center">
           <ViewSelector view={view} changeView={setView} />
