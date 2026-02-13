@@ -29,6 +29,7 @@ interface SaveValidationContextType {
   jsonErrorNotifications: JSONEditorErrorNotification[];
   jsonErrors: JSONEditorError[] | null;
   resetCounter: number;
+  errorFields: Map<string, boolean>;
 }
 
 const validationReducer = (state: ValidationState, action: ValidationAction): ValidationState => {
@@ -94,6 +95,7 @@ export const SaveValidationContextProvider = ({ children }: { children: ReactNod
         dispatch,
         jsonErrors: state.jsonErrors,
         resetCounter: state.resetCounter,
+        errorFields: state.fieldValidations,
       }}
     >
       {children}

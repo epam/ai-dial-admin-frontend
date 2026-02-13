@@ -173,7 +173,7 @@ const Variable: FC<Props> = ({ index, variable, updateVariable, removeVariable, 
           </div>
         </div>
         <div className="w-[40px] flex-shrink-0">
-          <DialRemoveButton onClick={onRemove} className={index === 0 ? 'mt-3 lg:mt-6' : ''} />
+          <DialRemoveButton onClick={onRemove} className={index === 0 ? 'mt-3 lg:mt-6' : ''} disabled={disabled} />
         </div>
       </div>
     </DraggableItem>

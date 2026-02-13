@@ -193,6 +193,7 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
                         items={createToolsetOptions}
                         variant={ButtonVariant.Neutral}
                         appearance={ButtonAppearance.Outlined}
+                        disabled={!isValid}
                       />
                     ) : (
                       <DialNeutralButton
@@ -200,6 +201,7 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
                         label={t(CreateI18nKey.CreateEntity, { entity: getTranslatedEntity(route, t) })}
                         iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
                         onClick={onOpenCreateModal}
+                        disabled={!isValid}
                       />
                     )}
                   </>

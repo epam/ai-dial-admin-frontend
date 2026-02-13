@@ -138,3 +138,7 @@ export const convertMbToBytes = (value?: string): string => {
 export const convertBytesToMb = (value?: string): string => {
   return String(Math.round(Number(value) / (1024 * 1024)));
 };
+
+export const isErrorPresent = (errors: Map<string, boolean>, errorKeys: string[]) => {
+  return [...errors].some(([key, value]) => errorKeys.some((errorKey) => key.includes(errorKey)) && !value);
+};

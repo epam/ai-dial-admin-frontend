@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useMemo } from 'react';
+import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { IconPlus } from '@tabler/icons-react';
@@ -8,12 +8,13 @@ import { EnvironmentVariable } from '@/src/models/deployments/variables';
 import { MOUNT_TYPE, VALUE_TYPE } from '@/src/types/deployments/variables';
 import { EntityFieldsI18nKey, EnvVariablesI18nKey } from '@/src/constants/i18n';
 import { Container } from '@/src/models/deployments/containers';
-import { isEditDisabled } from '@/src/utils/deployments/containers';
+import { isEditDisabled, isErrorPresent } from '@/src/utils/deployments/containers';
 import { useI18n } from '@/src/locales/client';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 
 import Accordion from '@/src/components/Common/Accordion/Accordion';
 import Variable from '@/src/components/Deployments/Fields/ContainerVariables/Variable';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 
 interface Props {
   container: Container;
@@ -22,6 +23,9 @@ interface Props {
 
 const ContainerVariables: FC<Props> = ({ container, setContainer }) => {
   const t = useI18n();
+  const { errorFields, isValid } = useSaveValidationContext();
+
+  const [isSectionInvalid, setSectionInvalid] = useState(false);
 
   const variables = useMemo(() => container.metadata?.envs || [], [container]);
 
@@ -84,8 +88,16 @@ const ContainerVariables: FC<Props> = ({ container, setContainer }) => {
     [findColumn, onChangeVariables, variables],
   );
 
+  useEffect(() => {
+    if (!isValid) {
+      setSectionInvalid(isErrorPresent(errorFields, ['variable_']));
+    } else {
+      setSectionInvalid(false);
+    }
+  }, [errorFields, isValid]);
+
   return (
-    <Accordion title={t(EntityFieldsI18nKey.EnvironmentVariables)}>
+    <Accordion title={t(EntityFieldsI18nKey.EnvironmentVariables)} errorIndicator={isSectionInvalid}>
       <div className="flex flex-col gap-y-2">
         <DndProvider backend={HTML5Backend}>
           <div className="flex flex-col gap-2 lg:pr-2 overflow-auto">
