@@ -355,6 +355,7 @@ export enum UpdateI18nKey {
   InterceptorTemplate = 'UpdateEntity.Entities.InterceptorTemplate',
   ApplicationRunner = 'UpdateEntity.Entities.ApplicationRunner',
   SystemProperties = 'UpdateEntity.Entities.SystemProperties',
+  Publication = 'UpdateEntity.Entities.Publication',
 }
 
 export enum CreateI18nKey {
@@ -551,6 +552,7 @@ export enum TabsI18nKey {
   TestCases = 'Tabs.TestCases',
   Runs = 'Tabs.Runs',
   Trends = 'Tabs.Trends',
+  Permissions = 'Tabs.Permissions',
 }
 
 export enum InterceptorsI18nKey {
@@ -608,6 +610,11 @@ export enum PublicationsI18nKey {
   DeclineReasonPlaceholder = 'Publications.ReasonPlaceholder',
   Warning = 'Publications.Warning',
   Publication = 'Publications.Publication',
+  PermissionsWarningTitle = 'Publications.PermissionsWarningTitle',
+  PermissionsWarningDescription = 'Publications.PermissionsWarningDescription',
+  PublishWarningTitle = 'Publications.PublishWarningTitle',
+  PublishWarningDescription = 'Publications.PublishWarningDescription',
+  UnpublishWarningTitle = 'Publications.UnpublishWarningTitle',
 
   // prompt publications
   PromptPublishApproveModalTitle = 'Publications.Prompt.PublishApproveModalTitle',
@@ -981,6 +988,7 @@ export enum EntityPlaceholdersI18nKey {
   Domain = 'EntityPlaceholders.Domain',
   Mask = 'EntityPlaceholders.Mask',
   IpRange = 'EntityPlaceholders.IpRange',
+  DisplayAuthor = 'EntityPlaceholders.DisplayAuthor',
 }
 
 export enum EntityFieldsI18nKey {
@@ -996,6 +1004,7 @@ export enum EntityFieldsI18nKey {
   id = 'EntityFields.id',
   scopes = 'EntityFields.scopes',
   author = 'EntityFields.author',
+  displayAuthor = 'EntityFields.displayAuthor',
   endpoint = 'EntityFields.endpoint',
   permissions = 'EntityFields.permissions',
   allowedTools = 'EntityFields.allowedTools',
@@ -1145,6 +1154,7 @@ export enum EntityFieldsI18nKey {
   LastReason = 'EntityFields.LastReason',
   Mask = 'EntityFields.Mask',
   IpRange = 'EntityFields.IpRange',
+  action = 'EntityFields.action',
 }
 
 export enum ToolsetI18nKey {

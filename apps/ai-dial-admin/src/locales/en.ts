@@ -65,8 +65,8 @@ export default {
     SelectAll: 'Select All',
     CopiedSuccessfully: 'copied successfully',
     Search: 'Search',
-    Or: 'or',
-    And: 'And',
+    Or: 'OR',
+    And: 'AND',
     Enabled: 'Enabled',
     Disabled: 'Disabled',
     Yes: 'Yes',
@@ -346,6 +346,7 @@ export default {
       InterceptorTemplate: 'Interceptor Template',
       ApplicationRunner: 'Application Runner',
       SystemProperties: 'System Properties',
+      Publication: 'Publication',
     },
   },
   Type: {
@@ -526,6 +527,7 @@ export default {
     TestCases: 'Test Cases',
     Runs: 'Runs',
     Trends: 'Trends',
+    Permissions: 'Permissions',
   },
   ForwardToken: {
     ForwardTokenModalTitle: 'Forward Auth Token',
@@ -623,6 +625,10 @@ export default {
     ReasonTitle: 'Reason',
     ReasonPlaceholder: 'Describe the reason for decline',
     Warning: 'This request refers to an item that is no longer available or has changed since the request was created.',
+    PermissionsWarningTitle: 'Permission changes have been proposed.',
+    PermissionsWarningDescription: 'Use “Compare changes” to review them. Changes will apply after publishing.',
+    PublishWarningTitle: 'Current folder permissions will make it visible to all users.',
+    PublishWarningDescription: 'Are you sure you want to continue?',
     Prompt: {
       PublishApproveModalTitle: 'Publish Prompt',
       UnpublishApproveModalTitle: 'Unpublish Prompt',
@@ -633,7 +639,7 @@ export default {
       OpenPrompt: 'Open Prompt',
     },
     File: {
-      FilesListTitle: 'Files list',
+      FilesListTitle: 'Files',
       PublishApproveModalTitle: 'Publish File',
       UnpublishApproveModalTitle: 'Unpublish File',
       PublishDeclineModalTitle: 'Decline File Publishing',
@@ -888,6 +894,7 @@ export default {
     adapter: 'Adapter',
     description: 'Description',
     author: 'Maintainer',
+    displayAuthor: 'Author',
     displayVersion: 'Display version',
     allVersionsOption: 'All versions',
     version: 'Version',
@@ -1034,6 +1041,7 @@ export default {
     LastReason: 'Last reason',
     Mask: 'Mask',
     IpRange: 'IP Range',
+    action: 'Action',
   },
   EntityPlaceholders: {
     Project: 'Enter project',
@@ -1098,6 +1106,7 @@ export default {
     Domain: 'Enter domain',
     Mask: 'Enter mask',
     IpRange: 'Enter IPv4 or IPv6 address',
+    DisplayAuthor: "Enter author's public name to display",
   },
   Error: {
     Error: 'Error',

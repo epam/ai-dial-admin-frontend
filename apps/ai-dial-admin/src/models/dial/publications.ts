@@ -7,6 +7,7 @@ export interface Publication {
   path: string;
   requestName: string;
   author: string;
+  displayAuthor?: string;
   createdAt: string;
   status: string;
   action: ActionType;

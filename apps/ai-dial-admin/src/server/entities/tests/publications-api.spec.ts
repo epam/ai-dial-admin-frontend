@@ -14,7 +14,7 @@ describe('Server :: Publications', () => {
     fetch.resetMocks();
   });
 
-  test('Should calls publications prompts list', async () => {
+  test('Should call publications prompts list', async () => {
     const mockPublications: Publication[] = [
       { id: '1', title: 'Test Prompt 1' },
       { id: '2', title: 'Test Prompt 2' },
@@ -29,7 +29,7 @@ describe('Server :: Publications', () => {
     );
   });
 
-  test('Should calls toolset publications list', async () => {
+  test('Should call toolset publications list', async () => {
     const mockPublications: Publication[] = [
       { id: '10', title: 'App 1' },
       { id: '20', title: 'App 2' },
@@ -44,7 +44,7 @@ describe('Server :: Publications', () => {
     );
   });
 
-  test('Should calls application publications list', async () => {
+  test('Should call application publications list', async () => {
     const mockPublications: Publication[] = [
       { id: '10', title: 'App 1' },
       { id: '20', title: 'App 2' },
@@ -59,7 +59,7 @@ describe('Server :: Publications', () => {
     );
   });
 
-  test('Should calls publications files list', async () => {
+  test('Should call publications files list', async () => {
     const mockPublications: Publication[] = [
       { id: '10', title: 'File 1' },
       { id: '20', title: 'File 2' },
@@ -74,7 +74,7 @@ describe('Server :: Publications', () => {
     );
   });
 
-  test('Should calls getPublication', async () => {
+  test('Should call getPublication', async () => {
     const mockPublication: Publication = { id: '123', title: 'Single Publication' };
     fetch.mockResponseOnce(JSON.stringify(mockPublication));
 
@@ -92,7 +92,7 @@ describe('Server :: Publications', () => {
     expect(result).toEqual(JSON.stringify(mockPublication));
   });
 
-  test('Should calls declinePublication', async () => {
+  test('Should call declinePublication', async () => {
     fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     const path = '/decline/path';
@@ -109,7 +109,7 @@ describe('Server :: Publications', () => {
     );
   });
 
-  test('Should calls approvePublication', async () => {
+  test('Should call approvePublication', async () => {
     fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     const path = '/approve/path';
@@ -125,7 +125,7 @@ describe('Server :: Publications', () => {
     );
   });
 
-  test('Should calls deletePublication', async () => {
+  test('Should call deletePublication', async () => {
     fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     const path = '/delete/path';
@@ -136,6 +136,22 @@ describe('Server :: Publications', () => {
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify({ path }),
+        headers: expect.anything(),
+      }),
+    );
+  });
+
+  test('Should call updatePublication', async () => {
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
+
+    const publication = { folderId: 'folder-1', title: 'Updated Publication' } as unknown as Publication;
+    await instance.updatePublication(TOKEN_MOCK, publication);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/publications/update'),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify(publication),
         headers: expect.anything(),
       }),
     );

@@ -7,6 +7,7 @@ import {
   getDownloadOperation,
   getOpenInNewTabOperation,
   getPreviewOperation,
+  getRemoveOperation,
 } from '@/src/constants/grid-columns/actions';
 import { FILES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
@@ -21,9 +22,10 @@ import { isAddAction } from '@/src/utils/publications';
 interface Props {
   files: Partial<DialFile | string>[];
   action: ActionType;
+  onChange?: (files: DialFile[]) => void;
 }
 
-const FilesList: FC<Props> = ({ files, action }) => {
+const FilesList: FC<Props> = ({ files, action, onChange }) => {
   const t = useI18n();
   const download = useCallback((file?: DialFile) => {
     window.open(`/${FILE_DOWNLOAD}/?path=${encodeURIComponent(file?.path || '')}`, '_blank');
@@ -37,12 +39,26 @@ const FilesList: FC<Props> = ({ files, action }) => {
     window.open(`/${FILE_PREVIEW}?path=${encodeURIComponent(file?.path || '')}`, '_blank');
   }, []);
 
+  const remove = useCallback(
+    (_?: DialFile, index?: number) => {
+      if (index != null) {
+        files?.splice(index, 1);
+      }
+      onChange?.(files as DialFile[]);
+    },
+    [files, onChange],
+  );
+
   const isPreviewActionHidden = (_: GridApi, node: IRowNode) => {
     return !PREVIEW_EXTENSIONS.includes(node.data.extension);
   };
 
   const isOpenActionHidden = () => {
     return isAddAction(action);
+  };
+
+  const isRemoveActionHidden = () => {
+    return !onChange;
   };
 
   const rowData =
@@ -52,6 +68,7 @@ const FilesList: FC<Props> = ({ files, action }) => {
     getPreviewOperation(preview, isPreviewActionHidden),
     getOpenInNewTabOperation(openInNewTab, isOpenActionHidden),
     getDownloadOperation(download),
+    getRemoveOperation(remove, isRemoveActionHidden),
   ];
 
   const columnDefs = getGridFileColumns(FILES_COLUMNS, actions);

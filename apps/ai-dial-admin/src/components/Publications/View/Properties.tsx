@@ -4,7 +4,6 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { Publication } from '@/src/models/dial/publications';
 import BasePublicationProperties from '@/src/components/Publications/Properties/Properties';
 import PromptsPropertiesList from '@/src/components/Publications/Assets/Prompt/PromptsPropertiesList';
-import FilesProperties from '@/src/components/Publications/Assets/Files/FilesProperties';
 import ApplicationProperties from '@/src/components/Publications/Assets/Application/ApplicationProperties';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import ToolsetProperties from '@/src/components/Publications/Assets/Toolset/ToolsetProperties';
@@ -20,13 +19,6 @@ const PublicationProperties: FC<Props> = ({ view, publication, applicationScheme
     return (
       <BasePublicationProperties view={view} publication={publication}>
         <PromptsPropertiesList publication={publication} />
-      </BasePublicationProperties>
-    );
-  }
-  if (view === ApplicationRoute.FilePublications) {
-    return (
-      <BasePublicationProperties view={view} publication={publication}>
-        <FilesProperties publication={publication} />
       </BasePublicationProperties>
     );
   }

@@ -43,6 +43,7 @@ export enum EntityViewTab {
   TestCases = 'TestCases',
   Runs = 'Runs',
   Trends = 'Trends',
+  Permissions = 'Permissions',
 }
 
 export const propertiesTab = (t: (key: string) => string) => ({
@@ -221,6 +222,11 @@ export const runsTab = (t: (key: string) => string) => ({
   label: t(TabsI18nKey.Runs),
 });
 
+export const permissionsTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.Permissions,
+  label: t(TabsI18nKey.Permissions),
+});
+
 export const getRouteTabs = (t: (key: string) => string): TabModel[] => {
   return [propertiesTab(t), rolesTab(t), auditTab(t)];
 };
@@ -351,4 +357,8 @@ export const getSystemPropertiesTabs = (t: (key: string) => string): TabModel[] 
 
 export const getTestSuiteTabs = (t: (key: string) => string): TabModel[] => {
   return [propertiesTab(t), testCasesTab(t), runsTab(t), trendsTab(t)];
+};
+
+export const getFilePublicationTabs = (t: (key: string) => string): TabModel[] => {
+  return [propertiesTab(t), permissionsTab(t)];
 };
