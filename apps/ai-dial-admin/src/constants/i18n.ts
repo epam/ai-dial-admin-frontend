@@ -797,6 +797,7 @@ export enum RollbackI18nKey {
   Revision = 'Rollback.Revision',
   Resource = 'Rollback.Resource',
   System = 'Rollback.System',
+  Rollback = 'Rollback.Rollback',
   ConfirmRollbackAsking = 'Rollback.ConfirmRollbackAsking',
 
   // Resource rollback

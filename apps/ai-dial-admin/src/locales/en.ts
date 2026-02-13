@@ -825,7 +825,8 @@ export default {
     State: 'Rollback state',
     Revision: 'Rollback revision',
     Resource: 'Resource rollback',
-    System: 'System Rollback',
+    System: 'System',
+    Rollback: 'System Rollback',
     ConfirmRollbackAsking: 'This action will overwrite the current configuration. Are you sure you want to continue?',
     ConfirmRollbackDescription: {
       Part1: 'You`re about to revert',

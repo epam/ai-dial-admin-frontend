@@ -63,7 +63,7 @@ export class ActivityAuditApi extends BaseApi {
     return this.get(`${API}${url}`, token);
   }
 
-  rollbackToRevision(revisionNumber: number | undefined, token: JWT | null) {
-    return this.post(`${ACTIVITY_AUDIT_ROLLBACK_URL}`, { revisionNumber }, token);
+  rollbackToRevision(revisionNumber: number | undefined, token: JWT | null): Promise<ServerActionResponse> {
+    return this.postAction(`${ACTIVITY_AUDIT_ROLLBACK_URL}`, { revisionNumber }, token);
   }
 }
