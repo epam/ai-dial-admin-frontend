@@ -238,6 +238,7 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
         rowData={containersList}
         columnDefs={columnDefs}
         additionalGridOptions={gridOptions}
+        isMainListView
         listLabel={t(ContainersI18nKey.ContainersListTitle, {
           type: getTranslatedType(route, t),
           entityType: getTranslatedDeploymentType(route, t),

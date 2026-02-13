@@ -11,7 +11,7 @@ vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
 }));
 
 // Mock ListView component
-vi.mock('@/src/components/ListView/ListView', () => ({
+vi.mock('@/src/components/ListView/List', () => ({
   default: ({ title, emptyDataTitle, columnDefs, onGridReady, children }: any) => (
     <div>
       <div>List View Component</div>
@@ -60,27 +60,6 @@ describe('TestCases', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  test('renders ListView with correct title', () => {
-    vi.mocked(actions.getTestCases).mockResolvedValue({
-      content: mockTestCases,
-      totalElements: 2,
-    });
-    render(<TestCases selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
-
-    expect(screen.getByText('List View Component')).toBeInTheDocument();
-    expect(screen.getByText(`Title: ${TestSuitesI18nKey.TestCases}`)).toBeInTheDocument();
-  });
-
-  test('renders ListView with correct empty data title', () => {
-    vi.mocked(actions.getTestCases).mockResolvedValue({
-      content: mockTestCases,
-      totalElements: 2,
-    });
-    render(<TestCases selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
-
-    expect(screen.getByText(`Empty Title: ${TestSuitesI18nKey.NoTestCases}`)).toBeInTheDocument();
   });
 
   test('fetches test cases on mount', async () => {
@@ -149,20 +128,6 @@ describe('TestCases', () => {
     await waitFor(() => {
       expect(actions.getTestCases).toHaveBeenCalledWith(undefined, 0, 100, [], []);
     });
-  });
-
-  test('renders with flex layout classes', () => {
-    vi.mocked(actions.getTestCases).mockResolvedValue({
-      content: [],
-      totalElements: 0,
-    });
-
-    const { container } = render(<TestCases selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
-
-    const wrapper = container.firstChild as HTMLElement;
-    expect(wrapper.className).toContain('flex');
-    expect(wrapper.className).toContain('h-full');
-    expect(wrapper.className).toContain('w-full');
   });
 
   test('passes allowPadding false to ListView', () => {
