@@ -25,7 +25,7 @@ const ImportFileModal: FC<Props> = ({ selectedTestSuiteId, isModalOpen, onClose,
 
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [testCases, setTestCases] = useState<TestCase[] | null>(null);
+  const [testCases, setTestCases] = useState<object[] | null>(null);
   const [columnDefs, setColumnDefs] = useState<ColDef[]>([]);
 
   const onChangeFile = (files: File[]) => {
