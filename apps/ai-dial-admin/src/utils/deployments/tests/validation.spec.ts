@@ -438,7 +438,7 @@ describe('validation utils', () => {
 
   describe('GPU field validation', () => {
     test('returns value error', () => {
-      expect(getGpuError('0.5', t)).toEqual({
+      expect(getGpuError('-1', t)).toEqual({
         type: ErrorType.INVALID,
         text: ErrorI18nKey.GPUError,
       });
