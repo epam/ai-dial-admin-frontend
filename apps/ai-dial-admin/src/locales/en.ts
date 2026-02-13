@@ -264,6 +264,10 @@ export default {
       Adapter: 'Adapter',
       InterceptorTemplate: 'Interceptor Template',
       ApplicationRunner: 'Application Runner',
+      McpContainer: 'MCP Container',
+      InterceptorContainer: 'Interceptor Container',
+      ModelServing: 'Model Serving',
+      Image: 'Image',
     },
     BulkDelete: {
       Prompt: 'Prompts',

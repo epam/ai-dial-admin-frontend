@@ -10,7 +10,6 @@ import { ImagesI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
-import { Container } from '@/src/models/deployments/containers';
 import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -28,10 +27,9 @@ interface Props {
   image: Image;
   containerNames?: string[];
   versions: ImageVersion[];
-  dependencies: Container[];
 }
 
-const ImageView: FC<Props> = ({ image, containerNames, versions, dependencies }) => {
+const ImageView: FC<Props> = ({ image, containerNames, versions }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -131,7 +129,6 @@ const ImageView: FC<Props> = ({ image, containerNames, versions, dependencies })
         onDiscard={onDiscard}
         containerNames={containerNames}
         versions={imageVersions}
-        dependencies={dependencies}
       />
 
       <div className="flex-1 overflow-auto mt-3 min-h-0">

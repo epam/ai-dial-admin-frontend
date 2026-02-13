@@ -231,6 +231,10 @@ export enum DeleteI18nKey {
   InterceptorTemplate = 'DeleteEntity.Entities.InterceptorTemplate',
   TestSuite = 'DeleteEntity.Entities.TestSuite',
   ApplicationRunner = 'DeleteEntity.Entities.ApplicationRunner',
+  McpContainer = 'DeleteEntity.Entities.McpContainer',
+  InterceptorContainer = 'DeleteEntity.Entities.InterceptorContainer',
+  ModelServing = 'DeleteEntity.Entities.ModelServing',
+  Image = 'DeleteEntity.Entities.Image',
 
   // Bulk Delete
   Applications = 'DeleteEntity.BulkDelete.Applications',

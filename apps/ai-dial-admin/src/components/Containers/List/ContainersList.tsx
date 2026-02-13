@@ -28,7 +28,7 @@ import { IMAGE_BUILD_POLL_INTERVAL } from '@/src/constants/deployments/images';
 import ListView from '@/src/components/ListView/ListView';
 import HeaderButtons from '@/src/components/Containers/List/HeaderButtons';
 import ContainerDuplicate from '@/src/components/Deployments/Modals/ContainerDuplicate';
-import EntityDeleteModal from '@/src/components/Deployments/Modals/EntityDelete';
+
 import {
   getDeleteOperation,
   getDuplicateOperation,
@@ -38,6 +38,7 @@ import {
 } from '@/src/constants/grid-columns/actions';
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { CONTAINERS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import Delete from '@/src/components/EntityView/Modals/Delete/Delete';
 
 interface Props {
   route: ApplicationRoute;
@@ -164,12 +165,6 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
     },
     [currentContainer, route, router, showNotification],
   );
-
-  const onDelete = useCallback(() => {
-    if (currentContainer?.name) {
-      deleteContainer(currentContainer.name).then(refreshCb(router, showNotification));
-    }
-  }, [currentContainer, router, showNotification]);
 
   const columnDefs = [
     ...CONTAINERS_COLUMNS(t, getTranslatedType(route, t), route),
@@ -306,18 +301,11 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
         modalType === ModalType.delete &&
         currentContainer &&
         createPortal(
-          <EntityDeleteModal
-            title={t(ContainersI18nKey.DeleteModalTitle, {
-              type: getTranslatedType(route, t),
-              entityType: getTranslatedDeploymentType(route, t),
-            })}
-            description={t(ContainersI18nKey.DeleteModalDescription, {
-              entityType: getTranslatedDeploymentType(route, t),
-            })}
-            isModalOpen={isModalOpen}
-            onClose={onCloseModal}
-            onApply={onDelete}
-            route={route}
+          <Delete
+            onRemoveEntity={deleteContainer}
+            view={route}
+            entity={{ ...currentContainer }}
+            onCloseModal={onCloseModal}
           />,
           document.body,
         )}
