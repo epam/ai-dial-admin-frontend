@@ -362,13 +362,13 @@ export const USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
     headerName: 'Deployment Price',
     minWidth: 180,
     hide: false,
-    ...priceColumn,
+    ...priceColumn('Deployment Price'),
   },
   {
     field: 'price',
     headerName: 'Total Price',
     hide: false,
-    ...priceColumn,
+    ...priceColumn('Total Price'),
   },
   {
     field: 'number_request_messages',
@@ -418,7 +418,7 @@ export const USAGE_LOG_CONVERSATIONS_COLUMNS: ColDef[] = [
     field: 'deployment_price',
     headerName: 'Total Price',
     hide: false,
-    ...priceColumn,
+    ...priceColumn('Total Price'),
   },
   {
     field: 'number_request_messages',
