@@ -21,7 +21,7 @@ export interface TestSuiteDeploymentRef {
 
 export interface TestSuiteEndpointRef {
   method?: string;
-  relativeUrl?: string;
+  relativePattern?: string;
   parameters?: Record<string, unknown>[];
   requestBodySchema?: DialScheme;
   responseBodySchema?: DialScheme;
