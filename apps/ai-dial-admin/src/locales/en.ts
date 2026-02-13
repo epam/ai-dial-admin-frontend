@@ -681,6 +681,12 @@ export default {
       Months: 'months',
       Year: 'Year',
     },
+    RestrictionFieldLabel: 'IPs access restriction:',
+    Restrictions: {
+      AllowAll: 'Allow all',
+      BlockAll: 'Block all',
+      Ranges: 'Only selected ranges',
+    },
   },
   Import: {
     ConflictResolution: 'Conflict resolution',
@@ -1026,6 +1032,8 @@ export default {
     Restarts: 'Restarts',
     LastRestartedAt: 'Last restarted at',
     LastReason: 'Last reason',
+    Mask: 'Mask',
+    IpRange: 'IP Range',
   },
   EntityPlaceholders: {
     Project: 'Enter project',
@@ -1088,6 +1096,8 @@ export default {
     Arguments: 'e.g. --arg1 value1 --arg2 value2',
     Command: 'e.g. /path/to/executable --option',
     Domain: 'Enter domain',
+    Mask: 'Enter mask',
+    IpRange: 'Enter IPv4 or IPv6 address',
   },
   Error: {
     Error: 'Error',
@@ -1138,6 +1148,9 @@ export default {
     ExitedWithError: 'Failed during execution',
     InvalidWhitelistDomain: 'Invalid domain name',
     NotSemanticVersion: 'Version must follow semantic versioning (e.g., 1.0.0)',
+    InvalidIpAddress: 'Invalid IP. Should be IPv4 or IPv6 address',
+    MinMaxMask: 'Mask must be {min}-{max}',
+    EmptyIpRangeField: 'Mandatory field',
     PortError: 'Port must be between 1 and 65535',
     MemoryError: 'Memory should be greater than 1',
     GPUError: 'GPU should be greater than 1',
