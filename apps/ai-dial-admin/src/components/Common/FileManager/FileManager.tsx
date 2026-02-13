@@ -172,8 +172,10 @@ const FileManager: FC<Props> = ({ label, columnDefs, view, getContext, ...props 
   const handleFolderPopupPathChange = useCallback(
     (nextPath: string | undefined) => {
       if (nextPath && !loadedPaths.has(nextPath)) {
+        if (!loadedPaths.has(nextPath)) {
+          fetchFiles(nextPath);
+        }
         setLoadedPaths((prev) => new Set(prev).add(nextPath));
-        fetchFiles(nextPath);
       }
     },
     [loadedPaths, fetchFiles],
