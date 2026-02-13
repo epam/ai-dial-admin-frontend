@@ -18,21 +18,19 @@ vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
 }));
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
-  DialCollapsibleSidebar: ({ children }: any) => <div data-testid="sidebar">{children}</div>,
+  DialCollapsibleSidebar: ({ children }: any) => <div>{children}</div>,
 }));
 
 vi.mock('../MethodItem', () => ({
   __esModule: true,
   default: ({ item, index, onClick }: any) => (
-    <button data-testid={`method-${index}`} onClick={() => onClick(index)}>
-      {item?.method ?? `CHAT-${index}`}
-    </button>
+    <button onClick={() => onClick(index)}>{item?.method ?? `CHAT-${index}`}</button>
   ),
 }));
 
 vi.mock('../MethodInfo', () => ({
   __esModule: true,
-  default: ({ testSuite }: any) => <div data-testid="method-info">{JSON.stringify(testSuite?.endpointRef)}</div>,
+  default: ({ testSuite }: any) => <div>{JSON.stringify(testSuite?.endpointRef)}</div>,
 }));
 
 describe('Methods component', () => {
@@ -48,9 +46,9 @@ describe('Methods component', () => {
     render(<Methods testSuite={baseTestSuite} selectedApplication={selectedApplication} onChange={onChange} />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('method-0')).toBeInTheDocument();
-      expect(screen.getByTestId('method-1')).toBeInTheDocument();
-      expect(screen.getByTestId('method-2')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'CHAT-0' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'GET' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'POST' })).toBeInTheDocument();
     });
   });
 
@@ -58,10 +56,10 @@ describe('Methods component', () => {
     render(<Methods testSuite={baseTestSuite} selectedApplication={selectedApplication} onChange={onChange} />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('method-1')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'GET' })).toBeInTheDocument();
     });
 
-    const genMethodButton = screen.getByTestId('method-1');
+    const genMethodButton = screen.getByRole('button', { name: 'POST' });
     fireEvent.click(genMethodButton);
 
     expect(onChange).toHaveBeenCalledTimes(1);
@@ -69,17 +67,17 @@ describe('Methods component', () => {
     const updater = onChange.mock.calls[0][0];
     const newState = updater(baseTestSuite);
 
-    expect(newState.endpointRef).toEqual({ method: 'POST', relativeUrl: '/data' });
+    expect(newState.endpointRef).toEqual({ method: 'POST', relativeUrlPattern: '/data' });
   });
 
   test('clicking chat-completion item sets endpointRef to CHAT_COMPLETION_METHOD', async () => {
     render(<Methods testSuite={baseTestSuite} selectedApplication={selectedApplication} onChange={onChange} />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('method-0')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'CHAT-0' })).toBeInTheDocument();
     });
 
-    const chatButton = screen.getByTestId('method-0');
+    const chatButton = screen.getByRole('button', { name: 'CHAT-0' });
     fireEvent.click(chatButton);
 
     expect(onChange).toHaveBeenCalledTimes(1);
