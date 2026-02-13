@@ -1,9 +1,8 @@
 import { notFound } from 'next/navigation';
 
-import { getImage, getImageContainers, getImageVersions } from '@/src/app/actions/deployments';
+import { getImage, getImageVersions } from '@/src/app/actions/deployments';
 import ImageView from '@/src/components/Images/View/ImageView';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
-import { Container } from '@/src/models/deployments/containers';
 import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { errorObjLog } from '@/src/server/logger';
 import { getRouteByType } from '@/src/utils/deployments/entity';
@@ -19,7 +18,6 @@ interface Params {
 export default async function Page(params: Params) {
   let image: Image | null = null;
   let versions: ImageVersion[] | null = null;
-  let dependencies: Container[] | null = null;
 
   try {
     const imageResponse = await getImage((await params.params).id);
@@ -28,11 +26,9 @@ export default async function Page(params: Params) {
       imageResponse.response.name,
       getImageType(getRouteByType(imageResponse.response.$type)),
     );
-    const dependenciesResponses = await getImageContainers((await params.params).id);
 
     image = imageResponse.response as Image;
     versions = versionsResponse.response as ImageVersion[];
-    dependencies = dependenciesResponses.response as Container[];
   } catch (e) {
     errorObjLog(e, 'Failed to fetch interceptor image page');
   }
@@ -43,7 +39,7 @@ export default async function Page(params: Params) {
 
   return (
     <SaveValidationContextProvider>
-      <ImageView image={image} versions={versions || []} dependencies={dependencies || []} />
+      <ImageView image={image} versions={versions || []} />
     </SaveValidationContextProvider>
   );
 }
