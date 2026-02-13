@@ -8,36 +8,33 @@ import {
   IGetRowsParams,
 } from 'ag-grid-community';
 import { isEqual } from 'lodash';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getHuggingFaceModels } from '@/src/app/actions/deployments';
 import { emptyDataTitleMap, listViewTitleMap } from '@/src/components/ListView/constants';
 import { infiniteGridOptions, SINGLE_ROW_SELECTION, UTILITY_COLUMN } from '@/src/constants/ag-grid';
 import { HF_REGISTRY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { FilterDto, SortDto } from '@/src/models/request';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
-import { DialGhostButton } from '@epam/ai-dial-ui-kit';
-import { IconColumns2, IconFileDescription } from '@tabler/icons-react';
+import { IconFileDescription } from '@tabler/icons-react';
 
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
-import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
-import ListView from '@/src/components/ListView/ListView';
+import ListEntities from '@/src/components/ListView/List';
 
 interface Props {
   route: ApplicationRoute;
   modelName: string;
+  infoPanel?: ReactNode;
   setModelName: (name: string) => void;
   showModelDescription: (name: string, sha: string) => void;
 }
 
-const HfRegistryGrid: FC<Props> = ({ route, modelName, setModelName, showModelDescription }) => {
+const HfRegistryGrid: FC<Props> = ({ route, infoPanel, modelName, setModelName, showModelDescription }) => {
   const t = useI18n();
-  const [showColumnsPanel, setShowColumnsPanel] = useState(false);
+
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
 
   const gridOptions: GridOptions = {
@@ -134,30 +131,18 @@ const HfRegistryGrid: FC<Props> = ({ route, modelName, setModelName, showModelDe
     } as ColDef,
   ];
 
-  const toggleColumnsPanel = () => setShowColumnsPanel(!showColumnsPanel);
-
   return (
-    <ListView
-      view={route}
+    <ListEntities
       columnDefs={columnDefs}
-      additionalGridOptions={gridOptions}
-      title={t(listViewTitleMap[route])}
-      emptyDataTitle={t(emptyDataTitleMap[route])}
-      showColumnsPanel={showColumnsPanel}
-      toggleColumnsPanel={toggleColumnsPanel}
+      listLabel={t(listViewTitleMap[route])}
+      emptyDataProps={{ title: t(emptyDataTitleMap[route]) }}
       storageKey={`${route}/registry`}
+      additionalGridOptions={gridOptions}
       onGridReady={onGridReady}
-      allowPadding={false}
-    >
-      <div className="flex gap-4 items-end">
-        <ResetFiltersButton gridApi={gridApi} />
-        <DialGhostButton
-          label={t(ButtonsI18nKey.Columns)}
-          iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} />}
-          onClick={toggleColumnsPanel}
-        />
-      </div>
-    </ListView>
+      infoPanel={infoPanel}
+      isEmbedToModal
+      isEnableColumnPanel
+    />
   );
 };
 

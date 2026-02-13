@@ -52,7 +52,7 @@ const ItemsList: FC<Props> = ({ items, setItems, addItemLabel, validate, isModal
       <ul className="flex flex-col gap-4 w-full overflow-auto">
         {items == null || items.length === 0 ? (
           <Item
-            item={''}
+            item=""
             index={0}
             onChange={onChangeItem}
             onRemove={onRemoveItem}
