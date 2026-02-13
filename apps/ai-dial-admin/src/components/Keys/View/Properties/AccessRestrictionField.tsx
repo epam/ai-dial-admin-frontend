@@ -10,7 +10,7 @@ import RangeItems from './RangeItems';
 interface Props<T> {
   elementId?: string;
   entity: T;
-  originalEntity: T;
+  originalEntity?: T;
   onChange?: (allowedIpAddressRanges?: string[]) => void;
 }
 

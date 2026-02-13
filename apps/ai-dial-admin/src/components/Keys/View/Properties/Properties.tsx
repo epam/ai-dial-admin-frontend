@@ -20,7 +20,7 @@ import AccessRestrictionField from './AccessRestrictionField';
 
 interface Props {
   entity: DialKey;
-  originalEntity: DialKey;
+  originalEntity?: DialKey;
   names: string[];
   keys: string[];
   isKeyImmutable?: boolean;
