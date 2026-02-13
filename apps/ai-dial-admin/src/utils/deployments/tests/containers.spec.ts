@@ -9,6 +9,7 @@ import {
   convertMbToBytes,
   convertBytesToMb,
   normalizeContainerPorts,
+  isErrorPresent,
 } from '../containers';
 import { CONTAINER_STATUS, CONTAINER_TRANSPORT, CONTAINER_TYPE } from '@/src/types/deployments/containers';
 import { Container } from '@/src/models/deployments/containers';
@@ -214,6 +215,22 @@ describe('containers utils', () => {
     test('should convert ContainerPorts', () => {
       expect(normalizeContainerPorts(undefined)).toEqual([]);
       expect(normalizeContainerPorts([80, 8080])).toEqual([80, 8080]);
+    });
+  });
+
+  describe('isErrorPresent', () => {
+    const errors = new Map().set('name', false).set('version', true);
+
+    test('should return true when errors present', () => {
+      expect(isErrorPresent(errors, ['name'])).toBeTruthy();
+    });
+
+    test('should return false when errors present', () => {
+      expect(isErrorPresent(errors, ['displayName'])).toBeFalsy();
+    });
+
+    test('should return false when key exist but valid', () => {
+      expect(isErrorPresent(errors, ['version'])).toBeFalsy();
     });
   });
 });

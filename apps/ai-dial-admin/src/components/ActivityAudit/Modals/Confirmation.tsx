@@ -19,7 +19,7 @@ const ConfirmationRollback: FC<Props> = ({ revisionDate, isModalOpen, onClose, o
   const onChangeConfirmation = useCallback(
     (value?: string) => {
       setConfirmation(value || '');
-      setIsDisabled(value !== t(RollbackI18nKey.System));
+      setIsDisabled(value !== t(RollbackI18nKey.Rollback));
     },
     [t],
   );

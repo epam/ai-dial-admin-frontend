@@ -14,7 +14,6 @@ interface Props extends ContainersButtonsWrapperProps {
   tabs: TabModel[];
   activeTab: EntityViewTab;
   children?: ReactNode;
-
   onChangeActiveTab: (tab: EntityViewTab) => void;
 }
 

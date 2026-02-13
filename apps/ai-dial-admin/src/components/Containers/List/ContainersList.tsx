@@ -14,8 +14,8 @@ import {
 } from '@/src/app/actions/deployments';
 import HeaderButtons from '@/src/components/Containers/List/HeaderButtons';
 import ContainerDuplicate from '@/src/components/Deployments/Modals/ContainerDuplicate';
-import EntityDeleteModal from '@/src/components/Deployments/Modals/EntityDelete';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
+import Delete from '@/src/components/EntityView/Modals/Delete/Delete';
 import ListEntities from '@/src/components/ListView/List';
 import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { IMAGE_BUILD_POLL_INTERVAL } from '@/src/constants/deployments/images';
@@ -158,12 +158,6 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
     [currentContainer, route, router, showNotification],
   );
 
-  const onDelete = useCallback(() => {
-    if (currentContainer?.name) {
-      deleteContainer(currentContainer.name).then(refreshCb(router, showNotification));
-    }
-  }, [currentContainer, router, showNotification]);
-
   const columnDefs = [
     ...CONTAINERS_COLUMNS(t, getTranslatedType(route, t), route),
     ACTION_COLUMN([
@@ -279,18 +273,11 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
         modalType === ModalType.delete &&
         currentContainer &&
         createPortal(
-          <EntityDeleteModal
-            title={t(ContainersI18nKey.DeleteModalTitle, {
-              type: getTranslatedType(route, t),
-              entityType: getTranslatedDeploymentType(route, t),
-            })}
-            description={t(ContainersI18nKey.DeleteModalDescription, {
-              entityType: getTranslatedDeploymentType(route, t),
-            })}
-            isModalOpen={isModalOpen}
-            onClose={onCloseModal}
-            onApply={onDelete}
-            route={route}
+          <Delete
+            onRemoveEntity={deleteContainer}
+            view={route}
+            entity={{ ...currentContainer }}
+            onCloseModal={onCloseModal}
           />,
           document.body,
         )}

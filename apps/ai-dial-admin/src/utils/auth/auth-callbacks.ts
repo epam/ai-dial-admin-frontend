@@ -27,7 +27,8 @@ export const getUser = (accessToken: string | undefined, providerId: string) => 
     process.env.ADMIN_ROLE_NAMES ??
     'admin'
   ).split(',');
-  const decodedPayload = accessToken ? safeDecodeJwt(accessToken) : {};
+  // Google tokens are not JWTs, so we shouldn't try to decode them
+  const decodedPayload = accessToken && providerId !== 'google' ? safeDecodeJwt(accessToken) : {};
   const dialRoles = get(decodedPayload, rolesFieldName, []) as string[];
   const roles = Array.isArray(dialRoles) ? dialRoles : [dialRoles];
   const isAdmin = roles.length > 0 && adminRoleNames.some((role) => roles.includes(role));

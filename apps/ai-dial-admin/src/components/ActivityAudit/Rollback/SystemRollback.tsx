@@ -21,17 +21,19 @@ import { SYSTEM_ROLLBACK_ENTITIES, SYSTEM_ROLLBACK_TAB_NAME } from '@/src/compon
 import { getSystemRollbackColumns } from '@/src/components/ActivityAudit/Rollback/utils';
 import DiffLegend from '@/src/components/ActivityAudit/View/DiffReport/DiffLegend';
 import FilterControl from '@/src/components/ActivityAudit/View/DiffReport/FilterControl';
-import JsonView from '@/src/components/Common/JsonView/JsonView';
 import { mergeEntityMaps } from '@/src/components/ActivityAudit/View/utils/generate-diffs';
+import JsonView from '@/src/components/Common/JsonView/JsonView';
 import { ActivityAuditI18nKey, MenuI18nKey, RollbackI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useNotification } from '@/src/context/NotificationContext';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { ActivityAuditDiff, DialActivity } from '@/src/models/activity-audit';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ActivityAuditEntity, ActivityAuditResourceType, DiffView } from '@/src/types/activity-audit';
 import { getRevisionRouteForAllEntities } from '@/src/utils/audit/get-revision-route';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
-import { useProtectedRequest } from '@/src/hooks/use-protected-request';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 
 const SystemRollback: FC = () => {
   const t = useI18n();
@@ -41,6 +43,7 @@ const SystemRollback: FC = () => {
     label: t(MenuI18nKey[`${SYSTEM_ROLLBACK_TAB_NAME[e]}` as keyof typeof MenuI18nKey]),
   }));
   const getReqRef = useRef(useProtectedRequest());
+  const { showNotification } = useNotification();
 
   const [selectedTab, setSelectedTab] = useState(tabs[0].id);
   const [columns, setColumns] = useState<ColDef[]>([]);
@@ -65,9 +68,26 @@ const SystemRollback: FC = () => {
   const [isJsonView, setIsJsonView] = useState(false);
 
   const systemRollback = useCallback(() => {
-    systemRollbackToRevision(rollbackRevision?.id);
+    systemRollbackToRevision(rollbackRevision?.id).then((res) => {
+      if (res.success) {
+        showNotification(
+          getSuccessNotification(
+            t(RollbackI18nKey.NotificationSuccessTitle, { entity: t(RollbackI18nKey.System) }),
+            t(RollbackI18nKey.NotificationSuccessDescription),
+          ),
+        );
+      } else {
+        showNotification(
+          getErrorNotification(
+            t(RollbackI18nKey.NotificationErrorTitle, { entity: t(RollbackI18nKey.System) }),
+            t(RollbackI18nKey.NotificationErrorDescription),
+            res?.requestId,
+          ),
+        );
+      }
+    });
     setIsRollBackModalOpen(false);
-  }, [rollbackRevision?.id]);
+  }, [rollbackRevision?.id, showNotification, t]);
 
   const fetchAllEntitiesForRevision = async (
     revision?: ActivityAuditRevision | null,
@@ -127,7 +147,8 @@ const SystemRollback: FC = () => {
         }
       });
     }
-  }, [fetchRevisionEntities, revisions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     setColumns(getSystemRollbackColumns(selectedTab, t));
@@ -154,7 +175,7 @@ const SystemRollback: FC = () => {
   return (
     <div className="flex flex-col bg-layer-2 rounded py-4 px-6 flex-1 min-h-0">
       <div className="flex flex-row justify-between mb-4 items-center h-[38x]">
-        <h1>{t(RollbackI18nKey.System)}</h1>
+        <h1>{t(RollbackI18nKey.Rollback)}</h1>
         <div className="flex flex-row gap-3 items-center">
           <FilterControl diffView={diffView} setDiffView={setDiffView} isResources={true} />
           <div
@@ -169,8 +190,9 @@ const SystemRollback: FC = () => {
           </div>
           <DialPrimaryButton
             iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} />}
-            label={t(RollbackI18nKey.System)}
+            label={t(RollbackI18nKey.Rollback)}
             onClick={() => setIsRollBackModalOpen(true)}
+            disabled={isLoading}
           />
           <div className="w-[1px] h-6 bg-layer-4"></div>
           <DialSwitch switchId="jsonView" isOn={isJsonView} onChange={() => setIsJsonView(!isJsonView)} label="JSON" />

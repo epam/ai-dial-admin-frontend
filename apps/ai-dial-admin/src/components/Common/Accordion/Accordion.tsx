@@ -3,6 +3,8 @@ import classNames from 'classnames';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { ErrorI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
 
 interface Props {
   title?: string;
@@ -12,6 +14,7 @@ interface Props {
   header?: ReactElement<{ isCollapsed: boolean }>;
   containerClassName?: string;
   contentClassName?: string;
+  errorIndicator?: boolean;
 }
 
 const Accordion: FC<Props> = ({
@@ -22,7 +25,9 @@ const Accordion: FC<Props> = ({
   actionButtons,
   contentClassName,
   containerClassName,
+  errorIndicator,
 }) => {
+  const t = useI18n();
   const [isCollapsed, setIsCollapsed] = useState(collapsed);
 
   const toggleCollapse = useCallback(() => {
@@ -42,6 +47,13 @@ const Accordion: FC<Props> = ({
           <button className="flex items-center w-full" onClick={toggleCollapse}>
             {icon}
             <h3 className="mx-2">{title}</h3>
+            {errorIndicator && (
+              <span
+                role="status"
+                className="flex w-2 h-2 rounded no-user-select bg-red-400"
+                aria-label={t(ErrorI18nKey.Error)}
+              />
+            )}
           </button>
           {actionButtons}
         </div>
