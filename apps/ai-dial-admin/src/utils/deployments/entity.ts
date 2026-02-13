@@ -72,12 +72,12 @@ export const getIdFormat = (name: string) => {
   return name.toLowerCase().replace(/\s+/g, '_');
 };
 
-export const getEntityId = (container: Container, route: ApplicationRoute, t: (key: string) => string) => {
-  return getIdFormat(getEntityName(container, route, t));
+export const getEntityId = (container: Container) => {
+  return getIdFormat(getEntityName(container));
 };
 
-export const getEntityName = (container: Container, route: ApplicationRoute, t: (key: string) => string) => {
-  return `${container.displayName} ${getTranslatedEntity(route, t)}`;
+export const getEntityName = (container: Container) => {
+  return `${container.displayName}`;
 };
 
 export const getEntityTemplate = (
@@ -87,8 +87,8 @@ export const getEntityTemplate = (
   transport?: CONTAINER_TRANSPORT,
 ): DialModel | Toolset | DialInterceptor => {
   const template: DialModel | Toolset | DialInterceptor = {
-    name: getEntityId(container, route, t),
-    displayName: getEntityName(container, route, t),
+    name: getEntityId(container),
+    displayName: getEntityName(container),
     description: '',
     source: { $type: SOURCE_TYPE.CONTAINER, containerId: container.name },
   };
@@ -119,8 +119,8 @@ export const getAssetTemplate = (
   transport: CONTAINER_TRANSPORT,
 ): Partial<AssetToolset> => {
   return {
-    name: getEntityId(container, route, t),
-    displayName: getEntityName(container, route, t),
+    name: getEntityId(container),
+    displayName: getEntityName(container),
     endpoint: container.url,
     transport: ENTITY_TRANSPORT[transport],
   };
