@@ -5,7 +5,7 @@ import { breadcrumbConfig } from './constants';
 import { Breadcrumb } from './models';
 
 const IGNORE_BREADCRUMBS = [ApplicationRoute.Home];
-const TRANSLATE_BREADCRUMBS = { [SYSTEM_ROLLBACK_ID]: RollbackI18nKey.System };
+const TRANSLATE_BREADCRUMBS = { [SYSTEM_ROLLBACK_ID]: RollbackI18nKey.Rollback };
 
 export function getBreadcrumbs(pathname: string, currentLocale: string): Breadcrumb[] {
   const segments = pathname.split('/').filter((segment) => segment);

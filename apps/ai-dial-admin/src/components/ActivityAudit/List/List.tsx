@@ -265,7 +265,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, initTimeFil
           {!entity && (
             <DialNeutralButton
               iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} />}
-              label={t(RollbackI18nKey.System)}
+              label={t(RollbackI18nKey.Rollback)}
               onClick={systemRollback}
             />
           )}
