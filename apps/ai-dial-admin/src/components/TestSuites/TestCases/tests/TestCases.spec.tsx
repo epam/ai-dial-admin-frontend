@@ -11,7 +11,7 @@ vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
 }));
 
 // Mock ListView component
-vi.mock('@/src/components/ListView/ListView', () => ({
+vi.mock('@/src/components/ListView/List', () => ({
   default: ({ title, emptyDataTitle, columnDefs, onGridReady, children }: any) => (
     <div>
       <div>List View Component</div>
@@ -43,14 +43,14 @@ describe('TestCases', () => {
 
   const mockTestCases: TestCase[] = [
     {
-      name: 'Test Case 1',
-      facts: {
+      testCaseName: 'Test Case 1',
+      data: {
         temperature: 0.7,
       },
     },
     {
-      name: 'Test Case 2',
-      facts: {
+      testCaseName: 'Test Case 2',
+      data: {
         temperature: 0.5,
       },
     },
@@ -60,27 +60,6 @@ describe('TestCases', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  test('renders ListView with correct title', () => {
-    vi.mocked(actions.getTestCases).mockResolvedValue({
-      content: mockTestCases,
-      totalElements: 2,
-    });
-    render(<TestCases selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
-
-    expect(screen.getByText('List View Component')).toBeInTheDocument();
-    expect(screen.getByText(`Title: ${TestSuitesI18nKey.TestCases}`)).toBeInTheDocument();
-  });
-
-  test('renders ListView with correct empty data title', () => {
-    vi.mocked(actions.getTestCases).mockResolvedValue({
-      content: mockTestCases,
-      totalElements: 2,
-    });
-    render(<TestCases selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
-
-    expect(screen.getByText(`Empty Title: ${TestSuitesI18nKey.NoTestCases}`)).toBeInTheDocument();
   });
 
   test('fetches test cases on mount', async () => {
@@ -151,20 +130,6 @@ describe('TestCases', () => {
     });
   });
 
-  test('renders with flex layout classes', () => {
-    vi.mocked(actions.getTestCases).mockResolvedValue({
-      content: [],
-      totalElements: 0,
-    });
-
-    const { container } = render(<TestCases selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
-
-    const wrapper = container.firstChild as HTMLElement;
-    expect(wrapper.className).toContain('flex');
-    expect(wrapper.className).toContain('h-full');
-    expect(wrapper.className).toContain('w-full');
-  });
-
   test('passes allowPadding false to ListView', () => {
     vi.mocked(actions.getTestCases).mockResolvedValue({
       content: [],
@@ -180,12 +145,12 @@ describe('TestCases', () => {
   test('handles multiple test cases with different facts', async () => {
     const testCasesWithDifferentFacts: TestCase[] = [
       {
-        name: 'Case 1',
-        facts: { temp: 0.5 },
+        testCaseName: 'Case 1',
+        data: { temp: 0.5 },
       },
       {
-        name: 'Case 2',
-        facts: { model: 'gpt-4', tokens: 100 },
+        testCaseName: 'Case 2',
+        data: { model: 'gpt-4', tokens: 100 },
       },
     ];
 

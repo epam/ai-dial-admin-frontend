@@ -8,6 +8,7 @@ import { RowDragEvent } from 'ag-grid-community';
 import { getApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
 import { getProperties } from '@/src/app/[lang]/system-properties/actions';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { DESCRIPTION_COLUMN, DISPLAY_NAME_COLUMN, NAME_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { ButtonsI18nKey, EntitiesI18nKey, InterceptorsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
@@ -18,7 +19,6 @@ import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import GridView from '@/src/components/Grid/GridView/GridView';
 import CollapsableInterceptors from './CollapsableInterceptors';
 import { getInterceptorsColumnDefs, getInterceptorsGridData } from './utils';
 
@@ -103,27 +103,6 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
     [entity, entityInterceptors, isAppRunnerView, onChangeEntity],
   );
 
-  const onRemoveInterceptor = useCallback(
-    (_?: DialInterceptor, index?: number) => {
-      if (index != null) {
-        entityInterceptors?.splice(index, 1);
-
-        if (isAppRunnerView) {
-          onChangeEntity({
-            ...entity,
-            'dial:applicationTypeInterceptors': entityInterceptors,
-          });
-        } else {
-          onChangeEntity({
-            ...entity,
-            interceptors: entityInterceptors,
-          });
-        }
-      }
-    },
-    [entity, entityInterceptors, isAppRunnerView, onChangeEntity],
-  );
-
   const onRowDragEnd = useCallback(
     (event: RowDragEvent) => {
       const newRowData: string[] = [];
@@ -153,10 +132,23 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
 
   const runnerColumns = getInterceptorsColumnDefs(onOpen, void 0, globalInterceptors?.length);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const onRemoveInterceptor = (_?: DialInterceptor, index?: number) => {
+    if (index != null) {
+      if (isAppRunnerView) {
+        entity['dial:applicationTypeInterceptors']?.splice(index, 1);
+      } else {
+        entity.interceptors?.splice(index, 1);
+      }
+
+      onChangeEntity({ ...entity });
+    }
+  };
+
   const localColumns = useMemo(() => {
     return getInterceptorsColumnDefs(
       onOpen,
-      onRemoveInterceptor,
+      (_?: DialInterceptor, index?: number) => onRemoveInterceptor(_, index),
       (globalInterceptors?.length || 0) + (runnerInterceptors?.length || 0),
     );
   }, [onRemoveInterceptor, globalInterceptors?.length, runnerInterceptors?.length]);

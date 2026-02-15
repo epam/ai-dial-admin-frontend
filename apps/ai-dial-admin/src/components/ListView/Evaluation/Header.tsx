@@ -1,14 +1,12 @@
 'use client';
 
-import { MouseEvent, useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialGhostButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
-import { IconColumns2, IconPlus } from '@tabler/icons-react';
-import { GridApi } from 'ag-grid-community';
+import { DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { IconPlus } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 
-import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
 import CreateTestSuite from '@/src/components/TestSuites/Modals/Create/CreateTestSuite';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -25,12 +23,10 @@ import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 
 interface Props<T> {
   route: ApplicationRoute;
-  gridApi?: GridApi | null;
-  toggleColumnsPanel: () => void;
   onCreateEntity?: (entity: T) => Promise<ServerActionResponse>;
 }
 
-const HeaderButtons = <T extends { id?: string }>({ route, gridApi, toggleColumnsPanel, onCreateEntity }: Props<T>) => {
+const HeaderButtons = <T extends { id?: string }>({ route, onCreateEntity }: Props<T>) => {
   const t = useI18n();
   const router = useRouter();
 
@@ -45,15 +41,6 @@ const HeaderButtons = <T extends { id?: string }>({ route, gridApi, toggleColumn
   const onModalOpen = useCallback(() => {
     setIsModalOpen(true);
   }, []);
-
-  const onToggleColumnsPanel = useCallback(
-    (e: MouseEvent<HTMLButtonElement>) => {
-      e.stopPropagation();
-
-      toggleColumnsPanel();
-    },
-    [toggleColumnsPanel],
-  );
 
   const onCreate = useCallback(
     (entity: T) => {
@@ -90,14 +77,7 @@ const HeaderButtons = <T extends { id?: string }>({ route, gridApi, toggleColumn
   };
 
   return (
-    <div className="flex gap-4">
-      <ResetFiltersButton gridApi={gridApi} />
-      <DialGhostButton
-        label={t(ButtonsI18nKey.Columns)}
-        iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} />}
-        onClick={onToggleColumnsPanel}
-      />
-
+    <>
       <DialPrimaryButton
         label={isTabletScreen ? '' : t(ButtonsI18nKey.Create)}
         iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
@@ -105,7 +85,7 @@ const HeaderButtons = <T extends { id?: string }>({ route, gridApi, toggleColumn
       />
 
       {isModalOpen && createPortal(getCreateModal(), document.body)}
-    </div>
+    </>
   );
 };
 

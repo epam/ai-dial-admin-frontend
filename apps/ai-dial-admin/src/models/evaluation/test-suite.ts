@@ -21,13 +21,18 @@ export interface TestSuiteDeploymentRef {
 
 export interface TestSuiteEndpointRef {
   method?: string;
-  relativeUrl?: string;
+  relativeUrlPattern?: string;
   parameters?: Record<string, unknown>[];
   requestBodySchema?: DialScheme;
   responseBodySchema?: DialScheme;
 }
 
 export interface TestCase {
-  name?: string;
-  facts?: Record<string, unknown>;
+  testCaseName?: string;
+  updatedAt?: number;
+  valid?: boolean;
+  id: string;
+  enabled: boolean;
+  createdAt: number;
+  data?: Record<string, unknown>;
 }

@@ -34,7 +34,7 @@ describe('Common ItemsList component', () => {
 
   test('add correctly', async () => {
     const setItems = vi.fn();
-    render(<ItemsList items={['item', 'item-2']} setItems={setItems} addItemLabel={'ADD'} />);
+    render(<ItemsList items={['item', 'item-2']} setItems={setItems} addItemLabel="ADD" />);
 
     const button = screen.getByRole('button', { name: 'ADD' });
 

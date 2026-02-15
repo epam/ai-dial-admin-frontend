@@ -4,6 +4,7 @@ import { FC } from 'react';
 
 import { DialGhostButton, DialNeutralButton, DialPrimaryButton, Step, StepStatus } from '@epam/ai-dial-ui-kit';
 import { IconArrowNarrowLeft, IconArrowNarrowRight } from '@tabler/icons-react';
+import classNames from 'classnames';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -31,7 +32,12 @@ const StepperModalButtons: FC<Props> = ({ steps, currentStep, onChangeStep, onFi
   };
 
   return (
-    <div className="flex flex-row items-center justify-between gap-2 px-6 py-4">
+    <div
+      className={classNames(
+        'flex flex-row items-center gap-2 px-6 py-4',
+        currentStep?.id !== steps[0]?.id ? 'justify-between' : 'justify-end',
+      )}
+    >
       {currentStep?.id !== steps[0]?.id && (
         <DialGhostButton
           label={t(ButtonsI18nKey.Back)}

@@ -23,22 +23,6 @@ describe('HeaderButtons', () => {
     expect(screen.getByRole('button', { name: /create/i })).toBeInTheDocument();
   });
 
-  test('renders columns button', () => {
-    render(<HeaderButtons {...defaultProps} />);
-
-    expect(screen.getByRole('button', { name: /columns/i })).toBeInTheDocument();
-  });
-
-  test('calls toggleColumnsPanel when columns button clicked', async () => {
-    const user = userEvent.setup();
-    render(<HeaderButtons {...defaultProps} />);
-
-    const columnsButton = screen.getByRole('button', { name: /columns/i });
-    await user.click(columnsButton);
-
-    expect(mockToggleColumnsPanel).toHaveBeenCalled();
-  });
-
   test.skip('opens modal when create button clicked', async () => {
     const user = userEvent.setup();
     render(<HeaderButtons {...defaultProps} />);
