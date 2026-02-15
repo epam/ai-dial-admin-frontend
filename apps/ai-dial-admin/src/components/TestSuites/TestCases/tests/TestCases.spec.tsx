@@ -43,14 +43,14 @@ describe('TestCases', () => {
 
   const mockTestCases: TestCase[] = [
     {
-      name: 'Test Case 1',
-      facts: {
+      testCaseName: 'Test Case 1',
+      data: {
         temperature: 0.7,
       },
     },
     {
-      name: 'Test Case 2',
-      facts: {
+      testCaseName: 'Test Case 2',
+      data: {
         temperature: 0.5,
       },
     },
@@ -145,12 +145,12 @@ describe('TestCases', () => {
   test('handles multiple test cases with different facts', async () => {
     const testCasesWithDifferentFacts: TestCase[] = [
       {
-        name: 'Case 1',
-        facts: { temp: 0.5 },
+        testCaseName: 'Case 1',
+        data: { temp: 0.5 },
       },
       {
-        name: 'Case 2',
-        facts: { model: 'gpt-4', tokens: 100 },
+        testCaseName: 'Case 2',
+        data: { model: 'gpt-4', tokens: 100 },
       },
     ];
 

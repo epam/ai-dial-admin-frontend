@@ -20,17 +20,13 @@ describe('getTestCaseGridData', () => {
   });
 
   test('should return test case without modification when it has no facts', () => {
-    const testCases: TestCase[] = [
-      {
-        name: 'Test Case 1',
-      },
-    ];
+    const testCases: TestCase[] = [{ testCaseName: 'Test Case 1' }];
 
     const result = getTestCaseGridData(testCases);
 
     expect(result).toEqual([
       {
-        name: 'Test Case 1',
+        testCaseName: 'Test Case 1',
       },
     ]);
   });
@@ -38,8 +34,8 @@ describe('getTestCaseGridData', () => {
   test('should return test case without modification when facts is undefined', () => {
     const testCases: TestCase[] = [
       {
-        name: 'Test Case 1',
-        facts: undefined,
+        testCaseName: 'Test Case 1',
+        data: undefined,
       },
     ];
 
@@ -47,8 +43,8 @@ describe('getTestCaseGridData', () => {
 
     expect(result).toEqual([
       {
-        name: 'Test Case 1',
-        facts: undefined,
+        testCaseName: 'Test Case 1',
+        data: undefined,
       },
     ]);
   });
@@ -56,8 +52,8 @@ describe('getTestCaseGridData', () => {
   test('should return test case without modification when facts is empty object', () => {
     const testCases: TestCase[] = [
       {
-        name: 'Test Case 1',
-        facts: {},
+        testCaseName: 'Test Case 1',
+        data: {},
       },
     ];
 
@@ -65,8 +61,8 @@ describe('getTestCaseGridData', () => {
 
     expect(result).toEqual([
       {
-        name: 'Test Case 1',
-        facts: {},
+        testCaseName: 'Test Case 1',
+        data: {},
       },
     ]);
   });
@@ -74,8 +70,8 @@ describe('getTestCaseGridData', () => {
   test('should spread facts into the result object', () => {
     const testCases: TestCase[] = [
       {
-        name: 'Test Case 1',
-        facts: {
+        testCaseName: 'Test Case 1',
+        data: {
           temperature: 0.7,
           maxTokens: 100,
         },
@@ -86,8 +82,8 @@ describe('getTestCaseGridData', () => {
 
     expect(result).toEqual([
       {
-        name: 'Test Case 1',
-        facts: {
+        testCaseName: 'Test Case 1',
+        data: {
           temperature: 0.7,
           maxTokens: 100,
         },
@@ -100,8 +96,8 @@ describe('getTestCaseGridData', () => {
   test('should handle single fact', () => {
     const testCases: TestCase[] = [
       {
-        name: 'Test Case 1',
-        facts: {
+        testCaseName: 'Test Case 1',
+        data: {
           prompt: 'test prompt',
         },
       },
@@ -111,8 +107,8 @@ describe('getTestCaseGridData', () => {
 
     expect(result).toEqual([
       {
-        name: 'Test Case 1',
-        facts: {
+        testCaseName: 'Test Case 1',
+        data: {
           prompt: 'test prompt',
         },
         prompt: 'test prompt',
@@ -123,14 +119,14 @@ describe('getTestCaseGridData', () => {
   test('should process multiple test cases', () => {
     const testCases: TestCase[] = [
       {
-        name: 'Test Case 1',
-        facts: {
+        testCaseName: 'Test Case 1',
+        data: {
           temperature: 0.7,
         },
       },
       {
-        name: 'Test Case 2',
-        facts: {
+        testCaseName: 'Test Case 2',
+        data: {
           temperature: 0.5,
           model: 'gpt-4',
         },
@@ -141,15 +137,15 @@ describe('getTestCaseGridData', () => {
 
     expect(result.length).toBe(2);
     expect(result[0]).toEqual({
-      name: 'Test Case 1',
-      facts: {
+      testCaseName: 'Test Case 1',
+      data: {
         temperature: 0.7,
       },
       temperature: 0.7,
     });
     expect(result[1]).toEqual({
-      name: 'Test Case 2',
-      facts: {
+      testCaseName: 'Test Case 2',
+      data: {
         temperature: 0.5,
         model: 'gpt-4',
       },
@@ -161,20 +157,20 @@ describe('getTestCaseGridData', () => {
   test('should handle different fact values across test cases', () => {
     const testCases: TestCase[] = [
       {
-        name: 'Case 1',
-        facts: {
+        testCaseName: 'Case 1',
+        data: {
           param1: 'value1',
         },
       },
       {
-        name: 'Case 2',
-        facts: {
+        testCaseName: 'Case 2',
+        data: {
           param2: 'value2',
         },
       },
       {
-        name: 'Case 3',
-        facts: {},
+        testCaseName: 'Case 3',
+        data: {},
       },
     ];
 
@@ -192,8 +188,8 @@ describe('getTestCaseGridData', () => {
   test('should handle various data types in facts', () => {
     const testCases: TestCase[] = [
       {
-        name: 'Test Case 1',
-        facts: {
+        testCaseName: 'Test Case 1',
+        data: {
           stringFact: 'text',
           numberFact: 42,
           booleanFact: true,
@@ -215,8 +211,8 @@ describe('getTestCaseGridData', () => {
   test('should preserve all test case properties', () => {
     const testCases: TestCase[] = [
       {
-        name: 'Test Case 1',
-        facts: {
+        testCaseName: 'Test Case 1',
+        data: {
           temperature: 0.7,
         },
       },
@@ -224,16 +220,16 @@ describe('getTestCaseGridData', () => {
 
     const result = getTestCaseGridData(testCases);
 
-    expect(result[0].name).toBe('Test Case 1');
-    expect(result[0].facts).toEqual({ temperature: 0.7 });
+    expect(result[0].testCaseName).toBe('Test Case 1');
+    expect(result[0].data).toEqual({ temperature: 0.7 });
     expect(result[0].temperature).toBe(0.7);
   });
 
   test('should handle facts with special characters in keys', () => {
     const testCases: TestCase[] = [
       {
-        name: 'Test Case 1',
-        facts: {
+        testCaseName: 'Test Case 1',
+        data: {
           'fact-with-dash': 'value1',
           fact_with_underscore: 'value2',
           'fact.with.dot': 'value3',
@@ -251,8 +247,8 @@ describe('getTestCaseGridData', () => {
   test('should handle null and undefined values in facts', () => {
     const testCases: TestCase[] = [
       {
-        name: 'Test Case 1',
-        facts: {
+        testCaseName: 'Test Case 1',
+        data: {
           nullValue: null,
           undefinedValue: undefined,
         },
@@ -268,8 +264,8 @@ describe('getTestCaseGridData', () => {
   test('should handle facts overriding test case properties', () => {
     const testCases: TestCase[] = [
       {
-        name: 'Test Case 1',
-        facts: {
+        testCaseName: 'Test Case 1',
+        data: {
           name: 'Overridden Name',
         },
       },
@@ -279,7 +275,7 @@ describe('getTestCaseGridData', () => {
 
     // Facts are spread after testCase, so they override
     expect(result[0].name).toBe('Overridden Name');
-    expect(result[0].facts).toEqual({ name: 'Overridden Name' });
+    expect(result[0].data).toEqual({ name: 'Overridden Name' });
   });
 
   test('should handle large number of facts', () => {
@@ -290,8 +286,8 @@ describe('getTestCaseGridData', () => {
 
     const testCases: TestCase[] = [
       {
-        name: 'Test Case 1',
-        facts,
+        testCaseName: 'Test Case 1',
+        data: facts,
       },
     ];
 
@@ -306,17 +302,17 @@ describe('getTestCaseGridData', () => {
   test('should handle mixed test cases with and without facts', () => {
     const testCases: TestCase[] = [
       {
-        name: 'Case 1',
-        facts: {
+        testCaseName: 'Case 1',
+        data: {
           param: 'value',
         },
       },
       {
-        name: 'Case 2',
+        testCaseName: 'Case 2',
       },
       {
-        name: 'Case 3',
-        facts: {
+        testCaseName: 'Case 3',
+        data: {
           another: 'test',
         },
       },
@@ -333,8 +329,8 @@ describe('getTestCaseGridData', () => {
   test('should not mutate original test cases', () => {
     const testCases: TestCase[] = [
       {
-        name: 'Test Case 1',
-        facts: {
+        testCaseName: 'Test Case 1',
+        data: {
           temperature: 0.7,
         },
       },
@@ -349,8 +345,8 @@ describe('getTestCaseGridData', () => {
   test('should handle zero values in facts', () => {
     const testCases: TestCase[] = [
       {
-        name: 'Test Case 1',
-        facts: {
+        testCaseName: 'Test Case 1',
+        data: {
           zeroNumber: 0,
           emptyString: '',
           falseBool: false,
