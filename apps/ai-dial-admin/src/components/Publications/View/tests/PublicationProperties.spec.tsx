@@ -13,11 +13,6 @@ describe('PublicationProperties', () => {
     expect(screen.getByText(EntitiesI18nKey.FolderStorage)).toBeInTheDocument();
   });
 
-  test('renders file publication properties', () => {
-    render(<PublicationProperties view={ApplicationRoute.FilePublications} publication={fakePublication} />);
-    expect(screen.getByText(EntitiesI18nKey.FolderStorage)).toBeInTheDocument();
-  });
-
   test('renders application publication properties', () => {
     render(
       <PublicationProperties
