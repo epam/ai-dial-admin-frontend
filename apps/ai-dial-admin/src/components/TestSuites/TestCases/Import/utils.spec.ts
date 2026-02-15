@@ -12,6 +12,7 @@ describe('getGridDataFromImportPreview', () => {
       sampleRows: [],
       totalRows: 0,
       warnings: [],
+      autoDetectedSchema: [],
     };
 
     const result = getGridDataFromImportPreview(importPreview);
@@ -23,22 +24,21 @@ describe('getGridDataFromImportPreview', () => {
 
   test('should map sampleRows with facts and parameters to rowData correctly', () => {
     const importPreview: ImportPreview = {
+      autoDetectedSchema: [],
       detectedColumns: [{ fieldName: 'name', headerName: 'Name', inferredType: 'string', mappedTo: 'testCaseName' }],
       sampleRows: [
         {
           enabled: true,
           valid: true,
           testCaseName: 'Test Case 1',
-          facts: { temperature: 0.7, model: 'gpt-4' },
-          parameters: { maxTokens: 100, stream: true },
+          data: { temperature: 0.7, model: 'gpt-4' },
           validationWarnings: [],
         },
         {
           enabled: false,
           valid: true,
           testCaseName: 'Test Case 2',
-          facts: { temperature: 0.5 },
-          parameters: { maxTokens: 200 },
+          data: { temperature: 0.5 },
           validationWarnings: [],
         },
       ],
@@ -53,23 +53,18 @@ describe('getGridDataFromImportPreview', () => {
         enabled: true,
         valid: true,
         testCaseName: 'Test Case 1',
-        facts: { temperature: 0.7, model: 'gpt-4' },
-        parameters: { maxTokens: 100, stream: true },
+        data: { temperature: 0.7, model: 'gpt-4' },
         validationWarnings: [],
         temperature: 0.7,
         model: 'gpt-4',
-        maxTokens: 100,
-        stream: true,
       },
       {
         enabled: false,
         valid: true,
         testCaseName: 'Test Case 2',
-        facts: { temperature: 0.5 },
-        parameters: { maxTokens: 200 },
+        data: { temperature: 0.5 },
         validationWarnings: [],
         temperature: 0.5,
-        maxTokens: 200,
       },
     ]);
   });
@@ -80,6 +75,7 @@ describe('getGridDataFromImportPreview', () => {
       sampleRows: [],
       totalRows: 0,
       warnings: [],
+      autoDetectedSchema: [],
     };
 
     const result = getGridDataFromImportPreview(importPreview);
@@ -94,6 +90,7 @@ describe('getGridDataFromImportPreview', () => {
       sampleRows: [],
       totalRows: 0,
       warnings: [],
+      autoDetectedSchema: [],
     };
 
     const result = getGridDataFromImportPreview(importPreview);
@@ -104,14 +101,14 @@ describe('getGridDataFromImportPreview', () => {
 
   test('should handle rows with empty facts and parameters', () => {
     const importPreview: ImportPreview = {
+      autoDetectedSchema: [],
       detectedColumns: [{ fieldName: 'name', headerName: 'Name', inferredType: 'string', mappedTo: 'testCaseName' }],
       sampleRows: [
         {
           enabled: true,
           valid: true,
           testCaseName: 'Test Case 1',
-          facts: {},
-          parameters: {},
+          data: {},
           validationWarnings: [],
         },
       ],
@@ -126,8 +123,7 @@ describe('getGridDataFromImportPreview', () => {
         enabled: true,
         valid: true,
         testCaseName: 'Test Case 1',
-        facts: {},
-        parameters: {},
+        data: {},
         validationWarnings: [],
       },
     ]);
@@ -135,14 +131,14 @@ describe('getGridDataFromImportPreview', () => {
 
   test('should correctly spread row properties when facts and parameters have same keys', () => {
     const importPreview: ImportPreview = {
+      autoDetectedSchema: [],
       detectedColumns: [],
       sampleRows: [
         {
           enabled: true,
           valid: true,
           testCaseName: 'Test Case 1',
-          facts: { value: 100 },
-          parameters: { value: 200 }, // Same key as facts
+          data: { value: 100 },
           validationWarnings: [],
         },
       ],
@@ -152,7 +148,7 @@ describe('getGridDataFromImportPreview', () => {
 
     const result = getGridDataFromImportPreview(importPreview);
 
-    // parameters.value should override facts.value due to spread order
-    expect((result.rowData[0] as any).value).toBe(200);
+    // data.value should be correctly mapped
+    expect((result.rowData[0] as any).value).toBe(100);
   });
 });
