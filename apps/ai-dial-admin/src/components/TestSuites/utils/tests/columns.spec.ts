@@ -14,7 +14,7 @@ describe('getTestCaseColumns', () => {
   });
 
   test('should return only base columns when first test case has no facts', () => {
-    const testCases: TestCase[] = [{ name: 'Test Case 1' }];
+    const testCases: TestCase[] = [{ testCaseName: 'Test Case 1' }];
 
     const result = getTestCaseColumns(testCases);
 
@@ -25,8 +25,8 @@ describe('getTestCaseColumns', () => {
   test('should return only base columns when first test case has undefined facts', () => {
     const testCases: TestCase[] = [
       {
-        name: 'Test Case 1',
-        facts: undefined,
+        testCaseName: 'Test Case 1',
+        data: undefined,
       },
     ];
 
@@ -38,8 +38,8 @@ describe('getTestCaseColumns', () => {
   test('should return only base columns when first test case has empty facts object', () => {
     const testCases: TestCase[] = [
       {
-        name: 'Test Case 1',
-        facts: {},
+        testCaseName: 'Test Case 1',
+        data: {},
       },
     ];
 
@@ -52,8 +52,8 @@ describe('getTestCaseColumns', () => {
   test('should add columns for each fact in the first test case', () => {
     const testCases: TestCase[] = [
       {
-        name: 'Test Case 1',
-        facts: {
+        testCaseName: 'Test Case 1',
+        data: {
           temperature: 0.7,
           maxTokens: 100,
         },
@@ -72,8 +72,8 @@ describe('getTestCaseColumns', () => {
   test('should handle single fact', () => {
     const testCases: TestCase[] = [
       {
-        name: 'Test Case 1',
-        facts: {
+        testCaseName: 'Test Case 1',
+        data: {
           prompt: 'test prompt',
         },
       },
@@ -88,8 +88,8 @@ describe('getTestCaseColumns', () => {
   test('should handle facts with various data types', () => {
     const testCases: TestCase[] = [
       {
-        name: 'Test Case 1',
-        facts: {
+        testCaseName: 'Test Case 1',
+        data: {
           stringFact: 'value',
           numberFact: 42,
           booleanFact: true,
@@ -112,8 +112,8 @@ describe('getTestCaseColumns', () => {
   test('should handle facts with special characters in keys', () => {
     const testCases: TestCase[] = [
       {
-        name: 'Test Case 1',
-        facts: {
+        testCaseName: 'Test Case 1',
+        data: {
           'fact-with-dash': 'value1',
           fact_with_underscore: 'value2',
           'fact.with.dot': 'value3',
@@ -132,8 +132,8 @@ describe('getTestCaseColumns', () => {
   test('should preserve the order of facts as they appear in the object', () => {
     const testCases: TestCase[] = [
       {
-        name: 'Test Case 1',
-        facts: {
+        testCaseName: 'Test Case 1',
+        data: {
           zFact: 'z',
           aFact: 'a',
           mFact: 'm',
@@ -151,8 +151,8 @@ describe('getTestCaseColumns', () => {
   test('should correctly spread TEST_CASES_COLUMN at the beginning', () => {
     const testCases: TestCase[] = [
       {
-        name: 'Test Case 1',
-        facts: {
+        testCaseName: 'Test Case 1',
+        data: {
           customFact: 'value',
         },
       },
