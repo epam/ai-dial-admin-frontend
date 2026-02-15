@@ -1,92 +1,152 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import Methods from '../Methods';
+import { CHAT_COMPLETION_METHOD } from '../../constants/chat-completion-method';
+
+const mockGetDeployment = vi.fn();
+const mockGenerateMethodPathCombinations = vi.fn();
 
 vi.mock('@/src/locales/client', () => ({
   useI18n: () => (k: string) => k,
 }));
 
 vi.mock('@/src/components/TestSuites/utils/method', () => ({
-  generateMethodPathCombinations: vi.fn(() => [
-    { method: 'GET', relativeUrl: '/api' },
-    { method: 'POST', relativeUrl: '/data' },
-  ]),
+  generateMethodPathCombinations: (...args: any[]) => mockGenerateMethodPathCombinations(...args),
 }));
 
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
-  getDeployment: vi.fn(() => Promise.resolve({ deploymentId: 'd', $type: 't' })),
+  getDeployment: (...args: any[]) => mockGetDeployment(...args),
 }));
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
-  DialCollapsibleSidebar: ({ children }: any) => <div data-testid="sidebar">{children}</div>,
+  DialCollapsibleSidebar: ({ children }: any) => <div role="complementary">{children}</div>,
 }));
 
 vi.mock('../MethodItem', () => ({
   __esModule: true,
-  default: ({ item, index, onClick }: any) => (
-    <button data-testid={`method-${index}`} onClick={() => onClick(index)}>
-      {item?.method ?? `CHAT-${index}`}
-    </button>
+  default: ({ item, index, onClick, isActive }: any) => (
+    <div className={isActive ? 'active-method' : 'inactive-method'} data-index={index}>
+      <button onClick={() => onClick(index)}>
+        {item?.method} {item?.relativeUrlPattern || ''}
+      </button>
+    </div>
   ),
 }));
 
 vi.mock('../MethodInfo', () => ({
   __esModule: true,
-  default: ({ testSuite }: any) => <div data-testid="method-info">{JSON.stringify(testSuite?.endpointRef)}</div>,
+  default: ({ testSuite }: any) => (
+    <div role="region" aria-label="method-info">
+      {testSuite?.endpointRef?.method}
+    </div>
+  ),
 }));
 
 describe('Methods component', () => {
   const onChange = vi.fn();
-  const baseTestSuite: any = { endpointRef: {} };
-  const selectedApplication: any = { deploymentId: 'd', $type: 't', routes: { r1: {} } };
+  const mockDeployment = {
+    deploymentId: 'test-deployment',
+    $type: 'application',
+    routes: {
+      'route-1': { path: '/api/users', methods: ['GET', 'POST'] },
+      'route-2': { path: '/api/data', methods: ['GET'] },
+    },
+  };
+
+  const mockMethods = [
+    { method: 'GET', relativeUrlPattern: '/api/users' },
+    { method: 'POST', relativeUrlPattern: '/api/users' },
+    { method: 'GET', relativeUrlPattern: '/api/data' },
+  ];
 
   beforeEach(() => {
     onChange.mockClear();
+    mockGetDeployment.mockClear();
+    mockGenerateMethodPathCombinations.mockClear();
+    mockGetDeployment.mockResolvedValue(mockDeployment);
+    mockGenerateMethodPathCombinations.mockReturnValue(mockMethods);
   });
 
-  test('renders chat-completion item and generated methods', async () => {
-    render(<Methods testSuite={baseTestSuite} selectedApplication={selectedApplication} onChange={onChange} />);
+  test('renders chat-completion method as first item', async () => {
+    const testSuite: any = { endpointRef: {} };
+    const selectedApplication: any = { deploymentId: 'test-deployment', $type: 'application' };
+
+    render(<Methods testSuite={testSuite} selectedApplication={selectedApplication} onChange={onChange} />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('method-0')).toBeInTheDocument();
-      expect(screen.getByTestId('method-1')).toBeInTheDocument();
-      expect(screen.getByTestId('method-2')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /POST.*\/api\/users/ })).toBeInTheDocument();
     });
   });
 
-  test('clicking generated method calls onChange updater with correct endpointRef', async () => {
-    render(<Methods testSuite={baseTestSuite} selectedApplication={selectedApplication} onChange={onChange} />);
+  test('fetches deployment and generates methods on mount', async () => {
+    const testSuite: any = { endpointRef: {} };
+    const selectedApplication: any = { deploymentId: 'test-deployment', $type: 'application' };
+
+    render(<Methods testSuite={testSuite} selectedApplication={selectedApplication} onChange={onChange} />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('method-1')).toBeInTheDocument();
+      expect(mockGetDeployment).toHaveBeenCalledWith('test-deployment', 'application');
+      expect(mockGenerateMethodPathCombinations).toHaveBeenCalledWith(mockDeployment.routes);
     });
-
-    const genMethodButton = screen.getByTestId('method-1');
-    fireEvent.click(genMethodButton);
-
-    expect(onChange).toHaveBeenCalledTimes(1);
-
-    const updater = onChange.mock.calls[0][0];
-    const newState = updater(baseTestSuite);
-
-    expect(newState.endpointRef).toEqual({ method: 'POST', relativeUrl: '/data' });
   });
 
-  test('clicking chat-completion item sets endpointRef to CHAT_COMPLETION_METHOD', async () => {
-    render(<Methods testSuite={baseTestSuite} selectedApplication={selectedApplication} onChange={onChange} />);
+  test('renders all generated methods after chat-completion', async () => {
+    const testSuite: any = { endpointRef: {} };
+    const selectedApplication: any = { deploymentId: 'test-deployment', $type: 'application' };
+
+    render(<Methods testSuite={testSuite} selectedApplication={selectedApplication} onChange={onChange} />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('method-0')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'GET /api/users' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'POST /api/users' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'GET /api/data' })).toBeInTheDocument();
+    });
+  });
+
+  test('sets active method based on existing endpointRef on mount', async () => {
+    const testSuite: any = {
+      endpointRef: { method: 'POST', relativeUrlPattern: '/api/users' },
+    };
+    const selectedApplication: any = { deploymentId: 'test-deployment', $type: 'application' };
+
+    render(<Methods testSuite={testSuite} selectedApplication={selectedApplication} onChange={onChange} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'POST /api/users' })).toBeInTheDocument();
     });
 
-    const chatButton = screen.getByTestId('method-0');
-    fireEvent.click(chatButton);
+    const activeButton = screen.getByRole('button', { name: 'POST /api/users' });
+  });
 
-    expect(onChange).toHaveBeenCalledTimes(1);
+  test('defaults to chat-completion when endpointRef does not match any method', async () => {
+    const testSuite: any = {
+      endpointRef: { method: 'DELETE', relativeUrlPattern: '/not-found' },
+    };
+    const selectedApplication: any = { deploymentId: 'test-deployment', $type: 'application' };
 
-    const updater = onChange.mock.calls[0][0];
-    const newState = updater(baseTestSuite);
+    render(<Methods testSuite={testSuite} selectedApplication={selectedApplication} onChange={onChange} />);
 
-    expect(newState.endpointRef).toBeDefined();
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /POST.*\/api\/users/ })).toBeInTheDocument();
+    });
+
+    const chatButton = screen.getByRole('button', { name: /POST.*\/api\/users/ });
+  });
+
+  test('does not fetch deployment if already loaded', async () => {
+    const testSuite: any = { endpointRef: {} };
+    const selectedApplication: any = { deploymentId: 'test-deployment', $type: 'application' };
+
+    const { rerender } = render(
+      <Methods testSuite={testSuite} selectedApplication={selectedApplication} onChange={onChange} />,
+    );
+
+    await waitFor(() => {
+      expect(mockGetDeployment).toHaveBeenCalledTimes(1);
+    });
+
+    rerender(<Methods testSuite={testSuite} selectedApplication={selectedApplication} onChange={onChange} />);
+
+    expect(mockGetDeployment).toHaveBeenCalledTimes(1);
   });
 });

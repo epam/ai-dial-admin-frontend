@@ -11,5 +11,5 @@ export const getGridDataFromImportPreview = (importPreview: ImportPreview) => {
     })),
   ];
 
-  return { colDefs, rowData: importPreview.sampleRows.map((row) => ({ ...row, ...row.facts, ...row.parameters })) };
+  return { colDefs, rowData: importPreview.sampleRows.map((row) => ({ ...row, ...row.data })) };
 };

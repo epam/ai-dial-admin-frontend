@@ -27,8 +27,8 @@ describe('Export Config Utils :: getAllAvailableDependencies', () => {
   });
 
   test('returns correct dependencies for MODEL', () => {
-    const result = getAllAvailableDependencies(EntityType.MODEL);
-    expect(result).toEqual([EntityType.ADAPTER, EntityType.INTERCEPTOR]);
+    expect(getAllAvailableDependencies(EntityType.MODEL, false)).toEqual([EntityType.ADAPTER, EntityType.INTERCEPTOR]);
+    expect(getAllAvailableDependencies(EntityType.MODEL, true)).toEqual([EntityType.INTERCEPTOR]);
   });
 
   test('returns correct dependencies for APPLICATION_TYPE_SCHEMA', () => {

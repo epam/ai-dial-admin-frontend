@@ -11,6 +11,7 @@ import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { EntityType } from '@/src/types/entity-type';
+import { ExportFormat } from '@/src/types/export';
 import { getEmptyDataTitleI18nKey } from '@/src/utils/entities/get-empty-data-title';
 import Dependencies from './Dependencies';
 
@@ -19,11 +20,20 @@ interface Props {
   selectedTab?: EntityType;
   entities: EntitiesGridData[];
   columnDefs?: ColDef[];
+  selectedExportFormat: ExportFormat;
   onClose: () => void;
   onApply: (entities: EntitiesGridData[], dependencies?: EntityType[]) => void;
 }
 
-const AddEntitiesModal: FC<Props> = ({ isModalOpen, selectedTab, entities, columnDefs, onClose, onApply }) => {
+const AddEntitiesModal: FC<Props> = ({
+  isModalOpen,
+  selectedExportFormat,
+  selectedTab,
+  entities,
+  columnDefs,
+  onClose,
+  onApply,
+}) => {
   const t = useI18n();
   const [selectedEntities, setSelectedEntities] = useState<EntitiesGridData[]>([]);
   const [selectedDependencies, setSelectedDependencies] = useState<EntityType[]>([]);
@@ -70,6 +80,7 @@ const AddEntitiesModal: FC<Props> = ({ isModalOpen, selectedTab, entities, colum
             </div>
             <Dependencies
               selectedTab={selectedTab}
+              selectedExportFormat={selectedExportFormat}
               selectedDependencies={selectedDependencies}
               onChangeSelectedDependencies={setSelectedDependencies}
             />
