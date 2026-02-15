@@ -12,6 +12,7 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { EntityType } from '@/src/types/entity-type';
+import { ExportFormat } from '@/src/types/export';
 import { getAvailableData, getButtonTitle } from './utils';
 
 interface Props {
@@ -20,6 +21,7 @@ interface Props {
   customExportData: Record<string, EntitiesGridData[]>;
   setCustomExportData: Dispatch<SetStateAction<Record<string, EntitiesGridData[]>>>;
   selectedTopics: string[];
+  selectedExportFormat: ExportFormat;
 }
 
 const AddEntitiesButton: FC<Props> = ({
@@ -28,6 +30,7 @@ const AddEntitiesButton: FC<Props> = ({
   customExportData,
   setCustomExportData,
   selectedTopics,
+  selectedExportFormat,
 }) => {
   const t = useI18n();
 
@@ -94,6 +97,7 @@ const AddEntitiesButton: FC<Props> = ({
           <AddEntitiesModal
             selectedTab={entityTitle}
             columnDefs={columnDefs}
+            selectedExportFormat={selectedExportFormat}
             isModalOpen={isModalOpen}
             entities={availableEntities}
             onClose={() => setIsModalOpen(false)}
