@@ -63,12 +63,14 @@ const TelemetryGrid: FC<Props> = ({ columnDefs, title, getData, query, refreshTi
       {loading ? (
         <DialLoader size={24} />
       ) : (
-        <GridView
-          emptyDataProps={{ title: t(BasicI18nKey.NoData) }}
-          rowData={data}
-          columnDefs={columnDefs}
-          additionalGridOptions={additionalGridOptions}
-        />
+        <div className="flex-1 min-h-0">
+          <GridView
+            emptyDataProps={{ title: t(BasicI18nKey.NoData) }}
+            rowData={data}
+            columnDefs={columnDefs}
+            additionalGridOptions={additionalGridOptions}
+          />
+        </div>
       )}
     </div>
   );
