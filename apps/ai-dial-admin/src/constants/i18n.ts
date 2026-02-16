@@ -46,6 +46,7 @@ export enum MenuI18nKey {
   FoldersStorage = 'Menu.FoldersStorage',
   McpContainers = 'Menu.McpContainers',
   InterceptorContainers = 'Menu.InterceptorContainers',
+  AdapterContainers = 'Menu.AdapterContainers',
   ModelServings = 'Menu.ModelServings',
   InterceptorTemplates = 'Menu.InterceptorTemplates',
   ActivityAudit = 'Menu.ActivityAudit',
@@ -176,6 +177,7 @@ export enum EntitiesI18nKey {
   Core = 'Entities.Core',
   Action = 'Entities.Action',
   Runner = 'Entities.Runner',
+  Adapter = 'Entities.Adapter',
   FolderStorage = 'Entities.FolderStorage',
   ApplicationDisplayName = 'Entities.ApplicationDisplayName',
   ChangeIcon = 'Entities.ChangeIcon',
@@ -1219,6 +1221,7 @@ export enum ImagesI18nKey {
   ImageTransportRemote = 'Images.ImageTransportRemote',
   ImageTypeMCP = 'Images.ImageTypeMCP',
   ImageTypeInterceptor = 'Images.ImageTypeInterceptor',
+  ImageTypeAdapter = 'Images.ImageTypeAdapter',
   ImageWhitelistType = 'Images.ImageWhitelistType',
 }
 

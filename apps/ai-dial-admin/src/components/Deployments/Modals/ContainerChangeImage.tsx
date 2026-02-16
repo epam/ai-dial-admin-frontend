@@ -12,6 +12,7 @@ import { useI18n } from '@/src/locales/client';
 import { Image, ImageGroup } from '@/src/models/deployments/images';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
+import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import { getTranslatedDeploymentType } from '@/src/utils/deployments/entity';
 import { getImageType, isValidVersion, updateSelectedVersion } from '@/src/utils/deployments/images';
 import { getErrorNotification } from '@/src/utils/notification';
@@ -73,7 +74,14 @@ const ContainerChangeImage: FC<Props> = ({
       const res = await getImagesWithVersions(getImageType(route));
       if (res.success) {
         setLoading(false);
-        setImages(updateSelectedVersion(res.response as [], image.id));
+        setImages(
+          updateSelectedVersion(
+            (res.response as ImageGroup[]).filter((group) =>
+              group.availableVersions.some((v) => v.status === IMAGE_STATUS.BUILT),
+            ),
+            image.id,
+          ),
+        );
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }

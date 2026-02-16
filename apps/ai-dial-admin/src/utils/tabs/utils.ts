@@ -328,21 +328,19 @@ export const getDeploymentsViewTabs = (
       relatedContainersTab(t, status as IMAGE_STATUS),
       installationLogTab(t, status as IMAGE_STATUS),
     ];
-  } else {
-    if (route === ApplicationRoute.InterceptorContainers || route === ApplicationRoute.ModelServings) {
-      return [propertiesTab(t), firewallTab(t), executionLogTab(t), eventsTab(t)];
-    } else {
-      return [
-        propertiesTab(t),
-        firewallTab(t),
-        deploymentsToolsTab(t, status as CONTAINER_STATUS),
-        resourcesTab(t, status as CONTAINER_STATUS),
-        promptsTab(t, status as CONTAINER_STATUS),
-        executionLogTab(t),
-        eventsTab(t),
-      ];
-    }
   }
+  if (route === ApplicationRoute.McpContainers) {
+    return [
+      propertiesTab(t),
+      firewallTab(t),
+      deploymentsToolsTab(t, status as CONTAINER_STATUS),
+      resourcesTab(t, status as CONTAINER_STATUS),
+      promptsTab(t, status as CONTAINER_STATUS),
+      executionLogTab(t),
+      eventsTab(t),
+    ];
+  }
+  return [propertiesTab(t), firewallTab(t), executionLogTab(t), eventsTab(t)];
 };
 
 export const getSystemPropertiesTabs = (t: (key: string) => string): TabModel[] => {
