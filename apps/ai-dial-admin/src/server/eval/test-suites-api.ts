@@ -6,7 +6,7 @@ import { EvaluationPageData, FilterDto, SortDto } from '@/src/models/request';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { API } from '@/src/server/api';
 import { BaseApi } from '@/src/server/base-api';
-import { getRequestFiltersRunsStr, getRequestFiltersStr } from '@/src/utils/request/get-request-filters';
+import { getRequestFiltersStr } from '@/src/utils/request/get-request-filters';
 import { getRequestSortsStr } from '@/src/utils/request/get-request-sorts';
 
 export const TEST_SUITES_URL = `${API}/test-suites`;

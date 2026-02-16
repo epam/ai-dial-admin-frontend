@@ -6,14 +6,14 @@ import { GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } fro
 
 import { getRuns } from '@/src/app/[lang]/test-suites/actions';
 import { infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
+import { TEST_SUITE_RUNS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { TestSuite, TestSuiteRun } from '@/src/models/evaluation/test-suite';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
-import GridView from '../../Grid/GridView/GridView';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { RUN_FILTER } from './constants';
-import { TEST_SUITE_RUNS_COLUMNS } from '../../../constants/grid-columns/grid-columns';
 
 interface Props {
   selectedTestSuite: TestSuite;

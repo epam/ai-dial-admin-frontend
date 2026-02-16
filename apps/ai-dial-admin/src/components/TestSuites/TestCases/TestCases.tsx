@@ -3,7 +3,7 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getTestCases, importTestCase } from '@/src/app/[lang]/test-suites/actions';
-import { infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
+import { ACTION_COLUMN, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -16,6 +16,9 @@ import ListEntities from '@/src/components/ListView/List';
 import { getTestCaseColumns } from '../utils/columns';
 import { getTestCaseGridData } from '../utils/data';
 import HeaderButtons from './Header';
+import { createPortal } from 'react-dom';
+import DeleteConfirmationModal from '../../EntityView/Modals/Delete/Delete';
+import { getDeleteOperation } from '../../../constants/grid-columns/actions';
 
 interface Props {
   selectedTestSuite: TestSuite;
@@ -31,10 +34,22 @@ const TestCases: FC<Props> = ({ selectedTestSuite }) => {
   const [testCases, setTestCases] = useState<TestCase[] | null>(null);
   const [columnDefs, setColumnDefs] = useState<ColDef[]>([]);
   const [totalElements, setTotalElements] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentEntity, setCurrentEntity] = useState<TestCase | undefined>(undefined);
 
   const gridOptions: GridOptions = {
     ...infiniteGridOptions,
   };
+
+  const onOpenDeleteModal = useCallback(
+    (entity?: TestCase) => {
+      setCurrentEntity(entity);
+      onModalOpen();
+    },
+    [onModalOpen],
+  );
+
+  const actionColumn = ACTION_COLUMN([getDeleteOperation(onOpenDeleteModal)]);
 
   useEffect(() => {
     if (!testCases && !isLoading) {
@@ -48,7 +63,7 @@ const TestCases: FC<Props> = ({ selectedTestSuite }) => {
         const testCasesData = (res?.content || []) as TestCase[];
         setTotalElements(res?.totalElements || 0);
         setTestCases(testCasesData);
-        setColumnDefs(getTestCaseColumns(testCasesData));
+        setColumnDefs([...getTestCaseColumns(testCasesData), actionColumn]);
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -128,15 +143,28 @@ const TestCases: FC<Props> = ({ selectedTestSuite }) => {
   );
 
   return (
-    <ListEntities
-      columnDefs={columnDefs}
-      additionalGridOptions={gridOptions}
-      listLabel={t(TestSuitesI18nKey.TestCases)}
-      emptyDataProps={{ title: t(TestSuitesI18nKey.NoTestCases) }}
-      onGridReady={onGridReady}
-    >
-      <HeaderButtons selectedTestSuiteId={selectedTestSuite.id as string} onApplyImport={onApplyImport} />
-    </ListEntities>
+    <>
+      <ListEntities
+        columnDefs={columnDefs}
+        additionalGridOptions={gridOptions}
+        listLabel={t(TestSuitesI18nKey.TestCases)}
+        emptyDataProps={{ title: t(TestSuitesI18nKey.NoTestCases) }}
+        onGridReady={onGridReady}
+      >
+        <HeaderButtons selectedTestSuiteId={selectedTestSuite.id as string} onApplyImport={onApplyImport} />
+      </ListEntities>
+
+      {isModalOpen &&
+        createPortal(
+          <DeleteConfirmationModal
+            entity={currentEntity}
+            view={route}
+            onCloseModal={onModalClose}
+            onRemoveEntity={onRemoveEntity}
+          />,
+          document.body,
+        )}
+    </>
   );
 };
 
