@@ -9,6 +9,7 @@ import {
   MODEL_SOURCE_TYPE,
 } from '@/src/types/deployments/containers';
 import { DEFAULT_SCALING } from '@/src/constants/deployments/containers';
+import { ApplicationRoute } from '@/src/types/routes';
 
 export const normalizeContainerPorts = (ports?: number[]): number[] => {
   return [...(ports ?? [])].slice().sort((a, b) => a - b);
@@ -38,6 +39,19 @@ export const getContainerRedeploySnapshot = (container: Container): ContainerRed
     envs: normalizeEnvironmentVariables(container.metadata?.envs),
     resources: normalizeResources(container.resources),
   };
+};
+
+export const getContainerTypeByRoute = (route: ApplicationRoute): CONTAINER_TYPE => {
+  switch (route) {
+    case ApplicationRoute.McpContainers:
+      return CONTAINER_TYPE.MCP;
+    case ApplicationRoute.InterceptorContainers:
+      return CONTAINER_TYPE.INTERCEPTOR;
+    case ApplicationRoute.AdapterContainers:
+      return CONTAINER_TYPE.ADAPTER;
+    default:
+      return CONTAINER_TYPE.MCP;
+  }
 };
 
 export const getContainerTemplate = (type: CONTAINER_TYPE, defaults?: ResourcesDefaults): Container | null => {

@@ -8,11 +8,10 @@ import { Container } from '@/src/models/deployments/containers';
 import { Image } from '@/src/models/deployments/images';
 import { getContainerTemplate } from '@/src/utils/deployments/containers';
 import { getRouteByType } from '@/src/utils/deployments/entity';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
+import { getContainerTypeByImageType } from '@/src/utils/deployments/images';
 
 import ContainerFields from '@/src/components/Containers/Fields/ContainerFields';
-import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
-import { IMAGE_TYPE } from '@/src/types/deployments/images';
-import { CONTAINER_TYPE } from '@/src/types/deployments/containers';
 
 interface Props {
   isModalOpen: boolean;
@@ -27,10 +26,7 @@ const ImageCreateContainer: FC<Props> = ({ onClose, isModalOpen, modalTitle, nam
   const t = useI18n();
   const { resourcesDefaults } = useAppContext();
   const { isValid } = useSaveValidationContext();
-  const type = useMemo(
-    () => (image.$type === IMAGE_TYPE.MCP ? CONTAINER_TYPE.MCP : CONTAINER_TYPE.INTERCEPTOR),
-    [image],
-  );
+  const type = useMemo(() => getContainerTypeByImageType(image.$type), [image]);
 
   const [container, setContainer] = useState<Container>(getContainerTemplate(type, resourcesDefaults) as Container);
 
