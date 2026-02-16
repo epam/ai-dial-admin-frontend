@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 
 import { DialNeutralButton, DialTabs } from '@epam/ai-dial-ui-kit';
 import { IconRefresh } from '@tabler/icons-react';
@@ -29,11 +29,22 @@ interface Props {
   entity?: BaseEntity;
   entityView?: EntityViewTab;
   className?: string;
-  initTimeFilter?: string;
-  onChangeTimeFilter?: (filter: string) => void;
+  initTimeFilter?: string | TimeRange;
+  onChangeTimeFilter?: (filter: string | TimeRange) => void;
+  isCustomRange?: boolean;
+  setIsCustomRange?: Dispatch<SetStateAction<boolean>>;
 }
 
-const UsageLog: FC<Props> = ({ route, className, entity, entityView, onChangeTimeFilter, initTimeFilter }) => {
+const UsageLog: FC<Props> = ({
+  route,
+  className,
+  entity,
+  entityView,
+  onChangeTimeFilter,
+  initTimeFilter,
+  isCustomRange,
+  setIsCustomRange,
+}) => {
   const t = useI18n();
   const tabs = getUsageLogTabs(t);
   const getReqRef = useRef(useProtectedRequest());
@@ -44,10 +55,15 @@ const UsageLog: FC<Props> = ({ route, className, entity, entityView, onChangeTim
 
   useEffect(() => {
     if (!timePeriod) {
-      setTimePeriod(initTimeFilter || DEFAULT_TIME_PERIOD);
-      setTimeRange(getTimeRangeById(initTimeFilter || DEFAULT_TIME_PERIOD));
+      if (!isCustomRange) {
+        setTimePeriod((initTimeFilter as string) || DEFAULT_TIME_PERIOD);
+        setTimeRange(getTimeRangeById((initTimeFilter as string) || DEFAULT_TIME_PERIOD));
+      } else {
+        setTimePeriod(DEFAULT_TIME_PERIOD);
+        setTimeRange((initTimeFilter as TimeRange) || getTimeRangeById(DEFAULT_TIME_PERIOD));
+      }
     }
-  }, [initTimeFilter, timePeriod]);
+  }, [initTimeFilter, timePeriod, isCustomRange]);
 
   const getData = useCallback(
     (query: TelemetryQuery) => {
@@ -71,9 +87,15 @@ const UsageLog: FC<Props> = ({ route, className, entity, entityView, onChangeTim
     [onChangeTimeFilter],
   );
 
-  const onTimeRangeChange = useCallback((range: TimeRange) => {
-    setTimeRange(range);
-  }, []);
+  const onTimeRangeChange = useCallback(
+    (range: TimeRange, isCustom?: boolean) => {
+      setTimeRange(range);
+      if (isCustom) {
+        onChangeTimeFilter?.(range);
+      }
+    },
+    [onChangeTimeFilter],
+  );
 
   const onChangeActiveTab = useCallback(
     (tab: string) => {
@@ -103,6 +125,8 @@ const UsageLog: FC<Props> = ({ route, className, entity, entityView, onChangeTim
               onTimePeriodChange={onTimePeriodChange}
               timeRange={timeRange}
               onTimeRangeChange={onTimeRangeChange}
+              isCustomRange={isCustomRange}
+              setIsCustomRange={setIsCustomRange}
             />
           )}
           <DialNeutralButton

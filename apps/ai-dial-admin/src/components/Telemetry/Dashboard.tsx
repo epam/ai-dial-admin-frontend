@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
+import React, { Dispatch, FC, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 import LineChart from '@/src/components/Charts/LineChart/LineChart';
 import SingleValueChartsDashboard from '@/src/components/Charts/SingleValueChart/SingleValueChartsDashboard';
 import TelemetryGrid from '@/src/components/Telemetry/TelemetryGrid';
@@ -19,12 +19,21 @@ import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   route: ApplicationRoute;
-  initTimeFilter?: string;
+  initTimeFilter?: string | TimeRange;
   entity?: BaseEntity;
-  onChangeTimeFilter?: (filter: string) => void;
+  onChangeTimeFilter?: (filter: string | TimeRange) => void;
+  isCustomRange?: boolean;
+  setIsCustomRange?: Dispatch<SetStateAction<boolean>>;
 }
 
-const Dashboard: FC<Props> = ({ route, entity, initTimeFilter, onChangeTimeFilter }) => {
+const Dashboard: FC<Props> = ({
+  route,
+  entity,
+  initTimeFilter,
+  onChangeTimeFilter,
+  isCustomRange,
+  setIsCustomRange,
+}) => {
   const t = useI18n();
   const [filters, setFilters] = useState<FilterData[]>([]);
   const [refreshTime, setRefreshTime] = useState(DEFAULT_REFRESH_TIME);
@@ -34,10 +43,15 @@ const Dashboard: FC<Props> = ({ route, entity, initTimeFilter, onChangeTimeFilte
 
   useEffect(() => {
     if (!timePeriod) {
-      setTimePeriod(initTimeFilter || DEFAULT_TIME_PERIOD);
-      setTimeRange(getTimeRangeById(initTimeFilter || DEFAULT_TIME_PERIOD));
+      if (!isCustomRange) {
+        setTimePeriod((initTimeFilter as string) || DEFAULT_TIME_PERIOD);
+        setTimeRange(getTimeRangeById((initTimeFilter as string) || DEFAULT_TIME_PERIOD));
+      } else {
+        setTimePeriod(DEFAULT_TIME_PERIOD);
+        setTimeRange((initTimeFilter as TimeRange) || getTimeRangeById(DEFAULT_TIME_PERIOD));
+      }
     }
-  }, [initTimeFilter, timePeriod]);
+  }, [initTimeFilter, timePeriod, isCustomRange]);
 
   const getData = useCallback(
     (query: TelemetryQuery) => {
@@ -68,9 +82,15 @@ const Dashboard: FC<Props> = ({ route, entity, initTimeFilter, onChangeTimeFilte
     [onChangeTimeFilter],
   );
 
-  const onTimeRangeChange = useCallback((range: TimeRange) => {
-    setTimeRange(range);
-  }, []);
+  const onTimeRangeChange = useCallback(
+    (range: TimeRange, isCustom?: boolean) => {
+      setTimeRange(range);
+      if (isCustom) {
+        onChangeTimeFilter?.(range);
+      }
+    },
+    [onChangeTimeFilter],
+  );
 
   return (
     <div role="dashboards" className="flex flex-1 flex-col min-h-0 min-w-0">
@@ -87,6 +107,8 @@ const Dashboard: FC<Props> = ({ route, entity, initTimeFilter, onChangeTimeFilte
             setFilters={setFilters}
             getData={getData}
             route={route}
+            isCustomRange={isCustomRange}
+            setIsCustomRange={setIsCustomRange}
           />
         )}
       </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { DialConfirmationPopup, DialNeutralButton, DialTooltip } from '@epam/ai-dial-ui-kit';
@@ -46,11 +46,21 @@ interface Props {
   entity?: BaseEntity | DialApplicationScheme;
   entityType?: string;
   refresh?: boolean;
-  initTimeFilter?: string;
-  onChangeTimeFilter?: (filter: string) => void;
+  initTimeFilter?: string | TimeRange;
+  onChangeTimeFilter?: (filter: string | TimeRange) => void;
+  isCustomRange?: boolean;
+  setIsCustomRange?: Dispatch<SetStateAction<boolean>>;
 }
 
-const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, initTimeFilter, onChangeTimeFilter }) => {
+const ActivityAuditList: FC<Props> = ({
+  entity,
+  entityType,
+  refresh,
+  initTimeFilter,
+  onChangeTimeFilter,
+  isCustomRange,
+  setIsCustomRange,
+}) => {
   const t = useI18n();
   const router = useRouter();
 
@@ -68,10 +78,15 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, initTimeFil
 
   useEffect(() => {
     if (!timePeriod) {
-      setTimePeriod(initTimeFilter || DEFAULT_TIME_PERIOD);
-      setTimeRange(getTimeRangeById(initTimeFilter || DEFAULT_TIME_PERIOD));
+      if (!isCustomRange) {
+        setTimePeriod((initTimeFilter as string) || DEFAULT_TIME_PERIOD);
+        setTimeRange(getTimeRangeById((initTimeFilter as string) || DEFAULT_TIME_PERIOD));
+      } else {
+        setTimePeriod(DEFAULT_TIME_PERIOD);
+        setTimeRange((initTimeFilter as TimeRange) || getTimeRangeById(DEFAULT_TIME_PERIOD));
+      }
     }
-  }, [initTimeFilter, timePeriod]);
+  }, [initTimeFilter, timePeriod, isCustomRange]);
 
   const onCloseModal = useCallback(() => {
     setIsRollbackModalOpen(false);
@@ -178,11 +193,14 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, initTimeFil
   );
 
   const onTimeRangeChange = useCallback(
-    (range: TimeRange) => {
+    (range: TimeRange, isCustom?: boolean) => {
       setTimeRange(range);
+      if (isCustom) {
+        onChangeTimeFilter?.(range);
+      }
       onRefresh();
     },
-    [onRefresh],
+    [onRefresh, onChangeTimeFilter],
   );
 
   const resourceRollback = useCallback(() => {
@@ -250,6 +268,8 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, initTimeFil
               onTimePeriodChange={onTimePeriodChange}
               timeRange={timeRange}
               onTimeRangeChange={onTimeRangeChange}
+              isCustomRange={isCustomRange}
+              setIsCustomRange={setIsCustomRange}
             />
           )}
 
