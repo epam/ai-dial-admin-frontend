@@ -95,6 +95,8 @@ const ImportFileTypeSelector: FC<Props> = ({
             fileCountError={t(ImportI18nKey.ArchiveDescription)}
             acceptTypes={APPLICATION_ZIP_TYPES_STR}
             onChange={onChangeFile}
+            fileSizeError={t(ImportI18nKey.ArchiveSizeErrorDescription, { size: MAX_FILE_SIZE_MB })}
+            maxFileSize={MAX_FILE_SIZE_MB}
           />
         )}
         {fileType === ImportFileType.JSON && (
