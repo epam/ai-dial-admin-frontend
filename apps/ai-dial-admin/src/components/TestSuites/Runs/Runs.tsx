@@ -5,14 +5,14 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
 
 import { getRuns } from '@/src/app/[lang]/test-suites/actions';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
 import { TEST_SUITE_RUNS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { TestSuite, TestSuiteRun } from '@/src/models/evaluation/test-suite';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
-import GridView from '@/src/components/Grid/GridView/GridView';
 import { RUN_FILTER } from './constants';
 
 interface Props {
@@ -102,7 +102,6 @@ const Runs: FC<Props> = ({ selectedTestSuite }) => {
     <GridView
       columnDefs={TEST_SUITE_RUNS_COLUMNS}
       additionalGridOptions={gridOptions}
-      listLabel={t(TabsI18nKey.Runs)}
       emptyDataProps={{ title: t(EntitiesI18nKey.NoRuns) }}
       onGridReady={onGridReady}
     />
