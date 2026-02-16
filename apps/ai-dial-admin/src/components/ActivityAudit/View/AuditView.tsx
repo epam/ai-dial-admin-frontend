@@ -166,7 +166,7 @@ const AuditView: FC<Props> = ({
                     <DialEllipsisTooltip text={activity.activityId} />
                     <DialIconButton
                       onClick={() => openActivityInNewTab(activity)}
-                      className="text-secondary w-auto h-auto p-0"
+                      className="text-secondary w-auto h-auto"
                       icon={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
                     />
                   </h3>

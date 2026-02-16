@@ -127,7 +127,7 @@ const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, o
               <GridView columnDefs={columns} rowData={data} />
             ) : iAppRunnerView && route.isPublic ? (
               <DialNoDataContent
-                icon={<IconReplace width={60} height={60} />}
+                icon={<IconReplace size={60} stroke={0.5} />}
                 title={t(RoutesI18nKey.InheritRolesWarning)}
               />
             ) : (
