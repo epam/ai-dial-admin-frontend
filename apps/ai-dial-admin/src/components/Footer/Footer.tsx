@@ -50,7 +50,7 @@ const Footer: FC<Props> = ({ beVersion, coreVersions, onChangeCoreVersion }) => 
           {coreVersion}
           <DialIconButton
             disabled={!coreVersions}
-            className="p-0 h-auto w-auto"
+            className="h-auto w-auto"
             icon={<IconPencilMinus size={14} className="text-primary ml-2 group-hover/version:text-accent-primary" />}
           />
         </span>

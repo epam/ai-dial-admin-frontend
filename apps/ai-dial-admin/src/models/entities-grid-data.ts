@@ -19,4 +19,5 @@ export interface EntitiesGridData extends BaseEntity {
   dependencies?: (EntityType | string)[];
   diffStatus?: DiffStatus;
   topics?: string[];
+  descriptionKeywords?: string[];
 }

@@ -1,5 +1,5 @@
 import { DialLoader, DialPopup, DialSteps, PopupSize, StepStatus } from '@epam/ai-dial-ui-kit';
-import { GridOptions } from 'ag-grid-community';
+import { GridOptions, GridReadyEvent } from 'ag-grid-community';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Container } from '@/src/models/deployments/containers';
@@ -132,18 +132,19 @@ const ContainerCreate: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
         });
       }
     },
-    onGridReady: (event) => {
-      event.api?.updateGridOptions({
-        rowData: images,
-        columnDefs: colDefs,
-      });
-      event.api.setFilterModel(filters);
-      event.api.forEachNode((node) => {
-        if (node.data.selectedId === container.imageDefinitionId && isValidVersion(node.data as ImageGroup)) {
-          node.setSelected(true);
-        }
-      });
-    },
+  };
+
+  const onGridReady = (event: GridReadyEvent) => {
+    event.api?.updateGridOptions({
+      rowData: images,
+      columnDefs: colDefs,
+    });
+    event.api.setFilterModel(filters);
+    event.api.forEachNode((node) => {
+      if (node.data.selectedId === container.imageDefinitionId && isValidVersion(node.data as ImageGroup)) {
+        node.setSelected(true);
+      }
+    });
   };
 
   return (
@@ -170,7 +171,12 @@ const ContainerCreate: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
             <>
               {loading && <DialLoader size={40} />}
               {!loading && !!images.length && (
-                <GridView rowData={images} columnDefs={colDefs} additionalGridOptions={options} />
+                <GridView
+                  rowData={images}
+                  columnDefs={colDefs}
+                  additionalGridOptions={options}
+                  onGridReady={onGridReady}
+                />
               )}
             </>
           )}

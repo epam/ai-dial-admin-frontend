@@ -75,6 +75,7 @@ const ConfigContent: FC<Props> = ({
               </h3>
               {selectedExportType === ExportType.Custom && (
                 <AddEntitiesButton
+                  selectedExportFormat={selectedExportFormat}
                   selectedTab={selectedTab as EntityType}
                   tabData={tabData}
                   customExportData={customExportData}

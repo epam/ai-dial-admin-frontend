@@ -733,6 +733,7 @@ export default {
     Changes: 'Changes',
     FileSizeErrorHeader: 'File size limit error',
     FileSizeErrorDescription: 'Size of files is more than {size} MB',
+    ArchiveSizeErrorDescription: 'Size of archive is more than {size} MB',
     Notifications: {
       ConfigImported: 'Config imported successfully',
       ConfigImportedDescription: 'Changes have been delivered to the system',

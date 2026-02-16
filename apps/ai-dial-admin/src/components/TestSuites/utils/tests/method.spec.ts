@@ -15,12 +15,12 @@ describe('generateMethodPathCombinations', () => {
 
     expect(generateMethodPathCombinations()).toEqual([]);
     expect(result).toEqual([
-      { method: 'HEAD', relativeUrl: '/e' },
-      { method: 'POST', relativeUrl: '/e' },
-      { method: 'GET', relativeUrl: '/e' },
-      { method: 'HEAD', relativeUrl: '/r' },
-      { method: 'POST', relativeUrl: '/r' },
-      { method: 'GET', relativeUrl: '/r' },
+      { method: 'HEAD', relativeUrlPattern: '/e' },
+      { method: 'POST', relativeUrlPattern: '/e' },
+      { method: 'GET', relativeUrlPattern: '/e' },
+      { method: 'HEAD', relativeUrlPattern: '/r' },
+      { method: 'POST', relativeUrlPattern: '/r' },
+      { method: 'GET', relativeUrlPattern: '/r' },
     ]);
   });
 
@@ -39,8 +39,8 @@ describe('generateMethodPathCombinations', () => {
     const result = generateMethodPathCombinations(input);
 
     expect(result).toEqual([
-      { method: 'GET', relativeUrl: '/api' },
-      { method: 'POST', relativeUrl: '/data' },
+      { method: 'GET', relativeUrlPattern: '/api' },
+      { method: 'POST', relativeUrlPattern: '/data' },
     ]);
   });
 
@@ -58,7 +58,7 @@ describe('generateMethodPathCombinations', () => {
 
     const result = generateMethodPathCombinations(input);
 
-    expect(result).toEqual([{ method: 'GET', relativeUrl: '/api' }]);
+    expect(result).toEqual([{ method: 'GET', relativeUrlPattern: '/api' }]);
   });
 
   test('should skip routes with empty paths', () => {
@@ -75,7 +75,7 @@ describe('generateMethodPathCombinations', () => {
 
     const result = generateMethodPathCombinations(input);
 
-    expect(result).toEqual([{ method: 'DELETE', relativeUrl: '/user' }]);
+    expect(result).toEqual([{ method: 'DELETE', relativeUrlPattern: '/user' }]);
   });
 
   test('should return empty array when all routes have empty methods or paths', () => {
@@ -118,10 +118,10 @@ describe('generateMethodPathCombinations', () => {
     const result = generateMethodPathCombinations(input);
 
     expect(result).toHaveLength(6); // (2 methods * 2 paths) + (2 methods * 1 path)
-    expect(result).toContainEqual({ method: 'GET', relativeUrl: '/users' });
-    expect(result).toContainEqual({ method: 'POST', relativeUrl: '/profiles' });
-    expect(result).toContainEqual({ method: 'PUT', relativeUrl: '/posts' });
-    expect(result).toContainEqual({ method: 'DELETE', relativeUrl: '/posts' });
+    expect(result).toContainEqual({ method: 'GET', relativeUrlPattern: '/users' });
+    expect(result).toContainEqual({ method: 'POST', relativeUrlPattern: '/profiles' });
+    expect(result).toContainEqual({ method: 'PUT', relativeUrlPattern: '/posts' });
+    expect(result).toContainEqual({ method: 'DELETE', relativeUrlPattern: '/posts' });
   });
 
   test('should handle routes with missing methods property', () => {

@@ -2,7 +2,7 @@ export const CHAT_COMPLETION_METHOD = {
   method: 'POST',
   operationId: 'sendChatCompletionRequest',
   summary: '/openai/deployments/{Deployment Name}/chat/completions',
-  relativeUrl: '/chat/completions',
+  relativeUrlPattern: '/chat/completions',
   description:
     'This API is based on the OpenAI Azure API and extended to support working with advanced DIAL agents and applications.',
   parameters: [

@@ -710,6 +710,7 @@ export enum ImportI18nKey {
   Changes = 'Import.Changes',
   FileSizeErrorHeader = 'Import.FileSizeErrorHeader',
   FileSizeErrorDescription = 'Import.FileSizeErrorDescription',
+  ArchiveSizeErrorDescription = 'Import.ArchiveSizeErrorDescription',
 }
 
 export enum ExportI18nKey {
