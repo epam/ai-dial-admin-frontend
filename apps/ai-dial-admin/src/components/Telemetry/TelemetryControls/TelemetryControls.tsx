@@ -19,6 +19,8 @@ interface Props {
   setFilters: Dispatch<SetStateAction<FilterData[]>>;
   getData: (query: TelemetryQuery) => Promise<ServerActionResponse>;
   route: ApplicationRoute;
+  isCustomRange?: boolean;
+  setIsCustomRange?: Dispatch<SetStateAction<boolean>>;
 }
 
 const TelemetryControls: FC<Props> = ({
@@ -32,6 +34,8 @@ const TelemetryControls: FC<Props> = ({
   setFilters,
   getData,
   route,
+  isCustomRange,
+  setIsCustomRange,
 }) => {
   return (
     <div className="flex w-full justify-between flex-wrap">
@@ -41,6 +45,8 @@ const TelemetryControls: FC<Props> = ({
           onTimePeriodChange={onTimePeriodChange}
           timeRange={timeRange}
           onTimeRangeChange={onTimeRangeChange}
+          isCustomRange={isCustomRange}
+          setIsCustomRange={setIsCustomRange}
         />
         <Filters filters={filters} setFilters={setFilters} getData={getData} route={route} />
       </div>
