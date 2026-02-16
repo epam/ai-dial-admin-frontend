@@ -667,7 +667,7 @@ export const TEST_SUITES_COLUMN: ColDef[] = [
     sortable: false,
     hide: true,
     filter: false,
-    valueGetter: (params) => params.data?.endpointRef?.relativeUrl || '',
+    valueGetter: (params) => params.data?.endpointRef?.relativeUrlPattern || '',
   },
 ];
 
