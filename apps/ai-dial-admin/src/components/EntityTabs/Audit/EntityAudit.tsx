@@ -14,6 +14,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { TabOrientation } from '@/src/types/tab';
 import { EntityViewTab, getAuditTabs } from '@/src/utils/tabs/utils';
 import { DEFAULT_TIME_PERIOD } from '@/src/constants/global-time-filter';
+import { TimeRange } from '@/src/models/time-range';
 
 interface Props {
   entity: BaseEntity;
@@ -26,7 +27,8 @@ const EntityAudit: FC<Props> = ({ entity, view }) => {
   const { featureFlags } = useAppContext();
   const tabs = getAuditTabs(t, featureFlags, view);
   const [activeTab, setActiveTab] = useState(tabs[0].id);
-  const [timeFilter, setTimeFilter] = useState(DEFAULT_TIME_PERIOD);
+  const [timeFilter, setTimeFilter] = useState<string | TimeRange>(DEFAULT_TIME_PERIOD);
+  const [isCustomRange, setIsCustomRange] = useState(false);
 
   return (
     <div className="flex flex-row gap-4 h-full w-full">
@@ -43,7 +45,14 @@ const EntityAudit: FC<Props> = ({ entity, view }) => {
       </div>
       <div className="flex flex-col flex-1 min-h-0 w-full relative">
         {activeTab === EntityViewTab.Dashboard && (
-          <Dashboard initTimeFilter={timeFilter} onChangeTimeFilter={setTimeFilter} entity={entity} route={view} />
+          <Dashboard
+            initTimeFilter={timeFilter}
+            onChangeTimeFilter={setTimeFilter}
+            entity={entity}
+            route={view}
+            isCustomRange={isCustomRange}
+            setIsCustomRange={setIsCustomRange}
+          />
         )}
         {activeTab === EntityViewTab.Traces && (
           <UsageLog
@@ -52,6 +61,8 @@ const EntityAudit: FC<Props> = ({ entity, view }) => {
             entity={entity}
             route={view}
             entityView={activeTab}
+            isCustomRange={isCustomRange}
+            setIsCustomRange={setIsCustomRange}
           />
         )}
         {activeTab === EntityViewTab.Conversations && (
@@ -61,6 +72,8 @@ const EntityAudit: FC<Props> = ({ entity, view }) => {
             entity={entity}
             route={view}
             entityView={activeTab}
+            isCustomRange={isCustomRange}
+            setIsCustomRange={setIsCustomRange}
           />
         )}
         {activeTab === EntityViewTab.Activities && (
@@ -70,6 +83,8 @@ const EntityAudit: FC<Props> = ({ entity, view }) => {
             entity={entity}
             entityType={routeAuditResource[view]}
             refresh
+            isCustomRange={isCustomRange}
+            setIsCustomRange={setIsCustomRange}
           />
         )}
       </div>

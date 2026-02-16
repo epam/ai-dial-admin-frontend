@@ -22,6 +22,7 @@ export enum CONTAINER_TYPE {
   INTERCEPTOR = 'interceptor',
   NIM = 'nim',
   HF = 'inference',
+  ADAPTER = 'adapter',
 }
 
 export enum CreateSteps {

@@ -19,6 +19,10 @@ export const IMAGE_TYPES = (t: (key: string, options?: Record<string, string | n
     label: t(ContainersI18nKey.ContainerImage, { type: getTranslatedType(getRouteByType(IMAGE_TYPE.INTERCEPTOR), t) }),
     value: IMAGE_TYPE.INTERCEPTOR,
   },
+  {
+    label: t(ContainersI18nKey.ContainerImage, { type: getTranslatedType(getRouteByType(IMAGE_TYPE.ADAPTER), t) }),
+    value: IMAGE_TYPE.ADAPTER,
+  },
 ];
 
 export const TRANSPORT_TYPES = (
@@ -41,6 +45,7 @@ export const IMAGE_SOURCE_TYPE_I18N_KEYS: Record<IMAGE_SOURCE_TYPE, string> = {
 export const IMAGE_TYPE_I18N_KEYS: Record<IMAGE_TYPE, string> = {
   [IMAGE_TYPE.MCP]: ImagesI18nKey.ImageTypeMCP,
   [IMAGE_TYPE.INTERCEPTOR]: ImagesI18nKey.ImageTypeInterceptor,
+  [IMAGE_TYPE.ADAPTER]: ImagesI18nKey.ImageTypeAdapter,
 };
 
 export const STATUS_I18N_KEYS: Record<IMAGE_STATUS | CONTAINER_STATUS | KubEventType, string> = {
