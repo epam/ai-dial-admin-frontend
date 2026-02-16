@@ -1,6 +1,6 @@
 import { DialSelect, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
-import { FC, useCallback, useRef, useState } from 'react';
+import { Dispatch, FC, SetStateAction, useCallback, useRef, useState } from 'react';
 
 import RangePicker from '@/src/components/Common/RangePicker/RangePicker';
 import { timePeriodOptionsConfig } from '@/src/constants/global-time-filter';
@@ -9,46 +9,54 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { TimeRange } from '@/src/models/time-range';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
+import { formatDate } from './utils';
 
 interface Props {
   timePeriod: string;
   onTimePeriodChange: (value: string) => void;
   timeRange: TimeRange;
-  onTimeRangeChange: (value: TimeRange) => void;
+  onTimeRangeChange: (value: TimeRange, isCustom?: boolean) => void;
+  isCustomRange?: boolean;
+  setIsCustomRange?: Dispatch<SetStateAction<boolean>>;
 }
 
-const TimeFilter: FC<Props> = ({ timePeriod, onTimePeriodChange, timeRange, onTimeRangeChange }) => {
+const TimeFilter: FC<Props> = ({
+  timePeriod,
+  onTimePeriodChange,
+  timeRange,
+  onTimeRangeChange,
+  isCustomRange = false,
+  setIsCustomRange,
+}) => {
   const t = useI18n();
   const dismissRef = useRef<{ dismiss: () => void }>(null);
   const [showCustomRange, setShowCustomRange] = useState(false);
-  const [value, setValue] = useState<string>(timePeriod);
+  const [value, setValue] = useState<string>(
+    isCustomRange ? `${formatDate(timeRange.startDate)} - ${formatDate(timeRange.endDate)}` : timePeriod,
+  );
 
   const onRangeChange = useCallback(
     (range: TimeRange) => {
       const { startDate, endDate } = range;
       if (startDate && endDate) {
-        onTimeRangeChange(range);
-        const formatDate = (date: Date) => {
-          const day = ('0' + date.getDate()).slice(-2);
-          const month = ('0' + (date.getMonth() + 1)).slice(-2);
-          const year = date.getFullYear();
-          return `${month}-${day}-${year}`;
-        };
+        onTimeRangeChange(range, true);
         const value = `${formatDate(startDate)} - ${formatDate(endDate)}`;
         dismissRef.current?.dismiss();
         setValue(value);
+        setIsCustomRange?.(true);
       }
     },
-    [onTimeRangeChange],
+    [onTimeRangeChange, setIsCustomRange],
   );
 
   const onItemSelect = useCallback(
     (value: string) => {
       setValue(value);
       onTimePeriodChange(value);
-      onTimeRangeChange(getTimeRangeById(value));
+      onTimeRangeChange(getTimeRangeById(value), false);
+      setIsCustomRange?.(false);
     },
-    [onTimePeriodChange, onTimeRangeChange],
+    [onTimePeriodChange, onTimeRangeChange, setIsCustomRange],
   );
 
   const onClick = useCallback(() => {
