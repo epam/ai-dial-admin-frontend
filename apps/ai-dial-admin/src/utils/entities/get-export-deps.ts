@@ -1,6 +1,6 @@
 import { EntityType } from '@/src/types/entity-type';
 
-export const getAllAvailableDependencies = (type?: EntityType): EntityType[] => {
+export const getAllAvailableDependencies = (type?: EntityType, isCore?: boolean): EntityType[] => {
   if (type === EntityType.ROLE) {
     return [
       EntityType.MODEL,
@@ -22,7 +22,7 @@ export const getAllAvailableDependencies = (type?: EntityType): EntityType[] => 
   }
 
   if (type === EntityType.MODEL) {
-    return [EntityType.ADAPTER, EntityType.INTERCEPTOR];
+    return isCore ? [EntityType.INTERCEPTOR] : [EntityType.ADAPTER, EntityType.INTERCEPTOR];
   }
 
   if (type === EntityType.APPLICATION) {

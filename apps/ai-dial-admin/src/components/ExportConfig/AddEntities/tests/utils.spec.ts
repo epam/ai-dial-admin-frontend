@@ -247,10 +247,10 @@ describe('Export Config Utils :: getAvailableData', () => {
 
   test('should handle APPLICATION_TYPE_SCHEMA entities with selected topics', () => {
     const tabData = {
-      APPLICATION_TYPE_SCHEMA: [entity('schema1', MenuI18nKey.Applications, ['topic1'])],
+      APPLICATION_TYPE_SCHEMA: [entity('schema1', MenuI18nKey.ApplicationRunners, ['topic1'])],
     };
     const customExportData = {
-      APPLICATION_TYPE_SCHEMA: [entity('schema2', MenuI18nKey.Applications, ['topic2'])],
+      APPLICATION_TYPE_SCHEMA: [entity('schema2', MenuI18nKey.ApplicationRunners, ['topic2'])],
     };
 
     const selectedTopics = ['topic1'];
@@ -265,6 +265,10 @@ describe('Export Config Utils :: getAvailableData', () => {
       selectedTopics,
     );
 
+    expect(mockGetAvailableEntities).toHaveBeenCalledWith(
+      [entity('schema2', MenuI18nKey.ApplicationRunners, ['topic2'])],
+      [entity('schema1', MenuI18nKey.ApplicationRunners, ['topic1'])],
+    );
     expect(result).toEqual(['filtered-schemas']);
   });
 

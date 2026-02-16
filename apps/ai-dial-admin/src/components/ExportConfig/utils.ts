@@ -98,10 +98,14 @@ export const getFilteredData = (
   entity: string,
   selectedTopics?: string[],
 ): EntitiesGridData[] => {
-  if (!selectedTopics || selectedTopics?.length === 0 || !isEntityWithTopics(entity)) {
+  if (!selectedTopics || selectedTopics?.length === 0) {
     return data?.[entity] || [];
   } else {
-    return data?.[entity]?.filter((entity) => selectedTopics.some((topic) => entity?.topics?.includes(topic))) || [];
+    return (
+      data?.[entity]?.filter((entity) =>
+        selectedTopics.some((topic) => entity?.topics?.includes(topic) || entity?.descriptionKeywords?.includes(topic)),
+      ) || []
+    );
   }
 };
 
@@ -246,20 +250,5 @@ export const isEntityWithDependency = (entity: string): boolean => {
     entity === EntityType.ROLE ||
     entity === EntityType.KEY ||
     entity === EntityType.APPLICATION_TYPE_SCHEMA
-  );
-};
-
-/**
- * Check if entity have topics
- *
- * @param {string} entity - EntityType
- * @returns {boolean} - true if EntityType have topics
- */
-export const isEntityWithTopics = (entity: string): boolean => {
-  return (
-    entity === EntityType.MODEL ||
-    entity === EntityType.APPLICATION ||
-    entity === EntityType.APPLICATION_TYPE_SCHEMA ||
-    entity === EntityType.TOOLSET
   );
 };
