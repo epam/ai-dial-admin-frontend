@@ -44,5 +44,5 @@ export const imageTypes: Record<string, string> = {
   '.bmp': 'image/bmp',
   '.avif': 'image/avif',
 };
-
+// same as bodySizeLimit in server config
 export const MAX_FILE_SIZE_MB = 4;

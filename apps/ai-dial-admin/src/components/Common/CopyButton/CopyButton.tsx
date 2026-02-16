@@ -36,8 +36,7 @@ const CopyButton: FC<Props> = ({ buttonLabel, value, valueLabel, className }) =>
     />
   ) : (
     <DialIconButton
-      className={classNames('cursor-pointer text-secondary hover:text-accent-primary p-0 h-[20px] w-[20px]', className)}
-      tooltipProps={{ triggerClassName: 'h-[20px] w-[20px]' }}
+      className={classNames('cursor-pointer text-secondary hover:text-accent-primary', className)}
       aria-label="copy"
       onClick={onClick}
       icon={<IconCopy {...BASE_BUTTON_ICON_PROPS} />}

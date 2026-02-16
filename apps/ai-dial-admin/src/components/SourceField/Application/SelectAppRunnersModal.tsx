@@ -1,6 +1,6 @@
 import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 import { FC, useState } from 'react';
-import { GridOptions } from 'ag-grid-community';
+import { GridOptions, GridReadyEvent } from 'ag-grid-community';
 
 import GridView from '@/src/components/Grid/GridView/GridView';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
@@ -48,22 +48,23 @@ const SelectAppRunnerModal: FC<Props> = ({ selectedId, sourceEntities, isModalOp
         setSelectedRunner(event.data.$id || event.data.name);
       }
     },
-    onGridReady: (event) => {
-      event.api?.updateGridOptions({
-        rowData: [
-          {
-            ['dial:applicationTypeDisplayName']: t(BasicI18nKey.None),
-            $id: t(BasicI18nKey.None),
-          },
-          ...(sourceEntities || []),
-        ],
-      });
-      event.api.forEachNode((node) => {
-        if (isSelectedNode(node.data)) {
-          node.setSelected(true);
-        }
-      });
-    },
+  };
+
+  const onGridReady = (event: GridReadyEvent) => {
+    event.api?.updateGridOptions({
+      rowData: [
+        {
+          ['dial:applicationTypeDisplayName']: t(BasicI18nKey.None),
+          $id: t(BasicI18nKey.None),
+        },
+        ...(sourceEntities || []),
+      ],
+    });
+    event.api.forEachNode((node) => {
+      if (isSelectedNode(node.data)) {
+        node.setSelected(true);
+      }
+    });
   };
 
   return (
@@ -84,6 +85,7 @@ const SelectAppRunnerModal: FC<Props> = ({ selectedId, sourceEntities, isModalOp
         <GridView
           columnDefs={LIST_RUNNER_COLUMNS.map((col) => ({ ...col, sort: void 0 }))}
           additionalGridOptions={options}
+          onGridReady={onGridReady}
         />
       </div>
     </DialFormPopup>

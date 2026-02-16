@@ -12,7 +12,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { DialTokenizer } from '@/src/models/dial/model';
 import { getErrorNotification } from '@/src/utils/notification';
-import { GridOptions } from 'ag-grid-community';
+import { GridOptions, GridReadyEvent } from 'ag-grid-community';
 
 interface Props {
   selectedModel?: string;
@@ -54,23 +54,24 @@ const TokenizedModelsGrid: FC<Props> = ({ onSelectModelId, selectedModel }) => {
       event.api.setNodesSelected({ nodes: selectedRows, newValue: false });
       event.api.setNodesSelected({ nodes: [event.node], newValue: true });
     },
-    onGridReady: (event) => {
-      event.api?.updateGridOptions({
-        columnDefs: BASE_COLUMNS,
-        rowData: data,
-      });
-      event.api.forEachNode((node) => {
-        if (node.data.name === selectedModel) {
-          node.setSelected(true);
-        }
-      });
-    },
+  };
+
+  const onGridReady = (event: GridReadyEvent) => {
+    event.api?.updateGridOptions({
+      columnDefs: BASE_COLUMNS,
+      rowData: data,
+    });
+    event.api.forEachNode((node) => {
+      if (node.data.name === selectedModel) {
+        node.setSelected(true);
+      }
+    });
   };
 
   return isLoading ? (
     <DialLoader size={40} />
   ) : (
-    <GridView columnDefs={BASE_COLUMNS} rowData={data} additionalGridOptions={options} />
+    <GridView columnDefs={BASE_COLUMNS} rowData={data} additionalGridOptions={options} onGridReady={onGridReady} />
   );
 };
 

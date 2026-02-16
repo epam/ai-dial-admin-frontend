@@ -1,5 +1,5 @@
 import { AlertVariant, DialAlert, DialFormPopup, DialLoader } from '@epam/ai-dial-ui-kit';
-import { GridOptions } from 'ag-grid-community';
+import { GridOptions, GridReadyEvent } from 'ag-grid-community';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getImagesWithVersions } from '@/src/app/actions/deployments';
@@ -101,18 +101,19 @@ const ContainerChangeImage: FC<Props> = ({
         setId(event.data?.selectedId);
       }
     },
-    onGridReady: (event) => {
-      event.api?.updateGridOptions({
-        rowData: images,
-        columnDefs: colDefs,
-      });
-      event.api.forEachNode((node) => {
-        if (node.data.selectedId === id && isValidVersion(node.data as ImageGroup)) {
-          node.setSelected(true);
-          event.api.ensureNodeVisible(node, 'middle');
-        }
-      });
-    },
+  };
+
+  const onGridReady = (event: GridReadyEvent) => {
+    event.api?.updateGridOptions({
+      rowData: images,
+      columnDefs: colDefs,
+    });
+    event.api.forEachNode((node) => {
+      if (node.data.selectedId === id && isValidVersion(node.data as ImageGroup)) {
+        node.setSelected(true);
+        event.api.ensureNodeVisible(node, 'middle');
+      }
+    });
   };
 
   return (
@@ -133,7 +134,12 @@ const ContainerChangeImage: FC<Props> = ({
         {loading && <DialLoader size={24} />}
         {!loading && !!images.length && (
           <div className="flex flex-col gap-4 min-h-0 h-full">
-            <GridView rowData={images} columnDefs={colDefs} additionalGridOptions={additionalGridOptions} />
+            <GridView
+              rowData={images}
+              columnDefs={colDefs}
+              additionalGridOptions={additionalGridOptions}
+              onGridReady={onGridReady}
+            />
             {containerStatus === CONTAINER_STATUS.RUNNING && (
               <DialAlert
                 message={t(ContainersI18nKey.ContainerRestartWarning, {
