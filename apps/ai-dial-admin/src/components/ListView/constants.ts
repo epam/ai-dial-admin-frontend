@@ -52,3 +52,5 @@ export const emptyDataTitleMap: Record<string, EntitiesI18nKey> = {
   [ApplicationRoute.Runs]: EntitiesI18nKey.NoRuns,
   [ApplicationRoute.ModelServings]: EntitiesI18nKey.NoModelServings,
 };
+
+export const mainListEntitiesViewClassName = 'py-4 px-6';

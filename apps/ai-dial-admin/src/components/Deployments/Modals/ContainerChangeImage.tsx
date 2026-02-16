@@ -1,5 +1,5 @@
 import { AlertVariant, DialAlert, DialFormPopup, DialLoader } from '@epam/ai-dial-ui-kit';
-import { GridOptions } from 'ag-grid-community';
+import { GridOptions, GridReadyEvent } from 'ag-grid-community';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getImagesWithVersions } from '@/src/app/actions/deployments';
@@ -12,6 +12,7 @@ import { useI18n } from '@/src/locales/client';
 import { Image, ImageGroup } from '@/src/models/deployments/images';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
+import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import { getTranslatedDeploymentType } from '@/src/utils/deployments/entity';
 import { getImageType, isValidVersion, updateSelectedVersion } from '@/src/utils/deployments/images';
 import { getErrorNotification } from '@/src/utils/notification';
@@ -73,7 +74,14 @@ const ContainerChangeImage: FC<Props> = ({
       const res = await getImagesWithVersions(getImageType(route));
       if (res.success) {
         setLoading(false);
-        setImages(updateSelectedVersion(res.response as [], image.id));
+        setImages(
+          updateSelectedVersion(
+            (res.response as ImageGroup[]).filter((group) =>
+              group.availableVersions.some((v) => v.status === IMAGE_STATUS.BUILT),
+            ),
+            image.id,
+          ),
+        );
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
@@ -101,18 +109,19 @@ const ContainerChangeImage: FC<Props> = ({
         setId(event.data?.selectedId);
       }
     },
-    onGridReady: (event) => {
-      event.api?.updateGridOptions({
-        rowData: images,
-        columnDefs: colDefs,
-      });
-      event.api.forEachNode((node) => {
-        if (node.data.selectedId === id && isValidVersion(node.data as ImageGroup)) {
-          node.setSelected(true);
-          event.api.ensureNodeVisible(node, 'middle');
-        }
-      });
-    },
+  };
+
+  const onGridReady = (event: GridReadyEvent) => {
+    event.api?.updateGridOptions({
+      rowData: images,
+      columnDefs: colDefs,
+    });
+    event.api.forEachNode((node) => {
+      if (node.data.selectedId === id && isValidVersion(node.data as ImageGroup)) {
+        node.setSelected(true);
+        event.api.ensureNodeVisible(node, 'middle');
+      }
+    });
   };
 
   return (
@@ -133,7 +142,12 @@ const ContainerChangeImage: FC<Props> = ({
         {loading && <DialLoader size={24} />}
         {!loading && !!images.length && (
           <div className="flex flex-col gap-4 min-h-0 h-full">
-            <GridView rowData={images} columnDefs={colDefs} additionalGridOptions={additionalGridOptions} />
+            <GridView
+              rowData={images}
+              columnDefs={colDefs}
+              additionalGridOptions={additionalGridOptions}
+              onGridReady={onGridReady}
+            />
             {containerStatus === CONTAINER_STATUS.RUNNING && (
               <DialAlert
                 message={t(ContainersI18nKey.ContainerRestartWarning, {

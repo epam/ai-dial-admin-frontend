@@ -114,6 +114,10 @@ export const MENU_CONFIGURATION = (
           href: ApplicationRoute.InterceptorContainers,
         },
         {
+          key: MenuI18nKey.AdapterContainers,
+          href: ApplicationRoute.AdapterContainers,
+        },
+        {
           key: MenuI18nKey.Images,
           href: ApplicationRoute.Images,
         },

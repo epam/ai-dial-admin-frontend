@@ -7,15 +7,22 @@ import { getButtonTitle } from '@/src/components/ExportConfig/AddEntities/utils'
 import { ExportI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { EntityType } from '@/src/types/entity-type';
+import { ExportFormat } from '@/src/types/export';
 import { getAllAvailableDependencies } from '@/src/utils/entities/get-export-deps';
 
 interface Props {
   selectedTab?: EntityType;
+  selectedExportFormat?: ExportFormat;
   selectedDependencies: EntityType[];
   onChangeSelectedDependencies: (dependencies: EntityType[]) => void;
 }
 
-const Dependencies: FC<Props> = ({ selectedTab, onChangeSelectedDependencies, selectedDependencies }) => {
+const Dependencies: FC<Props> = ({
+  selectedTab,
+  selectedExportFormat,
+  onChangeSelectedDependencies,
+  selectedDependencies,
+}) => {
   const t = useI18n();
   const [allDependencies, setAllDependencies] = useState<EntityType[]>([]);
 
@@ -24,10 +31,10 @@ const Dependencies: FC<Props> = ({ selectedTab, onChangeSelectedDependencies, se
   }, [allDependencies, selectedDependencies]);
 
   useEffect(() => {
-    const dependencies = getAllAvailableDependencies(selectedTab);
+    const dependencies = getAllAvailableDependencies(selectedTab, selectedExportFormat === ExportFormat.CORE);
     setAllDependencies(dependencies);
     onChangeSelectedDependencies(dependencies);
-  }, [selectedTab, onChangeSelectedDependencies]);
+  }, [selectedTab, selectedExportFormat, onChangeSelectedDependencies]);
 
   const onChange = useCallback(
     (value: boolean | undefined, key: EntityType) => {

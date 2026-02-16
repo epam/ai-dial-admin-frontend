@@ -1,7 +1,7 @@
 import { FC, useState } from 'react';
 
 import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
-import { GridOptions } from 'ag-grid-community';
+import { GridOptions, GridReadyEvent } from 'ag-grid-community';
 
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import { SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
@@ -40,13 +40,14 @@ const SelectApplicationModal: FC<Props> = ({ selected, apps, isModalOpen, onClos
         setSelectedApp(event.data.deploymentId);
       }
     },
-    onGridReady: (event) => {
-      event.api.forEachNode((node) => {
-        if (node.data.deploymentId === selectedApp) {
-          node.setSelected(true);
-        }
-      });
-    },
+  };
+
+  const onGridReady = (event: GridReadyEvent) => {
+    event.api.forEachNode((node) => {
+      if (node.data.deploymentId === selectedApp) {
+        node.setSelected(true);
+      }
+    });
   };
 
   return (
@@ -69,6 +70,7 @@ const SelectApplicationModal: FC<Props> = ({ selected, apps, isModalOpen, onClos
           rowData={apps}
           columnDefs={EVALUATION_DEPLOYMENTS_COLUMNS(t)}
           additionalGridOptions={options}
+          onGridReady={onGridReady}
         />
       </div>
     </DialFormPopup>

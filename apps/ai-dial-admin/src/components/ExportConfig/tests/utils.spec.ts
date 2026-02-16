@@ -1,12 +1,6 @@
 import { EntitiesI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { ExportFormat, ExportType } from '@/src/types/export';
-import {
-  getComponents,
-  getComponentTypes,
-  getFilteredData,
-  isEntityWithDependency,
-  isEntityWithTopics,
-} from '../utils';
+import { getComponents, getComponentTypes, getFilteredData, isEntityWithDependency } from '../utils';
 import { EntityType } from '@/src/types/entity-type';
 import { describe, expect, test } from 'vitest';
 
@@ -168,6 +162,7 @@ describe('Export Config Utils :: getFilteredData', () => {
       { id: 5, topics: ['topic2'] },
     ],
     [EntityType.ROLE]: [{ id: 6, topics: ['topic2', 'topic4'] }],
+    [EntityType.TOOLSET]: [{ id: 7, descriptionKeywords: ['topic1', 'topic3'] }],
   };
 
   test('Should return all data if selectedTopics is empty', () => {
@@ -176,8 +171,8 @@ describe('Export Config Utils :: getFilteredData', () => {
   });
 
   test('Should return all data for entity if the entity is not associated with topics', () => {
-    const res = getFilteredData(mockData, EntityType.ROLE, ['topic1']);
-    expect(res).toEqual(mockData[EntityType.ROLE]);
+    const res = getFilteredData(mockData, EntityType.TOOLSET, ['topic1']);
+    expect(res).toEqual(mockData[EntityType.TOOLSET]);
   });
 
   test('Should filter data based on selected topics', () => {
@@ -217,50 +212,6 @@ describe('Export Config Utils :: isEntityWithDependency', () => {
   });
   test('Should return false for adapter', () => {
     const res = isEntityWithDependency(EntityType.ADAPTER);
-
-    expect(res).toEqual(false);
-  });
-});
-
-describe('Export Config Utils :: isEntityWithTopics', () => {
-  test('Should return true for model', () => {
-    const res = isEntityWithTopics(EntityType.MODEL);
-
-    expect(res).toEqual(true);
-  });
-
-  test('Should return true for application', () => {
-    const res = isEntityWithTopics(EntityType.APPLICATION);
-
-    expect(res).toEqual(true);
-  });
-
-  test('Should return true for app runner', () => {
-    const res = isEntityWithTopics(EntityType.APPLICATION_TYPE_SCHEMA);
-
-    expect(res).toEqual(true);
-  });
-
-  test('Should return true for toolset', () => {
-    const res = isEntityWithTopics(EntityType.TOOLSET);
-
-    expect(res).toEqual(true);
-  });
-
-  test('Should return false for role', () => {
-    const res = isEntityWithTopics(EntityType.ROLE);
-
-    expect(res).toEqual(false);
-  });
-
-  test('Should return false for adapter', () => {
-    const res = isEntityWithTopics(EntityType.ADAPTER);
-
-    expect(res).toEqual(false);
-  });
-
-  test('Should return false for key', () => {
-    const res = isEntityWithTopics(EntityType.KEY);
 
     expect(res).toEqual(false);
   });

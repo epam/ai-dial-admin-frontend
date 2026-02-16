@@ -14,7 +14,6 @@ import {
 } from 'ag-grid-community';
 import { useRouter } from 'next/navigation';
 
-import ListView from '@/src/components/ListView/ListView';
 import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
 import { getDeleteOperation, getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
 import { useI18n } from '@/src/locales/client';
@@ -27,6 +26,7 @@ import { EvaluationPageData, FilterDto, SortDto } from '@/src/models/request';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { emptyDataTitleMap, listViewTitleMap } from '../constants';
+import ListEntities from '@/src/components/ListView/List';
 import HeaderButtons from './Header';
 
 interface Props<T> {
@@ -52,7 +52,6 @@ const EvaluationListView = <T extends object>({
   const t = useI18n();
   const router = useRouter();
 
-  const [showColumnsPanel, setShowColumnsPanel] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentEntity, setCurrentEntity] = useState<T | undefined>(undefined);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
@@ -127,34 +126,25 @@ const EvaluationListView = <T extends object>({
 
   const actionColumn = ACTION_COLUMN([
     getOpenInNewTabOperation(onOpenInNewTabAction),
-    // getDuplicateOperation(onDuplicateAction), // TODO: implement duplication for evaluations
     getDeleteOperation(onOpenDeleteModal),
   ]);
 
   const columnDefs = [...baseColumns, actionColumn];
 
-  const toggleColumnsPanel = () => setShowColumnsPanel(!showColumnsPanel);
-
   return (
     <>
-      <ListView
-        view={route}
+      <ListEntities
         columnDefs={columnDefs}
         additionalGridOptions={gridOptions}
-        title={t(listViewTitleMap[route])}
-        emptyDataTitle={t(emptyDataTitleMap[route])}
-        showColumnsPanel={showColumnsPanel}
-        toggleColumnsPanel={toggleColumnsPanel}
+        listLabel={t(listViewTitleMap[route])}
+        emptyDataProps={{ title: t(emptyDataTitleMap[route]) }}
+        isEnableColumnPanel
+        isMainListView
         storageKey={route}
         onGridReady={onGridReady}
       >
-        <HeaderButtons
-          route={route}
-          toggleColumnsPanel={toggleColumnsPanel}
-          onCreateEntity={onCreateEntity}
-          gridApi={gridApi}
-        />
-      </ListView>
+        <HeaderButtons route={route} onCreateEntity={onCreateEntity} />
+      </ListEntities>
 
       {isModalOpen &&
         onRemoveEntity &&

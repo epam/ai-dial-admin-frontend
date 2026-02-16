@@ -84,7 +84,7 @@ const ListView = <T extends object>({
                 <DialIconButton
                   className={classNames(
                     isCollapseDisable ? 'text-controls-disable' : 'hover:text-accent-primary',
-                    'w-auto h-auto p-0',
+                    'w-auto h-auto',
                   )}
                   onClick={collapseFolders}
                   icon={<FolderCollapse width={24} height={24} />}

@@ -30,8 +30,10 @@ const Paths: FC<Props> = ({ title, optional, readonly, paths, disableValidation,
   }, [dispatch, pathError]);
 
   useEffect(() => {
-    setPathError(!paths || paths.length === 0 || paths.some((p) => !p) ? t(ErrorI18nKey.RequiredField) : '');
-  }, [paths, t]);
+    setPathError(
+      !optional && (!paths || paths.length === 0 || paths.some((p) => !p)) ? t(ErrorI18nKey.RequiredField) : '',
+    );
+  }, [optional, paths, t]);
 
   const onAddPath = useCallback(() => {
     const newPaths = [...(paths || []), ''];

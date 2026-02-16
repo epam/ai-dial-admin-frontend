@@ -14,7 +14,7 @@ import { getHuggingFaceModels } from '@/src/app/actions/deployments';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import OpenPopup from '@/public/images/icons/open-pop-up.svg';
 import { createPortal } from 'react-dom';
-import HFRegistryModal from '@/src/components/Deployments/Modals/HuggingfaceRegistry';
+import HFRegistryModal from '@/src/components/Deployments/Modals/HFRegistryModal/HuggingfaceRegistry';
 import classNames from 'classnames';
 import { ApplicationRoute } from '@/src/types/routes';
 

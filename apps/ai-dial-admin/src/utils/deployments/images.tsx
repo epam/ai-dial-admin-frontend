@@ -1,7 +1,7 @@
 import { SelectOption } from '@epam/ai-dial-ui-kit';
 import { STATUS_CLASSNAMES } from '@/src/constants/deployments/images';
 import { IMAGE_STATUS, IMAGE_TRANSPORT_TYPE, IMAGE_TYPE } from '@/src/types/deployments/images';
-import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
+import { CONTAINER_STATUS, CONTAINER_TYPE } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 import { Image, ImageGroup, ImageVersion } from '@/src/models/deployments/images';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -18,12 +18,25 @@ export function getImageType(route: ApplicationRoute): string {
       return 'INTERCEPTOR';
     case ApplicationRoute.McpContainers:
       return 'MCP';
-    case ApplicationRoute.ModelServings:
-      return 'NIM';
+    case ApplicationRoute.AdapterContainers:
+      return 'ADAPTER';
     default:
       return '';
   }
 }
+
+export const getContainerTypeByImageType = (type: IMAGE_TYPE): CONTAINER_TYPE => {
+  switch (type) {
+    case IMAGE_TYPE.MCP:
+      return CONTAINER_TYPE.MCP;
+    case IMAGE_TYPE.INTERCEPTOR:
+      return CONTAINER_TYPE.INTERCEPTOR;
+    case IMAGE_TYPE.ADAPTER:
+      return CONTAINER_TYPE.ADAPTER;
+    default:
+      return CONTAINER_TYPE.MCP;
+  }
+};
 
 export const isValidVersion = (imageData: ImageGroup): boolean => {
   return (
@@ -36,26 +49,6 @@ export function validateImageChanged(originalImage: Image, updatedImage: Image) 
   const { updatedAt: __originalUpdatedAt, buildStatus: __originalBuiltStatus, ...original } = originalImage;
   const { updatedAt: __updatedUpdatedAt, buildStatus: __updatedBuiltStatus, ...updated } = updatedImage;
   return !isEqualSkippingUndefined(original, updated);
-}
-
-export function validateImage(image: Image): boolean {
-  if (!image.name?.trim()) {
-    return false;
-  }
-
-  if (!image.version.trim()) {
-    return false;
-  }
-
-  if (!image.transportType && image.$type === IMAGE_TYPE.MCP) {
-    return false;
-  }
-
-  if (!image.source?.$type) {
-    return false;
-  }
-
-  return true;
 }
 
 export const getVersionsList = (versions: ImageVersion[]): SelectOption[] => {
@@ -100,7 +93,7 @@ export const updateSelectedVersion = (images: ImageGroup[], id: string) => {
 
 export const setTransport = (image: Image) => {
   const updatedImage = { ...image };
-  if (updatedImage.$type === IMAGE_TYPE.INTERCEPTOR) {
+  if (updatedImage.$type === IMAGE_TYPE.INTERCEPTOR || updatedImage.$type === IMAGE_TYPE.ADAPTER) {
     delete updatedImage.transportType;
   } else {
     updatedImage.transportType = IMAGE_TRANSPORT_TYPE.LOCAL;

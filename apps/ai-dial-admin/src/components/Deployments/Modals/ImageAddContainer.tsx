@@ -120,9 +120,9 @@ const ImageAddContainer: FC<Props> = ({ title, isModalOpen, onClose, onApply, im
       <div className="flex flex-col px-6 py-4 min-h-0 h-full">
         {isLoading && <DialLoader size={24} />}
         {!isLoading && (
-          <div className="flex flex-col gap-4  min-h-0 h-full">
+          <div className="flex flex-col gap-4 min-h-0 h-full">
             <DialSwitch
-              switchId={'related-containers'}
+              switchId="related-containers"
               onChange={toggleShowRelated}
               isOn={showRelated}
               label={t(ContainersI18nKey.ShowRelatedContainers)}

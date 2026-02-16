@@ -46,6 +46,7 @@ export enum MenuI18nKey {
   FoldersStorage = 'Menu.FoldersStorage',
   McpContainers = 'Menu.McpContainers',
   InterceptorContainers = 'Menu.InterceptorContainers',
+  AdapterContainers = 'Menu.AdapterContainers',
   ModelServings = 'Menu.ModelServings',
   InterceptorTemplates = 'Menu.InterceptorTemplates',
   ActivityAudit = 'Menu.ActivityAudit',
@@ -176,6 +177,7 @@ export enum EntitiesI18nKey {
   Core = 'Entities.Core',
   Action = 'Entities.Action',
   Runner = 'Entities.Runner',
+  Adapter = 'Entities.Adapter',
   FolderStorage = 'Entities.FolderStorage',
   ApplicationDisplayName = 'Entities.ApplicationDisplayName',
   ChangeIcon = 'Entities.ChangeIcon',
@@ -708,6 +710,7 @@ export enum ImportI18nKey {
   Changes = 'Import.Changes',
   FileSizeErrorHeader = 'Import.FileSizeErrorHeader',
   FileSizeErrorDescription = 'Import.FileSizeErrorDescription',
+  ArchiveSizeErrorDescription = 'Import.ArchiveSizeErrorDescription',
 }
 
 export enum ExportI18nKey {
@@ -797,6 +800,7 @@ export enum RollbackI18nKey {
   Revision = 'Rollback.Revision',
   Resource = 'Rollback.Resource',
   System = 'Rollback.System',
+  Rollback = 'Rollback.Rollback',
   ConfirmRollbackAsking = 'Rollback.ConfirmRollbackAsking',
 
   // Resource rollback
@@ -1218,6 +1222,7 @@ export enum ImagesI18nKey {
   ImageTransportRemote = 'Images.ImageTransportRemote',
   ImageTypeMCP = 'Images.ImageTypeMCP',
   ImageTypeInterceptor = 'Images.ImageTypeInterceptor',
+  ImageTypeAdapter = 'Images.ImageTypeAdapter',
   ImageWhitelistType = 'Images.ImageWhitelistType',
 }
 
@@ -1250,6 +1255,7 @@ export enum ContainersI18nKey {
   ContainerSuccessDescription = 'Containers.ContainerSuccessDescription',
   Pod = 'Containers.Pod',
   Pods = 'Containers.Pods',
+  ModelDetails = 'Containers.ModelDetails',
   ContainerRestartWarning = 'Containers.ContainerRestartWarning',
   ContainersRestartWarning = 'Containers.ContainersRestartWarning',
   ShowRelatedContainers = 'Containers.ShowRelatedContainers',

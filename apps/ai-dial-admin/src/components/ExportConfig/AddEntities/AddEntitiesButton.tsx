@@ -7,11 +7,12 @@ import { IconPlus } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
 
 import AddEntitiesModal from '@/src/components/ExportConfig/AddEntities/AddEntitiesModal';
-import { getActualColDefs, isEntityWithDependency, isEntityWithTopics } from '@/src/components/ExportConfig/utils';
+import { getActualColDefs, isEntityWithDependency } from '@/src/components/ExportConfig/utils';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { EntityType } from '@/src/types/entity-type';
+import { ExportFormat } from '@/src/types/export';
 import { getAvailableData, getButtonTitle } from './utils';
 
 interface Props {
@@ -20,6 +21,7 @@ interface Props {
   customExportData: Record<string, EntitiesGridData[]>;
   setCustomExportData: Dispatch<SetStateAction<Record<string, EntitiesGridData[]>>>;
   selectedTopics: string[];
+  selectedExportFormat: ExportFormat;
 }
 
 const AddEntitiesButton: FC<Props> = ({
@@ -28,6 +30,7 @@ const AddEntitiesButton: FC<Props> = ({
   customExportData,
   setCustomExportData,
   selectedTopics,
+  selectedExportFormat,
 }) => {
   const t = useI18n();
 
@@ -63,11 +66,9 @@ const AddEntitiesButton: FC<Props> = ({
       const updatedData = { ...prev };
 
       Object.entries(prev).forEach(([entityType, entities]) => {
-        if (isEntityWithTopics(entityType)) {
-          updatedData[entityType] = entities.filter((entity) =>
-            selectedTopics.length ? selectedTopics.some((topic) => entity?.topics?.includes(topic)) : true,
-          );
-        }
+        updatedData[entityType] = entities.filter((entity) =>
+          selectedTopics.length ? selectedTopics.some((topic) => entity?.topics?.includes(topic)) : true,
+        );
       });
 
       return updatedData;
@@ -94,6 +95,7 @@ const AddEntitiesButton: FC<Props> = ({
           <AddEntitiesModal
             selectedTab={entityTitle}
             columnDefs={columnDefs}
+            selectedExportFormat={selectedExportFormat}
             isModalOpen={isModalOpen}
             entities={availableEntities}
             onClose={() => setIsModalOpen(false)}

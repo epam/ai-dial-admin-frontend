@@ -143,13 +143,13 @@ const UsageLog: FC<Props> = ({
             getData={getData}
             columnDefs={USAGE_LOG_TRACES_COLUMNS}
             query={TRACES_QUERY}
-            title={t(TelemetryI18nKey.TracesTitle)}
+            listLabel={t(TelemetryI18nKey.TracesTitle)}
             emptyDataTitle={t(TelemetryI18nKey.NoTracesTitle)}
           />
         )}
         {activeTab === EntityViewTab.Conversations && (
           <List
-            title={t(TelemetryI18nKey.ConversationsTitle)}
+            listLabel={t(TelemetryI18nKey.ConversationsTitle)}
             emptyDataTitle={t(TelemetryI18nKey.NoConversationsTitle)}
             route={route}
             getData={getData}

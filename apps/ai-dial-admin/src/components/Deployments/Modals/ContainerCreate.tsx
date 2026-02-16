@@ -1,27 +1,28 @@
 import { DialLoader, DialPopup, DialSteps, PopupSize, StepStatus } from '@epam/ai-dial-ui-kit';
-import { GridOptions } from 'ag-grid-community';
+import { GridOptions, GridReadyEvent } from 'ag-grid-community';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
+import { Container } from '@/src/models/deployments/containers';
+import { ImageGroup } from '@/src/models/deployments/images';
+import { CreateSteps } from '@/src/types/deployments/containers';
+import { IMAGE_STATUS } from '@/src/types/deployments/images';
+import { ApplicationRoute } from '@/src/types/routes';
 import { getImagesWithVersions } from '@/src/app/actions/deployments';
-import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
-import ContainerFields from '@/src/components/Containers/Fields/ContainerFields';
-import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
-import GridView from '@/src/components/Grid/GridView/GridView';
-import { SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
 import { CREATE_CONTAINER_STEPS } from '@/src/constants/deployments/containers';
 import { IMAGES_LIST_FOR_CONTAINER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
-import { useI18n } from '@/src/locales/client';
-import { Container } from '@/src/models/deployments/containers';
-import { ImageGroup } from '@/src/models/deployments/images';
-import { CONTAINER_TYPE, CreateSteps } from '@/src/types/deployments/containers';
-import { IMAGE_STATUS } from '@/src/types/deployments/images';
-import { ApplicationRoute } from '@/src/types/routes';
-import { getContainerTemplate } from '@/src/utils/deployments/containers';
+import { getContainerTypeByRoute, getContainerTemplate } from '@/src/utils/deployments/containers';
 import { getImageType, isValidVersion, updateSelectedVersion } from '@/src/utils/deployments/images';
 import { getErrorNotification } from '@/src/utils/notification';
+import { SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
+import { useI18n } from '@/src/locales/client';
+
+import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
+import ContainerFields from '@/src/components/Containers/Fields/ContainerFields';
+import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
+import GridView from '@/src/components/Grid/GridView/GridView';
 
 interface Props {
   isModalOpen: boolean;
@@ -37,10 +38,7 @@ const ContainerCreate: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
   const { showNotification } = useNotification();
   const { resourcesDefaults } = useAppContext();
   const { isValid } = useSaveValidationContext();
-  const type = useMemo(
-    () => (route === ApplicationRoute.McpContainers ? CONTAINER_TYPE.MCP : CONTAINER_TYPE.INTERCEPTOR),
-    [route],
-  );
+  const type = useMemo(() => getContainerTypeByRoute(route), [route]);
 
   const [container, setContainer] = useState<Container>(getContainerTemplate(type, resourcesDefaults) as Container);
   const [steps, setSteps] = useState(CREATE_CONTAINER_STEPS(route, t));
@@ -134,18 +132,19 @@ const ContainerCreate: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
         });
       }
     },
-    onGridReady: (event) => {
-      event.api?.updateGridOptions({
-        rowData: images,
-        columnDefs: colDefs,
-      });
-      event.api.setFilterModel(filters);
-      event.api.forEachNode((node) => {
-        if (node.data.selectedId === container.imageDefinitionId && isValidVersion(node.data as ImageGroup)) {
-          node.setSelected(true);
-        }
-      });
-    },
+  };
+
+  const onGridReady = (event: GridReadyEvent) => {
+    event.api?.updateGridOptions({
+      rowData: images,
+      columnDefs: colDefs,
+    });
+    event.api.setFilterModel(filters);
+    event.api.forEachNode((node) => {
+      if (node.data.selectedId === container.imageDefinitionId && isValidVersion(node.data as ImageGroup)) {
+        node.setSelected(true);
+      }
+    });
   };
 
   return (
@@ -172,7 +171,12 @@ const ContainerCreate: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
             <>
               {loading && <DialLoader size={40} />}
               {!loading && !!images.length && (
-                <GridView rowData={images} columnDefs={colDefs} additionalGridOptions={options} />
+                <GridView
+                  rowData={images}
+                  columnDefs={colDefs}
+                  additionalGridOptions={options}
+                  onGridReady={onGridReady}
+                />
               )}
             </>
           )}
