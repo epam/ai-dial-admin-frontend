@@ -33,7 +33,7 @@ import {
   ScrollApiModule,
 } from 'ag-grid-community';
 import { AgGridReact } from 'ag-grid-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { baseColumnComparator } from './comparators/base-column-comparator';
 import { ROW_HEIGHT } from './constants';
@@ -168,6 +168,31 @@ const AgGridWrapper = <T extends object>({
     );
   };
 
+  const defaultColDef: ColDef = useMemo(() => {
+    return {
+      minWidth: 150,
+      floatingFilter: true,
+      floatingFilterComponent: FloatingFilter,
+      resizable: true,
+      flex: 1,
+      filter: 'agTextColumnFilter',
+      filterParams: {
+        filterPlaceholder: 'Enter value',
+        buttons: ['reset'],
+      } as ITextFilterParams,
+      comparator: baseColumnComparator.bind(this),
+      tooltipValueGetter: (p: ITooltipParams) => p.data?.[(p.colDef as ColDef)?.field || ''],
+      tooltipComponent: tooltipRenderer,
+      suppressKeyboardEvent: (params: SuppressKeyboardEventParams) => {
+        const event = params.event;
+        if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
+          return true;
+        }
+        return false;
+      },
+    };
+  }, []);
+
   return (
     <div className="ag-theme-balham-dark h-full overflow-x-auto" role="table">
       <AgGridReact
@@ -179,28 +204,7 @@ const AgGridWrapper = <T extends object>({
         autoSizeStrategy={{ type: 'fitGridWidth' }}
         tooltipShowDelay={500}
         suppressDragLeaveHidesColumns={true}
-        defaultColDef={{
-          minWidth: 150,
-          floatingFilter: true,
-          floatingFilterComponent: FloatingFilter,
-          resizable: true,
-          flex: 1,
-          filter: 'agTextColumnFilter',
-          filterParams: {
-            filterPlaceholder: 'Enter value',
-            buttons: ['reset'],
-          } as ITextFilterParams,
-          comparator: baseColumnComparator.bind(this),
-          tooltipValueGetter: (p: ITooltipParams) => p.data?.[(p.colDef as ColDef)?.field || ''],
-          tooltipComponent: tooltipRenderer,
-          suppressKeyboardEvent: (params: SuppressKeyboardEventParams) => {
-            const event = params.event;
-            if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
-              return true;
-            }
-            return false;
-          },
-        }}
+        defaultColDef={defaultColDef}
         onGridSizeChanged={onGridSizeChanged}
         onFilterChanged={onStateChanged}
         onSortChanged={onStateChanged}
