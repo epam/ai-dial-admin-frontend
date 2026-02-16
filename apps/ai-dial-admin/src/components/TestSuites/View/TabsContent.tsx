@@ -11,6 +11,7 @@ import { EntityViewTab } from '@/src/utils/tabs/utils';
 import TestCases from '../TestCases/TestCases';
 import TestSuiteProperties from '../Properties/Properties';
 import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
+import Runs from '../Runs/Runs';
 
 interface Props {
   activeTab: EntityViewTab;
@@ -38,7 +39,7 @@ const TabsContent: FC<Props> = ({ activeTab, onChange, selectedTestSuite }) => {
         </PropertiesTabContent>
       )}
       {activeTab === EntityViewTab.TestCases && <TestCases selectedTestSuite={selectedTestSuite} onChange={onChange} />}
-      {activeTab === EntityViewTab.Runs && <div>Runs</div>}
+      {activeTab === EntityViewTab.Runs && <Runs selectedTestSuite={selectedTestSuite} />}
       {activeTab === EntityViewTab.Trends && <div>Trends</div>}
     </>
   );

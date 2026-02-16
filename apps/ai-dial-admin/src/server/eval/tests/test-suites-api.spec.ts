@@ -37,6 +37,17 @@ describe('Server :: TestSuiteApi', () => {
     );
   });
 
+  test('Should calls getRuns and return list', async () => {
+    fetch.mockResponseOnce(JSON.stringify([mockTestSuite]));
+
+    await instance.getRuns(0, 10, [], [], TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_SUITES_RUNS_URL}?page=0&size=10&includeTotalCount=true`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
   test('Should calls getTestSuite by name and return testSuite', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockTestSuite));
 

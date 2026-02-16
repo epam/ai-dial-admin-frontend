@@ -28,6 +28,11 @@ export async function getTestSuites(page: number, size: number, sorts: SortDto[]
   return testSuitesApi.getTestSuites(page, size, sorts, filters, token);
 }
 
+export async function getRuns(page: number, size: number, sorts: SortDto[], filters: FilterDto[]) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.getRuns(page, size, sorts, filters, token);
+}
+
 export async function getTestSuite(id: string, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return testSuitesApi.getTestSuite(id, etag, token);
