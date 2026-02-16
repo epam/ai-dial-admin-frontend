@@ -12,6 +12,7 @@ import { getRequestSortsStr } from '@/src/utils/request/get-request-sorts';
 export const TEST_SUITES_URL = `${API}/test-suites`;
 export const TEST_SUITE_URL = (id?: string) => `${TEST_SUITES_URL}/${id || ''}`;
 export const TEST_CASES_URL = (id?: string) => `${TEST_SUITE_URL(id)}/test-cases`;
+export const TEST_SUITE_RUN_URL = (id?: string) => `${TEST_SUITE_URL(id)}/runs`;
 export const TEST_CASE_URL = (id?: string, testCaseId?: string) => `${TEST_CASES_URL(id)}/${testCaseId || ''}`;
 export const DEPLOYMENTS_URL = `${API}/deployments`;
 export const TEST_SUITES_RUNS_URL = `${API}/test-suite-runs`;
@@ -83,6 +84,10 @@ export class TestSuitesApi extends BaseApi {
 
   updateTestSuite(suite: TestSuite, etag: string, token: JWT | null): Promise<ServerActionResponse> {
     return this.putActionWithEtag(TEST_SUITE_URL(suite.id), suite, token, etag);
+  }
+
+  runTestSuite(id: string, numberOfRuns: number, token: JWT | null): Promise<ServerActionResponse> {
+    return this.postAction(TEST_SUITE_RUN_URL(id), { runConfig: { numberOfRuns } }, token);
   }
 
   private getFiltersAndSortsStr(sorts: SortDto[], filters: FilterDto[]): string {

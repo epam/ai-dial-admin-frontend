@@ -8,6 +8,7 @@ import {
   createTestSuite,
   getDeployment,
   getDeployments,
+  getRuns,
   getTestCase,
   getTestCases,
   getTestSuite,
@@ -15,6 +16,7 @@ import {
   importTestCase,
   importTestCasePreview,
   removeTestSuite,
+  runTestSuite,
   updateTestSuite,
 } from './actions';
 
@@ -76,6 +78,14 @@ describe('TestSuites :: server actions', () => {
     const result = await getRuns(1, 10, [], []);
     expect(getUserToken).toHaveBeenCalled();
     expect(testSuitesApi.getRuns).toHaveBeenCalledWith(1, 10, [], [], TOKEN_MOCK);
+    expect(result).toEqual([RESPONSE_MOCK]);
+  });
+
+  test('Should call runTestSuite action', async () => {
+    (testSuitesApi.runTestSuite as any).mockResolvedValue([RESPONSE_MOCK]);
+    const result = await runTestSuite('test', 1);
+    expect(getUserToken).toHaveBeenCalled();
+    expect(testSuitesApi.runTestSuite).toHaveBeenCalledWith('test', 1, TOKEN_MOCK);
     expect(result).toEqual([RESPONSE_MOCK]);
   });
 
