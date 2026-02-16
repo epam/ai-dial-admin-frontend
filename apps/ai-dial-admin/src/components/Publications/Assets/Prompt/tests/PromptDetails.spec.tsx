@@ -105,11 +105,11 @@ describe('Publications :: PromptDetails', () => {
     const { onChange } = setup();
 
     const titleInput = screen.getByTestId('title-input');
-    
+
     await userEvent.type(titleInput, 'X');
 
     expect(onChange).toHaveBeenCalled();
-    
+
     const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1];
     expect(lastCall[0]).toHaveProperty('name');
     expect(lastCall[0]).toHaveProperty('content');

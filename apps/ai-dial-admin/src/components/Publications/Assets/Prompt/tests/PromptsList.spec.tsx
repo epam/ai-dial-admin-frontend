@@ -260,7 +260,7 @@ describe('Publications :: PromptsList', () => {
     render(<PromptsList publication={publication} />);
 
     const changeButton = screen.getByTestId('change-prompt1');
-    
+
     await expect(userEvent.click(changeButton)).resolves.not.toThrow();
   });
 
