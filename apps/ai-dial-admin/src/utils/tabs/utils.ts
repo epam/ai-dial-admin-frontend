@@ -359,6 +359,21 @@ export const getTestSuiteTabs = (t: (key: string) => string): TabModel[] => {
   return [propertiesTab(t), testCasesTab(t), runsTab(t), trendsTab(t)];
 };
 
+export const getPublicationViewTabs = (t: (key: string) => string, view: ApplicationRoute): TabModel[] => {
+  switch (view) {
+    case ApplicationRoute.FilePublications:
+      return getFilePublicationTabs(t);
+    case ApplicationRoute.PromptPublications:
+      return getPromptPublicationTabs(t);
+    default:
+      return [];
+  }
+};
+
 export const getFilePublicationTabs = (t: (key: string) => string): TabModel[] => {
+  return [propertiesTab(t), permissionsTab(t)];
+};
+
+export const getPromptPublicationTabs = (t: (key: string) => string): TabModel[] => {
   return [propertiesTab(t), permissionsTab(t)];
 };

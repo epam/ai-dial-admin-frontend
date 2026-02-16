@@ -30,7 +30,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { EntityViewTab, getFilePublicationTabs } from '@/src/utils/tabs/utils';
+import { EntityViewTab, getPublicationViewTabs } from '@/src/utils/tabs/utils';
 import { addTrailingSlash } from '@/src/utils/url';
 import TabsContent from './TabsContent';
 
@@ -49,7 +49,7 @@ const PublicationView = <T extends Publication>({ view, publication, application
   const { showNotification } = useNotification();
   const [isJsonView, setIsJsonView] = useState<boolean>(false);
 
-  const [tabs, setTabs] = useState(() => getFilePublicationTabs(t));
+  const [tabs, setTabs] = useState(() => getPublicationViewTabs(t, view));
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
 
@@ -193,7 +193,7 @@ const PublicationView = <T extends Publication>({ view, publication, application
   }, [publication.resourceIssues, t]);
 
   const header = useMemo(() => {
-    if (view === ApplicationRoute.FilePublications) {
+    if (view === ApplicationRoute.FilePublications || view === ApplicationRoute.PromptPublications) {
       return (
         <PublicationsHeader
           view={view}
@@ -253,7 +253,7 @@ const PublicationView = <T extends Publication>({ view, publication, application
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       {header}
       <div className="flex-1 overflow-auto min-h-0">
-        {view === ApplicationRoute.FilePublications ? (
+        {view === ApplicationRoute.FilePublications || view === ApplicationRoute.PromptPublications ? (
           isEditorEnabled ? (
             <EntityJsonEditor
               entity={selectedPublication}

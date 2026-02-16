@@ -1,8 +1,9 @@
 'use client';
 
-import FilesProperties from '@/src/components/Publications/Properties/FilesProperties';
+import FileProperties from '@/src/components/Publications/Properties/FileProperties';
+import PromptProperties from '@/src/components/Publications/Properties/PromptProperties';
 import { FileFolderProvider } from '@/src/context/assets/FileFolderContext';
-import { FilePublication, Publication } from '@/src/models/dial/publications';
+import { FilePublication, PromptPublication, Publication } from '@/src/models/dial/publications';
 import { DialRule } from '@/src/models/dial/rule';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
@@ -29,12 +30,20 @@ const TabsContent = <T extends Publication>({
   return (
     <>
       {activeTab === EntityViewTab.Properties && (
-        <div className="flex flex-col">
+        <div className="flex flex-col h-full">
           <PublicationInfoHeader view={view} entity={selectedPublication} />
 
           {view === ApplicationRoute.FilePublications && (
             <FileFolderProvider>
-              <FilesProperties publication={selectedPublication} onChange={onChange as (p: FilePublication) => void} />
+              <FileProperties publication={selectedPublication} onChange={onChange as (p: FilePublication) => void} />
+            </FileFolderProvider>
+          )}
+          {view === ApplicationRoute.PromptPublications && (
+            <FileFolderProvider>
+              <PromptProperties
+                publication={selectedPublication}
+                onChange={onChange as (p: PromptPublication) => void}
+              />
             </FileFolderProvider>
           )}
         </div>
