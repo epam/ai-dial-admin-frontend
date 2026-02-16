@@ -1,6 +1,6 @@
 'use client';
 
-import { Dispatch, FC, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
+import { FC, ReactNode, useCallback, useMemo, useRef, useState } from 'react';
 
 import { DialNeutralButton, DialTabs } from '@epam/ai-dial-ui-kit';
 import { IconRefresh } from '@tabler/icons-react';
@@ -29,72 +29,55 @@ interface Props {
   entity?: BaseEntity;
   entityView?: EntityViewTab;
   className?: string;
-  initTimeFilter?: string | TimeRange;
-  onChangeTimeFilter?: (filter: string | TimeRange) => void;
-  isCustomRange?: boolean;
-  setIsCustomRange?: Dispatch<SetStateAction<boolean>>;
+  timeRange: TimeRange;
+  timeFilter?: ReactNode;
+  onRefresh?: () => void;
 }
 
-const UsageLog: FC<Props> = ({
-  route,
-  className,
-  entity,
-  entityView,
-  onChangeTimeFilter,
-  initTimeFilter,
-  isCustomRange,
-  setIsCustomRange,
-}) => {
+const UsageLog: FC<Props> = ({ route, className, entity, entityView, timeRange, timeFilter, onRefresh }) => {
   const t = useI18n();
   const tabs = getUsageLogTabs(t);
   const getReqRef = useRef(useProtectedRequest());
 
   const [activeTab, setActiveTab] = useState(entityView || EntityViewTab.Traces);
-  const [timePeriod, setTimePeriod] = useState<string | undefined>();
-  const [timeRange, setTimeRange] = useState<TimeRange>(getTimeRangeById(DEFAULT_TIME_PERIOD));
 
-  useEffect(() => {
-    if (!timePeriod) {
-      if (!isCustomRange) {
-        setTimePeriod((initTimeFilter as string) || DEFAULT_TIME_PERIOD);
-        setTimeRange(getTimeRangeById((initTimeFilter as string) || DEFAULT_TIME_PERIOD));
-      } else {
-        setTimePeriod(DEFAULT_TIME_PERIOD);
-        setTimeRange((initTimeFilter as TimeRange) || getTimeRangeById(DEFAULT_TIME_PERIOD));
-      }
-    }
-  }, [initTimeFilter, timePeriod, isCustomRange]);
+  const [isCustomRange, setIsCustomRange] = useState(false);
+  const [timePeriod, setTimePeriod] = useState<string>(DEFAULT_TIME_PERIOD);
+  const [ownTimeRange, setOwnTimeRange] = useState<TimeRange>(getTimeRangeById(DEFAULT_TIME_PERIOD));
+
+  const onTimePeriodChange = useCallback((period: string) => {
+    setTimePeriod(period);
+    setOwnTimeRange(getTimeRangeById(period));
+  }, []);
+
+  const onTimeRangeChange = useCallback((range: TimeRange) => {
+    setOwnTimeRange(range);
+  }, []);
+
+  const ownTimeFilter = useMemo(() => {
+    return (
+      <TimeFilter
+        timePeriod={timePeriod}
+        onTimePeriodChange={onTimePeriodChange}
+        timeRange={ownTimeRange}
+        onTimeRangeChange={onTimeRangeChange}
+        isCustomRange={isCustomRange}
+        setIsCustomRange={setIsCustomRange}
+      />
+    );
+  }, [isCustomRange, onTimePeriodChange, onTimeRangeChange, ownTimeRange, timePeriod]);
 
   const getData = useCallback(
     (query: TelemetryQuery) => {
       if (typeof query.query.from === 'string') {
-        query.query.where = getFormattedFilters(timeRange, [], entity?.name || null);
+        query.query.where = getFormattedFilters(timeRange || ownTimeRange, [], entity?.name || null);
       } else {
-        query.query.from.where = getFormattedFilters(timeRange, [], entity?.name || null);
+        query.query.from.where = getFormattedFilters(timeRange || ownTimeRange, [], entity?.name || null);
       }
 
       return getReqRef.current(getDashboardData, query);
     },
-    [entity?.name, timeRange],
-  );
-
-  const onTimePeriodChange = useCallback(
-    (period: string) => {
-      setTimePeriod(period);
-      onChangeTimeFilter?.(period);
-      setTimeRange(getTimeRangeById(period));
-    },
-    [onChangeTimeFilter],
-  );
-
-  const onTimeRangeChange = useCallback(
-    (range: TimeRange, isCustom?: boolean) => {
-      setTimeRange(range);
-      if (isCustom) {
-        onChangeTimeFilter?.(range);
-      }
-    },
-    [onChangeTimeFilter],
+    [entity?.name, ownTimeRange, timeRange],
   );
 
   const onChangeActiveTab = useCallback(
@@ -106,10 +89,6 @@ const UsageLog: FC<Props> = ({
     [activeTab],
   );
 
-  const onRefresh = useCallback(() => {
-    setTimeRange(getTimeRangeById(timePeriod || ''));
-  }, [timePeriod]);
-
   return (
     <div className={classNames('flex flex-col h-full w-full', className)}>
       <div className="flex flex-row h-[40px] justify-between mb-4">
@@ -119,20 +98,12 @@ const UsageLog: FC<Props> = ({
           </div>
         )}
         <div className={classNames('flex items-center gap-4', entityView && 'justify-between w-full')}>
-          {timePeriod && (
-            <TimeFilter
-              timePeriod={timePeriod}
-              onTimePeriodChange={onTimePeriodChange}
-              timeRange={timeRange}
-              onTimeRangeChange={onTimeRangeChange}
-              isCustomRange={isCustomRange}
-              setIsCustomRange={setIsCustomRange}
-            />
-          )}
+          {timeFilter}
+          {!timeFilter && ownTimeRange && ownTimeFilter}
           <DialNeutralButton
             label={t(ButtonsI18nKey.Refresh)}
             iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}
-            onClick={onRefresh}
+            onClick={onRefresh || (() => setOwnTimeRange(ownTimeRange))}
           />
         </div>
       </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { DialConfirmationPopup, DialNeutralButton, DialTooltip } from '@epam/ai-dial-ui-kit';
@@ -46,21 +46,12 @@ interface Props {
   entity?: BaseEntity | DialApplicationScheme;
   entityType?: string;
   refresh?: boolean;
-  initTimeFilter?: string | TimeRange;
-  onChangeTimeFilter?: (filter: string | TimeRange) => void;
-  isCustomRange?: boolean;
-  setIsCustomRange?: Dispatch<SetStateAction<boolean>>;
+  timeRange: TimeRange;
+  timeFilter?: ReactNode;
+  allowPadding?: boolean;
 }
 
-const ActivityAuditList: FC<Props> = ({
-  entity,
-  entityType,
-  refresh,
-  initTimeFilter,
-  onChangeTimeFilter,
-  isCustomRange,
-  setIsCustomRange,
-}) => {
+const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, timeRange, timeFilter, allowPadding }) => {
   const t = useI18n();
   const router = useRouter();
 
@@ -71,22 +62,8 @@ const ActivityAuditList: FC<Props> = ({
 
   const [isLoading, setIsLoading] = useState(false);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
-  const [timePeriod, setTimePeriod] = useState<string | undefined>();
-  const [timeRange, setTimeRange] = useState<TimeRange>(getTimeRangeById(DEFAULT_TIME_PERIOD));
 
   const [selectedActivity, setSelectedActivity] = useState<DialActivity | undefined>(void 0);
-
-  useEffect(() => {
-    if (!timePeriod) {
-      if (!isCustomRange) {
-        setTimePeriod((initTimeFilter as string) || DEFAULT_TIME_PERIOD);
-        setTimeRange(getTimeRangeById((initTimeFilter as string) || DEFAULT_TIME_PERIOD));
-      } else {
-        setTimePeriod(DEFAULT_TIME_PERIOD);
-        setTimeRange((initTimeFilter as TimeRange) || getTimeRangeById(DEFAULT_TIME_PERIOD));
-      }
-    }
-  }, [initTimeFilter, timePeriod, isCustomRange]);
 
   const onCloseModal = useCallback(() => {
     setIsRollbackModalOpen(false);
@@ -108,10 +85,35 @@ const ActivityAuditList: FC<Props> = ({
     setSelectedActivity(activity);
   }, []);
 
+  const [isCustomRange, setIsCustomRange] = useState(false);
+  const [timePeriod, setTimePeriod] = useState<string>(DEFAULT_TIME_PERIOD);
+  const [ownTimeRange, setOwnTimeRange] = useState<TimeRange>(getTimeRangeById(DEFAULT_TIME_PERIOD));
+
+  const onTimePeriodChange = useCallback((period: string) => {
+    setTimePeriod(period);
+    setOwnTimeRange(getTimeRangeById(period));
+  }, []);
+
+  const onTimeRangeChange = useCallback((range: TimeRange) => {
+    setOwnTimeRange(range);
+  }, []);
+
+  const ownTimeFilter = useMemo(() => {
+    return (
+      <TimeFilter
+        timePeriod={timePeriod}
+        onTimePeriodChange={onTimePeriodChange}
+        timeRange={ownTimeRange}
+        onTimeRangeChange={onTimeRangeChange}
+        isCustomRange={isCustomRange}
+        setIsCustomRange={setIsCustomRange}
+      />
+    );
+  }, [isCustomRange, onTimePeriodChange, onTimeRangeChange, ownTimeRange, timePeriod]);
+
   const gridDataSource: IDatasource = useMemo(
     () => ({
       getRows: (params: IGetRowsParams) => {
-        const actualTimeRange = timeRange;
         gridApi?.setGridOption('loading', true);
         const page = Math.floor(params.startRow / PAGE_SIZE);
         const sorts = getRequestSorts(params.sortModel);
@@ -130,7 +132,7 @@ const ActivityAuditList: FC<Props> = ({
                 } as FilterDto,
               ]
             : []),
-          ...getGridFilters(params.filterModel, actualTimeRange),
+          ...getGridFilters(params.filterModel, timeRange || ownTimeRange),
         ];
 
         getActivities(PAGE_SIZE, page, sorts, filters)
@@ -148,7 +150,7 @@ const ActivityAuditList: FC<Props> = ({
           });
       },
     }),
-    [timeRange, gridApi, entity, entityType],
+    [gridApi, entity, entityType, timeRange, ownTimeRange],
   );
 
   useEffect(() => {
@@ -181,27 +183,6 @@ const ActivityAuditList: FC<Props> = ({
       gridApi.setGridOption('datasource', gridDataSource);
     }
   }, [gridApi, gridDataSource]);
-
-  const onTimePeriodChange = useCallback(
-    (period: string) => {
-      setTimePeriod(period);
-      onChangeTimeFilter?.(period);
-      setTimeRange(getTimeRangeById(period));
-      onRefresh();
-    },
-    [onRefresh, onChangeTimeFilter],
-  );
-
-  const onTimeRangeChange = useCallback(
-    (range: TimeRange, isCustom?: boolean) => {
-      setTimeRange(range);
-      if (isCustom) {
-        onChangeTimeFilter?.(range);
-      }
-      onRefresh();
-    },
-    [onRefresh, onChangeTimeFilter],
-  );
 
   const resourceRollback = useCallback(() => {
     if (selectedActivity) {
@@ -253,6 +234,7 @@ const ActivityAuditList: FC<Props> = ({
   return (
     <div role="activities" className="flex flex-col flex-1 min-h-0 w-full relative">
       <ListView
+        allowPadding={allowPadding}
         additionalGridOptions={gridOptions}
         columnDefs={columnDefs}
         title={!entity ? t(listViewTitleMap[ApplicationRoute.ActivityAudit]) : void 0}
@@ -262,17 +244,8 @@ const ActivityAuditList: FC<Props> = ({
       >
         <div className={classNames('flex gap-4', entity ? 'flex-1 justify-between' : 'justify-end')}>
           {!entity && <ResetFiltersButton gridApi={gridApi} />}
-          {timePeriod && (
-            <TimeFilter
-              timePeriod={timePeriod as string}
-              onTimePeriodChange={onTimePeriodChange}
-              timeRange={timeRange}
-              onTimeRangeChange={onTimeRangeChange}
-              isCustomRange={isCustomRange}
-              setIsCustomRange={setIsCustomRange}
-            />
-          )}
-
+          {timeFilter}
+          {!timeFilter && ownTimeRange && ownTimeFilter}
           <div className="flex flex-row gap-x-4">
             {entity && <ResetFiltersButton gridApi={gridApi} />}
             <DialNeutralButton
