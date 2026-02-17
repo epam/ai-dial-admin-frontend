@@ -7,7 +7,7 @@ import { getDeployments } from '@/src/app/[lang]/test-suites/actions';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 import Methods from '@/src/components/TestSuites/Methods/Methods';
 import TestSuiteProperties from '@/src/components/TestSuites/Properties/Properties';
-import { TestSuitesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { Deployment } from '@/src/models/evaluation/deployment';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
@@ -91,6 +91,7 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate }) => {
         onChangeStep={setCurrentStep}
         steps={steps}
         currentStep={currentStep}
+        finishButtonLabel={t(ButtonsI18nKey.Create)}
       />
     </DialPopup>
   );

@@ -53,7 +53,7 @@ describe('Server :: TestSuiteApi', () => {
   test('Should calls runTestSuite and return list', async () => {
     fetch.mockResponseOnce(JSON.stringify([mockTestSuite]));
 
-    await instance.runTestSuite('id', 1, TOKEN_MOCK);
+    await instance.runTestSuite(TOKEN_MOCK, 'id', 1);
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${TEST_SUITE_RUN_URL('id')}`,

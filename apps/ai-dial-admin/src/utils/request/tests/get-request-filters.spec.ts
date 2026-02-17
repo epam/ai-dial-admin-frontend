@@ -44,7 +44,7 @@ describe('getRequestFiltersStr', () => {
   test('converts a single filter to query string', () => {
     const filters: FilterDto[] = [{ column: 'name', value: 'John', operator: FilterOperatorDto.CONTAINS }];
 
-    expect(getRequestFiltersStr(filters)).toBe('name=John');
+    expect(getRequestFiltersStr(filters)).toBe('filter=name:co:John');
   });
 
   test('converts multiple filters to query string with & separator', () => {
@@ -54,7 +54,7 @@ describe('getRequestFiltersStr', () => {
       { column: 'city', value: 'New York', operator: FilterOperatorDto.CONTAINS },
     ];
 
-    expect(getRequestFiltersStr(filters)).toBe('name=John&age=30&city=New%20York');
+    expect(getRequestFiltersStr(filters)).toBe('filter=name:co:John&filter=age:eq:30&filter=city:co:New%20York');
   });
 
   test('properly encodes special characters in filter values', () => {
@@ -63,7 +63,9 @@ describe('getRequestFiltersStr', () => {
       { column: 'email', value: 'user@example.com', operator: FilterOperatorDto.EQUALS },
     ];
 
-    expect(getRequestFiltersStr(filters)).toBe('query=test%20%26%20query%3Dvalue&email=user%40example.com');
+    expect(getRequestFiltersStr(filters)).toBe(
+      'filter=query:co:test%20%26%20query%3Dvalue&filter=email:eq:user%40example.com',
+    );
   });
 
   test('returns empty string for empty filters array', () => {
