@@ -874,6 +874,7 @@ export enum ErrorI18nKey {
   CpuError = 'Error.CpuError',
   ImageSourceURI = 'Error.ImageSourceURI',
   PathError = 'Error.PathError',
+  ProbePathError = 'Error.ProbePathError',
   VariableError = 'Error.VariableError',
   HFModelName = 'Error.HFModelName',
   ContainSpace = 'Error.ContainSpace',
@@ -891,6 +892,7 @@ export enum ErrorI18nKey {
   PortError = 'Error.PortError',
   MemoryError = 'Error.MemoryError',
   GPUError = 'Error.GPUError',
+  PositiveNumber = 'Error.PositiveNumber',
 }
 
 export enum SourceI18nKey {
@@ -977,13 +979,27 @@ export enum EntityPlaceholdersI18nKey {
   SHA = 'EntityPlaceholders.SHA',
   Search = 'EntityPlaceholders.Search',
   BaseDirectory = 'EntityPlaceholders.BaseDirectory',
-  ContainerPort = 'EntityPlaceholders.ContainerPort',
+  Port = 'EntityPlaceholders.Port',
   ContainerEndpointPath = 'EntityPlaceholders.ContainerEndpointPath',
   Command = 'EntityPlaceholders.Command',
   Arguments = 'EntityPlaceholders.Arguments',
   Domain = 'EntityPlaceholders.Domain',
   Mask = 'EntityPlaceholders.Mask',
   IpRange = 'EntityPlaceholders.IpRange',
+  InitialDelaySeconds = 'EntityPlaceholders.InitialDelaySeconds',
+  PeriodSeconds = 'EntityPlaceholders.PeriodSeconds',
+  TimeoutSeconds = 'EntityPlaceholders.TimeoutSeconds',
+  FailureThreshold = 'EntityPlaceholders.FailureThreshold',
+}
+
+export enum EntityCaptionsI18nKey {
+  ProbeEnableCustom = 'EntityCaptions.ProbeEnableCustom',
+  ProbePath = 'EntityCaptions.ProbePath',
+  ProbePort = 'EntityCaptions.ProbePort',
+  ProbeInitialDelaySeconds = 'EntityCaptions.ProbeInitialDelaySeconds',
+  ProbePeriodSeconds = 'EntityCaptions.ProbePeriodSeconds',
+  ProbeTimeoutSeconds = 'EntityCaptions.ProbeTimeoutSeconds',
+  ProbeFailuresThreshold = 'EntityCaptions.ProbeFailuresThreshold',
 }
 
 export enum EntityFieldsI18nKey {
@@ -1137,6 +1153,7 @@ export enum EntityFieldsI18nKey {
   globalInterceptors = 'EntityFields.globalInterceptors',
   HFModelName = 'EntityFields.HFModelName',
   Resources = 'EntityFields.Resources',
+  StartupProbe = 'EntityFields.StartupProbe',
   Configuration = 'EntityFields.Configuration',
   Command = 'EntityFields.Command',
   EnvironmentVariables = 'EntityFields.EnvironmentVariables',
@@ -1148,6 +1165,12 @@ export enum EntityFieldsI18nKey {
   LastReason = 'EntityFields.LastReason',
   Mask = 'EntityFields.Mask',
   IpRange = 'EntityFields.IpRange',
+  Path = 'EntityFields.Path',
+  InitialDelaySeconds = 'EntityFields.InitialDelaySeconds',
+  PeriodSeconds = 'EntityFields.PeriodSeconds',
+  TimeoutSeconds = 'EntityFields.TimeoutSeconds',
+  FailureThreshold = 'EntityFields.FailureThreshold',
+  AdvancedTiming = 'EntityFields.AdvancedTiming',
 }
 
 export enum ToolsetI18nKey {

@@ -80,7 +80,7 @@ const Port: FC<Props> = ({ container, setContainer }) => {
         containerClassName="max-w-[125px]"
         elementId="containerPort"
         fieldTitle={t(EntityFieldsI18nKey.Port)}
-        placeholder={t(EntityPlaceholdersI18nKey.ContainerPort)}
+        placeholder={t(EntityPlaceholdersI18nKey.Port)}
         value={container.containerPort}
         invalid={!!portError}
         errorText={portError?.text}
@@ -93,7 +93,7 @@ const Port: FC<Props> = ({ container, setContainer }) => {
           containerClassName="max-w-[125px]"
           elementId="containerGRPCPort"
           fieldTitle={t(EntityFieldsI18nKey.GRPCPort)}
-          placeholder={t(EntityPlaceholdersI18nKey.ContainerPort)}
+          placeholder={t(EntityPlaceholdersI18nKey.Port)}
           value={container.containerGrpcPort}
           invalid={!!grpcPortError}
           errorText={grpcPortError?.text}

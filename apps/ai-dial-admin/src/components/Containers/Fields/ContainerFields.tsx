@@ -11,6 +11,7 @@ import ContainerResources from '@/src/components/Deployments/Fields/ContainerRes
 import ContainerAutoscaling from '@/src/components/Deployments/Fields/ContainerAutoscaling';
 import ContainerVariables from '@/src/components/Deployments/Fields/ContainerVariables';
 import ContainerConfiguration from '@/src/components/Deployments/Fields/ContainerConfiguration';
+import ContainerStartupProbe from '@/src/components/Deployments/Fields/ContainerStartupProbe';
 
 interface Props {
   container: Container;
@@ -38,6 +39,7 @@ const ContainerFields: FC<Props> = ({ container, setContainer, isModal, route, n
           {container.source?.$type === MODEL_SOURCE_TYPE.HF && (
             <ContainerConfiguration container={container} setContainer={setContainer} />
           )}
+          <ContainerStartupProbe container={container} setContainer={setContainer} />
         </div>
       )}
     </div>
