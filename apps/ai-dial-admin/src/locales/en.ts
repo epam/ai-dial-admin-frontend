@@ -528,6 +528,8 @@ export default {
     TestCases: 'Test Cases',
     Runs: 'Runs',
     Trends: 'Trends',
+    Body: 'Body',
+    Headers: 'Headers',
   },
   ForwardToken: {
     ForwardTokenModalTitle: 'Forward Auth Token',
@@ -1352,6 +1354,7 @@ export default {
       'When running test cases more than once, some evaluation results may be unavailable or displayed differently.',
     MethodChangeWarning:
       'Changing the method will significantly affect the test suite, including configuration and results. Existing settings may be updated or reset.',
+    RequestTemplate: 'Request Template',
   },
   FileManager: {
     SelectedItems: 'item(s) selected',

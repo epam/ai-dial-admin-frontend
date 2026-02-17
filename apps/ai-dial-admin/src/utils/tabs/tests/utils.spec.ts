@@ -7,6 +7,7 @@ import {
   appRouteTab,
   attachmentsTab,
   auditTab,
+  bodyTab,
   conversationsTab,
   dependenciesTab,
   deploymentsToolsTab,
@@ -31,10 +32,12 @@ import {
   getRouteTabs,
   getSystemPropertiesTabs,
   getTabsForAsset,
+  getTestSuiteRequestTemplateTabs,
   getTestSuiteTabs,
   getToolsetTabs,
   getUsageLogTabs,
   globalInterceptorsTab,
+  headersTab,
   installationLogTab,
   interceptorsTab,
   keysTab,
@@ -227,4 +230,8 @@ describe('Entities :: tabs', () => {
       eventsTab(t),
     ]);
   });
+});
+
+test('returns correct tabs for test suite request template', () => {
+  expect(getTestSuiteRequestTemplateTabs(t)).toEqual([parametersTab(t), bodyTab(t), headersTab(t)]);
 });
