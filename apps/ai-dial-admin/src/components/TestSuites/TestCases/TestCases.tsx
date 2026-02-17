@@ -93,6 +93,7 @@ const TestCases: FC<Props> = ({ selectedTestSuite }) => {
   useEffect(() => {
     refreshGrid();
   }, [gridApi, gridDataSource, refreshGrid]);
+
   const onApplyImport = useCallback(
     (file: File) => {
       const body = new FormData();

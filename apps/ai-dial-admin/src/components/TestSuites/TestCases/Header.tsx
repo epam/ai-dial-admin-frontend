@@ -3,17 +3,9 @@
 import { FC, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import {
-  ButtonAppearance,
-  ButtonVariant,
-  DialButtonDropdown,
-  DialPrimaryButton,
-  DropdownItem,
-} from '@epam/ai-dial-ui-kit';
-import { IconPlus } from '@tabler/icons-react';
+import { ButtonAppearance, ButtonVariant, DialButtonDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import AddTestCase from './AddTestCase';
 import ImportFileModal from './Import/ImportFile';
@@ -41,11 +33,11 @@ const HeaderButtons: FC<Props> = ({ selectedTestSuiteId, onApplyImport }) => {
         appearance={ButtonAppearance.Ghost}
       />
 
-      <DialPrimaryButton
+      {/* <DialPrimaryButton
         label={t(ButtonsI18nKey.Add)}
         iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
         onClick={() => setIsAddModalOpen(true)}
-      />
+      /> */}
 
       {isAddModalOpen &&
         createPortal(
