@@ -10,7 +10,7 @@ import { getDeployments } from '@/src/app/[lang]/test-suites/actions';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import Field from '@/src/components/Common/Field/Field';
-import MethodInfo from '@/src/components/TestSuites/Methods/MethodInfo';
+import RequestTemplate from '@/src/components/TestSuites/RequestTemplate/RequestTemplate';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -108,10 +108,16 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false }
               onClick={() => openInNewTab()}
             />
           </div>
-          <div className="flex flex-col gap-4">
+          {/* <div className="flex flex-col gap-4">
             <h3>{t(TestSuitesI18nKey.Method)}</h3>
             <div className="flex border border-primary rounded h-[480px]">
               <MethodInfo selectedAppType={selectedAppType} testSuite={testSuite} onChangeTestSuite={onChange} />
+            </div>
+          </div> */}
+          <div className="flex flex-col gap-4">
+            <h3>{t(TestSuitesI18nKey.RequestTemplate)}</h3>
+            <div className="flex border border-primary rounded h-[480px] p-4">
+              <RequestTemplate testSuite={testSuite} onChangeTestSuite={onChange} />
             </div>
           </div>
         </>
