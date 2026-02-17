@@ -36,9 +36,11 @@ import { AgGridReact } from 'ag-grid-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { baseColumnComparator } from './comparators/base-column-comparator';
-import { ROW_HEIGHT } from './constants';
+import { GRID_COLUMNS_KEY, ROW_HEIGHT } from './constants';
 import FloatingFilter from './FloatingFilter/FloatingFilter';
 import { getColumnsStateFromStorage, GridModel, saveColumnsStateToStorage } from './utils';
+import { debounce } from 'lodash';
+import { getFromLocalStorage } from '@/src/utils/local-storage';
 
 export interface AgGridProps<T> {
   columnDefs?: ColDef[];
@@ -152,10 +154,17 @@ const AgGridWrapper = <T extends object>({
 
   useEffect(() => {
     if (columnDefs) {
-      const columns = columnDefs?.map((col) => ({ ...col, sort: undefined }));
+      const gridColumnsState = getFromLocalStorage(`${GRID_COLUMNS_KEY}${storageKey}`) || '{}';
+      const columnsFromStorage = JSON.parse(gridColumnsState)?.columns;
+
+      const columns = columnDefs?.map((col) => {
+        const columnFromStorage =
+          columnsFromStorage?.find((storageCol: ColumnState) => storageCol.colId === col.colId) || {};
+        return { ...columnFromStorage, ...col, sort: undefined };
+      });
       gridApi?.updateGridOptions({ columnDefs: columns, rowData });
     }
-  }, [columnDefs, gridApi, rowData]);
+  }, [columnDefs, gridApi, rowData, storageKey]);
 
   const tooltipRenderer = (params: { value: string }) => {
     return (
@@ -193,6 +202,14 @@ const AgGridWrapper = <T extends object>({
     };
   }, []);
 
+  const handleStateUpdated = useMemo(
+    () =>
+      debounce((e: AgGridEvent) => {
+        onStateChanged(e);
+      }, 300),
+    [onStateChanged],
+  );
+
   return (
     <div className="ag-theme-balham-dark h-full overflow-x-auto" role="table">
       <AgGridReact
@@ -209,6 +226,7 @@ const AgGridWrapper = <T extends object>({
         onFilterChanged={onStateChanged}
         onSortChanged={onStateChanged}
         onGridReady={onGridReady}
+        onStateUpdated={handleStateUpdated}
         {...additionalGridOptions}
       />
     </div>

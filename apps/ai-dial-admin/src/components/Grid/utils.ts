@@ -1,10 +1,7 @@
 import { ColDef, ColumnState, FilterModel } from 'ag-grid-community';
 import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storage';
 import { keyBy, map } from 'lodash';
-
-const COLUMNS_KEY = 'gridColumns';
-const GRID_COLUMNS_KEY = 'gridColumnsState';
-
+import { COLUMNS_KEY, GRID_COLUMNS_KEY } from './constants';
 export interface GridModel {
   columns: ColumnState[];
   filters: FilterModel;
