@@ -124,12 +124,12 @@ module.exports = {
   important: true,
   content: ['./src/**/*.{html,js,ts,tsx,yaml}', './../../node_modules/@epam/ai-dial-ui-kit/**/*.{js,ts,jsx,tsx}'],
   theme: {
-    backgroundColor: { ...backgroundsColors, ...buttonsBgColors },
+    backgroundColor: { ...backgroundsColors, ...controlsBgColors },
     borderColor: borderColors,
     stroke: borderColors,
     divideColor: borderColors,
     placeholderColor: placeholderColor,
-    textColor: { ...textColors, ...buttonsTextColors },
+    textColor: { ...textColors, ...controlsTextColors },
     gradientColorStops: backgroundsColors,
 
     extend: {
