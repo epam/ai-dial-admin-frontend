@@ -44,6 +44,8 @@ export enum EntityViewTab {
   Runs = 'Runs',
   Trends = 'Trends',
   Permissions = 'Permissions',
+  Body = 'Body',
+  Headers = 'Headers',
 }
 
 export const propertiesTab = (t: (key: string) => string) => ({
@@ -227,6 +229,16 @@ export const permissionsTab = (t: (key: string) => string) => ({
   label: t(TabsI18nKey.Permissions),
 });
 
+export const bodyTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.Body,
+  label: t(TabsI18nKey.Body),
+});
+
+export const headersTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.Headers,
+  label: t(TabsI18nKey.Headers),
+});
+
 export const getRouteTabs = (t: (key: string) => string): TabModel[] => {
   return [propertiesTab(t), rolesTab(t), auditTab(t)];
 };
@@ -334,21 +346,19 @@ export const getDeploymentsViewTabs = (
       relatedContainersTab(t, status as IMAGE_STATUS),
       installationLogTab(t, status as IMAGE_STATUS),
     ];
-  } else {
-    if (route === ApplicationRoute.InterceptorContainers || route === ApplicationRoute.ModelServings) {
-      return [propertiesTab(t), firewallTab(t), executionLogTab(t), eventsTab(t)];
-    } else {
-      return [
-        propertiesTab(t),
-        firewallTab(t),
-        deploymentsToolsTab(t, status as CONTAINER_STATUS),
-        resourcesTab(t, status as CONTAINER_STATUS),
-        promptsTab(t, status as CONTAINER_STATUS),
-        executionLogTab(t),
-        eventsTab(t),
-      ];
-    }
   }
+  if (route === ApplicationRoute.McpContainers) {
+    return [
+      propertiesTab(t),
+      firewallTab(t),
+      deploymentsToolsTab(t, status as CONTAINER_STATUS),
+      resourcesTab(t, status as CONTAINER_STATUS),
+      promptsTab(t, status as CONTAINER_STATUS),
+      executionLogTab(t),
+      eventsTab(t),
+    ];
+  }
+  return [propertiesTab(t), firewallTab(t), executionLogTab(t), eventsTab(t)];
 };
 
 export const getSystemPropertiesTabs = (t: (key: string) => string): TabModel[] => {
@@ -376,4 +386,7 @@ export const getFilePublicationTabs = (t: (key: string) => string): TabModel[] =
 
 export const getPromptPublicationTabs = (t: (key: string) => string): TabModel[] => {
   return [propertiesTab(t), permissionsTab(t)];
+};
+export const getTestSuiteRequestTemplateTabs = (t: (key: string) => string): TabModel[] => {
+  return [parametersTab(t), bodyTab(t), headersTab(t)];
 };

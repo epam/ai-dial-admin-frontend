@@ -1,3 +1,4 @@
+import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { RESPONSE_MOCK, TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
@@ -5,11 +6,12 @@ import {
   DEPLOYMENTS_URL,
   TEST_CASES_URL,
   TEST_CASE_URL,
+  TEST_SUITES_RUNS_URL,
   TEST_SUITES_URL,
+  TEST_SUITE_RUN_URL,
   TEST_SUITE_URL,
   TestSuitesApi,
 } from '../test-suites-api';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
@@ -34,6 +36,28 @@ describe('Server :: TestSuiteApi', () => {
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${TEST_SUITES_URL}?page=0&size=10&includeTotalCount=true`,
       expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
+  test('Should calls getRuns and return list', async () => {
+    fetch.mockResponseOnce(JSON.stringify([mockTestSuite]));
+
+    await instance.getRuns(0, 10, [], [], TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_SUITES_RUNS_URL}?page=0&size=10&includeTotalCount=true`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
+  test('Should calls runTestSuite and return list', async () => {
+    fetch.mockResponseOnce(JSON.stringify([mockTestSuite]));
+
+    await instance.runTestSuite('id', 1, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_SUITE_RUN_URL('id')}`,
+      expect.objectContaining({ method: 'POST' }),
     );
   });
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { DialPrimaryButton } from '@epam/ai-dial-ui-kit';
@@ -36,7 +36,6 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
   view,
 }: Props<T>) => {
   const t = useI18n();
-
   const [availableInterceptors, setAvailableInterceptors] = useState<DialInterceptor[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [runnerInterceptors, setRunnerInterceptors] = useState<string[]>();
@@ -58,6 +57,12 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
   const entityInterceptors = useMemo(() => {
     return isAppRunnerView ? entity['dial:applicationTypeInterceptors'] : entity.interceptors;
   }, [entity, isAppRunnerView]);
+
+  const interceptorsRef = useRef(entityInterceptors);
+
+  useEffect(() => {
+    interceptorsRef.current = entityInterceptors;
+  }, [entityInterceptors]);
 
   useEffect(() => {
     const name =
@@ -132,23 +137,32 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
 
   const runnerColumns = getInterceptorsColumnDefs(onOpen, void 0, globalInterceptors?.length);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const onRemoveInterceptor = (_?: DialInterceptor, index?: number) => {
-    if (index != null) {
-      if (isAppRunnerView) {
-        entity['dial:applicationTypeInterceptors']?.splice(index, 1);
-      } else {
-        entity.interceptors?.splice(index, 1);
-      }
+  const onRemoveInterceptor = useCallback(
+    (_?: DialInterceptor, index?: number) => {
+      if (index != null) {
+        const interceptors = [...(interceptorsRef.current || [])];
+        interceptors.splice(index, 1);
 
-      onChangeEntity({ ...entity });
-    }
-  };
+        if (isAppRunnerView) {
+          onChangeEntity({
+            ...entity,
+            'dial:applicationTypeInterceptors': interceptors,
+          });
+        } else {
+          onChangeEntity({
+            ...entity,
+            interceptors,
+          });
+        }
+      }
+    },
+    [entity, isAppRunnerView, onChangeEntity],
+  );
 
   const localColumns = useMemo(() => {
     return getInterceptorsColumnDefs(
       onOpen,
-      (_?: DialInterceptor, index?: number) => onRemoveInterceptor(_, index),
+      onRemoveInterceptor,
       (globalInterceptors?.length || 0) + (runnerInterceptors?.length || 0),
     );
   }, [onRemoveInterceptor, globalInterceptors?.length, runnerInterceptors?.length]);

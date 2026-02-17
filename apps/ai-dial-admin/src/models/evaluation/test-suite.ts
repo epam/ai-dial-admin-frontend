@@ -11,6 +11,7 @@ export interface TestSuite {
 
   deploymentRef?: TestSuiteDeploymentRef;
   endpointRef?: TestSuiteEndpointRef;
+  requestTemplate?: TestSuiteRequestTemplate;
 }
 
 export interface TestSuiteDeploymentRef {
@@ -27,6 +28,18 @@ export interface TestSuiteEndpointRef {
   responseBodySchema?: DialScheme;
 }
 
+export interface TestSuiteRequestTemplate {
+  urlTemplate?: string;
+  body?: Record<string, unknown>;
+  headers?: TestSuiteRequestTemplateParam[];
+  queryParams?: TestSuiteRequestTemplateParam[];
+}
+
+export interface TestSuiteRequestTemplateParam {
+  key: string;
+  value: string;
+}
+
 export interface TestCase {
   testCaseName?: string;
   updatedAt?: number;
@@ -35,4 +48,27 @@ export interface TestCase {
   enabled: boolean;
   createdAt: number;
   data?: Record<string, unknown>;
+}
+
+export interface TestSuiteRun {
+  id: string;
+  testSuiteId: string;
+  testRunName: string;
+  status: string;
+  runConfig: {
+    numberOfRuns: number;
+    testRunName: string;
+  };
+  numberOfTestCases: number;
+  startedAt: number;
+  completedAt: number;
+  errorMessage: string;
+  errorDetails: {
+    code: string;
+    category: string;
+    message: string;
+    details: Record<string, unknown>;
+  };
+  createdAt: number;
+  updatedAt: number;
 }
