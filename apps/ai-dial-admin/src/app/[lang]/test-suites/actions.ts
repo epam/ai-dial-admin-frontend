@@ -23,9 +23,19 @@ export async function updateTestSuite(suite: TestSuite, etag: string) {
   return testSuitesApi.updateTestSuite(suite, etag, token);
 }
 
+export async function runTestSuite(id: string, numberOfRuns: number) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.runTestSuite(id, numberOfRuns, token);
+}
+
 export async function getTestSuites(page: number, size: number, sorts: SortDto[], filters: FilterDto[]) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return testSuitesApi.getTestSuites(page, size, sorts, filters, token);
+}
+
+export async function getRuns(page: number, size: number, sorts: SortDto[], filters: FilterDto[]) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.getRuns(page, size, sorts, filters, token);
 }
 
 export async function getTestSuite(id: string, etag: string) {

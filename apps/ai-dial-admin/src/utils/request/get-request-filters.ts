@@ -32,5 +32,5 @@ export const getFilter = (type: GridFilterType): FilterOperatorDto | null => {
 };
 
 export const getRequestFiltersStr = (filters: FilterDto[]): string => {
-  return filters.map((filter) => `filter=${encodeURIComponent(filter.value)}`).join('&');
+  return filters.map((filter) => `${filter.column}=${encodeURIComponent(filter.value)}`).join('&');
 };

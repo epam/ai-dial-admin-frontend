@@ -1,7 +1,7 @@
 import { JWT } from 'next-auth/jwt';
 
 import { Deployment } from '@/src/models/evaluation/deployment';
-import { TestCase, TestSuite } from '@/src/models/evaluation/test-suite';
+import { TestCase, TestSuite, TestSuiteRun } from '@/src/models/evaluation/test-suite';
 import { EvaluationPageData, FilterDto, SortDto } from '@/src/models/request';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { API } from '@/src/server/api';
@@ -12,8 +12,10 @@ import { getRequestSortsStr } from '@/src/utils/request/get-request-sorts';
 export const TEST_SUITES_URL = `${API}/test-suites`;
 export const TEST_SUITE_URL = (id?: string) => `${TEST_SUITES_URL}/${id || ''}`;
 export const TEST_CASES_URL = (id?: string) => `${TEST_SUITE_URL(id)}/test-cases`;
+export const TEST_SUITE_RUN_URL = (id?: string) => `${TEST_SUITE_URL(id)}/runs`;
 export const TEST_CASE_URL = (id?: string, testCaseId?: string) => `${TEST_CASES_URL(id)}/${testCaseId || ''}`;
 export const DEPLOYMENTS_URL = `${API}/deployments`;
+export const TEST_SUITES_RUNS_URL = `${API}/test-suite-runs`;
 
 export class TestSuitesApi extends BaseApi {
   getTestSuites(
@@ -25,6 +27,19 @@ export class TestSuitesApi extends BaseApi {
   ): Promise<EvaluationPageData<TestSuite> | null> {
     return this.get<EvaluationPageData<TestSuite>>(
       `${TEST_SUITES_URL}?page=${page}&size=${size}&includeTotalCount=true${this.getFiltersAndSortsStr(sorts, filters)}`,
+      token,
+    );
+  }
+
+  getRuns(
+    page: number,
+    size: number,
+    sorts: SortDto[],
+    filters: FilterDto[],
+    token: JWT | null,
+  ): Promise<EvaluationPageData<TestSuiteRun> | null> {
+    return this.get<EvaluationPageData<TestSuiteRun>>(
+      `${TEST_SUITES_RUNS_URL}?page=${page}&size=${size}&includeTotalCount=true${this.getFiltersAndSortsStr(sorts, filters)}`,
       token,
     );
   }
@@ -69,6 +84,10 @@ export class TestSuitesApi extends BaseApi {
 
   updateTestSuite(suite: TestSuite, etag: string, token: JWT | null): Promise<ServerActionResponse> {
     return this.putActionWithEtag(TEST_SUITE_URL(suite.id), suite, token, etag);
+  }
+
+  runTestSuite(id: string, numberOfRuns: number, token: JWT | null): Promise<ServerActionResponse> {
+    return this.postAction(TEST_SUITE_RUN_URL(id), { runConfig: { numberOfRuns } }, token);
   }
 
   private getFiltersAndSortsStr(sorts: SortDto[], filters: FilterDto[]): string {

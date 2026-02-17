@@ -3,6 +3,7 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getTestCases, importTestCase } from '@/src/app/[lang]/test-suites/actions';
+import ListEntities from '@/src/components/ListView/List';
 import { infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -12,7 +13,6 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { ColDef, GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
-import ListEntities from '@/src/components/ListView/List';
 import { getTestCaseColumns } from '../utils/columns';
 import { getTestCaseGridData } from '../utils/data';
 import HeaderButtons from './Header';
@@ -128,15 +128,17 @@ const TestCases: FC<Props> = ({ selectedTestSuite }) => {
   );
 
   return (
-    <ListEntities
-      columnDefs={columnDefs}
-      additionalGridOptions={gridOptions}
-      listLabel={t(TestSuitesI18nKey.TestCases)}
-      emptyDataProps={{ title: t(TestSuitesI18nKey.NoTestCases) }}
-      onGridReady={onGridReady}
-    >
-      <HeaderButtons selectedTestSuiteId={selectedTestSuite.id as string} onApplyImport={onApplyImport} />
-    </ListEntities>
+    <>
+      <ListEntities
+        columnDefs={columnDefs}
+        additionalGridOptions={gridOptions}
+        listLabel={t(TestSuitesI18nKey.TestCases)}
+        emptyDataProps={{ title: t(TestSuitesI18nKey.NoTestCases) }}
+        onGridReady={onGridReady}
+      >
+        <HeaderButtons selectedTestSuiteId={selectedTestSuite.id as string} onApplyImport={onApplyImport} />
+      </ListEntities>
+    </>
   );
 };
 
