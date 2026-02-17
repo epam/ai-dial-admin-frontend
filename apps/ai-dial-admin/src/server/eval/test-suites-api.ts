@@ -86,7 +86,7 @@ export class TestSuitesApi extends BaseApi {
     return this.putActionWithEtag(TEST_SUITE_URL(suite.id), suite, token, etag);
   }
 
-  runTestSuite(id: string, numberOfRuns: number, token: JWT | null): Promise<ServerActionResponse> {
+  runTestSuite(token: JWT | null, id?: string, numberOfRuns?: number | string): Promise<ServerActionResponse> {
     return this.postAction(TEST_SUITE_RUN_URL(id), { runConfig: { numberOfRuns } }, token);
   }
 

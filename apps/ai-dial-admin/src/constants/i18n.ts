@@ -1323,6 +1323,10 @@ export enum TestSuitesI18nKey {
   ImportSuccess = 'TestSuites.ImportSuccess',
   ImportFailed = 'TestSuites.ImportFailed',
   ImportSuccessDescription = 'TestSuites.ImportSuccessDescription',
+  RunEvaluation = 'TestSuites.RunEvaluation',
+  RunWarning = 'TestSuites.RunWarning',
+  NumberOfRuns = 'TestSuites.NumberOfRuns',
+  SelectedTestCases = 'TestSuites.SelectedTestCases',
 }
 
 export enum FileManagerI18nKey {

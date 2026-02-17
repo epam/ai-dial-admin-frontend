@@ -1345,6 +1345,11 @@ export default {
     ImportSuccess: 'Test cases imported successfully',
     ImportSuccessDescription: 'You can now see them in the list of test cases',
     ImportFailed: 'Test cases import failed',
+    RunEvaluation: 'Run Evaluation',
+    SelectedTestCases: 'Selected test cases',
+    NumberOfRuns: 'Number of runs',
+    RunWarning:
+      'When running test cases more than once, some evaluation results may be unavailable or displayed differently.',
     MethodChangeWarning:
       'Changing the method will significantly affect the test suite, including configuration and results. Existing settings may be updated or reset.',
   },
