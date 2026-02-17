@@ -184,4 +184,13 @@ describe('Server :: TestSuiteApi', () => {
       expect.objectContaining({ method: 'POST' }),
     );
   });
+
+  test('Should call removeTestCase', async () => {
+    fetch.mockResponseOnce(JSON.stringify(mockTestSuite));
+    await instance.removeTestCase('id', 'caseId', TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_CASE_URL('id', 'caseId')}`,
+      expect.objectContaining({ method: 'DELETE' }),
+    );
+  });
 });
