@@ -40,7 +40,6 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
         ],
       ).then((res) => {
         setValidRuns(res?.totalElements);
-        console.log(res);
       });
     }
   }, [selectedTestSuite.id, validRuns]);
