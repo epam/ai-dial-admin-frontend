@@ -23,7 +23,13 @@ interface Props {
 const EntityProperties: FC<Props> = ({ runners, view, ...props }) => {
   return (
     <div className="h-full flex flex-col gap-y-8">
-      <DeploymentProperties view={view} runners={runners} isUniqueNameError={false} {...props} />
+      <DeploymentProperties
+        view={view}
+        isEntityImmutable={true}
+        runners={runners}
+        isUniqueNameError={false}
+        {...props}
+      />
       <IconControl
         iconUrl={props.entity.iconUrl}
         onChange={(icon) => props.onChangeEntity({ ...props.entity, iconUrl: icon })}
