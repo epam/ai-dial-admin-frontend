@@ -10,7 +10,7 @@ import { removeTestSuite, runTestSuite, updateTestSuite } from '@/src/app/[lang]
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
-import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -86,14 +86,15 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
     (num?: string | number) => {
       runTestSuite(selectedTestSuite.id, num).then((res) => {
         if (res.success) {
-          console.log(res);
-          router.refresh();
+          showNotification(
+            getSuccessNotification(t(TestSuitesI18nKey.RunSuccess), t(TestSuitesI18nKey.RunSuccessDescription)),
+          );
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
       });
     },
-    [router, selectedTestSuite.id, showNotification],
+    [selectedTestSuite.id, showNotification, t],
   );
 
   return (

@@ -1327,6 +1327,8 @@ export enum TestSuitesI18nKey {
   ImportSuccessDescription = 'TestSuites.ImportSuccessDescription',
   RunEvaluation = 'TestSuites.RunEvaluation',
   RunWarning = 'TestSuites.RunWarning',
+  RunSuccess = 'TestSuites.RunSuccess',
+  RunSuccessDescription = 'TestSuites.RunSuccessDescription',
   NumberOfRuns = 'TestSuites.NumberOfRuns',
   SelectedTestCases = 'TestSuites.SelectedTestCases',
   RequestTemplate = 'TestSuites.RequestTemplate',

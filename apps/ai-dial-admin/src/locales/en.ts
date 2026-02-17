@@ -1348,6 +1348,8 @@ export default {
     ImportSuccessDescription: 'You can now see them in the list of test cases',
     ImportFailed: 'Test cases import failed',
     RunEvaluation: 'Run Evaluation',
+    RunSuccess: 'Run is started',
+    RunSuccessDescription: 'Evaluation results will be available in a few minutes',
     SelectedTestCases: 'Selected test cases',
     NumberOfRuns: 'Number of runs',
     RunWarning:
