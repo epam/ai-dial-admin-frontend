@@ -24,8 +24,12 @@ import { getDeleteOperation, getDuplicateOperation, getMoveOperation, getOpenInN
 
 import StatusIndicator from '@/src/components/Deployments/Common/StatusIndicator/StatusIndicator';
 import VersionsSelect from '@/src/components/Deployments/Common/VersionsSelect/VersionsSelect';
+import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRenderer';
+import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
+import { TestSuiteRequestTemplateParam } from '@/src/models/evaluation/test-suite';
+import { formatNumberWithExponent } from '@/src/utils/formatting/number-formatting';
 import {
   ASSET_NAME_COLUMN,
   ATTACHMENT_COLUMN,
@@ -50,8 +54,6 @@ import {
 } from './base-columns';
 import { dateTimeColumn, numericColumn, priceColumn } from './configs';
 import { auditStringFilter, evalStringFilter } from './filters';
-import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
-import { formatNumberWithExponent } from '@/src/utils/formatting/number-formatting';
 
 export const COLUMN_PANEL_PREFIX = 'column_';
 
@@ -851,3 +853,34 @@ export const HF_REGISTRY_COLUMNS: ColDef[] = [
     floatingFilter: false,
   },
 ];
+
+export const getParamsColumns = (
+  onChange: (value: string, data: TestSuiteRequestTemplateParam, key: string, rowIndex?: number) => void,
+) => {
+  const cols: ColDef[] = [
+    {
+      headerName: 'Key',
+      field: 'key',
+      cellClass: NO_BORDER_CLASS,
+      tooltipValueGetter: () => undefined,
+      cellRenderer: EditableCellRenderer,
+      cellRendererParams: {
+        onChange,
+        hideTriangle: true,
+      },
+    },
+    {
+      headerName: 'Value',
+      field: 'value',
+      cellClass: NO_BORDER_CLASS,
+      tooltipValueGetter: () => undefined,
+      cellRenderer: EditableCellRenderer,
+      cellRendererParams: {
+        onChange,
+        hideTriangle: true,
+      },
+    },
+  ];
+
+  return cols;
+};

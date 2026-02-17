@@ -6,6 +6,7 @@ import { DialCollapsibleSidebar } from '@epam/ai-dial-ui-kit';
 
 import { getDeployment } from '@/src/app/[lang]/test-suites/actions';
 import { CHAT_COMPLETION_METHOD } from '@/src/components/TestSuites/constants/chat-completion-method';
+import { CHAT_COMPLETION_RELATIVE_URL } from '@/src/components/TestSuites/constants/methods';
 import { generateMethodPathCombinations } from '@/src/components/TestSuites/utils/method';
 import { MenuI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -42,6 +43,9 @@ const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange, isCreate
         onChange((prev: TestSuite) => ({
           ...prev,
           endpointRef: CHAT_COMPLETION_METHOD,
+          requestTemplate: {
+            urlTemplate: CHAT_COMPLETION_RELATIVE_URL,
+          },
         }));
       } else {
         onChange((prev: TestSuite) => ({
@@ -49,6 +53,9 @@ const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange, isCreate
           endpointRef: {
             method: methods[index].method,
             relativeUrlPattern: methods[index].relativeUrlPattern,
+          },
+          requestTemplate: {
+            urlTemplate: methods[index].relativeUrlPattern,
           },
         }));
       }
@@ -68,10 +75,16 @@ const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange, isCreate
             m.method === testSuite.endpointRef?.method &&
             m.relativeUrlPattern === testSuite.endpointRef?.relativeUrlPattern,
         );
-        setActiveMethodIndex(index === -1 ? 0 : index);
+        onMethodClick(index === -1 ? 0 : index);
       });
     }
-  }, [fullApplication, selectedApplication, testSuite.endpointRef?.method, testSuite.endpointRef?.relativeUrlPattern]);
+  }, [
+    fullApplication,
+    onMethodClick,
+    selectedApplication,
+    testSuite.endpointRef?.method,
+    testSuite.endpointRef?.relativeUrlPattern,
+  ]);
 
   return (
     <div className="w-full flex flex-row h-full gap-2">
