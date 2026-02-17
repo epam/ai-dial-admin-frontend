@@ -20,7 +20,7 @@ vi.mock('@/src/app/[lang]/interceptors/actions', () => ({
 }));
 
 vi.mock('@/src/app/[lang]/models/actions', () => ({
-  getModelsAction: vi
+  getModels: vi
     .fn()
     .mockResolvedValue({ response: [{ name: 'm1' }, { name: 'm2' }, { name: 'm3' }, { name: 'm4' }, { name: 'm5' }] }),
 }));
