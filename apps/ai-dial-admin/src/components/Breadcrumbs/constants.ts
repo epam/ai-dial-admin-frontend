@@ -222,6 +222,15 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig | null>
       { name: 'Id', href: false },
     ],
   },
+  [ApplicationRoute.AdapterContainers]: {
+    segments: [
+      {
+        name: 'AdapterContainers',
+        i18nKey: MenuI18nKey.AdapterContainers,
+      },
+      { name: 'Id', href: false },
+    ],
+  },
   [ApplicationRoute.Images]: {
     segments: [
       {

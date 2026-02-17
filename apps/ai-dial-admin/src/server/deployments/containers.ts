@@ -35,6 +35,10 @@ export class ContainersApi extends BaseApi {
     return this.getAction(`${BASE_CONTAINERS_URL}?type=INTERCEPTOR`, token);
   }
 
+  getAdapterContainers(token: JWT | null): Promise<ServerActionResponse> {
+    return this.getAction(`${BASE_CONTAINERS_URL}?type=ADAPTER`, token);
+  }
+
   getModelContainers(token: JWT | null): Promise<ServerActionResponse> {
     return this.getAction(`${BASE_CONTAINERS_URL}?type=NIM,INFERENCE`, token);
   }

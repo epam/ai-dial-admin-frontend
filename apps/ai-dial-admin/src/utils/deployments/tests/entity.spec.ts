@@ -30,8 +30,13 @@ describe('entity utils', () => {
     test('returns McpContainers for MCP', () => {
       expect(getRouteByType(IMAGE_TYPE.MCP)).toBe(ApplicationRoute.McpContainers);
     });
+
     test('returns InterceptorContainers for INTERCEPTOR', () => {
       expect(getRouteByType(IMAGE_TYPE.INTERCEPTOR)).toBe(ApplicationRoute.InterceptorContainers);
+    });
+
+    test('returns AdapterContainers for ADAPTER', () => {
+      expect(getRouteByType(IMAGE_TYPE.ADAPTER)).toBe(ApplicationRoute.AdapterContainers);
     });
 
     test('returns ModelServings for INTERCEPTOR', () => {

@@ -29,7 +29,6 @@ import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getRouteByType, getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
-import { validateImage } from '@/src/utils/deployments/images';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
@@ -66,8 +65,8 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
   const { isValid } = useSaveValidationContext();
 
   const isDisableSave = useMemo(
-    () => (jsonConfiguration?.isEditorEnabled ? false : !validateImage(image) || !isValid),
-    [jsonConfiguration?.isEditorEnabled, image, isValid],
+    () => (jsonConfiguration?.isEditorEnabled ? false : !isValid),
+    [jsonConfiguration?.isEditorEnabled, isValid],
   );
 
   const [modalType, setModalType] = useState<ModalType>();
@@ -145,7 +144,7 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
     (image: Image) => {
       createImage(image).then((res) => {
         if (res.success) {
-          const type = getTranslatedType(ApplicationRoute.Images, t);
+          const type = getTranslatedType(getRouteByType(image.$type), t);
           showNotification(
             getSuccessNotification(
               t(ImagesI18nKey.ImagesSaveSuccess, { type }),

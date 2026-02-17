@@ -38,6 +38,15 @@ describe('ContainersApi', () => {
     );
   });
 
+  test('calls getContainers with correct URL and method', async () => {
+    fetch.mockResponseOnce(JSON.stringify(['container1']));
+    await instance.getContainers('ADAPTER', TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(`${BASE_CONTAINERS_URL}?type=ADAPTER`),
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
   test('calls getContainerPods with correct URL and method', async () => {
     fetch.mockResponseOnce(JSON.stringify(['container1']));
     await instance.getContainerPods('container1', TOKEN_MOCK);
