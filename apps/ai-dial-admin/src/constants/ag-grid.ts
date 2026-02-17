@@ -1,5 +1,6 @@
 import { ColDef, GridOptions } from 'ag-grid-community';
 
+import ActionCellRenderer from '@/src/components/Grid/ActionColumn/ActionCellRenderer';
 import ActionColumn from '@/src/components/Grid/ActionColumn/ActionColumn';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
 
@@ -45,6 +46,19 @@ export const ACTION_COLUMN = <T>(
   cellRenderer: ActionColumn,
   cellRendererParams: { items, disabledInsteadHidden },
   cellClass: 'relative',
+  pinned: 'right',
+  lockPinned: true,
+});
+
+export const ONE_ACTION_COLUMN = <T>(item: ActionMenuOperationDeclaration<T>): ColDef => ({
+  ...UTILITY_COLUMN,
+  width: UTILITY_COLUMN_WIDTH,
+  minWidth: UTILITY_COLUMN_WIDTH,
+  maxWidth: UTILITY_COLUMN_WIDTH,
+  field: ACTIONS_COLUMN_CEL_ID,
+  cellRenderer: ActionCellRenderer,
+  cellRendererParams: { item },
+  cellClass: NO_BORDER_CLASS,
   pinned: 'right',
   lockPinned: true,
 });
