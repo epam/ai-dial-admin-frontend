@@ -2,7 +2,7 @@
 
 import { FC, useCallback } from 'react';
 
-import { TabsI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
@@ -32,6 +32,7 @@ const TabsContent: FC<Props> = ({ activeTab, onChange, selectedTestSuite }) => {
           changeTemplate={onChangeTemplate}
           field="queryParams"
           title={t(TabsI18nKey.Parameters)}
+          emptyDataTitle={t(BasicI18nKey.NoParameters)}
         />
       )}
       {activeTab === EntityViewTab.Body && (
@@ -43,6 +44,7 @@ const TabsContent: FC<Props> = ({ activeTab, onChange, selectedTestSuite }) => {
           changeTemplate={onChangeTemplate}
           field="headers"
           title={t(TabsI18nKey.Headers)}
+          emptyDataTitle={t(BasicI18nKey.NoHeaders)}
         />
       )}
     </div>

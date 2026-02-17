@@ -64,6 +64,11 @@ export async function getTestCases(
   return testSuitesApi.getTestCases(id, page, size, sorts, filters, token);
 }
 
+export async function removeTestCase(id: string, testCaseId: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.removeTestCase(id, testCaseId, token);
+}
+
 export async function getTestCase(id: string, testCaseId?: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return testSuitesApi.getTestCase(id, testCaseId, token);
