@@ -553,6 +553,8 @@ export enum TabsI18nKey {
   TestCases = 'Tabs.TestCases',
   Runs = 'Tabs.Runs',
   Trends = 'Tabs.Trends',
+  Body = 'Tabs.Body',
+  Headers = 'Tabs.Headers',
 }
 
 export enum InterceptorsI18nKey {
@@ -1346,6 +1348,13 @@ export enum TestSuitesI18nKey {
   ImportSuccess = 'TestSuites.ImportSuccess',
   ImportFailed = 'TestSuites.ImportFailed',
   ImportSuccessDescription = 'TestSuites.ImportSuccessDescription',
+  RunEvaluation = 'TestSuites.RunEvaluation',
+  RunWarning = 'TestSuites.RunWarning',
+  RunSuccess = 'TestSuites.RunSuccess',
+  RunSuccessDescription = 'TestSuites.RunSuccessDescription',
+  NumberOfRuns = 'TestSuites.NumberOfRuns',
+  SelectedTestCases = 'TestSuites.SelectedTestCases',
+  RequestTemplate = 'TestSuites.RequestTemplate',
 }
 
 export enum FileManagerI18nKey {

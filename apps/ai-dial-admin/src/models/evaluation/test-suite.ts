@@ -11,6 +11,7 @@ export interface TestSuite {
 
   deploymentRef?: TestSuiteDeploymentRef;
   endpointRef?: TestSuiteEndpointRef;
+  requestTemplate?: TestSuiteRequestTemplate;
 }
 
 export interface TestSuiteDeploymentRef {
@@ -25,6 +26,18 @@ export interface TestSuiteEndpointRef {
   parameters?: Record<string, unknown>[];
   requestBodySchema?: DialScheme;
   responseBodySchema?: DialScheme;
+}
+
+export interface TestSuiteRequestTemplate {
+  urlTemplate?: string;
+  body?: Record<string, unknown>;
+  headers?: TestSuiteRequestTemplateParam[];
+  queryParams?: TestSuiteRequestTemplateParam[];
+}
+
+export interface TestSuiteRequestTemplateParam {
+  key: string;
+  value: string;
 }
 
 export interface TestCase {

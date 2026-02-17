@@ -13,12 +13,20 @@ import { useI18n } from '@/src/locales/client';
 interface Props {
   steps: Step[];
   currentStep?: Step;
+  finishButtonLabel?: string;
   onChangeStep: (id: string) => void;
   onFinishClick: () => void;
   onClose: () => void;
 }
 
-const StepperModalButtons: FC<Props> = ({ steps, currentStep, onChangeStep, onFinishClick, onClose }) => {
+const StepperModalButtons: FC<Props> = ({
+  steps,
+  currentStep,
+  finishButtonLabel,
+  onChangeStep,
+  onFinishClick,
+  onClose,
+}) => {
   const t = useI18n();
 
   const onNextStep = () => {
@@ -58,7 +66,7 @@ const StepperModalButtons: FC<Props> = ({ steps, currentStep, onChangeStep, onFi
         )}
         {currentStep?.id === steps.at(-1)?.id && (
           <DialPrimaryButton
-            label={t(ButtonsI18nKey.Finish)}
+            label={finishButtonLabel || t(ButtonsI18nKey.Finish)}
             disabled={steps.some((s) => s.status !== StepStatus.VALID)}
             onClick={onFinishClick}
           />
