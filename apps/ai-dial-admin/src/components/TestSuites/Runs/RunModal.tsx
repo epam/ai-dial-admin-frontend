@@ -6,11 +6,14 @@ import {
   DialNumberInputField,
   PopupSize,
 } from '@epam/ai-dial-ui-kit';
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 
+import { getTestCases } from '@/src/app/[lang]/test-suites/actions';
+import { PAGE_SIZE } from '@/src/constants/ag-grid';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { FilterOperatorDto } from '@/src/types/request';
 
 interface Props {
   isModalOpen: boolean;
@@ -19,9 +22,28 @@ interface Props {
   onRun: (value?: number | string) => void;
 }
 
-const RunModal: FC<Props> = ({ isModalOpen, onRun, onClose }) => {
+const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose }) => {
   const t = useI18n();
   const [value, setValue] = useState<string | number | undefined>(1);
+  const [validRuns, setValidRuns] = useState<number | undefined>();
+
+  useEffect(() => {
+    if (!validRuns) {
+      getTestCases(
+        selectedTestSuite.id,
+        0,
+        PAGE_SIZE,
+        [],
+        [
+          { column: 'valid', operator: FilterOperatorDto.EQUALS, value: 'true' },
+          { column: 'enabled', operator: FilterOperatorDto.EQUALS, value: 'true' },
+        ],
+      ).then((res) => {
+        setValidRuns(res?.totalElements);
+        console.log(res);
+      });
+    }
+  }, [selectedTestSuite.id, validRuns]);
 
   return (
     <DialFormPopup
@@ -36,7 +58,7 @@ const RunModal: FC<Props> = ({ isModalOpen, onRun, onClose }) => {
       onCancel={onClose}
     >
       <div className="flex flex-col gap-6 py-6 px-6 h-full">
-        <DialLabelledText label={t(TestSuitesI18nKey.SelectedTestCases)} />
+        <DialLabelledText label={t(TestSuitesI18nKey.SelectedTestCases)} text={validRuns} />
         <DialNumberInputField
           elementId="numberOfRuns"
           fieldTitle={t(TestSuitesI18nKey.NumberOfRuns)}

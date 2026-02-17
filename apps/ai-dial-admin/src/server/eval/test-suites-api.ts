@@ -93,6 +93,7 @@ export class TestSuitesApi extends BaseApi {
   private getFiltersAndSortsStr(sorts: SortDto[], filters: FilterDto[]): string {
     const filtersStr = getRequestFiltersStr(filters);
     const sortsStr = getRequestSortsStr(sorts);
+    console.log(filtersStr);
     return `${filtersStr || sortsStr ? '&' : ''}${filtersStr}${sortsStr ? '&' : ''}${sortsStr}`;
   }
 
