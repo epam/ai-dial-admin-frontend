@@ -14,6 +14,7 @@ interface Props {
   rulesToInclude?: DialRule[];
   rulesToExclude?: DialRule[];
   folderName?: string;
+  folderDescription?: string;
   indentIndex: number;
   isAlwaysToggled?: boolean;
   isReadonly?: boolean;
@@ -29,6 +30,7 @@ const RulesItem: FC<Props> = ({
   rulesToInclude,
   rulesToExclude,
   folderName,
+  folderDescription,
   indentIndex,
   isAlwaysToggled,
   isReadonly,
@@ -71,6 +73,7 @@ const RulesItem: FC<Props> = ({
       >
         <RulesItemHeader
           folderName={folderName}
+          folderDescription={folderDescription}
           isCollapsed={isCollapsed}
           toggleCollapse={toggleCollapse}
           isAlwaysToggled={isAlwaysToggled}

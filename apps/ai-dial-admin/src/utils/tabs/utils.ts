@@ -43,6 +43,7 @@ export enum EntityViewTab {
   TestCases = 'TestCases',
   Runs = 'Runs',
   Trends = 'Trends',
+  Permissions = 'Permissions',
   Body = 'Body',
   Headers = 'Headers',
 }
@@ -223,6 +224,11 @@ export const runsTab = (t: (key: string) => string) => ({
   label: t(TabsI18nKey.Runs),
 });
 
+export const permissionsTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.Permissions,
+  label: t(TabsI18nKey.Permissions),
+});
+
 export const bodyTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Body,
   label: t(TabsI18nKey.Body),
@@ -363,6 +369,24 @@ export const getTestSuiteTabs = (t: (key: string) => string): TabModel[] => {
   return [propertiesTab(t), testCasesTab(t), runsTab(t), trendsTab(t)];
 };
 
+export const getPublicationViewTabs = (t: (key: string) => string, view: ApplicationRoute): TabModel[] => {
+  switch (view) {
+    case ApplicationRoute.FilePublications:
+      return getFilePublicationTabs(t);
+    case ApplicationRoute.PromptPublications:
+      return getPromptPublicationTabs(t);
+    default:
+      return [];
+  }
+};
+
+export const getFilePublicationTabs = (t: (key: string) => string): TabModel[] => {
+  return [propertiesTab(t), permissionsTab(t)];
+};
+
+export const getPromptPublicationTabs = (t: (key: string) => string): TabModel[] => {
+  return [propertiesTab(t), permissionsTab(t)];
+};
 export const getTestSuiteRequestTemplateTabs = (t: (key: string) => string): TabModel[] => {
   return [parametersTab(t), bodyTab(t), headersTab(t)];
 };

@@ -13,6 +13,7 @@ export const PUBLICATION_GET_URL = `${PUBLICATIONS_BASE_URL}/get`;
 export const PUBLICATION_REJECT_URL = `${PUBLICATIONS_BASE_URL}/reject`;
 export const PUBLICATION_APPROVE_URL = `${PUBLICATIONS_BASE_URL}/approve`;
 export const PUBLICATION_DELETE_URL = `${PUBLICATIONS_BASE_URL}/delete`;
+export const PUBLICATION_UPDATE_URL = `${PUBLICATIONS_BASE_URL}/update`;
 
 export class PublicationsApi extends BaseApi {
   getApplicationPublicationsList(token: JWT | null): Promise<Publication[] | undefined> {
@@ -37,6 +38,10 @@ export class PublicationsApi extends BaseApi {
 
   getPublication(token: JWT | null, path: string): Promise<Publication | null> {
     return this.post(PUBLICATION_GET_URL, { path }, token);
+  }
+
+  updatePublication(token: JWT | null, publication: Publication): Promise<ServerActionResponse> {
+    return this.postAction(PUBLICATION_UPDATE_URL, publication, token);
   }
 
   declinePublication(token: JWT | null, path: string, comment?: string): Promise<ServerActionResponse> {

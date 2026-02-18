@@ -3,6 +3,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 import { DialSwitch } from '@epam/ai-dial-ui-kit';
 
 import DescriptionControl from '@/src/components/BaseControls/Description';
+import VersionControl from '@/src/components/BaseControls/Version';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import MdEditor from '@/src/components/Common/MdEditor/MdEditor';
@@ -16,28 +17,15 @@ import { JSONEditorError } from '@/src/types/editor';
 interface Props {
   prompt: DialPrompt;
   onChangePrompt?: (key: DialPrompt) => void;
+  isPublication?: boolean;
 }
 
-const PromptProperties: FC<Props> = ({ prompt, onChangePrompt }) => {
+const PromptProperties: FC<Props> = ({ prompt, onChangePrompt, isPublication }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
 
   const [isJSONContentMode, setIsJSONContentMode] = useState(false);
   const [jsonValue, setJsonValue] = useState<string | undefined>(undefined);
-
-  const onChangeContent = useCallback(
-    (content: string) => {
-      onChangePrompt?.({ ...prompt, content });
-    },
-    [prompt, onChangePrompt],
-  );
-
-  const onChangePath = useCallback(
-    (folderId: string) => {
-      onChangePrompt?.({ ...prompt, folderId });
-    },
-    [prompt, onChangePrompt],
-  );
 
   const onChangeContentMode = useCallback(
     (value: boolean) => {
@@ -79,6 +67,13 @@ const PromptProperties: FC<Props> = ({ prompt, onChangePrompt }) => {
 
   return (
     <div className="flex flex-col gap-y-8">
+      {isPublication && (
+        <VersionControl
+          elementContainerClassName="w-[175px]"
+          version={prompt.version}
+          onChange={(version?: string) => onChangePrompt?.({ ...prompt, version: version || '' })}
+        />
+      )}
       <DescriptionControl entity={prompt} onChangeEntity={onChangePrompt} isFullWidth={false} />
       <div>
         <div className="flex justify-between mb-2">
@@ -95,17 +90,22 @@ const PromptProperties: FC<Props> = ({ prompt, onChangePrompt }) => {
             <JsonEditorBase value={jsonValue} onChange={onChangeJsonValue} onValidateJSON={onValidateJSON} />
           </div>
         ) : (
-          <MdEditor content={prompt.content} onChangeContent={onChangeContent} />
+          <MdEditor
+            content={prompt.content}
+            onChangeContent={(content: string) => onChangePrompt?.({ ...prompt, content })}
+          />
         )}
       </div>
-      <FilePath
-        value={prompt.folderId}
-        label={t(EntitiesI18nKey.FolderStorage)}
-        modalTitle={t(BasicI18nKey.MoveToFolder)}
-        placeholder={t(EntityPlaceholdersI18nKey.Path)}
-        onChange={onChangePath}
-        context={usePromptFolder}
-      />
+      {!isPublication && (
+        <FilePath
+          value={prompt.folderId}
+          label={t(EntitiesI18nKey.FolderStorage)}
+          modalTitle={t(BasicI18nKey.MoveToFolder)}
+          placeholder={t(EntityPlaceholdersI18nKey.Path)}
+          onChange={(folderId: string) => onChangePrompt?.({ ...prompt, folderId })}
+          context={usePromptFolder}
+        />
+      )}
     </div>
   );
 };
