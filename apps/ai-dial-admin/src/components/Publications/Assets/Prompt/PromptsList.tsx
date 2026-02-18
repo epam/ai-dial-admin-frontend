@@ -15,7 +15,7 @@ const PromptsList: FC<Props> = ({ publication, onChange }) => {
     (updatedPrompt: DialPrompt, index: number) => {
       const path = updatePathWithNameAndVersion(updatedPrompt.path, updatedPrompt.name || '', updatedPrompt.version);
       const updatedPrompts = [...(publication.prompts || [])];
-      updatedPrompts[index] = { ...updatedPrompts[index], ...updatedPrompt, path };
+      updatedPrompts[index] = { ...updatedPrompts[index], prompt: { ...updatedPrompt, path } };
       onChange?.({ ...publication, prompts: updatedPrompts });
     },
     [publication, onChange],
@@ -35,7 +35,7 @@ const PromptsList: FC<Props> = ({ publication, onChange }) => {
       {publication.prompts?.map((prompt, index) => (
         <div key={index} className="mb-6">
           <PromptDetails
-            prompt={prompt as DialPrompt}
+            prompt={prompt.prompt as DialPrompt}
             onChange={(updatedPrompt) => onChangePrompt(updatedPrompt, index)}
             onRemove={() => onRemovePrompt(index)}
           />
