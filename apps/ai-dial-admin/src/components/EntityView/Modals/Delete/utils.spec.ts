@@ -60,6 +60,14 @@ describe('EntityView :: Delete :: utils', () => {
     expect(getNotificationDescription(ApplicationRoute.Interceptors, 'aa', tWithProps)).toBe(
       `${DeleteI18nKey.NotificationDescription} with props`,
     );
+
+    expect(getNotificationDescription(ApplicationRoute.AssetsApplications, 'aa', tWithProps)).toBe(
+      `${DeleteI18nKey.NotificationDescriptionWithoutRollback} with props`,
+    );
+
+    expect(getNotificationDescription(ApplicationRoute.TestSuites, 'aa', tWithProps)).toBe(
+      `${DeleteI18nKey.NotificationDescriptionWithoutRollback} with props`,
+    );
   });
 
   test('getWarningText returns a string', () => {

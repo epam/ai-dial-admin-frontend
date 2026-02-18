@@ -218,6 +218,7 @@ export enum DeleteI18nKey {
   // Notification
   NotificationTitle = 'DeleteEntity.Notification.Title',
   NotificationDescription = 'DeleteEntity.Notification.Description',
+  NotificationDescriptionWithoutRollback = 'DeleteEntity.Notification.DescriptionWithoutRollback',
   ShortDescription = 'DeleteEntity.Notification.ShortDescription',
 
   // Entities
@@ -341,7 +342,7 @@ export enum UpdateI18nKey {
   // Notification
   NotificationTitle = 'UpdateEntity.Notification.Title',
   NotificationDescription = 'UpdateEntity.Notification.Description',
-  NotificationDescriptionAssets = 'UpdateEntity.Notification.DescriptionAssets',
+  NotificationDescriptionWithoutRollback = 'UpdateEntity.Notification.DescriptionWithoutRollback',
 
   // Entities
   Model = 'UpdateEntity.Entities.Model',
