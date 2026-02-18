@@ -1314,6 +1314,13 @@ export enum DeploymentsI18nKey {
   GlobalWhitelist = 'Deployments.GlobalWhitelist',
   SpecificWhitelist = 'Deployments.SpecificWhitelist',
   GlobalFirewall = 'Deployments.GlobalFirewall',
+  WhitelistPolicyLabel = 'Deployments.WhitelistPolicyLabel',
+  WhitelistPolicyAll = 'Deployments.WhitelistPolicyAll',
+  WhitelistPolicyAllCaption = 'Deployments.WhitelistPolicyAllCaption',
+  WhitelistPolicyAllWarning = 'Deployments.WhitelistPolicyAllWarning',
+  WhitelistPolicyAllWarningDescription = 'Deployments.WhitelistPolicyAllWarningDescription',
+  WhitelistPolicyCustom = 'Deployments.WhitelistPolicyCustom',
+  WhitelistPolicyCustomCaption = 'Deployments.WhitelistPolicyCustomCaption',
   AddDomain = 'Deployments.AddDomain',
 }
 

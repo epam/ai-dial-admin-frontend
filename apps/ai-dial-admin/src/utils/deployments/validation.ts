@@ -330,6 +330,10 @@ export const getWhitelistDomainError = (
   value?: string,
   t?: (key: string, options?: Record<string, string | number>) => string,
 ): FieldError | null => {
+  if (value === '*') {
+    return null;
+  }
+
   const trimmed = value?.trim() ?? '';
   if (!trimmed) {
     return {
