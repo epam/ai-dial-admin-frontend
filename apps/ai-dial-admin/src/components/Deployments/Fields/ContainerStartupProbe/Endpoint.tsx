@@ -27,21 +27,6 @@ const Endpoint: FC<Props> = ({ container, setContainer, disabled }) => {
     { label: 'HTTP GET', value: PROBE_TYPE.HTTP_GET },
   ];
 
-  useEffect(() => {
-    if (container.containerPort && container.probeProperties?.enabled && !container.probeProperties.probe?.port) {
-      setContainer({
-        ...container,
-        probeProperties: {
-          ...container.probeProperties,
-          probe: {
-            ...container.probeProperties.probe,
-            port: container.containerPort || void 0,
-          } as ProbeConfig,
-        },
-      });
-    }
-  }, [container, setContainer]);
-
   const onPortChange = useCallback(
     (port?: number | string) => {
       const error = getPortError(port as number, t, true);
