@@ -8,16 +8,6 @@ const fakePublication = { id: '1', name: 'Test Publication', createdAt: '2020-12
 const fakeSchemes = [{ id: 'scheme1' }] as any;
 
 describe('PublicationProperties', () => {
-  test('renders prompt publication properties', () => {
-    render(<PublicationProperties view={ApplicationRoute.PromptPublications} publication={fakePublication} />);
-    expect(screen.getByText(EntitiesI18nKey.FolderStorage)).toBeInTheDocument();
-  });
-
-  test('renders file publication properties', () => {
-    render(<PublicationProperties view={ApplicationRoute.FilePublications} publication={fakePublication} />);
-    expect(screen.getByText(EntitiesI18nKey.FolderStorage)).toBeInTheDocument();
-  });
-
   test('renders application publication properties', () => {
     render(
       <PublicationProperties

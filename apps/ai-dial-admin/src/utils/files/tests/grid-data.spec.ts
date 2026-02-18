@@ -1,9 +1,14 @@
 import { describe, expect, test } from 'vitest';
-import { getGridFileData, getGridFileDataFromString, getGridFileColumns } from '../grid-data';
+import {
+  getPublicationGridFileData,
+  getPublicationGridFileDataFromString,
+  getGridFileColumns,
+  getGridFileData,
+} from '../grid-data';
 
 describe('Files list :: getGridFileData', () => {
   test('Should return correct grid data from files', () => {
-    const res = getGridFileData([{ name: 'somePic.jpg' }, { name: 'someText.txt' }, { name: 'someJson.json' }]);
+    const res = getGridFileData([{ name: 'somePic.jpg' }, { name: 'someText.txt' }, { name: 'someJson.json' }] as any);
     expect(res).toEqual([
       { name: 'somePic', extension: '.jpg' },
       { name: 'someText', extension: '.txt' },
@@ -12,10 +17,25 @@ describe('Files list :: getGridFileData', () => {
   });
 });
 
-describe('Files list :: getGridFileDataFromString', () => {
+describe('Files list :: getPublicationGridFileData', () => {
+  test('Should return correct grid data from files', () => {
+    const res = getPublicationGridFileData([
+      { file: { name: 'somePic.jpg' } },
+      { file: { name: 'someText.txt' } },
+      { file: { name: 'someJson.json' } },
+    ] as any);
+    expect(res).toEqual([
+      { name: 'somePic', extension: '.jpg' },
+      { name: 'someText', extension: '.txt' },
+      { name: 'someJson', extension: '.json' },
+    ]);
+  });
+});
+
+describe('Files list :: getPublicationGridFileDataFromString', () => {
   test('returns correct grid data for file strings', () => {
     const files = ['folder/file1.txt', 'file2.pdf', 'archive.tar.gz', 'noextensionfile'];
-    const result = getGridFileDataFromString(files);
+    const result = getPublicationGridFileDataFromString(files);
 
     expect(result).toEqual([
       { name: 'folder/file1', extension: '.txt', path: 'folder/file1.txt' },
@@ -26,7 +46,7 @@ describe('Files list :: getGridFileDataFromString', () => {
   });
 
   test('returns empty array for empty input', () => {
-    expect(getGridFileDataFromString([])).toEqual([]);
+    expect(getPublicationGridFileDataFromString([])).toEqual([]);
   });
 });
 

@@ -4,7 +4,6 @@ import { describe, expect, test, vi } from 'vitest';
 import {
   getBulkNotificationTitle,
   getConfirmation,
-  getNoRelatedText,
   getNotificationDescription,
   getNotificationTitle,
   getRelatedArtifacts,
@@ -60,12 +59,21 @@ describe('EntityView :: Delete :: utils', () => {
     expect(getNotificationDescription(ApplicationRoute.Interceptors, 'aa', tWithProps)).toBe(
       `${DeleteI18nKey.NotificationDescription} with props`,
     );
+
+    expect(getNotificationDescription(ApplicationRoute.AssetsApplications, 'aa', tWithProps)).toBe(
+      `${DeleteI18nKey.NotificationDescriptionWithoutRollback} with props`,
+    );
+
+    expect(getNotificationDescription(ApplicationRoute.TestSuites, 'aa', tWithProps)).toBe(
+      `${DeleteI18nKey.NotificationDescriptionWithoutRollback} with props`,
+    );
   });
 
   test('getWarningText returns a string', () => {
     expect(getWarningText(ApplicationRoute.ApplicationRunners, t)).toBe(DeleteI18nKey.ApplicationRunnerWarning);
     expect(getWarningText(ApplicationRoute.InterceptorTemplates, t)).toBe(DeleteI18nKey.InterceptorTemplateWarning);
     expect(getWarningText(ApplicationRoute.Adapters, t)).toBe(DeleteI18nKey.AdapterWarning);
+    expect(getWarningText(ApplicationRoute.Images, t)).toBe(DeleteI18nKey.ImageWarning);
     expect(getWarningText(ApplicationRoute.Models, t)).toBe('');
   });
 
@@ -73,14 +81,8 @@ describe('EntityView :: Delete :: utils', () => {
     expect(getRelatedText(ApplicationRoute.ApplicationRunners, t)).toBe(DeleteI18nKey.RelatedApplications);
     expect(getRelatedText(ApplicationRoute.InterceptorTemplates, t)).toBe(DeleteI18nKey.RelatedInterceptors);
     expect(getRelatedText(ApplicationRoute.Adapters, t)).toBe(DeleteI18nKey.RelatedModels);
+    expect(getRelatedText(ApplicationRoute.Images, t)).toBe(DeleteI18nKey.RelatedContainers);
     expect(getRelatedText(ApplicationRoute.Models, t)).toBe('');
-  });
-
-  test('getNoRelatedText returns a string', () => {
-    expect(getNoRelatedText(ApplicationRoute.ApplicationRunners, t)).toBe(DeleteI18nKey.NoApplications);
-    expect(getNoRelatedText(ApplicationRoute.InterceptorTemplates, t)).toBe(DeleteI18nKey.NoInterceptors);
-    expect(getNoRelatedText(ApplicationRoute.Adapters, t)).toBe(DeleteI18nKey.NoModels);
-    expect(getNoRelatedText(ApplicationRoute.Models, t)).toBe('');
   });
 
   test('getRelatedArtifacts returns an array', async () => {

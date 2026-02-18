@@ -218,6 +218,7 @@ export enum DeleteI18nKey {
   // Notification
   NotificationTitle = 'DeleteEntity.Notification.Title',
   NotificationDescription = 'DeleteEntity.Notification.Description',
+  NotificationDescriptionWithoutRollback = 'DeleteEntity.Notification.DescriptionWithoutRollback',
   ShortDescription = 'DeleteEntity.Notification.ShortDescription',
 
   // Entities
@@ -246,14 +247,13 @@ export enum DeleteI18nKey {
 
   //  No related artefacts
   AdapterWarning = 'DeleteEntity.NoRelatedArtefacts.AdapterWarning',
-  NoModels = 'DeleteEntity.NoRelatedArtefacts.NoModels',
   InterceptorTemplateWarning = 'DeleteEntity.NoRelatedArtefacts.InterceptorTemplateWarning',
-  NoInterceptors = 'DeleteEntity.NoRelatedArtefacts.NoInterceptors',
   ApplicationRunnerWarning = 'DeleteEntity.NoRelatedArtefacts.ApplicationRunnerWarning',
-  NoApplications = 'DeleteEntity.NoRelatedArtefacts.NoApplications',
+  ImageWarning = 'DeleteEntity.NoRelatedArtefacts.ImageWarning',
   RelatedApplications = 'DeleteEntity.NoRelatedArtefacts.RelatedApplications',
   RelatedInterceptors = 'DeleteEntity.NoRelatedArtefacts.RelatedInterceptors',
   RelatedModels = 'DeleteEntity.NoRelatedArtefacts.RelatedModels',
+  RelatedContainers = 'DeleteEntity.NoRelatedArtefacts.RelatedContainers',
 }
 
 export enum DuplicateI18nKey {
@@ -341,7 +341,7 @@ export enum UpdateI18nKey {
   // Notification
   NotificationTitle = 'UpdateEntity.Notification.Title',
   NotificationDescription = 'UpdateEntity.Notification.Description',
-  NotificationDescriptionAssets = 'UpdateEntity.Notification.DescriptionAssets',
+  NotificationDescriptionWithoutRollback = 'UpdateEntity.Notification.DescriptionWithoutRollback',
 
   // Entities
   Model = 'UpdateEntity.Entities.Model',
@@ -358,6 +358,7 @@ export enum UpdateI18nKey {
   InterceptorTemplate = 'UpdateEntity.Entities.InterceptorTemplate',
   ApplicationRunner = 'UpdateEntity.Entities.ApplicationRunner',
   SystemProperties = 'UpdateEntity.Entities.SystemProperties',
+  Publication = 'UpdateEntity.Entities.Publication',
 }
 
 export enum CreateI18nKey {
@@ -554,6 +555,7 @@ export enum TabsI18nKey {
   TestCases = 'Tabs.TestCases',
   Runs = 'Tabs.Runs',
   Trends = 'Tabs.Trends',
+  Permissions = 'Tabs.Permissions',
   Body = 'Tabs.Body',
   Headers = 'Tabs.Headers',
 }
@@ -613,6 +615,11 @@ export enum PublicationsI18nKey {
   DeclineReasonPlaceholder = 'Publications.ReasonPlaceholder',
   Warning = 'Publications.Warning',
   Publication = 'Publications.Publication',
+  PermissionsWarningTitle = 'Publications.PermissionsWarningTitle',
+  PermissionsWarningDescription = 'Publications.PermissionsWarningDescription',
+  PublishWarningTitle = 'Publications.PublishWarningTitle',
+  PublishWarningDescription = 'Publications.PublishWarningDescription',
+  UnpublishWarningTitle = 'Publications.UnpublishWarningTitle',
 
   // prompt publications
   PromptPublishApproveModalTitle = 'Publications.Prompt.PublishApproveModalTitle',
@@ -825,6 +832,8 @@ export enum RollbackI18nKey {
   NotificationErrorDescription = 'Rollback.Notification.ErrorDescription',
   NotificationSuccessTitle = 'Rollback.Notification.SuccessTitle',
   NotificationSuccessDescription = 'Rollback.Notification.SuccessDescription',
+  NotificationPrepareTitle = 'Rollback.Notification.PrepareTitle',
+  NotificationPrepareDescription = 'Rollback.Notification.PrepareDescription',
 
   // Entities
   Model = 'Rollback.Entities.Model',
@@ -989,6 +998,7 @@ export enum EntityPlaceholdersI18nKey {
   Domain = 'EntityPlaceholders.Domain',
   Mask = 'EntityPlaceholders.Mask',
   IpRange = 'EntityPlaceholders.IpRange',
+  DisplayAuthor = 'EntityPlaceholders.DisplayAuthor',
   InitialDelaySeconds = 'EntityPlaceholders.InitialDelaySeconds',
   PeriodSeconds = 'EntityPlaceholders.PeriodSeconds',
   TimeoutSeconds = 'EntityPlaceholders.TimeoutSeconds',
@@ -1018,6 +1028,7 @@ export enum EntityFieldsI18nKey {
   id = 'EntityFields.id',
   scopes = 'EntityFields.scopes',
   author = 'EntityFields.author',
+  displayAuthor = 'EntityFields.displayAuthor',
   endpoint = 'EntityFields.endpoint',
   permissions = 'EntityFields.permissions',
   allowedTools = 'EntityFields.allowedTools',
@@ -1168,6 +1179,7 @@ export enum EntityFieldsI18nKey {
   LastReason = 'EntityFields.LastReason',
   Mask = 'EntityFields.Mask',
   IpRange = 'EntityFields.IpRange',
+  action = 'EntityFields.action',
   Path = 'EntityFields.Path',
   InitialDelaySeconds = 'EntityFields.InitialDelaySeconds',
   PeriodSeconds = 'EntityFields.PeriodSeconds',
@@ -1372,6 +1384,7 @@ export enum FileManagerI18nKey {
   NameExists = 'FileManager.NameExists',
   ManagePermissions = 'FileManager.ManagePermissions',
   CreateFolderValidate = 'FileManager.CreateFolderValidate',
+  CreateFolderValidateFirstSymbol = 'FileManager.CreateFolderValidateFirstSymbol',
   Preview = 'FileManager.Preview',
 
   // Notifications
