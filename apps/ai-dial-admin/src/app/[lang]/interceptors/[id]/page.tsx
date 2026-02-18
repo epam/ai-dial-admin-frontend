@@ -2,7 +2,8 @@ import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
 import { getInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
-import { applicationRunnersApi, applicationsApi, interceptorsApi, modelsApi, utilityApi } from '@/src/app/api/api';
+import { getModelsList } from '@/src/app/[lang]/models/actions';
+import { applicationRunnersApi, applicationsApi, interceptorsApi, utilityApi } from '@/src/app/api/api';
 import InterceptorView from '@/src/components/Interceptors/View/View';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
@@ -34,7 +35,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   try {
     interceptors = await interceptorsApi.getInterceptorsList(token);
-    models = await modelsApi.getModelsList(token);
+    models = await getModelsList();
     applications = await applicationsApi.getApplicationsList(token);
     appRunners = await applicationRunnersApi.getApplicationSchemesList(token);
     interceptor = await interceptorsApi.getInterceptor((await params.params).id, token, etag).then((res) => {
