@@ -26,7 +26,7 @@ export const getPublicationGridFileDataFromString = (files: string[]): FileRowDa
 
 export const getPublicationGridFileData = (files: PublicationFile[]): FileRowData[] => {
   return files.map((file) => {
-    const { name, extension } = getNameExtensionFromFile(file.file.path as string);
+    const { name, extension } = getNameExtensionFromFile(file.file.name as string);
     return {
       name,
       extension,

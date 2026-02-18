@@ -67,7 +67,7 @@ const createMockPublication = (prompts?: PublicationPrompt[]): PromptPublication
   requestName: 'test-request',
   author: 'test@example.com',
   displayAuthor: 'Test Author',
-  createdAt: '2024-01-01',s
+  createdAt: '2024-01-01',
   status: 'pending',
   action: 'add' as any,
   folderId: 'folder1',
