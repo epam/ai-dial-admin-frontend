@@ -247,14 +247,13 @@ export enum DeleteI18nKey {
 
   //  No related artefacts
   AdapterWarning = 'DeleteEntity.NoRelatedArtefacts.AdapterWarning',
-  NoModels = 'DeleteEntity.NoRelatedArtefacts.NoModels',
   InterceptorTemplateWarning = 'DeleteEntity.NoRelatedArtefacts.InterceptorTemplateWarning',
-  NoInterceptors = 'DeleteEntity.NoRelatedArtefacts.NoInterceptors',
   ApplicationRunnerWarning = 'DeleteEntity.NoRelatedArtefacts.ApplicationRunnerWarning',
-  NoApplications = 'DeleteEntity.NoRelatedArtefacts.NoApplications',
+  ImageWarning = 'DeleteEntity.NoRelatedArtefacts.ImageWarning',
   RelatedApplications = 'DeleteEntity.NoRelatedArtefacts.RelatedApplications',
   RelatedInterceptors = 'DeleteEntity.NoRelatedArtefacts.RelatedInterceptors',
   RelatedModels = 'DeleteEntity.NoRelatedArtefacts.RelatedModels',
+  RelatedContainers = 'DeleteEntity.NoRelatedArtefacts.RelatedContainers',
 }
 
 export enum DuplicateI18nKey {

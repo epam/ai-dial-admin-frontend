@@ -40,6 +40,7 @@ import { AllVersionValue } from '@/src/components/EntityView/Modals/Delete/const
 import { ImageVersion } from '@/src/models/deployments/images';
 import { IMAGE_TYPE } from '@/src/types/deployments/images';
 import RelatedArtefacts from '@/src/components/EntityView/Modals/Delete/RelatedArtefact';
+import StatusIcon from '@/src/components/Deployments/Common/StatusIndicator/StatusIcon';
 
 interface Artefact {
   name?: string;
@@ -107,12 +108,27 @@ const ImageDeleteConfirmationModal = <T extends Artefact>({
       return [];
     }
 
+    //CHANGED
+    if (existingVersions.length === 1) {
+      return [
+        ...existingVersions.map(({ version, status }) => ({
+          value: version,
+          label: version,
+          icon: <StatusIcon status={status} />,
+        })),
+      ];
+    }
+
     return [
       {
         label: t(EntityFieldsI18nKey.allVersionsOption),
         value: AllVersionValue,
       },
-      ...existingVersions.map((version) => ({ value: version.version, label: version.version })), //CHANGED
+      ...existingVersions.map(({ version, status }) => ({
+        value: version,
+        label: version,
+        icon: <StatusIcon status={status} />,
+      })), //CHANGED
       //...existingVersions.map((version) => ({ value: version, label: version })),
     ];
   }, [existingVersions, t]);
@@ -192,8 +208,8 @@ const ImageDeleteConfirmationModal = <T extends Artefact>({
       confirmLabel={t(ButtonsI18nKey.Delete)}
     >
       <div className="h-full flex flex-col gap-y-4 px-6 py-2 w-full">
-        <span className="text-secondary dial-small">{getConfirmation(view, t)}</span>
         <div className="flex flex-col gap-y-2">
+          <span className="text-secondary dial-small">{getConfirmation(view, t)}</span>
           {id && (
             <div className="text-primary dial-small flex flex-row items-center gap-x-1">
               <span className="text-secondary">{t(EntityFieldsI18nKey.id)}:</span>
