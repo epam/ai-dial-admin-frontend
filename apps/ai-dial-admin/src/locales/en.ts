@@ -866,9 +866,10 @@ export default {
     },
 
     Notification: {
+      PrepareTitle: 'Preparing {entity} rollback',
+      PrepareDescription: '{entity} rollback is in progress. You will be notified when it is complete.',
       ErrorTitle: '{entity} rollback failed',
       ErrorDescription: 'Error occurred while reverting, please try again',
-
       SuccessTitle: '{entity} rolled back successfully',
       SuccessDescription: 'Changes have been delivered to the system',
     },

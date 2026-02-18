@@ -33,7 +33,7 @@ import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ActivityAuditEntity, ActivityAuditResourceType, DiffView } from '@/src/types/activity-audit';
 import { getRevisionRouteForAllEntities } from '@/src/utils/audit/get-revision-route';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
-import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { getErrorNotification, getPrepareNotification, getSuccessNotification } from '@/src/utils/notification';
 
 const SystemRollback: FC = () => {
   const t = useI18n();
@@ -43,7 +43,7 @@ const SystemRollback: FC = () => {
     label: t(MenuI18nKey[`${SYSTEM_ROLLBACK_TAB_NAME[e]}` as keyof typeof MenuI18nKey]),
   }));
   const getReqRef = useRef(useProtectedRequest());
-  const { showNotification } = useNotification();
+  const { showNotification, removeNotification } = useNotification();
 
   const [selectedTab, setSelectedTab] = useState(tabs[0].id);
   const [columns, setColumns] = useState<ColDef[]>([]);
@@ -68,8 +68,15 @@ const SystemRollback: FC = () => {
   const [isJsonView, setIsJsonView] = useState(false);
 
   const systemRollback = useCallback(() => {
+    const prepareNotificationId = showNotification(
+      getPrepareNotification(
+        t(RollbackI18nKey.NotificationPrepareTitle, { entity: t(RollbackI18nKey.System) }),
+        t(RollbackI18nKey.NotificationPrepareDescription, { entity: t(RollbackI18nKey.System) }),
+      ),
+    );
     systemRollbackToRevision(rollbackRevision?.id).then((res) => {
       if (res.success) {
+        removeNotification(prepareNotificationId);
         showNotification(
           getSuccessNotification(
             t(RollbackI18nKey.NotificationSuccessTitle, { entity: t(RollbackI18nKey.System) }),
@@ -77,6 +84,7 @@ const SystemRollback: FC = () => {
           ),
         );
       } else {
+        removeNotification(prepareNotificationId);
         showNotification(
           getErrorNotification(
             t(RollbackI18nKey.NotificationErrorTitle, { entity: t(RollbackI18nKey.System) }),
@@ -87,7 +95,7 @@ const SystemRollback: FC = () => {
       }
     });
     setIsRollBackModalOpen(false);
-  }, [rollbackRevision?.id, showNotification, t]);
+  }, [removeNotification, rollbackRevision?.id, showNotification, t]);
 
   const fetchAllEntitiesForRevision = async (
     revision?: ActivityAuditRevision | null,
