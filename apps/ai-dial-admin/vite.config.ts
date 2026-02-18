@@ -1,14 +1,18 @@
-import { configDefaults, defineConfig, coverageConfigDefaults } from 'vitest/config';
+import { configDefaults, coverageConfigDefaults, defineConfig } from 'vitest/config';
 
-import react from '@vitejs/plugin-react';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import path from 'path';
 
 export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/apps/ai-dial-admin',
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
+    },
+  },
   plugins: [
-    react(),
     nxViteTsPaths(),
     nxCopyAssetsPlugin(['*.md']),
     {
@@ -28,6 +32,7 @@ export default defineConfig(() => ({
     reporters: ['default'],
     setupFiles: './test-setup.tsx',
     coverage: {
+      include: ['src/**/*.{ts,tsx}'],
       reporter: ['text', 'html', 'clover', 'json'],
       reportsDirectory: '../../coverage/apps/ai-dial-admin',
       provider: 'v8' as const,
