@@ -33,8 +33,8 @@ export const getUpdateNotificationDescription = (
   entityId: string | undefined,
   t: (str: string, props?: Record<string, string>) => string,
 ) => {
-  if (isAssetView(view)) {
-    return t(UpdateI18nKey.NotificationDescriptionAssets, {
+  if (isAssetView(view) || view === ApplicationRoute.TestSuites) {
+    return t(UpdateI18nKey.NotificationDescriptionWithoutRollback, {
       entity: t(createEntityMap[view]),
       entityId: entityId || '',
     });

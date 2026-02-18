@@ -251,6 +251,7 @@ export default {
     Notification: {
       Title: '{entity} deleted successfully',
       Description: '{entity} {entityId} has been deleted. It can be restored using Rollback.',
+      DescriptionWithoutRollback: '{entity} {entityId} has been deleted.',
       ShortDescription: 'They can be restored using Rollback.',
     },
     Entities: {
@@ -332,7 +333,7 @@ export default {
     Notification: {
       Title: '{entity} updated successfully',
       Description: '{entity} {entityId} has been updated. Changes can be reverted using Rollback.',
-      DescriptionAssets: '{entity} {entityId} has been updated.',
+      DescriptionWithoutRollback: '{entity} {entityId} has been updated.',
     },
     Entities: {
       Model: 'Model',
