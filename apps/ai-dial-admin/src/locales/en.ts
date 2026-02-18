@@ -1117,7 +1117,7 @@ export default {
     FailureThreshold: 'Enter number of failure threshold',
   },
   EntityCaptions: {
-    ProbeEnableCustom: 'Custom checks that the container has started successfully',
+    ProbeEnableCustom: 'Use custom values instead of default probe configuration',
     ProbePath: 'Path to call inside the container',
     ProbePort: 'Container port to call',
     ProbeInitialDelaySeconds: 'Wait time after container start before the first check',

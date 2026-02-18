@@ -1,9 +1,6 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { ApplicationRoute } from '@/src/types/routes';
-import { CreateSteps, PROBE_TYPE } from '@/src/types/deployments/containers';
-import { ContainersI18nKey } from '@/src/constants/i18n';
-import { AUTOSCALE_OPTIONS, CREATE_CONTAINER_STEPS, DEFAULT_PROBE_CONFIG, RESTART_REASONS } from '../containers';
-import { Container } from '@/src/models/deployments/containers';
+import { AUTOSCALE_OPTIONS, CREATE_CONTAINER_STEPS, RESTART_REASONS } from '../containers';
 
 describe('CREATE_CONTAINER_STEPS', () => {
   const mockT = vi.fn((key: string, options?: Record<string, string | number>) => {
@@ -52,35 +49,5 @@ describe('RESTART_REASONS', () => {
     expect(keys).toContain('Error');
     expect(keys).not.toContain('Success');
     expect(keys).not.toContain('Unknown');
-  });
-});
-describe('DEFAULT_PROBE_CONFIG', () => {
-  test('should return defaults + container port', () => {
-    expect(DEFAULT_PROBE_CONFIG({ containerPort: 9999 } as Container)).toEqual({
-      enabled: true,
-      initialDelaySeconds: 0,
-      failureThreshold: 3,
-      periodSeconds: 10,
-      timeoutSeconds: -1,
-      probe: {
-        path: '',
-        port: 9999,
-        $type: PROBE_TYPE.TCP,
-      },
-    });
-  });
-  test('should return defaults + container port', () => {
-    expect(DEFAULT_PROBE_CONFIG({} as Container)).toEqual({
-      enabled: true,
-      initialDelaySeconds: 0,
-      failureThreshold: 3,
-      periodSeconds: 10,
-      timeoutSeconds: -1,
-      probe: {
-        path: '',
-        port: void 0,
-        $type: PROBE_TYPE.TCP,
-      },
-    });
   });
 });
