@@ -12,39 +12,43 @@ import {
 import { FILES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DialFile } from '@/src/models/dial/file';
-import { ActionType } from '@/src/models/dial/publications';
+import { ActionType, PublicationFile } from '@/src/models/dial/publications';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getGridFileColumns, getGridFileData, getGridFileDataFromString } from '@/src/utils/files/grid-data';
+import {
+  FileRowData,
+  getGridFileColumns,
+  getGridFileData,
+  getGridFileDataFromString,
+} from '@/src/utils/files/grid-data';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { isAddAction } from '@/src/utils/publications';
 
 interface Props {
-  files: Partial<DialFile | string>[];
+  files: PublicationFile[] | string[];
   action: ActionType;
-  onChange?: (files: DialFile[]) => void;
+  onChange?: (files: PublicationFile[]) => void;
 }
 
 const FilesList: FC<Props> = ({ files, action, onChange }) => {
   const t = useI18n();
-  const download = useCallback((file?: DialFile) => {
-    window.open(`/${FILE_DOWNLOAD}/?path=${encodeURIComponent(file?.path || '')}`, '_blank');
+  const download = useCallback((file?: PublicationFile) => {
+    window.open(`/${FILE_DOWNLOAD}/?path=${encodeURIComponent(file?.file.path || '')}`, '_blank');
   }, []);
 
-  const openInNewTab = useCallback((file?: DialFile) => {
-    onOpenInNewTab(ApplicationRoute.Files, file);
+  const openInNewTab = useCallback((file?: PublicationFile) => {
+    onOpenInNewTab(ApplicationRoute.Files, file?.file);
   }, []);
 
-  const preview = useCallback(async (file?: DialFile) => {
-    window.open(`/${FILE_PREVIEW}?path=${encodeURIComponent(file?.path || '')}`, '_blank');
+  const preview = useCallback(async (file?: PublicationFile) => {
+    window.open(`/${FILE_PREVIEW}?path=${encodeURIComponent(file?.file.path || '')}`, '_blank');
   }, []);
 
   const remove = useCallback(
-    (_?: DialFile, index?: number) => {
+    (_?: PublicationFile, index?: number) => {
       if (index != null) {
         files?.splice(index, 1);
       }
-      onChange?.(files as DialFile[]);
+      onChange?.(files as PublicationFile[]);
     },
     [files, onChange],
   );
@@ -61,8 +65,10 @@ const FilesList: FC<Props> = ({ files, action, onChange }) => {
     return !onChange;
   };
 
-  const rowData =
-    typeof files[0] === 'string' ? getGridFileDataFromString(files as string[]) : getGridFileData(files as DialFile[]);
+  const rowData: FileRowData[] =
+    typeof files[0] === 'string'
+      ? getGridFileDataFromString(files as string[])
+      : getGridFileData(files as PublicationFile[]);
 
   const actions = [
     getPreviewOperation(preview, isPreviewActionHidden),

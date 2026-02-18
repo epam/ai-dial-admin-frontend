@@ -1,12 +1,18 @@
 import { ColDef } from 'ag-grid-community';
 
-import { DialFile } from '@/src/models/dial/file';
-import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import FileNameCellRenderer from '@/src/components/Grid/CellRenderers/FileNameCellRenderer';
+import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
+import { PublicationFile } from '@/src/models/dial/publications';
 import { getNameExtensionFromFile } from './get-extension';
 
-export const getGridFileDataFromString = (files: string[]) => {
+export interface FileRowData {
+  name: string;
+  extension: string;
+  path: string;
+}
+
+export const getGridFileDataFromString = (files: string[]): FileRowData[] => {
   return files.map((file) => {
     const { name, extension } = getNameExtensionFromFile(file);
     return {
@@ -17,13 +23,13 @@ export const getGridFileDataFromString = (files: string[]) => {
   });
 };
 
-export const getGridFileData = (files: DialFile[]) => {
+export const getGridFileData = (files: PublicationFile[]): FileRowData[] => {
   return files.map((file) => {
-    const { name, extension } = getNameExtensionFromFile(file.name as string);
+    const { name, extension } = getNameExtensionFromFile(file.file.name as string);
     return {
-      ...file,
       name,
       extension,
+      path: file.file.path as string,
     };
   });
 };

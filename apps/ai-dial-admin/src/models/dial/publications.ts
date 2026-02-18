@@ -16,12 +16,20 @@ export interface Publication {
   resourceIssues?: ResourceIssue[];
 }
 
+export interface PublicationFile {
+  sourceUrl: string;
+  targetUrl: string;
+  reviewUrl: string;
+  action: ActionType;
+  file: Partial<DialFile>;
+}
+
 export interface PromptPublication extends Publication {
   prompts?: Partial<DialPrompt>[];
 }
 
 export interface FilePublication extends Publication {
-  files?: Partial<DialFile>[];
+  files?: PublicationFile[];
 }
 
 export interface ApplicationPublication extends Publication {
