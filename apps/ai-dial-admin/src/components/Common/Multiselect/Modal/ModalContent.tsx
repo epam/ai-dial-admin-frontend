@@ -4,8 +4,8 @@ import { useDrop } from 'react-dnd';
 import { DialCheckbox, DialNeutralButton } from '@epam/ai-dial-ui-kit';
 
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-import NewItemInput from './NewItemInput';
 import Search from '@/src/components/Common/Search/Search';
+import NewItem from '@/src/components/Common/Multiselect/Modal/NewItem';
 
 interface Props {
   addTitle?: string;
@@ -147,7 +147,7 @@ const MultiselectContentModal: FC<Props> = ({
           })}
           {(draggable ? newItems : filteredNewItems).map((item, index) => {
             return (
-              <NewItemInput
+              <NewItem
                 key={index}
                 value={item}
                 draggable={draggable}
