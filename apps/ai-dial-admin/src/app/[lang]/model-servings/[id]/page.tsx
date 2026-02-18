@@ -1,17 +1,13 @@
-import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
-import { createModel } from '@/src/app/[lang]/models/actions';
+import { createModel, getModelsList } from '@/src/app/[lang]/models/actions';
 import { getContainer, getModelContainers } from '@/src/app/actions/deployments';
-import { modelsApi } from '@/src/app/api/api';
 import ContainerView from '@/src/components/Containers/View/ContainerView';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { Container } from '@/src/models/deployments/containers';
 import { DialModel } from '@/src/models/dial/model';
 import { errorObjLog } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getUserToken } from '@/src/utils/auth/auth-request';
-import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { decodeVariables } from '@/src/utils/deployments/variables';
 
 export const dynamic = 'force-dynamic';
@@ -22,8 +18,6 @@ interface Params {
 }
 
 export default async function Page(params: Params) {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-
   let container: Container | null = null;
   let containers: Container[] | null = null;
   let models: DialModel[] | null = null;
@@ -38,7 +32,7 @@ export default async function Page(params: Params) {
     container = containerResponse.response as Container;
     containers = containersResponse.response as Container[];
 
-    models = await modelsApi.getModelsList(token);
+    models = await getModelsList();
   } catch (e) {
     errorObjLog(e, 'Failed to fetch interceptor container page');
   }

@@ -1,7 +1,8 @@
 import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
-import { adaptersApi, modelsApi } from '@/src/app/api/api';
+import { getModelsList } from '@/src/app/[lang]/models/actions';
+import { adaptersApi } from '@/src/app/api/api';
 import AdapterView from '@/src/components/Adapter/View/View';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
@@ -26,7 +27,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
       etag = res?.etag || DEFAULT_ETAG;
       return res?.response as DialAdapter | null;
     });
-    models = await modelsApi.getModelsList(token);
+    models = await getModelsList();
   } catch (e) {
     errorObjLog(e, 'Failed to fetch adapter view data');
   }

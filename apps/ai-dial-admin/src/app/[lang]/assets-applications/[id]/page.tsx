@@ -1,7 +1,8 @@
 import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
-import { applicationRunnersApi, applicationsApi, assetsApi, interceptorsApi, modelsApi } from '@/src/app/api/api';
+import { getModelsList } from '@/src/app/[lang]/models/actions';
+import { applicationRunnersApi, applicationsApi, assetsApi, interceptorsApi } from '@/src/app/api/api';
 import AppView from '@/src/components/Assets/Apps/View';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { AppsFolderProvider } from '@/src/context/assets/AppsFolderContext';
@@ -48,7 +49,7 @@ export default async function Page(params: {
       (p) => p.nodeType === DialFileNodeType.ITEM && p.name === name,
     ) || []) as AssetApp[];
 
-    models = await modelsApi.getModelsList(token);
+    models = await getModelsList();
     applications = await applicationsApi.getApplicationsList(token);
 
     applicationSchemes = await applicationRunnersApi.getApplicationSchemesList(token);

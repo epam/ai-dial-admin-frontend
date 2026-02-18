@@ -1,7 +1,8 @@
 import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
-import { applicationRunnersApi, applicationsApi, interceptorsApi, modelsApi, rolesApi } from '@/src/app/api/api';
+import { getModelsList } from '@/src/app/[lang]/models/actions';
+import { applicationRunnersApi, applicationsApi, interceptorsApi, rolesApi } from '@/src/app/api/api';
 import ApplicationView from '@/src/components/Applications/View/View';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
@@ -29,7 +30,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   let interceptors: DialInterceptor[] | null = [];
 
   try {
-    models = (await modelsApi.getModelsList(token)) || [];
+    models = (await getModelsList()) || [];
     applications = (await applicationsApi.getApplicationsList(token)) || [];
     application = await applicationsApi.getApplication((await params.params).id, token, etag).then((res) => {
       etag = res?.etag || DEFAULT_ETAG;
