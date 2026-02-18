@@ -1416,5 +1416,6 @@ export default {
       },
     },
     CreateFolderValidate: 'Folder name contains forbidden characters: < > : " / \\ | ? *',
+    CreateFolderValidateFirstSymbol: 'Folder name cannot start with a dot',
   },
 } as const;
