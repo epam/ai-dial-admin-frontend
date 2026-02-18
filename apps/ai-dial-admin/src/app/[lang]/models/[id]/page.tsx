@@ -1,7 +1,8 @@
 import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
-import { interceptorsApi, modelsApi, rolesApi } from '@/src/app/api/api';
+import { getModel, getModelsList } from '@/src/app/[lang]/models/actions';
+import { interceptorsApi, rolesApi } from '@/src/app/api/api';
 import View from '@/src/components/Models/View/View';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
@@ -25,11 +26,12 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   let interceptors: DialInterceptor[] | null = [];
 
   try {
-    models = await modelsApi.getModelsList(token);
-    model = await modelsApi.getModel((await params.params).id, token, etag).then((res) => {
+    models = await getModelsList();
+    model = await getModel((await params.params).id, etag).then((res) => {
       etag = res?.etag || DEFAULT_ETAG;
       return res?.response as DialModel | null;
     });
+
     roles = await rolesApi.getRolesList(token);
     interceptors = await interceptorsApi.getInterceptorsList(token);
   } catch (e) {
