@@ -83,6 +83,8 @@ export const getWarningText = (view: ApplicationRoute, t: (str: string) => strin
       return t(DeleteI18nKey.InterceptorTemplateWarning);
     case ApplicationRoute.Adapters:
       return t(DeleteI18nKey.AdapterWarning);
+    case ApplicationRoute.Images:
+      return t(DeleteI18nKey.ImageWarning);
     default:
       return '';
   }
@@ -96,19 +98,8 @@ export const getRelatedText = (view: ApplicationRoute, t: (str: string) => strin
       return t(DeleteI18nKey.RelatedInterceptors);
     case ApplicationRoute.Adapters:
       return t(DeleteI18nKey.RelatedModels);
-    default:
-      return '';
-  }
-};
-
-export const getNoRelatedText = (view: ApplicationRoute, t: (str: string) => string) => {
-  switch (view) {
-    case ApplicationRoute.ApplicationRunners:
-      return t(DeleteI18nKey.NoApplications);
-    case ApplicationRoute.InterceptorTemplates:
-      return t(DeleteI18nKey.NoInterceptors);
-    case ApplicationRoute.Adapters:
-      return t(DeleteI18nKey.NoModels);
+    case ApplicationRoute.Images:
+      return t(DeleteI18nKey.RelatedContainers);
     default:
       return '';
   }
