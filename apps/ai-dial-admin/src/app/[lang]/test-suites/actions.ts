@@ -23,9 +23,9 @@ export async function updateTestSuite(suite: TestSuite, etag: string) {
   return testSuitesApi.updateTestSuite(suite, etag, token);
 }
 
-export async function runTestSuite(id: string, numberOfRuns: number) {
+export async function runTestSuite(id?: string, numberOfRuns?: number | string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return testSuitesApi.runTestSuite(id, numberOfRuns, token);
+  return testSuitesApi.runTestSuite(token, id, numberOfRuns);
 }
 
 export async function getTestSuites(page: number, size: number, sorts: SortDto[], filters: FilterDto[]) {

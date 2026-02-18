@@ -85,7 +85,7 @@ describe('TestSuites :: server actions', () => {
     (testSuitesApi.runTestSuite as any).mockResolvedValue([RESPONSE_MOCK]);
     const result = await runTestSuite('test', 1);
     expect(getUserToken).toHaveBeenCalled();
-    expect(testSuitesApi.runTestSuite).toHaveBeenCalledWith('test', 1, TOKEN_MOCK);
+    expect(testSuitesApi.runTestSuite).toHaveBeenCalledWith(TOKEN_MOCK, 'test', 1);
     expect(result).toEqual([RESPONSE_MOCK]);
   });
 
