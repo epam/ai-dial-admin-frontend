@@ -17,8 +17,8 @@ import { ApplicationRoute } from '@/src/types/routes';
 import {
   FileRowData,
   getGridFileColumns,
-  getGridFileData,
-  getGridFileDataFromString,
+  getPublicationGridFileData,
+  getPublicationGridFileDataFromString,
 } from '@/src/utils/files/grid-data';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { isAddAction } from '@/src/utils/publications';
@@ -67,8 +67,8 @@ const FilesList: FC<Props> = ({ files, action, onChange }) => {
 
   const rowData: FileRowData[] =
     typeof files[0] === 'string'
-      ? getGridFileDataFromString(files as string[])
-      : getGridFileData(files as PublicationFile[]);
+      ? getPublicationGridFileDataFromString(files as string[])
+      : getPublicationGridFileData(files as PublicationFile[]);
 
   const actions = [
     getPreviewOperation(preview, isPreviewActionHidden),
