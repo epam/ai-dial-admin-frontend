@@ -254,6 +254,7 @@ export default {
     Notification: {
       Title: '{entity} deleted successfully',
       Description: '{entity} {entityId} has been deleted. It can be restored using Rollback.',
+      DescriptionWithoutRollback: '{entity} {entityId} has been deleted.',
       ShortDescription: 'They can be restored using Rollback.',
     },
     Entities: {
@@ -335,7 +336,7 @@ export default {
     Notification: {
       Title: '{entity} updated successfully',
       Description: '{entity} {entityId} has been updated. Changes can be reverted using Rollback.',
-      DescriptionAssets: '{entity} {entityId} has been updated.',
+      DescriptionWithoutRollback: '{entity} {entityId} has been updated.',
     },
     Entities: {
       Model: 'Model',
@@ -1129,7 +1130,7 @@ export default {
     FailureThreshold: 'Enter number of failure threshold',
   },
   EntityCaptions: {
-    ProbeEnableCustom: 'Custom checks that the container has started successfully',
+    ProbeEnableCustom: 'Use custom values instead of default probe configuration',
     ProbePath: 'Path to call inside the container',
     ProbePort: 'Container port to call',
     ProbeInitialDelaySeconds: 'Wait time after container start before the first check',
