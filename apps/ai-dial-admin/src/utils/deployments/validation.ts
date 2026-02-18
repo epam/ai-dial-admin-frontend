@@ -21,6 +21,7 @@ const SSH_REPO_REGEX =
 const MIN_VARIABLE_NAME_SYMBOLS = 1;
 const MAX_VARIABLE_NAME_SYMBOLS = 253;
 const VARIABLE_NAME_REGEX = /^[-._a-zA-Z0-9]+$/;
+
 // HF model name
 const HF_USERNAME_MAX_LENGTH = 42;
 const HF_MODEL_MAX_LENGTH = 96;
@@ -196,6 +197,24 @@ export const getPathError = (path?: string, t?: (str: string) => string, require
   return null;
 };
 
+export const getProbePathError = (path?: string, t?: (str: string) => string, required?: boolean) => {
+  if (!path && required) {
+    return {
+      type: ErrorType.EMPTY,
+      text: t ? t(ErrorI18nKey.RequiredField) : '',
+    };
+  }
+
+  if (!required && path?.trim() && path.startsWith('/')) {
+    return {
+      type: ErrorType.INVALID,
+      text: t ? t(ErrorI18nKey.ProbePathError) : '',
+    };
+  }
+
+  return null;
+};
+
 const endsWithAny = (value: string, suffixes: string[]): boolean => {
   const lower = value.toLowerCase();
   return suffixes.some((s) => lower.endsWith(s.toLowerCase()));
@@ -354,7 +373,17 @@ export const getWhitelistDomainError = (
   return null;
 };
 
-export const getPortError = (value: number, t?: (key: string, options?: Record<string, string | number>) => string) => {
+export const getPortError = (
+  value: number,
+  t?: (key: string, options?: Record<string, string | number>) => string,
+  required?: boolean,
+) => {
+  if (required && value === void 0) {
+    return {
+      type: ErrorType.EMPTY,
+      text: t ? t(ErrorI18nKey.RequiredField) : '',
+    };
+  }
   if (value < 1 || value > 65535) {
     return {
       type: ErrorType.INVALID,
@@ -386,6 +415,17 @@ export const getFileNameError = (
       type: ErrorType.INVALID,
       text: t ? t(ErrorI18nKey.VariableError) : '',
     };
+  }
+
+  return null;
+};
+
+export const getPositiveNumberFieldsError = (
+  value?: number,
+  t?: (key: string, options?: Record<string, string | number>) => string,
+) => {
+  if (value && value < 0) {
+    return { type: ErrorType.INVALID, text: t ? t(ErrorI18nKey.PositiveNumber) : '' };
   }
 
   return null;

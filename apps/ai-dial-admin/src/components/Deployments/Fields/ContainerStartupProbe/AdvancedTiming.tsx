@@ -1,0 +1,237 @@
+import { FC, useCallback, useEffect, useState } from 'react';
+import { DialNumberInputField } from '@epam/ai-dial-ui-kit';
+
+import { Container, ProbeProperties } from '@/src/models/deployments/containers';
+import { EntityCaptionsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { FieldError } from '@/src/models/error';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { getPositiveNumberFieldsError } from '@/src/utils/deployments/validation';
+import { useI18n } from '@/src/locales/client';
+
+interface Props {
+  container: Container;
+  setContainer: (container: Container) => void;
+  disabled?: boolean;
+}
+
+const AdvancedTiming: FC<Props> = ({ container, setContainer, disabled }) => {
+  const t = useI18n();
+  const { dispatch, resetCounter } = useSaveValidationContext();
+
+  const [initialDelaySecondsError, setInitialDelaySecondsError] = useState<FieldError | null>(null);
+  const [periodSecondsError, setPeriodSecondsError] = useState<FieldError | null>(null);
+  const [timeoutSecondsError, setTimeoutSecondsError] = useState<FieldError | null>(null);
+  const [failureThresholdError, setFailureThresholdError] = useState<FieldError | null>(null);
+
+  const onInitialDelaySecondsChange = useCallback(
+    (initialDelaySeconds?: string | number) => {
+      const error = getPositiveNumberFieldsError(initialDelaySeconds as number, t);
+      setInitialDelaySecondsError(error);
+      dispatch({ type: ValidationActionType.SetField, field: 'initialDelaySeconds', isValid: !error });
+
+      setContainer({
+        ...container,
+        probeProperties: {
+          ...container.probeProperties,
+          initialDelaySeconds,
+        } as ProbeProperties,
+      });
+    },
+    [container, dispatch, setContainer, t],
+  );
+
+  const onPeriodSecondsChange = useCallback(
+    (periodSeconds?: string | number) => {
+      const error = getPositiveNumberFieldsError(periodSeconds as number, t);
+      setPeriodSecondsError(error);
+      dispatch({ type: ValidationActionType.SetField, field: 'periodSeconds', isValid: !error });
+
+      setContainer({
+        ...container,
+        probeProperties: {
+          ...container.probeProperties,
+          periodSeconds,
+        } as ProbeProperties,
+      });
+    },
+    [container, dispatch, setContainer, t],
+  );
+
+  const onTimeoutSecondsChange = useCallback(
+    (timeoutSeconds?: string | number) => {
+      const error = getPositiveNumberFieldsError(timeoutSeconds as number, t);
+      setTimeoutSecondsError(error);
+      dispatch({ type: ValidationActionType.SetField, field: 'timeoutSeconds', isValid: !error });
+
+      setContainer({
+        ...container,
+        probeProperties: {
+          ...container.probeProperties,
+          timeoutSeconds,
+        } as ProbeProperties,
+      });
+    },
+    [container, dispatch, setContainer, t],
+  );
+
+  const onFailureThresholdChange = useCallback(
+    (failureThreshold?: string | number) => {
+      const error = getPositiveNumberFieldsError(failureThreshold as number, t);
+      setFailureThresholdError(error);
+      dispatch({ type: ValidationActionType.SetField, field: 'failureThreshold', isValid: !error });
+
+      setContainer({
+        ...container,
+        probeProperties: {
+          ...container.probeProperties,
+          failureThreshold,
+        } as ProbeProperties,
+      });
+    },
+    [container, dispatch, setContainer, t],
+  );
+
+  useEffect(() => {
+    const { initialDelaySeconds, periodSeconds, timeoutSeconds, failureThreshold } =
+      container.probeProperties as ProbeProperties;
+    dispatch({
+      type: ValidationActionType.SetField,
+      field: 'initialDelaySeconds',
+      isValid: !getPositiveNumberFieldsError(initialDelaySeconds as number, t),
+    });
+    dispatch({
+      type: ValidationActionType.SetField,
+      field: 'periodSeconds',
+      isValid: !getPositiveNumberFieldsError(periodSeconds as number, t),
+    });
+    dispatch({
+      type: ValidationActionType.SetField,
+      field: 'timeoutSeconds',
+      isValid: !getPositiveNumberFieldsError(timeoutSeconds as number, t),
+    });
+    dispatch({
+      type: ValidationActionType.SetField,
+      field: 'failureThreshold',
+      isValid: !getPositiveNumberFieldsError(failureThreshold as number, t),
+    });
+
+    return () => {
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'initialDelaySeconds',
+        isValid: true,
+      });
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'periodSeconds',
+        isValid: true,
+      });
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'timeoutSeconds',
+        isValid: true,
+      });
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'failureThreshold',
+        isValid: true,
+      });
+    };
+  }, [container.probeProperties, dispatch, t]);
+
+  useEffect(() => {
+    const { initialDelaySeconds } = container.probeProperties as ProbeProperties;
+    if (resetCounter || initialDelaySeconds !== void 0) {
+      const error = getPositiveNumberFieldsError(initialDelaySeconds as number, t);
+      setInitialDelaySecondsError(error);
+      dispatch({ type: ValidationActionType.SetField, field: 'initialDelaySeconds', isValid: !error });
+    }
+  }, [container.probeProperties, dispatch, resetCounter, t]);
+
+  useEffect(() => {
+    const { periodSeconds } = container.probeProperties as ProbeProperties;
+    if (resetCounter || periodSeconds !== void 0) {
+      const error = getPositiveNumberFieldsError(periodSeconds as number, t);
+      setPeriodSecondsError(error);
+      dispatch({ type: ValidationActionType.SetField, field: 'periodSeconds', isValid: !error });
+    }
+  }, [container.probeProperties, dispatch, resetCounter, t]);
+
+  useEffect(() => {
+    const { timeoutSeconds } = container.probeProperties as ProbeProperties;
+    if (resetCounter || timeoutSeconds !== void 0) {
+      const error = getPositiveNumberFieldsError(timeoutSeconds as number, t);
+      setTimeoutSecondsError(error);
+      dispatch({ type: ValidationActionType.SetField, field: 'timeoutSeconds', isValid: !error });
+    }
+  }, [container.probeProperties, dispatch, resetCounter, t]);
+
+  useEffect(() => {
+    const { failureThreshold } = container.probeProperties as ProbeProperties;
+    if (resetCounter || failureThreshold !== void 0) {
+      const error = getPositiveNumberFieldsError(failureThreshold as number, t);
+      setFailureThresholdError(error);
+      dispatch({ type: ValidationActionType.SetField, field: 'failureThreshold', isValid: !error });
+    }
+  }, [container.probeProperties, dispatch, resetCounter, t]);
+
+  return (
+    <div className="flex flex-col gap-6">
+      <h3>{t(EntityFieldsI18nKey.AdvancedTiming)}</h3>
+      <DialNumberInputField
+        elementId="initialDelaySeconds"
+        fieldTitle={t(EntityFieldsI18nKey.InitialDelaySeconds)}
+        placeholder={t(EntityPlaceholdersI18nKey.InitialDelaySeconds)}
+        value={container.probeProperties?.initialDelaySeconds}
+        onChange={onInitialDelaySecondsChange}
+        disabled={disabled}
+        containerClassName="w-[320px]"
+        captionDescription={!initialDelaySecondsError ? t(EntityCaptionsI18nKey.ProbeInitialDelaySeconds) : ''}
+        invalid={!!initialDelaySecondsError}
+        errorText={initialDelaySecondsError?.text}
+        optional={true}
+      />
+      <DialNumberInputField
+        elementId="periodSeconds"
+        fieldTitle={t(EntityFieldsI18nKey.PeriodSeconds)}
+        placeholder={t(EntityPlaceholdersI18nKey.PeriodSeconds)}
+        value={container.probeProperties?.periodSeconds}
+        onChange={onPeriodSecondsChange}
+        disabled={disabled}
+        containerClassName="w-[320px]"
+        captionDescription={!periodSecondsError ? t(EntityCaptionsI18nKey.ProbePeriodSeconds) : ''}
+        invalid={!!periodSecondsError}
+        errorText={periodSecondsError?.text}
+        optional={true}
+      />
+      <DialNumberInputField
+        elementId="timeoutSeconds"
+        fieldTitle={t(EntityFieldsI18nKey.TimeoutSeconds)}
+        placeholder={t(EntityPlaceholdersI18nKey.TimeoutSeconds)}
+        value={container.probeProperties?.timeoutSeconds}
+        onChange={onTimeoutSecondsChange}
+        disabled={disabled}
+        containerClassName="w-[320px]"
+        captionDescription={!timeoutSecondsError ? t(EntityCaptionsI18nKey.ProbeTimeoutSeconds) : ''}
+        invalid={!!timeoutSecondsError}
+        errorText={timeoutSecondsError?.text}
+        optional={true}
+      />
+      <DialNumberInputField
+        elementId="failureThreshold"
+        fieldTitle={t(EntityFieldsI18nKey.FailureThreshold)}
+        placeholder={t(EntityPlaceholdersI18nKey.FailureThreshold)}
+        value={container.probeProperties?.failureThreshold}
+        onChange={onFailureThresholdChange}
+        disabled={disabled}
+        containerClassName="w-[320px]"
+        captionDescription={!failureThresholdError ? t(EntityCaptionsI18nKey.ProbeFailuresThreshold) : ''}
+        invalid={!!failureThresholdError}
+        errorText={failureThresholdError?.text}
+        optional={true}
+      />
+    </div>
+  );
+};
+
+export default AdvancedTiming;
