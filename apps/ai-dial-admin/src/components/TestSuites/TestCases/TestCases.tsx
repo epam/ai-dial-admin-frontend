@@ -4,15 +4,16 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ColDef, GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
 
-import { getTestCases, importTestCase } from '@/src/app/[lang]/test-suites/actions';
+import { getTestCases, importTestCase, removeTestCase } from '@/src/app/[lang]/test-suites/actions';
 import ListEntities from '@/src/components/ListView/List';
 import { getTestCaseColumns } from '@/src/components/TestSuites/utils/columns';
 import { getTestCaseGridData } from '@/src/components/TestSuites/utils/data';
-import { infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
+import { infiniteGridOptions, ONE_ACTION_COLUMN, PAGE_SIZE } from '@/src/constants/ag-grid';
+import { getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { TestCase, TestSuite } from '@/src/models/evaluation/test-suite';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
@@ -30,20 +31,11 @@ const TestCases: FC<Props> = ({ selectedTestSuite }) => {
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const [columnDefs, setColumnDefs] = useState<ColDef[]>([]);
   const isInitialLoadRef = useRef(false);
+  const onRemoveCaseRef = useRef<(data?: TestCase) => void>(() => {});
 
   const gridOptions: GridOptions = {
     ...infiniteGridOptions,
   };
-
-  useEffect(() => {
-    if (!isInitialLoadRef.current) {
-      isInitialLoadRef.current = true;
-      getTestCases(selectedTestSuite.id, 0, PAGE_SIZE, [], []).then((res) => {
-        const testCasesData = res?.content || [];
-        setColumnDefs(getTestCaseColumns(testCasesData));
-      });
-    }
-  }, [selectedTestSuite.id]);
 
   const onSetData = useCallback(
     (data: Record<string, unknown>[], totalElements: number, params: IGetRowsParams) => {
@@ -114,6 +106,44 @@ const TestCases: FC<Props> = ({ selectedTestSuite }) => {
     },
     [refreshGrid, selectedTestSuite.id, showNotification, t],
   );
+
+  const onRemoveCase = useCallback(
+    (data?: TestCase) => {
+      if (!data) return;
+      removeTestCase(selectedTestSuite.id as string, data.id as string).then((res) => {
+        if (res?.success) {
+          showNotification(getSuccessNotification(t(TestSuitesI18nKey.RemoveSuccess)));
+          refreshGrid();
+        } else {
+          showNotification(
+            getErrorNotification(t(TestSuitesI18nKey.RemoveFailed), res?.errorMessage || 'Unknown error'),
+          );
+        }
+      });
+    },
+    [refreshGrid, selectedTestSuite.id, showNotification, t],
+  );
+
+  useEffect(() => {
+    onRemoveCaseRef.current = onRemoveCase;
+  }, [onRemoveCase]);
+
+  const stableOnRemoveCase = useCallback((data?: TestCase) => {
+    onRemoveCaseRef.current(data);
+  }, []);
+
+  useEffect(() => {
+    if (!isInitialLoadRef.current) {
+      isInitialLoadRef.current = true;
+      getTestCases(selectedTestSuite.id, 0, PAGE_SIZE, [], []).then((res) => {
+        const testCasesData = res?.content || [];
+        setColumnDefs([
+          ...getTestCaseColumns(testCasesData),
+          ONE_ACTION_COLUMN(getRemoveOperation(stableOnRemoveCase, void 0, 'text-error w-4 h-4')),
+        ]);
+      });
+    }
+  }, [stableOnRemoveCase, selectedTestSuite.id]);
 
   return (
     <>

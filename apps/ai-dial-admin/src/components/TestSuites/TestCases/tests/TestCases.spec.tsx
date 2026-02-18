@@ -84,7 +84,7 @@ describe('TestCases', () => {
     render(<TestCases selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
 
     await waitFor(() => {
-      expect(screen.getByText('Columns: 2')).toBeInTheDocument();
+      expect(screen.getByText('Columns: 3')).toBeInTheDocument();
     });
   });
 
