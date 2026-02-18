@@ -59,3 +59,8 @@ export interface ContainerResources {
   limits?: Record<string, string | undefined>;
   requests?: Record<string, string | undefined>;
 }
+
+export enum PROBE_TYPE {
+  HTTP_GET = 'httpGet',
+  TCP = 'tcpSocket',
+}

@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
-import { getModels } from '@/src/app/[lang]/models/actions';
+import { getModelsListAction } from '@/src/app/[lang]/models/actions';
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
 import { getRelevantModelsForAdapter } from '@/src/components/AddEntitiesTab/utils';
 import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
@@ -26,7 +26,7 @@ const AdapterModels: FC<Props> = ({ adapter, onChangeAdapter }) => {
   const [models, setModels] = useState<DialModel[]>([]);
 
   useEffect(() => {
-    getReqRef.current(getModels).then((res) => {
+    getReqRef.current(getModelsListAction).then((res) => {
       if (!res || !res.success || !res.response) {
         return Promise.reject(res?.errorMessage);
       }

@@ -17,8 +17,9 @@ interface Props {
   changeTemplate: (template: TestSuiteRequestTemplate) => void;
   field: keyof Omit<TestSuiteRequestTemplate, 'urlTemplate' | 'body'>;
   title: string;
+  emptyDataTitle: string;
 }
-const ParamsTab: FC<Props> = ({ template, changeTemplate, field, title }) => {
+const ParamsTab: FC<Props> = ({ template, changeTemplate, field, title, emptyDataTitle }) => {
   const t = useI18n();
   const [visibleIndex, setVisibleIndex] = useState<number | undefined>();
   const gridApi = useRef<GridApi>(null);
@@ -93,7 +94,11 @@ const ParamsTab: FC<Props> = ({ template, changeTemplate, field, title }) => {
         <DialGhostButton iconBefore={<IconPlus />} label={t(ButtonsI18nKey.Add)} onClick={() => onAddParam()} />
       </div>
       <div className="flex-1 min-h-0 overflow-auto">
-        <GridView onGridReady={onGridReady} />
+        <GridView
+          getIsEmptyData={() => !template[field]?.length}
+          emptyDataProps={{ title: emptyDataTitle }}
+          onGridReady={onGridReady}
+        />
       </div>
     </div>
   );

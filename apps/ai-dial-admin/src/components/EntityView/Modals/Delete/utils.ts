@@ -2,7 +2,7 @@ import { DeleteI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getApplications } from '@/src/app/[lang]/applications/actions';
 import { BaseEntity } from '@/src/models/dial/base-entity';
-import { getModels } from '@/src/app/[lang]/models/actions';
+import { getModelsListAction } from '@/src/app/[lang]/models/actions';
 import { getInterceptorsList } from '@/src/app/[lang]/interceptors/actions';
 import { ImageVersion } from '@/src/models/deployments/images';
 import { getContainers } from '@/src/app/actions/deployments';
@@ -121,7 +121,7 @@ const getRelatedApplications = (entity: { applications?: string[] }) => {
 };
 
 const getRelatedModels = (entity: { models?: string[] }) => {
-  return getModels().then((res) => {
+  return getModelsListAction().then((res) => {
     return res.response?.reduce((acc, curr) => {
       if (entity.models?.includes(curr.name as string)) {
         acc.push(curr);

@@ -4,13 +4,14 @@ import {
   CreateSteps,
   KubEventType,
   MODEL_TYPE,
+  PROBE_TYPE,
   SCALING_STRATEGY_TYPE,
 } from '@/src/types/deployments/containers';
 import { ToolsetTransport } from '@/src/types/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ContainersI18nKey, ErrorI18nKey, KubEventsI18nKey } from '@/src/constants/i18n';
 import { getTranslatedType } from '@/src/utils/deployments/entity';
-import { Autoscaling } from '@/src/models/deployments/containers';
+import { Autoscaling, Container, ProbeProperties } from '@/src/models/deployments/containers';
 
 export const POD_OBJECT_KIND = 'pod';
 
@@ -63,6 +64,21 @@ export const DEFAULT_SCALING: Autoscaling = {
     $type: SCALING_STRATEGY_TYPE.REQUESTS,
     threshold: 2,
   },
+};
+
+export const DEFAULT_PROBE_CONFIG = (container: Container): ProbeProperties => {
+  return {
+    enabled: true,
+    initialDelaySeconds: 0,
+    failureThreshold: 3,
+    periodSeconds: 10,
+    timeoutSeconds: -1,
+    probe: {
+      path: '',
+      port: container.containerPort || void 0,
+      $type: PROBE_TYPE.TCP,
+    },
+  };
 };
 
 export const RESTART_REASONS = (

@@ -15,6 +15,7 @@ import {
   getTestSuites,
   importTestCase,
   importTestCasePreview,
+  removeTestCase,
   removeTestSuite,
   runTestSuite,
   updateTestSuite,
@@ -142,6 +143,14 @@ describe('TestSuites :: server actions', () => {
     const result = await importTestCasePreview('id', new FormData());
     expect(getUserToken).toHaveBeenCalled();
     expect(testSuitesApi.importTestCasePreview).toHaveBeenCalledWith('id', new FormData(), TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call removeTestCase action ', async () => {
+    (testSuitesApi.removeTestCase as any).mockResolvedValue(RESPONSE_MOCK);
+    const result = await removeTestCase('id', 'caseId');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(testSuitesApi.removeTestCase).toHaveBeenCalledWith('id', 'caseId', TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

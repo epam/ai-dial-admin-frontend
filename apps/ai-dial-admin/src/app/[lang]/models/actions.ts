@@ -11,9 +11,19 @@ import { convertDefaultsToRecord } from '@/src/components/Defaults/utils';
 import { SOURCE_FIELD, SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 
-export async function getModels() {
+export async function getModelsListAction() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return modelsApi.getModelsListAction(token);
+}
+
+export async function getModelsList() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return modelsApi.getModelsList(token);
+}
+
+export async function getModel(name: string, etag: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return modelsApi.getModel(name, token, etag);
 }
 
 export async function getModelsTopics() {
