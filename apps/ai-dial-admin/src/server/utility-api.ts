@@ -1,7 +1,6 @@
-import { JWT } from 'next-auth/jwt';
-
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { AppProcessStatus } from '@/src/models/app-process-status';
+import { Token } from '@/src/models/auth';
 import { CoreSyncStatus } from '@/src/models/core-sync-status';
 import { CoreConfigVersion, CoreVersions } from '@/src/models/core-version';
 import { ExportRequest } from '@/src/models/export';
@@ -29,63 +28,74 @@ export const DEPLOYMENT_URL = (name: string) => `${API}/deployments/${name}`;
 export const SECURITY_INFO_URL = `${API}/security-info`;
 
 export class UtilityApi extends BaseApi {
-  getBeVersion(token: JWT | null): Promise<string | null> {
+  getBeVersion(token: Token | undefined): Promise<string | null> {
     return this.get(VERSION_URL, token, { Accept: 'text/plain' }).catch(() => null) as Promise<string | null>;
   }
 
-  importJsonConfigs(url: string, token: JWT | null, file: FormData): Promise<ServerActionResponse> {
+  importJsonConfigs(url: string, token: Token | undefined, file: FormData): Promise<ServerActionResponse> {
     return this.postFiles(url, file, token);
   }
 
-  importZipConfig(url: string, token: JWT | null, file: FormData): Promise<ServerActionResponse> {
+  importZipConfig(url: string, token: Token | undefined, file: FormData): Promise<ServerActionResponse> {
     return this.postFiles(url, file, token);
   }
 
-  exportConfig(exportConfig: ExportRequest, token: JWT | null): Promise<{ blob: Blob; fileName: string }> {
+  exportConfig(exportConfig: ExportRequest, token: Token | undefined): Promise<{ blob: Blob; fileName: string }> {
     return this.sendRequest(EXPORT_CONFIG_URL, 'POST', exportConfig, token).then(async (res) => {
       return { blob: await (res as Response)?.blob?.(), fileName: getFileName(res as Response) || '' };
     });
   }
 
-  exportConfigMap(token: JWT | null): Promise<{ blob: Blob; fileName: string }> {
+  exportConfigMap(token: Token | undefined): Promise<{ blob: Blob; fileName: string }> {
     return this.sendRequest(EXPORT_CONFIG_MAP_URL, 'POST', { addSecrets: true }, token).then(async (res) => {
       return { blob: await (res as Response)?.blob?.(), fileName: getFileName(res as Response) || '' };
     });
   }
 
-  previewExportConfig(exportConfig: ExportRequest, token: JWT | null): Promise<ServerActionResponse> {
+  previewExportConfig(exportConfig: ExportRequest, token: Token | undefined): Promise<ServerActionResponse> {
     return this.postAction(EXPORT_PREVIEW_CONFIG_URL, exportConfig, token);
   }
 
-  checkDeploymentByName(name: string, token: JWT | null) {
+  checkDeploymentByName(name: string, token: Token | undefined) {
     return this.head(DEPLOYMENT_URL(name), token);
   }
 
-  getAppProcessStatus(token: JWT | null): Promise<ServerActionResponse<AppProcessStatus>> {
+  getAppProcessStatus(token: Token | undefined): Promise<ServerActionResponse<AppProcessStatus>> {
     return this.getAction(RELOAD_CONFIG_URL, token);
   }
 
-  getCoreVersion(token: JWT | null): Promise<ServerActionResponse<CoreVersions>> {
+  getCoreVersion(token: Token | undefined): Promise<ServerActionResponse<CoreVersions>> {
     return this.getAction(CORE_VERSION_URL, token);
   }
 
-  setCoreVersion(version: CoreConfigVersion, token: JWT | null): Promise<ServerActionResponse<AppProcessStatus>> {
+  setCoreVersion(
+    version: CoreConfigVersion,
+    token: Token | undefined,
+  ): Promise<ServerActionResponse<AppProcessStatus>> {
     return this.putActionWithEtag(CORE_CONFIG_VERSION_URL, version, token, DEFAULT_ETAG);
   }
 
-  getSystemProperties(token: JWT | null, etag: string): Promise<ServerActionResponse<GlobalSettings>> {
+  getSystemProperties(token: Token | undefined, etag: string): Promise<ServerActionResponse<GlobalSettings>> {
     return this.getActionWithEtag(SYSTEM_PROPERTIES_URL, etag, token);
   }
 
-  updateSystemProperties(properties: GlobalSettings, token: JWT | null, etag: string): Promise<ServerActionResponse> {
+  updateSystemProperties(
+    properties: GlobalSettings,
+    token: Token | undefined,
+    etag: string,
+  ): Promise<ServerActionResponse> {
     return this.putActionWithEtag(SYSTEM_PROPERTIES_URL, properties, token, etag);
   }
 
-  getEntitySyncStatus(url: string, token: JWT | null, etag: string): Promise<ServerActionResponse<CoreSyncStatus>> {
+  getEntitySyncStatus(
+    url: string,
+    token: Token | undefined,
+    etag: string,
+  ): Promise<ServerActionResponse<CoreSyncStatus>> {
     return this.getActionWithMatchEtag(`${API}${url}`, etag, token);
   }
 
-  getSecurityInfo(token: JWT | null): Promise<ServerActionResponse> {
+  getSecurityInfo(token: Token | undefined): Promise<ServerActionResponse> {
     return this.getAction(SECURITY_INFO_URL, token);
   }
 }

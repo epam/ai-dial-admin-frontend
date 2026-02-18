@@ -1,41 +1,40 @@
-import { JWT } from 'next-auth/jwt';
-
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
+import { Token } from '@/src/models/auth';
 import { DialKey } from '@/src/models/dial/key';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { API } from '../api';
 import { BaseApi } from '../base-api';
-import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const KEYS_URL = `${API}/keys`;
 export const KEY_URL = (name?: string) => `${KEYS_URL}/${name || ''}`;
 export const CORE_KEY_URL = (name: string) => `${KEYS_URL}/core/${name}`;
 
 export class KeysApi extends BaseApi {
-  getKeysList(token: JWT | null): Promise<DialKey[] | null> {
+  getKeysList(token: Token | undefined): Promise<DialKey[] | null> {
     return this.get(KEYS_URL, token);
   }
 
-  getKey(name: string, token: JWT | null, eTag: string) {
+  getKey(name: string, token: Token | undefined, eTag: string) {
     return this.getActionWithEtag(KEY_URL(name), eTag, token);
   }
 
-  removeKey(token: JWT | null, name?: string): Promise<ServerActionResponse> {
+  removeKey(token: Token | undefined, name?: string): Promise<ServerActionResponse> {
     return this.deleteAction(KEY_URL(name), token);
   }
 
-  createKey(key: DialKey, token: JWT | null): Promise<ServerActionResponse> {
+  createKey(key: DialKey, token: Token | undefined): Promise<ServerActionResponse> {
     return this.postAction(KEYS_URL, key, token);
   }
 
-  updateKey(key: DialKey, token: JWT | null, eTag: string): Promise<ServerActionResponse> {
+  updateKey(key: DialKey, token: Token | undefined, eTag: string): Promise<ServerActionResponse> {
     return this.putActionWithEtag(KEY_URL(encodeURIComponent(key.name || '')), key, token, eTag);
   }
 
-  getCoreKey(name: string, token: JWT | null): Promise<ServerActionResponse<DialKey>> {
+  getCoreKey(name: string, token: Token | undefined): Promise<ServerActionResponse<DialKey>> {
     return this.getActionWithEtag(CORE_KEY_URL(name), DEFAULT_ETAG, token);
   }
 
-  updateCoreKey(key: DialKey, name: string, eTag: string, token: JWT | null): Promise<ServerActionResponse> {
+  updateCoreKey(key: DialKey, name: string, eTag: string, token: Token | undefined): Promise<ServerActionResponse> {
     return this.putActionWithEtag(CORE_KEY_URL(encodeURIComponent(name)), key, token, eTag);
   }
 }

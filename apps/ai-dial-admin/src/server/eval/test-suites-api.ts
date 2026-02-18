@@ -1,5 +1,4 @@
-import { JWT } from 'next-auth/jwt';
-
+import { Token } from '@/src/models/auth';
 import { Deployment } from '@/src/models/evaluation/deployment';
 import { TestCase, TestSuite, TestSuiteRun } from '@/src/models/evaluation/test-suite';
 import { EvaluationPageData, FilterDto, SortDto } from '@/src/models/request';
@@ -23,7 +22,7 @@ export class TestSuitesApi extends BaseApi {
     size: number,
     sorts: SortDto[],
     filters: FilterDto[],
-    token: JWT | null,
+    token: Token | undefined,
   ): Promise<EvaluationPageData<TestSuite> | null> {
     return this.get<EvaluationPageData<TestSuite>>(
       `${TEST_SUITES_URL}?page=${page}&size=${size}&includeTotalCount=true${this.getFiltersAndSortsStr(sorts, filters)}`,
@@ -36,7 +35,7 @@ export class TestSuitesApi extends BaseApi {
     size: number,
     sorts: SortDto[],
     filters: FilterDto[],
-    token: JWT | null,
+    token: Token | undefined,
   ): Promise<EvaluationPageData<TestSuiteRun> | null> {
     return this.get<EvaluationPageData<TestSuiteRun>>(
       `${TEST_SUITES_RUNS_URL}?page=${page}&size=${size}&includeTotalCount=true${this.getFiltersAndSortsStr(sorts, filters)}`,
@@ -44,15 +43,15 @@ export class TestSuitesApi extends BaseApi {
     );
   }
 
-  getTestSuite(id: string, etag: string, token: JWT | null): Promise<ServerActionResponse<TestSuite> | null> {
+  getTestSuite(id: string, etag: string, token: Token | undefined): Promise<ServerActionResponse<TestSuite> | null> {
     return this.getActionWithEtag(TEST_SUITE_URL(id), etag, token);
   }
 
-  importTestCase(id: string, file: FormData, token: JWT | null): Promise<ServerActionResponse> {
+  importTestCase(id: string, file: FormData, token: Token | undefined): Promise<ServerActionResponse> {
     return this.postFiles(`${TEST_CASES_URL(id)}/import`, file, token);
   }
 
-  importTestCasePreview(id: string, file: FormData, token: JWT | null): Promise<ServerActionResponse> {
+  importTestCasePreview(id: string, file: FormData, token: Token | undefined): Promise<ServerActionResponse> {
     return this.postFiles(`${TEST_CASES_URL(id)}/import/preview`, file, token);
   }
 
@@ -62,7 +61,7 @@ export class TestSuitesApi extends BaseApi {
     size: number,
     sorts: SortDto[],
     filters: FilterDto[],
-    token: JWT | null,
+    token: Token | undefined,
   ): Promise<EvaluationPageData<TestCase> | null> {
     return this.get<EvaluationPageData<TestCase>>(
       `${TEST_CASES_URL(id)}?page=${page}&size=${size}&includeTotalCount=true${this.getFiltersAndSortsStr(sorts, filters)}`,
@@ -70,27 +69,27 @@ export class TestSuitesApi extends BaseApi {
     );
   }
 
-  getTestCase(id: string, testCaseId: string | undefined, token: JWT | null): Promise<TestCase | null> {
+  getTestCase(id: string, testCaseId: string | undefined, token: Token | undefined): Promise<TestCase | null> {
     return this.get(TEST_CASE_URL(id, testCaseId), token);
   }
 
-  removeTestCase(id: string, testCaseId: string, token: JWT | null): Promise<ServerActionResponse> {
+  removeTestCase(id: string, testCaseId: string, token: Token | undefined): Promise<ServerActionResponse> {
     return this.deleteAction(TEST_CASE_URL(id, testCaseId), token);
   }
 
-  createTestSuite(suite: TestSuite, token: JWT | null): Promise<ServerActionResponse> {
+  createTestSuite(suite: TestSuite, token: Token | undefined): Promise<ServerActionResponse> {
     return this.postAction(TEST_SUITES_URL, suite, token);
   }
 
-  removeTestSuite(id: string, token: JWT | null): Promise<ServerActionResponse> {
+  removeTestSuite(id: string, token: Token | undefined): Promise<ServerActionResponse> {
     return this.deleteAction(TEST_SUITE_URL(id), token);
   }
 
-  updateTestSuite(suite: TestSuite, etag: string, token: JWT | null): Promise<ServerActionResponse> {
+  updateTestSuite(suite: TestSuite, etag: string, token: Token | undefined): Promise<ServerActionResponse> {
     return this.putActionWithEtag(TEST_SUITE_URL(suite.id), suite, token, etag);
   }
 
-  runTestSuite(token: JWT | null, id?: string, numberOfRuns?: number | string): Promise<ServerActionResponse> {
+  runTestSuite(token: Token | undefined, id?: string, numberOfRuns?: number | string): Promise<ServerActionResponse> {
     return this.postAction(TEST_SUITE_RUN_URL(id), { runConfig: { numberOfRuns } }, token);
   }
 
@@ -101,11 +100,11 @@ export class TestSuitesApi extends BaseApi {
     return `${filtersStr || sortsStr ? '&' : ''}${filtersStr}${sortsStr ? '&' : ''}${sortsStr}`;
   }
 
-  getDeployments(token: JWT | null): Promise<Deployment[] | null> {
+  getDeployments(token: Token | undefined): Promise<Deployment[] | null> {
     return this.get(DEPLOYMENTS_URL, token);
   }
 
-  getDeployment(id: string, type: string, token: JWT | null): Promise<Deployment | null> {
+  getDeployment(id: string, type: string, token: Token | undefined): Promise<Deployment | null> {
     return this.get(`${DEPLOYMENTS_URL}/${type}/${id}`, token);
   }
 }

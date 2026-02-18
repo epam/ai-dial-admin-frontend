@@ -1,6 +1,5 @@
-import { JWT } from 'next-auth/jwt';
-
 import { imageTypes } from '@/src/constants/file';
+import { Token } from '@/src/models/auth';
 import { errorObjLog } from '@/src/server/logger';
 import { getAuthorizationHeader } from '@/src/utils/auth/api-headers';
 import { sendRequest } from './send-request';
@@ -8,7 +7,7 @@ import { sendRequest } from './send-request';
 export const streamRequest = async (
   url: string,
   fileName: string,
-  token?: JWT | null,
+  token?: Token | undefined,
   isPreview?: boolean,
 ): Promise<Response> => {
   try {

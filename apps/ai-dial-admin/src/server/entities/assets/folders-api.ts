@@ -1,5 +1,4 @@
-import { JWT } from 'next-auth/jwt';
-
+import { Token } from '@/src/models/auth';
 import { DialFolder } from '@/src/models/dial/folder';
 import { DialRule } from '@/src/models/dial/rule';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -18,22 +17,22 @@ export const PREVIEW_APP_ZIP = `${API}/application-resources/import/zip/preview`
 export const PREVIEW_TOOLSET_ZIP = `${API}/toolset-resources/import/zip/preview`;
 
 export class FoldersApi extends BaseApi {
-  getFolders(token: JWT | null, path: string): Promise<DialFolder[] | null | undefined> {
+  getFolders(token: Token | undefined, path: string): Promise<DialFolder[] | null | undefined> {
     return this.post(FOLDERS_URL, { path }, token).then((response) =>
       response === void 0 ? void 0 : (response as { items: DialFolder[] })?.items || [],
     );
   }
 
-  getRules(token: JWT | null, path: string): Promise<ServerActionResponse<Record<string, DialRule[]>>> {
+  getRules(token: Token | undefined, path: string): Promise<ServerActionResponse<Record<string, DialRule[]>>> {
     return this.getAction(`${FOLDERS_URL}?path=${path}`, token);
   }
 
-  updateRules(token: JWT | null, targetFolder: string, rules: DialRule[]): Promise<ServerActionResponse> {
+  updateRules(token: Token | undefined, targetFolder: string, rules: DialRule[]): Promise<ServerActionResponse> {
     return this.postAction(`${RULES_UPDATE_URL}`, { targetFolder, rules }, token);
   }
 
   createFolder(
-    token: JWT | null,
+    token: Token | undefined,
     body: FormData,
     type?: string,
     view?: ApplicationRoute,
@@ -42,24 +41,24 @@ export class FoldersApi extends BaseApi {
     return this.postFiles(url, body, token, 'POST');
   }
 
-  previewPromptZipFiles(token: JWT | null, body: FormData): Promise<ServerActionResponse> {
+  previewPromptZipFiles(token: Token | undefined, body: FormData): Promise<ServerActionResponse> {
     return this.postFiles(`${PREVIEW_PROMPT_ZIP}`, body, token, 'POST');
   }
 
-  previewAppZipFiles(token: JWT | null, body: FormData): Promise<ServerActionResponse> {
+  previewAppZipFiles(token: Token | undefined, body: FormData): Promise<ServerActionResponse> {
     return this.postFiles(`${PREVIEW_APP_ZIP}`, body, token, 'POST');
   }
 
-  previewToolsetZipFiles(token: JWT | null, body: FormData): Promise<ServerActionResponse> {
+  previewToolsetZipFiles(token: Token | undefined, body: FormData): Promise<ServerActionResponse> {
     return this.postFiles(`${PREVIEW_TOOLSET_ZIP}`, body, token, 'POST');
   }
 
-  deleteFolder(token: JWT | null, path: string): Promise<ServerActionResponse> {
+  deleteFolder(token: Token | undefined, path: string): Promise<ServerActionResponse> {
     return this.deleteAction(`${FOLDERS_URL}?path=${path}`, token);
   }
 
   changeFolder(
-    token: JWT | null,
+    token: Token | undefined,
     oldPath: string,
     newPath: string,
     resourceType: ResourceType,

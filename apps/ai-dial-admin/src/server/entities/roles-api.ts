@@ -1,5 +1,4 @@
-import { JWT } from 'next-auth/jwt';
-
+import { Token } from '@/src/models/auth';
 import { DialRole } from '@/src/models/dial/role';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { API } from '../api';
@@ -11,31 +10,31 @@ export const ROLE_URL = (name?: string) => `${ROLES_URL}/${name || ''}`;
 export const CORE_ROLE_URL = (name: string) => `${ROLES_URL}/core/${name}`;
 
 export class RolesApi extends BaseApi {
-  getRolesList(token: JWT | null): Promise<DialRole[] | null> {
+  getRolesList(token: Token | undefined): Promise<DialRole[] | null> {
     return this.get(ROLES_URL, token);
   }
 
-  getRole(name: string, token: JWT | null, eTag: string) {
+  getRole(name: string, token: Token | undefined, eTag: string) {
     return this.getActionWithEtag(ROLE_URL(name), eTag, token);
   }
 
-  removeRole(token: JWT | null, name?: string): Promise<ServerActionResponse> {
+  removeRole(token: Token | undefined, name?: string): Promise<ServerActionResponse> {
     return this.deleteAction(ROLE_URL(name), token);
   }
 
-  createRole(role: DialRole, token: JWT | null): Promise<ServerActionResponse> {
+  createRole(role: DialRole, token: Token | undefined): Promise<ServerActionResponse> {
     return this.postAction(ROLES_URL, role, token);
   }
 
-  updateRole(role: DialRole, token: JWT | null, eTag: string): Promise<ServerActionResponse> {
+  updateRole(role: DialRole, token: Token | undefined, eTag: string): Promise<ServerActionResponse> {
     return this.putActionWithEtag(ROLE_URL(encodeURIComponent(role.name || '')), role, token, eTag);
   }
 
-  getCoreRole(name: string, token: JWT | null): Promise<ServerActionResponse<DialRole>> {
+  getCoreRole(name: string, token: Token | undefined): Promise<ServerActionResponse<DialRole>> {
     return this.getActionWithEtag(CORE_ROLE_URL(name), DEFAULT_ETAG, token);
   }
 
-  updateCoreRole(role: DialRole, name: string, eTag: string, token: JWT | null): Promise<ServerActionResponse> {
+  updateCoreRole(role: DialRole, name: string, eTag: string, token: Token | undefined): Promise<ServerActionResponse> {
     return this.putActionWithEtag(CORE_ROLE_URL(encodeURIComponent(name)), role, token, eTag);
   }
 }

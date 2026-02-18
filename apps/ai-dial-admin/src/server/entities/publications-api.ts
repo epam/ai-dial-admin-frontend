@@ -1,6 +1,6 @@
 import { API } from '@/src/server/api';
 import { BaseApi } from '@/src/server/base-api';
-import { JWT } from 'next-auth/jwt';
+import { Token } from '@/src/models/auth';
 import { Publication } from '@/src/models/dial/publications';
 import { ServerActionResponse } from '@/src/models/server-action';
 
@@ -15,39 +15,39 @@ export const PUBLICATION_APPROVE_URL = `${PUBLICATIONS_BASE_URL}/approve`;
 export const PUBLICATION_DELETE_URL = `${PUBLICATIONS_BASE_URL}/delete`;
 
 export class PublicationsApi extends BaseApi {
-  getApplicationPublicationsList(token: JWT | null): Promise<Publication[] | undefined> {
+  getApplicationPublicationsList(token: Token | undefined): Promise<Publication[] | undefined> {
     return this.getPublicationsList(PUBLICATIONS_APPLICATION_URL, token);
   }
 
-  getToolsetPublicationsList(token: JWT | null): Promise<Publication[] | undefined> {
+  getToolsetPublicationsList(token: Token | undefined): Promise<Publication[] | undefined> {
     return this.getPublicationsList(PUBLICATIONS_TOOLSET_URL, token);
   }
 
-  getPublicationsPromptsList(token: JWT | null): Promise<Publication[] | undefined> {
+  getPublicationsPromptsList(token: Token | undefined): Promise<Publication[] | undefined> {
     return this.getPublicationsList(PUBLICATIONS_PROMPTS_URL, token);
   }
 
-  getPublicationsFilesList(token: JWT | null): Promise<Publication[] | undefined> {
+  getPublicationsFilesList(token: Token | undefined): Promise<Publication[] | undefined> {
     return this.getPublicationsList(PUBLICATIONS_FILES_URL, token);
   }
 
-  getPublicationsList(url: string, token: JWT | null): Promise<Publication[] | undefined> {
+  getPublicationsList(url: string, token: Token | undefined): Promise<Publication[] | undefined> {
     return this.get<{ publications: Publication[] }>(url, token).then((data) => (data ? data.publications : void 0));
   }
 
-  getPublication(token: JWT | null, path: string): Promise<Publication | null> {
+  getPublication(token: Token | undefined, path: string): Promise<Publication | null> {
     return this.post(PUBLICATION_GET_URL, { path }, token);
   }
 
-  declinePublication(token: JWT | null, path: string, comment?: string): Promise<ServerActionResponse> {
+  declinePublication(token: Token | undefined, path: string, comment?: string): Promise<ServerActionResponse> {
     return this.postAction(PUBLICATION_REJECT_URL, { path, comment }, token);
   }
 
-  approvePublication(token: JWT | null, path: string): Promise<ServerActionResponse> {
+  approvePublication(token: Token | undefined, path: string): Promise<ServerActionResponse> {
     return this.postAction(PUBLICATION_APPROVE_URL, { path }, token);
   }
 
-  deletePublication(token: JWT | null, path: string): Promise<ServerActionResponse> {
+  deletePublication(token: Token | undefined, path: string): Promise<ServerActionResponse> {
     return this.postAction(PUBLICATION_DELETE_URL, { path }, token);
   }
 }

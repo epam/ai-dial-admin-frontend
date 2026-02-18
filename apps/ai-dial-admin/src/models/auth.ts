@@ -5,6 +5,7 @@ export interface Token extends JWT {
   providerId: string;
   userId: string;
   refreshToken: string | TokenSet;
+  token?: string;
 }
 
 export interface UserSession extends Session {

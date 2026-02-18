@@ -1,8 +1,7 @@
-import { GetTokenParams, JWT, getToken } from 'next-auth/jwt';
+import { Token } from '@/src/models/auth';
+import { GetTokenParams, getToken } from 'next-auth/jwt';
 
-export const getFullToken = async (
-  params: GetTokenParams,
-): Promise<(JWT & { token?: string; jobTitle?: string }) | undefined> => {
+export const getFullToken = async (params: GetTokenParams): Promise<Token | undefined> => {
   const tokenObj = await getToken(params);
 
   if (!tokenObj) return;
