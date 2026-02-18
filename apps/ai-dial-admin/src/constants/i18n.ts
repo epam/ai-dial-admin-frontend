@@ -832,6 +832,8 @@ export enum RollbackI18nKey {
   NotificationErrorDescription = 'Rollback.Notification.ErrorDescription',
   NotificationSuccessTitle = 'Rollback.Notification.SuccessTitle',
   NotificationSuccessDescription = 'Rollback.Notification.SuccessDescription',
+  NotificationPrepareTitle = 'Rollback.Notification.PrepareTitle',
+  NotificationPrepareDescription = 'Rollback.Notification.PrepareDescription',
 
   // Entities
   Model = 'Rollback.Entities.Model',
