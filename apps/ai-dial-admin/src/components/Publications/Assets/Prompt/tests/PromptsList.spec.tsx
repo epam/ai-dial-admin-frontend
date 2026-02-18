@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import { DialPrompt } from '@/src/models/dial/prompt';
-import { PromptPublication } from '@/src/models/dial/publications';
+import { PromptPublication, PublicationPrompt } from '@/src/models/dial/publications';
 import PromptsList from '../PromptsList';
 
 vi.mock('@/src/utils/files/path', () => ({
@@ -26,42 +26,48 @@ vi.mock('../PromptDetails', () => ({
   ),
 }));
 
-const mockPrompts: DialPrompt[] = [
+const mockPrompts: PublicationPrompt[] = [
   {
-    id: 'prompt1',
-    name: 'First Prompt',
-    content: 'First content',
-    version: '1.0.0',
-    type: 'prompt',
-    folderId: 'folder1',
-    path: 'publications/prompts/first/1.0.0.json',
+    prompt: {
+      id: 'prompt1',
+      name: 'First Prompt',
+      content: 'First content',
+      version: '1.0.0',
+      type: 'prompt',
+      folderId: 'folder1',
+      path: 'publications/prompts/first/1.0.0.json',
+    },
   },
   {
-    id: 'prompt2',
-    name: 'Second Prompt',
-    content: 'Second content',
-    version: '2.0.0',
-    type: 'prompt',
-    folderId: 'folder1',
-    path: 'publications/prompts/second/2.0.0.json',
+    prompt: {
+      id: 'prompt2',
+      name: 'Second Prompt',
+      content: 'Second content',
+      version: '2.0.0',
+      type: 'prompt',
+      folderId: 'folder1',
+      path: 'publications/prompts/second/2.0.0.json',
+    },
   },
   {
-    id: 'prompt3',
-    name: 'Third Prompt',
-    content: 'Third content',
-    version: '1.5.0',
-    type: 'prompt',
-    folderId: 'folder1',
-    path: 'publications/prompts/third/1.5.0.json',
+    prompt: {
+      id: 'prompt3',
+      name: 'Third Prompt',
+      content: 'Third content',
+      version: '1.5.0',
+      type: 'prompt',
+      folderId: 'folder1',
+      path: 'publications/prompts/third/1.5.0.json',
+    },
   },
 ];
 
-const createMockPublication = (prompts?: Partial<DialPrompt>[]): PromptPublication => ({
+const createMockPublication = (prompts?: PublicationPrompt[]): PromptPublication => ({
   path: 'publications/test-publication',
   requestName: 'test-request',
   author: 'test@example.com',
   displayAuthor: 'Test Author',
-  createdAt: '2024-01-01',
+  createdAt: '2024-01-01',s
   status: 'pending',
   action: 'add' as any,
   folderId: 'folder1',
@@ -119,7 +125,7 @@ describe('Publications :: PromptsList', () => {
 
     const updatedPublication = onChange.mock.calls[0][0];
     expect(updatedPublication.prompts).toHaveLength(3);
-    expect(updatedPublication.prompts[0].name).toBe('Updated Prompt');
+    expect(updatedPublication.prompts[0].prompt.name).toBe('Updated Prompt');
   });
 
   test('updates path when prompt name or version changes', async () => {
@@ -136,7 +142,7 @@ describe('Publications :: PromptsList', () => {
     );
 
     const updatedPublication = onChange.mock.calls[0][0];
-    expect(updatedPublication.prompts[0].path).toBe('updated/Updated Prompt/1.0.0.json');
+    expect(updatedPublication.prompts[0].prompt.path).toBe('updated/Updated Prompt/1.0.0.json');
   });
 
   test('preserves other prompts when updating one prompt', async () => {
@@ -146,9 +152,9 @@ describe('Publications :: PromptsList', () => {
     await userEvent.click(changeButton);
 
     const updatedPublication = onChange.mock.calls[0][0];
-    expect(updatedPublication.prompts[0].name).toBe('First Prompt');
-    expect(updatedPublication.prompts[1].name).toBe('Updated Prompt');
-    expect(updatedPublication.prompts[2].name).toBe('Third Prompt');
+    expect(updatedPublication.prompts[0].prompt.name).toBe('First Prompt');
+    expect(updatedPublication.prompts[1].prompt.name).toBe('Updated Prompt');
+    expect(updatedPublication.prompts[2].prompt.name).toBe('Third Prompt');
   });
 
   test('removes prompt when onRemove is called', async () => {
@@ -161,8 +167,8 @@ describe('Publications :: PromptsList', () => {
 
     const updatedPublication = onChange.mock.calls[0][0];
     expect(updatedPublication.prompts).toHaveLength(2);
-    expect(updatedPublication.prompts[0].id).toBe('prompt1');
-    expect(updatedPublication.prompts[1].id).toBe('prompt3');
+    expect(updatedPublication.prompts[0].prompt.id).toBe('prompt1');
+    expect(updatedPublication.prompts[1].prompt.id).toBe('prompt3');
   });
 
   test('removes first prompt correctly', async () => {
@@ -173,8 +179,8 @@ describe('Publications :: PromptsList', () => {
 
     const updatedPublication = onChange.mock.calls[0][0];
     expect(updatedPublication.prompts).toHaveLength(2);
-    expect(updatedPublication.prompts[0].id).toBe('prompt2');
-    expect(updatedPublication.prompts[1].id).toBe('prompt3');
+    expect(updatedPublication.prompts[0].prompt.id).toBe('prompt2');
+    expect(updatedPublication.prompts[1].prompt.id).toBe('prompt3');
   });
 
   test('removes last prompt correctly', async () => {
@@ -185,8 +191,8 @@ describe('Publications :: PromptsList', () => {
 
     const updatedPublication = onChange.mock.calls[0][0];
     expect(updatedPublication.prompts).toHaveLength(2);
-    expect(updatedPublication.prompts[0].id).toBe('prompt1');
-    expect(updatedPublication.prompts[1].id).toBe('prompt2');
+    expect(updatedPublication.prompts[0].prompt.id).toBe('prompt1');
+    expect(updatedPublication.prompts[1].prompt.id).toBe('prompt2');
   });
 
   test('removes all prompts one by one', async () => {
@@ -223,8 +229,8 @@ describe('Publications :: PromptsList', () => {
   });
 
   test('handles prompt without path property', async () => {
-    const promptsWithoutPath = [{ ...mockPrompts[0] }];
-    delete (promptsWithoutPath[0] as any).path;
+    const promptsWithoutPath = [{ ...mockPrompts[0], prompt: { ...mockPrompts[0].prompt } }];
+    delete (promptsWithoutPath[0].prompt as any).path;
 
     const publication = createMockPublication(promptsWithoutPath);
     const { onChange } = setup({ publication });
@@ -234,7 +240,7 @@ describe('Publications :: PromptsList', () => {
 
     expect(onChange).toHaveBeenCalled();
     const updatedPublication = onChange.mock.calls[0][0];
-    expect(updatedPublication.prompts[0].path).toBe('updated/Updated Prompt/1.0.0.json');
+    expect(updatedPublication.prompts[0].prompt.path).toBe('updated/Updated Prompt/1.0.0.json');
   });
 
   test('renders with single prompt', () => {
@@ -265,9 +271,9 @@ describe('Publications :: PromptsList', () => {
   });
 
   test('handles prompts with partial data', () => {
-    const partialPrompts = [
-      { id: 'partial1', name: 'Partial Prompt' } as Partial<DialPrompt>,
-      { id: 'partial2', version: '1.0.0' } as Partial<DialPrompt>,
+    const partialPrompts: PublicationPrompt[] = [
+      { prompt: { id: 'partial1', name: 'Partial Prompt' } as Partial<DialPrompt> } as PublicationPrompt,
+      { prompt: { id: 'partial2', version: '1.0.0' } as Partial<DialPrompt> } as PublicationPrompt,
     ];
 
     const publication = createMockPublication(partialPrompts);
