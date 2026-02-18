@@ -28,7 +28,7 @@ const getConfigurationItems = (componentItems: FileComponentItem[], t: (v: strin
 };
 
 const getPrevItems = (componentItems: FileComponentItem[]) => {
-  return componentItems?.map((componentItem) => componentItem?.prev);
+  return componentItems?.map((componentItem) => componentItem?.prev).filter(Boolean);
 };
 
 const getConfigurationTabs = (preview: Record<string, BaseEntity[]>, t: (v: string) => string): TabModel[] => {

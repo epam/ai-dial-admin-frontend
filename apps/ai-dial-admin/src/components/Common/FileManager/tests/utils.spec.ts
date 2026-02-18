@@ -132,5 +132,11 @@ describe('FileManager', () => {
 
       expect(result).toBe(FileManagerI18nKey.CreateFolderValidate);
     });
+
+    test('should return error message for folder names starting with a dot', () => {
+      const result = validateCreateFolder('.hiddenfolder', mockTranslate);
+
+      expect(result).toBe(FileManagerI18nKey.CreateFolderValidateFirstSymbol);
+    });
   });
 });

@@ -180,6 +180,9 @@ export const getEmptyFile = () => {
 export const validateCreateFolder = (name: string, t: (key: string) => string): string | null => {
   if (CREATE_FOLDER_FORBIDDEN_CHARS.test(name)) {
     return t(FileManagerI18nKey.CreateFolderValidate);
+  } else if (name.startsWith('.')) {
+    return t(FileManagerI18nKey.CreateFolderValidateFirstSymbol);
   }
+
   return null;
 };

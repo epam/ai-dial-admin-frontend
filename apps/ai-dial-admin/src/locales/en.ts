@@ -241,12 +241,15 @@ export default {
       InterceptorTemplateWarning: 'This Interceptor Template and all related Interceptors will be deleted permanently.',
       AdapterWarning: 'This Adapter and all related Models will be deleted permanently.',
       ApplicationRunnerWarning: 'This Application Runner and all related Applications will be deleted permanently.',
+      ImageWarning: 'This image and all related containers will be deleted permanently.',
       NoApplications: 'No related Applications',
       NoInterceptors: 'No related Interceptors',
       NoModels: 'No related Models',
+      NoContainers: 'No related Containers',
       RelatedApplications: 'Related Applications',
       RelatedInterceptors: 'Related Interceptors',
       RelatedModels: 'Related Models',
+      RelatedContainers: 'Related Containers',
     },
     Notification: {
       Title: '{entity} deleted successfully',
@@ -1412,5 +1415,6 @@ export default {
       },
     },
     CreateFolderValidate: 'Folder name contains forbidden characters: < > : " / \\ | ? *',
+    CreateFolderValidateFirstSymbol: 'Folder name cannot start with a dot',
   },
 } as const;

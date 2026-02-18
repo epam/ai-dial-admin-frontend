@@ -1,5 +1,5 @@
 'use client';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { ColDef } from 'ag-grid-community';
@@ -38,6 +38,12 @@ const ConfigurationGrid: FC<Props> = ({ selectedTab, tabData, currentState, prev
   const [nextEntity, setNextEntity] = useState<ActivityAuditEntity | undefined>();
   const [action, setAction] = useState<string | undefined>();
 
+  const selectedTabRef = useRef(selectedTab);
+
+  useEffect(() => {
+    selectedTabRef.current = selectedTab;
+  }, [selectedTab]);
+
   const emptyDataTitleI18nkKey = useMemo(() => {
     return getEmptyDataTitleI18nKey(selectedTab);
   }, [selectedTab]);
@@ -53,14 +59,14 @@ const ConfigurationGrid: FC<Props> = ({ selectedTab, tabData, currentState, prev
 
   const onOpenDetailsModal = useCallback(
     (entity?: BaseEntity) => {
-      const prev = getEntityByIdentifier(prevState[selectedTab], entity);
-      const { action, ...next } = getEntityByIdentifier(currentState[selectedTab], entity);
+      const prev = getEntityByIdentifier(prevState[selectedTabRef.current], entity);
+      const { action, ...next } = getEntityByIdentifier(currentState[selectedTabRef.current], entity);
       setPrevEntity(prev);
       setNextEntity(next);
       setAction(action as string);
       setIsModalOpen(true);
     },
-    [currentState, prevState, selectedTab],
+    [currentState, prevState],
   );
 
   const onCloseModal = useCallback(() => {
