@@ -80,27 +80,22 @@ vi.mock('next/image', () => ({
   },
 }));
 
-vi.stubGlobal(
-  'IntersectionObserver',
-  class {
-    observe = vi.fn();
-    unobserve = vi.fn();
-    disconnect = vi.fn();
-    takeRecords = vi.fn();
-    thresholds: any = [];
-    root: any = null;
-    rootMargin: string = '';
-  },
-);
+class MockIntersectionObserver {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
 
-vi.stubGlobal(
-  'ResizeObserver',
-  class {
-    observe = vi.fn();
-    unobserve = vi.fn();
-    disconnect = vi.fn();
-  },
-);
+global.IntersectionObserver = vi.fn(MockIntersectionObserver);
+
+class MockClass {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+
+global.ResizeObserver = vi.fn(MockClass);
+
 global.console = {
   ...console,
   error: vi.fn(),
