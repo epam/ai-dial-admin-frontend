@@ -247,14 +247,13 @@ export enum DeleteI18nKey {
 
   //  No related artefacts
   AdapterWarning = 'DeleteEntity.NoRelatedArtefacts.AdapterWarning',
-  NoModels = 'DeleteEntity.NoRelatedArtefacts.NoModels',
   InterceptorTemplateWarning = 'DeleteEntity.NoRelatedArtefacts.InterceptorTemplateWarning',
-  NoInterceptors = 'DeleteEntity.NoRelatedArtefacts.NoInterceptors',
   ApplicationRunnerWarning = 'DeleteEntity.NoRelatedArtefacts.ApplicationRunnerWarning',
-  NoApplications = 'DeleteEntity.NoRelatedArtefacts.NoApplications',
+  ImageWarning = 'DeleteEntity.NoRelatedArtefacts.ImageWarning',
   RelatedApplications = 'DeleteEntity.NoRelatedArtefacts.RelatedApplications',
   RelatedInterceptors = 'DeleteEntity.NoRelatedArtefacts.RelatedInterceptors',
   RelatedModels = 'DeleteEntity.NoRelatedArtefacts.RelatedModels',
+  RelatedContainers = 'DeleteEntity.NoRelatedArtefacts.RelatedContainers',
 }
 
 export enum DuplicateI18nKey {
@@ -833,6 +832,8 @@ export enum RollbackI18nKey {
   NotificationErrorDescription = 'Rollback.Notification.ErrorDescription',
   NotificationSuccessTitle = 'Rollback.Notification.SuccessTitle',
   NotificationSuccessDescription = 'Rollback.Notification.SuccessDescription',
+  NotificationPrepareTitle = 'Rollback.Notification.PrepareTitle',
+  NotificationPrepareDescription = 'Rollback.Notification.PrepareDescription',
 
   // Entities
   Model = 'Rollback.Entities.Model',
@@ -1390,6 +1391,7 @@ export enum FileManagerI18nKey {
   NameExists = 'FileManager.NameExists',
   ManagePermissions = 'FileManager.ManagePermissions',
   CreateFolderValidate = 'FileManager.CreateFolderValidate',
+  CreateFolderValidateFirstSymbol = 'FileManager.CreateFolderValidateFirstSymbol',
   Preview = 'FileManager.Preview',
 
   // Notifications
