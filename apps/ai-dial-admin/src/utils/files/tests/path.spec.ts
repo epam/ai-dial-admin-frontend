@@ -11,6 +11,7 @@ import {
   getPathSegments,
   isFolder,
   removeTrailingSlash,
+  updatePathWithNameAndVersion,
 } from '@/src/utils/files/path';
 import { describe, expect, test, vi } from 'vitest';
 import * as findFolderChildrenModule from '../folder';
@@ -317,5 +318,64 @@ describe('Utils :: files :: changeFolderName', () => {
   test('Should handle path with only slashes', () => {
     const result = changeFolderName('////', 'newName');
     expect(result).toBe('////');
+  });
+});
+
+describe('Utils :: files :: updatePathWithNameAndVersion', () => {
+  test('Should update path with new name and version', () => {
+    const oldPath =
+      'PqCTwx9SUyFjJexgKjtXf2bvRz41RPtJ1WCJ52fvpQ1sJEhHedpvV7SPqqt7whAdJ3hWqev6mu982RJShLJt3RbxJqWVUdDdrJLymiy89nx9gcoM9c3BxQWyfc5yuugjrmnA3FjHVzF2rY6CyphY6Bwr8/test-pub-prompt__0.0.1';
+    const result = updatePathWithNameAndVersion(oldPath, 'test-pub-prompt_new', '0.0.2');
+    expect(result).toBe(
+      'PqCTwx9SUyFjJexgKjtXf2bvRz41RPtJ1WCJ52fvpQ1sJEhHedpvV7SPqqt7whAdJ3hWqev6mu982RJShLJt3RbxJqWVUdDdrJLymiy89nx9gcoM9c3BxQWyfc5yuugjrmnA3FjHVzF2rY6CyphY6Bwr8/test-pub-prompt_new__0.0.2',
+    );
+  });
+
+  test('Should handle simple path with name and version', () => {
+    const oldPath = 'folder/my-app__1.0.0';
+    const result = updatePathWithNameAndVersion(oldPath, 'my-app-updated', '2.0.0');
+    expect(result).toBe('folder/my-app-updated__2.0.0');
+  });
+
+  test('Should handle nested folder structure', () => {
+    const oldPath = 'root/subfolder/nested/app-name__1.2.3';
+    const result = updatePathWithNameAndVersion(oldPath, 'new-app-name', '2.0.0');
+    expect(result).toBe('root/subfolder/nested/new-app-name__2.0.0');
+  });
+
+  test('Should handle single folder level', () => {
+    const oldPath = 'root/prompt__0.1.0';
+    const result = updatePathWithNameAndVersion(oldPath, 'updated-prompt', '0.2.0');
+    expect(result).toBe('root/updated-prompt__0.2.0');
+  });
+
+  test('Should handle name with underscores', () => {
+    const oldPath = 'folder/my_test_app__1.0.0';
+    const result = updatePathWithNameAndVersion(oldPath, 'my_new_test_app', '1.1.0');
+    expect(result).toBe('folder/my_new_test_app__1.1.0');
+  });
+
+  test('Should handle name with dashes and underscores', () => {
+    const oldPath = 'folder/test-pub-prompt__0.0.1';
+    const result = updatePathWithNameAndVersion(oldPath, 'test-pub-prompt_new', '0.0.2');
+    expect(result).toBe('folder/test-pub-prompt_new__0.0.2');
+  });
+
+  test('Should handle version with multiple digits', () => {
+    const oldPath = 'folder/app__10.20.30';
+    const result = updatePathWithNameAndVersion(oldPath, 'app-v2', '11.21.31');
+    expect(result).toBe('folder/app-v2__11.21.31');
+  });
+
+  test('Should handle version with prerelease info', () => {
+    const oldPath = 'folder/app__1.0.0-beta';
+    const result = updatePathWithNameAndVersion(oldPath, 'app', '1.0.0-rc1');
+    expect(result).toBe('folder/app__1.0.0-rc1');
+  });
+
+  test('Should handle complex hash-like folder structure', () => {
+    const oldPath = 'abc123XYZ456/def789/item-name__1.0.0';
+    const result = updatePathWithNameAndVersion(oldPath, 'new-item', '1.5.0');
+    expect(result).toBe('abc123XYZ456/def789/new-item__1.5.0');
   });
 });

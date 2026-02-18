@@ -5,8 +5,8 @@ import FilesList from '../FilesList';
 describe('FilesList', () => {
   test('renders grid with files', () => {
     const files = [
-      { name: 'file1.txt', path: '/path/file1.txt', extension: 'txt' },
-      { name: 'file2.pdf', path: '/path/file2.pdf', extension: 'pdf' },
+      { file: { name: 'file1.txt', path: '/path/file1.txt', extension: 'txt' } },
+      { file: { name: 'file2.pdf', path: '/path/file2.pdf', extension: 'pdf' } },
     ];
 
     render(<FilesList files={files} action="download" />);

@@ -12,12 +12,20 @@ import { useI18n } from '@/src/locales/client';
 interface Props {
   children?: ReactNode;
   folderName?: string;
+  folderDescription?: string;
   isCollapsed: boolean;
   isAlwaysToggled?: boolean;
   toggleCollapse: () => void;
 }
 
-const RulesItemHeader: FC<Props> = ({ children, folderName, isCollapsed, isAlwaysToggled, toggleCollapse }) => {
+const RulesItemHeader: FC<Props> = ({
+  children,
+  folderName,
+  folderDescription,
+  isCollapsed,
+  isAlwaysToggled,
+  toggleCollapse,
+}) => {
   const t = useI18n();
 
   return (
@@ -36,7 +44,10 @@ const RulesItemHeader: FC<Props> = ({ children, folderName, isCollapsed, isAlway
         ) : (
           <IconChevronDown className="text-secondary" {...BASE_BUTTON_ICON_PROPS} />
         ))}
-      <h3 className={classNames(!isAlwaysToggled && 'mx-2')}>{folderName || t(FoldersI18nKey.Permissions)}</h3>
+      <div className="flex flex-col gap-1">
+        <h3 className={classNames(!isAlwaysToggled && 'mx-2')}>{folderName || t(FoldersI18nKey.Permissions)}</h3>
+        {folderDescription && <span className="tiny text-secondary">{folderDescription}</span>}
+      </div>
       {children}
     </div>
   );
