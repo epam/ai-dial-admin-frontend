@@ -197,24 +197,6 @@ export const getPathError = (path?: string, t?: (str: string) => string, require
   return null;
 };
 
-export const getProbePathError = (path?: string, t?: (str: string) => string, required?: boolean) => {
-  if (!path && required) {
-    return {
-      type: ErrorType.EMPTY,
-      text: t ? t(ErrorI18nKey.RequiredField) : '',
-    };
-  }
-
-  if (!required && path?.trim() && path.startsWith('/')) {
-    return {
-      type: ErrorType.INVALID,
-      text: t ? t(ErrorI18nKey.ProbePathError) : '',
-    };
-  }
-
-  return null;
-};
-
 const endsWithAny = (value: string, suffixes: string[]): boolean => {
   const lower = value.toLowerCase();
   return suffixes.some((s) => lower.endsWith(s.toLowerCase()));
