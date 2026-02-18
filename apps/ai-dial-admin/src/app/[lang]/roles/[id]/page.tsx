@@ -1,10 +1,11 @@
 import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
-import { applicationsApi, keysApi, modelsApi, rolesApi, routesApi, toolSetsApi } from '@/src/app/api/api';
+import { applicationsApi, keysApi, rolesApi, routesApi, toolSetsApi } from '@/src/app/api/api';
 import RolesView from '@/src/components/Roles/View/View';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
+import { getModelsList } from '@/src/app/[lang]/models/actions';
 import { DialApplication } from '@/src/models/dial/application';
 import { DialKey } from '@/src/models/dial/key';
 import { DialModel } from '@/src/models/dial/model';
@@ -33,7 +34,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   try {
     roles = await rolesApi.getRolesList(token);
-    models = await modelsApi.getModelsList(token);
+    models = await getModelsList();
     keys = await keysApi.getKeysList(token);
     applications = await applicationsApi.getApplicationsList(token);
     toolsets = await toolSetsApi.getToolsetList(token);

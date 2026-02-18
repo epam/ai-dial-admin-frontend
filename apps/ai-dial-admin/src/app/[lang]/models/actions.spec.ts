@@ -7,13 +7,15 @@ import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
   createModel,
   getCoreModel,
-  getModels,
+  getModelsListAction,
   getModelsAdapters,
   getModelsTokenizers,
   getModelsTopics,
   removeModel,
   updateCoreModel,
   updateModel,
+  getModelsList,
+  getModel,
 } from './actions';
 import { DialModel } from '@/src/models/dial/model';
 
@@ -55,12 +57,21 @@ describe('Models :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call getModels action', async () => {
+  test('Should call getModelsListAction action', async () => {
     (modelsApi.getModelsListAction as any).mockResolvedValue(RESPONSE_MOCK);
 
-    const result = await getModels();
+    const result = await getModelsListAction();
     expect(getUserToken).toHaveBeenCalled();
     expect(modelsApi.getModelsListAction).toHaveBeenCalledWith(TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getModels action', async () => {
+    (modelsApi.getModelsList as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getModelsList();
+    expect(getUserToken).toHaveBeenCalled();
+    expect(modelsApi.getModelsList).toHaveBeenCalledWith(TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 
@@ -70,6 +81,15 @@ describe('Models :: server actions', () => {
     const result = await getCoreModel('test');
     expect(getUserToken).toHaveBeenCalled();
     expect(modelsApi.getCoreModel).toHaveBeenCalledWith('test', TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getModel action', async () => {
+    (modelsApi.getModel as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getModel('test', 'etag');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(modelsApi.getModel).toHaveBeenCalledWith('test', TOKEN_MOCK, 'etag');
     expect(result).toBe(RESPONSE_MOCK);
   });
 
