@@ -140,8 +140,7 @@ const ImageDeleteConfirmationModal = <T extends Artefact>({
         selectedVersion !== AllVersionValue
           ? existingVersions?.filter((v) => v.version === selectedVersion)
           : existingVersions;
-      entityKeys = versionsForRemove?.map((v) => v.id) || []; // CHANGED
-      //? [getEntityPath(view, entity, true, selectedVersion)] : existingVersions?.map((version) => getEntityPath(view, entity, true, version)) || [];
+      entityKeys = versionsForRemove?.map((v) => v.id) || [];
     }
     const promises = entityKeys.map((entityKey) => getReqRef.current(onRemoveEntity, entityKey, etag));
 
