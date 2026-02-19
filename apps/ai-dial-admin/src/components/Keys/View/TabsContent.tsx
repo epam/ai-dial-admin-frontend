@@ -5,8 +5,9 @@ import { FC, useCallback, useMemo } from 'react';
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
 import { getRelevantRolesForKey } from '@/src/components/AddEntitiesTab/utils';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
+import ValidityStatusLabel from '@/src/components/Common/ValidityStatus/ValidityStatusLabel';
 import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
-import ValidityStatus from '@/src/components/EntityView/Status/ValidityStatus';
+import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
 import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, EntityFieldsI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -18,7 +19,6 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import { cloneDeep } from 'lodash';
-import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
 import KeyProperties from './Properties/Properties';
 
 interface Props {
@@ -55,9 +55,7 @@ const TabsContent: FC<Props> = ({
           label={t(EntityFieldsI18nKey.expiresAt)}
           text={formatDateTimeToLocalString(selectedKey.expiresAt)}
         />
-        <LabelledText label={t(EntityFieldsI18nKey.status)}>
-          <ValidityStatus validityState={selectedKey.validityState} />
-        </LabelledText>
+        <ValidityStatusLabel {...selectedKey.validityState} />
       </>
     );
   }, [selectedKey.keyGeneratedAt, selectedKey.expiresAt, selectedKey.validityState, t]);

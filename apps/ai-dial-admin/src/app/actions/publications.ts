@@ -1,10 +1,10 @@
 'use server';
-import { ServerActionResponse } from '@/src/models/server-action';
+import { cookies, headers } from 'next/headers';
+
 import { publicationsApi } from '@/src/app/api/api';
+import { ServerActionResponse } from '@/src/models/server-action';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { cookies, headers } from 'next/headers';
-import { Publication } from '@/src/models/dial/publications';
 
 export async function declinePublication(path: string, comment = ''): Promise<ServerActionResponse> {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -21,7 +21,7 @@ export async function deletePublication(path: string): Promise<ServerActionRespo
   return publicationsApi.deletePublication(token, path);
 }
 
-export async function updatePublication(publication: Publication): Promise<ServerActionResponse> {
+export async function updatePublication(publication: FormData): Promise<ServerActionResponse> {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return publicationsApi.updatePublication(token, publication);
 }

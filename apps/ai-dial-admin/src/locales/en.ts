@@ -869,9 +869,10 @@ export default {
     },
 
     Notification: {
+      PrepareTitle: 'Preparing {entity} rollback',
+      PrepareDescription: '{entity} rollback is in progress. You will be notified when it is complete.',
       ErrorTitle: '{entity} rollback failed',
       ErrorDescription: 'Error occurred while reverting, please try again',
-
       SuccessTitle: '{entity} rolled back successfully',
       SuccessDescription: 'Changes have been delivered to the system',
     },
@@ -1197,7 +1198,7 @@ export default {
     PortError: 'Port must be between 1 and 65535',
     MemoryError: 'Memory should be greater than 1',
     GPUError: 'GPU should be greater or equal to 0',
-    PositiveNumber: 'Value should be greater or equal to 0',
+    AdvancedTimingsError: 'Value must be between 0 and {max}',
   },
   Source: {
     OpenTemplate: 'Open template',
@@ -1367,6 +1368,14 @@ export default {
     GlobalWhitelist: 'Global domain whitelist',
     SpecificWhitelist: '{type} domain whitelist',
     GlobalFirewall: 'Global Firewall',
+    WhitelistPolicyLabel: 'Domain access policy',
+    WhitelistPolicyAll: 'All domains',
+    WhitelistPolicyAllCaption: 'Allows access to all domains. Reduces security.',
+    WhitelistPolicyAllWarning: 'All domains option enabled.',
+    WhitelistPolicyAllWarningDescription:
+      'Allowing unrestricted network access may expose sensitive information and user data. Use this option only for trusted {type}.',
+    WhitelistPolicyCustom: 'Specific domains (recommended)',
+    WhitelistPolicyCustomCaption: 'Allow network access only to selected domains.',
     AddDomain: 'Add domain',
   },
   TestSuites: {

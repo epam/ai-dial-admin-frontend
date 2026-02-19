@@ -6,7 +6,7 @@ import ApplicationAssetProperties from '@/src/components/Assets/Apps/Properties'
 import FoldersStorageLabel from '@/src/components/Assets/Header/FolderStorage';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
-import ValidityStatus from '@/src/components/EntityView/Status/ValidityStatus';
+import ValidityStatus from '@/src/components/Common/ValidityStatus/ValidityStatus';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
@@ -28,7 +28,7 @@ const TabContent: FC<Props> = ({ applicationSchemes, names, view, selectedApp, o
       <>
         {view === ApplicationRoute.AssetsApplications ? <FoldersStorageLabel asset={selectedApp as AssetApp} /> : null}
         <LabelledText label={t(EntityFieldsI18nKey.status)}>
-          <ValidityStatus validityState={selectedApp.validityState} />
+          <ValidityStatus valid={selectedApp.validityState?.valid} message={selectedApp.validityState?.message} />
         </LabelledText>
       </>
     );

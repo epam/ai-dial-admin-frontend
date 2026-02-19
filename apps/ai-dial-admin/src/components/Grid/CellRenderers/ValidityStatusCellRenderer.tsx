@@ -2,10 +2,10 @@
 
 import { ICellRendererParams } from 'ag-grid-community';
 
-import ValidityStatus from '@/src/components/EntityView/Status/ValidityStatus';
+import ValidityStatus from '@/src/components/Common/ValidityStatus/ValidityStatus';
 
 const ValidityStatusCellRenderer = (params: ICellRendererParams) => {
-  return <ValidityStatus validityState={params.data.validityState} isHideHint={true} />;
+  return <ValidityStatus {...params.data.validityState} isHideHint={true} />;
 };
 
 export default ValidityStatusCellRenderer;

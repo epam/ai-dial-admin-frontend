@@ -5,7 +5,6 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { approvePublication, declinePublication, deletePublication, updatePublication } from '../publications';
-import { Publication } from '@/src/models/dial/publications';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -48,9 +47,12 @@ describe('Publications :: server actions', () => {
   test('Should call updatePublication action', async () => {
     (publicationsApi.updatePublication as any).mockResolvedValue(RESPONSE_MOCK);
 
-    const result = await updatePublication({ folderId: 'path' } as Publication);
+    const formData = new FormData();
+    formData.append('publication', new Blob([JSON.stringify({ folderId: 'path' })], { type: 'application/json' }));
+
+    const result = await updatePublication(formData);
     expect(getUserToken).toHaveBeenCalled();
-    expect(publicationsApi.updatePublication).toHaveBeenCalledWith(TOKEN_MOCK, { folderId: 'path' });
+    expect(publicationsApi.updatePublication).toHaveBeenCalledWith(TOKEN_MOCK, formData);
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

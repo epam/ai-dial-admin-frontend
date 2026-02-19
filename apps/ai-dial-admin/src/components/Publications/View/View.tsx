@@ -34,6 +34,7 @@ import { EntityViewTab, getPublicationViewTabs } from '@/src/utils/tabs/utils';
 import { addTrailingSlash } from '@/src/utils/url';
 import TabsContent from './TabsContent';
 import DiscardModal from '@/src/components//EntityView/Modals/Discard/Discard';
+import { getFormDataForPublication } from './utils';
 
 interface Props<T> {
   view: ApplicationRoute;
@@ -135,7 +136,8 @@ const PublicationView = <T extends Publication>({ view, publication, application
   }, []);
 
   const onSave = useCallback(() => {
-    const req = getReqRef.current(updatePublication, selectedPublication);
+    const body = getFormDataForPublication(selectedPublication);
+    const req = getReqRef.current(updatePublication, body);
     req.then((res) => {
       if (res.success) {
         dispatch({ type: ValidationActionType.Reset });
