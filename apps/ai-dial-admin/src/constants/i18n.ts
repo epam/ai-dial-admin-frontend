@@ -904,7 +904,7 @@ export enum ErrorI18nKey {
   PortError = 'Error.PortError',
   MemoryError = 'Error.MemoryError',
   GPUError = 'Error.GPUError',
-  PositiveNumber = 'Error.PositiveNumber',
+  AdvancedTimingsError = 'Error.AdvancedTimingsError',
 }
 
 export enum SourceI18nKey {
