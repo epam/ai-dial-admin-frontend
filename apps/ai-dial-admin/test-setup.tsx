@@ -35,6 +35,7 @@ vi.mock('@/src/context/NotificationContext', () => ({
 
 vi.mock('@/src/context/assets/FileFolderContext', () => ({
   useFileFolder: vi.fn(),
+  FileFolderProvider: ({ children }: any) => <div>{children}</div>,
 }));
 
 vi.mock('@/src/context/ThemeContext', () => ({ useTheme: createFnContext }));

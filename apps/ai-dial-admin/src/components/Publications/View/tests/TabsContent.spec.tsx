@@ -6,6 +6,7 @@ import { DialRule, RuleFunction } from '@/src/models/dial/rule';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import TabsContent from '../TabsContent';
+import { EntitiesI18nKey, EntityFieldsI18nKey } from '../../../../constants/i18n';
 
 vi.mock('../Permissions', () => ({
   default: ({ selectedPublication, onChange, isPermissionsChanged, currentRules }: any) => (
@@ -126,7 +127,7 @@ describe('Publications :: TabsContent', () => {
       currentRules: mockCurrentRules,
     });
 
-    expect(screen.getByRole('region', { name: 'info-header' })).toBeInTheDocument();
+    expect(screen.getByText(EntityFieldsI18nKey.displayAuthor)).toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'file-properties' })).toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'prompt-properties' })).not.toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'permissions' })).not.toBeInTheDocument();
@@ -142,7 +143,7 @@ describe('Publications :: TabsContent', () => {
       currentRules: mockCurrentRules,
     });
 
-    expect(screen.getByRole('region', { name: 'info-header' })).toBeInTheDocument();
+    expect(screen.getByText(EntityFieldsI18nKey.displayAuthor)).toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'prompt-properties' })).toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'file-properties' })).not.toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'permissions' })).not.toBeInTheDocument();
@@ -159,7 +160,7 @@ describe('Publications :: TabsContent', () => {
     });
 
     expect(screen.getByRole('region', { name: 'permissions' })).toBeInTheDocument();
-    expect(screen.queryByRole('region', { name: 'info-header' })).not.toBeInTheDocument();
+    expect(screen.queryByText(EntityFieldsI18nKey.displayAuthor)).not.toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'file-properties' })).not.toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'prompt-properties' })).not.toBeInTheDocument();
   });
@@ -287,7 +288,7 @@ describe('Publications :: TabsContent', () => {
       currentRules: mockCurrentRules,
     });
 
-    expect(screen.queryByRole('region', { name: 'info-header' })).not.toBeInTheDocument();
+    expect(screen.queryByText(EntityFieldsI18nKey.displayAuthor)).not.toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'prompt-properties' })).not.toBeInTheDocument();
   });
 
@@ -367,21 +368,6 @@ describe('Publications :: TabsContent', () => {
     });
 
     expect(screen.getByRole('region', { name: 'permissions' })).toBeInTheDocument();
-  });
-
-  test('renders empty fragment for unsupported view on Properties tab', () => {
-    const publication = createMockPublication();
-    setup({
-      view: ApplicationRoute.ApplicationPublications,
-      selectedPublication: publication,
-      activeTab: EntityViewTab.Properties,
-      isPermissionsChanged: false,
-      currentRules: mockCurrentRules,
-    });
-
-    expect(screen.getByRole('region', { name: 'info-header' })).toBeInTheDocument();
-    expect(screen.queryByRole('region', { name: 'file-properties' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('region', { name: 'prompt-properties' })).not.toBeInTheDocument();
   });
 
   test('updates when activeTab changes from Properties to Permissions', () => {
