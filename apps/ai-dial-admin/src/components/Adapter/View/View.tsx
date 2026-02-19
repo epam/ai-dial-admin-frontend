@@ -29,6 +29,7 @@ import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getAdapterTabs } from '@/src/utils/tabs/utils';
 import TabsContent from './TabsContent';
+import DiscardModal from '@/src/components//EntityView/Modals/Discard/Discard';
 
 interface Props {
   etag: string;
@@ -50,6 +51,7 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
   const [isChanged, setIsChanged] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -87,13 +89,22 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
     });
   }, [selectedAdapter, etag, showNotification, t, router]);
 
+  const onTryToDiscard = useCallback(() => {
+    setIsDiscardModalOpen(true);
+  }, []);
+
+  const onDiscardModalConfirm = useCallback(() => {
+    onDiscard();
+    setIsDiscardModalOpen(false);
+  }, [onDiscard]);
+
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <SimpleEntityHeader
         view={ApplicationRoute.Adapters}
         entity={selectedAdapter}
         isChanged={isChanged}
-        onDiscard={onDiscard}
+        onDiscard={onTryToDiscard}
         onSave={onSave}
         tabs={tabs}
         jsonConfiguration={jsonConfiguration}
@@ -137,6 +148,13 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
                 />,
                 document.body,
               )}
+            {isDiscardModalOpen && (
+              <DiscardModal
+                onConfirm={onDiscardModalConfirm}
+                onClose={() => setIsDiscardModalOpen(false)}
+                onCancel={() => setIsDiscardModalOpen(false)}
+              />
+            )}
           </>
         )}
       </div>

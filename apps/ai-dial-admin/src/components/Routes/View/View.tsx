@@ -9,6 +9,8 @@ import { getCoreRoute, removeRoute, updateCoreRoute, updateRoute } from '@/src/a
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import { ModalType } from '@/src/components/EntityView/Modals/constants';
+import EntityViewModals from '@/src/components/EntityView/Modals/EntityViewModals';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -42,6 +44,8 @@ const RouteView: FC<Props> = ({ originalRoute, etag, names, roles }) => {
   const [selectedRoute, setSelectedRoute] = useState(cloneDeep(originalRoute));
   const [isChanged, setIsChanged] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalType, setModalType] = useState<ModalType>();
 
   const [selectedFormat, setSelectedFormat] = useState(ExportFormat.ADMIN);
   const [coreRoute, setCoreRoute] = useState<DialRoute | null>(null);
@@ -112,37 +116,76 @@ const RouteView: FC<Props> = ({ originalRoute, etag, names, roles }) => {
     });
   }, [selectedFormat, selectedRoute, originalRoute.name, etag, dispatch, showNotification, t, router]);
 
+  const onModalClose = useCallback(() => {
+    setIsModalOpen(false);
+    setModalType(void 0);
+  }, []);
+
+  const onModalOpen = useCallback((modalType: ModalType) => {
+    setModalType(modalType);
+    setIsModalOpen(true);
+  }, []);
+
+  const onModalCancel = useCallback(
+    (type: ModalType) => {
+      if (type === ModalType.discard) {
+        onModalClose();
+      }
+    },
+    [onModalClose],
+  );
+
+  const onModalConfirm = useCallback(
+    (type: ModalType) => {
+      if (type === ModalType.discard) {
+        onDiscard();
+        onModalClose();
+      }
+    },
+    [onDiscard, onModalClose],
+  );
+
+  const onTryToDiscard = useCallback(() => {
+    onModalOpen(ModalType.discard);
+  }, [onModalOpen]);
+
   return (
-    <>
-      <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-        <SimpleEntityHeader
-          view={ApplicationRoute.Routes}
-          entity={selectedRoute}
-          isChanged={isChanged}
-          onDiscard={onDiscard}
-          onSave={onSaveRoute}
-          tabs={tabs}
-          jsonConfiguration={jsonConfiguration}
-          activeTab={activeTab}
-          onChangeActiveTab={setActiveTab}
-          onRemove={removeRoute}
-        />
-        <div className="flex-1 overflow-auto min-h-0">
-          {isEditorEnabled ? (
-            <EntityJsonEditor entity={selectedRoute} setSelectedEntity={setSelectedRoute} setIsChanged={setIsChanged} />
-          ) : (
-            <TabsContent
-              selectedFormat={selectedFormat}
-              activeTab={activeTab}
-              route={selectedRoute}
-              onChangeRoute={setSelectedRoute}
-              roles={roles}
-              routeNames={names}
-            />
-          )}
-        </div>
+    <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
+      <SimpleEntityHeader
+        view={ApplicationRoute.Routes}
+        entity={selectedRoute}
+        isChanged={isChanged}
+        onDiscard={onTryToDiscard}
+        onSave={onSaveRoute}
+        tabs={tabs}
+        jsonConfiguration={jsonConfiguration}
+        activeTab={activeTab}
+        onChangeActiveTab={setActiveTab}
+        onRemove={removeRoute}
+      />
+      <div className="flex-1 overflow-auto min-h-0">
+        {isEditorEnabled ? (
+          <EntityJsonEditor entity={selectedRoute} setSelectedEntity={setSelectedRoute} setIsChanged={setIsChanged} />
+        ) : (
+          <TabsContent
+            selectedFormat={selectedFormat}
+            activeTab={activeTab}
+            route={selectedRoute}
+            onChangeRoute={setSelectedRoute}
+            roles={roles}
+            routeNames={names}
+          />
+        )}
       </div>
-    </>
+
+      <EntityViewModals
+        isModalOpen={isModalOpen}
+        modalType={modalType}
+        handleConfirm={onModalConfirm}
+        handleClose={onModalClose}
+        handleCancel={onModalCancel}
+      />
+    </div>
   );
 };
 

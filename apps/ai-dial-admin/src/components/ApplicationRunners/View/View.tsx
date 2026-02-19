@@ -36,6 +36,7 @@ import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getAppRunnerTabs } from '@/src/utils/tabs/utils';
 import TabsContent from './TabsContent';
+import DiscardModal from '@/src/components//EntityView/Modals/Discard/Discard';
 
 interface Props {
   etag: string;
@@ -71,6 +72,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
   const [coreRunner, setCoreRunner] = useState<DialApplicationScheme | null>(null);
   const [isCreateAppModalOpen, setIsCreateAppModalOpen] = useState(false);
   const [isCreateAssetAppModalOpen, setIsCreateAssetAppModalOpen] = useState(false);
+  const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -139,13 +141,22 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
     });
   }, [selectedFormat, selectedRunner, originalScheme.$id, etag, dispatch, showNotification, t, router]);
 
+  const onTryToDiscard = useCallback(() => {
+    setIsDiscardModalOpen(true);
+  }, []);
+
+  const onDiscardModalConfirm = useCallback(() => {
+    onDiscard();
+    setIsDiscardModalOpen(false);
+  }, [onDiscard]);
+
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <SimpleEntityHeader
         view={ApplicationRoute.ApplicationRunners}
         entity={selectedRunner}
         isChanged={isChanged}
-        onDiscard={onDiscard}
+        onDiscard={onTryToDiscard}
         onSave={onSave}
         tabs={tabs}
         jsonConfiguration={jsonConfiguration}
@@ -198,6 +209,13 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
             />,
             document.body,
           )}
+        {isDiscardModalOpen && (
+          <DiscardModal
+            onConfirm={onDiscardModalConfirm}
+            onClose={() => setIsDiscardModalOpen(false)}
+            onCancel={() => setIsDiscardModalOpen(false)}
+          />
+        )}
       </div>
     </div>
   );
