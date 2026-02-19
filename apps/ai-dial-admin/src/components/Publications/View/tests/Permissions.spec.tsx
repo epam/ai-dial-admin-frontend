@@ -11,10 +11,6 @@ vi.mock('react-dom', () => ({
   createPortal: (node: any) => node,
 }));
 
-vi.mock('@/src/locales/client', () => ({
-  useI18n: () => (key: string) => key,
-}));
-
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   AlertVariant: {
     Warning: 'warning',

@@ -3,14 +3,6 @@ import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 import PromptProperties from '../PromptProperties';
 import { useFileFolder } from '@/src/context/assets/FileFolderContext';
 
-vi.mock('@/src/locales/client', () => ({
-  useI18n: () => (k: string) => k,
-}));
-
-vi.mock('@/src/context/assets/FileFolderContext', () => ({
-  useFileFolder: vi.fn(),
-}));
-
 vi.mock('../BaseProperties', () => ({
   default: () => <div data-testid="base-properties">Base Properties</div>,
 }));

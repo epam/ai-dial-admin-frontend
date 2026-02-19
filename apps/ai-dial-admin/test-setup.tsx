@@ -33,6 +33,10 @@ vi.mock('@/src/context/NotificationContext', () => ({
   useNotification: () => ({ showNotification: vi.fn() }),
 }));
 
+vi.mock('@/src/context/assets/FileFolderContext', () => ({
+  useFileFolder: vi.fn(),
+}));
+
 vi.mock('@/src/context/ThemeContext', () => ({ useTheme: createFnContext }));
 vi.mock('@/src/context/RuleFolderProvider', () => ({ useRuleFolder: createFnContext }));
 vi.mock('@/src/context/assets/PromptFolderContext', () => ({ usePromptFolder: createFnContext }));
@@ -89,6 +93,28 @@ class ResizeObserverMock {
 }
 
 global.ResizeObserver = ResizeObserverMock as unknown as typeof ResizeObserver;
+
+// ---------------- IntersectionObserver ----------------
+let lastIntersectionObserverInstance: IntersectionObserverMock | null = null;
+
+class IntersectionObserverMock {
+  callback: IntersectionObserverCallback;
+
+  constructor(callback: IntersectionObserverCallback) {
+    this.callback = callback;
+    lastIntersectionObserverInstance = this;
+  }
+
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+
+  trigger(entries: IntersectionObserverEntry[]) {
+    this.callback(entries, this as unknown as IntersectionObserver);
+  }
+}
+
+global.IntersectionObserver = IntersectionObserverMock as unknown as typeof IntersectionObserver;
 
 // ------------------ Cleanup after each test ------------------
 afterEach(() => cleanup());

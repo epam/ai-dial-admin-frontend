@@ -53,10 +53,6 @@ vi.mock('@tabler/icons-react', () => ({
   IconTrashX: (props: any) => <span data-testid="trash-icon" {...props} />,
 }));
 
-vi.mock('@/src/locales/client', () => ({
-  useI18n: () => (key: string) => key,
-}));
-
 const mockPrompt: DialPrompt = {
   name: 'Test Prompt',
   content: 'Test content',

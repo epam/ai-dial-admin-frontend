@@ -5,10 +5,6 @@ import userEvent from '@testing-library/user-event';
 import VersionsSelect from './VersionsSelect';
 import { ImageVersion } from '@/src/models/deployments/images';
 
-vi.mock('@/src/locales/client', () => ({
-  useI18n: () => (key: string) => key,
-}));
-
 vi.mock('@/src/utils/deployments/images', () => ({
   getVersionsList: (versions: any[]) => versions.map((v: any) => ({ id: v.id, label: v.name })),
 }));

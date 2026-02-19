@@ -51,10 +51,6 @@ vi.mock('@/src/components/Publications/Properties/PromptProperties', () => ({
   ),
 }));
 
-vi.mock('@/src/context/assets/FileFolderContext', () => ({
-  FileFolderProvider: ({ children }: any) => <div data-testid="file-folder-provider">{children}</div>,
-}));
-
 const mockRules: DialRule[] = [
   {
     source: 'role',

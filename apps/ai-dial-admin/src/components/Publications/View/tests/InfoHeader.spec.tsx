@@ -5,10 +5,6 @@ import { ActionType, Publication } from '@/src/models/dial/publications';
 import { ApplicationRoute } from '@/src/types/routes';
 import PublicationInfoHeader from '../InfoHeader';
 
-vi.mock('@/src/locales/client', () => ({
-  useI18n: () => (key: string) => key,
-}));
-
 vi.mock('@/src/utils/formatting/date', () => ({
   formatDateTimeToLocalString: vi.fn((value?: string | number) => {
     if (!value) return '';
