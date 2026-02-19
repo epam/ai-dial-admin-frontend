@@ -9,11 +9,18 @@ export interface TestSuite {
   createdAt?: string;
   updatedAt?: string;
   valid?: boolean;
-  validationWarnings?: string[];
+  validationWarnings?: ValidationWarning[];
 
   deploymentRef?: TestSuiteDeploymentRef;
   endpointRef?: TestSuiteEndpointRef;
   requestTemplate?: TestSuiteRequestTemplate;
+}
+
+export interface ValidationWarning {
+  code: string;
+  message: string;
+  path: string;
+  fieldName: string;
 }
 
 export interface TestSuiteDeploymentRef {
