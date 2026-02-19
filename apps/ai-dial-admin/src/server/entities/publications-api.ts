@@ -40,8 +40,8 @@ export class PublicationsApi extends BaseApi {
     return this.post(PUBLICATION_GET_URL, { path }, token);
   }
 
-  updatePublication(token: JWT | null, publication: Publication): Promise<ServerActionResponse> {
-    return this.postAction(PUBLICATION_UPDATE_URL, publication, token);
+  updatePublication(token: JWT | null, publication: FormData): Promise<ServerActionResponse> {
+    return this.postFiles(PUBLICATION_UPDATE_URL, publication, token);
   }
 
   declinePublication(token: JWT | null, path: string, comment?: string): Promise<ServerActionResponse> {
