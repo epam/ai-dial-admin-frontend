@@ -13,7 +13,7 @@ describe('getAuthorizationHeader', () => {
   });
 
   test('returns authorization header if token is present', () => {
-    const token = { access_token: 'abc123' };
+    const token = { token: 'abc123' };
     expect(getAuthorizationHeader(token as any)).toEqual({ authorization: 'Bearer abc123' });
   });
 
@@ -32,7 +32,7 @@ describe('getApiHeaders', () => {
   });
 
   test('returns headers with authorization if token is present', () => {
-    const token = { access_token: 'xyz789' };
+    const token = { token: 'xyz789' };
     const headers = getApiHeaders(token as any);
     expect(headers['Content-Type']).toBe(APPLICATION_JSON_TYPE);
     expect(headers['Accept']).toBe(APPLICATION_JSON_TYPE);
