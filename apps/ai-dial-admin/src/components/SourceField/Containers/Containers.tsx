@@ -68,6 +68,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
         ...entity,
         endpoint: '',
         configurationEndpoint: '',
+        baseEndpoint: '',
         source: {
           ...entity.source,
           $type: entity.source?.$type || SOURCE_TYPE.CONTAINER,
@@ -87,9 +88,11 @@ const Containers = <T extends DialInterceptor | DialModel>({
     const route =
       view === ApplicationRoute.Models
         ? ApplicationRoute.ModelServings
-        : view === ApplicationRoute.Interceptors
-          ? ApplicationRoute.InterceptorContainers
-          : ApplicationRoute.McpContainers;
+        : view === ApplicationRoute.Adapters
+          ? ApplicationRoute.AdapterContainers
+          : view === ApplicationRoute.Interceptors
+            ? ApplicationRoute.InterceptorContainers
+            : ApplicationRoute.McpContainers;
     onOpenInNewTab(route, selectedContainer);
   }, [selectedContainer, view]);
 

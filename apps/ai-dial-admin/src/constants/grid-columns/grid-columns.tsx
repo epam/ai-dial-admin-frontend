@@ -63,6 +63,13 @@ export const BASE_COLUMNS_WITH_TOPICS: ColDef[] = [...BASE_COLUMNS, TOPICS_COLUM
 
 export const DEPENDENCIES_COLUMNS = [DISPLAY_NAME_COLUMN, VERSION_COLUMN, DESCRIPTION_COLUMN, NAME_COLUMN];
 
+export const ADAPTER_COLUMNS = (t: (str: string) => string): ColDef[] => [
+  ...BASE_COLUMNS,
+  TOPICS_COLUMN,
+  ...SOURCE_FIELD_COLUMNS(t, ApplicationRoute.Adapters),
+  UPDATED_AT_COLUMN,
+];
+
 export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   DISPLAY_NAME_COLUMN_WITH_SORT,
   DISPLAY_VERSION_COLUMN,

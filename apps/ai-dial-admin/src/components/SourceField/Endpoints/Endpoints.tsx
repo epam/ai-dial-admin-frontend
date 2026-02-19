@@ -1,11 +1,14 @@
 import { ApplicationRoute } from '@/src/types/routes';
-import ModelEndpoint from '@/src/components/SourceField/Endpoints/ModelEndpoint';
 import { DialModel } from '@/src/models/dial/model';
-import ToolsetEndpoint from '@/src/components/SourceField/Endpoints/ToolsetEndpoint';
 import { Toolset } from '@/src/models/dial/toolset';
-import InterceptorEndpoint from '@/src/components/SourceField/Endpoints/InterceptorEndpoint';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { SOURCE_TYPE } from '../types';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
+import { DialAdapter } from '@/src/models/dial/adapter';
+
+import ModelEndpoint from '@/src/components/SourceField/Endpoints/ModelEndpoint';
+import ToolsetEndpoint from '@/src/components/SourceField/Endpoints/ToolsetEndpoint';
+import AdapterEndpoint from '@/src/components/SourceField/Endpoints/AdapterEndpoint';
+import InterceptorEndpoint from '@/src/components/SourceField/Endpoints/InterceptorEndpoint';
 
 interface Props<T> {
   entity: T;
@@ -39,6 +42,14 @@ const Endpoints = <T extends object>({ entity, onChange, view, isModal, prefix }
         <InterceptorEndpoint
           entity={entity}
           onChange={onChange as (entity: DialInterceptor) => void}
+          prefix={prefix}
+          isModal={isModal}
+        />
+      )}
+      {view === ApplicationRoute.Adapters && (
+        <AdapterEndpoint
+          entity={entity}
+          onChange={onChange as (entity: DialAdapter) => void}
           prefix={prefix}
           isModal={isModal}
         />
