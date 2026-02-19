@@ -110,17 +110,16 @@ const Endpoint: FC<Props> = ({ container, setContainer, disabled }) => {
     });
     // Clear up
     return () => {
-      if (container.probeProperties?.probe?.$type === PROBE_TYPE.HTTP_GET) {
-        dispatch({
-          type: ValidationActionType.SetField,
-          field: 'path',
-          isValid: !getPathError(container.probeProperties?.probe?.path as string, t, true),
-        });
-      }
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'path',
+        isValid: true,
+      });
+
       dispatch({
         type: ValidationActionType.SetField,
         field: 'port',
-        isValid: !getPortError(container.probeProperties?.probe?.port as number, t, true),
+        isValid: true,
       });
     };
   }, [
