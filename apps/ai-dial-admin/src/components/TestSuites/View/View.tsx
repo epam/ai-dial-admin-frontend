@@ -116,6 +116,7 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
             label={t(ButtonsI18nKey.Run)}
             iconBefore={<IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} />}
             onClick={onStartRunTestSuite}
+            disabled={!selectedTestSuite.valid}
           />
         </SimpleEntityHeader>
 
