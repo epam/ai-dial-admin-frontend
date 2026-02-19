@@ -22,12 +22,13 @@ import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 import { getErrorNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { addTrailingSlash } from '@/src/utils/url';
+import { getContainerRoute } from '@/src/components/SourceField/utils';
 
 interface Props<T> {
   entity: T;
   onChange: (entity: T) => void;
   getContainers: () => Promise<ServerActionResponse<Container[]>>;
-  view?: ApplicationRoute;
+  view: ApplicationRoute;
   isModal?: boolean;
   errorText?: string;
 }
@@ -85,15 +86,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
   );
 
   const openContainer = useCallback(() => {
-    const route =
-      view === ApplicationRoute.Models
-        ? ApplicationRoute.ModelServings
-        : view === ApplicationRoute.Adapters
-          ? ApplicationRoute.AdapterContainers
-          : view === ApplicationRoute.Interceptors
-            ? ApplicationRoute.InterceptorContainers
-            : ApplicationRoute.McpContainers;
-    onOpenInNewTab(route, selectedContainer);
+    onOpenInNewTab(getContainerRoute(view), selectedContainer);
   }, [selectedContainer, view]);
 
   useEffect(() => {

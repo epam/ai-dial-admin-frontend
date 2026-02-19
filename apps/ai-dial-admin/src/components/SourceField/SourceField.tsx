@@ -31,7 +31,7 @@ interface Props<T> {
   elementId: string;
   fieldTitle?: string;
   optional?: boolean;
-  view?: ApplicationRoute;
+  view: ApplicationRoute;
   adapters?: DialAdapter[];
   isModal?: boolean;
 }
