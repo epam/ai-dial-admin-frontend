@@ -61,6 +61,9 @@ export const getTranslatedDeploymentType = (route: ApplicationRoute, t: (key: st
   if (route === ApplicationRoute.ModelServings) {
     return t(EntitiesI18nKey.Serving);
   }
+  if (route === ApplicationRoute.Images) {
+    return t(ImagesI18nKey.Image);
+  }
   return t(EntitiesI18nKey.Container);
 };
 

@@ -4,6 +4,7 @@ import { TabsI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
+import { ALLOW_ALL_DOMAINS } from '@/src/components/Deployments/Common/Whitelists/Whitelists';
 
 export enum EntityViewTab {
   Properties = 'Properties',
@@ -198,9 +199,10 @@ export const eventsTab = (t: (key: string) => string) => ({
   label: t(TabsI18nKey.Events),
 });
 
-export const firewallTab = (t: (key: string) => string) => ({
+export const firewallTab = (t: (key: string) => string, allAllowed: boolean) => ({
   id: EntityViewTab.Firewall,
   label: t(TabsI18nKey.Firewall),
+  warning: allAllowed,
 });
 
 export const relatedContainersTab = (t: (key: string) => string, status?: IMAGE_STATUS) => ({
@@ -338,11 +340,12 @@ export const getDeploymentsViewTabs = (
   route: ApplicationRoute,
   t: (key: string) => string,
   status?: CONTAINER_STATUS | IMAGE_STATUS,
+  allowedWhitelist?: string[],
 ): TabModel[] => {
   if (route === ApplicationRoute.Images) {
     return [
       propertiesTab(t),
-      firewallTab(t),
+      firewallTab(t, !!allowedWhitelist?.includes(ALLOW_ALL_DOMAINS)),
       relatedContainersTab(t, status as IMAGE_STATUS),
       installationLogTab(t, status as IMAGE_STATUS),
     ];
@@ -350,7 +353,7 @@ export const getDeploymentsViewTabs = (
   if (route === ApplicationRoute.McpContainers) {
     return [
       propertiesTab(t),
-      firewallTab(t),
+      firewallTab(t, !!allowedWhitelist?.includes(ALLOW_ALL_DOMAINS)),
       deploymentsToolsTab(t, status as CONTAINER_STATUS),
       resourcesTab(t, status as CONTAINER_STATUS),
       promptsTab(t, status as CONTAINER_STATUS),
@@ -358,7 +361,12 @@ export const getDeploymentsViewTabs = (
       eventsTab(t),
     ];
   }
-  return [propertiesTab(t), firewallTab(t), executionLogTab(t), eventsTab(t)];
+  return [
+    propertiesTab(t),
+    firewallTab(t, !!allowedWhitelist?.includes(ALLOW_ALL_DOMAINS)),
+    executionLogTab(t),
+    eventsTab(t),
+  ];
 };
 
 export const getSystemPropertiesTabs = (t: (key: string) => string): TabModel[] => {

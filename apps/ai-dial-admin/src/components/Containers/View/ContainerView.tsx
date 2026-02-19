@@ -46,7 +46,9 @@ const ContainerView: FC<Props> = ({ container, route, createEntity, createEntity
   const { showNotification } = useNotification();
   const { disableDeploymentsJSONEditor } = useAppContext();
 
-  const [tabs, setTabs] = useState<TabModel[]>(getDeploymentsViewTabs(route, t, container.status));
+  const [tabs, setTabs] = useState<TabModel[]>(
+    getDeploymentsViewTabs(route, t, container.status, container.allowedDomains),
+  );
   const [selectedContainer, setSelectedContainer] = useState<Container>(cloneDeep(container));
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [isEditorEnabled, setIsEditorEnabled] = useState<boolean>(false);
@@ -58,8 +60,8 @@ const ContainerView: FC<Props> = ({ container, route, createEntity, createEntity
   const [pods, setPods] = useState<Pod[]>([]);
 
   useEffect(() => {
-    setTabs(getDeploymentsViewTabs(route, t, container.status));
-  }, [container.status, route, t]);
+    setTabs(getDeploymentsViewTabs(route, t, container.status, container.allowedDomains));
+  }, [container.allowedDomains, container.status, route, t]);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({

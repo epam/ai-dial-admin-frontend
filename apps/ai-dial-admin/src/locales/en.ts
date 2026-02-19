@@ -1365,6 +1365,14 @@ export default {
     GlobalWhitelist: 'Global domain whitelist',
     SpecificWhitelist: '{type} domain whitelist',
     GlobalFirewall: 'Global Firewall',
+    WhitelistPolicyLabel: 'Domain access policy',
+    WhitelistPolicyAll: 'All domains',
+    WhitelistPolicyAllCaption: 'Allows access to all domains. Reduces security.',
+    WhitelistPolicyAllWarning: 'All domains option enabled.',
+    WhitelistPolicyAllWarningDescription:
+      'Allowing unrestricted network access may expose sensitive information and user data. Use this option only for trusted {type}.',
+    WhitelistPolicyCustom: 'Specific domains (recommended)',
+    WhitelistPolicyCustomCaption: 'Allow network access only to selected domains.',
     AddDomain: 'Add domain',
   },
   TestSuites: {
