@@ -46,7 +46,7 @@ export interface ProbeProperties {
 
 export interface ProbeConfig {
   $type: PROBE_TYPE;
-  path: string;
+  path?: string;
   port?: number;
 }
 

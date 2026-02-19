@@ -3,6 +3,7 @@
 import { FC, useMemo } from 'react';
 
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
+import ValidityStatusLabel from '@/src/components/Common/ValidityStatus/ValidityStatusLabel';
 import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
 import TestSuiteProperties from '@/src/components/TestSuites/Properties/Properties';
 import Runs from '@/src/components/TestSuites/Runs/Runs';
@@ -26,11 +27,21 @@ const TabsContent: FC<Props> = ({ activeTab, onChange, selectedTestSuite }) => {
     return <LabelledText copyable={true} label={t(EntityFieldsI18nKey.name)} text={selectedTestSuite.name} />;
   }, [selectedTestSuite.name, t]);
 
+  const headerPostfix = useMemo(() => {
+    return (
+      <ValidityStatusLabel
+        valid={selectedTestSuite?.valid}
+        message={selectedTestSuite.validationWarnings?.join(', ')}
+      />
+    );
+  }, [selectedTestSuite.valid, selectedTestSuite.validationWarnings]);
+
   return (
     <>
       {activeTab === EntityViewTab.Properties && (
         <PropertiesTabContent
           headerPrefix={headerPrefix}
+          headerPostfix={headerPostfix}
           entity={selectedTestSuite}
           view={ApplicationRoute.TestSuites}
           id={selectedTestSuite.id}

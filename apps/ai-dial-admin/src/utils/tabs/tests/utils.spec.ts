@@ -195,9 +195,9 @@ describe('Entities :: tabs', () => {
   test('returns correct tabs for deployment images', () => {
     const status = IMAGE_STATUS.BUILT;
 
-    expect(getDeploymentsViewTabs(ApplicationRoute.Images, t, status)).toEqual([
+    expect(getDeploymentsViewTabs(ApplicationRoute.Images, t, status, [])).toEqual([
       propertiesTab(t),
-      firewallTab(t),
+      firewallTab(t, false),
       relatedContainersTab(t, status),
       installationLogTab(t, status),
     ]);
@@ -205,9 +205,9 @@ describe('Entities :: tabs', () => {
   test('returns correct tabs for deployment mcp containers', () => {
     const status = CONTAINER_STATUS.RUNNING;
 
-    expect(getDeploymentsViewTabs(ApplicationRoute.McpContainers, t, status)).toEqual([
+    expect(getDeploymentsViewTabs(ApplicationRoute.McpContainers, t, status, ['*'])).toEqual([
       propertiesTab(t),
-      firewallTab(t),
+      firewallTab(t, true),
       deploymentsToolsTab(t, status),
       resourcesTab(t, status),
       promptsTab(t, status),
@@ -223,9 +223,9 @@ describe('Entities :: tabs', () => {
   test('returns correct tabs for model containers', () => {
     const status = CONTAINER_STATUS.RUNNING;
 
-    expect(getDeploymentsViewTabs(ApplicationRoute.ModelServings, t, status)).toEqual([
+    expect(getDeploymentsViewTabs(ApplicationRoute.ModelServings, t, status, [])).toEqual([
       propertiesTab(t),
-      firewallTab(t),
+      firewallTab(t, false),
       executionLogTab(t),
       eventsTab(t),
     ]);

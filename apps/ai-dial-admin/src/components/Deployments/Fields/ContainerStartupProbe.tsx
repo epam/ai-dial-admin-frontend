@@ -47,7 +47,7 @@ const ContainerStartupProbe: FC<Props> = ({ container, setContainer }) => {
       if (!enabled) {
         delete updated.probeProperties;
       } else {
-        updated.probeProperties = updated.probeProperties || DEFAULT_PROBE_CONFIG(container);
+        updated.probeProperties = updated.probeProperties || DEFAULT_PROBE_CONFIG;
       }
       setContainer(updated);
     },

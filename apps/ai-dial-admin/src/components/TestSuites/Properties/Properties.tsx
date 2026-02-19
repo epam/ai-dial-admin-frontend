@@ -60,10 +60,13 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false }
   );
 
   useEffect(() => {
-    getDeployments().then((data) => {
-      setDeployments(data);
-      const type = data?.find((d) => d.deploymentId === testSuite.deploymentRef?.id)?.$type;
-      setSelectedAppType(type);
+    getDeployments().then((res) => {
+      if (res?.success) {
+        const data = res.response || [];
+        setDeployments(data);
+        const type = data?.find((d) => d.deploymentId === testSuite.deploymentRef?.id)?.$type;
+        setSelectedAppType(type);
+      }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

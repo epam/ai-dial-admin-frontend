@@ -197,24 +197,6 @@ export const getPathError = (path?: string, t?: (str: string) => string, require
   return null;
 };
 
-export const getProbePathError = (path?: string, t?: (str: string) => string, required?: boolean) => {
-  if (!path && required) {
-    return {
-      type: ErrorType.EMPTY,
-      text: t ? t(ErrorI18nKey.RequiredField) : '',
-    };
-  }
-
-  if (!required && path?.trim() && path.startsWith('/')) {
-    return {
-      type: ErrorType.INVALID,
-      text: t ? t(ErrorI18nKey.ProbePathError) : '',
-    };
-  }
-
-  return null;
-};
-
 const endsWithAny = (value: string, suffixes: string[]): boolean => {
   const lower = value.toLowerCase();
   return suffixes.some((s) => lower.endsWith(s.toLowerCase()));
@@ -348,6 +330,10 @@ export const getWhitelistDomainError = (
   value?: string,
   t?: (key: string, options?: Record<string, string | number>) => string,
 ): FieldError | null => {
+  if (value === '*') {
+    return null;
+  }
+
   const trimmed = value?.trim() ?? '';
   if (!trimmed) {
     return {
@@ -420,12 +406,15 @@ export const getFileNameError = (
   return null;
 };
 
-export const getPositiveNumberFieldsError = (
+export const getAdvancedTimingsError = (
   value?: number,
   t?: (key: string, options?: Record<string, string | number>) => string,
+  max?: number,
 ) => {
-  if (value && value < 0) {
-    return { type: ErrorType.INVALID, text: t ? t(ErrorI18nKey.PositiveNumber) : '' };
+  if (value != null && max) {
+    if (value < 0 || value > max) {
+      return { type: ErrorType.INVALID, text: t ? t(ErrorI18nKey.AdvancedTimingsError, { max }) : '' };
+    }
   }
 
   return null;

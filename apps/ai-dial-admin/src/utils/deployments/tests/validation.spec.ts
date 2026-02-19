@@ -17,8 +17,7 @@ import {
   getGpuError,
   getMemoryValueError,
   getPortError,
-  getPositiveNumberFieldsError,
-  getProbePathError,
+  getAdvancedTimingsError,
 } from '../validation';
 import { ErrorType } from '@/src/types/error-type';
 import { ErrorI18nKey } from '@/src/constants/i18n';
@@ -259,35 +258,6 @@ describe('validation utils', () => {
 
     test('returns null if valid', () => {
       expect(getPathError('/valid/path', t, false)).toBeNull();
-    });
-  });
-  describe('getProbePathError', () => {
-    test('returns error if required and empty', () => {
-      expect(getProbePathError('', t, true)).toEqual({
-        type: ErrorType.EMPTY,
-        text: ErrorI18nKey.RequiredField,
-      });
-
-      expect(getProbePathError('', void 0, true)).toEqual({
-        type: ErrorType.EMPTY,
-        text: '',
-      });
-    });
-
-    test('returns error if starting with /', () => {
-      expect(getProbePathError('/invalid/path', t, false)).toEqual({
-        type: ErrorType.INVALID,
-        text: ErrorI18nKey.ProbePathError,
-      });
-
-      expect(getProbePathError('/invalid/path', void 0, false)).toEqual({
-        type: ErrorType.INVALID,
-        text: '',
-      });
-    });
-
-    test('returns null if valid', () => {
-      expect(getProbePathError('valid/path', t, false)).toBeNull();
     });
   });
 
@@ -668,13 +638,19 @@ describe('validation utils', () => {
 
   describe('getPositiveNumberFieldsError', () => {
     test('should return error when value less than 0', () => {
-      expect(getPositiveNumberFieldsError(-1, t)).toEqual({
+      expect(getAdvancedTimingsError(-1, t, 1)).toEqual({
         type: ErrorType.INVALID,
-        text: ErrorI18nKey.PositiveNumber,
+        text: ErrorI18nKey.AdvancedTimingsError,
+      });
+    });
+    test('should return error when value bigger than max', () => {
+      expect(getAdvancedTimingsError(101, t, 100)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.AdvancedTimingsError,
       });
     });
     test('should return null when value is bigger or equal to 0', () => {
-      expect(getPositiveNumberFieldsError(0, t)).toBeNull();
+      expect(getAdvancedTimingsError(0, t, 10)).toBeNull();
     });
   });
 });

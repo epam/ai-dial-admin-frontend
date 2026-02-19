@@ -8,7 +8,7 @@ import {
   DialSwitch,
   DialNeutralButton,
 } from '@epam/ai-dial-ui-kit';
-import { IconCircleX, IconWorldOff, IconWorldShare } from '@tabler/icons-react';
+import { IconCircleX, IconTrashX, IconWorldOff, IconWorldShare } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import {
@@ -105,7 +105,7 @@ const PublicationHeader: FC<Props> = ({
               className={buttonsClassName}
               label={t(ButtonsI18nKey.Delete)}
               onClick={() => setIsOpenDeleteModal(true)}
-              iconBefore={<IconCircleX {...BASE_BUTTON_ICON_PROPS} />}
+              iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
             />
           ) : (
             <>

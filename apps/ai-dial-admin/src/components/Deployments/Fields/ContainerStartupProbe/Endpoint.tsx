@@ -6,7 +6,7 @@ import { Container, ProbeConfig, ProbeProperties } from '@/src/models/deployment
 import { PROBE_TYPE } from '@/src/types/deployments/containers';
 import { FieldError } from '@/src/models/error';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { getProbePathError, getPortError } from '@/src/utils/deployments/validation';
+import { getPortError, getPathError } from '@/src/utils/deployments/validation';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -26,21 +26,6 @@ const Endpoint: FC<Props> = ({ container, setContainer, disabled }) => {
     { label: 'TCP', value: PROBE_TYPE.TCP },
     { label: 'HTTP GET', value: PROBE_TYPE.HTTP_GET },
   ];
-
-  useEffect(() => {
-    if (container.containerPort && container.probeProperties?.enabled && !container.probeProperties.probe?.port) {
-      setContainer({
-        ...container,
-        probeProperties: {
-          ...container.probeProperties,
-          probe: {
-            ...container.probeProperties.probe,
-            port: container.containerPort || void 0,
-          } as ProbeConfig,
-        },
-      });
-    }
-  }, [container, setContainer]);
 
   const onPortChange = useCallback(
     (port?: number | string) => {
@@ -64,7 +49,7 @@ const Endpoint: FC<Props> = ({ container, setContainer, disabled }) => {
 
   const onPathChange = useCallback(
     (path?: string | string[]) => {
-      const error = getProbePathError(path as string, t, true);
+      const error = getPathError(path as string, t, true);
       setPathError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'path', isValid: !error });
 
@@ -74,7 +59,7 @@ const Endpoint: FC<Props> = ({ container, setContainer, disabled }) => {
           ...container.probeProperties,
           probe: {
             ...(container.probeProperties?.probe as ProbeConfig),
-            path: `/${path}`,
+            path,
           },
         } as ProbeProperties,
       });
@@ -98,7 +83,7 @@ const Endpoint: FC<Props> = ({ container, setContainer, disabled }) => {
         dispatch({
           type: ValidationActionType.SetField,
           field: 'path',
-          isValid: !getProbePathError(container.probeProperties?.probe?.path as string, t, true),
+          isValid: !getPathError(container.probeProperties?.probe?.path as string, t, true),
         });
       }
       dispatch({
@@ -115,7 +100,7 @@ const Endpoint: FC<Props> = ({ container, setContainer, disabled }) => {
       dispatch({
         type: ValidationActionType.SetField,
         field: 'path',
-        isValid: !getProbePathError(container.probeProperties?.probe?.path as string, t, true),
+        isValid: !getPathError(container.probeProperties?.probe?.path as string, t, true),
       });
     }
     dispatch({
@@ -125,17 +110,16 @@ const Endpoint: FC<Props> = ({ container, setContainer, disabled }) => {
     });
     // Clear up
     return () => {
-      if (container.probeProperties?.probe?.$type === PROBE_TYPE.HTTP_GET) {
-        dispatch({
-          type: ValidationActionType.SetField,
-          field: 'path',
-          isValid: !getProbePathError(container.probeProperties?.probe?.path as string, t, true),
-        });
-      }
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'path',
+        isValid: true,
+      });
+
       dispatch({
         type: ValidationActionType.SetField,
         field: 'port',
-        isValid: !getPortError(container.probeProperties?.probe?.port as number, t, true),
+        isValid: true,
       });
     };
   }, [
@@ -159,7 +143,7 @@ const Endpoint: FC<Props> = ({ container, setContainer, disabled }) => {
       resetCounter ||
       (container.probeProperties?.probe?.path != null && container.probeProperties?.probe?.path.length > 0)
     ) {
-      const error = getProbePathError(container.probeProperties?.probe?.path?.slice(1) as string, t);
+      const error = getPathError(container.probeProperties?.probe?.path as string, t);
       setPathError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'path', isValid: !error });
     }
@@ -168,12 +152,12 @@ const Endpoint: FC<Props> = ({ container, setContainer, disabled }) => {
   return (
     <div className="flex flex-col gap-6">
       <h3>{t(EntityFieldsI18nKey.endpoint)}</h3>
-      <div className="flex">
+      <div className="flex gap-3">
         <DialSelectField
           elementId="type"
           disabled={disabled}
           fieldTitle={t(EntityFieldsI18nKey.type)}
-          containerClassName="w-[180px] mr-6"
+          containerClassName="w-[180px]"
           options={typeOptions}
           value={container.probeProperties?.probe?.$type || typeOptions[0].value}
           onChange={onTypeChange}
@@ -191,21 +175,18 @@ const Endpoint: FC<Props> = ({ container, setContainer, disabled }) => {
           errorText={portError?.text}
         />
         {container.probeProperties?.probe?.$type === PROBE_TYPE.HTTP_GET && (
-          <>
-            <div className="flex items-center tiny text-secondary mx-3">/</div>
-            <DialTextInputField
-              elementId="path"
-              fieldTitle={t(EntityFieldsI18nKey.Path)}
-              placeholder={t(EntityPlaceholdersI18nKey.Path)}
-              value={container.probeProperties?.probe?.path?.slice(1)}
-              disabled={disabled}
-              containerClassName="w-[320px]"
-              onChange={onPathChange}
-              captionDescription={!pathError ? t(EntityCaptionsI18nKey.ProbePath) : ''}
-              invalid={!!pathError}
-              errorText={pathError?.text}
-            />
-          </>
+          <DialTextInputField
+            elementId="path"
+            fieldTitle={t(EntityFieldsI18nKey.Path)}
+            placeholder={t(EntityPlaceholdersI18nKey.Path)}
+            value={container.probeProperties?.probe?.path}
+            disabled={disabled}
+            containerClassName="w-[320px]"
+            onChange={onPathChange}
+            captionDescription={!pathError ? t(EntityCaptionsI18nKey.ProbePath) : ''}
+            invalid={!!pathError}
+            errorText={pathError?.text}
+          />
         )}
       </div>
     </div>
