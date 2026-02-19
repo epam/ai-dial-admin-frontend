@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconPlayerPlay } from '@tabler/icons-react';
@@ -34,6 +34,7 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
   const router = useRouter();
   const { showNotification } = useNotification();
 
+  const runRefreshRef = useRef<(() => void) | null>(null);
   const tabs = getTestSuiteTabs(t);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
@@ -89,6 +90,10 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
           showNotification(
             getSuccessNotification(t(TestSuitesI18nKey.RunSuccess), t(TestSuitesI18nKey.RunSuccessDescription)),
           );
+          setIsModalOpen(false);
+          setTimeout(() => {
+            runRefreshRef.current?.();
+          }, 500);
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
@@ -128,7 +133,12 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
               setIsChanged={setIsChanged}
             />
           ) : (
-            <TabsContent activeTab={activeTab} selectedTestSuite={selectedTestSuite} onChange={setSelectedTestSuite} />
+            <TabsContent
+              runRefreshRef={runRefreshRef}
+              activeTab={activeTab}
+              selectedTestSuite={selectedTestSuite}
+              onChange={setSelectedTestSuite}
+            />
           )}
         </div>
       </div>
