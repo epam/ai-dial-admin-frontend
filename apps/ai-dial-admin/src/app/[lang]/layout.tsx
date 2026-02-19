@@ -46,17 +46,17 @@ export default async function Layout({ children, params }: { children: ReactNode
   const beVersion = await utilityApi.getBeVersion(token);
 
   return (
-    <NextAuthProvider>
-      <AppContextProvider
-        themeUrl={process.env.THEMES_CONFIG_URL}
-        featureFlags={featureFlags}
-        disableDeploymentsJSONEditor={isValueTruthy(process.env.DEPLOYMENTS_DISABLE_JSON_EDITOR)}
-        resourcesDefaults={JSON.parse(process.env.DEPLOYMENTS_RESOURCES_DEFAULTS || '{}') as ResourcesDefaults}
-      >
-        <ThemeProvider themesConfiguration={themesConfiguration} themeImages={themesImages}>
-          <RuleFolderProvider attributes={process.env.PUBLICATION_FILTERS || 'title,role,dial_roles'}>
-            <PromptFolderProvider>
-              <I18nProvider locale={lang}>
+    <I18nProvider locale={lang}>
+      <NextAuthProvider>
+        <AppContextProvider
+          themeUrl={process.env.THEMES_CONFIG_URL}
+          featureFlags={featureFlags}
+          disableDeploymentsJSONEditor={isValueTruthy(process.env.DEPLOYMENTS_DISABLE_JSON_EDITOR)}
+          resourcesDefaults={JSON.parse(process.env.DEPLOYMENTS_RESOURCES_DEFAULTS || '{}') as ResourcesDefaults}
+        >
+          <ThemeProvider themesConfiguration={themesConfiguration} themeImages={themesImages}>
+            <RuleFolderProvider attributes={process.env.PUBLICATION_FILTERS || 'title,role,dial_roles'}>
+              <PromptFolderProvider>
                 <NotificationProvider>
                   <div className="flex flex-col h-full w-full">
                     <Header isEnableAuth={isEnableAuth} />
@@ -70,11 +70,11 @@ export default async function Layout({ children, params }: { children: ReactNode
                     </div>
                   </div>
                 </NotificationProvider>
-              </I18nProvider>
-            </PromptFolderProvider>
-          </RuleFolderProvider>
-        </ThemeProvider>
-      </AppContextProvider>
-    </NextAuthProvider>
+              </PromptFolderProvider>
+            </RuleFolderProvider>
+          </ThemeProvider>
+        </AppContextProvider>
+      </NextAuthProvider>
+    </I18nProvider>
   );
 }
