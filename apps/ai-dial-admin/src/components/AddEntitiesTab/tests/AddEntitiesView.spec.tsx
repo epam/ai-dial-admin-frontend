@@ -3,12 +3,6 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import AddEntitiesView from '../AddEntitiesView';
 
-// Mock createPortal to render modal content inline for test simplicity
-vi.mock('react-dom', () => ({
-  ...vi.importActual('react-dom'),
-  createPortal: (node: any) => node,
-}));
-
 describe('AddEntitiesView', () => {
   test('renders the view title and entity count', () => {
     const customColumns = [{ field: 'custom', headerName: 'Custom' }];

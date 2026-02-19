@@ -41,6 +41,9 @@ vi.mock('@/src/context/ThemeContext', () => ({ useTheme: createFnContext }));
 vi.mock('@/src/context/RuleFolderProvider', () => ({ useRuleFolder: createFnContext }));
 vi.mock('@/src/context/assets/PromptFolderContext', () => ({ usePromptFolder: createFnContext }));
 vi.mock('@/src/context/RuleFolderContext', () => ({ useRuleFolder: createFnContext }));
+vi.mock('@/src/context/assets/AppsFolderContext', () => ({
+  useAppsFolder: createFnContext,
+}));
 
 vi.mock('@/src/context/AppContext', () => ({
   useAppContext: () => ({
@@ -115,6 +118,12 @@ class IntersectionObserverMock {
 }
 
 global.IntersectionObserver = IntersectionObserverMock as unknown as typeof IntersectionObserver;
+
+// Mock createPortal to render modal content inline for test simplicity
+vi.mock('react-dom', () => ({
+  ...vi.importActual('react-dom'),
+  createPortal: (node: any) => node,
+}));
 
 // ------------------ Cleanup after each test ------------------
 afterEach(() => cleanup());

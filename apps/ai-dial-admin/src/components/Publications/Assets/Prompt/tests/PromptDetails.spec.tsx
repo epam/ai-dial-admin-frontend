@@ -7,7 +7,7 @@ import PromptDetails from '../PromptDetails';
 
 vi.mock('@/src/components/Assets/Prompts/View/Properties', () => ({
   default: ({ prompt, onChangePrompt, isPublication }: any) => (
-    <div data-testid="prompt-properties">
+    <div role="region" aria-label="prompt-properties">
       <div>Prompt Name: {prompt.name}</div>
       <div>Is Publication: {isPublication?.toString()}</div>
       <button onClick={() => onChangePrompt({ ...prompt, content: 'Modified content' })}>
@@ -19,30 +19,24 @@ vi.mock('@/src/components/Assets/Prompts/View/Properties', () => ({
 
 vi.mock('@/src/components/Common/Accordion/Accordion', () => ({
   default: ({ header, children, contentClassName }: any) => (
-    <div data-testid="accordion" className={contentClassName}>
-      <div data-testid="accordion-header">{header}</div>
-      <div data-testid="accordion-content">{children}</div>
+    <div role="listbox" className={contentClassName}>
+      <div>{header}</div>
+      <div>{children}</div>
     </div>
   ),
 }));
 
 vi.mock('@/src/components/Common/EditableTitle/EditableTitle', () => ({
   default: ({ title, changeTitle, disabled, size }: any) => (
-    <div data-testid="editable-title">
-      <input
-        data-testid="title-input"
-        value={title}
-        onChange={(e) => changeTitle(e.target.value)}
-        disabled={disabled}
-        aria-label={`Title size ${size}`}
-      />
+    <div role="region" aria-label="editable-title">
+      <input aria-label="title-input" value={title} onChange={(e) => changeTitle(e.target.value)} disabled={disabled} />
     </div>
   ),
 }));
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   DialNeutralButton: ({ label, onClick, iconBefore }: any) => (
-    <button data-testid="delete-button" onClick={onClick}>
+    <button role="button" aria-label={label} onClick={onClick}>
       {iconBefore}
       {label}
     </button>
@@ -50,7 +44,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
 }));
 
 vi.mock('@tabler/icons-react', () => ({
-  IconTrashX: (props: any) => <span data-testid="trash-icon" {...props} />,
+  IconTrashX: (props: any) => <span role="img" aria-label="trash-icon" {...props} />,
 }));
 
 const mockPrompt: DialPrompt = {
@@ -76,31 +70,31 @@ describe('Publications :: PromptDetails', () => {
   test('renders prompt details with accordion and prompt properties', () => {
     setup();
 
-    expect(screen.getByTestId('accordion')).toBeInTheDocument();
-    expect(screen.getByTestId('accordion-header')).toBeInTheDocument();
-    expect(screen.getByTestId('accordion-content')).toBeInTheDocument();
-    expect(screen.getByTestId('prompt-properties')).toBeInTheDocument();
+    expect(screen.getByRole('listbox')).toBeInTheDocument();
+    expect(screen.getByText('Prompt Name: Test Prompt')).toBeInTheDocument();
+    expect(screen.getByText('Is Publication: true')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'prompt-properties' })).toBeInTheDocument();
   });
 
   test('renders editable title with prompt name', () => {
     setup({ prompt: { ...mockPrompt, name: 'My Custom Prompt' } });
 
-    const titleInput = screen.getByTestId('title-input');
+    const titleInput = screen.getByRole('textbox', { name: 'title-input' });
     expect(titleInput).toHaveValue('My Custom Prompt');
   });
 
   test('renders delete button with trash icon', () => {
     setup();
 
-    const deleteButton = screen.getByTestId('delete-button');
+    const deleteButton = screen.getByRole('button', { name: 'Delete' });
     expect(deleteButton).toBeInTheDocument();
-    expect(screen.getByTestId('trash-icon')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'trash-icon' })).toBeInTheDocument();
   });
 
   test('calls onChange when prompt name is changed', async () => {
     const { onChange } = setup();
 
-    const titleInput = screen.getByTestId('title-input');
+    const titleInput = screen.getByRole('textbox', { name: 'title-input' });
 
     await userEvent.type(titleInput, 'X');
 
@@ -115,7 +109,7 @@ describe('Publications :: PromptDetails', () => {
   test('calls onRemove when delete button is clicked', async () => {
     const { onRemove } = setup();
 
-    const deleteButton = screen.getByTestId('delete-button');
+    const deleteButton = screen.getByRole('button', { name: 'Delete' });
     await userEvent.click(deleteButton);
 
     expect(onRemove).toHaveBeenCalledTimes(1);
@@ -142,21 +136,21 @@ describe('Publications :: PromptDetails', () => {
   test('renders with empty prompt name', () => {
     setup({ prompt: { ...mockPrompt, name: '' } });
 
-    const titleInput = screen.getByTestId('title-input');
+    const titleInput = screen.getByRole('textbox', { name: 'title-input' });
     expect(titleInput).toHaveValue('');
   });
 
   test('applies correct contentClassName to accordion', () => {
     setup();
 
-    const accordion = screen.getByTestId('accordion');
+    const accordion = screen.getByRole('listbox');
     expect(accordion).toHaveClass('h-full justify-between');
   });
 
   test('title is not disabled in collapsed state', () => {
     setup();
 
-    const titleInput = screen.getByTestId('title-input');
+    const titleInput = screen.getByRole('textbox', { name: 'title-input' });
     expect(titleInput).not.toBeDisabled();
   });
 
@@ -164,7 +158,7 @@ describe('Publications :: PromptDetails', () => {
     const promptWithVersion = { ...mockPrompt, version: '2.5' };
     setup({ prompt: promptWithVersion });
 
-    expect(screen.getByTestId('prompt-properties')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'prompt-properties' })).toBeInTheDocument();
     expect(screen.getByText('Prompt Name: Test Prompt')).toBeInTheDocument();
   });
 });

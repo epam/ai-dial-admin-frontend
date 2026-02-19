@@ -5,30 +5,22 @@ import { ActionType, Publication } from '@/src/models/dial/publications';
 import { ApplicationRoute } from '@/src/types/routes';
 import PublicationInfoHeader from '../InfoHeader';
 
-vi.mock('@/src/utils/formatting/date', () => ({
-  formatDateTimeToLocalString: vi.fn((value?: string | number) => {
-    if (!value) return '';
-    return 'Formatted Date';
-  }),
-}));
-
-vi.mock('@/src/utils/publications', () => ({
-  getActionClassName: vi.fn((action: ActionType) => {
-    const classMap = {
-      [ActionType.ADD]: 'bg-accent-primary',
-      [ActionType.ADD_IF_ABSENT]: 'bg-accent-primary',
-      [ActionType.DELETE]: 'bg-red-400',
-    };
-    return classMap[action] || '';
-  }),
-}));
-
 vi.mock('@/src/components/Common/LabelledText/LabelledText', () => ({
   default: ({ label, text, children }: any) => (
-    <div data-testid="labelled-text">
-      <div data-testid="label">{label}</div>
-      {text && <div data-testid="text">{text}</div>}
-      {children && <div data-testid="children">{children}</div>}
+    <div role="region" aria-label="labelled-text">
+      <div role="region" aria-label="label">
+        {label}
+      </div>
+      {text && (
+        <div role="region" aria-label="text">
+          {text}
+        </div>
+      )}
+      {children && (
+        <div role="region" aria-label="children">
+          {children}
+        </div>
+      )}
     </div>
   ),
 }));
@@ -55,7 +47,7 @@ describe('Publications :: InfoHeader', () => {
     const entity = createMockPublication();
     setup({ entity, view: ApplicationRoute.PromptPublications });
 
-    const labels = screen.getAllByTestId('label');
+    const labels = screen.getAllByRole('region', { name: 'label' });
     expect(labels).toHaveLength(3);
 
     const labelTexts = labels.map((label) => label.textContent);
@@ -109,7 +101,7 @@ describe('Publications :: InfoHeader', () => {
 
     setup({ entity, view: ApplicationRoute.PromptPublications });
 
-    const texts = screen.getAllByTestId('text');
+    const texts = screen.getAllByRole('region', { name: 'text' });
     const textContents = texts.map((el) => el.textContent);
     expect(textContents).toContain('John Doe');
   });
@@ -120,7 +112,7 @@ describe('Publications :: InfoHeader', () => {
 
     setup({ entity, view: ApplicationRoute.PromptPublications });
 
-    const labels = screen.getAllByTestId('label');
+    const labels = screen.getAllByRole('region', { name: 'label' });
     const labelTexts = labels.map((label) => label.textContent);
     expect(labelTexts).not.toContain('Entities.Action');
   });
@@ -131,7 +123,7 @@ describe('Publications :: InfoHeader', () => {
 
     setup({ entity, view: ApplicationRoute.PromptPublications });
 
-    const labels = screen.getAllByTestId('label');
+    const labels = screen.getAllByRole('region', { name: 'label' });
     const labelTexts = labels.map((label) => label.textContent);
     expect(labelTexts).not.toContain('EntityFields.createdAt');
   });
@@ -142,7 +134,7 @@ describe('Publications :: InfoHeader', () => {
 
     setup({ entity, view: ApplicationRoute.PromptPublications });
 
-    const labels = screen.getAllByTestId('label');
+    const labels = screen.getAllByRole('region', { name: 'label' });
     const labelTexts = labels.map((label) => label.textContent);
     expect(labelTexts).not.toContain('EntityFields.displayAuthor');
   });
@@ -154,7 +146,7 @@ describe('Publications :: InfoHeader', () => {
 
     setup({ entity, view: ApplicationRoute.PromptPublications });
 
-    const labels = screen.getAllByTestId('label');
+    const labels = screen.getAllByRole('region', { name: 'label' });
     expect(labels).toHaveLength(1);
     expect(labels[0].textContent).toBe('Entities.Action');
   });
@@ -197,10 +189,10 @@ describe('Publications :: InfoHeader', () => {
     const entity = createMockPublication();
 
     const { rerender } = setup({ entity, view: ApplicationRoute.PromptPublications });
-    expect(screen.getAllByTestId('label')).toHaveLength(3);
+    expect(screen.getAllByRole('region', { name: 'label' })).toHaveLength(3);
 
     rerender(<PublicationInfoHeader entity={entity} view={ApplicationRoute.ApplicationPublications} />);
-    expect(screen.getAllByTestId('label')).toHaveLength(3);
+    expect(screen.getAllByRole('region', { name: 'label' })).toHaveLength(3);
   });
 
   test('renders empty state when all optional fields are missing', () => {
@@ -215,14 +207,14 @@ describe('Publications :: InfoHeader', () => {
     expect(headerContainer).toBeInTheDocument();
     expect(headerContainer).toHaveClass('border-b', 'border-primary');
 
-    expect(screen.queryAllByTestId('labelled-text')).toHaveLength(0);
+    expect(screen.queryAllByRole('region', { name: 'labelled-text' })).toHaveLength(0);
   });
 
   test('translates action type using ACTION_I18N_KEYS', () => {
     const entity = createMockPublication({ action: ActionType.ADD });
     setup({ entity, view: ApplicationRoute.PromptPublications });
 
-    const childrenElements = screen.getAllByTestId('children');
+    const childrenElements = screen.getAllByRole('region', { name: 'children' });
     expect(childrenElements.length).toBeGreaterThan(0);
   });
 
@@ -239,7 +231,7 @@ describe('Publications :: InfoHeader', () => {
 
     setup({ entity: minimalEntity, view: ApplicationRoute.PromptPublications });
 
-    const labels = screen.getAllByTestId('label');
+    const labels = screen.getAllByRole('region', { name: 'label' });
     expect(labels).toHaveLength(2);
   });
 
@@ -251,7 +243,7 @@ describe('Publications :: InfoHeader', () => {
 
     setup({ entity, view: ApplicationRoute.PromptPublications });
 
-    const labels = screen.getAllByTestId('label');
+    const labels = screen.getAllByRole('region', { name: 'label' });
 
     expect(labels.length).toBeGreaterThanOrEqual(1);
   });

@@ -13,10 +13,6 @@ vi.mock('@/src/app/[lang]/assets-applications/actions', () => ({
   removeApp: vi.fn(),
 }));
 
-vi.mock('@/src/context/assets/AppsFolderContext', () => ({
-  useAppsFolder: vi.fn(() => ({ data: [{ id: 'a' }] })),
-}));
-
 vi.mock('@/src/components/EntityListView/EntityListView', () => ({
   default: vi.fn(({ data, names, route }) => <div role="list">EntityListView</div>),
 }));

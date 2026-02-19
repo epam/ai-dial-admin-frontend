@@ -11,40 +11,25 @@ vi.mock('react-dom', () => ({
   createPortal: (node: any) => node,
 }));
 
-vi.mock('@epam/ai-dial-ui-kit', () => ({
-  AlertVariant: {
-    Warning: 'warning',
-  },
-  DialAlert: ({ message, variant }: any) => (
-    <div data-testid="dial-alert" data-variant={variant}>
-      {message}
-    </div>
-  ),
-  DialNeutralButton: ({ label, onClick, iconBefore }: any) => (
-    <button data-testid="compare-button" onClick={onClick}>
-      {iconBefore}
-      {label}
-    </button>
-  ),
-}));
-
 vi.mock('@tabler/icons-react', () => ({
-  IconReplace: (props: any) => <span data-testid="icon-replace" {...props} />,
+  IconReplace: (props: any) => <span role="img" aria-label="icon-replace" {...props} />,
 }));
 
 vi.mock('@/src/components/Rules/Item/RulesItem', () => ({
   default: ({ rules, folderName, folderDescription, onChange, children }: any) => (
-    <div data-testid="rules-item">
-      <div data-testid="folder-name">{folderName}</div>
-      <div data-testid="folder-description">{folderDescription}</div>
-      <div data-testid="rules-count">{rules.length}</div>
+    <div role="region" aria-label="rules-item">
+      <div>{folderName}</div>
+      <div>{folderDescription}</div>
+      <div role="region" aria-label="rules-count">
+        {rules.length}
+      </div>
       <button
-        data-testid="change-rules-button"
+        role="button"
+        aria-label="change-rules-button"
         onClick={() => onChange([...rules, { source: 'new', function: 'equal', targets: ['test'] }])}
       >
         Change Rules
       </button>
-      <div data-testid="rules-children">{children}</div>
     </div>
   ),
 }));
@@ -53,10 +38,14 @@ vi.mock('@/src/components/Publications/Popup/RulesCompare', () => ({
   default: ({ rules, compareRules, isOpen, onClose }: any) => {
     if (!isOpen) return null;
     return (
-      <div data-testid="rules-compare-modal">
-        <div data-testid="modal-rules-count">{rules.length}</div>
-        <div data-testid="modal-compare-rules-count">{compareRules.length}</div>
-        <button data-testid="close-modal-button" onClick={onClose}>
+      <div role="region" aria-label="rules-compare-modal">
+        <div role="region" aria-label="modal-rules-count">
+          {rules.length}
+        </div>
+        <div role="region" aria-label="modal-compare-rules-count">
+          {compareRules.length}
+        </div>
+        <button role="button" aria-label="close-modal-button" onClick={onClose}>
           Close
         </button>
       </div>
@@ -125,8 +114,8 @@ describe('Publications :: Permissions', () => {
       currentRules: mockCurrentRules,
     });
 
-    expect(screen.getByTestId('rules-item')).toBeInTheDocument();
-    expect(screen.getByTestId('rules-count')).toHaveTextContent('2');
+    expect(screen.getByRole('region', { name: 'rules-item' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'rules-count' })).toHaveTextContent('2');
   });
 
   test('renders folder name and description', () => {
@@ -137,8 +126,7 @@ describe('Publications :: Permissions', () => {
       currentRules: mockCurrentRules,
     });
 
-    expect(screen.getByTestId('folder-name')).toHaveTextContent('Folder.Permissions');
-    expect(screen.getByTestId('folder-description')).toHaveTextContent('test-folder-123');
+    expect(screen.getByRole('region', { name: 'folder-name' })).toHaveTextContent('Folder.Permissions');
   });
 
   test('shows warning alert when permissions changed', () => {
@@ -149,7 +137,7 @@ describe('Publications :: Permissions', () => {
       currentRules: mockCurrentRules,
     });
 
-    const alert = screen.getByTestId('dial-alert');
+    const alert = screen.getByRole('alert');
     expect(alert).toBeInTheDocument();
     expect(alert).toHaveAttribute('data-variant', 'warning');
     expect(screen.getByText('Publications.PermissionsWarningTitle')).toBeInTheDocument();
@@ -164,7 +152,7 @@ describe('Publications :: Permissions', () => {
       currentRules: mockCurrentRules,
     });
 
-    expect(screen.queryByTestId('dial-alert')).not.toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   test('shows compare button when permissions changed', () => {
@@ -175,10 +163,10 @@ describe('Publications :: Permissions', () => {
       currentRules: mockCurrentRules,
     });
 
-    const compareButton = screen.getByTestId('compare-button');
+    const compareButton = screen.getByRole('button', { name: 'Compare.CompareChanges' });
     expect(compareButton).toBeInTheDocument();
     expect(compareButton).toHaveTextContent('Compare.CompareChanges');
-    expect(screen.getByTestId('icon-replace')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'icon-replace' })).toBeInTheDocument();
   });
 
   test('does not show compare button when permissions not changed', () => {
@@ -189,7 +177,7 @@ describe('Publications :: Permissions', () => {
       currentRules: mockCurrentRules,
     });
 
-    expect(screen.queryByTestId('compare-button')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Compare.CompareChanges' })).not.toBeInTheDocument();
   });
 
   test('opens compare modal when compare button is clicked', async () => {
@@ -200,12 +188,12 @@ describe('Publications :: Permissions', () => {
       currentRules: mockCurrentRules,
     });
 
-    expect(screen.queryByTestId('rules-compare-modal')).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'rules-compare-modal' })).not.toBeInTheDocument();
 
-    const compareButton = screen.getByTestId('compare-button');
+    const compareButton = screen.getByRole('button', { name: 'Compare.CompareChanges' });
     await userEvent.click(compareButton);
 
-    expect(screen.getByTestId('rules-compare-modal')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'rules-compare-modal' })).toBeInTheDocument();
   });
 
   test('passes correct rules to compare modal', async () => {
@@ -216,11 +204,11 @@ describe('Publications :: Permissions', () => {
       currentRules: mockCurrentRules,
     });
 
-    const compareButton = screen.getByTestId('compare-button');
+    const compareButton = screen.getByRole('button', { name: 'Compare.CompareChanges' });
     await userEvent.click(compareButton);
 
-    expect(screen.getByTestId('modal-rules-count')).toHaveTextContent('2');
-    expect(screen.getByTestId('modal-compare-rules-count')).toHaveTextContent('1');
+    expect(screen.getByRole('region', { name: 'modal-rules-count' })).toHaveTextContent('2');
+    expect(screen.getByRole('region', { name: 'modal-compare-rules-count' })).toHaveTextContent('1');
   });
 
   test('closes compare modal when close button is clicked', async () => {
@@ -231,15 +219,15 @@ describe('Publications :: Permissions', () => {
       currentRules: mockCurrentRules,
     });
 
-    const compareButton = screen.getByTestId('compare-button');
+    const compareButton = screen.getByRole('button', { name: 'Compare.CompareChanges' });
     await userEvent.click(compareButton);
 
-    expect(screen.getByTestId('rules-compare-modal')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'rules-compare-modal' })).toBeInTheDocument();
 
-    const closeButton = screen.getByTestId('close-modal-button');
+    const closeButton = screen.getByRole('button', { name: 'Close' });
     await userEvent.click(closeButton);
 
-    expect(screen.queryByTestId('rules-compare-modal')).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'rules-compare-modal' })).not.toBeInTheDocument();
   });
 
   test('calls onChange when rules are modified', async () => {
@@ -250,7 +238,7 @@ describe('Publications :: Permissions', () => {
       currentRules: mockCurrentRules,
     });
 
-    const changeRulesButton = screen.getByTestId('change-rules-button');
+    const changeRulesButton = screen.getByRole('button', { name: 'Change Rules' });
     await userEvent.click(changeRulesButton);
 
     expect(onChange).toHaveBeenCalledTimes(1);
@@ -266,7 +254,7 @@ describe('Publications :: Permissions', () => {
       currentRules: mockCurrentRules,
     });
 
-    expect(screen.getByTestId('rules-count')).toHaveTextContent('0');
+    expect(screen.getByRole('region', { name: 'rules-count' })).toHaveTextContent('0');
   });
 
   test('handles publication with empty rules array', () => {
@@ -277,7 +265,7 @@ describe('Publications :: Permissions', () => {
       currentRules: mockCurrentRules,
     });
 
-    expect(screen.getByTestId('rules-count')).toHaveTextContent('0');
+    expect(screen.getByRole('region', { name: 'rules-count' })).toHaveTextContent('0');
   });
 
   test('handles empty current rules', () => {
@@ -288,7 +276,7 @@ describe('Publications :: Permissions', () => {
       currentRules: [],
     });
 
-    const compareButton = screen.getByTestId('compare-button');
+    const compareButton = screen.getByRole('button', { name: 'Compare.CompareChanges' });
     expect(compareButton).toBeInTheDocument();
   });
 
@@ -304,7 +292,7 @@ describe('Publications :: Permissions', () => {
       currentRules: mockCurrentRules,
     });
 
-    const changeRulesButton = screen.getByTestId('change-rules-button');
+    const changeRulesButton = screen.getByRole('button', { name: 'Change Rules' });
     await userEvent.click(changeRulesButton);
 
     const updatedPublication = onChange.mock.calls[0][0];
@@ -333,7 +321,7 @@ describe('Publications :: Permissions', () => {
       currentRules: mockCurrentRules,
     });
 
-    expect(screen.queryByTestId('rules-compare-modal')).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'rules-compare-modal' })).not.toBeInTheDocument();
   });
 
   test('works with different publication types', () => {
@@ -344,8 +332,8 @@ describe('Publications :: Permissions', () => {
       currentRules: mockCurrentRules,
     });
 
-    expect(screen.getByTestId('rules-item')).toBeInTheDocument();
-    expect(screen.getByTestId('dial-alert')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'rules-item' })).toBeInTheDocument();
+    expect(screen.getByRole('alert', { name: 'dial-alert' })).toBeInTheDocument();
   });
 
   test('handles multiple rule changes', async () => {
@@ -356,7 +344,7 @@ describe('Publications :: Permissions', () => {
       currentRules: mockCurrentRules,
     });
 
-    await userEvent.click(screen.getByTestId('change-rules-button'));
+    await userEvent.click(screen.getByRole('button', { name: 'Change Rules' }));
     expect(onChange).toHaveBeenCalledTimes(1);
 
     const updatedPublication = onChange.mock.calls[0][0];
@@ -369,7 +357,7 @@ describe('Publications :: Permissions', () => {
       />,
     );
 
-    await userEvent.click(screen.getByTestId('change-rules-button'));
+    await userEvent.click(screen.getByRole('button', { name: 'Change Rules' }));
     expect(onChange).toHaveBeenCalledTimes(2);
   });
 
@@ -381,14 +369,14 @@ describe('Publications :: Permissions', () => {
       currentRules: mockCurrentRules,
     });
 
-    await userEvent.click(screen.getByTestId('compare-button'));
-    expect(screen.getByTestId('rules-compare-modal')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Compare.CompareChanges' }));
+    expect(screen.getByRole('region', { name: 'rules-compare-modal' })).toBeInTheDocument();
 
-    await userEvent.click(screen.getByTestId('close-modal-button'));
-    expect(screen.queryByTestId('rules-compare-modal')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('region', { name: 'rules-compare-modal' })).not.toBeInTheDocument();
 
-    await userEvent.click(screen.getByTestId('compare-button'));
-    expect(screen.getByTestId('rules-compare-modal')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Compare.CompareChanges' }));
+    expect(screen.getByRole('region', { name: 'rules-compare-modal' })).toBeInTheDocument();
   });
 
   test('warning message renders with correct structure', () => {
@@ -399,8 +387,8 @@ describe('Publications :: Permissions', () => {
       currentRules: mockCurrentRules,
     });
 
-    const titleElement = screen.getByText('Publications.PermissionsWarningTitle');
-    const descriptionElement = screen.getByText('Publications.PermissionsWarningDescription');
+    const titleElement = screen.getByRole('heading', { name: 'Publications.PermissionsWarningTitle' });
+    const descriptionElement = screen.getByRole('region', { name: 'Publications.PermissionsWarningDescription' });
 
     expect(titleElement.tagName).toBe('H3');
     expect(descriptionElement.className).toContain('text-sm');

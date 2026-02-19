@@ -21,11 +21,6 @@ import {
 import { describe, expect, test, vi } from 'vitest';
 import { ApplicationRoute } from '@/src/types/routes';
 
-vi.mock('@/src/constants/ag-grid', () => ({
-  ACTION_COLUMN: vi.fn((actions) => ({ colId: 'actions', actions })),
-  NO_BORDER_CLASS: 'NO_BORDER_CLASS',
-}));
-
 describe('Constants :: grid columns', () => {
   test('MODELS_COLUMNS returns expected columns', () => {
     const t = (s: string) => s;

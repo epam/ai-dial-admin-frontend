@@ -7,22 +7,19 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import TabsContent from '../TabsContent';
 
-vi.mock('../InfoHeader', () => ({
-  default: ({ view, entity }: any) => (
-    <div data-testid="info-header">
-      <div data-testid="header-view">{view}</div>
-      <div data-testid="header-entity">{entity.path}</div>
-    </div>
-  ),
-}));
-
 vi.mock('../Permissions', () => ({
   default: ({ selectedPublication, onChange, isPermissionsChanged, currentRules }: any) => (
-    <div data-testid="permissions">
-      <div data-testid="permissions-publication">{selectedPublication.path}</div>
-      <div data-testid="permissions-changed">{isPermissionsChanged.toString()}</div>
-      <div data-testid="permissions-rules-count">{currentRules.length}</div>
-      <button data-testid="permissions-change-button" onClick={() => onChange({ ...selectedPublication })}>
+    <div role="region" aria-label="permissions">
+      <div role="region" aria-label="permissions-publication">
+        {selectedPublication.path}
+      </div>
+      <div role="region" aria-label="permissions-changed">
+        {isPermissionsChanged.toString()}
+      </div>
+      <div role="region" aria-label="permissions-rules-count">
+        {currentRules.length}
+      </div>
+      <button role="button" aria-label="permissions-change-button" onClick={() => onChange({ ...selectedPublication })}>
         Change
       </button>
     </div>
@@ -31,9 +28,11 @@ vi.mock('../Permissions', () => ({
 
 vi.mock('@/src/components/Publications/Properties/FileProperties', () => ({
   default: ({ publication, onChange }: any) => (
-    <div data-testid="file-properties">
-      <div data-testid="file-publication-path">{publication.path}</div>
-      <button data-testid="file-change-button" onClick={() => onChange({ ...publication })}>
+    <div role="region" aria-label="file-properties">
+      <div role="region" aria-label="file-publication-path">
+        {publication.path}
+      </div>
+      <button role="button" aria-label="file-change-button" onClick={() => onChange({ ...publication })}>
         Change File
       </button>
     </div>
@@ -42,9 +41,11 @@ vi.mock('@/src/components/Publications/Properties/FileProperties', () => ({
 
 vi.mock('@/src/components/Publications/Properties/PromptProperties', () => ({
   default: ({ publication, onChange }: any) => (
-    <div data-testid="prompt-properties">
-      <div data-testid="prompt-publication-path">{publication.path}</div>
-      <button data-testid="prompt-change-button" onClick={() => onChange({ ...publication })}>
+    <div role="region" aria-label="prompt-properties">
+      <div role="region" aria-label="prompt-publication-path">
+        {publication.path}
+      </div>
+      <button role="button" aria-label="prompt-change-button" onClick={() => onChange({ ...publication })}>
         Change Prompt
       </button>
     </div>
@@ -125,10 +126,10 @@ describe('Publications :: TabsContent', () => {
       currentRules: mockCurrentRules,
     });
 
-    expect(screen.getByTestId('info-header')).toBeInTheDocument();
-    expect(screen.getByTestId('file-properties')).toBeInTheDocument();
-    expect(screen.queryByTestId('prompt-properties')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('permissions')).not.toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'info-header' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'file-properties' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'prompt-properties' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'permissions' })).not.toBeInTheDocument();
   });
 
   test('renders InfoHeader and PromptProperties when Properties tab is active for PromptPublications', () => {
@@ -141,10 +142,10 @@ describe('Publications :: TabsContent', () => {
       currentRules: mockCurrentRules,
     });
 
-    expect(screen.getByTestId('info-header')).toBeInTheDocument();
-    expect(screen.getByTestId('prompt-properties')).toBeInTheDocument();
-    expect(screen.queryByTestId('file-properties')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('permissions')).not.toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'info-header' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'prompt-properties' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'file-properties' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'permissions' })).not.toBeInTheDocument();
   });
 
   test('renders Permissions when Permissions tab is active', () => {
@@ -157,10 +158,10 @@ describe('Publications :: TabsContent', () => {
       currentRules: mockCurrentRules,
     });
 
-    expect(screen.getByTestId('permissions')).toBeInTheDocument();
-    expect(screen.queryByTestId('info-header')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('file-properties')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('prompt-properties')).not.toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'permissions' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'info-header' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'file-properties' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'prompt-properties' })).not.toBeInTheDocument();
   });
 
   test('wraps FileProperties in FileFolderProvider', () => {
@@ -175,7 +176,7 @@ describe('Publications :: TabsContent', () => {
 
     const provider = screen.getByTestId('file-folder-provider');
     expect(provider).toBeInTheDocument();
-    expect(screen.getByTestId('file-properties').parentElement).toBe(provider);
+    expect(screen.getByRole('region', { name: 'file-properties' }).parentElement).toBe(provider);
   });
 
   test('wraps PromptProperties in FileFolderProvider', () => {
@@ -190,7 +191,7 @@ describe('Publications :: TabsContent', () => {
 
     const provider = screen.getByTestId('file-folder-provider');
     expect(provider).toBeInTheDocument();
-    expect(screen.getByTestId('prompt-properties').parentElement).toBe(provider);
+    expect(screen.getByRole('region', { name: 'prompt-properties' }).parentElement).toBe(provider);
   });
 
   test('passes view and entity to InfoHeader', () => {
@@ -203,8 +204,8 @@ describe('Publications :: TabsContent', () => {
       currentRules: mockCurrentRules,
     });
 
-    expect(screen.getByTestId('header-view')).toHaveTextContent(ApplicationRoute.FilePublications);
-    expect(screen.getByTestId('header-entity')).toHaveTextContent('test/custom/path');
+    expect(screen.getByRole('region', { name: 'header-view' })).toHaveTextContent(ApplicationRoute.FilePublications);
+    expect(screen.getByRole('region', { name: 'header-entity' })).toHaveTextContent('test/custom/path');
   });
 
   test('passes publication and onChange to FileProperties', () => {
@@ -217,9 +218,9 @@ describe('Publications :: TabsContent', () => {
       currentRules: mockCurrentRules,
     });
 
-    expect(screen.getByTestId('file-publication-path')).toHaveTextContent('file/publication/path');
+    expect(screen.getByRole('region', { name: 'file-publication-path' })).toHaveTextContent('file/publication/path');
 
-    const changeButton = screen.getByTestId('file-change-button');
+    const changeButton = screen.getByRole('button', { name: 'file-change-button' });
     changeButton.click();
     expect(onChange).toHaveBeenCalled();
   });
@@ -234,9 +235,11 @@ describe('Publications :: TabsContent', () => {
       currentRules: mockCurrentRules,
     });
 
-    expect(screen.getByTestId('prompt-publication-path')).toHaveTextContent('prompt/publication/path');
+    expect(screen.getByRole('region', { name: 'prompt-publication-path' })).toHaveTextContent(
+      'prompt/publication/path',
+    );
 
-    const changeButton = screen.getByTestId('prompt-change-button');
+    const changeButton = screen.getByRole('button', { name: 'prompt-change-button' });
     changeButton.click();
     expect(onChange).toHaveBeenCalled();
   });
@@ -251,11 +254,11 @@ describe('Publications :: TabsContent', () => {
       currentRules: mockCurrentRules,
     });
 
-    expect(screen.getByTestId('permissions-publication')).toHaveTextContent('permissions/test/path');
-    expect(screen.getByTestId('permissions-changed')).toHaveTextContent('true');
-    expect(screen.getByTestId('permissions-rules-count')).toHaveTextContent('1');
+    expect(screen.getByRole('region', { name: 'permissions-publication' })).toHaveTextContent('permissions/test/path');
+    expect(screen.getByRole('region', { name: 'permissions-changed' })).toHaveTextContent('true');
+    expect(screen.getByRole('region', { name: 'permissions-rules-count' })).toHaveTextContent('1');
 
-    const changeButton = screen.getByTestId('permissions-change-button');
+    const changeButton = screen.getByRole('button', { name: 'permissions-change-button' });
     changeButton.click();
     expect(onChange).toHaveBeenCalled();
   });
@@ -284,8 +287,8 @@ describe('Publications :: TabsContent', () => {
       currentRules: mockCurrentRules,
     });
 
-    expect(screen.queryByTestId('info-header')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('prompt-properties')).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'info-header' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'prompt-properties' })).not.toBeInTheDocument();
   });
 
   test('does not render Permissions content when Properties tab is active', () => {
@@ -298,7 +301,7 @@ describe('Publications :: TabsContent', () => {
       currentRules: mockCurrentRules,
     });
 
-    expect(screen.queryByTestId('permissions')).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'permissions' })).not.toBeInTheDocument();
   });
 
   test('does not render FileProperties for PromptPublications on Properties tab', () => {
@@ -311,7 +314,7 @@ describe('Publications :: TabsContent', () => {
       currentRules: mockCurrentRules,
     });
 
-    expect(screen.queryByTestId('file-properties')).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'file-properties' })).not.toBeInTheDocument();
   });
 
   test('does not render PromptProperties for FilePublications on Properties tab', () => {
@@ -324,7 +327,7 @@ describe('Publications :: TabsContent', () => {
       currentRules: mockCurrentRules,
     });
 
-    expect(screen.queryByTestId('prompt-properties')).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'prompt-properties' })).not.toBeInTheDocument();
   });
 
   test('passes isPermissionsChanged false to Permissions', () => {
@@ -337,7 +340,7 @@ describe('Publications :: TabsContent', () => {
       currentRules: mockCurrentRules,
     });
 
-    expect(screen.getByTestId('permissions-changed')).toHaveTextContent('false');
+    expect(screen.getByRole('region', { name: 'permissions-changed' })).toHaveTextContent('false');
   });
 
   test('handles empty currentRules array', () => {
@@ -350,7 +353,7 @@ describe('Publications :: TabsContent', () => {
       currentRules: [],
     });
 
-    expect(screen.getByTestId('permissions-rules-count')).toHaveTextContent('0');
+    expect(screen.getByRole('region', { name: 'permissions-rules-count' })).toHaveTextContent('0');
   });
 
   test('works with ApplicationPublications view for Permissions tab', () => {
@@ -363,7 +366,7 @@ describe('Publications :: TabsContent', () => {
       currentRules: mockCurrentRules,
     });
 
-    expect(screen.getByTestId('permissions')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'permissions' })).toBeInTheDocument();
   });
 
   test('renders empty fragment for unsupported view on Properties tab', () => {
@@ -376,9 +379,9 @@ describe('Publications :: TabsContent', () => {
       currentRules: mockCurrentRules,
     });
 
-    expect(screen.getByTestId('info-header')).toBeInTheDocument();
-    expect(screen.queryByTestId('file-properties')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('prompt-properties')).not.toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'info-header' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'file-properties' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'prompt-properties' })).not.toBeInTheDocument();
   });
 
   test('updates when activeTab changes from Properties to Permissions', () => {
@@ -391,7 +394,7 @@ describe('Publications :: TabsContent', () => {
       currentRules: mockCurrentRules,
     });
 
-    expect(screen.getByTestId('file-properties')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'file-properties' })).toBeInTheDocument();
 
     rerender(
       <TabsContent
@@ -404,8 +407,8 @@ describe('Publications :: TabsContent', () => {
       />,
     );
 
-    expect(screen.queryByTestId('file-properties')).not.toBeInTheDocument();
-    expect(screen.getByTestId('permissions')).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'file-properties' })).not.toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'permissions' })).toBeInTheDocument();
   });
 
   test('updates when view changes from FilePublications to PromptPublications', () => {
@@ -418,7 +421,7 @@ describe('Publications :: TabsContent', () => {
       currentRules: mockCurrentRules,
     });
 
-    expect(screen.getByTestId('file-properties')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'file-properties' })).toBeInTheDocument();
 
     const promptPublication = createMockPromptPublication();
     rerender(
@@ -432,8 +435,8 @@ describe('Publications :: TabsContent', () => {
       />,
     );
 
-    expect(screen.queryByTestId('file-properties')).not.toBeInTheDocument();
-    expect(screen.getByTestId('prompt-properties')).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'file-properties' })).not.toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'prompt-properties' })).toBeInTheDocument();
   });
 
   test('handles publication with different action types', () => {
@@ -446,7 +449,7 @@ describe('Publications :: TabsContent', () => {
       currentRules: mockCurrentRules,
     });
 
-    expect(screen.getByTestId('permissions')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'permissions' })).toBeInTheDocument();
   });
 
   test('renders correctly with multiple rules in currentRules', () => {
@@ -465,6 +468,6 @@ describe('Publications :: TabsContent', () => {
       currentRules: multipleRules,
     });
 
-    expect(screen.getByTestId('permissions-rules-count')).toHaveTextContent('3');
+    expect(screen.getByRole('region', { name: 'permissions-rules-count' })).toHaveTextContent('3');
   });
 });

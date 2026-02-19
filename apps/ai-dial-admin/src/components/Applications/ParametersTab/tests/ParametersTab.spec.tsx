@@ -3,12 +3,6 @@ import { describe, expect, test, vi } from 'vitest';
 import ParametersTab from '../ParametersTab';
 import { BasicI18nKey } from '@/src/constants/i18n';
 
-vi.mock('next-auth/react', () => ({
-  useSession: vi.fn(() => {
-    return { session: { providerId: 'provider' } };
-  }),
-}));
-
 describe('Applications - ApplicationParametersTab', () => {
   test('Should correctly render notification', () => {
     render(

@@ -4,23 +4,6 @@ import AddTestCase from '../AddTestCase';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 
 // Mock DialFormPopup component
-vi.mock('@epam/ai-dial-ui-kit', () => ({
-  DialFormPopup: ({ open, header, onClose, onSubmit, onCancel, submitLabel, cancelLabel, children }: any) => (
-    <>
-      {open && (
-        <div role="dialog" aria-label={header}>
-          <div>Header: {header}</div>
-          <div>{children}</div>
-          <button onClick={onSubmit}>{submitLabel}</button>
-          <button onClick={onCancel}>{cancelLabel}</button>
-          <button onClick={onClose} aria-label="Close dialog">
-            ×
-          </button>
-        </div>
-      )}
-    </>
-  ),
-}));
 
 describe('AddTestCase', () => {
   const mockOnClose = vi.fn();
