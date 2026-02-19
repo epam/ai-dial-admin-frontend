@@ -7,6 +7,16 @@ import { ReactNode } from 'react';
 import { afterEach, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 
+Object.defineProperty(globalThis, 'ResizeObserver', {
+  writable: true,
+  configurable: true,
+  value: vi.fn().mockImplementation(() => ({
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  })),
+});
+
 // ------------------ Fetch Mock ------------------
 const fetchMocker = createFetchMock(vi);
 fetchMocker.enableMocks();
@@ -59,24 +69,6 @@ vi.mock('next/image', () => ({
   __esModule: true,
   default: (props: any) => <img {...props} />,
 }));
-
-// ------------------ Global ResizeObserver ------------------
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-})) as any;
-
-// IntersectionObserver
-global.IntersectionObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-  takeRecords: vi.fn(),
-  root: null,
-  rootMargin: '',
-  thresholds: [],
-})) as any;
 
 // ------------------ Global console ------------------
 const originalConsole = console;
