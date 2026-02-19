@@ -24,10 +24,11 @@ export default defineConfig(() => ({
   test: {
     globals: true,
     environment: 'jsdom',
+    setupFiles: './test-setup.tsx',
+    threads: false,
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     exclude: [...configDefaults.exclude, '**/.next/**', '*.config.{ts,js}'],
     reporters: ['default'],
-    setupFiles: './test-setup.tsx',
     coverage: {
       include: ['src/**/*.{ts,tsx}'],
       reporter: ['text', 'html', 'clover', 'json'],

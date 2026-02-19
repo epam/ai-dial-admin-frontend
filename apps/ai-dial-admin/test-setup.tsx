@@ -8,31 +8,40 @@ import { afterEach, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 
 // -------------------- ResizeObserver --------------------
-Object.defineProperty(globalThis, 'ResizeObserver', {
-  writable: true,
-  configurable: true,
-  value: class {
-    constructor(_callback: ResizeObserverCallback) {}
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  },
-});
+declare global {
+  var ResizeObserver: any;
+  var IntersectionObserver: any;
+}
 
-// -------------------- IntersectionObserver --------------------
-Object.defineProperty(globalThis, 'IntersectionObserver', {
-  writable: true,
-  configurable: true,
-  value: class {
-    constructor(_callback: IntersectionObserverCallback) {}
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-    takeRecords() {
-      return [];
-    }
-  },
-});
+// --- ResizeObserver ---
+global.ResizeObserver = class {
+  constructor(callback: ResizeObserverCallback) {
+    this.callback = callback;
+  }
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+  // опционально: триггер callback
+  trigger(entries: ResizeObserverEntry[]) {
+    this.callback(entries, this);
+  }
+};
+
+// --- IntersectionObserver ---
+global.IntersectionObserver = class {
+  constructor(callback: IntersectionObserverCallback) {
+    this.callback = callback;
+  }
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+  takeRecords() {
+    return [];
+  }
+  trigger(entries: IntersectionObserverEntry[]) {
+    this.callback(entries, this);
+  }
+};
 
 // ------------------ Fetch Mock ------------------
 const fetchMocker = createFetchMock(vi);
