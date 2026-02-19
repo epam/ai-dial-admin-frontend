@@ -2,15 +2,17 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { DialPopup, DialSteps, PopupSize, StepStatus } from '@epam/ai-dial-ui-kit';
 
-import { useI18n } from '@/src/locales/client';
 import { getDeployments } from '@/src/app/[lang]/test-suites/actions';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 import Methods from '@/src/components/TestSuites/Methods/Methods';
 import TestSuiteProperties from '@/src/components/TestSuites/Properties/Properties';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
+import { useI18n } from '@/src/locales/client';
 import { Deployment } from '@/src/models/evaluation/deployment';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { getErrorNotification } from '@/src/utils/notification';
 import Applications from './Applications';
 import { TEST_SUIT_STEPS, TestSuitTab } from './constants';
 
@@ -22,6 +24,8 @@ interface Props {
 
 const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate }) => {
   const t = useI18n();
+  const { showNotification } = useNotification();
+
   const { isValid } = useSaveValidationContext();
   const [steps, setSteps] = useState(TEST_SUIT_STEPS(t));
   const [currentStepId, setCurrentStep] = useState(steps[0].id);
@@ -37,9 +41,15 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate }) => {
 
   useEffect(() => {
     if (!deployments) {
-      getDeployments().then((data) => setDeployments(data));
+      getDeployments().then((res) => {
+        if (res?.success) {
+          setDeployments(res.response || []);
+        } else {
+          showNotification(getErrorNotification(res?.errorHeader, res?.errorMessage, res?.requestId));
+        }
+      });
     }
-  }, [deployments]);
+  }, [deployments, showNotification]);
 
   useEffect(() => {
     setSteps((prev) =>
