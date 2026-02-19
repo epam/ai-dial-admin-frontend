@@ -7,27 +7,30 @@ import { ReactNode } from 'react';
 import { afterEach, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 
+// -------------------- ResizeObserver --------------------
 Object.defineProperty(globalThis, 'ResizeObserver', {
-  configurable: true,
   writable: true,
+  configurable: true,
   value: class {
-    observe = vi.fn();
-    unobserve = vi.fn();
-    disconnect = vi.fn();
+    constructor(_callback: ResizeObserverCallback) {}
+    observe() {}
+    unobserve() {}
+    disconnect() {}
   },
 });
 
+// -------------------- IntersectionObserver --------------------
 Object.defineProperty(globalThis, 'IntersectionObserver', {
-  configurable: true,
   writable: true,
+  configurable: true,
   value: class {
-    root = null;
-    rootMargin = '';
-    thresholds = [];
-    takeRecords = vi.fn();
-    observe = vi.fn();
-    unobserve = vi.fn();
-    disconnect = vi.fn();
+    constructor(_callback: IntersectionObserverCallback) {}
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+    takeRecords() {
+      return [];
+    }
   },
 });
 
