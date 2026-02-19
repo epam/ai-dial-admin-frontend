@@ -8,13 +8,27 @@ import { afterEach, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 
 Object.defineProperty(globalThis, 'ResizeObserver', {
-  writable: true,
   configurable: true,
-  value: vi.fn().mockImplementation(() => ({
-    observe: vi.fn(),
-    unobserve: vi.fn(),
-    disconnect: vi.fn(),
-  })),
+  writable: true,
+  value: class {
+    observe = vi.fn();
+    unobserve = vi.fn();
+    disconnect = vi.fn();
+  },
+});
+
+Object.defineProperty(globalThis, 'IntersectionObserver', {
+  configurable: true,
+  writable: true,
+  value: class {
+    root = null;
+    rootMargin = '';
+    thresholds = [];
+    takeRecords = vi.fn();
+    observe = vi.fn();
+    unobserve = vi.fn();
+    disconnect = vi.fn();
+  },
 });
 
 // ------------------ Fetch Mock ------------------
