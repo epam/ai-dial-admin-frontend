@@ -233,5 +233,5 @@ describe('Entities :: tabs', () => {
 });
 
 test('returns correct tabs for test suite request template', () => {
-  expect(getTestSuiteRequestTemplateTabs(t)).toEqual([parametersTab(t), bodyTab(t), headersTab(t)]);
+  expect(getTestSuiteRequestTemplateTabs(t)).toEqual([bodyTab(t), parametersTab(t), headersTab(t)]);
 });

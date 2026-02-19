@@ -53,7 +53,6 @@ const TabsContent: FC<Props> = ({ activeTab, onChange, selectedTestSuite }) => {
       )}
       {activeTab === EntityViewTab.TestCases && <TestCases selectedTestSuite={selectedTestSuite} onChange={onChange} />}
       {activeTab === EntityViewTab.Runs && <Runs selectedTestSuite={selectedTestSuite} />}
-      {activeTab === EntityViewTab.Trends && <div>Trends</div>}
     </>
   );
 };
