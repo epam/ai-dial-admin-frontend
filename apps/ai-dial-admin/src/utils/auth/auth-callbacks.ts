@@ -4,13 +4,12 @@ import { Account, CallbacksOptions, Profile } from 'next-auth';
 import { TokenEndpointHandler } from 'next-auth/providers';
 import { TokenSet } from 'openid-client';
 
-import { Token, UserSession } from '@/src/models/auth';
+import { NextAuthToken, Token, UserSession } from '@/src/models/auth';
 import { errorObjLog, warnLog } from '@/src/server/logger';
 import { NextClient, RefreshToken } from './nextauth-client';
 import { getListProvidersPassIdToken } from './token';
 
 const waitRefreshTokenTimeout = 5;
-const providersWithNotJWTToken = ['gitlab', 'google'];
 
 export const safeDecodeJwt = (jwtToken: string) => {
   try {
@@ -34,9 +33,8 @@ const getUser = (accessToken: string | undefined, idToken: string | undefined, p
 
   const useIdToken = listProviders.includes(providerId);
   const token = useIdToken ? idToken : accessToken;
-  const skipDecoding = !useIdToken && providersWithNotJWTToken.includes(providerId);
 
-  const decodedPayload = token && !skipDecoding ? safeDecodeJwt(token) : {};
+  const decodedPayload = token && !useIdToken ? safeDecodeJwt(token) : {};
   const dialRoles = get(decodedPayload, rolesFieldName, []) as string[];
   const roles = Array.isArray(dialRoles) ? dialRoles : [dialRoles];
   const isAdmin = roles.length > 0 && adminRoleNames.some((role) => roles.includes(role));
@@ -65,7 +63,7 @@ export const tokenConfig: TokenEndpointHandler = {
  * `accessToken` and `accessTokenExpires`. If an error occurs,
  * returns the old token and an error property
  */
-export async function refreshAccessToken(token: Token) {
+export async function refreshAccessToken(token: NextAuthToken) {
   const displayedTokenSub = process.env.SHOW_TOKEN_SUB === 'true' ? token.sub : '******';
   try {
     if (!token.providerId) {
@@ -177,7 +175,7 @@ export const callbacks: Partial<CallbacksOptions<Profile & { job_title?: string 
         ),
       };
     }
-    const typedToken = options.token as Token;
+    const typedToken = options.token as NextAuthToken;
     // Access token has expired, try to update it
     return refreshAccessToken(typedToken);
   },
@@ -194,7 +192,7 @@ export const callbacks: Partial<CallbacksOptions<Profile & { job_title?: string 
     }
 
     const isAdmin = (options?.token?.user as { isAdmin?: boolean })?.isAdmin ?? false;
-    const providerId = (options?.token as Token).providerId;
+    const providerId = (options?.token as NextAuthToken).providerId;
 
     if (options.session.user) {
       (options?.token?.user as { isAdmin?: boolean }).isAdmin = isAdmin;
