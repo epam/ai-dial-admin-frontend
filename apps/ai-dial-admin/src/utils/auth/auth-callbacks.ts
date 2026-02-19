@@ -10,6 +10,7 @@ import { NextClient, RefreshToken } from './nextauth-client';
 import { getListProvidersPassIdToken } from './token';
 
 const waitRefreshTokenTimeout = 5;
+const providersWithNotJWTToken = ['gitlab', 'google'];
 
 export const safeDecodeJwt = (jwtToken: string) => {
   try {
@@ -31,9 +32,11 @@ const getUser = (accessToken: string | undefined, idToken: string | undefined, p
 
   const listProviders = getListProvidersPassIdToken();
 
-  const token = listProviders.includes(providerId) ? idToken : accessToken;
+  const useIdToken = listProviders.includes(providerId);
+  const token = useIdToken ? idToken : accessToken;
+  const skipDecoding = !useIdToken && providersWithNotJWTToken.includes(providerId);
 
-  const decodedPayload = token ? safeDecodeJwt(token) : {};
+  const decodedPayload = token && !skipDecoding ? safeDecodeJwt(token) : {};
   const dialRoles = get(decodedPayload, rolesFieldName, []) as string[];
   const roles = Array.isArray(dialRoles) ? dialRoles : [dialRoles];
   const isAdmin = roles.length > 0 && adminRoleNames.some((role) => roles.includes(role));
