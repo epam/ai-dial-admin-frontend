@@ -6,7 +6,7 @@ import FilesProperties from '../FilesProperties';
 describe('FilesProperties', () => {
   test('renders files list title and files', () => {
     const publication = {
-      files: [{ name: 'file1.txt' }, { name: 'file2.txt' }],
+      files: [{ file: { name: 'file1.txt' } }, { file: { name: 'file2.txt' } }],
       action: 'download',
     };
 

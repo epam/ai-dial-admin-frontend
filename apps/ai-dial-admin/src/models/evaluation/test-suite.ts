@@ -8,6 +8,8 @@ export interface TestSuite {
   createdBy?: string;
   createdAt?: string;
   updatedAt?: string;
+  valid?: boolean;
+  validationWarnings?: string[];
 
   deploymentRef?: TestSuiteDeploymentRef;
   endpointRef?: TestSuiteEndpointRef;

@@ -1,5 +1,4 @@
 import { ValidityStatusI18nKey } from '@/src/constants/i18n';
-import { ValidityState } from '@/src/models/dial/base-entity';
 import { ValidityStatus } from '@/src/types/key';
 
 /**
@@ -17,8 +16,8 @@ export const getColorClassName = (status: string, theme: string): string => {
   return theme === 'dark' ? 'bg-red-400' : 'bg-red-800';
 };
 
-export const getValidityStatus = (validityState: ValidityState | undefined, t: (t: string) => string) => {
-  if (validityState?.valid) {
+export const getValidityStatus = (valid: boolean | undefined, t: (t: string) => string) => {
+  if (valid) {
     return {
       status: ValidityStatus.VALID,
       title: t(ValidityStatusI18nKey.Valid),

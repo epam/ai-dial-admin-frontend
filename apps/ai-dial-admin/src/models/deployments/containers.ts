@@ -4,6 +4,7 @@ import {
   CONTAINER_TYPE,
   ContainerResources,
   KubEventType,
+  PROBE_TYPE,
   SCALING_STRATEGY_TYPE,
   SERVING_SOURCE,
 } from '@/src/types/deployments/containers';
@@ -31,6 +32,22 @@ export interface Container extends BaseEntity {
   args?: string;
   scaling?: Autoscaling;
   allowedDomains?: string[];
+  probeProperties?: ProbeProperties;
+}
+
+export interface ProbeProperties {
+  enabled: boolean;
+  initialDelaySeconds?: number;
+  periodSeconds?: number;
+  timeoutSeconds?: number;
+  failureThreshold?: number;
+  probe?: ProbeConfig;
+}
+
+export interface ProbeConfig {
+  $type: PROBE_TYPE;
+  path?: string;
+  port?: number;
 }
 
 export interface Autoscaling {

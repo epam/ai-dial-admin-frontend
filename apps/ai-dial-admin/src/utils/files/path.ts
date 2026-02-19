@@ -82,3 +82,10 @@ export const getPathSegments = (fullPath: string): string[] => {
 
   return paths;
 };
+
+export const updatePathWithNameAndVersion = (oldPath: string, newName: string, newVersion: string): string => {
+  const parts = oldPath.split('/').filter(Boolean);
+  parts.pop();
+  parts.push(`${newName}__${newVersion}`);
+  return parts.join('/');
+};

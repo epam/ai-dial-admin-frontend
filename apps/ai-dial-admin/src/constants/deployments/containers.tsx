@@ -4,6 +4,7 @@ import {
   CreateSteps,
   KubEventType,
   MODEL_TYPE,
+  PROBE_TYPE,
   SCALING_STRATEGY_TYPE,
 } from '@/src/types/deployments/containers';
 import { ToolsetTransport } from '@/src/types/toolset';
@@ -62,6 +63,17 @@ export const DEFAULT_SCALING: Autoscaling = {
   strategy: {
     $type: SCALING_STRATEGY_TYPE.REQUESTS,
     threshold: 2,
+  },
+};
+
+export const DEFAULT_PROBE_CONFIG = {
+  enabled: true,
+  initialDelaySeconds: 0,
+  failureThreshold: 3,
+  periodSeconds: 10,
+  timeoutSeconds: 1,
+  probe: {
+    $type: PROBE_TYPE.TCP,
   },
 };
 

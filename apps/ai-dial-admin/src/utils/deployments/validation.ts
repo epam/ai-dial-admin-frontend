@@ -21,6 +21,7 @@ const SSH_REPO_REGEX =
 const MIN_VARIABLE_NAME_SYMBOLS = 1;
 const MAX_VARIABLE_NAME_SYMBOLS = 253;
 const VARIABLE_NAME_REGEX = /^[-._a-zA-Z0-9]+$/;
+
 // HF model name
 const HF_USERNAME_MAX_LENGTH = 42;
 const HF_MODEL_MAX_LENGTH = 96;
@@ -329,6 +330,10 @@ export const getWhitelistDomainError = (
   value?: string,
   t?: (key: string, options?: Record<string, string | number>) => string,
 ): FieldError | null => {
+  if (value === '*') {
+    return null;
+  }
+
   const trimmed = value?.trim() ?? '';
   if (!trimmed) {
     return {
@@ -354,7 +359,17 @@ export const getWhitelistDomainError = (
   return null;
 };
 
-export const getPortError = (value: number, t?: (key: string, options?: Record<string, string | number>) => string) => {
+export const getPortError = (
+  value: number,
+  t?: (key: string, options?: Record<string, string | number>) => string,
+  required?: boolean,
+) => {
+  if (required && value === void 0) {
+    return {
+      type: ErrorType.EMPTY,
+      text: t ? t(ErrorI18nKey.RequiredField) : '',
+    };
+  }
   if (value < 1 || value > 65535) {
     return {
       type: ErrorType.INVALID,
@@ -386,6 +401,20 @@ export const getFileNameError = (
       type: ErrorType.INVALID,
       text: t ? t(ErrorI18nKey.VariableError) : '',
     };
+  }
+
+  return null;
+};
+
+export const getAdvancedTimingsError = (
+  value?: number,
+  t?: (key: string, options?: Record<string, string | number>) => string,
+  max?: number,
+) => {
+  if (value != null && max) {
+    if (value < 0 || value > max) {
+      return { type: ErrorType.INVALID, text: t ? t(ErrorI18nKey.AdvancedTimingsError, { max }) : '' };
+    }
   }
 
   return null;

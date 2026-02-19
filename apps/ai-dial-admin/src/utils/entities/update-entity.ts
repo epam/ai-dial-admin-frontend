@@ -19,6 +19,10 @@ const createEntityMap: Record<string, UpdateI18nKey> = {
   [ApplicationRoute.SystemProperties]: UpdateI18nKey.SystemProperties,
   [ApplicationRoute.Files]: UpdateI18nKey.File,
   [ApplicationRoute.TestSuites]: UpdateI18nKey.TestSuite,
+  [ApplicationRoute.FilePublications]: UpdateI18nKey.Publication,
+  [ApplicationRoute.PromptPublications]: UpdateI18nKey.Publication,
+  [ApplicationRoute.ApplicationPublications]: UpdateI18nKey.Publication,
+  [ApplicationRoute.ToolsetPublications]: UpdateI18nKey.Publication,
 };
 
 export const getUpdateNotificationTitle = (
@@ -33,8 +37,8 @@ export const getUpdateNotificationDescription = (
   entityId: string | undefined,
   t: (str: string, props?: Record<string, string>) => string,
 ) => {
-  if (isAssetView(view)) {
-    return t(UpdateI18nKey.NotificationDescriptionAssets, {
+  if (isAssetView(view) || view === ApplicationRoute.TestSuites) {
+    return t(UpdateI18nKey.NotificationDescriptionWithoutRollback, {
       entity: t(createEntityMap[view]),
       entityId: entityId || '',
     });

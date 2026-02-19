@@ -1,7 +1,5 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { ApplicationRoute } from '@/src/types/routes';
-import { CreateSteps } from '@/src/types/deployments/containers';
-import { ContainersI18nKey } from '@/src/constants/i18n';
 import { AUTOSCALE_OPTIONS, CREATE_CONTAINER_STEPS, RESTART_REASONS } from '../containers';
 
 describe('CREATE_CONTAINER_STEPS', () => {

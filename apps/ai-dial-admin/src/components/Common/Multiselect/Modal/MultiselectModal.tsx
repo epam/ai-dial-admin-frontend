@@ -11,6 +11,7 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { getErrorNotification } from '@/src/utils/notification';
 import { isEqual, uniq } from 'lodash';
 import MultiselectContentModal from './ModalContent';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 
 interface Props {
   initSelectedItems?: string[];
@@ -39,11 +40,12 @@ const MultiselectModal: FC<Props> = ({
   ...props
 }) => {
   const t = useI18n();
+  const { isValid } = useSaveValidationContext();
 
   const { showNotification } = useNotification();
   const showNotificationRef = useRef(showNotification);
 
-  const [isValid, setIsValid] = useState(false);
+  const [isListValid, setListIsValid] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedItems, setSelectedItems] = useState<string[]>(initSelectedItems || []);
   const [items, setItems] = useState<string[]>([]);
@@ -60,7 +62,7 @@ const MultiselectModal: FC<Props> = ({
 
   useEffect(() => {
     const filtered = newItems.filter((v) => v !== '');
-    setIsValid(!!items.length || !!filtered.length);
+    setListIsValid(!!items.length || !!filtered.length);
   }, [items, newItems]);
 
   useEffect(() => {
@@ -92,7 +94,7 @@ const MultiselectModal: FC<Props> = ({
       onCancel={onClose}
       submitLabel={applyButtonText || t(ButtonsI18nKey.Apply)}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
-      disableSubmitButton={!isValid || (draggable && isEqual(newItems, selectedItems))}
+      disableSubmitButton={!isValid || !isListValid || (draggable && isEqual(newItems, selectedItems))}
     >
       <div className="flex flex-col overflow-auto px-6 py-4">
         {isLoading ? (

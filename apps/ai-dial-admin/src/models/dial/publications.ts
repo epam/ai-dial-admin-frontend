@@ -7,6 +7,7 @@ export interface Publication {
   path: string;
   requestName: string;
   author: string;
+  displayAuthor?: string;
   createdAt: string;
   status: string;
   action: ActionType;
@@ -15,12 +16,27 @@ export interface Publication {
   resourceIssues?: ResourceIssue[];
 }
 
+export interface PublicationEntity {
+  sourceUrl: string;
+  targetUrl: string;
+  reviewUrl: string;
+  action: ActionType;
+}
+
+export interface PublicationFile extends PublicationEntity {
+  file: Partial<DialFile>;
+}
+
+export interface PublicationPrompt extends PublicationEntity {
+  prompt: Partial<DialPrompt>;
+}
+
 export interface PromptPublication extends Publication {
-  prompts?: Partial<DialPrompt>[];
+  prompts?: PublicationPrompt[];
 }
 
 export interface FilePublication extends Publication {
-  files?: Partial<DialFile>[];
+  files?: PublicationFile[];
 }
 
 export interface ApplicationPublication extends Publication {

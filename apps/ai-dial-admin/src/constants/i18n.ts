@@ -218,6 +218,7 @@ export enum DeleteI18nKey {
   // Notification
   NotificationTitle = 'DeleteEntity.Notification.Title',
   NotificationDescription = 'DeleteEntity.Notification.Description',
+  NotificationDescriptionWithoutRollback = 'DeleteEntity.Notification.DescriptionWithoutRollback',
   ShortDescription = 'DeleteEntity.Notification.ShortDescription',
 
   // Entities
@@ -246,14 +247,13 @@ export enum DeleteI18nKey {
 
   //  No related artefacts
   AdapterWarning = 'DeleteEntity.NoRelatedArtefacts.AdapterWarning',
-  NoModels = 'DeleteEntity.NoRelatedArtefacts.NoModels',
   InterceptorTemplateWarning = 'DeleteEntity.NoRelatedArtefacts.InterceptorTemplateWarning',
-  NoInterceptors = 'DeleteEntity.NoRelatedArtefacts.NoInterceptors',
   ApplicationRunnerWarning = 'DeleteEntity.NoRelatedArtefacts.ApplicationRunnerWarning',
-  NoApplications = 'DeleteEntity.NoRelatedArtefacts.NoApplications',
+  ImageWarning = 'DeleteEntity.NoRelatedArtefacts.ImageWarning',
   RelatedApplications = 'DeleteEntity.NoRelatedArtefacts.RelatedApplications',
   RelatedInterceptors = 'DeleteEntity.NoRelatedArtefacts.RelatedInterceptors',
   RelatedModels = 'DeleteEntity.NoRelatedArtefacts.RelatedModels',
+  RelatedContainers = 'DeleteEntity.NoRelatedArtefacts.RelatedContainers',
 }
 
 export enum DuplicateI18nKey {
@@ -341,7 +341,7 @@ export enum UpdateI18nKey {
   // Notification
   NotificationTitle = 'UpdateEntity.Notification.Title',
   NotificationDescription = 'UpdateEntity.Notification.Description',
-  NotificationDescriptionAssets = 'UpdateEntity.Notification.DescriptionAssets',
+  NotificationDescriptionWithoutRollback = 'UpdateEntity.Notification.DescriptionWithoutRollback',
 
   // Entities
   Model = 'UpdateEntity.Entities.Model',
@@ -358,6 +358,7 @@ export enum UpdateI18nKey {
   InterceptorTemplate = 'UpdateEntity.Entities.InterceptorTemplate',
   ApplicationRunner = 'UpdateEntity.Entities.ApplicationRunner',
   SystemProperties = 'UpdateEntity.Entities.SystemProperties',
+  Publication = 'UpdateEntity.Entities.Publication',
 }
 
 export enum CreateI18nKey {
@@ -554,6 +555,7 @@ export enum TabsI18nKey {
   TestCases = 'Tabs.TestCases',
   Runs = 'Tabs.Runs',
   Trends = 'Tabs.Trends',
+  Permissions = 'Tabs.Permissions',
   Body = 'Tabs.Body',
   Headers = 'Tabs.Headers',
 }
@@ -613,6 +615,11 @@ export enum PublicationsI18nKey {
   DeclineReasonPlaceholder = 'Publications.ReasonPlaceholder',
   Warning = 'Publications.Warning',
   Publication = 'Publications.Publication',
+  PermissionsWarningTitle = 'Publications.PermissionsWarningTitle',
+  PermissionsWarningDescription = 'Publications.PermissionsWarningDescription',
+  PublishWarningTitle = 'Publications.PublishWarningTitle',
+  PublishWarningDescription = 'Publications.PublishWarningDescription',
+  UnpublishWarningTitle = 'Publications.UnpublishWarningTitle',
 
   // prompt publications
   PromptPublishApproveModalTitle = 'Publications.Prompt.PublishApproveModalTitle',
@@ -825,6 +832,8 @@ export enum RollbackI18nKey {
   NotificationErrorDescription = 'Rollback.Notification.ErrorDescription',
   NotificationSuccessTitle = 'Rollback.Notification.SuccessTitle',
   NotificationSuccessDescription = 'Rollback.Notification.SuccessDescription',
+  NotificationPrepareTitle = 'Rollback.Notification.PrepareTitle',
+  NotificationPrepareDescription = 'Rollback.Notification.PrepareDescription',
 
   // Entities
   Model = 'Rollback.Entities.Model',
@@ -877,6 +886,7 @@ export enum ErrorI18nKey {
   CpuError = 'Error.CpuError',
   ImageSourceURI = 'Error.ImageSourceURI',
   PathError = 'Error.PathError',
+  ProbePathError = 'Error.ProbePathError',
   VariableError = 'Error.VariableError',
   HFModelName = 'Error.HFModelName',
   ContainSpace = 'Error.ContainSpace',
@@ -894,6 +904,7 @@ export enum ErrorI18nKey {
   PortError = 'Error.PortError',
   MemoryError = 'Error.MemoryError',
   GPUError = 'Error.GPUError',
+  AdvancedTimingsError = 'Error.AdvancedTimingsError',
 }
 
 export enum SourceI18nKey {
@@ -980,13 +991,28 @@ export enum EntityPlaceholdersI18nKey {
   SHA = 'EntityPlaceholders.SHA',
   Search = 'EntityPlaceholders.Search',
   BaseDirectory = 'EntityPlaceholders.BaseDirectory',
-  ContainerPort = 'EntityPlaceholders.ContainerPort',
+  Port = 'EntityPlaceholders.Port',
   ContainerEndpointPath = 'EntityPlaceholders.ContainerEndpointPath',
   Command = 'EntityPlaceholders.Command',
   Arguments = 'EntityPlaceholders.Arguments',
   Domain = 'EntityPlaceholders.Domain',
   Mask = 'EntityPlaceholders.Mask',
   IpRange = 'EntityPlaceholders.IpRange',
+  DisplayAuthor = 'EntityPlaceholders.DisplayAuthor',
+  InitialDelaySeconds = 'EntityPlaceholders.InitialDelaySeconds',
+  PeriodSeconds = 'EntityPlaceholders.PeriodSeconds',
+  TimeoutSeconds = 'EntityPlaceholders.TimeoutSeconds',
+  FailureThreshold = 'EntityPlaceholders.FailureThreshold',
+}
+
+export enum EntityCaptionsI18nKey {
+  ProbeEnableCustom = 'EntityCaptions.ProbeEnableCustom',
+  ProbePath = 'EntityCaptions.ProbePath',
+  ProbePort = 'EntityCaptions.ProbePort',
+  ProbeInitialDelaySeconds = 'EntityCaptions.ProbeInitialDelaySeconds',
+  ProbePeriodSeconds = 'EntityCaptions.ProbePeriodSeconds',
+  ProbeTimeoutSeconds = 'EntityCaptions.ProbeTimeoutSeconds',
+  ProbeFailuresThreshold = 'EntityCaptions.ProbeFailuresThreshold',
 }
 
 export enum EntityFieldsI18nKey {
@@ -1002,6 +1028,7 @@ export enum EntityFieldsI18nKey {
   id = 'EntityFields.id',
   scopes = 'EntityFields.scopes',
   author = 'EntityFields.author',
+  displayAuthor = 'EntityFields.displayAuthor',
   endpoint = 'EntityFields.endpoint',
   permissions = 'EntityFields.permissions',
   allowedTools = 'EntityFields.allowedTools',
@@ -1140,6 +1167,7 @@ export enum EntityFieldsI18nKey {
   globalInterceptors = 'EntityFields.globalInterceptors',
   HFModelName = 'EntityFields.HFModelName',
   Resources = 'EntityFields.Resources',
+  StartupProbe = 'EntityFields.StartupProbe',
   Configuration = 'EntityFields.Configuration',
   Command = 'EntityFields.Command',
   EnvironmentVariables = 'EntityFields.EnvironmentVariables',
@@ -1151,6 +1179,13 @@ export enum EntityFieldsI18nKey {
   LastReason = 'EntityFields.LastReason',
   Mask = 'EntityFields.Mask',
   IpRange = 'EntityFields.IpRange',
+  action = 'EntityFields.action',
+  Path = 'EntityFields.Path',
+  InitialDelaySeconds = 'EntityFields.InitialDelaySeconds',
+  PeriodSeconds = 'EntityFields.PeriodSeconds',
+  TimeoutSeconds = 'EntityFields.TimeoutSeconds',
+  FailureThreshold = 'EntityFields.FailureThreshold',
+  AdvancedTiming = 'EntityFields.AdvancedTiming',
 }
 
 export enum ToolsetI18nKey {
@@ -1280,6 +1315,13 @@ export enum DeploymentsI18nKey {
   GlobalWhitelist = 'Deployments.GlobalWhitelist',
   SpecificWhitelist = 'Deployments.SpecificWhitelist',
   GlobalFirewall = 'Deployments.GlobalFirewall',
+  WhitelistPolicyLabel = 'Deployments.WhitelistPolicyLabel',
+  WhitelistPolicyAll = 'Deployments.WhitelistPolicyAll',
+  WhitelistPolicyAllCaption = 'Deployments.WhitelistPolicyAllCaption',
+  WhitelistPolicyAllWarning = 'Deployments.WhitelistPolicyAllWarning',
+  WhitelistPolicyAllWarningDescription = 'Deployments.WhitelistPolicyAllWarningDescription',
+  WhitelistPolicyCustom = 'Deployments.WhitelistPolicyCustom',
+  WhitelistPolicyCustomCaption = 'Deployments.WhitelistPolicyCustomCaption',
   AddDomain = 'Deployments.AddDomain',
 }
 
@@ -1349,6 +1391,7 @@ export enum FileManagerI18nKey {
   NameExists = 'FileManager.NameExists',
   ManagePermissions = 'FileManager.ManagePermissions',
   CreateFolderValidate = 'FileManager.CreateFolderValidate',
+  CreateFolderValidateFirstSymbol = 'FileManager.CreateFolderValidateFirstSymbol',
   Preview = 'FileManager.Preview',
 
   // Notifications

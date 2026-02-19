@@ -17,6 +17,7 @@ import {
   getGpuError,
   getMemoryValueError,
   getPortError,
+  getAdvancedTimingsError,
 } from '../validation';
 import { ErrorType } from '@/src/types/error-type';
 import { ErrorI18nKey } from '@/src/constants/i18n';
@@ -632,6 +633,24 @@ describe('validation utils', () => {
         type: ErrorType.INVALID,
         text: `Translated: ${ErrorI18nKey.ReplicasError}`,
       });
+    });
+  });
+
+  describe('getPositiveNumberFieldsError', () => {
+    test('should return error when value less than 0', () => {
+      expect(getAdvancedTimingsError(-1, t, 1)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.AdvancedTimingsError,
+      });
+    });
+    test('should return error when value bigger than max', () => {
+      expect(getAdvancedTimingsError(101, t, 100)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.AdvancedTimingsError,
+      });
+    });
+    test('should return null when value is bigger or equal to 0', () => {
+      expect(getAdvancedTimingsError(0, t, 10)).toBeNull();
     });
   });
 });

@@ -11,6 +11,7 @@ import { getRouteByType } from '@/src/utils/deployments/entity';
 import { IMAGE_TYPE } from '@/src/types/deployments/images';
 import { Container } from '@/src/models/deployments/containers';
 import { AllVersionValue } from '@/src/components/EntityView/Modals/Delete/constants';
+import { isAssetView } from '@/src/utils/is-asset-view';
 
 const deleteEntityMap: Record<string, DeleteI18nKey> = {
   [ApplicationRoute.Models]: DeleteI18nKey.Model,
@@ -67,6 +68,10 @@ export const getNotificationDescription = (
   entityId: string,
   t: (str: string, props?: Record<string, string>) => string,
 ) => {
+  if (isAssetView(view) || view === ApplicationRoute.TestSuites) {
+    return t(DeleteI18nKey.NotificationDescriptionWithoutRollback, { entity: t(deleteEntityMap[view]), entityId });
+  }
+
   return t(DeleteI18nKey.NotificationDescription, { entity: t(deleteEntityMap[view]), entityId });
 };
 
@@ -78,6 +83,8 @@ export const getWarningText = (view: ApplicationRoute, t: (str: string) => strin
       return t(DeleteI18nKey.InterceptorTemplateWarning);
     case ApplicationRoute.Adapters:
       return t(DeleteI18nKey.AdapterWarning);
+    case ApplicationRoute.Images:
+      return t(DeleteI18nKey.ImageWarning);
     default:
       return '';
   }
@@ -91,19 +98,8 @@ export const getRelatedText = (view: ApplicationRoute, t: (str: string) => strin
       return t(DeleteI18nKey.RelatedInterceptors);
     case ApplicationRoute.Adapters:
       return t(DeleteI18nKey.RelatedModels);
-    default:
-      return '';
-  }
-};
-
-export const getNoRelatedText = (view: ApplicationRoute, t: (str: string) => string) => {
-  switch (view) {
-    case ApplicationRoute.ApplicationRunners:
-      return t(DeleteI18nKey.NoApplications);
-    case ApplicationRoute.InterceptorTemplates:
-      return t(DeleteI18nKey.NoInterceptors);
-    case ApplicationRoute.Adapters:
-      return t(DeleteI18nKey.NoModels);
+    case ApplicationRoute.Images:
+      return t(DeleteI18nKey.RelatedContainers);
     default:
       return '';
   }
