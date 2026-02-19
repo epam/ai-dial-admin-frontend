@@ -31,7 +31,9 @@ const TabsContent: FC<Props> = ({ activeTab, onChange, selectedTestSuite }) => {
     return (
       <ValidityStatusLabel
         valid={selectedTestSuite?.valid}
-        message={selectedTestSuite.validationWarnings?.join(', ')}
+        message={selectedTestSuite.validationWarnings
+          ?.map((warning) => `${warning.code}: ${warning.message}`)
+          .join(', \n')}
       />
     );
   }, [selectedTestSuite.valid, selectedTestSuite.validationWarnings]);

@@ -218,6 +218,9 @@ export default {
     SaveChangesDescription: 'Save changes before opening the parameters tab. All unsaved changes will be lost.',
     SaveParametersTitle: 'Save Parameters',
     SaveParametersDescription: 'Save parameter changes before leaving. Unsaved changes will be lost.',
+    DiscardChanges: 'Discard Changes',
+    DiscardChangesDescription:
+      'Are you sure you want to discard changes? All previously added information will not be saved.',
     // deployments
     NoImages: 'No Images',
     NoContainersType: 'No {type} {entityType}s',
