@@ -29,7 +29,10 @@ const TabsContent: FC<Props> = ({ activeTab, onChange, selectedTestSuite }) => {
 
   const headerPostfix = useMemo(() => {
     return (
-      <ValidityStatusLabel valid={selectedTestSuite?.valid} message={selectedTestSuite.validationWarnings.join(', ')} />
+      <ValidityStatusLabel
+        valid={selectedTestSuite?.valid}
+        message={selectedTestSuite.validationWarnings?.join(', ')}
+      />
     );
   }, [selectedTestSuite.valid, selectedTestSuite.validationWarnings]);
 
