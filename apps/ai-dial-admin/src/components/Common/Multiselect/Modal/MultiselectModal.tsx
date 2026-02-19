@@ -12,6 +12,7 @@ import { getErrorNotification } from '@/src/utils/notification';
 import { isEqual, uniq } from 'lodash';
 import MultiselectContentModal from './ModalContent';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
+import { isErrorPresent } from '@/src/utils/deployments/containers';
 
 interface Props {
   initSelectedItems?: string[];
@@ -40,7 +41,7 @@ const MultiselectModal: FC<Props> = ({
   ...props
 }) => {
   const t = useI18n();
-  const { isValid } = useSaveValidationContext();
+  const { isValid, errorFields } = useSaveValidationContext();
 
   const { showNotification } = useNotification();
   const showNotificationRef = useRef(showNotification);
@@ -50,6 +51,15 @@ const MultiselectModal: FC<Props> = ({
   const [selectedItems, setSelectedItems] = useState<string[]>(initSelectedItems || []);
   const [items, setItems] = useState<string[]>([]);
   const [newItems, setNewItems] = useState<string[]>([]);
+  const [isModalInvalid, setModalInvalid] = useState(false);
+
+  useEffect(() => {
+    if (!isValid) {
+      setModalInvalid(isErrorPresent(errorFields, ['topic_']));
+    } else {
+      setModalInvalid(false);
+    }
+  }, [errorFields, isValid]);
 
   const onApply = useCallback(() => {
     if (draggable) {
@@ -94,7 +104,7 @@ const MultiselectModal: FC<Props> = ({
       onCancel={onClose}
       submitLabel={applyButtonText || t(ButtonsI18nKey.Apply)}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
-      disableSubmitButton={!isValid || !isListValid || (draggable && isEqual(newItems, selectedItems))}
+      disableSubmitButton={isModalInvalid || !isListValid || (draggable && isEqual(newItems, selectedItems))}
     >
       <div className="flex flex-col overflow-auto px-6 py-4">
         {isLoading ? (
