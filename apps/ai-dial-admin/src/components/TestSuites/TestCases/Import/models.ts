@@ -1,9 +1,11 @@
+import { ValidationWarning } from '@/src/models/evaluation/test-suite';
+
 export interface ImportPreview {
   autoDetectedSchema: AutoDetectedSchema[];
   detectedColumns: ColumnMapping[];
   sampleRows: RowMapping[];
   totalRows: number;
-  warnings: ValidationWarning[];
+  warnings: CaseWarning[];
 }
 
 export interface AutoDetectedSchema {
@@ -23,18 +25,11 @@ export interface RowMapping {
   enabled: boolean;
   valid: boolean;
   data: Record<string, string | number>;
-  validationWarnings: RowValidationWarning[];
+  validationWarnings: ValidationWarning[];
   testCaseName: string;
 }
 
-export interface RowValidationWarning {
-  code: string;
-  message: string;
-  path: string;
-  fieldName: string;
-}
-
-export interface ValidationWarning {
+export interface CaseWarning {
   columnName: string;
   message: string;
   rowNumber: number;
