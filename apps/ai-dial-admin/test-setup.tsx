@@ -7,42 +7,6 @@ import { ReactNode } from 'react';
 import { afterEach, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 
-// -------------------- ResizeObserver --------------------
-declare global {
-  var ResizeObserver: any;
-  var IntersectionObserver: any;
-}
-
-// --- ResizeObserver ---
-global.ResizeObserver = class {
-  constructor(callback: ResizeObserverCallback) {
-    this.callback = callback;
-  }
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-  // опционально: триггер callback
-  trigger(entries: ResizeObserverEntry[]) {
-    this.callback(entries, this);
-  }
-};
-
-// --- IntersectionObserver ---
-global.IntersectionObserver = class {
-  constructor(callback: IntersectionObserverCallback) {
-    this.callback = callback;
-  }
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-  takeRecords() {
-    return [];
-  }
-  trigger(entries: IntersectionObserverEntry[]) {
-    this.callback(entries, this);
-  }
-};
-
 // ------------------ Fetch Mock ------------------
 const fetchMocker = createFetchMock(vi);
 fetchMocker.enableMocks();
@@ -110,6 +74,21 @@ Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
   writable: true,
   value: () => {},
 });
+
+// ------------------ Mock ResizeObserver ------------------
+class ResizeObserverMock {
+  constructor(public callback: ResizeObserverCallback) {}
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+
+  trigger(entries: ResizeObserverEntry[]) {
+    this.callback(entries, this as unknown as ResizeObserver);
+    console.warn('ResizeObserverMock triggered with entries:', entries);
+  }
+}
+
+global.ResizeObserver = ResizeObserverMock as unknown as typeof ResizeObserver;
 
 // ------------------ Cleanup after each test ------------------
 afterEach(() => cleanup());
