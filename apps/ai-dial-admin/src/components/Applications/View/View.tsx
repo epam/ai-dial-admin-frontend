@@ -186,6 +186,9 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
       if (type === ModalType.emptyRoles) {
         onModalClose();
       }
+      if (type === ModalType.discard) {
+        onModalClose();
+      }
     },
     [onChangeTab, onModalClose, onDiscard],
   );
@@ -232,8 +235,12 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
         onSave();
         onModalClose();
       }
+      if (type === ModalType.discard) {
+        onDiscard();
+        onModalClose();
+      }
     },
-    [onChangeTab, onModalClose, onSave, sendMessage, visualizerConnector],
+    [onChangeTab, onModalClose, onSave, sendMessage, onDiscard, visualizerConnector],
   );
 
   const onChangeActiveTab = useCallback(
@@ -259,13 +266,17 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
     }
   }, [onModalOpen, selectedFormat, onSave, selectedApplication]);
 
+  const onTryToDiscard = useCallback(() => {
+    onModalOpen(ModalType.discard);
+  }, [onModalOpen]);
+
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <SimpleEntityHeader
         view={ApplicationRoute.Applications}
         entity={selectedApplication}
         isChanged={isChanged}
-        onDiscard={onDiscard}
+        onDiscard={onTryToDiscard}
         onSave={onTryToSave}
         tabs={tabs}
         jsonConfiguration={jsonConfiguration}

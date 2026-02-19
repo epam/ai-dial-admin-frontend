@@ -8,6 +8,7 @@ import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { ModalType } from './constants';
 import EntityRolesModal from './EmptyRoles/EmptyRoles';
+import DiscardModal from './Discard/Discard';
 
 interface Props {
   isModalOpen: boolean;
@@ -59,6 +60,13 @@ const EntityViewModals: FC<Props> = ({ isModalOpen, modalType, handleConfirm, ha
           onConfirm={() => handleConfirm(ModalType.emptyRoles)}
           onClose={() => handleClose()}
           onCancel={() => handleCancel(ModalType.emptyRoles)}
+        />
+      )}
+      {isModalOpen && modalType === ModalType.discard && (
+        <DiscardModal
+          onConfirm={() => handleConfirm(ModalType.discard)}
+          onClose={() => handleClose()}
+          onCancel={() => handleCancel(ModalType.discard)}
         />
       )}
     </>

@@ -27,6 +27,7 @@ import { EntityViewTab, getKeyTabs } from '@/src/utils/tabs/utils';
 import KeyRotateModal from '../Modals/KeyRotateModal';
 import TabsContent from './TabsContent';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
+import DiscardModal from '@/src/components//EntityView/Modals/Discard/Discard';
 
 interface Props {
   originalKey: DialKey;
@@ -49,6 +50,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, ...props }) => {
   const [selectedKey, setSelectedKey] = useState(cloneDeep(originalKey));
   const [isChanged, setIsChanged] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
+  const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
 
   const [selectedFormat, setSelectedFormat] = useState(ExportFormat.ADMIN);
   const [coreKey, setCoreKey] = useState<DialKey | null>(null);
@@ -143,6 +145,15 @@ const KeyView: FC<Props> = ({ originalKey, etag, ...props }) => {
     }
   }, [selectedKey, selectedFormat, onSaveKey]);
 
+  const onTryToDiscard = useCallback(() => {
+    setIsDiscardModalOpen(true);
+  }, []);
+
+  const onDiscardModalConfirm = useCallback(() => {
+    onDiscard();
+    setIsDiscardModalOpen(false);
+  }, [onDiscard]);
+
   return (
     <>
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
@@ -150,7 +161,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, ...props }) => {
           view={ApplicationRoute.Keys}
           entity={selectedKey}
           isChanged={isChanged}
-          onDiscard={onDiscard}
+          onDiscard={onTryToDiscard}
           onSave={onTryToSaveKey}
           tabs={tabs}
           jsonConfiguration={jsonConfiguration}
@@ -205,6 +216,14 @@ const KeyView: FC<Props> = ({ originalKey, etag, ...props }) => {
           />,
           document.body,
         )}
+
+      {isDiscardModalOpen && (
+        <DiscardModal
+          onConfirm={onDiscardModalConfirm}
+          onClose={() => setIsDiscardModalOpen(false)}
+          onCancel={() => setIsDiscardModalOpen(false)}
+        />
+      )}
     </>
   );
 };
