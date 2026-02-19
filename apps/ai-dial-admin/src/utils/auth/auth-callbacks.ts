@@ -4,7 +4,7 @@ import { Account, CallbacksOptions, Profile } from 'next-auth';
 import { TokenEndpointHandler } from 'next-auth/providers';
 import { TokenSet } from 'openid-client';
 
-import { NextAuthToken, Token, UserSession } from '@/src/models/auth';
+import { NextAuthToken, UserSession } from '@/src/models/auth';
 import { errorObjLog, warnLog } from '@/src/server/logger';
 import { NextClient, RefreshToken } from './nextauth-client';
 import { getListProvidersPassIdToken } from './token';
