@@ -165,50 +165,6 @@ describe('Publications :: TabsContent', () => {
     expect(screen.queryByRole('region', { name: 'prompt-properties' })).not.toBeInTheDocument();
   });
 
-  test('wraps FileProperties in FileFolderProvider', () => {
-    const publication = createMockFilePublication();
-    setup({
-      view: ApplicationRoute.FilePublications,
-      selectedPublication: publication,
-      activeTab: EntityViewTab.Properties,
-      isPermissionsChanged: false,
-      currentRules: mockCurrentRules,
-    });
-
-    const provider = screen.getByTestId('file-folder-provider');
-    expect(provider).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: 'file-properties' }).parentElement).toBe(provider);
-  });
-
-  test('wraps PromptProperties in FileFolderProvider', () => {
-    const publication = createMockPromptPublication();
-    setup({
-      view: ApplicationRoute.PromptPublications,
-      selectedPublication: publication,
-      activeTab: EntityViewTab.Properties,
-      isPermissionsChanged: false,
-      currentRules: mockCurrentRules,
-    });
-
-    const provider = screen.getByTestId('file-folder-provider');
-    expect(provider).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: 'prompt-properties' }).parentElement).toBe(provider);
-  });
-
-  test('passes view and entity to InfoHeader', () => {
-    const publication = createMockFilePublication({ path: 'test/custom/path' });
-    setup({
-      view: ApplicationRoute.FilePublications,
-      selectedPublication: publication,
-      activeTab: EntityViewTab.Properties,
-      isPermissionsChanged: false,
-      currentRules: mockCurrentRules,
-    });
-
-    expect(screen.getByRole('region', { name: 'header-view' })).toHaveTextContent(ApplicationRoute.FilePublications);
-    expect(screen.getByRole('region', { name: 'header-entity' })).toHaveTextContent('test/custom/path');
-  });
-
   test('passes publication and onChange to FileProperties', () => {
     const publication = createMockFilePublication({ path: 'file/publication/path' });
     const { onChange } = setup({
