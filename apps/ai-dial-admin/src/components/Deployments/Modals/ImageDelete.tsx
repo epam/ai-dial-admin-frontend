@@ -3,7 +3,6 @@
 /**
  * This is copy of Entity delete modal updated for usage with Images.
  * apps/ai-dial-admin/src/components/EntityView/Modals/Delete/Delete.tsx
- * All changes marked with //CHANGED comment
  * TODO: reuse original component when Images will support unified fields.
  */
 
@@ -29,7 +28,6 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isAssetView, isBuildersView } from '@/src/utils/is-asset-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import {
   getConfirmation,
   getNotificationDescription,
@@ -87,6 +85,7 @@ const ImageDeleteConfirmationModal = <T extends Artefact>({
   const modalSize = isBuildersView(view) ? PopupSize.Md : PopupSize.Sm;
 
   const [selectedVersion, setSelectedVersion] = useState(entity?.version);
+  const [displayedId, setDisplayedId] = useState(entity.name);
 
   const name = useMemo(
     () => (isAssetView(view) ? entity.name : entity.displayName || entity['dial:applicationTypeDisplayName']),
@@ -108,7 +107,6 @@ const ImageDeleteConfirmationModal = <T extends Artefact>({
       return [];
     }
 
-    //CHANGED
     if (existingVersions.length === 1) {
       return [
         ...existingVersions.map(({ version, status }) => ({
@@ -128,8 +126,7 @@ const ImageDeleteConfirmationModal = <T extends Artefact>({
         value: version,
         label: version,
         icon: <StatusIcon status={status} />,
-      })), //CHANGED
-      //...existingVersions.map((version) => ({ value: version, label: version })),
+      })),
     ];
   }, [existingVersions, t]);
 
@@ -137,15 +134,15 @@ const ImageDeleteConfirmationModal = <T extends Artefact>({
     let entityKeys: string[];
 
     if (!selectedVersion) {
-      entityKeys = [getEntityPath(view, entity, true)];
+      entityKeys = [entity.id];
     } else {
-      entityKeys =
+      const versionsForRemove =
         selectedVersion !== AllVersionValue
-          ? [getEntityPath(view, entity, true, selectedVersion)]
-          : existingVersions?.map((version) => version.id) || []; // CHANGED
-      //: existingVersions?.map((version) => getEntityPath(view, entity, true, version)) || [];;
+          ? existingVersions?.filter((v) => v.version === selectedVersion)
+          : existingVersions;
+      entityKeys = versionsForRemove?.map((v) => v.id) || []; // CHANGED
+      //? [getEntityPath(view, entity, true, selectedVersion)] : existingVersions?.map((version) => getEntityPath(view, entity, true, version)) || [];
     }
-
     const promises = entityKeys.map((entityKey) => getReqRef.current(onRemoveEntity, entityKey, etag));
 
     Promise.all(promises)
@@ -168,7 +165,7 @@ const ImageDeleteConfirmationModal = <T extends Artefact>({
             folderContext?.fetchFiles(folderContext?.filePath);
           }
 
-          if (isSelectedView) {
+          if (isSelectedView && entityKeys.includes(entity.name as string)) {
             router.push(view);
           }
           router.refresh();
@@ -193,9 +190,17 @@ const ImageDeleteConfirmationModal = <T extends Artefact>({
     etag,
   ]);
 
-  const onVersionChange = useCallback((value: string) => {
-    setSelectedVersion(value);
-  }, []);
+  const onVersionChange = useCallback(
+    (value: string) => {
+      const all = value === AllVersionValue;
+      const ids = !all ? existingVersions?.filter((v) => v.version === value) : existingVersions;
+      const id = ids?.map((v) => v.id).join(', ') || '';
+
+      setDisplayedId(id);
+      setSelectedVersion(value);
+    },
+    [existingVersions],
+  );
 
   return (
     <DialConfirmationPopup
@@ -213,7 +218,7 @@ const ImageDeleteConfirmationModal = <T extends Artefact>({
           {id && (
             <div className="text-primary dial-small flex flex-row items-center gap-x-1">
               <span className="text-secondary">{t(EntityFieldsI18nKey.id)}:</span>
-              <DialEllipsisTooltip text={entity.name || entity.$id} />
+              <DialEllipsisTooltip text={displayedId} />
             </div>
           )}
           {name && (
@@ -241,8 +246,6 @@ const ImageDeleteConfirmationModal = <T extends Artefact>({
             )
           )}
         </div>
-        {/* //CHANGED */}
-        {/*{isBuildersView(view) && (*/}
         {(isBuildersView(view) || view === ApplicationRoute.Images) && (
           <RelatedArtefacts entity={{ ...entity, existingVersions, selectedVersion }} view={view} />
         )}

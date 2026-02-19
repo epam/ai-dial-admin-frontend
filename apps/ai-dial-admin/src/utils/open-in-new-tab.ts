@@ -54,6 +54,7 @@ export const getEntityPath = (
     case ApplicationRoute.ModelServings:
       return `${encodeURIComponent((data as { name: string }).name)}`;
     case ApplicationRoute.Images:
+      return `${encodeURIComponent((data as { id: string }).id)}`;
     case ApplicationRoute.TestSuites:
       return `${encodeURIComponent((data as { id: string }).id)}`;
 
