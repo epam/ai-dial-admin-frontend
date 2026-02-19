@@ -55,7 +55,12 @@ const ImageView: FC<Props> = ({ image, containerNames, versions }) => {
     setImageVersions(versions);
   }, [versions]);
 
-  const tabs = getDeploymentsViewTabs(ApplicationRoute.Images, t, selectedImage.buildStatus);
+  const tabs = getDeploymentsViewTabs(
+    ApplicationRoute.Images,
+    t,
+    selectedImage.buildStatus,
+    selectedImage.allowedDomains,
+  );
 
   useEffect(() => {
     setSelectedImage(cloneDeep(image));
