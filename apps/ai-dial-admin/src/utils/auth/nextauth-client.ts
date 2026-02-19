@@ -3,7 +3,7 @@ import { Client } from 'openid-client';
 
 export interface RefreshToken {
   isRefreshing: boolean;
-  token: Token | undefined;
+  token: Token;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

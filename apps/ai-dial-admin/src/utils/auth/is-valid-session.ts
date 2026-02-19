@@ -1,8 +1,8 @@
+import { Token } from '@/src/models/auth';
 import { DefaultSession, getServerSession } from 'next-auth';
-import { JWT } from 'next-auth/jwt';
 import { authOptions } from './auth-options';
 
-export const getIsInvalidSession = async (isEnableAuth: boolean, token: JWT | null) => {
+export const getIsInvalidSession = async (isEnableAuth: boolean, token: Token) => {
   if (!isEnableAuth) {
     return false;
   }

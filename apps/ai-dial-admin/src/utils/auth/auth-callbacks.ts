@@ -4,22 +4,23 @@ import { Account, CallbacksOptions, Profile } from 'next-auth';
 import { TokenEndpointHandler } from 'next-auth/providers';
 import { TokenSet } from 'openid-client';
 
-import { Token, UserSession } from '@/src/models/auth';
+import { NextAuthToken, UserSession } from '@/src/models/auth';
 import { errorObjLog, warnLog } from '@/src/server/logger';
 import { NextClient, RefreshToken } from './nextauth-client';
+import { getListProvidersPassIdToken } from './token';
 
 const waitRefreshTokenTimeout = 5;
 
-export const safeDecodeJwt = (accessToken: string) => {
+export const safeDecodeJwt = (jwtToken: string) => {
   try {
-    return decodeJwt(accessToken);
+    return decodeJwt(jwtToken);
   } catch (err) {
     errorObjLog(err, "Token couldn't be parsed as JWT");
     return {};
   }
 };
 
-export const getUser = (accessToken: string | undefined, providerId: string) => {
+const getUser = (accessToken: string | undefined, idToken: string | undefined, providerId: string) => {
   const rolesFieldName =
     process.env[`AUTH_${providerId.toUpperCase()}_DIAL_ROLES_FIELD`] ?? process.env.DIAL_ROLES_FIELD ?? 'dial_roles';
   const adminRoleNames = (
@@ -27,8 +28,13 @@ export const getUser = (accessToken: string | undefined, providerId: string) => 
     process.env.ADMIN_ROLE_NAMES ??
     'admin'
   ).split(',');
-  // Google tokens are not JWTs, so we shouldn't try to decode them
-  const decodedPayload = accessToken && providerId !== 'google' ? safeDecodeJwt(accessToken) : {};
+
+  const listProviders = getListProvidersPassIdToken();
+
+  const useIdToken = listProviders.includes(providerId);
+  const token = useIdToken ? idToken : accessToken;
+
+  const decodedPayload = token && !useIdToken ? safeDecodeJwt(token) : {};
   const dialRoles = get(decodedPayload, rolesFieldName, []) as string[];
   const roles = Array.isArray(dialRoles) ? dialRoles : [dialRoles];
   const isAdmin = roles.length > 0 && adminRoleNames.some((role) => roles.includes(role));
@@ -57,7 +63,7 @@ export const tokenConfig: TokenEndpointHandler = {
  * `accessToken` and `accessTokenExpires`. If an error occurs,
  * returns the old token and an error property
  */
-export async function refreshAccessToken(token: Token) {
+export async function refreshAccessToken(token: NextAuthToken) {
   const displayedTokenSub = process.env.SHOW_TOKEN_SUB === 'true' ? token.sub : '******';
   try {
     if (!token.providerId) {
@@ -113,7 +119,7 @@ export async function refreshAccessToken(token: Token) {
 
     const returnToken = {
       ...token,
-      user: getUser(refreshedTokens.access_token, token.providerId),
+      user: getUser(refreshedTokens.access_token as string, refreshedTokens.idToken as string, token.providerId),
       access_token: refreshedTokens.access_token,
       accessTokenExpires: refreshedTokens.expires_in
         ? Date.now() + refreshedTokens.expires_in * 1000
@@ -141,7 +147,7 @@ export const callbacks: Partial<CallbacksOptions<Profile & { job_title?: string 
     if (options.account) {
       return {
         ...options.token,
-        user: getUser(options.account?.access_token, options.account.provider),
+        user: getUser(options.account.access_token, options.account.id_token, options.account.provider),
         jobTitle: options.profile?.job_title,
         access_token: options.account.access_token,
         accessTokenExpires:
@@ -164,11 +170,12 @@ export const callbacks: Partial<CallbacksOptions<Profile & { job_title?: string 
         ...options.token,
         user: getUser(
           options.token?.access_token as string,
+          options.token.idToken as string,
           typeof options.token.providerId === 'string' ? options.token.providerId : '',
         ),
       };
     }
-    const typedToken = options.token as Token;
+    const typedToken = options.token as NextAuthToken;
     // Access token has expired, try to update it
     return refreshAccessToken(typedToken);
   },
@@ -185,7 +192,7 @@ export const callbacks: Partial<CallbacksOptions<Profile & { job_title?: string 
     }
 
     const isAdmin = (options?.token?.user as { isAdmin?: boolean })?.isAdmin ?? false;
-    const providerId = (options?.token as Token).providerId;
+    const providerId = (options?.token as NextAuthToken).providerId;
 
     if (options.session.user) {
       (options?.token?.user as { isAdmin?: boolean }).isAdmin = isAdmin;
