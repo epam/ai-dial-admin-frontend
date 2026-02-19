@@ -55,7 +55,7 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
         gridApi?.hideOverlay();
         gridApi?.setGridOption('loading', true);
         const page = Math.floor(params.startRow / PAGE_SIZE);
-        if (page === 0) {
+        if (page === 0 && runs) {
           onSetData(runs, totalElements, params);
           return;
         }
@@ -90,6 +90,7 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
   );
 
   const refreshGrid = useCallback(() => {
+    setRuns(null);
     if (gridApi) {
       gridApi.setGridOption('datasource', gridDataSource);
     }
@@ -100,7 +101,9 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
   }, [refreshGrid, runRefreshRef]);
 
   useEffect(() => {
-    refreshGrid();
+    if (gridApi) {
+      gridApi.setGridOption('datasource', gridDataSource);
+    }
   }, [gridApi, gridDataSource, refreshGrid]);
 
   const onGridReady = useCallback(({ api }: GridReadyEvent) => {
