@@ -136,7 +136,10 @@ const PublicationView = <T extends Publication>({ view, publication, application
   }, []);
 
   const onSave = useCallback(() => {
-    const body = getFormDataForPublication(selectedPublication);
+    const body = getFormDataForPublication({
+      ...selectedPublication,
+      folderId: addTrailingSlash(selectedPublication.folderId),
+    });
     const req = getReqRef.current(updatePublication, body);
     req.then((res) => {
       if (res.success) {
