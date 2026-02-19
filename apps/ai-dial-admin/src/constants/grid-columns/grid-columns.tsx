@@ -680,6 +680,7 @@ export const TEST_CASES_COLUMN: ColDef[] = [
 
 export const TEST_SUITE_RUNS_COLUMNS: ColDef[] = [
   { field: 'id', colId: 'id', headerName: 'ID' },
+  { field: 'testRunName', colId: 'testRunName', headerName: 'Test run name' },
   { field: 'runConfig.numberOfRuns', colId: 'runConfig.numberOfRuns', headerName: 'Number of runs' },
   { field: 'numberOfTestCases', colId: 'numberOfTestCases', headerName: 'Number of test cases' },
   { field: 'failedTestCases', colId: 'failedTestCases', headerName: 'Failed test cases' },

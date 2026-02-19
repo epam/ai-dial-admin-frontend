@@ -89,6 +89,7 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
           showNotification(
             getSuccessNotification(t(TestSuitesI18nKey.RunSuccess), t(TestSuitesI18nKey.RunSuccessDescription)),
           );
+          setIsModalOpen(false);
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }

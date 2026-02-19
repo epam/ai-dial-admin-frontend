@@ -14,7 +14,7 @@ import { PAGE_SIZE } from '@/src/constants/ag-grid';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
-import { FilterOperatorDto } from '@/src/types/request';
+import { VALID_FILTERS } from './constants';
 
 interface Props {
   isModalOpen: boolean;
@@ -29,21 +29,17 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
   const [isLoading, setIsLoading] = useState(false);
   const [value, setValue] = useState<string | number | undefined>(1);
   const [validRuns, setValidRuns] = useState<number | undefined>();
+  const [allRuns, setAllRuns] = useState<number | undefined>();
 
   useEffect(() => {
     if (!validRuns) {
       setIsLoading(true);
-      getTestCases(
-        selectedTestSuite.id,
-        0,
-        PAGE_SIZE,
-        [],
-        [
-          { column: 'valid', operator: FilterOperatorDto.EQUALS, value: 'true' },
-          { column: 'enabled', operator: FilterOperatorDto.EQUALS, value: 'true' },
-        ],
-      ).then((res) => {
-        setValidRuns(res?.totalElements || 0);
+
+      const validTestCases = getTestCases(selectedTestSuite.id, 0, PAGE_SIZE, [], VALID_FILTERS);
+      const allTestCases = getTestCases(selectedTestSuite.id, 0, PAGE_SIZE, [], []);
+      Promise.all([validTestCases, allTestCases]).then(([validRes, allRes]) => {
+        setAllRuns(allRes?.totalElements || 0);
+        setValidRuns(validRes?.totalElements || 0);
         setIsLoading(false);
       });
     }
@@ -58,7 +54,7 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
       size={PopupSize.Sm}
       submitLabel={t(ButtonsI18nKey.Run)}
       onSubmit={() => onRun(value)}
-      disableSubmitButton={isLoading || !validRuns || +validRuns === 0}
+      disableSubmitButton={isLoading}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
       onCancel={onClose}
     >
@@ -67,7 +63,7 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
           <DialLoader size={30} />
         ) : (
           <>
-            <DialLabelledText label={t(TestSuitesI18nKey.SelectedTestCases)} text={validRuns} />
+            <DialLabelledText label={t(TestSuitesI18nKey.SelectedTestCases)} text={`${validRuns} of ${allRuns}`} />
             <DialNumberInputField
               elementId="numberOfRuns"
               fieldTitle={t(TestSuitesI18nKey.NumberOfRuns)}
