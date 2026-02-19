@@ -374,7 +374,7 @@ export const getSystemPropertiesTabs = (t: (key: string) => string): TabModel[] 
 };
 
 export const getTestSuiteTabs = (t: (key: string) => string): TabModel[] => {
-  return [propertiesTab(t), testCasesTab(t), runsTab(t), trendsTab(t)];
+  return [propertiesTab(t), testCasesTab(t), runsTab(t)];
 };
 
 export const getPublicationViewTabs = (t: (key: string) => string, view: ApplicationRoute): TabModel[] => {

@@ -217,7 +217,7 @@ describe('Entities :: tabs', () => {
   });
 
   test('returns correct tabs for test suite', () => {
-    expect(getTestSuiteTabs(t)).toEqual([propertiesTab(t), testCasesTab(t), runsTab(t), trendsTab(t)]);
+    expect(getTestSuiteTabs(t)).toEqual([propertiesTab(t), testCasesTab(t), runsTab(t)]);
   });
 
   test('returns correct tabs for model containers', () => {

@@ -1,5 +1,7 @@
-import { TestCase } from '@/src/models/evaluation/test-suite';
+import ValidityStatus from '@/src/components/Common/ValidityStatus/ValidityStatus';
+import { BASE_STATUS_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { TEST_CASES_COLUMN } from '@/src/constants/grid-columns/grid-columns';
+import { TestCase } from '@/src/models/evaluation/test-suite';
 
 export const getTestCaseColumns = (testCases: TestCase[]) => {
   const data = testCases.reduce((acc: string[], testCase) => {
@@ -18,5 +20,11 @@ export const getTestCaseColumns = (testCases: TestCase[]) => {
       field: fact,
       headerName: fact,
     })),
+    {
+      ...BASE_STATUS_COLUMN,
+      cellRenderer: (params: { data?: { valid: boolean } }) => {
+        return <ValidityStatus valid={params.data?.valid} isHideHint={true} />;
+      },
+    },
   ];
 };
