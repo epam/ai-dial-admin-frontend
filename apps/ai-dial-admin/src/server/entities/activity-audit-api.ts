@@ -15,7 +15,7 @@ export class ActivityAuditApi extends BaseApi {
   getActivitiesList(
     pageSize: number,
     pageNumber: number,
-    token: Token | undefined,
+    token: Token,
     sorts: SortDto[],
     filters: FilterDto[],
   ): Promise<AuditPageData<DialActivity> | null> {
@@ -31,18 +31,18 @@ export class ActivityAuditApi extends BaseApi {
     );
   }
 
-  getActivityById(id: string, token: Token | undefined): Promise<ServerActionResponse<DialActivity>> {
+  getActivityById(id: string, token: Token): Promise<ServerActionResponse<DialActivity>> {
     return this.getAction(`${ACTIVITIES_URL}/${id}`, token);
   }
 
-  getRevisionDetails(url: string, token: Token | undefined): Promise<ActivityAuditEntity | null> {
+  getRevisionDetails(url: string, token: Token): Promise<ActivityAuditEntity | null> {
     return this.get(`${API}${url}`, token);
   }
 
   getRevisions(
     pageSize: number,
     pageNumber: number,
-    token: Token | undefined,
+    token: Token,
     sorts: SortDto[],
     filters: FilterDto[],
   ): Promise<ServerActionResponse<ActivityAuditRevision[]>> {
@@ -58,11 +58,11 @@ export class ActivityAuditApi extends BaseApi {
     );
   }
 
-  getEntitiesForRevision(url: string, token: Token | undefined): Promise<ActivityAuditEntity[] | null> {
+  getEntitiesForRevision(url: string, token: Token): Promise<ActivityAuditEntity[] | null> {
     return this.get(`${API}${url}`, token);
   }
 
-  rollbackToRevision(revisionNumber: number | undefined, token: Token | undefined): Promise<ServerActionResponse> {
+  rollbackToRevision(revisionNumber: number | undefined, token: Token): Promise<ServerActionResponse> {
     return this.postAction(`${ACTIVITY_AUDIT_ROLLBACK_URL}`, { revisionNumber }, token);
   }
 }

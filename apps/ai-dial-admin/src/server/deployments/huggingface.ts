@@ -14,11 +14,11 @@ export const HUGGINGFACE_MODEL_DETAILS = (modelName: string, sha: string) =>
   `${HUGGINGFACE_MODELS_BASE}/${modelName}/resolve/${sha}/README.md`;
 
 export class HuggingfaceApi extends BaseApi {
-  getHuggingFaceModels(params: Record<string, string>, token: Token | undefined): Promise<ServerActionResponse> {
+  getHuggingFaceModels(params: Record<string, string>, token: Token): Promise<ServerActionResponse> {
     return this.getAction(HUGGINGFACE_MODELS(params), token);
   }
 
-  getModelDetails(modelName: string, sha: string, token: Token | undefined): Promise<ServerActionResponse> {
+  getModelDetails(modelName: string, sha: string, token: Token): Promise<ServerActionResponse> {
     return this.getAction(HUGGINGFACE_MODEL_DETAILS(modelName, sha), token);
   }
 }

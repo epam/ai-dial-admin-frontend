@@ -8,27 +8,27 @@ export const ADAPTERS_URL = `${API}/adapters`;
 export const ADAPTER_URL = (id?: string) => `${ADAPTERS_URL}/${id || ''}`;
 
 export class AdaptersApi extends BaseApi {
-  getAdaptersList(token: Token | undefined): Promise<DialAdapter[] | null> {
+  getAdaptersList(token: Token): Promise<DialAdapter[] | null> {
     return this.get(ADAPTERS_URL, token);
   }
 
-  getAdaptersListAction(token: Token | undefined): Promise<ServerActionResponse<DialAdapter[]>> {
+  getAdaptersListAction(token: Token): Promise<ServerActionResponse<DialAdapter[]>> {
     return this.getAction(ADAPTERS_URL, token);
   }
 
-  createAdapter(adapter: DialAdapter, token: Token | undefined): Promise<ServerActionResponse> {
+  createAdapter(adapter: DialAdapter, token: Token): Promise<ServerActionResponse> {
     return this.postAction(ADAPTERS_URL, adapter, token);
   }
 
-  removeAdapter(token: Token | undefined, name?: string): Promise<ServerActionResponse> {
+  removeAdapter(token: Token, name?: string): Promise<ServerActionResponse> {
     return this.deleteAction(ADAPTER_URL(name), token);
   }
 
-  getAdapter(name: string, token: Token | undefined, eTag: string) {
+  getAdapter(name: string, token: Token, eTag: string) {
     return this.getActionWithEtag(ADAPTER_URL(name), eTag, token);
   }
 
-  updateAdapter(adapter: DialAdapter, token: Token | undefined, eTag: string): Promise<ServerActionResponse> {
+  updateAdapter(adapter: DialAdapter, token: Token, eTag: string): Promise<ServerActionResponse> {
     return this.putActionWithEtag(ADAPTER_URL(encodeURIComponent(adapter.name || '')), adapter, token, eTag);
   }
 }

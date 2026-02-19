@@ -10,31 +10,31 @@ export const KEY_URL = (name?: string) => `${KEYS_URL}/${name || ''}`;
 export const CORE_KEY_URL = (name: string) => `${KEYS_URL}/core/${name}`;
 
 export class KeysApi extends BaseApi {
-  getKeysList(token: Token | undefined): Promise<DialKey[] | null> {
+  getKeysList(token: Token): Promise<DialKey[] | null> {
     return this.get(KEYS_URL, token);
   }
 
-  getKey(name: string, token: Token | undefined, eTag: string) {
+  getKey(name: string, token: Token, eTag: string) {
     return this.getActionWithEtag(KEY_URL(name), eTag, token);
   }
 
-  removeKey(token: Token | undefined, name?: string): Promise<ServerActionResponse> {
+  removeKey(token: Token, name?: string): Promise<ServerActionResponse> {
     return this.deleteAction(KEY_URL(name), token);
   }
 
-  createKey(key: DialKey, token: Token | undefined): Promise<ServerActionResponse> {
+  createKey(key: DialKey, token: Token): Promise<ServerActionResponse> {
     return this.postAction(KEYS_URL, key, token);
   }
 
-  updateKey(key: DialKey, token: Token | undefined, eTag: string): Promise<ServerActionResponse> {
+  updateKey(key: DialKey, token: Token, eTag: string): Promise<ServerActionResponse> {
     return this.putActionWithEtag(KEY_URL(encodeURIComponent(key.name || '')), key, token, eTag);
   }
 
-  getCoreKey(name: string, token: Token | undefined): Promise<ServerActionResponse<DialKey>> {
+  getCoreKey(name: string, token: Token): Promise<ServerActionResponse<DialKey>> {
     return this.getActionWithEtag(CORE_KEY_URL(name), DEFAULT_ETAG, token);
   }
 
-  updateCoreKey(key: DialKey, name: string, eTag: string, token: Token | undefined): Promise<ServerActionResponse> {
+  updateCoreKey(key: DialKey, name: string, eTag: string, token: Token): Promise<ServerActionResponse> {
     return this.putActionWithEtag(CORE_KEY_URL(encodeURIComponent(name)), key, token, eTag);
   }
 }

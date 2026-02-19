@@ -19,14 +19,14 @@ export class BaseApi {
     this.config = config;
   }
 
-  protected async deleteAction(url: string, token?: Token | undefined): Promise<ServerActionResponse> {
+  protected async deleteAction(url: string, token?: Token): Promise<ServerActionResponse> {
     return this.sendActionRequest(url, 'DELETE', token);
   }
 
   protected async putActionWithEtag<T extends object>(
     url: string,
     dto: T,
-    token: Token | undefined,
+    token: Token,
     etag: string,
   ): Promise<ServerActionResponse> {
     return this.putAction<T>(url, dto, token, { [IF_MATCH]: etag || DEFAULT_ETAG });
@@ -35,7 +35,7 @@ export class BaseApi {
   protected async putAction<T extends object>(
     url: string,
     dto: T,
-    token?: Token | undefined,
+    token?: Token,
     initHeaders?: HeadersInit,
   ): Promise<ServerActionResponse> {
     return this.sendActionRequest<T>(url, 'PUT', token, dto, initHeaders);
@@ -44,7 +44,7 @@ export class BaseApi {
   protected async post<T extends object, R>(
     url: string,
     dto: T,
-    token?: Token | undefined,
+    token?: Token,
     initHeaders?: HeadersInit,
   ): Promise<R | null> {
     return this.sendRequest<object, R>(url, 'POST', dto, token, initHeaders) as Promise<R | null>;
@@ -53,60 +53,46 @@ export class BaseApi {
   protected async postAction<T extends object>(
     url: string,
     dto: T,
-    token?: Token | undefined,
+    token?: Token,
     initHeaders?: HeadersInit,
   ): Promise<ServerActionResponse> {
     return this.sendActionRequest<T>(url, 'POST', token, dto, initHeaders);
   }
 
-  protected async postFiles(
-    url: string,
-    dto: FormData,
-    token?: Token | undefined,
-    method?: string,
-  ): Promise<ServerActionResponse> {
+  protected async postFiles(url: string, dto: FormData, token?: Token, method?: string): Promise<ServerActionResponse> {
     return fileRequest(`${this.config.host || ''}${url}`, getAuthorizationHeader(token), dto, method).then((res) => {
       return this.handleResponse(res, method || 'POST');
     });
   }
 
-  protected get<R extends object>(url: string, token?: Token | undefined, headers?: HeadersInit): Promise<R | null> {
+  protected get<R extends object>(url: string, token?: Token, headers?: HeadersInit): Promise<R | null> {
     return this.sendRequest<object, R>(url, 'GET', void 0, token, headers) as Promise<R | null>;
   }
 
-  protected head<R extends object>(url: string, token?: Token | undefined, headers?: HeadersInit): Promise<R | null> {
+  protected head<R extends object>(url: string, token?: Token, headers?: HeadersInit): Promise<R | null> {
     return this.sendRequest<object, R>(url, 'HEAD', void 0, token, headers) as Promise<R | null>;
   }
 
-  protected getActionWithEtag(url: string, etag: string, token?: Token | undefined): Promise<ServerActionResponse> {
+  protected getActionWithEtag(url: string, etag: string, token?: Token): Promise<ServerActionResponse> {
     return this.sendActionRequest(url, 'GET', token, void 0, { [IF_NONE_MATCH]: etag });
   }
 
-  protected getActionWithMatchEtag(
-    url: string,
-    etag: string,
-    token?: Token | undefined,
-  ): Promise<ServerActionResponse> {
+  protected getActionWithMatchEtag(url: string, etag: string, token?: Token): Promise<ServerActionResponse> {
     return this.sendActionRequest(url, 'GET', token, void 0, { [IF_MATCH]: etag });
   }
 
-  protected getAction(url: string, token?: Token | undefined): Promise<ServerActionResponse> {
+  protected getAction(url: string, token?: Token): Promise<ServerActionResponse> {
     return this.sendActionRequest(url, 'GET', token);
   }
 
-  protected streamRequest(
-    url: string,
-    fileName: string,
-    token?: Token | undefined,
-    isPreview?: boolean,
-  ): Promise<Response> {
+  protected streamRequest(url: string, fileName: string, token?: Token, isPreview?: boolean): Promise<Response> {
     return streamRequest(`${this.config.host || ''}${url}`, fileName, token, isPreview);
   }
 
   protected sendActionRequest<T extends object>(
     url: string,
     type: string,
-    token?: Token | undefined,
+    token?: Token,
     dto?: T,
     initHeaders?: HeadersInit,
   ): Promise<ServerActionResponse> {
@@ -119,7 +105,7 @@ export class BaseApi {
     url: string,
     type: string,
     dto?: T,
-    token?: Token | undefined,
+    token?: Token,
     initHeaders?: HeadersInit,
   ): Promise<Response | R | null | undefined> {
     return sendRequest(`${this.config.host || ''}${url}`, type, { ...getApiHeaders(token), ...initHeaders }, dto).then(

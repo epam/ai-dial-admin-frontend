@@ -12,31 +12,27 @@ export const CORE_INTERCEPTOR_URL = (name: string) => `${INTERCEPTORS_URL}/core/
 export const CONFIGURATION_URL = (name: string) => `${API}/deployments/${name}/configuration`;
 
 export class InterceptorsApi extends BaseApi {
-  getInterceptorsList(token: Token | undefined): Promise<DialInterceptor[] | null> {
+  getInterceptorsList(token: Token): Promise<DialInterceptor[] | null> {
     return this.get(INTERCEPTORS_URL, token);
   }
 
-  getInterceptorsListAction(token: Token | undefined): Promise<ServerActionResponse<DialInterceptor[]>> {
+  getInterceptorsListAction(token: Token): Promise<ServerActionResponse<DialInterceptor[]>> {
     return this.getAction(INTERCEPTORS_URL, token);
   }
 
-  getInterceptor(name: string, token: Token | undefined, eTag: string) {
+  getInterceptor(name: string, token: Token, eTag: string) {
     return this.getActionWithEtag(INTERCEPTOR_URL(name), eTag, token);
   }
 
-  removeInterceptor(token: Token | undefined, name?: string): Promise<ServerActionResponse> {
+  removeInterceptor(token: Token, name?: string): Promise<ServerActionResponse> {
     return this.deleteAction(INTERCEPTOR_URL(name), token);
   }
 
-  createInterceptor(interceptor: DialInterceptor, token: Token | undefined): Promise<ServerActionResponse> {
+  createInterceptor(interceptor: DialInterceptor, token: Token): Promise<ServerActionResponse> {
     return this.postAction(INTERCEPTORS_URL, interceptor, token);
   }
 
-  updateInterceptor(
-    interceptor: DialInterceptor,
-    token: Token | undefined,
-    eTag: string,
-  ): Promise<ServerActionResponse> {
+  updateInterceptor(interceptor: DialInterceptor, token: Token, eTag: string): Promise<ServerActionResponse> {
     return this.putActionWithEtag(
       INTERCEPTOR_URL(encodeURIComponent(interceptor.name || '')),
       interceptor,
@@ -45,11 +41,11 @@ export class InterceptorsApi extends BaseApi {
     );
   }
 
-  getConfigurationSchema(name: string, token: Token | undefined): Promise<ServerActionResponse<RJSFSchema>> {
+  getConfigurationSchema(name: string, token: Token): Promise<ServerActionResponse<RJSFSchema>> {
     return this.getAction(CONFIGURATION_URL(name), token);
   }
 
-  getCoreInterceptor(name: string, token: Token | undefined): Promise<ServerActionResponse<DialInterceptor>> {
+  getCoreInterceptor(name: string, token: Token): Promise<ServerActionResponse<DialInterceptor>> {
     return this.getActionWithEtag(CORE_INTERCEPTOR_URL(name), DEFAULT_ETAG, token);
   }
 
@@ -57,7 +53,7 @@ export class InterceptorsApi extends BaseApi {
     interceptor: DialInterceptor,
     name: string,
     etag: string,
-    token: Token | undefined,
+    token: Token,
   ): Promise<ServerActionResponse> {
     return this.putActionWithEtag(CORE_INTERCEPTOR_URL(encodeURIComponent(name)), interceptor, token, etag);
   }

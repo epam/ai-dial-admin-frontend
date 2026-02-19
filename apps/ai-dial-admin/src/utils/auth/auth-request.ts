@@ -26,7 +26,7 @@ export const getUserToken = async (
   isEnableAuth: boolean,
   headers: Promise<Headers>,
   cookies: Promise<unknown>,
-): Promise<Token | undefined> => {
+): Promise<Token> => {
   const params = await getTokenRequestParams(headers, cookies);
   return isEnableAuth ? await getFullToken(params) : undefined;
 };

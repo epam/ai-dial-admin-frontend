@@ -15,7 +15,7 @@ import { BaseApi } from '../../base-api';
 import { ResourceBasePaths, ResourceOperation } from './constants';
 import { buildAssetUrl } from './utils';
 export class AssetsApi extends BaseApi {
-  async getAssetList(token: Token | undefined, path: string, type: ResourceType): Promise<Asset[] | null | undefined> {
+  async getAssetList(token: Token, path: string, type: ResourceType): Promise<Asset[] | null | undefined> {
     const url = buildAssetUrl(type, ResourceOperation.LIST);
     if (type === ResourceType.FILE) {
       return this.post(ResourceBasePaths[type], { path }, token).then((response) =>
@@ -48,20 +48,20 @@ export class AssetsApi extends BaseApi {
     }
   }
 
-  getAssetWithEtag(token: Token | undefined, path: string, type: ResourceType, etag: string) {
+  getAssetWithEtag(token: Token, path: string, type: ResourceType, etag: string) {
     const url = buildAssetUrl(type, ResourceOperation.GET);
 
     return this.postAction(url, { path }, token, { [IF_NONE_MATCH]: etag });
   }
 
-  getAsset(token: Token | undefined, path: string, type: ResourceType): Promise<DialPrompt | null> {
+  getAsset(token: Token, path: string, type: ResourceType): Promise<DialPrompt | null> {
     const url = buildAssetUrl(type, ResourceOperation.GET);
 
     return this.post(url, { path }, token);
   }
 
   updateAssetWithEtag(
-    token: Token | undefined,
+    token: Token,
     asset: AssetWithVersion,
     type: ResourceType,
     etag: string,
@@ -70,27 +70,22 @@ export class AssetsApi extends BaseApi {
     return this.postAction(url, { ...asset }, token, { [IF_MATCH]: etag });
   }
 
-  updateAsset(token: Token | undefined, asset: AssetWithVersion, type: ResourceType): Promise<ServerActionResponse> {
+  updateAsset(token: Token, asset: AssetWithVersion, type: ResourceType): Promise<ServerActionResponse> {
     const url = buildAssetUrl(type, ResourceOperation.UPDATE);
     return this.postAction(url, { ...asset }, token);
   }
 
-  createAsset(asset: AssetWithVersion, type: ResourceType, token: Token | undefined): Promise<ServerActionResponse> {
+  createAsset(asset: AssetWithVersion, type: ResourceType, token: Token): Promise<ServerActionResponse> {
     const url = buildAssetUrl(type, ResourceOperation.CREATE);
     return this.postAction(url, { ...asset, folderId: asset.folderId || ROOT_FOLDER }, token);
   }
 
-  removeAssetWithEtag(
-    token: Token | undefined,
-    path: string,
-    type: ResourceType,
-    etag?: string,
-  ): Promise<ServerActionResponse> {
+  removeAssetWithEtag(token: Token, path: string, type: ResourceType, etag?: string): Promise<ServerActionResponse> {
     const url = buildAssetUrl(type, ResourceOperation.DELETE);
     return this.postAction(url, { path }, token, { [IF_MATCH]: etag || DEFAULT_ETAG });
   }
 
-  removeAsset(token: Token | undefined, path: string, type: ResourceType): Promise<ServerActionResponse> {
+  removeAsset(token: Token, path: string, type: ResourceType): Promise<ServerActionResponse> {
     if (type === ResourceType.FILE) {
       return this.deleteAction(`${ResourceBasePaths[type]}?path=${path}`, token);
     } else {
@@ -99,21 +94,12 @@ export class AssetsApi extends BaseApi {
     }
   }
 
-  bulkDeleteAssets(
-    token: Token | undefined,
-    paths: { path: string }[],
-    type: ResourceType,
-  ): Promise<ServerActionResponse> {
+  bulkDeleteAssets(token: Token, paths: { path: string }[], type: ResourceType): Promise<ServerActionResponse> {
     const url = buildAssetUrl(type, ResourceOperation.DELETE_BULK);
     return this.postAction(url, { paths }, token);
   }
 
-  moveAssets(
-    token: Token | undefined,
-    paths: string[],
-    newPath: string,
-    type: ResourceType,
-  ): Promise<ServerActionResponse[]> {
+  moveAssets(token: Token, paths: string[], newPath: string, type: ResourceType): Promise<ServerActionResponse[]> {
     const url = buildAssetUrl(type, ResourceOperation.MOVE);
     const requests = paths.map((path) => {
       const body = {
@@ -127,7 +113,7 @@ export class AssetsApi extends BaseApi {
   }
 
   importAssets(
-    token: Token | undefined,
+    token: Token,
     body: FormData,
     fileType: ImportFileType,
     type: ResourceType,
@@ -144,7 +130,7 @@ export class AssetsApi extends BaseApi {
   }
 
   exportAssets(
-    token: Token | undefined,
+    token: Token,
     type: ResourceType,
     paths?: string[],
     fileType?: ImportFileType,
@@ -164,19 +150,19 @@ export class AssetsApi extends BaseApi {
 
   // File specific
 
-  downloadFile(token: Token | undefined, path: string): Promise<Response> {
+  downloadFile(token: Token, path: string): Promise<Response> {
     const url = buildAssetUrl(ResourceType.FILE, ResourceOperation.DOWNLOAD);
     const filename = getFolderNameAndPath(path).name;
     return this.streamRequest(`${url}?path=${path}`, filename, token);
   }
 
-  previewFile(token: Token | undefined, path: string): Promise<Response> {
+  previewFile(token: Token, path: string): Promise<Response> {
     const url = buildAssetUrl(ResourceType.FILE, ResourceOperation.DOWNLOAD);
     const filename = getFolderNameAndPath(path).name;
     return this.streamRequest(`${url}?path=${path}`, filename, token, true);
   }
 
-  exportFiles(token: Token | undefined, paths?: string[]): Promise<{ blob: Blob; fileName: string }> {
+  exportFiles(token: Token, paths?: string[]): Promise<{ blob: Blob; fileName: string }> {
     const url = buildAssetUrl(ResourceType.FILE, ResourceOperation.EXPORT);
     return this.sendRequest(url, 'POST', { paths }, token).then(async (res) => {
       if ((res as Response).blob) {
@@ -191,7 +177,7 @@ export class AssetsApi extends BaseApi {
 
   // Toolset specific
 
-  getTools(name: string, token: Token | undefined) {
+  getTools(name: string, token: Token) {
     const url = `${ResourceBasePaths[ResourceType.TOOLSET]}/discovered-tools`;
     return this.post(url, { path: name }, token).then((res) => (res as { tools: Tool[] })?.tools || []);
   }
@@ -199,7 +185,7 @@ export class AssetsApi extends BaseApi {
   signInToolset(
     toolset: AssetToolset,
     type: ToolsetAuthCredentialLevel,
-    token: Token | undefined,
+    token: Token,
     apiKey?: string,
     authCode?: string,
   ) {
@@ -208,13 +194,13 @@ export class AssetsApi extends BaseApi {
     return this.postAction(url, getToolsetSignInBody(toolset, type, apiKey, authCode), token);
   }
 
-  signOutToolset(toolset: AssetToolset, type: ToolsetAuthCredentialLevel, token: Token | undefined) {
+  signOutToolset(toolset: AssetToolset, type: ToolsetAuthCredentialLevel, token: Token) {
     const url = `${ResourceBasePaths[ResourceType.TOOLSET]}/sign-out`;
 
     return this.postAction(url, getToolsetBasicBody(toolset, type), token);
   }
 
-  tryOutTool(body: Record<string, unknown>, token: Token | undefined) {
+  tryOutTool(body: Record<string, unknown>, token: Token) {
     const url = `${ResourceBasePaths[ResourceType.TOOLSET]}/call-tool`;
     return this.postAction(url, body, token);
   }

@@ -7,7 +7,7 @@ import { sendRequest } from './send-request';
 export const streamRequest = async (
   url: string,
   fileName: string,
-  token?: Token | undefined,
+  token?: Token,
   isPreview?: boolean,
 ): Promise<Response> => {
   try {

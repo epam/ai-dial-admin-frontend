@@ -10,31 +10,27 @@ export const APPLICATION_SCHEME_URL = (id?: string) => `${APPLICATION_SCHEMES_UR
 export const CORE_APPLICATION_SCHEME_URL = (id: string) => `${APPLICATION_SCHEMES_URL}/core?id=${id}`;
 
 export class ApplicationRunnersApi extends BaseApi {
-  getApplicationSchemesList(token: Token | undefined): Promise<DialApplicationScheme[] | null> {
+  getApplicationSchemesList(token: Token): Promise<DialApplicationScheme[] | null> {
     return this.get(APPLICATION_SCHEMES_URL, token);
   }
 
-  getApplicationScheme(name: string, token: Token | undefined, etag: string) {
+  getApplicationScheme(name: string, token: Token, etag: string) {
     return this.getActionWithEtag(APPLICATION_SCHEME_URL(name), etag, token);
   }
 
-  removeApplicationScheme(token: Token | undefined, id?: string): Promise<ServerActionResponse> {
+  removeApplicationScheme(token: Token, id?: string): Promise<ServerActionResponse> {
     return this.deleteAction(APPLICATION_SCHEME_URL(id), token);
   }
 
-  createApplicationScheme(scheme: DialApplicationScheme, token: Token | undefined): Promise<ServerActionResponse> {
+  createApplicationScheme(scheme: DialApplicationScheme, token: Token): Promise<ServerActionResponse> {
     return this.postAction(APPLICATION_SCHEMES_URL, scheme, token);
   }
 
-  updateApplicationScheme(
-    scheme: DialApplicationScheme,
-    token: Token | undefined,
-    etag: string,
-  ): Promise<ServerActionResponse> {
+  updateApplicationScheme(scheme: DialApplicationScheme, token: Token, etag: string): Promise<ServerActionResponse> {
     return this.putActionWithEtag(APPLICATION_SCHEME_URL(encodeURIComponent(scheme.$id || '')), scheme, token, etag);
   }
 
-  getCoreRunner(name: string, token: Token | undefined): Promise<ServerActionResponse<DialApplicationScheme>> {
+  getCoreRunner(name: string, token: Token): Promise<ServerActionResponse<DialApplicationScheme>> {
     return this.getActionWithEtag(CORE_APPLICATION_SCHEME_URL(name), DEFAULT_ETAG, token);
   }
 
@@ -42,7 +38,7 @@ export class ApplicationRunnersApi extends BaseApi {
     scheme: DialApplicationScheme,
     id: string,
     etag: string,
-    token: Token | undefined,
+    token: Token,
   ): Promise<ServerActionResponse> {
     return this.putActionWithEtag(CORE_APPLICATION_SCHEME_URL(encodeURIComponent(id)), scheme, token, etag);
   }

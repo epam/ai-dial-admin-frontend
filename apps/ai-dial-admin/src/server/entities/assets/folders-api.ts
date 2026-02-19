@@ -17,48 +17,43 @@ export const PREVIEW_APP_ZIP = `${API}/application-resources/import/zip/preview`
 export const PREVIEW_TOOLSET_ZIP = `${API}/toolset-resources/import/zip/preview`;
 
 export class FoldersApi extends BaseApi {
-  getFolders(token: Token | undefined, path: string): Promise<DialFolder[] | null | undefined> {
+  getFolders(token: Token, path: string): Promise<DialFolder[] | null | undefined> {
     return this.post(FOLDERS_URL, { path }, token).then((response) =>
       response === void 0 ? void 0 : (response as { items: DialFolder[] })?.items || [],
     );
   }
 
-  getRules(token: Token | undefined, path: string): Promise<ServerActionResponse<Record<string, DialRule[]>>> {
+  getRules(token: Token, path: string): Promise<ServerActionResponse<Record<string, DialRule[]>>> {
     return this.getAction(`${FOLDERS_URL}?path=${path}`, token);
   }
 
-  updateRules(token: Token | undefined, targetFolder: string, rules: DialRule[]): Promise<ServerActionResponse> {
+  updateRules(token: Token, targetFolder: string, rules: DialRule[]): Promise<ServerActionResponse> {
     return this.postAction(`${RULES_UPDATE_URL}`, { targetFolder, rules }, token);
   }
 
-  createFolder(
-    token: Token | undefined,
-    body: FormData,
-    type?: string,
-    view?: ApplicationRoute,
-  ): Promise<ServerActionResponse> {
+  createFolder(token: Token, body: FormData, type?: string, view?: ApplicationRoute): Promise<ServerActionResponse> {
     const url = buildCreateFolderUrl(type, view);
     return this.postFiles(url, body, token, 'POST');
   }
 
-  previewPromptZipFiles(token: Token | undefined, body: FormData): Promise<ServerActionResponse> {
+  previewPromptZipFiles(token: Token, body: FormData): Promise<ServerActionResponse> {
     return this.postFiles(`${PREVIEW_PROMPT_ZIP}`, body, token, 'POST');
   }
 
-  previewAppZipFiles(token: Token | undefined, body: FormData): Promise<ServerActionResponse> {
+  previewAppZipFiles(token: Token, body: FormData): Promise<ServerActionResponse> {
     return this.postFiles(`${PREVIEW_APP_ZIP}`, body, token, 'POST');
   }
 
-  previewToolsetZipFiles(token: Token | undefined, body: FormData): Promise<ServerActionResponse> {
+  previewToolsetZipFiles(token: Token, body: FormData): Promise<ServerActionResponse> {
     return this.postFiles(`${PREVIEW_TOOLSET_ZIP}`, body, token, 'POST');
   }
 
-  deleteFolder(token: Token | undefined, path: string): Promise<ServerActionResponse> {
+  deleteFolder(token: Token, path: string): Promise<ServerActionResponse> {
     return this.deleteAction(`${FOLDERS_URL}?path=${path}`, token);
   }
 
   changeFolder(
-    token: Token | undefined,
+    token: Token,
     oldPath: string,
     newPath: string,
     resourceType: ResourceType,

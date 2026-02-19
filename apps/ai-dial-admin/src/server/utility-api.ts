@@ -28,74 +28,63 @@ export const DEPLOYMENT_URL = (name: string) => `${API}/deployments/${name}`;
 export const SECURITY_INFO_URL = `${API}/security-info`;
 
 export class UtilityApi extends BaseApi {
-  getBeVersion(token: Token | undefined): Promise<string | null> {
+  getBeVersion(token: Token): Promise<string | null> {
     return this.get(VERSION_URL, token, { Accept: 'text/plain' }).catch(() => null) as Promise<string | null>;
   }
 
-  importJsonConfigs(url: string, token: Token | undefined, file: FormData): Promise<ServerActionResponse> {
+  importJsonConfigs(url: string, token: Token, file: FormData): Promise<ServerActionResponse> {
     return this.postFiles(url, file, token);
   }
 
-  importZipConfig(url: string, token: Token | undefined, file: FormData): Promise<ServerActionResponse> {
+  importZipConfig(url: string, token: Token, file: FormData): Promise<ServerActionResponse> {
     return this.postFiles(url, file, token);
   }
 
-  exportConfig(exportConfig: ExportRequest, token: Token | undefined): Promise<{ blob: Blob; fileName: string }> {
+  exportConfig(exportConfig: ExportRequest, token: Token): Promise<{ blob: Blob; fileName: string }> {
     return this.sendRequest(EXPORT_CONFIG_URL, 'POST', exportConfig, token).then(async (res) => {
       return { blob: await (res as Response)?.blob?.(), fileName: getFileName(res as Response) || '' };
     });
   }
 
-  exportConfigMap(token: Token | undefined): Promise<{ blob: Blob; fileName: string }> {
+  exportConfigMap(token: Token): Promise<{ blob: Blob; fileName: string }> {
     return this.sendRequest(EXPORT_CONFIG_MAP_URL, 'POST', { addSecrets: true }, token).then(async (res) => {
       return { blob: await (res as Response)?.blob?.(), fileName: getFileName(res as Response) || '' };
     });
   }
 
-  previewExportConfig(exportConfig: ExportRequest, token: Token | undefined): Promise<ServerActionResponse> {
+  previewExportConfig(exportConfig: ExportRequest, token: Token): Promise<ServerActionResponse> {
     return this.postAction(EXPORT_PREVIEW_CONFIG_URL, exportConfig, token);
   }
 
-  checkDeploymentByName(name: string, token: Token | undefined) {
+  checkDeploymentByName(name: string, token: Token) {
     return this.head(DEPLOYMENT_URL(name), token);
   }
 
-  getAppProcessStatus(token: Token | undefined): Promise<ServerActionResponse<AppProcessStatus>> {
+  getAppProcessStatus(token: Token): Promise<ServerActionResponse<AppProcessStatus>> {
     return this.getAction(RELOAD_CONFIG_URL, token);
   }
 
-  getCoreVersion(token: Token | undefined): Promise<ServerActionResponse<CoreVersions>> {
+  getCoreVersion(token: Token): Promise<ServerActionResponse<CoreVersions>> {
     return this.getAction(CORE_VERSION_URL, token);
   }
 
-  setCoreVersion(
-    version: CoreConfigVersion,
-    token: Token | undefined,
-  ): Promise<ServerActionResponse<AppProcessStatus>> {
+  setCoreVersion(version: CoreConfigVersion, token: Token): Promise<ServerActionResponse<AppProcessStatus>> {
     return this.putActionWithEtag(CORE_CONFIG_VERSION_URL, version, token, DEFAULT_ETAG);
   }
 
-  getSystemProperties(token: Token | undefined, etag: string): Promise<ServerActionResponse<GlobalSettings>> {
+  getSystemProperties(token: Token, etag: string): Promise<ServerActionResponse<GlobalSettings>> {
     return this.getActionWithEtag(SYSTEM_PROPERTIES_URL, etag, token);
   }
 
-  updateSystemProperties(
-    properties: GlobalSettings,
-    token: Token | undefined,
-    etag: string,
-  ): Promise<ServerActionResponse> {
+  updateSystemProperties(properties: GlobalSettings, token: Token, etag: string): Promise<ServerActionResponse> {
     return this.putActionWithEtag(SYSTEM_PROPERTIES_URL, properties, token, etag);
   }
 
-  getEntitySyncStatus(
-    url: string,
-    token: Token | undefined,
-    etag: string,
-  ): Promise<ServerActionResponse<CoreSyncStatus>> {
+  getEntitySyncStatus(url: string, token: Token, etag: string): Promise<ServerActionResponse<CoreSyncStatus>> {
     return this.getActionWithMatchEtag(`${API}${url}`, etag, token);
   }
 
-  getSecurityInfo(token: Token | undefined): Promise<ServerActionResponse> {
+  getSecurityInfo(token: Token): Promise<ServerActionResponse> {
     return this.getAction(SECURITY_INFO_URL, token);
   }
 }

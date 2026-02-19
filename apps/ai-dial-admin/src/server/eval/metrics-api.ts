@@ -8,14 +8,14 @@ export const METRICS_URL = `${API}/metrics-definitions`;
 export const METRIC_URL = (id: string) => `${METRICS_URL}/${id}`;
 
 export class MetricsApi extends BaseApi {
-  getMetrics(page: number, size: number, token: Token | undefined): Promise<EvaluationPageData<Metric> | null> {
+  getMetrics(page: number, size: number, token: Token): Promise<EvaluationPageData<Metric> | null> {
     return this.get<EvaluationPageData<Metric>>(
       `${METRICS_URL}?page=${page}&size=${size}&includeTotalCount=true`,
       token,
     );
   }
 
-  getMetric(id: string, token: Token | undefined): Promise<Metric | null> {
+  getMetric(id: string, token: Token): Promise<Metric | null> {
     return this.get<Metric>(METRIC_URL(id), token);
   }
 }
