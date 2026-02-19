@@ -7,18 +7,18 @@ import classNames from 'classnames';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useI18n } from '@/src/locales/client';
-import { ValidityState } from '@/src/models/dial/base-entity';
 import { getColorClassName, getValidityStatus } from './utils';
 
 interface Props {
-  validityState?: ValidityState;
+  message?: string;
+  valid?: boolean;
   isHideHint?: boolean;
 }
 
-const ValidityStatus: FC<Props> = ({ validityState, isHideHint }) => {
+const ValidityStatus: FC<Props> = ({ message, valid, isHideHint }) => {
   const t = useI18n();
   const { currentTheme } = useTheme();
-  const { title, status } = getValidityStatus(validityState, t);
+  const { title, status } = getValidityStatus(valid, t);
 
   const colorClassName = classNames('w-[10px] h-[10px] rounded-full', getColorClassName(status, currentTheme));
 
@@ -26,8 +26,8 @@ const ValidityStatus: FC<Props> = ({ validityState, isHideHint }) => {
     <div className="flex items-center gap-x-2">
       <div className={colorClassName}></div>
       <div>{title}</div>
-      {!isHideHint && !validityState?.valid && (
-        <DialTooltip tooltip={validityState?.message || ''}>
+      {!isHideHint && !valid && (
+        <DialTooltip tooltip={message || ''}>
           <IconInfoCircle {...BASE_BUTTON_ICON_PROPS} />
         </DialTooltip>
       )}

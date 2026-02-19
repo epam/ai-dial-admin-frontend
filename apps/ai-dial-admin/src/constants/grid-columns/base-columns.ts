@@ -1,6 +1,5 @@
 import { ColDef } from 'ag-grid-community';
 
-import { getValidityStatus } from '@/src/components/EntityView/Status/utils';
 import {
   formatAttachment,
   getTopics,
@@ -12,6 +11,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRenderer';
 import ValidityStatusCellRenderer from '@/src/components/Grid/CellRenderers/ValidityStatusCellRenderer';
 import { dateTimeColumn } from './configs';
+import { getValidityStatus } from '@/src/components/Common/ValidityStatus/utils';
 
 export const CREATED_AT_COLUMN: ColDef = {
   field: 'createdAt',

@@ -100,8 +100,8 @@ export class TestSuitesApi extends BaseApi {
     return `${filtersStr || sortsStr ? '&' : ''}${filtersStr}${sortsStr ? '&' : ''}${sortsStr}`;
   }
 
-  getDeployments(token: Token): Promise<Deployment[] | null> {
-    return this.get(DEPLOYMENTS_URL, token);
+  getDeployments(token: Token): Promise<ServerActionResponse<Deployment[]> | null> {
+    return this.getAction(DEPLOYMENTS_URL, token);
   }
 
   getDeployment(id: string, type: string, token: Token): Promise<Deployment | null> {

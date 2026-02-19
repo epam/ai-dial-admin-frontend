@@ -31,20 +31,20 @@ interface Props {
 
 const FilesList: FC<Props> = ({ files, action, onChange }) => {
   const t = useI18n();
-  const download = useCallback((file?: PublicationFile) => {
-    window.open(`/${FILE_DOWNLOAD}/?path=${encodeURIComponent(file?.file.path || '')}`, '_blank');
+  const download = useCallback((file?: FileRowData) => {
+    window.open(`/${FILE_DOWNLOAD}/?path=${encodeURIComponent(file?.path || '')}`, '_blank');
   }, []);
 
-  const openInNewTab = useCallback((file?: PublicationFile) => {
-    onOpenInNewTab(ApplicationRoute.Files, file?.file);
+  const openInNewTab = useCallback((file?: FileRowData) => {
+    onOpenInNewTab(ApplicationRoute.Files, file);
   }, []);
 
-  const preview = useCallback(async (file?: PublicationFile) => {
-    window.open(`/${FILE_PREVIEW}?path=${encodeURIComponent(file?.file.path || '')}`, '_blank');
+  const preview = useCallback(async (file?: FileRowData) => {
+    window.open(`/${FILE_PREVIEW}?path=${encodeURIComponent(file?.path || '')}`, '_blank');
   }, []);
 
   const remove = useCallback(
-    (_?: PublicationFile, index?: number) => {
+    (_?: FileRowData, index?: number) => {
       if (index != null) {
         files?.splice(index, 1);
       }
