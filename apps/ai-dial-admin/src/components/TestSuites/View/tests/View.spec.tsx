@@ -8,13 +8,16 @@ import TestSuiteView from '../View';
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
   updateTestSuite: vi.fn(),
   removeTestSuite: vi.fn(),
-  getDeployments: vi.fn().mockResolvedValue([
-    {
-      deploymentId: 'deployment-1',
-      $type: 'some-app-type',
-      name: 'Deployment 1',
-    },
-  ]),
+  getDeployments: vi.fn().mockResolvedValue({
+    success: true,
+    response: [
+      {
+        deploymentId: 'deployment-1',
+        $type: 'some-app-type',
+        name: 'Deployment 1',
+      },
+    ],
+  }),
 }));
 
 // Mock next/navigation

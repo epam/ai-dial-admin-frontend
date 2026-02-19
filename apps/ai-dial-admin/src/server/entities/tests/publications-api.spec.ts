@@ -144,14 +144,16 @@ describe('Server :: Publications', () => {
   test('Should call updatePublication', async () => {
     fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
-    const publication = { folderId: 'folder-1', title: 'Updated Publication' } as unknown as Publication;
-    await instance.updatePublication(TOKEN_MOCK, publication);
+    const formData = new FormData();
+    formData.append('publication', new Blob([JSON.stringify({ folderId: 'folder-1' })], { type: 'application/json' }));
+
+    await instance.updatePublication(TOKEN_MOCK, formData);
 
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/publications/update'),
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify(publication),
+        body: formData,
         headers: expect.anything(),
       }),
     );

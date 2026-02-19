@@ -5,7 +5,7 @@ import { Container, ProbeProperties } from '@/src/models/deployments/containers'
 import { EntityCaptionsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { FieldError } from '@/src/models/error';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { getPositiveNumberFieldsError } from '@/src/utils/deployments/validation';
+import { getAdvancedTimingsError } from '@/src/utils/deployments/validation';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -13,6 +13,11 @@ interface Props {
   setContainer: (container: Container) => void;
   disabled?: boolean;
 }
+
+const MAX_INITIAL_DELAY_SEC = 6000;
+const MAX_PERIOD_SEC = 600;
+const MAX_TIMEOUT_SEC = 12000;
+const MAX_FAILURE_THRESHOLD = 100;
 
 const AdvancedTiming: FC<Props> = ({ container, setContainer, disabled }) => {
   const t = useI18n();
@@ -25,7 +30,7 @@ const AdvancedTiming: FC<Props> = ({ container, setContainer, disabled }) => {
 
   const onInitialDelaySecondsChange = useCallback(
     (initialDelaySeconds?: string | number) => {
-      const error = getPositiveNumberFieldsError(initialDelaySeconds as number, t);
+      const error = getAdvancedTimingsError(initialDelaySeconds as number, t, MAX_INITIAL_DELAY_SEC);
       setInitialDelaySecondsError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'initialDelaySeconds', isValid: !error });
 
@@ -33,7 +38,7 @@ const AdvancedTiming: FC<Props> = ({ container, setContainer, disabled }) => {
         ...container,
         probeProperties: {
           ...container.probeProperties,
-          initialDelaySeconds,
+          initialDelaySeconds: initialDelaySeconds,
         } as ProbeProperties,
       });
     },
@@ -42,7 +47,7 @@ const AdvancedTiming: FC<Props> = ({ container, setContainer, disabled }) => {
 
   const onPeriodSecondsChange = useCallback(
     (periodSeconds?: string | number) => {
-      const error = getPositiveNumberFieldsError(periodSeconds as number, t);
+      const error = getAdvancedTimingsError(periodSeconds as number, t, MAX_PERIOD_SEC);
       setPeriodSecondsError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'periodSeconds', isValid: !error });
 
@@ -50,7 +55,7 @@ const AdvancedTiming: FC<Props> = ({ container, setContainer, disabled }) => {
         ...container,
         probeProperties: {
           ...container.probeProperties,
-          periodSeconds,
+          periodSeconds: periodSeconds,
         } as ProbeProperties,
       });
     },
@@ -59,7 +64,7 @@ const AdvancedTiming: FC<Props> = ({ container, setContainer, disabled }) => {
 
   const onTimeoutSecondsChange = useCallback(
     (timeoutSeconds?: string | number) => {
-      const error = getPositiveNumberFieldsError(timeoutSeconds as number, t);
+      const error = getAdvancedTimingsError(timeoutSeconds as number, t, MAX_TIMEOUT_SEC);
       setTimeoutSecondsError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'timeoutSeconds', isValid: !error });
 
@@ -76,7 +81,7 @@ const AdvancedTiming: FC<Props> = ({ container, setContainer, disabled }) => {
 
   const onFailureThresholdChange = useCallback(
     (failureThreshold?: string | number) => {
-      const error = getPositiveNumberFieldsError(failureThreshold as number, t);
+      const error = getAdvancedTimingsError(failureThreshold as number, t, MAX_FAILURE_THRESHOLD);
       setFailureThresholdError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'failureThreshold', isValid: !error });
 
@@ -97,22 +102,22 @@ const AdvancedTiming: FC<Props> = ({ container, setContainer, disabled }) => {
     dispatch({
       type: ValidationActionType.SetField,
       field: 'initialDelaySeconds',
-      isValid: !getPositiveNumberFieldsError(initialDelaySeconds as number, t),
+      isValid: !getAdvancedTimingsError(initialDelaySeconds as number, t, MAX_INITIAL_DELAY_SEC),
     });
     dispatch({
       type: ValidationActionType.SetField,
       field: 'periodSeconds',
-      isValid: !getPositiveNumberFieldsError(periodSeconds as number, t),
+      isValid: !getAdvancedTimingsError(periodSeconds as number, t, MAX_PERIOD_SEC),
     });
     dispatch({
       type: ValidationActionType.SetField,
       field: 'timeoutSeconds',
-      isValid: !getPositiveNumberFieldsError(timeoutSeconds as number, t),
+      isValid: !getAdvancedTimingsError(timeoutSeconds as number, t, MAX_TIMEOUT_SEC),
     });
     dispatch({
       type: ValidationActionType.SetField,
       field: 'failureThreshold',
-      isValid: !getPositiveNumberFieldsError(failureThreshold as number, t),
+      isValid: !getAdvancedTimingsError(failureThreshold as number, t, MAX_FAILURE_THRESHOLD),
     });
 
     return () => {
@@ -142,7 +147,7 @@ const AdvancedTiming: FC<Props> = ({ container, setContainer, disabled }) => {
   useEffect(() => {
     const { initialDelaySeconds } = container.probeProperties as ProbeProperties;
     if (resetCounter || initialDelaySeconds !== void 0) {
-      const error = getPositiveNumberFieldsError(initialDelaySeconds as number, t);
+      const error = getAdvancedTimingsError(initialDelaySeconds as number, t, MAX_INITIAL_DELAY_SEC);
       setInitialDelaySecondsError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'initialDelaySeconds', isValid: !error });
     }
@@ -151,7 +156,7 @@ const AdvancedTiming: FC<Props> = ({ container, setContainer, disabled }) => {
   useEffect(() => {
     const { periodSeconds } = container.probeProperties as ProbeProperties;
     if (resetCounter || periodSeconds !== void 0) {
-      const error = getPositiveNumberFieldsError(periodSeconds as number, t);
+      const error = getAdvancedTimingsError(periodSeconds as number, t, MAX_PERIOD_SEC);
       setPeriodSecondsError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'periodSeconds', isValid: !error });
     }
@@ -160,7 +165,7 @@ const AdvancedTiming: FC<Props> = ({ container, setContainer, disabled }) => {
   useEffect(() => {
     const { timeoutSeconds } = container.probeProperties as ProbeProperties;
     if (resetCounter || timeoutSeconds !== void 0) {
-      const error = getPositiveNumberFieldsError(timeoutSeconds as number, t);
+      const error = getAdvancedTimingsError(timeoutSeconds as number, t, MAX_TIMEOUT_SEC);
       setTimeoutSecondsError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'timeoutSeconds', isValid: !error });
     }
@@ -169,7 +174,7 @@ const AdvancedTiming: FC<Props> = ({ container, setContainer, disabled }) => {
   useEffect(() => {
     const { failureThreshold } = container.probeProperties as ProbeProperties;
     if (resetCounter || failureThreshold !== void 0) {
-      const error = getPositiveNumberFieldsError(failureThreshold as number, t);
+      const error = getAdvancedTimingsError(failureThreshold as number, t, MAX_FAILURE_THRESHOLD);
       setFailureThresholdError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'failureThreshold', isValid: !error });
     }
