@@ -10,7 +10,7 @@ export const getFullToken = async (params: GetTokenParams): Promise<Token> => {
   const listProviders = getListProvidersPassIdToken();
   const tokenToReturn =
     listProviders.length && listProviders.includes(providerId) ? tokenObj.idToken : tokenObj.access_token;
-  return { token: tokenToReturn as string, ...tokenObj };
+  return { token: tokenToReturn as string, ...tokenObj } as Token;
 };
 
 export const getListProvidersPassIdToken = () => {
