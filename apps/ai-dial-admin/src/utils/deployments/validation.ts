@@ -406,12 +406,15 @@ export const getFileNameError = (
   return null;
 };
 
-export const getPositiveNumberFieldsError = (
+export const getAdvancedTimingsError = (
   value?: number,
   t?: (key: string, options?: Record<string, string | number>) => string,
+  max?: number,
 ) => {
-  if (value && value < 0) {
-    return { type: ErrorType.INVALID, text: t ? t(ErrorI18nKey.PositiveNumber) : '' };
+  if (value != null && max) {
+    if (value < 0 || value > max) {
+      return { type: ErrorType.INVALID, text: t ? t(ErrorI18nKey.AdvancedTimingsError, { max }) : '' };
+    }
   }
 
   return null;
