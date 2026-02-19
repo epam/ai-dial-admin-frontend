@@ -9,7 +9,8 @@ import { getCoreToolset, removeToolset, updateCoreToolset, updateToolset } from 
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
-import EntityRolesModal from '@/src/components/EntityView/Modals/EmptyRoles/EmptyRoles';
+import { ModalType } from '@/src/components/EntityView/Modals/constants';
+import EntityViewModals from '@/src/components/EntityView/Modals/EntityViewModals';
 import { isDisableRole } from '@/src/components/EntityView/Roles/utils';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -46,6 +47,7 @@ const ToolsetView: FC<Props> = ({ names, oAuthCode, etag, roles, originalToolset
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalType, setModalType] = useState<ModalType>();
 
   const [selectedToolset, setSelectedToolset] = useState(cloneDeep(originalToolset));
   const [isChanged, setIsChanged] = useState(false);
@@ -136,17 +138,57 @@ const ToolsetView: FC<Props> = ({ names, oAuthCode, etag, roles, originalToolset
     });
   }, [selectedFormat, selectedToolset, originalToolset.name, etag, dispatch, showNotification, t, router]);
 
+  const onModalClose = useCallback(() => {
+    setIsModalOpen(false);
+    setModalType(void 0);
+  }, []);
+
+  const onModalOpen = useCallback((modalType: ModalType) => {
+    setModalType(modalType);
+    setIsModalOpen(true);
+  }, []);
+
+  const onModalCancel = useCallback(
+    (type: ModalType) => {
+      if (type === ModalType.emptyRoles) {
+        onModalClose();
+      }
+      if (type === ModalType.discard) {
+        onModalClose();
+      }
+    },
+    [onModalClose],
+  );
+
+  const onModalConfirm = useCallback(
+    (type: ModalType) => {
+      if (type === ModalType.emptyRoles) {
+        onSave();
+        onModalClose();
+      }
+      if (type === ModalType.discard) {
+        onDiscard();
+        onModalClose();
+      }
+    },
+    [onDiscard, onModalClose, onSave],
+  );
+
   const onTryToSave = useCallback(() => {
     if (
       selectedFormat !== ExportFormat.CORE &&
       isDisableRole(selectedToolset as EntityRoleLimits) &&
       !isEditorEnabled
     ) {
-      setIsModalOpen(true);
+      onModalOpen(ModalType.emptyRoles);
     } else {
       onSave();
     }
-  }, [isEditorEnabled, onSave, selectedFormat, selectedToolset]);
+  }, [isEditorEnabled, onSave, selectedFormat, selectedToolset, onModalOpen]);
+
+  const onTryToDiscard = useCallback(() => {
+    onModalOpen(ModalType.discard);
+  }, [onModalOpen]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
@@ -154,7 +196,7 @@ const ToolsetView: FC<Props> = ({ names, oAuthCode, etag, roles, originalToolset
         view={ApplicationRoute.Toolsets}
         entity={selectedToolset}
         isChanged={isChanged}
-        onDiscard={onDiscard}
+        onDiscard={onTryToDiscard}
         onSave={onTryToSave}
         tabs={tabs}
         jsonConfiguration={jsonConfiguration}
@@ -185,14 +227,13 @@ const ToolsetView: FC<Props> = ({ names, oAuthCode, etag, roles, originalToolset
           />
         )}
       </div>
-
-      {isModalOpen && (
-        <EntityRolesModal
-          onConfirm={() => onSave()}
-          onClose={() => setIsModalOpen(false)}
-          onCancel={() => setIsModalOpen(false)}
-        />
-      )}
+      <EntityViewModals
+        isModalOpen={isModalOpen}
+        modalType={modalType}
+        handleConfirm={onModalConfirm}
+        handleClose={onModalClose}
+        handleCancel={onModalCancel}
+      />
     </div>
   );
 };
