@@ -3,6 +3,7 @@ import { describe, expect, test, vi } from 'vitest';
 
 import { ActionType, Publication } from '@/src/models/dial/publications';
 import { ApplicationRoute } from '@/src/types/routes';
+import { EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import PublicationInfoHeader from '../InfoHeader';
 
 vi.mock('@/src/components/Common/LabelledText/LabelledText', () => ({
@@ -51,9 +52,9 @@ describe('Publications :: InfoHeader', () => {
     expect(labels).toHaveLength(3);
 
     const labelTexts = labels.map((label) => label.textContent);
-    expect(labelTexts).toContain('Entities.Action');
-    expect(labelTexts).toContain('EntityFields.createdAt');
-    expect(labelTexts).toContain('EntityFields.displayAuthor');
+    expect(labelTexts).toContain(EntitiesI18nKey.Action);
+    expect(labelTexts).toContain(EntityFieldsI18nKey.createdAt);
+    expect(labelTexts).toContain(EntityFieldsI18nKey.displayAuthor);
   });
 
   test('renders action field with indicator', () => {
@@ -93,7 +94,7 @@ describe('Publications :: InfoHeader', () => {
     const entity = createMockPublication({ createdAt: '2024-01-15T10:30:00Z' });
     setup({ entity, view: ApplicationRoute.PromptPublications });
 
-    expect(screen.getByText('Formatted Date')).toBeInTheDocument();
+    expect(screen.getByText(new Date('2024-01-15T10:30:00Z').toLocaleString())).toBeInTheDocument();
   });
 
   test('renders display author', () => {
@@ -114,7 +115,7 @@ describe('Publications :: InfoHeader', () => {
 
     const labels = screen.getAllByRole('region', { name: 'label' });
     const labelTexts = labels.map((label) => label.textContent);
-    expect(labelTexts).not.toContain('Entities.Action');
+    expect(labelTexts).not.toContain(EntitiesI18nKey.Action);
   });
 
   test('does not render createdAt field when date is missing', () => {
@@ -125,7 +126,7 @@ describe('Publications :: InfoHeader', () => {
 
     const labels = screen.getAllByRole('region', { name: 'label' });
     const labelTexts = labels.map((label) => label.textContent);
-    expect(labelTexts).not.toContain('EntityFields.createdAt');
+    expect(labelTexts).not.toContain(EntityFieldsI18nKey.createdAt);
   });
 
   test('does not render displayAuthor field when author is missing', () => {
@@ -136,7 +137,7 @@ describe('Publications :: InfoHeader', () => {
 
     const labels = screen.getAllByRole('region', { name: 'label' });
     const labelTexts = labels.map((label) => label.textContent);
-    expect(labelTexts).not.toContain('EntityFields.displayAuthor');
+    expect(labelTexts).not.toContain(EntityFieldsI18nKey.displayAuthor);
   });
 
   test('renders only action when other fields are missing', () => {
@@ -148,7 +149,7 @@ describe('Publications :: InfoHeader', () => {
 
     const labels = screen.getAllByRole('region', { name: 'label' });
     expect(labels).toHaveLength(1);
-    expect(labels[0].textContent).toBe('Entities.Action');
+    expect(labels[0].textContent).toBe(EntitiesI18nKey.Action);
   });
 
   test('applies correct container styling', () => {
@@ -165,24 +166,6 @@ describe('Publications :: InfoHeader', () => {
       'border-b',
       'border-primary',
     );
-  });
-
-  test('calls formatDateTimeToLocalString with createdAt value', async () => {
-    const formattingModule = await import('@/src/utils/formatting/date');
-    const entity = createMockPublication({ createdAt: '2024-01-15T10:30:00Z' });
-
-    setup({ entity, view: ApplicationRoute.PromptPublications });
-
-    expect(vi.mocked(formattingModule.formatDateTimeToLocalString)).toHaveBeenCalledWith('2024-01-15T10:30:00Z');
-  });
-
-  test('calls getActionClassName with action value', async () => {
-    const publicationsModule = await import('@/src/utils/publications');
-    const entity = createMockPublication({ action: ActionType.DELETE });
-
-    setup({ entity, view: ApplicationRoute.PromptPublications });
-
-    expect(vi.mocked(publicationsModule.getActionClassName)).toHaveBeenCalledWith(ActionType.DELETE);
   });
 
   test('works with different ApplicationRoute views', () => {

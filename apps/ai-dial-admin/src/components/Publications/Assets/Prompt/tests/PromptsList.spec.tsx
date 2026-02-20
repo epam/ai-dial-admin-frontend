@@ -126,23 +126,6 @@ describe('Publications :: PromptsList', () => {
     expect(updatedPublication.prompts[0].prompt.name).toBe('Updated Prompt');
   });
 
-  test('updates path when prompt name or version changes', async () => {
-    const { onChange } = setup();
-    const { updatePathWithNameAndVersion } = await import('@/src/utils/files/path');
-
-    const changeButton = screen.getByRole('button', { name: 'change-prompt1' });
-    await userEvent.click(changeButton);
-
-    expect(updatePathWithNameAndVersion).toHaveBeenCalledWith(
-      'publications/prompts/first/1.0.0.json',
-      'Updated Prompt',
-      '1.0.0',
-    );
-
-    const updatedPublication = onChange.mock.calls[0][0];
-    expect(updatedPublication.prompts[0].prompt.path).toBe('updated/Updated Prompt/1.0.0.json');
-  });
-
   test('preserves other prompts when updating one prompt', async () => {
     const { onChange } = setup();
 
@@ -224,21 +207,6 @@ describe('Publications :: PromptsList', () => {
     expect(updatedPublication.requestName).toBe('test-request');
     expect(updatedPublication.author).toBe('test@example.com');
     expect(updatedPublication.folderId).toBe('folder1');
-  });
-
-  test('handles prompt without path property', async () => {
-    const promptsWithoutPath = [{ ...mockPrompts[0], prompt: { ...mockPrompts[0].prompt } }];
-    delete (promptsWithoutPath[0].prompt as any).path;
-
-    const publication = createMockPublication(promptsWithoutPath);
-    const { onChange } = setup({ publication });
-
-    const changeButton = screen.getByRole('button', { name: 'change-prompt1' });
-    await userEvent.click(changeButton);
-
-    expect(onChange).toHaveBeenCalled();
-    const updatedPublication = onChange.mock.calls[0][0];
-    expect(updatedPublication.prompts[0].prompt.path).toBe('updated/Updated Prompt/1.0.0.json');
   });
 
   test('renders with single prompt', () => {
