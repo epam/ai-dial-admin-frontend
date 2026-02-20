@@ -14,6 +14,6 @@ export const getFullToken = async (params: GetTokenParams): Promise<Token> => {
 };
 
 export const getListProvidersPassIdToken = () => {
-  const listProviders = process.env.AUTH_IDTOKEN_PROVIDER?.split(',').map((str) => str.trim());
+  const listProviders = process.env.AUTH_IDTOKEN_PROVIDERS?.split(',').map((str) => str.trim());
   return listProviders || [];
 };

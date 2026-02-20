@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useMemo } from 'react';
+import { FC, RefObject, useMemo } from 'react';
 
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import ValidityStatusLabel from '@/src/components/Common/ValidityStatus/ValidityStatusLabel';
@@ -15,12 +15,13 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 
 interface Props {
+  runRefreshRef: RefObject<(() => void) | null>;
   activeTab: EntityViewTab;
   selectedTestSuite: TestSuite;
   onChange: (testSuite: TestSuite) => void;
 }
 
-const TabsContent: FC<Props> = ({ activeTab, onChange, selectedTestSuite }) => {
+const TabsContent: FC<Props> = ({ runRefreshRef, activeTab, onChange, selectedTestSuite }) => {
   const t = useI18n();
 
   const headerPrefix = useMemo(() => {
@@ -52,8 +53,7 @@ const TabsContent: FC<Props> = ({ activeTab, onChange, selectedTestSuite }) => {
         </PropertiesTabContent>
       )}
       {activeTab === EntityViewTab.TestCases && <TestCases selectedTestSuite={selectedTestSuite} onChange={onChange} />}
-      {activeTab === EntityViewTab.Runs && <Runs selectedTestSuite={selectedTestSuite} />}
-      {activeTab === EntityViewTab.Trends && <div>Trends</div>}
+      {activeTab === EntityViewTab.Runs && <Runs selectedTestSuite={selectedTestSuite} runRefreshRef={runRefreshRef} />}
     </>
   );
 };

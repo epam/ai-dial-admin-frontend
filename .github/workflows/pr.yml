@@ -8,6 +8,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  security-events: write
+
 jobs:
   run_tests:
     uses: epam/ai-dial-ci/.github/workflows/node_pr.yml@3.1.2

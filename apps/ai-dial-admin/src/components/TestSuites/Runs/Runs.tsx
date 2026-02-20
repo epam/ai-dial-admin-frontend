@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, RefObject, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
 
@@ -16,10 +16,11 @@ import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { RUN_FILTER } from './constants';
 
 interface Props {
+  runRefreshRef: RefObject<(() => void) | null>;
   selectedTestSuite: TestSuite;
 }
 
-const Runs: FC<Props> = ({ selectedTestSuite }) => {
+const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
   const t = useI18n();
 
   let isLoading = false;
@@ -54,7 +55,7 @@ const Runs: FC<Props> = ({ selectedTestSuite }) => {
         gridApi?.hideOverlay();
         gridApi?.setGridOption('loading', true);
         const page = Math.floor(params.startRow / PAGE_SIZE);
-        if (page === 0) {
+        if (page === 0 && runs) {
           onSetData(runs, totalElements, params);
           return;
         }
@@ -88,11 +89,22 @@ const Runs: FC<Props> = ({ selectedTestSuite }) => {
     [gridApi],
   );
 
-  useEffect(() => {
+  const refreshGrid = useCallback(() => {
+    setRuns(null);
     if (gridApi) {
       gridApi.setGridOption('datasource', gridDataSource);
     }
   }, [gridApi, gridDataSource]);
+
+  useEffect(() => {
+    runRefreshRef.current = refreshGrid;
+  }, [refreshGrid, runRefreshRef]);
+
+  useEffect(() => {
+    if (gridApi) {
+      gridApi.setGridOption('datasource', gridDataSource);
+    }
+  }, [gridApi, gridDataSource, refreshGrid]);
 
   const onGridReady = useCallback(({ api }: GridReadyEvent) => {
     setGridApi(api);

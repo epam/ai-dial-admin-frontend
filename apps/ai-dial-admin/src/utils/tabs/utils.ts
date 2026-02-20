@@ -374,7 +374,7 @@ export const getSystemPropertiesTabs = (t: (key: string) => string): TabModel[] 
 };
 
 export const getTestSuiteTabs = (t: (key: string) => string): TabModel[] => {
-  return [propertiesTab(t), testCasesTab(t), runsTab(t), trendsTab(t)];
+  return [propertiesTab(t), testCasesTab(t), runsTab(t)];
 };
 
 export const getPublicationViewTabs = (t: (key: string) => string, view: ApplicationRoute): TabModel[] => {
@@ -395,6 +395,7 @@ export const getFilePublicationTabs = (t: (key: string) => string): TabModel[] =
 export const getPromptPublicationTabs = (t: (key: string) => string): TabModel[] => {
   return [propertiesTab(t), permissionsTab(t)];
 };
+
 export const getTestSuiteRequestTemplateTabs = (t: (key: string) => string): TabModel[] => {
-  return [parametersTab(t), bodyTab(t), headersTab(t)];
+  return [bodyTab(t), parametersTab(t), headersTab(t)];
 };
