@@ -9,6 +9,7 @@ import {
   TEST_SUITES_RUNS_URL,
   TEST_SUITES_URL,
   TEST_SUITE_RUN_URL,
+  TEST_SUITE_TEMPLATE_VARIABLES_URL,
   TEST_SUITE_URL,
   TestSuitesApi,
 } from '../test-suites-api';
@@ -191,6 +192,15 @@ describe('Server :: TestSuiteApi', () => {
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${TEST_CASE_URL('id', 'caseId')}`,
       expect.objectContaining({ method: 'DELETE' }),
+    );
+  });
+
+  test('Should call getTemplateVariables', async () => {
+    fetch.mockResponseOnce(JSON.stringify(mockTestSuite));
+    await instance.getTemplateVariables('id', TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_SUITE_TEMPLATE_VARIABLES_URL('id')}`,
+      expect.objectContaining({ method: 'GET' }),
     );
   });
 });

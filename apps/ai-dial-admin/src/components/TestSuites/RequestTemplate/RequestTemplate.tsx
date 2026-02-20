@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { DialTabs, DialTextInputField } from '@epam/ai-dial-ui-kit';
 
@@ -21,7 +21,7 @@ const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
   const tabs = getTestSuiteRequestTemplateTabs(t);
-  const [activeTab, setActiveTab] = useState(EntityViewTab.Parameters);
+  const [activeTab, setActiveTab] = useState(EntityViewTab.Body);
 
   const onChangeActiveTab = useCallback((id: string) => {
     setActiveTab(id as EntityViewTab);
@@ -40,16 +40,18 @@ const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
         const regex = new RegExp(relativeUrlPattern);
 
         if (!regex.test(urlTemplate)) {
-          dispatch({ type: ValidationActionType.SetField, field: 'urlTemplate', isValid: false });
           return `Not matches with ${relativeUrlPattern}`;
         }
       } catch (error) {
         console.error('Invalid regex pattern:', error);
       }
     }
-    dispatch({ type: ValidationActionType.SetField, field: 'urlTemplate', isValid: true });
     return undefined;
-  }, [dispatch, testSuite.endpointRef?.relativeUrlPattern, testSuite.requestTemplate?.urlTemplate]);
+  }, [testSuite.endpointRef?.relativeUrlPattern, testSuite.requestTemplate?.urlTemplate]);
+
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'urlTemplate', isValid: !urlTemplateError });
+  }, [dispatch, urlTemplateError]);
 
   return (
     <div className="flex flex-col w-full h-full gap-2">
