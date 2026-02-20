@@ -27,7 +27,6 @@ import { useI18n } from '@/src/locales/client';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import AssetChangedEntityButtons from '../Buttons/AssetChangedEntityButtons';
 import { SimpleButtonsWrapperProps } from './SimpleButtonsWrapper';
-import DiscardModal from '@/src/components//EntityView/Modals/Discard/Discard';
 
 export interface AssetButtonsWrapperProps extends Omit<SimpleButtonsWrapperProps<AssetWithVersion>, 'onSave'> {
   assets?: AssetWithVersion[] | null;
@@ -67,7 +66,6 @@ const AssetButtonsWrapper: FC<AssetButtonsWrapperProps> = ({
   const isMobile = useIsMobileScreen();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
   const [containerClassName, setContainerClassName] = useState(SELECT_ENTITY_HEADER_CLASS);
   const [buttonsClassName, setButtonsClassName] = useState('');
 
@@ -92,15 +90,6 @@ const AssetButtonsWrapper: FC<AssetButtonsWrapperProps> = ({
     onDiscard?.();
   }, [dispatch, onDiscard]);
 
-  const onTryToDiscard = useCallback(() => {
-    setIsDiscardModalOpen(true);
-  }, []);
-
-  const onDiscardModalConfirm = useCallback(() => {
-    onStartDiscard();
-    setIsDiscardModalOpen(false);
-  }, [onStartDiscard]);
-
   const onTryToSave = useCallback(
     (version?: string) => {
       if (jsonErrors?.length) {
@@ -122,7 +111,7 @@ const AssetButtonsWrapper: FC<AssetButtonsWrapperProps> = ({
           <AssetChangedEntityButtons
             version={entity.version}
             existingVersions={existingVersions}
-            onDiscard={onTryToDiscard}
+            onDiscard={onStartDiscard}
             isEditorEnabled={isEditorEnabled}
             onSave={onTryToSave}
           />
@@ -166,13 +155,6 @@ const AssetButtonsWrapper: FC<AssetButtonsWrapperProps> = ({
           />,
           document.body,
         )}
-      {isDiscardModalOpen && (
-        <DiscardModal
-          onConfirm={onDiscardModalConfirm}
-          onClose={() => setIsDiscardModalOpen(false)}
-          onCancel={() => setIsDiscardModalOpen(false)}
-        />
-      )}
     </>
   );
 };

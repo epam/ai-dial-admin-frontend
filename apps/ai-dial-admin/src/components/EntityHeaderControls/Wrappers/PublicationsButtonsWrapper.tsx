@@ -33,7 +33,6 @@ import { useI18n } from '@/src/locales/client';
 import { ActionType, Publication } from '@/src/models/dial/publications';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getModalsTranslations, isAddAction } from '@/src/utils/publications';
-import DiscardModal from '@/src/components//EntityView/Modals/Discard/Discard';
 
 export interface PublicationsButtonsWrapperProps<T> {
   view: ApplicationRoute;
@@ -82,7 +81,6 @@ const PublicationsButtonsWrapper = <T extends Publication>({
   const [isApproveModalOpen, setIsOpenApproveModal] = useState(false);
   const [isDeclineModalOpen, setIsOpenDeclineModal] = useState(false);
   const [isDeleteModalOpen, setIsOpenDeleteModal] = useState(false);
-  const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
   const [declineReason, setDeclineReason] = useState('');
   const isDeclineInvalid = useMemo(() => {
     const value = declineReason.trim();
@@ -130,15 +128,6 @@ const PublicationsButtonsWrapper = <T extends Publication>({
     }
   }, [jsonErrors, showNotification, t, dispatch, onSave]);
 
-  const onTryToDiscard = useCallback(() => {
-    setIsDiscardModalOpen(true);
-  }, []);
-
-  const onDiscardModalConfirm = useCallback(() => {
-    onStartDiscard();
-    setIsDiscardModalOpen(false);
-  }, [onStartDiscard]);
-
   const publishWarning = useMemo(() => {
     if (isAddAction(action) && !entity.rules?.length) {
       return (
@@ -158,7 +147,7 @@ const PublicationsButtonsWrapper = <T extends Publication>({
     <>
       <div className={containerClassName}>
         {isChanged ? (
-          <ChangedEntityButtons disableSave={isDisableSave} onDiscard={onTryToDiscard} onSave={onTryToSave} />
+          <ChangedEntityButtons disableSave={isDisableSave} onDiscard={onStartDiscard} onSave={onTryToSave} />
         ) : (
           <div className="flex flex-row items-center w-full gap-x-4">
             {!isEditorEnabled && (
@@ -262,13 +251,6 @@ const PublicationsButtonsWrapper = <T extends Publication>({
           </DialConfirmationPopup>,
           document.body,
         )}
-      {isDiscardModalOpen && (
-        <DiscardModal
-          onConfirm={onDiscardModalConfirm}
-          onClose={() => setIsDiscardModalOpen(false)}
-          onCancel={() => setIsDiscardModalOpen(false)}
-        />
-      )}
     </>
   );
 };
