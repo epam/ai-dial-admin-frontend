@@ -109,7 +109,7 @@ export const VALIDITY_STATUS_COLUMN = (t: (str: string) => string): ColDef => {
   return {
     ...BASE_STATUS_COLUMN,
     cellRenderer: ValidityStatusCellRenderer,
-    filterValueGetter: ({ data }) => getValidityStatus(data?.validityState, t).title,
+    filterValueGetter: ({ data }) => getValidityStatus(data?.validityState.valid, t).title,
   };
 };
 
