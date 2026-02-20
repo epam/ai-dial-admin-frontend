@@ -151,7 +151,7 @@ const PublicationsButtonsWrapper = <T extends Publication>({
         ) : (
           <div className="flex flex-row items-center w-full gap-x-4">
             {!isEditorEnabled && (
-              <div className={'flex-1 flex flex-row gap-x-4 justify-center'}>
+              <div className="flex-1 flex flex-row gap-x-4 justify-center">
                 <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
                   <DialNeutralButton
                     className={buttonsClassName}
