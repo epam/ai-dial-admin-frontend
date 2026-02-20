@@ -31,7 +31,7 @@ interface Props<T> {
   elementId: string;
   fieldTitle?: string;
   optional?: boolean;
-  view?: ApplicationRoute;
+  view: ApplicationRoute;
   adapters?: DialAdapter[];
   isModal?: boolean;
 }
@@ -82,17 +82,10 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
           isValid: true,
         });
 
-        if (sourceType !== SOURCE_TYPE.ENDPOINTS && view === ApplicationRoute.Toolsets) {
-          dispatch({
-            type: ValidationActionType.SetField,
-            field: 'endpoint',
-            isValid: true,
-          });
-        }
         onChangeEntity({ ...entity, source: { ...entity.source, $type: sourceType as SOURCE_TYPE }, endpoint: '' });
       }
     },
-    [dispatch, entity, onChangeEntity, source, view],
+    [dispatch, entity, onChangeEntity, source],
   );
 
   useEffect(() => {

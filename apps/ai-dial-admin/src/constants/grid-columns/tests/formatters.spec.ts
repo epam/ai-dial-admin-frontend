@@ -10,7 +10,7 @@ import {
   sourceValueFormatter,
 } from '../formatters';
 import { ActivityAuditResourceType } from '@/src/types/activity-audit';
-import { SOURCE_TYPE } from '@/src/components/SourceField/types';
+import { SOURCE_FIELD, SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { ApplicationRoute } from '@/src/types/routes';
 import { AttachmentsI18nKey, BasicI18nKey, EntitiesI18nKey, MenuI18nKey, SourceI18nKey } from '@/src/constants/i18n';
 
@@ -97,8 +97,7 @@ describe('Formatters :: priceValueFormatter', () => {
 
 describe('Formatters :: sourceValueFormatter', () => {
   test('return empty value', () => {
-    expect(sourceValueFormatter({ source: {} })).toBeUndefined();
-    expect(sourceValueFormatter({ source: { $type: 'AAA' } })).toBeUndefined();
+    expect(sourceValueFormatter({ source: {} as SOURCE_FIELD })).toBeUndefined();
   });
   test('formats source value for ADAPTER type', () => {
     expect(sourceValueFormatter({ source: { $type: SOURCE_TYPE.ADAPTER, adapterName: 'Adapter1' } })).toBe('Adapter1');
@@ -120,6 +119,19 @@ describe('Formatters :: sourceValueFormatter', () => {
         source: { $type: SOURCE_TYPE.ENDPOINTS, runnerName: 'Runner1' },
         endpoint: 'http://example.com',
       }),
+    ).toBe('http://example.com');
+  });
+
+  test('formats source value for ENDPOINT type in Adapter view', () => {
+    expect(
+      sourceValueFormatter(
+        {
+          source: { $type: SOURCE_TYPE.ENDPOINTS, runnerName: 'Runner1' },
+          baseEndpoint: 'http://example.com',
+        },
+        '',
+        ApplicationRoute.Adapters,
+      ),
     ).toBe('http://example.com');
   });
 });

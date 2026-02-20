@@ -21,7 +21,7 @@ const TabsContent: FC<Props> = ({ activeTab, selectedAdapter, onChangeAdapter })
     <>
       {activeTab === EntityViewTab.Properties && (
         <PropertiesTabContent entity={selectedAdapter} view={ApplicationRoute.Adapters} id={selectedAdapter.name}>
-          <AdapterProperties entity={selectedAdapter} onChangeAdapter={onChangeAdapter} isEntityImmutable={true} />
+          <AdapterProperties entity={selectedAdapter} onChangeAdapter={onChangeAdapter} />
         </PropertiesTabContent>
       )}
       {activeTab === EntityViewTab.Models && (
