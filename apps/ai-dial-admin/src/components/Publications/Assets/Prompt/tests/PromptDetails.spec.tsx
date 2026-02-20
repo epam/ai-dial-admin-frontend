@@ -4,6 +4,7 @@ import { describe, expect, test, vi } from 'vitest';
 
 import { DialPrompt } from '@/src/models/dial/prompt';
 import PromptDetails from '../PromptDetails';
+import { ButtonsI18nKey } from '../../../../../constants/i18n';
 
 vi.mock('@/src/components/Assets/Prompts/View/Properties', () => ({
   default: ({ prompt, onChangePrompt, isPublication }: any) => (
@@ -86,7 +87,7 @@ describe('Publications :: PromptDetails', () => {
   test('renders delete button with trash icon', () => {
     setup();
 
-    const deleteButton = screen.getByRole('button', { name: 'Delete' });
+    const deleteButton = screen.getByRole('button', { name: ButtonsI18nKey.Delete });
     expect(deleteButton).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'trash-icon' })).toBeInTheDocument();
   });
@@ -109,7 +110,7 @@ describe('Publications :: PromptDetails', () => {
   test('calls onRemove when delete button is clicked', async () => {
     const { onRemove } = setup();
 
-    const deleteButton = screen.getByRole('button', { name: 'Delete' });
+    const deleteButton = screen.getByRole('button', { name: ButtonsI18nKey.Delete });
     await userEvent.click(deleteButton);
 
     expect(onRemove).toHaveBeenCalledTimes(1);
