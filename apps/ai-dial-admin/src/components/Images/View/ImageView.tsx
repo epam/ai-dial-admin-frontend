@@ -22,7 +22,6 @@ import ImagesHeader from '@/src/components/EntityHeaderControls/ImagesHeader';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import TabsContent from './TabsContent';
-import DiscardModal from '@/src/components//EntityView/Modals/Discard/Discard';
 
 interface Props {
   image: Image;
@@ -42,7 +41,6 @@ const ImageView: FC<Props> = ({ image, containerNames, versions }) => {
   const [isChanged, setIsChanged] = useState<boolean>(false);
   const [key, setKey] = useState(0);
   const [imageVersions, setImageVersions] = useState<ImageVersion[]>(versions);
-  const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -122,15 +120,6 @@ const ImageView: FC<Props> = ({ image, containerNames, versions }) => {
     };
   }, [selectedImage, t, router]);
 
-  const onTryToDiscard = useCallback(() => {
-    setIsDiscardModalOpen(true);
-  }, []);
-
-  const onDiscardModalConfirm = useCallback(() => {
-    onDiscard();
-    setIsDiscardModalOpen(false);
-  }, [onDiscard]);
-
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <ImagesHeader
@@ -142,7 +131,7 @@ const ImageView: FC<Props> = ({ image, containerNames, versions }) => {
         image={selectedImage}
         isChanged={isChanged}
         onSave={onSave}
-        onDiscard={onTryToDiscard}
+        onDiscard={onDiscard}
         containerNames={containerNames}
         versions={imageVersions}
       />
@@ -164,13 +153,6 @@ const ImageView: FC<Props> = ({ image, containerNames, versions }) => {
               selectedImage={selectedImage}
               onChangeVersions={setImageVersions}
             />
-            {isDiscardModalOpen && (
-              <DiscardModal
-                onConfirm={onDiscardModalConfirm}
-                onClose={() => setIsDiscardModalOpen(false)}
-                onCancel={() => setIsDiscardModalOpen(false)}
-              />
-            )}
           </>
         )}
       </div>

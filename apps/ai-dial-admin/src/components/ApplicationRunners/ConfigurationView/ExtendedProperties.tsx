@@ -106,10 +106,10 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
       <EditorUrlControl endpoint={runner['dial:applicationTypeEditorUrl']} onChange={onChangeEditorUrl} />
       <EndpointControl
         id="applicationTypeSchemaEndpoint"
-        fieldTitle={t(EntityFieldsI18nKey.applicationTypeSchemaEndpoint)}
+        fieldTitle={t(EntityFieldsI18nKey['dial:applicationTypeSchemaEndpoint'])}
         placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
-        endpoint={runner.applicationTypeSchemaEndpoint}
-        onChange={(endpoint) => onChange(endpoint, 'applicationTypeSchemaEndpoint')}
+        endpoint={runner['dial:applicationTypeSchemaEndpoint']}
+        onChange={(endpoint) => onChange(endpoint, 'dial:applicationTypeSchemaEndpoint')}
       />
     </div>
   );
