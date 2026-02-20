@@ -11,7 +11,7 @@ import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/
 import { useI18n } from '@/src/locales/client';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { DialApplicationScheme, TypeBucketCopy } from '@/src/models/dial/application';
-import EndpointControl from '../../BaseControls/Endpoint/Endpoint';
+import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 
 interface Props {
   runner: DialApplicationScheme;
