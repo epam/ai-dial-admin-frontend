@@ -65,7 +65,7 @@ export class TestSuitesApi extends BaseApi {
     token: Token,
   ): Promise<EvaluationPageData<TestCase> | null> {
     return this.get<EvaluationPageData<TestCase>>(
-      `${TEST_CASES_URL(id)}?page=${page}&size=${size}&includeTotalCount=true${this.getFiltersAndSortsStr(sorts, filters)}`,
+      `${TEST_CASES_URL(id)}?page=${page}&size=${size}&includeTotalCount=true&includeWarnings=true${this.getFiltersAndSortsStr(sorts, filters)}`,
       token,
     );
   }

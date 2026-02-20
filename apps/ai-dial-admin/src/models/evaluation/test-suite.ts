@@ -60,6 +60,7 @@ export interface TestCase {
   enabled: boolean;
   createdAt: number;
   data?: Record<string, unknown>;
+  validationWarnings?: ValidationWarning[];
 }
 
 export interface TestSuiteRun {
