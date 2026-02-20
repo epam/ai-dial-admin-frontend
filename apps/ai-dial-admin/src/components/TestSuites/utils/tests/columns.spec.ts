@@ -9,7 +9,7 @@ describe('getTestCaseColumns', () => {
 
     const result = getTestCaseColumns(testCases);
 
-    expect(result.length).toBe(3);
+    expect(result.length).toBe(4);
   });
 
   test('should return only base columns when first test case has no facts', () => {
@@ -17,7 +17,7 @@ describe('getTestCaseColumns', () => {
 
     const result = getTestCaseColumns(testCases);
 
-    expect(result.length).toBe(3);
+    expect(result.length).toBe(4);
   });
 
   test('should return only base columns when first test case has empty facts object', () => {
@@ -30,7 +30,7 @@ describe('getTestCaseColumns', () => {
 
     const result = getTestCaseColumns(testCases);
 
-    expect(result.length).toBe(3);
+    expect(result.length).toBe(4);
   });
 
   test('should add columns for each fact in the first test case', () => {
@@ -46,11 +46,10 @@ describe('getTestCaseColumns', () => {
 
     const result = getTestCaseColumns(testCases);
 
-    expect(result.length).toBe(5);
-    expect(result[0]).toEqual({ field: 'id', colId: 'id', headerName: 'ID' });
-    expect(result[1]).toEqual({ field: 'testCaseName', colId: 'testCaseName', headerName: 'Test case name' });
-    expect(result[2]).toEqual({ field: 'temperature', headerName: 'temperature' });
-    expect(result[3]).toEqual({ field: 'maxTokens', headerName: 'maxTokens' });
+    expect(result[1]).toEqual({ field: 'id', colId: 'id', headerName: 'ID' });
+    expect(result[2]).toEqual({ field: 'testCaseName', colId: 'testCaseName', headerName: 'Test case name' });
+    expect(result[3]).toEqual({ field: 'temperature', headerName: 'temperature' });
+    expect(result[4]).toEqual({ field: 'maxTokens', headerName: 'maxTokens' });
   });
 
   test('should handle single fact', () => {
@@ -65,8 +64,7 @@ describe('getTestCaseColumns', () => {
 
     const result = getTestCaseColumns(testCases);
 
-    expect(result.length).toBe(4);
-    expect(result[2]).toEqual({ field: 'prompt', headerName: 'prompt' });
+    expect(result[3]).toEqual({ field: 'prompt', headerName: 'prompt' });
   });
 
   test('should handle facts with various data types', () => {
@@ -85,12 +83,11 @@ describe('getTestCaseColumns', () => {
 
     const result = getTestCaseColumns(testCases);
 
-    expect(result.length).toBe(8); // 3 base + 5 fact columns
-    expect(result[2].field).toBe('stringFact');
-    expect(result[3].field).toBe('numberFact');
-    expect(result[4].field).toBe('booleanFact');
-    expect(result[5].field).toBe('arrayFact');
-    expect(result[6].field).toBe('objectFact');
+    expect(result[3].field).toBe('stringFact');
+    expect(result[4].field).toBe('numberFact');
+    expect(result[5].field).toBe('booleanFact');
+    expect(result[6].field).toBe('arrayFact');
+    expect(result[7].field).toBe('objectFact');
   });
 
   test('should handle facts with special characters in keys', () => {
@@ -107,10 +104,9 @@ describe('getTestCaseColumns', () => {
 
     const result = getTestCaseColumns(testCases);
 
-    expect(result.length).toBe(6);
-    expect(result[2]).toEqual({ field: 'fact-with-dash', headerName: 'fact-with-dash' });
-    expect(result[3]).toEqual({ field: 'fact_with_underscore', headerName: 'fact_with_underscore' });
-    expect(result[4]).toEqual({ field: 'fact.with.dot', headerName: 'fact.with.dot' });
+    expect(result[3]).toEqual({ field: 'fact-with-dash', headerName: 'fact-with-dash' });
+    expect(result[4]).toEqual({ field: 'fact_with_underscore', headerName: 'fact_with_underscore' });
+    expect(result[5]).toEqual({ field: 'fact.with.dot', headerName: 'fact.with.dot' });
   });
 
   test('should preserve the order of facts as they appear in the object', () => {
@@ -127,9 +123,9 @@ describe('getTestCaseColumns', () => {
 
     const result = getTestCaseColumns(testCases);
 
-    expect(result[2].field).toBe('zFact');
-    expect(result[3].field).toBe('aFact');
-    expect(result[4].field).toBe('mFact');
+    expect(result[3].field).toBe('zFact');
+    expect(result[4].field).toBe('aFact');
+    expect(result[5].field).toBe('mFact');
   });
 
   test('should correctly spread TEST_CASES_COLUMN at the beginning', () => {
@@ -145,9 +141,9 @@ describe('getTestCaseColumns', () => {
     const result = getTestCaseColumns(testCases);
 
     // First columns should be from TEST_CASES_COLUMN
-    expect(result[0]).toEqual(TEST_CASES_COLUMN[0]);
-    expect(result[1]).toEqual(TEST_CASES_COLUMN[1]);
+    expect(result[1]).toEqual(TEST_CASES_COLUMN[0]);
+    expect(result[2]).toEqual(TEST_CASES_COLUMN[1]);
     // Then custom fact columns
-    expect(result[2]).toEqual({ field: 'customFact', headerName: 'customFact' });
+    expect(result[3]).toEqual({ field: 'customFact', headerName: 'customFact' });
   });
 });

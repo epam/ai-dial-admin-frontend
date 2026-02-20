@@ -33,6 +33,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import ImageDelete from '@/src/components/Deployments/Modals/ImageDelete';
+import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
 
 export interface ImagesButtonsWrapperProps {
   image: Image;
@@ -179,21 +180,19 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
       <div className={containerClassNames}>
         {isChanged ? (
           <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
-            <DialNeutralButton className={buttonsClassNames} label={t(ButtonsI18nKey.Discard)} onClick={onDiscard} />
-            <DialPrimaryButton
-              className={buttonsClassNames}
-              label={t(ButtonsI18nKey.SaveAsNewVersion)}
-              onClick={onOpenSaveNewVersionModal}
-              disabled={isDisableSave}
-            />
-            {allowEditing && !forceNewVersion && (
+            <ChangedEntityButtons
+              disableSave={isDisableSave}
+              onDiscard={onDiscard}
+              onSave={onSave}
+              isSaveAllowed={allowEditing && !forceNewVersion}
+            >
               <DialPrimaryButton
                 className={buttonsClassNames}
-                label={t(ButtonsI18nKey.Save)}
-                onClick={onSave}
+                label={t(ButtonsI18nKey.SaveAsNewVersion)}
+                onClick={onOpenSaveNewVersionModal}
                 disabled={isDisableSave}
               />
-            )}
+            </ChangedEntityButtons>
           </div>
         ) : (
           <div className="flex flex-row items-center w-full gap-x-4">
