@@ -26,9 +26,8 @@ const MultiselectContentModal: FC<Props> = ({
   setSelectedItems,
   setNewItems,
 }) => {
-  const [newItems, setItems] = useState<string[]>([]);
-
   const [filteredItems, setFilteredItems] = useState<string[]>(items);
+  const [newItems, setItems] = useState<string[]>([]);
   const [filteredNewItems, setFilteredNewItems] = useState<string[]>([]);
 
   const newItemsContainer = useRef<HTMLDivElement | null>(null);
@@ -38,19 +37,15 @@ const MultiselectContentModal: FC<Props> = ({
 
   useEffect(() => {
     setFilteredItems(items);
-  }, [items]);
+    if (draggable) {
+      setItems(items);
+    }
+  }, [draggable, items]);
 
   useEffect(() => {
     setNewItems(newItems);
     setFilteredNewItems(newItems);
   }, [newItems, setNewItems]);
-
-  useEffect(() => {
-    if (draggable) {
-      setItems(items);
-      setFilteredNewItems(items);
-    }
-  }, [setItems, draggable, items]);
 
   const onChangeSelectedItems = useCallback(
     (topic: string, value?: boolean) => {
@@ -88,14 +83,8 @@ const MultiselectContentModal: FC<Props> = ({
   );
 
   const onAddItem = useCallback(() => {
-    const newValues = [...newItems, ''];
-    setItems(newValues);
-
-    if ((!newItems || !newItems.length) && draggable) {
-      setItems(newValues);
-      setFilteredNewItems(newValues);
-    }
-  }, [setItems, newItems, draggable]);
+    setItems((prev) => [...prev, '']);
+  }, [setItems]);
 
   useEffect(() => {
     const container = newItemsContainer.current;
