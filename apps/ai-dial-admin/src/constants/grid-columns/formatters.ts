@@ -61,6 +61,8 @@ export const sourceTypeFormatter = (value: string, t: (key: string) => string, v
         return t(SourceI18nKey.InterceptorContainer);
       case ApplicationRoute.Toolsets:
         return t(SourceI18nKey.McpContainer);
+      case ApplicationRoute.Adapters:
+        return t(SourceI18nKey.AdapterContainer);
       default:
         return value;
     }
@@ -78,7 +80,11 @@ export const sourceTypeFormatter = (value: string, t: (key: string) => string, v
   }
 };
 
-export const sourceValueFormatter = (data?: { source: SOURCE_FIELD; endpoint?: string }, value?: string) => {
+export const sourceValueFormatter = (
+  data?: { source: SOURCE_FIELD; endpoint?: string; baseEndpoint?: string },
+  value?: string,
+  view?: ApplicationRoute,
+) => {
   if (!data?.source?.$type) {
     return value;
   }
@@ -89,7 +95,7 @@ export const sourceValueFormatter = (data?: { source: SOURCE_FIELD; endpoint?: s
   } else if (data.source.$type === SOURCE_TYPE.CONTAINER) {
     return data.source.containerId;
   } else if (data.source.$type === SOURCE_TYPE.ENDPOINTS) {
-    return data.endpoint;
+    return view === ApplicationRoute.Adapters ? data.baseEndpoint : data.endpoint;
   } else {
     return value;
   }

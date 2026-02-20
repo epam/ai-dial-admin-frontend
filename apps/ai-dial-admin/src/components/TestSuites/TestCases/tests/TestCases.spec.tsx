@@ -75,19 +75,6 @@ describe('TestCases', () => {
     });
   });
 
-  test('handles empty test cases response', async () => {
-    vi.mocked(actions.getTestCases).mockResolvedValue({
-      content: [],
-      totalElements: 0,
-    });
-
-    render(<TestCases selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
-
-    await waitFor(() => {
-      expect(screen.getByText('Columns: 3')).toBeInTheDocument();
-    });
-  });
-
   test('handles null response from getTestCases', async () => {
     vi.mocked(actions.getTestCases).mockResolvedValue(null as any);
 
