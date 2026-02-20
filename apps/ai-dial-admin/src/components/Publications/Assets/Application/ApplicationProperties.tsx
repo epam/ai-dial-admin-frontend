@@ -20,7 +20,7 @@ interface Props {
 const ApplicationProperties: FC<Props> = ({ publication, applicationSchemes }) => {
   const t = useI18n();
   const tabs = getPublicationTabs(t);
-  const application = publication.applicationResources?.[0];
+  const application = publication.applicationResources?.[0]?.applicationResource;
   const [selectedTab, setSelectedTab] = useState(tabs[0].id);
   useEffect(() => {
     const permissionContent = document.getElementById('publication-permissions');
