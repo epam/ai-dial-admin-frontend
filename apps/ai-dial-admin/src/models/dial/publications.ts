@@ -27,6 +27,10 @@ export interface PublicationFile extends PublicationEntity {
   file: Partial<DialFile>;
 }
 
+export interface FilePublication extends Publication {
+  files?: PublicationFile[];
+}
+
 export interface PublicationPrompt extends PublicationEntity {
   prompt: Partial<DialPrompt>;
 }
@@ -35,16 +39,20 @@ export interface PromptPublication extends Publication {
   prompts?: PublicationPrompt[];
 }
 
-export interface FilePublication extends Publication {
-  files?: PublicationFile[];
-}
-
-export interface ApplicationPublication extends Publication {
-  applicationResources?: DialApplicationResource[];
+export interface PublicationToolset extends PublicationEntity {
+  toolSetResource: DialToolsetResource;
 }
 
 export interface ToolsetPublication extends Publication {
-  toolSetResources?: DialToolsetResource[];
+  toolSetResources?: PublicationToolset[];
+}
+
+export interface PublicationApplication extends PublicationEntity {
+  applicationResource: DialApplicationResource;
+}
+
+export interface ApplicationPublication extends Publication {
+  applicationResources?: PublicationApplication[];
 }
 
 export interface ResourceIssue {
