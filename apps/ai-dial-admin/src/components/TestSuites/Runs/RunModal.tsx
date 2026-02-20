@@ -54,7 +54,7 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
       size={PopupSize.Sm}
       submitLabel={t(ButtonsI18nKey.Run)}
       onSubmit={() => onRun(value)}
-      disableSubmitButton={isLoading}
+      disableSubmitButton={isLoading || !value || +value <= 0}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
       onCancel={onClose}
     >

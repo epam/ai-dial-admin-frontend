@@ -6,7 +6,7 @@ import ValidityStatus from '@/src/components/Common/ValidityStatus/ValidityStatu
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import JsonEditorCellRenderer from '@/src/components/Grid/CellRenderers/JsonEditorCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
-import { NO_BORDER_CLASS } from '@/src/constants/ag-grid';
+import { CHECKBOX_COL_DEF, NO_BORDER_CLASS } from '@/src/constants/ag-grid';
 import { BASE_STATUS_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { TEST_CASES_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -25,6 +25,7 @@ export const getTestCaseColumns = (testCases: TestCase[]) => {
   }, [] as string[]);
 
   return [
+    { ...CHECKBOX_COL_DEF },
     ...TEST_CASES_COLUMN,
     ...data.map((fact) => ({
       field: fact,
@@ -32,8 +33,13 @@ export const getTestCaseColumns = (testCases: TestCase[]) => {
     })),
     {
       ...BASE_STATUS_COLUMN,
-      cellRenderer: (params: { data?: { valid: boolean } }) => {
-        return <ValidityStatus valid={params.data?.valid} isHideHint={true} />;
+      cellRenderer: (params: { data?: TestCase }) => {
+        return (
+          <ValidityStatus
+            valid={params.data?.valid}
+            message={params.data?.validationWarnings?.map((warning) => warning.message).join(', \n') || ''}
+          />
+        );
       },
     },
   ];
