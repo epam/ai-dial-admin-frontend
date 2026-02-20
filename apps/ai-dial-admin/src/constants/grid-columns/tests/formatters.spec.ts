@@ -12,7 +12,7 @@ import {
 import { ActivityAuditResourceType } from '@/src/types/activity-audit';
 import { SOURCE_FIELD, SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { ApplicationRoute } from '@/src/types/routes';
-import { BasicI18nKey, EntitiesI18nKey, MenuI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import { AttachmentsI18nKey, BasicI18nKey, EntitiesI18nKey, MenuI18nKey, SourceI18nKey } from '@/src/constants/i18n';
 
 const t = (s: string) => s;
 
@@ -46,7 +46,7 @@ describe('Formatters :: formatAttachment ', () => {
 
   test('Should return custom', () => {
     const result = formatAttachment(['*/*'] as any, (v: string) => v);
-    expect(result).toEqual('Attachments.AllAttachments');
+    expect(result).toEqual(AttachmentsI18nKey.AllAttachments);
   });
 });
 

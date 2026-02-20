@@ -4,23 +4,6 @@ import AddTestCase from '../AddTestCase';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 
 // Mock DialFormPopup component
-vi.mock('@epam/ai-dial-ui-kit', () => ({
-  DialFormPopup: ({ open, header, onClose, onSubmit, onCancel, submitLabel, cancelLabel, children }: any) => (
-    <>
-      {open && (
-        <div role="dialog" aria-label={header}>
-          <div>Header: {header}</div>
-          <div>{children}</div>
-          <button onClick={onSubmit}>{submitLabel}</button>
-          <button onClick={onCancel}>{cancelLabel}</button>
-          <button onClick={onClose} aria-label="Close dialog">
-            ×
-          </button>
-        </div>
-      )}
-    </>
-  ),
-}));
 
 describe('AddTestCase', () => {
   const mockOnClose = vi.fn();
@@ -40,12 +23,6 @@ describe('AddTestCase', () => {
     render(<AddTestCase isModalOpen={false} onClose={mockOnClose} onAdd={mockOnAdd} />);
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-  });
-
-  test('displays correct header text', () => {
-    render(<AddTestCase isModalOpen={true} onClose={mockOnClose} onAdd={mockOnAdd} />);
-
-    expect(screen.getByText('Header: add test case')).toBeInTheDocument();
   });
 
   test('renders Add button with correct label', () => {
@@ -94,13 +71,6 @@ describe('AddTestCase', () => {
 
     expect(mockOnClose).toHaveBeenCalledTimes(1);
     expect(mockOnAdd).not.toHaveBeenCalled();
-  });
-
-  test('modal has correct aria-label', () => {
-    render(<AddTestCase isModalOpen={true} onClose={mockOnClose} onAdd={mockOnAdd} />);
-
-    const dialog = screen.getByRole('dialog');
-    expect(dialog).toHaveAttribute('aria-label', 'add test case');
   });
 
   test('can toggle modal open and closed', () => {

@@ -5,17 +5,9 @@ import BaseProperties from '../BaseProperties';
 import { useFileFolder } from '@/src/context/assets/FileFolderContext';
 import { ROOT_FOLDER } from '@/src/constants/file';
 
-vi.mock('@/src/locales/client', () => ({
-  useI18n: () => (k: string) => k,
-}));
-
-vi.mock('@/src/context/assets/FileFolderContext', () => ({
-  useFileFolder: vi.fn(),
-}));
-
 vi.mock('@/src/components/Common/FilePath/FilePath', () => ({
   default: ({ label, value }: { label: string; value: string }) => (
-    <div data-testid="file-path">
+    <div>
       <label>{label}</label>
       <span>{value}</span>
     </div>

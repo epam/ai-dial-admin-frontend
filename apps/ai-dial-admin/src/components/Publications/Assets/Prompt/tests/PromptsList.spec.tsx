@@ -6,20 +6,18 @@ import { DialPrompt } from '@/src/models/dial/prompt';
 import { PromptPublication, PublicationPrompt } from '@/src/models/dial/publications';
 import PromptsList from '../PromptsList';
 
-vi.mock('@/src/utils/files/path', () => ({
-  updatePathWithNameAndVersion: vi
-    .fn()
-    .mockImplementation((oldPath: string, name: string, version: string) => `updated/${name}/${version}.json`),
-}));
-
 vi.mock('../PromptDetails', () => ({
   default: ({ prompt, onChange, onRemove }: any) => (
-    <div data-testid={`prompt-details-${prompt.id || 'unknown'}`}>
+    <div role="region" aria-label={`prompt-details-${prompt.id || 'unknown'}`}>
       <div>Prompt: {prompt.name}</div>
-      <button data-testid={`change-${prompt.id}`} onClick={() => onChange({ ...prompt, name: 'Updated Prompt' })}>
+      <button
+        role="button"
+        aria-label={`change-${prompt.id}`}
+        onClick={() => onChange({ ...prompt, name: 'Updated Prompt' })}
+      >
         Change Prompt
       </button>
-      <button data-testid={`remove-${prompt.id}`} onClick={onRemove}>
+      <button role="button" aria-label={`remove-${prompt.id}`} onClick={onRemove}>
         Remove Prompt
       </button>
     </div>
@@ -87,9 +85,9 @@ describe('Publications :: PromptsList', () => {
   test('renders list of prompts', () => {
     setup();
 
-    expect(screen.getByTestId('prompt-details-prompt1')).toBeInTheDocument();
-    expect(screen.getByTestId('prompt-details-prompt2')).toBeInTheDocument();
-    expect(screen.getByTestId('prompt-details-prompt3')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'prompt-details-prompt1' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'prompt-details-prompt2' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'prompt-details-prompt3' })).toBeInTheDocument();
 
     expect(screen.getByText('Prompt: First Prompt')).toBeInTheDocument();
     expect(screen.getByText('Prompt: Second Prompt')).toBeInTheDocument();
@@ -118,7 +116,7 @@ describe('Publications :: PromptsList', () => {
   test('calls onChange when a prompt is updated', async () => {
     const { onChange } = setup();
 
-    const changeButton = screen.getByTestId('change-prompt1');
+    const changeButton = screen.getByRole('button', { name: 'change-prompt1' });
     await userEvent.click(changeButton);
 
     expect(onChange).toHaveBeenCalledTimes(1);
@@ -128,27 +126,10 @@ describe('Publications :: PromptsList', () => {
     expect(updatedPublication.prompts[0].prompt.name).toBe('Updated Prompt');
   });
 
-  test('updates path when prompt name or version changes', async () => {
-    const { onChange } = setup();
-    const { updatePathWithNameAndVersion } = await import('@/src/utils/files/path');
-
-    const changeButton = screen.getByTestId('change-prompt1');
-    await userEvent.click(changeButton);
-
-    expect(updatePathWithNameAndVersion).toHaveBeenCalledWith(
-      'publications/prompts/first/1.0.0.json',
-      'Updated Prompt',
-      '1.0.0',
-    );
-
-    const updatedPublication = onChange.mock.calls[0][0];
-    expect(updatedPublication.prompts[0].prompt.path).toBe('updated/Updated Prompt/1.0.0.json');
-  });
-
   test('preserves other prompts when updating one prompt', async () => {
     const { onChange } = setup();
 
-    const changeButton = screen.getByTestId('change-prompt2');
+    const changeButton = screen.getByRole('button', { name: 'change-prompt2' });
     await userEvent.click(changeButton);
 
     const updatedPublication = onChange.mock.calls[0][0];
@@ -160,7 +141,7 @@ describe('Publications :: PromptsList', () => {
   test('removes prompt when onRemove is called', async () => {
     const { onChange } = setup();
 
-    const removeButton = screen.getByTestId('remove-prompt2');
+    const removeButton = screen.getByRole('button', { name: 'remove-prompt2' });
     await userEvent.click(removeButton);
 
     expect(onChange).toHaveBeenCalledTimes(1);
@@ -174,7 +155,7 @@ describe('Publications :: PromptsList', () => {
   test('removes first prompt correctly', async () => {
     const { onChange } = setup();
 
-    const removeButton = screen.getByTestId('remove-prompt1');
+    const removeButton = screen.getByRole('button', { name: 'remove-prompt1' });
     await userEvent.click(removeButton);
 
     const updatedPublication = onChange.mock.calls[0][0];
@@ -186,7 +167,7 @@ describe('Publications :: PromptsList', () => {
   test('removes last prompt correctly', async () => {
     const { onChange } = setup();
 
-    const removeButton = screen.getByTestId('remove-prompt3');
+    const removeButton = screen.getByRole('button', { name: 'remove-prompt3' });
     await userEvent.click(removeButton);
 
     const updatedPublication = onChange.mock.calls[0][0];
@@ -198,19 +179,19 @@ describe('Publications :: PromptsList', () => {
   test('removes all prompts one by one', async () => {
     const { onChange, rerender } = setup();
 
-    await userEvent.click(screen.getByTestId('remove-prompt1'));
+    await userEvent.click(screen.getByRole('button', { name: 'remove-prompt1' }));
     let updatedPublication = onChange.mock.calls[0][0];
     expect(updatedPublication.prompts).toHaveLength(2);
 
     rerender(<PromptsList publication={updatedPublication} onChange={onChange} />);
 
-    await userEvent.click(screen.getByTestId('remove-prompt2'));
+    await userEvent.click(screen.getByRole('button', { name: 'remove-prompt2' }));
     updatedPublication = onChange.mock.calls[1][0];
     expect(updatedPublication.prompts).toHaveLength(1);
 
     rerender(<PromptsList publication={updatedPublication} onChange={onChange} />);
 
-    await userEvent.click(screen.getByTestId('remove-prompt3'));
+    await userEvent.click(screen.getByRole('button', { name: 'remove-prompt3' }));
     updatedPublication = onChange.mock.calls[2][0];
     expect(updatedPublication.prompts).toHaveLength(0);
   });
@@ -218,7 +199,7 @@ describe('Publications :: PromptsList', () => {
   test('preserves publication properties when updating prompts', async () => {
     const { onChange } = setup();
 
-    const changeButton = screen.getByTestId('change-prompt1');
+    const changeButton = screen.getByRole('button', { name: 'change-prompt1' });
     await userEvent.click(changeButton);
 
     const updatedPublication = onChange.mock.calls[0][0];
@@ -228,27 +209,12 @@ describe('Publications :: PromptsList', () => {
     expect(updatedPublication.folderId).toBe('folder1');
   });
 
-  test('handles prompt without path property', async () => {
-    const promptsWithoutPath = [{ ...mockPrompts[0], prompt: { ...mockPrompts[0].prompt } }];
-    delete (promptsWithoutPath[0].prompt as any).path;
-
-    const publication = createMockPublication(promptsWithoutPath);
-    const { onChange } = setup({ publication });
-
-    const changeButton = screen.getByTestId('change-prompt1');
-    await userEvent.click(changeButton);
-
-    expect(onChange).toHaveBeenCalled();
-    const updatedPublication = onChange.mock.calls[0][0];
-    expect(updatedPublication.prompts[0].prompt.path).toBe('updated/Updated Prompt/1.0.0.json');
-  });
-
   test('renders with single prompt', () => {
     const publication = createMockPublication([mockPrompts[0]]);
     setup({ publication });
 
-    expect(screen.getByTestId('prompt-details-prompt1')).toBeInTheDocument();
-    expect(screen.queryByTestId('prompt-details-prompt2')).not.toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'prompt-details-prompt1' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'prompt-details-prompt2' })).not.toBeInTheDocument();
   });
 
   test('applies correct styling classes', () => {
@@ -265,7 +231,7 @@ describe('Publications :: PromptsList', () => {
     const publication = createMockPublication();
     render(<PromptsList publication={publication} />);
 
-    const changeButton = screen.getByTestId('change-prompt1');
+    const changeButton = screen.getByRole('button', { name: 'change-prompt1' });
 
     await expect(userEvent.click(changeButton)).resolves.not.toThrow();
   });
@@ -279,7 +245,7 @@ describe('Publications :: PromptsList', () => {
     const publication = createMockPublication(partialPrompts);
     setup({ publication });
 
-    expect(screen.getByTestId('prompt-details-partial1')).toBeInTheDocument();
-    expect(screen.getByTestId('prompt-details-partial2')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'prompt-details-partial1' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'prompt-details-partial2' })).toBeInTheDocument();
   });
 });

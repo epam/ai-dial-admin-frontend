@@ -5,6 +5,7 @@ import userEvent from '@testing-library/user-event';
 import { ApplicationRoute } from '@/src/types/routes';
 
 import Create from '../Create';
+import { ButtonsI18nKey } from '../../../../constants/i18n';
 
 const pushMock = vi.fn();
 vi.mock('next/navigation', () => ({
@@ -30,8 +31,8 @@ describe('Create InterceptorTemplate Modal', () => {
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
 
-    expect(screen.getByRole('button', { name: 'Buttons.Cancel' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Buttons.Create' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Cancel })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Create })).toBeInTheDocument();
   });
 
   test('Should call onClose when Cancel button is clicked', async () => {
@@ -44,7 +45,7 @@ describe('Create InterceptorTemplate Modal', () => {
       />,
     );
 
-    const cancelButton = screen.getByRole('button', { name: 'Buttons.Cancel' });
+    const cancelButton = screen.getByRole('button', { name: ButtonsI18nKey.Cancel });
     await userEvent.click(cancelButton);
 
     expect(onCloseMock).toHaveBeenCalled();
