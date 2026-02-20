@@ -9,6 +9,7 @@ import {
   getDeployment,
   getDeployments,
   getRuns,
+  getTemplateVariables,
   getTestCase,
   getTestCases,
   getTestSuite,
@@ -151,6 +152,14 @@ describe('TestSuites :: server actions', () => {
     const result = await removeTestCase('id', 'caseId');
     expect(getUserToken).toHaveBeenCalled();
     expect(testSuitesApi.removeTestCase).toHaveBeenCalledWith('id', 'caseId', TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getTemplateVariables action ', async () => {
+    (testSuitesApi.getTemplateVariables as any).mockResolvedValue(RESPONSE_MOCK);
+    const result = await getTemplateVariables('id');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(testSuitesApi.getTemplateVariables).toHaveBeenCalledWith('id', TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

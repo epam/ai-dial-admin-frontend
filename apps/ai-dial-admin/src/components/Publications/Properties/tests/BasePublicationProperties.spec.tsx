@@ -11,11 +11,6 @@ const basePublication = {
   folderId: 'folder',
   rules: [],
 };
-vi.mock('next-auth/react', () => ({
-  useSession: vi.fn(() => {
-    return { session: { providerId: 'provider' } };
-  }),
-}));
 
 describe('BasePublicationProperties', () => {
   test('renders all main fields', () => {

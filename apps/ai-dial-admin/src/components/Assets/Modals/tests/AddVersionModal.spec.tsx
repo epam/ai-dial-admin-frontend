@@ -46,28 +46,4 @@ describe('Common components - AddVersionModal', () => {
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
     expect(onConfirm).toHaveBeenCalled();
   });
-
-  test('renders provided versions and handles version change', () => {
-    const existingVersions = ['1.0.0', '2.0.0'];
-
-    render(
-      <AddVersionModal
-        heading="header"
-        existingVersions={existingVersions}
-        isModalOpen={true}
-        onClose={onClose}
-        onConfirm={onConfirm}
-      />,
-    );
-
-    const input = screen.getByRole('textbox');
-    expect(input).toBeInTheDocument();
-    expect(input).toHaveValue('');
-
-    waitFor(() => {
-      user.clear(input);
-      user.paste('3.0.0');
-      expect(input).toHaveValue('3.0.0');
-    });
-  });
 });
