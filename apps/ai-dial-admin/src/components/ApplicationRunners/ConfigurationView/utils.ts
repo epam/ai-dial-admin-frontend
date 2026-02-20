@@ -11,7 +11,7 @@ const fields: (keyof DialApplicationScheme)[] = [
   'createdAt',
   'title',
   'type',
-  'applicationTypeSchemaEndpoint',
+  'dial:applicationTypeSchemaEndpoint',
   'dial:applicationTypeRoutes',
   'dial:applicationTypeCompletionEndpoint',
   'dial:applicationTypeViewerUrl',

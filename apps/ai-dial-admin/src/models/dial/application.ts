@@ -20,7 +20,7 @@ export interface DialApplicationScheme extends ModifiedEntity, DialScheme {
   description?: string;
   title?: string;
   type?: TypeEntity;
-  applicationTypeSchemaEndpoint?: string;
+  'dial:applicationTypeSchemaEndpoint'?: string;
   'dial:applicationTypeEditorUrl'?: string;
   'dial:applicationTypeViewerUrl'?: string;
   'dial:applicationTypeDisplayName'?: string;
