@@ -99,7 +99,7 @@ const PublicationHeader: FC<Props> = ({
   return (
     <>
       <div className={containerClassName}>
-        <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
+        <div className="flex flex-row gap-3 w-full p-3 lg:p-0 items-center">
           {isDelete ? (
             <DialNeutralButton
               className={buttonsClassName}
