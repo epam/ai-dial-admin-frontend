@@ -6,24 +6,20 @@ import { TestSuite } from '@/src/models/evaluation/test-suite';
 
 vi.mock('../TemplateVariables', () => ({
   default: ({ selectedTestSuite, onChange, isSkipRefresh }: any) => (
-    <div data-testid="template-variables">
-      <div data-testid="tv-suite-id">{selectedTestSuite.id}</div>
-      <div data-testid="tv-skip-refresh">{String(isSkipRefresh)}</div>
-      <button data-testid="tv-change" onClick={() => onChange({ ...selectedTestSuite, name: 'Changed by TV' }, true)}>
-        TV Change
-      </button>
-    </div>
+    <section aria-label="template variables">
+      <span>{selectedTestSuite.id}</span>
+      <span role="note">{String(isSkipRefresh)}</span>
+      <button onClick={() => onChange({ ...selectedTestSuite, name: 'Changed by TV' }, true)}>TV Change</button>
+    </section>
   ),
 }));
 
 vi.mock('../TestCasesList', () => ({
   default: ({ selectedTestSuite, onChange }: any) => (
-    <div data-testid="test-cases-list">
-      <div data-testid="tcl-suite-id">{selectedTestSuite.id}</div>
-      <button data-testid="tcl-change" onClick={() => onChange({ ...selectedTestSuite, name: 'Changed by TCL' })}>
-        TCL Change
-      </button>
-    </div>
+    <section aria-label="test cases list">
+      <span>{selectedTestSuite.id}</span>
+      <button onClick={() => onChange({ ...selectedTestSuite, name: 'Changed by TCL' })}>TCL Change</button>
+    </section>
   ),
 }));
 
@@ -46,38 +42,40 @@ describe('TestCases', () => {
   test('renders both TemplateVariables and TestCasesList', () => {
     render(<TestCases selectedTestSuite={createTestSuite()} onChange={mockOnChange} />);
 
-    expect(screen.getByTestId('template-variables')).toBeInTheDocument();
-    expect(screen.getByTestId('test-cases-list')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'template variables' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'test cases list' })).toBeInTheDocument();
   });
 
   test('passes selectedTestSuite to TemplateVariables', () => {
     render(<TestCases selectedTestSuite={createTestSuite({ id: 'my-suite' })} onChange={mockOnChange} />);
 
-    expect(screen.getByTestId('tv-suite-id')).toHaveTextContent('my-suite');
+    const tvSection = screen.getByRole('region', { name: 'template variables' });
+    expect(tvSection).toHaveTextContent('my-suite');
   });
 
   test('passes selectedTestSuite to TestCasesList', () => {
     render(<TestCases selectedTestSuite={createTestSuite({ id: 'my-suite' })} onChange={mockOnChange} />);
 
-    expect(screen.getByTestId('tcl-suite-id')).toHaveTextContent('my-suite');
+    const tclSection = screen.getByRole('region', { name: 'test cases list' });
+    expect(tclSection).toHaveTextContent('my-suite');
   });
 
   test('passes isSkipRefresh to TemplateVariables', () => {
     render(<TestCases selectedTestSuite={createTestSuite()} onChange={mockOnChange} isSkipRefresh={true} />);
 
-    expect(screen.getByTestId('tv-skip-refresh')).toHaveTextContent('true');
+    expect(screen.getByRole('note')).toHaveTextContent('true');
   });
 
   test('defaults isSkipRefresh to undefined', () => {
     render(<TestCases selectedTestSuite={createTestSuite()} onChange={mockOnChange} />);
 
-    expect(screen.getByTestId('tv-skip-refresh')).toHaveTextContent('undefined');
+    expect(screen.getByRole('note')).toHaveTextContent('undefined');
   });
 
   test('passes onChange to TemplateVariables and it triggers correctly', () => {
     render(<TestCases selectedTestSuite={createTestSuite()} onChange={mockOnChange} />);
 
-    fireEvent.click(screen.getByTestId('tv-change'));
+    fireEvent.click(screen.getByRole('button', { name: 'TV Change' }));
 
     expect(mockOnChange).toHaveBeenCalledTimes(1);
     expect(mockOnChange).toHaveBeenCalledWith(expect.objectContaining({ name: 'Changed by TV' }), true);
@@ -86,7 +84,7 @@ describe('TestCases', () => {
   test('passes onChange to TestCasesList and it triggers correctly', () => {
     render(<TestCases selectedTestSuite={createTestSuite()} onChange={mockOnChange} />);
 
-    fireEvent.click(screen.getByTestId('tcl-change'));
+    fireEvent.click(screen.getByRole('button', { name: 'TCL Change' }));
 
     expect(mockOnChange).toHaveBeenCalledTimes(1);
     expect(mockOnChange).toHaveBeenCalledWith(expect.objectContaining({ name: 'Changed by TCL' }));

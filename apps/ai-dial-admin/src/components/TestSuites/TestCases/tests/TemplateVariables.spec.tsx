@@ -15,11 +15,7 @@ vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
   default: ({ getIsEmptyData, emptyDataProps, onGridReady }: any) => {
     const isEmpty = getIsEmptyData();
-    return (
-      <section aria-label="grid">
-        {isEmpty && <p role="status">{emptyDataProps?.title}</p>}
-      </section>
-    );
+    return <section aria-label="grid">{isEmpty && <p role="status">{emptyDataProps?.title}</p>}</section>;
   },
 }));
 
