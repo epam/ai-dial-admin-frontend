@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { SOURCE_TYPE } from './types';
-import { isValidSourceField } from './utils';
+import { getContainerRoute, isValidSourceField } from './utils';
+import { ApplicationRoute } from '@/src/types/routes';
 
 describe('isValidSourceField', () => {
   test('returns true for valid CONTAINER source', () => {
@@ -51,5 +52,20 @@ describe('isValidSourceField', () => {
   test('returns false if source is missing', () => {
     const entity = {};
     expect(isValidSourceField(entity as any)).toBe(false);
+  });
+});
+
+describe('getContainerRoute', () => {
+  test('return AdapterContainers route for Adapters', () => {
+    expect(getContainerRoute(ApplicationRoute.Adapters)).toBe(ApplicationRoute.AdapterContainers);
+  });
+  test('return ModelServings route for Models', () => {
+    expect(getContainerRoute(ApplicationRoute.Models)).toBe(ApplicationRoute.ModelServings);
+  });
+  test('return InterceptorContainers route for Interceptors', () => {
+    expect(getContainerRoute(ApplicationRoute.Interceptors)).toBe(ApplicationRoute.InterceptorContainers);
+  });
+  test('return McpContainers route for Toolsets', () => {
+    expect(getContainerRoute(ApplicationRoute.Toolsets)).toBe(ApplicationRoute.McpContainers);
   });
 });

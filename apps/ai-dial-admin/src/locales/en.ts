@@ -213,6 +213,7 @@ export default {
     NewEntity: 'New {entity}',
     DuplicationType: 'Duplication type',
     ToolsetEndpoint: 'Toolset Endpoint',
+    AdapterEndpoint: 'Adapter Endpoint',
     // modals
     SaveChangesTitle: 'Save Changes',
     SaveChangesDescription: 'Save changes before opening the parameters tab. All unsaved changes will be lost.',
@@ -1214,6 +1215,7 @@ export default {
     Endpoint: 'Endpoint',
     ExternalEndpoint: 'External endpoint',
     Adapter: 'Adapter',
+    AdapterContainer: 'Adapter Container',
   },
   Toolset: {
     Tools: 'Tools',

@@ -71,7 +71,7 @@ const CreateAdapter: FC<Props> = ({ isModalOpen, onClose, names }) => {
   return (
     <DialPopup onClose={onClose} header={t(CreateI18nKey.Adapter)} portalId="CreateAdapter" open={isModalOpen}>
       <div className="flex flex-col px-6 py-4">
-        <AdapterProperties entity={currentAdapter} names={names} onChangeAdapter={onChangeAdapter} />
+        <AdapterProperties entity={currentAdapter} names={names} onChangeAdapter={onChangeAdapter} isModal={true} />
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
         <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
