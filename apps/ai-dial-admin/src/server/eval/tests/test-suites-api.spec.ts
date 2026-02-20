@@ -130,7 +130,7 @@ describe('Server :: TestSuiteApi', () => {
     fetch.mockResponseOnce(JSON.stringify([mockTestSuite]));
     await instance.getTestCases('id', 0, 10, [], [], TOKEN_MOCK);
     expect(fetch).toHaveBeenCalledWith(
-      `${TEST_URL}${TEST_CASES_URL('id')}?page=0&size=10&includeTotalCount=true`,
+      `${TEST_URL}${TEST_CASES_URL('id')}?page=0&size=10&includeTotalCount=true&includeWarnings=true`,
       expect.objectContaining({ method: 'GET' }),
     );
   });

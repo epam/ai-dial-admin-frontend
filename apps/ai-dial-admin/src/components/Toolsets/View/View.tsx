@@ -153,9 +153,6 @@ const ToolsetView: FC<Props> = ({ names, oAuthCode, etag, roles, originalToolset
       if (type === ModalType.emptyRoles) {
         onModalClose();
       }
-      if (type === ModalType.discard) {
-        onModalClose();
-      }
     },
     [onModalClose],
   );
@@ -166,12 +163,8 @@ const ToolsetView: FC<Props> = ({ names, oAuthCode, etag, roles, originalToolset
         onSave();
         onModalClose();
       }
-      if (type === ModalType.discard) {
-        onDiscard();
-        onModalClose();
-      }
     },
-    [onDiscard, onModalClose, onSave],
+    [onModalClose, onSave],
   );
 
   const onTryToSave = useCallback(() => {
@@ -186,17 +179,13 @@ const ToolsetView: FC<Props> = ({ names, oAuthCode, etag, roles, originalToolset
     }
   }, [isEditorEnabled, onSave, selectedFormat, selectedToolset, onModalOpen]);
 
-  const onTryToDiscard = useCallback(() => {
-    onModalOpen(ModalType.discard);
-  }, [onModalOpen]);
-
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <SimpleEntityHeader
         view={ApplicationRoute.Toolsets}
         entity={selectedToolset}
         isChanged={isChanged}
-        onDiscard={onTryToDiscard}
+        onDiscard={onDiscard}
         onSave={onTryToSave}
         tabs={tabs}
         jsonConfiguration={jsonConfiguration}
