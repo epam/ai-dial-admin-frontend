@@ -969,6 +969,7 @@ export default {
     completionEndpoint: 'Completion endpoint',
     applicationTypeDisplayName: 'Name',
     applicationTypeViewerUrl: 'Viewer URL',
+    applicationTypeSchemaEndpoint: 'Schema endpoint',
     applicationTypeEditorUrl: 'Editor URL',
     viewerUrl: 'Viewer URL',
     editorUrl: 'Editor URL',
