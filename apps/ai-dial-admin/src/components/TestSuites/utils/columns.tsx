@@ -6,7 +6,7 @@ import ValidityStatus from '@/src/components/Common/ValidityStatus/ValidityStatu
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import JsonEditorCellRenderer from '@/src/components/Grid/CellRenderers/JsonEditorCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
-import { CHECKBOX_COL_DEF, NO_BORDER_CLASS } from '@/src/constants/ag-grid';
+import { CHECKBOX_COL_DEF, NO_BORDER_CLASS, UTILITY_COLUMN } from '@/src/constants/ag-grid';
 import { BASE_STATUS_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { TEST_CASES_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -25,7 +25,18 @@ export const getTestCaseColumns = (testCases: TestCase[]) => {
   }, [] as string[]);
 
   return [
-    { ...CHECKBOX_COL_DEF },
+    {
+      ...UTILITY_COLUMN,
+      headerName: '',
+      field: 'enabled',
+      editable: true,
+      cellRenderer: 'agCheckboxCellRenderer',
+      cellEditor: 'agCheckboxCellEditor',
+      tooltipValueGetter: (params: ITooltipParams<TestCase>) => {
+        return !params.data?.enabled ? 'Disable test case' : 'Enable test case';
+      },
+      valueGetter: (params) => params.data?.enabled,
+    } as ColDef,
     ...TEST_CASES_COLUMN,
     ...data.map((fact) => ({
       field: fact,
