@@ -1,13 +1,7 @@
 import { describe, test, expect } from 'vitest';
 import { generateInputBindingsRowData } from '../template-variables';
-import {
-  InputBinding,
-  TemplateVariable,
-} from '@/src/models/evaluation/test-suite';
-import {
-  InputBindingType,
-  TestCaseItemType,
-} from '@/src/types/evaluation';
+import { InputBinding, TemplateVariable } from '@/src/models/evaluation/test-suite';
+import { InputBindingType, TestCaseItemType } from '@/src/types/evaluation';
 
 describe('generateInputBindingsRowData', () => {
   test('should return empty array when variables is empty', () => {
