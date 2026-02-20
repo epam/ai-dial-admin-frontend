@@ -27,7 +27,6 @@ import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getInterceptorTemplateTabs } from '@/src/utils/tabs/utils';
 import TabsContent from './TabsContent';
-import DiscardModal from '@/src/components//EntityView/Modals/Discard/Discard';
 
 interface Props {
   etag: string;
@@ -45,7 +44,6 @@ const View: FC<Props> = ({ etag, template, names }) => {
   const [isChanged, setIsChanged] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(cloneDeep(template));
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
 
   const tabs = getInterceptorTemplateTabs(t);
@@ -94,22 +92,13 @@ const View: FC<Props> = ({ etag, template, names }) => {
     setIsChanged(!isEqualSkippingUndefined(restTemplate, restSelectedTemplate));
   }, [template, selectedTemplate]);
 
-  const onTryToDiscard = useCallback(() => {
-    setIsDiscardModalOpen(true);
-  }, []);
-
-  const onDiscardModalConfirm = useCallback(() => {
-    onDiscard();
-    setIsDiscardModalOpen(false);
-  }, [onDiscard]);
-
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <SimpleEntityHeader
         view={ApplicationRoute.InterceptorTemplates}
         entity={selectedTemplate}
         isChanged={isChanged}
-        onDiscard={onTryToDiscard}
+        onDiscard={onDiscard}
         onSave={onSave}
         tabs={tabs}
         jsonConfiguration={jsonConfiguration}
@@ -146,13 +135,6 @@ const View: FC<Props> = ({ etag, template, names }) => {
                 />,
                 document.body,
               )}
-            {isDiscardModalOpen && (
-              <DiscardModal
-                onConfirm={onDiscardModalConfirm}
-                onClose={() => setIsDiscardModalOpen(false)}
-                onCancel={() => setIsDiscardModalOpen(false)}
-              />
-            )}
           </>
         )}
       </div>

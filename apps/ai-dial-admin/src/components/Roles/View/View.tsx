@@ -26,7 +26,6 @@ import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getRoleTabs } from '@/src/utils/tabs/utils';
 import TabsContent from './TabsContent';
-import DiscardModal from '@/src/components//EntityView/Modals/Discard/Discard';
 
 interface Props {
   originalRole: DialRole;
@@ -56,7 +55,6 @@ const RolesView: FC<Props> = ({ originalRole, etag, keys, ...props }) => {
   const [isSkipRefresh, setIsSkipRefresh] = useState(true);
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
   const [coreRole, setCoreRole] = useState<DialKey | null>(null);
-  const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -132,22 +130,13 @@ const RolesView: FC<Props> = ({ originalRole, etag, keys, ...props }) => {
     });
   }, [selectedFormat, selectedRole, originalRole.name, etag, dispatch, showNotification, t, router]);
 
-  const onTryToDiscard = useCallback(() => {
-    setIsDiscardModalOpen(true);
-  }, []);
-
-  const onDiscardModalConfirm = useCallback(() => {
-    onDiscard();
-    setIsDiscardModalOpen(false);
-  }, [onDiscard]);
-
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <SimpleEntityHeader
         view={ApplicationRoute.Roles}
         entity={selectedRole}
         isChanged={isChanged}
-        onDiscard={onTryToDiscard}
+        onDiscard={onDiscard}
         onSave={onSave}
         tabs={tabs}
         jsonConfiguration={jsonConfiguration}
@@ -159,24 +148,15 @@ const RolesView: FC<Props> = ({ originalRole, etag, keys, ...props }) => {
         {isEditorEnabled ? (
           <EntityJsonEditor entity={selectedRole} setSelectedEntity={setSelectedRole} setIsChanged={setIsChanged} />
         ) : (
-          <>
-            <TabsContent
-              isSkipRefresh={isSkipRefresh}
-              activeTab={activeTab}
-              selectedFormat={selectedFormat}
-              selectedRole={selectedRole}
-              keys={keys}
-              onChange={onChangeRole}
-              {...props}
-            />
-            {isDiscardModalOpen && (
-              <DiscardModal
-                onConfirm={onDiscardModalConfirm}
-                onClose={() => setIsDiscardModalOpen(false)}
-                onCancel={() => setIsDiscardModalOpen(false)}
-              />
-            )}
-          </>
+          <TabsContent
+            isSkipRefresh={isSkipRefresh}
+            activeTab={activeTab}
+            selectedFormat={selectedFormat}
+            selectedRole={selectedRole}
+            keys={keys}
+            onChange={onChangeRole}
+            {...props}
+          />
         )}
       </div>
     </div>
