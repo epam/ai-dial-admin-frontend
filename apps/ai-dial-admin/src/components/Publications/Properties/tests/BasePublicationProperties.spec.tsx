@@ -31,7 +31,7 @@ describe('BasePublicationProperties', () => {
   test('renders runner if runnerId exists', () => {
     const publication = {
       ...basePublication,
-      applicationResources: [{ applicationTypeSchemaId: 'runner-id' }],
+      applicationResources: [{ applicationResource: { applicationTypeSchemaId: 'runner-id' } }],
     };
     const applicationSchemes = [{ $id: 'runner-id', 'dial:applicationTypeDisplayName': 'RunnerName' }];
     render(
