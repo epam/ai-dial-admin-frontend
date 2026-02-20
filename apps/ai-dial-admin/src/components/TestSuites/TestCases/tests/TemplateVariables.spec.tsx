@@ -1,4 +1,4 @@
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 
 import TemplateVariables from '../TemplateVariables';
@@ -16,21 +16,9 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
   default: ({ getIsEmptyData, emptyDataProps, onGridReady }: any) => {
     const isEmpty = getIsEmptyData();
     return (
-      <div data-testid="grid-view">
-        {isEmpty && <div data-testid="empty-data">{emptyDataProps?.title}</div>}
-        <button
-          data-testid="trigger-grid-ready"
-          onClick={() => {
-            const mockApi = {
-              isDestroyed: () => false,
-              updateGridOptions: vi.fn(),
-            };
-            onGridReady({ api: mockApi });
-          }}
-        >
-          Ready
-        </button>
-      </div>
+      <section aria-label="grid">
+        {isEmpty && <p role="status">{emptyDataProps?.title}</p>}
+      </section>
     );
   },
 }));
@@ -65,19 +53,19 @@ describe('TemplateVariables', () => {
     mockGetTemplateVariables.mockResolvedValue([]);
   });
 
-  test('renders the heading with DynamicConfiguration key', async () => {
+  test('renders the heading with DynamicConfiguration key', () => {
     render(<TemplateVariables selectedTestSuite={createTestSuite()} onChange={mockOnChange} />);
 
-    expect(screen.getByText(TestSuitesI18nKey.DynamicConfiguration)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(TestSuitesI18nKey.DynamicConfiguration);
   });
 
-  test('renders GridView component', async () => {
+  test('renders GridView component', () => {
     render(<TemplateVariables selectedTestSuite={createTestSuite()} onChange={mockOnChange} />);
 
-    expect(screen.getByTestId('grid-view')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'grid' })).toBeInTheDocument();
   });
 
-  test('fetches template variables on mount using test suite id', async () => {
+  test('fetches template variables on mount using test suite id', () => {
     render(<TemplateVariables selectedTestSuite={createTestSuite({ id: 'my-suite-id' })} onChange={mockOnChange} />);
 
     expect(mockGetTemplateVariables).toHaveBeenCalledWith('my-suite-id');
@@ -90,8 +78,7 @@ describe('TemplateVariables', () => {
     render(<TemplateVariables selectedTestSuite={createTestSuite()} onChange={mockOnChange} />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('empty-data')).toBeInTheDocument();
-      expect(screen.getByText(BasicI18nKey.NoVariables)).toBeInTheDocument();
+      expect(screen.getByRole('status')).toHaveTextContent(BasicI18nKey.NoVariables);
     });
   });
 
@@ -109,7 +96,7 @@ describe('TemplateVariables', () => {
     );
 
     await waitFor(() => {
-      expect(screen.queryByTestId('empty-data')).not.toBeInTheDocument();
+      expect(screen.queryByRole('status')).not.toBeInTheDocument();
     });
   });
 
@@ -119,7 +106,7 @@ describe('TemplateVariables', () => {
     render(<TemplateVariables selectedTestSuite={createTestSuite()} onChange={mockOnChange} />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('empty-data')).toBeInTheDocument();
+      expect(screen.getByRole('status')).toBeInTheDocument();
     });
   });
 
@@ -131,11 +118,11 @@ describe('TemplateVariables', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByTestId('grid-view')).toBeInTheDocument();
+      expect(screen.getByRole('region', { name: 'grid' })).toBeInTheDocument();
     });
   });
 
-  test('calls getTemplateVariables only once on mount', async () => {
+  test('calls getTemplateVariables only once on mount', () => {
     const { rerender } = render(<TemplateVariables selectedTestSuite={createTestSuite()} onChange={mockOnChange} />);
 
     rerender(
@@ -145,7 +132,7 @@ describe('TemplateVariables', () => {
     expect(mockGetTemplateVariables).toHaveBeenCalledTimes(1);
   });
 
-  test('renders with correct container classes', async () => {
+  test('renders with correct container classes', () => {
     const { container } = render(<TemplateVariables selectedTestSuite={createTestSuite()} onChange={mockOnChange} />);
 
     const wrapper = container.firstChild as HTMLElement;
