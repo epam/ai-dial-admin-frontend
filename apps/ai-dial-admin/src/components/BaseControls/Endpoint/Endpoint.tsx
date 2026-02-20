@@ -70,6 +70,10 @@ const EndpointControl: FC<Props> = ({
       dispatch({ type: ValidationActionType.SetField, field: id, isValid: true });
     }
 
+    return () => {
+      dispatch({ type: ValidationActionType.SetField, field: id, isValid: true });
+    };
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [required]);
 

@@ -17,6 +17,7 @@ import {
   CONTAINERS_COLUMNS,
   CONTAINER_EVENTS,
   HF_REGISTRY_COLUMNS,
+  ADAPTER_COLUMNS,
 } from '../grid-columns';
 import { describe, expect, test, vi } from 'vitest';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -34,6 +35,15 @@ describe('Constants :: grid columns', () => {
     expect(cols.some((c) => c.field === 'source.$type')).toBe(true);
     expect(cols.some((c) => c.field === 'endpoint')).toBe(true);
     expect(cols.some((c) => c.field === 'pricing.prompt')).toBe(true);
+  });
+
+  test('ADAPTER_COLUMNS returns expected columns', () => {
+    const t = (s: string) => s;
+    const cols = ADAPTER_COLUMNS(t);
+    expect(Array.isArray(cols)).toBe(true);
+    expect(cols.some((c) => c.field === 'source.$type')).toBe(true);
+    expect(cols.some((c) => c.field === 'topics')).toBe(true);
+    expect(cols.some((c) => c.field === 'updatedAt')).toBe(true);
   });
 
   test('APPLICATIONS_COLUMNS returns expected columns', () => {
