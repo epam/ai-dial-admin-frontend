@@ -45,6 +45,7 @@ import {
 } from '@/src/utils/deployments/entity';
 import { getErrorNotification } from '@/src/utils/notification';
 import Delete from '@/src/components/EntityView/Modals/Delete/Delete';
+import DiscardModal from '@/src/components//EntityView/Modals/Discard/Discard';
 
 export interface ContainersButtonsWrapperProps {
   route: ApplicationRoute;
@@ -89,6 +90,7 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
   const [buttonsClassNames, setButtonsClassNames] = useState('');
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
 
   const handleModalClose = useCallback(() => {
     setIsModalOpen(false);
@@ -171,12 +173,21 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
     onDiscard?.();
   }, [dispatch, onDiscard]);
 
+  const onTryToDiscard = useCallback(() => {
+    setIsDiscardModalOpen(true);
+  }, []);
+
+  const onDiscardModalConfirm = useCallback(() => {
+    onStartDiscard();
+    setIsDiscardModalOpen(false);
+  }, [onStartDiscard]);
+
   return (
     <>
       <div className={containerClassNames}>
         {isChanged ? (
           <ChangedEntityButtons
-            onDiscard={onStartDiscard}
+            onDiscard={onTryToDiscard}
             onSave={onSave}
             disableSave={!isValid}
             saveLabel={t(isRedeployRequired ? ButtonsI18nKey.SaveAndRedeploy : ButtonsI18nKey.Save)}
@@ -278,6 +289,13 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
           />,
           document.body,
         )}
+      {isDiscardModalOpen && (
+        <DiscardModal
+          onConfirm={onDiscardModalConfirm}
+          onClose={() => setIsDiscardModalOpen(false)}
+          onCancel={() => setIsDiscardModalOpen(false)}
+        />
+      )}
     </>
   );
 };

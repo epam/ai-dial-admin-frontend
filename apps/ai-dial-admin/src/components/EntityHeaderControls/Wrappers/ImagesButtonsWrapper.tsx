@@ -33,6 +33,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import ImageDelete from '@/src/components/Deployments/Modals/ImageDelete';
+import DiscardModal from '@/src/components//EntityView/Modals/Discard/Discard';
 
 export interface ImagesButtonsWrapperProps {
   image: Image;
@@ -73,6 +74,7 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
   const [containerClassNames, setContainerClassNames] = useState(SELECT_ENTITY_HEADER_CLASS);
   const [buttonsClassNames, setButtonsClassNames] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
 
   const allowEditing = useMemo(() => {
     return image.buildStatus !== IMAGE_STATUS.BUILT && image.buildStatus !== IMAGE_STATUS.BUILDING;
@@ -174,12 +176,25 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
     setButtonsClassNames(classNames((isTablet || isMobile) && SELECT_ENTITY_MOBILE_HEADER_BUTTONS_CLASS));
   }, [isTablet, isMobile]);
 
+  const onTryToDiscard = useCallback(() => {
+    setIsDiscardModalOpen(true);
+  }, []);
+
+  const onDiscardModalConfirm = useCallback(() => {
+    onDiscard?.();
+    setIsDiscardModalOpen(false);
+  }, [onDiscard]);
+
   return (
     <>
       <div className={containerClassNames}>
         {isChanged ? (
           <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
-            <DialNeutralButton className={buttonsClassNames} label={t(ButtonsI18nKey.Discard)} onClick={onDiscard} />
+            <DialNeutralButton
+              className={buttonsClassNames}
+              label={t(ButtonsI18nKey.Discard)}
+              onClick={onTryToDiscard}
+            />
             <DialPrimaryButton
               className={buttonsClassNames}
               label={t(ButtonsI18nKey.SaveAsNewVersion)}
@@ -312,6 +327,13 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
           />,
           document.body,
         )}
+      {isDiscardModalOpen && (
+        <DiscardModal
+          onConfirm={onDiscardModalConfirm}
+          onClose={() => setIsDiscardModalOpen(false)}
+          onCancel={() => setIsDiscardModalOpen(false)}
+        />
+      )}
     </>
   );
 };

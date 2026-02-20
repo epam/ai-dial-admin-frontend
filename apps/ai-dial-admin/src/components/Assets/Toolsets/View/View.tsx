@@ -33,7 +33,6 @@ import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
 import { addTrailingSlash } from '@/src/utils/url';
 import TabsContent from './TabsContent';
-import DiscardModal from '@/src/components//EntityView/Modals/Discard/Discard';
 
 interface Props {
   etag: string;
@@ -54,7 +53,6 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
   const [selectedToolset, setSelectedToolset] = useState(cloneDeep(originalToolset));
   const [isChanged, setIsChanged] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
-  const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -135,22 +133,13 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
     [etag],
   );
 
-  const onTryToDiscard = useCallback(() => {
-    setIsDiscardModalOpen(true);
-  }, []);
-
-  const onDiscardModalConfirm = useCallback(() => {
-    onDiscard();
-    setIsDiscardModalOpen(false);
-  }, [onDiscard]);
-
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <AssetHeader
         view={ApplicationRoute.AssetsToolsets}
         entity={selectedToolset}
         isChanged={isChanged}
-        onDiscard={onTryToDiscard}
+        onDiscard={onDiscard}
         onSave={onSave}
         tabs={tabs}
         assets={toolsets || []}
@@ -172,21 +161,12 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
             setIsChanged={setIsChanged}
           />
         ) : (
-          <>
-            <TabsContent
-              activeTab={activeTab}
-              selectedToolset={selectedToolset}
-              originalToolset={originalToolset}
-              onChange={setSelectedToolset}
-            />
-            {isDiscardModalOpen && (
-              <DiscardModal
-                onConfirm={onDiscardModalConfirm}
-                onClose={() => setIsDiscardModalOpen(false)}
-                onCancel={() => setIsDiscardModalOpen(false)}
-              />
-            )}
-          </>
+          <TabsContent
+            activeTab={activeTab}
+            selectedToolset={selectedToolset}
+            originalToolset={originalToolset}
+            onChange={setSelectedToolset}
+          />
         )}
       </div>
     </div>

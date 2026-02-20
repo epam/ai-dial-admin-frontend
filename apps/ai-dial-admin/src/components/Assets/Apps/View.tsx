@@ -30,7 +30,6 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
 import { addTrailingSlash } from '@/src/utils/url';
-import DiscardModal from '@/src/components//EntityView/Modals/Discard/Discard';
 
 interface Props {
   etag: string;
@@ -55,7 +54,6 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
   const [isChanged, setIsChanged] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [isSkipRefresh, setIsSkipRefresh] = useState(true);
-  const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -153,22 +151,13 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
     [etag],
   );
 
-  const onTryToDiscard = useCallback(() => {
-    setIsDiscardModalOpen(true);
-  }, []);
-
-  const onDiscardModalConfirm = useCallback(() => {
-    onDiscard();
-    setIsDiscardModalOpen(false);
-  }, [onDiscard]);
-
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <AssetHeader
         view={ApplicationRoute.AssetsApplications}
         entity={selectedApp}
         isChanged={isChanged}
-        onDiscard={onTryToDiscard}
+        onDiscard={onDiscard}
         onSave={onSave}
         tabs={tabs}
         assets={assets}
@@ -184,32 +173,23 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
         {isEditorEnabled && !(activeTab === EntityViewTab.Parameters) ? (
           <EntityJsonEditor entity={selectedApp} setSelectedEntity={setSelectedApp} setIsChanged={setIsChanged} />
         ) : (
-          <>
-            <TabsContent
-              activeTab={activeTab}
-              names={[]}
-              models={models}
-              applications={applications}
-              applicationSchemes={schemes}
-              interceptors={interceptors}
-              view={ApplicationRoute.AssetsApplications}
-              selectedApplication={selectedApp}
-              isEditorEnabled={isEditorEnabled}
-              isSkipRefresh={isSkipRefresh}
-              isChanged={isChanged}
-              onSave={onSave}
-              onChangeApplication={onChangeEntity as (application: DialApplication) => void}
-              setIsChanged={setIsChanged}
-              setSelectedApplication={setSelectedApp as Dispatch<SetStateAction<DialApplication>>}
-            />
-            {isDiscardModalOpen && (
-              <DiscardModal
-                onConfirm={onDiscardModalConfirm}
-                onClose={() => setIsDiscardModalOpen(false)}
-                onCancel={() => setIsDiscardModalOpen(false)}
-              />
-            )}
-          </>
+          <TabsContent
+            activeTab={activeTab}
+            names={[]}
+            models={models}
+            applications={applications}
+            applicationSchemes={schemes}
+            interceptors={interceptors}
+            view={ApplicationRoute.AssetsApplications}
+            selectedApplication={selectedApp}
+            isEditorEnabled={isEditorEnabled}
+            isSkipRefresh={isSkipRefresh}
+            isChanged={isChanged}
+            onSave={onSave}
+            onChangeApplication={onChangeEntity as (application: DialApplication) => void}
+            setIsChanged={setIsChanged}
+            setSelectedApplication={setSelectedApp as Dispatch<SetStateAction<DialApplication>>}
+          />
         )}
       </div>
     </div>

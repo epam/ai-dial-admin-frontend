@@ -15,8 +15,6 @@ import {
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
-import { ModalType } from '@/src/components/EntityView/Modals/constants';
-import EntityViewModals from '@/src/components/EntityView/Modals/EntityViewModals';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -58,8 +56,6 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, etag, ...props
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [selectedFormat, setSelectedFormat] = useState(ExportFormat.ADMIN);
   const [coreInterceptor, setCoreInterceptor] = useState<DialInterceptor | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalType, setModalType] = useState<ModalType>();
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -135,46 +131,13 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, etag, ...props
     });
   }, [selectedFormat, selectedInterceptor, originalInterceptor.name, etag, dispatch, showNotification, t, router]);
 
-  const onModalClose = useCallback(() => {
-    setIsModalOpen(false);
-    setModalType(void 0);
-  }, []);
-
-  const onModalOpen = useCallback((modalType: ModalType) => {
-    setModalType(modalType);
-    setIsModalOpen(true);
-  }, []);
-
-  const onModalCancel = useCallback(
-    (type: ModalType) => {
-      if (type === ModalType.discard) {
-        onModalClose();
-      }
-    },
-    [onModalClose],
-  );
-
-  const onModalConfirm = useCallback(
-    (type: ModalType) => {
-      if (type === ModalType.discard) {
-        onDiscard();
-        onModalClose();
-      }
-    },
-    [onDiscard, onModalClose],
-  );
-
-  const onTryToDiscard = useCallback(() => {
-    onModalOpen(ModalType.discard);
-  }, [onModalOpen]);
-
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <SimpleEntityHeader
         view={ApplicationRoute.Interceptors}
         entity={selectedInterceptor}
         isChanged={isChanged}
-        onDiscard={onTryToDiscard}
+        onDiscard={onDiscard}
         onSave={onSave}
         tabs={tabs}
         jsonConfiguration={jsonConfiguration}
@@ -202,13 +165,6 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, etag, ...props
           />
         )}
       </div>
-      <EntityViewModals
-        isModalOpen={isModalOpen}
-        modalType={modalType}
-        handleConfirm={onModalConfirm}
-        handleClose={onModalClose}
-        handleCancel={onModalCancel}
-      />
     </div>
   );
 };

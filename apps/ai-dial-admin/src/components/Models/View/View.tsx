@@ -141,10 +141,6 @@ const View: FC<Props> = ({ originalModel, etag, ...props }) => {
     }
   }, [handleModalOpen, selectedFormat, onSave, selectedModel]);
 
-  const onTryToDiscard = useCallback(() => {
-    handleModalOpen(ModalType.discard);
-  }, [handleModalOpen]);
-
   const onChangeModel = useCallback(
     (model: DialModel, skipRefresh?: boolean) => {
       setSelectedModel(model);
@@ -169,12 +165,8 @@ const View: FC<Props> = ({ originalModel, etag, ...props }) => {
         onSave();
         handleModalClose();
       }
-      if (type === ModalType.discard) {
-        onDiscard();
-        handleModalClose();
-      }
     },
-    [changeTab, handleModalClose, onSave, onDiscard],
+    [changeTab, handleModalClose, onSave],
   );
 
   const onModalCancel = useCallback(
@@ -188,10 +180,6 @@ const View: FC<Props> = ({ originalModel, etag, ...props }) => {
       if (type === ModalType.emptyRoles) {
         handleModalClose();
       }
-
-      if (type === ModalType.discard) {
-        handleModalClose();
-      }
     },
     [changeTab, handleModalClose, onDiscard],
   );
@@ -203,7 +191,7 @@ const View: FC<Props> = ({ originalModel, etag, ...props }) => {
           view={ApplicationRoute.Applications}
           entity={selectedModel}
           isChanged={isChanged}
-          onDiscard={onTryToDiscard}
+          onDiscard={onDiscard}
           onSave={onTryToSave}
           tabs={tabs}
           jsonConfiguration={jsonConfiguration}

@@ -26,6 +26,7 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { showEditorErrorNotifications } from '@/src/components/EntityHeaderControls/Buttons/utils';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
+import DiscardModal from '@/src/components//EntityView/Modals/Discard/Discard';
 
 export interface SimpleButtonsWrapperProps<T> {
   view: ApplicationRoute;
@@ -60,6 +61,7 @@ const SimpleButtonsWrapper = <T extends object>({
   const isMobile = useIsMobileScreen();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
   const [containerClassName, setContainerClassName] = useState(SELECT_ENTITY_HEADER_CLASS);
   const [buttonsClassName, setButtonsClassName] = useState('');
   const isDisableSave = useMemo(() => (isEditorEnabled ? false : !isValid), [isEditorEnabled, isValid]);
@@ -94,11 +96,20 @@ const SimpleButtonsWrapper = <T extends object>({
     }
   }, [jsonErrors, showNotification, t, dispatch, onSave]);
 
+  const onTryToDiscard = useCallback(() => {
+    setIsDiscardModalOpen(true);
+  }, []);
+
+  const onDiscardModalConfirm = useCallback(() => {
+    onStartDiscard();
+    setIsDiscardModalOpen(false);
+  }, [onStartDiscard]);
+
   return (
     <>
       <div className={containerClassName}>
         {isChanged ? (
-          <ChangedEntityButtons disableSave={isDisableSave} onDiscard={onStartDiscard} onSave={onTryToSave} />
+          <ChangedEntityButtons disableSave={isDisableSave} onDiscard={onTryToDiscard} onSave={onTryToSave} />
         ) : (
           <div className="flex flex-row items-center w-full gap-x-4">
             {!isEditorEnabled && (
@@ -128,6 +139,13 @@ const SimpleButtonsWrapper = <T extends object>({
           />,
           document.body,
         )}
+      {isDiscardModalOpen && (
+        <DiscardModal
+          onConfirm={onDiscardModalConfirm}
+          onClose={() => setIsDiscardModalOpen(false)}
+          onCancel={() => setIsDiscardModalOpen(false)}
+        />
+      )}
     </>
   );
 };
