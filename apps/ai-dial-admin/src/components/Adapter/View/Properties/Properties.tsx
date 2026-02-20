@@ -5,24 +5,29 @@ import { FC, useCallback, useEffect } from 'react';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import IdControl from '@/src/components/BaseControls/Id/Id';
-import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { getErrorForDisplayName } from '@/src/utils/validation/name-error';
-import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import TopicsControl from '@/src/components/BaseControls/Topics';
+import SourceField from '@/src/components/SourceField/SourceField';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getSourceItems } from '@/src/components/SourceField/constants';
+import { useAppContext } from '@/src/context/AppContext';
+import { getAdapterContainers } from '@/src/app/actions/deployments';
+import { EntitiesI18nKey } from '@/src/constants/i18n';
 
 interface Props {
   entity: DialAdapter;
   names?: string[];
-  isEntityImmutable?: boolean;
+  isModal?: boolean;
   onChangeAdapter: (adapter: DialAdapter) => void;
 }
 
-const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntityImmutable }) => {
+const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isModal }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
+  const { featureFlags } = useAppContext();
 
   const onValidateDisplayName = useCallback(
     (displayName?: string) => {
@@ -33,10 +38,10 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
   );
 
   useEffect(() => {
-    if (isEntityImmutable) {
+    if (!isModal) {
       onValidateDisplayName(entity.displayName);
     }
-  }, [entity.displayName, isEntityImmutable, onValidateDisplayName]);
+  }, [entity.displayName, isModal, onValidateDisplayName]);
 
   const onChangeDisplayName = useCallback(
     (displayName?: string) => {
@@ -45,37 +50,31 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
     [onChangeAdapter, entity],
   );
 
-  const onChangeEndpoint = useCallback(
-    (baseEndpoint?: string) => {
-      onChangeAdapter({ ...entity, baseEndpoint });
-    },
-    [onChangeAdapter, entity],
-  );
-
   return (
     <div className="h-full flex flex-col gap-y-8">
-      {!isEntityImmutable && <IdControl entity={entity} names={names} onChangeEntity={onChangeAdapter} />}
+      {isModal && <IdControl entity={entity} names={names} onChangeEntity={onChangeAdapter} />}
 
       <DisplayNameControl
         displayName={entity.displayName}
         required={true}
         onChange={onChangeDisplayName}
-        isFullWidth={!isEntityImmutable}
+        isFullWidth={isModal}
       />
 
-      <DescriptionControl entity={entity} onChangeEntity={onChangeAdapter} isFullWidth={!isEntityImmutable} />
+      <DescriptionControl entity={entity} onChangeEntity={onChangeAdapter} isFullWidth={isModal} />
 
-      <EndpointControl
-        id="baseEndpoint"
-        required={true}
-        placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
-        fieldTitle={t(EntityFieldsI18nKey.baseEndpoint)}
-        endpoint={entity.baseEndpoint}
-        isFullWidth={!isEntityImmutable}
-        onChange={onChangeEndpoint}
+      <SourceField
+        elementId="sourceType"
+        fieldTitle={t(EntitiesI18nKey.SourceType)}
+        view={ApplicationRoute.Adapters}
+        entity={entity}
+        onChange={onChangeAdapter}
+        sourceItems={getSourceItems(ApplicationRoute.Adapters, featureFlags.deploymentsEnabled)}
+        getContainers={getAdapterContainers}
+        isModal={isModal}
       />
 
-      {isEntityImmutable && <TopicsControl entity={entity} onChange={onChangeAdapter} />}
+      {!isModal && <TopicsControl entity={entity} onChange={onChangeAdapter} />}
     </div>
   );
 };

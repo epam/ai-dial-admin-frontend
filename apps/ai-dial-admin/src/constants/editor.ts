@@ -20,13 +20,14 @@ const DEFAULT_COLORS = {
 };
 
 export const getDiffEditorTheme = (theme: EDITOR_THEMES): JSONEditorThemeConfig => {
-  const template = EDITOR_THEMES_CONFIG[theme];
+  const template = EDITOR_THEMES_CONFIG[theme || EDITOR_THEMES.dark];
 
   switch (theme) {
-    case EDITOR_THEMES.dark:
-      return { ...template, colors: { ...template.colors, 'editor.background': '#222932' } };
     case EDITOR_THEMES.light:
       return { ...template, colors: { ...template.colors, 'editor.background': '#FCFCFC' } };
+    case EDITOR_THEMES.dark:
+    default:
+      return { ...template, colors: { ...template.colors, 'editor.background': '#222932' } };
   }
 };
 
