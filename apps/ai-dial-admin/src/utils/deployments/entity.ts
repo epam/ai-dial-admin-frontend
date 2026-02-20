@@ -10,6 +10,7 @@ import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 import { ENTITY_TRANSPORT } from '@/src/constants/deployments/containers';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { IMAGE_TYPE } from '@/src/types/deployments/images';
+import { DialAdapter } from '@/src/models/dial/adapter';
 
 export const getEntityRoute = (route: ApplicationRoute) => {
   if (route === ApplicationRoute.McpContainers) {
@@ -17,6 +18,9 @@ export const getEntityRoute = (route: ApplicationRoute) => {
   }
   if (route === ApplicationRoute.InterceptorContainers) {
     return ApplicationRoute.Interceptors;
+  }
+  if (route === ApplicationRoute.AdapterContainers) {
+    return ApplicationRoute.Adapters;
   }
   return ApplicationRoute.Models;
 };
@@ -74,6 +78,9 @@ export const getTranslatedEntity = (route: ApplicationRoute, t: (key: string) =>
   if (route === ApplicationRoute.InterceptorContainers) {
     return t(EntitiesI18nKey.Interceptor);
   }
+  if (route === ApplicationRoute.AdapterContainers) {
+    return t(EntitiesI18nKey.Adapter);
+  }
   return t(EntitiesI18nKey.Model);
 };
 
@@ -116,6 +123,10 @@ export const getEntityTemplate = (
     if (transport) {
       (template as Toolset).transport = ENTITY_TRANSPORT[transport];
     }
+  }
+
+  if (route === ApplicationRoute.AdapterContainers) {
+    (template as DialAdapter).baseEndpoint = container.url;
   }
 
   return template;

@@ -185,7 +185,7 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
           <div className="flex flex-row items-center w-full gap-x-4">
             {!jsonConfiguration.isEditorEnabled && (
               <div className="flex flex-row gap-3">
-                {container.status === CONTAINER_STATUS.RUNNING && route !== ApplicationRoute.AdapterContainers && (
+                {container.status === CONTAINER_STATUS.RUNNING && (
                   <>
                     {route === ApplicationRoute.McpContainers ? (
                       <DialButtonDropdown

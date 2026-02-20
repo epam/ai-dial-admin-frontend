@@ -63,6 +63,9 @@ describe('entity utils', () => {
     test('returns Interceptors for InterceptorContainers', () => {
       expect(getEntityRoute(ApplicationRoute.InterceptorContainers)).toBe(ApplicationRoute.Interceptors);
     });
+    test('returns Adapters for AdapterContainers', () => {
+      expect(getEntityRoute(ApplicationRoute.AdapterContainers)).toBe(ApplicationRoute.Adapters);
+    });
     test('returns Models for other routes', () => {
       expect(getEntityRoute(ApplicationRoute.ModelServings)).toBe(ApplicationRoute.Models);
     });
@@ -86,6 +89,9 @@ describe('entity utils', () => {
     });
     test('returns Interceptor for Interceptors', () => {
       expect(getTranslatedEntity(ApplicationRoute.InterceptorContainers, t)).toBe(EntitiesI18nKey.Interceptor);
+    });
+    test('returns Adapter for Adapters', () => {
+      expect(getTranslatedEntity(ApplicationRoute.AdapterContainers, t)).toBe(EntitiesI18nKey.Adapter);
     });
     test('returns Model for other routes', () => {
       expect(getTranslatedEntity(ApplicationRoute.ModelServings, t)).toBe(EntitiesI18nKey.Model);
@@ -132,6 +138,12 @@ describe('entity utils', () => {
       const container = { displayName: 'MyContainer', name: '123' } as any;
       const template = getEntityTemplate(ApplicationRoute.McpContainers, container, t, CONTAINER_TRANSPORT.SSE) as any;
       expect(template.transport).toBe(ENTITY_TRANSPORT[CONTAINER_TRANSPORT.SSE]);
+    });
+
+    test('configures baseEndpoint for AdapterContainers', () => {
+      const container = { displayName: 'MyContainer', url: 'http://url' } as any;
+      const template = getEntityTemplate(ApplicationRoute.AdapterContainers, container, t) as any;
+      expect(template.baseEndpoint).toBe('http://url');
     });
   });
 
