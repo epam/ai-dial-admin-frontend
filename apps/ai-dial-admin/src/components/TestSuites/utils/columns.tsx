@@ -32,10 +32,14 @@ export const getTestCaseColumns = (testCases: TestCase[]) => {
       editable: true,
       cellRenderer: 'agCheckboxCellRenderer',
       cellEditor: 'agCheckboxCellEditor',
-      tooltipValueGetter: (params: ITooltipParams<TestCase>) => {
+      tooltipValueGetter: (params) => {
         return !params.data?.enabled ? 'Disable test case' : 'Enable test case';
       },
       valueGetter: (params) => params.data?.enabled,
+      valueSetter: (params) => {
+        params.data.enabled = params.newValue;
+        return true;
+      },
     } as ColDef,
     ...TEST_CASES_COLUMN,
     ...data.map((fact) => ({

@@ -31,6 +31,7 @@ import {
   themeBalham,
   TooltipModule,
   ScrollApiModule,
+  CheckboxEditorModule,
 } from 'ag-grid-community';
 import { AgGridReact } from 'ag-grid-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -68,6 +69,7 @@ ModuleRegistry.registerModules([
   RowStyleModule,
   EventApiModule,
   ScrollApiModule,
+  CheckboxEditorModule,
 ]);
 
 const GRID_THEME_COLORS = {

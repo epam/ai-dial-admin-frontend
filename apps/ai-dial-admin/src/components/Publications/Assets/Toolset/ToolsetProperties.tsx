@@ -15,7 +15,7 @@ interface Props {
 const ToolsProperties: FC<Props> = ({ publication }) => {
   const t = useI18n();
   const tabs = getTabsForAsset(t, ApplicationRoute.AssetsToolsets);
-  const toolset = publication.toolSetResources?.[0];
+  const toolset = publication.toolSetResources?.[0]?.toolSetResource;
   const [selectedTab, setSelectedTab] = useState(tabs[0].id);
 
   useEffect(() => {
