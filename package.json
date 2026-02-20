@@ -116,10 +116,9 @@
     "vitest-fetch-mock": "^0.4.5"
   },
   "overrides": {
-    "glob": "11.1.0",
+    "glob": "13.0.6",
     "react": "19.1.2",
     "react-dom": "19.1.2",
-    "@modern-js/utils": "2.69.5",
     "eslint": "^10.0.1",
     "minimatch": "10.2.2"
   },
