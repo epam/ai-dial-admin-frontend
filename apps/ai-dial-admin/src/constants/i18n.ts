@@ -561,7 +561,7 @@ export enum TabsI18nKey {
   Body = 'Tabs.Body',
   Headers = 'Tabs.Headers',
 }
-----------------------
+
 export enum InterceptorsI18nKey {
   Add = 'Interceptors.Add',
   Local = 'Interceptors.Local',
