@@ -33,7 +33,6 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { EntityViewTab, getPublicationViewTabs } from '@/src/utils/tabs/utils';
 import { addTrailingSlash } from '@/src/utils/url';
 import TabsContent from './TabsContent';
-import DiscardModal from '@/src/components//EntityView/Modals/Discard/Discard';
 import { getFormDataForPublication } from './utils';
 
 interface Props<T> {
@@ -50,7 +49,6 @@ const PublicationView = <T extends Publication>({ view, publication, application
   const { dispatch } = useSaveValidationContext();
   const { showNotification } = useNotification();
   const [isJsonView, setIsJsonView] = useState<boolean>(false);
-  const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
 
   const [tabs, setTabs] = useState(() => getPublicationViewTabs(t, view));
 
@@ -121,15 +119,6 @@ const PublicationView = <T extends Publication>({ view, publication, application
   const onDiscard = useCallback(() => {
     setSelectedPublication(structuredClone(publication));
   }, [publication]);
-
-  const onTryToDiscard = useCallback(() => {
-    setIsDiscardModalOpen(true);
-  }, []);
-
-  const onDiscardModalConfirm = useCallback(() => {
-    onDiscard();
-    setIsDiscardModalOpen(false);
-  }, [onDiscard]);
 
   const onChangePublication = useCallback((entity: T) => {
     setSelectedPublication(entity);
@@ -215,7 +204,7 @@ const PublicationView = <T extends Publication>({ view, publication, application
           view={view}
           entity={selectedPublication}
           isChanged={isChanged}
-          onDiscard={onTryToDiscard}
+          onDiscard={onDiscard}
           onSave={onSave}
           tabs={tabs}
           jsonConfiguration={jsonConfiguration}
@@ -254,7 +243,7 @@ const PublicationView = <T extends Publication>({ view, publication, application
     onApprove,
     onDecline,
     onDelete,
-    onTryToDiscard,
+    onDiscard,
     onSave,
     publication.action,
     publication.requestName,
@@ -294,13 +283,6 @@ const PublicationView = <T extends Publication>({ view, publication, application
           <PublicationProperties view={view} publication={publication} applicationSchemes={applicationSchemes} />
         )}
       </div>
-      {isDiscardModalOpen && (
-        <DiscardModal
-          onConfirm={onDiscardModalConfirm}
-          onClose={() => setIsDiscardModalOpen(false)}
-          onCancel={() => setIsDiscardModalOpen(false)}
-        />
-      )}
     </div>
   );
 };
