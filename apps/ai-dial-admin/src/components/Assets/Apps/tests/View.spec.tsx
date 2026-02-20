@@ -9,6 +9,10 @@ import AppView from '../View';
 
 // Mock dependencies
 
+vi.mock('@/src/context/assets/AppsFolderContext', () => ({
+  useAppsFolder: vi.fn(),
+}));
+
 vi.mock('@/src/app/[lang]/assets-applications/actions', () => ({
   getApps: vi.fn(),
   moveApps: vi.fn(),
