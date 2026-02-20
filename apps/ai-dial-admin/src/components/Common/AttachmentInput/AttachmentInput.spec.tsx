@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 import { useState } from 'react';
+import { describe, expect, test, vi } from 'vitest';
 
 import { AttachmentsI18nKey } from '@/src/constants/i18n';
 
@@ -37,20 +37,6 @@ const ControlledAttachmentInput = (props: Partial<Props> & { initialValues?: str
 };
 
 describe('Common components - AttachmentInput', () => {
-  beforeAll(() => {
-    const resizeObserverMock = vi.fn().mockImplementation(() => ({
-      observe: vi.fn(),
-      unobserve: vi.fn(),
-      disconnect: vi.fn(),
-    }));
-
-    global.ResizeObserver = resizeObserverMock;
-  });
-
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
-
   test('renders tags from initialValues', () => {
     renderComponent({ initialValues: ['pdf'] });
 

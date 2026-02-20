@@ -1,14 +1,9 @@
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
-import { describe, test, expect, vi, beforeEach } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import Methods from '../Methods';
-import { CHAT_COMPLETION_METHOD } from '../../constants/chat-completion-method';
 
 const mockGetDeployment = vi.fn();
 const mockGenerateMethodPathCombinations = vi.fn();
-
-vi.mock('@/src/locales/client', () => ({
-  useI18n: () => (k: string) => k,
-}));
 
 vi.mock('@/src/components/TestSuites/utils/method', () => ({
   generateMethodPathCombinations: (...args: any[]) => mockGenerateMethodPathCombinations(...args),
