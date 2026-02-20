@@ -1199,7 +1199,7 @@ export default {
     PortError: 'Port must be between 1 and 65535',
     MemoryError: 'Memory should be greater than 1',
     GPUError: 'GPU should be greater or equal to 0',
-    AdvancedTimingsError: 'Value must be between 0 and {max}',
+    AdvancedTimingsError: 'Value must be between 1 and {max}',
   },
   Source: {
     OpenTemplate: 'Open template',
