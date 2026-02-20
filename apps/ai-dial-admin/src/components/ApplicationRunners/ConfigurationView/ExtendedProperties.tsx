@@ -11,6 +11,7 @@ import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/
 import { useI18n } from '@/src/locales/client';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { DialApplicationScheme, TypeBucketCopy } from '@/src/models/dial/application';
+import EndpointControl from '../../BaseControls/Endpoint/Endpoint';
 
 interface Props {
   runner: DialApplicationScheme;
@@ -103,6 +104,13 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
 
       <ViewerUrlControl endpoint={runner['dial:applicationTypeViewerUrl']} onChange={onChangeViewerUrl} />
       <EditorUrlControl endpoint={runner['dial:applicationTypeEditorUrl']} onChange={onChangeEditorUrl} />
+      <EndpointControl
+        id="applicationTypeSchemaEndpoint"
+        fieldTitle={t(EntityFieldsI18nKey.applicationTypeSchemaEndpoint)}
+        placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
+        endpoint={runner.applicationTypeSchemaEndpoint}
+        onChange={(endpoint) => onChange(endpoint, 'applicationTypeSchemaEndpoint')}
+      />
     </div>
   );
 };

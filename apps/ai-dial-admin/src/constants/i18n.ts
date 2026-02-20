@@ -561,7 +561,7 @@ export enum TabsI18nKey {
   Body = 'Tabs.Body',
   Headers = 'Tabs.Headers',
 }
-
+----------------------
 export enum InterceptorsI18nKey {
   Add = 'Interceptors.Add',
   Local = 'Interceptors.Local',
@@ -1092,6 +1092,7 @@ export enum EntityFieldsI18nKey {
   'dial:applicationTypeCompletionEndpoint' = 'EntityFields.applicationTypeCompletionEndpoint',
   'dial:applicationTypeDisplayName' = 'EntityFields.applicationTypeDisplayName',
   title = 'EntityFields.title',
+  applicationTypeSchemaEndpoint = 'EntityFields.applicationTypeSchemaEndpoint',
   'dial:applicationTypeEditorUrl' = 'EntityFields.applicationTypeEditorUrl',
   editorUrl = 'EntityFields.editorUrl',
   'dial:applicationTypeViewerUrl' = 'EntityFields.applicationTypeViewerUrl',
