@@ -412,7 +412,7 @@ export const getAdvancedTimingsError = (
   max?: number,
 ) => {
   if (value != null && max) {
-    if (value < 0 || value > max) {
+    if (value < 1 || value > max) {
       return { type: ErrorType.INVALID, text: t ? t(ErrorI18nKey.AdvancedTimingsError, { max }) : '' };
     }
   }
