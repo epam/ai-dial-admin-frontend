@@ -3,12 +3,6 @@ import { describe, expect, test, vi, beforeEach } from 'vitest';
 import CreateAppRunner from '../CreateAppRunner';
 import { ButtonsI18nKey, CreateI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 
-vi.mock('next-auth/react', () => ({
-  useSession: vi.fn(() => {
-    return { session: { providerId: 'provider' } };
-  }),
-}));
-
 describe('CreateAppRunner', () => {
   const baseProps = {
     isModalOpen: true,

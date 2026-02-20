@@ -15,12 +15,6 @@ vi.mock('@/src/app/[lang]/export-config/actions', () => ({
   previewExportConfig: vi.fn().mockResolvedValue({ success: true, response: {} }),
 }));
 
-vi.mock('next-auth/react', () => ({
-  useSession: vi.fn(() => {
-    return { session: { providerId: 'provider' } };
-  }),
-}));
-
 describe('PreviewModal', () => {
   test('renders popup and tabs', async () => {
     render(<PreviewModal {...defaultProps} />);

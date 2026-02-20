@@ -3,21 +3,17 @@ import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 import PromptProperties from '../PromptProperties';
 import { useFileFolder } from '@/src/context/assets/FileFolderContext';
 
-vi.mock('@/src/locales/client', () => ({
-  useI18n: () => (k: string) => k,
-}));
-
-vi.mock('@/src/context/assets/FileFolderContext', () => ({
-  useFileFolder: vi.fn(),
-}));
-
 vi.mock('../BaseProperties', () => ({
-  default: () => <div data-testid="base-properties">Base Properties</div>,
+  default: () => (
+    <div role="region" aria-label="base-properties">
+      Base Properties
+    </div>
+  ),
 }));
 
 vi.mock('@/src/components/Publications/Assets/Prompt/PromptsList', () => ({
   default: ({ publication }: { publication: any }) => (
-    <div data-testid="prompts-list">
+    <div role="region" aria-label="prompts-list">
       <span>Prompts: {publication.prompts?.length || 0}</span>
     </div>
   ),
@@ -44,8 +40,8 @@ describe('PromptProperties', () => {
 
     render(<PromptProperties publication={publication} onChange={mockOnChange} />);
 
-    expect(screen.getByTestId('base-properties')).toBeInTheDocument();
-    expect(screen.getByTestId('prompts-list')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'base-properties' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'prompts-list' })).toBeInTheDocument();
     expect(screen.getByText('Prompts: 2')).toBeInTheDocument();
   });
 
@@ -57,8 +53,8 @@ describe('PromptProperties', () => {
 
     render(<PromptProperties publication={publication} onChange={mockOnChange} />);
 
-    expect(screen.getByTestId('base-properties')).toBeInTheDocument();
-    expect(screen.getByTestId('prompts-list')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'base-properties' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'prompts-list' })).toBeInTheDocument();
     expect(screen.getByText('Prompts: 0')).toBeInTheDocument();
   });
 

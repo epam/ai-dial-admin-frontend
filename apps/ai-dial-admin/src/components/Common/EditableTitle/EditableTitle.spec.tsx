@@ -7,19 +7,19 @@ const setup = (props: Record<string, unknown> = {}) => {
   const changeTitle = vi.fn();
   const utils = render(
     <EditableTitle title="My title" changeTitle={changeTitle} size={1} {...props}>
-      <span data-testid="child-node">•</span>
+      <span role="definition">•</span>
     </EditableTitle>,
   );
   return { changeTitle, ...utils };
 };
 
-describe('Common components – EditableTitle', () => {
+describe('Common components - EditableTitle', () => {
   test('renders title and children in display mode', () => {
     setup({ size: 2 });
 
     const heading = screen.getByRole('heading', { level: 2 });
     expect(heading).toHaveTextContent('My title');
-    expect(screen.getByTestId('child-node')).toBeInTheDocument();
+    expect(screen.getByRole('definition')).toBeInTheDocument();
     expect(screen.queryByRole('textbox')).toBeNull();
   });
 
