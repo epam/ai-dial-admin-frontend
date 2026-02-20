@@ -29,7 +29,6 @@ import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getDeploymentsViewTabs } from '@/src/utils/tabs/utils';
 import TabsContent from './TabsContent';
-import DiscardModal from '@/src/components//EntityView/Modals/Discard/Discard';
 
 interface Props {
   container: Container;
@@ -59,7 +58,6 @@ const ContainerView: FC<Props> = ({ container, route, createEntity, createEntity
   const [events, setEvents] = useState<KubEvent[]>([]);
   const [restarts, setRestarts] = useState(0);
   const [pods, setPods] = useState<Pod[]>([]);
-  const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
 
   useEffect(() => {
     setTabs(getDeploymentsViewTabs(route, t, container.status, container.allowedDomains));
@@ -236,15 +234,6 @@ const ContainerView: FC<Props> = ({ container, route, createEntity, createEntity
     }
   }, [activeTab, tabs]);
 
-  const onTryToDiscard = useCallback(() => {
-    setIsDiscardModalOpen(true);
-  }, []);
-
-  const onDiscardModalConfirm = useCallback(() => {
-    onDiscard();
-    setIsDiscardModalOpen(false);
-  }, [onDiscard]);
-
   return (
     <>
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
@@ -257,7 +246,7 @@ const ContainerView: FC<Props> = ({ container, route, createEntity, createEntity
           isChanged={isChanged}
           isRedeployRequired={isRedeployRequired}
           onSave={onSave}
-          onDiscard={onTryToDiscard}
+          onDiscard={onDiscard}
           jsonConfiguration={jsonConfiguration}
           createEntity={createEntity}
           createEntityAsAsset={createEntityAsAsset}
@@ -273,25 +262,16 @@ const ContainerView: FC<Props> = ({ container, route, createEntity, createEntity
               setIsChanged={setIsChanged}
             />
           ) : (
-            <>
-              <TabsContent
-                activeTab={activeTab}
-                route={route}
-                selectedContainer={selectedContainer}
-                events={events}
-                onChange={setSelectedContainer}
-                pods={pods}
-                restarts={restarts}
-                {...props}
-              />
-              {isDiscardModalOpen && (
-                <DiscardModal
-                  onConfirm={onDiscardModalConfirm}
-                  onClose={() => setIsDiscardModalOpen(false)}
-                  onCancel={() => setIsDiscardModalOpen(false)}
-                />
-              )}
-            </>
+            <TabsContent
+              activeTab={activeTab}
+              route={route}
+              selectedContainer={selectedContainer}
+              events={events}
+              onChange={setSelectedContainer}
+              pods={pods}
+              restarts={restarts}
+              {...props}
+            />
           )}
         </div>
       </div>
