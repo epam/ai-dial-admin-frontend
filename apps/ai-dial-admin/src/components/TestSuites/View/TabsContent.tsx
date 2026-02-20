@@ -18,10 +18,11 @@ interface Props {
   runRefreshRef: RefObject<(() => void) | null>;
   activeTab: EntityViewTab;
   selectedTestSuite: TestSuite;
-  onChange: (testSuite: TestSuite) => void;
+  onChange: (testSuite: TestSuite, isSkipRefresh?: boolean) => void;
+  isSkipRefresh?: boolean;
 }
 
-const TabsContent: FC<Props> = ({ runRefreshRef, activeTab, onChange, selectedTestSuite }) => {
+const TabsContent: FC<Props> = ({ runRefreshRef, activeTab, onChange, selectedTestSuite, isSkipRefresh }) => {
   const t = useI18n();
 
   const headerPrefix = useMemo(() => {
@@ -52,7 +53,9 @@ const TabsContent: FC<Props> = ({ runRefreshRef, activeTab, onChange, selectedTe
           <TestSuiteProperties testSuite={selectedTestSuite} onChange={onChange} />
         </PropertiesTabContent>
       )}
-      {activeTab === EntityViewTab.TestCases && <TestCases selectedTestSuite={selectedTestSuite} onChange={onChange} />}
+      {activeTab === EntityViewTab.TestCases && (
+        <TestCases selectedTestSuite={selectedTestSuite} onChange={onChange} isSkipRefresh={isSkipRefresh} />
+      )}
       {activeTab === EntityViewTab.Runs && <Runs selectedTestSuite={selectedTestSuite} runRefreshRef={runRefreshRef} />}
     </>
   );

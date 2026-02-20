@@ -10,6 +10,7 @@ import { getDeployments } from '@/src/app/[lang]/test-suites/actions';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import Field from '@/src/components/Common/Field/Field';
+import SelectApplicationModal from '@/src/components/TestSuites/Modals/SelectApplication/SelectApplicationModal';
 import RequestTemplate from '@/src/components/TestSuites/RequestTemplate/RequestTemplate';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
@@ -19,7 +20,6 @@ import { Deployment } from '@/src/models/evaluation/deployment';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import SelectApplicationModal from '../Modals/SelectApplication/SelectApplicationModal';
 
 interface Props {
   isModal?: boolean;
