@@ -1,185 +1,101 @@
-import { render, screen, waitFor } from '@testing-library/react';
-import { describe, expect, test, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, expect, test, vi, beforeEach, Mock } from 'vitest';
+
 import TestCases from '../TestCases';
-import { TestSuite, TestCase } from '@/src/models/evaluation/test-suite';
-import { TestSuitesI18nKey } from '@/src/constants/i18n';
-import * as actions from '@/src/app/[lang]/test-suites/actions';
+import { TestSuite } from '@/src/models/evaluation/test-suite';
 
-// Mock the actions
-vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
-  getTestCases: vi.fn(),
-}));
-
-// Mock ListView component
-vi.mock('@/src/components/ListView/List', () => ({
-  default: ({ title, emptyDataTitle, columnDefs, onGridReady, children }: any) => (
-    <div>
-      <div>List View Component</div>
-      <div>Title: {title}</div>
-      <div>Empty Title: {emptyDataTitle}</div>
-      <div>Columns: {columnDefs.length}</div>
-      <button onClick={() => onGridReady({ setGridOption: vi.fn() })}>Initialize Grid</button>
-      <div>{children}</div>
+vi.mock('../TemplateVariables', () => ({
+  default: ({ selectedTestSuite, onChange, isSkipRefresh }: any) => (
+    <div data-testid="template-variables">
+      <div data-testid="tv-suite-id">{selectedTestSuite.id}</div>
+      <div data-testid="tv-skip-refresh">{String(isSkipRefresh)}</div>
+      <button data-testid="tv-change" onClick={() => onChange({ ...selectedTestSuite, name: 'Changed by TV' }, true)}>
+        TV Change
+      </button>
     </div>
   ),
 }));
 
-// Mock HeaderButtons component
-vi.mock('./Header', () => ({
-  default: ({ selectedTestSuiteId }: any) => (
-    <div>
-      <div>Header Buttons</div>
-      <div>Test Suite ID: {selectedTestSuiteId}</div>
+vi.mock('../TestCasesList', () => ({
+  default: ({ selectedTestSuite, onChange }: any) => (
+    <div data-testid="test-cases-list">
+      <div data-testid="tcl-suite-id">{selectedTestSuite.id}</div>
+      <button data-testid="tcl-change" onClick={() => onChange({ ...selectedTestSuite, name: 'Changed by TCL' })}>
+        TCL Change
+      </button>
     </div>
   ),
 }));
+
+const createTestSuite = (overrides?: Partial<TestSuite>): TestSuite => ({
+  id: 'suite-1',
+  name: 'Test Suite 1',
+  inputBindings: [],
+  testCaseSchema: [],
+  ...overrides,
+});
 
 describe('TestCases', () => {
-  const mockTestSuite: TestSuite = {
-    id: 'test-suite-123',
-    name: 'Test Suite 1',
-    description: 'Test description',
-  };
-
-  const mockTestCases: TestCase[] = [
-    {
-      testCaseName: 'Test Case 1',
-      data: {
-        temperature: 0.7,
-      },
-    },
-    {
-      testCaseName: 'Test Case 2',
-      data: {
-        temperature: 0.5,
-      },
-    },
-  ];
-
-  const mockOnChange = vi.fn();
+  let mockOnChange: Mock;
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockOnChange = vi.fn();
   });
 
-  test('fetches test cases on mount', async () => {
-    vi.mocked(actions.getTestCases).mockResolvedValue({
-      content: mockTestCases,
-      totalElements: 2,
-    });
+  test('renders both TemplateVariables and TestCasesList', () => {
+    render(<TestCases selectedTestSuite={createTestSuite()} onChange={mockOnChange} />);
 
-    render(<TestCases selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
-
-    await waitFor(() => {
-      expect(actions.getTestCases).toHaveBeenCalledWith(mockTestSuite.id, 0, 100, [], []);
-    });
+    expect(screen.getByTestId('template-variables')).toBeInTheDocument();
+    expect(screen.getByTestId('test-cases-list')).toBeInTheDocument();
   });
 
-  test('handles empty test cases response', async () => {
-    vi.mocked(actions.getTestCases).mockResolvedValue({
-      content: [],
-      totalElements: 0,
-    });
+  test('passes selectedTestSuite to TemplateVariables', () => {
+    render(<TestCases selectedTestSuite={createTestSuite({ id: 'my-suite' })} onChange={mockOnChange} />);
 
-    render(<TestCases selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
-
-    await waitFor(() => {
-      expect(screen.getByText('Columns: 3')).toBeInTheDocument();
-    });
+    expect(screen.getByTestId('tv-suite-id')).toHaveTextContent('my-suite');
   });
 
-  test('handles null response from getTestCases', async () => {
-    vi.mocked(actions.getTestCases).mockResolvedValue(null as any);
+  test('passes selectedTestSuite to TestCasesList', () => {
+    render(<TestCases selectedTestSuite={createTestSuite({ id: 'my-suite' })} onChange={mockOnChange} />);
 
-    render(<TestCases selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
-
-    await waitFor(() => {
-      expect(actions.getTestCases).toHaveBeenCalled();
-    });
+    expect(screen.getByTestId('tcl-suite-id')).toHaveTextContent('my-suite');
   });
 
-  test('initializes grid when onGridReady is called', async () => {
-    vi.mocked(actions.getTestCases).mockResolvedValue({
-      content: mockTestCases,
-      totalElements: 2,
-    });
+  test('passes isSkipRefresh to TemplateVariables', () => {
+    render(<TestCases selectedTestSuite={createTestSuite()} onChange={mockOnChange} isSkipRefresh={true} />);
 
-    render(<TestCases selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
-
-    const initButton = screen.getByText('Initialize Grid');
-    initButton.click();
-
-    // Grid initialization should complete without errors
-    expect(initButton).toBeInTheDocument();
+    expect(screen.getByTestId('tv-skip-refresh')).toHaveTextContent('true');
   });
 
-  test('handles test suite without id', async () => {
-    vi.mocked(actions.getTestCases).mockResolvedValue({
-      content: [],
-      totalElements: 0,
-    });
+  test('defaults isSkipRefresh to undefined', () => {
+    render(<TestCases selectedTestSuite={createTestSuite()} onChange={mockOnChange} />);
 
-    const testSuiteNoId: TestSuite = {
-      name: 'Test Suite',
-    };
-
-    render(<TestCases selectedTestSuite={testSuiteNoId} onChange={mockOnChange} />);
-
-    await waitFor(() => {
-      expect(actions.getTestCases).toHaveBeenCalledWith(undefined, 0, 100, [], []);
-    });
+    expect(screen.getByTestId('tv-skip-refresh')).toHaveTextContent('undefined');
   });
 
-  test('passes allowPadding false to ListView', () => {
-    vi.mocked(actions.getTestCases).mockResolvedValue({
-      content: [],
-      totalElements: 0,
-    });
+  test('passes onChange to TemplateVariables and it triggers correctly', () => {
+    render(<TestCases selectedTestSuite={createTestSuite()} onChange={mockOnChange} />);
 
-    render(<TestCases selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
+    fireEvent.click(screen.getByTestId('tv-change'));
 
-    // ListView is rendered (we can't directly test props but can verify component renders)
-    expect(screen.getByText('List View Component')).toBeInTheDocument();
+    expect(mockOnChange).toHaveBeenCalledTimes(1);
+    expect(mockOnChange).toHaveBeenCalledWith(expect.objectContaining({ name: 'Changed by TV' }), true);
   });
 
-  test('handles multiple test cases with different facts', async () => {
-    const testCasesWithDifferentFacts: TestCase[] = [
-      {
-        testCaseName: 'Case 1',
-        data: { temp: 0.5 },
-      },
-      {
-        testCaseName: 'Case 2',
-        data: { model: 'gpt-4', tokens: 100 },
-      },
-    ];
+  test('passes onChange to TestCasesList and it triggers correctly', () => {
+    render(<TestCases selectedTestSuite={createTestSuite()} onChange={mockOnChange} />);
 
-    vi.mocked(actions.getTestCases).mockResolvedValue({
-      content: testCasesWithDifferentFacts,
-      totalElements: 2,
-    });
+    fireEvent.click(screen.getByTestId('tcl-change'));
 
-    render(<TestCases selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
-
-    await waitFor(() => {
-      expect(actions.getTestCases).toHaveBeenCalled();
-    });
+    expect(mockOnChange).toHaveBeenCalledTimes(1);
+    expect(mockOnChange).toHaveBeenCalledWith(expect.objectContaining({ name: 'Changed by TCL' }));
   });
 
-  test('does not refetch if test cases already exist and id remains same', async () => {
-    vi.mocked(actions.getTestCases).mockResolvedValue({
-      content: mockTestCases,
-      totalElements: 2,
-    });
+  test('renders with correct container classes', () => {
+    const { container } = render(<TestCases selectedTestSuite={createTestSuite()} onChange={mockOnChange} />);
 
-    render(<TestCases selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
-
-    await waitFor(() => {
-      expect(actions.getTestCases).toHaveBeenCalledTimes(1);
-    });
-
-    // Even if we wait longer, it shouldn't call again
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    expect(actions.getTestCases).toHaveBeenCalledTimes(1);
+    const wrapper = container.firstChild as HTMLElement;
+    expect(wrapper).toHaveClass('flex-1', 'min-h-0', 'flex', 'flex-col', 'gap-y-6');
   });
 });

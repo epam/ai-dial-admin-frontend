@@ -42,6 +42,7 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
   const [isChanged, setIsChanged] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
+  const [isSkipRefresh, setIsSkipRefresh] = useState(false);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -61,6 +62,7 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
 
   const onDiscard = useCallback(() => {
     setSelectedTestSuite(structuredClone(originalTestSuite));
+    setIsSkipRefresh(false);
   }, [originalTestSuite]);
 
   const onSave = useCallback(() => {
@@ -102,6 +104,14 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
     [selectedTestSuite.id, showNotification, t],
   );
 
+  const onChangeTestSuite = useCallback(
+    (testSuite: TestSuite, isSkipRefresh = false) => {
+      setSelectedTestSuite(testSuite);
+      setIsSkipRefresh(isSkipRefresh);
+    },
+    [setSelectedTestSuite, setIsSkipRefresh],
+  );
+
   return (
     <>
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
@@ -135,9 +145,10 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
           ) : (
             <TabsContent
               runRefreshRef={runRefreshRef}
+              isSkipRefresh={isSkipRefresh}
               activeTab={activeTab}
               selectedTestSuite={selectedTestSuite}
-              onChange={setSelectedTestSuite}
+              onChange={onChangeTestSuite}
             />
           )}
         </div>
