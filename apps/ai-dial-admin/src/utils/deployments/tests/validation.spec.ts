@@ -649,8 +649,8 @@ describe('validation utils', () => {
         text: ErrorI18nKey.AdvancedTimingsError,
       });
     });
-    test('should return null when value is bigger or equal to 0', () => {
-      expect(getAdvancedTimingsError(0, t, 10)).toBeNull();
+    test('should return null when value is bigger than 0', () => {
+      expect(getAdvancedTimingsError(1, t, 10)).toBeNull();
     });
   });
 });

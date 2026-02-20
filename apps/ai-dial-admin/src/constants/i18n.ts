@@ -102,6 +102,7 @@ export enum BasicI18nKey {
   Failed = 'Basic.Failed',
   NoData = 'Basic.NoData',
   NoParameters = 'Basic.NoParameters',
+  NoVariables = 'Basic.NoVariables',
   NoHeaders = 'Basic.NoHeaders',
   Value = 'Basic.Value',
   From = 'Basic.From',
@@ -1094,6 +1095,7 @@ export enum EntityFieldsI18nKey {
   'dial:applicationTypeCompletionEndpoint' = 'EntityFields.applicationTypeCompletionEndpoint',
   'dial:applicationTypeDisplayName' = 'EntityFields.applicationTypeDisplayName',
   title = 'EntityFields.title',
+  applicationTypeSchemaEndpoint = 'EntityFields.applicationTypeSchemaEndpoint',
   'dial:applicationTypeEditorUrl' = 'EntityFields.applicationTypeEditorUrl',
   editorUrl = 'EntityFields.editorUrl',
   'dial:applicationTypeViewerUrl' = 'EntityFields.applicationTypeViewerUrl',
@@ -1381,6 +1383,9 @@ export enum TestSuitesI18nKey {
   NumberOfRuns = 'TestSuites.NumberOfRuns',
   SelectedTestCases = 'TestSuites.SelectedTestCases',
   RequestTemplate = 'TestSuites.RequestTemplate',
+  DynamicConfiguration = 'TestSuites.DynamicConfiguration',
+  Constant = 'TestSuites.Constant',
+  Attribute = 'TestSuites.Attribute',
 }
 
 export enum FileManagerI18nKey {

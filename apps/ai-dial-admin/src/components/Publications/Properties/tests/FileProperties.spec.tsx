@@ -4,14 +4,6 @@ import { EntitiesI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
 import FilesProperties from '../FileProperties';
 import { useFileFolder } from '@/src/context/assets/FileFolderContext';
 
-vi.mock('@/src/locales/client', () => ({
-  useI18n: () => (k: string) => k,
-}));
-
-vi.mock('@/src/context/assets/FileFolderContext', () => ({
-  useFileFolder: vi.fn(),
-}));
-
 describe('FileProperties', () => {
   const mockFetchFiles = vi.fn();
   beforeEach(() => {
