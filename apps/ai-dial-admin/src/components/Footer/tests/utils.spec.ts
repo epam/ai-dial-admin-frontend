@@ -34,7 +34,7 @@ describe('getCoreVersionElement', () => {
 
     renderResult(el);
 
-    expect(screen.getByText(`${CoreVersionModalI18nKey.Default}:${'1.2.3'}`)).toBeInTheDocument();
+    expect(screen.getByText(`${CoreVersionModalI18nKey.Default}]${'1.2.3'}`)).toBeInTheDocument();
   });
 
   test('renders manually set version same as auto-detected', () => {
@@ -48,7 +48,7 @@ describe('getCoreVersionElement', () => {
 
     renderResult(el);
 
-    expect(screen.getByText(`${CoreVersionModalI18nKey.SetManually}:${'2.0.0'}`)).toBeInTheDocument();
+    expect(screen.getByText(`${CoreVersionModalI18nKey.SetManually}]${'2.0.0'}`)).toBeInTheDocument();
   });
 
   test('renders manually set version different from auto-detected with warning icon', () => {
@@ -62,7 +62,7 @@ describe('getCoreVersionElement', () => {
 
     renderResult(el);
 
-    expect(screen.getByText(`${CoreVersionModalI18nKey.SetManually}:${'3.0.0'}`)).toBeInTheDocument();
+    expect(screen.getByText(`${CoreVersionModalI18nKey.SetManually}]${'3.0.0'}`)).toBeInTheDocument();
   });
 
   test('renders detected version when autoDetectedVersion is valid', () => {
