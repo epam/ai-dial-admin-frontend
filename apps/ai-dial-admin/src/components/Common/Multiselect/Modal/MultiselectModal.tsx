@@ -49,7 +49,7 @@ const MultiselectModal: FC<Props> = ({
   const [isListValid, setListIsValid] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedItems, setSelectedItems] = useState<string[]>(initSelectedItems || []);
-  const [items, setItems] = useState<string[]>([]);
+  const [items, setItems] = useState<string[]>(allItems || []);
   const [newItems, setNewItems] = useState<string[]>([]);
   const [isModalInvalid, setModalInvalid] = useState(false);
 
@@ -80,19 +80,17 @@ const MultiselectModal: FC<Props> = ({
       setIsLoading(true);
       getItems().then((res) => {
         if (res.success) {
-          const items = uniq([...((res.response as string[]) || []), ...(allItems || [])]);
-
-          setItems(items.sort(baseColumnComparator));
+          setItems((prev) => {
+            return uniq([...((res.response as string[]) || []), ...(prev || [])]).sort(baseColumnComparator);
+          });
           setIsLoading(false);
         } else {
           showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
           setIsLoading(false);
         }
       });
-    } else if (allItems) {
-      setItems(allItems);
     }
-  }, [setItems, getItems, allItems]);
+  }, [getItems]);
 
   return (
     <DialFormPopup
@@ -113,9 +111,9 @@ const MultiselectModal: FC<Props> = ({
           <DndProvider backend={HTML5Backend}>
             <MultiselectContentModal
               items={items}
+              setItems={setNewItems}
               selectedItems={selectedItems}
               setSelectedItems={setSelectedItems}
-              setNewItems={setNewItems}
               draggable={draggable}
               {...props}
             />

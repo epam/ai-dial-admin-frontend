@@ -24,24 +24,28 @@ const NewItem: FC<Props> = ({
   value,
   placeholder,
 }) => {
-  return draggable ? (
-    <DraggableItem id={value} findItem={onFindItem} moveItem={onMoveItem}>
-      <NewItemInput
-        value={value}
-        index={index}
-        placeholder={placeholder}
-        onChangeItem={onChangeItem}
-        onRemoveItem={onRemoveItem}
-      />
-    </DraggableItem>
-  ) : (
-    <NewItemInput
-      value={value}
-      index={index}
-      placeholder={placeholder}
-      onChangeItem={onChangeItem}
-      onRemoveItem={onRemoveItem}
-    />
+  return (
+    <li key={`${value}_${index}`}>
+      {draggable ? (
+        <DraggableItem id={value} findItem={onFindItem} moveItem={onMoveItem}>
+          <NewItemInput
+            value={value}
+            index={index}
+            placeholder={placeholder}
+            onChangeItem={onChangeItem}
+            onRemoveItem={onRemoveItem}
+          />
+        </DraggableItem>
+      ) : (
+        <NewItemInput
+          value={value}
+          index={index}
+          placeholder={placeholder}
+          onChangeItem={onChangeItem}
+          onRemoveItem={onRemoveItem}
+        />
+      )}
+    </li>
   );
 };
 

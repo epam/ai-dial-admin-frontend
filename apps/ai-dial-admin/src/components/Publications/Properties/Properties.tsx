@@ -29,7 +29,7 @@ const BasePublicationProperties: FC<Props> = ({ view, publication, children, app
     getActionClassName(publication.action),
   );
 
-  const application = (publication as ApplicationPublication).applicationResources?.[0];
+  const application = (publication as ApplicationPublication).applicationResources?.[0]?.applicationResource;
   const runnerId = application?.applicationTypeSchemaId;
   const runner = applicationSchemes?.find((app) => app.$id === runnerId);
 
