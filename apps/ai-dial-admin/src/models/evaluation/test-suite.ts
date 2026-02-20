@@ -1,4 +1,5 @@
 import { DialScheme } from '@/src/models/dial/scheme';
+import { InputBindingType, TestCaseItemType } from '@/src/types/evaluation';
 
 export interface TestSuite {
   id?: string;
@@ -14,6 +15,8 @@ export interface TestSuite {
   deploymentRef?: TestSuiteDeploymentRef;
   endpointRef?: TestSuiteEndpointRef;
   requestTemplate?: TestSuiteRequestTemplate;
+  inputBindings?: InputBinding[];
+  testCaseSchema?: TestCaseSchema[];
 }
 
 export interface ValidationWarning {
@@ -80,4 +83,32 @@ export interface TestSuiteRun {
   };
   createdAt: number;
   updatedAt: number;
+}
+
+export interface TemplateVariable {
+  defaultValue: unknown;
+  hasDefault: boolean;
+  inferredType: TestCaseItemType;
+  name: string;
+  sources: string[];
+}
+
+export interface TestCaseSchema {
+  name: string;
+  type: TestCaseItemType;
+  required: boolean;
+  description: string;
+}
+
+export interface InputBinding {
+  templateVariable: string;
+  dataField?: string;
+  constantValue?: unknown;
+}
+
+export interface InputBindingRowData extends InputBinding {
+  inferredType?: TestCaseItemType;
+  type?: InputBindingType;
+  value?: unknown;
+  defaultValue?: unknown;
 }

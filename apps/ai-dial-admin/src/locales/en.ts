@@ -56,6 +56,7 @@ export default {
     Failed: 'Failed',
     NoData: 'No Data',
     NoParameters: 'No Parameters',
+    NoVariables: 'No Variables',
     NoHeaders: 'No Headers',
     Value: 'Value',
     From: 'From',
@@ -969,6 +970,7 @@ export default {
     completionEndpoint: 'Completion endpoint',
     applicationTypeDisplayName: 'Name',
     applicationTypeViewerUrl: 'Viewer URL',
+    applicationTypeSchemaEndpoint: 'Schema endpoint',
     applicationTypeEditorUrl: 'Editor URL',
     viewerUrl: 'Viewer URL',
     editorUrl: 'Editor URL',
@@ -1409,6 +1411,9 @@ export default {
     MethodChangeWarning:
       'Changing the method will significantly affect the test suite, including configuration and results. Existing settings may be updated or reset.',
     RequestTemplate: 'Request Template',
+    DynamicConfiguration: 'Dynamic configuration',
+    Constant: 'Constant',
+    Attribute: 'Attribute',
   },
   FileManager: {
     SelectedItems: 'item(s) selected',
