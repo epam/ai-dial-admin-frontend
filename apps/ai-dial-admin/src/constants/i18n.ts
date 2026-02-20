@@ -1095,6 +1095,7 @@ export enum EntityFieldsI18nKey {
   'dial:applicationTypeCompletionEndpoint' = 'EntityFields.applicationTypeCompletionEndpoint',
   'dial:applicationTypeDisplayName' = 'EntityFields.applicationTypeDisplayName',
   title = 'EntityFields.title',
+  applicationTypeSchemaEndpoint = 'EntityFields.applicationTypeSchemaEndpoint',
   'dial:applicationTypeEditorUrl' = 'EntityFields.applicationTypeEditorUrl',
   editorUrl = 'EntityFields.editorUrl',
   'dial:applicationTypeViewerUrl' = 'EntityFields.applicationTypeViewerUrl',
