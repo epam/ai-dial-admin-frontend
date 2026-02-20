@@ -200,7 +200,7 @@ const View: FC<Props> = ({ originalModel, etag, ...props }) => {
     <>
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
         <SimpleEntityHeader
-          view={ApplicationRoute.Applications}
+          view={ApplicationRoute.Models}
           entity={selectedModel}
           isChanged={isChanged}
           onDiscard={onTryToDiscard}
