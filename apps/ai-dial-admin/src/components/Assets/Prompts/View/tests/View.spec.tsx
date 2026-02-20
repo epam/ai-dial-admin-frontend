@@ -5,6 +5,9 @@ import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 import PromptView from '../View';
 
 // Mock dependencies
+vi.mock('@/src/context/assets/PromptFolderContext', () => ({
+  usePromptFolder: vi.fn(),
+}));
 
 vi.mock('@/src/app/[lang]/prompts/actions', () => ({
   createPrompt: vi.fn(),

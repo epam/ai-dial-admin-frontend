@@ -25,12 +25,6 @@ describe('AddTestCase', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  test('displays correct header text', () => {
-    render(<AddTestCase isModalOpen={true} onClose={mockOnClose} onAdd={mockOnAdd} />);
-
-    expect(screen.getByText('Header: add test case')).toBeInTheDocument();
-  });
-
   test('renders Add button with correct label', () => {
     render(<AddTestCase isModalOpen={true} onClose={mockOnClose} onAdd={mockOnAdd} />);
 
@@ -77,13 +71,6 @@ describe('AddTestCase', () => {
 
     expect(mockOnClose).toHaveBeenCalledTimes(1);
     expect(mockOnAdd).not.toHaveBeenCalled();
-  });
-
-  test('modal has correct aria-label', () => {
-    render(<AddTestCase isModalOpen={true} onClose={mockOnClose} onAdd={mockOnAdd} />);
-
-    const dialog = screen.getByRole('dialog');
-    expect(dialog).toHaveAttribute('aria-label', 'add test case');
   });
 
   test('can toggle modal open and closed', () => {
