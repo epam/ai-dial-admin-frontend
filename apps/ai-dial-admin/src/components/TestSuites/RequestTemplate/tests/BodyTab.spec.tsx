@@ -60,7 +60,11 @@ describe('BodyTab', () => {
   });
 
   test('calls changeTemplate with updated body on edit', () => {
-    const template = createTemplate({ body: { original: true }, urlTemplate: '/url', headers: [{ key: 'h', value: 'v' }] });
+    const template = createTemplate({
+      body: { original: true },
+      urlTemplate: '/url',
+      headers: [{ key: 'h', value: 'v' }],
+    });
 
     render(<BodyTab template={template} changeTemplate={mockChangeTemplate} />);
 

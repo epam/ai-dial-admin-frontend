@@ -1,5 +1,9 @@
 import { describe, test, expect } from 'vitest';
-import { convertVariableIntoInitialRequest, generateInputBindingsRowData, generateVariablesRowData } from '../template-variables';
+import {
+  convertVariableIntoInitialRequest,
+  generateInputBindingsRowData,
+  generateVariablesRowData,
+} from '../template-variables';
 import { InputBinding, TemplateVariable } from '@/src/models/evaluation/test-suite';
 import { InputBindingType, TestCaseItemType } from '@/src/types/evaluation';
 
@@ -417,11 +421,7 @@ describe('generateVariablesRowData', () => {
   });
 
   test('should preserve variable order from input array', () => {
-    const variables = [
-      createVariable({ name: 'c' }),
-      createVariable({ name: 'a' }),
-      createVariable({ name: 'b' }),
-    ];
+    const variables = [createVariable({ name: 'c' }), createVariable({ name: 'a' }), createVariable({ name: 'b' })];
 
     const result = generateVariablesRowData(variables, {});
 
@@ -517,11 +517,7 @@ describe('convertVariableIntoInitialRequest', () => {
   });
 
   test('should preserve variable order as object keys', () => {
-    const variables = [
-      createVariable({ name: 'c' }),
-      createVariable({ name: 'a' }),
-      createVariable({ name: 'b' }),
-    ];
+    const variables = [createVariable({ name: 'c' }), createVariable({ name: 'a' }), createVariable({ name: 'b' })];
 
     const result = convertVariableIntoInitialRequest(variables);
 
@@ -529,10 +525,7 @@ describe('convertVariableIntoInitialRequest', () => {
   });
 
   test('should overwrite duplicate variable names with empty string', () => {
-    const variables = [
-      createVariable({ name: 'dup' }),
-      createVariable({ name: 'dup' }),
-    ];
+    const variables = [createVariable({ name: 'dup' }), createVariable({ name: 'dup' })];
 
     const result = convertVariableIntoInitialRequest(variables);
 

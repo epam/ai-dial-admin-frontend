@@ -148,9 +148,7 @@ describe('TabsContent', () => {
   test('Parameters ParamsTab changeTemplate calls onChange with updated requestTemplate', () => {
     const testSuite = createTestSuite();
 
-    render(
-      <TabsContent activeTab={EntityViewTab.Parameters} selectedTestSuite={testSuite} onChange={mockOnChange} />,
-    );
+    render(<TabsContent activeTab={EntityViewTab.Parameters} selectedTestSuite={testSuite} onChange={mockOnChange} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'EditParams-queryParams' }));
 
