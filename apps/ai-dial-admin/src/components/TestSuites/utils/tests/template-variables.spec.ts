@@ -1,7 +1,16 @@
 import { describe, test, expect } from 'vitest';
-import { generateInputBindingsRowData } from '../template-variables';
+import { convertVariableIntoInitialRequest, generateInputBindingsRowData, generateVariablesRowData } from '../template-variables';
 import { InputBinding, TemplateVariable } from '@/src/models/evaluation/test-suite';
 import { InputBindingType, TestCaseItemType } from '@/src/types/evaluation';
+
+const createVariable = (overrides?: Partial<TemplateVariable>): TemplateVariable => ({
+  name: 'var1',
+  inferredType: TestCaseItemType.STRING,
+  defaultValue: null,
+  hasDefault: false,
+  sources: ['body'],
+  ...overrides,
+});
 
 describe('generateInputBindingsRowData', () => {
   test('should return empty array when variables is empty', () => {
@@ -312,5 +321,222 @@ describe('generateInputBindingsRowData', () => {
     const result = generateInputBindingsRowData(variables, []);
 
     expect(result.map((r) => r.templateVariable)).toEqual(['c', 'a', 'b']);
+  });
+});
+
+describe('generateVariablesRowData', () => {
+  test('should return empty array when variables is empty', () => {
+    const result = generateVariablesRowData([], {});
+    expect(result).toEqual([]);
+  });
+
+  test('should map variable with matching requestBody value', () => {
+    const variables = [createVariable({ name: 'var1', defaultValue: 'default' })];
+    const requestBody = { var1: 'hello' };
+
+    const result = generateVariablesRowData(variables, requestBody);
+
+    expect(result).toEqual([
+      {
+        templateVariable: 'var1',
+        inferredType: TestCaseItemType.STRING,
+        value: 'hello',
+        defaultValue: 'default',
+      },
+    ]);
+  });
+
+  test('should use empty string as value when variable is not in requestBody', () => {
+    const variables = [createVariable({ name: 'missing' })];
+
+    const result = generateVariablesRowData(variables, {});
+
+    expect(result[0].value).toBe('');
+  });
+
+  test('should handle multiple variables with mixed presence in requestBody', () => {
+    const variables = [
+      createVariable({ name: 'present', inferredType: TestCaseItemType.STRING, defaultValue: 'def1' }),
+      createVariable({ name: 'absent', inferredType: TestCaseItemType.NUMBER, defaultValue: 42 }),
+      createVariable({ name: 'also_present', inferredType: TestCaseItemType.BOOLEAN, defaultValue: false }),
+    ];
+    const requestBody = { present: 'value1', also_present: true };
+
+    const result = generateVariablesRowData(variables, requestBody);
+
+    expect(result).toEqual([
+      {
+        templateVariable: 'present',
+        inferredType: TestCaseItemType.STRING,
+        value: 'value1',
+        defaultValue: 'def1',
+      },
+      {
+        templateVariable: 'absent',
+        inferredType: TestCaseItemType.NUMBER,
+        value: '',
+        defaultValue: 42,
+      },
+      {
+        templateVariable: 'also_present',
+        inferredType: TestCaseItemType.BOOLEAN,
+        value: true,
+        defaultValue: false,
+      },
+    ]);
+  });
+
+  test('should handle falsy values in requestBody correctly', () => {
+    const variables = [
+      createVariable({ name: 'zero_var', inferredType: TestCaseItemType.NUMBER }),
+      createVariable({ name: 'empty_var', inferredType: TestCaseItemType.STRING }),
+      createVariable({ name: 'false_var', inferredType: TestCaseItemType.BOOLEAN }),
+    ];
+    const requestBody = { zero_var: 0, empty_var: '', false_var: false };
+
+    const result = generateVariablesRowData(variables, requestBody);
+
+    expect(result[0].value).toBe(0);
+    expect(result[1].value).toBe('');
+    expect(result[2].value).toBe(false);
+  });
+
+  test('should handle object and array values in requestBody', () => {
+    const variables = [
+      createVariable({ name: 'obj_var', inferredType: TestCaseItemType.OBJECT }),
+      createVariable({ name: 'arr_var', inferredType: TestCaseItemType.ARRAY }),
+    ];
+    const objValue = { key: 'value' };
+    const arrValue = [1, 2, 3];
+    const requestBody = { obj_var: objValue, arr_var: arrValue };
+
+    const result = generateVariablesRowData(variables, requestBody);
+
+    expect(result[0].value).toEqual({ key: 'value' });
+    expect(result[1].value).toEqual([1, 2, 3]);
+  });
+
+  test('should preserve variable order from input array', () => {
+    const variables = [
+      createVariable({ name: 'c' }),
+      createVariable({ name: 'a' }),
+      createVariable({ name: 'b' }),
+    ];
+
+    const result = generateVariablesRowData(variables, {});
+
+    expect(result.map((r) => r.templateVariable)).toEqual(['c', 'a', 'b']);
+  });
+
+  test('should use null as value when requestBody value is null', () => {
+    const variables = [createVariable({ name: 'null_var' })];
+    const requestBody = { null_var: null };
+
+    const result = generateVariablesRowData(variables, requestBody);
+
+    expect(result[0].value).toBe('');
+  });
+
+  test('should use undefined fallback to empty string', () => {
+    const variables = [createVariable({ name: 'undef_var' })];
+    const requestBody = { undef_var: undefined };
+
+    const result = generateVariablesRowData(variables, requestBody);
+
+    expect(result[0].value).toBe('');
+  });
+
+  test('should ignore extra keys in requestBody not present in variables', () => {
+    const variables = [createVariable({ name: 'var1' })];
+    const requestBody = { var1: 'matched', extra: 'ignored' };
+
+    const result = generateVariablesRowData(variables, requestBody);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].templateVariable).toBe('var1');
+  });
+});
+
+describe('convertVariableIntoInitialRequest', () => {
+  test('should return empty object when variables is empty', () => {
+    const result = convertVariableIntoInitialRequest([]);
+    expect(result).toEqual({});
+  });
+
+  test('should create request with empty string for single variable', () => {
+    const variables = [createVariable({ name: 'var1' })];
+
+    const result = convertVariableIntoInitialRequest(variables);
+
+    expect(result).toEqual({ var1: '' });
+  });
+
+  test('should create request with empty strings for multiple variables', () => {
+    const variables = [
+      createVariable({ name: 'alpha' }),
+      createVariable({ name: 'beta' }),
+      createVariable({ name: 'gamma' }),
+    ];
+
+    const result = convertVariableIntoInitialRequest(variables);
+
+    expect(result).toEqual({ alpha: '', beta: '', gamma: '' });
+  });
+
+  test('should ignore defaultValue and use empty string', () => {
+    const variables = [
+      createVariable({ name: 'with_default', defaultValue: 'some-default' }),
+      createVariable({ name: 'with_number_default', defaultValue: 42 }),
+      createVariable({ name: 'with_object_default', defaultValue: { key: 'val' } }),
+    ];
+
+    const result = convertVariableIntoInitialRequest(variables);
+
+    expect(result).toEqual({
+      with_default: '',
+      with_number_default: '',
+      with_object_default: '',
+    });
+  });
+
+  test('should handle variables of all inferred types', () => {
+    const variables = [
+      createVariable({ name: 'str', inferredType: TestCaseItemType.STRING }),
+      createVariable({ name: 'num', inferredType: TestCaseItemType.NUMBER }),
+      createVariable({ name: 'bool', inferredType: TestCaseItemType.BOOLEAN }),
+      createVariable({ name: 'obj', inferredType: TestCaseItemType.OBJECT }),
+      createVariable({ name: 'arr', inferredType: TestCaseItemType.ARRAY }),
+    ];
+
+    const result = convertVariableIntoInitialRequest(variables);
+
+    expect(Object.keys(result)).toEqual(['str', 'num', 'bool', 'obj', 'arr']);
+    Object.values(result).forEach((value) => {
+      expect(value).toBe('');
+    });
+  });
+
+  test('should preserve variable order as object keys', () => {
+    const variables = [
+      createVariable({ name: 'c' }),
+      createVariable({ name: 'a' }),
+      createVariable({ name: 'b' }),
+    ];
+
+    const result = convertVariableIntoInitialRequest(variables);
+
+    expect(Object.keys(result)).toEqual(['c', 'a', 'b']);
+  });
+
+  test('should overwrite duplicate variable names with empty string', () => {
+    const variables = [
+      createVariable({ name: 'dup' }),
+      createVariable({ name: 'dup' }),
+    ];
+
+    const result = convertVariableIntoInitialRequest(variables);
+
+    expect(result).toEqual({ dup: '' });
+    expect(Object.keys(result)).toHaveLength(1);
   });
 });

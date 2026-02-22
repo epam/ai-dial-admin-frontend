@@ -1,0 +1,265 @@
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
+import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { TemplateVariable } from '@/src/models/evaluation/test-suite';
+import { TestCaseItemType } from '@/src/types/evaluation';
+import TryOut from '../components/TryOut';
+
+const mockGetTemplateVariables = vi.fn();
+
+vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
+  getTemplateVariables: (...args: unknown[]) => mockGetTemplateVariables(...args),
+}));
+
+const mockCloseSidebar = vi.fn();
+const mockToggleSidebar = vi.fn();
+const mockToggleIsMenuClosed = vi.fn();
+
+let mockSidebar = {
+  show: false,
+  content: null,
+  isMenuClosed: false,
+  closeSidebar: mockCloseSidebar,
+  showSidebar: vi.fn(),
+  toggleIsMenuClosed: mockToggleIsMenuClosed,
+};
+
+vi.mock('@/src/context/AppContext', () => ({
+  useAppContext: () => ({
+    sidebar: mockSidebar,
+    toggleSidebar: mockToggleSidebar,
+  }),
+}));
+
+vi.mock('@/src/components/EntityTabs/JsonEditor/JsonEditor', () => ({
+  default: ({ entity }: { entity: unknown }) => <pre role="code">{JSON.stringify(entity)}</pre>,
+}));
+
+vi.mock('../components/Variables', () => ({
+  default: ({ variables }: any) => (
+    <div role="table">
+      {variables.map((v: TemplateVariable) => (
+        <span key={v.name}>{v.name}</span>
+      ))}
+    </div>
+  ),
+}));
+
+vi.mock('../components/CollapsibleSection', () => ({
+  default: ({ title, children }: any) => (
+    <section aria-label={title}>
+      <h3>{title}</h3>
+      {children}
+    </section>
+  ),
+}));
+
+vi.mock('@/src/components/Common/Divider/Divider', () => ({
+  default: () => <hr role="separator" />,
+}));
+
+vi.mock('@epam/ai-dial-ui-kit', () => ({
+  DialLoader: () => <div role="progressbar" aria-label="loading" />,
+  DialPrimaryButton: ({ label, onClick, disabled }: any) => (
+    <button role="button" onClick={onClick} disabled={disabled}>
+      {label}
+    </button>
+  ),
+  DialCloseButton: ({ onClose }: any) => (
+    <button role="button" aria-label="close" onClick={onClose}>
+      Close
+    </button>
+  ),
+}));
+
+const createVariable = (overrides?: Partial<TemplateVariable>): TemplateVariable => ({
+  name: 'var1',
+  inferredType: TestCaseItemType.STRING,
+  defaultValue: null,
+  hasDefault: false,
+  sources: ['body'],
+  ...overrides,
+});
+
+describe('TryOut', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockGetTemplateVariables.mockResolvedValue([]);
+    mockSidebar = {
+      show: false,
+      content: null,
+      isMenuClosed: false,
+      closeSidebar: mockCloseSidebar,
+      showSidebar: vi.fn(),
+      toggleIsMenuClosed: mockToggleIsMenuClosed,
+    };
+  });
+
+  test('shows loader while fetching template variables', () => {
+    mockGetTemplateVariables.mockReturnValue(new Promise(() => {}));
+
+    render(<TryOut testSuiteId="suite-1" />);
+
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+  });
+
+  test('renders heading and buttons after loading', async () => {
+    mockGetTemplateVariables.mockResolvedValue([]);
+
+    render(<TryOut testSuiteId="suite-1" />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(ButtonsI18nKey.TryOut);
+    });
+
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.SendRequest })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'close' })).toBeInTheDocument();
+  });
+
+  test('calls getTemplateVariables with testSuiteId on mount', () => {
+    mockGetTemplateVariables.mockResolvedValue([]);
+
+    render(<TryOut testSuiteId="my-suite" />);
+
+    expect(mockGetTemplateVariables).toHaveBeenCalledWith('my-suite');
+    expect(mockGetTemplateVariables).toHaveBeenCalledTimes(1);
+  });
+
+  test('displays "NoVariables" message when no variables returned', async () => {
+    mockGetTemplateVariables.mockResolvedValue([]);
+
+    render(<TryOut testSuiteId="suite-1" />);
+
+    await waitFor(() => {
+      expect(screen.getByText(BasicI18nKey.NoVariables)).toBeInTheDocument();
+    });
+  });
+
+  test('renders Variables component when variables exist', async () => {
+    const variables = [createVariable({ name: 'myVar' }), createVariable({ name: 'otherVar' })];
+    mockGetTemplateVariables.mockResolvedValue(variables);
+
+    render(<TryOut testSuiteId="suite-1" />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('table')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('myVar')).toBeInTheDocument();
+    expect(screen.getByText('otherVar')).toBeInTheDocument();
+  });
+
+  test('renders three collapsible sections: Variables, Request, Response', async () => {
+    mockGetTemplateVariables.mockResolvedValue([]);
+
+    render(<TryOut testSuiteId="suite-1" />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('region', { name: BasicI18nKey.Variables })).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole('region', { name: BasicI18nKey.Request })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: BasicI18nKey.Response })).toBeInTheDocument();
+  });
+
+  test('renders JsonEditors for request and response sections', async () => {
+    mockGetTemplateVariables.mockResolvedValue([]);
+
+    render(<TryOut testSuiteId="suite-1" />);
+
+    await waitFor(() => {
+      const editors = screen.getAllByRole('code');
+      expect(editors).toHaveLength(2);
+    });
+  });
+
+  test('renders divider between Variables and Request sections', async () => {
+    mockGetTemplateVariables.mockResolvedValue([]);
+
+    render(<TryOut testSuiteId="suite-1" />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('separator')).toBeInTheDocument();
+    });
+  });
+
+  test('close button calls closeSidebar when menu is not closed', async () => {
+    mockSidebar.isMenuClosed = false;
+    mockGetTemplateVariables.mockResolvedValue([]);
+
+    render(<TryOut testSuiteId="suite-1" />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'close' })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'close' }));
+
+    expect(mockCloseSidebar).toHaveBeenCalledTimes(1);
+    expect(mockToggleSidebar).not.toHaveBeenCalled();
+  });
+
+  test('close button toggles sidebar and menu when isMenuClosed is true', async () => {
+    mockSidebar.isMenuClosed = true;
+    mockGetTemplateVariables.mockResolvedValue([]);
+
+    render(<TryOut testSuiteId="suite-1" />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'close' })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'close' }));
+
+    expect(mockToggleSidebar).toHaveBeenCalledTimes(1);
+    expect(mockToggleIsMenuClosed).toHaveBeenCalledTimes(1);
+    expect(mockCloseSidebar).toHaveBeenCalledTimes(1);
+  });
+
+  test('send request button is not disabled initially', async () => {
+    mockGetTemplateVariables.mockResolvedValue([]);
+
+    render(<TryOut testSuiteId="suite-1" />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: ButtonsI18nKey.SendRequest })).not.toBeDisabled();
+    });
+  });
+
+  test('request body initializes with empty string values for each variable', async () => {
+    const variables = [createVariable({ name: 'alpha' }), createVariable({ name: 'beta' })];
+    mockGetTemplateVariables.mockResolvedValue(variables);
+
+    render(<TryOut testSuiteId="suite-1" />);
+
+    await waitFor(() => {
+      const editors = screen.getAllByRole('code');
+      const requestEditor = editors[0];
+      expect(requestEditor).toHaveTextContent('"alpha":""');
+      expect(requestEditor).toHaveTextContent('"beta":""');
+    });
+  });
+
+  test('response body is initially empty object', async () => {
+    mockGetTemplateVariables.mockResolvedValue([]);
+
+    render(<TryOut testSuiteId="suite-1" />);
+
+    await waitFor(() => {
+      const editors = screen.getAllByRole('code');
+      const responseEditor = editors[1];
+      expect(responseEditor).toHaveTextContent('{}');
+    });
+  });
+
+  test('handles null response from getTemplateVariables', async () => {
+    mockGetTemplateVariables.mockResolvedValue(null);
+
+    render(<TryOut testSuiteId="suite-1" />);
+
+    await waitFor(() => {
+      expect(screen.getByText(BasicI18nKey.NoVariables)).toBeInTheDocument();
+    });
+  });
+});
