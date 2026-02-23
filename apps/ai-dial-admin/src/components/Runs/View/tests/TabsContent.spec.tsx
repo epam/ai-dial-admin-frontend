@@ -32,5 +32,4 @@ describe('Runs View :: TabsContent', () => {
     expect(screen.getByRole('region', { name: 'extraction-result-tab' })).toHaveTextContent('run-id:run-1');
     expect(screen.queryByRole('region', { name: 'properties-tab-content' })).not.toBeInTheDocument();
   });
-  l;
 });
