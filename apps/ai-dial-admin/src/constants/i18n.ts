@@ -897,6 +897,7 @@ export enum ErrorI18nKey {
   HFModelName = 'Error.HFModelName',
   ContainSpace = 'Error.ContainSpace',
   SpecialChars = 'Error.SpecialChars',
+  ContainerId = 'Error.ContainerId',
   BaseDirectoryError = 'Error.BaseDirectoryError',
   LimitRequestError = 'Error.LimitRequestError',
   ReplicasError = 'Error.ReplicasError',

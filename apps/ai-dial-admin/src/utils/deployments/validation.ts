@@ -419,3 +419,20 @@ export const getAdvancedTimingsError = (
 
   return null;
 };
+
+export const getImageNameVersionError = (
+  name?: string,
+  names?: string[],
+  isUniqueNameError?: boolean,
+  t?: (key: string, options?: Record<string, string | number>) => string,
+) => {
+  const isIncludesName = name && names?.includes(name);
+  if (isIncludesName || isUniqueNameError) {
+    return {
+      type: ErrorType.EXISTING,
+      text: t ? t(ErrorI18nKey.NameExists) : '',
+    };
+  }
+
+  return getImageNameError(name, t);
+};
