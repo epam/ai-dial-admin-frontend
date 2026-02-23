@@ -1373,6 +1373,7 @@ export default {
     GlobalWhitelist: 'Global domain whitelist',
     SpecificWhitelist: '{type} domain whitelist',
     GlobalFirewall: 'Global Firewall',
+    AllowedDomains: 'Allowed domains',
     WhitelistPolicyLabel: 'Domain access policy',
     WhitelistPolicyAll: 'All domains',
     WhitelistPolicyAllCaption: 'Allows access to all domains. Reduces security.',
