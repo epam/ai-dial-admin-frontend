@@ -20,7 +20,12 @@ const getInputColumns = (input: Record<string, unknown>) => {
     return {
       field: `testCaseData.${part1}.${part2}`,
       headerName: part2,
-    };
+      valueGetter: (params) => {
+        const value = params.data?.testCaseData?.[`${part1}.${part2}`];
+        if (typeof value === 'object') return JSON.stringify(value);
+        return value ?? '—';
+      },
+    } as ColDef;
   });
 };
 
@@ -77,7 +82,6 @@ export function getResultColumns(results: ExtractionResult[]) {
   ];
 
   const input = results[0]?.testCaseData || {};
-
   return [
     ...staticColumns,
 
