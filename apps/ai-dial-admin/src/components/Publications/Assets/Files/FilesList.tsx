@@ -1,5 +1,5 @@
 import { GridApi, IRowNode } from 'ag-grid-community';
-import { FC, useCallback } from 'react';
+import { FC, useCallback, useMemo } from 'react';
 
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { FILE_DOWNLOAD, FILE_PREVIEW, PREVIEW_EXTENSIONS } from '@/src/constants/file';
@@ -27,10 +27,13 @@ interface Props {
   files: PublicationFile[] | string[];
   action: ActionType;
   onChange?: (files: PublicationFile[]) => void;
+  addedFiles?: File[];
+  onRemoveAdded?: (index: number) => void;
 }
 
-const FilesList: FC<Props> = ({ files, action, onChange }) => {
+const FilesList: FC<Props> = ({ files, action, onChange, addedFiles, onRemoveAdded }) => {
   const t = useI18n();
+
   const download = useCallback((file?: FileRowData) => {
     window.open(`/${FILE_DOWNLOAD}/?path=${encodeURIComponent(file?.path || '')}`, '_blank');
   }, []);
@@ -44,17 +47,23 @@ const FilesList: FC<Props> = ({ files, action, onChange }) => {
   }, []);
 
   const remove = useCallback(
-    (_?: FileRowData, index?: number) => {
-      if (index != null) {
-        files?.splice(index, 1);
+    (data?: FileRowData, index?: number) => {
+      if (data?.path !== '') {
+        if (index != null) {
+          files?.splice(index, 1);
+        }
+        onChange?.(files as PublicationFile[]);
+      } else {
+        if (index != null) {
+          onRemoveAdded?.(index - files.length);
+        }
       }
-      onChange?.(files as PublicationFile[]);
     },
-    [files, onChange],
+    [files, onChange, onRemoveAdded],
   );
 
   const isPreviewActionHidden = (_: GridApi, node: IRowNode) => {
-    return !PREVIEW_EXTENSIONS.includes(node.data.extension);
+    return !PREVIEW_EXTENSIONS.includes(node.data.extension) || node.data.path === '';
   };
 
   const isOpenActionHidden = () => {
@@ -65,15 +74,16 @@ const FilesList: FC<Props> = ({ files, action, onChange }) => {
     return !onChange;
   };
 
-  const rowData: FileRowData[] =
-    typeof files[0] === 'string'
+  const rowData: FileRowData[] = useMemo(() => {
+    return typeof files[0] === 'string'
       ? getPublicationGridFileDataFromString(files as string[])
-      : getPublicationGridFileData(files as PublicationFile[]);
+      : getPublicationGridFileData(files as PublicationFile[], addedFiles || []);
+  }, [files, addedFiles]);
 
   const actions = [
     getPreviewOperation(preview, isPreviewActionHidden),
     getOpenInNewTabOperation(openInNewTab, isOpenActionHidden),
-    getDownloadOperation(download),
+    getDownloadOperation(download, isPreviewActionHidden),
     getRemoveOperation(remove, isRemoveActionHidden),
   ];
 
