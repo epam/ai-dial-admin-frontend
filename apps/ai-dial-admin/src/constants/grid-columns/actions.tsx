@@ -114,11 +114,15 @@ export function getMoveOperation<T>(onClick: (entity?: T) => void): ActionMenuOp
   };
 }
 
-export function getDownloadOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
+export function getDownloadOperation<T>(
+  onClick: (entity?: T) => void,
+  hidden?: (api: GridApi, node: IRowNode) => boolean,
+): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconDownload {...BASE_BUTTON_ICON_PROPS} />,
     id: ActionMenuOperation.Download,
     onClick,
+    hidden,
   };
 }
 
