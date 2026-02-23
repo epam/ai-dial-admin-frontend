@@ -31,6 +31,26 @@ const mockRouter = {
   prefetch: vi.fn(),
 };
 
+const mockCloseSidebar = vi.fn();
+const mockToggleSidebar = vi.fn();
+const mockToggleIsMenuClosed = vi.fn();
+
+let mockSidebar = {
+  show: false,
+  content: null,
+  isMenuClosed: false,
+  closeSidebar: mockCloseSidebar,
+  showSidebar: vi.fn(),
+  toggleIsMenuClosed: mockToggleIsMenuClosed,
+};
+
+vi.mock('@/src/context/AppContext', () => ({
+  useAppContext: () => ({
+    sidebar: mockSidebar,
+    toggleSidebar: mockToggleSidebar,
+  }),
+}));
+
 vi.mock('next/navigation', () => ({
   useRouter: () => mockRouter,
   usePathname: vi.fn(() => '/test-suites/123'),

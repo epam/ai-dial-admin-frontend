@@ -113,3 +113,8 @@ export interface InputBindingRowData extends InputBinding {
   value?: unknown;
   defaultValue?: unknown;
 }
+
+export interface TryOutResponse {
+  resolvedRequest: Record<string, unknown>;
+  response: Record<string, unknown>;
+}
