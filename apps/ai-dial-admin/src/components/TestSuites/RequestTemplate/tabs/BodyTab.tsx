@@ -3,7 +3,6 @@
 import { Dispatch, FC, SetStateAction, useCallback } from 'react';
 
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
-
 import { TestSuiteRequestTemplate } from '@/src/models/evaluation/test-suite';
 
 interface Props {

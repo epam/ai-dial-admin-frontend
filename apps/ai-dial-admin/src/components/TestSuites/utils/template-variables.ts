@@ -29,3 +29,27 @@ export const generateInputBindingsRowData = (
     };
   });
 };
+
+export const generateVariablesRowData = (
+  variables: TemplateVariable[],
+  requestBody: Record<string, unknown>,
+): InputBindingRowData[] => {
+  return variables.map((variable) => {
+    const binding = requestBody[variable.name];
+
+    return {
+      templateVariable: variable.name,
+      inferredType: variable.inferredType,
+      value: binding ?? '',
+      defaultValue: variable.defaultValue,
+    };
+  });
+};
+
+export const convertVariableIntoInitialRequest = (variables: TemplateVariable[]): Record<string, unknown> => {
+  const requestVariables: Record<string, unknown> = {};
+  variables.forEach((variable) => {
+    requestVariables[variable.name] = '';
+  });
+  return requestVariables;
+};
