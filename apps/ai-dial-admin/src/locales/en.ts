@@ -545,6 +545,8 @@ export default {
     Permissions: 'Permissions',
     Body: 'Body',
     Headers: 'Headers',
+    ExtractionResult: 'Extraction result',
+    Summary: 'Summary',
   },
   ForwardToken: {
     ForwardTokenModalTitle: 'Forward Auth Token',

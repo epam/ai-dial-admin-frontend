@@ -119,3 +119,7 @@ export const testSuitesApi = new TestSuitesApi({
 export const metricsApi = new MetricsApi({
   host: process.env.DIAL_EVAL_API_URL,
 });
+
+export const runsApi = new RunsApi({
+  host: process.env.DIAL_EVAL_API_URL,
+});

@@ -30,6 +30,7 @@ import {
   getPublicationTabs,
   getRoleTabs,
   getRouteTabs,
+  getRunTabs,
   getSystemPropertiesTabs,
   getTabsForAsset,
   getTestSuiteRequestTemplateTabs,
@@ -41,6 +42,7 @@ import {
   installationLogTab,
   interceptorsTab,
   keysTab,
+  extractionResultTab,
   modelsTab,
   parameterSchemaTab,
   parametersTab,
@@ -50,6 +52,7 @@ import {
   resourcesTab,
   rolesTab,
   runsTab,
+  summaryTab,
   testCasesTab,
   toolsTab,
   tracesTab,
@@ -218,6 +221,10 @@ describe('Entities :: tabs', () => {
 
   test('returns correct tabs for test suite', () => {
     expect(getTestSuiteTabs(t)).toEqual([propertiesTab(t), testCasesTab(t), runsTab(t)]);
+  });
+
+  test('returns correct tabs for run', () => {
+    expect(getRunTabs(t)).toEqual([summaryTab(t), extractionResultTab(t)]);
   });
 
   test('returns correct tabs for model containers', () => {

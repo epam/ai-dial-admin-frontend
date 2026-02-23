@@ -11,7 +11,7 @@ export interface Run {
   startedAt?: number;
   completedAt?: number;
   errorMessage?: string;
-  errorDetails: {
+  errorDetails?: {
     code?: string;
     category?: string;
     message?: string;

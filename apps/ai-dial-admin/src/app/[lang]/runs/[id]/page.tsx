@@ -1,9 +1,10 @@
 import { notFound } from 'next/navigation';
 
 import RunView from '@/src/components/Runs/View/View';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { Run } from '@/src/models/evaluation/run';
 import { errorObjLog } from '@/src/server/logger';
-import { getRun } from '../actions';
+import { getRun, removeRun } from '../actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,5 +22,9 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     notFound();
   }
 
-  return <RunView run={run} />;
+  return (
+    <SaveValidationContextProvider>
+      <RunView run={run} onRemove={removeRun} />
+    </SaveValidationContextProvider>
+  );
 }
