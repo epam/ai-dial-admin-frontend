@@ -136,6 +136,7 @@ export enum EntitiesI18nKey {
   NoInterceptors = 'Entities.NoInterceptors',
   NoTestSuites = 'Entities.NoTestSuites',
   NoRuns = 'Entities.NoRuns',
+  NoResults = 'Entities.NoResults',
   NoMetrics = 'Entities.NoMetrics',
   NoLocalInterceptors = 'Entities.NoLocalInterceptors',
   NoGlobalInterceptors = 'Entities.NoGlobalInterceptors',

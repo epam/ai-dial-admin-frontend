@@ -151,6 +151,7 @@ export default {
     NoTestSuites: 'No Test Suites',
     NoRuns: 'No Runs',
     NoMetrics: 'No Metrics',
+    NoResults: 'No Results',
     NoLocalInterceptors: 'No Local Interceptors',
     NoGlobalInterceptors: 'No Global Interceptors',
     NoRunnerInterceptors: 'No Runner Interceptors',
@@ -1444,5 +1445,6 @@ export default {
   Runs: {
     StartTime: 'Start time',
     EndTime: 'End time',
+    TestSuite: 'Test suite',
   },
 } as const;

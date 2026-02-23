@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { runsApi } from '@/src/app/api/api';
+import { FilterDto } from '@/src/models/request';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { getRun, getRuns, removeRun } from './actions';
+import { getRun, getRunResults, getRuns, removeRun } from './actions';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -53,5 +54,20 @@ describe('Runs :: server actions', () => {
     expect(getUserToken).toHaveBeenCalled();
     expect(runsApi.removeRun).toHaveBeenCalledWith('run-id', TOKEN_MOCK);
     expect(result).toEqual(RESPONSE_MOCK);
+  });
+
+  test('Should call getRunResults action and return extraction results', async () => {
+    const filters: FilterDto[] = [
+      { column: 'testSuite', value: 'suite-1' },
+      { column: 'status', value: 'PASSED' },
+    ];
+    const extractionResults = [{ id: 'result-1' }];
+    (runsApi.getRunResults as any).mockResolvedValue(extractionResults);
+
+    const result = await getRunResults(filters);
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(runsApi.getRunResults).toHaveBeenCalledWith(TOKEN_MOCK, filters);
+    expect(result).toEqual(extractionResults);
   });
 });
