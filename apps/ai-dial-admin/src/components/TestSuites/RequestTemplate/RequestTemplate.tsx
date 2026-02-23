@@ -38,7 +38,7 @@ const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
       e.stopPropagation();
       sidebar.showSidebar(
         <SaveValidationContextProvider>
-          <TryOut testSuiteId={testSuite.id} />
+          <TryOut testSuiteId={testSuite.id || ''} />
         </SaveValidationContextProvider>,
         'w-[50%] max-w-[800px]',
       );

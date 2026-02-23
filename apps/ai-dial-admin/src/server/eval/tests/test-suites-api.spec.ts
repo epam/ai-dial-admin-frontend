@@ -10,6 +10,7 @@ import {
   TEST_SUITES_URL,
   TEST_SUITE_RUN_URL,
   TEST_SUITE_TEMPLATE_VARIABLES_URL,
+  TEST_SUITE_TRY_OUT_URL,
   TEST_SUITE_URL,
   TestSuitesApi,
 } from '../test-suites-api';
@@ -201,6 +202,15 @@ describe('Server :: TestSuiteApi', () => {
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${TEST_SUITE_TEMPLATE_VARIABLES_URL('id')}`,
       expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
+  test('Should call tryOutSuite', async () => {
+    fetch.mockResponseOnce(JSON.stringify(mockTestSuite));
+    await instance.tryOutSuite('id', { variables: {} }, TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_SUITE_TRY_OUT_URL('id')}`,
+      expect.objectContaining({ method: 'POST' }),
     );
   });
 });

@@ -3,7 +3,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { DialCloseButton, DialLoader, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 
-import { getTemplateVariables } from '@/src/app/[lang]/test-suites/actions';
+import { getTemplateVariables, tryOutSuite } from '@/src/app/[lang]/test-suites/actions';
 import Divider from '@/src/components/Common/Divider/Divider';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { convertVariableIntoInitialRequest } from '@/src/components/TestSuites/utils/template-variables';
@@ -15,7 +15,7 @@ import CollapsibleSection from './CollapsibleSection';
 import Variables from './Variables';
 
 interface Props {
-  testSuiteId?: string;
+  testSuiteId: string;
 }
 
 const TryOut: FC<Props> = ({ testSuiteId }) => {
@@ -24,6 +24,7 @@ const TryOut: FC<Props> = ({ testSuiteId }) => {
 
   const [requestBody, setRequestBody] = useState<Record<string, unknown>>({});
   const [response, setResponse] = useState<Record<string, unknown>>({});
+  const [resolvedRequest, setResolvedRequest] = useState<Record<string, unknown>>({});
   const [isRequestSend, setIsRequestSend] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -31,13 +32,17 @@ const TryOut: FC<Props> = ({ testSuiteId }) => {
 
   const sendRequest = useCallback(() => {
     setIsRequestSend(true);
-    // ().then((res) => {
-    //   setResponse(res.success ? res.response : { error: res.errorMessage });
-    //   setIsRequestSend(false);
-    // });
-    setResponse({});
-    setIsRequestSend(false);
-  }, []);
+    tryOutSuite(testSuiteId, requestBody).then((res) => {
+      if (res?.success) {
+        setResolvedRequest(res.response?.resolvedRequest || {});
+        setResponse(res.response?.response || {});
+      } else {
+        setResolvedRequest(requestBody || {});
+        setResponse({ error: res?.errorMessage || 'Unknown error' });
+      }
+      setIsRequestSend(false);
+    });
+  }, [testSuiteId, requestBody]);
 
   const onChangeRequestBody = useCallback((body: Record<string, unknown>) => {
     setRequestBody(body);
@@ -91,7 +96,7 @@ const TryOut: FC<Props> = ({ testSuiteId }) => {
               {isRequestSend ? (
                 <DialLoader />
               ) : (
-                <JsonEditor entity={requestBody} options={{ stickyScroll: { enabled: false } }} readonly={true} />
+                <JsonEditor entity={resolvedRequest} options={{ stickyScroll: { enabled: false } }} readonly={true} />
               )}
             </CollapsibleSection>
             <CollapsibleSection title={t(BasicI18nKey.Response)} growOnOpen>
