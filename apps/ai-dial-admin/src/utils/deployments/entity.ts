@@ -11,6 +11,9 @@ import { ENTITY_TRANSPORT } from '@/src/constants/deployments/containers';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { IMAGE_TYPE } from '@/src/types/deployments/images';
 import { DialAdapter } from '@/src/models/dial/adapter';
+import { ALLOW_ALL_DOMAINS } from '@/src/components/Deployments/Common/Whitelists/Whitelists';
+import { Image } from '@/src/models/deployments/images';
+import { WHITELIST_POLICY } from '@/src/types/deployments/entity';
 
 export const getEntityRoute = (route: ApplicationRoute) => {
   if (route === ApplicationRoute.McpContainers) {
@@ -151,4 +154,8 @@ export const splitFolderId = (folderId: string) => {
   const base = match ? match[0] : folderId + '/';
   const path = match ? folderId.slice(base.length) : '';
   return { base, path };
+};
+
+export const getCurrentPolicy = (entity: Image | Container) => {
+  return entity.allowedDomains?.includes(ALLOW_ALL_DOMAINS) ? WHITELIST_POLICY.ALL : WHITELIST_POLICY.CUSTOM;
 };

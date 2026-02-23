@@ -394,7 +394,6 @@ export const USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
   { field: 'user_hash', headerName: 'User', hide: false },
   { field: 'user_title', headerName: 'User Title', hide: true },
   { field: 'language', headerName: 'Language', hide: true },
-  { field: 'duration', headerName: 'Duration', hide: true },
   { field: 'response_id', headerName: 'Response ID', hide: true },
   { field: 'chat_id', headerName: 'Conversation ID', hide: true },
   { field: 'core_span_id', headerName: 'Core span ID', hide: true },

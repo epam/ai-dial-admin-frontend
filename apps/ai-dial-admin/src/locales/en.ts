@@ -77,6 +77,7 @@ export default {
     URL: 'URL',
     Request: 'Request',
     Response: 'Response',
+    Variables: 'Variables',
   },
   Menu: {
     Entities: 'Entities',
@@ -432,6 +433,7 @@ export default {
     Confirm: 'Confirm',
     GlobalFirewall: 'Global firewall',
     HFRegistry: 'Select from registry',
+    TryOut: 'Try out',
   },
   Compare: {
     CompareChanges: 'Compare changes',
@@ -1251,7 +1253,6 @@ export default {
     SuccessLoginDescription: 'List of available tools is in the Tools Overview tab',
     SuccessLogout: 'Toolset logged out successfully',
     SuccessLogoutDescription: 'Access to the list of available tools has been revoked. Log in to restore it.',
-    TryOut: 'Try out',
     ManageTools: 'Manage tools',
     AvailableForYou: 'Available for you',
     OtherInAToolset: 'Others in a toolset',
@@ -1372,6 +1373,7 @@ export default {
     GlobalWhitelist: 'Global domain whitelist',
     SpecificWhitelist: '{type} domain whitelist',
     GlobalFirewall: 'Global Firewall',
+    AllowedDomains: 'Allowed domains',
     WhitelistPolicyLabel: 'Domain access policy',
     WhitelistPolicyAll: 'All domains',
     WhitelistPolicyAllCaption: 'Allows access to all domains. Reduces security.',
