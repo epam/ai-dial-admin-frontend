@@ -2,6 +2,7 @@
 import { FC, PropsWithChildren, useCallback, useState } from 'react';
 
 import { IconChevronDown } from '@tabler/icons-react';
+import classNames from 'classnames';
 
 interface Props {
   title: string;
@@ -20,13 +21,13 @@ const CollapsibleSection: FC<PropsWithChildren<Props>> = ({
   const toggle = useCallback(() => setIsOpen((prev) => !prev), []);
 
   return (
-    <div className={`${isOpen && growOnOpen ? 'flex-1' : ''} min-h-0 flex flex-col`}>
+    <div className={classNames('min-h-0 flex flex-col', isOpen && growOnOpen && 'flex-1')}>
       <h3 className="w-full mb-4 flex items-center gap-x-2 cursor-pointer select-none" onClick={toggle}>
-        <IconChevronDown className={`transition-transform ${isOpen ? '' : '-rotate-90'}`} size={16} />
+        <IconChevronDown className={classNames('transition-transform', !isOpen && '-rotate-90')} size={16} />
         {title}
       </h3>
       {isOpen && (
-        <div className={`${growOnOpen ? 'flex-1' : ''} min-h-0 overflow-y-auto flex flex-col`}>{children}</div>
+        <div className={classNames('min-h-0 overflow-y-auto flex flex-col', growOnOpen && 'flex-1')}>{children}</div>
       )}
     </div>
   );

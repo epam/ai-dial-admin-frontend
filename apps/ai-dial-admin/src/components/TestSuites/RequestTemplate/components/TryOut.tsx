@@ -73,7 +73,7 @@ const TryOut: FC<Props> = ({ testSuiteId }) => {
       ) : (
         <>
           <div className="flex items-center justify-between">
-            <h1 className="text-primary overflow-ellipsis">{t(ButtonsI18nKey.TryOut)}</h1>
+            <h1>{t(ButtonsI18nKey.TryOut)}</h1>
             <div className="flex flex-row items-center gap-x-4">
               <DialPrimaryButton
                 label={t(ButtonsI18nKey.SendRequest)}
