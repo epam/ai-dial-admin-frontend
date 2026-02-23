@@ -7,7 +7,7 @@ import { GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } fro
 import { getRuns } from '@/src/app/[lang]/test-suites/actions';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
-import { TEST_SUITE_RUNS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { RUNS_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { TestSuite, TestSuiteRun } from '@/src/models/evaluation/test-suite';
@@ -112,7 +112,7 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
 
   return (
     <GridView
-      columnDefs={TEST_SUITE_RUNS_COLUMNS}
+      columnDefs={RUNS_COLUMN}
       additionalGridOptions={gridOptions}
       emptyDataProps={{ title: t(EntitiesI18nKey.NoRuns) }}
       onGridReady={onGridReady}
