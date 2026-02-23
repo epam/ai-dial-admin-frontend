@@ -195,7 +195,6 @@ export enum EntitiesI18nKey {
   NewEntity = 'Entities.NewEntity',
   DuplicationType = 'Entities.DuplicationType',
   ToolsetEndpoint = 'Entities.ToolsetEndpoint',
-  AdapterEndpoint = 'Entities.AdapterEndpoint',
   Interceptor = 'Entities.Interceptor',
   MCP = 'Entities.MCP',
   Model = 'Entities.Model',
