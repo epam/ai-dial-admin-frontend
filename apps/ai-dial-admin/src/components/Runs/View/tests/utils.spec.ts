@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { FilterOperatorDto } from '@/src/types/request';
-import { RESULT_FILTERS, getCellClass, getResultColumns } from './utils';
+import { RESULT_FILTERS, getCellClass, getResultColumns } from '../utils';
 
 describe('Runs View :: RESULT_FILTERS', () => {
   test('Should return run and suite filters for provided run', () => {
