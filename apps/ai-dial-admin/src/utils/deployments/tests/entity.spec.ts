@@ -1,6 +1,7 @@
 import { describe, expect, test, vi } from 'vitest';
 import {
   getAssetTemplate,
+  getCurrentPolicy,
   getDeploymentEntityKey,
   getEntityId,
   getEntityName,
@@ -20,6 +21,8 @@ import { CONTAINER_TRANSPORT } from '@/src/types/deployments/containers';
 import { ENTITY_TRANSPORT } from '@/src/constants/deployments/containers';
 import { DialModelType } from '@/src/models/dial/model';
 import { IMAGE_TYPE } from '@/src/types/deployments/images';
+import { Image } from '@/src/models/deployments/images';
+import { WHITELIST_POLICY } from '@/src/types/deployments/entity';
 
 vi.mock('@/src/utils/models/model-endpoint');
 
@@ -215,6 +218,16 @@ describe('entity utils', () => {
 
       expect(result).toBe(`Translated: ${ImagesI18nKey.ImageWhitelistType}`);
       expect(mockT).toHaveBeenCalledWith(ImagesI18nKey.ImageWhitelistType);
+    });
+  });
+
+  describe('getCurrentPolicy', () => {
+    test('should co ALL when "*" present', () => {
+      expect(getCurrentPolicy({ allowedDomains: ['*'] } as Image)).toBe(WHITELIST_POLICY.ALL);
+    });
+
+    test('should co CUSTOM when "*" not present', () => {
+      expect(getCurrentPolicy({ allowedDomains: ['asd.com'] } as Image)).toBe(WHITELIST_POLICY.CUSTOM);
     });
   });
 });

@@ -1,4 +1,6 @@
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+'use client';
+
+import { FC, useCallback, useEffect, useState } from 'react';
 import {
   AlertVariant,
   DialAlert,
@@ -17,6 +19,7 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { getGlobalWhitelist } from '@/src/app/actions/deployments';
 import { getWhitelistDomainError } from '@/src/utils/deployments/validation';
 import { getDeploymentEntityKey, getTranslatedDeploymentType } from '@/src/utils/deployments/entity';
+import { getCurrentPolicy } from '@/src/utils/deployments/entity';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 
@@ -35,12 +38,8 @@ const Whitelists: FC<Props> = ({ entity, setEntity, route, disabled }) => {
   const t = useI18n();
   const { dispatch, resetCounter } = useSaveValidationContext();
 
-  const currentPolicy = useMemo(() => {
-    return entity.allowedDomains?.includes(ALLOW_ALL_DOMAINS) ? WHITELIST_POLICY.ALL : WHITELIST_POLICY.CUSTOM;
-  }, [entity]);
-
+  const [currentPolicy, setCurrentPolicy] = useState<WHITELIST_POLICY>(getCurrentPolicy(entity));
   const [globalWhitelist, setGlobalWhitelist] = useState<string[]>([]);
-  const [selectedPolicy, setSelectedPolicy] = useState(currentPolicy);
 
   const policyOptions: RadioButtonWithContent[] = [
     {
@@ -66,6 +65,10 @@ const Whitelists: FC<Props> = ({ entity, setEntity, route, disabled }) => {
   );
 
   useEffect(() => {
+    setCurrentPolicy(getCurrentPolicy(entity));
+  }, [entity]);
+
+  useEffect(() => {
     getGlobalWhitelist().then(({ response, success }) => {
       if (success) {
         setGlobalWhitelist(response as string[]);
@@ -74,7 +77,7 @@ const Whitelists: FC<Props> = ({ entity, setEntity, route, disabled }) => {
   }, []);
 
   useEffect(() => {
-    if (resetCounter || entity.allowedDomains !== null) {
+    if (resetCounter || entity.allowedDomains != null) {
       entity.allowedDomains?.forEach((item, index) => {
         dispatch({
           type: ValidationActionType.SetField,
@@ -103,7 +106,6 @@ const Whitelists: FC<Props> = ({ entity, setEntity, route, disabled }) => {
         ...entity,
         allowedDomains: list,
       });
-      setSelectedPolicy(policy);
     },
     [entity, setEntity],
   );
@@ -115,13 +117,13 @@ const Whitelists: FC<Props> = ({ entity, setEntity, route, disabled }) => {
           elementId={'policy'}
           fieldTitle={t(DeploymentsI18nKey.WhitelistPolicyLabel)}
           radioButtons={policyOptions}
-          activeRadioButton={selectedPolicy}
+          activeRadioButton={currentPolicy}
           orientation={RadioGroupOrientation.Column}
           onChange={(id) => onPolicyChange(id as WHITELIST_POLICY)}
           disabled={disabled}
         />
       </div>
-      {selectedPolicy === WHITELIST_POLICY.ALL ? (
+      {currentPolicy === WHITELIST_POLICY.ALL ? (
         <DialAlert
           id={'alert'}
           message={
@@ -135,7 +137,7 @@ const Whitelists: FC<Props> = ({ entity, setEntity, route, disabled }) => {
           variant={AlertVariant.Warning}
         />
       ) : (
-        <>
+        <div className="flex flex-col ml-[34px]">
           {route === ApplicationRoute.Images && !!globalWhitelist.length && (
             <div className="flex flex-col gap-2">
               <p className="tiny text-secondary">{t(DeploymentsI18nKey.GlobalWhitelist)}</p>
@@ -152,6 +154,7 @@ const Whitelists: FC<Props> = ({ entity, setEntity, route, disabled }) => {
             </div>
           )}
           <div className="flex flex-col gap-2">
+            <p className="small-text-semi">{t(DeploymentsI18nKey.AllowedDomains)}</p>
             <p className="tiny text-secondary">
               {t(DeploymentsI18nKey.SpecificWhitelist, { type: getDeploymentEntityKey(route, t) })}
             </p>
@@ -163,7 +166,7 @@ const Whitelists: FC<Props> = ({ entity, setEntity, route, disabled }) => {
               disabled={disabled}
             />
           </div>
-        </>
+        </div>
       )}
     </div>
   );

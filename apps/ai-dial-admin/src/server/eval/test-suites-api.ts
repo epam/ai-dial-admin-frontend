@@ -1,6 +1,12 @@
 import { Token } from '@/src/models/auth';
 import { Deployment } from '@/src/models/evaluation/deployment';
-import { TemplateVariable, TestCase, TestSuite, TestSuiteRun } from '@/src/models/evaluation/test-suite';
+import {
+  TemplateVariable,
+  TestCase,
+  TestSuite,
+  TestSuiteRun,
+  TryOutResponse,
+} from '@/src/models/evaluation/test-suite';
 import { EvaluationPageData, FilterDto, SortDto } from '@/src/models/request';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { API } from '@/src/server/api';
@@ -16,6 +22,7 @@ export const TEST_CASE_URL = (id?: string, testCaseId?: string) => `${TEST_CASES
 export const DEPLOYMENTS_URL = `${API}/deployments`;
 export const TEST_SUITES_RUNS_URL = `${API}/test-suite-runs`;
 export const TEST_SUITE_TEMPLATE_VARIABLES_URL = (id: string) => `${TEST_SUITE_URL(id)}/template-variables`;
+export const TEST_SUITE_TRY_OUT_URL = (id: string) => `${TEST_SUITE_URL(id)}/try-it-out`;
 
 export class TestSuitesApi extends BaseApi {
   getTestSuites(
@@ -111,5 +118,13 @@ export class TestSuitesApi extends BaseApi {
 
   getTemplateVariables(id: string, token: Token): Promise<TemplateVariable[] | null> {
     return this.get(TEST_SUITE_TEMPLATE_VARIABLES_URL(id), token);
+  }
+
+  tryOutSuite(
+    id: string,
+    requestBody: Record<string, unknown>,
+    token: Token,
+  ): Promise<ServerActionResponse<TryOutResponse> | null> {
+    return this.postAction(TEST_SUITE_TRY_OUT_URL(id), { variables: requestBody }, token);
   }
 }

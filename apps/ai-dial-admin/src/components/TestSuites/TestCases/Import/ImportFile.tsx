@@ -64,7 +64,7 @@ const ImportFileModal: FC<Props> = ({ selectedTestSuiteId, isModalOpen, onClose,
       submitLabel={t(ButtonsI18nKey.Confirm)}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
     >
-      <div className="flex px-6 py-4 flex-col h-[800px]">
+      <div className="flex px-6 py-4 flex-col h-[600px]">
         {!testCases && !isLoading && (
           <DialLoadFileArea
             acceptTypes="text/csv"
