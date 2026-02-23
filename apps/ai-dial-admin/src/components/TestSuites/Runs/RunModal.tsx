@@ -35,18 +35,13 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
     if (!validRuns) {
       setIsLoading(true);
 
-      getTestCases(selectedTestSuite.id, 0, PAGE_SIZE, [], VALID_FILTERS).then((res) => {
-        setValidRuns(res?.totalElements || 0);
-      });
-      getTestCases(selectedTestSuite.id, 0, PAGE_SIZE, [], []).then((res) => {
-        setAllRuns(res?.totalElements || 0);
+      const validTestCases = getTestCases(selectedTestSuite.id, 0, PAGE_SIZE, [], VALID_FILTERS);
+      const allTestCases = getTestCases(selectedTestSuite.id, 0, PAGE_SIZE, [], []);
+      Promise.all([validTestCases, allTestCases]).then(([validRes, allRes]) => {
+        setAllRuns(allRes?.totalElements || 0);
+        setValidRuns(validRes?.totalElements || 0);
         setIsLoading(false);
       });
-      // Promise.all([allTestCases]).then(([validRes, allRes]) => {
-      //   setAllRuns(allRes?.totalElements || 0);
-
-      //   setIsLoading(false);
-      // });
     }
   }, [selectedTestSuite.id, validRuns]);
 
