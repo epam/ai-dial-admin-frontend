@@ -74,7 +74,10 @@ const DeleteConfirmationModal = <T extends Artefact>({
     () => (isAssetView(view) ? entity.name : entity.displayName || entity['dial:applicationTypeDisplayName']),
     [entity, view],
   );
-  const id = useMemo(() => (isAssetView(view) ? void 0 : entity.name || entity.$id), [entity.$id, entity.name, view]);
+  const id = useMemo(
+    () => (isAssetView(view) ? void 0 : entity.name || entity.$id || (entity as { id?: string }).id),
+    [entity, view],
+  );
 
   const showSuccessNotification = useCallback(
     (entityKey: string) => {
@@ -178,7 +181,7 @@ const DeleteConfirmationModal = <T extends Artefact>({
           {id && (
             <div className="text-primary dial-small flex flex-row items-center gap-x-1">
               <span className="text-secondary">{t(EntityFieldsI18nKey.id)}:</span>
-              <DialEllipsisTooltip text={entity.name || entity.$id} />
+              <DialEllipsisTooltip text={id} />
             </div>
           )}
           {name && (

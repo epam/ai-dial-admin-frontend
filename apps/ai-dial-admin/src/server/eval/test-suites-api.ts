@@ -1,18 +1,13 @@
 import { Token } from '@/src/models/auth';
 import { Deployment } from '@/src/models/evaluation/deployment';
-import {
-  TemplateVariable,
-  TestCase,
-  TestSuite,
-  TestSuiteRun,
-  TryOutResponse,
-} from '@/src/models/evaluation/test-suite';
+import { TemplateVariable, TestCase, TestSuite, TryOutResponse } from '@/src/models/evaluation/test-suite';
 import { EvaluationPageData, FilterDto, SortDto } from '@/src/models/request';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { API } from '@/src/server/api';
 import { BaseApi } from '@/src/server/base-api';
 import { getRequestFiltersStr } from '@/src/utils/request/get-request-filters';
 import { getRequestSortsStr } from '@/src/utils/request/get-request-sorts';
+import { Run } from '@/src/models/evaluation/run';
 
 export const TEST_SUITES_URL = `${API}/test-suites`;
 export const TEST_SUITE_URL = (id?: string) => `${TEST_SUITES_URL}/${id || ''}`;
@@ -44,8 +39,8 @@ export class TestSuitesApi extends BaseApi {
     sorts: SortDto[],
     filters: FilterDto[],
     token: Token,
-  ): Promise<EvaluationPageData<TestSuiteRun> | null> {
-    return this.get<EvaluationPageData<TestSuiteRun>>(
+  ): Promise<EvaluationPageData<Run> | null> {
+    return this.get<EvaluationPageData<Run>>(
       `${TEST_SUITES_RUNS_URL}?page=${page}&size=${size}&includeTotalCount=true${this.getFiltersAndSortsStr(sorts, filters)}`,
       token,
     );

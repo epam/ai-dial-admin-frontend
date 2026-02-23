@@ -22,6 +22,7 @@ import { TestSuitesApi } from '@/src/server/eval/test-suites-api';
 import { WhitelistApi } from '@/src/server/deployments/whitelist';
 import { MetricsApi } from '@/src/server/eval/metrics-api';
 import { HuggingfaceApi } from '@/src/server/deployments/huggingface';
+import { RunsApi } from '@/src/server/eval/runs-api';
 
 // Admin APIs
 export const modelsApi = new ModelsApi({
@@ -117,5 +118,9 @@ export const testSuitesApi = new TestSuitesApi({
 });
 
 export const metricsApi = new MetricsApi({
+  host: process.env.DIAL_EVAL_API_URL,
+});
+
+export const runsApi = new RunsApi({
   host: process.env.DIAL_EVAL_API_URL,
 });

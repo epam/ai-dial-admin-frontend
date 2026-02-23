@@ -8,6 +8,6 @@ export const RUN_FILTER = (testSuiteId: string): FilterDto => ({
 });
 
 export const VALID_FILTERS = [
-  { column: 'valid', operator: FilterOperatorDto.EQUALS, value: 'true' },
-  { column: 'enabled', operator: FilterOperatorDto.EQUALS, value: 'true' },
+  { column: 'isValid', operator: FilterOperatorDto.EQUALS, value: 'true' },
+  { column: 'isEnabled', operator: FilterOperatorDto.EQUALS, value: 'true' },
 ];

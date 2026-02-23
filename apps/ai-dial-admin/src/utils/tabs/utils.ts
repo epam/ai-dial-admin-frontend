@@ -43,6 +43,8 @@ export enum EntityViewTab {
   Firewall = 'Firewall',
   TestCases = 'TestCases',
   Runs = 'Runs',
+  Summary = 'Summary',
+  ExtractionResult = 'ExtractionResult',
   Trends = 'Trends',
   Permissions = 'Permissions',
   Body = 'Body',
@@ -226,6 +228,16 @@ export const runsTab = (t: (key: string) => string) => ({
   label: t(TabsI18nKey.Runs),
 });
 
+export const summaryTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.Summary,
+  label: t(TabsI18nKey.Summary),
+});
+
+export const extractionResultTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.ExtractionResult,
+  label: t(TabsI18nKey.ExtractionResult),
+});
+
 export const permissionsTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Permissions,
   label: t(TabsI18nKey.Permissions),
@@ -398,4 +410,8 @@ export const getPromptPublicationTabs = (t: (key: string) => string): TabModel[]
 
 export const getTestSuiteRequestTemplateTabs = (t: (key: string) => string): TabModel[] => {
   return [bodyTab(t), parametersTab(t), headersTab(t)];
+};
+
+export const getRunTabs = (t: (key: string) => string): TabModel[] => {
+  return [summaryTab(t), extractionResultTab(t)];
 };
