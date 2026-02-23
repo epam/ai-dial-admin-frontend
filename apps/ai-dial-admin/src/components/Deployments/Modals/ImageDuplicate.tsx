@@ -21,11 +21,10 @@ import {
   ImagesI18nKey,
 } from '@/src/constants/i18n';
 import { getImageVersions } from '@/src/app/actions/deployments';
-import { getSemanticVersionError } from '@/src/utils/deployments/validation';
+import { getImageNameVersionError, getSemanticVersionError } from '@/src/utils/deployments/validation';
 import { getVersionsPerName } from '@/src/components/Assets/utils';
 import { getRouteByType } from '@/src/utils/deployments/entity';
 import { getImageType } from '@/src/utils/deployments/images';
-import { getErrorForName } from '@/src/utils/validation/name-error';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
@@ -99,12 +98,11 @@ const ImageDuplicateModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
   const onChangeName = useCallback(
     (name?: string) => {
       const isUniqNameError = names?.includes(name as string) ?? false;
-      const error = getErrorForName(
+      const error = getImageNameVersionError(
         name,
         names,
-        t,
         duplicationType === DUPLICATION_TYPE.ENTITY && isUniqNameError,
-        true,
+        t,
       );
       setNameError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !error });
@@ -125,12 +123,11 @@ const ImageDuplicateModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
   );
 
   useEffect(() => {
-    const nameError = getErrorForName(
+    const nameError = getImageNameVersionError(
       copyImage.name,
       [],
-      t,
       duplicationType === DUPLICATION_TYPE.ENTITY && isUniqNameError,
-      true,
+      t,
     );
     const versionError = getSemanticVersionError(versionsMap, copyImage.name, t, copyImage.version);
     setNameError(nameError);
