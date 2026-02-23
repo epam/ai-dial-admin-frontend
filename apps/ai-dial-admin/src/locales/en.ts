@@ -1441,4 +1441,8 @@ export default {
     CreateFolderValidate: 'Folder name contains forbidden characters: < > : " / \\ | ? *',
     CreateFolderValidateFirstSymbol: 'Folder name cannot start with a dot',
   },
+  Runs: {
+    StartTime: 'Start time',
+    EndTime: 'End time',
+  },
 } as const;
