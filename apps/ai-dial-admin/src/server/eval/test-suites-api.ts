@@ -1,12 +1,13 @@
 import { Token } from '@/src/models/auth';
 import { Deployment } from '@/src/models/evaluation/deployment';
-import { TemplateVariable, TestCase, TestSuite, Run, TryOutResponse } from '@/src/models/evaluation/test-suite';
+import { TemplateVariable, TestCase, TestSuite, TryOutResponse } from '@/src/models/evaluation/test-suite';
 import { EvaluationPageData, FilterDto, SortDto } from '@/src/models/request';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { API } from '@/src/server/api';
 import { BaseApi } from '@/src/server/base-api';
 import { getRequestFiltersStr } from '@/src/utils/request/get-request-filters';
 import { getRequestSortsStr } from '@/src/utils/request/get-request-sorts';
+import { Run } from '@/src/models/evaluation/run';
 
 export const TEST_SUITES_URL = `${API}/test-suites`;
 export const TEST_SUITE_URL = (id?: string) => `${TEST_SUITES_URL}/${id || ''}`;
