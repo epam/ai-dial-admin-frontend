@@ -1,5 +1,6 @@
 import { ColDef } from 'ag-grid-community';
 
+import { getValidityStatusColumn } from '@/src/components/TestSuites/utils/columns';
 import { ImportPreview } from './models';
 
 export const getGridDataFromImportPreview = (importPreview: ImportPreview) => {
@@ -11,5 +12,8 @@ export const getGridDataFromImportPreview = (importPreview: ImportPreview) => {
     })),
   ];
 
-  return { colDefs, rowData: importPreview.sampleRows.map((row) => ({ ...row, ...row.data })) };
+  return {
+    colDefs: [...colDefs, getValidityStatusColumn()],
+    rowData: importPreview.sampleRows.map((row) => ({ ...row, ...row.data })),
+  };
 };
