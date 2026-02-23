@@ -249,6 +249,7 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
             entityType: getTranslatedDeploymentType(route, t),
           }),
         }}
+        isEnableColumnPanel
         storageKey={route}
       >
         <HeaderButtons route={route} names={containersList.map((container) => container.name as string) || []} />
