@@ -1,11 +1,8 @@
 import { FC, useCallback } from 'react';
 import { DialAdapter } from '@/src/models/dial/adapter';
-import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
-import { useI18n } from '@/src/locales/client';
 
-import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
-import ReadonlyField from '@/src/components/Common/ReadonlyField/ReadonlyField';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
+import CompletionEndpointControl from '@/src/components/BaseControls/Endpoint/CompletionEndpoint';
 
 interface Props {
   entity: DialAdapter;
@@ -15,8 +12,6 @@ interface Props {
 }
 
 const AdapterEndpoint: FC<Props> = ({ entity, onChange, isModal, prefix }) => {
-  const t = useI18n();
-
   const onChangeEndpoint = useCallback(
     (baseEndpoint?: string) => {
       onChange({ ...entity, baseEndpoint });
@@ -27,21 +22,22 @@ const AdapterEndpoint: FC<Props> = ({ entity, onChange, isModal, prefix }) => {
   return (
     <div className="w-full flex flex-col gap-y-8">
       {prefix ? (
-        <ReadonlyField
-          containerClassName={STANDARD_CONTROL_WIDTH}
-          elementId="endpoint"
-          title={t(EntitiesI18nKey.AdapterEndpoint)}
-          value={prefix}
+        <CompletionEndpointControl
+          endpoint={entity.source?.completionEndpointPath}
+          textBeforeInput={prefix}
+          onChange={(completionEndpointPath) => {
+            onChange({
+              ...entity,
+              source: { ...entity.source, $type: SOURCE_TYPE.CONTAINER, completionEndpointPath },
+            });
+          }}
         />
       ) : (
-        <EndpointControl
-          id="baseEndpoint"
-          required={true}
-          placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
-          fieldTitle={t(EntityFieldsI18nKey.baseEndpoint)}
-          endpoint={entity.baseEndpoint}
+        <CompletionEndpointControl
           isFullWidth={isModal}
+          endpoint={entity.baseEndpoint}
           onChange={onChangeEndpoint}
+          required={true}
         />
       )}
     </div>
