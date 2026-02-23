@@ -29,6 +29,7 @@ const deleteEntityMap: Record<string, DeleteI18nKey> = {
   [ApplicationRoute.Adapters]: DeleteI18nKey.Adapter,
   [ApplicationRoute.InterceptorTemplates]: DeleteI18nKey.InterceptorTemplate,
   [ApplicationRoute.TestSuites]: DeleteI18nKey.TestSuite,
+  [ApplicationRoute.Runs]: DeleteI18nKey.Run,
   [ApplicationRoute.McpContainers]: DeleteI18nKey.McpContainer,
   [ApplicationRoute.InterceptorContainers]: DeleteI18nKey.InterceptorContainer,
   [ApplicationRoute.ModelServings]: DeleteI18nKey.ModelServing,
@@ -68,7 +69,7 @@ export const getNotificationDescription = (
   entityId: string,
   t: (str: string, props?: Record<string, string>) => string,
 ) => {
-  if (isAssetView(view) || view === ApplicationRoute.TestSuites) {
+  if (isAssetView(view) || view === ApplicationRoute.TestSuites || view === ApplicationRoute.Runs) {
     return t(DeleteI18nKey.NotificationDescriptionWithoutRollback, { entity: t(deleteEntityMap[view]), entityId });
   }
 

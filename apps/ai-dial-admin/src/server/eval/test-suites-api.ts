@@ -1,12 +1,6 @@
 import { Token } from '@/src/models/auth';
 import { Deployment } from '@/src/models/evaluation/deployment';
-import {
-  TemplateVariable,
-  TestCase,
-  TestSuite,
-  TestSuiteRun,
-  TryOutResponse,
-} from '@/src/models/evaluation/test-suite';
+import { TemplateVariable, TestCase, TestSuite, Run, TryOutResponse } from '@/src/models/evaluation/test-suite';
 import { EvaluationPageData, FilterDto, SortDto } from '@/src/models/request';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { API } from '@/src/server/api';
@@ -44,8 +38,8 @@ export class TestSuitesApi extends BaseApi {
     sorts: SortDto[],
     filters: FilterDto[],
     token: Token,
-  ): Promise<EvaluationPageData<TestSuiteRun> | null> {
-    return this.get<EvaluationPageData<TestSuiteRun>>(
+  ): Promise<EvaluationPageData<Run> | null> {
+    return this.get<EvaluationPageData<Run>>(
       `${TEST_SUITES_RUNS_URL}?page=${page}&size=${size}&includeTotalCount=true${this.getFiltersAndSortsStr(sorts, filters)}`,
       token,
     );

@@ -689,7 +689,6 @@ export const RUNS_COLUMN: ColDef[] = [
   { field: 'testRunName', colId: 'testRunName', headerName: 'Test run name' },
   { field: 'runConfig.numberOfRuns', colId: 'runConfig.numberOfRuns', headerName: 'Number of runs' },
   { field: 'numberOfTestCases', colId: 'numberOfTestCases', headerName: 'Number of test cases' },
-  { field: 'failedTestCases', colId: 'failedTestCases', headerName: 'Failed test cases' },
   { field: 'startedAt', headerName: 'Start date', ...dateTimeColumn },
   { field: 'completedAt', headerName: 'End date', ...dateTimeColumn },
   { field: 'status', headerName: 'Status' },

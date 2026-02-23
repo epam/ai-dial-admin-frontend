@@ -29,19 +29,51 @@ describe('Server :: RunsApi', () => {
   test('Should call getRuns and return paginated list', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockPageData));
 
-    await instance.getRuns(0, 10, TOKEN_MOCK);
+    const result = await instance.getRuns(0, 10, TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${RUNS_URL}?page=0&size=10&includeTotalCount=true`,
       expect.objectContaining({ method: 'GET' }),
     );
+    expect(result).toEqual(mockPageData);
+  });
+
+  test('Should call getRuns with different page and size', async () => {
+    fetch.mockResponseOnce(JSON.stringify(mockPageData));
+
+    const result = await instance.getRuns(2, 25, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${RUNS_URL}?page=2&size=25&includeTotalCount=true`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+    expect(result).toEqual(mockPageData);
   });
 
   test('Should call getRun by id and return run', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockRun));
 
-    await instance.getRun(mockRun.id, TOKEN_MOCK);
+    const runId = mockRun.id as string;
+    const result = await instance.getRun(runId, TOKEN_MOCK);
 
-    expect(fetch).toHaveBeenCalledWith(`${TEST_URL}${RUN_URL(mockRun.id)}`, expect.objectContaining({ method: 'GET' }));
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${RUN_URL(runId)}`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+    expect(result).toEqual(mockRun);
+  });
+
+  test('Should call removeRun with DELETE method and return response', async () => {
+    const successResponse = { success: true };
+    fetch.mockResponseOnce(JSON.stringify(successResponse));
+
+    const runId = mockRun.id as string;
+    const result = await instance.removeRun(runId, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${RUN_URL(runId)}`,
+      expect.objectContaining({ method: 'DELETE' }),
+    );
+    expect(result).toEqual(expect.objectContaining({ success: true }));
   });
 });

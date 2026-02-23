@@ -239,6 +239,7 @@ export enum DeleteI18nKey {
   Adapter = 'DeleteEntity.Entities.Adapter',
   InterceptorTemplate = 'DeleteEntity.Entities.InterceptorTemplate',
   TestSuite = 'DeleteEntity.Entities.TestSuite',
+  Run = 'DeleteEntity.Entities.Run',
   ApplicationRunner = 'DeleteEntity.Entities.ApplicationRunner',
   McpContainer = 'DeleteEntity.Entities.McpContainer',
   InterceptorContainer = 'DeleteEntity.Entities.InterceptorContainer',
@@ -1388,6 +1389,15 @@ export enum TestSuitesI18nKey {
   DynamicConfiguration = 'TestSuites.DynamicConfiguration',
   Constant = 'TestSuites.Constant',
   Attribute = 'TestSuites.Attribute',
+}
+
+export enum RunsI18nKey {
+  TestRunName = 'Runs.TestRunName',
+  NumberOfRuns = 'Runs.NumberOfRuns',
+  NumberOfTestCases = 'Runs.NumberOfTestCases',
+  FailedTestCases = 'Runs.FailedTestCases',
+  StartDate = 'Runs.StartDate',
+  EndDate = 'Runs.EndDate',
 }
 
 export enum FileManagerI18nKey {

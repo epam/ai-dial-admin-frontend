@@ -6,11 +6,15 @@ import { GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } fro
 
 import { getRuns } from '@/src/app/[lang]/test-suites/actions';
 import GridView from '@/src/components/Grid/GridView/GridView';
-import { infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
+import { ACTION_COLUMN, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
+import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
 import { RUNS_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { TestSuite, TestSuiteRun } from '@/src/models/evaluation/test-suite';
+import { Run } from '@/src/models/evaluation/run';
+import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { ApplicationRoute } from '@/src/types/routes';
+import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { RUN_FILTER } from './constants';
@@ -25,7 +29,7 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
 
   let isLoading = false;
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
-  const [runs, setRuns] = useState<TestSuiteRun[] | null>(null);
+  const [runs, setRuns] = useState<Run[] | null>(null);
   const [totalElements, setTotalElements] = useState(0);
 
   const gridOptions: GridOptions = {
@@ -41,7 +45,7 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
           return;
         }
         isLoading = false;
-        const runsData = (res?.content || []) as TestSuiteRun[];
+        const runsData = (res?.content || []) as Run[];
         setTotalElements(res?.totalElements || 0);
         setRuns(runsData);
       });
@@ -79,7 +83,7 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
   );
 
   const onSetData = useCallback(
-    (data: TestSuiteRun[] | null, totalElements: number, params: IGetRowsParams) => {
+    (data: Run[] | null, totalElements: number, params: IGetRowsParams) => {
       params.successCallback(data || [], totalElements);
       if (totalElements === 0) {
         gridApi?.showNoRowsOverlay();
@@ -110,9 +114,18 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
     setGridApi(api);
   }, []);
 
+  const onOpenInNewTabAction = useCallback((run?: Run) => {
+    onOpenInNewTab(ApplicationRoute.Runs, run);
+  }, []);
+
+  const columnDefs = useMemo(
+    () => [...RUNS_COLUMN, ACTION_COLUMN([getOpenInNewTabOperation(onOpenInNewTabAction)])],
+    [onOpenInNewTabAction],
+  );
+
   return (
     <GridView
-      columnDefs={RUNS_COLUMN}
+      columnDefs={columnDefs}
       additionalGridOptions={gridOptions}
       emptyDataProps={{ title: t(EntitiesI18nKey.NoRuns) }}
       onGridReady={onGridReady}

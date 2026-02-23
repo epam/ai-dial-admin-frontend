@@ -281,6 +281,7 @@ export default {
       InterceptorContainer: 'Interceptor Container',
       ModelServing: 'Model Serving',
       Image: 'Image',
+      Run: 'Run',
     },
     BulkDelete: {
       Prompt: 'Prompts',

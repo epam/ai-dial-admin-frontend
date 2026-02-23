@@ -1,6 +1,7 @@
 import { Token } from '@/src/models/auth';
 import { Run } from '@/src/models/evaluation/run';
 import { EvaluationPageData } from '@/src/models/request';
+import { ServerActionResponse } from '@/src/models/server-action';
 import { API } from '@/src/server/api';
 import { BaseApi } from '@/src/server/base-api';
 
@@ -14,5 +15,9 @@ export class RunsApi extends BaseApi {
 
   getRun(id: string, token: Token): Promise<Run | null> {
     return this.get<Run>(RUN_URL(id), token);
+  }
+
+  removeRun(id: string, token: Token): Promise<ServerActionResponse> {
+    return this.deleteAction(RUN_URL(id), token);
   }
 }
