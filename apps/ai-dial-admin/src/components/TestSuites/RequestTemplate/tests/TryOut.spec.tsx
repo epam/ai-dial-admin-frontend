@@ -7,9 +7,11 @@ import { TestCaseItemType } from '@/src/types/evaluation';
 import TryOut from '../components/TryOut';
 
 const mockGetTemplateVariables = vi.fn();
+const mockTryOutSuite = vi.fn();
 
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
   getTemplateVariables: (...args: unknown[]) => mockGetTemplateVariables(...args),
+  tryOutSuite: (...args: unknown[]) => mockTryOutSuite(...args),
 }));
 
 const mockCloseSidebar = vi.fn();
@@ -227,17 +229,15 @@ describe('TryOut', () => {
     });
   });
 
-  test('request body initializes with empty string values for each variable', async () => {
-    const variables = [createVariable({ name: 'alpha' }), createVariable({ name: 'beta' })];
-    mockGetTemplateVariables.mockResolvedValue(variables);
+  test('resolved request is initially empty object', async () => {
+    mockGetTemplateVariables.mockResolvedValue([]);
 
     render(<TryOut testSuiteId="suite-1" />);
 
     await waitFor(() => {
       const editors = screen.getAllByRole('code');
       const requestEditor = editors[0];
-      expect(requestEditor).toHaveTextContent('"alpha":""');
-      expect(requestEditor).toHaveTextContent('"beta":""');
+      expect(requestEditor).toHaveTextContent('{}');
     });
   });
 
@@ -260,6 +260,108 @@ describe('TryOut', () => {
 
     await waitFor(() => {
       expect(screen.getByText(BasicI18nKey.NoVariables)).toBeInTheDocument();
+    });
+  });
+
+  test('sendRequest calls tryOutSuite with testSuiteId and requestBody', async () => {
+    mockGetTemplateVariables.mockResolvedValue([createVariable({ name: 'x' })]);
+    mockTryOutSuite.mockResolvedValue({ success: true, response: { resolvedRequest: {}, response: {} } });
+
+    render(<TryOut testSuiteId="suite-1" />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: ButtonsI18nKey.SendRequest })).not.toBeDisabled();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.SendRequest }));
+
+    expect(mockTryOutSuite).toHaveBeenCalledWith('suite-1', { x: '' });
+  });
+
+  test('sendRequest success populates resolvedRequest and response', async () => {
+    mockGetTemplateVariables.mockResolvedValue([]);
+    mockTryOutSuite.mockResolvedValue({
+      success: true,
+      response: {
+        resolvedRequest: { resolved: 'req' },
+        response: { data: 'ok' },
+      },
+    });
+
+    render(<TryOut testSuiteId="suite-1" />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: ButtonsI18nKey.SendRequest })).not.toBeDisabled();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.SendRequest }));
+
+    await waitFor(() => {
+      const editors = screen.getAllByRole('code');
+      expect(editors[0]).toHaveTextContent('{"resolved":"req"}');
+      expect(editors[1]).toHaveTextContent('{"data":"ok"}');
+    });
+  });
+
+  test('sendRequest error sets response with error message and resolvedRequest to requestBody', async () => {
+    mockGetTemplateVariables.mockResolvedValue([createVariable({ name: 'v' })]);
+    mockTryOutSuite.mockResolvedValue({
+      success: false,
+      errorMessage: 'Something went wrong',
+    });
+
+    render(<TryOut testSuiteId="suite-1" />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: ButtonsI18nKey.SendRequest })).not.toBeDisabled();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.SendRequest }));
+
+    await waitFor(() => {
+      const editors = screen.getAllByRole('code');
+      expect(editors[0]).toHaveTextContent('{"v":""}');
+      expect(editors[1]).toHaveTextContent('{"error":"Something went wrong"}');
+    });
+  });
+
+  test('sendRequest error uses default message when errorMessage is missing', async () => {
+    mockGetTemplateVariables.mockResolvedValue([]);
+    mockTryOutSuite.mockResolvedValue({ success: false });
+
+    render(<TryOut testSuiteId="suite-1" />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: ButtonsI18nKey.SendRequest })).not.toBeDisabled();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.SendRequest }));
+
+    await waitFor(() => {
+      const editors = screen.getAllByRole('code');
+      expect(editors[1]).toHaveTextContent('{"error":"Unknown error"}');
+    });
+  });
+
+  test('sendRequest success with empty response fields defaults to empty objects', async () => {
+    mockGetTemplateVariables.mockResolvedValue([]);
+    mockTryOutSuite.mockResolvedValue({
+      success: true,
+      response: {},
+    });
+
+    render(<TryOut testSuiteId="suite-1" />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: ButtonsI18nKey.SendRequest })).not.toBeDisabled();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.SendRequest }));
+
+    await waitFor(() => {
+      const editors = screen.getAllByRole('code');
+      expect(editors[0]).toHaveTextContent('{}');
+      expect(editors[1]).toHaveTextContent('{}');
     });
   });
 });
