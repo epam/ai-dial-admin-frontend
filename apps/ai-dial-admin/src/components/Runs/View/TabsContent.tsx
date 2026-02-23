@@ -15,7 +15,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
-import ExtractionResult from './ExtractionResult';
+import ExtractionResultTab from './ExtractionResult';
 
 interface Props {
   run: Run;
@@ -55,7 +55,7 @@ const TabsContent: FC<Props> = ({ run, activeTab }) => {
 
   return (
     <>
-      {activeTab === EntityViewTab.ExtractionResult && <ExtractionResult run={run} />}
+      {activeTab === EntityViewTab.ExtractionResult && <ExtractionResultTab run={run} />}
 
       {activeTab === EntityViewTab.Summary && (
         <PropertiesTabContent entity={run} view={ApplicationRoute.Runs} headerPostfix={headerPostfix}>

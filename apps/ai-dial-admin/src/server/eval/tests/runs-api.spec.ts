@@ -1,8 +1,10 @@
 import { Run } from '@/src/models/evaluation/run';
+import { FilterDto } from '@/src/models/request';
+import { FilterOperatorDto } from '@/src/types/request';
 import { RESPONSE_MOCK, TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
-import { RUNS_URL, RUN_URL, RunsApi } from '../runs-api';
+import { RUN_RESULTS_URL, RUNS_URL, RUN_URL, RunsApi } from '../runs-api';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
@@ -58,5 +60,21 @@ describe('Server :: RunsApi', () => {
 
     expect(fetch).toHaveBeenCalledWith(`${TEST_URL}${RUN_URL(runId)}`, expect.objectContaining({ method: 'DELETE' }));
     expect(result).toEqual(expect.objectContaining({ success: true }));
+  });
+
+  test('Should call getRunResults with filters and return extraction results', async () => {
+    fetch.mockResponseOnce(JSON.stringify([RESPONSE_MOCK]));
+
+    const filters: FilterDto[] = [
+      { column: 'status', operator: FilterOperatorDto.EQUALS, value: 'PASSED' },
+      { column: 'name', operator: FilterOperatorDto.CONTAINS, value: 'smoke test' },
+    ];
+
+    await instance.getRunResults(TOKEN_MOCK, filters);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${RUN_RESULTS_URL}?filter=status:eq:PASSED&filter=name:co:smoke%20test`,
+      expect.objectContaining({ method: 'GET' }),
+    );
   });
 });
