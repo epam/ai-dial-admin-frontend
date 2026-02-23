@@ -1,4 +1,5 @@
 'use client';
+import { Dispatch, SetStateAction } from 'react';
 
 import FileProperties from '@/src/components/Publications/Properties/FileProperties';
 import PromptProperties from '@/src/components/Publications/Properties/PromptProperties';
@@ -17,6 +18,8 @@ interface Props<T> {
   onChange: (publication: T) => void;
   isPermissionsChanged: boolean;
   currentRules: DialRule[];
+  addedFiles?: File[];
+  setAddedFiles: Dispatch<SetStateAction<File[]>>;
 }
 
 const TabsContent = <T extends Publication>({
@@ -26,6 +29,8 @@ const TabsContent = <T extends Publication>({
   onChange,
   isPermissionsChanged,
   currentRules,
+  addedFiles,
+  setAddedFiles,
 }: Props<T>) => {
   return (
     <>
@@ -35,7 +40,12 @@ const TabsContent = <T extends Publication>({
 
           {view === ApplicationRoute.FilePublications && (
             <FileFolderProvider>
-              <FileProperties publication={selectedPublication} onChange={onChange as (p: FilePublication) => void} />
+              <FileProperties
+                publication={selectedPublication}
+                onChange={onChange as (p: FilePublication) => void}
+                addedFiles={addedFiles}
+                setAddedFiles={setAddedFiles}
+              />
             </FileFolderProvider>
           )}
           {view === ApplicationRoute.PromptPublications && (

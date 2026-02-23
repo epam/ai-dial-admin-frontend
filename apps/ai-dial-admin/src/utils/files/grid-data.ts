@@ -24,8 +24,8 @@ export const getPublicationGridFileDataFromString = (files: string[]): FileRowDa
   });
 };
 
-export const getPublicationGridFileData = (files: PublicationFile[]): FileRowData[] => {
-  return files.map((file) => {
+export const getPublicationGridFileData = (files: PublicationFile[], addedFiles: File[]): FileRowData[] => {
+  const publicationFilesData = files.map((file) => {
     const { name, extension } = getNameExtensionFromFile(file.file.name as string);
     return {
       name,
@@ -33,6 +33,15 @@ export const getPublicationGridFileData = (files: PublicationFile[]): FileRowDat
       path: file.file.path as string,
     };
   });
+  const addedFilesData = addedFiles.map((file) => {
+    const { name, extension } = getNameExtensionFromFile(file.name);
+    return {
+      name,
+      extension,
+      path: '',
+    };
+  });
+  return [...publicationFilesData, ...addedFilesData];
 };
 
 export const getGridFileData = (files: DialFile[]) => {

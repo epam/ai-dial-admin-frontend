@@ -18,17 +18,46 @@ describe('Files list :: getGridFileData', () => {
 });
 
 describe('Files list :: getPublicationGridFileData', () => {
-  test('Should return correct grid data from files', () => {
-    const res = getPublicationGridFileData([
-      { file: { name: 'somePic.jpg' } },
-      { file: { name: 'someText.txt' } },
-      { file: { name: 'someJson.json' } },
-    ] as any);
+  test('Should return correct grid data from publication files', () => {
+    const res = getPublicationGridFileData(
+      [
+        { file: { name: 'somePic.jpg', path: '/images/somePic.jpg' } },
+        { file: { name: 'someText.txt', path: '/docs/someText.txt' } },
+        { file: { name: 'someJson.json', path: '/data/someJson.json' } },
+      ] as any,
+      [],
+    );
     expect(res).toEqual([
-      { name: 'somePic', extension: '.jpg' },
-      { name: 'someText', extension: '.txt' },
-      { name: 'someJson', extension: '.json' },
+      { name: 'somePic', extension: '.jpg', path: '/images/somePic.jpg' },
+      { name: 'someText', extension: '.txt', path: '/docs/someText.txt' },
+      { name: 'someJson', extension: '.json', path: '/data/someJson.json' },
     ]);
+  });
+
+  test('Should return correct grid data from added files', () => {
+    const addedFiles = [
+      new File(['a'], 'upload.png', { type: 'image/png' }),
+      new File(['b'], 'report.pdf', { type: 'application/pdf' }),
+    ];
+    const res = getPublicationGridFileData([], addedFiles);
+    expect(res).toEqual([
+      { name: 'upload', extension: '.png', path: '' },
+      { name: 'report', extension: '.pdf', path: '' },
+    ]);
+  });
+
+  test('Should combine publication files and added files', () => {
+    const res = getPublicationGridFileData([{ file: { name: 'existing.txt', path: '/docs/existing.txt' } }] as any, [
+      new File(['c'], 'new.csv'),
+    ]);
+    expect(res).toEqual([
+      { name: 'existing', extension: '.txt', path: '/docs/existing.txt' },
+      { name: 'new', extension: '.csv', path: '' },
+    ]);
+  });
+
+  test('Should return empty array when both inputs are empty', () => {
+    expect(getPublicationGridFileData([], [])).toEqual([]);
   });
 });
 

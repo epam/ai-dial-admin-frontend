@@ -263,7 +263,7 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
             onClose={onCloseModal}
             modalTitle={t(ContainersI18nKey.CreateModalTitle, {
               type: getTranslatedType(getRouteByType(image.$type), t),
-              entityType: getTranslatedDeploymentType(ApplicationRoute.Images, t),
+              entityType: getTranslatedDeploymentType(getRouteByType(image.$type), t),
             })}
             image={image}
             onCreate={onCreateContainer}

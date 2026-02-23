@@ -24,11 +24,16 @@ const TemplateVariables: FC<Props> = ({ selectedTestSuite, onChange, isSkipRefre
 
   const [gridApi, setGridApi] = useState<GridApi>();
   const [variables, setVariables] = useState<TemplateVariable[]>([]);
+
   const bindingsRef = useRef(selectedTestSuite.inputBindings || []);
+  const onChangeRef = useRef(onChange);
+  const selectedTestSuiteRef = useRef(selectedTestSuite);
 
   useEffect(() => {
+    onChangeRef.current = onChange;
+    selectedTestSuiteRef.current = selectedTestSuite;
     bindingsRef.current = selectedTestSuite.inputBindings || [];
-  }, [selectedTestSuite.inputBindings]);
+  }, [onChange, selectedTestSuite]);
 
   useEffect(() => {
     getTemplateVariables(selectedTestSuite.id as string).then((res) => {
@@ -46,33 +51,30 @@ const TemplateVariables: FC<Props> = ({ selectedTestSuite, onChange, isSkipRefre
       binding.templateVariable = data.templateVariable;
 
       inputBindings.splice(index as number, 1, binding);
-      onChange({ ...selectedTestSuite, inputBindings }, true);
+      onChangeRef.current({ ...selectedTestSuiteRef.current, inputBindings }, true);
     },
-    [onChange, selectedTestSuite],
+    [],
   );
 
-  const onChangeSelect = useCallback(
-    (value: string, data: InputBindingRowData, field: string, index?: number) => {
-      const inputBindings = [...bindingsRef.current];
-      const binding = { ...inputBindings[index as number] };
-      if (field === 'type') {
-        if (value === InputBindingType.Attribute) {
-          binding.constantValue = void 0;
-          binding.dataField = '';
-        } else {
-          binding.constantValue = '';
-          binding.dataField = void 0;
-        }
+  const onChangeSelect = useCallback((value: string, data: InputBindingRowData, field: string, index?: number) => {
+    const inputBindings = [...bindingsRef.current];
+    const binding = { ...inputBindings[index as number] };
+    if (field === 'type') {
+      if (value === InputBindingType.Attribute) {
+        binding.constantValue = void 0;
+        binding.dataField = '';
       } else {
-        binding.dataField = value;
+        binding.constantValue = '';
+        binding.dataField = void 0;
       }
-      binding.templateVariable = data.templateVariable;
+    } else {
+      binding.dataField = value;
+    }
+    binding.templateVariable = data.templateVariable;
 
-      inputBindings.splice(index as number, 1, binding);
-      onChange({ ...selectedTestSuite, inputBindings });
-    },
-    [onChange, selectedTestSuite],
-  );
+    inputBindings.splice(index as number, 1, binding);
+    onChangeRef.current({ ...selectedTestSuiteRef.current, inputBindings });
+  }, []);
 
   const columns = useMemo(() => {
     return [
@@ -94,13 +96,16 @@ const TemplateVariables: FC<Props> = ({ selectedTestSuite, onChange, isSkipRefre
   };
 
   useEffect(() => {
-    if (!isSkipRefresh && !gridApi?.isDestroyed()) {
-      gridApi?.updateGridOptions({
-        columnDefs: columns,
-        rowData: data,
-      });
+    if (!gridApi?.isDestroyed()) {
+      gridApi?.updateGridOptions({ columnDefs: columns });
     }
-  }, [isSkipRefresh, columns, data, gridApi]);
+  }, [columns, gridApi]);
+
+  useEffect(() => {
+    if (!isSkipRefresh && !gridApi?.isDestroyed()) {
+      gridApi?.updateGridOptions({ rowData: data });
+    }
+  }, [isSkipRefresh, data, gridApi]);
 
   return (
     <div className="flex-1 min-h-0 flex flex-col gap-y-4">

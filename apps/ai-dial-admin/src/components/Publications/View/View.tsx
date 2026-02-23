@@ -61,6 +61,8 @@ const PublicationView = <T extends Publication>({ view, publication, application
   const [isPermissionsChanged, setIsPermissionsChanged] = useState(false);
   const [currentRules, setCurrentRules] = useState<DialRule[]>([]);
 
+  const [addedFiles, setAddedFiles] = useState<File[]>([]);
+
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
       isEditorEnabled,
@@ -76,7 +78,7 @@ const PublicationView = <T extends Publication>({ view, publication, application
   }, [publication]);
 
   useEffect(() => {
-    setIsChanged(!isEqualSkippingUndefined(selectedPublication, publication));
+    setIsChanged(!isEqualSkippingUndefined(selectedPublication, publication) || addedFiles.length > 0);
     setIsPermissionsChanged(!isEqualSkippingUndefined(currentRules, selectedPublication.rules));
     const error = selectedPublication.rules?.some(
       (rule) =>
@@ -86,7 +88,7 @@ const PublicationView = <T extends Publication>({ view, publication, application
         (rule.targets.length && !rule.targets[0].length),
     );
     dispatch({ type: ValidationActionType.SetField, field: 'rules', isValid: !error });
-  }, [selectedPublication, publication, t, currentRules, dispatch]);
+  }, [selectedPublication, publication, t, currentRules, dispatch, addedFiles.length]);
 
   useEffect(() => {
     setTabs((prev) => {
@@ -118,6 +120,7 @@ const PublicationView = <T extends Publication>({ view, publication, application
 
   const onDiscard = useCallback(() => {
     setSelectedPublication(structuredClone(publication));
+    setAddedFiles([]);
   }, [publication]);
 
   const onChangePublication = useCallback((entity: T) => {
@@ -125,10 +128,13 @@ const PublicationView = <T extends Publication>({ view, publication, application
   }, []);
 
   const onSave = useCallback(() => {
-    const body = getFormDataForPublication({
-      ...selectedPublication,
-      folderId: addTrailingSlash(selectedPublication.folderId),
-    });
+    const body = getFormDataForPublication(
+      {
+        ...selectedPublication,
+        folderId: addTrailingSlash(selectedPublication.folderId),
+      },
+      addedFiles,
+    );
     const req = getReqRef.current(updatePublication, body);
     req.then((res) => {
       if (res.success) {
@@ -139,12 +145,13 @@ const PublicationView = <T extends Publication>({ view, publication, application
             getUpdateNotificationDescription(view, publication.requestName, t),
           ),
         );
+        setAddedFiles([]);
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
-  }, [dispatch, publication.requestName, router, selectedPublication, showNotification, t, view]);
+  }, [dispatch, publication.requestName, router, selectedPublication, showNotification, t, view, addedFiles]);
 
   const onApprove = useCallback(() => {
     approvePublication(publication.path).then((res) => {
@@ -274,6 +281,8 @@ const PublicationView = <T extends Publication>({ view, publication, application
                 onChange={onChangePublication}
                 isPermissionsChanged={isPermissionsChanged}
                 currentRules={currentRules}
+                addedFiles={addedFiles}
+                setAddedFiles={setAddedFiles}
               />
             )
           )

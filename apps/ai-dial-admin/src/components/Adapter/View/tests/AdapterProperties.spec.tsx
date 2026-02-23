@@ -59,7 +59,7 @@ describe('AdapterProperties', () => {
         onChangeAdapter={onChangeAdapter}
       />,
     );
-    fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Endpoint), {
+    fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.CompletionEndpoint), {
       target: { value: 'http://new' },
     });
     expect(onChangeAdapter).toHaveBeenCalledWith(expect.objectContaining({ baseEndpoint: 'http://new' }));
