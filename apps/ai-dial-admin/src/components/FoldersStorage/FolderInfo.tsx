@@ -13,7 +13,6 @@ import { DialRule } from '@/src/models/dial/rule';
 import FolderInfoHeader from './FolderInfoHeader';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
-import DiscardModal from '@/src/components//EntityView/Modals/Discard/Discard';
 
 interface Props {
   isReadonly?: boolean;
@@ -26,7 +25,6 @@ const FolderInfo: FC<Props> = ({ isReadonly }) => {
   const [editableRules, setEditableRules] = useState(fetchedFoldersRule?.[filePath]);
   const [isChanged, setIsChanged] = useState<boolean>(false);
   const [isSaveDisable, setIsSaveDisable] = useState<boolean>(false);
-  const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
   const getReqRef = useRef(useProtectedRequest());
 
   const onSave = useCallback(() => {
@@ -71,15 +69,6 @@ const FolderInfo: FC<Props> = ({ isReadonly }) => {
     );
   }, [originalRules, editableRules, filePath]);
 
-  const onTryToDiscard = useCallback(() => {
-    setIsDiscardModalOpen(true);
-  }, []);
-
-  const onDiscardModalConfirm = useCallback(() => {
-    onDiscard();
-    setIsDiscardModalOpen(false);
-  }, [onDiscard]);
-
   return !currentFolder ? (
     <DialNoDataContent title={t(EntitiesI18nKey.NoFolders)} />
   ) : (
@@ -88,17 +77,10 @@ const FolderInfo: FC<Props> = ({ isReadonly }) => {
         isChanged={isChanged}
         title={currentFolder?.name as string}
         onSave={onSave}
-        onDiscard={onTryToDiscard}
+        onDiscard={onDiscard}
         isSaveDisable={isSaveDisable}
       />
       <RulesList rulesMap={editableRules} onChange={onChangeRules} isReadonly={isReadonly} />
-      {isDiscardModalOpen && (
-        <DiscardModal
-          onConfirm={onDiscardModalConfirm}
-          onClose={() => setIsDiscardModalOpen(false)}
-          onCancel={() => setIsDiscardModalOpen(false)}
-        />
-      )}
     </div>
   );
 };
