@@ -186,3 +186,100 @@ export const getDynamicConfigurationsColumns = (
     },
   ];
 };
+
+export const getVariablesColumns = (
+  onChangeEditable: (value: string | object, data: InputBindingRowData) => void,
+): ColDef<InputBindingRowData>[] => {
+  return [
+    {
+      headerName: 'Name',
+      field: 'templateVariable',
+      cellClass: NO_BORDER_CLASS,
+      cellDataType: 'text',
+      flex: 1,
+      floatingFilter: false,
+      filter: false,
+      sortable: false,
+    },
+    {
+      headerName: 'Value',
+      field: 'value',
+      cellClass: NO_BORDER_CLASS,
+      cellRendererSelector: (params: ICellRendererParams<InputBindingRowData>) => {
+        if (
+          params.data?.inferredType == TestCaseItemType.OBJECT ||
+          params.data?.inferredType == TestCaseItemType.ARRAY
+        ) {
+          return {
+            component: JsonEditorCellRenderer,
+            params: {
+              onChange: onChangeEditable,
+              disableValidation: true,
+            },
+          };
+        } else if (params.data?.inferredType == TestCaseItemType.BOOLEAN) {
+          return {
+            component: SelectCellRenderer,
+            params: {
+              items: [
+                {
+                  value: 'true',
+                  label: 'True',
+                },
+                {
+                  value: 'false',
+                  label: 'False',
+                },
+              ],
+              onChange: onChangeEditable,
+            },
+          };
+        } else {
+          return {
+            component: EditableCellRenderer,
+            params: {
+              inputType: params.data?.inferredType === TestCaseItemType.STRING ? 'text' : 'number',
+              onChange: onChangeEditable,
+            },
+          };
+        }
+      },
+      tooltipValueGetter: (params: ITooltipParams<InputBindingRowData>) => {
+        if (
+          params.data?.inferredType === TestCaseItemType.OBJECT ||
+          params.data?.inferredType === TestCaseItemType.BOOLEAN
+        ) {
+          return void 0;
+        }
+        return params.value;
+      },
+      cellRendererParams: {
+        hideTriangle: true,
+      },
+      flex: 2,
+      floatingFilter: false,
+      filter: false,
+      sortable: false,
+    },
+    {
+      headerName: '',
+      cellClass: NO_BORDER_CLASS,
+      cellRenderer: (params: ICellRendererParams<InputBindingRowData>) => {
+        return params.data?.defaultValue != null ? (
+          <div className="w-full cursor-pointer">
+            <DialTooltip tooltip={`Default value: ${params.data.defaultValue}`}>
+              <IconInfoCircle size={20} />
+            </DialTooltip>
+          </div>
+        ) : null;
+      },
+      width: 36,
+      maxWidth: 36,
+      sortable: false,
+      filter: false,
+      floatingFilter: false,
+      resizable: false,
+      suppressMovable: true,
+    },
+  ];
+};

@@ -17,14 +17,7 @@ import { tryOutTool } from '@/src/app/[lang]/toolsets/actions';
 import Divider from '@/src/components/Common/Divider/Divider';
 import SchemaUiRenderer from '@/src/components/Common/SchemaUIRenderer/SchemaUIRenderer';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
-import {
-  BasicI18nKey,
-  ButtonsI18nKey,
-  CompareI18nKey,
-  EntitiesI18nKey,
-  ToolsetI18nKey,
-  TypeI18nKey,
-} from '@/src/constants/i18n';
+import { BasicI18nKey, ButtonsI18nKey, CompareI18nKey, EntitiesI18nKey, TypeI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
 import { Tool } from '@/src/models/dial/toolset';
@@ -105,7 +98,7 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset }) => {
   return (
     <div className="flex flex-col gap-y-8 w-full h-full min-h-0">
       <div className="flex items-center justify-between">
-        <h1 className="text-primary overflow-ellipsis">{t(ToolsetI18nKey.TryOut)}</h1>
+        <h1 className="text-primary overflow-ellipsis">{t(ButtonsI18nKey.TryOut)}</h1>
         <div className="flex flex-row items-center gap-x-4">
           <DialPrimaryButton
             label={t(ButtonsI18nKey.SendRequest)}

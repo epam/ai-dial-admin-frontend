@@ -123,6 +123,7 @@ export enum BasicI18nKey {
   URL = 'Basic.URL',
   Request = 'Basic.Request',
   Response = 'Basic.Response',
+  Variables = 'Basic.Variables',
 }
 
 export enum EntitiesI18nKey {
@@ -339,6 +340,7 @@ export enum ButtonsI18nKey {
   Confirm = 'Buttons.Confirm',
   GlobalFirewall = 'Buttons.GlobalFirewall',
   HFRegistry = 'Buttons.HFRegistry',
+  TryOut = 'Buttons.TryOut',
 }
 
 export enum UpdateI18nKey {
@@ -1227,7 +1229,6 @@ export enum ToolsetI18nKey {
   SuccessLoginDescription = 'Toolset.SuccessLoginDescription',
   SuccessLogout = 'Toolset.SuccessLogout',
   SuccessLogoutDescription = 'Toolset.SuccessLogoutDescription',
-  TryOut = 'Toolset.TryOut',
   ManageTools = 'Toolset.ManageTools',
   AvailableForYou = 'Toolset.AvailableForYou',
   OtherInAToolset = 'Toolset.OtherInAToolset',

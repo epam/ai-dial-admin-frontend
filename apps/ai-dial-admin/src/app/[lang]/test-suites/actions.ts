@@ -88,3 +88,8 @@ export async function getTemplateVariables(id: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return testSuitesApi.getTemplateVariables(id, token);
 }
+
+export async function tryOutSuite(id: string, requestBody: Record<string, unknown>) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.tryOutSuite(id, requestBody, token);
+}

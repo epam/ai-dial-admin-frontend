@@ -5,7 +5,7 @@ import { IconPlayerPlay } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import TryOut from '@/src/components/Tools/Tool/TryOut';
-import { ToolsetI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
@@ -68,7 +68,7 @@ const ToolHeader: FC<Props> = ({
             className={classNames(isCollapsed && 'invisible group-hover/accordion:visible')}
             iconBefore={<IconPlayerPlay size={20} />}
             onClick={openTryOutSidebar}
-            label={t(ToolsetI18nKey.TryOut)}
+            label={t(ButtonsI18nKey.TryOut)}
           />
         </div>
       )}
