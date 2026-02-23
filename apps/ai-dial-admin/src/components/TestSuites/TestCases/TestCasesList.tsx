@@ -154,14 +154,16 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite }) => {
 
   return (
     <>
-      <ListEntities
-        additionalGridOptions={gridOptions}
-        listLabel={t(TestSuitesI18nKey.TestCases)}
-        emptyDataProps={{ title: t(TestSuitesI18nKey.NoTestCases) }}
-        onGridReady={onGridReady}
-      >
-        <HeaderButtons selectedTestSuiteId={selectedTestSuite.id as string} onApplyImport={onApplyImport} />
-      </ListEntities>
+      <div className="h-full min-h-[250px]">
+        <ListEntities
+          additionalGridOptions={gridOptions}
+          listLabel={t(TestSuitesI18nKey.TestCases)}
+          emptyDataProps={{ title: t(TestSuitesI18nKey.NoTestCases) }}
+          onGridReady={onGridReady}
+        >
+          <HeaderButtons selectedTestSuiteId={selectedTestSuite.id as string} onApplyImport={onApplyImport} />
+        </ListEntities>
+      </div>
     </>
   );
 };

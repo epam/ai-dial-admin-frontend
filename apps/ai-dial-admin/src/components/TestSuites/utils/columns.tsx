@@ -46,18 +46,22 @@ export const getTestCaseColumns = (testCases: TestCase[]) => {
       field: fact,
       headerName: fact,
     })),
-    {
-      ...BASE_STATUS_COLUMN,
-      cellRenderer: (params: { data?: TestCase }) => {
-        return (
-          <ValidityStatus
-            valid={params.data?.valid}
-            message={params.data?.validationWarnings?.map((warning) => warning.message).join(', \n') || ''}
-          />
-        );
-      },
-    },
+    getValidityStatusColumn(),
   ];
+};
+
+export const getValidityStatusColumn = (): ColDef => {
+  return {
+    ...BASE_STATUS_COLUMN,
+    cellRenderer: (params: { data?: TestCase }) => {
+      return !params.data ? null : (
+        <ValidityStatus
+          valid={params.data?.valid}
+          message={params.data?.validationWarnings?.map((warning) => warning.message).join(', \n') || ''}
+        />
+      );
+    },
+  };
 };
 
 export const getDynamicConfigurationsColumns = (
