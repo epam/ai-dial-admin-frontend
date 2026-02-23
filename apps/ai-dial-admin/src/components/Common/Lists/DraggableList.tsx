@@ -91,7 +91,6 @@ const DraggableList: FC<Props> = ({ items, setItems, filter, addTitle, addPlaceh
       <ul className="flex flex-col gap-y-2 overflow-auto flex-1 min-h-0" ref={newItemsContainer}>
         {list.map((item, index) => (
           <NewItem
-            key={`${item}_${index}`}
             value={item}
             draggable={true}
             onChangeItem={onChangeNewItem}

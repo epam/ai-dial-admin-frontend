@@ -77,7 +77,7 @@ const CheckboxList: FC<Props> = ({
     <>
       <ul className="flex flex-col gap-y-2 overflow-auto flex-1 min-h-0">
         {list.map((item, index) => (
-          <li key={`${item}_${index}`}>
+          <li key={`item_${index}`}>
             <DialCheckbox
               checked={selectedItems.includes(item)}
               id={index.toString()}

@@ -25,7 +25,7 @@ const NewItem: FC<Props> = ({
   placeholder,
 }) => {
   return (
-    <li key={`${value}_${index}`}>
+    <li key={`item_${index}`}>
       {draggable ? (
         <DraggableItem id={value} findItem={onFindItem} moveItem={onMoveItem}>
           <NewItemInput
