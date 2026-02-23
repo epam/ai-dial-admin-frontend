@@ -12,7 +12,7 @@ This project is managed by [NX](https://nx.dev/).
 
 Before diving into the development environment, install Node.js (version >=20) and npm on your system. If you don't already have them, follow the [instruction](https://nodejs.org/en/download/).
 
-Once you have Node.js and npm installed, follow these steps to set up your developer environment:
+Once you have Node.js and npm installed, follow these steps to set up your developer environment: 
 
 1. Clone the AI DIAL Admin repository:
 
