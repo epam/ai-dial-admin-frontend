@@ -1394,25 +1394,9 @@ export enum TestSuitesI18nKey {
 }
 
 export enum RunsI18nKey {
-  TestRunName = 'Runs.TestRunName',
-  NumberOfRuns = 'Runs.NumberOfRuns',
-  NumberOfTestCases = 'Runs.NumberOfTestCases',
-  FailedTestCases = 'Runs.FailedTestCases',
-  StartDate = 'Runs.StartDate',
-  EndDate = 'Runs.EndDate',
-  Guid = 'Runs.Guid',
-  Count = 'Runs.Count',
+  StartTime = 'Runs.StartTime',
+  EndTime = 'Runs.EndTime',
   TestSuite = 'Runs.TestSuite',
-  Application = 'Runs.Application',
-  AverageAccuracy = 'Runs.AverageAccuracy',
-  TotalCost = 'Runs.TotalCost',
-  TotalRunTime = 'Runs.TotalRunTime',
-  AverageRunTime = 'Runs.AverageRunTime',
-  NumberOfAttributes = 'Runs.NumberOfAttributes',
-  TotalTestCases = 'Runs.TotalTestCases',
-  ResponseReceived = 'Runs.ResponseReceived',
-  CorrectResponse = 'Runs.CorrectResponse',
-  ErrorMessage = 'Runs.ErrorMessage',
 }
 
 export enum FileManagerI18nKey {
