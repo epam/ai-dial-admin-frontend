@@ -56,10 +56,7 @@ describe('Server :: RunsApi', () => {
     const runId = mockRun.id as string;
     const result = await instance.getRun(runId, TOKEN_MOCK);
 
-    expect(fetch).toHaveBeenCalledWith(
-      `${TEST_URL}${RUN_URL(runId)}`,
-      expect.objectContaining({ method: 'GET' }),
-    );
+    expect(fetch).toHaveBeenCalledWith(`${TEST_URL}${RUN_URL(runId)}`, expect.objectContaining({ method: 'GET' }));
     expect(result).toEqual(mockRun);
   });
 
@@ -70,10 +67,7 @@ describe('Server :: RunsApi', () => {
     const runId = mockRun.id as string;
     const result = await instance.removeRun(runId, TOKEN_MOCK);
 
-    expect(fetch).toHaveBeenCalledWith(
-      `${TEST_URL}${RUN_URL(runId)}`,
-      expect.objectContaining({ method: 'DELETE' }),
-    );
+    expect(fetch).toHaveBeenCalledWith(`${TEST_URL}${RUN_URL(runId)}`, expect.objectContaining({ method: 'DELETE' }));
     expect(result).toEqual(expect.objectContaining({ success: true }));
   });
 });
