@@ -108,6 +108,11 @@ describe('Entity list view :: getEntityPath', () => {
     const res1 = getEntityPath(ApplicationRoute.Images, { data, id: 'id' }, void 0);
     expect(res1).toEqual('id');
   });
+
+  test('Should return id field for Images', () => {
+    const res1 = getEntityPath(ApplicationRoute.Runs, { data, id: 'id' }, void 0);
+    expect(res1).toEqual('id');
+  });
 });
 
 describe('onOpenInNewTab', () => {

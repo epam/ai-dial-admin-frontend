@@ -280,6 +280,7 @@ export default {
       InterceptorContainer: 'Interceptor Container',
       ModelServing: 'Model Serving',
       Image: 'Image',
+      Run: 'Run',
     },
     BulkDelete: {
       Prompt: 'Prompts',
@@ -543,6 +544,8 @@ export default {
     Permissions: 'Permissions',
     Body: 'Body',
     Headers: 'Headers',
+    ExtractionResult: 'Extraction result',
+    Summary: 'Summary',
   },
   ForwardToken: {
     ForwardTokenModalTitle: 'Forward Auth Token',

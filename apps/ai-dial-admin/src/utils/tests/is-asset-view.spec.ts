@@ -1,4 +1,10 @@
-import { isAssetView, isAssetWithVersion, isBuildersView, isEntitiesWithDisplayVersion } from '../is-asset-view';
+import {
+  isAssetView,
+  isAssetWithVersion,
+  isBuildersView,
+  isEntitiesWithDisplayVersion,
+  isEvaluationView,
+} from '../is-asset-view';
 import { describe, expect, test } from 'vitest';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -26,6 +32,18 @@ describe('Utils :: isAssetView', () => {
   test('Should return false', () => {
     const result = isAssetView(ApplicationRoute.Models);
     expect(result).toBeFalsy();
+  });
+});
+
+describe('Utils :: isEvaluationView', () => {
+  test('Should return true', () => {
+    expect(isEvaluationView(ApplicationRoute.TestSuites)).toBeTruthy();
+    expect(isEvaluationView(ApplicationRoute.Runs)).toBeTruthy();
+    expect(isEvaluationView(ApplicationRoute.Metrics)).toBeTruthy();
+  });
+
+  test('Should return false', () => {
+    expect(isEvaluationView(ApplicationRoute.Models)).toBeFalsy();
   });
 });
 

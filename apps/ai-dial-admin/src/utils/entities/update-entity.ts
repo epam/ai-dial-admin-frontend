@@ -1,6 +1,6 @@
 import { UpdateI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isAssetView } from '../is-asset-view';
+import { isAssetView, isEvaluationView } from '../is-asset-view';
 
 const createEntityMap: Record<string, UpdateI18nKey> = {
   [ApplicationRoute.Models]: UpdateI18nKey.Model,
@@ -37,7 +37,7 @@ export const getUpdateNotificationDescription = (
   entityId: string | undefined,
   t: (str: string, props?: Record<string, string>) => string,
 ) => {
-  if (isAssetView(view) || view === ApplicationRoute.TestSuites) {
+  if (isAssetView(view) || isEvaluationView(view)) {
     return t(UpdateI18nKey.NotificationDescriptionWithoutRollback, {
       entity: t(createEntityMap[view]),
       entityId: entityId || '',

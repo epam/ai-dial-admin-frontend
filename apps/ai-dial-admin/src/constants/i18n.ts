@@ -238,6 +238,7 @@ export enum DeleteI18nKey {
   Adapter = 'DeleteEntity.Entities.Adapter',
   InterceptorTemplate = 'DeleteEntity.Entities.InterceptorTemplate',
   TestSuite = 'DeleteEntity.Entities.TestSuite',
+  Run = 'DeleteEntity.Entities.Run',
   ApplicationRunner = 'DeleteEntity.Entities.ApplicationRunner',
   McpContainer = 'DeleteEntity.Entities.McpContainer',
   InterceptorContainer = 'DeleteEntity.Entities.InterceptorContainer',
@@ -559,6 +560,8 @@ export enum TabsI18nKey {
   Firewall = 'Tabs.Firewall',
   TestCases = 'Tabs.TestCases',
   Runs = 'Tabs.Runs',
+  Summary = 'Tabs.Summary',
+  ExtractionResult = 'Tabs.ExtractionResult',
   Trends = 'Tabs.Trends',
   Permissions = 'Tabs.Permissions',
   Body = 'Tabs.Body',
@@ -1388,6 +1391,28 @@ export enum TestSuitesI18nKey {
   DynamicConfiguration = 'TestSuites.DynamicConfiguration',
   Constant = 'TestSuites.Constant',
   Attribute = 'TestSuites.Attribute',
+}
+
+export enum RunsI18nKey {
+  TestRunName = 'Runs.TestRunName',
+  NumberOfRuns = 'Runs.NumberOfRuns',
+  NumberOfTestCases = 'Runs.NumberOfTestCases',
+  FailedTestCases = 'Runs.FailedTestCases',
+  StartDate = 'Runs.StartDate',
+  EndDate = 'Runs.EndDate',
+  Guid = 'Runs.Guid',
+  Count = 'Runs.Count',
+  TestSuite = 'Runs.TestSuite',
+  Application = 'Runs.Application',
+  AverageAccuracy = 'Runs.AverageAccuracy',
+  TotalCost = 'Runs.TotalCost',
+  TotalRunTime = 'Runs.TotalRunTime',
+  AverageRunTime = 'Runs.AverageRunTime',
+  NumberOfAttributes = 'Runs.NumberOfAttributes',
+  TotalTestCases = 'Runs.TotalTestCases',
+  ResponseReceived = 'Runs.ResponseReceived',
+  CorrectResponse = 'Runs.CorrectResponse',
+  ErrorMessage = 'Runs.ErrorMessage',
 }
 
 export enum FileManagerI18nKey {

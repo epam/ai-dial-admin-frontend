@@ -684,21 +684,14 @@ export const TEST_CASES_COLUMN: ColDef[] = [
   { field: 'testCaseName', colId: 'testCaseName', headerName: 'Test case name' },
 ];
 
-export const TEST_SUITE_RUNS_COLUMNS: ColDef[] = [
+export const RUNS_COLUMN: ColDef[] = [
   { field: 'id', colId: 'id', headerName: 'ID' },
   { field: 'testRunName', colId: 'testRunName', headerName: 'Test run name' },
   { field: 'runConfig.numberOfRuns', colId: 'runConfig.numberOfRuns', headerName: 'Number of runs' },
   { field: 'numberOfTestCases', colId: 'numberOfTestCases', headerName: 'Number of test cases' },
-  { field: 'failedTestCases', colId: 'failedTestCases', headerName: 'Failed test cases' },
-  { field: 'totalCost', colId: 'totalCost', headerName: 'Total cost' },
   { field: 'startedAt', headerName: 'Start date', ...dateTimeColumn },
   { field: 'completedAt', headerName: 'End date', ...dateTimeColumn },
   { field: 'status', headerName: 'Status' },
-];
-
-// TODO: update columns
-export const RUNS_COLUMN = (): ColDef[] => [
-  { field: 'displayName', colId: 'displayName', headerName: 'Display Name', hide: false },
 ];
 
 export const METRICS_COLUMN: ColDef[] = [
