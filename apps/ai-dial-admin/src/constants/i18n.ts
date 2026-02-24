@@ -1399,6 +1399,10 @@ export enum RunsI18nKey {
   StartTime = 'Runs.StartTime',
   EndTime = 'Runs.EndTime',
   TestSuite = 'Runs.TestSuite',
+  RequestBody = 'Runs.RequestBody',
+  ResponseBody = 'Runs.ResponseBody',
+  TestCaseData = 'Runs.TestCaseData',
+  Execution = 'Runs.Execution',
 }
 
 export enum FileManagerI18nKey {
