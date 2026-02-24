@@ -1,5 +1,5 @@
 import { GridApi, IRowNode } from 'ag-grid-community';
-import { FC, useCallback, useMemo } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { FILE_DOWNLOAD, FILE_PREVIEW, PREVIEW_EXTENSIONS } from '@/src/constants/file';
@@ -33,6 +33,11 @@ interface Props {
 
 const FilesList: FC<Props> = ({ files, action, onChange, addedFiles, onRemoveAdded }) => {
   const t = useI18n();
+  const filesRef = useRef(files);
+
+  useEffect(() => {
+    filesRef.current = files;
+  }, [files]);
 
   const download = useCallback((file?: FileRowData) => {
     window.open(`/${FILE_DOWNLOAD}/?path=${encodeURIComponent(file?.path || '')}`, '_blank');
@@ -50,9 +55,10 @@ const FilesList: FC<Props> = ({ files, action, onChange, addedFiles, onRemoveAdd
     (data?: FileRowData, index?: number) => {
       if (data?.path !== '') {
         if (index != null) {
-          files?.splice(index, 1);
+          const newFiles = [...(filesRef.current as PublicationFile[])];
+          newFiles?.splice(index, 1);
+          onChange?.(newFiles);
         }
-        onChange?.(files as PublicationFile[]);
       } else {
         if (index != null) {
           onRemoveAdded?.(index - files.length);
