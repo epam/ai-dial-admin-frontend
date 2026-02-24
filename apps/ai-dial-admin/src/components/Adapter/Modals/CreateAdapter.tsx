@@ -46,7 +46,6 @@ const CreateAdapter: FC<Props> = ({ isModalOpen, onClose, names }) => {
   useEffect(() => {
     dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!currentAdapter.name });
     dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !!currentAdapter.displayName });
-    dispatch({ type: ValidationActionType.SetField, field: 'baseEndpoint', isValid: !!currentAdapter.baseEndpoint });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

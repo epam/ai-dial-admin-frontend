@@ -1,11 +1,12 @@
 import { FC, useCallback, useState } from 'react';
+
 import {
   AlertVariant,
   DialAlert,
   DialRadioGroupPopupField,
+  DialTextInputField,
   PopupSize,
   RadioButtonWithContent,
-  DialTextInputField,
 } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
@@ -16,11 +17,11 @@ import {
   EntityPlaceholdersI18nKey,
   ForwardTokenI18nKey,
 } from '@/src/constants/i18n';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { ChatEntity } from '@/src/models/dial/base-entity';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getAlertTitlePerView, getDisplayNamePerView, NONE_ID, USE_ID } from './utils';
-import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 
 interface Props {
   view: ApplicationRoute;
@@ -56,9 +57,9 @@ const ForwardAuthTokenField: FC<Props> = ({ view, entity, onChangeEntity }) => {
   const onChangeName = useCallback(
     (name?: string) => {
       setConfirmName(name || '');
-      setIsValid(name === (view === ApplicationRoute.Interceptors ? entity.name : entity.displayName));
+      setIsValid(name === entity.displayName);
     },
-    [entity.displayName, entity.name, view],
+    [entity.displayName],
   );
 
   const onApply = useCallback(() => {
