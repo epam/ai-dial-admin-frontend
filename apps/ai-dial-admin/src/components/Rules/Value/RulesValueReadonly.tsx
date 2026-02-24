@@ -1,14 +1,13 @@
 'use client';
 
-import { Dispatch, FC, SetStateAction, useEffect, useRef } from 'react';
+import { Dispatch, FC, SetStateAction, useEffect, useMemo, useRef } from 'react';
 
 import classNames from 'classnames';
 import { DialTag } from '@epam/ai-dial-ui-kit';
 
-import { FoldersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DialRule, RuleDiffModel, RuleDiffStatus, RuleSource } from '@/src/models/dial/rule';
-import { getOperationIcon } from '@/src/components/Rules/utils';
+import { DialRule, RuleDiffModel, RuleDiffStatus } from '@/src/models/dial/rule';
+import { getOperationIcon, getRuleLabel } from '@/src/components/Rules/utils';
 
 interface Props {
   rule: DialRule;
@@ -38,6 +37,8 @@ const RulesValueReadonly: FC<Props> = ({ rule, ruleDiff, setLastValueHeight }) =
     return () => observer.disconnect();
   }, [setLastValueHeight]);
 
+  const ruleLabel = useMemo(() => getRuleLabel(rule.source, t), [rule.source, t]);
+
   return (
     <div
       ref={ref}
@@ -47,7 +48,7 @@ const RulesValueReadonly: FC<Props> = ({ rule, ruleDiff, setLastValueHeight }) =
         isRuleNew && 'border-accent-secondary',
       )}
     >
-      <div>{t(FoldersI18nKey[RuleSource[rule.source as keyof typeof RuleSource]])}</div>
+      <div>{ruleLabel}</div>
       <div className="flex px-2">
         <span className="inline-block text-secondary mr-2">{getOperationIcon(rule.function)} </span>
         <span> {rule.function}</span>
