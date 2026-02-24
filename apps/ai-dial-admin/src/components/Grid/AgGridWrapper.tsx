@@ -3,7 +3,9 @@
 import {
   AgGridEvent,
   CellApiModule,
+  CellContextMenuEvent,
   CellStyleModule,
+  CheckboxEditorModule,
   ClientSideRowModelModule,
   ColDef,
   colorSchemeDark,
@@ -26,22 +28,22 @@ import {
   RowDragModule,
   RowSelectionModule,
   RowStyleModule,
+  ScrollApiModule,
   SuppressKeyboardEventParams,
   TextFilterModule,
   themeBalham,
   TooltipModule,
-  ScrollApiModule,
-  CheckboxEditorModule,
 } from 'ag-grid-community';
 import { AgGridReact } from 'ag-grid-react';
+import { debounce } from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { getFromLocalStorage } from '@/src/utils/local-storage';
+import CellContextMenu, { ContextMenuPosition } from './CellContextMenu/CellContextMenu';
 import { baseColumnComparator } from './comparators/base-column-comparator';
 import { GRID_COLUMNS_KEY, ROW_HEIGHT } from './constants';
 import FloatingFilter from './FloatingFilter/FloatingFilter';
 import { getColumnsStateFromStorage, GridModel, saveColumnsStateToStorage } from './utils';
-import { debounce } from 'lodash';
-import { getFromLocalStorage } from '@/src/utils/local-storage';
 
 export interface AgGridProps<T> {
   columnDefs?: ColDef[];
@@ -100,6 +102,7 @@ const AgGridWrapper = <T extends object>({
   onGridReady: gridReadyCb,
 }: AgGridProps<T>) => {
   const [gridApi, setGridApi] = useState<GridApi>();
+  const [contextMenu, setContextMenu] = useState<ContextMenuPosition | null>(null);
 
   const onStateChanged = useCallback(
     (e: AgGridEvent) => {
@@ -204,6 +207,26 @@ const AgGridWrapper = <T extends object>({
     };
   }, []);
 
+  const onCellContextMenu = useCallback((event: CellContextMenuEvent) => {
+    const mouseEvent = event.event as MouseEvent;
+    mouseEvent.preventDefault();
+    const formattedValue = event.api.getCellValue({
+      rowNode: event.node!,
+      colKey: event.column,
+      useFormatter: true,
+    });
+    const displayValue = formattedValue ?? event.value;
+    setContextMenu({
+      x: mouseEvent.clientX,
+      y: mouseEvent.clientY,
+      value: displayValue != null ? String(displayValue) : '',
+    });
+  }, []);
+
+  const closeContextMenu = useCallback(() => {
+    setContextMenu(null);
+  }, []);
+
   const handleStateUpdated = useMemo(
     () =>
       debounce((e: AgGridEvent) => {
@@ -229,8 +252,11 @@ const AgGridWrapper = <T extends object>({
         onSortChanged={onStateChanged}
         onGridReady={onGridReady}
         onStateUpdated={handleStateUpdated}
+        onCellContextMenu={onCellContextMenu}
+        preventDefaultOnContextMenu={true}
         {...additionalGridOptions}
       />
+      <CellContextMenu position={contextMenu} onClose={closeContextMenu} />
     </div>
   );
 };
