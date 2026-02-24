@@ -63,7 +63,7 @@ export function getResultColumns(results: ExtractionResult[]) {
           field: 'responseStatusCode',
           headerName: 'HTTP',
           colId: 'http',
-          cellClass: (params) => getCellClass(params.data?.responseStatusCode),
+          cellClass: (params) => getTestCaseStatusClass(params.data?.responseStatusCode),
         } as ColDef,
         {
           field: 'durationMs',
@@ -75,13 +75,14 @@ export function getResultColumns(results: ExtractionResult[]) {
             if (duration >= 1000) return `${(duration / 1000).toFixed(1)}s`;
             return `${duration}ms`;
           },
-          cellClass: (params) => getCellClass(params.data?.responseStatusCode),
+          cellClass: (params) => getTestCaseStatusClass(params.data?.responseStatusCode),
         } as ColDef,
       ],
     },
   ];
 
   const input = results[0]?.testCaseData || {};
+
   return [
     ...staticColumns,
 
@@ -92,7 +93,7 @@ export function getResultColumns(results: ExtractionResult[]) {
   ];
 }
 
-export const getCellClass = (code: number | undefined) => {
+export const getTestCaseStatusClass = (code: number | undefined) => {
   if (code == null) return '';
   if (code >= 200 && code < 300) return 'text-success';
   if (code >= 400 && code < 500) return 'text-warning';

@@ -27,6 +27,7 @@ interface Props<T> {
 }
 
 const HeaderButtons = <T extends { id?: string }>({ route, onCreateEntity }: Props<T>) => {
+  if (route === ApplicationRoute.Runs) return null;
   const t = useI18n();
   const router = useRouter();
 

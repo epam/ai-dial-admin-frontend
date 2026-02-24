@@ -1,15 +1,18 @@
 'use client';
 
 import { ColDef } from 'ag-grid-community';
-import { FC, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
+
+import { DialLoader } from '@epam/ai-dial-ui-kit';
 
 import { getRunResults } from '@/src/app/[lang]/runs/actions';
 import { EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
 import { ExtractionResult, Run } from '@/src/models/evaluation/run';
 import GridView from '../../Grid/GridView/GridView';
+import RunResultDetailPanel from './RunResultDetailPanel';
 import { getResultColumns, RESULT_FILTERS } from './utils';
-import { DialLoader } from '@epam/ai-dial-ui-kit';
 
 interface Props {
   run: Run;
@@ -17,6 +20,7 @@ interface Props {
 
 const ExtractionResultTab: FC<Props> = ({ run }) => {
   const t = useI18n();
+  const { sidebar } = useAppContext();
 
   const [results, setResults] = useState<ExtractionResult[] | null>(null);
   const [colDefs, setColDefs] = useState<ColDef[]>(() => getResultColumns([]));
@@ -36,6 +40,16 @@ const ExtractionResultTab: FC<Props> = ({ run }) => {
     }
   }, [isLoading, results, run]);
 
+  const onRowClicked = useCallback(
+    (event: { data?: ExtractionResult }) => {
+      const result = event.data;
+      if (result) {
+        sidebar.showSidebar(<RunResultDetailPanel result={result} onClose={sidebar.closeSidebar} />, 'w-[500px]');
+      }
+    },
+    [sidebar],
+  );
+
   return (
     <div className="flex flex-col gap-4 h-full min-h-0">
       <h2>{t(TabsI18nKey.ExtractionResult)}</h2>
@@ -46,7 +60,10 @@ const ExtractionResultTab: FC<Props> = ({ run }) => {
           <GridView
             columnDefs={colDefs}
             rowData={results}
-            additionalGridOptions={{ defaultColDef: { filter: false, floatingFilter: false } }}
+            additionalGridOptions={{
+              defaultColDef: { filter: false, floatingFilter: false },
+              onRowClicked,
+            }}
             emptyDataProps={{ title: t(EntitiesI18nKey.NoResults) }}
           />
         )}
