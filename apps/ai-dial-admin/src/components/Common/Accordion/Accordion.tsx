@@ -13,10 +13,13 @@ interface Props {
   children?: ReactNode;
   header?: ReactElement<{ isCollapsed: boolean }>;
   containerClassName?: string;
+  containerPaddingClassName?: string;
+  contentPaddingClassName?: string;
   contentClassName?: string;
   errorIndicator?: boolean;
 }
 
+// TODO: review after design implementation
 const Accordion: FC<Props> = ({
   children,
   title,
@@ -26,6 +29,8 @@ const Accordion: FC<Props> = ({
   contentClassName,
   containerClassName,
   errorIndicator,
+  containerPaddingClassName = 'p-4',
+  contentPaddingClassName = 'px-6 pb-4',
 }) => {
   const t = useI18n();
   const [isCollapsed, setIsCollapsed] = useState(collapsed);
@@ -41,7 +46,13 @@ const Accordion: FC<Props> = ({
   );
 
   return (
-    <div className={classNames('flex flex-col rounded border border-primary gap-4 p-4', containerClassName)}>
+    <div
+      className={classNames(
+        'flex flex-col rounded border border-primary gap-4',
+        containerClassName,
+        containerPaddingClassName,
+      )}
+    >
       {title && (
         <div className="flex flex-row justify-between">
           <button className="flex items-center w-full" onClick={toggleCollapse}>
@@ -64,7 +75,14 @@ const Accordion: FC<Props> = ({
           {cloneElement(header, { isCollapsed })}
         </div>
       )}
-      <div className={classNames('flex flex-col px-6 pb-4 overflow-auto', isCollapsed && 'hidden', contentClassName)}>
+      <div
+        className={classNames(
+          'flex flex-col overflow-auto',
+          isCollapsed && 'hidden',
+          contentClassName,
+          contentPaddingClassName,
+        )}
+      >
         {children}
       </div>
     </div>

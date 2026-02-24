@@ -1447,5 +1447,9 @@ export default {
     StartTime: 'Start time',
     EndTime: 'End time',
     TestSuite: 'Test suite',
+    RequestBody: 'Request body',
+    ResponseBody: 'Response body',
+    TestCaseData: 'Test case data',
+    Execution: 'Execution',
   },
 } as const;

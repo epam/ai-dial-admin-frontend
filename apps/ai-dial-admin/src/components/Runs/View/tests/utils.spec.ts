@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { FilterOperatorDto } from '@/src/types/request';
-import { RESULT_FILTERS, getCellClass, getResultColumns } from '../utils';
+import { RESULT_FILTERS, getTestCaseStatusClass, getResultColumns } from '../utils';
 
 describe('Runs View :: RESULT_FILTERS', () => {
   test('Should return run and suite filters for provided run', () => {
@@ -25,19 +25,19 @@ describe('Runs View :: RESULT_FILTERS', () => {
 
 describe('Runs View :: getCellClass', () => {
   test('Should return empty class for undefined status code', () => {
-    expect(getCellClass(void 0)).toBe('');
+    expect(getTestCaseStatusClass(void 0)).toBe('');
   });
 
   test('Should return success for 2xx status code', () => {
-    expect(getCellClass(201)).toBe('text-success');
+    expect(getTestCaseStatusClass(201)).toBe('text-success');
   });
 
   test('Should return warning for 4xx status code', () => {
-    expect(getCellClass(404)).toBe('text-warning');
+    expect(getTestCaseStatusClass(404)).toBe('text-warning');
   });
 
   test('Should return error for non-2xx/4xx status code', () => {
-    expect(getCellClass(500)).toBe('text-error');
+    expect(getTestCaseStatusClass(500)).toBe('text-error');
   });
 });
 
