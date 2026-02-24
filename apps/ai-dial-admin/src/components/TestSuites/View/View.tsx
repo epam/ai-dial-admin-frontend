@@ -30,7 +30,6 @@ interface Props {
 }
 
 const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
-  console.log('Rendering TestSuiteView', originalTestSuite);
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
