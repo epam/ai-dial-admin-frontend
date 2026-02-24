@@ -1,22 +1,34 @@
 'use client';
 
-import { FC } from 'react';
+import { FC, useMemo } from 'react';
 
+import { AlertVariant, DialAlert } from '@epam/ai-dial-ui-kit';
+import { isEqual } from 'lodash';
+
+import { TestSuitesI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
-import TestCasesList from './TestCasesList';
 import TemplateVariables from './TemplateVariables';
+import TestCasesList from './TestCasesList';
 
 interface Props {
   selectedTestSuite: TestSuite;
+  originalTestSuite?: TestSuite;
   onChange: (testSuite: TestSuite, isSkipRefresh?: boolean) => void;
   isSkipRefresh?: boolean;
 }
 
-const TestCases: FC<Props> = ({ selectedTestSuite, onChange, isSkipRefresh }) => {
+const TestCases: FC<Props> = ({ selectedTestSuite, originalTestSuite, onChange, isSkipRefresh }) => {
+  const t = useI18n();
+  const isNotSaved = useMemo(() => {
+    return !isEqual(selectedTestSuite.requestTemplate, originalTestSuite?.requestTemplate);
+  }, [selectedTestSuite.requestTemplate, originalTestSuite?.requestTemplate]);
+
   return (
-    <div className="flex-1 min-h-0 flex flex-col gap-y-6">
+    <div className="h-full flex flex-col gap-y-6">
       <TemplateVariables selectedTestSuite={selectedTestSuite} onChange={onChange} isSkipRefresh={isSkipRefresh} />
       <TestCasesList selectedTestSuite={selectedTestSuite} onChange={onChange} />
+      {isNotSaved && <DialAlert variant={AlertVariant.Info} message={t(TestSuitesI18nKey.Warning)} />}
     </div>
   );
 };

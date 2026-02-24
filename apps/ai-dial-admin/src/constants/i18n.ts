@@ -1393,6 +1393,7 @@ export enum TestSuitesI18nKey {
   DynamicConfiguration = 'TestSuites.DynamicConfiguration',
   Constant = 'TestSuites.Constant',
   Attribute = 'TestSuites.Attribute',
+  Warning = 'TestSuites.Warning',
 }
 
 export enum RunsI18nKey {

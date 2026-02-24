@@ -13,7 +13,7 @@ vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
 }));
 
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
-  default: ({ getIsEmptyData, emptyDataProps, onGridReady }: any) => {
+  default: ({ getIsEmptyData, emptyDataProps }: any) => {
     const isEmpty = getIsEmptyData();
     return <section aria-label="grid">{isEmpty && <p role="status">{emptyDataProps?.title}</p>}</section>;
   },
@@ -132,6 +132,6 @@ describe('TemplateVariables', () => {
     const { container } = render(<TemplateVariables selectedTestSuite={createTestSuite()} onChange={mockOnChange} />);
 
     const wrapper = container.firstChild as HTMLElement;
-    expect(wrapper).toHaveClass('flex-1', 'min-h-0', 'flex', 'flex-col', 'gap-y-4');
+    expect(wrapper).toHaveClass('flex-1', 'min-h-[200px]', 'flex', 'flex-col', 'gap-y-4');
   });
 });

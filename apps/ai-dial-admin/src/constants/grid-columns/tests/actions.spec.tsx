@@ -171,7 +171,7 @@ describe('Actions :: getResourceRollbackOperation', () => {
   test('Should set TRY_OUT_OPERATION', () => {
     const res = getTryOutOperation(CLICK);
     expect(res.id).toBe(ActionMenuOperation.Try_out);
-    expect(res.icon).toEqual(<IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} />);
+    expect(res.icon).toEqual(<IconPlayerPlay className="text-success" {...BASE_BUTTON_ICON_PROPS} />);
     expect(res.onClick).toEqual(CLICK);
   });
 });

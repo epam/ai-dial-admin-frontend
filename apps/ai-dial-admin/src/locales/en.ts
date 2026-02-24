@@ -1403,6 +1403,7 @@ export default {
     ChatInterface: 'Chat interface',
     Preview: 'Preview',
     ChangeMethod: 'Change method',
+    Warning: 'Request template has been changed. Save changes to update the list of test cases.',
     ImportSuccess: 'Test cases imported successfully',
     ImportSuccessDescription: 'You can now see them in the list of test cases',
     ImportFailed: 'Test cases import failed',
