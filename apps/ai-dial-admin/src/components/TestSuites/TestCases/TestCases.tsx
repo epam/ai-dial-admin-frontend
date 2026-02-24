@@ -14,7 +14,7 @@ interface Props {
 
 const TestCases: FC<Props> = ({ selectedTestSuite, onChange, isSkipRefresh }) => {
   return (
-    <div className="h-full flex flex-col gap-y-6 relative">
+    <div className="flex-1 min-h-0 flex flex-col gap-y-6">
       <TemplateVariables selectedTestSuite={selectedTestSuite} onChange={onChange} isSkipRefresh={isSkipRefresh} />
       <TestCasesList selectedTestSuite={selectedTestSuite} onChange={onChange} />
     </div>

@@ -92,7 +92,7 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite }) => {
         getTestCases(selectedTestSuite.id, page, PAGE_SIZE, sorts, filters)
           .then((res) => {
             const data = res == null || res.content.length === 0 ? [] : getTestCaseGridData(res?.content || []);
-            onSetData(data, res?.totalElements || 0, params);
+
             gridApi?.updateGridOptions({
               columnDefs: [
                 ...getTestCaseColumns(res?.content || []),
@@ -103,6 +103,7 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite }) => {
                 },
               ],
             });
+            onSetData(data, res?.totalElements || 0, params);
           })
           .catch(() => {
             params.failCallback();
@@ -190,7 +191,7 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite }) => {
 
   return (
     <>
-      <div className="h-full min-h-[250px]">
+      <div className="h-full min-h-[400px]">
         <ListEntities
           additionalGridOptions={gridOptions}
           listLabel={t(TestSuitesI18nKey.TestCases)}
