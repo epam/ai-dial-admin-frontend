@@ -32,8 +32,8 @@ const EditableTitle: FC<Props> = ({ children, size, title, disabled, changeTitle
 
   if (!editing) {
     return (
-      <div className="flex gap-3 items-center group/title">
-        <Tag className={classNames(!disabled && 'cursor-pointer')} onClick={onClick}>
+      <div className="flex gap-3 items-center group/title" onClick={onClick}>
+        <Tag className={classNames(!disabled && 'cursor-pointer')}>
           {title}
           {children}
         </Tag>
