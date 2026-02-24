@@ -7,12 +7,8 @@ export enum TestSuitTab {
   Methods = 'Methods',
 }
 
-export const TEST_SUIT_STEPS = (t: (key: string) => string) => {
-  return [
-    {
-      id: TestSuitTab.Properties,
-      name: t(TabsI18nKey.Properties),
-    },
+export const TEST_SUIT_STEPS = (t: (key: string) => string, hideProperties: boolean) => {
+  const steps = [
     {
       id: TestSuitTab.Application,
       name: t(TestSuitesI18nKey.Application),
@@ -23,5 +19,14 @@ export const TEST_SUIT_STEPS = (t: (key: string) => string) => {
       name: t(TestSuitesI18nKey.Methods),
       status: StepStatus.VALID,
     },
-  ] as Step[];
+  ];
+  return hideProperties
+    ? steps
+    : ([
+        {
+          id: TestSuitTab.Properties,
+          name: t(TabsI18nKey.Properties),
+        },
+        ...steps,
+      ] as Step[]);
 };

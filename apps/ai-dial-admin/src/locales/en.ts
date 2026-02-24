@@ -1390,6 +1390,7 @@ export default {
   },
   TestSuites: {
     CreateTestSuite: 'Create Test Suite',
+    UpdateTestSuite: 'Update Test Suite',
     Application: 'Application',
     Methods: 'Methods',
     Method: 'Method',
