@@ -4,7 +4,7 @@ import { Dispatch, FC, MouseEvent, SetStateAction, useCallback, useMemo, useStat
 
 import { DialGhostButton, DialLoader } from '@epam/ai-dial-ui-kit';
 import { IconColumns2 } from '@tabler/icons-react';
-import { GridOptions, RowSelectedEvent } from 'ag-grid-community';
+import { FirstDataRenderedEvent, GridOptions, RowSelectedEvent } from 'ag-grid-community';
 
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import GridView from '@/src/components/Grid/GridView/GridView';
@@ -60,6 +60,16 @@ const Applications: FC<Props> = ({ deployments, selectedApplicationId, onChangeA
       ),
     },
     onRowSelected,
+    onFirstDataRendered: (event: FirstDataRenderedEvent) => {
+      if (selectedApplicationId) {
+        event.api.forEachNode((node) => {
+          if (node.data?.deploymentId === selectedApplicationId) {
+            node.setSelected(true);
+            event.api.ensureNodeVisible(node, 'middle');
+          }
+        });
+      }
+    },
   };
 
   const toggleColumnsPanel = useCallback(() => setShowColumnsPanel(!showColumnsPanel), [showColumnsPanel]);
