@@ -9,6 +9,7 @@ import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
 import { getHeaderClassName } from '@/src/utils/entities/view';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import SimpleButtonsWrapper, { SimpleButtonsWrapperProps } from './Wrappers/SimpleButtonsWrapper';
+import { ApplicationRoute } from '@/src/types/routes';
 
 interface Entity {
   id?: string;
@@ -33,10 +34,15 @@ const SimpleEntityHeader = <T extends Entity>({
   ...props
 }: Props<T>) => {
   const isEditorEnabled = jsonConfiguration?.isEditorEnabled;
+  const readonlyId =
+    props.view === ApplicationRoute.TestSuites
+      ? props.entity.name || ''
+      : props.entity.id || props.entity.$id || props.entity.name || '';
+
   return (
     <div className="flex flex-col gap-y-4 mb-8">
       <div className={getHeaderClassName(isEditorEnabled)}>
-        {!isEditorEnabled && <ReadonlyId value={props.entity.id || props.entity.$id || props.entity.name || ''} />}
+        {!isEditorEnabled && <ReadonlyId value={readonlyId} />}
         <SimpleButtonsWrapper jsonConfiguration={jsonConfiguration} {...props}>
           {children}
         </SimpleButtonsWrapper>
