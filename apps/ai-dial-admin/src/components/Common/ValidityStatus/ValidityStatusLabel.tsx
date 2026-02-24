@@ -14,9 +14,11 @@ const ValidityStatusLabel: FC<Props> = ({ ...props }) => {
   const t = useI18n();
 
   return (
-    <LabelledText label={t(EntityFieldsI18nKey.status)}>
-      <ValidityStatus {...props} />
-    </LabelledText>
+    props.valid != null && (
+      <LabelledText label={t(EntityFieldsI18nKey.status)}>
+        <ValidityStatus {...props} />
+      </LabelledText>
+    )
   );
 };
 
