@@ -1,6 +1,6 @@
 'use client';
 
-import { ColDef } from 'ag-grid-community';
+import { ColDef, RowClickedEvent } from 'ag-grid-community';
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import { DialLoader } from '@epam/ai-dial-ui-kit';
@@ -10,7 +10,7 @@ import { EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
 import { ExtractionResult, Run } from '@/src/models/evaluation/run';
-import GridView from '../../Grid/GridView/GridView';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import RunResultDetailPanel from './RunResultDetailPanel';
 import { getResultColumns, RESULT_FILTERS } from './utils';
 
@@ -24,6 +24,7 @@ const ExtractionResultTab: FC<Props> = ({ run }) => {
 
   const [results, setResults] = useState<ExtractionResult[] | null>(null);
   const [colDefs, setColDefs] = useState<ColDef[]>(() => getResultColumns([]));
+  const [selectedResult, setSelectedResult] = useState<ExtractionResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -41,13 +42,16 @@ const ExtractionResultTab: FC<Props> = ({ run }) => {
   }, [isLoading, results, run]);
 
   const onRowClicked = useCallback(
-    (event: { data?: ExtractionResult }) => {
-      const result = event.data;
-      if (result) {
-        sidebar.showSidebar(<RunResultDetailPanel result={result} onClose={sidebar.closeSidebar} />, 'w-[500px]');
+    (event: RowClickedEvent) => {
+      if (event.data && selectedResult?.id !== event.data.id) {
+        setSelectedResult(event.data);
+        sidebar.showSidebar(<RunResultDetailPanel result={event.data} onClose={sidebar.closeSidebar} />, 'w-[500px]');
+      } else {
+        setSelectedResult(null);
+        sidebar.closeSidebar();
       }
     },
-    [sidebar],
+    [sidebar, selectedResult],
   );
 
   return (
