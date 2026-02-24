@@ -10,11 +10,10 @@ import { getDeployments } from '@/src/app/[lang]/test-suites/actions';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import Field from '@/src/components/Common/Field/Field';
-import SelectApplicationModal from '@/src/components/TestSuites/Modals/SelectApplication/SelectApplicationModal';
+import CreateTestSuite from '@/src/components/TestSuites/Modals/Create/CreateTestSuite';
 import RequestTemplate from '@/src/components/TestSuites/RequestTemplate/RequestTemplate';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { Deployment } from '@/src/models/evaluation/deployment';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
@@ -29,7 +28,6 @@ interface Props {
 
 const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false }) => {
   const t = useI18n();
-  const { dispatch } = useSaveValidationContext();
   const [deployments, setDeployments] = useState<Deployment[] | null>(null);
   const [selectedAppType, setSelectedAppType] = useState<string | undefined>(void 0);
   const [isAppModalOpen, setIsAppModalOpen] = useState(false);
@@ -40,23 +38,14 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false }
     });
   }, [selectedAppType, testSuite.deploymentRef?.id]);
 
-  const onSelectApp = useCallback(
-    (id?: string) => {
-      const app = deployments?.find((d) => d.deploymentId === id);
-      onChange({
-        ...testSuite,
-        deploymentRef: {
-          id: app?.deploymentId,
-          name: app?.displayName,
-          version: app?.version,
-        },
-        endpointRef: void 0,
-      });
-      dispatch({ type: ValidationActionType.SetField, field: 'endpointRef', isValid: false });
+  const onUpdate = useCallback(
+    (suite: TestSuite) => {
+      const app = deployments?.find((d) => d.deploymentId === suite.deploymentRef?.id);
       setSelectedAppType(app?.$type);
       setIsAppModalOpen(false);
+      onChange(suite);
     },
-    [deployments, dispatch, onChange, testSuite],
+    [deployments, onChange],
   );
 
   useEffect(() => {
@@ -90,16 +79,15 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false }
               <DialInputPopup
                 open={isAppModalOpen}
                 onOpen={() => setIsAppModalOpen(true)}
-                selectedValue={testSuite.deploymentRef?.name}
+                selectedValue={`${testSuite.deploymentRef?.name}${testSuite.deploymentRef?.version ? ` (version: ${testSuite.deploymentRef.version})` : ''}`}
                 elementId="applications"
                 disabled={!deployments}
               >
-                <SelectApplicationModal
-                  selected={testSuite.deploymentRef?.id}
-                  onClose={() => setIsAppModalOpen(false)}
-                  onApply={onSelectApp}
-                  apps={deployments || []}
+                <CreateTestSuite
+                  currentEntity={testSuite}
                   isModalOpen={isAppModalOpen}
+                  onClose={() => setIsAppModalOpen(false)}
+                  onCreate={onUpdate as (suite: TestSuite) => void}
                 />
               </DialInputPopup>
             </div>

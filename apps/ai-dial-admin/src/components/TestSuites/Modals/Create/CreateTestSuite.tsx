@@ -20,16 +20,17 @@ interface Props {
   isModalOpen: boolean;
   onClose: () => void;
   onCreate: (suite: TestSuite) => void;
+  currentEntity?: TestSuite;
 }
 
-const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate }) => {
+const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEntity }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
 
   const { isValid } = useSaveValidationContext();
-  const [steps, setSteps] = useState(TEST_SUIT_STEPS(t));
+  const [steps, setSteps] = useState(TEST_SUIT_STEPS(t, !!currentEntity));
   const [currentStepId, setCurrentStep] = useState(steps[0].id);
-  const [testSuite, setTestSuite] = useState<TestSuite>({} as TestSuite);
+  const [testSuite, setTestSuite] = useState<TestSuite>(structuredClone(currentEntity) || ({} as TestSuite));
   const [selectedApplication, setSelectedApplication] = useState<Deployment | null>(null);
   const [deployments, setDeployments] = useState<Deployment[] | null>(null);
 
@@ -44,12 +45,16 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate }) => {
       getDeployments().then((res) => {
         if (res?.success) {
           setDeployments(res.response || []);
+          if (currentEntity?.deploymentRef?.id) {
+            const app = res.response?.find((d) => d.deploymentId === currentEntity.deploymentRef?.id);
+            setSelectedApplication(app || null);
+          }
         } else {
           showNotification(getErrorNotification(res?.errorHeader, res?.errorMessage, res?.requestId));
         }
       });
     }
-  }, [deployments, showNotification]);
+  }, [currentEntity?.deploymentRef?.id, deployments, showNotification]);
 
   useEffect(() => {
     setSteps((prev) =>
@@ -68,7 +73,7 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate }) => {
   return (
     <DialPopup
       onClose={onClose}
-      header={t(TestSuitesI18nKey.CreateTestSuite)}
+      header={t(currentEntity ? TestSuitesI18nKey.UpdateTestSuite : TestSuitesI18nKey.CreateTestSuite)}
       portalId="CreateTestSuiteModal"
       open={isModalOpen}
       size={PopupSize.Lg}
@@ -101,7 +106,7 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate }) => {
         onChangeStep={setCurrentStep}
         steps={steps}
         currentStep={currentStep}
-        finishButtonLabel={t(ButtonsI18nKey.Create)}
+        finishButtonLabel={t(currentEntity ? ButtonsI18nKey.Update : ButtonsI18nKey.Create)}
       />
     </DialPopup>
   );
