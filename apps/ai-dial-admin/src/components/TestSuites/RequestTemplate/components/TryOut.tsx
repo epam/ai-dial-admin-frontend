@@ -3,7 +3,12 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { DialCloseButton, DialLoader, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 
-import { getTemplateVariables, tryOutSuite } from '@/src/app/[lang]/test-suites/actions';
+import {
+  getTestCaseTemplateVariables,
+  getTestSuiteTemplateVariables,
+  tryOutTestCase,
+  tryOutTestSuite,
+} from '@/src/app/[lang]/test-suites/actions';
 import Divider from '@/src/components/Common/Divider/Divider';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { convertVariableIntoInitialRequest } from '@/src/components/TestSuites/utils/template-variables';
@@ -16,9 +21,10 @@ import Variables from './Variables';
 
 interface Props {
   testSuiteId: string;
+  testCaseId?: string;
 }
 
-const TryOut: FC<Props> = ({ testSuiteId }) => {
+const TryOut: FC<Props> = ({ testSuiteId, testCaseId }) => {
   const t = useI18n();
   const { sidebar, toggleSidebar } = useAppContext();
 
@@ -29,20 +35,6 @@ const TryOut: FC<Props> = ({ testSuiteId }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const [variables, setVariables] = useState<TemplateVariable[]>([]);
-
-  const sendRequest = useCallback(() => {
-    setIsRequestSend(true);
-    tryOutSuite(testSuiteId, requestBody).then((res) => {
-      if (res?.success) {
-        setResolvedRequest(res.response?.resolvedRequest || {});
-        setResponse(res.response?.response || {});
-      } else {
-        setResolvedRequest(requestBody || {});
-        setResponse({ error: res?.errorMessage || 'Unknown error' });
-      }
-      setIsRequestSend(false);
-    });
-  }, [testSuiteId, requestBody]);
 
   const onChangeRequestBody = useCallback((body: Record<string, unknown>) => {
     setRequestBody(body);
@@ -56,13 +48,42 @@ const TryOut: FC<Props> = ({ testSuiteId }) => {
     sidebar.closeSidebar();
   }, [sidebar, toggleSidebar]);
 
+  const sendRequest = useCallback(async () => {
+    setIsRequestSend(true);
+    try {
+      const res = testCaseId
+        ? await tryOutTestCase(testSuiteId, testCaseId, requestBody)
+        : await tryOutTestSuite(testSuiteId, requestBody);
+
+      if (res?.success) {
+        setResolvedRequest(res.response?.resolvedRequest || {});
+        setResponse(res.response?.response || {});
+      } else {
+        setResolvedRequest(requestBody || {});
+        setResponse({ error: res?.errorMessage || 'Unknown error' });
+      }
+    } finally {
+      setIsRequestSend(false);
+    }
+  }, [testSuiteId, testCaseId, requestBody]);
+
   useEffect(() => {
-    setIsLoading(true);
-    getTemplateVariables(testSuiteId as string).then((res) => {
-      setVariables(res || []);
-      setRequestBody(convertVariableIntoInitialRequest(res || []));
-      setIsLoading(false);
-    });
+    const fetchVariables = async () => {
+      setIsLoading(true);
+      try {
+        const res = testCaseId
+          ? await getTestCaseTemplateVariables(testSuiteId, testCaseId)
+          : await getTestSuiteTemplateVariables(testSuiteId);
+
+        const vars = res || [];
+        setVariables(vars);
+        setRequestBody(convertVariableIntoInitialRequest(vars));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchVariables();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

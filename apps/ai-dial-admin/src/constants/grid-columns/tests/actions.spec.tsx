@@ -34,6 +34,7 @@ import {
   getPreviewOperation,
   getRunOperation,
   getStopOperation,
+  getTryOutOperation,
 } from '../actions';
 
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
@@ -165,5 +166,12 @@ describe('Actions :: getResourceRollbackOperation', () => {
     expect(hidden({} as any, nodeFailed)).toBe(false);
     // and true for other statuses
     expect(hidden({} as any, nodeOther)).toBe(true);
+  });
+
+  test('Should set TRY_OUT_OPERATION', () => {
+    const res = getTryOutOperation(CLICK);
+    expect(res.id).toBe(ActionMenuOperation.Try_out);
+    expect(res.icon).toEqual(<IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} />);
+    expect(res.onClick).toEqual(CLICK);
   });
 });

@@ -242,7 +242,6 @@ export const getVariablesColumns = (
           return {
             component: EditableCellRenderer,
             params: {
-              inputType: params.data?.inferredType === TestCaseItemType.STRING ? 'text' : 'number',
               onChange: onChangeEditable,
             },
           };

@@ -7,15 +7,6 @@ export const CHAT_COMPLETION_METHOD = {
     'This API is based on the OpenAI Azure API and extended to support working with advanced DIAL agents and applications.',
   parameters: [
     {
-      name: 'Deployment Name',
-      in: 'path',
-      schema: {
-        type: 'string',
-      },
-      description: 'The name of the deployment.',
-      required: true,
-    },
-    {
       in: 'query',
       name: 'api-version',
       schema: {
