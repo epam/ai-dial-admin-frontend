@@ -30,6 +30,7 @@ interface Props {
 }
 
 const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
+  console.log('Rendering TestSuiteView', originalTestSuite);
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -148,6 +149,7 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
               isSkipRefresh={isSkipRefresh}
               activeTab={activeTab}
               selectedTestSuite={selectedTestSuite}
+              originalTestSuite={originalTestSuite}
               onChange={onChangeTestSuite}
             />
           )}
