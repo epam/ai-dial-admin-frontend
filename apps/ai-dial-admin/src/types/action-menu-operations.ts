@@ -23,4 +23,5 @@ export enum ActionMenuOperation {
   Run = 'Run',
   Stop = 'Stop',
   CreateNewVersion = 'Create new version',
+  Try_out = 'Try out',
 }

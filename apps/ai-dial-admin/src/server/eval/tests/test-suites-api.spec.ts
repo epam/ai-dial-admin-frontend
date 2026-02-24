@@ -5,6 +5,8 @@ import createFetchMock from 'vitest-fetch-mock';
 import {
   DEPLOYMENTS_URL,
   TEST_CASES_URL,
+  TEST_CASE_TEMPLATE_VARIABLES_URL,
+  TEST_CASE_TRY_OUT_URL,
   TEST_CASE_URL,
   TEST_SUITES_RUNS_URL,
   TEST_SUITES_URL,
@@ -196,20 +198,38 @@ describe('Server :: TestSuiteApi', () => {
     );
   });
 
-  test('Should call getTemplateVariables', async () => {
+  test('Should call getTestSuiteTemplateVariables', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockTestSuite));
-    await instance.getTemplateVariables('id', TOKEN_MOCK);
+    await instance.getTestSuiteTemplateVariables('id', TOKEN_MOCK);
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${TEST_SUITE_TEMPLATE_VARIABLES_URL('id')}`,
       expect.objectContaining({ method: 'GET' }),
     );
   });
 
-  test('Should call tryOutSuite', async () => {
+  test('Should call getTestCaseTemplateVariables', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockTestSuite));
-    await instance.tryOutSuite('id', { variables: {} }, TOKEN_MOCK);
+    await instance.getTestCaseTemplateVariables('id', 'caseId', TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_CASE_TEMPLATE_VARIABLES_URL('id', 'caseId')}`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
+  test('Should call tryOutTestSuite', async () => {
+    fetch.mockResponseOnce(JSON.stringify(mockTestSuite));
+    await instance.tryOutTestSuite('id', { variables: {} }, TOKEN_MOCK);
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${TEST_SUITE_TRY_OUT_URL('id')}`,
+      expect.objectContaining({ method: 'POST' }),
+    );
+  });
+
+  test('Should call tryOutTestCase', async () => {
+    fetch.mockResponseOnce(JSON.stringify(mockTestSuite));
+    await instance.tryOutTestCase('id', 'caseId', { variables: {} }, TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_CASE_TRY_OUT_URL('id', 'caseId')}`,
       expect.objectContaining({ method: 'POST' }),
     );
   });

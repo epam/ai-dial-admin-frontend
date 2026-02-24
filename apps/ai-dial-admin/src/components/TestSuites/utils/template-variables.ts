@@ -49,7 +49,7 @@ export const generateVariablesRowData = (
 export const convertVariableIntoInitialRequest = (variables: TemplateVariable[]): Record<string, unknown> => {
   const requestVariables: Record<string, unknown> = {};
   variables.forEach((variable) => {
-    requestVariables[variable.name] = '';
+    requestVariables[variable.name] = variable.defaultValue ?? '';
   });
   return requestVariables;
 };

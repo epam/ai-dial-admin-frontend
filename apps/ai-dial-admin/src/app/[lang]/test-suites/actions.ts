@@ -84,12 +84,22 @@ export async function getDeployment(id: string, type: string) {
   return testSuitesApi.getDeployment(id, type, token);
 }
 
-export async function getTemplateVariables(id: string) {
+export async function getTestSuiteTemplateVariables(id: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return testSuitesApi.getTemplateVariables(id, token);
+  return testSuitesApi.getTestSuiteTemplateVariables(id, token);
 }
 
-export async function tryOutSuite(id: string, requestBody: Record<string, unknown>) {
+export async function getTestCaseTemplateVariables(id: string, testCaseId: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return testSuitesApi.tryOutSuite(id, requestBody, token);
+  return testSuitesApi.getTestCaseTemplateVariables(id, testCaseId, token);
+}
+
+export async function tryOutTestSuite(id: string, requestBody: Record<string, unknown>) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.tryOutTestSuite(id, requestBody, token);
+}
+
+export async function tryOutTestCase(id: string, testCaseId: string, requestBody: Record<string, unknown>) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.tryOutTestCase(id, testCaseId, requestBody, token);
 }

@@ -483,19 +483,21 @@ describe('convertVariableIntoInitialRequest', () => {
     expect(result).toEqual({ alpha: '', beta: '', gamma: '' });
   });
 
-  test('should ignore defaultValue and use empty string', () => {
+  test('should use defaultValue when available, otherwise empty string', () => {
     const variables = [
       createVariable({ name: 'with_default', defaultValue: 'some-default' }),
       createVariable({ name: 'with_number_default', defaultValue: 42 }),
       createVariable({ name: 'with_object_default', defaultValue: { key: 'val' } }),
+      createVariable({ name: 'without_default', defaultValue: null }),
     ];
 
     const result = convertVariableIntoInitialRequest(variables);
 
     expect(result).toEqual({
-      with_default: '',
-      with_number_default: '',
-      with_object_default: '',
+      with_default: 'some-default',
+      with_number_default: 42,
+      with_object_default: { key: 'val' },
+      without_default: '',
     });
   });
 

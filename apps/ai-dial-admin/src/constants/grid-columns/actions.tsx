@@ -175,3 +175,11 @@ export function getStopOperation<T>(onClick: (entity?: T) => void): ActionMenuOp
     },
   };
 }
+
+export function getTryOutOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
+  return {
+    icon: <IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} />,
+    id: ActionMenuOperation.Try_out,
+    onClick,
+  };
+}

@@ -9,7 +9,7 @@ import {
   getDeployment,
   getDeployments,
   getRuns,
-  getTemplateVariables,
+  getTestSuiteTemplateVariables,
   getTestCase,
   getTestCases,
   getTestSuite,
@@ -19,8 +19,10 @@ import {
   removeTestCase,
   removeTestSuite,
   runTestSuite,
-  tryOutSuite,
+  tryOutTestSuite,
   updateTestSuite,
+  getTestCaseTemplateVariables,
+  tryOutTestCase,
 } from './actions';
 
 vi.mock('@/src/utils/auth/auth-request');
@@ -156,19 +158,35 @@ describe('TestSuites :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call getTemplateVariables action ', async () => {
-    (testSuitesApi.getTemplateVariables as any).mockResolvedValue(RESPONSE_MOCK);
-    const result = await getTemplateVariables('id');
+  test('Should call getTestSuiteTemplateVariables action ', async () => {
+    (testSuitesApi.getTestSuiteTemplateVariables as any).mockResolvedValue(RESPONSE_MOCK);
+    const result = await getTestSuiteTemplateVariables('id');
     expect(getUserToken).toHaveBeenCalled();
-    expect(testSuitesApi.getTemplateVariables).toHaveBeenCalledWith('id', TOKEN_MOCK);
+    expect(testSuitesApi.getTestSuiteTemplateVariables).toHaveBeenCalledWith('id', TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call tryOutSuite action ', async () => {
-    (testSuitesApi.tryOutSuite as any).mockResolvedValue(RESPONSE_MOCK);
-    const result = await tryOutSuite('id', { variables: {} });
+  test('Should call getTestCaseTemplateVariables action ', async () => {
+    (testSuitesApi.getTestCaseTemplateVariables as any).mockResolvedValue(RESPONSE_MOCK);
+    const result = await getTestCaseTemplateVariables('id', 'caseId');
     expect(getUserToken).toHaveBeenCalled();
-    expect(testSuitesApi.tryOutSuite).toHaveBeenCalledWith('id', { variables: {} }, TOKEN_MOCK);
+    expect(testSuitesApi.getTestCaseTemplateVariables).toHaveBeenCalledWith('id', 'caseId', TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call tryOutTestSuite action ', async () => {
+    (testSuitesApi.tryOutTestSuite as any).mockResolvedValue(RESPONSE_MOCK);
+    const result = await tryOutTestSuite('id', { variables: {} });
+    expect(getUserToken).toHaveBeenCalled();
+    expect(testSuitesApi.tryOutTestSuite).toHaveBeenCalledWith('id', { variables: {} }, TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call tryOutTestCase action ', async () => {
+    (testSuitesApi.tryOutTestCase as any).mockResolvedValue(RESPONSE_MOCK);
+    const result = await tryOutTestCase('id', 'caseId', { variables: {} });
+    expect(getUserToken).toHaveBeenCalled();
+    expect(testSuitesApi.tryOutTestCase).toHaveBeenCalledWith('id', 'caseId', { variables: {} }, TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

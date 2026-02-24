@@ -31,7 +31,7 @@ const Variables: FC<Props> = ({ variables, requestBody, onChangeRequestBody }) =
   const onChangeParam = useCallback(
     (value: string | object, data: InputBindingRowData) => {
       const body = { ...requestBodyRef.current, [data.templateVariable]: value };
-      setIsSkipRefresh(data.inferredType === TestCaseItemType.STRING || data.inferredType === TestCaseItemType.NUMBER);
+      setIsSkipRefresh(!(data.inferredType === TestCaseItemType.BOOLEAN));
       onChangeRequestBody(body);
     },
     [onChangeRequestBody],
