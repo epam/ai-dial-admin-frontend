@@ -10,7 +10,6 @@ export const PasswordWidget: FC<WidgetProps> = ({
   value,
   required,
   disabled,
-  readonly,
   onChange,
   placeholder,
   schema,
@@ -21,9 +20,8 @@ export const PasswordWidget: FC<WidgetProps> = ({
       <WidgetHeader title={schema.title} label={label} description={schema.description} />
       <DialPasswordInput
         containerClassName="flex w-full max-w-[600px]"
-        elementId={id}
+        id={id}
         disabled={disabled}
-        readonly={readonly}
         onChange={onChange}
         placeholder={placeholder}
         invalid={required ? !value : false}

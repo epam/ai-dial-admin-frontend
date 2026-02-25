@@ -14,7 +14,7 @@ describe('SchemeProperties', () => {
     const onChangeRunner = vi.fn();
     render(<SchemeProperties runner={baseRunner} onChangeRunner={onChangeRunner} />);
     // ID field
-    expect(screen.getAllByLabelText(EntityFieldsI18nKey.id)[0]).toBeInTheDocument();
+    expect(screen.getByText(EntityFieldsI18nKey.id)).toBeInTheDocument();
     fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Id), { target: { value: 'new-id' } });
     expect(onChangeRunner).toHaveBeenCalledWith(expect.objectContaining({ $id: 'new-id' }));
 
@@ -36,7 +36,7 @@ describe('SchemeProperties', () => {
 
   test('does not render id field if isImmutable', () => {
     render(<SchemeProperties runner={baseRunner} isImmutable onChangeRunner={vi.fn()} />);
-    expect(screen.queryByLabelText(EntityFieldsI18nKey.id)).toBeNull();
+    expect(screen.getByText(EntityFieldsI18nKey.id)).toBeNull();
   });
 
   test('renders AppRunnerExtendedProperties if isImmutable', () => {
