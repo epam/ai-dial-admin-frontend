@@ -26,7 +26,13 @@ vi.mock('next-auth/react', () => ({
 
 // ------------------ Next.js hooks ------------------
 vi.mock('next/headers', () => ({ headers: vi.fn(), cookies: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: vi.fn(), usePathname: vi.fn() }));
+vi.mock('next/navigation', () => ({
+  useRouter: vi.fn(),
+  usePathname: vi.fn(),
+  useSearchParams: vi.fn().mockReturnValue({
+    get: vi.fn(),
+  }),
+}));
 
 // ------------------ Contexts ------------------
 const createFnContext = () => vi.fn();
