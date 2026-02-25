@@ -35,7 +35,7 @@ export default async function Page(params: { searchParams: Promise<{ path: strin
       <PublicationView
         publication={data as Publication}
         view={ApplicationRoute.ApplicationPublications}
-        applicationSchemes={applicationSchemes}
+        applicationSchemes={applicationSchemes || []}
       />
     </SaveValidationContextProvider>
   );

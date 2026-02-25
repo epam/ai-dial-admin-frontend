@@ -273,5 +273,5 @@ test('returns correct tabs for application publication', () => {
 });
 
 test('returns correct tabs for toolset publication', () => {
-  expect(getToolsetPublicationTabs(t)).toEqual([getToolsetPublicationTabs]);
+  expect(getToolsetPublicationTabs(t)).toEqual([propertiesTab(t), toolsTab(t), permissionsTab(t)]);
 });
