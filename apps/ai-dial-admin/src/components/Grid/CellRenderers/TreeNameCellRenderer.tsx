@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import { ICellRendererParams } from 'ag-grid-community';
+import classNames from 'classnames';
 
 interface TreeNameCellRendererParams extends ICellRendererParams {
   onToggleExpand: (data: unknown) => void;
@@ -23,9 +24,10 @@ const TreeNameCellRenderer = ({ data, onToggleExpand, onChangeName, setValue }: 
   return (
     <div className="flex items-center h-full gap-1" style={{ paddingLeft: depth * 24 }}>
       <div
-        className={`flex items-center justify-center w-[18px] h-[18px] flex-shrink-0 rounded ${
-          hasChildren ? 'cursor-pointer hover:bg-layer-3' : ''
-        }`}
+        className={classNames(
+          'flex items-center justify-center w-[18px] h-[18px] flex-shrink-0 rounded',
+          hasChildren && 'cursor-pointer hover:bg-layer-3',
+        )}
         onClick={() => hasChildren && onToggleExpand(data)}
       >
         {hasChildren ? (
