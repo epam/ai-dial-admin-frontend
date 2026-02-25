@@ -166,6 +166,17 @@ describe('Deployments actions', () => {
       expect(result).toBe(mockResponse);
     });
 
+    test('getContainers without type calls containersApi.getContainers with undefined and token', async () => {
+      const mockResponse = [{ id: '1', name: 'container' }];
+      (containersApi.getContainers as any).mockResolvedValue(mockResponse);
+
+      const result = await getContainers();
+
+      expect(getUserToken).toHaveBeenCalled();
+      expect(containersApi.getContainers).toHaveBeenCalledWith(undefined, TOKEN_MOCK);
+      expect(result).toBe(mockResponse);
+    });
+
     test('getMCPContainers calls containersApi.getMCPContainers with token', async () => {
       const mockResponse = [{ id: '1', name: 'mcp-container' }];
       (containersApi.getMCPContainers as any).mockResolvedValue(mockResponse);
