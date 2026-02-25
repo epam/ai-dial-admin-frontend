@@ -56,8 +56,8 @@ const CreateRoute: FC<Props> = ({ isModalOpen, routeNames, onClose, onCreate }) 
     >
       <div className="flex flex-col overflow-auto px-6 py-4">
         <DialInput
-          elementId="name"
-          fieldTitle={t(EntityFieldsI18nKey.displayName)}
+          id="name"
+          labelProps={{ title: t(EntityFieldsI18nKey.displayName) }}
           placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
           value={name}
           onChange={onChangeName}

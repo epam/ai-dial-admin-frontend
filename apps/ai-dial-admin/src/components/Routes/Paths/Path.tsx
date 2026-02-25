@@ -66,11 +66,11 @@ const Path: FC<Props> = ({
     <div className={classNames('flex flex-row gap-x-2', alignmentClassName)}>
       <div className="flex-1 min-w-0">
         <DialInput
-          elementId={`path-${index}`}
+          id={`path-${index}`}
           value={path}
           disabled={readonly}
           placeholder={t(EntityPlaceholdersI18nKey.PathUrl)}
-          fieldTitle={index === 0 ? fieldTitle : ''}
+          labelProps={{ title: index === 0 ? fieldTitle : '' }}
           onChange={(value) => onChangePath(index, value)}
           errorText={error}
           invalid={!!error}

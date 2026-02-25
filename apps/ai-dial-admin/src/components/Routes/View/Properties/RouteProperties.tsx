@@ -242,9 +242,9 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
       <div className={classNames('flex gap-x-2 flex-row', STANDARD_CONTROL_WIDTH, !route.response && 'hidden')}>
         <DialNumberInput
           disabled={readonly}
-          elementId="status"
+          id="status"
           containerClassName="w-[150px]"
-          fieldTitle={t(EntityFieldsI18nKey.status)}
+          labelProps={{ title: t(EntityFieldsI18nKey.status) }}
           placeholder={t(EntityPlaceholdersI18nKey.Status)}
           value={route.response?.status}
           onChange={onChangeStatus}
@@ -253,9 +253,9 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
         />
         <DialInput
           disabled={readonly}
-          elementId="body"
+          id="body"
           containerClassName="flex-1"
-          fieldTitle={t(EntityFieldsI18nKey.body)}
+          labelProps={{ title: t(EntityFieldsI18nKey.body) }}
           placeholder={t(EntityPlaceholdersI18nKey.Body)}
           value={route.response?.body}
           onChange={onChangeBody}
@@ -277,22 +277,22 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
         <DialSelectField
           disabled={readonly}
           placeholder={t(EntityPlaceholdersI18nKey.SelectPermission)}
-          elementId="permissions"
+          id="permissions"
           multiple={true}
           className={STANDARD_CONTROL_WIDTH}
           containerClassName={STANDARD_CONTROL_WIDTH}
           options={permissionsItems}
           value={selectedPermissions}
-          fieldTitle={t(EntityFieldsI18nKey.permissions)}
+          label={t(EntityFieldsI18nKey.permissions)}
           onChange={(values) => onChangePermissions(values as string[])}
         />
       )}
       <div className={classNames('flex gap-x-2 flex-row items-end', STANDARD_CONTROL_WIDTH)}>
         <DialNumberInput
-          elementId="order"
+          id="order"
           disabled={readonly}
           containerClassName="w-[50%]"
-          fieldTitle={t(EntityFieldsI18nKey.order)}
+          labelProps={{ title: t(EntityFieldsI18nKey.order) }}
           placeholder={t(EntityPlaceholdersI18nKey.Order)}
           value={route.order}
           min={0}

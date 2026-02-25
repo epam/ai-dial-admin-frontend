@@ -106,9 +106,9 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
         <div className={classNames(inputClassName, 'w-[250px]')}>
           <DialSelectField
             value={rule.source}
-            elementId={`rule-attribute-${index}`}
+            id={`rule-attribute-${index}`}
             options={attributeItems}
-            fieldTitle={isFirstLine ? t(FoldersI18nKey.AttributeTitle) : ''}
+            labe={isFirstLine ? t(FoldersI18nKey.AttributeTitle) : ''}
             placeholder={t(FoldersI18nKey.AttributePlaceholder)}
             onChange={(source) => onChangeSource(source as string)}
           />
@@ -116,9 +116,9 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
         <div className={classNames(inputClassName, 'w-[160px]')}>
           <DialSelectField
             value={rule.function}
-            elementId={`rule-function-${index}`}
+            id={`rule-function-${index}`}
             options={functionItems}
-            fieldTitle={isFirstLine ? t(FoldersI18nKey.OperationTitle) : ''}
+            label={isFirstLine ? t(FoldersI18nKey.OperationTitle) : ''}
             placeholder={t(FoldersI18nKey.OperationPlaceholder)}
             onChange={(fun) => onChangeFunction(fun as string)}
           />
@@ -126,19 +126,18 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
         <div className="flex-1">
           {rule.function === RuleFunction.REGEX ? (
             <DialInput
-              elementId={`upstream-endpoints-${index}`}
+              id={`upstream-endpoints-${index}`}
               value={rule.targets?.[0]}
-              fieldTitle={isFirstLine ? t(BasicI18nKey.Value) : ''}
+              labelProps={{ title: isFirstLine ? t(BasicI18nKey.Value) : '' }}
               placeholder={t(FoldersI18nKey.RegexPlaceholder)}
               onChange={onChangeRegex}
               errorText={errorText}
               invalid={!!errorText}
-              elementClassName="h-[40px]"
             />
           ) : (
             <DialTagInput
               elementId="rule-values"
-              fieldTitle={isFirstLine ? t(BasicI18nKey.Value) : ''}
+              label={isFirstLine ? t(BasicI18nKey.Value) : ''}
               placeholder={t(FoldersI18nKey.ValuePlaceholder)}
               captionDescription={t(FoldersI18nKey.ValueCaption)}
               initialTags={rule.targets}

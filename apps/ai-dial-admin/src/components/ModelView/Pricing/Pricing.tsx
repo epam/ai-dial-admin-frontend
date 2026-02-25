@@ -73,11 +73,11 @@ const Pricing: FC<Props> = ({ model, onChangeModel }) => {
     >
       <DialSelectField
         value={activeType}
-        elementId="pricing"
+        id="pricing"
         options={items}
         className="w-[220px]"
         containerClassName="w-[220px]"
-        fieldTitle={t(ModelViewI18nKey.CostUnit)}
+        label={t(ModelViewI18nKey.CostUnit)}
         onChange={(type) => onChangePricingType(type as string)}
       />
 

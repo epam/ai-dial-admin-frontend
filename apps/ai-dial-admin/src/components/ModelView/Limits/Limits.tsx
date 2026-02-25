@@ -74,19 +74,19 @@ const Limits: FC<Props> = ({ model, onChangeModel }) => {
     <div className="flex flex-row gap-x-2 items-center">
       <DialSelectField
         value={activeLimitType}
-        elementId="limits"
+        id="limits"
         options={items}
         className="w-[220px]"
         containerClassName="w-[220px]"
-        fieldTitle={t(ModelViewI18nKey.InteractionLimit)}
+        label={t(ModelViewI18nKey.InteractionLimit)}
         onChange={(type) => onChangeLimitType(type as string)}
       />
 
       {activeLimitType === LimitType.Total && (
         <DialNumberInput
-          elementId="totalNum"
-          elementClassName="flex-1"
-          fieldTitle={t(ModelViewI18nKey.NumberOfTokens)}
+          id="totalNum"
+          className="flex-1"
+          labelProps={{ title: t(ModelViewI18nKey.NumberOfTokens) }}
           placeholder={t(EntityPlaceholdersI18nKey.Value)}
           value={model.limits?.maxTotalTokens}
           onChange={onChangeMaxTotalTokens}
@@ -97,18 +97,18 @@ const Limits: FC<Props> = ({ model, onChangeModel }) => {
       {activeLimitType === LimitType.SeparateTokenAndCompletions && (
         <>
           <DialNumberInput
-            elementId="promptsNum"
-            elementClassName="flex-1"
-            fieldTitle={t(ModelViewI18nKey.Prompts)}
+            id="promptsNum"
+            className="flex-1"
+            labelProps={{ title: t(ModelViewI18nKey.Prompts) }}
             value={model.limits?.maxPromptTokens}
             placeholder={t(EntityPlaceholdersI18nKey.Value)}
             onChange={onChangeMaxPromptTokens}
             containerClassName="w-[150px]"
           />
           <DialNumberInput
-            elementId="completionsNum"
-            elementClassName="flex-1"
-            fieldTitle={t(ModelViewI18nKey.Completions)}
+            id="completionsNum"
+            className="flex-1"
+            labelProps={{ title: t(ModelViewI18nKey.Completions) }}
             placeholder={t(EntityPlaceholdersI18nKey.Value)}
             value={model.limits?.maxCompletionTokens}
             onChange={onChangeMaxCompletionTokens}

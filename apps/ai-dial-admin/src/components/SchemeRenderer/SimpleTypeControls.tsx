@@ -20,9 +20,9 @@ const SimpleTypeControls: FC<Props> = ({ control }) => {
       {control.type === SchemeParameterType.string && (
         <div className="w-[35%]">
           <DialInput
-            elementId={control.id}
-            fieldTitle={control.label}
-            optional={control.optional}
+            id={control.id}
+            labelProps={{ title: control.label }}
+            required={!control.optional}
             placeholder={t(EntityPlaceholdersI18nKey.Value)}
             disabled={true}
           />
@@ -31,9 +31,9 @@ const SimpleTypeControls: FC<Props> = ({ control }) => {
       {control.type === SchemeParameterType.number && (
         <div className="w-[120px]">
           <DialNumberInput
-            elementId={control.id}
-            fieldTitle={control.label}
-            optional={control.optional}
+            id={control.id}
+            labelProps={{ title: control.label }}
+            required={!control.optional}
             placeholder={t(EntityPlaceholdersI18nKey.Value)}
             disabled={true}
           />
@@ -42,9 +42,9 @@ const SimpleTypeControls: FC<Props> = ({ control }) => {
       {control.type === SchemeParameterType.boolean && (
         <div className="w-[35%]">
           <DialSelectField
-            elementId={control.id}
-            fieldTitle={control.label}
-            optional={control.optional}
+            id={control.id}
+            label={control.label}
+            required={!control.optional}
             placeholder={t(EntityPlaceholdersI18nKey.Select)}
             disabled={true}
             options={[]}

@@ -29,12 +29,11 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
     <div className="w-full flex flex-col gap-y-8">
       <DialInput
         containerClassName={STANDARD_CONTROL_WIDTH}
-        elementId="overrideName"
-        fieldTitle={t(EntityFieldsI18nKey.overrideName)}
+        id="overrideName"
+        labelProps={{ title: t(EntityFieldsI18nKey.overrideName) }}
         placeholder={t(EntityPlaceholdersI18nKey.OverrideName)}
         value={model.overrideName}
         onChange={onChangeOverrideName}
-        optional={true}
       />
       {model.type === DialModelType.Chat && (
         <>

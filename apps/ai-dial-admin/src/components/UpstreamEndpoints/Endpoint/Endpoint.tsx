@@ -142,29 +142,27 @@ const Endpoint: FC<Props> = ({
           />
 
           <DialNumberInput
-            elementId={`weight-${index}`}
+            id={`weight-${index}`}
             disabled={readonly}
             value={endpoint.weight}
-            fieldTitle={isFirstLine || isTablet ? t(EntityFieldsI18nKey.weight) : ''}
+            labelProps={{ title: isFirstLine || isTablet ? t(EntityFieldsI18nKey.weight) : '' }}
             containerClassName="w-[120px]"
-            elementClassName="h-[40px]"
             placeholder={t(EntityPlaceholdersI18nKey.Weight)}
             onChange={onChangeWeight}
           />
 
           <DialNumberInput
-            elementId={`tier-${index}`}
+            id={`tier-${index}`}
             disabled={readonly}
             value={endpoint.tier}
-            fieldTitle={isFirstLine || isTablet ? t(EntityFieldsI18nKey.tier) : ''}
+            labelProps={{ title: isFirstLine || isTablet ? t(EntityFieldsI18nKey.tier) : '' }}
             containerClassName="w-[120px]"
-            elementClassName="h-[40px]"
             placeholder={t(EntityPlaceholdersI18nKey.Tier)}
             onChange={onChangeTier}
           />
 
           <ExtraDataField
-            fieldTitle={isFirstLine || isTablet ? t(EntityFieldsI18nKey.extraData) : ''}
+            label={isFirstLine || isTablet ? t(EntityFieldsI18nKey.extraData) : ''}
             endpoint={endpoint}
             disabled={readonly}
             onChangeExtraData={onChangeExtraData}
