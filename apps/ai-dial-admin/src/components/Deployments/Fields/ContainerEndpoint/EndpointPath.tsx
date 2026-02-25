@@ -58,7 +58,7 @@ const EndpointPath: FC<Props> = ({ container, setContainer }) => {
 
   return (
     <DialInput
-      label={t(EntityFieldsI18nKey.ContainerEndpointPath)}
+      labelProps={{ label: t(EntityFieldsI18nKey.ContainerEndpointPath) }}
       id="mcpEndpointPath"
       containerClassName={STANDARD_CONTROL_WIDTH}
       placeholder={t(EntityPlaceholdersI18nKey.ContainerEndpointPath)}

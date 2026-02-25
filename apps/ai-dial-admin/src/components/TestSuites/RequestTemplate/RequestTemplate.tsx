@@ -88,7 +88,7 @@ const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
   return (
     <div className="flex flex-col w-full h-full gap-2">
       <div className="flex flex-col gap-4">
-        <div className="flex flex-row justify-between">
+        <div className="flex flex-row justify-between gap-x-2">
           <div className="flex flex-row gap-2 items-start">
             {testSuite?.endpointRef?.method && (
               <span className="tiny bg-layer-3 rounded p-1 mt-[7px] border border-primary whitespace-nowrap max-w-[200px] overflow-hidden">
@@ -96,14 +96,14 @@ const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
               </span>
             )}
             <DialInput
-              elementId="urlTemplate"
+              id="urlTemplate"
               value={testSuite.requestTemplate?.urlTemplate || ''}
               onChange={(urlTemplate) =>
                 onChangeTestSuite({ ...testSuite, requestTemplate: { ...testSuite.requestTemplate, urlTemplate } })
               }
               containerClassName={STANDARD_CONTROL_WIDTH}
               invalid={!!urlTemplateError}
-              error={urlTemplateError}
+              errorText={urlTemplateError}
             />
           </div>
           <DialNeutralButton
