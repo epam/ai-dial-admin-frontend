@@ -3,7 +3,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { createInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
-import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
@@ -13,8 +13,12 @@ import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 
 import BaseProperties from '@/src/components/InterceptorTemplates/Properties/BaseProperties';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
+import {
+  getCreateEntityTitle,
+  getCreateNotificationDescription,
+  getCreateNotificationTitle,
+} from '@/src/utils/entities/create-entity';
 
 interface Props {
   route: ApplicationRoute;
@@ -63,7 +67,7 @@ const Create: FC<Props> = ({ route, onClose, isModalOpen, names }) => {
   return (
     <DialFormPopup
       onClose={onClose}
-      header={t(CreateI18nKey.InterceptorTemplate)}
+      header={getCreateEntityTitle(ApplicationRoute.InterceptorTemplates, t)}
       portalId="CreateInterceptorTemplate"
       open={isModalOpen}
       onSubmit={onCreate}

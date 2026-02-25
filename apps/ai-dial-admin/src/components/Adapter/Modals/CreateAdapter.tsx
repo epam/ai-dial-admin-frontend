@@ -4,16 +4,20 @@ import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { createAdapter } from '@/src/app/[lang]/adapters/actions';
 import AdapterProperties from '@/src/components/Adapter/View/Properties/Properties';
-import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
+import {
+  getCreateEntityTitle,
+  getCreateNotificationDescription,
+  getCreateNotificationTitle,
+} from '@/src/utils/entities/create-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   isModalOpen: boolean;
@@ -68,7 +72,12 @@ const CreateAdapter: FC<Props> = ({ isModalOpen, onClose, names }) => {
   }, [currentAdapter, showNotification, t, router, onClose]);
 
   return (
-    <DialPopup onClose={onClose} header={t(CreateI18nKey.Adapter)} portalId="CreateAdapter" open={isModalOpen}>
+    <DialPopup
+      onClose={onClose}
+      header={getCreateEntityTitle(ApplicationRoute.Adapters, t)}
+      portalId="CreateAdapter"
+      open={isModalOpen}
+    >
       <div className="flex flex-col px-6 py-4">
         <AdapterProperties entity={currentAdapter} names={names} onChangeAdapter={onChangeAdapter} isModal={true} />
       </div>

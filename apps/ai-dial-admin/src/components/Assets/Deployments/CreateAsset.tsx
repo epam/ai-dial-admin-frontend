@@ -87,7 +87,7 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onC
   return (
     <DialFormPopup
       onClose={onClose}
-      header={t(getCreateEntityTitle(view, t))}
+      header={getCreateEntityTitle(view, t)}
       portalId="CreateAsset"
       size={PopupSize.Lg}
       className="h-[750px]"
