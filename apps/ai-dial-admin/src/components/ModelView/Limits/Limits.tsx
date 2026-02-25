@@ -86,7 +86,7 @@ const Limits: FC<Props> = ({ model, onChangeModel }) => {
         <DialNumberInput
           id="totalNum"
           className="flex-1"
-          labelProps={{ title: t(ModelViewI18nKey.NumberOfTokens) }}
+          labelProps={{ label: t(ModelViewI18nKey.NumberOfTokens) }}
           placeholder={t(EntityPlaceholdersI18nKey.Value)}
           value={model.limits?.maxTotalTokens}
           onChange={onChangeMaxTotalTokens}
@@ -99,7 +99,7 @@ const Limits: FC<Props> = ({ model, onChangeModel }) => {
           <DialNumberInput
             id="promptsNum"
             className="flex-1"
-            labelProps={{ title: t(ModelViewI18nKey.Prompts) }}
+            labelProps={{ label: t(ModelViewI18nKey.Prompts) }}
             value={model.limits?.maxPromptTokens}
             placeholder={t(EntityPlaceholdersI18nKey.Value)}
             onChange={onChangeMaxPromptTokens}
@@ -108,7 +108,7 @@ const Limits: FC<Props> = ({ model, onChangeModel }) => {
           <DialNumberInput
             id="completionsNum"
             className="flex-1"
-            labelProps={{ title: t(ModelViewI18nKey.Completions) }}
+            labelProps={{ label: t(ModelViewI18nKey.Completions) }}
             placeholder={t(EntityPlaceholdersI18nKey.Value)}
             value={model.limits?.maxCompletionTokens}
             onChange={onChangeMaxCompletionTokens}

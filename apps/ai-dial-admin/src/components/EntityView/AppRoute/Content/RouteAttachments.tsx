@@ -39,7 +39,7 @@ const RouteAttachments: FC<Props> = ({ route, readonly, onChangeRoute }) => {
   return (
     <div className="h-full w-full flex flex-col gap-y-9 mt-3">
       <Paths
-        title={t(RoutesI18nKey.RequestAttachmentPaths)}
+        label={t(RoutesI18nKey.RequestAttachmentPaths)}
         paths={
           route.attachmentPaths?.requestBody && route.attachmentPaths?.requestBody.length
             ? route.attachmentPaths?.requestBody
@@ -52,7 +52,7 @@ const RouteAttachments: FC<Props> = ({ route, readonly, onChangeRoute }) => {
       />
       <Divider />
       <Paths
-        title={t(RoutesI18nKey.ResponseAttachmentPaths)}
+        label={t(RoutesI18nKey.ResponseAttachmentPaths)}
         readonly={readonly}
         optional={true}
         paths={

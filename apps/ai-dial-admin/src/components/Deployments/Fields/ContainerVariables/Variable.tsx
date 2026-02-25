@@ -134,7 +134,7 @@ const Variable: FC<Props> = ({ index, variable, updateVariable, removeVariable, 
               id={`name ${index}`}
               value={variable.name}
               placeholder={t(EntityPlaceholdersI18nKey.Name)}
-              labelProps={{ title: index === 0 ? t(EnvVariablesI18nKey.Name) : '' }}
+              labelProps={{ label: index === 0 ? t(EnvVariablesI18nKey.Name) : '' }}
               errorText={variableNameError?.text}
               invalid={!!variableNameError}
               required={true}
@@ -147,7 +147,7 @@ const Variable: FC<Props> = ({ index, variable, updateVariable, removeVariable, 
               containerClassName="min-w-[150px]"
               value={variable.description}
               placeholder={t(EntityPlaceholdersI18nKey.Description)}
-              labelProps={{ title: index === 0 ? t(EnvVariablesI18nKey.Description) : '' }}
+              labelProps={{ label: index === 0 ? t(EnvVariablesI18nKey.Description) : '' }}
               onChange={onChangeDescription}
               disabled={disabled}
             />

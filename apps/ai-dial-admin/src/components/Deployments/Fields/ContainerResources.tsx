@@ -86,7 +86,7 @@ const ContainerResources: FC<Props> = ({ container, setContainer, route }) => {
             <DialNumberInput
               id="gpuRequest"
               className="w-[180px]"
-              labelProps={{ title: t(EntityFieldsI18nKey.GPURequest) }}
+              labelProps={{ label: t(EntityFieldsI18nKey.GPURequest) }}
               value={container.resources?.requests?.['nvidia.com/gpu'] || ''}
               disabled={isEditDisabled(container)}
               onChange={onChangeGpuRequest}

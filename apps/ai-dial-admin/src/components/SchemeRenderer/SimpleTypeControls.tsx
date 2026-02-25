@@ -21,7 +21,7 @@ const SimpleTypeControls: FC<Props> = ({ control }) => {
         <div className="w-[35%]">
           <DialInput
             id={control.id}
-            labelProps={{ title: control.label }}
+            labelProps={{ label: control.label }}
             required={!control.optional}
             placeholder={t(EntityPlaceholdersI18nKey.Value)}
             disabled={true}
@@ -32,7 +32,7 @@ const SimpleTypeControls: FC<Props> = ({ control }) => {
         <div className="w-[120px]">
           <DialNumberInput
             id={control.id}
-            labelProps={{ title: control.label }}
+            labelProps={{ label: control.label }}
             required={!control.optional}
             placeholder={t(EntityPlaceholdersI18nKey.Value)}
             disabled={true}

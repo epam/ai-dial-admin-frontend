@@ -126,7 +126,7 @@ const KeyProperties: FC<Props> = ({ entity, originalEntity, names, keys, isKeyIm
 
       <DialInput
         id="project"
-        labelProps={{ title: t(EntityFieldsI18nKey.project) }}
+        labelProps={{ label: t(EntityFieldsI18nKey.project) }}
         placeholder={t(EntityPlaceholdersI18nKey.Project)}
         value={entity.project}
         errorText={projectError}
@@ -138,7 +138,7 @@ const KeyProperties: FC<Props> = ({ entity, originalEntity, names, keys, isKeyIm
       {isKeyImmutable && (
         <DialInput
           id="projectContact"
-          labelProps={{ title: t(EntityFieldsI18nKey.projectContactPoint) }}
+          labelProps={{ label: t(EntityFieldsI18nKey.projectContactPoint) }}
           placeholder={t(EntityPlaceholdersI18nKey.ContactPoint)}
           value={entity.projectContactPoint}
           onChange={onChangeProjectContactPoint}

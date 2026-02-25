@@ -11,7 +11,7 @@ import { useI18n } from '@/src/locales/client';
 import Path from './Path';
 
 interface Props {
-  title: string;
+  label: string;
   readonly?: boolean;
   optional?: boolean;
   paths?: string[];
@@ -19,7 +19,7 @@ interface Props {
   onChangePaths: (path: string[]) => void;
 }
 
-const Paths: FC<Props> = ({ title, optional, readonly, paths, disableValidation, onChangePaths }) => {
+const Paths: FC<Props> = ({ label, optional, readonly, paths, disableValidation, onChangePaths }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
 
@@ -80,7 +80,7 @@ const Paths: FC<Props> = ({ title, optional, readonly, paths, disableValidation,
           path={path}
           index={index}
           optional={optional}
-          fieldTitle={title}
+          label={label}
           allPaths={paths}
           onRemove={onRemove}
           onChangePath={onChangePath}

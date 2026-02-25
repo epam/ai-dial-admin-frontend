@@ -24,7 +24,7 @@ const AdapterEndpoint: FC<Props> = ({ entity, onChange, isModal, prefix }) => {
       {prefix ? (
         <CompletionEndpointControl
           endpoint={entity.source?.completionEndpointPath}
-          textBeforeInput={prefix}
+          prefix={prefix}
           onChange={(completionEndpointPath) => {
             onChange({
               ...entity,

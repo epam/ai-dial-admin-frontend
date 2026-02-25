@@ -114,18 +114,18 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
           value={endpoint}
           fullValue={fullValue}
           label={t(EntityFieldsI18nKey.endpoint)}
-          suffix={postfix}
-          textBeforeInput={prefix}
+          postfix={postfix}
+          prefix={prefix}
           onChange={onChangePath}
           isFullWidth={isModal}
         />
       ) : (
         <ComplexInput
-          elementId="endpoint"
+          id="endpoint"
           value={endpoint}
           fullValue={fullValue}
           label={t(EntityFieldsI18nKey.endpoint)}
-          suffix={postfix}
+          postfix={postfix}
           isFullWidth={isModal}
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
           onChange={onChangeEndpoint}

@@ -103,7 +103,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
             id={`entity-default-key-${index}`}
             value={item.key}
             placeholder={t(EntityPlaceholdersI18nKey.Key)}
-            labelProps={{ title: isFirstLine ? t(EntityFieldsI18nKey.key) : '' }}
+            labelProps={{ label: isFirstLine ? t(EntityFieldsI18nKey.key) : '' }}
             onChange={onChangeKey}
           />
         </div>
@@ -113,7 +113,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
               id={`entity-default-value-${index}`}
               value={item.value as string}
               placeholder={t(EntityPlaceholdersI18nKey.Value)}
-              labelProps={{ title: isFirstLine ? t(BasicI18nKey.Value) : '' }}
+              labelProps={{ label: isFirstLine ? t(BasicI18nKey.Value) : '' }}
               onChange={onChangeValue}
             />
           )}
@@ -122,7 +122,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
               id={`entity-default-value-${index}`}
               value={item.value as string}
               placeholder={t(EntityPlaceholdersI18nKey.Value)}
-              labelProps={{ title: isFirstLine ? t(BasicI18nKey.Value) : '' }}
+              labelProps={{ label: isFirstLine ? t(BasicI18nKey.Value) : '' }}
               onChange={onChangeValue}
             />
           )}

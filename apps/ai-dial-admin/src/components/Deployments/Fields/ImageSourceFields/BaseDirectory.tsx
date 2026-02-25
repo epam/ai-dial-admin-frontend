@@ -54,7 +54,7 @@ const BaseDirectory: FC<Props> = ({ image, setImage }) => {
 
   return (
     <DialInput
-      labelProps={{ title: t(EntityFieldsI18nKey.BaseDirectory) }}
+      labelProps={{ label: t(EntityFieldsI18nKey.BaseDirectory) }}
       id="baseDirectory"
       placeholder={t(EntityPlaceholdersI18nKey.BaseDirectory)}
       value={image.source.baseDirectory}

@@ -30,7 +30,7 @@ const BaseProperties: FC<Props> = ({ publication, onChange, getContext }) => {
   return (
     <>
       <DialInput
-        labelProps={{ title: t(EntityFieldsI18nKey.displayAuthor) }}
+        labelProps={{ label: t(EntityFieldsI18nKey.displayAuthor) }}
         placeholder={t(EntityPlaceholdersI18nKey.DisplayAuthor)}
         id="author"
         value={publication.displayAuthor || ''}

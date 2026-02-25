@@ -100,7 +100,7 @@ const ImageBase: FC<Props> = ({
   return (
     <div className="flex flex-col gap-y-8">
       <DialInput
-        labelProps={{ title: t(EntityFieldsI18nKey.name) }}
+        labelProps={{ label: t(EntityFieldsI18nKey.name) }}
         id="name"
         placeholder={t(EntityPlaceholdersI18nKey.Name)}
         value={image.name}
@@ -112,7 +112,7 @@ const ImageBase: FC<Props> = ({
       {isModal && (
         <DialInput
           className="w-[120px]"
-          labelProps={{ title: t(EntityFieldsI18nKey.version) }}
+          labelProps={{ label: t(EntityFieldsI18nKey.version) }}
           id="version"
           placeholder={t(EntityPlaceholdersI18nKey.Version)}
           value={image.version}

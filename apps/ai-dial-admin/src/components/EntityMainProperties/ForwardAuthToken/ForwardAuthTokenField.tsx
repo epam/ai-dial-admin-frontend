@@ -76,7 +76,7 @@ const ForwardAuthTokenField: FC<Props> = ({ view, entity, onChangeEntity }) => {
           <DialAlert variant={AlertVariant.Error} message={t(ForwardTokenI18nKey.ForwardTokenModalAlert)} />
           <DialInput
             id="entityName"
-            labelProps={{ title: displayNameKey ? t(displayNameKey as CreateI18nKey) : '' }}
+            labelProps={{ label: displayNameKey ? t(displayNameKey as CreateI18nKey) : '' }}
             placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
             value={confirmName}
             onChange={onChangeName}

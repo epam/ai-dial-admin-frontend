@@ -183,7 +183,7 @@ const ImageDuplicateModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
         />
         <DialInput
           id="name"
-          labelProps={{ title: t(EntityFieldsI18nKey.name) }}
+          labelProps={{ label: t(EntityFieldsI18nKey.name) }}
           placeholder={t(EntityPlaceholdersI18nKey.Name)}
           value={copyImage.name}
           errorText={nameError?.text}
@@ -193,7 +193,7 @@ const ImageDuplicateModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
         <DialInput
           className="max-w-[120px]"
           id="version"
-          labelProps={{ title: t(EntityFieldsI18nKey.version) }}
+          labelProps={{ label: t(EntityFieldsI18nKey.version) }}
           placeholder={t(EntityPlaceholdersI18nKey.Version)}
           value={copyImage.version}
           errorText={versionError?.text}

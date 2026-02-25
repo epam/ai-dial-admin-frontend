@@ -119,7 +119,7 @@ const VersionModal: FC<Props> = ({ coreVersions, isModalOpen, onClose, onApply }
           />
           <DialInput
             id="version"
-            labelProps={{ title: t(EntityFieldsI18nKey.version) }}
+            labelProps={{ label: t(EntityFieldsI18nKey.version) }}
             value={version}
             disabled={definition === DefinitionType.AUTO || definition === DefinitionType.DEFAULT}
             iconBefore={iconBefore}

@@ -30,7 +30,7 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
       <DialInput
         containerClassName={STANDARD_CONTROL_WIDTH}
         id="overrideName"
-        labelProps={{ title: t(EntityFieldsI18nKey.overrideName) }}
+        labelProps={{ label: t(EntityFieldsI18nKey.overrideName) }}
         placeholder={t(EntityPlaceholdersI18nKey.OverrideName)}
         value={model.overrideName}
         onChange={onChangeOverrideName}

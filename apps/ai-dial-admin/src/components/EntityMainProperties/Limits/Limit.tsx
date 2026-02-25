@@ -11,15 +11,15 @@ import { getCorrectValue } from './utils';
 
 interface Props {
   controlClassName?: string;
-  elementId: string;
+  id: string;
   fieldKey: keyof DialRoleLimits;
-  fieldTitle: string;
+  label: string;
   limits?: DialRoleLimits;
   isCostInputs?: boolean;
   onChange: (limits: DialRoleLimits) => void;
 }
 
-const LimitControl: FC<Props> = ({ limits, controlClassName, isCostInputs, onChange, fieldKey, ...props }) => {
+const LimitControl: FC<Props> = ({ limits, controlClassName, isCostInputs, onChange, fieldKey, label, id }) => {
   const t = useI18n();
 
   const onChangeLimit = useCallback(
@@ -36,7 +36,8 @@ const LimitControl: FC<Props> = ({ limits, controlClassName, isCostInputs, onCha
       value={getCorrectValue(limits?.[fieldKey])}
       onChange={(value) => onChangeLimit(value, fieldKey)}
       iconBefore={isCostInputs ? <IconCurrencyDollar className="text-secondary" {...BASE_BUTTON_ICON_PROPS} /> : null}
-      {...props}
+      labelProps={{ label }}
+      id={id}
     />
   );
 };

@@ -53,7 +53,7 @@ const ContainerSource: FC<Props> = ({ container, setContainer, isModal = false, 
       {container.source?.$type === MODEL_SOURCE_TYPE.NIM ? (
         <DialInput
           id="imageRef"
-          labelProps={{ title: t(EntityFieldsI18nKey.ImageURI) }}
+          labelProps={{ label: t(EntityFieldsI18nKey.ImageURI) }}
           placeholder={t(EntityPlaceholdersI18nKey.URI)}
           value={container.source?.imageRef}
           errorText={imageRefError?.text}

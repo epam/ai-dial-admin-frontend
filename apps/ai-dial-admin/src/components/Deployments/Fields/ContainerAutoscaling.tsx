@@ -139,7 +139,7 @@ const ContainerAutoscaling: FC<Props> = ({ container, setContainer }) => {
                 (!!container.scaling?.scaleToZeroDelaySeconds && container.scaling?.scaleToZeroDelaySeconds !== 0) ||
                 isEditDisabled(container)
               }
-              labelProps={{ title: t(ContainersI18nKey.MinReplicas) }}
+              labelProps={{ label: t(ContainersI18nKey.MinReplicas) }}
             />
             <DialNumberInput
               id="maxScale"
@@ -147,7 +147,7 @@ const ContainerAutoscaling: FC<Props> = ({ container, setContainer }) => {
               value={container.scaling?.maxReplicas}
               onChange={onMaxScaleChange}
               className="max-w-[80px]"
-              labelProps={{ title: t(ContainersI18nKey.MaxReplicas) }}
+              labelProps={{ label: t(ContainersI18nKey.MaxReplicas) }}
               errorText={replicasError?.text}
               invalid={!!replicasError}
               disabled={isEditDisabled(container)}
@@ -161,7 +161,7 @@ const ContainerAutoscaling: FC<Props> = ({ container, setContainer }) => {
               value={container.scaling?.strategy?.threshold}
               onChange={onThresholdChange}
               className="max-w-[80px]"
-              labelProps={{ title: t(ContainersI18nKey.Threshold) }}
+              labelProps={{ label: t(ContainersI18nKey.Threshold) }}
               disabled={isEditDisabled(container)}
             />
           </div>

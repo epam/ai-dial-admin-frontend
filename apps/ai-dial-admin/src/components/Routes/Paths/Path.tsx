@@ -10,7 +10,7 @@ import { isValidRoutePath } from '@/src/utils/validation/path-error';
 
 interface Props {
   index: number;
-  fieldTitle: string;
+  label: string;
   path: string;
   optional?: boolean;
   readonly?: boolean;
@@ -25,7 +25,7 @@ const Path: FC<Props> = ({
   path,
   readonly,
   optional,
-  fieldTitle,
+  label,
   allPaths,
   disableValidation,
   onRemove,
@@ -70,7 +70,7 @@ const Path: FC<Props> = ({
           value={path}
           disabled={readonly}
           placeholder={t(EntityPlaceholdersI18nKey.PathUrl)}
-          labelProps={{ title: index === 0 ? fieldTitle : '' }}
+          labelProps={{ label: index === 0 ? label : '' }}
           onChange={(value) => onChangePath(index, value)}
           errorText={error}
           invalid={!!error}

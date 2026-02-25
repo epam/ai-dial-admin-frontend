@@ -164,7 +164,7 @@ const Endpoint: FC<Props> = ({ container, setContainer, disabled }) => {
         />
         <DialNumberInput
           id="port"
-          labelProps={{ title: t(EntityFieldsI18nKey.Port) }}
+          labelProps={{ label: t(EntityFieldsI18nKey.Port) }}
           placeholder={t(EntityPlaceholdersI18nKey.Port)}
           value={container.probeProperties?.probe?.port}
           onChange={onPortChange}
@@ -177,7 +177,7 @@ const Endpoint: FC<Props> = ({ container, setContainer, disabled }) => {
         {container.probeProperties?.probe?.$type === PROBE_TYPE.HTTP_GET && (
           <DialInput
             id="path"
-            labelProps={{ title: t(EntityFieldsI18nKey.Path) }}
+            labelProps={{ label: t(EntityFieldsI18nKey.Path) }}
             placeholder={t(EntityPlaceholdersI18nKey.Path)}
             value={container.probeProperties?.probe?.path}
             disabled={disabled}

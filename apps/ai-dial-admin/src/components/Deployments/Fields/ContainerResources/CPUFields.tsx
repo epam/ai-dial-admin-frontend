@@ -146,7 +146,7 @@ const CPUFields: FC<Props> = ({ container, setContainer }) => {
       <DialNumberInput
         id="cpuRequest"
         className="w-[180px]"
-        labelProps={{ title: t(EntityFieldsI18nKey.CPURequest) }}
+        labelProps={{ label: t(EntityFieldsI18nKey.CPURequest) }}
         value={container.resources?.requests?.cpu ? convertCoresToMilliCores(container.resources?.requests?.cpu) : ''}
         errorText={requestError?.text}
         invalid={!!requestError}
@@ -157,7 +157,7 @@ const CPUFields: FC<Props> = ({ container, setContainer }) => {
       <DialNumberInput
         id="cpuLimit"
         className="w-[180px]"
-        labelProps={{ title: t(EntityFieldsI18nKey.CPULimit) }}
+        labelProps={{ label: t(EntityFieldsI18nKey.CPULimit) }}
         value={container.resources?.limits?.cpu ? convertCoresToMilliCores(container.resources?.limits?.cpu) : ''}
         // suffix="m"
         errorText={limitError?.text}

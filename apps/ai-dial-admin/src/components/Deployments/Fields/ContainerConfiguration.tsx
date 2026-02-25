@@ -21,7 +21,7 @@ const ContainerConfiguration: FC<Props> = ({ container, setContainer }) => {
       <div className="flex flex-col gap-6">
         <DialInput
           id="command"
-          labelProps={{ title: t(EntityFieldsI18nKey.Command) }}
+          labelProps={{ label: t(EntityFieldsI18nKey.Command) }}
           value={container.command}
           onChange={(command?: string) => setContainer({ ...container, command })}
           placeholder={t(EntityPlaceholdersI18nKey.Command)}
@@ -30,7 +30,7 @@ const ContainerConfiguration: FC<Props> = ({ container, setContainer }) => {
 
         <DialInput
           id="args"
-          labelProps={{ title: t(EntityFieldsI18nKey.Arguments) }}
+          labelProps={{ label: t(EntityFieldsI18nKey.Arguments) }}
           value={container.args}
           onChange={(args?: string) => setContainer({ ...container, args })}
           placeholder={t(EntityPlaceholdersI18nKey.Arguments)}

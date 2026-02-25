@@ -90,7 +90,7 @@ const EntityProperties: FC<Props> = ({
         <DialInput
           id="path"
           placeholder={t(EntityPlaceholdersI18nKey.PathUrl)}
-          labelProps={{ title: t(EntityFieldsI18nKey.paths) }}
+          labelProps={{ label: t(EntityFieldsI18nKey.paths) }}
           value={(entity as DialRoute).paths?.[0]}
           errorText={pathError}
           invalid={!!pathError}

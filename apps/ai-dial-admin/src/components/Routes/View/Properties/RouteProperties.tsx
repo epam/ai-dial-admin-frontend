@@ -205,7 +205,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
       />
       {!isAppRoute && <DescriptionControl entity={route} onChangeEntity={onChange} isFullWidth={false} />}
       <Paths
-        title={t(EntityFieldsI18nKey.paths)}
+        label={t(EntityFieldsI18nKey.paths)}
         paths={route.paths}
         onChangePaths={onChangePaths}
         readonly={readonly}
@@ -244,7 +244,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
           disabled={readonly}
           id="status"
           containerClassName="w-[150px]"
-          labelProps={{ title: t(EntityFieldsI18nKey.status) }}
+          labelProps={{ label: t(EntityFieldsI18nKey.status) }}
           placeholder={t(EntityPlaceholdersI18nKey.Status)}
           value={route.response?.status}
           onChange={onChangeStatus}
@@ -255,7 +255,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
           disabled={readonly}
           id="body"
           containerClassName="flex-1"
-          labelProps={{ title: t(EntityFieldsI18nKey.body) }}
+          labelProps={{ label: t(EntityFieldsI18nKey.body) }}
           placeholder={t(EntityPlaceholdersI18nKey.Body)}
           value={route.response?.body}
           onChange={onChangeBody}
@@ -292,7 +292,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
           id="order"
           disabled={readonly}
           containerClassName="w-[50%]"
-          labelProps={{ title: t(EntityFieldsI18nKey.order) }}
+          labelProps={{ label: t(EntityFieldsI18nKey.order) }}
           placeholder={t(EntityPlaceholdersI18nKey.Order)}
           value={route.order}
           min={0}

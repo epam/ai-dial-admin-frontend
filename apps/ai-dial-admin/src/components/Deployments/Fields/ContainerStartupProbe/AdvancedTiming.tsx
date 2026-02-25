@@ -185,7 +185,7 @@ const AdvancedTiming: FC<Props> = ({ container, setContainer, disabled }) => {
       <h3>{t(EntityFieldsI18nKey.AdvancedTiming)}</h3>
       <DialNumberInput
         id="initialDelaySeconds"
-        labelProps={{ title: t(EntityFieldsI18nKey.InitialDelaySeconds) }}
+        labelProps={{ label: t(EntityFieldsI18nKey.InitialDelaySeconds) }}
         placeholder={t(EntityPlaceholdersI18nKey.InitialDelaySeconds)}
         value={container.probeProperties?.initialDelaySeconds}
         onChange={onInitialDelaySecondsChange}
@@ -197,7 +197,7 @@ const AdvancedTiming: FC<Props> = ({ container, setContainer, disabled }) => {
       />
       <DialNumberInput
         id="periodSeconds"
-        labelProps={{ title: t(EntityFieldsI18nKey.PeriodSeconds) }}
+        labelProps={{ label: t(EntityFieldsI18nKey.PeriodSeconds) }}
         placeholder={t(EntityPlaceholdersI18nKey.PeriodSeconds)}
         value={container.probeProperties?.periodSeconds}
         onChange={onPeriodSecondsChange}
@@ -209,7 +209,7 @@ const AdvancedTiming: FC<Props> = ({ container, setContainer, disabled }) => {
       />
       <DialNumberInput
         id="timeoutSeconds"
-        labelProps={{ title: t(EntityFieldsI18nKey.TimeoutSeconds) }}
+        labelProps={{ label: t(EntityFieldsI18nKey.TimeoutSeconds) }}
         placeholder={t(EntityPlaceholdersI18nKey.TimeoutSeconds)}
         value={container.probeProperties?.timeoutSeconds}
         onChange={onTimeoutSecondsChange}
@@ -221,7 +221,7 @@ const AdvancedTiming: FC<Props> = ({ container, setContainer, disabled }) => {
       />
       <DialNumberInput
         id="failureThreshold"
-        labelProps={{ title: t(EntityFieldsI18nKey.FailureThreshold) }}
+        labelProps={{ label: t(EntityFieldsI18nKey.FailureThreshold) }}
         placeholder={t(EntityPlaceholdersI18nKey.FailureThreshold)}
         value={container.probeProperties?.failureThreshold}
         onChange={onFailureThresholdChange}

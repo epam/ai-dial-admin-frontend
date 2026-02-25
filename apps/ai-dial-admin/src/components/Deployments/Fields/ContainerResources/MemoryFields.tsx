@@ -151,7 +151,7 @@ const MemoryFields: FC<Props> = ({ container, setContainer }) => {
         id="memoryRequest"
         containerClassName="w-[180px]"
         className="w-[180px]"
-        labelProps={{ title: t(EntityFieldsI18nKey.MemoryRequest) }}
+        labelProps={{ label: t(EntityFieldsI18nKey.MemoryRequest) }}
         value={container.resources?.requests?.memory ? convertBytesToMb(container.resources?.requests?.memory) : ''}
         // suffix="Mb"
         errorText={requestError?.text}
@@ -162,7 +162,7 @@ const MemoryFields: FC<Props> = ({ container, setContainer }) => {
       <DialNumberInput
         id="memoryLimit"
         className="w-[180px]"
-        labelProps={{ title: t(EntityFieldsI18nKey.MemoryLimit) }}
+        labelProps={{ label: t(EntityFieldsI18nKey.MemoryLimit) }}
         value={container.resources?.limits?.memory ? convertBytesToMb(container.resources?.limits?.memory) : ''}
         // suffix="Mb"
         errorText={limitError?.text}

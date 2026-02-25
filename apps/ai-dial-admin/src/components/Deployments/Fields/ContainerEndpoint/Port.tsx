@@ -79,7 +79,7 @@ const Port: FC<Props> = ({ container, setContainer }) => {
       <DialNumberInput
         containerClassName="max-w-[125px]"
         id="containerPort"
-        labelProps={{ title: t(EntityFieldsI18nKey.Port) }}
+        labelProps={{ label: t(EntityFieldsI18nKey.Port) }}
         placeholder={t(EntityPlaceholdersI18nKey.Port)}
         value={container.containerPort}
         invalid={!!portError}
@@ -91,7 +91,7 @@ const Port: FC<Props> = ({ container, setContainer }) => {
         <DialNumberInput
           containerClassName="max-w-[125px]"
           id="containerGRPCPort"
-          labelProps={{ title: t(EntityFieldsI18nKey.GRPCPort) }}
+          labelProps={{ label: t(EntityFieldsI18nKey.GRPCPort) }}
           placeholder={t(EntityPlaceholdersI18nKey.Port)}
           value={container.containerGrpcPort}
           invalid={!!grpcPortError}

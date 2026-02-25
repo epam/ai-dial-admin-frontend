@@ -128,7 +128,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
             <DialInput
               id={`upstream-endpoints-${index}`}
               value={rule.targets?.[0]}
-              labelProps={{ title: isFirstLine ? t(BasicI18nKey.Value) : '' }}
+              labelProps={{ label: isFirstLine ? t(BasicI18nKey.Value) : '' }}
               placeholder={t(FoldersI18nKey.RegexPlaceholder)}
               onChange={onChangeRegex}
               errorText={errorText}
