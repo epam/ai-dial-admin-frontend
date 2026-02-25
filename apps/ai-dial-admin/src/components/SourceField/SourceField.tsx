@@ -29,7 +29,7 @@ interface Props<T> {
   getAdapters?: () => Promise<ServerActionResponse | null>;
   sourceItems: SelectOption[];
   elementId: string;
-  fieldTitle?: string;
+  label?: string;
   optional?: boolean;
   view: ApplicationRoute;
   adapters?: DialAdapter[];
@@ -43,7 +43,7 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
   getRunners,
   getAdapters,
   elementId,
-  fieldTitle,
+  label,
   optional,
   view,
   sourceItems,
@@ -110,9 +110,9 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
   return (
     <div className="flex flex-col gap-y-8">
       <DialSelectField
-        elementId={elementId}
+        id={elementId}
         containerClassName="w-[180px]"
-        fieldTitle={fieldTitle}
+        label={label}
         optional={optional}
         options={sourceItems}
         onChange={(v) => onChangeSource(v as string)}

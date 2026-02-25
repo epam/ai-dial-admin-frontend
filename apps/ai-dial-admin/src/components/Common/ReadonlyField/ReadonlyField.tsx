@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialInput } from '@epam/ai-dial-ui-kit';
 
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 
@@ -11,9 +11,9 @@ interface Props {
 }
 const ReadonlyField: FC<Props> = ({ title, elementId, ...props }) => {
   return (
-    <DialTextInputField
+    <DialInput
       fieldTitle={title}
-      elementId={elementId || 'readonlyField'}
+      id={elementId || 'readonlyField'}
       disabled={true}
       iconAfter={<CopyButton value={props.value || ''} valueLabel={title} className="ml-2" />}
       {...props}

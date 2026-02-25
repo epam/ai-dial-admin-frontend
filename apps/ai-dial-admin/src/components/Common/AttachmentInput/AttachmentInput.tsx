@@ -28,7 +28,7 @@ export interface Props {
   availableItems: AttachmentOption[];
   initialValues?: string[];
   placeholder?: string;
-  fieldTitle?: string;
+  label?: string;
   elementId?: string;
   optional?: boolean;
   onChange?: (values?: string[]) => void;
@@ -39,7 +39,7 @@ const ALL_ATTACHMENTS_VALUE = [{ label: ALL_ATTACHMENTS, value: ALL_ATTACHMENTS 
 const AttachmentInput: FC<Props> = ({
   availableItems,
   initialValues,
-  fieldTitle,
+  label,
   placeholder,
   elementId,
   optional,
@@ -198,7 +198,7 @@ const AttachmentInput: FC<Props> = ({
 
   return (
     <div className="flex flex-col w-full relative gap-3">
-      <Field fieldTitle={fieldTitle} optional={optional} htmlFor={elementId} />
+      <Field fieldTitle={label} optional={optional} htmlFor={elementId} />
 
       <div className="flex flex-col gap-3">
         <DialRadioButton

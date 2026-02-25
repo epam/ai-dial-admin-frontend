@@ -3,7 +3,7 @@
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 
 import classNames from 'classnames';
-import { DialRemoveButton, DialSelectField, DialTagInput, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialRemoveButton, DialSelectField, DialTagInput, DialInput } from '@epam/ai-dial-ui-kit';
 
 import { BasicI18nKey, ErrorI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -125,7 +125,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
         </div>
         <div className="flex-1">
           {rule.function === RuleFunction.REGEX ? (
-            <DialTextInputField
+            <DialInput
               elementId={`upstream-endpoints-${index}`}
               value={rule.targets?.[0]}
               fieldTitle={isFirstLine ? t(BasicI18nKey.Value) : ''}

@@ -1,4 +1,4 @@
-import { DialFormPopup, DialTextInputField, PopupSize } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, DialInput, PopupSize } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useMemo, useState } from 'react';
 
 import { ButtonsI18nKey, FileManagerI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
@@ -53,9 +53,9 @@ const RenameFolder: FC<Props> = ({ currentPath, siblings = [], isModalOpen, onCl
       disableSubmitButton={isDisabled}
     >
       <div className="px-6 py-4">
-        <DialTextInputField
-          elementId="folderName"
-          fieldTitle={t(FoldersI18nKey.FolderName)}
+        <DialInput
+          id="folderName"
+          labelProps={{ label: t(FoldersI18nKey.FolderName) }}
           placeholder={t(FoldersI18nKey.FolderCreatePlaceholder)}
           value={newName}
           onChange={onChangeName}

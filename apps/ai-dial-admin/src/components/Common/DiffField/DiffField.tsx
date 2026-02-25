@@ -11,12 +11,12 @@ import Field from '@/src/components/Common/Field/Field';
 interface Props {
   original?: string;
   modified?: string;
-  fieldTitle: string;
+  label: string;
   className?: string;
   language?: string;
 }
 
-const DiffField: FC<Props> = ({ original, modified, fieldTitle, className, language }) => {
+const DiffField: FC<Props> = ({ original, modified, label, className, language }) => {
   const { currentTheme } = useTheme();
 
   function handleBeforeMount(monaco: Monaco) {
@@ -25,7 +25,7 @@ const DiffField: FC<Props> = ({ original, modified, fieldTitle, className, langu
 
   return (
     <div className={classNames('flex flex-col w-full flex-1 relative bg-layer-2 pt-2 pl-3', className)}>
-      <Field fieldTitle={fieldTitle} />
+      <Field fieldTitle={label} />
       <div className="flex-1 min-w-0 min-h-0 overflow-hidden">
         <DiffEditor
           keepCurrentModifiedModel={true}

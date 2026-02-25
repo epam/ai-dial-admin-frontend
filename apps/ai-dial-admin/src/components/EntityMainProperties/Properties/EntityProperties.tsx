@@ -1,4 +1,4 @@
-import { DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialInput } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useState } from 'react';
 
 import { getInterceptorTemplatesList } from '@/src/app/[lang]/interceptor-templates/actions';
@@ -79,18 +79,18 @@ const EntityProperties: FC<Props> = ({
           onChange={onChangeEntity}
           getContainers={getInterceptorContainers}
           getRunners={getInterceptorTemplatesList}
-          elementId="sourceType"
-          fieldTitle={t(EntitiesI18nKey.SourceType)}
+          id="sourceType"
+          label={t(EntitiesI18nKey.SourceType)}
           sourceItems={getSourceItems(ApplicationRoute.Interceptors, featureFlags.deploymentsEnabled)}
           isModal={!isEntityImmutable}
         />
       )}
 
       {view === ApplicationRoute.Routes && (
-        <DialTextInputField
-          elementId="path"
+        <DialInput
+          id="path"
           placeholder={t(EntityPlaceholdersI18nKey.PathUrl)}
-          fieldTitle={t(EntityFieldsI18nKey.paths)}
+          labelProps={{ title: t(EntityFieldsI18nKey.paths) }}
           value={(entity as DialRoute).paths?.[0]}
           errorText={pathError}
           invalid={!!pathError}

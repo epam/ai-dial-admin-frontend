@@ -1,12 +1,12 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ButtonAppearance,
-  DialNumberInputField,
+  DialNumberInput,
   DialPrimaryButton,
   DialRadioGroup,
   DialSelectField,
   DialSwitch,
-  DialTextInputField,
+  DialInput,
   RadioButtonWithContent,
   RadioGroupOrientation,
   SelectOption,
@@ -223,7 +223,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
         selectedItems={route.methods}
         onChangeItems={onChangeMethods}
         heading={t(EntityFieldsI18nKey.methods)}
-        title={t(EntityFieldsI18nKey.methods)}
+        label={t(EntityFieldsI18nKey.methods)}
         allItems={methods}
         className={STANDARD_CONTROL_WIDTH}
         errorText={route.methods?.length ? '' : t(ErrorI18nKey.EmptyField)}
@@ -240,7 +240,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
         onChange={onChangeOutput}
       />
       <div className={classNames('flex gap-x-2 flex-row', STANDARD_CONTROL_WIDTH, !route.response && 'hidden')}>
-        <DialNumberInputField
+        <DialNumberInput
           disabled={readonly}
           elementId="status"
           containerClassName="w-[150px]"
@@ -251,7 +251,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
           errorText={statusError}
           invalid={!!statusError}
         />
-        <DialTextInputField
+        <DialInput
           disabled={readonly}
           elementId="body"
           containerClassName="flex-1"
@@ -288,7 +288,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
         />
       )}
       <div className={classNames('flex gap-x-2 flex-row items-end', STANDARD_CONTROL_WIDTH)}>
-        <DialNumberInputField
+        <DialNumberInput
           elementId="order"
           disabled={readonly}
           containerClassName="w-[50%]"

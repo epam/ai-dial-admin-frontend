@@ -18,11 +18,11 @@ const Transport: FC<Props> = ({ container, setContainer }) => {
 
   return (
     <DialSelectField
-      elementId="transport"
+      id="transport"
       value={container.transport || TRANSPORTS[0].value}
       options={TRANSPORTS}
       containerClassName="max-w-[160px]"
-      fieldTitle={t(EntityFieldsI18nKey.Transport)}
+      label={t(EntityFieldsI18nKey.Transport)}
       onChange={(transportId) => {
         const selectedTransport = TRANSPORTS.find((source) => source.value === transportId) || TRANSPORTS[0];
 
@@ -31,7 +31,7 @@ const Transport: FC<Props> = ({ container, setContainer }) => {
           transport: selectedTransport.value as CONTAINER_TRANSPORT,
         });
       }}
-      optional={false}
+      required
       disabled={isEditDisabled(container)}
     />
   );

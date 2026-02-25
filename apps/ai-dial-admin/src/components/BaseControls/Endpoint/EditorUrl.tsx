@@ -10,7 +10,7 @@ const EditorUrlControl: FC<EndpointControlProps> = ({ ...props }) => {
   return (
     <EndpointControl
       id="editorUrl"
-      fieldTitle={t(EntityFieldsI18nKey.editorUrl)}
+      label={t(EntityFieldsI18nKey.editorUrl)}
       placeholder={t(EntityPlaceholdersI18nKey.EditorUrl)}
       {...props}
     />

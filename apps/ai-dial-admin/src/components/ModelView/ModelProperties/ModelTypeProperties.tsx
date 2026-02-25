@@ -1,6 +1,6 @@
 'use client';
 
-import { DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialInput } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback } from 'react';
 
 import IconControl from '@/src/components/BaseControls/Icon';
@@ -27,7 +27,7 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
   );
   return (
     <div className="w-full flex flex-col gap-y-8">
-      <DialTextInputField
+      <DialInput
         containerClassName={STANDARD_CONTROL_WIDTH}
         elementId="overrideName"
         fieldTitle={t(EntityFieldsI18nKey.overrideName)}

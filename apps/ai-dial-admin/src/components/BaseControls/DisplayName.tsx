@@ -1,5 +1,5 @@
-import { DialTextInputField } from '@epam/ai-dial-ui-kit';
-import { FC, useCallback, useState, useMemo, useEffect } from 'react';
+import { DialInput } from '@epam/ai-dial-ui-kit';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -18,7 +18,7 @@ interface Props {
   onChange?: (displayName?: string) => void;
 }
 
-const DisplayNameControl: FC<Props> = ({ displayName, isFullWidth = true, onChange, required, names, ...props }) => {
+const DisplayNameControl: FC<Props> = ({ displayName, isFullWidth = true, onChange, names, ...props }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
   const containerClassName = useMemo(() => getControlClassName(isFullWidth), [isFullWidth]);
@@ -54,11 +54,10 @@ const DisplayNameControl: FC<Props> = ({ displayName, isFullWidth = true, onChan
   );
 
   return (
-    <DialTextInputField
-      fieldTitle={t(EntityFieldsI18nKey.displayName)}
+    <DialInput
+      labelProps={{ label: t(EntityFieldsI18nKey.displayName) }}
       placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
-      elementId="displayName"
-      optional={!required}
+      id="displayName"
       value={displayName}
       onChange={onChangeDisplayName}
       errorText={displayNameError?.text}

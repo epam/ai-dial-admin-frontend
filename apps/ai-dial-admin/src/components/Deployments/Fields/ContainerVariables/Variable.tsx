@@ -1,6 +1,6 @@
 'use client';
 
-import { DialRemoveButton, DialSelectField, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialRemoveButton, DialSelectField, DialInput } from '@epam/ai-dial-ui-kit';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, useCallback, useEffect, useState } from 'react';
@@ -130,25 +130,24 @@ const Variable: FC<Props> = ({ index, variable, updateVariable, removeVariable, 
           <div
             className={classNames('flex flex-col mt-4 gap-y-4 lg:flex-row lg:gap-x-4 lg:mt-0', isCollapsed && 'hidden')}
           >
-            <DialTextInputField
-              elementId={`name ${index}`}
+            <DialInput
+              id={`name ${index}`}
               value={variable.name}
               placeholder={t(EntityPlaceholdersI18nKey.Name)}
-              fieldTitle={index === 0 ? t(EnvVariablesI18nKey.Name) : ''}
+              labelProps={{ title: index === 0 ? t(EnvVariablesI18nKey.Name) : '' }}
               errorText={variableNameError?.text}
               invalid={!!variableNameError}
-              optional={false}
+              required={true}
               containerClassName="min-w-[100px]"
               onChange={onChangeName}
               disabled={disabled}
             />
-            <DialTextInputField
-              elementId={`description ${index}`}
+            <DialInput
+              id={`description ${index}`}
               containerClassName="min-w-[150px]"
               value={variable.description}
               placeholder={t(EntityPlaceholdersI18nKey.Description)}
-              fieldTitle={index === 0 ? t(EnvVariablesI18nKey.Description) : ''}
-              optional={true}
+              labelProps={{ title: index === 0 ? t(EnvVariablesI18nKey.Description) : '' }}
               onChange={onChangeDescription}
               disabled={disabled}
             />
@@ -164,9 +163,9 @@ const Variable: FC<Props> = ({ index, variable, updateVariable, removeVariable, 
             <DialSelectField
               className="min-w-[160px]"
               value={variable.mountType || mountTypeItems[0].value}
-              elementId="mountType"
+              id="mountType"
               options={mountTypeItems}
-              fieldTitle={index === 0 ? t(EnvVariablesI18nKey.MountType) : ''}
+              label={index === 0 ? t(EnvVariablesI18nKey.MountType) : ''}
               onChange={onChangeMountType}
               disabled={disabled}
             />

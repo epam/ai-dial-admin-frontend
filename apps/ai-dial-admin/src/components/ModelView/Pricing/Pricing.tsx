@@ -83,7 +83,7 @@ const Pricing: FC<Props> = ({ model, onChangeModel }) => {
 
       <PriceControl
         elementId="promptsPrice"
-        fieldTitle={t(ModelViewI18nKey.PromptPrice)}
+        label={t(ModelViewI18nKey.PromptPrice)}
         value={getMultipliedValue(model.pricing?.prompt, isTokenType)}
         onChange={onChangePrompt}
         containerClassName="w-[120px]"
@@ -92,7 +92,7 @@ const Pricing: FC<Props> = ({ model, onChangeModel }) => {
 
       <PriceControl
         elementId="completionsPrice"
-        fieldTitle={t(ModelViewI18nKey.CompletionPrice)}
+        label={t(ModelViewI18nKey.CompletionPrice)}
         value={getMultipliedValue(model.pricing?.completion, isTokenType)}
         onChange={onChangeCompletion}
         containerClassName="w-[120px]"

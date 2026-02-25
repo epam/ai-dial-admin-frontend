@@ -2,7 +2,7 @@
 
 import { FC, useCallback } from 'react';
 
-import { DialNeutralButton, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialNeutralButton, DialInput } from '@epam/ai-dial-ui-kit';
 import { useI18n } from '@/src/locales/client';
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { IconTrashX } from '@tabler/icons-react';
@@ -37,10 +37,10 @@ const AddNewTool: FC<Props> = ({ toolName, error, onDelete, onChange }) => {
         />
       </div>
       <span className="text-primary dial-small block mb-4">{t(ToolsetI18nKey.CustomToolDescription)}</span>
-      <DialTextInputField
+      <DialInput
         containerClassName={STANDARD_CONTROL_WIDTH}
-        elementId="customToolName"
-        fieldTitle={t(EntityFieldsI18nKey.ToolName)}
+        id="customToolName"
+        labelProps={{ label: t(EntityFieldsI18nKey.ToolName) }}
         placeholder={t(EntityPlaceholdersI18nKey.ToolName)}
         value={toolName}
         onChange={onChangeName}

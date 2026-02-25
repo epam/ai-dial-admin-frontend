@@ -1,5 +1,5 @@
 import { FC, useCallback, useMemo } from 'react';
-import { DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialInput } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { Image } from '@/src/models/deployments/images';
@@ -45,18 +45,18 @@ const Branch: FC<Props> = ({ image, isModal = false, setImage }) => {
 
   return (
     <div className={classNames('flex flex-row gap-x-4', className)}>
-      <DialTextInputField
-        fieldTitle={t(EntityFieldsI18nKey.BranchName)}
-        elementId="branch"
+      <DialInput
+        labelProps={{ title: t(EntityFieldsI18nKey.BranchName) }}
+        id="branch"
         placeholder={t(EntityPlaceholdersI18nKey.Branch)}
         value={image.source.branchName}
         disabled={false}
         optional={true}
         onChange={onBranchChange}
       />
-      <DialTextInputField
-        fieldTitle={t(EntityFieldsI18nKey.SHA)}
-        elementId="SHA"
+      <DialInput
+        labelProps={{ title: t(EntityFieldsI18nKey.SHA) }}
+        id="SHA"
         placeholder={t(EntityPlaceholdersI18nKey.SHA)}
         value={image.source.sha}
         disabled={false}

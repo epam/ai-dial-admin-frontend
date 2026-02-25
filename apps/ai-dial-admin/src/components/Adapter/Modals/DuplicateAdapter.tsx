@@ -69,7 +69,7 @@ const DuplicateAdapter: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose,
           id="baseEndpoint"
           required={true}
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
-          fieldTitle={t(EntityFieldsI18nKey.baseEndpoint)}
+          label={t(EntityFieldsI18nKey.baseEndpoint)}
           endpoint={entity.baseEndpoint}
           onChange={onChangeEndpoint}
         />

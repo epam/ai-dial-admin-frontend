@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import { DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialInput } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { Container } from '@/src/models/deployments/containers';
@@ -57,15 +57,14 @@ const EndpointPath: FC<Props> = ({ container, setContainer }) => {
   );
 
   return (
-    <DialTextInputField
-      fieldTitle={t(EntityFieldsI18nKey.ContainerEndpointPath)}
-      elementId="mcpEndpointPath"
+    <DialInput
+      label={t(EntityFieldsI18nKey.ContainerEndpointPath)}
+      id="mcpEndpointPath"
       containerClassName={STANDARD_CONTROL_WIDTH}
       placeholder={t(EntityPlaceholdersI18nKey.ContainerEndpointPath)}
       value={container.mcpEndpointPath || ''}
       errorText={pathError?.text}
       invalid={!!pathError}
-      optional={true}
       onChange={onPathChange}
       disabled={isEditDisabled(container)}
     />

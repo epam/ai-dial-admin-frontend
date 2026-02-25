@@ -122,8 +122,8 @@ const DeploymentProperties: FC<Props> = ({
       )}
 
       <DialSelectField
-        elementId="displayName"
-        fieldTitle={t(EntityFieldsI18nKey.displayName)}
+        id="displayName"
+        label={t(EntityFieldsI18nKey.displayName)}
         placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
         inlineSearch={true}
         value={entity.displayName}
@@ -173,7 +173,7 @@ const DeploymentProperties: FC<Props> = ({
           elementId="sourceType"
           onChange={onChangeEntity}
           getContainers={view === ApplicationRoute.Models ? getModelContainers : getMCPContainers}
-          fieldTitle={t(EntitiesI18nKey.SourceType)}
+          label={t(EntitiesI18nKey.SourceType)}
           sourceItems={getSourceItems(view, featureFlags.deploymentsEnabled)}
           getAdapters={getModelsAdapters}
           isModal={!isEntityImmutable}

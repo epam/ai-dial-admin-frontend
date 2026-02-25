@@ -9,7 +9,7 @@ import { JSONEditorError } from '@/src/types/editor';
 
 interface Props {
   value: object;
-  fieldTitle?: string;
+  label?: string;
   elementId?: string;
   disabled?: boolean;
   inputClassName?: string;
@@ -20,7 +20,7 @@ interface Props {
 const JsonEditorInput: FC<Props> = ({
   value,
   disabled,
-  fieldTitle,
+  label,
   elementId,
   inputClassName,
   onChangeValue,
@@ -72,7 +72,7 @@ const JsonEditorInput: FC<Props> = ({
 
   return (
     <div className="flex flex-col">
-      {fieldTitle && <Field fieldTitle={fieldTitle} htmlFor={elementId} />}
+      {label && <Field fieldTitle={label} htmlFor={elementId} />}
       <DialInputPopup
         disabled={disabled}
         open={isModalOpen}

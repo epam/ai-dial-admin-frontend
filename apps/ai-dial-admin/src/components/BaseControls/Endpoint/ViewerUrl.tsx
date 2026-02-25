@@ -10,7 +10,7 @@ const ViewerUrlControl: FC<EndpointControlProps> = ({ ...props }) => {
   return (
     <EndpointControl
       id="viewerUrl"
-      fieldTitle={t(EntityFieldsI18nKey.viewerUrl)}
+      label={t(EntityFieldsI18nKey.viewerUrl)}
       placeholder={t(EntityPlaceholdersI18nKey.ViewerUrl)}
       {...props}
     />

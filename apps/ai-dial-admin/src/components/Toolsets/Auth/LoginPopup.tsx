@@ -2,7 +2,7 @@
 
 import {
   DialFormPopup,
-  DialPasswordInputField,
+  DialPasswordInput,
   DialRadioGroup,
   PopupSize,
   RadioButtonWithContent,
@@ -55,9 +55,9 @@ const LoginPopup: FC<Props> = ({ type, isModalOpen, onClose, onLogin }) => {
         />
 
         {type === ToolsetAuthType.API_KEY && (
-          <DialPasswordInputField
-            elementId="apiKeyValue"
-            fieldTitle={t(EntityFieldsI18nKey.apiKeyValue)}
+          <DialPasswordInput
+            id="apiKeyValue"
+            labelProps={{ label: t(EntityFieldsI18nKey.apiKeyValue) }}
             placeholder={t(EntityPlaceholdersI18nKey.Value)}
             value={apiKeyValue}
             onChange={(v) => setApiKeyValue(v || '')}

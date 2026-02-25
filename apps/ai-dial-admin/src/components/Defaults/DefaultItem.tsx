@@ -2,13 +2,7 @@
 
 import { FC, useCallback, useMemo } from 'react';
 
-import {
-  DialNumberInputField,
-  DialRemoveButton,
-  DialSelectField,
-  DialTextInputField,
-  SelectOption,
-} from '@epam/ai-dial-ui-kit';
+import { DialInput, DialNumberInput, DialRemoveButton, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 
 import JsonEditorInput from '@/src/components/Common/JsonEditorInput/JsonEditorInput';
 import {
@@ -105,39 +99,39 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
     <div className="flex gap-x-3 items-end">
       <div className="flex flex-row gap-x-4 items-center">
         <div className="min-w-[187px]">
-          <DialTextInputField
-            elementId={`entity-default-key-${index}`}
+          <DialInput
+            id={`entity-default-key-${index}`}
             value={item.key}
             placeholder={t(EntityPlaceholdersI18nKey.Key)}
-            fieldTitle={isFirstLine ? t(EntityFieldsI18nKey.key) : ''}
+            labelProps={{ title: isFirstLine ? t(EntityFieldsI18nKey.key) : '' }}
             onChange={onChangeKey}
           />
         </div>
         <div className="w-[384px]">
           {item.type === DefaultItemType.string && (
-            <DialTextInputField
-              elementId={`entity-default-value-${index}`}
+            <DialInput
+              id={`entity-default-value-${index}`}
               value={item.value as string}
               placeholder={t(EntityPlaceholdersI18nKey.Value)}
-              fieldTitle={isFirstLine ? t(BasicI18nKey.Value) : ''}
+              labelProps={{ title: isFirstLine ? t(BasicI18nKey.Value) : '' }}
               onChange={onChangeValue}
             />
           )}
           {item.type === DefaultItemType.number && (
-            <DialNumberInputField
-              elementId={`entity-default-value-${index}`}
+            <DialNumberInput
+              id={`entity-default-value-${index}`}
               value={item.value as string}
               placeholder={t(EntityPlaceholdersI18nKey.Value)}
-              fieldTitle={isFirstLine ? t(BasicI18nKey.Value) : ''}
+              labelProps={{ title: isFirstLine ? t(BasicI18nKey.Value) : '' }}
               onChange={onChangeValue}
             />
           )}
           {item.type === DefaultItemType.boolean && (
             <DialSelectField
               value={item.value.toString()}
-              elementId={`entity-default-value=${index}`}
+              id={`entity-default-value=${index}`}
               options={booleans}
-              fieldTitle={isFirstLine ? t(BasicI18nKey.Value) : ''}
+              label={isFirstLine ? t(BasicI18nKey.Value) : ''}
               onChange={onChangeValue}
             />
           )}
@@ -145,7 +139,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
             <JsonEditorInput
               elementId={`entity-default-value-${index}`}
               value={item.value as object}
-              fieldTitle={isFirstLine ? t(BasicI18nKey.Value) : ''}
+              label={isFirstLine ? t(BasicI18nKey.Value) : ''}
               onChangeValue={onChangeValue}
             />
           )}
@@ -153,9 +147,9 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
         <div className="min-w-[136px]">
           <DialSelectField
             value={item.type}
-            elementId={`entity-default-type-${index}`}
+            id={`entity-default-type-${index}`}
             options={types}
-            fieldTitle={isFirstLine ? t(EntityFieldsI18nKey.type) : ''}
+            label={isFirstLine ? t(EntityFieldsI18nKey.type) : ''}
             onChange={(type) => onChangeType(type as string)}
           />
         </div>

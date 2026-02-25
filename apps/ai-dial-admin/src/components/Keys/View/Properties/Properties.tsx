@@ -1,4 +1,4 @@
-import { DialGhostButton, DialSwitch, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton, DialSwitch, DialInput } from '@epam/ai-dial-ui-kit';
 import { IconSparkles } from '@tabler/icons-react';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
@@ -124,9 +124,9 @@ const KeyProperties: FC<Props> = ({ entity, originalEntity, names, keys, isKeyIm
 
       <DescriptionControl entity={entity} onChangeEntity={onChangeKey} isFullWidth={!isKeyImmutable} />
 
-      <DialTextInputField
-        elementId="project"
-        fieldTitle={t(EntityFieldsI18nKey.project)}
+      <DialInput
+        id="project"
+        labelProps={{ title: t(EntityFieldsI18nKey.project) }}
         placeholder={t(EntityPlaceholdersI18nKey.Project)}
         value={entity.project}
         errorText={projectError}
@@ -136,10 +136,9 @@ const KeyProperties: FC<Props> = ({ entity, originalEntity, names, keys, isKeyIm
       />
 
       {isKeyImmutable && (
-        <DialTextInputField
-          elementId="projectContact"
-          optional={true}
-          fieldTitle={t(EntityFieldsI18nKey.projectContactPoint)}
+        <DialInput
+          id="projectContact"
+          labelProps={{ title: t(EntityFieldsI18nKey.projectContactPoint) }}
           placeholder={t(EntityPlaceholdersI18nKey.ContactPoint)}
           value={entity.projectContactPoint}
           onChange={onChangeProjectContactPoint}

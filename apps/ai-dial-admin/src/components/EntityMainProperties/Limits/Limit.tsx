@@ -1,6 +1,6 @@
 import { FC, useCallback } from 'react';
 
-import { DialNumberInputField } from '@epam/ai-dial-ui-kit';
+import { DialNumberInput } from '@epam/ai-dial-ui-kit';
 import { IconCurrencyDollar } from '@tabler/icons-react';
 
 import { RolesI18nKey } from '@/src/constants/i18n';
@@ -30,7 +30,7 @@ const LimitControl: FC<Props> = ({ limits, controlClassName, isCostInputs, onCha
   );
 
   return (
-    <DialNumberInputField
+    <DialNumberInput
       containerClassName={controlClassName}
       placeholder={t(RolesI18nKey.NoLimits)}
       value={getCorrectValue(limits?.[fieldKey])}

@@ -10,7 +10,7 @@ import classNames from 'classnames';
 
 interface Props {
   elementId: string;
-  title: string;
+  label: string;
   disabled?: boolean;
   optional?: boolean;
   selectedItems?: string[];
@@ -29,7 +29,7 @@ const Multiselect: FC<Props> = ({
   onChangeItems,
   elementId,
   selectedItems,
-  title,
+  label,
   disabled,
   optional,
   errorText,
@@ -49,7 +49,7 @@ const Multiselect: FC<Props> = ({
 
   return (
     <div className={classNames('flex flex-col', className)}>
-      <Field fieldTitle={title} htmlFor={elementId} optional={optional} />
+      <Field fieldTitle={label} htmlFor={elementId} optional={optional} />
       <DialInputPopup
         inputClassName={errorText && 'dial-input-error'}
         open={isModalOpen}

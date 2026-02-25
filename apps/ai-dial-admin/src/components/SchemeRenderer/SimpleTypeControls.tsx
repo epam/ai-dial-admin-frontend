@@ -1,7 +1,7 @@
 'use client';
 
 import { FC } from 'react';
-import { DialNumberInputField, DialSelectField, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialNumberInput, DialSelectField, DialInput } from '@epam/ai-dial-ui-kit';
 
 import { EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -19,7 +19,7 @@ const SimpleTypeControls: FC<Props> = ({ control }) => {
     <>
       {control.type === SchemeParameterType.string && (
         <div className="w-[35%]">
-          <DialTextInputField
+          <DialInput
             elementId={control.id}
             fieldTitle={control.label}
             optional={control.optional}
@@ -30,7 +30,7 @@ const SimpleTypeControls: FC<Props> = ({ control }) => {
       )}
       {control.type === SchemeParameterType.number && (
         <div className="w-[120px]">
-          <DialNumberInputField
+          <DialNumberInput
             elementId={control.id}
             fieldTitle={control.label}
             optional={control.optional}

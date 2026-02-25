@@ -1,7 +1,7 @@
 import { FC, useEffect, useMemo, useState } from 'react';
 
 import classNames from 'classnames';
-import { DialRemoveButton, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialRemoveButton, DialInput } from '@epam/ai-dial-ui-kit';
 
 import { EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -65,7 +65,7 @@ const Path: FC<Props> = ({
   return (
     <div className={classNames('flex flex-row gap-x-2', alignmentClassName)}>
       <div className="flex-1 min-w-0">
-        <DialTextInputField
+        <DialInput
           elementId={`path-${index}`}
           value={path}
           disabled={readonly}

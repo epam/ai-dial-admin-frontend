@@ -2,7 +2,7 @@
 
 import { FC, MouseEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialNeutralButton, DialTabs, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialNeutralButton, DialTabs, DialInput } from '@epam/ai-dial-ui-kit';
 import { IconPlayerPlay } from '@tabler/icons-react';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
@@ -95,7 +95,7 @@ const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
                 {testSuite?.endpointRef.method}
               </span>
             )}
-            <DialTextInputField
+            <DialInput
               elementId="urlTemplate"
               value={testSuite.requestTemplate?.urlTemplate || ''}
               onChange={(urlTemplate) =>

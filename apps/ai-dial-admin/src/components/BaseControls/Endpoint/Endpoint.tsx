@@ -1,4 +1,4 @@
-import { DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialInput } from '@epam/ai-dial-ui-kit';
 import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
 import ComplexInput from '@/src/components/Common/ComplexInput/ComplexInput';
@@ -21,7 +21,7 @@ export interface EndpointControlProps {
 
 export interface Props extends EndpointControlProps {
   id: string;
-  fieldTitle: string;
+  label: string;
   placeholder: string;
   elementClassName?: string;
   iconAfterInput?: ReactNode;
@@ -101,11 +101,11 @@ const EndpointControl: FC<Props> = ({
     <ReadonlyField
       containerClassName={isFullWidth ? 'w-full' : STANDARD_CONTROL_WIDTH}
       elementId={id}
-      title={props.fieldTitle}
+      label={props.label}
       value={endpoint || ''}
     />
   ) : (
-    <DialTextInputField
+    <DialInput
       textBeforeInput={textBeforeInput}
       elementId={id}
       value={endpoint || ''}

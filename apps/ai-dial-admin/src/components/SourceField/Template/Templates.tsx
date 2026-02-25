@@ -101,10 +101,10 @@ const Templates = <T extends DialModel | DialInterceptor>({
               }))}
               searchable={true}
               onChange={(value) => onSelect(value as string)}
-              elementId="source-type"
+              id="source-type"
               value={runners.find((runner) => runner.name === entity.source?.runnerName)?.name}
               placeholder={t(CreateI18nKey.SelectInterceptorTemplate)}
-              fieldTitle={t(SourceI18nKey.InterceptorTemplate)}
+              label={t(SourceI18nKey.InterceptorTemplate)}
             />
           </div>
         ) : (

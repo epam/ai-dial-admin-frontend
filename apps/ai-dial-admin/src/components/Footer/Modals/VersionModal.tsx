@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialFormPopup, DialSelectField, DialTextInputField, PopupSize, SelectOption } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, DialSelectField, DialInput, PopupSize, SelectOption } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey, CoreVersionModalI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -111,21 +111,21 @@ const VersionModal: FC<Props> = ({ coreVersions, isModalOpen, onClose, onApply }
         <div className="flex flex-row gap-x-4">
           <DialSelectField
             containerClassName="w-[160px]"
-            elementId="definitionType"
+            id="definitionType"
             options={definitionTypes}
             value={definition}
-            fieldTitle={t(CoreVersionModalI18nKey.DefinitionType)}
+            label={t(CoreVersionModalI18nKey.DefinitionType)}
             onChange={(value) => setDefinition(value as string)}
           />
-          <DialTextInputField
-            elementId="version"
-            fieldTitle={t(EntityFieldsI18nKey.version)}
+          <DialInput
+            id="version"
+            labelProps={{ title: t(EntityFieldsI18nKey.version) }}
             value={version}
             disabled={definition === DefinitionType.AUTO || definition === DefinitionType.DEFAULT}
             iconBefore={iconBefore}
             iconAfter={iconAfter}
             onChange={(v) => setVersion(v || '')}
-            captionDescription={captionDescription}
+            // captionDescription={captionDescription}
           />
         </div>
       </div>

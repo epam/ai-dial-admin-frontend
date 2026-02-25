@@ -7,7 +7,7 @@ import {
   DialLoadFileAreaField,
   DialRadioGroup,
   DialSwitch,
-  DialTextInputField,
+  DialInput,
   RadioButtonWithContent,
   RadioGroupOrientation,
   Step,
@@ -128,9 +128,9 @@ const FolderCreateSetup: FC<Props> = ({
   return (
     <>
       <div className="w-[50%]">
-        <DialTextInputField
-          fieldTitle={t(FoldersI18nKey.FolderName)}
-          elementId="name"
+        <DialInput
+          labelProps={{ label: t(FoldersI18nKey.FolderName) }}
+          id="name"
           placeholder={t(FoldersI18nKey.FolderCreatePlaceholder)}
           value={folderName}
           onChange={onChangeName}

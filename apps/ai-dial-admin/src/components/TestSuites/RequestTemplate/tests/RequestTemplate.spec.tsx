@@ -61,7 +61,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
       ))}
     </div>
   ),
-  DialTextInputField: ({ elementId, value, onChange, invalid, error }: any) => (
+  DialInput: ({ elementId, value, onChange, invalid, error }: any) => (
     <div>
       <input
         role="textbox"

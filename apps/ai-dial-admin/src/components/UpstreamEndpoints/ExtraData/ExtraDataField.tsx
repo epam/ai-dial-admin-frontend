@@ -11,12 +11,12 @@ import { NONE_ID, USE_JSON_ID, USE_STRING_ID } from './constants';
 
 interface Props {
   endpoint: DialModelEndpoint;
-  fieldTitle?: string;
+  label?: string;
   disabled?: boolean;
   onChangeExtraData: (extraData: DialEndpointExtraData) => void;
 }
 
-const ExtraDataField: FC<Props> = ({ endpoint, disabled, fieldTitle, onChangeExtraData }) => {
+const ExtraDataField: FC<Props> = ({ endpoint, disabled, label, onChangeExtraData }) => {
   const t = useI18n();
   const [isValid, setIsValid] = useState(false);
   const [stringValue, setStringValue] = useState<string | undefined>(undefined);
@@ -138,7 +138,7 @@ const ExtraDataField: FC<Props> = ({ endpoint, disabled, fieldTitle, onChangeExt
         htmlFor="extraDataInput"
         id="extraDataInput"
         emptyValueText={t(BasicI18nKey.None)}
-        label={fieldTitle ?? ''}
+        label={label ?? ''}
         header={t(EntityFieldsI18nKey.extraData)}
         portalId="extraDataPortal"
         customInputValue={

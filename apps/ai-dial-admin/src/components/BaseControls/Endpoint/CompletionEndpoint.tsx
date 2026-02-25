@@ -10,7 +10,7 @@ const CompletionEndpointControl: FC<EndpointControlProps> = ({ ...props }) => {
   return (
     <EndpointControl
       id="completionEndpoint"
-      fieldTitle={t(EntityFieldsI18nKey.completionEndpoint)}
+      label={t(EntityFieldsI18nKey.completionEndpoint)}
       placeholder={t(EntityPlaceholdersI18nKey.CompletionEndpoint)}
       {...props}
     />

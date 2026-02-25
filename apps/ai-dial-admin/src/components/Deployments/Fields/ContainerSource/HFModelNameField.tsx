@@ -84,8 +84,8 @@ const HfModelNameField: FC<Props> = ({ container, setContainer, isModal, route }
     <>
       <div className="flex gap-3">
         <DialSelectField
-          elementId="modelName"
-          fieldTitle={t(EntityFieldsI18nKey.HFModelName)}
+          id="modelName"
+          label={t(EntityFieldsI18nKey.HFModelName)}
           placeholder={t(EntityPlaceholdersI18nKey.HFModelName)}
           inlineSearch={true}
           value={container.source?.modelName}

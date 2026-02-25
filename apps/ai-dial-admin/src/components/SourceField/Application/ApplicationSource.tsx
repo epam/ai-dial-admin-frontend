@@ -105,10 +105,10 @@ const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, i
     <div className="h-full flex flex-col gap-y-8">
       <DialSelectField
         value={sourceType?.value}
-        elementId="sourceType"
+        id="sourceType"
         options={sources}
         containerClassName="w-[180px]"
-        fieldTitle={t(EntitiesI18nKey.SourceType)}
+        label={t(EntitiesI18nKey.SourceType)}
         onChange={(source) => onChangeSource(source as string)}
       />
       {sourceType?.value === SourceTypes.ENDPOINTS && (

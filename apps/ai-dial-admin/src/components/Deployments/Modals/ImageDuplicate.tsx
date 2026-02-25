@@ -2,7 +2,7 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   DialConfirmationPopup,
   DialRadioGroup,
-  DialTextInputField,
+  DialInput,
   PopupSize,
   RadioButtonWithContent,
   RadioGroupOrientation,
@@ -181,19 +181,19 @@ const ImageDuplicateModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
           orientation={RadioGroupOrientation.Column}
           onChange={onChangeDuplicationType}
         />
-        <DialTextInputField
-          elementId="name"
-          fieldTitle={t(EntityFieldsI18nKey.name)}
+        <DialInput
+          id="name"
+          labelProps={{ title: t(EntityFieldsI18nKey.name) }}
           placeholder={t(EntityPlaceholdersI18nKey.Name)}
           value={copyImage.name}
           errorText={nameError?.text}
           invalid={!!nameError}
           onChange={onChangeName}
         />
-        <DialTextInputField
-          elementContainerClassName="max-w-[120px]"
-          fieldTitle={t(EntityFieldsI18nKey.version)}
-          elementId="version"
+        <DialInput
+          className="max-w-[120px]"
+          id="version"
+          labelProps={{ title: t(EntityFieldsI18nKey.version) }}
           placeholder={t(EntityPlaceholdersI18nKey.Version)}
           value={copyImage.version}
           errorText={versionError?.text}

@@ -1,11 +1,11 @@
 import { FC, useMemo } from 'react';
 
-import { DialNumberInputField, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialInput, DialNumberInput } from '@epam/ai-dial-ui-kit';
 import type { WidgetProps } from '@rjsf/utils';
 
+import { WidgetHeader } from '@/src/components/Common/SchemaUIRenderer/Components/WidgetHeader';
 import { ErrorI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { WidgetHeader } from '@/src/components/Common/SchemaUIRenderer/Components/WidgetHeader';
 
 export const TextWidget: FC<WidgetProps> = ({
   id,
@@ -22,19 +22,19 @@ export const TextWidget: FC<WidgetProps> = ({
   const invalid = useMemo(() => {
     return required ? !value : false;
   }, [required, value]);
+
   const errorText = useMemo(() => {
     return !invalid || readonly ? '' : t(ErrorI18nKey.RequiredField);
   }, [invalid, readonly, t]);
 
   return schema.__additional_property ? (
-    <DialTextInputField
+    <DialInput
       containerClassName="flex w-full max-w-[600px]"
-      elementId={id}
+      id={id}
       disabled={disabled}
-      readonly={readonly}
       onChange={onChange}
       placeholder={placeholder}
-      optional={!required}
+      required={required}
       invalid={invalid}
       errorText={errorText}
       value={value}
@@ -43,29 +43,25 @@ export const TextWidget: FC<WidgetProps> = ({
     <div className="flex flex-col w-full bg-layer-2 rounded p-[18px]">
       <WidgetHeader label={label} title={schema.title} description={schema.description} />
       {schema.type === 'string' && (
-        <DialTextInputField
+        <DialInput
           containerClassName="flex w-full max-w-[600px]"
-          elementId={id}
+          id={id}
           disabled={disabled}
-          readonly={readonly}
-          defaultEmptyText=""
           onChange={onChange}
           placeholder={placeholder}
-          optional={!required}
+          required={required}
           invalid={invalid}
           errorText={errorText}
           value={value}
         />
       )}
       {(schema.type === 'number' || schema.type === 'integer') && (
-        <DialNumberInputField
+        <DialNumberInput
           containerClassName="flex w-full max-w-[600px]"
-          elementId={id}
+          id={id}
           value={value}
           placeholder={placeholder}
-          optional={!required}
-          readonly={readonly}
-          defaultEmptyText=""
+          required={required}
           invalid={invalid}
           errorText={errorText}
           onChange={onChange}

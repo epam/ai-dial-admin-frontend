@@ -41,7 +41,7 @@ const ToolsetEndpoint: FC<Props> = ({ entity, disabled, onChange, prefix, isModa
           id="endpoint"
           disabled={disabled}
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
-          fieldTitle={t(EntitiesI18nKey.ExternalEndpoint)}
+          label={t(EntitiesI18nKey.ExternalEndpoint)}
           endpoint={entity.endpoint}
           onChange={(endpoint) => onChange?.({ ...entity, endpoint })}
           required={true}
@@ -51,8 +51,8 @@ const ToolsetEndpoint: FC<Props> = ({ entity, disabled, onChange, prefix, isModa
       {!isModal && (
         <DialSelectField
           disabled={disabled}
-          fieldTitle={t(EntityFieldsI18nKey.transport)}
-          elementId="transport"
+          label={t(EntityFieldsI18nKey.transport)}
+          id="transport"
           containerClassName="w-[180px]"
           value={entity.transport || ToolsetTransport.SSE}
           options={transportOptions}

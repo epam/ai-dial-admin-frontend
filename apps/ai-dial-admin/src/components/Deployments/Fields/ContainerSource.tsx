@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialInput } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { MODEL_SOURCE_TYPE, SERVING_SOURCE } from '@/src/types/deployments/containers';
@@ -51,9 +51,9 @@ const ContainerSource: FC<Props> = ({ container, setContainer, isModal = false, 
   return (
     <div className="flex flex-col gap-y-8">
       {container.source?.$type === MODEL_SOURCE_TYPE.NIM ? (
-        <DialTextInputField
-          elementId="imageRef"
-          fieldTitle={t(EntityFieldsI18nKey.ImageURI)}
+        <DialInput
+          id="imageRef"
+          labelProps={{ title: t(EntityFieldsI18nKey.ImageURI) }}
           placeholder={t(EntityPlaceholdersI18nKey.URI)}
           value={container.source?.imageRef}
           errorText={imageRefError?.text}
