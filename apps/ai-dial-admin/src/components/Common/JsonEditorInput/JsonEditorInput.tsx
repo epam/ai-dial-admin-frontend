@@ -70,7 +70,7 @@ const JsonEditorInput: FC<Props> = ({
   }, [onChangeValue, jsonValue, onCloseModal]);
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col gap-y-2">
       {label && <DialLabel label={label} htmlFor={elementId} />}
       <DialInputPopup
         disabled={disabled}

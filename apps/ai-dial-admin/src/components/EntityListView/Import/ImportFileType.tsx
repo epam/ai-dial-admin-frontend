@@ -68,7 +68,7 @@ const ImportFileTypeSelector: FC<Props> = ({
         />
 
         {isAssetView(route) && (
-          <div className="flex flex-col">
+          <div className="flex flex-col gap-y-2">
             <DialLabel label={ignorePathsTitle} htmlFor="ignorePaths" />
             <DialSwitch
               isOn={ignorePaths}

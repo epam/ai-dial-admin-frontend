@@ -47,7 +47,7 @@ const Multiselect: FC<Props> = ({
   }, [setIsModalState]);
 
   return (
-    <div className={classNames('flex flex-col', className)}>
+    <div className={classNames('flex flex-col gap-y-2', className)}>
       <DialLabel label={label} htmlFor={elementId} required={required} />
       <DialInputPopup
         inputClassName={errorText && 'dial-input-error'}

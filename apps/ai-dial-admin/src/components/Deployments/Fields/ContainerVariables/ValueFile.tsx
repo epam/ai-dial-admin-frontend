@@ -65,7 +65,7 @@ const ValueFile: FC<Props> = ({ value, index, fieldName, onValueChange, disabled
   }, [dispatch, index]);
 
   return (
-    <div className="flex flex-col flex-1 max-w-full">
+    <div className="flex flex-col flex-1 gap-y-2 max-w-full">
       <DialLabel label={fieldName} htmlFor={`variable_value_${index}`} />
       <div
         className={classNames(

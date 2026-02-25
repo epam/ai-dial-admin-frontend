@@ -84,7 +84,7 @@ const AppRunners: FC<Props> = ({ selectedValue, runners, onChangeValue, isEntity
     />
   ) : (
     <div className={classNames('flex flex-row gap-2 items-end', STANDARD_CONTROL_WIDTH)}>
-      <div className={CONTROL_WITH_BUTTON_WIDTH}>
+      <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-2')}>
         <DialLabel label={t(EntitiesI18nKey.AppRunner)} required htmlFor="sourceEntity" />
         <DialInputPopup
           emptyValueText={t(EntitiesI18nKey.NoApplicationRunners)}

@@ -75,7 +75,7 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
       {!isModal && (
         <>
           <div className={classNames('flex gap-2', STANDARD_CONTROL_WIDTH)}>
-            <div className={CONTROL_WITH_BUTTON_WIDTH}>
+            <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-2')}>
               <DialLabel label={t(TestSuitesI18nKey.Application)} htmlFor="applications" />
               <DialInputPopup
                 open={isAppModalOpen}
