@@ -49,9 +49,7 @@ const mockToolsetResources: PublicationToolset[] = [
   },
 ];
 
-const createMockPublication = (
-  resources?: PublicationToolset[],
-): ToolsetPublication => ({
+const createMockPublication = (resources?: PublicationToolset[]): ToolsetPublication => ({
   path: 'publications/test-publication',
   requestName: 'test-request',
   author: 'test@example.com',

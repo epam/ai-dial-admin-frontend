@@ -48,13 +48,9 @@ const mockApplicationResources: PublicationApplication[] = [
   },
 ];
 
-const mockSchemes: DialApplicationScheme[] = [
-  { $id: 'schema-1', title: 'Schema 1' } as DialApplicationScheme,
-];
+const mockSchemes: DialApplicationScheme[] = [{ $id: 'schema-1', title: 'Schema 1' } as DialApplicationScheme];
 
-const createMockPublication = (
-  resources?: PublicationApplication[],
-): ApplicationPublication => ({
+const createMockPublication = (resources?: PublicationApplication[]): ApplicationPublication => ({
   path: 'publications/test-publication',
   requestName: 'test-request',
   author: 'test@example.com',
@@ -84,11 +80,7 @@ describe('Publications :: ApplicationProperties', () => {
     const publication = createMockPublication();
 
     render(
-      <ApplicationProperties
-        publication={publication}
-        onChange={mockOnChange}
-        applicationSchemes={mockSchemes}
-      />,
+      <ApplicationProperties publication={publication} onChange={mockOnChange} applicationSchemes={mockSchemes} />,
     );
 
     expect(screen.getByRole('region', { name: 'base-properties' })).toBeInTheDocument();
@@ -99,11 +91,7 @@ describe('Publications :: ApplicationProperties', () => {
     const publication = createMockPublication();
 
     render(
-      <ApplicationProperties
-        publication={publication}
-        onChange={mockOnChange}
-        applicationSchemes={mockSchemes}
-      />,
+      <ApplicationProperties publication={publication} onChange={mockOnChange} applicationSchemes={mockSchemes} />,
     );
 
     expect(capturedBaseProps.publication).toBe(publication);
@@ -113,11 +101,7 @@ describe('Publications :: ApplicationProperties', () => {
     const publication = createMockPublication();
 
     render(
-      <ApplicationProperties
-        publication={publication}
-        onChange={mockOnChange}
-        applicationSchemes={mockSchemes}
-      />,
+      <ApplicationProperties publication={publication} onChange={mockOnChange} applicationSchemes={mockSchemes} />,
     );
 
     expect(capturedBaseProps.onChange).toBe(mockOnChange);
@@ -127,11 +111,7 @@ describe('Publications :: ApplicationProperties', () => {
     const publication = createMockPublication();
 
     render(
-      <ApplicationProperties
-        publication={publication}
-        onChange={mockOnChange}
-        applicationSchemes={mockSchemes}
-      />,
+      <ApplicationProperties publication={publication} onChange={mockOnChange} applicationSchemes={mockSchemes} />,
     );
 
     expect(capturedBaseProps.getContext).toBe(useAppsFolder);
@@ -141,11 +121,7 @@ describe('Publications :: ApplicationProperties', () => {
     const publication = createMockPublication();
 
     render(
-      <ApplicationProperties
-        publication={publication}
-        onChange={mockOnChange}
-        applicationSchemes={mockSchemes}
-      />,
+      <ApplicationProperties publication={publication} onChange={mockOnChange} applicationSchemes={mockSchemes} />,
     );
 
     expect(capturedAppDetailsProps.publication).toBe(publication);
@@ -155,11 +131,7 @@ describe('Publications :: ApplicationProperties', () => {
     const publication = createMockPublication();
 
     render(
-      <ApplicationProperties
-        publication={publication}
-        onChange={mockOnChange}
-        applicationSchemes={mockSchemes}
-      />,
+      <ApplicationProperties publication={publication} onChange={mockOnChange} applicationSchemes={mockSchemes} />,
     );
 
     expect(capturedAppDetailsProps.onChange).toBe(mockOnChange);
@@ -169,11 +141,7 @@ describe('Publications :: ApplicationProperties', () => {
     const publication = createMockPublication();
 
     render(
-      <ApplicationProperties
-        publication={publication}
-        onChange={mockOnChange}
-        applicationSchemes={mockSchemes}
-      />,
+      <ApplicationProperties publication={publication} onChange={mockOnChange} applicationSchemes={mockSchemes} />,
     );
 
     expect(capturedAppDetailsProps.applicationSchemes).toBe(mockSchemes);
@@ -183,11 +151,7 @@ describe('Publications :: ApplicationProperties', () => {
     const publication = createMockPublication();
 
     render(
-      <ApplicationProperties
-        publication={publication}
-        onChange={mockOnChange}
-        applicationSchemes={mockSchemes}
-      />,
+      <ApplicationProperties publication={publication} onChange={mockOnChange} applicationSchemes={mockSchemes} />,
     );
 
     expect(screen.getByText('Resources: 1')).toBeInTheDocument();
@@ -197,11 +161,7 @@ describe('Publications :: ApplicationProperties', () => {
     const publication = createMockPublication([]);
 
     render(
-      <ApplicationProperties
-        publication={publication}
-        onChange={mockOnChange}
-        applicationSchemes={mockSchemes}
-      />,
+      <ApplicationProperties publication={publication} onChange={mockOnChange} applicationSchemes={mockSchemes} />,
     );
 
     expect(screen.getByText('Resources: 0')).toBeInTheDocument();

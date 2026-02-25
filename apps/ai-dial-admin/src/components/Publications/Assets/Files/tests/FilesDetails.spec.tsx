@@ -306,12 +306,7 @@ describe('Publications :: FilesDetails', () => {
   });
 
   test('does not call onChange when onChange is not provided', () => {
-    const { container } = render(
-      <FilesDetails
-        publication={createMockPublication()}
-        setAddedFiles={vi.fn()}
-      />,
-    );
+    const { container } = render(<FilesDetails publication={createMockPublication()} setAddedFiles={vi.fn()} />);
 
     expect(container).toBeInTheDocument();
 
@@ -328,8 +323,9 @@ describe('Publications :: FilesDetails', () => {
       file: { name: `file${i}.txt`, path: `/path/file${i}.txt` },
     })) as PublicationFile[];
 
-    const addedFiles = Array.from({ length: 3 }, (_, i) =>
-      new File([`content-${i}`], `added-${i}.txt`, { type: 'text/plain' }),
+    const addedFiles = Array.from(
+      { length: 3 },
+      (_, i) => new File([`content-${i}`], `added-${i}.txt`, { type: 'text/plain' }),
     );
 
     const publication = createMockPublication(files);

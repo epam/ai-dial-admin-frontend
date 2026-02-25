@@ -2,11 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
 import { DeploymentAsset } from '@/src/models/dial/deployment-asset';
-import {
-  ActionType,
-  PublicationToolset,
-  ToolsetPublication,
-} from '@/src/models/dial/publications';
+import { ActionType, PublicationToolset, ToolsetPublication } from '@/src/models/dial/publications';
 import ToolsetDetails from '../ToolsetDetails';
 
 let capturedPropertiesProps: any = {};
@@ -50,9 +46,7 @@ const mockToolsetResources: PublicationToolset[] = [
   },
 ];
 
-const createMockPublication = (
-  toolSetResources?: PublicationToolset[],
-): ToolsetPublication => ({
+const createMockPublication = (toolSetResources?: PublicationToolset[]): ToolsetPublication => ({
   path: 'publications/test-publication',
   requestName: 'test-request',
   author: 'test@example.com',
@@ -73,9 +67,7 @@ const setup = (
   const onChange = props.onChange ?? vi.fn();
   const publication = props.publication ?? createMockPublication();
 
-  const utils = render(
-    <ToolsetDetails publication={publication} onChange={onChange} />,
-  );
+  const utils = render(<ToolsetDetails publication={publication} onChange={onChange} />);
 
   return { onChange, publication, ...utils };
 };
@@ -140,9 +132,7 @@ describe('Publications :: ToolsetDetails', () => {
     capturedPropertiesProps.onChange(updatedToolset);
 
     const updatedPublication = onChange.mock.calls[0][0];
-    expect(updatedPublication.toolSetResources[0].toolSetResource.path).toBe(
-      'toolsets/folder/NewToolset__3.0.0',
-    );
+    expect(updatedPublication.toolSetResources[0].toolSetResource.path).toBe('toolsets/folder/NewToolset__3.0.0');
   });
 
   test('onChangeToolset preserves all publication properties', () => {

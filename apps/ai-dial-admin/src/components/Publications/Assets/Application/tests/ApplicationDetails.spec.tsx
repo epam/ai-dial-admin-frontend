@@ -2,11 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
 import { DeploymentAsset } from '@/src/models/dial/deployment-asset';
-import {
-  ActionType,
-  ApplicationPublication,
-  PublicationApplication,
-} from '@/src/models/dial/publications';
+import { ActionType, ApplicationPublication, PublicationApplication } from '@/src/models/dial/publications';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import ApplicationDetails from '../ApplicationDetails';
 
@@ -59,9 +55,7 @@ const mockApplicationResources: PublicationApplication[] = [
   },
 ];
 
-const createMockPublication = (
-  applicationResources?: PublicationApplication[],
-): ApplicationPublication => ({
+const createMockPublication = (applicationResources?: PublicationApplication[]): ApplicationPublication => ({
   path: 'publications/test-publication',
   requestName: 'test-request',
   author: 'test@example.com',
@@ -93,11 +87,7 @@ const setup = (
   const applicationSchemes = props.applicationSchemes ?? mockSchemes;
 
   const utils = render(
-    <ApplicationDetails
-      publication={publication}
-      applicationSchemes={applicationSchemes}
-      onChange={onChange}
-    />,
+    <ApplicationDetails publication={publication} applicationSchemes={applicationSchemes} onChange={onChange} />,
   );
 
   return { onChange, publication, ...utils };
@@ -169,9 +159,7 @@ describe('Publications :: ApplicationDetails', () => {
     capturedAssetProps.onChange(updatedAsset);
 
     const updatedPublication = onChange.mock.calls[0][0];
-    expect(updatedPublication.applicationResources[0].applicationResource.path).toBe(
-      'apps/folder/NewApp__3.0.0',
-    );
+    expect(updatedPublication.applicationResources[0].applicationResource.path).toBe('apps/folder/NewApp__3.0.0');
   });
 
   test('onChangeApplication preserves other publication properties', () => {
@@ -216,12 +204,7 @@ describe('Publications :: ApplicationDetails', () => {
   });
 
   test('does not call onChange when onChange is not provided', () => {
-    render(
-      <ApplicationDetails
-        publication={createMockPublication()}
-        applicationSchemes={mockSchemes}
-      />,
-    );
+    render(<ApplicationDetails publication={createMockPublication()} applicationSchemes={mockSchemes} />);
 
     // Should not throw
     capturedAssetProps.onChange?.({
@@ -241,11 +224,7 @@ describe('Publications :: ApplicationDetails', () => {
   });
 
   test('passes undefined runners when applicationSchemes is not provided', () => {
-    render(
-      <ApplicationDetails
-        publication={createMockPublication()}
-      />,
-    );
+    render(<ApplicationDetails publication={createMockPublication()} />);
 
     expect(capturedAssetProps.runners).toBeUndefined();
   });

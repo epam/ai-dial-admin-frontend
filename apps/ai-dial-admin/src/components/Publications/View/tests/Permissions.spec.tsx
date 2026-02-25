@@ -30,8 +30,12 @@ vi.mock('@/src/components/Publications/Popup/RulesCompare', () => ({
     capturedRulesCompareProps = props;
     return (
       <div role="dialog" aria-label="rules-compare">
-        <span>Compare Rules: {props.rules.length} vs {props.compareRules.length}</span>
-        <button aria-label="close-compare" onClick={props.onClose}>Close</button>
+        <span>
+          Compare Rules: {props.rules.length} vs {props.compareRules.length}
+        </span>
+        <button aria-label="close-compare" onClick={props.onClose}>
+          Close
+        </button>
       </div>
     );
   },
@@ -42,9 +46,7 @@ const mockRules: DialRule[] = [
   { source: 'groups', function: RuleFunction.CONTAIN, targets: ['devs'] },
 ];
 
-const mockCurrentRules: DialRule[] = [
-  { source: 'title', function: RuleFunction.REGEX, targets: ['.*engineer.*'] },
-];
+const mockCurrentRules: DialRule[] = [{ source: 'title', function: RuleFunction.REGEX, targets: ['.*engineer.*'] }];
 
 const createMockPublication = (overrides?: Partial<Publication>): Publication => ({
   path: 'publications/test',
@@ -191,9 +193,7 @@ describe('Publications :: PublicationPermissions', () => {
     const onChange = vi.fn();
     setup({ onChange });
 
-    const newRules: DialRule[] = [
-      { source: 'title', function: RuleFunction.EQUAL, targets: ['lead'] },
-    ];
+    const newRules: DialRule[] = [{ source: 'title', function: RuleFunction.EQUAL, targets: ['lead'] }];
     capturedRulesItemProps.onChange(newRules);
 
     expect(onChange).toHaveBeenCalledTimes(1);
