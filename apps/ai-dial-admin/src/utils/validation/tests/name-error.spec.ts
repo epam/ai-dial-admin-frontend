@@ -103,7 +103,7 @@ describe('getErrorForName', () => {
   });
 
   test('Should return empty error for undefined name', () => {
-    const res1 = getErrorForName('n', ['name']);
+    const res1 = getErrorForName('', ['name']);
     const res2 = getErrorForName(void 0, ['name']);
 
     expect(res1).toEqual({
