@@ -115,7 +115,7 @@ const Adapters = <T extends DialModel | DialInterceptor>({
         ) : (
           <div className={classNames('flex gap-2', STANDARD_CONTROL_WIDTH)}>
             <div className={CONTROL_WITH_BUTTON_WIDTH}>
-              <DialLabel label={t(SourceI18nKey.Adapter)} htmlFor="adapters" />
+              <DialLabel label={t(SourceI18nKey.Adapter)} required htmlFor="adapters" />
               <DialInputPopup
                 open={isModalOpen}
                 onOpen={onOpenModal}

@@ -9,7 +9,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { Toolset } from '@/src/models/dial/toolset';
 import { useI18n } from '@/src/locales/client';
 
-import ReadonlyField from '@/src/components/Common/ReadonlyField/ReadonlyField';
+import ReadonlyInput from '@/src/components/Common/ReadonlyInput/ReadonlyInput';
 import MaintainerControl from '@/src/components/BaseControls/Maintainer';
 import IconControl from '@/src/components/BaseControls/Icon';
 import TopicsControl from '@/src/components/BaseControls/Topics';
@@ -46,9 +46,9 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
       ) : null}
 
       {isShowCompletionEndpoint && isEntityImmutable ? (
-        <ReadonlyField
+        <ReadonlyInput
           value={applicationRunner['dial:applicationTypeCompletionEndpoint']}
-          title={t(EntityFieldsI18nKey.completionEndpoint)}
+          label={t(EntityFieldsI18nKey.completionEndpoint)}
           containerClassName={STANDARD_CONTROL_WIDTH}
         />
       ) : null}

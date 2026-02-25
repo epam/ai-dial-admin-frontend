@@ -8,7 +8,7 @@ import { FieldError } from '@/src/models/error';
 import { addTrailingSlash, removeSlash } from '@/src/utils/url';
 import { getUrlError } from '@/src/utils/validation/url-error';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
-import ReadonlyField from '@/src/components/Common/ReadonlyField/ReadonlyField';
+import ReadonlyInput from '@/src/components/Common/ReadonlyInput/ReadonlyInput';
 
 export interface EndpointControlProps {
   endpoint?: string | null;
@@ -100,9 +100,9 @@ const EndpointControl: FC<Props> = ({
       {...props}
     />
   ) : props.disabled ? (
-    <ReadonlyField
+    <ReadonlyInput
       containerClassName={isFullWidth ? 'w-full' : STANDARD_CONTROL_WIDTH}
-      elementId={id}
+      id={id}
       label={label}
       value={endpoint || ''}
     />
@@ -111,11 +111,10 @@ const EndpointControl: FC<Props> = ({
       prefix={prefix}
       id={id}
       value={endpoint || ''}
-      required={required}
       errorText={endpointError?.text}
       invalid={!!endpointError}
       onChange={onChangeEndpoint}
-      labelProps={{ label }}
+      labelProps={{ label, required }}
       containerClassName={isFullWidth ? 'w-full' : STANDARD_CONTROL_WIDTH}
       {...props}
     />

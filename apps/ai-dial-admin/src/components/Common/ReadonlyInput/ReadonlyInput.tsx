@@ -4,21 +4,21 @@ import { DialInput } from '@epam/ai-dial-ui-kit';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 
 interface Props {
-  title: string;
+  label: string;
   value?: string;
-  elementId?: string;
+  id?: string;
   containerClassName?: string;
 }
-const ReadonlyField: FC<Props> = ({ title, elementId, ...props }) => {
+const ReadonlyInput: FC<Props> = ({ label, id, ...props }) => {
   return (
     <DialInput
-      fieldTitle={title}
-      id={elementId || 'readonlyField'}
+      labelProps={{ label }}
+      id={id || 'readonlyInput'}
       disabled={true}
-      iconAfter={<CopyButton value={props.value || ''} valueLabel={title} className="ml-2" />}
+      iconAfter={<CopyButton value={props.value || ''} valueLabel={label} className="ml-2" />}
       {...props}
     />
   );
 };
 
-export default ReadonlyField;
+export default ReadonlyInput;

@@ -61,7 +61,7 @@ const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
       />
       {!!entity.inputAttachmentTypes?.length && (
         <DialNumberInput
-          className="w-[180px]"
+          containerClassName="w-[180px]"
           id="maxAttachment"
           labelProps={{ label: t(AttachmentsI18nKey.MaxNumber) }}
           placeholder={t(EntityPlaceholdersI18nKey.Number)}
