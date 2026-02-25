@@ -98,7 +98,8 @@ const Templates = <T extends DialModel | DialInterceptor>({
                 value: runner.name as string,
                 label: runner.displayName || runner.name || '',
               }))}
-              searchable={true}
+              searchable
+              required
               onChange={(value) => onSelect(value as string)}
               id="source-type"
               value={runners.find((runner) => runner.name === entity.source?.runnerName)?.name}
@@ -109,7 +110,7 @@ const Templates = <T extends DialModel | DialInterceptor>({
         ) : (
           <div className={classNames('flex gap-2', STANDARD_CONTROL_WIDTH)}>
             <div className={CONTROL_WITH_BUTTON_WIDTH}>
-              <DialLabel label={t(SourceI18nKey.InterceptorTemplate)} htmlFor="templates" />
+              <DialLabel label={t(SourceI18nKey.InterceptorTemplate)} required htmlFor="templates" />
               <DialInputPopup
                 open={isModalOpen}
                 onOpen={onOpenModal}

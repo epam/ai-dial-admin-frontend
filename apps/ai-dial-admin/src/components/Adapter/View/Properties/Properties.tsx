@@ -64,7 +64,7 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isModal 
       <DescriptionControl entity={entity} onChangeEntity={onChangeAdapter} isFullWidth={isModal} />
 
       <SourceField
-        elementId="sourceType"
+        id="sourceType"
         label={t(EntitiesI18nKey.SourceType)}
         view={ApplicationRoute.Adapters}
         entity={entity}

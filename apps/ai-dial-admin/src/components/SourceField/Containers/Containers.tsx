@@ -111,11 +111,12 @@ const Containers = <T extends DialInterceptor | DialModel>({
         {isModal ? (
           <div className="flex flex-col w-full">
             <DialSelectField
-              searchable={true}
               options={containers.map((container) => ({
                 value: container.name as string,
                 label: container.displayName as string,
               }))}
+              required
+              searchable
               onChange={(container) => onSelect(container as string)}
               id="source-type"
               value={selectedContainerName}
@@ -127,7 +128,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
         ) : (
           <div className={classNames('flex gap-2', STANDARD_CONTROL_WIDTH)}>
             <div className={CONTROL_WITH_BUTTON_WIDTH}>
-              <DialLabel label={t(SourceI18nKey.Container)} htmlFor="containers" />
+              <DialLabel label={t(SourceI18nKey.Container)} required htmlFor="containers" />
               <DialInputPopup
                 open={isModalOpen}
                 onOpen={onOpenModal}

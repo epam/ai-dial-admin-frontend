@@ -28,9 +28,8 @@ interface Props<T> {
   getRunners?: () => Promise<ServerActionResponse<InterceptorTemplate[]>>;
   getAdapters?: () => Promise<ServerActionResponse | null>;
   sourceItems: SelectOption[];
-  elementId: string;
+  id: string;
   label?: string;
-  optional?: boolean;
   view: ApplicationRoute;
   adapters?: DialAdapter[];
   isModal?: boolean;
@@ -42,9 +41,8 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
   getContainers,
   getRunners,
   getAdapters,
-  elementId,
+  id,
   label,
-  optional,
   view,
   sourceItems,
   isModal,
@@ -110,10 +108,9 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
   return (
     <div className="flex flex-col gap-y-8">
       <DialSelectField
-        id={elementId}
+        id={id}
         containerClassName="w-[180px]"
         label={label}
-        optional={optional}
         options={sourceItems}
         onChange={(v) => onChangeSource(v as string)}
         value={source}

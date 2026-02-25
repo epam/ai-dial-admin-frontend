@@ -50,7 +50,7 @@ const OAuthSection: FC<Props> = ({ disabled, authSettings, onChange }) => {
         <DialInput
           disabled={disabled}
           id="clientId"
-          labelProps={{ label: t(EntityFieldsI18nKey.clientId) }}
+          labelProps={{ label: t(EntityFieldsI18nKey.clientId), required: true }}
           value={authSettings?.clientId || ''}
           placeholder={t(EntityPlaceholdersI18nKey.ClientId)}
           onChange={(clientId) => onChange?.({ ...(authSettings || {}), clientId } as ToolsetAuthSettings)}
@@ -58,7 +58,7 @@ const OAuthSection: FC<Props> = ({ disabled, authSettings, onChange }) => {
         <DialPasswordInput
           disabled={disabled}
           id="clientSecret"
-          labelProps={{ label: t(EntityFieldsI18nKey.clientSecret) }}
+          labelProps={{ label: t(EntityFieldsI18nKey.clientSecret), required: true }}
           value={authSettings?.clientSecret || ''}
           placeholder={t(EntityPlaceholdersI18nKey.ClientSecret)}
           onChange={(clientSecret) => onChange?.({ ...(authSettings || {}), clientSecret } as ToolsetAuthSettings)}

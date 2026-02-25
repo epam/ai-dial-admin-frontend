@@ -18,11 +18,10 @@ const ApiKeySection: FC<Props> = ({ disabled, authSettings, onChange }) => {
     <div className="flex flex-col gap-y-4">
       <DialInput
         id="apiKeyHeader"
-        labelProps={{ label: t(EntityFieldsI18nKey.apiKeyHeader) }}
+        labelProps={{ label: t(EntityFieldsI18nKey.apiKeyHeader), required: true }}
         placeholder={t(EntityPlaceholdersI18nKey.Header)}
         value={authSettings?.apiKeyHeader}
         disabled={disabled}
-        required={true}
         onChange={(apiKeyHeader) => onChange?.({ ...(authSettings || {}), apiKeyHeader } as ToolsetAuthSettings)}
       />
     </div>
