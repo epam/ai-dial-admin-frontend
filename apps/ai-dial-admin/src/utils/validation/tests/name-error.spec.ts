@@ -94,7 +94,7 @@ describe('getErrorForName', () => {
   });
 
   test('Should return length error for short name', () => {
-    const res = getErrorForName('n', ['name'], mockT);
+    const res = getErrorForName('', ['name'], mockT);
 
     expect(res).toEqual({
       type: ErrorType.LENGTH,
