@@ -101,7 +101,7 @@ const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
               onChange={(urlTemplate) =>
                 onChangeTestSuite({ ...testSuite, requestTemplate: { ...testSuite.requestTemplate, urlTemplate } })
               }
-              containerClassName={STANDARD_CONTROL_WIDTH}
+              containerClassName="w-full large_tablet:w-[640px] max-w-full"
               invalid={!!urlTemplateError}
               error={urlTemplateError}
             />
