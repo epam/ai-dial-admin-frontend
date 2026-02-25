@@ -6,12 +6,12 @@ import { TemplateVariable } from '@/src/models/evaluation/test-suite';
 import { TestCaseItemType } from '@/src/types/evaluation';
 import TryOut from '../components/TryOut';
 
-const mockGetTemplateVariables = vi.fn();
-const mockTryOutSuite = vi.fn();
+const mockgetTestSuiteTemplateVariables = vi.fn();
+const mocktryOutTestSuite = vi.fn();
 
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
-  getTemplateVariables: (...args: unknown[]) => mockGetTemplateVariables(...args),
-  tryOutSuite: (...args: unknown[]) => mockTryOutSuite(...args),
+  getTestSuiteTemplateVariables: (...args: unknown[]) => mockgetTestSuiteTemplateVariables(...args),
+  tryOutTestSuite: (...args: unknown[]) => mocktryOutTestSuite(...args),
 }));
 
 const mockCloseSidebar = vi.fn();
@@ -87,7 +87,7 @@ const createVariable = (overrides?: Partial<TemplateVariable>): TemplateVariable
 describe('TryOut', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockGetTemplateVariables.mockResolvedValue([]);
+    mockgetTestSuiteTemplateVariables.mockResolvedValue([]);
     mockSidebar = {
       show: false,
       content: null,
@@ -99,7 +99,7 @@ describe('TryOut', () => {
   });
 
   test('shows loader while fetching template variables', () => {
-    mockGetTemplateVariables.mockReturnValue(new Promise(() => {}));
+    mockgetTestSuiteTemplateVariables.mockReturnValue(new Promise(() => {}));
 
     render(<TryOut testSuiteId="suite-1" />);
 
@@ -107,7 +107,7 @@ describe('TryOut', () => {
   });
 
   test('renders heading and buttons after loading', async () => {
-    mockGetTemplateVariables.mockResolvedValue([]);
+    mockgetTestSuiteTemplateVariables.mockResolvedValue([]);
 
     render(<TryOut testSuiteId="suite-1" />);
 
@@ -119,17 +119,17 @@ describe('TryOut', () => {
     expect(screen.getByRole('button', { name: 'close' })).toBeInTheDocument();
   });
 
-  test('calls getTemplateVariables with testSuiteId on mount', () => {
-    mockGetTemplateVariables.mockResolvedValue([]);
+  test('calls getTestSuiteTemplateVariables with testSuiteId on mount', () => {
+    mockgetTestSuiteTemplateVariables.mockResolvedValue([]);
 
     render(<TryOut testSuiteId="my-suite" />);
 
-    expect(mockGetTemplateVariables).toHaveBeenCalledWith('my-suite');
-    expect(mockGetTemplateVariables).toHaveBeenCalledTimes(1);
+    expect(mockgetTestSuiteTemplateVariables).toHaveBeenCalledWith('my-suite');
+    expect(mockgetTestSuiteTemplateVariables).toHaveBeenCalledTimes(1);
   });
 
   test('displays "NoVariables" message when no variables returned', async () => {
-    mockGetTemplateVariables.mockResolvedValue([]);
+    mockgetTestSuiteTemplateVariables.mockResolvedValue([]);
 
     render(<TryOut testSuiteId="suite-1" />);
 
@@ -140,7 +140,7 @@ describe('TryOut', () => {
 
   test('renders Variables component when variables exist', async () => {
     const variables = [createVariable({ name: 'myVar' }), createVariable({ name: 'otherVar' })];
-    mockGetTemplateVariables.mockResolvedValue(variables);
+    mockgetTestSuiteTemplateVariables.mockResolvedValue(variables);
 
     render(<TryOut testSuiteId="suite-1" />);
 
@@ -153,7 +153,7 @@ describe('TryOut', () => {
   });
 
   test('renders three collapsible sections: Variables, Request, Response', async () => {
-    mockGetTemplateVariables.mockResolvedValue([]);
+    mockgetTestSuiteTemplateVariables.mockResolvedValue([]);
 
     render(<TryOut testSuiteId="suite-1" />);
 
@@ -166,7 +166,7 @@ describe('TryOut', () => {
   });
 
   test('renders JsonEditors for request and response sections', async () => {
-    mockGetTemplateVariables.mockResolvedValue([]);
+    mockgetTestSuiteTemplateVariables.mockResolvedValue([]);
 
     render(<TryOut testSuiteId="suite-1" />);
 
@@ -177,7 +177,7 @@ describe('TryOut', () => {
   });
 
   test('renders divider between Variables and Request sections', async () => {
-    mockGetTemplateVariables.mockResolvedValue([]);
+    mockgetTestSuiteTemplateVariables.mockResolvedValue([]);
 
     render(<TryOut testSuiteId="suite-1" />);
 
@@ -188,7 +188,7 @@ describe('TryOut', () => {
 
   test('close button calls closeSidebar when menu is not closed', async () => {
     mockSidebar.isMenuClosed = false;
-    mockGetTemplateVariables.mockResolvedValue([]);
+    mockgetTestSuiteTemplateVariables.mockResolvedValue([]);
 
     render(<TryOut testSuiteId="suite-1" />);
 
@@ -204,7 +204,7 @@ describe('TryOut', () => {
 
   test('close button toggles sidebar and menu when isMenuClosed is true', async () => {
     mockSidebar.isMenuClosed = true;
-    mockGetTemplateVariables.mockResolvedValue([]);
+    mockgetTestSuiteTemplateVariables.mockResolvedValue([]);
 
     render(<TryOut testSuiteId="suite-1" />);
 
@@ -220,7 +220,7 @@ describe('TryOut', () => {
   });
 
   test('send request button is not disabled initially', async () => {
-    mockGetTemplateVariables.mockResolvedValue([]);
+    mockgetTestSuiteTemplateVariables.mockResolvedValue([]);
 
     render(<TryOut testSuiteId="suite-1" />);
 
@@ -230,7 +230,7 @@ describe('TryOut', () => {
   });
 
   test('resolved request is initially empty object', async () => {
-    mockGetTemplateVariables.mockResolvedValue([]);
+    mockgetTestSuiteTemplateVariables.mockResolvedValue([]);
 
     render(<TryOut testSuiteId="suite-1" />);
 
@@ -242,7 +242,7 @@ describe('TryOut', () => {
   });
 
   test('response body is initially empty object', async () => {
-    mockGetTemplateVariables.mockResolvedValue([]);
+    mockgetTestSuiteTemplateVariables.mockResolvedValue([]);
 
     render(<TryOut testSuiteId="suite-1" />);
 
@@ -253,8 +253,8 @@ describe('TryOut', () => {
     });
   });
 
-  test('handles null response from getTemplateVariables', async () => {
-    mockGetTemplateVariables.mockResolvedValue(null);
+  test('handles null response from getTestSuiteTemplateVariables', async () => {
+    mockgetTestSuiteTemplateVariables.mockResolvedValue(null);
 
     render(<TryOut testSuiteId="suite-1" />);
 
@@ -263,9 +263,9 @@ describe('TryOut', () => {
     });
   });
 
-  test('sendRequest calls tryOutSuite with testSuiteId and requestBody', async () => {
-    mockGetTemplateVariables.mockResolvedValue([createVariable({ name: 'x' })]);
-    mockTryOutSuite.mockResolvedValue({ success: true, response: { resolvedRequest: {}, response: {} } });
+  test('sendRequest calls tryOutTestSuite with testSuiteId and requestBody', async () => {
+    mockgetTestSuiteTemplateVariables.mockResolvedValue([createVariable({ name: 'x' })]);
+    mocktryOutTestSuite.mockResolvedValue({ success: true, response: { resolvedRequest: {}, response: {} } });
 
     render(<TryOut testSuiteId="suite-1" />);
 
@@ -275,12 +275,12 @@ describe('TryOut', () => {
 
     fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.SendRequest }));
 
-    expect(mockTryOutSuite).toHaveBeenCalledWith('suite-1', { x: '' });
+    expect(mocktryOutTestSuite).toHaveBeenCalledWith('suite-1', { x: '' });
   });
 
   test('sendRequest success populates resolvedRequest and response', async () => {
-    mockGetTemplateVariables.mockResolvedValue([]);
-    mockTryOutSuite.mockResolvedValue({
+    mockgetTestSuiteTemplateVariables.mockResolvedValue([]);
+    mocktryOutTestSuite.mockResolvedValue({
       success: true,
       response: {
         resolvedRequest: { resolved: 'req' },
@@ -304,8 +304,8 @@ describe('TryOut', () => {
   });
 
   test('sendRequest error sets response with error message and resolvedRequest to requestBody', async () => {
-    mockGetTemplateVariables.mockResolvedValue([createVariable({ name: 'v' })]);
-    mockTryOutSuite.mockResolvedValue({
+    mockgetTestSuiteTemplateVariables.mockResolvedValue([createVariable({ name: 'v' })]);
+    mocktryOutTestSuite.mockResolvedValue({
       success: false,
       errorMessage: 'Something went wrong',
     });
@@ -326,8 +326,8 @@ describe('TryOut', () => {
   });
 
   test('sendRequest error uses default message when errorMessage is missing', async () => {
-    mockGetTemplateVariables.mockResolvedValue([]);
-    mockTryOutSuite.mockResolvedValue({ success: false });
+    mockgetTestSuiteTemplateVariables.mockResolvedValue([]);
+    mocktryOutTestSuite.mockResolvedValue({ success: false });
 
     render(<TryOut testSuiteId="suite-1" />);
 
@@ -344,8 +344,8 @@ describe('TryOut', () => {
   });
 
   test('sendRequest success with empty response fields defaults to empty objects', async () => {
-    mockGetTemplateVariables.mockResolvedValue([]);
-    mockTryOutSuite.mockResolvedValue({
+    mockgetTestSuiteTemplateVariables.mockResolvedValue([]);
+    mocktryOutTestSuite.mockResolvedValue({
       success: true,
       response: {},
     });

@@ -1,12 +1,14 @@
+import { JSX } from 'react';
+
+import { SelectOption } from '@epam/ai-dial-ui-kit';
 import { IconEqual } from '@tabler/icons-react';
+import { startCase, toLower } from 'lodash';
 
 import Contains from '@/public/images/icons/filter/contains.svg';
 import Regex from '@/public/images/icons/regex.svg';
 import { FoldersI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-import { DialRule, RuleDiffStatus, RuleDiffModel, RuleFunction, RuleSource } from '@/src/models/dial/rule';
-import { JSX } from 'react';
-import { SelectOption } from '@epam/ai-dial-ui-kit';
+import { DialRule, RuleDiffModel, RuleDiffStatus, RuleFunction, RuleSource } from '@/src/models/dial/rule';
 
 const operations = [RuleFunction.EQUAL, RuleFunction.CONTAIN, RuleFunction.REGEX];
 
@@ -21,11 +23,24 @@ export const getAttributeItems = (t: (t: string) => string, attributes?: string[
   return (
     attributes?.map((a) => {
       const value = a.trim();
-      const name = RuleSource[value as keyof typeof RuleSource];
-      const label = name && name in FoldersI18nKey ? t(FoldersI18nKey[name as keyof typeof FoldersI18nKey]) : value;
+      const label = getRuleLabel(value, t);
       return { value, label };
     }) || []
   );
+};
+
+/**
+ * Generate rule attribute label
+ *
+ * @param {string} value - attribute value
+ * @param {(t: string) => string} t - function for translate
+ * @returns {string} - translated label
+ */
+export const getRuleLabel = (value: string, t: (t: string) => string): string => {
+  const name = RuleSource[value as keyof typeof RuleSource];
+  const label =
+    name && name in FoldersI18nKey ? t(FoldersI18nKey[name as keyof typeof FoldersI18nKey]) : startCase(toLower(value));
+  return label;
 };
 
 /**

@@ -6,14 +6,14 @@ import { TestSuite, TemplateVariable } from '@/src/models/evaluation/test-suite'
 import { TestCaseItemType } from '@/src/types/evaluation';
 import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 
-const mockGetTemplateVariables = vi.fn();
+const mockgetTestSuiteTemplateVariables = vi.fn();
 
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
-  getTemplateVariables: (...args: unknown[]) => mockGetTemplateVariables(...args),
+  getTestSuiteTemplateVariables: (...args: unknown[]) => mockgetTestSuiteTemplateVariables(...args),
 }));
 
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
-  default: ({ getIsEmptyData, emptyDataProps, onGridReady }: any) => {
+  default: ({ getIsEmptyData, emptyDataProps }: any) => {
     const isEmpty = getIsEmptyData();
     return <section aria-label="grid">{isEmpty && <p role="status">{emptyDataProps?.title}</p>}</section>;
   },
@@ -46,7 +46,7 @@ describe('TemplateVariables', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockOnChange = vi.fn();
-    mockGetTemplateVariables.mockResolvedValue([]);
+    mockgetTestSuiteTemplateVariables.mockResolvedValue([]);
   });
 
   test('renders the heading with DynamicConfiguration key', () => {
@@ -64,12 +64,12 @@ describe('TemplateVariables', () => {
   test('fetches template variables on mount using test suite id', () => {
     render(<TemplateVariables selectedTestSuite={createTestSuite({ id: 'my-suite-id' })} onChange={mockOnChange} />);
 
-    expect(mockGetTemplateVariables).toHaveBeenCalledWith('my-suite-id');
-    expect(mockGetTemplateVariables).toHaveBeenCalledTimes(1);
+    expect(mockgetTestSuiteTemplateVariables).toHaveBeenCalledWith('my-suite-id');
+    expect(mockgetTestSuiteTemplateVariables).toHaveBeenCalledTimes(1);
   });
 
   test('shows empty data message when no variables exist', async () => {
-    mockGetTemplateVariables.mockResolvedValue([]);
+    mockgetTestSuiteTemplateVariables.mockResolvedValue([]);
 
     render(<TemplateVariables selectedTestSuite={createTestSuite()} onChange={mockOnChange} />);
 
@@ -80,7 +80,7 @@ describe('TemplateVariables', () => {
 
   test('does not show empty data when variables exist', async () => {
     const variables = [createVariable()];
-    mockGetTemplateVariables.mockResolvedValue(variables);
+    mockgetTestSuiteTemplateVariables.mockResolvedValue(variables);
 
     render(
       <TemplateVariables
@@ -96,8 +96,8 @@ describe('TemplateVariables', () => {
     });
   });
 
-  test('handles null response from getTemplateVariables', async () => {
-    mockGetTemplateVariables.mockResolvedValue(null);
+  test('handles null response from getTestSuiteTemplateVariables', async () => {
+    mockgetTestSuiteTemplateVariables.mockResolvedValue(null);
 
     render(<TemplateVariables selectedTestSuite={createTestSuite()} onChange={mockOnChange} />);
 
@@ -107,7 +107,7 @@ describe('TemplateVariables', () => {
   });
 
   test('uses empty array as fallback for inputBindings', async () => {
-    mockGetTemplateVariables.mockResolvedValue([createVariable()]);
+    mockgetTestSuiteTemplateVariables.mockResolvedValue([createVariable()]);
 
     render(
       <TemplateVariables selectedTestSuite={createTestSuite({ inputBindings: undefined })} onChange={mockOnChange} />,
@@ -118,20 +118,20 @@ describe('TemplateVariables', () => {
     });
   });
 
-  test('calls getTemplateVariables only once on mount', () => {
+  test('calls getTestSuiteTemplateVariables only once on mount', () => {
     const { rerender } = render(<TemplateVariables selectedTestSuite={createTestSuite()} onChange={mockOnChange} />);
 
     rerender(
       <TemplateVariables selectedTestSuite={createTestSuite({ name: 'Updated Name' })} onChange={mockOnChange} />,
     );
 
-    expect(mockGetTemplateVariables).toHaveBeenCalledTimes(1);
+    expect(mockgetTestSuiteTemplateVariables).toHaveBeenCalledTimes(1);
   });
 
   test('renders with correct container classes', () => {
     const { container } = render(<TemplateVariables selectedTestSuite={createTestSuite()} onChange={mockOnChange} />);
 
     const wrapper = container.firstChild as HTMLElement;
-    expect(wrapper).toHaveClass('flex-1', 'min-h-0', 'flex', 'flex-col', 'gap-y-4');
+    expect(wrapper).toHaveClass('flex-1', 'min-h-[200px]', 'flex', 'flex-col', 'gap-y-4');
   });
 });

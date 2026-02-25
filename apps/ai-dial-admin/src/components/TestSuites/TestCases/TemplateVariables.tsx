@@ -4,7 +4,7 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { GridApi, GridReadyEvent } from 'ag-grid-community';
 
-import { getTemplateVariables } from '@/src/app/[lang]/test-suites/actions';
+import { getTestSuiteTemplateVariables } from '@/src/app/[lang]/test-suites/actions';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { getDynamicConfigurationsColumns } from '@/src/components/TestSuites/utils/columns';
 import { generateInputBindingsRowData } from '@/src/components/TestSuites/utils/template-variables';
@@ -36,7 +36,7 @@ const TemplateVariables: FC<Props> = ({ selectedTestSuite, onChange, isSkipRefre
   }, [onChange, selectedTestSuite]);
 
   useEffect(() => {
-    getTemplateVariables(selectedTestSuite.id as string).then((res) => {
+    getTestSuiteTemplateVariables(selectedTestSuite.id as string).then((res) => {
       setVariables(res || []);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -108,7 +108,7 @@ const TemplateVariables: FC<Props> = ({ selectedTestSuite, onChange, isSkipRefre
   }, [isSkipRefresh, data, gridApi]);
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col gap-y-4">
+    <div className="flex-1 flex flex-col gap-y-4 min-h-[200px]">
       <h1>{t(TestSuitesI18nKey.DynamicConfiguration)}</h1>
       <GridView
         getIsEmptyData={() => !data.length}

@@ -1,17 +1,20 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
 
 import { getTestCases, importTestCase, removeTestCase } from '@/src/app/[lang]/test-suites/actions';
 import ListEntities from '@/src/components/ListView/List';
+import TryOut from '@/src/components/TestSuites/RequestTemplate/components/TryOut';
 import { getTestCaseColumns } from '@/src/components/TestSuites/utils/columns';
 import { getTestCaseGridData } from '@/src/components/TestSuites/utils/data';
 import { infiniteGridOptions, ONE_ACTION_COLUMN, PAGE_SIZE } from '@/src/constants/ag-grid';
-import { getRemoveOperation } from '@/src/constants/grid-columns/actions';
+import { getRemoveOperation, getTryOutOperation } from '@/src/constants/grid-columns/actions';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
+import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { TestCase, TestSuite } from '@/src/models/evaluation/test-suite';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
@@ -27,6 +30,7 @@ interface Props {
 const TestCasesList: FC<Props> = ({ selectedTestSuite }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
+  const { sidebar, sidebarOpen, toggleSidebar } = useAppContext();
 
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const isInitialLoadRef = useRef(false);
@@ -39,6 +43,30 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite }) => {
   const stableOnRemoveCase = useCallback((data?: TestCase) => {
     onRemoveCaseRef.current(data);
   }, []);
+
+  const openTryOutSidebar = useCallback(
+    (e?: MouseEvent<HTMLButtonElement>, testCaseId?: string) => {
+      e?.stopPropagation();
+      sidebar.showSidebar(
+        <SaveValidationContextProvider>
+          <TryOut testSuiteId={selectedTestSuite.id || ''} testCaseId={testCaseId || ''} />
+        </SaveValidationContextProvider>,
+        'w-[50%] max-w-[800px]',
+      );
+      if (sidebarOpen) {
+        sidebar.toggleIsMenuClosed?.();
+        toggleSidebar(e);
+      }
+    },
+    [selectedTestSuite.id, sidebar, sidebarOpen, toggleSidebar],
+  );
+
+  const tryOut = useCallback(
+    (data?: TestCase) => {
+      openTryOutSidebar(undefined, data?.id);
+    },
+    [openTryOutSidebar],
+  );
 
   const onSetData = useCallback(
     (data: Record<string, unknown>[], totalElements: number, params: IGetRowsParams) => {
@@ -64,13 +92,18 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite }) => {
         getTestCases(selectedTestSuite.id, page, PAGE_SIZE, sorts, filters)
           .then((res) => {
             const data = res == null || res.content.length === 0 ? [] : getTestCaseGridData(res?.content || []);
-            onSetData(data, res?.totalElements || 0, params);
+
             gridApi?.updateGridOptions({
               columnDefs: [
                 ...getTestCaseColumns(res?.content || []),
-                ONE_ACTION_COLUMN(getRemoveOperation(stableOnRemoveCase, void 0, 'text-error w-4 h-4')),
+                { ...ONE_ACTION_COLUMN(getTryOutOperation(tryOut)), colId: 'action-tryout' },
+                {
+                  ...ONE_ACTION_COLUMN(getRemoveOperation(stableOnRemoveCase, void 0, 'text-error w-4 h-4')),
+                  colId: 'action-remove',
+                },
               ],
             });
+            onSetData(data, res?.totalElements || 0, params);
           })
           .catch(() => {
             params.failCallback();
@@ -78,7 +111,7 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite }) => {
           });
       },
     }),
-    [gridApi, selectedTestSuite.id, onSetData, stableOnRemoveCase],
+    [gridApi, selectedTestSuite.id, onSetData, tryOut, stableOnRemoveCase],
   );
 
   const onGridReady = useCallback(({ api }: GridReadyEvent) => {
@@ -145,16 +178,20 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite }) => {
         gridApi?.updateGridOptions({
           columnDefs: [
             ...getTestCaseColumns(testCasesData),
-            ONE_ACTION_COLUMN(getRemoveOperation(stableOnRemoveCase, void 0, 'text-error w-4 h-4')),
+            {
+              ...ONE_ACTION_COLUMN(getRemoveOperation(stableOnRemoveCase, void 0, 'text-error w-4 h-4')),
+              colId: 'action-remove',
+            },
+            { ...ONE_ACTION_COLUMN(getTryOutOperation(openTryOutSidebar)), colId: 'action-tryout' },
           ],
         });
       });
     }
-  }, [stableOnRemoveCase, selectedTestSuite.id, gridApi]);
+  }, [stableOnRemoveCase, selectedTestSuite.id, gridApi, openTryOutSidebar]);
 
   return (
     <>
-      <div className="h-full min-h-[250px]">
+      <div className="flex-1 min-h-[400px]">
         <ListEntities
           additionalGridOptions={gridOptions}
           listLabel={t(TestSuitesI18nKey.TestCases)}

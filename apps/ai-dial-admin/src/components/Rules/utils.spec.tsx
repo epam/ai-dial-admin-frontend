@@ -2,7 +2,14 @@ import { render } from '@testing-library/react';
 
 import { DialRule, RuleDiffStatus, RuleFunction } from '@/src/models/dial/rule';
 import { describe, expect, test } from 'vitest';
-import { generateRuleDiff, getAttributeItems, getOperationIcon, getOperationItems, sortRules } from './utils';
+import {
+  generateRuleDiff,
+  getAttributeItems,
+  getOperationIcon,
+  getOperationItems,
+  getRuleLabel,
+  sortRules,
+} from './utils';
 import { FoldersI18nKey } from '@/src/constants/i18n';
 
 describe('Rules :: getOperationIcon', () => {
@@ -132,11 +139,27 @@ describe('getOperationItems', () => {
 describe('getAttributeItems', () => {
   const t = (s: string) => s;
 
-  test('returns translated attribute items', () => {
+  test('returns translated attribute items for unknown sources (fallback to startCase)', () => {
     const items = getAttributeItems(t, ['a', 'b']);
     expect(items).toEqual([
-      { label: 'a', value: 'a' },
-      { label: 'b', value: 'b' },
+      { label: 'A', value: 'a' },
+      { label: 'B', value: 'b' },
+    ]);
+  });
+
+  test('returns translated attribute items for known RuleSource values', () => {
+    const items = getAttributeItems(t, ['title', 'role']);
+    expect(items).toEqual([
+      { label: FoldersI18nKey.Title, value: 'title' },
+      { label: FoldersI18nKey.Role, value: 'role' },
+    ]);
+  });
+
+  test('trims whitespace from attribute values', () => {
+    const items = getAttributeItems(t, ['  title  ', ' custom ']);
+    expect(items).toEqual([
+      { label: FoldersI18nKey.Title, value: 'title' },
+      { label: 'Custom', value: 'custom' },
     ]);
   });
 
@@ -148,5 +171,28 @@ describe('getAttributeItems', () => {
   test('returns empty array if attributes is empty', () => {
     const items = getAttributeItems(t, []);
     expect(items).toEqual([]);
+  });
+});
+
+describe('getRuleLabel', () => {
+  const t = (s: string) => s;
+
+  test('returns translated label for known RuleSource keys', () => {
+    expect(getRuleLabel('title', t)).toBe(FoldersI18nKey.Title);
+    expect(getRuleLabel('role', t)).toBe(FoldersI18nKey.Role);
+    expect(getRuleLabel('dial_roles', t)).toBe(FoldersI18nKey.DialRoles);
+    expect(getRuleLabel('groups', t)).toBe(FoldersI18nKey.Groups);
+    expect(getRuleLabel('job title', t)).toBe(FoldersI18nKey.JobTitle);
+  });
+
+  test('falls back to startCase(toLower(value)) for unknown sources', () => {
+    expect(getRuleLabel('unknown_attr', t)).toBe('Unknown Attr');
+    expect(getRuleLabel('CUSTOM', t)).toBe('Custom');
+    expect(getRuleLabel('some value', t)).toBe('Some Value');
+  });
+
+  test('uses provided translation function', () => {
+    const mockT = (s: string) => `translated:${s}`;
+    expect(getRuleLabel('title', mockT)).toBe(`translated:${FoldersI18nKey.Title}`);
   });
 });

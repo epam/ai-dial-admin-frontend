@@ -14,7 +14,7 @@ const Field: FC<Props> = ({ fieldTitle, htmlFor, optional }) => {
   const t = useI18n();
   return (
     <DialFieldLabel
-      optionalText={t(BasicI18nKey.Optional)}
+      optionalText={`(${t(BasicI18nKey.Optional)})`}
       fieldTitle={fieldTitle}
       optional={optional}
       htmlFor={htmlFor || fieldTitle || ''}

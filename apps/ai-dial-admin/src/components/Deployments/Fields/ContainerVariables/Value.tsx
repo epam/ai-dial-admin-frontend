@@ -9,6 +9,7 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 
 import ValueFile from '@/src/components/Deployments/Fields/ContainerVariables/ValueFile';
+import classNames from 'classnames';
 
 interface Props {
   value: EnvVariableValue;
@@ -67,7 +68,7 @@ const ContainerVariableValue: FC<Props> = ({ value, index, onValueChange, mountT
   );
 
   return (
-    <div className="flex items-end w-full relative pr-[50px]">
+    <div className="flex w-full relative pr-[50px]">
       {value.$type === VALUE_TYPE.SIMPLE && (
         <div className="flex-1">
           {mountType === MOUNT_TYPE.SECURE_CONTENT ? (
@@ -104,7 +105,7 @@ const ContainerVariableValue: FC<Props> = ({ value, index, onValueChange, mountT
       <DialNeutralButton
         iconBefore={<IconFileArrowRight {...BASE_BUTTON_ICON_PROPS} />}
         onClick={handleFileInputClick}
-        className="absolute right-0"
+        className={classNames('absolute right-0', index === 0 && 'mt-[23px]')}
         disabled={disabled}
       />
       <input type="file" className="hidden" ref={inputRef} onChange={handleFileUpload} />

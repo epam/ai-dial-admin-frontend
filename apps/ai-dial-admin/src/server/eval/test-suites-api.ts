@@ -17,7 +17,10 @@ export const TEST_CASE_URL = (id?: string, testCaseId?: string) => `${TEST_CASES
 export const DEPLOYMENTS_URL = `${API}/deployments`;
 export const TEST_SUITES_RUNS_URL = `${API}/test-suite-runs`;
 export const TEST_SUITE_TEMPLATE_VARIABLES_URL = (id: string) => `${TEST_SUITE_URL(id)}/template-variables`;
+export const TEST_CASE_TEMPLATE_VARIABLES_URL = (id: string, testCaseId: string) =>
+  `${TEST_CASES_URL(id)}/${testCaseId}/template-variables`;
 export const TEST_SUITE_TRY_OUT_URL = (id: string) => `${TEST_SUITE_URL(id)}/try-it-out`;
+export const TEST_CASE_TRY_OUT_URL = (id: string, testCaseId: string) => `${TEST_CASE_URL(id, testCaseId)}/try-it-out`;
 
 export class TestSuitesApi extends BaseApi {
   getTestSuites(
@@ -111,15 +114,28 @@ export class TestSuitesApi extends BaseApi {
     return this.get(`${DEPLOYMENTS_URL}/${type}/${id}`, token);
   }
 
-  getTemplateVariables(id: string, token: Token): Promise<TemplateVariable[] | null> {
+  getTestSuiteTemplateVariables(id: string, token: Token): Promise<TemplateVariable[] | null> {
     return this.get(TEST_SUITE_TEMPLATE_VARIABLES_URL(id), token);
   }
 
-  tryOutSuite(
+  getTestCaseTemplateVariables(id: string, testCaseId: string, token: Token): Promise<TemplateVariable[] | null> {
+    return this.get(TEST_CASE_TEMPLATE_VARIABLES_URL(id, testCaseId), token);
+  }
+
+  tryOutTestSuite(
     id: string,
     requestBody: Record<string, unknown>,
     token: Token,
   ): Promise<ServerActionResponse<TryOutResponse> | null> {
     return this.postAction(TEST_SUITE_TRY_OUT_URL(id), { variables: requestBody }, token);
+  }
+
+  tryOutTestCase(
+    id: string,
+    testCaseId: string,
+    requestBody: Record<string, unknown>,
+    token: Token,
+  ): Promise<ServerActionResponse<TryOutResponse> | null> {
+    return this.postAction(TEST_CASE_TRY_OUT_URL(id, testCaseId), { variables: requestBody }, token);
   }
 }

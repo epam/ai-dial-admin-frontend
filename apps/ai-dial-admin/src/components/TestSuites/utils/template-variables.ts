@@ -24,7 +24,7 @@ export const generateInputBindingsRowData = (
       inferredType: variable.inferredType,
       constantValue: binding?.constantValue,
       type: InputBindingType.Constant,
-      value: binding?.constantValue ?? '',
+      value: binding?.constantValue ?? variable.defaultValue ?? '',
       defaultValue: variable.defaultValue,
     };
   });
@@ -49,7 +49,7 @@ export const generateVariablesRowData = (
 export const convertVariableIntoInitialRequest = (variables: TemplateVariable[]): Record<string, unknown> => {
   const requestVariables: Record<string, unknown> = {};
   variables.forEach((variable) => {
-    requestVariables[variable.name] = '';
+    requestVariables[variable.name] = variable.defaultValue ?? '';
   });
   return requestVariables;
 };
