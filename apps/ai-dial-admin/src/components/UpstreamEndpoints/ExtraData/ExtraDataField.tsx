@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { DialRadioGroupPopupField, DialTextAreaField, RadioButtonWithContent } from '@epam/ai-dial-ui-kit';
+import { DialRadioGroupPopupField, DialTextarea, RadioButtonWithContent } from '@epam/ai-dial-ui-kit';
 
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, TypeI18nKey } from '@/src/constants/i18n';
@@ -112,8 +112,8 @@ const ExtraDataField: FC<Props> = ({ endpoint, disabled, fieldTitle, onChangeExt
       id: USE_STRING_ID,
       name: t(TypeI18nKey.String),
       content: (
-        <DialTextAreaField
-          elementId="extraDataStringValue"
+        <DialTextarea
+          id="extraDataStringValue"
           value={stringValue}
           placeholder={t(EntityPlaceholdersI18nKey.Value)}
           onChange={onChangeStringValue}
@@ -138,7 +138,7 @@ const ExtraDataField: FC<Props> = ({ endpoint, disabled, fieldTitle, onChangeExt
         htmlFor="extraDataInput"
         id="extraDataInput"
         emptyValueText={t(BasicI18nKey.None)}
-        fieldTitle={fieldTitle ?? ''}
+        label={fieldTitle ?? ''}
         header={t(EntityFieldsI18nKey.extraData)}
         portalId="extraDataPortal"
         customInputValue={

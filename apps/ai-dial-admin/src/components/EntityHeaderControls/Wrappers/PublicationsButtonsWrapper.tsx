@@ -9,7 +9,7 @@ import {
   DialConfirmationPopup,
   DialNeutralButton,
   DialPrimaryButton,
-  DialTextAreaField,
+  DialTextarea,
 } from '@epam/ai-dial-ui-kit';
 import { IconCircleX, IconTrashX, IconWorldOff, IconWorldShare } from '@tabler/icons-react';
 import classNames from 'classnames';
@@ -237,13 +237,12 @@ const PublicationsButtonsWrapper = <T extends Publication>({
             confirmLabel={t(ButtonsI18nKey.Decline)}
           >
             <div className="px-6">
-              <DialTextAreaField
-                elementId="reason"
-                fieldTitle={t(PublicationsI18nKey.DeclineReason)}
+              <DialTextarea
+                id="reason"
+                labelProps={{ label: t(PublicationsI18nKey.DeclineReason) }}
                 placeholder={t(PublicationsI18nKey.DeclineReasonPlaceholder)}
                 value={declineReason}
                 onChange={setDeclineReason}
-                elementClassName="min-h-[120px]"
                 invalid={isDeclineInvalid}
                 errorText={isDeclineInvalid ? t(ErrorI18nKey.CommentError) : ''}
               />

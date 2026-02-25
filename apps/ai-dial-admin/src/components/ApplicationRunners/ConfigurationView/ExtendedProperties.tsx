@@ -1,17 +1,17 @@
 import { FC, useCallback } from 'react';
 
-import { DialSelectField, DialTextInputField, SelectOption } from '@epam/ai-dial-ui-kit';
+import { DialInput, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 
 import CompletionEndpointControl from '@/src/components/BaseControls/Endpoint/CompletionEndpoint';
 import EditorUrlControl from '@/src/components/BaseControls/Endpoint/EditorUrl';
+import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import ViewerUrlControl from '@/src/components/BaseControls/Endpoint/ViewerUrl';
 import IconControl from '@/src/components/BaseControls/Icon';
 import TopicsControl from '@/src/components/BaseControls/Topics';
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme, TypeBucketCopy } from '@/src/models/dial/application';
-import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 
 interface Props {
   runner: DialApplicationScheme;
@@ -70,12 +70,11 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
         }}
       />
 
-      <DialTextInputField
-        elementId="title"
-        fieldTitle={t(EntityFieldsI18nKey.title)}
+      <DialInput
+        id="title"
+        labelProps={{ label: t(EntityFieldsI18nKey.title) }}
         placeholder={t(EntityPlaceholdersI18nKey.Title)}
         value={runner.title}
-        optional={true}
         containerClassName={STANDARD_CONTROL_WIDTH}
         onChange={(title?: string) => {
           onChangeRunner({ ...runner, title });
@@ -84,13 +83,13 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
 
       <DialSelectField
         value={runner['dial:applicationTypeBucketCopy'] || TypeBucketCopy.DISABLED}
-        elementId="typeCopy"
+        id="typeCopy"
         className="w-[180px]"
         childrenClassName="w-[180px]"
         containerClassName="w-[180px]"
         listClassName="w-[180px]"
         options={typeBucketCopy}
-        fieldTitle={t(EntityFieldsI18nKey['dial:applicationTypeBucketCopy'])}
+        label={t(EntityFieldsI18nKey['dial:applicationTypeBucketCopy'])}
         placeholder={t(EntityPlaceholdersI18nKey.TypeBucketCopy)}
         onChange={(type) => onChangeTypeCopyBucket(type as string)}
       />

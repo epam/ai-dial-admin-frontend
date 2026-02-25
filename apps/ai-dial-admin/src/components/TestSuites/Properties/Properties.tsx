@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { DialInputPopup, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { DialInputPopup, DialLabel, DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -75,7 +75,7 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false }
         <>
           <div className={classNames('flex gap-2', STANDARD_CONTROL_WIDTH)}>
             <div className={CONTROL_WITH_BUTTON_WIDTH}>
-              <Field fieldTitle={t(TestSuitesI18nKey.Application)} htmlFor="applications" />
+              <DialLabel label={t(TestSuitesI18nKey.Application)} htmlFor="applications" />
               <DialInputPopup
                 open={isAppModalOpen}
                 onOpen={() => setIsAppModalOpen(true)}

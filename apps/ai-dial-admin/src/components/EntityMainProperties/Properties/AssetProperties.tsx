@@ -67,7 +67,7 @@ const AssetProperties: FC<Props> = ({
     <div className="flex flex-col gap-y-8">
       {!isEntityImmutable && (
         <IdControl
-          fieldTitle={isDeployment ? t(EntityFieldsI18nKey.id) : t(EntityFieldsI18nKey.displayName)}
+          label={isDeployment ? t(EntityFieldsI18nKey.id) : t(EntityFieldsI18nKey.displayName)}
           placeholder={isDeployment ? t(EntityPlaceholdersI18nKey.Id) : t(EntityPlaceholdersI18nKey.DisplayName)}
           entity={entity}
           names={names}

@@ -1,15 +1,15 @@
+import { DialInput } from '@epam/ai-dial-ui-kit';
 import { useCallback, useEffect, useState } from 'react';
-import { DialTextInputField } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
-import { getErrorForName, getErrorForUrlId } from '@/src/utils/validation/name-error';
 import { FieldError } from '@/src/models/error';
+import { getErrorForName, getErrorForUrlId } from '@/src/utils/validation/name-error';
 
 interface Props<T> {
   entity: T;
-  fieldTitle?: string;
+  label?: string;
   placeholder?: string;
   names?: string[];
   isUrlId?: boolean;
@@ -20,7 +20,7 @@ interface Props<T> {
 }
 
 const IdControl = <T extends { name?: string }>({
-  fieldTitle,
+  label,
   placeholder,
   entity,
   names,
@@ -61,10 +61,11 @@ const IdControl = <T extends { name?: string }>({
   }, [isUniqueNameError]);
 
   return (
-    <DialTextInputField
+    <DialInput
       placeholder={placeholder || t(EntityPlaceholdersI18nKey.Id)}
-      fieldTitle={fieldTitle || t(EntityFieldsI18nKey.id)}
-      elementId="name"
+      labelProps={{ label: label || t(EntityFieldsI18nKey.id) }}
+      id="name"
+      required={true}
       value={entity.name}
       onChange={onChangeName}
       errorText={nameError?.text}

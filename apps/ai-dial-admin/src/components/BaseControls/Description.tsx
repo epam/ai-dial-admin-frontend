@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 
-import { DialTextAreaField } from '@epam/ai-dial-ui-kit';
+import { DialTextarea } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -39,11 +39,10 @@ const DescriptionControl = <T extends { description?: string }>({
   );
 
   return (
-    <DialTextAreaField
-      elementId="description"
-      fieldTitle={t(EntityFieldsI18nKey.description)}
+    <DialTextarea
+      id="description"
+      labelProps={{ label: t(EntityFieldsI18nKey.description) }}
       placeholder={t(EntityPlaceholdersI18nKey.Description)}
-      optional={true}
       value={entity.description}
       errorText={descriptionError?.text}
       invalid={!!descriptionError}
