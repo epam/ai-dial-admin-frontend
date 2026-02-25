@@ -1,8 +1,7 @@
 'use client';
+import { DialLabel, DialSwitch } from '@epam/ai-dial-ui-kit';
 import { FC, useMemo } from 'react';
-import { DialSwitch } from '@epam/ai-dial-ui-kit';
 
-import Field from '@/src/components/Common/Field/Field';
 import { ExportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ExportDependenciesConfig } from '@/src/models/export';
@@ -43,7 +42,7 @@ const ExportDependencies: FC<Props> = ({ selectedExportFormat, dependencies, onC
 
   return (
     <div className="flex flex-col">
-      <Field fieldTitle={t(ExportI18nKey.Resources)} htmlFor="dependencies" />
+      <DialLabel label={t(ExportI18nKey.Resources)} htmlFor="dependencies" />
       <div className="flex flex-col gap-y-4 flex-1 min-h-0">
         {switches.map(({ key, label }) => (
           <DialSwitch

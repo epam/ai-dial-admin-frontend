@@ -63,9 +63,8 @@ const IdControl = <T extends { name?: string }>({
   return (
     <DialInput
       placeholder={placeholder || t(EntityPlaceholdersI18nKey.Id)}
-      labelProps={{ label: label || t(EntityFieldsI18nKey.id) }}
+      labelProps={{ label: label || t(EntityFieldsI18nKey.id), required: true }}
       id="name"
-      required={true}
       value={entity.name}
       onChange={onChangeName}
       errorText={nameError?.text}

@@ -4,17 +4,17 @@ import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState
 
 import {
   DialFileIcon,
+  DialInput,
+  DialLabel,
   DialLoadFileAreaField,
   DialRadioGroup,
   DialSwitch,
-  DialInput,
   RadioButtonWithContent,
   RadioGroupOrientation,
   Step,
   StepStatus,
 } from '@epam/ai-dial-ui-kit';
 
-import Field from '@/src/components/Common/Field/Field';
 import { CreateFolderSteps } from '@/src/components/Common/FolderCreate/constants';
 import { BasicI18nKey, ButtonsI18nKey, FoldersI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { APPLICATION_ZIP_TYPES, APPLICATION_ZIP_TYPES_STR } from '@/src/constants/request-headers';
@@ -22,9 +22,9 @@ import { useI18n } from '@/src/locales/client';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
-import { getErrorForFolderName } from '@/src/utils/validation/folder-error';
-import { isAssetView, isAssetWithVersion } from '@/src/utils/is-asset-view';
 import { getIgnorePathTitles } from '@/src/utils/import/get-ignore-path-title';
+import { isAssetView, isAssetWithVersion } from '@/src/utils/is-asset-view';
+import { getErrorForFolderName } from '@/src/utils/validation/folder-error';
 
 interface Props {
   view?: ApplicationRoute;
@@ -150,7 +150,7 @@ const FolderCreateSetup: FC<Props> = ({
           />
           {isAssetView(view) && (
             <div className="flex flex-col">
-              <Field fieldTitle={ignorePathsTitle} />
+              <DialLabel label={ignorePathsTitle} htmlFor="ignorePaths" />
               <DialSwitch
                 isOn={ignorePaths}
                 label={t(ImportI18nKey.PathsIgnore)}

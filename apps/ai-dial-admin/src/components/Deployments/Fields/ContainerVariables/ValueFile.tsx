@@ -1,17 +1,16 @@
-import { FC, useCallback, useEffect, useState } from 'react';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
-import classNames from 'classnames';
-import Field from '@/src/components/Common/Field/Field';
 import { EnvVariableValue } from '@/src/models/deployments/variables';
-import { getFileNameError } from '@/src/utils/deployments/validation';
 import { FieldError } from '@/src/models/error';
 import { VALUE_TYPE } from '@/src/types/deployments/variables';
-import { DialErrorText, DialFileIcon, DialIconButton, DialTooltip } from '@epam/ai-dial-ui-kit';
-import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
-import { IconX } from '@tabler/icons-react';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { getFileNameError } from '@/src/utils/deployments/validation';
 import { downloadFile } from '@/src/utils/download';
+import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
+import { DialErrorText, DialFileIcon, DialIconButton, DialLabel, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { IconX } from '@tabler/icons-react';
+import classNames from 'classnames';
+import { FC, useCallback, useEffect, useState } from 'react';
 
 interface Props {
   value: EnvVariableValue;
@@ -67,7 +66,7 @@ const ValueFile: FC<Props> = ({ value, index, fieldName, onValueChange, disabled
 
   return (
     <div className="flex flex-col flex-1 max-w-full">
-      <Field fieldTitle={fieldName} />
+      <DialLabel label={fieldName} htmlFor={`variable_value_${index}`} />
       <div
         className={classNames(
           'flex border px-3 py-1 rounded justify-between items-center',

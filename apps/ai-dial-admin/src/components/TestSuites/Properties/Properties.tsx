@@ -9,7 +9,6 @@ import classNames from 'classnames';
 import { getDeployments } from '@/src/app/[lang]/test-suites/actions';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
-import Field from '@/src/components/Common/Field/Field';
 import CreateTestSuite from '@/src/components/TestSuites/Modals/Create/CreateTestSuite';
 import RequestTemplate from '@/src/components/TestSuites/RequestTemplate/RequestTemplate';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';

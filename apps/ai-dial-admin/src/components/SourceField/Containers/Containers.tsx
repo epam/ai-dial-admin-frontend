@@ -1,12 +1,12 @@
-import { DialInputPopup, DialNeutralButton, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { DialInputPopup, DialLabel, DialNeutralButton, DialSelectField } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import Field from '@/src/components/Common/Field/Field';
 import SelectContainerModal from '@/src/components/SourceField/Containers/SelectContainerModal';
 import Endpoints from '@/src/components/SourceField/Endpoints/Endpoints';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
+import { getContainerRoute } from '@/src/components/SourceField/utils';
 import { CreateI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, SourceI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
@@ -22,7 +22,6 @@ import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 import { getErrorNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { addTrailingSlash } from '@/src/utils/url';
-import { getContainerRoute } from '@/src/components/SourceField/utils';
 
 interface Props<T> {
   entity: T;
@@ -118,17 +117,17 @@ const Containers = <T extends DialInterceptor | DialModel>({
                 label: container.displayName as string,
               }))}
               onChange={(container) => onSelect(container as string)}
-              elementId="source-type"
+              id="source-type"
               value={selectedContainerName}
               placeholder={t(CreateI18nKey.SelectContainer)}
-              fieldTitle={t(EntityFieldsI18nKey.container)}
+              label={t(EntityFieldsI18nKey.container)}
               readonly={!featureFlags.deploymentsEnabled}
             />
           </div>
         ) : (
           <div className={classNames('flex gap-2', STANDARD_CONTROL_WIDTH)}>
             <div className={CONTROL_WITH_BUTTON_WIDTH}>
-              <Field fieldTitle={t(SourceI18nKey.Container)} htmlFor="containers" />
+              <DialLabel label={t(SourceI18nKey.Container)} htmlFor="containers" />
               <DialInputPopup
                 open={isModalOpen}
                 onOpen={onOpenModal}

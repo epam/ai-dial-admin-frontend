@@ -1,14 +1,13 @@
 'use client';
-import { DialInputPopup } from '@epam/ai-dial-ui-kit';
+import { DialInputPopup, DialLabel } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import Field from '@/src/components/Common/Field/Field';
 import FilledIcon from '@/src/components/Common/IconFile/FilledIcon';
 import IconGalleryModal from '@/src/components/IconGallery/IconGalleryModal';
 import { BasicI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
-import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 
 interface Props {
   iconUrl?: string;
@@ -35,7 +34,7 @@ const IconControl: FC<Props> = ({ iconUrl, disabled = false, onChange }) => {
 
   return (
     <div className="flex flex-col">
-      <Field fieldTitle={t(EntityFieldsI18nKey.iconUrl)} htmlFor="icon" />
+      <DialLabel label={t(EntityFieldsI18nKey.iconUrl)} htmlFor="icon" />
       {value.length === 0 ? (
         <DialInputPopup
           emptyValueText={t(BasicI18nKey.None)}

@@ -1,12 +1,11 @@
+import { DialErrorText, DialInputPopup, DialLabel } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useState } from 'react';
-import { DialErrorText, DialInputPopup } from '@epam/ai-dial-ui-kit';
 
-import Field from '@/src/components/Common/Field/Field';
-import { ServerActionResponse } from '@/src/models/server-action';
-import MultiselectModal from './Modal/MultiselectModal';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { ServerActionResponse } from '@/src/models/server-action';
 import classNames from 'classnames';
+import MultiselectModal from './Modal/MultiselectModal';
 
 interface Props {
   elementId: string;
@@ -49,7 +48,7 @@ const Multiselect: FC<Props> = ({
 
   return (
     <div className={classNames('flex flex-col', className)}>
-      <Field fieldTitle={label} htmlFor={elementId} optional={optional} />
+      <DialLabel label={label} htmlFor={elementId} required={!optional} />
       <DialInputPopup
         inputClassName={errorText && 'dial-input-error'}
         open={isModalOpen}

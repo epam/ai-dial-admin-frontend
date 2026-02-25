@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { DialInputPopup, DialNeutralButton, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { DialInputPopup, DialLabel, DialNeutralButton, DialSelectField } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 
-import Field from '@/src/components/Common/Field/Field';
 import SelectRunnerModal from '@/src/components/SourceField/Template/SelectRunnerModal';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { CreateI18nKey, EntitiesI18nKey, SourceI18nKey } from '@/src/constants/i18n';
@@ -110,7 +109,7 @@ const Templates = <T extends DialModel | DialInterceptor>({
         ) : (
           <div className={classNames('flex gap-2', STANDARD_CONTROL_WIDTH)}>
             <div className={CONTROL_WITH_BUTTON_WIDTH}>
-              <Field fieldTitle={t(SourceI18nKey.InterceptorTemplate)} htmlFor="templates" />
+              <DialLabel label={t(SourceI18nKey.InterceptorTemplate)} htmlFor="templates" />
               <DialInputPopup
                 open={isModalOpen}
                 onOpen={onOpenModal}

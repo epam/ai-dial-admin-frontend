@@ -2,11 +2,10 @@
 
 import { ChangeEventHandler, FC, KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DialRadioButton, DialTag } from '@epam/ai-dial-ui-kit';
+import { DialLabel, DialRadioButton, DialTag } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 import { isEqual } from 'lodash';
 
-import Field from '@/src/components/Common/Field/Field';
 import { ALL_ATTACHMENTS } from '@/src/constants/dial-base-entity';
 import { AttachmentsI18nKey } from '@/src/constants/i18n';
 import { CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
@@ -29,22 +28,14 @@ export interface Props {
   initialValues?: string[];
   placeholder?: string;
   label?: string;
-  elementId?: string;
-  optional?: boolean;
+  id?: string;
+  required?: boolean;
   onChange?: (values?: string[]) => void;
 }
 
 const ALL_ATTACHMENTS_VALUE = [{ label: ALL_ATTACHMENTS, value: ALL_ATTACHMENTS }];
 
-const AttachmentInput: FC<Props> = ({
-  availableItems,
-  initialValues,
-  label,
-  placeholder,
-  elementId,
-  optional,
-  onChange,
-}) => {
+const AttachmentInput: FC<Props> = ({ availableItems, initialValues, label, placeholder, id, required, onChange }) => {
   const t = useI18n();
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -198,12 +189,12 @@ const AttachmentInput: FC<Props> = ({
 
   return (
     <div className="flex flex-col w-full relative gap-3">
-      <Field fieldTitle={label} optional={optional} htmlFor={elementId} />
+      <DialLabel label={label} required={required} htmlFor={id} />
 
       <div className="flex flex-col gap-3">
         <DialRadioButton
-          inputId={`${elementId}-none`}
-          name={`${elementId}-attachment-options`}
+          inputId={`${id}-none`}
+          name={`${id}-attachment-options`}
           value={AttachmentType.NONE}
           checked={selectedRadio === AttachmentType.NONE}
           onChange={() => handleRadioChange(AttachmentType.NONE)}
@@ -211,8 +202,8 @@ const AttachmentInput: FC<Props> = ({
         />
 
         <DialRadioButton
-          inputId={`${elementId}-all`}
-          name={`${elementId}-attachment-options`}
+          inputId={`${id}-all`}
+          name={`${id}-attachment-options`}
           value={AttachmentType.ALL}
           checked={selectedRadio === AttachmentType.ALL}
           onChange={() => handleRadioChange(AttachmentType.ALL)}
@@ -220,8 +211,8 @@ const AttachmentInput: FC<Props> = ({
         />
 
         <DialRadioButton
-          inputId={`${elementId}-specific`}
-          name={`${elementId}-attachment-options`}
+          inputId={`${id}-specific`}
+          name={`${id}-attachment-options`}
           value={AttachmentType.SPECIFIC}
           checked={selectedRadio === AttachmentType.SPECIFIC}
           onChange={() => handleRadioChange(AttachmentType.SPECIFIC)}

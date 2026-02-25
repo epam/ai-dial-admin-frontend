@@ -1,7 +1,6 @@
-import { DialFormPopup, DialInputPopup } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, DialInputPopup, DialLabel } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import Field from '@/src/components/Common/Field/Field';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import { BasicI18nKey, ButtonsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -72,7 +71,7 @@ const JsonEditorInput: FC<Props> = ({
 
   return (
     <div className="flex flex-col">
-      {label && <Field fieldTitle={label} htmlFor={elementId} />}
+      {label && <DialLabel label={label} htmlFor={elementId} />}
       <DialInputPopup
         disabled={disabled}
         open={isModalOpen}

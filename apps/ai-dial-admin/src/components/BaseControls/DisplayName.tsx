@@ -18,7 +18,7 @@ interface Props {
   onChange?: (displayName?: string) => void;
 }
 
-const DisplayNameControl: FC<Props> = ({ displayName, isFullWidth = true, onChange, names, ...props }) => {
+const DisplayNameControl: FC<Props> = ({ displayName, required, isFullWidth = true, onChange, names, ...props }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
   const containerClassName = useMemo(() => getControlClassName(isFullWidth), [isFullWidth]);
@@ -55,7 +55,7 @@ const DisplayNameControl: FC<Props> = ({ displayName, isFullWidth = true, onChan
 
   return (
     <DialInput
-      labelProps={{ label: t(EntityFieldsI18nKey.displayName) }}
+      labelProps={{ label: t(EntityFieldsI18nKey.displayName), required }}
       placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
       id="displayName"
       value={displayName}

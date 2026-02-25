@@ -125,7 +125,8 @@ const DeploymentProperties: FC<Props> = ({
         id="displayName"
         label={t(EntityFieldsI18nKey.displayName)}
         placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
-        inlineSearch={true}
+        inlineSearch
+        required
         value={entity.displayName}
         customSelectedValue={entity.displayName}
         onChange={(value) => onChangeDisplayName(value as string)}

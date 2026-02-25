@@ -62,12 +62,11 @@ const VersionControl: FC<Props> = ({
   return (
     <DialInput
       id="displayVersion"
-      labelProps={{ label: title || t(EntityFieldsI18nKey.version) }}
+      labelProps={{ label: title || t(EntityFieldsI18nKey.version), required: !optional }}
       placeholder={t(EntityPlaceholdersI18nKey.Version)}
       value={version}
       errorText={error || versionError?.text}
       invalid={!!error || !!versionError}
-      required={!optional}
       onChange={onChangeVersion}
       containerClassName={containerClassName}
       {...props}
