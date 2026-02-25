@@ -52,7 +52,8 @@ export default {
   },
   Basic: {
     None: '- None -',
-    Optional: '(Optional)',
+    Optional: 'Optional',
+    Required: 'Required',
     Failed: 'Failed',
     NoData: 'No Data',
     NoParameters: 'No Parameters',
@@ -62,6 +63,7 @@ export default {
     From: 'From',
     To: 'To',
     AddField: 'Add field',
+    AddSubField: 'Add sub-field',
     MoveToFolder: 'Move to another folder',
     Selected: 'selected',
     SelectAll: 'Select All',
@@ -547,6 +549,8 @@ export default {
     Headers: 'Headers',
     ExtractionResult: 'Extraction result',
     Summary: 'Summary',
+    RequestSchema: 'Request Schema',
+    ResponseSchema: 'Response Schema',
   },
   ForwardToken: {
     ForwardTokenModalTitle: 'Forward Auth Token',
@@ -1403,6 +1407,7 @@ export default {
     ChatInterface: 'Chat interface',
     Preview: 'Preview',
     ChangeMethod: 'Change method',
+    Warning: 'Request template has been changed. Save changes to update the list of test cases.',
     ImportSuccess: 'Test cases imported successfully',
     ImportSuccessDescription: 'You can now see them in the list of test cases',
     ImportFailed: 'Test cases import failed',
@@ -1418,6 +1423,7 @@ export default {
     MethodChangeWarning:
       'Changing the method will significantly affect the test suite, including configuration and results. Existing settings may be updated or reset.',
     RequestTemplate: 'Request Template',
+    EndpointSchema: 'Endpoint schema',
     DynamicConfiguration: 'Dynamic configuration',
     Constant: 'Constant',
     Attribute: 'Attribute',

@@ -24,7 +24,7 @@ export const generateInputBindingsRowData = (
       inferredType: variable.inferredType,
       constantValue: binding?.constantValue,
       type: InputBindingType.Constant,
-      value: binding?.constantValue ?? '',
+      value: binding?.constantValue ?? variable.defaultValue ?? '',
       defaultValue: variable.defaultValue,
     };
   });

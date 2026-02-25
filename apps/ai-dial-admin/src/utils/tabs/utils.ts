@@ -49,6 +49,8 @@ export enum EntityViewTab {
   Permissions = 'Permissions',
   Body = 'Body',
   Headers = 'Headers',
+  RequestSchema = 'RequestSchema',
+  ResponseSchema = 'ResponseSchema',
 }
 
 export const propertiesTab = (t: (key: string) => string) => ({
@@ -253,6 +255,16 @@ export const headersTab = (t: (key: string) => string) => ({
   label: t(TabsI18nKey.Headers),
 });
 
+export const requestSchemaTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.RequestSchema,
+  label: t(TabsI18nKey.RequestSchema),
+});
+
+export const responseSchemaTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.ResponseSchema,
+  label: t(TabsI18nKey.ResponseSchema),
+});
+
 export const getRouteTabs = (t: (key: string) => string): TabModel[] => {
   return [propertiesTab(t), rolesTab(t), auditTab(t)];
 };
@@ -414,4 +426,8 @@ export const getTestSuiteRequestTemplateTabs = (t: (key: string) => string): Tab
 
 export const getRunTabs = (t: (key: string) => string): TabModel[] => {
   return [summaryTab(t), extractionResultTab(t)];
+};
+
+export const getEndpointSchemaTabs = (t: (key: string) => string): TabModel[] => {
+  return [requestSchemaTab(t), responseSchemaTab(t)];
 };

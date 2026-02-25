@@ -94,6 +94,6 @@ describe('TestCases', () => {
     const { container } = render(<TestCases selectedTestSuite={createTestSuite()} onChange={mockOnChange} />);
 
     const wrapper = container.firstChild as HTMLElement;
-    expect(wrapper).toHaveClass('flex-1', 'min-h-0', 'flex', 'flex-col', 'gap-y-6');
+    expect(wrapper).toHaveClass('h-full', 'flex', 'flex-col', 'gap-y-6');
   });
 });
