@@ -148,6 +148,7 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
               isSkipRefresh={isSkipRefresh}
               activeTab={activeTab}
               selectedTestSuite={selectedTestSuite}
+              originalTestSuite={originalTestSuite}
               onChange={onChangeTestSuite}
             />
           )}
