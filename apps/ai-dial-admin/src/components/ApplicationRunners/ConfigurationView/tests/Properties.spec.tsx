@@ -14,7 +14,7 @@ describe('SchemeProperties', () => {
     const onChangeRunner = vi.fn();
     render(<SchemeProperties runner={baseRunner} onChangeRunner={onChangeRunner} />);
     // ID field
-    expect(screen.getByText(EntityFieldsI18nKey.id)).toBeInTheDocument();
+    expect(screen.getAllByAltText(EntityFieldsI18nKey.id)[0]).toBeInTheDocument();
     fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Id), { target: { value: 'new-id' } });
     expect(onChangeRunner).toHaveBeenCalledWith(expect.objectContaining({ $id: 'new-id' }));
 

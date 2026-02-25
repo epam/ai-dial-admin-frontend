@@ -65,7 +65,7 @@ const ImageNewVersion: FC<Props> = ({ isModalOpen, title, onClose, onApply, imag
         <DialInput
           className="max-w-[120px]"
           id="version"
-          label={t(EntityFieldsI18nKey.version)}
+          labelProps={{ label: t(EntityFieldsI18nKey.version) }}
           onChange={onVersionChange}
           value={version}
           invalid={!!versionError}
