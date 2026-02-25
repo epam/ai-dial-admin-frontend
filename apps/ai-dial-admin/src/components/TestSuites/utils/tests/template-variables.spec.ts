@@ -41,7 +41,7 @@ describe('generateInputBindingsRowData', () => {
         inferredType: TestCaseItemType.STRING,
         constantValue: undefined,
         type: InputBindingType.Constant,
-        value: '',
+        value: 'default',
         defaultValue: 'default',
       },
     ]);
