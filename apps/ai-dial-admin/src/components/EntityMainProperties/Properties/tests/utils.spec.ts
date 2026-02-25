@@ -12,7 +12,7 @@ const mockT = (key: string, params?: Record<string, number>) => {
 
 describe('EntityMainProperties :: errors :: getDisplayNameError', () => {
   test('returns MinMaxLength error if name is too short', () => {
-    const result = getDisplayNameError(ApplicationRoute.Models, 'a', ['foo'], mockT);
+    const result = getDisplayNameError(ApplicationRoute.Models, '', ['foo'], mockT);
     expect(result).toBe(ErrorI18nKey.MinMaxLength);
   });
 
