@@ -13,7 +13,7 @@ describe('Common components :: Field', () => {
 
   test('Should render (Optional) when optional is true', () => {
     render(<Field htmlFor="input" fieldTitle="My Field" optional />);
-    expect(screen.getByText(BasicI18nKey.Optional)).toBeInTheDocument();
+    expect(screen.getByText(`(${BasicI18nKey.Optional})`)).toBeInTheDocument();
   });
 
   test('Should render nothing when fieldTitle is not provided', () => {
