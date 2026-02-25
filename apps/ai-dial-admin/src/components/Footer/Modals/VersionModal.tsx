@@ -119,13 +119,12 @@ const VersionModal: FC<Props> = ({ coreVersions, isModalOpen, onClose, onApply }
           />
           <DialInput
             id="version"
-            labelProps={{ label: t(EntityFieldsI18nKey.version) }}
+            labelProps={{ label: t(EntityFieldsI18nKey.version), caption: captionDescription }}
             value={version}
             disabled={definition === DefinitionType.AUTO || definition === DefinitionType.DEFAULT}
             iconBefore={iconBefore}
             iconAfter={iconAfter}
             onChange={(v) => setVersion(v || '')}
-            // captionDescription={captionDescription}
           />
         </div>
       </div>

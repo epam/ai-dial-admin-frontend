@@ -164,26 +164,30 @@ const Endpoint: FC<Props> = ({ container, setContainer, disabled }) => {
         />
         <DialNumberInput
           id="port"
-          labelProps={{ label: t(EntityFieldsI18nKey.Port) }}
+          labelProps={{
+            label: t(EntityFieldsI18nKey.Port),
+            caption: !portError ? t(EntityCaptionsI18nKey.ProbePort) : '',
+          }}
           placeholder={t(EntityPlaceholdersI18nKey.Port)}
           value={container.probeProperties?.probe?.port}
           onChange={onPortChange}
           disabled={disabled}
           containerClassName="w-[320px]"
-          // captionDescription={!portError ? t(EntityCaptionsI18nKey.ProbePort) : ''}
           invalid={!!portError}
           errorText={portError?.text}
         />
         {container.probeProperties?.probe?.$type === PROBE_TYPE.HTTP_GET && (
           <DialInput
             id="path"
-            labelProps={{ label: t(EntityFieldsI18nKey.Path) }}
+            labelProps={{
+              label: t(EntityFieldsI18nKey.Path),
+              caption: !pathError ? t(EntityCaptionsI18nKey.ProbePath) : '',
+            }}
             placeholder={t(EntityPlaceholdersI18nKey.Path)}
             value={container.probeProperties?.probe?.path}
             disabled={disabled}
             containerClassName="w-[320px]"
             onChange={onPathChange}
-            // ca={!pathError ? t(EntityCaptionsI18nKey.ProbePath) : ''}
             invalid={!!pathError}
             errorText={pathError?.text}
           />

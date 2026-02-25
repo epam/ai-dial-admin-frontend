@@ -236,7 +236,7 @@ const AttachmentInput: FC<Props> = ({ availableItems, initialValues, label, plac
                   onChange={handleInputChange}
                   onBlur={handleInputBlur}
                   onKeyDown={handleKeyDown}
-                  className="outline-none border-none w-full flex-1 p-1 dial-input"
+                  className="outline-none border-none w-full flex-1 p-1 dial-input h-auto"
                   placeholder={placeholder || ''}
                 />
               </div>
