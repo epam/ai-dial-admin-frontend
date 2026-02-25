@@ -8,6 +8,7 @@ import { baseColumnComparator } from '@/src/components/Grid/comparators/base-col
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { CREATE_FOLDER_FORBIDDEN_CHARS } from './constants';
+import { GridOptions } from '@epam/ai-dial-ui-kit/dist/src/components/FileManager/FileManager';
 
 const gridActionLabels = [
   {
@@ -107,27 +108,28 @@ export const getValidationMessages = (t: (key: string) => string) => {
   return { emptyName: t(FileManagerI18nKey.EnterFolderName), duplicateName: t(FileManagerI18nKey.NameExists) };
 };
 
-export const getGridOptions = (columnDefs: ColDef[], t: (key: string) => string) => ({
-  alternateOddRowColors: true,
-  columnDefs,
-  selectionMode: GridSelectionMode.MULTIPLE,
-  actionLabels: getActionLabels(gridActionLabels, t),
-  additionalGridOptions: {
-    defaultColDef: {
-      minWidth: 150,
-      floatingFilter: true,
-      floatingFilterComponent: FloatingFilter,
-      resizable: true,
-      flex: 1,
-      filter: 'agTextColumnFilter',
-      filterParams: {
-        filterPlaceholder: 'Enter value',
-        buttons: ['reset'],
-      } as ITextFilterParams,
-      comparator: baseColumnComparator.bind(this),
+export const getGridOptions = (columnDefs: ColDef[], t: (key: string) => string) =>
+  ({
+    alternateOddRowColors: true,
+    columnDefs,
+    selectionMode: GridSelectionMode.MULTIPLE,
+    actionLabels: getActionLabels(gridActionLabels, t),
+    additionalGridOptions: {
+      defaultColDef: {
+        minWidth: 150,
+        floatingFilter: true,
+        floatingFilterComponent: FloatingFilter,
+        resizable: true,
+        flex: 1,
+        filter: 'agTextColumnFilter',
+        filterParams: {
+          filterPlaceholder: 'Enter value',
+          buttons: ['reset'],
+        } as ITextFilterParams,
+        comparator: baseColumnComparator.bind(this),
+      },
     },
-  },
-});
+  }) as GridOptions;
 
 export const getTreeOptions = (
   isFetchingFiles: boolean,
