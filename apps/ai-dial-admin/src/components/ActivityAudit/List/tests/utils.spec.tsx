@@ -1,8 +1,14 @@
 import { ActivityAuditRevision } from '@/src/components/ActivityAudit/models';
-import { getActivityAuditColumns, getGridFilters, groupByDay } from '@/src/components/ActivityAudit/List/utils';
+import {
+  getActivityAuditColumns,
+  getAuditActivityHref,
+  getGridFilters,
+  groupByDay,
+} from '@/src/components/ActivityAudit/List/utils';
 import { GridFilterType } from '@/src/types/grid-filter';
 import { FilterOperatorDto } from '@/src/types/request';
 import { describe, expect, test, vi } from 'vitest';
+import { ActivityAuditResourceType } from '@/src/types/activity-audit';
 
 vi.mock('@/src/constants/ag-grid', () => ({
   ACTION_COLUMN: vi.fn((actions) => ({ colId: 'actions', actions })),
@@ -111,5 +117,52 @@ describe('Activity Audit List utils :: groupByDay', () => {
     expect(grouped[clonedDate.toLocaleDateString()]).toHaveLength(1);
 
     vi.useRealTimers();
+  });
+});
+
+describe('getAuditActivityHref', () => {
+  test('returns correct href for entity type', () => {
+    let href = getAuditActivityHref(ActivityAuditResourceType.MODEL, '1', '1');
+    expect(href).toBe('/models/1/1');
+
+    href = getAuditActivityHref(ActivityAuditResourceType.APPLICATION, '1', '1');
+    expect(href).toBe('/applications/1/1');
+
+    href = getAuditActivityHref(ActivityAuditResourceType.TOOLSET, '1', '1');
+    expect(href).toBe('/toolsets/1/1');
+
+    href = getAuditActivityHref(ActivityAuditResourceType.INTERCEPTOR, '1', '1');
+    expect(href).toBe('/interceptors/1/1');
+
+    href = getAuditActivityHref(ActivityAuditResourceType.ROUTE, '1', '1');
+    expect(href).toBe('/routes/1/1');
+
+    href = getAuditActivityHref(ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA, '1', '1');
+    expect(href).toBe('/application-runners/1/1');
+
+    href = getAuditActivityHref(ActivityAuditResourceType.INTERCEPTOR_TEMPLATE, '1', '1');
+    expect(href).toBe('/interceptor-templates/1/1');
+
+    href = getAuditActivityHref(ActivityAuditResourceType.ADAPTER, '1', '1');
+    expect(href).toBe('/adapters/1/1');
+
+    href = getAuditActivityHref(ActivityAuditResourceType.ROLE, '1', '1');
+    expect(href).toBe('/roles/1/1');
+
+    href = getAuditActivityHref(ActivityAuditResourceType.KEY, '1', '1');
+    expect(href).toBe('/keys/1/1');
+  });
+
+  test('returns empty href for unknown entity type', () => {
+    const href = getAuditActivityHref(undefined, '1', '1');
+    expect(href).toBe('');
+  });
+
+  test('returns empty href for empty resourceId or empty activityId', () => {
+    const href = getAuditActivityHref(ActivityAuditResourceType.MODEL, '', '1');
+    expect(href).toBe('');
+
+    const href2 = getAuditActivityHref(ActivityAuditResourceType.MODEL, '1', '');
+    expect(href2).toBe('');
   });
 });

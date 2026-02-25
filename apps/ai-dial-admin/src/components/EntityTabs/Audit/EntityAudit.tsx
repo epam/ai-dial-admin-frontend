@@ -15,6 +15,7 @@ import { TabOrientation } from '@/src/types/tab';
 import { EntityViewTab, getAuditTabs } from '@/src/utils/tabs/utils';
 import { DEFAULT_TIME_PERIOD } from '@/src/constants/global-time-filter';
 import { TimeRange } from '@/src/models/time-range';
+import { useSearchParams } from 'next/navigation';
 
 interface Props {
   entity: BaseEntity;
@@ -23,10 +24,12 @@ interface Props {
 
 const EntityAudit: FC<Props> = ({ entity, view }) => {
   const t = useI18n();
+  const searchParams = useSearchParams();
 
   const { featureFlags } = useAppContext();
   const tabs = getAuditTabs(t, featureFlags, view);
-  const [activeTab, setActiveTab] = useState(tabs[0].id);
+  const [activeTab, setActiveTab] = useState(searchParams.get('subtab') || tabs[0].id);
+
   const [timeFilter, setTimeFilter] = useState<string | TimeRange>(DEFAULT_TIME_PERIOD);
   const [isCustomRange, setIsCustomRange] = useState(false);
 

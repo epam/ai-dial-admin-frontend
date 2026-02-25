@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { TabModel } from '@epam/ai-dial-ui-kit';
@@ -44,13 +44,14 @@ interface Props {
 const InterceptorView: FC<Props> = ({ originalInterceptor, names, etag, ...props }) => {
   const t = useI18n();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
   const getReqRef = useRef(useProtectedRequest());
 
   const tabs: TabModel[] = getInterceptorTabs(t);
 
-  const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
+  const [activeTab, setActiveTab] = useState((searchParams.get('tab') as EntityViewTab) || EntityViewTab.Properties);
   const [selectedInterceptor, setSelectedInterceptor] = useState(cloneDeep(originalInterceptor));
   const [isChanged, setIsChanged] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
