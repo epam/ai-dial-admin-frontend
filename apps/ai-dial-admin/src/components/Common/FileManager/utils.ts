@@ -1,9 +1,12 @@
-import { DialUploadFileItem, GridSelectionMode } from '@epam/ai-dial-ui-kit';
-import { ColDef } from 'ag-grid-community';
-
-import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
-import { ROOT_FOLDER } from '@/src/constants/file';
 import { ReactNode } from 'react';
+
+import { DialUploadFileItem, GridSelectionMode } from '@epam/ai-dial-ui-kit';
+import { ColDef, ITextFilterParams } from 'ag-grid-community';
+
+import FloatingFilter from '@/src/components/Grid/FloatingFilter/FloatingFilter';
+import { baseColumnComparator } from '@/src/components/Grid/comparators/base-column-comparator';
+import { ROOT_FOLDER } from '@/src/constants/file';
+import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { CREATE_FOLDER_FORBIDDEN_CHARS } from './constants';
 
 const gridActionLabels = [
@@ -109,6 +112,21 @@ export const getGridOptions = (columnDefs: ColDef[], t: (key: string) => string)
   columnDefs,
   selectionMode: GridSelectionMode.MULTIPLE,
   actionLabels: getActionLabels(gridActionLabels, t),
+  additionalGridOptions: {
+    defaultColDef: {
+      minWidth: 150,
+      floatingFilter: true,
+      floatingFilterComponent: FloatingFilter,
+      resizable: true,
+      flex: 1,
+      filter: 'agTextColumnFilter',
+      filterParams: {
+        filterPlaceholder: 'Enter value',
+        buttons: ['reset'],
+      } as ITextFilterParams,
+      comparator: baseColumnComparator.bind(this),
+    },
+  },
 });
 
 export const getTreeOptions = (
