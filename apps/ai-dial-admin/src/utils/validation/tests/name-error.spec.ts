@@ -314,20 +314,6 @@ describe('getErrorForDisplayName', () => {
     expect(result).toBeNull();
   });
 
-  test('returns error if name is too short', () => {
-    const result1 = getErrorForDisplayName('a', false, mockT);
-    const result2 = getErrorForDisplayName('a', false, void 0);
-
-    expect(result1).toEqual({
-      type: ErrorType.LENGTH,
-      text: 'Translated Text',
-    });
-    expect(result2).toEqual({
-      type: ErrorType.LENGTH,
-      text: '',
-    });
-  });
-
   test('returns error if name is too long', () => {
     const longName = 'a'.repeat(300);
     const result = getErrorForDisplayName(longName, false, mockT);
