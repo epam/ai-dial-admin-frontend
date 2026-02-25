@@ -30,10 +30,13 @@ describe('Breadcrumbs :: getBreadcrumbConfig with language in path', () => {
   });
 
   test('Should correctly return config with no href items', () => {
-    const config = getBreadcrumbs('/en/applications/applicationId', 'en');
-    expect(config.length).toEqual(2);
-    expect(config[1].href).toBeFalsy();
+    const config = getBreadcrumbs('/en/applications/applicationId/auditActionId', 'en');
+    expect(config.length).toEqual(3);
+    expect(config[1].href).toEqual('/en/applications/applicationId');
     expect(config[1].key).toBeFalsy();
     expect(config[1].name).toEqual('applicationId');
+    expect(config[2].href).toBeFalsy();
+    expect(config[2].key).toBeFalsy();
+    expect(config[2].name).toEqual('auditActionId');
   });
 });
