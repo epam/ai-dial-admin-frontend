@@ -67,7 +67,7 @@ const DuplicateAdapter: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose,
 
         <EndpointControl
           id="baseEndpoint"
-          required={true}
+          required
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
           label={t(EntityFieldsI18nKey.baseEndpoint)}
           endpoint={entity.baseEndpoint}

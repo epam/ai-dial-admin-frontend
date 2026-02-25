@@ -45,7 +45,6 @@ const TopicsControl = <T extends { topics?: string[]; descriptionKeywords?: stri
       selectedItems={selectedItems}
       getItems={getModelsTopics}
       allItems={allItems}
-      optional={true}
       onChangeItems={onChangeTopics}
       heading={t(EntityFieldsI18nKey.topics)}
       label={t(EntityFieldsI18nKey.topics)}

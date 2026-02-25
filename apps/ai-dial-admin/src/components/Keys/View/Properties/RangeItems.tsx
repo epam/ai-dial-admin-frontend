@@ -70,7 +70,7 @@ const RangeItems: FC<Props> = ({ ranges, onAddRange, onRemoveRange, onUpdateRang
             errorText={errors?.[index]?.ip?.text}
             value={range.ip || ''}
           />
-          <span className={classNames('text-secondary leading-[40px]', index === 0 && 'mt-6')}>/</span>
+          <span className="text-secondary leading-[40px]">/</span>
           <DialNumberInput
             id={`mask-${index}`}
             value={range.mask || undefined}

@@ -27,7 +27,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
   const functionItems = getOperationItems(t);
   const attributeItems = getAttributeItems(t, attributes);
 
-  const inputClassName = classNames('flex-shrink-0 pb-[18px]');
+  const inputClassName = 'flex-shrink-0';
   const iconClassName = classNames('cursor-pointer mb-[18px]', index === 0 ? 'mt-[24px]' : 'flex items-center');
 
   const setError = useCallback(
@@ -108,7 +108,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
             value={rule.source}
             id={`rule-attribute-${index}`}
             options={attributeItems}
-            labe={isFirstLine ? t(FoldersI18nKey.AttributeTitle) : ''}
+            label={isFirstLine ? t(FoldersI18nKey.AttributeTitle) : ''}
             placeholder={t(FoldersI18nKey.AttributePlaceholder)}
             onChange={(source) => onChangeSource(source as string)}
           />
@@ -135,16 +135,18 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
               invalid={!!errorText}
             />
           ) : (
-            <DialTagInput
-              elementId="rule-values"
-              label={isFirstLine ? t(BasicI18nKey.Value) : ''}
-              placeholder={t(FoldersI18nKey.ValuePlaceholder)}
-              captionDescription={t(FoldersI18nKey.ValueCaption)}
-              initialTags={rule.targets}
-              onChange={onChangeTags}
-              errorText={errorText}
-              invalid={!!errorText}
-            />
+            <div className="mt-[23px]">
+              <DialTagInput
+                elementId="rule-values"
+                label={isFirstLine ? t(BasicI18nKey.Value) : ''}
+                placeholder={t(FoldersI18nKey.ValuePlaceholder)}
+                captionDescription={t(FoldersI18nKey.ValueCaption)}
+                initialTags={rule.targets}
+                onChange={onChangeTags}
+                errorText={errorText}
+                invalid={!!errorText}
+              />
+            </div>
           )}
         </div>
         <DialRemoveButton onClick={onRemoveValue} className={iconClassName} />

@@ -102,16 +102,11 @@ const KeyProperties: FC<Props> = ({ entity, originalEntity, names, keys, isKeyIm
   return (
     <div className="flex flex-col gap-y-8 h-full">
       {!isKeyImmutable && (
-        <div className="flex items-end">
+        <div className="flex items-end gap-x-2">
           <div className="flex-1">
             <IdControl entity={entity} names={names} onChangeEntity={onChangeKey} />
           </div>
-          <DialGhostButton
-            className="ml-2 h-[34px]"
-            iconBefore={<IconSparkles />}
-            label={t(ButtonsI18nKey.Generate)}
-            onClick={onGenerateKeyId}
-          />
+          <DialGhostButton iconBefore={<IconSparkles />} label={t(ButtonsI18nKey.Generate)} onClick={onGenerateKeyId} />
         </div>
       )}
 
@@ -126,7 +121,7 @@ const KeyProperties: FC<Props> = ({ entity, originalEntity, names, keys, isKeyIm
 
       <DialInput
         id="project"
-        labelProps={{ label: t(EntityFieldsI18nKey.project) }}
+        labelProps={{ label: t(EntityFieldsI18nKey.project), required: true }}
         placeholder={t(EntityPlaceholdersI18nKey.Project)}
         value={entity.project}
         errorText={projectError}

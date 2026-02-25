@@ -11,7 +11,7 @@ interface Props {
   elementId: string;
   label: string;
   disabled?: boolean;
-  optional?: boolean;
+  required?: boolean;
   selectedItems?: string[];
   heading?: string;
   addTitle?: string;
@@ -30,7 +30,7 @@ const Multiselect: FC<Props> = ({
   selectedItems,
   label,
   disabled,
-  optional,
+  required,
   errorText,
   className,
   ...props
@@ -48,7 +48,7 @@ const Multiselect: FC<Props> = ({
 
   return (
     <div className={classNames('flex flex-col', className)}>
-      <DialLabel label={label} htmlFor={elementId} required={!optional} />
+      <DialLabel label={label} htmlFor={elementId} required={required} />
       <DialInputPopup
         inputClassName={errorText && 'dial-input-error'}
         open={isModalOpen}

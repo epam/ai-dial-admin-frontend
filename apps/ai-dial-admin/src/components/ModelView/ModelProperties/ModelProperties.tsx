@@ -63,7 +63,6 @@ const ModelProperties: FC<Props> = ({ model, modelsNames, onChangeModel }) => {
         label={t(EntityFieldsI18nKey.fieldsHashingOrder)}
         addPlaceholder={t(EntityPlaceholdersI18nKey.Value)}
         addTitle={t(BasicI18nKey.AddField)}
-        optional={true}
       />
     </div>
   );

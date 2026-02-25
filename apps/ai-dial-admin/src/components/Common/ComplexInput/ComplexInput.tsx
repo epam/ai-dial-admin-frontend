@@ -15,7 +15,6 @@ interface Props extends DialInputProps {
   errorText?: string;
   fullValue?: string;
   copyable?: boolean;
-  optional?: boolean;
   isFullWidth?: boolean;
 }
 
