@@ -29,13 +29,19 @@ describe('ContainersList', () => {
   ];
 
   test('renders with containers', () => {
-    render(<ContainersList route={ApplicationRoute.ModelServings} containersList={mockContainers} />);
+    render(
+      <ContainersList
+        route={ApplicationRoute.ModelServings}
+        containersList={mockContainers}
+        names={mockContainers.map((container) => container.name || '')}
+      />,
+    );
 
     expect(screen.getByRole('table')).toBeInTheDocument();
   });
 
   test('renders with empty list', () => {
-    render(<ContainersList route={ApplicationRoute.ModelServings} containersList={[]} />);
+    render(<ContainersList route={ApplicationRoute.ModelServings} containersList={[]} names={[]} />);
 
     expect(screen.getByText(EntitiesI18nKey.NoContainersType)).toBeInTheDocument();
   });

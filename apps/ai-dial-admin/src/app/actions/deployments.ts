@@ -57,7 +57,7 @@ export async function getTopics() {
   return topicApi.getTopics(token);
 }
 
-export async function getContainers(type: string) {
+export async function getContainers(type?: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return containersApi.getContainers(type, token);
 }
