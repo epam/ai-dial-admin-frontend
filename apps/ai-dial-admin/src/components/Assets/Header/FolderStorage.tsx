@@ -28,17 +28,19 @@ const FoldersStorageLabel: FC<Props> = ({ asset }) => {
   );
 
   return (
-    <DialLabelledText
-      label={t(EntitiesI18nKey.FolderStorage)}
-      text={removeTrailingSlash(asset.folderId)}
-      postfix={
-        <DialIconButton
-          className="text-secondary h-[20px] w-[20px]"
-          onClick={() => openFolderStorageInNewTab(asset.folderId)}
-          icon={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
-        />
-      }
-    />
+    asset.folderId && (
+      <DialLabelledText
+        label={t(EntitiesI18nKey.FolderStorage)}
+        text={removeTrailingSlash(asset.folderId)}
+        postfix={
+          <DialIconButton
+            className="text-secondary h-[20px] w-[20px]"
+            onClick={() => openFolderStorageInNewTab(asset.folderId)}
+            icon={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
+          />
+        }
+      />
+    )
   );
 };
 
