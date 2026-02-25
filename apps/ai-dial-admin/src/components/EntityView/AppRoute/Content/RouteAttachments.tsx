@@ -46,15 +46,13 @@ const RouteAttachments: FC<Props> = ({ route, readonly, onChangeRoute }) => {
             : ['']
         }
         readonly={readonly}
-        optional={true}
         onChangePaths={onChangeRequest}
-        disableValidation={true}
+        disableValidation
       />
       <Divider />
       <Paths
         label={t(RoutesI18nKey.ResponseAttachmentPaths)}
         readonly={readonly}
-        optional={true}
         paths={
           route.attachmentPaths?.responseBody && route.attachmentPaths?.responseBody.length
             ? route.attachmentPaths?.responseBody

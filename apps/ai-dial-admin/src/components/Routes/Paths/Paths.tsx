@@ -13,13 +13,13 @@ import Path from './Path';
 interface Props {
   label: string;
   readonly?: boolean;
-  optional?: boolean;
+  required?: boolean;
   paths?: string[];
   disableValidation?: boolean;
   onChangePaths: (path: string[]) => void;
 }
 
-const Paths: FC<Props> = ({ label, optional, readonly, paths, disableValidation, onChangePaths }) => {
+const Paths: FC<Props> = ({ label, required, readonly, paths, disableValidation, onChangePaths }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
 
@@ -31,9 +31,9 @@ const Paths: FC<Props> = ({ label, optional, readonly, paths, disableValidation,
 
   useEffect(() => {
     setPathError(
-      !optional && (!paths || paths.length === 0 || paths.some((p) => !p)) ? t(ErrorI18nKey.RequiredField) : '',
+      required && (!paths || paths.length === 0 || paths.some((p) => !p)) ? t(ErrorI18nKey.RequiredField) : '',
     );
-  }, [optional, paths, t]);
+  }, [required, paths, t]);
 
   const onAddPath = useCallback(() => {
     const newPaths = [...(paths || []), ''];
@@ -79,7 +79,7 @@ const Paths: FC<Props> = ({ label, optional, readonly, paths, disableValidation,
           key={`path-${index}`}
           path={path}
           index={index}
-          optional={optional}
+          required={required}
           label={label}
           allPaths={paths}
           onRemove={onRemove}

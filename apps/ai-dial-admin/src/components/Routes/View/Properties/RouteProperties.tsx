@@ -208,6 +208,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
         label={t(EntityFieldsI18nKey.paths)}
         paths={route.paths}
         onChangePaths={onChangePaths}
+        required
         readonly={readonly}
       />
       <DialSwitch

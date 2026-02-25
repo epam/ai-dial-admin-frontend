@@ -12,7 +12,7 @@ interface Props {
   index: number;
   label: string;
   path: string;
-  optional?: boolean;
+  required?: boolean;
   readonly?: boolean;
   allPaths?: string[];
   disableValidation?: boolean;
@@ -24,7 +24,7 @@ const Path: FC<Props> = ({
   index,
   path,
   readonly,
-  optional,
+  required,
   label,
   allPaths,
   disableValidation,
@@ -39,12 +39,12 @@ const Path: FC<Props> = ({
   const error = useMemo(() => {
     return disableValidation
       ? ''
-      : isEmptyPath && index === 0 && isAllEmptyValues && !optional
+      : isEmptyPath && index === 0 && isAllEmptyValues && required
         ? t(ErrorI18nKey.RequiredProperty)
         : isInvalidPath
           ? t(ErrorI18nKey.InvalidPath)
           : '';
-  }, [disableValidation, isEmptyPath, index, isAllEmptyValues, optional, t, isInvalidPath]);
+  }, [disableValidation, isEmptyPath, index, isAllEmptyValues, required, t, isInvalidPath]);
 
   const alignmentClassName =
     index === 0 ? (error ? 'items-start' : 'items-end') : error ? 'items-start' : 'items-center';
@@ -70,7 +70,7 @@ const Path: FC<Props> = ({
           value={path}
           disabled={readonly}
           placeholder={t(EntityPlaceholdersI18nKey.PathUrl)}
-          labelProps={{ label: index === 0 ? label : '' }}
+          labelProps={{ label: index === 0 ? label : '', required }}
           onChange={(value) => onChangePath(index, value)}
           errorText={error}
           invalid={!!error}
