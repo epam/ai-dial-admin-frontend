@@ -60,6 +60,11 @@ import {
   getEndpointSchemaTabs,
   requestSchemaTab,
   responseSchemaTab,
+  getFilePublicationTabs,
+  permissionsTab,
+  getPromptPublicationTabs,
+  getApplicationPublicationTabs,
+  getToolsetPublicationTabs,
 } from '../utils';
 
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
@@ -248,4 +253,25 @@ test('returns correct tabs for test suite request template', () => {
 
 test('returns correct tabs for test suite request template', () => {
   expect(getEndpointSchemaTabs(t)).toEqual([requestSchemaTab(t), responseSchemaTab(t)]);
+});
+
+test('returns correct tabs for file publication', () => {
+  expect(getFilePublicationTabs(t)).toEqual([propertiesTab(t), permissionsTab(t)]);
+});
+
+test('returns correct tabs for prompt publication', () => {
+  expect(getPromptPublicationTabs(t)).toEqual([propertiesTab(t), permissionsTab(t)]);
+});
+
+test('returns correct tabs for application publication', () => {
+  expect(getApplicationPublicationTabs(t)).toEqual([
+    propertiesTab(t),
+    parametersTab(t),
+    permissionsTab(t),
+    filesTab(t),
+  ]);
+});
+
+test('returns correct tabs for toolset publication', () => {
+  expect(getToolsetPublicationTabs(t)).toEqual([getToolsetPublicationTabs]);
 });

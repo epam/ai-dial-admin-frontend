@@ -7,6 +7,7 @@ import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import IconControl from '@/src/components/BaseControls/Icon';
 import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
 import TopicsControl from '@/src/components/BaseControls/Topics';
+import VersionControl from '@/src/components/BaseControls/Version';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import ToolsetEndpoint from '@/src/components/SourceField/Endpoints/ToolsetEndpoint';
 import Authentication from '@/src/components/Toolsets/Auth/Authentication';
@@ -20,9 +21,10 @@ import { ApplicationRoute } from '@/src/types/routes';
 interface Props {
   selectedToolset: AssetToolset;
   onChange: (asset: AssetToolset) => void;
+  isPublication?: boolean;
 }
 
-const Properties: FC<Props> = ({ selectedToolset, onChange }) => {
+const Properties: FC<Props> = ({ selectedToolset, onChange, isPublication }) => {
   const t = useI18n();
 
   return (
@@ -34,6 +36,15 @@ const Properties: FC<Props> = ({ selectedToolset, onChange }) => {
           isFullWidth={false}
           onChange={(displayName) => onChange({ ...selectedToolset, displayName })}
         />
+        {isPublication && (
+          <VersionControl
+            elementContainerClassName="w-[175px]"
+            version={selectedToolset.version}
+            onChange={(version?: string) =>
+              onChange?.({ ...selectedToolset, version: version || '', displayVersion: version || '' })
+            }
+          />
+        )}
         <DescriptionControl entity={selectedToolset} onChangeEntity={onChange} isFullWidth={false} />
 
         <IconControl
@@ -42,14 +53,16 @@ const Properties: FC<Props> = ({ selectedToolset, onChange }) => {
         />
         <TopicsControl entity={selectedToolset} onChange={onChange} view={ApplicationRoute.AssetsToolsets} />
 
-        <FilePath
-          value={selectedToolset.folderId}
-          label={t(EntitiesI18nKey.FolderStorage)}
-          modalTitle={t(BasicI18nKey.MoveToFolder)}
-          placeholder={t(EntityPlaceholdersI18nKey.Path)}
-          onChange={(folderId) => onChange?.({ ...selectedToolset, folderId })}
-          context={useToolsetFolder}
-        />
+        {!isPublication && (
+          <FilePath
+            value={selectedToolset.folderId}
+            label={t(EntitiesI18nKey.FolderStorage)}
+            modalTitle={t(BasicI18nKey.MoveToFolder)}
+            placeholder={t(EntityPlaceholdersI18nKey.Path)}
+            onChange={(folderId) => onChange?.({ ...selectedToolset, folderId })}
+            context={useToolsetFolder}
+          />
+        )}
         <ToolsetEndpoint entity={selectedToolset} onChange={onChange as (entity: Toolset) => void} />
         <Authentication
           toolset={selectedToolset}
