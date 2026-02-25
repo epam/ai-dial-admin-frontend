@@ -6,7 +6,7 @@ import { DialNeutralButton, DialTabs, DialTextInputField } from '@epam/ai-dial-u
 import { IconPlayerPlay } from '@tabler/icons-react';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
 import {
   SaveValidationContextProvider,
@@ -101,7 +101,7 @@ const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
               onChange={(urlTemplate) =>
                 onChangeTestSuite({ ...testSuite, requestTemplate: { ...testSuite.requestTemplate, urlTemplate } })
               }
-              containerClassName={STANDARD_CONTROL_WIDTH}
+              containerClassName="w-full large_tablet:w-[640px] max-w-full"
               invalid={!!urlTemplateError}
               error={urlTemplateError}
             />
