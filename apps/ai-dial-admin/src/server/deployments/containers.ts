@@ -23,8 +23,9 @@ export const CONTAINER_EVENTS_URL = (containerId?: string) =>
 export const CHANGE_IMAGE_ID = `${BASE_CONTAINERS_URL}/change-image`;
 
 export class ContainersApi extends BaseApi {
-  getContainers(type: string, token: Token): Promise<ServerActionResponse> {
-    return this.getAction(`${BASE_CONTAINERS_URL}?type=${type}`, token);
+  getContainers(type: string | undefined, token: Token): Promise<ServerActionResponse> {
+    const url = type ? `${BASE_CONTAINERS_URL}?type=${type}` : BASE_CONTAINERS_URL;
+    return this.getAction(url, token);
   }
 
   getMCPContainers(token: Token): Promise<ServerActionResponse> {

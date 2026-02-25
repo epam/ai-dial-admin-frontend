@@ -43,14 +43,15 @@ import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.share
 interface Props {
   route: ApplicationRoute;
   containersList: Container[];
+  names: string[];
 }
 
-const ContainersList: FC<Props> = ({ route, containersList }) => {
+const ContainersList: FC<Props> = ({ route, containersList, names }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
 
-  const [names, setNames] = useState(containersList.map((container) => container.name || ''));
+  const [duplicateNames, setDuplicateNames] = useState(names);
   const [currentContainer, setCurrentContainer] = useState<Container | null>(null);
   const [modalType, setModalType] = useState<ModalType>();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -141,14 +142,14 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
   const onDuplicate = useCallback(
     (container: Container) => {
       if (currentContainer) {
-        setNames((prev) => [...prev, container.name || '']);
+        setDuplicateNames((prev) => [...prev, container.name || '']);
         duplicateContainer(currentContainer.name || '', container.name || '', container.displayName || '').then(
           (res) => {
             if (res.success) {
               setCurrentContainer(null);
               router.push(getUrnForEntity(route, res.response));
             } else {
-              setNames((prev) => prev.filter((n) => n !== container.name));
+              setDuplicateNames((prev) => prev.filter((n) => n !== container.name));
               showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
             }
           },
@@ -252,7 +253,7 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
         isEnableColumnPanel
         storageKey={route}
       >
-        <HeaderButtons route={route} names={containersList.map((container) => container.name as string) || []} />
+        <HeaderButtons route={route} names={names} />
       </ListEntities>
       {isModalOpen &&
         modalType === ModalType.duplicate &&
@@ -267,7 +268,7 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
             onClose={onCloseModal}
             onApply={onDuplicate}
             container={currentContainer}
-            names={names}
+            names={duplicateNames}
           />,
           document.body,
         )}
