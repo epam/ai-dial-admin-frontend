@@ -80,7 +80,7 @@ const ExecutionLog: FC<Props> = ({ containerId, route, pods }) => {
               />
             </DialCollapsibleSidebar>
           )}
-          <PodView pod={pods.find((pod) => pod.name === activeTab) as Pod} containerId={containerId} />
+          <PodView pod={pods.find((pod) => pod.name === activeTab) ?? pods[0]} containerId={containerId} />
         </div>
       )}
     </div>
