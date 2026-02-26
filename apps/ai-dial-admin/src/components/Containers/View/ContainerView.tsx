@@ -114,22 +114,34 @@ const ContainerView: FC<Props> = ({ container, route, createEntity, createEntity
     if (selectedContainer.name) {
       const eventSource = new EventSource(`/api/events?id=${selectedContainer.name}`);
 
-      eventSource.addEventListener('event', (event) => {
-        const data = JSON.parse(event.data) as KubEvent;
-        if (data.eventType === KubEventType.WARNING) {
-          setTabs((prev) => {
-            return prev.map((tab) => {
-              if (tab.id === EntityViewTab.Events) {
-                return { ...tab, invalid: true };
-              }
-              return tab;
-            });
-          });
+      const handleEvent = (event: MessageEvent) => {
+        try {
+          const data = JSON.parse(event.data) as KubEvent;
+          if (data.eventType === KubEventType.WARNING) {
+            setTabs((prev) => prev.map((tab) => (tab.id === EntityViewTab.Events ? { ...tab, invalid: true } : tab)));
+          }
+          setEvents((prev) => [...prev, data].sort((a, b) => b.firstTimestamp - a.firstTimestamp));
+        } catch (e) {
+          console.error('Failed to parse SSE event:', e);
         }
-        setEvents((prev) => [...prev, data].sort((a, b) => b.firstTimestamp - a.firstTimestamp));
-      });
+      };
+
+      const handleError = () => {
+        console.error('EventSource error: events stream connection failed');
+      };
+
+      const handleOpen = () => {
+        setEvents([]);
+      };
+
+      eventSource.addEventListener('event', handleEvent);
+      eventSource.addEventListener('error', handleError);
+      eventSource.addEventListener('open', handleOpen);
 
       return () => {
+        eventSource.removeEventListener('event', handleEvent);
+        eventSource.removeEventListener('error', handleError);
+        eventSource.removeEventListener('open', handleOpen);
         eventSource.close();
       };
     }
