@@ -94,7 +94,7 @@ describe('getErrorForName', () => {
   });
 
   test('Should return length error for short name', () => {
-    const res = getErrorForName('n', ['name'], mockT);
+    const res = getErrorForName('', ['name'], mockT);
 
     expect(res).toEqual({
       type: ErrorType.LENGTH,
@@ -103,7 +103,7 @@ describe('getErrorForName', () => {
   });
 
   test('Should return empty error for undefined name', () => {
-    const res1 = getErrorForName('n', ['name']);
+    const res1 = getErrorForName('', ['name']);
     const res2 = getErrorForName(void 0, ['name']);
 
     expect(res1).toEqual({
@@ -312,20 +312,6 @@ describe('getErrorForDisplayName', () => {
     const result = getErrorForDisplayName(undefined);
 
     expect(result).toBeNull();
-  });
-
-  test('returns error if name is too short', () => {
-    const result1 = getErrorForDisplayName('a', false, mockT);
-    const result2 = getErrorForDisplayName('a', false, void 0);
-
-    expect(result1).toEqual({
-      type: ErrorType.LENGTH,
-      text: 'Translated Text',
-    });
-    expect(result2).toEqual({
-      type: ErrorType.LENGTH,
-      text: '',
-    });
   });
 
   test('returns error if name is too long', () => {

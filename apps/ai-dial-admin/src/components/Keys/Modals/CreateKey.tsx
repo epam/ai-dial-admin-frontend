@@ -4,16 +4,20 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { createKey } from '@/src/app/[lang]/keys/actions';
 import KeyProperties from '@/src/components/Keys/View/Properties/Properties';
-import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
+import {
+  getCreateEntityTitle,
+  getCreateNotificationDescription,
+  getCreateNotificationTitle,
+} from '@/src/utils/entities/create-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   isModalOpen: boolean;
@@ -78,7 +82,7 @@ const CreateKey: FC<Props> = ({ isModalOpen, names, keys, onClose }) => {
   return (
     <DialFormPopup
       onClose={onClose}
-      header={t(CreateI18nKey.Key)}
+      header={getCreateEntityTitle(ApplicationRoute.Keys, t)}
       portalId="CreateKey"
       open={isModalOpen}
       onSubmit={onCreate}
