@@ -136,7 +136,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
                 elementId="containers"
                 emptyValueText={t(EntitiesI18nKey.NoContainers)}
                 disabled={!featureFlags.deploymentsEnabled}
-                error={error}
+                errorText={error}
               >
                 <SelectContainerModal
                   selectedId={entity.source?.containerId}
