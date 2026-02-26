@@ -29,7 +29,7 @@ export const SelectWidget: FC<WidgetProps> = ({
 
   return (
     <div className="flex flex-col w-full bg-layer-2 rounded p-[18px]">
-      {label && <WidgetHeader title={label} defaultHeader={true} description={schema.description} />}
+      {label && <WidgetHeader title={label} defaultHeader={true} caption={schema.description} />}
       <DialSelect
         disabled={readonly}
         options={enumOptions?.map((o) => ({ ...o, value: o.value.toString() })) || []}

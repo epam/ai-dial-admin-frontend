@@ -30,16 +30,15 @@ export const URLWidget: FC<WidgetProps> = ({
 
   return (
     <div className="flex flex-col w-full bg-layer-2 p-[18px] rounded">
-      <WidgetHeader label={label} title={schema.title} description={schema.description} />
+      <WidgetHeader label={label} title={schema.title} caption={schema.description} required={required} />
       <DialInput
         containerClassName="flex w-full max-w-[600px]"
         id={id}
         disabled={disabled}
         onChange={onChange}
         placeholder={placeholder}
-        required={required}
         invalid={invalid}
-        errorText={errorText}
+        error={errorText}
         value={value}
       />
     </div>

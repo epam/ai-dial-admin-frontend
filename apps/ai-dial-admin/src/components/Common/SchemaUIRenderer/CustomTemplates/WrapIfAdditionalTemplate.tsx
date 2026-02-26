@@ -27,7 +27,7 @@ export const WrapIfAdditionalTemplate: FC<WrapIfAdditionalTemplateProps> = ({
           <DialInput
             containerClassName="flex w-full bg-layer-2"
             id={id}
-            disabled={disabled}
+            disabled={disabled || readonly}
             onBlur={({ target }) => onKeyRename(target.value)}
             defaultValue={label}
           />

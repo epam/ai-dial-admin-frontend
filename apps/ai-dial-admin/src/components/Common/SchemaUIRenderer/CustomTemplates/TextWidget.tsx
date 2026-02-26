@@ -34,14 +34,13 @@ export const TextWidget: FC<WidgetProps> = ({
       disabled={disabled}
       onChange={onChange}
       placeholder={placeholder}
-      required={required}
       invalid={invalid}
-      errorText={errorText}
+      error={errorText}
       value={value}
     />
   ) : (
     <div className="flex flex-col w-full bg-layer-2 rounded p-[18px]">
-      <WidgetHeader label={label} title={schema.title} description={schema.description} />
+      <WidgetHeader required={required} label={label} title={schema.title} caption={schema.description} />
       {schema.type === 'string' && (
         <DialInput
           containerClassName="flex w-full max-w-[600px]"
@@ -49,9 +48,8 @@ export const TextWidget: FC<WidgetProps> = ({
           disabled={disabled}
           onChange={onChange}
           placeholder={placeholder}
-          required={required}
           invalid={invalid}
-          errorText={errorText}
+          error={errorText}
           value={value}
         />
       )}
@@ -61,9 +59,8 @@ export const TextWidget: FC<WidgetProps> = ({
           id={id}
           value={value}
           placeholder={placeholder}
-          required={required}
           invalid={invalid}
-          errorText={errorText}
+          error={errorText}
           onChange={onChange}
         />
       )}
