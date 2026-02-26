@@ -6,6 +6,7 @@ import { IconReplace } from '@tabler/icons-react';
 
 import RulesCompare from '@/src/components/Publications/Popup/RulesCompare';
 import RulesItem from '@/src/components/Rules/Item/RulesItem';
+import { ROOT_FOLDER } from '@/src/constants/file';
 import { CompareI18nKey, FoldersI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
@@ -50,36 +51,40 @@ const PublicationPermissions = <T extends Publication>({
   return (
     <div className="flex flex-col gap-8 min-h-0">
       {isPermissionsChanged && warning}
-      <RulesItem
-        rules={selectedPublication.rules || []}
-        indentIndex={0}
-        isAlwaysToggled={true}
-        folderName={t(FoldersI18nKey.Permissions)}
-        folderDescription={selectedPublication.folderId}
-        setLastRuleHeight={() => void 0}
-        onChange={handleRulesChange}
-      >
-        <div className="flex gap-4">
-          {isPermissionsChanged && (
-            <DialNeutralButton
-              label={t(CompareI18nKey.CompareChanges)}
-              iconBefore={<IconReplace {...BASE_BUTTON_ICON_PROPS} />}
-              onClick={() => setIsCompareModalOpen(true)}
-            />
-          )}
-        </div>
+      {selectedPublication.folderId === `${ROOT_FOLDER}/` ? (
+        <div>{t(FoldersI18nKey.AllRules)}</div>
+      ) : (
+        <RulesItem
+          rules={selectedPublication.rules || []}
+          indentIndex={0}
+          isAlwaysToggled={true}
+          folderName={t(FoldersI18nKey.Permissions)}
+          folderDescription={selectedPublication.folderId}
+          setLastRuleHeight={() => void 0}
+          onChange={handleRulesChange}
+        >
+          <div className="flex gap-4">
+            {isPermissionsChanged && (
+              <DialNeutralButton
+                label={t(CompareI18nKey.CompareChanges)}
+                iconBefore={<IconReplace {...BASE_BUTTON_ICON_PROPS} />}
+                onClick={() => setIsCompareModalOpen(true)}
+              />
+            )}
+          </div>
 
-        {isCompareModalOpen &&
-          createPortal(
-            <RulesCompare
-              rules={selectedPublication.rules || []}
-              compareRules={currentRules}
-              isOpen={isCompareModalOpen}
-              onClose={() => setIsCompareModalOpen(false)}
-            />,
-            document.body,
-          )}
-      </RulesItem>
+          {isCompareModalOpen &&
+            createPortal(
+              <RulesCompare
+                rules={selectedPublication.rules || []}
+                compareRules={currentRules}
+                isOpen={isCompareModalOpen}
+                onClose={() => setIsCompareModalOpen(false)}
+              />,
+              document.body,
+            )}
+        </RulesItem>
+      )}
     </div>
   );
 };

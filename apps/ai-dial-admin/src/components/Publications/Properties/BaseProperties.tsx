@@ -1,17 +1,18 @@
-import { DialTextInputField } from '@epam/ai-dial-ui-kit';
 import { FC, useEffect, useMemo } from 'react';
+
+import { DialTextInputField } from '@epam/ai-dial-ui-kit';
 
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
-import { FilePublication } from '@/src/models/dial/publications';
-import { getControlClassName } from '@/src/utils/entities/view';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { useI18n } from '@/src/locales/client';
+import { Publication } from '@/src/models/dial/publications';
+import { getControlClassName } from '@/src/utils/entities/view';
 
 interface Props {
-  publication: FilePublication;
-  onChange?: (publication: FilePublication) => void;
+  publication: Publication;
+  onChange?: (publication: Publication) => void;
   getContext: () => AssetsFolderContext;
 }
 

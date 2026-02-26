@@ -3,8 +3,10 @@ import { FC } from 'react';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import IconControl from '@/src/components/BaseControls/Icon';
+import IdControl from '@/src/components/BaseControls/Id/Id';
 import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
 import TopicsControl from '@/src/components/BaseControls/Topics';
+import VersionControl from '@/src/components/BaseControls/Version';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import Defaults from '@/src/components/Defaults/Defaults';
 import EntityAttachments from '@/src/components/EntityMainProperties/EntityAttachments/EntityAttachments';
@@ -21,32 +23,47 @@ interface Props {
   asset: DeploymentAsset;
   runners?: DialApplicationScheme[];
   onChange: (asset: DeploymentAsset) => void;
+  isPublication?: boolean;
 }
 
-const ApplicationAssetProperties: FC<Props> = ({ asset, runners, onChange }) => {
+const ApplicationAssetProperties: FC<Props> = ({ asset, runners, onChange, isPublication }) => {
   const t = useI18n();
 
   return (
     <div className="flex flex-col gap-y-8">
+      {isPublication && (
+        <IdControl entity={asset} onChangeEntity={onChange} checkEmptySymbols={false} isFullWidth={false} />
+      )}
       <DisplayNameControl
         displayName={asset.displayName}
         required={true}
         isFullWidth={false}
         onChange={(displayName) => onChange({ ...asset, displayName })}
       />
+      {isPublication && (
+        <VersionControl
+          elementContainerClassName="w-[175px]"
+          version={asset.version}
+          onChange={(version?: string) =>
+            onChange?.({ ...asset, version: version || '', displayVersion: version || '' })
+          }
+        />
+      )}
       <DescriptionControl entity={asset} onChangeEntity={onChange} isFullWidth={false} />
 
       <IconControl iconUrl={asset.iconUrl} onChange={(icon) => onChange({ ...asset, iconUrl: icon })} />
       <TopicsControl entity={asset} onChange={onChange} view={ApplicationRoute.AssetsApplications} />
 
-      <FilePath
-        value={asset.folderId}
-        label={t(EntitiesI18nKey.FolderStorage)}
-        modalTitle={t(BasicI18nKey.MoveToFolder)}
-        placeholder={t(EntityPlaceholdersI18nKey.Path)}
-        onChange={(folderId) => onChange?.({ ...asset, folderId })}
-        context={useAppsFolder}
-      />
+      {!isPublication && (
+        <FilePath
+          value={asset.folderId}
+          label={t(EntitiesI18nKey.FolderStorage)}
+          modalTitle={t(BasicI18nKey.MoveToFolder)}
+          placeholder={t(EntityPlaceholdersI18nKey.Path)}
+          onChange={(folderId) => onChange?.({ ...asset, folderId })}
+          context={useAppsFolder}
+        />
+      )}
 
       <ApplicationSource
         entity={asset}
