@@ -27,6 +27,7 @@ const EntityAudit: FC<Props> = ({ entity, view }) => {
   const { featureFlags } = useAppContext();
   const tabs = getAuditTabs(t, featureFlags, view);
   const [activeTab, setActiveTab] = useState(tabs[0].id);
+
   const [timeFilter, setTimeFilter] = useState<string | TimeRange>(DEFAULT_TIME_PERIOD);
   const [isCustomRange, setIsCustomRange] = useState(false);
 
