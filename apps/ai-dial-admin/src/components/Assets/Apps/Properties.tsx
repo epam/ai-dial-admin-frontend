@@ -42,7 +42,7 @@ const ApplicationAssetProperties: FC<Props> = ({ asset, runners, onChange, isPub
       />
       {isPublication && (
         <VersionControl
-          containerClassName="w-[175px]"
+          className="w-[175px]"
           version={asset.version}
           onChange={(version?: string) =>
             onChange?.({ ...asset, version: version || '', displayVersion: version || '' })
