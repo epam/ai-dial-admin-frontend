@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { cloneDeep } from 'lodash';
@@ -33,13 +33,12 @@ interface Props {
 const RouteView: FC<Props> = ({ originalRoute, etag, names, roles }) => {
   const t = useI18n();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { dispatch } = useSaveValidationContext();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
   const tabs = getRouteTabs(t);
 
-  const [activeTab, setActiveTab] = useState((searchParams.get('tab') as EntityViewTab) || EntityViewTab.Properties);
+  const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedRoute, setSelectedRoute] = useState(cloneDeep(originalRoute));
   const [isChanged, setIsChanged] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);

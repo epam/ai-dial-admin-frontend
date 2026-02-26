@@ -122,47 +122,51 @@ describe('Activity Audit List utils :: groupByDay', () => {
 
 describe('getAuditActivityHref', () => {
   test('returns correct href for entity type', () => {
-    let href = getAuditActivityHref(ActivityAuditResourceType.MODEL, '1', '1');
-    expect(href).toBe('/models/1/1');
+    const mockEntity = { name: 'entity', $id: 'entity' };
 
-    href = getAuditActivityHref(ActivityAuditResourceType.APPLICATION, '1', '1');
-    expect(href).toBe('/applications/1/1');
+    let href = getAuditActivityHref(mockEntity, ActivityAuditResourceType.MODEL, '1');
+    expect(href).toBe('/models/entity/1');
 
-    href = getAuditActivityHref(ActivityAuditResourceType.TOOLSET, '1', '1');
-    expect(href).toBe('/toolsets/1/1');
+    href = getAuditActivityHref(mockEntity, ActivityAuditResourceType.APPLICATION, '1');
+    expect(href).toBe('/applications/entity/1');
 
-    href = getAuditActivityHref(ActivityAuditResourceType.INTERCEPTOR, '1', '1');
-    expect(href).toBe('/interceptors/1/1');
+    href = getAuditActivityHref(mockEntity, ActivityAuditResourceType.TOOLSET, '1');
+    expect(href).toBe('/toolsets/entity/1');
 
-    href = getAuditActivityHref(ActivityAuditResourceType.ROUTE, '1', '1');
-    expect(href).toBe('/routes/1/1');
+    href = getAuditActivityHref(mockEntity, ActivityAuditResourceType.INTERCEPTOR, '1');
+    expect(href).toBe('/interceptors/entity/1');
 
-    href = getAuditActivityHref(ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA, '1', '1');
-    expect(href).toBe('/application-runners/1/1');
+    href = getAuditActivityHref(mockEntity, ActivityAuditResourceType.ROUTE, '1');
+    expect(href).toBe('/routes/entity/1');
 
-    href = getAuditActivityHref(ActivityAuditResourceType.INTERCEPTOR_TEMPLATE, '1', '1');
-    expect(href).toBe('/interceptor-templates/1/1');
+    href = getAuditActivityHref(mockEntity, ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA, '1');
+    expect(href).toBe('/application-runners/entity/1');
 
-    href = getAuditActivityHref(ActivityAuditResourceType.ADAPTER, '1', '1');
-    expect(href).toBe('/adapters/1/1');
+    href = getAuditActivityHref(mockEntity, ActivityAuditResourceType.INTERCEPTOR_TEMPLATE, '1');
+    expect(href).toBe('/interceptor-templates/entity/1');
 
-    href = getAuditActivityHref(ActivityAuditResourceType.ROLE, '1', '1');
-    expect(href).toBe('/roles/1/1');
+    href = getAuditActivityHref(mockEntity, ActivityAuditResourceType.ADAPTER, '1');
+    expect(href).toBe('/adapters/entity/1');
 
-    href = getAuditActivityHref(ActivityAuditResourceType.KEY, '1', '1');
-    expect(href).toBe('/keys/1/1');
+    href = getAuditActivityHref(mockEntity, ActivityAuditResourceType.ROLE, '1');
+    expect(href).toBe('/roles/entity/1');
+
+    href = getAuditActivityHref(mockEntity, ActivityAuditResourceType.KEY, '1');
+    expect(href).toBe('/keys/entity/1');
   });
 
   test('returns empty href for unknown entity type', () => {
-    const href = getAuditActivityHref(undefined, '1', '1');
+    const mockEntity = { name: 'entity' };
+    const href = getAuditActivityHref(mockEntity, undefined, '1');
     expect(href).toBe('');
   });
 
   test('returns empty href for empty resourceId or empty activityId', () => {
-    const href = getAuditActivityHref(ActivityAuditResourceType.MODEL, '', '1');
+    const mockEntity = { name: 'entity' };
+    let href = getAuditActivityHref(undefined, ActivityAuditResourceType.MODEL, '1');
     expect(href).toBe('');
 
-    const href2 = getAuditActivityHref(ActivityAuditResourceType.MODEL, '1', '');
-    expect(href2).toBe('');
+    href = getAuditActivityHref(mockEntity, ActivityAuditResourceType.MODEL, '');
+    expect(href).toBe('');
   });
 });

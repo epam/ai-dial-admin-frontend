@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -48,7 +48,6 @@ interface Props {
 const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...props }) => {
   const t = useI18n();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
   const getReqRef = useRef(useProtectedRequest());
@@ -64,7 +63,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
     },
   ];
 
-  const [activeTab, setActiveTab] = useState((searchParams.get('tab') as EntityViewTab) || EntityViewTab.Properties);
+  const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedRunner, setSelectedRunner] = useState(cloneDeep(originalScheme));
   const [isChanged, setIsChanged] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);

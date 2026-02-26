@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -39,12 +39,11 @@ interface Props {
 const KeyView: FC<Props> = ({ originalKey, etag, ...props }) => {
   const t = useI18n();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
   const tabs = getKeyTabs(t);
 
-  const [activeTab, setActiveTab] = useState((searchParams.get('tab') as EntityViewTab) || EntityViewTab.Properties);
+  const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [isOpenConfirmModal, setIsOpenConfirmModal] = useState(false);
   const [isRotateModalOpen, setIsRotateModalOpen] = useState(false);
   const [selectedKey, setSelectedKey] = useState(cloneDeep(originalKey));

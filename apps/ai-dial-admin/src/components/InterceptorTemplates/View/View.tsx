@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -37,11 +37,10 @@ interface Props {
 const View: FC<Props> = ({ etag, template, names }) => {
   const t = useI18n();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
 
-  const [activeTab, setActiveTab] = useState((searchParams.get('tab') as EntityViewTab) || EntityViewTab.Properties);
+  const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [isChanged, setIsChanged] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(cloneDeep(template));
   const [isModalOpen, setIsModalOpen] = useState(false);

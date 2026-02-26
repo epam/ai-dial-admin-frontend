@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { cloneDeep } from 'lodash';
@@ -41,13 +41,12 @@ const View: FC<Props> = ({ originalModel, etag, ...props }) => {
 
   const tabs = getModelsTabs(t);
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { showNotification } = useNotification();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType>();
 
-  const [activeTab, setActiveTab] = useState((searchParams.get('tab') as EntityViewTab) || EntityViewTab.Properties);
+  const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [nextTab, setNextTab] = useState<string>();
   const [selectedModel, setSelectedModel] = useState(cloneDeep(originalModel));
   const [isChanged, setIsChanged] = useState(false);

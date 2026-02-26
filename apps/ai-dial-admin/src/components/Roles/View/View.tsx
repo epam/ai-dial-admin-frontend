@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { cloneDeep } from 'lodash';
@@ -41,14 +41,13 @@ interface Props {
 const RolesView: FC<Props> = ({ originalRole, etag, keys, ...props }) => {
   const t = useI18n();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const getReqRef = useRef(useProtectedRequest());
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
 
   const tabs = getRoleTabs(t);
 
-  const [activeTab, setActiveTab] = useState((searchParams.get('tab') as EntityViewTab) || EntityViewTab.Properties);
+  const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedRole, setSelectedRole] = useState(cloneDeep(originalRole));
   const [isChanged, setIsChanged] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);

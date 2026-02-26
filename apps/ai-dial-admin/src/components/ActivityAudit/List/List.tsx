@@ -163,11 +163,7 @@ const ActivityAuditList: FC<Props> = ({
     onCellClicked: (e) => {
       if (e.colDef.field !== ACTIONS_COLUMN_CEL_ID) {
         if (entity) {
-          const href = getAuditActivityHref(
-            entityType as ActivityAuditResourceType,
-            e.data.resourceId,
-            e.data.activityId,
-          );
+          const href = getAuditActivityHref(entity, entityType as ActivityAuditResourceType, e.data.activityId);
           if (href) {
             router.push(href);
           }
