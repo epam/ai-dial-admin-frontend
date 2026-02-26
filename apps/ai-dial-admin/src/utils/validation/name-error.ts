@@ -47,6 +47,7 @@ export const getErrorForName = (
   checkForbiddenChars = true,
   isDisplayName = false,
   isDeploymentId = false,
+  checkEmptySymbols = true,
 ) => {
   const isIncludesName = name && names?.includes(name);
   if (isIncludesName || isUniqueNameError) {
@@ -86,7 +87,7 @@ export const getErrorForName = (
         text: t ? tWithArgs(ErrorI18nKey.ForbiddenChars, { list: FORBIDDEN_NAME_SYMBOLS.join(' ') }) : '',
       };
     }
-    if (name?.includes(' ')) {
+    if (checkEmptySymbols && name?.includes(' ')) {
       return {
         type: ErrorType.INVALID,
         text: t ? t(ErrorI18nKey.ContainSpace) : '',

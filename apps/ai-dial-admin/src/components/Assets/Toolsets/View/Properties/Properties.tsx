@@ -5,6 +5,7 @@ import { DialSwitch } from '@epam/ai-dial-ui-kit';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import IconControl from '@/src/components/BaseControls/Icon';
+import IdControl from '@/src/components/BaseControls/Id/Id';
 import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
 import TopicsControl from '@/src/components/BaseControls/Topics';
 import VersionControl from '@/src/components/BaseControls/Version';
@@ -29,58 +30,59 @@ const Properties: FC<Props> = ({ selectedToolset, onChange, isPublication }) => 
 
   return (
     <div className="h-full flex flex-col w-full gap-y-8">
-      <div className="flex flex-col gap-y-8">
-        <DisplayNameControl
-          displayName={selectedToolset.displayName}
-          required={true}
-          isFullWidth={false}
-          onChange={(displayName) => onChange({ ...selectedToolset, displayName })}
+      {isPublication && (
+        <IdControl entity={selectedToolset} onChangeEntity={onChange} checkEmptySymbols={false} isFullWidth={false} />
+      )}
+      <DisplayNameControl
+        displayName={selectedToolset.displayName}
+        required={true}
+        isFullWidth={false}
+        onChange={(displayName) => onChange({ ...selectedToolset, displayName })}
+      />
+      {isPublication && (
+        <VersionControl
+          elementContainerClassName="w-[175px]"
+          version={selectedToolset.version}
+          onChange={(version?: string) =>
+            onChange?.({ ...selectedToolset, version: version || '', displayVersion: version || '' })
+          }
         />
-        {isPublication && (
-          <VersionControl
-            elementContainerClassName="w-[175px]"
-            version={selectedToolset.version}
-            onChange={(version?: string) =>
-              onChange?.({ ...selectedToolset, version: version || '', displayVersion: version || '' })
-            }
-          />
-        )}
-        <DescriptionControl entity={selectedToolset} onChangeEntity={onChange} isFullWidth={false} />
+      )}
+      <DescriptionControl entity={selectedToolset} onChangeEntity={onChange} isFullWidth={false} />
 
-        <IconControl
-          iconUrl={selectedToolset.iconUrl}
-          onChange={(icon) => onChange({ ...selectedToolset, iconUrl: icon })}
-        />
-        <TopicsControl entity={selectedToolset} onChange={onChange} view={ApplicationRoute.AssetsToolsets} />
+      <IconControl
+        iconUrl={selectedToolset.iconUrl}
+        onChange={(icon) => onChange({ ...selectedToolset, iconUrl: icon })}
+      />
+      <TopicsControl entity={selectedToolset} onChange={onChange} view={ApplicationRoute.AssetsToolsets} />
 
-        {!isPublication && (
-          <FilePath
-            value={selectedToolset.folderId}
-            label={t(EntitiesI18nKey.FolderStorage)}
-            modalTitle={t(BasicI18nKey.MoveToFolder)}
-            placeholder={t(EntityPlaceholdersI18nKey.Path)}
-            onChange={(folderId) => onChange?.({ ...selectedToolset, folderId })}
-            context={useToolsetFolder}
-          />
-        )}
-        <ToolsetEndpoint entity={selectedToolset} onChange={onChange as (entity: Toolset) => void} />
-        <Authentication
-          toolset={selectedToolset}
-          view={ApplicationRoute.AssetsToolsets}
-          onChange={onChange as (entity: Toolset) => void}
+      {!isPublication && (
+        <FilePath
+          value={selectedToolset.folderId}
+          label={t(EntitiesI18nKey.FolderStorage)}
+          modalTitle={t(BasicI18nKey.MoveToFolder)}
+          placeholder={t(EntityPlaceholdersI18nKey.Path)}
+          onChange={(folderId) => onChange?.({ ...selectedToolset, folderId })}
+          context={useToolsetFolder}
         />
-        <DialSwitch
-          isOn={selectedToolset.forwardPerRequestKey}
-          label={t(EntityFieldsI18nKey.forwardPerRequestKey)}
-          switchId="forwardPerRequestKey"
-          disabled={selectedToolset.authSettings?.authenticationType === ToolsetAuthType.API_KEY}
-          onChange={(value: boolean) => {
-            onChange({ ...selectedToolset, forwardPerRequestKey: value });
-          }}
-        />
+      )}
+      <ToolsetEndpoint entity={selectedToolset} onChange={onChange as (entity: Toolset) => void} />
+      <Authentication
+        toolset={selectedToolset}
+        view={ApplicationRoute.AssetsToolsets}
+        onChange={onChange as (entity: Toolset) => void}
+      />
+      <DialSwitch
+        isOn={selectedToolset.forwardPerRequestKey}
+        label={t(EntityFieldsI18nKey.forwardPerRequestKey)}
+        switchId="forwardPerRequestKey"
+        disabled={selectedToolset.authSettings?.authenticationType === ToolsetAuthType.API_KEY}
+        onChange={(value: boolean) => {
+          onChange({ ...selectedToolset, forwardPerRequestKey: value });
+        }}
+      />
 
-        <MaxRetryAttempts entity={selectedToolset} onChangeEntity={onChange} />
-      </div>
+      <MaxRetryAttempts entity={selectedToolset} onChangeEntity={onChange} />
     </div>
   );
 };

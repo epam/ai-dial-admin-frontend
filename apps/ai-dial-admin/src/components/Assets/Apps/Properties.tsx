@@ -3,6 +3,7 @@ import { FC } from 'react';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import IconControl from '@/src/components/BaseControls/Icon';
+import IdControl from '@/src/components/BaseControls/Id/Id';
 import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
 import TopicsControl from '@/src/components/BaseControls/Topics';
 import VersionControl from '@/src/components/BaseControls/Version';
@@ -30,6 +31,9 @@ const ApplicationAssetProperties: FC<Props> = ({ asset, runners, onChange, isPub
 
   return (
     <div className="flex flex-col gap-y-8">
+      {isPublication && (
+        <IdControl entity={asset} onChangeEntity={onChange} checkEmptySymbols={false} isFullWidth={false} />
+      )}
       <DisplayNameControl
         displayName={asset.displayName}
         required={true}
