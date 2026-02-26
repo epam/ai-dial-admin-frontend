@@ -1,10 +1,11 @@
 import { DialInput } from '@epam/ai-dial-ui-kit';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
+import { getControlClassName } from '@/src/utils/entities/view';
 import { getErrorForName, getErrorForUrlId } from '@/src/utils/validation/name-error';
 
 interface Props<T> {
@@ -17,6 +18,8 @@ interface Props<T> {
   isDeploymentId?: boolean;
   disabled?: boolean;
   onChangeEntity?: (entity: T) => void;
+  checkEmptySymbols?: boolean;
+  isFullWidth?: boolean;
 }
 
 const IdControl = <T extends { name?: string }>({
@@ -29,20 +32,23 @@ const IdControl = <T extends { name?: string }>({
   isDeploymentId,
   disabled,
   onChangeEntity,
+  checkEmptySymbols,
+  isFullWidth = true,
 }: Props<T>) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
   const [nameError, setNameError] = useState<FieldError | null>(null);
+  const containerClassName = useMemo(() => getControlClassName(isFullWidth), [isFullWidth]);
 
   const validateName = useCallback(
     (name?: string) => {
       const error = isUrlId
         ? getErrorForUrlId(name, names, t)
-        : getErrorForName(name, names, t, isUniqueNameError, true, false, isDeploymentId);
+        : getErrorForName(name, names, t, isUniqueNameError, true, false, isDeploymentId, checkEmptySymbols);
       setNameError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !error });
     },
-    [dispatch, isDeploymentId, isUniqueNameError, isUrlId, names, t],
+    [dispatch, isDeploymentId, isUniqueNameError, isUrlId, names, t, checkEmptySymbols],
   );
 
   const onChangeName = useCallback(
@@ -70,6 +76,7 @@ const IdControl = <T extends { name?: string }>({
       error={nameError?.text}
       invalid={!!nameError}
       disabled={disabled}
+      containerClassName={containerClassName}
     />
   );
 };

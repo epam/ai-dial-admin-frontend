@@ -14,6 +14,7 @@ export interface Publication {
   folderId: string;
   rules?: DialRule[];
   resourceIssues?: ResourceIssue[];
+  files?: PublicationFile[];
 }
 
 export interface PublicationEntity {

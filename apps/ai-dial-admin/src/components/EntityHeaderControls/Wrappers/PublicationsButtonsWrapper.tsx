@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -14,6 +15,7 @@ import {
 import { IconCircleX, IconTrashX, IconWorldOff, IconWorldShare } from '@tabler/icons-react';
 import classNames from 'classnames';
 
+import { approvePublication, declinePublication, deletePublication } from '@/src/app/actions/publications';
 import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
 import { showEditorErrorNotifications } from '@/src/components/EntityHeaderControls/Buttons/utils';
 import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
@@ -32,6 +34,7 @@ import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { ActionType, Publication } from '@/src/models/dial/publications';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getErrorNotification } from '@/src/utils/notification';
 import { getModalsTranslations, isAddAction } from '@/src/utils/publications';
 
 export interface PublicationsButtonsWrapperProps<T> {
@@ -40,10 +43,6 @@ export interface PublicationsButtonsWrapperProps<T> {
   jsonConfiguration?: JsonConfiguration;
   entity: T;
   isOnlyDeleteAvailable?: boolean;
-
-  onApprove: () => void;
-  onDecline: (comment: string) => void;
-  onDelete: () => void;
 
   onDiscard: () => void;
   onSave: () => void;
@@ -55,9 +54,6 @@ const PublicationsButtonsWrapper = <T extends Publication>({
   jsonConfiguration,
   isChanged,
   isOnlyDeleteAvailable,
-  onApprove,
-  onDecline,
-  onDelete,
   onDiscard,
   onSave,
 }: PublicationsButtonsWrapperProps<T>) => {
@@ -65,6 +61,7 @@ const PublicationsButtonsWrapper = <T extends Publication>({
   const isEditorEnabled = jsonConfiguration?.isEditorEnabled;
   const { isValid, dispatch, jsonErrors } = useSaveValidationContext();
   const { showNotification } = useNotification();
+  const router = useRouter();
 
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
@@ -86,6 +83,39 @@ const PublicationsButtonsWrapper = <T extends Publication>({
     const value = declineReason.trim();
     return !value || value.length < 15 || value.length > 255;
   }, [declineReason]);
+
+  const onApprove = useCallback(() => {
+    approvePublication(entity.path).then((res) => {
+      if (res.success) {
+        router.push(view);
+      } else {
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+      }
+    });
+  }, [entity.path, router, showNotification, view]);
+
+  const onDecline = useCallback(
+    (comment: string) => {
+      declinePublication(entity.path, comment).then((res) => {
+        if (res.success) {
+          router.push(view);
+        } else {
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+        }
+      });
+    },
+    [entity.path, router, showNotification, view],
+  );
+
+  const onDelete = useCallback(() => {
+    deletePublication(entity.path).then((res) => {
+      if (res.success) {
+        router.push(view);
+      } else {
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+      }
+    });
+  }, [entity.path, router, showNotification, view]);
 
   useEffect(() => {
     setKeys(getModalsTranslations(view, action));

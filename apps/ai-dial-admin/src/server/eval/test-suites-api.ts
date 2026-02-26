@@ -83,6 +83,10 @@ export class TestSuitesApi extends BaseApi {
     return this.deleteAction(TEST_CASE_URL(id, testCaseId), token);
   }
 
+  updateTestCases(id: string, testCases: TestCase[], token: Token): Promise<ServerActionResponse> {
+    return this.putAction(TEST_CASES_URL(id), testCases, token);
+  }
+
   createTestSuite(suite: TestSuite, token: Token): Promise<ServerActionResponse> {
     return this.postAction(TEST_SUITES_URL, suite, token);
   }

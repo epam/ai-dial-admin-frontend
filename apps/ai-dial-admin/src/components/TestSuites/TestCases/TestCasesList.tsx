@@ -1,14 +1,21 @@
 'use client';
 
-import { FC, MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, MouseEvent, RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
+import {
+  CellValueChangedEvent,
+  GridApi,
+  GridOptions,
+  GridReadyEvent,
+  IDatasource,
+  IGetRowsParams,
+} from 'ag-grid-community';
 
 import { getTestCases, importTestCase, removeTestCase } from '@/src/app/[lang]/test-suites/actions';
 import ListEntities from '@/src/components/ListView/List';
 import TryOut from '@/src/components/TestSuites/RequestTemplate/components/TryOut';
 import { getTestCaseColumns } from '@/src/components/TestSuites/utils/columns';
-import { getTestCaseGridData } from '@/src/components/TestSuites/utils/data';
+import { getTestCaseGridData, rowToTestCase } from '@/src/components/TestSuites/utils/data';
 import { infiniteGridOptions, ONE_ACTION_COLUMN, PAGE_SIZE } from '@/src/constants/ag-grid';
 import { getRemoveOperation, getTryOutOperation } from '@/src/constants/grid-columns/actions';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -22,12 +29,19 @@ import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import HeaderButtons from './Header';
 
+export interface TestCasesActions {
+  getDirtyTestCases: () => TestCase[];
+  clearDirtyAndRefresh: () => void;
+}
+
 interface Props {
   selectedTestSuite: TestSuite;
   onChange: (testSuite: TestSuite) => void;
+  testCasesActionsRef?: RefObject<TestCasesActions | null>;
+  onDirtyChange?: (hasDirty: boolean) => void;
 }
 
-const TestCasesList: FC<Props> = ({ selectedTestSuite }) => {
+const TestCasesList: FC<Props> = ({ selectedTestSuite, testCasesActionsRef, onDirtyChange }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
   const { sidebar, sidebarOpen, toggleSidebar } = useAppContext();
@@ -35,9 +49,21 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite }) => {
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const isInitialLoadRef = useRef(false);
   const onRemoveCaseRef = useRef<(data?: TestCase) => void>(() => {});
+  const dirtyRowsRef = useRef<Map<string, Record<string, unknown>>>(new Map());
+
+  const onCellValueChanged = useCallback(
+    (event: CellValueChangedEvent) => {
+      const col = event.column?.getColId();
+      if (col === 'action-tryout' || col === 'action-remove' || !event.data?.id) return;
+      dirtyRowsRef.current.set(String(event.data.id), { ...event.data } as Record<string, unknown>);
+      onDirtyChange?.(true);
+    },
+    [onDirtyChange],
+  );
 
   const gridOptions: GridOptions = {
     ...infiniteGridOptions,
+    onCellValueChanged,
   };
 
   const stableOnRemoveCase = useCallback((data?: TestCase) => {
@@ -165,6 +191,27 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite }) => {
     },
     [refreshGrid, selectedTestSuite.id, showNotification, t],
   );
+
+  const getDirtyTestCases = useCallback((): TestCase[] => {
+    return Array.from(dirtyRowsRef.current.values()).map((row) => rowToTestCase(row));
+  }, []);
+
+  const clearDirtyAndRefresh = useCallback(() => {
+    dirtyRowsRef.current.clear();
+    onDirtyChange?.(false);
+    refreshGrid();
+  }, [refreshGrid, onDirtyChange]);
+
+  useEffect(() => {
+    if (!testCasesActionsRef) return;
+    testCasesActionsRef.current = {
+      getDirtyTestCases,
+      clearDirtyAndRefresh,
+    };
+    return () => {
+      testCasesActionsRef.current = null;
+    };
+  }, [testCasesActionsRef, getDirtyTestCases, clearDirtyAndRefresh]);
 
   useEffect(() => {
     onRemoveCaseRef.current = onRemoveCase;

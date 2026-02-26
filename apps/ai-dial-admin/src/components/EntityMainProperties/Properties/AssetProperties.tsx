@@ -72,6 +72,7 @@ const AssetProperties: FC<Props> = ({
           entity={entity}
           names={names}
           onChangeEntity={onChangeEntity}
+          checkEmptySymbols={false}
         />
       )}
 

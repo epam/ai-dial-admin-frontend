@@ -198,6 +198,21 @@ describe('Server :: TestSuiteApi', () => {
     );
   });
 
+  test('Should call updateTestCases', async () => {
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
+    const testCases = [{ id: 'caseId', name: 'Case Name' }];
+
+    await instance.updateTestCases('id', testCases as any, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_CASES_URL('id')}`,
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify(testCases),
+      }),
+    );
+  });
+
   test('Should call getTestSuiteTemplateVariables', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockTestSuite));
     await instance.getTestSuiteTemplateVariables('id', TOKEN_MOCK);

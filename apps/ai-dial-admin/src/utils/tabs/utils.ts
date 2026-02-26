@@ -407,6 +407,10 @@ export const getPublicationViewTabs = (t: (key: string) => string, view: Applica
       return getFilePublicationTabs(t);
     case ApplicationRoute.PromptPublications:
       return getPromptPublicationTabs(t);
+    case ApplicationRoute.ApplicationPublications:
+      return getApplicationPublicationTabs(t);
+    case ApplicationRoute.ToolsetPublications:
+      return getToolsetPublicationTabs(t);
     default:
       return [];
   }
@@ -418,6 +422,14 @@ export const getFilePublicationTabs = (t: (key: string) => string): TabModel[] =
 
 export const getPromptPublicationTabs = (t: (key: string) => string): TabModel[] => {
   return [propertiesTab(t), permissionsTab(t)];
+};
+
+export const getApplicationPublicationTabs = (t: (key: string) => string): TabModel[] => {
+  return [propertiesTab(t), parametersTab(t), permissionsTab(t), filesTab(t)];
+};
+
+export const getToolsetPublicationTabs = (t: (key: string) => string): TabModel[] => {
+  return [propertiesTab(t), toolsTab(t), permissionsTab(t)];
 };
 
 export const getTestSuiteRequestTemplateTabs = (t: (key: string) => string): TabModel[] => {
