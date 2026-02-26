@@ -39,6 +39,7 @@ import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { generateCurrentResource } from './utils/generate-diffs';
+import { getRollbackRedirectHref } from './utils/get-rollback-redirect-href';
 
 interface Props {
   activity: DialActivity;
@@ -47,6 +48,7 @@ interface Props {
   isModalView?: boolean;
   hideComparator?: boolean;
   entity?: BaseEntity;
+  isEntityActivity?: boolean;
 }
 
 const AuditView: FC<Props> = ({
@@ -56,6 +58,7 @@ const AuditView: FC<Props> = ({
   isModalView,
   hideComparator,
   entity,
+  isEntityActivity = false,
 }) => {
   const t = useI18n();
   const router = useRouter();
@@ -103,7 +106,12 @@ const AuditView: FC<Props> = ({
               getRollbackSuccessDescription(activity.resourceType, t),
             ),
           );
-          router.push(ApplicationRoute.ActivityAudit);
+          if (isEntityActivity) {
+            const newRoute = getRollbackRedirectHref(activity.resourceType, activity.resourceId);
+            router.push(newRoute);
+          } else {
+            router.push(ApplicationRoute.ActivityAudit);
+          }
         } else {
           showNotification(getErrorNotification(res?.errorHeader, res?.errorMessage, res?.requestId));
         }
@@ -119,7 +127,17 @@ const AuditView: FC<Props> = ({
           ),
         );
       });
-  }, [setIsLoading, activity, activityRevision, previousRevision, showNotification, t, onCloseModal, router]);
+  }, [
+    setIsLoading,
+    activity,
+    activityRevision,
+    previousRevision,
+    showNotification,
+    t,
+    onCloseModal,
+    router,
+    isEntityActivity,
+  ]);
 
   const openActivityInNewTab = (activity: DialActivity) => {
     onOpenInNewTab(ApplicationRoute.ActivityAudit, activity);

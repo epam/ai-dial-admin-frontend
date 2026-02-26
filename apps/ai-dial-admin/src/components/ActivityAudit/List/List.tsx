@@ -10,7 +10,11 @@ import { GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } fro
 import classNames from 'classnames';
 
 import { getActivities } from '@/src/app/[lang]/activity-audit/actions';
-import { getActivityAuditColumns, getGridFilters } from '@/src/components/ActivityAudit/List/utils';
+import {
+  getActivityAuditColumns,
+  getAuditActivityHref,
+  getGridFilters,
+} from '@/src/components/ActivityAudit/List/utils';
 import ActivityDetails from '@/src/components/ActivityAudit/Modals/Details';
 import { SYSTEM_ROLLBACK_ID } from '@/src/components/ActivityAudit/Rollback/constants';
 import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
@@ -41,6 +45,8 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
+import { ActivityAuditResourceType } from '@/src/types/activity-audit';
+import { ACTIVITY_AUDIT_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 
 interface Props {
   entity?: BaseEntity | DialApplicationScheme;
@@ -104,11 +110,6 @@ const ActivityAuditList: FC<Props> = ({
     setSelectedActivity(activity);
   }, []);
 
-  const onOpenDetailsModal = useCallback((activity?: DialActivity) => {
-    setIsDetailsModalOpen(true);
-    setSelectedActivity(activity);
-  }, []);
-
   const gridDataSource: IDatasource = useMemo(
     () => ({
       getRows: (params: IGetRowsParams) => {
@@ -163,7 +164,10 @@ const ActivityAuditList: FC<Props> = ({
     onCellClicked: (e) => {
       if (e.colDef.field !== ACTIONS_COLUMN_CEL_ID) {
         if (entity) {
-          onOpenDetailsModal(e.data);
+          const href = getAuditActivityHref(entity, entityType as ActivityAuditResourceType, e.data.activityId);
+          if (href) {
+            router.push(href);
+          }
         } else {
           router.push(getUrnForEntity(ApplicationRoute.ActivityAudit, e.data));
         }
@@ -172,7 +176,7 @@ const ActivityAuditList: FC<Props> = ({
   };
 
   const columnDefs = entity
-    ? getActivityAuditColumns(t, void 0, onOpenConfirmationModal, onOpenDetailsModal, true)
+    ? [...ACTIVITY_AUDIT_COLUMNS(t, true)]
     : getActivityAuditColumns(t, openInNewTab, onOpenConfirmationModal, void 0);
 
   const onRefresh = useCallback(() => {

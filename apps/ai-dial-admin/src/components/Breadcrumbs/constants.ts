@@ -11,6 +11,9 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig | null>
       { name: 'Models', i18nKey: MenuI18nKey.Models },
       {
         name: 'Id',
+      },
+      {
+        name: 'Audit Id',
         href: false,
       },
     ],
@@ -21,7 +24,11 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig | null>
         name: 'Application',
         i18nKey: MenuI18nKey.Applications,
       },
-      { name: 'Id', href: false },
+      { name: 'Id' },
+      {
+        name: 'Audit Id',
+        href: false,
+      },
     ],
   },
   [ApplicationRoute.Adapters]: {
@@ -29,6 +36,9 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig | null>
       { name: 'Adapters', i18nKey: MenuI18nKey.Adapters },
       {
         name: 'Id',
+      },
+      {
+        name: 'Audit Id',
         href: false,
       },
     ],
@@ -39,19 +49,31 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig | null>
         name: 'Interceptors',
         i18nKey: MenuI18nKey.Interceptors,
       },
-      { name: 'Id', href: false },
+      { name: 'Id' },
+      {
+        name: 'Audit Id',
+        href: false,
+      },
     ],
   },
   [ApplicationRoute.Roles]: {
     segments: [
       { name: 'Roles', i18nKey: MenuI18nKey.Roles },
-      { name: 'Id', href: false },
+      { name: 'Id' },
+      {
+        name: 'Audit Id',
+        href: false,
+      },
     ],
   },
   [ApplicationRoute.Keys]: {
     segments: [
       { name: 'Keys', i18nKey: MenuI18nKey.Keys },
-      { name: 'Id', href: false },
+      { name: 'Id' },
+      {
+        name: 'Audit Id',
+        href: false,
+      },
     ],
   },
   [ApplicationRoute.Prompts]: {
@@ -141,7 +163,11 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig | null>
         name: 'Routes',
         i18nKey: MenuI18nKey.Routes,
       },
-      { name: 'Id', href: false },
+      { name: 'Id' },
+      {
+        name: 'Audit Id',
+        href: false,
+      },
     ],
   },
   [ApplicationRoute.Toolsets]: {
@@ -150,7 +176,11 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig | null>
         name: 'Toolsets',
         i18nKey: MenuI18nKey.Toolsets,
       },
-      { name: 'Id', href: false },
+      { name: 'Id' },
+      {
+        name: 'Audit Id',
+        href: false,
+      },
     ],
   },
   [ApplicationRoute.Dashboard]: {
@@ -183,7 +213,11 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig | null>
         name: 'ApplicationRunners',
         i18nKey: MenuI18nKey.ApplicationRunners,
       },
-      { name: 'Id', href: false },
+      { name: 'Id' },
+      {
+        name: 'Audit Id',
+        href: false,
+      },
     ],
   },
   [ApplicationRoute.InterceptorTemplates]: {
@@ -192,7 +226,11 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig | null>
         name: 'InterceptorTemplates',
         i18nKey: MenuI18nKey.InterceptorTemplates,
       },
-      { name: 'Id', href: false },
+      { name: 'Id' },
+      {
+        name: 'Audit Id',
+        href: false,
+      },
     ],
   },
   [ApplicationRoute.InterceptorContainers]: {
