@@ -86,6 +86,7 @@ const HfModelNameField: FC<Props> = ({ container, setContainer, isModal, route }
         <DialSelectField
           id="modelName"
           label={t(EntityFieldsI18nKey.HFModelName)}
+          required
           placeholder={t(EntityPlaceholdersI18nKey.HFModelName)}
           inlineSearch={true}
           value={container.source?.modelName}

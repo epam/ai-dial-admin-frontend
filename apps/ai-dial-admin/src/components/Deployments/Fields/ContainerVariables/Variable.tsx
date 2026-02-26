@@ -138,13 +138,13 @@ const Variable: FC<Props> = ({ index, variable, updateVariable, removeVariable, 
               errorText={variableNameError?.text}
               invalid={!!variableNameError}
               required={true}
-              containerClassName="min-w-[100px]"
+              className="min-w-[100px]"
               onChange={onChangeName}
               disabled={disabled}
             />
             <DialInput
               id={`description ${index}`}
-              containerClassName="min-w-[150px]"
+              className="min-w-[150px]"
               value={variable.description}
               placeholder={t(EntityPlaceholdersI18nKey.Description)}
               labelProps={{ label: index === 0 ? t(EnvVariablesI18nKey.Description) : '' }}
