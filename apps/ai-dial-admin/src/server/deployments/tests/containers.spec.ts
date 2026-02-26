@@ -29,7 +29,7 @@ describe('ContainersApi', () => {
     expect(CONTAINER_EVENTS_URL('aaa')).toBe(`${BASE_CONTAINERS_URL}/aaa/events/stream`);
   });
 
-  test('calls getContainers with correct URL and method', async () => {
+  test('calls getContainers with correct URL and method for INTERCEPTOR', async () => {
     fetch.mockResponseOnce(JSON.stringify(['container1']));
     await instance.getContainers('INTERCEPTOR', TOKEN_MOCK);
     expect(fetch).toHaveBeenCalledWith(
@@ -38,13 +38,23 @@ describe('ContainersApi', () => {
     );
   });
 
-  test('calls getContainers with correct URL and method', async () => {
+  test('calls getContainers with correct URL and method for ADAPTER', async () => {
     fetch.mockResponseOnce(JSON.stringify(['container1']));
     await instance.getContainers('ADAPTER', TOKEN_MOCK);
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining(`${BASE_CONTAINERS_URL}?type=ADAPTER`),
       expect.objectContaining({ method: 'GET' }),
     );
+  });
+
+  test('calls getContainers without type and no type query param', async () => {
+    fetch.mockClear();
+    fetch.mockResponseOnce(JSON.stringify(['container1']));
+    await instance.getContainers(undefined, TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledTimes(1);
+    const [url, options] = fetch.mock.calls[0];
+    expect(url).toBe(`${TEST_URL}${BASE_CONTAINERS_URL}`);
+    expect(options).toEqual(expect.objectContaining({ method: 'GET' }));
   });
 
   test('calls getContainerPods with correct URL and method', async () => {
