@@ -63,7 +63,7 @@ const TabsContent: FC<Props> = ({
           view={ApplicationRoute.TestSuites}
           id={selectedTestSuite.id}
         >
-          <TestSuiteProperties testSuite={selectedTestSuite} onChange={onChange} />
+          <TestSuiteProperties testSuite={selectedTestSuite} onChange={onChange} isSkipRefresh={isSkipRefresh} />
         </PropertiesTabContent>
       )}
       {activeTab === EntityViewTab.TestCases && (

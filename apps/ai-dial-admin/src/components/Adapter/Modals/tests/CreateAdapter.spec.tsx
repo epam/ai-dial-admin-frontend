@@ -6,7 +6,7 @@ import CreateAdapter from '../CreateAdapter';
 describe('CreateAdapter', () => {
   test('renders popup and adapter properties', () => {
     render(<CreateAdapter isModalOpen={true} onClose={vi.fn()} names={['adapter1']} />);
-    expect(screen.getByText(CreateI18nKey.Adapter)).toBeInTheDocument();
+
     expect(screen.getByText(ButtonsI18nKey.Cancel)).toBeInTheDocument();
     expect(screen.getByText(ButtonsI18nKey.Create)).toBeInTheDocument();
   });

@@ -99,6 +99,7 @@ export enum CoreVersionModalI18nKey {
 export enum BasicI18nKey {
   None = 'Basic.None',
   Optional = 'Basic.Optional',
+  Required = 'Basic.Required',
   Failed = 'Basic.Failed',
   NoData = 'Basic.NoData',
   NoParameters = 'Basic.NoParameters',
@@ -108,6 +109,7 @@ export enum BasicI18nKey {
   From = 'Basic.From',
   To = 'Basic.To',
   AddField = 'Basic.AddField',
+  AddSubField = 'Basic.AddSubField',
   MoveToFolder = 'Basic.MoveToFolder',
   Selected = 'Basic.Selected',
   SelectAll = 'Basic.SelectAll',
@@ -567,6 +569,8 @@ export enum TabsI18nKey {
   Permissions = 'Tabs.Permissions',
   Body = 'Tabs.Body',
   Headers = 'Tabs.Headers',
+  RequestSchema = 'Tabs.RequestSchema',
+  ResponseSchema = 'Tabs.ResponseSchema',
 }
 
 export enum InterceptorsI18nKey {
@@ -1390,6 +1394,7 @@ export enum TestSuitesI18nKey {
   NumberOfRuns = 'TestSuites.NumberOfRuns',
   SelectedTestCases = 'TestSuites.SelectedTestCases',
   RequestTemplate = 'TestSuites.RequestTemplate',
+  EndpointSchema = 'TestSuites.EndpointSchema',
   DynamicConfiguration = 'TestSuites.DynamicConfiguration',
   Constant = 'TestSuites.Constant',
   Attribute = 'TestSuites.Attribute',

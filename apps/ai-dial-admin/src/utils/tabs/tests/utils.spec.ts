@@ -57,6 +57,9 @@ import {
   toolsTab,
   tracesTab,
   trendsTab,
+  getEndpointSchemaTabs,
+  requestSchemaTab,
+  responseSchemaTab,
 } from '../utils';
 
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
@@ -241,4 +244,8 @@ describe('Entities :: tabs', () => {
 
 test('returns correct tabs for test suite request template', () => {
   expect(getTestSuiteRequestTemplateTabs(t)).toEqual([bodyTab(t), parametersTab(t), headersTab(t)]);
+});
+
+test('returns correct tabs for test suite request template', () => {
+  expect(getEndpointSchemaTabs(t)).toEqual([requestSchemaTab(t), responseSchemaTab(t)]);
 });
