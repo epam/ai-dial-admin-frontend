@@ -99,6 +99,7 @@ describe('Constants :: grid columns', () => {
     expect(Array.isArray(cols1)).toBe(true);
     expect(cols1.some((c) => c.field === 'name')).toBe(true);
     expect(cols1.some((c) => c.field === 'description')).toBe(true);
+    expect(cols1.some((c) => c.field === 'author')).toBe(true);
   });
 
   test('IMAGES_LIST_FOR_CONTAINER_COLUMNS returns expected columns', () => {

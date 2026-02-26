@@ -4,13 +4,16 @@ import { EntitiesI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
 import FilesProperties from '../FileProperties';
 import { useFileFolder } from '@/src/context/assets/FileFolderContext';
 
+vi.mock('@/src/context/assets/FileFolderContext', () => ({
+  useFileFolder: vi.fn(),
+  FileFolderProvider: ({ children }: any) => <div>{children}</div>,
+}));
+
 describe('FileProperties', () => {
-  const mockFetchFiles = vi.fn();
   beforeEach(() => {
     vi.clearAllMocks();
 
     (useFileFolder as Mock).mockReturnValue({
-      fetchFiles: mockFetchFiles,
       files: [{}],
     });
   });

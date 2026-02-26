@@ -36,17 +36,28 @@ vi.mock('@/src/context/NotificationContext', () => ({
 }));
 
 vi.mock('@/src/context/assets/FileFolderContext', () => ({
-  useFileFolder: vi.fn(),
+  useFileFolder: createFnContext,
   FileFolderProvider: ({ children }: any) => <div>{children}</div>,
+}));
+
+vi.mock('@/src/context/assets/PromptFolderContext', () => ({
+  usePromptFolder: createFnContext,
+  PromptFolderProvider: ({ children }: any) => <div>{children}</div>,
+}));
+
+vi.mock('@/src/context/assets/AppsFolderContext', () => ({
+  useAppsFolder: createFnContext,
+  AppsFolderProvider: ({ children }: any) => <div>{children}</div>,
+}));
+
+vi.mock('@/src/context/assets/ToolsetsFolderContext', () => ({
+  useToolsetsFolder: createFnContext,
+  ToolsetsFolderProvider: ({ children }: any) => <div>{children}</div>,
 }));
 
 vi.mock('@/src/context/ThemeContext', () => ({ useTheme: createFnContext }));
 vi.mock('@/src/context/RuleFolderProvider', () => ({ useRuleFolder: createFnContext }));
-vi.mock('@/src/context/assets/PromptFolderContext', () => ({ usePromptFolder: createFnContext }));
 vi.mock('@/src/context/RuleFolderContext', () => ({ useRuleFolder: createFnContext }));
-vi.mock('@/src/context/assets/AppsFolderContext', () => ({
-  useAppsFolder: createFnContext,
-}));
 
 vi.mock('@/src/context/AppContext', () => ({
   useAppContext: () => ({

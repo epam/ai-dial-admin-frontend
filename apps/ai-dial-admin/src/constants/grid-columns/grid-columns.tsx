@@ -576,7 +576,6 @@ export const IMAGES_LIST_COLUMNS = (t: (key: string) => string): ColDef[] => [
   { field: 'version', headerName: 'Version', hide: false },
   DESCRIPTION_COLUMN,
   { field: 'id', headerName: 'ID', hide: false },
-  TOPICS_COLUMN,
   {
     field: '$type',
     headerName: 'Type',
@@ -617,6 +616,8 @@ export const IMAGES_LIST_COLUMNS = (t: (key: string) => string): ColDef[] => [
     tooltipValueGetter: ({ value }) => t(STATUS_I18N_KEYS[value as IMAGE_STATUS]),
     filterValueGetter: (params) => t(STATUS_I18N_KEYS[params.data[params.colDef.field || ''] as IMAGE_STATUS]),
   },
+  AUTHOR_COLUMN,
+  TOPICS_COLUMN,
   CREATED_AT_COLUMN,
   UPDATED_AT_COLUMN,
 ];

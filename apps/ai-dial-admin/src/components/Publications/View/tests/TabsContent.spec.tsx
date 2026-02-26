@@ -6,7 +6,7 @@ import { DialRule, RuleFunction } from '@/src/models/dial/rule';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import TabsContent from '../TabsContent';
-import { EntitiesI18nKey, EntityFieldsI18nKey } from '../../../../constants/i18n';
+import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 
 vi.mock('../Permissions', () => ({
   default: ({ selectedPublication, onChange, isPermissionsChanged, currentRules }: any) => (

@@ -3,6 +3,11 @@ import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 import PromptProperties from '../PromptProperties';
 import { useFileFolder } from '@/src/context/assets/FileFolderContext';
 
+vi.mock('@/src/context/assets/FileFolderContext', () => ({
+  useFileFolder: vi.fn(),
+  FileFolderProvider: ({ children }: any) => <div>{children}</div>,
+}));
+
 vi.mock('../BaseProperties', () => ({
   default: () => (
     <div role="region" aria-label="base-properties">
