@@ -73,6 +73,7 @@ const ActivityAuditList: FC<Props> = ({
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const [timePeriod, setTimePeriod] = useState<string | undefined>();
   const [timeRange, setTimeRange] = useState<TimeRange>(getTimeRangeById(DEFAULT_TIME_PERIOD));
+  const [innerIsCustomRange, setInnerIsCustomRange] = useState(false);
 
   const [selectedActivity, setSelectedActivity] = useState<DialActivity | undefined>(void 0);
 
@@ -111,7 +112,7 @@ const ActivityAuditList: FC<Props> = ({
   const gridDataSource: IDatasource = useMemo(
     () => ({
       getRows: (params: IGetRowsParams) => {
-        const actualTimeRange = timeRange;
+        const actualTimeRange = innerIsCustomRange ? timeRange : getTimeRangeById(timePeriod || '');
         gridApi?.setGridOption('loading', true);
         const page = Math.floor(params.startRow / PAGE_SIZE);
         const sorts = getRequestSorts(params.sortModel);
@@ -148,7 +149,7 @@ const ActivityAuditList: FC<Props> = ({
           });
       },
     }),
-    [timeRange, gridApi, entity, entityType],
+    [innerIsCustomRange, timePeriod, timeRange, gridApi, entity, entityType],
   );
 
   useEffect(() => {
@@ -268,8 +269,8 @@ const ActivityAuditList: FC<Props> = ({
               onTimePeriodChange={onTimePeriodChange}
               timeRange={timeRange}
               onTimeRangeChange={onTimeRangeChange}
-              isCustomRange={isCustomRange}
-              setIsCustomRange={setIsCustomRange}
+              isCustomRange={isCustomRange || innerIsCustomRange}
+              setIsCustomRange={setIsCustomRange || setInnerIsCustomRange}
             />
           )}
 
