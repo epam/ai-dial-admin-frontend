@@ -86,7 +86,7 @@ const ValueFile: FC<Props> = ({ value, index, fieldName, onValueChange, disabled
           className="w-auto h-auto"
         />
       </div>
-      <DialErrorText errorText={error?.text} />
+      <DialErrorText text={error?.text} />
     </div>
   );
 };

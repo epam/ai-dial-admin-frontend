@@ -91,10 +91,10 @@ const EndpointControl: FC<Props> = ({
       id={id}
       value={endpoint || ''}
       required={required}
-      errorText={endpointError?.text}
+      error={endpointError?.text}
       invalid={!!endpointError}
       onChange={onChangeEndpoint}
-      copyable={true}
+      copyable
       fullValue={fullValue}
       label={label}
       {...props}
@@ -111,7 +111,7 @@ const EndpointControl: FC<Props> = ({
       prefix={prefix}
       id={id}
       value={endpoint || ''}
-      errorText={endpointError?.text}
+      error={endpointError?.text}
       invalid={!!endpointError}
       onChange={onChangeEndpoint}
       labelProps={{ label, required }}

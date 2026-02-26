@@ -67,7 +67,7 @@ const IdControl = <T extends { name?: string }>({
       id="name"
       value={entity.name}
       onChange={onChangeName}
-      errorText={nameError?.text}
+      error={nameError?.text}
       invalid={!!nameError}
       disabled={disabled}
     />

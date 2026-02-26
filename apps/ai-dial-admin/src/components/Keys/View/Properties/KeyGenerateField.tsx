@@ -44,7 +44,7 @@ const KeyGenerateField: FC<Props> = ({ isKeyImmutable, keys, selectedKey, change
           labelProps={{ label: t(EntityFieldsI18nKey.keyValue), required: true }}
           placeholder={t(EntityPlaceholdersI18nKey.KeyValue)}
           value={selectedKey.key}
-          errorText={keyError?.text}
+          error={keyError?.text}
           invalid={!!keyError}
           onChange={onChangeKeyValue}
         />

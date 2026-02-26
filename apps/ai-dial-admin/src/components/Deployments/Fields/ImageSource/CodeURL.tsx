@@ -78,7 +78,7 @@ const CodeUrl: FC<Props> = ({ image, setImage }) => {
       id="codeURL"
       placeholder={t(EntityPlaceholdersI18nKey.URL)}
       value={image.source.url}
-      errorText={sourceError?.text}
+      error={sourceError?.text}
       invalid={!!sourceError}
       onChange={onURLChange}
     />

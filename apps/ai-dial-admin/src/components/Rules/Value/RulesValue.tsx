@@ -131,7 +131,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
               labelProps={{ label: isFirstLine ? t(BasicI18nKey.Value) : '' }}
               placeholder={t(FoldersI18nKey.RegexPlaceholder)}
               onChange={onChangeRegex}
-              errorText={errorText}
+              error={errorText}
               invalid={!!errorText}
             />
           ) : (

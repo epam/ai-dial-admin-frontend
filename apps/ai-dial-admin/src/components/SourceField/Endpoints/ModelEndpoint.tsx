@@ -129,7 +129,7 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
           isFullWidth={isModal}
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
           onChange={onChangeEndpoint}
-          errorText={endpointError?.text}
+          error={endpointError?.text}
           invalid={!!endpointError}
           copyable={false}
         />

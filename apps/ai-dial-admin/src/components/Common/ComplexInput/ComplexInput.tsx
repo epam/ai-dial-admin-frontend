@@ -12,13 +12,13 @@ import { useI18n } from '@/src/locales/client';
 interface Props extends DialInputProps {
   value?: string;
   label: string;
-  errorText?: string;
+  error?: string;
   fullValue?: string;
   copyable?: boolean;
   isFullWidth?: boolean;
 }
 
-const ComplexInput: FC<Props> = ({ fullValue, label: label, isFullWidth, copyable = true, required, ...props }) => {
+const ComplexInput: FC<Props> = ({ fullValue, label, isFullWidth, copyable = true, required, ...props }) => {
   const t = useI18n();
   return (
     <div className={classNames('flex items-end gap-2', copyable && !isFullWidth ? STANDARD_CONTROL_WIDTH : 'w-full')}>

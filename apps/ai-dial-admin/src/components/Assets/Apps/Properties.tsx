@@ -30,7 +30,7 @@ const ApplicationAssetProperties: FC<Props> = ({ asset, runners, onChange }) => 
     <div className="flex flex-col gap-y-8">
       <DisplayNameControl
         displayName={asset.displayName}
-        required={true}
+        required
         isFullWidth={false}
         onChange={(displayName) => onChange({ ...asset, displayName })}
       />

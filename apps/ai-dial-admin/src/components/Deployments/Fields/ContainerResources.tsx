@@ -91,7 +91,7 @@ const ContainerResources: FC<Props> = ({ container, setContainer, route }) => {
               disabled={isEditDisabled(container)}
               onChange={onChangeGpuRequest}
               invalid={!!error}
-              errorText={error?.text}
+              error={error?.text}
             />
           </div>
         )}

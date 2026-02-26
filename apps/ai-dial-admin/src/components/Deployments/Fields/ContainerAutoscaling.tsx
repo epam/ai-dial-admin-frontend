@@ -148,7 +148,7 @@ const ContainerAutoscaling: FC<Props> = ({ container, setContainer }) => {
               onChange={onMaxScaleChange}
               className="max-w-[80px]"
               labelProps={{ label: t(ContainersI18nKey.MaxReplicas) }}
-              errorText={replicasError?.text}
+              error={replicasError?.text}
               invalid={!!replicasError}
               disabled={isEditDisabled(container)}
             />

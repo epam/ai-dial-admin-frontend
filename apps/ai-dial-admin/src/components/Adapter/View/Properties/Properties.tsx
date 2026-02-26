@@ -56,7 +56,7 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isModal 
 
       <DisplayNameControl
         displayName={entity.displayName}
-        required={true}
+        required
         onChange={onChangeDisplayName}
         isFullWidth={isModal}
       />

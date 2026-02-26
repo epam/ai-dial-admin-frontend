@@ -135,9 +135,9 @@ const Variable: FC<Props> = ({ index, variable, updateVariable, removeVariable, 
               value={variable.name}
               placeholder={t(EntityPlaceholdersI18nKey.Name)}
               labelProps={{ label: index === 0 ? t(EnvVariablesI18nKey.Name) : '' }}
-              errorText={variableNameError?.text}
+              error={variableNameError?.text}
               invalid={!!variableNameError}
-              required={true}
+              required
               className="min-w-[100px]"
               onChange={onChangeName}
               disabled={disabled}

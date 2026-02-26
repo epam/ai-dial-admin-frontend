@@ -65,7 +65,7 @@ const Multiselect: FC<Props> = ({
           {...props}
         />
       </DialInputPopup>
-      <DialErrorText errorText={errorText} />
+      <DialErrorText text={errorText} />
     </div>
   );
 };

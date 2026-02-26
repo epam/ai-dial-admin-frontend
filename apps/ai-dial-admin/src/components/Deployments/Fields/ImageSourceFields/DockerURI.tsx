@@ -76,7 +76,7 @@ const DockerURI: FC<Props> = ({ image, setImage }) => {
       id="DockerURI"
       placeholder={t(EntityPlaceholdersI18nKey.URI)}
       value={image.source.imageUri}
-      errorText={sourceError?.text}
+      error={sourceError?.text}
       invalid={!!sourceError}
       onChange={onURIChange}
     />

@@ -135,7 +135,7 @@ const FolderCreateSetup: FC<Props> = ({
           value={folderName}
           onChange={onChangeName}
           invalid={!!nameErrorText}
-          errorText={nameErrorText}
+          error={nameErrorText}
         />
       </div>
       <div className="flex-1 flex flex-col min-h-0">

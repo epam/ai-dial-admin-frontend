@@ -197,7 +197,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
     <div className="h-full flex flex-col w-full gap-y-8">
       <DisplayNameControl
         displayName={isAppRoute ? route.name : route.displayName}
-        required={true}
+        required
         isFullWidth={false}
         onChange={onChangeDisplayName}
         disabled={readonly}
@@ -249,7 +249,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
           placeholder={t(EntityPlaceholdersI18nKey.Status)}
           value={route.response?.status}
           onChange={onChangeStatus}
-          errorText={statusError}
+          error={statusError}
           invalid={!!statusError}
         />
         <DialInput
@@ -260,7 +260,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
           placeholder={t(EntityPlaceholdersI18nKey.Body)}
           value={route.response?.body}
           onChange={onChangeBody}
-          errorText={bodyError}
+          error={bodyError}
           invalid={!!bodyError}
         />
       </div>
@@ -298,7 +298,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
           value={route.order}
           min={0}
           onChange={onChangeOrder}
-          errorText={orderError}
+          error={orderError}
           invalid={!!orderError}
         />
         {route.order !== ORDER_DEFAULT_VALUE && (

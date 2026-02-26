@@ -69,7 +69,7 @@ const ImageNewVersion: FC<Props> = ({ isModalOpen, title, onClose, onApply, imag
           onChange={onVersionChange}
           value={version}
           invalid={!!versionError}
-          errorText={versionError?.text}
+          error={versionError?.text}
         />
       </div>
     </DialConfirmationPopup>

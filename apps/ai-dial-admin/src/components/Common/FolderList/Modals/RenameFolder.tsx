@@ -59,7 +59,7 @@ const RenameFolder: FC<Props> = ({ currentPath, siblings = [], isModalOpen, onCl
           placeholder={t(FoldersI18nKey.FolderCreatePlaceholder)}
           value={newName}
           onChange={onChangeName}
-          errorText={errorText}
+          error={errorText}
           invalid={!!errorText}
         />
       </div>

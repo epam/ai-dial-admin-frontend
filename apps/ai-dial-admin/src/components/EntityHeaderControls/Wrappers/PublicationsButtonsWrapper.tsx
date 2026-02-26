@@ -244,7 +244,7 @@ const PublicationsButtonsWrapper = <T extends Publication>({
                 value={declineReason}
                 onChange={setDeclineReason}
                 invalid={isDeclineInvalid}
-                errorText={isDeclineInvalid ? t(ErrorI18nKey.CommentError) : ''}
+                error={isDeclineInvalid ? t(ErrorI18nKey.CommentError) : ''}
               />
             </div>
           </DialConfirmationPopup>,

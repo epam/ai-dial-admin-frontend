@@ -98,7 +98,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
       <CompletionEndpointControl
         endpoint={runner['dial:applicationTypeCompletionEndpoint']}
         onChange={onChangeCompletionEndPoint}
-        required={true}
+        required
       />
 
       <ViewerUrlControl endpoint={runner['dial:applicationTypeViewerUrl']} onChange={onChangeViewerUrl} />

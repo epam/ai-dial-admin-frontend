@@ -26,7 +26,7 @@ interface Props<T> {
   entity: T;
   onChange: (entity: T) => void;
   getAdapters: () => Promise<ServerActionResponse | null>;
-  errorText?: string;
+  error?: string;
   isModal?: boolean;
 }
 
@@ -34,7 +34,7 @@ const Adapters = <T extends DialModel | DialInterceptor>({
   entity,
   onChange,
   getAdapters,
-  errorText,
+  error,
   isModal,
 }: Props<T>) => {
   const t = useI18n();
@@ -121,7 +121,7 @@ const Adapters = <T extends DialModel | DialInterceptor>({
                 onOpen={onOpenModal}
                 selectedValue={selectedAdapter?.displayName || selectedAdapter?.name || ''}
                 elementId="adapters"
-                errorText={errorText}
+                error={error}
                 emptyValueText={t(EntitiesI18nKey.NoAdapters)}
               >
                 <SelectAdapterModal
@@ -136,7 +136,7 @@ const Adapters = <T extends DialModel | DialInterceptor>({
             {entity.source?.adapterName && (
               <DialNeutralButton
                 iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
-                className={classNames(errorText ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
+                className={classNames(error ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
                 label={t(SourceI18nKey.OpenAdapter)}
                 onClick={() => openAdapter()}
               />

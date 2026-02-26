@@ -83,7 +83,7 @@ const Port: FC<Props> = ({ container, setContainer }) => {
         placeholder={t(EntityPlaceholdersI18nKey.Port)}
         value={container.containerPort}
         invalid={!!portError}
-        errorText={portError?.text}
+        error={portError?.text}
         onChange={onPortChange}
         disabled={isEditDisabled(container)}
       />
@@ -95,7 +95,7 @@ const Port: FC<Props> = ({ container, setContainer }) => {
           placeholder={t(EntityPlaceholdersI18nKey.Port)}
           value={container.containerGrpcPort}
           invalid={!!grpcPortError}
-          errorText={grpcPortError?.text}
+          error={grpcPortError?.text}
           onChange={onGRPCPortChange}
           disabled={isEditDisabled(container)}
         />

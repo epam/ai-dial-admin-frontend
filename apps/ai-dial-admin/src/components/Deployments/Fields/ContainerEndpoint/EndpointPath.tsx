@@ -63,7 +63,7 @@ const EndpointPath: FC<Props> = ({ container, setContainer }) => {
       containerClassName={STANDARD_CONTROL_WIDTH}
       placeholder={t(EntityPlaceholdersI18nKey.ContainerEndpointPath)}
       value={container.mcpEndpointPath || ''}
-      errorText={pathError?.text}
+      error={pathError?.text}
       invalid={!!pathError}
       onChange={onPathChange}
       disabled={isEditDisabled(container)}

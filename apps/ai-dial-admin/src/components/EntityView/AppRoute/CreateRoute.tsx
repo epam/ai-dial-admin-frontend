@@ -62,7 +62,7 @@ const CreateRoute: FC<Props> = ({ isModalOpen, routeNames, onClose, onCreate }) 
           value={name}
           onChange={onChangeName}
           invalid={!!nameError}
-          errorText={nameError?.text}
+          error={nameError?.text}
         />
       </div>
     </DialFormPopup>

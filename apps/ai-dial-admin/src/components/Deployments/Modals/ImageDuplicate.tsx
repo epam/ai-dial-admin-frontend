@@ -186,7 +186,7 @@ const ImageDuplicateModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
           labelProps={{ label: t(EntityFieldsI18nKey.name) }}
           placeholder={t(EntityPlaceholdersI18nKey.Name)}
           value={copyImage.name}
-          errorText={nameError?.text}
+          error={nameError?.text}
           invalid={!!nameError}
           onChange={onChangeName}
         />
@@ -196,7 +196,7 @@ const ImageDuplicateModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
           labelProps={{ label: t(EntityFieldsI18nKey.version) }}
           placeholder={t(EntityPlaceholdersI18nKey.Version)}
           value={copyImage.version}
-          errorText={versionError?.text}
+          error={versionError?.text}
           invalid={!!versionError}
           onChange={onChangeVersion}
         />

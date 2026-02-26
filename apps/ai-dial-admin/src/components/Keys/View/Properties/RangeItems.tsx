@@ -67,7 +67,7 @@ const RangeItems: FC<Props> = ({ ranges, onAddRange, onRemoveRange, onUpdateRang
               onUpdateRange(IpRangeProperty.IP, value, index);
             }}
             invalid={!!errors?.[index]?.ip}
-            errorText={errors?.[index]?.ip?.text}
+            error={errors?.[index]?.ip?.text}
             value={range.ip || ''}
           />
           <span className="text-secondary leading-[40px]">/</span>
@@ -81,7 +81,7 @@ const RangeItems: FC<Props> = ({ ranges, onAddRange, onRemoveRange, onUpdateRang
               onUpdateRange(IpRangeProperty.MASK, value, index);
             }}
             invalid={!!errors?.[index]?.mask}
-            errorText={errors?.[index]?.mask?.text}
+            error={errors?.[index]?.mask?.text}
           />
           <DialRemoveButton
             className={classNames(index === 0 && 'mt-6')}

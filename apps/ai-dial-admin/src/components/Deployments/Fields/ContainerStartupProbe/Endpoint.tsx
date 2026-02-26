@@ -174,7 +174,7 @@ const Endpoint: FC<Props> = ({ container, setContainer, disabled }) => {
           disabled={disabled}
           containerClassName="w-[320px]"
           invalid={!!portError}
-          errorText={portError?.text}
+          error={portError?.text}
         />
         {container.probeProperties?.probe?.$type === PROBE_TYPE.HTTP_GET && (
           <DialInput
@@ -189,7 +189,7 @@ const Endpoint: FC<Props> = ({ container, setContainer, disabled }) => {
             containerClassName="w-[320px]"
             onChange={onPathChange}
             invalid={!!pathError}
-            errorText={pathError?.text}
+            error={pathError?.text}
           />
         )}
       </div>

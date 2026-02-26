@@ -72,7 +72,7 @@ const Path: FC<Props> = ({
           placeholder={t(EntityPlaceholdersI18nKey.PathUrl)}
           labelProps={{ label: index === 0 ? label : '', required }}
           onChange={(value) => onChangePath(index, value)}
-          errorText={error}
+          error={error}
           invalid={!!error}
         />
       </div>

@@ -77,7 +77,7 @@ const OAuthSection: FC<Props> = ({ disabled, authSettings, onChange }) => {
         />
         <EndpointControl
           disabled={disabled}
-          required={true}
+          required
           id="authEndpoint"
           label={t(EntityFieldsI18nKey.authorizationEndpoint)}
           endpoint={authSettings?.authorizationEndpoint || ''}

@@ -66,7 +66,7 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
       {isModal && (
         <DisplayNameControl
           displayName={testSuite.name}
-          required={true}
+          required
           isFullWidth={false}
           onChange={(name) => onChange({ ...testSuite, name })}
         />

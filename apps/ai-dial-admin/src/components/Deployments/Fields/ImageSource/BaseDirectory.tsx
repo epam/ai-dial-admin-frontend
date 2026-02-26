@@ -62,7 +62,7 @@ const BaseDirectory: FC<Props> = ({ image, setImage }) => {
       containerClassName={STANDARD_CONTROL_WIDTH}
       onChange={onChange}
       invalid={!!error}
-      errorText={error?.text}
+      error={error?.text}
     />
   );
 };

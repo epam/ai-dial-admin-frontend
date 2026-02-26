@@ -103,7 +103,7 @@ const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
               }
               containerClassName="w-[640px]"
               invalid={!!urlTemplateError}
-              errorText={urlTemplateError}
+              error={urlTemplateError}
             />
           </div>
           <DialNeutralButton

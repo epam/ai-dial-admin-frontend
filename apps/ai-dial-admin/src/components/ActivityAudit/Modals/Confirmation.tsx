@@ -45,10 +45,9 @@ const ConfirmationRollback: FC<Props> = ({ revisionDate, isModalOpen, onClose, o
         </div>
         <DialInput
           id="confirmationText"
-          labelProps={{ label: t(RollbackI18nKey.ConfirmSystemRollbackLabel) }}
+          labelProps={{ label: t(RollbackI18nKey.ConfirmSystemRollbackLabel), required: true }}
           placeholder={t(RollbackI18nKey.ConfirmSystemRollbackPlaceholder)}
           value={confirmation}
-          required={true}
           onChange={onChangeConfirmation}
         />
       </div>

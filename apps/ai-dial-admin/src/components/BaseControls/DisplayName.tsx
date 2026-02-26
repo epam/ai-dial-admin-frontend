@@ -60,7 +60,7 @@ const DisplayNameControl: FC<Props> = ({ displayName, required, isFullWidth = tr
       id="displayName"
       value={displayName}
       onChange={onChangeDisplayName}
-      errorText={displayNameError?.text}
+      error={displayNameError?.text}
       invalid={!!displayNameError}
       containerClassName={containerClassName}
       {...props}

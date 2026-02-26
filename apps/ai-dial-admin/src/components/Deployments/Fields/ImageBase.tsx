@@ -106,7 +106,7 @@ const ImageBase: FC<Props> = ({
         value={image.name}
         containerClassName={containerClassName}
         onChange={onChangeName}
-        errorText={nameError?.text}
+        error={nameError?.text}
         invalid={!!nameError}
       />
       {isModal && (
@@ -116,7 +116,7 @@ const ImageBase: FC<Props> = ({
           id="version"
           placeholder={t(EntityPlaceholdersI18nKey.Version)}
           value={image.version}
-          errorText={versionError?.text}
+          error={versionError?.text}
           invalid={!!versionError}
           onChange={onChangeVersion}
         />

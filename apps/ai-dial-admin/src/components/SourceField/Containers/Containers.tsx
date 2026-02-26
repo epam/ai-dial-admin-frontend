@@ -29,7 +29,7 @@ interface Props<T> {
   getContainers: () => Promise<ServerActionResponse<Container[]>>;
   view: ApplicationRoute;
   isModal?: boolean;
-  errorText?: string;
+  error?: string;
 }
 
 const Containers = <T extends DialInterceptor | DialModel>({
@@ -38,7 +38,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
   getContainers,
   view,
   isModal,
-  errorText,
+  error,
 }: Props<T>) => {
   const t = useI18n();
   const { showNotification } = useNotification();
@@ -136,7 +136,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
                 elementId="containers"
                 emptyValueText={t(EntitiesI18nKey.NoContainers)}
                 disabled={!featureFlags.deploymentsEnabled}
-                errorText={errorText}
+                error={error}
               >
                 <SelectContainerModal
                   selectedId={entity.source?.containerId}
@@ -150,7 +150,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
             {entity.source?.containerId && featureFlags.deploymentsEnabled && (
               <DialNeutralButton
                 iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
-                className={classNames(errorText ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
+                className={classNames(error ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
                 label={t(SourceI18nKey.OpenContainer)}
                 onClick={() => openContainer()}
               />

@@ -67,7 +67,7 @@ const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
           placeholder={t(EntityPlaceholdersI18nKey.Number)}
           value={entity.maxInputAttachments}
           onChange={onChangeAttachmentMax}
-          errorText={error}
+          error={error}
           invalid={!!error}
           min={0}
         />

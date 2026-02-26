@@ -23,7 +23,7 @@ interface Props<T> {
   entity: T;
   onChange: (entity: T) => void;
   getRunners: () => Promise<ServerActionResponse<InterceptorTemplate[]>>;
-  errorText?: string;
+  error?: string;
   isModal?: boolean;
 }
 
@@ -31,7 +31,7 @@ const Templates = <T extends DialModel | DialInterceptor>({
   entity,
   onChange,
   getRunners,
-  errorText,
+  error,
   isModal,
 }: Props<T>) => {
   const t = useI18n();
@@ -116,7 +116,7 @@ const Templates = <T extends DialModel | DialInterceptor>({
                 onOpen={onOpenModal}
                 selectedValue={selectedRunner?.name}
                 elementId="templates"
-                errorText={errorText}
+                errorText={error}
                 emptyValueText={t(EntitiesI18nKey.NoTemplates)}
               >
                 <SelectRunnerModal
@@ -131,7 +131,7 @@ const Templates = <T extends DialModel | DialInterceptor>({
             {entity.source?.runnerName && (
               <DialNeutralButton
                 iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
-                className={classNames(errorText ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
+                className={classNames(error ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
                 label={t(SourceI18nKey.OpenTemplate)}
                 onClick={() => openTemplate()}
               />

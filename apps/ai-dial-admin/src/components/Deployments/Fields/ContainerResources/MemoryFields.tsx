@@ -153,7 +153,7 @@ const MemoryFields: FC<Props> = ({ container, setContainer }) => {
         labelProps={{ label: t(EntityFieldsI18nKey.MemoryRequest) }}
         value={container.resources?.requests?.memory ? convertBytesToMb(container.resources?.requests?.memory) : ''}
         postfix="Mb"
-        errorText={requestError?.text}
+        error={requestError?.text}
         invalid={!!requestError}
         disabled={isEditDisabled(container)}
         onChange={onChangeRequest}
@@ -164,7 +164,7 @@ const MemoryFields: FC<Props> = ({ container, setContainer }) => {
         labelProps={{ label: t(EntityFieldsI18nKey.MemoryLimit) }}
         value={container.resources?.limits?.memory ? convertBytesToMb(container.resources?.limits?.memory) : ''}
         postfix="Mb"
-        errorText={limitError?.text}
+        error={limitError?.text}
         invalid={!!limitError}
         disabled={isEditDisabled(container)}
         onChange={onChangeLimit}

@@ -65,7 +65,7 @@ const EntityProperties: FC<Props> = ({
 
       <DisplayNameControl
         displayName={entity.displayName}
-        required={true}
+        required
         isFullWidth={!isEntityImmutable}
         onChange={(name) => onChangeEntity({ ...entity, displayName: name })}
       />
@@ -92,7 +92,7 @@ const EntityProperties: FC<Props> = ({
           placeholder={t(EntityPlaceholdersI18nKey.PathUrl)}
           labelProps={{ label: t(EntityFieldsI18nKey.paths), required: true }}
           value={(entity as DialRoute).paths?.[0]}
-          errorText={pathError}
+          error={pathError}
           invalid={!!pathError}
           onChange={onChangePath}
         />

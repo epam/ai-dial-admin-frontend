@@ -114,7 +114,7 @@ const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, i
       {sourceType?.value === SourceTypes.ENDPOINTS && (
         <div className="flex flex-col gap-y-8">
           <CompletionEndpointControl
-            required={true}
+            required
             endpoint={entity.endpoint}
             onChange={onChangeEndpoint}
             isFullWidth={!isEntityImmutable}

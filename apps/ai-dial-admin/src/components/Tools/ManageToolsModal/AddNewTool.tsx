@@ -44,7 +44,7 @@ const AddNewTool: FC<Props> = ({ toolName, error, onDelete, onChange }) => {
         placeholder={t(EntityPlaceholdersI18nKey.ToolName)}
         value={toolName}
         onChange={onChangeName}
-        errorText={error?.text}
+        error={error?.text}
         invalid={!!error}
       />
     </>

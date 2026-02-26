@@ -185,59 +185,51 @@ const AdvancedTiming: FC<Props> = ({ container, setContainer, disabled }) => {
       <h3>{t(EntityFieldsI18nKey.AdvancedTiming)}</h3>
       <DialNumberInput
         id="initialDelaySeconds"
-        labelProps={{
-          label: t(EntityFieldsI18nKey.InitialDelaySeconds),
-          caption: !initialDelaySecondsError ? t(EntityCaptionsI18nKey.ProbeInitialDelaySeconds) : '',
-        }}
+        labelProps={{ label: t(EntityFieldsI18nKey.InitialDelaySeconds) }}
+        caption={!initialDelaySecondsError ? t(EntityCaptionsI18nKey.ProbeInitialDelaySeconds) : ''}
         placeholder={t(EntityPlaceholdersI18nKey.InitialDelaySeconds)}
         value={container.probeProperties?.initialDelaySeconds}
         onChange={onInitialDelaySecondsChange}
         disabled={disabled}
         containerClassName="w-[320px]"
         invalid={!!initialDelaySecondsError}
-        errorText={initialDelaySecondsError?.text}
+        error={initialDelaySecondsError?.text}
       />
       <DialNumberInput
         id="periodSeconds"
-        labelProps={{
-          label: t(EntityFieldsI18nKey.PeriodSeconds),
-          caption: !periodSecondsError ? t(EntityCaptionsI18nKey.ProbePeriodSeconds) : '',
-        }}
+        labelProps={{ label: t(EntityFieldsI18nKey.PeriodSeconds) }}
+        caption={!periodSecondsError ? t(EntityCaptionsI18nKey.ProbePeriodSeconds) : ''}
         placeholder={t(EntityPlaceholdersI18nKey.PeriodSeconds)}
         value={container.probeProperties?.periodSeconds}
         onChange={onPeriodSecondsChange}
         disabled={disabled}
         containerClassName="w-[320px]"
         invalid={!!periodSecondsError}
-        errorText={periodSecondsError?.text}
+        error={periodSecondsError?.text}
       />
       <DialNumberInput
         id="timeoutSeconds"
-        labelProps={{
-          label: t(EntityFieldsI18nKey.TimeoutSeconds),
-          caption: !timeoutSecondsError ? t(EntityCaptionsI18nKey.ProbeTimeoutSeconds) : '',
-        }}
+        labelProps={{ label: t(EntityFieldsI18nKey.TimeoutSeconds) }}
+        caption={!timeoutSecondsError ? t(EntityCaptionsI18nKey.ProbeTimeoutSeconds) : ''}
         placeholder={t(EntityPlaceholdersI18nKey.TimeoutSeconds)}
         value={container.probeProperties?.timeoutSeconds}
         onChange={onTimeoutSecondsChange}
         disabled={disabled}
         containerClassName="w-[320px]"
         invalid={!!timeoutSecondsError}
-        errorText={timeoutSecondsError?.text}
+        error={timeoutSecondsError?.text}
       />
       <DialNumberInput
         id="failureThreshold"
-        labelProps={{
-          label: t(EntityFieldsI18nKey.FailureThreshold),
-          caption: !failureThresholdError ? t(EntityCaptionsI18nKey.ProbeFailuresThreshold) : '',
-        }}
+        labelProps={{ label: t(EntityFieldsI18nKey.FailureThreshold) }}
+        caption={!failureThresholdError ? t(EntityCaptionsI18nKey.ProbeFailuresThreshold) : ''}
         placeholder={t(EntityPlaceholdersI18nKey.FailureThreshold)}
         value={container.probeProperties?.failureThreshold}
         onChange={onFailureThresholdChange}
         disabled={disabled}
         containerClassName="w-[320px]"
         invalid={!!failureThresholdError}
-        errorText={failureThresholdError?.text}
+        error={failureThresholdError?.text}
       />
     </div>
   );

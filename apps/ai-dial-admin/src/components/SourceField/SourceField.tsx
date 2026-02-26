@@ -126,7 +126,7 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
           getContainers={getContainers}
           view={view}
           isModal={isModal}
-          errorText={source === SOURCE_TYPE.CONTAINER ? errorText : ''}
+          error={source === SOURCE_TYPE.CONTAINER ? errorText : ''}
         />
       )}
       {source === SOURCE_TYPE.RUNNER && getRunners && (
@@ -134,7 +134,7 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
           entity={entity}
           onChange={onChangeEntity}
           getRunners={getRunners}
-          errorText={source === SOURCE_TYPE.RUNNER ? errorText : ''}
+          error={source === SOURCE_TYPE.RUNNER ? errorText : ''}
           isModal={isModal}
         />
       )}
@@ -144,7 +144,7 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
           onChange={onChangeEntity}
           getAdapters={getAdapters}
           isModal={isModal}
-          errorText={source === SOURCE_TYPE.ADAPTER ? errorText : ''}
+          error={source === SOURCE_TYPE.ADAPTER ? errorText : ''}
         />
       )}
     </div>

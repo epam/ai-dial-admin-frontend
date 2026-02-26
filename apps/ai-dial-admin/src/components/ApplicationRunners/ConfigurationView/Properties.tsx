@@ -30,7 +30,7 @@ const SchemeProperties: FC<Props> = ({ names, runner, isImmutable, onChangeRunne
       {!isImmutable && (
         <IdControl
           names={names}
-          isUrlId={true}
+          isUrlId
           entity={{ name: runner.$id }}
           onChangeEntity={(entity) => onChangeId(entity.name)}
         />
@@ -38,7 +38,7 @@ const SchemeProperties: FC<Props> = ({ names, runner, isImmutable, onChangeRunne
 
       <DisplayNameControl
         displayName={runner['dial:applicationTypeDisplayName']}
-        required={true}
+        required
         isFullWidth={!isImmutable}
         onChange={(name?: string) => onChangeRunner({ ...runner, 'dial:applicationTypeDisplayName': name })}
       />
@@ -53,8 +53,8 @@ const SchemeProperties: FC<Props> = ({ names, runner, isImmutable, onChangeRunne
           onChange={(endpoint?: string) =>
             onChangeRunner({ ...runner, 'dial:applicationTypeCompletionEndpoint': endpoint })
           }
-          required={true}
-          isFullWidth={true}
+          required
+          isFullWidth
         />
       )}
     </div>

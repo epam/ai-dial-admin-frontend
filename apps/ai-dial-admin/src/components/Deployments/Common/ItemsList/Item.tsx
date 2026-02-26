@@ -72,7 +72,7 @@ const Item = forwardRef<HTMLLIElement, Props>(
           placeholder={t(EntityPlaceholdersI18nKey.Domain)}
           onChange={(v) => onChangeItem(v, index)}
           invalid={!!error}
-          errorText={error?.text}
+          error={error?.text}
           disabled={disabled}
         />
         <div className="w-[40px] flex-shrink-0">

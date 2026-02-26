@@ -78,7 +78,7 @@ const AssetProperties: FC<Props> = ({
       {isDeployment && (
         <DisplayNameControl
           displayName={entity.displayName}
-          required={true}
+          required
           isFullWidth={!isEntityImmutable}
           onChange={(displayName) => onChangeEntity({ ...entity, displayName })}
         />

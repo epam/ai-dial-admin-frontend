@@ -30,7 +30,7 @@ const Properties: FC<Props> = ({ selectedToolset, onChange }) => {
       <div className="flex flex-col gap-y-8">
         <DisplayNameControl
           displayName={selectedToolset.displayName}
-          required={true}
+          required
           isFullWidth={false}
           onChange={(displayName) => onChange({ ...selectedToolset, displayName })}
         />

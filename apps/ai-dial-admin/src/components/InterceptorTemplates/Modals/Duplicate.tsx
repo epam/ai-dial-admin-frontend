@@ -50,7 +50,7 @@ const DuplicateTemplate: FC<Props> = ({ onDuplicate, isModalOpen, onClose, templ
         <DisplayNameControl
           displayName={clonedTemplate.displayName}
           onChange={(displayName) => setTemplate({ ...clonedTemplate, displayName })}
-          required={true}
+          required
         />
       </div>
     </DialFormPopup>

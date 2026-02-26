@@ -112,7 +112,7 @@ const KeyProperties: FC<Props> = ({ entity, originalEntity, names, keys, isKeyIm
 
       <DisplayNameControl
         displayName={entity.displayName}
-        required={true}
+        required
         isFullWidth={!isKeyImmutable}
         onChange={(displayName) => onChangeKey({ ...entity, displayName })}
       />
@@ -124,7 +124,7 @@ const KeyProperties: FC<Props> = ({ entity, originalEntity, names, keys, isKeyIm
         labelProps={{ label: t(EntityFieldsI18nKey.project), required: true }}
         placeholder={t(EntityPlaceholdersI18nKey.Project)}
         value={entity.project}
-        errorText={projectError}
+        error={projectError}
         onChange={onChangeProject}
         invalid={!!projectError}
         containerClassName={containerClassName}
