@@ -51,13 +51,13 @@ const NewItemInput: FC<Props> = ({ value, index, placeholder, onRemoveItem, onCh
         <div className="flex-1 min-w-0">
           <DialInput
             invalid={!!error}
-            id={`item-${index}`}
+            elementId={`item-${index}`}
             value={value}
             placeholder={placeholder}
             onChange={onChange}
           />
         </div>
-        <DialErrorText text={error?.text} />
+        <DialErrorText errorText={error?.text} />
       </div>
       <DialRemoveButton disabled={!value} onClick={onRemove} />
     </div>
