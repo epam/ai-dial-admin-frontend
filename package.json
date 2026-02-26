@@ -116,7 +116,8 @@
     "glob": "11.1.0",
     "react": "19.1.2",
     "react-dom": "19.1.2",
-    "@modern-js/utils": "2.69.5"
+    "@modern-js/utils": "2.69.5",
+    "minimatch": "10.2.2"
   },
   "engines": {
     "node": ">=24.12.0",
