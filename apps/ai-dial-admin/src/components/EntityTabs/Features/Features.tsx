@@ -75,7 +75,7 @@ const EntityFeatures = <T extends { features?: DialFeatures }>({
           <EndpointControl
             key={key}
             id={key}
-            fieldTitle={t(FeaturesI18nKey[key as keyof typeof FeaturesI18nKey])}
+            label={t(FeaturesI18nKey[key as keyof typeof FeaturesI18nKey])}
             placeholder={t(placeholdersMap[key])}
             endpoint={entity.features?.[key] as string}
             onChange={(value) => onChange(value, key)}

@@ -2,7 +2,7 @@
 
 import { FC, MouseEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialNeutralButton, DialTabs, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialNeutralButton, DialTabs, DialInput } from '@epam/ai-dial-ui-kit';
 import { IconPlayerPlay } from '@tabler/icons-react';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
@@ -88,15 +88,15 @@ const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
   return (
     <div className="flex flex-col w-full h-full gap-2">
       <div className="flex flex-col gap-4">
-        <div className="flex flex-row justify-between">
+        <div className="flex flex-row justify-between gap-x-2">
           <div className="flex flex-row gap-2 items-start">
             {testSuite?.endpointRef?.method && (
               <span className="tiny bg-layer-3 rounded p-1 mt-[7px] border border-primary whitespace-nowrap max-w-[200px] overflow-hidden">
                 {testSuite?.endpointRef.method}
               </span>
             )}
-            <DialTextInputField
-              elementId="urlTemplate"
+            <DialInput
+              id="urlTemplate"
               value={testSuite.requestTemplate?.urlTemplate || ''}
               onChange={(urlTemplate) =>
                 onChangeTestSuite({ ...testSuite, requestTemplate: { ...testSuite.requestTemplate, urlTemplate } })

@@ -28,9 +28,8 @@ interface Props<T> {
   getRunners?: () => Promise<ServerActionResponse<InterceptorTemplate[]>>;
   getAdapters?: () => Promise<ServerActionResponse | null>;
   sourceItems: SelectOption[];
-  elementId: string;
-  fieldTitle?: string;
-  optional?: boolean;
+  id: string;
+  label?: string;
   view: ApplicationRoute;
   adapters?: DialAdapter[];
   isModal?: boolean;
@@ -42,9 +41,8 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
   getContainers,
   getRunners,
   getAdapters,
-  elementId,
-  fieldTitle,
-  optional,
+  id,
+  label,
   view,
   sourceItems,
   isModal,
@@ -110,10 +108,9 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
   return (
     <div className="flex flex-col gap-y-8">
       <DialSelectField
-        elementId={elementId}
+        id={id}
         containerClassName="w-[180px]"
-        fieldTitle={fieldTitle}
-        optional={optional}
+        label={label}
         options={sourceItems}
         onChange={(v) => onChangeSource(v as string)}
         value={source}
@@ -129,7 +126,7 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
           getContainers={getContainers}
           view={view}
           isModal={isModal}
-          errorText={source === SOURCE_TYPE.CONTAINER ? errorText : ''}
+          error={source === SOURCE_TYPE.CONTAINER ? errorText : ''}
         />
       )}
       {source === SOURCE_TYPE.RUNNER && getRunners && (
@@ -137,7 +134,7 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
           entity={entity}
           onChange={onChangeEntity}
           getRunners={getRunners}
-          errorText={source === SOURCE_TYPE.RUNNER ? errorText : ''}
+          error={source === SOURCE_TYPE.RUNNER ? errorText : ''}
           isModal={isModal}
         />
       )}
@@ -147,7 +144,7 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
           onChange={onChangeEntity}
           getAdapters={getAdapters}
           isModal={isModal}
-          errorText={source === SOURCE_TYPE.ADAPTER ? errorText : ''}
+          error={source === SOURCE_TYPE.ADAPTER ? errorText : ''}
         />
       )}
     </div>

@@ -1,4 +1,4 @@
-import { DialFormPopup, DialTextInputField, PopupSize } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, DialInput, PopupSize } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useState } from 'react';
 
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -55,14 +55,14 @@ const CreateRoute: FC<Props> = ({ isModalOpen, routeNames, onClose, onCreate }) 
       open={isModalOpen}
     >
       <div className="flex flex-col overflow-auto px-6 py-4">
-        <DialTextInputField
-          elementId="name"
-          fieldTitle={t(EntityFieldsI18nKey.displayName)}
+        <DialInput
+          id="name"
+          labelProps={{ label: t(EntityFieldsI18nKey.displayName) }}
           placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
           value={name}
           onChange={onChangeName}
           invalid={!!nameError}
-          errorText={nameError?.text}
+          error={nameError?.text}
         />
       </div>
     </DialFormPopup>

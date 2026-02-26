@@ -1,7 +1,7 @@
 'use client';
 
 import { FC } from 'react';
-import { DialNumberInputField, DialSelectField, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialNumberInput, DialSelectField, DialInput } from '@epam/ai-dial-ui-kit';
 
 import { EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -19,10 +19,10 @@ const SimpleTypeControls: FC<Props> = ({ control }) => {
     <>
       {control.type === SchemeParameterType.string && (
         <div className="w-[35%]">
-          <DialTextInputField
-            elementId={control.id}
-            fieldTitle={control.label}
-            optional={control.optional}
+          <DialInput
+            id={control.id}
+            labelProps={{ label: control.label }}
+            required={!control.optional}
             placeholder={t(EntityPlaceholdersI18nKey.Value)}
             disabled={true}
           />
@@ -30,10 +30,10 @@ const SimpleTypeControls: FC<Props> = ({ control }) => {
       )}
       {control.type === SchemeParameterType.number && (
         <div className="w-[120px]">
-          <DialNumberInputField
-            elementId={control.id}
-            fieldTitle={control.label}
-            optional={control.optional}
+          <DialNumberInput
+            id={control.id}
+            labelProps={{ label: control.label }}
+            required={!control.optional}
             placeholder={t(EntityPlaceholdersI18nKey.Value)}
             disabled={true}
           />
@@ -42,9 +42,9 @@ const SimpleTypeControls: FC<Props> = ({ control }) => {
       {control.type === SchemeParameterType.boolean && (
         <div className="w-[35%]">
           <DialSelectField
-            elementId={control.id}
-            fieldTitle={control.label}
-            optional={control.optional}
+            id={control.id}
+            label={control.label}
+            required={!control.optional}
             placeholder={t(EntityPlaceholdersI18nKey.Select)}
             disabled={true}
             options={[]}

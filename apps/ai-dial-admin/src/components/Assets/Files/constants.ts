@@ -4,5 +4,5 @@ import { ColDef } from 'ag-grid-community';
 export const FILES_GRID_COLUMNS: ColDef[] = [
   NAME_COLUMN('Display name') as ColDef,
   UPDATED_AT_COLUMN('Updated time') as ColDef,
-  SIZE_COLUMN('Size'),
+  SIZE_COLUMN('Size') as ColDef,
 ];

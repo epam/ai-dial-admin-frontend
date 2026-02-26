@@ -238,7 +238,7 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, testCasesActionsRef, onDi
 
   return (
     <>
-      <div className="flex-1 min-h-[400px]">
+      <div className="flex-1 min-h-0">
         <ListEntities
           additionalGridOptions={gridOptions}
           listLabel={t(TestSuitesI18nKey.TestCases)}

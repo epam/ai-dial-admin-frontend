@@ -69,7 +69,7 @@ const DuplicateScheme: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose, 
         <DisplayNameControl
           displayName={clonedEntity['dial:applicationTypeDisplayName']}
           onChange={onChangeName}
-          required={true}
+          required
         />
       </div>
     </DialFormPopup>

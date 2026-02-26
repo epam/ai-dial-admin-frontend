@@ -2,14 +2,13 @@
 
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { DialInputPopup, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { DialInputPopup, DialLabel, DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import { getDeployments } from '@/src/app/[lang]/test-suites/actions';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
-import Field from '@/src/components/Common/Field/Field';
 import EndpointSchema from '@/src/components/TestSuites/EndpointSchema/EndpointSchema';
 import CreateTestSuite from '@/src/components/TestSuites/Modals/Create/CreateTestSuite';
 import RequestTemplate from '@/src/components/TestSuites/RequestTemplate/RequestTemplate';
@@ -67,7 +66,7 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
       {isModal && (
         <DisplayNameControl
           displayName={testSuite.name}
-          required={true}
+          required
           isFullWidth={false}
           onChange={(name) => onChange({ ...testSuite, name })}
         />
@@ -76,8 +75,8 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
       {!isModal && (
         <>
           <div className={classNames('flex gap-2', STANDARD_CONTROL_WIDTH)}>
-            <div className={CONTROL_WITH_BUTTON_WIDTH}>
-              <Field fieldTitle={t(TestSuitesI18nKey.Application)} htmlFor="applications" />
+            <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-2')}>
+              <DialLabel label={t(TestSuitesI18nKey.Application)} htmlFor="applications" />
               <DialInputPopup
                 open={isAppModalOpen}
                 onOpen={() => setIsAppModalOpen(true)}

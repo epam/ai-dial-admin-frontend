@@ -4,7 +4,7 @@ import {
   AlertVariant,
   DialAlert,
   DialRadioGroupPopupField,
-  DialTextInputField,
+  DialInput,
   PopupSize,
   RadioButtonWithContent,
 } from '@epam/ai-dial-ui-kit';
@@ -74,9 +74,9 @@ const ForwardAuthTokenField: FC<Props> = ({ view, entity, onChangeEntity }) => {
       content: (
         <div className="flex flex-col gap-y-8 mt-3">
           <DialAlert variant={AlertVariant.Error} message={t(ForwardTokenI18nKey.ForwardTokenModalAlert)} />
-          <DialTextInputField
-            elementId="entityName"
-            fieldTitle={displayNameKey !== '' ? t(displayNameKey as CreateI18nKey) : ''}
+          <DialInput
+            id="entityName"
+            labelProps={{ label: displayNameKey ? t(displayNameKey as CreateI18nKey) : '' }}
             placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
             value={confirmName}
             onChange={onChangeName}
@@ -92,7 +92,7 @@ const ForwardAuthTokenField: FC<Props> = ({ view, entity, onChangeEntity }) => {
         htmlFor="forwardAuthToken"
         id="forwardAuthToken"
         emptyValueText={t(BasicI18nKey.None)}
-        fieldTitle={t(EntityFieldsI18nKey.forwardAuthToken)}
+        label={t(EntityFieldsI18nKey.forwardAuthToken)}
         header={t(ForwardTokenI18nKey.ForwardTokenModalTitle)}
         portalId="entityNameToken"
         size={PopupSize.Sm}

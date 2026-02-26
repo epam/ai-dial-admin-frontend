@@ -1,6 +1,6 @@
 import { ChangeEvent, FC, memo, useCallback, useRef } from 'react';
 import { IconFileArrowRight } from '@tabler/icons-react';
-import { DialTextInputField, DialPasswordInputField, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { DialPasswordInput, DialNeutralButton, DialInput } from '@epam/ai-dial-ui-kit';
 
 import { EnvVariableValue } from '@/src/models/deployments/variables';
 import { EntityPlaceholdersI18nKey, EnvVariablesI18nKey } from '@/src/constants/i18n';
@@ -72,20 +72,20 @@ const ContainerVariableValue: FC<Props> = ({ value, index, onValueChange, mountT
       {value.$type === VALUE_TYPE.SIMPLE && (
         <div className="flex-1">
           {mountType === MOUNT_TYPE.SECURE_CONTENT ? (
-            <DialPasswordInputField
-              elementId={`value_${index}`}
+            <DialPasswordInput
+              id={`value_${index}`}
               value={value.value}
               placeholder={t(EntityPlaceholdersI18nKey.Value)}
-              fieldTitle={fieldName}
+              labelProps={{ label: fieldName }}
               onChange={onChangeValue}
               disabled={disabled}
             />
           ) : (
-            <DialTextInputField
-              elementId={`value ${index}`}
+            <DialInput
+              id={`value_${index}`}
               value={value.value}
               placeholder={t(EntityPlaceholdersI18nKey.Value)}
-              fieldTitle={fieldName}
+              labelProps={{ label: fieldName }}
               onChange={onChangeValue}
               disabled={disabled}
             />

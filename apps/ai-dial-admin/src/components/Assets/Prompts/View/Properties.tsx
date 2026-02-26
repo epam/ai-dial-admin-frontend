@@ -69,7 +69,7 @@ const PromptProperties: FC<Props> = ({ prompt, onChangePrompt, isPublication }) 
     <div className="flex flex-col gap-y-8">
       {isPublication && (
         <VersionControl
-          elementContainerClassName="w-[175px]"
+          className="w-[175px]"
           version={prompt.version}
           onChange={(version?: string) => onChangePrompt?.({ ...prompt, version: version || '' })}
         />

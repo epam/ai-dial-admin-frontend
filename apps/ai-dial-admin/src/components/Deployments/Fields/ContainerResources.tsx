@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import { DialNumberInputField } from '@epam/ai-dial-ui-kit';
+import { DialNumberInput } from '@epam/ai-dial-ui-kit';
 
 import { Container } from '@/src/models/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -83,15 +83,15 @@ const ContainerResources: FC<Props> = ({ container, setContainer, route }) => {
         <MemoryFields container={container} setContainer={setContainer} />
         {route === ApplicationRoute.ModelServings && (
           <div className="flex gap-2 flex-col lg:flex-row">
-            <DialNumberInputField
-              elementId="gpuRequest"
-              containerClassName="w-[180px]"
-              fieldTitle={t(EntityFieldsI18nKey.GPURequest)}
+            <DialNumberInput
+              id="gpuRequest"
+              className="w-[180px]"
+              labelProps={{ label: t(EntityFieldsI18nKey.GPURequest) }}
               value={container.resources?.requests?.['nvidia.com/gpu'] || ''}
               disabled={isEditDisabled(container)}
               onChange={onChangeGpuRequest}
               invalid={!!error}
-              errorText={error?.text}
+              error={error?.text}
             />
           </div>
         )}

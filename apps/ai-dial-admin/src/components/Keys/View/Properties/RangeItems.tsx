@@ -6,10 +6,10 @@ import { FC, useCallback, useEffect, useState } from 'react';
 import { IpRange, IpRangeError, IpRangeProperty } from './types';
 import {
   ButtonAppearance,
-  DialNumberInputField,
+  DialNumberInput,
   DialPrimaryButton,
   DialRemoveButton,
-  DialTextInputField,
+  DialInput,
 } from '@epam/ai-dial-ui-kit';
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { IconPlus } from '@tabler/icons-react';
@@ -58,31 +58,30 @@ const RangeItems: FC<Props> = ({ ranges, onAddRange, onRemoveRange, onUpdateRang
     <div className={classNames('flex flex-col gap-2 pl-6 pt-2', STANDARD_CONTROL_WIDTH)}>
       {ranges.map((range, index) => (
         <div key={index} className="flex flex-row gap-1 items-start">
-          <DialTextInputField
+          <DialInput
             containerClassName="flex w-full flex-1"
-            label={index === 0 ? t(EntityFieldsI18nKey.IpRange) : null}
+            labelProps={index === 0 ? { title: t(EntityFieldsI18nKey.IpRange) } : undefined}
             placeholder={t(EntityPlaceholdersI18nKey.IpRange)}
-            elementId={`ip-${index}`}
+            id={`ip-${index}`}
             onChange={(value) => {
               onUpdateRange(IpRangeProperty.IP, value, index);
             }}
             invalid={!!errors?.[index]?.ip}
-            errorText={errors?.[index]?.ip?.text}
+            error={errors?.[index]?.ip?.text}
             value={range.ip || ''}
           />
-          <span className={classNames('text-secondary leading-[40px]', index === 0 && 'mt-6')}>/</span>
-          <DialNumberInputField
-            elementId={`mask-${index}`}
+          <span className="text-secondary leading-[40px]">/</span>
+          <DialNumberInput
+            id={`mask-${index}`}
             value={range.mask || undefined}
-            fieldTitle={index === 0 ? t(EntityFieldsI18nKey.Mask) : undefined}
-            containerClassName="w-[120px]"
-            elementClassName="h-[40px]"
+            labelProps={index === 0 ? { title: t(EntityFieldsI18nKey.Mask) } : undefined}
+            className="w-[120px]"
             placeholder={t(EntityPlaceholdersI18nKey.Mask)}
             onChange={(value) => {
               onUpdateRange(IpRangeProperty.MASK, value, index);
             }}
             invalid={!!errors?.[index]?.mask}
-            errorText={errors?.[index]?.mask?.text}
+            error={errors?.[index]?.mask?.text}
           />
           <DialRemoveButton
             className={classNames(index === 0 && 'mt-6')}

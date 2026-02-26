@@ -1,12 +1,12 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ButtonAppearance,
-  DialNumberInputField,
+  DialNumberInput,
   DialPrimaryButton,
   DialRadioGroup,
   DialSelectField,
   DialSwitch,
-  DialTextInputField,
+  DialInput,
   RadioButtonWithContent,
   RadioGroupOrientation,
   SelectOption,
@@ -197,7 +197,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
     <div className="h-full flex flex-col w-full gap-y-8">
       <DisplayNameControl
         displayName={isAppRoute ? route.name : route.displayName}
-        required={true}
+        required
         isFullWidth={false}
         onChange={onChangeDisplayName}
         disabled={readonly}
@@ -205,9 +205,10 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
       />
       {!isAppRoute && <DescriptionControl entity={route} onChangeEntity={onChange} isFullWidth={false} />}
       <Paths
-        title={t(EntityFieldsI18nKey.paths)}
+        label={t(EntityFieldsI18nKey.paths)}
         paths={route.paths}
         onChangePaths={onChangePaths}
+        required
         readonly={readonly}
       />
       <DialSwitch
@@ -223,7 +224,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
         selectedItems={route.methods}
         onChangeItems={onChangeMethods}
         heading={t(EntityFieldsI18nKey.methods)}
-        title={t(EntityFieldsI18nKey.methods)}
+        label={t(EntityFieldsI18nKey.methods)}
         allItems={methods}
         className={STANDARD_CONTROL_WIDTH}
         errorText={route.methods?.length ? '' : t(ErrorI18nKey.EmptyField)}
@@ -240,26 +241,26 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
         onChange={onChangeOutput}
       />
       <div className={classNames('flex gap-x-2 flex-row', STANDARD_CONTROL_WIDTH, !route.response && 'hidden')}>
-        <DialNumberInputField
+        <DialNumberInput
           disabled={readonly}
-          elementId="status"
+          id="status"
           containerClassName="w-[150px]"
-          fieldTitle={t(EntityFieldsI18nKey.status)}
+          labelProps={{ label: t(EntityFieldsI18nKey.status) }}
           placeholder={t(EntityPlaceholdersI18nKey.Status)}
           value={route.response?.status}
           onChange={onChangeStatus}
-          errorText={statusError}
+          error={statusError}
           invalid={!!statusError}
         />
-        <DialTextInputField
+        <DialInput
           disabled={readonly}
-          elementId="body"
+          id="body"
           containerClassName="flex-1"
-          fieldTitle={t(EntityFieldsI18nKey.body)}
+          labelProps={{ label: t(EntityFieldsI18nKey.body) }}
           placeholder={t(EntityPlaceholdersI18nKey.Body)}
           value={route.response?.body}
           onChange={onChangeBody}
-          errorText={bodyError}
+          error={bodyError}
           invalid={!!bodyError}
         />
       </div>
@@ -277,27 +278,27 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
         <DialSelectField
           disabled={readonly}
           placeholder={t(EntityPlaceholdersI18nKey.SelectPermission)}
-          elementId="permissions"
+          id="permissions"
           multiple={true}
           className={STANDARD_CONTROL_WIDTH}
           containerClassName={STANDARD_CONTROL_WIDTH}
           options={permissionsItems}
           value={selectedPermissions}
-          fieldTitle={t(EntityFieldsI18nKey.permissions)}
+          label={t(EntityFieldsI18nKey.permissions)}
           onChange={(values) => onChangePermissions(values as string[])}
         />
       )}
       <div className={classNames('flex gap-x-2 flex-row items-end', STANDARD_CONTROL_WIDTH)}>
-        <DialNumberInputField
-          elementId="order"
+        <DialNumberInput
+          id="order"
           disabled={readonly}
           containerClassName="w-[50%]"
-          fieldTitle={t(EntityFieldsI18nKey.order)}
+          labelProps={{ label: t(EntityFieldsI18nKey.order) }}
           placeholder={t(EntityPlaceholdersI18nKey.Order)}
           value={route.order}
           min={0}
           onChange={onChangeOrder}
-          errorText={orderError}
+          error={orderError}
           invalid={!!orderError}
         />
         {route.order !== ORDER_DEFAULT_VALUE && (

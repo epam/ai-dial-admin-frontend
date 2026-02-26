@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useEffect, useState } from 'react';
-import { DialNumberInputField, DialSelectField, DialTextInputField, SelectOption } from '@epam/ai-dial-ui-kit';
+import { DialNumberInput, DialSelectField, DialInput, SelectOption } from '@epam/ai-dial-ui-kit';
 
 import { EntityCaptionsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { Container, ProbeConfig, ProbeProperties } from '@/src/models/deployments/containers';
@@ -154,38 +154,38 @@ const Endpoint: FC<Props> = ({ container, setContainer, disabled }) => {
       <h3>{t(EntityFieldsI18nKey.endpoint)}</h3>
       <div className="flex gap-3">
         <DialSelectField
-          elementId="type"
+          id="type"
           disabled={disabled}
-          fieldTitle={t(EntityFieldsI18nKey.type)}
+          label={t(EntityFieldsI18nKey.type)}
           containerClassName="w-[180px]"
           options={typeOptions}
           value={container.probeProperties?.probe?.$type || typeOptions[0].value}
           onChange={onTypeChange}
         />
-        <DialNumberInputField
-          elementId="port"
-          fieldTitle={t(EntityFieldsI18nKey.Port)}
+        <DialNumberInput
+          id="port"
+          labelProps={{ label: t(EntityFieldsI18nKey.Port) }}
+          caption={!portError ? t(EntityCaptionsI18nKey.ProbePort) : ''}
           placeholder={t(EntityPlaceholdersI18nKey.Port)}
           value={container.probeProperties?.probe?.port}
           onChange={onPortChange}
           disabled={disabled}
           containerClassName="w-[320px]"
-          captionDescription={!portError ? t(EntityCaptionsI18nKey.ProbePort) : ''}
           invalid={!!portError}
-          errorText={portError?.text}
+          error={portError?.text}
         />
         {container.probeProperties?.probe?.$type === PROBE_TYPE.HTTP_GET && (
-          <DialTextInputField
-            elementId="path"
-            fieldTitle={t(EntityFieldsI18nKey.Path)}
+          <DialInput
+            id="path"
+            labelProps={{ label: t(EntityFieldsI18nKey.Path) }}
+            caption={!pathError ? t(EntityCaptionsI18nKey.ProbePath) : ''}
             placeholder={t(EntityPlaceholdersI18nKey.Path)}
             value={container.probeProperties?.probe?.path}
             disabled={disabled}
             containerClassName="w-[320px]"
             onChange={onPathChange}
-            captionDescription={!pathError ? t(EntityCaptionsI18nKey.ProbePath) : ''}
             invalid={!!pathError}
-            errorText={pathError?.text}
+            error={pathError?.text}
           />
         )}
       </div>

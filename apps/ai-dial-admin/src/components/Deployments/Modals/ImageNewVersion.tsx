@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 import semver from 'semver';
-import { DialConfirmationPopup, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialConfirmationPopup, DialInput } from '@epam/ai-dial-ui-kit';
 
 import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { useI18n } from '@/src/locales/client';
@@ -62,14 +62,14 @@ const ImageNewVersion: FC<Props> = ({ isModalOpen, title, onClose, onApply, imag
       confirmLabel={okLabel}
     >
       <div className="flex flex-col h-full overflow-auto px-6 py-4">
-        <DialTextInputField
-          elementContainerClassName="max-w-[120px]"
-          elementId="version"
-          fieldTitle={t(EntityFieldsI18nKey.version)}
+        <DialInput
+          className="max-w-[120px]"
+          id="version"
+          labelProps={{ label: t(EntityFieldsI18nKey.version) }}
           onChange={onVersionChange}
           value={version}
           invalid={!!versionError}
-          errorText={versionError?.text}
+          error={versionError?.text}
         />
       </div>
     </DialConfirmationPopup>

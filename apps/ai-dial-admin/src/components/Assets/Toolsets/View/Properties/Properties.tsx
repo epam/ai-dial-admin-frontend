@@ -35,13 +35,13 @@ const Properties: FC<Props> = ({ selectedToolset, onChange, isPublication }) => 
       )}
       <DisplayNameControl
         displayName={selectedToolset.displayName}
-        required={true}
+        required
         isFullWidth={false}
         onChange={(displayName) => onChange({ ...selectedToolset, displayName })}
       />
       {isPublication && (
         <VersionControl
-          elementContainerClassName="w-[175px]"
+          className="w-[175px]"
           version={selectedToolset.version}
           onChange={(version?: string) =>
             onChange?.({ ...selectedToolset, version: version || '', displayVersion: version || '' })

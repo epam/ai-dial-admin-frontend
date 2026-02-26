@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import { DialNumberInputField } from '@epam/ai-dial-ui-kit';
+import { DialNumberInput } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { Container } from '@/src/models/deployments/containers';
@@ -143,25 +143,24 @@ const CPUFields: FC<Props> = ({ container, setContainer }) => {
 
   return (
     <div className="flex flex-col lg:flex-row gap-2">
-      <DialNumberInputField
-        elementId="cpuRequest"
+      <DialNumberInput
+        id="cpuRequest"
         containerClassName="w-[180px]"
-        elementContainerClassName="w-[180px]"
-        fieldTitle={t(EntityFieldsI18nKey.CPURequest)}
+        labelProps={{ label: t(EntityFieldsI18nKey.CPURequest) }}
         value={container.resources?.requests?.cpu ? convertCoresToMilliCores(container.resources?.requests?.cpu) : ''}
-        errorText={requestError?.text}
+        error={requestError?.text}
         invalid={!!requestError}
-        suffix="m"
+        postfix="m"
         disabled={isEditDisabled(container)}
         onChange={onChangeRequest}
       />
-      <DialNumberInputField
-        elementId="cpuLimit"
-        elementContainerClassName="w-[180px]"
-        fieldTitle={t(EntityFieldsI18nKey.CPULimit)}
+      <DialNumberInput
+        id="cpuLimit"
+        containerClassName="w-[180px]"
+        labelProps={{ label: t(EntityFieldsI18nKey.CPULimit) }}
         value={container.resources?.limits?.cpu ? convertCoresToMilliCores(container.resources?.limits?.cpu) : ''}
-        suffix="m"
-        errorText={limitError?.text}
+        postfix="m"
+        error={limitError?.text}
         invalid={!!limitError}
         disabled={isEditDisabled(container)}
         onChange={onChangeLimit}

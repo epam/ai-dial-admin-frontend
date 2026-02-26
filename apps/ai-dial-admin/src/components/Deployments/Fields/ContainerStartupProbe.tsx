@@ -65,7 +65,7 @@ const ContainerStartupProbe: FC<Props> = ({ container, setContainer }) => {
     <Accordion title={t(EntityFieldsI18nKey.StartupProbe)} errorIndicator={isSectionInvalid}>
       <div className="flex flex-col gap-4">
         <DialSwitch
-          switchId={'startup-probe'}
+          switchId="startup-probe"
           label={t('Enable startup probe')}
           isOn={container.probeProperties?.enabled || false}
           onChange={onChangeEnabled}
