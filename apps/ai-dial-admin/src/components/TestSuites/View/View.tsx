@@ -6,7 +6,8 @@ import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconPlayerPlay } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 
-import { removeTestSuite, runTestSuite, updateTestSuite } from '@/src/app/[lang]/test-suites/actions';
+import { removeTestSuite, runTestSuite, updateTestCases, updateTestSuite } from '@/src/app/[lang]/test-suites/actions';
+import { TestCasesActions } from '@/src/components/TestSuites/TestCases/TestCasesList';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
@@ -35,11 +36,13 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
   const { showNotification } = useNotification();
 
   const runRefreshRef = useRef<(() => void) | null>(null);
+  const testCasesActionsRef = useRef<TestCasesActions | null>(null);
   const tabs = getTestSuiteTabs(t);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedTestSuite, setSelectedTestSuite] = useState(structuredClone(originalTestSuite));
   const [isChanged, setIsChanged] = useState(false);
+  const [hasTestCaseChanges, setHasTestCaseChanges] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [isSkipRefresh, setIsSkipRefresh] = useState(false);
@@ -53,8 +56,8 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
   );
 
   useEffect(() => {
-    setIsChanged(!isEqualSkippingUndefined(originalTestSuite, selectedTestSuite));
-  }, [originalTestSuite, selectedTestSuite]);
+    setIsChanged(!isEqualSkippingUndefined(originalTestSuite, selectedTestSuite) || hasTestCaseChanges);
+  }, [originalTestSuite, selectedTestSuite, hasTestCaseChanges]);
 
   useEffect(() => {
     setSelectedTestSuite(structuredClone(originalTestSuite));
@@ -62,21 +65,44 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
 
   const onDiscard = useCallback(() => {
     setSelectedTestSuite(structuredClone(originalTestSuite));
+    setHasTestCaseChanges(false);
     setIsSkipRefresh(false);
+    testCasesActionsRef.current?.clearDirtyAndRefresh();
   }, [originalTestSuite]);
 
   const onSave = useCallback(() => {
+    const showSuccessAndRefresh = () => {
+      showNotification(
+        getSuccessNotification(
+          getUpdateNotificationTitle(ApplicationRoute.TestSuites, t),
+          getUpdateNotificationDescription(ApplicationRoute.TestSuites, selectedTestSuite.id, t),
+        ),
+      );
+      router.refresh();
+    };
+
     updateTestSuite(selectedTestSuite, etag).then((res) => {
-      if (res.success) {
-        showNotification(
-          getSuccessNotification(
-            getUpdateNotificationTitle(ApplicationRoute.TestSuites, t),
-            getUpdateNotificationDescription(ApplicationRoute.TestSuites, selectedTestSuite.id, t),
-          ),
-        );
-        router.refresh();
-      } else {
+      if (!res.success) {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+        return;
+      }
+      const dirtyTestCases = testCasesActionsRef.current?.getDirtyTestCases() ?? [];
+      if (dirtyTestCases.length > 0 && selectedTestSuite.id) {
+        updateTestCases(selectedTestSuite.id, dirtyTestCases).then((testCasesRes) => {
+          if (testCasesRes.success) {
+            testCasesActionsRef.current?.clearDirtyAndRefresh();
+            setHasTestCaseChanges(false);
+            showSuccessAndRefresh();
+          } else {
+            showNotification(
+              getErrorNotification(testCasesRes.errorHeader, testCasesRes.errorMessage, testCasesRes.requestId),
+            );
+          }
+        });
+      } else {
+        testCasesActionsRef.current?.clearDirtyAndRefresh();
+        setHasTestCaseChanges(false);
+        showSuccessAndRefresh();
       }
     });
   }, [selectedTestSuite, etag, showNotification, t, router]);
@@ -145,6 +171,8 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
           ) : (
             <TabsContent
               runRefreshRef={runRefreshRef}
+              testCasesActionsRef={testCasesActionsRef}
+              onTestCaseDirtyChange={setHasTestCaseChanges}
               isSkipRefresh={isSkipRefresh}
               activeTab={activeTab}
               selectedTestSuite={selectedTestSuite}

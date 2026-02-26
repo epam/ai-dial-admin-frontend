@@ -3,12 +3,13 @@ import { notFound } from 'next/navigation';
 
 import { createToolset as createAssetToolset } from '@/src/app/[lang]/assets-toolsets/actions';
 import { createToolset } from '@/src/app/[lang]/toolsets/actions';
-import { getContainer, getMCPContainers } from '@/src/app/actions/deployments';
+import { getContainer, getImage, getMCPContainers } from '@/src/app/actions/deployments';
 import { toolSetsApi } from '@/src/app/api/api';
 import ContainerView from '@/src/components/Containers/View/ContainerView';
 import { ToolsetFolderProvider } from '@/src/context/assets/ToolsetsFolderContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { Container } from '@/src/models/deployments/containers';
+import { Image } from '@/src/models/deployments/images';
 import { Toolset } from '@/src/models/dial/toolset';
 import { errorObjLog } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -28,6 +29,7 @@ export default async function Page(params: Params) {
 
   let container: Container | null = null;
   let containers: Container[] | null = null;
+  let image: Image | null = null;
   let toolsets: Toolset[] | null = null;
 
   try {
@@ -39,12 +41,18 @@ export default async function Page(params: Params) {
     }
     container = containerResponse.response as Container;
     containers = containersResponse.response as Container[];
+
+    const imageResponse = await getImage(container?.imageDefinitionId as string);
+    if (!imageResponse.success) {
+      notFound();
+    }
+    image = imageResponse.response as Image;
     toolsets = await toolSetsApi.getToolsetList(token);
   } catch (e) {
     errorObjLog(e, 'Failed to fetch mcp container page');
   }
 
-  if (!container) {
+  if (!container || !image) {
     notFound();
   }
 
@@ -53,6 +61,7 @@ export default async function Page(params: Params) {
       <ToolsetFolderProvider>
         <ContainerView
           container={decodeVariables(container)}
+          image={image}
           route={ApplicationRoute.McpContainers}
           names={
             containers?.map((container) => container.name as string).filter((name) => name !== container.name) || []

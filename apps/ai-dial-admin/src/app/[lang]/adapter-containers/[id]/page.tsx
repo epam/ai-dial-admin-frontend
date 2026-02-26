@@ -1,11 +1,12 @@
 import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
-import { getAdapterContainers, getContainer } from '@/src/app/actions/deployments';
+import { getAdapterContainers, getContainer, getImage } from '@/src/app/actions/deployments';
 import { adaptersApi } from '@/src/app/api/api';
 import ContainerView from '@/src/components/Containers/View/ContainerView';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { Container } from '@/src/models/deployments/containers';
+import { Image } from '@/src/models/deployments/images';
 import { errorObjLog } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -26,6 +27,7 @@ export default async function Page(params: Params) {
 
   let container: Container | null = null;
   let containers: Container[] | null = null;
+  let image: Image | null = null;
   let adapters: DialAdapter[] | null = null;
 
   try {
@@ -37,12 +39,18 @@ export default async function Page(params: Params) {
     }
     container = containerResponse.response as Container;
     containers = containersResponse.response as Container[];
+
+    const imageResponse = await getImage(container?.imageDefinitionId as string);
+    if (!imageResponse.success) {
+      notFound();
+    }
+    image = imageResponse.response as Image;
     adapters = await adaptersApi.getAdaptersList(token);
   } catch (e) {
     errorObjLog(e, 'Failed to fetch interceptor container page');
   }
 
-  if (!container) {
+  if (!container || !image) {
     notFound();
   }
 
@@ -50,6 +58,7 @@ export default async function Page(params: Params) {
     <SaveValidationContextProvider>
       <ContainerView
         container={decodeVariables(container)}
+        image={image}
         route={ApplicationRoute.AdapterContainers}
         names={containers?.map((container) => container.name as string).filter((name) => name !== container.name) || []}
         createEntity={createAdapter}
