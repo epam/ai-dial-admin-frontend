@@ -20,6 +20,7 @@ import {
   removeTestSuite,
   runTestSuite,
   tryOutTestSuite,
+  updateTestCases,
   updateTestSuite,
   getTestCaseTemplateVariables,
   tryOutTestCase,
@@ -155,6 +156,15 @@ describe('TestSuites :: server actions', () => {
     const result = await removeTestCase('id', 'caseId');
     expect(getUserToken).toHaveBeenCalled();
     expect(testSuitesApi.removeTestCase).toHaveBeenCalledWith('id', 'caseId', TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call updateTestCases action ', async () => {
+    (testSuitesApi.updateTestCases as any).mockResolvedValue(RESPONSE_MOCK);
+    const testCases = [{ id: 'caseId' }];
+    const result = await updateTestCases('id', testCases as any);
+    expect(getUserToken).toHaveBeenCalled();
+    expect(testSuitesApi.updateTestCases).toHaveBeenCalledWith('id', testCases, TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 

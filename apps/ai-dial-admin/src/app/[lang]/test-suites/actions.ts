@@ -5,7 +5,7 @@ import { cookies, headers } from 'next/headers';
 import { testSuitesApi } from '@/src/app/api/api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { TestCase, TestSuite } from '@/src/models/evaluation/test-suite';
 import { FilterDto, SortDto } from '@/src/models/request';
 
 export async function removeTestSuite(id: string) {
@@ -67,6 +67,11 @@ export async function getTestCases(
 export async function removeTestCase(id: string, testCaseId: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return testSuitesApi.removeTestCase(id, testCaseId, token);
+}
+
+export async function updateTestCases(id: string, testCases: TestCase[]) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.updateTestCases(id, testCases, token);
 }
 
 export async function getTestCase(id: string, testCaseId?: string) {
