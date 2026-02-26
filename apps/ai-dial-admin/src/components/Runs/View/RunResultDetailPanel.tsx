@@ -34,8 +34,7 @@ const RunResultDetailPanel: FC<Props> = ({ result, onClose }) => {
   const testCaseEntries = useMemo(() => {
     const testCaseData = result.testCaseData ?? {};
     return Object.keys(testCaseData).map((key) => {
-      const [, part2] = key.split('.');
-      return [part2, String(testCaseData[key])] as [string, string];
+      return [key, String(testCaseData[key])] as [string, string];
     });
   }, [result.testCaseData]);
 
