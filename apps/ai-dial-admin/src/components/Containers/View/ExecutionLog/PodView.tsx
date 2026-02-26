@@ -26,7 +26,7 @@ const PodView: FC<Props> = ({ pod, containerId }) => {
   const restartReasons = RESTART_REASONS(t);
 
   useEffect(() => {
-    if (containerId && podData.name) {
+    if (containerId && podData?.name) {
       const eventSource = new EventSource(`/api/sse?entity=container&id=${containerId}&podName=${podData.name}`);
       const handleLogs = (event: MessageEvent) => {
         setLogs((prev) => prev + event.data + '\n');
