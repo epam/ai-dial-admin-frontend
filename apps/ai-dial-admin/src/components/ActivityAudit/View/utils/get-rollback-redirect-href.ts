@@ -6,41 +6,28 @@ export const getRollbackRedirectHref = (entityType?: ActivityAuditResourceType, 
     return ApplicationRoute.ActivityAudit;
   }
 
-  let redirectHref = '';
   switch (entityType) {
     case ActivityAuditResourceType.MODEL:
-      redirectHref = `${ApplicationRoute.Models}/${encodeURIComponent(resourceId)}`;
-      break;
+      return `${ApplicationRoute.Models}/${encodeURIComponent(resourceId)}`;
     case ActivityAuditResourceType.APPLICATION:
-      redirectHref = `${ApplicationRoute.Applications}/${encodeURIComponent(resourceId)}`;
-      break;
+      return `${ApplicationRoute.Applications}/${encodeURIComponent(resourceId)}`;
     case ActivityAuditResourceType.TOOLSET:
-      redirectHref = `${ApplicationRoute.Toolsets}/${encodeURIComponent(resourceId)}`;
-      break;
+      return `${ApplicationRoute.Toolsets}/${encodeURIComponent(resourceId)}`;
     case ActivityAuditResourceType.INTERCEPTOR:
-      redirectHref = `${ApplicationRoute.Interceptors}/${encodeURIComponent(resourceId)}`;
-      break;
+      return `${ApplicationRoute.Interceptors}/${encodeURIComponent(resourceId)}`;
     case ActivityAuditResourceType.ROUTE:
-      redirectHref = `${ApplicationRoute.Routes}/${encodeURIComponent(resourceId)}`;
-      break;
+      return `${ApplicationRoute.Routes}/${encodeURIComponent(resourceId)}`;
     case ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA:
-      redirectHref = `${ApplicationRoute.ApplicationRunners}/${encodeURIComponent(resourceId)}`;
-      break;
+      return `${ApplicationRoute.ApplicationRunners}/${encodeURIComponent(resourceId)}`;
     case ActivityAuditResourceType.INTERCEPTOR_TEMPLATE:
-      redirectHref = `${ApplicationRoute.InterceptorTemplates}/${encodeURIComponent(resourceId)}`;
-      break;
+      return `${ApplicationRoute.InterceptorTemplates}/${encodeURIComponent(resourceId)}`;
     case ActivityAuditResourceType.ADAPTER:
-      redirectHref = `${ApplicationRoute.Adapters}/${encodeURIComponent(resourceId)}`;
-      break;
+      return `${ApplicationRoute.Adapters}/${encodeURIComponent(resourceId)}`;
     case ActivityAuditResourceType.ROLE:
-      redirectHref = `${ApplicationRoute.Roles}/${encodeURIComponent(resourceId)}`;
-      break;
+      return `${ApplicationRoute.Roles}/${encodeURIComponent(resourceId)}`;
     case ActivityAuditResourceType.KEY:
-      redirectHref = `${ApplicationRoute.Keys}/${encodeURIComponent(resourceId)}`;
-      break;
+      return `${ApplicationRoute.Keys}/${encodeURIComponent(resourceId)}`;
     default:
-      redirectHref = ApplicationRoute.ActivityAudit;
+      return ApplicationRoute.ActivityAudit;
   }
-
-  return redirectHref;
 };
