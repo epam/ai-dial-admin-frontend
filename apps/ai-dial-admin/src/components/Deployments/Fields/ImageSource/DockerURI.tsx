@@ -72,7 +72,7 @@ const DockerURI: FC<Props> = ({ image, setImage }) => {
 
   return (
     <DialInput
-      labelProps={{ label: t(EntityFieldsI18nKey.ImageURI) }}
+      labelProps={{ label: t(EntityFieldsI18nKey.ImageURI), required: true }}
       id="DockerURI"
       placeholder={t(EntityPlaceholdersI18nKey.URI)}
       value={image.source.imageUri}

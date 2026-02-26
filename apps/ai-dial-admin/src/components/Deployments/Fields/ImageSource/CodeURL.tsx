@@ -74,7 +74,7 @@ const CodeUrl: FC<Props> = ({ image, setImage }) => {
 
   return (
     <DialInput
-      labelProps={{ label: t(EntityFieldsI18nKey.SourceURL) }}
+      labelProps={{ label: t(EntityFieldsI18nKey.SourceURL), required: true }}
       id="codeURL"
       placeholder={t(EntityPlaceholdersI18nKey.URL)}
       value={image.source.url}
