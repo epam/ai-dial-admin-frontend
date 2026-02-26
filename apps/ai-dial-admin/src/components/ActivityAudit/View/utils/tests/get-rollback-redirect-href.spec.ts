@@ -26,7 +26,7 @@ describe('getRollbackRedirectHref', () => {
     expect(newHref).toBe('/interceptor-templates/111');
 
     newHref = getRollbackRedirectHref(ActivityAuditResourceType.ADAPTER, '222');
-    expect(newHref).toBe('/adapters/s');
+    expect(newHref).toBe('/adapters/222');
 
     newHref = getRollbackRedirectHref(ActivityAuditResourceType.ROLE, '333');
     expect(newHref).toBe('/roles/333');
