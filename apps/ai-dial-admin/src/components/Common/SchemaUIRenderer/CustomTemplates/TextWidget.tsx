@@ -31,7 +31,7 @@ export const TextWidget: FC<WidgetProps> = ({
     <DialInput
       containerClassName="flex w-full max-w-[600px]"
       id={id}
-      disabled={disabled}
+      disabled={disabled || readonly}
       onChange={onChange}
       placeholder={placeholder}
       invalid={invalid}
@@ -45,7 +45,7 @@ export const TextWidget: FC<WidgetProps> = ({
         <DialInput
           containerClassName="flex w-full max-w-[600px]"
           id={id}
-          disabled={disabled}
+          disabled={disabled || readonly}
           onChange={onChange}
           placeholder={placeholder}
           invalid={invalid}
@@ -62,6 +62,7 @@ export const TextWidget: FC<WidgetProps> = ({
           invalid={invalid}
           error={errorText}
           onChange={onChange}
+          disabled={disabled || readonly}
         />
       )}
     </div>
