@@ -24,8 +24,8 @@ const TopicsControl = <T extends { topics?: string[]; descriptionKeywords?: stri
   ...props
 }: Props<T>) => {
   const t = useI18n();
-  const selectedItems = (isDeploymentAsset(view) ? entity.descriptionKeywords : entity.topics)?.sort();
-  const allItems = (isDeploymentAsset(view) ? entity.descriptionKeywords : entity.topics)?.sort();
+  const selectedItems = [...(isDeploymentAsset(view) ? entity.descriptionKeywords || [] : entity.topics || [])]?.sort();
+  const allItems = [...(isDeploymentAsset(view) ? entity.descriptionKeywords || [] : entity.topics || [])]?.sort();
 
   const onChangeTopics = useCallback(
     (items: string[]) => {

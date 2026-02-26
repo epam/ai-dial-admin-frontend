@@ -26,23 +26,28 @@ const PodView: FC<Props> = ({ pod, containerId }) => {
   const restartReasons = RESTART_REASONS(t);
 
   useEffect(() => {
-    if (containerId) {
+    if (containerId && podData?.name) {
       const eventSource = new EventSource(`/api/sse?entity=container&id=${containerId}&podName=${podData.name}`);
       const handleLogs = (event: MessageEvent) => {
         setLogs((prev) => prev + event.data + '\n');
       };
       const handleError = (event: MessageEvent) => console.error('EventSource error:', event);
+      const handleOpen = () => {
+        setLogs('');
+      };
       eventSource.addEventListener('logs', handleLogs);
-      eventSource.addEventListener('error', handleLogs);
+      eventSource.addEventListener('error', handleError);
+      eventSource.addEventListener('open', handleOpen);
 
       return () => {
         eventSource.removeEventListener('logs', handleLogs);
         eventSource.removeEventListener('error', handleError);
+        eventSource.removeEventListener('open', handleOpen);
         eventSource?.close();
         setLogs('');
       };
     }
-  }, [podData, containerId]);
+  }, [containerId, podData?.name]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 h-full gap-4">
