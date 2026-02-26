@@ -121,7 +121,7 @@ const Adapters = <T extends DialModel | DialInterceptor>({
                 onOpen={onOpenModal}
                 selectedValue={selectedAdapter?.displayName || selectedAdapter?.name || ''}
                 elementId="adapters"
-                error={error}
+                errorText={error}
                 emptyValueText={t(EntitiesI18nKey.NoAdapters)}
               >
                 <SelectAdapterModal
