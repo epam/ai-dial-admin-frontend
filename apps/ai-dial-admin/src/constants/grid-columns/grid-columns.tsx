@@ -1,6 +1,5 @@
 'use client';
 
-import { SelectVariant } from '@epam/ai-dial-ui-kit';
 import { ColDef, ICellRendererParams, ITooltipParams, ValueGetterParams } from 'ag-grid-community';
 
 import { ACTION_COLUMN, NO_BORDER_CLASS } from '@/src/constants/ag-grid';
@@ -536,7 +535,6 @@ export const IMAGES_LIST_FOR_CONTAINER_COLUMNS = (
               selected={params.data.selectedId}
               versions={params.data.availableVersions}
               onChange={onChange}
-              variant={SelectVariant.Primary}
             />
           </div>
         );
