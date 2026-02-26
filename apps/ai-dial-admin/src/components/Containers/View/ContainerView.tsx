@@ -15,7 +15,6 @@ import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { Container, KubEvent, Pod } from '@/src/models/deployments/containers';
-import { Image } from '@/src/models/deployments/images';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
@@ -32,7 +31,6 @@ import TabsContent from './TabsContent';
 
 interface Props {
   container: Container;
-  image?: Image;
   route: ApplicationRoute;
   names: string[];
   createEntity: (entity: DialModel | Toolset | DialInterceptor) => Promise<ServerActionResponse>;
@@ -84,11 +82,18 @@ const ContainerView: FC<Props> = ({ container, route, createEntity, createEntity
   }, [container, isEditorEnabled]);
 
   const onSave = useCallback(() => {
-    updateContainer(selectedContainer).then((res) => {
-      if (res.success) {
+    updateContainer(selectedContainer).then(({ success, errorMessage, errorHeader, response, requestId }) => {
+      if (success) {
+        const updatedContainer = response as Container | undefined;
+        if (updatedContainer?.status) {
+          setSelectedContainer((prev) => ({
+            ...prev,
+            updatedContainer,
+          }));
+        }
         router.refresh();
       } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        showNotification(getErrorNotification(errorHeader, errorMessage, requestId));
       }
     });
   }, [router, selectedContainer, showNotification]);
