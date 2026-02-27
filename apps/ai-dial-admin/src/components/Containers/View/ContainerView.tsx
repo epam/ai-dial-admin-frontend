@@ -126,8 +126,13 @@ const ContainerView: FC<Props> = ({ container, route, createEntity, createEntity
         }
       };
 
-      const handleError = () => {
-        console.error('EventSource error: events stream connection failed');
+      const handleError = (event: Event) => {
+        const messageEvent = event as MessageEvent;
+        if (messageEvent.data) {
+          eventSource.close();
+        } else {
+          console.error('EventSource connection error');
+        }
       };
 
       const handleOpen = () => {
