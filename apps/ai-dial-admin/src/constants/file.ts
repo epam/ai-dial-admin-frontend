@@ -55,12 +55,6 @@ export const contentTypes: Record<string, string> = {
   '.txt': 'text/plain',
   '.md': 'text/markdown',
   '.csv': 'text/csv',
-  // audio/video
-  '.mp3': 'audio/mpeg',
-  '.wav': 'audio/wav',
-  '.ogg': 'audio/ogg',
-  '.mp4': 'video/mp4',
-  '.webm': 'video/webm',
   // pdf
   '.pdf': 'application/pdf',
 };
