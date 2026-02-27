@@ -31,7 +31,15 @@ const PodView: FC<Props> = ({ pod, containerId }) => {
       const handleLogs = (event: MessageEvent) => {
         setLogs((prev) => prev + event.data + '\n');
       };
-      const handleError = (event: MessageEvent) => console.error('EventSource error:', event);
+      const handleError = (event: Event) => {
+        const messageEvent = event as MessageEvent;
+        if (messageEvent.data) {
+          setLogs((prev) => prev + messageEvent.data + '\n');
+          eventSource.close();
+        } else {
+          console.error('EventSource connection error');
+        }
+      };
       const handleOpen = () => {
         setLogs('');
       };
