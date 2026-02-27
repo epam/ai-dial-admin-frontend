@@ -21,10 +21,12 @@ interface Props extends DialInputProps {
 const ComplexInput: FC<Props> = ({ fullValue, label, isFullWidth, copyable = true, required, ...props }) => {
   const t = useI18n();
   return (
-    <div className={classNames('flex items-end gap-2', !copyable && isFullWidth && 'w-full')}>
-      <div className={isFullWidth ? 'w-full' : copyable ? CONTROL_WITH_BUTTON_WIDTH : STANDARD_CONTROL_WIDTH}>
-        <DialInput labelProps={{ label, required }} className="w-full" {...props} />
-      </div>
+    <div className={classNames('flex items-end gap-2')}>
+      <DialInput
+        labelProps={{ label, required }}
+        containerClassName={isFullWidth ? 'w-full' : copyable ? CONTROL_WITH_BUTTON_WIDTH : STANDARD_CONTROL_WIDTH}
+        {...props}
+      />
       {copyable && <CopyButton valueLabel={label} value={fullValue} buttonLabel={t(ButtonsI18nKey.Copy)} />}
     </div>
   );
