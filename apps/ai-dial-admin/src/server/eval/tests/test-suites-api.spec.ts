@@ -198,6 +198,36 @@ describe('Server :: TestSuiteApi', () => {
     );
   });
 
+  test('Should call createTestCase without includeWarnings', async () => {
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
+    const testCasePayload = { testCaseName: 'Case Name', data: [] };
+
+    await instance.createTestCase('id', testCasePayload as any, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_CASES_URL('id')}`,
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify(testCasePayload),
+      }),
+    );
+  });
+
+  test('Should call createTestCase with includeWarnings', async () => {
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
+    const testCasePayload = { testCaseName: 'Case Name', data: [] };
+
+    await instance.createTestCase('id', testCasePayload as any, TOKEN_MOCK, true);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_CASES_URL('id')}?includeWarnings=true`,
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify(testCasePayload),
+      }),
+    );
+  });
+
   test('Should call updateTestCases', async () => {
     fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
     const testCases = [{ id: 'caseId', name: 'Case Name' }];

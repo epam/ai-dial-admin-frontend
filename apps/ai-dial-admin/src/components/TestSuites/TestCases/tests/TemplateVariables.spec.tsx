@@ -132,6 +132,6 @@ describe('TemplateVariables', () => {
     const { container } = render(<TemplateVariables selectedTestSuite={createTestSuite()} onChange={mockOnChange} />);
 
     const wrapper = container.firstChild as HTMLElement;
-    expect(wrapper).toHaveClass('flex-1', 'min-h-[200px]', 'flex', 'flex-col', 'gap-y-4');
+    expect(wrapper).toHaveClass('flex', 'flex-col', 'gap-y-4', 'h-[250px]');
   });
 });
