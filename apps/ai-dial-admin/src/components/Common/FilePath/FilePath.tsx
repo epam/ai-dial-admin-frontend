@@ -1,12 +1,11 @@
 import { ChangeEvent, FC, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { DialLabel, DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconFolderShare } from '@tabler/icons-react';
-import classNames from 'classnames';
 
 import { FileManagerI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import FilePathModal from './FilePathModal';
@@ -42,10 +41,8 @@ const FilePath: FC<Props> = ({ label, placeholder, disabled, value, modalTitle, 
   }, [setIsModalOpen]);
 
   return (
-    <div className={classNames('flex flex-col', STANDARD_CONTROL_WIDTH)}>
-      <label className="tiny mb-2 text-secondary" htmlFor="pathSelectButton">
-        {label}
-      </label>
+    <div className="flex flex-col gap-y-2">
+      <DialLabel label={label} htmlFor="pathSelectButton" />
       <div className="flex gap-2">
         <div className={CONTROL_WITH_BUTTON_WIDTH}>
           <input
