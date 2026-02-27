@@ -5,6 +5,7 @@ import {
   IconEye,
   IconFolderShare,
   IconInfinity,
+  IconPencilMinus,
   IconPlayerPause,
   IconPlayerPlay,
   IconRefreshDot,
@@ -45,6 +46,18 @@ export function getRemoveOperation<T>(
   return {
     icon: <IconTrash {...BASE_BUTTON_ICON_PROPS} className={className} />,
     id: ActionMenuOperation.Remove,
+    onClick,
+    hidden,
+  };
+}
+
+export function getEditOperation<T>(
+  onClick: (entity?: T, index?: number) => void,
+  hidden?: (api: GridApi, node: IRowNode) => boolean,
+): ActionMenuOperationDeclaration<T> {
+  return {
+    icon: <IconPencilMinus {...BASE_BUTTON_ICON_PROPS} />,
+    id: ActionMenuOperation.Edit,
     onClick,
     hidden,
   };

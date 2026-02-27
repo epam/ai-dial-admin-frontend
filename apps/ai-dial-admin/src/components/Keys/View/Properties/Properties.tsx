@@ -1,4 +1,4 @@
-import { DialGhostButton, DialSwitch, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton, DialSwitch, DialInput } from '@epam/ai-dial-ui-kit';
 import { IconSparkles } from '@tabler/icons-react';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
@@ -102,44 +102,38 @@ const KeyProperties: FC<Props> = ({ entity, originalEntity, names, keys, isKeyIm
   return (
     <div className="flex flex-col gap-y-8 h-full">
       {!isKeyImmutable && (
-        <div className="flex items-end">
+        <div className="flex items-end gap-x-2">
           <div className="flex-1">
             <IdControl entity={entity} names={names} onChangeEntity={onChangeKey} />
           </div>
-          <DialGhostButton
-            className="ml-2 h-[34px]"
-            iconBefore={<IconSparkles />}
-            label={t(ButtonsI18nKey.Generate)}
-            onClick={onGenerateKeyId}
-          />
+          <DialGhostButton iconBefore={<IconSparkles />} label={t(ButtonsI18nKey.Generate)} onClick={onGenerateKeyId} />
         </div>
       )}
 
       <DisplayNameControl
         displayName={entity.displayName}
-        required={true}
+        required
         isFullWidth={!isKeyImmutable}
         onChange={(displayName) => onChangeKey({ ...entity, displayName })}
       />
 
       <DescriptionControl entity={entity} onChangeEntity={onChangeKey} isFullWidth={!isKeyImmutable} />
 
-      <DialTextInputField
-        elementId="project"
-        fieldTitle={t(EntityFieldsI18nKey.project)}
+      <DialInput
+        id="project"
+        labelProps={{ label: t(EntityFieldsI18nKey.project), required: true }}
         placeholder={t(EntityPlaceholdersI18nKey.Project)}
         value={entity.project}
-        errorText={projectError}
+        error={projectError}
         onChange={onChangeProject}
         invalid={!!projectError}
         containerClassName={containerClassName}
       />
 
       {isKeyImmutable && (
-        <DialTextInputField
-          elementId="projectContact"
-          optional={true}
-          fieldTitle={t(EntityFieldsI18nKey.projectContactPoint)}
+        <DialInput
+          id="projectContact"
+          labelProps={{ label: t(EntityFieldsI18nKey.projectContactPoint) }}
           placeholder={t(EntityPlaceholdersI18nKey.ContactPoint)}
           value={entity.projectContactPoint}
           onChange={onChangeProjectContactPoint}

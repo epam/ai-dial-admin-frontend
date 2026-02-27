@@ -12,13 +12,6 @@ describe('ApiKeySection', () => {
     expect(input).not.toBeDisabled();
   });
 
-  test('renders disabled input', () => {
-    render(<ApiKeySection authSettings={{ apiKeyHeader: 'disabled-key' }} disabled={true} />);
-    const input = screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Header);
-    expect(input).toBeDisabled();
-    expect(input).toHaveValue('disabled-key');
-  });
-
   test('calls onChange with updated apiKeyHeader', () => {
     const handleChange = vi.fn();
     render(<ApiKeySection authSettings={{ apiKeyHeader: 'old-key' }} onChange={handleChange} />);

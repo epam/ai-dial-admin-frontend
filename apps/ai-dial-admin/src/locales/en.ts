@@ -551,6 +551,7 @@ export default {
     Summary: 'Summary',
     RequestSchema: 'Request Schema',
     ResponseSchema: 'Response Schema',
+    Columns: 'Columns',
   },
   ForwardToken: {
     ForwardTokenModalTitle: 'Forward Auth Token',
@@ -1075,6 +1076,7 @@ export default {
     TimeoutSeconds: 'Timeout seconds',
     FailureThreshold: 'Failure threshold',
     AdvancedTiming: 'Advanced timing',
+    expression: 'Expression',
   },
   EntityPlaceholders: {
     Project: 'Enter project',
@@ -1144,6 +1146,7 @@ export default {
     PeriodSeconds: 'Enter period seconds',
     TimeoutSeconds: 'Enter timeout seconds',
     FailureThreshold: 'Enter number of failure threshold',
+    Expression: 'Enter expression',
   },
   EntityCaptions: {
     ProbeEnableCustom: 'Use custom values instead of default probe configuration',
@@ -1429,6 +1432,9 @@ export default {
     DynamicConfiguration: 'Dynamic configuration',
     Constant: 'Constant',
     Attribute: 'Attribute',
+    ColumnsDescription: 'Extracted response fields shown as columns in eval results',
+    EditColumn: 'Edit column',
+    SaveColumn: 'Save column',
   },
   FileManager: {
     SelectedItems: 'item(s) selected',

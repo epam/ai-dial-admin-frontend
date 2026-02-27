@@ -6,7 +6,7 @@ import ExtraDataField from './ExtraDataField';
 const makeEndpoint = (extraData: any) => ({ id: 'ep1', extraData }) as any;
 
 const baseProps = {
-  fieldTitle: 'Extra Data',
+  label: 'Extra Data',
   disabled: false,
   onChangeExtraData: vi.fn(),
 };

@@ -38,7 +38,7 @@ const InterceptorEndpoint: FC<Props> = ({ entity, onChange, prefix, isModal }) =
         <>
           <CompletionEndpointControl
             endpoint={entity.source?.completionEndpointPath}
-            textBeforeInput={prefix}
+            prefix={prefix}
             onChange={(completionEndpointPath) => {
               onChange({
                 ...entity,
@@ -49,7 +49,7 @@ const InterceptorEndpoint: FC<Props> = ({ entity, onChange, prefix, isModal }) =
 
           <ConfigurationEndpointControl
             endpoint={entity.source?.configurationEndpointPath}
-            textBeforeInput={prefix}
+            prefix={prefix}
             onChange={(configurationEndpointPath) => {
               onChange({
                 ...entity,
@@ -64,7 +64,7 @@ const InterceptorEndpoint: FC<Props> = ({ entity, onChange, prefix, isModal }) =
             isFullWidth={isModal}
             endpoint={entity.endpoint}
             onChange={onChangeCompletionEndpoint}
-            required={true}
+            required
           />
           {!isModal && (
             <ConfigurationEndpointControl

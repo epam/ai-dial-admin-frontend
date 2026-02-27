@@ -38,8 +38,8 @@ const SettingsModal: FC<Props> = ({ onConfirm, isModalOpen, onClose }) => {
     >
       <div className="flex flex-col gap-4 py-6 px-6">
         <DialSelectField
-          elementId="themeSelector"
-          fieldTitle={t(SettingsModalI18nKey.Theme)}
+          id="themeSelector"
+          label={t(SettingsModalI18nKey.Theme)}
           options={allThemes || []}
           value={selectedTheme?.value}
           onChange={(theme) => onChangeTheme(theme as string)}

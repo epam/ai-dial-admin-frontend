@@ -12,9 +12,7 @@ interface Props {
 const Search: FC<Props> = ({ initialPattern, onChange }) => {
   const t = useI18n();
 
-  return (
-    <DialSearch elementId="search" placeholder={t(BasicI18nKey.Search)} value={initialPattern} onChange={onChange} />
-  );
+  return <DialSearch id="search" placeholder={t(BasicI18nKey.Search)} value={initialPattern} onChange={onChange} />;
 };
 
 export default Search;

@@ -134,12 +134,7 @@ export class TestSuitesApi extends BaseApi {
     return this.postAction(TEST_SUITE_TRY_OUT_URL(id), { variables: requestBody }, token);
   }
 
-  tryOutTestCase(
-    id: string,
-    testCaseId: string,
-    requestBody: Record<string, unknown>,
-    token: Token,
-  ): Promise<ServerActionResponse<TryOutResponse> | null> {
-    return this.postAction(TEST_CASE_TRY_OUT_URL(id, testCaseId), { variables: requestBody }, token);
+  tryOutTestCase(id: string, testCaseId: string, token: Token): Promise<ServerActionResponse<TryOutResponse> | null> {
+    return this.postAction(TEST_CASE_TRY_OUT_URL(id, testCaseId), {}, token);
   }
 }

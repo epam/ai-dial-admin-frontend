@@ -1,21 +1,21 @@
-import { FC, useCallback, useEffect, useState, useMemo } from 'react';
-import { DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialInput } from '@epam/ai-dial-ui-kit';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { FieldError } from '@/src/models/error';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { getVersionControlError } from '@/src/utils/validation/version-error';
 import { useI18n } from '@/src/locales/client';
+import { FieldError } from '@/src/models/error';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getControlClassName } from '@/src/utils/entities/view';
 import { isEntitiesWithDisplayVersion } from '@/src/utils/is-asset-view';
+import { getVersionControlError } from '@/src/utils/validation/version-error';
 
 interface Props {
   version?: string;
   optional?: boolean;
   disabled?: boolean;
   containerClassName?: string;
-  elementContainerClassName?: string;
+  className?: string;
   error?: string;
   hideError?: boolean;
   title?: string;
@@ -60,14 +60,13 @@ const VersionControl: FC<Props> = ({
   }, [version, optional, view, dispatch]);
 
   return (
-    <DialTextInputField
-      elementId="displayVersion"
-      fieldTitle={title || t(EntityFieldsI18nKey.version)}
+    <DialInput
+      id="displayVersion"
+      labelProps={{ label: title || t(EntityFieldsI18nKey.version), required: !optional }}
       placeholder={t(EntityPlaceholdersI18nKey.Version)}
       value={version}
-      errorText={error || versionError?.text}
+      error={error || versionError?.text}
       invalid={!!error || !!versionError}
-      optional={optional}
       onChange={onChangeVersion}
       containerClassName={containerClassName}
       {...props}

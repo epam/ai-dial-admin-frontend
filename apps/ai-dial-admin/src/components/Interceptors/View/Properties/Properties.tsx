@@ -50,8 +50,8 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
         onChange={onChangeInterceptor}
         getContainers={getInterceptorContainers}
         getRunners={getInterceptorTemplatesList}
-        elementId="sourceType"
-        fieldTitle={t(EntitiesI18nKey.SourceType)}
+        id="sourceType"
+        label={t(EntitiesI18nKey.SourceType)}
         sourceItems={getSourceItems(ApplicationRoute.Interceptors, featureFlags.deploymentsEnabled)}
       />
       <Defaults entity={selectedInterceptor} onChangeEntity={onChangeInterceptor} />

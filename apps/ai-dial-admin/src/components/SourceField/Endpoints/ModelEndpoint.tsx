@@ -110,26 +110,26 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
 
       {prefix ? (
         <ComplexInput
-          elementId="endpoint"
+          id="endpoint"
           value={endpoint}
           fullValue={fullValue}
-          fieldTitle={t(EntityFieldsI18nKey.endpoint)}
-          suffix={postfix}
-          textBeforeInput={prefix}
+          label={t(EntityFieldsI18nKey.endpoint)}
+          postfix={postfix}
+          prefix={prefix}
           onChange={onChangePath}
           isFullWidth={isModal}
         />
       ) : (
         <ComplexInput
-          elementId="endpoint"
+          id="endpoint"
           value={endpoint}
           fullValue={fullValue}
-          fieldTitle={t(EntityFieldsI18nKey.endpoint)}
-          suffix={postfix}
+          label={t(EntityFieldsI18nKey.endpoint)}
+          postfix={postfix}
           isFullWidth={isModal}
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
           onChange={onChangeEndpoint}
-          errorText={endpointError?.text}
+          error={endpointError?.text}
           invalid={!!endpointError}
           copyable={false}
         />

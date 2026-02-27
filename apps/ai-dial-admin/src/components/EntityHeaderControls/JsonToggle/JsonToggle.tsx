@@ -37,12 +37,14 @@ const JsonToggles: FC<Props> = ({ children, isEditorEnabled, onToggleEditor }) =
       {!isEditorEnabled && <div className="w-[1px] h-6 bg-layer-4"></div>}
       {children}
 
-      <DialSwitch
-        isOn={isEditorEnabled}
-        label={t(EntitiesI18nKey.JSONEditor)}
-        switchId="jsonEditor"
-        onChange={onToggleEditor}
-      />
+      <div className="h-auto">
+        <DialSwitch
+          isOn={isEditorEnabled}
+          label={t(EntitiesI18nKey.JSONEditor)}
+          switchId="jsonEditor"
+          onChange={onToggleEditor}
+        />
+      </div>
     </div>
   );
 };

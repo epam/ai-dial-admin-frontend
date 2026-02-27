@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useState } from 'react';
 
-import { DialNumberInputField, DialPasswordInputField, DialRemoveButton, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { DialNumberInput, DialPasswordInput, DialRemoveButton, DialTooltip } from '@epam/ai-dial-ui-kit';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -125,46 +125,44 @@ const Endpoint: FC<Props> = ({
             endpoint={endpoint.endpoint}
             elementClassName="h-[40px]"
             placeholder={t(EntityPlaceholdersI18nKey.UpstreamEndpoint)}
-            fieldTitle={isFirstLine || isTablet ? t(UpstreamEndpointsI18nKey.Endpoints) : ''}
+            label={isFirstLine || isTablet ? t(UpstreamEndpointsI18nKey.Endpoints) : ''}
             onChange={onChangeEndPointUrl}
             iconAfterInput={<WarningIcon endpointWarning={endpointWarning} />}
             required={required}
           />
 
-          <DialPasswordInputField
+          <DialPasswordInput
             disabled={readonly}
-            elementId={`key-${index}`}
+            id={`key-${index}`}
             value={endpoint.key}
             placeholder={t(EntityPlaceholdersI18nKey.UpstreamKey)}
-            fieldTitle={isFirstLine || isTablet ? t(UpstreamEndpointsI18nKey.Keys) : ''}
-            optional={isKeyOptional}
+            labelProps={{ label: isFirstLine || isTablet ? t(UpstreamEndpointsI18nKey.Keys) : '' }}
+            required={!isKeyOptional}
             onChange={onChangeKey}
           />
 
-          <DialNumberInputField
-            elementId={`weight-${index}`}
+          <DialNumberInput
+            id={`weight-${index}`}
             disabled={readonly}
             value={endpoint.weight}
-            fieldTitle={isFirstLine || isTablet ? t(EntityFieldsI18nKey.weight) : ''}
+            labelProps={{ label: isFirstLine || isTablet ? t(EntityFieldsI18nKey.weight) : '' }}
             containerClassName="w-[120px]"
-            elementClassName="h-[40px]"
             placeholder={t(EntityPlaceholdersI18nKey.Weight)}
             onChange={onChangeWeight}
           />
 
-          <DialNumberInputField
-            elementId={`tier-${index}`}
+          <DialNumberInput
+            id={`tier-${index}`}
             disabled={readonly}
             value={endpoint.tier}
-            fieldTitle={isFirstLine || isTablet ? t(EntityFieldsI18nKey.tier) : ''}
+            labelProps={{ label: isFirstLine || isTablet ? t(EntityFieldsI18nKey.tier) : '' }}
             containerClassName="w-[120px]"
-            elementClassName="h-[40px]"
             placeholder={t(EntityPlaceholdersI18nKey.Tier)}
             onChange={onChangeTier}
           />
 
           <ExtraDataField
-            fieldTitle={isFirstLine || isTablet ? t(EntityFieldsI18nKey.extraData) : ''}
+            label={isFirstLine || isTablet ? t(EntityFieldsI18nKey.extraData) : ''}
             endpoint={endpoint}
             disabled={readonly}
             onChangeExtraData={onChangeExtraData}

@@ -52,7 +52,7 @@ const TryOut: FC<Props> = ({ testSuiteId, testCaseId }) => {
     setIsRequestSend(true);
     try {
       const res = testCaseId
-        ? await tryOutTestCase(testSuiteId, testCaseId, requestBody)
+        ? await tryOutTestCase(testSuiteId, testCaseId)
         : await tryOutTestSuite(testSuiteId, requestBody);
 
       if (res?.success) {

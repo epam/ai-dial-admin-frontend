@@ -2,19 +2,19 @@
 
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { DialInputPopup, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { DialInputPopup, DialLabel, DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import { getDeployments } from '@/src/app/[lang]/test-suites/actions';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
-import Field from '@/src/components/Common/Field/Field';
 import EndpointSchema from '@/src/components/TestSuites/EndpointSchema/EndpointSchema';
 import CreateTestSuite from '@/src/components/TestSuites/Modals/Create/CreateTestSuite';
 import RequestTemplate from '@/src/components/TestSuites/RequestTemplate/RequestTemplate';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
+import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useI18n } from '@/src/locales/client';
 import { Deployment } from '@/src/models/evaluation/deployment';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
@@ -33,6 +33,7 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
   const [deployments, setDeployments] = useState<Deployment[] | null>(null);
   const [selectedAppType, setSelectedAppType] = useState<string | undefined>(void 0);
   const [isAppModalOpen, setIsAppModalOpen] = useState(false);
+  const isMobile = useIsMobileScreen();
 
   const openInNewTab = useCallback(() => {
     onOpenInNewTab(selectedAppType === 'dial-application' ? ApplicationRoute.Applications : ApplicationRoute.Models, {
@@ -67,7 +68,7 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
       {isModal && (
         <DisplayNameControl
           displayName={testSuite.name}
-          required={true}
+          required
           isFullWidth={false}
           onChange={(name) => onChange({ ...testSuite, name })}
         />
@@ -75,9 +76,9 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
       <DescriptionControl isFullWidth={false} entity={testSuite} onChangeEntity={onChange} />
       {!isModal && (
         <>
-          <div className={classNames('flex gap-2', STANDARD_CONTROL_WIDTH)}>
-            <div className={CONTROL_WITH_BUTTON_WIDTH}>
-              <Field fieldTitle={t(TestSuitesI18nKey.Application)} htmlFor="applications" />
+          <div className="flex gap-2">
+            <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-2')}>
+              <DialLabel label={t(TestSuitesI18nKey.Application)} htmlFor="applications" />
               <DialInputPopup
                 open={isAppModalOpen}
                 onOpen={() => setIsAppModalOpen(true)}
@@ -97,7 +98,7 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
             <DialNeutralButton
               iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
               className="self-end shrink-0"
-              label={t(ButtonsI18nKey.Open)}
+              label={isMobile ? '' : t(ButtonsI18nKey.Open)}
               onClick={() => openInNewTab()}
             />
           </div>
@@ -115,7 +116,7 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
           </div>
           <div className="flex flex-col gap-4">
             <h3>{t(TestSuitesI18nKey.EndpointSchema)}</h3>
-            <div className="flex border border-primary rounded h-[480px] p-4">
+            <div className="flex border border-primary rounded h-[680px] p-4">
               <EndpointSchema testSuite={testSuite} onChangeTestSuite={onChange} isSkipRefresh={isSkipRefresh} />
             </div>
           </div>

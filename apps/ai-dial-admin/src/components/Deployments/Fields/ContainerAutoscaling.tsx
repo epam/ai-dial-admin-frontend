@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { DialNumberInputField, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { DialNumberInput, DialSelectField } from '@epam/ai-dial-ui-kit';
 
 import { AutoscalingStrategy, Container } from '@/src/models/deployments/containers';
 import { ContainersI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
@@ -121,17 +121,17 @@ const ContainerAutoscaling: FC<Props> = ({ container, setContainer }) => {
       <div className="flex flex-col gap-6">
         <div className="flex gap-4 flex-col lg:flex-row">
           <DialSelectField
-            elementId="scaleToZero"
+            id="scaleToZero"
             options={scalingOptions}
             value={container.scaling?.scaleToZeroDelaySeconds?.toString() || scalingOptions[0].value}
             onChange={onScaleDelayChange}
-            fieldTitle={t(ContainersI18nKey.ScaleToZero)}
+            label={t(ContainersI18nKey.ScaleToZero)}
             containerClassName="max-w-[280px]"
             disabled={isEditDisabled(container)}
           />
           <div className="flex gap-4">
-            <DialNumberInputField
-              elementId="minScale"
+            <DialNumberInput
+              id="minScale"
               value={container.scaling?.minReplicas}
               onChange={onMinScaleChange}
               containerClassName="max-w-[80px]"
@@ -139,16 +139,16 @@ const ContainerAutoscaling: FC<Props> = ({ container, setContainer }) => {
                 (!!container.scaling?.scaleToZeroDelaySeconds && container.scaling?.scaleToZeroDelaySeconds !== 0) ||
                 isEditDisabled(container)
               }
-              label={t(ContainersI18nKey.MinReplicas)}
+              labelProps={{ label: t(ContainersI18nKey.MinReplicas) }}
             />
-            <DialNumberInputField
-              elementId="maxScale"
+            <DialNumberInput
+              id="maxScale"
               min={1}
               value={container.scaling?.maxReplicas}
               onChange={onMaxScaleChange}
-              elementContainerClassName="max-w-[80px]"
-              label={t(ContainersI18nKey.MaxReplicas)}
-              errorText={replicasError?.text}
+              className="max-w-[80px]"
+              labelProps={{ label: t(ContainersI18nKey.MaxReplicas) }}
+              error={replicasError?.text}
               invalid={!!replicasError}
               disabled={isEditDisabled(container)}
             />
@@ -156,12 +156,12 @@ const ContainerAutoscaling: FC<Props> = ({ container, setContainer }) => {
         </div>
         {container.scaling?.minReplicas !== container.scaling?.maxReplicas && (
           <div className="flex">
-            <DialNumberInputField
-              elementId="threshold"
+            <DialNumberInput
+              id="threshold"
               value={container.scaling?.strategy?.threshold}
               onChange={onThresholdChange}
-              elementContainerClassName="max-w-[80px]"
-              label={t(ContainersI18nKey.Threshold)}
+              className="max-w-[80px]"
+              labelProps={{ label: t(ContainersI18nKey.Threshold) }}
               disabled={isEditDisabled(container)}
             />
           </div>

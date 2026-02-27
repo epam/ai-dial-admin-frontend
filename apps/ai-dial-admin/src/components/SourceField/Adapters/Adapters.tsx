@@ -1,4 +1,4 @@
-import { DialInputPopup, DialNeutralButton, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { DialInputPopup, DialLabel, DialNeutralButton, DialSelectField } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { CreateI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, SourceI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
@@ -17,9 +17,9 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 
-import Field from '@/src/components/Common/Field/Field';
 import SelectAdapterModal from '@/src/components/SourceField/Adapters/SelectAdapterModal';
 import ModelEndpoint from '@/src/components/SourceField/Endpoints/ModelEndpoint';
+import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 
@@ -27,7 +27,7 @@ interface Props<T> {
   entity: T;
   onChange: (entity: T) => void;
   getAdapters: () => Promise<ServerActionResponse | null>;
-  errorText?: string;
+  error?: string;
   isModal?: boolean;
 }
 
@@ -35,13 +35,14 @@ const Adapters = <T extends DialModel | DialInterceptor>({
   entity,
   onChange,
   getAdapters,
-  errorText,
+  error,
   isModal,
 }: Props<T>) => {
   const t = useI18n();
   const showNotificationRef = useRef(useNotification().showNotification);
   const getReqRef = useRef(useProtectedRequest());
 
+  const isMobile = useIsMobileScreen();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [adapters, setAdapters] = useState<DialAdapter[]>([]);
   const [selectedAdapter, setSelectedAdapter] = useState<DialAdapter | null>(null);
@@ -96,7 +97,7 @@ const Adapters = <T extends DialModel | DialInterceptor>({
 
   return (
     <div className="flex flex-col gap-y-8">
-      <div className="flex lg:flex-row flex-col gap-2 items-end">
+      <div className="flex lg:flex-row flex-col gap-2">
         {isModal ? (
           <div className="w-full">
             <DialSelectField
@@ -106,22 +107,23 @@ const Adapters = <T extends DialModel | DialInterceptor>({
                 label: adapter.displayName || adapter.name || '',
               }))}
               onChange={(adapter) => onSelect(adapter as string)}
-              elementId="source-type"
+              id="source-type"
+              required
               value={adapters.find((adapter) => adapter.name === entity.source?.adapterName)?.name}
               placeholder={t(CreateI18nKey.SelectAdapter)}
-              fieldTitle={t(EntityFieldsI18nKey.adapter)}
+              label={t(EntityFieldsI18nKey.adapter)}
             />
           </div>
         ) : (
-          <div className={classNames('flex gap-2', STANDARD_CONTROL_WIDTH)}>
-            <div className={CONTROL_WITH_BUTTON_WIDTH}>
-              <Field fieldTitle={t(SourceI18nKey.Adapter)} htmlFor="adapters" />
+          <div className="flex gap-2">
+            <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-2')}>
+              <DialLabel label={t(SourceI18nKey.Adapter)} required htmlFor="adapters" />
               <DialInputPopup
                 open={isModalOpen}
                 onOpen={onOpenModal}
                 selectedValue={selectedAdapter?.displayName || selectedAdapter?.name || ''}
                 elementId="adapters"
-                errorText={errorText}
+                errorText={error}
                 emptyValueText={t(EntitiesI18nKey.NoAdapters)}
               >
                 <SelectAdapterModal
@@ -136,8 +138,8 @@ const Adapters = <T extends DialModel | DialInterceptor>({
             {entity.source?.adapterName && (
               <DialNeutralButton
                 iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
-                className={classNames(errorText ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
-                label={t(SourceI18nKey.OpenAdapter)}
+                className={classNames(error ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
+                label={isMobile ? '' : t(SourceI18nKey.OpenAdapter)}
                 onClick={() => openAdapter()}
               />
             )}

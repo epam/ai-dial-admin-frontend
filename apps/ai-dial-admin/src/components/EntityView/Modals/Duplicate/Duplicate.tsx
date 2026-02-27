@@ -165,7 +165,7 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
           <DisplayNameControl
             displayName={clonedEntity.displayName}
             onChange={onChangeDisplayName}
-            required={true}
+            required
             names={names}
           />
 
