@@ -1,6 +1,12 @@
 import { describe, expect, test } from 'vitest';
-import { createNewTestCaseRow, getTestCaseGridData, rowToTestCase } from '../data';
-import { TestCase } from '@/src/models/evaluation/test-suite';
+import { createNewTestCaseRow, getTestCaseGridData as getTestCaseGridDataRaw, rowToTestCase } from '../data';
+import { TestCase as TestCaseModel } from '@/src/models/evaluation/test-suite';
+
+type TestCase = Partial<TestCaseModel>;
+
+const getTestCaseGridData = (testCases?: TestCase[] | null) => {
+  return getTestCaseGridDataRaw(testCases as TestCaseModel[] | null | undefined);
+};
 
 describe('getTestCaseGridData', () => {
   test('should return empty array when test cases array is empty', () => {
