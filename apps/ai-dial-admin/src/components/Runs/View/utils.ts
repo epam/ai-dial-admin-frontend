@@ -28,6 +28,20 @@ const getInputColumns = (input: Record<string, unknown>) => {
   });
 };
 
+const getExtractedColumns = (extracted: Record<string, unknown>) => {
+  return Object.keys(extracted).map((key) => {
+    return {
+      field: key,
+      headerName: key,
+      valueGetter: (params) => {
+        const value = params.data?.extractedColumns?.[key];
+        if (typeof value === 'object') return JSON.stringify(value);
+        return value ?? '—';
+      },
+    } as ColDef;
+  });
+};
+
 export const getResultColumns = (results: ExtractionResult[]) => {
   const staticColumns = [
     {
@@ -88,6 +102,11 @@ export const getResultColumns = (results: ExtractionResult[]) => {
     {
       headerName: 'INPUT BINDINGS',
       children: getInputColumns(input),
+    },
+
+    {
+      headerName: 'EXTRACTED',
+      children: getExtractedColumns(results[0]?.extractedColumns || {}),
     },
   ];
 };

@@ -42,19 +42,23 @@ describe('Runs View :: getCellClass', () => {
 });
 
 describe('Runs View :: getResultColumns', () => {
-  test('Should build static and input columns and format values', () => {
+  test('Should build static, input and extracted columns and format values', () => {
     const results = [
       {
         testCaseData: {
           prompt: 'hello',
           payload: { a: 1 },
         },
+        extractedColumns: {
+          score: 0.98,
+          details: { matched: true },
+        },
       },
     ] as any[];
 
     const columns = getResultColumns(results as any);
 
-    expect(columns).toHaveLength(3);
+    expect(columns).toHaveLength(4);
     expect(columns[0]).toEqual(
       expect.objectContaining({
         headerName: ' ',
@@ -70,6 +74,11 @@ describe('Runs View :: getResultColumns', () => {
         headerName: 'INPUT BINDINGS',
       }),
     );
+    expect(columns[3]).toEqual(
+      expect.objectContaining({
+        headerName: 'EXTRACTED',
+      }),
+    );
 
     const inputChildren = (columns[2] as any).children;
     expect(inputChildren).toHaveLength(2);
@@ -83,6 +92,20 @@ describe('Runs View :: getResultColumns', () => {
     expect(inputChildren[1].valueGetter({ data: { testCaseData: { payload: { a: 1 } } } })).toBe('{"a":1}');
     expect(inputChildren[0].valueGetter({ data: { testCaseData: { prompt: 'value' } } })).toBe('value');
     expect(inputChildren[0].valueGetter({ data: { testCaseData: {} } })).toBe('—');
+
+    const extractedChildren = (columns[3] as any).children;
+    expect(extractedChildren).toHaveLength(2);
+    expect(extractedChildren[0]).toEqual(
+      expect.objectContaining({
+        field: 'score',
+        headerName: 'score',
+      }),
+    );
+    expect(extractedChildren[1].valueGetter({ data: { extractedColumns: { details: { matched: true } } } })).toBe(
+      '{"matched":true}',
+    );
+    expect(extractedChildren[0].valueGetter({ data: { extractedColumns: { score: 1 } } })).toBe(1);
+    expect(extractedChildren[0].valueGetter({ data: { extractedColumns: {} } })).toBe('—');
   });
 
   test('Should format duration and row index in execution columns', () => {
