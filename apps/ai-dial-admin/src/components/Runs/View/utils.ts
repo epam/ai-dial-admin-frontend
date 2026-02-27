@@ -16,12 +16,11 @@ export const RESULT_FILTERS = (run: Run): FilterDto[] => [
 
 const getInputColumns = (input: Record<string, unknown>) => {
   return Object.keys(input).map((key) => {
-    const [part1, part2] = key.split('.');
     return {
-      field: `testCaseData.${part1}.${part2}`,
-      headerName: part2,
+      field: key,
+      headerName: key,
       valueGetter: (params) => {
-        const value = params.data?.testCaseData?.[`${part1}.${part2}`];
+        const value = params.data?.testCaseData?.[key];
         if (typeof value === 'object') return JSON.stringify(value);
         return value ?? '—';
       },
@@ -29,7 +28,7 @@ const getInputColumns = (input: Record<string, unknown>) => {
   });
 };
 
-export function getResultColumns(results: ExtractionResult[]) {
+export const getResultColumns = (results: ExtractionResult[]) => {
   const staticColumns = [
     {
       headerName: ' ',
@@ -91,7 +90,7 @@ export function getResultColumns(results: ExtractionResult[]) {
       children: getInputColumns(input),
     },
   ];
-}
+};
 
 export const getTestCaseStatusClass = (code: number | undefined) => {
   if (code == null) return '';
