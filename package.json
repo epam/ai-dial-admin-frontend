@@ -112,12 +112,12 @@
   "overrides": {
     "@babel/core": "7.28.4",
     "esbuild": "0.25.10",
-    "koa": "3.0.3",
+    "koa": "3.1.2",
     "glob": "11.1.0",
     "react": "19.1.2",
     "react-dom": "19.1.2",
     "@modern-js/utils": "2.69.5",
-    "minimatch": "10.2.2"
+    "minimatch": "10.2.3"
   },
   "engines": {
     "node": ">=24.12.0",
