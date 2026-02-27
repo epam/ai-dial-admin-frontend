@@ -117,7 +117,7 @@ const DuplicateAsset: FC<Props> = ({ view, isModalOpen, entity, versionsMap, con
           disabled={duplicationType === DuplicationTypes.VERSION}
         />
         {isDeploymentAsset(view) && (
-          <DisplayNameControl displayName={clonedAsset.displayName} onChange={onChangeName} required={true} />
+          <DisplayNameControl displayName={clonedAsset.displayName} onChange={onChangeName} required />
         )}
         <VersionControl version={clonedAsset.version} onChange={onChangeVersion} />
 

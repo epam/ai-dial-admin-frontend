@@ -86,16 +86,12 @@ const CompareVersions: FC<Props> = ({ heading, isModalOpen, onClose, prompts, pr
         )}
 
         <DiffField
-          fieldTitle={t(EntityFieldsI18nKey.description)}
+          label={t(EntityFieldsI18nKey.description)}
           original={original?.description}
           modified={modified?.description}
           className="max-h-[200px]"
         />
-        <DiffField
-          fieldTitle={t(EntityFieldsI18nKey.content)}
-          original={original?.content}
-          modified={modified?.content}
-        />
+        <DiffField label={t(EntityFieldsI18nKey.content)} original={original?.content} modified={modified?.content} />
       </div>
     </DialPopup>
   );

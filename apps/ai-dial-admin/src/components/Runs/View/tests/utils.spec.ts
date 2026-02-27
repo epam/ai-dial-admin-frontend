@@ -46,8 +46,8 @@ describe('Runs View :: getResultColumns', () => {
     const results = [
       {
         testCaseData: {
-          'input.prompt': 'hello',
-          'input.payload': { a: 1 },
+          prompt: 'hello',
+          payload: { a: 1 },
         },
       },
     ] as any[];
@@ -75,13 +75,13 @@ describe('Runs View :: getResultColumns', () => {
     expect(inputChildren).toHaveLength(2);
     expect(inputChildren[0]).toEqual(
       expect.objectContaining({
-        field: 'testCaseData.input.prompt',
+        field: 'prompt',
         headerName: 'prompt',
       }),
     );
 
-    expect(inputChildren[1].valueGetter({ data: { testCaseData: { 'input.payload': { a: 1 } } } })).toBe('{"a":1}');
-    expect(inputChildren[0].valueGetter({ data: { testCaseData: { 'input.prompt': 'value' } } })).toBe('value');
+    expect(inputChildren[1].valueGetter({ data: { testCaseData: { payload: { a: 1 } } } })).toBe('{"a":1}');
+    expect(inputChildren[0].valueGetter({ data: { testCaseData: { prompt: 'value' } } })).toBe('value');
     expect(inputChildren[0].valueGetter({ data: { testCaseData: {} } })).toBe('—');
   });
 

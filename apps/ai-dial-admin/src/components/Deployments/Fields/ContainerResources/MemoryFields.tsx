@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import { DialNumberInputField } from '@epam/ai-dial-ui-kit';
+import { DialNumberInput } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { Container } from '@/src/models/deployments/containers';
@@ -147,25 +147,24 @@ const MemoryFields: FC<Props> = ({ container, setContainer }) => {
 
   return (
     <div className="flex gap-2 flex-col lg:flex-row">
-      <DialNumberInputField
-        elementId="memoryRequest"
+      <DialNumberInput
+        id="memoryRequest"
         containerClassName="w-[180px]"
-        elementContainerClassName="w-[180px]"
-        fieldTitle={t(EntityFieldsI18nKey.MemoryRequest)}
+        labelProps={{ label: t(EntityFieldsI18nKey.MemoryRequest) }}
         value={container.resources?.requests?.memory ? convertBytesToMb(container.resources?.requests?.memory) : ''}
-        suffix="Mb"
-        errorText={requestError?.text}
+        postfix="Mb"
+        error={requestError?.text}
         invalid={!!requestError}
         disabled={isEditDisabled(container)}
         onChange={onChangeRequest}
       />
-      <DialNumberInputField
-        elementId="memoryLimit"
-        elementContainerClassName="w-[180px]"
-        fieldTitle={t(EntityFieldsI18nKey.MemoryLimit)}
+      <DialNumberInput
+        id="memoryLimit"
+        containerClassName="w-[180px]"
+        labelProps={{ label: t(EntityFieldsI18nKey.MemoryLimit) }}
         value={container.resources?.limits?.memory ? convertBytesToMb(container.resources?.limits?.memory) : ''}
-        suffix="Mb"
-        errorText={limitError?.text}
+        postfix="Mb"
+        error={limitError?.text}
         invalid={!!limitError}
         disabled={isEditDisabled(container)}
         onChange={onChangeLimit}

@@ -1,24 +1,24 @@
 import { Dispatch, FC, SetStateAction, useMemo } from 'react';
 
 import {
+  DialFileIcon,
+  DialLabel,
+  DialLoadFileAreaField,
   DialRadioGroup,
   DialSwitch,
-  RadioGroupOrientation,
   RadioButtonWithContent,
-  DialLoadFileAreaField,
-  DialFileIcon,
+  RadioGroupOrientation,
 } from '@epam/ai-dial-ui-kit';
 
-import Field from '@/src/components/Common/Field/Field';
+import { MAX_FILE_SIZE_MB } from '@/src/constants/file';
 import { BasicI18nKey, ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
+import { APPLICATION_ZIP_TYPES_STR } from '@/src/constants/request-headers';
 import { useI18n } from '@/src/locales/client';
 import { ImportFileType } from '@/src/types/import';
-import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isAssetView } from '@/src/utils/is-asset-view';
+import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import { getIgnorePathTitles } from '@/src/utils/import/get-ignore-path-title';
-import { APPLICATION_ZIP_TYPES_STR } from '@/src/constants/request-headers';
-import { MAX_FILE_SIZE_MB } from '@/src/constants/file';
+import { isAssetView } from '@/src/utils/is-asset-view';
 
 interface Props {
   files: File[];
@@ -68,8 +68,8 @@ const ImportFileTypeSelector: FC<Props> = ({
         />
 
         {isAssetView(route) && (
-          <div className="flex flex-col">
-            <Field fieldTitle={ignorePathsTitle} />
+          <div className="flex flex-col gap-y-2">
+            <DialLabel label={ignorePathsTitle} htmlFor="ignorePaths" />
             <DialSwitch
               isOn={ignorePaths}
               label={t(ImportI18nKey.PathsIgnore)}

@@ -2,6 +2,10 @@
 
 import { FC, useCallback } from 'react';
 
+import {
+  filterParameterBindings,
+  getTemplateParameters,
+} from '@/src/components/TestSuites/utils/request-template-params';
 import { BasicI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
@@ -19,7 +23,14 @@ const TabsContent: FC<Props> = ({ activeTab, onChange, selectedTestSuite }) => {
   const t = useI18n();
   const onChangeTemplate = useCallback(
     (template: TestSuite['requestTemplate']) => {
-      onChange({ ...selectedTestSuite, requestTemplate: template });
+      const paramNames = getTemplateParameters(template);
+      const inputBindings = filterParameterBindings(selectedTestSuite.inputBindings, paramNames);
+
+      onChange({
+        ...selectedTestSuite,
+        requestTemplate: template,
+        inputBindings,
+      });
     },
     [onChange, selectedTestSuite],
   );

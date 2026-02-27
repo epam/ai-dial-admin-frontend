@@ -1,7 +1,7 @@
 import { FC, useEffect, useMemo, useState } from 'react';
 
 import classNames from 'classnames';
-import { DialRemoveButton, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialRemoveButton, DialInput } from '@epam/ai-dial-ui-kit';
 
 import { EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -10,9 +10,9 @@ import { isValidRoutePath } from '@/src/utils/validation/path-error';
 
 interface Props {
   index: number;
-  fieldTitle: string;
+  label: string;
   path: string;
-  optional?: boolean;
+  required?: boolean;
   readonly?: boolean;
   allPaths?: string[];
   disableValidation?: boolean;
@@ -24,8 +24,8 @@ const Path: FC<Props> = ({
   index,
   path,
   readonly,
-  optional,
-  fieldTitle,
+  required,
+  label,
   allPaths,
   disableValidation,
   onRemove,
@@ -39,12 +39,12 @@ const Path: FC<Props> = ({
   const error = useMemo(() => {
     return disableValidation
       ? ''
-      : isEmptyPath && index === 0 && isAllEmptyValues && !optional
+      : isEmptyPath && index === 0 && isAllEmptyValues && required
         ? t(ErrorI18nKey.RequiredProperty)
         : isInvalidPath
           ? t(ErrorI18nKey.InvalidPath)
           : '';
-  }, [disableValidation, isEmptyPath, index, isAllEmptyValues, optional, t, isInvalidPath]);
+  }, [disableValidation, isEmptyPath, index, isAllEmptyValues, required, t, isInvalidPath]);
 
   const alignmentClassName =
     index === 0 ? (error ? 'items-start' : 'items-end') : error ? 'items-start' : 'items-center';
@@ -65,14 +65,14 @@ const Path: FC<Props> = ({
   return (
     <div className={classNames('flex flex-row gap-x-2', alignmentClassName)}>
       <div className="flex-1 min-w-0">
-        <DialTextInputField
-          elementId={`path-${index}`}
+        <DialInput
+          id={`path-${index}`}
           value={path}
           disabled={readonly}
           placeholder={t(EntityPlaceholdersI18nKey.PathUrl)}
-          fieldTitle={index === 0 ? fieldTitle : ''}
+          labelProps={{ label: index === 0 ? label : '', required }}
           onChange={(value) => onChangePath(index, value)}
-          errorText={error}
+          error={error}
           invalid={!!error}
         />
       </div>

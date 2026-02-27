@@ -1,6 +1,6 @@
 'use client';
 
-import { DialInputProps, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialInputProps, DialInput } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 import classNames from 'classnames';
 
@@ -11,22 +11,21 @@ import { useI18n } from '@/src/locales/client';
 
 interface Props extends DialInputProps {
   value?: string;
-  fieldTitle: string;
-  errorText?: string;
+  label: string;
+  error?: string;
   fullValue?: string;
   copyable?: boolean;
-  optional?: boolean;
   isFullWidth?: boolean;
 }
 
-const ComplexInput: FC<Props> = ({ fullValue, fieldTitle, isFullWidth, copyable = true, ...props }) => {
+const ComplexInput: FC<Props> = ({ fullValue, label, isFullWidth, copyable = true, required, ...props }) => {
   const t = useI18n();
   return (
     <div className={classNames('flex items-end gap-2', copyable && !isFullWidth ? STANDARD_CONTROL_WIDTH : 'w-full')}>
       <div className={isFullWidth ? 'w-full' : copyable ? CONTROL_WITH_BUTTON_WIDTH : STANDARD_CONTROL_WIDTH}>
-        <DialTextInputField containerClassName="w-full" fieldTitle={fieldTitle} elementClassName="w-full" {...props} />
+        <DialInput labelProps={{ label, required }} className="w-full" {...props} />
       </div>
-      {copyable && <CopyButton valueLabel={fieldTitle} value={fullValue} buttonLabel={t(ButtonsI18nKey.Copy)} />}
+      {copyable && <CopyButton valueLabel={label} value={fullValue} buttonLabel={t(ButtonsI18nKey.Copy)} />}
     </div>
   );
 };

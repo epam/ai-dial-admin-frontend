@@ -1,11 +1,10 @@
 'use client';
 
-import { DialInputPopup, DialNeutralButton, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
+import { DialInputPopup, DialLabel, DialNeutralButton, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import Field from '@/src/components/Common/Field/Field';
 import { ButtonsI18nKey, EntitiesI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -75,17 +74,18 @@ const AppRunners: FC<Props> = ({ selectedValue, runners, onChangeValue, isEntity
     <DialSelectField
       value={selectedValue}
       searchable={true}
-      elementId="sourceEntity"
+      required
+      id="sourceEntity"
       className="w-full"
       options={dropdownItems}
-      fieldTitle={t(EntitiesI18nKey.AppRunner)}
+      label={t(EntitiesI18nKey.AppRunner)}
       placeholder={t(EntityPlaceholdersI18nKey.SelectAppRunner)}
       onChange={(runner) => onChange(runner as string)}
     />
   ) : (
     <div className={classNames('flex flex-row gap-2 items-end', STANDARD_CONTROL_WIDTH)}>
-      <div className={CONTROL_WITH_BUTTON_WIDTH}>
-        <Field fieldTitle={t(EntitiesI18nKey.AppRunner)} htmlFor="sourceEntity" />
+      <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-2')}>
+        <DialLabel label={t(EntitiesI18nKey.AppRunner)} required htmlFor="sourceEntity" />
         <DialInputPopup
           emptyValueText={t(EntitiesI18nKey.NoApplicationRunners)}
           open={isModalOpen}

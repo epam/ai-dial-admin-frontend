@@ -38,8 +38,8 @@ const ExportTopics: FC<Props> = ({ selectedTopics, setSelectedTopics }) => {
     <DialSelectField
       listClassName="w-[200px]"
       captionDescription={t(ExportI18nKey.TopicsCaption)}
-      elementId="topics"
-      fieldTitle={t(EntityFieldsI18nKey.topics)}
+      id="topics"
+      label={t(EntityFieldsI18nKey.topics)}
       multiple
       onChange={(topics) => {
         setSelectedTopics(topics as string[]);

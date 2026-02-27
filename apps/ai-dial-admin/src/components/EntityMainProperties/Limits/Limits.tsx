@@ -18,37 +18,37 @@ const LimitsControl: FC<Props> = ({ limits, onChangeLimits, ...props }) => {
   return (
     <div className="flex flex-row gap-x-3">
       <LimitControl
-        elementId="minute"
+        id="minute"
         fieldKey="minute"
         limits={limits}
-        fieldTitle={t(RolesI18nKey.PerMinute)}
+        label={t(RolesI18nKey.PerMinute)}
         onChange={onChangeLimits}
         {...props}
       />
 
       <LimitControl
-        elementId="day"
+        id="day"
         fieldKey="day"
         limits={limits}
-        fieldTitle={t(RolesI18nKey.PerDay)}
+        label={t(RolesI18nKey.PerDay)}
         onChange={onChangeLimits}
         {...props}
       />
 
       <LimitControl
-        elementId="week"
+        id="week"
         fieldKey="week"
         limits={limits}
-        fieldTitle={t(RolesI18nKey.PerWeek)}
+        label={t(RolesI18nKey.PerWeek)}
         onChange={onChangeLimits}
         {...props}
       />
 
       <LimitControl
-        elementId="month"
+        id="month"
         fieldKey="month"
         limits={limits}
-        fieldTitle={t(RolesI18nKey.PerMonth)}
+        label={t(RolesI18nKey.PerMonth)}
         onChange={onChangeLimits}
         {...props}
       />

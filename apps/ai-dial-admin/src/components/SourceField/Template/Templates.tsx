@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { DialInputPopup, DialNeutralButton, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { DialInputPopup, DialLabel, DialNeutralButton, DialSelectField } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 
-import Field from '@/src/components/Common/Field/Field';
 import SelectRunnerModal from '@/src/components/SourceField/Template/SelectRunnerModal';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { CreateI18nKey, EntitiesI18nKey, SourceI18nKey } from '@/src/constants/i18n';
@@ -24,7 +23,7 @@ interface Props<T> {
   entity: T;
   onChange: (entity: T) => void;
   getRunners: () => Promise<ServerActionResponse<InterceptorTemplate[]>>;
-  errorText?: string;
+  error?: string;
   isModal?: boolean;
 }
 
@@ -32,7 +31,7 @@ const Templates = <T extends DialModel | DialInterceptor>({
   entity,
   onChange,
   getRunners,
-  errorText,
+  error,
   isModal,
 }: Props<T>) => {
   const t = useI18n();
@@ -99,24 +98,25 @@ const Templates = <T extends DialModel | DialInterceptor>({
                 value: runner.name as string,
                 label: runner.displayName || runner.name || '',
               }))}
-              searchable={true}
+              searchable
+              required
               onChange={(value) => onSelect(value as string)}
-              elementId="source-type"
+              id="source-type"
               value={runners.find((runner) => runner.name === entity.source?.runnerName)?.name}
               placeholder={t(CreateI18nKey.SelectInterceptorTemplate)}
-              fieldTitle={t(SourceI18nKey.InterceptorTemplate)}
+              label={t(SourceI18nKey.InterceptorTemplate)}
             />
           </div>
         ) : (
           <div className={classNames('flex gap-2', STANDARD_CONTROL_WIDTH)}>
-            <div className={CONTROL_WITH_BUTTON_WIDTH}>
-              <Field fieldTitle={t(SourceI18nKey.InterceptorTemplate)} htmlFor="templates" />
+            <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-2')}>
+              <DialLabel label={t(SourceI18nKey.InterceptorTemplate)} required htmlFor="templates" />
               <DialInputPopup
                 open={isModalOpen}
                 onOpen={onOpenModal}
                 selectedValue={selectedRunner?.name}
                 elementId="templates"
-                errorText={errorText}
+                errorText={error}
                 emptyValueText={t(EntitiesI18nKey.NoTemplates)}
               >
                 <SelectRunnerModal
@@ -131,7 +131,7 @@ const Templates = <T extends DialModel | DialInterceptor>({
             {entity.source?.runnerName && (
               <DialNeutralButton
                 iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
-                className={classNames(errorText ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
+                className={classNames(error ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
                 label={t(SourceI18nKey.OpenTemplate)}
                 onClick={() => openTemplate()}
               />

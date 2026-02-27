@@ -3,7 +3,7 @@
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 
 import classNames from 'classnames';
-import { DialRemoveButton, DialSelectField, DialTagInput, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialRemoveButton, DialSelectField, DialTagInput, DialInput } from '@epam/ai-dial-ui-kit';
 
 import { BasicI18nKey, ErrorI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -27,7 +27,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
   const functionItems = getOperationItems(t);
   const attributeItems = getAttributeItems(t, attributes);
 
-  const inputClassName = classNames('flex-shrink-0 pb-[18px]');
+  const inputClassName = 'flex-shrink-0';
   const iconClassName = classNames('cursor-pointer mb-[18px]', index === 0 ? 'mt-[24px]' : 'flex items-center');
 
   const setError = useCallback(
@@ -106,9 +106,9 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
         <div className={classNames(inputClassName, 'w-[250px]')}>
           <DialSelectField
             value={rule.source}
-            elementId={`rule-attribute-${index}`}
+            id={`rule-attribute-${index}`}
             options={attributeItems}
-            fieldTitle={isFirstLine ? t(FoldersI18nKey.AttributeTitle) : ''}
+            label={isFirstLine ? t(FoldersI18nKey.AttributeTitle) : ''}
             placeholder={t(FoldersI18nKey.AttributePlaceholder)}
             onChange={(source) => onChangeSource(source as string)}
           />
@@ -116,36 +116,37 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
         <div className={classNames(inputClassName, 'w-[160px]')}>
           <DialSelectField
             value={rule.function}
-            elementId={`rule-function-${index}`}
+            id={`rule-function-${index}`}
             options={functionItems}
-            fieldTitle={isFirstLine ? t(FoldersI18nKey.OperationTitle) : ''}
+            label={isFirstLine ? t(FoldersI18nKey.OperationTitle) : ''}
             placeholder={t(FoldersI18nKey.OperationPlaceholder)}
             onChange={(fun) => onChangeFunction(fun as string)}
           />
         </div>
         <div className="flex-1">
           {rule.function === RuleFunction.REGEX ? (
-            <DialTextInputField
-              elementId={`upstream-endpoints-${index}`}
+            <DialInput
+              id={`upstream-endpoints-${index}`}
               value={rule.targets?.[0]}
-              fieldTitle={isFirstLine ? t(BasicI18nKey.Value) : ''}
+              labelProps={{ label: isFirstLine ? t(BasicI18nKey.Value) : '' }}
               placeholder={t(FoldersI18nKey.RegexPlaceholder)}
               onChange={onChangeRegex}
-              errorText={errorText}
+              error={errorText}
               invalid={!!errorText}
-              elementClassName="h-[40px]"
             />
           ) : (
-            <DialTagInput
-              elementId="rule-values"
-              fieldTitle={isFirstLine ? t(BasicI18nKey.Value) : ''}
-              placeholder={t(FoldersI18nKey.ValuePlaceholder)}
-              captionDescription={t(FoldersI18nKey.ValueCaption)}
-              initialTags={rule.targets}
-              onChange={onChangeTags}
-              errorText={errorText}
-              invalid={!!errorText}
-            />
+            <div className="mt-[23px]">
+              <DialTagInput
+                elementId="rule-values"
+                label={isFirstLine ? t(BasicI18nKey.Value) : ''}
+                placeholder={t(FoldersI18nKey.ValuePlaceholder)}
+                captionDescription={t(FoldersI18nKey.ValueCaption)}
+                initialTags={rule.targets}
+                onChange={onChangeTags}
+                errorText={errorText}
+                invalid={!!errorText}
+              />
+            </div>
           )}
         </div>
         <DialRemoveButton onClick={onRemoveValue} className={iconClassName} />

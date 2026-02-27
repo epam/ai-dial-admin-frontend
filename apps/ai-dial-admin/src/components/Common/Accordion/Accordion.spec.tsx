@@ -42,7 +42,7 @@ describe('Common components :: Accordion', () => {
 
   test('render error indicator', () => {
     render(
-      <Accordion title={'title'} errorIndicator={true}>
+      <Accordion title="title" errorIndicator={true}>
         <div>Child content</div>
       </Accordion>,
     );

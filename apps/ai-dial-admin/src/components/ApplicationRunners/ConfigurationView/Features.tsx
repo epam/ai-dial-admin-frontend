@@ -34,7 +34,7 @@ const AppRunnerFeatures: FC<Props> = ({ runner, onChangeRunner }) => {
 
       <EndpointControl
         id="rateEndpoint"
-        fieldTitle={t(FeaturesI18nKey.rateEndpoint)}
+        label={t(FeaturesI18nKey.rateEndpoint)}
         placeholder={t(EntityPlaceholdersI18nKey.RateEndpoint)}
         endpoint={runner['dial:applicationTypeRateEndpoint']}
         onChange={(value?: string) => {
@@ -44,7 +44,7 @@ const AppRunnerFeatures: FC<Props> = ({ runner, onChangeRunner }) => {
 
       <EndpointControl
         id="tokenizeEndpoint"
-        fieldTitle={t(FeaturesI18nKey.tokenizeEndpoint)}
+        label={t(FeaturesI18nKey.tokenizeEndpoint)}
         placeholder={t(EntityPlaceholdersI18nKey.TokenizeEndpoint)}
         endpoint={runner['dial:applicationTypeTokenizeEndpoint']}
         onChange={(value?: string) => {
@@ -54,7 +54,7 @@ const AppRunnerFeatures: FC<Props> = ({ runner, onChangeRunner }) => {
 
       <EndpointControl
         id="promptEndpoint"
-        fieldTitle={t(FeaturesI18nKey.truncatePromptEndpoint)}
+        label={t(FeaturesI18nKey.truncatePromptEndpoint)}
         placeholder={t(EntityPlaceholdersI18nKey.TruncatePromptEndpoint)}
         endpoint={runner['dial:applicationTypeTruncatePromptEndpoint']}
         onChange={(value?: string) => {

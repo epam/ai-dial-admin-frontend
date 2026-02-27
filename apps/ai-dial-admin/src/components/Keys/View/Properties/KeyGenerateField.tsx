@@ -1,4 +1,4 @@
-import { DialGhostButton, DialPasswordInputField } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton, DialPasswordInput } from '@epam/ai-dial-ui-kit';
 import { IconSparkles } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, useCallback, useState } from 'react';
@@ -39,15 +39,14 @@ const KeyGenerateField: FC<Props> = ({ isKeyImmutable, keys, selectedKey, change
   return (
     <div className={classNames('flex items-end gap-x-3', !isKeyImmutable ? 'w-full' : STANDARD_CONTROL_WIDTH)}>
       <div className={CONTROL_WITH_BUTTON_WIDTH}>
-        <DialPasswordInputField
-          elementId="key"
-          fieldTitle={t(EntityFieldsI18nKey.keyValue)}
+        <DialPasswordInput
+          id="key"
+          labelProps={{ label: t(EntityFieldsI18nKey.keyValue), required: true }}
           placeholder={t(EntityPlaceholdersI18nKey.KeyValue)}
           value={selectedKey.key}
-          errorText={keyError?.text}
+          error={keyError?.text}
           invalid={!!keyError}
           onChange={onChangeKeyValue}
-          elementClassName="w-full"
         />
       </div>
       {isKeyImmutable ? (
@@ -58,7 +57,7 @@ const KeyGenerateField: FC<Props> = ({ isKeyImmutable, keys, selectedKey, change
         />
       ) : (
         <DialGhostButton
-          className="ml-2 h-[34px]"
+          className="ml-2"
           iconBefore={<IconSparkles />}
           label={t(ButtonsI18nKey.Generate)}
           onClick={onGenerateKey}

@@ -49,21 +49,21 @@ const SourceType: FC<Props> = ({ image, setImage, isModal, verifyVersion }) => {
     <div className="flex gap-x-4">
       {isModal && (
         <DialSelectField
-          elementId="imagesType"
+          id="imagesType"
           containerClassName="w-[220px]"
           value={image.$type}
           options={imageTypesList}
-          fieldTitle={t(EntityFieldsI18nKey.type)}
+          label={t(EntityFieldsI18nKey.type)}
           onChange={onImageTypeChange}
         />
       )}
       {image.$type === IMAGE_TYPE.MCP && (
         <DialSelectField
-          elementId="sourceType"
+          id="sourceType"
           containerClassName="w-[220px]"
           value={image.source.$type}
           options={sourcesList}
-          fieldTitle={t(EntitiesI18nKey.SourceType)}
+          label={t(EntitiesI18nKey.SourceType)}
           onChange={onSourceTypeChange}
         />
       )}

@@ -1,11 +1,10 @@
-import { useI18n } from '@/src/locales/client';
-import { useCallback, useEffect, useState } from 'react';
-import { IpRange, IpRangeProperty, RestrictionType } from './types';
-import { DialRadioButton } from '@epam/ai-dial-ui-kit';
 import { KeysI18nKey } from '@/src/constants/i18n';
-import Field from '@/src/components/Common/Field/Field';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useI18n } from '@/src/locales/client';
+import { DialLabel, DialRadioButton } from '@epam/ai-dial-ui-kit';
+import { useCallback, useEffect, useState } from 'react';
 import RangeItems from './RangeItems';
+import { IpRange, IpRangeProperty, RestrictionType } from './types';
 
 interface Props<T> {
   elementId?: string;
@@ -106,7 +105,7 @@ const AccessRestrictionField = <T extends { allowedIpAddressRanges?: string[] }>
   }, [selectedRadio, ipRanges]);
 
   useEffect(() => {
-    // When discard need to reinitialize Fied
+    // When discard need to reinitialize Field
     if (entity === originalEntity) {
       initialize(entity);
     }
@@ -114,7 +113,7 @@ const AccessRestrictionField = <T extends { allowedIpAddressRanges?: string[] }>
 
   return (
     <div className="flex flex-col w-full relative gap-2">
-      <Field fieldTitle={t(KeysI18nKey.RestrictionFieldLabel)} htmlFor={elementId} />
+      <DialLabel label={t(KeysI18nKey.RestrictionFieldLabel)} htmlFor={elementId} />
 
       <div className="flex flex-col gap-4">
         <DialRadioButton

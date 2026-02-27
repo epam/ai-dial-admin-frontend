@@ -161,7 +161,6 @@ const AgGridWrapper = <T extends object>({
     if (columnDefs) {
       const gridColumnsState = getFromLocalStorage(`${GRID_COLUMNS_KEY}${storageKey}`) || '{}';
       const columnsFromStorage = JSON.parse(gridColumnsState)?.columns;
-
       const columns = columnDefs?.map((col) => {
         const columnFromStorage =
           columnsFromStorage?.find((storageCol: ColumnState) => storageCol.colId === col.colId) || {};

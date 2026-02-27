@@ -71,7 +71,7 @@ const ContainerDuplicate: FC<Props> = ({ title, isModalOpen, container, onClose,
           isUniqueNameError={isUniqueNameError}
           isDeploymentId={true}
         />
-        <DisplayNameControl displayName={duplicate.displayName} required={true} onChange={onChangeDisplayName} />
+        <DisplayNameControl displayName={duplicate.displayName} required onChange={onChangeDisplayName} />
       </div>
     </DialConfirmationPopup>
   );
