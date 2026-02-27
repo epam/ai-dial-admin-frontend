@@ -79,7 +79,7 @@ describe('Actions :: getResourceRollbackOperation', () => {
     expect(res.onClick).toEqual(CLICK);
   });
 
-    test('Should set EDIT_OPERATION', () => {
+  test('Should set EDIT_OPERATION', () => {
     const res = getEditOperation(CLICK);
     expect(res.id).toBe(ActionMenuOperation.Edit);
     expect(res.icon).toEqual(<IconPencilMinus {...BASE_BUTTON_ICON_PROPS} />);
