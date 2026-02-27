@@ -116,7 +116,7 @@
     "vitest-fetch-mock": "^0.4.5"
   },
   "overrides": {
-    "koa": "3.1.1",
+    "koa": "3.1.2",
     "glob": "11.1.0",
     "react": "19.1.2",
     "react-dom": "19.1.2",
