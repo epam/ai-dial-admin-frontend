@@ -5,7 +5,7 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { DialCopiedItem, DialDeletedItem, DialFile, DialFileManager, DialUploadFileItem } from '@epam/ai-dial-ui-kit';
 import { ColDef } from 'ag-grid-community';
 
-import { bulkDeleteFiles, exportFiles, moveFiles } from '@/src/app/[lang]/files/actions';
+import { bulkDeleteFiles, exportFiles, importFiles, moveFiles } from '@/src/app/[lang]/files/actions';
 import { changeFolder, createFolderWithFiles, removeFolder } from '@/src/app/[lang]/folders-storage/actions';
 import { getParentPathByFullPath } from '@/src/components/Assets/utils';
 import { getFormDataForImport, getImportTitle } from '@/src/components/EntityListView/HeaderButtons/utils';
@@ -269,6 +269,33 @@ const FileManager: FC<Props> = ({ label, columnDefs, view, getContext, ...props 
     window.open(`/${FILE_PREVIEW}?path=${encodeURIComponent(path || '')}`, '_blank');
   }, []);
 
+  const handleDragAndDropFiles = useCallback(
+    (files: DialUploadFileItem[], destinationFolder: string) => {
+      const promises: Promise<ServerActionResponse>[] = [];
+
+      files.forEach((file) => {
+        const { body } = getFormDataForImport(
+          destinationFolder,
+          [file.fileContent],
+          ImportFileType.FILES,
+          ConflictResolutionPolicy.SKIP,
+          void 0,
+          false,
+          view,
+        );
+        promises.push(importFiles(body, ImportFileType.FILES));
+      });
+
+      Promise.all(promises).then((result) => {
+        const isSuccess = result.every((res) => res.success);
+        if (isSuccess) {
+          fetchFiles?.(destinationFolder);
+        }
+      });
+    },
+    [fetchFiles, view],
+  );
+
   return (
     <DialFileManager
       managerLabel={managerLabel}
@@ -293,6 +320,7 @@ const FileManager: FC<Props> = ({ label, columnDefs, view, getContext, ...props 
       onFolderPopupPathChange={handleFolderPopupPathChange}
       onManagePermissions={handleManagePermissions}
       onPreview={handlePreviewFile}
+      onUploadFiles={handleDragAndDropFiles}
       folderCreationValidationMessages={getValidationMessages(t)}
       renameValidationMessages={getValidationMessages(t)}
       isRenameFileAvailable={false}

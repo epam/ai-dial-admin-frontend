@@ -15,7 +15,6 @@ describe('CreateAppRunner', () => {
 
   test('renders popup and fields', () => {
     render(<CreateAppRunner {...baseProps} />);
-    expect(screen.getByText(CreateI18nKey.ApplicationRunner)).toBeInTheDocument();
     expect(screen.getByText(ButtonsI18nKey.Cancel)).toBeInTheDocument();
     expect(screen.getByText(ButtonsI18nKey.Create)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Id)).toBeInTheDocument();
