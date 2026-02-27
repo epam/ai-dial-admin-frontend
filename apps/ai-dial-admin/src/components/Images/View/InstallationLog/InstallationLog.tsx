@@ -23,8 +23,14 @@ const InstallationLog: FC<Props> = ({ imageBuildId }) => {
       eventSource.close();
     };
 
-    const handleError = () => {
-      console.error('EventSource error: installation log stream failed');
+    const handleError = (event: Event) => {
+      const messageEvent = event as MessageEvent;
+      if (messageEvent.data) {
+        setLogs((prev) => prev + messageEvent.data + '\n');
+        eventSource.close();
+      } else {
+        console.error('EventSource connection error');
+      }
     };
 
     eventSource.addEventListener('logs', handleLogs);
