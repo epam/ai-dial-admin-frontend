@@ -13,7 +13,8 @@ import EndpointSchema from '@/src/components/TestSuites/EndpointSchema/EndpointS
 import CreateTestSuite from '@/src/components/TestSuites/Modals/Create/CreateTestSuite';
 import RequestTemplate from '@/src/components/TestSuites/RequestTemplate/RequestTemplate';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
+import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useI18n } from '@/src/locales/client';
 import { Deployment } from '@/src/models/evaluation/deployment';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
@@ -32,6 +33,7 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
   const [deployments, setDeployments] = useState<Deployment[] | null>(null);
   const [selectedAppType, setSelectedAppType] = useState<string | undefined>(void 0);
   const [isAppModalOpen, setIsAppModalOpen] = useState(false);
+  const isMobile = useIsMobileScreen();
 
   const openInNewTab = useCallback(() => {
     onOpenInNewTab(selectedAppType === 'dial-application' ? ApplicationRoute.Applications : ApplicationRoute.Models, {
@@ -74,7 +76,7 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
       <DescriptionControl isFullWidth={false} entity={testSuite} onChangeEntity={onChange} />
       {!isModal && (
         <>
-          <div className={classNames('flex gap-2', STANDARD_CONTROL_WIDTH)}>
+          <div className="flex gap-2">
             <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-2')}>
               <DialLabel label={t(TestSuitesI18nKey.Application)} htmlFor="applications" />
               <DialInputPopup
@@ -96,7 +98,7 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
             <DialNeutralButton
               iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
               className="self-end shrink-0"
-              label={t(ButtonsI18nKey.Open)}
+              label={isMobile ? '' : t(ButtonsI18nKey.Open)}
               onClick={() => openInNewTab()}
             />
           </div>

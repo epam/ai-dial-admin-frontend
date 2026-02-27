@@ -6,8 +6,9 @@ import classNames from 'classnames';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { ButtonsI18nKey, EntitiesI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -27,7 +28,7 @@ const AppRunners: FC<Props> = ({ selectedValue, runners, onChangeValue, isEntity
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [valueTitle, setValueTitle] = useState('');
-
+  const isMobile = useIsMobileScreen();
   const onOpenModal = useCallback(() => {
     setIsModalOpen(true);
   }, [setIsModalOpen]);
@@ -83,7 +84,7 @@ const AppRunners: FC<Props> = ({ selectedValue, runners, onChangeValue, isEntity
       onChange={(runner) => onChange(runner as string)}
     />
   ) : (
-    <div className={classNames('flex flex-row gap-2 items-end', STANDARD_CONTROL_WIDTH)}>
+    <div className="flex gap-2">
       <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-2')}>
         <DialLabel label={t(EntitiesI18nKey.AppRunner)} required htmlFor="sourceEntity" />
         <DialInputPopup
@@ -103,7 +104,7 @@ const AppRunners: FC<Props> = ({ selectedValue, runners, onChangeValue, isEntity
       </div>
       {selectedValue && (
         <DialNeutralButton
-          label={t(ButtonsI18nKey.OpenAppRunner)}
+          label={isMobile ? '' : t(ButtonsI18nKey.OpenAppRunner)}
           iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
           onClick={openInNewTab}
         />
