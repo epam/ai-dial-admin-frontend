@@ -194,9 +194,9 @@ describe('TestSuites :: server actions', () => {
 
   test('Should call tryOutTestCase action ', async () => {
     (testSuitesApi.tryOutTestCase as any).mockResolvedValue(RESPONSE_MOCK);
-    const result = await tryOutTestCase('id', 'caseId', { variables: {} });
+    const result = await tryOutTestCase('id', 'caseId');
     expect(getUserToken).toHaveBeenCalled();
-    expect(testSuitesApi.tryOutTestCase).toHaveBeenCalledWith('id', 'caseId', { variables: {} }, TOKEN_MOCK);
+    expect(testSuitesApi.tryOutTestCase).toHaveBeenCalledWith('id', 'caseId', TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

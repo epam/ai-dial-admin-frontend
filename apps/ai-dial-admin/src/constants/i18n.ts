@@ -571,6 +571,7 @@ export enum TabsI18nKey {
   Headers = 'Tabs.Headers',
   RequestSchema = 'Tabs.RequestSchema',
   ResponseSchema = 'Tabs.ResponseSchema',
+  Columns = 'Tabs.Columns',
 }
 
 export enum InterceptorsI18nKey {
@@ -1018,6 +1019,7 @@ export enum EntityPlaceholdersI18nKey {
   PeriodSeconds = 'EntityPlaceholders.PeriodSeconds',
   TimeoutSeconds = 'EntityPlaceholders.TimeoutSeconds',
   FailureThreshold = 'EntityPlaceholders.FailureThreshold',
+  Expression = 'EntityPlaceholders.Expression',
 }
 
 export enum EntityCaptionsI18nKey {
@@ -1202,6 +1204,7 @@ export enum EntityFieldsI18nKey {
   TimeoutSeconds = 'EntityFields.TimeoutSeconds',
   FailureThreshold = 'EntityFields.FailureThreshold',
   AdvancedTiming = 'EntityFields.AdvancedTiming',
+  expression = 'EntityFields.expression',
 }
 
 export enum ToolsetI18nKey {
@@ -1339,6 +1342,8 @@ export enum DeploymentsI18nKey {
   WhitelistPolicyCustom = 'Deployments.WhitelistPolicyCustom',
   WhitelistPolicyCustomCaption = 'Deployments.WhitelistPolicyCustomCaption',
   AddDomain = 'Deployments.AddDomain',
+  EventsError = 'Deployments.EventsError',
+  LogsError = 'Deployments.LogsError',
 }
 
 export enum KubEventsI18nKey {
@@ -1399,6 +1404,9 @@ export enum TestSuitesI18nKey {
   Constant = 'TestSuites.Constant',
   Attribute = 'TestSuites.Attribute',
   Warning = 'TestSuites.Warning',
+  ColumnsDescription = 'TestSuites.ColumnsDescription',
+  EditColumn = 'TestSuites.EditColumn',
+  SaveColumn = 'TestSuites.SaveColumn',
 }
 
 export enum RunsI18nKey {

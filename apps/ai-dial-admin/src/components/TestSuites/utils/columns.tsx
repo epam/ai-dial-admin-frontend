@@ -13,7 +13,7 @@ import { getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import { BASE_STATUS_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { TEST_CASES_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
-import { InputBindingRowData, TestCase, TestCaseSchema } from '@/src/models/evaluation/test-suite';
+import { InputBindingRowData, ResponseColumn, TestCase, TestCaseSchema } from '@/src/models/evaluation/test-suite';
 import { InputBindingType, TestCaseItemType } from '@/src/types/evaluation';
 import { getSchemaTypes, SchemaFieldRow } from './schema';
 
@@ -374,3 +374,34 @@ export const getSchemaGridColumns = (
     floatingFilter: false,
   },
 ];
+
+export const getColumnsGridColumns = (): ColDef<ResponseColumn>[] => {
+  return [
+    {
+      headerName: 'Name',
+      colId: 'displayName',
+      field: 'displayName',
+      sortable: false,
+      filter: false,
+      floatingFilter: false,
+    },
+    {
+      headerName: 'JSONata Expression',
+      colId: 'expression',
+      field: 'expression',
+      sortable: false,
+      filter: false,
+      floatingFilter: false,
+    },
+    {
+      headerName: 'Type',
+      colId: 'type',
+      field: 'type',
+      sortable: false,
+      filter: false,
+      floatingFilter: false,
+      valueFormatter: ({ value }) => value.toLowerCase(),
+      tooltipValueGetter: ({ value }) => value.toLowerCase(),
+    },
+  ];
+};

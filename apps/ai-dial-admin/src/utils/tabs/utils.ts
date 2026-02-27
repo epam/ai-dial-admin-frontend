@@ -51,6 +51,7 @@ export enum EntityViewTab {
   Headers = 'Headers',
   RequestSchema = 'RequestSchema',
   ResponseSchema = 'ResponseSchema',
+  Columns = 'Columns',
 }
 
 export const propertiesTab = (t: (key: string) => string) => ({
@@ -265,6 +266,11 @@ export const responseSchemaTab = (t: (key: string) => string) => ({
   label: t(TabsI18nKey.ResponseSchema),
 });
 
+export const columnsTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.Columns,
+  label: t(TabsI18nKey.Columns),
+});
+
 export const getRouteTabs = (t: (key: string) => string): TabModel[] => {
   return [propertiesTab(t), rolesTab(t), auditTab(t)];
 };
@@ -441,5 +447,5 @@ export const getRunTabs = (t: (key: string) => string): TabModel[] => {
 };
 
 export const getEndpointSchemaTabs = (t: (key: string) => string): TabModel[] => {
-  return [requestSchemaTab(t), responseSchemaTab(t)];
+  return [requestSchemaTab(t), responseSchemaTab(t), columnsTab(t)];
 };

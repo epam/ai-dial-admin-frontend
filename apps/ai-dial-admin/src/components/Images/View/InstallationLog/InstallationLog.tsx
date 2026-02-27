@@ -1,4 +1,9 @@
 import { FC, useEffect, useState } from 'react';
+import { DeploymentsI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
+import { useNotification } from '@/src/context/NotificationContext';
+import { getErrorNotification } from '@/src/utils/notification';
+import { useI18n } from '@/src/locales/client';
+
 import LogViewer from '@/src/components/Common/LogViewer/LogViewer';
 
 interface Props {
@@ -6,6 +11,8 @@ interface Props {
 }
 
 const InstallationLog: FC<Props> = ({ imageBuildId }) => {
+  const t = useI18n();
+  const { showNotification } = useNotification();
   const [logs, setLogs] = useState<string>('');
 
   useEffect(() => {
@@ -25,12 +32,13 @@ const InstallationLog: FC<Props> = ({ imageBuildId }) => {
 
     const handleError = (event: Event) => {
       const messageEvent = event as MessageEvent;
-      if (messageEvent.data) {
-        setLogs((prev) => prev + messageEvent.data + '\n');
-        eventSource.close();
-      } else {
-        console.error('EventSource connection error');
+      try {
+        const { message } = JSON.parse(messageEvent.data);
+        showNotification(getErrorNotification(t(ErrorI18nKey.Error), message));
+      } catch {
+        showNotification(getErrorNotification(t(ErrorI18nKey.Error), t(DeploymentsI18nKey.LogsError)));
       }
+      eventSource.close();
     };
 
     eventSource.addEventListener('logs', handleLogs);
@@ -43,7 +51,7 @@ const InstallationLog: FC<Props> = ({ imageBuildId }) => {
       eventSource.removeEventListener('error', handleError);
       eventSource.close();
     };
-  }, [imageBuildId]);
+  }, [imageBuildId, showNotification, t]);
 
   return (
     <div className="h-full">
