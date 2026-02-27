@@ -10,7 +10,7 @@ import ContainersHeader from '@/src/components/EntityHeaderControls/ContainersHe
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { IMAGE_BUILD_POLL_INTERVAL } from '@/src/constants/deployments/images';
-import { ContainersI18nKey } from '@/src/constants/i18n';
+import { ErrorI18nKey, ContainersI18nKey, DeploymentsI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -128,11 +128,13 @@ const ContainerView: FC<Props> = ({ container, route, createEntity, createEntity
 
       const handleError = (event: Event) => {
         const messageEvent = event as MessageEvent;
-        if (messageEvent.data) {
-          eventSource.close();
-        } else {
-          console.error('EventSource connection error');
+        try {
+          const { message } = JSON.parse(messageEvent.data);
+          showNotification(getErrorNotification(t(ErrorI18nKey.Error), message));
+        } catch {
+          showNotification(getErrorNotification(t(ErrorI18nKey.Error), t(DeploymentsI18nKey.EventsError)));
         }
+        eventSource.close();
       };
 
       const handleOpen = () => {
@@ -150,7 +152,7 @@ const ContainerView: FC<Props> = ({ container, route, createEntity, createEntity
         eventSource.close();
       };
     }
-  }, [selectedContainer.name]);
+  }, [selectedContainer.name, showNotification, t]);
 
   useEffect(() => {
     if (!selectedContainer.name) {

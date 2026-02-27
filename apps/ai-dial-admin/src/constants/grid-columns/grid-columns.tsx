@@ -456,7 +456,7 @@ export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, rou
   ...(route === ApplicationRoute.ModelServings
     ? [
         {
-          field: 'type',
+          field: '$type',
           headerName: 'Source type',
           hide: false,
           valueFormatter: ({ value }) => t(MODEL_TYPES[value as MODEL_TYPE]),

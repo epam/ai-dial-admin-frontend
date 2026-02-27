@@ -104,7 +104,7 @@ export async function tryOutTestSuite(id: string, requestBody: Record<string, un
   return testSuitesApi.tryOutTestSuite(id, requestBody, token);
 }
 
-export async function tryOutTestCase(id: string, testCaseId: string, requestBody: Record<string, unknown>) {
+export async function tryOutTestCase(id: string, testCaseId: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return testSuitesApi.tryOutTestCase(id, testCaseId, requestBody, token);
+  return testSuitesApi.tryOutTestCase(id, testCaseId, token);
 }
