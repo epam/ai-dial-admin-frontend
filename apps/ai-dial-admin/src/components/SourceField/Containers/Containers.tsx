@@ -1,16 +1,17 @@
-import { DialInputPopup, DialNeutralButton, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { DialInputPopup, DialLabel, DialNeutralButton, DialSelectField } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import Field from '@/src/components/Common/Field/Field';
 import SelectContainerModal from '@/src/components/SourceField/Containers/SelectContainerModal';
 import Endpoints from '@/src/components/SourceField/Endpoints/Endpoints';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
+import { getContainerRoute } from '@/src/components/SourceField/utils';
 import { CreateI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, SourceI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { Container } from '@/src/models/deployments/containers';
@@ -22,7 +23,6 @@ import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 import { getErrorNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { addTrailingSlash } from '@/src/utils/url';
-import { getContainerRoute } from '@/src/components/SourceField/utils';
 
 interface Props<T> {
   entity: T;
@@ -30,7 +30,7 @@ interface Props<T> {
   getContainers: () => Promise<ServerActionResponse<Container[]>>;
   view: ApplicationRoute;
   isModal?: boolean;
-  errorText?: string;
+  error?: string;
 }
 
 const Containers = <T extends DialInterceptor | DialModel>({
@@ -39,7 +39,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
   getContainers,
   view,
   isModal,
-  errorText,
+  error,
 }: Props<T>) => {
   const t = useI18n();
   const { showNotification } = useNotification();
@@ -50,6 +50,8 @@ const Containers = <T extends DialInterceptor | DialModel>({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [containers, setContainers] = useState<Container[]>([]);
   const [selectedContainer, setSelectedContainer] = useState<Container | null>(null);
+
+  const isMobile = useIsMobileScreen();
 
   const selectedContainerName = useMemo(() => {
     return containers.find((container) => container.name === entity.source?.containerId)?.name;
@@ -112,23 +114,24 @@ const Containers = <T extends DialInterceptor | DialModel>({
         {isModal ? (
           <div className="flex flex-col w-full">
             <DialSelectField
-              searchable={true}
               options={containers.map((container) => ({
                 value: container.name as string,
                 label: container.displayName as string,
               }))}
+              required
+              searchable
               onChange={(container) => onSelect(container as string)}
-              elementId="source-type"
+              id="source-type"
               value={selectedContainerName}
               placeholder={t(CreateI18nKey.SelectContainer)}
-              fieldTitle={t(EntityFieldsI18nKey.container)}
+              label={t(EntityFieldsI18nKey.container)}
               readonly={!featureFlags.deploymentsEnabled}
             />
           </div>
         ) : (
-          <div className={classNames('flex gap-2', STANDARD_CONTROL_WIDTH)}>
-            <div className={CONTROL_WITH_BUTTON_WIDTH}>
-              <Field fieldTitle={t(SourceI18nKey.Container)} htmlFor="containers" />
+          <div className="flex gap-2">
+            <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-2')}>
+              <DialLabel label={t(SourceI18nKey.Container)} required htmlFor="containers" />
               <DialInputPopup
                 open={isModalOpen}
                 onOpen={onOpenModal}
@@ -136,7 +139,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
                 elementId="containers"
                 emptyValueText={t(EntitiesI18nKey.NoContainers)}
                 disabled={!featureFlags.deploymentsEnabled}
-                errorText={errorText}
+                errorText={error}
               >
                 <SelectContainerModal
                   selectedId={entity.source?.containerId}
@@ -150,8 +153,8 @@ const Containers = <T extends DialInterceptor | DialModel>({
             {entity.source?.containerId && featureFlags.deploymentsEnabled && (
               <DialNeutralButton
                 iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
-                className={classNames(errorText ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
-                label={t(SourceI18nKey.OpenContainer)}
+                className={classNames(error ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
+                label={isMobile ? '' : t(SourceI18nKey.OpenContainer)}
                 onClick={() => openContainer()}
               />
             )}

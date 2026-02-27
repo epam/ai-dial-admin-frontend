@@ -47,7 +47,7 @@ const ContainerBase: FC<Props> = ({ container, setContainer, names, isModal = fa
       )}
       <DisplayNameControl
         displayName={container.displayName}
-        required={true}
+        required
         onChange={onChangeDisplayName}
         isFullWidth={isModal}
         disabled={isEditDisabled(container)}

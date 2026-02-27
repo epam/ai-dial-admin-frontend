@@ -10,7 +10,7 @@ const ConfigurationEndpointControl: FC<EndpointControlProps> = ({ ...props }) =>
   return (
     <EndpointControl
       id="configurationEndpoint"
-      fieldTitle={t(FeaturesI18nKey.configurationEndpoint)}
+      label={t(FeaturesI18nKey.configurationEndpoint)}
       placeholder={t(EntityPlaceholdersI18nKey.ConfigurationEndpoint)}
       {...props}
     />

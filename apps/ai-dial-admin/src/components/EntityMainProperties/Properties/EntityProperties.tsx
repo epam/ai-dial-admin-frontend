@@ -1,4 +1,4 @@
-import { DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialInput } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useState } from 'react';
 
 import { getInterceptorTemplatesList } from '@/src/app/[lang]/interceptor-templates/actions';
@@ -55,7 +55,7 @@ const EntityProperties: FC<Props> = ({
     <div className="flex flex-col gap-y-8">
       {!isEntityImmutable && (
         <IdControl
-          fieldTitle={t(EntityFieldsI18nKey.id)}
+          label={t(EntityFieldsI18nKey.id)}
           placeholder={t(EntityPlaceholdersI18nKey.Id)}
           entity={entity}
           names={names}
@@ -65,7 +65,7 @@ const EntityProperties: FC<Props> = ({
 
       <DisplayNameControl
         displayName={entity.displayName}
-        required={true}
+        required
         isFullWidth={!isEntityImmutable}
         onChange={(name) => onChangeEntity({ ...entity, displayName: name })}
       />
@@ -79,20 +79,20 @@ const EntityProperties: FC<Props> = ({
           onChange={onChangeEntity}
           getContainers={getInterceptorContainers}
           getRunners={getInterceptorTemplatesList}
-          elementId="sourceType"
-          fieldTitle={t(EntitiesI18nKey.SourceType)}
+          id="sourceType"
+          label={t(EntitiesI18nKey.SourceType)}
           sourceItems={getSourceItems(ApplicationRoute.Interceptors, featureFlags.deploymentsEnabled)}
           isModal={!isEntityImmutable}
         />
       )}
 
       {view === ApplicationRoute.Routes && (
-        <DialTextInputField
-          elementId="path"
+        <DialInput
+          id="path"
           placeholder={t(EntityPlaceholdersI18nKey.PathUrl)}
-          fieldTitle={t(EntityFieldsI18nKey.paths)}
+          labelProps={{ label: t(EntityFieldsI18nKey.paths), required: true }}
           value={(entity as DialRoute).paths?.[0]}
-          errorText={pathError}
+          error={pathError}
           invalid={!!pathError}
           onChange={onChangePath}
         />

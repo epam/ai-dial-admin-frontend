@@ -60,10 +60,9 @@ const ModelProperties: FC<Props> = ({ model, modelsNames, onChangeModel }) => {
           onChangeModel({ ...model, fieldsHashingOrder });
         }}
         heading={t(EntityFieldsI18nKey.fieldsHashingOrder)}
-        title={t(EntityFieldsI18nKey.fieldsHashingOrder)}
+        label={t(EntityFieldsI18nKey.fieldsHashingOrder)}
         addPlaceholder={t(EntityPlaceholdersI18nKey.Value)}
         addTitle={t(BasicI18nKey.AddField)}
-        optional={true}
       />
     </div>
   );

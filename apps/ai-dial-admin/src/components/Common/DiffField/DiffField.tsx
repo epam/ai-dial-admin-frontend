@@ -1,22 +1,21 @@
-import { FC } from 'react';
-import classNames from 'classnames';
 import { DiffEditor, Monaco } from '@monaco-editor/react';
+import classNames from 'classnames';
+import { FC } from 'react';
 
-import { EDITOR_THEMES } from '@/src/types/editor';
-import { useTheme } from '@/src/context/ThemeContext';
 import { diffEditorOptions, getDiffEditorTheme } from '@/src/constants/editor';
-
-import Field from '@/src/components/Common/Field/Field';
+import { useTheme } from '@/src/context/ThemeContext';
+import { EDITOR_THEMES } from '@/src/types/editor';
+import { DialLabel } from '@epam/ai-dial-ui-kit';
 
 interface Props {
   original?: string;
   modified?: string;
-  fieldTitle: string;
+  label: string;
   className?: string;
   language?: string;
 }
 
-const DiffField: FC<Props> = ({ original, modified, fieldTitle, className, language }) => {
+const DiffField: FC<Props> = ({ original, modified, label, className, language }) => {
   const { currentTheme } = useTheme();
 
   function handleBeforeMount(monaco: Monaco) {
@@ -24,8 +23,8 @@ const DiffField: FC<Props> = ({ original, modified, fieldTitle, className, langu
   }
 
   return (
-    <div className={classNames('flex flex-col w-full flex-1 relative bg-layer-2 pt-2 pl-3', className)}>
-      <Field fieldTitle={fieldTitle} />
+    <div className={classNames('flex flex-col w-full flex-1 relative gap-y-2 bg-layer-2 pt-2 pl-3', className)}>
+      <DialLabel label={label} htmlFor="diffField" />
       <div className="flex-1 min-w-0 min-h-0 overflow-hidden">
         <DiffEditor
           keepCurrentModifiedModel={true}

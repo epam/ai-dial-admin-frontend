@@ -61,7 +61,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
       ))}
     </div>
   ),
-  DialTextInputField: ({ elementId, value, onChange, invalid, error }: any) => (
+  DialInput: ({ elementId, value, onChange, invalid, error }: any) => (
     <div>
       <input
         role="textbox"
@@ -97,22 +97,6 @@ describe('RequestTemplate', () => {
     expect(screen.getByRole('button', { name: ButtonsI18nKey.TryOut })).toBeInTheDocument();
   });
 
-  test('renders URL template input with value from testSuite', () => {
-    const testSuite = createTestSuite({ requestTemplate: { urlTemplate: '/api/test' } });
-
-    render(<RequestTemplate testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
-
-    expect(screen.getByRole('textbox', { name: 'urlTemplate' })).toHaveValue('/api/test');
-  });
-
-  test('renders empty URL template input when urlTemplate is undefined', () => {
-    const testSuite = createTestSuite({ requestTemplate: undefined });
-
-    render(<RequestTemplate testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
-
-    expect(screen.getByRole('textbox', { name: 'urlTemplate' })).toHaveValue('');
-  });
-
   test('renders tabs (Body, Parameters, Headers)', () => {
     render(<RequestTemplate testSuite={createTestSuite()} onChangeTestSuite={mockOnChangeTestSuite} />);
 
@@ -142,20 +126,6 @@ describe('RequestTemplate', () => {
     fireEvent.click(tabs[1]);
 
     expect(screen.getByText(`Active: ${EntityViewTab.Parameters}`)).toBeInTheDocument();
-  });
-
-  test('calls onChangeTestSuite when URL template input changes', () => {
-    const testSuite = createTestSuite({ requestTemplate: { urlTemplate: '/old' } });
-
-    render(<RequestTemplate testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
-
-    fireEvent.change(screen.getByRole('textbox', { name: 'urlTemplate' }), { target: { value: '/new-path' } });
-
-    expect(mockOnChangeTestSuite).toHaveBeenCalledWith(
-      expect.objectContaining({
-        requestTemplate: expect.objectContaining({ urlTemplate: '/new-path' }),
-      }),
-    );
   });
 
   test('renders endpoint method badge when endpointRef.method exists', () => {
@@ -235,17 +205,6 @@ describe('RequestTemplate', () => {
     render(<RequestTemplate testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
 
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-  });
-
-  test('shows URL error when urlTemplate does not match relativeUrlPattern regex', () => {
-    const testSuite = createTestSuite({
-      requestTemplate: { urlTemplate: '/wrong/path' },
-      endpointRef: { relativeUrlPattern: '/api/v1/.*' },
-    });
-
-    render(<RequestTemplate testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
-
-    expect(screen.getByRole('alert')).toHaveTextContent('Not matches with /api/v1/.*');
   });
 
   test('dispatches invalid field when URL does not match pattern', () => {

@@ -1,4 +1,4 @@
-import { DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialInput } from '@epam/ai-dial-ui-kit';
 import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
 import ComplexInput from '@/src/components/Common/ComplexInput/ComplexInput';
@@ -8,12 +8,12 @@ import { FieldError } from '@/src/models/error';
 import { addTrailingSlash, removeSlash } from '@/src/utils/url';
 import { getUrlError } from '@/src/utils/validation/url-error';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
-import ReadonlyField from '@/src/components/Common/ReadonlyField/ReadonlyField';
+import ReadonlyInput from '@/src/components/Common/ReadonlyInput/ReadonlyInput';
 
 export interface EndpointControlProps {
   endpoint?: string | null;
   required?: boolean;
-  textBeforeInput?: string;
+  prefix?: string;
   disabled?: boolean;
   isFullWidth?: boolean;
   onChange?: (endpoint?: string) => void;
@@ -21,17 +21,18 @@ export interface EndpointControlProps {
 
 export interface Props extends EndpointControlProps {
   id: string;
-  fieldTitle: string;
+  label: string;
   placeholder: string;
   elementClassName?: string;
   iconAfterInput?: ReactNode;
 }
 
 const EndpointControl: FC<Props> = ({
-  textBeforeInput,
+  prefix,
   required,
   endpoint,
   id,
+  label,
   onChange,
   isFullWidth = false,
   ...props
@@ -42,16 +43,16 @@ const EndpointControl: FC<Props> = ({
 
   const fullValue = useMemo(() => {
     const value = endpoint ? removeSlash(endpoint) : '';
-    return textBeforeInput ? `${addTrailingSlash(textBeforeInput)}${value}` : value;
-  }, [endpoint, textBeforeInput]);
+    return prefix ? `${addTrailingSlash(prefix)}${value}` : value;
+  }, [endpoint, prefix]);
 
   const validateEndpoint = useCallback(
     (value?: string | null) => {
-      const error = getUrlError(textBeforeInput ? `${textBeforeInput}${value}` : value, t, required);
+      const error = getUrlError(prefix ? `${prefix}${value}` : value, t, required);
       setEndpointError(error);
       dispatch({ type: ValidationActionType.SetField, field: id, isValid: !error });
     },
-    [dispatch, id, required, t, textBeforeInput],
+    [dispatch, id, required, t, prefix],
   );
 
   const onChangeEndpoint = useCallback(
@@ -84,35 +85,36 @@ const EndpointControl: FC<Props> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetCounter, endpoint]);
 
-  return textBeforeInput ? (
+  return prefix ? (
     <ComplexInput
-      textBeforeInput={textBeforeInput}
-      elementId={id}
+      prefix={prefix}
+      id={id}
       value={endpoint || ''}
-      optional={!required}
-      errorText={endpointError?.text}
+      required={required}
+      error={endpointError?.text}
       invalid={!!endpointError}
       onChange={onChangeEndpoint}
-      copyable={true}
+      copyable
       fullValue={fullValue}
+      label={label}
       {...props}
     />
   ) : props.disabled ? (
-    <ReadonlyField
+    <ReadonlyInput
       containerClassName={isFullWidth ? 'w-full' : STANDARD_CONTROL_WIDTH}
-      elementId={id}
-      title={props.fieldTitle}
+      id={id}
+      label={label}
       value={endpoint || ''}
     />
   ) : (
-    <DialTextInputField
-      textBeforeInput={textBeforeInput}
-      elementId={id}
+    <DialInput
+      prefix={prefix}
+      id={id}
       value={endpoint || ''}
-      optional={!required}
-      errorText={endpointError?.text}
+      error={endpointError?.text}
       invalid={!!endpointError}
       onChange={onChangeEndpoint}
+      labelProps={{ label, required }}
       containerClassName={isFullWidth ? 'w-full' : STANDARD_CONTROL_WIDTH}
       {...props}
     />

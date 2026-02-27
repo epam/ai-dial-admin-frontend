@@ -4,7 +4,7 @@ import Multiselect from './Multiselect';
 
 describe('Multiselect', () => {
   test('renders field title and error text', () => {
-    render(<Multiselect elementId="id" title="Title" errorText="Error!" />);
+    render(<Multiselect elementId="id" label="Title" errorText="Error!" />);
     expect(screen.getByText('Title')).toBeInTheDocument();
     expect(screen.getByText('Error!')).toBeInTheDocument();
   });

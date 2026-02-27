@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialInput } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { Image } from '@/src/models/deployments/images';
@@ -99,24 +99,24 @@ const ImageBase: FC<Props> = ({
 
   return (
     <div className="flex flex-col gap-y-8">
-      <DialTextInputField
-        fieldTitle={t(EntityFieldsI18nKey.name)}
-        elementId="name"
+      <DialInput
+        labelProps={{ label: t(EntityFieldsI18nKey.name), required: true }}
+        id="name"
         placeholder={t(EntityPlaceholdersI18nKey.Name)}
         value={image.name}
         containerClassName={containerClassName}
         onChange={onChangeName}
-        errorText={nameError?.text}
+        error={nameError?.text}
         invalid={!!nameError}
       />
       {isModal && (
-        <DialTextInputField
-          elementContainerClassName="w-[120px]"
-          fieldTitle={t(EntityFieldsI18nKey.version)}
-          elementId="version"
+        <DialInput
+          className="w-[120px]"
+          labelProps={{ label: t(EntityFieldsI18nKey.version), required: true }}
+          id="version"
           placeholder={t(EntityPlaceholdersI18nKey.Version)}
           value={image.version}
-          errorText={versionError?.text}
+          error={versionError?.text}
           invalid={!!versionError}
           onChange={onChangeVersion}
         />

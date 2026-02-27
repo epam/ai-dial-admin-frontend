@@ -1,6 +1,5 @@
+import { DialInput } from '@epam/ai-dial-ui-kit';
 import { FC, useEffect, useMemo } from 'react';
-
-import { DialTextInputField } from '@epam/ai-dial-ui-kit';
 
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import { ROOT_FOLDER } from '@/src/constants/file';
@@ -30,10 +29,10 @@ const BaseProperties: FC<Props> = ({ publication, onChange, getContext }) => {
 
   return (
     <>
-      <DialTextInputField
-        fieldTitle={t(EntityFieldsI18nKey.displayAuthor)}
+      <DialInput
+        labelProps={{ label: t(EntityFieldsI18nKey.displayAuthor) }}
         placeholder={t(EntityPlaceholdersI18nKey.DisplayAuthor)}
-        elementId="author"
+        id="author"
         value={publication.displayAuthor || ''}
         onChange={(displayAuthor) => onChange?.({ ...publication, displayAuthor })}
         containerClassName={containerClassName}

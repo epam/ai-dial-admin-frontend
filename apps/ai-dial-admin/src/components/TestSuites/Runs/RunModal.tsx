@@ -4,7 +4,7 @@ import {
   DialFormPopup,
   DialLabelledText,
   DialLoader,
-  DialNumberInputField,
+  DialNumberInput,
   PopupSize,
 } from '@epam/ai-dial-ui-kit';
 import { FC, useEffect, useState } from 'react';
@@ -64,9 +64,9 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
         ) : (
           <>
             <DialLabelledText label={t(TestSuitesI18nKey.SelectedTestCases)} text={`${validRuns} of ${allRuns}`} />
-            <DialNumberInputField
-              elementId="numberOfRuns"
-              fieldTitle={t(TestSuitesI18nKey.NumberOfRuns)}
+            <DialNumberInput
+              id="numberOfRuns"
+              labelProps={{ label: t(TestSuitesI18nKey.NumberOfRuns) }}
               value={value}
               containerClassName="w-[90px]"
               onChange={setValue}

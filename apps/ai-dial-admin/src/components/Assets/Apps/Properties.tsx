@@ -36,13 +36,13 @@ const ApplicationAssetProperties: FC<Props> = ({ asset, runners, onChange, isPub
       )}
       <DisplayNameControl
         displayName={asset.displayName}
-        required={true}
+        required
         isFullWidth={false}
         onChange={(displayName) => onChange({ ...asset, displayName })}
       />
       {isPublication && (
         <VersionControl
-          elementContainerClassName="w-[175px]"
+          className="w-[175px]"
           version={asset.version}
           onChange={(version?: string) =>
             onChange?.({ ...asset, version: version || '', displayVersion: version || '' })

@@ -114,7 +114,7 @@ const Whitelists: FC<Props> = ({ entity, setEntity, route, disabled }) => {
     <div className="flex flex-col gap-8">
       <div>
         <DialRadioGroup
-          elementId={'policy'}
+          elementId="policy"
           fieldTitle={t(DeploymentsI18nKey.WhitelistPolicyLabel)}
           radioButtons={policyOptions}
           activeRadioButton={currentPolicy}
@@ -125,7 +125,7 @@ const Whitelists: FC<Props> = ({ entity, setEntity, route, disabled }) => {
       </div>
       {currentPolicy === WHITELIST_POLICY.ALL ? (
         <DialAlert
-          id={'alert'}
+          id="alert"
           message={
             <p className="small">
               <span className="small-text-semi mr-1">{t(DeploymentsI18nKey.WhitelistPolicyAllWarning)}</span>

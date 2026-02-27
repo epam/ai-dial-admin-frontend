@@ -1,5 +1,5 @@
 import { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
-import { DialRemoveButton, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialInput, DialRemoveButton } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
 import { FieldError } from '@/src/models/error';
@@ -65,14 +65,14 @@ const Item = forwardRef<HTMLLIElement, Props>(
         key={`item-${index}`}
         ref={ref}
       >
-        <DialTextInputField
-          elementId={`item-${index}`}
+        <DialInput
+          id={`item-${index}`}
           value={item}
           containerClassName={containerClassName}
           placeholder={t(EntityPlaceholdersI18nKey.Domain)}
           onChange={(v) => onChangeItem(v, index)}
           invalid={!!error}
-          errorText={error?.text}
+          error={error?.text}
           disabled={disabled}
         />
         <div className="w-[40px] flex-shrink-0">

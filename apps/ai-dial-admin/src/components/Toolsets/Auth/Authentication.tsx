@@ -1,8 +1,8 @@
+import { DialLabel } from '@epam/ai-dial-ui-kit';
 import { IconBrandOauth, IconKey, IconLockOff } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, ReactNode, useCallback, useMemo } from 'react';
 
-import Field from '@/src/components/Common/Field/Field';
 import { EntityFieldsI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
@@ -47,7 +47,7 @@ const Authentication: FC<Props> = ({ disabled, view, toolset, onChange, ...props
 
   return (
     <div className={classNames('flex flex-col gap-y-2', STANDARD_CONTROL_WIDTH)}>
-      <Field fieldTitle={t(EntityFieldsI18nKey.authSettings)} />
+      <DialLabel label={t(EntityFieldsI18nKey.authSettings)} />
       <div className="flex flex-col gap-y-3">
         {disabled ? (
           <AuthTypeSection
