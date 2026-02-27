@@ -8,9 +8,10 @@ import Endpoints from '@/src/components/SourceField/Endpoints/Endpoints';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { getContainerRoute } from '@/src/components/SourceField/utils';
 import { CreateI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, SourceI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { Container } from '@/src/models/deployments/containers';
@@ -49,6 +50,8 @@ const Containers = <T extends DialInterceptor | DialModel>({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [containers, setContainers] = useState<Container[]>([]);
   const [selectedContainer, setSelectedContainer] = useState<Container | null>(null);
+
+  const isMobile = useIsMobileScreen();
 
   const selectedContainerName = useMemo(() => {
     return containers.find((container) => container.name === entity.source?.containerId)?.name;
@@ -126,7 +129,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
             />
           </div>
         ) : (
-          <div className={classNames('flex gap-2', STANDARD_CONTROL_WIDTH)}>
+          <div className="flex gap-2">
             <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-2')}>
               <DialLabel label={t(SourceI18nKey.Container)} required htmlFor="containers" />
               <DialInputPopup
@@ -151,7 +154,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
               <DialNeutralButton
                 iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
                 className={classNames(error ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
-                label={t(SourceI18nKey.OpenContainer)}
+                label={isMobile ? '' : t(SourceI18nKey.OpenContainer)}
                 onClick={() => openContainer()}
               />
             )}

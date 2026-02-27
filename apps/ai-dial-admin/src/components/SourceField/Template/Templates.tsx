@@ -7,8 +7,9 @@ import classNames from 'classnames';
 import SelectRunnerModal from '@/src/components/SourceField/Template/SelectRunnerModal';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { CreateI18nKey, EntitiesI18nKey, SourceI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
@@ -42,6 +43,7 @@ const Templates = <T extends DialModel | DialInterceptor>({
   const [runners, setRunners] = useState<InterceptorTemplate[]>([]);
   const [selectedRunner, setSelectedRunner] = useState<InterceptorTemplate | null>(null);
 
+  const isMobile = useIsMobileScreen();
   const onOpenModal = useCallback(() => {
     setIsModalOpen(true);
   }, [setIsModalOpen]);
@@ -108,7 +110,7 @@ const Templates = <T extends DialModel | DialInterceptor>({
             />
           </div>
         ) : (
-          <div className={classNames('flex gap-2', STANDARD_CONTROL_WIDTH)}>
+          <div className="flex gap-2">
             <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-2')}>
               <DialLabel label={t(SourceI18nKey.InterceptorTemplate)} required htmlFor="templates" />
               <DialInputPopup
@@ -132,7 +134,7 @@ const Templates = <T extends DialModel | DialInterceptor>({
               <DialNeutralButton
                 iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
                 className={classNames(error ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
-                label={t(SourceI18nKey.OpenTemplate)}
+                label={isMobile ? '' : t(SourceI18nKey.OpenTemplate)}
                 onClick={() => openTemplate()}
               />
             )}

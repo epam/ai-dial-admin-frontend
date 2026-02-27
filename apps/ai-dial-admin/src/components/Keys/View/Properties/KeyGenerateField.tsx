@@ -6,7 +6,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
+import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
 import { FieldError } from '@/src/models/error';
@@ -23,6 +24,7 @@ const KeyGenerateField: FC<Props> = ({ isKeyImmutable, keys, selectedKey, change
   const t = useI18n();
 
   const [keyError, setKeyError] = useState<FieldError | null>(null);
+  const isMobile = useIsMobileScreen();
 
   const onChangeKeyValue = useCallback(
     (key?: string) => {
@@ -37,7 +39,7 @@ const KeyGenerateField: FC<Props> = ({ isKeyImmutable, keys, selectedKey, change
   };
 
   return (
-    <div className={classNames('flex items-end gap-x-3', !isKeyImmutable ? 'w-full' : STANDARD_CONTROL_WIDTH)}>
+    <div className={classNames('flex items-end gap-x-3', !isKeyImmutable && 'w-full')}>
       <div className={CONTROL_WITH_BUTTON_WIDTH}>
         <DialPasswordInput
           id="key"
@@ -51,7 +53,7 @@ const KeyGenerateField: FC<Props> = ({ isKeyImmutable, keys, selectedKey, change
       </div>
       {isKeyImmutable ? (
         <CopyButton
-          buttonLabel={t(ButtonsI18nKey.Copy)}
+          buttonLabel={isMobile ? '' : t(ButtonsI18nKey.Copy)}
           value={selectedKey.key}
           valueLabel={t(EntityFieldsI18nKey.keyValue)}
         />

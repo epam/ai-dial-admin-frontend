@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { CreateI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, SourceI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
@@ -19,6 +19,7 @@ import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 
 import SelectAdapterModal from '@/src/components/SourceField/Adapters/SelectAdapterModal';
 import ModelEndpoint from '@/src/components/SourceField/Endpoints/ModelEndpoint';
+import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 
@@ -41,6 +42,7 @@ const Adapters = <T extends DialModel | DialInterceptor>({
   const showNotificationRef = useRef(useNotification().showNotification);
   const getReqRef = useRef(useProtectedRequest());
 
+  const isMobile = useIsMobileScreen();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [adapters, setAdapters] = useState<DialAdapter[]>([]);
   const [selectedAdapter, setSelectedAdapter] = useState<DialAdapter | null>(null);
@@ -95,7 +97,7 @@ const Adapters = <T extends DialModel | DialInterceptor>({
 
   return (
     <div className="flex flex-col gap-y-8">
-      <div className="flex lg:flex-row flex-col gap-2 items-end">
+      <div className="flex lg:flex-row flex-col gap-2">
         {isModal ? (
           <div className="w-full">
             <DialSelectField
@@ -113,7 +115,7 @@ const Adapters = <T extends DialModel | DialInterceptor>({
             />
           </div>
         ) : (
-          <div className={classNames('flex gap-2', STANDARD_CONTROL_WIDTH)}>
+          <div className="flex gap-2">
             <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-2')}>
               <DialLabel label={t(SourceI18nKey.Adapter)} required htmlFor="adapters" />
               <DialInputPopup
@@ -137,7 +139,7 @@ const Adapters = <T extends DialModel | DialInterceptor>({
               <DialNeutralButton
                 iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
                 className={classNames(error ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
-                label={t(SourceI18nKey.OpenAdapter)}
+                label={isMobile ? '' : t(SourceI18nKey.OpenAdapter)}
                 onClick={() => openAdapter()}
               />
             )}
