@@ -65,6 +65,7 @@ import {
   getPromptPublicationTabs,
   getApplicationPublicationTabs,
   getToolsetPublicationTabs,
+  columnsTab,
 } from '../utils';
 
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
@@ -252,7 +253,7 @@ test('returns correct tabs for test suite request template', () => {
 });
 
 test('returns correct tabs for test suite request template', () => {
-  expect(getEndpointSchemaTabs(t)).toEqual([requestSchemaTab(t), responseSchemaTab(t)]);
+  expect(getEndpointSchemaTabs(t)).toEqual([requestSchemaTab(t), responseSchemaTab(t), columnsTab(t)]);
 });
 
 test('returns correct tabs for file publication', () => {

@@ -17,6 +17,7 @@ export interface TestSuite {
   requestTemplate?: TestSuiteRequestTemplate;
   inputBindings?: InputBinding[];
   testCaseSchema?: TestCaseSchema[];
+  responseColumns?: ResponseColumn[];
 }
 
 export interface ValidationWarning {
@@ -94,4 +95,11 @@ export interface InputBindingRowData extends InputBinding {
 export interface TryOutResponse {
   resolvedRequest: Record<string, unknown>;
   response: Record<string, unknown>;
+}
+
+export interface ResponseColumn {
+  name: string;
+  displayName: string;
+  expression: string;
+  type: string;
 }
