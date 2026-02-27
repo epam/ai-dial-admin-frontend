@@ -9,6 +9,7 @@ import { useI18n } from '@/src/locales/client';
 import { Toolset, ToolsetAuthType } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 import AuthTypeSection from './Sections/AuthTypeSection';
+import { TOOLSET_AUTH_REDIRECT_URL } from './AuthButtons';
 
 interface Props {
   toolset: Toolset;
@@ -39,6 +40,10 @@ const Authentication: FC<Props> = ({ disabled, view, toolset, onChange, ...props
         forwardPerRequestKey: authenticationType === ToolsetAuthType.API_KEY ? false : toolset.forwardPerRequestKey,
         authSettings: {
           authenticationType,
+          redirectUri:
+            authenticationType === ToolsetAuthType.OAUTH
+              ? `${window.location.origin}${TOOLSET_AUTH_REDIRECT_URL}`
+              : undefined,
         },
       });
     },

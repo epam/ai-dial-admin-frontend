@@ -1,10 +1,12 @@
 import { FC, useEffect, useState } from 'react';
 
 import { Pod } from '@/src/models/deployments/containers';
-import { EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { ErrorI18nKey, EntityFieldsI18nKey, DeploymentsI18nKey } from '@/src/constants/i18n';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { RESTART_REASONS } from '@/src/constants/deployments/containers';
 import { useI18n } from '@/src/locales/client';
+import { useNotification } from '@/src/context/NotificationContext';
+import { getErrorNotification } from '@/src/utils/notification';
 
 import LogViewer from '@/src/components/Common/LogViewer/LogViewer';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
@@ -16,6 +18,7 @@ interface Props {
 
 const PodView: FC<Props> = ({ pod, containerId }) => {
   const t = useI18n();
+  const { showNotification } = useNotification();
   const [logs, setLogs] = useState('');
   const [podData, setPodData] = useState(pod);
 
@@ -33,12 +36,13 @@ const PodView: FC<Props> = ({ pod, containerId }) => {
       };
       const handleError = (event: Event) => {
         const messageEvent = event as MessageEvent;
-        if (messageEvent.data) {
-          setLogs((prev) => prev + messageEvent.data + '\n');
-          eventSource.close();
-        } else {
-          console.error('EventSource connection error');
+        try {
+          const { message } = JSON.parse(messageEvent.data);
+          showNotification(getErrorNotification(t(ErrorI18nKey.Error), message));
+        } catch {
+          showNotification(getErrorNotification(t(ErrorI18nKey.Error), t(DeploymentsI18nKey.LogsError)));
         }
+        eventSource.close();
       };
       const handleOpen = () => {
         setLogs('');
@@ -55,7 +59,7 @@ const PodView: FC<Props> = ({ pod, containerId }) => {
         setLogs('');
       };
     }
-  }, [containerId, podData?.name]);
+  }, [containerId, podData.name, showNotification, t]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 h-full gap-4">

@@ -1342,6 +1342,8 @@ export enum DeploymentsI18nKey {
   WhitelistPolicyCustom = 'Deployments.WhitelistPolicyCustom',
   WhitelistPolicyCustomCaption = 'Deployments.WhitelistPolicyCustomCaption',
   AddDomain = 'Deployments.AddDomain',
+  EventsError = 'Deployments.EventsError',
+  LogsError = 'Deployments.LogsError',
 }
 
 export enum KubEventsI18nKey {
