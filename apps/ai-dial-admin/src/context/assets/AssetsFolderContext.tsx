@@ -79,7 +79,7 @@ export function createFolderContext(
         newExpanded.add(folderPath);
         if (!fetchedFoldersData[folderPath] && !skipFetch) {
           fetchFiles(folderPath);
-        } else {
+        } else if (fetchedFoldersData[folderPath]) {
           setData(fetchedFoldersData[folderPath]);
         }
       }
