@@ -97,6 +97,8 @@ const ImportFileTypeSelector: FC<Props> = ({
             onChange={onChangeFile}
             fileSizeError={t(ImportI18nKey.ArchiveSizeErrorDescription, { size: MAX_FILE_SIZE_MB })}
             maxFileSize={MAX_FILE_SIZE_MB}
+            deleteAllButtonLabel={t(ButtonsI18nKey.DeleteAll)}
+            addButtonLabel={t(ButtonsI18nKey.Add)}
           />
         )}
         {fileType === ImportFileType.JSON && (
@@ -114,6 +116,8 @@ const ImportFileTypeSelector: FC<Props> = ({
             errorText={t(ImportI18nKey.PromptError)}
             onChange={onChangeFile}
             maxFilesCount={maxFilesCount}
+            deleteAllButtonLabel={t(ButtonsI18nKey.DeleteAll)}
+            addButtonLabel={t(ButtonsI18nKey.Add)}
           />
         )}
         {fileType === ImportFileType.FILES && (
@@ -133,6 +137,8 @@ const ImportFileTypeSelector: FC<Props> = ({
             maxFilesCount={maxFilesCount}
             fileSizeError={t(ImportI18nKey.FileSizeErrorDescription, { size: MAX_FILE_SIZE_MB })}
             maxFileSize={MAX_FILE_SIZE_MB}
+            deleteAllButtonLabel={t(ButtonsI18nKey.DeleteAll)}
+            addButtonLabel={t(ButtonsI18nKey.Add)}
           />
         )}
       </div>
