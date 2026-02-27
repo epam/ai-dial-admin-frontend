@@ -1,4 +1,5 @@
-import { imageTypes } from '@/src/constants/file';
+import { contentTypes } from '@/src/constants/file';
+
 import { Token } from '@/src/models/auth';
 import { errorObjLog } from '@/src/server/logger';
 import { getAuthorizationHeader } from '@/src/utils/auth/api-headers';
@@ -57,8 +58,8 @@ export const createReadableStream = (stream: ReadableStream<Uint8Array>): Readab
 export const getContentType = (fileName: string): string | null => {
   const extension = fileName.split('.').pop()?.toLowerCase();
 
-  if (extension && imageTypes[`.${extension}`]) {
-    return imageTypes[`.${extension}`];
+  if (extension && contentTypes[`.${extension}`]) {
+    return contentTypes[`.${extension}`];
   }
 
   return null;

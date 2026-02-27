@@ -33,7 +33,8 @@ export const PREVIEW_EXTENSIONS = [
   '.pdf',
 ];
 
-export const imageTypes: Record<string, string> = {
+export const contentTypes: Record<string, string> = {
+  // image
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.png': 'image/png',
@@ -43,6 +44,19 @@ export const imageTypes: Record<string, string> = {
   '.ico': 'image/x-icon',
   '.bmp': 'image/bmp',
   '.avif': 'image/avif',
+  // text
+  '.html': 'text/html',
+  '.htm': 'text/html',
+  '.css': 'text/css',
+  '.js': 'application/javascript',
+  '.mjs': 'application/javascript',
+  '.json': 'application/json',
+  '.xml': 'application/xml',
+  '.txt': 'text/plain',
+  '.md': 'text/markdown',
+  '.csv': 'text/csv',
+  // pdf
+  '.pdf': 'application/pdf',
 };
 // same as bodySizeLimit in server config
 export const MAX_FILE_SIZE_MB = 4;
