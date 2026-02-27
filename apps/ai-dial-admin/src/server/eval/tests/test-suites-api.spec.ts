@@ -242,7 +242,7 @@ describe('Server :: TestSuiteApi', () => {
 
   test('Should call tryOutTestCase', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockTestSuite));
-    await instance.tryOutTestCase('id', 'caseId', { variables: {} }, TOKEN_MOCK);
+    await instance.tryOutTestCase('id', 'caseId', TOKEN_MOCK);
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${TEST_CASE_TRY_OUT_URL('id', 'caseId')}`,
       expect.objectContaining({ method: 'POST' }),

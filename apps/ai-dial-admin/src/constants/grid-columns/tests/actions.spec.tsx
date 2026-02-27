@@ -14,6 +14,7 @@ import {
   IconPlayerPlay,
   IconPlayerPause,
   IconRefreshDot,
+  IconPencilMinus,
 } from '@tabler/icons-react';
 
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -35,6 +36,7 @@ import {
   getRunOperation,
   getStopOperation,
   getTryOutOperation,
+  getEditOperation,
 } from '../actions';
 
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
@@ -74,6 +76,13 @@ describe('Actions :: getResourceRollbackOperation', () => {
     const res = getRemoveOperation(CLICK);
     expect(res.id).toBe(ActionMenuOperation.Remove);
     expect(res.icon).toEqual(<IconTrash {...BASE_BUTTON_ICON_PROPS} />);
+    expect(res.onClick).toEqual(CLICK);
+  });
+
+  test('Should set EDIT_OPERATION', () => {
+    const res = getEditOperation(CLICK);
+    expect(res.id).toBe(ActionMenuOperation.Edit);
+    expect(res.icon).toEqual(<IconPencilMinus {...BASE_BUTTON_ICON_PROPS} />);
     expect(res.onClick).toEqual(CLICK);
   });
 

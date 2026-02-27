@@ -7,9 +7,10 @@ import { JSONSchema7 } from 'json-schema';
 
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { useI18n } from '@/src/locales/client';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { ResponseColumn, TestSuite } from '@/src/models/evaluation/test-suite';
 import { EntityViewTab, getEndpointSchemaTabs } from '@/src/utils/tabs/utils';
 import SchemaGrid from './SchemaGrid';
+import Columns from './Columns';
 
 interface Props {
   testSuite: TestSuite;
@@ -26,6 +27,9 @@ const EndpointSchema: FC<Props> = ({ testSuite, onChangeTestSuite, isSkipRefresh
 
   const onChangeSchemaTab = useCallback((id: string) => {
     setActiveSchemaTab(id as string);
+    if (id === EntityViewTab.Columns) {
+      setIsJsonView(false);
+    }
   }, []);
 
   const currentSchema =
@@ -33,7 +37,7 @@ const EndpointSchema: FC<Props> = ({ testSuite, onChangeTestSuite, isSkipRefresh
       ? (testSuite.endpointRef?.requestBodySchema as unknown as JSONSchema7 | undefined)
       : (testSuite.endpointRef?.responseBodySchema as unknown as JSONSchema7 | undefined);
 
-  const onSchemaChange = useCallback(
+  const onChangeSchema = useCallback(
     (schema: JSONSchema7, isSkipRefresh?: boolean) => {
       const endpointRef = { ...testSuite.endpointRef };
       if (activeSchemaTab === EntityViewTab.RequestSchema) {
@@ -46,22 +50,40 @@ const EndpointSchema: FC<Props> = ({ testSuite, onChangeTestSuite, isSkipRefresh
     [testSuite, activeSchemaTab, onChangeTestSuite],
   );
 
+  const onChangeResponseColumns = useCallback(
+    (responseColumns: ResponseColumn[]) => {
+      onChangeTestSuite({ ...testSuite, responseColumns });
+    },
+    [testSuite, onChangeTestSuite],
+  );
+
   return (
     <div className="flex flex-col w-full h-full gap-2">
       <div className="flex flex-col gap-4">
         <div className="flex flex-row justify-between">
           <DialTabs tabs={tabs} activeTab={activeSchemaTab} onClick={onChangeSchemaTab} />
-          <DialSwitch isOn={isJsonView} label="JSON" switchId="jsonView" onChange={() => setIsJsonView(!isJsonView)} />
+          {activeSchemaTab !== EntityViewTab.Columns && (
+            <DialSwitch
+              isOn={isJsonView}
+              label="JSON"
+              switchId="jsonView"
+              onChange={() => setIsJsonView(!isJsonView)}
+            />
+          )}
         </div>
       </div>
-      {isJsonView ? (
-        <JsonEditor
-          entity={currentSchema as object}
-          options={{ stickyScroll: { enabled: false } }}
-          setSelectedEntity={onSchemaChange as Dispatch<SetStateAction<JSONSchema7>>}
-        />
+      {activeSchemaTab !== EntityViewTab.Columns ? (
+        isJsonView ? (
+          <JsonEditor
+            entity={currentSchema as object}
+            options={{ stickyScroll: { enabled: false } }}
+            setSelectedEntity={onChangeSchema as Dispatch<SetStateAction<JSONSchema7>>}
+          />
+        ) : (
+          <SchemaGrid schema={currentSchema} onChange={onChangeSchema} isSkipRefresh={isSkipRefresh} />
+        )
       ) : (
-        <SchemaGrid schema={currentSchema} onChange={onSchemaChange} isSkipRefresh={isSkipRefresh} />
+        <Columns responseColumns={testSuite.responseColumns || []} onChangeResponseColumns={onChangeResponseColumns} />
       )}
     </div>
   );
