@@ -1394,6 +1394,8 @@ export default {
     WhitelistPolicyCustom: 'Specific domains (recommended)',
     WhitelistPolicyCustomCaption: 'Allow network access only to selected domains.',
     AddDomain: 'Add domain',
+    EventsError: 'Error getting Events',
+    LogsError: 'Error getting Logs',
   },
   TestSuites: {
     CreateTestSuite: 'Create Test Suite',
