@@ -69,7 +69,7 @@ describe('TestCasesList', () => {
     render(<TestCasesList selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
 
     await waitFor(() => {
-      expect(actions.getTestCases).toHaveBeenCalledWith(mockTestSuite.id, 0, 100, [], []);
+      expect(actions.getTestCases).toHaveBeenCalledWith(mockTestSuite.id, 0, 1000, [], []);
     });
   });
   test('handles null response from getTestCases', async () => {

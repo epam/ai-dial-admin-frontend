@@ -48,7 +48,6 @@ const Applications: FC<Props> = ({ deployments, selectedApplicationId, onChangeA
   };
 
   const additionalGridOptions: GridOptions = {
-    suppressRowClickSelection: true,
     ...SINGLE_ROW_SELECTION,
     selectionColumnDef: {
       ...SINGLE_ROW_SELECTION.selectionColumnDef,

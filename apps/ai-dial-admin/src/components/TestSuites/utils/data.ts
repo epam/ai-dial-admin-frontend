@@ -1,16 +1,16 @@
 import { TestCase } from '@/src/models/evaluation/test-suite';
 import { v4 as uuidv4 } from 'uuid';
 
-export function createNewTestCaseRow(): Record<string, unknown> {
+export const createNewTestCaseRow = (): Record<string, unknown> => {
   return {
     id: uuidv4(),
     enabled: true,
-    testCaseName: '',
+    testCaseName: `new-test-case-${uuidv4().slice(0, 5)}`,
     data: {},
     createdAt: 0,
     updatedAt: 0,
   };
-}
+};
 
 export const getTestCaseGridData = (testCases?: TestCase[] | null) => {
   return (

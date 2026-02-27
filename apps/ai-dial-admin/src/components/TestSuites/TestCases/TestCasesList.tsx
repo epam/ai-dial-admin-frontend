@@ -5,7 +5,7 @@ import { FC, MouseEvent, RefObject, useCallback, useEffect, useRef, useState } f
 
 import { CellValueChangedEvent, ColDef, GridApi, GridOptions, GridReadyEvent } from 'ag-grid-community';
 
-import { getTestCases, importTestCase, removeTestCase } from '@/src/app/[lang]/test-suites/actions';
+import { createTestCase, getTestCases, importTestCase, removeTestCase } from '@/src/app/[lang]/test-suites/actions';
 import ListEntities from '@/src/components/ListView/List';
 import TryOut from '@/src/components/TestSuites/RequestTemplate/components/TryOut';
 import { getTestCaseColumns } from '@/src/components/TestSuites/utils/columns';
@@ -20,6 +20,7 @@ import { useI18n } from '@/src/locales/client';
 import { TestCase, TestSuite } from '@/src/models/evaluation/test-suite';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import HeaderButtons from './Header';
+import { DialLoader } from '@epam/ai-dial-ui-kit';
 
 export interface TestCasesActions {
   getDirtyTestCases: () => TestCase[];
@@ -152,9 +153,16 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, testCasesActionsRef, onDi
   );
 
   const onAddTestCase = useCallback(() => {
-    setNewTestCases((prev) => [...prev, createNewTestCaseRow()]);
-    onDirtyChange?.(true);
-  }, [onDirtyChange]);
+    const testSuiteId = selectedTestSuite.id;
+    if (!testSuiteId) return;
+    createTestCase(testSuiteId, createNewTestCaseRow(), true).then((res) => {
+      if (res?.success) {
+        refreshGrid();
+      } else {
+        showNotification(getErrorNotification(res?.errorHeader, res?.errorMessage));
+      }
+    });
+  }, [selectedTestSuite.id, refreshGrid, showNotification, t]);
 
   const onRemoveCase = useCallback(
     (data?: TestCase) => {
@@ -222,7 +230,7 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, testCasesActionsRef, onDi
     <>
       <div className="flex-1 min-h-0">
         {isLoading ? (
-          <div>Loading...</div>
+          <DialLoader size={40} />
         ) : (
           <ListEntities
             additionalGridOptions={gridOptions}

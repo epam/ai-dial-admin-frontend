@@ -83,6 +83,16 @@ export class TestSuitesApi extends BaseApi {
     return this.deleteAction(TEST_CASE_URL(id, testCaseId), token);
   }
 
+  createTestCase(
+    testSuiteId: string,
+    body: Pick<TestCase, 'testCaseName' | 'data'>,
+    token: Token,
+    includeWarnings = false,
+  ): Promise<ServerActionResponse> {
+    const url = `${TEST_CASES_URL(testSuiteId)}${includeWarnings ? '?includeWarnings=true' : ''}`;
+    return this.postAction<Pick<TestCase, 'testCaseName' | 'data'>>(url, body, token);
+  }
+
   updateTestCases(id: string, testCases: TestCase[], token: Token): Promise<ServerActionResponse> {
     return this.putAction(TEST_CASES_URL(id), testCases, token);
   }
