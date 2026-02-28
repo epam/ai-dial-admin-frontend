@@ -9,7 +9,9 @@ import {
   DialPrimaryButton,
   DialSelectField,
 } from '@epam/ai-dial-ui-kit';
+import { JSONSchema7 } from 'json-schema';
 
+import SchemaTree from '@/src/components/TestSuites/EndpointSchema/Schema/SchemaTree';
 import { getSchemaTypes } from '@/src/components/TestSuites/utils/schema';
 import {
   ButtonsI18nKey,
@@ -24,15 +26,24 @@ interface ColumnsProps {
   column: ResponseColumn;
   onChangeColumn: (responseColumn: ResponseColumn) => void;
   onClose: () => void;
+  responseSchema: JSONSchema7;
 }
 
-const EditColumn: FC<ColumnsProps> = ({ column, onChangeColumn, onClose }) => {
+const EditColumn: FC<ColumnsProps> = ({ column, onChangeColumn, onClose, responseSchema }) => {
   const t = useI18n();
   const [editableColumn, setEditableColumn] = useState(column);
 
   useEffect(() => {
     setEditableColumn(column);
   }, [column]);
+
+  const onPickFromSchema = useCallback((result: { expression: string; type: string }) => {
+    setEditableColumn((prev) => ({
+      ...prev,
+      expression: result.expression,
+      type: result.type,
+    }));
+  }, []);
 
   const onSaveColumn = useCallback(() => {
     onChangeColumn(editableColumn);
@@ -45,8 +56,8 @@ const EditColumn: FC<ColumnsProps> = ({ column, onChangeColumn, onClose }) => {
         <h3>{t(TestSuitesI18nKey.EditColumn)}</h3>
         <DialCloseButton onClose={onClose} />
       </div>
-      <div className="flex flex-row">
-        <div className="flex flex-col gap-4 w-[60%]">
+      <div className="flex flex-row gap-4 min-h-0 flex-1">
+        <div className="flex flex-col gap-4 w-[70%] min-h-0">
           <DialInput
             id="name"
             labelProps={{ label: t(EntityFieldsI18nKey.displayName), required: true }}
@@ -78,6 +89,10 @@ const EditColumn: FC<ColumnsProps> = ({ column, onChangeColumn, onClose }) => {
               disabled={!editableColumn.displayName || !editableColumn.expression || !editableColumn.type}
             />
           </div>
+        </div>
+        <div className="flex flex-col gap-2 w-[30%] min-w-0 min-h-0 rounded border border-primary py-4 pl-4 overflow-hidden">
+          <span className="small text-secondary flex-shrink-0">{t(TestSuitesI18nKey.PickFromResponseSchema)}</span>
+          <SchemaTree responseSchema={responseSchema} onSelect={onPickFromSchema} />
         </div>
       </div>
     </div>
