@@ -1,6 +1,7 @@
 import { FC, useCallback, useMemo, useState } from 'react';
 
 import { DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
+import { JSONSchema7 } from 'json-schema';
 
 import CompletionEndpointControl from '@/src/components/BaseControls/Endpoint/CompletionEndpoint';
 import EditorUrlControl from '@/src/components/BaseControls/Endpoint/EditorUrl';
@@ -10,8 +11,10 @@ import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
+import { DefaultsValue } from '@/src/models/dial/defaults';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getSchemaDefaults } from '@/src/utils/schema';
 import { SourceTypes } from './constants';
 
 interface Props {
@@ -96,9 +99,16 @@ const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, i
               endpoint: void 0,
             }
           : { ...entity, customAppSchemaId: value, endpoint: void 0 };
-      onChangeEntity(newEntity);
+      const runner = runners?.find((r) => r.$id === value);
+      if (runner) {
+        const applicationProperties = getSchemaDefaults(runner as JSONSchema7) as Record<string, DefaultsValue>;
+        onChangeEntity({
+          ...newEntity,
+          applicationProperties: isEntityImmutable ? { ...newEntity.applicationProperties } : applicationProperties,
+        });
+      }
     },
-    [entity, onChangeEntity, view],
+    [entity, isEntityImmutable, onChangeEntity, runners, view],
   );
 
   return (
