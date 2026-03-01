@@ -43,10 +43,10 @@ export function resolveRef(root: JSONSchema7, ref: string): JSONSchema7 | undefi
  * Returns the primary type for default/empty value when schema has type as string or array.
  */
 function getPrimaryType(schema: JSONSchema7): JSONSchema7TypeName {
-  const t = schema.type;
-  if (typeof t === 'string') return t as JSONSchema7TypeName;
-  if (Array.isArray(t) && t.length) {
-    const first = t.find((x) => x !== 'null') ?? t[0];
+  const type = schema.type;
+  if (typeof type === 'string') return type as JSONSchema7TypeName;
+  if (Array.isArray(type) && type.length) {
+    const first = type.find((x) => x !== 'null') ?? type[0];
     return first as JSONSchema7TypeName;
   }
   return 'string';
