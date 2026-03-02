@@ -13,6 +13,7 @@ import {
 } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey, ExportI18nKey, TypeI18nKey } from '@/src/constants/i18n';
+import { ARCHIVE_IMPORT_TYPE } from '@/src/constants/import';
 import { useI18n } from '@/src/locales/client';
 import { ImportFileType as FileType, ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -29,7 +30,7 @@ const ExportModal: FC<Props> = ({ isModalOpen, route, onClose, onApply }) => {
   const t = useI18n();
 
   const exportTypeRadio: RadioButtonWithContent[] = [
-    { id: ImportFileType.ARCHIVE, name: t(TypeI18nKey.Archive) },
+    ARCHIVE_IMPORT_TYPE(t),
     { id: ImportFileType.JSON, name: t(TypeI18nKey.JSON) },
   ];
 
