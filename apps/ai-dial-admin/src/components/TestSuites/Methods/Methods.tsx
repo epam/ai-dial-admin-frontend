@@ -53,11 +53,11 @@ const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange, isCreate
         onChange((prev: TestSuite) => ({
           ...prev,
           endpointRef: {
-            method: methods[index].method,
-            relativeUrlPattern: methods[index].relativeUrlPattern,
+            method: methods[index - 1].method,
+            relativeUrlPattern: methods[index - 1].relativeUrlPattern,
           },
           requestTemplate: {
-            urlTemplate: methods[index].relativeUrlPattern,
+            urlTemplate: methods[index - 1].relativeUrlPattern,
           },
         }));
       }

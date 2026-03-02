@@ -9,8 +9,8 @@ import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { useI18n } from '@/src/locales/client';
 import { ResponseColumn, TestSuite } from '@/src/models/evaluation/test-suite';
 import { EntityViewTab, getEndpointSchemaTabs } from '@/src/utils/tabs/utils';
-import SchemaGrid from './SchemaGrid';
-import Columns from './Columns';
+import Columns from './Columns/Columns';
+import SchemaGrid from './Schema/SchemaGrid';
 
 interface Props {
   testSuite: TestSuite;
@@ -83,7 +83,11 @@ const EndpointSchema: FC<Props> = ({ testSuite, onChangeTestSuite, isSkipRefresh
           <SchemaGrid schema={currentSchema} onChange={onChangeSchema} isSkipRefresh={isSkipRefresh} />
         )
       ) : (
-        <Columns responseColumns={testSuite.responseColumns || []} onChangeResponseColumns={onChangeResponseColumns} />
+        <Columns
+          responseColumns={testSuite.responseColumns || []}
+          onChangeResponseColumns={onChangeResponseColumns}
+          responseSchema={(testSuite.endpointRef?.responseBodySchema || {}) as JSONSchema7}
+        />
       )}
     </div>
   );

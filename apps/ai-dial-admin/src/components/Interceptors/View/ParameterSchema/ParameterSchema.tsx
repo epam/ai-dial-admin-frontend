@@ -50,7 +50,7 @@ const ParameterSchema: FC<Props> = ({ schemaURL, name, configuration, onChangeCo
       {!schema ? (
         <DialNoDataContent title={t(EntitiesI18nKey.NoConfigurationSchema)} />
       ) : (
-        <div className="flex relative min-h-0 h-full w-full bg-layer-0">
+        <div className="flex relative min-h-0 h-full w-full">
           <div className="w-full h-full">
             <SchemaUiRenderer schema={schema} data={configuration} onChangeConfiguration={onChangeConfiguration} />
           </div>

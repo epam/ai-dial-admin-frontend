@@ -1435,6 +1435,8 @@ export default {
     ColumnsDescription: 'Extracted response fields shown as columns in eval results',
     EditColumn: 'Edit column',
     SaveColumn: 'Save column',
+    PickFromResponseSchema: 'Pick from response schema',
+    NoSchemaProperties: 'No schema properties to display.',
   },
   FileManager: {
     SelectedItems: 'item(s) selected',

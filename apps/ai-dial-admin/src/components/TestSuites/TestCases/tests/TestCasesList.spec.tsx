@@ -1,21 +1,34 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 import TestCasesList from '../TestCasesList';
-import { TestSuite, TestCase } from '@/src/models/evaluation/test-suite';
+import { TestSuite, TestCase as TestCaseModel } from '@/src/models/evaluation/test-suite';
 import * as actions from '@/src/app/[lang]/test-suites/actions';
+
+type TestCase = Partial<TestCaseModel>;
+
+const createPageData = (content: TestCase[]) => ({
+  page: 0,
+  size: 1000,
+  totalElements: content.length,
+  totalPages: 1,
+  content: content as TestCaseModel[],
+});
 
 // Mock the actions
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
   getTestCases: vi.fn(),
+  createTestCase: vi.fn(),
+  importTestCase: vi.fn(),
+  removeTestCase: vi.fn(),
 }));
 
 // Mock ListView component
 vi.mock('@/src/components/ListView/List', () => ({
-  default: ({ title, emptyDataTitle, onGridReady, children }: any) => (
+  default: ({ listLabel, emptyDataProps, onGridReady, children }: any) => (
     <div>
       <div>List View Component</div>
-      <div>Title: {title}</div>
-      <div>Empty Title: {emptyDataTitle}</div>
+      <div>Title: {listLabel}</div>
+      <div>Empty Title: {emptyDataProps?.title}</div>
       <button onClick={() => onGridReady({ setGridOption: vi.fn() })}>Initialize Grid</button>
       <div>{children}</div>
     </div>
@@ -23,7 +36,7 @@ vi.mock('@/src/components/ListView/List', () => ({
 }));
 
 // Mock HeaderButtons component
-vi.mock('./Header', () => ({
+vi.mock('@/src/components/TestSuites/TestCases/Header', () => ({
   default: ({ selectedTestSuiteId }: any) => (
     <div>
       <div>Header Buttons</div>
@@ -61,15 +74,12 @@ describe('TestCasesList', () => {
   });
 
   test('fetches test cases on mount', async () => {
-    vi.mocked(actions.getTestCases).mockResolvedValue({
-      content: mockTestCases,
-      totalElements: 2,
-    });
+    vi.mocked(actions.getTestCases).mockResolvedValue(createPageData(mockTestCases));
 
     render(<TestCasesList selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
 
     await waitFor(() => {
-      expect(actions.getTestCases).toHaveBeenCalledWith(mockTestSuite.id, 0, 100, [], []);
+      expect(actions.getTestCases).toHaveBeenCalledWith(mockTestSuite.id, 0, 1000, [], []);
     });
   });
   test('handles null response from getTestCases', async () => {
@@ -83,14 +93,11 @@ describe('TestCasesList', () => {
   });
 
   test('initializes grid when onGridReady is called', async () => {
-    vi.mocked(actions.getTestCases).mockResolvedValue({
-      content: mockTestCases,
-      totalElements: 2,
-    });
+    vi.mocked(actions.getTestCases).mockResolvedValue(createPageData(mockTestCases));
 
     render(<TestCasesList selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
 
-    const initButton = screen.getByText('Initialize Grid');
+    const initButton = await screen.findByText('Initialize Grid');
     initButton.click();
 
     // Grid initialization should complete without errors
@@ -98,10 +105,7 @@ describe('TestCasesList', () => {
   });
 
   test('handles test suite without id', async () => {
-    vi.mocked(actions.getTestCases).mockResolvedValue({
-      content: [],
-      totalElements: 0,
-    });
+    vi.mocked(actions.getTestCases).mockResolvedValue(createPageData([]));
 
     const testSuiteNoId: TestSuite = {
       name: 'Test Suite',
@@ -110,20 +114,8 @@ describe('TestCasesList', () => {
     render(<TestCasesList selectedTestSuite={testSuiteNoId} onChange={mockOnChange} />);
 
     await waitFor(() => {
-      expect(actions.getTestCases).toHaveBeenCalledWith(undefined, 0, 100, [], []);
+      expect(actions.getTestCases).toHaveBeenCalledWith(undefined, 0, 1000, [], []);
     });
-  });
-
-  test('passes allowPadding false to ListView', () => {
-    vi.mocked(actions.getTestCases).mockResolvedValue({
-      content: [],
-      totalElements: 0,
-    });
-
-    render(<TestCasesList selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
-
-    // ListView is rendered (we can't directly test props but can verify component renders)
-    expect(screen.getByText('List View Component')).toBeInTheDocument();
   });
 
   test('handles multiple test cases with different facts', async () => {
@@ -139,8 +131,7 @@ describe('TestCasesList', () => {
     ];
 
     vi.mocked(actions.getTestCases).mockResolvedValue({
-      content: testCasesWithDifferentFacts,
-      totalElements: 2,
+      ...createPageData(testCasesWithDifferentFacts),
     });
 
     render(<TestCasesList selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
@@ -151,10 +142,7 @@ describe('TestCasesList', () => {
   });
 
   test('does not refetch if test cases already exist and id remains same', async () => {
-    vi.mocked(actions.getTestCases).mockResolvedValue({
-      content: mockTestCases,
-      totalElements: 2,
-    });
+    vi.mocked(actions.getTestCases).mockResolvedValue(createPageData(mockTestCases));
 
     render(<TestCasesList selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
 

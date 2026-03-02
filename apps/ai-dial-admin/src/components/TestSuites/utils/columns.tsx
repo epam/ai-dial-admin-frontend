@@ -17,7 +17,9 @@ import { InputBindingRowData, ResponseColumn, TestCase, TestCaseSchema } from '@
 import { InputBindingType, TestCaseItemType } from '@/src/types/evaluation';
 import { getSchemaTypes, SchemaFieldRow } from './schema';
 
-export const getTestCaseColumns = (testCases: TestCase[]) => {
+export type onCellChange = (data: Record<string, unknown>, field: string, value: string | number) => void;
+
+export const getTestCaseColumns = (testCases: TestCase[], onCellChange: onCellChange): ColDef[] => {
   const data = testCases.reduce((acc: string[], testCase) => {
     const testCaseFacts = Object.keys(testCase.data || {});
     testCaseFacts.forEach((fact) => {
@@ -45,11 +47,40 @@ export const getTestCaseColumns = (testCases: TestCase[]) => {
         return true;
       },
     } as ColDef,
-    ...TEST_CASES_COLUMN,
-    ...data.map((fact) => ({
-      field: fact,
-      headerName: fact,
-    })),
+    ...TEST_CASES_COLUMN.map((col) => {
+      if (col.field === 'testCaseName' && onCellChange) {
+        return {
+          ...col,
+          editable: false,
+          cellRenderer: EditableCellRenderer,
+          valueGetter: (params: ValueGetterParams) => params.data?.testCaseName ?? '',
+          cellRendererParams: {
+            hideTriangle: true,
+            skipRequired: true,
+            onChange: (value: string | number, rowData: unknown) => {
+              onCellChange(rowData as Record<string, unknown>, 'testCaseName', value);
+            },
+          },
+        };
+      }
+      return col;
+    }),
+    ...data.map((fact) => {
+      return {
+        field: fact,
+        headerName: fact,
+        editable: false,
+        cellRenderer: EditableCellRenderer,
+        valueGetter: (params: ValueGetterParams) => params.data?.data?.[fact] ?? params.data?.[fact] ?? '',
+        cellRendererParams: {
+          hideTriangle: true,
+          skipRequired: true,
+          onChange: (value: string | number, rowData: unknown) => {
+            onCellChange(rowData as Record<string, unknown>, fact, value);
+          },
+        },
+      };
+    }),
     getValidityStatusColumn(),
   ];
 };
