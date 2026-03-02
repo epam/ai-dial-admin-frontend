@@ -145,6 +145,7 @@ export const getTreeOptions = (
     loadingPaths: isFetchingFiles ? new Set<string>([ROOT_FOLDER]) : new Set<string>(),
     actionLabels: getActionLabels(treeActionLabels, t),
     onExpandedPathsChange: setExpanded,
+    header: t(FileManagerI18nKey.FolderTree),
   };
 };
 
