@@ -45,7 +45,11 @@ const RangeItems: FC<Props> = ({ ranges, onAddRange, onRemoveRange, onUpdateRang
         newErrors.push(rangeError);
       });
       setErrors(newErrors);
-      dispatch({ type: ValidationActionType.SetField, field: 'ipRanges', isValid: isRangesValid });
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'ipRanges',
+        isValid: ranges.length > 0 ? isRangesValid : false,
+      });
     },
     [t, dispatch],
   );
@@ -60,7 +64,7 @@ const RangeItems: FC<Props> = ({ ranges, onAddRange, onRemoveRange, onUpdateRang
         <div key={index} className="flex flex-row gap-1 items-start">
           <DialInput
             containerClassName="flex w-full flex-1"
-            labelProps={index === 0 ? { title: t(EntityFieldsI18nKey.IpRange) } : undefined}
+            labelProps={index === 0 ? { label: t(EntityFieldsI18nKey.IpRange) } : undefined}
             placeholder={t(EntityPlaceholdersI18nKey.IpRange)}
             id={`ip-${index}`}
             onChange={(value) => {
@@ -70,11 +74,11 @@ const RangeItems: FC<Props> = ({ ranges, onAddRange, onRemoveRange, onUpdateRang
             error={errors?.[index]?.ip?.text}
             value={range.ip || ''}
           />
-          <span className="text-secondary leading-[40px]">/</span>
+          <span className={classNames('text-secondary leading-[40px]', index === 0 && 'mt-6')}>/</span>
           <DialNumberInput
             id={`mask-${index}`}
             value={range.mask || undefined}
-            labelProps={index === 0 ? { title: t(EntityFieldsI18nKey.Mask) } : undefined}
+            labelProps={index === 0 ? { label: t(EntityFieldsI18nKey.Mask) } : undefined}
             className="w-[120px]"
             placeholder={t(EntityPlaceholdersI18nKey.Mask)}
             onChange={(value) => {
