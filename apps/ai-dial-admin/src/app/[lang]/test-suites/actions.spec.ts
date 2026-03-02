@@ -140,7 +140,13 @@ describe('TestSuites :: server actions', () => {
     (testSuitesApi.importTestCase as any).mockResolvedValue(RESPONSE_MOCK);
     const result = await importTestCase('id', new FormData(), TestCaseImportMode.MERGE, TestCaseConflictStrategy.SKIP);
     expect(getUserToken).toHaveBeenCalled();
-    expect(testSuitesApi.importTestCase).toHaveBeenCalledWith('id', new FormData(), TOKEN_MOCK, undefined);
+    expect(testSuitesApi.importTestCase).toHaveBeenCalledWith(
+      'id',
+      new FormData(),
+      TOKEN_MOCK,
+      TestCaseImportMode.MERGE,
+      TestCaseConflictStrategy.SKIP,
+    );
     expect(result).toBe(RESPONSE_MOCK);
   });
 

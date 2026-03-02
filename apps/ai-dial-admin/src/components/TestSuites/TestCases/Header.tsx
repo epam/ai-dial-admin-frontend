@@ -3,7 +3,6 @@
 import { FC, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { IconDownload, IconPlus } from '@tabler/icons-react';
 import {
   ButtonAppearance,
   ButtonVariant,
@@ -11,15 +10,17 @@ import {
   DialPrimaryButton,
   DropdownItem,
 } from '@epam/ai-dial-ui-kit';
+import { IconDownload, IconPlus } from '@tabler/icons-react';
 
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
+import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 import ImportFileModal from './Import/ImportFile';
 
 interface Props {
   selectedTestSuiteId: string;
-  onApplyImport: (file: File) => void;
+  onApplyImport: (file: File, mode: TestCaseImportMode, strategy: TestCaseConflictStrategy) => void;
   onAdd?: () => void;
   onExport?: () => void;
 }
