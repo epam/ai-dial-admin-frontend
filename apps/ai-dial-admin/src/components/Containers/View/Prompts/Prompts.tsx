@@ -37,7 +37,7 @@ const Prompts: FC<Props> = ({ containerId }) => {
 
   return (
     <div className="flex flex-col">
-      <div className="flex flex-col mt-6">
+      <div className="flex flex-col gap-6">
         {prompts?.map((prompt, index) => {
           return <PromptComponent prompt={prompt} key={index} />;
         })}

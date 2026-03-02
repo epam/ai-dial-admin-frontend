@@ -1,22 +1,25 @@
 import { FC, useEffect, useState } from 'react';
-
+import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import { Pod } from '@/src/models/deployments/containers';
-import { ErrorI18nKey, EntityFieldsI18nKey, DeploymentsI18nKey } from '@/src/constants/i18n';
+import { ErrorI18nKey, EntityFieldsI18nKey, DeploymentsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { RESTART_REASONS } from '@/src/constants/deployments/containers';
 import { useI18n } from '@/src/locales/client';
 import { useNotification } from '@/src/context/NotificationContext';
 import { getErrorNotification } from '@/src/utils/notification';
+import { getTranslatedDeploymentType } from '@/src/utils/deployments/entity';
 
 import LogViewer from '@/src/components/Common/LogViewer/LogViewer';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
+import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
   pod: Pod;
   containerId?: string;
+  route: ApplicationRoute;
 }
 
-const PodView: FC<Props> = ({ pod, containerId }) => {
+const PodView: FC<Props> = ({ pod, containerId, route }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
   const [logs, setLogs] = useState('');
@@ -78,7 +81,13 @@ const PodView: FC<Props> = ({ pod, containerId }) => {
         </div>
       )}
       <div className="flex flex-1 min-h-0 h-full">
-        <LogViewer logs={logs} />
+        {logs.length ? (
+          <LogViewer logs={logs} />
+        ) : (
+          <DialNoDataContent
+            title={t(EntitiesI18nKey.NoContainerLogs, { entityType: getTranslatedDeploymentType(route, t) })}
+          />
+        )}
       </div>
     </div>
   );
