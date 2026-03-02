@@ -97,6 +97,20 @@ export class TestSuitesApi extends BaseApi {
     return this.putAction(TEST_CASES_URL(id), testCases, token);
   }
 
+  exportTestCasesCsv(
+    testSuiteId: string,
+    token: Token,
+    options?: { delimiter?: string; includeEnabled?: boolean; filter?: string[] },
+  ): Promise<string | null> {
+    const params = new URLSearchParams();
+    if (options?.delimiter != null) params.set('delimiter', options.delimiter);
+    if (options?.includeEnabled != null) params.set('includeEnabled', String(options.includeEnabled));
+    options?.filter?.slice(0, 32).forEach((f) => params.append('filter', f));
+    const query = params.toString();
+    const url = `${TEST_CASES_URL(testSuiteId)}/export.csv${query ? `?${query}` : ''}`;
+    return this.getText(url, token);
+  }
+
   createTestSuite(suite: TestSuite, token: Token): Promise<ServerActionResponse> {
     return this.postAction(TEST_SUITES_URL, suite, token);
   }

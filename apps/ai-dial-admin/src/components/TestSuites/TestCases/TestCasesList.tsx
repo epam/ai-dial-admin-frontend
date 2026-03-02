@@ -5,7 +5,13 @@ import { FC, MouseEvent, RefObject, useCallback, useEffect, useRef, useState } f
 
 import { CellValueChangedEvent, ColDef, GridApi, GridOptions, GridReadyEvent } from 'ag-grid-community';
 
-import { createTestCase, getTestCases, importTestCase, removeTestCase } from '@/src/app/[lang]/test-suites/actions';
+import {
+  createTestCase,
+  exportTestCasesCsv,
+  getTestCases,
+  importTestCase,
+  removeTestCase,
+} from '@/src/app/[lang]/test-suites/actions';
 import ListEntities from '@/src/components/ListView/List';
 import TryOut from '@/src/components/TestSuites/RequestTemplate/components/TryOut';
 import { getTestCaseColumns } from '@/src/components/TestSuites/utils/columns';
@@ -152,6 +158,34 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, testCasesActionsRef, onDi
     [refreshGrid, selectedTestSuite.id, showNotification, t],
   );
 
+  const onExport = useCallback(() => {
+    const testSuiteId = selectedTestSuite.id;
+    if (!testSuiteId) return;
+    setIsExporting(true);
+    exportTestCasesCsv(testSuiteId, { includeEnabled: true })
+      .then((res) => {
+        setIsExporting(false);
+        if (res.success && res.csv) {
+          const blob = new Blob([res.csv], { type: 'text/csv;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `test-cases-${testSuiteId}.csv`;
+          a.click();
+          URL.revokeObjectURL(url);
+          showNotification(getSuccessNotification(t(TestSuitesI18nKey.ExportSuccess)));
+        } else {
+          showNotification(
+            getErrorNotification(t(TestSuitesI18nKey.ExportFailed), res.success ? undefined : res.errorMessage),
+          );
+        }
+      })
+      .catch(() => {
+        setIsExporting(false);
+        showNotification(getErrorNotification(t(TestSuitesI18nKey.ExportFailed), 'Export failed'));
+      });
+  }, [selectedTestSuite.id, showNotification, t]);
+
   const onAddTestCase = useCallback(() => {
     const testSuiteId = selectedTestSuite.id;
     if (!testSuiteId) return;
@@ -244,6 +278,7 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, testCasesActionsRef, onDi
               selectedTestSuiteId={selectedTestSuite.id as string}
               onApplyImport={onApplyImport}
               onAdd={onAddTestCase}
+              onExport={onExport}
             />
           </ListEntities>
         )}

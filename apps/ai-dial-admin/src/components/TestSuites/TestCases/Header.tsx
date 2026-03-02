@@ -3,7 +3,7 @@
 import { FC, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { IconPlus } from '@tabler/icons-react';
+import { IconDownload, IconPlus } from '@tabler/icons-react';
 import {
   ButtonAppearance,
   ButtonVariant,
@@ -21,8 +21,9 @@ interface Props {
   selectedTestSuiteId: string;
   onApplyImport: (file: File) => void;
   onAdd?: () => void;
+  onExport?: () => void;
 }
-const HeaderButtons: FC<Props> = ({ selectedTestSuiteId, onApplyImport, onAdd }) => {
+const HeaderButtons: FC<Props> = ({ selectedTestSuiteId, onApplyImport, onAdd, onExport }) => {
   const t = useI18n();
 
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -39,6 +40,15 @@ const HeaderButtons: FC<Props> = ({ selectedTestSuiteId, onApplyImport, onAdd })
         variant={ButtonVariant.Primary}
         appearance={ButtonAppearance.Ghost}
       />
+
+      {onExport && (
+        <DialPrimaryButton
+          label={t(ButtonsI18nKey.Export)}
+          iconBefore={<IconDownload {...BASE_BUTTON_ICON_PROPS} />}
+          onClick={onExport}
+          appearance={ButtonAppearance.Ghost}
+        />
+      )}
 
       <DialPrimaryButton
         label={t(ButtonsI18nKey.Add)}

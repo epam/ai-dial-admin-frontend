@@ -88,6 +88,24 @@ export async function getTestCase(id: string, testCaseId?: string) {
   return testSuitesApi.getTestCase(id, testCaseId, token);
 }
 
+export type ExportTestCasesOptions = {
+  delimiter?: string;
+  includeEnabled?: boolean;
+  filter?: string[];
+};
+
+export async function exportTestCasesCsv(
+  testSuiteId: string,
+  options?: ExportTestCasesOptions,
+): Promise<{ success: true; csv: string } | { success: false; errorMessage?: string }> {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  const csv = await testSuitesApi.exportTestCasesCsv(testSuiteId, token, options);
+  if (csv == null) {
+    return { success: false, errorMessage: 'Export failed' };
+  }
+  return { success: true, csv };
+}
+
 export async function getDeployments() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return testSuitesApi.getDeployments(token);

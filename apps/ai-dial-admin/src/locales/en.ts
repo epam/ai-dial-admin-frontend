@@ -1416,6 +1416,8 @@ export default {
     ImportSuccess: 'Test cases imported successfully',
     ImportSuccessDescription: 'You can now see them in the list of test cases',
     ImportFailed: 'Test cases import failed',
+    ExportSuccess: 'Test cases exported successfully',
+    ExportFailed: 'Test cases export failed',
     RemoveSuccess: 'Test case removed successfully',
     RemoveFailed: 'Test case remove failed',
     RunEvaluation: 'Run Evaluation',
