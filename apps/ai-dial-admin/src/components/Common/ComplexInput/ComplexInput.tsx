@@ -22,14 +22,16 @@ const ComplexInput: FC<Props> = ({ fullValue, label, isFullWidth, copyable = tru
   const t = useI18n();
   return (
     <div className="flex items-end gap-2">
-      <DialInput
-        labelProps={{ label, required }}
-        containerClassName={mergeClasses(
-          isFullWidth ? 'w-full' : copyable ? CONTROL_WITH_BUTTON_WIDTH : STANDARD_CONTROL_WIDTH,
-        )}
-        {...props}
-      />
-      {copyable && <CopyButton valueLabel={label} value={fullValue} buttonLabel={t(ButtonsI18nKey.Copy)} />}
+      <div className="flex items-end gap-2">
+        <DialInput
+          labelProps={{ label, required }}
+          containerClassName={mergeClasses(
+            isFullWidth ? 'w-full' : copyable ? CONTROL_WITH_BUTTON_WIDTH : STANDARD_CONTROL_WIDTH,
+          )}
+          {...props}
+        />
+        {copyable && <CopyButton valueLabel={label} value={fullValue} buttonLabel={t(ButtonsI18nKey.Copy)} />}
+      </div>
     </div>
   );
 };

@@ -19,8 +19,8 @@ import { SaveValidationContextProvider } from '@/src/context/SaveValidationConte
 import { useI18n } from '@/src/locales/client';
 import { TestCase, TestSuite } from '@/src/models/evaluation/test-suite';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import HeaderButtons from './Header';
 import { DialLoader } from '@epam/ai-dial-ui-kit';
+import HeaderButtons from './Header';
 
 export interface TestCasesActions {
   getDirtyTestCases: () => TestCase[];
@@ -152,6 +152,13 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, testCasesActionsRef, onDi
     [refreshGrid, selectedTestSuite.id, showNotification, t],
   );
 
+  const onExport = useCallback(() => {
+    const testSuiteId = selectedTestSuite.id;
+    if (!testSuiteId) return;
+
+    window.open(`/api/test-suites/export?id=${encodeURIComponent(testSuiteId)}`, '_blank');
+  }, [selectedTestSuite.id, showNotification, t]);
+
   const onAddTestCase = useCallback(() => {
     const testSuiteId = selectedTestSuite.id;
     if (!testSuiteId) return;
@@ -244,6 +251,7 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, testCasesActionsRef, onDi
               selectedTestSuiteId={selectedTestSuite.id as string}
               onApplyImport={onApplyImport}
               onAdd={onAddTestCase}
+              onExport={onExport}
             />
           </ListEntities>
         )}

@@ -97,6 +97,11 @@ export class TestSuitesApi extends BaseApi {
     return this.putAction(TEST_CASES_URL(id), testCases, token);
   }
 
+  exportTestCasesCsv(testSuiteId: string, token: Token) {
+    const filename = `test_suite_${testSuiteId}_export.csv`;
+    return this.streamRequest(`${TEST_CASES_URL(testSuiteId)}/export.csv`, filename, token);
+  }
+
   createTestSuite(suite: TestSuite, token: Token): Promise<ServerActionResponse> {
     return this.postAction(TEST_SUITES_URL, suite, token);
   }
