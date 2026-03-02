@@ -1,11 +1,11 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import { DialCollapsibleSidebar, DialNoDataContent, DialTabs, TabModel, TabOrientation } from '@epam/ai-dial-ui-kit';
+import { DialCollapsibleSidebar, DialTabs, TabModel, TabOrientation } from '@epam/ai-dial-ui-kit';
 
 import { Pod } from '@/src/models/deployments/containers';
-import { ContainersI18nKey, EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { ContainersI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getTranslatedDeploymentType } from '@/src/utils/deployments/entity';
+
 import { useI18n } from '@/src/locales/client';
 
 import PodView from '@/src/components/Containers/View/ExecutionLog/PodView';
@@ -58,11 +58,7 @@ const ExecutionLog: FC<Props> = ({ containerId, route, pods }) => {
 
   return (
     <div className="flex flex-col h-full w-full">
-      {!tabs.length ? (
-        <DialNoDataContent
-          title={t(EntitiesI18nKey.NoContainerLogs, { entityType: getTranslatedDeploymentType(route, t) })}
-        />
-      ) : (
+      {!!tabs.length && (
         <div className="flex h-full min-h-0 gap-8">
           {tabs.length > 1 && (
             <DialCollapsibleSidebar
@@ -80,7 +76,11 @@ const ExecutionLog: FC<Props> = ({ containerId, route, pods }) => {
               />
             </DialCollapsibleSidebar>
           )}
-          <PodView pod={pods.find((pod) => pod.name === activeTab) ?? pods[0]} containerId={containerId} />
+          <PodView
+            pod={pods.find((pod) => pod.name === activeTab) ?? pods[0]}
+            containerId={containerId}
+            route={route}
+          />
         </div>
       )}
     </div>
