@@ -18,6 +18,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { TestCase, TestSuite } from '@/src/models/evaluation/test-suite';
+import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { DialLoader } from '@epam/ai-dial-ui-kit';
 import HeaderButtons from './Header';
@@ -132,11 +133,11 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, testCasesActionsRef, onDi
   );
 
   const onApplyImport = useCallback(
-    (file: File) => {
+    (file: File, mode: TestCaseImportMode, strategy: TestCaseConflictStrategy) => {
       const body = new FormData();
       body.append('file', file);
 
-      importTestCase(selectedTestSuite.id || '', body).then((res) => {
+      importTestCase(selectedTestSuite.id || '', body, mode, strategy).then((res) => {
         if (res?.success) {
           showNotification(
             getSuccessNotification(t(TestSuitesI18nKey.ImportSuccess), t(TestSuitesI18nKey.ImportSuccessDescription)),

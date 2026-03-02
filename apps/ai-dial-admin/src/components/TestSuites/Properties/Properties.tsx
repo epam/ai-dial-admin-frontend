@@ -77,30 +77,31 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
       {!isModal && (
         <>
           <div className="flex gap-2">
-            <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-2')}>
-              <DialLabel label={t(TestSuitesI18nKey.Application)} htmlFor="applications" />
-              <DialInputPopup
-                open={isAppModalOpen}
-                onOpen={() => setIsAppModalOpen(true)}
-                selectedValue={`${testSuite.deploymentRef?.name}${testSuite.deploymentRef?.version ? ` (version: ${testSuite.deploymentRef.version})` : ''}`}
-                elementId="applications"
-                disabled={!deployments}
-              >
-                <CreateTestSuite
-                  currentEntity={testSuite}
-                  isModalOpen={isAppModalOpen}
-                  onClose={() => setIsAppModalOpen(false)}
-                  onCreate={onUpdate as (suite: TestSuite) => void}
-                />
-              </DialInputPopup>
+            <div className="flex gap-2">
+              <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-2')}>
+                <DialLabel label={t(TestSuitesI18nKey.Application)} htmlFor="applications" />
+                <DialInputPopup
+                  open={isAppModalOpen}
+                  onOpen={() => setIsAppModalOpen(true)}
+                  selectedValue={`${testSuite.deploymentRef?.name}${testSuite.deploymentRef?.version ? ` (version: ${testSuite.deploymentRef.version})` : ''}`}
+                  elementId="applications"
+                  disabled={!deployments}
+                >
+                  <CreateTestSuite
+                    currentEntity={testSuite}
+                    isModalOpen={isAppModalOpen}
+                    onClose={() => setIsAppModalOpen(false)}
+                    onCreate={onUpdate as (suite: TestSuite) => void}
+                  />
+                </DialInputPopup>
+              </div>
+              <DialNeutralButton
+                iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
+                className="self-end shrink-0"
+                label={isMobile ? '' : t(ButtonsI18nKey.Open)}
+                onClick={() => openInNewTab()}
+              />
             </div>
-
-            <DialNeutralButton
-              iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
-              className="self-end shrink-0"
-              label={isMobile ? '' : t(ButtonsI18nKey.Open)}
-              onClick={() => openInNewTab()}
-            />
           </div>
           {/* <div className="flex flex-col gap-4">
             <h3>{t(TestSuitesI18nKey.Method)}</h3>

@@ -3,10 +3,11 @@
 import { cookies, headers } from 'next/headers';
 
 import { testSuitesApi } from '@/src/app/api/api';
-import { getUserToken } from '@/src/utils/auth/auth-request';
-import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { TestCase, TestSuite } from '@/src/models/evaluation/test-suite';
 import { FilterDto, SortDto } from '@/src/models/request';
+import type { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
+import { getUserToken } from '@/src/utils/auth/auth-request';
+import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 export async function removeTestSuite(id: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -43,9 +44,14 @@ export async function getTestSuite(id: string, etag: string) {
   return testSuitesApi.getTestSuite(id, etag, token);
 }
 
-export async function importTestCase(id: string, file: FormData) {
+export async function importTestCase(
+  id: string,
+  file: FormData,
+  mode: TestCaseImportMode,
+  strategy: TestCaseConflictStrategy,
+) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return testSuitesApi.importTestCase(id, file, token);
+  return testSuitesApi.importTestCase(id, file, token, mode, strategy);
 }
 
 export async function importTestCasePreview(id: string, file: FormData) {

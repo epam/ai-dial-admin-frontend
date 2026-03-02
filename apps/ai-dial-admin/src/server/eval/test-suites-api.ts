@@ -5,9 +5,11 @@ import { EvaluationPageData, FilterDto, SortDto } from '@/src/models/request';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { API } from '@/src/server/api';
 import { BaseApi } from '@/src/server/base-api';
+import { getAuthorizationHeader } from '@/src/utils/auth/api-headers';
 import { getRequestFiltersStr } from '@/src/utils/request/get-request-filters';
 import { getRequestSortsStr } from '@/src/utils/request/get-request-sorts';
 import { Run } from '@/src/models/evaluation/run';
+import { TestCaseConflictStrategy, TestCaseImportMode } from '../../types/evaluation';
 
 export const TEST_SUITES_URL = `${API}/test-suites`;
 export const TEST_SUITE_URL = (id?: string) => `${TEST_SUITES_URL}/${id || ''}`;
@@ -53,8 +55,14 @@ export class TestSuitesApi extends BaseApi {
     return this.getActionWithEtag(TEST_SUITE_URL(id), etag, token);
   }
 
-  importTestCase(id: string, file: FormData, token: Token): Promise<ServerActionResponse> {
-    return this.postFiles(`${TEST_CASES_URL(id)}/import`, file, token);
+  importTestCase(
+    id: string,
+    file: FormData,
+    token: Token,
+    mode: TestCaseImportMode,
+    strategy: TestCaseConflictStrategy,
+  ): Promise<ServerActionResponse> {
+    return this.postFiles(`${TEST_CASES_URL(id)}/import?importMode=${mode}&conflictStrategy=${strategy}`, file, token);
   }
 
   importTestCasePreview(id: string, file: FormData, token: Token): Promise<ServerActionResponse> {

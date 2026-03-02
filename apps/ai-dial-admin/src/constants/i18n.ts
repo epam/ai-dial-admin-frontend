@@ -1409,6 +1409,22 @@ export enum TestSuitesI18nKey {
   SaveColumn = 'TestSuites.SaveColumn',
   PickFromResponseSchema = 'TestSuites.PickFromResponseSchema',
   NoSchemaProperties = 'TestSuites.NoSchemaProperties',
+  ImportMode = 'TestSuites.ImportMode',
+  ImportModeOverride = 'TestSuites.ImportModeOverride',
+  ImportModeOverrideDesc = 'TestSuites.ImportModeOverrideDesc',
+  ImportModeAppend = 'TestSuites.ImportModeAppend',
+  ImportModeAppendDesc = 'TestSuites.ImportModeAppendDesc',
+  ImportModeMerge = 'TestSuites.ImportModeMerge',
+  ImportModeMergeDesc = 'TestSuites.ImportModeMergeDesc',
+  OnNameCollision = 'TestSuites.OnNameCollision',
+  ConflictStrategyFail = 'TestSuites.ConflictStrategyFail',
+  ConflictStrategyFailDesc = 'TestSuites.ConflictStrategyFailDesc',
+  ConflictStrategySkip = 'TestSuites.ConflictStrategySkip',
+  ConflictStrategySkipDesc = 'TestSuites.ConflictStrategySkipDesc',
+  ConflictStrategyOverride = 'TestSuites.ConflictStrategyOverride',
+  ConflictStrategyOverrideDesc = 'TestSuites.ConflictStrategyOverrideDesc',
+  ImportStepFile = 'TestSuites.ImportStepFile',
+  ImportStepOptions = 'TestSuites.ImportStepOptions',
 }
 
 export enum RunsI18nKey {
