@@ -1,4 +1,5 @@
 import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 import { RESPONSE_MOCK, TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
@@ -173,9 +174,15 @@ describe('Server :: TestSuiteApi', () => {
 
   test('Should call importTestCase', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockTestSuite));
-    await instance.importTestCase('id', new FormData(), TOKEN_MOCK);
+    await instance.importTestCase(
+      'id',
+      new FormData(),
+      TOKEN_MOCK,
+      TestCaseImportMode.OVERRIDE,
+      TestCaseConflictStrategy.FAIL,
+    );
     expect(fetch).toHaveBeenCalledWith(
-      `${TEST_URL}${TEST_CASES_URL('id')}/import`,
+      `${TEST_URL}${TEST_CASES_URL('id')}/import?importMode=OVERRIDE&conflictStrategy=FAIL`,
       expect.objectContaining({ method: 'POST' }),
     );
   });
