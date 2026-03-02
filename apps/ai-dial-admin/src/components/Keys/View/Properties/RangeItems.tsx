@@ -45,7 +45,11 @@ const RangeItems: FC<Props> = ({ ranges, onAddRange, onRemoveRange, onUpdateRang
         newErrors.push(rangeError);
       });
       setErrors(newErrors);
-      dispatch({ type: ValidationActionType.SetField, field: 'ipRanges', isValid: isRangesValid });
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'ipRanges',
+        isValid: ranges.length > 0 ? isRangesValid : false,
+      });
     },
     [t, dispatch],
   );
