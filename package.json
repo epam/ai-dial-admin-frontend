@@ -59,6 +59,7 @@
     "react-dom": "19.1.2",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
+    "tailwind-merge": "^3.5.0",
     "uuid": "^13.0.0"
   },
   "devDependencies": {
@@ -120,7 +121,8 @@
     "glob": "11.1.0",
     "react": "19.1.2",
     "react-dom": "19.1.2",
-    "minimatch": "10.2.3"
+    "minimatch": "10.2.3",
+    "serialize-javascript": "7.0.3"
   },
   "engines": {
     "node": ">=24.12.0",

@@ -8,7 +8,7 @@ import { isEqual } from 'lodash';
 
 import { ALL_ATTACHMENTS } from '@/src/constants/dial-base-entity';
 import { AttachmentsI18nKey } from '@/src/constants/i18n';
-import { CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import Suggestions from './Suggestions';
 
@@ -222,7 +222,7 @@ const AttachmentInput: FC<Props> = ({ availableItems, initialValues, label, plac
 
       {selectedRadio === AttachmentType.SPECIFIC && (
         <div className={classNames('flex flex-col', STANDARD_CONTROL_WIDTH)}>
-          <div className={classNames('dial-input min-h-[40px] p-[6px]', CONTROL_WITH_BUTTON_WIDTH)}>
+          <div className="dial-input min-h-[40px] p-[6px]">
             <div
               ref={containerRef}
               className={classNames('flex flex-wrap items-start gap-2', wraps ? 'flex-col-reverse' : 'flex-row')}
