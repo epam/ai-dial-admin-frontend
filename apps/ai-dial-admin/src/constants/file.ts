@@ -57,6 +57,12 @@ export const contentTypes: Record<string, string> = {
   '.csv': 'text/csv',
   // pdf
   '.pdf': 'application/pdf',
+  // audio/video
+  '.mp3': 'audio/mpeg',
+  '.wav': 'audio/wav',
+  '.ogg': 'audio/ogg',
+  '.mp4': 'video/mp4',
+  '.webm': 'video/webm',
 };
 // same as bodySizeLimit in server config
 export const MAX_FILE_SIZE_MB = 4;
