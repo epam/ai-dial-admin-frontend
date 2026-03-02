@@ -25,6 +25,7 @@ import {
   getTestCaseTemplateVariables,
   tryOutTestCase,
 } from './actions';
+import { TestCaseConflictStrategy, TestCaseImportMode } from '../../../types/evaluation';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -137,9 +138,15 @@ describe('TestSuites :: server actions', () => {
 
   test('Should call importTestCase action ', async () => {
     (testSuitesApi.importTestCase as any).mockResolvedValue(RESPONSE_MOCK);
-    const result = await importTestCase('id', new FormData());
+    const result = await importTestCase('id', new FormData(), TestCaseImportMode.MERGE, TestCaseConflictStrategy.SKIP);
     expect(getUserToken).toHaveBeenCalled();
-    expect(testSuitesApi.importTestCase).toHaveBeenCalledWith('id', new FormData(), TOKEN_MOCK);
+    expect(testSuitesApi.importTestCase).toHaveBeenCalledWith(
+      'id',
+      new FormData(),
+      TOKEN_MOCK,
+      TestCaseImportMode.MERGE,
+      TestCaseConflictStrategy.SKIP,
+    );
     expect(result).toBe(RESPONSE_MOCK);
   });
 
