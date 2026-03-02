@@ -1389,8 +1389,6 @@ export enum TestSuitesI18nKey {
   MethodChangeWarning = 'TestSuites.MethodChangeWarning',
   ImportSuccess = 'TestSuites.ImportSuccess',
   ImportFailed = 'TestSuites.ImportFailed',
-  ExportSuccess = 'TestSuites.ExportSuccess',
-  ExportFailed = 'TestSuites.ExportFailed',
   RemoveSuccess = 'TestSuites.RemoveSuccess',
   RemoveFailed = 'TestSuites.RemoveFailed',
   ImportSuccessDescription = 'TestSuites.ImportSuccessDescription',
