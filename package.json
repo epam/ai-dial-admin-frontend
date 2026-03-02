@@ -121,7 +121,8 @@
     "glob": "11.1.0",
     "react": "19.1.2",
     "react-dom": "19.1.2",
-    "minimatch": "10.2.3"
+    "minimatch": "10.2.3",
+    "serialize-javascript": "7.0.3"
   },
   "engines": {
     "node": ">=24.12.0",
