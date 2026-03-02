@@ -243,6 +243,20 @@ describe('Server :: TestSuiteApi', () => {
     );
   });
 
+  test('Should call exportTestCasesCsv', async () => {
+    const streamResponse = new Response(null, { status: 200 });
+    const streamSpy = vi.spyOn(instance as any, 'streamRequest').mockResolvedValue(streamResponse);
+
+    const result = await instance.exportTestCasesCsv('suite-id', TOKEN_MOCK);
+
+    expect(streamSpy).toHaveBeenCalledWith(
+      `${TEST_CASES_URL('suite-id')}/export.csv`,
+      'test_suite_suite-id_export.csv',
+      TOKEN_MOCK,
+    );
+    expect(result).toBe(streamResponse);
+  });
+
   test('Should call getTestSuiteTemplateVariables', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockTestSuite));
     await instance.getTestSuiteTemplateVariables('id', TOKEN_MOCK);
