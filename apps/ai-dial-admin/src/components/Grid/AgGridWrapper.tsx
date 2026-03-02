@@ -23,6 +23,7 @@ import {
   ITooltipParams,
   ModuleRegistry,
   NumberFilterModule,
+  PinnedRowModule,
   RenderApiModule,
   RowApiModule,
   RowDragModule,
@@ -72,6 +73,7 @@ ModuleRegistry.registerModules([
   EventApiModule,
   ScrollApiModule,
   CheckboxEditorModule,
+  PinnedRowModule,
 ]);
 
 const GRID_THEME_COLORS = {

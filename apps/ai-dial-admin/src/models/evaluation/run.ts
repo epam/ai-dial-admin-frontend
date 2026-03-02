@@ -17,6 +17,7 @@ export interface ExtractionResult {
   requestBody?: Record<string, unknown>;
   testCaseData?: Record<string, unknown>;
   responseBody?: Record<string, unknown>;
+  extractedColumns?: Record<string, unknown>;
 }
 
 export enum ExtractionResultStatus {

@@ -108,7 +108,7 @@ const TemplateVariables: FC<Props> = ({ selectedTestSuite, onChange, isSkipRefre
   }, [isSkipRefresh, data, gridApi]);
 
   return (
-    <div className="flex-1 flex flex-col gap-y-4 min-h-[200px]">
+    <div className="flex flex-col gap-y-4 h-[250px]">
       <h1>{t(TestSuitesI18nKey.DynamicConfiguration)}</h1>
       <GridView
         getIsEmptyData={() => !data.length}

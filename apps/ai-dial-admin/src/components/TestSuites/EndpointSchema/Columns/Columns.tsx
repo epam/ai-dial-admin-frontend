@@ -5,24 +5,26 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
+import { JSONSchema7 } from 'json-schema';
 
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { getColumnsGridColumns } from '@/src/components/TestSuites/utils/columns';
-import { BasicI18nKey, ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-import { useI18n } from '@/src/locales/client';
-import { ResponseColumn } from '@/src/models/evaluation/test-suite';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { ONE_ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getEditOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
+import { BasicI18nKey, ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useI18n } from '@/src/locales/client';
+import { ResponseColumn } from '@/src/models/evaluation/test-suite';
 import EditColumn from './EditColumn';
 
 interface ColumnsProps {
   responseColumns: ResponseColumn[];
   onChangeResponseColumns: (responseColumns: ResponseColumn[]) => void;
+  responseSchema: JSONSchema7;
 }
 
-const Columns: FC<ColumnsProps> = ({ responseColumns, onChangeResponseColumns }) => {
+const Columns: FC<ColumnsProps> = ({ responseColumns, onChangeResponseColumns, responseSchema }) => {
   const t = useI18n();
   const { isValid, dispatch } = useSaveValidationContext();
 
@@ -123,6 +125,7 @@ const Columns: FC<ColumnsProps> = ({ responseColumns, onChangeResponseColumns })
           column={responseColumns[editableColumnIndex]}
           onChangeColumn={onChangeColumn}
           onClose={() => setEditableColumnIndex(void 0)}
+          responseSchema={responseSchema}
         />
       )}
     </div>

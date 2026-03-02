@@ -69,6 +69,15 @@ export async function removeTestCase(id: string, testCaseId: string) {
   return testSuitesApi.removeTestCase(id, testCaseId, token);
 }
 
+export async function createTestCase(
+  testSuiteId: string,
+  body: Pick<TestCase, 'testCaseName' | 'data'>,
+  includeWarnings?: boolean,
+) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.createTestCase(testSuiteId, body, token, includeWarnings);
+}
+
 export async function updateTestCases(id: string, testCases: TestCase[]) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return testSuitesApi.updateTestCases(id, testCases, token);

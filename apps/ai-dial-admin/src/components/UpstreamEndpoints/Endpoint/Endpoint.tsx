@@ -123,11 +123,10 @@ const Endpoint: FC<Props> = ({
             disabled={readonly}
             id={`upstreamEndpoints-${index}`}
             endpoint={endpoint.endpoint}
-            elementClassName="h-[40px]"
             placeholder={t(EntityPlaceholdersI18nKey.UpstreamEndpoint)}
             label={isFirstLine || isTablet ? t(UpstreamEndpointsI18nKey.Endpoints) : ''}
             onChange={onChangeEndPointUrl}
-            iconAfterInput={<WarningIcon endpointWarning={endpointWarning} />}
+            iconAfter={<WarningIcon endpointWarning={endpointWarning} />}
             required={required}
           />
 
