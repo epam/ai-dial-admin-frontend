@@ -13,6 +13,13 @@ export interface SchemaFieldRow {
   isAddSubFieldRow?: boolean;
 }
 
+export interface SchemaTreeNode {
+  path: string;
+  name: string;
+  type: JSONSchema7TypeName;
+  children: SchemaTreeNode[];
+}
+
 const SCHEMA_TYPES: JSONSchema7TypeName[] = ['string', 'number', 'integer', 'boolean', 'object', 'array', 'null'];
 
 export const getSchemaTypes = (): JSONSchema7TypeName[] => SCHEMA_TYPES;
@@ -214,4 +221,41 @@ export const flattenFields = (fields: SchemaFieldRow[], depth = 0): SchemaFieldR
   }
 
   return result;
+};
+
+export const schemaToTreeNodes = (schema: JSONSchema7 | undefined, parentPath: string): SchemaTreeNode[] => {
+  if (!schema || !schema.properties) return [];
+
+  return Object.entries(schema.properties).map(([name, def]) => {
+    if (!isJSONSchema7(def)) {
+      return {
+        path: parentPath ? `${parentPath}.${name}` : name,
+        name,
+        type: 'string' as JSONSchema7TypeName,
+        children: [],
+      };
+    }
+
+    const type = (def.type as JSONSchema7TypeName) || 'string';
+    const path = parentPath ? `${parentPath}.${name}` : name;
+    let children: SchemaTreeNode[] = [];
+
+    if (type === 'object' && def.properties) {
+      children = schemaToTreeNodes(def as JSONSchema7, path);
+    } else if (
+      type === 'array' &&
+      def.items &&
+      !Array.isArray(def.items) &&
+      typeof def.items === 'object' &&
+      isJSONSchema7(def.items as JSONSchema7Definition)
+    ) {
+      const items = def.items as JSONSchema7;
+      if (items.properties) {
+        // Child paths through array use [0] index for JSONata (e.g. choices[0].message.content)
+        children = schemaToTreeNodes(items, `${path}[0]`);
+      }
+    }
+
+    return { path, name, type, children };
+  });
 };

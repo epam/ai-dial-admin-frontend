@@ -20,7 +20,7 @@ import {
   SELECT_ENTITY_MOBILE_HEADER_CLASS,
 } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
-import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
@@ -63,7 +63,7 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
   const router = useRouter();
-  const { isValid } = useSaveValidationContext();
+  const { isValid, dispatch } = useSaveValidationContext();
 
   const isDisableSave = useMemo(
     () => (jsonConfiguration?.isEditorEnabled ? false : !isValid),
@@ -93,7 +93,8 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
   const onCloseModal = useCallback(() => {
     setIsModalOpen(false);
     setModalType(void 0);
-  }, []);
+    dispatch({ type: ValidationActionType.Reset });
+  }, [dispatch]);
 
   const onInstallImage = useCallback(
     (image: Image) => {

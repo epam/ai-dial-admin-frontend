@@ -3,21 +3,28 @@
 import { FC, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonAppearance, ButtonVariant, DialButtonDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
+import { IconPlus } from '@tabler/icons-react';
+import {
+  ButtonAppearance,
+  ButtonVariant,
+  DialButtonDropdown,
+  DialPrimaryButton,
+  DropdownItem,
+} from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
-import AddTestCase from './AddTestCase';
 import ImportFileModal from './Import/ImportFile';
 
 interface Props {
   selectedTestSuiteId: string;
   onApplyImport: (file: File) => void;
+  onAdd?: () => void;
 }
-const HeaderButtons: FC<Props> = ({ selectedTestSuiteId, onApplyImport }) => {
+const HeaderButtons: FC<Props> = ({ selectedTestSuiteId, onApplyImport, onAdd }) => {
   const t = useI18n();
 
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   const items: DropdownItem[] = useMemo(() => {
@@ -33,17 +40,12 @@ const HeaderButtons: FC<Props> = ({ selectedTestSuiteId, onApplyImport }) => {
         appearance={ButtonAppearance.Ghost}
       />
 
-      {/* <DialPrimaryButton
+      <DialPrimaryButton
         label={t(ButtonsI18nKey.Add)}
         iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-        onClick={() => setIsAddModalOpen(true)}
-      /> */}
+        onClick={onAdd}
+      />
 
-      {isAddModalOpen &&
-        createPortal(
-          <AddTestCase isModalOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onAdd={() => {}} />,
-          document.body,
-        )}
       {isImportModalOpen &&
         createPortal(
           <ImportFileModal

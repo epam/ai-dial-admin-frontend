@@ -109,7 +109,8 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
   const onCloseModal = useCallback(() => {
     handleModalClose();
     setModalType(void 0);
-  }, [handleModalClose]);
+    dispatch({ type: ValidationActionType.Reset });
+  }, [dispatch, handleModalClose]);
 
   const handleRunContainer = useCallback(() => {
     if (container.name) {

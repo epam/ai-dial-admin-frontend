@@ -1,6 +1,12 @@
 import { describe, expect, test } from 'vitest';
-import { getTestCaseGridData } from '../data';
-import { TestCase } from '@/src/models/evaluation/test-suite';
+import { createNewTestCaseRow, getTestCaseGridData as getTestCaseGridDataRaw, rowToTestCase } from '../data';
+import { TestCase as TestCaseModel } from '@/src/models/evaluation/test-suite';
+
+type TestCase = Partial<TestCaseModel>;
+
+const getTestCaseGridData = (testCases?: TestCase[] | null) => {
+  return getTestCaseGridDataRaw(testCases as TestCaseModel[] | null | undefined);
+};
 
 describe('getTestCaseGridData', () => {
   test('should return empty array when test cases array is empty', () => {
@@ -359,5 +365,72 @@ describe('getTestCaseGridData', () => {
     expect(result[0].zeroNumber).toBe(0);
     expect(result[0].emptyString).toBe('');
     expect(result[0].falseBool).toBe(false);
+  });
+});
+
+describe('createNewTestCaseRow', () => {
+  test('should return a default test case row shape', () => {
+    const result = createNewTestCaseRow();
+
+    expect(result.enabled).toBe(true);
+    expect(result.data).toEqual({});
+    expect(result.createdAt).toBe(0);
+    expect(result.updatedAt).toBe(0);
+    expect(result.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+    expect(result.testCaseName).toMatch(/^new-test-case-[0-9a-f]{5}$/i);
+  });
+});
+
+describe('rowToTestCase', () => {
+  test('should map row fields to test case object', () => {
+    const row: Record<string, unknown> = {
+      id: 'test-case-id',
+      enabled: false,
+      testCaseName: 'Case A',
+      createdAt: 1710000000,
+      updatedAt: 1710000001,
+      valid: true,
+      validationWarnings: [{ message: 'warning', path: ['data', 'input'] }],
+      data: { input: 'hello', expected: 'world' },
+    };
+
+    const result = rowToTestCase(row);
+
+    expect(result).toEqual({
+      id: 'test-case-id',
+      enabled: false,
+      testCaseName: 'Case A',
+      createdAt: 1710000000,
+      updatedAt: 1710000001,
+      valid: true,
+      validationWarnings: [{ message: 'warning', path: ['data', 'input'] }],
+      data: { input: 'hello', expected: 'world' },
+    });
+  });
+
+  test('should preserve undefined optional values', () => {
+    const row: Record<string, unknown> = {
+      id: 'test-case-id',
+      enabled: true,
+      testCaseName: undefined,
+      createdAt: 0,
+      updatedAt: undefined,
+      valid: undefined,
+      validationWarnings: undefined,
+      data: {},
+    };
+
+    const result = rowToTestCase(row);
+
+    expect(result).toEqual({
+      id: 'test-case-id',
+      enabled: true,
+      testCaseName: undefined,
+      createdAt: 0,
+      updatedAt: undefined,
+      valid: undefined,
+      validationWarnings: undefined,
+      data: {},
+    });
   });
 });

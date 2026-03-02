@@ -1407,6 +1407,8 @@ export enum TestSuitesI18nKey {
   ColumnsDescription = 'TestSuites.ColumnsDescription',
   EditColumn = 'TestSuites.EditColumn',
   SaveColumn = 'TestSuites.SaveColumn',
+  PickFromResponseSchema = 'TestSuites.PickFromResponseSchema',
+  NoSchemaProperties = 'TestSuites.NoSchemaProperties',
 }
 
 export enum RunsI18nKey {
