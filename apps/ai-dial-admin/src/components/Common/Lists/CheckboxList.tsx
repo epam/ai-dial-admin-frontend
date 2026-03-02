@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import NewItem from '@/src/components/Common/Multiselect/Modal/NewItem';
 import { DialCheckbox, DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
@@ -23,6 +23,8 @@ const CheckboxList: FC<Props> = ({
   addTitle,
   addPlaceholder,
 }) => {
+  const newItemsContainer = useRef<HTMLUListElement | null>(null);
+
   const [list, setList] = useState<string[]>(items);
   const [newList, setNewList] = useState<string[]>([]);
 
@@ -73,9 +75,21 @@ const CheckboxList: FC<Props> = ({
     setNewList((prev) => [...prev, '']);
   }, []);
 
+  useEffect(() => {
+    const container = newItemsContainer.current;
+    if (container && container.scrollHeight > container.clientHeight) {
+      setTimeout(() => {
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: 'smooth',
+        });
+      });
+    }
+  }, [newList.length]);
+
   return (
     <>
-      <ul className="flex flex-col gap-y-2 overflow-auto flex-1 min-h-0">
+      <ul className="flex flex-col gap-y-2 overflow-auto flex-1 min-h-0" ref={newItemsContainer}>
         {list.map((item, index) => (
           <li key={`item_${index}`}>
             <DialCheckbox
