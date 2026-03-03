@@ -69,6 +69,12 @@ const CreateEntity = <T extends CreatePromptEntity>({
   );
   const [isUniqueNameError, setIsUniqueNameError] = useState<boolean | undefined>(void 0);
 
+  const getUniqError = useCallback(async () => {
+    return RoutesForCheckingUniqueName.includes(route)
+      ? await checkIsUniqueDeploymentName(currentEntity.name as string)
+      : true;
+  }, [currentEntity.name, route]);
+
   const onCreate = useCallback(
     async (updatedEntity: T) => {
       const entity = {
@@ -76,9 +82,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
         name: updatedEntity.name?.trim(),
       };
 
-      const isUnique = RoutesForCheckingUniqueName.includes(route)
-        ? await checkIsUniqueDeploymentName(entity.name as string)
-        : true;
+      const isUnique = await getUniqError();
 
       setIsUniqueNameError(!isUnique);
 
@@ -106,12 +110,14 @@ const CreateEntity = <T extends CreatePromptEntity>({
         }
       });
     },
-    [route, createEntity, folderContext, showNotification, t, router, initialValues, onClose],
+    [getUniqError, route, createEntity, folderContext, showNotification, t, router, initialValues, onClose],
   );
 
   useEffect(() => {
-    setIsUniqueNameError(void 0);
-  }, [currentEntity, route, versionsMap, names]);
+    getUniqError().then((isUnique) => {
+      setIsUniqueNameError(!isUnique);
+    });
+  }, [currentEntity, route, versionsMap, names, getUniqError]);
 
   // initial validation (disable save when no values entered yet)
   useEffect(() => {
