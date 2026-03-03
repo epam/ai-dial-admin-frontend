@@ -12,12 +12,12 @@ interface Props {
 
 const BodyTab: FC<Props> = ({ template, changeTemplate }) => {
   const onChangeBody = useCallback(
-    (body: Record<string, unknown>) => {
+    (content: Record<string, unknown>) => {
       changeTemplate({
         ...template,
-        content: {
-          ...template.content,
-          body,
+        body: {
+          ...template.body,
+          content,
         },
       });
     },
@@ -26,7 +26,7 @@ const BodyTab: FC<Props> = ({ template, changeTemplate }) => {
 
   return (
     <JsonEditor
-      entity={template.content?.body || {}}
+      entity={template.body?.content || {}}
       setSelectedEntity={onChangeBody as Dispatch<SetStateAction<Record<string, unknown>>>}
       options={{ stickyScroll: { enabled: false } }}
     />

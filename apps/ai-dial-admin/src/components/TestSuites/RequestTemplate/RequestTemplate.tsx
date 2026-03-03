@@ -55,7 +55,7 @@ const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
   }, []);
 
   const urlTemplateError = useMemo(() => {
-    const urlTemplate = testSuite.requestTemplate?.content?.urlTemplate;
+    const urlTemplate = testSuite.requestTemplate?.urlTemplate;
     const relativeUrlPattern = testSuite.endpointRef?.relativeUrlPattern;
 
     if (!urlTemplate || !relativeUrlPattern) {
@@ -74,7 +74,7 @@ const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
       }
     }
     return undefined;
-  }, [testSuite.endpointRef?.relativeUrlPattern, testSuite.requestTemplate?.content?.urlTemplate]);
+  }, [testSuite.endpointRef?.relativeUrlPattern, testSuite.requestTemplate?.urlTemplate]);
 
   useEffect(() => {
     dispatch({ type: ValidationActionType.SetField, field: 'urlTemplate', isValid: !urlTemplateError });
@@ -86,7 +86,7 @@ const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
   }, []);
 
   return (
-    <div className="flex flex-col w-full h-full gap-2">
+    <div className="flex flex-col size-full gap-2">
       <div className="flex flex-col gap-4">
         <div className="flex flex-row justify-between gap-x-2">
           <div className="flex flex-row gap-2 items-start">
@@ -97,13 +97,13 @@ const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
             )}
             <DialInput
               id="urlTemplate"
-              value={testSuite.requestTemplate?.content?.urlTemplate || ''}
+              value={testSuite.requestTemplate?.urlTemplate || ''}
               onChange={(urlTemplate) =>
                 onChangeTestSuite({
                   ...testSuite,
                   requestTemplate: {
                     ...testSuite.requestTemplate,
-                    content: { ...testSuite.requestTemplate?.content, urlTemplate },
+                    urlTemplate,
                   },
                 })
               }

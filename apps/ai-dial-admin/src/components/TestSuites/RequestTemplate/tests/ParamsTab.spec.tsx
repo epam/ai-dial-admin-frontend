@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { TestSuiteRequestTemplate, TestSuiteRequestTemplateContent } from '@/src/models/evaluation/test-suite';
+import { TestSuiteRequestTemplate, TestSuiteRequestTemplateBody } from '@/src/models/evaluation/test-suite';
 import ParamsTab from '../tabs/ParamsTab';
 
 let capturedOnGridReady: (event: any) => void;
@@ -42,7 +42,7 @@ vi.mock('@tabler/icons-react', () => ({
   IconPlus: () => <svg data-icon="plus" />,
 }));
 
-const createTemplate = (overrides?: Partial<TestSuiteRequestTemplateContent>): TestSuiteRequestTemplate => ({
+const createTemplate = (overrides?: Partial<TestSuiteRequestTemplateBody>): TestSuiteRequestTemplate => ({
   content: {
     urlTemplate: '/api/test',
     body: {},

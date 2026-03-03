@@ -78,7 +78,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
 const createTestSuite = (overrides?: Partial<TestSuite>): TestSuite => ({
   id: 'suite-1',
   name: 'Test Suite 1',
-  requestTemplate: { content: { urlTemplate: '' } },
+  requestTemplate: { urlTemplate: '' },
   ...overrides,
 });
 
@@ -198,7 +198,7 @@ describe('RequestTemplate', () => {
 
   test('dispatches invalid field when URL does not match pattern', () => {
     const testSuite = createTestSuite({
-      requestTemplate: { content: { urlTemplate: '/invalid' } },
+      requestTemplate: { urlTemplate: '/invalid' },
       endpointRef: { relativeUrlPattern: '/api/.*' },
     });
 
@@ -213,7 +213,7 @@ describe('RequestTemplate', () => {
 
   test('does not show error when relativeUrlPattern has no regex symbols', () => {
     const testSuite = createTestSuite({
-      requestTemplate: { content: { urlTemplate: '/something' } },
+      requestTemplate: { urlTemplate: '/something' },
       endpointRef: { relativeUrlPattern: '/other' },
     });
 
@@ -224,7 +224,7 @@ describe('RequestTemplate', () => {
 
   test('does not show error when urlTemplate is empty', () => {
     const testSuite = createTestSuite({
-      requestTemplate: { content: { urlTemplate: '' } },
+      requestTemplate: { urlTemplate: '' },
       endpointRef: { relativeUrlPattern: '/api/.*' },
     });
 
@@ -235,7 +235,7 @@ describe('RequestTemplate', () => {
 
   test('does not show error when relativeUrlPattern is undefined', () => {
     const testSuite = createTestSuite({
-      requestTemplate: { content: { urlTemplate: '/api/test' } },
+      requestTemplate: { urlTemplate: '/api/test' },
       endpointRef: { relativeUrlPattern: undefined },
     });
 
