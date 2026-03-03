@@ -25,6 +25,7 @@ export interface ToolsetAuthSettings {
   redirectUri?: string;
   authorizationEndpoint?: string;
   codeChallenge?: string;
+  codeVerifier?: string;
   codeChallengeMethod?: ToolsetCodeChallengeMethod;
   tokenEndpoint?: string;
   scopesSupported?: string[];
