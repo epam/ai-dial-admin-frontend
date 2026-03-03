@@ -43,7 +43,7 @@ const SchemaTreeItem: FC<TreeItemProps> = ({ node, depth, expandedSet, onToggleE
       >
         <div
           className={classNames(
-            'flex items-center justify-center w-[18px] h-[18px] flex-shrink-0 rounded',
+            'flex items-center justify-center w-[18px] h-[18px] shrink-0 rounded',
             hasChildren && 'cursor-pointer hover:bg-layer-3',
           )}
           onClick={toggleExpand}

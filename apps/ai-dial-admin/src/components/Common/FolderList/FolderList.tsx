@@ -218,25 +218,15 @@ const FolderList: FC<Props> = ({
                 >
                   <div className={classNames(iconClassName, 'flex items-center justify-center')}>
                     {isExpanded ? (
-                      <IconCaretDownFilled
-                        {...BASE_BUTTON_ICON_PROPS}
-                        widths={10}
-                        height={10}
-                        className="flex-shrink-0"
-                      />
+                      <IconCaretDownFilled {...BASE_BUTTON_ICON_PROPS} widths={10} height={10} className="shrink-0" />
                     ) : (
-                      <IconCaretRightFilled
-                        {...BASE_BUTTON_ICON_PROPS}
-                        widths={10}
-                        height={10}
-                        className="flex-shrink-0"
-                      />
+                      <IconCaretRightFilled {...BASE_BUTTON_ICON_PROPS} widths={10} height={10} className="shrink-0" />
                     )}
                   </div>
                   <IconFolder
                     {...BASE_BUTTON_ICON_PROPS}
                     className={classNames(
-                      'flex-shrink-0 mr-2',
+                      'shrink-0 mr-2',
                       isMoveError && 'text-error',
                       isMovableFolder || isFolderDelete ? 'text-accent-primary' : '',
                     )}

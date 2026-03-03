@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useState } from 'react';
+import Cloud from '@/public/images/icons/cloud.svg';
 import {
   AlertVariant,
   DialAlert,
@@ -8,20 +8,19 @@ import {
   RadioButtonWithContent,
   RadioGroupOrientation,
 } from '@epam/ai-dial-ui-kit';
-import Cloud from '@/public/images/icons/cloud.svg';
+import { FC, useCallback, useEffect, useState } from 'react';
 
-import { Image } from '@/src/models/deployments/images';
-import { Container } from '@/src/models/deployments/containers';
-import { DeploymentsI18nKey } from '@/src/constants/i18n';
-import { ApplicationRoute } from '@/src/types/routes';
-import { WHITELIST_POLICY } from '@/src/types/deployments/entity';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getGlobalWhitelist } from '@/src/app/actions/deployments';
-import { getWhitelistDomainError } from '@/src/utils/deployments/validation';
-import { getDeploymentEntityKey, getTranslatedDeploymentType } from '@/src/utils/deployments/entity';
-import { getCurrentPolicy } from '@/src/utils/deployments/entity';
+import { DeploymentsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
+import { Container } from '@/src/models/deployments/containers';
+import { Image } from '@/src/models/deployments/images';
+import { WHITELIST_POLICY } from '@/src/types/deployments/entity';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getCurrentPolicy, getDeploymentEntityKey, getTranslatedDeploymentType } from '@/src/utils/deployments/entity';
+import { getWhitelistDomainError } from '@/src/utils/deployments/validation';
 
 import ItemsList from '@/src/components/Deployments/Common/ItemsList/ItemsList';
 

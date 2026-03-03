@@ -15,14 +15,14 @@ interface Props {
 
 const StatusIcon: FC<Props> = ({ status }) => {
   const t = useI18n();
-  const indicatorClassNames = classNames('flex w-2 h-2 rounded no-user-select', getActionClass(status));
+  const indicatorClassNames = classNames('flex size-2 rounded no-user-select', getActionClass(status));
 
   const statusLabel = useMemo(() => t(STATUS_I18N_KEYS[status]), [status, t]);
 
   return (
     <div>
       {LOADING_STATUSES.includes(status) ? (
-        <DialLoader ariaLabel={statusLabel} size={12} className="w-2 h-2" />
+        <DialLoader ariaLabel={statusLabel} size={12} className="size-2" />
       ) : (
         <span role="status" aria-label={statusLabel} className={indicatorClassNames} />
       )}
