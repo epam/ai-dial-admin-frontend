@@ -103,12 +103,14 @@ const DraggableList: FC<Props> = ({ items, setItems, filter, addTitle, addPlaceh
         ))}
       </ul>
       {addTitle && (
-        <DialNeutralButton
-          className="self-start"
-          iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-          label={addTitle}
-          onClick={onAddItem}
-        />
+        <div>
+          <DialNeutralButton
+            className="self-start"
+            iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
+            label={addTitle}
+            onClick={onAddItem}
+          />
+        </div>
       )}
     </>
   );

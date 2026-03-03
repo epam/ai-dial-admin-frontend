@@ -13,18 +13,14 @@ import {
 
 import { isLargeFile } from '@/src/components/EntityListView/Import/utils';
 import { BasicI18nKey, ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
-import { IMPORT_RESOLUTIONS } from '@/src/constants/import';
+import { ARCHIVE_IMPORT_TYPE, DIAL_JSON_IMPORT_TYPE, IMPORT_RESOLUTIONS } from '@/src/constants/import';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 
 const IMPORT_FILE_TYPES = (t: (str: string) => string): RadioButtonWithContent[] => [
-  {
-    id: ImportFileType.ARCHIVE,
-    name: t(ImportI18nKey.DialArchive),
-    content: <div className="tiny mt-2 ml-[26px]">{t(ImportI18nKey.DialArchiveDescription)}</div>,
-  },
-  { id: ImportFileType.JSON, name: t(ImportI18nKey.DialCoreFiles) },
+  ARCHIVE_IMPORT_TYPE(t),
+  DIAL_JSON_IMPORT_TYPE(t),
 ];
 
 interface Props {

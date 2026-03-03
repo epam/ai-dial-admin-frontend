@@ -29,36 +29,35 @@ export const IMPORT_CONFIG_STEPS = (t: (stringToTranslate: string) => string): S
   { id: ImportSteps.CONFIGURATION, name: t(ImportI18nKey.Configuration) },
 ];
 
+export const ARCHIVE_IMPORT_TYPE = (t: (stringToTranslate: string) => string) => ({
+  id: ImportFileType.ARCHIVE,
+  name: t(ImportI18nKey.DialArchive),
+  content: <div className="dial-tiny-text ml-[33px]">{t(ImportI18nKey.DialArchiveDescription)}</div>,
+});
+
+export const DIAL_JSON_IMPORT_TYPE = (t: (stringToTranslate: string) => string) => ({
+  id: ImportFileType.JSON,
+  name: t(ImportI18nKey.DialCoreFiles),
+  content: <div className="dial-tiny-text ml-[33px]">{t(ImportI18nKey.JsonDescription)}</div>,
+});
+
+export const SEPARATE_FILES_IMPORT_TYPE = (t: (stringToTranslate: string) => string) => ({
+  id: ImportFileType.FILES,
+  name: t(ImportI18nKey.SeparateFiles),
+  content: <div className="dial-tiny-text ml-[33px]">{t(ImportI18nKey.SeparateFilesDescription)}</div>,
+});
+
 export const IMPORT_FILE_TYPES = (
   t: (stringToTranslate: string) => string,
   route?: ApplicationRoute,
 ): RadioButtonWithContent[] => {
-  const buttons = [
-    {
-      id: ImportFileType.ARCHIVE,
-      name: t(ImportI18nKey.DialArchive),
-      description: t(ImportI18nKey.ArchiveDescription),
-    },
-  ];
+  const buttons = [ARCHIVE_IMPORT_TYPE(t)];
 
   if (isAssetWithVersion(route)) {
-    return [
-      ...buttons,
-      {
-        id: ImportFileType.JSON,
-        name: t(ImportI18nKey.DialCoreFiles),
-        description: t(ImportI18nKey.JsonDescription),
-      },
-    ];
-  } else if (route === ApplicationRoute.Files) {
-    return [
-      ...buttons,
-      {
-        id: ImportFileType.FILES,
-        name: t(ImportI18nKey.SeparateFiles),
-        description: t(ImportI18nKey.SeparateFilesDescription),
-      },
-    ];
+    return [...buttons, DIAL_JSON_IMPORT_TYPE(t)];
+  }
+  if (route === ApplicationRoute.Files) {
+    return [...buttons, SEPARATE_FILES_IMPORT_TYPE(t)];
   }
   return buttons;
 };
