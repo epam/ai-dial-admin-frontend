@@ -2,7 +2,6 @@ export interface DialScheme {
   properties?: Record<string, DialSchemeProperty>;
   $defs?: Record<string, unknown>;
   required?: string[];
-  [key: string]: unknown;
 }
 
 export interface DialSchemeProperty {
@@ -12,12 +11,10 @@ export interface DialSchemeProperty {
   oneOf?: DialSchemePropertyType[];
   items?: DialSchemeProperty;
   $ref?: string;
-  [key: string]: unknown;
 }
 
 export interface DialSchemePropertyType {
   type?: string;
   items?: DialSchemeProperty;
   $ref?: string;
-  [key: string]: unknown;
 }

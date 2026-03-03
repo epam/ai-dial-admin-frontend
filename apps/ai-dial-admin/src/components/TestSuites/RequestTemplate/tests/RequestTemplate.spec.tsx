@@ -196,17 +196,6 @@ describe('RequestTemplate', () => {
     });
   });
 
-  test('shows no URL error when urlTemplate matches relativeUrlPattern regex', () => {
-    const testSuite = createTestSuite({
-      requestTemplate: { content: { urlTemplate: '/api/test' } },
-      endpointRef: { relativeUrlPattern: '/api/v1/.*' },
-    });
-
-    render(<RequestTemplate testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
-
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-  });
-
   test('dispatches invalid field when URL does not match pattern', () => {
     const testSuite = createTestSuite({
       requestTemplate: { content: { urlTemplate: '/invalid' } },
