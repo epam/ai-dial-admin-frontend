@@ -28,7 +28,7 @@ const RouteContent: FC<Props> = ({ route, readonly, routeNames, onChangeRoute, .
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
 
   return (
-    <div className="h-full w-full p-4 flex flex-col">
+    <div className="size-full p-4 flex flex-col">
       <div className="mb-4">
         <DialTabs tabs={tabs} activeTab={activeTab} onClick={(tab) => setActiveTab(tab as EntityViewTab)} />
       </div>

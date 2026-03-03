@@ -96,7 +96,7 @@ const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, o
 
   return (
     <>
-      <div className="h-full w-full flex flex-col">
+      <div className="size-full flex flex-col">
         {!readonly && (
           <DialSwitch
             switchId="inheritedAppRoles"

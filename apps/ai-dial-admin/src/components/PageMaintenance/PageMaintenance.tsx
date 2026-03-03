@@ -10,7 +10,7 @@ const PageMaintenance: FC = () => {
   const t = useI18n();
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center bg-layer-2">
+    <div className="size-full flex flex-col items-center justify-center bg-layer-2">
       <div>
         <Icon />
       </div>

@@ -57,7 +57,7 @@ const ExecutionLog: FC<Props> = ({ containerId, route, pods }) => {
   }, [pods, t]);
 
   return (
-    <div className="flex flex-col h-full w-full">
+    <div className="flex flex-col size-full">
       {!!tabs.length && (
         <div className="flex h-full min-h-0 gap-8">
           {tabs.length > 1 && (

@@ -168,7 +168,7 @@ const ParametersTab: FC<Props> = ({
   }, [application?.applicationPropertiesTemp, application?.applicationProperties]);
 
   return (
-    <div className="flex flex-col w-full h-full">
+    <div className="flex flex-col size-full">
       {!isEditorEnabled && (
         <div className="flex flex-row justify-between mb-2">
           <div className="flex flex-row gap-4 items-center">
@@ -213,7 +213,7 @@ const ParametersTab: FC<Props> = ({
         )}
         <div
           className={classNames(
-            paramsView === ParamsView.FORM && !isEditorEnabled ? 'block w-full h-full overflow-y-auto' : 'hidden',
+            paramsView === ParamsView.FORM && !isEditorEnabled ? 'block size-full overflow-y-auto' : 'hidden',
           )}
         >
           {!scheme || !scheme?.properties || !Object.keys(scheme.properties).length ? (
