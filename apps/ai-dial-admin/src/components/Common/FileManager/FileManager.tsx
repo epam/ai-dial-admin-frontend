@@ -26,6 +26,7 @@ import { getSuccessNotification } from '@/src/utils/notification';
 import {
   createEmptyFile,
   getBulkActionsToolbarOptions,
+  getDestinationFolderPopupOptions,
   getGridOptions,
   getToolbarOptions,
   getTreeOptions,
@@ -323,6 +324,7 @@ const FileManager: FC<Props> = ({ label, columnDefs, view, getContext, ...props 
       onUploadFiles={handleDragAndDropFiles}
       folderCreationValidationMessages={getValidationMessages(t)}
       renameValidationMessages={getValidationMessages(t)}
+      destinationFolderPopupOptions={getDestinationFolderPopupOptions(t)}
       isRenameFileAvailable={false}
       previewExtensions={PREVIEW_EXTENSIONS}
       {...props}

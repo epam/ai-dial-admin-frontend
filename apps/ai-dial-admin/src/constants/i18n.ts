@@ -1452,6 +1452,8 @@ export enum FileManagerI18nKey {
   CreateFolderValidate = 'FileManager.CreateFolderValidate',
   CreateFolderValidateFirstSymbol = 'FileManager.CreateFolderValidateFirstSymbol',
   Preview = 'FileManager.Preview',
+  MoveItem = 'FileManager.MoveItem',
+  MoveItems = 'FileManager.MoveItems',
 
   // Notifications
   CreateFolderSuccessTitle = 'FileManager.Notifications.CreateFolder.Title',
