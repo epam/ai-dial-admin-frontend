@@ -63,7 +63,7 @@ const ToolHeader: FC<Props> = ({
       {!isAddedManual && !isMcpToolset && (
         <div className="flex flex-row items-center gap-4" onClick={(e) => e.stopPropagation()}>
           {!isCollapsed && viewSelector}
-          {!isCollapsed && !!viewSelector && <div className="w-[1px] h-6 bg-layer-4"></div>}
+          {!isCollapsed && !!viewSelector && <div className="w-[px] h-6 bg-layer-4"></div>}
           <DialNeutralButton
             className={classNames(isCollapsed && 'invisible group-hover/accordion:visible')}
             iconBefore={<IconPlayerPlay size={20} />}

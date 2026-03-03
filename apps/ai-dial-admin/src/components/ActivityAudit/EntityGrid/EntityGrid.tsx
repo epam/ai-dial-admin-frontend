@@ -99,7 +99,7 @@ const AuditEntityGrid: FC<Props> = ({
       <DialNoDataContent title={t(EntitiesI18nKey.NoResource)} />
     </div>
   ) : (
-    <div className="w-full h-full relative">
+    <div className="size-full relative">
       <GridView additionalGridOptions={options} />
       {isModalOpen &&
         createPortal(

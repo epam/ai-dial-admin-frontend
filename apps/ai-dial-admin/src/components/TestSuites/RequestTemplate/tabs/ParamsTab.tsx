@@ -90,7 +90,7 @@ const ParamsTab: FC<Props> = ({ template, changeTemplate, field, title, emptyDat
   }, [template.content?.[field]?.length, gridApi]);
 
   return (
-    <div className="flex flex-col gap-3 w-full h-full">
+    <div className="flex flex-col gap-3 size-full">
       <div className="flex flex-row justify-between items-center">
         <h3>
           {title}: {template.content?.[field]?.length || 0}

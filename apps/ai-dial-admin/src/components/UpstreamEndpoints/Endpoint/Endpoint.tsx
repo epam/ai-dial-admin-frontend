@@ -169,7 +169,7 @@ const Endpoint: FC<Props> = ({
         </div>
       </div>
       {!readonly && (
-        <div className="w-[40px] flex-shrink-0">
+        <div className="w-[40px] shrink-0">
           <DialRemoveButton onClick={onRemove} className={removeButtonClassName} aria-label="remove" />
         </div>
       )}
