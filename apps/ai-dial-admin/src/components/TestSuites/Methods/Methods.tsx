@@ -46,10 +46,12 @@ const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange, isCreate
           ...prev,
           endpointRef: CHAT_COMPLETION_METHOD,
           requestTemplate: {
-            contentType: APPLICATION_JSON_TYPE,
-            content: {
-              urlTemplate: CHAT_COMPLETION_RELATIVE_URL,
-              body: CHAT_COMPLETION_BODY,
+            body: {
+              contentType: APPLICATION_JSON_TYPE,
+              content: {
+                urlTemplate: CHAT_COMPLETION_RELATIVE_URL,
+                body: CHAT_COMPLETION_BODY,
+              },
             },
           },
         }));
@@ -61,9 +63,11 @@ const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange, isCreate
             relativeUrlPattern: methods[index - 1].relativeUrlPattern,
           },
           requestTemplate: {
-            contentType: APPLICATION_JSON_TYPE,
-            content: {
-              urlTemplate: methods[index - 1].relativeUrlPattern,
+            body: {
+              contentType: APPLICATION_JSON_TYPE,
+              content: {
+                urlTemplate: methods[index - 1].relativeUrlPattern,
+              },
             },
           },
         }));
@@ -96,7 +100,7 @@ const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange, isCreate
   ]);
 
   return (
-    <div className="w-full flex flex-row h-full gap-2">
+    <div className="flex flex-row size-full gap-2">
       <DialCollapsibleSidebar containerClassName="border border-primary" title={t(MenuI18nKey.Applications)}>
         <div className="flex flex-col gap-y-4 ">
           <div className="flex flex-col gap-y-1">

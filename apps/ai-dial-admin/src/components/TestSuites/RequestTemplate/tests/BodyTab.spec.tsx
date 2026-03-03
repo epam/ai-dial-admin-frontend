@@ -19,14 +19,12 @@ vi.mock('@/src/components/EntityTabs/JsonEditor/JsonEditor', () => ({
   },
 }));
 
-const createTemplate = (overrides?: Partial<TestSuiteRequestTemplateContent>): TestSuiteRequestTemplate => ({
-  content: {
-    urlTemplate: '/api/test',
-    body: { key: 'value' },
-    headers: [],
-    queryParams: [],
-    ...overrides,
-  },
+const createTemplate = (overrides?: Partial<TestSuiteRequestTemplate>): TestSuiteRequestTemplate => ({
+  urlTemplate: '/api/test',
+  body: { content: { key: 'value' } },
+  headers: [],
+  queryParams: [],
+  ...overrides,
 });
 
 describe('BodyTab', () => {
@@ -44,7 +42,9 @@ describe('BodyTab', () => {
   });
 
   test('passes template body to JsonEditor entity', () => {
-    render(<BodyTab template={createTemplate({ body: { foo: 'bar' } })} changeTemplate={mockChangeTemplate} />);
+    render(
+      <BodyTab template={createTemplate({ body: { content: { foo: 'bar' } } })} changeTemplate={mockChangeTemplate} />,
+    );
 
     expect(screen.getByText('{"foo":"bar"}')).toBeInTheDocument();
   });
@@ -87,7 +87,7 @@ describe('BodyTab', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
 
-    const calledWith = mockChangeTemplate.mock.calls[0][0].content;
+    const calledWith = mockChangeTemplate.mock.calls[0][0];
     expect(calledWith.urlTemplate).toBe('/my-url');
     expect(calledWith.headers).toEqual([{ key: 'auth', value: 'token' }]);
     expect(calledWith.queryParams).toEqual([{ key: 'q', value: 'search' }]);
@@ -107,6 +107,9 @@ describe('BodyTab', () => {
     const complexBody = { nested: { deep: [1, 2, 3] }, flag: true };
     capturedSetSelectedEntity(complexBody);
 
-    expect(mockChangeTemplate).toHaveBeenCalledWith(createTemplate({ body: complexBody }));
+    expect(mockChangeTemplate).toHaveBeenCalledWith({
+      ...template,
+      body: { content: complexBody },
+    });
   });
 });

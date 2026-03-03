@@ -47,15 +47,15 @@ export interface RequestBodySchema {
 }
 
 export interface TestSuiteRequestTemplate {
-  contentType?: string;
-  content?: TestSuiteRequestTemplateContent;
-}
-
-export interface TestSuiteRequestTemplateContent {
   urlTemplate?: string;
-  body?: Record<string, unknown>;
+  body?: TestSuiteRequestTemplateBody;
   headers?: TestSuiteRequestTemplateParam[];
   queryParams?: TestSuiteRequestTemplateParam[];
+}
+
+export interface TestSuiteRequestTemplateBody {
+  contentType?: string;
+  content?: Record<string, unknown>;
 }
 export interface TestSuiteRequestTemplateParam {
   key: string;
