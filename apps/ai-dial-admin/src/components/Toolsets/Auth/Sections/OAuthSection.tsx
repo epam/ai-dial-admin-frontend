@@ -109,8 +109,8 @@ const OAuthSection: FC<Props> = ({ disabled, authSettings, view, onChange }) => 
             onChange?.({
               ...(authSettings || {}),
               codeChallengeMethod: codeChallengeMethod === BasicI18nKey.None ? '' : codeChallengeMethod,
-              codeChallenge: view === ApplicationRoute.AssetsToolsets ? authSettings?.codeChallenge || '' : undefined,
-              codeVerifier: view === ApplicationRoute.AssetsToolsets ? authSettings?.codeVerifier || '' : undefined,
+              codeChallenge: view === ApplicationRoute.AssetsToolsets ? authSettings?.codeChallenge : undefined,
+              codeVerifier: view === ApplicationRoute.AssetsToolsets ? authSettings?.codeVerifier : undefined,
             } as ToolsetAuthSettings);
           }}
         />
