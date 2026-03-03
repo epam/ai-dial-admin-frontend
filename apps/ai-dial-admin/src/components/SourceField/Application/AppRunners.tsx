@@ -84,31 +84,33 @@ const AppRunners: FC<Props> = ({ selectedValue, runners, onChangeValue, isEntity
       onChange={(runner) => onChange(runner as string)}
     />
   ) : (
-    <div className="flex gap-2">
-      <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-2')}>
-        <DialLabel label={t(EntitiesI18nKey.AppRunner)} required htmlFor="sourceEntity" />
-        <DialInputPopup
-          emptyValueText={t(EntitiesI18nKey.NoApplicationRunners)}
-          open={isModalOpen}
-          onOpen={onOpenModal}
-          selectedValue={valueTitle}
-        >
-          <SelectAppRunnerModal
-            selectedId={selectedValue}
-            onApply={onChange}
-            isModalOpen={isModalOpen}
-            onClose={onCloseModal}
-            sourceEntities={runners}
+    <div className="flex">
+      <div className="flex gap-2 items-end">
+        <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-2')}>
+          <DialLabel label={t(EntitiesI18nKey.AppRunner)} required htmlFor="sourceEntity" />
+          <DialInputPopup
+            emptyValueText={t(EntitiesI18nKey.NoApplicationRunners)}
+            open={isModalOpen}
+            onOpen={onOpenModal}
+            selectedValue={valueTitle}
+          >
+            <SelectAppRunnerModal
+              selectedId={selectedValue}
+              onApply={onChange}
+              isModalOpen={isModalOpen}
+              onClose={onCloseModal}
+              sourceEntities={runners}
+            />
+          </DialInputPopup>
+        </div>
+        {selectedValue && (
+          <DialNeutralButton
+            label={isMobile ? '' : t(ButtonsI18nKey.OpenAppRunner)}
+            iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
+            onClick={openInNewTab}
           />
-        </DialInputPopup>
+        )}
       </div>
-      {selectedValue && (
-        <DialNeutralButton
-          label={isMobile ? '' : t(ButtonsI18nKey.OpenAppRunner)}
-          iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
-          onClick={openInNewTab}
-        />
-      )}
     </div>
   );
 };
