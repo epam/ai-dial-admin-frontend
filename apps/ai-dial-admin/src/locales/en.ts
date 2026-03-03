@@ -1466,6 +1466,7 @@ export default {
     NameExists: 'A folder with this name already exists in this location',
     ManagePermissions: 'Manage Permissions',
     Preview: 'Preview',
+    FolderTree: 'Folder Tree',
     Notifications: {
       CreateFolder: {
         Title: 'Folder created successfully',
