@@ -78,7 +78,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
 const createTestSuite = (overrides?: Partial<TestSuite>): TestSuite => ({
   id: 'suite-1',
   name: 'Test Suite 1',
-  requestTemplate: { urlTemplate: '' },
+  requestTemplate: { content: { urlTemplate: '' } },
   ...overrides,
 });
 

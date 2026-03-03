@@ -43,11 +43,13 @@ vi.mock('@tabler/icons-react', () => ({
 }));
 
 const createTemplate = (overrides?: Partial<TestSuiteRequestTemplate>): TestSuiteRequestTemplate => ({
-  urlTemplate: '/api/test',
-  body: {},
-  headers: [],
-  queryParams: [],
-  ...overrides,
+  content: {
+    urlTemplate: '/api/test',
+    body: {},
+    headers: [],
+    queryParams: [],
+    ...overrides,
+  },
 });
 
 describe('ParamsTab', () => {
