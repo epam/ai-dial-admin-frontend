@@ -60,7 +60,7 @@ const SchemaTreeItem: FC<TreeItemProps> = ({ node, depth, expandedSet, onToggleE
         <button
           type="button"
           onClick={handleSelect}
-          className="flex-shrink-0 p-1 rounded text-tertiary hover:text-primary hover:bg-layer-3 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="shrink-0 p-1 rounded text-tertiary hover:text-primary hover:bg-layer-3 opacity-0 group-hover:opacity-100 transition-opacity"
         >
           <IconArrowRight size={14} stroke={2} />
         </button>

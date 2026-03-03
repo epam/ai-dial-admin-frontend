@@ -56,7 +56,7 @@ const TelemetryGrid: FC<Props> = ({ columnDefs, title, getData, query, refreshTi
   }, [query, getData, refreshTime]);
 
   return (
-    <div className="flex flex-col w-full rounded-lg border border-primary p-4 h-full max-h-[580px]">
+    <div className="flex flex-col size-full rounded-lg border border-primary p-4 max-h-[580px]">
       <div className="mb-4 flex flex-row items-center justify-between">
         <h3>{title}</h3>
       </div>

@@ -33,7 +33,7 @@ const RulesItemBody: FC<Props> = ({
       <div className="relative flex flex-row">
         <div
           style={{ height: `calc(100% - ${isLast ? 19 : lastValueHeight / 2}px)` }}
-          className="w-[1px] ml-1 bg-accent-primary"
+          className="w-[px] ml-1 bg-accent-primary"
         ></div>
         <RulesValueList
           rules={rules}

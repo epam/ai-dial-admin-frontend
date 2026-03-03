@@ -65,6 +65,7 @@ export default [
       '@next/next/no-html-link-for-pages': 'off',
       'react-hooks/exhaustive-deps': 'error',
       'import/no-unresolved': 'off',
+      'import/no-duplicates': 'error',
       'import/named': 'off',
       'tailwindcss/no-custom-classname': 'off',
       'tailwindcss/classnames-order': 'off',

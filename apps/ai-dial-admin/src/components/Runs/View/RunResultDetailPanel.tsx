@@ -59,7 +59,7 @@ const RunResultDetailPanel: FC<Props> = ({ result, onClose }) => {
   }, []);
 
   return (
-    <div className="flex flex-col h-full w-full">
+    <div className="flex flex-col size-full">
       <div className="flex items-start justify-between">
         <h1 className="truncate">{title}</h1>
         <DialCloseButton onClose={onClose} />
