@@ -48,11 +48,11 @@ const MethodInfo: FC<Props> = ({ testSuite, onChangeTestSuite, selectedAppType }
   const [isMethodModalOpen, setIsMethodModalOpen] = useState(false);
 
   const inputSchema = useMemo(() => {
-    return convertSchemaToTable(testSuite?.endpointRef?.requestBodySchema as unknown as DialScheme);
-  }, [testSuite?.endpointRef?.requestBodySchema]);
+    return convertSchemaToTable(testSuite?.endpointRef?.requestBodySchema?.schema);
+  }, [testSuite?.endpointRef?.requestBodySchema?.schema]);
 
   const outputSchema = useMemo(() => {
-    return convertSchemaToTable(testSuite?.endpointRef?.responseBodySchema as unknown as DialScheme);
+    return convertSchemaToTable(testSuite?.endpointRef?.responseBodySchema as DialScheme);
   }, [testSuite?.endpointRef?.responseBodySchema]);
 
   const parameters = useMemo(() => {
