@@ -42,14 +42,12 @@ vi.mock('@tabler/icons-react', () => ({
   IconPlus: () => <svg data-icon="plus" />,
 }));
 
-const createTemplate = (overrides?: Partial<TestSuiteRequestTemplateBody>): TestSuiteRequestTemplate => ({
-  content: {
-    urlTemplate: '/api/test',
-    body: {},
-    headers: [],
-    queryParams: [],
-    ...overrides,
-  },
+const createTemplate = (overrides?: Partial<TestSuiteRequestTemplate>): TestSuiteRequestTemplate => ({
+  urlTemplate: '/api/test',
+  body: {},
+  headers: [],
+  queryParams: [],
+  ...overrides,
 });
 
 describe('ParamsTab', () => {
@@ -183,7 +181,7 @@ describe('ParamsTab', () => {
     fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.Add }));
 
     expect(mockChangeTemplate).toHaveBeenCalledTimes(1);
-    const updatedTemplate = mockChangeTemplate.mock.calls[0][0].content;
+    const updatedTemplate = mockChangeTemplate.mock.calls[0][0];
     expect(updatedTemplate.queryParams).toHaveLength(2);
     expect(updatedTemplate.queryParams[1]).toEqual({ key: '', value: '' });
   });
@@ -211,14 +209,14 @@ describe('ParamsTab', () => {
 
     fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.Add }));
 
-    const updatedTemplate = mockChangeTemplate.mock.calls[0][0].content;
+    const updatedTemplate = mockChangeTemplate.mock.calls[0][0];
     expect(updatedTemplate.headers[0]).toEqual({ key: 'auth', value: 'token' });
   });
 
   test('Add button preserves other template fields', () => {
     const template = createTemplate({
       urlTemplate: '/my-url',
-      body: { data: true },
+      body: { content: { data: true } },
       queryParams: [],
     });
 
@@ -242,9 +240,9 @@ describe('ParamsTab', () => {
 
     fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.Add }));
 
-    const updatedTemplate = mockChangeTemplate.mock.calls[0][0].content;
+    const updatedTemplate = mockChangeTemplate.mock.calls[0][0];
     expect(updatedTemplate.urlTemplate).toBe('/my-url');
-    expect(updatedTemplate.body).toEqual({ data: true });
+    expect(updatedTemplate.body.content).toEqual({ data: true });
   });
 
   test('onGridReady updates grid options with columnDefs and rowData', () => {
@@ -307,7 +305,7 @@ describe('ParamsTab', () => {
     onChangeValue('new-value', { key: 'name', value: 'old' }, 'value', 0);
 
     expect(mockChangeTemplate).toHaveBeenCalledTimes(1);
-    const updatedTemplate = mockChangeTemplate.mock.calls[0][0].content;
+    const updatedTemplate = mockChangeTemplate.mock.calls[0][0];
     expect(updatedTemplate.queryParams[0].value).toBe('new-value');
   });
 
@@ -372,7 +370,7 @@ describe('ParamsTab', () => {
     );
 
     const wrapper = container.firstChild as HTMLElement;
-    expect(wrapper).toHaveClass('flex', 'flex-col', 'gap-3', 'w-full', 'h-full');
+    expect(wrapper).toHaveClass('flex', 'flex-col', 'gap-3', 'size-full');
   });
 
   test('heading shows correct count for multiple params', () => {
