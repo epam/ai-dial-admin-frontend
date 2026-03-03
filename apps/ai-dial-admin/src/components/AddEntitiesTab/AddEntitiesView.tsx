@@ -126,7 +126,7 @@ const AddEntitiesView: FC<Props> = ({
 
   return (
     <>
-      <div className="h-full flex flex-col w-full">
+      <div className="size-full flex flex-col">
         <div className="mb-4 flex flex-row items-center justify-between">
           <h1>
             {viewTitle || t(TabsI18nKey.Entities)}: {data.length}

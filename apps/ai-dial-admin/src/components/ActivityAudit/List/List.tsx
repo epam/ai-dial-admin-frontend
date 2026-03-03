@@ -312,7 +312,7 @@ const ActivityAuditList: FC<Props> = ({
                 <span className="important-text-part mx-1">{selectedActivity?.activityType}</span>
                 <span>{t(RollbackI18nKey.ConfirmRollbackDescriptionPart2)}</span>
                 <DialTooltip tooltip={selectedActivity?.resourceId || ''} triggerClassName="flex-1">
-                  <span className="important-text-part mx-1 my-1">{selectedActivity?.resourceId}</span>
+                  <span className="important-text-part m-1">{selectedActivity?.resourceId}</span>
                 </DialTooltip>
                 <span>{t(RollbackI18nKey.ConfirmRollbackDescriptionPart3)}</span>
                 <span className="important-text-part">

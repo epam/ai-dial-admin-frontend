@@ -111,7 +111,7 @@ const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, o
             }}
           />
         )}
-        <div className="flex flex-row items-center w-full mt-4 mb-4 justify-between h-[40px]">
+        <div className="flex flex-row items-center w-full my-4 justify-between h-[40px]">
           <h1> {t(TabsI18nKey.Roles)}</h1>
           {!route.isPublic && !readonly && (
             <DialNeutralButton
