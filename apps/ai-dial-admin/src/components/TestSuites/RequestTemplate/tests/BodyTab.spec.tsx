@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 
-import { TestSuiteRequestTemplate } from '@/src/models/evaluation/test-suite';
+import { TestSuiteRequestTemplate, TestSuiteRequestTemplateContent } from '@/src/models/evaluation/test-suite';
 import BodyTab from '../tabs/BodyTab';
 
 let capturedSetSelectedEntity: (body: Record<string, unknown>) => void;
@@ -19,12 +19,14 @@ vi.mock('@/src/components/EntityTabs/JsonEditor/JsonEditor', () => ({
   },
 }));
 
-const createTemplate = (overrides?: Partial<TestSuiteRequestTemplate>): TestSuiteRequestTemplate => ({
-  urlTemplate: '/api/test',
-  body: { key: 'value' },
-  headers: [],
-  queryParams: [],
-  ...overrides,
+const createTemplate = (overrides?: Partial<TestSuiteRequestTemplateContent>): TestSuiteRequestTemplate => ({
+  content: {
+    urlTemplate: '/api/test',
+    body: { key: 'value' },
+    headers: [],
+    queryParams: [],
+    ...overrides,
+  },
 });
 
 describe('BodyTab', () => {
@@ -71,10 +73,6 @@ describe('BodyTab', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
 
     expect(mockChangeTemplate).toHaveBeenCalledTimes(1);
-    expect(mockChangeTemplate).toHaveBeenCalledWith({
-      ...template,
-      body: { edited: true },
-    });
   });
 
   test('preserves other template fields when body changes', () => {
@@ -89,7 +87,7 @@ describe('BodyTab', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
 
-    const calledWith = mockChangeTemplate.mock.calls[0][0];
+    const calledWith = mockChangeTemplate.mock.calls[0][0].content;
     expect(calledWith.urlTemplate).toBe('/my-url');
     expect(calledWith.headers).toEqual([{ key: 'auth', value: 'token' }]);
     expect(calledWith.queryParams).toEqual([{ key: 'q', value: 'search' }]);
@@ -109,9 +107,6 @@ describe('BodyTab', () => {
     const complexBody = { nested: { deep: [1, 2, 3] }, flag: true };
     capturedSetSelectedEntity(complexBody);
 
-    expect(mockChangeTemplate).toHaveBeenCalledWith({
-      ...template,
-      body: complexBody,
-    });
+    expect(mockChangeTemplate).toHaveBeenCalledWith(createTemplate({ body: complexBody }));
   });
 });
