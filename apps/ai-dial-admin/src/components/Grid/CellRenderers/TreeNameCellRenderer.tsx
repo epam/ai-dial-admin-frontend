@@ -37,7 +37,7 @@ const TreeNameCellRenderer = ({ data, onToggleExpand, onChangeName, setValue }: 
             <IconChevronRight size={14} className="text-secondary" />
           )
         ) : (
-          <span className="w-1.5 h-1.5 rounded-full bg-tertiary" />
+          <span className="size-1.5 rounded-full bg-tertiary" />
         )}
       </div>
       <input

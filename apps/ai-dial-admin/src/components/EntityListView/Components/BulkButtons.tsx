@@ -47,11 +47,11 @@ const BulkButtons: FC<Props> = ({
   };
 
   return (
-    <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 px-4 py-2 bg-layer-0 flex flex-row gap-4 items-center">
+    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 px-4 py-2 bg-layer-0 flex flex-row gap-4 items-center">
       <div className="text-secondary">
         {itemsCount} {t(BasicI18nKey.Selected)}
       </div>
-      <div className="bg-layer-4 h-5 w-[1px]"></div>
+      <div className="bg-layer-4 h-5 w-[px]"></div>
       <DialNeutralButton
         label={t(ButtonsI18nKey.Export)}
         iconBefore={<IconFileArrowRight {...BASE_BUTTON_ICON_PROPS} />}

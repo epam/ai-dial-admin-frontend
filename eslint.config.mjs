@@ -70,6 +70,7 @@ export default [
       'import/named': 'off',
       'tailwindcss/no-custom-classname': 'off',
       'tailwindcss/classnames-order': 'off',
+      'tailwindcss/enforces-shorthand': 'error',
       '@nx/enforce-module-boundaries': [
         'error',
         {
