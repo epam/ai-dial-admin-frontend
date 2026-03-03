@@ -107,7 +107,7 @@ const AuthTypeSection: FC<Props> = ({
           )}
 
           {selectedAuthType === AuthType.With_config_and_login && config.id === ToolsetAuthType.OAUTH && (
-            <OAuthSection disabled={disabled} authSettings={authSettings} onChange={onChange} />
+            <OAuthSection disabled={disabled} authSettings={authSettings} onChange={onChange} view={view} />
           )}
         </div>
       )}
