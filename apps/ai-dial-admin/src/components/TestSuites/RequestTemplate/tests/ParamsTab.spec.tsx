@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { TestSuiteRequestTemplate } from '@/src/models/evaluation/test-suite';
+import { TestSuiteRequestTemplate, TestSuiteRequestTemplateContent } from '@/src/models/evaluation/test-suite';
 import ParamsTab from '../tabs/ParamsTab';
 
 let capturedOnGridReady: (event: any) => void;
@@ -42,7 +42,7 @@ vi.mock('@tabler/icons-react', () => ({
   IconPlus: () => <svg data-icon="plus" />,
 }));
 
-const createTemplate = (overrides?: Partial<TestSuiteRequestTemplate>): TestSuiteRequestTemplate => ({
+const createTemplate = (overrides?: Partial<TestSuiteRequestTemplateContent>): TestSuiteRequestTemplate => ({
   content: {
     urlTemplate: '/api/test',
     body: {},
@@ -183,7 +183,7 @@ describe('ParamsTab', () => {
     fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.Add }));
 
     expect(mockChangeTemplate).toHaveBeenCalledTimes(1);
-    const updatedTemplate = mockChangeTemplate.mock.calls[0][0];
+    const updatedTemplate = mockChangeTemplate.mock.calls[0][0].content;
     expect(updatedTemplate.queryParams).toHaveLength(2);
     expect(updatedTemplate.queryParams[1]).toEqual({ key: '', value: '' });
   });
@@ -211,7 +211,7 @@ describe('ParamsTab', () => {
 
     fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.Add }));
 
-    const updatedTemplate = mockChangeTemplate.mock.calls[0][0];
+    const updatedTemplate = mockChangeTemplate.mock.calls[0][0].content;
     expect(updatedTemplate.headers[0]).toEqual({ key: 'auth', value: 'token' });
   });
 
@@ -242,7 +242,7 @@ describe('ParamsTab', () => {
 
     fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.Add }));
 
-    const updatedTemplate = mockChangeTemplate.mock.calls[0][0];
+    const updatedTemplate = mockChangeTemplate.mock.calls[0][0].content;
     expect(updatedTemplate.urlTemplate).toBe('/my-url');
     expect(updatedTemplate.body).toEqual({ data: true });
   });
@@ -307,7 +307,7 @@ describe('ParamsTab', () => {
     onChangeValue('new-value', { key: 'name', value: 'old' }, 'value', 0);
 
     expect(mockChangeTemplate).toHaveBeenCalledTimes(1);
-    const updatedTemplate = mockChangeTemplate.mock.calls[0][0];
+    const updatedTemplate = mockChangeTemplate.mock.calls[0][0].content;
     expect(updatedTemplate.queryParams[0].value).toBe('new-value');
   });
 
