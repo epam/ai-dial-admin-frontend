@@ -42,12 +42,16 @@ export interface TestSuiteEndpointRef {
 }
 
 export interface TestSuiteRequestTemplate {
+  contentType?: string;
+  content?: TestSuiteRequestTemplateContent;
+}
+
+export interface TestSuiteRequestTemplateContent {
   urlTemplate?: string;
   body?: Record<string, unknown>;
   headers?: TestSuiteRequestTemplateParam[];
   queryParams?: TestSuiteRequestTemplateParam[];
 }
-
 export interface TestSuiteRequestTemplateParam {
   key: string;
   value: string;

@@ -15,6 +15,7 @@ import { Deployment } from '@/src/models/evaluation/deployment';
 import { TestSuite, TestSuiteEndpointRef } from '@/src/models/evaluation/test-suite';
 import MethodInfo from './MethodInfo';
 import MethodItem from './MethodItem';
+import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
 
 interface Props {
   testSuite: TestSuite;
@@ -45,8 +46,11 @@ const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange, isCreate
           ...prev,
           endpointRef: CHAT_COMPLETION_METHOD,
           requestTemplate: {
-            urlTemplate: CHAT_COMPLETION_RELATIVE_URL,
-            body: CHAT_COMPLETION_BODY,
+            contentType: APPLICATION_JSON_TYPE,
+            content: {
+              urlTemplate: CHAT_COMPLETION_RELATIVE_URL,
+              body: CHAT_COMPLETION_BODY,
+            },
           },
         }));
       } else {
@@ -57,7 +61,10 @@ const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange, isCreate
             relativeUrlPattern: methods[index - 1].relativeUrlPattern,
           },
           requestTemplate: {
-            urlTemplate: methods[index - 1].relativeUrlPattern,
+            contentType: APPLICATION_JSON_TYPE,
+            content: {
+              urlTemplate: methods[index - 1].relativeUrlPattern,
+            },
           },
         }));
       }

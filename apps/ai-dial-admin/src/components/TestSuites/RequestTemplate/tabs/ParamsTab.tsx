@@ -10,12 +10,16 @@ import { getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import { getParamsColumns } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { TestSuiteRequestTemplate, TestSuiteRequestTemplateParam } from '@/src/models/evaluation/test-suite';
+import {
+  TestSuiteRequestTemplate,
+  TestSuiteRequestTemplateContent,
+  TestSuiteRequestTemplateParam,
+} from '@/src/models/evaluation/test-suite';
 
 interface Props {
   template: TestSuiteRequestTemplate;
   changeTemplate: (template: TestSuiteRequestTemplate) => void;
-  field: keyof Omit<TestSuiteRequestTemplate, 'urlTemplate' | 'body'>;
+  field: keyof Omit<TestSuiteRequestTemplateContent, 'urlTemplate' | 'body'>;
   title: string;
   emptyDataTitle: string;
 }
@@ -23,14 +27,14 @@ const ParamsTab: FC<Props> = ({ template, changeTemplate, field, title, emptyDat
   const t = useI18n();
   const [visibleIndex, setVisibleIndex] = useState<number | undefined>();
   const gridApi = useRef<GridApi>(null);
-  const configRef = useRef(template[field] || []);
+  const configRef = useRef(template.content?.[field] || []);
 
   const onAddParam = useCallback(() => {
     const fieldData = [...configRef.current];
     const lastIndex = gridApi.current?.getLastDisplayedRowIndex() as number;
     setVisibleIndex(lastIndex + 1);
     fieldData.push({ key: '', value: '' });
-    changeTemplate({ ...template, [field]: fieldData });
+    changeTemplate({ ...template, content: { ...template.content, [field]: fieldData } });
   }, [changeTemplate, template, field]);
 
   const onRemoveParam = useCallback(
@@ -39,7 +43,7 @@ const ParamsTab: FC<Props> = ({ template, changeTemplate, field, title, emptyDat
         const fieldData = [...configRef.current];
         fieldData.splice(index, 1);
         setVisibleIndex(index - 1);
-        changeTemplate({ ...template, [field]: fieldData });
+        changeTemplate({ ...template, content: { ...template.content, [field]: fieldData } });
       }
     },
     [template, changeTemplate, field],
@@ -50,7 +54,7 @@ const ParamsTab: FC<Props> = ({ template, changeTemplate, field, title, emptyDat
       if (rowIndex != null) {
         const fieldData = [...configRef.current];
         fieldData[rowIndex][key as keyof TestSuiteRequestTemplateParam] = value;
-        changeTemplate({ ...template, [field]: fieldData });
+        changeTemplate({ ...template, content: { ...template.content, [field]: fieldData } });
       }
     },
     [template, changeTemplate, field],
@@ -60,7 +64,7 @@ const ParamsTab: FC<Props> = ({ template, changeTemplate, field, title, emptyDat
     ...getParamsColumns(onChangeValue),
     ONE_ACTION_COLUMN(getRemoveOperation(onRemoveParam, void 0, 'text-error w-4 h-4')),
   ];
-  const rowData = template[field] || [];
+  const rowData = template.content?.[field] || [];
 
   const onGridReady = (event: GridReadyEvent) => {
     gridApi.current = event.api;
@@ -72,30 +76,30 @@ const ParamsTab: FC<Props> = ({ template, changeTemplate, field, title, emptyDat
   };
 
   useEffect(() => {
-    configRef.current = template[field] || [];
+    configRef.current = template.content?.[field] || [];
   }, [field, template]);
 
   useEffect(() => {
     gridApi.current?.updateGridOptions({
-      rowData: template[field],
+      rowData: template.content?.[field],
     });
     if (visibleIndex != null) {
       gridApi.current?.ensureIndexVisible(visibleIndex, 'bottom');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [template[field]?.length, gridApi]);
+  }, [template.content?.[field]?.length, gridApi]);
 
   return (
     <div className="flex flex-col gap-3 w-full h-full">
       <div className="flex flex-row justify-between items-center">
         <h3>
-          {title}: {template[field]?.length || 0}
+          {title}: {template.content?.[field]?.length || 0}
         </h3>
         <DialGhostButton iconBefore={<IconPlus />} label={t(ButtonsI18nKey.Add)} onClick={() => onAddParam()} />
       </div>
       <div className="flex-1 min-h-0 overflow-auto">
         <GridView
-          getIsEmptyData={() => !template[field]?.length}
+          getIsEmptyData={() => !template.content?.[field]?.length}
           emptyDataProps={{ title: emptyDataTitle }}
           onGridReady={onGridReady}
         />
