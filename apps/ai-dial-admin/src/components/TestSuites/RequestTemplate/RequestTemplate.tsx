@@ -55,7 +55,7 @@ const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
   }, []);
 
   const urlTemplateError = useMemo(() => {
-    const urlTemplate = testSuite.requestTemplate?.urlTemplate;
+    const urlTemplate = testSuite.requestTemplate?.content?.urlTemplate;
     const relativeUrlPattern = testSuite.endpointRef?.relativeUrlPattern;
 
     if (!urlTemplate || !relativeUrlPattern) {
@@ -74,7 +74,7 @@ const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
       }
     }
     return undefined;
-  }, [testSuite.endpointRef?.relativeUrlPattern, testSuite.requestTemplate?.urlTemplate]);
+  }, [testSuite.endpointRef?.relativeUrlPattern, testSuite.requestTemplate?.content?.urlTemplate]);
 
   useEffect(() => {
     dispatch({ type: ValidationActionType.SetField, field: 'urlTemplate', isValid: !urlTemplateError });
@@ -97,9 +97,15 @@ const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
             )}
             <DialInput
               id="urlTemplate"
-              value={testSuite.requestTemplate?.urlTemplate || ''}
+              value={testSuite.requestTemplate?.content?.urlTemplate || ''}
               onChange={(urlTemplate) =>
-                onChangeTestSuite({ ...testSuite, requestTemplate: { ...testSuite.requestTemplate, urlTemplate } })
+                onChangeTestSuite({
+                  ...testSuite,
+                  requestTemplate: {
+                    ...testSuite.requestTemplate,
+                    content: { ...testSuite.requestTemplate?.content, urlTemplate },
+                  },
+                })
               }
               containerClassName="w-[640px]"
               invalid={!!urlTemplateError}

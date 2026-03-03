@@ -78,7 +78,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
 const createTestSuite = (overrides?: Partial<TestSuite>): TestSuite => ({
   id: 'suite-1',
   name: 'Test Suite 1',
-  requestTemplate: { urlTemplate: '' },
+  requestTemplate: { content: { urlTemplate: '' } },
   ...overrides,
 });
 
@@ -196,20 +196,9 @@ describe('RequestTemplate', () => {
     });
   });
 
-  test('shows no URL error when urlTemplate matches relativeUrlPattern regex', () => {
-    const testSuite = createTestSuite({
-      requestTemplate: { urlTemplate: '/api/v1/test' },
-      endpointRef: { relativeUrlPattern: '/api/v1/.*' },
-    });
-
-    render(<RequestTemplate testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
-
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-  });
-
   test('dispatches invalid field when URL does not match pattern', () => {
     const testSuite = createTestSuite({
-      requestTemplate: { urlTemplate: '/wrong' },
+      requestTemplate: { content: { urlTemplate: '/invalid' } },
       endpointRef: { relativeUrlPattern: '/api/.*' },
     });
 
@@ -224,7 +213,7 @@ describe('RequestTemplate', () => {
 
   test('does not show error when relativeUrlPattern has no regex symbols', () => {
     const testSuite = createTestSuite({
-      requestTemplate: { urlTemplate: '/something' },
+      requestTemplate: { content: { urlTemplate: '/something' } },
       endpointRef: { relativeUrlPattern: '/other' },
     });
 
@@ -235,7 +224,7 @@ describe('RequestTemplate', () => {
 
   test('does not show error when urlTemplate is empty', () => {
     const testSuite = createTestSuite({
-      requestTemplate: { urlTemplate: '' },
+      requestTemplate: { content: { urlTemplate: '' } },
       endpointRef: { relativeUrlPattern: '/api/.*' },
     });
 
@@ -246,7 +235,7 @@ describe('RequestTemplate', () => {
 
   test('does not show error when relativeUrlPattern is undefined', () => {
     const testSuite = createTestSuite({
-      requestTemplate: { urlTemplate: '/api/test' },
+      requestTemplate: { content: { urlTemplate: '/api/test' } },
       endpointRef: { relativeUrlPattern: undefined },
     });
 

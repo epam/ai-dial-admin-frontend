@@ -37,17 +37,26 @@ export interface TestSuiteEndpointRef {
   method?: string;
   relativeUrlPattern?: string;
   parameters?: Record<string, unknown>[];
-  requestBodySchema?: DialScheme;
+  requestBodySchema?: RequestBodySchema;
   responseBodySchema?: DialScheme;
 }
 
+export interface RequestBodySchema {
+  contentType: string;
+  schema: DialScheme;
+}
+
 export interface TestSuiteRequestTemplate {
+  contentType?: string;
+  content?: TestSuiteRequestTemplateContent;
+}
+
+export interface TestSuiteRequestTemplateContent {
   urlTemplate?: string;
   body?: Record<string, unknown>;
   headers?: TestSuiteRequestTemplateParam[];
   queryParams?: TestSuiteRequestTemplateParam[];
 }
-
 export interface TestSuiteRequestTemplateParam {
   key: string;
   value: string;

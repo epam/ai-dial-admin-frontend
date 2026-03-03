@@ -11,6 +11,8 @@ import { ResponseColumn, TestSuite } from '@/src/models/evaluation/test-suite';
 import { EntityViewTab, getEndpointSchemaTabs } from '@/src/utils/tabs/utils';
 import Columns from './Columns/Columns';
 import SchemaGrid from './Schema/SchemaGrid';
+import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
+import { DialScheme } from '@/src/models/dial/scheme';
 
 interface Props {
   testSuite: TestSuite;
@@ -34,16 +36,20 @@ const EndpointSchema: FC<Props> = ({ testSuite, onChangeTestSuite, isSkipRefresh
 
   const currentSchema =
     activeSchemaTab === EntityViewTab.RequestSchema
-      ? (testSuite.endpointRef?.requestBodySchema as unknown as JSONSchema7 | undefined)
+      ? (testSuite.endpointRef?.requestBodySchema?.schema as unknown as JSONSchema7 | undefined)
       : (testSuite.endpointRef?.responseBodySchema as unknown as JSONSchema7 | undefined);
 
   const onChangeSchema = useCallback(
     (schema: JSONSchema7, isSkipRefresh?: boolean) => {
       const endpointRef = { ...testSuite.endpointRef };
       if (activeSchemaTab === EntityViewTab.RequestSchema) {
-        endpointRef.requestBodySchema = schema as unknown as typeof endpointRef.requestBodySchema;
+        endpointRef.requestBodySchema = {
+          ...endpointRef.requestBodySchema,
+          contentType: endpointRef.requestBodySchema?.contentType || APPLICATION_JSON_TYPE,
+          schema: schema as unknown as DialScheme,
+        };
       } else {
-        endpointRef.responseBodySchema = schema as unknown as typeof endpointRef.responseBodySchema;
+        endpointRef.responseBodySchema = schema as typeof endpointRef.responseBodySchema;
       }
       onChangeTestSuite({ ...testSuite, endpointRef }, isSkipRefresh);
     },

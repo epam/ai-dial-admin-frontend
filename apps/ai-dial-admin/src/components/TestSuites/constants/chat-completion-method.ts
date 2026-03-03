@@ -28,265 +28,269 @@ export const CHAT_COMPLETION_METHOD = {
     },
   ],
   requestBodySchema: {
-    type: 'object',
-    properties: {
-      model: {
-        type: 'string',
-        description: 'The name of the model to use.',
-      },
-      messages: {
-        type: 'array',
-        minItems: 1,
-        description: 'A list of messages comprising the conversation so far.',
-        items: {
-          oneOf: [
-            {
-              type: 'object',
-              title: 'Developer message',
-              description: 'Developer-provided instructions that the model should follow.',
-              properties: {
-                content: { oneOf: [{ type: 'string' }] },
-                custom_fields: {
-                  type: 'object',
-                  properties: {
-                    cache_breakpoint: {
-                      type: 'object',
-                      properties: {
-                        expire_at: { type: 'string' },
-                      },
-                    },
-                  },
-                },
-                role: { type: 'string', enum: ['developer'] },
-                name: { type: 'string' },
-              },
-              required: ['content', 'role'],
-            },
-            {
-              type: 'object',
-              title: 'System message',
-              properties: {
-                content: { oneOf: [{ type: 'string' }] },
-                custom_fields: { type: 'object' },
-                role: { type: 'string', enum: ['system'] },
-                name: { type: 'string' },
-              },
-              required: ['content', 'role'],
-            },
-            {
-              type: 'object',
-              title: 'User message',
-              properties: {
-                content: { oneOf: [{ type: 'string' }] },
-                custom_content: {
-                  type: 'object',
-                  properties: {
-                    attachments: {
-                      type: 'array',
-                      items: {
-                        type: 'object',
-                        properties: {
-                          type: { type: 'string', default: 'text/markdown' },
-                          title: { type: 'string' },
-                          data: { type: 'string' },
-                          url: { type: 'string' },
-                          reference_type: { type: 'string' },
-                          reference_url: { type: 'string' },
-                        },
-                      },
-                    },
-                    form_value: { type: 'object', additionalProperties: true },
-                  },
-                },
-                custom_fields: { type: 'object' },
-                role: { type: 'string', enum: ['user'] },
-                name: { type: 'string' },
-              },
-              required: ['content', 'role'],
-            },
-            {
-              type: 'object',
-              title: 'Assistant message',
-              properties: {
-                content: { type: 'string' },
-                custom_content: {
-                  type: 'object',
-                  properties: {
-                    state: { type: 'object', additionalProperties: true },
-                    attachments: {
-                      type: 'array',
-                      items: { type: 'object' },
-                    },
-                    form_schema: { type: 'object', additionalProperties: true },
-                  },
-                },
-                custom_fields: { type: 'object' },
-                refusal: { type: 'string' },
-                role: { type: 'string', enum: ['assistant'] },
-                name: { type: 'string' },
-                tool_calls: {
-                  type: 'array',
-                  items: {
+    contentType: 'application/json',
+    schema: {
+      type: 'object',
+      properties: {
+        model: {
+          type: 'string',
+          description: 'The name of the model to use.',
+        },
+        messages: {
+          type: 'array',
+          minItems: 1,
+          description: 'A list of messages comprising the conversation so far.',
+          items: {
+            oneOf: [
+              {
+                type: 'object',
+                title: 'Developer message',
+                description: 'Developer-provided instructions that the model should follow.',
+                properties: {
+                  content: { oneOf: [{ type: 'string' }] },
+                  custom_fields: {
                     type: 'object',
                     properties: {
-                      id: { type: 'string' },
-                      type: { type: 'string', enum: ['function'] },
-                      function: {
+                      cache_breakpoint: {
                         type: 'object',
                         properties: {
-                          name: { type: 'string' },
-                          arguments: { type: 'string' },
+                          expire_at: { type: 'string' },
                         },
-                        required: ['name', 'arguments'],
                       },
                     },
-                    required: ['id', 'type', 'function'],
+                  },
+                  role: { type: 'string', enum: ['developer'] },
+                  name: { type: 'string' },
+                },
+                required: ['content', 'role'],
+              },
+              {
+                type: 'object',
+                title: 'System message',
+                properties: {
+                  content: { oneOf: [{ type: 'string' }] },
+                  custom_fields: { type: 'object' },
+                  role: { type: 'string', enum: ['system'] },
+                  name: { type: 'string' },
+                },
+                required: ['content', 'role'],
+              },
+              {
+                type: 'object',
+                title: 'User message',
+                properties: {
+                  content: { oneOf: [{ type: 'string' }] },
+                  custom_content: {
+                    type: 'object',
+                    properties: {
+                      attachments: {
+                        type: 'array',
+                        items: {
+                          type: 'object',
+                          properties: {
+                            type: { type: 'string', default: 'text/markdown' },
+                            title: { type: 'string' },
+                            data: { type: 'string' },
+                            url: { type: 'string' },
+                            reference_type: { type: 'string' },
+                            reference_url: { type: 'string' },
+                          },
+                        },
+                      },
+                      form_value: { type: 'object', additionalProperties: true },
+                    },
+                  },
+                  custom_fields: { type: 'object' },
+                  role: { type: 'string', enum: ['user'] },
+                  name: { type: 'string' },
+                },
+                required: ['content', 'role'],
+              },
+              {
+                type: 'object',
+                title: 'Assistant message',
+                properties: {
+                  content: { type: 'string' },
+                  custom_content: {
+                    type: 'object',
+                    properties: {
+                      state: { type: 'object', additionalProperties: true },
+                      attachments: {
+                        type: 'array',
+                        items: { type: 'object' },
+                      },
+                      form_schema: { type: 'object', additionalProperties: true },
+                    },
+                  },
+                  custom_fields: { type: 'object' },
+                  refusal: { type: 'string' },
+                  role: { type: 'string', enum: ['assistant'] },
+                  name: { type: 'string' },
+                  tool_calls: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        id: { type: 'string' },
+                        type: { type: 'string', enum: ['function'] },
+                        function: {
+                          type: 'object',
+                          properties: {
+                            name: { type: 'string' },
+                            arguments: { type: 'string' },
+                          },
+                          required: ['name', 'arguments'],
+                        },
+                      },
+                      required: ['id', 'type', 'function'],
+                    },
+                  },
+                  function_call: {
+                    type: 'object',
+                    properties: { arguments: {} },
                   },
                 },
-                function_call: {
-                  type: 'object',
-                  properties: { arguments: {} },
+                required: ['role'],
+              },
+              {
+                type: 'object',
+                title: 'Tool message',
+                properties: {
+                  role: { type: 'string', enum: ['tool'] },
+                  content: { oneOf: [{ type: 'string' }] },
+                  custom_fields: { type: 'object' },
+                  tool_call_id: { type: 'string' },
                 },
+                required: ['role', 'content', 'tool_call_id'],
               },
-              required: ['role'],
-            },
-            {
-              type: 'object',
-              title: 'Tool message',
-              properties: {
-                role: { type: 'string', enum: ['tool'] },
-                content: { oneOf: [{ type: 'string' }] },
-                custom_fields: { type: 'object' },
-                tool_call_id: { type: 'string' },
+              {
+                type: 'object',
+                title: 'Function message',
+                properties: {
+                  role: { type: 'string', enum: ['function'] },
+                  content: { type: 'string' },
+                  custom_fields: { type: 'object' },
+                  name: { type: 'string' },
+                },
+                required: ['role', 'content', 'name'],
               },
-              required: ['role', 'content', 'tool_call_id'],
+            ],
+          },
+        },
+        functions: {
+          description: 'Deprecated in favor of `tools`. A list of functions the model may generate JSON inputs for.',
+          type: 'array',
+          minItems: 1,
+          maxItems: 128,
+          items: {
+            type: 'object',
+            properties: {
+              description: { type: 'string' },
+              name: { type: 'string' },
+              parameters: { type: 'object', additionalProperties: true },
+              strict: { type: 'boolean', default: false },
             },
-            {
-              type: 'object',
-              title: 'Function message',
-              properties: {
-                role: { type: 'string', enum: ['function'] },
-                content: { type: 'string' },
-                custom_fields: { type: 'object' },
-                name: { type: 'string' },
-              },
-              required: ['role', 'content', 'name'],
-            },
+            required: ['name'],
+          },
+        },
+        function_call: {
+          description:
+            'Deprecated in favor of `tool_choice`. Controls which (if any) `function` is called by the model.',
+          oneOf: [
+            { type: 'string', enum: ['none', 'auto'] },
+            { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] },
           ],
         },
-      },
-      functions: {
-        description: 'Deprecated in favor of `tools`. A list of functions the model may generate JSON inputs for.',
-        type: 'array',
-        minItems: 1,
-        maxItems: 128,
-        items: {
-          type: 'object',
-          properties: {
-            description: { type: 'string' },
-            name: { type: 'string' },
-            parameters: { type: 'object', additionalProperties: true },
-            strict: { type: 'boolean', default: false },
-          },
-          required: ['name'],
-        },
-      },
-      function_call: {
-        description: 'Deprecated in favor of `tool_choice`. Controls which (if any) `function` is called by the model.',
-        oneOf: [
-          { type: 'string', enum: ['none', 'auto'] },
-          { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] },
-        ],
-      },
-      tools: {
-        type: 'array',
-        description: 'A list of tools the model may call.',
-        items: {
-          type: 'object',
-          properties: {
-            type: { type: 'string', enum: ['function'] },
-            function: {
-              type: 'object',
-              properties: {
-                description: { type: 'string' },
-                name: { type: 'string' },
-                parameters: { type: 'object', additionalProperties: true },
-                strict: { type: 'boolean', default: false },
-              },
-              required: ['name'],
-            },
-            custom_fields: { type: 'object' },
-          },
-          required: ['type', 'function'],
-        },
-      },
-      tool_choice: {
-        oneOf: [
-          { type: 'string', enum: ['none', 'auto', 'required'] },
-          {
+        tools: {
+          type: 'array',
+          description: 'A list of tools the model may call.',
+          items: {
             type: 'object',
             properties: {
               type: { type: 'string', enum: ['function'] },
-              function: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] },
+              function: {
+                type: 'object',
+                properties: {
+                  description: { type: 'string' },
+                  name: { type: 'string' },
+                  parameters: { type: 'object', additionalProperties: true },
+                  strict: { type: 'boolean', default: false },
+                },
+                required: ['name'],
+              },
+              custom_fields: { type: 'object' },
             },
             required: ['type', 'function'],
           },
-        ],
-      },
-      addons: {
-        type: 'array',
-        items: {
+        },
+        tool_choice: {
           oneOf: [
-            { type: 'object', properties: { name: { type: 'string' } } },
-            { type: 'object', properties: { url: { type: 'string' } } },
+            { type: 'string', enum: ['none', 'auto', 'required'] },
+            {
+              type: 'object',
+              properties: {
+                type: { type: 'string', enum: ['function'] },
+                function: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] },
+              },
+              required: ['type', 'function'],
+            },
           ],
         },
-        description: 'A list of Addons the Assistant can use.',
-      },
-      stream: {
-        description: 'If set, partial message deltas will be sent.',
-        type: 'boolean',
-        default: false,
-      },
-      temperature: { type: 'number', minimum: 0, maximum: 2, default: 1 },
-      top_p: { type: 'number', minimum: 0, maximum: 1, default: 1 },
-      n: { type: 'integer', minimum: 1, maximum: 128, default: 1 },
-      parallel_tool_calls: { type: 'boolean', default: true },
-      stop: {
-        oneOf: [{ type: 'string' }, { type: 'array', minItems: 1, maxItems: 4, items: { type: 'string' } }],
-      },
-      max_tokens: { type: 'integer', description: 'The maximum number of tokens to generate by the Assistant.' },
-      max_prompt_tokens: {
-        type: 'integer',
-        description: 'Maximum number of prompt tokens to handle in a request.',
-      },
-      max_completion_tokens: { type: 'integer' },
-      presence_penalty: { type: 'number', minimum: -2, maximum: 2, default: 0 },
-      frequency_penalty: { type: 'number', minimum: -2, maximum: 2, default: 0 },
-      logit_bias: { type: 'object', additionalProperties: true, default: null },
-      seed: { type: 'integer', minimum: -Number.MAX_SAFE_INTEGER, maximum: Number.MAX_SAFE_INTEGER },
-      user: { type: 'string' },
-      response_format: {
-        oneOf: [
-          { type: 'object', properties: { type: { type: 'string', enum: ['text'] } }, required: ['type'] },
-          {
-            type: 'object',
-            properties: { type: { type: 'string', enum: ['json_object'] } },
-            required: ['type'],
+        addons: {
+          type: 'array',
+          items: {
+            oneOf: [
+              { type: 'object', properties: { name: { type: 'string' } } },
+              { type: 'object', properties: { url: { type: 'string' } } },
+            ],
           },
-          {
-            type: 'object',
-            properties: {
-              type: { type: 'string', enum: ['json_schema'] },
-              json_schema: { type: 'object', additionalProperties: true },
+          description: 'A list of Addons the Assistant can use.',
+        },
+        stream: {
+          description: 'If set, partial message deltas will be sent.',
+          type: 'boolean',
+          default: false,
+        },
+        temperature: { type: 'number', minimum: 0, maximum: 2, default: 1 },
+        top_p: { type: 'number', minimum: 0, maximum: 1, default: 1 },
+        n: { type: 'integer', minimum: 1, maximum: 128, default: 1 },
+        parallel_tool_calls: { type: 'boolean', default: true },
+        stop: {
+          oneOf: [{ type: 'string' }, { type: 'array', minItems: 1, maxItems: 4, items: { type: 'string' } }],
+        },
+        max_tokens: { type: 'integer', description: 'The maximum number of tokens to generate by the Assistant.' },
+        max_prompt_tokens: {
+          type: 'integer',
+          description: 'Maximum number of prompt tokens to handle in a request.',
+        },
+        max_completion_tokens: { type: 'integer' },
+        presence_penalty: { type: 'number', minimum: -2, maximum: 2, default: 0 },
+        frequency_penalty: { type: 'number', minimum: -2, maximum: 2, default: 0 },
+        logit_bias: { type: 'object', additionalProperties: true, default: null },
+        seed: { type: 'integer', minimum: -Number.MAX_SAFE_INTEGER, maximum: Number.MAX_SAFE_INTEGER },
+        user: { type: 'string' },
+        response_format: {
+          oneOf: [
+            { type: 'object', properties: { type: { type: 'string', enum: ['text'] } }, required: ['type'] },
+            {
+              type: 'object',
+              properties: { type: { type: 'string', enum: ['json_object'] } },
+              required: ['type'],
             },
-            required: ['type', 'json_schema'],
-          },
-        ],
+            {
+              type: 'object',
+              properties: {
+                type: { type: 'string', enum: ['json_schema'] },
+                json_schema: { type: 'object', additionalProperties: true },
+              },
+              required: ['type', 'json_schema'],
+            },
+          ],
+        },
+        custom_fields: { type: 'object', additionalProperties: true },
       },
-      custom_fields: { type: 'object', additionalProperties: true },
+      required: ['messages'],
     },
-    required: ['messages'],
   },
   responseBodySchema: {
     type: 'object',

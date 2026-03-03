@@ -15,7 +15,10 @@ const BodyTab: FC<Props> = ({ template, changeTemplate }) => {
     (body: Record<string, unknown>) => {
       changeTemplate({
         ...template,
-        body,
+        content: {
+          ...template.content,
+          body,
+        },
       });
     },
     [changeTemplate, template],
@@ -23,7 +26,7 @@ const BodyTab: FC<Props> = ({ template, changeTemplate }) => {
 
   return (
     <JsonEditor
-      entity={template.body || {}}
+      entity={template.content?.body || {}}
       setSelectedEntity={onChangeBody as Dispatch<SetStateAction<Record<string, unknown>>>}
       options={{ stickyScroll: { enabled: false } }}
     />
