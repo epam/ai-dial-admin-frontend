@@ -1475,6 +1475,8 @@ export default {
     },
     CreateFolderValidate: 'Folder name contains forbidden characters: < > : " / \\ | ? *',
     CreateFolderValidateFirstSymbol: 'Folder name cannot start with a dot',
+    MoveItem: 'Move "{item}" to',
+    MoveItems: 'Move {count} items to',
   },
   Runs: {
     StartTime: 'Start time',

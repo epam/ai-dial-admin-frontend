@@ -160,6 +160,15 @@ export const getBulkActionsToolbarOptions = (t: (key: string) => string) => ({
   actionLabels: getActionLabels(bulkActionLabels, t),
 });
 
+export const getDestinationFolderPopupOptions = (
+  t: (key: string, options?: Record<string, string | number> | undefined) => string,
+) => ({
+  getMoveHeader: (itemsCount: number, itemName?: string) =>
+    itemsCount === 1 && itemName
+      ? t(FileManagerI18nKey.MoveItem, { item: itemName })
+      : t(FileManagerI18nKey.MoveItems, { count: itemsCount }),
+});
+
 const getActionLabels = (actionLabels: { key: string; label: string }[], t: (key: string) => string) => {
   return actionLabels.reduce((acc: { [key: string]: string }, item) => {
     acc[item.key] = t(item.label);
