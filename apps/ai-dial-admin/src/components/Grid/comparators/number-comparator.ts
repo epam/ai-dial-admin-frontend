@@ -1,5 +1,5 @@
 import { IRowNode } from 'ag-grid-community';
-import Big from 'big.js';
+import { Big } from 'big.js';
 
 export const numberValueComparator = (
   a: string | number | undefined,

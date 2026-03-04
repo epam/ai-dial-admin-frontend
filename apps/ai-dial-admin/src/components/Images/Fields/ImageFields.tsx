@@ -71,7 +71,8 @@ const ImageFields: FC<Props> = ({ image, setImage, isModal, setImageVersions }) 
   );
 
   return (
-    <div className="flex flex-col w-full h-full gap-y-8 divide-y divide-primary">
+
+    <div className="flex flex-col size-full gap-y-8 divide-y divide-primary">
       <ImageBase
         image={image}
         setImage={setImage}

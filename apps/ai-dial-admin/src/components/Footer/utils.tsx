@@ -18,7 +18,7 @@ export const getCoreVersionElement = (
       return (
         <DialTooltip tooltip={t(CoreVersionModalI18nKey.NotDetectedTooltip)} triggerClassName="flex-1 cursor-pointer">
           <span className="flex flex-row items-center">
-            <span className="bg-red-400 rounded-full w-[10px] h-[10px] mx-1"></span>
+            <span className="bg-red-400 rounded-full size-[10px] mx-1"></span>
             <span>{`${t(CoreVersionModalI18nKey.NotDetected)}`}</span>
           </span>
         </DialTooltip>
@@ -32,7 +32,7 @@ export const getCoreVersionElement = (
         >
           <span className="flex flex-row items-center">
             <span className="ml-1">[</span>
-            <span className="bg-yellow-400 rounded-full w-[10px] h-[10px] mx-1"></span>
+            <span className="bg-yellow-400 rounded-full size-[10px] mx-1"></span>
             <span>{`${t(CoreVersionModalI18nKey.Default)}]${defaultVersion}`}</span>
           </span>
         </DialTooltip>
@@ -78,7 +78,7 @@ export const getCoreVersionElement = (
     if (!manuallySetVersion && !defaultVersion) {
       return (
         <span className="flex flex-row items-center">
-          <span className="bg-red-400 rounded-full w-[10px] h-[10px] mx-1"></span>
+          <span className="bg-red-400 rounded-full size-[10px] mx-1"></span>
           <span>{`${t(CoreVersionModalI18nKey.Undefined)}`}</span>
         </span>
       );
@@ -118,14 +118,14 @@ export const getIconBefore = (coreVersions: CoreVersions, definition?: string): 
     !coreVersions?.defaultVersion &&
     definition === DefinitionType.AUTO
   ) {
-    return <span className="inline-block bg-red-400 rounded-full w-[10px] h-[10px] mx-1"></span>;
+    return <span className="inline-block bg-red-400 rounded-full size-[10px] mx-1"></span>;
   }
   if (
     coreVersions?.autoDetectedVersion === '-1' &&
     coreVersions?.defaultVersion &&
     definition === DefinitionType.AUTO
   ) {
-    return <span className="inline-block bg-yellow-400 rounded-full w-[10px] h-[10px] mx-1"></span>;
+    return <span className="inline-block bg-yellow-400 rounded-full size-[10px] mx-1"></span>;
   }
   return null;
 };

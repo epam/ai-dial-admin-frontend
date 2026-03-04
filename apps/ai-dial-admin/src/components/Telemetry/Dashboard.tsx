@@ -129,7 +129,7 @@ const Dashboard: FC<Props> = ({
               />
             </div>
           )}
-          <div className="flex w-full h-full relative">
+          <div className="flex size-full relative">
             <TelemetryGrid
               getData={getData}
               refreshTime={refreshTime}

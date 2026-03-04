@@ -4,7 +4,7 @@
   .react-datepicker__input-container {
     @apply flex;
     .react-datepicker__calendar-icon {
-      @apply flex text-accent-primary w-auto h-auto right-0 m-0.5;
+      @apply flex text-accent-primary size-auto right-0 m-0.5;
     }
 
     input {
@@ -42,7 +42,7 @@
     }
 
     .react-datepicker__navigation-icon {
-      @apply flex items-center justify-center w-full h-full text-primary hover:text-accent-primary;
+      @apply flex items-center justify-center size-full text-primary hover:text-accent-primary;
     }
 
     .react-datepicker__navigation-icon:before {

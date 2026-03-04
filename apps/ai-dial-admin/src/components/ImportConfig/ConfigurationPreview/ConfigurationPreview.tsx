@@ -76,7 +76,7 @@ const ConfigurationPreview: FC<Props> = ({ files, importBody, fileType, onImport
       </div>
       <div className="flex-1 min-h-0">
         {isLoading ? (
-          <div className="flex flex-col h-full w-full justify-center items-center">
+          <div className="flex flex-col size-full justify-center items-center">
             <DialLoader size={45} className="h-auto" />
             <p className="mt-3 text-primary small">{t(ImportI18nKey.ConfigurationParsing)}</p>
           </div>

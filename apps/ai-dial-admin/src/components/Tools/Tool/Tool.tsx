@@ -21,7 +21,7 @@ const Tool: FC<Props> = ({ tool, isAddedManual, isMcpToolset, isAssetToolset, to
   return (
     <>
       {isAddedManual ? (
-        <div className="flex flex-col rounded border border-primary px-4 pl-[36px] py-4">
+        <div className="flex flex-col rounded border border-primary p-4 pl-[36px]">
           <ToolHeader
             tool={tool}
             toolSetName={toolSetName}

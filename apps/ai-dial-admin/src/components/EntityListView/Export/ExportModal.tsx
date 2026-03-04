@@ -44,7 +44,7 @@ const ExportModal: FC<Props> = ({ isModalOpen, route, onClose, onApply }) => {
       open={isModalOpen}
       size={PopupSize.Sm}
     >
-      <div className="flex px-6 py-6 h-full flex-col">
+      <div className="flex p-6 h-full flex-col">
         <DialRadioGroup
           radioButtons={exportTypeRadio}
           activeRadioButton={exportType}

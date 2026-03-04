@@ -26,7 +26,7 @@ const Notification: FC<NotificationConfig> = ({ type, title, description, reques
         </div>
         <DialIconButton
           aria-label="close"
-          className="absolute right-0 w-auto h-auto top-0"
+          className="absolute right-0 size-auto top-0"
           onClick={onClose}
           icon={<IconX size={18} />}
         />

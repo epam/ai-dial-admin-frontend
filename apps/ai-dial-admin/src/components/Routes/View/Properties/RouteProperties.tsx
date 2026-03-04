@@ -1,34 +1,39 @@
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ButtonAppearance,
+  DialInput,
   DialNumberInput,
   DialPrimaryButton,
   DialRadioGroup,
   DialSelectField,
   DialSwitch,
-  DialInput,
   RadioButtonWithContent,
   RadioGroupOrientation,
   SelectOption,
 } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
-import UpstreamEndpoints from '@/src/components/UpstreamEndpoints/UpstreamEndpoints';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
+import TopicsControl from '@/src/components/BaseControls/Topics';
+import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import Paths from '@/src/components/Routes/Paths/Paths';
 import { handleRouteOutputChange } from '@/src/components/Routes/utils';
-import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
+import UpstreamEndpoints from '@/src/components/UpstreamEndpoints/UpstreamEndpoints';
+import {
+  ButtonsI18nKey,
+  EntityFieldsI18nKey,
+  EntityPlaceholdersI18nKey,
+  ErrorI18nKey,
+  RoutesI18nKey,
+} from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { ORDER_DEFAULT_VALUE } from '@/src/constants/routes';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAppRoute, DialRoute, RouteOutput, RoutePermission } from '@/src/models/dial/route';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { IconRefresh } from '@tabler/icons-react';
-import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { ORDER_DEFAULT_VALUE } from '@/src/constants/routes';
-import TopicsControl from '@/src/components/BaseControls/Topics';
 
 interface Props {
   route: DialRoute | DialAppRoute;
@@ -194,7 +199,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
   }, [route, onChange, dispatch]);
 
   return (
-    <div className="h-full flex flex-col w-full gap-y-8">
+    <div className="flex flex-col size-full gap-y-8">
       <DisplayNameControl
         displayName={isAppRoute ? route.name : route.displayName}
         required
@@ -292,7 +297,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
         <DialNumberInput
           id="order"
           disabled={readonly}
-          containerClassName="w-[50%]"
+          containerClassName="w-1/2"
           labelProps={{ label: t(EntityFieldsI18nKey.order) }}
           placeholder={t(EntityPlaceholdersI18nKey.Order)}
           value={route.order}
