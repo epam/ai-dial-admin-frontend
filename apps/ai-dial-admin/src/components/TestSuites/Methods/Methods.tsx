@@ -46,12 +46,10 @@ const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange, isCreate
           ...prev,
           endpointRef: CHAT_COMPLETION_METHOD,
           requestTemplate: {
+            urlTemplate: CHAT_COMPLETION_RELATIVE_URL,
             body: {
               contentType: APPLICATION_JSON_TYPE,
-              content: {
-                urlTemplate: CHAT_COMPLETION_RELATIVE_URL,
-                body: CHAT_COMPLETION_BODY,
-              },
+              content: CHAT_COMPLETION_BODY,
             },
           },
         }));
@@ -63,12 +61,7 @@ const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange, isCreate
             relativeUrlPattern: methods[index - 1].relativeUrlPattern,
           },
           requestTemplate: {
-            body: {
-              contentType: APPLICATION_JSON_TYPE,
-              content: {
-                urlTemplate: methods[index - 1].relativeUrlPattern,
-              },
-            },
+            urlTemplate: methods[index - 1].relativeUrlPattern,
           },
         }));
       }
