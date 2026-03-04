@@ -165,7 +165,7 @@ const AuditView: FC<Props> = ({
                 label={t(RollbackI18nKey.Resource)}
                 onClick={onOpenModal}
               />
-              <div className="w-[px] h-6 bg-layer-4"></div>
+              <div className="w-px h-6 bg-layer-4"></div>
               <DialSwitch
                 switchId="jsonView"
                 isOn={isJsonView}
@@ -191,7 +191,7 @@ const AuditView: FC<Props> = ({
                   <div className="flex flex-row gap-3 items-center justify-end">
                     {!hideComparator && <CompareControl compareView={compareView} setCompareView={setCompareView} />}
                     <FilterControl diffView={diffView} setDiffView={setDiffView} />
-                    <div className="w-[px] h-6 bg-layer-4"></div>
+                    <div className="w-px h-6 bg-layer-4"></div>
                     <DialSwitch
                       switchId="jsonView"
                       isOn={isJsonView}

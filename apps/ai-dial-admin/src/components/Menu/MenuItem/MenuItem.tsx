@@ -50,7 +50,7 @@ const MenuItem: FC<Props> = ({ config, activeMenuItem, isOpenByDefault = false, 
       </DialTooltip>
       {isOpen && !!config.items.length && (
         <div className="flex flex-row w-full relative my-1">
-          <div className="bg-layer-4 w-[px] absolute left-[23px] inset-y-[12px]"></div>
+          <div className="bg-layer-4 w-px absolute left-[23px] inset-y-[12px]"></div>
           <div className="flex flex-col flex-1 min-w-0 gap-0.5 ">
             {config.items.map((menuItem) => (
               <MenuItemContent

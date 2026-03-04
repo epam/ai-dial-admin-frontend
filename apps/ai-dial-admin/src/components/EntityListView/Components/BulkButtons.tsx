@@ -51,7 +51,7 @@ const BulkButtons: FC<Props> = ({
       <div className="text-secondary">
         {itemsCount} {t(BasicI18nKey.Selected)}
       </div>
-      <div className="bg-layer-4 h-5 w-[px]"></div>
+      <div className="bg-layer-4 h-5 w-px"></div>
       <DialNeutralButton
         label={t(ButtonsI18nKey.Export)}
         iconBefore={<IconFileArrowRight {...BASE_BUTTON_ICON_PROPS} />}

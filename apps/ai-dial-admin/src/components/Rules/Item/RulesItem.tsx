@@ -63,7 +63,7 @@ const RulesItem: FC<Props> = ({
   return (
     <div ref={ref} className={classNames('flex flex-1', !folderName && 'border border-primary')}>
       <div style={{ width: `${RULE_INDENT * indentIndex}px` }} className="flex items-center">
-        <div className="h-[px] w-full bg-accent-secondary"></div>
+        <div className="h-px w-full bg-accent-secondary"></div>
       </div>
       <div
         className={classNames(

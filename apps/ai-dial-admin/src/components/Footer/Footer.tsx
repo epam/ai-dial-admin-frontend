@@ -43,7 +43,7 @@ const Footer: FC<Props> = ({ beVersion, coreVersions, onChangeCoreVersion }) => 
     <div className="hidden lg:flex absolute bottom-0 right-0 caption text-right pr-6 pb-1 text-secondary tiny">
       <span className="mr-1">Admin: [FE]{process.env.NEXT_PUBLIC_APP_VERSION}</span>
       <span>[BE]{beVersion}</span>
-      <span className="inline-block w-[1px] h-[14px] mx-1 bg-controls-disable"></span>
+      <span className="inline-block w-px h-[14px] mx-1 bg-controls-disable"></span>
       <span className="flex">
         Core:
         <span className="flex flex-row hover:text-accent-primary group/version" onClick={() => setIsModalOpen(true)}>

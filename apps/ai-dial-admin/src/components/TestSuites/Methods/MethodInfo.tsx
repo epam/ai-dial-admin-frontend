@@ -95,7 +95,7 @@ const MethodInfo: FC<Props> = ({ testSuite, onChangeTestSuite, selectedAppType }
           <ViewSelector view={view} changeView={setView} />
           {selectedAppType && (
             <>
-              <div className="w-[px] h-6 bg-layer-4"></div>
+              <div className="w-px h-6 bg-layer-4"></div>
               <DialNeutralButton
                 iconBefore={<IconPencilMinus {...BASE_BUTTON_ICON_PROPS} />}
                 className="self-end shrink-0"
