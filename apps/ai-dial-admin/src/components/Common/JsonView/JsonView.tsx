@@ -22,7 +22,7 @@ const JsonView: FC<Props> = ({ modified, original, containerClassName, leftTitle
   return (
     <div className={classNames('flex-1 flex flex-col min-h-0', containerClassName)}>
       <div className="flex flex-row">
-        <h4 className="mb-2 text-secondary w-[50%]">{leftTitle || t(CompareI18nKey.Before)}</h4>
+        <h4 className="mb-2 text-secondary w-1/2">{leftTitle || t(CompareI18nKey.Before)}</h4>
         <h4 className="mb-2 text-secondary">{rightTitle || t(CompareI18nKey.After)}</h4>
       </div>
       <DiffField label="" modified={modified} original={original} className="overflow-hidden" language="json" />

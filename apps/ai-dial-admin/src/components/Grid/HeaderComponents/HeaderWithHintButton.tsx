@@ -26,7 +26,7 @@ const HeaderWithHintButton: FC<Props> = ({ displayName, hintText, hintTitle }) =
 
   return (
     <div className="flex items-center w-full justify-end gap-x-3">
-      <DialIconButton className="p-0 h-auto w-auto" icon={<IconInfoCircle size={14} />} onClick={onClick} />
+      <DialIconButton className="p-0 size-auto" icon={<IconInfoCircle size={14} />} onClick={onClick} />
       {displayName}
     </div>
   );

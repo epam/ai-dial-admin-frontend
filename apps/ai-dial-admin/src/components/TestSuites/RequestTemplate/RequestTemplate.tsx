@@ -40,7 +40,7 @@ const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
         <SaveValidationContextProvider>
           <TryOut testSuiteId={testSuite.id || ''} />
         </SaveValidationContextProvider>,
-        'w-[50%] max-w-[800px]',
+        'w-1/2 max-w-[800px]',
       );
       if (sidebarOpen) {
         sidebar.toggleIsMenuClosed?.();

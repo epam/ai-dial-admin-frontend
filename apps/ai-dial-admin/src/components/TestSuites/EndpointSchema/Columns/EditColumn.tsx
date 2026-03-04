@@ -91,7 +91,7 @@ const EditColumn: FC<ColumnsProps> = ({ column, onChangeColumn, onClose, respons
           </div>
         </div>
         <div className="flex flex-col gap-2 w-[30%] min-w-0 min-h-0 rounded border border-primary py-4 pl-4 overflow-hidden">
-          <span className="small text-secondary flex-shrink-0">{t(TestSuitesI18nKey.PickFromResponseSchema)}</span>
+          <span className="small text-secondary shrink-0">{t(TestSuitesI18nKey.PickFromResponseSchema)}</span>
           <SchemaTree responseSchema={responseSchema} onSelect={onPickFromSchema} />
         </div>
       </div>

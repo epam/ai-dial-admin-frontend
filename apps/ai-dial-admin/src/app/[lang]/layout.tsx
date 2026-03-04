@@ -58,7 +58,7 @@ export default async function Layout({ children, params }: { children: ReactNode
             <RuleFolderProvider attributes={process.env.PUBLICATION_FILTERS || 'title,role,dial_roles'}>
               <PromptFolderProvider>
                 <NotificationProvider>
-                  <div className="flex flex-col h-full w-full">
+                  <div className="flex flex-col size-full">
                     <Header isEnableAuth={isEnableAuth} />
                     <div className="flex-1 min-h-0">
                       <div className="flex flex-row h-full relative">

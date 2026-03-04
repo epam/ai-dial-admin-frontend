@@ -81,7 +81,7 @@ const MethodInfo: FC<Props> = ({ testSuite, onChangeTestSuite, selectedAppType }
   }, [currentSuite.endpointRef?.method, currentSuite.endpointRef?.relativeUrlPattern]);
 
   return (testSuite?.endpointRef && !!Object.keys(testSuite?.endpointRef).length) || testSuite ? (
-    <div className="flex flex-col gap-4 p-4 h-full w-full relative">
+    <div className="size-full flex flex-col gap-4 p-4 relative">
       <div className="flex flex-row justify-between">
         <div>
           {testSuite?.endpointRef?.method && (
@@ -95,7 +95,7 @@ const MethodInfo: FC<Props> = ({ testSuite, onChangeTestSuite, selectedAppType }
           <ViewSelector view={view} changeView={setView} />
           {selectedAppType && (
             <>
-              <div className="w-[1px] h-6 bg-layer-4"></div>
+              <div className="w-px h-6 bg-layer-4"></div>
               <DialNeutralButton
                 iconBefore={<IconPencilMinus {...BASE_BUTTON_ICON_PROPS} />}
                 className="self-end shrink-0"
@@ -149,7 +149,7 @@ const MethodInfo: FC<Props> = ({ testSuite, onChangeTestSuite, selectedAppType }
             size={PopupSize.Lg}
             className="h-[800px]"
           >
-            <div className="w-full h-full flex flex-col gap-4 px-6 py-4">
+            <div className="size-full flex flex-col gap-4 px-6 py-4">
               <div className="flex-1 overflow-auto">
                 <Methods
                   selectedApplication={{

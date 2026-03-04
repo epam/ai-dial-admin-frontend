@@ -18,7 +18,7 @@ import { BooleanType } from '@/src/types/boolean';
 import { DefaultItemType } from './types';
 import { getDefaultValueByType, getValueByType } from './utils';
 
-interface DefaultItem {
+interface DefaultItemDeclaration {
   key: string;
   value: DefaultsValue;
   type: string;
@@ -26,8 +26,8 @@ interface DefaultItem {
 
 interface Props {
   index: number;
-  item: DefaultItem;
-  changeItem: (item: DefaultItem, index: number) => void;
+  item: DefaultItemDeclaration;
+  changeItem: (item: DefaultItemDeclaration, index: number) => void;
   onRemove: (index: number) => void;
 }
 
@@ -154,7 +154,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
           />
         </div>
       </div>
-      <div className="w-[40px] flex-shrink-0 mt-[10px]">
+      <div className="w-[40px] shrink-0 mt-[10px]">
         <DialRemoveButton onClick={() => onRemove(index)} />
       </div>
     </div>

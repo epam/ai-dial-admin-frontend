@@ -16,11 +16,11 @@ const Hint: FC<Props> = ({ title, text }) => {
   return (
     <div className="flex flex-col gap-y-8 w-[400px]">
       <div className="flex items-center justify-between">
-        <h3 className="text-primary overflow-ellipsis">{title}</h3>
+        <h3 className="truncate">{title}</h3>
         <DialCloseButton onClose={closeSidebar} />
       </div>
       <div className="overflow-y-auto">
-        <p className="small text-primary">{text}</p>
+        <p className="dial-small-text">{text}</p>
       </div>
     </div>
   );

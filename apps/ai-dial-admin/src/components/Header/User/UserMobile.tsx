@@ -12,7 +12,7 @@ const UserMobile: FC<Props> = ({ isEnableAuth }) => {
 
   return (
     userMenuOpen && (
-      <div className="lg:hidden absolute right-0 top-0 bottom-0 w-[260px] z-50 bg-layer-3">
+      <div className="lg:hidden absolute right-0 inset-y-0 w-[260px] z-50 bg-layer-3">
         <UserMenu isMobile={true} isEnableAuth={isEnableAuth} />
       </div>
     )

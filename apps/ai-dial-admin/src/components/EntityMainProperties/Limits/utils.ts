@@ -1,4 +1,4 @@
-import Big from 'big.js';
+import { Big } from 'big.js';
 
 import { UNLIMITED_VALUE } from '@/src/constants/role';
 

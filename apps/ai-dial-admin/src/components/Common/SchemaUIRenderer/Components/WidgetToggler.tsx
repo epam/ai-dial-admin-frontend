@@ -40,7 +40,7 @@ export const WidgetToggler: FC<Props> = ({ children, title, isRoot }) => {
           )}
         >
           {title}
-          {hasError && <span className="inline-block bg-red-400 rounded-full w-[10px] h-[10px] ml-2"></span>}
+          {hasError && <span className="inline-block bg-red-400 rounded-full size-[10px] ml-2"></span>}
         </div>
         <div
           ref={containerRef}

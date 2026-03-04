@@ -109,7 +109,7 @@ const Endpoint: FC<Props> = ({
             </h3>
             {isCollapsed && (
               <DialTooltip tooltip={endpoint.endpoint || '—'}>
-                <p className="max-w-[220px] md:max-w-[50%] truncate tiny text-secondary mt-3">
+                <p className="max-w-[220px] md:max-w-1/2 truncate tiny text-secondary mt-3">
                   {endpoint.endpoint || '—'}
                 </p>
               </DialTooltip>
@@ -169,7 +169,7 @@ const Endpoint: FC<Props> = ({
         </div>
       </div>
       {!readonly && (
-        <div className="w-[40px] flex-shrink-0">
+        <div className="w-[40px] shrink-0">
           <DialRemoveButton onClick={onRemove} className={removeButtonClassName} aria-label="remove" />
         </div>
       )}

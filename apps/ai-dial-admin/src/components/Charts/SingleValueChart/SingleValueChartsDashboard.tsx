@@ -18,7 +18,7 @@ const SingleValueChartsDashboard: FC<Props> = ({ getData, refreshTime }) => {
     { title: TelemetryI18nKey.Money, query: MONEY_QUERY, unit: '$' },
   ];
   return (
-    <div className="flex flex-shrink-0 overflow-auto">
+    <div className="flex shrink-0 overflow-auto">
       <div className="grid grid-cols-2 gap-6 w-full">
         {config.map(({ title, query, unit }, index) => (
           <SingleValueChart

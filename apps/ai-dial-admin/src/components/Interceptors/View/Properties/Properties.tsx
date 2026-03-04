@@ -29,7 +29,7 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
   const { featureFlags } = useAppContext();
 
   return (
-    <div className="h-full flex flex-col gap-y-8 w-full">
+    <div className="flex flex-col gap-y-8 size-full">
       <EntityProperties
         entity={selectedInterceptor}
         onChangeEntity={onChangeInterceptor}

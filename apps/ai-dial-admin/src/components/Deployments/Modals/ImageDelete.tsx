@@ -211,7 +211,7 @@ const ImageDeleteConfirmationModal = <T extends Artefact>({
       size={modalSize}
       confirmLabel={t(ButtonsI18nKey.Delete)}
     >
-      <div className="h-full flex flex-col gap-y-4 px-6 py-2 w-full">
+      <div className="size-full flex flex-col gap-y-4 px-6 py-2">
         <div className="flex flex-col gap-y-2">
           <span className="text-secondary dial-small">{getConfirmation(view, t)}</span>
           {id && (

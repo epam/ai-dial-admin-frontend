@@ -58,7 +58,7 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
       cancelLabel={t(ButtonsI18nKey.Cancel)}
       onCancel={onClose}
     >
-      <div className="flex flex-col gap-6 py-6 px-6 h-[300px]">
+      <div className="flex flex-col gap-6 p-6 h-[300px]">
         {isLoading ? (
           <DialLoader size={30} />
         ) : (

@@ -165,7 +165,7 @@ const AuditView: FC<Props> = ({
                 label={t(RollbackI18nKey.Resource)}
                 onClick={onOpenModal}
               />
-              <div className="w-[1px] h-6 bg-layer-4"></div>
+              <div className="w-px h-6 bg-layer-4"></div>
               <DialSwitch
                 switchId="jsonView"
                 isOn={isJsonView}
@@ -184,14 +184,14 @@ const AuditView: FC<Props> = ({
                     <DialEllipsisTooltip text={activity.activityId} />
                     <DialIconButton
                       onClick={() => openActivityInNewTab(activity)}
-                      className="text-secondary w-auto h-auto"
+                      className="text-secondary size-auto"
                       icon={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
                     />
                   </h3>
                   <div className="flex flex-row gap-3 items-center justify-end">
                     {!hideComparator && <CompareControl compareView={compareView} setCompareView={setCompareView} />}
                     <FilterControl diffView={diffView} setDiffView={setDiffView} />
-                    <div className="w-[1px] h-6 bg-layer-4"></div>
+                    <div className="w-px h-6 bg-layer-4"></div>
                     <DialSwitch
                       switchId="jsonView"
                       isOn={isJsonView}
