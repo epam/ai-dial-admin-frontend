@@ -91,7 +91,7 @@ const ImportConfig: FC = () => {
   }, []);
 
   return (
-    <div className="flex flex-col w-full h-full rounded p-4 bg-layer-2">
+    <div className="flex flex-col size-full rounded p-4 bg-layer-2">
       <DialSteps steps={steps} currentStep={currentStepId} onChangeStep={setCurrentStep} />
       {currentStepId === ImportSteps.FILES && (
         <Files

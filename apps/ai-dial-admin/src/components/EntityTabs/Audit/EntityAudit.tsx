@@ -32,7 +32,7 @@ const EntityAudit: FC<Props> = ({ entity, view }) => {
   const [isCustomRange, setIsCustomRange] = useState(false);
 
   return (
-    <div className="flex flex-row gap-4 h-full w-full">
+    <div className="flex flex-row gap-4 size-full">
       <div className="bg-layer-3 h-full w-[296px] p-4 relative">
         <h1 className="mb-4">{t(TabsI18nKey.Audit)}</h1>
         <div className="flex-1 min-h-0 relative">

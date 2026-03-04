@@ -88,7 +88,7 @@ const TryOut: FC<Props> = ({ testSuiteId, testCaseId }) => {
   }, []);
 
   return (
-    <div className="flex flex-col gap-y-8 w-full h-full min-h-0">
+    <div className="flex flex-col gap-y-8 size-full min-h-0">
       {isLoading ? (
         <DialLoader size={40} />
       ) : (

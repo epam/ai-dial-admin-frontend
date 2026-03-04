@@ -29,7 +29,7 @@ const Properties: FC<Props> = ({ selectedToolset, onChange, isPublication }) => 
   const t = useI18n();
 
   return (
-    <div className="h-full flex flex-col w-full gap-y-8">
+    <div className="size-full flex flex-col gap-y-8">
       {isPublication && (
         <IdControl entity={selectedToolset} onChangeEntity={onChange} checkEmptySymbols={false} isFullWidth={false} />
       )}

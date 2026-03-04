@@ -93,7 +93,7 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
 
   return (
     <>
-      <div className="flex flex-row gap-4 h-full w-full">
+      <div className="flex flex-row gap-4 size-full">
         <DialCollapsibleSidebar width={296} title={t(TabsI18nKey.Routes)} containerClassName="bg-layer-3 mr-4">
           <div className="h-full relative flex flex-col">
             <div className="flex flex-row flex-wrap justify-between items-center mb-6">

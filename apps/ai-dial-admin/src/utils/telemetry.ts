@@ -1,5 +1,5 @@
 import { SelectOption } from '@epam/ai-dial-ui-kit';
-import Big from 'big.js';
+import { Big } from 'big.js';
 import { EChartsOption } from 'echarts-for-react/src/types';
 
 import { lineChartDefaultOptions } from '@/src/components/Charts/LineChart/constants';

@@ -10,7 +10,7 @@ import { EntityDefaults } from '@/src/models/dial/base-entity';
 import { DefaultTemp } from '@/src/models/dial/defaults';
 import { convertDefaultsToArray } from './utils';
 
-import DefaultItem from './DefaultItem';
+import DefaultItemDeclaration from './DefaultItem';
 import Accordion from '@/src/components/Common/Accordion/Accordion';
 
 interface Props {
@@ -67,7 +67,13 @@ const Defaults: FC<Props> = ({ entity, onChangeEntity }) => {
   return (
     <Accordion title={`${t(EntityFieldsI18nKey.defaults)}: ${count}`} contentClassName="gap-2">
       {defaultItems.map((item, index) => (
-        <DefaultItem key={index} item={item} index={index} changeItem={onChangeDefaultItem} onRemove={onRemoveItem} />
+        <DefaultItemDeclaration
+          key={index}
+          item={item}
+          index={index}
+          changeItem={onChangeDefaultItem}
+          onRemove={onRemoveItem}
+        />
       ))}
       <div>
         <DialGhostButton

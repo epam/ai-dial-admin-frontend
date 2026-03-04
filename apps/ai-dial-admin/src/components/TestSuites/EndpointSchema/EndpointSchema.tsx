@@ -64,7 +64,7 @@ const EndpointSchema: FC<Props> = ({ testSuite, onChangeTestSuite, isSkipRefresh
   );
 
   return (
-    <div className="flex flex-col w-full h-full gap-2">
+    <div className="flex flex-col size-full gap-2">
       <div className="flex flex-col gap-4">
         <div className="flex flex-row justify-between">
           <DialTabs tabs={tabs} activeTab={activeSchemaTab} onClick={onChangeSchemaTab} />

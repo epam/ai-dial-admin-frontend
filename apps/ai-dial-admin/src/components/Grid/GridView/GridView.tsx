@@ -34,7 +34,7 @@ const GridView = <T extends object>({
   getIsEmptyData,
 }: GridViewProps<T>) => {
   const staticPanelContainerClassName = classNames(
-    'left-0 top-0 w-full h-full bg-blackout z-50',
+    'left-0 top-0 size-full bg-blackout z-50',
     showColumnsPanel ? 'flex' : 'hidden',
   );
 
@@ -132,7 +132,7 @@ const GridView = <T extends object>({
   );
 
   return (
-    <div className="w-full h-full relative">
+    <div className="size-full relative">
       {isEmptyData && emptyDataProps ? (
         <DialNoDataContent {...emptyDataProps} />
       ) : (

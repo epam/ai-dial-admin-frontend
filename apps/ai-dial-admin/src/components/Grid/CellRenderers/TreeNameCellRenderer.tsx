@@ -25,7 +25,7 @@ const TreeNameCellRenderer = ({ data, onToggleExpand, onChangeName, setValue }: 
     <div className="flex items-center h-full gap-1" style={{ paddingLeft: depth * 24 }}>
       <div
         className={classNames(
-          'flex items-center justify-center w-[18px] h-[18px] flex-shrink-0 rounded',
+          'flex items-center justify-center w-[18px] h-[18px] shrink-0 rounded',
           hasChildren && 'cursor-pointer hover:bg-layer-3',
         )}
         onClick={() => hasChildren && onToggleExpand(data)}
@@ -37,7 +37,7 @@ const TreeNameCellRenderer = ({ data, onToggleExpand, onChangeName, setValue }: 
             <IconChevronRight size={14} className="text-secondary" />
           )
         ) : (
-          <span className="w-1.5 h-1.5 rounded-full bg-tertiary" />
+          <span className="size-1.5 rounded-full bg-tertiary" />
         )}
       </div>
       <input

@@ -43,7 +43,7 @@ const SchemaTreeItem: FC<TreeItemProps> = ({ node, depth, expandedSet, onToggleE
       >
         <div
           className={classNames(
-            'flex items-center justify-center w-[18px] h-[18px] flex-shrink-0 rounded',
+            'flex items-center justify-center w-[18px] h-[18px] shrink-0 rounded',
             hasChildren && 'cursor-pointer hover:bg-layer-3',
           )}
           onClick={toggleExpand}
@@ -60,7 +60,7 @@ const SchemaTreeItem: FC<TreeItemProps> = ({ node, depth, expandedSet, onToggleE
         <button
           type="button"
           onClick={handleSelect}
-          className="flex-shrink-0 p-1 rounded text-tertiary hover:text-primary hover:bg-layer-3 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="shrink-0 p-1 rounded text-tertiary hover:text-primary hover:bg-layer-3 opacity-0 group-hover:opacity-100 transition-opacity"
         >
           <IconArrowRight size={14} stroke={2} />
         </button>
