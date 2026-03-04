@@ -1,4 +1,4 @@
-import Big from 'big.js';
+import { Big } from 'big.js';
 import { isInteger } from 'lodash';
 
 export const formatNumberWithExponent = (num: number): string => {

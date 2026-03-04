@@ -17,7 +17,7 @@ const StatusText: FC<Props> = ({ status }) => {
     <>
       {status === EntitySyncStatus.FULLY_SYNCED && (
         <>
-          <div className="w-[10px] h-[10px] rounded-full bg-accent-secondary"></div>
+          <div className="size-[10px]  rounded-full bg-accent-secondary"></div>
           <DialTooltip tooltip={t(CoreSyncI18nKey.Synced)}>
             <span>{t(CoreSyncI18nKey.Synced)}</span>
           </DialTooltip>
@@ -25,13 +25,13 @@ const StatusText: FC<Props> = ({ status }) => {
       )}
       {status === EntitySyncStatus.IN_PROGRESS && (
         <>
-          <DialLoader size={12} className="w-2 h-2" />
+          <DialLoader size={12} className="size-2" />
           <span className="whitespace-nowrap">{t(CoreSyncI18nKey.InProgress)}</span>
         </>
       )}
       {status === EntitySyncStatus.IN_PROGRESS_TOO_LONG && (
         <>
-          <div className="w-[10px] h-[10px] rounded-full bg-orange-400"></div>
+          <div className="size-[10px]  rounded-full bg-orange-400"></div>
           <DialTooltip tooltip={t(CoreSyncI18nKey.Partially)}>
             <span>{t(CoreSyncI18nKey.Partially)}</span>
           </DialTooltip>
@@ -39,7 +39,7 @@ const StatusText: FC<Props> = ({ status }) => {
       )}
       {status === EntitySyncStatus.UNKNOWN && (
         <>
-          <div className="w-[10px] h-[10px] rounded-full bg-secondary"></div>
+          <div className="size-[10px]  rounded-full bg-secondary"></div>
           <DialTooltip tooltip={t(CoreSyncI18nKey.Unknown)}>
             <span>{t(CoreSyncI18nKey.Unknown)}</span>
           </DialTooltip>

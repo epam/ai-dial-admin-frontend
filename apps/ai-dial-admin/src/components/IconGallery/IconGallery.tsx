@@ -11,14 +11,11 @@ interface Props {
   setSelectedIcon: (url: string) => void;
 }
 
-export interface Icon {
-  url: string;
-  name: string;
-}
-
-interface IconProps extends Icon {
+interface IconProps {
   onClick: () => void;
   selected: boolean;
+  url: string;
+  name: string;
 }
 
 const Icon: FC<IconProps> = ({ url, name, selected, onClick }) => {

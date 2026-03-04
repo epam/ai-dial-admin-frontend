@@ -154,7 +154,7 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
 
   return (
     <>
-      <div className="flex flex-col w-full h-full rounded p-4 bg-layer-2">
+      <div className="flex flex-col size-full rounded p-4 bg-layer-2">
         <div className="mb-4 flex flex-row items-center justify-between">
           <h1>{t(MenuI18nKey.ExportConfig)}</h1>
           <DialPrimaryButton

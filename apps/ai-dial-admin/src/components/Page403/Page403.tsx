@@ -6,7 +6,7 @@ import Icon from '@/public/images/403.svg';
 
 const Page403: FC = () => {
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center bg-layer-2">
+    <div className="size-full flex flex-col items-center justify-center bg-layer-2">
       <div>
         <Icon />
       </div>

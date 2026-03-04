@@ -64,9 +64,7 @@ const LineChart: FC<Props> = ({ getData, refreshTime }) => {
           {!data?.length ? (
             <DialNoDataContent title={t(BasicI18nKey.NoData)} />
           ) : (
-            <div>
-              {options && <ReactECharts option={options} className="flex w-full h-full min-h-[280px] m-0 p-0" />}
-            </div>
+            <div>{options && <ReactECharts option={options} className="flex size-full min-h-[280px] m-0 p-0" />}</div>
           )}
         </>
       )}

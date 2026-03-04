@@ -28,7 +28,7 @@ const RulesList: FC<Props> = ({ rulesMap, isReadonly, onChange }) => {
 
   const isEmpty = !!rulesMap && Object.keys(rulesMap).length === 0;
   return (
-    <div className="flex flex-col w-full h-full overflow-auto">
+    <div className="flex flex-col size-full overflow-auto">
       {!isSingle && !isEmpty && (
         <div>
           <span className="border border-accent-secondary rounded bg-accent-secondary-alpha inline-block px-2">

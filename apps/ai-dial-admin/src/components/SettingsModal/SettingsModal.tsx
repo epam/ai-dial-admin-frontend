@@ -36,7 +36,7 @@ const SettingsModal: FC<Props> = ({ onConfirm, isModalOpen, onClose }) => {
       submitLabel={t(ButtonsI18nKey.Save)}
       onSubmit={() => onConfirm(settings)}
     >
-      <div className="flex flex-col gap-4 py-6 px-6">
+      <div className="flex flex-col gap-4 p-6">
         <DialSelectField
           id="themeSelector"
           label={t(SettingsModalI18nKey.Theme)}

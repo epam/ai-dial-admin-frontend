@@ -68,7 +68,7 @@ const ListEntities = <T extends object>({
   return (
     <div
       className={classNames(
-        'flex flex-col rounded w-full h-full',
+        'flex flex-col rounded size-full',
         isMainListView && mainListEntitiesViewClassName,
         !isEmbedToModal && 'bg-layer-2',
       )}

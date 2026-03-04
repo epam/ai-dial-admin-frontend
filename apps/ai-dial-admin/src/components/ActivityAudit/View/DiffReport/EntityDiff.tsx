@@ -17,7 +17,7 @@ interface Props {
 const EntityDiff: FC<Props> = ({ currentEntity, compareEntity, type, diffView, compareView }) => {
   const sections = createSectionFromDiffs(currentEntity, compareEntity);
   return (
-    <div className="flex flex-col w-full h-full min-h-0 mt-8 pt-8">
+    <div className="flex flex-col size-full min-h-0 mt-8 pt-8">
       <div id="activity-audit-diff" className="flex-1 flex flex-row gap-4 w-full min-h-0 mb-4 overflow-auto">
         <div className="flex-1 flex flex-col gap-y-8 min-h-0 ">
           {Object.entries(sections).map(([key, value]) => (

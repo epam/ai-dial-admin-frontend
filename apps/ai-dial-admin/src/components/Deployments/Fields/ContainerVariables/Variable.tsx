@@ -123,7 +123,7 @@ const Variable: FC<Props> = ({ index, variable, updateVariable, removeVariable, 
                 {t(EnvVariablesI18nKey.EnvVariable)} {index + 1}
               </h3>
               {isCollapsed && (
-                <p className="max-w-[220px] md:max-w-[50%] truncate tiny text-secondary mt-3">{variable.name}</p>
+                <p className="max-w-[220px] md:max-w-1/2 truncate tiny text-secondary mt-3">{variable.name}</p>
               )}
             </div>
           )}
@@ -171,7 +171,7 @@ const Variable: FC<Props> = ({ index, variable, updateVariable, removeVariable, 
             />
           </div>
         </div>
-        <div className="w-[40px] flex-shrink-0">
+        <div className="w-[40px] shrink-0">
           <DialRemoveButton onClick={onRemove} className={index === 0 ? 'mt-3 lg:mt-6' : ''} disabled={disabled} />
         </div>
       </div>

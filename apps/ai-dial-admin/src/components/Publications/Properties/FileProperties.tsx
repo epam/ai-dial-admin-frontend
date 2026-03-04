@@ -15,7 +15,7 @@ interface Props {
 const FileProperties: FC<Props> = ({ publication, onChange, addedFiles, setAddedFiles }) => {
   return (
     <div className="flex-1 min-h-0 pt-8">
-      <div className="w-full h-full flex flex-col gap-y-8">
+      <div className="size-full flex flex-col gap-y-8">
         <BaseProperties publication={publication} onChange={onChange} getContext={useFileFolder} />
         <FilesDetails
           publication={publication}

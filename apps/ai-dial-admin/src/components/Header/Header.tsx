@@ -29,7 +29,7 @@ const Header: FC<Props> = ({ isEnableAuth }) => {
       <div className="flex">
         <DialIconButton
           aria-label="menu"
-          className="py-3 px-5 border-r w-auto h-auto border-r-tertiary text-secondary focus-within:outline-offset-[-1px] focus:text-accent-primary hover:text-accent-primary"
+          className="py-3 px-5 border-r size-auto border-r-tertiary text-secondary focus-within:outline-offset-[-1px] focus:text-accent-primary hover:text-accent-primary"
           onClick={toggleSidebar}
           icon={sidebarIcon}
         />
