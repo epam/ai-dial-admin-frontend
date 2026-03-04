@@ -50,6 +50,7 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
         setRuns(runsData);
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTestSuite.id]);
 
   const gridDataSource: IDatasource = useMemo(
