@@ -1280,6 +1280,11 @@ export enum ImagesI18nKey {
   ImageTypeInterceptor = 'Images.ImageTypeInterceptor',
   ImageTypeAdapter = 'Images.ImageTypeAdapter',
   ImageWhitelistType = 'Images.ImageWhitelistType',
+  BuildPrivileges = 'Images.BuildPrivileges',
+  BuilderRootless = 'Images.BuilderRootless',
+  BuilderRoot = 'Images.BuilderRoot',
+  BuilderRootlessCaption = 'Images.BuilderRootlessCaption',
+  BuilderRootCaption = 'Images.BuilderRootCaption',
 }
 
 export enum ContainersI18nKey {

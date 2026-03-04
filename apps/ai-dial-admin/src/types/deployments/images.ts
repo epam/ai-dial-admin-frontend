@@ -21,6 +21,11 @@ export enum IMAGE_TRANSPORT_TYPE {
   REMOTE = 'remote',
 }
 
+export enum IMAGE_BUILDER_TYPE {
+  ROOTLESS = 'buildkit_rootless',
+  ROOT = 'buildkit',
+}
+
 export enum DUPLICATION_TYPE {
   VERSION = 'version',
   ENTITY = 'entity',
