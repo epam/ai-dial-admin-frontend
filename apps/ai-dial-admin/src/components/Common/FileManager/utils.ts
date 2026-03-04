@@ -7,7 +7,7 @@ import FloatingFilter from '@/src/components/Grid/FloatingFilter/FloatingFilter'
 import { baseColumnComparator } from '@/src/components/Grid/comparators/base-column-comparator';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
-import { CREATE_FOLDER_FORBIDDEN_CHARS } from './constants';
+import { CREATE_FOLDER_FORBIDDEN_CHARS, FILE_NAME_MAX_LENGTH } from './constants';
 import { GridOptions } from '@epam/ai-dial-ui-kit/dist/src/components/FileManager/FileManager';
 
 const gridActionLabels = [
@@ -207,11 +207,16 @@ export const getEmptyFile = () => {
   return uploadFileItem;
 };
 
-export const validateCreateFolder = (name: string, t: (key: string) => string): string | null => {
+export const validateCreateFolder = (
+  name: string,
+  t: (key: string, options?: Record<string, string | number>) => string,
+): string | null => {
   if (CREATE_FOLDER_FORBIDDEN_CHARS.test(name)) {
     return t(FileManagerI18nKey.CreateFolderValidate);
   } else if (name.startsWith('.')) {
     return t(FileManagerI18nKey.CreateFolderValidateFirstSymbol);
+  } else if (name.length > FILE_NAME_MAX_LENGTH) {
+    return t(FileManagerI18nKey.CreateFolderValidateNameLength, { length: FILE_NAME_MAX_LENGTH });
   }
 
   return null;
