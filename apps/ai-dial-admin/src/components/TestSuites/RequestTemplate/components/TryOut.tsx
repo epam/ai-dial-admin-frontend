@@ -1,7 +1,7 @@
 'use client';
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { DialCloseButton, DialLoader, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { DialCloseButton, DialLinkButton, DialLoader, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 
 import {
   getTestCaseTemplateVariables,
@@ -9,10 +9,11 @@ import {
   tryOutTestCase,
   tryOutTestSuite,
 } from '@/src/app/[lang]/test-suites/actions';
+import Grafana from '@/public/images/icons/grafana.svg';
 import Divider from '@/src/components/Common/Divider/Divider';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { convertVariableIntoInitialRequest } from '@/src/components/TestSuites/utils/template-variables';
-import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, ButtonsI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
 import { TemplateVariable } from '@/src/models/evaluation/test-suite';
@@ -33,7 +34,7 @@ const TryOut: FC<Props> = ({ testSuiteId, testCaseId }) => {
   const [resolvedRequest, setResolvedRequest] = useState<Record<string, unknown>>({});
   const [isRequestSend, setIsRequestSend] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
+  const [grafanaTraceUrl, setGrafanaTraceUrl] = useState<string | undefined>(undefined);
   const [variables, setVariables] = useState<TemplateVariable[]>([]);
 
   const onChangeRequestBody = useCallback((body: Record<string, unknown>) => {
@@ -58,6 +59,7 @@ const TryOut: FC<Props> = ({ testSuiteId, testCaseId }) => {
       if (res?.success) {
         setResolvedRequest(res.response?.resolvedRequest || {});
         setResponse(res.response?.response || {});
+        setGrafanaTraceUrl(res.response?.grafanaTraceUrl);
       } else {
         setResolvedRequest(requestBody || {});
         setResponse({ error: res?.errorMessage || 'Unknown error' });
@@ -113,6 +115,15 @@ const TryOut: FC<Props> = ({ testSuiteId, testCaseId }) => {
               )}
             </CollapsibleSection>
             <Divider />
+
+            {grafanaTraceUrl && (
+              <DialLinkButton
+                className="w-fit"
+                iconBefore={<Grafana />}
+                label={t(RunsI18nKey.GrafanaRun)}
+                onClick={() => window.open(grafanaTraceUrl, '_blank')}
+              />
+            )}
             <CollapsibleSection title={t(BasicI18nKey.Request)} growOnOpen>
               {isRequestSend ? (
                 <DialLoader />
