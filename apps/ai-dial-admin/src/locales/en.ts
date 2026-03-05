@@ -1492,5 +1492,7 @@ export default {
     ResponseBody: 'Response body',
     TestCaseData: 'Test case data',
     Execution: 'Execution',
+    GrafanaDetails: 'View trace in Grafana',
+    GrafanaRun: 'Traces in Grafana',
   },
 } as const;

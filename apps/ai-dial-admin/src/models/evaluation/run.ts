@@ -18,6 +18,7 @@ export interface ExtractionResult {
   testCaseData?: Record<string, unknown>;
   responseBody?: Record<string, unknown>;
   extractedColumns?: Record<string, unknown>;
+  grafanaExploreUrl?: string;
 }
 
 export enum ExtractionResultStatus {
@@ -37,6 +38,7 @@ export interface Run {
     testRunName?: string;
   };
   numberOfTestCases?: number;
+  grafanaExploreUrl?: string;
   startedAt?: number;
   completedAt?: number;
   errorMessage?: string;
