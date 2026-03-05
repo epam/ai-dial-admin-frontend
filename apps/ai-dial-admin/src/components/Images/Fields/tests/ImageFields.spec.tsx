@@ -44,10 +44,16 @@ describe('ImageFields', () => {
     expect(screen.getByText('ImageSource')).toBeInTheDocument();
   });
 
-  test('should render ImageBuildPrivileges in Properties view', () => {
+  test('should render ImageBuildPrivileges in the same group as ImageBase in Properties view', () => {
     render(<ImageFields image={mockImage} setImage={vi.fn()} />);
 
-    expect(screen.getByText('ImageBuildPrivileges')).toBeInTheDocument();
+    const buildPrivileges = screen.getByText('ImageBuildPrivileges');
+    expect(buildPrivileges).toBeInTheDocument();
+
+    const baseEl = screen.getByText('ImageBase');
+    const baseGroup = baseEl.closest('div')?.parentElement;
+    const privilegesGroup = buildPrivileges.closest('div')?.parentElement;
+    expect(baseGroup).toBe(privilegesGroup);
   });
 
   test('should not render ImageBuildPrivileges in modal', () => {

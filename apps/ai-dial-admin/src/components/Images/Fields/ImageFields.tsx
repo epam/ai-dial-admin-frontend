@@ -72,24 +72,22 @@ const ImageFields: FC<Props> = ({ image, setImage, isModal, setImageVersions }) 
 
   return (
     <div className="flex flex-col size-full gap-y-8 divide-y divide-primary">
-      <ImageBase
-        image={image}
-        setImage={setImage}
-        isModal={isModal}
-        versionsMap={versionsMap}
-        versionError={versionError}
-        setVersionError={setVersionError}
-        verifyVersion={verifyVersion}
-      />
+      <div className="flex flex-col gap-y-8">
+        <ImageBase
+          image={image}
+          setImage={setImage}
+          isModal={isModal}
+          versionsMap={versionsMap}
+          versionError={versionError}
+          setVersionError={setVersionError}
+          verifyVersion={verifyVersion}
+        />
+        {!isModal && <ImageBuildPrivileges image={image} setImage={setImage} />}
+      </div>
       <div className="flex flex-col gap-y-8 pt-8">
         <ImageSource image={image} setImage={setImage} isModal={isModal} verifyVersion={verifyVersion} />
         {!isModal && <ImageTransport image={image} setImage={setImage} />}
       </div>
-      {!isModal && (
-        <div className="pt-8">
-          <ImageBuildPrivileges image={image} setImage={setImage} />
-        </div>
-      )}
     </div>
   );
 };
