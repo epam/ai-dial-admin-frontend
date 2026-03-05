@@ -790,6 +790,11 @@ export default {
     NoPreview: 'Preview is not available for Active Config format',
     TopicsCaption: 'Select one or more topics',
     TopicsPlaceholder: 'Select topics',
+    Components: 'Components',
+    EntitiesBuildersAccess: 'Entities, Builders, Access Management',
+    Deployments: 'Deployments',
+    IncludeGlobalFirewall: 'Include global firewall',
+    PreviewUnavailable: 'Preview currently unavailable',
   },
   Folder: {
     Export: 'Export files',

@@ -1,5 +1,5 @@
 'use client';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useMemo, useState } from 'react';
 
 import {
   DialNoDataContent,
@@ -10,11 +10,13 @@ import {
 } from '@epam/ai-dial-ui-kit';
 import { IconEyeOff, IconUpload } from '@tabler/icons-react';
 
-import { exportConfig, exportConfigMap } from '@/src/app/[lang]/export-config/actions';
+import { exportConfig, exportConfigMap, exportDeploymentConfig } from '@/src/app/[lang]/export-config/actions';
 import ConfigContent from '@/src/components/ExportConfig/Content/ConfigContent';
+import DeploymentConfigContent from '@/src/components/ExportConfig/Content/DeploymentConfigContent';
 import PreviewModal from '@/src/components/ExportConfig/Preview/PreviewModal';
 import ExportDependencies from '@/src/components/ExportConfig/Structure/Dependencies';
 import { fulDependenciesConfig, getComponents, getComponentTypes } from '@/src/components/ExportConfig/utils';
+import { getDeploymentExportComponents } from '@/src/components/ExportConfig/deployment-utils';
 import { ButtonsI18nKey, ExportI18nKey, ImportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -26,14 +28,21 @@ import { downloadFile } from '@/src/utils/download';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import ExportTopics from './Structure/Topics';
 
-interface Props {
-  enableExportConfigMap?: boolean;
+export enum ExportComponentType {
+  ADMIN = 'admin',
+  DEPLOYMENTS = 'deployments',
 }
 
-const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
+interface Props {
+  enableExportConfigMap?: boolean;
+  deploymentsEnabled?: boolean;
+}
+
+const ExportConfig: FC<Props> = ({ enableExportConfigMap, deploymentsEnabled }) => {
   const t = useI18n();
 
   const { showNotification } = useNotification();
+  const [selectedComponentType, setSelectedComponentType] = useState<ExportComponentType>(ExportComponentType.ADMIN);
   const [selectedExportFormat, setSelectedExportFormat] = useState(ExportFormat.ADMIN);
   const [selectedExportType, setSelectedExportType] = useState(ExportType.Full);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -41,6 +50,25 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
   const [customExportData, setCustomExportData] = useState<Record<string, EntitiesGridData[]>>({});
   const [isExportDisable, setIsExportDisable] = useState(false);
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+
+  const isDeploymentContext = useMemo(
+    () => selectedComponentType === ExportComponentType.DEPLOYMENTS,
+    [selectedComponentType],
+  );
+
+  const componentTypes: RadioButtonWithContent[] = useMemo(
+    () => [
+      {
+        id: ExportComponentType.ADMIN,
+        name: t(ExportI18nKey.EntitiesBuildersAccess),
+      },
+      {
+        id: ExportComponentType.DEPLOYMENTS,
+        name: t(ExportI18nKey.Deployments),
+      },
+    ],
+    [t],
+  );
 
   const exportTypes: RadioButtonWithContent[] = [
     {
@@ -84,6 +112,23 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
     } as ExportRequest;
   }, [selectedExportType, selectedExportFormat, dependencies, customExportData, selectedTopics]);
 
+  const prevComponentTypeRef = useRef(selectedComponentType);
+  const onChangeComponentType = useCallback((key: string) => {
+    const newType = key as ExportComponentType;
+    if (newType === prevComponentTypeRef.current) return;
+    prevComponentTypeRef.current = newType;
+
+    setSelectedComponentType(newType);
+    setCustomExportData({});
+
+    if (newType === ExportComponentType.ADMIN) {
+      setSelectedExportFormat(ExportFormat.ADMIN);
+      setSelectedExportType(ExportType.Full);
+      setDependencies({ ...fulDependenciesConfig });
+      setSelectedTopics([]);
+    }
+  }, []);
+
   const onChangeExportType = useCallback((key: string) => {
     setSelectedExportType(key as ExportType);
   }, []);
@@ -119,6 +164,31 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
     [exportRequest, showNotification, t],
   );
 
+  const onDeploymentExport = useCallback(
+    (addSecrets: boolean, addGlobalFirewall: boolean) => {
+      const type = t(ExportI18nKey.Deployments);
+      const components = getDeploymentExportComponents(customExportData);
+      exportDeploymentConfig({
+        $type: ExportType.Custom,
+        addSecrets,
+        addGlobalImageBuildDomainWhitelist: addGlobalFirewall,
+        components,
+      })
+        .then(({ blob, fileName }) => {
+          showNotification(
+            getSuccessNotification(t(ExportI18nKey.SuccessTitle, { type }), t(ExportI18nKey.SuccessDescription)),
+          );
+          downloadFile(blob, fileName);
+        })
+        .catch(() => {
+          showNotification(
+            getErrorNotification(t(ExportI18nKey.ErrorTitle, { type }), t(ExportI18nKey.ErrorDescription)),
+          );
+        });
+    },
+    [customExportData, showNotification, t],
+  );
+
   const onExportMap = useCallback(() => {
     const type = t(ExportI18nKey.Config);
     exportConfigMap()
@@ -137,20 +207,23 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
   }, [showNotification, t]);
 
   const onTryExport = useCallback(() => {
-    if (selectedExportFormat === ExportFormat.ACTIVE_CONFIG) {
+    if (!isDeploymentContext && selectedExportFormat === ExportFormat.ACTIVE_CONFIG) {
       onExportMap();
     } else {
       setIsModalOpen(true);
     }
-  }, [onExportMap, selectedExportFormat]);
+  }, [isDeploymentContext, onExportMap, selectedExportFormat]);
 
   useEffect(() => {
-    if (exportRequest.$type === ExportType.Full) {
+    if (isDeploymentContext) {
+      const hasComponents = Object.values(customExportData).some((data) => data.length > 0);
+      setIsExportDisable(!hasComponents);
+    } else if (exportRequest.$type === ExportType.Full) {
       setIsExportDisable(exportRequest.componentTypes.length === 0);
     } else {
       setIsExportDisable(exportRequest.components.length === 0);
     }
-  }, [exportRequest]);
+  }, [exportRequest, isDeploymentContext, customExportData]);
 
   return (
     <>
@@ -165,41 +238,57 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
           />
         </div>
         <div className="flex-1 min-h-0 gap-x-3 flex flex-row w-full">
-          <div className="border border-primary p-4 rounded w-[240px] flex flex-col">
+          <div className="border border-primary p-4 rounded w-[340px] flex flex-col">
             <h3 className="mb-4">{t(ExportI18nKey.Structure)}</h3>
             <div className="flex flex-1 flex-col gap-y-8 min-h-0 min-w-0 overflow-auto">
-              <DialRadioGroup
-                radioButtons={exportFormats}
-                activeRadioButton={selectedExportFormat}
-                elementId="exportFormat"
-                fieldTitle={t(ExportI18nKey.ExportFormat)}
-                orientation={RadioGroupOrientation.Column}
-                onChange={onChangeExportFormat}
-              />
-              {selectedExportFormat !== ExportFormat.ACTIVE_CONFIG && (
+              {deploymentsEnabled && (
+                <DialRadioGroup
+                  radioButtons={componentTypes}
+                  activeRadioButton={selectedComponentType}
+                  elementId="componentType"
+                  fieldTitle={t(ExportI18nKey.Components)}
+                  orientation={RadioGroupOrientation.Column}
+                  onChange={onChangeComponentType}
+                />
+              )}
+              {!isDeploymentContext && (
                 <>
                   <DialRadioGroup
-                    radioButtons={exportTypes}
-                    activeRadioButton={selectedExportType}
-                    elementId="exportType"
-                    fieldTitle={t(ExportI18nKey.ExportType)}
+                    radioButtons={exportFormats}
+                    activeRadioButton={selectedExportFormat}
+                    elementId="exportFormat"
+                    fieldTitle={t(ExportI18nKey.ExportFormat)}
                     orientation={RadioGroupOrientation.Column}
-                    onChange={onChangeExportType}
+                    onChange={onChangeExportFormat}
                   />
+                  {selectedExportFormat !== ExportFormat.ACTIVE_CONFIG && (
+                    <>
+                      <DialRadioGroup
+                        radioButtons={exportTypes}
+                        activeRadioButton={selectedExportType}
+                        elementId="exportType"
+                        fieldTitle={t(ExportI18nKey.ExportType)}
+                        orientation={RadioGroupOrientation.Column}
+                        onChange={onChangeExportType}
+                      />
 
-                  {selectedExportType === ExportType.Full && (
-                    <ExportDependencies
-                      selectedExportFormat={selectedExportFormat}
-                      dependencies={dependencies}
-                      onChangeConfig={(deps) => setDependencies(deps)}
-                    />
+                      {selectedExportType === ExportType.Full && (
+                        <ExportDependencies
+                          selectedExportFormat={selectedExportFormat}
+                          dependencies={dependencies}
+                          onChangeConfig={(deps) => setDependencies(deps)}
+                        />
+                      )}
+                      <ExportTopics selectedTopics={selectedTopics} setSelectedTopics={setSelectedTopics} />
+                    </>
                   )}
-                  <ExportTopics selectedTopics={selectedTopics} setSelectedTopics={setSelectedTopics} />
                 </>
               )}
             </div>
           </div>
-          {selectedExportFormat === ExportFormat.ACTIVE_CONFIG ? (
+          {isDeploymentContext ? (
+            <DeploymentConfigContent customExportData={customExportData} setCustomExportData={setCustomExportData} />
+          ) : selectedExportFormat === ExportFormat.ACTIVE_CONFIG ? (
             <DialNoDataContent title={t(ExportI18nKey.NoPreview)} icon={<IconEyeOff width={50} height={50} />} />
           ) : (
             <ConfigContent
@@ -216,12 +305,17 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
 
       {isModalOpen && (
         <PreviewModal
-          exportRequest={exportRequest}
+          exportRequest={isDeploymentContext ? undefined : exportRequest}
+          isDeploymentExport={isDeploymentContext}
           isModalOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          onPrepare={(addSecrets) => {
+          onPrepare={(addSecrets, addGlobalFirewall) => {
             setIsModalOpen(false);
-            onExport(addSecrets);
+            if (isDeploymentContext) {
+              onDeploymentExport(addSecrets, addGlobalFirewall ?? false);
+            } else {
+              onExport(addSecrets);
+            }
           }}
         />
       )}
