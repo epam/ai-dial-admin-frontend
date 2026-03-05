@@ -129,9 +129,7 @@ describe('ExportConfig :: getDeploymentExportComponents', () => {
     };
 
     const result = getDeploymentExportComponents(data);
-    expect(result).toEqual([
-      { name: 'container-1', type: DeploymentExportComponentType.MCP_DEPLOYMENT },
-    ]);
+    expect(result).toEqual([{ name: 'container-1', type: DeploymentExportComponentType.MCP_DEPLOYMENT }]);
   });
 
   test('maps image entities using id field instead of name', () => {
@@ -142,9 +140,7 @@ describe('ExportConfig :: getDeploymentExportComponents', () => {
     };
 
     const result = getDeploymentExportComponents(data);
-    expect(result).toEqual([
-      { name: 'image-id-123', type: DeploymentExportComponentType.ADAPTER_IMAGE_DEFINITION },
-    ]);
+    expect(result).toEqual([{ name: 'image-id-123', type: DeploymentExportComponentType.ADAPTER_IMAGE_DEFINITION }]);
   });
 
   test('maps multiple entities across different types', () => {

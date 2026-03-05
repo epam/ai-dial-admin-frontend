@@ -23,15 +23,10 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ExportDependenciesConfig, ExportRequest } from '@/src/models/export';
-import { ExportFormat, ExportType } from '@/src/types/export';
+import { ExportComponentType, ExportFormat, ExportType } from '@/src/types/export';
 import { downloadFile } from '@/src/utils/download';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import ExportTopics from './Structure/Topics';
-
-export enum ExportComponentType {
-  ADMIN = 'admin',
-  DEPLOYMENTS = 'deployments',
-}
 
 interface Props {
   enableExportConfigMap?: boolean;
@@ -289,7 +284,7 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap, deploymentsEnabled }) 
           {isDeploymentContext ? (
             <DeploymentConfigContent customExportData={customExportData} setCustomExportData={setCustomExportData} />
           ) : selectedExportFormat === ExportFormat.ACTIVE_CONFIG ? (
-            <DialNoDataContent title={t(ExportI18nKey.NoPreview)} icon={<IconEyeOff width={50} height={50} />} />
+            <DialNoDataContent title={t(ExportI18nKey.NoPreview)} icon={<IconEyeOff size={50} />} />
           ) : (
             <ConfigContent
               selectedExportFormat={selectedExportFormat}

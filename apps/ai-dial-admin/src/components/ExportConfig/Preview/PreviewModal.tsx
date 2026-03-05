@@ -98,10 +98,7 @@ const PreviewModal: FC<Props> = ({ exportRequest, isDeploymentExport, onPrepare,
       <div className="flex flex-col gap-4 p-6 h-full">
         <div className="flex-1 min-h-0">
           {isDeploymentExport ? (
-            <DialNoDataContent
-              title={t(ExportI18nKey.PreviewUnavailable)}
-              icon={<IconEyeOff width={50} height={50} />}
-            />
+            <DialNoDataContent title={t(ExportI18nKey.PreviewUnavailable)} icon={<IconEyeOff size={50} />} />
           ) : isLoadingData ? (
             <DialLoader size={50} />
           ) : (
