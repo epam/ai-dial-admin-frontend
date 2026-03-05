@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 import { createEmptyFile, getEmptyFile, validateCreateFolder } from '../utils';
-import { CREATE_FOLDER_FORBIDDEN_CHARS } from '../constants';
+import { CREATE_FOLDER_FORBIDDEN_CHARS, FILE_NAME_MAX_LENGTH } from '../constants';
 import { FileManagerI18nKey } from '@/src/constants/i18n';
 
 describe('FileManager', () => {
@@ -137,6 +137,13 @@ describe('FileManager', () => {
       const result = validateCreateFolder('.hiddenfolder', mockTranslate);
 
       expect(result).toBe(FileManagerI18nKey.CreateFolderValidateFirstSymbol);
+    });
+
+    test('should return error message for folder names with length exceeding maximum', () => {
+      const longName = 'a'.repeat(FILE_NAME_MAX_LENGTH + 1);
+      const result = validateCreateFolder(longName, mockTranslate);
+
+      expect(result).toBe(FileManagerI18nKey.CreateFolderValidateNameLength);
     });
   });
 });
