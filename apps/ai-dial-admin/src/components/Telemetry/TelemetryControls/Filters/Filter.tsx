@@ -38,7 +38,7 @@ const Filter: FC<Props> = ({ id, onClose, onEdit, dropdownData, filterData, rout
         <p className="flex items-center">
           <span className="mr-1">{typeText}</span>
           <i className="mr-1">{conditionIcon}</i>
-          <span className="mr-1 max-w-[250px]">{value}</span>
+          <span className="mr-1 max-w-[250px] break-words">{value}</span>
         </p>
 
         <button
