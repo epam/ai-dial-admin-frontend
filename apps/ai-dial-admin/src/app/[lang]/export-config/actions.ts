@@ -6,6 +6,9 @@ import {
   adaptersApi,
   applicationRunnersApi,
   applicationsApi,
+  containersApi,
+  deploymentExportApi,
+  imagesApi,
   interceptorsApi,
   interceptorTemplatesApi,
   keysApi,
@@ -16,9 +19,14 @@ import {
   utilityApi,
 } from '@/src/app/api/api';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
-import { ExportRequest } from '@/src/models/export';
+import { DeploymentExportRequest, ExportRequest } from '@/src/models/export';
 import { EntityType } from '@/src/types/entity-type';
+import { DeploymentExportEntityType } from '@/src/types/deployments/export';
 import { getUserToken } from '@/src/utils/auth/auth-request';
+import {
+  getContainersForEntitiesGrid,
+  getImagesForEntitiesGrid,
+} from '@/src/utils/entities/deployment-entities-list-view';
 import {
   getAdaptersForEntitiesGrid,
   getApplicationsForEntitiesGrid,
@@ -96,6 +104,37 @@ export async function getEntities(type: string): Promise<EntitiesGridData[]> {
   if (type === EntityType.ADAPTER) {
     const adapters = await adaptersApi.getAdaptersList(token);
     return getAdaptersForEntitiesGrid(adapters);
+  }
+  return [];
+}
+
+export async function exportDeploymentConfig(exportConfig: DeploymentExportRequest) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return await deploymentExportApi.exportConfig(exportConfig, token);
+}
+
+export async function getDeploymentEntities(type: string): Promise<EntitiesGridData[]> {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+
+  if (type === DeploymentExportEntityType.MODEL_SERVING) {
+    const res = await containersApi.getModelContainers(token);
+    return getContainersForEntitiesGrid(res.success ? res.response : null, type);
+  }
+  if (type === DeploymentExportEntityType.MCP_CONTAINER) {
+    const res = await containersApi.getMCPContainers(token);
+    return getContainersForEntitiesGrid(res.success ? res.response : null, type);
+  }
+  if (type === DeploymentExportEntityType.INTERCEPTOR_CONTAINER) {
+    const res = await containersApi.getInterceptorContainers(token);
+    return getContainersForEntitiesGrid(res.success ? res.response : null, type);
+  }
+  if (type === DeploymentExportEntityType.ADAPTER_CONTAINER) {
+    const res = await containersApi.getAdapterContainers(token);
+    return getContainersForEntitiesGrid(res.success ? res.response : null, type);
+  }
+  if (type === DeploymentExportEntityType.IMAGE) {
+    const res = await imagesApi.getImages(token);
+    return getImagesForEntitiesGrid(res.success ? res.response : null);
   }
   return [];
 }
