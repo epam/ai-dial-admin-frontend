@@ -738,7 +738,7 @@ export default {
     ArchiveFileFormatError: 'Only archive file supported',
     DialArchiveDescription: 'Only 1 aidial-admin.zip archive file can be imported',
     JsonDescription: 'Up to 30 files could be imported',
-    SeparateFilesDescription: 'One file size must be less than 512 MB, up to 30 files can be imported',
+    SeparateFilesDescription: 'Up to 30 files can be imported. Maximum 4 MB per file. Total size must not exceed 64 MB',
     File: 'File',
     DropAnyFile: 'Drop file here',
     PrepareTitle: 'Importing {type}',
@@ -760,7 +760,7 @@ export default {
     FilePaths: 'File paths',
     Changes: 'Changes',
     FileSizeErrorHeader: 'File size limit error',
-    FileSizeErrorDescription: 'Size of files is more than {size} MB',
+    FileSizeErrorDescription: 'Size of file is more than {size} MB',
     ArchiveSizeErrorDescription: 'Size of archive is more than {size} MB',
     Notifications: {
       ConfigImported: 'Config imported successfully',
