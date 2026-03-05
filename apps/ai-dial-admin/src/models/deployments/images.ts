@@ -1,4 +1,10 @@
-import { IMAGE_SOURCE_TYPE, IMAGE_STATUS, IMAGE_TRANSPORT_TYPE, IMAGE_TYPE } from '@/src/types/deployments/images';
+import {
+  IMAGE_BUILDER_TYPE,
+  IMAGE_SOURCE_TYPE,
+  IMAGE_STATUS,
+  IMAGE_TRANSPORT_TYPE,
+  IMAGE_TYPE,
+} from '@/src/types/deployments/images';
 import { BaseEntity } from '../dial/base-entity';
 
 export interface Image extends BaseEntity {
@@ -9,6 +15,7 @@ export interface Image extends BaseEntity {
   topics?: string[];
   source: ImageSource;
   transportType?: IMAGE_TRANSPORT_TYPE;
+  imageBuilder?: IMAGE_BUILDER_TYPE;
   author?: string;
   logs?: string[];
   allowedDomains?: string[];

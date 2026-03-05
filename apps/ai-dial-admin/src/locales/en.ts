@@ -1305,6 +1305,11 @@ export default {
     ImageTypeInterceptor: 'Interceptor image',
     ImageTypeAdapter: 'Adapter image',
     ImageWhitelistType: 'Image-specific',
+    BuildPrivileges: 'Build privileges',
+    BuilderRootless: 'Rootless (recommended)',
+    BuilderRoot: 'Root',
+    BuilderRootlessCaption: 'Builds the image without root privileges for improved security and reduced risk.',
+    BuilderRootCaption: 'Builds the image with root privileges. Increasing security risks.',
   },
   Containers: {
     ContainersListTitle: '{type} {entityType}s',
