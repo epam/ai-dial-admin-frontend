@@ -91,7 +91,7 @@ const RunResultDetailPanel: FC<Props> = ({ result, grafanaExploreUrl, onClose })
             <DialLinkButton
               className="w-fit mt-3"
               iconBefore={<Grafana />}
-              label={t(RunsI18nKey.Grafana)}
+              label={t(RunsI18nKey.GrafanaDetails)}
               onClick={() => window.open(exploreUrl, '_blank')}
             />
           )}

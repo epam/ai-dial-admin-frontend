@@ -1435,7 +1435,8 @@ export enum RunsI18nKey {
   ResponseBody = 'Runs.ResponseBody',
   TestCaseData = 'Runs.TestCaseData',
   Execution = 'Runs.Execution',
-  Grafana = 'Runs.Grafana',
+  GrafanaDetails = 'Runs.GrafanaDetails',
+  GrafanaRun = 'Runs.GrafanaRun',
 }
 
 export enum FileManagerI18nKey {
