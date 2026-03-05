@@ -63,7 +63,7 @@ const nextConfig = {
   nx: {},
   experimental: {
     serverActions: {
-      bodySizeLimit: '4mb',
+      bodySizeLimit: '64mb',
     },
   },
   env: {
