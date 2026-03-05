@@ -1280,6 +1280,11 @@ export enum ImagesI18nKey {
   ImageTypeInterceptor = 'Images.ImageTypeInterceptor',
   ImageTypeAdapter = 'Images.ImageTypeAdapter',
   ImageWhitelistType = 'Images.ImageWhitelistType',
+  BuildPrivileges = 'Images.BuildPrivileges',
+  BuilderRootless = 'Images.BuilderRootless',
+  BuilderRoot = 'Images.BuilderRoot',
+  BuilderRootlessCaption = 'Images.BuilderRootlessCaption',
+  BuilderRootCaption = 'Images.BuilderRootCaption',
 }
 
 export enum ContainersI18nKey {
@@ -1453,6 +1458,7 @@ export enum FileManagerI18nKey {
   ManagePermissions = 'FileManager.ManagePermissions',
   CreateFolderValidate = 'FileManager.CreateFolderValidate',
   CreateFolderValidateFirstSymbol = 'FileManager.CreateFolderValidateFirstSymbol',
+  CreateFolderValidateNameLength = 'FileManager.CreateFolderValidateNameLength',
   Preview = 'FileManager.Preview',
   MoveItem = 'FileManager.MoveItem',
   MoveItems = 'FileManager.MoveItems',

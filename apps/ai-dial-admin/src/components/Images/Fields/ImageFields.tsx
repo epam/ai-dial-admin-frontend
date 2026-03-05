@@ -14,6 +14,7 @@ import { useI18n } from '@/src/locales/client';
 import ImageBase from '@/src/components/Deployments/Fields/ImageBase';
 import ImageSource from '@/src/components/Deployments/Fields/ImageSource';
 import ImageTransport from '@/src/components/Deployments/Fields/ImageTransport';
+import ImageBuildPrivileges from '@/src/components/Deployments/Fields/ImageBuildPrivileges';
 
 interface Props {
   image: Image;
@@ -70,20 +71,25 @@ const ImageFields: FC<Props> = ({ image, setImage, isModal, setImageVersions }) 
   );
 
   return (
-    <div className="flex flex-col size-full gap-y-8">
-      <div className="pb-8 border-b border-primary">
-        <ImageBase
-          image={image}
-          setImage={setImage}
-          isModal={isModal}
-          versionsMap={versionsMap}
-          versionError={versionError}
-          setVersionError={setVersionError}
-          verifyVersion={verifyVersion}
-        />
+    <div className="flex flex-col size-full gap-y-8 divide-y divide-primary">
+      <ImageBase
+        image={image}
+        setImage={setImage}
+        isModal={isModal}
+        versionsMap={versionsMap}
+        versionError={versionError}
+        setVersionError={setVersionError}
+        verifyVersion={verifyVersion}
+      />
+      <div className="flex flex-col gap-y-8 pt-8">
+        <ImageSource image={image} setImage={setImage} isModal={isModal} verifyVersion={verifyVersion} />
+        {!isModal && <ImageTransport image={image} setImage={setImage} />}
       </div>
-      <ImageSource image={image} setImage={setImage} isModal={isModal} verifyVersion={verifyVersion} />
-      {!isModal && <ImageTransport image={image} setImage={setImage} />}
+      {!isModal && (
+        <div className="pt-8">
+          <ImageBuildPrivileges image={image} setImage={setImage} />
+        </div>
+      )}
     </div>
   );
 };
