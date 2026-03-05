@@ -13,6 +13,7 @@ export interface ExtractionResult {
     completedAt?: number;
     traceId?: string;
     durationMs?: number;
+    grafanaTraceUrl?: string;
   };
   requestBody?: Record<string, unknown>;
   testCaseData?: Record<string, unknown>;
