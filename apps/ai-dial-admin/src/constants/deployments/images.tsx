@@ -1,5 +1,11 @@
 import { RadioButtonWithContent, SelectOption } from '@epam/ai-dial-ui-kit';
-import { IMAGE_SOURCE_TYPE, IMAGE_STATUS, IMAGE_TRANSPORT_TYPE, IMAGE_TYPE } from '@/src/types/deployments/images';
+import {
+  IMAGE_BUILDER_TYPE,
+  IMAGE_SOURCE_TYPE,
+  IMAGE_STATUS,
+  IMAGE_TRANSPORT_TYPE,
+  IMAGE_TYPE,
+} from '@/src/types/deployments/images';
 import { Image, ImageSource } from '@/src/models/deployments/images';
 import { ContainersI18nKey, ImagesI18nKey, KubEventsI18nKey } from '@/src/constants/i18n';
 import { CONTAINER_STATUS, KubEventType } from '@/src/types/deployments/containers';
@@ -30,6 +36,17 @@ export const TRANSPORT_TYPES = (
 ): RadioButtonWithContent[] => [
   { name: t(ImagesI18nKey.ImageTransportLocal), id: IMAGE_TRANSPORT_TYPE.LOCAL },
   { name: t(ImagesI18nKey.ImageTransportRemote), id: IMAGE_TRANSPORT_TYPE.REMOTE },
+];
+
+export const BUILDER_TYPES = (
+  t: (key: string, options?: Record<string, string | number>) => string,
+): RadioButtonWithContent[] => [
+  {
+    name: t(ImagesI18nKey.BuilderRootless),
+    id: IMAGE_BUILDER_TYPE.ROOTLESS,
+    caption: t(ImagesI18nKey.BuilderRootlessCaption),
+  },
+  { name: t(ImagesI18nKey.BuilderRoot), id: IMAGE_BUILDER_TYPE.ROOT, caption: t(ImagesI18nKey.BuilderRootCaption) },
 ];
 
 export const IMAGE_TRANSPORT_I18N_KEYS: Record<IMAGE_TRANSPORT_TYPE, string> = {
@@ -91,6 +108,7 @@ export const IMAGE_TEMPLATE: Image = {
     imageUri: '',
   },
   transportType: IMAGE_TRANSPORT_TYPE.LOCAL,
+  imageBuilder: IMAGE_BUILDER_TYPE.ROOTLESS,
   topics: [],
   buildStatus: IMAGE_STATUS.NOT_BUILT,
 };

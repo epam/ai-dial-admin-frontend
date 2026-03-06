@@ -127,7 +127,7 @@ const FolderCreateSetup: FC<Props> = ({
 
   return (
     <>
-      <div className="w-[50%]">
+      <div className="w-1/2">
         <DialInput
           labelProps={{ label: t(FoldersI18nKey.FolderName) }}
           id="name"

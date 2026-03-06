@@ -64,5 +64,5 @@ export const contentTypes: Record<string, string> = {
   '.mp4': 'video/mp4',
   '.webm': 'video/webm',
 };
-// same as bodySizeLimit in server config
+
 export const MAX_FILE_SIZE_MB = 4;

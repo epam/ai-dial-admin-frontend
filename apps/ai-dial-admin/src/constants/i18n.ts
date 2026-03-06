@@ -758,6 +758,11 @@ export enum ExportI18nKey {
   NoPreview = 'Export.NoPreview',
   TopicsCaption = 'Export.TopicsCaption',
   TopicsPlaceholder = 'Export.TopicsPlaceholder',
+  Components = 'Export.Components',
+  EntitiesBuildersAccess = 'Export.EntitiesBuildersAccess',
+  Deployments = 'Export.Deployments',
+  IncludeGlobalFirewall = 'Export.IncludeGlobalFirewall',
+  PreviewUnavailable = 'Export.PreviewUnavailable',
 }
 
 export enum FoldersI18nKey {
@@ -1280,6 +1285,11 @@ export enum ImagesI18nKey {
   ImageTypeInterceptor = 'Images.ImageTypeInterceptor',
   ImageTypeAdapter = 'Images.ImageTypeAdapter',
   ImageWhitelistType = 'Images.ImageWhitelistType',
+  BuildPrivileges = 'Images.BuildPrivileges',
+  BuilderRootless = 'Images.BuilderRootless',
+  BuilderRoot = 'Images.BuilderRoot',
+  BuilderRootlessCaption = 'Images.BuilderRootlessCaption',
+  BuilderRootCaption = 'Images.BuilderRootCaption',
 }
 
 export enum ContainersI18nKey {
@@ -1435,6 +1445,8 @@ export enum RunsI18nKey {
   ResponseBody = 'Runs.ResponseBody',
   TestCaseData = 'Runs.TestCaseData',
   Execution = 'Runs.Execution',
+  GrafanaDetails = 'Runs.GrafanaDetails',
+  GrafanaRun = 'Runs.GrafanaRun',
 }
 
 export enum FileManagerI18nKey {
@@ -1451,6 +1463,7 @@ export enum FileManagerI18nKey {
   ManagePermissions = 'FileManager.ManagePermissions',
   CreateFolderValidate = 'FileManager.CreateFolderValidate',
   CreateFolderValidateFirstSymbol = 'FileManager.CreateFolderValidateFirstSymbol',
+  CreateFolderValidateNameLength = 'FileManager.CreateFolderValidateNameLength',
   Preview = 'FileManager.Preview',
   MoveItem = 'FileManager.MoveItem',
   MoveItems = 'FileManager.MoveItems',

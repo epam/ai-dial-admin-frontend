@@ -45,13 +45,20 @@ const ExtractionResultTab: FC<Props> = ({ run }) => {
     (event: RowClickedEvent) => {
       if (event.data && selectedResult?.id !== event.data.id) {
         setSelectedResult(event.data);
-        sidebar.showSidebar(<RunResultDetailPanel result={event.data} onClose={sidebar.closeSidebar} />, 'w-[500px]');
+        sidebar.showSidebar(
+          <RunResultDetailPanel
+            result={event.data}
+            grafanaExploreUrl={run.grafanaExploreUrl}
+            onClose={sidebar.closeSidebar}
+          />,
+          'w-[500px]',
+        );
       } else {
         setSelectedResult(null);
         sidebar.closeSidebar();
       }
     },
-    [sidebar, selectedResult],
+    [selectedResult?.id, sidebar, run.grafanaExploreUrl],
   );
 
   return (

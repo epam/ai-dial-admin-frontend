@@ -16,7 +16,7 @@ interface Props {
 
 const PropertiesTabContent: FC<Props> = ({ isSkipRefresh, names, onChange, selectedRole }) => {
   return (
-    <div className="h-full flex flex-col w-full">
+    <div className="size-full flex flex-col">
       <EntityInfoHeader id={selectedRole.name} entity={selectedRole} view={ApplicationRoute.Roles} />
       <div className="flex-1 min-h-0 pt-8">
         <RoleProperties

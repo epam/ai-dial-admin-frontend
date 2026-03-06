@@ -1,4 +1,13 @@
-import { DialFormPopup, DialLoader, DialSwitch, DialTabs, PopupSize, TabModel } from '@epam/ai-dial-ui-kit';
+import {
+  DialCheckbox,
+  DialFormPopup,
+  DialLoader,
+  DialNoDataContent,
+  DialTabs,
+  PopupSize,
+  TabModel,
+} from '@epam/ai-dial-ui-kit';
+import { IconEyeOff } from '@tabler/icons-react';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { previewExportConfig } from '@/src/app/[lang]/export-config/actions';
@@ -15,19 +24,21 @@ import { getErrorNotification } from '@/src/utils/notification';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
-  exportRequest: Partial<ExportRequest>;
+  exportRequest?: Partial<ExportRequest>;
+  isDeploymentExport?: boolean;
   isModalOpen: boolean;
   onClose: () => void;
-  onPrepare: (isIncludeSecret: boolean) => void;
+  onPrepare: (isIncludeSecret: boolean, addGlobalFirewall?: boolean) => void;
 }
 
-const PreviewModal: FC<Props> = ({ exportRequest, onPrepare, isModalOpen, onClose }) => {
+const PreviewModal: FC<Props> = ({ exportRequest, isDeploymentExport, onPrepare, isModalOpen, onClose }) => {
   const t = useI18n();
 
   const { showNotification } = useNotification();
   const showNotificationRef = useRef(showNotification);
   const getReqRef = useRef(useProtectedRequest());
   const [isIncludeSecret, setIsIncludeSecret] = useState<boolean>(false);
+  const [isIncludeGlobalFirewall, setIsIncludeGlobalFirewall] = useState<boolean>(false);
   const [tabs, setTabs] = useState<TabModel[]>([]);
   const [data, setData] = useState<Record<string, EntitiesGridData[]>>({});
   const [selectedTab, setSelectedTab] = useState('');
@@ -35,9 +46,17 @@ const PreviewModal: FC<Props> = ({ exportRequest, onPrepare, isModalOpen, onClos
 
   const toggleIncludeSecret = useCallback(() => {
     setIsIncludeSecret((prev) => !prev);
-  }, [setIsIncludeSecret]);
+  }, []);
+
+  const toggleIncludeGlobalFirewall = useCallback(() => {
+    setIsIncludeGlobalFirewall((prev) => !prev);
+  }, []);
 
   useEffect(() => {
+    if (isDeploymentExport || !exportRequest) {
+      return;
+    }
+
     if (exportRequest.$type === ExportType.Custom && exportRequest.components?.length === 0) {
       return;
     }
@@ -61,7 +80,7 @@ const PreviewModal: FC<Props> = ({ exportRequest, onPrepare, isModalOpen, onClos
           showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
       });
-  }, [exportRequest, isIncludeSecret, showNotification, t]);
+  }, [exportRequest, isDeploymentExport, isIncludeSecret, showNotification, t]);
 
   return (
     <DialFormPopup
@@ -72,13 +91,15 @@ const PreviewModal: FC<Props> = ({ exportRequest, onPrepare, isModalOpen, onClos
       className="h-[754px]"
       size={PopupSize.Lg}
       submitLabel={t(ButtonsI18nKey.Export)}
-      onSubmit={() => onPrepare(isIncludeSecret)}
+      onSubmit={() => onPrepare(isIncludeSecret, isDeploymentExport ? isIncludeGlobalFirewall : undefined)}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
       onCancel={onClose}
     >
-      <div className="flex flex-col gap-4 py-6 px-6 h-full">
+      <div className="flex flex-col gap-4 p-6 h-full">
         <div className="flex-1 min-h-0">
-          {isLoadingData ? (
+          {isDeploymentExport ? (
+            <DialNoDataContent title={t(ExportI18nKey.PreviewUnavailable)} icon={<IconEyeOff size={50} />} />
+          ) : isLoadingData ? (
             <DialLoader size={50} />
           ) : (
             <div className="flex flex-col h-full">
@@ -91,12 +112,25 @@ const PreviewModal: FC<Props> = ({ exportRequest, onPrepare, isModalOpen, onClos
             </div>
           )}
         </div>
-        <DialSwitch
-          isOn={isIncludeSecret}
-          label={t(ExportI18nKey.IncludeSecrets)}
-          switchId="includeSecret"
-          onChange={toggleIncludeSecret}
-        />
+        <div className="flex flex-row items-center gap-4">
+          <DialCheckbox
+            checked={isIncludeSecret}
+            label={t(ExportI18nKey.IncludeSecrets)}
+            id="includeSecret"
+            onChange={toggleIncludeSecret}
+          />
+          {isDeploymentExport && (
+            <>
+              <div className="h-5 w-px bg-layer-4" />
+              <DialCheckbox
+                checked={isIncludeGlobalFirewall}
+                label={t(ExportI18nKey.IncludeGlobalFirewall)}
+                id="includeGlobalFirewall"
+                onChange={toggleIncludeGlobalFirewall}
+              />
+            </>
+          )}
+        </div>
       </div>
     </DialFormPopup>
   );

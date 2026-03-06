@@ -42,7 +42,7 @@ const TabsContent: FC<Props> = ({ run, activeTab }) => {
             text={run.testSuiteId}
             postfix={
               <DialIconButton
-                className="text-secondary h-[20px] w-[20px]"
+                className="text-secondary size-[20px]"
                 onClick={() => onOpenInNewTab(ApplicationRoute.TestSuites, { id: run.testSuiteId })}
                 icon={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
               />

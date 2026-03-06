@@ -89,7 +89,7 @@ const CoreSyncEntityStatus: FC<Props> = ({ view, name }) => {
             <DialIconButton
               icon={<OpenPopup {...BASE_BUTTON_ICON_PROPS} className="cursor-pointer text-secondary" />}
               onClick={() => setIsModalOpen(true)}
-              className="w-auto h-auto"
+              className="size-auto"
             />
           )}
         </div>

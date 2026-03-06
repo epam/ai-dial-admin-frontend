@@ -2,12 +2,15 @@
 
 import { FC, useCallback, useState } from 'react';
 
+import Grafana from '@/public/images/icons/grafana.svg';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
+import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Run } from '@/src/models/evaluation/run';
+import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab, getRunTabs } from '@/src/utils/tabs/utils';
-import { ServerActionResponse } from '@/src/models/server-action';
+import { DialLinkButton } from '@epam/ai-dial-ui-kit';
 import TabsContent from './TabsContent';
 
 interface Props {
@@ -34,7 +37,15 @@ const RunView: FC<Props> = ({ run, onRemove }) => {
         activeTab={activeTab}
         onChangeActiveTab={setActiveTab}
         onRemove={onRemove}
-      />
+      >
+        {run.grafanaExploreUrl && (
+          <DialLinkButton
+            iconBefore={<Grafana />}
+            label={t(RunsI18nKey.GrafanaRun)}
+            onClick={() => window.open(run.grafanaExploreUrl, '_blank')}
+          />
+        )}
+      </SimpleEntityHeader>
 
       <div className="flex-1 overflow-auto min-h-0">
         <TabsContent run={run} activeTab={activeTab} />

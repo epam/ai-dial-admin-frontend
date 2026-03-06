@@ -104,6 +104,7 @@ export interface InputBindingRowData extends InputBinding {
 export interface TryOutResponse {
   resolvedRequest: Record<string, unknown>;
   response: Record<string, unknown>;
+  grafanaTraceUrl?: string;
 }
 
 export interface ResponseColumn {

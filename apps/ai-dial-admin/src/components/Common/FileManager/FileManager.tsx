@@ -316,6 +316,7 @@ const FileManager: FC<Props> = ({ label, columnDefs, view, getContext, ...props 
       onCreateFolder={handleCreateFolder}
       onDownloadFiles={handleDownloadFiles}
       onCreateFolderValidate={handleCreateFolderValidate}
+      onRenameValidate={handleCreateFolderValidate}
       onDeleteFiles={handleDeleteFileNodes}
       onMoveToFiles={handleMoveToFiles}
       onFolderPopupPathChange={handleFolderPopupPathChange}

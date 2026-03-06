@@ -84,14 +84,14 @@ const Applications: FC<Props> = ({ deployments, selectedApplicationId, onChangeA
 
   if (deployments == null) {
     return (
-      <div className="w-full flex flex-col h-full">
+      <div className="size-full flex flex-col">
         <DialLoader size={40} />
       </div>
     );
   }
 
   return (
-    <div className="w-full flex flex-col h-full">
+    <div className="size-full flex flex-col">
       <div className="flex flex-row mb-4 items-center justify-between">
         <h2 className="font-semibold">{t(MenuI18nKey.Applications)}</h2>
 

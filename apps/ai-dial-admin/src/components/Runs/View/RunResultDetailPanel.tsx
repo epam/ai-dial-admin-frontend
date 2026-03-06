@@ -2,8 +2,9 @@
 
 import { FC, useCallback, useMemo } from 'react';
 
-import { DialCloseButton } from '@epam/ai-dial-ui-kit';
+import { DialCloseButton, DialLinkButton } from '@epam/ai-dial-ui-kit';
 
+import Grafana from '@/public/images/icons/grafana.svg';
 import Accordion from '@/src/components/Common/Accordion/Accordion';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -14,11 +15,13 @@ import { getTestCaseStatusClass } from './utils';
 
 interface Props {
   result: ExtractionResult;
+  grafanaExploreUrl?: string;
   onClose: () => void;
 }
 
-const RunResultDetailPanel: FC<Props> = ({ result, onClose }) => {
+const RunResultDetailPanel: FC<Props> = ({ result, grafanaExploreUrl, onClose }) => {
   const t = useI18n();
+  const exploreUrl = result.grafanaExploreUrl ?? grafanaExploreUrl;
 
   const durationMs = result.executionInfo?.durationMs;
   const durationStr =
@@ -59,7 +62,7 @@ const RunResultDetailPanel: FC<Props> = ({ result, onClose }) => {
   }, []);
 
   return (
-    <div className="flex flex-col h-full w-full">
+    <div className="flex flex-col size-full">
       <div className="flex items-start justify-between">
         <h1 className="truncate">{title}</h1>
         <DialCloseButton onClose={onClose} />
@@ -84,6 +87,14 @@ const RunResultDetailPanel: FC<Props> = ({ result, onClose }) => {
               </span>
             ))}
           </div>
+          {exploreUrl && (
+            <DialLinkButton
+              className="w-fit mt-3"
+              iconBefore={<Grafana />}
+              label={t(RunsI18nKey.GrafanaDetails)}
+              onClick={() => window.open(exploreUrl, '_blank')}
+            />
+          )}
         </section>
 
         {testCaseEntries.length > 0 && (

@@ -83,7 +83,7 @@ const ValueFile: FC<Props> = ({ value, index, fieldName, onValueChange, disabled
           icon={<IconX {...BASE_BUTTON_ICON_PROPS} />}
           onClick={onClearFile}
           disabled={disabled}
-          className="w-auto h-auto"
+          className="size-auto"
         />
       </div>
       <DialErrorText text={error?.text} />

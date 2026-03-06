@@ -18,7 +18,7 @@ const GlobalError: FC<Props> = ({ error, reset }) => {
   return (
     <html>
       <body>
-        <div className="w-full h-full flex flex-col items-center justify-center bg-layer-2">
+        <div className="size-full flex flex-col items-center justify-center bg-layer-2">
           <div className="text-2xl mt-6 mb-2">Something went wrong</div>
 
           <div className="flex flex-col text-center text-secondary justify-center">

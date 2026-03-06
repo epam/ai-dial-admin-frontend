@@ -149,7 +149,7 @@ describe('RequestTemplate', () => {
     fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.TryOut }));
 
     expect(mockShowSidebar).toHaveBeenCalledTimes(1);
-    expect(mockShowSidebar).toHaveBeenCalledWith(expect.anything(), 'w-[50%] max-w-[800px]');
+    expect(mockShowSidebar).toHaveBeenCalledWith(expect.anything(), 'w-1/2 max-w-[800px]');
   });
 
   test('toggles sidebar and menu when sidebar is already open on TryOut click', () => {
