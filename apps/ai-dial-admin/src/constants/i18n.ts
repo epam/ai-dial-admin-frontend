@@ -758,6 +758,11 @@ export enum ExportI18nKey {
   NoPreview = 'Export.NoPreview',
   TopicsCaption = 'Export.TopicsCaption',
   TopicsPlaceholder = 'Export.TopicsPlaceholder',
+  Components = 'Export.Components',
+  EntitiesBuildersAccess = 'Export.EntitiesBuildersAccess',
+  Deployments = 'Export.Deployments',
+  IncludeGlobalFirewall = 'Export.IncludeGlobalFirewall',
+  PreviewUnavailable = 'Export.PreviewUnavailable',
 }
 
 export enum FoldersI18nKey {

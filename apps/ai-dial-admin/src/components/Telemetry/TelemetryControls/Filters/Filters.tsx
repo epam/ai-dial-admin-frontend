@@ -1,6 +1,6 @@
 import { DialGhostButton, SelectOption } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
-import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react';
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
 import AddFilter from '@/src/components/Telemetry/TelemetryControls/Filters/AddFilter';
 import Filter from '@/src/components/Telemetry/TelemetryControls/Filters/Filter';
@@ -11,6 +11,7 @@ import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { FilterData, TelemetryQuery } from '@/src/models/telemetry';
 import { ApplicationRoute } from '@/src/types/routes';
+import { v4 as uuidv4 } from 'uuid';
 
 interface Props {
   filters: FilterData[];
@@ -23,6 +24,8 @@ const Filters: FC<Props> = ({ filters, setFilters, getData, route }) => {
   const t = useI18n();
   const [projects, setProjects] = useState<SelectOption[]>([]);
   const [entities, setEntities] = useState<SelectOption[]>([]);
+
+  const filtersWithId = useMemo(() => filters.map((filter) => ({ ...filter, id: uuidv4() })), [filters]);
 
   useEffect(() => {
     const fetch = async (query: TelemetryQuery): Promise<{ data: string[][] }> => {
@@ -82,10 +85,10 @@ const Filters: FC<Props> = ({ filters, setFilters, getData, route }) => {
 
   return (
     <>
-      {!!filters?.length &&
-        filters.map((filter, index) => (
+      {!!filtersWithId?.length &&
+        filtersWithId.map((filter, index) => (
           <Filter
-            key={index}
+            key={filter.id}
             filterData={filter}
             id={index}
             onClose={onDelete}

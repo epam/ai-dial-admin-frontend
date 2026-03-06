@@ -8,3 +8,8 @@ export enum ExportFormat {
   ADMIN = 'ADMIN',
   ACTIVE_CONFIG = 'ACTIVE_CONFIG',
 }
+
+export enum ExportComponentType {
+  ADMIN = 'admin',
+  DEPLOYMENTS = 'deployments',
+}
