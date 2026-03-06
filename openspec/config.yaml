@@ -67,3 +67,4 @@ rules:
     - Require unit tests for all new and updated code as a dedicated task
     - Keep tasks small enough to be reviewable in a single PR
     - In tests, prefer querying by role and text content over data-testid
+    - Run all code quality checks (lint, format, tests) as a final task after all implementation tasks are complete
