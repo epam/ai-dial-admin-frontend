@@ -22,7 +22,7 @@ import { TestSuitesApi } from '@/src/server/eval/test-suites-api';
 import { WhitelistApi } from '@/src/server/deployments/whitelist';
 import { MetricsApi } from '@/src/server/eval/metrics-api';
 import { HuggingfaceApi } from '@/src/server/deployments/huggingface';
-import { DeploymentExportApi } from '@/src/server/deployments/export';
+import { DeploymentConfigApi } from '@/src/server/deployments/config';
 import { RunsApi } from '@/src/server/eval/runs-api';
 
 // Admin APIs
@@ -113,7 +113,7 @@ export const huggingFaceApi = new HuggingfaceApi({
   host: process.env.DIAL_DEPLOYMENTS_API_URL,
 });
 
-export const deploymentExportApi = new DeploymentExportApi({
+export const deploymentConfigApi = new DeploymentConfigApi({
   host: process.env.DIAL_DEPLOYMENTS_API_URL,
 });
 

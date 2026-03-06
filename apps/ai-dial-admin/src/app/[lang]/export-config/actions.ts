@@ -7,7 +7,7 @@ import {
   applicationRunnersApi,
   applicationsApi,
   containersApi,
-  deploymentExportApi,
+  deploymentConfigApi,
   imagesApi,
   interceptorsApi,
   interceptorTemplatesApi,
@@ -110,7 +110,7 @@ export async function getEntities(type: string): Promise<EntitiesGridData[]> {
 
 export async function exportDeploymentConfig(exportConfig: DeploymentExportRequest) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return await deploymentExportApi.exportConfig(exportConfig, token);
+  return await deploymentConfigApi.exportConfig(exportConfig, token);
 }
 
 export async function getDeploymentEntities(type: string): Promise<EntitiesGridData[]> {
