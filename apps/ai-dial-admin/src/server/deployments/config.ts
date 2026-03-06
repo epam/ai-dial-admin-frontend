@@ -9,7 +9,7 @@ const DEPLOYMENT_CONFIGS_URL = `${API}/configs`;
 export const DEPLOYMENT_EXPORT_CONFIG_URL = `${DEPLOYMENT_CONFIGS_URL}/export`;
 export const DEPLOYMENT_IMPORT_CONFIG_URL = `${DEPLOYMENT_CONFIGS_URL}/import`;
 
-export class DeploymentExportApi extends BaseApi {
+export class DeploymentConfigApi extends BaseApi {
   async exportConfig(exportConfig: DeploymentExportRequest, token: Token): Promise<{ blob: Blob; fileName: string }> {
     const res = await this.sendRequest(DEPLOYMENT_EXPORT_CONFIG_URL, 'POST', exportConfig, token);
     return { blob: await (res as Response)?.blob?.(), fileName: getFileName(res as Response) || '' };

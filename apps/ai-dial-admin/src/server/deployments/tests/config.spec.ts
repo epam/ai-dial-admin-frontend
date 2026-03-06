@@ -1,5 +1,5 @@
 import { describe, test, expect, vi } from 'vitest';
-import { DeploymentExportApi, DEPLOYMENT_IMPORT_CONFIG_URL } from '../export';
+import { DeploymentConfigApi, DEPLOYMENT_IMPORT_CONFIG_URL } from '../config';
 import { DeploymentImportResolutionPolicy } from '@/src/types/deployments/import';
 import createFetchMock from 'vitest-fetch-mock';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
@@ -7,8 +7,8 @@ import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
 
-describe('DeploymentExportApi - importConfig', () => {
-  const instance = new DeploymentExportApi({ host: TEST_URL });
+describe('DeploymentConfigApi - importConfig', () => {
+  const instance = new DeploymentConfigApi({ host: TEST_URL });
 
   test('calls import URL with resolutionPolicy query param and POST method', async () => {
     fetch.mockResponseOnce(JSON.stringify({ success: true }));

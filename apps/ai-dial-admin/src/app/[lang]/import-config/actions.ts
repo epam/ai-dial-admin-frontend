@@ -2,7 +2,7 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { deploymentExportApi, utilityApi } from '@/src/app/api/api';
+import { deploymentConfigApi, utilityApi } from '@/src/app/api/api';
 import {
   IMPORT_CONFIG_URL,
   IMPORT_ZIP_CONFIG_URL,
@@ -34,5 +34,5 @@ export async function previewZipConfig(file: FormData) {
 
 export async function importDeploymentConfig(file: FormData, resolutionPolicy: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return deploymentExportApi.importConfig(file, resolutionPolicy, token);
+  return deploymentConfigApi.importConfig(file, resolutionPolicy, token);
 }

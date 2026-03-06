@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { deploymentExportApi } from '@/src/app/api/api';
+import { deploymentConfigApi } from '@/src/app/api/api';
 import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { DeploymentExportComponentType } from '@/src/types/deployments/export';
 import { ExportType } from '@/src/types/export';
@@ -23,9 +23,9 @@ describe('Export config actions :: exportDeploymentConfig', () => {
     (getIsEnableAuthToggle as any).mockReturnValue(true);
   });
 
-  test('calls deploymentExportApi.exportConfig with request and token', async () => {
+  test('calls deploymentConfigApi.exportConfig with request and token', async () => {
     const mockResponse = { blob: new Blob(), fileName: 'export.zip' };
-    (deploymentExportApi.exportConfig as any).mockResolvedValue(mockResponse);
+    (deploymentConfigApi.exportConfig as any).mockResolvedValue(mockResponse);
 
     const request = {
       $type: ExportType.Custom,
@@ -37,13 +37,13 @@ describe('Export config actions :: exportDeploymentConfig', () => {
     const result = await exportDeploymentConfig(request);
 
     expect(getUserToken).toHaveBeenCalled();
-    expect(deploymentExportApi.exportConfig).toHaveBeenCalledWith(request, TOKEN_MOCK);
+    expect(deploymentConfigApi.exportConfig).toHaveBeenCalledWith(request, TOKEN_MOCK);
     expect(result).toBe(mockResponse);
   });
 
   test('passes addGlobalImageBuildDomainWhitelist flag correctly', async () => {
     const mockResponse = { blob: new Blob(), fileName: 'export.zip' };
-    (deploymentExportApi.exportConfig as any).mockResolvedValue(mockResponse);
+    (deploymentConfigApi.exportConfig as any).mockResolvedValue(mockResponse);
 
     const request = {
       $type: ExportType.Custom,
@@ -54,7 +54,7 @@ describe('Export config actions :: exportDeploymentConfig', () => {
 
     await exportDeploymentConfig(request);
 
-    expect(deploymentExportApi.exportConfig).toHaveBeenCalledWith(
+    expect(deploymentConfigApi.exportConfig).toHaveBeenCalledWith(
       expect.objectContaining({ addGlobalImageBuildDomainWhitelist: true }),
       TOKEN_MOCK,
     );
@@ -62,7 +62,7 @@ describe('Export config actions :: exportDeploymentConfig', () => {
 
   test('handles empty components array', async () => {
     const mockResponse = { blob: new Blob(), fileName: 'export.zip' };
-    (deploymentExportApi.exportConfig as any).mockResolvedValue(mockResponse);
+    (deploymentConfigApi.exportConfig as any).mockResolvedValue(mockResponse);
 
     const request = {
       $type: ExportType.Custom,
@@ -72,7 +72,7 @@ describe('Export config actions :: exportDeploymentConfig', () => {
 
     const result = await exportDeploymentConfig(request);
 
-    expect(deploymentExportApi.exportConfig).toHaveBeenCalledWith(request, TOKEN_MOCK);
+    expect(deploymentConfigApi.exportConfig).toHaveBeenCalledWith(request, TOKEN_MOCK);
     expect(result).toBe(mockResponse);
   });
 });
