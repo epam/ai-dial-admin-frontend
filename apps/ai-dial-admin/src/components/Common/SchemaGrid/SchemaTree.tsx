@@ -38,7 +38,7 @@ const SchemaTree: FC<SchemaTreeProps> = ({ responseSchema, onSelect }) => {
 
   const nodes = useMemo(() => {
     if (!responseSchema || responseSchema.type !== 'object') return [];
-    return schemaToTreeNodes(responseSchema, '');
+    return schemaToTreeNodes(responseSchema, '', responseSchema);
   }, [responseSchema]);
 
   if (nodes.length === 0) {

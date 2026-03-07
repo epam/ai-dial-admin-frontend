@@ -1,5 +1,7 @@
 import { JSONSchema7, JSONSchema7Definition, JSONSchema7TypeName } from 'json-schema';
 
+import { resolveRef } from '@/src/utils/schema';
+
 export interface SchemaFieldRow {
   id: string;
   name: string;
@@ -41,44 +43,52 @@ export const createEmptyField = (parentId: string | null = null, depth = 0): Sch
 
 const isJSONSchema7 = (def: JSONSchema7Definition): def is JSONSchema7 => typeof def === 'object';
 
-export const jsonSchemaToFields = (schema: JSONSchema7 | undefined): SchemaFieldRow[] => {
-  if (!schema || schema.type !== 'object' || !schema.properties) return [];
+function resolveDef(def: JSONSchema7Definition, root: JSONSchema7): JSONSchema7Definition {
+  if (typeof def !== 'object' || !def || !('$ref' in def) || !def.$ref) return def;
+  const resolved = resolveRef(root, def.$ref);
+  return resolved ?? def;
+}
 
+export const jsonSchemaToFields = (schema: JSONSchema7 | undefined, root?: JSONSchema7): SchemaFieldRow[] => {
+  if (!schema || schema.type !== 'object' || !schema.properties) return [];
+  const rootSchema = root ?? schema;
   const requiredFields = schema.required || [];
 
   return Object.entries(schema.properties).map(([name, def]) => {
-    if (!isJSONSchema7(def)) {
+    const resolvedDef = resolveDef(def, rootSchema);
+    if (!isJSONSchema7(resolvedDef)) {
       return {
         ...createEmptyField(null, 0),
         name,
       };
     }
 
-    const type = (def.type as JSONSchema7TypeName) || 'string';
+    const type = (resolvedDef.type as JSONSchema7TypeName) || 'string';
     const field: SchemaFieldRow = {
       id: generateFieldId(),
       name,
       type,
       required: requiredFields.includes(name),
-      description: def.description || '',
+      description: resolvedDef.description || '',
       expanded: false,
       children: [],
       parentId: null,
       depth: 0,
     };
 
-    if (type === 'object' && def.properties) {
-      const nestedRequired = def.required || [];
-      field.children = Object.entries(def.properties).map(([childName, childDef]) => {
-        if (!isJSONSchema7(childDef)) {
+    if (type === 'object' && resolvedDef.properties) {
+      const nestedRequired = resolvedDef.required || [];
+      field.children = Object.entries(resolvedDef.properties).map(([childName, childDef]) => {
+        const resolvedChild = resolveDef(childDef, rootSchema);
+        if (!isJSONSchema7(resolvedChild)) {
           return { ...createEmptyField(field.id, 1), name: childName };
         }
         return {
           id: generateFieldId(),
           name: childName,
-          type: (childDef.type as JSONSchema7TypeName) || 'string',
+          type: (resolvedChild.type as JSONSchema7TypeName) || 'string',
           required: nestedRequired.includes(childName),
-          description: childDef.description || '',
+          description: resolvedChild.description || '',
           expanded: false,
           children: [],
           parentId: field.id,
@@ -88,24 +98,25 @@ export const jsonSchemaToFields = (schema: JSONSchema7 | undefined): SchemaField
       if (field.children.length) field.expanded = true;
     } else if (
       type === 'array' &&
-      def.items &&
-      !Array.isArray(def.items) &&
-      typeof def.items === 'object' &&
-      isJSONSchema7(def.items as JSONSchema7Definition) &&
-      (def.items as JSONSchema7).properties
+      resolvedDef.items &&
+      !Array.isArray(resolvedDef.items) &&
+      typeof resolvedDef.items === 'object' &&
+      isJSONSchema7(resolvedDef.items as JSONSchema7Definition) &&
+      (resolvedDef.items as JSONSchema7).properties
     ) {
-      const items = def.items as JSONSchema7;
+      const items = resolvedDef.items as JSONSchema7;
       const nestedRequired = items.required || [];
       field.children = Object.entries(items.properties!).map(([childName, childDef]) => {
-        if (!isJSONSchema7(childDef)) {
+        const resolvedChild = resolveDef(childDef, rootSchema);
+        if (!isJSONSchema7(resolvedChild)) {
           return { ...createEmptyField(field.id, 1), name: childName };
         }
         return {
           id: generateFieldId(),
           name: childName,
-          type: (childDef.type as JSONSchema7TypeName) || 'string',
+          type: (resolvedChild.type as JSONSchema7TypeName) || 'string',
           required: nestedRequired.includes(childName),
-          description: childDef.description || '',
+          description: resolvedChild.description || '',
           expanded: false,
           children: [],
           parentId: field.id,
@@ -223,11 +234,17 @@ export const flattenFields = (fields: SchemaFieldRow[], depth = 0): SchemaFieldR
   return result;
 };
 
-export const schemaToTreeNodes = (schema: JSONSchema7 | undefined, parentPath: string): SchemaTreeNode[] => {
+export const schemaToTreeNodes = (
+  schema: JSONSchema7 | undefined,
+  parentPath: string,
+  root?: JSONSchema7,
+): SchemaTreeNode[] => {
   if (!schema || !schema.properties) return [];
+  const rootSchema = root ?? schema;
 
   return Object.entries(schema.properties).map(([name, def]) => {
-    if (!isJSONSchema7(def)) {
+    const resolvedDef = resolveDef(def, rootSchema);
+    if (!isJSONSchema7(resolvedDef)) {
       return {
         path: parentPath ? `${parentPath}.${name}` : name,
         name,
@@ -236,23 +253,23 @@ export const schemaToTreeNodes = (schema: JSONSchema7 | undefined, parentPath: s
       };
     }
 
-    const type = (def.type as JSONSchema7TypeName) || 'string';
+    const type = (resolvedDef.type as JSONSchema7TypeName) || 'string';
     const path = parentPath ? `${parentPath}.${name}` : name;
     let children: SchemaTreeNode[] = [];
 
-    if (type === 'object' && def.properties) {
-      children = schemaToTreeNodes(def as JSONSchema7, path);
+    if (type === 'object' && resolvedDef.properties) {
+      children = schemaToTreeNodes(resolvedDef as JSONSchema7, path, rootSchema);
     } else if (
       type === 'array' &&
-      def.items &&
-      !Array.isArray(def.items) &&
-      typeof def.items === 'object' &&
-      isJSONSchema7(def.items as JSONSchema7Definition)
+      resolvedDef.items &&
+      !Array.isArray(resolvedDef.items) &&
+      typeof resolvedDef.items === 'object' &&
+      isJSONSchema7(resolvedDef.items as JSONSchema7Definition)
     ) {
-      const items = def.items as JSONSchema7;
+      const items = resolvedDef.items as JSONSchema7;
       if (items.properties) {
         // Child paths through array use [0] index for JSONata (e.g. choices[0].message.content)
-        children = schemaToTreeNodes(items, `${path}[0]`);
+        children = schemaToTreeNodes(items, `${path}[0]`, rootSchema);
       }
     }
 

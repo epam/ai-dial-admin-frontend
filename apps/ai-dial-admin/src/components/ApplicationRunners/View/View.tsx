@@ -71,6 +71,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
   const [coreRunner, setCoreRunner] = useState<DialApplicationScheme | null>(null);
   const [isCreateAppModalOpen, setIsCreateAppModalOpen] = useState(false);
   const [isCreateAssetAppModalOpen, setIsCreateAssetAppModalOpen] = useState(false);
+  const [isSkipRefresh, setIsSkipRefresh] = useState(true);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -113,6 +114,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
     if (isEditorEnabled) {
       setSelectedFormat(ExportFormat.ADMIN);
     }
+    setIsSkipRefresh(false);
     setSelectedRunner(cloneDeep(originalScheme));
   }, [isEditorEnabled, originalScheme]);
 
@@ -138,6 +140,14 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
       }
     });
   }, [selectedFormat, selectedRunner, originalScheme.$id, etag, dispatch, showNotification, t, router]);
+
+  const onChangeRunner = useCallback(
+    (runner: DialApplicationScheme) => {
+      setSelectedRunner(runner);
+      setIsSkipRefresh(true);
+    },
+    [setSelectedRunner],
+  );
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
@@ -169,8 +179,9 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
             activeTab={activeTab}
             selectedFormat={selectedFormat}
             selectedRunner={selectedRunner}
-            onChange={setSelectedRunner}
+            onChange={onChangeRunner}
             names={names}
+            isSkipRefresh={isSkipRefresh}
             {...props}
           />
         )}

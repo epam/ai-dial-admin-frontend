@@ -221,6 +221,71 @@ describe('jsonSchemaToFields', () => {
     expect(fields[0].children).toEqual([]);
   });
 
+  test('should resolve $ref from $defs when building fields', () => {
+    const schema: JSONSchema7 = {
+      type: 'object',
+      properties: {
+        user: { $ref: '#/$defs/User' },
+        count: { type: 'integer' },
+      },
+      $defs: {
+        User: {
+          type: 'object',
+          properties: {
+            login: { type: 'string', description: 'Username' },
+            role: { type: 'string' },
+          },
+          required: ['login'],
+        },
+      },
+    };
+
+    const fields = jsonSchemaToFields(schema, schema);
+
+    expect(fields).toHaveLength(2);
+    expect(fields[0]).toMatchObject({
+      name: 'user',
+      type: 'object',
+      required: false,
+      expanded: true,
+    });
+    expect(fields[0].children).toHaveLength(2);
+    expect(fields[0].children[0]).toMatchObject({
+      name: 'login',
+      type: 'string',
+      required: true,
+      description: 'Username',
+    });
+    expect(fields[0].children[1]).toMatchObject({ name: 'role', type: 'string', required: false });
+    expect(fields[1]).toMatchObject({ name: 'count', type: 'integer' });
+  });
+
+  test('should resolve $ref from definitions when building fields', () => {
+    const schema: JSONSchema7 = {
+      type: 'object',
+      properties: {
+        address: { $ref: '#/definitions/Address' },
+      },
+      definitions: {
+        Address: {
+          type: 'object',
+          properties: {
+            city: { type: 'string' },
+            zip: { type: 'integer' },
+          },
+        },
+      },
+    };
+
+    const fields = jsonSchemaToFields(schema, schema);
+
+    expect(fields).toHaveLength(1);
+    expect(fields[0]).toMatchObject({ name: 'address', type: 'object' });
+    expect(fields[0].children).toHaveLength(2);
+    expect(fields[0].children[0]).toMatchObject({ name: 'city', type: 'string' });
+    expect(fields[0].children[1]).toMatchObject({ name: 'zip', type: 'integer' });
+  });
+
   test('should handle boolean schema definitions gracefully', () => {
     const schema: JSONSchema7 = {
       type: 'object',
@@ -828,6 +893,48 @@ describe('schemaToTreeNodes', () => {
   test('should return empty array for schema without properties', () => {
     expect(schemaToTreeNodes({ type: 'object' }, '')).toEqual([]);
     expect(schemaToTreeNodes({ type: 'string' } as JSONSchema7, '')).toEqual([]);
+  });
+
+  test('should resolve $ref from $defs when building tree nodes', () => {
+    const schema: JSONSchema7 = {
+      type: 'object',
+      properties: {
+        profile: { $ref: '#/$defs/Profile' },
+        id: { type: 'string' },
+      },
+      $defs: {
+        Profile: {
+          type: 'object',
+          properties: {
+            displayName: { type: 'string' },
+            age: { type: 'integer' },
+          },
+        },
+      },
+    };
+
+    const nodes = schemaToTreeNodes(schema, '', schema);
+
+    expect(nodes).toHaveLength(2);
+    expect(nodes[0]).toMatchObject({
+      path: 'profile',
+      name: 'profile',
+      type: 'object',
+    });
+    expect(nodes[0].children).toHaveLength(2);
+    expect(nodes[0].children[0]).toMatchObject({
+      path: 'profile.displayName',
+      name: 'displayName',
+      type: 'string',
+      children: [],
+    });
+    expect(nodes[0].children[1]).toMatchObject({
+      path: 'profile.age',
+      name: 'age',
+      type: 'integer',
+      children: [],
+    });
+    expect(nodes[1]).toMatchObject({ path: 'id', name: 'id', type: 'string', children: [] });
   });
 
   test('should convert flat object schema to tree nodes with empty parentPath', () => {

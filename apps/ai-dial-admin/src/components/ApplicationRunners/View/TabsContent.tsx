@@ -4,9 +4,11 @@ import { FC } from 'react';
 
 import AppRunnerApplications from '@/src/components/ApplicationRunners/ConfigurationView/Applications';
 import AppRunnerFeatures from '@/src/components/ApplicationRunners/ConfigurationView/Features';
-import ParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
-import EntityRoutes from '@/src/components/EntityView/AppRoute/AppRoute';
+import Parameters from '@/src/components/ApplicationRunners/ConfigurationView/Parameters';
+import SchemeProperties from '@/src/components/ApplicationRunners/ConfigurationView/Properties';
 import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
+import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
+import EntityRoutes from '@/src/components/EntityView/AppRoute/AppRoute';
 import EntityInterceptors from '@/src/components/EntityView/Interceptors/Interceptors';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
@@ -14,8 +16,6 @@ import { DialRole } from '@/src/models/dial/role';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
-import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
-import SchemeProperties from '@/src/components/ApplicationRunners/ConfigurationView/Properties';
 
 interface Props {
   activeTab: EntityViewTab;
@@ -24,6 +24,7 @@ interface Props {
   interceptors: DialInterceptor[];
   selectedRunner: DialApplicationScheme;
   names: string[];
+  isSkipRefresh: boolean;
   onChange: (runner: DialApplicationScheme) => void;
 }
 
@@ -34,6 +35,7 @@ const TabsContent: FC<Props> = ({
   roles,
   selectedRunner,
   interceptors,
+  isSkipRefresh,
   onChange,
 }) => {
   return (
@@ -50,7 +52,7 @@ const TabsContent: FC<Props> = ({
         )}
 
         {activeTab === EntityViewTab.Parameters && (
-          <ParametersTab view={ApplicationRoute.ApplicationRunners} application={selectedRunner} />
+          <Parameters runner={selectedRunner} onChangeRunner={onChange} isSkipRefresh={isSkipRefresh} />
         )}
 
         {activeTab === EntityViewTab.Features && (

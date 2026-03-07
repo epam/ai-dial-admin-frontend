@@ -21,7 +21,7 @@ interface SchemaGridProps {
 
 const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh }) => {
   const t = useI18n();
-  const [fields, setFields] = useState<SchemaFieldRow[]>(() => jsonSchemaToFields(schema));
+  const [fields, setFields] = useState<SchemaFieldRow[]>(() => jsonSchemaToFields(schema, schema));
   const fieldsRef = useRef(fields);
   const gridApiRef = useRef<GridApi | null>(null);
   const onChangeRef = useRef(onChange);
@@ -39,7 +39,7 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh }) =>
   useEffect(() => {
     if (!isEqual(prevSchemaRef.current, schema)) {
       prevSchemaRef.current = schema;
-      const newFields = jsonSchemaToFields(schema);
+      const newFields = jsonSchemaToFields(schema, schema);
       setFields(newFields);
     }
   }, [schema]);
