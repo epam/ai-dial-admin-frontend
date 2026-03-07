@@ -24,7 +24,7 @@ interface Props {
   onChangeAdapter: (adapter: DialAdapter) => void;
 }
 
-const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isModal }) => {
+const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isModal = false }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
   const { featureFlags } = useAppContext();
