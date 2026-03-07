@@ -8,16 +8,10 @@ import { JSONSchema7 } from 'json-schema';
 import isEqual from 'lodash/isEqual';
 
 import GridView from '@/src/components/Grid/GridView/GridView';
-import { getSchemaGridColumns } from '@/src/components/TestSuites/utils/columns';
-import {
-  SchemaFieldRow,
-  createEmptyField,
-  fieldsToJsonSchema,
-  flattenFields,
-  jsonSchemaToFields,
-} from '@/src/components/TestSuites/utils/schema';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { getSchemaGridColumns } from './columns';
+import { SchemaFieldRow, createEmptyField, fieldsToJsonSchema, flattenFields, jsonSchemaToFields } from './utils';
 
 interface SchemaGridProps {
   schema?: JSONSchema7;

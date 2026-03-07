@@ -10,7 +10,7 @@ import {
   flattenFields,
   schemaToTreeNodes,
   SchemaFieldRow,
-} from '../schema';
+} from '../utils';
 
 describe('getSchemaTypes', () => {
   test('should return all JSON Schema 7 types', () => {
