@@ -25,7 +25,7 @@ interface Props {
   selectedRunner: DialApplicationScheme;
   names: string[];
   isSkipRefresh: boolean;
-  onChange: (runner: DialApplicationScheme) => void;
+  onChange: (runner: DialApplicationScheme, isSkipRefresh?: boolean) => void;
 }
 
 const TabsContent: FC<Props> = ({

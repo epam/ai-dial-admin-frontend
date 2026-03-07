@@ -286,6 +286,40 @@ describe('jsonSchemaToFields', () => {
     expect(fields[0].children[1]).toMatchObject({ name: 'zip', type: 'integer' });
   });
 
+  test('should preserve dial:meta value as dialMeta on first-level properties only', () => {
+    const schema = {
+      type: 'object' as const,
+      properties: {
+        orchestrator: {
+          type: 'object' as const,
+          properties: {
+            deployment: { $ref: '#/$defs/DialDeploymentConfig', description: 'Deployment config' },
+            name: { type: 'string' as const },
+          },
+          required: ['deployment'],
+          title: 'OrchestratorConfig',
+          description: 'Orchestrator config',
+          'dial:meta': {
+            'dial:propertyKind': 'server',
+            'dial:propertyOrder': 1,
+          },
+        },
+        plain: { type: 'string' as const },
+      },
+    };
+
+    const fields = jsonSchemaToFields(schema as JSONSchema7, schema as JSONSchema7);
+
+    expect(fields).toHaveLength(2);
+    expect(fields[0].name).toBe('orchestrator');
+    expect(fields[0].dialMeta).toEqual({ 'dial:propertyKind': 'server', 'dial:propertyOrder': 1 });
+    expect(fields[0].children).toHaveLength(2);
+    expect(fields[0].children[0].dialMeta).toBeUndefined();
+    expect(fields[0].children[1].dialMeta).toBeUndefined();
+    expect(fields[1].name).toBe('plain');
+    expect(fields[1].dialMeta).toBeUndefined();
+  });
+
   test('should handle boolean schema definitions gracefully', () => {
     const schema: JSONSchema7 = {
       type: 'object',
@@ -343,6 +377,29 @@ describe('fieldsToJsonSchema', () => {
   test('should convert empty fields to empty object schema', () => {
     const schema = fieldsToJsonSchema([]);
     expect(schema).toEqual({ type: 'object', properties: {} });
+  });
+
+  test('should preserve dialMeta as dial:meta on first-level properties', () => {
+    const fields: SchemaFieldRow[] = [
+      {
+        id: 'f1',
+        name: 'orchestrator',
+        type: 'object',
+        required: false,
+        description: 'Orchestrator config',
+        expanded: false,
+        children: [],
+        parentId: null,
+        depth: 0,
+        dialMeta: { 'dial:propertyKind': 'server', 'dial:propertyOrder': 1 },
+      },
+    ];
+    const schema = fieldsToJsonSchema(fields);
+    expect(schema.properties?.orchestrator).toMatchObject({
+      type: 'object',
+      description: 'Orchestrator config',
+      'dial:meta': { 'dial:propertyKind': 'server', 'dial:propertyOrder': 1 },
+    });
   });
 
   test('should convert flat fields to JSON Schema', () => {
@@ -935,6 +992,30 @@ describe('schemaToTreeNodes', () => {
       children: [],
     });
     expect(nodes[1]).toMatchObject({ path: 'id', name: 'id', type: 'string', children: [] });
+  });
+
+  test('should preserve dial:meta value as dialMeta on first-level tree nodes only', () => {
+    const schema = {
+      type: 'object' as const,
+      properties: {
+        orchestrator: {
+          type: 'object' as const,
+          properties: { name: { type: 'string' as const } },
+          'dial:meta': { 'dial:propertyKind': 'server', 'dial:propertyOrder': 1 },
+        },
+        leaf: { type: 'string' as const },
+      },
+    };
+
+    const nodes = schemaToTreeNodes(schema as JSONSchema7, '', schema as JSONSchema7);
+
+    expect(nodes).toHaveLength(2);
+    expect(nodes[0].name).toBe('orchestrator');
+    expect(nodes[0].dialMeta).toEqual({ 'dial:propertyKind': 'server', 'dial:propertyOrder': 1 });
+    expect(nodes[0].children).toHaveLength(1);
+    expect(nodes[0].children[0].dialMeta).toBeUndefined();
+    expect(nodes[1].name).toBe('leaf');
+    expect(nodes[1].dialMeta).toBeUndefined();
   });
 
   test('should convert flat object schema to tree nodes with empty parentPath', () => {

@@ -13,6 +13,8 @@ export interface SchemaFieldRow {
   parentId: string | null;
   depth: number;
   isAddSubFieldRow?: boolean;
+  /** Value of dial:meta from schema (first-level only). Stored as-is, e.g. { "dial:propertyKind": "server", "dial:propertyOrder": 1 }. */
+  dialMeta?: Record<string, unknown>;
 }
 
 export interface SchemaTreeNode {
@@ -20,9 +22,12 @@ export interface SchemaTreeNode {
   name: string;
   type: JSONSchema7TypeName;
   children: SchemaTreeNode[];
+  /** Value of dial:meta from schema (first-level only). Stored as-is. */
+  dialMeta?: Record<string, unknown>;
 }
 
 const SCHEMA_TYPES: JSONSchema7TypeName[] = ['string', 'number', 'integer', 'boolean', 'object', 'array', 'null'];
+const DIAL_META_KEY = 'dial:meta';
 
 export const getSchemaTypes = (): JSONSchema7TypeName[] => SCHEMA_TYPES;
 
@@ -43,11 +48,18 @@ export const createEmptyField = (parentId: string | null = null, depth = 0): Sch
 
 const isJSONSchema7 = (def: JSONSchema7Definition): def is JSONSchema7 => typeof def === 'object';
 
-function resolveDef(def: JSONSchema7Definition, root: JSONSchema7): JSONSchema7Definition {
+export const getGridSchemaPart = (
+  s: JSONSchema7 | undefined,
+): Pick<JSONSchema7, 'type' | 'properties' | 'required'> | undefined => {
+  if (!s) return undefined;
+  return { type: s.type, properties: s.properties, required: s.required };
+};
+
+export const resolveDef = (def: JSONSchema7Definition, root: JSONSchema7): JSONSchema7Definition => {
   if (typeof def !== 'object' || !def || !('$ref' in def) || !def.$ref) return def;
   const resolved = resolveRef(root, def.$ref);
   return resolved ?? def;
-}
+};
 
 export const jsonSchemaToFields = (schema: JSONSchema7 | undefined, root?: JSONSchema7): SchemaFieldRow[] => {
   if (!schema || schema.type !== 'object' || !schema.properties) return [];
@@ -64,6 +76,11 @@ export const jsonSchemaToFields = (schema: JSONSchema7 | undefined, root?: JSONS
     }
 
     const type = (resolvedDef.type as JSONSchema7TypeName) || 'string';
+    const rawDef = typeof def === 'object' && def !== null ? (def as Record<string, unknown>) : null;
+    const dialMeta =
+      rawDef && typeof rawDef[DIAL_META_KEY] === 'object' && rawDef[DIAL_META_KEY] !== null
+        ? (rawDef[DIAL_META_KEY] as Record<string, unknown>)
+        : undefined;
     const field: SchemaFieldRow = {
       id: generateFieldId(),
       name,
@@ -74,6 +91,7 @@ export const jsonSchemaToFields = (schema: JSONSchema7 | undefined, root?: JSONS
       children: [],
       parentId: null,
       depth: 0,
+      ...(dialMeta && Object.keys(dialMeta).length > 0 && { dialMeta }),
     };
 
     if (type === 'object' && resolvedDef.properties) {
@@ -135,7 +153,7 @@ export const fieldsToJsonSchema = (fields: SchemaFieldRow[]): JSONSchema7 => {
 
   fields.forEach((field) => {
     const fieldName = field.name;
-    const prop: JSONSchema7 = { type: field.type };
+    const prop: JSONSchema7 & Record<string, unknown> = { type: field.type };
 
     if (field.description) {
       prop.description = field.description;
@@ -152,7 +170,11 @@ export const fieldsToJsonSchema = (fields: SchemaFieldRow[]): JSONSchema7 => {
       }
     }
 
-    schema.properties![fieldName] = prop;
+    if (field.parentId === null && field.dialMeta) {
+      prop[DIAL_META_KEY] = field.dialMeta;
+    }
+
+    schema.properties![fieldName] = prop as JSONSchema7;
     if (field.required) (schema.required as string[]).push(fieldName);
   });
 
@@ -242,6 +264,8 @@ export const schemaToTreeNodes = (
   if (!schema || !schema.properties) return [];
   const rootSchema = root ?? schema;
 
+  const isFirstLevel = parentPath === '';
+
   return Object.entries(schema.properties).map(([name, def]) => {
     const resolvedDef = resolveDef(def, rootSchema);
     if (!isJSONSchema7(resolvedDef)) {
@@ -273,6 +297,11 @@ export const schemaToTreeNodes = (
       }
     }
 
-    return { path, name, type, children };
+    const rawDef = isFirstLevel && typeof def === 'object' && def !== null ? (def as Record<string, unknown>) : null;
+    const dialMeta =
+      rawDef && typeof rawDef[DIAL_META_KEY] === 'object' && rawDef[DIAL_META_KEY] !== null
+        ? (rawDef[DIAL_META_KEY] as Record<string, unknown>)
+        : undefined;
+    return { path, name, type, children, ...(dialMeta && Object.keys(dialMeta).length > 0 && { dialMeta }) };
   });
 };

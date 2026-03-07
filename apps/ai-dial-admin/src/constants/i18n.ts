@@ -126,6 +126,8 @@ export enum BasicI18nKey {
   Request = 'Basic.Request',
   Response = 'Basic.Response',
   Variables = 'Basic.Variables',
+  Server = 'Basic.Server',
+  Client = 'Basic.Client',
 }
 
 export enum EntitiesI18nKey {

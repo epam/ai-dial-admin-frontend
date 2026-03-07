@@ -1,9 +1,10 @@
 'use client';
 
-import { FC, useCallback, useMemo } from 'react';
+import { FC, useCallback, useRef } from 'react';
 
 import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import { RJSFSchema } from '@rjsf/utils';
+import { JSONSchema7 } from 'json-schema';
 
 import SchemaGrid from '@/src/components/Common/SchemaGrid/SchemaGrid';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
@@ -12,29 +13,23 @@ import { DialApplicationScheme } from '@/src/models/dial/application';
 
 interface Props {
   runner?: DialApplicationScheme;
-  onChangeRunner: (runner: DialApplicationScheme) => void;
+  onChangeRunner: (runner: DialApplicationScheme, isSkipRefresh?: boolean) => void;
   isSkipRefresh?: boolean;
 }
 
 const Parameters: FC<Props> = ({ runner, onChangeRunner, isSkipRefresh }) => {
   const t = useI18n();
-  const rjsfSchema = useMemo(
-    () =>
-      ({
-        $defs: runner?.$defs,
-        properties: runner?.properties,
-        required: runner?.required,
-        type: 'object',
-      }) as RJSFSchema,
-    [runner?.$defs, runner?.properties, runner?.required],
-  );
+  const runnerRef = useRef(runner);
+  runnerRef.current = runner;
 
   const onChangeSchema = useCallback(
-    (schema: RJSFSchema) => {
+    (schema: RJSFSchema, skipRefresh?: boolean) => {
       delete schema.type;
-      onChangeRunner({ ...runner, ...(schema as unknown as DialApplicationScheme) });
+      const current = runnerRef.current;
+      if (!current) return;
+      onChangeRunner({ ...current, ...(schema as unknown as DialApplicationScheme) }, skipRefresh);
     },
-    [runner, onChangeRunner],
+    [onChangeRunner],
   );
 
   return (
@@ -42,7 +37,12 @@ const Parameters: FC<Props> = ({ runner, onChangeRunner, isSkipRefresh }) => {
       {!runner || !runner?.properties || !Object.keys(runner.properties || {}).length ? (
         <DialNoDataContent title={t(EntitiesI18nKey.NoConfigurationSchema)} />
       ) : (
-        <SchemaGrid schema={rjsfSchema} onChange={onChangeSchema} isSkipRefresh={isSkipRefresh} />
+        <SchemaGrid
+          schema={runner as JSONSchema7}
+          onChange={onChangeSchema}
+          isSkipRefresh={isSkipRefresh}
+          isDialSchema={true}
+        />
       )}
     </div>
   );

@@ -71,7 +71,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
   const [coreRunner, setCoreRunner] = useState<DialApplicationScheme | null>(null);
   const [isCreateAppModalOpen, setIsCreateAppModalOpen] = useState(false);
   const [isCreateAssetAppModalOpen, setIsCreateAssetAppModalOpen] = useState(false);
-  const [isSkipRefresh, setIsSkipRefresh] = useState(true);
+  const [isSkipRefresh, setIsSkipRefresh] = useState(false);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -142,11 +142,11 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
   }, [selectedFormat, selectedRunner, originalScheme.$id, etag, dispatch, showNotification, t, router]);
 
   const onChangeRunner = useCallback(
-    (runner: DialApplicationScheme) => {
+    (runner: DialApplicationScheme, isSkipRefresh?: boolean) => {
       setSelectedRunner(runner);
-      setIsSkipRefresh(true);
+      setIsSkipRefresh(!!isSkipRefresh);
     },
-    [setSelectedRunner],
+    [setSelectedRunner, setIsSkipRefresh],
   );
 
   return (

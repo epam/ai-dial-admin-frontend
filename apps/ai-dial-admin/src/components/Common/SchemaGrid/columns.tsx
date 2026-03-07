@@ -1,5 +1,6 @@
+import { FC } from 'react';
 import { SelectOption } from '@epam/ai-dial-ui-kit';
-import { ColDef, ValueGetterParams } from 'ag-grid-community';
+import { ColDef, ICellRendererParams, ValueGetterParams } from 'ag-grid-community';
 
 import { getSchemaTypes, SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
 import BooleanButtonCellRenderer from '@/src/components/Grid/CellRenderers/BooleanButtonCellRenderer';
@@ -12,6 +13,24 @@ import { BasicI18nKey } from '@/src/constants/i18n';
 
 const SCHEMA_TYPE_OPTIONS: SelectOption[] = getSchemaTypes().map((t) => ({ value: t, label: t }));
 
+const getPropertyKindOptions = (t: (key: BasicI18nKey) => string): SelectOption[] => [
+  { value: 'server', label: t(BasicI18nKey.Server) },
+  { value: 'client', label: t(BasicI18nKey.Client) },
+];
+
+const isFirstLevel = (data: SchemaFieldRow | undefined): boolean =>
+  !!data && data.parentId === null && !data.isAddSubFieldRow;
+
+const OrderCellRenderer: FC<ICellRendererParams<SchemaFieldRow>> = (params) => {
+  if (!isFirstLevel(params.data)) return null;
+  return <EditableCellRenderer {...params} {...params.colDef?.cellRendererParams} />;
+};
+
+const PropertyKindCellRenderer: FC<ICellRendererParams<SchemaFieldRow>> = (params) => {
+  if (!isFirstLevel(params.data)) return null;
+  return <SelectCellRenderer {...params} {...params.colDef?.cellRendererParams} />;
+};
+
 export const getSchemaGridColumns = (
   onToggleExpand: (data: SchemaFieldRow) => void,
   onChangeName: (value: string, data: SchemaFieldRow) => void,
@@ -20,76 +39,125 @@ export const getSchemaGridColumns = (
   onChangeRequired: (value: boolean, data: SchemaFieldRow) => void,
   onRemoveField: (data?: SchemaFieldRow) => void,
   t: (stringToTranslate: string) => string,
-): ColDef<SchemaFieldRow>[] => [
-  {
-    headerName: 'Name',
-    colId: 'name',
-    cellClass: NO_BORDER_CLASS,
-    flex: 2,
-    minWidth: 180,
-    sortable: false,
-    filter: false,
-    floatingFilter: false,
-    valueGetter: (params: ValueGetterParams<SchemaFieldRow>) =>
-      `${params.data?.name}|${params.data?.expanded}|${params.data?.type}`,
-    cellRenderer: TreeNameCellRenderer,
-    cellRendererParams: {
-      onToggleExpand,
-      onChangeName,
+  onChangeOrder?: (value: number | string, data: SchemaFieldRow) => void,
+  onChangePropertyKind?: (value: string, data: SchemaFieldRow) => void,
+): ColDef<SchemaFieldRow>[] => {
+  const baseColumns: ColDef<SchemaFieldRow>[] = [
+    {
+      headerName: 'Name',
+      colId: 'name',
+      cellClass: NO_BORDER_CLASS,
+      flex: 2,
+      minWidth: 180,
+      sortable: false,
+      filter: false,
+      floatingFilter: false,
+      valueGetter: (params: ValueGetterParams<SchemaFieldRow>) =>
+        `${params.data?.name}|${params.data?.expanded}|${params.data?.type}`,
+      cellRenderer: TreeNameCellRenderer,
+      cellRendererParams: {
+        onToggleExpand,
+        onChangeName,
+      },
     },
-  },
-  {
-    headerName: 'Type',
-    field: 'type',
-    cellClass: NO_BORDER_CLASS,
-    width: 140,
-    maxWidth: 160,
-    sortable: false,
-    filter: false,
-    floatingFilter: false,
-    cellRenderer: SelectCellRenderer,
-    cellRendererParams: {
-      items: SCHEMA_TYPE_OPTIONS,
-      onChange: onChangeType,
+    {
+      headerName: 'Type',
+      field: 'type',
+      cellClass: NO_BORDER_CLASS,
+      width: 140,
+      maxWidth: 160,
+      sortable: false,
+      filter: false,
+      floatingFilter: false,
+      cellRenderer: SelectCellRenderer,
+      cellRendererParams: {
+        items: SCHEMA_TYPE_OPTIONS,
+        onChange: onChangeType,
+      },
     },
-  },
-  {
-    headerName: 'Required',
-    field: 'required',
-    cellClass: NO_BORDER_CLASS,
-    width: 100,
-    maxWidth: 110,
-    sortable: false,
-    filter: false,
-    floatingFilter: false,
-    cellRenderer: BooleanButtonCellRenderer,
-    cellRendererParams: {
-      onChange: onChangeRequired,
-      trueLabel: t(BasicI18nKey.Required),
-      falseLabel: t(BasicI18nKey.Optional),
+    {
+      headerName: 'Required',
+      field: 'required',
+      cellClass: NO_BORDER_CLASS,
+      width: 100,
+      maxWidth: 110,
+      sortable: false,
+      filter: false,
+      floatingFilter: false,
+      cellRenderer: BooleanButtonCellRenderer,
+      cellRendererParams: {
+        onChange: onChangeRequired,
+        trueLabel: t(BasicI18nKey.Required),
+        falseLabel: t(BasicI18nKey.Optional),
+      },
+      tooltipValueGetter: () => undefined,
     },
-    tooltipValueGetter: () => undefined,
-  },
-  {
-    headerName: 'Description',
-    field: 'description',
-    cellClass: NO_BORDER_CLASS,
-    flex: 3,
-    minWidth: 160,
-    sortable: false,
-    filter: false,
-    floatingFilter: false,
-    cellRenderer: EditableCellRenderer,
-    cellRendererParams: {
-      hideTriangle: true,
-      skipRequired: true,
-      onChange: (value: string, data: SchemaFieldRow) => onChangeDescription(value, data),
+    {
+      headerName: 'Description',
+      field: 'description',
+      cellClass: NO_BORDER_CLASS,
+      flex: 3,
+      minWidth: 160,
+      sortable: false,
+      filter: false,
+      floatingFilter: false,
+      cellRenderer: EditableCellRenderer,
+      cellRendererParams: {
+        hideTriangle: true,
+        skipRequired: true,
+        onChange: (value: string, data: SchemaFieldRow) => onChangeDescription(value, data),
+      },
     },
-  },
-  {
+  ];
+
+  if (onChangeOrder) {
+    baseColumns.push({
+      headerName: 'Order',
+      colId: 'order',
+      cellClass: NO_BORDER_CLASS,
+      width: 90,
+      maxWidth: 110,
+      sortable: false,
+      filter: false,
+      floatingFilter: false,
+      valueGetter: (params: ValueGetterParams<SchemaFieldRow>) =>
+        isFirstLevel(params.data) ? params.data?.dialMeta?.['dial:propertyOrder'] : undefined,
+      cellRenderer: OrderCellRenderer,
+      cellRendererParams: {
+        inputType: 'number',
+        hideTriangle: true,
+        skipRequired: true,
+        onChange: (value: number | string, data: SchemaFieldRow) => onChangeOrder(value, data),
+      },
+    });
+  }
+
+  if (onChangePropertyKind) {
+    baseColumns.push({
+      headerName: 'Property kind',
+      colId: 'propertyKind',
+      cellClass: NO_BORDER_CLASS,
+      width: 130,
+      maxWidth: 150,
+      sortable: false,
+      filter: false,
+      floatingFilter: false,
+      valueGetter: (params: ValueGetterParams<SchemaFieldRow>) =>
+        isFirstLevel(params.data) ? params.data?.dialMeta?.['dial:propertyKind'] : undefined,
+      cellRenderer: PropertyKindCellRenderer,
+      cellRendererParams: {
+        items: getPropertyKindOptions(t),
+        onChange: (value: string, data: SchemaFieldRow) => onChangePropertyKind(value, data),
+      },
+    });
+  }
+
+  baseColumns.push({
     ...(ONE_ACTION_COLUMN(
       getRemoveOperation(onRemoveField, undefined, 'text-error w-4 h-4'),
     ) as ColDef<SchemaFieldRow>),
     floatingFilter: false,
-  },
-];
+  });
+
+  return baseColumns;
+};
