@@ -460,10 +460,7 @@ describe('jsonSchemaToFields', () => {
         tags: { oneOf: [{ type: 'array', items: { type: 'string' } }, { type: 'null' }] },
         count: { anyOf: [{ type: 'integer' }, { type: 'null' }] },
         nested: {
-          oneOf: [
-            { type: 'object', properties: { x: { type: 'string' } } },
-            { type: 'null' },
-          ],
+          oneOf: [{ type: 'object', properties: { x: { type: 'string' } } }, { type: 'null' }],
         },
       },
     };
@@ -850,7 +847,19 @@ describe('flattenFields', () => {
         required: false,
         description: '',
         expanded: true,
-        children: [{ id: 'c1', name: 'x', type: 'string', required: false, description: '', expanded: false, children: [], parentId: 'f1', depth: 1 }],
+        children: [
+          {
+            id: 'c1',
+            name: 'x',
+            type: 'string',
+            required: false,
+            description: '',
+            expanded: false,
+            children: [],
+            parentId: 'f1',
+            depth: 1,
+          },
+        ],
         parentId: null,
         depth: 0,
       },
