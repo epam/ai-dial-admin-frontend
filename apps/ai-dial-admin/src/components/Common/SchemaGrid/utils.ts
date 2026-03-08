@@ -48,6 +48,12 @@ export const createEmptyField = (parentId: string | null = null, depth = 0): Sch
 
 const isJSONSchema7 = (def: JSONSchema7Definition): def is JSONSchema7 => typeof def === 'object';
 
+/**
+ * Retrieve correct parts from schema for comparison between states to smoothly re-render grid
+ *
+ * @param {(JSONSchema7 | undefined)} s - schema, which may have unused fields
+ * @returns {(Pick<JSONSchema7, 'type' | 'properties' | 'required'> | undefined)} - new object with only necessary fields for grid, or undefined if input is undefined
+ */
 export const getGridSchemaPart = (
   s: JSONSchema7 | undefined,
 ): Pick<JSONSchema7, 'type' | 'properties' | 'required'> | undefined => {
@@ -55,12 +61,25 @@ export const getGridSchemaPart = (
   return { type: s.type, properties: s.properties, required: s.required };
 };
 
+/**
+ * Resolve $ref from scheme definitions
+ *
+ * @param {JSONSchema7Definition} def - scheme definition which may have $ref inside
+ * @param {JSONSchema7} root - root scheme where $defs array is located
+ * @returns {JSONSchema7Definition} - resolved definition or original if resolution fails
+ */
 export const resolveDef = (def: JSONSchema7Definition, root: JSONSchema7): JSONSchema7Definition => {
   if (typeof def !== 'object' || !def || !('$ref' in def) || !def.$ref) return def;
   const resolved = resolveRef(root, def.$ref);
   return resolved ?? def;
 };
 
+/**
+ * Check if schema type is null only
+ *
+ * @param {JSONSchema7} schema - schema to check
+ * @returns {boolean} - true if schema type is 'null' or ['null'], false otherwise
+ */
 export const isNullOnly = (schema: JSONSchema7): boolean => {
   if (schema.type === 'null') {
     return true;
@@ -71,6 +90,14 @@ export const isNullOnly = (schema: JSONSchema7): boolean => {
   return false;
 };
 
+/**
+ * Get the effective schema by resolving $ref and handling anyOf/oneOf to find the first non-null variant.
+ * This is used to determine the actual structure of fields for the grid.
+ *
+ * @param {JSONSchema7Definition} def - definition which may have $ref and/or anyOf/oneOf
+ * @param {JSONSchema7} root - root schema for resolving $ref
+ * @returns {(JSONSchema7 | null)} - effective schema with $ref resolved and anyOf/oneOf handled, or null if it cannot be determined
+ */
 export const getEffectiveSchema = (def: JSONSchema7Definition, root: JSONSchema7): JSONSchema7 | null => {
   if (typeof def !== 'object' || !def) {
     return null;
@@ -79,13 +106,14 @@ export const getEffectiveSchema = (def: JSONSchema7Definition, root: JSONSchema7
   if (typeof current !== 'object' || !current) {
     return null;
   }
-  current = current as JSONSchema7;
   const variants = current.anyOf ?? current.oneOf;
   if (Array.isArray(variants) && variants.length > 0) {
     const chosen = variants.find((v) => {
-      if (typeof v !== 'object' || !v) return false;
-      const r = resolveDef(v, root) as JSONSchema7;
-      return !isNullOnly(r);
+      if (typeof v !== 'object' || !v) {
+        return false;
+      }
+      const resolved = resolveDef(v, root) as JSONSchema7;
+      return !isNullOnly(resolved);
     });
     const variant = chosen ?? variants[0];
     if (typeof variant === 'object' && variant) {
@@ -96,8 +124,13 @@ export const getEffectiveSchema = (def: JSONSchema7Definition, root: JSONSchema7
   return current;
 };
 
-/** Get the primary type from a schema (handles type as string or array, e.g. ['string','null']). */
-function getPrimaryType(schema: JSONSchema7): JSONSchema7TypeName {
+/**
+ * Get the primary type from a schema (handles type as string or array, e.g. ['string','null']).
+ *
+ * @param {JSONSchema7} schema - schema to extract the primary type from
+ * @returns {JSONSchema7TypeName} - primary type of the schema
+ */
+export const getPrimaryType = (schema: JSONSchema7): JSONSchema7TypeName => {
   const type = schema.type;
   if (typeof type === 'string') {
     return type as JSONSchema7TypeName;
@@ -107,10 +140,19 @@ function getPrimaryType(schema: JSONSchema7): JSONSchema7TypeName {
     return first as JSONSchema7TypeName;
   }
   return 'string';
-}
+};
 
+/**
+ * Convert every definition into grid row, handle all types and nested structures, resolve $ref and effective schema for correct type detection.
+ *
+ * @param {(JSONSchema7 | undefined)} schema - JSON schema to convert, expected to be of type 'object' with properties
+ * @param {?JSONSchema7} [root] - root schema for resolving $ref
+ * @returns {SchemaFieldRow[]} - array of schema field rows
+ */
 export const jsonSchemaToFields = (schema: JSONSchema7 | undefined, root?: JSONSchema7): SchemaFieldRow[] => {
-  if (!schema || schema.type !== 'object' || !schema.properties) return [];
+  if (!schema || schema.type !== 'object' || !schema.properties) {
+    return [];
+  }
   const rootSchema = root ?? schema;
   const requiredFields = schema.required || [];
 
@@ -164,7 +206,9 @@ export const jsonSchemaToFields = (schema: JSONSchema7 | undefined, root?: JSONS
           depth: 1,
         };
       });
-      if (field.children.length) field.expanded = true;
+      if (field.children.length) {
+        field.expanded = true;
+      }
     } else if (
       type === 'array' &&
       effectiveDef.items &&
@@ -194,13 +238,21 @@ export const jsonSchemaToFields = (schema: JSONSchema7 | undefined, root?: JSONS
           depth: 1,
         };
       });
-      if (field.children.length) field.expanded = true;
+      if (field.children.length) {
+        field.expanded = true;
+      }
     }
 
     return field;
   });
 };
 
+/**
+ * Converts an array of schema field rows into a JSON schema.
+ *
+ * @param {SchemaFieldRow[]} fields - array of schema field rows to convert, expected to have a tree structure with parent-child relationships
+ * @returns {JSONSchema7} - the resulting JSON schema
+ */
 export const fieldsToJsonSchema = (fields: SchemaFieldRow[]): JSONSchema7 => {
   const schema: JSONSchema7 = { type: 'object', properties: {}, required: [] };
 
@@ -216,7 +268,9 @@ export const fieldsToJsonSchema = (fields: SchemaFieldRow[]): JSONSchema7 => {
       if (field.type === 'object') {
         const nested = fieldChildrenToObjectSchema(field.children);
         prop.properties = nested.properties;
-        if (nested.required?.length) prop.required = nested.required;
+        if (nested.required?.length) {
+          prop.required = nested.required;
+        }
       } else {
         const items = fieldChildrenToObjectSchema(field.children);
         prop.items = items;
@@ -228,14 +282,24 @@ export const fieldsToJsonSchema = (fields: SchemaFieldRow[]): JSONSchema7 => {
     }
 
     schema.properties![fieldName] = prop as JSONSchema7;
-    if (field.required) (schema.required as string[]).push(fieldName);
+    if (field.required) {
+      (schema.required as string[]).push(fieldName);
+    }
   });
 
-  if (!(schema.required as string[])?.length) delete schema.required;
+  if (!(schema.required as string[])?.length) {
+    delete schema.required;
+  }
 
   return schema;
 };
 
+/**
+ * Convert definition scheme children for nested structures in grid back to JSON schema recursively, used for object type with properties and array type with items.
+ *
+ * @param {SchemaFieldRow[]} children - array of schema field rows which are children of a parent field, expected to have a tree structure with parent-child relationships
+ * @returns {JSONSchema7} - the resulting JSON schema representing the children, with type 'object' and properties for object type, or with items for array type
+ */
 const fieldChildrenToObjectSchema = (children: SchemaFieldRow[]): JSONSchema7 => {
   const schema: JSONSchema7 = { type: 'object', properties: {} };
   const requiredList: string[] = [];
@@ -249,21 +313,36 @@ const fieldChildrenToObjectSchema = (children: SchemaFieldRow[]): JSONSchema7 =>
       if (child.type === 'object') {
         const nested = fieldChildrenToObjectSchema(child.children);
         childProp.properties = nested.properties;
-        if (nested.required?.length) childProp.required = nested.required;
+        if (nested.required?.length) {
+          childProp.required = nested.required;
+        }
       } else {
         childProp.items = fieldChildrenToObjectSchema(child.children);
       }
     }
 
     schema.properties![childName] = childProp;
-    if (child.required) requiredList.push(childName);
+    if (child.required) {
+      requiredList.push(childName);
+    }
   });
 
-  if (requiredList.length) schema.required = requiredList;
+  if (requiredList.length) {
+    schema.required = requiredList;
+  }
 
   return schema;
 };
 
+/**
+ * Fully flatten the tree structure of schema field rows into a flat array for grid consumption, while keeping track of depth for indentation and parent-child relationships.
+ * Also adds "Add Sub-field" rows for object and array types, and a root "Add Field" row if not readonly.
+ *
+ * @param {SchemaFieldRow[]} fields - array of schema field rows with tree structure (parent-child relationships) to flatten
+ * @param {number} [depth=0] - current depth level for indentation, used for recursion (start with 0 for root level)
+ * @param {?boolean} [isReadonly] - flag indicating if the grid is in readonly mode, which determines whether to include "Add Field" rows
+ * @returns {SchemaFieldRow[]} - flat array of schema field rows with depth information and "Add Field" rows included as needed, suitable for grid consumption
+ */
 export const flattenFields = (fields: SchemaFieldRow[], depth = 0, isReadonly?: boolean): SchemaFieldRow[] => {
   const result: SchemaFieldRow[] = [];
 
@@ -309,6 +388,15 @@ export const flattenFields = (fields: SchemaFieldRow[], depth = 0, isReadonly?: 
   return result;
 };
 
+/**
+ * Partial implementation of converting a JSON schema to tree nodes. Just to have simple tree structure for field paths in JSONata editor, without all the extra info needed for the grid.
+ * Does not handle all cases (e.g. arrays with non-object items), but covers basic nested objects and arrays of objects.
+ *
+ * @param {(JSONSchema7 | undefined)} schema - JSON schema to convert, expected to be of type 'object' with properties
+ * @param {string} parentPath - current path of the parent node, used for recursion to build full paths (start with empty string for root level)
+ * @param {?JSONSchema7} [root] - root schema for resolving $ref, needed for correct type detection when schema has references
+ * @returns {SchemaTreeNode[]} -  array of schema tree nodes with path, name, type, children, and optional dialMeta for first-level fields
+ */
 export const schemaToTreeNodes = (
   schema: JSONSchema7 | undefined,
   parentPath: string,
