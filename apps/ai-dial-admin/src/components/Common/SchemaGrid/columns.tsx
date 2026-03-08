@@ -39,6 +39,7 @@ export const getSchemaGridColumns = (
   onChangeRequired: (value: boolean, data: SchemaFieldRow) => void,
   onRemoveField: (data?: SchemaFieldRow) => void,
   t: (stringToTranslate: string) => string,
+  isReadonly?: boolean,
   onChangeOrder?: (value: number | string, data: SchemaFieldRow) => void,
   onChangePropertyKind?: (value: string, data: SchemaFieldRow) => void,
 ): ColDef<SchemaFieldRow>[] => {
@@ -58,6 +59,7 @@ export const getSchemaGridColumns = (
       cellRendererParams: {
         onToggleExpand,
         onChangeName,
+        isReadonly,
       },
     },
     {
@@ -73,6 +75,7 @@ export const getSchemaGridColumns = (
       cellRendererParams: {
         items: SCHEMA_TYPE_OPTIONS,
         onChange: onChangeType,
+        isReadonly,
       },
     },
     {
@@ -89,6 +92,7 @@ export const getSchemaGridColumns = (
         onChange: onChangeRequired,
         trueLabel: t(BasicI18nKey.Required),
         falseLabel: t(BasicI18nKey.Optional),
+        isReadonly,
       },
       tooltipValueGetter: () => undefined,
     },
@@ -105,6 +109,7 @@ export const getSchemaGridColumns = (
       cellRendererParams: {
         hideTriangle: true,
         skipRequired: true,
+        isReadonly,
         onChange: (value: string, data: SchemaFieldRow) => onChangeDescription(value, data),
       },
     },
@@ -126,7 +131,7 @@ export const getSchemaGridColumns = (
       cellRendererParams: {
         inputType: 'number',
         hideTriangle: true,
-        skipRequired: true,
+        isReadonly,
         onChange: (value: number | string, data: SchemaFieldRow) => onChangeOrder(value, data),
       },
     });
@@ -146,18 +151,21 @@ export const getSchemaGridColumns = (
         isFirstLevel(params.data) ? params.data?.dialMeta?.['dial:propertyKind'] : undefined,
       cellRenderer: PropertyKindCellRenderer,
       cellRendererParams: {
+        isReadonly,
         items: getPropertyKindOptions(t),
         onChange: (value: string, data: SchemaFieldRow) => onChangePropertyKind(value, data),
       },
     });
   }
 
-  baseColumns.push({
-    ...(ONE_ACTION_COLUMN(
-      getRemoveOperation(onRemoveField, undefined, 'text-error w-4 h-4'),
-    ) as ColDef<SchemaFieldRow>),
-    floatingFilter: false,
-  });
+  if (!isReadonly) {
+    baseColumns.push({
+      ...(ONE_ACTION_COLUMN(
+        getRemoveOperation(onRemoveField, undefined, 'text-error w-4 h-4'),
+      ) as ColDef<SchemaFieldRow>),
+      floatingFilter: false,
+    });
+  }
 
   return baseColumns;
 };

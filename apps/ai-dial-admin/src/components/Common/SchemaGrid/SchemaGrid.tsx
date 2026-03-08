@@ -25,9 +25,10 @@ interface SchemaGridProps {
   onChange: (schema: JSONSchema7, isSkipRefresh?: boolean) => void;
   isSkipRefresh?: boolean;
   isDialSchema?: boolean;
+  isReadonly?: boolean;
 }
 
-const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDialSchema }) => {
+const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDialSchema, isReadonly }) => {
   const t = useI18n();
   const [fields, setFields] = useState<SchemaFieldRow[]>(() => jsonSchemaToFields(schema, schema));
   const fieldsRef = useRef(fields);
@@ -83,10 +84,10 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
       setFields(updated);
       // Directly push rowData to grid since this bypasses onChange/isSkipRefresh flow
       if (!gridApiRef.current?.isDestroyed()) {
-        gridApiRef.current?.updateGridOptions({ rowData: flattenFields(updated) });
+        gridApiRef.current?.updateGridOptions({ rowData: flattenFields(updated, 0, isReadonly) });
       }
     },
-    [updateFieldInList],
+    [updateFieldInList, isReadonly],
   );
 
   const onChangeName = useCallback(
@@ -202,7 +203,7 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
     [updateFieldInList, updateFields, findFieldById],
   );
 
-  const rowData = useMemo(() => flattenFields(fields), [fields]);
+  const rowData = useMemo(() => flattenFields(fields, 0, isReadonly), [fields, isReadonly]);
 
   const columnDefs: ColDef[] = useMemo(
     () =>
@@ -214,6 +215,7 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
         onChangeRequired,
         onRemoveField,
         t,
+        isReadonly,
         isDialSchema ? onChangeOrder : undefined,
         isDialSchema ? onChangePropertyKind : undefined,
       ),
@@ -226,6 +228,7 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
       onRemoveField,
       t,
       isDialSchema,
+      isReadonly,
       onChangeOrder,
       onChangePropertyKind,
     ],

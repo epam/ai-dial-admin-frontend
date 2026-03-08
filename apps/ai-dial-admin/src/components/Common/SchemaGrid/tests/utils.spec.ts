@@ -1,10 +1,14 @@
 import { describe, test, expect } from 'vitest';
-import { JSONSchema7 } from 'json-schema';
+import { JSONSchema7, JSONSchema7Definition } from 'json-schema';
 
 import {
   getSchemaTypes,
   generateFieldId,
   createEmptyField,
+  getGridSchemaPart,
+  resolveDef,
+  isNullOnly,
+  getEffectiveSchema,
   jsonSchemaToFields,
   fieldsToJsonSchema,
   flattenFields,
@@ -52,6 +56,134 @@ describe('createEmptyField', () => {
     const field = createEmptyField('parent-1', 2);
     expect(field.parentId).toBe('parent-1');
     expect(field.depth).toBe(2);
+  });
+});
+
+describe('getGridSchemaPart', () => {
+  test('should return undefined for undefined schema', () => {
+    expect(getGridSchemaPart(undefined)).toBeUndefined();
+  });
+
+  test('should return only type, properties, and required', () => {
+    const schema: JSONSchema7 = {
+      type: 'object',
+      properties: { a: { type: 'string' } },
+      required: ['a'],
+      $defs: { X: { type: 'string' } },
+      description: 'ignored',
+    };
+    const part = getGridSchemaPart(schema);
+    expect(part).toEqual({ type: 'object', properties: schema.properties, required: ['a'] });
+    expect(part).not.toHaveProperty('$defs');
+    expect(part).not.toHaveProperty('description');
+  });
+
+  test('should handle schema without required', () => {
+    const schema: JSONSchema7 = { type: 'object', properties: {} };
+    expect(getGridSchemaPart(schema)).toEqual({ type: 'object', properties: {}, required: undefined });
+  });
+});
+
+describe('resolveDef', () => {
+  test('should return def unchanged when def has no $ref', () => {
+    const def: JSONSchema7 = { type: 'string' };
+    const root: JSONSchema7 = { type: 'object' };
+    expect(resolveDef(def, root)).toBe(def);
+  });
+
+  test('should resolve $ref against root definitions', () => {
+    const root: JSONSchema7 = {
+      type: 'object',
+      definitions: { Foo: { type: 'boolean' } },
+    };
+    const def = { $ref: '#/definitions/Foo' };
+    expect(resolveDef(def, root)).toEqual({ type: 'boolean' });
+  });
+
+  test('should resolve $ref against root $defs', () => {
+    const root: JSONSchema7 = {
+      type: 'object',
+      $defs: { Bar: { type: 'integer' } },
+    };
+    const def = { $ref: '#/$defs/Bar' };
+    expect(resolveDef(def, root)).toEqual({ type: 'integer' });
+  });
+
+  test('should return def when $ref cannot be resolved', () => {
+    const root: JSONSchema7 = { type: 'object' };
+    const def = { $ref: '#/definitions/Missing' };
+    expect(resolveDef(def, root)).toBe(def);
+  });
+});
+
+describe('isNullOnly', () => {
+  test('should return true for type "null"', () => {
+    expect(isNullOnly({ type: 'null' } as JSONSchema7)).toBe(true);
+  });
+
+  test('should return true for type ["null"]', () => {
+    expect(isNullOnly({ type: ['null'] } as JSONSchema7)).toBe(true);
+  });
+
+  test('should return false for type "string"', () => {
+    expect(isNullOnly({ type: 'string' } as JSONSchema7)).toBe(false);
+  });
+
+  test('should return false for type ["string", "null"]', () => {
+    expect(isNullOnly({ type: ['string', 'null'] } as JSONSchema7)).toBe(false);
+  });
+
+  test('should return false when type is undefined', () => {
+    expect(isNullOnly({} as JSONSchema7)).toBe(false);
+  });
+});
+
+describe('getEffectiveSchema', () => {
+  test('should return null for non-object def', () => {
+    const root: JSONSchema7 = { type: 'object' };
+    expect(getEffectiveSchema(undefined as unknown as JSONSchema7Definition, root)).toBeNull();
+    expect(getEffectiveSchema(true as unknown as JSONSchema7Definition, root)).toBeNull();
+  });
+
+  test('should return schema as-is when no anyOf/oneOf', () => {
+    const root: JSONSchema7 = { type: 'object' };
+    const def: JSONSchema7 = { type: 'boolean' };
+    expect(getEffectiveSchema(def, root)).toEqual(def);
+  });
+
+  test('should resolve $ref first then return', () => {
+    const root: JSONSchema7 = {
+      type: 'object',
+      $defs: { T: { type: 'number' } },
+    };
+    const def = { $ref: '#/$defs/T' };
+    expect(getEffectiveSchema(def, root)).toEqual({ type: 'number' });
+  });
+
+  test('should pick first non-null variant from anyOf', () => {
+    const root: JSONSchema7 = { type: 'object' };
+    const def: JSONSchema7 = {
+      anyOf: [{ type: 'null' }, { type: 'boolean' }, { type: 'string' }],
+    };
+    expect(getEffectiveSchema(def, root)).toEqual({ type: 'boolean' });
+  });
+
+  test('should pick first non-null variant from oneOf', () => {
+    const root: JSONSchema7 = { type: 'object' };
+    const def: JSONSchema7 = {
+      oneOf: [{ type: 'null' }, { type: 'array', items: { type: 'string' } }],
+    };
+    const result = getEffectiveSchema(def, root);
+    expect(result).toMatchObject({ type: 'array' });
+    expect(result?.items).toEqual({ type: 'string' });
+  });
+
+  test('should return first variant when all are null', () => {
+    const root: JSONSchema7 = { type: 'object' };
+    const def: JSONSchema7 = {
+      anyOf: [{ type: 'null' }],
+    };
+    expect(getEffectiveSchema(def, root)).toEqual({ type: 'null' });
   });
 });
 
@@ -318,6 +450,33 @@ describe('jsonSchemaToFields', () => {
     expect(fields[0].children[1].dialMeta).toBeUndefined();
     expect(fields[1].name).toBe('plain');
     expect(fields[1].dialMeta).toBeUndefined();
+  });
+
+  test('should derive boolean/array/object from anyOf/oneOf instead of defaulting to string', () => {
+    const schema: JSONSchema7 = {
+      type: 'object',
+      properties: {
+        flag: { anyOf: [{ type: 'boolean' }, { type: 'null' }] },
+        tags: { oneOf: [{ type: 'array', items: { type: 'string' } }, { type: 'null' }] },
+        count: { anyOf: [{ type: 'integer' }, { type: 'null' }] },
+        nested: {
+          oneOf: [
+            { type: 'object', properties: { x: { type: 'string' } } },
+            { type: 'null' },
+          ],
+        },
+      },
+    };
+
+    const fields = jsonSchemaToFields(schema);
+
+    expect(fields).toHaveLength(4);
+    expect(fields[0]).toMatchObject({ name: 'flag', type: 'boolean' });
+    expect(fields[1]).toMatchObject({ name: 'tags', type: 'array' });
+    expect(fields[2]).toMatchObject({ name: 'count', type: 'integer' });
+    expect(fields[3]).toMatchObject({ name: 'nested', type: 'object' });
+    expect(fields[3].children).toHaveLength(1);
+    expect(fields[3].children[0]).toMatchObject({ name: 'x', type: 'string' });
   });
 
   test('should handle boolean schema definitions gracefully', () => {
@@ -678,6 +837,31 @@ describe('flattenFields', () => {
     });
   });
 
+  test('should not add add-root-field or add-sub-field rows when isReadonly is true', () => {
+    const resultEmpty = flattenFields([], 0, true);
+    expect(resultEmpty).toHaveLength(0);
+    expect(resultEmpty.some((r) => r.isAddSubFieldRow)).toBe(false);
+
+    const fields: SchemaFieldRow[] = [
+      {
+        id: 'f1',
+        name: 'obj',
+        type: 'object',
+        required: false,
+        description: '',
+        expanded: true,
+        children: [{ id: 'c1', name: 'x', type: 'string', required: false, description: '', expanded: false, children: [], parentId: 'f1', depth: 1 }],
+        parentId: null,
+        depth: 0,
+      },
+    ];
+    const result = flattenFields(fields, 0, true);
+    expect(result).toHaveLength(2);
+    expect(result[0].name).toBe('obj');
+    expect(result[1].name).toBe('x');
+    expect(result.some((r) => r.isAddSubFieldRow)).toBe(false);
+  });
+
   test('should flatten simple fields and append add-root-field row', () => {
     const fields: SchemaFieldRow[] = [
       {
@@ -1016,6 +1200,22 @@ describe('schemaToTreeNodes', () => {
     expect(nodes[0].children[0].dialMeta).toBeUndefined();
     expect(nodes[1].name).toBe('leaf');
     expect(nodes[1].dialMeta).toBeUndefined();
+  });
+
+  test('should derive types from anyOf/oneOf in tree nodes', () => {
+    const schema: JSONSchema7 = {
+      type: 'object',
+      properties: {
+        enabled: { anyOf: [{ type: 'boolean' }, { type: 'null' }] },
+        list: { oneOf: [{ type: 'array', items: { type: 'string' } }, { type: 'null' }] },
+      },
+    };
+
+    const nodes = schemaToTreeNodes(schema, '', schema);
+
+    expect(nodes).toHaveLength(2);
+    expect(nodes[0]).toMatchObject({ path: 'enabled', name: 'enabled', type: 'boolean', children: [] });
+    expect(nodes[1]).toMatchObject({ path: 'list', name: 'list', type: 'array' });
   });
 
   test('should convert flat object schema to tree nodes with empty parentPath', () => {

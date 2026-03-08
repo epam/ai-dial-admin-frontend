@@ -41,7 +41,7 @@ const Parameters: FC<Props> = ({ runner, onChangeRunner, isSkipRefresh }) => {
           schema={runner as JSONSchema7}
           onChange={onChangeSchema}
           isSkipRefresh={isSkipRefresh}
-          isDialSchema={true}
+          isDialSchema
         />
       )}
     </div>
