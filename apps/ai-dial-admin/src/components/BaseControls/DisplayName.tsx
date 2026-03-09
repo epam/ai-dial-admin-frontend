@@ -15,10 +15,19 @@ interface Props {
   disabled?: boolean;
   isFullWidth?: boolean;
   names?: string[];
+  allowedEmptySymbols?: boolean;
   onChange?: (displayName?: string) => void;
 }
 
-const DisplayNameControl: FC<Props> = ({ displayName, required, isFullWidth = true, onChange, names, ...props }) => {
+const DisplayNameControl: FC<Props> = ({
+  displayName,
+  required,
+  isFullWidth = true,
+  onChange,
+  names,
+  allowedEmptySymbols = true,
+  ...props
+}) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
   const containerClassName = useMemo(() => getControlClassName(isFullWidth), [isFullWidth]);
@@ -27,11 +36,11 @@ const DisplayNameControl: FC<Props> = ({ displayName, required, isFullWidth = tr
 
   const validateDisplayName = useCallback(
     (displayName?: string) => {
-      const error = getErrorForName(displayName, names, t, false, false, true);
+      const error = getErrorForName(displayName, names, t, false, !allowedEmptySymbols, true);
       setDisplayNameError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !error });
     },
-    [dispatch, t, names],
+    [dispatch, t, names, allowedEmptySymbols],
   );
 
   // initial validation

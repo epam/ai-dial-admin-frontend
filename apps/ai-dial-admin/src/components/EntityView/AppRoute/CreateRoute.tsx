@@ -23,7 +23,7 @@ const CreateRoute: FC<Props> = ({ isModalOpen, routeNames, onClose, onCreate }) 
 
   const validateName = useCallback(
     (name?: string) => {
-      const error = getErrorForName(name, routeNames, t, false, false, true);
+      const error = getErrorForName(name, routeNames, t, false, true, true);
       setNameError(error);
     },
     [routeNames, t],
