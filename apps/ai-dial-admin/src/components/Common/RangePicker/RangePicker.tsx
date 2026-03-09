@@ -14,8 +14,20 @@ interface Props {
 
 const RangePicker: FC<Props> = ({ onChange, timeRange }) => {
   const t = useI18n();
-  const [startDate, setStartDate] = useState<Date | null>(timeRange?.startDate || null);
-  const [endDate, setEndDate] = useState<Date | null>(timeRange?.endDate || null);
+  const [startDate, setStartDate] = useState<Date | null>(() => {
+    const date = timeRange?.startDate || null;
+    if (date) {
+      date?.setHours(0, 0, 0, 0);
+    }
+    return date;
+  });
+  const [endDate, setEndDate] = useState<Date | null>(() => {
+    const date = timeRange?.endDate || null;
+    if (date) {
+      date.setHours(23, 59, 59, 999);
+    }
+    return date;
+  });
 
   const onClick = useCallback(() => {
     if (startDate && endDate) {
