@@ -100,7 +100,10 @@ const PublicationView = <T extends Publication>({ view, publication, application
   useEffect(() => {
     if (selectedPublication.folderId === addTrailingSlash(ROOT_FOLDER)) {
       setIsPermissionsChanged(false);
-    } else {
+      return;
+    }
+
+    const timeout = setTimeout(() => {
       getReqRef.current(getRules, selectedPublication.folderId).then((res) => {
         if (res.success) {
           const rule = res.response?.[selectedPublication.folderId] || [];
@@ -110,7 +113,9 @@ const PublicationView = <T extends Publication>({ view, publication, application
           showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
       });
-    }
+    }, 1000);
+
+    return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPublication.folderId]);
 
