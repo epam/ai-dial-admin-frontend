@@ -2,7 +2,7 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { utilityApi } from '@/src/app/api/api';
+import { deploymentConfigApi, utilityApi } from '@/src/app/api/api';
 import {
   IMPORT_CONFIG_URL,
   IMPORT_ZIP_CONFIG_URL,
@@ -30,4 +30,9 @@ export async function previewJsonConfigs(file: FormData) {
 export async function previewZipConfig(file: FormData) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return utilityApi.importZipConfig(PREVIEW_IMPORT_ZIP_CONFIG_URL, token, file);
+}
+
+export async function importDeploymentConfig(file: FormData, resolutionPolicy: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return deploymentConfigApi.importConfig(file, resolutionPolicy, token);
 }

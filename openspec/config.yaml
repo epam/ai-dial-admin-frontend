@@ -1,21 +1,70 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  # AI DIAL Admin Frontend
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+  ## Tech Stack
+  - Monorepo: Nx
+  - Framework: Next.js 15 (App Router with [lang] i18n via next-international)
+  - Language: TypeScript 5.9 (strict mode)
+  - UI: React 19, Tailwind CSS 3 (preferred), SCSS (for external component overrides)
+  - Auth: next-auth v4
+  - State: React Context + custom hooks (no external state management)
+  - API: Next.js server actions + occasional API routes
+  - Testing: Vitest + React Testing Library (unit for utils, component tests for UI)
+  - Linting: ESLint 9 + Prettier, husky + lint-staged pre-commit
+  - Commits: Conventional commits (feat/fix/chore with optional scope)
 
+  ## Key Libraries
+  - @epam/ai-dial-ui-kit: Design system with base components
+  - @epam/ai-dial-shared: Shared types/utilities across DIAL projects
+  - AG Grid for data grids
+  - ECharts for charts
+  - Monaco Editor for code editing
+  - @tabler/icons-react + @svgr/webpack for icons/SVGs
+  - react-dnd for drag and drop
+  - @rjsf for dynamic JSON Schema-driven forms
+  - Custom validation context for standard form validation
+
+  ## Path Alias
+  - @/* -> apps/ai-dial-admin/*
+
+  ## Architecture
+  - Single app: apps/ai-dial-admin
+  - Components: pragmatic organization in src/components/ — core app sections,
+    reusable common components, entity views/lists with co-located related components
+  - Theming: separate themes controlling color palette, icons and more via CSS variables
+    with custom Tailwind palette
+  - Error handling: error pages for server errors, toast notifications for action results
+  - Backend APIs:
+    - Core admin: github.com/epam/ai-dial-admin-backend
+    - Deployment manager: github.com/epam/ai-dial-admin-deployment-manager-backend
+
+rules:
+  proposal:
+    - Keep proposals concise and focused on the problem and solution
+    - Reference existing components/patterns when proposing changes
+    - Include a "Non-goals" section to keep scope clear
+    - Ask clarifying questions to gather details before finalizing the proposal
+    - Investigate the current codebase for related functionality before proposing — don't duplicate what already exists
+    - Consider impact on existing features — flag if the proposal could affect other parts of the app (shared components, contexts, API routes)
+  design:
+    - Use existing Tailwind theme tokens and CSS variables — don't introduce hardcoded colors
+    - Prefer extending existing components from @epam/ai-dial-ui-kit over creating new ones
+    - Consider i18n — all user-facing strings go through next-international
+    - Follow existing patterns in src/components/ for structuring new features
+    - Keep JSX clean — extract handlers, computed values, and complex props into named variables in the component body
+    - Apply base accessibility features targeting WCAG AA level
+  specs:
+    - Reference backend API contracts from ai-dial-admin-backend or ai-dial-admin-deployment-manager-backend
+    - Include validation requirements for any form fields
+    - Specify error/success notification behavior for actions
+    - Flag performance-sensitive areas that need memoization (useCallback/useMemo)
+    - Define aria/accessibility requirements for interactive components
+    - When specifying a feature, identify and include cleanup of related technical debt (TODOs, as any, eslint-disable) in nearby/related code
+  tasks:
+    - Reference specific file paths and component names
+    - Require unit tests for all new and updated code as a dedicated task
+    - Keep tasks small enough to be reviewable in a single PR
+    - In tests, prefer querying by role and text content over data-testid
+    - Run all code quality checks (lint, format, tests) as a final task after all implementation tasks are complete

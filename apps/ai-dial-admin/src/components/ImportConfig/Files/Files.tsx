@@ -11,11 +11,19 @@ import {
   DialFileIcon,
 } from '@epam/ai-dial-ui-kit';
 
+import ConfigScopeSelector from '@/src/components/Common/ConfigScopeSelector/ConfigScopeSelector';
 import { isLargeFile } from '@/src/components/EntityListView/Import/utils';
 import { BasicI18nKey, ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
-import { ARCHIVE_IMPORT_TYPE, DIAL_JSON_IMPORT_TYPE, IMPORT_RESOLUTIONS } from '@/src/constants/import';
+import {
+  ARCHIVE_IMPORT_TYPE,
+  DEPLOYMENT_IMPORT_RESOLUTIONS,
+  DIAL_JSON_IMPORT_TYPE,
+  IMPORT_RESOLUTIONS,
+} from '@/src/constants/import';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
+import { DeploymentImportResolutionPolicy } from '@/src/types/deployments/import';
+import { ExportComponentType } from '@/src/types/export';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 
 const IMPORT_FILE_TYPES = (t: (str: string) => string): RadioButtonWithContent[] => [
@@ -27,23 +35,32 @@ interface Props {
   files: File[];
   fileType: ImportFileType;
   isFilesValid?: boolean;
+  configScope: ExportComponentType;
+  deploymentsEnabled?: boolean;
   onChangeFiles: (files: File[]) => void;
   onChangeFileType: (fileType: string) => void;
   onChangeImportBody: (body: FormData) => void;
+  onChangeConfigScope: (scope: string) => void;
   onNextStep: () => void;
 }
 const Files: FC<Props> = ({
   files,
   fileType,
   isFilesValid,
+  configScope,
+  deploymentsEnabled,
   onChangeFiles,
   onNextStep,
   onChangeImportBody,
   onChangeFileType,
+  onChangeConfigScope,
 }) => {
   const t = useI18n();
 
+  const isDeployments = configScope === ExportComponentType.DEPLOYMENTS;
+
   const [activeResolution, setActiveResolution] = useState(ConflictResolutionPolicy.OVERRIDE);
+  const [deploymentResolution, setDeploymentResolution] = useState(DeploymentImportResolutionPolicy.OVERWRITE);
 
   useEffect(() => {
     const body = new FormData();
@@ -51,15 +68,26 @@ const Files: FC<Props> = ({
     files.forEach((file) => {
       body.append('file', file);
     });
-    body.append('resolutionPolicy', activeResolution.toUpperCase());
+    if (isDeployments) {
+      body.append('resolutionPolicy', deploymentResolution);
+    } else {
+      body.append('resolutionPolicy', activeResolution.toUpperCase());
+    }
     onChangeImportBody(body);
-  }, [files, activeResolution, onChangeImportBody]);
+  }, [files, activeResolution, deploymentResolution, isDeployments, onChangeImportBody]);
 
   const onChangeResolution = useCallback(
     (value: string) => {
       setActiveResolution(value as ConflictResolutionPolicy);
     },
     [setActiveResolution],
+  );
+
+  const onChangeDeploymentResolution = useCallback(
+    (value: string) => {
+      setDeploymentResolution(value as DeploymentImportResolutionPolicy);
+    },
+    [setDeploymentResolution],
   );
 
   const onChangeFile = useCallback(
@@ -81,26 +109,40 @@ const Files: FC<Props> = ({
         />
       </div>
       <div className="flex-1 min-h-0 gap-y-8 flex flex-col w-full overflow-auto">
-        <DialRadioGroup
-          radioButtons={IMPORT_RESOLUTIONS(t)}
-          activeRadioButton={activeResolution}
-          elementId="conflictResolution"
-          fieldTitle={t(ImportI18nKey.ConflictResolution)}
-          orientation={RadioGroupOrientation.Column}
-          onChange={onChangeResolution}
-        />
-        <div className="h-[104px]">
+        {deploymentsEnabled && <ConfigScopeSelector selectedScope={configScope} onChange={onChangeConfigScope} />}
+        {isDeployments ? (
           <DialRadioGroup
-            radioButtons={IMPORT_FILE_TYPES(t)}
-            activeRadioButton={fileType}
-            elementId="fileType"
-            fieldTitle={t(ImportI18nKey.FileType)}
+            radioButtons={DEPLOYMENT_IMPORT_RESOLUTIONS(t)}
+            activeRadioButton={deploymentResolution}
+            elementId="deploymentConflictResolution"
+            fieldTitle={t(ImportI18nKey.ConflictResolution)}
             orientation={RadioGroupOrientation.Column}
-            onChange={onChangeFileType}
+            onChange={onChangeDeploymentResolution}
           />
-        </div>
+        ) : (
+          <>
+            <DialRadioGroup
+              radioButtons={IMPORT_RESOLUTIONS(t)}
+              activeRadioButton={activeResolution}
+              elementId="conflictResolution"
+              fieldTitle={t(ImportI18nKey.ConflictResolution)}
+              orientation={RadioGroupOrientation.Column}
+              onChange={onChangeResolution}
+            />
+            <div className="h-[104px]">
+              <DialRadioGroup
+                radioButtons={IMPORT_FILE_TYPES(t)}
+                activeRadioButton={fileType}
+                elementId="fileType"
+                fieldTitle={t(ImportI18nKey.FileType)}
+                orientation={RadioGroupOrientation.Column}
+                onChange={onChangeFileType}
+              />
+            </div>
+          </>
+        )}
         <div className="flex-1 min-h-0">
-          {fileType === ImportFileType.ARCHIVE ? (
+          {isDeployments || fileType === ImportFileType.ARCHIVE ? (
             <DialLoadFileAreaField
               elementId="localFile"
               fieldTitle={t(ImportI18nKey.File)}

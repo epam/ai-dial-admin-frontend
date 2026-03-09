@@ -10,6 +10,8 @@ import {
 } from '@epam/ai-dial-ui-kit';
 import { IconEyeOff, IconUpload } from '@tabler/icons-react';
 
+import ConfigScopeSelector from '@/src/components/Common/ConfigScopeSelector/ConfigScopeSelector';
+
 import { exportConfig, exportConfigMap, exportDeploymentConfig } from '@/src/app/[lang]/export-config/actions';
 import ConfigContent from '@/src/components/ExportConfig/Content/ConfigContent';
 import DeploymentConfigContent from '@/src/components/ExportConfig/Content/DeploymentConfigContent';
@@ -49,20 +51,6 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap, deploymentsEnabled }) 
   const isDeploymentContext = useMemo(
     () => selectedComponentType === ExportComponentType.DEPLOYMENTS,
     [selectedComponentType],
-  );
-
-  const componentTypes: RadioButtonWithContent[] = useMemo(
-    () => [
-      {
-        id: ExportComponentType.ADMIN,
-        name: t(ExportI18nKey.EntitiesBuildersAccess),
-      },
-      {
-        id: ExportComponentType.DEPLOYMENTS,
-        name: t(ExportI18nKey.Deployments),
-      },
-    ],
-    [t],
   );
 
   const exportTypes: RadioButtonWithContent[] = [
@@ -237,14 +225,7 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap, deploymentsEnabled }) 
             <h3 className="mb-4">{t(ExportI18nKey.Structure)}</h3>
             <div className="flex flex-1 flex-col gap-y-8 min-h-0 min-w-0 overflow-auto">
               {deploymentsEnabled && (
-                <DialRadioGroup
-                  radioButtons={componentTypes}
-                  activeRadioButton={selectedComponentType}
-                  elementId="componentType"
-                  fieldTitle={t(ExportI18nKey.Components)}
-                  orientation={RadioGroupOrientation.Column}
-                  onChange={onChangeComponentType}
-                />
+                <ConfigScopeSelector selectedScope={selectedComponentType} onChange={onChangeComponentType} />
               )}
               {!isDeploymentContext && (
                 <>
