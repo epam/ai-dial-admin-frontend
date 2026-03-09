@@ -39,32 +39,34 @@ const KeyGenerateField: FC<Props> = ({ isKeyImmutable, keys, selectedKey, change
   };
 
   return (
-    <div className={classNames('flex items-end gap-x-3', !isKeyImmutable && 'w-full')}>
-      <div className={CONTROL_WITH_BUTTON_WIDTH}>
-        <DialPasswordInput
-          id="key"
-          labelProps={{ label: t(EntityFieldsI18nKey.keyValue), required: true }}
-          placeholder={t(EntityPlaceholdersI18nKey.KeyValue)}
-          value={selectedKey.key}
-          error={keyError?.text}
-          invalid={!!keyError}
-          onChange={onChangeKeyValue}
-        />
+    <div className="flex">
+      <div className={classNames('flex items-end gap-x-3', !isKeyImmutable && 'w-full')}>
+        <div className={CONTROL_WITH_BUTTON_WIDTH}>
+          <DialPasswordInput
+            id="key"
+            labelProps={{ label: t(EntityFieldsI18nKey.keyValue), required: true }}
+            placeholder={t(EntityPlaceholdersI18nKey.KeyValue)}
+            value={selectedKey.key}
+            error={keyError?.text}
+            invalid={!!keyError}
+            onChange={onChangeKeyValue}
+          />
+        </div>
+        {isKeyImmutable ? (
+          <CopyButton
+            buttonLabel={isMobile ? '' : t(ButtonsI18nKey.Copy)}
+            value={selectedKey.key}
+            valueLabel={t(EntityFieldsI18nKey.keyValue)}
+          />
+        ) : (
+          <DialGhostButton
+            className="ml-2"
+            iconBefore={<IconSparkles />}
+            label={t(ButtonsI18nKey.Generate)}
+            onClick={onGenerateKey}
+          />
+        )}
       </div>
-      {isKeyImmutable ? (
-        <CopyButton
-          buttonLabel={isMobile ? '' : t(ButtonsI18nKey.Copy)}
-          value={selectedKey.key}
-          valueLabel={t(EntityFieldsI18nKey.keyValue)}
-        />
-      ) : (
-        <DialGhostButton
-          className="ml-2"
-          iconBefore={<IconSparkles />}
-          label={t(ButtonsI18nKey.Generate)}
-          onClick={onGenerateKey}
-        />
-      )}
     </div>
   );
 };

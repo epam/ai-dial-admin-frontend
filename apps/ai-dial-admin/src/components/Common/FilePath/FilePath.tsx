@@ -1,7 +1,7 @@
-import { ChangeEvent, FC, useCallback, useState } from 'react';
+import { FC, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialLabel, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { DialInput, DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconFolderShare } from '@tabler/icons-react';
 
 import { FileManagerI18nKey } from '@/src/constants/i18n';
@@ -24,12 +24,8 @@ const FilePath: FC<Props> = ({ label, placeholder, disabled, value, modalTitle, 
   const t = useI18n();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const onInputChange = (event: ChangeEvent<HTMLInputElement>): void => {
-    onPathChange(event.target.value);
-  };
-
-  const onPathChange = (value: string) => {
-    onChange(value);
+  const onInputChange = (value?: string) => {
+    onChange(value || '');
   };
 
   const onOpenFilePathModal = useCallback(() => {
@@ -41,33 +37,30 @@ const FilePath: FC<Props> = ({ label, placeholder, disabled, value, modalTitle, 
   }, [setIsModalOpen]);
 
   return (
-    <div className="flex flex-col gap-y-2">
-      <DialLabel label={label} htmlFor="pathSelectButton" />
-      <div className="flex gap-2">
-        <div className={CONTROL_WITH_BUTTON_WIDTH}>
-          <input
-            disabled={disabled}
-            type="text"
-            value={value}
-            onChange={onInputChange}
-            placeholder={placeholder}
-            className="dial-input dial-input-field py-2 px-3"
-          />
-        </div>
-        <DialNeutralButton
-          disabled={disabled}
-          onClick={onOpenFilePathModal}
-          label={t(FileManagerI18nKey.Move)}
-          iconBefore={<IconFolderShare {...BASE_BUTTON_ICON_PROPS} />}
-        />
-      </div>
+    <div className="flex gap-2 items-end">
+      <DialInput
+        id="filePath"
+        disabled={disabled}
+        value={value}
+        onChange={onInputChange}
+        placeholder={placeholder}
+        labelProps={{ label }}
+        containerClassName={`${CONTROL_WITH_BUTTON_WIDTH} flex-none`}
+      />
+      <DialNeutralButton
+        disabled={disabled}
+        onClick={onOpenFilePathModal}
+        label={t(FileManagerI18nKey.Move)}
+        iconBefore={<IconFolderShare {...BASE_BUTTON_ICON_PROPS} />}
+      />
+
       {isModalOpen &&
         createPortal(
           <FilePathModal
             modalTitle={modalTitle}
             isModalOpen={isModalOpen}
             onClose={onCloseFilePathModal}
-            onApply={onPathChange}
+            onApply={onChange}
             initialPath={value}
             context={context}
           />,
