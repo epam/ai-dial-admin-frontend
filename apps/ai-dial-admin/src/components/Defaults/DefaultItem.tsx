@@ -141,6 +141,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
               value={item.value as object}
               label={isFirstLine ? t(BasicI18nKey.Value) : ''}
               onChangeValue={onChangeValue}
+              disableValidation
             />
           )}
         </div>
