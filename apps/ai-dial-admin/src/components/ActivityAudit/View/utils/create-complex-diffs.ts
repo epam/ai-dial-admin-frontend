@@ -246,16 +246,19 @@ export const compareDefaults = (
     if (!diffMap[sectionKey]) diffMap[sectionKey] = [];
     const v1 = val1[defaultKey];
     const v2 = val2[defaultKey];
-
+    const v1Type = typeof v1;
+    const v2Type = typeof v2;
+    const correctV1 = v1Type === 'object' ? JSON.stringify(v1) : v1;
+    const correctV2 = v2Type === 'object' ? JSON.stringify(v2) : v2;
     if (v1 != null && v2 == null) {
-      const valueObject = { key: defaultKey, value: v1, type: typeof v1 };
+      const valueObject = { key: defaultKey, value: correctV1, type: v1Type };
       compareSimpleObjects(diffMap[sectionKey], valueObject, createEmptyObjectWithKeys(valueObject), isCurrent);
     } else if (v1 == null && v2 != null) {
-      const valueObject = { key: defaultKey, value: v2, type: typeof v2 };
+      const valueObject = { key: defaultKey, value: correctV2, type: v2Type };
       compareSimpleObjects(diffMap[sectionKey], createEmptyObjectWithKeys(valueObject), valueObject, isCurrent);
     } else if (v1 != null && v2 != null) {
-      const v1Object = { key: defaultKey, value: v1, type: typeof v1 };
-      const v2Object = { key: defaultKey, value: v2, type: typeof v2 };
+      const v1Object = { key: defaultKey, value: correctV1, type: v1Type };
+      const v2Object = { key: defaultKey, value: correctV2, type: v2Type };
       compareSimpleObjects(diffMap[sectionKey], v1Object, v2Object, isCurrent);
     }
   });
@@ -276,7 +279,10 @@ export const fillDefaults = (
   Object.keys(value).forEach((val, index) => {
     const sectionKey = `${key}${index}`;
     if (!diffMap[sectionKey]) diffMap[sectionKey] = [];
-    fillSimpleObjects(diffMap[sectionKey], { key: val, value: value[val], type: typeof value[val] });
+    const rawValue = value[val];
+    const valueType = typeof rawValue;
+    const correctValue = valueType === 'object' ? JSON.stringify(rawValue) : rawValue;
+    fillSimpleObjects(diffMap[sectionKey], { key: val, value: correctValue, type: valueType });
   });
 };
 

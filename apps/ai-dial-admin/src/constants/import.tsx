@@ -2,6 +2,7 @@ import { RadioButtonWithContent, Step } from '@epam/ai-dial-ui-kit';
 
 import { ImportI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { ConflictResolutionPolicy, ImportFileType, ImportSteps } from '@/src/types/import';
+import { DeploymentImportResolutionPolicy } from '@/src/types/deployments/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 
@@ -46,6 +47,11 @@ export const SEPARATE_FILES_IMPORT_TYPE = (t: (stringToTranslate: string) => str
   name: t(ImportI18nKey.SeparateFiles),
   content: <div className="dial-tiny-text ml-[33px]">{t(ImportI18nKey.SeparateFilesDescription)}</div>,
 });
+
+export const DEPLOYMENT_IMPORT_RESOLUTIONS = (t: (stringToTranslate: string) => string): RadioButtonWithContent[] => [
+  { id: DeploymentImportResolutionPolicy.OVERWRITE, name: t(ImportI18nKey.Override) },
+  { id: DeploymentImportResolutionPolicy.SKIP_IF_EXISTS, name: t(ImportI18nKey.Skip) },
+];
 
 export const IMPORT_FILE_TYPES = (
   t: (stringToTranslate: string) => string,
