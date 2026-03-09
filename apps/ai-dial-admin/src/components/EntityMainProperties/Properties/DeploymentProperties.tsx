@@ -118,7 +118,12 @@ const DeploymentProperties: FC<Props> = ({
   return (
     <div className="w-full flex flex-col gap-y-8">
       {!isEntityImmutable && (
-        <IdControl entity={entity} onChangeEntity={onChangeEntity} isUniqueNameError={isUniqueNameError} />
+        <IdControl
+          entity={entity}
+          names={names}
+          onChangeEntity={onChangeEntity}
+          isUniqueNameError={isUniqueNameError}
+        />
       )}
 
       <DialSelectField
