@@ -33,11 +33,15 @@ const VersionControl: FC<Props> = ({
   onChange,
   title,
   view,
+  containerClassName,
   ...props
 }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
-  const containerClassName = useMemo(() => getControlClassName(isFullWidth), [isFullWidth]);
+  const containerClass = useMemo(
+    () => containerClassName || getControlClassName(isFullWidth),
+    [containerClassName, isFullWidth],
+  );
 
   const [versionError, setVersionError] = useState<FieldError | null>(null);
 
@@ -68,7 +72,7 @@ const VersionControl: FC<Props> = ({
       error={error || versionError?.text}
       invalid={!!error || !!versionError}
       onChange={onChangeVersion}
-      containerClassName={containerClassName}
+      containerClassName={containerClass}
       {...props}
     />
   );
