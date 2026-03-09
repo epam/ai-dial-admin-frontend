@@ -2,7 +2,9 @@ import { ActivityAuditRevision } from '@/src/components/ActivityAudit/models';
 import {
   getActivityAuditColumns,
   getAuditActivityHref,
+  getEndOfDay,
   getGridFilters,
+  getStartOfDay,
   groupByDay,
 } from '@/src/components/ActivityAudit/List/utils';
 import { GridFilterType } from '@/src/types/grid-filter';
@@ -168,5 +170,25 @@ describe('getAuditActivityHref', () => {
 
     href = getAuditActivityHref(mockEntity, ActivityAuditResourceType.MODEL, '');
     expect(href).toBe('');
+  });
+});
+
+describe('getStartOfDay and getEndOfDay', () => {
+  test('getStartOfDay returns date with time set to 00:00:00', () => {
+    const date = new Date('2024-06-25T15:45:30');
+    const startOfDay = getStartOfDay(date);
+    expect(startOfDay.getHours()).toBe(0);
+    expect(startOfDay.getMinutes()).toBe(0);
+    expect(startOfDay.getSeconds()).toBe(0);
+    expect(startOfDay.getMilliseconds()).toBe(0);
+  });
+
+  test('getEndOfDay returns date with time set to 23:59:59.999', () => {
+    const date = new Date('2024-06-25T15:45:30');
+    const endOfDay = getEndOfDay(date);
+    expect(endOfDay.getHours()).toBe(23);
+    expect(endOfDay.getMinutes()).toBe(59);
+    expect(endOfDay.getSeconds()).toBe(59);
+    expect(endOfDay.getMilliseconds()).toBe(999);
   });
 });
