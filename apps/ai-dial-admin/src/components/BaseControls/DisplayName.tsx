@@ -15,7 +15,7 @@ interface Props {
   disabled?: boolean;
   isFullWidth?: boolean;
   names?: string[];
-  allowedEmptySymbols?: boolean;
+  allowWhitespace?: boolean;
   onChange?: (displayName?: string) => void;
 }
 
@@ -25,7 +25,7 @@ const DisplayNameControl: FC<Props> = ({
   isFullWidth = true,
   onChange,
   names,
-  allowedEmptySymbols = true,
+  allowWhitespace = true,
   ...props
 }) => {
   const t = useI18n();
@@ -36,11 +36,11 @@ const DisplayNameControl: FC<Props> = ({
 
   const validateDisplayName = useCallback(
     (displayName?: string) => {
-      const error = getErrorForName(displayName, names, t, false, !allowedEmptySymbols, true);
+      const error = getErrorForName(displayName, names, t, false, !allowWhitespace, true);
       setDisplayNameError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !error });
     },
-    [dispatch, t, names, allowedEmptySymbols],
+    [dispatch, t, names, allowWhitespace],
   );
 
   // initial validation
