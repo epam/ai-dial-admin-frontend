@@ -15,17 +15,9 @@ interface Props {
   onChangeEntity: (entity: DialRoute | DialModel) => void;
   isKeyOptional?: boolean;
   required?: boolean;
-  validateInitially?: boolean;
 }
 
-const UpstreamEndpoints: FC<Props> = ({
-  readonly,
-  entity,
-  onChangeEntity,
-  isKeyOptional,
-  required,
-  validateInitially = false,
-}) => {
+const UpstreamEndpoints: FC<Props> = ({ readonly, entity, onChangeEntity, isKeyOptional, required }) => {
   const t = useI18n();
 
   const onAddEndpoint = useCallback(() => {
@@ -70,7 +62,6 @@ const UpstreamEndpoints: FC<Props> = ({
             required={required}
             updateEndpoint={(point) => onUpdateEndPoint(point, 0)}
             removeEndpoint={onRemoveEndpoint}
-            validateInitially={validateInitially}
           />
         ) : (
           entity.upstreams?.map((endpoint, index) => (
@@ -83,7 +74,6 @@ const UpstreamEndpoints: FC<Props> = ({
               required={required}
               updateEndpoint={(point) => onUpdateEndPoint(point, index)}
               removeEndpoint={onRemoveEndpoint}
-              validateInitially={validateInitially}
             />
           ))
         )}

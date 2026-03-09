@@ -29,7 +29,6 @@ interface Props {
   required?: boolean;
   updateEndpoint: (endpoint: DialModelEndpoint) => void;
   removeEndpoint: (index: number) => void;
-  validateInitially?: boolean;
 }
 
 const Endpoint: FC<Props> = ({
@@ -40,7 +39,6 @@ const Endpoint: FC<Props> = ({
   required,
   updateEndpoint,
   removeEndpoint,
-  validateInitially = false,
 }) => {
   const t = useI18n();
   const isFirstLine = index === 0;
@@ -130,7 +128,6 @@ const Endpoint: FC<Props> = ({
             onChange={onChangeEndPointUrl}
             iconAfter={<WarningIcon endpointWarning={endpointWarning} />}
             required={required}
-            validateInitially={validateInitially}
           />
 
           <DialPasswordInput

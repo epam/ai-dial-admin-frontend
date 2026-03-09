@@ -24,7 +24,6 @@ export interface Props extends EndpointControlProps {
   label: string;
   placeholder: string;
   iconAfter?: ReactNode;
-  validateInitially?: boolean;
 }
 
 const EndpointControl: FC<Props> = ({
@@ -35,7 +34,6 @@ const EndpointControl: FC<Props> = ({
   label,
   onChange,
   isFullWidth = false,
-  validateInitially = false,
   ...props
 }) => {
   const t = useI18n();
@@ -66,14 +64,10 @@ const EndpointControl: FC<Props> = ({
   );
 
   useEffect(() => {
-    if (validateInitially) {
+    if (required) {
       validateEndpoint(endpoint);
     } else {
-      if (required) {
-        dispatch({ type: ValidationActionType.SetField, field: id, isValid: !!endpoint });
-      } else {
-        dispatch({ type: ValidationActionType.SetField, field: id, isValid: true });
-      }
+      dispatch({ type: ValidationActionType.SetField, field: id, isValid: true });
     }
 
     return () => {
@@ -81,7 +75,7 @@ const EndpointControl: FC<Props> = ({
     };
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [required, validateInitially]);
+  }, [required]);
 
   useEffect(() => {
     if (resetCounter || (endpoint != null && endpoint.length > 0)) {

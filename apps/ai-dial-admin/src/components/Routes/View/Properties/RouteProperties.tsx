@@ -276,7 +276,6 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
           entity={route}
           onChangeEntity={onChange}
           required={isUpstreamsRequired}
-          validateInitially
         />
       </div>
       <MaxRetryAttempts readonly={readonly} entity={route} onChangeEntity={onChange} />
