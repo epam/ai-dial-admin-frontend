@@ -1,0 +1,54 @@
+---
+name: "🔧 Infra Task"
+description: Request an infrastructure change (env variable, config, secret, etc.)
+labels: ["infra-task"]
+projects: ["epam/68"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to request infrastructure changes such as adding/updating environment variables, secrets, or configuration values.
+        List each change as a separate checklist item so it can be tracked and marked done individually.
+  - type: dropdown
+    id: change-type
+    attributes:
+      label: Type of change
+      options:
+        - environment variable
+        - secret
+        - config change
+        - extra configuration
+        - other
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Target environment
+      options:
+        - development
+        - uat
+        - production
+        - all
+    validations:
+      required: true
+  - type: textarea
+    id: tasks
+    attributes:
+      label: Task list
+      description: |
+        List each change as a checklist item. Use the format below — one item per line.
+        The AI will mark each item [x] when done and leave notes if needed.
+      placeholder: |
+        - [ ] configure new identity provider
+        - [ ] set LOG_LEVEL=warn
+        - [ ] remove LEGACY_MODE variable
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context / reason
+      description: Why is this change needed? Link to a ticket, incident, or PR if applicable.
+    validations:
+      required: false
