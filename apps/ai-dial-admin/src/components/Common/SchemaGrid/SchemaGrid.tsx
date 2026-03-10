@@ -8,26 +8,29 @@ import { JSONSchema7 } from 'json-schema';
 import isEqual from 'lodash/isEqual';
 
 import GridView from '@/src/components/Grid/GridView/GridView';
-import { getSchemaGridColumns } from '@/src/components/TestSuites/utils/columns';
+import { BasicI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
+import { getSchemaGridColumns } from './columns';
 import {
   SchemaFieldRow,
   createEmptyField,
   fieldsToJsonSchema,
   flattenFields,
+  getGridSchemaPart,
   jsonSchemaToFields,
-} from '@/src/components/TestSuites/utils/schema';
-import { BasicI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
+} from './utils';
 
 interface SchemaGridProps {
   schema?: JSONSchema7;
   onChange: (schema: JSONSchema7, isSkipRefresh?: boolean) => void;
   isSkipRefresh?: boolean;
+  isDialSchema?: boolean;
+  isReadonly?: boolean;
 }
 
-const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh }) => {
+const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDialSchema, isReadonly }) => {
   const t = useI18n();
-  const [fields, setFields] = useState<SchemaFieldRow[]>(() => jsonSchemaToFields(schema));
+  const [fields, setFields] = useState<SchemaFieldRow[]>(() => jsonSchemaToFields(schema, schema));
   const fieldsRef = useRef(fields);
   const gridApiRef = useRef<GridApi | null>(null);
   const onChangeRef = useRef(onChange);
@@ -40,12 +43,13 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh }) =>
     onChangeRef.current = onChange;
   }, [onChange]);
 
-  const prevSchemaRef = useRef(schema);
+  const prevSchemaRef = useRef(getGridSchemaPart(schema));
 
   useEffect(() => {
-    if (!isEqual(prevSchemaRef.current, schema)) {
-      prevSchemaRef.current = schema;
-      const newFields = jsonSchemaToFields(schema);
+    const nextPart = getGridSchemaPart(schema);
+    if (!isEqual(prevSchemaRef.current, nextPart)) {
+      prevSchemaRef.current = nextPart;
+      const newFields = jsonSchemaToFields(schema, schema);
       setFields(newFields);
     }
   }, [schema]);
@@ -53,7 +57,7 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh }) =>
   const updateFields = useCallback((updatedFields: SchemaFieldRow[], isSkipRefresh?: boolean) => {
     setFields(updatedFields);
     const newSchema = fieldsToJsonSchema(updatedFields);
-    prevSchemaRef.current = newSchema;
+    prevSchemaRef.current = getGridSchemaPart(newSchema);
     onChangeRef.current(newSchema, isSkipRefresh);
   }, []);
 
@@ -80,10 +84,10 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh }) =>
       setFields(updated);
       // Directly push rowData to grid since this bypasses onChange/isSkipRefresh flow
       if (!gridApiRef.current?.isDestroyed()) {
-        gridApiRef.current?.updateGridOptions({ rowData: flattenFields(updated) });
+        gridApiRef.current?.updateGridOptions({ rowData: flattenFields(updated, 0, isReadonly) });
       }
     },
-    [updateFieldInList],
+    [updateFieldInList, isReadonly],
   );
 
   const onChangeName = useCallback(
@@ -123,6 +127,31 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh }) =>
     (value: string, data: SchemaFieldRow) => {
       const updated = updateFieldInList(fieldsRef.current, data.id, (f) => ({ ...f, description: value }));
       updateFields(updated, true);
+    },
+    [updateFieldInList, updateFields],
+  );
+
+  const onChangeOrder = useCallback(
+    (value: number | string, data: SchemaFieldRow) => {
+      if (data.parentId !== null) return;
+      const num = typeof value === 'string' ? (value === '' ? undefined : Number(value)) : value;
+      const updated = updateFieldInList(fieldsRef.current, data.id, (f) => ({
+        ...f,
+        dialMeta: { ...f.dialMeta, 'dial:propertyOrder': num },
+      }));
+      updateFields(updated, true);
+    },
+    [updateFieldInList, updateFields],
+  );
+
+  const onChangePropertyKind = useCallback(
+    (value: string, data: SchemaFieldRow) => {
+      if (data.parentId !== null) return;
+      const updated = updateFieldInList(fieldsRef.current, data.id, (f) => ({
+        ...f,
+        dialMeta: { ...f.dialMeta, 'dial:propertyKind': value },
+      }));
+      updateFields(updated);
     },
     [updateFieldInList, updateFields],
   );
@@ -174,7 +203,7 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh }) =>
     [updateFieldInList, updateFields, findFieldById],
   );
 
-  const rowData = useMemo(() => flattenFields(fields), [fields]);
+  const rowData = useMemo(() => flattenFields(fields, 0, isReadonly), [fields, isReadonly]);
 
   const columnDefs: ColDef[] = useMemo(
     () =>
@@ -186,8 +215,23 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh }) =>
         onChangeRequired,
         onRemoveField,
         t,
+        isReadonly,
+        isDialSchema ? onChangeOrder : undefined,
+        isDialSchema ? onChangePropertyKind : undefined,
       ),
-    [onToggleExpand, onChangeName, onChangeType, onChangeDescription, onChangeRequired, onRemoveField, t],
+    [
+      onToggleExpand,
+      onChangeName,
+      onChangeType,
+      onChangeDescription,
+      onChangeRequired,
+      onRemoveField,
+      t,
+      isDialSchema,
+      isReadonly,
+      onChangeOrder,
+      onChangePropertyKind,
+    ],
   );
 
   const onGridReady = useCallback(

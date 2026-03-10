@@ -5,14 +5,14 @@ import { Dispatch, FC, SetStateAction, useCallback, useState } from 'react';
 import { DialSwitch, DialTabs } from '@epam/ai-dial-ui-kit';
 import { JSONSchema7 } from 'json-schema';
 
+import SchemaGrid from '@/src/components/Common/SchemaGrid/SchemaGrid';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
 import { useI18n } from '@/src/locales/client';
+import { DialScheme } from '@/src/models/dial/scheme';
 import { ResponseColumn, TestSuite } from '@/src/models/evaluation/test-suite';
 import { EntityViewTab, getEndpointSchemaTabs } from '@/src/utils/tabs/utils';
 import Columns from './Columns/Columns';
-import SchemaGrid from './Schema/SchemaGrid';
-import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
-import { DialScheme } from '@/src/models/dial/scheme';
 
 interface Props {
   testSuite: TestSuite;

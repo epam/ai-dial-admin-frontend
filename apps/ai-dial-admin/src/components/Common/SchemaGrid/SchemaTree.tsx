@@ -5,10 +5,10 @@ import { FC, useCallback, useMemo, useState } from 'react';
 import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import { JSONSchema7 } from 'json-schema';
 
-import { schemaToTreeNodes } from '@/src/components/TestSuites/utils/schema';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import SchemaTreeItem from './SchemaTreeItem';
+import { schemaToTreeNodes } from './utils';
 
 export interface SchemaTreeSelectResult {
   expression: string;
@@ -38,7 +38,7 @@ const SchemaTree: FC<SchemaTreeProps> = ({ responseSchema, onSelect }) => {
 
   const nodes = useMemo(() => {
     if (!responseSchema || responseSchema.type !== 'object') return [];
-    return schemaToTreeNodes(responseSchema, '');
+    return schemaToTreeNodes(responseSchema, '', responseSchema);
   }, [responseSchema]);
 
   if (nodes.length === 0) {

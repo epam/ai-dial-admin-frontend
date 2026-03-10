@@ -26,20 +26,14 @@ const RangePicker: FC<Props> = ({ onChange, timeRange }) => {
   const onStartDateChange = useCallback((startDate: Date | null) => {
     if (startDate) {
       // reset hours, minutes, seconds, milliseconds to 0
-      startDate.setHours(0);
-      startDate.setMinutes(0);
-      startDate.setSeconds(0);
-      startDate.setMilliseconds(0);
+      startDate.setHours(0, 0, 0, 0);
       setStartDate(startDate);
     }
   }, []);
 
   const onEndDateChange = useCallback((endDate: Date | null) => {
     if (endDate) {
-      endDate.setHours(12);
-      endDate.setMinutes(59);
-      endDate.setSeconds(59);
-      endDate.setMilliseconds(0);
+      endDate.setHours(23, 59, 59, 999);
       setEndDate(endDate);
     }
   }, []);

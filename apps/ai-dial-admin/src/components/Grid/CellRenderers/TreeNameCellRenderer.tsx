@@ -7,9 +7,16 @@ import classNames from 'classnames';
 interface TreeNameCellRendererParams extends ICellRendererParams {
   onToggleExpand: (data: unknown) => void;
   onChangeName: (value: string, data: unknown) => void;
+  isReadonly?: boolean;
 }
 
-const TreeNameCellRenderer = ({ data, onToggleExpand, onChangeName, setValue }: TreeNameCellRendererParams) => {
+const TreeNameCellRenderer = ({
+  data,
+  isReadonly,
+  onToggleExpand,
+  onChangeName,
+  setValue,
+}: TreeNameCellRendererParams) => {
   const [inputValue, setInputValue] = useState(data?.name || '');
 
   useEffect(() => {
@@ -40,17 +47,21 @@ const TreeNameCellRenderer = ({ data, onToggleExpand, onChangeName, setValue }: 
           <span className="size-1.5 rounded-full bg-tertiary" />
         )}
       </div>
-      <input
-        type="text"
-        value={inputValue}
-        placeholder="field_name"
-        onChange={(e) => {
-          setInputValue(e.target.value);
-          setValue?.(e.target.value);
-          onChangeName(e.target.value, data);
-        }}
-        className="leading-[18px] h-[32px] dial-input px-2 py-1 flex-1 min-w-0"
-      />
+      {!isReadonly ? (
+        <input
+          type="text"
+          value={inputValue}
+          placeholder="field_name"
+          onChange={(e) => {
+            setInputValue(e.target.value);
+            setValue?.(e.target.value);
+            onChangeName(e.target.value, data);
+          }}
+          className="leading-[18px] h-[32px] dial-input px-2 py-1 flex-1 min-w-0"
+        />
+      ) : (
+        <div>{inputValue}</div>
+      )}
     </div>
   );
 };

@@ -80,6 +80,8 @@ export default {
     Request: 'Request',
     Response: 'Response',
     Variables: 'Variables',
+    Server: 'Server',
+    Client: 'Client',
   },
   Menu: {
     Entities: 'Entities',
