@@ -6,7 +6,7 @@ import classNames from 'classnames';
 
 import SelectRunnerModal from '@/src/components/SourceField/Template/SelectRunnerModal';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
-import { CreateI18nKey, EntitiesI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, CreateI18nKey, EntitiesI18nKey, SourceI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
@@ -134,7 +134,7 @@ const Templates = <T extends DialModel | DialInterceptor>({
               <DialNeutralButton
                 iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
                 className={classNames(error ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
-                label={isMobile ? '' : t(SourceI18nKey.OpenTemplate)}
+                label={isMobile ? '' : t(ButtonsI18nKey.Open)}
                 onClick={() => openTemplate()}
               />
             )}

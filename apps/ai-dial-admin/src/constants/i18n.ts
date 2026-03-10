@@ -328,8 +328,6 @@ export enum ButtonsI18nKey {
   Rollback = 'Buttons.Rollback',
   Back = 'Buttons.Back',
   Close = 'Buttons.Close',
-  OpenAdapter = 'Buttons.OpenAdapter',
-  OpenAppRunner = 'Buttons.OpenAppRunner',
   Open = 'Buttons.Open',
   None = 'Buttons.None',
   BulkActions = 'Buttons.BulkActions',
@@ -933,9 +931,6 @@ export enum ErrorI18nKey {
 }
 
 export enum SourceI18nKey {
-  OpenTemplate = 'Source.OpenTemplate',
-  OpenContainer = 'Source.OpenContainer',
-  OpenAdapter = 'Source.OpenAdapter',
   Container = 'Source.Container',
   InterceptorTemplate = 'Source.InterceptorTemplate',
   ModelDeployment = 'Source.ModelDeployment',

@@ -421,8 +421,6 @@ export default {
     Refresh: 'Refresh',
     Back: 'Back',
     Close: 'Close',
-    OpenAppRunner: 'Open Application Runner',
-    OpenAdapter: 'Open Adapter',
     Open: 'Open',
     None: 'None',
     BulkActions: 'Bulk actions',
@@ -1227,9 +1225,6 @@ export default {
     AdvancedTimingsError: 'Value must be between 1 and {max}',
   },
   Source: {
-    OpenTemplate: 'Open template',
-    OpenContainer: 'Open container',
-    OpenAdapter: 'Open adapter',
     Container: 'Container',
     InterceptorTemplate: 'Interceptor template',
     ModelDeployment: 'Deployment model',
