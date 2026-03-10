@@ -328,8 +328,6 @@ export enum ButtonsI18nKey {
   Rollback = 'Buttons.Rollback',
   Back = 'Buttons.Back',
   Close = 'Buttons.Close',
-  OpenAdapter = 'Buttons.OpenAdapter',
-  OpenAppRunner = 'Buttons.OpenAppRunner',
   Open = 'Buttons.Open',
   None = 'Buttons.None',
   BulkActions = 'Buttons.BulkActions',
@@ -765,6 +763,9 @@ export enum ExportI18nKey {
   Deployments = 'Export.Deployments',
   IncludeGlobalFirewall = 'Export.IncludeGlobalFirewall',
   PreviewUnavailable = 'Export.PreviewUnavailable',
+  McpImage = 'Export.McpImage',
+  InterceptorImage = 'Export.InterceptorImage',
+  AdapterImage = 'Export.AdapterImage',
 }
 
 export enum FoldersI18nKey {
@@ -930,9 +931,6 @@ export enum ErrorI18nKey {
 }
 
 export enum SourceI18nKey {
-  OpenTemplate = 'Source.OpenTemplate',
-  OpenContainer = 'Source.OpenContainer',
-  OpenAdapter = 'Source.OpenAdapter',
   Container = 'Source.Container',
   InterceptorTemplate = 'Source.InterceptorTemplate',
   ModelDeployment = 'Source.ModelDeployment',
@@ -1172,6 +1170,7 @@ export enum EntityFieldsI18nKey {
   applicationTypeSchemas = 'EntityFields.applicationTypeSchemas',
   SourceURL = 'EntityFields.SourceURL',
   ImageURI = 'EntityFields.ImageURI',
+  DockerImageReference = 'EntityFields.DockerImageReference',
   BranchName = 'EntityFields.BranchName',
   SHA = 'EntityFields.SHA',
   BaseDirectory = 'EntityFields.BaseDirectory',
@@ -1339,6 +1338,8 @@ export enum ContainersI18nKey {
   MaxReplicas = 'Containers.Autoscaling.MaxReplicas',
   MinReplicas = 'Containers.Autoscaling.MinReplicas',
   ScaleToZero = 'Containers.Autoscaling.ScaleToZero',
+  FromInternalMcpImage = 'Containers.FromInternalMcpImage',
+  FromDockerImageReference = 'Containers.FromDockerImageReference',
 }
 
 export enum DeploymentsI18nKey {

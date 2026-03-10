@@ -6,7 +6,7 @@ import { DialFormPopup } from '@epam/ai-dial-ui-kit';
 import { Container } from '@/src/models/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { CONTAINER_TYPE } from '@/src/types/deployments/containers';
+import { CONTAINER_SOURCE_TYPE, CONTAINER_TYPE } from '@/src/types/deployments/containers';
 import { getContainerTemplate } from '@/src/utils/deployments/containers';
 import { useAppContext } from '@/src/context/AppContext';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
@@ -21,14 +21,17 @@ interface Props {
   names: string[];
   header: string;
   type: CONTAINER_TYPE;
+  sourceType?: CONTAINER_SOURCE_TYPE;
 }
 
-const ServingCreate: FC<Props> = ({ isModalOpen, onClose, onApply, route, names, header, type }) => {
+const ServingCreate: FC<Props> = ({ isModalOpen, onClose, onApply, route, names, header, type, sourceType }) => {
   const t = useI18n();
   const { resourcesDefaults } = useAppContext();
   const { isValid } = useSaveValidationContext();
 
-  const [container, setContainer] = useState<Container>(getContainerTemplate(type, resourcesDefaults) as Container);
+  const [container, setContainer] = useState<Container>(
+    getContainerTemplate(type, resourcesDefaults, sourceType) as Container,
+  );
 
   return (
     <DialFormPopup

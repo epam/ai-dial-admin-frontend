@@ -105,7 +105,7 @@ const AppRunners: FC<Props> = ({ selectedValue, runners, onChangeValue, isEntity
         </div>
         {selectedValue && (
           <DialNeutralButton
-            label={isMobile ? '' : t(ButtonsI18nKey.OpenAppRunner)}
+            label={isMobile ? '' : t(ButtonsI18nKey.Open)}
             iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
             onClick={openInNewTab}
           />

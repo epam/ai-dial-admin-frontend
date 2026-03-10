@@ -15,6 +15,7 @@ interface Props {
   selectedExportFormat?: ExportFormat;
   selectedDependencies: EntityType[];
   onChangeSelectedDependencies: (dependencies: EntityType[]) => void;
+  disabled?: boolean;
 }
 
 const Dependencies: FC<Props> = ({
@@ -22,6 +23,7 @@ const Dependencies: FC<Props> = ({
   selectedExportFormat,
   onChangeSelectedDependencies,
   selectedDependencies,
+  disabled,
 }) => {
   const t = useI18n();
   const [allDependencies, setAllDependencies] = useState<EntityType[]>([]);
@@ -64,17 +66,20 @@ const Dependencies: FC<Props> = ({
       <div className="flex flex-col">
         <h3 className="mb-3">{t(ExportI18nKey.Dependencies)}</h3>
         <div className="flex-1 min-h-0">
-          <DialCheckbox
-            checked={isAllSelected}
-            id="all-dependencies"
-            label={t(ExportI18nKey.AllDependencies)}
-            onChange={onSelectAll}
-          />
-          <div className="flex flex-col pl-[20px] mt-3 gap-y-3">
+          {!disabled && (
+            <DialCheckbox
+              checked={isAllSelected}
+              id="all-dependencies"
+              label={t(ExportI18nKey.AllDependencies)}
+              onChange={onSelectAll}
+            />
+          )}
+          <div className={`flex flex-col ${disabled ? '' : 'pl-[20px] mt-3'} gap-y-3`}>
             {allDependencies.map((dep, i) => {
               return (
                 <DialCheckbox
                   checked={selectedDependencies.includes(dep)}
+                  disabled={disabled}
                   id={dep}
                   key={i}
                   label={getButtonTitle(t, dep)}

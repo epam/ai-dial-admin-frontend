@@ -23,6 +23,7 @@ interface Props {
   selectedExportFormat: ExportFormat;
   onClose: () => void;
   onApply: (entities: EntitiesGridData[], dependencies?: EntityType[]) => void;
+  disabledDependencies?: boolean;
 }
 
 const AddEntitiesModal: FC<Props> = ({
@@ -33,6 +34,7 @@ const AddEntitiesModal: FC<Props> = ({
   columnDefs,
   onClose,
   onApply,
+  disabledDependencies,
 }) => {
   const t = useI18n();
   const [selectedEntities, setSelectedEntities] = useState<EntitiesGridData[]>([]);
@@ -83,6 +85,7 @@ const AddEntitiesModal: FC<Props> = ({
               selectedExportFormat={selectedExportFormat}
               selectedDependencies={selectedDependencies}
               onChangeSelectedDependencies={setSelectedDependencies}
+              disabled={disabledDependencies}
             />
           </div>
         )}
