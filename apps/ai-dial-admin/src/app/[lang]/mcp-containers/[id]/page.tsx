@@ -65,7 +65,7 @@ export default async function Page(params: Params) {
       <ToolsetFolderProvider>
         <ContainerView
           container={decodeVariables(container)}
-          image={image}
+          image={image ?? void 0}
           route={ApplicationRoute.McpContainers}
           names={
             containers?.map((container) => container.name as string).filter((name) => name !== container.name) || []
