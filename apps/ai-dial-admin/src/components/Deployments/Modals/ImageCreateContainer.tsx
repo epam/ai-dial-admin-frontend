@@ -37,7 +37,7 @@ const ImageCreateContainer: FC<Props> = ({ onClose, isModalOpen, modalTitle, nam
   useEffect(() => {
     setContainer((prev) => ({
       ...prev,
-      imageDefinitionId: image.id as string,
+      source: { ...prev.source, imageDefinitionId: image.id as string },
     }));
   }, [image]);
 

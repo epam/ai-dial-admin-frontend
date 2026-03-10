@@ -1,7 +1,7 @@
 import { describe, expect, test, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import { Container } from '@/src/models/deployments/containers';
-import { CONTAINER_STATUS, CONTAINER_TYPE } from '@/src/types/deployments/containers';
+import { CONTAINER_SOURCE_TYPE, CONTAINER_STATUS, CONTAINER_TYPE } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 import ContainerResources from '@/src/components/Deployments/Fields/ContainerResources';
 
@@ -11,7 +11,7 @@ describe('ContainerResourcesFields', () => {
     id: '1',
     name: 'test-container',
     status: CONTAINER_STATUS.RUNNING,
-    imageDefinitionId: 'img-1',
+    source: { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE, imageDefinitionId: 'img-1' },
     metadata: { envs: [] },
     resources: {
       requests: { cpu: '1', memory: '2Gi' },

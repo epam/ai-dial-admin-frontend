@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, test, vi, expect } from 'vitest';
-import { CONTAINER_STATUS, CONTAINER_TYPE, MODEL_SOURCE_TYPE } from '@/src/types/deployments/containers';
+import { CONTAINER_SOURCE_TYPE, CONTAINER_STATUS, CONTAINER_TYPE } from '@/src/types/deployments/containers';
 import { Container } from '@/src/models/deployments/containers';
 import Port from '@/src/components/Deployments/Fields/ContainerEndpoint/Port';
 
@@ -11,7 +11,7 @@ describe('Common components :: PortField', () => {
     id: '1',
     name: 'test-container',
     status: CONTAINER_STATUS.RUNNING,
-    imageDefinitionId: 'img-1',
+    source: { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE, imageDefinitionId: 'img-1' },
     metadata: { envs: [] },
     containerPort: 8000,
   } as Container;
@@ -28,7 +28,7 @@ describe('Common components :: PortField', () => {
         container={{
           ...mockContainer,
           $type: CONTAINER_TYPE.NIM,
-          source: { $type: MODEL_SOURCE_TYPE.NIM },
+          source: { $type: CONTAINER_SOURCE_TYPE.NGC_REGISTRY },
           containerGrpcPort: 1234,
         }}
         setContainer={vi.fn()}

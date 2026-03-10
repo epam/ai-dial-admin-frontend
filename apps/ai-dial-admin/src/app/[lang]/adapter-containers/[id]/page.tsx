@@ -40,7 +40,7 @@ export default async function Page(params: Params) {
     container = containerResponse.response as Container;
     containers = containersResponse.response as Container[];
 
-    const imageResponse = await getImage(container?.imageDefinitionId as string);
+    const imageResponse = await getImage(container?.source.imageDefinitionId as string);
     if (!imageResponse.success) {
       notFound();
     }

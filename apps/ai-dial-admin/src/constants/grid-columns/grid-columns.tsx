@@ -466,13 +466,15 @@ export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, rou
       ]
     : [
         {
-          field: 'imageDefinitionId',
           headerName: `${type} Image`,
           hide: false,
+          valueGetter: (params: ValueGetterParams) =>
+            params.data?.source?.$type === 'internal_image' ? params.data.source.imageDefinitionId : undefined,
           cellRenderer: (params: ICellRendererParams) => formatDeploymentImageName(params.data) ?? params.value,
           tooltipValueGetter: (params: ITooltipParams) => formatDeploymentImageName(params.data) ?? params.value,
           filterValueGetter: (params: ValueGetterParams) =>
-            formatDeploymentImageName(params.data) ?? params.data[params.colDef.field || ''],
+            formatDeploymentImageName(params.data) ??
+            (params.data?.source?.$type === 'internal_image' ? params.data.source.imageDefinitionId : ''),
         },
       ]),
   {
@@ -627,13 +629,15 @@ export const IMAGE_DEPENDENCIES_COLUMNS = (t: (key: string) => string, showImage
   ...(showImageColumn
     ? [
         {
-          field: 'imageDefinitionId',
           headerName: `Image`,
           hide: false,
+          valueGetter: (params: ValueGetterParams) =>
+            params.data?.source?.$type === 'internal_image' ? params.data.source.imageDefinitionId : undefined,
           cellRenderer: (params: ICellRendererParams) => formatDeploymentImageName(params.data) ?? params.value,
           tooltipValueGetter: (params: ITooltipParams) => formatDeploymentImageName(params.data) ?? params.value,
           filterValueGetter: (params: ValueGetterParams) =>
-            formatDeploymentImageName(params.data) ?? params.data[params.colDef.field || ''],
+            formatDeploymentImageName(params.data) ??
+            (params.data?.source?.$type === 'internal_image' ? params.data.source.imageDefinitionId : ''),
         },
       ]
     : []),

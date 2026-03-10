@@ -151,7 +151,7 @@ const getRelatedContainers = (image: {
         selectedVersion === AllVersionValue
           ? existingVersions.map((v) => v.id)
           : existingVersions.filter((v) => v.version === selectedVersion).map((v) => v.id);
-      return response.filter((c: Container) => reference.includes(c.imageDefinitionId));
+      return response.filter((c: Container) => reference.includes(c.source.imageDefinitionId as string));
     }
   });
 };

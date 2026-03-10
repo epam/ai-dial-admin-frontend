@@ -6,7 +6,7 @@ import { Container, HuggingFaceModel } from '@/src/models/deployments/containers
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
 import { getControlClassName } from '@/src/utils/entities/view';
-import { CONTAINER_STATUS, SERVING_SOURCE } from '@/src/types/deployments/containers';
+import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getErrorForHfModelName } from '@/src/utils/deployments/validation';
 import { debounce } from 'lodash';
@@ -38,7 +38,7 @@ const HfModelNameField: FC<Props> = ({ container, setContainer, isModal, route }
     (value?: string) => {
       const error = getErrorForHfModelName(value, t);
       setModelNameError(error);
-      setContainer({ ...container, source: { ...container.source, modelName: value } as SERVING_SOURCE });
+      setContainer({ ...container, source: { ...container.source, modelName: value } });
 
       dispatch({
         type: ValidationActionType.SetField,

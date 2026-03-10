@@ -84,7 +84,7 @@ const ContainerCreate: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
       setImages(updateSelectedVersion(images, id));
       setContainer({
         ...container,
-        imageDefinitionId: id,
+        source: { ...container.source, imageDefinitionId: id },
       });
     },
     [container, images],
@@ -94,14 +94,14 @@ const ContainerCreate: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
 
   useEffect(() => {
     if (currentStepId === CreateSteps.IMAGE) {
-      if (container.imageDefinitionId) {
-        const image = images.find((i) => i.selectedId === container.imageDefinitionId);
+      if (container.source.imageDefinitionId) {
+        const image = images.find((i) => i.selectedId === container.source.imageDefinitionId);
         setStepsState(
-          container.imageDefinitionId && image && isValidVersion(image) ? StepStatus.VALID : StepStatus.ERROR,
+          container.source.imageDefinitionId && image && isValidVersion(image) ? StepStatus.VALID : StepStatus.ERROR,
         );
       }
     }
-  }, [container.imageDefinitionId, names, route, currentStepId, setStepsState, images]);
+  }, [names, route, currentStepId, setStepsState, images, container.source]);
 
   useEffect(() => {
     if (currentStepId === CreateSteps.PROPERTIES) {
@@ -116,7 +116,7 @@ const ContainerCreate: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
       cellRenderer: (data: { data?: { selectedId: string; name: string }; name: string }) => (
         <RadioButtonRenderer
           inputId={data.data?.name || data.name}
-          isChecked={data.data?.selectedId === container.imageDefinitionId}
+          isChecked={data.data?.selectedId === container.source.imageDefinitionId}
         />
       ),
     },
@@ -128,7 +128,7 @@ const ContainerCreate: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
         setContainer({
           ...container,
           containerPorts: event.data?.containerPorts || container.containerPorts,
-          imageDefinitionId: event.data?.selectedId,
+          source: { ...container.source, imageDefinitionId: event.data?.selectedId },
         });
       }
     },
@@ -141,7 +141,7 @@ const ContainerCreate: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
     });
     event.api.setFilterModel(filters);
     event.api.forEachNode((node) => {
-      if (node.data.selectedId === container.imageDefinitionId && isValidVersion(node.data as ImageGroup)) {
+      if (node.data.selectedId === container.source.imageDefinitionId && isValidVersion(node.data as ImageGroup)) {
         node.setSelected(true);
       }
     });

@@ -97,7 +97,10 @@ const TabsContent: FC<Props> = ({
 
   const onApply = useCallback(
     (id: string) => {
-      updateContainer({ ...selectedContainer, imageDefinitionId: id }).then((res) => {
+      updateContainer({
+        ...selectedContainer,
+        source: { ...selectedContainer.source, imageDefinitionId: id },
+      }).then((res) => {
         if (res.success) {
           router.refresh();
         } else {

@@ -3,17 +3,17 @@ import {
   CONTAINER_TRANSPORT,
   CONTAINER_TYPE,
   ContainerResources,
+  ContainerSource,
   KubEventType,
   PROBE_TYPE,
   SCALING_STRATEGY_TYPE,
-  SERVING_SOURCE,
 } from '@/src/types/deployments/containers';
 import { EnvironmentVariable } from '@/src/models/deployments/variables';
 import { BaseEntity } from '../dial/base-entity';
 
 export interface Container extends BaseEntity {
   $type: CONTAINER_TYPE;
-  imageDefinitionId: string;
+  source: ContainerSource;
   containerPorts?: number[];
   containerPort?: number;
   containerGrpcPort?: number;
@@ -26,7 +26,6 @@ export interface Container extends BaseEntity {
   metadata: {
     envs?: EnvironmentVariable[];
   };
-  source?: SERVING_SOURCE;
   modelFormat?: string;
   command?: string;
   args?: string;
@@ -114,7 +113,7 @@ export interface KubEvent {
 }
 
 export interface ContainerRedeploySnapshot {
-  imageDefinitionId: string;
+  source: ContainerSource;
   containerPorts: number[];
   containerPort?: number;
   containerGrpcPort?: number;

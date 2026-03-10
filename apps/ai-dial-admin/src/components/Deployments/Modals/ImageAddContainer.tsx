@@ -17,8 +17,8 @@ import { ButtonsI18nKey, ContainersI18nKey, EntitiesI18nKey } from '@/src/consta
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { Container } from '@/src/models/deployments/containers';
-import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
+import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getRouteByType, getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
 import { getImageType } from '@/src/utils/deployments/images';
@@ -92,10 +92,11 @@ const ImageAddContainer: FC<Props> = ({ title, isModalOpen, onClose, onApply, im
 
   useEffect(() => {
     const displayed = dependencies.filter((container) => {
+      const imageDefId = container.source.imageDefinitionId as string;
       if (showRelated) {
-        return imageVersionsIds.includes(container.imageDefinitionId);
+        return imageVersionsIds.includes(imageDefId);
       }
-      return container.imageDefinitionId !== image.id;
+      return imageDefId !== image.id;
     });
     setDisplayedDependencies(displayed);
     gridApi?.updateGridOptions({

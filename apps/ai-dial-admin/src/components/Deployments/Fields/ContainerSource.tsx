@@ -2,7 +2,7 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { DialInput } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { MODEL_SOURCE_TYPE, SERVING_SOURCE } from '@/src/types/deployments/containers';
+import { CONTAINER_SOURCE_TYPE } from '@/src/types/deployments/containers';
 import { Container } from '@/src/models/deployments/containers';
 import { FieldError } from '@/src/models/error';
 import { getDeploymentsURIError } from '@/src/utils/deployments/validation';
@@ -36,7 +36,7 @@ const ContainerSource: FC<Props> = ({ container, setContainer, isModal = false, 
         field: 'modelSourceName',
         isValid: !error,
       });
-      setContainer({ ...container, source: { ...container.source, imageRef: value } as SERVING_SOURCE });
+      setContainer({ ...container, source: { ...container.source, imageRef: value } });
     },
     [t, dispatch, setContainer, container],
   );
@@ -50,7 +50,7 @@ const ContainerSource: FC<Props> = ({ container, setContainer, isModal = false, 
 
   return (
     <div className="flex flex-col gap-y-8">
-      {container.source?.$type === MODEL_SOURCE_TYPE.NIM ? (
+      {container.source?.$type === CONTAINER_SOURCE_TYPE.NGC_REGISTRY ? (
         <DialInput
           id="imageRef"
           labelProps={{ label: t(EntityFieldsI18nKey.ImageURI) }}

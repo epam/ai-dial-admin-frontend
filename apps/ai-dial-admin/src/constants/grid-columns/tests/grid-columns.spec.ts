@@ -90,7 +90,7 @@ describe('Constants :: grid columns', () => {
     expect(cols1.some((c) => c.field === 'image')).toBe(false);
     expect(cols1.find((c) => c.field === 'status')?.cellRenderer).toBeDefined();
     expect(Array.isArray(cols2)).toBe(true);
-    expect(cols2.some((c) => c.field === 'imageDefinitionId')).toBe(true);
+    expect(cols2.some((c) => c.headerName === 'Image')).toBe(true);
   });
 
   test('IMAGES_LIST_COLUMNS returns expected columns', () => {

@@ -11,7 +11,12 @@ import {
   normalizeContainerPorts,
   isErrorPresent,
 } from '../containers';
-import { CONTAINER_STATUS, CONTAINER_TRANSPORT, CONTAINER_TYPE } from '@/src/types/deployments/containers';
+import {
+  CONTAINER_SOURCE_TYPE,
+  CONTAINER_STATUS,
+  CONTAINER_TRANSPORT,
+  CONTAINER_TYPE,
+} from '@/src/types/deployments/containers';
 import { Container } from '@/src/models/deployments/containers';
 import { MOUNT_TYPE, VALUE_TYPE } from '@/src/types/deployments/variables';
 
@@ -73,7 +78,7 @@ describe('containers utils', () => {
       $type: CONTAINER_TYPE.NIM,
       name: 'container-1',
       displayName: 'c1',
-      imageDefinitionId: 'img-1',
+      source: { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE, imageDefinitionId: 'img-1' },
       status: CONTAINER_STATUS.NOT_DEPLOYED,
       metadata: {},
     };
@@ -108,9 +113,15 @@ describe('containers utils', () => {
       expect(getContainerRedeploySnapshot(a)).toEqual(getContainerRedeploySnapshot(b));
     });
 
-    test('detects imageDefinitionId change via snapshot inequality', () => {
-      const a: Container = { ...baseContainer, imageDefinitionId: 'img-1' };
-      const b: Container = { ...baseContainer, imageDefinitionId: 'img-2' };
+    test('detects source change via snapshot inequality', () => {
+      const a: Container = {
+        ...baseContainer,
+        source: { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE, imageDefinitionId: 'img-1' },
+      };
+      const b: Container = {
+        ...baseContainer,
+        source: { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE, imageDefinitionId: 'img-2' },
+      };
       expect(getContainerRedeploySnapshot(a)).not.toEqual(getContainerRedeploySnapshot(b));
     });
 
