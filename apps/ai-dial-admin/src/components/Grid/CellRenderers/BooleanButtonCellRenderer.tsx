@@ -5,6 +5,7 @@ interface BooleanButtonCellRendererParams extends ICellRendererParams {
   trueLabel: string;
   falseLabel: string;
   onChange: (value: boolean, data: { id: string }) => void;
+  isReadonly?: boolean;
 }
 
 const BooleanButtonCellRenderer = ({
@@ -13,6 +14,7 @@ const BooleanButtonCellRenderer = ({
   falseLabel,
   data,
   onChange,
+  isReadonly,
 }: BooleanButtonCellRendererParams) => {
   const isRequired = !!value;
 
@@ -24,10 +26,11 @@ const BooleanButtonCellRenderer = ({
     <div className="w-full flex items-center justify-center">
       <button
         onClick={handleClick}
+        disabled={isReadonly}
         className={classNames(
           'tiny p-2 rounded-[10px] select-none border',
           isRequired
-            ? 'bg-accent-primary-alpha text-accent-primary border-accent-primary/30'
+            ? 'bg-accent-primary-alpha text-accent-primary border-accent-primary'
             : 'bg-layer-3 text-secondary border-tertiary',
         )}
       >

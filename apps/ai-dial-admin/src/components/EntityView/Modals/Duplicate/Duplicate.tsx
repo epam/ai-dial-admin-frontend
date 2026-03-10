@@ -39,8 +39,12 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
 
   const [clonedEntity, setEntity] = useState<ClonedEntity>(
     isSimple
-      ? { ...entity, name: getClonedEntityName(entity.name) }
-      : { ...entity, name: getClonedEntityName(entity.name), displayVersion: void 0 },
+      ? { ...entity, name: getClonedEntityName(entity.name, view === ApplicationRoute.Toolsets) }
+      : {
+          ...entity,
+          name: getClonedEntityName(entity.name, view === ApplicationRoute.Toolsets),
+          displayVersion: void 0,
+        },
   );
 
   const namesConfiguration = useMemo(() => {

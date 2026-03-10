@@ -6,7 +6,7 @@ import { DialTag } from '@epam/ai-dial-ui-kit';
 import { IconArrowRight, IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import classNames from 'classnames';
 
-import { SchemaTreeNode } from '@/src/components/TestSuites/utils/schema';
+import { SchemaTreeNode } from './utils';
 
 export interface SchemaTreeSelectResult {
   expression: string;

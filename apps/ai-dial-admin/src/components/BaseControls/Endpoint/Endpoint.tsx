@@ -65,7 +65,7 @@ const EndpointControl: FC<Props> = ({
 
   useEffect(() => {
     if (required) {
-      dispatch({ type: ValidationActionType.SetField, field: id, isValid: !!endpoint });
+      validateEndpoint(endpoint);
     } else {
       dispatch({ type: ValidationActionType.SetField, field: id, isValid: true });
     }

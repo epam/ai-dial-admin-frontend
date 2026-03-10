@@ -7,6 +7,7 @@ import { getItems } from './utils';
 
 export interface SelectCellRendererParams extends ICellRendererParams {
   isMulti?: boolean;
+  isReadonly?: boolean;
   items?: SelectOption[];
   getItems?: (data: unknown) => SelectOption[];
   onChange: (value: string | string[], data: unknown, column?: string, index?: number, isSelected?: boolean) => void;
@@ -27,6 +28,10 @@ const SelectCellRenderer = (params: SelectCellRendererParams) => {
 
   const value = params.value?.toString();
   const multipleValues = params.value === '' ? [] : (params.value?.toString().split(STRINGS_DELIMITER) as string[]);
+
+  if (params.isReadonly) {
+    return <div>{value}</div>;
+  }
 
   return (
     <div className="h-8 w-full overflow-hidden">

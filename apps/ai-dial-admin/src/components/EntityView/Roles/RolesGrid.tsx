@@ -1,10 +1,11 @@
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useRef } from 'react';
 
 import { DialGhostButton, DialPrimaryButton, DialSwitch } from '@epam/ai-dial-ui-kit';
 import { IconPlus, IconReload } from '@tabler/icons-react';
 import { GridApi, GridOptions, GridReadyEvent, IRowNode } from 'ag-grid-community';
 
 import GridView from '@/src/components/Grid/GridView/GridView';
+import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { ButtonsI18nKey, EntitiesI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
@@ -47,7 +48,7 @@ const RolesGrid: FC<Props> = ({
   isSkipRefresh,
 }) => {
   const t = useI18n();
-  const [gridApi, setGridApi] = useState<GridApi>();
+  const gridApiRef = useRef<GridApi | null>(null);
   const data = getRolesGridData(entity, roles);
 
   const columns = getRolesColumnDefs(
@@ -63,7 +64,7 @@ const RolesGrid: FC<Props> = ({
   );
 
   const onGridReady = (event: GridReadyEvent) => {
-    setGridApi(event.api);
+    gridApiRef.current = event.api ?? null;
     event.api?.updateGridOptions({
       columnDefs: columns,
       rowData: data,
@@ -71,13 +72,17 @@ const RolesGrid: FC<Props> = ({
   };
 
   useEffect(() => {
-    if (!isSkipRefresh && !gridApi?.isDestroyed()) {
-      gridApi?.updateGridOptions({
+    if (!isSkipRefresh && !gridApiRef.current?.isDestroyed()) {
+      gridApiRef.current?.updateGridOptions({
         columnDefs: columns,
         rowData: data,
       });
     }
-  }, [isSkipRefresh, columns, data, gridApi]);
+  }, [isSkipRefresh, columns, data]);
+
+  useEffect(() => {
+    gridApiRef.current?.refreshCells({ columns: [ACTIONS_COLUMN_CEL_ID], force: true });
+  }, [data]);
 
   const onSwitchSpecificRoles = useCallback(
     (isPublic: boolean) => {

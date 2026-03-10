@@ -18,6 +18,7 @@ interface EditableCellRendererParams extends ICellRendererParams {
   onChange?: (value: number | string, data: unknown, column: string, index?: number) => void;
   getDefaultPlaceholder?: (node: IRowNode, colDef?: ColDef) => string;
   showMaxValue?: boolean;
+  isReadonly?: boolean;
 }
 
 const EditableCellRenderer = ({
@@ -35,6 +36,7 @@ const EditableCellRenderer = ({
   data,
   node,
   showMaxValue,
+  isReadonly,
 }: EditableCellRendererParams) => {
   const t = useI18n();
   const initialPlaceholder = placeholder ? t(placeholder) : '';
@@ -78,6 +80,10 @@ const EditableCellRenderer = ({
     const formattedValue = valueFormatter ? valueFormatter(value) : value || translatedPlaceholder;
     setInputValue(formattedValue);
   }, [value, valueFormatter, translatedPlaceholder]);
+
+  if (isReadonly) {
+    return <div>{correctValue}</div>;
+  }
 
   return (
     <>
