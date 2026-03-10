@@ -3,7 +3,7 @@ import { DialNumberInput } from '@epam/ai-dial-ui-kit';
 
 import { Container } from '@/src/models/deployments/containers';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { MODEL_SOURCE_TYPE } from '@/src/types/deployments/containers';
+import { CONTAINER_SOURCE_TYPE } from '@/src/types/deployments/containers';
 import { FieldError } from '@/src/models/error';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { isEditDisabled } from '@/src/utils/deployments/containers';
@@ -87,7 +87,7 @@ const Port: FC<Props> = ({ container, setContainer }) => {
         onChange={onPortChange}
         disabled={isEditDisabled(container)}
       />
-      {container.source?.$type === MODEL_SOURCE_TYPE.NIM && (
+      {container.source?.$type === CONTAINER_SOURCE_TYPE.NGC_REGISTRY && (
         <DialNumberInput
           containerClassName="max-w-[125px]"
           id="containerGRPCPort"

@@ -30,9 +30,11 @@ export enum CreateSteps {
   PROPERTIES = 'properties',
 }
 
-export enum MODEL_SOURCE_TYPE {
-  NIM = 'ngc_registry',
-  HF = 'huggingface',
+export enum CONTAINER_SOURCE_TYPE {
+  INTERNAL_IMAGE = 'internal_image',
+  IMAGE_REFERENCE = 'image_reference',
+  NGC_REGISTRY = 'ngc_registry',
+  HUGGINGFACE = 'huggingface',
 }
 
 export enum MODEL_TYPE {
@@ -45,8 +47,10 @@ export enum SCALING_STRATEGY_TYPE {
   HARDWARE = 'hardware_usage',
 }
 
-export type SERVING_SOURCE = {
-  $type: MODEL_SOURCE_TYPE;
+export type ContainerSource = {
+  $type: CONTAINER_SOURCE_TYPE;
+  imageDefinitionId?: string;
+  imageReference?: string;
   imageRef?: string;
   modelName?: string;
 };

@@ -2,7 +2,7 @@ import React, { FC } from 'react';
 
 import { Container } from '@/src/models/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
-import { MODEL_SOURCE_TYPE } from '@/src/types/deployments/containers';
+import { CONTAINER_SOURCE_TYPE } from '@/src/types/deployments/containers';
 
 import ContainerBase from '@/src/components/Deployments/Fields/ContainerBase';
 import ContainerSource from '@/src/components/Deployments/Fields/ContainerSource';
@@ -31,12 +31,12 @@ const ContainerFields: FC<Props> = ({ container, setContainer, isModal, route, n
       {!isModal && (
         <div className="flex flex-col gap-y-8">
           <ContainerEndpoint container={container} setContainer={setContainer} route={route} />
-          {container.source?.$type === MODEL_SOURCE_TYPE.HF && (
+          {container.source?.$type === CONTAINER_SOURCE_TYPE.HUGGINGFACE && (
             <ContainerAutoscaling container={container} setContainer={setContainer} />
           )}
           <ContainerVariables container={container} setContainer={setContainer} />
           <ContainerResources container={container} setContainer={setContainer} route={route} />
-          {container.source?.$type === MODEL_SOURCE_TYPE.HF && (
+          {container.source?.$type === CONTAINER_SOURCE_TYPE.HUGGINGFACE && (
             <ContainerConfiguration container={container} setContainer={setContainer} />
           )}
           <ContainerStartupProbe container={container} setContainer={setContainer} />

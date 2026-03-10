@@ -1,12 +1,12 @@
 import { EnvironmentVariable } from '@/src/models/deployments/variables';
 import { Container, ContainerRedeploySnapshot, ResourcesDefaults } from '@/src/models/deployments/containers';
 import {
+  CONTAINER_SOURCE_TYPE,
   CONTAINER_STATUS,
   CONTAINER_TRANSPORT,
   CONTAINER_TYPE,
   ContainerResources,
   MODEL_FORMAT,
-  MODEL_SOURCE_TYPE,
 } from '@/src/types/deployments/containers';
 import { DEFAULT_SCALING } from '@/src/constants/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -32,7 +32,7 @@ const normalizeResources = (resources?: ContainerResources): ContainerResources 
 
 export const getContainerRedeploySnapshot = (container: Container): ContainerRedeploySnapshot => {
   return {
-    imageDefinitionId: container.imageDefinitionId,
+    source: container.source,
     containerPorts: normalizeContainerPorts(container.containerPorts),
     containerPort: container.containerPort,
     containerGrpcPort: container.containerGrpcPort,
@@ -61,7 +61,7 @@ export const getContainerTemplate = (type: CONTAINER_TYPE, defaults?: ResourcesD
 
   const template = {
     $type: type,
-    imageDefinitionId: '',
+    source: { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE, imageDefinitionId: '' },
     displayName: '',
     name: '',
     description: '',
@@ -92,7 +92,7 @@ export const getContainerTemplate = (type: CONTAINER_TYPE, defaults?: ResourcesD
     return {
       ...template,
       source: {
-        $type: MODEL_SOURCE_TYPE.HF,
+        $type: CONTAINER_SOURCE_TYPE.HUGGINGFACE,
       },
       modelFormat: MODEL_FORMAT.HF,
       resources: {
@@ -113,7 +113,7 @@ export const getContainerTemplate = (type: CONTAINER_TYPE, defaults?: ResourcesD
     return {
       ...template,
       source: {
-        $type: MODEL_SOURCE_TYPE.NIM,
+        $type: CONTAINER_SOURCE_TYPE.NGC_REGISTRY,
       },
       resources: {
         requests: {
