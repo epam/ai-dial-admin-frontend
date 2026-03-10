@@ -7,7 +7,13 @@ import SelectContainerModal from '@/src/components/SourceField/Containers/Select
 import Endpoints from '@/src/components/SourceField/Endpoints/Endpoints';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { getContainerRoute } from '@/src/components/SourceField/utils';
-import { CreateI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import {
+  ButtonsI18nKey,
+  CreateI18nKey,
+  EntitiesI18nKey,
+  EntityFieldsI18nKey,
+  SourceI18nKey,
+} from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -154,7 +160,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
               <DialNeutralButton
                 iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
                 className={classNames(error ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
-                label={isMobile ? '' : t(SourceI18nKey.OpenContainer)}
+                label={isMobile ? '' : t(ButtonsI18nKey.Open)}
                 onClick={() => openContainer()}
               />
             )}
