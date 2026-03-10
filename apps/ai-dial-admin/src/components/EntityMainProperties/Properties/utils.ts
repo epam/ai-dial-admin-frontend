@@ -3,6 +3,7 @@ import { MAX_NAME_SYMBOLS, MIN_NAME_SYMBOLS } from '@/src/constants/validation';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isWrongFieldLength } from '@/src/utils/validation/name-error';
 import { DialModel } from '@/src/models/dial/model';
+import { isEntitiesWithDisplayVersion } from '@/src/utils/is-asset-view';
 
 export const getDisplayNameError = (
   view: ApplicationRoute,
@@ -16,11 +17,11 @@ export const getDisplayNameError = (
     return t(ErrorI18nKey.MinMaxLength, { min: MIN_NAME_SYMBOLS, max: MAX_NAME_SYMBOLS });
   }
 
-  if (view === ApplicationRoute.Models) {
-    return names.includes(displayName) && !version ? t(ErrorI18nKey.DisplayNameErrorModel) : '';
+  if (isEntitiesWithDisplayVersion(view)) {
+    return names.includes(displayName) && !version ? t(ErrorI18nKey.DisplayNameErrorVersion) : '';
   }
 
-  if (view === ApplicationRoute.Applications || view === ApplicationRoute.Toolsets) {
+  if (view === ApplicationRoute.Toolsets) {
     return names.includes(displayName) ? t(ErrorI18nKey.DisplayNameExists) : '';
   }
 
@@ -34,13 +35,13 @@ export const getVersionError = (
   t: (str: string, param?: Record<string, number>) => string,
 ) => {
   if (!isVersionOptional) {
-    const hasDisplayVersion = !!model.displayName;
+    const hasDisplayVersion = !!model.displayVersion;
 
     if (!hasDisplayVersion) {
       return t(ErrorI18nKey.Version);
     }
 
-    if (versionsMap[model.displayName as string]?.includes(model.displayVersion as string)) {
+    if (versionsMap[model.displayName as string]?.includes(model.displayVersion || '')) {
       return t(ErrorI18nKey.Unique);
     }
   }

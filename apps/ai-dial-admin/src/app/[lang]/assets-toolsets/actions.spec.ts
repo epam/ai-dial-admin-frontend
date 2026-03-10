@@ -15,10 +15,14 @@ import {
   getAssetTools,
   createToolset,
   signOutToolset,
+  importToolsets,
+  exportToolsets,
+  tryOutAssetTool,
 } from './actions';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { ResourceType } from '@/src/types/resource-type';
 import { ToolsetAuthCredentialLevel } from '@/src/models/dial/toolset';
+import { ImportFileType } from '@/src/types/import';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -140,6 +144,15 @@ describe('Assets Toolset :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
+  test('Should call exportToolsets action', async () => {
+    (assetsApi.exportAssets as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await exportToolsets(['test']);
+    expect(getUserToken).toHaveBeenCalled();
+    expect(assetsApi.exportAssets).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.TOOLSET, ['test'], void 0);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
   test('Should call signInToolset action', async () => {
     (assetsApi.signInToolset as any).mockResolvedValue(RESPONSE_MOCK);
 
@@ -173,6 +186,29 @@ describe('Assets Toolset :: server actions', () => {
       ToolsetAuthCredentialLevel.GLOBAL,
       TOKEN_MOCK,
     );
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call importToolsets action', async () => {
+    (assetsApi.importAssets as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await importToolsets({} as FormData, ImportFileType.ARCHIVE);
+    expect(getUserToken).toHaveBeenCalled();
+    expect(assetsApi.importAssets).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      {} as FormData,
+      ImportFileType.ARCHIVE,
+      ResourceType.TOOLSET,
+    );
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call tryOutAssetTool action', async () => {
+    (assetsApi.tryOutTool as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await tryOutAssetTool({});
+    expect(getUserToken).toHaveBeenCalled();
+    expect(assetsApi.tryOutTool).toHaveBeenCalledWith({}, TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

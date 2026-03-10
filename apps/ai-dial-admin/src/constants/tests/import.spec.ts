@@ -1,9 +1,14 @@
-import { describe, expect, test } from 'vitest';
-import { IMPORT_RESOLUTIONS, IMPORT_STEPS, IMPORT_CONFIG_STEPS, IMPORT_FILE_TYPES } from '../import';
 import { ImportI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { ConflictResolutionPolicy, ImportFileType, ImportSteps } from '@/src/types/import';
-import { StepStatus } from '@epam/ai-dial-ui-kit';
 import { ApplicationRoute } from '@/src/types/routes';
+import { describe, expect, test } from 'vitest';
+import {
+  ARCHIVE_IMPORT_TYPE,
+  IMPORT_CONFIG_STEPS,
+  IMPORT_FILE_TYPES,
+  IMPORT_RESOLUTIONS,
+  IMPORT_STEPS,
+} from '../import';
 
 const t = (s: string) => s;
 
@@ -55,13 +60,7 @@ describe('IMPORT_CONFIG_STEPS', () => {
 describe('IMPORT_FILE_TYPES', () => {
   test('returns only ARCHIVE by default', () => {
     const result = IMPORT_FILE_TYPES(t);
-    expect(result).toEqual([
-      {
-        id: ImportFileType.ARCHIVE,
-        name: ImportI18nKey.DialArchive,
-        description: ImportI18nKey.ArchiveDescription,
-      },
-    ]);
+    expect(result).toEqual([ARCHIVE_IMPORT_TYPE(t)]);
   });
 
   test('returns ARCHIVE and JSON for Prompts route', () => {

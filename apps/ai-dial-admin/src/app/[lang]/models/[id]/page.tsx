@@ -1,17 +1,15 @@
 import { cookies, headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
-import { getCoreModel, removeModel, updateCoreModel, updateModel } from '@/src/app/[lang]/models/actions';
-import { interceptorsApi, modelsApi, rolesApi } from '@/src/app/api/api';
-import EntityView from '@/src/components/EntityView/View/EntityView';
-import Page403 from '@/src/components/Page403/Page403';
+import { getModel, getModelsList } from '@/src/app/[lang]/models/actions';
+import { interceptorsApi, rolesApi } from '@/src/app/api/api';
+import View from '@/src/components/Models/View/View';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
-import { logError } from '@/src/server/logger';
-import { ApplicationRoute } from '@/src/types/routes';
+import { errorObjLog } from '@/src/server/logger';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { filterDisplayNamesWithVersions } from '@/src/utils/entities/filter-names';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -28,39 +26,26 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   let interceptors: DialInterceptor[] | null = [];
 
   try {
-    models = await modelsApi.getModelsList(token);
-    model = await modelsApi.getModel((await params.params).id, token, etag).then((res) => {
+    models = await getModelsList();
+    model = await getModel((await params.params).id, etag).then((res) => {
       etag = res?.etag || DEFAULT_ETAG;
       return res?.response as DialModel | null;
     });
+
     roles = await rolesApi.getRolesList(token);
     interceptors = await interceptorsApi.getInterceptorsList(token);
-    if (models === void 0 || model === void 0 || roles === void 0 || interceptors === void 0) {
-      return <Page403 />;
-    }
   } catch (e) {
-    logError(e, 'Failed to fetch model view data');
+    errorObjLog(e, 'Failed to fetch model view data');
   }
 
   if (model == null) {
-    redirect(ApplicationRoute.Models);
+    notFound();
   }
   const names = filterDisplayNamesWithVersions(models, model);
 
   return (
     <SaveValidationContextProvider>
-      <EntityView
-        view={ApplicationRoute.Models}
-        names={names}
-        etag={etag}
-        roles={roles}
-        interceptors={interceptors}
-        originalEntity={model}
-        removeEntity={removeModel}
-        updateEntity={updateModel}
-        getCoreEntity={getCoreModel}
-        updateCoreEntity={updateCoreModel}
-      />
+      <View names={names} etag={etag} roles={roles} interceptors={interceptors} originalModel={model} />
     </SaveValidationContextProvider>
   );
 }

@@ -20,15 +20,20 @@ export const getFolderName = (path: string): string | undefined => {
  * @param {DialFile[]} files - array of DialFile
  * @returns {DialFile[]} - DialFile array
  */
-export const fillChildren = (files: DialFile[]): DialFile[] => {
-  return [
-    ...files.map((file) => {
+export const fillChildren = (files: DialFile[], existingChildren?: DialFile[]): DialFile[] => {
+  return files
+    .map((file) => {
+      const items = existingChildren?.find((child) => child.path === file.path)?.items;
       return {
         ...file,
         name: getFolderName(file.path),
+        parentPath: `${file.path.replace(/\/[^/]+\/?$/, '')}/`,
+        // TODO: Remove When we get real permissions
+        permissions: ['WRITE', 'READ'],
+        items: file.nodeType === DialFileNodeType.FOLDER ? items : void 0,
       };
-    }),
-  ];
+    })
+    .sort((a, b) => a.name?.toLowerCase().localeCompare(b.name?.toLowerCase() || '') || 0);
 };
 
 /**
@@ -51,10 +56,13 @@ export const mergeFiles = <T extends DialFile>(
         name: getFolderName(targetPath),
         path: targetPath,
         nodeType: DialFileNodeType.FOLDER,
+        // TODO: Remove When we get real permissions
+        permissions: ['WRITE', 'READ'],
         items: fillChildren(newFiles as T[]),
       } as T,
     ];
   }
+
   return existingFiles.map((file) => {
     const currentPath = file.path;
 
@@ -63,7 +71,7 @@ export const mergeFiles = <T extends DialFile>(
         return {
           ...file,
           name: getFolderName(file.path),
-          items: newFiles?.length ? fillChildren(newFiles) : void 0,
+          items: newFiles?.length ? fillChildren(newFiles, file.items) : void 0,
         } as T;
       } else if (file.items) {
         return {

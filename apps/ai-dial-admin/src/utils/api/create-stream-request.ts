@@ -1,14 +1,14 @@
-import { JWT } from 'next-auth/jwt';
+import { contentTypes } from '@/src/constants/file';
 
-import { imageTypes } from '@/src/constants/file';
-import { logError } from '@/src/server/logger';
+import { Token } from '@/src/models/auth';
+import { errorObjLog } from '@/src/server/logger';
 import { getAuthorizationHeader } from '@/src/utils/auth/api-headers';
 import { sendRequest } from './send-request';
 
 export const streamRequest = async (
   url: string,
   fileName: string,
-  token?: JWT | null,
+  token?: Token,
   isPreview?: boolean,
 ): Promise<Response> => {
   try {
@@ -24,7 +24,7 @@ export const streamRequest = async (
     headers.append('Content-Disposition', isPreview ? 'inline' : `attachment; filename=${fileName}`);
     return new Response(stream, { headers });
   } catch (e) {
-    logError(e, 'Stream request failed');
+    errorObjLog(e, 'Stream request failed');
     return new Promise(() => null);
   }
 };
@@ -58,8 +58,8 @@ export const createReadableStream = (stream: ReadableStream<Uint8Array>): Readab
 export const getContentType = (fileName: string): string | null => {
   const extension = fileName.split('.').pop()?.toLowerCase();
 
-  if (extension && imageTypes[`.${extension}`]) {
-    return imageTypes[`.${extension}`];
+  if (extension && contentTypes[`.${extension}`]) {
+    return contentTypes[`.${extension}`];
   }
 
   return null;

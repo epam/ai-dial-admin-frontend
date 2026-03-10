@@ -28,14 +28,15 @@ export const SelectWidget: FC<WidgetProps> = ({
   const selectedIndexes = enumOptions?.find((o) => o.value.toString() === value?.toString())?.value.toString();
 
   return (
-    <div className="flex flex-col w-full bg-layer-2 py-[18px] pl-[18px]">
-      {label && <WidgetHeader title={label} defaultHeader={true} description={schema.description} />}
+    <div className="flex flex-col w-full bg-layer-2 rounded p-[18px]">
+      {label && <WidgetHeader title={label} defaultHeader={true} caption={schema.description} />}
       <DialSelect
         disabled={readonly}
         options={enumOptions?.map((o) => ({ ...o, value: o.value.toString() })) || []}
         value={selectedIndexes === void 0 ? emptyValue : selectedIndexes}
         onChange={handleChange}
         className="max-w-[600px]"
+        listClassName="w-[600px]"
       />
     </div>
   );

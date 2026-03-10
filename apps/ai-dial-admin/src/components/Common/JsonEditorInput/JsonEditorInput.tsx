@@ -1,7 +1,6 @@
-import { DialFormPopup, DialInputPopup } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, DialInputPopup, DialLabel } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import Field from '@/src/components/Common/Field/Field';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import { BasicI18nKey, ButtonsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -9,14 +8,23 @@ import { JSONEditorError } from '@/src/types/editor';
 
 interface Props {
   value: object;
-  fieldTitle?: string;
+  label?: string;
   elementId?: string;
   disabled?: boolean;
   inputClassName?: string;
   onChangeValue: (json: object) => void;
+  disableValidation?: boolean;
 }
 
-const JsonEditorInput: FC<Props> = ({ value, disabled, fieldTitle, elementId, inputClassName, onChangeValue }) => {
+const JsonEditorInput: FC<Props> = ({
+  value,
+  disabled,
+  label,
+  elementId,
+  inputClassName,
+  onChangeValue,
+  disableValidation,
+}) => {
   const t = useI18n();
   const [isValid, setIsValid] = useState(false);
   const [jsonValue, setJsonValue] = useState<string | undefined>(undefined);
@@ -62,8 +70,8 @@ const JsonEditorInput: FC<Props> = ({ value, disabled, fieldTitle, elementId, in
   }, [onChangeValue, jsonValue, onCloseModal]);
 
   return (
-    <div className="flex flex-col">
-      {fieldTitle && <Field fieldTitle={fieldTitle} htmlFor={elementId} />}
+    <div className="flex flex-col gap-y-2">
+      {label && <DialLabel label={label} htmlFor={elementId} />}
       <DialInputPopup
         disabled={disabled}
         open={isModalOpen}
@@ -74,14 +82,14 @@ const JsonEditorInput: FC<Props> = ({ value, disabled, fieldTitle, elementId, in
       >
         <DialFormPopup
           onClose={onCloseModal}
-          title={t(EntityPlaceholdersI18nKey.Object)}
+          header={t(EntityPlaceholdersI18nKey.Object)}
           portalId="jsonInputModal"
           open={isModalOpen}
           submitLabel={t(ButtonsI18nKey.Apply)}
           onSubmit={onApply}
           cancelLabel={t(ButtonsI18nKey.Cancel)}
           onCancel={onCloseModal}
-          disableSubmitButton={!isValid}
+          disableSubmitButton={!isValid && !disableValidation}
         >
           <div className="px-6 py-4 h-[540px] max-h-[35vh]">
             <JsonEditorBase value={jsonValue} onChange={onChangeJsonValue} onValidateJSON={onValidateJSON} />

@@ -1,18 +1,17 @@
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import { GridApi, GridReadyEvent, IRowNode } from 'ag-grid-community';
 
 import { DefaultItemType } from '@/src/components/Defaults/types';
 import { getValueByType } from '@/src/components/Defaults/utils';
-import Grid from '@/src/components/Grid/Grid';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ApplicationPropertiesTemp } from '@/src/models/dial/application';
 import { BooleanType } from '@/src/types/boolean';
-import { ParamsFields } from './types';
+import { ParamsFields } from '@/src/types/parameters';
 import { getAppPropertiesColumns } from './utils';
 
 interface Props {
@@ -24,7 +23,7 @@ interface Props {
 }
 
 const TableView: FC<Props> = ({ properties, isSkipRefresh, onChangeProperties, isAddClicked, setIsAddClicked }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const t = useI18n();
   const [gridApi, setGridApi] = useState<GridApi>();
   const data = useMemo(() => properties, [properties]);
   const propRef = useRef(properties || []);
@@ -141,10 +140,12 @@ const TableView: FC<Props> = ({ properties, isSkipRefresh, onChangeProperties, i
     }
   });
 
-  return !properties.length ? (
-    <DialNoDataContent title={t(BasicI18nKey.NoParameters)} />
-  ) : (
-    <Grid additionalGridOptions={{ onGridReady }} />
+  return (
+    <GridView
+      getIsEmptyData={() => !properties.length}
+      emptyDataProps={{ title: t(BasicI18nKey.NoParameters) }}
+      onGridReady={onGridReady}
+    />
   );
 };
 

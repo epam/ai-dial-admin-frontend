@@ -1,7 +1,9 @@
+import { GridFilter } from '@/src/models/grid-filter';
+import { FilterDto } from '@/src/models/request';
 import { GridFilterType } from '@/src/types/grid-filter';
-import { FilterDto, FilterOperatorDto, GridFilter } from '@/src/types/request';
+import { FilterOperatorDto } from '@/src/types/request';
 import { describe, expect, test } from 'vitest';
-import { getRequestFilters } from '../get-request-filters';
+import { getRequestFilters, getRequestFiltersStr } from '../get-request-filters';
 
 describe('getRequestFilters', () => {
   test('converts grid filters to request filters correctly', () => {
@@ -35,5 +37,38 @@ describe('getRequestFilters', () => {
 
   test('returns empty array for empty input', () => {
     expect(getRequestFilters({})).toEqual([]);
+  });
+});
+
+describe('getRequestFiltersStr', () => {
+  test('converts a single filter to query string', () => {
+    const filters: FilterDto[] = [{ column: 'name', value: 'John', operator: FilterOperatorDto.CONTAINS }];
+
+    expect(getRequestFiltersStr(filters)).toBe('filter=name:co:John');
+  });
+
+  test('converts multiple filters to query string with & separator', () => {
+    const filters: FilterDto[] = [
+      { column: 'name', value: 'John', operator: FilterOperatorDto.CONTAINS },
+      { column: 'age', value: '30', operator: FilterOperatorDto.EQUALS },
+      { column: 'city', value: 'New York', operator: FilterOperatorDto.CONTAINS },
+    ];
+
+    expect(getRequestFiltersStr(filters)).toBe('filter=name:co:John&filter=age:eq:30&filter=city:co:New%20York');
+  });
+
+  test('properly encodes special characters in filter values', () => {
+    const filters: FilterDto[] = [
+      { column: 'query', value: 'test & query=value', operator: FilterOperatorDto.CONTAINS },
+      { column: 'email', value: 'user@example.com', operator: FilterOperatorDto.EQUALS },
+    ];
+
+    expect(getRequestFiltersStr(filters)).toBe(
+      'filter=query:co:test%20%26%20query%3Dvalue&filter=email:eq:user%40example.com',
+    );
+  });
+
+  test('returns empty string for empty filters array', () => {
+    expect(getRequestFiltersStr([])).toBe('');
   });
 });

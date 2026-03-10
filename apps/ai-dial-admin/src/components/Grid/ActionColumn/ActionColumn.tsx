@@ -21,7 +21,7 @@ const ActionColumn = <T extends object>({ items, data, api, node, disabledInstea
       })
     : items.filter((item) => !item.hidden?.(api, node));
   return data ? (
-    <div className="w-[24px] h-[24px] ml-[-4px]">
+    <div className="size-[24px] ml-[-4px]">
       <ActionsDropdown
         data={data}
         rowIndex={node.rowIndex as number}

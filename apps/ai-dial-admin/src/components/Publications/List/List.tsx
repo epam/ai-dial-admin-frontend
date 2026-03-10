@@ -3,8 +3,8 @@ import { GridOptions } from 'ag-grid-community';
 import { useRouter } from 'next/navigation';
 import { useCallback } from 'react';
 
-import { emptyDataTitleMap, listViewTitleMap } from '@/src/components/EntityListView/constants';
-import ListView from '@/src/components/ListView/ListView';
+import { emptyDataTitleMap, listViewTitleMap } from '@/src/components/ListView/constants';
+import ListEntities from '@/src/components/ListView/List';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { getPublicationColumns } from '@/src/constants/grid-columns/grid-columns';
 import { useI18n } from '@/src/locales/client';
@@ -18,7 +18,7 @@ interface Props<T> {
 }
 
 const PublicationsList = <T extends Publication>({ data, route }: Props<T>) => {
-  const t = useI18n() as (s: string) => string;
+  const t = useI18n();
   const router = useRouter();
 
   const openInNewTab = useCallback(
@@ -39,13 +39,13 @@ const PublicationsList = <T extends Publication>({ data, route }: Props<T>) => {
   };
 
   return (
-    <ListView
-      data={data}
+    <ListEntities
+      rowData={data}
       additionalGridOptions={gridOptions}
       columnDefs={gridColumns}
-      title={t(listViewTitleMap[route])}
-      emptyDataTitle={t(emptyDataTitleMap[route])}
-      view={route}
+      listLabel={t(listViewTitleMap[route])}
+      emptyDataProps={{ title: t(emptyDataTitleMap[route]) }}
+      isMainListView
     />
   );
 };

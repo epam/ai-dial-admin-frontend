@@ -2,6 +2,8 @@
 name: 🐛 Bug report
 description: Problems and issues with code in EPAM AI DIAL Admin
 labels: ["bug"]
+projects: ["epam/68"]
+type: "Bug"
 body:
   - type: markdown
     attributes:
@@ -46,6 +48,10 @@ body:
         Please provide any suggestions or ideas what should happen instead.
     validations:
       required: true
+  - type: textarea
+    attributes:
+      label: Additional information
+      description: Tell us anything else you think we should know.
   - type: checkboxes
     attributes:
       label: Confidential information

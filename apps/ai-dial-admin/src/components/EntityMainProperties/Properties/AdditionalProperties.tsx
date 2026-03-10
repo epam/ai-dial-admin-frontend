@@ -9,10 +9,11 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { Toolset } from '@/src/models/dial/toolset';
 import { useI18n } from '@/src/locales/client';
 
-import ReadonlyField from '@/src/components/Common/ReadonlyField/ReadonlyField';
-import MaintainerControl from '@/src/components/EntityMainProperties/BaseProperties/Maintainer';
-import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
-import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
+import ReadonlyInput from '@/src/components/Common/ReadonlyInput/ReadonlyInput';
+import MaintainerControl from '@/src/components/BaseControls/Maintainer';
+import IconControl from '@/src/components/BaseControls/Icon';
+import TopicsControl from '@/src/components/BaseControls/Topics';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 
 interface Props {
   view: ApplicationRoute;
@@ -23,7 +24,7 @@ interface Props {
 }
 
 const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity, isEntityImmutable = false }) => {
-  const t = useI18n() as (str: string, param?: Record<string, number>) => string;
+  const t = useI18n();
 
   const applicationRunner = runners?.find((runner) => runner.$id === (entity as DialApplication).customAppSchemaId);
 
@@ -39,30 +40,29 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
   }
 
   return (
-    <div className="w-full flex flex-col">
-      <div className="flex flex-col lg:w-[35%] gap-y-8">
-        {isEntityImmutable && isShowMaintainer ? (
-          <MaintainerControl entity={entity} onChangeEntity={onChangeEntity} />
-        ) : null}
+    <div className="w-full flex flex-col gap-y-8">
+      {isEntityImmutable && isShowMaintainer ? (
+        <MaintainerControl entity={entity} onChangeEntity={onChangeEntity} />
+      ) : null}
 
-        {isShowCompletionEndpoint && isEntityImmutable ? (
-          <ReadonlyField
-            value={applicationRunner['dial:applicationTypeCompletionEndpoint']}
-            title={t(EntityFieldsI18nKey.completionEndpoint)}
+      {isShowCompletionEndpoint && isEntityImmutable ? (
+        <ReadonlyInput
+          value={applicationRunner['dial:applicationTypeCompletionEndpoint']}
+          label={t(EntityFieldsI18nKey.completionEndpoint)}
+          containerClassName={STANDARD_CONTROL_WIDTH}
+        />
+      ) : null}
+      {view == ApplicationRoute.Toolsets && isEntityImmutable && (
+        <>
+          <IconControl iconUrl={entity.iconUrl} onChange={(icon) => onChangeEntity({ ...entity, iconUrl: icon })} />
+          <TopicsControl
+            entity={{ topics: (entity as Toolset)?.descriptionKeywords }}
+            onChange={({ topics }) => {
+              onChangeEntity({ ...entity, descriptionKeywords: topics } as Toolset);
+            }}
           />
-        ) : null}
-        {view == ApplicationRoute.Toolsets && isEntityImmutable && (
-          <>
-            <IconControl iconUrl={entity.iconUrl} onChange={(icon) => onChangeEntity({ ...entity, iconUrl: icon })} />
-            <TopicsControl
-              entity={{ topics: (entity as Toolset)?.descriptionKeywords }}
-              onChange={({ topics }) => {
-                onChangeEntity({ ...entity, descriptionKeywords: topics } as Toolset);
-              }}
-            />
-          </>
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
 };

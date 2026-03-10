@@ -1,37 +1,29 @@
 import { cookies, headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
 import { toolSetsApi } from '@/src/app/api/api';
-import Page403 from '@/src/components/Page403/Page403';
 import ToolsetsList from '@/src/components/Toolsets/List';
-import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { Toolset } from '@/src/models/dial/toolset';
-import { logError } from '@/src/server/logger';
+import { errorObjLog } from '@/src/server/logger';
 import { getUserToken } from '@/src/utils/auth/auth-request';
-import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page() {
-  const isEnableAuth = getIsEnableAuthToggle();
-  const token = await getUserToken(isEnableAuth, headers(), cookies());
-  const isInvalidSession = await getIsInvalidSession(isEnableAuth, token);
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
-  if (isInvalidSession) {
-    return redirect(SIGN_IN_LINK);
-  }
-
-  let data: Toolset[] | null = [];
+  let data: Toolset[] | null = null;
 
   try {
     data = await toolSetsApi.getToolsetList(token);
-    if (data === void 0) {
-      return <Page403 />;
-    }
   } catch (e) {
-    logError(e, 'Failed to fetch toolsets view data');
+    errorObjLog(e, 'Failed to fetch toolsets view data');
+  }
+
+  if (data == null) {
+    notFound();
   }
 
   return (

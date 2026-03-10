@@ -4,6 +4,7 @@ import { render, screen } from '@testing-library/react';
 import { ApplicationRoute } from '@/src/types/routes';
 
 import List from './List';
+import { ButtonsI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 
 describe('Interceptor Templates List', () => {
   test('Should render correctly', () => {
@@ -13,8 +14,8 @@ describe('Interceptor Templates List', () => {
     ];
     render(<List route={ApplicationRoute.InterceptorTemplates} data={data} />);
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Menu.InterceptorTemplates' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Buttons.Create' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: MenuI18nKey.InterceptorTemplates })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Create })).toBeInTheDocument();
     expect(screen.getByRole('table')).toBeInTheDocument();
   });
 });

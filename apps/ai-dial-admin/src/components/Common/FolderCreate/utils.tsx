@@ -2,26 +2,27 @@ import { ColDef } from 'ag-grid-community';
 
 import {
   generateFileColumnsForImportGrid,
-  generatePromptColumnsForImportGrid,
+  generateAssetColumnsForImportGrid,
   isInvalidJson,
   isLargeFile,
-} from '@/src/components/EntityListView/Import/import';
+} from '@/src/components/EntityListView/Import/utils';
 import { DialFile } from '@/src/models/dial/file';
 import { FileImportGridData, FileImportMap } from '@/src/models/file';
-import { ParsedPrompts, PromptImportGridData } from '@/src/models/prompts';
+import { ParsedAssets, AssetImportGridData } from '@/src/models/import-asset';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderNameAndPath } from '@/src/utils/files/path';
 import { ZipFilePreview } from './models';
+import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 
 /**
- * Check is import prompt preview has errors
+ * Check is import data preview has errors
  *
- * @param {PromptImportGridData} data - prompts
+ * @param {AssetImportGridData} data - import data
  * @returns {boolean} - return true if has errors
  */
-export const isErrorPromptReview = (data: PromptImportGridData): boolean => {
-  return !data.version || !data.promptName || !!data.invalid;
+export const isErrorAssetReview = (data: AssetImportGridData): boolean => {
+  return !data.version || !data.assetName || !!data.invalid;
 };
 
 /**
@@ -39,9 +40,11 @@ export const isErrorFileReview = (data: FileImportGridData): boolean => {
  *
  * @async
  * @param {File[]} files - prompts
+ * @param {?ApplicationRoute} [route] - route
  * @returns {Promise<Map<string, FileImportMap>>} - mapping file name and all prompts related to this file, tagged with validity flag
  */
-export const readJsonFiles = async (files: File[]): Promise<Map<string, FileImportMap>> => {
+
+export const readJsonFiles = async (files: File[], route?: ApplicationRoute): Promise<Map<string, FileImportMap>> => {
   const results = new Map<string, FileImportMap>();
 
   const readFile = (file: File): Promise<void> => {
@@ -50,9 +53,12 @@ export const readJsonFiles = async (files: File[]): Promise<Map<string, FileImpo
 
       reader.onload = () => {
         try {
-          const parsedData: ParsedPrompts = JSON.parse(reader.result as string);
-          const isInvalid = isInvalidJson(parsedData);
-          results.set(file.name, { files: parsedData?.prompts, isInvalid });
+          const parsedData: ParsedAssets = JSON.parse(reader.result as string);
+          const isInvalid = isInvalidJson(parsedData, route);
+          results.set(file.name, {
+            files: parsedData?.prompts || parsedData?.applications || parsedData?.toolSets || [],
+            isInvalid,
+          });
         } catch (error) {
           console.error('Error parsing JSON:', error);
           results.set(file.name, { files: [], isInvalid: true });
@@ -124,8 +130,8 @@ export const generateColumnsForImportGrid = (
   fileType: string,
   route?: ApplicationRoute,
 ): ColDef[] => {
-  if (route === ApplicationRoute.Prompts) {
-    return generatePromptColumnsForImportGrid(changeFileFunc, true, fileType === ImportFileType.ARCHIVE);
+  if (isAssetWithVersion(route)) {
+    return generateAssetColumnsForImportGrid(changeFileFunc, true, fileType === ImportFileType.ARCHIVE);
   }
   if (route === ApplicationRoute.Files) {
     return generateFileColumnsForImportGrid(changeFileFunc, true, fileType === ImportFileType.ARCHIVE);
@@ -136,16 +142,16 @@ export const generateColumnsForImportGrid = (
 /**
  * Check if import data has errors
  *
- * @param {(PromptImportGridData | FileImportGridData)} data - import data
+ * @param {(AssetImportGridData | FileImportGridData)} data - import data
  * @param {?ApplicationRoute} [route] - route
  * @returns {boolean} - return true if errors exist
  */
 export const isErrorRowForImport = (
-  data: PromptImportGridData | FileImportGridData,
+  data: AssetImportGridData | FileImportGridData,
   route?: ApplicationRoute,
 ): boolean => {
-  if (route === ApplicationRoute.Prompts) {
-    return isErrorPromptReview(data as PromptImportGridData);
+  if (isAssetWithVersion(route)) {
+    return isErrorAssetReview(data as AssetImportGridData);
   }
   if (route === ApplicationRoute.Files) {
     return isErrorFileReview(data as FileImportGridData);

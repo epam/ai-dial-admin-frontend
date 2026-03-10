@@ -20,7 +20,7 @@ const RulesStructure: FC<Props> = ({ isLoading, isOpen, onClose }) => {
   return (
     <DialPopup
       onClose={onClose}
-      title={t(FoldersI18nKey.ReviewStructure)}
+      header={t(FoldersI18nKey.ReviewStructure)}
       portalId="RulesStructure"
       open={isOpen}
       className="min-h-[200px]"
@@ -31,7 +31,7 @@ const RulesStructure: FC<Props> = ({ isLoading, isOpen, onClose }) => {
       ) : (
         <div className="flex flex-1 flex-row px-6 min-h-0">
           <div className="flex flex-1 gap-4 pt-4 mb-6 min-h-0">
-            <div className="w-[360px] rounded border border-primary p-4 flex-shrink-0 flex">
+            <div className="w-[360px] rounded border border-primary p-4 shrink-0 flex">
               <FolderList context={useRuleFolder} disableAutoFetch={true} />
             </div>
             <div className="rounded border border-primary p-4 flex-1">

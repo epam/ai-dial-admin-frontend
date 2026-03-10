@@ -1,12 +1,13 @@
 import { JSONEditorThemeConfig, EDITOR_THEMES, EditorOptions } from '@/src/types/editor';
 
 const DEFAULT_COLORS = {
+  focusBorder: '#00000000',
   'editor.foreground': '#F3F4F6',
   'editor.background': '#141A23',
   'editorCursor.foreground': '#F3F4F6',
   'editor.selectionBackground': '#5C8DEA2B',
   'editorLineNumber.foreground': '#333942',
-  'scrollbarSlider.background': '#222932',
+  'scrollbarSlider.background': '#333942',
   'scrollbarSlider.hoverBackground': '#333942',
   'scrollbarSlider.activeBackground': '#333942',
   'diffEditor.insertedTextBackground': '#1D3841',
@@ -19,14 +20,14 @@ const DEFAULT_COLORS = {
 };
 
 export const getDiffEditorTheme = (theme: EDITOR_THEMES): JSONEditorThemeConfig => {
-  const template = EDITOR_THEMES_CONFIG[theme];
+  const template = EDITOR_THEMES_CONFIG[theme || EDITOR_THEMES.dark];
 
   switch (theme) {
-    case EDITOR_THEMES.dark:
-      return { ...template, colors: { ...template.colors, 'editor.background': '#222932' } };
     case EDITOR_THEMES.light:
-    case EDITOR_THEMES['light-orange']:
       return { ...template, colors: { ...template.colors, 'editor.background': '#FCFCFC' } };
+    case EDITOR_THEMES.dark:
+    default:
+      return { ...template, colors: { ...template.colors, 'editor.background': '#222932' } };
   }
 };
 
@@ -36,7 +37,7 @@ export const EDITOR_THEMES_CONFIG: Record<EDITOR_THEMES, JSONEditorThemeConfig> 
     inherit: false,
     rules: [
       { token: 'string.key.json', foreground: '#37BABC' },
-      { token: 'string.value.json', foreground: '#5C8DEA' },
+      { token: 'string.value.json', foreground: '#74A4FF' },
       { token: 'number', foreground: '#D97C27' },
       { token: 'keyword.json', foreground: '#F4CE46' },
       { token: 'delimiter', foreground: '#F3F4F6' },
@@ -68,27 +69,6 @@ export const EDITOR_THEMES_CONFIG: Record<EDITOR_THEMES, JSONEditorThemeConfig> 
       'diffEditor.removedTextBackground': '#F3D6D8',
     },
   },
-  [EDITOR_THEMES['light-orange']]: {
-    base: 'vs',
-    inherit: false,
-    rules: [
-      { token: 'string.key.json', foreground: '#009D9F' },
-      { token: 'string.value.json', foreground: '#2764D9' },
-      { token: 'number', foreground: '#B25500' },
-      { token: 'keyword.json', foreground: '#3F3D25' },
-      { token: 'delimiter', foreground: '#141A23' },
-      { token: 'delimiter.bracket.json', foreground: '#843EF3' },
-      { token: 'delimiter.parenthesis', foreground: '#843EF3' },
-    ],
-    colors: {
-      ...DEFAULT_COLORS,
-      'editor.foreground': '#141A23',
-      'editor.background': '#F3F4F6',
-      'editorCursor.foreground': '#141A23',
-      'diffEditor.insertedTextBackground': '#CEEBEE',
-      'diffEditor.removedTextBackground': '#F3D6D8',
-    },
-  },
 };
 
 const defaultOptions: EditorOptions = {
@@ -100,9 +80,10 @@ const defaultOptions: EditorOptions = {
   smoothScrolling: true,
   overviewRulerLanes: 0,
   scrollbar: {
-    horizontal: 'hidden',
-    verticalScrollbarSize: 4,
-    verticalSliderSize: 4,
+    verticalScrollbarSize: 6,
+    verticalSliderSize: 6,
+    horizontalScrollbarSize: 6,
+    horizontalSliderSize: 6,
   },
 };
 

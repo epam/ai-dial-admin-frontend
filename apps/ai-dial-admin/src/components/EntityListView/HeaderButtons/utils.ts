@@ -1,15 +1,23 @@
+import { importFiles } from '@/src/app/[lang]/files/actions';
+import { importPrompts } from '@/src/app/[lang]/prompts/actions';
+import { importApps } from '@/src/app/[lang]/assets-applications/actions';
+import { importToolsets } from '@/src/app/[lang]/assets-toolsets/actions';
+import { MenuI18nKey } from '@/src/constants/i18n';
 import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
 import { DialRule } from '@/src/models/dial/rule';
-import { ParsedPrompts } from '@/src/models/prompts';
+import { ImportData } from '@/src/models/import-asset';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getJsonFileName } from '@/src/utils/import/get-json-name';
 
 export const getFormDataForImport = (
   path: string,
-  file: File | File[] | ParsedPrompts,
+  file: ImportData,
   fileType: ImportFileType,
   resolutionStrategy: string,
   rules?: DialRule[],
   flatImport?: boolean,
+  route?: ApplicationRoute,
 ): { body: FormData; fileSize: number } => {
   const config: { path: string; conflictResolutionStrategy: string; rules?: DialRule[]; flatImport?: boolean } = {
     flatImport,
@@ -33,7 +41,7 @@ export const getFormDataForImport = (
     const fileBlob = new Blob([JSON.stringify(file)], {
       type: APPLICATION_JSON_TYPE,
     });
-    body.append('file', fileBlob, 'prompts.json');
+    body.append('file', fileBlob, `${getJsonFileName(route)}.json`);
   } else {
     (file as File[]).forEach((f) => {
       body.append('files', f);
@@ -44,4 +52,40 @@ export const getFormDataForImport = (
     body,
     fileSize,
   };
+};
+
+export const getImportFunction = (view: ApplicationRoute) => {
+  switch (view) {
+    case ApplicationRoute.Prompts:
+      return importPrompts;
+
+    case ApplicationRoute.Files:
+      return importFiles;
+
+    case ApplicationRoute.AssetsApplications:
+      return importApps;
+
+    case ApplicationRoute.AssetsToolsets:
+      return importToolsets;
+    default:
+      return null;
+  }
+};
+
+export const getImportTitle = (view?: ApplicationRoute) => {
+  switch (view) {
+    case ApplicationRoute.Prompts:
+      return MenuI18nKey.Prompts;
+
+    case ApplicationRoute.Files:
+      return MenuI18nKey.Files;
+
+    case ApplicationRoute.AssetsApplications:
+      return MenuI18nKey.Applications;
+
+    case ApplicationRoute.AssetsToolsets:
+      return MenuI18nKey.Toolsets;
+    default:
+      return '';
+  }
 };

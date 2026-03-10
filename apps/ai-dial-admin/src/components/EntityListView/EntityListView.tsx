@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
-import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
+import { ColDef, GridApi, GridOptions, GridReadyEvent } from 'ag-grid-community';
 
 import ListView from '@/src/components/ListView/ListView';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
@@ -11,15 +11,13 @@ import { ENTITIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { Asset } from '@/src/models/dial/deployment-asset';
-import { DialFile } from '@/src/models/dial/file';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { emptyDataTitleMap, listViewTitleMap } from '../ListView/constants';
 import Actions from './Components/Actions';
 import { ModalType } from './Components/Modals';
-import { emptyDataTitleMap, listViewTitleMap } from './constants';
 import EntityListHeaderButtons from './HeaderButtons/HeaderButtons';
 
 interface Props<T> {
@@ -30,12 +28,12 @@ interface Props<T> {
   baseColumns: ColDef[];
   runners?: DialApplicationScheme[];
   route: ApplicationRoute;
-  createEntity?: (entity: T) => Promise<ServerActionResponse>;
-  removeEntity: (entity: string) => Promise<ServerActionResponse>;
-  moveFiles?: (paths: string[], newPath: string) => Promise<ServerActionResponse[]>;
-  bulkDelete?: (paths: { path: string }[]) => Promise<ServerActionResponse>;
   showColumnsButton?: boolean;
-  context?: () => AssetsFolderContext<DialFile | Asset>;
+  onCreateEntity?: (entity: T) => Promise<ServerActionResponse>;
+  onRemoveEntity: (entity: string) => Promise<ServerActionResponse>;
+  onMoveFiles?: (paths: string[], newPath: string) => Promise<ServerActionResponse[]>;
+  onBulkDelete?: (paths: { path: string }[]) => Promise<ServerActionResponse>;
+  getAssetContext?: () => AssetsFolderContext;
 }
 
 const BaseEntityList = <T extends object>({
@@ -46,14 +44,14 @@ const BaseEntityList = <T extends object>({
   route,
   runners,
   versionsMap,
-  createEntity,
-  removeEntity,
-  moveFiles,
-  bulkDelete,
+  onCreateEntity,
+  onRemoveEntity,
+  onMoveFiles,
+  onBulkDelete,
   showColumnsButton,
-  context,
+  getAssetContext,
 }: Props<T>) => {
-  const t = useI18n() as (s: string) => string;
+  const t = useI18n();
   const router = useRouter();
   const gridOptions: GridOptions = {
     onCellClicked: (e) => {
@@ -73,7 +71,7 @@ const BaseEntityList = <T extends object>({
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const [isBulkView, setIsBulkView] = useState(false);
 
-  const onGridReady = useCallback((api: GridApi) => {
+  const onGridReady = useCallback(({ api }: GridReadyEvent) => {
     setGridApi(api);
   }, []);
 
@@ -144,7 +142,7 @@ const BaseEntityList = <T extends object>({
         showColumnsPanel={showColumnsPanel}
         toggleColumnsPanel={toggleColumnsPanel}
         view={route}
-        context={context}
+        context={getAssetContext}
         onGridReady={onGridReady}
         isBulkView={isBulkView}
       >
@@ -156,8 +154,8 @@ const BaseEntityList = <T extends object>({
           route={route}
           showColumnsButton={showColumnsButton && data.length > 0}
           toggleColumnsPanel={toggleColumnsPanel}
-          createEntity={createEntity}
-          context={context}
+          createEntity={onCreateEntity}
+          context={getAssetContext}
           setIsBulkView={setIsBulkView}
           isBulkView={isBulkView}
           gridApi={gridApi}
@@ -168,19 +166,19 @@ const BaseEntityList = <T extends object>({
         keys={keys}
         route={route}
         versionsMap={versionsMap}
-        createEntity={createEntity}
-        removeEntity={removeEntity}
-        moveFiles={moveFiles}
-        bulkDelete={bulkDelete}
-        context={context}
+        onCreateEntity={onCreateEntity}
+        onRemoveEntity={onRemoveEntity}
+        onMoveFiles={onMoveFiles}
+        onBulkDelete={onBulkDelete}
+        getAssetContext={getAssetContext}
         isModalOpen={isModalOpen}
-        setIsModalOpen={setIsModalOpen}
+        onChangeIsModalOpen={setIsModalOpen}
         modalType={modalType}
-        setModalType={setModalType}
+        onChangeModalType={setModalType}
         currentEntity={currentEntity}
-        setCurrentEntity={setCurrentEntity}
+        onChangeCurrentEntity={setCurrentEntity}
         isBulkView={isBulkView}
-        setIsBulkView={setIsBulkView}
+        onChangeIsBulkView={setIsBulkView}
       />
     </>
   );

@@ -1,16 +1,17 @@
 'use client';
-import { ButtonVariant, DialButton, DialNoDataContent, DialSwitch } from '@epam/ai-dial-ui-kit';
+
+import { DialNeutralButton, DialNoDataContent, DialSwitch } from '@epam/ai-dial-ui-kit';
 import { IconPlus, IconReplace } from '@tabler/icons-react';
 import { FC, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
-import Grid from '@/src/components/Grid/Grid';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getOpenInNewTabOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
-import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, EntitiesI18nKey, RolesI18nKey, RoutesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialRole } from '@/src/models/dial/role';
 import { DialRoleLimitsMap } from '@/src/models/dial/role-limits';
@@ -28,7 +29,7 @@ interface Props {
 }
 
 const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, onChangeRoute, roles }) => {
-  const t = useI18n() as (str: string) => string;
+  const t = useI18n();
 
   const data = useMemo(() => {
     const userRoles = Object.keys(route.roleLimits || {});
@@ -90,16 +91,16 @@ const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, o
       actions.push(getRemoveOperation(onRemoveRole));
     }
 
-    return [...SIMPLE_ENTITY_COLUMNS, ACTION_COLUMN(actions)];
+    return [...BASE_COLUMNS, ACTION_COLUMN(actions)];
   }, [route, onRemoveRole]);
 
   return (
     <>
-      <div className="h-full w-full flex flex-col">
+      <div className="size-full flex flex-col">
         {!readonly && (
           <DialSwitch
             switchId="inheritedAppRoles"
-            title={t(RoutesI18nKey.InheritApplicationRoles)}
+            label={t(RoutesI18nKey.InheritApplicationRoles)}
             isOn={route.isPublic}
             onChange={() => {
               onChangeRoute({
@@ -110,12 +111,11 @@ const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, o
             }}
           />
         )}
-        <div className="flex flex-row items-center w-full mt-4 mb-4 justify-between h-[38px]">
+        <div className="flex flex-row items-center w-full my-4 justify-between h-[40px]">
           <h1> {t(TabsI18nKey.Roles)}</h1>
           {!route.isPublic && !readonly && (
-            <DialButton
-              variant={ButtonVariant.Secondary}
-              iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+            <DialNeutralButton
+              iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
               label={t(ButtonsI18nKey.Add)}
               onClick={onOpenAddModal}
             />
@@ -124,10 +124,10 @@ const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, o
         <div className="flex-1 min-h-0">
           <div className="h-full">
             {data.length > 0 ? (
-              <Grid columnDefs={columns} rowData={data} />
+              <GridView columnDefs={columns} rowData={data} />
             ) : iAppRunnerView && route.isPublic ? (
               <DialNoDataContent
-                icon={<IconReplace width={60} height={60} />}
+                icon={<IconReplace size={60} stroke={0.5} />}
                 title={t(RoutesI18nKey.InheritRolesWarning)}
               />
             ) : (

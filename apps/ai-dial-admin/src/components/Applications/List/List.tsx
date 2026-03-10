@@ -1,5 +1,5 @@
 'use client';
-import { FC } from 'react';
+import { FC, useMemo } from 'react';
 
 import { createApplication, removeApplication } from '@/src/app/[lang]/applications/actions';
 import { APPLICATIONS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
@@ -7,7 +7,7 @@ import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { ApplicationRoute } from '@/src/types/routes';
-import { filterDisplayNames } from '@/src/utils/entities/filter-names';
+import { filterDisplayNamesWithVersions } from '@/src/utils/entities/filter-names';
 
 interface Props {
   data: DialApplication[];
@@ -15,18 +15,20 @@ interface Props {
 }
 
 const ApplicationsList: FC<Props> = ({ data, runners }) => {
-  const names = filterDisplayNames(data);
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const names = filterDisplayNamesWithVersions(data);
+  const t = useI18n();
+
+  const columns = useMemo(() => APPLICATIONS_COLUMNS(t), [t]);
 
   return (
     <BaseEntityList
       data={data}
       runners={runners}
       names={names}
-      baseColumns={APPLICATIONS_COLUMNS(t)}
+      baseColumns={columns}
       route={ApplicationRoute.Applications}
-      createEntity={createApplication}
-      removeEntity={removeApplication}
+      onCreateEntity={createApplication}
+      onRemoveEntity={removeApplication}
       showColumnsButton={true}
     />
   );

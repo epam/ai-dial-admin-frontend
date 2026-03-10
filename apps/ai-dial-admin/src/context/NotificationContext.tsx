@@ -1,5 +1,5 @@
 'use client';
-import React, { createContext, useContext, useState, ReactNode, FC } from 'react';
+import React, { createContext, useContext, useState, ReactNode, FC, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import NotificationPortal from '@/src/components/Notification/NotificationPortal';
 import { NotificationConfig, Notification } from '@/src/models/notification';
@@ -20,34 +20,37 @@ interface Props {
 export const NotificationProvider: FC<Props> = ({ children }) => {
   const [notifications, setNotifications] = useState<NotificationConfig[]>([]);
 
-  const showNotification = (notification: Notification) => {
-    const id = uuidv4();
-
-    setNotifications((prev) => [
-      ...prev,
-      {
-        ...notification,
-        id,
-        onClose: () => {
-          return removeNotification(id);
-        },
-      },
-    ]);
-
-    if (notification.duration !== null) {
-      setTimeout(() => {
-        removeNotification(id);
-      }, notification.duration ?? DEFAULT_DURATION);
-    }
-
-    return id;
-  };
-
-  const removeNotification = (id: string) => {
+  const removeNotification = useCallback((id: string) => {
     setNotifications((prev) => {
       return prev.filter((notification) => notification.id !== id);
     });
-  };
+  }, []);
+
+  const showNotification = useCallback(
+    (notification: Notification) => {
+      const id = uuidv4();
+
+      setNotifications((prev) => [
+        ...prev,
+        {
+          ...notification,
+          id,
+          onClose: () => {
+            return removeNotification(id);
+          },
+        },
+      ]);
+
+      if (notification.duration !== null) {
+        setTimeout(() => {
+          removeNotification(id);
+        }, notification.duration ?? DEFAULT_DURATION);
+      }
+
+      return id;
+    },
+    [removeNotification],
+  );
 
   return (
     <NotificationContext.Provider value={{ showNotification, removeNotification }}>

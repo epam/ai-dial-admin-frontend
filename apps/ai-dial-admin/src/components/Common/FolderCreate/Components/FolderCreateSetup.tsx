@@ -4,24 +4,26 @@ import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState
 
 import {
   DialFileIcon,
+  DialInput,
+  DialLabel,
   DialLoadFileAreaField,
   DialRadioGroup,
   DialSwitch,
-  DialTextInputField,
   RadioButtonWithContent,
   RadioGroupOrientation,
   Step,
   StepStatus,
 } from '@epam/ai-dial-ui-kit';
 
-import Field from '@/src/components/Common/Field/Field';
 import { CreateFolderSteps } from '@/src/components/Common/FolderCreate/constants';
 import { BasicI18nKey, ButtonsI18nKey, FoldersI18nKey, ImportI18nKey } from '@/src/constants/i18n';
-import { APPLICATION_ZIP_TYPE } from '@/src/constants/request-headers';
+import { APPLICATION_ZIP_TYPES, APPLICATION_ZIP_TYPES_STR } from '@/src/constants/request-headers';
 import { useI18n } from '@/src/locales/client';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
+import { getIgnorePathTitles } from '@/src/utils/import/get-ignore-path-title';
+import { isAssetView, isAssetWithVersion } from '@/src/utils/is-asset-view';
 import { getErrorForFolderName } from '@/src/utils/validation/folder-error';
 
 interface Props {
@@ -53,20 +55,14 @@ const FolderCreateSetup: FC<Props> = ({
   ignorePaths,
   setIgnorePaths,
 }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const t = useI18n();
 
   const ignorePathsTitle = useMemo(() => {
-    if (view === ApplicationRoute.Prompts) {
-      return t(ImportI18nKey.PathsPrompt);
-    }
-    if (view === ApplicationRoute.Files) {
-      return t(ImportI18nKey.PathsFile);
-    }
-    return '';
+    return view ? getIgnorePathTitles(view, t) : '';
   }, [t, view]);
 
   const acceptTypes = useMemo(() => {
-    if (view === ApplicationRoute.Prompts) {
+    if (isAssetWithVersion(view)) {
       return 'application/json';
     }
     if (view === ApplicationRoute.Files) {
@@ -81,7 +77,7 @@ const FolderCreateSetup: FC<Props> = ({
     return <DialFileIcon extension={getNameExtensionFromFile(name).extension} />;
   };
 
-  const setCurrentSteps = useCallback(
+  const onChangeCurrentSteps = useCallback(
     (allFiles: File[], name: string, errorText?: string) => {
       const status = allFiles.length && name && !errorText ? StepStatus.VALID : void 0;
       setSteps((prev) => {
@@ -92,55 +88,54 @@ const FolderCreateSetup: FC<Props> = ({
               ...item,
               status,
             };
-          } else {
-            return item;
           }
+          return item;
         });
       });
     },
     [setSteps],
   );
 
-  const changeName = useCallback(
+  const onChangeName = useCallback(
     (name?: string) => {
       const error = getErrorForFolderName(name, void 0, t, true);
       setNameErrorText(error?.text || '');
       setFolderName(name || '');
-      setCurrentSteps(files, name || '', error?.text);
+      onChangeCurrentSteps(files, name || '', error?.text);
     },
-    [t, setFolderName, setCurrentSteps, files],
+    [t, setFolderName, onChangeCurrentSteps, files],
   );
 
-  const changeFile = useCallback(
+  const onChangeFile = useCallback(
     (files: File[]) => {
       if (fileType === ImportFileType.ARCHIVE) {
-        if (files.length === 0 || files[0].type === APPLICATION_ZIP_TYPE) {
+        if (files.length === 0 || APPLICATION_ZIP_TYPES.includes(files[0].type)) {
           setZipFile(files[0]);
         }
       } else {
         setSeparateFiles(files.slice(0, 30));
       }
-      setCurrentSteps(files, folderName);
+      onChangeCurrentSteps(files, folderName);
     },
-    [fileType, setCurrentSteps, folderName, setZipFile, setSeparateFiles],
+    [fileType, onChangeCurrentSteps, folderName, setZipFile, setSeparateFiles],
   );
 
   useEffect(() => {
-    setCurrentSteps(files, folderName);
+    onChangeCurrentSteps(files, folderName);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fileType]);
 
   return (
     <>
-      <div className="w-[50%]">
-        <DialTextInputField
-          fieldTitle={t(FoldersI18nKey.FolderName)}
-          elementId="name"
+      <div className="w-1/2">
+        <DialInput
+          labelProps={{ label: t(FoldersI18nKey.FolderName) }}
+          id="name"
           placeholder={t(FoldersI18nKey.FolderCreatePlaceholder)}
           value={folderName}
-          onChange={changeName}
+          onChange={onChangeName}
           invalid={!!nameErrorText}
-          errorText={nameErrorText}
+          error={nameErrorText}
         />
       </div>
       <div className="flex-1 flex flex-col min-h-0">
@@ -153,12 +148,12 @@ const FolderCreateSetup: FC<Props> = ({
             elementId="conflict-resolution"
             onChange={setFileType}
           />
-          {view === ApplicationRoute.Prompts && (
-            <div className="flex flex-col">
-              <Field fieldTitle={ignorePathsTitle} />
+          {isAssetView(view) && (
+            <div className="flex flex-col gap-y-2">
+              <DialLabel label={ignorePathsTitle} htmlFor="ignorePaths" />
               <DialSwitch
                 isOn={ignorePaths}
-                title={t(ImportI18nKey.PathsIgnore)}
+                label={t(ImportI18nKey.PathsIgnore)}
                 switchId="ignorePaths"
                 onChange={setIgnorePaths}
               />
@@ -177,8 +172,8 @@ const FolderCreateSetup: FC<Props> = ({
               iconBeforeInput={<DialFileIcon extension="zip" className="text-secondary" />}
               fileFormatError={t(ImportI18nKey.ArchiveFileFormatError)}
               fileCountError={t(ImportI18nKey.ArchiveDescription)}
-              acceptTypes="application/zip, .zip, application/x-zip-compressed"
-              onChange={changeFile}
+              acceptTypes={APPLICATION_ZIP_TYPES_STR}
+              onChange={onChangeFile}
               multiple={false}
             />
           )}
@@ -192,7 +187,7 @@ const FolderCreateSetup: FC<Props> = ({
               emptyButtonLabel={t(ButtonsI18nKey.Browse)}
               files={files}
               acceptTypes={acceptTypes}
-              onChange={changeFile}
+              onChange={onChangeFile}
               dynamicIcon={getFileIcon}
               errorText={t(ImportI18nKey.FileError)}
               maxFilesCount={30}
@@ -210,7 +205,7 @@ const FolderCreateSetup: FC<Props> = ({
               iconBeforeInput={<DialFileIcon extension="json" className="text-secondary" />}
               acceptTypes="application/json"
               fileFormatError={t(ImportI18nKey.JsonFileFormatError)}
-              onChange={changeFile}
+              onChange={onChangeFile}
               maxFilesCount={30}
             />
           )}

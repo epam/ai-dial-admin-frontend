@@ -9,6 +9,7 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getAllowTools, getTransport } from '@/src/utils/toolset/toolset-transport';
 import { ToolsetAuthCredentialLevel } from '@/src/models/dial/toolset';
+import { ImportFileType } from '@/src/types/import';
 
 export async function getToolsets(path: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -27,6 +28,11 @@ export async function createToolset(toolset: AssetToolset) {
     ResourceType.TOOLSET,
     token,
   );
+}
+
+export async function importToolsets(body: FormData, fileType: ImportFileType) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return assetsApi.importAssets(token, body, fileType, ResourceType.TOOLSET);
 }
 
 export async function getToolset(folderId: string, name: string, version: string, etag: string) {
@@ -81,4 +87,14 @@ export async function signInToolset(
 export async function signOutToolset(toolset: AssetToolset, type: ToolsetAuthCredentialLevel) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return assetsApi.signOutToolset(toolset, type, token);
+}
+
+export async function exportToolsets(paths: string[], type?: ImportFileType) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return await assetsApi.exportAssets(token, ResourceType.TOOLSET, paths, type);
+}
+
+export async function tryOutAssetTool(body: Record<string, unknown>) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return assetsApi.tryOutTool(body, token);
 }

@@ -34,7 +34,7 @@ const CreateFilter: FC<Props> = ({
   dropdownData,
   route,
 }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
   const filterTypeConfig = getFilterTypeConfig(t);
   const filterConditionConfig = getFilterConditionConfig(t);
   const isMobile = useIsMobileScreen();
@@ -85,7 +85,7 @@ const CreateFilter: FC<Props> = ({
           <div className="md:mr-4 md:mb-0 mb-4 min-w-[120px]">
             <DialSelectField
               value={filterTypeConfig.find((item) => item.value === type)?.value}
-              elementId="type"
+              id="type"
               onChange={(type) => setTypeHandler(type as FILTER_TYPE)}
               options={filterTypeConfig}
             />
@@ -99,7 +99,7 @@ const CreateFilter: FC<Props> = ({
       <div className="md:mr-4 md:mb-0 mb-4 min-w-[160px]">
         <DialSelectField
           value={filterConditionConfig.find((item) => item.value === type)?.value}
-          elementId="Condition"
+          id="Condition"
           onChange={(type) => setConditionHandler(type as FILTER_OPERATOR)}
           options={filterConditionConfig}
         />
@@ -110,14 +110,14 @@ const CreateFilter: FC<Props> = ({
             {type === FILTER_TYPE.Entity ? (
               <DialSelectField
                 value={entities.find((item) => item.value === value)?.value}
-                elementId="entities"
+                id="entities"
                 onChange={(type) => setValue(type as string)}
                 options={entities}
               />
             ) : (
               <DialSelectField
                 value={projects.find((item) => item.value === value)?.value}
-                elementId="projects"
+                id="projects"
                 onChange={(type) => setValue(type as string)}
                 options={projects}
               />
@@ -125,7 +125,7 @@ const CreateFilter: FC<Props> = ({
           </>
         ) : (
           <DialInput
-            elementId="filterValue"
+            id="filterValue"
             onChange={(v) => setValue(v || '')}
             placeholder={t(BasicI18nKey.Value)}
             value={value}

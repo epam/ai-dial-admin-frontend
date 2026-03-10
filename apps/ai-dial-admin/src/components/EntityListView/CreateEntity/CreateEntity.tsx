@@ -3,10 +3,13 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { checkIsUniqueDeploymentName } from '@/src/app/actions';
+import Properties from '@/src/components/EntityMainProperties/Properties/Properties';
 import { isValidSourceField } from '@/src/components/SourceField/utils';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
@@ -19,15 +22,10 @@ import {
   getCreateNotificationDescription,
   getCreateNotificationTitle,
 } from '@/src/utils/entities/create-entity';
+import { isAssetView } from '@/src/utils/is-asset-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
-import Properties from '@/src/components/EntityMainProperties/Properties/Properties';
 import { RoutesForCheckingUniqueName } from './constants';
-import { isAssetView } from '@/src/utils/is-asset-view';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
-import { Asset } from '@/src/models/dial/deployment-asset';
-import { DialFile } from '@/src/models/dial/file';
-import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface CreatePromptEntity extends BaseEntity {
   version?: string;
@@ -41,7 +39,7 @@ interface Props<T> {
   runners?: DialApplicationScheme[];
   versionsMap?: Record<string, string[]>;
   createEntity?: (entity: T) => Promise<ServerActionResponse>;
-  context?: () => AssetsFolderContext<Asset | DialFile>;
+  context?: () => AssetsFolderContext;
   onClose: () => void;
   initialValues?: Partial<T>;
 }
@@ -57,7 +55,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
   initialValues,
   context,
 }: Props<T>) => {
-  const t = useI18n() as (str: string, props?: Record<string, string>) => string;
+  const t = useI18n();
   const router = useRouter();
   const folderContext = context?.();
   const { isValid, dispatch } = useSaveValidationContext();
@@ -71,42 +69,45 @@ const CreateEntity = <T extends CreatePromptEntity>({
   );
   const [isUniqueNameError, setIsUniqueNameError] = useState<boolean | undefined>(void 0);
 
-  const onCreate = useCallback(async () => {
-    const entity = {
-      ...currentEntity,
-      name: currentEntity.name?.trim(),
-    };
+  const onCreate = useCallback(
+    async (updatedEntity: T) => {
+      const entity = {
+        ...updatedEntity,
+        name: updatedEntity.name?.trim(),
+      };
 
-    const isUnique = RoutesForCheckingUniqueName.includes(route)
-      ? await checkIsUniqueDeploymentName(entity.name as string)
-      : true;
+      const isUnique = RoutesForCheckingUniqueName.includes(route)
+        ? await checkIsUniqueDeploymentName(entity.name as string)
+        : true;
 
-    setIsUniqueNameError(!isUnique);
+      setIsUniqueNameError(!isUnique);
 
-    if (!isUnique) return;
+      if (!isUnique) return;
 
-    if (isAssetView(route)) {
-      entity.folderId = folderContext?.filePath;
-    }
-    getReqRef.current(createEntity, entity).then((res) => {
-      if (res.success) {
-        if (isAssetView(route)) {
-          folderContext?.fetchFiles(folderContext?.filePath);
-        }
-        showNotification(
-          getSuccessNotification(
-            getCreateNotificationTitle(route, t),
-            getCreateNotificationDescription(route, entity.name, t),
-          ),
-        );
-        const originalRoute = route.split('/')[1];
-        router.push(`${initialValues ? '/' : ''}${originalRoute}/${getEntityPath(route, res.response || entity)}`);
-        onClose();
-      } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+      if (isAssetView(route)) {
+        entity.folderId = folderContext?.filePath;
       }
-    });
-  }, [currentEntity, route, createEntity, folderContext, showNotification, t, router, initialValues, onClose]);
+      getReqRef.current(createEntity, entity).then((res) => {
+        if (res.success) {
+          if (isAssetView(route)) {
+            folderContext?.fetchFiles(folderContext?.filePath);
+          }
+          showNotification(
+            getSuccessNotification(
+              getCreateNotificationTitle(route, t),
+              getCreateNotificationDescription(route, entity.name, t),
+            ),
+          );
+          const originalRoute = route.split('/')[1];
+          router.push(`${initialValues ? '/' : ''}${originalRoute}/${getEntityPath(route, res.response || entity)}`);
+          onClose();
+        } else {
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+        }
+      });
+    },
+    [route, createEntity, folderContext, showNotification, t, router, initialValues, onClose],
+  );
 
   useEffect(() => {
     setIsUniqueNameError(void 0);
@@ -148,10 +149,10 @@ const CreateEntity = <T extends CreatePromptEntity>({
   return (
     <DialFormPopup
       onClose={onClose}
-      title={getCreateEntityTitle(route, t)}
+      header={getCreateEntityTitle(route, t)}
       portalId="CreateEntity"
       open={isModalOpen}
-      onSubmit={onCreate}
+      onSubmit={() => onCreate(currentEntity)}
       onCancel={onClose}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
       submitLabel={t(ButtonsI18nKey.Create)}

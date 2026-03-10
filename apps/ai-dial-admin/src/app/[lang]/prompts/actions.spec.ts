@@ -13,6 +13,7 @@ import {
   getPrompt,
   getPrompts,
   importPrompts,
+  updatePrompt,
 } from './actions';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { ResourceType } from '@/src/types/resource-type';
@@ -39,12 +40,12 @@ describe('Assets Prompt :: server actions', () => {
   });
 
   test('Should call getPrompt action', async () => {
-    (assetsApi.getAsset as any).mockResolvedValue(RESPONSE_MOCK);
+    (assetsApi.getAssetWithEtag as any).mockResolvedValue(RESPONSE_MOCK);
     (assetsApi.getAssetList as any).mockResolvedValue([{ name: 'test', version: '1.0.0', path: 'path' }]);
 
-    const result = await getPrompt('path', 'test', '1.0.0');
+    const result = await getPrompt('path', 'test', '1.0.0', 'etag');
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetsApi.getAsset).toHaveBeenCalledWith(TOKEN_MOCK, 'path', ResourceType.PROMPT);
+    expect(assetsApi.getAssetWithEtag).toHaveBeenCalledWith(TOKEN_MOCK, 'path', ResourceType.PROMPT, 'etag');
     expect(result).toBe(RESPONSE_MOCK);
   });
 
@@ -102,7 +103,7 @@ describe('Assets Prompt :: server actions', () => {
 
     await removePrompt('test');
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetsApi.removeAsset).toHaveBeenCalledWith(TOKEN_MOCK, 'test', ResourceType.PROMPT);
+    expect(assetsApi.removeAssetWithEtag).toHaveBeenCalledWith(TOKEN_MOCK, 'test', ResourceType.PROMPT, undefined);
   });
 
   test('Should call importPrompts action', async () => {
@@ -120,11 +121,40 @@ describe('Assets Prompt :: server actions', () => {
   });
 
   test('Should call exportPrompts action', async () => {
-    (assetsApi.exportPrompts as any).mockResolvedValue(RESPONSE_MOCK);
+    (assetsApi.exportAssets as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await exportPrompts(['test']);
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetsApi.exportPrompts).toHaveBeenCalledWith(TOKEN_MOCK, ['test'], void 0);
+    expect(assetsApi.exportAssets).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.PROMPT, ['test'], void 0);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call updatePrompt action', async () => {
+    (assetsApi.updateAssetWithEtag as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await updatePrompt(
+      {
+        folderId: 'public',
+        nodeType: DialFileNodeType.FOLDER,
+        path: 'test',
+        version: '1.0',
+        content: 'content',
+      },
+      'etag',
+    );
+    expect(getUserToken).toHaveBeenCalled();
+    expect(assetsApi.updateAssetWithEtag).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      {
+        folderId: 'public',
+        nodeType: DialFileNodeType.FOLDER,
+        path: 'test',
+        version: '1.0',
+        content: 'content',
+      },
+      ResourceType.PROMPT,
+      'etag',
+    );
     expect(result).toBe(RESPONSE_MOCK);
   });
 

@@ -11,6 +11,8 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { getErrorNotification } from '@/src/utils/notification';
 import { isEqual, uniq } from 'lodash';
 import MultiselectContentModal from './ModalContent';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
+import { isErrorPresent } from '@/src/utils/deployments/containers';
 
 interface Props {
   initSelectedItems?: string[];
@@ -39,15 +41,25 @@ const MultiselectModal: FC<Props> = ({
   ...props
 }) => {
   const t = useI18n();
+  const { isValid, errorFields } = useSaveValidationContext();
 
   const { showNotification } = useNotification();
   const showNotificationRef = useRef(showNotification);
 
-  const [isValid, setIsValid] = useState(false);
+  const [isListValid, setListIsValid] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedItems, setSelectedItems] = useState<string[]>(initSelectedItems || []);
-  const [items, setItems] = useState<string[]>([]);
+  const [items, setItems] = useState<string[]>(allItems || []);
   const [newItems, setNewItems] = useState<string[]>([]);
+  const [isModalInvalid, setModalInvalid] = useState(false);
+
+  useEffect(() => {
+    if (!isValid) {
+      setModalInvalid(isErrorPresent(errorFields, ['topic_']));
+    } else {
+      setModalInvalid(false);
+    }
+  }, [errorFields, isValid]);
 
   const onApply = useCallback(() => {
     if (draggable) {
@@ -60,7 +72,7 @@ const MultiselectModal: FC<Props> = ({
 
   useEffect(() => {
     const filtered = newItems.filter((v) => v !== '');
-    setIsValid(!!items.length || !!filtered.length);
+    setListIsValid(!!items.length || !!filtered.length);
   }, [items, newItems]);
 
   useEffect(() => {
@@ -68,31 +80,29 @@ const MultiselectModal: FC<Props> = ({
       setIsLoading(true);
       getItems().then((res) => {
         if (res.success) {
-          const items = uniq([...((res.response as string[]) || []), ...(allItems || [])]);
-
-          setItems(items.sort(baseColumnComparator));
+          setItems((prev) => {
+            return uniq([...((res.response as string[]) || []), ...(prev || [])]).sort(baseColumnComparator);
+          });
           setIsLoading(false);
         } else {
           showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
           setIsLoading(false);
         }
       });
-    } else if (allItems) {
-      setItems(allItems);
     }
-  }, [setItems, getItems, allItems]);
+  }, [getItems]);
 
   return (
     <DialFormPopup
       onClose={onClose}
-      title={heading}
+      header={heading}
       portalId="itemsMultiSelect"
       open={isModalOpen}
       onSubmit={onApply}
       onCancel={onClose}
       submitLabel={applyButtonText || t(ButtonsI18nKey.Apply)}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
-      disableSubmitButton={!isValid || (draggable && isEqual(newItems, selectedItems))}
+      disableSubmitButton={isModalInvalid || !isListValid || (draggable && isEqual(newItems, selectedItems))}
     >
       <div className="flex flex-col overflow-auto px-6 py-4">
         {isLoading ? (
@@ -101,9 +111,9 @@ const MultiselectModal: FC<Props> = ({
           <DndProvider backend={HTML5Backend}>
             <MultiselectContentModal
               items={items}
+              setItems={setNewItems}
               selectedItems={selectedItems}
               setSelectedItems={setSelectedItems}
-              setNewItems={setNewItems}
               draggable={draggable}
               {...props}
             />

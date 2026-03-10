@@ -1,37 +1,29 @@
 import { cookies, headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
 import { adaptersApi } from '@/src/app/api/api';
 import AdaptersList from '@/src/components/Adapter/List/AdaptersList';
-import Page403 from '@/src/components/Page403/Page403';
-import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialAdapter } from '@/src/models/dial/adapter';
-import { logError } from '@/src/server/logger';
+import { errorObjLog } from '@/src/server/logger';
 import { getUserToken } from '@/src/utils/auth/auth-request';
-import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page() {
-  let data: DialAdapter[] | null = [];
+  let data: DialAdapter[] | null = null;
 
-  const isEnableAuth = getIsEnableAuthToggle();
-  const token = await getUserToken(isEnableAuth, headers(), cookies());
-  const isInvalidSession = await getIsInvalidSession(isEnableAuth, token);
-
-  if (isInvalidSession) {
-    return redirect(SIGN_IN_LINK);
-  }
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
   try {
     data = await adaptersApi.getAdaptersList(token);
-    if (data === void 0) {
-      return <Page403 />;
-    }
   } catch (e) {
-    logError(e, 'Failed to fetch adapters data');
+    errorObjLog(e, 'Failed to fetch adapters data');
+  }
+
+  if (data == null) {
+    notFound();
   }
 
   return (

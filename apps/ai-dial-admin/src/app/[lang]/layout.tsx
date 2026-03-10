@@ -11,7 +11,7 @@ import Content from '@/src/components/Content/Content';
 import Header from '@/src/components/Header/Header';
 import Menu from '@/src/components/Menu/Menu';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
-import { AppContextProvider, EmbeddedApp } from '@/src/context/AppContext';
+import { AppContextProvider } from '@/src/context/AppContext';
 import { I18nProvider } from '@/src/context/I18nProvider';
 import { NextAuthProvider } from '@/src/context/NextAuthProvider';
 import { NotificationProvider } from '@/src/context/NotificationContext';
@@ -22,6 +22,8 @@ import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getMenuItems } from '@/src/utils/env/get-menu-items';
 import { PromptFolderProvider } from '@/src/context/assets/PromptFolderContext';
+import { ResourcesDefaults } from '@/src/models/deployments/containers';
+import { isValueTruthy } from '@/src/utils/types';
 
 export default async function Layout({ children, params }: { children: ReactNode; params: Promise<{ lang: string }> }) {
   const { lang } = await params;
@@ -35,27 +37,28 @@ export default async function Layout({ children, params }: { children: ReactNode
 
   const featureFlags = {
     dashboardEnabled: !process.env.DISABLE_MENU_ITEMS?.toLowerCase().includes('dashboard'),
+    deploymentsEnabled: isValueTruthy(process.env.DEPLOYMENTS_ENABLED),
   };
 
   const themesConfiguration = await themesApi.getThemesConfiguration();
   const themesImages = await themesApi.getImages();
 
   const beVersion = await utilityApi.getBeVersion(token);
-  const embeddedApps: EmbeddedApp[] = JSON.parse(process.env.EMBEDDED_APPS || '[]');
 
   return (
-    <NextAuthProvider>
-      <AppContextProvider
-        themeUrl={process.env.THEMES_CONFIG_URL}
-        featureFlags={featureFlags}
-        embeddedApps={embeddedApps}
-      >
-        <ThemeProvider themesConfiguration={themesConfiguration} themeImages={themesImages}>
-          <RuleFolderProvider attributes={process.env.PUBLICATION_FILTERS || 'title,role,dial_roles'}>
-            <PromptFolderProvider>
-              <I18nProvider locale={lang}>
+    <I18nProvider locale={lang}>
+      <NextAuthProvider>
+        <AppContextProvider
+          themeUrl={process.env.THEMES_CONFIG_URL}
+          featureFlags={featureFlags}
+          disableDeploymentsJSONEditor={isValueTruthy(process.env.DEPLOYMENTS_DISABLE_JSON_EDITOR)}
+          resourcesDefaults={JSON.parse(process.env.DEPLOYMENTS_RESOURCES_DEFAULTS || '{}') as ResourcesDefaults}
+        >
+          <ThemeProvider themesConfiguration={themesConfiguration} themeImages={themesImages}>
+            <RuleFolderProvider attributes={process.env.PUBLICATION_FILTERS || 'title,role,dial_roles'}>
+              <PromptFolderProvider>
                 <NotificationProvider>
-                  <div className="flex flex-col h-full w-full">
+                  <div className="flex flex-col size-full">
                     <Header isEnableAuth={isEnableAuth} />
                     <div className="flex-1 min-h-0">
                       <div className="flex flex-row h-full relative">
@@ -67,11 +70,11 @@ export default async function Layout({ children, params }: { children: ReactNode
                     </div>
                   </div>
                 </NotificationProvider>
-              </I18nProvider>
-            </PromptFolderProvider>
-          </RuleFolderProvider>
-        </ThemeProvider>
-      </AppContextProvider>
-    </NextAuthProvider>
+              </PromptFolderProvider>
+            </RuleFolderProvider>
+          </ThemeProvider>
+        </AppContextProvider>
+      </NextAuthProvider>
+    </I18nProvider>
   );
 }

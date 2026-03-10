@@ -1,31 +1,36 @@
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { DialSwitch } from '@epam/ai-dial-ui-kit';
-import { v4 as uuidv4 } from 'uuid';
-import { ButtonVariant, DialButton, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton, DialSwitch, DialInput } from '@epam/ai-dial-ui-kit';
 import { IconSparkles } from '@tabler/icons-react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 
+import DescriptionControl from '@/src/components/BaseControls/Description';
+import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
+import IdControl from '@/src/components/BaseControls/Id/Id';
+import TopicsControl from '@/src/components/BaseControls/Topics';
 import ValidityPeriod from '@/src/components/Keys/Modals/ValidityPeriod';
+import KeyGenerateField from '@/src/components/Keys/View/Properties/KeyGenerateField';
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { MAX_NAME_SYMBOLS } from '@/src/constants/validation';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
-import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
-import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
-import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
-import KeyGenerateField from '@/src/components/Keys/View/Properties/KeyGenerateField';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { MAX_NAME_SYMBOLS } from '@/src/constants/validation';
+import { getControlClassName } from '@/src/utils/entities/view';
+import AccessRestrictionField from './AccessRestrictionField';
 
 interface Props {
   entity: DialKey;
+  originalEntity?: DialKey;
   names: string[];
   keys: string[];
   isKeyImmutable?: boolean;
   onChangeKey: (key: DialKey) => void;
 }
 
-const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChangeKey }) => {
-  const t = useI18n() as (t: string) => string;
+const KeyProperties: FC<Props> = ({ entity, originalEntity, names, keys, isKeyImmutable, onChangeKey }) => {
+  const t = useI18n();
   const { dispatch } = useSaveValidationContext();
+  const containerClassName = getControlClassName(!isKeyImmutable);
 
   const isValidKey = useMemo(() => {
     return !!entity.key && !(entity.key.length > MAX_NAME_SYMBOLS);
@@ -37,7 +42,7 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
     dispatch({ type: ValidationActionType.SetField, field: 'key', isValid: isValidKey });
   }, [isValidKey, dispatch]);
 
-  const validateProject = useCallback(
+  const onValidateProject = useCallback(
     (project?: string) => {
       const error = project ? void 0 : t(ErrorI18nKey.RequiredField);
       setProjectError(error);
@@ -49,9 +54,9 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
   const onChangeProject = useCallback(
     (project?: string) => {
       onChangeKey({ ...entity, project: project || '' });
-      validateProject(project);
+      onValidateProject(project);
     },
-    [entity, onChangeKey, validateProject],
+    [entity, onChangeKey, onValidateProject],
   );
 
   const onChangeProjectContactPoint = useCallback(
@@ -75,7 +80,14 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
     [entity, onChangeKey],
   );
 
-  const changeKey = useCallback(
+  const onChangeAccessRestriction = useCallback(
+    (allowedIpAddressRanges?: string[]) => {
+      onChangeKey({ ...entity, allowedIpAddressRanges });
+    },
+    [entity, onChangeKey],
+  );
+
+  const onChange = useCallback(
     (key: DialKey) => {
       onChangeKey(key);
       dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: true });
@@ -84,65 +96,74 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
   );
 
   const onGenerateKeyId = () => {
-    changeKey({ ...entity, name: uuidv4() });
+    onChange({ ...entity, name: uuidv4() });
   };
 
   return (
     <div className="flex flex-col gap-y-8 h-full">
       {!isKeyImmutable && (
-        <div className="flex items-end">
+        <div className="flex items-end gap-x-2">
           <div className="flex-1">
             <IdControl entity={entity} names={names} onChangeEntity={onChangeKey} />
           </div>
-          <DialButton
-            variant={ButtonVariant.Tertiary}
-            className="ml-2 h-[34px]"
-            iconBefore={<IconSparkles />}
-            label={t(ButtonsI18nKey.Generate)}
-            onClick={onGenerateKeyId}
-          />
+          <DialGhostButton iconBefore={<IconSparkles />} label={t(ButtonsI18nKey.Generate)} onClick={onGenerateKeyId} />
         </div>
       )}
 
       <DisplayNameControl
         displayName={entity.displayName}
-        required={true}
+        required
+        isFullWidth={!isKeyImmutable}
         onChange={(displayName) => onChangeKey({ ...entity, displayName })}
       />
 
-      <DescriptionControl entity={entity} onChangeEntity={onChangeKey} />
+      <DescriptionControl entity={entity} onChangeEntity={onChangeKey} isFullWidth={!isKeyImmutable} />
 
-      <DialTextInputField
-        elementId="project"
-        fieldTitle={t(EntityFieldsI18nKey.project)}
+      <DialInput
+        id="project"
+        labelProps={{ label: t(EntityFieldsI18nKey.project), required: true }}
         placeholder={t(EntityPlaceholdersI18nKey.Project)}
         value={entity.project}
-        errorText={projectError}
+        error={projectError}
         onChange={onChangeProject}
         invalid={!!projectError}
+        containerClassName={containerClassName}
       />
 
       {isKeyImmutable && (
-        <DialTextInputField
-          elementId="projectContact"
-          optional={true}
-          fieldTitle={t(EntityFieldsI18nKey.projectContactPoint)}
+        <DialInput
+          id="projectContact"
+          labelProps={{ label: t(EntityFieldsI18nKey.projectContactPoint) }}
           placeholder={t(EntityPlaceholdersI18nKey.ContactPoint)}
           value={entity.projectContactPoint}
           onChange={onChangeProjectContactPoint}
+          containerClassName={STANDARD_CONTROL_WIDTH}
         />
       )}
-      <KeyGenerateField isKeyImmutable={isKeyImmutable} keys={keys} selectedKey={entity} changeKey={changeKey} />
+      <KeyGenerateField isKeyImmutable={isKeyImmutable} keys={keys} selectedKey={entity} changeKey={onChange} />
 
       {isKeyImmutable && (
-        <DialSwitch
-          isOn={entity.secured}
-          title={t(EntityFieldsI18nKey.secured)}
-          switchId="secured"
-          onChange={onChangeSecured}
+        <>
+          <DialSwitch
+            isOn={entity.secured}
+            label={t(EntityFieldsI18nKey.secured)}
+            switchId="secured"
+            onChange={onChangeSecured}
+          />
+          <TopicsControl entity={entity} onChange={onChangeKey} />
+        </>
+      )}
+
+      {!isKeyImmutable && <ValidityPeriod onChange={onChangeExpiresAt} />}
+
+      {isKeyImmutable && (
+        <AccessRestrictionField
+          elementId="ip-access-restriction"
+          onChange={onChangeAccessRestriction}
+          entity={entity}
+          originalEntity={originalEntity}
         />
       )}
-      {!isKeyImmutable && <ValidityPeriod onChange={onChangeExpiresAt} />}
     </div>
   );
 };

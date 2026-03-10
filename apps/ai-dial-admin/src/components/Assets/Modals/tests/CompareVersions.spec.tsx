@@ -1,14 +1,15 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import { DialPrompt } from '@/src/models/dial/prompt';
 import CompareVersions from '../CompareVersions';
 
-import * as actions from '@/src/app/[lang]/prompts/actions';
-
 vi.mock('@/src/app/[lang]/prompts/actions', () => ({
-  getPrompt: vi.fn(),
+  getPrompt: vi.fn(() => {
+    response: {
+    }
+  }),
 }));
 
 describe('Common components - CompareVersions', () => {

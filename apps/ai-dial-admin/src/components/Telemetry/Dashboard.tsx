@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useRef, useState } from 'react';
+import React, { Dispatch, FC, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 import LineChart from '@/src/components/Charts/LineChart/LineChart';
 import SingleValueChartsDashboard from '@/src/components/Charts/SingleValueChart/SingleValueChartsDashboard';
 import TelemetryGrid from '@/src/components/Telemetry/TelemetryGrid';
@@ -19,16 +19,39 @@ import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   route: ApplicationRoute;
+  initTimeFilter?: string | TimeRange;
   entity?: BaseEntity;
+  onChangeTimeFilter?: (filter: string | TimeRange) => void;
+  isCustomRange?: boolean;
+  setIsCustomRange?: Dispatch<SetStateAction<boolean>>;
 }
 
-const Dashboard: FC<Props> = ({ route, entity }) => {
+const Dashboard: FC<Props> = ({
+  route,
+  entity,
+  initTimeFilter,
+  onChangeTimeFilter,
+  isCustomRange,
+  setIsCustomRange,
+}) => {
   const t = useI18n();
   const [filters, setFilters] = useState<FilterData[]>([]);
   const [refreshTime, setRefreshTime] = useState(DEFAULT_REFRESH_TIME);
-  const [timePeriod, setTimePeriod] = useState(DEFAULT_TIME_PERIOD);
+  const [timePeriod, setTimePeriod] = useState<string | undefined>();
   const [timeRange, setTimeRange] = useState<TimeRange>(getTimeRangeById(DEFAULT_TIME_PERIOD));
   const getReqRef = useRef(useProtectedRequest());
+
+  useEffect(() => {
+    if (!timePeriod) {
+      if (!isCustomRange) {
+        setTimePeriod((initTimeFilter as string) || DEFAULT_TIME_PERIOD);
+        setTimeRange(getTimeRangeById((initTimeFilter as string) || DEFAULT_TIME_PERIOD));
+      } else {
+        setTimePeriod(DEFAULT_TIME_PERIOD);
+        setTimeRange((initTimeFilter as TimeRange) || getTimeRangeById(DEFAULT_TIME_PERIOD));
+      }
+    }
+  }, [initTimeFilter, timePeriod, isCustomRange]);
 
   const getData = useCallback(
     (query: TelemetryQuery) => {
@@ -50,33 +73,47 @@ const Dashboard: FC<Props> = ({ route, entity }) => {
     [setRefreshTime],
   );
 
-  const onTimePeriodChange = useCallback((period: string) => {
-    setTimePeriod(period);
-    setTimeRange(getTimeRangeById(period));
-  }, []);
+  const onTimePeriodChange = useCallback(
+    (period: string) => {
+      setTimePeriod(period);
+      onChangeTimeFilter?.(period);
+      setTimeRange(getTimeRangeById(period));
+    },
+    [onChangeTimeFilter],
+  );
 
-  const onTimeRangeChange = useCallback((range: TimeRange) => {
-    setTimeRange(range);
-  }, []);
+  const onTimeRangeChange = useCallback(
+    (range: TimeRange, isCustom?: boolean) => {
+      setTimeRange(range);
+      if (isCustom) {
+        onChangeTimeFilter?.(range);
+      }
+    },
+    [onChangeTimeFilter],
+  );
 
   return (
-    <div role="dashboards" className="flex flex-1 flex-col min-h-0 overflow-auto">
+    <div role="dashboards" className="flex flex-1 flex-col min-h-0 min-w-0">
       <div className="flex w-full mb-6">
-        <TelemetryControls
-          selectedRefreshValue={refreshTime}
-          onRefreshTimeChange={onRefreshTimeChange}
-          timePeriod={timePeriod}
-          onTimePeriodChange={onTimePeriodChange}
-          onTimeRangeChange={onTimeRangeChange}
-          filters={filters}
-          timeRange={timeRange}
-          setFilters={setFilters}
-          getData={getData}
-          route={route}
-        />
+        {timePeriod && (
+          <TelemetryControls
+            selectedRefreshValue={refreshTime}
+            onRefreshTimeChange={onRefreshTimeChange}
+            timePeriod={timePeriod}
+            onTimePeriodChange={onTimePeriodChange}
+            onTimeRangeChange={onTimeRangeChange}
+            filters={filters}
+            timeRange={timeRange}
+            setFilters={setFilters}
+            getData={getData}
+            route={route}
+            isCustomRange={isCustomRange}
+            setIsCustomRange={setIsCustomRange}
+          />
+        )}
       </div>
-      <div className="flex flex-col flex-1 min-h-0 overflow-auto">
-        <div className="flex flex-col md:flex-row mb-6">
+      <div className="flex flex-col flex-1 min-h-0 min-w-0 overflow-auto">
+        <div className="flex flex-col md:flex-row mb-6 md:flex-wrap gap-6">
           <LineChart getData={getData} refreshTime={refreshTime} />
           <SingleValueChartsDashboard getData={getData} refreshTime={refreshTime} />
         </div>
@@ -92,7 +129,7 @@ const Dashboard: FC<Props> = ({ route, entity }) => {
               />
             </div>
           )}
-          <div className="flex w-full h-full relative">
+          <div className="flex size-full relative">
             <TelemetryGrid
               getData={getData}
               refreshTime={refreshTime}

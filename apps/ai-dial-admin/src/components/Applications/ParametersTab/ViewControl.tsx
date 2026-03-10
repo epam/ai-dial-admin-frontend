@@ -6,7 +6,7 @@ import {
   VisualizerConnectorRequest,
   VisualizerConnectorRequests,
 } from '@epam/ai-dial-shared';
-import { DialConfirmationPopup, SelectVariant, DialSelect, SelectOption, SelectSize } from '@epam/ai-dial-ui-kit';
+import { DialConfirmationPopup, DialSelect, SelectOption, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
 import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
 
 import { ButtonsI18nKey, CompareI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
@@ -14,7 +14,7 @@ import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAttachmentData } from '@/src/models/attachment-data';
-import { ParamsView } from './types';
+import { ParamsView } from '@/src/types/parameters';
 
 interface Props {
   items: SelectOption[];
@@ -103,7 +103,7 @@ const ViewControl: FC<Props> = ({ items, paramsView, setParamsView, onSave, isCh
       {createPortal(
         <DialConfirmationPopup
           open={isModalOpen}
-          title={t(EntitiesI18nKey.SaveParametersTitle)}
+          header={t(EntitiesI18nKey.SaveParametersTitle)}
           description={t(EntitiesI18nKey.SaveParametersDescription)}
           confirmLabel={t(ButtonsI18nKey.Save)}
           cancelLabel={t(ButtonsI18nKey.LeaveWithoutSave)}

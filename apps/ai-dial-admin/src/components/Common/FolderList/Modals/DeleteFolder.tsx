@@ -1,13 +1,13 @@
 import { FC, useEffect, useMemo, useState } from 'react';
 
-import { DialCollapsibleSidebar, DialFormPopup, DialNoDataContent, PopupSize } from '@epam/ai-dial-ui-kit';
+import { DialCollapsibleSidebar, DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 
 import FolderList from '@/src/components/Common/FolderList/FolderList';
 import { generatePromptRowDataForDelete } from '@/src/components/Common/FolderList/utils';
-import { listViewTitleMap } from '@/src/components/EntityListView/constants';
-import TopicsCellRenderer from '@/src/components/Grid/CellRenderers/TopicCellRenderer';
-import Grid from '@/src/components/Grid/Grid';
+import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRenderer';
+import GridView from '@/src/components/Grid/GridView/GridView';
+import { listViewTitleMap } from '@/src/components/ListView/constants';
 import { BasicI18nKey, ButtonsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
@@ -20,13 +20,13 @@ interface Props {
   view?: ApplicationRoute;
   selectedFolder?: string;
   isBulkDelete?: boolean;
-  context?: () => AssetsFolderContext<DialFile>;
+  context?: () => AssetsFolderContext;
   onClose: () => void;
   onApply?: () => void;
 }
 
 const DeleteFolder: FC<Props> = ({ isModalOpen, view, selectedFolder, isBulkDelete, context, onClose, onApply }) => {
-  const t = useI18n() as (s: string, params?: Record<string, string>) => string;
+  const t = useI18n();
 
   const folderContext = context?.();
   const filePath = folderContext?.filePath as string;
@@ -41,9 +41,9 @@ const DeleteFolder: FC<Props> = ({ isModalOpen, view, selectedFolder, isBulkDele
         headerName: 'Version',
         field: 'version',
         filter: true,
-        cellRenderer: TopicsCellRenderer,
+        cellRenderer: TagsCellRenderer,
         cellRendererParams: (params: { data?: { versions?: string[] } }) => ({
-          topics: params.data?.versions || [],
+          items: params.data?.versions || [],
         }),
       });
     }
@@ -83,7 +83,7 @@ const DeleteFolder: FC<Props> = ({ isModalOpen, view, selectedFolder, isBulkDele
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(FoldersI18nKey.DeleteFolder)}
+      header={t(FoldersI18nKey.DeleteFolder)}
       portalId="DeleteFolder"
       open={isModalOpen}
       size={PopupSize.Lg}
@@ -114,15 +114,11 @@ const DeleteFolder: FC<Props> = ({ isModalOpen, view, selectedFolder, isBulkDele
             />
           </DialCollapsibleSidebar>
           <div className="flex-1 min-h-0">
-            {rowData.length ? (
-              <Grid
-                additionalGridOptions={{
-                  onGridReady,
-                }}
-              />
-            ) : (
-              <DialNoDataContent title={t(BasicI18nKey.NoData)} />
-            )}
+            <GridView
+              getIsEmptyData={() => !!rowData.length}
+              emptyDataProps={{ title: t(BasicI18nKey.NoData) }}
+              onGridReady={onGridReady}
+            />
           </div>
         </div>
       </div>

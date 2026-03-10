@@ -5,12 +5,11 @@ import { FC, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import {
-  ButtonVariant,
-  DialButton,
+  DialIconButton,
   DialConfirmationPopup,
   DialEllipsisTooltip,
+  DialNeutralButton,
   DialSwitch,
-  DialTooltip,
 } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink, IconRestore } from '@tabler/icons-react';
 import classNames from 'classnames';
@@ -20,8 +19,9 @@ import EntityDiff from '@/src/components/ActivityAudit/View/DiffReport/EntityDif
 import FilterControl from '@/src/components/ActivityAudit/View/DiffReport/FilterControl';
 import ViewHeader from '@/src/components/ActivityAudit/View/Header/Header';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
+import JsonView from '@/src/components/Common/JsonView/JsonView';
 import { ButtonsI18nKey, EntityFieldsI18nKey, RollbackI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialActivity } from '@/src/models/activity-audit';
@@ -38,8 +38,8 @@ import {
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import JsonView from './JsonView';
 import { generateCurrentResource } from './utils/generate-diffs';
+import { getRollbackRedirectHref } from './utils/get-rollback-redirect-href';
 
 interface Props {
   activity: DialActivity;
@@ -48,6 +48,7 @@ interface Props {
   isModalView?: boolean;
   hideComparator?: boolean;
   entity?: BaseEntity;
+  isEntityActivity?: boolean;
 }
 
 const AuditView: FC<Props> = ({
@@ -57,8 +58,9 @@ const AuditView: FC<Props> = ({
   isModalView,
   hideComparator,
   entity,
+  isEntityActivity = false,
 }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
   const router = useRouter();
 
   const { showNotification } = useNotification();
@@ -104,7 +106,12 @@ const AuditView: FC<Props> = ({
               getRollbackSuccessDescription(activity.resourceType, t),
             ),
           );
-          router.push(ApplicationRoute.ActivityAudit);
+          if (isEntityActivity) {
+            const newRoute = getRollbackRedirectHref(activity.resourceType, activity.resourceId);
+            router.push(newRoute);
+          } else {
+            router.push(ApplicationRoute.ActivityAudit);
+          }
         } else {
           showNotification(getErrorNotification(res?.errorHeader, res?.errorMessage, res?.requestId));
         }
@@ -120,7 +127,17 @@ const AuditView: FC<Props> = ({
           ),
         );
       });
-  }, [setIsLoading, activity, activityRevision, previousRevision, showNotification, t, onCloseModal, router]);
+  }, [
+    setIsLoading,
+    activity,
+    activityRevision,
+    previousRevision,
+    showNotification,
+    t,
+    onCloseModal,
+    router,
+    isEntityActivity,
+  ]);
 
   const openActivityInNewTab = (activity: DialActivity) => {
     onOpenInNewTab(ApplicationRoute.ActivityAudit, activity);
@@ -138,23 +155,22 @@ const AuditView: FC<Props> = ({
           <div className="flex flex-row flex-wrap justify-between mb-6 gap-3">
             <h1 className="flex flex-row items-center gap-x-3">
               <DialEllipsisTooltip text={activity.activityId} />
-              <CopyButton field={activity.activityId} label={t(EntityFieldsI18nKey.id)} />
+              <CopyButton value={activity.activityId} valueLabel={t(EntityFieldsI18nKey.id)} />
             </h1>
             <div className="flex flex-row items-center gap-4 flex-wrap">
               <CompareControl compareView={compareView} setCompareView={setCompareView} />
               <FilterControl diffView={diffView} setDiffView={setDiffView} />
-              <DialButton
-                iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
-                variant={ButtonVariant.Secondary}
+              <DialNeutralButton
+                iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} />}
                 label={t(RollbackI18nKey.Resource)}
                 onClick={onOpenModal}
               />
-              <div className="w-[1px] h-6 bg-layer-4"></div>
+              <div className="w-px h-6 bg-layer-4"></div>
               <DialSwitch
                 switchId="jsonView"
                 isOn={isJsonView}
                 onChange={() => setIsJsonView(!isJsonView)}
-                title="JSON"
+                label="JSON"
               />
             </div>
           </div>
@@ -165,22 +181,22 @@ const AuditView: FC<Props> = ({
               {isModalView && (
                 <>
                   <h3 className="flex flex-row items-center gap-x-3">
-                    <DialTooltip tooltip={activity.activityId}>{activity.activityId}</DialTooltip>
-                    <DialButton
+                    <DialEllipsisTooltip text={activity.activityId} />
+                    <DialIconButton
                       onClick={() => openActivityInNewTab(activity)}
-                      className="text-secondary"
-                      iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
+                      className="text-secondary size-auto"
+                      icon={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
                     />
                   </h3>
                   <div className="flex flex-row gap-3 items-center justify-end">
                     {!hideComparator && <CompareControl compareView={compareView} setCompareView={setCompareView} />}
                     <FilterControl diffView={diffView} setDiffView={setDiffView} />
-                    <div className="w-[1px] h-6 bg-layer-4"></div>
+                    <div className="w-px h-6 bg-layer-4"></div>
                     <DialSwitch
                       switchId="jsonView"
                       isOn={isJsonView}
                       onChange={() => setIsJsonView(!isJsonView)}
-                      title="JSON"
+                      label="JSON"
                     />
                   </div>
                 </>
@@ -214,7 +230,7 @@ const AuditView: FC<Props> = ({
           <DialConfirmationPopup
             open={isOpenModal}
             isLoading={isLoading}
-            title={t(RollbackI18nKey.ConfirmResourceRollbackTitle)}
+            header={t(RollbackI18nKey.ConfirmResourceRollbackTitle)}
             onConfirm={resourceRollback}
             confirmLabel={t(ButtonsI18nKey.Rollback)}
             onClose={onCloseModal}

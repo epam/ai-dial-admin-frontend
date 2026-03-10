@@ -29,17 +29,17 @@ const SettingsModal: FC<Props> = ({ onConfirm, isModalOpen, onClose }) => {
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(SettingsModalI18nKey.Settings)}
+      header={t(SettingsModalI18nKey.Settings)}
       portalId="SettingsModal"
       open={isModalOpen}
       size={PopupSize.Sm}
       submitLabel={t(ButtonsI18nKey.Save)}
       onSubmit={() => onConfirm(settings)}
     >
-      <div className="flex flex-col gap-4 py-6 px-6">
+      <div className="flex flex-col gap-4 p-6">
         <DialSelectField
-          elementId="themeSelector"
-          fieldTitle={t(SettingsModalI18nKey.Theme)}
+          id="themeSelector"
+          label={t(SettingsModalI18nKey.Theme)}
           options={allThemes || []}
           value={selectedTheme?.value}
           onChange={(theme) => onChangeTheme(theme as string)}

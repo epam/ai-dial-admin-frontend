@@ -2,16 +2,17 @@
 import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import AddEntitiesModal from '@/src/components/ExportConfig/AddEntities/AddEntitiesModal';
 import { getActualColDefs, isEntityWithDependency } from '@/src/components/ExportConfig/utils';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { EntityType } from '@/src/types/entity-type';
+import { ExportFormat } from '@/src/types/export';
 import { getAvailableData, getButtonTitle } from './utils';
 
 interface Props {
@@ -19,10 +20,19 @@ interface Props {
   tabData: Record<string, EntitiesGridData[]>;
   customExportData: Record<string, EntitiesGridData[]>;
   setCustomExportData: Dispatch<SetStateAction<Record<string, EntitiesGridData[]>>>;
+  selectedTopics: string[];
+  selectedExportFormat: ExportFormat;
 }
 
-const AddEntitiesButton: FC<Props> = ({ selectedTab, tabData, customExportData, setCustomExportData }) => {
-  const t = useI18n() as (v: string) => string;
+const AddEntitiesButton: FC<Props> = ({
+  selectedTab,
+  tabData,
+  customExportData,
+  setCustomExportData,
+  selectedTopics,
+  selectedExportFormat,
+}) => {
+  const t = useI18n();
 
   const [buttonTitle, setButtonTitle] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -32,7 +42,7 @@ const AddEntitiesButton: FC<Props> = ({ selectedTab, tabData, customExportData, 
 
   const onClick = (id: EntityType) => {
     setEntityTitle(id);
-    setAvailableEntities(getAvailableData(id, tabData, customExportData, selectedTab));
+    setAvailableEntities(getAvailableData(id, tabData, customExportData, selectedTab, selectedTopics));
     setIsModalOpen(true);
   };
 
@@ -52,6 +62,20 @@ const AddEntitiesButton: FC<Props> = ({ selectedTab, tabData, customExportData, 
   };
 
   useEffect(() => {
+    setCustomExportData((prev) => {
+      const updatedData = { ...prev };
+
+      Object.entries(prev).forEach(([entityType, entities]) => {
+        updatedData[entityType] = entities.filter((entity) =>
+          selectedTopics.length ? selectedTopics.some((topic) => entity?.topics?.includes(topic)) : true,
+        );
+      });
+
+      return updatedData;
+    });
+  }, [selectedTopics, setCustomExportData]);
+
+  useEffect(() => {
     if (selectedTab) {
       setButtonTitle(getButtonTitle(t, selectedTab, true));
       setColumnDefs(getActualColDefs(selectedTab, t).slice(0, -1));
@@ -60,10 +84,9 @@ const AddEntitiesButton: FC<Props> = ({ selectedTab, tabData, customExportData, 
 
   return (
     <>
-      <DialButton
+      <DialNeutralButton
         label={buttonTitle}
-        iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-        variant={ButtonVariant.Secondary}
+        iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
         onClick={() => onClick(selectedTab)}
       />
 
@@ -72,6 +95,7 @@ const AddEntitiesButton: FC<Props> = ({ selectedTab, tabData, customExportData, 
           <AddEntitiesModal
             selectedTab={entityTitle}
             columnDefs={columnDefs}
+            selectedExportFormat={selectedExportFormat}
             isModalOpen={isModalOpen}
             entities={availableEntities}
             onClose={() => setIsModalOpen(false)}

@@ -1,6 +1,7 @@
 import { SOURCE_FIELD } from '@/src/components/SourceField/types';
 import { BaseEntity, EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { ToolsetTransport } from '@/src/types/toolset';
+import { DialScheme } from './scheme';
 
 export interface Toolset extends BaseEntity, EntityRoleLimits {
   transport?: ToolsetTransport;
@@ -12,6 +13,7 @@ export interface Toolset extends BaseEntity, EntityRoleLimits {
   maxRetryAttempts?: number;
   source?: SOURCE_FIELD;
   authSettings?: ToolsetAuthSettings;
+  forwardPerRequestKey?: boolean;
 }
 
 export interface ToolsetAuthSettings {
@@ -23,6 +25,7 @@ export interface ToolsetAuthSettings {
   redirectUri?: string;
   authorizationEndpoint?: string;
   codeChallenge?: string;
+  codeVerifier?: string;
   codeChallengeMethod?: ToolsetCodeChallengeMethod;
   tokenEndpoint?: string;
   scopesSupported?: string[];
@@ -56,5 +59,14 @@ export enum ToolsetAuthType {
 
 export interface Tool {
   name: string;
-  description: string;
+  description?: string;
+  inputSchema?: DialScheme;
+  annotations?: {
+    title?: string;
+    readOnlyHint?: boolean;
+    destructiveHint?: boolean;
+    idempotentHint?: boolean;
+    openWorldHint?: boolean;
+  };
+  outputSchema?: DialScheme;
 }

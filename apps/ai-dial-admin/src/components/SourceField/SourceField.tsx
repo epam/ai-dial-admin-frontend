@@ -4,7 +4,7 @@ import { DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
-import { Container } from '@/src/models/deployments';
+import { Container } from '@/src/models/deployments/containers';
 import { DialModel, DialModelType } from '@/src/models/dial/model';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -28,10 +28,9 @@ interface Props<T> {
   getRunners?: () => Promise<ServerActionResponse<InterceptorTemplate[]>>;
   getAdapters?: () => Promise<ServerActionResponse | null>;
   sourceItems: SelectOption[];
-  elementId: string;
-  fieldTitle?: string;
-  optional?: boolean;
-  view?: ApplicationRoute;
+  id: string;
+  label?: string;
+  view: ApplicationRoute;
   adapters?: DialAdapter[];
   isModal?: boolean;
 }
@@ -42,9 +41,8 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
   getContainers,
   getRunners,
   getAdapters,
-  elementId,
-  fieldTitle,
-  optional,
+  id,
+  label,
   view,
   sourceItems,
   isModal,
@@ -82,17 +80,10 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
           isValid: true,
         });
 
-        if (sourceType !== SOURCE_TYPE.ENDPOINTS && view === ApplicationRoute.Toolsets) {
-          dispatch({
-            type: ValidationActionType.SetField,
-            field: 'endpoint',
-            isValid: true,
-          });
-        }
         onChangeEntity({ ...entity, source: { ...entity.source, $type: sourceType as SOURCE_TYPE }, endpoint: '' });
       }
     },
-    [dispatch, entity, onChangeEntity, source, view],
+    [dispatch, entity, onChangeEntity, source],
   );
 
   useEffect(() => {
@@ -117,10 +108,9 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
   return (
     <div className="flex flex-col gap-y-8">
       <DialSelectField
-        elementId={elementId}
+        id={id}
         containerClassName="w-[180px]"
-        fieldTitle={fieldTitle}
-        optional={optional}
+        label={label}
         options={sourceItems}
         onChange={(v) => onChangeSource(v as string)}
         value={source}
@@ -136,7 +126,7 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
           getContainers={getContainers}
           view={view}
           isModal={isModal}
-          errorText={source === SOURCE_TYPE.CONTAINER ? errorText : ''}
+          error={source === SOURCE_TYPE.CONTAINER ? errorText : ''}
         />
       )}
       {source === SOURCE_TYPE.RUNNER && getRunners && (
@@ -144,7 +134,7 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
           entity={entity}
           onChange={onChangeEntity}
           getRunners={getRunners}
-          errorText={source === SOURCE_TYPE.RUNNER ? errorText : ''}
+          error={source === SOURCE_TYPE.RUNNER ? errorText : ''}
           isModal={isModal}
         />
       )}
@@ -154,7 +144,7 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
           onChange={onChangeEntity}
           getAdapters={getAdapters}
           isModal={isModal}
-          errorText={source === SOURCE_TYPE.ADAPTER ? errorText : ''}
+          error={source === SOURCE_TYPE.ADAPTER ? errorText : ''}
         />
       )}
     </div>

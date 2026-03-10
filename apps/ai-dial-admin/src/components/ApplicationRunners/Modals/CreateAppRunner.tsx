@@ -4,16 +4,20 @@ import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { createApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
 import SchemeProperties from '@/src/components/ApplicationRunners/ConfigurationView/Properties';
-import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
+import {
+  getCreateEntityTitle,
+  getCreateNotificationDescription,
+  getCreateNotificationTitle,
+} from '@/src/utils/entities/create-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   isModalOpen: boolean;
@@ -22,7 +26,7 @@ interface Props {
 }
 
 const CreateAppRunner: FC<Props> = ({ isModalOpen, names, onClose }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
   const router = useRouter();
   const getReqRef = useRef(useProtectedRequest());
   const { showNotification } = useNotification();
@@ -72,7 +76,7 @@ const CreateAppRunner: FC<Props> = ({ isModalOpen, names, onClose }) => {
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(CreateI18nKey.ApplicationRunner)}
+      header={getCreateEntityTitle(ApplicationRoute.ApplicationRunners, t)}
       portalId="CreateRunner"
       open={isModalOpen}
       onSubmit={onCreate}

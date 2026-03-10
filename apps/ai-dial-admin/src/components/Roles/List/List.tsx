@@ -3,7 +3,7 @@
 import { FC } from 'react';
 
 import { createRole, removeRole } from '@/src/app/[lang]/roles/actions';
-import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { BASE_COLUMNS_WITH_TOPICS } from '@/src/constants/grid-columns/grid-columns';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import { DialRole } from '@/src/models/dial/role';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -15,14 +15,15 @@ interface Props {
 
 const RolesList: FC<Props> = ({ data }) => {
   const names = filterNames(data);
+
   return (
     <BaseEntityList
-      baseColumns={SIMPLE_ENTITY_COLUMNS}
+      baseColumns={BASE_COLUMNS_WITH_TOPICS}
       names={names}
       data={data}
       route={ApplicationRoute.Roles}
-      createEntity={createRole}
-      removeEntity={removeRole}
+      onCreateEntity={createRole}
+      onRemoveEntity={removeRole}
     />
   );
 };

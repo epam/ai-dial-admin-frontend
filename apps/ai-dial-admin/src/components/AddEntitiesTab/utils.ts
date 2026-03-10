@@ -1,37 +1,40 @@
 import { ColDef } from 'ag-grid-community';
 
-import { ENTITY_BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { LIMIT_COLUMNS } from '@/src/components/EntityView/Roles/utils';
+import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { NO_LIMITS_KEY } from '@/src/constants/role';
+import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialKey } from '@/src/models/dial/key';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
+import { DialRoute } from '@/src/models/dial/route';
+import { Toolset } from '@/src/models/dial/toolset';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import {
   getApplicationsForEntitiesGrid,
   getKeysForEntitiesGrid,
   getModelsForEntitiesGrid,
   getRolesForEntitiesGrid,
+  getRoutesForEntitiesGrid,
   getRunnersForEntitiesGrid,
+  getToolsetsForEntitiesGrid,
 } from '@/src/utils/entities/entities-list-view';
-import { DialAdapter } from '@/src/models/dial/adapter';
 
 export const ENTITY_COLUMNS = (t: (v: string) => string): ColDef[] => [
-  ...ENTITY_BASE_COLUMNS,
   {
     headerName: 'Type',
     field: 'type',
     valueFormatter: (params) => t(params.value),
     tooltipValueGetter: (params) => t(params.value),
   },
+  ...BASE_COLUMNS,
 ];
 
 export const ROLES_ENTITIES_COLUMNS = (
-  t: (v: string) => string,
   onChangeLimits: ((value: number, data: DialRole, token: string) => void) | undefined,
-): ColDef[] => [...ENTITY_COLUMNS(t), ...LIMIT_COLUMNS(void 0, onChangeLimits)];
+): ColDef[] => [...LIMIT_COLUMNS(void 0, onChangeLimits)];
 
 /**
  * Get list of entities with type and route for entities view
@@ -48,6 +51,8 @@ export const getEntitiesGridData = (
   roles?: DialRole[],
   keys?: DialKey[],
   appRunners?: DialApplicationScheme[],
+  toolsets?: Toolset[],
+  routes?: DialRoute[],
 ): EntitiesGridData[] => {
   const data: EntitiesGridData[] = [];
 
@@ -56,6 +61,8 @@ export const getEntitiesGridData = (
   data.push(...getRolesForEntitiesGrid(roles));
   data.push(...getKeysForEntitiesGrid(keys));
   data.push(...getRunnersForEntitiesGrid(appRunners));
+  data.push(...getToolsetsForEntitiesGrid(toolsets));
+  data.push(...getRoutesForEntitiesGrid(routes));
 
   return data;
 };

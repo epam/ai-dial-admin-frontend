@@ -1,8 +1,8 @@
 import { DialFormPopup } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
-import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
+import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
+import IdControl from '@/src/components/BaseControls/Id/Id';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
@@ -19,7 +19,7 @@ interface Props {
 }
 
 const DuplicateScheme: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose, entity }) => {
-  const t = useI18n() as (t: string, props?: Record<string, string>) => string;
+  const t = useI18n();
 
   const [clonedEntity, setEntity] = useState<DialApplicationScheme>({
     ...entity,
@@ -50,7 +50,7 @@ const DuplicateScheme: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose, 
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(getCloneTitle(ApplicationRoute.ApplicationRunners, t))}
+      header={t(getCloneTitle(ApplicationRoute.ApplicationRunners, t))}
       portalId="DuplicateScheme"
       open={isModalOpen}
       onSubmit={() => onDuplicate(clonedEntity)}
@@ -69,7 +69,7 @@ const DuplicateScheme: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose, 
         <DisplayNameControl
           displayName={clonedEntity['dial:applicationTypeDisplayName']}
           onChange={onChangeName}
-          required={true}
+          required
         />
       </div>
     </DialFormPopup>

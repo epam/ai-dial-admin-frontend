@@ -30,3 +30,9 @@ export const getFilter = (type: GridFilterType): FilterOperatorDto | null => {
       return null;
   }
 };
+
+export const getRequestFiltersStr = (filters: FilterDto[]): string => {
+  return filters
+    .map((filter) => `filter=${filter.column}:${filter.operator}:${encodeURIComponent(filter.value)}`)
+    .join('&');
+};

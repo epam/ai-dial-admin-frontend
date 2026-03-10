@@ -1,7 +1,6 @@
 import { ApplicationRoute } from '@/src/types/routes';
-import { describe, expect, test, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { getEntityPath, getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import { Container, DEPLOYMENT_ENTITY } from '@/src/models/deployments';
 
 describe('getUrnForEntity', () => {
   test('returns correct URN for Prompts', () => {
@@ -19,11 +18,18 @@ describe('getUrnForEntity', () => {
     expect(urn).toBe(`/${originalRoute}/act123`);
   });
 
-  test('returns correct URN for ModelDeployments with entityType', () => {
+  test('returns correct URN for Images', () => {
     const entity = { id: 'modelId' };
-    const urn = getUrnForEntity(ApplicationRoute.ModelDeployments, entity, 'MODEL');
-    const originalRoute = ApplicationRoute.ModelDeployments.split('/')?.[1];
-    expect(urn).toBe(`/${originalRoute}/${encodeURIComponent('modelId')}?entityType=MODEL`);
+    const urn = getUrnForEntity(ApplicationRoute.Images, entity);
+    const originalRoute = ApplicationRoute.Images.split('/')?.[1];
+    expect(urn).toBe(`/${originalRoute}/${encodeURIComponent('modelId')}`);
+  });
+
+  test('returns correct URN for TestSuites', () => {
+    const entity = { id: 'test' };
+    const urn = getUrnForEntity(ApplicationRoute.TestSuites, entity);
+    const originalRoute = ApplicationRoute.TestSuites.split('/')?.[1];
+    expect(urn).toBe(`/${originalRoute}/${encodeURIComponent('test')}`);
   });
 
   test('returns correct URN for default case', () => {
@@ -63,6 +69,9 @@ describe('Entity list view :: getEntityPath', () => {
 
   test('Should return path field for Prompts when remove passed', () => {
     expect(getEntityPath(ApplicationRoute.Prompts, data, true)).toEqual('path');
+    expect(
+      getEntityPath(ApplicationRoute.Prompts, { ...data, name: 'name', folderId: 'folder' }, true, '1.0.0'),
+    ).toEqual('foldername__1.0.0');
     expect(getEntityPath(ApplicationRoute.Prompts, { ...data, path: void 0 }, true)).toBeUndefined;
   });
 
@@ -76,6 +85,11 @@ describe('Entity list view :: getEntityPath', () => {
     expect(result).toEqual('requestName?path=path');
   });
 
+  test('Should return name field for McpContainers', () => {
+    const result = getEntityPath(ApplicationRoute.McpContainers, { ...data, name: 'test-id' });
+    expect(result).toEqual('test-id');
+  });
+
   test('Should return name field for file publication', () => {
     const result = getEntityPath(ApplicationRoute.FilePublications, { ...data, requestName: 'requestName' }, true);
     expect(result).toEqual('requestName?path=path');
@@ -86,22 +100,18 @@ describe('Entity list view :: getEntityPath', () => {
     expect(result).toEqual('id');
   });
 
-  test('Should return id field for InterceptorDeployments', () => {
-    const res1 = getEntityPath(
-      ApplicationRoute.InterceptorDeployments,
-      { data, id: 'id' },
-      void 0,
-      DEPLOYMENT_ENTITY.images,
-    );
-    expect(res1).toEqual('id?entityType=images');
-    const res2 = getEntityPath(ApplicationRoute.InterceptorDeployments, { data, id: 'id' }, void 0);
-    expect(res2).toEqual('id?entityType=');
+  test('Should return id field for InterceptorContainers', () => {
+    const res1 = getEntityPath(ApplicationRoute.InterceptorContainers, { data, name: 'id' }, void 0);
+    expect(res1).toEqual('id');
   });
-  test('Should return id field for McpDeploymentsF', () => {
-    const res1 = getEntityPath(ApplicationRoute.McpDeployments, { data, id: 'id' }, void 0, DEPLOYMENT_ENTITY.images);
-    expect(res1).toEqual('id?entityType=images');
-    const res2 = getEntityPath(ApplicationRoute.McpDeployments, { data, id: 'id' }, void 0);
-    expect(res2).toEqual('id?entityType=');
+  test('Should return id field for Images', () => {
+    const res1 = getEntityPath(ApplicationRoute.Images, { data, id: 'id' }, void 0);
+    expect(res1).toEqual('id');
+  });
+
+  test('Should return id field for Images', () => {
+    const res1 = getEntityPath(ApplicationRoute.Runs, { data, id: 'id' }, void 0);
+    expect(res1).toEqual('id');
   });
 });
 

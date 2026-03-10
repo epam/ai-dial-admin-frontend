@@ -2,11 +2,11 @@
 import { IconCircleCheck, IconExclamationCircle, IconX } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, useCallback, useEffect, useState } from 'react';
-import { DialButton } from '@epam/ai-dial-ui-kit';
+import { DialIconButton } from '@epam/ai-dial-ui-kit';
 
 import { NotificationIcons } from '@/src/components/Notification/Notification';
 import { BasicI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { FileDetails, NotificationConfig, NotificationIconColor } from '@/src/models/notification';
 
@@ -48,8 +48,12 @@ const DynamicNotification: FC<NotificationConfig> = ({ type, title, onClose, dow
       <div className="flex flex-row w-full items-center [&:not(:only-child)]:mb-2 px-4">
         <div className="flex items-center relative w-full pr-5">
           <p className="small-text-semi truncate w-full">{title}</p>
-          <DialButton className={iconClassName} onClick={showDetails} iconBefore={Icon} />
-          <DialButton className="absolute right-0" onClick={onClose} iconBefore={<IconX height={18} width={18} />} />
+          <DialIconButton className={classNames(iconClassName, 'size-auto')} onClick={showDetails} icon={Icon} />
+          <DialIconButton
+            className="absolute right-0 size-auto top-0"
+            onClick={onClose}
+            icon={<IconX height={18} width={18} />}
+          />
         </div>
       </div>
       {progress !== null && (
@@ -60,7 +64,7 @@ const DynamicNotification: FC<NotificationConfig> = ({ type, title, onClose, dow
         </div>
       )}
       {detailsShown && files && (
-        <div className="max-h-[360px] overflow-y-scroll px-4">
+        <div className="max-h-[360px] overflow-y-auto px-4">
           {files?.map((file) => (
             <File key={file.id} {...file} />
           ))}
@@ -81,22 +85,16 @@ const File: FC<FileDetails> = ({ name, progress, failed, complete, onCancel }) =
         {progress && !failed && !complete && (
           <div className="flex flex-row items-center truncate">
             <p className="tiny text-secondary mx-1">{fileProgress}</p>
-            <DialButton iconBefore={<IconX height={18} width={18} />} onClick={onCancel} />
+            <DialIconButton className="size-auto" icon={<IconX height={18} width={18} />} onClick={onCancel} />
           </div>
         )}
         {failed && (
           <span className="flex flex-row items-center">
             <p className="tiny text-error mx-1">{t(BasicI18nKey.Failed)}</p>
-            <i className="text-icon-error">
-              <IconExclamationCircle {...BASE_ICON_PROPS} />
-            </i>
+            <IconExclamationCircle className="text-error" {...BASE_BUTTON_ICON_PROPS} />
           </span>
         )}
-        {complete && (
-          <i className="tiny text-icon-accent-secondary">
-            <IconCircleCheck {...BASE_ICON_PROPS} />
-          </i>
-        )}
+        {complete && <IconCircleCheck className="dial-tiny text-accent-secondary" {...BASE_BUTTON_ICON_PROPS} />}
       </div>
     </div>
   );

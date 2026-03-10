@@ -1,13 +1,14 @@
 'use client';
 
-import { ButtonVariant, DialButton, DialInputPopup, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
+import { DialInputPopup, DialLabel, DialNeutralButton, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
+import classNames from 'classnames';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import Field from '@/src/components/Common/Field/Field';
 import { ButtonsI18nKey, EntitiesI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -27,7 +28,7 @@ const AppRunners: FC<Props> = ({ selectedValue, runners, onChangeValue, isEntity
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [valueTitle, setValueTitle] = useState('');
-
+  const isMobile = useIsMobileScreen();
   const onOpenModal = useCallback(() => {
     setIsModalOpen(true);
   }, [setIsModalOpen]);
@@ -71,22 +72,22 @@ const AppRunners: FC<Props> = ({ selectedValue, runners, onChangeValue, isEntity
   }, [selectedValue, dropdownItems]);
 
   return !isEntityImmutable ? (
-    <div className="w-full">
-      <DialSelectField
-        value={selectedValue}
-        searchable={true}
-        elementId="sourceEntity"
-        options={dropdownItems}
-        fieldTitle={t(EntitiesI18nKey.AppRunner)}
-        placeholder={t(EntityPlaceholdersI18nKey.SelectAppRunner)}
-        onChange={(runner) => onChange(runner as string)}
-      />
-    </div>
+    <DialSelectField
+      value={selectedValue}
+      searchable={true}
+      required
+      id="sourceEntity"
+      className="w-full"
+      options={dropdownItems}
+      label={t(EntitiesI18nKey.AppRunner)}
+      placeholder={t(EntityPlaceholdersI18nKey.SelectAppRunner)}
+      onChange={(runner) => onChange(runner as string)}
+    />
   ) : (
-    <div className="flex flex-row gap-2 items-end w-full lg:w-[50%]">
-      <div className="flex-1 min-w-0">
-        <div className="w-full">
-          <Field fieldTitle={t(EntitiesI18nKey.AppRunner)} htmlFor="sourceEntity" />
+    <div className="flex">
+      <div className="flex gap-2 items-end">
+        <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-2')}>
+          <DialLabel label={t(EntitiesI18nKey.AppRunner)} required htmlFor="sourceEntity" />
           <DialInputPopup
             emptyValueText={t(EntitiesI18nKey.NoApplicationRunners)}
             open={isModalOpen}
@@ -102,15 +103,14 @@ const AppRunners: FC<Props> = ({ selectedValue, runners, onChangeValue, isEntity
             />
           </DialInputPopup>
         </div>
+        {selectedValue && (
+          <DialNeutralButton
+            label={isMobile ? '' : t(ButtonsI18nKey.Open)}
+            iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
+            onClick={openInNewTab}
+          />
+        )}
       </div>
-      {selectedValue && (
-        <DialButton
-          variant={ButtonVariant.Secondary}
-          label={t(ButtonsI18nKey.OpenAppRunner)}
-          iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
-          onClick={openInNewTab}
-        />
-      )}
     </div>
   );
 };

@@ -1,11 +1,13 @@
+import { DialGhostButton, DialPasswordInput } from '@epam/ai-dial-ui-kit';
+import { IconSparkles } from '@tabler/icons-react';
+import classNames from 'classnames';
 import { FC, useCallback, useState } from 'react';
-
-import { ButtonVariant, DialButton, DialPasswordInputField } from '@epam/ai-dial-ui-kit';
-import { IconCopy, IconSparkles } from '@tabler/icons-react';
 import { v4 as uuidv4 } from 'uuid';
 
+import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
+import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
 import { FieldError } from '@/src/models/error';
@@ -19,9 +21,10 @@ interface Props {
 }
 
 const KeyGenerateField: FC<Props> = ({ isKeyImmutable, keys, selectedKey, changeKey }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
 
   const [keyError, setKeyError] = useState<FieldError | null>(null);
+  const isMobile = useIsMobileScreen();
 
   const onChangeKeyValue = useCallback(
     (key?: string) => {
@@ -36,36 +39,34 @@ const KeyGenerateField: FC<Props> = ({ isKeyImmutable, keys, selectedKey, change
   };
 
   return (
-    <div className="flex items-end">
-      <div className="flex-1">
-        <DialPasswordInputField
-          elementId="key"
-          fieldTitle={t(EntityFieldsI18nKey.keyValue)}
-          placeholder={t(EntityPlaceholdersI18nKey.KeyValue)}
-          value={selectedKey.key}
-          errorText={keyError?.text}
-          invalid={!!keyError}
-          onChange={onChangeKeyValue}
-          elementClassName="w-full"
-        />
+    <div className="flex">
+      <div className={classNames('flex items-end gap-x-3', !isKeyImmutable && 'w-full')}>
+        <div className={CONTROL_WITH_BUTTON_WIDTH}>
+          <DialPasswordInput
+            id="key"
+            labelProps={{ label: t(EntityFieldsI18nKey.keyValue), required: true }}
+            placeholder={t(EntityPlaceholdersI18nKey.KeyValue)}
+            value={selectedKey.key}
+            error={keyError?.text}
+            invalid={!!keyError}
+            onChange={onChangeKeyValue}
+          />
+        </div>
+        {isKeyImmutable ? (
+          <CopyButton
+            buttonLabel={isMobile ? '' : t(ButtonsI18nKey.Copy)}
+            value={selectedKey.key}
+            valueLabel={t(EntityFieldsI18nKey.keyValue)}
+          />
+        ) : (
+          <DialGhostButton
+            className="ml-2"
+            iconBefore={<IconSparkles />}
+            label={t(ButtonsI18nKey.Generate)}
+            onClick={onGenerateKey}
+          />
+        )}
       </div>
-      {isKeyImmutable ? (
-        <DialButton
-          variant={ButtonVariant.Secondary}
-          className="ml-2 h-[34px]"
-          iconBefore={<IconCopy {...BASE_ICON_PROPS} />}
-          label={t(ButtonsI18nKey.Copy)}
-          onClick={() => navigator.clipboard.writeText(selectedKey.key || '')}
-        />
-      ) : (
-        <DialButton
-          variant={ButtonVariant.Tertiary}
-          className="ml-2 h-[34px]"
-          iconBefore={<IconSparkles />}
-          label={t(ButtonsI18nKey.Generate)}
-          onClick={onGenerateKey}
-        />
-      )}
     </div>
   );
 };

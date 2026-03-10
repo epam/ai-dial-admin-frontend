@@ -11,6 +11,10 @@ vi.mock('next/navigation', () => ({
 describe('Menu', () => {
   test('renders Sidebar and MenuContent with open state', () => {
     render(<Menu disableMenuItems={['item1']} />);
-    expect(screen.getByText(MenuI18nKey.AccessManagement)).toBeInTheDocument();
+
+    const items = screen.getAllByText(MenuI18nKey.AccessManagement);
+
+    expect(items.length).toBeGreaterThan(0);
+    expect(items[0]).toBeInTheDocument();
   });
 });

@@ -1,11 +1,10 @@
-import { DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialInput } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useState } from 'react';
 
 import { getInterceptorTemplatesList } from '@/src/app/[lang]/interceptor-templates/actions';
-import { getInterceptorContainers } from '@/src/app/[lang]/interceptors/actions';
-import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
-import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
-import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
+import DescriptionControl from '@/src/components/BaseControls/Description';
+import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
+import IdControl from '@/src/components/BaseControls/Id/Id';
 import { getSourceItems } from '@/src/components/SourceField/constants';
 import SourceField from '@/src/components/SourceField/SourceField';
 import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -15,8 +14,8 @@ import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialRoute } from '@/src/models/dial/route';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isDeploymentsEnabled } from '@/src/utils/plugins';
 import { getErrorForPath } from '@/src/utils/validation/path-error';
+import { getInterceptorContainers } from '@/src/app/actions/deployments';
 
 interface Props {
   view?: ApplicationRoute;
@@ -36,10 +35,9 @@ const EntityProperties: FC<Props> = ({
   isEntityImmutable = false,
   initialValues,
 }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
   const { dispatch } = useSaveValidationContext();
-  const { embeddedApps } = useAppContext();
-  const deploymentsEnabled = isDeploymentsEnabled(embeddedApps);
+  const { featureFlags } = useAppContext();
 
   const [pathError, setPathError] = useState<string | undefined>(void 0);
 
@@ -57,7 +55,7 @@ const EntityProperties: FC<Props> = ({
     <div className="flex flex-col gap-y-8">
       {!isEntityImmutable && (
         <IdControl
-          fieldTitle={t(EntityFieldsI18nKey.id)}
+          label={t(EntityFieldsI18nKey.id)}
           placeholder={t(EntityPlaceholdersI18nKey.Id)}
           entity={entity}
           names={names}
@@ -67,11 +65,12 @@ const EntityProperties: FC<Props> = ({
 
       <DisplayNameControl
         displayName={entity.displayName}
-        required={true}
+        required
+        isFullWidth={!isEntityImmutable}
         onChange={(name) => onChangeEntity({ ...entity, displayName: name })}
       />
 
-      <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} />
+      <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} isFullWidth={!isEntityImmutable} />
 
       {view === ApplicationRoute.Interceptors && !isEntityImmutable && !initialValues && (
         <SourceField
@@ -80,20 +79,20 @@ const EntityProperties: FC<Props> = ({
           onChange={onChangeEntity}
           getContainers={getInterceptorContainers}
           getRunners={getInterceptorTemplatesList}
-          elementId="sourceType"
-          fieldTitle={t(EntitiesI18nKey.SourceType)}
-          sourceItems={getSourceItems(ApplicationRoute.Interceptors, deploymentsEnabled)}
+          id="sourceType"
+          label={t(EntitiesI18nKey.SourceType)}
+          sourceItems={getSourceItems(ApplicationRoute.Interceptors, featureFlags.deploymentsEnabled)}
           isModal={!isEntityImmutable}
         />
       )}
 
       {view === ApplicationRoute.Routes && (
-        <DialTextInputField
-          elementId="path"
+        <DialInput
+          id="path"
           placeholder={t(EntityPlaceholdersI18nKey.PathUrl)}
-          fieldTitle={t(EntityFieldsI18nKey.paths)}
+          labelProps={{ label: t(EntityFieldsI18nKey.paths), required: true }}
           value={(entity as DialRoute).paths?.[0]}
-          errorText={pathError}
+          error={pathError}
           invalid={!!pathError}
           onChange={onChangePath}
         />

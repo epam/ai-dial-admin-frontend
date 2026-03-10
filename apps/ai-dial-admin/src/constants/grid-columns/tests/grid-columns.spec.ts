@@ -9,6 +9,15 @@ import {
   NON_DEPLOYMENT_ASSETS_COLUMNS,
   PUBLICATION_COLUMNS,
   TELEMETRY_GRID_COLUMNS,
+  APPLICATIONS_COLUMNS,
+  ACTIVITY_AUDIT_COLUMNS,
+  IMAGE_DEPENDENCIES_COLUMNS,
+  IMAGES_LIST_COLUMNS,
+  IMAGES_LIST_FOR_CONTAINER_COLUMNS,
+  CONTAINERS_COLUMNS,
+  CONTAINER_EVENTS,
+  HF_REGISTRY_COLUMNS,
+  ADAPTER_COLUMNS,
 } from '../grid-columns';
 import { describe, expect, test, vi } from 'vitest';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -21,12 +30,28 @@ vi.mock('@/src/constants/ag-grid', () => ({
 describe('Constants :: grid columns', () => {
   test('MODELS_COLUMNS returns expected columns', () => {
     const t = (s: string) => s;
-    const cols = MODELS_COLUMNS(t, ApplicationRoute.Models);
+    const cols = MODELS_COLUMNS(t);
     expect(Array.isArray(cols)).toBe(true);
     expect(cols.some((c) => c.field === 'source.$type')).toBe(true);
     expect(cols.some((c) => c.field === 'endpoint')).toBe(true);
-    expect(cols.some((c) => c.field === 'type')).toBe(true);
     expect(cols.some((c) => c.field === 'pricing.prompt')).toBe(true);
+  });
+
+  test('ADAPTER_COLUMNS returns expected columns', () => {
+    const t = (s: string) => s;
+    const cols = ADAPTER_COLUMNS(t);
+    expect(Array.isArray(cols)).toBe(true);
+    expect(cols.some((c) => c.field === 'source.$type')).toBe(true);
+    expect(cols.some((c) => c.field === 'topics')).toBe(true);
+    expect(cols.some((c) => c.field === 'updatedAt')).toBe(true);
+  });
+
+  test('APPLICATIONS_COLUMNS returns expected columns', () => {
+    const t = (s: string) => s;
+    const cols = APPLICATIONS_COLUMNS(t);
+    expect(Array.isArray(cols)).toBe(true);
+    expect(cols.some((c) => c.field === 'maxInputAttachments')).toBe(true);
+    expect(cols.some((c) => c.field === 'endpoint')).toBe(true);
   });
 
   test('KEYS_COLUMNS returns expected columns', () => {
@@ -40,6 +65,69 @@ describe('Constants :: grid columns', () => {
     expect(Array.isArray(ASSETS_COLUMNS)).toBe(true);
     expect(ASSETS_COLUMNS.some((c) => c.field === 'author')).toBe(true);
     expect(ASSETS_COLUMNS.some((c) => c.field === 'version')).toBe(true);
+  });
+
+  test('ACTIVITY_AUDIT_COLUMNS returns expected columns', () => {
+    const t = (s: string) => s;
+    const cols1 = ACTIVITY_AUDIT_COLUMNS(t);
+    expect(Array.isArray(cols1)).toBe(true);
+    expect(cols1.some((c) => c.field === 'activityType')).toBe(true);
+    expect(cols1.some((c) => c.field === 'resourceId')).toBe(true);
+
+    const cols2 = ACTIVITY_AUDIT_COLUMNS(t, true);
+    expect(Array.isArray(cols2)).toBe(true);
+    expect(cols2.some((c) => c.field === 'activityType')).toBe(true);
+    expect(cols2.some((c) => c.field === 'activityId')).toBe(true);
+  });
+
+  test('IMAGE_DEPENDENCIES_COLUMNS returns expected columns', () => {
+    const t = (s: string) => s;
+    const cols1 = IMAGE_DEPENDENCIES_COLUMNS(t);
+    const cols2 = IMAGE_DEPENDENCIES_COLUMNS(t, true);
+    expect(Array.isArray(cols1)).toBe(true);
+    expect(cols1.some((c) => c.field === 'name')).toBe(true);
+    expect(cols1.some((c) => c.field === 'description')).toBe(true);
+    expect(cols1.some((c) => c.field === 'image')).toBe(false);
+    expect(cols1.find((c) => c.field === 'status')?.cellRenderer).toBeDefined();
+    expect(Array.isArray(cols2)).toBe(true);
+    expect(cols2.some((c) => c.headerName === 'Image')).toBe(true);
+  });
+
+  test('IMAGES_LIST_COLUMNS returns expected columns', () => {
+    const t = (s: string) => s;
+    const cols1 = IMAGES_LIST_COLUMNS(t);
+    expect(Array.isArray(cols1)).toBe(true);
+    expect(cols1.some((c) => c.field === 'name')).toBe(true);
+    expect(cols1.some((c) => c.field === 'description')).toBe(true);
+    expect(cols1.some((c) => c.field === 'author')).toBe(true);
+  });
+
+  test('IMAGES_LIST_FOR_CONTAINER_COLUMNS returns expected columns', () => {
+    const t = (s: string) => s;
+    const cols1 = IMAGES_LIST_FOR_CONTAINER_COLUMNS(t);
+    const cols2 = IMAGES_LIST_FOR_CONTAINER_COLUMNS(t, true);
+    expect(Array.isArray(cols1)).toBe(true);
+    expect(cols1.some((c) => c.field === 'name')).toBe(true);
+    expect(cols1.some((c) => c.field === 'versions')).toBe(true);
+    expect(cols1.some((c) => c.field === 'topics')).toBe(false);
+    expect(Array.isArray(cols2)).toBe(true);
+    expect(cols2.some((c) => c.field === 'topics')).toBe(true);
+  });
+
+  test('CONTAINERS_COLUMNS returns expected columns', () => {
+    const t = (s: string) => s;
+    const cols1 = CONTAINERS_COLUMNS(t, 'type', ApplicationRoute.ModelServings);
+    expect(Array.isArray(cols1)).toBe(true);
+    expect(cols1.some((c) => c.field === 'name')).toBe(true);
+    expect(cols1.some((c) => c.field === 'description')).toBe(true);
+  });
+
+  test('CONTAINER_EVENTS returns expected columns', () => {
+    const t = (s: string) => s;
+    const cols1 = CONTAINER_EVENTS(t);
+    expect(Array.isArray(cols1)).toBe(true);
+    expect(cols1.some((c) => c.field === 'eventType')).toBe(true);
+    expect(cols1.some((c) => c.field === 'message')).toBe(true);
   });
 
   test('DEPLOYMENT_ASSETS_COLUMNS returns expected columns', () => {
@@ -91,5 +179,17 @@ describe('Constants :: grid columns', () => {
     expect(PROJECT_GRID_COLUMNS.some((c) => c.field === 'name')).toBe(true);
     expect(PROJECT_GRID_COLUMNS.some((c) => c.field === 'requests')).toBe(true);
     expect(PROJECT_GRID_COLUMNS.some((c) => c.field === 'cost')).toBe(true);
+  });
+
+  test('HF_REGISTRY_COLUMNS returns expected columns', () => {
+    expect(Array.isArray(HF_REGISTRY_COLUMNS)).toBe(true);
+    expect(HF_REGISTRY_COLUMNS.some((c) => c.field === 'id')).toBe(true);
+    expect(HF_REGISTRY_COLUMNS.some((c) => c.field === 'libraries')).toBe(true);
+    expect(HF_REGISTRY_COLUMNS.some((c) => c.field === 'languages')).toBe(true);
+    expect(HF_REGISTRY_COLUMNS.some((c) => c.field === 'licenses')).toBe(true);
+    expect(HF_REGISTRY_COLUMNS.some((c) => c.field === 'author')).toBe(true);
+    expect(HF_REGISTRY_COLUMNS.some((c) => c.field === 'parameters')).toBe(true);
+    expect(HF_REGISTRY_COLUMNS.some((c) => c.field === 'tags')).toBe(true);
+    expect(HF_REGISTRY_COLUMNS.some((c) => c.field === 'datasets')).toBe(true);
   });
 });

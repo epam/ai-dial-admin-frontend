@@ -1,6 +1,5 @@
+import { AlertVariant, DialAlert, DialConfirmationPopup, DialInput } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useState } from 'react';
-import { DialConfirmationPopup, DialTextInputField } from '@epam/ai-dial-ui-kit';
-import { AlertVariant, DialAlert } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey, RollbackI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -20,7 +19,7 @@ const ConfirmationRollback: FC<Props> = ({ revisionDate, isModalOpen, onClose, o
   const onChangeConfirmation = useCallback(
     (value?: string) => {
       setConfirmation(value || '');
-      setIsDisabled(value !== t(RollbackI18nKey.System));
+      setIsDisabled(value !== t(RollbackI18nKey.Rollback));
     },
     [t],
   );
@@ -28,7 +27,7 @@ const ConfirmationRollback: FC<Props> = ({ revisionDate, isModalOpen, onClose, o
   return (
     <DialConfirmationPopup
       onClose={onClose}
-      title={t(RollbackI18nKey.ConfirmSystemRollbackTitle)}
+      header={t(RollbackI18nKey.ConfirmSystemRollbackTitle)}
       portalId="ConfirmationRollBackModal"
       open={isModalOpen}
       disableConfirmButton={isDisabled}
@@ -44,9 +43,9 @@ const ConfirmationRollback: FC<Props> = ({ revisionDate, isModalOpen, onClose, o
         <div className="my-4">
           <DialAlert variant={AlertVariant.Error} message={t(RollbackI18nKey.ConfirmSystemRollbackAlert)} />
         </div>
-        <DialTextInputField
-          elementId="confirmationText"
-          fieldTitle={t(RollbackI18nKey.ConfirmSystemRollbackLabel)}
+        <DialInput
+          id="confirmationText"
+          labelProps={{ label: t(RollbackI18nKey.ConfirmSystemRollbackLabel), required: true }}
           placeholder={t(RollbackI18nKey.ConfirmSystemRollbackPlaceholder)}
           value={confirmation}
           onChange={onChangeConfirmation}

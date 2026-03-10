@@ -1,17 +1,17 @@
+import { DialErrorText, DialInputPopup, DialLabel } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useState } from 'react';
-import { DialErrorText, DialInputPopup } from '@epam/ai-dial-ui-kit';
 
-import Field from '@/src/components/Common/Field/Field';
-import { ServerActionResponse } from '@/src/models/server-action';
-import MultiselectModal from './Modal/MultiselectModal';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { ServerActionResponse } from '@/src/models/server-action';
+import classNames from 'classnames';
+import MultiselectModal from './Modal/MultiselectModal';
 
 interface Props {
   elementId: string;
-  title: string;
+  label: string;
   disabled?: boolean;
-  optional?: boolean;
+  required?: boolean;
   selectedItems?: string[];
   heading?: string;
   addTitle?: string;
@@ -19,6 +19,7 @@ interface Props {
   allItems?: string[];
   draggable?: boolean;
   errorText?: string;
+  className?: string;
   onChangeItems?: (items: string[]) => void;
   getItems?: () => Promise<ServerActionResponse>;
 }
@@ -27,10 +28,11 @@ const Multiselect: FC<Props> = ({
   onChangeItems,
   elementId,
   selectedItems,
-  title,
+  label,
   disabled,
-  optional,
+  required,
   errorText,
+  className,
   ...props
 }) => {
   const t = useI18n();
@@ -45,8 +47,8 @@ const Multiselect: FC<Props> = ({
   }, [setIsModalState]);
 
   return (
-    <div className="flex flex-col">
-      <Field fieldTitle={title} htmlFor={elementId} optional={optional} />
+    <div className={classNames('flex flex-col gap-y-2', className)}>
+      <DialLabel label={label} htmlFor={elementId} required={required} />
       <DialInputPopup
         inputClassName={errorText && 'dial-input-error'}
         open={isModalOpen}
@@ -63,7 +65,7 @@ const Multiselect: FC<Props> = ({
           {...props}
         />
       </DialInputPopup>
-      <DialErrorText errorText={errorText} />
+      <DialErrorText text={errorText} />
     </div>
   );
 };

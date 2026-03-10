@@ -2,7 +2,7 @@
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonVariant, DialButton, DialLoader, DialSwitch, DialTabs } from '@epam/ai-dial-ui-kit';
+import { DialLoader, DialPrimaryButton, DialSwitch, DialTabs } from '@epam/ai-dial-ui-kit';
 import { IconRestore } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
 
@@ -21,26 +21,29 @@ import { SYSTEM_ROLLBACK_ENTITIES, SYSTEM_ROLLBACK_TAB_NAME } from '@/src/compon
 import { getSystemRollbackColumns } from '@/src/components/ActivityAudit/Rollback/utils';
 import DiffLegend from '@/src/components/ActivityAudit/View/DiffReport/DiffLegend';
 import FilterControl from '@/src/components/ActivityAudit/View/DiffReport/FilterControl';
-import JsonView from '@/src/components/ActivityAudit/View/JsonView';
 import { mergeEntityMaps } from '@/src/components/ActivityAudit/View/utils/generate-diffs';
+import JsonView from '@/src/components/Common/JsonView/JsonView';
 import { ActivityAuditI18nKey, MenuI18nKey, RollbackI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useNotification } from '@/src/context/NotificationContext';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { ActivityAuditDiff, DialActivity } from '@/src/models/activity-audit';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ActivityAuditEntity, ActivityAuditResourceType, DiffView } from '@/src/types/activity-audit';
 import { getRevisionRouteForAllEntities } from '@/src/utils/audit/get-revision-route';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
-import { useProtectedRequest } from '@/src/hooks/use-protected-request';
+import { getErrorNotification, getPrepareNotification, getSuccessNotification } from '@/src/utils/notification';
 
 const SystemRollback: FC = () => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
 
   const tabs = SYSTEM_ROLLBACK_ENTITIES.map((e) => ({
     id: e,
     label: t(MenuI18nKey[`${SYSTEM_ROLLBACK_TAB_NAME[e]}` as keyof typeof MenuI18nKey]),
   }));
   const getReqRef = useRef(useProtectedRequest());
+  const { showNotification, removeNotification } = useNotification();
 
   const [selectedTab, setSelectedTab] = useState(tabs[0].id);
   const [columns, setColumns] = useState<ColDef[]>([]);
@@ -65,9 +68,34 @@ const SystemRollback: FC = () => {
   const [isJsonView, setIsJsonView] = useState(false);
 
   const systemRollback = useCallback(() => {
-    systemRollbackToRevision(rollbackRevision?.id);
+    const prepareNotificationId = showNotification(
+      getPrepareNotification(
+        t(RollbackI18nKey.NotificationPrepareTitle, { entity: t(RollbackI18nKey.System) }),
+        t(RollbackI18nKey.NotificationPrepareDescription, { entity: t(RollbackI18nKey.System) }),
+      ),
+    );
+    systemRollbackToRevision(rollbackRevision?.id).then((res) => {
+      if (res.success) {
+        removeNotification(prepareNotificationId);
+        showNotification(
+          getSuccessNotification(
+            t(RollbackI18nKey.NotificationSuccessTitle, { entity: t(RollbackI18nKey.System) }),
+            t(RollbackI18nKey.NotificationSuccessDescription),
+          ),
+        );
+      } else {
+        removeNotification(prepareNotificationId);
+        showNotification(
+          getErrorNotification(
+            t(RollbackI18nKey.NotificationErrorTitle, { entity: t(RollbackI18nKey.System) }),
+            t(RollbackI18nKey.NotificationErrorDescription),
+            res?.requestId,
+          ),
+        );
+      }
+    });
     setIsRollBackModalOpen(false);
-  }, [rollbackRevision?.id]);
+  }, [removeNotification, rollbackRevision?.id, showNotification, t]);
 
   const fetchAllEntitiesForRevision = async (
     revision?: ActivityAuditRevision | null,
@@ -127,7 +155,8 @@ const SystemRollback: FC = () => {
         }
       });
     }
-  }, [fetchRevisionEntities, revisions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     setColumns(getSystemRollbackColumns(selectedTab, t));
@@ -154,7 +183,7 @@ const SystemRollback: FC = () => {
   return (
     <div className="flex flex-col bg-layer-2 rounded py-4 px-6 flex-1 min-h-0">
       <div className="flex flex-row justify-between mb-4 items-center h-[38x]">
-        <h1>{t(RollbackI18nKey.System)}</h1>
+        <h1>{t(RollbackI18nKey.Rollback)}</h1>
         <div className="flex flex-row gap-3 items-center">
           <FilterControl diffView={diffView} setDiffView={setDiffView} isResources={true} />
           <div
@@ -167,14 +196,14 @@ const SystemRollback: FC = () => {
               <OpenPopup />
             </div>
           </div>
-          <DialButton
-            iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
-            variant={ButtonVariant.Primary}
-            label={t(RollbackI18nKey.System)}
+          <DialPrimaryButton
+            iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} />}
+            label={t(RollbackI18nKey.Rollback)}
             onClick={() => setIsRollBackModalOpen(true)}
+            disabled={isLoading}
           />
-          <div className="w-[1px] h-6 bg-layer-4"></div>
-          <DialSwitch switchId="jsonView" isOn={isJsonView} onChange={() => setIsJsonView(!isJsonView)} title="JSON" />
+          <div className="w-px h-6 bg-layer-4"></div>
+          <DialSwitch switchId="jsonView" isOn={isJsonView} onChange={() => setIsJsonView(!isJsonView)} label="JSON" />
         </div>
       </div>
       <div className="flex flex-col min-h-0 flex-1 relative">

@@ -1,8 +1,8 @@
 import { DialFormPopup } from '@epam/ai-dial-ui-kit';
 import { FC, useEffect, useState } from 'react';
 
-import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
-import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
+import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
+import IdControl from '@/src/components/BaseControls/Id/Id';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
@@ -18,7 +18,7 @@ interface Props {
   names?: string[];
 }
 const DuplicateTemplate: FC<Props> = ({ onDuplicate, isModalOpen, onClose, template, names }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
   const { isValid, dispatch } = useSaveValidationContext();
 
   const [clonedTemplate, setTemplate] = useState<InterceptorTemplate>({
@@ -35,7 +35,7 @@ const DuplicateTemplate: FC<Props> = ({ onDuplicate, isModalOpen, onClose, templ
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(getCloneTitle(ApplicationRoute.InterceptorTemplates, t))}
+      header={t(getCloneTitle(ApplicationRoute.InterceptorTemplates, t))}
       portalId="DuplicateTemplate"
       open={isModalOpen}
       onSubmit={() => onDuplicate(clonedTemplate)}
@@ -50,7 +50,7 @@ const DuplicateTemplate: FC<Props> = ({ onDuplicate, isModalOpen, onClose, templ
         <DisplayNameControl
           displayName={clonedTemplate.displayName}
           onChange={(displayName) => setTemplate({ ...clonedTemplate, displayName })}
-          required={true}
+          required
         />
       </div>
     </DialFormPopup>

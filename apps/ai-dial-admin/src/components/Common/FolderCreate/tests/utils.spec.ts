@@ -1,8 +1,8 @@
 import {
   generateFileColumnsForImportGrid,
-  generatePromptColumnsForImportGrid,
+  generateAssetColumnsForImportGrid,
   isLargeFile,
-} from '@/src/components/EntityListView/Import/import';
+} from '@/src/components/EntityListView/Import/utils';
 import { FileImportGridData } from '@/src/models/file';
 import { PromptImportGridData } from '@/src/models/prompts';
 import { ImportFileType } from '@/src/types/import';
@@ -13,14 +13,14 @@ import {
   generateColumnsForImportGrid,
   generatePreviewData,
   isErrorFileReview,
-  isErrorPromptReview,
+  isErrorAssetReview,
   isErrorRowForImport,
   readAllFiles,
 } from '../utils';
 import { getFolderNameAndPath } from '@/src/utils/files/path';
 
-vi.mock('@/src/components/EntityListView/Import/import', () => ({
-  generatePromptColumnsForImportGrid: vi.fn(),
+vi.mock('@/src/components/EntityListView/Import/utils', () => ({
+  generateAssetColumnsForImportGrid: vi.fn(),
   generateFileColumnsForImportGrid: vi.fn(),
   isLargeFile: vi.fn(),
 }));
@@ -29,22 +29,22 @@ vi.mock('@/src/utils/files/path', () => ({
   getFolderNameAndPath: vi.fn(),
 }));
 
-const validPromptData = { version: '1.0', promptName: 'Test Prompt', invalid: false } as PromptImportGridData;
-const invalidPromptData = { version: '', promptName: '', invalid: true } as PromptImportGridData;
+const validPromptData = { version: '1.0', assetName: 'Test Prompt', invalid: false } as PromptImportGridData;
+const invalidPromptData = { version: '', assetName: '', invalid: true } as PromptImportGridData;
 
 const validFileData = { name: 'testFile.txt', invalid: false } as FileImportGridData;
 const invalidFileData = { name: '', invalid: true } as FileImportGridData;
 
 describe('isErrorPromptReview', () => {
-  test('should return true if version or promptName is missing or if invalid is true', () => {
-    expect(isErrorPromptReview(invalidPromptData)).toBe(true);
-    expect(isErrorPromptReview({ ...validPromptData, version: '' })).toBe(true);
-    expect(isErrorPromptReview({ ...validPromptData, promptName: '' })).toBe(true);
-    expect(isErrorPromptReview({ ...validPromptData, invalid: true })).toBe(true);
+  test('should return true if version or assetName is missing or if invalid is true', () => {
+    expect(isErrorAssetReview(invalidPromptData)).toBe(true);
+    expect(isErrorAssetReview({ ...validPromptData, version: '' })).toBe(true);
+    expect(isErrorAssetReview({ ...validPromptData, assetName: '' })).toBe(true);
+    expect(isErrorAssetReview({ ...validPromptData, invalid: true })).toBe(true);
   });
 
-  test('should return false if version and promptName are present and invalid is false', () => {
-    expect(isErrorPromptReview(validPromptData)).toBe(false);
+  test('should return false if version and assetName are present and invalid is false', () => {
+    expect(isErrorAssetReview(validPromptData)).toBe(false);
   });
 });
 
@@ -218,12 +218,12 @@ describe('generateColumnsForImportGrid', () => {
     const route = ApplicationRoute.Prompts;
     const fileType = ImportFileType.ARCHIVE;
 
-    generatePromptColumnsForImportGrid.mockReturnValue(['prompt_column_1', 'prompt_column_2']);
+    generateAssetColumnsForImportGrid.mockReturnValue(['prompt_column_1', 'prompt_column_2']);
 
     const result = generateColumnsForImportGrid(mockChangeFileFunc, fileType, route);
 
     expect(result).toEqual(['prompt_column_1', 'prompt_column_2']);
-    expect(generatePromptColumnsForImportGrid).toHaveBeenCalledWith(mockChangeFileFunc, true, true);
+    expect(generateAssetColumnsForImportGrid).toHaveBeenCalledWith(mockChangeFileFunc, true, true);
   });
 
   test('should call generateFileColumnsForImportGrid when route is Files', () => {
@@ -251,12 +251,12 @@ describe('generateColumnsForImportGrid', () => {
     const route = ApplicationRoute.Prompts;
     const fileType = ImportFileType.ARCHIVE;
 
-    generatePromptColumnsForImportGrid.mockReturnValue(['prompt_column_1', 'prompt_column_2']);
+    generateAssetColumnsForImportGrid.mockReturnValue(['prompt_column_1', 'prompt_column_2']);
 
     const result = generateColumnsForImportGrid(mockChangeFileFunc, fileType, route);
 
     expect(result).toEqual(['prompt_column_1', 'prompt_column_2']);
-    expect(generatePromptColumnsForImportGrid).toHaveBeenCalledWith(mockChangeFileFunc, true, true);
+    expect(generateAssetColumnsForImportGrid).toHaveBeenCalledWith(mockChangeFileFunc, true, true);
   });
 
   test('should correctly handle different fileType values (OTHER)', () => {

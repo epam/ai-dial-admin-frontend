@@ -1,18 +1,20 @@
 import { FC, useCallback, useMemo, useState } from 'react';
 
 import { DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
-import classNames from 'classnames';
+import { JSONSchema7 } from 'json-schema';
 
-import CompletionEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/CompletionEndpoint';
-import EditorUrlControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/EditorUrl';
-import ViewerUrlControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ViewerUrl';
+import CompletionEndpointControl from '@/src/components/BaseControls/Endpoint/CompletionEndpoint';
+import EditorUrlControl from '@/src/components/BaseControls/Endpoint/EditorUrl';
+import ViewerUrlControl from '@/src/components/BaseControls/Endpoint/ViewerUrl';
 import AppRunners from '@/src/components/SourceField/Application/AppRunners';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
+import { DefaultsValue } from '@/src/models/dial/defaults';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getSchemaDefaults } from '@/src/utils/schema';
 import { SourceTypes } from './constants';
 
 interface Props {
@@ -24,7 +26,7 @@ interface Props {
 }
 
 const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, isEntityImmutable }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
   const sources: SelectOption[] = useMemo(
     () => [
       {
@@ -97,25 +99,36 @@ const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, i
               endpoint: void 0,
             }
           : { ...entity, customAppSchemaId: value, endpoint: void 0 };
-      onChangeEntity(newEntity);
+      const runner = runners?.find((r) => r.$id === value);
+      if (runner) {
+        const applicationProperties = getSchemaDefaults(runner as JSONSchema7) as Record<string, DefaultsValue>;
+        onChangeEntity({
+          ...newEntity,
+          applicationProperties: isEntityImmutable ? { ...newEntity.applicationProperties } : applicationProperties,
+        });
+      }
     },
-    [entity, onChangeEntity, view],
+    [entity, isEntityImmutable, onChangeEntity, runners, view],
   );
 
   return (
     <div className="h-full flex flex-col gap-y-8">
-      <div className="lg:w-[180px]">
-        <DialSelectField
-          value={sourceType?.value}
-          elementId="sourceType"
-          options={sources}
-          fieldTitle={t(EntitiesI18nKey.SourceType)}
-          onChange={(source) => onChangeSource(source as string)}
-        />
-      </div>
+      <DialSelectField
+        value={sourceType?.value}
+        id="sourceType"
+        options={sources}
+        containerClassName="w-[180px]"
+        label={t(EntitiesI18nKey.SourceType)}
+        onChange={(source) => onChangeSource(source as string)}
+      />
       {sourceType?.value === SourceTypes.ENDPOINTS && (
-        <div className={classNames('flex flex-col gap-y-8', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
-          <CompletionEndpointControl required={true} endpoint={entity.endpoint} onChange={onChangeEndpoint} />
+        <div className="flex flex-col gap-y-8">
+          <CompletionEndpointControl
+            required
+            endpoint={entity.endpoint}
+            onChange={onChangeEndpoint}
+            isFullWidth={!isEntityImmutable}
+          />
           {isEntityImmutable && (
             <>
               <ViewerUrlControl endpoint={entity.viewerUrl} onChange={onChangeViewerUrl} />
@@ -125,18 +138,16 @@ const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, i
         </div>
       )}
       {sourceType?.value === SourceTypes.APP_RUNNER && (
-        <div className="flex flex-row gap-y-8 items-start">
-          <AppRunners
-            selectedValue={
-              view === ApplicationRoute.AssetsApplications
-                ? (entity as AssetApp).applicationTypeSchemaId
-                : entity.customAppSchemaId
-            }
-            runners={runners}
-            isEntityImmutable={isEntityImmutable}
-            onChangeValue={onChangeAppRunner}
-          />
-        </div>
+        <AppRunners
+          selectedValue={
+            view === ApplicationRoute.AssetsApplications
+              ? (entity as AssetApp).applicationTypeSchemaId
+              : entity.customAppSchemaId
+          }
+          runners={runners}
+          isEntityImmutable={isEntityImmutable}
+          onChangeValue={onChangeAppRunner}
+        />
       )}
     </div>
   );

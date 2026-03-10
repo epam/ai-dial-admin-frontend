@@ -1,4 +1,8 @@
-export const addTrailingSlash = (path: string) => {
+export const addTrailingSlash = (path?: string) => {
+  if (!path || path === '') {
+    return '';
+  }
+
   return path.endsWith('/') ? path : `${path}/`;
 };
 

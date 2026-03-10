@@ -1,41 +1,19 @@
 import { SYSTEM_ROLLBACK_ID } from '@/src/components/ActivityAudit/Rollback/constants';
 import { RollbackI18nKey, MenuI18nKey } from '@/src/constants/i18n';
-import { EmbeddedApp } from '@/src/context/AppContext';
 import { ApplicationRoute } from '@/src/types/routes';
 import { breadcrumbConfig } from './constants';
-import { BreadcrumbConfig, Breadcrumb } from './models';
+import { Breadcrumb } from './models';
 
-const IGNORE_BREADCRUMBS = [ApplicationRoute.Home, ApplicationRoute.Forbidden];
-const TRANSLATE_BREADCRUMBS = { [SYSTEM_ROLLBACK_ID]: RollbackI18nKey.System };
+const IGNORE_BREADCRUMBS = [ApplicationRoute.Home];
+const TRANSLATE_BREADCRUMBS = { [SYSTEM_ROLLBACK_ID]: RollbackI18nKey.Rollback };
 
-const getEmbeddedPluginBreadcrumb = (route: ApplicationRoute, apps?: EmbeddedApp[]): BreadcrumbConfig | null => {
-  const app = apps?.find((a) => a.slug === route);
-  if (app) {
-    return {
-      segments: [
-        { name: app.slug, i18nKey: app.key as MenuI18nKey },
-        { name: 'Id', href: false },
-      ],
-    };
-  }
-  return null;
-};
-
-const getBreadcrumbConfig = (route: ApplicationRoute, embeddedApps?: EmbeddedApp[]): BreadcrumbConfig | null => {
-  const fromConfig = breadcrumbConfig[route];
-  if (fromConfig) return fromConfig;
-
-  const embedded = getEmbeddedPluginBreadcrumb(route, embeddedApps);
-  return embedded || null;
-};
-
-export function getBreadcrumbs(pathname: string, currentLocale: string, embeddedApps?: EmbeddedApp[]): Breadcrumb[] {
+export function getBreadcrumbs(pathname: string, currentLocale: string): Breadcrumb[] {
   const segments = pathname.split('/').filter((segment) => segment);
   const isLocale = currentLocale?.includes(segments[0]);
   const locale = isLocale ? segments[0] : null;
   const pathSegments = isLocale ? segments.slice(1) : segments;
   const rootSegment = `/${pathSegments[0]}`;
-  const config = getBreadcrumbConfig(rootSegment as ApplicationRoute, embeddedApps);
+  const config = breadcrumbConfig[rootSegment as ApplicationRoute];
 
   if (IGNORE_BREADCRUMBS.includes(rootSegment as ApplicationRoute) || !config) {
     return [];

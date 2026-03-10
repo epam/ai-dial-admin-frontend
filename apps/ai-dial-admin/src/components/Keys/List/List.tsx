@@ -14,7 +14,7 @@ interface Props {
 }
 
 const KeysList: FC<Props> = ({ data }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
   const names = filterNames(data);
   const keys = data.map((entity) => entity.key as string);
 
@@ -25,9 +25,9 @@ const KeysList: FC<Props> = ({ data }) => {
       keys={keys}
       data={data}
       route={ApplicationRoute.Keys}
-      createEntity={createKey}
-      removeEntity={removeKey}
-      showColumnsButton={true}
+      onCreateEntity={createKey}
+      onRemoveEntity={removeKey}
+      showColumnsButton
     />
   );
 };

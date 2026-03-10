@@ -1,13 +1,11 @@
 'use client';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import { ColDef } from 'ag-grid-community';
 
 import ActivityDetails from '@/src/components/ActivityAudit/Modals/Details';
 import { importPreviewResource } from '@/src/components/ActivityAudit/View/Header/constants';
-import Grid from '@/src/components/Grid/Grid';
 import {
   getComponentColDefs,
   getEntityByIdentifier,
@@ -20,6 +18,7 @@ import { ActivityAuditEntity } from '@/src/types/activity-audit';
 import { EntityType } from '@/src/types/entity-type';
 import { getEmptyDataTitleI18nKey } from '@/src/utils/entities/get-empty-data-title';
 import { getEntitiesList } from '@/src/utils/entities/get-entities-list';
+import GridView from '@/src/components/Grid/GridView/GridView';
 
 interface Props {
   selectedTab: EntityType;
@@ -29,7 +28,7 @@ interface Props {
 }
 
 const ConfigurationGrid: FC<Props> = ({ selectedTab, tabData, currentState, prevState }) => {
-  const t = useI18n() as (v: string) => string;
+  const t = useI18n();
 
   const [rowData, setRowData] = useState<BaseEntity[]>([]);
   const [colDefs, setColDefs] = useState<ColDef[]>([]);
@@ -38,6 +37,12 @@ const ConfigurationGrid: FC<Props> = ({ selectedTab, tabData, currentState, prev
   const [prevEntity, setPrevEntity] = useState<ActivityAuditEntity | undefined>();
   const [nextEntity, setNextEntity] = useState<ActivityAuditEntity | undefined>();
   const [action, setAction] = useState<string | undefined>();
+
+  const selectedTabRef = useRef(selectedTab);
+
+  useEffect(() => {
+    selectedTabRef.current = selectedTab;
+  }, [selectedTab]);
 
   const emptyDataTitleI18nkKey = useMemo(() => {
     return getEmptyDataTitleI18nKey(selectedTab);
@@ -54,14 +59,14 @@ const ConfigurationGrid: FC<Props> = ({ selectedTab, tabData, currentState, prev
 
   const onOpenDetailsModal = useCallback(
     (entity?: BaseEntity) => {
-      const prev = getEntityByIdentifier(prevState[selectedTab], entity);
-      const { action, ...next } = getEntityByIdentifier(currentState[selectedTab], entity);
+      const prev = getEntityByIdentifier(prevState[selectedTabRef.current], entity);
+      const { action, ...next } = getEntityByIdentifier(currentState[selectedTabRef.current], entity);
       setPrevEntity(prev);
       setNextEntity(next);
       setAction(action as string);
       setIsModalOpen(true);
     },
-    [currentState, prevState, selectedTab],
+    [currentState, prevState],
   );
 
   const onCloseModal = useCallback(() => {
@@ -78,11 +83,9 @@ const ConfigurationGrid: FC<Props> = ({ selectedTab, tabData, currentState, prev
     }
   }, [onOpenDetailsModal, selectedTab, t, tabData]);
 
-  return rowData.length === 0 ? (
-    <DialNoDataContent title={t(emptyDataTitleI18nkKey)} />
-  ) : (
+  return (
     <>
-      <Grid columnDefs={colDefs} rowData={rowData} />
+      <GridView columnDefs={colDefs} rowData={rowData} emptyDataProps={{ title: t(emptyDataTitleI18nkKey) }} />
       {isModalOpen &&
         createPortal(
           <ActivityDetails

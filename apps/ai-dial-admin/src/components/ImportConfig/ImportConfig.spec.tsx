@@ -3,10 +3,6 @@ import { describe, test, vi } from 'vitest';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import ImportConfig from './ImportConfig';
 
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: vi.fn() }),
-}));
-
 vi.mock('@/src/app/[lang]/import-config/actions', () => ({
   importJsonConfigs: vi.fn(() => Promise.resolve({ success: true })),
   importZipConfig: vi.fn(() => Promise.resolve({ success: true })),

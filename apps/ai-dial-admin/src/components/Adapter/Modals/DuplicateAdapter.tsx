@@ -4,23 +4,23 @@ import { DialFormPopup } from '@epam/ai-dial-ui-kit';
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
-import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
-import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
-import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
+import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
+import IdControl from '@/src/components/BaseControls/Id/Id';
+import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getClonedEntityName, getCloneTitle } from '@/src/utils/entities/duplicate-entity';
 
 interface Props {
   isModalOpen: boolean;
-  onClose: () => void;
   names: string[];
   adapter: DialAdapter;
+  onClose: () => void;
   onDuplicate: (entity: DialAdapter) => void;
 }
 
 const DuplicateAdapter: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose, adapter }) => {
-  const t = useI18n() as (t: string, props?: Record<string, string>) => string;
+  const t = useI18n();
 
   const [entity, setEntity] = useState<DialAdapter>({ ...adapter, name: getClonedEntityName(adapter.name) });
   const { isValid, dispatch } = useSaveValidationContext();
@@ -51,7 +51,7 @@ const DuplicateAdapter: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose,
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(getCloneTitle(ApplicationRoute.Adapters, t))}
+      header={t(getCloneTitle(ApplicationRoute.Adapters, t))}
       portalId="DuplicateAdapter"
       open={isModalOpen}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
@@ -60,16 +60,16 @@ const DuplicateAdapter: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose,
       onCancel={onClose}
       disableSubmitButton={!isValid}
     >
-      <div className="flex flex-col gap-3 px-6 py-4">
+      <div className="flex flex-col gap-y-8 px-6 py-4">
         <IdControl entity={entity} onChangeEntity={setEntity} names={names} />
 
-        <DisplayNameControl displayName={entity.displayName} onChange={onChangeDisplayName} required={true} />
+        <DisplayNameControl displayName={entity.displayName} onChange={onChangeDisplayName} required />
 
         <EndpointControl
           id="baseEndpoint"
-          required={true}
+          required
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
-          fieldTitle={t(EntityFieldsI18nKey.baseEndpoint)}
+          label={t(EntityFieldsI18nKey.baseEndpoint)}
           endpoint={entity.baseEndpoint}
           onChange={onChangeEndpoint}
         />

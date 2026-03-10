@@ -1,7 +1,7 @@
 'use client';
 
 import { FC } from 'react';
-import { DialButton, DialCollapsibleSidebar, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { DialCollapsibleSidebar, DialIconButton, DialTooltip } from '@epam/ai-dial-ui-kit';
 
 import FolderCollapse from '@/public/images/icons/folder-collapse.svg';
 import FolderList from '@/src/components/Common/FolderList/FolderList';
@@ -16,7 +16,7 @@ interface Props {
 }
 
 const FoldersStorage: FC<Props> = ({ initialPath }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
   const folderContext = useRuleFolder();
   const isCollapseDisable =
     folderContext?.expandedFolders.size === 0 ||
@@ -27,7 +27,7 @@ const FoldersStorage: FC<Props> = ({ initialPath }) => {
   };
   return (
     <div className="flex flex-col bg-layer-2 rounded py-4 px-6 flex-1 min-h-0">
-      <div className="flex flex-row flex-wrap justify-between mb-4 items-center h-[38px]">
+      <div className="flex flex-row flex-wrap justify-between mb-4 items-center h-[40px]">
         <h1>{t(MenuI18nKey.FoldersStorage)}</h1>
       </div>
       <div className="flex flex-1 gap-4 min-h-0">
@@ -42,10 +42,10 @@ const FoldersStorage: FC<Props> = ({ initialPath }) => {
               tooltip={isCollapseDisable ? '' : t(FoldersI18nKey.CollapseAll)}
               placement="top"
             >
-              <DialButton
-                className={isCollapseDisable ? 'text-controls-disable' : 'hover:text-icon-accent-primary'}
+              <DialIconButton
+                className={isCollapseDisable ? 'text-controls-disable' : 'hover:text-accent-primary'}
                 onClick={collapseFolders}
-                iconBefore={<FolderCollapse width={24} height={24} />}
+                icon={<FolderCollapse size={24} />}
                 disabled={isCollapseDisable}
               />
             </DialTooltip>

@@ -13,9 +13,12 @@ interface EditableCellRendererParams extends ICellRendererParams {
   defaultValue?: number;
   inputType?: 'text' | 'number';
   hideTriangle?: boolean;
+  skipRequired?: boolean;
   valueFormatter?: (value: number | string) => string;
   onChange?: (value: number | string, data: unknown, column: string, index?: number) => void;
   getDefaultPlaceholder?: (node: IRowNode, colDef?: ColDef) => string;
+  showMaxValue?: boolean;
+  isReadonly?: boolean;
 }
 
 const EditableCellRenderer = ({
@@ -24,6 +27,7 @@ const EditableCellRenderer = ({
   defaultValue,
   inputType = 'text',
   hideTriangle,
+  skipRequired,
   valueFormatter,
   onChange,
   setValue,
@@ -31,30 +35,28 @@ const EditableCellRenderer = ({
   colDef,
   data,
   node,
+  showMaxValue,
+  isReadonly,
 }: EditableCellRendererParams) => {
-  const t = useI18n() as (s: string) => string;
+  const t = useI18n();
   const initialPlaceholder = placeholder ? t(placeholder) : '';
   const translatedPlaceholder = getDefaultPlaceholder?.(node, colDef) || initialPlaceholder;
   const initialValue = valueFormatter ? valueFormatter(value) : value || translatedPlaceholder;
 
   const [inputValue, setInputValue] = useState(initialValue);
 
-  const isEmptyValue = useMemo(() => {
-    return inputValue == null;
-  }, [inputValue]);
-
   const isMaxValue = useMemo(() => {
-    return inputValue === UNLIMITED_VALUE || inputValue === UNLIMITED_ACCEPTED_USERS;
-  }, [inputValue]);
-
-  const showTriangle = useMemo(() => {
-    const value = isEmptyValue || isMaxValue ? void 0 : inputValue;
-    return getDefaultPlaceholder ? value : defaultValue !== value;
-  }, [defaultValue, getDefaultPlaceholder, inputValue, isEmptyValue, isMaxValue]);
+    return inputValue === UNLIMITED_VALUE || inputValue === UNLIMITED_ACCEPTED_USERS || showMaxValue;
+  }, [inputValue, showMaxValue]);
 
   const correctValue = useMemo(() => {
-    return isEmptyValue || isMaxValue ? '' : inputValue;
-  }, [inputValue, isEmptyValue, isMaxValue]);
+    return !inputValue || isMaxValue ? '' : inputValue;
+  }, [inputValue, isMaxValue]);
+
+  const showTriangle = useMemo(() => {
+    const value = !correctValue || isMaxValue ? void 0 : correctValue;
+    return getDefaultPlaceholder ? value : defaultValue != value;
+  }, [defaultValue, getDefaultPlaceholder, correctValue, isMaxValue]);
 
   const correctPlaceholder = useMemo(() => {
     return isMaxValue ? t(RolesI18nKey.Unlimited) : translatedPlaceholder;
@@ -79,6 +81,10 @@ const EditableCellRenderer = ({
     setInputValue(formattedValue);
   }, [value, valueFormatter, translatedPlaceholder]);
 
+  if (isReadonly) {
+    return <div>{correctValue}</div>;
+  }
+
   return (
     <>
       <input
@@ -89,7 +95,7 @@ const EditableCellRenderer = ({
         onChange={handleChange}
         className={classNames(
           'leading-[18px] h-[32px] dial-input px-2 py-1',
-          data.required && !correctValue && 'dial-input-error',
+          !skipRequired && data.required && !correctValue && 'dial-input-error',
           isMaxValue && 'placeholder-primary',
         )}
       />

@@ -23,8 +23,8 @@ const List: FC<Props> = ({ route, data }) => {
       names={names}
       baseColumns={INTERCEPTOR_TEMPLATES_COLUMNS}
       route={route}
-      createEntity={createInterceptorTemplate}
-      removeEntity={deleteInterceptorTemplate}
+      onCreateEntity={createInterceptorTemplate}
+      onRemoveEntity={deleteInterceptorTemplate}
     />
   );
 };

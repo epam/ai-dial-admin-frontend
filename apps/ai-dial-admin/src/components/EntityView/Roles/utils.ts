@@ -1,6 +1,7 @@
-import { ColDef, Column, GridApi, IRowNode } from 'ag-grid-community';
+import { ColDef, Column, GridApi, ICellRendererParams, IRowNode } from 'ag-grid-community';
 
 import { RolesGridData } from '@/src/components/EntityView/Roles/models';
+import EmptyCellRenderer from '@/src/components/Grid/CellRenderers/EmptyCellRenderer';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import { sharingTypes } from '@/src/components/Roles/constants';
 import { ACTION_COLUMN, NO_BORDER_CLASS } from '@/src/constants/ag-grid';
@@ -10,15 +11,14 @@ import {
   getResetOperation,
   getSetNoLimitsOperation,
 } from '@/src/constants/grid-columns/actions';
-import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { RolesI18nKey } from '@/src/constants/i18n';
+import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { MenuI18nKey, RolesI18nKey } from '@/src/constants/i18n';
+import { NO_LIMITS_KEY, UNLIMITED_VALUE } from '@/src/constants/role';
 import { EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialRole } from '@/src/models/dial/role';
 import { DialRoleLimits } from '@/src/models/dial/role-limits';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { cellRenderParams } from './constants';
-import { UNLIMITED_VALUE } from '@/src/constants/role';
 
 export const getNoAvailableTitle = (view: ApplicationRoute) => {
   if (view === ApplicationRoute.Models) return RolesI18nKey.NotAvailableModel;
@@ -77,55 +77,62 @@ const mapRoleData = (
   month: getLimitData(limit?.month, entity?.defaultRoleLimit?.month),
 });
 
+const editableCellRendererSelector = (params: ICellRendererParams) => {
+  const { type } = params.data || {};
+
+  if (!type || (type !== MenuI18nKey.Routes && type !== MenuI18nKey.Toolsets)) {
+    return { component: EditableCellRenderer };
+  }
+
+  return { component: EmptyCellRenderer };
+};
+
+const createLimitColumn = (
+  headerName: string,
+  field: keyof DialRoleLimits,
+  defaultValues?: DialRoleLimits,
+  onChange?: (value: number, data: DialRole, token: string) => void,
+  otherFields: Array<keyof DialRoleLimits> = [],
+) => ({
+  headerName,
+  field,
+  cellClass: NO_BORDER_CLASS,
+  cellRendererSelector: editableCellRendererSelector,
+  cellRendererParams: (params: { data?: DialRoleLimits }) => {
+    const defaultValue = defaultValues?.[field];
+    const hasOtherValue = otherFields.some((f) => params.data?.[f] && params.data?.[f] !== NO_LIMITS_KEY);
+    const hasOtherDefaults = otherFields.some((f) => defaultValues?.[f] && params.data?.[f] !== NO_LIMITS_KEY);
+    return {
+      ...cellRenderParams,
+      defaultValue,
+      onChange,
+      showMaxValue:
+        (hasOtherValue || hasOtherDefaults) && (!params.data?.[field] || params.data?.[field] === NO_LIMITS_KEY),
+    };
+  },
+});
+
 export const LIMIT_COLUMNS = (
   defaultValues?: DialRoleLimits,
   onChange?: (value: number, data: DialRole, token: string) => void,
 ) => [
-  {
-    headerName: 'Tokens per minute',
-    field: 'minute',
-    cellClass: NO_BORDER_CLASS,
-    cellRenderer: EditableCellRenderer,
-    cellRendererParams: {
-      ...cellRenderParams,
-      defaultValue: defaultValues?.minute,
-      onChange,
-    },
-  },
-  {
-    headerName: 'Tokens per day',
-    field: 'day',
-    cellClass: NO_BORDER_CLASS,
-    cellRenderer: EditableCellRenderer,
-    cellRendererParams: {
-      ...cellRenderParams,
-      defaultValue: defaultValues?.day,
-      onChange,
-    },
-  },
-  {
-    headerName: 'Tokens per week',
-    field: 'week',
-    cellClass: NO_BORDER_CLASS,
-    cellRenderer: EditableCellRenderer,
-    cellRendererParams: {
-      ...cellRenderParams,
-      defaultValue: defaultValues?.week,
-      onChange,
-    },
-  },
-  {
-    headerName: 'Tokens per month',
-    field: 'month',
-    cellClass: NO_BORDER_CLASS,
-    cellRenderer: EditableCellRenderer,
-    cellRendererParams: {
-      ...cellRenderParams,
-      defaultValue: defaultValues?.month,
-      onChange,
-    },
-  },
+  createLimitColumn('Tokens per minute', 'minute', defaultValues, onChange, ['day', 'week', 'month']),
+  createLimitColumn('Tokens per day', 'day', defaultValues, onChange, ['minute', 'week', 'month']),
+  createLimitColumn('Tokens per week', 'week', defaultValues, onChange, ['minute', 'day', 'month']),
+  createLimitColumn('Tokens per month', 'month', defaultValues, onChange, ['minute', 'day', 'week']),
 ];
+
+export const integerValueFormatter = (v: string | number) => {
+  if (v == null) return '';
+  const s = String(v);
+  if (s === '') return '';
+  let digits = s.replace(/\D+/g, '');
+  if (digits.length > 1) {
+    digits = digits.replace(/^0+/, '');
+    if (digits === '') return '0';
+  }
+  return digits;
+};
 
 export const SHARING_COLUMNS = (
   t: (stringToTranslate: string) => string,
@@ -152,7 +159,7 @@ export const SHARING_COLUMNS = (
       ...cellRenderParams,
       getDefaultPlaceholder,
       onChange,
-      valueFormatter: (v: string) => v,
+      valueFormatter: integerValueFormatter,
     },
   },
   {
@@ -167,7 +174,7 @@ export const SHARING_COLUMNS = (
       ...cellRenderParams,
       getDefaultPlaceholder,
       onChange,
-      valueFormatter: (v: string) => v,
+      valueFormatter: integerValueFormatter,
     },
   },
 ];
@@ -193,7 +200,7 @@ export const getRolesColumnDefs = (
   view: ApplicationRoute,
 ): ColDef[] => {
   const actions = [getOpenInNewTabOperation(open)];
-  const colDefs = [...SIMPLE_ENTITY_COLUMNS.slice(0, 3)];
+  const colDefs = [...BASE_COLUMNS.slice(0, 3)];
 
   if (view !== ApplicationRoute.Routes && view !== ApplicationRoute.Toolsets) {
     actions.push(
@@ -215,11 +222,33 @@ export const getRolesColumnDefs = (
 export const isResetAvailable = (entity: EntityRoleLimits): boolean => {
   return (
     entity.roleLimits != null &&
-    Object.values(entity.roleLimits).some((limit) => !isEqualSkippingUndefined(limit, entity.defaultRoleLimit))
+    Object.values(entity.roleLimits).some((limit) => !isLimitSameAsDefault(limit, entity.defaultRoleLimit))
   );
 };
 
+export const isLimitSameAsDefault = (limit: DialRoleLimits, defaultLimit?: DialRoleLimits): boolean => {
+  const limitKeys = Object.keys(limit ?? {}) as Array<keyof DialRoleLimits>;
+  const defaultKeys = defaultLimit ? (Object.keys(defaultLimit) as Array<keyof DialRoleLimits>) : [];
+
+  if (defaultLimit) {
+    if (limitKeys.some((key) => !defaultKeys.includes(key as keyof DialRoleLimits))) {
+      return false;
+    }
+  }
+
+  for (const key of defaultKeys) {
+    if (key in limit && limit[key] !== defaultLimit![key]) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
 export const isSetNoLimitsHidden = (api: GridApi, node: IRowNode) => {
+  if (node.data.type === MenuI18nKey.Routes || node.data.type === MenuI18nKey.Toolsets) {
+    return true;
+  }
   const month = api.getCellValue({
     colKey: api.getColumn('month') as Column,
     rowNode: node,
@@ -236,7 +265,6 @@ export const isSetNoLimitsHidden = (api: GridApi, node: IRowNode) => {
     colKey: api.getColumn('day') as Column,
     rowNode: node,
   });
-
   return day === UNLIMITED_VALUE && minute === UNLIMITED_VALUE && month === UNLIMITED_VALUE && week === UNLIMITED_VALUE;
 };
 

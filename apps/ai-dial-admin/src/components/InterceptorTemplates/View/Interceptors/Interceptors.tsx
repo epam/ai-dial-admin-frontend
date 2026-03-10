@@ -1,11 +1,10 @@
-import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { getInterceptorsList } from '@/src/app/[lang]/interceptors/actions';
-import Grid from '@/src/components/Grid/Grid';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
-import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -20,7 +19,7 @@ interface Props {
 }
 
 const Interceptors: FC<Props> = ({ interceptorList }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
   const [interceptors, setInterceptors] = useState<DialInterceptor[]>([]);
@@ -29,7 +28,7 @@ const Interceptors: FC<Props> = ({ interceptorList }) => {
     onOpenInNewTab(ApplicationRoute.Interceptors, interceptor);
   }, []);
 
-  const colDefs = [...SIMPLE_ENTITY_COLUMNS, ACTION_COLUMN([getOpenInNewTabOperation(onOpen)])];
+  const colDefs = [...BASE_COLUMNS, ACTION_COLUMN([getOpenInNewTabOperation(onOpen)])];
 
   useEffect(() => {
     const fetchInterceptors = async () => {
@@ -50,13 +49,12 @@ const Interceptors: FC<Props> = ({ interceptorList }) => {
   }, [interceptorList, showNotification]);
 
   return (
-    <>
-      {!interceptorList?.length || !interceptors.length ? (
-        <DialNoDataContent title={t(EntitiesI18nKey.NoInterceptors)} />
-      ) : (
-        <Grid columnDefs={colDefs} rowData={interceptors} />
-      )}
-    </>
+    <GridView
+      emptyDataProps={{ title: t(EntitiesI18nKey.NoInterceptors) }}
+      getIsEmptyData={() => !interceptorList?.length || !interceptors.length}
+      columnDefs={colDefs}
+      rowData={interceptors}
+    />
   );
 };
 

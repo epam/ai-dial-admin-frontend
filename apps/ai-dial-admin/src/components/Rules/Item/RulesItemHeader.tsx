@@ -6,18 +6,26 @@ import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import { FoldersI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
   children?: ReactNode;
   folderName?: string;
+  folderDescription?: string;
   isCollapsed: boolean;
   isAlwaysToggled?: boolean;
   toggleCollapse: () => void;
 }
 
-const RulesItemHeader: FC<Props> = ({ children, folderName, isCollapsed, isAlwaysToggled, toggleCollapse }) => {
+const RulesItemHeader: FC<Props> = ({
+  children,
+  folderName,
+  folderDescription,
+  isCollapsed,
+  isAlwaysToggled,
+  toggleCollapse,
+}) => {
   const t = useI18n();
 
   return (
@@ -30,12 +38,16 @@ const RulesItemHeader: FC<Props> = ({ children, folderName, isCollapsed, isAlway
       )}
       onClick={isAlwaysToggled ? void 0 : toggleCollapse}
     >
-      {!isAlwaysToggled && (
-        <i className="text-icon-secondary">
-          {isCollapsed ? <IconChevronRight {...BASE_ICON_PROPS} /> : <IconChevronDown {...BASE_ICON_PROPS} />}
-        </i>
-      )}
-      <h3 className={classNames(!isAlwaysToggled && 'mx-2')}>{folderName || t(FoldersI18nKey.Permissions)}</h3>
+      {!isAlwaysToggled &&
+        (isCollapsed ? (
+          <IconChevronRight className="text-secondary" {...BASE_BUTTON_ICON_PROPS} />
+        ) : (
+          <IconChevronDown className="text-secondary" {...BASE_BUTTON_ICON_PROPS} />
+        ))}
+      <div className="flex flex-col gap-1">
+        <h3 className={classNames(!isAlwaysToggled && 'mx-2')}>{folderName || t(FoldersI18nKey.Permissions)}</h3>
+        {folderDescription && <span className="tiny text-secondary">{folderDescription}</span>}
+      </div>
       {children}
     </div>
   );

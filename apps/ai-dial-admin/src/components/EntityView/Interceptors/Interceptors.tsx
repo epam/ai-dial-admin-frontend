@@ -1,19 +1,21 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonVariant, DialButton, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { RowDragEvent } from 'ag-grid-community';
 
 import { getApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
+import { getProperties } from '@/src/app/[lang]/system-properties/actions';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
-import Grid from '@/src/components/Grid/Grid';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
-import { DESCRIPTION_COLUMN, DISPLAY_NAME_COLUMN, NAME_COLUMN } from '@/src/constants/grid-columns/grid-columns';
+import { DESCRIPTION_COLUMN, DISPLAY_NAME_COLUMN, NAME_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { ButtonsI18nKey, EntitiesI18nKey, InterceptorsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication } from '@/src/models/dial/application';
+import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
@@ -34,13 +36,18 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
   view,
 }: Props<T>) => {
   const t = useI18n();
-
   const [availableInterceptors, setAvailableInterceptors] = useState<DialInterceptor[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [runnerInterceptors, setRunnerInterceptors] = useState<string[]>();
+  const [globalInterceptors, setGlobalInterceptors] = useState<string[] | null>(null);
 
   const isCollapsableView = useMemo(() => {
-    return view === ApplicationRoute.Models || view === ApplicationRoute.Applications;
+    return (
+      view === ApplicationRoute.Models ||
+      view === ApplicationRoute.Applications ||
+      view === ApplicationRoute.ApplicationRunners ||
+      view === ApplicationRoute.AssetsApplications
+    );
   }, [view]);
 
   const isAppRunnerView = useMemo(() => {
@@ -51,8 +58,15 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
     return isAppRunnerView ? entity['dial:applicationTypeInterceptors'] : entity.interceptors;
   }, [entity, isAppRunnerView]);
 
+  const interceptorsRef = useRef(entityInterceptors);
+
   useEffect(() => {
-    const name = (entity as DialApplication).customAppSchemaId;
+    interceptorsRef.current = entityInterceptors;
+  }, [entityInterceptors]);
+
+  useEffect(() => {
+    const name =
+      (entity as DialApplication).customAppSchemaId || (entity as unknown as AssetApp).applicationTypeSchemaId;
     if (name && !runnerInterceptors) {
       getApplicationScheme(name, DEFAULT_ETAG).then((res) => {
         setRunnerInterceptors(res.response?.['dial:applicationTypeInterceptors']);
@@ -61,7 +75,14 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
   }, [entity, runnerInterceptors]);
 
   useEffect(() => {
-    //todo recheck
+    if (!globalInterceptors) {
+      getProperties(DEFAULT_ETAG).then((res) => {
+        setGlobalInterceptors(res.response?.globalInterceptors || []);
+      });
+    }
+  }, [entity, globalInterceptors, runnerInterceptors]);
+
+  useEffect(() => {
     setAvailableInterceptors(interceptors);
   }, [entity, interceptors]);
 
@@ -83,27 +104,6 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
       }
 
       setIsModalOpen(false);
-    },
-    [entity, entityInterceptors, isAppRunnerView, onChangeEntity],
-  );
-
-  const onRemoveInterceptor = useCallback(
-    (_?: DialInterceptor, index?: number) => {
-      if (index != null) {
-        entityInterceptors?.splice(index, 1);
-
-        if (isAppRunnerView) {
-          onChangeEntity({
-            ...entity,
-            'dial:applicationTypeInterceptors': entityInterceptors,
-          });
-        } else {
-          onChangeEntity({
-            ...entity,
-            interceptors: entityInterceptors,
-          });
-        }
-      }
     },
     [entity, entityInterceptors, isAppRunnerView, onChangeEntity],
   );
@@ -133,31 +133,61 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
 
   const rowData = getInterceptorsGridData(interceptors, entityInterceptors);
 
-  const runnerColumns = getInterceptorsColumnDefs(onOpen);
+  const globalColumns = getInterceptorsColumnDefs(onOpen);
+
+  const runnerColumns = getInterceptorsColumnDefs(onOpen, void 0, globalInterceptors?.length);
+
+  const onRemoveInterceptor = useCallback(
+    (_?: DialInterceptor, index?: number) => {
+      if (index != null) {
+        const interceptors = [...(interceptorsRef.current || [])];
+        interceptors.splice(index, 1);
+
+        if (isAppRunnerView) {
+          onChangeEntity({
+            ...entity,
+            'dial:applicationTypeInterceptors': interceptors,
+          });
+        } else {
+          onChangeEntity({
+            ...entity,
+            interceptors,
+          });
+        }
+      }
+    },
+    [entity, isAppRunnerView, onChangeEntity],
+  );
 
   const localColumns = useMemo(() => {
-    return getInterceptorsColumnDefs(onOpen, onRemoveInterceptor, runnerInterceptors?.length);
-  }, [onRemoveInterceptor, runnerInterceptors?.length]);
+    return getInterceptorsColumnDefs(
+      onOpen,
+      onRemoveInterceptor,
+      (globalInterceptors?.length || 0) + (runnerInterceptors?.length || 0),
+    );
+  }, [onRemoveInterceptor, globalInterceptors?.length, runnerInterceptors?.length]);
 
   const additionalGridOptions = useMemo(() => {
     return { rowDragManaged: true, onRowDragEnd };
   }, [onRowDragEnd]);
 
   const button = (
-    <DialButton
-      variant={ButtonVariant.Primary}
-      iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+    <DialPrimaryButton
+      iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
       label={t(ButtonsI18nKey.Add)}
       onClick={() => setIsModalOpen(true)}
     />
   );
 
-  const localInterceptors = !entityInterceptors?.length ? (
-    <DialNoDataContent
-      title={isCollapsableView ? t(EntitiesI18nKey.NoLocalInterceptors) : t(EntitiesI18nKey.NoInterceptors)}
+  const localInterceptors = (
+    <GridView
+      emptyDataProps={{
+        title: isCollapsableView ? t(EntitiesI18nKey.NoLocalInterceptors) : t(EntitiesI18nKey.NoInterceptors),
+      }}
+      columnDefs={localColumns}
+      rowData={rowData}
+      additionalGridOptions={additionalGridOptions}
     />
-  ) : (
-    <Grid columnDefs={localColumns} rowData={rowData} additionalGridOptions={additionalGridOptions} />
   );
 
   return (
@@ -166,9 +196,11 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
         <CollapsableInterceptors
           entity={entity}
           interceptors={interceptors}
+          globalColumns={globalColumns}
           runnerColumns={runnerColumns}
           runnerInterceptors={runnerInterceptors}
           localInterceptors={localInterceptors}
+          globalInterceptors={globalInterceptors}
           headerButton={button}
         />
       ) : (

@@ -2,9 +2,7 @@
 
 import { FC, useCallback, useMemo } from 'react';
 
-import { DialNumberInputField, DialSelectField, DialTextInputField, SelectOption } from '@epam/ai-dial-ui-kit';
-import { IconTrash } from '@tabler/icons-react';
-import classNames from 'classnames';
+import { DialInput, DialNumberInput, DialRemoveButton, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 
 import JsonEditorInput from '@/src/components/Common/JsonEditorInput/JsonEditorInput';
 import {
@@ -14,14 +12,13 @@ import {
   EntityPlaceholdersI18nKey,
   TypeI18nKey,
 } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DefaultsValue } from '@/src/models/dial/defaults';
 import { BooleanType } from '@/src/types/boolean';
 import { DefaultItemType } from './types';
 import { getDefaultValueByType, getValueByType } from './utils';
 
-interface DefaultItem {
+interface DefaultItemDeclaration {
   key: string;
   value: DefaultsValue;
   type: string;
@@ -29,8 +26,8 @@ interface DefaultItem {
 
 interface Props {
   index: number;
-  item: DefaultItem;
-  changeItem: (item: DefaultItem, index: number) => void;
+  item: DefaultItemDeclaration;
+  changeItem: (item: DefaultItemDeclaration, index: number) => void;
   onRemove: (index: number) => void;
 }
 
@@ -99,42 +96,42 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
   );
 
   return (
-    <div className="flex gap-4 items-start">
+    <div className="flex gap-x-3 items-end">
       <div className="flex flex-row gap-x-4 items-center">
         <div className="min-w-[187px]">
-          <DialTextInputField
-            elementId={`entity-default-key-${index}`}
+          <DialInput
+            id={`entity-default-key-${index}`}
             value={item.key}
             placeholder={t(EntityPlaceholdersI18nKey.Key)}
-            fieldTitle={isFirstLine ? t(EntityFieldsI18nKey.key) : ''}
+            labelProps={{ label: isFirstLine ? t(EntityFieldsI18nKey.key) : '' }}
             onChange={onChangeKey}
           />
         </div>
         <div className="w-[384px]">
           {item.type === DefaultItemType.string && (
-            <DialTextInputField
-              elementId={`entity-default-value-${index}`}
+            <DialInput
+              id={`entity-default-value-${index}`}
               value={item.value as string}
               placeholder={t(EntityPlaceholdersI18nKey.Value)}
-              fieldTitle={isFirstLine ? t(BasicI18nKey.Value) : ''}
+              labelProps={{ label: isFirstLine ? t(BasicI18nKey.Value) : '' }}
               onChange={onChangeValue}
             />
           )}
           {item.type === DefaultItemType.number && (
-            <DialNumberInputField
-              elementId={`entity-default-value-${index}`}
+            <DialNumberInput
+              id={`entity-default-value-${index}`}
               value={item.value as string}
               placeholder={t(EntityPlaceholdersI18nKey.Value)}
-              fieldTitle={isFirstLine ? t(BasicI18nKey.Value) : ''}
+              labelProps={{ label: isFirstLine ? t(BasicI18nKey.Value) : '' }}
               onChange={onChangeValue}
             />
           )}
           {item.type === DefaultItemType.boolean && (
             <DialSelectField
               value={item.value.toString()}
-              elementId={`entity-default-value=${index}`}
+              id={`entity-default-value=${index}`}
               options={booleans}
-              fieldTitle={isFirstLine ? t(BasicI18nKey.Value) : ''}
+              label={isFirstLine ? t(BasicI18nKey.Value) : ''}
               onChange={onChangeValue}
             />
           )}
@@ -142,29 +139,25 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
             <JsonEditorInput
               elementId={`entity-default-value-${index}`}
               value={item.value as object}
-              fieldTitle={isFirstLine ? t(BasicI18nKey.Value) : ''}
+              label={isFirstLine ? t(BasicI18nKey.Value) : ''}
               onChangeValue={onChangeValue}
+              disableValidation
             />
           )}
         </div>
         <div className="min-w-[136px]">
           <DialSelectField
             value={item.type}
-            elementId={`entity-default-type-${index}`}
+            id={`entity-default-type-${index}`}
             options={types}
-            fieldTitle={isFirstLine ? t(EntityFieldsI18nKey.type) : ''}
+            label={isFirstLine ? t(EntityFieldsI18nKey.type) : ''}
             onChange={(type) => onChangeType(type as string)}
           />
         </div>
       </div>
-
-      <button
-        className={classNames('text-error cursor-pointer mt-[10px]', index === 0 && 'lg:mt-[32px]')}
-        onClick={() => onRemove(index)}
-        aria-label="remove"
-      >
-        <IconTrash {...BASE_ICON_PROPS} />
-      </button>
+      <div className="w-[40px] shrink-0 mt-[10px]">
+        <DialRemoveButton onClick={() => onRemove(index)} />
+      </div>
     </div>
   );
 };

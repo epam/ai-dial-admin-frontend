@@ -1,15 +1,22 @@
-import { ColDef } from 'ag-grid-community';
+import { ColDef, GridOptions } from 'ag-grid-community';
 
+import ActionCellRenderer from '@/src/components/Grid/ActionColumn/ActionCellRenderer';
 import ActionColumn from '@/src/components/Grid/ActionColumn/ActionColumn';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
 
 export const PAGE_SIZE = 100;
 export const CACHE_LIMIT = 1000;
 
+export const infiniteGridOptions: Partial<GridOptions> = {
+  rowModelType: 'infinite',
+  cacheBlockSize: PAGE_SIZE,
+  blockLoadDebounceMillis: 200,
+  maxBlocksInCache: Math.floor(CACHE_LIMIT / PAGE_SIZE),
+};
+
 export const NO_BORDER_CLASS = 'ag-grid-no-border';
 export const NO_CHECKBOX_CLASS = 'ag-grid-no-checkbox';
 
-export const ACTIONS_COLUMN_CELL_RENDERER_KEY = 'actionsColumn';
 export const ACTIONS_COLUMN_CEL_ID = 'actionsColumn';
 export const CHECKBOX_COLUMN_CEL_ID = 'checkboxColumn';
 export const DRAGGABLE_COLUMN_CEL_ID = 'draggableColumn';
@@ -43,6 +50,19 @@ export const ACTION_COLUMN = <T>(
   lockPinned: true,
 });
 
+export const ONE_ACTION_COLUMN = <T>(item: ActionMenuOperationDeclaration<T>): ColDef => ({
+  ...UTILITY_COLUMN,
+  width: UTILITY_COLUMN_WIDTH,
+  minWidth: UTILITY_COLUMN_WIDTH,
+  maxWidth: UTILITY_COLUMN_WIDTH,
+  field: ACTIONS_COLUMN_CEL_ID,
+  cellRenderer: ActionCellRenderer,
+  cellRendererParams: { item },
+  cellClass: NO_BORDER_CLASS,
+  pinned: 'right',
+  lockPinned: true,
+});
+
 const RADIO_BUTTON_COLUMN_WIDTH = 40;
 export const RADIO_BUTTON_COL_DEF: ColDef = {
   ...UTILITY_COLUMN,
@@ -70,4 +90,25 @@ export const DRAGGABLE_COL_DEF: ColDef = {
   colId: DRAGGABLE_COLUMN_CEL_ID,
   cellClass: NO_BORDER_CLASS,
   rowDrag: true,
+};
+
+export const MULTI_ROW_SELECTION: Partial<GridOptions> = {
+  rowSelection: {
+    mode: 'multiRow',
+    headerCheckbox: true,
+    selectAll: 'filtered',
+  },
+  selectionColumnDef: {
+    ...CHECKBOX_COL_DEF,
+  },
+};
+
+export const SINGLE_ROW_SELECTION: Partial<GridOptions> = {
+  rowSelection: {
+    mode: 'singleRow',
+    enableClickSelection: true,
+  },
+  selectionColumnDef: {
+    ...RADIO_BUTTON_COL_DEF,
+  },
 };

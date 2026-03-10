@@ -11,8 +11,7 @@ import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
-import { Asset } from '@/src/models/dial/deployment-asset';
-import { DialFile } from '@/src/models/dial/file';
+import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import {
@@ -27,14 +26,14 @@ import { getEntityPath } from '@/src/utils/open-in-new-tab';
 interface Props {
   view: ApplicationRoute;
   isModalOpen: boolean;
-  initialValues?: Partial<Asset>;
-  context?: () => AssetsFolderContext<DialFile | Asset>;
+  initialValues?: Partial<AssetWithVersion>;
+  context?: () => AssetsFolderContext;
   onClose: () => void;
-  onCreate: (entity: Asset) => Promise<ServerActionResponse>;
+  onCreate: (entity: AssetWithVersion) => Promise<ServerActionResponse>;
 }
 
 const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onCreate, onClose }) => {
-  const t = useI18n() as (t: string, props?: Record<string, string>) => string;
+  const t = useI18n();
   const { isValid, dispatch } = useSaveValidationContext();
   const { showNotification } = useNotification();
   const router = useRouter();
@@ -42,9 +41,12 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onC
   const filePath = folderContext?.filePath as string;
   const data = folderContext?.data || [];
   const names = filterNames(data);
-  const versionsMap = getVersionsPerName(data as Asset[]);
+  const versionsMap = getVersionsPerName(data as AssetWithVersion[]);
 
-  const [currentEntity, setCurrentEntity] = useState<Asset>({ ...initialValues, version: '1.0.0' } as Asset);
+  const [currentEntity, setCurrentEntity] = useState<AssetWithVersion>({
+    ...initialValues,
+    version: '1.0.0',
+  } as AssetWithVersion);
 
   const onSubmit = useCallback(async () => {
     onCreate(currentEntity).then((res) => {
@@ -69,7 +71,7 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onC
   }, [folderContext, currentEntity, initialValues, onClose, onCreate, router, showNotification, t, view]);
 
   const onChangeEntity = useCallback((entity: object) => {
-    setCurrentEntity(entity as Asset);
+    setCurrentEntity(entity as AssetWithVersion);
   }, []);
 
   useEffect(() => {
@@ -85,7 +87,7 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onC
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(getCreateEntityTitle(view, t))}
+      header={getCreateEntityTitle(view, t)}
       portalId="CreateAsset"
       size={PopupSize.Lg}
       className="h-[750px]"
@@ -105,7 +107,7 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onC
           >
             <FolderList context={context} />
           </DialCollapsibleSidebar>
-          <div className="flex flex-col flex-1 min-h-0 bg-layer-2 px-6 py-4">
+          <div className="flex flex-col flex-1 min-h-0 bg-layer-2 px-6 py-4 overflow-auto">
             <h3>{t(EntityFieldsI18nKey.properties)}</h3>
             <div className="py-6">
               <DialLabelledText label={t(EntitiesI18nKey.FolderStorage)} text={filePath} />

@@ -2,11 +2,10 @@
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
-import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
 import { getDataWithoutItem } from '@/src/components/ExportConfig/Content/utils';
-import { getActualColDefs } from '@/src/components/ExportConfig/utils';
-import Grid from '@/src/components/Grid/Grid';
+import { getActualColDefs, getFilteredData } from '@/src/components/ExportConfig/utils';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { EntityType } from '@/src/types/entity-type';
@@ -18,10 +17,20 @@ interface Props {
   isFull: boolean;
   customExportData?: Record<string, EntitiesGridData[]>;
   setCustomExportData?: Dispatch<SetStateAction<Record<string, EntitiesGridData[]>>>;
+  selectedTopics?: string[];
+  onChangeItemsCount?: (count: number) => void;
 }
 
-const ConfigContentGrid: FC<Props> = ({ selectedTab, tabData, isFull, customExportData, setCustomExportData }) => {
-  const t = useI18n() as (v: string) => string;
+const ConfigContentGrid: FC<Props> = ({
+  selectedTab,
+  tabData,
+  isFull,
+  customExportData,
+  setCustomExportData,
+  selectedTopics,
+  onChangeItemsCount,
+}) => {
+  const t = useI18n();
 
   const [gridApi, setGridApi] = useState<GridApi>();
 
@@ -58,8 +67,10 @@ const ConfigContentGrid: FC<Props> = ({ selectedTab, tabData, isFull, customExpo
   useEffect(() => {
     if (selectedTab) {
       const columnDefs = isFull ? getActualColDefs(selectedTab, t) : getActualColDefs(selectedTab, t, onRemove);
-      const rowData = isFull ? tabData[selectedTab] || [] : customExportData?.[selectedTab] || [];
-
+      const rowData = isFull
+        ? getFilteredData(tabData, selectedTab, selectedTopics)
+        : getFilteredData(customExportData, selectedTab, selectedTopics);
+      onChangeItemsCount?.(rowData.length || 0);
       if (isFull) {
         setFullColDefs(columnDefs);
         setFullData(rowData);
@@ -81,7 +92,7 @@ const ConfigContentGrid: FC<Props> = ({ selectedTab, tabData, isFull, customExpo
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedTab, isFull, customExportData]);
+  }, [selectedTab, isFull, customExportData, selectedTopics]);
 
   const onGridReady = (event: GridReadyEvent) => {
     setGridApi(event.api);
@@ -92,10 +103,12 @@ const ConfigContentGrid: FC<Props> = ({ selectedTab, tabData, isFull, customExpo
     });
   };
 
-  return (isFull ? fullData.length === 0 : customData.length === 0) ? (
-    <DialNoDataContent title={t(emptyDataTitleI18nkKey)} />
-  ) : (
-    <Grid additionalGridOptions={{ onGridReady }} />
+  return (
+    <GridView
+      getIsEmptyData={() => (isFull ? fullData.length === 0 : customData.length === 0)}
+      emptyDataProps={{ title: t(emptyDataTitleI18nkKey) }}
+      onGridReady={onGridReady}
+    />
   );
 };
 

@@ -1,7 +1,7 @@
-import { DialFormPopup, DialTextInputField, PopupSize } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, DialInput, PopupSize } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import { ButtonsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, FileManagerI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { getFolderName } from '@/src/utils/files/folder';
 import { changeFolderName } from '@/src/utils/files/path';
@@ -15,8 +15,9 @@ interface Props {
   onApply: (name: string) => void;
 }
 
+// TODO: remove after support FilesManager in all places with folders
 const RenameFolder: FC<Props> = ({ currentPath, siblings = [], isModalOpen, onClose, onApply }) => {
-  const t = useI18n() as (str: string) => string;
+  const t = useI18n();
   const [newName, setNewName] = useState(getFolderName(currentPath) || '');
   const [isDisabled, setIsDisabled] = useState(true);
   const [errorText, setErrorText] = useState('');
@@ -40,7 +41,7 @@ const RenameFolder: FC<Props> = ({ currentPath, siblings = [], isModalOpen, onCl
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(FoldersI18nKey.Rename)}
+      header={t(FileManagerI18nKey.Rename)}
       portalId="FolderRename"
       open={isModalOpen}
       dividers={true}
@@ -52,13 +53,13 @@ const RenameFolder: FC<Props> = ({ currentPath, siblings = [], isModalOpen, onCl
       disableSubmitButton={isDisabled}
     >
       <div className="px-6 py-4">
-        <DialTextInputField
-          elementId="folderName"
-          fieldTitle={t(FoldersI18nKey.FolderName)}
+        <DialInput
+          id="folderName"
+          labelProps={{ label: t(FoldersI18nKey.FolderName) }}
           placeholder={t(FoldersI18nKey.FolderCreatePlaceholder)}
           value={newName}
           onChange={onChangeName}
-          errorText={errorText}
+          error={errorText}
           invalid={!!errorText}
         />
       </div>

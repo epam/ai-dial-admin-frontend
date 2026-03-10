@@ -1,19 +1,17 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DialTabs } from '@epam/ai-dial-ui-kit';
 import { cloneDeep } from 'lodash';
 
 import { getCoreToolset, removeToolset, updateCoreToolset, updateToolset } from '@/src/app/[lang]/toolsets/actions';
-import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
-import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
-import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
-import EntityRolesModal from '@/src/components/EntityView/Modals/EmptyRoles/EmptyRoles';
-import EntityRoles from '@/src/components/EntityView/Roles/Roles';
+import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
+import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
+import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import { ModalType } from '@/src/components/EntityView/Modals/constants';
+import EntityViewModals from '@/src/components/EntityView/Modals/EntityViewModals';
 import { isDisableRole } from '@/src/components/EntityView/Roles/utils';
-import ToolsView from '@/src/components/Toolsets/Tools/Tools';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -27,18 +25,19 @@ import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getToolsetTabs } from '@/src/utils/tabs/utils';
-import ToolsetProperties from './Properties';
-import { getViewHeaderClassName } from '@/src/utils/entities/view';
+import AuthButtons from '@/src/components/Toolsets/Auth/AuthButtons';
+import TabsContent from './TabsContent';
 
 interface Props {
   etag: string;
   names: string[];
   roles?: DialRole[] | null;
   originalToolset: Toolset;
+  oAuthCode?: string | null;
 }
 
-const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
+const ToolsetView: FC<Props> = ({ names, oAuthCode, etag, roles, originalToolset }) => {
+  const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
@@ -48,13 +47,28 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalType, setModalType] = useState<ModalType>();
+
   const [selectedToolset, setSelectedToolset] = useState(cloneDeep(originalToolset));
   const [isChanged, setIsChanged] = useState(false);
-  const [isJsonEditorEnabled, setIsJsonEditorEnabled] = useState(false);
+  const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [isSkipRefresh, setIsSkipRefresh] = useState(true);
-  const [key, setKey] = useState(0);
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
   const [coreToolset, setCoreToolset] = useState<Toolset | null>(null);
+
+  const jsonConfiguration = useMemo<JsonConfiguration>(
+    () => ({
+      isEditorEnabled,
+      selectedFormat,
+      onChangeSelectedFormat: setSelectedFormat,
+      onToggleEditor: () => {
+        setSelectedFormat(ExportFormat.ADMIN);
+
+        setIsEditorEnabled((prev) => !prev);
+      },
+    }),
+    [isEditorEnabled, selectedFormat],
+  );
 
   useEffect(() => {
     const name = originalToolset?.name;
@@ -78,25 +92,14 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
     setIsChanged(selectedFormat === ExportFormat.CORE ? !isEqualCoreToolset : !isEqualAdminToolset);
   }, [selectedFormat, originalToolset, selectedToolset, coreToolset]);
 
-  const onChangeActiveTab = useCallback(
-    (tab: string) => {
-      setActiveTab(tab as EntityViewTab);
-    },
-    [setActiveTab],
-  );
-
   const onDiscard = useCallback(() => {
-    if (isJsonEditorEnabled) {
-      dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
-      setIsChanged(false);
+    if (isEditorEnabled) {
       setSelectedFormat(ExportFormat.ADMIN);
-      // Due to we can't set invalid JSON as variable, we can't update entity in error state.
-      // Force JSON Editor re-render to show originalEntity on discard.
-      setKey((prevKey) => prevKey + 1);
     }
+
     setSelectedToolset(originalToolset);
     setIsSkipRefresh(false);
-  }, [isJsonEditorEnabled, originalToolset, dispatch]);
+  }, [isEditorEnabled, originalToolset]);
 
   const onChangeToolset = useCallback(
     (entity: Toolset, skipRefresh?: boolean) => {
@@ -105,11 +108,6 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
     },
     [setSelectedToolset],
   );
-
-  const onToggleJsonEditor = useCallback(() => {
-    setSelectedFormat(ExportFormat.ADMIN);
-    setIsJsonEditorEnabled((prev) => !prev);
-  }, [setIsJsonEditorEnabled]);
 
   const onSave = useCallback(() => {
     const req =
@@ -125,6 +123,7 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
     req.then((res) => {
       if (res.success) {
         setCoreToolset(null);
+        dispatch({ type: ValidationActionType.Reset });
         showNotification(
           getSuccessNotification(
             getUpdateNotificationTitle(ApplicationRoute.Toolsets, t),
@@ -137,87 +136,93 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
       }
       setIsModalOpen(false);
     });
-  }, [selectedFormat, selectedToolset, originalToolset.name, etag, showNotification, t, router]);
+  }, [selectedFormat, selectedToolset, originalToolset.name, etag, dispatch, showNotification, t, router]);
+
+  const onModalClose = useCallback(() => {
+    setIsModalOpen(false);
+    setModalType(void 0);
+  }, []);
+
+  const onModalOpen = useCallback((modalType: ModalType) => {
+    setModalType(modalType);
+    setIsModalOpen(true);
+  }, []);
+
+  const onModalCancel = useCallback(
+    (type: ModalType) => {
+      if (type === ModalType.emptyRoles) {
+        onModalClose();
+      }
+    },
+    [onModalClose],
+  );
+
+  const onModalConfirm = useCallback(
+    (type: ModalType) => {
+      if (type === ModalType.emptyRoles) {
+        onSave();
+        onModalClose();
+      }
+    },
+    [onModalClose, onSave],
+  );
 
   const onTryToSave = useCallback(() => {
     if (
       selectedFormat !== ExportFormat.CORE &&
       isDisableRole(selectedToolset as EntityRoleLimits) &&
-      !isJsonEditorEnabled
+      !isEditorEnabled
     ) {
-      setIsModalOpen(true);
+      onModalOpen(ModalType.emptyRoles);
     } else {
       onSave();
     }
-  }, [isJsonEditorEnabled, onSave, selectedFormat, selectedToolset]);
+  }, [isEditorEnabled, onSave, selectedFormat, selectedToolset, onModalOpen]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-      <div className={getViewHeaderClassName(isJsonEditorEnabled)}>
-        {!isJsonEditorEnabled && (
-          <div className="flex-1 min-w-0">
-            <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
-          </div>
-        )}
-        <HeaderButtons
-          view={ApplicationRoute.Toolsets}
-          entity={selectedToolset}
-          isChanged={isChanged}
-          onDiscard={onDiscard}
-          onSave={onTryToSave}
-          onRemove={removeToolset}
-          isJsonEditorEnabled={isJsonEditorEnabled}
-          onToggleJsonEditor={onToggleJsonEditor}
-          selectedFormat={selectedFormat}
-          onChangeSelectedFormat={setSelectedFormat}
-        />
-      </div>
+      <SimpleEntityHeader
+        view={ApplicationRoute.Toolsets}
+        entity={selectedToolset}
+        isChanged={isChanged}
+        onDiscard={onDiscard}
+        onSave={onTryToSave}
+        tabs={tabs}
+        jsonConfiguration={jsonConfiguration}
+        activeTab={activeTab}
+        onChangeActiveTab={setActiveTab}
+        onRemove={removeToolset}
+      >
+        <AuthButtons selectedToolset={selectedToolset} oAuthCode={oAuthCode} view={ApplicationRoute.Toolsets} />
+      </SimpleEntityHeader>
+
       <div className="flex-1 overflow-auto min-h-0">
-        {isJsonEditorEnabled ? (
+        {isEditorEnabled ? (
           <EntityJsonEditor
-            key={key}
             entity={selectedToolset}
             setSelectedEntity={setSelectedToolset}
             setIsChanged={setIsChanged}
           />
         ) : (
-          <>
-            {activeTab === EntityViewTab.Properties && (
-              <ToolsetProperties names={names} selectedToolset={selectedToolset} onChangeToolset={onChangeToolset} />
-            )}
-
-            {activeTab === EntityViewTab.Tools && (
-              <ToolsView
-                originalToolset={originalToolset}
-                selectedToolset={selectedToolset}
-                onChangeToolset={onChangeToolset}
-              />
-            )}
-
-            {activeTab === EntityViewTab.Roles && (
-              <EntityRoles
-                entity={selectedToolset}
-                view={ApplicationRoute.Toolsets}
-                roles={roles || []}
-                onChangeEntity={onChangeToolset}
-                isSkipRefresh={isSkipRefresh}
-              />
-            )}
-
-            {activeTab === EntityViewTab.Audit && (
-              <EntityAudit entity={selectedToolset} view={ApplicationRoute.Toolsets} />
-            )}
-
-            {isModalOpen && (
-              <EntityRolesModal
-                onConfirm={() => onSave()}
-                onClose={() => setIsModalOpen(false)}
-                onCancel={() => setIsModalOpen(false)}
-              />
-            )}
-          </>
+          <TabsContent
+            activeTab={activeTab}
+            isSkipRefresh={isSkipRefresh}
+            selectedToolset={selectedToolset}
+            originalToolset={originalToolset}
+            names={names}
+            onChange={onChangeToolset}
+            roles={roles}
+            selectedFormat={selectedFormat}
+          />
         )}
       </div>
+      <EntityViewModals
+        isModalOpen={isModalOpen}
+        modalType={modalType}
+        handleConfirm={onModalConfirm}
+        handleClose={onModalClose}
+        handleCancel={onModalCancel}
+      />
     </div>
   );
 };

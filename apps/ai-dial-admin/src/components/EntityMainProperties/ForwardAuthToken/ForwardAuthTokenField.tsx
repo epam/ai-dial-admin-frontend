@@ -1,12 +1,14 @@
 import { FC, useCallback, useState } from 'react';
+
 import {
   AlertVariant,
   DialAlert,
   DialRadioGroupPopupField,
+  DialInput,
   PopupSize,
   RadioButtonWithContent,
-  DialTextInputField,
 } from '@epam/ai-dial-ui-kit';
+import classNames from 'classnames';
 
 import {
   BasicI18nKey,
@@ -15,6 +17,7 @@ import {
   EntityPlaceholdersI18nKey,
   ForwardTokenI18nKey,
 } from '@/src/constants/i18n';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { ChatEntity } from '@/src/models/dial/base-entity';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -27,7 +30,7 @@ interface Props {
 }
 
 const ForwardAuthTokenField: FC<Props> = ({ view, entity, onChangeEntity }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
   const titleKey = getAlertTitlePerView(view);
   const displayNameKey = getDisplayNamePerView(view);
   const [isValid, setIsValid] = useState(false);
@@ -54,9 +57,9 @@ const ForwardAuthTokenField: FC<Props> = ({ view, entity, onChangeEntity }) => {
   const onChangeName = useCallback(
     (name?: string) => {
       setConfirmName(name || '');
-      setIsValid(name === (view === ApplicationRoute.Interceptors ? entity.name : entity.displayName));
+      setIsValid(name === entity.displayName);
     },
-    [entity.displayName, entity.name, view],
+    [entity.displayName],
   );
 
   const onApply = useCallback(() => {
@@ -71,9 +74,9 @@ const ForwardAuthTokenField: FC<Props> = ({ view, entity, onChangeEntity }) => {
       content: (
         <div className="flex flex-col gap-y-8 mt-3">
           <DialAlert variant={AlertVariant.Error} message={t(ForwardTokenI18nKey.ForwardTokenModalAlert)} />
-          <DialTextInputField
-            elementId="entityName"
-            fieldTitle={displayNameKey !== '' ? t(displayNameKey as CreateI18nKey) : ''}
+          <DialInput
+            id="entityName"
+            labelProps={{ label: displayNameKey ? t(displayNameKey as CreateI18nKey) : '' }}
             placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
             value={confirmName}
             onChange={onChangeName}
@@ -84,13 +87,13 @@ const ForwardAuthTokenField: FC<Props> = ({ view, entity, onChangeEntity }) => {
   ];
 
   return (
-    <div className="flex flex-col">
+    <div className={classNames('flex flex-col', STANDARD_CONTROL_WIDTH)}>
       <DialRadioGroupPopupField
         htmlFor="forwardAuthToken"
         id="forwardAuthToken"
         emptyValueText={t(BasicI18nKey.None)}
-        fieldTitle={t(EntityFieldsI18nKey.forwardAuthToken)}
-        title={t(ForwardTokenI18nKey.ForwardTokenModalTitle)}
+        label={t(EntityFieldsI18nKey.forwardAuthToken)}
+        header={t(ForwardTokenI18nKey.ForwardTokenModalTitle)}
         portalId="entityNameToken"
         size={PopupSize.Sm}
         selectedRadioValue={forwardToken ? radioButtons[1].id : radioButtons[0].id}

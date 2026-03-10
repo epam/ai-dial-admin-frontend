@@ -48,12 +48,12 @@ const TokenizerModelSwitch: FC<Props> = ({ model, onChangeModel }) => {
     <div className="flex flex-col gap-3">
       <DialSwitch
         isOn={model.tokenizerModel != null}
-        title={t(EntityFieldsI18nKey.tokenizerModel)}
+        label={t(EntityFieldsI18nKey.tokenizerModel)}
         switchId="tokenizerModel"
         onChange={onSwitchTokenizerModel}
       />
       {model.tokenizerModel != null && (
-        <div className="pl-[42px] lg:w-[35%]">
+        <div className="pl-[42px] w-[300px]">
           <DialInputPopup
             open={isModalOpen}
             selectedValue={model.tokenizerModel}

@@ -1,8 +1,7 @@
-import { JWT } from 'next-auth/jwt';
-
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
+import { Token } from '@/src/models/auth';
 import { DialRoute } from '@/src/models/dial/route';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { API } from '../api';
 import { BaseApi } from '../base-api';
 
@@ -11,31 +10,31 @@ export const ROUTE_URL = (name?: string) => `${ROUTES_URL}/${name || ''}`;
 export const CORE_ROUTE_URL = (name: string) => `${ROUTES_URL}/core/${name}`;
 
 export class RoutesApi extends BaseApi {
-  getRoutesList(token: JWT | null): Promise<DialRoute[] | null> {
+  getRoutesList(token: Token): Promise<DialRoute[] | null> {
     return this.get(ROUTES_URL, token);
   }
 
-  getRoute(name: string, token: JWT | null, eTag: string) {
+  getRoute(name: string, token: Token, eTag: string) {
     return this.getActionWithEtag(ROUTE_URL(name), eTag, token);
   }
 
-  removeRoute(token: JWT | null, name?: string): Promise<ServerActionResponse> {
+  removeRoute(token: Token, name?: string): Promise<ServerActionResponse> {
     return this.deleteAction(ROUTE_URL(name), token);
   }
 
-  createRoute(route: DialRoute, token: JWT | null): Promise<ServerActionResponse> {
+  createRoute(route: DialRoute, token: Token): Promise<ServerActionResponse> {
     return this.postAction(ROUTES_URL, route, token);
   }
 
-  updateRoute(route: DialRoute, token: JWT | null, eTag: string): Promise<ServerActionResponse> {
+  updateRoute(route: DialRoute, token: Token, eTag: string): Promise<ServerActionResponse> {
     return this.putActionWithEtag(ROUTE_URL(encodeURIComponent(route.name || '')), route, token, eTag);
   }
 
-  getCoreRoute(name: string, token: JWT | null) {
+  getCoreRoute(name: string, token: Token) {
     return this.getActionWithEtag(CORE_ROUTE_URL(name), DEFAULT_ETAG, token);
   }
 
-  updateCoreRoute(route: DialRoute, name: string, eTag: string, token: JWT | null): Promise<ServerActionResponse> {
+  updateCoreRoute(route: DialRoute, name: string, eTag: string, token: Token): Promise<ServerActionResponse> {
     return this.putActionWithEtag(CORE_ROUTE_URL(encodeURIComponent(name)), route, token, eTag);
   }
 }

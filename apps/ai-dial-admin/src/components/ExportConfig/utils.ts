@@ -1,18 +1,19 @@
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
 
-import {
-  KEYS_COLUMNS,
-  ENTITY_BASE_COLUMNS,
-  LIST_RUNNER_COLUMNS,
-  SIMPLE_ENTITY_COLUMNS,
-} from '@/src/constants/grid-columns/grid-columns';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
+import { getOpenInNewTabOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
+import {
+  DESCRIPTION_COLUMN,
+  DISPLAY_NAME_COLUMN_WITH_SORT,
+  DISPLAY_VERSION_COLUMN,
+  NAME_COLUMN,
+} from '@/src/constants/grid-columns/base-columns';
+import { BASE_COLUMNS, BASE_KEYS_COLUMNS, LIST_RUNNER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ExportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ExportDependenciesConfig, ExportRequestComponent } from '@/src/models/export';
-import { ExportFormat, ExportType } from '@/src/types/export';
-import { getOpenInNewTabOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import { EntityType } from '@/src/types/entity-type';
+import { ExportFormat, ExportType } from '@/src/types/export';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 
 export const fulDependenciesConfig: ExportDependenciesConfig = {
@@ -41,10 +42,11 @@ export const getActualColDefs = (
   t: (v: string) => string,
   remove?: (entity?: EntitiesGridData) => void,
 ): ColDef[] => {
-  let columns: ColDef[] = [...ENTITY_BASE_COLUMNS];
-  if (type === EntityType.MODEL || type === EntityType.APPLICATION) {
-    columns = [...ENTITY_BASE_COLUMNS];
+  let columns: ColDef[] = [...BASE_COLUMNS];
+  if (type === EntityType.MODEL) {
+    columns = [DISPLAY_NAME_COLUMN_WITH_SORT, DISPLAY_VERSION_COLUMN, DESCRIPTION_COLUMN, NAME_COLUMN];
   }
+
   if (
     type === EntityType.ROLE ||
     type === EntityType.INTERCEPTOR ||
@@ -52,16 +54,16 @@ export const getActualColDefs = (
     type === EntityType.ROUTE ||
     type === EntityType.INTERCEPTOR_RUNNER
   ) {
-    columns = [...SIMPLE_ENTITY_COLUMNS];
+    columns = [...BASE_COLUMNS];
   }
   if (type === EntityType.KEY) {
-    columns = [...KEYS_COLUMNS(t)];
+    columns = [...BASE_KEYS_COLUMNS];
   }
   if (type === EntityType.APPLICATION_TYPE_SCHEMA) {
     columns = [...LIST_RUNNER_COLUMNS];
   }
   if (type === EntityType.ADAPTER) {
-    columns = [...SIMPLE_ENTITY_COLUMNS];
+    columns = [...BASE_COLUMNS];
   }
 
   if (remove && isEntityWithDependency(type)) {
@@ -81,6 +83,30 @@ export const getActualColDefs = (
   }
 
   return [...columns, ACTION_COLUMN(actions)];
+};
+
+/**
+ * Filter export grid data by topics
+ *
+ * @param {(Record<string, EntitiesGridData[]> | undefined)} data - initial data
+ * @param {string} entity - entity type
+ * @param {string[]} selectedTopics - list of selected topics
+ * @returns {EntitiesGridData[]} - filtered data
+ */
+export const getFilteredData = (
+  data: Record<string, EntitiesGridData[]> | undefined,
+  entity: string,
+  selectedTopics?: string[],
+): EntitiesGridData[] => {
+  if (!selectedTopics || selectedTopics?.length === 0) {
+    return data?.[entity] || [];
+  } else {
+    return (
+      data?.[entity]?.filter((entity) =>
+        selectedTopics.some((topic) => entity?.topics?.includes(topic) || entity?.descriptionKeywords?.includes(topic)),
+      ) || []
+    );
+  }
 };
 
 /**

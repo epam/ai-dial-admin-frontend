@@ -4,6 +4,7 @@ import {
   MAX_URL_ID_SYMBOLS,
   MIN_NAME_SYMBOLS,
   FORBIDDEN_NAME_SYMBOLS,
+  MAX_DEPLOYMENT_ID_SYMBOLS,
 } from '@/src/constants/validation';
 import { ErrorType } from '@/src/types/error-type';
 import { isValidHttpUrl } from './url-error';
@@ -44,30 +45,52 @@ export const getErrorForName = (
   t?: (str: string) => string,
   isUniqueNameError?: boolean,
   checkForbiddenChars = true,
+  isDisplayName = false,
+  isDeploymentId = false,
+  checkEmptySymbols = true,
 ) => {
   const isIncludesName = name && names?.includes(name);
   if (isIncludesName || isUniqueNameError) {
     return {
       type: ErrorType.EXISTING,
-      text: t ? t(ErrorI18nKey.NameExists) : '',
+      text: t ? t(isDisplayName ? ErrorI18nKey.DisplayNameExists : ErrorI18nKey.NameExists) : '',
     };
   }
 
   const tWithArgs = t as (str: string, args?: Record<string, string | number>) => string;
-  const isWrongLength = isWrongFieldLength(name || '');
+  const isWrongLength = isWrongFieldLength(name || '', isDeploymentId);
   if (isWrongLength) {
     return {
       type: ErrorType.LENGTH,
-      text: t ? tWithArgs(ErrorI18nKey.MinMaxLength, { min: MIN_NAME_SYMBOLS, max: MAX_NAME_SYMBOLS }) : '',
+      text: t
+        ? tWithArgs(ErrorI18nKey.MinMaxLength, {
+            min: MIN_NAME_SYMBOLS,
+            max: isDeploymentId ? MAX_DEPLOYMENT_ID_SYMBOLS : MAX_NAME_SYMBOLS,
+          })
+        : '',
     };
   }
 
   if (checkForbiddenChars) {
+    if (isDeploymentId) {
+      if (!name?.match(/^[a-z0-9-]+$/)) {
+        return {
+          type: ErrorType.INVALID,
+          text: t ? tWithArgs(ErrorI18nKey.ContainerId) : '',
+        };
+      }
+    }
     const hasForbiddenChars = hasInvalidCharacters(name);
     if (hasForbiddenChars) {
       return {
         type: ErrorType.FORBIDDEN_CHARS,
         text: t ? tWithArgs(ErrorI18nKey.ForbiddenChars, { list: FORBIDDEN_NAME_SYMBOLS.join(' ') }) : '',
+      };
+    }
+    if (checkEmptySymbols && name?.includes(' ')) {
+      return {
+        type: ErrorType.INVALID,
+        text: t ? t(ErrorI18nKey.ContainSpace) : '',
       };
     }
   }
@@ -88,8 +111,10 @@ export const getErrorForDisplayName = (name?: string, required?: boolean, t?: (s
   return null;
 };
 
-export const isWrongFieldLength = (value: string): boolean => {
-  return value.length < MIN_NAME_SYMBOLS || value.length > MAX_NAME_SYMBOLS;
+export const isWrongFieldLength = (value: string, isDeploymentId?: boolean): boolean => {
+  return (
+    value.length < MIN_NAME_SYMBOLS || value.length > (isDeploymentId ? MAX_DEPLOYMENT_ID_SYMBOLS : MAX_NAME_SYMBOLS)
+  );
 };
 
 export const hasInvalidCharacters = (value?: string): boolean => {

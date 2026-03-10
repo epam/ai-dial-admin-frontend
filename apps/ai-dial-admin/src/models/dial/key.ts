@@ -9,4 +9,5 @@ export interface DialKey extends BaseEntity, EntityValidityState {
   owner?: string;
   expiresAt?: string;
   keyGeneratedAt?: string;
+  allowedIpAddressRanges?: string[];
 }

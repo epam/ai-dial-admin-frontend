@@ -88,7 +88,7 @@ const RollbackRevisions: FC<Props> = ({ initialRevisions, rollBackRevision, isMo
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(RollbackI18nKey.Revision)}
+      header={t(RollbackI18nKey.Revision)}
       portalId="RollBackRevisionsModal"
       open={isModalOpen}
       cancelLabel={t(ButtonsI18nKey.Cancel)}

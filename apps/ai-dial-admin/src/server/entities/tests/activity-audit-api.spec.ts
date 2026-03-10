@@ -112,6 +112,6 @@ describe('Server :: ActivityAuditApi', () => {
       expect.objectContaining({ method: 'POST' }),
     );
 
-    expect(result).toEqual(JSON.stringify(mockDetails));
+    expect(result).toEqual({ success: true, response: JSON.stringify(mockDetails), etag: undefined });
   });
 });

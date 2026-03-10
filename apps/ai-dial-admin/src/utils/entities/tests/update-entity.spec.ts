@@ -21,4 +21,18 @@ describe('Update :: utils', () => {
       `${UpdateI18nKey.NotificationDescription} with props`,
     );
   });
+
+  test('getUpdateNotificationDescription returns a string', () => {
+    expect(getUpdateNotificationDescription(ApplicationRoute.AssetsApplications, 'aa', tWithProps)).toBe(
+      `${UpdateI18nKey.NotificationDescriptionWithoutRollback} with props`,
+    );
+
+    expect(getUpdateNotificationDescription(ApplicationRoute.AssetsApplications, void 0, tWithProps)).toBe(
+      `${UpdateI18nKey.NotificationDescriptionWithoutRollback} with props`,
+    );
+
+    expect(getUpdateNotificationDescription(ApplicationRoute.TestSuites, void 0, tWithProps)).toBe(
+      `${UpdateI18nKey.NotificationDescriptionWithoutRollback} with props`,
+    );
+  });
 });

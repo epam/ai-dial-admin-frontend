@@ -34,6 +34,16 @@ export async function previewPromptZip(body: FormData) {
   return foldersApi.previewPromptZipFiles(token, body);
 }
 
+export async function previewAppZip(body: FormData) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return foldersApi.previewAppZipFiles(token, body);
+}
+
+export async function previewToolsetZip(body: FormData) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return foldersApi.previewToolsetZipFiles(token, body);
+}
+
 export async function removeFolder(path: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return foldersApi.deleteFolder(token, path);

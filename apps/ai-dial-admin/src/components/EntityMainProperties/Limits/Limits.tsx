@@ -1,6 +1,6 @@
 import { FC } from 'react';
 
-import { EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { RolesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialRoleLimits } from '@/src/models/dial/role-limits';
 import LimitControl from './Limit';
@@ -18,37 +18,37 @@ const LimitsControl: FC<Props> = ({ limits, onChangeLimits, ...props }) => {
   return (
     <div className="flex flex-row gap-x-3">
       <LimitControl
-        elementId="minute"
+        id="minute"
         fieldKey="minute"
         limits={limits}
-        fieldTitle={t(EntityFieldsI18nKey.minute)}
+        label={t(RolesI18nKey.PerMinute)}
         onChange={onChangeLimits}
         {...props}
       />
 
       <LimitControl
-        elementId="day"
+        id="day"
         fieldKey="day"
         limits={limits}
-        fieldTitle={t(EntityFieldsI18nKey.day)}
+        label={t(RolesI18nKey.PerDay)}
         onChange={onChangeLimits}
         {...props}
       />
 
       <LimitControl
-        elementId="week"
+        id="week"
         fieldKey="week"
         limits={limits}
-        fieldTitle={t(EntityFieldsI18nKey.week)}
+        label={t(RolesI18nKey.PerWeek)}
         onChange={onChangeLimits}
         {...props}
       />
 
       <LimitControl
-        elementId="month"
+        id="month"
         fieldKey="month"
         limits={limits}
-        fieldTitle={t(EntityFieldsI18nKey.month)}
+        label={t(RolesI18nKey.PerMonth)}
         onChange={onChangeLimits}
         {...props}
       />

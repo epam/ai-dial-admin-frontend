@@ -1,76 +1,70 @@
-/* eslint-disable no-console */
-// eslint-disable-next-line @nx/enforce-module-boundaries
-import pkg from '../../../package.json';
-
-import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
-import { OTLPLogExporter as OTLPLogExporterHTTP } from '@opentelemetry/exporter-logs-otlp-http';
+import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api';
+import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
 import { OTLPMetricExporter as OTLPMetricExporterHTTP } from '@opentelemetry/exporter-metrics-otlp-http';
 import { PrometheusExporter } from '@opentelemetry/exporter-prometheus';
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
+import { FetchInstrumentation } from '@opentelemetry/instrumentation-fetch';
 import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
 import { PinoInstrumentation } from '@opentelemetry/instrumentation-pino';
-import { defaultResource, resourceFromAttributes } from '@opentelemetry/resources';
-
+import { UndiciInstrumentation } from '@opentelemetry/instrumentation-undici';
+import { resourceFromAttributes } from '@opentelemetry/resources';
+import { SimpleLogRecordProcessor } from '@opentelemetry/sdk-logs';
 import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
-import { NodeSDK, logs } from '@opentelemetry/sdk-node';
-import { ConsoleSpanExporter, SimpleSpanProcessor } from '@opentelemetry/sdk-trace-node';
-import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
+import { NodeSDK } from '@opentelemetry/sdk-node';
+import { SimpleSpanProcessor } from '@opentelemetry/sdk-trace-node';
+import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
 
-function getPrometheusMetricExporter() {
-  const defaultMetricExporter = new PrometheusExporter({
-    port: Number(process.env.OTEL_EXPORTER_PROMETHEUS_PORT ?? 9464),
-    endpoint: '/metrics',
-  });
-  return defaultMetricExporter;
+const logLevel = (process.env.OTEL_LOG_LEVEL || '').toLowerCase();
+
+// Enable verbose OpenTelemetry internal logs when requested.
+if (logLevel === 'debug') {
+  diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.DEBUG);
 }
 
-function getOltpMetricExporter() {
+const resource = resourceFromAttributes({
+  [ATTR_SERVICE_NAME]: process.env.OTEL_SERVICE_NAME || 'dial-admin',
+});
+
+const pinoInstrumentation = new PinoInstrumentation();
+const traceExporter = new OTLPTraceExporter();
+const logsExporter = new OTLPLogExporter();
+const metricReader = getMetricExporter(process.env.OTEL_METRICS_EXPORTER);
+
+const sdk = new NodeSDK({
+  resource,
+  metricReader,
+  spanProcessor: new SimpleSpanProcessor(traceExporter),
+  logRecordProcessor: new SimpleLogRecordProcessor(logsExporter),
+  instrumentations: [
+    new HttpInstrumentation({
+      ignoreIncomingRequestHook: (req) => {
+        return req.url === '/api/health';
+      },
+    }),
+    new FetchInstrumentation(),
+    new UndiciInstrumentation({
+      requestHook: (span, request) => {
+        span.updateName(`${request.method} ${request.origin}${request.path}`);
+      },
+    }),
+    pinoInstrumentation,
+  ],
+});
+
+sdk.start();
+
+function getMetricExporter(metricsExporterType: string | undefined) {
+  if (!metricsExporterType || metricsExporterType !== 'otlp') {
+    const defaultMetricExporter = new PrometheusExporter({
+      port: 9464,
+      endpoint: '/metrics',
+    });
+    return defaultMetricExporter;
+  }
   const metricExporterHTTP = new OTLPMetricExporterHTTP();
-  const metricReaderHTTP = new PeriodicExportingMetricReader({ exporter: metricExporterHTTP });
+  const metricReaderHTTP = new PeriodicExportingMetricReader({
+    exporter: metricExporterHTTP,
+  });
 
   return metricReaderHTTP;
 }
-
-//For the opentelemetry debugging uncomment the following line
-// For troubleshooting, set the log level to DiagLogLevel.DEBUG
-// diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.DEBUG);
-
-const httpInstrumentation = new HttpInstrumentation({
-  ignoreIncomingRequestHook: (req) => {
-    return req.url === '/api/health';
-  },
-});
-const pinoInstrumentation = new PinoInstrumentation();
-
-const metricsExporterType = process.env.OTEL_METRICS_EXPORTER ?? 'otlp';
-const metricReader = metricsExporterType === 'otlp' ? getOltpMetricExporter() : getPrometheusMetricExporter();
-const defaultTraceExporter = new OTLPTraceExporter({});
-const defaultSpanProcessor = new SimpleSpanProcessor(defaultTraceExporter);
-
-const logExporter = new OTLPLogExporterHTTP();
-const logRecordProcessor = new logs.BatchLogRecordProcessor(logExporter);
-
-const sdk = new NodeSDK({
-  metricReader: metricReader,
-  resource: defaultResource().merge(
-    resourceFromAttributes({
-      [ATTR_SERVICE_NAME]: process.env.OTEL_SERVICE_NAME || pkg.name || 'dial-admin',
-      [ATTR_SERVICE_VERSION]: pkg.version,
-    }),
-  ),
-  instrumentations: [getNodeAutoInstrumentations(), httpInstrumentation, pinoInstrumentation],
-  spanProcessors: [defaultSpanProcessor],
-  logRecordProcessors: [logRecordProcessor],
-  traceExporter: new ConsoleSpanExporter(),
-  spanProcessor: new SimpleSpanProcessor(new ConsoleSpanExporter()),
-});
-sdk.start();
-
-// gracefully shut down the SDK on process exit
-process.on('SIGTERM', () => {
-  sdk
-    .shutdown()
-    .then(() => console.log('Tracing terminated'))
-    .catch((error) => console.log('Error terminating tracing', error))
-    .finally(() => process.exit(0));
-});

@@ -4,12 +4,12 @@ import { IconGripVertical } from '@tabler/icons-react';
 import { FC, useRef, type ReactNode } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 
 interface Props {
   children: ReactNode;
   id: string;
-  findItem?: (field: string) => number;
+  findItem?: (field: string) => number | undefined;
   moveItem?: (field: string, atIndex: number) => void;
 }
 
@@ -57,7 +57,7 @@ const DraggableItem: FC<Props> = ({ children, id, findItem, moveItem }: Props) =
   return (
     <div ref={dropRef} className="flex items-center" style={{ opacity: isDragging ? 0 : 1 }}>
       <div ref={dragRef} className="mr-3 cursor-move text-secondary">
-        <IconGripVertical {...BASE_ICON_PROPS} />
+        <IconGripVertical {...BASE_BUTTON_ICON_PROPS} />
       </div>
       {children}
     </div>

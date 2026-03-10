@@ -14,6 +14,11 @@ export async function createPrompt(prompt: DialPrompt) {
   return assetsApi.createAsset({ ...prompt, content: prompt.content || '' }, ResourceType.PROMPT, token);
 }
 
+export async function updatePrompt(prompt: DialPrompt, etag: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return assetsApi.updateAssetWithEtag(token, prompt, ResourceType.PROMPT, etag);
+}
+
 export async function getPrompts(path: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   const prompts = await assetsApi.getAssetList(token, path, ResourceType.PROMPT);
@@ -21,18 +26,18 @@ export async function getPrompts(path: string) {
   return prompts;
 }
 
-export async function getPrompt(folderId: string, name: string, version: string) {
+export async function getPrompt(folderId: string, name: string, version: string, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   const prompts = await assetsApi.getAssetList(token, `${folderId}/`, ResourceType.PROMPT);
   const path = prompts?.find((prompt) => prompt.name === name && (prompt as DialPrompt).version === version)
     ?.path as string;
 
-  return assetsApi.getAsset(token, path, ResourceType.PROMPT);
+  return assetsApi.getAssetWithEtag(token, path, ResourceType.PROMPT, etag);
 }
 
-export async function removePrompt(path: string) {
+export async function removePrompt(path: string, etag?: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.removeAsset(token, path, ResourceType.PROMPT);
+  return assetsApi.removeAssetWithEtag(token, path, ResourceType.PROMPT, etag);
 }
 
 export async function bulkDeletePrompts(paths: { path: string }[]) {
@@ -52,5 +57,5 @@ export async function importPrompts(body: FormData, fileType: ImportFileType) {
 
 export async function exportPrompts(paths: string[], type?: ImportFileType) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return await assetsApi.exportPrompts(token, paths, type);
+  return await assetsApi.exportAssets(token, ResourceType.PROMPT, paths, type);
 }

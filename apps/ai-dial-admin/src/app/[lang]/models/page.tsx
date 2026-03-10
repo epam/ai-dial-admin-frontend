@@ -1,37 +1,24 @@
-import { cookies, headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
-import { modelsApi } from '@/src/app/api/api';
 import ModelsList from '@/src/components/Models/List/List';
-import Page403 from '@/src/components/Page403/Page403';
-import { SIGN_IN_LINK } from '@/src/constants/auth';
-import { DialModel } from '@/src/models/dial/model';
-import { logError } from '@/src/server/logger';
-import { getUserToken } from '@/src/utils/auth/auth-request';
-import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
-import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
+import { DialModel } from '@/src/models/dial/model';
+import { errorObjLog } from '@/src/server/logger';
+import { getModelsList } from './actions';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page() {
-  const isEnableAuth = getIsEnableAuthToggle();
-  const token = await getUserToken(isEnableAuth, headers(), cookies());
-  const isInvalidSession = await getIsInvalidSession(isEnableAuth, token);
-
-  if (isInvalidSession) {
-    return redirect(SIGN_IN_LINK);
-  }
-
-  let data: DialModel[] | null = [];
+  let data: DialModel[] | null = null;
 
   try {
-    data = await modelsApi.getModelsList(token);
-    if (data === void 0) {
-      return <Page403 />;
-    }
+    data = await getModelsList();
   } catch (e) {
-    logError(e, 'Failed to fetch models view data');
+    errorObjLog(e, 'Failed to fetch models view data');
+  }
+
+  if (data == null) {
+    notFound();
   }
 
   return (

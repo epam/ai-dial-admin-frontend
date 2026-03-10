@@ -1,12 +1,13 @@
-import { DialFormPopup, DialNoDataContent, PopupSize } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 import { ColDef, GridOptions, SelectionChangedEvent } from 'ag-grid-community';
 import { useState } from 'react';
 
-import Grid from '@/src/components/Grid/Grid';
-import { CHECKBOX_COL_DEF } from '@/src/constants/ag-grid';
-import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import GridView from '@/src/components/Grid/GridView/GridView';
+import { MULTI_ROW_SELECTION } from '@/src/constants/ag-grid';
+import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+
 interface Props<T> {
   isModalOpen: boolean;
   modalTitle: string;
@@ -18,7 +19,7 @@ interface Props<T> {
 }
 
 const AddEntitiesGrid = <T extends object>({
-  columnDefs = SIMPLE_ENTITY_COLUMNS,
+  columnDefs = BASE_COLUMNS,
   isModalOpen,
   modalTitle,
   emptyTitle,
@@ -35,20 +36,14 @@ const AddEntitiesGrid = <T extends object>({
   };
 
   const additionalGridOptions: GridOptions = {
-    rowSelection: {
-      mode: 'multiRow',
-      selectAll: 'all',
-    },
-    selectionColumnDef: {
-      ...CHECKBOX_COL_DEF,
-    },
-    onSelectionChanged: onSelectionChanged,
+    ...MULTI_ROW_SELECTION,
+    onSelectionChanged,
   };
 
   return (
     <DialFormPopup
       onClose={onClose}
-      title={modalTitle}
+      header={modalTitle}
       portalId="AddEntity"
       open={isModalOpen}
       className="h-[800px]"
@@ -60,11 +55,12 @@ const AddEntitiesGrid = <T extends object>({
       onCancel={onClose}
     >
       <div className="flex h-full flex-col px-6 py-4 min-h-0">
-        {!entities.length ? (
-          <DialNoDataContent title={emptyTitle} />
-        ) : (
-          <Grid columnDefs={columnDefs} rowData={entities} additionalGridOptions={additionalGridOptions} />
-        )}
+        <GridView
+          emptyDataProps={{ title: emptyTitle }}
+          columnDefs={columnDefs}
+          rowData={entities}
+          additionalGridOptions={additionalGridOptions}
+        />
       </div>
     </DialFormPopup>
   );

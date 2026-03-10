@@ -1,40 +1,44 @@
 import { Dispatch, FC, SetStateAction, useMemo } from 'react';
 
 import {
+  DialFileIcon,
+  DialLabel,
+  DialLoadFileAreaField,
   DialRadioGroup,
   DialSwitch,
-  RadioGroupOrientation,
   RadioButtonWithContent,
-  DialLoadFileAreaField,
-  DialFileIcon,
+  RadioGroupOrientation,
 } from '@epam/ai-dial-ui-kit';
 
-import Field from '@/src/components/Common/Field/Field';
+import { MAX_FILE_SIZE_MB } from '@/src/constants/file';
 import { BasicI18nKey, ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
+import { APPLICATION_ZIP_TYPES_STR } from '@/src/constants/request-headers';
 import { useI18n } from '@/src/locales/client';
 import { ImportFileType } from '@/src/types/import';
-import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
+import { getIgnorePathTitles } from '@/src/utils/import/get-ignore-path-title';
+import { isAssetView } from '@/src/utils/is-asset-view';
 
 interface Props {
   files: File[];
-  changeFile: (files: File[]) => void;
+  route?: ApplicationRoute;
   fileType: string;
   fileTypes: RadioButtonWithContent[];
-  changeFileType: (type: string) => void;
-  isInvalid?: (file: File) => boolean;
   maxFilesCount?: number;
   ignorePaths?: boolean;
   setIgnorePaths?: Dispatch<SetStateAction<boolean>>;
-  route?: ApplicationRoute;
+  onChangeFile: (files: File[]) => void;
+  onChangeFileType: (type: string) => void;
+  isInvalid?: (file: File) => boolean;
 }
 
 const ImportFileTypeSelector: FC<Props> = ({
   files,
-  changeFile,
+  onChangeFile,
   fileTypes,
   fileType,
-  changeFileType,
+  onChangeFileType,
   isInvalid,
   maxFilesCount,
   ignorePaths,
@@ -44,13 +48,7 @@ const ImportFileTypeSelector: FC<Props> = ({
   const t = useI18n();
 
   const ignorePathsTitle = useMemo(() => {
-    if (route === ApplicationRoute.Prompts) {
-      return t(ImportI18nKey.PathsPrompt);
-    }
-    if (route === ApplicationRoute.Files) {
-      return t(ImportI18nKey.PathsFile);
-    }
-    return '';
+    return route ? getIgnorePathTitles(route, t) : '';
   }, [t, route]);
 
   const getFileIcon = (name: string) => {
@@ -66,15 +64,15 @@ const ImportFileTypeSelector: FC<Props> = ({
           radioButtons={fileTypes}
           activeRadioButton={fileType}
           elementId="file-type"
-          onChange={changeFileType}
+          onChange={onChangeFileType}
         />
 
-        {route === ApplicationRoute.Prompts && (
-          <div className="flex flex-col">
-            <Field fieldTitle={ignorePathsTitle} />
+        {isAssetView(route) && (
+          <div className="flex flex-col gap-y-2">
+            <DialLabel label={ignorePathsTitle} htmlFor="ignorePaths" />
             <DialSwitch
               isOn={ignorePaths}
-              title={t(ImportI18nKey.PathsIgnore)}
+              label={t(ImportI18nKey.PathsIgnore)}
               switchId="ignorePaths"
               onChange={setIgnorePaths}
             />
@@ -95,8 +93,12 @@ const ImportFileTypeSelector: FC<Props> = ({
             iconBeforeInput={<DialFileIcon extension="zip" className="text-secondary" />}
             fileFormatError={t(ImportI18nKey.ArchiveFileFormatError)}
             fileCountError={t(ImportI18nKey.ArchiveDescription)}
-            acceptTypes="application/zip, .zip, application/x-zip-compressed"
-            onChange={changeFile}
+            acceptTypes={APPLICATION_ZIP_TYPES_STR}
+            onChange={onChangeFile}
+            fileSizeError={t(ImportI18nKey.ArchiveSizeErrorDescription, { size: MAX_FILE_SIZE_MB })}
+            maxFileSize={MAX_FILE_SIZE_MB}
+            deleteAllButtonLabel={t(ButtonsI18nKey.DeleteAll)}
+            addButtonLabel={t(ButtonsI18nKey.Add)}
           />
         )}
         {fileType === ImportFileType.JSON && (
@@ -112,8 +114,10 @@ const ImportFileTypeSelector: FC<Props> = ({
             fileFormatError={t(ImportI18nKey.JsonFileFormatError)}
             isInvalid={isInvalid}
             errorText={t(ImportI18nKey.PromptError)}
-            onChange={changeFile}
+            onChange={onChangeFile}
             maxFilesCount={maxFilesCount}
+            deleteAllButtonLabel={t(ButtonsI18nKey.DeleteAll)}
+            addButtonLabel={t(ButtonsI18nKey.Add)}
           />
         )}
         {fileType === ImportFileType.FILES && (
@@ -126,11 +130,15 @@ const ImportFileTypeSelector: FC<Props> = ({
             files={files}
             acceptTypes="/"
             fileFormatError={t(ImportI18nKey.FileErrorType)}
-            onChange={changeFile}
+            onChange={onChangeFile}
             isInvalid={isInvalid}
             dynamicIcon={getFileIcon}
             errorText={t(ImportI18nKey.FileError)}
             maxFilesCount={maxFilesCount}
+            fileSizeError={t(ImportI18nKey.FileSizeErrorDescription, { size: MAX_FILE_SIZE_MB })}
+            maxFileSize={MAX_FILE_SIZE_MB}
+            deleteAllButtonLabel={t(ButtonsI18nKey.DeleteAll)}
+            addButtonLabel={t(ButtonsI18nKey.Add)}
           />
         )}
       </div>

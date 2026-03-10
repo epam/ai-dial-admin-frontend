@@ -1,8 +1,8 @@
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
-import { ToolsetAuthCredentialLevel, ToolsetAuthStatus, ToolsetAuthType } from '@/src/models/dial/toolset';
+import { Toolset, ToolsetAuthCredentialLevel, ToolsetAuthStatus, ToolsetAuthType } from '@/src/models/dial/toolset';
 
 export const getToolsetSignInBody = (
-  toolset: AssetToolset,
+  toolset: Toolset,
   level: ToolsetAuthCredentialLevel,
   apiKey?: string,
   authCode?: string,
@@ -16,24 +16,24 @@ export const getToolsetSignInBody = (
   return { ...body, apiKey };
 };
 
-export const getToolsetBasicBody = (toolset: AssetToolset, level: ToolsetAuthCredentialLevel) => {
+export const getToolsetBasicBody = (toolset: Toolset, level: ToolsetAuthCredentialLevel) => {
   return {
-    url: `toolsets/${toolset.path}`,
+    url: (toolset as AssetToolset).path ? `toolsets/${(toolset as AssetToolset).path}` : toolset.name,
     credentialsLevel: level,
     authenticationType: toolset.authSettings?.authenticationType,
   };
 };
 
-export const isLoggedInToToolset = (toolset: AssetToolset): boolean => {
+export const isLoggedInToToolset = (toolset: Toolset): boolean => {
   return isUserLoggedInToToolset(toolset) || isAdminLoggedInToToolset(toolset);
 };
 
-export const isUserLoggedInToToolset = (toolset: AssetToolset): boolean => {
+export const isUserLoggedInToToolset = (toolset: Toolset): boolean => {
   const authSettings = toolset.authSettings;
   return authSettings?.userLevelAuthStatus === ToolsetAuthStatus.SIGNED_IN;
 };
 
-export const isAdminLoggedInToToolset = (toolset: AssetToolset): boolean => {
+export const isAdminLoggedInToToolset = (toolset: Toolset): boolean => {
   const authSettings = toolset.authSettings;
   return authSettings?.globalAuthStatus === ToolsetAuthStatus.SIGNED_IN;
 };

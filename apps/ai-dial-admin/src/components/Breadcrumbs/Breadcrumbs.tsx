@@ -1,5 +1,5 @@
 'use client';
-/* eslint-disable react-hooks/rules-of-hooks */
+
 import { FC, useState, useEffect } from 'react';
 import classNames from 'classnames';
 import { usePathname } from 'next/navigation';
@@ -8,7 +8,7 @@ import { IconChevronRight } from '@tabler/icons-react';
 import Link from 'next/link';
 import { getBreadcrumbs } from '@/src/components/Breadcrumbs/utils';
 import { Breadcrumb } from '@/src/components/Breadcrumbs/models';
-import { useAppContext } from '@/src/context/AppContext';
+
 interface Props {
   mobile: boolean;
 }
@@ -17,14 +17,13 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
   const pathname = usePathname();
   const t = useI18n();
   const currentLocale = useCurrentLocale();
-  const { embeddedApps } = useAppContext();
   const [breadcrumbs, setBreadcrumbs] = useState<Breadcrumb[]>([]);
 
   if (!pathname) return null;
 
   useEffect(() => {
-    setBreadcrumbs(getBreadcrumbs(pathname, currentLocale, embeddedApps));
-  }, [pathname, currentLocale, embeddedApps]);
+    setBreadcrumbs(getBreadcrumbs(pathname, currentLocale));
+  }, [pathname, currentLocale]);
 
   return (
     <div

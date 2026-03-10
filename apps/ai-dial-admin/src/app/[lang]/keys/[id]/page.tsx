@@ -1,18 +1,16 @@
 import { cookies, headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
 import { keysApi, rolesApi } from '@/src/app/api/api';
 import KeyView from '@/src/components/Keys/View/View';
-import Page403 from '@/src/components/Page403/Page403';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialKey } from '@/src/models/dial/key';
 import { DialRole } from '@/src/models/dial/role';
-import { logError } from '@/src/server/logger';
-import { ApplicationRoute } from '@/src/types/routes';
+import { errorObjLog } from '@/src/server/logger';
 import { getUserToken } from '@/src/utils/auth/auth-request';
-import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { filterNames } from '@/src/utils/entities/filter-names';
-import { DEFAULT_ETAG } from '@/src/constants/api-headers';
+import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,15 +28,12 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
       return res?.response as DialKey | null;
     });
     roles = await rolesApi.getRolesList(token);
-    if (keys === void 0 || key === void 0 || roles === void 0) {
-      return <Page403 />;
-    }
   } catch (e) {
-    logError(e, 'Failed to fetch key data');
+    errorObjLog(e, 'Failed to fetch key data');
   }
 
   if (key == null) {
-    redirect(ApplicationRoute.Keys);
+    notFound();
   }
 
   const names = filterNames(keys, key?.name);

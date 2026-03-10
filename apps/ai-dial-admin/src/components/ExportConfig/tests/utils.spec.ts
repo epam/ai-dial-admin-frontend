@@ -1,6 +1,6 @@
 import { EntitiesI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { ExportFormat, ExportType } from '@/src/types/export';
-import { getComponents, getComponentTypes, isEntityWithDependency } from '../utils';
+import { getComponents, getComponentTypes, getFilteredData, isEntityWithDependency } from '../utils';
 import { EntityType } from '@/src/types/entity-type';
 import { describe, expect, test } from 'vitest';
 
@@ -147,6 +147,55 @@ describe('Export Config Utils :: getComponents', () => {
         dependencies: [EntityType.APPLICATION],
       },
     ]);
+  });
+});
+
+describe('Export Config Utils :: getFilteredData', () => {
+  const mockData = {
+    [EntityType.MODEL]: [
+      { id: 1, topics: ['topic1', 'topic2'] },
+      { id: 2, topics: ['topic3'] },
+      { id: 3, topics: ['topic1', 'topic3'] },
+    ],
+    [EntityType.APPLICATION]: [
+      { id: 4, topics: ['topic1'] },
+      { id: 5, topics: ['topic2'] },
+    ],
+    [EntityType.ROLE]: [{ id: 6, topics: ['topic2', 'topic4'] }],
+    [EntityType.TOOLSET]: [{ id: 7, descriptionKeywords: ['topic1', 'topic3'] }],
+  };
+
+  test('Should return all data if selectedTopics is empty', () => {
+    const res = getFilteredData(mockData, EntityType.MODEL, []);
+    expect(res).toEqual(mockData[EntityType.MODEL]);
+  });
+
+  test('Should return all data for entity if the entity is not associated with topics', () => {
+    const res = getFilteredData(mockData, EntityType.TOOLSET, ['topic1']);
+    expect(res).toEqual(mockData[EntityType.TOOLSET]);
+  });
+
+  test('Should filter data based on selected topics', () => {
+    const res = getFilteredData(mockData, EntityType.MODEL, ['topic1']);
+    expect(res).toEqual([
+      { id: 1, topics: ['topic1', 'topic2'] },
+      { id: 3, topics: ['topic1', 'topic3'] },
+    ]);
+  });
+
+  test('Should return empty array if no data matches selected topics', () => {
+    const res = getFilteredData(mockData, EntityType.MODEL, ['topic4']);
+    expect(res).toEqual([]);
+  });
+
+  test('Should return empty array if no entity data is available', () => {
+    const res = getFilteredData(undefined, EntityType.MODEL, ['topic1']);
+    expect(res).toEqual([]);
+  });
+
+  test('Should return all data if entity is not in the data object', () => {
+    const res = getFilteredData(mockData, 'UNKNOWN_ENTITY', ['topic1']);
+    expect(res).toEqual([]);
   });
 });
 

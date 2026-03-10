@@ -1,35 +1,35 @@
 import { DialFormPopup, DialRadioGroup, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useState } from 'react';
 
+import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
+import IdControl from '@/src/components/BaseControls/Id/Id';
+import VersionControl from '@/src/components/BaseControls/Version';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
-import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
-import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
-import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
 import { BasicI18nKey, ButtonsI18nKey, EntitiesI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
-import { Asset } from '@/src/models/dial/deployment-asset';
-import { DialFile } from '@/src/models/dial/file';
-import { DialPrompt } from '@/src/models/dial/prompt';
+import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DuplicationTypes } from '@/src/types/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { duplicateEntityMap, getClonedEntityName, getCloneTitle } from '@/src/utils/entities/duplicate-entity';
-import { addTrailingSlash } from '@/src/utils/url';
 import { isDeploymentAsset } from '@/src/utils/is-asset-view';
 import { checkNameVersionCombination, getInitialVersion } from '@/src/utils/prompts/versions';
+import { addTrailingSlash } from '@/src/utils/url';
 
 interface Props {
   view: ApplicationRoute;
   isModalOpen: boolean;
-  entity: Asset;
+  entity: AssetWithVersion;
   versionsMap: Record<string, string[]>;
-  context?: () => AssetsFolderContext<DialFile | Asset>;
+  context?: () => AssetsFolderContext;
   onClose: () => void;
-  onDuplicate: (entity: Asset) => void;
+  onDuplicate: (entity: AssetWithVersion) => void;
 }
 
 const DuplicateAsset: FC<Props> = ({ view, isModalOpen, entity, versionsMap, context, onDuplicate, onClose }) => {
-  const t = useI18n() as (t: string, props?: Record<string, string>) => string;
+  const t = useI18n();
+  const { isValid } = useSaveValidationContext();
   const initialName = entity.name;
   const initialFolder = entity.folderId;
   const [duplicationType, setDuplicationType] = useState<string>(DuplicationTypes.VERSION);
@@ -39,16 +39,16 @@ const DuplicateAsset: FC<Props> = ({ view, isModalOpen, entity, versionsMap, con
     { id: DuplicationTypes.ENTITY, name: t(EntitiesI18nKey.NewEntity, { entity: t(duplicateEntityMap[view]) }) },
   ];
 
-  const [clonedAsset, setClonedAsset] = useState<Asset>({
+  const [clonedAsset, setClonedAsset] = useState<AssetWithVersion>({
     ...entity,
     name: getClonedEntityName(entity.name, duplicationType === DuplicationTypes.VERSION),
     displayName: isDeploymentAsset(view) ? entity.displayName : void 0,
     version: getInitialVersion(versionsMap, entity?.name),
   });
-  const [isValid, setIsValid] = useState(false);
+  const [isInnerValid, setIsInnerValid] = useState(false);
 
   useEffect(() => {
-    setIsValid(
+    setIsInnerValid(
       !!clonedAsset.name &&
         !!clonedAsset.version &&
         !checkNameVersionCombination(versionsMap, clonedAsset.name, clonedAsset.version),
@@ -95,12 +95,12 @@ const DuplicateAsset: FC<Props> = ({ view, isModalOpen, entity, versionsMap, con
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(getCloneTitle(view, t))}
+      header={t(getCloneTitle(view, t))}
       portalId="DuplicateAsset"
       open={isModalOpen}
       onSubmit={() => onDuplicate({ ...clonedAsset, folderId: addTrailingSlash(clonedAsset.folderId) })}
       onCancel={onClose}
-      disableSubmitButton={!isValid}
+      disableSubmitButton={!isInnerValid || !isValid}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
       submitLabel={t(ButtonsI18nKey.Duplicate)}
     >
@@ -119,7 +119,7 @@ const DuplicateAsset: FC<Props> = ({ view, isModalOpen, entity, versionsMap, con
           disabled={duplicationType === DuplicationTypes.VERSION}
         />
         {isDeploymentAsset(view) && (
-          <DisplayNameControl displayName={clonedAsset.displayName} onChange={onChangeName} required={true} />
+          <DisplayNameControl displayName={clonedAsset.displayName} onChange={onChangeName} required />
         )}
         <VersionControl version={clonedAsset.version} onChange={onChangeVersion} />
 
@@ -130,7 +130,7 @@ const DuplicateAsset: FC<Props> = ({ view, isModalOpen, entity, versionsMap, con
             modalTitle={t(BasicI18nKey.MoveToFolder)}
             placeholder={t(EntityPlaceholdersI18nKey.Path)}
             onChange={onChangePath}
-            context={context as () => AssetsFolderContext<DialPrompt | DialFile>}
+            context={context}
           />
         )}
       </div>

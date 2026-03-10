@@ -3,10 +3,17 @@ import {
   isDisableRole,
   getNoAvailableTitle,
   isResetAvailable,
+  isLimitSameAsDefault,
+  integerValueFormatter,
+  isSetNoLimitsHidden,
+  isResetToDefaultHidden,
 } from '@/src/components/EntityView/Roles/utils';
 import { ApplicationRoute } from '@/src/types/routes';
-import { RolesI18nKey } from '@/src/constants/i18n';
-import { describe, expect, test } from 'vitest';
+import { MenuI18nKey, RolesI18nKey } from '@/src/constants/i18n';
+import { describe, expect, test, vi } from 'vitest';
+import { GridApi, IRowNode } from 'ag-grid-community';
+import { UNLIMITED_VALUE } from '@/src/constants/role';
+import { EntityRoleLimits } from '@/src/models/dial/base-entity';
 
 describe('getNoAvailableTitle', () => {
   test('returns NotAvailableModel for Models view', () => {
@@ -22,7 +29,51 @@ describe('getNoAvailableTitle', () => {
   });
 });
 
-describe('Roles View :: isResetAvailable', () => {
+describe('isLimitSameAsDefault', () => {
+  const defaultLimit = {
+    enabled: true,
+    day: '1',
+    minute: '2',
+  };
+
+  test('returns true when limit is exact subset with same values', () => {
+    const limit = { enabled: true, day: '1' };
+
+    expect(isLimitSameAsDefault(limit, defaultLimit)).toBe(true);
+  });
+
+  test('returns true when limit matches default exactly', () => {
+    const limit = { enabled: true, day: '1', minute: '2' };
+
+    expect(isLimitSameAsDefault(limit, defaultLimit)).toBe(true);
+  });
+
+  test('returns false when value differs', () => {
+    const limit = { enabled: true, day: '2' };
+
+    expect(isLimitSameAsDefault(limit, defaultLimit)).toBe(false);
+  });
+
+  test('returns false when enabled differs', () => {
+    const limit = { enabled: false };
+
+    expect(isLimitSameAsDefault(limit, defaultLimit)).toBe(false);
+  });
+
+  test('returns false when extra key exists', () => {
+    const limit = { enabled: true, day: '1', week: '3' };
+
+    expect(isLimitSameAsDefault(limit, defaultLimit)).toBe(false);
+  });
+
+  test('returns true when defaultLimit is undefined and limit has no extra rules', () => {
+    const limit = {};
+
+    expect(isLimitSameAsDefault(limit, undefined)).toBe(true);
+  });
+});
+
+describe('isResetAvailable', () => {
   test('Should return true', () => {
     const res = isResetAvailable({
       defaultRoleLimit: { day: '2', minute: '2' },
@@ -40,7 +91,7 @@ describe('Roles View :: isResetAvailable', () => {
   });
 });
 
-describe('Roles View :: isDisableRole', () => {
+describe('isDisableRole', () => {
   test('returns true if roleLimits is empty object and isPublic is falsy', () => {
     const entity = { roleLimits: {}, isPublic: false };
     expect(isDisableRole(entity)).toBe(true);
@@ -67,7 +118,7 @@ describe('Roles View :: isDisableRole', () => {
   });
 });
 
-describe('Roles View :: getRolesGridData', () => {
+describe('getRolesGridData', () => {
   test('Should return role for isPublic true with limits and shares', () => {
     const res = getRolesGridData(
       {
@@ -221,5 +272,154 @@ describe('Roles View :: getRolesGridData', () => {
         week: undefined,
       },
     ]);
+  });
+});
+
+describe('integerValueFormatter', () => {
+  test('returns empty string for null and undefined', () => {
+    // @ts-ignore
+    expect(integerValueFormatter(null)).toBe('');
+    // @ts-ignore
+    expect(integerValueFormatter(undefined)).toBe('');
+  });
+
+  test('returns empty string for empty input or non-digits', () => {
+    expect(integerValueFormatter('')).toBe('');
+    expect(integerValueFormatter('abc')).toBe('');
+  });
+
+  test('preserves numeric strings and numbers', () => {
+    expect(integerValueFormatter('123')).toBe('123');
+    expect(integerValueFormatter(123)).toBe('123');
+  });
+
+  test('strips non-digit characters', () => {
+    expect(integerValueFormatter('a1b2c3')).toBe('123');
+  });
+
+  test('handles leading zeros: single zero stays, multi zeros trimmed', () => {
+    expect(integerValueFormatter('0')).toBe('0');
+    expect(integerValueFormatter('05')).toBe('5');
+    expect(integerValueFormatter('000')).toBe('0');
+    expect(integerValueFormatter('0a1')).toBe('1');
+  });
+});
+
+describe('isSetNoLimitsHidden', () => {
+  const mockApi = (values: Record<string, string>) =>
+    ({
+      getColumn: vi.fn((key: string) => key),
+      getCellValue: vi.fn(({ colKey }: { colKey: string }) => values[colKey]),
+    }) as unknown as GridApi;
+
+  const baseNode = {
+    data: {
+      type: 'SomeOtherType',
+    },
+  } as IRowNode;
+
+  test('returns true for Routes type', () => {
+    const api = mockApi({});
+    const node = {
+      data: { type: MenuI18nKey.Routes },
+    } as IRowNode;
+
+    expect(isSetNoLimitsHidden(api, node)).toBe(true);
+  });
+
+  test('returns true for Toolsets type', () => {
+    const api = mockApi({});
+    const node = {
+      data: { type: MenuI18nKey.Toolsets },
+    } as IRowNode;
+
+    expect(isSetNoLimitsHidden(api, node)).toBe(true);
+  });
+
+  test('returns true when all limits are UNLIMITED', () => {
+    const api = mockApi({
+      day: UNLIMITED_VALUE,
+      minute: UNLIMITED_VALUE,
+      week: UNLIMITED_VALUE,
+      month: UNLIMITED_VALUE,
+    });
+
+    expect(isSetNoLimitsHidden(api, baseNode)).toBe(true);
+  });
+
+  test('returns false when at least one limit is not UNLIMITED', () => {
+    const api = mockApi({
+      day: UNLIMITED_VALUE,
+      minute: UNLIMITED_VALUE,
+      week: UNLIMITED_VALUE,
+      month: '10',
+    });
+
+    expect(isSetNoLimitsHidden(api, baseNode)).toBe(false);
+  });
+});
+
+describe('isResetToDefaultHidden', () => {
+  const mockApi = (values: Record<string, string | undefined>) =>
+    ({
+      getColumn: vi.fn((key: string) => key),
+      getCellValue: vi.fn(({ colKey }: { colKey: string }) => values[colKey]),
+    }) as unknown as GridApi;
+
+  const node = {} as IRowNode;
+
+  test('returns true when all values match defaultRoleLimit', () => {
+    const api = mockApi({
+      day: '1',
+      minute: '2',
+      week: '3',
+      month: '4',
+    });
+
+    const entity = {
+      defaultRoleLimit: {
+        day: '1',
+        minute: '2',
+        week: '3',
+        month: '4',
+      },
+    } as EntityRoleLimits;
+
+    expect(isResetToDefaultHidden(api, node, entity)).toBe(true);
+  });
+
+  test('returns false when any value differs from defaultRoleLimit', () => {
+    const api = mockApi({
+      day: '1',
+      minute: '2',
+      week: '99',
+      month: '4',
+    });
+
+    const entity = {
+      defaultRoleLimit: {
+        day: '1',
+        minute: '2',
+        week: '3',
+        month: '4',
+      },
+    } as EntityRoleLimits;
+
+    expect(isResetToDefaultHidden(api, node, entity)).toBe(false);
+  });
+
+  test('returns false when defaultRoleLimit is undefined', () => {
+    const api = mockApi({
+      day: '1',
+      minute: '2',
+      week: '3',
+      month: '4',
+    });
+
+    const entity = {
+      defaultRoleLimit: undefined,
+    } as EntityRoleLimits;
+
+    expect(isResetToDefaultHidden(api, node, entity)).toBe(false);
   });
 });

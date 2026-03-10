@@ -1,6 +1,5 @@
-import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { SelectOption } from '@epam/ai-dial-ui-kit';
-import Big from 'big.js';
+import { Big } from 'big.js';
 import { EChartsOption } from 'echarts-for-react/src/types';
 
 import { lineChartDefaultOptions } from '@/src/components/Charts/LineChart/constants';
@@ -104,9 +103,9 @@ export const getDefaultFilterValue = (
   return '';
 };
 
-export function prepareChartData(data: Record<string, string>[]): EChartsOption {
-  const config = { ...lineChartDefaultOptions };
-  const xData = data.map((item) => formatDateTimeToLocalString(item.time));
+export function prepareChartData(data: Record<string, string>[], t: (key: string) => string): EChartsOption {
+  const config = { ...lineChartDefaultOptions(t) };
+  const xData = data.map((item) => item.time);
   const yData = data.map((item) => item.requests);
 
   (config.xAxis as unknown as { data: string[] }).data = xData;

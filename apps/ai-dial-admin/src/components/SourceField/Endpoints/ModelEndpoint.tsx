@@ -5,12 +5,10 @@ import { DialRadioGroup, RadioGroupOrientation, RadioButtonWithContent } from '@
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
 import { DialModel, DialModelType } from '@/src/models/dial/model';
 import { SOURCE_FIELD } from '@/src/components/SourceField/types';
-import { FieldError } from '@/src/models/error';
 import { getUrlError } from '@/src/utils/validation/url-error';
 import { useI18n } from '@/src/locales/client';
 import ComplexInput from '@/src/components/Common/ComplexInput/ComplexInput';
 import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
-import classNames from 'classnames';
 import { addTrailingSlash, removeSlash } from '@/src/utils/url';
 
 interface Props {
@@ -21,7 +19,7 @@ interface Props {
 }
 
 const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
 
   const modelTypeRadio: RadioButtonWithContent[] = [
     { id: DialModelType.Chat, name: t(ModelViewI18nKey.Chat) },
@@ -29,15 +27,22 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
   ];
 
   const [postfix, setPostfix] = useState('');
-  const [name, setName] = useState('');
-  const [endpointError, setEndpointError] = useState<FieldError | null>(null);
+  const [endpoint, setEndpoint] = useState('');
+
+  const endpointError = useMemo(() => {
+    return getUrlError(entity.endpoint, t, true);
+  }, [entity.endpoint, t]);
+
   const fullValue = useMemo(() => {
-    return prefix ? `${addTrailingSlash(prefix)}${removeSlash(entity.endpoint || '')}` : entity.endpoint || '';
-  }, [entity.endpoint, prefix]);
+    if (prefix) {
+      return `${addTrailingSlash(prefix)}${removeSlash(endpoint)}`;
+    }
+    return entity.endpoint || '';
+  }, [entity.endpoint, prefix, endpoint]);
 
   const onChangePath = useCallback(
     (value?: string) => {
-      setName(value || '');
+      setEndpoint(value || '');
       onChange({
         ...entity,
         source: { ...(entity.source as SOURCE_FIELD), completionEndpointPath: `${value || ''}${postfix}` },
@@ -48,38 +53,36 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
 
   const onChangeEndpoint = useCallback(
     (value?: string) => {
-      const error = getUrlError(value, t, true);
-      setEndpointError(error);
-      setName(value || '');
+      setEndpoint(value || '');
       onChange({
         ...entity,
         endpoint: `${value || ''}${postfix}`,
       });
     },
-    [entity, onChange, postfix, t],
+    [entity, onChange, postfix],
   );
 
   const onChangeType = useCallback(
     (type: string) => {
-      const endpoint = `${name}${getEndpointPostfix(type as DialModelType)}`;
+      const value = `${endpoint}${getEndpointPostfix(type as DialModelType)}`;
       if (prefix) {
         onChange({
           ...entity,
           source: {
             ...(entity.source as SOURCE_FIELD),
-            completionEndpointPath: endpoint,
+            completionEndpointPath: value,
           },
           type: type as DialModelType,
         });
       } else {
         onChange({
           ...entity,
-          endpoint,
+          endpoint: value,
           type: type as DialModelType,
         });
       }
     },
-    [name, prefix, onChange, entity],
+    [endpoint, prefix, onChange, entity],
   );
 
   useEffect(() => {
@@ -89,11 +92,11 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
       : entity.endpoint?.split(postfix)[0] || '';
 
     setPostfix(postfix);
-    setName(name);
+    setEndpoint(name);
   }, [isModal, entity, prefix]);
 
   return (
-    <div className={classNames('flex flex-col gap-y-8', isModal ? 'w-full' : 'w-full lg:w-[45%]')}>
+    <div className="flex flex-col gap-y-8">
       {!isModal && (
         <DialRadioGroup
           radioButtons={modelTypeRadio}
@@ -107,24 +110,26 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
 
       {prefix ? (
         <ComplexInput
-          elementId="endpoint"
-          value={name}
+          id="endpoint"
+          value={endpoint}
           fullValue={fullValue}
-          fieldTitle={t(EntityFieldsI18nKey.endpoint)}
-          suffix={postfix}
-          textBeforeInput={prefix}
+          label={t(EntityFieldsI18nKey.endpoint)}
+          postfix={postfix}
+          prefix={prefix}
           onChange={onChangePath}
+          isFullWidth={isModal}
         />
       ) : (
         <ComplexInput
-          elementId="endpoint"
-          value={name}
+          id="endpoint"
+          value={endpoint}
           fullValue={fullValue}
-          fieldTitle={t(EntityFieldsI18nKey.endpoint)}
-          suffix={postfix}
+          label={t(EntityFieldsI18nKey.endpoint)}
+          postfix={postfix}
+          isFullWidth={isModal}
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
           onChange={onChangeEndpoint}
-          errorText={endpointError?.text}
+          error={endpointError?.text}
           invalid={!!endpointError}
           copyable={false}
         />

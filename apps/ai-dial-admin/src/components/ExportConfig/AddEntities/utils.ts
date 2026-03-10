@@ -1,50 +1,37 @@
 import { getAvailableEntities } from '@/src/components/AddEntitiesTab/utils';
-import { ButtonsI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, ExportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
+import { DeploymentExportEntityType } from '@/src/types/deployments/export';
 import { EntityType } from '@/src/types/entity-type';
+import { DEPLOYMENT_IMAGE_DEP } from '@/src/utils/entities/get-export-deps';
+
+const entityTypeToMenuKey: Record<string, string> = {
+  [EntityType.ROLE]: MenuI18nKey.Roles,
+  [EntityType.KEY]: MenuI18nKey.Keys,
+  [EntityType.APPLICATION_TYPE_SCHEMA]: MenuI18nKey.ApplicationRunners,
+  [EntityType.INTERCEPTOR]: MenuI18nKey.Interceptors,
+  [EntityType.PROMPT]: MenuI18nKey.Prompts,
+  [EntityType.FILE]: MenuI18nKey.Files,
+  [EntityType.MODEL]: MenuI18nKey.Models,
+  [EntityType.APPLICATION]: MenuI18nKey.Applications,
+  [EntityType.ROUTE]: MenuI18nKey.Routes,
+  [EntityType.ADAPTER]: MenuI18nKey.Adapters,
+  [EntityType.TOOLSET]: MenuI18nKey.Toolsets,
+  [EntityType.INTERCEPTOR_RUNNER]: MenuI18nKey.InterceptorTemplates,
+  [DeploymentExportEntityType.MODEL_SERVING]: MenuI18nKey.ModelServings,
+  [DeploymentExportEntityType.MCP_CONTAINER]: MenuI18nKey.McpContainers,
+  [DeploymentExportEntityType.INTERCEPTOR_CONTAINER]: MenuI18nKey.InterceptorContainers,
+  [DeploymentExportEntityType.ADAPTER_CONTAINER]: MenuI18nKey.AdapterContainers,
+  [DeploymentExportEntityType.IMAGE]: MenuI18nKey.Images,
+  [DEPLOYMENT_IMAGE_DEP.MCP]: ExportI18nKey.McpImage,
+  [DEPLOYMENT_IMAGE_DEP.INTERCEPTOR]: ExportI18nKey.InterceptorImage,
+  [DEPLOYMENT_IMAGE_DEP.ADAPTER]: ExportI18nKey.AdapterImage,
+};
 
 export const getButtonTitle = (t: (v: string) => string, selectedTab?: EntityType, full?: boolean) => {
-  let entity = '';
-
-  if (selectedTab === EntityType.ROLE) {
-    entity = t(MenuI18nKey.Roles);
-  }
-  if (selectedTab === EntityType.KEY) {
-    entity = t(MenuI18nKey.Keys);
-  }
-  if (selectedTab === EntityType.APPLICATION_TYPE_SCHEMA) {
-    entity = t(MenuI18nKey.ApplicationRunners);
-  }
-  if (selectedTab === EntityType.INTERCEPTOR) {
-    entity = t(MenuI18nKey.Interceptors);
-  }
-  if (selectedTab === EntityType.PROMPT) {
-    entity = t(MenuI18nKey.Prompts);
-  }
-  if (selectedTab === EntityType.FILE) {
-    entity = t(MenuI18nKey.Files);
-  }
-  if (selectedTab === EntityType.MODEL) {
-    entity = t(MenuI18nKey.Models);
-  }
-  if (selectedTab === EntityType.APPLICATION) {
-    entity = t(MenuI18nKey.Applications);
-  }
-  if (selectedTab === EntityType.ROUTE) {
-    entity = t(MenuI18nKey.Routes);
-  }
-  if (selectedTab === EntityType.ADAPTER) {
-    entity = t(MenuI18nKey.Adapters);
-  }
-  if (selectedTab === EntityType.TOOLSET) {
-    entity = t(MenuI18nKey.Toolsets);
-  }
-
-  if (selectedTab === EntityType.INTERCEPTOR_RUNNER) {
-    entity = t(MenuI18nKey.InterceptorTemplates);
-  }
-
-  return full ? `${t(ButtonsI18nKey.Add)} ${entity.toLowerCase()}` : entity;
+  const menuKey = selectedTab ? entityTypeToMenuKey[selectedTab] : undefined;
+  const entity = menuKey ? t(menuKey) : '';
+  return full ? `${t(ButtonsI18nKey.Add)} ${entity}` : entity;
 };
 
 export const getAvailableData = (
@@ -52,25 +39,22 @@ export const getAvailableData = (
   tabData: Record<string, EntitiesGridData[]>,
   customExportData: Record<string, EntitiesGridData[]>,
   currentTab: string,
+  selectedTopics: string[],
 ) => {
   let entityData = tabData[currentTab] || [];
   let existingData = customExportData[currentTab] || [];
-  if (id === EntityType.MODEL) {
-    entityData = entityData.filter((data) => data.type === MenuI18nKey.Models);
-    existingData = existingData.filter((data) => data.type === MenuI18nKey.Models);
-  }
-  if (id === EntityType.APPLICATION) {
-    entityData = entityData.filter((data) => data.type === MenuI18nKey.Applications);
-    existingData = existingData.filter((data) => data.type === MenuI18nKey.Applications);
-  }
-  if (id === EntityType.ROUTE) {
-    entityData = entityData.filter((data) => data.type === MenuI18nKey.Routes);
-    existingData = existingData.filter((data) => data.type === MenuI18nKey.Routes);
+
+  const menuKey = entityTypeToMenuKey[id];
+  if (menuKey) {
+    entityData = entityData.filter(
+      (data) =>
+        data.type === menuKey && isEntityWithTopicsMatches(selectedTopics, data?.topics || data?.descriptionKeywords),
+    );
+    existingData = existingData.filter((data) => data.type === menuKey);
   }
 
-  if (id === EntityType.TOOLSET) {
-    entityData = entityData.filter((data) => data.type === MenuI18nKey.Toolsets);
-    existingData = existingData.filter((data) => data.type === MenuI18nKey.Toolsets);
-  }
   return getAvailableEntities(existingData, entityData);
 };
+
+const isEntityWithTopicsMatches = (selectedTopics?: string[], entityTopics?: string[]) =>
+  selectedTopics?.length ? selectedTopics?.some((topic) => entityTopics?.includes(topic)) : true;

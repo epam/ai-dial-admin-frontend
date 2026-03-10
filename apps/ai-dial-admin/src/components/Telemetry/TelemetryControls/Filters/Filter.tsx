@@ -19,7 +19,7 @@ interface Props {
 
 const Filter: FC<Props> = ({ id, onClose, onEdit, dropdownData, filterData, route }) => {
   const { type, condition, value } = filterData;
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
   const filterTypeConfig = getFilterTypeConfig(t);
   const filterConditionConfig = getFilterConditionConfig(t);
   const typeText = filterTypeConfig.find((item) => item.value === type)?.value;
@@ -38,7 +38,7 @@ const Filter: FC<Props> = ({ id, onClose, onEdit, dropdownData, filterData, rout
         <p className="flex items-center">
           <span className="mr-1">{typeText}</span>
           <i className="mr-1">{conditionIcon}</i>
-          <span className="mr-1 max-w-[250px]">{value}</span>
+          <span className="mr-1 max-w-[250px] break-words">{value}</span>
         </p>
 
         <button

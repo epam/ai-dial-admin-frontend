@@ -9,16 +9,17 @@ import { CREATE_FOLDER_STEPS, CreateFolderSteps } from '@/src/components/Common/
 import { FoldersI18nKey } from '@/src/constants/i18n';
 import { IMPORT_FILE_TYPES } from '@/src/constants/import';
 import { useI18n } from '@/src/locales/client';
-import { DialPrompt } from '@/src/models/dial/prompt';
 import { DialRule } from '@/src/models/dial/rule';
 import { FileImportMap } from '@/src/models/file';
-import { ParsedPrompts } from '@/src/models/prompts';
+import { ImportData } from '@/src/models/import-asset';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
-import FolderCreateModalButtons from './FolderCreateModalButtons';
 import FolderCreatePermissions from './FolderCreatePermissions';
 import FolderCreateReview from './FolderCreateReview';
 import FolderCreateSetup from './FolderCreateSetup';
+import { isAssetWithVersion } from '@/src/utils/is-asset-view';
+import { getJsonFileName } from '@/src/utils/import/get-json-name';
+import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 
 interface Props {
   isModalOpen: boolean;
@@ -27,7 +28,7 @@ interface Props {
   onClose: () => void;
   onApply?: (
     fileType: ImportFileType,
-    file: File | File[] | ParsedPrompts,
+    file: ImportData,
     rules: DialRule[],
     path: string,
     ignorePaths?: boolean,
@@ -35,7 +36,7 @@ interface Props {
 }
 
 const FolderCreateModal: FC<Props> = ({ isModalOpen, folderPath, view, onClose, onApply }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const t = useI18n();
 
   const fileTypes = IMPORT_FILE_TYPES(t, view);
 
@@ -53,13 +54,13 @@ const FolderCreateModal: FC<Props> = ({ isModalOpen, folderPath, view, onClose, 
   const [folderName, setFolderName] = useState('');
 
   const onFinishClick = () => {
-    if (view === ApplicationRoute.Prompts) {
+    if (isAssetWithVersion(view)) {
       const type = fileType === ImportFileType.FILES ? ImportFileType.JSON : fileType;
       if (type === ImportFileType.ARCHIVE) {
         onApply?.(type, zipFile as File, rules, `${folderPath}${folderName}`, ignorePaths);
       } else {
         const jsonFile = {
-          prompts: Array.from(editedFileMap.values()).flatMap((value) => value.files as DialPrompt[]),
+          [getJsonFileName(view)]: Array.from(editedFileMap.values()).flatMap((value) => value.files),
         };
         onApply?.(type as ImportFileType, jsonFile, rules, `${folderPath}${folderName}`, ignorePaths);
       }
@@ -81,16 +82,16 @@ const FolderCreateModal: FC<Props> = ({ isModalOpen, folderPath, view, onClose, 
   return (
     <DialPopup
       onClose={onClose}
-      title={t(FoldersI18nKey.FolderCreate)}
+      header={t(FoldersI18nKey.FolderCreate)}
       portalId="CreateFolder"
       open={isModalOpen}
       className="h-[660px]"
       size={PopupSize.Lg}
       footer={
-        <FolderCreateModalButtons
+        <StepperModalButtons
           steps={steps}
           currentStep={steps.find((s) => s.id === currentStepId)}
-          setCurrentStep={setCurrentStepId}
+          onChangeStep={setCurrentStepId}
           onFinishClick={onFinishClick}
           onClose={onClose}
         />
@@ -129,8 +130,8 @@ const FolderCreateModal: FC<Props> = ({ isModalOpen, folderPath, view, onClose, 
             fileType={fileType}
             currentStepId={currentStepId}
             editedFileMap={editedFileMap}
-            setEditedFileMap={setEditedFileMap}
-            setSteps={setSteps}
+            onChangeFileMap={setEditedFileMap}
+            onChangeSteps={setSteps}
           />
         </div>
         <div

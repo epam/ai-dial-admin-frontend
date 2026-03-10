@@ -14,6 +14,7 @@ interface Props {
   rulesToInclude?: DialRule[];
   rulesToExclude?: DialRule[];
   folderName?: string;
+  folderDescription?: string;
   indentIndex: number;
   isAlwaysToggled?: boolean;
   isReadonly?: boolean;
@@ -29,6 +30,7 @@ const RulesItem: FC<Props> = ({
   rulesToInclude,
   rulesToExclude,
   folderName,
+  folderDescription,
   indentIndex,
   isAlwaysToggled,
   isReadonly,
@@ -61,7 +63,7 @@ const RulesItem: FC<Props> = ({
   return (
     <div ref={ref} className={classNames('flex flex-1', !folderName && 'border border-primary')}>
       <div style={{ width: `${RULE_INDENT * indentIndex}px` }} className="flex items-center">
-        <div className="h-[1px] w-full bg-accent-secondary"></div>
+        <div className="h-px w-full bg-accent-secondary"></div>
       </div>
       <div
         className={classNames(
@@ -71,6 +73,7 @@ const RulesItem: FC<Props> = ({
       >
         <RulesItemHeader
           folderName={folderName}
+          folderDescription={folderDescription}
           isCollapsed={isCollapsed}
           toggleCollapse={toggleCollapse}
           isAlwaysToggled={isAlwaysToggled}

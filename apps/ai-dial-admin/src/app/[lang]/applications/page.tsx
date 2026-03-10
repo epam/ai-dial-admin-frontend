@@ -1,39 +1,31 @@
 import { cookies, headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
-import { applicationsApi, applicationRunnersApi } from '@/src/app/api/api';
+import { applicationRunnersApi, applicationsApi } from '@/src/app/api/api';
 import ApplicationsList from '@/src/components/Applications/List/List';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
+import { errorObjLog } from '@/src/server/logger';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
-import { SIGN_IN_LINK } from '@/src/constants/auth';
-import { logError } from '@/src/server/logger';
-import Page403 from '@/src/components/Page403/Page403';
-import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page() {
-  const isEnableAuth = getIsEnableAuthToggle();
-  const token = await getUserToken(isEnableAuth, headers(), cookies());
-  const isInvalidSession = await getIsInvalidSession(isEnableAuth, token);
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
-  if (isInvalidSession) {
-    return redirect(SIGN_IN_LINK);
-  }
-
-  let data: DialApplication[] | null = [];
+  let data: DialApplication[] | null = null;
   let runners: DialApplicationScheme[] | null = [];
 
   try {
     data = await applicationsApi.getApplicationsList(token);
     runners = await applicationRunnersApi.getApplicationSchemesList(token);
-    if (data === void 0 || runners === void 0) {
-      return <Page403 />;
-    }
   } catch (e) {
-    logError(e, 'Failed to fetch applications data');
+    errorObjLog(e, 'Failed to fetch applications data');
+  }
+
+  if (data == null) {
+    notFound();
   }
 
   return (

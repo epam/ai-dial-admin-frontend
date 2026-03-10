@@ -1,0 +1,56 @@
+import { EntitiesI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { ApplicationRoute } from '@/src/types/routes';
+
+export const listViewTitleMap: Record<string, MenuI18nKey> = {
+  [ApplicationRoute.Models]: MenuI18nKey.Models,
+  [ApplicationRoute.Applications]: MenuI18nKey.Applications,
+  [ApplicationRoute.Adapters]: MenuI18nKey.Adapters,
+  [ApplicationRoute.Interceptors]: MenuI18nKey.Interceptors,
+  [ApplicationRoute.Keys]: MenuI18nKey.Keys,
+  [ApplicationRoute.Roles]: MenuI18nKey.Roles,
+  [ApplicationRoute.ApplicationRunners]: MenuI18nKey.ApplicationRunners,
+  [ApplicationRoute.Prompts]: MenuI18nKey.Prompts,
+  [ApplicationRoute.Files]: MenuI18nKey.Files,
+  [ApplicationRoute.AssetsApplications]: MenuI18nKey.Applications,
+  [ApplicationRoute.Routes]: MenuI18nKey.Routes,
+  [ApplicationRoute.PromptPublications]: MenuI18nKey.PromptPublications,
+  [ApplicationRoute.ToolsetPublications]: MenuI18nKey.ToolsetPublications,
+  [ApplicationRoute.FilePublications]: MenuI18nKey.FilePublications,
+  [ApplicationRoute.ApplicationPublications]: MenuI18nKey.ApplicationPublications,
+  [ApplicationRoute.ActivityAudit]: MenuI18nKey.ActivityAudit,
+  [ApplicationRoute.InterceptorTemplates]: MenuI18nKey.InterceptorTemplates,
+  [ApplicationRoute.Toolsets]: MenuI18nKey.Toolsets,
+  [ApplicationRoute.AssetsToolsets]: MenuI18nKey.Toolsets,
+  [ApplicationRoute.TestSuites]: MenuI18nKey.TestSuites,
+  [ApplicationRoute.Metrics]: MenuI18nKey.Metrics,
+  [ApplicationRoute.Runs]: MenuI18nKey.Runs,
+  [ApplicationRoute.ModelServings]: MenuI18nKey.ModelServings,
+};
+
+export const emptyDataTitleMap: Record<string, EntitiesI18nKey> = {
+  [ApplicationRoute.Models]: EntitiesI18nKey.NoModels,
+  [ApplicationRoute.Applications]: EntitiesI18nKey.NoApplications,
+  [ApplicationRoute.ApplicationRunners]: EntitiesI18nKey.NoApplicationRunners,
+  [ApplicationRoute.Interceptors]: EntitiesI18nKey.NoInterceptors,
+  [ApplicationRoute.Adapters]: EntitiesI18nKey.NoAdapters,
+  [ApplicationRoute.Keys]: EntitiesI18nKey.NoKeys,
+  [ApplicationRoute.Roles]: EntitiesI18nKey.NoRoles,
+  [ApplicationRoute.Routes]: EntitiesI18nKey.NoRoutes,
+  [ApplicationRoute.Prompts]: EntitiesI18nKey.NoPrompts,
+  [ApplicationRoute.Files]: EntitiesI18nKey.NoFiles,
+  [ApplicationRoute.AssetsApplications]: EntitiesI18nKey.NoApplications,
+  [ApplicationRoute.AssetsToolsets]: EntitiesI18nKey.NoToolsets,
+  [ApplicationRoute.PromptPublications]: EntitiesI18nKey.NoPublications,
+  [ApplicationRoute.ToolsetPublications]: EntitiesI18nKey.NoPublications,
+  [ApplicationRoute.FilePublications]: EntitiesI18nKey.NoPublications,
+  [ApplicationRoute.ApplicationPublications]: EntitiesI18nKey.NoPublications,
+  [ApplicationRoute.ActivityAudit]: EntitiesI18nKey.NoActivityAudit,
+  [ApplicationRoute.InterceptorTemplates]: EntitiesI18nKey.NoInterceptorTemplates,
+  [ApplicationRoute.Toolsets]: EntitiesI18nKey.NoToolsets,
+  [ApplicationRoute.TestSuites]: EntitiesI18nKey.NoTestSuites,
+  [ApplicationRoute.Metrics]: EntitiesI18nKey.NoMetrics,
+  [ApplicationRoute.Runs]: EntitiesI18nKey.NoRuns,
+  [ApplicationRoute.ModelServings]: EntitiesI18nKey.NoModelServings,
+};
+
+export const mainListEntitiesViewClassName = 'py-4 px-6';

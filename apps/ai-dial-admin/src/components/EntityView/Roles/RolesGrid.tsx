@@ -1,12 +1,13 @@
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useRef } from 'react';
 
+import { DialGhostButton, DialPrimaryButton, DialSwitch } from '@epam/ai-dial-ui-kit';
 import { IconPlus, IconReload } from '@tabler/icons-react';
-import { GridApi, GridReadyEvent, IRowNode } from 'ag-grid-community';
-import { DialSwitch, DialButton, ButtonVariant, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { GridApi, GridOptions, GridReadyEvent, IRowNode } from 'ag-grid-community';
 
-import Grid from '@/src/components/Grid/Grid';
+import GridView from '@/src/components/Grid/GridView/GridView';
+import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { ButtonsI18nKey, EntitiesI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialRole } from '@/src/models/dial/role';
@@ -46,8 +47,8 @@ const RolesGrid: FC<Props> = ({
   isSetNoLimitsHidden,
   isSkipRefresh,
 }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
-  const [gridApi, setGridApi] = useState<GridApi>();
+  const t = useI18n();
+  const gridApiRef = useRef<GridApi | null>(null);
   const data = getRolesGridData(entity, roles);
 
   const columns = getRolesColumnDefs(
@@ -63,7 +64,7 @@ const RolesGrid: FC<Props> = ({
   );
 
   const onGridReady = (event: GridReadyEvent) => {
-    setGridApi(event.api);
+    gridApiRef.current = event.api ?? null;
     event.api?.updateGridOptions({
       columnDefs: columns,
       rowData: data,
@@ -71,13 +72,17 @@ const RolesGrid: FC<Props> = ({
   };
 
   useEffect(() => {
-    if (!isSkipRefresh && !gridApi?.isDestroyed()) {
-      gridApi?.updateGridOptions({
+    if (!isSkipRefresh && !gridApiRef.current?.isDestroyed()) {
+      gridApiRef.current?.updateGridOptions({
         columnDefs: columns,
         rowData: data,
       });
     }
-  }, [isSkipRefresh, columns, data, gridApi]);
+  }, [isSkipRefresh, columns, data]);
+
+  useEffect(() => {
+    gridApiRef.current?.refreshCells({ columns: [ACTIONS_COLUMN_CEL_ID], force: true });
+  }, [data]);
 
   const onSwitchSpecificRoles = useCallback(
     (isPublic: boolean) => {
@@ -85,6 +90,11 @@ const RolesGrid: FC<Props> = ({
     },
     [onChangeEntity, entity],
   );
+
+  const options: GridOptions = {
+    suppressCellFocus: true,
+    suppressHeaderFocus: true,
+  };
 
   return (
     <div className="h-full flex flex-col">
@@ -95,7 +105,7 @@ const RolesGrid: FC<Props> = ({
           </h1>
           <DialSwitch
             isOn={!entity.isPublic}
-            title={t(RolesI18nKey.AvailableSpecificRoles)}
+            label={t(RolesI18nKey.AvailableSpecificRoles)}
             switchId="specificRoles"
             onChange={onSwitchSpecificRoles}
           />
@@ -103,28 +113,27 @@ const RolesGrid: FC<Props> = ({
 
         <div className="flex flex-row gap-3">
           {isResetAvailable(entity) && (
-            <DialButton
-              variant={ButtonVariant.Tertiary}
-              iconBefore={<IconReload {...BASE_ICON_PROPS} />}
+            <DialGhostButton
+              iconBefore={<IconReload {...BASE_BUTTON_ICON_PROPS} />}
               label={t(RolesI18nKey.ResetToDefaultLimits)}
               onClick={onResetAllRolesToDefault}
             />
           )}
           {!entity.isPublic && (
-            <DialButton
-              variant={ButtonVariant.Primary}
-              iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+            <DialPrimaryButton
+              iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
               label={t(ButtonsI18nKey.Add)}
               onClick={onOpenAddModal}
             />
           )}
         </div>
       </div>
-      {!data.length ? (
-        <DialNoDataContent title={t(EntitiesI18nKey.NoRoles)} />
-      ) : (
-        <Grid additionalGridOptions={{ onGridReady, suppressCellFocus: true, suppressHeaderFocus: true }} />
-      )}
+      <GridView
+        emptyDataProps={{ title: t(EntitiesI18nKey.NoRoles) }}
+        onGridReady={onGridReady}
+        additionalGridOptions={options}
+        getIsEmptyData={() => !data.length}
+      />
     </div>
   );
 };

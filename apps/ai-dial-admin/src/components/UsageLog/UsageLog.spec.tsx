@@ -8,12 +8,6 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import UsageLog from './UsageLog';
 
-vi.mock('next-auth/react', () => ({
-  useSession: vi.fn(() => {
-    return { session: { providerId: 'provider' } };
-  }),
-}));
-
 vi.mock('@/src/app/[lang]/dashboard/actions', () => ({
   getDashboardData: vi.fn(() => Promise.resolve({ data: null })),
 }));

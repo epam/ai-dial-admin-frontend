@@ -11,12 +11,10 @@ import { BasicI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
-import { DialFile } from '@/src/models/dial/file';
-import { ParsedPrompts } from '@/src/models/prompts';
+import { ImportData } from '@/src/models/import-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
-import { Asset } from '@/src/models/dial/deployment-asset';
 
 export enum ModalType {
   create = 'create',
@@ -28,6 +26,18 @@ export enum ModalType {
   move = 'move',
   addVersion = 'add-version',
   compareVersions = 'compare-versions',
+  createAsset = 'createAsset',
+  createEntity = 'createEntity',
+  build = 'build',
+  saveNewVersion = 'saveNewVersion',
+  createNewVersion = 'createNewVersion',
+  install = 'install',
+  globalFirewall = 'globalFirewall',
+  addImage = 'addImage',
+  createContainer = 'createContainer',
+  createServingHF = 'createServingHF',
+  createServingNIM = 'createServingNIM',
+  createMcpDockerImage = 'createMcpDockerImage',
 }
 
 interface Props {
@@ -38,20 +48,21 @@ interface Props {
   modalType?: ModalType;
   createModal?: ReactNode;
   duplicateModal?: ReactNode;
-  resetCurrentEntity?: () => void;
-  removeEntity?: (entity: string) => Promise<ServerActionResponse>;
-  handleExport?: (fileType?: ImportFileType) => void;
-  handleImport?: (
+  existingVersions?: string[];
+  onResetCurrentEntity?: () => void;
+  onRemove?: (entity: string) => Promise<ServerActionResponse>;
+  onExport?: (fileType?: ImportFileType) => void;
+  onImport?: (
     fileType: ImportFileType,
-    file: File | File[] | ParsedPrompts,
+    file: ImportData,
     resolution: string,
     path: string,
     ignorePaths?: boolean,
   ) => void;
-  handleMove?: (path: string) => void;
-  handleDeleteBulk?: () => void;
-  handleClose: () => void;
-  context?: () => AssetsFolderContext<Asset | DialFile>;
+  onMove?: (path: string) => void;
+  onDeleteBulk?: () => void;
+  onClose: () => void;
+  getAssetContext?: () => AssetsFolderContext;
 }
 
 const Modals: FC<Props> = ({
@@ -62,15 +73,16 @@ const Modals: FC<Props> = ({
   modalType,
   createModal,
   duplicateModal,
-  handleExport,
-  handleImport,
-  handleMove,
-  handleDeleteBulk,
-  handleClose,
-  context,
-  removeEntity,
+  existingVersions,
+  onExport,
+  onImport,
+  onMove,
+  onDeleteBulk,
+  onClose,
+  getAssetContext,
+  onRemove,
 }) => {
-  const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
+  const t = useI18n();
 
   return (
     <>
@@ -80,10 +92,10 @@ const Modals: FC<Props> = ({
         createPortal(
           <ImportModal
             route={route}
-            context={context}
+            getAssetContext={getAssetContext}
             isModalOpen={isModalOpen}
-            onClose={handleClose}
-            onApply={handleImport}
+            onClose={onClose}
+            onApply={onImport}
           />,
           document.body,
         )}
@@ -94,9 +106,10 @@ const Modals: FC<Props> = ({
           <DeleteConfirmationModal
             entity={entity as object}
             view={route}
-            onCloseModal={handleClose}
-            context={context}
-            removeEntity={removeEntity as (entity: string) => Promise<ServerActionResponse>}
+            onCloseModal={onClose}
+            getAssetContext={getAssetContext}
+            existingVersions={existingVersions}
+            onRemoveEntity={onRemove as (entity: string) => Promise<ServerActionResponse>}
           />,
           document.body,
         )}
@@ -107,10 +120,10 @@ const Modals: FC<Props> = ({
           <FilePathModal
             modalTitle={t(BasicI18nKey.MoveToFolder)}
             isModalOpen={isModalOpen}
-            onClose={handleClose}
-            onApply={handleMove as () => void}
+            onClose={onClose}
+            onApply={onMove as () => void}
             initialPath={initialPath}
-            context={context}
+            context={getAssetContext}
           />,
           document.body,
         )}
@@ -120,9 +133,9 @@ const Modals: FC<Props> = ({
           <DeleteFolder
             view={route}
             isModalOpen={isModalOpen}
-            onClose={handleClose}
-            onApply={handleDeleteBulk}
-            context={context}
+            onClose={onClose}
+            onApply={onDeleteBulk}
+            context={getAssetContext}
             isBulkDelete={true}
           />,
           document.body,
@@ -130,7 +143,7 @@ const Modals: FC<Props> = ({
       {isModalOpen &&
         modalType === ModalType.export &&
         createPortal(
-          <ExportModal route={route} isModalOpen={isModalOpen} onClose={handleClose} onApply={handleExport} />,
+          <ExportModal route={route} isModalOpen={isModalOpen} onClose={onClose} onApply={onExport} />,
           document.body,
         )}
     </>

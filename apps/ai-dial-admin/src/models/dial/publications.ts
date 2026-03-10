@@ -7,30 +7,63 @@ export interface Publication {
   path: string;
   requestName: string;
   author: string;
+  displayAuthor?: string;
   createdAt: string;
   status: string;
   action: ActionType;
   folderId: string;
   rules?: DialRule[];
+  resourceIssues?: ResourceIssue[];
+  files?: PublicationFile[];
 }
 
-export interface PromptPublication extends Publication {
-  prompts?: Partial<DialPrompt>[];
+export interface PublicationEntity {
+  sourceUrl: string;
+  targetUrl: string;
+  reviewUrl: string;
+  action: ActionType;
+}
+
+export interface PublicationFile extends PublicationEntity {
+  file: Partial<DialFile>;
 }
 
 export interface FilePublication extends Publication {
-  files?: Partial<DialFile>[];
+  files?: PublicationFile[];
 }
 
-export interface ApplicationPublication extends Publication {
-  applicationResources?: DialApplicationResource[];
+export interface PublicationPrompt extends PublicationEntity {
+  prompt: Partial<DialPrompt>;
+}
+
+export interface PromptPublication extends Publication {
+  prompts?: PublicationPrompt[];
+}
+
+export interface PublicationToolset extends PublicationEntity {
+  toolSetResource: DialToolsetResource;
 }
 
 export interface ToolsetPublication extends Publication {
-  toolSetResources?: DialToolsetResource[];
+  toolSetResources?: PublicationToolset[];
+}
+
+export interface PublicationApplication extends PublicationEntity {
+  applicationResource: DialApplicationResource;
+}
+
+export interface ApplicationPublication extends Publication {
+  applicationResources?: PublicationApplication[];
+}
+
+export interface ResourceIssue {
+  message: string;
+  path: string;
+  resourceType: string;
 }
 
 export enum ActionType {
   ADD = 'add',
+  ADD_IF_ABSENT = 'add_if_absent',
   DELETE = 'delete',
 }

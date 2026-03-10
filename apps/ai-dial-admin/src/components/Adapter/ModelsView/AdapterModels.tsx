@@ -1,9 +1,9 @@
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
-import { getModels } from '@/src/app/[lang]/models/actions';
+import { getModelsListAction } from '@/src/app/[lang]/models/actions';
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
 import { getRelevantModelsForAdapter } from '@/src/components/AddEntitiesTab/utils';
-import { ENTITY_BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -19,14 +19,14 @@ interface Props {
 }
 
 const AdapterModels: FC<Props> = ({ adapter, onChangeAdapter }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
   const getReqRef = useRef(useProtectedRequest());
   const showNotificationRef = useRef(useNotification().showNotification);
 
   const [models, setModels] = useState<DialModel[]>([]);
 
   useEffect(() => {
-    getReqRef.current(getModels).then((res) => {
+    getReqRef.current(getModelsListAction).then((res) => {
       if (!res || !res.success || !res.response) {
         return Promise.reject(res?.errorMessage);
       }
@@ -71,7 +71,7 @@ const AdapterModels: FC<Props> = ({ adapter, onChangeAdapter }) => {
       getRelevantDataForEntity={getRelevantModelsForAdapter.bind(this, adapter)}
       onAdd={onAddModels}
       onRemove={onRemoveModel}
-      customColumns={ENTITY_BASE_COLUMNS}
+      customColumns={BASE_COLUMNS}
     />
   );
 };

@@ -1,19 +1,23 @@
-import { ButtonVariant, DialButton, DialPopup } from '@epam/ai-dial-ui-kit';
+import { DialNeutralButton, DialPopup, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { createAdapter } from '@/src/app/[lang]/adapters/actions';
-import AdapterProperties from '@/src/components/Adapter/View/AdapterProperties';
-import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
+import AdapterProperties from '@/src/components/Adapter/View/Properties/Properties';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
+import {
+  getCreateEntityTitle,
+  getCreateNotificationDescription,
+  getCreateNotificationTitle,
+} from '@/src/utils/entities/create-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   isModalOpen: boolean;
@@ -22,7 +26,7 @@ interface Props {
 }
 
 const CreateAdapter: FC<Props> = ({ isModalOpen, onClose, names }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
   const router = useRouter();
   const getReqRef = useRef(useProtectedRequest());
   const { showNotification } = useNotification();
@@ -46,7 +50,6 @@ const CreateAdapter: FC<Props> = ({ isModalOpen, onClose, names }) => {
   useEffect(() => {
     dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!currentAdapter.name });
     dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !!currentAdapter.displayName });
-    dispatch({ type: ValidationActionType.SetField, field: 'baseEndpoint', isValid: !!currentAdapter.baseEndpoint });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -69,18 +72,18 @@ const CreateAdapter: FC<Props> = ({ isModalOpen, onClose, names }) => {
   }, [currentAdapter, showNotification, t, router, onClose]);
 
   return (
-    <DialPopup onClose={onClose} title={t(CreateI18nKey.Adapter)} portalId="CreateAdapter" open={isModalOpen}>
+    <DialPopup
+      onClose={onClose}
+      header={getCreateEntityTitle(ApplicationRoute.Adapters, t)}
+      portalId="CreateAdapter"
+      open={isModalOpen}
+    >
       <div className="flex flex-col px-6 py-4">
-        <AdapterProperties entity={currentAdapter} names={names} onChangeAdapter={onChangeAdapter} />
+        <AdapterProperties entity={currentAdapter} names={names} onChangeAdapter={onChangeAdapter} isModal={true} />
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialButton
-          variant={ButtonVariant.Primary}
-          label={t(ButtonsI18nKey.Create)}
-          onClick={onCreate}
-          disabled={!isValid}
-        />
+        <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialPrimaryButton label={t(ButtonsI18nKey.Create)} onClick={onCreate} disabled={!isValid} />
       </div>
     </DialPopup>
   );

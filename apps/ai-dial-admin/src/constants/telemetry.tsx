@@ -6,7 +6,7 @@ import { TelemetryI18nKey } from '@/src/constants/i18n';
 import { TelemetryQuery } from '@/src/models/telemetry';
 import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
 import { IconEqual, IconEqualNot } from '@tabler/icons-react';
-import { BASE_ICON_PROPS } from './main-layout';
+import { BASE_BUTTON_ICON_PROPS } from './main-layout';
 
 export const DEFAULT_REFRESH_TIME = '1m';
 
@@ -30,12 +30,12 @@ export const filterConditionConfig = [
   {
     value: FILTER_OPERATOR.Equal,
     label: TelemetryI18nKey.FilterConditionEqual,
-    icon: <IconEqual {...BASE_ICON_PROPS} />,
+    icon: <IconEqual {...BASE_BUTTON_ICON_PROPS} />,
   },
   {
     value: FILTER_OPERATOR.NotEqual,
     label: TelemetryI18nKey.FilterConditionNotEqual,
-    icon: <IconEqualNot {...BASE_ICON_PROPS} />,
+    icon: <IconEqualNot {...BASE_BUTTON_ICON_PROPS} />,
   },
   { value: FILTER_OPERATOR.StartsWith, label: TelemetryI18nKey.FilterConditionStartsWith, icon: <StartsWith /> },
   { value: FILTER_OPERATOR.EndsWith, label: TelemetryI18nKey.FilterConditionEndsWith, icon: <EndsWith /> },

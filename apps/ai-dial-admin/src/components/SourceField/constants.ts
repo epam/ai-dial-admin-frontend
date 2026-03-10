@@ -11,7 +11,7 @@ export const INTERCEPTOR_SOURCE_ITEMS: SelectOption[] = [
 export const MODELS_SOURCE_ITEMS: SelectOption[] = [
   // NOTE: Keep order
   { value: SOURCE_TYPE.ADAPTER, label: 'Adapter' },
-  { value: SOURCE_TYPE.CONTAINER, label: 'Model Container' },
+  { value: SOURCE_TYPE.CONTAINER, label: 'Model Serving' },
   { value: SOURCE_TYPE.ENDPOINTS, label: 'External Endpoint' },
 ];
 
@@ -19,6 +19,12 @@ export const TOOLSET_SOURCE_ITEMS: SelectOption[] = [
   // NOTE: Keep order
   { value: SOURCE_TYPE.ENDPOINTS, label: 'External Endpoint' },
   { value: SOURCE_TYPE.CONTAINER, label: 'MCP Container' },
+];
+
+export const ADAPTER_SOURCE_ITEMS: SelectOption[] = [
+  // NOTE: Keep order
+  { value: SOURCE_TYPE.ENDPOINTS, label: 'External Endpoint' },
+  { value: SOURCE_TYPE.CONTAINER, label: 'Adapter Container' },
 ];
 
 const getItems = (route: ApplicationRoute) => {
@@ -29,6 +35,8 @@ const getItems = (route: ApplicationRoute) => {
       return MODELS_SOURCE_ITEMS;
     case ApplicationRoute.Toolsets:
       return TOOLSET_SOURCE_ITEMS;
+    case ApplicationRoute.Adapters:
+      return ADAPTER_SOURCE_ITEMS;
     default:
       return [];
   }

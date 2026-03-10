@@ -1,7 +1,6 @@
 'use client';
 
 import { FC } from 'react';
-import classNames from 'classnames';
 import { DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 
 import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -9,8 +8,9 @@ import { Toolset } from '@/src/models/dial/toolset';
 import { ToolsetTransport } from '@/src/types/toolset';
 import { useI18n } from '@/src/locales/client';
 
-import ReadonlyField from '@/src/components/Common/ReadonlyField/ReadonlyField';
-import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
+import ReadonlyInput from '@/src/components/Common/ReadonlyInput/ReadonlyInput';
+import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 
 interface Props {
   entity: Toolset;
@@ -28,25 +28,31 @@ const ToolsetEndpoint: FC<Props> = ({ entity, disabled, onChange, prefix, isModa
   ];
 
   return (
-    <div className={classNames('w-full flex flex-col gap-y-8', !isModal && 'lg:w-[45%]')}>
+    <div className="w-full flex flex-col gap-y-8">
       {prefix ? (
-        <ReadonlyField elementId="endpoint" title={t(EntitiesI18nKey.ToolsetEndpoint)} value={prefix} />
+        <ReadonlyInput
+          containerClassName={STANDARD_CONTROL_WIDTH}
+          id="endpoint"
+          label={t(EntitiesI18nKey.ToolsetEndpoint)}
+          value={prefix}
+        />
       ) : (
         <EndpointControl
           id="endpoint"
           disabled={disabled}
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
-          fieldTitle={t(EntitiesI18nKey.ExternalEndpoint)}
+          label={t(EntitiesI18nKey.ExternalEndpoint)}
           endpoint={entity.endpoint}
           onChange={(endpoint) => onChange?.({ ...entity, endpoint })}
-          required={true}
+          required
+          isFullWidth={isModal}
         />
       )}
       {!isModal && (
         <DialSelectField
           disabled={disabled}
-          fieldTitle={t(EntityFieldsI18nKey.transport)}
-          elementId="transport"
+          label={t(EntityFieldsI18nKey.transport)}
+          id="transport"
           containerClassName="w-[180px]"
           value={entity.transport || ToolsetTransport.SSE}
           options={transportOptions}

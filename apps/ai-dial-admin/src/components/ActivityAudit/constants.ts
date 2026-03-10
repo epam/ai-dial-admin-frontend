@@ -14,6 +14,7 @@ export enum EntityParameterKeys {
   LIMITS = 'limits',
   PRICING = 'pricing',
   INTERCEPTORS = 'interceptors',
+  GLOBAL_INTERCEPTORS = 'globalInterceptors',
   ROLES = 'roles',
   SHARE = 'share',
   ROLE_LIMITS = 'roleLimits',
@@ -67,6 +68,7 @@ export const arrayObjectParameterKeys = [
 ];
 export const separateObjectParameterKeys = [
   EntityParameterKeys.INTERCEPTORS,
+  EntityParameterKeys.GLOBAL_INTERCEPTORS,
   EntityParameterKeys.ROLE_LIMITS,
   EntityParameterKeys.DEFAULT_ROLE_LIMIT,
   EntityParameterKeys.AUTH,

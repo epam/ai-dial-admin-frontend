@@ -1,30 +1,30 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { ButtonVariant, DialButton, DialInputPopup, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { DialInputPopup, DialLabel, DialNeutralButton, DialSelectField } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
+import classNames from 'classnames';
 
-import Field from '@/src/components/Common/Field/Field';
 import SelectRunnerModal from '@/src/components/SourceField/Template/SelectRunnerModal';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
-import { CreateI18nKey, EntitiesI18nKey, SourceI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { ButtonsI18nKey, CreateI18nKey, EntitiesI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
+import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import classNames from 'classnames';
-import { ServerActionResponse } from '@/src/models/server-action';
-import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props<T> {
   entity: T;
   onChange: (entity: T) => void;
   getRunners: () => Promise<ServerActionResponse<InterceptorTemplate[]>>;
-  errorText?: string;
+  error?: string;
   isModal?: boolean;
 }
 
@@ -32,7 +32,7 @@ const Templates = <T extends DialModel | DialInterceptor>({
   entity,
   onChange,
   getRunners,
-  errorText,
+  error,
   isModal,
 }: Props<T>) => {
   const t = useI18n();
@@ -43,6 +43,7 @@ const Templates = <T extends DialModel | DialInterceptor>({
   const [runners, setRunners] = useState<InterceptorTemplate[]>([]);
   const [selectedRunner, setSelectedRunner] = useState<InterceptorTemplate | null>(null);
 
+  const isMobile = useIsMobileScreen();
   const onOpenModal = useCallback(() => {
     setIsModalOpen(true);
   }, [setIsModalOpen]);
@@ -99,24 +100,25 @@ const Templates = <T extends DialModel | DialInterceptor>({
                 value: runner.name as string,
                 label: runner.displayName || runner.name || '',
               }))}
-              searchable={true}
+              searchable
+              required
               onChange={(value) => onSelect(value as string)}
-              elementId="source-type"
+              id="source-type"
               value={runners.find((runner) => runner.name === entity.source?.runnerName)?.name}
               placeholder={t(CreateI18nKey.SelectInterceptorTemplate)}
-              fieldTitle={t(SourceI18nKey.InterceptorTemplate)}
+              label={t(SourceI18nKey.InterceptorTemplate)}
             />
           </div>
         ) : (
-          <div className="flex gap-2 w-full">
-            <div className="w-full lg:w-[45%]">
-              <Field fieldTitle={t(SourceI18nKey.InterceptorTemplate)} htmlFor="templates" />
+          <div className="flex gap-2">
+            <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-2')}>
+              <DialLabel label={t(SourceI18nKey.InterceptorTemplate)} required htmlFor="templates" />
               <DialInputPopup
                 open={isModalOpen}
                 onOpen={onOpenModal}
                 selectedValue={selectedRunner?.name}
                 elementId="templates"
-                errorText={errorText}
+                errorText={error}
                 emptyValueText={t(EntitiesI18nKey.NoTemplates)}
               >
                 <SelectRunnerModal
@@ -129,11 +131,10 @@ const Templates = <T extends DialModel | DialInterceptor>({
               </DialInputPopup>
             </div>
             {entity.source?.runnerName && (
-              <DialButton
-                variant={ButtonVariant.Secondary}
-                iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
-                className={classNames(errorText ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
-                label={t(SourceI18nKey.OpenTemplate)}
+              <DialNeutralButton
+                iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
+                className={classNames(error ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
+                label={isMobile ? '' : t(ButtonsI18nKey.Open)}
                 onClick={() => openTemplate()}
               />
             )}

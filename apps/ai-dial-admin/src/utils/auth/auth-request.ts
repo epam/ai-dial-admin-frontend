@@ -1,7 +1,9 @@
+import { Token } from '@/src/models/auth';
 import { IncomingMessage } from 'http';
-import { getToken, GetTokenParams, JWT } from 'next-auth/jwt';
+import { GetTokenParams } from 'next-auth/jwt';
 import { NextApiRequestCookies } from 'next/dist/server/api-utils';
 import { authOptions } from './auth-options';
+import { getFullToken } from './token';
 
 export const getTokenRequestParams = async (
   headers: Promise<Headers>,
@@ -24,7 +26,7 @@ export const getUserToken = async (
   isEnableAuth: boolean,
   headers: Promise<Headers>,
   cookies: Promise<unknown>,
-): Promise<JWT | null> => {
+): Promise<Token> => {
   const params = await getTokenRequestParams(headers, cookies);
-  return isEnableAuth ? await getToken(params) : null;
+  return isEnableAuth ? await getFullToken(params) : undefined;
 };

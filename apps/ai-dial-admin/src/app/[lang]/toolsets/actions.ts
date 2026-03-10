@@ -2,8 +2,8 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { deploymentsApi, toolSetsApi } from '@/src/app/api/api';
-import { Toolset } from '@/src/models/dial/toolset';
+import { toolSetsApi } from '@/src/app/api/api';
+import { Toolset, ToolsetAuthCredentialLevel } from '@/src/models/dial/toolset';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getAllowTools, getTransport } from '@/src/utils/toolset/toolset-transport';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -42,7 +42,22 @@ export async function createToolset(toolSet: Toolset) {
   );
 }
 
-export async function getToolsetContainers() {
+export async function tryOutTool(name: string, body: Record<string, unknown>) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return deploymentsApi.getMcpContainers(token);
+  return toolSetsApi.tryOutTool(name, body, token);
+}
+
+export async function signInToolset(
+  toolset: Toolset,
+  type: ToolsetAuthCredentialLevel,
+  apiKey?: string,
+  authCode?: string,
+) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return toolSetsApi.signInToolset(toolset, type, token, apiKey, authCode);
+}
+
+export async function signOutToolset(toolset: Toolset, type: ToolsetAuthCredentialLevel) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return toolSetsApi.signOutToolset(toolset, type, token);
 }

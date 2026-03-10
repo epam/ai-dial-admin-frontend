@@ -8,6 +8,7 @@ export interface DialApplication extends ChatEntity, EntityValidityState {
   viewerUrl?: string;
   editorUrl?: string;
   routes?: DialRoute[];
+  displayVersion?: string;
   dependencies?: string[];
   applicationProperties?: Record<string, DefaultsValue>;
   applicationPropertiesTemp?: ApplicationPropertiesTemp[];
@@ -19,6 +20,7 @@ export interface DialApplicationScheme extends ModifiedEntity, DialScheme {
   description?: string;
   title?: string;
   type?: TypeEntity;
+  'dial:applicationTypeSchemaEndpoint'?: string;
   'dial:applicationTypeEditorUrl'?: string;
   'dial:applicationTypeViewerUrl'?: string;
   'dial:applicationTypeDisplayName'?: string;
@@ -30,6 +32,7 @@ export interface DialApplicationScheme extends ModifiedEntity, DialScheme {
   'dial:appendApplicationPropertiesHeader'?: boolean;
   'dial:applicationTypeRoutes'?: DialRoute[];
   'dial:applicationTypePlaybackSupport'?: boolean;
+  'dial:applicationTypeAssistantAttachmentsInRequestSupported'?: boolean;
   'dial:applicationTypeIconUrl'?: string;
   'dial:applicationTypeBucketCopy'?: TypeBucketCopy;
   'dial:applicationTypeInterceptors'?: string[];

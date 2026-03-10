@@ -6,14 +6,14 @@ import { ADDITIONAL_PROPERTY_FLAG, WrapIfAdditionalTemplateProps } from '@rjsf/u
 export const WrapIfAdditionalTemplate: FC<WrapIfAdditionalTemplateProps> = ({
   id,
   label,
-  onKeyChange,
   children,
   classNames,
   style,
   schema,
   disabled,
   readonly,
-  onDropPropertyClick,
+  onRemoveProperty,
+  onKeyRename,
 }) => {
   const additional = ADDITIONAL_PROPERTY_FLAG in schema;
 
@@ -26,21 +26,14 @@ export const WrapIfAdditionalTemplate: FC<WrapIfAdditionalTemplateProps> = ({
         <div className="flex">
           <DialInput
             containerClassName="flex w-full bg-layer-2"
-            elementId={id}
-            disabled={disabled}
-            readonly={readonly}
-            onBlur={({ target }) => onKeyChange(target.value)}
+            id={id}
+            disabled={disabled || readonly}
+            onBlur={({ target }) => onKeyRename(target.value)}
             defaultValue={label}
           />
         </div>
         <div className="bg-layer-2">{children}</div>
-        {!readonly && (
-          <DialRemoveButton
-            onClick={onDropPropertyClick(label)}
-            iconClassName="text-error"
-            className="border rounded border-primary justify-start p-2"
-          />
-        )}
+        {!readonly && <DialRemoveButton onClick={onRemoveProperty} />}
       </div>
     </div>
   );

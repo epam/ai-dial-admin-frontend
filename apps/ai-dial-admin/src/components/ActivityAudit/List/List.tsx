@@ -1,26 +1,32 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonVariant, DialButton, DialConfirmationPopup, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { DialConfirmationPopup, DialNeutralButton, DialTooltip } from '@epam/ai-dial-ui-kit';
 import { IconRefresh, IconRestore } from '@tabler/icons-react';
-import { GridApi, GridOptions, IDatasource, IGetRowsParams } from 'ag-grid-community';
+import { GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
 import classNames from 'classnames';
 
 import { getActivities } from '@/src/app/[lang]/activity-audit/actions';
-import { getActivityAuditColumns, getGridFilters } from '@/src/components/ActivityAudit/List/utils';
+import {
+  getActivityAuditColumns,
+  getAuditActivityHref,
+  getEndOfDay,
+  getGridFilters,
+  getStartOfDay,
+} from '@/src/components/ActivityAudit/List/utils';
 import ActivityDetails from '@/src/components/ActivityAudit/Modals/Details';
 import { SYSTEM_ROLLBACK_ID } from '@/src/components/ActivityAudit/Rollback/constants';
 import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
-import { emptyDataTitleMap, listViewTitleMap } from '@/src/components/EntityListView/constants';
-import ResetFiltersButton from '@/src/components/EntityListView/HeaderButtons/ResetFiltersButton';
+import { emptyDataTitleMap, listViewTitleMap } from '@/src/components/ListView/constants';
+import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
 import ListView from '@/src/components/ListView/ListView';
-import { ACTIONS_COLUMN_CEL_ID, CACHE_LIMIT, PAGE_SIZE } from '@/src/constants/ag-grid';
+import { ACTIONS_COLUMN_CEL_ID, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
 import { DEFAULT_TIME_PERIOD } from '@/src/constants/global-time-filter';
 import { ButtonsI18nKey, RollbackI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialActivity } from '@/src/models/activity-audit';
@@ -41,14 +47,29 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
+import { ActivityAuditResourceType } from '@/src/types/activity-audit';
+import { ACTIVITY_AUDIT_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 
 interface Props {
   entity?: BaseEntity | DialApplicationScheme;
   entityType?: string;
+  refresh?: boolean;
+  initTimeFilter?: string | TimeRange;
+  onChangeTimeFilter?: (filter: string | TimeRange) => void;
+  isCustomRange?: boolean;
+  setIsCustomRange?: Dispatch<SetStateAction<boolean>>;
 }
 
-const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
-  const t = useI18n() as (key: string) => string;
+const ActivityAuditList: FC<Props> = ({
+  entity,
+  entityType,
+  refresh,
+  initTimeFilter,
+  onChangeTimeFilter,
+  isCustomRange,
+  setIsCustomRange,
+}) => {
+  const t = useI18n();
   const router = useRouter();
 
   const { showNotification } = useNotification();
@@ -58,10 +79,22 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
-  const [timePeriod, setTimePeriod] = useState<string | null>(DEFAULT_TIME_PERIOD);
+  const [timePeriod, setTimePeriod] = useState<string | undefined>();
   const [timeRange, setTimeRange] = useState<TimeRange>(getTimeRangeById(DEFAULT_TIME_PERIOD));
-
   const [selectedActivity, setSelectedActivity] = useState<DialActivity | undefined>(void 0);
+  const [innerIsCustomRange, setInnerIsCustomRange] = useState(false);
+
+  useEffect(() => {
+    if (!timePeriod) {
+      if (!isCustomRange) {
+        setTimePeriod((initTimeFilter as string) || DEFAULT_TIME_PERIOD);
+        setTimeRange(getTimeRangeById((initTimeFilter as string) || DEFAULT_TIME_PERIOD));
+      } else {
+        setTimePeriod(DEFAULT_TIME_PERIOD);
+        setTimeRange((initTimeFilter as TimeRange) || getTimeRangeById(DEFAULT_TIME_PERIOD));
+      }
+    }
+  }, [initTimeFilter, timePeriod, isCustomRange]);
 
   const onCloseModal = useCallback(() => {
     setIsRollbackModalOpen(false);
@@ -69,10 +102,22 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
     setSelectedActivity(void 0);
   }, [setIsRollbackModalOpen]);
 
+  const openInNewTab = useCallback((activity?: DialActivity) => {
+    onOpenInNewTab(ApplicationRoute.ActivityAudit, activity);
+  }, []);
+
+  const onOpenConfirmationModal = useCallback((activity?: DialActivity) => {
+    setIsRollbackModalOpen(true);
+    setSelectedActivity(activity);
+  }, []);
+
   const gridDataSource: IDatasource = useMemo(
     () => ({
       getRows: (params: IGetRowsParams) => {
-        const actualTimeRange = timePeriod ? getTimeRangeById(timePeriod) : timeRange;
+        const actualTimeRange =
+          isCustomRange || innerIsCustomRange
+            ? { startDate: getStartOfDay(timeRange.startDate), endDate: getEndOfDay(timeRange.endDate) }
+            : getTimeRangeById(timePeriod || '');
         gridApi?.setGridOption('loading', true);
         const page = Math.floor(params.startRow / PAGE_SIZE);
         const sorts = getRequestSorts(params.sortModel);
@@ -96,9 +141,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
 
         getActivities(PAGE_SIZE, page, sorts, filters)
           .then((res) => {
-            if (res === void 0) {
-              router.push(ApplicationRoute.Forbidden);
-            } else if (res == null || res.data.length === 0) {
+            if (res == null || res.data.length === 0) {
               params.successCallback([], 0);
             } else {
               params.successCallback(res.data || [], page + 1 === res.totalPages ? res.total : void 0);
@@ -111,7 +154,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
           });
       },
     }),
-    [timePeriod, timeRange, gridApi, entity, entityType, router],
+    [isCustomRange, innerIsCustomRange, timePeriod, timeRange, gridApi, entity, entityType],
   );
 
   useEffect(() => {
@@ -121,35 +164,23 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
   }, [gridApi, gridDataSource]);
 
   const gridOptions: GridOptions = {
-    rowModelType: 'infinite',
-    cacheBlockSize: PAGE_SIZE,
-    blockLoadDebounceMillis: 200,
-    maxBlocksInCache: Math.floor(CACHE_LIMIT / PAGE_SIZE),
-    onCellClicked: !entity
-      ? (e) => {
-          if (e.colDef.field !== ACTIONS_COLUMN_CEL_ID) {
-            router.push(getUrnForEntity(ApplicationRoute.ActivityAudit, e.data));
+    ...infiniteGridOptions,
+    onCellClicked: (e) => {
+      if (e.colDef.field !== ACTIONS_COLUMN_CEL_ID) {
+        if (entity) {
+          const href = getAuditActivityHref(entity, entityType as ActivityAuditResourceType, e.data.activityId);
+          if (href) {
+            router.push(href);
           }
+        } else {
+          router.push(getUrnForEntity(ApplicationRoute.ActivityAudit, e.data));
         }
-      : void 0,
+      }
+    },
   };
 
-  const openInNewTab = useCallback((activity?: DialActivity) => {
-    onOpenInNewTab(ApplicationRoute.ActivityAudit, activity);
-  }, []);
-
-  const onOpenConfirmationModal = useCallback((activity?: DialActivity) => {
-    setIsRollbackModalOpen(true);
-    setSelectedActivity(activity);
-  }, []);
-
-  const onOpenDetailsModal = useCallback((activity?: DialActivity) => {
-    setIsDetailsModalOpen(true);
-    setSelectedActivity(activity);
-  }, []);
-
   const columnDefs = entity
-    ? getActivityAuditColumns(t, void 0, onOpenConfirmationModal, onOpenDetailsModal, true)
+    ? [...ACTIVITY_AUDIT_COLUMNS(t, true)]
     : getActivityAuditColumns(t, openInNewTab, onOpenConfirmationModal, void 0);
 
   const onRefresh = useCallback(() => {
@@ -163,18 +194,22 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
   const onTimePeriodChange = useCallback(
     (period: string) => {
       setTimePeriod(period);
+      onChangeTimeFilter?.(period);
+      setTimeRange(getTimeRangeById(period));
       onRefresh();
     },
-    [onRefresh],
+    [onRefresh, onChangeTimeFilter],
   );
 
   const onTimeRangeChange = useCallback(
-    (range: TimeRange) => {
-      setTimePeriod(null);
+    (range: TimeRange, isCustom?: boolean) => {
       setTimeRange(range);
+      if (isCustom) {
+        onChangeTimeFilter?.(range);
+      }
       onRefresh();
     },
-    [onRefresh],
+    [onRefresh, onChangeTimeFilter],
   );
 
   const resourceRollback = useCallback(() => {
@@ -192,6 +227,9 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
               ),
             );
             onRefresh();
+            if (refresh) {
+              router.refresh();
+            }
           } else {
             showNotification(
               getErrorNotification(
@@ -211,11 +249,15 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
           );
         });
     }
-  }, [selectedActivity, showNotification, t, onCloseModal, onRefresh]);
+  }, [selectedActivity, onCloseModal, showNotification, t, onRefresh, refresh, router]);
 
   const systemRollback = useCallback(() => {
     router.push(`${ApplicationRoute.ActivityAudit}/${SYSTEM_ROLLBACK_ID}`);
   }, [router]);
+
+  const onGridReady = useCallback(({ api }: GridReadyEvent) => {
+    setGridApi(api);
+  }, []);
 
   return (
     <div role="activities" className="flex flex-col flex-1 min-h-0 w-full relative">
@@ -224,28 +266,35 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
         columnDefs={columnDefs}
         title={!entity ? t(listViewTitleMap[ApplicationRoute.ActivityAudit]) : void 0}
         emptyDataTitle={t(emptyDataTitleMap[ApplicationRoute.ActivityAudit])}
-        onGridReady={setGridApi}
+        onGridReady={onGridReady}
         view={!entity ? ApplicationRoute.ActivityAudit : void 0}
       >
         <div className={classNames('flex gap-4', entity ? 'flex-1 justify-between' : 'justify-end')}>
-          <ResetFiltersButton gridApi={gridApi} />
-          <TimeFilter
-            timePeriod={timePeriod as string}
-            onTimePeriodChange={onTimePeriodChange}
-            timeRange={timeRange}
-            onTimeRangeChange={onTimeRangeChange}
-          />
-          <DialButton
-            variant={ButtonVariant.Secondary}
-            label={t(ButtonsI18nKey.Refresh)}
-            iconBefore={<IconRefresh {...BASE_ICON_PROPS} />}
-            onClick={onRefresh}
-          />
+          {!entity && <ResetFiltersButton gridApi={gridApi} />}
+          {timePeriod && (
+            <TimeFilter
+              timePeriod={timePeriod as string}
+              onTimePeriodChange={onTimePeriodChange}
+              timeRange={timeRange}
+              onTimeRangeChange={onTimeRangeChange}
+              isCustomRange={isCustomRange || innerIsCustomRange}
+              setIsCustomRange={setIsCustomRange || setInnerIsCustomRange}
+            />
+          )}
+
+          <div className="flex flex-row gap-x-4">
+            {entity && <ResetFiltersButton gridApi={gridApi} />}
+            <DialNeutralButton
+              label={t(ButtonsI18nKey.Refresh)}
+              iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}
+              onClick={onRefresh}
+            />
+          </div>
+
           {!entity && (
-            <DialButton
-              iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
-              variant={ButtonVariant.Secondary}
-              label={t(RollbackI18nKey.System)}
+            <DialNeutralButton
+              iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} />}
+              label={t(RollbackI18nKey.Rollback)}
               onClick={systemRollback}
             />
           )}
@@ -256,7 +305,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
           <DialConfirmationPopup
             open={isRollbackModalOpen}
             isLoading={isLoading}
-            title={t(RollbackI18nKey.ConfirmResourceRollbackTitle)}
+            header={t(RollbackI18nKey.ConfirmResourceRollbackTitle)}
             onConfirm={resourceRollback}
             confirmLabel={t(ButtonsI18nKey.Rollback)}
             onClose={onCloseModal}
@@ -267,7 +316,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
                 <span className="important-text-part mx-1">{selectedActivity?.activityType}</span>
                 <span>{t(RollbackI18nKey.ConfirmRollbackDescriptionPart2)}</span>
                 <DialTooltip tooltip={selectedActivity?.resourceId || ''} triggerClassName="flex-1">
-                  <span className="important-text-part mx-1 my-1">{selectedActivity?.resourceId}</span>
+                  <span className="important-text-part m-1">{selectedActivity?.resourceId}</span>
                 </DialTooltip>
                 <span>{t(RollbackI18nKey.ConfirmRollbackDescriptionPart3)}</span>
                 <span className="important-text-part">

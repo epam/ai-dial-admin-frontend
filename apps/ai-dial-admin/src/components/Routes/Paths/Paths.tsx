@@ -1,23 +1,25 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
+import classNames from 'classnames';
 
 import { ErrorI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import Path from './Path';
 
 interface Props {
-  title: string;
+  label: string;
   readonly?: boolean;
-  optional?: boolean;
+  required?: boolean;
   paths?: string[];
+  disableValidation?: boolean;
   onChangePaths: (path: string[]) => void;
 }
 
-const Paths: FC<Props> = ({ title, optional, readonly, paths, onChangePaths }) => {
+const Paths: FC<Props> = ({ label, required, readonly, paths, disableValidation, onChangePaths }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
 
@@ -28,8 +30,10 @@ const Paths: FC<Props> = ({ title, optional, readonly, paths, onChangePaths }) =
   }, [dispatch, pathError]);
 
   useEffect(() => {
-    setPathError(!paths || paths.length === 0 || paths.some((p) => !p) ? t(ErrorI18nKey.RequiredField) : '');
-  }, [paths, t]);
+    setPathError(
+      required && (!paths || paths.length === 0 || paths.some((p) => !p)) ? t(ErrorI18nKey.RequiredField) : '',
+    );
+  }, [required, paths, t]);
 
   const onAddPath = useCallback(() => {
     const newPaths = [...(paths || []), ''];
@@ -51,12 +55,16 @@ const Paths: FC<Props> = ({ title, optional, readonly, paths, onChangePaths }) =
 
   const onChangePath = useCallback(
     (index: number, value?: string) => {
-      const newPaths = [...(paths || [])];
+      let newPaths = [...(paths || [])];
 
       if (!value) {
         newPaths.splice(index, 1);
       } else {
         newPaths[index] = value;
+      }
+
+      if (newPaths?.length === 0) {
+        newPaths.push('');
       }
       onChangePaths(newPaths);
     },
@@ -64,26 +72,26 @@ const Paths: FC<Props> = ({ title, optional, readonly, paths, onChangePaths }) =
   );
 
   return (
-    <div className="flex flex-col gap-y-3">
+    <div className={classNames('flex flex-col gap-y-3', STANDARD_CONTROL_WIDTH)}>
       {paths?.map((path, index) => (
         <Path
           readonly={readonly}
           key={`path-${index}`}
           path={path}
           index={index}
-          optional={optional}
-          fieldTitle={title}
+          required={required}
+          label={label}
           allPaths={paths}
           onRemove={onRemove}
           onChangePath={onChangePath}
+          disableValidation={disableValidation}
         />
       ))}
       {!readonly && (
         <div>
-          <DialButton
-            variant={ButtonVariant.Secondary}
+          <DialNeutralButton
             label={t(RoutesI18nKey.AddPaths)}
-            iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+            iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
             onClick={onAddPath}
           />
         </div>

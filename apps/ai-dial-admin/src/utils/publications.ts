@@ -7,9 +7,13 @@ export function getActionClassName(action: ActionType): string {
   return ACTION_CLASS_NAME[action];
 }
 
+export function isAddAction(action: ActionType): boolean {
+  return action === ActionType.ADD || action === ActionType.ADD_IF_ABSENT;
+}
+
 export function getModalsTranslations(route: ApplicationRoute, action: ActionType) {
   if (route === ApplicationRoute.PromptPublications) {
-    return action === ActionType.ADD
+    return isAddAction(action)
       ? {
           ApproveModalTitle: PublicationsI18nKey.PromptPublishApproveModalTitle,
           DeclineModalTitle: PublicationsI18nKey.PromptPublishDeclineModalTitle,
@@ -21,7 +25,7 @@ export function getModalsTranslations(route: ApplicationRoute, action: ActionTyp
           ApproveDescription: PublicationsI18nKey.PromptUnpublishApproveDescription,
         };
   } else if (route === ApplicationRoute.ApplicationPublications) {
-    return action === ActionType.ADD
+    return isAddAction(action)
       ? {
           ApproveModalTitle: PublicationsI18nKey.ApplicationPublishApproveModalTitle,
           DeclineModalTitle: PublicationsI18nKey.ApplicationPublishDeclineModalTitle,
@@ -33,7 +37,7 @@ export function getModalsTranslations(route: ApplicationRoute, action: ActionTyp
           ApproveDescription: PublicationsI18nKey.ApplicationUnpublishApproveDescription,
         };
   } else if (route === ApplicationRoute.ToolsetPublications) {
-    return action === ActionType.ADD
+    return isAddAction(action)
       ? {
           ApproveModalTitle: PublicationsI18nKey.ToolsetPublishApproveModalTitle,
           DeclineModalTitle: PublicationsI18nKey.ToolsetPublishDeclineModalTitle,
@@ -46,7 +50,7 @@ export function getModalsTranslations(route: ApplicationRoute, action: ActionTyp
         };
   }
 
-  return action === ActionType.ADD
+  return isAddAction(action)
     ? {
         ApproveModalTitle: PublicationsI18nKey.FilePublishApproveModalTitle,
         DeclineModalTitle: PublicationsI18nKey.FilePublishDeclineModalTitle,

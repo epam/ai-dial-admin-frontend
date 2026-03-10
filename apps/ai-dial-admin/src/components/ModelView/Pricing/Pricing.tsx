@@ -1,7 +1,7 @@
 import { FC, useCallback } from 'react';
 import { DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 
-import PriceControl from '@/src/components/EntityMainProperties/BaseProperties/Price';
+import PriceControl from '@/src/components/BaseControls/Price';
 import { BasicI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialModel, PricingType } from '@/src/models/dial/model';
@@ -71,31 +71,31 @@ const Pricing: FC<Props> = ({ model, onChangeModel }) => {
         'lg:justify-start lg:border-none lg:p-0 lg:flex-row lg:gap-x-2 lg:items-center lg:mb-0',
       )}
     >
-      <div className="lg:w-[35%]">
-        <DialSelectField
-          value={activeType}
-          elementId="pricing"
-          options={items}
-          fieldTitle={t(ModelViewI18nKey.CostUnit)}
-          onChange={(type) => onChangePricingType(type as string)}
-        />
-      </div>
+      <DialSelectField
+        value={activeType}
+        id="pricing"
+        options={items}
+        className="w-[220px]"
+        containerClassName="w-[220px]"
+        label={t(ModelViewI18nKey.CostUnit)}
+        onChange={(type) => onChangePricingType(type as string)}
+      />
 
       <PriceControl
         elementId="promptsPrice"
-        fieldTitle={t(ModelViewI18nKey.PromptPrice)}
+        label={t(ModelViewI18nKey.PromptPrice)}
         value={getMultipliedValue(model.pricing?.prompt, isTokenType)}
         onChange={onChangePrompt}
-        containerClassName="w-[120px] lg:w-auto lg:max-w-[120px]"
+        containerClassName="w-[120px]"
         disabled={activeType === BasicI18nKey.None}
       />
 
       <PriceControl
         elementId="completionsPrice"
-        fieldTitle={t(ModelViewI18nKey.CompletionPrice)}
+        label={t(ModelViewI18nKey.CompletionPrice)}
         value={getMultipliedValue(model.pricing?.completion, isTokenType)}
         onChange={onChangeCompletion}
-        containerClassName="w-[120px] lg:w-auto lg:max-w-[120px]"
+        containerClassName="w-[120px]"
         disabled={activeType === BasicI18nKey.None}
       />
     </div>

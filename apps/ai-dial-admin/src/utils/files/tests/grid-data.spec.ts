@@ -1,9 +1,14 @@
 import { describe, expect, test } from 'vitest';
-import { getGridFileData, getGridFileDataFromString, getGridFileColumns } from '../grid-data';
+import {
+  getPublicationGridFileData,
+  getPublicationGridFileDataFromString,
+  getGridFileColumns,
+  getGridFileData,
+} from '../grid-data';
 
 describe('Files list :: getGridFileData', () => {
   test('Should return correct grid data from files', () => {
-    const res = getGridFileData([{ name: 'somePic.jpg' }, { name: 'someText.txt' }, { name: 'someJson.json' }]);
+    const res = getGridFileData([{ name: 'somePic.jpg' }, { name: 'someText.txt' }, { name: 'someJson.json' }] as any);
     expect(res).toEqual([
       { name: 'somePic', extension: '.jpg' },
       { name: 'someText', extension: '.txt' },
@@ -12,10 +17,54 @@ describe('Files list :: getGridFileData', () => {
   });
 });
 
-describe('Files list :: getGridFileDataFromString', () => {
+describe('Files list :: getPublicationGridFileData', () => {
+  test('Should return correct grid data from publication files', () => {
+    const res = getPublicationGridFileData(
+      [
+        { file: { name: 'somePic.jpg', path: '/images/somePic.jpg' } },
+        { file: { name: 'someText.txt', path: '/docs/someText.txt' } },
+        { file: { name: 'someJson.json', path: '/data/someJson.json' } },
+      ] as any,
+      [],
+    );
+    expect(res).toEqual([
+      { name: 'somePic', extension: '.jpg', path: '/images/somePic.jpg' },
+      { name: 'someText', extension: '.txt', path: '/docs/someText.txt' },
+      { name: 'someJson', extension: '.json', path: '/data/someJson.json' },
+    ]);
+  });
+
+  test('Should return correct grid data from added files', () => {
+    const addedFiles = [
+      new File(['a'], 'upload.png', { type: 'image/png' }),
+      new File(['b'], 'report.pdf', { type: 'application/pdf' }),
+    ];
+    const res = getPublicationGridFileData([], addedFiles);
+    expect(res).toEqual([
+      { name: 'upload', extension: '.png', path: '' },
+      { name: 'report', extension: '.pdf', path: '' },
+    ]);
+  });
+
+  test('Should combine publication files and added files', () => {
+    const res = getPublicationGridFileData([{ file: { name: 'existing.txt', path: '/docs/existing.txt' } }] as any, [
+      new File(['c'], 'new.csv'),
+    ]);
+    expect(res).toEqual([
+      { name: 'existing', extension: '.txt', path: '/docs/existing.txt' },
+      { name: 'new', extension: '.csv', path: '' },
+    ]);
+  });
+
+  test('Should return empty array when both inputs are empty', () => {
+    expect(getPublicationGridFileData([], [])).toEqual([]);
+  });
+});
+
+describe('Files list :: getPublicationGridFileDataFromString', () => {
   test('returns correct grid data for file strings', () => {
     const files = ['folder/file1.txt', 'file2.pdf', 'archive.tar.gz', 'noextensionfile'];
-    const result = getGridFileDataFromString(files);
+    const result = getPublicationGridFileDataFromString(files);
 
     expect(result).toEqual([
       { name: 'folder/file1', extension: '.txt', path: 'folder/file1.txt' },
@@ -26,7 +75,7 @@ describe('Files list :: getGridFileDataFromString', () => {
   });
 
   test('returns empty array for empty input', () => {
-    expect(getGridFileDataFromString([])).toEqual([]);
+    expect(getPublicationGridFileDataFromString([])).toEqual([]);
   });
 });
 

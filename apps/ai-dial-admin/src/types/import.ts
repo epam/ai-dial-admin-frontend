@@ -14,6 +14,7 @@ export enum ImportStatus {
   SUCCESS = 'success',
   SKIP = 'already_exists',
   ERROR = 'failed',
+  FAILED = 'failure',
 }
 
 export enum ImportSteps {

@@ -2,42 +2,38 @@
 
 import { Dispatch, MouseEvent, SetStateAction, useCallback, useRef, useState } from 'react';
 
+import { DialGhostButton, DialNeutralButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconColumns2, IconFileArrowLeft, IconPlus, IconSquareCheck } from '@tabler/icons-react';
 import { GridApi } from 'ag-grid-community';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import { importFiles } from '@/src/app/[lang]/files/actions';
-import { importPrompts } from '@/src/app/[lang]/prompts/actions';
 import CreateAdapter from '@/src/components/Adapter/Modals/CreateAdapter';
 import CreateAppRunner from '@/src/components/ApplicationRunners/Modals/CreateAppRunner';
 import Modals, { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
-import { getImportResults } from '@/src/components/EntityListView/Import/import';
+import { getImportResults } from '@/src/components/EntityListView/Import/utils';
 import CreateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Create';
 import CreateKey from '@/src/components/Keys/Modals/CreateKey';
-import { ButtonsI18nKey, ImportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
+import { MAX_FILE_SIZE_MB } from '@/src/constants/file';
+import { ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
-import { DialFile } from '@/src/models/dial/file';
 import { ImportResult } from '@/src/models/import';
-import { ParsedPrompts } from '@/src/models/prompts';
+import { ImportData } from '@/src/models/import-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
-import { getErrorNotification, getPrepareNotification } from '@/src/utils/notification';
-import ResetFiltersButton from './ResetFiltersButton';
-import { getFormDataForImport } from './utils';
-import { Asset } from '@/src/models/dial/deployment-asset';
 import { isAssetView } from '@/src/utils/is-asset-view';
-import { MAX_FILE_SIZE_MB } from '@/src/constants/file';
-import { useProtectedRequest } from '@/src/hooks/use-protected-request';
+import { getErrorNotification, getPrepareNotification } from '@/src/utils/notification';
+import { getFormDataForImport, getImportFunction, getImportTitle } from './utils';
 
 interface Props<T> {
   names?: string[];
@@ -49,7 +45,7 @@ interface Props<T> {
   gridApi?: GridApi | null;
   toggleColumnsPanel: () => void;
   createEntity?: (entity: T) => Promise<ServerActionResponse>;
-  context?: () => AssetsFolderContext<Asset | DialFile>;
+  context?: () => AssetsFolderContext;
   setIsBulkView?: Dispatch<SetStateAction<boolean>>;
   isBulkView?: boolean;
 }
@@ -68,7 +64,7 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
   setIsBulkView,
   isBulkView,
 }: Props<T>) => {
-  const t = useI18n() as (t: string, options?: Record<string, string | number>) => string;
+  const t = useI18n();
   const { showNotification, removeNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
 
@@ -89,7 +85,7 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
   const onImport = useCallback(
     (
       fileType: ImportFileType,
-      file: File | File[] | ParsedPrompts,
+      file: ImportData,
       conflictResolutionStrategy: string,
       path: string,
       ignorePaths?: boolean,
@@ -101,6 +97,7 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
         conflictResolutionStrategy,
         void 0,
         ignorePaths,
+        route,
       );
       const folderName = getFolderName(path) || '';
       const prepareNotificationId = showNotification(
@@ -109,10 +106,11 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
           t(ImportI18nKey.PrepareDescription, { folder: folderName }),
         ),
       );
-      const importFunction = route === ApplicationRoute.Prompts ? importPrompts : importFiles;
-      const translatedType = t(
-        route === ApplicationRoute.Prompts ? MenuI18nKey.Prompts : MenuI18nKey.Files,
-      ).toLowerCase();
+
+      const importFunction = getImportFunction(route);
+      const translatedType = t(getImportTitle(route)).toLowerCase();
+      if (!importFunction) return;
+
       if (fileSize > MAX_FILE_SIZE_MB * (1024 * 1024)) {
         removeNotification(prepareNotificationId);
         showNotification(
@@ -193,10 +191,9 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
     <div className="flex gap-4">
       <ResetFiltersButton gridApi={gridApi} />
       {showColumnsButton && (
-        <DialButton
-          variant={ButtonVariant.Tertiary}
+        <DialGhostButton
           label={t(ButtonsI18nKey.Columns)}
-          iconBefore={<IconColumns2 {...BASE_ICON_PROPS} />}
+          iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} />}
           onClick={onToggleColumnsPanel}
         />
       )}
@@ -204,25 +201,22 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
         <>
           {isAssetView(route) && (
             <>
-              <DialButton
-                variant={ButtonVariant.Secondary}
+              <DialNeutralButton
                 label={isTabletScreen ? '' : t(ButtonsI18nKey.BulkActions)}
-                iconBefore={<IconSquareCheck {...BASE_ICON_PROPS} />}
+                iconBefore={<IconSquareCheck {...BASE_BUTTON_ICON_PROPS} />}
                 onClick={() => setIsBulkView?.(true)}
               />
-              <DialButton
-                variant={ButtonVariant.Secondary}
+              <DialNeutralButton
                 label={isTabletScreen ? '' : t(ButtonsI18nKey.Import)}
-                iconBefore={<IconFileArrowLeft {...BASE_ICON_PROPS} />}
+                iconBefore={<IconFileArrowLeft {...BASE_BUTTON_ICON_PROPS} />}
                 onClick={() => handleModalOpen(ModalType.import)}
               />
             </>
           )}
           {!!createEntity && (
-            <DialButton
-              variant={ButtonVariant.Primary}
+            <DialPrimaryButton
               label={isTabletScreen ? '' : t(ButtonsI18nKey.Create)}
-              iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+              iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
               onClick={() => handleModalOpen(ModalType.create)}
             />
           )}
@@ -234,9 +228,9 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
         isModalOpen={isModalOpen}
         modalType={modalType}
         createModal={<SaveValidationContextProvider>{getCreateModal()}</SaveValidationContextProvider>}
-        handleImport={onImport}
-        handleClose={handleModalClose}
-        context={context}
+        onImport={onImport}
+        onClose={handleModalClose}
+        getAssetContext={context}
       />
     </div>
   );

@@ -1,21 +1,21 @@
-import { Asset } from '@/src/models/dial/deployment-asset';
-import { DialPrompt } from '@/src/models/dial/prompt';
+import { ImageVersion } from '@/src/models/deployments/images';
+import { AssetApp, AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { compareVersions, modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
 
-export const filterLatestVersions = (data: Asset[]) => {
-  const latestVersions: Record<string, DialPrompt> = {};
+export const filterLatestVersions = (data: AssetWithVersion[]) => {
+  const latestVersions: Record<string, AssetWithVersion> = {};
 
   data?.forEach((item) => {
     const name = item.name as string;
     if (!latestVersions[name] || compareVersions(item.version, latestVersions[name].version) > 0) {
-      latestVersions[name] = item as DialPrompt;
+      latestVersions[name] = item as AssetWithVersion;
     }
   });
 
   return Object.values(latestVersions);
 };
 
-export const getVersionsPerName = (data: Asset[]) => {
+export const getVersionsPerName = (data: AssetWithVersion[] | ImageVersion[]) => {
   const versionsPerName: Record<string, string[]> = {};
 
   data.forEach((item) => {
@@ -34,22 +34,31 @@ export const getVersionsPerName = (data: Asset[]) => {
   return versionsPerName;
 };
 
-export const getIsNeedToMove = (entity: Asset, initialEntity?: Asset) => {
+export const getIsNeedToMove = (entity: AssetWithVersion, initialEntity?: AssetWithVersion) => {
   return entity.folderId !== initialEntity?.folderId;
 };
 
-export const getEntityForUpdate = (entity: Asset, initialEntity?: Asset) => {
+export const getEntityForUpdate = (entity: AssetWithVersion, initialEntity?: AssetWithVersion) => {
   return {
     ...entity,
-    folderId: (initialEntity as Asset)?.folderId,
+    folderId: (initialEntity as AssetWithVersion)?.folderId,
   };
 };
 
-export const addNewVersion = (entity: Asset, version: string) => {
+export const addNewVersion = (entity: AssetWithVersion, version: string) => {
   const path = modifyNameVersionInPrompt(entity.path, void 0, version);
+  delete (entity as AssetApp).reference;
   return {
     ...entity,
     path,
     version,
   };
+};
+
+export const getParentPathByFullPath = (fullPath: string) => {
+  let normalized = fullPath.endsWith('/') && fullPath !== '/' ? fullPath.slice(0, -1) : fullPath;
+  const lastSlash = normalized.lastIndexOf('/');
+  if (lastSlash === -1) return '';
+
+  return normalized.slice(0, lastSlash + 1);
 };

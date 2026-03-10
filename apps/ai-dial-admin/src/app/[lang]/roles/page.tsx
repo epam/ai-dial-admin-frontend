@@ -1,37 +1,29 @@
 import { cookies, headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
 import { rolesApi } from '@/src/app/api/api';
 import RolesList from '@/src/components/Roles/List/List';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialRole } from '@/src/models/dial/role';
+import { errorObjLog } from '@/src/server/logger';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
-import { SIGN_IN_LINK } from '@/src/constants/auth';
-import { logError } from '@/src/server/logger';
-import Page403 from '@/src/components/Page403/Page403';
-import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page() {
-  let data: DialRole[] | null = [];
+  let data: DialRole[] | null = null;
 
-  const isEnableAuth = getIsEnableAuthToggle();
-  const token = await getUserToken(isEnableAuth, headers(), cookies());
-  const isInvalidSession = await getIsInvalidSession(isEnableAuth, token);
-
-  if (isInvalidSession) {
-    return redirect(SIGN_IN_LINK);
-  }
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
   try {
     data = await rolesApi.getRolesList(token);
-    if (data === void 0) {
-      return <Page403 />;
-    }
   } catch (e) {
-    logError(e, 'Failed to fetch roles view data');
+    errorObjLog(e, 'Failed to fetch roles view data');
+  }
+
+  if (data == null) {
+    notFound();
   }
 
   return (

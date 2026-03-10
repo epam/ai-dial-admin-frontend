@@ -5,12 +5,13 @@ import { DialFormPopup, DialNoDataContent, PopupSize } from '@epam/ai-dial-ui-ki
 import { ColDef, GridOptions, SelectionChangedEvent } from 'ag-grid-community';
 
 import { getButtonTitle } from '@/src/components/ExportConfig/AddEntities/utils';
-import Grid from '@/src/components/Grid/Grid';
-import { CHECKBOX_COL_DEF } from '@/src/constants/ag-grid';
+import GridView from '@/src/components/Grid/GridView/GridView';
+import { MULTI_ROW_SELECTION } from '@/src/constants/ag-grid';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { EntityType } from '@/src/types/entity-type';
+import { ExportFormat } from '@/src/types/export';
 import { getEmptyDataTitleI18nKey } from '@/src/utils/entities/get-empty-data-title';
 import Dependencies from './Dependencies';
 
@@ -19,12 +20,23 @@ interface Props {
   selectedTab?: EntityType;
   entities: EntitiesGridData[];
   columnDefs?: ColDef[];
+  selectedExportFormat: ExportFormat;
   onClose: () => void;
   onApply: (entities: EntitiesGridData[], dependencies?: EntityType[]) => void;
+  disabledDependencies?: boolean;
 }
 
-const AddEntitiesModal: FC<Props> = ({ isModalOpen, selectedTab, entities, columnDefs, onClose, onApply }) => {
-  const t = useI18n() as (v: string) => string;
+const AddEntitiesModal: FC<Props> = ({
+  isModalOpen,
+  selectedExportFormat,
+  selectedTab,
+  entities,
+  columnDefs,
+  onClose,
+  onApply,
+  disabledDependencies,
+}) => {
+  const t = useI18n();
   const [selectedEntities, setSelectedEntities] = useState<EntitiesGridData[]>([]);
   const [selectedDependencies, setSelectedDependencies] = useState<EntityType[]>([]);
 
@@ -42,20 +54,14 @@ const AddEntitiesModal: FC<Props> = ({ isModalOpen, selectedTab, entities, colum
   };
 
   const additionalGridOptions: GridOptions = {
-    rowSelection: {
-      mode: 'multiRow',
-      selectAll: 'all',
-    },
-    selectionColumnDef: {
-      ...CHECKBOX_COL_DEF,
-    },
-    onSelectionChanged: onSelectionChanged,
+    ...MULTI_ROW_SELECTION,
+    onSelectionChanged,
   };
 
   return (
     <DialFormPopup
       onClose={onClose}
-      title={modalTitle}
+      header={modalTitle}
       portalId="AddExportEntities"
       open={isModalOpen}
       size={PopupSize.Lg}
@@ -72,12 +78,14 @@ const AddEntitiesModal: FC<Props> = ({ isModalOpen, selectedTab, entities, colum
         ) : (
           <div className="flex-1 flex flex-row min-h-0">
             <div className="flex-1">
-              <Grid columnDefs={columnDefs} rowData={entities} additionalGridOptions={additionalGridOptions} />
+              <GridView columnDefs={columnDefs} rowData={entities} additionalGridOptions={additionalGridOptions} />
             </div>
             <Dependencies
               selectedTab={selectedTab}
+              selectedExportFormat={selectedExportFormat}
               selectedDependencies={selectedDependencies}
               onChangeSelectedDependencies={setSelectedDependencies}
+              disabled={disabledDependencies}
             />
           </div>
         )}

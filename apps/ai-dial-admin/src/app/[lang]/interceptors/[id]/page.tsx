@@ -1,10 +1,10 @@
 import { cookies, headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
 import { getInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
-import { applicationRunnersApi, applicationsApi, interceptorsApi, modelsApi } from '@/src/app/api/api';
+import { getModelsList } from '@/src/app/[lang]/models/actions';
+import { applicationRunnersApi, applicationsApi, interceptorsApi, utilityApi } from '@/src/app/api/api';
 import InterceptorView from '@/src/components/Interceptors/View/View';
-import Page403 from '@/src/components/Page403/Page403';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
@@ -12,9 +12,8 @@ import { DialApplication, DialApplicationScheme } from '@/src/models/dial/applic
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
-import { logError } from '@/src/server/logger';
+import { errorObjLog } from '@/src/server/logger';
 import { InterceptorStatus } from '@/src/types/interceptor-status';
-import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { filterNames } from '@/src/utils/entities/filter-names';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -36,15 +35,14 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   try {
     interceptors = await interceptorsApi.getInterceptorsList(token);
-    models = await modelsApi.getModelsList(token);
+    models = await getModelsList();
     applications = await applicationsApi.getApplicationsList(token);
     appRunners = await applicationRunnersApi.getApplicationSchemesList(token);
     interceptor = await interceptorsApi.getInterceptor((await params.params).id, token, etag).then((res) => {
       etag = res?.etag || DEFAULT_ETAG;
       return res?.response as DialModel | null;
     });
-    // todo fill when api ready
-    globalInterceptors = [];
+    globalInterceptors = (await utilityApi.getSystemProperties(token, DEFAULT_ETAG)).response?.globalInterceptors || [];
 
     interceptor = {
       ...interceptor,
@@ -60,16 +58,12 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
         },
       );
     }
-
-    if (interceptors === void 0 || models === void 0 || applications === void 0 || interceptor === void 0) {
-      return <Page403 />;
-    }
   } catch (e) {
-    logError(e, 'Failed to fetch interceptor view data');
+    errorObjLog(e, 'Failed to fetch interceptor view data');
   }
 
   if (interceptor == null) {
-    redirect(ApplicationRoute.Interceptors);
+    notFound();
   }
 
   const names = filterNames(interceptors, interceptor?.name);

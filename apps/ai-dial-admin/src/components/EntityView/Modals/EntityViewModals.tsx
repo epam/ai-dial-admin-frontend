@@ -8,6 +8,7 @@ import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { ModalType } from './constants';
 import EntityRolesModal from './EmptyRoles/EmptyRoles';
+import DiscardModal from './Discard/Discard';
 
 interface Props {
   isModalOpen: boolean;
@@ -28,7 +29,7 @@ const EntityViewModals: FC<Props> = ({ isModalOpen, modalType, handleConfirm, ha
         createPortal(
           <DialConfirmationPopup
             open={isModalOpen}
-            title={t(EntitiesI18nKey.SaveChangesTitle)}
+            header={t(EntitiesI18nKey.SaveChangesTitle)}
             description={t(EntitiesI18nKey.SaveChangesDescription)}
             confirmLabel={t(ButtonsI18nKey.Save)}
             cancelLabel={t(ButtonsI18nKey.OpenWithoutSave)}
@@ -44,7 +45,7 @@ const EntityViewModals: FC<Props> = ({ isModalOpen, modalType, handleConfirm, ha
         createPortal(
           <DialConfirmationPopup
             open={isModalOpen}
-            title={t(EntitiesI18nKey.SaveParametersTitle)}
+            header={t(EntitiesI18nKey.SaveParametersTitle)}
             description={t(EntitiesI18nKey.SaveParametersDescription)}
             confirmLabel={t(ButtonsI18nKey.Save)}
             cancelLabel={t(ButtonsI18nKey.LeaveWithoutSave)}
@@ -59,6 +60,13 @@ const EntityViewModals: FC<Props> = ({ isModalOpen, modalType, handleConfirm, ha
           onConfirm={() => handleConfirm(ModalType.emptyRoles)}
           onClose={() => handleClose()}
           onCancel={() => handleCancel(ModalType.emptyRoles)}
+        />
+      )}
+      {isModalOpen && modalType === ModalType.discard && (
+        <DiscardModal
+          onConfirm={() => handleConfirm(ModalType.discard)}
+          onClose={() => handleClose()}
+          onCancel={() => handleCancel(ModalType.discard)}
         />
       )}
     </>

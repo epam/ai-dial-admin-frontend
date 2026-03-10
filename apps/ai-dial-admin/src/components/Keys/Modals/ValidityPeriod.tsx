@@ -51,14 +51,18 @@ const ValidityPeriod: FC<Props> = ({ onChange }) => {
   return (
     <div className="flex flex-row gap-8">
       <DialSelectField
-        fieldTitle={t(KeysI18nKey.ValidityPeriod)}
+        label={t(KeysI18nKey.ValidityPeriod)}
         value={selectedValue}
         options={items}
-        elementId="period"
+        id="period"
         onChange={(value) => onChangeValue(value as string)}
         containerClassName="w-[180px]"
       />
-      <LabelledText label={t(EntityFieldsI18nKey.expiresAt)} text={formatDateTimeToLocalString(expirationTime) || ''} />
+      <LabelledText
+        label={t(EntityFieldsI18nKey.expiresAt)}
+        text={formatDateTimeToLocalString(expirationTime) || ''}
+        className="justify-center"
+      />
     </div>
   );
 };

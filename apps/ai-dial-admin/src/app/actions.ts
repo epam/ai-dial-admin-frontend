@@ -16,3 +16,21 @@ export async function getAppProcessStatus() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return utilityApi.getAppProcessStatus(token);
 }
+
+export async function getCoreVersions() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return utilityApi.getCoreVersion(token);
+}
+
+export async function setCoreVersion(version?: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  const coreVersion = { coreConfigVersion: version };
+  return utilityApi.setCoreVersion(coreVersion, token);
+}
+
+export async function getCoreSyncStatus(url: string | null, etag: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  if (url) {
+    return utilityApi.getEntitySyncStatus(url, token, etag);
+  }
+}

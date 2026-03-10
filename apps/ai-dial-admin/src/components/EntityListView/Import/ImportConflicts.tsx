@@ -1,26 +1,28 @@
 'use client';
 import { Dispatch, FC, SetStateAction, useCallback } from 'react';
 
-import { CellValueChangedEvent, ColDef, GridReadyEvent, RowClassRules } from 'ag-grid-community';
+import { CellValueChangedEvent, ColDef, GridOptions, GridReadyEvent, RowClassRules } from 'ag-grid-community';
 import { DialRadioGroup, RadioGroupOrientation, RadioButtonWithContent, StepStatus } from '@epam/ai-dial-ui-kit';
 
 import {
   changeFilesMap,
   generateFileColumnsForImportGrid,
   generateFileRowDataForImportGrid,
-  generatePromptColumnsForImportGrid,
-  generatePromptRowDataForImportGrid,
+  generateAssetColumnsForImportGrid,
+  generateAssetRowDataForImportGrid,
   isErrorFileNode,
   isErrorPromptNode,
-} from '@/src/components/EntityListView/Import/import';
-import Grid from '@/src/components/Grid/Grid';
-import { ImportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+} from '@/src/components/EntityListView/Import/utils';
+import GridView from '@/src/components/Grid/GridView/GridView';
+import { ImportI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { FileImportGridData, FileImportMap } from '@/src/models/file';
 import { ConflictResolutionPolicy } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
+import { isAssetWithVersion } from '@/src/utils/is-asset-view';
+import { getImportTitle } from '@/src/components/EntityListView/HeaderButtons/utils';
 
 interface Props {
   route?: ApplicationRoute;
@@ -43,9 +45,9 @@ const ImportConflicts: FC<Props> = ({
   setEditedFileMap,
   setStepsState,
 }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const t = useI18n();
 
-  const isPromptImport = route === ApplicationRoute.Prompts;
+  const isAssetWithVersionImport = isAssetWithVersion(route);
   const fileCount = [...filesMap.values()].reduce((total, value) => total + value.files.length, 0);
 
   const changeFile = useCallback(
@@ -55,25 +57,24 @@ const ImportConflicts: FC<Props> = ({
     [setEditedFileMap],
   );
 
-  const rowData = isPromptImport
-    ? generatePromptRowDataForImportGrid(filesMap, existing as DialPrompt[])
+  const rowData = isAssetWithVersionImport
+    ? generateAssetRowDataForImportGrid(filesMap, existing as DialPrompt[])
     : generateFileRowDataForImportGrid(filesMap, existing as DialFile[]);
 
-  const columnDefs: ColDef[] = isPromptImport
-    ? generatePromptColumnsForImportGrid(changeFile)
+  const columnDefs: ColDef[] = isAssetWithVersionImport
+    ? generateAssetColumnsForImportGrid(changeFile)
     : generateFileColumnsForImportGrid(changeFile);
 
   const rowClassRules: RowClassRules = {
     'ag-error-row': (params) => {
-      return isPromptImport ? isErrorPromptNode(params.data) : isErrorFileNode(params.data);
+      return isAssetWithVersionImport ? isErrorPromptNode(params.data) : isErrorFileNode(params.data);
     },
   };
-
   const setErrorState = (event: GridReadyEvent | CellValueChangedEvent) => {
     let isError = false;
 
     event.api?.forEachNode((node) => {
-      if (isPromptImport ? isErrorPromptNode(node.data) : isErrorFileNode(node.data)) {
+      if (isAssetWithVersionImport ? isErrorPromptNode(node.data) : isErrorFileNode(node.data)) {
         isError = true;
       }
     });
@@ -97,6 +98,11 @@ const ImportConflicts: FC<Props> = ({
     });
   };
 
+  const options: GridOptions = {
+    onGridReady,
+    onCellValueChanged,
+  };
+
   return (
     <div className="flex flex-col min-h-0">
       <h3 className="pt-6 pb-4">{t(ImportI18nKey.ConflictResolution)}</h3>
@@ -108,12 +114,12 @@ const ImportConflicts: FC<Props> = ({
         onChange={setResolution}
       />
       {resolution === ConflictResolutionPolicy.MANUAL && (
-        <div className="flex flex-col flex-1 min-h-0">
+        <div className="flex flex-col flex-1 min-h-0 mt-4">
           <div>
-            {t(MenuI18nKey.Prompts)}: {fileCount}
+            {t(getImportTitle(route))}: {fileCount}
           </div>
           <div className="min-h-0">
-            <Grid additionalGridOptions={{ onGridReady, onCellValueChanged }} />
+            <GridView additionalGridOptions={options} onGridReady={onGridReady} />
           </div>
         </div>
       )}

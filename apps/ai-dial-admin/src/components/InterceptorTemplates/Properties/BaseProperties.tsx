@@ -1,29 +1,30 @@
 import { FC } from 'react';
 
-import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
-import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
-import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
+import DescriptionControl from '@/src/components/BaseControls/Description';
+import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
+import IdControl from '@/src/components/BaseControls/Id/Id';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 
 interface Props {
   template: InterceptorTemplate;
-  setTemplate: (template: InterceptorTemplate) => void;
+  onChangeTemplate: (template: InterceptorTemplate) => void;
   names?: string[];
   isImmutable?: boolean;
 }
 
-const BaseProperties: FC<Props> = ({ template, setTemplate, names, isImmutable }) => {
+const BaseProperties: FC<Props> = ({ template, onChangeTemplate, names, isImmutable }) => {
   return (
     <div className="flex flex-col gap-y-8 h-full">
-      {!isImmutable && <IdControl entity={template} names={names} onChangeEntity={setTemplate} />}
+      {!isImmutable && <IdControl entity={template} names={names} onChangeEntity={onChangeTemplate} />}
       <DisplayNameControl
-        required={true}
+        required
         displayName={template.displayName}
+        isFullWidth={!isImmutable}
         onChange={(displayName) => {
-          setTemplate({ ...template, displayName });
+          onChangeTemplate({ ...template, displayName });
         }}
       />
-      <DescriptionControl entity={template} onChangeEntity={setTemplate} />
+      <DescriptionControl entity={template} onChangeEntity={onChangeTemplate} isFullWidth={!isImmutable} />
     </div>
   );
 };

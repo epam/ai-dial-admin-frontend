@@ -1,37 +1,29 @@
 import { cookies, headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
 import { publicationsApi } from '@/src/app/api/api';
-import Page403 from '@/src/components/Page403/Page403';
 import PublicationsList from '@/src/components/Publications/List/List';
-import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { Publication } from '@/src/models/dial/publications';
-import { logError } from '@/src/server/logger';
+import { errorObjLog } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
-import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page() {
-  const isEnableAuth = getIsEnableAuthToggle();
-  const token = await getUserToken(isEnableAuth, headers(), cookies());
-  const isInvalidSession = await getIsInvalidSession(isEnableAuth, token);
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
-  if (isInvalidSession) {
-    return redirect(SIGN_IN_LINK);
-  }
-
-  let data: Publication[] | undefined = [];
+  let data: Publication[] | undefined = undefined;
 
   try {
     data = await publicationsApi.getPublicationsPromptsList(token);
-    if (data === void 0) {
-      return <Page403 />;
-    }
   } catch (e) {
-    logError(e, 'Failed to fetch publications prompt view data');
+    errorObjLog(e, 'Failed to fetch publications prompt view data');
+  }
+
+  if (data == null) {
+    notFound();
   }
 
   return <PublicationsList data={data || []} route={ApplicationRoute.PromptPublications} />;

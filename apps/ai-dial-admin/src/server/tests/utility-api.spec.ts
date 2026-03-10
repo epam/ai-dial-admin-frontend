@@ -62,4 +62,83 @@ describe('Server :: UtilityApi', () => {
     const result = await instance.getAppProcessStatus(TOKEN_MOCK);
     expect(result.response).toEqual(JSON.stringify({ running: true }));
   });
+
+  test('should get system properties', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ globalInterceptors: ['global'] }));
+
+    const result = await instance.getSystemProperties(TOKEN_MOCK, 'etag');
+    expect(result.response).toEqual(JSON.stringify({ globalInterceptors: ['global'] }));
+  });
+
+  test('should update system properties', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ globalInterceptors: ['global'] }));
+
+    const result = await instance.updateSystemProperties({ globalInterceptors: ['global'] }, TOKEN_MOCK, 'etag');
+    expect(result.response).toEqual(JSON.stringify({ globalInterceptors: ['global'] }));
+  });
+
+  test('should get core versions', async () => {
+    fetch.mockResponseOnce(
+      JSON.stringify({
+        defaultVersion: '0.36.6',
+        autoDetectedVersion: '0.33.55',
+        manuallySetVersion: '0.23.6',
+      }),
+    );
+
+    const result = await instance.getCoreVersion(TOKEN_MOCK);
+    expect(result.response).toEqual(
+      JSON.stringify({
+        defaultVersion: '0.36.6',
+        autoDetectedVersion: '0.33.55',
+        manuallySetVersion: '0.23.6',
+      }),
+    );
+  });
+
+  test('should set core versions', async () => {
+    fetch.mockResponseOnce(
+      JSON.stringify({
+        coreConfigVersion: '0.36.6',
+      }),
+    );
+
+    const result = await instance.setCoreVersion(
+      {
+        coreConfigVersion: '0.36.6',
+      },
+      TOKEN_MOCK,
+    );
+    expect(result.response).toEqual(
+      JSON.stringify({
+        coreConfigVersion: '0.36.6',
+      }),
+    );
+  });
+
+  test('should get core sync status', async () => {
+    fetch.mockResponseOnce(
+      JSON.stringify({
+        currentState: {},
+        configState: {},
+        status: '',
+      }),
+    );
+
+    const result = await instance.getEntitySyncStatus('', TOKEN_MOCK, 'etag');
+    expect(result.response).toEqual(
+      JSON.stringify({
+        currentState: {},
+        configState: {},
+        status: '',
+      }),
+    );
+  });
+
+  test('should get core security info', async () => {
+    fetch.mockResponseOnce(JSON.stringify({}));
+
+    const result = await instance.getSecurityInfo(TOKEN_MOCK);
+    expect(result.response).toEqual(JSON.stringify({}));
+  });
 });

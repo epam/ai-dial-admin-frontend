@@ -1,32 +1,60 @@
 import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 import { FC, useState } from 'react';
+import { GridOptions, GridReadyEvent } from 'ag-grid-community';
 
-import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
+import { SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
 import { SOURCE_CONTAINERS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { Container } from '@/src/models/deployments';
+import { Container } from '@/src/models/deployments/containers';
 
+import GridView from '@/src/components/Grid/GridView/GridView';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
-import Grid from '@/src/components/Grid/Grid';
 
 interface Props {
   selectedId?: string;
-  interceptorContainers?: Container[];
+  containers?: Container[];
   isModalOpen: boolean;
   onClose: () => void;
   onApply: (id?: string) => void;
 }
 
-const SelectContainerModal: FC<Props> = ({ selectedId, interceptorContainers, isModalOpen, onClose, onApply }) => {
+const SelectContainerModal: FC<Props> = ({ selectedId, containers, isModalOpen, onClose, onApply }) => {
   const t = useI18n();
 
   const [selectedContainer, setSelectedContainer] = useState(selectedId);
 
+  const options: GridOptions = {
+    ...SINGLE_ROW_SELECTION,
+    selectionColumnDef: {
+      ...SINGLE_ROW_SELECTION.selectionColumnDef,
+      cellRenderer: (data: { data?: { name: string; image: string }; name: string }) => (
+        <RadioButtonRenderer inputId={data.data?.name || data.name} isChecked={data.data?.name === selectedContainer} />
+      ),
+    },
+    onRowSelected: (event) => {
+      if (event.node.isSelected()) {
+        setSelectedContainer(event.data.name);
+      }
+    },
+  };
+
+  const onGridReady = (event: GridReadyEvent) => {
+    event.api?.updateGridOptions({
+      columnDefs: SOURCE_CONTAINERS_COLUMNS,
+      rowData: containers,
+    });
+    event.api.forEachNode((node) => {
+      if (node.data.name === selectedContainer) {
+        node.setSelected(true);
+      }
+    });
+  };
+
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(CreateI18nKey.SelectContainer)}
+      header={t(CreateI18nKey.SelectContainer)}
       portalId="SelectContainer"
       open={isModalOpen}
       size={PopupSize.Lg}
@@ -38,37 +66,7 @@ const SelectContainerModal: FC<Props> = ({ selectedId, interceptorContainers, is
       onCancel={onClose}
     >
       <div className="flex flex-col px-6 py-4 h-full">
-        <Grid
-          columnDefs={SOURCE_CONTAINERS_COLUMNS}
-          additionalGridOptions={{
-            rowSelection: { mode: 'singleRow', enableClickSelection: true },
-            selectionColumnDef: {
-              ...RADIO_BUTTON_COL_DEF,
-              cellRenderer: (data: { data?: { id: string; name: string; image: string }; id: string }) => (
-                <RadioButtonRenderer
-                  inputId={data.data?.id || data.id}
-                  isChecked={data.data?.id === selectedContainer}
-                />
-              ),
-            },
-            onRowSelected: (event) => {
-              if (event.node.isSelected()) {
-                setSelectedContainer(event.data.id);
-              }
-            },
-            onGridReady: (event) => {
-              event.api?.updateGridOptions({
-                columnDefs: SOURCE_CONTAINERS_COLUMNS,
-                rowData: interceptorContainers,
-              });
-              event.api.forEachNode((node) => {
-                if (node.data.id === selectedContainer) {
-                  node.setSelected(true);
-                }
-              });
-            },
-          }}
-        />
+        <GridView columnDefs={SOURCE_CONTAINERS_COLUMNS} additionalGridOptions={options} onGridReady={onGridReady} />
       </div>
     </DialFormPopup>
   );

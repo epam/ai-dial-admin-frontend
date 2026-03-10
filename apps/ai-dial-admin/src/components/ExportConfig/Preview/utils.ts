@@ -5,7 +5,12 @@ import {
   getApplicationsForEntitiesGrid,
   getModelsForEntitiesGrid,
   getRoutesForEntitiesGrid,
+  getRolesForEntitiesGrid,
+  getAdaptersForEntitiesGrid,
+  getInterceptorsForEntitiesGrid,
+  getKeysForEntitiesGrid,
   getToolsetsForEntitiesGrid,
+  getRunnersForEntitiesGrid,
 } from '@/src/utils/entities/entities-list-view';
 import { DialModel } from '@/src/models/dial/model';
 import { EntityType } from '@/src/types/entity-type';
@@ -32,7 +37,7 @@ export const getPreviewTabs = (
   Object.keys(data).forEach((key) => {
     if (data[key].length > 0) {
       if (key === 'roles') {
-        convertedData[EntityType.ROLE] = data[key];
+        convertedData[EntityType.ROLE] = getRolesForEntitiesGrid(data[key]);
         tabs.push({
           id: EntityType.ROLE,
           label: `${t(MenuI18nKey.Roles)}: ${data[key].length}`,
@@ -40,7 +45,7 @@ export const getPreviewTabs = (
       }
 
       if (key === 'keys' && (exportFormat === ExportFormat.ADMIN || isIncludeSecret)) {
-        convertedData[EntityType.KEY] = data[key];
+        convertedData[EntityType.KEY] = getKeysForEntitiesGrid(data[key]);
         tabs.push({
           id: EntityType.KEY,
           label: `${t(MenuI18nKey.Keys)}: ${data[key].length}`,
@@ -48,7 +53,7 @@ export const getPreviewTabs = (
       }
 
       if (key === 'applicationRunners') {
-        convertedData[EntityType.APPLICATION_TYPE_SCHEMA] = data[key];
+        convertedData[EntityType.APPLICATION_TYPE_SCHEMA] = getRunnersForEntitiesGrid(data[key]);
         tabs.push({
           id: EntityType.APPLICATION_TYPE_SCHEMA,
           label: `${t(MenuI18nKey.ApplicationRunners)}: ${data[key].length}`,
@@ -56,7 +61,7 @@ export const getPreviewTabs = (
       }
 
       if (key === 'interceptors') {
-        convertedData[EntityType.INTERCEPTOR] = data[key];
+        convertedData[EntityType.INTERCEPTOR] = getInterceptorsForEntitiesGrid(data[key]);
         tabs.push({
           id: EntityType.INTERCEPTOR,
           label: `${t(MenuI18nKey.Interceptors)}: ${data[key].length}`,
@@ -64,7 +69,7 @@ export const getPreviewTabs = (
       }
 
       if (key === 'adapters') {
-        convertedData[EntityType.ADAPTER] = data[key];
+        convertedData[EntityType.ADAPTER] = getAdaptersForEntitiesGrid(data[key]);
         tabs.push({
           id: EntityType.ADAPTER,
           label: `${t(MenuI18nKey.Adapters)}: ${data[key].length}`,

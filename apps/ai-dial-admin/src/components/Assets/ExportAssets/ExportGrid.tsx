@@ -1,11 +1,8 @@
 import { FC, useEffect, useRef, useState } from 'react';
 
-import { GridApi, GridReadyEvent } from 'ag-grid-community';
-import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { GridApi, GridOptions, GridReadyEvent } from 'ag-grid-community';
 
-import Grid from '@/src/components/Grid/Grid';
-import { CHECKBOX_COL_DEF } from '@/src/constants/ag-grid';
-import { ALL_ID } from '@/src/constants/dial-base-entity';
+import { MULTI_ROW_SELECTION } from '@/src/constants/ag-grid';
 import { EXPORT_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { STRINGS_DELIMITER } from '@/src/constants/prompt';
@@ -14,11 +11,12 @@ import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { changeExportGridData, getExportGridData } from './export';
 
 interface Props {
   route?: ApplicationRoute;
-  context?: () => AssetsFolderContext<DialFile>;
+  context?: () => AssetsFolderContext;
 }
 
 const ExportGrid: FC<Props> = ({ route, context }) => {
@@ -37,61 +35,36 @@ const ExportGrid: FC<Props> = ({ route, context }) => {
     exportRef.current = folderContext?.bulkSelectedData as Record<string, (DialFile | DialPrompt)[]>;
   }, [folderContext?.fetchedFoldersData, folderContext?.bulkSelectedData]);
 
-  const onChangeVersions = (value: string, data: unknown) => {
-    const name = (data as { name: string }).name;
+  const onChangeVersions = (value: string[], data: unknown, _field: string, _index: number, isSelected: boolean) => {
     setIsSkipRefresh(true);
+
+    const name = (data as { name: string }).name;
     const newData = [...rowData];
     const prompt = newData.find((prompt) => prompt.name === name) as DialPrompt;
-    // handle SelectAll click
-    if (value === ALL_ID) {
-      prompt.version = prompt.versions?.join(STRINGS_DELIMITER) as string;
-      setRowData(newData);
-      const exportedIndex = exportRef.current[filePath]?.findIndex((prompt) => prompt.name === name);
-      if (exportedIndex != null && exportedIndex > -1) {
-        const fetched = fetchedRef.current[filePath].filter((prompt) => prompt.name === name);
-        const exported = exportRef.current[filePath].filter((p) => p.name !== name);
-        folderContext?.setBulkSelectedData({
-          ...exportRef.current,
-          [filePath]: [...exported, ...fetched],
-        } as Record<string, DialPrompt[]>);
-      }
-    } else {
-      // handle add/remove version when row not selected
-      const versions = prompt?.version.split(STRINGS_DELIMITER);
-      const newVersions = versions?.filter((v) => v !== value);
-      if (versions?.length === newVersions?.length) {
-        newVersions?.push(value);
-      }
-      prompt.version = newVersions?.join(STRINGS_DELIMITER);
-      setRowData(newData);
-      const exportedIndex = exportRef.current?.[filePath]?.findIndex(
-        (prompt) => prompt.name === name && (prompt as DialPrompt).version === value,
-      );
-      // additionally handle remove for selected row
-      if (exportedIndex != null && exportedIndex > -1) {
-        const newExportData = exportRef.current?.[filePath];
-        newExportData.splice(exportedIndex, 1);
-        folderContext?.setBulkSelectedData({
-          ...exportRef.current,
-          [filePath]: newExportData,
-        } as Record<string, DialPrompt[]>);
-      } else {
-        // additionally handle add for selected row
-        const exist = exportRef.current[filePath]?.findIndex((prompt) => prompt.name === name);
-        const fetched = (fetchedRef.current[filePath] as DialPrompt[]).find(
-          (prompt) => prompt.name === name && prompt.version === value,
-        ) as DialPrompt;
-        if (exist != null && exist > -1 && fetched) {
-          const newExportData = exportRef.current[filePath];
-          newExportData.push(fetched);
-          folderContext?.setBulkSelectedData({
-            ...exportRef.current,
-            [filePath]: newExportData,
-          } as Record<string, DialPrompt[]>);
-        }
-      }
+    prompt.version = value?.join(STRINGS_DELIMITER);
+    setRowData(newData);
+
+    const exportedIndex = exportRef.current?.[filePath]?.findIndex((prompt) => prompt.name === name);
+
+    if ((exportedIndex != null && exportedIndex > -1) || isSelected) {
+      const newExportData = exportRef.current?.[filePath].filter((prompt) => prompt.name !== name) as DialPrompt[];
+      fillExportData(value, name, newExportData);
     }
   };
+
+  const fillExportData = (versions: string[], promptName: string, newExportData: (DialFile | DialPrompt)[]) => {
+    versions.forEach((version) => {
+      const fetched = (fetchedRef.current[filePath] as DialPrompt[]).find(
+        (prompt) => prompt.name === promptName && prompt.version === version,
+      ) as DialPrompt;
+      newExportData.push(fetched);
+    });
+    folderContext?.setBulkSelectedData({
+      ...exportRef.current,
+      [filePath]: newExportData,
+    } as Record<string, DialPrompt[]>);
+  };
+
   const columnDefs = EXPORT_COLUMNS(onChangeVersions, route);
 
   const onGridReady = (event: GridReadyEvent) => {
@@ -136,44 +109,37 @@ const ExportGrid: FC<Props> = ({ route, context }) => {
   useEffect(() => {
     const rowData: (DialPrompt | DialFile)[] = getExportGridData(
       route,
-      folderContext?.fetchedFoldersData[filePath],
-      folderContext?.bulkSelectedData[filePath],
+      folderContext?.fetchedFoldersData[filePath] || [],
+      folderContext?.bulkSelectedData[filePath] || [],
     );
     setRowData(rowData);
   }, [filePath, folderContext?.fetchedFoldersData, folderContext?.bulkSelectedData, route]);
 
+  const gridOptions: GridOptions = {
+    ...MULTI_ROW_SELECTION,
+    onSelectionChanged: (event) => {
+      setIsSkipRefresh(true);
+      const selectedRows = event.api.getSelectedRows();
+      folderContext?.setBulkSelectedData(
+        changeExportGridData(
+          route,
+          folderContext?.fetchedFoldersData,
+          folderContext?.bulkSelectedData,
+          selectedRows,
+          folderContext?.filePath,
+        ),
+      );
+    },
+  };
+
   return (
     <div className="flex-1 min-h-0">
-      {rowData.length ? (
-        <Grid
-          additionalGridOptions={{
-            rowSelection: {
-              mode: 'multiRow',
-              headerCheckbox: true,
-              selectAll: 'filtered',
-            },
-            selectionColumnDef: {
-              ...CHECKBOX_COL_DEF,
-            },
-            onSelectionChanged: (event) => {
-              setIsSkipRefresh(true);
-              const selectedRows = event.api.getSelectedRows();
-              folderContext?.setBulkSelectedData(
-                changeExportGridData(
-                  route,
-                  folderContext?.fetchedFoldersData,
-                  folderContext?.bulkSelectedData,
-                  selectedRows,
-                  folderContext?.filePath,
-                ),
-              );
-            },
-            onGridReady,
-          }}
-        />
-      ) : (
-        <DialNoDataContent title={t(BasicI18nKey.NoData)} />
-      )}
+      <GridView
+        getIsEmptyData={() => !rowData.length}
+        emptyDataProps={{ title: t(BasicI18nKey.NoData) }}
+        additionalGridOptions={gridOptions}
+        onGridReady={onGridReady}
+      />
     </div>
   );
 };

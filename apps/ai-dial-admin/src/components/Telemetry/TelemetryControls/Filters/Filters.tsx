@@ -1,16 +1,17 @@
-import React, { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react';
+import { DialGhostButton, SelectOption } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
-import { ButtonVariant, DialButton, SelectOption } from '@epam/ai-dial-ui-kit';
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
 import AddFilter from '@/src/components/Telemetry/TelemetryControls/Filters/AddFilter';
 import Filter from '@/src/components/Telemetry/TelemetryControls/Filters/Filter';
-import { FilterData, TelemetryQuery } from '@/src/models/telemetry';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { ServerActionResponse } from '@/src/models/server-action';
-import { ENTITY_QUERY, PROJECT_QUERY } from '@/src/constants/telemetry';
 import { TelemetryI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { ENTITY_QUERY, PROJECT_QUERY } from '@/src/constants/telemetry';
 import { useI18n } from '@/src/locales/client';
+import { ServerActionResponse } from '@/src/models/server-action';
+import { FilterData, TelemetryQuery } from '@/src/models/telemetry';
 import { ApplicationRoute } from '@/src/types/routes';
+import { v4 as uuidv4 } from 'uuid';
 
 interface Props {
   filters: FilterData[];
@@ -23,6 +24,8 @@ const Filters: FC<Props> = ({ filters, setFilters, getData, route }) => {
   const t = useI18n();
   const [projects, setProjects] = useState<SelectOption[]>([]);
   const [entities, setEntities] = useState<SelectOption[]>([]);
+
+  const filtersWithId = useMemo(() => filters.map((filter) => ({ ...filter, id: uuidv4() })), [filters]);
 
   useEffect(() => {
     const fetch = async (query: TelemetryQuery): Promise<{ data: string[][] }> => {
@@ -82,10 +85,10 @@ const Filters: FC<Props> = ({ filters, setFilters, getData, route }) => {
 
   return (
     <>
-      {!!filters?.length &&
-        filters.map((filter, index) => (
+      {!!filtersWithId?.length &&
+        filtersWithId.map((filter, index) => (
           <Filter
-            key={index}
+            key={filter.id}
             filterData={filter}
             id={index}
             onClose={onDelete}
@@ -95,11 +98,7 @@ const Filters: FC<Props> = ({ filters, setFilters, getData, route }) => {
           />
         ))}
       <AddFilter addFilter={addFilter} dropdownData={{ projects, entities }} route={route}>
-        <DialButton
-          label={t(TelemetryI18nKey.AddFilter)}
-          iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-          variant={ButtonVariant.Tertiary}
-        />
+        <DialGhostButton label={t(TelemetryI18nKey.AddFilter)} iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />} />
       </AddFilter>
     </>
   );

@@ -2,16 +2,16 @@
 
 import { Dispatch, FC, SetStateAction, useCallback } from 'react';
 
+import { DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
+import RulesValue from '@/src/components/Rules/Value/RulesValue';
+import RulesValueReadonly from '@/src/components/Rules/Value/RulesValueReadonly';
+import { generateRuleDiff } from '@/src/components/Rules/utils';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useRuleFolder } from '@/src/context/RuleFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialRule, RuleDiffModel } from '@/src/models/dial/rule';
-import RulesValue from '@/src/components/Rules/Value/RulesValue';
-import RulesValueReadonly from '@/src/components/Rules/Value/RulesValueReadonly';
-import { generateRuleDiff } from '@/src/components/Rules/utils';
 
 const emptyRule = { function: void 0, source: '', targets: [] } as unknown as DialRule;
 
@@ -106,8 +106,7 @@ const RulesValueList: FC<Props> = ({
       )}
       <div className={classNames(ruleIndentClassName, isReadonly && 'hidden')}>
         <div className={lineHorizontalChildClassName}></div>
-        <DialButton
-          variant={ButtonVariant.Primary}
+        <DialPrimaryButton
           label={t(ButtonsI18nKey.Add)}
           onClick={onAddValue}
           disabled={availableAttributes?.length === rules.length}

@@ -5,7 +5,7 @@ import classNames from 'classnames';
 
 import SettingsModal from '@/src/components/SettingsModal/SettingsModal';
 import { AuthI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useLogout } from '@/src/hooks/use-logout';
 import { useI18n } from '@/src/locales/client';
@@ -90,7 +90,7 @@ const UserMenu: FC<Props> = ({ isEnableAuth, isMobile }) => {
           <div role="menuitem" className="flex min-w-[120px] cursor-pointer items-center justify-between gap-2 pr-6">
             <UserInfo session={session} />
             <IconChevronDown
-              {...BASE_ICON_PROPS}
+              {...BASE_BUTTON_ICON_PROPS}
               className={classNames('shrink-0 text-primary transition-all', isOpen && 'rotate-180')}
             />
           </div>
@@ -99,7 +99,7 @@ const UserMenu: FC<Props> = ({ isEnableAuth, isMobile }) => {
       {isLogoutConfirmationOpen && (
         <DialConfirmationPopup
           open={isLogoutConfirmationOpen}
-          title={t(AuthI18nKey.ModalTitle)}
+          header={t(AuthI18nKey.ModalTitle)}
           description={t(AuthI18nKey.ModalDescription)}
           confirmLabel={t(AuthI18nKey.Logout)}
           onClose={() => setIsLogoutConfirmationOpen(false)}

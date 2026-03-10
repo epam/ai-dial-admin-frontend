@@ -10,12 +10,12 @@ Object.assign(navigator, {
 
 describe('Common components :: CopyButton', () => {
   test('Should render button with icon and be accessible by role', () => {
-    render(<CopyButton label="Copy this" field="value" />);
+    render(<CopyButton valueLabel="Copy this" value="value" />);
     expect(screen.getByRole('button', { name: 'copy' })).toBeInTheDocument();
   });
 
   test('Should copy text and show notification on click', () => {
-    const { getByRole } = render(<CopyButton field="copied value" label="Copy this" />);
+    const { getByRole } = render(<CopyButton value="copied value" valueLabel="Copy this" />);
     fireEvent.click(getByRole('button', { name: 'copy' }));
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith('copied value');
   });

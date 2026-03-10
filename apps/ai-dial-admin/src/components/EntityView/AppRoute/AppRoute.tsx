@@ -1,11 +1,11 @@
 import { IconPlus } from '@tabler/icons-react';
-import { FC, useCallback, useEffect, useState } from 'react';
-import { ButtonVariant, DialButton, DialCollapsibleSidebar } from '@epam/ai-dial-ui-kit';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { DialPrimaryButton, DialCollapsibleSidebar } from '@epam/ai-dial-ui-kit';
 
 import RouteContent from '@/src/components/EntityView/AppRoute/Content/RouteContent';
 import CreateRoute from '@/src/components/EntityView/AppRoute/CreateRoute';
 import { ButtonsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialRole } from '@/src/models/dial/role';
@@ -23,22 +23,21 @@ interface Props {
 }
 
 const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunnerView, routes, onChangeRoutes }) => {
-  const t = useI18n() as (str: string) => string;
-  const { dispatch } = useSaveValidationContext();
+  const t = useI18n();
+  const { dispatch, isValid } = useSaveValidationContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const [activeRoute, setActiveRoute] = useState<string | undefined>(undefined);
   const [activeRouteIndex, setActiveRouteIndex] = useState<number | null>(null);
 
-  useEffect(() => {
-    if (!activeRoute && routes?.length) {
-      setActiveRoute(routes[0]?.name || '');
-    }
-  }, [routes, activeRoute]);
+  const routeNames = useMemo(() => {
+    return routes?.map((r) => r.name || '');
+  }, [routes]);
 
   useEffect(() => {
-    setActiveRouteIndex((routes || []).findIndex((route) => route.name === activeRoute));
-  }, [activeRoute, routes]);
+    if (activeRouteIndex == null && routes?.length) {
+      setActiveRouteIndex(0);
+    }
+  }, [routes, activeRouteIndex]);
 
   const handleModalClose = useCallback(() => {
     setIsModalOpen(false);
@@ -69,8 +68,10 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
           upstreams: [],
           paths: [''],
           attachmentPaths: { requestBody: [''], responseBody: [''] },
+          maxRetryAttempts: 1,
         } as DialAppRoute,
       ]);
+      setActiveRouteIndex(routes?.length || 0);
     },
     [handleModalClose, onChangeRoutes, routes],
   );
@@ -92,25 +93,25 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
 
   return (
     <>
-      <div className="flex flex-row gap-4 h-full w-full">
+      <div className="flex flex-row gap-4 size-full">
         <DialCollapsibleSidebar width={296} title={t(TabsI18nKey.Routes)} containerClassName="bg-layer-3 mr-4">
           <div className="h-full relative flex flex-col">
             <div className="flex flex-row flex-wrap justify-between items-center mb-6">
               <h1>{t(TabsI18nKey.Routes)}</h1>
               {!readonly && (
-                <DialButton
-                  variant={ButtonVariant.Primary}
-                  iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+                <DialPrimaryButton
+                  iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
                   label={t(ButtonsI18nKey.Add)}
                   onClick={handleModalOpen}
+                  disabled={!isValid}
                 />
               )}
             </div>
             <AppRouteList
               readonly={readonly}
               routes={routes}
-              activeRoute={activeRoute}
-              onClick={(tab) => setActiveRoute(tab)}
+              activeRouteIndex={activeRouteIndex}
+              onClick={(index) => setActiveRouteIndex(index)}
               onRemove={onRemoveRoute}
             />
           </div>
@@ -125,11 +126,14 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
               parentRoles={Object.keys(parentRoleLimits || {})}
               onChangeRoute={onChangeRoute}
               readonly={readonly}
+              routeNames={routeNames?.filter((_, index) => index !== activeRouteIndex)}
             />
           )}
         </div>
       </div>
-      {isModalOpen && <CreateRoute isModalOpen={isModalOpen} onClose={handleModalClose} onCreate={onCreate} />}
+      {isModalOpen && (
+        <CreateRoute isModalOpen={isModalOpen} onClose={handleModalClose} onCreate={onCreate} routeNames={routeNames} />
+      )}
     </>
   );
 };

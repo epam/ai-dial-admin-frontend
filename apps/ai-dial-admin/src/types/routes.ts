@@ -1,31 +1,53 @@
 export enum ApplicationRoute {
   Home = '/home',
+  SystemProperties = '/system-properties',
+  ImportConfig = '/import-config',
+  ExportConfig = '/export-config',
+
+  // Entities
   Models = '/models',
-  Adapters = '/adapters',
   Applications = '/applications',
+  Interceptors = '/interceptors',
+  Toolsets = '/toolsets',
+  Routes = '/routes',
+
+  // Builders
+  Adapters = '/adapters',
+  ApplicationRunners = '/application-runners',
+  InterceptorTemplates = '/interceptor-templates',
+
+  // Assets
   AssetsApplications = '/assets-applications',
   AssetsToolsets = '/assets-toolsets',
-  ApplicationRunners = '/application-runners',
-  ApplicationPublications = '/application-publications',
-  Interceptors = '/interceptors',
-  Roles = '/roles',
-  Keys = '/keys',
   Prompts = '/prompts',
   Files = '/files',
-  Routes = '/routes',
-  Dashboard = '/dashboard',
-  UsageLog = '/usage-log',
-  Toolsets = '/toolsets',
+
+  // Publications
+  FoldersStorage = '/folders-storage',
+  ApplicationPublications = '/application-publications',
   ToolsetPublications = '/toolset-publications',
   PromptPublications = '/prompt-publications',
   FilePublications = '/file-publications',
-  ImportConfig = '/import-config',
-  ExportConfig = '/export-config',
-  FoldersStorage = '/folders-storage',
+
+  // Access Management
+  Roles = '/roles',
+  Keys = '/keys',
+
+  // Activity
+  Dashboard = '/dashboard',
+  UsageLog = '/usage-log',
   ActivityAudit = '/activity-audit',
-  Forbidden = '/forbidden',
-  InterceptorTemplates = '/interceptor-templates',
-  InterceptorDeployments = '/interceptor-deployments',
-  ModelDeployments = '/model-deployments',
-  McpDeployments = '/mcp-deployments',
+
+  // Deployments
+  InterceptorContainers = '/interceptor-containers',
+  ModelServings = '/model-servings',
+  McpContainers = '/mcp-containers',
+  AdapterContainers = '/adapter-containers',
+  Images = '/deployment-images',
+
+  // evaluations
+  Playground = '/playground',
+  TestSuites = '/test-suites',
+  Runs = '/runs',
+  Metrics = '/metrics',
 }

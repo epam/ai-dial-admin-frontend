@@ -5,8 +5,8 @@ import ValidityPeriod from '@/src/components/Keys/Modals/ValidityPeriod';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
-import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
-import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
+import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
+import IdControl from '@/src/components/BaseControls/Id/Id';
 import KeyGenerateField from '../View/Properties/KeyGenerateField';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getClonedEntityName, getCloneTitle } from '@/src/utils/entities/duplicate-entity';
@@ -22,7 +22,7 @@ interface Props {
 }
 
 const DuplicateKey: FC<Props> = ({ onDuplicate, isModalOpen, onClose, entity, names, keys }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
 
   const { isValid, dispatch } = useSaveValidationContext();
 
@@ -61,7 +61,7 @@ const DuplicateKey: FC<Props> = ({ onDuplicate, isModalOpen, onClose, entity, na
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(getCloneTitle(ApplicationRoute.Keys, t))}
+      header={t(getCloneTitle(ApplicationRoute.Keys, t))}
       portalId="DuplicateKey"
       open={isModalOpen}
       onSubmit={() => onDuplicate(clonedEntity)}
@@ -75,7 +75,7 @@ const DuplicateKey: FC<Props> = ({ onDuplicate, isModalOpen, onClose, entity, na
         <DisplayNameControl
           displayName={clonedEntity.displayName}
           onChange={(displayName?: string) => setEntity({ ...clonedEntity, displayName })}
-          required={true}
+          required
         />
 
         <KeyGenerateField keys={keys} selectedKey={clonedEntity} changeKey={onChangeKey} />

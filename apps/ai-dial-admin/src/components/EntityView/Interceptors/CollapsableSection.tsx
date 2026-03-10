@@ -3,7 +3,7 @@ import React, { FC, ReactNode, useCallback, useState } from 'react';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import classNames from 'classnames';
 
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 
 interface Props {
   title: string;
@@ -11,7 +11,7 @@ interface Props {
   headerButton?: ReactNode;
 }
 
-// TODO: move to ui-kit after merging design systems
+// TODO: move to ui-kit after merging design systems (for all cases)
 const CollapsableSection: FC<Props> = ({ title, children, headerButton }) => {
   const [isCollapsed, setIsCollapsed] = useState(true);
 
@@ -24,9 +24,11 @@ const CollapsableSection: FC<Props> = ({ title, children, headerButton }) => {
       <div className="flex flex-row">
         <button className="flex flex-1 items-center justify-between" onClick={toggleCollapse}>
           <div className="flex flex-row">
-            <i className="text-icon-secondary">
-              {isCollapsed ? <IconChevronRight {...BASE_ICON_PROPS} /> : <IconChevronDown {...BASE_ICON_PROPS} />}
-            </i>
+            {isCollapsed ? (
+              <IconChevronRight className="text-secondary" {...BASE_BUTTON_ICON_PROPS} />
+            ) : (
+              <IconChevronDown className="text-secondary" {...BASE_BUTTON_ICON_PROPS} />
+            )}
             <h3 className="mx-2">{title}</h3>
           </div>
         </button>

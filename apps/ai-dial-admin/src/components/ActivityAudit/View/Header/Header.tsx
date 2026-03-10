@@ -1,16 +1,16 @@
 import { FC, ReactNode } from 'react';
 
-import { DialButton, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { DialIconButton, DialTooltip } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 
 import { auditResourceRoute } from '@/src/components/ActivityAudit/View/Header/constants';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import { getFormattedResourceType } from '@/src/constants/grid-columns/formatters';
 import { ActivityAuditI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { DialActivity } from '@/src/models/activity-audit';
-import { ActivityAuditType } from '@/src/types/activity-audit';
+import { ActivityAuditResourceType, ActivityAuditType } from '@/src/types/activity-audit';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 
 interface Props {
@@ -18,7 +18,7 @@ interface Props {
   children?: ReactNode;
 }
 const ViewHeader: FC<Props> = ({ activity, children }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
   const currentLocale = useCurrentLocale();
 
   const openResourceInNewTab = (activity: DialActivity) => {
@@ -41,15 +41,15 @@ const ViewHeader: FC<Props> = ({ activity, children }) => {
             text={getFormattedResourceType(activity.resourceType, t)}
           />
         )}
-        {activity.resourceId && (
+        {activity.resourceId && activity.resourceType !== ActivityAuditResourceType.SYSTEM_PROPERTIES && (
           <LabelledText label={t(ActivityAuditI18nKey.ResourceId)}>
             <div className="flex flex-row gap-1 items-center">
               <DialTooltip tooltip={activity.resourceId}>{activity.resourceId}</DialTooltip>
               {activity.activityType != ActivityAuditType.Delete && (
-                <DialButton
+                <DialIconButton
                   onClick={() => openResourceInNewTab(activity)}
-                  className="text-secondary"
-                  iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
+                  className="text-secondary size-auto"
+                  icon={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
                 />
               )}
             </div>

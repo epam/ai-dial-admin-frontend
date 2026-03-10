@@ -1,82 +1,77 @@
 'use client';
 
-import { Dispatch, SetStateAction } from 'react';
+import { FC } from 'react';
 
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconFileArrowRight, IconTrashX } from '@tabler/icons-react';
 
 import CloseButton from '@/src/components/Common/CloseButton/CloseButton';
 import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
-import { DialFile } from '@/src/models/dial/file';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
+import { isAssetView, isAssetWithVersion } from '@/src/utils/is-asset-view';
 import { ModalType } from './Modals';
-import { isAssetWithVersion, isDeploymentAsset } from '@/src/utils/is-asset-view';
 
 interface Props {
   route: ApplicationRoute;
   itemsCount: number;
-  context?: () => AssetsFolderContext<DialFile>;
-  setIsModalOpen: Dispatch<SetStateAction<boolean>>;
-  setModalType: Dispatch<SetStateAction<ModalType | undefined>>;
-  setIsBulkView: Dispatch<SetStateAction<boolean>>;
-  handleExport?: (fileType?: ImportFileType) => void;
+  onChangeIsModalOpen: (value: boolean) => void;
+  onChangeModalType: (value?: ModalType) => void;
+  onChangeIsBulkView: (value: boolean) => void;
+  getAssetContext?: () => AssetsFolderContext;
+  onExport?: (fileType?: ImportFileType) => void;
 }
 
-const BulkButtons = ({
+const BulkButtons: FC<Props> = ({
   route,
   itemsCount,
-  context,
-  setIsModalOpen,
-  setModalType,
-  setIsBulkView,
-  handleExport,
-}: Props) => {
+  getAssetContext,
+  onChangeIsModalOpen,
+  onChangeModalType,
+  onChangeIsBulkView,
+  onExport,
+}) => {
   const t = useI18n();
-  const folderContext = context?.();
+  const folderContext = getAssetContext?.();
 
-  const bulkExport = () => {
+  const onBulkExport = () => {
     if (isAssetWithVersion(route)) {
-      setModalType(ModalType.export);
-      setIsModalOpen(true);
+      onChangeModalType(ModalType.export);
+      onChangeIsModalOpen(true);
     } else {
-      handleExport?.();
+      onExport?.();
     }
   };
 
   return (
-    <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 px-4 py-2 bg-layer-0 flex flex-row gap-4 items-center">
+    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 px-4 py-2 bg-layer-0 flex flex-row gap-4 items-center">
       <div className="text-secondary">
         {itemsCount} {t(BasicI18nKey.Selected)}
       </div>
-      <div className="bg-layer-4 h-5 w-[1px]"></div>
-      {!isDeploymentAsset(route) && (
-        <DialButton
-          variant={ButtonVariant.Secondary}
-          label={t(ButtonsI18nKey.Export)}
-          iconBefore={<IconFileArrowRight {...BASE_ICON_PROPS} />}
-          disabled={!itemsCount}
-          onClick={bulkExport}
-        />
-      )}
-      {isAssetWithVersion(route) && (
-        <DialButton
-          variant={ButtonVariant.Secondary}
+      <div className="bg-layer-4 h-5 w-px"></div>
+      <DialNeutralButton
+        label={t(ButtonsI18nKey.Export)}
+        iconBefore={<IconFileArrowRight {...BASE_BUTTON_ICON_PROPS} />}
+        disabled={!itemsCount}
+        onClick={onBulkExport}
+      />
+      {isAssetView(route) && (
+        <DialNeutralButton
           label={t(ButtonsI18nKey.Delete)}
-          iconBefore={<IconTrashX {...BASE_ICON_PROPS} />}
+          iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
           disabled={!itemsCount}
           onClick={() => {
-            setModalType(ModalType.deleteBulk);
-            setIsModalOpen(true);
+            onChangeModalType(ModalType.deleteBulk);
+            onChangeIsModalOpen(true);
           }}
         />
       )}
       <CloseButton
         onClose={() => {
-          setIsBulkView(false);
+          onChangeIsBulkView(false);
           folderContext?.setBulkSelectedData({});
         }}
       />

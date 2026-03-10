@@ -1,37 +1,42 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import classNames from 'classnames';
-import { ButtonVariant, DialButton, DialInputPopup, DialSelectField } from '@epam/ai-dial-ui-kit';
-
-import { SOURCE_TYPE } from '@/src/components/SourceField/types';
-import { Container, DEPLOYMENT_ENTITY } from '@/src/models/deployments';
-import { ApplicationRoute } from '@/src/types/routes';
-import { DialModel } from '@/src/models/dial/model';
-import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { CreateI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, SourceI18nKey } from '@/src/constants/i18n';
-import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
-import { useNotification } from '@/src/context/NotificationContext';
-import { getErrorNotification } from '@/src/utils/notification';
-import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import { useAppContext } from '@/src/context/AppContext';
-import { isDeploymentsEnabled } from '@/src/utils/plugins';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { useI18n } from '@/src/locales/client';
+import { DialInputPopup, DialLabel, DialNeutralButton, DialSelectField } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
+import classNames from 'classnames';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import Field from '@/src/components/Common/Field/Field';
 import SelectContainerModal from '@/src/components/SourceField/Containers/SelectContainerModal';
 import Endpoints from '@/src/components/SourceField/Endpoints/Endpoints';
-import { addTrailingSlash } from '@/src/utils/url';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
+import { getContainerRoute } from '@/src/components/SourceField/utils';
+import {
+  ButtonsI18nKey,
+  CreateI18nKey,
+  EntitiesI18nKey,
+  EntityFieldsI18nKey,
+  SourceI18nKey,
+} from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
+import { useAppContext } from '@/src/context/AppContext';
+import { useNotification } from '@/src/context/NotificationContext';
+import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
+import { useI18n } from '@/src/locales/client';
+import { Container } from '@/src/models/deployments/containers';
+import { DialInterceptor } from '@/src/models/dial/interceptor';
+import { DialModel } from '@/src/models/dial/model';
 import { ServerActionResponse } from '@/src/models/server-action';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
+import { getErrorNotification } from '@/src/utils/notification';
+import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { addTrailingSlash } from '@/src/utils/url';
 
 interface Props<T> {
   entity: T;
   onChange: (entity: T) => void;
   getContainers: () => Promise<ServerActionResponse<Container[]>>;
-  view?: ApplicationRoute;
+  view: ApplicationRoute;
   isModal?: boolean;
-  errorText?: string;
+  error?: string;
 }
 
 const Containers = <T extends DialInterceptor | DialModel>({
@@ -40,18 +45,23 @@ const Containers = <T extends DialInterceptor | DialModel>({
   getContainers,
   view,
   isModal,
-  errorText,
+  error,
 }: Props<T>) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
   const { showNotification } = useNotification();
-  const { embeddedApps } = useAppContext();
+  const { featureFlags } = useAppContext();
   const getReqRef = useRef(useProtectedRequest());
-  const deploymentsEnabled = isDeploymentsEnabled(embeddedApps);
   const showNotificationRef = useRef(showNotification);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [containers, setContainers] = useState<Container[]>([]);
   const [selectedContainer, setSelectedContainer] = useState<Container | null>(null);
+
+  const isMobile = useIsMobileScreen();
+
+  const selectedContainerName = useMemo(() => {
+    return containers.find((container) => container.name === entity.source?.containerId)?.name;
+  }, [containers, entity.source?.containerId]);
 
   const onOpenModal = useCallback(() => {
     setIsModalOpen(true);
@@ -67,6 +77,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
         ...entity,
         endpoint: '',
         configurationEndpoint: '',
+        baseEndpoint: '',
         source: {
           ...entity.source,
           $type: entity.source?.$type || SOURCE_TYPE.CONTAINER,
@@ -74,8 +85,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
         },
       };
       if (view === ApplicationRoute.Models) {
-        updatedEntity.source.completionEndpointPath =
-          entity.source?.completionEndpointPath || getEndpointPostfix((entity as DialModel).type);
+        updatedEntity.source.completionEndpointPath = `openai/v1${getEndpointPostfix((entity as DialModel).type)}`;
       }
       onChange(updatedEntity);
       onCloseModal();
@@ -84,13 +94,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
   );
 
   const openContainer = useCallback(() => {
-    const route =
-      view === ApplicationRoute.Models
-        ? ApplicationRoute.ModelDeployments
-        : view === ApplicationRoute.Interceptors
-          ? ApplicationRoute.InterceptorDeployments
-          : ApplicationRoute.McpDeployments;
-    onOpenInNewTab(route, selectedContainer, DEPLOYMENT_ENTITY.containers);
+    onOpenInNewTab(getContainerRoute(view), selectedContainer);
   }, [selectedContainer, view]);
 
   useEffect(() => {
@@ -107,7 +111,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
   }, [getContainers]);
 
   useEffect(() => {
-    setSelectedContainer(containers?.find((container) => container.id === entity.source?.containerId) || null);
+    setSelectedContainer(containers?.find((container) => container.name === entity.source?.containerId) || null);
   }, [containers, selectedContainer, entity]);
 
   return (
@@ -116,44 +120,47 @@ const Containers = <T extends DialInterceptor | DialModel>({
         {isModal ? (
           <div className="flex flex-col w-full">
             <DialSelectField
-              searchable={true}
-              options={containers.map((container) => ({ value: container.id, label: container.name }))}
+              options={containers.map((container) => ({
+                value: container.name as string,
+                label: container.displayName as string,
+              }))}
+              required
+              searchable
               onChange={(container) => onSelect(container as string)}
-              elementId="source-type"
-              value={containers.find((container) => container.id === entity.source?.containerId)?.id}
+              id="source-type"
+              value={selectedContainerName}
               placeholder={t(CreateI18nKey.SelectContainer)}
-              fieldTitle={t(EntityFieldsI18nKey.container)}
-              readonly={!deploymentsEnabled}
+              label={t(EntityFieldsI18nKey.container)}
+              readonly={!featureFlags.deploymentsEnabled}
             />
           </div>
         ) : (
-          <div className="flex w-full gap-2">
-            <div className="w-full lg:w-[45%]">
-              <Field fieldTitle={t(SourceI18nKey.Container)} htmlFor="containers" />
+          <div className="flex gap-2">
+            <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-2')}>
+              <DialLabel label={t(SourceI18nKey.Container)} required htmlFor="containers" />
               <DialInputPopup
                 open={isModalOpen}
                 onOpen={onOpenModal}
-                selectedValue={selectedContainer?.name}
+                selectedValue={selectedContainer?.displayName}
                 elementId="containers"
                 emptyValueText={t(EntitiesI18nKey.NoContainers)}
-                disabled={!deploymentsEnabled}
-                errorText={errorText}
+                disabled={!featureFlags.deploymentsEnabled}
+                errorText={error}
               >
                 <SelectContainerModal
                   selectedId={entity.source?.containerId}
                   onClose={onCloseModal}
                   onApply={onSelect}
-                  interceptorContainers={containers}
+                  containers={containers}
                   isModalOpen={isModalOpen}
                 />
               </DialInputPopup>
             </div>
-            {entity.source?.containerId && deploymentsEnabled && (
-              <DialButton
-                iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
-                className={classNames(errorText ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
-                label={t(SourceI18nKey.OpenContainer)}
-                variant={ButtonVariant.Secondary}
+            {entity.source?.containerId && featureFlags.deploymentsEnabled && (
+              <DialNeutralButton
+                iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
+                className={classNames(error ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
+                label={isMobile ? '' : t(ButtonsI18nKey.Open)}
                 onClick={() => openContainer()}
               />
             )}

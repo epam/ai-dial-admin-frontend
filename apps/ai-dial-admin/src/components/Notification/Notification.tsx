@@ -1,16 +1,16 @@
-import { IconChevronDown, IconCircleCheck, IconExclamationCircle, IconLoader, IconX } from '@tabler/icons-react';
+import { IconChevronDown, IconCircleCheck, IconExclamationCircle, IconX } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, ReactNode } from 'react';
-import { DialButton } from '@epam/ai-dial-ui-kit';
+import { DialIconButton, DialLoader } from '@epam/ai-dial-ui-kit';
 
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { NotificationConfig, NotificationIconColor, NotificationType } from '@/src/models/notification';
 
 export const NotificationIcons: Record<NotificationType, ReactNode> = {
-  success: <IconCircleCheck {...BASE_ICON_PROPS} />,
-  error: <IconExclamationCircle {...BASE_ICON_PROPS} />,
-  prepare: <IconLoader {...BASE_ICON_PROPS} />,
-  dynamic: <IconChevronDown {...BASE_ICON_PROPS} />,
+  success: <IconCircleCheck {...BASE_BUTTON_ICON_PROPS} />,
+  error: <IconExclamationCircle {...BASE_BUTTON_ICON_PROPS} />,
+  prepare: <DialLoader size={18} className="text-primary" />,
+  dynamic: <IconChevronDown {...BASE_BUTTON_ICON_PROPS} />,
 };
 
 const Notification: FC<NotificationConfig> = ({ type, title, description, requestId, onClose }) => {
@@ -24,11 +24,11 @@ const Notification: FC<NotificationConfig> = ({ type, title, description, reques
           <i className={iconClassName}>{Icon}</i>
           <p className="small-text-semi truncate">{title}</p>
         </div>
-        <DialButton
+        <DialIconButton
           aria-label="close"
-          className="absolute right-0"
+          className="absolute right-0 size-auto top-0"
           onClick={onClose}
-          iconBefore={<IconX height={18} width={18} />}
+          icon={<IconX size={18} />}
         />
       </div>
       {description ? <p className="tiny text-secondary break-words whitespace-pre-wrap mt-2">{description}</p> : null}

@@ -1,16 +1,14 @@
 import { cookies, headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
 import { applicationRunnersApi, applicationsApi, interceptorsApi, rolesApi } from '@/src/app/api/api';
-import ApplicationRunnersView from '@/src/components/ApplicationRunners/ApplicationRunnersView';
-import Page403 from '@/src/components/Page403/Page403';
+import ApplicationRunnersView from '@/src/components/ApplicationRunners/View/View';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { AppsFolderProvider } from '@/src/context/assets/AppsFolderContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialRole } from '@/src/models/dial/role';
-import { logError } from '@/src/server/logger';
-import { ApplicationRoute } from '@/src/types/routes';
+import { errorObjLog } from '@/src/server/logger';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { filterDisplayNames } from '@/src/utils/entities/filter-names';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -33,18 +31,15 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
       etag = res?.etag || DEFAULT_ETAG;
       return res?.response as DialApplicationScheme | null;
     });
-    roles = await rolesApi.getRolesList(token);
-    if (roles === void 0 || applicationScheme === void 0) {
-      return <Page403 />;
-    }
+    roles = (await rolesApi.getRolesList(token)) || [];
     applications = await applicationsApi.getApplicationsList(token);
-    interceptors = await interceptorsApi.getInterceptorsList(token);
+    interceptors = (await interceptorsApi.getInterceptorsList(token)) || [];
   } catch (e) {
-    logError(e, 'Failed to fetch application runner data');
+    errorObjLog(e, 'Failed to fetch application runner data');
   }
 
   if (applicationScheme == null) {
-    redirect(ApplicationRoute.ApplicationRunners);
+    notFound();
   }
 
   return (

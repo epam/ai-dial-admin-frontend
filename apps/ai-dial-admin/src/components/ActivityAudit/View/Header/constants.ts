@@ -13,6 +13,7 @@ export const auditResourceRoute: Record<ActivityAuditResourceType, ApplicationRo
   [ActivityAuditResourceType.ROUTE]: ApplicationRoute.Routes,
   [ActivityAuditResourceType.INTERCEPTOR_TEMPLATE]: ApplicationRoute.InterceptorTemplates,
   [ActivityAuditResourceType.TOOLSET]: ApplicationRoute.Toolsets,
+  [ActivityAuditResourceType.SYSTEM_PROPERTIES]: ApplicationRoute.SystemProperties,
 };
 
 export const routeAuditResource: Partial<Record<ApplicationRoute, ActivityAuditResourceType>> = {

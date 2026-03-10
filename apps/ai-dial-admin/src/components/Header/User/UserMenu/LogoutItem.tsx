@@ -2,7 +2,7 @@ import { Session } from 'next-auth';
 import { FC } from 'react';
 
 import { AuthI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { IconLogout } from '@tabler/icons-react';
 
@@ -16,7 +16,7 @@ const LogoutItem: FC<Props> = ({ session, onClick }) => {
 
   return (
     <div className="flex gap-3 items-center cursor-pointer" onClick={onClick}>
-      <IconLogout {...BASE_ICON_PROPS} className="text-secondary" />
+      <IconLogout {...BASE_BUTTON_ICON_PROPS} className="text-secondary" />
       <span>{session ? t(AuthI18nKey.Logout) : t(AuthI18nKey.Login)}</span>
     </div>
   );

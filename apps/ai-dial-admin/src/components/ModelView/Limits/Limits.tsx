@@ -1,4 +1,4 @@
-import { DialNumberInputField, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
+import { DialNumberInput, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useMemo } from 'react';
 
 import { BasicI18nKey, EntityPlaceholdersI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
@@ -71,43 +71,48 @@ const Limits: FC<Props> = ({ model, onChangeModel }) => {
   );
 
   return (
-    <div className="flex flex-row gap-x-2 items-center lg:w-[35%]">
+    <div className="flex flex-row gap-x-2 items-center">
       <DialSelectField
         value={activeLimitType}
-        elementId="limits"
+        id="limits"
         options={items}
-        fieldTitle={t(ModelViewI18nKey.InteractionLimit)}
+        className="w-[220px]"
+        containerClassName="w-[220px]"
+        label={t(ModelViewI18nKey.InteractionLimit)}
         onChange={(type) => onChangeLimitType(type as string)}
       />
 
       {activeLimitType === LimitType.Total && (
-        <DialNumberInputField
-          elementId="totalNum"
-          elementClassName="flex-1"
-          fieldTitle={t(ModelViewI18nKey.NumberOfTokens)}
+        <DialNumberInput
+          id="totalNum"
+          className="flex-1"
+          labelProps={{ label: t(ModelViewI18nKey.NumberOfTokens) }}
           placeholder={t(EntityPlaceholdersI18nKey.Value)}
           value={model.limits?.maxTotalTokens}
           onChange={onChangeMaxTotalTokens}
+          containerClassName="w-[150px]"
         />
       )}
 
       {activeLimitType === LimitType.SeparateTokenAndCompletions && (
         <>
-          <DialNumberInputField
-            elementId="promptsNum"
-            elementClassName="flex-1"
-            fieldTitle={t(ModelViewI18nKey.Prompts)}
+          <DialNumberInput
+            id="promptsNum"
+            className="flex-1"
+            labelProps={{ label: t(ModelViewI18nKey.Prompts) }}
             value={model.limits?.maxPromptTokens}
             placeholder={t(EntityPlaceholdersI18nKey.Value)}
             onChange={onChangeMaxPromptTokens}
+            containerClassName="w-[150px]"
           />
-          <DialNumberInputField
-            elementId="completionsNum"
-            elementClassName="flex-1"
-            fieldTitle={t(ModelViewI18nKey.Completions)}
+          <DialNumberInput
+            id="completionsNum"
+            className="flex-1"
+            labelProps={{ label: t(ModelViewI18nKey.Completions) }}
             placeholder={t(EntityPlaceholdersI18nKey.Value)}
             value={model.limits?.maxCompletionTokens}
             onChange={onChangeMaxCompletionTokens}
+            containerClassName="w-[150px]"
           />
         </>
       )}

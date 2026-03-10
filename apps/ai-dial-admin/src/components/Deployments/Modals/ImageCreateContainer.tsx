@@ -1,0 +1,73 @@
+import { DialConfirmationPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+
+import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { useAppContext } from '@/src/context/AppContext';
+import { useI18n } from '@/src/locales/client';
+import { Container } from '@/src/models/deployments/containers';
+import { Image } from '@/src/models/deployments/images';
+import { getContainerTemplate } from '@/src/utils/deployments/containers';
+import { getRouteByType } from '@/src/utils/deployments/entity';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
+import { getContainerTypeByImageType } from '@/src/utils/deployments/images';
+
+import ContainerFields from '@/src/components/Containers/Fields/ContainerFields';
+
+interface Props {
+  isModalOpen: boolean;
+  modalTitle: string;
+  onClose: () => void;
+  onCreate: (container: Container) => void;
+  image: Image;
+  names?: string[];
+}
+
+const ImageCreateContainer: FC<Props> = ({ onClose, isModalOpen, modalTitle, names, onCreate, image }) => {
+  const t = useI18n();
+  const { resourcesDefaults } = useAppContext();
+  const { isValid } = useSaveValidationContext();
+  const type = useMemo(() => getContainerTypeByImageType(image.$type), [image]);
+
+  const [container, setContainer] = useState<Container>(getContainerTemplate(type, resourcesDefaults) as Container);
+
+  const onChange = useCallback((container: Container) => {
+    setContainer(container);
+  }, []);
+
+  useEffect(() => {
+    setContainer((prev) => ({
+      ...prev,
+      source: { ...prev.source, imageDefinitionId: image.id as string },
+    }));
+  }, [image]);
+
+  return (
+    <DialConfirmationPopup
+      onClose={onClose}
+      header={modalTitle}
+      portalId="ImageCreateContainerModal"
+      open={isModalOpen}
+      size={PopupSize.Md}
+      cancelLabel={t(ButtonsI18nKey.Cancel)}
+      confirmLabel={t(ButtonsI18nKey.Create)}
+      onCancel={onClose}
+      disableConfirmButton={!isValid}
+      onConfirm={() => {
+        onCreate(container);
+        onClose();
+      }}
+    >
+      <div className="flex flex-col py-4 px-6 overflow-auto">
+        <ContainerFields
+          container={container}
+          setContainer={onChange}
+          isModal={true}
+          route={getRouteByType(image.$type)}
+          names={names}
+        />
+      </div>
+    </DialConfirmationPopup>
+  );
+};
+
+export default ImageCreateContainer;

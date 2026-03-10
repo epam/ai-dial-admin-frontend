@@ -7,6 +7,11 @@ describe('Utils :: addTrailingSlash', () => {
     expect(res).toEqual('folder1/folder2/all/folder/');
   });
 
+  test('Should return empty string', () => {
+    expect(addTrailingSlash()).toEqual('');
+    expect(addTrailingSlash('')).toEqual('');
+  });
+
   test('Should not add slash if exists', () => {
     const res = addTrailingSlash('folder1/folder2/all/folder/');
     expect(res).toEqual('folder1/folder2/all/folder/');

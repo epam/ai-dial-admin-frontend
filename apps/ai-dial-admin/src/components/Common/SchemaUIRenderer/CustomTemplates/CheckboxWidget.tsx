@@ -37,10 +37,11 @@ export const CheckboxWidget: FC<WidgetProps> = ({ value, onChange, label, schema
   }, [value]);
 
   return (
-    <div className="flex flex-col bg-layer-2 py-[18px] pl-[18px] w-full">
-      {label && <WidgetHeader title={label} defaultHeader={true} description={schema.description} />}
+    <div className="flex flex-col bg-layer-2 p-[18px] w-full rounded">
+      {label && <WidgetHeader title={label} defaultHeader={true} caption={schema.description} />}
       <DialSelect
         className="max-w-[200px]"
+        listClassName="w-[200px]"
         options={booleans || []}
         value={boolValue}
         onChange={(value) => onChange(value === BooleanType.true)}

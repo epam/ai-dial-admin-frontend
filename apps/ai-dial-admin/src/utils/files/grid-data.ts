@@ -1,12 +1,19 @@
 import { ColDef } from 'ag-grid-community';
 
-import { DialFile } from '@/src/models/dial/file';
-import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import FileNameCellRenderer from '@/src/components/Grid/CellRenderers/FileNameCellRenderer';
+import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
+import { DialFile } from '@/src/models/dial/file';
+import { PublicationFile } from '@/src/models/dial/publications';
 import { getNameExtensionFromFile } from './get-extension';
 
-export const getGridFileDataFromString = (files: string[]) => {
+export interface FileRowData {
+  name: string;
+  extension: string;
+  path: string;
+}
+
+export const getPublicationGridFileDataFromString = (files: string[]): FileRowData[] => {
   return files.map((file) => {
     const { name, extension } = getNameExtensionFromFile(file);
     return {
@@ -15,6 +22,26 @@ export const getGridFileDataFromString = (files: string[]) => {
       path: file,
     };
   });
+};
+
+export const getPublicationGridFileData = (files: PublicationFile[], addedFiles: File[]): FileRowData[] => {
+  const publicationFilesData = files.map((file) => {
+    const { name, extension } = getNameExtensionFromFile(file.file.name as string);
+    return {
+      name,
+      extension,
+      path: file.file.path as string,
+    };
+  });
+  const addedFilesData = addedFiles.map((file) => {
+    const { name, extension } = getNameExtensionFromFile(file.name);
+    return {
+      name,
+      extension,
+      path: '',
+    };
+  });
+  return [...publicationFilesData, ...addedFilesData];
 };
 
 export const getGridFileData = (files: DialFile[]) => {

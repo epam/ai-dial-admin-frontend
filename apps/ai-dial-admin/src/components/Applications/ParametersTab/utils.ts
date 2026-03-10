@@ -1,5 +1,5 @@
-import { ColDef, ICellRendererParams, ITooltipParams } from 'ag-grid-community';
 import { SelectOption } from '@epam/ai-dial-ui-kit';
+import { ColDef, ICellRendererParams, ITooltipParams } from 'ag-grid-community';
 
 import { DefaultItemType } from '@/src/components/Defaults/types';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
@@ -18,8 +18,8 @@ import { DialApplicationResource } from '@/src/models/dial/application-resource'
 import { DefaultsValue } from '@/src/models/dial/defaults';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialSchemePropertyType } from '@/src/models/dial/scheme';
+import { ParamsFields, ParamsView } from '@/src/types/parameters';
 import { ApplicationRoute } from '@/src/types/routes';
-import { ParamsFields, ParamsView } from './types';
 
 export const getFrameConfig = (
   scheme: DialApplicationScheme | DialApplicationResource,
@@ -237,6 +237,7 @@ export const getAppPropertiesColumns = (
             component: JsonEditorCellRenderer,
             params: {
               onChange: onChangeJSON,
+              disableValidation: true,
             },
           };
         } else if (params.data.type == 'boolean') {

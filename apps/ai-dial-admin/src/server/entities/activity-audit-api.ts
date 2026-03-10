@@ -1,12 +1,11 @@
-import { JWT } from 'next-auth/jwt';
-
+import { ActivityAuditRevision } from '@/src/components/ActivityAudit/models';
 import { DialActivity } from '@/src/models/activity-audit';
+import { Token } from '@/src/models/auth';
+import { AuditPageData, FilterDto, SortDto } from '@/src/models/request';
+import { ServerActionResponse } from '@/src/models/server-action';
 import { ActivityAuditEntity } from '@/src/types/activity-audit';
 import { API } from '../api';
 import { BaseApi } from '../base-api';
-import { PageDto, SortDto, FilterDto } from '@/src/models/request';
-import { ActivityAuditRevision } from '@/src/components/ActivityAudit/models';
-import { ServerActionResponse } from '@/src/models/server-action';
 
 export const ACTIVITIES_URL = `${API}/activities`;
 export const ACTIVITY_AUDIT_URL = `${API}/history/revisions`;
@@ -16,10 +15,10 @@ export class ActivityAuditApi extends BaseApi {
   getActivitiesList(
     pageSize: number,
     pageNumber: number,
-    token: JWT | null,
+    token: Token,
     sorts: SortDto[],
     filters: FilterDto[],
-  ): Promise<PageDto<DialActivity> | null> {
+  ): Promise<AuditPageData<DialActivity> | null> {
     return this.post(
       ACTIVITIES_URL,
       {
@@ -32,18 +31,18 @@ export class ActivityAuditApi extends BaseApi {
     );
   }
 
-  getActivityById(id: string, token: JWT | null): Promise<ServerActionResponse<DialActivity>> {
+  getActivityById(id: string, token: Token): Promise<ServerActionResponse<DialActivity>> {
     return this.getAction(`${ACTIVITIES_URL}/${id}`, token);
   }
 
-  getRevisionDetails(url: string, token: JWT | null): Promise<ActivityAuditEntity | null> {
+  getRevisionDetails(url: string, token: Token): Promise<ActivityAuditEntity | null> {
     return this.get(`${API}${url}`, token);
   }
 
   getRevisions(
     pageSize: number,
     pageNumber: number,
-    token: JWT | null,
+    token: Token,
     sorts: SortDto[],
     filters: FilterDto[],
   ): Promise<ServerActionResponse<ActivityAuditRevision[]>> {
@@ -59,11 +58,11 @@ export class ActivityAuditApi extends BaseApi {
     );
   }
 
-  getEntitiesForRevision(url: string, token: JWT | null): Promise<ActivityAuditEntity[] | null> {
+  getEntitiesForRevision(url: string, token: Token): Promise<ActivityAuditEntity[] | null> {
     return this.get(`${API}${url}`, token);
   }
 
-  rollbackToRevision(revisionNumber: number | undefined, token: JWT | null) {
-    return this.post(`${ACTIVITY_AUDIT_ROLLBACK_URL}`, { revisionNumber }, token);
+  rollbackToRevision(revisionNumber: number | undefined, token: Token): Promise<ServerActionResponse> {
+    return this.postAction(`${ACTIVITY_AUDIT_ROLLBACK_URL}`, { revisionNumber }, token);
   }
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { FC, useCallback, useEffect, useMemo } from 'react';
-import { DialNumberInputField } from '@epam/ai-dial-ui-kit';
+import { DialNumberInput } from '@epam/ai-dial-ui-kit';
 
 import AttachmentInput from '@/src/components/Common/AttachmentInput/AttachmentInput';
 import { AttachmentsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -17,7 +17,7 @@ interface Props {
 }
 
 const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
-  const t = useI18n() as (str: string, param?: Record<string, number>) => string;
+  const t = useI18n();
 
   const { dispatch } = useSaveValidationContext();
   const error = useMemo(() => {
@@ -36,8 +36,8 @@ const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
   );
 
   const onChangeAttachmentTypes = useCallback(
-    (types: string[]) => {
-      if (types.length) {
+    (types?: string[]) => {
+      if (types) {
         onChangeEntity({ ...entity, inputAttachmentTypes: types });
       } else {
         onChangeEntity({
@@ -51,25 +51,23 @@ const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
   );
 
   return (
-    <div className="flex flex-col gap-y-8 w-full">
+    <div className="flex flex-col gap-y-8">
       <AttachmentInput
         initialValues={entity.inputAttachmentTypes}
-        fieldTitle={t(AttachmentsI18nKey.Attachments)}
+        label={t(AttachmentsI18nKey.Attachments)}
         placeholder={t(EntityPlaceholdersI18nKey.AttachmentsTypes)}
-        allValueLabel={t(AttachmentsI18nKey.UseAllAttachment)}
         availableItems={mimeMapping}
-        inputClassName="lg:w-[35%] lg:flex-0"
         onChange={(values) => onChangeAttachmentTypes(values)}
       />
       {!!entity.inputAttachmentTypes?.length && (
-        <DialNumberInputField
-          containerClassName="w-[148px]"
-          elementId="maxAttachment"
-          fieldTitle={t(AttachmentsI18nKey.MaxNumber)}
+        <DialNumberInput
+          containerClassName="w-[180px]"
+          id="maxAttachment"
+          labelProps={{ label: t(AttachmentsI18nKey.MaxNumber) }}
           placeholder={t(EntityPlaceholdersI18nKey.Number)}
           value={entity.maxInputAttachments}
           onChange={onChangeAttachmentMax}
-          errorText={error}
+          error={error}
           invalid={!!error}
           min={0}
         />

@@ -7,16 +7,25 @@ import { getButtonTitle } from '@/src/components/ExportConfig/AddEntities/utils'
 import { ExportI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { EntityType } from '@/src/types/entity-type';
+import { ExportFormat } from '@/src/types/export';
 import { getAllAvailableDependencies } from '@/src/utils/entities/get-export-deps';
 
 interface Props {
   selectedTab?: EntityType;
+  selectedExportFormat?: ExportFormat;
   selectedDependencies: EntityType[];
   onChangeSelectedDependencies: (dependencies: EntityType[]) => void;
+  disabled?: boolean;
 }
 
-const Dependencies: FC<Props> = ({ selectedTab, onChangeSelectedDependencies, selectedDependencies }) => {
-  const t = useI18n() as (v: string) => string;
+const Dependencies: FC<Props> = ({
+  selectedTab,
+  selectedExportFormat,
+  onChangeSelectedDependencies,
+  selectedDependencies,
+  disabled,
+}) => {
+  const t = useI18n();
   const [allDependencies, setAllDependencies] = useState<EntityType[]>([]);
 
   const isAllSelected = useMemo(() => {
@@ -24,10 +33,10 @@ const Dependencies: FC<Props> = ({ selectedTab, onChangeSelectedDependencies, se
   }, [allDependencies, selectedDependencies]);
 
   useEffect(() => {
-    const dependencies = getAllAvailableDependencies(selectedTab);
+    const dependencies = getAllAvailableDependencies(selectedTab, selectedExportFormat === ExportFormat.CORE);
     setAllDependencies(dependencies);
     onChangeSelectedDependencies(dependencies);
-  }, [selectedTab, onChangeSelectedDependencies]);
+  }, [selectedTab, selectedExportFormat, onChangeSelectedDependencies]);
 
   const onChange = useCallback(
     (value: boolean | undefined, key: EntityType) => {
@@ -57,17 +66,20 @@ const Dependencies: FC<Props> = ({ selectedTab, onChangeSelectedDependencies, se
       <div className="flex flex-col">
         <h3 className="mb-3">{t(ExportI18nKey.Dependencies)}</h3>
         <div className="flex-1 min-h-0">
-          <DialCheckbox
-            checked={isAllSelected}
-            id="all-dependencies"
-            label={t(ExportI18nKey.AllDependencies)}
-            onChange={onSelectAll}
-          />
-          <div className="flex flex-col pl-[20px] mt-3 gap-y-3">
+          {!disabled && (
+            <DialCheckbox
+              checked={isAllSelected}
+              id="all-dependencies"
+              label={t(ExportI18nKey.AllDependencies)}
+              onChange={onSelectAll}
+            />
+          )}
+          <div className={`flex flex-col ${disabled ? '' : 'pl-[20px] mt-3'} gap-y-3`}>
             {allDependencies.map((dep, i) => {
               return (
                 <DialCheckbox
                   checked={selectedDependencies.includes(dep)}
+                  disabled={disabled}
                   id={dep}
                   key={i}
                   label={getButtonTitle(t, dep)}

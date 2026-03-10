@@ -1,7 +1,7 @@
 import { FC, useEffect, useMemo, useState } from 'react';
 
 import classNames from 'classnames';
-import { DialRemoveButton, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialRemoveButton, DialInput } from '@epam/ai-dial-ui-kit';
 
 import { EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -10,40 +10,44 @@ import { isValidRoutePath } from '@/src/utils/validation/path-error';
 
 interface Props {
   index: number;
-  fieldTitle: string;
+  label: string;
   path: string;
-  optional?: boolean;
+  required?: boolean;
   readonly?: boolean;
   allPaths?: string[];
+  disableValidation?: boolean;
   onRemove: (index: number) => void;
   onChangePath: (index: number, value?: string) => void;
 }
 
-const Path: FC<Props> = ({ index, path, readonly, optional, fieldTitle, allPaths, onRemove, onChangePath }) => {
+const Path: FC<Props> = ({
+  index,
+  path,
+  readonly,
+  required,
+  label,
+  allPaths,
+  disableValidation,
+  onRemove,
+  onChangePath,
+}) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
   const [isEmptyPath, setIsEmptyPath] = useState(true);
   const [isInvalidPath, setIsInvalidPath] = useState(false);
   const isAllEmptyValues = !allPaths?.some((v) => v !== '');
   const error = useMemo(() => {
-    return isEmptyPath && index === 0 && isAllEmptyValues && !optional
-      ? t(ErrorI18nKey.RequiredProperty)
-      : isInvalidPath
-        ? t(ErrorI18nKey.InvalidPath)
-        : '';
-  }, [index, optional, isAllEmptyValues, isEmptyPath, isInvalidPath, t]);
+    return disableValidation
+      ? ''
+      : isEmptyPath && index === 0 && isAllEmptyValues && required
+        ? t(ErrorI18nKey.RequiredProperty)
+        : isInvalidPath
+          ? t(ErrorI18nKey.InvalidPath)
+          : '';
+  }, [disableValidation, isEmptyPath, index, isAllEmptyValues, required, t, isInvalidPath]);
 
-  const removeButtonClassName = classNames(
-    'cursor-pointer ml-[10px]',
-    index === 0
-      ? (isEmptyPath && isAllEmptyValues) || isInvalidPath
-        ? ''
-        : 'mt-[18px]'
-      : isInvalidPath
-        ? 'mb-[16px]'
-        : '',
-    index === 0 && allPaths?.length === 1 ? 'text-secondary' : 'text-error',
-  );
+  const alignmentClassName =
+    index === 0 ? (error ? 'items-start' : 'items-end') : error ? 'items-start' : 'items-center';
 
   useEffect(() => {
     setIsEmptyPath(path === '');
@@ -59,20 +63,22 @@ const Path: FC<Props> = ({ index, path, readonly, optional, fieldTitle, allPaths
   }, [error]);
 
   return (
-    <div className="flex items-center">
-      <div className="flex-1">
-        <DialTextInputField
-          elementId={`path-${index}`}
+    <div className={classNames('flex flex-row gap-x-2', alignmentClassName)}>
+      <div className="flex-1 min-w-0">
+        <DialInput
+          id={`path-${index}`}
           value={path}
           disabled={readonly}
           placeholder={t(EntityPlaceholdersI18nKey.PathUrl)}
-          fieldTitle={index === 0 ? fieldTitle : ''}
+          labelProps={{ label: index === 0 ? label : '', required }}
           onChange={(value) => onChangePath(index, value)}
-          errorText={error}
+          error={error}
           invalid={!!error}
         />
       </div>
-      {!readonly && <DialRemoveButton onClick={() => onRemove(index)} className={removeButtonClassName} />}
+      {!readonly && (
+        <DialRemoveButton onClick={() => onRemove(index)} className={error && index === 0 ? 'mt-[22px]' : ''} />
+      )}
     </div>
   );
 };

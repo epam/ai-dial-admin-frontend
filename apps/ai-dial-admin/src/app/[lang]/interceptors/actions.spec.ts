@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { deploymentsApi, interceptorsApi } from '@/src/app/api/api';
+import { interceptorsApi } from '@/src/app/api/api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
@@ -8,7 +8,6 @@ import {
   createInterceptor,
   getConfigurationSchema,
   getCoreInterceptor,
-  getInterceptorContainers,
   getInterceptorsList,
   removeInterceptor,
   updateCoreInterceptor,
@@ -41,15 +40,6 @@ describe('Interceptors :: server actions', () => {
     await getInterceptorsList();
     expect(getUserToken).toHaveBeenCalled();
     expect(interceptorsApi.getInterceptorsListAction).toHaveBeenCalledWith(TOKEN_MOCK);
-  });
-
-  test('Should call getInterceptorContainers action ', async () => {
-    (deploymentsApi.getInterceptorContainers as any).mockResolvedValue(RESPONSE_MOCK);
-
-    const result = await getInterceptorContainers();
-    expect(getUserToken).toHaveBeenCalled();
-    expect(deploymentsApi.getInterceptorContainers).toHaveBeenCalledWith(TOKEN_MOCK);
-    expect(result).toBe(RESPONSE_MOCK);
   });
 
   test('Should call removeInterceptor action', async () => {

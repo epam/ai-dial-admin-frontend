@@ -1,17 +1,14 @@
 import { cookies, headers } from 'next/headers';
-import { redirect } from 'next/navigation';
-
-import { ApplicationRoute } from '@/src/types/routes';
+import { notFound } from 'next/navigation';
 
 import { activityAuditApi } from '@/src/app/api/api';
 import { SYSTEM_ROLLBACK_ID } from '@/src/components/ActivityAudit/Rollback/constants';
 import SystemRollback from '@/src/components/ActivityAudit/Rollback/SystemRollback';
 import AuditView from '@/src/components/ActivityAudit/View/AuditView';
-import Page403 from '@/src/components/Page403/Page403';
 import { DialActivity } from '@/src/models/activity-audit';
 import { BaseEntity } from '@/src/models/dial/base-entity';
-import { FilterDto, PageDto } from '@/src/models/request';
-import { logError } from '@/src/server/logger';
+import { FilterDto, AuditPageData } from '@/src/models/request';
+import { errorObjLog } from '@/src/server/logger';
 import { ActivityAuditEntity } from '@/src/types/activity-audit';
 import { SortDirectionDto } from '@/src/types/request';
 import { getRevisionRouteForEntityType } from '@/src/utils/audit/get-revision-route';
@@ -26,7 +23,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   let activity: DialActivity | null = null;
   let activityRevision: ActivityAuditEntity | null = null;
   let previousRevision: ActivityAuditEntity | null = null;
-  let activities: PageDto<DialActivity> | null = null;
+  let activities: AuditPageData<DialActivity> | null = null;
   let entity: BaseEntity | undefined = void 0;
 
   try {
@@ -35,9 +32,6 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
       return <SystemRollback />;
     }
     activity = (await activityAuditApi.getActivityById(auditViewId, token)).response as DialActivity;
-    if (activity === void 0) {
-      return <Page403 />;
-    }
     activities = await activityAuditApi.getActivitiesList(
       1,
       0,
@@ -73,11 +67,11 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
       previousRevision = await activityAuditApi.getRevisionDetails(`${route}${activity.revision - 1}`, token);
     }
   } catch (e) {
-    logError(e, 'Failed to fetch activity view data');
+    errorObjLog(e, 'Failed to fetch activity view data');
   }
 
   if (activity == null) {
-    redirect(ApplicationRoute.ActivityAudit);
+    notFound();
   }
 
   return (

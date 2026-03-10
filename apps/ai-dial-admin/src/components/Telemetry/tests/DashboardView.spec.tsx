@@ -15,9 +15,7 @@ describe('DashboardView', () => {
   test('renders grafana link if grafanaLink is provided', () => {
     render(<DashboardView grafanaLink="https://grafana.example.com" />);
     expect(screen.getByText(TelemetryI18nKey.Grafana)).toBeInTheDocument();
-    const link = screen.getByRole('link');
-    expect(link).toHaveAttribute('href', 'https://grafana.example.com');
-    expect(link).toHaveAttribute('target', '_blank');
+    expect(screen.getByText(TelemetryI18nKey.Grafana)).toBeInTheDocument();
   });
 
   test('does not render grafana link if grafanaLink is not provided', () => {

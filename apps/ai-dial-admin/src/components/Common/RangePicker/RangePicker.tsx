@@ -1,10 +1,11 @@
 import { FC, useCallback, useState } from 'react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 
 import DatePicker from '@/src/components/Common/DatePicker/DatePicker';
 import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { TimeRange } from '@/src/models/time-range';
+import { topOffset } from './constants';
 
 interface Props {
   timeRange: TimeRange | null;
@@ -25,44 +26,61 @@ const RangePicker: FC<Props> = ({ onChange, timeRange }) => {
   const onStartDateChange = useCallback((startDate: Date | null) => {
     if (startDate) {
       // reset hours, minutes, seconds, milliseconds to 0
-      startDate.setHours(0);
-      startDate.setMinutes(0);
-      startDate.setSeconds(0);
-      startDate.setMilliseconds(0);
+      startDate.setHours(0, 0, 0, 0);
       setStartDate(startDate);
     }
   }, []);
 
   const onEndDateChange = useCallback((endDate: Date | null) => {
     if (endDate) {
-      endDate.setHours(12);
-      endDate.setMinutes(59);
-      endDate.setSeconds(59);
-      endDate.setMilliseconds(0);
+      endDate.setHours(23, 59, 59, 999);
       setEndDate(endDate);
     }
   }, []);
 
   return (
     <div className="flex flex-col w-full p-3">
+      <p className="tiny text-secondary mb-2 cursor-default">{t(BasicI18nKey.From)}</p>
       <DatePicker
         id="start-date"
-        label={t(BasicI18nKey.From)}
+        className="dial-input cursor-pointer"
         date={startDate}
         setDate={onStartDateChange}
         startDate={startDate}
         endDate={endDate}
+        maxDate={endDate === null ? void 0 : endDate}
+        popperPlacement="bottom"
+        popperModifiers={[
+          {
+            name: 'flip',
+            fn: (state) => {
+              const yPosition = state.rects.reference.y + state.rects.reference.height + topOffset;
+              return { ...state, y: yPosition };
+            },
+          },
+        ]}
       />
+      <p className="tiny text-secondary mb-2 cursor-default">{t(BasicI18nKey.To)}</p>
       <DatePicker
         id="end-date"
-        label={t(BasicI18nKey.To)}
+        className="dial-input cursor-pointer"
         date={endDate}
         setDate={onEndDateChange}
         startDate={startDate}
         endDate={endDate}
         minDate={startDate === null ? void 0 : startDate} // minDate: Date | undefined
+        popperPlacement="bottom"
+        popperModifiers={[
+          {
+            name: 'flip',
+            fn: (state) => {
+              const yPosition = state.rects.reference.y + state.rects.reference.height + topOffset;
+              return { ...state, y: yPosition };
+            },
+          },
+        ]}
       />
-      <DialButton label={t(ButtonsI18nKey.Apply)} onClick={onClick} variant={ButtonVariant.Primary} className="w-max" />
+      <DialPrimaryButton label={t(ButtonsI18nKey.Apply)} onClick={onClick} className="w-max" />
     </div>
   );
 };

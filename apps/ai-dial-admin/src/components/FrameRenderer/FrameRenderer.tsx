@@ -32,7 +32,7 @@ const FrameRenderer = forwardRef<HTMLDivElement, Props>(
 
     useImperativeHandle(ref, () => containerRef.current as HTMLDivElement);
 
-    const className = classNames(containerClassName, 'relative h-full w-full');
+    const className = classNames(containerClassName, 'relative size-full');
 
     const handleMessage = useCallback(
       (event: MessageEvent<VisualizerConnectorRequest>) => {
@@ -100,7 +100,7 @@ const FrameRenderer = forwardRef<HTMLDivElement, Props>(
     }, [handleMessage]);
 
     return (
-      <div className="relative h-full w-full">
+      <div className="relative size-full">
         {loading && (
           <div className="absolute inset-0 z-50 bg-layer-2">
             <DialLoader size={40} />

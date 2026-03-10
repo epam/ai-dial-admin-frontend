@@ -19,6 +19,7 @@ describe('ApplicationRunner :: clearSchemeForEditor', () => {
       ['dial:applicationTypeTruncatePromptEndpoint']: 'dial:applicationTypeTruncatePromptEndpoint',
       ['dial:appendApplicationPropertiesHeader']: true,
       ['dial:applicationTypePlaybackSupport']: true,
+      ['dial:applicationTypeAssistantAttachmentsInRequestSupported']: false,
       ['dial:applicationTypeRoutes']: [],
       ['dial:applicationTypeBucketCopy']: TypeBucketCopy.ENABLED,
       ['dial:applicationTypeIconUrl']: 'icon1.svg',

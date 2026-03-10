@@ -2,78 +2,99 @@ import { TabsI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test, vi } from 'vitest';
 import {
-  appRouteTab,
-  auditTab,
-  dependenciesTab,
-  featuresTab,
-  getAuditTabs,
-  getTabsForAsset,
-  getToolsetTabs,
-  getViewTabs,
-  interceptorsTab,
-  parametersTab,
-  propertiesTab,
-  getKeyTabs,
-  rolesTab,
-  toolsTab,
-  getPublicationTabs,
-  getUsageLogTabs,
-  getInterceptorTemplateTabs,
-  getInterceptorTabs,
-  parameterSchemaTab,
-  entitiesTab,
   applicationRunnersTab,
-  filesTab,
-  conversationsTab,
-  tracesTab,
-  getRoleTabs,
-  keysTab,
-  getRouteTabs,
-  attachmentsTab,
-  getAppRunnerTabs,
   applicationsTab,
+  appRouteTab,
+  attachmentsTab,
+  auditTab,
+  bodyTab,
+  conversationsTab,
+  dependenciesTab,
+  deploymentsToolsTab,
+  entitiesTab,
+  eventsTab,
+  executionLogTab,
+  featuresTab,
+  filesTab,
+  firewallTab,
   getAdapterTabs,
+  getApplicationTabs,
+  getAppRouteTabs,
+  getAppRunnerTabs,
+  getAuditTabs,
+  getDeploymentsViewTabs,
+  getInterceptorTabs,
+  getInterceptorTemplateTabs,
+  getKeyTabs,
+  getModelsTabs,
+  getPublicationTabs,
+  getRoleTabs,
+  getRouteTabs,
+  getRunTabs,
+  getSystemPropertiesTabs,
+  getTabsForAsset,
+  getTestSuiteRequestTemplateTabs,
+  getTestSuiteTabs,
+  getToolsetTabs,
+  getUsageLogTabs,
+  globalInterceptorsTab,
+  headersTab,
+  installationLogTab,
+  interceptorsTab,
+  keysTab,
+  extractionResultTab,
   modelsTab,
+  parameterSchemaTab,
+  parametersTab,
+  promptsTab,
+  propertiesTab,
+  relatedContainersTab,
+  resourcesTab,
+  rolesTab,
+  runsTab,
+  summaryTab,
+  testCasesTab,
+  toolsTab,
+  tracesTab,
+  trendsTab,
+  getEndpointSchemaTabs,
+  requestSchemaTab,
+  responseSchemaTab,
+  getFilePublicationTabs,
+  permissionsTab,
+  getPromptPublicationTabs,
+  getApplicationPublicationTabs,
+  getToolsetPublicationTabs,
+  columnsTab,
 } from '../utils';
+
+import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
+import { IMAGE_STATUS } from '@/src/types/deployments/images';
 
 const t = vi.fn((id) => id);
 
 describe('Entities :: tabs', () => {
   test('Should return tabs for models', () => {
-    const res = getViewTabs(t, ApplicationRoute.Models);
+    const res = getModelsTabs(t);
     expect(res).toEqual([propertiesTab(t), featuresTab(t), rolesTab(t), interceptorsTab(t), auditTab(t)]);
   });
 
   test('Should return tabs for application', () => {
-    const res = getViewTabs(t, ApplicationRoute.Applications);
+    const res = getApplicationTabs(t);
     expect(res).toEqual([
       propertiesTab(t),
       featuresTab(t),
       parametersTab(t),
-      rolesTab(t),
-      interceptorsTab(t),
       dependenciesTab(t),
       appRouteTab(t),
-      auditTab(t),
-    ]);
-  });
-
-  test('Should return tabs for application with editor', () => {
-    const res = getViewTabs(t, ApplicationRoute.Applications);
-    expect(res).toEqual([
-      propertiesTab(t),
-      featuresTab(t),
-      parametersTab(t),
       rolesTab(t),
       interceptorsTab(t),
-      dependenciesTab(t),
-      appRouteTab(t),
       auditTab(t),
     ]);
   });
 
   test('Should return tabs for routes', () => {
-    const res = getViewTabs(t, ApplicationRoute.Routes);
+    const res = getRouteTabs(t);
     expect(res).toEqual([propertiesTab(t), rolesTab(t), auditTab(t)]);
   });
 
@@ -134,7 +155,7 @@ describe('Entities :: tabs', () => {
   });
 
   test('returns correct tabs for routes', () => {
-    expect(getRouteTabs(t)).toEqual([propertiesTab(t), attachmentsTab(t), rolesTab(t)]);
+    expect(getAppRouteTabs(t)).toEqual([propertiesTab(t), attachmentsTab(t), rolesTab(t)]);
   });
 
   test('returns correct tabs for roles', () => {
@@ -160,12 +181,17 @@ describe('Entities :: tabs', () => {
   test('returns correct tabs for app runner', () => {
     expect(getAppRunnerTabs(t)).toEqual([
       propertiesTab(t),
+      featuresTab(t),
       parametersTab(t),
       interceptorsTab(t),
       applicationsTab(t),
       appRouteTab(t),
       auditTab(t),
     ]);
+  });
+
+  test('returns correct tabs for system properties', () => {
+    expect(getSystemPropertiesTabs(t)).toEqual([globalInterceptorsTab(t)]);
   });
 
   test('returns correct tabs for interceptor', () => {
@@ -177,4 +203,76 @@ describe('Entities :: tabs', () => {
       auditTab(t),
     ]);
   });
+
+  test('returns correct tabs for deployment images', () => {
+    const status = IMAGE_STATUS.BUILT;
+
+    expect(getDeploymentsViewTabs(ApplicationRoute.Images, t, status, [])).toEqual([
+      propertiesTab(t),
+      firewallTab(t, false),
+      relatedContainersTab(t, status),
+      installationLogTab(t, status),
+    ]);
+  });
+  test('returns correct tabs for deployment mcp containers', () => {
+    const status = CONTAINER_STATUS.RUNNING;
+
+    expect(getDeploymentsViewTabs(ApplicationRoute.McpContainers, t, status, ['*'])).toEqual([
+      propertiesTab(t),
+      firewallTab(t, true),
+      deploymentsToolsTab(t, status),
+      resourcesTab(t, status),
+      promptsTab(t, status),
+      executionLogTab(t),
+      eventsTab(t),
+    ]);
+  });
+
+  test('returns correct tabs for test suite', () => {
+    expect(getTestSuiteTabs(t)).toEqual([propertiesTab(t), testCasesTab(t), runsTab(t)]);
+  });
+
+  test('returns correct tabs for run', () => {
+    expect(getRunTabs(t)).toEqual([summaryTab(t), extractionResultTab(t)]);
+  });
+
+  test('returns correct tabs for model containers', () => {
+    const status = CONTAINER_STATUS.RUNNING;
+
+    expect(getDeploymentsViewTabs(ApplicationRoute.ModelServings, t, status, [])).toEqual([
+      propertiesTab(t),
+      firewallTab(t, false),
+      executionLogTab(t),
+      eventsTab(t),
+    ]);
+  });
+});
+
+test('returns correct tabs for test suite request template', () => {
+  expect(getTestSuiteRequestTemplateTabs(t)).toEqual([bodyTab(t), parametersTab(t), headersTab(t)]);
+});
+
+test('returns correct tabs for test suite request template', () => {
+  expect(getEndpointSchemaTabs(t)).toEqual([requestSchemaTab(t), responseSchemaTab(t), columnsTab(t)]);
+});
+
+test('returns correct tabs for file publication', () => {
+  expect(getFilePublicationTabs(t)).toEqual([propertiesTab(t), permissionsTab(t)]);
+});
+
+test('returns correct tabs for prompt publication', () => {
+  expect(getPromptPublicationTabs(t)).toEqual([propertiesTab(t), permissionsTab(t)]);
+});
+
+test('returns correct tabs for application publication', () => {
+  expect(getApplicationPublicationTabs(t)).toEqual([
+    propertiesTab(t),
+    parametersTab(t),
+    permissionsTab(t),
+    filesTab(t),
+  ]);
+});
+
+test('returns correct tabs for toolset publication', () => {
+  expect(getToolsetPublicationTabs(t)).toEqual([propertiesTab(t), toolsTab(t), permissionsTab(t)]);
 });

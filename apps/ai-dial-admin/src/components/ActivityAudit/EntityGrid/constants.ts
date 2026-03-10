@@ -7,7 +7,7 @@ import { sourceTypeFormatter } from '@/src/constants/grid-columns/formatters';
 import { EntityFieldsI18nKey, FeaturesI18nKey } from '@/src/constants/i18n';
 
 export const INTERCEPTORS_DIFF_COLUMNS = [
-  { field: 'parameter', headerName: 'Order', width: 90, maxWidth: 90 },
+  { field: 'parameter', headerName: 'Order', width: 90, maxWidth: 90, filter: false },
   { field: 'value', headerName: 'Name' },
 ];
 

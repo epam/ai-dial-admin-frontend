@@ -1,6 +1,9 @@
 import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test } from 'vitest';
 import { prepareEntityForDuplicate } from '../utils';
+import { DialAdapter } from '@/src/models/dial/adapter';
+import { DialApplicationScheme } from '@/src/models/dial/application';
+import { InterceptorTemplate } from '@/src/models/interceptor-template';
 
 describe('Utils :: prepareEntityForDuplicate', () => {
   const entity = {
@@ -111,6 +114,59 @@ describe('Utils :: prepareEntityForDuplicate', () => {
       ...entity,
       description: 'd',
       folderId: 'folder',
+    });
+  });
+
+  test('Should return filtered adapter', async () => {
+    const result1 = await prepareEntityForDuplicate(
+      ApplicationRoute.Adapters,
+      { ...entity, models: ['folder'] } as DialAdapter,
+      {
+        current: {
+          folderId: 'aaa',
+          name: 'adapter',
+          version: '1.0.0',
+        },
+      } as any,
+    );
+    expect(result1).toEqual({
+      ...entity,
+      description: 'd',
+      models: [],
+    });
+  });
+
+  test('Should return filtered app runner', async () => {
+    const result1 = await prepareEntityForDuplicate(
+      ApplicationRoute.ApplicationRunners,
+      { ...entity, applications: ['folder'] } as DialApplicationScheme,
+      {
+        current: {
+          name: 'app runner',
+        },
+      } as any,
+    );
+    expect(result1).toEqual({
+      ...entity,
+      description: 'd',
+      applications: [],
+    });
+  });
+
+  test('Should return filtered interceptor', async () => {
+    const result1 = await prepareEntityForDuplicate(
+      ApplicationRoute.InterceptorTemplates,
+      { ...entity, interceptors: ['folder'] } as InterceptorTemplate,
+      {
+        current: {
+          name: 'interceptor',
+        },
+      } as any,
+    );
+    expect(result1).toEqual({
+      ...entity,
+      description: 'd',
+      interceptors: [],
     });
   });
 });

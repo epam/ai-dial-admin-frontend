@@ -18,7 +18,7 @@ interface Props {
 }
 
 const SingleValueChart: FC<Props> = ({ title, getData, unit, query, refreshTime }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const t = useI18n();
   const [data, setData] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -50,7 +50,7 @@ const SingleValueChart: FC<Props> = ({ title, getData, unit, query, refreshTime 
   }, [query, getData, refreshTime]);
 
   return (
-    <div className="flex flex-col rounded-lg border border-primary md:min-w-[250px] min-w-[150px] w-full p-4">
+    <div className="flex flex-col rounded-lg border border-primary md:min-w-[250px] min-w-[120px] w-full p-4">
       <h3 className="text-primary mb-4">{t(title)}</h3>
       {loading ? (
         <DialLoader size={24} />

@@ -25,6 +25,10 @@ const ActionsDropdown = <T extends object>({ items, data, rowIndex, ...props }: 
     label: <ActionItem item={item} data={data as T} rowIndex={rowIndex as number} />,
   }));
 
+  if (!items.length) {
+    return null;
+  }
+
   return (
     <div>
       <DialDropdown menu={{ items: dropdownItems }}>
@@ -41,7 +45,7 @@ const ActionTrigger: FC<{ icon: ReactNode; actionTriggerClassName?: string }> = 
 const ActionItem = <T extends object>({ item, data, rowIndex }: ActionProps<T>) => {
   return (
     <div
-      className="text-secondary flex-row flex w-full h-full gap-2 items-center"
+      className="text-secondary flex-row flex size-full gap-2 items-center"
       onClick={() => item.onClick(data, rowIndex)}
     >
       {item.icon}

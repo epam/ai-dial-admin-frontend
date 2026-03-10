@@ -1,8 +1,8 @@
 import { useRouter } from 'next/navigation';
-import { Dispatch, FC, SetStateAction, useCallback, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonVariant, DialButton, DialSelect, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton, DialNeutralButton, DialSelect, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
 import { IconPlus, IconReplace } from '@tabler/icons-react';
 
 import { getApp } from '@/src/app/[lang]/assets-applications/actions';
@@ -12,25 +12,23 @@ import AddVersionModal from '@/src/components/Assets/Modals/AddVersionModal';
 import CompareVersions from '@/src/components/Assets/Modals/CompareVersions';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import { ButtonsI18nKey, CompareI18nKey, EntityFieldsI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { useNotification } from '@/src/context/NotificationContext';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
-import { Asset, DeploymentAsset } from '@/src/models/dial/deployment-asset';
+import { AssetWithVersion, DeploymentAsset } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isDeploymentAsset } from '@/src/utils/is-asset-view';
-import { getErrorNotification } from '@/src/utils/notification';
 import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
 
 interface Props {
   view: ApplicationRoute;
   etag?: string;
-  asset: Asset;
-  assets?: Asset[];
-  onChangeAsset?: (key: Asset) => void;
+  asset: AssetWithVersion;
+  assets?: AssetWithVersion[] | null;
+  onChangeAsset?: (asset: AssetWithVersion) => void;
   addedVersions: string[];
-  setAddedVersions?: Dispatch<SetStateAction<string[]>>;
+  onChangeAddedVersion?: (version: string[]) => void;
 }
 
 const AssetVersionControl: FC<Props> = ({
@@ -40,20 +38,15 @@ const AssetVersionControl: FC<Props> = ({
   assets,
   onChangeAsset,
   addedVersions,
-  setAddedVersions,
+  onChangeAddedVersion,
 }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
 
   const router = useRouter();
-  const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType>();
-
-  const isDeployment = useMemo(() => {
-    return isDeploymentAsset(view);
-  }, [view]);
 
   const versions = useMemo(() => {
     return assets?.map((asset) => asset.version) || [];
@@ -64,18 +57,19 @@ const AssetVersionControl: FC<Props> = ({
   }, [addedVersions, versions]);
 
   const changeAssetForNewVersion = useCallback(
-    (version: string, newAsset?: Asset | null) => {
+    (version: string, newAsset?: AssetWithVersion | null) => {
       if (newAsset) {
         onChangeAsset?.({} as DeploymentAsset);
         const path = `${encodeURIComponent(newAsset.name as string)}?path=${encodeURIComponent(newAsset.path)}`;
         router.push(`${view}/${path}`);
       } else {
         const path = modifyNameVersionInPrompt(asset.path, void 0, version);
-        onChangeAsset?.({
+        const newAsset = {
           ...asset,
           version,
           path,
-        });
+        };
+        onChangeAsset?.(newAsset);
       }
     },
     [asset, onChangeAsset, router, view],
@@ -84,22 +78,22 @@ const AssetVersionControl: FC<Props> = ({
   const onChangeVersion = useCallback(
     async (version: string) => {
       if (version === asset.version) return;
-      if (isDeployment) {
-        const getAsset = view === ApplicationRoute.AssetsApplications ? getApp : getToolset;
-        getReqRef.current(getAsset, asset.folderId, asset.name as string, version, etag).then((res) => {
-          if (res.success) {
-            const newVersionAsset = res.response as DeploymentAsset;
-            changeAssetForNewVersion(version, newVersionAsset);
-          } else {
-            showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
-          }
-        });
-      } else {
-        const newVersionAsset = await getPrompt?.(asset.folderId, asset.name as string, version);
-        changeAssetForNewVersion(version, newVersionAsset);
-      }
+      const getAsset =
+        view === ApplicationRoute.AssetsApplications
+          ? getApp
+          : view === ApplicationRoute.AssetsToolsets
+            ? getToolset
+            : getPrompt;
+      getReqRef.current(getAsset, asset.folderId, asset.name as string, version, etag).then((res) => {
+        if (res.success) {
+          const newVersionAsset = res.response as DeploymentAsset;
+          changeAssetForNewVersion(version, newVersionAsset);
+        } else {
+          changeAssetForNewVersion(version);
+        }
+      });
     },
-    [asset, isDeployment, view, etag, changeAssetForNewVersion, showNotification],
+    [asset, view, etag, changeAssetForNewVersion],
   );
 
   const handleModalClose = useCallback(() => {
@@ -114,11 +108,11 @@ const AssetVersionControl: FC<Props> = ({
 
   const onAddVersion = useCallback(
     (version: string) => {
-      setAddedVersions?.((prev) => [...new Set([...prev, version])]);
+      onChangeAddedVersion?.([...new Set([...addedVersions, version])]);
       onChangeVersion(version);
       setIsModalOpen(false);
     },
-    [onChangeVersion, setAddedVersions],
+    [addedVersions, onChangeVersion, onChangeAddedVersion],
   );
 
   return (
@@ -132,22 +126,18 @@ const AssetVersionControl: FC<Props> = ({
           value={asset.version}
           onChange={(v) => onChangeVersion(v as string)}
           footer={
-            !isDeployment && (
-              <DialButton
-                className="w-full min-h-[34px] h-[34px]"
-                variant={ButtonVariant.Tertiary}
-                iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-                label={t(ButtonsI18nKey.Create)}
-              />
-            )
+            <DialGhostButton
+              className="w-full min-h-[34px] h-[34px]"
+              iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
+              label={t(ButtonsI18nKey.Create)}
+            />
           }
           onFooterClick={() => handleModalOpen(ModalType.addVersion)}
         />
 
-        {!isDeployment && !!assets?.length && assets.length > 1 && (
-          <DialButton
-            variant={ButtonVariant.Secondary}
-            iconBefore={<IconReplace {...BASE_ICON_PROPS} />}
+        {!!assets?.length && assets.length > 1 && !isDeploymentAsset(view) && (
+          <DialNeutralButton
+            iconBefore={<IconReplace {...BASE_BUTTON_ICON_PROPS} />}
             label={t(CompareI18nKey.CompareVersions)}
             onClick={() => handleModalOpen(ModalType.compareVersions)}
           />

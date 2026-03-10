@@ -90,7 +90,7 @@ export const compareInterceptors = (
   for (let i = 0; i < len; i++) {
     const value1 = val1?.[i];
     const value2 = val2?.[i];
-    const parameter = i.toString();
+    const parameter = (i + 1).toString();
 
     if (value1 != null && value2 == null) {
       diffs.push({ parameter, value: '', diffStatus: isCurrent ? DiffStatus.MIRROR : DiffStatus.REMOVED });
@@ -112,7 +112,7 @@ export const compareInterceptors = (
  */
 export const fillInterceptors = (diffs: ActivityAuditDiff[], value: string[]) => {
   const result = (value || []).map((val, i) => ({
-    parameter: i.toString(),
+    parameter: (i + 1).toString(),
     value: val || '',
   }));
   diffs.push(...result);

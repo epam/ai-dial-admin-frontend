@@ -1,6 +1,4 @@
 import { MenuGroupConfiguration, MenuItem } from '@/src/components/Menu/menu-configuration';
-import { EmbeddedApp } from '@/src/context/AppContext';
-import { MenuI18nKey } from '@/src/constants/i18n';
 
 export const getMenuItems = (value?: string): string[] => {
   return !value ? [] : value.toLowerCase().split(' ');
@@ -9,24 +7,8 @@ export const getMenuItems = (value?: string): string[] => {
 export const getActualMenuItems = (
   menuConfig: MenuGroupConfiguration[],
   disableItems: string[],
-  embeddedApps: EmbeddedApp[] = [],
 ): MenuGroupConfiguration[] => {
   return menuConfig
-    .map((config) => {
-      if (config.key === MenuI18nKey.MLOps) {
-        return {
-          ...config,
-          items: embeddedApps.map((app) => {
-            return {
-              key: app.key,
-              href: app.slug,
-            } as MenuItem;
-          }),
-        };
-      }
-
-      return config;
-    })
     .map((config) => {
       return {
         ...config,

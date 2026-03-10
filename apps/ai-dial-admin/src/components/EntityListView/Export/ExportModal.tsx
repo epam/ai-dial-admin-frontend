@@ -3,19 +3,21 @@
 import { FC, useState } from 'react';
 
 import {
-  ButtonVariant,
-  RadioButtonWithContent,
-  DialButton,
-  DialRadioGroup,
-  RadioGroupOrientation,
+  DialNeutralButton,
   DialPopup,
+  DialPrimaryButton,
+  DialRadioGroup,
   PopupSize,
+  RadioButtonWithContent,
+  RadioGroupOrientation,
 } from '@epam/ai-dial-ui-kit';
 
-import { ButtonsI18nKey, ExportI18nKey, FoldersI18nKey, PromptsI18nKey, TypeI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, ExportI18nKey, TypeI18nKey } from '@/src/constants/i18n';
+import { ARCHIVE_IMPORT_TYPE } from '@/src/constants/import';
 import { useI18n } from '@/src/locales/client';
 import { ImportFileType as FileType, ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getModalTitle } from './utils';
 
 interface Props {
   isModalOpen: boolean;
@@ -25,10 +27,10 @@ interface Props {
 }
 
 const ExportModal: FC<Props> = ({ isModalOpen, route, onClose, onApply }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const t = useI18n();
 
   const exportTypeRadio: RadioButtonWithContent[] = [
-    { id: ImportFileType.ARCHIVE, name: t(TypeI18nKey.Archive) },
+    ARCHIVE_IMPORT_TYPE(t),
     { id: ImportFileType.JSON, name: t(TypeI18nKey.JSON) },
   ];
 
@@ -37,12 +39,12 @@ const ExportModal: FC<Props> = ({ isModalOpen, route, onClose, onApply }) => {
   return (
     <DialPopup
       onClose={onClose}
-      title={route === ApplicationRoute.Prompts ? t(PromptsI18nKey.Export) : t(FoldersI18nKey.Export)}
+      header={getModalTitle(route, t)}
       portalId="ExportModal"
       open={isModalOpen}
       size={PopupSize.Sm}
     >
-      <div className="flex px-6 py-6 h-full flex-col">
+      <div className="flex p-6 h-full flex-col">
         <DialRadioGroup
           radioButtons={exportTypeRadio}
           activeRadioButton={exportType}
@@ -53,12 +55,8 @@ const ExportModal: FC<Props> = ({ isModalOpen, route, onClose, onApply }) => {
         />
       </div>
       <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialButton
-          variant={ButtonVariant.Primary}
-          label={t(ButtonsI18nKey.Export)}
-          onClick={() => onApply?.(exportType as ImportFileType)}
-        />
+        <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialPrimaryButton label={t(ButtonsI18nKey.Export)} onClick={() => onApply?.(exportType as ImportFileType)} />
       </div>
     </DialPopup>
   );

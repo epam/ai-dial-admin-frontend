@@ -2,18 +2,28 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { modelsApi, adaptersApi, deploymentsApi } from '@/src/app/api/api';
+import { modelsApi, adaptersApi } from '@/src/app/api/api';
 import { DEFAULT_ROLE_LIMITS } from '@/src/constants/role';
 import { DialModel, DialModelType } from '@/src/models/dial/model';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { convertDefaultsToRecord } from '@/src/components/Defaults/utils';
-import { SOURCE_FIELD } from '@/src/components/SourceField/types';
+import { SOURCE_FIELD, SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 
-export async function getModels() {
+export async function getModelsListAction() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return modelsApi.getModelsListAction(token);
+}
+
+export async function getModelsList() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return modelsApi.getModelsList(token);
+}
+
+export async function getModel(name: string, etag: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return modelsApi.getModel(name, token, etag);
 }
 
 export async function getModelsTopics() {
@@ -47,7 +57,7 @@ export async function updateModel(model: DialModel, etag: string) {
   return modelsApi.updateModel(newModel, token, etag);
 }
 
-export async function createModel(model: DialModel) {
+export async function createModel(model: DialModel, duplicate?: boolean) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   const type = model.type || DialModelType.Chat;
   return modelsApi.createModel(
@@ -57,16 +67,14 @@ export async function createModel(model: DialModel) {
       type,
       source: {
         ...model.source,
-        completionEndpointPath: `${model.name}${getEndpointPostfix(type)}`,
+        completionEndpointPath:
+          model.source?.$type === SOURCE_TYPE.CONTAINER || duplicate
+            ? model.source?.completionEndpointPath
+            : `${model.name}${getEndpointPostfix(type)}`,
       } as SOURCE_FIELD,
     },
     token,
   );
-}
-
-export async function getModelContainers() {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return deploymentsApi.getModelContainers(token);
 }
 
 export async function getCoreModel(name: string) {

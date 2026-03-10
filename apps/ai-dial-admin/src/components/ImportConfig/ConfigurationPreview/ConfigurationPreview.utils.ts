@@ -1,6 +1,6 @@
+import { TabModel } from '@epam/ai-dial-ui-kit';
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { isNull, startCase } from 'lodash';
-import { TabModel } from '@epam/ai-dial-ui-kit';
 
 import StatusCellRenderer from '@/src/components/Grid/CellRenderers/StatusCellRenderer';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
@@ -8,9 +8,9 @@ import { getCompareChangesOperation } from '@/src/constants/grid-columns/actions
 import {
   APPLICATIONS_COLUMNS,
   KEYS_COLUMNS,
-  MODELS_COLUMNS,
   LIST_RUNNER_COLUMNS,
-  SIMPLE_ENTITY_COLUMNS,
+  MODELS_COLUMNS,
+  BASE_COLUMNS,
 } from '@/src/constants/grid-columns/grid-columns';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity, ChatEntity } from '@/src/models/dial/base-entity';
@@ -18,7 +18,6 @@ import { FileComponentItem, FileConfiguration } from '@/src/models/import';
 import { ActivityAuditEntity } from '@/src/types/activity-audit';
 import { EntityType } from '@/src/types/entity-type';
 import { ImportConfigurationAction } from '@/src/types/import';
-import { ApplicationRoute } from '@/src/types/routes';
 import { getEntitiesList } from '@/src/utils/entities/get-entities-list';
 
 const getConfigurationItems = (componentItems: FileComponentItem[], t: (v: string) => string) => {
@@ -29,7 +28,7 @@ const getConfigurationItems = (componentItems: FileComponentItem[], t: (v: strin
 };
 
 const getPrevItems = (componentItems: FileComponentItem[]) => {
-  return componentItems?.map((componentItem) => componentItem?.prev);
+  return componentItems?.map((componentItem) => componentItem?.prev).filter(Boolean);
 };
 
 const getConfigurationTabs = (preview: Record<string, BaseEntity[]>, t: (v: string) => string): TabModel[] => {
@@ -147,7 +146,7 @@ export const getComponentColDefs = (
 ): ColDef[] => {
   const actionColumn = ACTION_COLUMN([getCompareChangesOperation(compare)]);
   if (type === EntityType.MODEL) {
-    return [getComponentActionColumn(), ...MODELS_COLUMNS(t, ApplicationRoute.Models), actionColumn];
+    return [getComponentActionColumn(), ...MODELS_COLUMNS(t), actionColumn];
   }
 
   if (type === EntityType.APPLICATION) {
@@ -162,7 +161,7 @@ export const getComponentColDefs = (
     return [getComponentActionColumn(), ...KEYS_COLUMNS(t), actionColumn];
   }
 
-  return [getComponentActionColumn(), ...SIMPLE_ENTITY_COLUMNS, actionColumn];
+  return [getComponentActionColumn(), ...BASE_COLUMNS, actionColumn];
 };
 
 export const getEntityByIdentifier = (allEntities: ActivityAuditEntity[], entity?: BaseEntity): ActivityAuditEntity => {

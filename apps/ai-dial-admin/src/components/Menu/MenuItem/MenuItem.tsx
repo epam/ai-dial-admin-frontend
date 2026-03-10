@@ -6,7 +6,7 @@ import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
 import { DialTooltip } from '@epam/ai-dial-ui-kit';
 
 import { MenuGroupConfiguration } from '../menu-configuration';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 
 import MenuItemContent from './MenuItemContent';
@@ -27,9 +27,7 @@ const MenuItem: FC<Props> = ({ config, activeMenuItem, isOpenByDefault = false, 
     setIsOpen(!isOpen);
   }, [isOpen]);
 
-  const iconClassName = isOpenByDefault
-    ? 'text-accent-primary'
-    : 'text-secondary group-focus-within:text-accent-primary';
+  const iconClassName = isOpenByDefault ? 'text-accent-primary' : 'text-secondary';
 
   return (
     <li className="flex flex-col">
@@ -45,14 +43,14 @@ const MenuItem: FC<Props> = ({ config, activeMenuItem, isOpenByDefault = false, 
           </div>
           {isSidebarOpen && (
             <div className={classNames('ml-4', iconClassName)}>
-              {isOpen ? <IconChevronUp {...BASE_ICON_PROPS} /> : <IconChevronDown {...BASE_ICON_PROPS} />}
+              {isOpen ? <IconChevronUp {...BASE_BUTTON_ICON_PROPS} /> : <IconChevronDown {...BASE_BUTTON_ICON_PROPS} />}
             </div>
           )}
         </button>
       </DialTooltip>
       {isOpen && !!config.items.length && (
         <div className="flex flex-row w-full relative my-1">
-          <div className="bg-layer-4 w-[1px] absolute left-[23px] top-[12px] bottom-[12px]"></div>
+          <div className="bg-layer-4 w-px absolute left-[23px] inset-y-[12px]"></div>
           <div className="flex flex-col flex-1 min-w-0 gap-0.5 ">
             {config.items.map((menuItem) => (
               <MenuItemContent

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { deploymentsApi, toolSetsApi } from '@/src/app/api/api';
+import { toolSetsApi } from '@/src/app/api/api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
@@ -8,11 +8,14 @@ import {
   createToolset,
   getCoreToolset,
   getTools,
-  getToolsetContainers,
   removeToolset,
+  signInToolset,
+  signOutToolset,
+  tryOutTool,
   updateCoreToolset,
   updateToolset,
 } from './actions';
+import { ToolsetAuthCredentialLevel } from '@/src/models/dial/toolset';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -31,15 +34,6 @@ describe('Toolsets :: server actions', () => {
     const result = await getTools('test');
     expect(getUserToken).toHaveBeenCalled();
     expect(toolSetsApi.getTools).toHaveBeenCalledWith('test', TOKEN_MOCK);
-    expect(result).toBe(RESPONSE_MOCK);
-  });
-
-  test('Should call getToolsetContainers action', async () => {
-    (deploymentsApi.getMcpContainers as any).mockResolvedValue(RESPONSE_MOCK);
-
-    const result = await getToolsetContainers();
-    expect(getUserToken).toHaveBeenCalled();
-    expect(deploymentsApi.getMcpContainers).toHaveBeenCalledWith(TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 
@@ -92,6 +86,43 @@ describe('Toolsets :: server actions', () => {
     const result = await updateCoreToolset({ name: 'test' }, 'test', 'etag');
     expect(getUserToken).toHaveBeenCalled();
     expect(toolSetsApi.updateCoreToolset).toHaveBeenCalledWith({ name: 'test' }, 'test', 'etag', TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call tryOutTool action', async () => {
+    (toolSetsApi.tryOutTool as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await tryOutTool('testSet', { name: 'test' });
+    expect(getUserToken).toHaveBeenCalled();
+    expect(toolSetsApi.tryOutTool).toHaveBeenCalledWith('testSet', { name: 'test' }, TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call signInToolset action', async () => {
+    (toolSetsApi.signInToolset as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await signInToolset({ name: 'name' }, ToolsetAuthCredentialLevel.GLOBAL, 'key', 'code');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(toolSetsApi.signInToolset).toHaveBeenCalledWith(
+      { name: 'name' },
+      ToolsetAuthCredentialLevel.GLOBAL,
+      TOKEN_MOCK,
+      'key',
+      'code',
+    );
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call signOutToolset action', async () => {
+    (toolSetsApi.signOutToolset as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await signOutToolset({ name: 'name' }, ToolsetAuthCredentialLevel.GLOBAL);
+    expect(getUserToken).toHaveBeenCalled();
+    expect(toolSetsApi.signOutToolset).toHaveBeenCalledWith(
+      { name: 'name' },
+      ToolsetAuthCredentialLevel.GLOBAL,
+      TOKEN_MOCK,
+    );
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

@@ -1,26 +1,19 @@
 import { cookies, headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
-import {
-  getCoreApplication,
-  removeApplication,
-  updateApplication,
-  updateCoreApplication,
-} from '@/src/app/[lang]/applications/actions';
-import { applicationRunnersApi, applicationsApi, interceptorsApi, modelsApi, rolesApi } from '@/src/app/api/api';
-import EntityView from '@/src/components/EntityView/View/EntityView';
-import Page403 from '@/src/components/Page403/Page403';
+import { getModelsList } from '@/src/app/[lang]/models/actions';
+import { applicationRunnersApi, applicationsApi, interceptorsApi, rolesApi } from '@/src/app/api/api';
+import ApplicationView from '@/src/components/Applications/View/View';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
-import { logError } from '@/src/server/logger';
-import { ApplicationRoute } from '@/src/types/routes';
+import { errorObjLog } from '@/src/server/logger';
 import { getUserToken } from '@/src/utils/auth/auth-request';
+import { filterDisplayNamesWithVersions } from '@/src/utils/entities/filter-names';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { filterDisplayNames } from '@/src/utils/entities/filter-names';
-import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,38 +30,28 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   let interceptors: DialInterceptor[] | null = [];
 
   try {
-    models = await modelsApi.getModelsList(token);
-    applications = await applicationsApi.getApplicationsList(token);
+    models = (await getModelsList()) || [];
+    applications = (await applicationsApi.getApplicationsList(token)) || [];
     application = await applicationsApi.getApplication((await params.params).id, token, etag).then((res) => {
       etag = res?.etag || DEFAULT_ETAG;
       return res?.response as DialApplication | null;
     });
-    applicationSchemes = await applicationRunnersApi.getApplicationSchemesList(token);
-    roles = await rolesApi.getRolesList(token);
-    interceptors = await interceptorsApi.getInterceptorsList(token);
-    if (
-      applications === void 0 ||
-      application === void 0 ||
-      applicationSchemes === void 0 ||
-      roles === void 0 ||
-      interceptors === void 0
-    ) {
-      return <Page403 />;
-    }
+    applicationSchemes = (await applicationRunnersApi.getApplicationSchemesList(token)) || [];
+    roles = (await rolesApi.getRolesList(token)) || [];
+    interceptors = (await interceptorsApi.getInterceptorsList(token)) || [];
   } catch (e) {
-    logError(e, 'Failed to fetch application view data');
+    errorObjLog(e, 'Failed to fetch application view data');
   }
 
   if (application == null) {
-    redirect(ApplicationRoute.Applications);
+    notFound();
   }
 
-  const names = filterDisplayNames(applications, application?.displayName);
+  const names = filterDisplayNamesWithVersions(applications, application);
 
   return (
     <SaveValidationContextProvider>
-      <EntityView
-        view={ApplicationRoute.Applications}
+      <ApplicationView
         names={names}
         etag={etag}
         roles={roles}
@@ -76,11 +59,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
         applications={applications}
         models={models}
         applicationSchemes={applicationSchemes}
-        originalEntity={application}
-        removeEntity={removeApplication}
-        updateEntity={updateApplication}
-        getCoreEntity={getCoreApplication}
-        updateCoreEntity={updateCoreApplication}
+        originalApplication={application}
       />
     </SaveValidationContextProvider>
   );

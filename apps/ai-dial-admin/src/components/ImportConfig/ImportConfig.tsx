@@ -3,35 +3,57 @@
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { DialSteps, StepStatus } from '@epam/ai-dial-ui-kit';
 
-import { importJsonConfigs, importZipConfig } from '@/src/app/[lang]/import-config/actions';
+import { importDeploymentConfig, importJsonConfigs, importZipConfig } from '@/src/app/[lang]/import-config/actions';
 import { IMPORT_CONFIG_STEPS } from '@/src/constants/import';
-import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { getErrorNotification, getPrepareNotification, getSuccessNotification } from '@/src/utils/notification';
 import { ImportI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
+import { ExportComponentType } from '@/src/types/export';
 import { ImportFileType, ImportSteps } from '@/src/types/import';
 import { useI18n } from '@/src/locales/client';
-import { isLargeFile } from '@/src/components/EntityListView/Import/import';
+import { isLargeFile } from '@/src/components/EntityListView/Import/utils';
 import Files from './Files/Files';
 import ConfigurationPreview from './ConfigurationPreview/ConfigurationPreview';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
-const ImportConfig: FC = () => {
-  const t = useI18n() as (stringToTranslate: string) => string;
-  const { showNotification } = useNotification();
+interface Props {
+  deploymentsEnabled?: boolean;
+}
+
+const ImportConfig: FC<Props> = ({ deploymentsEnabled }) => {
+  const t = useI18n();
+  const { showNotification, removeNotification } = useNotification();
 
   const [importBody, setImportBody] = useState<FormData>(new FormData());
   const [files, setFiles] = useState<File[]>([]);
   const [fileType, setFileType] = useState(ImportFileType.ARCHIVE);
+  const [configScope, setConfigScope] = useState(ExportComponentType.ADMIN);
   const getReqRef = useRef(useProtectedRequest());
+
+  const isDeployments = configScope === ExportComponentType.DEPLOYMENTS;
 
   const [steps, setSteps] = useState(IMPORT_CONFIG_STEPS(t));
   const [currentStepId, setCurrentStep] = useState(steps[0].id);
 
   const onImportFile = useCallback(() => {
-    (fileType == ImportFileType.ARCHIVE
-      ? getReqRef.current(importZipConfig, importBody)
-      : getReqRef.current(importJsonConfigs, importBody)
-    ).then((res) => {
+    const prepareNotificationId = showNotification(
+      getPrepareNotification(t(ImportI18nKey.NotificationImporting), t(ImportI18nKey.NotificationImportingDescription)),
+    );
+
+    const importPromise = isDeployments
+      ? (() => {
+          const resolutionPolicy = importBody.get('resolutionPolicy') as string;
+          const fileBody = new FormData();
+          const file = importBody.get('file') as File;
+          if (file) fileBody.append('file', file);
+          return importDeploymentConfig(fileBody, resolutionPolicy);
+        })()
+      : fileType == ImportFileType.ARCHIVE
+        ? getReqRef.current(importZipConfig, importBody)
+        : getReqRef.current(importJsonConfigs, importBody);
+
+    importPromise.then((res) => {
+      removeNotification(prepareNotificationId);
       if (res.success) {
         showNotification(
           getSuccessNotification(t(ImportI18nKey.ConfigImported), t(ImportI18nKey.ConfigImportedDescription)),
@@ -40,7 +62,7 @@ const ImportConfig: FC = () => {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
-  }, [showNotification, fileType, t, importBody]);
+  }, [showNotification, t, fileType, importBody, removeNotification, isDeployments]);
 
   const setStepsState = useCallback(
     (status: StepStatus) => {
@@ -74,6 +96,12 @@ const ImportConfig: FC = () => {
     setCurrentStep(steps[stepIndex + 1].id);
   }, [steps, currentStepId]);
 
+  const onChangeConfigScope = useCallback((value: string) => {
+    setConfigScope(value as ExportComponentType);
+    setFiles([]);
+    setFileType(ImportFileType.ARCHIVE);
+  }, []);
+
   const onChangeFileType = useCallback(
     (value: string) => {
       setFileType(value as ImportFileType);
@@ -87,21 +115,30 @@ const ImportConfig: FC = () => {
   }, []);
 
   return (
-    <div className="flex flex-col w-full h-full rounded p-4 bg-layer-2">
+    <div className="flex flex-col size-full rounded p-4 bg-layer-2">
       <DialSteps steps={steps} currentStep={currentStepId} onChangeStep={setCurrentStep} />
       {currentStepId === ImportSteps.FILES && (
         <Files
           files={files}
           fileType={fileType}
           isFilesValid={!!isFilesValid()}
+          configScope={configScope}
+          deploymentsEnabled={deploymentsEnabled}
           onChangeFileType={onChangeFileType}
           onChangeFiles={(files) => setFiles(files)}
           onChangeImportBody={onChangeImportBody}
+          onChangeConfigScope={onChangeConfigScope}
           onNextStep={onNextStep}
         />
       )}
       {currentStepId === ImportSteps.CONFIGURATION && (
-        <ConfigurationPreview files={files} onImportFile={onImportFile} importBody={importBody} fileType={fileType} />
+        <ConfigurationPreview
+          files={files}
+          onImportFile={onImportFile}
+          importBody={importBody}
+          fileType={fileType}
+          isDeployments={isDeployments}
+        />
       )}
     </div>
   );

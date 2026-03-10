@@ -6,16 +6,18 @@ import { changeFolder, createFolderWithFiles, removeFolder } from '@/src/app/[la
 import FilePathModal from '@/src/components/Common/FilePath/FilePathModal';
 import FolderCreateModal from '@/src/components/Common/FolderCreate/Components/FolderCreateModal';
 import { getResourceTypeByView } from '@/src/components/Common/FolderList/utils';
-import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';
+import { getFormDataForImport, getImportTitle } from '@/src/components/EntityListView/HeaderButtons/utils';
+import { getImportResults } from '@/src/components/EntityListView/Import/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { BasicI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
-import { DialFile } from '@/src/models/dial/file';
 import { DialFolder } from '@/src/models/dial/folder';
 import { DialRule } from '@/src/models/dial/rule';
-import { ParsedPrompts } from '@/src/models/prompts';
+import { ImportResult } from '@/src/models/import';
+import { ImportData } from '@/src/models/import-asset';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { findFolderSiblings, getFolderName } from '@/src/utils/files/folder';
@@ -23,7 +25,6 @@ import { getFolderNameAndPath } from '@/src/utils/files/path';
 import { getSuccessNotification } from '@/src/utils/notification';
 import DeleteFolder from './DeleteFolder';
 import RenameFolder from './RenameFolder';
-import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 export enum ModalType {
   create = 'create',
@@ -38,29 +39,39 @@ interface Props {
   view?: ApplicationRoute;
   selectedFolder?: string;
   handleClose: () => void;
-  context?: () => AssetsFolderContext<DialFile>;
+  context?: () => AssetsFolderContext;
 }
 
 const FolderListModals: FC<Props> = ({ isModalOpen, modalType, view, selectedFolder = '', handleClose, context }) => {
-  const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
+  const t = useI18n();
   const folderContext = context?.();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
 
-  const createFolder = useCallback(
-    (
-      fileType: ImportFileType,
-      file: File | File[] | ParsedPrompts,
-      rules: DialRule[],
-      path: string,
-      ignorePaths?: boolean,
-    ) => {
-      const body = getFormDataForImport(path, file, fileType, ConflictResolutionPolicy.SKIP, rules, ignorePaths).body;
+  const onCreateFolder = useCallback(
+    (fileType: ImportFileType, file: ImportData, rules: DialRule[], path: string, ignorePaths?: boolean) => {
+      const body = getFormDataForImport(
+        path,
+        file,
+        fileType,
+        ConflictResolutionPolicy.SKIP,
+        rules,
+        ignorePaths,
+        view,
+      ).body;
 
       getReqRef.current(createFolderWithFiles, body, fileType, view).then((res) => {
         if (res.success) {
           folderContext?.fetchFiles?.(`${ROOT_FOLDER}/`, true);
-          showNotification(getSuccessNotification(t(FoldersI18nKey.FolderCreateSuccess)));
+          const results = (res.response as { importResults: ImportResult[] }).importResults;
+          const translatedType = t(getImportTitle(view)).toLowerCase();
+          showNotification(
+            getSuccessNotification(
+              t(FileManagerI18nKey.CreateFolderSuccessTitle),
+              t(FileManagerI18nKey.CreateFolderSuccessDescription),
+            ),
+          );
+          getImportResults(results, getFolderName(path) as string, translatedType, t, showNotification);
         }
       });
       handleClose();
@@ -68,7 +79,7 @@ const FolderListModals: FC<Props> = ({ isModalOpen, modalType, view, selectedFol
     [folderContext, handleClose, showNotification, t, view],
   );
 
-  const renameFolder = useCallback(
+  const onRenameFolder = useCallback(
     (newName: string) => {
       handleClose();
       getReqRef.current(changeFolder, selectedFolder, newName, getResourceTypeByView(view)).then((result) => {
@@ -80,7 +91,7 @@ const FolderListModals: FC<Props> = ({ isModalOpen, modalType, view, selectedFol
     [folderContext, handleClose, selectedFolder, view],
   );
 
-  const deleteFolder = useCallback(() => {
+  const onDeleteFolder = useCallback(() => {
     handleClose();
     getReqRef.current(removeFolder, encodeURIComponent(selectedFolder)).then((result) => {
       if (result.success) {
@@ -89,7 +100,7 @@ const FolderListModals: FC<Props> = ({ isModalOpen, modalType, view, selectedFol
     });
   }, [folderContext, handleClose, selectedFolder]);
 
-  const moveFolder = useCallback(
+  const onMoveFolder = useCallback(
     (newName: string) => {
       handleClose();
       getReqRef
@@ -118,7 +129,7 @@ const FolderListModals: FC<Props> = ({ isModalOpen, modalType, view, selectedFol
             folderPath={selectedFolder}
             isModalOpen={isModalOpen}
             onClose={handleClose}
-            onApply={createFolder}
+            onApply={onCreateFolder}
           />,
           document.body,
         )}
@@ -130,7 +141,7 @@ const FolderListModals: FC<Props> = ({ isModalOpen, modalType, view, selectedFol
             siblings={findFolderSiblings(selectedFolder, folderContext?.files[0] as DialFolder)}
             isModalOpen={isModalOpen}
             onClose={handleClose}
-            onApply={renameFolder}
+            onApply={onRenameFolder}
           />,
           document.body,
         )}
@@ -142,7 +153,7 @@ const FolderListModals: FC<Props> = ({ isModalOpen, modalType, view, selectedFol
             view={view}
             isModalOpen={isModalOpen}
             onClose={handleClose}
-            onApply={deleteFolder}
+            onApply={onDeleteFolder}
             context={context}
             selectedFolder={selectedFolder}
           />,
@@ -155,7 +166,7 @@ const FolderListModals: FC<Props> = ({ isModalOpen, modalType, view, selectedFol
             modalTitle={t(BasicI18nKey.MoveToFolder)}
             isModalOpen={isModalOpen}
             onClose={handleClose}
-            onApply={moveFolder}
+            onApply={onMoveFolder}
             initialPath={selectedFolder}
             context={context}
             isFolderMove={true}

@@ -2,14 +2,14 @@ import { IconChevronLeft, IconChevronRight, IconCalendarEvent } from '@tabler/ic
 import { FC, useCallback } from 'react';
 import ReactDatePicker, { DatePickerProps } from 'react-datepicker';
 
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import 'react-datepicker/dist/react-datepicker.css';
 
 type PickerProps = Omit<DatePickerProps, 'date'>;
 
 interface Props extends PickerProps {
   id: string;
-  label: string;
+  label?: string;
   date: Date | null;
   dateFormat?: string;
   placeholder?: string;
@@ -31,9 +31,11 @@ const DatePicker: FC<Props> = ({ id, label, date, dateFormat, placeholder, showT
 
   return (
     <div className="mb-4 cursor-pointer">
-      <label htmlFor={id}>
-        <p className="tiny text-secondary mb-2">{label}</p>
-      </label>
+      {label && (
+        <label htmlFor={id}>
+          <p className="tiny text-secondary mb-2">{label}</p>
+        </label>
+      )}
       <ReactDatePicker
         id={id}
         placeholderText={placeholder || 'MM-DD-YYYY'}
@@ -41,14 +43,15 @@ const DatePicker: FC<Props> = ({ id, label, date, dateFormat, placeholder, showT
         calendarStartDay={1}
         selected={date}
         onChange={onChange}
-        previousMonthButtonLabel={<IconChevronLeft {...BASE_ICON_PROPS} />}
-        nextMonthButtonLabel={<IconChevronRight {...BASE_ICON_PROPS} />}
+        previousMonthButtonLabel={<IconChevronLeft {...BASE_BUTTON_ICON_PROPS} />}
+        nextMonthButtonLabel={<IconChevronRight {...BASE_BUTTON_ICON_PROPS} />}
         formatWeekDay={customWeekdayFormat}
         showTimeInput={showTimeInput}
         timeInputLabel=""
         shouldCloseOnSelect={true}
         showIcon
-        icon={<IconCalendarEvent {...BASE_ICON_PROPS} />}
+        toggleCalendarOnIconClick
+        icon={<IconCalendarEvent {...BASE_BUTTON_ICON_PROPS} />}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         {...(props as any)}
       />

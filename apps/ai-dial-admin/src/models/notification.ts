@@ -29,9 +29,9 @@ export enum NotificationType {
 }
 
 export enum NotificationIconColor {
-  success = 'text-icon-accent-secondary',
-  error = 'text-icon-error',
-  dynamic = 'text-icon-secondary',
+  success = 'text-accent-secondary',
+  error = 'text-error',
+  dynamic = 'text-secondary',
   // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
-  prepare = 'text-icon-secondary',
+  prepare = 'text-secondary',
 }

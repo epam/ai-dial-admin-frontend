@@ -1,6 +1,9 @@
 # Add files here to ignore them from prettier formatting
 /dist
 .github
+.claude
+.cursor
+openspec
 /coverage
 /.nx/cache
 /.nx/workspace-data
