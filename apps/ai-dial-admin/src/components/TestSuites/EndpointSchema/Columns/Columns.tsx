@@ -99,6 +99,8 @@ const Columns: FC<ColumnsProps> = ({ responseColumns, onChangeResponseColumns, r
       gridApiRef.current?.updateGridOptions({ rowData });
       const error = rowData.some((c) => !c.name || !c.displayName || !c.expression || !c.type);
       dispatch({ type: ValidationActionType.SetField, field: 'columns', isValid: !error });
+    } else {
+      dispatch({ type: ValidationActionType.SetField, field: 'columns', isValid: true });
     }
   }, [dispatch, rowData]);
 

@@ -11,8 +11,8 @@ import {
 } from '@epam/ai-dial-ui-kit';
 import { JSONSchema7 } from 'json-schema';
 
-import SchemaTree from '@/src/components/TestSuites/EndpointSchema/Schema/SchemaTree';
-import { getSchemaTypes } from '@/src/components/TestSuites/utils/schema';
+import SchemaTree from '@/src/components/Common/SchemaGrid/SchemaTree';
+import { getSchemaTypes } from '@/src/components/Common/SchemaGrid/utils';
 import {
   ButtonsI18nKey,
   EntityFieldsI18nKey,
