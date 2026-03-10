@@ -29,6 +29,7 @@ import PublicationPermissions from './Permissions';
 interface Props<T> {
   view: ApplicationRoute;
   selectedPublication: T;
+  originalPublication: T;
   applicationSchemes?: DialApplicationScheme[];
   activeTab: EntityViewTab;
   onChange: (publication: T) => void;
@@ -41,6 +42,7 @@ interface Props<T> {
 const TabsContent = <T extends Publication>({
   view,
   selectedPublication,
+  originalPublication,
   applicationSchemes,
   activeTab,
   onChange,
@@ -102,7 +104,8 @@ const TabsContent = <T extends Publication>({
 
       {activeTab === EntityViewTab.Tools && (
         <Tools
-          originalToolset={(selectedPublication as ToolsetPublication).toolSetResources?.[0].toolSetResource}
+          originalToolset={(originalPublication as ToolsetPublication).toolSetResources?.[0].toolSetResource}
+          selectedToolset={(selectedPublication as ToolsetPublication).toolSetResources?.[0].toolSetResource}
           readonly={true}
           isAssetToolset={true}
         />

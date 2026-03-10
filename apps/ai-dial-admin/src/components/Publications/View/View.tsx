@@ -195,6 +195,7 @@ const PublicationView = <T extends Publication>({ view, publication, application
               view={view}
               activeTab={activeTab}
               selectedPublication={selectedPublication}
+              originalPublication={publication}
               applicationSchemes={applicationSchemes}
               onChange={onChangePublication}
               isPermissionsChanged={isPermissionsChanged}
