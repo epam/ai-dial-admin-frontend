@@ -5,7 +5,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
-import { CreateI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import {
+  ButtonsI18nKey,
+  CreateI18nKey,
+  EntitiesI18nKey,
+  EntityFieldsI18nKey,
+  SourceI18nKey,
+} from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -139,7 +145,7 @@ const Adapters = <T extends DialModel | DialInterceptor>({
               <DialNeutralButton
                 iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
                 className={classNames(error ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
-                label={isMobile ? '' : t(SourceI18nKey.OpenAdapter)}
+                label={isMobile ? '' : t(ButtonsI18nKey.Open)}
                 onClick={() => openAdapter()}
               />
             )}
