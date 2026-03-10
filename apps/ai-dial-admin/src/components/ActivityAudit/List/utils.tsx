@@ -97,6 +97,18 @@ export const groupByDay = (revisions: ActivityAuditRevision[]): Record<string, A
   );
 };
 
+export const getStartOfDay = (date: Date): Date => {
+  const startOfDay = new Date(date);
+  startOfDay.setHours(0, 0, 0, 0);
+  return startOfDay;
+};
+
+export const getEndOfDay = (date: Date): Date => {
+  const endOfDay = new Date(date);
+  endOfDay.setHours(23, 59, 59, 999);
+  return endOfDay;
+};
+
 export const getAuditActivityHref = (
   entity?: BaseEntity | DialApplicationScheme,
   entityType?: ActivityAuditResourceType,

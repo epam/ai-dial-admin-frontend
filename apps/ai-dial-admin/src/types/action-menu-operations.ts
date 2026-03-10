@@ -5,7 +5,7 @@ export enum ActionMenuOperation {
   Remove = 'Remove',
   Reset_to_default_limits = 'Reset to default limits',
   Set_no_limits = 'Set unlimited',
-  Move = 'Move to another folders',
+  Move = 'Move to another folder',
   Publish = 'Publish',
   Unpublish = 'Unpublish',
   Decline = 'Decline',

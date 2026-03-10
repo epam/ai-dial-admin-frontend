@@ -41,7 +41,7 @@ const Properties: FC<Props> = ({ selectedToolset, onChange, isPublication }) => 
       />
       {isPublication && (
         <VersionControl
-          className="w-[175px]"
+          containerClassName="w-[175px]"
           version={selectedToolset.version}
           onChange={(version?: string) =>
             onChange?.({ ...selectedToolset, version: version || '', displayVersion: version || '' })
