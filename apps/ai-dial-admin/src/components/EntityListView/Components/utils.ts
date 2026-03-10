@@ -85,7 +85,7 @@ export const prepareEntityForDuplicate = async <T>(
   }
 
   if (route === ApplicationRoute.Prompts) {
-    const prompt = fullEntity as DialPrompt | null;
+    const prompt = fullEntity.response as DialPrompt | null;
     return {
       ...entity,
       description: prompt?.description,
