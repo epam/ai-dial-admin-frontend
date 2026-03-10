@@ -1,7 +1,9 @@
 import { getAvailableEntities } from '@/src/components/AddEntitiesTab/utils';
-import { ButtonsI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, ExportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
+import { DeploymentExportEntityType } from '@/src/types/deployments/export';
 import { EntityType } from '@/src/types/entity-type';
+import { DEPLOYMENT_IMAGE_DEP } from '@/src/utils/entities/get-export-deps';
 
 const entityTypeToMenuKey: Record<string, string> = {
   [EntityType.ROLE]: MenuI18nKey.Roles,
@@ -16,12 +18,20 @@ const entityTypeToMenuKey: Record<string, string> = {
   [EntityType.ADAPTER]: MenuI18nKey.Adapters,
   [EntityType.TOOLSET]: MenuI18nKey.Toolsets,
   [EntityType.INTERCEPTOR_RUNNER]: MenuI18nKey.InterceptorTemplates,
+  [DeploymentExportEntityType.MODEL_SERVING]: MenuI18nKey.ModelServings,
+  [DeploymentExportEntityType.MCP_CONTAINER]: MenuI18nKey.McpContainers,
+  [DeploymentExportEntityType.INTERCEPTOR_CONTAINER]: MenuI18nKey.InterceptorContainers,
+  [DeploymentExportEntityType.ADAPTER_CONTAINER]: MenuI18nKey.AdapterContainers,
+  [DeploymentExportEntityType.IMAGE]: MenuI18nKey.Images,
+  [DEPLOYMENT_IMAGE_DEP.MCP]: ExportI18nKey.McpImage,
+  [DEPLOYMENT_IMAGE_DEP.INTERCEPTOR]: ExportI18nKey.InterceptorImage,
+  [DEPLOYMENT_IMAGE_DEP.ADAPTER]: ExportI18nKey.AdapterImage,
 };
 
 export const getButtonTitle = (t: (v: string) => string, selectedTab?: EntityType, full?: boolean) => {
   const menuKey = selectedTab ? entityTypeToMenuKey[selectedTab] : undefined;
   const entity = menuKey ? t(menuKey) : '';
-  return full ? `${t(ButtonsI18nKey.Add)} ${entity.toLowerCase()}` : entity;
+  return full ? `${t(ButtonsI18nKey.Add)} ${entity}` : entity;
 };
 
 export const getAvailableData = (
