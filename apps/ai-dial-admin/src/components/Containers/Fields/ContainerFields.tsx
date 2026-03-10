@@ -25,7 +25,8 @@ const ContainerFields: FC<Props> = ({ container, setContainer, isModal, route, n
   return (
     <div className="flex flex-col gap-y-8">
       <ContainerBase container={container} setContainer={setContainer} names={names} isModal={isModal} />
-      {route === ApplicationRoute.ModelServings && (
+      {(route === ApplicationRoute.ModelServings ||
+        container.source?.$type === CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE) && (
         <ContainerSource container={container} setContainer={setContainer} isModal={isModal} route={route} />
       )}
       {!isModal && (

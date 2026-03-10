@@ -1043,6 +1043,7 @@ export default {
     applicationTypeSchemas: 'Application runners',
     SourceURL: 'Repo URL',
     ImageURI: 'Docker Image URI',
+    DockerImageReference: 'Docker Image Reference',
     BranchName: 'Branch name',
     SHA: 'SHA',
     BaseDirectory: 'Base directory',
@@ -1365,6 +1366,8 @@ export default {
       MaxReplicas: 'Max replicas',
       MinReplicas: 'Min replicas',
     },
+    FromInternalMcpImage: 'From Internal MCP Image',
+    FromDockerImageReference: 'From Docker Image Reference',
   },
   KubEvents: {
     Normal: 'Normal',

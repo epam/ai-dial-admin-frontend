@@ -1172,6 +1172,7 @@ export enum EntityFieldsI18nKey {
   applicationTypeSchemas = 'EntityFields.applicationTypeSchemas',
   SourceURL = 'EntityFields.SourceURL',
   ImageURI = 'EntityFields.ImageURI',
+  DockerImageReference = 'EntityFields.DockerImageReference',
   BranchName = 'EntityFields.BranchName',
   SHA = 'EntityFields.SHA',
   BaseDirectory = 'EntityFields.BaseDirectory',
@@ -1339,6 +1340,8 @@ export enum ContainersI18nKey {
   MaxReplicas = 'Containers.Autoscaling.MaxReplicas',
   MinReplicas = 'Containers.Autoscaling.MinReplicas',
   ScaleToZero = 'Containers.Autoscaling.ScaleToZero',
+  FromInternalMcpImage = 'Containers.FromInternalMcpImage',
+  FromDockerImageReference = 'Containers.FromDockerImageReference',
 }
 
 export enum DeploymentsI18nKey {
