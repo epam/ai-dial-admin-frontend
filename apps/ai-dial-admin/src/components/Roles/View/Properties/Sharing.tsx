@@ -1,7 +1,8 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef } from 'react';
 
+import { DialGhostButton } from '@epam/ai-dial-ui-kit';
 import { IconReload } from '@tabler/icons-react';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 
@@ -14,13 +15,12 @@ import {
   getSharingData,
   isResetToDefaultHidden,
 } from '@/src/components/Roles/utils';
-import { ACTION_COLUMN } from '@/src/constants/ag-grid';
+import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { getResetOperation } from '@/src/constants/grid-columns/actions';
 import { RolesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialRole } from '@/src/models/dial/role';
-import { DialGhostButton } from '@epam/ai-dial-ui-kit';
 
 interface Props {
   isSkipRefresh: boolean;
@@ -30,7 +30,8 @@ interface Props {
 
 const RoleSharing: FC<Props> = ({ isSkipRefresh, selectedRole, onChangeRole }) => {
   const t = useI18n();
-  const [gridApi, setGridApi] = useState<GridApi>();
+  const gridApiRef = useRef<GridApi | null>(null);
+  const entityRef = useRef(selectedRole);
 
   const onChangeTypeSharing = useCallback(
     (value: number, data: DialRole, token: string) => {
@@ -86,22 +87,18 @@ const RoleSharing: FC<Props> = ({ isSkipRefresh, selectedRole, onChangeRole }) =
       )
     );
   }, [selectedRole.share]);
-  const entityRef = useRef(selectedRole);
 
   const columns: ColDef[] = useMemo(() => {
     return [
-      ...SHARING_COLUMNS(t, onChangeTypeSharing, (node, colDef) => getDefaultPlaceholder(node, colDef)),
-      ACTION_COLUMN(
-        [getResetOperation(onResetSharingToDefault, (api, node) => isResetToDefaultHidden(api, node))],
-        true,
-      ),
+      ...SHARING_COLUMNS(t, onChangeTypeSharing, getDefaultPlaceholder),
+      ACTION_COLUMN([getResetOperation(onResetSharingToDefault, isResetToDefaultHidden)], true),
     ];
   }, [onChangeTypeSharing, onResetSharingToDefault, t]);
 
   const data = getSharingData(selectedRole);
 
   const onGridReady = (event: GridReadyEvent) => {
-    setGridApi(event.api);
+    gridApiRef.current = event.api ?? null;
     event.api?.updateGridOptions({
       columnDefs: columns,
       rowData: data,
@@ -113,13 +110,17 @@ const RoleSharing: FC<Props> = ({ isSkipRefresh, selectedRole, onChangeRole }) =
   }, [selectedRole]);
 
   useEffect(() => {
-    if (!isSkipRefresh && !gridApi?.isDestroyed()) {
-      gridApi?.updateGridOptions({
+    if (!isSkipRefresh && !gridApiRef.current?.isDestroyed()) {
+      gridApiRef.current?.updateGridOptions({
         columnDefs: columns,
         rowData: data,
       });
     }
-  }, [isSkipRefresh, columns, data, gridApi]);
+  }, [isSkipRefresh, columns, data]);
+
+  useEffect(() => {
+    gridApiRef.current?.refreshCells({ columns: [ACTIONS_COLUMN_CEL_ID], force: true });
+  }, [data]);
 
   return (
     <div className="max-w-[750px] w-full flex flex-col">
