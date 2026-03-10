@@ -10,8 +10,9 @@ describe('ContainerSource', () => {
     $type: CONTAINER_TYPE.MCP,
     name: 'test-container',
     status: CONTAINER_STATUS.NOT_DEPLOYED,
+    source: { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE, imageDefinitionId: '' },
     metadata: { envs: [] },
-  } as Container;
+  };
 
   test('renders Docker Image Reference input for IMAGE_REFERENCE source', () => {
     const container: Container = {
@@ -19,13 +20,7 @@ describe('ContainerSource', () => {
       source: { $type: CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE, imageReference: '' },
     };
 
-    render(
-      <ContainerSource
-        container={container}
-        setContainer={vi.fn()}
-        route={ApplicationRoute.McpContainers}
-      />,
-    );
+    render(<ContainerSource container={container} setContainer={vi.fn()} route={ApplicationRoute.McpContainers} />);
 
     expect(screen.getByRole('textbox')).toBeTruthy();
   });
@@ -37,13 +32,7 @@ describe('ContainerSource', () => {
       source: { $type: CONTAINER_SOURCE_TYPE.NGC_REGISTRY, imageRef: '' },
     };
 
-    render(
-      <ContainerSource
-        container={container}
-        setContainer={vi.fn()}
-        route={ApplicationRoute.ModelServings}
-      />,
-    );
+    render(<ContainerSource container={container} setContainer={vi.fn()} route={ApplicationRoute.ModelServings} />);
 
     expect(screen.getByRole('textbox')).toBeTruthy();
   });
