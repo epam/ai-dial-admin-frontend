@@ -7,6 +7,7 @@ import VersionControl from '@/src/components/BaseControls/Version';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import { BasicI18nKey, ButtonsI18nKey, EntitiesI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DuplicationTypes } from '@/src/types/prompt';
@@ -28,6 +29,7 @@ interface Props {
 
 const DuplicateAsset: FC<Props> = ({ view, isModalOpen, entity, versionsMap, context, onDuplicate, onClose }) => {
   const t = useI18n();
+  const { isValid } = useSaveValidationContext();
   const initialName = entity.name;
   const initialFolder = entity.folderId;
   const [duplicationType, setDuplicationType] = useState<string>(DuplicationTypes.VERSION);
@@ -43,10 +45,10 @@ const DuplicateAsset: FC<Props> = ({ view, isModalOpen, entity, versionsMap, con
     displayName: isDeploymentAsset(view) ? entity.displayName : void 0,
     version: getInitialVersion(versionsMap, entity?.name),
   });
-  const [isValid, setIsValid] = useState(false);
+  const [isInnerValid, setIsInnerValid] = useState(false);
 
   useEffect(() => {
-    setIsValid(
+    setIsInnerValid(
       !!clonedAsset.name &&
         !!clonedAsset.version &&
         !checkNameVersionCombination(versionsMap, clonedAsset.name, clonedAsset.version),
@@ -98,7 +100,7 @@ const DuplicateAsset: FC<Props> = ({ view, isModalOpen, entity, versionsMap, con
       open={isModalOpen}
       onSubmit={() => onDuplicate({ ...clonedAsset, folderId: addTrailingSlash(clonedAsset.folderId) })}
       onCancel={onClose}
-      disableSubmitButton={!isValid}
+      disableSubmitButton={!isInnerValid || !isValid}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
       submitLabel={t(ButtonsI18nKey.Duplicate)}
     >
