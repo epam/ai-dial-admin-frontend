@@ -797,6 +797,9 @@ export default {
     Deployments: 'Deployments',
     IncludeGlobalFirewall: 'Include global firewall',
     PreviewUnavailable: 'Preview currently unavailable',
+    McpImage: 'MCP Image',
+    InterceptorImage: 'Interceptor Image',
+    AdapterImage: 'Adapter Image',
   },
   Folder: {
     Export: 'Export files',

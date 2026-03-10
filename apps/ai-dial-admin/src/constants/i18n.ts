@@ -765,6 +765,9 @@ export enum ExportI18nKey {
   Deployments = 'Export.Deployments',
   IncludeGlobalFirewall = 'Export.IncludeGlobalFirewall',
   PreviewUnavailable = 'Export.PreviewUnavailable',
+  McpImage = 'Export.McpImage',
+  InterceptorImage = 'Export.InterceptorImage',
+  AdapterImage = 'Export.AdapterImage',
 }
 
 export enum FoldersI18nKey {
