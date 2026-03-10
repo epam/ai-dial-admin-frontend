@@ -58,6 +58,20 @@ describe('containers utils', () => {
       expect(template).toBeNull();
     });
 
+    test('returns MCP template with IMAGE_REFERENCE source when sourceType is provided', () => {
+      const template = getContainerTemplate(CONTAINER_TYPE.MCP, undefined, CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE);
+      expect(template?.$type).toBe(CONTAINER_TYPE.MCP);
+      expect(template?.source?.$type).toBe(CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE);
+      expect(template?.source?.imageReference).toBe('');
+      expect(template?.transport).toBe(CONTAINER_TRANSPORT.HTTP);
+    });
+
+    test('returns MCP template with INTERNAL_IMAGE source when no sourceType', () => {
+      const template = getContainerTemplate(CONTAINER_TYPE.MCP);
+      expect(template?.source?.$type).toBe(CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE);
+      expect(template?.source?.imageDefinitionId).toBe('');
+    });
+
     test('uses defaults if provided', () => {
       const defaults = {
         CPU_REQUEST: '2',

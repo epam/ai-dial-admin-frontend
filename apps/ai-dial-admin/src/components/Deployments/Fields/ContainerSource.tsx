@@ -26,6 +26,7 @@ const ContainerSource: FC<Props> = ({ container, setContainer, isModal = false, 
   const containerClassName = useMemo(() => getControlClassName(isModal), [isModal]);
 
   const [imageRefError, setImageRefError] = useState<FieldError | null>(null);
+  const [imageReferenceError, setImageReferenceError] = useState<FieldError | null>(null);
 
   const onChangeImageRef = useCallback(
     (value?: string) => {
@@ -41,6 +42,20 @@ const ContainerSource: FC<Props> = ({ container, setContainer, isModal = false, 
     [t, dispatch, setContainer, container],
   );
 
+  const onChangeImageReference = useCallback(
+    (value?: string) => {
+      const error = getDeploymentsURIError(value, t);
+      setImageReferenceError(error);
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'modelSourceName',
+        isValid: !error,
+      });
+      setContainer({ ...container, source: { ...container.source, imageReference: value } });
+    },
+    [t, dispatch, setContainer, container],
+  );
+
   useEffect(() => {
     if (resetCounter || (container.source?.imageRef && container.source?.imageRef.length > 0)) {
       const error = getDeploymentsURIError(container.source?.imageRef);
@@ -48,25 +63,49 @@ const ContainerSource: FC<Props> = ({ container, setContainer, isModal = false, 
     }
   }, [container.source?.imageRef, resetCounter]);
 
-  return (
-    <div className="flex flex-col gap-y-8">
-      {container.source?.$type === CONTAINER_SOURCE_TYPE.NGC_REGISTRY ? (
-        <DialInput
-          id="imageRef"
-          labelProps={{ label: t(EntityFieldsI18nKey.ImageURI) }}
-          placeholder={t(EntityPlaceholdersI18nKey.URI)}
-          value={container.source?.imageRef}
-          error={imageRefError?.text}
-          invalid={!!imageRefError}
-          onChange={onChangeImageRef}
-          containerClassName={containerClassName}
-          disabled={isEditDisabled(container)}
-        />
-      ) : (
-        <HFModelNameField container={container} setContainer={setContainer} isModal={isModal} route={route} />
-      )}
-    </div>
-  );
+  useEffect(() => {
+    if (resetCounter || (container.source?.imageReference && container.source?.imageReference.length > 0)) {
+      const error = getDeploymentsURIError(container.source?.imageReference);
+      setImageReferenceError(error);
+    }
+  }, [container.source?.imageReference, resetCounter]);
+
+  const renderSourceField = () => {
+    switch (container.source?.$type) {
+      case CONTAINER_SOURCE_TYPE.NGC_REGISTRY:
+        return (
+          <DialInput
+            id="imageRef"
+            labelProps={{ label: t(EntityFieldsI18nKey.ImageURI) }}
+            placeholder={t(EntityPlaceholdersI18nKey.URI)}
+            value={container.source?.imageRef}
+            error={imageRefError?.text}
+            invalid={!!imageRefError}
+            onChange={onChangeImageRef}
+            containerClassName={containerClassName}
+            disabled={isEditDisabled(container)}
+          />
+        );
+      case CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE:
+        return (
+          <DialInput
+            id="imageReference"
+            labelProps={{ label: t(EntityFieldsI18nKey.DockerImageReference) }}
+            placeholder={t(EntityPlaceholdersI18nKey.URI)}
+            value={container.source?.imageReference}
+            error={imageReferenceError?.text}
+            invalid={!!imageReferenceError}
+            onChange={onChangeImageReference}
+            containerClassName={containerClassName}
+            disabled={isEditDisabled(container)}
+          />
+        );
+      default:
+        return <HFModelNameField container={container} setContainer={setContainer} isModal={isModal} route={route} />;
+    }
+  };
+
+  return <div className="flex flex-col gap-y-8">{renderSourceField()}</div>;
 };
 
 export default ContainerSource;

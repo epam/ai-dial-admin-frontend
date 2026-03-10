@@ -54,7 +54,11 @@ export const getContainerTypeByRoute = (route: ApplicationRoute): CONTAINER_TYPE
   }
 };
 
-export const getContainerTemplate = (type: CONTAINER_TYPE, defaults?: ResourcesDefaults): Container | null => {
+export const getContainerTemplate = (
+  type: CONTAINER_TYPE,
+  defaults?: ResourcesDefaults,
+  sourceType?: CONTAINER_SOURCE_TYPE,
+): Container | null => {
   if (!type) {
     return null;
   }
@@ -84,6 +88,9 @@ export const getContainerTemplate = (type: CONTAINER_TYPE, defaults?: ResourcesD
   if (type === CONTAINER_TYPE.MCP) {
     return {
       ...template,
+      ...(sourceType === CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE
+        ? { source: { $type: CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE, imageReference: '' } }
+        : {}),
       transport: CONTAINER_TRANSPORT.HTTP,
     };
   }
