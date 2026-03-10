@@ -59,11 +59,7 @@ describe('containers utils', () => {
     });
 
     test('returns MCP template with IMAGE_REFERENCE source when sourceType is provided', () => {
-      const template = getContainerTemplate(
-        CONTAINER_TYPE.MCP,
-        undefined,
-        CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE,
-      );
+      const template = getContainerTemplate(CONTAINER_TYPE.MCP, undefined, CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE);
       expect(template?.$type).toBe(CONTAINER_TYPE.MCP);
       expect(template?.source?.$type).toBe(CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE);
       expect(template?.source?.imageReference).toBe('');
