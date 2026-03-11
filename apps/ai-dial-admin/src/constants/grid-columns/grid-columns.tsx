@@ -53,6 +53,7 @@ import {
 } from './base-columns';
 import { dateTimeColumn, numericColumn, priceColumn } from './configs';
 import { auditStringFilter, evalStringFilter } from './filters';
+import { FormDataPart, FormDataType } from '@/src/models/form-data';
 
 export const COLUMN_PANEL_PREFIX = 'column_';
 
@@ -485,6 +486,7 @@ export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, rou
   },
   { field: 'url', headerName: 'Container URL', hide: true },
   AUTHOR_COLUMN,
+  TOPICS_COLUMN,
   UPDATED_AT_COLUMN,
   CREATED_AT_COLUMN,
 ];
@@ -870,6 +872,53 @@ export const getParamsColumns = (
       cellRendererParams: {
         onChange,
         hideTriangle: true,
+      },
+    },
+    {
+      headerName: 'Value',
+      field: 'value',
+      cellClass: NO_BORDER_CLASS,
+      tooltipValueGetter: () => undefined,
+      cellRenderer: EditableCellRenderer,
+      cellRendererParams: {
+        onChange,
+        hideTriangle: true,
+      },
+    },
+  ];
+
+  return cols;
+};
+
+export const getFormDataColumns = (
+  onChange: (value: string | FormDataType, data: FormDataPart, key: string, rowIndex?: number) => void,
+) => {
+  const cols: ColDef[] = [
+    {
+      headerName: 'Name',
+      field: 'name',
+      cellClass: NO_BORDER_CLASS,
+      tooltipValueGetter: () => undefined,
+      cellRenderer: EditableCellRenderer,
+      cellRendererParams: {
+        onChange,
+        hideTriangle: true,
+      },
+    },
+    {
+      headerName: 'Type',
+      field: 'type',
+      cellClass: NO_BORDER_CLASS,
+      tooltipValueGetter: () => undefined,
+      cellRenderer: SelectCellRenderer,
+      cellRendererParams: {
+        onChange,
+        items: [
+          {
+            value: FormDataType.Text,
+            label: FormDataType.Text,
+          },
+        ],
       },
     },
     {
