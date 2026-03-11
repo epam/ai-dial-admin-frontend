@@ -1330,6 +1330,7 @@ export enum ContainersI18nKey {
   SelectModelFromRegistry = 'Containers.SelectModelFromRegistry',
   NoDescriptionAvailable = 'Containers.NoDescriptionAvailable',
   ScaleToZeroNever = 'Containers.Autoscaling.ScaleToZeroNever',
+  ScaleToZeroAfter5Minutes = 'Containers.Autoscaling.ScaleToZeroAfter5Minutes',
   ScaleToZeroAfter15Minutes = 'Containers.Autoscaling.ScaleToZeroAfter15Minutes',
   ScaleToZeroAfter30Minutes = 'Containers.Autoscaling.ScaleToZeroAfter30Minutes',
   ScaleToZeroAfter1Hour = 'Containers.Autoscaling.ScaleToZeroAfter1Hour',

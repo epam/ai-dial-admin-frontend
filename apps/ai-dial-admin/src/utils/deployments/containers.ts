@@ -92,6 +92,7 @@ export const getContainerTemplate = (
         ? { source: { $type: CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE, imageReference: '' } }
         : {}),
       transport: CONTAINER_TRANSPORT.HTTP,
+      scaling: DEFAULT_SCALING,
     };
   }
 
@@ -136,7 +137,7 @@ export const getContainerTemplate = (
     };
   }
 
-  return template;
+  return { ...template, scaling: DEFAULT_SCALING };
 };
 
 export const isEditDisabled = (container: Container): boolean => {

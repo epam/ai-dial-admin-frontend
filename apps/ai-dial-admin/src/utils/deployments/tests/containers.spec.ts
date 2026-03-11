@@ -33,24 +33,35 @@ describe('containers utils', () => {
       const template = getContainerTemplate(CONTAINER_TYPE.HF);
       expect(template?.$type).toBe(CONTAINER_TYPE.HF);
       expect(template?.resources?.requests?.['nvidia.com/gpu']).toBe('1');
+      expect(template?.scaling).toEqual({ minReplicas: 1, maxReplicas: 1 });
     });
 
     test('returns template for McpContainers', () => {
       const template = getContainerTemplate(CONTAINER_TYPE.MCP);
       expect(template?.$type).toBe(CONTAINER_TYPE.MCP);
       expect(template?.transport).toBe(CONTAINER_TRANSPORT.HTTP);
+      expect(template?.scaling).toEqual({ minReplicas: 1, maxReplicas: 1 });
     });
 
     test('returns template for Interceptors', () => {
       const template = getContainerTemplate(CONTAINER_TYPE.INTERCEPTOR);
       expect(template?.$type).toBe(CONTAINER_TYPE.INTERCEPTOR);
+      expect(template?.scaling).toEqual({ minReplicas: 1, maxReplicas: 1 });
     });
 
     test('returns template for NIM', () => {
-      expect(getContainerTemplate(CONTAINER_TYPE.NIM)?.$type).toBe(CONTAINER_TYPE.NIM);
+      const template = getContainerTemplate(CONTAINER_TYPE.NIM);
+      expect(template?.$type).toBe(CONTAINER_TYPE.NIM);
+      expect(template?.scaling).toEqual({ minReplicas: 1, maxReplicas: 1 });
       expect(getContainerTemplate(CONTAINER_TYPE.NIM, { GPU_REQUEST: '2', GPU_LIMIT: '2' })?.$type).toBe(
         CONTAINER_TYPE.NIM,
       );
+    });
+
+    test('returns template for ADAPTER with scaling defaults', () => {
+      const template = getContainerTemplate(CONTAINER_TYPE.ADAPTER);
+      expect(template?.$type).toBe(CONTAINER_TYPE.ADAPTER);
+      expect(template?.scaling).toEqual({ minReplicas: 1, maxReplicas: 1 });
     });
 
     test('returns template for McpContainers', () => {

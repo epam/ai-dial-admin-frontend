@@ -32,7 +32,7 @@ const ContainerFields: FC<Props> = ({ container, setContainer, isModal, route, n
       {!isModal && (
         <div className="flex flex-col gap-y-8">
           <ContainerEndpoint container={container} setContainer={setContainer} route={route} />
-          {container.source?.$type === CONTAINER_SOURCE_TYPE.HUGGINGFACE && (
+          {container.source?.$type !== CONTAINER_SOURCE_TYPE.NGC_REGISTRY && (
             <ContainerAutoscaling container={container} setContainer={setContainer} />
           )}
           <ContainerVariables container={container} setContainer={setContainer} />

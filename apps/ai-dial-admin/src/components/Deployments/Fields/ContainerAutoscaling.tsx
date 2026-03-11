@@ -1,12 +1,13 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { DialNumberInput, DialSelectField } from '@epam/ai-dial-ui-kit';
 
-import { AutoscalingStrategy, Container } from '@/src/models/deployments/containers';
+import { Container } from '@/src/models/deployments/containers';
 import { ContainersI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { FieldError } from '@/src/models/error';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getReplicasError } from '@/src/utils/deployments/validation';
 import { AUTOSCALE_OPTIONS } from '@/src/constants/deployments/containers';
+import { SCALING_STRATEGY_TYPE } from '@/src/types/deployments/containers';
 import { useI18n } from '@/src/locales/client';
 
 import Accordion from '@/src/components/Common/Accordion/Accordion';
@@ -16,6 +17,34 @@ interface Props {
   container: Container;
   setContainer: (container: Container) => void;
 }
+
+const DEFAULT_STRATEGY = {
+  $type: SCALING_STRATEGY_TYPE.REQUESTS,
+  threshold: 2,
+};
+
+const isAutoscalingEnabled = (min?: number, max?: number): boolean => {
+  return (max ?? 0) > (min ?? 0) && (max ?? 0) > 1;
+};
+
+const deriveScaling = (
+  scaling: Container['scaling'],
+  updates: Partial<NonNullable<Container['scaling']>>,
+): NonNullable<Container['scaling']> => {
+  const merged = { ...scaling, ...updates };
+  const min = merged.minReplicas;
+  const max = merged.maxReplicas;
+
+  if (isAutoscalingEnabled(min, max)) {
+    if (!merged.strategy) {
+      merged.strategy = DEFAULT_STRATEGY;
+    }
+  } else {
+    delete merged.strategy;
+  }
+
+  return merged;
+};
 
 const ContainerAutoscaling: FC<Props> = ({ container, setContainer }) => {
   const t = useI18n();
@@ -43,22 +72,22 @@ const ContainerAutoscaling: FC<Props> = ({ container, setContainer }) => {
 
   const onScaleDelayChange = useCallback(
     (value: string | string[]) => {
-      const error = getReplicasError(container.scaling?.minReplicas, container.scaling?.maxReplicas, t);
-      dispatch({ type: ValidationActionType.SetField, field: 'scaling', isValid: !error });
-      setReplicasError(error);
       if (value === '0') {
-        const updated: Container = { ...container, scaling: { ...container.scaling, minReplicas: 1 } };
-        delete updated.scaling?.scaleToZeroDelaySeconds;
-        setContainer(updated);
+        const scaling = deriveScaling(container.scaling, { minReplicas: 1 });
+        delete scaling.scaleToZeroDelaySeconds;
+        const error = getReplicasError(scaling.minReplicas, scaling.maxReplicas, t);
+        dispatch({ type: ValidationActionType.SetField, field: 'scaling', isValid: !error });
+        setReplicasError(error);
+        setContainer({ ...container, scaling });
       } else {
-        setContainer({
-          ...container,
-          scaling: {
-            ...container.scaling,
-            scaleToZeroDelaySeconds: Number(value),
-            minReplicas: 0,
-          },
+        const scaling = deriveScaling(container.scaling, {
+          scaleToZeroDelaySeconds: Number(value),
+          minReplicas: 0,
         });
+        const error = getReplicasError(scaling.minReplicas, scaling.maxReplicas, t);
+        dispatch({ type: ValidationActionType.SetField, field: 'scaling', isValid: !error });
+        setReplicasError(error);
+        setContainer({ ...container, scaling });
       }
     },
     [container, dispatch, setContainer, t],
@@ -66,55 +95,44 @@ const ContainerAutoscaling: FC<Props> = ({ container, setContainer }) => {
 
   const onMinScaleChange = useCallback(
     (minReplicas?: number | string) => {
-      const error = getReplicasError(minReplicas as number, container.scaling?.maxReplicas, t);
+      const scaling = deriveScaling(container.scaling, { minReplicas: minReplicas as number });
+      const error = getReplicasError(scaling.minReplicas, scaling.maxReplicas, t);
       dispatch({ type: ValidationActionType.SetField, field: 'scaling', isValid: !error });
       setReplicasError(error);
-      setContainer({
-        ...container,
-        scaling: {
-          ...container.scaling,
-          minReplicas: minReplicas as number,
-        },
-      });
+      setContainer({ ...container, scaling });
     },
     [container, dispatch, setContainer, t],
   );
+
   const onMaxScaleChange = useCallback(
     (maxReplicas?: number | string) => {
-      const error = getReplicasError(container.scaling?.minReplicas, maxReplicas as number, t);
+      const scaling = deriveScaling(container.scaling, { maxReplicas: maxReplicas as number });
+      const error = getReplicasError(scaling.minReplicas, scaling.maxReplicas, t);
       dispatch({ type: ValidationActionType.SetField, field: 'scaling', isValid: !error });
       setReplicasError(error);
+      setContainer({ ...container, scaling });
+    },
+    [container, dispatch, setContainer, t],
+  );
+
+  const onThresholdChange = useCallback(
+    (value?: number | string) => {
       setContainer({
         ...container,
         scaling: {
           ...container.scaling,
-          maxReplicas: maxReplicas as number,
+          strategy: {
+            ...container.scaling?.strategy,
+            $type: container.scaling?.strategy?.$type ?? SCALING_STRATEGY_TYPE.REQUESTS,
+            threshold: Number(value),
+          },
         },
       });
-    },
-    [container, dispatch, setContainer, t],
-  );
-  const onThresholdChange = useCallback(
-    (value?: number | string) => {
-      if (value === '0') {
-        const updated: Container = { ...container, scaling: { ...container.scaling } };
-        delete updated.scaling?.scaleToZeroDelaySeconds;
-        setContainer(updated);
-      } else {
-        setContainer({
-          ...container,
-          scaling: {
-            ...container.scaling,
-            strategy: {
-              ...(container.scaling?.strategy as AutoscalingStrategy),
-              threshold: Number(value),
-            },
-          },
-        });
-      }
     },
     [container, setContainer],
   );
+
+  const showStrategy = isAutoscalingEnabled(container.scaling?.minReplicas, container.scaling?.maxReplicas);
 
   return (
     <Accordion title={t(EntityFieldsI18nKey.Autoscaling)} errorIndicator={isSectionInvalid}>
@@ -154,7 +172,7 @@ const ContainerAutoscaling: FC<Props> = ({ container, setContainer }) => {
             />
           </div>
         </div>
-        {container.scaling?.minReplicas !== container.scaling?.maxReplicas && (
+        {showStrategy && (
           <div className="flex">
             <DialNumberInput
               id="threshold"
