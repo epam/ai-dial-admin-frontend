@@ -60,7 +60,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
     [t],
   );
 
-  const methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'TRACE'];
+  const methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD'];
 
   const [statusError, setStatusError] = useState('');
   const [bodyError, setBodyError] = useState('');
