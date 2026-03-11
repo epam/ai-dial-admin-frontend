@@ -485,6 +485,7 @@ export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, rou
   },
   { field: 'url', headerName: 'Container URL', hide: true },
   AUTHOR_COLUMN,
+  TOPICS_COLUMN,
   UPDATED_AT_COLUMN,
   CREATED_AT_COLUMN,
 ];
