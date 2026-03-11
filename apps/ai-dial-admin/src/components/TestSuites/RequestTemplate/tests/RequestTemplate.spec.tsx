@@ -1,8 +1,10 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 
+import { ContentType } from '@/src/components/TestSuites/constants/content-type';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { FormDataType } from '@/src/models/form-data';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import RequestTemplate from '../RequestTemplate';
 
@@ -36,6 +38,10 @@ vi.mock('@/src/context/AppContext', () => ({
   }),
 }));
 
+vi.mock('@/src/locales/client', () => ({
+  useI18n: () => (key: string) => key,
+}));
+
 vi.mock('../tabs/TabsContent', () => ({
   default: ({ activeTab, selectedTestSuite, onChange }: any) => (
     <div role="tabpanel">
@@ -61,17 +67,31 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
       ))}
     </div>
   ),
-  DialInput: ({ elementId, value, onChange, invalid, error }: any) => (
+  DialInput: ({ elementId, id, value, onChange, invalid, error }: any) => (
     <div>
       <input
         role="textbox"
-        aria-label={elementId}
+        aria-label={elementId ?? id}
         value={value}
         onChange={(e: any) => onChange(e.target.value)}
         aria-invalid={invalid}
       />
       {error && <span role="alert">{error}</span>}
     </div>
+  ),
+  DialSelect: ({ value, onChange, options, prefix }: any) => (
+    <select
+      role="combobox"
+      aria-label={prefix}
+      value={Array.isArray(value) ? value[0] : value}
+      onChange={(e: any) => onChange(e.target.value)}
+    >
+      {options?.map((opt: any) => (
+        <option key={opt.value} value={opt.value}>
+          {opt.label}
+        </option>
+      ))}
+    </select>
   ),
 }));
 
@@ -252,5 +272,60 @@ describe('RequestTemplate', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Modify' }));
 
     expect(mockOnChangeTestSuite).toHaveBeenCalledWith(expect.objectContaining({ name: 'Modified' }));
+  });
+
+  test('renders content type select and applies default content when switching to FormData', () => {
+    const testSuite = createTestSuite({
+      requestTemplate: {
+        urlTemplate: '/api',
+        body: { contentType: ContentType.JSON, content: { foo: 'bar' } },
+      },
+    });
+
+    render(<RequestTemplate testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
+
+    const contentTypeSelect = screen.getByRole('combobox', { name: /ContentType/i });
+    fireEvent.change(contentTypeSelect, { target: { value: ContentType.FormData } });
+
+    expect(mockOnChangeTestSuite).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requestTemplate: expect.objectContaining({
+          body: expect.objectContaining({
+            contentType: ContentType.FormData,
+            content: [],
+          }),
+        }),
+      }),
+    );
+  });
+
+  test('restores stored content when switching back to JSON from FormData', () => {
+    const testSuite = createTestSuite({
+      requestTemplate: {
+        urlTemplate: '/api',
+        body: {
+          contentType: ContentType.FormData,
+          content: [{ name: 'a', type: FormDataType.Text, value: '1' }],
+        },
+      },
+    });
+
+    render(<RequestTemplate testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
+
+    const contentTypeSelect = screen.getByRole('combobox', { name: /ContentType/i });
+    fireEvent.change(contentTypeSelect, { target: { value: ContentType.JSON } });
+
+    expect(mockOnChangeTestSuite).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requestTemplate: expect.objectContaining({
+          body: expect.objectContaining({
+            contentType: ContentType.JSON,
+            content: expect.any(Object),
+          }),
+        }),
+      }),
+    );
+    const call = mockOnChangeTestSuite.mock.calls[0][0];
+    expect(call.requestTemplate?.body?.content).toEqual({});
   });
 });
