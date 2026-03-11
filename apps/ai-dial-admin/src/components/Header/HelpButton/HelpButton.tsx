@@ -37,7 +37,7 @@ const HelpButton: FC<Props> = ({ docLink }) => {
   }, [helpUrl, docLink, onClick]);
 
   return helpUrl?.title ? (
-    <DialDropdown menu={{ items: dropdownItems }} listClassName="w-[180px]">
+    <DialDropdown menu={{ items: dropdownItems }} allowedPlacements={['bottom-end']}>
       <DialPrimaryIconButton
         appearance={ButtonAppearance.Ghost}
         aria-label="Help button"
