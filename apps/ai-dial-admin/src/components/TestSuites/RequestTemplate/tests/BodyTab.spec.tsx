@@ -174,9 +174,7 @@ describe('BodyTab', () => {
     });
 
     test('passes template body content to FormDataGrid', () => {
-      const formContent: FormDataPart[] = [
-        { name: 'field1', type: FormDataType.Text, value: 'val1' },
-      ];
+      const formContent: FormDataPart[] = [{ name: 'field1', type: FormDataType.Text, value: 'val1' }];
       render(
         <BodyTab
           template={createTemplate({ body: { contentType: ContentType.FormData, content: formContent } })}

@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useRef } from 'react';
 
 import { DialGhostButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
@@ -19,14 +19,11 @@ interface Props {
 }
 const FormDataGrid: FC<Props> = ({ content, changeContent }) => {
   const t = useI18n();
-  const [visibleIndex, setVisibleIndex] = useState<number | undefined>();
   const gridApi = useRef<GridApi>(null);
   const contentRef = useRef(content || []);
 
   const onAddPart = useCallback(() => {
     const fieldData = [...contentRef.current];
-    const lastIndex = gridApi.current?.getLastDisplayedRowIndex() as number;
-    setVisibleIndex(lastIndex + 1);
     fieldData.push({ name: '', value: '', type: FormDataType.Text });
     changeContent(fieldData);
   }, [changeContent]);
@@ -36,7 +33,6 @@ const FormDataGrid: FC<Props> = ({ content, changeContent }) => {
       if (index != null) {
         const fieldData = [...contentRef.current];
         fieldData.splice(index, 1);
-        setVisibleIndex(index - 1);
         changeContent(fieldData);
       }
     },
@@ -77,9 +73,7 @@ const FormDataGrid: FC<Props> = ({ content, changeContent }) => {
     gridApi.current?.updateGridOptions({
       rowData: content,
     });
-    if (visibleIndex != null) {
-      gridApi.current?.ensureIndexVisible(visibleIndex, 'bottom');
-    }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [content?.length, gridApi]);
 

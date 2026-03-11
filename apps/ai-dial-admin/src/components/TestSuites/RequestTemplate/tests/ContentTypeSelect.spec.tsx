@@ -148,9 +148,7 @@ describe('ContentTypeSelect', () => {
       },
     });
 
-    const { rerender } = render(
-      <ContentTypeSelect testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />,
-    );
+    const { rerender } = render(<ContentTypeSelect testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
 
     fireEvent.change(screen.getByRole('combobox'), { target: { value: ContentType.FormData } });
     expect(mockOnChangeTestSuite).toHaveBeenCalledTimes(1);
@@ -162,9 +160,7 @@ describe('ContentTypeSelect', () => {
 
     fireEvent.change(screen.getByRole('combobox'), { target: { value: ContentType.JSON } });
     expect(mockOnChangeTestSuite).toHaveBeenCalledTimes(1);
-    expect(mockOnChangeTestSuite.mock.calls[0][0].requestTemplate?.body?.contentType).toBe(
-      ContentType.JSON,
-    );
+    expect(mockOnChangeTestSuite.mock.calls[0][0].requestTemplate?.body?.contentType).toBe(ContentType.JSON);
     expect(mockOnChangeTestSuite.mock.calls[0][0].requestTemplate?.body?.content).toEqual(jsonContent);
   });
 
@@ -180,9 +176,7 @@ describe('ContentTypeSelect', () => {
       },
     });
 
-    const { rerender } = render(
-      <ContentTypeSelect testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />,
-    );
+    const { rerender } = render(<ContentTypeSelect testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
 
     fireEvent.change(screen.getByRole('combobox'), { target: { value: ContentType.JSON } });
     expect(mockOnChangeTestSuite).toHaveBeenCalledTimes(1);
@@ -195,9 +189,7 @@ describe('ContentTypeSelect', () => {
     fireEvent.change(screen.getByRole('combobox'), { target: { value: ContentType.FormData } });
 
     expect(mockOnChangeTestSuite).toHaveBeenCalledTimes(1);
-    expect(mockOnChangeTestSuite.mock.calls[0][0].requestTemplate?.body?.contentType).toBe(
-      ContentType.FormData,
-    );
+    expect(mockOnChangeTestSuite.mock.calls[0][0].requestTemplate?.body?.contentType).toBe(ContentType.FormData);
     expect(mockOnChangeTestSuite.mock.calls[0][0].requestTemplate?.body?.content).toEqual(formDataContent);
   });
 

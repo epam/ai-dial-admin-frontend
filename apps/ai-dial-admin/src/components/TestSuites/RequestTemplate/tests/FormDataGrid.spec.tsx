@@ -13,11 +13,7 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
     capturedOnGridReady = onGridReady;
     capturedGetIsEmptyData = getIsEmptyData;
     const isEmpty = getIsEmptyData();
-    return (
-      <section aria-label="grid">
-        {isEmpty && <p role="status">{emptyDataProps?.title}</p>}
-      </section>
-    );
+    return <section aria-label="grid">{isEmpty && <p role="status">{emptyDataProps?.title}</p>}</section>;
   },
 }));
 
@@ -86,9 +82,7 @@ describe('FormDataGrid', () => {
   });
 
   test('does not show empty state when content has items', () => {
-    render(
-      <FormDataGrid content={[createPart({ name: 'a', value: '1' })]} changeContent={mockChangeContent} />,
-    );
+    render(<FormDataGrid content={[createPart({ name: 'a', value: '1' })]} changeContent={mockChangeContent} />);
 
     expect(capturedGetIsEmptyData()).toBe(false);
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
@@ -99,17 +93,13 @@ describe('FormDataGrid', () => {
 
     const mockApi = {
       updateGridOptions: vi.fn(),
-      getLastDisplayedRowIndex: () => -1,
-      ensureIndexVisible: vi.fn(),
     };
     capturedOnGridReady({ api: mockApi });
 
     fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.Add }));
 
     expect(mockChangeContent).toHaveBeenCalledTimes(1);
-    expect(mockChangeContent).toHaveBeenCalledWith([
-      { name: '', value: '', type: FormDataType.Text },
-    ]);
+    expect(mockChangeContent).toHaveBeenCalledWith([{ name: '', value: '', type: FormDataType.Text }]);
   });
 
   test('appends new part to existing content when Add is clicked', () => {
@@ -118,8 +108,6 @@ describe('FormDataGrid', () => {
 
     const mockApi = {
       updateGridOptions: vi.fn(),
-      getLastDisplayedRowIndex: () => 0,
-      ensureIndexVisible: vi.fn(),
     };
     capturedOnGridReady({ api: mockApi });
 
@@ -132,17 +120,12 @@ describe('FormDataGrid', () => {
   });
 
   test('onGridReady updates grid options with columnDefs and rowData', () => {
-    const content = [
-      createPart({ name: 'field1', value: 'val1' }),
-      createPart({ name: 'field2', value: 'val2' }),
-    ];
+    const content = [createPart({ name: 'field1', value: 'val1' }), createPart({ name: 'field2', value: 'val2' })];
     render(<FormDataGrid content={content} changeContent={mockChangeContent} />);
 
     const mockUpdateGridOptions = vi.fn();
     const mockApi = {
       updateGridOptions: mockUpdateGridOptions,
-      getLastDisplayedRowIndex: () => 1,
-      ensureIndexVisible: vi.fn(),
     };
     capturedOnGridReady({ api: mockApi });
 
@@ -183,11 +166,7 @@ describe('FormDataGrid', () => {
   test('getRemoveOperation is called with onRemovePart callback', () => {
     render(<FormDataGrid content={[]} changeContent={mockChangeContent} />);
 
-    expect(mockGetRemoveOperation).toHaveBeenCalledWith(
-      expect.any(Function),
-      undefined,
-      'text-error w-4 h-4',
-    );
+    expect(mockGetRemoveOperation).toHaveBeenCalledWith(expect.any(Function), undefined, 'text-error w-4 h-4');
   });
 
   test('onRemovePart removes item at index and calls changeContent', () => {

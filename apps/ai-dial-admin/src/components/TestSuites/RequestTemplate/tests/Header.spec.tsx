@@ -24,9 +24,7 @@ vi.mock('../components/ContentTypeSelect', () => ({
 }));
 
 vi.mock('../components/TryOutButton', () => ({
-  default: () => (
-    <button type="button">{ButtonsI18nKey.TryOut}</button>
-  ),
+  default: () => <button type="button">{ButtonsI18nKey.TryOut}</button>,
 }));
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
