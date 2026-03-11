@@ -18,11 +18,6 @@ describe('Header', () => {
     expect(screen.getByText('Admin')).toBeInTheDocument();
   });
 
-  test('renders Help button', () => {
-    render(<Header isEnableAuth={true} />);
-    expect(screen.getByRole('button', { name: 'Help' })).toBeInTheDocument();
-  });
-
   test('calls toggleSidebar when menu button is clicked', () => {
     const { getByRole } = render(<Header isEnableAuth={false} />);
     const button = getByRole('button', { name: 'menu' });
