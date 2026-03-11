@@ -15,7 +15,7 @@ import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 export const getData = async <T>(route: ApplicationRoute, ref: RefObject<T | undefined>) => {
   if (route === ApplicationRoute.Prompts) {
     const { folderId, name, version } = ref.current as DialPrompt;
-    return await getPrompt(folderId, name as string, version, DEFAULT_ETAG);
+    return (await getPrompt(folderId, name as string, version, DEFAULT_ETAG)).response;
   }
 
   if (route === ApplicationRoute.AssetsApplications) {
@@ -85,7 +85,7 @@ export const prepareEntityForDuplicate = async <T>(
   }
 
   if (route === ApplicationRoute.Prompts) {
-    const prompt = fullEntity.response as DialPrompt | null;
+    const prompt = fullEntity as DialPrompt | null;
     return {
       ...entity,
       description: prompt?.description,
