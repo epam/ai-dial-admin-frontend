@@ -61,7 +61,6 @@ rules:
     - Specify error/success notification behavior for actions
     - Flag performance-sensitive areas that need memoization (useCallback/useMemo)
     - Define aria/accessibility requirements for interactive components
-    - When specifying a feature, identify and include cleanup of related technical debt (TODOs, as any, eslint-disable) in nearby/related code
   tasks:
     - Reference specific file paths and component names
     - Require unit tests for all new and updated code as a dedicated task
