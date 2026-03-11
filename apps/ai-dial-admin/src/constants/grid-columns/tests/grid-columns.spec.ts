@@ -120,6 +120,7 @@ describe('Constants :: grid columns', () => {
     expect(Array.isArray(cols1)).toBe(true);
     expect(cols1.some((c) => c.field === 'name')).toBe(true);
     expect(cols1.some((c) => c.field === 'description')).toBe(true);
+    expect(cols1.some((c) => c.field === 'topics')).toBe(true);
   });
 
   test('CONTAINER_EVENTS returns expected columns', () => {
