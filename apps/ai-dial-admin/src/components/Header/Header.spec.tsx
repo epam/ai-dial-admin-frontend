@@ -8,10 +8,19 @@ vi.mock('next-auth/react', () => ({
   }),
 }));
 
+vi.mock('next/navigation', () => ({
+  usePathname: vi.fn(() => '/en/models'),
+}));
+
 describe('Header', () => {
   test('renders logo, user, and breadcrumbs', () => {
     render(<Header isEnableAuth={true} />);
     expect(screen.getByText('Admin')).toBeInTheDocument();
+  });
+
+  test('renders Help button', () => {
+    render(<Header isEnableAuth={true} />);
+    expect(screen.getByRole('button', { name: 'Help' })).toBeInTheDocument();
   });
 
   test('calls toggleSidebar when menu button is clicked', () => {
