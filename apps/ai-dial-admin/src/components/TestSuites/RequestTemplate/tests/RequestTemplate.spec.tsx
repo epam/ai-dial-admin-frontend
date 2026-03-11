@@ -61,12 +61,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
   DialTabs: ({ tabs, activeTab, onClick }: any) => (
     <div role="tablist">
       {tabs.map((tab: any) => (
-        <button
-          key={tab.id}
-          role="tab"
-          aria-selected={tab.id === activeTab}
-          onClick={() => onClick(tab.id)}
-        >
+        <button key={tab.id} role="tab" aria-selected={tab.id === activeTab} onClick={() => onClick(tab.id)}>
           {tab.label}
         </button>
       ))}
