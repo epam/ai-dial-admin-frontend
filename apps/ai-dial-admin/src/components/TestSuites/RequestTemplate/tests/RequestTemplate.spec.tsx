@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 
 import { ContentType } from '@/src/components/TestSuites/constants/content-type';
@@ -54,14 +54,19 @@ vi.mock('../tabs/TabsContent', () => ({
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   DialNeutralButton: ({ label, onClick, iconBefore }: any) => (
-    <button role="button" onClick={onClick}>
+    <button type="button" onClick={onClick}>
       {label}
     </button>
   ),
   DialTabs: ({ tabs, activeTab, onClick }: any) => (
     <div role="tablist">
       {tabs.map((tab: any) => (
-        <button key={tab.id} role="tab" aria-selected={tab.id === activeTab} onClick={() => onClick(tab.id)}>
+        <button
+          key={tab.id}
+          role="tab"
+          aria-selected={tab.id === activeTab}
+          onClick={() => onClick(tab.id)}
+        >
           {tab.label}
         </button>
       ))}
@@ -93,6 +98,8 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
       ))}
     </select>
   ),
+  SelectSize: { Sm: 'sm' },
+  SelectVariant: { Secondary: 'secondary' },
 }));
 
 const createTestSuite = (overrides?: Partial<TestSuite>): TestSuite => ({
