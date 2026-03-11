@@ -43,6 +43,8 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
       : {
           ...entity,
           name: getClonedEntityName(entity.name, view === ApplicationRoute.Toolsets),
+          displayName:
+            view === ApplicationRoute.Toolsets ? getClonedEntityName(entity.displayName) : entity.displayName,
           displayVersion: void 0,
         },
   );

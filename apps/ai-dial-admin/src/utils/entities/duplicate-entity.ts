@@ -27,9 +27,13 @@ export const getCloneTitle = (view: ApplicationRoute, t: (str: string, props?: R
 };
 
 export const getClonedEntityName = (name?: string, withoutSuffix?: boolean, splitSymbol = '_'): string => {
-  const copySuffix = '(copy)';
-  if (name?.endsWith(copySuffix) || withoutSuffix) {
+  const copySuffix = 'copy';
+  if (name?.endsWith(copySuffix)) {
     return name || '';
   }
-  return `${name}${splitSymbol}${copySuffix}`;
+
+  if (withoutSuffix) {
+    return `${name}-${copySuffix}`;
+  }
+  return `${name}${splitSymbol}(${copySuffix})`;
 };
