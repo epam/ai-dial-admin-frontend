@@ -70,8 +70,6 @@ describe('ContainerBase', () => {
 
     fireEvent.click(screen.getByText('Change topics'));
 
-    expect(setContainer).toHaveBeenCalledWith(
-      expect.objectContaining({ topics: ['new-topic'] }),
-    );
+    expect(setContainer).toHaveBeenCalledWith(expect.objectContaining({ topics: ['new-topic'] }));
   });
 });
