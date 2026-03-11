@@ -5,12 +5,13 @@ import {
   KubEventType,
   MODEL_TYPE,
   PROBE_TYPE,
+  SCALING_STRATEGY_TYPE,
 } from '@/src/types/deployments/containers';
 import { ToolsetTransport } from '@/src/types/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ContainersI18nKey, ErrorI18nKey, KubEventsI18nKey } from '@/src/constants/i18n';
 import { getTranslatedType } from '@/src/utils/deployments/entity';
-import { Autoscaling } from '@/src/models/deployments/containers';
+import { Autoscaling, AutoscalingStrategy } from '@/src/models/deployments/containers';
 
 export const POD_OBJECT_KIND = 'pod';
 
@@ -60,6 +61,11 @@ export const AUTOSCALE_OPTIONS = (
 export const DEFAULT_SCALING: Autoscaling = {
   minReplicas: 1,
   maxReplicas: 1,
+};
+
+export const DEFAULT_STRATEGY: AutoscalingStrategy = {
+  $type: SCALING_STRATEGY_TYPE.REQUESTS,
+  threshold: 2,
 };
 
 export const DEFAULT_PROBE_CONFIG = {

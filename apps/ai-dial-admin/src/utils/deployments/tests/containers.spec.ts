@@ -10,12 +10,15 @@ import {
   convertBytesToMb,
   normalizeContainerPorts,
   isErrorPresent,
+  isAutoscalingEnabled,
+  deriveScaling,
 } from '../containers';
 import {
   CONTAINER_SOURCE_TYPE,
   CONTAINER_STATUS,
   CONTAINER_TRANSPORT,
   CONTAINER_TYPE,
+  SCALING_STRATEGY_TYPE,
 } from '@/src/types/deployments/containers';
 import { Container } from '@/src/models/deployments/containers';
 import { MOUNT_TYPE, VALUE_TYPE } from '@/src/types/deployments/variables';
@@ -267,6 +270,96 @@ describe('containers utils', () => {
 
     test('should return false when key exist but valid', () => {
       expect(isErrorPresent(errors, ['version'])).toBeFalsy();
+    });
+  });
+
+  describe('isAutoscalingEnabled', () => {
+    test('returns false when min equals max', () => {
+      expect(isAutoscalingEnabled(1, 1)).toBe(false);
+      expect(isAutoscalingEnabled(3, 3)).toBe(false);
+    });
+
+    test('returns false when max is 1 even if min < max', () => {
+      expect(isAutoscalingEnabled(0, 1)).toBe(false);
+    });
+
+    test('returns true when max > min and max > 1', () => {
+      expect(isAutoscalingEnabled(0, 2)).toBe(true);
+      expect(isAutoscalingEnabled(1, 3)).toBe(true);
+    });
+
+    test('handles undefined values', () => {
+      expect(isAutoscalingEnabled(undefined, undefined)).toBe(false);
+      expect(isAutoscalingEnabled(undefined, 2)).toBe(true);
+      expect(isAutoscalingEnabled(1, undefined)).toBe(false);
+    });
+  });
+
+  describe('deriveScaling', () => {
+    test('adds default strategy when autoscaling enabled and no strategy present', () => {
+      const result = deriveScaling({ minReplicas: 1, maxReplicas: 1 }, { maxReplicas: 3 });
+      expect(result.strategy).toEqual({
+        $type: SCALING_STRATEGY_TYPE.REQUESTS,
+        threshold: 2,
+      });
+    });
+
+    test('preserves existing strategy when autoscaling enabled', () => {
+      const existing = {
+        minReplicas: 1,
+        maxReplicas: 3,
+        strategy: { $type: SCALING_STRATEGY_TYPE.REQUESTS, threshold: 5 },
+      };
+      const result = deriveScaling(existing, { maxReplicas: 4 });
+      expect(result.strategy?.threshold).toBe(5);
+    });
+
+    test('removes strategy when max equals min', () => {
+      const existing = {
+        minReplicas: 1,
+        maxReplicas: 3,
+        strategy: { $type: SCALING_STRATEGY_TYPE.REQUESTS, threshold: 2 },
+      };
+      const result = deriveScaling(existing, { maxReplicas: 1 });
+      expect(result.strategy).toBeUndefined();
+    });
+
+    test('removes strategy when max is 1', () => {
+      const existing = {
+        minReplicas: 0,
+        maxReplicas: 3,
+        strategy: { $type: SCALING_STRATEGY_TYPE.REQUESTS, threshold: 2 },
+      };
+      const result = deriveScaling(existing, { maxReplicas: 1 });
+      expect(result.strategy).toBeUndefined();
+    });
+
+    test('adds strategy when scale-to-zero with max > 1', () => {
+      const result = deriveScaling({ minReplicas: 1, maxReplicas: 3 }, { minReplicas: 0 });
+      expect(result.strategy).toEqual({
+        $type: SCALING_STRATEGY_TYPE.REQUESTS,
+        threshold: 2,
+      });
+    });
+
+    test('merges updates into scaling', () => {
+      const result = deriveScaling(
+        { minReplicas: 1, maxReplicas: 1 },
+        { maxReplicas: 5, scaleToZeroDelaySeconds: 300 },
+      );
+      expect(result.maxReplicas).toBe(5);
+      expect(result.scaleToZeroDelaySeconds).toBe(300);
+      expect(result.minReplicas).toBe(1);
+    });
+
+    test('handles undefined scaling', () => {
+      const result = deriveScaling(undefined, { minReplicas: 1, maxReplicas: 3 });
+      expect(result.minReplicas).toBe(1);
+      expect(result.maxReplicas).toBe(3);
+      expect(result.strategy).toEqual({
+        $type: SCALING_STRATEGY_TYPE.REQUESTS,
+        threshold: 2,
+      });
     });
   });
 });

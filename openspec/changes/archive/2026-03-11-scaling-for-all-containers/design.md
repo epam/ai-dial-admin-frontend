@@ -111,6 +111,20 @@ to:
 
 Strategy is no longer part of the default — it's derived when `max > min && max > 1`.
 
+## Code Organization
+
+Scaling logic is organized across dedicated layers, not inlined in components:
+
+| Symbol | Location | Layer |
+|--------|----------|-------|
+| `DEFAULT_SCALING` | `src/constants/deployments/containers.tsx` | constant |
+| `DEFAULT_STRATEGY` | `src/constants/deployments/containers.tsx` | constant |
+| `isAutoscalingEnabled()` | `src/utils/deployments/containers.ts` | utility |
+| `deriveScaling()` | `src/utils/deployments/containers.ts` | utility |
+
+- `showStrategy` in `ContainerAutoscaling` uses `useMemo` for render optimization
+- Both utility functions have dedicated unit tests in `containers.spec.ts`
+
 ## Scale-to-Zero Dropdown Options
 
 | Label | Value (seconds) |

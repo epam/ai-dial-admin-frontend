@@ -11,40 +11,17 @@ import { SCALING_STRATEGY_TYPE } from '@/src/types/deployments/containers';
 import { useI18n } from '@/src/locales/client';
 
 import Accordion from '@/src/components/Common/Accordion/Accordion';
-import { isEditDisabled, isErrorPresent } from '@/src/utils/deployments/containers';
+import {
+  deriveScaling,
+  isAutoscalingEnabled,
+  isEditDisabled,
+  isErrorPresent,
+} from '@/src/utils/deployments/containers';
 
 interface Props {
   container: Container;
   setContainer: (container: Container) => void;
 }
-
-const DEFAULT_STRATEGY = {
-  $type: SCALING_STRATEGY_TYPE.REQUESTS,
-  threshold: 2,
-};
-
-const isAutoscalingEnabled = (min?: number, max?: number): boolean => {
-  return (max ?? 0) > (min ?? 0) && (max ?? 0) > 1;
-};
-
-const deriveScaling = (
-  scaling: Container['scaling'],
-  updates: Partial<NonNullable<Container['scaling']>>,
-): NonNullable<Container['scaling']> => {
-  const merged = { ...scaling, ...updates };
-  const min = merged.minReplicas;
-  const max = merged.maxReplicas;
-
-  if (isAutoscalingEnabled(min, max)) {
-    if (!merged.strategy) {
-      merged.strategy = DEFAULT_STRATEGY;
-    }
-  } else {
-    delete merged.strategy;
-  }
-
-  return merged;
-};
 
 const ContainerAutoscaling: FC<Props> = ({ container, setContainer }) => {
   const t = useI18n();
@@ -53,6 +30,11 @@ const ContainerAutoscaling: FC<Props> = ({ container, setContainer }) => {
   const scalingOptions = useMemo(() => AUTOSCALE_OPTIONS(t), [t]);
   const [replicasError, setReplicasError] = useState<FieldError | null>(null);
   const [isSectionInvalid, setSectionInvalid] = useState(false);
+
+  const showStrategy = useMemo(
+    () => isAutoscalingEnabled(container.scaling?.minReplicas, container.scaling?.maxReplicas),
+    [container.scaling?.minReplicas, container.scaling?.maxReplicas],
+  );
 
   useEffect(() => {
     if (!isValid) {
@@ -131,8 +113,6 @@ const ContainerAutoscaling: FC<Props> = ({ container, setContainer }) => {
     },
     [container, setContainer],
   );
-
-  const showStrategy = isAutoscalingEnabled(container.scaling?.minReplicas, container.scaling?.maxReplicas);
 
   return (
     <Accordion title={t(EntityFieldsI18nKey.Autoscaling)} errorIndicator={isSectionInvalid}>

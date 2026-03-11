@@ -8,7 +8,7 @@ import {
   ContainerResources,
   MODEL_FORMAT,
 } from '@/src/types/deployments/containers';
-import { DEFAULT_SCALING } from '@/src/constants/deployments/containers';
+import { DEFAULT_SCALING, DEFAULT_STRATEGY } from '@/src/constants/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 
 export const normalizeContainerPorts = (ports?: number[]): number[] => {
@@ -162,4 +162,27 @@ export const convertBytesToMb = (value?: string): string => {
 
 export const isErrorPresent = (errors: Map<string, boolean>, errorKeys: string[]) => {
   return [...errors].some(([key, value]) => errorKeys.some((errorKey) => key.includes(errorKey)) && !value);
+};
+
+export const isAutoscalingEnabled = (min?: number, max?: number): boolean => {
+  return (max ?? 0) > (min ?? 0) && (max ?? 0) > 1;
+};
+
+export const deriveScaling = (
+  scaling: Container['scaling'],
+  updates: Partial<NonNullable<Container['scaling']>>,
+): NonNullable<Container['scaling']> => {
+  const merged = { ...scaling, ...updates };
+  const min = merged.minReplicas;
+  const max = merged.maxReplicas;
+
+  if (isAutoscalingEnabled(min, max)) {
+    if (!merged.strategy) {
+      merged.strategy = DEFAULT_STRATEGY;
+    }
+  } else {
+    delete merged.strategy;
+  }
+
+  return merged;
 };
