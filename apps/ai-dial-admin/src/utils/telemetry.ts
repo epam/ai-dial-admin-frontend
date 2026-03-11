@@ -38,14 +38,14 @@ export const getFormattedDataFilters = (filters: FilterData[], entityName?: stri
 
   if (entityName) {
     const left = filterTypeConfig.find((filterType) => filterType.value === FILTER_TYPE.Entity)?.filter;
-    const right = `'${entityName}'`;
+    const right = `'${entityName.toLowerCase()}'`;
     const operator = filterOperatorConfig[FILTER_OPERATOR.Equal];
     userFilters.push({ [operator]: { left: left, right: right } });
   }
 
   filters.forEach((filter) => {
     const left = filterTypeConfig.find((filterType) => filterType.value === filter.type)?.filter;
-    const right = `'${filter.value}'`;
+    const right = `'${filter.value.toLowerCase()}'`;
     const operator = filterOperatorConfig[filter.condition];
 
     userFilters.push({ [operator]: { left: left, right: right } });
