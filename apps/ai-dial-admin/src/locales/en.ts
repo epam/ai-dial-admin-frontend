@@ -766,8 +766,6 @@ export default {
     Notifications: {
       ConfigImported: 'Config imported successfully',
       ConfigImportedDescription: 'Changes have been delivered to the system',
-      Importing: 'Config importing in progress',
-      ImportingDescription: 'You will be notified when the process is complete',
     },
   },
   Export: {

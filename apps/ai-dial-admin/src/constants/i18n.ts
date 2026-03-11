@@ -691,8 +691,6 @@ export enum ImportI18nKey {
   ConflictResolution = 'Import.ConflictResolution',
   ConfigImported = 'Import.Notifications.ConfigImported',
   ConfigImportedDescription = 'Import.Notifications.ConfigImportedDescription',
-  NotificationImporting = 'Import.Notifications.Importing',
-  NotificationImportingDescription = 'Import.Notifications.ImportingDescription',
   Override = 'Import.Override',
   Skip = 'Import.Skip',
   EditManually = 'Import.EditManually',
