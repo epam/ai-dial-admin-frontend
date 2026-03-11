@@ -37,9 +37,7 @@ const ContainerFields: FC<Props> = ({ container, setContainer, isModal, route, n
           )}
           <ContainerVariables container={container} setContainer={setContainer} />
           <ContainerResources container={container} setContainer={setContainer} route={route} />
-          {container.source?.$type === CONTAINER_SOURCE_TYPE.HUGGINGFACE && (
-            <ContainerConfiguration container={container} setContainer={setContainer} />
-          )}
+          <ContainerConfiguration container={container} setContainer={setContainer} />
           <ContainerStartupProbe container={container} setContainer={setContainer} />
         </div>
       )}
