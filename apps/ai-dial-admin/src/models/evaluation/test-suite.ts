@@ -1,4 +1,5 @@
 import { DialScheme } from '@/src/models/dial/scheme';
+import { FormDataPart } from '@/src/models/form-data';
 import { InputBindingType, TestCaseItemType } from '@/src/types/evaluation';
 
 export interface TestSuite {
@@ -55,8 +56,9 @@ export interface TestSuiteRequestTemplate {
 
 export interface TestSuiteRequestTemplateBody {
   contentType?: string;
-  content?: Record<string, unknown>;
+  content?: Record<string, unknown> | FormDataPart[];
 }
+
 export interface TestSuiteRequestTemplateParam {
   key: string;
   value: string;

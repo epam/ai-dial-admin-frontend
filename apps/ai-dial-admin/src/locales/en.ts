@@ -82,6 +82,7 @@ export default {
     Variables: 'Variables',
     Server: 'Server',
     Client: 'Client',
+    ContentType: 'Content-Type',
   },
   Menu: {
     Entities: 'Entities',
