@@ -200,6 +200,24 @@ describe('containers utils', () => {
       };
       expect(getContainerRedeploySnapshot(a)).toEqual(getContainerRedeploySnapshot(b));
     });
+
+    test('detects command change via snapshot inequality', () => {
+      const a: Container = { ...baseContainer, command: '/bin/sh' };
+      const b: Container = { ...baseContainer, command: '/bin/bash' };
+      expect(getContainerRedeploySnapshot(a)).not.toEqual(getContainerRedeploySnapshot(b));
+    });
+
+    test('detects args change via snapshot inequality', () => {
+      const a: Container = { ...baseContainer, args: '--port 8080' };
+      const b: Container = { ...baseContainer, args: '--port 9090' };
+      expect(getContainerRedeploySnapshot(a)).not.toEqual(getContainerRedeploySnapshot(b));
+    });
+
+    test('treats missing command and args as equivalent', () => {
+      const a: Container = { ...baseContainer };
+      const b: Container = { ...baseContainer, command: undefined, args: undefined };
+      expect(getContainerRedeploySnapshot(a)).toEqual(getContainerRedeploySnapshot(b));
+    });
   });
 
   describe('normalizeEnvironmentVariables', () => {
