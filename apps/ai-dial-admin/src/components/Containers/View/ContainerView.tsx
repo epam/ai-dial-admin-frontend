@@ -91,14 +91,22 @@ const ContainerView: FC<Props> = ({ container, route, createEntity, createEntity
         if (updatedContainer) {
           setSelectedContainer(decodeVariables(cloneDeep(updatedContainer)));
         }
+        router.refresh();
       } else {
         showNotification(getErrorNotification(errorHeader, errorMessage, requestId));
       }
     });
-  }, [selectedContainer, showNotification]);
+  }, [router, selectedContainer, showNotification]);
 
   useEffect(() => {
-    setSelectedContainer(cloneDeep(container));
+    setSelectedContainer((prev) => {
+      const next = cloneDeep(container);
+      const isTransitioning = prev.status === CONTAINER_STATUS.PENDING || prev.status === CONTAINER_STATUS.STOPPING;
+      if (isTransitioning && container.status === CONTAINER_STATUS.RUNNING) {
+        next.status = prev.status;
+      }
+      return next;
+    });
   }, [container]);
 
   useEffect(() => {
