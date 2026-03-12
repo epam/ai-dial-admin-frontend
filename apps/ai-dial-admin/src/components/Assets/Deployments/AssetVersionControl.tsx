@@ -147,7 +147,7 @@ const AssetVersionControl: FC<Props> = ({
         modalType === ModalType.addVersion &&
         createPortal(
           <AddVersionModal
-            heading={t(PromptsI18nKey.NewVersionCreate)}
+            header={t(PromptsI18nKey.NewVersionCreate)}
             isModalOpen={isModalOpen}
             existingVersions={[...versions, ...addedVersions]}
             onClose={handleModalClose}
