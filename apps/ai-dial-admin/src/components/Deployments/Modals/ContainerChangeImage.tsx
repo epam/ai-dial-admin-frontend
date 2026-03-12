@@ -92,7 +92,8 @@ const ContainerChangeImage: FC<Props> = ({
 
   useEffect(() => {
     if (images.length) {
-      setIsValid(isValidVersion(images?.find((i) => i.selectedId === id) as ImageGroup) && id !== image.id);
+      const found = images?.find((i) => i.selectedId === id);
+      setIsValid(isValidVersion(found) && id !== image.id);
     }
   }, [id, image.id, images]);
 
@@ -117,7 +118,7 @@ const ContainerChangeImage: FC<Props> = ({
       columnDefs: colDefs,
     });
     event.api.forEachNode((node) => {
-      if (node.data.selectedId === id && isValidVersion(node.data as ImageGroup)) {
+      if (node.data?.selectedId === id && isValidVersion(node.data as ImageGroup)) {
         node.setSelected(true);
         event.api.ensureNodeVisible(node, 'middle');
       }
