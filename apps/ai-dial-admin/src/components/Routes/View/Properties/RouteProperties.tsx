@@ -294,7 +294,13 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
           onChange={(values) => onChangePermissions(values as string[])}
         />
       )}
-      <div className={classNames('flex gap-x-2 flex-row items-end', STANDARD_CONTROL_WIDTH)}>
+      <div
+        className={classNames(
+          'flex gap-x-2 flex-row items-end',
+          STANDARD_CONTROL_WIDTH,
+          orderError ? 'items-center' : 'items-end',
+        )}
+      >
         <DialNumberInput
           id="order"
           disabled={readonly}
@@ -309,7 +315,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
         />
         {route.order !== ORDER_DEFAULT_VALUE && (
           <DialPrimaryButton
-            className="mb-2.5"
+            className="h-10"
             appearance={ButtonAppearance.Link}
             label={t(ButtonsI18nKey.ResetToDefault)}
             iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}
