@@ -27,6 +27,7 @@ import { useI18n } from '@/src/locales/client';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import AssetChangedEntityButtons from '../Buttons/AssetChangedEntityButtons';
 import { SimpleButtonsWrapperProps } from './SimpleButtonsWrapper';
+import { getVersionsPerName } from '@/src/components/Assets/utils';
 
 export interface AssetButtonsWrapperProps extends Omit<SimpleButtonsWrapperProps<AssetWithVersion>, 'onSave'> {
   assets?: AssetWithVersion[] | null;
@@ -110,7 +111,7 @@ const AssetButtonsWrapper: FC<AssetButtonsWrapperProps> = ({
         {isChanged ? (
           <AssetChangedEntityButtons
             version={entity.version}
-            existingVersions={existingVersions}
+            existingVersions={getVersionsPerName(assets || [])}
             onDiscard={onStartDiscard}
             isEditorEnabled={isEditorEnabled}
             onSave={onTryToSave}
