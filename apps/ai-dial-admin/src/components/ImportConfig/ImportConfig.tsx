@@ -1,20 +1,20 @@
 'use client';
 
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { DialSteps, StepStatus } from '@epam/ai-dial-ui-kit';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { importDeploymentConfig, importJsonConfigs, importZipConfig } from '@/src/app/[lang]/import-config/actions';
-import { IMPORT_CONFIG_STEPS } from '@/src/constants/import';
-import { getErrorNotification, getPrepareNotification, getSuccessNotification } from '@/src/utils/notification';
+import { isLargeFile } from '@/src/components/EntityListView/Import/utils';
 import { ImportI18nKey } from '@/src/constants/i18n';
+import { IMPORT_CONFIG_STEPS } from '@/src/constants/import';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
+import { useI18n } from '@/src/locales/client';
 import { ExportComponentType } from '@/src/types/export';
 import { ImportFileType, ImportSteps } from '@/src/types/import';
-import { useI18n } from '@/src/locales/client';
-import { isLargeFile } from '@/src/components/EntityListView/Import/utils';
-import Files from './Files/Files';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import ConfigurationPreview from './ConfigurationPreview/ConfigurationPreview';
-import { useProtectedRequest } from '@/src/hooks/use-protected-request';
+import Files from './Files/Files';
 
 interface Props {
   deploymentsEnabled?: boolean;
@@ -22,13 +22,14 @@ interface Props {
 
 const ImportConfig: FC<Props> = ({ deploymentsEnabled }) => {
   const t = useI18n();
-  const { showNotification, removeNotification } = useNotification();
+  const { showNotification } = useNotification();
 
   const [importBody, setImportBody] = useState<FormData>(new FormData());
   const [files, setFiles] = useState<File[]>([]);
   const [fileType, setFileType] = useState(ImportFileType.ARCHIVE);
   const [configScope, setConfigScope] = useState(ExportComponentType.ADMIN);
   const getReqRef = useRef(useProtectedRequest());
+  const [isImporting, setIsImporting] = useState(false);
 
   const isDeployments = configScope === ExportComponentType.DEPLOYMENTS;
 
@@ -36,10 +37,7 @@ const ImportConfig: FC<Props> = ({ deploymentsEnabled }) => {
   const [currentStepId, setCurrentStep] = useState(steps[0].id);
 
   const onImportFile = useCallback(() => {
-    const prepareNotificationId = showNotification(
-      getPrepareNotification(t(ImportI18nKey.NotificationImporting), t(ImportI18nKey.NotificationImportingDescription)),
-    );
-
+    setIsImporting(true);
     const importPromise = isDeployments
       ? (() => {
           const resolutionPolicy = importBody.get('resolutionPolicy') as string;
@@ -53,16 +51,17 @@ const ImportConfig: FC<Props> = ({ deploymentsEnabled }) => {
         : getReqRef.current(importJsonConfigs, importBody);
 
     importPromise.then((res) => {
-      removeNotification(prepareNotificationId);
+      setIsImporting(false);
       if (res.success) {
         showNotification(
           getSuccessNotification(t(ImportI18nKey.ConfigImported), t(ImportI18nKey.ConfigImportedDescription)),
         );
+        setCurrentStep(steps[0].id);
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
-  }, [showNotification, t, fileType, importBody, removeNotification, isDeployments]);
+  }, [showNotification, t, isDeployments, fileType, importBody, steps]);
 
   const setStepsState = useCallback(
     (status: StepStatus) => {
@@ -135,6 +134,7 @@ const ImportConfig: FC<Props> = ({ deploymentsEnabled }) => {
         <ConfigurationPreview
           files={files}
           onImportFile={onImportFile}
+          isImporting={isImporting}
           importBody={importBody}
           fileType={fileType}
           isDeployments={isDeployments}

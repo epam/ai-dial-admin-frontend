@@ -766,8 +766,6 @@ export default {
     Notifications: {
       ConfigImported: 'Config imported successfully',
       ConfigImportedDescription: 'Changes have been delivered to the system',
-      Importing: 'Config importing in progress',
-      ImportingDescription: 'You will be notified when the process is complete',
     },
   },
   Export: {
@@ -1355,6 +1353,7 @@ export default {
     NoDescriptionAvailable: 'No description available for the chosen model',
     Autoscaling: {
       ScaleToZeroNever: 'Never automatically scale to zero',
+      ScaleToZeroAfter5Minutes: 'After 5 minutes with no activity',
       ScaleToZeroAfter15Minutes: 'After 15 minutes with no activity',
       ScaleToZeroAfter30Minutes: 'After 30 minutes with no activity',
       ScaleToZeroAfter1Hour: 'After 1 hour with no activity',
