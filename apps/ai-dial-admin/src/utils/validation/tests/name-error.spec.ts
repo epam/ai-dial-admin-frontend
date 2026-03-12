@@ -191,8 +191,6 @@ describe('getErrorForName', () => {
     });
   });
 
-
-
   FORBIDDEN_NAME_SYMBOLS.forEach((symbol) => {
     test(`Should return forbidden chars error for symbol: ${symbol}`, () => {
       const nameWithSymbol = `name${symbol}`;
@@ -316,7 +314,7 @@ describe('getErrorForDisplayName', () => {
     expect(result).toBeNull();
   });
 
-    test('returns error if name is too short', () => {
+  test('returns error if name is too short', () => {
     const result1 = getErrorForDisplayName('a', false, mockT);
     const result2 = getErrorForDisplayName('a', false, void 0);
 
