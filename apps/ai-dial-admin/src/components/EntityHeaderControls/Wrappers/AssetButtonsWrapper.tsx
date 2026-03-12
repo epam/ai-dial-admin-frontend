@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
@@ -58,6 +58,10 @@ const AssetButtonsWrapper: FC<AssetButtonsWrapperProps> = ({
   const isEditorEnabled = jsonConfiguration?.isEditorEnabled;
   const { dispatch, jsonErrors } = useSaveValidationContext();
   const { showNotification } = useNotification();
+
+  const existingVersions = useMemo(() => {
+    return assets?.map((asset) => asset.version) || [];
+  }, [assets]);
 
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
@@ -147,7 +151,7 @@ const AssetButtonsWrapper: FC<AssetButtonsWrapperProps> = ({
             onCloseModal={onCloseModal}
             getAssetContext={getAssetContext}
             isSelectedView={true}
-            // existingVersions={existingVersions}
+            existingVersions={existingVersions}
             etag={etag}
           />,
           document.body,
