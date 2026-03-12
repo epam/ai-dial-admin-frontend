@@ -7,15 +7,17 @@ import SidebarClose from '@/public/images/icons/sidebar-close.svg';
 import SidebarOpen from '@/public/images/icons/sidebar-open.svg';
 import Breadcrumbs from '@/src/components/Breadcrumbs/Breadcrumbs';
 import { useAppContext } from '@/src/context/AppContext';
+import HelpButton from './HelpButton/HelpButton';
 import Logo from './Logo';
 import User from './User/User';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 
 interface Props {
   isEnableAuth: boolean;
+  docLink?: string;
 }
 
-const Header: FC<Props> = ({ isEnableAuth }) => {
+const Header: FC<Props> = ({ isEnableAuth, docLink }) => {
   const { sidebarOpen, toggleSidebar } = useAppContext();
   const [sidebarIcon, setSidebarIcon] = useState<ReactNode>(<SidebarClose />);
   const isTabletScreen = useIsTabletScreen();
@@ -39,7 +41,11 @@ const Header: FC<Props> = ({ isEnableAuth }) => {
         {!isTabletScreen && <Breadcrumbs mobile={false} />}
       </div>
 
-      <User isEnableAuth={isEnableAuth} />
+      <div className="flex items-center">
+        {docLink && <HelpButton docLink={docLink} />}
+        <div className="w-px h-[16px] bg-controls-disable-accent ml-2 mr-[-8px]" />
+        <User isEnableAuth={isEnableAuth} />
+      </div>
     </header>
   );
 };

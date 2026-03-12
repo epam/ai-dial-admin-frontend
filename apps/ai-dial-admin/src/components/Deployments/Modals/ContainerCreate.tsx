@@ -141,7 +141,7 @@ const ContainerCreate: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
     });
     event.api.setFilterModel(filters);
     event.api.forEachNode((node) => {
-      if (node.data.selectedId === container.source.imageDefinitionId && isValidVersion(node.data as ImageGroup)) {
+      if (node.data?.selectedId === container.source.imageDefinitionId && isValidVersion(node.data as ImageGroup)) {
         node.setSelected(true);
       }
     });
