@@ -38,11 +38,9 @@ export const getContainerTypeByImageType = (type: IMAGE_TYPE): CONTAINER_TYPE =>
   }
 };
 
-export const isValidVersion = (imageData: ImageGroup): boolean => {
-  return (
-    !!imageData.selectedId &&
-    imageData.availableVersions.find((v) => v.id === imageData.selectedId)?.status === IMAGE_STATUS.BUILT
-  );
+export const isValidVersion = (imageData?: ImageGroup): boolean => {
+  if (!imageData?.selectedId || !imageData?.availableVersions) return false;
+  return imageData.availableVersions.find((v) => v.id === imageData.selectedId)?.status === IMAGE_STATUS.BUILT;
 };
 
 export function validateImageChanged(originalImage: Image, updatedImage: Image) {

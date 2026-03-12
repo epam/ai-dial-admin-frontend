@@ -320,7 +320,13 @@ export const getReplicasError = (
   max?: number,
   t?: (key: string, options?: Record<string, string | number>) => string,
 ): FieldError | null => {
-  if (min && max && min > max) {
+  if (min != null && min < 0) {
+    return { type: ErrorType.INVALID, text: t ? t(ErrorI18nKey.ReplicasError) : '' };
+  }
+  if (max != null && max < 1) {
+    return { type: ErrorType.INVALID, text: t ? t(ErrorI18nKey.ReplicasError) : '' };
+  }
+  if (min != null && max != null && min > max) {
     return { type: ErrorType.INVALID, text: t ? t(ErrorI18nKey.ReplicasError) : '' };
   }
   return null;

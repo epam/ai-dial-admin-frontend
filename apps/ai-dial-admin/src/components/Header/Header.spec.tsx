@@ -8,6 +8,10 @@ vi.mock('next-auth/react', () => ({
   }),
 }));
 
+vi.mock('next/navigation', () => ({
+  usePathname: vi.fn(() => '/en/models'),
+}));
+
 describe('Header', () => {
   test('renders logo, user, and breadcrumbs', () => {
     render(<Header isEnableAuth={true} />);
