@@ -39,8 +39,6 @@ import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { emptyDataTitleMap, listViewTitleMap } from '../constants';
 import HeaderButtons from './Header';
-import DuplicateEntity from '../../EntityView/Modals/Duplicate/Duplicate';
-import { SaveValidationContextProvider } from '../../../context/SaveValidationContext';
 
 interface Props<T> {
   route: ApplicationRoute;
@@ -141,14 +139,6 @@ const EvaluationListView = <T extends object>({
     [onModalOpen],
   );
 
-  const onOpenCloneModal = useCallback(
-    (entity?: T) => {
-      setCurrentEntity(entity);
-      onOpenModal(ModalType.duplicate);
-    },
-    [onOpenModal],
-  );
-
   const onOpenDeleteModal = useCallback(
     (entity?: T) => {
       setCurrentEntity(entity);
@@ -181,14 +171,13 @@ const EvaluationListView = <T extends object>({
     [currentEntity, onModalClose, showNotification, t],
   );
 
-  const actionColumn = ACTION_COLUMN([
-    getOpenInNewTabOperation(onOpenInNewTabAction),
-    getDuplicateOperation(onOpenCloneModal),
-    getRunTestSuiteOperation(onOpenRunTestSuiteModal),
-    getDeleteOperation(onOpenDeleteModal),
-  ]);
+  const actionColumn = [getOpenInNewTabOperation(onOpenInNewTabAction)];
 
-  const columnDefs = [...baseColumns, actionColumn];
+  if (route === ApplicationRoute.TestSuites) {
+    actionColumn.push(getRunTestSuiteOperation(onOpenRunTestSuiteModal));
+  }
+
+  const columnDefs = [...baseColumns, ACTION_COLUMN([...actionColumn, getDeleteOperation(onOpenDeleteModal)])];
 
   return (
     <>
@@ -219,26 +208,7 @@ const EvaluationListView = <T extends object>({
         )}
 
       {isModalOpen &&
-        modalType === ModalType.duplicate &&
-        onRemoveEntity &&
-        createPortal(
-          <SaveValidationContextProvider>
-            <DuplicateEntity
-              view={route}
-              onCloseModal={onModalClose}
-              onRemoveEntity={onRemoveEntity}
-              names={[]}
-              entity={currentEntity}
-            />
-            ,
-          </SaveValidationContextProvider>,
-
-          document.body,
-        )}
-
-      {isModalOpen &&
         modalType === ModalType.runTestSuite &&
-        onRemoveEntity &&
         createPortal(
           <RunModal
             isModalOpen={isModalOpen}
