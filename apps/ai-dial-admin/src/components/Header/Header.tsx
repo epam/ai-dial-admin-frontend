@@ -42,7 +42,7 @@ const Header: FC<Props> = ({ isEnableAuth, docLink }) => {
       </div>
 
       <div className="flex items-center">
-        <HelpButton docLink={docLink} />
+        {docLink && <HelpButton docLink={docLink} />}
         <div className="w-px h-[16px] bg-controls-disable-accent ml-2 mr-[-8px]" />
         <User isEnableAuth={isEnableAuth} />
       </div>
