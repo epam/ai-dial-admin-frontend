@@ -216,7 +216,6 @@ export enum EntitiesI18nKey {
   Serving = 'Entities.Serving',
   ModelServing = 'Entities.ModelServing',
   Container = 'Entities.Container',
-  NoMethods = 'Entities.NoMethods',
   DiscardChanges = 'Entities.DiscardChanges',
   DiscardChangesDescription = 'Entities.DiscardChangesDescription',
 }
@@ -1387,7 +1386,7 @@ export enum ApplicationsI18nKey {
 export enum TestSuitesI18nKey {
   CreateTestSuite = 'TestSuites.CreateTestSuite',
   UpdateTestSuite = 'TestSuites.UpdateTestSuite',
-  Application = 'TestSuites.Application',
+  Target = 'TestSuites.Target',
   Methods = 'TestSuites.Methods',
   Method = 'TestSuites.Method',
   ChangeMethod = 'TestSuites.ChangeMethod',
@@ -1438,6 +1437,7 @@ export enum TestSuitesI18nKey {
   ConflictStrategyOverrideDesc = 'TestSuites.ConflictStrategyOverrideDesc',
   ImportStepFile = 'TestSuites.ImportStepFile',
   ImportStepOptions = 'TestSuites.ImportStepOptions',
+  NoInformationToPreview = 'TestSuites.NoInformationToPreview',
 }
 
 export enum RunsI18nKey {
