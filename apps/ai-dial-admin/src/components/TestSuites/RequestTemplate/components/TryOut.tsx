@@ -128,14 +128,22 @@ const TryOut: FC<Props> = ({ testSuiteId, testCaseId }) => {
               {isRequestSend ? (
                 <DialLoader />
               ) : (
-                <JsonEditor entity={resolvedRequest} options={{ stickyScroll: { enabled: false } }} readonly={true} />
+                <JsonEditor
+                  entity={resolvedRequest}
+                  options={{ stickyScroll: { enabled: false }, wordWrap: 'bounded' }}
+                  readonly={true}
+                />
               )}
             </CollapsibleSection>
             <CollapsibleSection title={t(BasicI18nKey.Response)} growOnOpen>
               {isRequestSend ? (
                 <DialLoader />
               ) : (
-                <JsonEditor entity={response} options={{ stickyScroll: { enabled: false } }} readonly={true} />
+                <JsonEditor
+                  entity={response}
+                  options={{ stickyScroll: { enabled: false }, wordWrap: 'off' }}
+                  readonly={true}
+                />
               )}
             </CollapsibleSection>
           </div>

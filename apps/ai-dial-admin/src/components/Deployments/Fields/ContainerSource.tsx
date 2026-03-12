@@ -70,13 +70,24 @@ const ContainerSource: FC<Props> = ({ container, setContainer, isModal = false, 
     }
   }, [container.source?.imageReference, resetCounter]);
 
+  useEffect(() => {
+    const sourceType = container.source?.$type;
+    if (sourceType === CONTAINER_SOURCE_TYPE.NGC_REGISTRY) {
+      const error = getDeploymentsURIError(container.source?.imageRef);
+      dispatch({ type: ValidationActionType.SetField, field: 'modelSourceName', isValid: !error });
+    } else if (sourceType === CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE) {
+      const error = getDeploymentsURIError(container.source?.imageReference);
+      dispatch({ type: ValidationActionType.SetField, field: 'modelSourceName', isValid: !error });
+    }
+  }, [container.source?.$type, container.source?.imageRef, container.source?.imageReference, dispatch]);
+
   const renderSourceField = () => {
     switch (container.source?.$type) {
       case CONTAINER_SOURCE_TYPE.NGC_REGISTRY:
         return (
           <DialInput
             id="imageRef"
-            labelProps={{ label: t(EntityFieldsI18nKey.ImageURI) }}
+            labelProps={{ label: t(EntityFieldsI18nKey.ImageURI), required: true }}
             placeholder={t(EntityPlaceholdersI18nKey.URI)}
             value={container.source?.imageRef}
             error={imageRefError?.text}
@@ -90,7 +101,7 @@ const ContainerSource: FC<Props> = ({ container, setContainer, isModal = false, 
         return (
           <DialInput
             id="imageReference"
-            labelProps={{ label: t(EntityFieldsI18nKey.DockerImageReference) }}
+            labelProps={{ label: t(EntityFieldsI18nKey.DockerImageReference), required: true }}
             placeholder={t(EntityPlaceholdersI18nKey.URI)}
             value={container.source?.imageReference}
             error={imageReferenceError?.text}
