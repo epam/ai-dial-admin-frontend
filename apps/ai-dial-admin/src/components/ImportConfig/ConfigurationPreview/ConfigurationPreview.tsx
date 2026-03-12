@@ -21,6 +21,7 @@ import { getErrorNotification } from '@/src/utils/notification';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
+  isImporting?: boolean;
   importBody: FormData;
   files: File[];
   fileType: ImportFileType;
@@ -28,7 +29,7 @@ interface Props {
   onImportFile: () => void;
 }
 
-const ConfigurationPreview: FC<Props> = ({ files, importBody, fileType, isDeployments, onImportFile }) => {
+const ConfigurationPreview: FC<Props> = ({ isImporting, files, importBody, fileType, isDeployments, onImportFile }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
   const showNotificationRef = useRef(showNotification);
@@ -73,7 +74,7 @@ const ConfigurationPreview: FC<Props> = ({ files, importBody, fileType, isDeploy
         <h1>{t(ImportI18nKey.Configuration)}</h1>
         <DialPrimaryButton
           label={t(ButtonsI18nKey.Import)}
-          disabled={isImportDisabled}
+          disabled={isImportDisabled || isImporting}
           iconBefore={<IconDownload {...BASE_BUTTON_ICON_PROPS} />}
           onClick={onImportFile}
         />
@@ -87,7 +88,12 @@ const ConfigurationPreview: FC<Props> = ({ files, importBody, fileType, isDeploy
             <p className="mt-3 text-primary small">{t(ImportI18nKey.ConfigurationParsing)}</p>
           </div>
         ) : (
-          <div className="flex flex-col h-full">
+          <div className="flex flex-col h-full relative">
+            {isImporting && (
+              <div className="size-full absolute bg-blackout z-10">
+                <DialLoader size={45} />
+              </div>
+            )}
             <div className="mb-3">
               <DialTabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab)} />
             </div>

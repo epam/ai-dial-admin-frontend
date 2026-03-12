@@ -59,7 +59,7 @@ export default async function Layout({ children, params }: { children: ReactNode
               <PromptFolderProvider>
                 <NotificationProvider>
                   <div className="flex flex-col size-full">
-                    <Header isEnableAuth={isEnableAuth} />
+                    <Header isEnableAuth={isEnableAuth} docLink={process.env.DIAL_ADMIN_DOCUMENTATION} />
                     <div className="flex-1 min-h-0">
                       <div className="flex flex-row h-full relative">
                         <Menu disableMenuItems={getMenuItems(process.env.DISABLE_MENU_ITEMS)} />

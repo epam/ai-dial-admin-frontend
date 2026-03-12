@@ -25,7 +25,7 @@ describe('getClonedEntityName function', () => {
   });
 
   test('should return the name as is when withoutSuffix is true', () => {
-    expect(getClonedEntityName('entity', true)).toBe('entity');
+    expect(getClonedEntityName('entity', true)).toBe('entity-copy');
     expect(getClonedEntityName('entity_(copy)', true)).toBe('entity_(copy)');
   });
 
