@@ -1,5 +1,5 @@
 import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useState } from 'react';
 import semver from 'semver';
 
 import VersionControl from '@/src/components/BaseControls/Version';
@@ -55,10 +55,6 @@ const AddVersionModal: FC<Props> = ({
     [validateVersion],
   );
 
-  useEffect(() => {
-    validateVersion(version);
-  }, [validateVersion, version]);
-
   return (
     <DialFormPopup
       onClose={onClose}
@@ -75,7 +71,7 @@ const AddVersionModal: FC<Props> = ({
       <div className="flex flex-col gap-4 dial-small-text px-6 py-4">
         {description && <div className="text-secondary">{description}</div>}
 
-        <VersionControl version={version} error={versionError?.text} onChange={onVersionChange} />
+        <VersionControl version={version} error={versionError?.text} onChange={onVersionChange} disableValidation />
       </div>
     </DialFormPopup>
   );
