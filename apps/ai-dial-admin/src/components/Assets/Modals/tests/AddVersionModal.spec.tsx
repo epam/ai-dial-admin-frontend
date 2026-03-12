@@ -13,8 +13,8 @@ describe('Common components - AddVersionModal', () => {
   test('renders input and buttons', () => {
     render(
       <AddVersionModal
-        heading="header"
-        existingVersions={[]}
+        header="header"
+        existingVersions={{}}
         isModalOpen={true}
         onClose={onClose}
         onConfirm={onConfirm}
@@ -29,8 +29,8 @@ describe('Common components - AddVersionModal', () => {
   test('handles close and confirm actions', async () => {
     render(
       <AddVersionModal
-        heading="header"
-        existingVersions={[]}
+        header="header"
+        existingVersions={{}}
         isModalOpen={true}
         onClose={onClose}
         onConfirm={onConfirm}

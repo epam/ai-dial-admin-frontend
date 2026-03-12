@@ -13,11 +13,10 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
-import { generateNewInitialVersion } from '@/src/utils/prompts/versions';
 
 interface Props {
   version?: string;
-  existingVersions?: string[];
+  existingVersions?: Record<string, string[]>;
   isEditorEnabled?: boolean;
   onDiscard: () => void;
   onSave: (newVersion?: string) => void;
@@ -76,10 +75,11 @@ const AssetChangedEntityButtons: FC<Props> = ({ version, isEditorEnabled, onDisc
       {isModalOpen &&
         createPortal(
           <AddVersionModal
-            heading={t(PromptsI18nKey.NewVersionSave)}
+            header={t(PromptsI18nKey.NewVersionSave)}
+            description={t(PromptsI18nKey.NewVersionSaveDescription)}
             isModalOpen={isModalOpen}
-            prefilledVersion={generateNewInitialVersion(version)}
-            existingVersions={existingVersions || []}
+            initialVersion={version}
+            existingVersions={existingVersions}
             onClose={() => setIsModalOpen(false)}
             onConfirm={onTryToSave}
           />,

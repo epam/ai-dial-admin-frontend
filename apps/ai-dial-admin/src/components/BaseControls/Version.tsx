@@ -22,6 +22,7 @@ interface Props {
   isFullWidth?: boolean;
   view?: ApplicationRoute;
   onChange?: (version?: string) => void;
+  disableValidation?: boolean;
 }
 
 const VersionControl: FC<Props> = ({
@@ -34,6 +35,7 @@ const VersionControl: FC<Props> = ({
   title,
   view,
   containerClassName,
+  disableValidation,
   ...props
 }) => {
   const t = useI18n();
@@ -47,21 +49,21 @@ const VersionControl: FC<Props> = ({
 
   const onChangeVersion = useCallback(
     (version?: string) => {
-      if (!isEntitiesWithDisplayVersion(view)) {
+      if (!isEntitiesWithDisplayVersion(view) && !disableValidation) {
         const error = getVersionControlError(version, optional, hideError, t);
         setVersionError(error);
         dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: !error });
       }
       onChange?.(version);
     },
-    [dispatch, hideError, onChange, optional, t, view],
+    [dispatch, hideError, onChange, optional, t, view, disableValidation],
   );
 
   useEffect(() => {
-    if (!isEntitiesWithDisplayVersion(view)) {
+    if (!isEntitiesWithDisplayVersion(view) && !disableValidation) {
       dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: !!version });
     }
-  }, [version, optional, view, dispatch]);
+  }, [version, optional, view, dispatch, disableValidation]);
 
   return (
     <DialInput

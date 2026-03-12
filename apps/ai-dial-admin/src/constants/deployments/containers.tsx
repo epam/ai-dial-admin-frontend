@@ -11,7 +11,7 @@ import { ToolsetTransport } from '@/src/types/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ContainersI18nKey, ErrorI18nKey, KubEventsI18nKey } from '@/src/constants/i18n';
 import { getTranslatedType } from '@/src/utils/deployments/entity';
-import { Autoscaling } from '@/src/models/deployments/containers';
+import { Autoscaling, AutoscalingStrategy } from '@/src/models/deployments/containers';
 
 export const POD_OBJECT_KIND = 'pod';
 
@@ -50,6 +50,7 @@ export const AUTOSCALE_OPTIONS = (
   t: (key: string, options?: Record<string, string | number>) => string,
 ): SelectOption[] => [
   { label: t(ContainersI18nKey.ScaleToZeroNever), value: '0' },
+  { label: t(ContainersI18nKey.ScaleToZeroAfter5Minutes), value: '300' },
   { label: t(ContainersI18nKey.ScaleToZeroAfter15Minutes), value: '900' },
   { label: t(ContainersI18nKey.ScaleToZeroAfter30Minutes), value: '1800' },
   { label: t(ContainersI18nKey.ScaleToZeroAfter1Hour), value: '3600' },
@@ -60,10 +61,11 @@ export const AUTOSCALE_OPTIONS = (
 export const DEFAULT_SCALING: Autoscaling = {
   minReplicas: 1,
   maxReplicas: 1,
-  strategy: {
-    $type: SCALING_STRATEGY_TYPE.REQUESTS,
-    threshold: 2,
-  },
+};
+
+export const DEFAULT_STRATEGY: AutoscalingStrategy = {
+  $type: SCALING_STRATEGY_TYPE.REQUESTS,
+  threshold: 2,
 };
 
 export const DEFAULT_PROBE_CONFIG = {
