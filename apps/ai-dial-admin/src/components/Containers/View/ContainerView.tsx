@@ -24,6 +24,7 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { CONTAINER_STATUS, KubEventType } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getContainerRedeploySnapshot } from '@/src/utils/deployments/containers';
+import { decodeVariables } from '@/src/utils/deployments/variables';
 import { getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
@@ -84,17 +85,28 @@ const ContainerView: FC<Props> = ({ container, route, createEntity, createEntity
   }, [container, isEditorEnabled]);
 
   const onSave = useCallback(() => {
-    updateContainer(selectedContainer).then((res) => {
-      if (res.success) {
+    updateContainer(selectedContainer).then(({ success, errorMessage, errorHeader, response, requestId }) => {
+      if (success) {
+        const updatedContainer = response as Container | undefined;
+        if (updatedContainer) {
+          setSelectedContainer(decodeVariables(cloneDeep(updatedContainer)));
+        }
         router.refresh();
       } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        showNotification(getErrorNotification(errorHeader, errorMessage, requestId));
       }
     });
   }, [router, selectedContainer, showNotification]);
 
   useEffect(() => {
-    setSelectedContainer(cloneDeep(container));
+    setSelectedContainer((prev) => {
+      const next = cloneDeep(container);
+      const isTransitioning = prev.status === CONTAINER_STATUS.PENDING || prev.status === CONTAINER_STATUS.STOPPING;
+      if (isTransitioning && container.status === CONTAINER_STATUS.RUNNING) {
+        next.status = prev.status;
+      }
+      return next;
+    });
   }, [container]);
 
   useEffect(() => {
