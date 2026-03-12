@@ -97,7 +97,7 @@ describe('filterParameterBindings', () => {
     expect(filterParameterBindings(bindings, [])).toBe(bindings);
   });
 
-  test('should remove bindings with exact template variable matches', () => {
+  test('should keep bindings with exact template variable matches', () => {
     const bindings: InputBinding[] = [
       { templateVariable: 'tenantId', dataField: 'tenant.id' },
       { templateVariable: 'session', constantValue: 'abc' },
@@ -105,11 +105,12 @@ describe('filterParameterBindings', () => {
     ];
 
     expect(filterParameterBindings(bindings, ['tenantId', 'userId'])).toEqual([
-      { templateVariable: 'session', constantValue: 'abc' },
+      { templateVariable: 'tenantId', dataField: 'tenant.id' },
+      { templateVariable: 'userId', dataField: 'user.id' },
     ]);
   });
 
-  test('should remove bindings when template variable contains a parameter name', () => {
+  test('should keep bindings when template variable contains a parameter name', () => {
     const bindings: InputBinding[] = [
       { templateVariable: 'tenantId.raw', dataField: 'tenant.raw' },
       { templateVariable: 'tenant-id', dataField: 'tenant.id' },
@@ -117,16 +118,17 @@ describe('filterParameterBindings', () => {
     ];
 
     expect(filterParameterBindings(bindings, ['tenantId', 'tenant-id'])).toEqual([
-      { templateVariable: 'region', constantValue: 'us' },
+      { templateVariable: 'tenantId.raw', dataField: 'tenant.raw' },
+      { templateVariable: 'tenant-id', dataField: 'tenant.id' },
     ]);
   });
 
-  test('should keep bindings that do not match or include parameter names', () => {
+  test('should return empty array when no bindings match parameter names', () => {
     const bindings: InputBinding[] = [
       { templateVariable: 'region', constantValue: 'us' },
       { templateVariable: 'environment', dataField: 'env.name' },
     ];
 
-    expect(filterParameterBindings(bindings, ['tenantId', 'userId'])).toEqual(bindings);
+    expect(filterParameterBindings(bindings, ['tenantId', 'userId'])).toEqual([]);
   });
 });
