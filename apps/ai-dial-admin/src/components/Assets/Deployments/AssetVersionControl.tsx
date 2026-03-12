@@ -150,6 +150,8 @@ const AssetVersionControl: FC<Props> = ({
           <AddVersionModal
             header={t(PromptsI18nKey.NewVersionCreate)}
             isModalOpen={isModalOpen}
+            initialVersion={asset.version}
+            entityName={asset.name}
             existingVersions={getVersionsPerName(assets || [])}
             // existingVersions={[...versions, ...addedVersions]}
             onClose={handleModalClose}
