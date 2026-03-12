@@ -38,6 +38,8 @@ export const getContainerRedeploySnapshot = (container: Container): ContainerRed
     containerGrpcPort: container.containerGrpcPort,
     envs: normalizeEnvironmentVariables(container.metadata?.envs),
     resources: normalizeResources(container.resources),
+    command: container.command,
+    args: container.args,
   };
 };
 
