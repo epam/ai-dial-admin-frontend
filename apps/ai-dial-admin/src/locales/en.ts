@@ -1353,6 +1353,7 @@ export default {
     NoDescriptionAvailable: 'No description available for the chosen model',
     Autoscaling: {
       ScaleToZeroNever: 'Never automatically scale to zero',
+      ScaleToZeroAfter5Minutes: 'After 5 minutes with no activity',
       ScaleToZeroAfter15Minutes: 'After 15 minutes with no activity',
       ScaleToZeroAfter30Minutes: 'After 30 minutes with no activity',
       ScaleToZeroAfter1Hour: 'After 1 hour with no activity',
