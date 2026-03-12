@@ -112,11 +112,11 @@ describe('validation utils', () => {
         text: ErrorI18nKey.SpecialChars,
         type: ErrorType.INVALID,
       });
-      expect(getImageNameError('', t)).toEqual({
+      expect(getImageNameError('I', t)).toEqual({
         text: ErrorI18nKey.MinMaxLength,
         type: ErrorType.LENGTH,
       });
-      expect(getImageNameError('')).toEqual({
+      expect(getImageNameError('I')).toEqual({
         text: '',
         type: ErrorType.LENGTH,
       });
