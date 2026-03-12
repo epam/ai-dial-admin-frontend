@@ -43,6 +43,7 @@ const AssetVersionControl: FC<Props> = ({
 }) => {
   const t = useI18n();
 
+  const existingVersionsMap = useMemo(() => getVersionsPerName(assets || []), [assets]);
   const router = useRouter();
   const getReqRef = useRef(useProtectedRequest());
 
@@ -152,8 +153,12 @@ const AssetVersionControl: FC<Props> = ({
             isModalOpen={isModalOpen}
             initialVersion={asset.version}
             entityName={asset.name}
-            existingVersions={getVersionsPerName(assets || [])}
-            // existingVersions={[...versions, ...addedVersions]}
+            existingVersions={{
+              ...existingVersionsMap,
+              ...(addedVersions
+                ? { [asset.name as string]: [...(existingVersionsMap[asset.name as string] || []), ...addedVersions] }
+                : {}),
+            }}
             onClose={handleModalClose}
             onConfirm={onAddVersion}
           />,
