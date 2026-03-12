@@ -48,6 +48,6 @@ export const filterParameterBindings = (
 
   const set = new Set(paramNames);
   return bindings.filter(
-    (binding) => !set.has(binding.templateVariable) && !paramNames.some((p) => binding.templateVariable?.includes(p)),
+    (binding) => set.has(binding.templateVariable) || paramNames.some((p) => binding.templateVariable?.includes(p)),
   );
 };
