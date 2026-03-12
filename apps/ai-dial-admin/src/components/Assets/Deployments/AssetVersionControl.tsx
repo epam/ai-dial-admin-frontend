@@ -20,6 +20,7 @@ import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isDeploymentAsset } from '@/src/utils/is-asset-view';
 import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
+import { getVersionsPerName } from '../utils';
 
 interface Props {
   view: ApplicationRoute;
@@ -149,7 +150,8 @@ const AssetVersionControl: FC<Props> = ({
           <AddVersionModal
             header={t(PromptsI18nKey.NewVersionCreate)}
             isModalOpen={isModalOpen}
-            existingVersions={[...versions, ...addedVersions]}
+            existingVersions={getVersionsPerName(assets || [])}
+            // existingVersions={[...versions, ...addedVersions]}
             onClose={handleModalClose}
             onConfirm={onAddVersion}
           />,

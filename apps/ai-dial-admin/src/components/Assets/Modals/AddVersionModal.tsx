@@ -12,7 +12,7 @@ import { getSemanticVersionError } from '@/src/utils/deployments/validation';
 interface Props {
   header: string;
   isModalOpen: boolean;
-  existingVersions: Record<string, string[]>;
+  existingVersions?: Record<string, string[]>;
   entityName?: string;
   initialVersion?: string;
   submitLabel?: string;

@@ -79,7 +79,7 @@ const AssetChangedEntityButtons: FC<Props> = ({ version, isEditorEnabled, onDisc
             description={t(PromptsI18nKey.NewVersionSaveDescription)}
             isModalOpen={isModalOpen}
             initialVersion={version}
-            existingVersions={existingVersions || []}
+            existingVersions={existingVersions}
             onClose={() => setIsModalOpen(false)}
             onConfirm={onTryToSave}
           />,
