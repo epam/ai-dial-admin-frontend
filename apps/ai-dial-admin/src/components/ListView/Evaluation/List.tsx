@@ -22,7 +22,6 @@ import RunModal from '@/src/components/TestSuites/Runs/RunModal';
 import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
 import {
   getDeleteOperation,
-  getDuplicateOperation,
   getOpenInNewTabOperation,
   getRunTestSuiteOperation,
 } from '@/src/constants/grid-columns/actions';
