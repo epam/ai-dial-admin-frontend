@@ -21,8 +21,9 @@ import {
 import { getNamesConfigurations } from '@/src/utils/entities/filter-names';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import { isEntitiesWithDisplayVersion } from '@/src/utils/is-asset-view';
+import { TestSuite } from '../../../../models/evaluation/test-suite';
 
-type ClonedEntity = BaseEntity | DialModel;
+type ClonedEntity = BaseEntity | DialModel | TestSuite;
 interface Props {
   view: ApplicationRoute;
   isModalOpen: boolean;

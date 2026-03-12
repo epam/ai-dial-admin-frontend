@@ -14,6 +14,11 @@ import {
 } from 'ag-grid-community';
 import { useRouter } from 'next/navigation';
 
+import { runTestSuite } from '@/src/app/[lang]/test-suites/actions';
+import { ModalType } from '@/src/components/EntityListView/Components/Modals';
+import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
+import ListEntities from '@/src/components/ListView/List';
+import RunModal from '@/src/components/TestSuites/Runs/RunModal';
 import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
 import {
   getDeleteOperation,
@@ -21,21 +26,21 @@ import {
   getOpenInNewTabOperation,
   getRunTestSuiteOperation,
 } from '@/src/constants/grid-columns/actions';
+import { TestSuitesI18nKey } from '@/src/constants/i18n';
+import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
+import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { EvaluationPageData, FilterDto, SortDto } from '@/src/models/request';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-
-import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
-import { EvaluationPageData, FilterDto, SortDto } from '@/src/models/request';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { emptyDataTitleMap, listViewTitleMap } from '../constants';
-import ListEntities from '@/src/components/ListView/List';
 import HeaderButtons from './Header';
-import { ModalType } from '../../EntityListView/Components/Modals';
-import RunModal from '../../TestSuites/Runs/RunModal';
-import { TestSuite } from '../../../models/evaluation/test-suite';
+import DuplicateEntity from '../../EntityView/Modals/Duplicate/Duplicate';
+import { SaveValidationContextProvider } from '../../../context/SaveValidationContext';
 
 interface Props<T> {
   route: ApplicationRoute;
@@ -64,6 +69,7 @@ const EvaluationListView = <T extends object>({
   const [modalType, setModalType] = useState<ModalType>();
   const [currentEntity, setCurrentEntity] = useState<T | undefined>(undefined);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
+  const { showNotification } = useNotification();
 
   const gridOptions: GridOptions = {
     ...infiniteGridOptions,
@@ -108,6 +114,8 @@ const EvaluationListView = <T extends object>({
 
   const onModalClose = useCallback(() => {
     setIsModalOpen(false);
+    setCurrentEntity(undefined);
+    setModalType(undefined);
   }, []);
 
   const onModalOpen = useCallback(() => {
@@ -157,9 +165,21 @@ const EvaluationListView = <T extends object>({
     [onOpenModal],
   );
 
-  const onRun = useCallback(() => {
-    console.log('Run test suite:', currentEntity);
-  }, []);
+  const onRun = useCallback(
+    (num?: string | number) => {
+      runTestSuite((currentEntity as TestSuite)?.id as string, num).then((res) => {
+        if (res.success) {
+          showNotification(
+            getSuccessNotification(t(TestSuitesI18nKey.RunSuccess), t(TestSuitesI18nKey.RunSuccessDescription)),
+          );
+          onModalClose();
+        } else {
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+        }
+      });
+    },
+    [currentEntity, onModalClose, showNotification, t],
+  );
 
   const actionColumn = ACTION_COLUMN([
     getOpenInNewTabOperation(onOpenInNewTabAction),
@@ -202,12 +222,17 @@ const EvaluationListView = <T extends object>({
         modalType === ModalType.duplicate &&
         onRemoveEntity &&
         createPortal(
-          <DeleteConfirmationModal
-            entity={currentEntity}
-            view={route}
-            onCloseModal={onModalClose}
-            onRemoveEntity={onRemoveEntity}
-          />,
+          <SaveValidationContextProvider>
+            <DuplicateEntity
+              view={route}
+              onCloseModal={onModalClose}
+              onRemoveEntity={onRemoveEntity}
+              names={[]}
+              entity={currentEntity}
+            />
+            ,
+          </SaveValidationContextProvider>,
+
           document.body,
         )}
 
