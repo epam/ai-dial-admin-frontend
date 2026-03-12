@@ -26,10 +26,14 @@ export const getCloneTitle = (view: ApplicationRoute, t: (str: string, props?: R
   return t(DuplicateI18nKey.Title, { entity: t(duplicateEntityMap[view]) });
 };
 
-export const getClonedEntityName = (name?: string, withoutSuffix?: boolean, splitSymbol = '_'): string => {
-  const copySuffix = '(copy)';
-  if (name?.endsWith(copySuffix) || withoutSuffix) {
-    return name || '';
+export const getClonedEntityName = (name?: string, withoutBrackets?: boolean, splitSymbol = '_'): string => {
+  const copySuffix = 'copy';
+  if (name?.includes(copySuffix)) {
+    return name;
   }
-  return `${name}${splitSymbol}${copySuffix}`;
+
+  if (withoutBrackets) {
+    return name ? `${name}-${copySuffix}` : '';
+  }
+  return `${name}${splitSymbol}(${copySuffix})`;
 };

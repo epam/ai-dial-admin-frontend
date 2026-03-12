@@ -9,7 +9,7 @@ import { createContainer, createImage, deleteImage, installImage } from '@/src/a
 import VersionsSelect from '@/src/components/Deployments/Common/VersionsSelect/VersionsSelect';
 import ImageCreateContainer from '@/src/components/Deployments/Modals/ImageCreateContainer';
 import ImageInstall from '@/src/components/Deployments/Modals/ImageInstall';
-import ImageNewVersion from '@/src/components/Deployments/Modals/ImageNewVersion';
+import AddVersionModal from '@/src/components/Assets/Modals/AddVersionModal';
 import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import { ButtonsI18nKey, ContainersI18nKey, CreateI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
@@ -34,6 +34,7 @@ import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import ImageDelete from '@/src/components/Deployments/Modals/ImageDelete';
 import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
+import { getVersionsPerName } from '@/src/components/Assets/utils';
 
 export interface ImagesButtonsWrapperProps {
   image: Image;
@@ -275,28 +276,27 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
       {isModalOpen &&
         modalType === ModalType.saveNewVersion &&
         createPortal(
-          <ImageNewVersion
+          <AddVersionModal
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
-            okLabel={t(ButtonsI18nKey.Save)}
-            title={t(ImagesI18nKey.SaveNewVersionModalTitle)}
-            image={image}
-            onApply={onSaveAsNewVersion}
-            versions={versions}
+            header={t(ImagesI18nKey.SaveNewVersionModalTitle)}
+            submitLabel={t(ButtonsI18nKey.Save)}
+            initialVersion={image.version}
+            onConfirm={(version) => onSaveAsNewVersion({ ...image, version })}
+            existingVersions={getVersionsPerName(versions)}
           />,
           document.body,
         )}
       {isModalOpen &&
         modalType === ModalType.createNewVersion &&
         createPortal(
-          <ImageNewVersion
+          <AddVersionModal
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
-            okLabel={t(ButtonsI18nKey.Create)}
-            title={t(ImagesI18nKey.CreateNewVersionModalTitle)}
-            image={image}
-            onApply={onSaveAsNewVersion}
-            versions={versions}
+            header={t(ImagesI18nKey.CreateNewVersionModalTitle)}
+            initialVersion={image.version}
+            onConfirm={(version) => onSaveAsNewVersion({ ...image, version })}
+            existingVersions={getVersionsPerName(versions)}
           />,
           document.body,
         )}

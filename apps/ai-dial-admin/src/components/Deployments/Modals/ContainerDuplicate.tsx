@@ -1,13 +1,14 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 import { DialConfirmationPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 
-import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { Container } from '@/src/models/deployments/containers';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 
 import IdControl from '@/src/components/BaseControls/Id/Id';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
+import { getClonedEntityName } from '@/src/utils/entities/duplicate-entity';
 
 interface Props {
   title: string;
@@ -24,8 +25,8 @@ const ContainerDuplicate: FC<Props> = ({ title, isModalOpen, container, onClose,
 
   const [duplicate, setDuplicate] = useState<Container>({
     ...container,
-    name: `${container.name?.slice(0, 31)}-copy`,
-    displayName: `${container.displayName} ${t(BasicI18nKey.DuplicateCopyPostfix)}`,
+    name: getClonedEntityName(container.name?.slice(0, 31), true),
+    displayName: getClonedEntityName(container.displayName),
   });
   const [isUniqueNameError, setIsUniqueNameError] = useState<boolean>(false);
 
