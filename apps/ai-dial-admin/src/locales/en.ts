@@ -1414,6 +1414,7 @@ export default {
     CreateTestSuite: 'Create Test Suite',
     UpdateTestSuite: 'Update Test Suite',
     Target: 'Target',
+    Application: 'Application',
     Methods: 'Methods',
     Method: 'Method',
     TestCases: 'Test Cases',
