@@ -14,6 +14,7 @@ import {
   DUPLICATE_CONTAINER_URL,
   CHANGE_IMAGE_ID,
   CONTAINER_EVENTS_URL,
+  CONTAINER_CALL_TOOL_URL,
 } from '../containers';
 import createFetchMock from 'vitest-fetch-mock';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
@@ -188,6 +189,16 @@ describe('ContainersApi', () => {
     await instance.stopContainer('c1', TOKEN_MOCK);
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining(STOP_CONTAINER_URL('c1')),
+      expect.objectContaining({ method: 'POST' }),
+    );
+  });
+
+  test('calls callContainerTool with correct URL and method', async () => {
+    const body = { name: 'my-tool', arguments: { input: 'test' } };
+    fetch.mockResponseOnce(JSON.stringify({ content: [{ type: 'text', text: 'result' }] }));
+    await instance.callContainerTool('container1', body, TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(CONTAINER_CALL_TOOL_URL('container1')),
       expect.objectContaining({ method: 'POST' }),
     );
   });
