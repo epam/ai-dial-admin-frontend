@@ -50,7 +50,7 @@ const IdControl = <T extends { name?: string }>({
             t,
             isUniqueNameError,
             true,
-            label !== t(EntityFieldsI18nKey.id),
+            !!label && label !== t(EntityFieldsI18nKey.id),
             isDeploymentId,
             checkEmptySymbols,
           );
