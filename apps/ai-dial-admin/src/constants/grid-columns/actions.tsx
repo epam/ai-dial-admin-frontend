@@ -159,6 +159,14 @@ export function getCompareChangesOperation<T>(onClick: (entity?: T) => void): Ac
   };
 }
 
+export function getRunTestSuiteOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
+  return {
+    icon: <IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} />,
+    id: ActionMenuOperation.Run,
+    onClick,
+  };
+}
+
 export function getRunOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} />,

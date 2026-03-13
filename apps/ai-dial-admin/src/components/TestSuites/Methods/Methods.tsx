@@ -122,21 +122,19 @@ const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange, isCreate
       </DialCollapsibleSidebar>
 
       <div className="flex-1 min-w-0 border border-primary rounded">
-        {
-          <MethodInfo
-            testSuite={{
-              ...testSuite,
-              endpointRef:
-                activeMethodIndex != null
-                  ? {
-                      ...testSuite.endpointRef,
-                      ...methodInfo,
-                    }
-                  : {},
-            }}
-            onChangeTestSuite={onChange}
-          />
-        }
+        <MethodInfo
+          testSuite={{
+            ...testSuite,
+            endpointRef:
+              activeMethodIndex != null
+                ? {
+                    ...testSuite.endpointRef,
+                    ...methodInfo,
+                  }
+                : {},
+          }}
+          onChangeTestSuite={onChange}
+        />
       </div>
     </div>
   );
