@@ -1,5 +1,3 @@
-import { createRef } from 'react';
-
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 
@@ -16,12 +14,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
     return (
       <nav aria-label="tabs">
         {tabs.map((tab: any) => (
-          <button
-            key={tab.id}
-            type="button"
-            aria-pressed={activeTab === tab.id}
-            onClick={() => onClick(tab.id)}
-          >
+          <button key={tab.id} type="button" aria-pressed={activeTab === tab.id} onClick={() => onClick(tab.id)}>
             {tab.label}
           </button>
         ))}
@@ -173,9 +166,7 @@ describe('RequestTemplate', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Parameters' }));
 
-    expect(
-      screen.getByRole('region', { name: `tabs-content-${EntityViewTab.Parameters}` }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: `tabs-content-${EntityViewTab.Parameters}` })).toBeInTheDocument();
   });
 
   test('switching to Headers tab renders TabsContent with Headers activeTab', () => {
@@ -183,9 +174,7 @@ describe('RequestTemplate', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Headers' }));
 
-    expect(
-      screen.getByRole('region', { name: `tabs-content-${EntityViewTab.Headers}` }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: `tabs-content-${EntityViewTab.Headers}` })).toBeInTheDocument();
   });
 
   test('Add button calls tabsContentRef.current.add', () => {
@@ -217,7 +206,9 @@ describe('RequestTemplate', () => {
   });
 
   test('passes testSuite to TabsContent as selectedTestSuite', () => {
-    render(<RequestTemplate testSuite={createTestSuite({ id: 'suite-42' })} onChangeTestSuite={mockOnChangeTestSuite} />);
+    render(
+      <RequestTemplate testSuite={createTestSuite({ id: 'suite-42' })} onChangeTestSuite={mockOnChangeTestSuite} />,
+    );
 
     expect(screen.getByText('Suite: suite-42')).toBeInTheDocument();
   });

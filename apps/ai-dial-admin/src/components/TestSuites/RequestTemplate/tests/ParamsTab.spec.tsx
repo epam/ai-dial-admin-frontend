@@ -173,7 +173,12 @@ describe('ParamsTab', () => {
   test('onRemoveParam removes item at given index and calls changeTemplate', () => {
     render(
       <ParamsTab
-        template={createTemplate({ headers: [{ key: 'a', value: '1' }, { key: 'b', value: '2' }] })}
+        template={createTemplate({
+          headers: [
+            { key: 'a', value: '1' },
+            { key: 'b', value: '2' },
+          ],
+        })}
         changeTemplate={mockChangeTemplate}
         field="headers"
         emptyDataTitle="No headers"
