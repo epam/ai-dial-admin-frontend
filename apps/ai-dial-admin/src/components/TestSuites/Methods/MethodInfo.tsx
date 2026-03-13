@@ -26,6 +26,7 @@ import { TestSuite, TestSuiteEndpointRef } from '@/src/models/evaluation/test-su
 import { ParamsView } from '@/src/types/parameters';
 import { convertSchemaToTable } from '@/src/utils/schema';
 import Methods from './Methods';
+import MethodEndpoint from './Endpoint';
 
 interface Props {
   testSuite: TestSuite;
@@ -77,14 +78,8 @@ const MethodInfo: FC<Props> = ({ testSuite, onChangeTestSuite, selectedAppType }
   return (testSuite?.endpointRef && !!Object.keys(testSuite?.endpointRef).length) || testSuite ? (
     <div className="size-full flex flex-col gap-4 p-4 relative">
       <div className="flex flex-row justify-between">
-        <div>
-          {testSuite?.endpointRef?.method && (
-            <span className="tiny bg-layer-3 rounded p-1 border border-primary whitespace-nowrap max-w-[200px] overflow-hidden">
-              {testSuite?.endpointRef.method}
-            </span>
-          )}
-          <span className="truncate text-primary ml-1">{testSuite?.endpointRef?.relativeUrlPattern}</span>
-        </div>
+        <MethodEndpoint testSuite={testSuite} />
+
         <div className="flex flex-row gap-4 items-center">
           <ViewSelector view={view} changeView={setView} />
           {selectedAppType && (

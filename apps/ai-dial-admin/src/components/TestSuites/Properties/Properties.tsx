@@ -20,6 +20,8 @@ import { Deployment } from '@/src/models/evaluation/deployment';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import MethodEndpoint from '../Methods/Endpoint';
+import TryOutButton from '@/src/components/TestSuites/RequestTemplate/components/TryOutButton';
 
 interface Props {
   isModal?: boolean;
@@ -103,23 +105,21 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
               />
             </div>
           </div>
-          {/* <div className="flex flex-col gap-4">
-            <h3>{t(TestSuitesI18nKey.Method)}</h3>
-            <div className="flex border border-primary rounded h-[480px]">
-              <MethodInfo selectedAppType={selectedAppType} testSuite={testSuite} onChangeTestSuite={onChange} />
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col">
+              <h2 className="mb-4 font-semibold">{t(TestSuitesI18nKey.Method)}</h2>
+
+              <div className="flex flex-row justify-between">
+                <MethodEndpoint testSuite={testSuite} />
+
+                <div className="flex flex-row gap-4 items-center">
+                  <TryOutButton testSuite={testSuite} />
+                </div>
+              </div>
             </div>
-          </div> */}
-          <div className="flex flex-col gap-4">
-            <h3>{t(TestSuitesI18nKey.RequestTemplate)}</h3>
-            <div className="flex border border-primary rounded h-[480px] p-4">
-              <RequestTemplate testSuite={testSuite} onChangeTestSuite={onChange} />
-            </div>
-          </div>
-          <div className="flex flex-col gap-4">
-            <h3>{t(TestSuitesI18nKey.EndpointSchema)}</h3>
-            <div className="flex border border-primary rounded h-[680px] p-4">
-              <EndpointSchema testSuite={testSuite} onChangeTestSuite={onChange} isSkipRefresh={isSkipRefresh} />
-            </div>
+
+            <RequestTemplate testSuite={testSuite} onChangeTestSuite={onChange} />
+            <EndpointSchema testSuite={testSuite} onChangeTestSuite={onChange} isSkipRefresh={isSkipRefresh} />
           </div>
         </>
       )}
