@@ -277,6 +277,7 @@ const Tools: FC<Props> = ({
                     isAddedManual={!tools?.some((t) => t.name === tool.name)}
                     isMcpToolset={isMcpToolset}
                     isAssetToolset={isAssetToolset}
+                    containerId={containerId}
                     toolSetName={
                       (isAssetToolset ? (selectedToolset as AssetToolset)?.path : selectedToolset?.name) || ''
                     }
