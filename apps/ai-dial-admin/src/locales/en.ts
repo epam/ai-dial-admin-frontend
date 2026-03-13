@@ -1365,6 +1365,8 @@ export default {
       MinReplicas: 'Min replicas',
     },
     FromInternalMcpImage: 'From Internal MCP Image',
+    FromInternalAdapterImage: 'From Internal Adapter Image',
+    FromInternalInterceptorImage: 'From Internal Interceptor Image',
     FromDockerImageReference: 'From Docker Image Reference',
   },
   KubEvents: {

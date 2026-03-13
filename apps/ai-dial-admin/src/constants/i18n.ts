@@ -1338,6 +1338,8 @@ export enum ContainersI18nKey {
   MinReplicas = 'Containers.Autoscaling.MinReplicas',
   ScaleToZero = 'Containers.Autoscaling.ScaleToZero',
   FromInternalMcpImage = 'Containers.FromInternalMcpImage',
+  FromInternalAdapterImage = 'Containers.FromInternalAdapterImage',
+  FromInternalInterceptorImage = 'Containers.FromInternalInterceptorImage',
   FromDockerImageReference = 'Containers.FromDockerImageReference',
 }
 

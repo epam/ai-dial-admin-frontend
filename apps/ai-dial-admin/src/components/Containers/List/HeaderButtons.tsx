@@ -89,6 +89,38 @@ const HeaderButtons: FC<Props> = ({ route, names }) => {
     [t, handleModalOpen],
   );
 
+  const adapterDropdownItems: DropdownItem[] = useMemo(
+    () => [
+      {
+        key: 'internal-image',
+        label: t(ContainersI18nKey.FromInternalAdapterImage),
+        onClick: () => handleModalOpen(ModalType.createContainer),
+      },
+      {
+        key: 'docker-image',
+        label: t(ContainersI18nKey.FromDockerImageReference),
+        onClick: () => handleModalOpen(ModalType.createAdapterDockerImage),
+      },
+    ],
+    [t, handleModalOpen],
+  );
+
+  const interceptorDropdownItems: DropdownItem[] = useMemo(
+    () => [
+      {
+        key: 'internal-image',
+        label: t(ContainersI18nKey.FromInternalInterceptorImage),
+        onClick: () => handleModalOpen(ModalType.createContainer),
+      },
+      {
+        key: 'docker-image',
+        label: t(ContainersI18nKey.FromDockerImageReference),
+        onClick: () => handleModalOpen(ModalType.createInterceptorDockerImage),
+      },
+    ],
+    [t, handleModalOpen],
+  );
+
   const onCreateContainer = useCallback(
     (container: Container) => {
       createContainer(container).then((res) => {
@@ -102,8 +134,27 @@ const HeaderButtons: FC<Props> = ({ route, names }) => {
     [route, router, showNotification],
   );
 
-  const showDropdown = route === ApplicationRoute.ModelServings || route === ApplicationRoute.McpContainers;
-  const dropdownItems = route === ApplicationRoute.ModelServings ? servingsDropdownItems : mcpDropdownItems;
+  const showDropdown =
+    route === ApplicationRoute.ModelServings ||
+    route === ApplicationRoute.McpContainers ||
+    route === ApplicationRoute.AdapterContainers ||
+    route === ApplicationRoute.InterceptorContainers;
+
+  const getDropdownItems = () => {
+    switch (route) {
+      case ApplicationRoute.ModelServings:
+        return servingsDropdownItems;
+      case ApplicationRoute.McpContainers:
+        return mcpDropdownItems;
+      case ApplicationRoute.AdapterContainers:
+        return adapterDropdownItems;
+      case ApplicationRoute.InterceptorContainers:
+        return interceptorDropdownItems;
+      default:
+        return mcpDropdownItems;
+    }
+  };
+  const dropdownItems = getDropdownItems();
 
   return (
     <>
@@ -177,6 +228,42 @@ const HeaderButtons: FC<Props> = ({ route, names }) => {
             route={route}
             names={names}
             type={CONTAINER_TYPE.MCP}
+            sourceType={CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE}
+          />,
+          document.body,
+        )}
+      {isModalOpen &&
+        modalType === ModalType.createAdapterDockerImage &&
+        createPortal(
+          <ServingCreate
+            header={t(ContainersI18nKey.CreateModalTitle, {
+              type: getTranslatedType(route, t),
+              entityType: getTranslatedDeploymentType(route, t),
+            })}
+            isModalOpen={isModalOpen}
+            onClose={handleModalClose}
+            onApply={onCreateContainer}
+            route={route}
+            names={names}
+            type={CONTAINER_TYPE.ADAPTER}
+            sourceType={CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE}
+          />,
+          document.body,
+        )}
+      {isModalOpen &&
+        modalType === ModalType.createInterceptorDockerImage &&
+        createPortal(
+          <ServingCreate
+            header={t(ContainersI18nKey.CreateModalTitle, {
+              type: getTranslatedType(route, t),
+              entityType: getTranslatedDeploymentType(route, t),
+            })}
+            isModalOpen={isModalOpen}
+            onClose={handleModalClose}
+            onApply={onCreateContainer}
+            route={route}
+            names={names}
+            type={CONTAINER_TYPE.INTERCEPTOR}
             sourceType={CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE}
           />,
           document.body,
