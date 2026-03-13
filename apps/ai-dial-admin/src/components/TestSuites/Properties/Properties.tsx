@@ -21,7 +21,7 @@ import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import MethodEndpoint from '../Methods/Endpoint';
-import TryOutButton from '../RequestTemplate/components/TryOutButton';
+import TryOutButton from '@/src/components/TestSuites/RequestTemplate/components/TryOutButton';
 
 interface Props {
   isModal?: boolean;
