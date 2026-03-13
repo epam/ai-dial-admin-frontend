@@ -14,19 +14,29 @@ import {
 } from 'ag-grid-community';
 import { useRouter } from 'next/navigation';
 
+import { runTestSuite } from '@/src/app/[lang]/test-suites/actions';
+import { ModalType } from '@/src/components/EntityListView/Components/Modals';
+import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
+import ListEntities from '@/src/components/ListView/List';
+import RunModal from '@/src/components/TestSuites/Runs/RunModal';
 import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
-import { getDeleteOperation, getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
+import {
+  getDeleteOperation,
+  getOpenInNewTabOperation,
+  getRunTestSuiteOperation,
+} from '@/src/constants/grid-columns/actions';
+import { TestSuitesI18nKey } from '@/src/constants/i18n';
+import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
+import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { EvaluationPageData, FilterDto, SortDto } from '@/src/models/request';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-
-import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
-import { EvaluationPageData, FilterDto, SortDto } from '@/src/models/request';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { emptyDataTitleMap, listViewTitleMap } from '../constants';
-import ListEntities from '@/src/components/ListView/List';
 import HeaderButtons from './Header';
 
 interface Props<T> {
@@ -53,8 +63,10 @@ const EvaluationListView = <T extends object>({
   const router = useRouter();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalType, setModalType] = useState<ModalType>();
   const [currentEntity, setCurrentEntity] = useState<T | undefined>(undefined);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
+  const { showNotification } = useNotification();
 
   const gridOptions: GridOptions = {
     ...infiniteGridOptions,
@@ -99,6 +111,8 @@ const EvaluationListView = <T extends object>({
 
   const onModalClose = useCallback(() => {
     setIsModalOpen(false);
+    setCurrentEntity(undefined);
+    setModalType(undefined);
   }, []);
 
   const onModalOpen = useCallback(() => {
@@ -116,20 +130,53 @@ const EvaluationListView = <T extends object>({
     [route],
   );
 
-  const onOpenDeleteModal = useCallback(
-    (entity?: T) => {
-      setCurrentEntity(entity);
+  const onOpenModal = useCallback(
+    (modalType: ModalType) => {
       onModalOpen();
+      setModalType(modalType);
     },
     [onModalOpen],
   );
 
-  const actionColumn = ACTION_COLUMN([
-    getOpenInNewTabOperation(onOpenInNewTabAction),
-    getDeleteOperation(onOpenDeleteModal),
-  ]);
+  const onOpenDeleteModal = useCallback(
+    (entity?: T) => {
+      setCurrentEntity(entity);
+      onOpenModal(ModalType.delete);
+    },
+    [onOpenModal],
+  );
 
-  const columnDefs = [...baseColumns, actionColumn];
+  const onOpenRunTestSuiteModal = useCallback(
+    (entity?: T) => {
+      setCurrentEntity(entity);
+      onOpenModal(ModalType.runTestSuite);
+    },
+    [onOpenModal],
+  );
+
+  const onRun = useCallback(
+    (num?: string | number) => {
+      runTestSuite((currentEntity as TestSuite)?.id as string, num).then((res) => {
+        if (res.success) {
+          showNotification(
+            getSuccessNotification(t(TestSuitesI18nKey.RunSuccess), t(TestSuitesI18nKey.RunSuccessDescription)),
+          );
+          onModalClose();
+        } else {
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+        }
+      });
+    },
+    [currentEntity, onModalClose, showNotification, t],
+  );
+
+  const actionColumn = [getOpenInNewTabOperation(onOpenInNewTabAction)];
+
+  if (route === ApplicationRoute.TestSuites) {
+    actionColumn.push(getRunTestSuiteOperation(onOpenRunTestSuiteModal));
+  }
+
+  const columnDefs = [...baseColumns, ACTION_COLUMN([...actionColumn, getDeleteOperation(onOpenDeleteModal)])];
 
   return (
     <>
@@ -147,6 +194,7 @@ const EvaluationListView = <T extends object>({
       </ListEntities>
 
       {isModalOpen &&
+        modalType === ModalType.delete &&
         onRemoveEntity &&
         createPortal(
           <DeleteConfirmationModal
@@ -154,6 +202,18 @@ const EvaluationListView = <T extends object>({
             view={route}
             onCloseModal={onModalClose}
             onRemoveEntity={onRemoveEntity}
+          />,
+          document.body,
+        )}
+
+      {isModalOpen &&
+        modalType === ModalType.runTestSuite &&
+        createPortal(
+          <RunModal
+            isModalOpen={isModalOpen}
+            onClose={onModalClose}
+            selectedTestSuite={currentEntity as TestSuite}
+            onRun={onRun}
           />,
           document.body,
         )}

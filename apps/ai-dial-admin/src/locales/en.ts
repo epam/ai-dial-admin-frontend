@@ -1184,7 +1184,7 @@ export default {
     WarningEndpoint: 'The endpoint uses HTTP instead of HTTPS. This may expose data to security risks.',
     DescriptionLength: 'User can add any characters, but not more than 2048.',
     NameExists: 'This ID already exists.',
-    DisplayNameExists: 'This display name already exists.',
+    DisplayNameExists: 'This Display name already exists.',
     Unique: 'This field must be unique.',
     Version: 'For a entity with this Display name, specifying a version is mandatory.',
     NameVersionCombination: 'This combination of name and version already exists. Specify another',
@@ -1413,6 +1413,7 @@ export default {
   TestSuites: {
     CreateTestSuite: 'Create Test Suite',
     UpdateTestSuite: 'Update Test Suite',
+    Target: 'Target',
     Application: 'Application',
     Methods: 'Methods',
     Method: 'Method',
@@ -1466,6 +1467,7 @@ export default {
     ConflictStrategySkipDesc: 'Silently skip colliding rows; existing row wins.',
     ConflictStrategyOverride: 'Override',
     ConflictStrategyOverrideDesc: 'Replace existing row with incoming row (last wins).',
+    NoInformationToPreview: 'No information to preview',
   },
   FileManager: {
     SelectedItems: 'item(s) selected',

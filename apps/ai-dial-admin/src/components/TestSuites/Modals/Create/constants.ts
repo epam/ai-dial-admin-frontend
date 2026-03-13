@@ -3,15 +3,15 @@ import { Step, StepStatus } from '@epam/ai-dial-ui-kit';
 
 export enum TestSuitTab {
   Properties = 'Properties',
-  Application = 'Application',
+  Target = 'Target',
   Methods = 'Methods',
 }
 
 export const TEST_SUIT_STEPS = (t: (key: string) => string, hideProperties: boolean) => {
   const steps = [
     {
-      id: TestSuitTab.Application,
-      name: t(TestSuitesI18nKey.Application),
+      id: TestSuitTab.Target,
+      name: t(TestSuitesI18nKey.Target),
     },
 
     {
