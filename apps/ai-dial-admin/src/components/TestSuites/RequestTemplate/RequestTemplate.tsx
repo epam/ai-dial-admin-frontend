@@ -32,7 +32,7 @@ const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
   }, []);
 
   return (
-    <div className="flex flex-col size-full gap-2 border border-primary rounded h-[480px] p-4">
+    <div className="flex flex-col size-full gap-2 border border-primary rounded p-4">
       <div className="flex flex-row justify-between items-start mb-3">
         <h3>{t(TestSuitesI18nKey.RequestTemplate)}</h3>
         <ContentTypeSelect testSuite={testSuite} onChangeTestSuite={onChangeTestSuite} />
