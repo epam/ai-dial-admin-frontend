@@ -87,10 +87,13 @@ const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange, isCreate
         m.relativeUrlPattern === testSuite.endpointRef?.relativeUrlPattern,
     );
     if (index === -1) {
+      if (isCreate) {
+        onMethodClick(0);
+      }
       return;
     }
     onMethodClick(index + 1);
-  }, [methods, onMethodClick, testSuite.endpointRef?.method, testSuite.endpointRef?.relativeUrlPattern]);
+  }, [isCreate, methods, onMethodClick, testSuite.endpointRef?.method, testSuite.endpointRef?.relativeUrlPattern]);
 
   return (
     <div className="flex flex-row size-full gap-2">
