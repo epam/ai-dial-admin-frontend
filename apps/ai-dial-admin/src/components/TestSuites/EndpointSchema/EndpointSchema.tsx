@@ -7,51 +7,30 @@ import { JSONSchema7 } from 'json-schema';
 
 import SchemaGrid from '@/src/components/Common/SchemaGrid/SchemaGrid';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import { CompareI18nKey, EntitiesI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
-import { ButtonsI18nKey, TestSuitesI18nKey, TabsI18nKey, EntitiesI18nKey, CompareI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialScheme } from '@/src/models/dial/scheme';
 import { ResponseColumn, TestSuite } from '@/src/models/evaluation/test-suite';
 import { EntityViewTab, getEndpointSchemaTabs } from '@/src/utils/tabs/utils';
 import Columns from './Columns/Columns';
 
-const ADD_PARAM = 'add-param';
-const ADD_HEADER = 'add-header';
-
 interface Props {
   testSuite: TestSuite;
   onChangeTestSuite: (testSuite: TestSuite, isSkipRefresh?: boolean) => void;
   isSkipRefresh?: boolean;
-  onAddParameter?: () => void;
-  onAddHeader?: () => void;
 }
 
-const EndpointSchema: FC<Props> = ({ testSuite, onChangeTestSuite, isSkipRefresh, onAddParameter, onAddHeader }) => {
+const EndpointSchema: FC<Props> = ({ testSuite, onChangeTestSuite, isSkipRefresh }) => {
   const t = useI18n();
   const tabs = getEndpointSchemaTabs(t);
   const [activeSchemaTab, setActiveSchemaTab] = useState(tabs[0].id);
   const [isJsonView, setIsJsonView] = useState(false);
-  const [addSelectValue, setAddSelectValue] = useState<string>('');
-
-  const addOptions: SelectOption[] = [
-    { value: ADD_PARAM, label: t(TabsI18nKey.Parameters) },
-    { value: ADD_HEADER, label: t(TabsI18nKey.Headers) },
-  ];
 
   const viewOptions: SelectOption[] = [
     { value: 'table', label: t(EntitiesI18nKey.Table) },
     { value: 'json', label: 'JSON' },
   ];
-
-  const onAddSelectChange = useCallback(
-    (value: string | string[]) => {
-      const v = Array.isArray(value) ? value[0] : value;
-      setAddSelectValue('');
-      if (v === ADD_PARAM) onAddParameter?.();
-      else if (v === ADD_HEADER) onAddHeader?.();
-    },
-    [onAddParameter, onAddHeader],
-  );
 
   const onChangeSchemaTab = useCallback((id: string) => {
     setActiveSchemaTab(id as string);
