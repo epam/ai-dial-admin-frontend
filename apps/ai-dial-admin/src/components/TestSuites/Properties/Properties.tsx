@@ -119,12 +119,7 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
             </div>
 
             <RequestTemplate testSuite={testSuite} onChangeTestSuite={onChange} />
-            <div className="flex flex-col gap-4">
-              <h3>{t(TestSuitesI18nKey.EndpointSchema)}</h3>
-              <div className="flex border border-primary rounded h-[680px] p-4">
-                <EndpointSchema testSuite={testSuite} onChangeTestSuite={onChange} isSkipRefresh={isSkipRefresh} />
-              </div>
-            </div>
+            <EndpointSchema testSuite={testSuite} onChangeTestSuite={onChange} isSkipRefresh={isSkipRefresh} />
           </div>
         </>
       )}

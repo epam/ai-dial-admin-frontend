@@ -43,7 +43,7 @@ const BodyTab: FC<Props> = ({ template, changeTemplate }) => {
   );
 
   return (
-    <div className="w-full h-[400px]">
+    <div className="w-full h-[350px]">
       {isJsonContent ? (
         <JsonEditor
           entity={(template.body?.content || {}) as Record<string, unknown>}

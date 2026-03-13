@@ -1,6 +1,7 @@
 import { JSONSchema7, JSONSchema7Definition, JSONSchema7TypeName } from 'json-schema';
 
 import { resolveRef } from '@/src/utils/schema';
+import { startCase } from 'lodash';
 
 export interface SchemaFieldRow {
   id: string;
@@ -29,7 +30,7 @@ export interface SchemaTreeNode {
 const SCHEMA_TYPES: JSONSchema7TypeName[] = ['string', 'number', 'integer', 'boolean', 'object', 'array', 'null'];
 const DIAL_META_KEY = 'dial:meta';
 
-export const getSchemaTypes = (): JSONSchema7TypeName[] => SCHEMA_TYPES;
+export const getSchemaTypes = () => SCHEMA_TYPES.map((t) => startCase(t));
 
 let nextId = 0;
 export const generateFieldId = (): string => `schema-field-${++nextId}`;
