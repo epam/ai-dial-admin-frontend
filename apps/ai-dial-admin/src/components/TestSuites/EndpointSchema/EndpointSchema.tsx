@@ -13,7 +13,7 @@ import { DialScheme } from '@/src/models/dial/scheme';
 import { ResponseColumn, TestSuite } from '@/src/models/evaluation/test-suite';
 import { EntityViewTab, getEndpointSchemaTabs } from '@/src/utils/tabs/utils';
 import Columns from './Columns/Columns';
-import { TestSuitesI18nKey } from '../../../constants/i18n';
+import { TestSuitesI18nKey } from '@/src/constants/i18n';
 
 interface Props {
   testSuite: TestSuite;

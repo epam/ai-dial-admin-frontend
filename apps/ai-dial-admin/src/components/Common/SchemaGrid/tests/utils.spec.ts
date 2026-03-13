@@ -19,7 +19,7 @@ import {
 describe('getSchemaTypes', () => {
   test('should return all JSON Schema 7 types', () => {
     const types = getSchemaTypes();
-    expect(types).toEqual(['String', 'Number', 'Integer', 'Boolean', 'Object', 'Array', 'Null']);
+    expect(types).toEqual(['string', 'number', 'integer', 'boolean', 'object', 'array', 'null']);
   });
 });
 

@@ -10,8 +10,9 @@ import TreeNameCellRenderer from '@/src/components/Grid/CellRenderers/TreeNameCe
 import { NO_BORDER_CLASS, ONE_ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getDeleteOperation } from '@/src/constants/grid-columns/actions';
 import { BasicI18nKey } from '@/src/constants/i18n';
+import { startCase } from 'lodash';
 
-const SCHEMA_TYPE_OPTIONS: SelectOption[] = getSchemaTypes().map((t) => ({ value: t, label: t }));
+const SCHEMA_TYPE_OPTIONS: SelectOption[] = getSchemaTypes().map((t) => ({ value: t, label: startCase(t) }));
 
 const getPropertyKindOptions = (t: (key: BasicI18nKey) => string): SelectOption[] => [
   { value: 'server', label: t(BasicI18nKey.Server) },
@@ -48,8 +49,8 @@ export const getSchemaGridColumns = (
       headerName: 'Name',
       colId: 'name',
       cellClass: NO_BORDER_CLASS,
-      flex: 2,
-      minWidth: 180,
+      flex: 1,
+      minWidth: 130,
       sortable: false,
       filter: false,
       floatingFilter: false,
