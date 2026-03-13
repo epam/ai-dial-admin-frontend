@@ -1,25 +1,27 @@
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
-import { DialGhostButton } from '@epam/ai-dial-ui-kit';
-import { IconPlus } from '@tabler/icons-react';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { ONE_ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import { getParamsColumns } from '@/src/constants/grid-columns/grid-columns';
-import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { TestSuiteRequestTemplate, TestSuiteRequestTemplateParam } from '@/src/models/evaluation/test-suite';
+
+export interface ParamsTabRef {
+  add: () => void;
+}
 
 interface Props {
   template: TestSuiteRequestTemplate;
   changeTemplate: (template: TestSuiteRequestTemplate) => void;
   field: keyof Omit<TestSuiteRequestTemplate, 'urlTemplate' | 'body'>;
-  title: string;
+  title?: string;
   emptyDataTitle: string;
 }
-const ParamsTab: FC<Props> = ({ template, changeTemplate, field, title, emptyDataTitle }) => {
+
+const ParamsTab = forwardRef<ParamsTabRef, Props>(({ template, changeTemplate, field, title, emptyDataTitle }, ref) => {
   const t = useI18n();
   const [visibleIndex, setVisibleIndex] = useState<number | undefined>();
   const gridApi = useRef<GridApi>(null);
@@ -71,6 +73,8 @@ const ParamsTab: FC<Props> = ({ template, changeTemplate, field, title, emptyDat
     });
   };
 
+  useImperativeHandle(ref, () => ({ add: onAddParam }), [onAddParam]);
+
   useEffect(() => {
     configRef.current = template?.[field] || [];
   }, [field, template]);
@@ -86,22 +90,16 @@ const ParamsTab: FC<Props> = ({ template, changeTemplate, field, title, emptyDat
   }, [template?.[field]?.length, gridApi]);
 
   return (
-    <div className="flex flex-col gap-3 size-full">
-      <div className="flex flex-row justify-between items-center">
-        <h3>
-          {title}: {template?.[field]?.length || 0}
-        </h3>
-        <DialGhostButton iconBefore={<IconPlus />} label={t(ButtonsI18nKey.Add)} onClick={() => onAddParam()} />
-      </div>
-      <div className="flex-1 min-h-0 overflow-auto">
-        <GridView
-          getIsEmptyData={() => !template?.[field]?.length}
-          emptyDataProps={{ title: emptyDataTitle }}
-          onGridReady={onGridReady}
-        />
-      </div>
+    <div className="size-full">
+      <GridView
+        getIsEmptyData={() => !template?.[field]?.length}
+        emptyDataProps={{ title: emptyDataTitle }}
+        onGridReady={onGridReady}
+      />
     </div>
   );
-};
+});
+
+ParamsTab.displayName = 'ParamsTab';
 
 export default ParamsTab;

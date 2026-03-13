@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback } from 'react';
+import { forwardRef, useCallback } from 'react';
 
 import {
   filterParameterBindings,
@@ -11,7 +11,9 @@ import { useI18n } from '@/src/locales/client';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import BodyTab from './BodyTab';
-import ParamsTab from './ParamsTab';
+import ParamsTab, { ParamsTabRef } from './ParamsTab';
+
+export type TabsContentRef = ParamsTabRef | null;
 
 interface Props {
   activeTab: EntityViewTab;
@@ -19,8 +21,9 @@ interface Props {
   onChange: (testSuite: TestSuite) => void;
 }
 
-const TabsContent: FC<Props> = ({ activeTab, onChange, selectedTestSuite }) => {
+const TabsContent = forwardRef<TabsContentRef, Props>(({ activeTab, onChange, selectedTestSuite }, ref) => {
   const t = useI18n();
+  
   const onChangeTemplate = useCallback(
     (template: TestSuite['requestTemplate']) => {
       const paramNames = getTemplateParameters(template);
@@ -39,6 +42,7 @@ const TabsContent: FC<Props> = ({ activeTab, onChange, selectedTestSuite }) => {
     <div className="flex-1 min-h-0">
       {activeTab === EntityViewTab.Parameters && (
         <ParamsTab
+          ref={ref}
           template={selectedTestSuite.requestTemplate || {}}
           changeTemplate={onChangeTemplate}
           field="queryParams"
@@ -51,6 +55,7 @@ const TabsContent: FC<Props> = ({ activeTab, onChange, selectedTestSuite }) => {
       )}
       {activeTab === EntityViewTab.Headers && (
         <ParamsTab
+          ref={ref}
           template={selectedTestSuite.requestTemplate || {}}
           changeTemplate={onChangeTemplate}
           field="headers"
@@ -60,6 +65,8 @@ const TabsContent: FC<Props> = ({ activeTab, onChange, selectedTestSuite }) => {
       )}
     </div>
   );
-};
+});
+
+TabsContent.displayName = 'TabsContent';
 
 export default TabsContent;
