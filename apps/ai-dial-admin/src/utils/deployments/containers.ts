@@ -40,6 +40,7 @@ export const getContainerRedeploySnapshot = (container: Container): ContainerRed
     resources: normalizeResources(container.resources),
     command: container.command,
     args: container.args,
+    scaling: container.scaling,
   };
 };
 

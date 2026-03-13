@@ -12,10 +12,11 @@ interface Props {
   isAddedManual?: boolean;
   isMcpToolset?: boolean;
   isAssetToolset?: boolean;
+  containerId?: string;
   toolSetName: string;
 }
 
-const Tool: FC<Props> = ({ tool, isAddedManual, isMcpToolset, isAssetToolset, toolSetName }) => {
+const Tool: FC<Props> = ({ tool, isAddedManual, isMcpToolset, isAssetToolset, containerId, toolSetName }) => {
   const [view, setView] = useState(ParamsView.TABLE);
 
   return (
@@ -28,6 +29,7 @@ const Tool: FC<Props> = ({ tool, isAddedManual, isMcpToolset, isAssetToolset, to
             isAddedManual={isAddedManual}
             isMcpToolset={isMcpToolset}
             isAssetToolset={isAssetToolset}
+            containerId={containerId}
           />
         </div>
       ) : (
@@ -40,6 +42,7 @@ const Tool: FC<Props> = ({ tool, isAddedManual, isMcpToolset, isAssetToolset, to
               isAddedManual={isAddedManual}
               isMcpToolset={isMcpToolset}
               isAssetToolset={isAssetToolset}
+              containerId={containerId}
             />
           }
           containerClassName={isMcpToolset ? '' : 'px-4 py-2'}

@@ -132,6 +132,11 @@ export async function getContainerTools(containerId: string) {
   return containersApi.getContainerTools(containerId, token);
 }
 
+export async function tryOutContainerTool(containerId: string, body: Record<string, unknown>) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return containersApi.callContainerTool(containerId, body, token);
+}
+
 export async function getContainerResources(containerId: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return containersApi.getContainerResources(containerId, token);
