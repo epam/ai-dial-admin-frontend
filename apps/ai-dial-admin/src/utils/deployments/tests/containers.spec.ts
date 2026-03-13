@@ -218,6 +218,29 @@ describe('containers utils', () => {
       const b: Container = { ...baseContainer, command: undefined, args: undefined };
       expect(getContainerRedeploySnapshot(a)).toEqual(getContainerRedeploySnapshot(b));
     });
+
+    test('detects scaling change via snapshot inequality', () => {
+      const a: Container = { ...baseContainer, scaling: { minReplicas: 1, maxReplicas: 1 } };
+      const b: Container = { ...baseContainer, scaling: { minReplicas: 1, maxReplicas: 3 } };
+      expect(getContainerRedeploySnapshot(a)).not.toEqual(getContainerRedeploySnapshot(b));
+    });
+
+    test('treats identical scaling as equal', () => {
+      const scaling = {
+        minReplicas: 1,
+        maxReplicas: 3,
+        strategy: { $type: SCALING_STRATEGY_TYPE.REQUESTS, threshold: 2 },
+      };
+      const a: Container = { ...baseContainer, scaling };
+      const b: Container = { ...baseContainer, scaling: { ...scaling } };
+      expect(getContainerRedeploySnapshot(a)).toEqual(getContainerRedeploySnapshot(b));
+    });
+
+    test('treats missing scaling on both sides as equal', () => {
+      const a: Container = { ...baseContainer };
+      const b: Container = { ...baseContainer, scaling: undefined };
+      expect(getContainerRedeploySnapshot(a)).toEqual(getContainerRedeploySnapshot(b));
+    });
   });
 
   describe('normalizeEnvironmentVariables', () => {
