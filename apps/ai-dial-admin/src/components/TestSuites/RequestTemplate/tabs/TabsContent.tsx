@@ -6,7 +6,7 @@ import {
   filterParameterBindings,
   getTemplateParameters,
 } from '@/src/components/TestSuites/utils/request-template-params';
-import { BasicI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
@@ -23,7 +23,7 @@ interface Props {
 
 const TabsContent = forwardRef<TabsContentRef, Props>(({ activeTab, onChange, selectedTestSuite }, ref) => {
   const t = useI18n();
-  
+
   const onChangeTemplate = useCallback(
     (template: TestSuite['requestTemplate']) => {
       const paramNames = getTemplateParameters(template);
@@ -46,7 +46,6 @@ const TabsContent = forwardRef<TabsContentRef, Props>(({ activeTab, onChange, se
           template={selectedTestSuite.requestTemplate || {}}
           changeTemplate={onChangeTemplate}
           field="queryParams"
-          title={t(TabsI18nKey.Parameters)}
           emptyDataTitle={t(BasicI18nKey.NoParameters)}
         />
       )}
@@ -59,7 +58,6 @@ const TabsContent = forwardRef<TabsContentRef, Props>(({ activeTab, onChange, se
           template={selectedTestSuite.requestTemplate || {}}
           changeTemplate={onChangeTemplate}
           field="headers"
-          title={t(TabsI18nKey.Headers)}
           emptyDataTitle={t(BasicI18nKey.NoHeaders)}
         />
       )}

@@ -4,9 +4,8 @@ import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { ONE_ACTION_COLUMN } from '@/src/constants/ag-grid';
-import { getRemoveOperation } from '@/src/constants/grid-columns/actions';
+import { getDeleteOperation } from '@/src/constants/grid-columns/actions';
 import { getParamsColumns } from '@/src/constants/grid-columns/grid-columns';
-import { useI18n } from '@/src/locales/client';
 import { TestSuiteRequestTemplate, TestSuiteRequestTemplateParam } from '@/src/models/evaluation/test-suite';
 
 export interface ParamsTabRef {
@@ -17,12 +16,10 @@ interface Props {
   template: TestSuiteRequestTemplate;
   changeTemplate: (template: TestSuiteRequestTemplate) => void;
   field: keyof Omit<TestSuiteRequestTemplate, 'urlTemplate' | 'body'>;
-  title?: string;
   emptyDataTitle: string;
 }
 
-const ParamsTab = forwardRef<ParamsTabRef, Props>(({ template, changeTemplate, field, title, emptyDataTitle }, ref) => {
-  const t = useI18n();
+const ParamsTab = forwardRef<ParamsTabRef, Props>(({ template, changeTemplate, field, emptyDataTitle }, ref) => {
   const [visibleIndex, setVisibleIndex] = useState<number | undefined>();
   const gridApi = useRef<GridApi>(null);
   const configRef = useRef(template?.[field] || []);
@@ -60,7 +57,7 @@ const ParamsTab = forwardRef<ParamsTabRef, Props>(({ template, changeTemplate, f
 
   const columnDefs: ColDef[] = [
     ...getParamsColumns(onChangeValue),
-    ONE_ACTION_COLUMN(getRemoveOperation(onRemoveParam, void 0, 'text-error w-4 h-4')),
+    ONE_ACTION_COLUMN(getDeleteOperation(onRemoveParam, void 0, 'text-error w-4 h-4')),
   ];
   const rowData = template?.[field] || [];
 

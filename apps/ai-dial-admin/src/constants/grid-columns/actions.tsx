@@ -30,11 +30,16 @@ export function getResourceRollbackOperation<T>(onClick: (entity?: T) => void): 
   };
 }
 
-export function getDeleteOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
+export function getDeleteOperation<T>(
+  onClick: (entity?: T, index?: number) => void,
+  hidden?: (api: GridApi, node: IRowNode) => boolean,
+  className?: string,
+): ActionMenuOperationDeclaration<T> {
   return {
-    icon: <IconTrashX {...BASE_BUTTON_ICON_PROPS} />,
+    icon: <IconTrashX {...BASE_BUTTON_ICON_PROPS} className={className} />,
     id: ActionMenuOperation.Delete,
     onClick,
+    hidden,
   };
 }
 
@@ -44,7 +49,7 @@ export function getRemoveOperation<T>(
   className?: string,
 ): ActionMenuOperationDeclaration<T> {
   return {
-    icon: <IconTrash {...BASE_BUTTON_ICON_PROPS} className={className} />,
+    icon: <IconTrashX {...BASE_BUTTON_ICON_PROPS} className={className} />,
     id: ActionMenuOperation.Remove,
     onClick,
     hidden,
