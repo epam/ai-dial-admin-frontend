@@ -18,13 +18,7 @@ import TableView from '@/src/components/Common/ViewSelector/TableView';
 import ViewSelector from '@/src/components/Common/ViewSelector/ViewSelector';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { PARAMETERS_SCHEMA_COLUMNS, TOOL_SCHEMA_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import {
-  ButtonsI18nKey,
-  ContainersI18nKey,
-  EntitiesI18nKey,
-  EntityFieldsI18nKey,
-  TestSuitesI18nKey,
-} from '@/src/constants/i18n';
+import { ButtonsI18nKey, ContainersI18nKey, EntityFieldsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialScheme } from '@/src/models/dial/scheme';
@@ -101,15 +95,19 @@ const MethodInfo: FC<Props> = ({ testSuite, onChangeTestSuite, selectedAppType }
           )}
         </div>
       </div>
-      <div className="flex flex-col gap-4 relative min-h-0 overflow-auto">
+      <div className="flex flex-col gap-4 relative min-h-0 overflow-auto flex-1">
         {view === ParamsView.TABLE ? (
           <>
-            {!!parameters.length && (
+            {parameters.length ? (
               <TableView
                 title={t(EntityFieldsI18nKey.parameters)}
                 columnDefs={PARAMETERS_COLUMNS}
                 rowData={parameters}
               />
+            ) : (
+              <div className="size-full flex items-center justify-center">
+                <DialNoDataContent title={t(TestSuitesI18nKey.NoInformationToPreview)} />
+              </div>
             )}
 
             {!!inputSchema.length && (
@@ -163,7 +161,7 @@ const MethodInfo: FC<Props> = ({ testSuite, onChangeTestSuite, selectedAppType }
         )}
     </div>
   ) : (
-    <DialNoDataContent title={t(EntitiesI18nKey.NoMethods)} />
+    <DialNoDataContent title={t(TestSuitesI18nKey.NoInformationToPreview)} />
   );
 };
 

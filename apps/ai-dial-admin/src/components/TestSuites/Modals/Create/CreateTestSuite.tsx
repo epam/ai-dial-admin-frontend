@@ -59,7 +59,7 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEnti
   useEffect(() => {
     setSteps((prev) =>
       prev.map((step) => {
-        if (step.id === TestSuitTab.Application) {
+        if (step.id === TestSuitTab.Target) {
           return { ...step, status: selectedApplication ? StepStatus.VALID : void 0 };
         }
         if (step.id === TestSuitTab.Methods) {
@@ -85,7 +85,7 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEnti
             <TestSuiteProperties testSuite={testSuite} onChange={setTestSuite} isModal={true} />
           )}
 
-          {currentStepId === TestSuitTab.Application && (
+          {currentStepId === TestSuitTab.Target && (
             <Applications
               deployments={deployments}
               selectedApplicationId={selectedApplication?.deploymentId}
