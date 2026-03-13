@@ -22,7 +22,7 @@ interface Props {
   onChangeApplication: (deployment: Deployment) => void;
   onChange: Dispatch<SetStateAction<TestSuite>>;
 }
-
+// TODO: rename after implement target functionality
 const Applications: FC<Props> = ({ deployments, selectedApplicationId, onChangeApplication, onChange }) => {
   const t = useI18n();
 

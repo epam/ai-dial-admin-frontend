@@ -80,6 +80,12 @@ const HfModelNameField: FC<Props> = ({ container, setContainer, isModal, route }
       setModelNameError(error);
     }
   }, [container.source?.modelName, resetCounter, t]);
+
+  useEffect(() => {
+    const error = getErrorForHfModelName(container.source?.modelName, t);
+    dispatch({ type: ValidationActionType.SetField, field: 'modelName', isValid: !error });
+  }, [container.source?.modelName, dispatch, t]);
+
   return (
     <>
       <div className="flex gap-3">

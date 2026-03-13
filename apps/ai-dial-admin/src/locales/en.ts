@@ -1413,6 +1413,7 @@ export default {
   TestSuites: {
     CreateTestSuite: 'Create Test Suite',
     UpdateTestSuite: 'Update Test Suite',
+    Target: 'Target',
     Application: 'Application',
     Methods: 'Methods',
     Method: 'Method',
@@ -1466,6 +1467,7 @@ export default {
     ConflictStrategySkipDesc: 'Silently skip colliding rows; existing row wins.',
     ConflictStrategyOverride: 'Override',
     ConflictStrategyOverrideDesc: 'Replace existing row with incoming row (last wins).',
+    NoInformationToPreview: 'No information to preview',
   },
   FileManager: {
     SelectedItems: 'item(s) selected',
