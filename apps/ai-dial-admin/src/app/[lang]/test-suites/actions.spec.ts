@@ -270,11 +270,7 @@ describe('TestSuites :: server actions', () => {
     (testSuitesApi.getTestSuiteMetricDetailsWithSchema as any).mockResolvedValue(RESPONSE_MOCK);
     const result = await getTestSuiteMetricDetailsWithSchema('suite-id', 'metric-id');
     expect(getUserToken).toHaveBeenCalled();
-    expect(testSuitesApi.getTestSuiteMetricDetailsWithSchema).toHaveBeenCalledWith(
-      'suite-id',
-      'metric-id',
-      TOKEN_MOCK,
-    );
+    expect(testSuitesApi.getTestSuiteMetricDetailsWithSchema).toHaveBeenCalledWith('suite-id', 'metric-id', TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 

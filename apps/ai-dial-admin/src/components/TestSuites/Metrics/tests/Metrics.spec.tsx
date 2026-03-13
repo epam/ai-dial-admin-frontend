@@ -75,12 +75,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
 
 vi.mock('@/src/components/Common/Search/Search', () => ({
   default: ({ onChange }: any) => (
-    <input
-      type="search"
-      role="searchbox"
-      aria-label="search"
-      onChange={(e) => onChange(e.target.value)}
-    />
+    <input type="search" role="searchbox" aria-label="search" onChange={(e) => onChange(e.target.value)} />
   ),
 }));
 

@@ -47,12 +47,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
 
 vi.mock('@/src/components/Common/Search/Search', () => ({
   default: ({ onChange }: any) => (
-    <input
-      type="search"
-      role="searchbox"
-      aria-label="search"
-      onChange={(e) => onChange(e.target.value)}
-    />
+    <input type="search" role="searchbox" aria-label="search" onChange={(e) => onChange(e.target.value)} />
   ),
 }));
 
@@ -77,26 +72,20 @@ describe('AddMetricModal', () => {
   });
 
   test('renders nothing when closed', () => {
-    render(
-      <AddMetricModal isModalOpen={false} metrics={metrics} onClose={onClose} onConfirm={onConfirm} />,
-    );
+    render(<AddMetricModal isModalOpen={false} metrics={metrics} onClose={onClose} onConfirm={onConfirm} />);
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   test('renders dialog with heading when open', () => {
-    render(
-      <AddMetricModal isModalOpen={true} metrics={metrics} onClose={onClose} onConfirm={onConfirm} />,
-    );
+    render(<AddMetricModal isModalOpen={true} metrics={metrics} onClose={onClose} onConfirm={onConfirm} />);
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: TestSuitesI18nKey.AddMetric })).toBeInTheDocument();
   });
 
   test('renders Cancel and Confirm buttons', () => {
-    render(
-      <AddMetricModal isModalOpen={true} metrics={metrics} onClose={onClose} onConfirm={onConfirm} />,
-    );
+    render(<AddMetricModal isModalOpen={true} metrics={metrics} onClose={onClose} onConfirm={onConfirm} />);
 
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Cancel })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Confirm })).toBeInTheDocument();
@@ -104,9 +93,7 @@ describe('AddMetricModal', () => {
 
   test('calls onClose when Cancel is clicked', async () => {
     const user = userEvent.setup();
-    render(
-      <AddMetricModal isModalOpen={true} metrics={metrics} onClose={onClose} onConfirm={onConfirm} />,
-    );
+    render(<AddMetricModal isModalOpen={true} metrics={metrics} onClose={onClose} onConfirm={onConfirm} />);
 
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Cancel }));
 
@@ -114,27 +101,19 @@ describe('AddMetricModal', () => {
   });
 
   test('Confirm button is disabled when no metric selected', () => {
-    render(
-      <AddMetricModal isModalOpen={true} metrics={metrics} onClose={onClose} onConfirm={onConfirm} />,
-    );
+    render(<AddMetricModal isModalOpen={true} metrics={metrics} onClose={onClose} onConfirm={onConfirm} />);
 
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Confirm })).toBeDisabled();
   });
 
   test('shows no data content when metrics list is empty', () => {
-    render(
-      <AddMetricModal isModalOpen={true} metrics={[]} onClose={onClose} onConfirm={onConfirm} />,
-    );
+    render(<AddMetricModal isModalOpen={true} metrics={[]} onClose={onClose} onConfirm={onConfirm} />);
 
-    expect(
-      screen.getByRole('status', { name: TestSuitesI18nKey.SelectMetricPreview }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('status', { name: TestSuitesI18nKey.SelectMetricPreview })).toBeInTheDocument();
   });
 
   test('renders searchbox', () => {
-    render(
-      <AddMetricModal isModalOpen={true} metrics={metrics} onClose={onClose} onConfirm={onConfirm} />,
-    );
+    render(<AddMetricModal isModalOpen={true} metrics={metrics} onClose={onClose} onConfirm={onConfirm} />);
 
     expect(screen.getByRole('searchbox', { name: 'search' })).toBeInTheDocument();
   });

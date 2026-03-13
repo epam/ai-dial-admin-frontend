@@ -92,9 +92,7 @@ describe('generateMetricBindingsRowData', () => {
 
   test('mixes existing bindings with defaults for missing schema fields', () => {
     const configSchema = [schemaField('apiKey'), schemaField('timeout')];
-    const existingConfig: MetricBinding[] = [
-      { property: 'apiKey', source: { $type: 'Constant', value: 'key' } },
-    ];
+    const existingConfig: MetricBinding[] = [{ property: 'apiKey', source: { $type: 'Constant', value: 'key' } }];
     const result = generateMetricBindingsRowData(existingConfig, [], configSchema, []);
 
     expect(result).toHaveLength(2);
@@ -108,15 +106,8 @@ describe('generateMetricBindingsRowData', () => {
     const existingConfig: MetricBinding[] = [
       { property: 'configField', source: { $type: 'Constant', value: 'config-val' } },
     ];
-    const existingInput: MetricBinding[] = [
-      { property: 'inputField', source: { $type: 'Column', columnName: 'col' } },
-    ];
-    const result = generateMetricBindingsRowData(
-      existingConfig,
-      existingInput,
-      configSchema,
-      inputSchema,
-    );
+    const existingInput: MetricBinding[] = [{ property: 'inputField', source: { $type: 'Column', columnName: 'col' } }];
+    const result = generateMetricBindingsRowData(existingConfig, existingInput, configSchema, inputSchema);
 
     expect(result).toHaveLength(2);
     expect(result[0]).toEqual({

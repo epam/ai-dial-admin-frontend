@@ -16,12 +16,7 @@ vi.mock('../Bindings', () => ({
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   DialInput: ({ value, onChange }: any) => (
-    <input
-      role="textbox"
-      aria-label="metric-name"
-      value={value ?? ''}
-      onChange={(e) => onChange(e.target.value)}
-    />
+    <input role="textbox" aria-label="metric-name" value={value ?? ''} onChange={(e) => onChange(e.target.value)} />
   ),
   DialNeutralButton: ({ label, onClick }: any) => (
     <button type="button" onClick={onClick}>
