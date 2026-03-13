@@ -98,6 +98,17 @@ export const getContainerTemplate = (
     };
   }
 
+  if (
+    (type === CONTAINER_TYPE.ADAPTER || type === CONTAINER_TYPE.INTERCEPTOR) &&
+    sourceType === CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE
+  ) {
+    return {
+      ...template,
+      source: { $type: CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE, imageReference: '' },
+      scaling: DEFAULT_SCALING,
+    };
+  }
+
   if (type === CONTAINER_TYPE.HF) {
     return {
       ...template,

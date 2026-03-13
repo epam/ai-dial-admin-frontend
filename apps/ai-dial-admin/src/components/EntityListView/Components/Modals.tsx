@@ -38,6 +38,8 @@ export enum ModalType {
   createServingHF = 'createServingHF',
   createServingNIM = 'createServingNIM',
   createMcpDockerImage = 'createMcpDockerImage',
+  createAdapterDockerImage = 'createAdapterDockerImage',
+  createInterceptorDockerImage = 'createInterceptorDockerImage',
   runTestSuite = 'runTestSuite',
 }
 

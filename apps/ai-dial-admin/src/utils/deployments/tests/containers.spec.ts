@@ -86,6 +86,28 @@ describe('containers utils', () => {
       expect(template?.source?.imageDefinitionId).toBe('');
     });
 
+    test('returns ADAPTER template with IMAGE_REFERENCE source when sourceType is provided', () => {
+      const template = getContainerTemplate(CONTAINER_TYPE.ADAPTER, undefined, CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE);
+      expect(template?.$type).toBe(CONTAINER_TYPE.ADAPTER);
+      expect(template?.source?.$type).toBe(CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE);
+      expect(template?.source?.imageReference).toBe('');
+      expect(template?.scaling).toEqual({ minReplicas: 1, maxReplicas: 1 });
+      expect(template?.transport).toBeUndefined();
+    });
+
+    test('returns INTERCEPTOR template with IMAGE_REFERENCE source when sourceType is provided', () => {
+      const template = getContainerTemplate(
+        CONTAINER_TYPE.INTERCEPTOR,
+        undefined,
+        CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE,
+      );
+      expect(template?.$type).toBe(CONTAINER_TYPE.INTERCEPTOR);
+      expect(template?.source?.$type).toBe(CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE);
+      expect(template?.source?.imageReference).toBe('');
+      expect(template?.scaling).toEqual({ minReplicas: 1, maxReplicas: 1 });
+      expect(template?.transport).toBeUndefined();
+    });
+
     test('uses defaults if provided', () => {
       const defaults = {
         CPU_REQUEST: '2',
