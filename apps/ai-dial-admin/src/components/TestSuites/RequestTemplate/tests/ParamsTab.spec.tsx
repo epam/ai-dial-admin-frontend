@@ -1,9 +1,10 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { createRef } from 'react';
+
+import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 
-import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { TestSuiteRequestTemplate, TestSuiteRequestTemplateBody } from '@/src/models/evaluation/test-suite';
-import ParamsTab from '../tabs/ParamsTab';
+import { TestSuiteRequestTemplate } from '@/src/models/evaluation/test-suite';
+import ParamsTab, { ParamsTabRef } from '../tabs/ParamsTab';
 
 let capturedOnGridReady: (event: any) => void;
 let capturedGetIsEmptyData: () => boolean;
@@ -17,29 +18,18 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
   },
 }));
 
-const mockGetParamsColumns = vi.fn(() => [{ field: 'key' }, { field: 'value' }]);
+const mockGetParamsColumns = vi.fn((_onChange: any) => [{ field: 'key' }, { field: 'value' }]);
 vi.mock('@/src/constants/grid-columns/grid-columns', () => ({
-  getParamsColumns: (...args: unknown[]) => mockGetParamsColumns(...args),
+  getParamsColumns: (onChange: any) => mockGetParamsColumns(onChange),
 }));
 
 vi.mock('@/src/constants/ag-grid', () => ({
-  ONE_ACTION_COLUMN: (action: any) => ({ headerName: 'Actions', cellRenderer: 'action', ...action }),
+  ONE_ACTION_COLUMN: (action: any) => ({ headerName: 'Actions', ...action }),
 }));
 
+const mockGetDeleteOperation = vi.fn((_onRemove: any, _a?: unknown, _b?: unknown) => ({ field: 'delete' }));
 vi.mock('@/src/constants/grid-columns/actions', () => ({
-  getRemoveOperation: vi.fn((_onRemove: any) => ({ field: 'remove' })),
-}));
-
-vi.mock('@epam/ai-dial-ui-kit', () => ({
-  DialGhostButton: ({ label, onClick, iconBefore }: any) => (
-    <button role="button" onClick={onClick}>
-      {label}
-    </button>
-  ),
-}));
-
-vi.mock('@tabler/icons-react', () => ({
-  IconPlus: () => <svg data-icon="plus" />,
+  getDeleteOperation: (onRemove: any, a?: unknown, b?: unknown) => mockGetDeleteOperation(onRemove, a, b),
 }));
 
 const createTemplate = (overrides?: Partial<TestSuiteRequestTemplate>): TestSuiteRequestTemplate => ({
@@ -50,6 +40,12 @@ const createTemplate = (overrides?: Partial<TestSuiteRequestTemplate>): TestSuit
   ...overrides,
 });
 
+const createMockApi = () => ({
+  updateGridOptions: vi.fn(),
+  getLastDisplayedRowIndex: vi.fn().mockReturnValue(-1),
+  ensureIndexVisible: vi.fn(),
+});
+
 describe('ParamsTab', () => {
   let mockChangeTemplate: Mock;
 
@@ -58,69 +54,12 @@ describe('ParamsTab', () => {
     mockChangeTemplate = vi.fn();
   });
 
-  test('renders heading with title and param count', () => {
-    render(
-      <ParamsTab
-        template={createTemplate({ queryParams: [{ key: 'a', value: 'b' }] })}
-        changeTemplate={mockChangeTemplate}
-        field="queryParams"
-        title="Parameters"
-        emptyDataTitle="No parameters"
-      />,
-    );
-
-    expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent('Parameters: 1');
-  });
-
-  test('renders heading with 0 count when field is empty', () => {
-    render(
-      <ParamsTab
-        template={createTemplate({ queryParams: [] })}
-        changeTemplate={mockChangeTemplate}
-        field="queryParams"
-        title="Parameters"
-        emptyDataTitle="No parameters"
-      />,
-    );
-
-    expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent('Parameters: 0');
-  });
-
-  test('renders heading with 0 count when field is undefined', () => {
-    render(
-      <ParamsTab
-        template={createTemplate({ queryParams: undefined })}
-        changeTemplate={mockChangeTemplate}
-        field="queryParams"
-        title="Parameters"
-        emptyDataTitle="No parameters"
-      />,
-    );
-
-    expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent('Parameters: 0');
-  });
-
-  test('renders Add button', () => {
-    render(
-      <ParamsTab
-        template={createTemplate()}
-        changeTemplate={mockChangeTemplate}
-        field="queryParams"
-        title="Parameters"
-        emptyDataTitle="No parameters"
-      />,
-    );
-
-    expect(screen.getByRole('button', { name: ButtonsI18nKey.Add })).toBeInTheDocument();
-  });
-
   test('renders GridView', () => {
     render(
       <ParamsTab
         template={createTemplate()}
         changeTemplate={mockChangeTemplate}
         field="queryParams"
-        title="Parameters"
         emptyDataTitle="No parameters"
       />,
     );
@@ -128,158 +67,191 @@ describe('ParamsTab', () => {
     expect(screen.getByRole('region', { name: 'grid' })).toBeInTheDocument();
   });
 
-  test('shows empty data message when field has no items', () => {
+  test('shows empty state when field data is empty', () => {
     render(
       <ParamsTab
-        template={createTemplate({ headers: [] })}
+        template={createTemplate({ queryParams: [] })}
         changeTemplate={mockChangeTemplate}
-        field="headers"
-        title="Headers"
-        emptyDataTitle="No headers"
+        field="queryParams"
+        emptyDataTitle="No parameters"
       />,
     );
 
-    expect(screen.getByRole('status')).toHaveTextContent('No headers');
+    expect(capturedGetIsEmptyData()).toBe(true);
+    expect(screen.getByRole('status')).toHaveTextContent('No parameters');
   });
 
-  test('does not show empty data message when field has items', () => {
+  test('does not show empty state when field data has items', () => {
     render(
       <ParamsTab
-        template={createTemplate({ headers: [{ key: 'k', value: 'v' }] })}
+        template={createTemplate({ queryParams: [{ key: 'k', value: 'v' }] })}
         changeTemplate={mockChangeTemplate}
-        field="headers"
-        title="Headers"
-        emptyDataTitle="No headers"
+        field="queryParams"
+        emptyDataTitle="No parameters"
       />,
     );
 
+    expect(capturedGetIsEmptyData()).toBe(false);
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 
-  test('Add button calls changeTemplate with new empty param appended', () => {
+  test('onGridReady updates grid options with columnDefs and rowData', () => {
+    const params = [{ key: 'a', value: '1' }];
+    render(
+      <ParamsTab
+        template={createTemplate({ queryParams: params })}
+        changeTemplate={mockChangeTemplate}
+        field="queryParams"
+        emptyDataTitle="No parameters"
+      />,
+    );
+
+    const mockApi = createMockApi();
+    capturedOnGridReady({ api: mockApi });
+
+    expect(mockApi.updateGridOptions).toHaveBeenCalledWith({
+      columnDefs: expect.any(Array),
+      rowData: params,
+    });
+  });
+
+  test('ref.add appends new empty param and calls changeTemplate', () => {
+    const ref = createRef<ParamsTabRef>();
     const template = createTemplate({ queryParams: [{ key: 'existing', value: 'val' }] });
 
     render(
       <ParamsTab
+        ref={ref}
         template={template}
         changeTemplate={mockChangeTemplate}
         field="queryParams"
-        title="Parameters"
         emptyDataTitle="No parameters"
       />,
     );
 
-    // Simulate gridApi for onAddParam to read lastDisplayedRowIndex
-    const mockApi = {
-      updateGridOptions: vi.fn(),
-      getLastDisplayedRowIndex: () => 0,
-      ensureIndexVisible: vi.fn(),
-      isDestroyed: () => false,
-    };
-    capturedOnGridReady({ api: mockApi } as any);
+    const mockApi = createMockApi();
+    capturedOnGridReady({ api: mockApi });
 
-    fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.Add }));
+    ref.current?.add();
 
     expect(mockChangeTemplate).toHaveBeenCalledTimes(1);
-    const updatedTemplate = mockChangeTemplate.mock.calls[0][0];
-    expect(updatedTemplate.queryParams).toHaveLength(2);
-    expect(updatedTemplate.queryParams[1]).toEqual({ key: '', value: '' });
+    expect(mockChangeTemplate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        queryParams: [
+          { key: 'existing', value: 'val' },
+          { key: '', value: '' },
+        ],
+      }),
+    );
   });
 
-  test('Add button preserves existing params', () => {
-    const template = createTemplate({ headers: [{ key: 'auth', value: 'token' }] });
+  test('ref.add works when field data is initially empty', () => {
+    const ref = createRef<ParamsTabRef>();
 
     render(
       <ParamsTab
-        template={template}
+        ref={ref}
+        template={createTemplate({ queryParams: [] })}
+        changeTemplate={mockChangeTemplate}
+        field="queryParams"
+        emptyDataTitle="No parameters"
+      />,
+    );
+
+    const mockApi = createMockApi();
+    capturedOnGridReady({ api: mockApi });
+
+    ref.current?.add();
+
+    expect(mockChangeTemplate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        queryParams: [{ key: '', value: '' }],
+      }),
+    );
+  });
+
+  test('onRemoveParam removes item at given index and calls changeTemplate', () => {
+    render(
+      <ParamsTab
+        template={createTemplate({ headers: [{ key: 'a', value: '1' }, { key: 'b', value: '2' }] })}
         changeTemplate={mockChangeTemplate}
         field="headers"
-        title="Headers"
         emptyDataTitle="No headers"
       />,
     );
 
-    const mockApi = {
-      updateGridOptions: vi.fn(),
-      getLastDisplayedRowIndex: () => 0,
-      ensureIndexVisible: vi.fn(),
-      isDestroyed: () => false,
-    };
-    capturedOnGridReady({ api: mockApi } as any);
+    const onRemove = mockGetDeleteOperation.mock.calls[0][0];
+    onRemove(undefined, 0);
 
-    fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.Add }));
-
-    const updatedTemplate = mockChangeTemplate.mock.calls[0][0];
-    expect(updatedTemplate.headers[0]).toEqual({ key: 'auth', value: 'token' });
+    expect(mockChangeTemplate).toHaveBeenCalledTimes(1);
+    expect(mockChangeTemplate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        headers: [{ key: 'b', value: '2' }],
+      }),
+    );
   });
 
-  test('Add button preserves other template fields', () => {
-    const template = createTemplate({
-      urlTemplate: '/my-url',
-      body: { content: { data: true } },
-      queryParams: [],
-    });
-
+  test('onRemoveParam does nothing when index is null', () => {
     render(
       <ParamsTab
-        template={template}
+        template={createTemplate({ queryParams: [{ key: 'a', value: '1' }] })}
         changeTemplate={mockChangeTemplate}
         field="queryParams"
-        title="Parameters"
         emptyDataTitle="No parameters"
       />,
     );
 
-    const mockApi = {
-      updateGridOptions: vi.fn(),
-      getLastDisplayedRowIndex: () => -1,
-      ensureIndexVisible: vi.fn(),
-      isDestroyed: () => false,
-    };
-    capturedOnGridReady({ api: mockApi } as any);
+    const onRemove = mockGetDeleteOperation.mock.calls[0][0];
+    onRemove(undefined, null);
 
-    fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.Add }));
-
-    const updatedTemplate = mockChangeTemplate.mock.calls[0][0];
-    expect(updatedTemplate.urlTemplate).toBe('/my-url');
-    expect(updatedTemplate.body.content).toEqual({ data: true });
+    expect(mockChangeTemplate).not.toHaveBeenCalled();
   });
 
-  test('onGridReady updates grid options with columnDefs and rowData', () => {
-    const template = createTemplate({ queryParams: [{ key: 'k', value: 'v' }] });
-
+  test('onChangeValue updates the correct field at rowIndex', () => {
+    const params = [{ key: 'old-key', value: 'old-val' }];
     render(
       <ParamsTab
-        template={template}
+        template={createTemplate({ queryParams: params })}
         changeTemplate={mockChangeTemplate}
         field="queryParams"
-        title="Parameters"
         emptyDataTitle="No parameters"
       />,
     );
 
-    const mockUpdateGridOptions = vi.fn();
-    const mockApi = {
-      updateGridOptions: mockUpdateGridOptions,
-      getLastDisplayedRowIndex: () => 0,
-      ensureIndexVisible: vi.fn(),
-      isDestroyed: () => false,
-    };
-    capturedOnGridReady({ api: mockApi } as any);
+    const onChangeValue = mockGetParamsColumns.mock.calls[0][0];
+    onChangeValue('new-val', params[0], 'value', 0);
 
-    expect(mockUpdateGridOptions).toHaveBeenCalledWith({
-      columnDefs: expect.any(Array),
-      rowData: [{ key: 'k', value: 'v' }],
-    });
+    expect(mockChangeTemplate).toHaveBeenCalledTimes(1);
+    expect(mockChangeTemplate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        queryParams: [{ key: 'old-key', value: 'new-val' }],
+      }),
+    );
   });
 
-  test('calls getParamsColumns with onChangeValue callback', () => {
+  test('onChangeValue does nothing when rowIndex is undefined', () => {
+    const params = [{ key: 'k', value: 'v' }];
+    render(
+      <ParamsTab
+        template={createTemplate({ queryParams: params })}
+        changeTemplate={mockChangeTemplate}
+        field="queryParams"
+        emptyDataTitle="No parameters"
+      />,
+    );
+
+    const onChangeValue = mockGetParamsColumns.mock.calls[0][0];
+    onChangeValue('new-val', params[0], 'value', undefined);
+
+    expect(mockChangeTemplate).not.toHaveBeenCalled();
+  });
+
+  test('calls getParamsColumns with an onChangeValue callback', () => {
     render(
       <ParamsTab
         template={createTemplate()}
         changeTemplate={mockChangeTemplate}
         field="queryParams"
-        title="Parameters"
         emptyDataTitle="No parameters"
       />,
     );
@@ -288,108 +260,16 @@ describe('ParamsTab', () => {
     expect(mockGetParamsColumns).toHaveBeenCalledWith(expect.any(Function));
   });
 
-  test('onChangeValue calls changeTemplate with updated param', () => {
-    const template = createTemplate({ queryParams: [{ key: 'name', value: 'old' }] });
-
+  test('passes field data as rowData to getIsEmptyData check for headers field', () => {
     render(
       <ParamsTab
-        template={template}
-        changeTemplate={mockChangeTemplate}
-        field="queryParams"
-        title="Parameters"
-        emptyDataTitle="No parameters"
-      />,
-    );
-
-    const onChangeValue = mockGetParamsColumns.mock.calls[0][0];
-    onChangeValue('new-value', { key: 'name', value: 'old' }, 'value', 0);
-
-    expect(mockChangeTemplate).toHaveBeenCalledTimes(1);
-    const updatedTemplate = mockChangeTemplate.mock.calls[0][0];
-    expect(updatedTemplate.queryParams[0].value).toBe('new-value');
-  });
-
-  test('onChangeValue does nothing when rowIndex is null', () => {
-    render(
-      <ParamsTab
-        template={createTemplate({ queryParams: [{ key: 'k', value: 'v' }] })}
-        changeTemplate={mockChangeTemplate}
-        field="queryParams"
-        title="Parameters"
-        emptyDataTitle="No parameters"
-      />,
-    );
-
-    const onChangeValue = mockGetParamsColumns.mock.calls[0][0];
-    onChangeValue('val', {}, 'key', null);
-
-    expect(mockChangeTemplate).not.toHaveBeenCalled();
-  });
-
-  test('onChangeValue does nothing when rowIndex is undefined', () => {
-    render(
-      <ParamsTab
-        template={createTemplate({ queryParams: [{ key: 'k', value: 'v' }] })}
-        changeTemplate={mockChangeTemplate}
-        field="queryParams"
-        title="Parameters"
-        emptyDataTitle="No parameters"
-      />,
-    );
-
-    const onChangeValue = mockGetParamsColumns.mock.calls[0][0];
-    onChangeValue('val', {}, 'key', undefined);
-
-    expect(mockChangeTemplate).not.toHaveBeenCalled();
-  });
-
-  test('works with headers field', () => {
-    render(
-      <ParamsTab
-        template={createTemplate({ headers: [{ key: 'Content-Type', value: 'application/json' }] })}
+        template={createTemplate({ headers: [{ key: 'x', value: 'y' }] })}
         changeTemplate={mockChangeTemplate}
         field="headers"
-        title="Headers"
         emptyDataTitle="No headers"
       />,
     );
 
-    expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent('Headers: 1');
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
-  });
-
-  test('renders with correct container classes', () => {
-    const { container } = render(
-      <ParamsTab
-        template={createTemplate()}
-        changeTemplate={mockChangeTemplate}
-        field="queryParams"
-        title="Parameters"
-        emptyDataTitle="No parameters"
-      />,
-    );
-
-    const wrapper = container.firstChild as HTMLElement;
-    expect(wrapper).toHaveClass('flex', 'flex-col', 'gap-3', 'size-full');
-  });
-
-  test('heading shows correct count for multiple params', () => {
-    const params = [
-      { key: 'a', value: '1' },
-      { key: 'b', value: '2' },
-      { key: 'c', value: '3' },
-    ];
-
-    render(
-      <ParamsTab
-        template={createTemplate({ queryParams: params })}
-        changeTemplate={mockChangeTemplate}
-        field="queryParams"
-        title="Query Params"
-        emptyDataTitle="No params"
-      />,
-    );
-
-    expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent('Query Params: 3');
+    expect(capturedGetIsEmptyData()).toBe(false);
   });
 });
