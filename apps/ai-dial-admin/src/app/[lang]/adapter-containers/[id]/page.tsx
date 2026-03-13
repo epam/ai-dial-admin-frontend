@@ -8,6 +8,7 @@ import { SaveValidationContextProvider } from '@/src/context/SaveValidationConte
 import { Container } from '@/src/models/deployments/containers';
 import { Image } from '@/src/models/deployments/images';
 import { errorObjLog } from '@/src/server/logger';
+import { CONTAINER_SOURCE_TYPE } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -40,17 +41,20 @@ export default async function Page(params: Params) {
     container = containerResponse.response as Container;
     containers = containersResponse.response as Container[];
 
-    const imageResponse = await getImage(container?.source.imageDefinitionId as string);
-    if (!imageResponse.success) {
-      notFound();
+    if (container?.source?.$type === CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE) {
+      const imageResponse = await getImage(container?.source.imageDefinitionId as string);
+      if (!imageResponse.success) {
+        notFound();
+      }
+      image = imageResponse.response as Image;
     }
-    image = imageResponse.response as Image;
     adapters = await adaptersApi.getAdaptersList(token);
   } catch (e) {
-    errorObjLog(e, 'Failed to fetch interceptor container page');
+    errorObjLog(e, 'Failed to fetch adapter container page');
   }
 
-  if (!container || !image) {
+  const requiresImage = container?.source?.$type === CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE;
+  if (!container || (requiresImage && !image)) {
     notFound();
   }
 
@@ -58,7 +62,7 @@ export default async function Page(params: Params) {
     <SaveValidationContextProvider>
       <ContainerView
         container={decodeVariables(container)}
-        image={image}
+        image={image ?? void 0}
         route={ApplicationRoute.AdapterContainers}
         names={containers?.map((container) => container.name as string).filter((name) => name !== container.name) || []}
         createEntity={createAdapter}
