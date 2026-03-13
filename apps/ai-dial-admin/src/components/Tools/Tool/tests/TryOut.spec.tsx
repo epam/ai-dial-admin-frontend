@@ -59,9 +59,7 @@ describe('TryOut - MCP Container', () => {
   test('calls tryOutContainerTool when isMcpToolset and containerId are provided', async () => {
     mockTryOutContainerTool.mockResolvedValue({ success: true, response: { result: 'ok' } });
 
-    render(
-      <TryOut tool={baseTool as any} toolSetName="test-toolset" isMcpToolset containerId="container-123" />,
-    );
+    render(<TryOut tool={baseTool as any} toolSetName="test-toolset" isMcpToolset containerId="container-123" />);
 
     const sendButton = screen.getByRole('button', { name: ButtonsI18nKey.SendRequest });
     fireEvent.click(sendButton);
@@ -97,9 +95,7 @@ describe('TryOut - MCP Container', () => {
   test('displays error response from container tool call', async () => {
     mockTryOutContainerTool.mockResolvedValue({ success: false, errorMessage: 'Container is not running' });
 
-    render(
-      <TryOut tool={baseTool as any} toolSetName="test-toolset" isMcpToolset containerId="container-123" />,
-    );
+    render(<TryOut tool={baseTool as any} toolSetName="test-toolset" isMcpToolset containerId="container-123" />);
 
     const sendButton = screen.getByRole('button', { name: ButtonsI18nKey.SendRequest });
     fireEvent.click(sendButton);
