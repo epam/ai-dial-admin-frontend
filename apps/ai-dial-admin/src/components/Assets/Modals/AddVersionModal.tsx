@@ -1,5 +1,5 @@
 import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 import semver from 'semver';
 
 import VersionControl from '@/src/components/BaseControls/Version';
@@ -54,6 +54,12 @@ const AddVersionModal: FC<Props> = ({
     },
     [validateVersion],
   );
+
+  useEffect(() => {
+    return () => {
+      dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: true });
+    };
+  }, [dispatch]);
 
   return (
     <DialFormPopup
