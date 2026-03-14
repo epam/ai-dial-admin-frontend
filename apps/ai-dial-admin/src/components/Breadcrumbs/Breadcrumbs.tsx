@@ -37,7 +37,7 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
         {breadcrumbs.map(({ href, key, name }, index) => {
           const label = key ? t(key) : name;
           const linkClassName = classNames(
-            'flex text-secondary relative group-[:last-child]:text-primary',
+            'flex text-secondary relative group-[:last-child]:text-primary w-full',
             'group-[:last-child]:pointer-events-none group-[:not(:last-child)]:hover:text-accent-primary group-[:not(:last-child)]:focus-within:text-accent-primary',
             !href.length && 'pointer-events-none',
           );
