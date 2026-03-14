@@ -13,6 +13,7 @@ import { DialScheme } from '@/src/models/dial/scheme';
 import { ResponseColumn, TestSuite } from '@/src/models/evaluation/test-suite';
 import { EntityViewTab, getEndpointSchemaTabs } from '@/src/utils/tabs/utils';
 import Columns from './Columns/Columns';
+import { TestSuitesI18nKey } from '@/src/constants/i18n';
 
 interface Props {
   testSuite: TestSuite;
@@ -64,20 +65,21 @@ const EndpointSchema: FC<Props> = ({ testSuite, onChangeTestSuite, isSkipRefresh
   );
 
   return (
-    <div className="flex flex-col size-full gap-2">
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-row justify-between">
-          <DialTabs tabs={tabs} activeTab={activeSchemaTab} onClick={onChangeSchemaTab} />
-          {activeSchemaTab !== EntityViewTab.Columns && (
-            <DialSwitch
-              isOn={isJsonView}
-              label="JSON"
-              switchId="jsonView"
-              onChange={() => setIsJsonView(!isJsonView)}
-            />
-          )}
-        </div>
+    <div className="flex flex-col size-full gap-2 border border-primary rounded p-4">
+      <div className="flex flex-row justify-between items-start mb-3">
+        <h3>{t(TestSuitesI18nKey.EndpointSchema)}</h3>
+        {activeSchemaTab !== EntityViewTab.Columns && (
+          <DialSwitch isOn={isJsonView} label="JSON" switchId="jsonView" onChange={() => setIsJsonView(!isJsonView)} />
+        )}
       </div>
+
+      <div className="flex flex-row justify-between items-start mb-3">
+        <DialTabs tabs={tabs} activeTab={activeSchemaTab} onClick={onChangeSchemaTab} />
+        {/* {activeTab !== EntityViewTab.Body && (
+          <DialNeutralButton iconBefore={<IconPlus />} label={t(ButtonsI18nKey.Add)} onClick={onAddParamOrHeader} />
+        )} */}
+      </div>
+
       {activeSchemaTab !== EntityViewTab.Columns ? (
         isJsonView ? (
           <JsonEditor
