@@ -11,15 +11,16 @@ import { generateMetricBindingsRowData } from '@/src/components/TestSuites/utils
 import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Metric, MetricBinding } from '@/src/models/evaluation/metric';
-import { MetricBindingType } from '@/src/types/evaluation';
+import { TestSuite } from '@/src/models/evaluation/test-suite';
 
 interface Props {
   selectedMetric: Metric;
+  selectedTestSuite: TestSuite;
   onChange: (metric: Metric, isSkipRefresh?: boolean) => void;
   isSkipRefresh?: boolean;
 }
 
-const Bindings: FC<Props> = ({ selectedMetric, onChange, isSkipRefresh }) => {
+const Bindings: FC<Props> = ({ selectedMetric, selectedTestSuite, onChange, isSkipRefresh }) => {
   const t = useI18n();
 
   const [gridApi, setGridApi] = useState<GridApi>();
@@ -52,23 +53,29 @@ const Bindings: FC<Props> = ({ selectedMetric, onChange, isSkipRefresh }) => {
   }, [onChange, selectedMetric]);
 
   const onChangeParam = useCallback(
-    (_value: string | object, data: MetricBinding, _field: string, _index?: number) => {
+    (value: string | object, data: MetricBinding, field: string, _index?: number) => {
       const isConfig = selectedMetricConfigSchema.find((s) => s.name === data.property);
       const isInput = selectedMetricInputSchema.find((s) => s.name === data.property);
-
+      const newData: MetricBinding = {
+        ...data,
+        source: { ...data.source },
+      };
+      if (field === 'source.$type') {
+        newData.source.$type = value as string;
+        newData.source.value = '';
+      } else if (field === 'source.value') {
+        newData.source.value = value as string;
+      }
       if (isConfig) {
         const index = selectedMetricRef.current.configBindings?.findIndex((b) => b.property === data.property);
         if (selectedMetricRef.current.configBindings) {
           const configBindings = [...selectedMetricRef.current.configBindings];
           if (index !== undefined && index !== -1) {
-            configBindings.splice(index, 1, data);
+            configBindings.splice(index, 1, newData);
           } else {
-            configBindings.push(data);
+            configBindings.push(newData);
           }
-          onChangeRef.current(
-            { ...selectedMetricRef.current, configBindings },
-            !!(data.source.$type === MetricBindingType.Constant),
-          );
+          onChangeRef.current({ ...selectedMetricRef.current, configBindings }, !(field === 'source.$type'));
         }
       }
       if (isInput) {
@@ -76,14 +83,11 @@ const Bindings: FC<Props> = ({ selectedMetric, onChange, isSkipRefresh }) => {
         if (selectedMetricRef.current.inputBindings) {
           const inputBindings = [...selectedMetricRef.current.inputBindings];
           if (index !== undefined && index !== -1) {
-            inputBindings.splice(index, 1, data);
+            inputBindings.splice(index, 1, newData);
           } else {
-            inputBindings.push(data);
+            inputBindings.push(newData);
           }
-          onChangeRef.current(
-            { ...selectedMetricRef.current, inputBindings },
-            !!(data.source.$type === MetricBindingType.Constant),
-          );
+          onChangeRef.current({ ...selectedMetricRef.current, inputBindings }, !(field === 'source.$type'));
         }
       }
     },
@@ -91,9 +95,22 @@ const Bindings: FC<Props> = ({ selectedMetric, onChange, isSkipRefresh }) => {
   );
 
   const columns = useMemo(() => {
-    //add response columns and test case columns
-    return [...getMetricBindingsColumns(onChangeParam, selectedMetricConfigSchema, [], [], t)];
-  }, [onChangeParam, selectedMetricConfigSchema, t]);
+    return [
+      ...getMetricBindingsColumns(
+        onChangeParam,
+        selectedMetricConfigSchema,
+        selectedTestSuite.testCaseSchema?.map((s) => s.name) || [],
+        selectedTestSuite.responseColumns?.map((s) => s.name) || [],
+        t,
+      ),
+    ];
+  }, [
+    onChangeParam,
+    selectedMetricConfigSchema,
+    selectedTestSuite.responseColumns,
+    selectedTestSuite.testCaseSchema,
+    t,
+  ]);
 
   const data = useMemo(
     () =>
@@ -132,7 +149,7 @@ const Bindings: FC<Props> = ({ selectedMetric, onChange, isSkipRefresh }) => {
   }, [isSkipRefresh, data, gridApi]);
 
   return (
-    <div className="flex flex-col gap-y-4 h-[650px]">
+    <div className="flex flex-col gap-y-4">
       <h1>{t(TestSuitesI18nKey.Bindings)}</h1>
       <GridView
         getIsEmptyData={() => !data.length}

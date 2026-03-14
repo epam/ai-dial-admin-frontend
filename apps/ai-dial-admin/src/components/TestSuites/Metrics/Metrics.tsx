@@ -22,11 +22,13 @@ import {
   updateTestSuiteMetric,
 } from '@/src/app/[lang]/test-suites/actions';
 import Search from '@/src/components/Common/Search/Search';
-import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { Metric } from '@/src/models/evaluation/metric';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import AddMetricModal from './AddMetricModal';
 import MetricContent from './MetricContent';
 
@@ -36,6 +38,8 @@ interface Props {
 
 const Metrics: FC<Props> = ({ selectedTestSuite }) => {
   const t = useI18n();
+  const { showNotification } = useNotification();
+
   const [isDetailsLoading, setIsDetailsLoading] = useState(false);
   const [activeMetricDetails, setActiveMetricDetails] = useState<Metric | null>(null);
 
@@ -96,14 +100,19 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
       delete newMetric.metricDeclarationVersion;
       updateTestSuiteMetric(selectedTestSuite.id as string, newMetric).then((response) => {
         if (response?.success) {
+          showNotification(getSuccessNotification(t(TestSuitesI18nKey.MetricUpdateSuccess)));
           getTestSuiteMetrics(selectedTestSuite.id as string, 0, 1000).then((response) => {
             setMetrics(response?.content);
             loadMetricDetails(newMetric);
           });
+        } else {
+          showNotification(
+            getErrorNotification(t(TestSuitesI18nKey.MetricUpdateFailed), response?.errorMessage || 'Unknown error'),
+          );
         }
       });
     },
-    [loadMetricDetails, selectedTestSuite.id],
+    [loadMetricDetails, selectedTestSuite.id, showNotification, t],
   );
 
   useEffect(() => {
@@ -123,8 +132,6 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
       });
     }
   }, [metrics, selectedTestSuite.id]);
-
-  // console.log(activeMetricDetails);
 
   return (
     <div className="h-full flex flex-row gap-2">
@@ -177,7 +184,12 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
         {isDetailsLoading ? (
           <DialLoader size={40} />
         ) : activeMetricDetails ? (
-          <MetricContent metric={activeMetricDetails} onUpdate={onUpdateMetric} onDelete={onRemoveMetric} />
+          <MetricContent
+            selectedTestSuite={selectedTestSuite}
+            metric={activeMetricDetails}
+            onUpdate={onUpdateMetric}
+            onDelete={onRemoveMetric}
+          />
         ) : (
           <DialNoDataContent title={t(EntitiesI18nKey.NoMetrics)} />
         )}

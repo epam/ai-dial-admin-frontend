@@ -1407,6 +1407,8 @@ export enum TestSuitesI18nKey {
   RemoveSuccess = 'TestSuites.RemoveSuccess',
   RemoveFailed = 'TestSuites.RemoveFailed',
   ImportSuccessDescription = 'TestSuites.ImportSuccessDescription',
+  MetricUpdateSuccess = 'TestSuites.MetricUpdateSuccess',
+  MetricUpdateFailed = 'TestSuites.MetricUpdateFailed',
   RunEvaluation = 'TestSuites.RunEvaluation',
   RunWarning = 'TestSuites.RunWarning',
   RunSuccess = 'TestSuites.RunSuccess',
@@ -1449,6 +1451,7 @@ export enum TestSuitesI18nKey {
   Inputs = 'TestSuites.Inputs',
   Outputs = 'TestSuites.Outputs',
   Bindings = 'TestSuites.Bindings',
+  Results = 'TestSuites.Results',
 }
 
 export enum RunsI18nKey {

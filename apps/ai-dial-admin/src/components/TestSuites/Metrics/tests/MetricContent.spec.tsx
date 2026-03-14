@@ -5,6 +5,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { Metric } from '@/src/models/evaluation/metric';
 import MetricContent from '../MetricContent';
+import { TestSuite } from '@/src/models/evaluation/test-suite';
 
 vi.mock('@/src/locales/client', () => ({
   useI18n: () => (key: string) => key,
@@ -12,6 +13,10 @@ vi.mock('@/src/locales/client', () => ({
 
 vi.mock('../Bindings', () => ({
   default: () => <div role="region" aria-label="bindings" />,
+}));
+
+vi.mock('../Results', () => ({
+  default: () => <div role="region" aria-label="results" />,
 }));
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
@@ -41,25 +46,36 @@ describe('MetricContent', () => {
     metricDeclarationVersion: { description: 'Declaration description' },
   };
 
+  const mockTestSuite: TestSuite = {
+    id: 'suite-1',
+    name: 'Test Suite',
+  };
+
   const onDelete = vi.fn();
   const onUpdate = vi.fn();
 
   test('renders metric name input and content region', () => {
-    render(<MetricContent metric={mockMetric} onDelete={onDelete} onUpdate={onUpdate} />);
+    render(
+      <MetricContent selectedTestSuite={mockTestSuite} metric={mockMetric} onDelete={onDelete} onUpdate={onUpdate} />,
+    );
 
     expect(screen.getByRole('textbox', { name: 'metric-name' })).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'metric-name' })).toHaveValue('Test Metric');
   });
 
   test('renders Delete button when unchanged', () => {
-    render(<MetricContent metric={mockMetric} onDelete={onDelete} onUpdate={onUpdate} />);
+    render(
+      <MetricContent selectedTestSuite={mockTestSuite} metric={mockMetric} onDelete={onDelete} onUpdate={onUpdate} />,
+    );
 
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Delete })).toBeInTheDocument();
   });
 
   test('calls onDelete when Delete button is clicked', async () => {
     const user = userEvent.setup();
-    render(<MetricContent metric={mockMetric} onDelete={onDelete} onUpdate={onUpdate} />);
+    render(
+      <MetricContent selectedTestSuite={mockTestSuite} metric={mockMetric} onDelete={onDelete} onUpdate={onUpdate} />,
+    );
 
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Delete }));
 
@@ -67,14 +83,26 @@ describe('MetricContent', () => {
   });
 
   test('renders Bindings region', () => {
-    render(<MetricContent metric={mockMetric} onDelete={onDelete} onUpdate={onUpdate} />);
+    render(
+      <MetricContent selectedTestSuite={mockTestSuite} metric={mockMetric} onDelete={onDelete} onUpdate={onUpdate} />,
+    );
 
     expect(screen.getByRole('region', { name: 'bindings' })).toBeInTheDocument();
   });
 
+  test('renders Results region', () => {
+    render(
+      <MetricContent selectedTestSuite={mockTestSuite} metric={mockMetric} onDelete={onDelete} onUpdate={onUpdate} />,
+    );
+
+    expect(screen.getByRole('region', { name: 'results' })).toBeInTheDocument();
+  });
+
   test('shows Save and Discard when name is changed', async () => {
     const user = userEvent.setup();
-    render(<MetricContent metric={mockMetric} onDelete={onDelete} onUpdate={onUpdate} />);
+    render(
+      <MetricContent selectedTestSuite={mockTestSuite} metric={mockMetric} onDelete={onDelete} onUpdate={onUpdate} />,
+    );
 
     const nameInput = screen.getByRole('textbox', { name: 'metric-name' });
     await user.clear(nameInput);
@@ -86,7 +114,9 @@ describe('MetricContent', () => {
 
   test('calls onUpdate when Save is clicked after change', async () => {
     const user = userEvent.setup();
-    render(<MetricContent metric={mockMetric} onDelete={onDelete} onUpdate={onUpdate} />);
+    render(
+      <MetricContent selectedTestSuite={mockTestSuite} metric={mockMetric} onDelete={onDelete} onUpdate={onUpdate} />,
+    );
 
     const nameInput = screen.getByRole('textbox', { name: 'metric-name' });
     await user.clear(nameInput);
@@ -98,12 +128,14 @@ describe('MetricContent', () => {
 
   test('resets name when Discard is clicked', async () => {
     const user = userEvent.setup();
-    render(<MetricContent metric={mockMetric} onDelete={onDelete} onUpdate={onUpdate} />);
+    render(
+      <MetricContent selectedTestSuite={mockTestSuite} metric={mockMetric} onDelete={onDelete} onUpdate={onUpdate} />,
+    );
 
     const nameInput = screen.getByRole('textbox', { name: 'metric-name' });
     await user.clear(nameInput);
-    await user.type(nameInput, 'Changed');
-    expect(nameInput).toHaveValue('Changed');
+    await user.type(nameInput, 'Changed Name');
+    expect(nameInput).toHaveValue('Changed Name');
 
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Discard }));
 

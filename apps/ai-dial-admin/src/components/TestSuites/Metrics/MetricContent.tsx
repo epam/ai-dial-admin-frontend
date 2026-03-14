@@ -9,16 +9,19 @@ import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { Metric } from '@/src/models/evaluation/metric';
+import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import Bindings from './Bindings';
+import Results from './Results';
 
 interface Props {
+  selectedTestSuite: TestSuite;
   metric: Metric;
   onDelete: () => void;
   onUpdate: (metric: Metric) => void;
 }
 
-const MetricContent: FC<Props> = ({ metric, onDelete, onUpdate }) => {
+const MetricContent: FC<Props> = ({ metric, selectedTestSuite, onDelete, onUpdate }) => {
   const t = useI18n();
   const [originalMetric, setOriginalMetric] = useState<Metric>(metric);
   const [selectedMetric, setSelectedMetric] = useState<Metric>(structuredClone(metric));
@@ -57,7 +60,7 @@ const MetricContent: FC<Props> = ({ metric, onDelete, onUpdate }) => {
   }, [originalMetric, selectedMetric]);
 
   return (
-    <div className="flex flex-col gap-4 min-h-0">
+    <div className="flex flex-col gap-4 h-full">
       <div className="flex flex-row justify-between items-center">
         <DialInput
           containerClassName={STANDARD_CONTROL_WIDTH}
@@ -79,7 +82,13 @@ const MetricContent: FC<Props> = ({ metric, onDelete, onUpdate }) => {
         )}
       </div>
       <span className="text-secondary dial-tiny block">{metric.metricDeclarationVersion?.description}</span>
-      <Bindings selectedMetric={selectedMetric} onChange={onChangeBinding} isSkipRefresh={isSkipRefresh} />
+      <Bindings
+        selectedTestSuite={selectedTestSuite}
+        selectedMetric={selectedMetric}
+        onChange={onChangeBinding}
+        isSkipRefresh={isSkipRefresh}
+      />
+      <Results selectedMetric={selectedMetric} />
     </div>
   );
 };

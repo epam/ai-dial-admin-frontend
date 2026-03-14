@@ -1432,6 +1432,8 @@ export default {
     ImportSuccess: 'Test cases imported successfully',
     ImportSuccessDescription: 'You can now see them in the list of test cases',
     ImportFailed: 'Test cases import failed',
+    MetricUpdateSuccess: 'Metric updated successfully',
+    MetricUpdateFailed: 'Metric update failed',
     RemoveSuccess: 'Test case removed successfully',
     RemoveFailed: 'Test case remove failed',
     RunEvaluation: 'Run Evaluation',
@@ -1478,6 +1480,7 @@ export default {
     Parameters: 'Parameters',
     Inputs: 'Inputs',
     Outputs: 'Outputs',
+    Results: 'Results',
   },
   FileManager: {
     SelectedItems: 'item(s) selected',
