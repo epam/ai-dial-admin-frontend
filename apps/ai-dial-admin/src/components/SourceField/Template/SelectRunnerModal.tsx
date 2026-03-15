@@ -1,5 +1,5 @@
 import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
-import { FC, useCallback, useState } from 'react';
+import { FC, useState } from 'react';
 
 import { SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
 import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
@@ -8,7 +8,7 @@ import { useI18n } from '@/src/locales/client';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
-import { GridOptions, GridReadyEvent } from 'ag-grid-community';
+import { GridOptions } from 'ag-grid-community';
 import GridView from '@/src/components/Grid/GridView/GridView';
 
 interface Props {
@@ -21,7 +21,6 @@ interface Props {
 
 const SelectRunnerModal: FC<Props> = ({ selected, runners, isModalOpen, onClose, onApply }) => {
   const t = useI18n();
-
   const [selectedRunner, setSelectedRunner] = useState(selected);
 
   const options: GridOptions = {
@@ -39,20 +38,6 @@ const SelectRunnerModal: FC<Props> = ({ selected, runners, isModalOpen, onClose,
     },
   };
 
-  const onGridReady = useCallback(
-    (event: GridReadyEvent) => {
-      event.api?.updateGridOptions({
-        columnDefs: BASE_COLUMNS,
-        rowData: runners,
-      });
-      event.api.forEachNode((node) => {
-        if (node.data.name === selectedRunner) {
-          node.setSelected(true);
-        }
-      });
-    },
-    [runners, selectedRunner],
-  );
   return (
     <DialFormPopup
       onClose={onClose}
@@ -69,9 +54,10 @@ const SelectRunnerModal: FC<Props> = ({ selected, runners, isModalOpen, onClose,
     >
       <div className="flex flex-col px-6 py-4 h-full">
         <GridView
+          columnDefs={BASE_COLUMNS}
+          rowData={runners}
           emptyDataProps={{ title: t(EntitiesI18nKey.NoTemplates) }}
           additionalGridOptions={options}
-          onGridReady={onGridReady}
         />
       </div>
     </DialFormPopup>
