@@ -42,17 +42,21 @@ const BodyTab: FC<Props> = ({ template, changeTemplate }) => {
     [changeTemplate, template],
   );
 
-  return isJsonContent ? (
-    <JsonEditor
-      entity={(template.body?.content || {}) as Record<string, unknown>}
-      setSelectedEntity={onChangeJson as Dispatch<SetStateAction<Record<string, unknown>>>}
-      options={{ stickyScroll: { enabled: false } }}
-    />
-  ) : (
-    <FormDataGrid
-      content={(template.body?.content as FormDataPart[]) || []}
-      changeContent={(content) => onChangeFormData(content)}
-    />
+  return (
+    <div className="w-full h-[350px]">
+      {isJsonContent ? (
+        <JsonEditor
+          entity={(template.body?.content || {}) as Record<string, unknown>}
+          setSelectedEntity={onChangeJson as Dispatch<SetStateAction<Record<string, unknown>>>}
+          options={{ stickyScroll: { enabled: false } }}
+        />
+      ) : (
+        <FormDataGrid
+          content={(template.body?.content as FormDataPart[]) || []}
+          changeContent={(content) => onChangeFormData(content)}
+        />
+      )}
+    </div>
   );
 };
 

@@ -1,4 +1,4 @@
-import { DialLabelledText } from '@epam/ai-dial-ui-kit';
+import { DialIconButton, DialLabelledText } from '@epam/ai-dial-ui-kit';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -25,6 +25,7 @@ import { Container, KubEvent, Pod } from '@/src/models/deployments/containers';
 import { Image } from '@/src/models/deployments/images';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
+import { isEditDisabled } from '@/src/utils/deployments/containers';
 import { getTranslatedType } from '@/src/utils/deployments/entity';
 import { getErrorNotification } from '@/src/utils/notification';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
@@ -58,6 +59,7 @@ const TabsContent: FC<Props> = ({
   const { showNotification } = useNotification();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const editDisabled = useMemo(() => isEditDisabled(selectedContainer), [selectedContainer]);
 
   const handleModalClose = useCallback(() => {
     setIsModalOpen(false);
@@ -88,12 +90,19 @@ const TabsContent: FC<Props> = ({
           <DialLabelledText
             label={t(ContainersI18nKey.ContainerImage, { type: getTranslatedType(route, t) })}
             text={`${image.name} (${image.version})`}
-            postfix={<OpenPopup {...BASE_BUTTON_ICON_PROPS} className="inline ml-2" onClick={handleModalOpen} />}
+            postfix={
+              <DialIconButton
+                className="size-auto ml-2 cursor-pointer text-secondary hover:text-accent-primary"
+                icon={<OpenPopup {...BASE_BUTTON_ICON_PROPS} />}
+                onClick={handleModalOpen}
+                disabled={editDisabled}
+              />
+            }
           />
         )}
       </>
     );
-  }, [handleModalOpen, image, route, t]);
+  }, [editDisabled, handleModalOpen, image, route, t]);
 
   const onApply = useCallback(
     (id: string) => {

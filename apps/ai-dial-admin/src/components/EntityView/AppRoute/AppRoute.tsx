@@ -1,11 +1,12 @@
+import { DialCollapsibleSidebar, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { DialPrimaryButton, DialCollapsibleSidebar } from '@epam/ai-dial-ui-kit';
 
 import RouteContent from '@/src/components/EntityView/AppRoute/Content/RouteContent';
 import CreateRoute from '@/src/components/EntityView/AppRoute/CreateRoute';
 import { ButtonsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { ORDER_DEFAULT_VALUE } from '@/src/constants/routes';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialRole } from '@/src/models/dial/role';
@@ -69,6 +70,7 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
           paths: [''],
           attachmentPaths: { requestBody: [''], responseBody: [''] },
           maxRetryAttempts: 1,
+          order: ORDER_DEFAULT_VALUE,
         } as DialAppRoute,
       ]);
       setActiveRouteIndex(routes?.length || 0);

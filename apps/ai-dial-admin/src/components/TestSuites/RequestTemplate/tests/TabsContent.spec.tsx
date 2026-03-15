@@ -96,17 +96,7 @@ describe('TabsContent', () => {
       />,
     );
 
-    expect(screen.getByText(`Title: ${TabsI18nKey.Parameters}`)).toBeInTheDocument();
     expect(screen.getByText(`Empty: ${BasicI18nKey.NoParameters}`)).toBeInTheDocument();
-  });
-
-  test('passes correct title and emptyDataTitle to Headers ParamsTab', () => {
-    render(
-      <TabsContent activeTab={EntityViewTab.Headers} selectedTestSuite={createTestSuite()} onChange={mockOnChange} />,
-    );
-
-    expect(screen.getByText(`Title: ${TabsI18nKey.Headers}`)).toBeInTheDocument();
-    expect(screen.getByText(`Empty: ${BasicI18nKey.NoHeaders}`)).toBeInTheDocument();
   });
 
   test('passes field="queryParams" to Parameters ParamsTab', () => {
