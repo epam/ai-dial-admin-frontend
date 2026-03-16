@@ -16,7 +16,6 @@ import {
   GridApi,
   GridOptions,
   GridReadyEvent,
-  GridSizeChangedEvent,
   GridStateModule,
   InfiniteRowModelModule,
   ITextFilterParams,
@@ -39,10 +38,9 @@ import { AgGridReact } from 'ag-grid-react';
 import { debounce } from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { getFromLocalStorage } from '@/src/utils/local-storage';
 import CellContextMenu, { ContextMenuPosition } from './CellContextMenu/CellContextMenu';
 import { baseColumnComparator } from './comparators/base-column-comparator';
-import { GRID_COLUMNS_KEY, ROW_HEIGHT } from './constants';
+import { ROW_HEIGHT } from './constants';
 import FloatingFilter from './FloatingFilter/FloatingFilter';
 import { getColumnsStateFromStorage, GridModel, saveColumnsStateToStorage } from './utils';
 
@@ -121,56 +119,40 @@ const AgGridWrapper = <T extends object>({
     [storageKey],
   );
 
-  const onGridSizeChanged = useCallback((e: GridSizeChangedEvent) => {
-    e.api.sizeColumnsToFit();
-  }, []);
-
-  const setGridColumnsState = (e: GridReadyEvent, defaultSorts: ColumnState[]) => {
-    if (storageKey) {
-      const model = getColumnsStateFromStorage(storageKey, defaultSorts);
-      e.api.setFilterModel(model.filters);
-      e.api.applyColumnState({ state: model.columns });
-    } else {
-      e.api.applyColumnState({ state: defaultSorts });
-    }
-  };
+  const setGridColumnsState = useCallback(
+    (defaultSorts: ColumnState[]) => {
+      if (storageKey) {
+        const model = getColumnsStateFromStorage(storageKey, defaultSorts);
+        const columns = columnDefs?.map((col) => {
+          const columnFromStorage =
+            model.columns?.find((storageCol: ColumnState) => storageCol.colId === col.colId) || {};
+          return { ...columnFromStorage, ...col, sort: undefined };
+        });
+        gridApi?.updateGridOptions({ columnDefs: columns, rowData });
+        gridApi?.setFilterModel(model.filters);
+        gridApi?.applyColumnState({ state: model.columns });
+      } else {
+        gridApi?.updateGridOptions({ columnDefs: columnDefs, rowData });
+        gridApi?.applyColumnState({ state: defaultSorts });
+      }
+    },
+    [columnDefs, gridApi, rowData, storageKey],
+  );
 
   const onGridReady = (event: GridReadyEvent) => {
     setGridApi(event.api);
-
-    event.api.sizeColumnsToFit();
-
-    if (columnDefs) {
-      const defaultSorts =
-        columnDefs
-          ?.filter((col) => col.sort)
-          .map(
-            (col) =>
-              ({
-                colId: col.field,
-                sort: col.sort,
-              }) as ColumnState,
-          ) || [];
-      const columns = columnDefs?.map((col) => ({ ...col, sort: undefined }));
-      event.api?.updateGridOptions({ columnDefs: columns, rowData });
-      setGridColumnsState(event, defaultSorts);
-    }
 
     gridReadyCb?.(event);
   };
 
   useEffect(() => {
     if (columnDefs) {
-      const gridColumnsState = getFromLocalStorage(`${GRID_COLUMNS_KEY}${storageKey}`) || '{}';
-      const columnsFromStorage = JSON.parse(gridColumnsState)?.columns;
-      const columns = columnDefs?.map((col) => {
-        const columnFromStorage =
-          columnsFromStorage?.find((storageCol: ColumnState) => storageCol.colId === col.colId) || {};
-        return { ...columnFromStorage, ...col, sort: undefined };
-      });
-      gridApi?.updateGridOptions({ columnDefs: columns, rowData });
+      const defaultSorts =
+        columnDefs?.filter((col) => col.sort).map((col) => ({ colId: col.field, sort: col.sort }) as ColumnState) || [];
+
+      setGridColumnsState(defaultSorts);
     }
-  }, [columnDefs, gridApi, rowData, storageKey]);
+  }, [columnDefs, gridApi, rowData, setGridColumnsState, storageKey]);
 
   const tooltipRenderer = (params: { value: string }) => {
     return (
@@ -244,15 +226,14 @@ const AgGridWrapper = <T extends object>({
         rowHeight={ROW_HEIGHT}
         cellSelection={false}
         theme={themeBalham.withPart(colorSchemeDark).withParams({ ...GRID_THEME_COLORS })}
-        autoSizeStrategy={{ type: 'fitGridWidth' }}
+        autoSizeStrategy={!storageKey ? { type: 'fitGridWidth' } : void 0}
         tooltipShowDelay={500}
         suppressDragLeaveHidesColumns={true}
         defaultColDef={defaultColDef}
-        onGridSizeChanged={onGridSizeChanged}
         onFilterChanged={onStateChanged}
         onSortChanged={onStateChanged}
         onGridReady={onGridReady}
-        onStateUpdated={handleStateUpdated}
+        onColumnResized={handleStateUpdated}
         onCellContextMenu={onCellContextMenu}
         preventDefaultOnContextMenu={true}
         {...additionalGridOptions}
