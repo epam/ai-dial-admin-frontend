@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { addTrailingSlash, normalizeUrl, removeSlash } from './url';
+import { addTrailingSlash, normalizeUrl, removeSlash } from '../url';
 
 describe('url utils', () => {
   describe('addTrailingSlash', () => {
