@@ -5,6 +5,7 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { ButtonAppearance, ButtonVariant, DialButtonDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
+import { JSONSchema7 } from 'json-schema';
 import { cloneDeep } from 'lodash';
 
 import {
@@ -27,6 +28,7 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
+import { DefaultsValue } from '@/src/models/dial/defaults';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialRole } from '@/src/models/dial/role';
 import { ExportFormat } from '@/src/types/export';
@@ -34,6 +36,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { getSchemaDefaults } from '@/src/utils/schema';
 import { EntityViewTab, getAppRunnerTabs } from '@/src/utils/tabs/utils';
 import TabsContent from './TabsContent';
 
@@ -193,7 +196,13 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
               createEntity={createApplication}
               onClose={() => setIsCreateAppModalOpen(false)}
               names={names}
-              initialValues={{ customAppSchemaId: selectedRunner.$id }}
+              initialValues={{
+                customAppSchemaId: selectedRunner.$id,
+                applicationProperties: getSchemaDefaults(selectedRunner as JSONSchema7) as Record<
+                  string,
+                  DefaultsValue
+                >,
+              }}
             />,
             document.body,
           )}
@@ -205,7 +214,13 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
               onClose={() => setIsCreateAssetAppModalOpen(false)}
               onCreate={createApp}
               context={useAppsFolder}
-              initialValues={{ applicationTypeSchemaId: selectedRunner.$id }}
+              initialValues={{
+                applicationTypeSchemaId: selectedRunner.$id,
+                applicationProperties: getSchemaDefaults(selectedRunner as JSONSchema7) as Record<
+                  string,
+                  DefaultsValue
+                >,
+              }}
             />,
             document.body,
           )}
