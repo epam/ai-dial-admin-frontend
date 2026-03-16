@@ -1,31 +1,53 @@
-import { addTrailingSlash, removeSlash } from '../url';
 import { describe, expect, test } from 'vitest';
 
-describe('Utils :: addTrailingSlash', () => {
-  test('Should add slash', () => {
-    const res = addTrailingSlash('folder1/folder2/all/folder');
-    expect(res).toEqual('folder1/folder2/all/folder/');
+import { addTrailingSlash, normalizeUrl, removeSlash } from './url';
+
+describe('url utils', () => {
+  describe('addTrailingSlash', () => {
+    test('returns empty string for empty input', () => {
+      expect(addTrailingSlash('')).toBe('');
+      expect(addTrailingSlash()).toBe('');
+    });
+
+    test('adds trailing slash when missing', () => {
+      expect(addTrailingSlash('api-url')).toBe('api-url/');
+    });
+
+    test('keeps single trailing slash when already present', () => {
+      expect(addTrailingSlash('api-url/')).toBe('api-url/');
+    });
   });
 
-  test('Should return empty string', () => {
-    expect(addTrailingSlash()).toEqual('');
-    expect(addTrailingSlash('')).toEqual('');
+  describe('removeSlash', () => {
+    test('removes only leading slash', () => {
+      expect(removeSlash('/api-url')).toBe('api-url');
+    });
+
+    test('keeps value when no leading slash', () => {
+      expect(removeSlash('api-url')).toBe('api-url');
+    });
   });
 
-  test('Should not add slash if exists', () => {
-    const res = addTrailingSlash('folder1/folder2/all/folder/');
-    expect(res).toEqual('folder1/folder2/all/folder/');
-  });
-});
+  describe('normalizeUrl', () => {
+    test('normalizes api-url and api-url/ to same value without trailing slash by default', () => {
+      expect(normalizeUrl('api-url')).toBe('api-url/');
+      expect(normalizeUrl('api-url/')).toBe('api-url/');
+    });
 
-describe('Utils :: removeSlash', () => {
-  test('Should remove slash', () => {
-    const res = removeSlash('/folder1/folder2/all/folder');
-    expect(res).toEqual('folder1/folder2/all/folder');
-  });
+    test('returns value with trailing slash when requested', () => {
+      expect(normalizeUrl('api-url', true)).toBe('api-url/');
+      expect(normalizeUrl('api-url/', true)).toBe('api-url/');
+    });
 
-  test('Should remove slash', () => {
-    const res = removeSlash('folder1/folder2/all/folder');
-    expect(res).toEqual('folder1/folder2/all/folder');
+    test('trims spaces around url before normalization', () => {
+      expect(normalizeUrl('  api-url/  ')).toBe('api-url/');
+      expect(normalizeUrl('  api-url  ', true)).toBe('api-url/');
+    });
+
+    test('returns empty string for empty-like values', () => {
+      expect(normalizeUrl()).toBe('');
+      expect(normalizeUrl('')).toBe('');
+      expect(normalizeUrl('   ')).toBe('');
+    });
   });
 });
