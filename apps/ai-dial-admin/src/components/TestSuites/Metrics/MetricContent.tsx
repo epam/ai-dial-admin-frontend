@@ -82,13 +82,15 @@ const MetricContent: FC<Props> = ({ metric, selectedTestSuite, onDelete, onUpdat
         )}
       </div>
       <span className="text-secondary dial-tiny block">{metric.metricDeclarationVersion?.description}</span>
-      <Bindings
-        selectedTestSuite={selectedTestSuite}
-        selectedMetric={selectedMetric}
-        onChange={onChangeBinding}
-        isSkipRefresh={isSkipRefresh}
-      />
-      <Results selectedMetric={selectedMetric} />
+      <div className="flex flex-col gap-4 h-full min-h-0 overflow-auto">
+        <Bindings
+          selectedTestSuite={selectedTestSuite}
+          selectedMetric={selectedMetric}
+          onChange={onChangeBinding}
+          isSkipRefresh={isSkipRefresh}
+        />
+        <Results selectedMetric={selectedMetric} />
+      </div>
     </div>
   );
 };

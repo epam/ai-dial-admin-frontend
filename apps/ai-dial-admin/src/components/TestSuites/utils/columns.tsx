@@ -278,7 +278,13 @@ export const getMetricBindingsColumns = (
     },
     {
       headerName: 'Value',
-      field: 'source.value',
+      valueGetter: (params: ValueGetterParams<MetricBinding>) => {
+        if (params.data?.source?.$type === MetricBindingType.Constant) {
+          return params.data?.source?.value;
+        } else {
+          return params.data?.source?.columnName;
+        }
+      },
       cellClass: NO_BORDER_CLASS,
       cellRendererSelector: (params: ICellRendererParams<MetricBinding>) => {
         if (params.data?.source?.$type === MetricBindingType.TestCase) {

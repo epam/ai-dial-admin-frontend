@@ -1,7 +1,8 @@
 import { describe, expect, test } from 'vitest';
 import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
 import { MetricBinding } from '@/src/models/evaluation/metric';
-import { generateMetricBindingsRowData } from '../metric-bindings';
+import { MetricBindingType } from '@/src/types/evaluation';
+import { createUpdatedMetricBinding, generateMetricBindingsRowData } from '../metric-bindings';
 
 const schemaField = (name: string, id = name): SchemaFieldRow =>
   ({
@@ -131,5 +132,79 @@ describe('generateMetricBindingsRowData', () => {
     expect(result).toHaveLength(1);
     expect(result[0].property).toBe('onlyField');
     expect(result[0].source.value).toBe('used');
+  });
+});
+
+describe('createUpdatedMetricBinding', () => {
+  test('updates source.$type and clears value and columnName', () => {
+    const data: MetricBinding = {
+      property: 'prompt',
+      source: { $type: MetricBindingType.Constant, value: 'hello' },
+    };
+    const result = createUpdatedMetricBinding(MetricBindingType.TestCase, data, 'source.$type');
+
+    expect(result.property).toBe('prompt');
+    expect(result.source.$type).toBe(MetricBindingType.TestCase);
+    expect(result.source.value).toBeUndefined();
+    expect(result.source.columnName).toBeUndefined();
+  });
+
+  test('updates value when field is not source.$type and type is Constant', () => {
+    const data: MetricBinding = {
+      property: 'apiKey',
+      source: { $type: MetricBindingType.Constant, value: 'old' },
+    };
+    const result = createUpdatedMetricBinding('new-secret', data, 'source.value');
+
+    expect(result.property).toBe('apiKey');
+    expect(result.source.$type).toBe(MetricBindingType.Constant);
+    expect(result.source.value).toBe('new-secret');
+    expect(result.source.columnName).toBeUndefined();
+  });
+
+  test('updates columnName when field is not source.$type and type is not Constant', () => {
+    const data: MetricBinding = {
+      property: 'inputField',
+      source: { $type: MetricBindingType.TestCase, columnName: 'old_col' },
+    };
+    const result = createUpdatedMetricBinding('new_col', data, 'source.columnName');
+
+    expect(result.property).toBe('inputField');
+    expect(result.source.$type).toBe(MetricBindingType.TestCase);
+    expect(result.source.columnName).toBe('new_col');
+    expect(result.source.value).toBeUndefined();
+  });
+
+  test('clears columnName when updating Constant value', () => {
+    const data: MetricBinding = {
+      property: 'key',
+      source: { $type: MetricBindingType.Constant, value: 'v', columnName: 'stale' },
+    };
+    const result = createUpdatedMetricBinding('new-value', data, 'other');
+
+    expect(result.source.value).toBe('new-value');
+    expect(result.source.columnName).toBeUndefined();
+  });
+
+  test('clears value when updating non-Constant columnName', () => {
+    const data: MetricBinding = {
+      property: 'col',
+      source: { $type: MetricBindingType.Response, columnName: 'c', value: 'stale' },
+    };
+    const result = createUpdatedMetricBinding('response_col', data, 'other');
+
+    expect(result.source.columnName).toBe('response_col');
+    expect(result.source.value).toBeUndefined();
+  });
+
+  test('does not mutate original data', () => {
+    const data: MetricBinding = {
+      property: 'p',
+      source: { $type: MetricBindingType.Constant, value: 'original' },
+    };
+    const result = createUpdatedMetricBinding('updated', data, 'source.value');
+
+    expect(data.source.value).toBe('original');
+    expect(result.source.value).toBe('updated');
   });
 });
