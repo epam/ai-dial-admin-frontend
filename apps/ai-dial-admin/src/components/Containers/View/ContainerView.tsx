@@ -26,6 +26,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getContainerRedeploySnapshot } from '@/src/utils/deployments/containers';
 import { decodeVariables } from '@/src/utils/deployments/variables';
 import { getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
+import { isImageNotInstalled } from '@/src/utils/deployments/images';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getDeploymentsViewTabs } from '@/src/utils/tabs/utils';
@@ -41,14 +42,24 @@ interface Props {
   entityNames: string[];
 }
 
-const ContainerView: FC<Props> = ({ container, route, createEntity, createEntityAsAsset, entityNames, ...props }) => {
+const ContainerView: FC<Props> = ({
+  container,
+  image,
+  route,
+  createEntity,
+  createEntityAsAsset,
+  entityNames,
+  ...props
+}) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
   const { disableDeploymentsJSONEditor } = useAppContext();
 
+  const imageNotInstalled = isImageNotInstalled(image);
+
   const [tabs, setTabs] = useState<TabModel[]>(
-    getDeploymentsViewTabs(route, t, container.status, container.allowedDomains),
+    getDeploymentsViewTabs(route, t, container.status, container.allowedDomains, imageNotInstalled),
   );
   const [selectedContainer, setSelectedContainer] = useState<Container>(cloneDeep(container));
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
@@ -61,8 +72,8 @@ const ContainerView: FC<Props> = ({ container, route, createEntity, createEntity
   const [pods, setPods] = useState<Pod[]>([]);
 
   useEffect(() => {
-    setTabs(getDeploymentsViewTabs(route, t, container.status, container.allowedDomains));
-  }, [container.allowedDomains, container.status, route, t]);
+    setTabs(getDeploymentsViewTabs(route, t, container.status, container.allowedDomains, imageNotInstalled));
+  }, [container.allowedDomains, container.status, imageNotInstalled, route, t]);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -274,6 +285,7 @@ const ContainerView: FC<Props> = ({ container, route, createEntity, createEntity
           onChangeActiveTab={setActiveTab}
           route={route}
           container={selectedContainer}
+          image={image}
           isChanged={isChanged}
           isRedeployRequired={isRedeployRequired}
           onSave={onSave}
@@ -301,6 +313,7 @@ const ContainerView: FC<Props> = ({ container, route, createEntity, createEntity
               onChange={setSelectedContainer}
               pods={pods}
               restarts={restarts}
+              image={image}
               {...props}
             />
           )}
