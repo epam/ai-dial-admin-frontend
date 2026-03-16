@@ -79,7 +79,6 @@ export default {
     URL: 'URL',
     Request: 'Request',
     Response: 'Response',
-    Variables: 'Variables',
     Server: 'Server',
     Client: 'Client',
     ContentType: 'Content-Type',
@@ -1439,6 +1438,7 @@ export default {
     RunSuccessDescription: 'Evaluation results will be available in a few minutes',
     SelectedTestCases: 'Selected test cases',
     NumberOfRuns: 'Number of runs',
+    TryoutWarning: 'Test this suite`s request template against a real deployment.',
     RunWarning:
       'When running test cases more than once, some evaluation results may be unavailable or displayed differently.',
     MethodChangeWarning:
