@@ -1406,6 +1406,8 @@ export enum TestSuitesI18nKey {
   RemoveSuccess = 'TestSuites.RemoveSuccess',
   RemoveFailed = 'TestSuites.RemoveFailed',
   ImportSuccessDescription = 'TestSuites.ImportSuccessDescription',
+  MetricUpdateSuccess = 'TestSuites.MetricUpdateSuccess',
+  MetricUpdateFailed = 'TestSuites.MetricUpdateFailed',
   RunEvaluation = 'TestSuites.RunEvaluation',
   RunWarning = 'TestSuites.RunWarning',
   RunSuccess = 'TestSuites.RunSuccess',
@@ -1418,6 +1420,8 @@ export enum TestSuitesI18nKey {
   DynamicConfiguration = 'TestSuites.DynamicConfiguration',
   Constant = 'TestSuites.Constant',
   Attribute = 'TestSuites.Attribute',
+  TestCase = 'TestSuites.TestCase',
+  Response = 'TestSuites.Response',
   Warning = 'TestSuites.Warning',
   ColumnsDescription = 'TestSuites.ColumnsDescription',
   EditColumn = 'TestSuites.EditColumn',
@@ -1441,6 +1445,13 @@ export enum TestSuitesI18nKey {
   ImportStepFile = 'TestSuites.ImportStepFile',
   ImportStepOptions = 'TestSuites.ImportStepOptions',
   NoInformationToPreview = 'TestSuites.NoInformationToPreview',
+  AddMetric = 'TestSuites.AddMetric',
+  SelectMetricPreview = 'TestSuites.SelectMetricPreview',
+  Parameters = 'TestSuites.Parameters',
+  Inputs = 'TestSuites.Inputs',
+  Outputs = 'TestSuites.Outputs',
+  Bindings = 'TestSuites.Bindings',
+  Results = 'TestSuites.Results',
 }
 
 export enum RunsI18nKey {

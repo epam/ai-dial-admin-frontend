@@ -8,7 +8,8 @@ import { API } from '@/src/server/api';
 import { BaseApi } from '@/src/server/base-api';
 import { getRequestFiltersStr } from '@/src/utils/request/get-request-filters';
 import { getRequestSortsStr } from '@/src/utils/request/get-request-sorts';
-import { TestCaseConflictStrategy, TestCaseImportMode } from '../../types/evaluation';
+import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
+import { Metric, MetricResponse } from '@/src/models/evaluation/metric';
 
 export const TEST_SUITES_URL = `${API}/test-suites`;
 export const TEST_SUITE_URL = (id?: string) => `${TEST_SUITES_URL}/${id || ''}`;
@@ -22,6 +23,8 @@ export const TEST_CASE_TEMPLATE_VARIABLES_URL = (id: string, testCaseId: string)
   `${TEST_CASES_URL(id)}/${testCaseId}/template-variables`;
 export const TEST_SUITE_TRY_OUT_URL = (id: string) => `${TEST_SUITE_URL(id)}/try-it-out`;
 export const TEST_CASE_TRY_OUT_URL = (id: string, testCaseId: string) => `${TEST_CASE_URL(id, testCaseId)}/try-it-out`;
+export const METRIC_DECLARATIONS_URL = `${API}/metric-declarations`;
+export const TEST_SUITE_METRICS_URL = (id: string) => `${TEST_SUITE_URL(id)}/metric-definitions`;
 
 export class TestSuitesApi extends BaseApi {
   getTestSuites(
@@ -158,5 +161,37 @@ export class TestSuitesApi extends BaseApi {
 
   tryOutTestCase(id: string, testCaseId: string, token: Token): Promise<ServerActionResponse<TryOutResponse> | null> {
     return this.postAction(TEST_CASE_TRY_OUT_URL(id, testCaseId), {}, token);
+  }
+
+  getMetricDeclarations(page: number, size: number, token: Token): Promise<MetricResponse | null> {
+    return this.get(`${METRIC_DECLARATIONS_URL}?page=${page}&size=${size}&includeTotalCount=true`, token);
+  }
+
+  getMetricLatestVersion(id: string, token: Token): Promise<Metric | null> {
+    return this.get(`${METRIC_DECLARATIONS_URL}/${id}/latest`, token);
+  }
+
+  createTestSuiteMetric(id: string, metric: Metric, token: Token): Promise<ServerActionResponse<Metric> | null> {
+    return this.postAction(`${TEST_SUITE_METRICS_URL(id)}`, metric, token);
+  }
+
+  deleteTestSuiteMetric(id: string, metricId: string, token: Token): Promise<ServerActionResponse> {
+    return this.deleteAction(`${TEST_SUITE_METRICS_URL(id)}/${metricId}`, token);
+  }
+
+  updateTestSuiteMetric(id: string, metric: Metric, token: Token): Promise<ServerActionResponse<Metric> | null> {
+    return this.putAction(`${TEST_SUITE_METRICS_URL(id)}/${metric.id}`, metric, token);
+  }
+
+  getTestSuiteMetrics(id: string, page: number, size: number, token: Token): Promise<MetricResponse | null> {
+    return this.get(`${TEST_SUITE_METRICS_URL(id)}?page=${page}&size=${size}&includeTotalCount=true`, token);
+  }
+
+  getTestSuiteMetricDetails(id: string, metricId: string, token: Token): Promise<Metric | null> {
+    return this.get(`${TEST_SUITE_METRICS_URL(id)}/${metricId}`, token);
+  }
+
+  getTestSuiteMetricDetailsWithSchema(id: string, metricId: string, token: Token): Promise<Metric | null> {
+    return this.get(`${TEST_SUITE_METRICS_URL(id)}/${metricId}/aggregated`, token);
   }
 }
