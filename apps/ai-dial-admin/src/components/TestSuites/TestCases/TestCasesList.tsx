@@ -96,7 +96,7 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, testCasesActionsRef, onDi
       e?.stopPropagation();
       sidebar.showSidebar(
         <SaveValidationContextProvider>
-          <TryOut testSuiteId={selectedTestSuite.id || ''} testCaseId={testCaseId || ''} />
+          <TryOut testSuite={selectedTestSuite} testCaseId={testCaseId || ''} />
         </SaveValidationContextProvider>,
         'w-1/2 max-w-[800px] !p-0',
       );

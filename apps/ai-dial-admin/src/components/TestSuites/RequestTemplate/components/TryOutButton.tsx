@@ -26,7 +26,7 @@ const TryOutButton: FC<Props> = ({ testSuite }) => {
       e.stopPropagation();
       sidebar.showSidebar(
         <SaveValidationContextProvider>
-          <TryOut testSuiteId={testSuite.id || ''} />
+          <TryOut testSuite={testSuite} />
         </SaveValidationContextProvider>,
         'w-1/2 max-w-[800px] !p-0',
       );
@@ -35,7 +35,7 @@ const TryOutButton: FC<Props> = ({ testSuite }) => {
         toggleSidebar(e);
       }
     },
-    [sidebar, sidebarOpen, testSuite.id, toggleSidebar],
+    [sidebar, sidebarOpen, testSuite, toggleSidebar],
   );
 
   useEffect(() => {
