@@ -2,10 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
 import { MetricBinding } from '@/src/models/evaluation/metric';
 import { MetricBindingType } from '@/src/types/evaluation';
-import {
-  createUpdatedMetricBinding,
-  generateMetricBindingsRowData,
-} from '../metric-bindings';
+import { createUpdatedMetricBinding, generateMetricBindingsRowData } from '../metric-bindings';
 
 const schemaField = (name: string, id = name): SchemaFieldRow =>
   ({
