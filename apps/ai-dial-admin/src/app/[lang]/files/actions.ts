@@ -5,7 +5,6 @@ import { cookies, headers } from 'next/headers';
 import { assetsApi } from '@/src/app/api/api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { ImportFileType } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
 
 export async function getFiles(path: string) {
@@ -26,11 +25,6 @@ export async function removeFile(path: string) {
 export async function moveFiles(paths: string[], newPath: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return assetsApi.moveAssets(token, paths, newPath, ResourceType.FILE);
-}
-
-export async function importFiles(body: FormData, fileType: ImportFileType) {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.importAssets(token, body, fileType, ResourceType.FILE);
 }
 
 export async function exportFiles(paths: string[]) {
