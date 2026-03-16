@@ -7,6 +7,7 @@ import { fileRequest } from '@/src/utils/api/file-request';
 import { sendRequest } from '@/src/utils/api/send-request';
 import { getApiHeaders, getAuthorizationHeader } from '@/src/utils/auth/api-headers';
 import { errorLog } from './logger';
+import { normalizeUrl } from '../utils/url';
 
 export interface BaseApiConfig {
   host?: string;
@@ -16,7 +17,7 @@ export class BaseApi {
   protected config: BaseApiConfig;
 
   constructor(config: BaseApiConfig) {
-    this.config = config;
+    this.config = { ...config, host: normalizeUrl(config.host) };
   }
 
   protected async deleteAction(url: string, token?: Token): Promise<ServerActionResponse> {
