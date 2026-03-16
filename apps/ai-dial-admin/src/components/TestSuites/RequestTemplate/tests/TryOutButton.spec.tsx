@@ -73,7 +73,9 @@ describe('TryOutButton', () => {
     expect(mockShowSidebar).toHaveBeenCalledTimes(1);
     expect(mockShowSidebar).toHaveBeenCalledWith(expect.any(Object), 'w-1/2 max-w-[800px] !p-0');
 
-    const sidebarElement = mockShowSidebar.mock.calls[0][0] as { props?: { children?: { props?: { testSuite?: TestSuite } } } };
+    const sidebarElement = mockShowSidebar.mock.calls[0][0] as {
+      props?: { children?: { props?: { testSuite?: TestSuite } } };
+    };
     expect(sidebarElement?.props?.children?.props?.testSuite?.id).toBe('suite-42');
   });
 
