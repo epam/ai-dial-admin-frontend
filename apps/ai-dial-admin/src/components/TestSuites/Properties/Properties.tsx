@@ -2,8 +2,14 @@
 
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { DialInputPopup, DialLabel, DialNeutralButton } from '@epam/ai-dial-ui-kit';
-import { IconExternalLink } from '@tabler/icons-react';
+import {
+  ButtonAppearance,
+  DialInputPopup,
+  DialLabel,
+  DialNeutralButton,
+  DialPrimaryButton,
+} from '@epam/ai-dial-ui-kit';
+import { IconEdit, IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import { getDeployments } from '@/src/app/[lang]/test-suites/actions';
@@ -11,6 +17,7 @@ import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import EndpointSchema from '@/src/components/TestSuites/EndpointSchema/EndpointSchema';
 import CreateTestSuite from '@/src/components/TestSuites/Modals/Create/CreateTestSuite';
+import ChangeMethodModal from '@/src/components/TestSuites/Modals/ChangeMethodModal/ChangeMethodModal';
 import RequestTemplate from '@/src/components/TestSuites/RequestTemplate/RequestTemplate';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
@@ -35,7 +42,10 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
   const [deployments, setDeployments] = useState<Deployment[] | null>(null);
   const [selectedAppType, setSelectedAppType] = useState<string | undefined>(void 0);
   const [isAppModalOpen, setIsAppModalOpen] = useState(false);
+  const [isChangeMethodModalOpen, setIsChangeMethodModalOpen] = useState(false);
   const isMobile = useIsMobileScreen();
+
+  const selectedApplication = deployments?.find((d) => d.deploymentId === testSuite.deploymentRef?.id) ?? null;
 
   const openInNewTab = useCallback(() => {
     onOpenInNewTab(selectedAppType === 'dial-application' ? ApplicationRoute.Applications : ApplicationRoute.Models, {
@@ -112,7 +122,13 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
               <div className="flex flex-row justify-between">
                 <MethodEndpoint testSuite={testSuite} />
 
-                <div className="flex flex-row gap-4 items-center">
+                <div className="flex flex-row gap-3 items-center">
+                  <DialPrimaryButton
+                    iconBefore={<IconEdit {...BASE_BUTTON_ICON_PROPS} />}
+                    appearance={ButtonAppearance.Ghost}
+                    label={t(TestSuitesI18nKey.ChangeMethod)}
+                    onClick={() => setIsChangeMethodModalOpen(true)}
+                  />
                   <TryOutButton testSuite={testSuite} />
                 </div>
               </div>
@@ -120,6 +136,14 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
 
             <RequestTemplate testSuite={testSuite} onChangeTestSuite={onChange} />
             <EndpointSchema testSuite={testSuite} onChangeTestSuite={onChange} isSkipRefresh={isSkipRefresh} />
+            <ChangeMethodModal
+              isModal={true}
+              testSuite={testSuite}
+              onChangeTestSuite={(suite) => onChange(suite)}
+              selectedApplication={selectedApplication}
+              isOpen={isChangeMethodModalOpen}
+              onClose={() => setIsChangeMethodModalOpen(false)}
+            />
           </div>
         </>
       )}

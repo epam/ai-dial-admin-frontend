@@ -4,7 +4,7 @@ import { DialPopup, DialSteps, PopupSize, StepStatus } from '@epam/ai-dial-ui-ki
 
 import { getDeployments } from '@/src/app/[lang]/test-suites/actions';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
-import Methods from '@/src/components/TestSuites/Methods/Methods';
+import ChangeMethodModal from '@/src/components/TestSuites/Modals/ChangeMethodModal/ChangeMethodModal';
 import TestSuiteProperties from '@/src/components/TestSuites/Properties/Properties';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -95,7 +95,12 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEnti
           )}
 
           {currentStepId === TestSuitTab.Methods && (
-            <Methods selectedApplication={selectedApplication} testSuite={testSuite} onChange={setTestSuite} isCreate />
+            <ChangeMethodModal
+              isModal={false}
+              testSuite={testSuite}
+              onChangeTestSuite={setTestSuite}
+              selectedApplication={selectedApplication}
+            />
           )}
         </div>
       </div>

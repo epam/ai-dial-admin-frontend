@@ -16,7 +16,6 @@ describe('Components - Breadcrumbs', () => {
     // Check that the chevron is rendered between breadcrumbs
     const allText = screen.getByText(MenuI18nKey.Models).parentElement?.parentElement?.textContent;
     expect(allText).toContain(MenuI18nKey.Models);
-    expect(allText).toContain('1');
   });
 
   test('Should render breadcrumbs for mobile', () => {

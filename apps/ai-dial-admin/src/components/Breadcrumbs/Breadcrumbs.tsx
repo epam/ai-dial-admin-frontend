@@ -8,6 +8,7 @@ import { IconChevronRight } from '@tabler/icons-react';
 import Link from 'next/link';
 import { getBreadcrumbs } from '@/src/components/Breadcrumbs/utils';
 import { Breadcrumb } from '@/src/components/Breadcrumbs/models';
+import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
 interface Props {
   mobile: boolean;
@@ -36,15 +37,15 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
         {breadcrumbs.map(({ href, key, name }, index) => {
           const label = key ? t(key) : name;
           const linkClassName = classNames(
-            'flex text-secondary relative group-[:last-child]:text-primary',
+            'flex text-secondary relative group-[:last-child]:text-primary w-full',
             'group-[:last-child]:pointer-events-none group-[:not(:last-child)]:hover:text-accent-primary group-[:not(:last-child)]:focus-within:text-accent-primary',
             !href.length && 'pointer-events-none',
           );
 
           return (
-            <li key={`${href}_${index}`} className="flex items-center group">
+            <li key={`${href}_${index}`} className="flex items-center group max-w-[300px] truncate">
               <Link prefetch={false} href={href} className={linkClassName}>
-                {decodeURIComponent(label)}
+                <DialEllipsisTooltip text={decodeURIComponent(label)} />
               </Link>
               {breadcrumbs.length !== index + 1 && (
                 <IconChevronRight width={16} height={16} className="text-secondary" />

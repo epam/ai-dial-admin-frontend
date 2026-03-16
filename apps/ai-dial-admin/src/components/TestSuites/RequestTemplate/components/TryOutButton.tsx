@@ -28,7 +28,7 @@ const TryOutButton: FC<Props> = ({ testSuite }) => {
         <SaveValidationContextProvider>
           <TryOut testSuiteId={testSuite.id || ''} />
         </SaveValidationContextProvider>,
-        'w-1/2 max-w-[800px]',
+        'w-1/2 max-w-[800px] !p-0',
       );
       if (sidebarOpen) {
         sidebar.toggleIsMenuClosed?.();

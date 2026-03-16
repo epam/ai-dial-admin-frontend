@@ -1,7 +1,13 @@
 'use client';
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { DialCloseButton, DialLinkButton, DialLoader, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import {
+  DialCloseButton,
+  DialLinkButton,
+  DialLoader,
+  DialNeutralButton,
+  DialPrimaryButton,
+} from '@epam/ai-dial-ui-kit';
 
 import {
   getTestCaseTemplateVariables,
@@ -13,7 +19,7 @@ import Grafana from '@/public/images/icons/grafana.svg';
 import Divider from '@/src/components/Common/Divider/Divider';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { convertVariableIntoInitialRequest } from '@/src/components/TestSuites/utils/template-variables';
-import { BasicI18nKey, ButtonsI18nKey, RunsI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, ButtonsI18nKey, RunsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
 import { TemplateVariable } from '@/src/models/evaluation/test-suite';
@@ -41,7 +47,7 @@ const TryOut: FC<Props> = ({ testSuiteId, testCaseId }) => {
     setRequestBody(body);
   }, []);
 
-  const close = useCallback(() => {
+  const onClose = useCallback(() => {
     if (sidebar.isMenuClosed) {
       toggleSidebar();
       sidebar.toggleIsMenuClosed?.();
@@ -49,7 +55,7 @@ const TryOut: FC<Props> = ({ testSuiteId, testCaseId }) => {
     sidebar.closeSidebar();
   }, [sidebar, toggleSidebar]);
 
-  const sendRequest = useCallback(async () => {
+  const onSendRequest = useCallback(async () => {
     setIsRequestSend(true);
     try {
       const res = testCaseId
@@ -90,30 +96,23 @@ const TryOut: FC<Props> = ({ testSuiteId, testCaseId }) => {
   }, []);
 
   return (
-    <div className="flex flex-col gap-y-8 size-full min-h-0">
+    <div className="flex flex-col gap-y-6 size-full min-h-0 py-6">
       {isLoading ? (
         <DialLoader size={40} />
       ) : (
         <>
-          <div className="flex items-center justify-between">
-            <h1>{t(ButtonsI18nKey.TryOut)}</h1>
-            <div className="flex flex-row items-center gap-x-4">
-              <DialPrimaryButton
-                label={t(ButtonsI18nKey.SendRequest)}
-                onClick={() => sendRequest()}
-                disabled={isRequestSend}
-              />
-              <DialCloseButton onClose={close} />
+          <div className="flex flex-col gap-y-3 px-6">
+            <div className="flex items-center justify-between">
+              <h1>{t(ButtonsI18nKey.TryOut)}</h1>
+              <div className="flex flex-row items-center gap-x-4">
+                <DialCloseButton onClose={onClose} />
+              </div>
             </div>
+            <p className="text-secondary dial-small-text">{t(TestSuitesI18nKey.TryoutWarning)}</p>
           </div>
-          <div className="flex-1 flex flex-col gap-y-8 pb-2 min-h-0">
-            <CollapsibleSection title={t(BasicI18nKey.Variables)}>
-              {variables.length === 0 ? (
-                <div>{t(BasicI18nKey.NoVariables)}</div>
-              ) : (
-                <Variables variables={variables} requestBody={requestBody} onChangeRequestBody={onChangeRequestBody} />
-              )}
-            </CollapsibleSection>
+          <div className="flex-1 flex flex-col gap-y-8 pb-2 min-h-0 px-6">
+            <p className="dial-small-text">{t(TestSuitesI18nKey.DynamicConfiguration)}</p>
+            <Variables variables={variables} requestBody={requestBody} onChangeRequestBody={onChangeRequestBody} />
             <Divider />
 
             {grafanaTraceUrl && (
@@ -146,6 +145,14 @@ const TryOut: FC<Props> = ({ testSuiteId, testCaseId }) => {
                 />
               )}
             </CollapsibleSection>
+          </div>
+          <div className="flex justify-end gap-x-4 px-6 py-4 border-t border-secondary">
+            <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+            <DialPrimaryButton
+              label={t(ButtonsI18nKey.SendRequest)}
+              onClick={() => onSendRequest()}
+              disabled={isRequestSend}
+            />
           </div>
         </>
       )}
