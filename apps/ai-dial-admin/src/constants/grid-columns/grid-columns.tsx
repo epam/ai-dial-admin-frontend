@@ -339,6 +339,11 @@ export const TELEMETRY_COLUMNS: ColDef[] = [
     sort: 'desc',
     ...numericColumn,
   },
+  {
+    field: 'deployment_cost',
+    headerName: 'Deployment Price',
+    ...priceColumn('Deployment Price'),
+  },
 ];
 
 export const TELEMETRY_GRID_COLUMNS: ColDef[] = [NAME_COLUMN, ...TELEMETRY_COLUMNS];

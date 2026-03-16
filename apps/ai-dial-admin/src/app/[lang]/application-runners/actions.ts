@@ -35,6 +35,10 @@ export async function getApplicationScheme(name: string, etag: string) {
   return applicationRunnersApi.getApplicationScheme(name, token, etag);
 }
 
+export async function getResolvedApplicationScheme(name: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return applicationRunnersApi.getResolvedApplicationScheme(name, token);
+}
 export async function getCoreRunner(name: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return applicationRunnersApi.getCoreRunner(name, token);

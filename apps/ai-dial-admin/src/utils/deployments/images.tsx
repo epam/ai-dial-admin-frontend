@@ -8,6 +8,10 @@ import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 import StatusIcon from '@/src/components/Deployments/Common/StatusIndicator/StatusIcon';
 
+export function isImageNotInstalled(image?: Image): boolean {
+  return image?.buildStatus === IMAGE_STATUS.NOT_BUILT || image?.buildStatus === IMAGE_STATUS.BUILD_FAILED;
+}
+
 export function getActionClass(action: IMAGE_STATUS | CONTAINER_STATUS): string {
   return STATUS_CLASSNAMES[action];
 }
