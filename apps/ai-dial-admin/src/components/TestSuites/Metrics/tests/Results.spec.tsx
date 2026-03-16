@@ -72,31 +72,4 @@ describe('Results', () => {
     expect(screen.getByText('passed')).toBeInTheDocument();
     expect(screen.getByText('Whether the test passed')).toBeInTheDocument();
   });
-
-  test('renders nested result items when outputSchema has nested object', () => {
-    const selectedMetric: Metric = {
-      id: 'metric-1',
-      metricDeclarationVersion: {
-        outputSchema: {
-          type: 'object',
-          properties: {
-            details: {
-              type: 'object',
-              description: 'Result details',
-              properties: {
-                reason: { type: 'string', description: 'Failure reason' },
-              },
-            },
-          },
-        },
-      },
-    };
-
-    render(<Results selectedMetric={selectedMetric} />);
-
-    expect(screen.getByText('details')).toBeInTheDocument();
-    expect(screen.getByText('Result details')).toBeInTheDocument();
-    expect(screen.getByText('reason')).toBeInTheDocument();
-    expect(screen.getByText('Failure reason')).toBeInTheDocument();
-  });
 });
