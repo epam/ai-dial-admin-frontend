@@ -169,7 +169,7 @@ export function getSchemaDefaults(
 
   const resolvedSchema = resolve(schema);
 
-  if (resolvedSchema.type !== 'object' || !resolvedSchema.properties) {
+  if (!resolvedSchema.properties) {
     return {};
   }
 
