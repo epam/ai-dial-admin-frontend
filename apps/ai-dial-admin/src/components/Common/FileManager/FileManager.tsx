@@ -268,7 +268,7 @@ const FileManager: FC<Props> = ({ label, columnDefs, view, getContext, ...props 
   );
 
   const handlePreviewFile = useCallback((path?: string) => {
-    window.open(`/${FILE_PREVIEW}?path=${encodeURIComponent(path || '')}`, '_blank');
+    window.open(`${FILE_PREVIEW}?path=${encodeURIComponent(path || '')}`, '_blank');
   }, []);
 
   const handleDragAndDropFiles = useCallback(
