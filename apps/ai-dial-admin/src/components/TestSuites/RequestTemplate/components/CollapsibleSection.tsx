@@ -22,10 +22,13 @@ const CollapsibleSection: FC<PropsWithChildren<Props>> = ({
 
   return (
     <div className={classNames('min-h-0 flex flex-col', isOpen && growOnOpen && 'flex-1')}>
-      <h3 className="w-full mb-4 flex items-center gap-x-2 cursor-pointer select-none" onClick={toggle}>
+      <p
+        className="w-full mb-4 flex items-center gap-x-2 cursor-pointer select-none dial-small-text font-semibold"
+        onClick={toggle}
+      >
         <IconChevronDown className={classNames('transition-transform', !isOpen && '-rotate-90')} size={16} />
         {title}
-      </h3>
+      </p>
       {isOpen && (
         <div className={classNames('min-h-0 overflow-y-auto flex flex-col', growOnOpen && 'flex-1')}>{children}</div>
       )}
