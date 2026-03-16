@@ -54,9 +54,10 @@ export enum EntityViewTab {
   Columns = 'Columns',
 }
 
-export const propertiesTab = (t: (key: string) => string) => ({
+export const propertiesTab = (t: (key: string) => string, warning?: boolean) => ({
   id: EntityViewTab.Properties,
   label: t(TabsI18nKey.Properties),
+  warning,
 });
 
 export const featuresTab = (t: (key: string) => string) => ({
@@ -371,6 +372,7 @@ export const getDeploymentsViewTabs = (
   t: (key: string) => string,
   status?: CONTAINER_STATUS | IMAGE_STATUS,
   allowedWhitelist?: string[],
+  propertiesWarning?: boolean,
 ): TabModel[] => {
   if (route === ApplicationRoute.Images) {
     return [
@@ -382,7 +384,7 @@ export const getDeploymentsViewTabs = (
   }
   if (route === ApplicationRoute.McpContainers) {
     return [
-      propertiesTab(t),
+      propertiesTab(t, propertiesWarning),
       firewallTab(t, !!allowedWhitelist?.includes(ALLOW_ALL_DOMAINS)),
       deploymentsToolsTab(t, status as CONTAINER_STATUS),
       resourcesTab(t, status as CONTAINER_STATUS),
@@ -392,7 +394,7 @@ export const getDeploymentsViewTabs = (
     ];
   }
   return [
-    propertiesTab(t),
+    propertiesTab(t, propertiesWarning),
     firewallTab(t, !!allowedWhitelist?.includes(ALLOW_ALL_DOMAINS)),
     executionLogTab(t),
     eventsTab(t),

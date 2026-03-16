@@ -1340,6 +1340,9 @@ export enum ContainersI18nKey {
   FromInternalAdapterImage = 'Containers.FromInternalAdapterImage',
   FromInternalInterceptorImage = 'Containers.FromInternalInterceptorImage',
   FromDockerImageReference = 'Containers.FromDockerImageReference',
+  ImageNotInstalledWarning = 'Containers.ImageNotInstalledWarning',
+  ImageBuildFailedWarning = 'Containers.ImageBuildFailedWarning',
+  InstallImage = 'Containers.InstallImage',
 }
 
 export enum DeploymentsI18nKey {
