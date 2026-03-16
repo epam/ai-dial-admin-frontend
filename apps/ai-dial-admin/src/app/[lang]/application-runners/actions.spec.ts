@@ -8,6 +8,7 @@ import {
   createApplicationScheme,
   getApplicationScheme,
   getCoreRunner,
+  getResolvedApplicationScheme,
   removeApplicationScheme,
   updateApplicationScheme,
   updateCoreRunner,
@@ -75,6 +76,15 @@ describe('Applications schemes :: server actions', () => {
     const result = await getApplicationScheme('test', 'etag');
     expect(getUserToken).toHaveBeenCalled();
     expect(applicationRunnersApi.getApplicationScheme).toHaveBeenCalledWith('test', TOKEN_MOCK, 'etag');
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getResolvedApplicationScheme action', async () => {
+    (applicationRunnersApi.getResolvedApplicationScheme as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getResolvedApplicationScheme('test');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(applicationRunnersApi.getResolvedApplicationScheme).toHaveBeenCalledWith('test', TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

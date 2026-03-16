@@ -3,8 +3,12 @@ import { describe, expect, test, vi } from 'vitest';
 import ParametersTab from '../ParametersTab';
 import { BasicI18nKey } from '@/src/constants/i18n';
 
+vi.mock('@/src/app/[lang]/application-runners/actions', () => ({
+  getResolvedApplicationScheme: vi.fn().mockResolvedValue({ success: false }),
+}));
+
 describe('Applications - ApplicationParametersTab', () => {
-  test('Should correctly render notification', () => {
+  test('Should correctly render notification', async () => {
     render(
       <ParametersTab
         application={{ customAppSchemaId: 'scheme1' }}
@@ -31,12 +35,12 @@ describe('Applications - ApplicationParametersTab', () => {
       />,
     );
 
-    expect(screen.getByText(BasicI18nKey.NoParameters)).toBeInTheDocument();
+    expect(await screen.findByText(BasicI18nKey.NoParameters)).toBeInTheDocument();
   });
 
-  test('Should correctly render notification', () => {
+  test('Should correctly render notification when no application schemes', async () => {
     render(<ParametersTab application={{ editorUrl: 'editorUrl' }} />);
 
-    expect(screen.getByText(BasicI18nKey.NoParameters)).toBeInTheDocument();
+    expect(await screen.findByText(BasicI18nKey.NoParameters)).toBeInTheDocument();
   });
 });

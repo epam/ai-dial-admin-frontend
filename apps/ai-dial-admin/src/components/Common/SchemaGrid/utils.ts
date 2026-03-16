@@ -150,7 +150,7 @@ export const getPrimaryType = (schema: JSONSchema7): JSONSchema7TypeName => {
  * @returns {SchemaFieldRow[]} - array of schema field rows
  */
 export const jsonSchemaToFields = (schema: JSONSchema7 | undefined, root?: JSONSchema7): SchemaFieldRow[] => {
-  if (!schema || schema.type !== 'object' || !schema.properties) {
+  if (!schema || !schema.properties) {
     return [];
   }
   const rootSchema = root ?? schema;

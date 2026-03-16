@@ -8,6 +8,7 @@ import {
   APPLICATION_SCHEME_URL,
   ApplicationRunnersApi,
   CORE_APPLICATION_SCHEME_URL,
+  RESOLVED_APPLICATION_SCHEME_URL,
 } from '../application-runners-api';
 
 const fetch = createFetchMock(vi);
@@ -127,6 +128,17 @@ describe('Server :: ApplicationRunnersApi', () => {
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${APPLICATION_SCHEME_URL(mockScheme.$id)}`,
       expect.objectContaining({ method: 'DELETE' }),
+    );
+  });
+
+  test('Should fetch a resolved application scheme by id', async () => {
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
+
+    await instance.getResolvedApplicationScheme(mockScheme.$id || '', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${RESOLVED_APPLICATION_SCHEME_URL(mockScheme.$id || '')}`,
+      expect.objectContaining({ method: 'GET' }),
     );
   });
 });
