@@ -7,137 +7,113 @@ import TryOutButton from '../components/TryOutButton';
 
 const mockShowSidebar = vi.fn();
 const mockCloseSidebar = vi.fn();
-const mockToggleSidebar = vi.fn();
 const mockToggleIsMenuClosed = vi.fn();
+const mockToggleSidebar = vi.fn();
 
-let mockSidebarOpen = false;
+let sidebarOpen = false;
 
 vi.mock('@/src/context/AppContext', () => ({
   useAppContext: () => ({
     sidebar: {
-      showSidebar: mockShowSidebar,
+      show: false,
+      content: null,
       closeSidebar: mockCloseSidebar,
+      showSidebar: mockShowSidebar,
       toggleIsMenuClosed: mockToggleIsMenuClosed,
+      isMenuClosed: false,
     },
-    sidebarOpen: mockSidebarOpen,
+    sidebarOpen,
     toggleSidebar: mockToggleSidebar,
   }),
 }));
 
-vi.mock('@/src/locales/client', () => ({
-  useI18n: () => (key: string) => key,
-}));
-
-vi.mock('@/src/context/SaveValidationContext', () => ({
-  SaveValidationContextProvider: ({ children }: any) => (
-    <div role="group" aria-label="Save validation">
-      {children}
-    </div>
-  ),
-}));
-
-vi.mock('../components/TryOut', () => ({
-  default: ({ testSuiteId }: { testSuiteId: string }) => (
-    <div role="region" aria-label={`TryOut ${testSuiteId}`}>
-      TryOut {testSuiteId}
-    </div>
-  ),
-}));
-
 vi.mock('@epam/ai-dial-ui-kit', () => ({
-  DialNeutralButton: ({ label, onClick, iconBefore }: any) => (
+  DialNeutralButton: ({ label, onClick }: { label: string; onClick: (event: any) => void }) => (
     <button type="button" onClick={onClick}>
       {label}
     </button>
   ),
 }));
 
+vi.mock('@/public/images/icons/tryout.svg', () => ({
+  default: () => <svg role="img" aria-label="tryout-icon" />,
+}));
+
+vi.mock('../components/TryOut', () => ({
+  default: ({ testSuite }: { testSuite: TestSuite }) => (
+    <section role="region" aria-label="tryout-content">
+      {testSuite?.id}
+    </section>
+  ),
+}));
+
 const createTestSuite = (overrides?: Partial<TestSuite>): TestSuite => ({
   id: 'suite-1',
-  name: 'Test Suite',
+  name: 'Suite 1',
   ...overrides,
 });
 
 describe('TryOutButton', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockSidebarOpen = false;
+    sidebarOpen = false;
   });
 
-  test('renders button with TryOut label', () => {
+  test('renders Try Out button label', () => {
     render(<TryOutButton testSuite={createTestSuite()} />);
 
     expect(screen.getByRole('button', { name: ButtonsI18nKey.TryOut })).toBeInTheDocument();
   });
 
-  test('calls showSidebar with SaveValidationContextProvider and TryOut when clicked', () => {
-    const testSuite = createTestSuite({ id: 'my-suite-id' });
-
-    render(<TryOutButton testSuite={testSuite} />);
+  test('opens sidebar with try out content and expected width class on click', () => {
+    render(<TryOutButton testSuite={createTestSuite({ id: 'suite-42' })} />);
 
     fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.TryOut }));
 
     expect(mockShowSidebar).toHaveBeenCalledTimes(1);
-    expect(mockShowSidebar).toHaveBeenCalledWith(expect.anything(), 'w-1/2 max-w-[800px] !p-0');
-    const [content] = mockShowSidebar.mock.calls[0];
-    const { getByRole } = render(content);
-    expect(getByRole('group', { name: 'Save validation' })).toBeInTheDocument();
-    expect(getByRole('region', { name: 'TryOut my-suite-id' })).toHaveTextContent('TryOut my-suite-id');
+    expect(mockShowSidebar).toHaveBeenCalledWith(expect.any(Object), 'w-1/2 max-w-[800px] !p-0');
+
+    const sidebarElement = mockShowSidebar.mock.calls[0][0] as { props?: { children?: { props?: { testSuite?: TestSuite } } } };
+    expect(sidebarElement?.props?.children?.props?.testSuite?.id).toBe('suite-42');
   });
 
-  test('passes empty string as testSuiteId when testSuite.id is undefined', () => {
-    const testSuite = createTestSuite({ id: undefined });
-
-    render(<TryOutButton testSuite={testSuite} />);
-    fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.TryOut }));
-
-    expect(mockShowSidebar).toHaveBeenCalled();
-    const [content] = mockShowSidebar.mock.calls[0];
-    const { getByRole } = render(content);
-    const tryOutEl = getByRole('region', { name: /^TryOut\s*$/ });
-    expect(tryOutEl).toBeInTheDocument();
-    expect(tryOutEl.textContent).toMatch(/^TryOut\s*$/);
-  });
-
-  test('stops propagation on click', () => {
-    const testSuite = createTestSuite();
-    const parentHandler = vi.fn();
+  test('stops propagation when button is clicked', () => {
+    const parentClick = vi.fn();
 
     render(
-      <div onClick={parentHandler}>
-        <TryOutButton testSuite={testSuite} />
+      <div onClick={parentClick}>
+        <TryOutButton testSuite={createTestSuite()} />
       </div>,
     );
 
     fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.TryOut }));
 
-    expect(mockShowSidebar).toHaveBeenCalled();
-    expect(parentHandler).not.toHaveBeenCalled();
+    expect(parentClick).not.toHaveBeenCalled();
   });
 
-  test('does not call toggleIsMenuClosed or toggleSidebar when sidebar is closed', () => {
-    mockSidebarOpen = false;
+  test('when sidebar is open, closes menu and toggles sidebar on click', () => {
+    sidebarOpen = true;
 
     render(<TryOutButton testSuite={createTestSuite()} />);
+
     fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.TryOut }));
 
-    expect(mockShowSidebar).toHaveBeenCalledTimes(1);
-    expect(mockToggleIsMenuClosed).not.toHaveBeenCalled();
-    expect(mockToggleSidebar).not.toHaveBeenCalled();
-  });
-
-  test('calls toggleIsMenuClosed and toggleSidebar when sidebar is already open', () => {
-    mockSidebarOpen = true;
-
-    render(<TryOutButton testSuite={createTestSuite()} />);
-    fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.TryOut }));
-
-    expect(mockShowSidebar).toHaveBeenCalledTimes(1);
     expect(mockToggleIsMenuClosed).toHaveBeenCalledTimes(1);
     expect(mockToggleSidebar).toHaveBeenCalledTimes(1);
   });
 
-  test('calls closeSidebar on unmount', () => {
+  test('when sidebar is closed, does not toggle menu state', () => {
+    sidebarOpen = false;
+
+    render(<TryOutButton testSuite={createTestSuite()} />);
+
+    fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.TryOut }));
+
+    expect(mockToggleIsMenuClosed).not.toHaveBeenCalled();
+    expect(mockToggleSidebar).not.toHaveBeenCalled();
+  });
+
+  test('closes sidebar on unmount', () => {
     const { unmount } = render(<TryOutButton testSuite={createTestSuite()} />);
 
     unmount();

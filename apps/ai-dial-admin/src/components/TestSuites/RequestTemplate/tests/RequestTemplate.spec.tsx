@@ -92,10 +92,6 @@ vi.mock('@/src/utils/tabs/utils', async (importOriginal) => {
   };
 });
 
-vi.mock('@/src/locales/client', () => ({
-  useI18n: () => (key: string) => key,
-}));
-
 const createTestSuite = (overrides?: Partial<TestSuite>): TestSuite => ({
   id: 'suite-1',
   name: 'My Suite',
