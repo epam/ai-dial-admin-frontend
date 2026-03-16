@@ -7,7 +7,10 @@ import { GridApi, GridReadyEvent } from 'ag-grid-community';
 import { jsonSchemaToFields } from '@/src/components/Common/SchemaGrid/utils';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { getMetricBindingsColumns } from '@/src/components/TestSuites/utils/columns';
-import { generateMetricBindingsRowData } from '@/src/components/TestSuites/utils/metric-bindings';
+import {
+  createUpdatedMetricBinding,
+  generateMetricBindingsRowData,
+} from '@/src/components/TestSuites/utils/metric-bindings';
 import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Metric, MetricBinding } from '@/src/models/evaluation/metric';
@@ -56,16 +59,8 @@ const Bindings: FC<Props> = ({ selectedMetric, selectedTestSuite, onChange, isSk
     (value: string | object, data: MetricBinding, field: string, _index?: number) => {
       const isConfig = selectedMetricConfigSchema.find((s) => s.name === data.property);
       const isInput = selectedMetricInputSchema.find((s) => s.name === data.property);
-      const newData: MetricBinding = {
-        ...data,
-        source: { ...data.source },
-      };
-      if (field === 'source.$type') {
-        newData.source.$type = value as string;
-        newData.source.value = '';
-      } else if (field === 'source.value') {
-        newData.source.value = value as string;
-      }
+      const newData = createUpdatedMetricBinding(value, data, field);
+      const isSkipRefresh = !(field === 'source.$type' || newData.source.value === void 0);
       if (isConfig) {
         const index = selectedMetricRef.current.configBindings?.findIndex((b) => b.property === data.property);
         if (selectedMetricRef.current.configBindings) {
@@ -75,7 +70,7 @@ const Bindings: FC<Props> = ({ selectedMetric, selectedTestSuite, onChange, isSk
           } else {
             configBindings.push(newData);
           }
-          onChangeRef.current({ ...selectedMetricRef.current, configBindings }, !(field === 'source.$type'));
+          onChangeRef.current({ ...selectedMetricRef.current, configBindings }, isSkipRefresh);
         }
       }
       if (isInput) {
@@ -87,7 +82,7 @@ const Bindings: FC<Props> = ({ selectedMetric, selectedTestSuite, onChange, isSk
           } else {
             inputBindings.push(newData);
           }
-          onChangeRef.current({ ...selectedMetricRef.current, inputBindings }, !(field === 'source.$type'));
+          onChangeRef.current({ ...selectedMetricRef.current, inputBindings }, isSkipRefresh);
         }
       }
     },
