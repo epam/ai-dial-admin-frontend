@@ -60,7 +60,12 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
     [t],
   );
 
-  const methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD'];
+  const methods = useMemo(() => {
+    if (isAppRoute) {
+      return ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD'];
+    }
+    return ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE'];
+  }, [isAppRoute]);
 
   const [statusError, setStatusError] = useState('');
   const [bodyError, setBodyError] = useState('');
