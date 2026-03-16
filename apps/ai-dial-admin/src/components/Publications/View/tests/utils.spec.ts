@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
-import { ActionType, Publication } from '@/src/models/dial/publications';
+import { ActionType, ApplicationPublication, Publication } from '@/src/models/dial/publications';
 
-import { getFormDataForPublication } from '../utils';
+import { getCorrectPublication, getFormDataForPublication } from '../utils';
 
 const createPublication = (overrides?: Partial<Publication>): Publication => ({
   path: '/test/path',
@@ -112,5 +112,137 @@ describe('getFormDataForPublication', () => {
     expect(entries).toHaveLength(2);
     expect(entries[0][0]).toBe('publication');
     expect(entries[1][0]).toBe('files');
+  });
+});
+
+describe('getCorrectPublication', () => {
+  const basePublication = (): ApplicationPublication => ({
+    path: '/test/path',
+    requestName: 'test-request',
+    author: 'test-author',
+    createdAt: '2026-01-01T00:00:00Z',
+    status: 'pending',
+    action: ActionType.ADD,
+    folderId: 'folder-1',
+    applicationResources: [
+      {
+        sourceUrl: '',
+        targetUrl: '',
+        reviewUrl: '',
+        action: ActionType.ADD,
+        applicationResource: {
+          name: 'app-resource',
+          path: '/app',
+          folderId: 'f1',
+          version: '1.0',
+          author: 'author',
+          endpoint: 'https://example.com',
+          iconUrl: '',
+          reference: '',
+          maxRetryAttempts: 0,
+          forwardAuthToken: false,
+          editorUrl: '',
+          viewerUrl: '',
+          applicationTypeSchemaId: 'schema-1',
+          descriptionKeywords: [],
+          inputAttachmentTypes: [],
+          dependencies: [],
+          interceptors: [],
+        },
+      },
+    ],
+  });
+
+  it('should return publication with defaults and applicationProperties from record when no temp fields', () => {
+    const publication = basePublication();
+    publication.applicationResources![0].applicationResource.defaults = { foo: 'bar' };
+    publication.applicationResources![0].applicationResource.applicationProperties = { baz: 42 };
+
+    const result = getCorrectPublication(publication) as ApplicationPublication;
+
+    expect(result.applicationResources).toHaveLength(1);
+    expect(result.applicationResources![0].applicationResource.defaults).toEqual({ foo: 'bar' });
+    expect(result.applicationResources![0].applicationResource.applicationProperties).toEqual({ baz: 42 });
+    expect(result.applicationResources![0].applicationResource).not.toHaveProperty('defaultsTemp');
+    expect(result.applicationResources![0].applicationResource).not.toHaveProperty('applicationPropertiesTemp');
+  });
+
+  it('should use convertDefaultsToRecord for defaults when defaultsTemp is present', () => {
+    const publication = basePublication();
+    publication.applicationResources![0].applicationResource.defaultsTemp = [
+      { key: 'a', value: '1', type: 'string' },
+      { key: 'b', value: '2', type: 'string' },
+    ];
+
+    const result = getCorrectPublication(publication) as ApplicationPublication;
+
+    expect(result.applicationResources![0].applicationResource.defaults).toEqual({ a: '1', b: '2' });
+    expect(result.applicationResources![0].applicationResource).not.toHaveProperty('defaultsTemp');
+  });
+
+  it('should use convertDefaultsToRecord for applicationProperties when applicationPropertiesTemp is present', () => {
+    const publication = basePublication();
+    publication.applicationResources![0].applicationResource.applicationPropertiesTemp = [
+      { key: 'x', value: 'val', type: 'string', required: false },
+      { key: 'y', value: 10, type: 'number', required: false },
+    ];
+
+    const result = getCorrectPublication(publication) as ApplicationPublication;
+
+    expect(result.applicationResources![0].applicationResource.applicationProperties).toEqual({ x: 'val', y: 10 });
+    expect(result.applicationResources![0].applicationResource).not.toHaveProperty('applicationPropertiesTemp');
+  });
+
+  it('should prefer defaultsTemp over defaults and applicationPropertiesTemp over applicationProperties', () => {
+    const publication = basePublication();
+    publication.applicationResources![0].applicationResource.defaults = { old: 'default' };
+    publication.applicationResources![0].applicationResource.defaultsTemp = [
+      { key: 'new', value: 'from-temp', type: 'string' },
+    ];
+    publication.applicationResources![0].applicationResource.applicationProperties = { oldProp: 1 };
+    publication.applicationResources![0].applicationResource.applicationPropertiesTemp = [
+      { key: 'newProp', value: 'temp', type: 'string', required: false },
+    ];
+
+    const result = getCorrectPublication(publication) as ApplicationPublication;
+
+    expect(result.applicationResources![0].applicationResource.defaults).toEqual({ new: 'from-temp' });
+    expect(result.applicationResources![0].applicationResource.applicationProperties).toEqual({ newProp: 'temp' });
+    expect(result.applicationResources![0].applicationResource).not.toHaveProperty('defaultsTemp');
+    expect(result.applicationResources![0].applicationResource).not.toHaveProperty('applicationPropertiesTemp');
+  });
+
+  it('should preserve top-level publication fields', () => {
+    const publication = basePublication();
+    publication.path = '/custom/path';
+    publication.requestName = 'my-request';
+    publication.applicationResources![0].applicationResource.defaults = {};
+
+    const result = getCorrectPublication(publication) as ApplicationPublication;
+
+    expect(result.path).toBe('/custom/path');
+    expect(result.requestName).toBe('my-request');
+    expect(result.applicationResources).toHaveLength(1);
+  });
+
+  it('should handle publication with empty applicationResources', () => {
+    const publication = basePublication();
+    publication.applicationResources = [];
+
+    const result = getCorrectPublication(publication) as ApplicationPublication;
+
+    expect(result.applicationResources).toHaveLength(1);
+    expect(result.applicationResources![0].applicationResource.defaults).toEqual({});
+    expect(result.applicationResources![0].applicationResource.applicationProperties).toEqual({});
+  });
+
+  it('should handle publication with undefined applicationResources', () => {
+    const publication = { ...basePublication(), applicationResources: undefined };
+
+    const result = getCorrectPublication(publication) as ApplicationPublication;
+
+    expect(result.applicationResources).toHaveLength(1);
+    expect(result.applicationResources![0].applicationResource.defaults).toEqual({});
+    expect(result.applicationResources![0].applicationResource.applicationProperties).toEqual({});
   });
 });

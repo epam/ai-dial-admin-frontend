@@ -26,7 +26,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { EntityViewTab, getPublicationViewTabs } from '@/src/utils/tabs/utils';
 import { addTrailingSlash } from '@/src/utils/url';
 import TabsContent from './TabsContent';
-import { getFormDataForPublication } from './utils';
+import { getCorrectPublication, getFormDataForPublication } from './utils';
 
 interface Props<T> {
   view: ApplicationRoute;
@@ -125,9 +125,13 @@ const PublicationView = <T extends Publication>({ view, publication, application
   }, [publication]);
 
   const onSave = useCallback(() => {
+    const correctedPublication =
+      view === ApplicationRoute.ApplicationPublications
+        ? getCorrectPublication(selectedPublication)
+        : selectedPublication;
     const body = getFormDataForPublication(
       {
-        ...selectedPublication,
+        ...correctedPublication,
         folderId: addTrailingSlash(selectedPublication.folderId),
       },
       addedFiles,

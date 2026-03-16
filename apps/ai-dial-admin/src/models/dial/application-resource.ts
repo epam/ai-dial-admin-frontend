@@ -1,8 +1,8 @@
-import { BaseEntity } from '@/src/models/dial/base-entity';
+import { BaseEntity, EntityDefaults } from '@/src/models/dial/base-entity';
 import { ApplicationPropertiesTemp } from './application';
 import { DefaultsValue } from './defaults';
 
-export interface DialApplicationResource extends BaseEntity {
+export interface DialApplicationResource extends BaseEntity, EntityDefaults {
   applicationTypeSchemaId: string;
   descriptionKeywords: string[];
   inputAttachmentTypes: string[];
