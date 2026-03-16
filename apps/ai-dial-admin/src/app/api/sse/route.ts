@@ -6,6 +6,7 @@ import { IMAGE_LOGS_URL } from '@/src/server/deployments/images';
 import { CONTAINER_LOGS_URL } from '@/src/server/deployments/containers';
 import { getAuthorizationHeader } from '@/src/utils/auth/api-headers';
 import { APPLICATION_JSON_TYPE, SSE_STREAM_TYPE } from '@/src/constants/request-headers';
+import { normalizeUrl } from '@/src/utils/url';
 
 export async function GET(req: NextRequest) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -13,10 +14,8 @@ export async function GET(req: NextRequest) {
   const id = req.nextUrl.searchParams.get('id') ?? '';
   const podName = req.nextUrl.searchParams.get('podName') ?? '';
 
-  const backendUrl =
-    entity === 'image'
-      ? `${process.env.DIAL_DEPLOYMENTS_API_URL}${IMAGE_LOGS_URL(id)}`
-      : `${process.env.DIAL_DEPLOYMENTS_API_URL}${CONTAINER_LOGS_URL(id, podName)}`;
+  const url = normalizeUrl(process.env.DIAL_DEPLOYMENTS_API_URL);
+  const backendUrl = entity === 'image' ? `${url}${IMAGE_LOGS_URL(id)}` : `${url}${CONTAINER_LOGS_URL(id, podName)}`;
 
   const backendRes = await fetch(backendUrl, {
     method: 'GET',
