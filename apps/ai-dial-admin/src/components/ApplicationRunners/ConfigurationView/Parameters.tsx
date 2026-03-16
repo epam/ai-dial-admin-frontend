@@ -1,8 +1,8 @@
 'use client';
 
-import { FC, useCallback, useRef } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
-import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import { RJSFSchema } from '@rjsf/utils';
 import { JSONSchema7 } from 'json-schema';
 
@@ -10,6 +10,7 @@ import SchemaGrid from '@/src/components/Common/SchemaGrid/SchemaGrid';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
+import { getResolvedApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
 
 interface Props {
   runner?: DialApplicationScheme;
@@ -22,9 +23,13 @@ const Parameters: FC<Props> = ({ runner, onChangeRunner, isSkipRefresh }) => {
   const runnerRef = useRef(runner);
   runnerRef.current = runner;
 
+  const [isLoading, setIsLoading] = useState(false);
+  const [isReadonly, setIsReadonly] = useState(false);
+
+  const [resolvedSchema, setResolvedSchema] = useState<RJSFSchema | null>(null);
+
   const onChangeSchema = useCallback(
     (schema: RJSFSchema, skipRefresh?: boolean) => {
-      delete schema.type;
       const current = runnerRef.current;
       if (!current) return;
       onChangeRunner({ ...current, ...(schema as unknown as DialApplicationScheme) }, skipRefresh);
@@ -32,17 +37,44 @@ const Parameters: FC<Props> = ({ runner, onChangeRunner, isSkipRefresh }) => {
     [onChangeRunner],
   );
 
+  useEffect(() => {
+    const id = runner?.$id;
+    if (!id) {
+      setIsLoading(false);
+      return;
+    }
+    setIsLoading(true);
+    getResolvedApplicationScheme(id).then((res) => {
+      setIsLoading(false);
+      if (res.success && res.response) {
+        const isReadOnly = res.response.isReadOnly;
+        setIsReadonly(isReadOnly);
+        setResolvedSchema(isReadOnly ? res.response.schema : null);
+      } else {
+        setIsReadonly(false);
+        setResolvedSchema(runner as RJSFSchema);
+      }
+    });
+  }, [runner?.$id, onChangeRunner, runner]);
+
   return (
     <div className="flex flex-col size-full">
-      {!runner || !runner?.properties || !Object.keys(runner.properties || {}).length ? (
-        <DialNoDataContent title={t(EntitiesI18nKey.NoConfigurationSchema)} />
+      {isLoading ? (
+        <DialLoader size={40} />
       ) : (
-        <SchemaGrid
-          schema={runner as JSONSchema7}
-          onChange={onChangeSchema}
-          isSkipRefresh={isSkipRefresh}
-          isDialSchema
-        />
+        <>
+          {!runner || !runner?.properties || !Object.keys(runner.properties || {}).length ? (
+            <DialNoDataContent title={t(EntitiesI18nKey.NoConfigurationSchema)} />
+          ) : (
+            <SchemaGrid
+              schema={(resolvedSchema || runner) as JSONSchema7}
+              onChange={onChangeSchema}
+              isSkipRefresh={isSkipRefresh}
+              isReadonly={isReadonly}
+              isDialSchema
+            />
+          )}
+        </>
       )}
     </div>
   );
