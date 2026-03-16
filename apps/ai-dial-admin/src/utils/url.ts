@@ -10,7 +10,7 @@ export const removeSlash = (path: string) => {
   return path?.startsWith('/') ? path.slice(1) : path;
 };
 
-export const normalizeUrl = (url?: string, withTrailingSlash = false) => {
+export const normalizeUrl = (url?: string, withTrailingSlash = true) => {
   if (!url) {
     return '';
   }
