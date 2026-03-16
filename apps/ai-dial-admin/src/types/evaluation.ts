@@ -3,6 +3,12 @@ export enum InputBindingType {
   Attribute = 'Attribute',
 }
 
+export enum MetricBindingType {
+  Constant = 'Constant',
+  TestCase = 'TestCase',
+  Response = 'Response',
+}
+
 export enum TestCaseImportMode {
   OVERRIDE = 'OVERRIDE',
   APPEND = 'APPEND',

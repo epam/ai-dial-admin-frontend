@@ -5,12 +5,14 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 import {
   DEPLOYMENTS_URL,
+  METRIC_DECLARATIONS_URL,
   TEST_CASES_URL,
   TEST_CASE_TEMPLATE_VARIABLES_URL,
   TEST_CASE_TRY_OUT_URL,
   TEST_CASE_URL,
   TEST_SUITES_RUNS_URL,
   TEST_SUITES_URL,
+  TEST_SUITE_METRICS_URL,
   TEST_SUITE_RUN_URL,
   TEST_SUITE_TEMPLATE_VARIABLES_URL,
   TEST_SUITE_TRY_OUT_URL,
@@ -297,6 +299,86 @@ describe('Server :: TestSuiteApi', () => {
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${TEST_CASE_TRY_OUT_URL('id', 'caseId')}`,
       expect.objectContaining({ method: 'POST' }),
+    );
+  });
+
+  test('Should call getMetricDeclarations', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ content: [], totalElements: 0 }));
+    await instance.getMetricDeclarations(0, 10, TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${METRIC_DECLARATIONS_URL}?page=0&size=10&includeTotalCount=true`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
+  test('Should call getMetricLatestVersion', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ id: 'metric-id' }));
+    await instance.getMetricLatestVersion('metric-id', TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${METRIC_DECLARATIONS_URL}/metric-id/latest`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
+  test('Should call getTestSuiteMetrics', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ content: [], totalElements: 0 }));
+    await instance.getTestSuiteMetrics('suite-id', 0, 10, TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_SUITE_METRICS_URL('suite-id')}?page=0&size=10&includeTotalCount=true`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
+  test('Should call getTestSuiteMetricDetails', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ id: 'metric-id' }));
+    await instance.getTestSuiteMetricDetails('suite-id', 'metric-id', TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_SUITE_METRICS_URL('suite-id')}/metric-id`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
+  test('Should call getTestSuiteMetricDetailsWithSchema', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ id: 'metric-id' }));
+    await instance.getTestSuiteMetricDetailsWithSchema('suite-id', 'metric-id', TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_SUITE_METRICS_URL('suite-id')}/metric-id/aggregated`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
+  test('Should call createTestSuiteMetric', async () => {
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
+    const metric = { name: 'My Metric', metricDeclarationId: 'decl-id' };
+    await instance.createTestSuiteMetric('suite-id', metric as any, TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_SUITE_METRICS_URL('suite-id')}`,
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify(metric),
+      }),
+    );
+  });
+
+  test('Should call updateTestSuiteMetric', async () => {
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
+    const metric = { id: 'metric-id', name: 'Updated Metric' };
+    await instance.updateTestSuiteMetric('suite-id', metric as any, TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_SUITE_METRICS_URL('suite-id')}/metric-id`,
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify(metric),
+      }),
+    );
+  });
+
+  test('Should call deleteTestSuiteMetric', async () => {
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
+    await instance.deleteTestSuiteMetric('suite-id', 'metric-id', TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_SUITE_METRICS_URL('suite-id')}/metric-id`,
+      expect.objectContaining({ method: 'DELETE' }),
     );
   });
 });

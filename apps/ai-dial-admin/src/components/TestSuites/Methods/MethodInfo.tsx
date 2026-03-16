@@ -1,31 +1,23 @@
 'use client';
 
 import { Dispatch, FC, SetStateAction, useCallback, useMemo, useState } from 'react';
-import { createPortal } from 'react-dom';
 
-import {
-  AlertVariant,
-  DialAlert,
-  DialConfirmationPopup,
-  DialNeutralButton,
-  DialNoDataContent,
-  PopupSize,
-} from '@epam/ai-dial-ui-kit';
+import { DialNeutralButton, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import { IconPencilMinus } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
 
 import TableView from '@/src/components/Common/ViewSelector/TableView';
 import ViewSelector from '@/src/components/Common/ViewSelector/ViewSelector';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import ChangeMethodModal from '@/src/components/TestSuites/Modals/ChangeMethodModal/ChangeMethodModal';
 import { PARAMETERS_SCHEMA_COLUMNS, TOOL_SCHEMA_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { ButtonsI18nKey, ContainersI18nKey, EntityFieldsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { ContainersI18nKey, EntityFieldsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialScheme } from '@/src/models/dial/scheme';
 import { TestSuite, TestSuiteEndpointRef } from '@/src/models/evaluation/test-suite';
 import { ParamsView } from '@/src/types/parameters';
 import { convertSchemaToTable } from '@/src/utils/schema';
-import Methods from './Methods';
 import MethodEndpoint from './Endpoint';
 
 interface Props {
@@ -64,16 +56,10 @@ const MethodInfo: FC<Props> = ({ testSuite, onChangeTestSuite, selectedAppType }
     [onChangeTestSuite, testSuite],
   );
 
-  const [currentSuite, setCurrentSuite] = useState(structuredClone(testSuite));
-
-  const onConfirm = useCallback(() => {
-    onChangeTestSuite(currentSuite);
-    setIsMethodModalOpen(false);
-  }, [onChangeTestSuite, currentSuite]);
-
-  const disableConfirm = useMemo(() => {
-    return !currentSuite.endpointRef?.method || !currentSuite.endpointRef?.relativeUrlPattern;
-  }, [currentSuite.endpointRef?.method, currentSuite.endpointRef?.relativeUrlPattern]);
+  const selectedApplicationForModal =
+    selectedAppType && testSuite?.deploymentRef?.id
+      ? { $type: selectedAppType, deploymentId: testSuite.deploymentRef.id }
+      : null;
 
   return (testSuite?.endpointRef && !!Object.keys(testSuite?.endpointRef).length) || testSuite ? (
     <div className="size-full flex flex-col gap-4 p-4 relative">
@@ -128,37 +114,14 @@ const MethodInfo: FC<Props> = ({ testSuite, onChangeTestSuite, selectedAppType }
           </div>
         )}
       </div>
-      {isMethodModalOpen &&
-        createPortal(
-          <DialConfirmationPopup
-            portalId="MethodChangeModal"
-            header={t(TestSuitesI18nKey.ChangeMethod)}
-            open={isMethodModalOpen}
-            onClose={() => setIsMethodModalOpen(false)}
-            confirmLabel={t(ButtonsI18nKey.Confirm)}
-            cancelLabel={t(ButtonsI18nKey.Cancel)}
-            onConfirm={onConfirm}
-            disableConfirmButton={disableConfirm}
-            size={PopupSize.Lg}
-            className="h-[800px]"
-          >
-            <div className="size-full flex flex-col gap-4 px-6 py-4">
-              <div className="flex-1 overflow-auto">
-                <Methods
-                  selectedApplication={{
-                    $type: selectedAppType as string,
-                    deploymentId: testSuite?.deploymentRef?.id as string,
-                  }}
-                  testSuite={currentSuite}
-                  onChange={setCurrentSuite}
-                />
-              </div>
-
-              <DialAlert message={t(TestSuitesI18nKey.MethodChangeWarning)} variant={AlertVariant.Warning} />
-            </div>
-          </DialConfirmationPopup>,
-          document.body,
-        )}
+      <ChangeMethodModal
+        isModal={true}
+        testSuite={testSuite}
+        onChangeTestSuite={onChangeTestSuite}
+        selectedApplication={selectedApplicationForModal}
+        isOpen={isMethodModalOpen}
+        onClose={() => setIsMethodModalOpen(false)}
+      />
     </div>
   ) : (
     <DialNoDataContent title={t(TestSuitesI18nKey.NoInformationToPreview)} />

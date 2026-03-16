@@ -1,5 +1,5 @@
 import { useAppContext } from '@/src/context/AppContext';
-import classNames from 'classnames';
+import { mergeClasses } from '@/src/utils/merge-classes';
 
 const Sidebar = () => {
   const { sidebar } = useAppContext();
@@ -7,7 +7,7 @@ const Sidebar = () => {
 
   if (!show || !content) return null;
 
-  return <aside className={classNames('flex shrink-0 min-w-[400px] bg-layer-0 p-4', className)}>{content}</aside>;
+  return <aside className={mergeClasses('flex shrink-0 min-w-[400px] bg-layer-0 p-4', className)}>{content}</aside>;
 };
 
 export default Sidebar;

@@ -78,7 +78,7 @@ describe('TryOutButton', () => {
     fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.TryOut }));
 
     expect(mockShowSidebar).toHaveBeenCalledTimes(1);
-    expect(mockShowSidebar).toHaveBeenCalledWith(expect.anything(), 'w-1/2 max-w-[800px]');
+    expect(mockShowSidebar).toHaveBeenCalledWith(expect.anything(), 'w-1/2 max-w-[800px] !p-0');
     const [content] = mockShowSidebar.mock.calls[0];
     const { getByRole } = render(content);
     expect(getByRole('group', { name: 'Save validation' })).toBeInTheDocument();

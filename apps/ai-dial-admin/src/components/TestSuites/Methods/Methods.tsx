@@ -10,12 +10,12 @@ import { CHAT_COMPLETION_METHOD } from '@/src/components/TestSuites/constants/ch
 import { CHAT_COMPLETION_RELATIVE_URL } from '@/src/components/TestSuites/constants/methods';
 import { generateMethodPathCombinations } from '@/src/components/TestSuites/utils/method';
 import { MenuI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
 import { useI18n } from '@/src/locales/client';
 import { Deployment } from '@/src/models/evaluation/deployment';
 import { TestSuite, TestSuiteEndpointRef } from '@/src/models/evaluation/test-suite';
 import MethodInfo from './MethodInfo';
 import MethodItem from './MethodItem';
-import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
 
 interface Props {
   testSuite: TestSuite;
@@ -76,21 +76,24 @@ const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange, isCreate
         setFullApplication(data);
         const methods = generateMethodPathCombinations(data?.routes);
         setMethods(methods);
-        const index = methods.findIndex(
-          (m) =>
-            m.method === testSuite.endpointRef?.method &&
-            m.relativeUrlPattern === testSuite.endpointRef?.relativeUrlPattern,
-        );
-        onMethodClick(index === -1 ? 0 : index);
       });
     }
-  }, [
-    fullApplication,
-    onMethodClick,
-    selectedApplication,
-    testSuite.endpointRef?.method,
-    testSuite.endpointRef?.relativeUrlPattern,
-  ]);
+  }, [fullApplication, selectedApplication]);
+
+  useEffect(() => {
+    const index = methods.findIndex(
+      (m) =>
+        m.method === testSuite.endpointRef?.method &&
+        m.relativeUrlPattern === testSuite.endpointRef?.relativeUrlPattern,
+    );
+    if (index === -1) {
+      if (isCreate) {
+        onMethodClick(0);
+      }
+      return;
+    }
+    onMethodClick(index + 1);
+  }, [isCreate, methods, onMethodClick, testSuite.endpointRef?.method, testSuite.endpointRef?.relativeUrlPattern]);
 
   return (
     <div className="flex flex-row size-full gap-2">

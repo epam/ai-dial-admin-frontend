@@ -10,6 +10,7 @@ import isEqual from 'lodash/isEqual';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { DialNeutralButton, ElementSize } from '@epam/ai-dial-ui-kit';
 import { getSchemaGridColumns } from './columns';
 import {
   SchemaFieldRow,
@@ -261,13 +262,12 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
       const isRootAdd = !parentId;
       return (
         <div className="flex items-center h-full" style={{ paddingLeft: depth * 24 + 18 + 8 }}>
-          <button
-            className="flex items-center gap-1 tiny text-secondary hover:text-primary"
+          <DialNeutralButton
+            size={ElementSize.Small}
+            iconBefore={<IconPlus size={12} stroke={2.5} />}
+            label={isRootAdd ? t(BasicI18nKey.AddField) : t(BasicI18nKey.AddSubField)}
             onClick={() => (isRootAdd ? onAddField() : onAddSubField(parentId!))}
-          >
-            <IconPlus size={12} stroke={2.5} />
-            {isRootAdd ? t(BasicI18nKey.AddField) : t(BasicI18nKey.AddSubField)}
-          </button>
+          />
         </div>
       );
     },

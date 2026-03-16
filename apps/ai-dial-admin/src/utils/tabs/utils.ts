@@ -191,7 +191,7 @@ export const promptsTab = (t: (key: string) => string, status?: CONTAINER_STATUS
 export const metricsTab = (t: (key: string) => string, status?: CONTAINER_STATUS) => ({
   id: EntityViewTab.Metrics,
   label: t(TabsI18nKey.Metrics),
-  disabled: status !== CONTAINER_STATUS.RUNNING,
+  disabled: status && status !== CONTAINER_STATUS.RUNNING,
 });
 
 export const executionLogTab = (t: (key: string) => string) => ({
@@ -404,7 +404,7 @@ export const getSystemPropertiesTabs = (t: (key: string) => string): TabModel[] 
 };
 
 export const getTestSuiteTabs = (t: (key: string) => string): TabModel[] => {
-  return [propertiesTab(t), testCasesTab(t), runsTab(t)];
+  return [propertiesTab(t), testCasesTab(t), runsTab(t), metricsTab(t)];
 };
 
 export const getPublicationViewTabs = (t: (key: string) => string, view: ApplicationRoute): TabModel[] => {
