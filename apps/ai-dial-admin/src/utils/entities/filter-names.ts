@@ -32,7 +32,7 @@ export const filterDisplayNamesWithVersions = (entities?: DialModel[] | null, cu
         currentModel?.displayVersion &&
         curr.displayVersion !== currentModel?.displayVersion
       ) {
-         acc.push(`${curr.displayName}___${curr.displayVersion || ''}`);
+        acc.push(`${curr.displayName}___${curr.displayVersion || ''}`);
       }
       return acc;
     }, [] as string[]) as string[]) || []
