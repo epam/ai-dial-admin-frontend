@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialNoDataContent, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { DialLoader, DialNoDataContent, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 import { RJSFSchema } from '@rjsf/utils';
 import { IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
@@ -16,6 +16,7 @@ import {
   getFrameConfig,
   getInitialParamsView,
 } from '@/src/components/Applications/ParametersTab/utils';
+import { getResolvedApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
 import SchemaUiRenderer from '@/src/components/Common/SchemaUIRenderer/SchemaUIRenderer';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import FrameRenderer from '@/src/components/FrameRenderer/FrameRenderer';
@@ -64,7 +65,26 @@ const ParametersTab: FC<Props> = ({
   const { data: session } = useSession();
   const { currentTheme } = useTheme();
   const { dispatch } = useSaveValidationContext();
-  const scheme = getAppRunner(application as DialApplication, applicationSchemes);
+  const [scheme, setScheme] = useState<DialApplicationScheme | undefined>(undefined);
+  const [isSchemeLoading, setIsSchemeLoading] = useState(true);
+
+  useEffect(() => {
+    const foundRunner = getAppRunner(application as DialApplication, applicationSchemes);
+    setScheme(foundRunner ?? undefined);
+    if (!foundRunner?.$id) {
+      setIsSchemeLoading(false);
+      return;
+    }
+    setIsSchemeLoading(true);
+    getResolvedApplicationScheme(foundRunner.$id).then((res) => {
+      if (res.success && (res.response as { schema?: DialApplicationScheme })?.schema) {
+        setScheme((res.response as { schema: DialApplicationScheme }).schema);
+      }
+      setIsSchemeLoading(false);
+    });
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [appPropertiesTemp, setAppPropertiesTemp] = useState<ApplicationPropertiesTemp[] | undefined>();
   const [schemeProperties, setSchemeProperties] = useState<ApplicationPropertiesTemp[]>([]);
@@ -195,49 +215,55 @@ const ParametersTab: FC<Props> = ({
         </div>
       )}
       <div className="flex-1 min-h-0">
-        {paramsView !== ParamsView.UI && isEditorEnabled && (
-          <EntityJsonEditor
-            entity={application as BaseEntity}
-            setSelectedEntity={setSelectedApplication}
-            setIsChanged={setIsChanged}
-          />
-        )}
-        {paramsView === ParamsView.TABLE && (
-          <TableView
-            isAddClicked={isAddClicked}
-            setIsAddClicked={setIsAddClicked}
-            properties={appPropertiesTemp || []}
-            onChangeProperties={onChangeProperties}
-            isSkipRefresh={isSkipRefresh}
-          />
-        )}
-        <div
-          className={classNames(
-            paramsView === ParamsView.FORM && !isEditorEnabled ? 'block size-full overflow-y-auto' : 'hidden',
-          )}
-        >
-          {!scheme || !scheme?.properties || !Object.keys(scheme.properties).length ? (
-            <DialNoDataContent title={t(EntitiesI18nKey.NoConfigurationSchema)} />
-          ) : (
-            <div className="flex-1 min-h-0 p-4 bg-layer-0">
-              <SchemaUiRenderer
-                schema={rjsfSchema}
-                data={application?.applicationProperties}
-                onChangeConfiguration={onChangeConfiguration}
-                onGetSchemeDefaults={onGetSchemeDefaults}
-                readonly={
-                  view === ApplicationRoute.ApplicationPublications || view === ApplicationRoute.ApplicationRunners
-                }
+        {isSchemeLoading ? (
+          <DialLoader size={40} />
+        ) : (
+          <>
+            {paramsView !== ParamsView.UI && isEditorEnabled && (
+              <EntityJsonEditor
+                entity={application as BaseEntity}
+                setSelectedEntity={setSelectedApplication}
+                setIsChanged={setIsChanged}
               />
+            )}
+            {paramsView === ParamsView.TABLE && (
+              <TableView
+                isAddClicked={isAddClicked}
+                setIsAddClicked={setIsAddClicked}
+                properties={appPropertiesTemp || []}
+                onChangeProperties={onChangeProperties}
+                isSkipRefresh={isSkipRefresh}
+              />
+            )}
+            <div
+              className={classNames(
+                paramsView === ParamsView.FORM && !isEditorEnabled ? 'block size-full overflow-y-auto' : 'hidden',
+              )}
+            >
+              {!scheme || !scheme?.properties || !Object.keys(scheme.properties).length ? (
+                <DialNoDataContent title={t(EntitiesI18nKey.NoConfigurationSchema)} />
+              ) : (
+                <div className="flex-1 min-h-0 p-4 bg-layer-0">
+                  <SchemaUiRenderer
+                    schema={rjsfSchema}
+                    data={application?.applicationProperties}
+                    onChangeConfiguration={onChangeConfiguration}
+                    onGetSchemeDefaults={onGetSchemeDefaults}
+                    readonly={
+                      view === ApplicationRoute.ApplicationPublications || view === ApplicationRoute.ApplicationRunners
+                    }
+                  />
+                </div>
+              )}
             </div>
-          )}
-        </div>
-        {paramsView === ParamsView.UI && (
-          <FrameRenderer
-            iframeUrl={targetUrl?.href ?? ''}
-            name={frameConfig?.name}
-            isJsonEditorEnabled={isEditorEnabled}
-          />
+            {paramsView === ParamsView.UI && (
+              <FrameRenderer
+                iframeUrl={targetUrl?.href ?? ''}
+                name={frameConfig?.name}
+                isJsonEditorEnabled={isEditorEnabled}
+              />
+            )}
+          </>
         )}
       </div>
     </div>
