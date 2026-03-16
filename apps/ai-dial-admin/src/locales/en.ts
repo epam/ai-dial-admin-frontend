@@ -1367,6 +1367,11 @@ export default {
     FromInternalAdapterImage: 'From Internal Adapter Image',
     FromInternalInterceptorImage: 'From Internal Interceptor Image',
     FromDockerImageReference: 'From Docker Image Reference',
+    ImageNotInstalledWarning:
+      'Image not installed. This container depends on a {imageName} ({imageVersion}) image that has not been installed. Install the image to enable this container.',
+    ImageBuildFailedWarning:
+      'Image installation failed. This container depends on a {imageName} ({imageVersion}) image whose installation has failed. Reinstall the image to enable this container.',
+    InstallImage: 'Install image',
   },
   KubEvents: {
     Normal: 'Normal',

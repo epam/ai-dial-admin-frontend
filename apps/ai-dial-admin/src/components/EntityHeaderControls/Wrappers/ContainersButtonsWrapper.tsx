@@ -32,6 +32,7 @@ import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { Container } from '@/src/models/deployments/containers';
+import { Image } from '@/src/models/deployments/images';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -43,12 +44,14 @@ import {
   getEntityTemplate,
   getTranslatedEntity,
 } from '@/src/utils/deployments/entity';
+import { isImageNotInstalled } from '@/src/utils/deployments/images';
 import { getErrorNotification } from '@/src/utils/notification';
 import Delete from '@/src/components/EntityView/Modals/Delete/Delete';
 
 export interface ContainersButtonsWrapperProps {
   route: ApplicationRoute;
   container: Container;
+  image?: Image;
   isChanged: boolean;
   isRedeployRequired: boolean;
   children?: ReactNode;
@@ -65,6 +68,7 @@ export interface ContainersButtonsWrapperProps {
 const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
   route,
   container,
+  image,
   isChanged,
   isRedeployRequired,
   onDiscard,
@@ -230,6 +234,7 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
                       label={t(ButtonsI18nKey.Run)}
                       iconBefore={<IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} />}
                       onClick={handleRunContainer}
+                      disabled={isImageNotInstalled(image)}
                     />
                   )}
                 </>
