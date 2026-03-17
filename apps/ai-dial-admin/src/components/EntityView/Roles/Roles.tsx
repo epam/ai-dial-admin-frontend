@@ -189,9 +189,9 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
             onOpenAddModal={isReadOnlyAdmin ? undefined : onOpenAddModal}
             onOpenInNewTab={onOpen}
             onRemoveRole={isReadOnlyAdmin ? undefined : onRemoveRole}
-            onResetToDefaultRole={onResetToDefaultRole}
+            onResetToDefaultRole={isReadOnlyAdmin ? undefined : onResetToDefaultRole}
             onResetAllRolesToDefault={onResetAllRolesToDefault}
-            onSetNoLimits={onSetNoLimits}
+            onSetNoLimits={isReadOnlyAdmin ? undefined : onSetNoLimits}
             isResetToDefaultHidden={(api, node) => isResetToDefaultHidden(api, node, entity)}
             isSetNoLimitsHidden={isSetNoLimitsHidden}
             isSkipRefresh={isSkipRefresh}

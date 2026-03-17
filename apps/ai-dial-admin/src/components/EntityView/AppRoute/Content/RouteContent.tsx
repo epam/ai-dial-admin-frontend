@@ -21,7 +21,7 @@ interface Props {
   onChangeRoute: (route: DialAppRoute) => void;
 }
 
-const RouteContent: FC<Props> = ({ route, disabled: readonly, routeNames, onChangeRoute, ...props }) => {
+const RouteContent: FC<Props> = ({ route, disabled, routeNames, onChangeRoute, ...props }) => {
   const t = useI18n();
 
   const tabs = getAppRouteTabs(t);
@@ -40,15 +40,15 @@ const RouteContent: FC<Props> = ({ route, disabled: readonly, routeNames, onChan
             onChange={onChangeRoute}
             isAppRoute={true}
             routeNames={routeNames}
-            disabled={readonly}
+            disabled={disabled}
           />
         )}
 
         {activeTab === EntityViewTab.Attachments && (
-          <RouteAttachments route={route} onChangeRoute={onChangeRoute} disabled={readonly} />
+          <RouteAttachments route={route} onChangeRoute={onChangeRoute} disabled={disabled} />
         )}
         {activeTab === EntityViewTab.Roles && (
-          <RouteRoles route={route} onChangeRoute={onChangeRoute} disabled={readonly} {...props} />
+          <RouteRoles route={route} onChangeRoute={onChangeRoute} disabled={disabled} {...props} />
         )}
       </div>
     </div>

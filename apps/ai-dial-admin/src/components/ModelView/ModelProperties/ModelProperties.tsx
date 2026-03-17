@@ -10,6 +10,7 @@ import Limits from '@/src/components/ModelView/Limits/Limits';
 import Pricing from '@/src/components/ModelView/Pricing/Pricing';
 import TokenizerModelSwitch from '@/src/components/Models/View/TokenizerModel/Tokenizer';
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialModel } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -24,6 +25,7 @@ interface Props {
 
 const ModelProperties: FC<Props> = ({ model, modelsNames, onChangeModel }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   return (
     <div className="h-full flex flex-col gap-8">
@@ -63,6 +65,7 @@ const ModelProperties: FC<Props> = ({ model, modelsNames, onChangeModel }) => {
         label={t(EntityFieldsI18nKey.fieldsHashingOrder)}
         addPlaceholder={t(EntityPlaceholdersI18nKey.Value)}
         addTitle={t(BasicI18nKey.AddField)}
+        disabled={isReadOnlyAdmin}
       />
     </div>
   );

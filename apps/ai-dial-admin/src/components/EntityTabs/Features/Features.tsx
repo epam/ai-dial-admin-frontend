@@ -10,6 +10,7 @@ import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialFeatures } from '@/src/models/dial/features';
 import { ApplicationRoute } from '@/src/types/routes';
 import { placeholdersMap } from './constants';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { getReadOnlyValues, getSwitchControls, getTextControls } from './utils';
 
 interface Props<T> {
@@ -26,6 +27,7 @@ const EntityFeatures = <T extends { features?: DialFeatures }>({
   onChangeEntity,
 }: Props<T>) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const switchKeys = getSwitchControls(view);
   const textKeys = getTextControls(view);
 
@@ -92,7 +94,7 @@ const EntityFeatures = <T extends { features?: DialFeatures }>({
             placement="bottom-start"
           >
             <DialSwitch
-              disabled={isReadonly}
+              disabled={isReadonly || isReadOnlyAdmin}
               isOn={(isReadonly ? value : entity?.features?.[key]) as boolean}
               label={t(FeaturesI18nKey[key as keyof typeof FeaturesI18nKey])}
               switchId={key}

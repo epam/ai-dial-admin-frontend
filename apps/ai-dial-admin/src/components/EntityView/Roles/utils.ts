@@ -93,6 +93,7 @@ const createLimitColumn = (
   defaultValues?: DialRoleLimits,
   onChange?: (value: number, data: DialRole, token: string) => void,
   otherFields: Array<keyof DialRoleLimits> = [],
+  isReadOnlyAdmin?: boolean,
 ) => ({
   headerName,
   field,
@@ -105,9 +106,10 @@ const createLimitColumn = (
     return {
       ...cellRenderParams,
       defaultValue,
-      onChange,
+      onChange: isReadOnlyAdmin ? undefined : onChange,
       showMaxValue:
         (hasOtherValue || hasOtherDefaults) && (!params.data?.[field] || params.data?.[field] === NO_LIMITS_KEY),
+      isReadonly: isReadOnlyAdmin,
     };
   },
 });
@@ -115,11 +117,12 @@ const createLimitColumn = (
 export const LIMIT_COLUMNS = (
   defaultValues?: DialRoleLimits,
   onChange?: (value: number, data: DialRole, token: string) => void,
+  isReadOnlyAdmin?: boolean,
 ) => [
-  createLimitColumn('Tokens per minute', 'minute', defaultValues, onChange, ['day', 'week', 'month']),
-  createLimitColumn('Tokens per day', 'day', defaultValues, onChange, ['minute', 'week', 'month']),
-  createLimitColumn('Tokens per week', 'week', defaultValues, onChange, ['minute', 'day', 'month']),
-  createLimitColumn('Tokens per month', 'month', defaultValues, onChange, ['minute', 'day', 'week']),
+  createLimitColumn('Tokens per minute', 'minute', defaultValues, onChange, ['day', 'week', 'month'], isReadOnlyAdmin),
+  createLimitColumn('Tokens per day', 'day', defaultValues, onChange, ['minute', 'week', 'month'], isReadOnlyAdmin),
+  createLimitColumn('Tokens per week', 'week', defaultValues, onChange, ['minute', 'day', 'month'], isReadOnlyAdmin),
+  createLimitColumn('Tokens per month', 'month', defaultValues, onChange, ['minute', 'day', 'week'], isReadOnlyAdmin),
 ];
 
 export const integerValueFormatter = (v: string | number) => {
@@ -193,23 +196,24 @@ export const getRolesColumnDefs = (
   onChangeLimits: ((value: number, data: DialRole, token: string) => void) | undefined,
   remove: ((entity?: DialRole) => void) | undefined,
   open: (entity?: DialRole) => void,
-  resetToDefault: (entity?: DialRole) => void,
-  setNoLimits: (entity?: DialRole) => void,
+  resetToDefault: ((entity?: DialRole) => void) | undefined,
+  setNoLimits: ((entity?: DialRole) => void) | undefined,
   resetToDefaultHidden: (api: GridApi, node: IRowNode) => boolean,
   isSetNoLimitsHidden: (api: GridApi, node: IRowNode) => boolean,
   view: ApplicationRoute,
+  isReadOnlyAdmin?: boolean,
 ): ColDef[] => {
   const actions = [getOpenInNewTabOperation(open)];
   const colDefs = [...BASE_COLUMNS.slice(0, 3)];
 
   if (view !== ApplicationRoute.Routes && view !== ApplicationRoute.Toolsets) {
-    actions.push(
-      ...[
-        getResetOperation(resetToDefault, resetToDefaultHidden),
-        getSetNoLimitsOperation(setNoLimits, isSetNoLimitsHidden),
-      ],
-    );
-    colDefs.push(...LIMIT_COLUMNS({ ...entity.defaultRoleLimit }, onChangeLimits));
+    if (resetToDefault) {
+      actions.push(getResetOperation(resetToDefault, resetToDefaultHidden));
+    }
+    if (setNoLimits) {
+      actions.push(getSetNoLimitsOperation(setNoLimits, isSetNoLimitsHidden));
+    }
+    colDefs.push(...LIMIT_COLUMNS({ ...entity.defaultRoleLimit }, onChangeLimits, isReadOnlyAdmin));
   }
 
   if (!entity.isPublic && remove) {

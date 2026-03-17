@@ -3,6 +3,7 @@ import { DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 
 import PriceControl from '@/src/components/BaseControls/Price';
 import { BasicI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialModel, PricingType } from '@/src/models/dial/model';
 import classNames from 'classnames';
@@ -15,6 +16,7 @@ interface Props {
 
 const Pricing: FC<Props> = ({ model, onChangeModel }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   const items: SelectOption[] = [
     {
@@ -79,6 +81,7 @@ const Pricing: FC<Props> = ({ model, onChangeModel }) => {
         containerClassName="w-[220px]"
         label={t(ModelViewI18nKey.CostUnit)}
         onChange={(type) => onChangePricingType(type as string)}
+        disabled={isReadOnlyAdmin}
       />
 
       <PriceControl
@@ -87,7 +90,7 @@ const Pricing: FC<Props> = ({ model, onChangeModel }) => {
         value={getMultipliedValue(model.pricing?.prompt, isTokenType)}
         onChange={onChangePrompt}
         containerClassName="w-[120px]"
-        disabled={activeType === BasicI18nKey.None}
+        disabled={activeType === BasicI18nKey.None || isReadOnlyAdmin}
       />
 
       <PriceControl
@@ -96,7 +99,7 @@ const Pricing: FC<Props> = ({ model, onChangeModel }) => {
         value={getMultipliedValue(model.pricing?.completion, isTokenType)}
         onChange={onChangeCompletion}
         containerClassName="w-[120px]"
-        disabled={activeType === BasicI18nKey.None}
+        disabled={activeType === BasicI18nKey.None || isReadOnlyAdmin}
       />
     </div>
   );

@@ -8,6 +8,7 @@ import TopicsControl from '@/src/components/BaseControls/Topics';
 import EntityAttachments from '@/src/components/EntityMainProperties/EntityAttachments/EntityAttachments';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialModel, DialModelType } from '@/src/models/dial/model';
 
@@ -18,6 +19,7 @@ interface Props {
 
 const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   const onChangeOverrideName = useCallback(
     (overrideName?: string) => {
@@ -34,6 +36,7 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
         placeholder={t(EntityPlaceholdersI18nKey.OverrideName)}
         value={model.overrideName}
         onChange={onChangeOverrideName}
+        disabled={isReadOnlyAdmin}
       />
       {model.type === DialModelType.Chat && (
         <>

@@ -5,6 +5,7 @@ import { DialSwitch } from '@epam/ai-dial-ui-kit';
 import ConfigurationEndpointControl from '@/src/components/BaseControls/Endpoint/ConfigurationEndpointControl';
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, FeaturesI18nKey } from '@/src/constants/i18n';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 
@@ -69,6 +70,7 @@ const AppRunnerFeatures: FC<Props> = ({ runner, onChangeRunner }) => {
         onChange={(value: boolean) => {
           onChange(value, 'dial:appendApplicationPropertiesHeader');
         }}
+        disabled={isReadOnlyAdmin}
       />
       <DialSwitch
         isOn={runner['dial:applicationTypePlaybackSupport']}
@@ -77,6 +79,7 @@ const AppRunnerFeatures: FC<Props> = ({ runner, onChangeRunner }) => {
         onChange={(value: boolean) => {
           onChange(value, 'dial:applicationTypePlaybackSupport');
         }}
+        disabled={isReadOnlyAdmin}
       />
 
       <DialSwitch
@@ -86,6 +89,7 @@ const AppRunnerFeatures: FC<Props> = ({ runner, onChangeRunner }) => {
         onChange={(value: boolean) => {
           onChange(value, 'dial:applicationTypeAssistantAttachmentsInRequestSupported');
         }}
+        disabled={isReadOnlyAdmin}
       />
     </div>
   );

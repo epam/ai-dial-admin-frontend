@@ -25,8 +25,8 @@ interface Props {
   onOpenInNewTab: (role?: DialRole) => void;
   onRemoveRole?: (role?: DialRole) => void;
   onResetAllRolesToDefault: () => void;
-  onResetToDefaultRole: (role?: DialRole) => void;
-  onSetNoLimits: (role?: DialRole) => void;
+  onResetToDefaultRole?: (role?: DialRole) => void;
+  onSetNoLimits?: (role?: DialRole) => void;
   isResetToDefaultHidden: (api: GridApi, node: IRowNode) => boolean;
   isSetNoLimitsHidden: (api: GridApi, node: IRowNode) => boolean;
   isReadOnlyAdmin?: boolean;
@@ -63,6 +63,7 @@ const RolesGrid: FC<Props> = ({
     isResetToDefaultHidden,
     isSetNoLimitsHidden,
     view,
+    isReadOnlyAdmin,
   );
 
   const onGridReady = (event: GridReadyEvent) => {
