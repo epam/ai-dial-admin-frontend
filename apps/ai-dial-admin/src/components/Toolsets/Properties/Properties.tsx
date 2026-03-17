@@ -31,16 +31,15 @@ const ToolsetProperties: FC<Props> = ({ names, selectedToolset, onChangeToolset 
         isEntityImmutable={true}
         view={ApplicationRoute.Toolsets}
       />
-      {!isReadOnlyAdmin && (
-        <DialSwitch
-          isOn={selectedToolset.forwardPerRequestKey}
-          label={t(EntityFieldsI18nKey.forwardPerRequestKey)}
-          switchId="forwardPerRequestKey"
-          onChange={(value: boolean) => {
-            onChangeToolset({ ...selectedToolset, forwardPerRequestKey: value });
-          }}
-        />
-      )}
+      <DialSwitch
+        isOn={selectedToolset.forwardPerRequestKey}
+        label={t(EntityFieldsI18nKey.forwardPerRequestKey)}
+        disabled={isReadOnlyAdmin}
+        switchId="forwardPerRequestKey"
+        onChange={(value: boolean) => {
+          onChangeToolset({ ...selectedToolset, forwardPerRequestKey: value });
+        }}
+      />
       <MaxRetryAttempts entity={selectedToolset} onChangeEntity={onChangeToolset} />
       <Authentication toolset={selectedToolset} view={ApplicationRoute.Toolsets} onChange={onChangeToolset} />
     </div>

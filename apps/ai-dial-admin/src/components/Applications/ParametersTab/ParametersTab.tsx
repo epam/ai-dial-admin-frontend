@@ -249,7 +249,7 @@ const ParametersTab: FC<Props> = ({
                     data={application?.applicationProperties}
                     onChangeConfiguration={onChangeConfiguration}
                     onGetSchemeDefaults={onGetSchemeDefaults}
-                    readonly={
+                    disabled={
                       view === ApplicationRoute.ApplicationPublications || view === ApplicationRoute.ApplicationRunners
                     }
                   />

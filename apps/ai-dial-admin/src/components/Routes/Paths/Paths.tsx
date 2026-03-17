@@ -12,14 +12,14 @@ import Path from './Path';
 
 interface Props {
   label: string;
-  readonly?: boolean;
+  disabled?: boolean;
   required?: boolean;
   paths?: string[];
   disableValidation?: boolean;
   onChangePaths: (path: string[]) => void;
 }
 
-const Paths: FC<Props> = ({ label, required, readonly, paths, disableValidation, onChangePaths }) => {
+const Paths: FC<Props> = ({ label, required, disabled, paths, disableValidation, onChangePaths }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
 
@@ -75,7 +75,7 @@ const Paths: FC<Props> = ({ label, required, readonly, paths, disableValidation,
     <div className={classNames('flex flex-col gap-y-3', STANDARD_CONTROL_WIDTH)}>
       {paths?.map((path, index) => (
         <Path
-          readonly={readonly}
+          disabled={disabled}
           key={`path-${index}`}
           path={path}
           index={index}
@@ -87,7 +87,7 @@ const Paths: FC<Props> = ({ label, required, readonly, paths, disableValidation,
           disableValidation={disableValidation}
         />
       ))}
-      {!readonly && (
+      {!disabled && (
         <div>
           <DialNeutralButton
             label={t(RoutesI18nKey.AddPaths)}

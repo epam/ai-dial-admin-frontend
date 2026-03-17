@@ -62,7 +62,7 @@ const TabsContent: FC<Props> = ({ activeTab, onChange, selectedToolset, original
           originalToolset={originalToolset}
           selectedToolset={selectedToolset}
           onChangeToolset={onChange as (toolset: Toolset) => void}
-          readonly={isReadOnlyAdmin}
+          disabled={isReadOnlyAdmin}
         />
       )}
     </>

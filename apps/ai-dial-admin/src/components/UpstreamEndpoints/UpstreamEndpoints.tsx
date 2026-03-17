@@ -11,13 +11,13 @@ import Endpoint from './Endpoint/Endpoint';
 
 interface Props {
   entity: DialRoute | DialModel;
-  readonly?: boolean;
+  disabled?: boolean;
   onChangeEntity: (entity: DialRoute | DialModel) => void;
   isKeyOptional?: boolean;
   required?: boolean;
 }
 
-const UpstreamEndpoints: FC<Props> = ({ readonly, entity, onChangeEntity, isKeyOptional, required }) => {
+const UpstreamEndpoints: FC<Props> = ({ disabled, entity, onChangeEntity, isKeyOptional, required }) => {
   const t = useI18n();
 
   const onAddEndpoint = useCallback(() => {
@@ -55,7 +55,7 @@ const UpstreamEndpoints: FC<Props> = ({ readonly, entity, onChangeEntity, isKeyO
         {entity.upstreams == null || entity.upstreams.length === 0 ? (
           <Endpoint
             key={0}
-            readonly={readonly}
+            disabled={disabled}
             endpoint={{}}
             index={0}
             isKeyOptional={isKeyOptional}
@@ -66,7 +66,7 @@ const UpstreamEndpoints: FC<Props> = ({ readonly, entity, onChangeEntity, isKeyO
         ) : (
           entity.upstreams?.map((endpoint, index) => (
             <Endpoint
-              readonly={readonly}
+              disabled={disabled}
               key={index}
               endpoint={endpoint}
               index={index}
@@ -78,7 +78,7 @@ const UpstreamEndpoints: FC<Props> = ({ readonly, entity, onChangeEntity, isKeyO
           ))
         )}
       </div>
-      {!readonly && (
+      {!disabled && (
         <div>
           <DialNeutralButton
             label={t(UpstreamEndpointsI18nKey.AddUpstream)}

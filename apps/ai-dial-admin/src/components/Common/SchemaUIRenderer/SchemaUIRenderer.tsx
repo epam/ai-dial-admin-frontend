@@ -15,11 +15,11 @@ interface Props {
   data?: Record<string, unknown>;
   onChangeConfiguration: (data: Record<string, DefaultsValue>) => void;
   onGetSchemeDefaults?: (data: Record<string, DefaultsValue>) => void;
-  readonly?: boolean;
+  disabled?: boolean;
 }
-const SchemaUiRenderer: FC<Props> = ({ schema, data, onChangeConfiguration, onGetSchemeDefaults, readonly }) => {
+const SchemaUiRenderer: FC<Props> = ({ schema, data, onChangeConfiguration, onGetSchemeDefaults, disabled }) => {
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
-  const isReadonly = readonly || isReadOnlyAdmin;
+  const isReadonly = disabled || isReadOnlyAdmin;
   const onChange = useCallback(
     (data: IChangeEvent<any, RJSFSchema, any>) => {
       onChangeConfiguration(data.formData);

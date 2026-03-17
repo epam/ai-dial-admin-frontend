@@ -25,7 +25,7 @@ const ApplicationAppRoutes: FC<Props> = ({ selectedEntity, applicationRunners, o
     <EntityRoutes
       parentRoleLimits={(selectedEntity as DialApplication).roleLimits}
       routes={routes}
-      readonly={!!selectedEntity.customAppSchemaId}
+      disabled={!!selectedEntity.customAppSchemaId}
       onChangeRoutes={(routes) => onChangeEntity({ ...selectedEntity, routes } as DialApplication)}
       {...props}
     />

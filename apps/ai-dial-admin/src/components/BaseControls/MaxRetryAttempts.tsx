@@ -7,14 +7,14 @@ import { useI18n } from '@/src/locales/client';
 
 interface Props<T> {
   entity?: T;
-  readonly?: boolean;
+  disabled?: boolean;
   onChangeEntity: (entity: T) => void;
 }
 
-const MaxRetryAttempts = <T extends { maxRetryAttempts?: number }>({ entity, onChangeEntity, readonly }: Props<T>) => {
+const MaxRetryAttempts = <T extends { maxRetryAttempts?: number }>({ entity, onChangeEntity, disabled }: Props<T>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
-  const isReadonly = readonly || isReadOnlyAdmin;
+  const isReadonly = disabled || isReadOnlyAdmin;
 
   const items: SelectOption[] = [
     { value: '1', label: '1' },

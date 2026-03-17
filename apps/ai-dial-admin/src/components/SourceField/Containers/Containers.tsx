@@ -133,7 +133,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
               value={selectedContainerName}
               placeholder={t(CreateI18nKey.SelectContainer)}
               label={t(EntityFieldsI18nKey.container)}
-              readonly={disabled || !featureFlags.deploymentsEnabled}
+              disabled={disabled || !featureFlags.deploymentsEnabled}
             />
           </div>
         ) : (

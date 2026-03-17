@@ -74,17 +74,15 @@ const Properties: FC<Props> = ({ selectedToolset, onChange, isPublication }) => 
         view={ApplicationRoute.AssetsToolsets}
         onChange={onChange as (entity: Toolset) => void}
       />
-      {!isReadOnlyAdmin && (
-        <DialSwitch
-          isOn={selectedToolset.forwardPerRequestKey}
-          label={t(EntityFieldsI18nKey.forwardPerRequestKey)}
-          switchId="forwardPerRequestKey"
-          disabled={selectedToolset.authSettings?.authenticationType === ToolsetAuthType.API_KEY}
-          onChange={(value: boolean) => {
-            onChange({ ...selectedToolset, forwardPerRequestKey: value });
-          }}
-        />
-      )}
+      <DialSwitch
+        isOn={selectedToolset.forwardPerRequestKey}
+        label={t(EntityFieldsI18nKey.forwardPerRequestKey)}
+        switchId="forwardPerRequestKey"
+        disabled={selectedToolset.authSettings?.authenticationType === ToolsetAuthType.API_KEY || isReadOnlyAdmin}
+        onChange={(value: boolean) => {
+          onChange({ ...selectedToolset, forwardPerRequestKey: value });
+        }}
+      />
 
       <MaxRetryAttempts entity={selectedToolset} onChangeEntity={onChange} />
     </div>
