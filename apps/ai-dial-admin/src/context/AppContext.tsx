@@ -90,7 +90,8 @@ export const AppContextProvider = ({
     setShow(false);
   };
 
-  const isReadOnlyAdmin = true;
+  const isReadOnlyAdmin =
+    !!userInfo?.roles?.includes(UserRole.READ_ONLY_ADMIN) && !userInfo?.roles?.includes(UserRole.FULL_ADMIN);
 
   const value = {
     sidebarOpen,
