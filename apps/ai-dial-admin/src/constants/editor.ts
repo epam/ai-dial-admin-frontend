@@ -77,6 +77,7 @@ const defaultOptions: EditorOptions = {
   automaticLayout: true,
   scrollBeyondLastLine: false,
   wordWrap: 'on',
+  diffWordWrap: 'on',
   smoothScrolling: true,
   overviewRulerLanes: 0,
   scrollbar: {
@@ -93,6 +94,8 @@ export const diffEditorOptions: EditorOptions = {
   renderIndicators: false,
   renderOverviewRuler: false,
   glyphMargin: false,
+  // Force side-by-side so both original and modified panes get word wrap (Monaco bug workaround)
+  useInlineViewWhenSpaceIsLimited: false,
 };
 
 export const editorOptions: EditorOptions = {
