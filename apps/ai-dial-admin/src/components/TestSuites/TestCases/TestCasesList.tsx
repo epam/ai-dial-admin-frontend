@@ -9,6 +9,7 @@ import { CellValueChangedEvent, ColDef, GridApi, GridOptions, GridReadyEvent } f
 
 import { createTestCase, getTestCases, importTestCase, removeTestCase } from '@/src/app/[lang]/test-suites/actions';
 import ListEntities from '@/src/components/ListView/List';
+import { ApiRoute } from '@/src/constants/api-routes';
 import TryOut from '@/src/components/TestSuites/RequestTemplate/components/TryOut';
 import { getTestCaseColumns } from '@/src/components/TestSuites/utils/columns';
 import { createNewTestCaseRow, getTestCaseGridData, rowToTestCase } from '@/src/components/TestSuites/utils/data';
@@ -165,7 +166,7 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, testCasesActionsRef, onDi
     const testSuiteId = selectedTestSuite.id;
     if (!testSuiteId) return;
 
-    window.open(`/api/test-suites/export?id=${encodeURIComponent(testSuiteId)}`, '_blank');
+    window.open(`${ApiRoute.TestSuitesExport}?id=${encodeURIComponent(testSuiteId)}`, '_blank');
   }, [selectedTestSuite.id, showNotification, t]);
 
   const onAddTestCase = useCallback(() => {
