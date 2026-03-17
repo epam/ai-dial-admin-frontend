@@ -13,6 +13,7 @@ import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI1
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { MAX_NAME_SYMBOLS } from '@/src/constants/validation';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
 import { getControlClassName } from '@/src/utils/entities/view';
@@ -29,6 +30,7 @@ interface Props {
 
 const KeyProperties: FC<Props> = ({ entity, originalEntity, names, keys, isKeyImmutable, onChangeKey }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { dispatch } = useSaveValidationContext();
   const containerClassName = getControlClassName(!isKeyImmutable);
 
@@ -106,7 +108,9 @@ const KeyProperties: FC<Props> = ({ entity, originalEntity, names, keys, isKeyIm
           <div className="flex-1">
             <IdControl entity={entity} names={names} onChangeEntity={onChangeKey} />
           </div>
-          <DialGhostButton iconBefore={<IconSparkles />} label={t(ButtonsI18nKey.Generate)} onClick={onGenerateKeyId} />
+          {!isReadOnlyAdmin && (
+            <DialGhostButton iconBefore={<IconSparkles />} label={t(ButtonsI18nKey.Generate)} onClick={onGenerateKeyId} />
+          )}
         </div>
       )}
 
@@ -128,6 +132,7 @@ const KeyProperties: FC<Props> = ({ entity, originalEntity, names, keys, isKeyIm
         onChange={onChangeProject}
         invalid={!!projectError}
         containerClassName={containerClassName}
+        disabled={isReadOnlyAdmin}
       />
 
       {isKeyImmutable && (
@@ -138,9 +143,16 @@ const KeyProperties: FC<Props> = ({ entity, originalEntity, names, keys, isKeyIm
           value={entity.projectContactPoint}
           onChange={onChangeProjectContactPoint}
           containerClassName={STANDARD_CONTROL_WIDTH}
+          disabled={isReadOnlyAdmin}
         />
       )}
-      <KeyGenerateField isKeyImmutable={isKeyImmutable} keys={keys} selectedKey={entity} changeKey={onChange} />
+      <KeyGenerateField
+        isKeyImmutable={isKeyImmutable}
+        keys={keys}
+        selectedKey={entity}
+        changeKey={onChange}
+        disabled={isReadOnlyAdmin}
+      />
 
       {isKeyImmutable && (
         <>
@@ -149,12 +161,13 @@ const KeyProperties: FC<Props> = ({ entity, originalEntity, names, keys, isKeyIm
             label={t(EntityFieldsI18nKey.secured)}
             switchId="secured"
             onChange={onChangeSecured}
+            disabled={isReadOnlyAdmin}
           />
           <TopicsControl entity={entity} onChange={onChangeKey} />
         </>
       )}
 
-      {!isKeyImmutable && <ValidityPeriod onChange={onChangeExpiresAt} />}
+      {!isKeyImmutable && <ValidityPeriod onChange={onChangeExpiresAt} disabled={isReadOnlyAdmin} />}
 
       {isKeyImmutable && (
         <AccessRestrictionField
@@ -162,6 +175,7 @@ const KeyProperties: FC<Props> = ({ entity, originalEntity, names, keys, isKeyIm
           onChange={onChangeAccessRestriction}
           entity={entity}
           originalEntity={originalEntity}
+          disabled={isReadOnlyAdmin}
         />
       )}
     </div>

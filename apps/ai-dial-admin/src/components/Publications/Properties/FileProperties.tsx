@@ -10,9 +10,10 @@ interface Props {
   onChange?: (publication: FilePublication) => void;
   addedFiles?: File[];
   setAddedFiles: Dispatch<SetStateAction<File[]>>;
+  disabled?: boolean;
 }
 
-const FileProperties: FC<Props> = ({ publication, onChange, addedFiles, setAddedFiles }) => {
+const FileProperties: FC<Props> = ({ publication, onChange, addedFiles, setAddedFiles, disabled }) => {
   return (
     <div className="flex-1 min-h-0 pt-8">
       <div className="size-full flex flex-col gap-y-8">
@@ -22,6 +23,7 @@ const FileProperties: FC<Props> = ({ publication, onChange, addedFiles, setAdded
           onChange={onChange}
           addedFiles={addedFiles}
           setAddedFiles={setAddedFiles}
+          disabled={disabled}
         />
       </div>
     </div>

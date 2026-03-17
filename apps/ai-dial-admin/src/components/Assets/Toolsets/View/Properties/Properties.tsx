@@ -66,6 +66,7 @@ const Properties: FC<Props> = ({ selectedToolset, onChange, isPublication }) => 
           placeholder={t(EntityPlaceholdersI18nKey.Path)}
           onChange={(folderId) => onChange?.({ ...selectedToolset, folderId })}
           context={useToolsetFolder}
+          disabled={isReadOnlyAdmin}
         />
       )}
       <ToolsetEndpoint entity={selectedToolset} onChange={onChange as (entity: Toolset) => void} />

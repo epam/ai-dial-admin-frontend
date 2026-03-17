@@ -141,6 +141,7 @@ export const SHARING_COLUMNS = (
   t: (stringToTranslate: string) => string,
   onChange?: (value: number, data: DialRole, token: string) => void,
   getDefaultPlaceholder?: (node: IRowNode, colDef: ColDef) => string,
+  isReadOnlyAdmin?: boolean,
 ): ColDef[] => [
   {
     headerName: 'Type',
@@ -161,8 +162,9 @@ export const SHARING_COLUMNS = (
       defaultValue: '',
       ...cellRenderParams,
       getDefaultPlaceholder,
-      onChange,
+      onChange: isReadOnlyAdmin ? undefined : onChange,
       valueFormatter: integerValueFormatter,
+      isReadonly: isReadOnlyAdmin,
     },
   },
   {
@@ -176,8 +178,9 @@ export const SHARING_COLUMNS = (
       defaultValue: '',
       ...cellRenderParams,
       getDefaultPlaceholder,
-      onChange,
+      onChange: isReadOnlyAdmin ? undefined : onChange,
       valueFormatter: integerValueFormatter,
+      isReadonly: isReadOnlyAdmin,
     },
   },
 ];

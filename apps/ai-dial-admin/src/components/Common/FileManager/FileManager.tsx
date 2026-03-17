@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { DialCopiedItem, DialDeletedItem, DialFile, DialFileManager, DialUploadFileItem } from '@epam/ai-dial-ui-kit';
 import { ColDef } from 'ag-grid-community';
@@ -12,8 +12,9 @@ import { getParentPathByFullPath } from '@/src/components/Assets/utils';
 import { getFormDataForImport, getImportTitle } from '@/src/components/EntityListView/HeaderButtons/utils';
 import { getImportResults } from '@/src/components/EntityListView/Import/utils';
 import { FILE_PREVIEW, PREVIEW_EXTENSIONS, ROOT_FOLDER } from '@/src/constants/file';
-import { FileManagerI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFileNodeType } from '@/src/models/dial/file';
@@ -49,6 +50,7 @@ const FileManager: FC<Props> = ({ label, columnDefs, view, getContext, ...props 
   const [loadedPaths, setLoadedPaths] = useState(new Set(['']));
 
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { showNotification } = useNotification();
   const { files, fetchFiles, isFetchingFiles, filePath, setFilePath, expandedFolders, setExpandedFolders } =
     getContext();
@@ -308,22 +310,26 @@ const FileManager: FC<Props> = ({ label, columnDefs, view, getContext, ...props 
       filesLoading={isFetchingFiles}
       showNavigationPanel={false}
       bulkActionsToolbarOptions={getBulkActionsToolbarOptions(t)}
-      toolbarOptions={getToolbarOptions(t)}
+      toolbarOptions={
+        isReadOnlyAdmin
+          ? { showHiddenFilesToggle: false, newActions: {} as Record<string, { label?: ReactNode; icon?: ReactNode }>, newButtonLabel: t(ButtonsI18nKey.Add) }
+          : getToolbarOptions(t)
+      }
       treeOptions={getTreeOptions(isFetchingFiles, loadedPaths, expandedFolders, setExpandedFolders, t)}
       gridOptions={getGridOptions(columnDefs, t)}
       onPathChange={handleOnPathChange}
-      onAddChild={handleAddChild}
-      onAddSibling={handleAddSibling}
-      onCreateFolder={handleCreateFolder}
+      onAddChild={isReadOnlyAdmin ? undefined : handleAddChild}
+      onAddSibling={isReadOnlyAdmin ? undefined : handleAddSibling}
+      onCreateFolder={isReadOnlyAdmin ? undefined : handleCreateFolder}
       onDownloadFiles={handleDownloadFiles}
       onCreateFolderValidate={handleCreateFolderValidate}
       onRenameValidate={handleCreateFolderValidate}
-      onDeleteFiles={handleDeleteFileNodes}
-      onMoveToFiles={handleMoveToFiles}
+      onDeleteFiles={isReadOnlyAdmin ? undefined : handleDeleteFileNodes}
+      onMoveToFiles={isReadOnlyAdmin ? undefined : handleMoveToFiles}
       onFolderPopupPathChange={handleFolderPopupPathChange}
-      onManagePermissions={handleManagePermissions}
+      onManagePermissions={isReadOnlyAdmin ? undefined : handleManagePermissions}
       onPreview={handlePreviewFile}
-      onUploadFiles={handleDragAndDropFiles}
+      onUploadFiles={isReadOnlyAdmin ? undefined : handleDragAndDropFiles}
       folderCreationValidationMessages={getValidationMessages(t)}
       renameValidationMessages={getValidationMessages(t)}
       destinationFolderPopupOptions={getDestinationFolderPopupOptions(t)}

@@ -17,6 +17,7 @@ import { getSetNoLimitsOperation } from '@/src/constants/grid-columns/actions';
 import { KEYS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, KeysI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { UNLIMITED_VALUE } from '@/src/constants/role';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication } from '@/src/models/dial/application';
 import { DialKey } from '@/src/models/dial/key';
@@ -56,6 +57,7 @@ const TabsContent: FC<Props> = ({
   ...props
 }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const entityRef = useRef(selectedRole);
 
   useEffect(() => {
@@ -182,8 +184,10 @@ const TabsContent: FC<Props> = ({
             onAdd={onAddEntities}
             onRemove={onRemoveEntity}
             customColumns={ENTITY_COLUMNS(t)}
-            additionalColumns={ROLES_ENTITIES_COLUMNS(onChangeRoleToken)}
-            customActions={[getSetNoLimitsOperation(onSetNoLimits, isSetNoLimitsHidden)]}
+            additionalColumns={ROLES_ENTITIES_COLUMNS(onChangeRoleToken, isReadOnlyAdmin)}
+            customActions={
+              isReadOnlyAdmin ? [] : [getSetNoLimitsOperation(onSetNoLimits, isSetNoLimitsHidden)]
+            }
             getRelevantDataForEntity={getEntitiesForRole.bind(this, selectedRole)}
             isSkipRefresh={isSkipRefresh}
             {...props}

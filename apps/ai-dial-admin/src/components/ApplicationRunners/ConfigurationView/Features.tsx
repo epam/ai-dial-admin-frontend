@@ -16,6 +16,7 @@ interface Props {
 
 const AppRunnerFeatures: FC<Props> = ({ runner, onChangeRunner }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   const onChange = useCallback(
     (value: string | string[] | boolean | undefined, key: keyof DialApplicationScheme) => {
