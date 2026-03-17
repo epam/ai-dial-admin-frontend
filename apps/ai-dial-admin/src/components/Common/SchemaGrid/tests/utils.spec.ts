@@ -43,6 +43,7 @@ describe('createEmptyField', () => {
       name: '',
       type: 'string',
       required: false,
+      title: '',
       description: '',
       expanded: false,
       children: [],
