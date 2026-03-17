@@ -312,11 +312,22 @@ const FileManager: FC<Props> = ({ label, columnDefs, view, getContext, ...props 
       bulkActionsToolbarOptions={getBulkActionsToolbarOptions(t)}
       toolbarOptions={
         isReadOnlyAdmin
-          ? { showHiddenFilesToggle: false, newActions: {} as Record<string, { label?: ReactNode; icon?: ReactNode }>, newButtonLabel: t(ButtonsI18nKey.Add) }
+          ? {
+              showHiddenFilesToggle: false,
+              newActions: {} as Record<string, { label?: ReactNode; icon?: ReactNode }>,
+              newButtonLabel: t(ButtonsI18nKey.Add),
+            }
           : getToolbarOptions(t)
       }
-      treeOptions={getTreeOptions(isFetchingFiles, loadedPaths, expandedFolders, setExpandedFolders, t)}
-      gridOptions={getGridOptions(columnDefs, t)}
+      treeOptions={getTreeOptions(
+        isFetchingFiles,
+        loadedPaths,
+        expandedFolders,
+        setExpandedFolders,
+        t,
+        isReadOnlyAdmin,
+      )}
+      gridOptions={getGridOptions(columnDefs, t, isReadOnlyAdmin)}
       onPathChange={handleOnPathChange}
       onAddChild={isReadOnlyAdmin ? undefined : handleAddChild}
       onAddSibling={isReadOnlyAdmin ? undefined : handleAddSibling}

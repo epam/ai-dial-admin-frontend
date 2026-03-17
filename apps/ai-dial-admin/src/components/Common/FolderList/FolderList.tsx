@@ -39,6 +39,7 @@ interface Props {
   folderPath?: string;
   isFolderDelete?: boolean;
   isBulkDelete?: boolean;
+  disabled?: boolean;
 }
 
 const FolderList: FC<Props> = ({
@@ -50,6 +51,7 @@ const FolderList: FC<Props> = ({
   folderPath,
   isFolderDelete,
   isBulkDelete,
+  disabled,
 }) => {
   const t = useI18n();
   const folderContext = context?.();
@@ -72,6 +74,7 @@ const FolderList: FC<Props> = ({
   const showFolderActions = isAssetView(view);
 
   const folderCreateItems = (node: DialFolder) => {
+    if (disabled) return [];
     const items = [
       getAddSiblingOperation(() => openCreateFolderModal(addTrailingSlash(getFolderNameAndPath(node.path).path))),
       getAddChildOperation(() => openCreateFolderModal(node.path)),
@@ -80,13 +83,16 @@ const FolderList: FC<Props> = ({
   };
 
   const folderManageItems = (node: DialFolder) => {
-    const items = [
+    if (node.name === ROOT_FOLDER) return [];
+    if (disabled) {
+      return [getManageFolderOperation(() => openFolderStorage(node.path))];
+    }
+    return [
       getRenameFolderOperation(() => openRenameFolderModal(node.path)),
       getMoveFolderOperation(() => openMoveFolderModal(node)),
       getManageFolderOperation(() => openFolderStorage(node.path)),
       getDeleteFolderOperation(() => openDeleteFolderModalState(node)),
     ];
-    return node.name === ROOT_FOLDER ? [] : items;
   };
 
   const handleModalClose = useCallback(() => {

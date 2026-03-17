@@ -27,69 +27,69 @@ import { RunsApi } from '@/src/server/eval/runs-api';
 
 // Admin APIs
 export const modelsApi = new ModelsApi({
-  host: 'http://localhost:61542/',
+  host: 'http://localhost:50243/',
 });
 
 export const applicationsApi = new ApplicationsApi({
-  host: 'http://localhost:61542/',
+  host: 'http://localhost:50243/',
 });
 
 export const rolesApi = new RolesApi({
-  host: 'http://localhost:61542/',
+  host: 'http://localhost:50243/',
 });
 
 export const keysApi = new KeysApi({
-  host: 'http://localhost:61542/',
+  host: 'http://localhost:50243/',
 });
 
 export const applicationRunnersApi = new ApplicationRunnersApi({
-  host: 'http://localhost:61542/',
+  host: 'http://localhost:50243/',
 });
 
 export const interceptorsApi = new InterceptorsApi({
-  host: 'http://localhost:61542/',
+  host: 'http://localhost:50243/',
 });
 
 export const adaptersApi = new AdaptersApi({
-  host: 'http://localhost:61542/',
+  host: 'http://localhost:50243/',
 });
 
 export const telemetryApi = new TelemetryApi({
-  host: 'http://localhost:61542/',
+  host: 'http://localhost:50243/',
 });
 
 export const routesApi = new RoutesApi({
-  host: 'http://localhost:61542/',
+  host: 'http://localhost:50243/',
 });
 
 export const publicationsApi = new PublicationsApi({
-  host: 'http://localhost:61542/',
+  host: 'http://localhost:50243/',
 });
 
 export const foldersApi = new FoldersApi({
-  host: 'http://localhost:61542/',
+  host: 'http://localhost:50243/',
 });
 
 export const utilityApi = new UtilityApi({
-  host: 'http://localhost:61542/',
+  host: 'http://localhost:50243/',
 });
 
 export const themesApi = new ThemesApi();
 
 export const activityAuditApi = new ActivityAuditApi({
-  host: 'http://localhost:61542/',
+  host: 'http://localhost:50243/',
 });
 
 export const interceptorTemplatesApi = new InterceptorTemplatesApi({
-  host: 'http://localhost:61542/',
+  host: 'http://localhost:50243/',
 });
 
 export const toolSetsApi = new ToolsetsApi({
-  host: 'http://localhost:61542/',
+  host: 'http://localhost:50243/',
 });
 
 export const assetsApi = new AssetsApi({
-  host: 'http://localhost:61542/',
+  host: 'http://localhost:50243/',
 });
 
 // Deployments management APIs
@@ -119,13 +119,13 @@ export const deploymentConfigApi = new DeploymentConfigApi({
 
 /// Evaluation APIs
 export const testSuitesApi = new TestSuitesApi({
-  host: 'http://localhost:63088/',
+  host: process.env.DIAL_EVAL_API_URL,
 });
 
 export const metricsApi = new MetricsApi({
-  host: 'http://localhost:63088/',
+  host: process.env.DIAL_EVAL_API_URL,
 });
 
 export const runsApi = new RunsApi({
-  host: 'http://localhost:63088/',
+  host: process.env.DIAL_EVAL_API_URL,
 });
