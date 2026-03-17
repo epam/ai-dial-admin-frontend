@@ -5,6 +5,7 @@ import { DialGhostButton } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { EntityDefaults } from '@/src/models/dial/base-entity';
 import { DefaultTemp } from '@/src/models/dial/defaults';
@@ -16,10 +17,13 @@ import Accordion from '@/src/components/Common/Accordion/Accordion';
 interface Props {
   entity: EntityDefaults;
   onChangeEntity: (entity: EntityDefaults) => void;
+  disabled?: boolean;
 }
 
-const Defaults: FC<Props> = ({ entity, onChangeEntity }) => {
+const Defaults: FC<Props> = ({ entity, onChangeEntity, disabled }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  const isReadonly = disabled || isReadOnlyAdmin;
 
   const [defaultItems, setDefaultItems] = useState<DefaultTemp[]>([]);
   const [count, setCount] = useState(0);
@@ -73,15 +77,18 @@ const Defaults: FC<Props> = ({ entity, onChangeEntity }) => {
           index={index}
           changeItem={onChangeDefaultItem}
           onRemove={onRemoveItem}
+          readonly={isReadonly}
         />
       ))}
-      <div>
-        <DialGhostButton
-          label={t(ButtonsI18nKey.AddDefault)}
-          iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-          onClick={onAddItem}
-        />
-      </div>
+      {!isReadonly && (
+        <div>
+          <DialGhostButton
+            label={t(ButtonsI18nKey.AddDefault)}
+            iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
+            onClick={onAddItem}
+          />
+        </div>
+      )}
     </Accordion>
   );
 };

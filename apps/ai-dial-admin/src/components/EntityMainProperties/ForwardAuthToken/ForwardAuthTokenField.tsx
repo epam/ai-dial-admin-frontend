@@ -17,6 +17,7 @@ import {
   EntityPlaceholdersI18nKey,
   ForwardTokenI18nKey,
 } from '@/src/constants/i18n';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { ChatEntity } from '@/src/models/dial/base-entity';
@@ -27,9 +28,12 @@ interface Props {
   view: ApplicationRoute;
   entity: ChatEntity;
   onChangeEntity: (entity: ChatEntity) => void;
+  disabled?: boolean;
 }
 
-const ForwardAuthTokenField: FC<Props> = ({ view, entity, onChangeEntity }) => {
+const ForwardAuthTokenField: FC<Props> = ({ view, entity, onChangeEntity, disabled }) => {
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  const isReadonly = disabled || isReadOnlyAdmin;
   const t = useI18n();
   const titleKey = getAlertTitlePerView(view);
   const displayNameKey = getDisplayNamePerView(view);
@@ -80,6 +84,7 @@ const ForwardAuthTokenField: FC<Props> = ({ view, entity, onChangeEntity }) => {
             placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
             value={confirmName}
             onChange={onChangeName}
+            disabled={isReadonly}
           />
         </div>
       ),
@@ -102,6 +107,7 @@ const ForwardAuthTokenField: FC<Props> = ({ view, entity, onChangeEntity }) => {
         radioButtons={radioButtons}
         onChangeRadioField={onChangeRadioField}
         onApply={onApply}
+        disabled={isReadonly}
       />
     </div>
   );

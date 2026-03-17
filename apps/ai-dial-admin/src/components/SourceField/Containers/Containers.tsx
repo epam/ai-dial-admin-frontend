@@ -37,6 +37,7 @@ interface Props<T> {
   view: ApplicationRoute;
   isModal?: boolean;
   error?: string;
+  disabled?: boolean;
 }
 
 const Containers = <T extends DialInterceptor | DialModel>({
@@ -46,6 +47,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
   view,
   isModal,
   error,
+  disabled,
 }: Props<T>) => {
   const t = useI18n();
   const { showNotification } = useNotification();
@@ -131,7 +133,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
               value={selectedContainerName}
               placeholder={t(CreateI18nKey.SelectContainer)}
               label={t(EntityFieldsI18nKey.container)}
-              readonly={!featureFlags.deploymentsEnabled}
+              readonly={disabled || !featureFlags.deploymentsEnabled}
             />
           </div>
         ) : (
@@ -144,7 +146,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
                 selectedValue={selectedContainer?.displayName}
                 elementId="containers"
                 emptyValueText={t(EntitiesI18nKey.NoContainers)}
-                disabled={!featureFlags.deploymentsEnabled}
+                disabled={disabled || !featureFlags.deploymentsEnabled}
                 errorText={error}
               >
                 <SelectContainerModal
@@ -156,7 +158,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
                 />
               </DialInputPopup>
             </div>
-            {entity.source?.containerId && featureFlags.deploymentsEnabled && (
+            {entity.source?.containerId && featureFlags.deploymentsEnabled && !disabled && (
               <DialNeutralButton
                 iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
                 className={classNames(error ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
@@ -173,6 +175,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
           onChange={onChange}
           view={view}
           prefix={addTrailingSlash(selectedContainer?.url || '')}
+          disabled={disabled}
         />
       )}
     </div>
