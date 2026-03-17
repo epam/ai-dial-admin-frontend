@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import { RJSFSchema } from '@rjsf/utils';
@@ -55,7 +55,14 @@ const Parameters: FC<Props> = ({ runner, onChangeRunner, isSkipRefresh }) => {
         setResolvedSchema(runner as RJSFSchema);
       }
     });
-  }, [runner?.$id, onChangeRunner, runner]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [runner?.$id]);
+
+  const isNoData = useMemo(() => {
+    return isReadonly
+      ? !resolvedSchema || !resolvedSchema?.properties || !Object.keys(resolvedSchema.properties || {}).length
+      : !runner || !runner?.properties || !Object.keys(runner.properties || {}).length;
+  }, [isReadonly, resolvedSchema, runner]);
 
   return (
     <div className="flex flex-col size-full">
@@ -63,7 +70,7 @@ const Parameters: FC<Props> = ({ runner, onChangeRunner, isSkipRefresh }) => {
         <DialLoader size={40} />
       ) : (
         <>
-          {!runner || !runner?.properties || !Object.keys(runner.properties || {}).length ? (
+          {isNoData ? (
             <DialNoDataContent title={t(EntitiesI18nKey.NoConfigurationSchema)} />
           ) : (
             <SchemaGrid
