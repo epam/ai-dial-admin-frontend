@@ -108,7 +108,6 @@ const PublicationView = <T extends Publication>({ view, publication, application
         if (res.success) {
           const rule = res.response?.[selectedPublication.folderId] || [];
           setCurrentRules(rule);
-          setIsPermissionsChanged(!isEqualSkippingUndefined(rule, selectedPublication.rules || []));
         } else {
           showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
