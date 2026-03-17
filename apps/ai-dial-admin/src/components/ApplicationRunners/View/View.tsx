@@ -216,10 +216,6 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
               context={useAppsFolder}
               initialValues={{
                 applicationTypeSchemaId: selectedRunner.$id,
-                applicationProperties: getSchemaDefaults(selectedRunner as JSONSchema7) as Record<
-                  string,
-                  DefaultsValue
-                >,
               }}
             />,
             document.body,
