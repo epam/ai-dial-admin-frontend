@@ -29,6 +29,7 @@ import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { Container } from '@/src/models/deployments/containers';
@@ -81,6 +82,7 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
   transport,
 }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const router = useRouter();
   const { showNotification } = useNotification();
   const { isValid, dispatch } = useSaveValidationContext();
@@ -179,7 +181,9 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
   return (
     <>
       <div className={containerClassNames}>
-        {isChanged ? (
+        {isReadOnlyAdmin ? (
+          !jsonConfiguration.hideJsonEditorButton && <JsonToggles {...jsonConfiguration} />
+        ) : isChanged ? (
           <ChangedEntityButtons
             onDiscard={onStartDiscard}
             onSave={onSave}

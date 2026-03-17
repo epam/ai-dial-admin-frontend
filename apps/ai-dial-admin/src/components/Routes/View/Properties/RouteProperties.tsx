@@ -34,6 +34,7 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useI18n } from '@/src/locales/client';
 import { DialAppRoute, DialRoute, RouteOutput, RoutePermission } from '@/src/models/dial/route';
 import { IconRefresh } from '@tabler/icons-react';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 
 interface Props {
   route: DialRoute | DialAppRoute;
@@ -46,6 +47,7 @@ interface Props {
 const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, onChange }) => {
   const t = useI18n();
   const { dispatch, resetCounter } = useSaveValidationContext();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   const outputRadio: RadioButtonWithContent[] = [
     { id: RouteOutput.UPSTREAMS, name: t(EntityFieldsI18nKey.upstreams) },
@@ -220,18 +222,18 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
         paths={route.paths}
         onChangePaths={onChangePaths}
         required
-        readonly={readonly}
+        readonly={readonly || isReadOnlyAdmin}
       />
       <DialSwitch
         isOn={route.rewritePath}
         label={t(EntityFieldsI18nKey.rewritePath)}
         switchId="rewritePath"
-        disabled={readonly}
+        disabled={readonly || isReadOnlyAdmin}
         onChange={onChangeRewritePath}
       />
       <Multiselect
         elementId="methods"
-        disabled={readonly}
+        disabled={readonly || isReadOnlyAdmin}
         selectedItems={route.methods}
         onChangeItems={onChangeMethods}
         heading={t(EntityFieldsI18nKey.methods)}
@@ -246,14 +248,14 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
         radioButtons={outputRadio}
         activeRadioButton={route.response ? outputRadio[1].id : outputRadio[0].id}
         elementId="output"
-        disabled={readonly}
+        disabled={readonly || isReadOnlyAdmin}
         fieldTitle={t(RoutesI18nKey.Output)}
         orientation={RadioGroupOrientation.Row}
         onChange={onChangeOutput}
       />
       <div className={classNames('flex gap-x-2 flex-row', STANDARD_CONTROL_WIDTH, !route.response && 'hidden')}>
         <DialNumberInput
-          disabled={readonly}
+          disabled={readonly || isReadOnlyAdmin}
           id="status"
           containerClassName="w-[150px]"
           labelProps={{ label: t(EntityFieldsI18nKey.status) }}
@@ -264,7 +266,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
           invalid={!!statusError}
         />
         <DialInput
-          disabled={readonly}
+          disabled={readonly || isReadOnlyAdmin}
           id="body"
           containerClassName="flex-1"
           labelProps={{ label: t(EntityFieldsI18nKey.body) }}
@@ -278,16 +280,16 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
 
       <div className={classNames(route.response && 'hidden')}>
         <UpstreamEndpoints
-          readonly={readonly}
+          readonly={readonly || isReadOnlyAdmin}
           entity={route}
           onChangeEntity={onChange}
           required={isUpstreamsRequired}
         />
       </div>
-      <MaxRetryAttempts readonly={readonly} entity={route} onChangeEntity={onChange} />
+      <MaxRetryAttempts readonly={readonly || isReadOnlyAdmin} entity={route} onChangeEntity={onChange} />
       {isAppRoute && (
         <DialSelectField
-          disabled={readonly}
+          disabled={readonly || isReadOnlyAdmin}
           placeholder={t(EntityPlaceholdersI18nKey.SelectPermission)}
           id="permissions"
           multiple={true}
@@ -308,7 +310,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
       >
         <DialNumberInput
           id="order"
-          disabled={readonly}
+          disabled={readonly || isReadOnlyAdmin}
           containerClassName="w-1/2"
           labelProps={{ label: t(EntityFieldsI18nKey.order) }}
           placeholder={t(EntityPlaceholdersI18nKey.Order)}
@@ -318,7 +320,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, routeNames, o
           error={orderError}
           invalid={!!orderError}
         />
-        {route.order !== ORDER_DEFAULT_VALUE && (
+        {route.order !== ORDER_DEFAULT_VALUE && !isReadOnlyAdmin && (
           <DialPrimaryButton
             className="h-10"
             appearance={ButtonAppearance.Link}

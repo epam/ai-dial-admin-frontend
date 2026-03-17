@@ -6,7 +6,7 @@ import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
 import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storage';
 import { LOCAL_STORAGE_SIDEBAR_OPEN_KEY } from '@/src/constants/main-layout';
 import { ResourcesDefaults } from '@/src/models/deployments/containers';
-import { UserInfo } from '@/src/models/user-info';
+import { UserInfo, UserRole } from '@/src/models/user-info';
 
 export interface AppContextType {
   themeUrl?: string;
@@ -23,6 +23,8 @@ export interface AppContextType {
 
   // user info
   userInfo?: UserInfo;
+  /** True when user has READ_ONLY_ADMIN and does not have FULL_ADMIN */
+  isReadOnlyAdmin: boolean;
 }
 
 interface AppContextSidebar {
@@ -88,6 +90,8 @@ export const AppContextProvider = ({
     setShow(false);
   };
 
+  const isReadOnlyAdmin = true;
+
   const value = {
     sidebarOpen,
     toggleSidebar,
@@ -109,6 +113,7 @@ export const AppContextProvider = ({
     disableDeploymentsJSONEditor,
     resourcesDefaults,
     userInfo,
+    isReadOnlyAdmin,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

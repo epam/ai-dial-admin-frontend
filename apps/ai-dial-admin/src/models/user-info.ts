@@ -4,7 +4,7 @@ export interface UserInfo {
   roles: UserRole[];
 }
 
-enum UserRole {
+export enum UserRole {
   FULL_ADMIN = 'FULL_ADMIN',
   READ_ONLY_ADMIN = 'READ_ONLY_ADMIN',
 }

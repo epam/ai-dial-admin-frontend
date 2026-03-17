@@ -6,6 +6,7 @@ import classNames from 'classnames';
 
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import RolesGrid from '@/src/components/EntityView/Roles/RolesGrid';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import {
   getNoAvailableTitle,
   isDisableRole,
@@ -32,6 +33,7 @@ interface Props {
 
 const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRefresh }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const isRolesWithDefaults = view !== ApplicationRoute.Routes && view !== ApplicationRoute.Toolsets;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -184,22 +186,23 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
             roles={roles}
             onChangeEntity={onChangeEntity}
             onChangeTokensValue={onChangeRoleToken}
-            onOpenAddModal={onOpenAddModal}
+            onOpenAddModal={isReadOnlyAdmin ? undefined : onOpenAddModal}
             onOpenInNewTab={onOpen}
-            onRemoveRole={onRemoveRole}
+            onRemoveRole={isReadOnlyAdmin ? undefined : onRemoveRole}
             onResetToDefaultRole={onResetToDefaultRole}
             onResetAllRolesToDefault={onResetAllRolesToDefault}
             onSetNoLimits={onSetNoLimits}
             isResetToDefaultHidden={(api, node) => isResetToDefaultHidden(api, node, entity)}
             isSetNoLimitsHidden={isSetNoLimitsHidden}
             isSkipRefresh={isSkipRefresh}
+            isReadOnlyAdmin={isReadOnlyAdmin}
           />
         </div>
       </div>
       {isDisableRole(entity) && view !== ApplicationRoute.Routes && (
         <DialAlert variant={AlertVariant.Info} message={t(getNoAvailableTitle(view))} />
       )}
-      {isModalOpen &&
+      {!isReadOnlyAdmin && isModalOpen &&
         createPortal(
           <AddEntitiesGrid
             modalTitle={t(RolesI18nKey.AddRoles)}

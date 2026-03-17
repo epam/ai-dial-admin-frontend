@@ -8,6 +8,7 @@ import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBas
 import { clearResolvedErrors } from '@/src/components/EntityTabs/JsonEditor/utils';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { JSONEditorError } from '@/src/types/editor';
 
 interface Props<T> {
@@ -25,6 +26,7 @@ const EntityJsonEditor = <T extends object>({
   readonly,
   options,
 }: Props<T>) => {
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { dispatch, jsonErrorNotifications } = useSaveValidationContext();
   const { removeNotification } = useNotification();
   const [entityModel, setEntityModel] = useState<string>('');
@@ -78,7 +80,7 @@ const EntityJsonEditor = <T extends object>({
       onValidateJSON={onValidateJSON}
       options={{
         ...(options ?? {}),
-        ...(readonly ? { readOnly: true } : {}),
+        ...(readonly || isReadOnlyAdmin ? { readOnly: true } : {}),
       }}
     />
   );

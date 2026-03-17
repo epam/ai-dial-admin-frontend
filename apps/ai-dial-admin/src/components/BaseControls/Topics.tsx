@@ -9,6 +9,7 @@ import { useI18n } from '@/src/locales/client';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isDeploymentAsset } from '@/src/utils/is-asset-view';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 
 interface Props<T> {
   entity: T;
@@ -20,10 +21,12 @@ interface Props<T> {
 const TopicsControl = <T extends { topics?: string[]; descriptionKeywords?: string[] }>({
   entity,
   onChange,
+  disabled,
   view,
   ...props
 }: Props<T>) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const selectedItems = [...(isDeploymentAsset(view) ? entity.descriptionKeywords || [] : entity.topics || [])]?.sort();
   const allItems = [...(isDeploymentAsset(view) ? entity.descriptionKeywords || [] : entity.topics || [])]?.sort();
 
@@ -50,6 +53,7 @@ const TopicsControl = <T extends { topics?: string[]; descriptionKeywords?: stri
       label={t(EntityFieldsI18nKey.topics)}
       addPlaceholder={t(EntityPlaceholdersI18nKey.Topic)}
       addTitle={t(TopicsI18nKey.AddTopic)}
+      disabled={disabled || isReadOnlyAdmin}
       {...props}
     />
   );

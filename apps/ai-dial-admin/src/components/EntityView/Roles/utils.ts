@@ -191,7 +191,7 @@ const formatType = (value: string, t: (stringToTranslate: string) => string) => 
 export const getRolesColumnDefs = (
   entity: EntityRoleLimits,
   onChangeLimits: ((value: number, data: DialRole, token: string) => void) | undefined,
-  remove: (entity?: DialRole) => void,
+  remove: ((entity?: DialRole) => void) | undefined,
   open: (entity?: DialRole) => void,
   resetToDefault: (entity?: DialRole) => void,
   setNoLimits: (entity?: DialRole) => void,
@@ -212,7 +212,7 @@ export const getRolesColumnDefs = (
     colDefs.push(...LIMIT_COLUMNS({ ...entity.defaultRoleLimit }, onChangeLimits));
   }
 
-  if (!entity.isPublic) {
+  if (!entity.isPublic && remove) {
     actions.push(getRemoveOperation(remove));
   }
 
