@@ -9,6 +9,7 @@ import {
   getUniqueImagesNames,
   getUniqueLatestImages,
   getVersionsList,
+  isImageNotInstalled,
   isValidVersion,
   setTransport,
   updateSelectedVersion,
@@ -22,6 +23,28 @@ describe('images utils', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  describe('isImageNotInstalled', () => {
+    test('returns true for NOT_BUILT status', () => {
+      expect(isImageNotInstalled({ buildStatus: IMAGE_STATUS.NOT_BUILT } as Image)).toBe(true);
+    });
+
+    test('returns true for BUILD_FAILED status', () => {
+      expect(isImageNotInstalled({ buildStatus: IMAGE_STATUS.BUILD_FAILED } as Image)).toBe(true);
+    });
+
+    test('returns false for BUILT status', () => {
+      expect(isImageNotInstalled({ buildStatus: IMAGE_STATUS.BUILT } as Image)).toBe(false);
+    });
+
+    test('returns false for BUILDING status', () => {
+      expect(isImageNotInstalled({ buildStatus: IMAGE_STATUS.BUILDING } as Image)).toBe(false);
+    });
+
+    test('returns false for undefined image', () => {
+      expect(isImageNotInstalled(undefined)).toBe(false);
+    });
   });
 
   describe('getActionClass', () => {

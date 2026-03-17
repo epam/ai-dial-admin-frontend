@@ -112,11 +112,11 @@ describe('validation utils', () => {
         text: ErrorI18nKey.SpecialChars,
         type: ErrorType.INVALID,
       });
-      expect(getImageNameError('', t)).toEqual({
+      expect(getImageNameError('I', t)).toEqual({
         text: ErrorI18nKey.MinMaxLength,
         type: ErrorType.LENGTH,
       });
-      expect(getImageNameError('')).toEqual({
+      expect(getImageNameError('I')).toEqual({
         text: '',
         type: ErrorType.LENGTH,
       });
@@ -592,19 +592,33 @@ describe('validation utils', () => {
       expect(result).toBeNull();
     });
 
-    test('should return null when both are 0', () => {
+    test('should return error when both are 0 (max must be >= 1)', () => {
       const result = getReplicasError(0, 0, mockT);
-      expect(result).toBeNull();
+      expect(result).toEqual({
+        type: ErrorType.INVALID,
+        text: `Translated: ${ErrorI18nKey.ReplicasError}`,
+      });
     });
 
-    test('should handle negative min with positive max', () => {
+    test('should return error for negative min', () => {
       const result = getReplicasError(-5, 10, mockT);
-      expect(result).toBeNull();
+      expect(result).toEqual({
+        type: ErrorType.INVALID,
+        text: `Translated: ${ErrorI18nKey.ReplicasError}`,
+      });
     });
 
-    test('should handle negative min greater than negative max', () => {
+    test('should return error for negative min and negative max', () => {
       const result = getReplicasError(-5, -10, mockT);
 
+      expect(result).toEqual({
+        type: ErrorType.INVALID,
+        text: `Translated: ${ErrorI18nKey.ReplicasError}`,
+      });
+    });
+
+    test('should return error when max is 0', () => {
+      const result = getReplicasError(0, 0, mockT);
       expect(result).toEqual({
         type: ErrorType.INVALID,
         text: `Translated: ${ErrorI18nKey.ReplicasError}`,

@@ -26,10 +26,6 @@ vi.mock('@/src/context/SaveValidationContext', () => ({
   useSaveValidationContext: () => ({ isValid: true }),
 }));
 
-vi.mock('@/src/locales/client', () => ({
-  useI18n: () => (key: string) => key,
-}));
-
 vi.mock('@/src/utils/deployments/containers', () => ({
   getContainerTemplate: () => ({}),
 }));

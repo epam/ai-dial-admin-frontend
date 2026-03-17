@@ -125,9 +125,9 @@ export enum BasicI18nKey {
   URL = 'Basic.URL',
   Request = 'Basic.Request',
   Response = 'Basic.Response',
-  Variables = 'Basic.Variables',
   Server = 'Basic.Server',
   Client = 'Basic.Client',
+  ContentType = 'Basic.ContentType',
 }
 
 export enum EntitiesI18nKey {
@@ -215,7 +215,6 @@ export enum EntitiesI18nKey {
   Serving = 'Entities.Serving',
   ModelServing = 'Entities.ModelServing',
   Container = 'Entities.Container',
-  NoMethods = 'Entities.NoMethods',
   DiscardChanges = 'Entities.DiscardChanges',
   DiscardChangesDescription = 'Entities.DiscardChangesDescription',
 }
@@ -328,8 +327,6 @@ export enum ButtonsI18nKey {
   Rollback = 'Buttons.Rollback',
   Back = 'Buttons.Back',
   Close = 'Buttons.Close',
-  OpenAdapter = 'Buttons.OpenAdapter',
-  OpenAppRunner = 'Buttons.OpenAppRunner',
   Open = 'Buttons.Open',
   None = 'Buttons.None',
   BulkActions = 'Buttons.BulkActions',
@@ -692,8 +689,6 @@ export enum ImportI18nKey {
   ConflictResolution = 'Import.ConflictResolution',
   ConfigImported = 'Import.Notifications.ConfigImported',
   ConfigImportedDescription = 'Import.Notifications.ConfigImportedDescription',
-  NotificationImporting = 'Import.Notifications.Importing',
-  NotificationImportingDescription = 'Import.Notifications.ImportingDescription',
   Override = 'Import.Override',
   Skip = 'Import.Skip',
   EditManually = 'Import.EditManually',
@@ -765,6 +760,9 @@ export enum ExportI18nKey {
   Deployments = 'Export.Deployments',
   IncludeGlobalFirewall = 'Export.IncludeGlobalFirewall',
   PreviewUnavailable = 'Export.PreviewUnavailable',
+  McpImage = 'Export.McpImage',
+  InterceptorImage = 'Export.InterceptorImage',
+  AdapterImage = 'Export.AdapterImage',
 }
 
 export enum FoldersI18nKey {
@@ -930,9 +928,6 @@ export enum ErrorI18nKey {
 }
 
 export enum SourceI18nKey {
-  OpenTemplate = 'Source.OpenTemplate',
-  OpenContainer = 'Source.OpenContainer',
-  OpenAdapter = 'Source.OpenAdapter',
   Container = 'Source.Container',
   InterceptorTemplate = 'Source.InterceptorTemplate',
   ModelDeployment = 'Source.ModelDeployment',
@@ -1172,6 +1167,7 @@ export enum EntityFieldsI18nKey {
   applicationTypeSchemas = 'EntityFields.applicationTypeSchemas',
   SourceURL = 'EntityFields.SourceURL',
   ImageURI = 'EntityFields.ImageURI',
+  DockerImageReference = 'EntityFields.DockerImageReference',
   BranchName = 'EntityFields.BranchName',
   SHA = 'EntityFields.SHA',
   BaseDirectory = 'EntityFields.BaseDirectory',
@@ -1330,6 +1326,7 @@ export enum ContainersI18nKey {
   SelectModelFromRegistry = 'Containers.SelectModelFromRegistry',
   NoDescriptionAvailable = 'Containers.NoDescriptionAvailable',
   ScaleToZeroNever = 'Containers.Autoscaling.ScaleToZeroNever',
+  ScaleToZeroAfter5Minutes = 'Containers.Autoscaling.ScaleToZeroAfter5Minutes',
   ScaleToZeroAfter15Minutes = 'Containers.Autoscaling.ScaleToZeroAfter15Minutes',
   ScaleToZeroAfter30Minutes = 'Containers.Autoscaling.ScaleToZeroAfter30Minutes',
   ScaleToZeroAfter1Hour = 'Containers.Autoscaling.ScaleToZeroAfter1Hour',
@@ -1339,6 +1336,13 @@ export enum ContainersI18nKey {
   MaxReplicas = 'Containers.Autoscaling.MaxReplicas',
   MinReplicas = 'Containers.Autoscaling.MinReplicas',
   ScaleToZero = 'Containers.Autoscaling.ScaleToZero',
+  FromInternalMcpImage = 'Containers.FromInternalMcpImage',
+  FromInternalAdapterImage = 'Containers.FromInternalAdapterImage',
+  FromInternalInterceptorImage = 'Containers.FromInternalInterceptorImage',
+  FromDockerImageReference = 'Containers.FromDockerImageReference',
+  ImageNotInstalledWarning = 'Containers.ImageNotInstalledWarning',
+  ImageBuildFailedWarning = 'Containers.ImageBuildFailedWarning',
+  InstallImage = 'Containers.InstallImage',
 }
 
 export enum DeploymentsI18nKey {
@@ -1387,6 +1391,7 @@ export enum TestSuitesI18nKey {
   CreateTestSuite = 'TestSuites.CreateTestSuite',
   UpdateTestSuite = 'TestSuites.UpdateTestSuite',
   Application = 'TestSuites.Application',
+  Target = 'TestSuites.Target',
   Methods = 'TestSuites.Methods',
   Method = 'TestSuites.Method',
   ChangeMethod = 'TestSuites.ChangeMethod',
@@ -1404,17 +1409,23 @@ export enum TestSuitesI18nKey {
   RemoveSuccess = 'TestSuites.RemoveSuccess',
   RemoveFailed = 'TestSuites.RemoveFailed',
   ImportSuccessDescription = 'TestSuites.ImportSuccessDescription',
+  MetricUpdateSuccess = 'TestSuites.MetricUpdateSuccess',
+  MetricUpdateFailed = 'TestSuites.MetricUpdateFailed',
   RunEvaluation = 'TestSuites.RunEvaluation',
   RunWarning = 'TestSuites.RunWarning',
   RunSuccess = 'TestSuites.RunSuccess',
   RunSuccessDescription = 'TestSuites.RunSuccessDescription',
   NumberOfRuns = 'TestSuites.NumberOfRuns',
+  TryoutWarning = 'TestSuites.TryoutWarning',
   SelectedTestCases = 'TestSuites.SelectedTestCases',
   RequestTemplate = 'TestSuites.RequestTemplate',
   EndpointSchema = 'TestSuites.EndpointSchema',
   DynamicConfiguration = 'TestSuites.DynamicConfiguration',
+  RequestBodyPreview = 'TestSuites.RequestBodyPreview',
   Constant = 'TestSuites.Constant',
   Attribute = 'TestSuites.Attribute',
+  TestCase = 'TestSuites.TestCase',
+  Response = 'TestSuites.Response',
   Warning = 'TestSuites.Warning',
   ColumnsDescription = 'TestSuites.ColumnsDescription',
   EditColumn = 'TestSuites.EditColumn',
@@ -1437,14 +1448,20 @@ export enum TestSuitesI18nKey {
   ConflictStrategyOverrideDesc = 'TestSuites.ConflictStrategyOverrideDesc',
   ImportStepFile = 'TestSuites.ImportStepFile',
   ImportStepOptions = 'TestSuites.ImportStepOptions',
+  NoInformationToPreview = 'TestSuites.NoInformationToPreview',
+  AddMetric = 'TestSuites.AddMetric',
+  SelectMetricPreview = 'TestSuites.SelectMetricPreview',
+  Parameters = 'TestSuites.Parameters',
+  Inputs = 'TestSuites.Inputs',
+  Outputs = 'TestSuites.Outputs',
+  Bindings = 'TestSuites.Bindings',
+  Results = 'TestSuites.Results',
 }
 
 export enum RunsI18nKey {
   StartTime = 'Runs.StartTime',
   EndTime = 'Runs.EndTime',
   TestSuite = 'Runs.TestSuite',
-  RequestBody = 'Runs.RequestBody',
-  ResponseBody = 'Runs.ResponseBody',
   TestCaseData = 'Runs.TestCaseData',
   Execution = 'Runs.Execution',
   GrafanaDetails = 'Runs.GrafanaDetails',

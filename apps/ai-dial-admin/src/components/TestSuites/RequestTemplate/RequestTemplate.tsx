@@ -1,24 +1,16 @@
 'use client';
 
-import { FC, MouseEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useRef, useState } from 'react';
 
-import { DialNeutralButton, DialTabs, DialInput } from '@epam/ai-dial-ui-kit';
-import { IconPlayerPlay } from '@tabler/icons-react';
+import { DialNeutralButton, DialTabs } from '@epam/ai-dial-ui-kit';
+import { IconPlus } from '@tabler/icons-react';
 
-import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-import { useAppContext } from '@/src/context/AppContext';
-import {
-  SaveValidationContextProvider,
-  useSaveValidationContext,
-  ValidationActionType,
-} from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { EntityViewTab, getTestSuiteRequestTemplateTabs } from '@/src/utils/tabs/utils';
-import { isContainRegexSymbols } from '@/src/utils/validation/path-error';
-import TryOut from './components/TryOut';
-import TabsContent from './tabs/TabsContent';
+import TabsContent, { TabsContentRef } from './tabs/TabsContent';
+import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import ContentTypeSelect from './components/ContentTypeSelect';
 
 interface Props {
   testSuite: TestSuite;
@@ -27,101 +19,38 @@ interface Props {
 
 const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
   const t = useI18n();
-  const { dispatch } = useSaveValidationContext();
   const tabs = getTestSuiteRequestTemplateTabs(t);
   const [activeTab, setActiveTab] = useState(EntityViewTab.Body);
-
-  const { sidebar, sidebarOpen, toggleSidebar } = useAppContext();
-
-  const openTryOutSidebar = useCallback(
-    (e: MouseEvent<HTMLButtonElement>) => {
-      e.stopPropagation();
-      sidebar.showSidebar(
-        <SaveValidationContextProvider>
-          <TryOut testSuiteId={testSuite.id || ''} />
-        </SaveValidationContextProvider>,
-        'w-1/2 max-w-[800px]',
-      );
-      if (sidebarOpen) {
-        sidebar.toggleIsMenuClosed?.();
-        toggleSidebar(e);
-      }
-    },
-    [sidebar, sidebarOpen, testSuite.id, toggleSidebar],
-  );
+  const tabsContentRef = useRef<TabsContentRef>(null);
 
   const onChangeActiveTab = useCallback((id: string) => {
     setActiveTab(id as EntityViewTab);
   }, []);
 
-  const urlTemplateError = useMemo(() => {
-    const urlTemplate = testSuite.requestTemplate?.urlTemplate;
-    const relativeUrlPattern = testSuite.endpointRef?.relativeUrlPattern;
-
-    if (!urlTemplate || !relativeUrlPattern) {
-      return undefined;
-    }
-
-    if (isContainRegexSymbols(relativeUrlPattern)) {
-      try {
-        const regex = new RegExp(relativeUrlPattern);
-
-        if (!regex.test(urlTemplate)) {
-          return `Not matches with ${relativeUrlPattern}`;
-        }
-      } catch (error) {
-        console.error('Invalid regex pattern:', error);
-      }
-    }
-    return undefined;
-  }, [testSuite.endpointRef?.relativeUrlPattern, testSuite.requestTemplate?.urlTemplate]);
-
-  useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'urlTemplate', isValid: !urlTemplateError });
-  }, [dispatch, urlTemplateError]);
-
-  useEffect(() => {
-    return () => sidebar.closeSidebar();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  const onAddParamOrHeader = useCallback(() => {
+    tabsContentRef.current?.add?.();
   }, []);
 
   return (
-    <div className="flex flex-col size-full gap-2">
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-row justify-between gap-x-2">
-          <div className="flex flex-row gap-2 items-start">
-            {testSuite?.endpointRef?.method && (
-              <span className="tiny bg-layer-3 rounded p-1 mt-[7px] border border-primary whitespace-nowrap max-w-[200px] overflow-hidden">
-                {testSuite?.endpointRef.method}
-              </span>
-            )}
-            <DialInput
-              id="urlTemplate"
-              value={testSuite.requestTemplate?.urlTemplate || ''}
-              onChange={(urlTemplate) =>
-                onChangeTestSuite({
-                  ...testSuite,
-                  requestTemplate: {
-                    ...testSuite.requestTemplate,
-                    urlTemplate,
-                  },
-                })
-              }
-              containerClassName="w-[640px]"
-              invalid={!!urlTemplateError}
-              error={urlTemplateError}
-            />
-          </div>
-          <DialNeutralButton
-            label={t(ButtonsI18nKey.TryOut)}
-            iconBefore={<IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} />}
-            onClick={openTryOutSidebar}
-          />
-        </div>
-
-        <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
+    <div className="flex flex-col size-full gap-2 border border-primary rounded p-4">
+      <div className="flex flex-row justify-between items-start mb-3">
+        <h3>{t(TestSuitesI18nKey.RequestTemplate)}</h3>
+        <ContentTypeSelect testSuite={testSuite} onChangeTestSuite={onChangeTestSuite} />
       </div>
-      <TabsContent activeTab={activeTab} selectedTestSuite={testSuite} onChange={onChangeTestSuite} />
+
+      <div className="flex flex-row justify-between items-start mb-3">
+        <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
+        {activeTab !== EntityViewTab.Body && (
+          <DialNeutralButton iconBefore={<IconPlus />} label={t(ButtonsI18nKey.Add)} onClick={onAddParamOrHeader} />
+        )}
+      </div>
+
+      <TabsContent
+        ref={tabsContentRef}
+        activeTab={activeTab}
+        selectedTestSuite={testSuite}
+        onChange={onChangeTestSuite}
+      />
     </div>
   );
 };

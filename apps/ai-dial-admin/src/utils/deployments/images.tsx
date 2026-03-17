@@ -8,6 +8,10 @@ import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 import StatusIcon from '@/src/components/Deployments/Common/StatusIndicator/StatusIcon';
 
+export function isImageNotInstalled(image?: Image): boolean {
+  return image?.buildStatus === IMAGE_STATUS.NOT_BUILT || image?.buildStatus === IMAGE_STATUS.BUILD_FAILED;
+}
+
 export function getActionClass(action: IMAGE_STATUS | CONTAINER_STATUS): string {
   return STATUS_CLASSNAMES[action];
 }
@@ -38,11 +42,9 @@ export const getContainerTypeByImageType = (type: IMAGE_TYPE): CONTAINER_TYPE =>
   }
 };
 
-export const isValidVersion = (imageData: ImageGroup): boolean => {
-  return (
-    !!imageData.selectedId &&
-    imageData.availableVersions.find((v) => v.id === imageData.selectedId)?.status === IMAGE_STATUS.BUILT
-  );
+export const isValidVersion = (imageData?: ImageGroup): boolean => {
+  if (!imageData?.selectedId || !imageData?.availableVersions) return false;
+  return imageData.availableVersions.find((v) => v.id === imageData.selectedId)?.status === IMAGE_STATUS.BUILT;
 };
 
 export function validateImageChanged(originalImage: Image, updatedImage: Image) {

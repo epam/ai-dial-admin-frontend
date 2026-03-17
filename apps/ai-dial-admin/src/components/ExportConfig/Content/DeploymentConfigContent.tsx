@@ -159,6 +159,7 @@ const DeploymentConfigContent: FC<Props> = ({ customExportData, setCustomExportD
             entities={availableEntities}
             onClose={() => setIsModalOpen(false)}
             onApply={onAddEntities}
+            disabledDependencies
           />,
           document.body,
         )}

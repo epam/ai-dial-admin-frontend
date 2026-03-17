@@ -10,8 +10,16 @@ import {
   convertBytesToMb,
   normalizeContainerPorts,
   isErrorPresent,
+  isAutoscalingEnabled,
+  deriveScaling,
 } from '../containers';
-import { CONTAINER_STATUS, CONTAINER_TRANSPORT, CONTAINER_TYPE } from '@/src/types/deployments/containers';
+import {
+  CONTAINER_SOURCE_TYPE,
+  CONTAINER_STATUS,
+  CONTAINER_TRANSPORT,
+  CONTAINER_TYPE,
+  SCALING_STRATEGY_TYPE,
+} from '@/src/types/deployments/containers';
 import { Container } from '@/src/models/deployments/containers';
 import { MOUNT_TYPE, VALUE_TYPE } from '@/src/types/deployments/variables';
 
@@ -28,29 +36,76 @@ describe('containers utils', () => {
       const template = getContainerTemplate(CONTAINER_TYPE.HF);
       expect(template?.$type).toBe(CONTAINER_TYPE.HF);
       expect(template?.resources?.requests?.['nvidia.com/gpu']).toBe('1');
+      expect(template?.scaling).toEqual({ minReplicas: 1, maxReplicas: 1 });
     });
 
     test('returns template for McpContainers', () => {
       const template = getContainerTemplate(CONTAINER_TYPE.MCP);
       expect(template?.$type).toBe(CONTAINER_TYPE.MCP);
       expect(template?.transport).toBe(CONTAINER_TRANSPORT.HTTP);
+      expect(template?.scaling).toEqual({ minReplicas: 1, maxReplicas: 1 });
     });
 
     test('returns template for Interceptors', () => {
       const template = getContainerTemplate(CONTAINER_TYPE.INTERCEPTOR);
       expect(template?.$type).toBe(CONTAINER_TYPE.INTERCEPTOR);
+      expect(template?.scaling).toEqual({ minReplicas: 1, maxReplicas: 1 });
     });
 
     test('returns template for NIM', () => {
-      expect(getContainerTemplate(CONTAINER_TYPE.NIM)?.$type).toBe(CONTAINER_TYPE.NIM);
+      const template = getContainerTemplate(CONTAINER_TYPE.NIM);
+      expect(template?.$type).toBe(CONTAINER_TYPE.NIM);
+      expect(template?.scaling).toEqual({ minReplicas: 1, maxReplicas: 1 });
       expect(getContainerTemplate(CONTAINER_TYPE.NIM, { GPU_REQUEST: '2', GPU_LIMIT: '2' })?.$type).toBe(
         CONTAINER_TYPE.NIM,
       );
     });
 
+    test('returns template for ADAPTER with scaling defaults', () => {
+      const template = getContainerTemplate(CONTAINER_TYPE.ADAPTER);
+      expect(template?.$type).toBe(CONTAINER_TYPE.ADAPTER);
+      expect(template?.scaling).toEqual({ minReplicas: 1, maxReplicas: 1 });
+    });
+
     test('returns template for McpContainers', () => {
       const template = getContainerTemplate('' as CONTAINER_TYPE);
       expect(template).toBeNull();
+    });
+
+    test('returns MCP template with IMAGE_REFERENCE source when sourceType is provided', () => {
+      const template = getContainerTemplate(CONTAINER_TYPE.MCP, undefined, CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE);
+      expect(template?.$type).toBe(CONTAINER_TYPE.MCP);
+      expect(template?.source?.$type).toBe(CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE);
+      expect(template?.source?.imageReference).toBe('');
+      expect(template?.transport).toBe(CONTAINER_TRANSPORT.HTTP);
+    });
+
+    test('returns MCP template with INTERNAL_IMAGE source when no sourceType', () => {
+      const template = getContainerTemplate(CONTAINER_TYPE.MCP);
+      expect(template?.source?.$type).toBe(CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE);
+      expect(template?.source?.imageDefinitionId).toBe('');
+    });
+
+    test('returns ADAPTER template with IMAGE_REFERENCE source when sourceType is provided', () => {
+      const template = getContainerTemplate(CONTAINER_TYPE.ADAPTER, undefined, CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE);
+      expect(template?.$type).toBe(CONTAINER_TYPE.ADAPTER);
+      expect(template?.source?.$type).toBe(CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE);
+      expect(template?.source?.imageReference).toBe('');
+      expect(template?.scaling).toEqual({ minReplicas: 1, maxReplicas: 1 });
+      expect(template?.transport).toBeUndefined();
+    });
+
+    test('returns INTERCEPTOR template with IMAGE_REFERENCE source when sourceType is provided', () => {
+      const template = getContainerTemplate(
+        CONTAINER_TYPE.INTERCEPTOR,
+        undefined,
+        CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE,
+      );
+      expect(template?.$type).toBe(CONTAINER_TYPE.INTERCEPTOR);
+      expect(template?.source?.$type).toBe(CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE);
+      expect(template?.source?.imageReference).toBe('');
+      expect(template?.scaling).toEqual({ minReplicas: 1, maxReplicas: 1 });
+      expect(template?.transport).toBeUndefined();
     });
 
     test('uses defaults if provided', () => {
@@ -73,7 +128,7 @@ describe('containers utils', () => {
       $type: CONTAINER_TYPE.NIM,
       name: 'container-1',
       displayName: 'c1',
-      imageDefinitionId: 'img-1',
+      source: { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE, imageDefinitionId: 'img-1' },
       status: CONTAINER_STATUS.NOT_DEPLOYED,
       metadata: {},
     };
@@ -108,9 +163,15 @@ describe('containers utils', () => {
       expect(getContainerRedeploySnapshot(a)).toEqual(getContainerRedeploySnapshot(b));
     });
 
-    test('detects imageDefinitionId change via snapshot inequality', () => {
-      const a: Container = { ...baseContainer, imageDefinitionId: 'img-1' };
-      const b: Container = { ...baseContainer, imageDefinitionId: 'img-2' };
+    test('detects source change via snapshot inequality', () => {
+      const a: Container = {
+        ...baseContainer,
+        source: { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE, imageDefinitionId: 'img-1' },
+      };
+      const b: Container = {
+        ...baseContainer,
+        source: { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE, imageDefinitionId: 'img-2' },
+      };
       expect(getContainerRedeploySnapshot(a)).not.toEqual(getContainerRedeploySnapshot(b));
     });
 
@@ -161,6 +222,47 @@ describe('containers utils', () => {
       };
       expect(getContainerRedeploySnapshot(a)).toEqual(getContainerRedeploySnapshot(b));
     });
+
+    test('detects command change via snapshot inequality', () => {
+      const a: Container = { ...baseContainer, command: '/bin/sh' };
+      const b: Container = { ...baseContainer, command: '/bin/bash' };
+      expect(getContainerRedeploySnapshot(a)).not.toEqual(getContainerRedeploySnapshot(b));
+    });
+
+    test('detects args change via snapshot inequality', () => {
+      const a: Container = { ...baseContainer, args: '--port 8080' };
+      const b: Container = { ...baseContainer, args: '--port 9090' };
+      expect(getContainerRedeploySnapshot(a)).not.toEqual(getContainerRedeploySnapshot(b));
+    });
+
+    test('treats missing command and args as equivalent', () => {
+      const a: Container = { ...baseContainer };
+      const b: Container = { ...baseContainer, command: undefined, args: undefined };
+      expect(getContainerRedeploySnapshot(a)).toEqual(getContainerRedeploySnapshot(b));
+    });
+
+    test('detects scaling change via snapshot inequality', () => {
+      const a: Container = { ...baseContainer, scaling: { minReplicas: 1, maxReplicas: 1 } };
+      const b: Container = { ...baseContainer, scaling: { minReplicas: 1, maxReplicas: 3 } };
+      expect(getContainerRedeploySnapshot(a)).not.toEqual(getContainerRedeploySnapshot(b));
+    });
+
+    test('treats identical scaling as equal', () => {
+      const scaling = {
+        minReplicas: 1,
+        maxReplicas: 3,
+        strategy: { $type: SCALING_STRATEGY_TYPE.REQUESTS, threshold: 2 },
+      };
+      const a: Container = { ...baseContainer, scaling };
+      const b: Container = { ...baseContainer, scaling: { ...scaling } };
+      expect(getContainerRedeploySnapshot(a)).toEqual(getContainerRedeploySnapshot(b));
+    });
+
+    test('treats missing scaling on both sides as equal', () => {
+      const a: Container = { ...baseContainer };
+      const b: Container = { ...baseContainer, scaling: undefined };
+      expect(getContainerRedeploySnapshot(a)).toEqual(getContainerRedeploySnapshot(b));
+    });
   });
 
   describe('normalizeEnvironmentVariables', () => {
@@ -188,6 +290,8 @@ describe('containers utils', () => {
     test('should be false', () => {
       expect(isEditDisabled({ status: CONTAINER_STATUS.FAILED } as Container)).toBeFalsy();
       expect(isEditDisabled({ status: CONTAINER_STATUS.STOPPED } as Container)).toBeFalsy();
+      expect(isEditDisabled({ status: CONTAINER_STATUS.RUNNING } as Container)).toBeFalsy();
+      expect(isEditDisabled({ status: CONTAINER_STATUS.NOT_DEPLOYED } as Container)).toBeFalsy();
     });
   });
 
@@ -231,6 +335,96 @@ describe('containers utils', () => {
 
     test('should return false when key exist but valid', () => {
       expect(isErrorPresent(errors, ['version'])).toBeFalsy();
+    });
+  });
+
+  describe('isAutoscalingEnabled', () => {
+    test('returns false when min equals max', () => {
+      expect(isAutoscalingEnabled(1, 1)).toBe(false);
+      expect(isAutoscalingEnabled(3, 3)).toBe(false);
+    });
+
+    test('returns false when max is 1 even if min < max', () => {
+      expect(isAutoscalingEnabled(0, 1)).toBe(false);
+    });
+
+    test('returns true when max > min and max > 1', () => {
+      expect(isAutoscalingEnabled(0, 2)).toBe(true);
+      expect(isAutoscalingEnabled(1, 3)).toBe(true);
+    });
+
+    test('handles undefined values', () => {
+      expect(isAutoscalingEnabled(undefined, undefined)).toBe(false);
+      expect(isAutoscalingEnabled(undefined, 2)).toBe(true);
+      expect(isAutoscalingEnabled(1, undefined)).toBe(false);
+    });
+  });
+
+  describe('deriveScaling', () => {
+    test('adds default strategy when autoscaling enabled and no strategy present', () => {
+      const result = deriveScaling({ minReplicas: 1, maxReplicas: 1 }, { maxReplicas: 3 });
+      expect(result.strategy).toEqual({
+        $type: SCALING_STRATEGY_TYPE.REQUESTS,
+        threshold: 2,
+      });
+    });
+
+    test('preserves existing strategy when autoscaling enabled', () => {
+      const existing = {
+        minReplicas: 1,
+        maxReplicas: 3,
+        strategy: { $type: SCALING_STRATEGY_TYPE.REQUESTS, threshold: 5 },
+      };
+      const result = deriveScaling(existing, { maxReplicas: 4 });
+      expect(result.strategy?.threshold).toBe(5);
+    });
+
+    test('removes strategy when max equals min', () => {
+      const existing = {
+        minReplicas: 1,
+        maxReplicas: 3,
+        strategy: { $type: SCALING_STRATEGY_TYPE.REQUESTS, threshold: 2 },
+      };
+      const result = deriveScaling(existing, { maxReplicas: 1 });
+      expect(result.strategy).toBeUndefined();
+    });
+
+    test('removes strategy when max is 1', () => {
+      const existing = {
+        minReplicas: 0,
+        maxReplicas: 3,
+        strategy: { $type: SCALING_STRATEGY_TYPE.REQUESTS, threshold: 2 },
+      };
+      const result = deriveScaling(existing, { maxReplicas: 1 });
+      expect(result.strategy).toBeUndefined();
+    });
+
+    test('adds strategy when scale-to-zero with max > 1', () => {
+      const result = deriveScaling({ minReplicas: 1, maxReplicas: 3 }, { minReplicas: 0 });
+      expect(result.strategy).toEqual({
+        $type: SCALING_STRATEGY_TYPE.REQUESTS,
+        threshold: 2,
+      });
+    });
+
+    test('merges updates into scaling', () => {
+      const result = deriveScaling(
+        { minReplicas: 1, maxReplicas: 1 },
+        { maxReplicas: 5, scaleToZeroDelaySeconds: 300 },
+      );
+      expect(result.maxReplicas).toBe(5);
+      expect(result.scaleToZeroDelaySeconds).toBe(300);
+      expect(result.minReplicas).toBe(1);
+    });
+
+    test('handles undefined scaling', () => {
+      const result = deriveScaling(undefined, { minReplicas: 1, maxReplicas: 3 });
+      expect(result.minReplicas).toBe(1);
+      expect(result.maxReplicas).toBe(3);
+      expect(result.strategy).toEqual({
+        $type: SCALING_STRATEGY_TYPE.REQUESTS,
+        threshold: 2,
+      });
     });
   });
 });

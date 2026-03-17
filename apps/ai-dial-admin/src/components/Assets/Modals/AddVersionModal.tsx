@@ -1,47 +1,83 @@
-import { DialFormPopup } from '@epam/ai-dial-ui-kit';
-import { FC, useState } from 'react';
+import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { FC, useCallback, useEffect, useState } from 'react';
+import semver from 'semver';
 
 import VersionControl from '@/src/components/BaseControls/Version';
-import { ButtonsI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
-import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
+import { FieldError } from '@/src/models/error';
+import { getSemanticVersionError } from '@/src/utils/deployments/validation';
 
 interface Props {
-  heading: string;
+  header: string;
   isModalOpen: boolean;
-  existingVersions: string[];
-  prefilledVersion?: string;
+  existingVersions?: Record<string, string[]>;
+  entityName?: string;
+  initialVersion?: string;
+  submitLabel?: string;
   onClose: () => void;
+  description?: string;
   onConfirm: (version: string) => void;
 }
 
 const AddVersionModal: FC<Props> = ({
-  heading,
-  isModalOpen,
-  existingVersions,
-  prefilledVersion,
+  submitLabel,
   onConfirm,
+  initialVersion,
+  header,
+  isModalOpen,
   onClose,
+  description,
+  existingVersions,
+  entityName,
 }) => {
   const t = useI18n();
-  const [version, setVersion] = useState<string>(prefilledVersion || '');
-  const { isValid } = useSaveValidationContext();
+  const { isValid, dispatch } = useSaveValidationContext();
+
+  const [version, setVersion] = useState(initialVersion ? semver.inc(initialVersion, 'patch') || '0.0.1' : '0.0.1');
+  const [versionError, setVersionError] = useState<FieldError | null>(null);
+
+  const validateVersion = useCallback(
+    (version?: string) => {
+      const error = getSemanticVersionError(existingVersions, entityName, t, version);
+      dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: !error });
+      setVersionError(error);
+    },
+    [dispatch, entityName, t, existingVersions],
+  );
+
+  const onVersionChange = useCallback(
+    (version?: string) => {
+      validateVersion(version);
+      setVersion(version || '');
+    },
+    [validateVersion],
+  );
+
+  useEffect(() => {
+    return () => {
+      dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: true });
+    };
+  }, [dispatch]);
 
   return (
     <DialFormPopup
       onClose={onClose}
-      header={heading}
+      header={header}
       portalId="newVersionModal"
       open={isModalOpen}
+      size={PopupSize.Sm}
       onCancel={onClose}
       onSubmit={() => onConfirm(version)}
-      disableSubmitButton={existingVersions.includes(version) || !isValid}
+      disableSubmitButton={!!existingVersions?.[version] || !isValid}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
-      submitLabel={t(ButtonsI18nKey.Create)}
+      submitLabel={submitLabel || t(ButtonsI18nKey.Create)}
     >
-      <div className="flex flex-col gap-4 text-primary small px-6 py-4">
-        {prefilledVersion && <div className="text-secondary">{t(PromptsI18nKey.NewVersionSaveDescription)}</div>}
-        <VersionControl version={version} onChange={(v) => setVersion(v || '')} />
+      <div className="flex flex-col gap-4 dial-small-text px-6 py-4">
+        {description && <div className="text-secondary">{description}</div>}
+
+        <VersionControl version={version} error={versionError?.text} onChange={onVersionChange} disableValidation />
       </div>
     </DialFormPopup>
   );

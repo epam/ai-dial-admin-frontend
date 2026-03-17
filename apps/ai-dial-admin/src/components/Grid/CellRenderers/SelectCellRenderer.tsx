@@ -15,8 +15,16 @@ export interface SelectCellRendererParams extends ICellRendererParams {
 
 const SelectCellRenderer = (params: SelectCellRendererParams) => {
   const { items } = getItems(params);
+  const { setValue } = params;
 
   const onChangeValue = (value: string | string[]) => {
+    const values = Array.isArray(value) ? value : value ? [value] : [];
+    const displayValue = params.isMulti ? values.join(STRINGS_DELIMITER) : values[0];
+
+    if (setValue) {
+      setValue(displayValue);
+    }
+
     params.onChange(
       value,
       params.data,

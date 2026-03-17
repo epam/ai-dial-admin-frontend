@@ -2,7 +2,7 @@ import React, { FC } from 'react';
 
 import { Container } from '@/src/models/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
-import { MODEL_SOURCE_TYPE } from '@/src/types/deployments/containers';
+import { CONTAINER_SOURCE_TYPE } from '@/src/types/deployments/containers';
 
 import ContainerBase from '@/src/components/Deployments/Fields/ContainerBase';
 import ContainerSource from '@/src/components/Deployments/Fields/ContainerSource';
@@ -25,20 +25,19 @@ const ContainerFields: FC<Props> = ({ container, setContainer, isModal, route, n
   return (
     <div className="flex flex-col gap-y-8">
       <ContainerBase container={container} setContainer={setContainer} names={names} isModal={isModal} />
-      {route === ApplicationRoute.ModelServings && (
+      {(route === ApplicationRoute.ModelServings ||
+        container.source?.$type === CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE) && (
         <ContainerSource container={container} setContainer={setContainer} isModal={isModal} route={route} />
       )}
       {!isModal && (
         <div className="flex flex-col gap-y-8">
           <ContainerEndpoint container={container} setContainer={setContainer} route={route} />
-          {container.source?.$type === MODEL_SOURCE_TYPE.HF && (
+          {container.source?.$type !== CONTAINER_SOURCE_TYPE.NGC_REGISTRY && (
             <ContainerAutoscaling container={container} setContainer={setContainer} />
           )}
           <ContainerVariables container={container} setContainer={setContainer} />
           <ContainerResources container={container} setContainer={setContainer} route={route} />
-          {container.source?.$type === MODEL_SOURCE_TYPE.HF && (
-            <ContainerConfiguration container={container} setContainer={setContainer} />
-          )}
+          <ContainerConfiguration container={container} setContainer={setContainer} />
           <ContainerStartupProbe container={container} setContainer={setContainer} />
         </div>
       )}

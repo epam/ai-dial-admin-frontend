@@ -12,7 +12,7 @@ import {
 } from '@epam/ai-dial-ui-kit';
 import { ColDef } from 'ag-grid-community';
 
-import { importFiles } from '@/src/app/[lang]/files/actions';
+import { importFiles } from '@/src/utils/files/import-files';
 import { getParentPathByFullPath } from '@/src/components/Assets/utils';
 import { getFormDataForImport, getImportTitle } from '@/src/components/EntityListView/HeaderButtons/utils';
 import { getImportResults } from '@/src/components/EntityListView/Import/utils';
@@ -263,7 +263,7 @@ const FileManager: FC<Props> = ({
   );
 
   const handlePreviewFile = useCallback((path?: string) => {
-    window.open(`/${FILE_PREVIEW}?path=${encodeURIComponent(path || '')}`, '_blank');
+    window.open(`${FILE_PREVIEW}?path=${encodeURIComponent(path || '')}`, '_blank');
   }, []);
 
   const handleDragAndDropFiles = useCallback(

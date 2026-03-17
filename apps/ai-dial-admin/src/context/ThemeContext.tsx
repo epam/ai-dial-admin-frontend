@@ -47,26 +47,31 @@ export const ThemeProvider = ({
         })
     : null;
 
+  const updateTheme = useCallback(
+    (themeId: string) => {
+      const theme = themesConfiguration?.themes.find((t) => t.id === themeId);
+      const root = document.documentElement;
+      applyThemeColors(root, theme);
+      setCurrentThemeId(themeId);
+      setCurrentThemeLogo(theme?.['app-logo']);
+    },
+    [themesConfiguration],
+  );
+
   useEffect(() => {
     const storedTheme = typeof window !== 'undefined' ? getFromLocalStorage('theme') : null;
     const configuredTheme = storedTheme || themesConfiguration?.themes?.[0].id;
     if (configuredTheme) {
-      setCurrentThemeId(configuredTheme);
+      updateTheme(configuredTheme);
     }
-  }, [themesConfiguration]);
+  }, [themesConfiguration, updateTheme]);
 
-  useEffect(() => {
-    if (currentThemeId && themesConfiguration && themesConfiguration.themes?.length > 0) {
-      const theme = themesConfiguration.themes.find((t) => t.id === currentThemeId);
-      const root = document.documentElement;
-      applyThemeColors(root, theme);
-      setCurrentThemeLogo(theme?.['app-logo']);
-    }
-  }, [currentThemeId, themesConfiguration]);
-
-  const setTheme = useCallback((themeId: string) => {
-    setCurrentThemeId(themeId);
-  }, []);
+  const setTheme = useCallback(
+    (themeId: string) => {
+      updateTheme(themeId);
+    },
+    [updateTheme],
+  );
 
   return (
     <ThemeContext.Provider

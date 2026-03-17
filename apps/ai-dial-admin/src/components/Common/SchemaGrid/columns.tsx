@@ -1,6 +1,6 @@
-import { FC } from 'react';
 import { SelectOption } from '@epam/ai-dial-ui-kit';
 import { ColDef, ICellRendererParams, ValueGetterParams } from 'ag-grid-community';
+import { FC } from 'react';
 
 import { getSchemaTypes, SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
 import BooleanButtonCellRenderer from '@/src/components/Grid/CellRenderers/BooleanButtonCellRenderer';
@@ -8,10 +8,11 @@ import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCe
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import TreeNameCellRenderer from '@/src/components/Grid/CellRenderers/TreeNameCellRenderer';
 import { NO_BORDER_CLASS, ONE_ACTION_COLUMN } from '@/src/constants/ag-grid';
-import { getRemoveOperation } from '@/src/constants/grid-columns/actions';
+import { getDeleteOperation } from '@/src/constants/grid-columns/actions';
 import { BasicI18nKey } from '@/src/constants/i18n';
+import { startCase } from 'lodash';
 
-const SCHEMA_TYPE_OPTIONS: SelectOption[] = getSchemaTypes().map((t) => ({ value: t, label: t }));
+const SCHEMA_TYPE_OPTIONS: SelectOption[] = getSchemaTypes().map((t) => ({ value: t, label: startCase(t) }));
 
 const getPropertyKindOptions = (t: (key: BasicI18nKey) => string): SelectOption[] => [
   { value: 'server', label: t(BasicI18nKey.Server) },
@@ -35,6 +36,7 @@ export const getSchemaGridColumns = (
   onToggleExpand: (data: SchemaFieldRow) => void,
   onChangeName: (value: string, data: SchemaFieldRow) => void,
   onChangeType: (value: string, data: SchemaFieldRow) => void,
+  onChangeTitle: (value: string, data: SchemaFieldRow) => void,
   onChangeDescription: (value: string, data: SchemaFieldRow) => void,
   onChangeRequired: (value: boolean, data: SchemaFieldRow) => void,
   onRemoveField: (data?: SchemaFieldRow) => void,
@@ -48,8 +50,8 @@ export const getSchemaGridColumns = (
       headerName: 'Name',
       colId: 'name',
       cellClass: NO_BORDER_CLASS,
-      flex: 2,
-      minWidth: 180,
+      flex: 1,
+      minWidth: 130,
       sortable: false,
       filter: false,
       floatingFilter: false,
@@ -63,38 +65,21 @@ export const getSchemaGridColumns = (
       },
     },
     {
-      headerName: 'Type',
-      field: 'type',
+      headerName: 'Title',
+      field: 'title',
       cellClass: NO_BORDER_CLASS,
-      width: 140,
-      maxWidth: 160,
+      flex: 1,
+      minWidth: 140,
       sortable: false,
       filter: false,
       floatingFilter: false,
-      cellRenderer: SelectCellRenderer,
+      cellRenderer: EditableCellRenderer,
       cellRendererParams: {
-        items: SCHEMA_TYPE_OPTIONS,
-        onChange: onChangeType,
+        hideTriangle: true,
+        skipRequired: true,
         isReadonly,
+        onChange: (value: string, data: SchemaFieldRow) => onChangeTitle(value, data),
       },
-    },
-    {
-      headerName: 'Required',
-      field: 'required',
-      cellClass: NO_BORDER_CLASS,
-      width: 100,
-      maxWidth: 110,
-      sortable: false,
-      filter: false,
-      floatingFilter: false,
-      cellRenderer: BooleanButtonCellRenderer,
-      cellRendererParams: {
-        onChange: onChangeRequired,
-        trueLabel: t(BasicI18nKey.Required),
-        falseLabel: t(BasicI18nKey.Optional),
-        isReadonly,
-      },
-      tooltipValueGetter: () => undefined,
     },
     {
       headerName: 'Description',
@@ -112,6 +97,40 @@ export const getSchemaGridColumns = (
         isReadonly,
         onChange: (value: string, data: SchemaFieldRow) => onChangeDescription(value, data),
       },
+    },
+    {
+      headerName: 'Data type',
+      field: 'type',
+      cellClass: NO_BORDER_CLASS,
+      width: 140,
+      maxWidth: 160,
+      sortable: false,
+      filter: false,
+      floatingFilter: false,
+      cellRenderer: SelectCellRenderer,
+      cellRendererParams: {
+        items: SCHEMA_TYPE_OPTIONS,
+        onChange: onChangeType,
+        isReadonly,
+      },
+    },
+    {
+      headerName: 'Requirement',
+      field: 'required',
+      cellClass: NO_BORDER_CLASS,
+      width: 100,
+      maxWidth: 110,
+      sortable: false,
+      filter: false,
+      floatingFilter: false,
+      cellRenderer: BooleanButtonCellRenderer,
+      cellRendererParams: {
+        onChange: onChangeRequired,
+        trueLabel: t(BasicI18nKey.Required),
+        falseLabel: t(BasicI18nKey.Optional),
+        isReadonly,
+      },
+      tooltipValueGetter: () => undefined,
     },
   ];
 
@@ -161,7 +180,7 @@ export const getSchemaGridColumns = (
   if (!isReadonly) {
     baseColumns.push({
       ...(ONE_ACTION_COLUMN(
-        getRemoveOperation(onRemoveField, undefined, 'text-error w-4 h-4'),
+        getDeleteOperation(onRemoveField, undefined, 'text-error w-4 h-4'),
       ) as ColDef<SchemaFieldRow>),
       floatingFilter: false,
     });

@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import ContainersList from '../ContainersList';
 import { ApplicationRoute } from '@/src/types/routes';
 import { Container } from '@/src/models/deployments/containers';
-import { CONTAINER_STATUS, CONTAINER_TYPE } from '@/src/types/deployments/containers';
+import { CONTAINER_SOURCE_TYPE, CONTAINER_STATUS, CONTAINER_TYPE } from '@/src/types/deployments/containers';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 
 vi.mock('@/src/app/actions/deployments');
@@ -15,7 +15,7 @@ describe('ContainersList', () => {
       id: '1',
       name: 'container-1',
       status: CONTAINER_STATUS.RUNNING,
-      imageDefinitionId: 'img-1',
+      source: { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE, imageDefinitionId: 'img-1' },
       metadata: {},
     } as Container,
     {
@@ -23,7 +23,7 @@ describe('ContainersList', () => {
       id: '2',
       name: 'container-2',
       status: CONTAINER_STATUS.NOT_DEPLOYED,
-      imageDefinitionId: 'img-2',
+      source: { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE, imageDefinitionId: 'img-2' },
       metadata: {},
     } as Container,
   ];

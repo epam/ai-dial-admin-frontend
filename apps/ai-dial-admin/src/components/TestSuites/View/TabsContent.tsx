@@ -5,12 +5,13 @@ import { FC, RefObject, useMemo } from 'react';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import ValidityStatusLabel from '@/src/components/Common/ValidityStatus/ValidityStatusLabel';
 import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
+import Metrics from '@/src/components/TestSuites/Metrics/Metrics';
 import TestSuiteProperties from '@/src/components/TestSuites/Properties/Properties';
 import Runs from '@/src/components/TestSuites/Runs/Runs';
 import TestCases from '@/src/components/TestSuites/TestCases/TestCases';
+import { TestCasesActions } from '@/src/components/TestSuites/TestCases/TestCasesList';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { TestCasesActions } from '@/src/components/TestSuites/TestCases/TestCasesList';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
@@ -77,6 +78,7 @@ const TabsContent: FC<Props> = ({
         />
       )}
       {activeTab === EntityViewTab.Runs && <Runs selectedTestSuite={selectedTestSuite} runRefreshRef={runRefreshRef} />}
+      {activeTab === EntityViewTab.Metrics && <Metrics selectedTestSuite={selectedTestSuite} />}
     </>
   );
 };

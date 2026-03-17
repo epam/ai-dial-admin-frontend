@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest';
 import { Container } from '@/src/models/deployments/containers';
 import { Image } from '@/src/models/deployments/images';
 import { DeploymentExportEntityType } from '@/src/types/deployments/export';
-import { CONTAINER_STATUS, CONTAINER_TYPE } from '@/src/types/deployments/containers';
+import { CONTAINER_SOURCE_TYPE, CONTAINER_STATUS, CONTAINER_TYPE } from '@/src/types/deployments/containers';
 import { IMAGE_STATUS, IMAGE_TYPE } from '@/src/types/deployments/images';
 import { getContainersForEntitiesGrid, getImagesForEntitiesGrid } from '../deployment-entities-list-view';
 
@@ -12,7 +12,7 @@ const mockContainer = (overrides?: Partial<Container>): Container => ({
   name: 'test-container',
   displayName: 'Test Container',
   description: 'A test container',
-  imageDefinitionId: 'img-1',
+  source: { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE, imageDefinitionId: 'img-1' },
   status: CONTAINER_STATUS.RUNNING,
   metadata: {},
   ...overrides,

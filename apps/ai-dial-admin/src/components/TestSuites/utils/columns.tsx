@@ -2,6 +2,7 @@ import { DialTooltip } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle } from '@tabler/icons-react';
 import { ColDef, ICellRendererParams, ITooltipParams, ValueGetterParams } from 'ag-grid-community';
 
+import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
 import ValidityStatus from '@/src/components/Common/ValidityStatus/ValidityStatus';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import JsonEditorCellRenderer from '@/src/components/Grid/CellRenderers/JsonEditorCellRenderer';
@@ -10,8 +11,9 @@ import { NO_BORDER_CLASS, UTILITY_COLUMN } from '@/src/constants/ag-grid';
 import { BASE_STATUS_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { TEST_CASES_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
+import { MetricBinding } from '@/src/models/evaluation/metric';
 import { InputBindingRowData, ResponseColumn, TestCase, TestCaseSchema } from '@/src/models/evaluation/test-suite';
-import { InputBindingType, TestCaseItemType } from '@/src/types/evaluation';
+import { InputBindingType, MetricBindingType, TestCaseItemType } from '@/src/types/evaluation';
 
 export type onCellChange = (data: Record<string, unknown>, field: string, value: string | number) => void;
 
@@ -218,6 +220,110 @@ export const getDynamicConfigurationsColumns = (
       filter: false,
       resizable: false,
       suppressMovable: true,
+    },
+  ];
+};
+
+export const getMetricBindingsColumns = (
+  onChangeEditable: (value: string | object, data: MetricBinding, column: string, index?: number) => void,
+  configSchema: SchemaFieldRow[],
+  testCaseColumns: string[],
+  responseColumns: string[],
+  t: (stringToTranslate: string) => string,
+): ColDef<MetricBinding>[] => {
+  return [
+    {
+      headerName: 'Property',
+      field: 'property',
+      cellClass: NO_BORDER_CLASS,
+      cellDataType: 'text',
+      flex: 1,
+    },
+    {
+      headerName: 'Schema',
+      cellClass: NO_BORDER_CLASS,
+      valueGetter: (params: ValueGetterParams<MetricBinding>) => {
+        const propName = params.data?.property || '';
+        const value = configSchema.find((s) => s.name === propName);
+        return value ? 'config' : 'input';
+      },
+      flex: 1,
+      maxWidth: 240,
+    },
+    {
+      headerName: 'Type',
+      field: 'source.$type',
+      cellClass: NO_BORDER_CLASS,
+      cellRenderer: SelectCellRenderer,
+      cellRendererParams: {
+        items: [
+          {
+            value: MetricBindingType.Constant,
+            label: t(TestSuitesI18nKey.Constant),
+          },
+          {
+            value: MetricBindingType.TestCase,
+            label: t(TestSuitesI18nKey.TestCase),
+          },
+          {
+            value: MetricBindingType.Response,
+            label: t(TestSuitesI18nKey.Response),
+          },
+        ],
+
+        onChange: onChangeEditable,
+      },
+      flex: 1,
+      maxWidth: 240,
+    },
+    {
+      headerName: 'Value',
+      valueGetter: (params: ValueGetterParams<MetricBinding>) => {
+        if (params.data?.source?.$type === MetricBindingType.Constant) {
+          return params.data?.source?.value;
+        } else {
+          return params.data?.source?.columnName;
+        }
+      },
+      cellClass: NO_BORDER_CLASS,
+      cellRendererSelector: (params: ICellRendererParams<MetricBinding>) => {
+        if (params.data?.source?.$type === MetricBindingType.TestCase) {
+          const items = testCaseColumns.map((s) => ({
+            value: s,
+            label: s,
+          }));
+          return {
+            component: SelectCellRenderer,
+            params: {
+              items: items,
+              onChange: onChangeEditable,
+            },
+          };
+        } else if (params.data?.source?.$type === MetricBindingType.Response) {
+          const items = responseColumns.map((s) => ({
+            value: s,
+            label: s,
+          }));
+          return {
+            component: SelectCellRenderer,
+            params: {
+              items: items,
+              onChange: onChangeEditable,
+            },
+          };
+        } else {
+          return {
+            component: EditableCellRenderer,
+            params: {
+              onChange: onChangeEditable,
+            },
+          };
+        }
+      },
+      cellRendererParams: {
+        hideTriangle: true,
+      },
+      flex: 2,
     },
   ];
 };

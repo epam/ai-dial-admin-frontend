@@ -4,7 +4,8 @@ import { useCallback, useState } from 'react';
 
 import { DialCopiedItem, DialDeletedItem, DialFile, DialFileNodeType, DialUploadFileItem } from '@epam/ai-dial-ui-kit';
 
-import { bulkDeleteFiles, exportFiles, importFiles, moveFiles } from '@/src/app/[lang]/files/actions';
+import { importFiles } from '@/src/utils/files/import-files';
+import { bulkDeleteFiles, exportFiles, moveFiles } from '@/src/app/[lang]/files/actions';
 import FileManager from '@/src/components/Common/FileManager/FileManager';
 import Modals, { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';

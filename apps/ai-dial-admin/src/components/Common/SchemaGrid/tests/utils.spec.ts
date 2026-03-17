@@ -43,6 +43,7 @@ describe('createEmptyField', () => {
       name: '',
       type: 'string',
       required: false,
+      title: '',
       description: '',
       expanded: false,
       children: [],
@@ -739,7 +740,7 @@ describe('fieldsToJsonSchema', () => {
     expect(schema.required).toEqual(['tags']);
   });
 
-  test('should not add nested properties for object/array without children', () => {
+  test('should add empty properties {} for object without children', () => {
     const fields: SchemaFieldRow[] = [
       {
         id: 'f1',
@@ -755,7 +756,29 @@ describe('fieldsToJsonSchema', () => {
     ];
 
     const schema = fieldsToJsonSchema(fields);
-    expect(schema.properties!['empty']).toEqual({ type: 'object' });
+    expect(schema.properties!['empty']).toEqual({ type: 'object', properties: {} });
+  });
+
+  test('should add items with type string when array has no children', () => {
+    const fields: SchemaFieldRow[] = [
+      {
+        id: 'f1',
+        name: 'tags',
+        type: 'array',
+        required: false,
+        description: '',
+        expanded: false,
+        children: [],
+        parentId: null,
+        depth: 0,
+      },
+    ];
+
+    const schema = fieldsToJsonSchema(fields);
+    expect(schema.properties!['tags']).toEqual({
+      type: 'array',
+      items: { type: 'string' },
+    });
   });
 });
 

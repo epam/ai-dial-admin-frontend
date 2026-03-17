@@ -1,8 +1,10 @@
 import { getButtonTitle, getAvailableData } from '../utils';
-import { ButtonsI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, ExportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import * as AddEntitiesUtils from '@/src/components/AddEntitiesTab/utils';
+import { DeploymentExportEntityType } from '@/src/types/deployments/export';
 import { EntityType } from '@/src/types/entity-type';
+import { DEPLOYMENT_IMAGE_DEP } from '@/src/utils/entities/get-export-deps';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 vi.mock('@/src/components/AddEntitiesTab/utils');
 
@@ -13,77 +15,77 @@ describe('Export Config Utils :: getButtonTitle', () => {
 
   test('Should return title for MODEL (full)', () => {
     const res = getButtonTitle(mockTranslate, EntityType.MODEL, true);
-    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Models.toLowerCase()}`);
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Models}`);
   });
 
   test('Should return title for APPLICATION (full)', () => {
     const res = getButtonTitle(mockTranslate, EntityType.APPLICATION, true);
-    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Applications.toLowerCase()}`);
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Applications}`);
   });
 
   test('Should return title for ROUTE (full)', () => {
     const res = getButtonTitle(mockTranslate, EntityType.ROUTE, true);
-    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Routes.toLowerCase()}`);
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Routes}`);
   });
 
   test('Should return title for TOOLSET (full)', () => {
     const res = getButtonTitle(mockTranslate, EntityType.TOOLSET, true);
-    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Toolsets.toLowerCase()}`);
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Toolsets}`);
   });
 
   test('Should return title for INTERCEPTOR_RUNNER (full)', () => {
     const res = getButtonTitle(mockTranslate, EntityType.INTERCEPTOR_RUNNER, true);
-    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.InterceptorTemplates.toLowerCase()}`);
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.InterceptorTemplates}`);
   });
 
   test('Should return title for key (full)', () => {
     const res = getButtonTitle(mockTranslate, EntityType.KEY, true);
-    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Keys.toLowerCase()}`);
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Keys}`);
   });
 
   test('Should return title for prompts (full)', () => {
     const res = getButtonTitle(mockTranslate, EntityType.PROMPT, true);
-    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Prompts.toLowerCase()}`);
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Prompts}`);
   });
 
   test('Should return title for roles (full)', () => {
     const res = getButtonTitle(mockTranslate, EntityType.ROLE, true);
-    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Roles.toLowerCase()}`);
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Roles}`);
   });
 
   test('Should return title for adapter (full)', () => {
     const res = getButtonTitle(mockTranslate, EntityType.ADAPTER, true);
-    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Adapters.toLowerCase()}`);
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Adapters}`);
   });
 
   test('Should return title for application runners (full)', () => {
     const res = getButtonTitle(mockTranslate, EntityType.APPLICATION_TYPE_SCHEMA, true);
-    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.ApplicationRunners.toLowerCase()}`);
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.ApplicationRunners}`);
   });
 
   test('Should return title for files (full)', () => {
     const res = getButtonTitle(mockTranslate, EntityType.FILE, true);
-    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Files.toLowerCase()}`);
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Files}`);
   });
 
   test('Should return title for models (full)', () => {
     const res = getButtonTitle(mockTranslate, EntityType.MODEL, true);
-    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Models.toLowerCase()}`);
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Models}`);
   });
 
   test('Should return title for applications (full)', () => {
     const res = getButtonTitle(mockTranslate, EntityType.APPLICATION, true);
-    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Applications.toLowerCase()}`);
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Applications}`);
   });
 
   test('Should return title for routes (full)', () => {
     const res = getButtonTitle(mockTranslate, EntityType.ROUTE, true);
-    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Routes.toLowerCase()}`);
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Routes}`);
   });
 
   test('Should return title for interceptors (full)', () => {
     const res = getButtonTitle(mockTranslate, EntityType.INTERCEPTOR, true);
-    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Interceptors.toLowerCase()}`);
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Interceptors}`);
   });
 
   test('Should return only label (not full) for interceptors', () => {
@@ -104,6 +106,46 @@ describe('Export Config Utils :: getButtonTitle', () => {
   test('Should return empty string if no selected tab and not full', () => {
     const res = getButtonTitle(mockTranslate, undefined, false);
     expect(res).toBe('');
+  });
+
+  test('Should return title for MCP_CONTAINER (full)', () => {
+    const res = getButtonTitle(mockTranslate, DeploymentExportEntityType.MCP_CONTAINER as EntityType, true);
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.McpContainers}`);
+  });
+
+  test('Should return title for INTERCEPTOR_CONTAINER (full)', () => {
+    const res = getButtonTitle(mockTranslate, DeploymentExportEntityType.INTERCEPTOR_CONTAINER as EntityType, true);
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.InterceptorContainers}`);
+  });
+
+  test('Should return title for ADAPTER_CONTAINER (full)', () => {
+    const res = getButtonTitle(mockTranslate, DeploymentExportEntityType.ADAPTER_CONTAINER as EntityType, true);
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.AdapterContainers}`);
+  });
+
+  test('Should return title for MODEL_SERVING (full)', () => {
+    const res = getButtonTitle(mockTranslate, DeploymentExportEntityType.MODEL_SERVING as EntityType, true);
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.ModelServings}`);
+  });
+
+  test('Should return title for IMAGE (full)', () => {
+    const res = getButtonTitle(mockTranslate, DeploymentExportEntityType.IMAGE as EntityType, true);
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Images}`);
+  });
+
+  test('Should return label for MCP_IMAGE dependency', () => {
+    const res = getButtonTitle(mockTranslate, DEPLOYMENT_IMAGE_DEP.MCP as unknown as EntityType);
+    expect(res).toBe(ExportI18nKey.McpImage);
+  });
+
+  test('Should return label for INTERCEPTOR_IMAGE dependency', () => {
+    const res = getButtonTitle(mockTranslate, DEPLOYMENT_IMAGE_DEP.INTERCEPTOR as unknown as EntityType);
+    expect(res).toBe(ExportI18nKey.InterceptorImage);
+  });
+
+  test('Should return label for ADAPTER_IMAGE dependency', () => {
+    const res = getButtonTitle(mockTranslate, DEPLOYMENT_IMAGE_DEP.ADAPTER as unknown as EntityType);
+    expect(res).toBe(ExportI18nKey.AdapterImage);
   });
 });
 

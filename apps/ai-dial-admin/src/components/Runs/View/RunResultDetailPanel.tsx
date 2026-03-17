@@ -6,7 +6,7 @@ import { DialCloseButton, DialLinkButton } from '@epam/ai-dial-ui-kit';
 
 import Grafana from '@/public/images/icons/grafana.svg';
 import Accordion from '@/src/components/Common/Accordion/Accordion';
-import { RunsI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ExtractionResult } from '@/src/models/evaluation/run';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
@@ -112,8 +112,8 @@ const RunResultDetailPanel: FC<Props> = ({ result, grafanaExploreUrl, onClose })
           </section>
         )}
 
-        {getCollapseBlock(t(RunsI18nKey.RequestBody), requestJson)}
-        {getCollapseBlock(t(RunsI18nKey.ResponseBody), responseJson)}
+        {getCollapseBlock(t(BasicI18nKey.Request), requestJson)}
+        {getCollapseBlock(t(BasicI18nKey.Response), responseJson)}
       </div>
     </div>
   );

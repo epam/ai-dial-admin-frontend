@@ -5,6 +5,7 @@ import { isEditDisabled } from '@/src/utils/deployments/containers';
 
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import Maintainer from '@/src/components/BaseControls/Maintainer';
+import TopicsControl from '@/src/components/BaseControls/Topics';
 import IdControl from '@/src/components/BaseControls/Id/Id';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 
@@ -58,7 +59,12 @@ const ContainerBase: FC<Props> = ({ container, setContainer, names, isModal = fa
         isFullWidth={isModal}
         disabled={isEditDisabled(container)}
       />
-      {!isModal && <Maintainer entity={container} onChangeEntity={setContainer} disabled={isEditDisabled(container)} />}
+      {!isModal && (
+        <>
+          <Maintainer entity={container} onChangeEntity={setContainer} disabled={isEditDisabled(container)} />
+          <TopicsControl entity={container} onChange={setContainer} disabled={isEditDisabled(container)} />
+        </>
+      )}
     </div>
   );
 };

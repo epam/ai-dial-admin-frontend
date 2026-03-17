@@ -37,6 +37,10 @@ export enum ModalType {
   createContainer = 'createContainer',
   createServingHF = 'createServingHF',
   createServingNIM = 'createServingNIM',
+  createMcpDockerImage = 'createMcpDockerImage',
+  createAdapterDockerImage = 'createAdapterDockerImage',
+  createInterceptorDockerImage = 'createInterceptorDockerImage',
+  runTestSuite = 'runTestSuite',
 }
 
 interface Props {

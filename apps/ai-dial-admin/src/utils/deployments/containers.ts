@@ -1,14 +1,14 @@
 import { EnvironmentVariable } from '@/src/models/deployments/variables';
 import { Container, ContainerRedeploySnapshot, ResourcesDefaults } from '@/src/models/deployments/containers';
 import {
+  CONTAINER_SOURCE_TYPE,
   CONTAINER_STATUS,
   CONTAINER_TRANSPORT,
   CONTAINER_TYPE,
   ContainerResources,
   MODEL_FORMAT,
-  MODEL_SOURCE_TYPE,
 } from '@/src/types/deployments/containers';
-import { DEFAULT_SCALING } from '@/src/constants/deployments/containers';
+import { DEFAULT_SCALING, DEFAULT_STRATEGY } from '@/src/constants/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 
 export const normalizeContainerPorts = (ports?: number[]): number[] => {
@@ -32,12 +32,15 @@ const normalizeResources = (resources?: ContainerResources): ContainerResources 
 
 export const getContainerRedeploySnapshot = (container: Container): ContainerRedeploySnapshot => {
   return {
-    imageDefinitionId: container.imageDefinitionId,
+    source: container.source,
     containerPorts: normalizeContainerPorts(container.containerPorts),
     containerPort: container.containerPort,
     containerGrpcPort: container.containerGrpcPort,
     envs: normalizeEnvironmentVariables(container.metadata?.envs),
     resources: normalizeResources(container.resources),
+    command: container.command,
+    args: container.args,
+    scaling: container.scaling,
   };
 };
 
@@ -54,14 +57,18 @@ export const getContainerTypeByRoute = (route: ApplicationRoute): CONTAINER_TYPE
   }
 };
 
-export const getContainerTemplate = (type: CONTAINER_TYPE, defaults?: ResourcesDefaults): Container | null => {
+export const getContainerTemplate = (
+  type: CONTAINER_TYPE,
+  defaults?: ResourcesDefaults,
+  sourceType?: CONTAINER_SOURCE_TYPE,
+): Container | null => {
   if (!type) {
     return null;
   }
 
   const template = {
     $type: type,
-    imageDefinitionId: '',
+    source: { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE, imageDefinitionId: '' },
     displayName: '',
     name: '',
     description: '',
@@ -84,7 +91,22 @@ export const getContainerTemplate = (type: CONTAINER_TYPE, defaults?: ResourcesD
   if (type === CONTAINER_TYPE.MCP) {
     return {
       ...template,
+      ...(sourceType === CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE
+        ? { source: { $type: CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE, imageReference: '' } }
+        : {}),
       transport: CONTAINER_TRANSPORT.HTTP,
+      scaling: DEFAULT_SCALING,
+    };
+  }
+
+  if (
+    (type === CONTAINER_TYPE.ADAPTER || type === CONTAINER_TYPE.INTERCEPTOR) &&
+    sourceType === CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE
+  ) {
+    return {
+      ...template,
+      source: { $type: CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE, imageReference: '' },
+      scaling: DEFAULT_SCALING,
     };
   }
 
@@ -92,7 +114,7 @@ export const getContainerTemplate = (type: CONTAINER_TYPE, defaults?: ResourcesD
     return {
       ...template,
       source: {
-        $type: MODEL_SOURCE_TYPE.HF,
+        $type: CONTAINER_SOURCE_TYPE.HUGGINGFACE,
       },
       modelFormat: MODEL_FORMAT.HF,
       resources: {
@@ -113,7 +135,7 @@ export const getContainerTemplate = (type: CONTAINER_TYPE, defaults?: ResourcesD
     return {
       ...template,
       source: {
-        $type: MODEL_SOURCE_TYPE.NIM,
+        $type: CONTAINER_SOURCE_TYPE.NGC_REGISTRY,
       },
       resources: {
         requests: {
@@ -129,7 +151,7 @@ export const getContainerTemplate = (type: CONTAINER_TYPE, defaults?: ResourcesD
     };
   }
 
-  return template;
+  return { ...template, scaling: DEFAULT_SCALING };
 };
 
 export const isEditDisabled = (container: Container): boolean => {
@@ -154,4 +176,27 @@ export const convertBytesToMb = (value?: string): string => {
 
 export const isErrorPresent = (errors: Map<string, boolean>, errorKeys: string[]) => {
   return [...errors].some(([key, value]) => errorKeys.some((errorKey) => key.includes(errorKey)) && !value);
+};
+
+export const isAutoscalingEnabled = (min?: number, max?: number): boolean => {
+  return (max ?? 0) > (min ?? 0) && (max ?? 0) > 1;
+};
+
+export const deriveScaling = (
+  scaling: Container['scaling'],
+  updates: Partial<NonNullable<Container['scaling']>>,
+): NonNullable<Container['scaling']> => {
+  const merged = { ...scaling, ...updates };
+  const min = merged.minReplicas;
+  const max = merged.maxReplicas;
+
+  if (isAutoscalingEnabled(min, max)) {
+    if (!merged.strategy) {
+      merged.strategy = DEFAULT_STRATEGY;
+    }
+  } else {
+    delete merged.strategy;
+  }
+
+  return merged;
 };

@@ -18,6 +18,7 @@ interface Props {
   isAddedManual?: boolean;
   isMcpToolset?: boolean;
   isAssetToolset?: boolean;
+  containerId?: string;
   viewSelector?: ReactNode;
 }
 
@@ -28,6 +29,7 @@ const ToolHeader: FC<Props> = ({
   isAddedManual,
   isMcpToolset,
   isAssetToolset,
+  containerId,
   viewSelector,
 }) => {
   const t = useI18n();
@@ -38,7 +40,13 @@ const ToolHeader: FC<Props> = ({
       e.stopPropagation();
       sidebar.showSidebar(
         <SaveValidationContextProvider>
-          <TryOut tool={tool} toolSetName={toolSetName} isAssetToolset={isAssetToolset} />
+          <TryOut
+            tool={tool}
+            toolSetName={toolSetName}
+            isAssetToolset={isAssetToolset}
+            isMcpToolset={isMcpToolset}
+            containerId={containerId}
+          />
         </SaveValidationContextProvider>,
         'w-1/2 max-w-[800px]',
       );
@@ -47,7 +55,7 @@ const ToolHeader: FC<Props> = ({
         toggleSidebar(e);
       }
     },
-    [isAssetToolset, sidebar, sidebarOpen, toggleSidebar, tool, toolSetName],
+    [containerId, isAssetToolset, isMcpToolset, sidebar, sidebarOpen, toggleSidebar, tool, toolSetName],
   );
 
   return (
@@ -60,7 +68,7 @@ const ToolHeader: FC<Props> = ({
           </span>
         )}
       </div>
-      {!isAddedManual && !isMcpToolset && (
+      {!isAddedManual && (
         <div className="flex flex-row items-center gap-4" onClick={(e) => e.stopPropagation()}>
           {!isCollapsed && viewSelector}
           {!isCollapsed && !!viewSelector && <div className="w-px h-6 bg-layer-4"></div>}
