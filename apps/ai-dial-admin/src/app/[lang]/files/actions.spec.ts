@@ -1,12 +1,11 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { assetsApi } from '@/src/app/api/api';
-import { ImportFileType } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { bulkDeleteFiles, exportFiles, getFiles, importFiles, moveFiles, removeFile } from './actions';
+import { bulkDeleteFiles, exportFiles, getFiles, moveFiles, removeFile } from './actions';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -25,20 +24,6 @@ describe('Files :: server actions', () => {
     const result = await getFiles('test');
     expect(getUserToken).toHaveBeenCalled();
     expect(assetsApi.getAssetList).toHaveBeenCalledWith(TOKEN_MOCK, 'test', ResourceType.FILE);
-    expect(result).toBe(RESPONSE_MOCK);
-  });
-
-  test('Should call importFiles action', async () => {
-    (assetsApi.importAssets as any).mockResolvedValue(RESPONSE_MOCK);
-
-    const result = await importFiles({} as FormData, ImportFileType.ARCHIVE);
-    expect(getUserToken).toHaveBeenCalled();
-    expect(assetsApi.importAssets).toHaveBeenCalledWith(
-      TOKEN_MOCK,
-      {} as FormData,
-      ImportFileType.ARCHIVE,
-      ResourceType.FILE,
-    );
     expect(result).toBe(RESPONSE_MOCK);
   });
 

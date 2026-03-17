@@ -1,3 +1,5 @@
+import { ApiRoute } from '@/src/constants/api-routes';
+
 export const getIconPath = (iconName?: string): string => {
-  return `/api/themes/${encodeURIComponent(iconName || '')}`;
+  return `${ApiRoute.Themes}/${encodeURIComponent(iconName || '')}`;
 };

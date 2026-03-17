@@ -5,7 +5,8 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { DialCopiedItem, DialDeletedItem, DialFile, DialFileManager, DialUploadFileItem } from '@epam/ai-dial-ui-kit';
 import { ColDef } from 'ag-grid-community';
 
-import { bulkDeleteFiles, exportFiles, importFiles, moveFiles } from '@/src/app/[lang]/files/actions';
+import { bulkDeleteFiles, exportFiles, moveFiles } from '@/src/app/[lang]/files/actions';
+import { importFiles } from '@/src/utils/files/import-files';
 import { changeFolder, createFolderWithFiles, removeFolder } from '@/src/app/[lang]/folders-storage/actions';
 import { getParentPathByFullPath } from '@/src/components/Assets/utils';
 import { getFormDataForImport, getImportTitle } from '@/src/components/EntityListView/HeaderButtons/utils';
@@ -267,7 +268,7 @@ const FileManager: FC<Props> = ({ label, columnDefs, view, getContext, ...props 
   );
 
   const handlePreviewFile = useCallback((path?: string) => {
-    window.open(`/${FILE_PREVIEW}?path=${encodeURIComponent(path || '')}`, '_blank');
+    window.open(`${FILE_PREVIEW}?path=${encodeURIComponent(path || '')}`, '_blank');
   }, []);
 
   const handleDragAndDropFiles = useCallback(
