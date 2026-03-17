@@ -7,6 +7,7 @@ import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import Tools from '@/src/components/Tools/Tools';
 import { AuthHeader } from '@/src/components/Toolsets/Auth/Sections/AuthHeader';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { Toolset } from '@/src/models/dial/toolset';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
@@ -24,6 +25,7 @@ interface Props {
 
 const TabsContent: FC<Props> = ({ activeTab, onChange, selectedToolset, originalToolset }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   const headerPostfix = useMemo(() => {
     return (
@@ -60,6 +62,7 @@ const TabsContent: FC<Props> = ({ activeTab, onChange, selectedToolset, original
           originalToolset={originalToolset}
           selectedToolset={selectedToolset}
           onChangeToolset={onChange as (toolset: Toolset) => void}
+          readonly={isReadOnlyAdmin}
         />
       )}
     </>

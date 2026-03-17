@@ -202,7 +202,8 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
       {isDisableRole(entity) && view !== ApplicationRoute.Routes && (
         <DialAlert variant={AlertVariant.Info} message={t(getNoAvailableTitle(view))} />
       )}
-      {!isReadOnlyAdmin && isModalOpen &&
+      {!isReadOnlyAdmin &&
+        isModalOpen &&
         createPortal(
           <AddEntitiesGrid
             modalTitle={t(RolesI18nKey.AddRoles)}

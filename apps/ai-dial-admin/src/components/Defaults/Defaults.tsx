@@ -77,7 +77,7 @@ const Defaults: FC<Props> = ({ entity, onChangeEntity, disabled }) => {
           index={index}
           changeItem={onChangeDefaultItem}
           onRemove={onRemoveItem}
-          readonly={isReadonly}
+          disabled={isReadonly}
         />
       ))}
       {!isReadonly && (
