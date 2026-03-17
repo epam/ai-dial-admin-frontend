@@ -4,7 +4,7 @@ import { useCallback, useState } from 'react';
 
 import { DialFile } from '@epam/ai-dial-ui-kit';
 
-import { importFiles } from '@/src/app/[lang]/files/actions';
+import { importFiles } from '@/src/utils/files/import-files';
 import FileManager from '@/src/components/Common/FileManager/FileManager';
 import Modals, { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';

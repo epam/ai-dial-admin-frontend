@@ -7,6 +7,7 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getContainer, getContainerPods, updateContainer } from '@/src/app/actions/deployments';
 import ContainersHeader from '@/src/components/EntityHeaderControls/ContainersHeader';
+import { ApiRoute } from '@/src/constants/api-routes';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { IMAGE_BUILD_POLL_INTERVAL } from '@/src/constants/deployments/images';
@@ -135,7 +136,7 @@ const ContainerView: FC<Props> = ({
 
   useEffect(() => {
     if (selectedContainer.name) {
-      const eventSource = new EventSource(`/api/events?id=${selectedContainer.name}`);
+      const eventSource = new EventSource(`${ApiRoute.Events}?id=${selectedContainer.name}`);
 
       const handleEvent = (event: MessageEvent) => {
         try {

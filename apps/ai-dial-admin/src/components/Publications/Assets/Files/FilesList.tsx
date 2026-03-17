@@ -40,7 +40,7 @@ const FilesList: FC<Props> = ({ files, action, onChange, addedFiles, onRemoveAdd
   }, [files]);
 
   const download = useCallback((file?: FileRowData) => {
-    window.open(`/${FILE_DOWNLOAD}/?path=${encodeURIComponent(file?.path || '')}`, '_blank');
+    window.open(`${FILE_DOWNLOAD}?path=${encodeURIComponent(file?.path || '')}`, '_blank');
   }, []);
 
   const openInNewTab = useCallback((file?: FileRowData) => {
@@ -48,7 +48,7 @@ const FilesList: FC<Props> = ({ files, action, onChange, addedFiles, onRemoveAdd
   }, []);
 
   const preview = useCallback(async (file?: FileRowData) => {
-    window.open(`/${FILE_PREVIEW}?path=${encodeURIComponent(file?.path || '')}`, '_blank');
+    window.open(`${FILE_PREVIEW}?path=${encodeURIComponent(file?.path || '')}`, '_blank');
   }, []);
 
   const remove = useCallback(
