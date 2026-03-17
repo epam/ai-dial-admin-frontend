@@ -27,69 +27,69 @@ import { RunsApi } from '@/src/server/eval/runs-api';
 
 // Admin APIs
 export const modelsApi = new ModelsApi({
-  host: 'http://localhost:50243/',
+  host: process.env.DIAL_ADMIN_API_URL,
 });
 
 export const applicationsApi = new ApplicationsApi({
-  host: 'http://localhost:50243/',
+  host: process.env.DIAL_ADMIN_API_URL,
 });
 
 export const rolesApi = new RolesApi({
-  host: 'http://localhost:50243/',
+  host: process.env.DIAL_ADMIN_API_URL,
 });
 
 export const keysApi = new KeysApi({
-  host: 'http://localhost:50243/',
+  host: process.env.DIAL_ADMIN_API_URL,
 });
 
 export const applicationRunnersApi = new ApplicationRunnersApi({
-  host: 'http://localhost:50243/',
+  host: process.env.DIAL_ADMIN_API_URL,
 });
 
 export const interceptorsApi = new InterceptorsApi({
-  host: 'http://localhost:50243/',
+  host: process.env.DIAL_ADMIN_API_URL,
 });
 
 export const adaptersApi = new AdaptersApi({
-  host: 'http://localhost:50243/',
+  host: process.env.DIAL_ADMIN_API_URL,
 });
 
 export const telemetryApi = new TelemetryApi({
-  host: 'http://localhost:50243/',
+  host: process.env.DIAL_ADMIN_API_URL,
 });
 
 export const routesApi = new RoutesApi({
-  host: 'http://localhost:50243/',
+  host: process.env.DIAL_ADMIN_API_URL,
 });
 
 export const publicationsApi = new PublicationsApi({
-  host: 'http://localhost:50243/',
+  host: process.env.DIAL_ADMIN_API_URL,
 });
 
 export const foldersApi = new FoldersApi({
-  host: 'http://localhost:50243/',
+  host: process.env.DIAL_ADMIN_API_URL,
 });
 
 export const utilityApi = new UtilityApi({
-  host: 'http://localhost:50243/',
+  host: process.env.DIAL_ADMIN_API_URL,
 });
 
 export const themesApi = new ThemesApi();
 
 export const activityAuditApi = new ActivityAuditApi({
-  host: 'http://localhost:50243/',
+  host: process.env.DIAL_ADMIN_API_URL,
 });
 
 export const interceptorTemplatesApi = new InterceptorTemplatesApi({
-  host: 'http://localhost:50243/',
+  host: process.env.DIAL_ADMIN_API_URL,
 });
 
 export const toolSetsApi = new ToolsetsApi({
-  host: 'http://localhost:50243/',
+  host: process.env.DIAL_ADMIN_API_URL,
 });
 
 export const assetsApi = new AssetsApi({
-  host: 'http://localhost:50243/',
+  host: process.env.DIAL_ADMIN_API_URL,
 });
 
 // Deployments management APIs
