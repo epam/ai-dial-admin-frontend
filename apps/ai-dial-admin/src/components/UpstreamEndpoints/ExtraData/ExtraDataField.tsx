@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { DialRadioGroupPopupField, DialTextarea, RadioButtonWithContent } from '@epam/ai-dial-ui-kit';
 
@@ -39,6 +39,9 @@ const ExtraDataField: FC<Props> = ({ endpoint, disabled, label, onChangeExtraDat
       } catch {
         console.error('Invalid JSON');
       }
+    } else if (typeof endpoint.extraData === 'number') {
+      setStringValue(String(endpoint.extraData));
+      setRadioFieldId(USE_STRING_ID);
     } else if (typeof endpoint.extraData === 'string' && endpoint.extraData.length) {
       try {
         const parsed = JSON.parse(endpoint.extraData);
@@ -96,7 +99,7 @@ const ExtraDataField: FC<Props> = ({ endpoint, disabled, label, onChangeExtraDat
         onSetExtraData('');
         break;
       case USE_STRING_ID:
-        onSetExtraData(stringValue as string);
+        onSetExtraData(String(stringValue ?? ''));
         break;
       case USE_JSON_ID:
         onSetExtraData(JSON.parse(jsonValue as string));
@@ -131,6 +134,16 @@ const ExtraDataField: FC<Props> = ({ endpoint, disabled, label, onChangeExtraDat
     },
   ];
 
+  const customInputValue = useMemo(() => {
+    return typeof endpoint.extraData === 'object'
+      ? JSON.stringify(endpoint.extraData, null, 2)
+      : typeof endpoint.extraData === 'string'
+        ? endpoint.extraData
+        : typeof endpoint.extraData === 'number'
+          ? String(endpoint.extraData)
+          : t(BasicI18nKey.None);
+  }, [endpoint.extraData, t]);
+
   return (
     <div className="flex flex-col">
       <DialRadioGroupPopupField
@@ -141,13 +154,7 @@ const ExtraDataField: FC<Props> = ({ endpoint, disabled, label, onChangeExtraDat
         label={label ?? ''}
         header={t(EntityFieldsI18nKey.extraData)}
         portalId="extraDataPortal"
-        customInputValue={
-          typeof endpoint.extraData === 'object'
-            ? JSON.stringify(endpoint.extraData, null, 2)
-            : typeof endpoint.extraData === 'string'
-              ? endpoint.extraData
-              : t(BasicI18nKey.None)
-        }
+        customInputValue={customInputValue}
         selectedRadioValue={radioFieldId}
         inputClassName="max-w-[200px]"
         valueClassName="w-[180px] truncate pr-2 text-left"
