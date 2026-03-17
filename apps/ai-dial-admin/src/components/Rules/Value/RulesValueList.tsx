@@ -90,9 +90,7 @@ const RulesValueList: FC<Props> = ({
                 ) : (
                   <RulesValue
                     rule={rule}
-                    attributes={availableAttributes?.filter(
-                      (item) => !rules.map((r) => r.source).includes(item) || item === rule.source,
-                    )}
+                    attributes={availableAttributes}
                     index={i}
                     setLastValueHeight={isLastItem ? setLastValueHeight : void 0}
                     onRemoveValue={() => onRemoveValue(i)}
@@ -106,11 +104,7 @@ const RulesValueList: FC<Props> = ({
       )}
       <div className={classNames(ruleIndentClassName, isReadonly && 'hidden')}>
         <div className={lineHorizontalChildClassName}></div>
-        <DialPrimaryButton
-          label={t(ButtonsI18nKey.Add)}
-          onClick={onAddValue}
-          disabled={availableAttributes?.length === rules.length}
-        />
+        <DialPrimaryButton label={t(ButtonsI18nKey.Add)} onClick={onAddValue} />
       </div>
     </div>
   );
