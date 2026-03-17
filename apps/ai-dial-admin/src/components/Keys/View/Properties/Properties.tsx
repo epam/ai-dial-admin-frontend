@@ -109,7 +109,11 @@ const KeyProperties: FC<Props> = ({ entity, originalEntity, names, keys, isKeyIm
             <IdControl entity={entity} names={names} onChangeEntity={onChangeKey} />
           </div>
           {!isReadOnlyAdmin && (
-            <DialGhostButton iconBefore={<IconSparkles />} label={t(ButtonsI18nKey.Generate)} onClick={onGenerateKeyId} />
+            <DialGhostButton
+              iconBefore={<IconSparkles />}
+              label={t(ButtonsI18nKey.Generate)}
+              onClick={onGenerateKeyId}
+            />
           )}
         </div>
       )}

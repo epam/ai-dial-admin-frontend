@@ -185,9 +185,7 @@ const TabsContent: FC<Props> = ({
             onRemove={onRemoveEntity}
             customColumns={ENTITY_COLUMNS(t)}
             additionalColumns={ROLES_ENTITIES_COLUMNS(onChangeRoleToken, isReadOnlyAdmin)}
-            customActions={
-              isReadOnlyAdmin ? [] : [getSetNoLimitsOperation(onSetNoLimits, isSetNoLimitsHidden)]
-            }
+            customActions={isReadOnlyAdmin ? [] : [getSetNoLimitsOperation(onSetNoLimits, isSetNoLimitsHidden)]}
             getRelevantDataForEntity={getEntitiesForRole.bind(this, selectedRole)}
             isSkipRefresh={isSkipRefresh}
             {...props}

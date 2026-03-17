@@ -195,7 +195,7 @@ const AttachmentInput: FC<Props> = ({ availableItems, initialValues, label, plac
 
       <div className="flex flex-col gap-3">
         <DialRadioButton
-        disabled={isReadOnlyAdmin}
+          disabled={isReadOnlyAdmin}
           inputId={`${id}-none`}
           name={`${id}-attachment-options`}
           value={AttachmentType.NONE}
@@ -205,7 +205,7 @@ const AttachmentInput: FC<Props> = ({ availableItems, initialValues, label, plac
         />
 
         <DialRadioButton
-        disabled={isReadOnlyAdmin}
+          disabled={isReadOnlyAdmin}
           inputId={`${id}-all`}
           name={`${id}-attachment-options`}
           value={AttachmentType.ALL}
@@ -215,7 +215,7 @@ const AttachmentInput: FC<Props> = ({ availableItems, initialValues, label, plac
         />
 
         <DialRadioButton
-        disabled={isReadOnlyAdmin}
+          disabled={isReadOnlyAdmin}
           inputId={`${id}-specific`}
           name={`${id}-attachment-options`}
           value={AttachmentType.SPECIFIC}

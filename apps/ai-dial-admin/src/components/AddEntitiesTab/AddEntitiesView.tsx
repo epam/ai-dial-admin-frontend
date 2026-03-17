@@ -151,7 +151,8 @@ const AddEntitiesView: FC<Props> = ({
           emptyDataProps={{ title: emptyDataTitle || t(EntitiesI18nKey.NoEntities) }}
         />
       </div>
-      {!isReadOnlyAdmin && isModalOpen &&
+      {!isReadOnlyAdmin &&
+        isModalOpen &&
         createPortal(
           <AddEntitiesGrid
             modalTitle={modalTitle || t(EntitiesI18nKey.AddEntities)}

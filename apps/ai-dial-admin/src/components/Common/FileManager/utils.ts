@@ -70,11 +70,7 @@ export const getValidationMessages = (t: (key: string) => string) => {
   return { emptyName: t(FileManagerI18nKey.EnterFolderName), duplicateName: t(FileManagerI18nKey.NameExists) };
 };
 
-export const getGridOptions = (
-  columnDefs: ColDef[],
-  t: (key: string) => string,
-  isReadOnlyAdmin?: boolean,
-) =>
+export const getGridOptions = (columnDefs: ColDef[], t: (key: string) => string, isReadOnlyAdmin?: boolean) =>
   ({
     alternateOddRowColors: true,
     columnDefs,
