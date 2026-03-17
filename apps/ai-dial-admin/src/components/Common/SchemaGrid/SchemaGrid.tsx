@@ -127,6 +127,14 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
     [updateFieldInList, updateFields],
   );
 
+  const onChangeTitle = useCallback(
+    (value: string, data: SchemaFieldRow) => {
+      const updated = updateFieldInList(fieldsRef.current, data.id, (f) => ({ ...f, title: value }));
+      updateFields(updated, true);
+    },
+    [updateFieldInList, updateFields],
+  );
+
   const onChangeDescription = useCallback(
     (value: string, data: SchemaFieldRow) => {
       const updated = updateFieldInList(fieldsRef.current, data.id, (f) => ({ ...f, description: value }));
@@ -215,6 +223,7 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
         onToggleExpand,
         onChangeName,
         onChangeType,
+        onChangeTitle,
         onChangeDescription,
         onChangeRequired,
         onRemoveField,
@@ -227,6 +236,7 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
       onToggleExpand,
       onChangeName,
       onChangeType,
+      onChangeTitle,
       onChangeDescription,
       onChangeRequired,
       onRemoveField,
