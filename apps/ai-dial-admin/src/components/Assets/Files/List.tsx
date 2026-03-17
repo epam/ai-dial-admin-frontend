@@ -2,9 +2,9 @@
 
 import { useCallback, useState } from 'react';
 
-import { DialFile } from '@epam/ai-dial-ui-kit';
+import { DialCopiedItem, DialDeletedItem, DialFile, DialFileNodeType, DialUploadFileItem } from '@epam/ai-dial-ui-kit';
 
-import { importFiles } from '@/src/app/[lang]/files/actions';
+import { bulkDeleteFiles, exportFiles, importFiles, moveFiles } from '@/src/app/[lang]/files/actions';
 import FileManager from '@/src/components/Common/FileManager/FileManager';
 import Modals, { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';
@@ -14,10 +14,21 @@ import { useFileFolder } from '@/src/context/assets/FileFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { ImportData } from '@/src/models/import-asset';
-import { ImportFileType } from '@/src/types/import';
+import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { FILES_GRID_COLUMNS } from './constants';
+import {
+  bulkActionLabels,
+  FILES_GRID_COLUMNS,
+  gridActionLabels,
+  toolbarOptionLabels,
+  treeActionLabels,
+} from './constants';
+import { changeFolder, createFolderWithFiles, removeFolder } from '@/src/app/[lang]/folders-storage/actions';
+import { createEmptyFile } from '../../Common/FileManager/utils';
+import { ServerActionResponse } from '@/src/models/server-action';
+import { ResourceType } from '@/src/types/resource-type';
+import { downloadFile } from '@/src/utils/download';
 
 const FilesList = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -70,6 +81,79 @@ const FilesList = () => {
     [importFolder?.path, handleModalClose, fetchFiles, showNotification, t],
   );
 
+  const handleCreateFolder = useCallback(async (_: DialUploadFileItem | undefined, folderPath: string) => {
+    // file arg is not used, because folder with empty file is not created
+    const { emptyFile } = createEmptyFile();
+    const newPath = `${folderPath.replaceAll('//', '/')}/`;
+
+    const body = getFormDataForImport(
+      newPath,
+      [emptyFile],
+      ImportFileType.FILES,
+      ConflictResolutionPolicy.SKIP,
+      void 0,
+      false,
+      ApplicationRoute.Files,
+    ).body;
+
+    return createFolderWithFiles(body, ImportFileType.FILES, ApplicationRoute.Files);
+  }, []);
+
+  const handleDeleteItems = useCallback(async (fileNodes: DialDeletedItem[]) => {
+    const files = fileNodes.filter((file) => file.nodeType === DialFileNodeType.ITEM);
+    const folders = fileNodes.filter((file) => file.nodeType === DialFileNodeType.FOLDER);
+
+    const promises = [];
+    if (files.length > 0) {
+      const filePaths = files.map((file) => ({ path: file.sourceUrl }));
+      promises.push(bulkDeleteFiles(filePaths));
+    }
+    folders.forEach((folder) => {
+      promises.push(removeFolder(folder.sourceUrl));
+    });
+
+    return Promise.all(promises);
+  }, []);
+
+  const handleMoveFiles = useCallback(
+    async (items: DialCopiedItem[], sourceFolder: string, destinationFolder: string) => {
+      const files = items.filter((file) => file.nodeType === DialFileNodeType.ITEM);
+      const folders = items.filter((file) => file.nodeType === DialFileNodeType.FOLDER);
+
+      const promises: (Promise<ServerActionResponse> | Promise<ServerActionResponse[]>)[] = [];
+      files.forEach((file) => {
+        if (sourceFolder !== destinationFolder) {
+          // Move file
+          const newPath = file.destinationUrl.replaceAll('//', '/').split('/').slice(0, -1).join('/');
+          promises.push(moveFiles([file.sourceUrl.replaceAll('//', '/')], newPath));
+        } else {
+          // Rename file
+        }
+      });
+      folders.forEach((folder) => {
+        promises.push(
+          changeFolder(
+            folder.sourceUrl.replaceAll('//', '/'),
+            folder.destinationUrl.replaceAll('//', '/'),
+            ResourceType.FILE,
+          ),
+        );
+      });
+
+      return Promise.all(promises);
+    },
+    [],
+  );
+
+  const onExport = useCallback((files: DialFile[]) => {
+    const filePaths = files.map((file) => file.path);
+
+    return exportFiles(filePaths).then((res) => {
+      const { blob, fileName } = res as { blob: Blob; fileName: string };
+      downloadFile(blob, fileName);
+    });
+  }, []);
+
   return (
     <>
       <FileManager
@@ -77,7 +161,15 @@ const FilesList = () => {
         columnDefs={FILES_GRID_COLUMNS}
         customUploadFileAction={handleModalOpen}
         getContext={() => useFileFolder()}
+        onCreateFolder={handleCreateFolder}
+        onDeleteItems={handleDeleteItems}
+        onMoveItems={handleMoveFiles}
+        onExport={onExport}
         view={ApplicationRoute.Files}
+        gridActionLabels={gridActionLabels}
+        treeActionLabels={treeActionLabels}
+        toolbarOptionLabels={toolbarOptionLabels}
+        bulkActionLabels={bulkActionLabels}
       />
       <Modals
         route={ApplicationRoute.Files}

@@ -1,12 +1,4 @@
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
-import { NAME_COLUMN, SIZE_COLUMN, UPDATED_AT_COLUMN } from '@epam/ai-dial-ui-kit';
-import { ColDef } from 'ag-grid-community';
-
-export const FILES_GRID_COLUMNS: ColDef[] = [
-  NAME_COLUMN('Display name') as ColDef,
-  UPDATED_AT_COLUMN('Updated time') as ColDef,
-  SIZE_COLUMN('Size') as ColDef,
-];
 
 export const gridActionLabels = [
   {
@@ -16,6 +8,10 @@ export const gridActionLabels = [
   {
     key: 'addChild',
     label: FileManagerI18nKey.AddChild,
+  },
+  {
+    key: 'duplicate',
+    label: 'Duplicate',
   },
   {
     key: 'move',
@@ -81,8 +77,13 @@ export const toolbarOptionLabels = [
     icon: null,
   },
   {
+    key: 'newItem',
+    label: FileManagerI18nKey.Prompt,
+    icon: null,
+  },
+  {
     key: 'uploadFiles',
-    label: FileManagerI18nKey.Files,
+    label: ButtonsI18nKey.Import,
     icon: null,
   },
 ];

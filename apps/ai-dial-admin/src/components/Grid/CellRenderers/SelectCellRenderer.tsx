@@ -21,8 +21,8 @@ const SelectCellRenderer = (params: SelectCellRendererParams) => {
       value,
       params.data,
       params.colDef?.field as string,
-      params.node.rowIndex as number,
-      params.node.isSelected(),
+      params.node?.rowIndex as number,
+      params.node?.isSelected(),
     );
   };
 

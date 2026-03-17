@@ -9,106 +9,14 @@ import { ROOT_FOLDER } from '@/src/constants/file';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { CREATE_FOLDER_FORBIDDEN_CHARS, FILE_NAME_MAX_LENGTH } from './constants';
 import { GridOptions } from '@epam/ai-dial-ui-kit/dist/src/components/FileManager/FileManager';
-
-const gridActionLabels = [
-  {
-    key: 'addSibling',
-    label: FileManagerI18nKey.AddSibling,
-  },
-  {
-    key: 'addChild',
-    label: FileManagerI18nKey.AddChild,
-  },
-  {
-    key: 'move',
-    label: FileManagerI18nKey.Move,
-  },
-  {
-    key: 'download',
-    label: ButtonsI18nKey.Export,
-  },
-  {
-    key: 'managePermissions',
-    label: FileManagerI18nKey.ManagePermissions,
-  },
-  {
-    key: 'rename',
-    label: FileManagerI18nKey.Rename,
-  },
-  {
-    key: 'delete',
-    label: ButtonsI18nKey.Delete,
-  },
-  {
-    key: 'preview',
-    label: FileManagerI18nKey.Preview,
-  },
-];
-
-const treeActionLabels = [
-  {
-    key: 'addSibling',
-    label: FileManagerI18nKey.AddSibling,
-  },
-  {
-    key: 'addChild',
-    label: FileManagerI18nKey.AddChild,
-  },
-  {
-    key: 'move',
-    label: FileManagerI18nKey.Move,
-  },
-  {
-    key: 'download',
-    label: ButtonsI18nKey.Export,
-  },
-  {
-    key: 'delete',
-    label: ButtonsI18nKey.Delete,
-  },
-  {
-    key: 'rename',
-    label: FileManagerI18nKey.Rename,
-  },
-  {
-    key: 'managePermissions',
-    label: FileManagerI18nKey.ManagePermissions,
-  },
-];
-
-const toolbarOptionLabels = [
-  {
-    key: 'newFolder',
-    label: FileManagerI18nKey.Folder,
-    icon: null,
-  },
-  {
-    key: 'uploadFiles',
-    label: FileManagerI18nKey.Files,
-    icon: null,
-  },
-];
-
-const bulkActionLabels = [
-  {
-    key: 'move',
-    label: FileManagerI18nKey.Move,
-  },
-  {
-    key: 'download',
-    label: ButtonsI18nKey.Export,
-  },
-  {
-    key: 'delete',
-    label: ButtonsI18nKey.Delete,
-  },
-];
+import { ActionLabel, ActionLabelWithIcon } from './types';
+import { ApplicationRoute } from '@/src/types/routes';
 
 export const getValidationMessages = (t: (key: string) => string) => {
   return { emptyName: t(FileManagerI18nKey.EnterFolderName), duplicateName: t(FileManagerI18nKey.NameExists) };
 };
 
-export const getGridOptions = (columnDefs: ColDef[], t: (key: string) => string) =>
+export const getGridOptions = (gridActionLabels: ActionLabel[], columnDefs: ColDef[], t: (key: string) => string) =>
   ({
     alternateOddRowColors: true,
     columnDefs,
@@ -132,6 +40,7 @@ export const getGridOptions = (columnDefs: ColDef[], t: (key: string) => string)
   }) as GridOptions;
 
 export const getTreeOptions = (
+  treeActionLabels: ActionLabel[],
   isFetchingFiles: boolean,
   loadedPaths: Set<string>,
   expandedPaths: Set<string>,
@@ -149,13 +58,17 @@ export const getTreeOptions = (
   };
 };
 
-export const getToolbarOptions = (t: (key: string) => string) => ({
+export const getToolbarOptions = (
+  route: ApplicationRoute,
+  toolbarOptionLabels: ActionLabelWithIcon[],
+  t: (key: string) => string,
+) => ({
   showHiddenFilesToggle: false,
   newActions: getActionLabelsWithIcon(toolbarOptionLabels, t),
-  newButtonLabel: t(ButtonsI18nKey.Add),
+  newButtonLabel: route === ApplicationRoute.Files ? t(ButtonsI18nKey.Add) : t(ButtonsI18nKey.Create),
 });
 
-export const getBulkActionsToolbarOptions = (t: (key: string) => string) => ({
+export const getBulkActionsToolbarOptions = (bulkActionLabels: ActionLabel[], t: (key: string) => string) => ({
   getSelectionLabel: (selectedCount: number) => `${selectedCount} ${t(FileManagerI18nKey.SelectedItems)}`,
   actionLabels: getActionLabels(bulkActionLabels, t),
 });
