@@ -142,4 +142,14 @@ describe('CollapsibleSection', () => {
     const childContainer = screen.getByText(childContent).parentElement;
     expect(childContainer).not.toHaveClass('flex-1');
   });
+
+  test('renders headerEnd beside title', () => {
+    render(
+      <CollapsibleSection title={title} headerIcon={<button type="button">Copy</button>}>
+        <p>{childContent}</p>
+      </CollapsibleSection>,
+    );
+
+    expect(screen.getByRole('button', { name: 'Copy' })).toBeInTheDocument();
+  });
 });

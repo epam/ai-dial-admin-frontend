@@ -432,6 +432,7 @@ export default {
     Run: 'Run',
     AddPort: 'Add Port',
     SendRequest: 'Send Request',
+    Restart: 'Restart',
     ManageTool: 'Manage tool',
     Confirm: 'Confirm',
     GlobalFirewall: 'Global firewall',

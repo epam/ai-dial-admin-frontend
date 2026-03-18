@@ -338,6 +338,7 @@ export enum ButtonsI18nKey {
   Run = 'Buttons.Run',
   AddPort = 'Buttons.AddPort',
   SendRequest = 'Buttons.SendRequest',
+  Restart = 'Buttons.Restart',
   ManageTool = 'Buttons.ManageTool',
   Confirm = 'Buttons.Confirm',
   GlobalFirewall = 'Buttons.GlobalFirewall',
