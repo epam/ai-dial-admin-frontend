@@ -14,6 +14,7 @@ import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor'
 import { ButtonsI18nKey, KeysI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
@@ -38,6 +39,7 @@ interface Props {
 
 const KeyView: FC<Props> = ({ originalKey, etag, ...props }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const router = useRouter();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
@@ -158,11 +160,13 @@ const KeyView: FC<Props> = ({ originalKey, etag, ...props }) => {
           onChangeActiveTab={setActiveTab}
           onRemove={removeKey}
         >
-          <DialPrimaryButton
-            label={t(ButtonsI18nKey.Rotate)}
-            iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}
-            onClick={() => setIsRotateModalOpen(true)}
-          />
+          {!isReadOnlyAdmin && (
+            <DialPrimaryButton
+              label={t(ButtonsI18nKey.Rotate)}
+              iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}
+              onClick={() => setIsRotateModalOpen(true)}
+            />
+          )}
         </SimpleEntityHeader>
         <div className="flex-1 overflow-auto min-h-0">
           {isEditorEnabled ? (

@@ -11,70 +11,32 @@ import { CREATE_FOLDER_FORBIDDEN_CHARS, FILE_NAME_MAX_LENGTH } from './constants
 import { GridOptions } from '@epam/ai-dial-ui-kit/dist/src/components/FileManager/FileManager';
 
 const gridActionLabels = [
-  {
-    key: 'addSibling',
-    label: FileManagerI18nKey.AddSibling,
-  },
-  {
-    key: 'addChild',
-    label: FileManagerI18nKey.AddChild,
-  },
-  {
-    key: 'move',
-    label: FileManagerI18nKey.Move,
-  },
-  {
-    key: 'download',
-    label: ButtonsI18nKey.Export,
-  },
-  {
-    key: 'managePermissions',
-    label: FileManagerI18nKey.ManagePermissions,
-  },
-  {
-    key: 'rename',
-    label: FileManagerI18nKey.Rename,
-  },
-  {
-    key: 'delete',
-    label: ButtonsI18nKey.Delete,
-  },
-  {
-    key: 'preview',
-    label: FileManagerI18nKey.Preview,
-  },
+  { key: 'addSibling', label: FileManagerI18nKey.AddSibling },
+  { key: 'addChild', label: FileManagerI18nKey.AddChild },
+  { key: 'move', label: FileManagerI18nKey.Move },
+  { key: 'download', label: ButtonsI18nKey.Export },
+  { key: 'managePermissions', label: FileManagerI18nKey.ManagePermissions },
+  { key: 'rename', label: FileManagerI18nKey.Rename },
+  { key: 'delete', label: ButtonsI18nKey.Delete },
+  { key: 'preview', label: FileManagerI18nKey.Preview },
+];
+
+const gridActionLabelsReadOnly = [
+  { key: 'download', label: ButtonsI18nKey.Export },
+  { key: 'preview', label: FileManagerI18nKey.Preview },
 ];
 
 const treeActionLabels = [
-  {
-    key: 'addSibling',
-    label: FileManagerI18nKey.AddSibling,
-  },
-  {
-    key: 'addChild',
-    label: FileManagerI18nKey.AddChild,
-  },
-  {
-    key: 'move',
-    label: FileManagerI18nKey.Move,
-  },
-  {
-    key: 'download',
-    label: ButtonsI18nKey.Export,
-  },
-  {
-    key: 'delete',
-    label: ButtonsI18nKey.Delete,
-  },
-  {
-    key: 'rename',
-    label: FileManagerI18nKey.Rename,
-  },
-  {
-    key: 'managePermissions',
-    label: FileManagerI18nKey.ManagePermissions,
-  },
+  { key: 'addSibling', label: FileManagerI18nKey.AddSibling },
+  { key: 'addChild', label: FileManagerI18nKey.AddChild },
+  { key: 'move', label: FileManagerI18nKey.Move },
+  { key: 'download', label: ButtonsI18nKey.Export },
+  { key: 'delete', label: ButtonsI18nKey.Delete },
+  { key: 'rename', label: FileManagerI18nKey.Rename },
+  { key: 'managePermissions', label: FileManagerI18nKey.ManagePermissions },
 ];
+
+const treeActionLabelsReadOnly = [{ key: 'download', label: ButtonsI18nKey.Export }];
 
 const toolbarOptionLabels = [
   {
@@ -108,12 +70,12 @@ export const getValidationMessages = (t: (key: string) => string) => {
   return { emptyName: t(FileManagerI18nKey.EnterFolderName), duplicateName: t(FileManagerI18nKey.NameExists) };
 };
 
-export const getGridOptions = (columnDefs: ColDef[], t: (key: string) => string) =>
+export const getGridOptions = (columnDefs: ColDef[], t: (key: string) => string, isReadOnlyAdmin?: boolean) =>
   ({
     alternateOddRowColors: true,
     columnDefs,
     selectionMode: GridSelectionMode.MULTIPLE,
-    actionLabels: getActionLabels(gridActionLabels, t),
+    actionLabels: getActionLabels(isReadOnlyAdmin ? gridActionLabelsReadOnly : gridActionLabels, t),
     additionalGridOptions: {
       defaultColDef: {
         minWidth: 150,
@@ -137,13 +99,15 @@ export const getTreeOptions = (
   expandedPaths: Set<string>,
   setExpanded: (paths: Set<string>) => void,
   t: (key: string) => string,
+  isReadOnlyAdmin?: boolean,
 ) => {
+  const labels = isReadOnlyAdmin ? treeActionLabelsReadOnly : treeActionLabels;
   return {
     collapsed: false,
     expandedPaths: expandedPaths,
     loadedPaths,
     loadingPaths: isFetchingFiles ? new Set<string>([ROOT_FOLDER]) : new Set<string>(),
-    actionLabels: getActionLabels(treeActionLabels, t),
+    actionLabels: getActionLabels(labels, t),
     onExpandedPathsChange: setExpanded,
     header: t(FileManagerI18nKey.FolderTree),
   };

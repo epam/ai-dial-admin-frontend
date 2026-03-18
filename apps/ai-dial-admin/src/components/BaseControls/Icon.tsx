@@ -7,6 +7,7 @@ import IconGalleryModal from '@/src/components/IconGallery/IconGalleryModal';
 import { BasicI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -17,6 +18,8 @@ interface Props {
 
 const IconControl: FC<Props> = ({ iconUrl, disabled = false, onChange }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  const isDisabled = disabled || isReadOnlyAdmin;
   const { themeUrl } = useAppContext();
   const value = useMemo(
     () => (iconUrl ? (iconUrl.startsWith('https://') ? iconUrl : `${themeUrl}/${iconUrl}`) : ''),
@@ -41,7 +44,7 @@ const IconControl: FC<Props> = ({ iconUrl, disabled = false, onChange }) => {
           open={isModalOpen}
           selectedValue={value}
           onOpen={onOpenModal}
-          disabled={disabled}
+          disabled={isDisabled}
           inputClassName={STANDARD_CONTROL_WIDTH}
         >
           <IconGalleryModal
@@ -52,7 +55,7 @@ const IconControl: FC<Props> = ({ iconUrl, disabled = false, onChange }) => {
           />
         </DialInputPopup>
       ) : (
-        <FilledIcon fileUrl={value} onChange={(url) => onChange?.(url)} disabled={disabled} />
+        <FilledIcon fileUrl={value} onChange={(url) => onChange?.(url)} disabled={isDisabled} />
       )}
     </div>
   );

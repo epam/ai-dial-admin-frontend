@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
@@ -6,6 +6,7 @@ import { getOpenInNewTabOperation, getRemoveOperation } from '@/src/constants/gr
 import { TYPE_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { DEPENDENCIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, MenuI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication } from '@/src/models/dial/application';
 import { DialModel } from '@/src/models/dial/model';
@@ -24,6 +25,7 @@ interface Props {
 
 const Dependencies: FC<Props> = ({ application, applications, models, onChange }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const [rowData, setRowData] = useState<EntitiesGridData[]>([]);
   const [availableModels, setAvailableModels] = useState<DialModel[]>([]);
   const [availableApplications, setAvailableApplications] = useState<DialApplication[]>([]);
@@ -58,11 +60,18 @@ const Dependencies: FC<Props> = ({ application, applications, models, onChange }
     onOpenInNewTab(route, entity);
   };
 
-  const columns = [
-    TYPE_COLUMN(t),
-    ...DEPENDENCIES_COLUMNS,
-    ACTION_COLUMN([getOpenInNewTabOperation(onOpen), getRemoveOperation(onRemoveDependency)]),
-  ];
+  const columns = useMemo(
+    () => [
+      TYPE_COLUMN(t),
+      ...DEPENDENCIES_COLUMNS,
+      ACTION_COLUMN(
+        isReadOnlyAdmin
+          ? [getOpenInNewTabOperation(onOpen)]
+          : [getOpenInNewTabOperation(onOpen), getRemoveOperation(onRemoveDependency)],
+      ),
+    ],
+    [t, isReadOnlyAdmin, onRemoveDependency],
+  );
 
   useEffect(() => {
     const { data, filteredModels, filteredApplications } = getDependenciesData(
@@ -81,11 +90,13 @@ const Dependencies: FC<Props> = ({ application, applications, models, onChange }
         <h1>
           {t(TabsI18nKey.Dependencies)}: {application.dependencies?.length || 0}
         </h1>
-        <AddDependenciesButton
-          availableModels={availableModels}
-          availableApplications={availableApplications?.filter((a) => a.name !== application.name)}
-          addDependency={onAddDependency}
-        />
+        {!isReadOnlyAdmin && (
+          <AddDependenciesButton
+            availableModels={availableModels}
+            availableApplications={availableApplications?.filter((a) => a.name !== application.name)}
+            addDependency={onAddDependency}
+          />
+        )}
       </div>
       <GridView emptyDataProps={{ title: t(EntitiesI18nKey.NoDependencies) }} columnDefs={columns} rowData={rowData} />
     </div>

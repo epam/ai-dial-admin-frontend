@@ -57,10 +57,16 @@ const Bindings: FC<Props> = ({ selectedMetric, selectedTestSuite, onChange, isSk
 
   const onChangeParam = useCallback(
     (value: string | object, data: MetricBinding, field: string, _index?: number) => {
-      const isConfig = selectedMetricConfigSchema.find((s) => s.name === data.property);
-      const isInput = selectedMetricInputSchema.find((s) => s.name === data.property);
+      const schemaField =
+        selectedMetricConfigSchema.find((s) => s.name === data.property) ??
+        selectedMetricInputSchema.find((s) => s.name === data.property);
+      const isConfig = !!selectedMetricConfigSchema.find((s) => s.name === data.property);
+      const isInput = !!selectedMetricInputSchema.find((s) => s.name === data.property);
       const newData = createUpdatedMetricBinding(value, data, field);
-      const isSkipRefresh = !(field === 'source.$type' || newData.source.value === void 0);
+      const isTypeOrColumnChanged = field === 'source.$type' || newData.source.value === void 0;
+      const isConstantEnumChanged =
+        !isTypeOrColumnChanged && newData.source.value !== undefined && schemaField?.enum?.length;
+      const isSkipRefresh = !isTypeOrColumnChanged && !isConstantEnumChanged;
       if (isConfig) {
         const index = selectedMetricRef.current.configBindings?.findIndex((b) => b.property === data.property);
         if (selectedMetricRef.current.configBindings) {
@@ -94,6 +100,7 @@ const Bindings: FC<Props> = ({ selectedMetric, selectedTestSuite, onChange, isSk
       ...getMetricBindingsColumns(
         onChangeParam,
         selectedMetricConfigSchema,
+        selectedMetricInputSchema,
         selectedTestSuite.testCaseSchema?.map((s) => s.name) || [],
         selectedTestSuite.responseColumns?.map((s) => s.name) || [],
         t,
@@ -102,6 +109,7 @@ const Bindings: FC<Props> = ({ selectedMetric, selectedTestSuite, onChange, isSk
   }, [
     onChangeParam,
     selectedMetricConfigSchema,
+    selectedMetricInputSchema,
     selectedTestSuite.responseColumns,
     selectedTestSuite.testCaseSchema,
     t,

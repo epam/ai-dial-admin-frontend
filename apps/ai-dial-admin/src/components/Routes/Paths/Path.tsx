@@ -13,7 +13,7 @@ interface Props {
   label: string;
   path: string;
   required?: boolean;
-  readonly?: boolean;
+  disabled?: boolean;
   allPaths?: string[];
   disableValidation?: boolean;
   onRemove: (index: number) => void;
@@ -23,7 +23,7 @@ interface Props {
 const Path: FC<Props> = ({
   index,
   path,
-  readonly,
+  disabled,
   required,
   label,
   allPaths,
@@ -68,7 +68,7 @@ const Path: FC<Props> = ({
         <DialInput
           id={`path-${index}`}
           value={path}
-          disabled={readonly}
+          disabled={disabled}
           placeholder={t(EntityPlaceholdersI18nKey.PathUrl)}
           labelProps={{ label: index === 0 ? label : '', required }}
           onChange={(value) => onChangePath(index, value)}
@@ -76,7 +76,7 @@ const Path: FC<Props> = ({
           invalid={!!error}
         />
       </div>
-      {!readonly && (
+      {!disabled && (
         <DialRemoveButton onClick={() => onRemove(index)} className={error && index === 0 ? 'mt-[22px]' : ''} />
       )}
     </div>

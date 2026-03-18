@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { Container } from '@/src/models/deployments/containers';
@@ -33,6 +34,7 @@ interface Props<T> {
   view: ApplicationRoute;
   adapters?: DialAdapter[];
   isModal?: boolean;
+  disabled?: boolean;
 }
 
 const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
@@ -46,8 +48,11 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
   view,
   sourceItems,
   isModal,
+  disabled,
 }: Props<T>) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  const isReadonly = disabled || isReadOnlyAdmin;
   const { dispatch } = useSaveValidationContext();
   const [source, setSource] = useState<string>();
   const [errorText, setErrorText] = useState('');
@@ -114,10 +119,11 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
         options={sourceItems}
         onChange={(v) => onChangeSource(v as string)}
         value={source}
+        disabled={isReadonly}
       />
 
       {source === SOURCE_TYPE.ENDPOINTS && (
-        <Endpoints entity={entity} onChange={onChangeEntity} view={view} isModal={isModal} />
+        <Endpoints entity={entity} onChange={onChangeEntity} view={view} isModal={isModal} disabled={isReadonly} />
       )}
       {source === SOURCE_TYPE.CONTAINER && (
         <Containers
@@ -127,6 +133,7 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
           view={view}
           isModal={isModal}
           error={source === SOURCE_TYPE.CONTAINER ? errorText : ''}
+          disabled={isReadonly}
         />
       )}
       {source === SOURCE_TYPE.RUNNER && getRunners && (
@@ -136,6 +143,7 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
           getRunners={getRunners}
           error={source === SOURCE_TYPE.RUNNER ? errorText : ''}
           isModal={isModal}
+          disabled={isReadonly}
         />
       )}
       {source === SOURCE_TYPE.ADAPTER && getAdapters && (
@@ -145,6 +153,7 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
           getAdapters={getAdapters}
           isModal={isModal}
           error={source === SOURCE_TYPE.ADAPTER ? errorText : ''}
+          disabled={isReadonly}
         />
       )}
     </div>

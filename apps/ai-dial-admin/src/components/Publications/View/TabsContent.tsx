@@ -1,6 +1,7 @@
 'use client';
 import { Dispatch, SetStateAction, useCallback } from 'react';
 
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import ParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
 import FilesDetails from '@/src/components/Publications/Assets/Files/FilesDetails';
 import ApplicationProperties from '@/src/components/Publications/Properties/ApplicationProperties';
@@ -53,6 +54,8 @@ const TabsContent = <T extends Publication>({
   addedFiles,
   setAddedFiles,
 }: Props<T>) => {
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
+
   const onChangeToolset = useCallback(
     (toolSetResource: DialApplicationResource) => {
       const updatedToolsets = [...((selectedPublication as ToolsetPublication).toolSetResources || [])];
@@ -78,6 +81,7 @@ const TabsContent = <T extends Publication>({
                 onChange={onChange as (p: FilePublication) => void}
                 addedFiles={addedFiles}
                 setAddedFiles={setAddedFiles}
+                disabled={isReadOnlyAdmin}
               />
             </FileFolderProvider>
           )}
@@ -140,6 +144,7 @@ const TabsContent = <T extends Publication>({
           onChange={onChange as (publication: FilePublication) => void}
           addedFiles={addedFiles}
           setAddedFiles={setAddedFiles}
+          disabled={isReadOnlyAdmin}
         />
       )}
     </>

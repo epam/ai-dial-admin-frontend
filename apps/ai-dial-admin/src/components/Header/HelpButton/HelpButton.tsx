@@ -16,7 +16,7 @@ const HelpButton: FC<Props> = ({ docLink }) => {
 
   const onClick = useCallback(() => {
     const isList = isListView(pathname ?? '');
-    const url = isList ? helpUrl?.listView : helpUrl?.selectedView;
+    const url = isList ? helpUrl?.listView : helpUrl?.selectedView || helpUrl?.listView;
     window.open(`${docLink}${url}`, '_blank', 'noopener,noreferrer');
   }, [docLink, helpUrl?.listView, helpUrl?.selectedView, pathname]);
 

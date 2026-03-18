@@ -5,6 +5,7 @@ import { FC, ReactNode, useCallback, useMemo } from 'react';
 
 import { EntityFieldsI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { Toolset, ToolsetAuthType } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -25,6 +26,8 @@ export interface AuthConfig {
 }
 const Authentication: FC<Props> = ({ disabled, view, toolset, onChange, ...props }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  const isDisabled = disabled || isReadOnlyAdmin;
   const selectedAuthType = useMemo(() => toolset.authSettings?.authenticationType || ToolsetAuthType.NONE, [toolset]);
 
   const authOptions: AuthConfig[] = [
@@ -54,7 +57,7 @@ const Authentication: FC<Props> = ({ disabled, view, toolset, onChange, ...props
     <div className={classNames('flex flex-col gap-y-2', STANDARD_CONTROL_WIDTH)}>
       <DialLabel label={t(EntityFieldsI18nKey.authSettings)} />
       <div className="flex flex-col gap-y-3">
-        {disabled ? (
+        {isDisabled ? (
           <AuthTypeSection
             config={authOptions.find((option) => option.id === selectedAuthType)!}
             isSelected={true}

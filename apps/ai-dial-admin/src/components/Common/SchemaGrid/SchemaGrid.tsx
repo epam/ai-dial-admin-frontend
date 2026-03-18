@@ -9,6 +9,7 @@ import isEqual from 'lodash/isEqual';
 
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { BasicI18nKey } from '@/src/constants/i18n';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialNeutralButton, ElementSize } from '@epam/ai-dial-ui-kit';
 import { getSchemaGridColumns } from './columns';
@@ -31,6 +32,8 @@ interface SchemaGridProps {
 
 const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDialSchema, isReadonly }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  const isReadonlyGrid = isReadonly || isReadOnlyAdmin;
   const [fields, setFields] = useState<SchemaFieldRow[]>(() => jsonSchemaToFields(schema, schema));
   const fieldsRef = useRef(fields);
   const gridApiRef = useRef<GridApi | null>(null);
@@ -85,10 +88,10 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
       setFields(updated);
       // Directly push rowData to grid since this bypasses onChange/isSkipRefresh flow
       if (!gridApiRef.current?.isDestroyed()) {
-        gridApiRef.current?.updateGridOptions({ rowData: flattenFields(updated, 0, isReadonly) });
+        gridApiRef.current?.updateGridOptions({ rowData: flattenFields(updated, 0, isReadonlyGrid) });
       }
     },
-    [updateFieldInList, isReadonly],
+    [updateFieldInList, isReadonlyGrid],
   );
 
   const onChangeName = useCallback(
@@ -212,7 +215,7 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
     [updateFieldInList, updateFields, findFieldById],
   );
 
-  const rowData = useMemo(() => flattenFields(fields, 0, isReadonly), [fields, isReadonly]);
+  const rowData = useMemo(() => flattenFields(fields, 0, isReadonlyGrid), [fields, isReadonlyGrid]);
 
   const columnDefs: ColDef[] = useMemo(
     () =>
@@ -225,7 +228,7 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
         onChangeRequired,
         onRemoveField,
         t,
-        isReadonly,
+        isReadonlyGrid,
         isDialSchema ? onChangeOrder : undefined,
         isDialSchema ? onChangePropertyKind : undefined,
       ),
@@ -239,7 +242,7 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
       onRemoveField,
       t,
       isDialSchema,
-      isReadonly,
+      isReadonlyGrid,
       onChangeOrder,
       onChangePropertyKind,
     ],

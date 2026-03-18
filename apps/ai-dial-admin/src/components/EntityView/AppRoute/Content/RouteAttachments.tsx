@@ -9,11 +9,11 @@ import { AttachmentPaths, DialAppRoute } from '@/src/models/dial/route';
 
 interface Props {
   route: DialAppRoute;
-  readonly?: boolean;
+  disabled?: boolean;
   onChangeRoute: (route: DialAppRoute) => void;
 }
 
-const RouteAttachments: FC<Props> = ({ route, readonly, onChangeRoute }) => {
+const RouteAttachments: FC<Props> = ({ route, disabled, onChangeRoute }) => {
   const t = useI18n();
 
   const onChangeRequest = useCallback(
@@ -45,14 +45,14 @@ const RouteAttachments: FC<Props> = ({ route, readonly, onChangeRoute }) => {
             ? route.attachmentPaths?.requestBody
             : ['']
         }
-        readonly={readonly}
+        disabled={disabled}
         onChangePaths={onChangeRequest}
         disableValidation
       />
       <Divider />
       <Paths
         label={t(RoutesI18nKey.ResponseAttachmentPaths)}
-        readonly={readonly}
+        disabled={disabled}
         paths={
           route.attachmentPaths?.responseBody && route.attachmentPaths?.responseBody.length
             ? route.attachmentPaths?.responseBody

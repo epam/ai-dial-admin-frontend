@@ -29,6 +29,7 @@ import {
 } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
@@ -58,6 +59,7 @@ const PublicationsButtonsWrapper = <T extends Publication>({
   onSave,
 }: PublicationsButtonsWrapperProps<T>) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const isEditorEnabled = jsonConfiguration?.isEditorEnabled;
   const { isValid, dispatch, jsonErrors } = useSaveValidationContext();
   const { showNotification } = useNotification();
@@ -176,7 +178,9 @@ const PublicationsButtonsWrapper = <T extends Publication>({
   return (
     <>
       <div className={containerClassName}>
-        {isChanged ? (
+        {isReadOnlyAdmin ? (
+          jsonConfiguration && !isOnlyDeleteAvailable && <JsonToggles {...jsonConfiguration} />
+        ) : isChanged ? (
           <ChangedEntityButtons disableSave={isDisableSave} onDiscard={onStartDiscard} onSave={onTryToSave} />
         ) : (
           <div className="flex flex-row items-center w-full gap-x-4">

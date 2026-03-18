@@ -6,6 +6,7 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
 import { ApplicationRoute } from '@/src/types/routes';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { getControlClassName } from '@/src/utils/entities/view';
 import { isEntitiesWithDisplayVersion } from '@/src/utils/is-asset-view';
 import { getVersionControlError } from '@/src/utils/validation/version-error';
@@ -34,11 +35,13 @@ const VersionControl: FC<Props> = ({
   onChange,
   title,
   view,
+  disabled,
   containerClassName,
   disableValidation,
   ...props
 }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { dispatch } = useSaveValidationContext();
   const containerClass = useMemo(
     () => containerClassName || getControlClassName(isFullWidth),
@@ -75,6 +78,7 @@ const VersionControl: FC<Props> = ({
       invalid={!!error || !!versionError}
       onChange={onChangeVersion}
       containerClassName={containerClass}
+      disabled={disabled || isReadOnlyAdmin}
       {...props}
     />
   );

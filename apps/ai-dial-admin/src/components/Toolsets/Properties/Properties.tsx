@@ -6,6 +6,7 @@ import { FC } from 'react';
 import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
 import DeploymentProperties from '@/src/components/EntityMainProperties/Properties/DeploymentProperties';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { Toolset } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -19,6 +20,7 @@ interface Props {
 
 const ToolsetProperties: FC<Props> = ({ names, selectedToolset, onChangeToolset }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   return (
     <div className="gap-y-8 flex flex-col">
@@ -32,6 +34,7 @@ const ToolsetProperties: FC<Props> = ({ names, selectedToolset, onChangeToolset 
       <DialSwitch
         isOn={selectedToolset.forwardPerRequestKey}
         label={t(EntityFieldsI18nKey.forwardPerRequestKey)}
+        disabled={isReadOnlyAdmin}
         switchId="forwardPerRequestKey"
         onChange={(value: boolean) => {
           onChangeToolset({ ...selectedToolset, forwardPerRequestKey: value });

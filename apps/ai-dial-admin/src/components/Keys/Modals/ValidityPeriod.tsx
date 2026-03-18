@@ -12,9 +12,10 @@ import { calculateExpirationDate } from '@/src/utils/keys';
 
 export interface Props {
   onChange?: (value: string) => void;
+  disabled?: boolean;
 }
 
-const ValidityPeriod: FC<Props> = ({ onChange }) => {
+const ValidityPeriod: FC<Props> = ({ onChange, disabled }) => {
   const t = useI18n();
 
   const items: SelectOption[] = useMemo(() => {
@@ -57,6 +58,7 @@ const ValidityPeriod: FC<Props> = ({ onChange }) => {
         id="period"
         onChange={(value) => onChangeValue(value as string)}
         containerClassName="w-[180px]"
+        disabled={disabled}
       />
       <LabelledText
         label={t(EntityFieldsI18nKey.expiresAt)}

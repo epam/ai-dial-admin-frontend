@@ -5,6 +5,7 @@ import FilePath from '@/src/components/Common/FilePath/FilePath';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { Publication } from '@/src/models/dial/publications';
 import { getControlClassName } from '@/src/utils/entities/view';
@@ -17,6 +18,7 @@ interface Props {
 
 const BaseProperties: FC<Props> = ({ publication, onChange, getContext }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const containerClassName = useMemo(() => getControlClassName(false), []);
   const { fetchFiles, files } = getContext();
 
@@ -36,6 +38,7 @@ const BaseProperties: FC<Props> = ({ publication, onChange, getContext }) => {
         value={publication.displayAuthor || ''}
         onChange={(displayAuthor) => onChange?.({ ...publication, displayAuthor })}
         containerClassName={containerClassName}
+        disabled={isReadOnlyAdmin}
       />
       <FilePath
         value={publication.folderId}
@@ -44,6 +47,7 @@ const BaseProperties: FC<Props> = ({ publication, onChange, getContext }) => {
         placeholder={t(EntityPlaceholdersI18nKey.Path)}
         onChange={(folderId) => onChange?.({ ...publication, folderId })}
         context={getContext}
+        disabled={isReadOnlyAdmin}
       />
     </>
   );

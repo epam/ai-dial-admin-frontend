@@ -14,14 +14,14 @@ import { DialAppRoute } from '@/src/models/dial/route';
 import { ActionMenuOperation } from '@/src/types/action-menu-operations';
 
 interface Props {
-  readonly?: boolean;
+  disabled?: boolean;
   activeRouteIndex: number | null;
   routes?: DialAppRoute[];
   onClick: (index: number) => void;
   onRemove: (route?: string) => void;
 }
 
-const AppRouteList: FC<Props> = ({ readonly, routes, activeRouteIndex, onRemove, onClick }) => {
+const AppRouteList: FC<Props> = ({ disabled, routes, activeRouteIndex, onRemove, onClick }) => {
   const t = useI18n();
   const { isValid } = useSaveValidationContext();
   const getOperation = (onClick: () => void): ActionMenuOperationDeclaration<DialAppRoute> => {
@@ -52,7 +52,7 @@ const AppRouteList: FC<Props> = ({ readonly, routes, activeRouteIndex, onRemove,
                 <span className="flex-1 min-w-0 mr-0 text-left truncate" onClick={() => onClick(index)}>
                   <DialEllipsisTooltip text={route.name} />
                 </span>
-                {!readonly && (
+                {!disabled && (
                   <div className="invisible group-hover:visible text-primary mx-2 flex flex-row gap-2">
                     <ActionsDropdown
                       items={[getOperation(() => onRemove(route.name))]}
