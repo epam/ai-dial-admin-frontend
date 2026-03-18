@@ -1398,6 +1398,7 @@ export default {
     MountTypeSecureFile: 'Secure file',
     MountTypeSecureContent: 'Secure content',
     NoFileSelected: 'No file selected',
+    DuplicateName: 'Variable name already exists',
   },
   Applications: {
     Import: 'Import Applications',
