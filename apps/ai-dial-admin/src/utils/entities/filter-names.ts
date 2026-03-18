@@ -27,11 +27,7 @@ export const filterDisplayNamesWithVersions = (entities?: DialModel[] | null, cu
         acc.push(`${curr.displayName}___${curr.displayVersion || ''}`);
       }
 
-      if (
-        curr.displayName === currentModel?.displayName &&
-        currentModel?.displayVersion &&
-        curr.displayVersion !== currentModel?.displayVersion
-      ) {
+      if (curr.displayName === currentModel?.displayName && curr.displayVersion !== currentModel?.displayVersion) {
         acc.push(`${curr.displayName}___${curr.displayVersion || ''}`);
       }
       return acc;

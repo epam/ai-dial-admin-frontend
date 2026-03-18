@@ -33,7 +33,7 @@ describe('getNamesConfigurations', () => {
 });
 
 describe('filterDisplayNamesWithVersions', () => {
-  test('returns display names from entities', () => {
+  test('returns display names from entities and keeps same display name when current version differs', () => {
     const entities = [
       { displayName: 'Entity1', displayVersion: '1.0.0' },
       { displayName: 'Entity2', displayVersion: '2.0.0' },
@@ -43,6 +43,7 @@ describe('filterDisplayNamesWithVersions', () => {
     ];
     expect(filterDisplayNamesWithVersions(entities, { displayName: 'Entity2' })).toEqual([
       'Entity1___1.0.0',
+      'Entity2___2.0.0',
       'Entity3___',
     ]);
 
@@ -58,6 +59,38 @@ describe('filterDisplayNamesWithVersions', () => {
         { displayName: 'Entity2', displayVersion: '2.0.0' },
       ),
     ).toEqual(['Entity1___1.0.0', 'Entity3___']);
+  });
+
+  test('returns same display name when version differs from current model version', () => {
+    const entities = [
+      { displayName: 'Entity1', displayVersion: '1.0.0' },
+      { displayName: 'Entity1', displayVersion: '1.0.1' },
+      { displayName: 'Entity2', displayVersion: '2.0.0' },
+    ];
+
+    expect(filterDisplayNamesWithVersions(entities, { displayName: 'Entity1', displayVersion: '1.0.0' })).toEqual([
+      'Entity1___1.0.1',
+      'Entity2___2.0.0',
+    ]);
+  });
+
+  test('returns same display name with empty version suffix when current model version differs', () => {
+    const entities = [{ displayName: 'Entity1', displayVersion: '' }];
+
+    expect(filterDisplayNamesWithVersions(entities, { displayName: 'Entity1', displayVersion: '1.0.0' })).toEqual([
+      'Entity1___',
+    ]);
+  });
+
+  test('returns all entity display names with versions when current model is not provided', () => {
+    const entities = [
+      { displayName: 'Entity1', displayVersion: '1.0.0' },
+      { displayName: 'Entity2' },
+      { displayName: null },
+      {},
+    ];
+
+    expect(filterDisplayNamesWithVersions(entities)).toEqual(['Entity1___1.0.0', 'Entity2___']);
   });
 
   test('returns empty array if entities is undefined', () => {
