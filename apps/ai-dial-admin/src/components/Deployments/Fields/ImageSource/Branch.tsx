@@ -3,6 +3,7 @@ import { DialInput } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { Image } from '@/src/models/deployments/images';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import classNames from 'classnames';
 import { getControlClassName } from '@/src/utils/entities/view';
@@ -15,6 +16,7 @@ interface Props {
 
 const Branch: FC<Props> = ({ image, isModal = false, setImage }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const className = useMemo(() => getControlClassName(isModal), [isModal]);
 
   const onBranchChange = useCallback(
@@ -50,7 +52,7 @@ const Branch: FC<Props> = ({ image, isModal = false, setImage }) => {
         id="branch"
         placeholder={t(EntityPlaceholdersI18nKey.Branch)}
         value={image.source.branchName}
-        disabled={false}
+        disabled={isReadOnlyAdmin}
         onChange={onBranchChange}
       />
       <DialInput
@@ -58,7 +60,7 @@ const Branch: FC<Props> = ({ image, isModal = false, setImage }) => {
         id="SHA"
         placeholder={t(EntityPlaceholdersI18nKey.SHA)}
         value={image.source.sha}
-        disabled={false}
+        disabled={isReadOnlyAdmin}
         onChange={onSHAChange}
       />
     </div>
