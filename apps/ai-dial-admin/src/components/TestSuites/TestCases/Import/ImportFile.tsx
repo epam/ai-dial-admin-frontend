@@ -8,8 +8,10 @@ import { importTestCasePreview } from '@/src/app/[lang]/test-suites/actions';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { BasicI18nKey, ButtonsI18nKey, ImportI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
+import { getErrorNotification } from '@/src/utils/notification';
 import ImportOptionsStep from './ImportOptionsStep';
 import { ImportPreview } from './models';
 import SelectedFile from './SelectedFile';
@@ -27,6 +29,7 @@ interface Props {
 
 const ImportFileModal: FC<Props> = ({ selectedTestSuiteId, isModalOpen, onClose, onApply }) => {
   const t = useI18n();
+  const { showNotification } = useNotification();
 
   const [currentStepId, setCurrentStepId] = useState(STEP_FILE);
   const [isLoading, setIsLoading] = useState(false);
@@ -60,11 +63,15 @@ const ImportFileModal: FC<Props> = ({ selectedTestSuiteId, isModalOpen, onClose,
     setIsLoading(true);
 
     importTestCasePreview(selectedTestSuiteId, body).then((res) => {
+      if (res.success) {
+        const testCasesData = (res?.response || []) as ImportPreview;
+        const { colDefs, rowData } = getGridDataFromImportPreview(testCasesData);
+        setTestCases(rowData);
+        setColumnDefs(colDefs);
+      } else {
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+      }
       setIsLoading(false);
-      const testCasesData = (res?.response || []) as ImportPreview;
-      const { colDefs, rowData } = getGridDataFromImportPreview(testCasesData);
-      setTestCases(rowData);
-      setColumnDefs(colDefs);
     });
   };
 
