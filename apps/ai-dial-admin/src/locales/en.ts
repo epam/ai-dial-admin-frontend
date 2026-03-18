@@ -1432,6 +1432,7 @@ export default {
     ChatInterface: 'Chat interface',
     Preview: 'Preview',
     ChangeMethod: 'Change method',
+    ChangeMethodDisabledWhileTryOutOpen: 'Close Try out to change the method',
     RequestBodyPreview: 'Request body preview',
     Warning: 'Request template has been changed. Save changes to update the list of test cases.',
     ImportSuccess: 'Test cases imported successfully',

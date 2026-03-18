@@ -54,6 +54,7 @@ import {
   runsTab,
   summaryTab,
   testCasesTab,
+  testSuiteMethodTab,
   toolsTab,
   tracesTab,
   trendsTab,
@@ -230,7 +231,13 @@ describe('Entities :: tabs', () => {
   });
 
   test('returns correct tabs for test suite', () => {
-    expect(getTestSuiteTabs(t)).toEqual([propertiesTab(t), testCasesTab(t), runsTab(t), metricsTab(t)]);
+    expect(getTestSuiteTabs(t)).toEqual([
+      propertiesTab(t),
+      testSuiteMethodTab(t),
+      testCasesTab(t),
+      runsTab(t),
+      metricsTab(t),
+    ]);
   });
 
   test('returns correct tabs for run', () => {

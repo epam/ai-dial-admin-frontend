@@ -106,7 +106,7 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
         <DialLoader size={40} />
       ) : (
         <>
-          <div className="flex flex-col gap-y-3 px-6">
+          <div className="flex flex-col gap-y-3">
             <div className="flex items-center justify-between">
               <h1>{t(ButtonsI18nKey.TryOut)}</h1>
               <div className="flex flex-row items-center gap-x-4">
@@ -115,7 +115,7 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
             </div>
             <p className="text-secondary dial-small-text">{t(TestSuitesI18nKey.TryoutWarning)}</p>
           </div>
-          <div className="flex-1 flex flex-col gap-y-8 pb-2 min-h-0 px-6">
+          <div className="flex-1 flex flex-col gap-y-8 pb-2 min-h-0">
             {!response && (
               <>
                 <div className="flex flex-col">
@@ -186,7 +186,7 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
               </>
             )}
           </div>
-          <div className="flex justify-end gap-x-4 px-6 py-4 border-t border-secondary">
+          <div className="flex justify-end gap-x-4 pt-4 border-t border-secondary">
             <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
             <DialPrimaryButton
               label={t(ButtonsI18nKey.SendRequest)}

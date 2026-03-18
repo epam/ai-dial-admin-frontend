@@ -1395,6 +1395,7 @@ export enum TestSuitesI18nKey {
   Methods = 'TestSuites.Methods',
   Method = 'TestSuites.Method',
   ChangeMethod = 'TestSuites.ChangeMethod',
+  ChangeMethodDisabledWhileTryOutOpen = 'TestSuites.ChangeMethodDisabledWhileTryOutOpen',
   TestCases = 'TestSuites.TestCases',
   NoTestCases = 'TestSuites.NoTestCases',
   FromPC = 'TestSuites.FromPC',
