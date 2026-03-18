@@ -115,7 +115,7 @@ const DeleteFolder: FC<Props> = ({ isModalOpen, view, selectedFolder, isBulkDele
           </DialCollapsibleSidebar>
           <div className="flex-1 min-h-0">
             <GridView
-              getIsEmptyData={() => !!rowData.length}
+              getIsEmptyData={() => !rowData.length}
               emptyDataProps={{ title: t(BasicI18nKey.NoData) }}
               onGridReady={onGridReady}
             />
