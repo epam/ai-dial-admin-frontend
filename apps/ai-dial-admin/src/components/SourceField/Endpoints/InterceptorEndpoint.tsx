@@ -67,6 +67,7 @@ const InterceptorEndpoint: FC<Props> = ({ entity, onChange, prefix, isModal, dis
             isFullWidth={isModal}
             endpoint={entity.endpoint}
             onChange={onChangeCompletionEndpoint}
+            isModal={isModal}
             required
             disabled={disabled}
           />

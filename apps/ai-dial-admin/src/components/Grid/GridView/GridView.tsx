@@ -11,7 +11,7 @@ import ColumnsPanel from '@/src/components/Grid/ColumnsPanel/ColumnsPanel';
 import { checkColDefsChanges } from '@/src/components/Grid/comparators/base-column-comparator';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
-import { getColumnVisibilityFromStorage, saveColumnVisibilityToStorage } from '../utils';
+import { getColumnVisibilityFromGridState, updateColumnVisibilityInStorage } from '../utils';
 import { DialNoDataContentProps } from '@epam/ai-dial-ui-kit/dist/src/components/NoDataContent/NoDataContent';
 
 export interface GridViewProps<T> extends AgGridProps<T> {
@@ -60,7 +60,7 @@ const GridView = <T extends object>({
 
   useEffect(() => {
     if ((currentColDefs == null || currentColDefs.length === 0) && columnDefs) {
-      const storageColumns = storageKey ? getColumnVisibilityFromStorage(columnDefs, storageKey) : null;
+      const storageColumns = storageKey ? getColumnVisibilityFromGridState(storageKey, columnDefs) : null;
       setCurrentColDefs(
         !(storageColumns && columnDefs && columnDefs.length > storageColumns?.length)
           ? storageColumns || [...(columnDefs || [])]
@@ -92,7 +92,7 @@ const GridView = <T extends object>({
         const newColDefs = currentColDefs?.map((c) => (c.field === id ? { ...c, hide: !c.hide } : c));
         setCurrentColDefs(newColDefs);
         if (storageKey) {
-          saveColumnVisibilityToStorage(newColDefs, storageKey);
+          updateColumnVisibilityInStorage(storageKey, newColDefs);
         }
         setShowResetButton(newColDefs.some((c, index) => c.hide !== columnDefs?.[index].hide));
       }
@@ -104,7 +104,7 @@ const GridView = <T extends object>({
     setCurrentColDefs([...(columnDefs || [])]);
 
     if (storageKey) {
-      saveColumnVisibilityToStorage(columnDefs || [], storageKey);
+      updateColumnVisibilityInStorage(storageKey, columnDefs || []);
     }
     setShowResetButton(false);
   };
@@ -122,7 +122,7 @@ const GridView = <T extends object>({
         const [removedColDef] = updatedColDefs.splice(index, 1);
         updatedColDefs.splice(atIndex, 0, removedColDef);
         if (storageKey) {
-          saveColumnVisibilityToStorage(updatedColDefs, storageKey);
+          updateColumnVisibilityInStorage(storageKey, updatedColDefs);
         }
         setCurrentColDefs(updatedColDefs);
         setShowResetButton(checkColDefsChanges(updatedColDefs, columnDefs || []));

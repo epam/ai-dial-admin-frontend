@@ -42,6 +42,7 @@ interface Props<T> {
   context?: () => AssetsFolderContext;
   onClose: () => void;
   initialValues?: Partial<T>;
+  isModal?: boolean;
 }
 
 const CreateEntity = <T extends CreatePromptEntity>({
@@ -54,6 +55,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
   createEntity,
   initialValues,
   context,
+  isModal,
 }: Props<T>) => {
   const t = useI18n();
   const router = useRouter();
@@ -168,6 +170,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
           isUniqueNameError={isUniqueNameError}
           onChangeEntity={(entity) => setEntity(entity as T)}
           initialValues={initialValues}
+          isModal={isModal}
         />
       </div>
     </DialFormPopup>
