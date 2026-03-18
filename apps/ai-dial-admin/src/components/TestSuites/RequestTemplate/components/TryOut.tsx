@@ -19,6 +19,7 @@ import {
 } from '@/src/app/[lang]/test-suites/actions';
 import Grafana from '@/public/images/icons/grafana.svg';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import { saveTryoutResponseToStorage } from '@/src/components/TestSuites/utils/tryout-storage';
 import { convertVariableIntoInitialRequest } from '@/src/components/TestSuites/utils/template-variables';
 import { BasicI18nKey, ButtonsI18nKey, RunsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
@@ -67,13 +68,18 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
         ? await tryOutTestCase(testSuite.id || '', testCaseId)
         : await tryOutTestSuite(testSuite.id || '', requestBody);
 
+      const testSuiteId = testSuite.id || '';
       if (res?.success) {
+        const tryoutResponse = (res.response?.response as TryOutResponse) || null;
         setResolvedRequest(res.response?.resolvedRequest || {});
-        setResponse((res.response?.response as TryOutResponse) || null);
+        setResponse(tryoutResponse);
         setGrafanaTraceUrl(res.response?.grafanaTraceUrl);
+        saveTryoutResponseToStorage(testSuiteId, tryoutResponse);
       } else {
+        const errorResponse = { error: res?.errorMessage || 'Unknown error', statusCode: 500 } as TryOutResponse;
         setResolvedRequest(requestBody || {});
-        setResponse({ error: res?.errorMessage || 'Unknown error', statusCode: 500 } as TryOutResponse);
+        setResponse(errorResponse);
+        saveTryoutResponseToStorage(testSuiteId, errorResponse);
       }
     } finally {
       setIsRequestSend(false);
