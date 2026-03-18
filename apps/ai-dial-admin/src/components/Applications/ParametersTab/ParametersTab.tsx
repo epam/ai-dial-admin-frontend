@@ -249,9 +249,7 @@ const ParametersTab: FC<Props> = ({
                     data={application?.applicationProperties}
                     onChangeConfiguration={onChangeConfiguration}
                     onGetSchemeDefaults={onGetSchemeDefaults}
-                    disabled={
-                      view === ApplicationRoute.ApplicationPublications || view === ApplicationRoute.ApplicationRunners
-                    }
+                    disabled={view === ApplicationRoute.ApplicationPublications}
                   />
                 </div>
               )}
