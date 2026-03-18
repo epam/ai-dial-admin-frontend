@@ -7,7 +7,7 @@ import { Container } from '@/src/models/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { CONTAINER_SOURCE_TYPE, CONTAINER_TYPE } from '@/src/types/deployments/containers';
-import { getContainerTemplate } from '@/src/utils/deployments/containers';
+import { ContainerTemplateOptions, getContainerTemplate } from '@/src/utils/deployments/containers';
 import { useAppContext } from '@/src/context/AppContext';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
@@ -22,15 +22,26 @@ interface Props {
   header: string;
   type: CONTAINER_TYPE;
   sourceType?: CONTAINER_SOURCE_TYPE;
+  templateOptions?: ContainerTemplateOptions;
 }
 
-const ServingCreate: FC<Props> = ({ isModalOpen, onClose, onApply, route, names, header, type, sourceType }) => {
+const ServingCreate: FC<Props> = ({
+  isModalOpen,
+  onClose,
+  onApply,
+  route,
+  names,
+  header,
+  type,
+  sourceType,
+  templateOptions,
+}) => {
   const t = useI18n();
   const { resourcesDefaults } = useAppContext();
   const { isValid } = useSaveValidationContext();
 
   const [container, setContainer] = useState<Container>(
-    getContainerTemplate(type, resourcesDefaults, sourceType) as Container,
+    getContainerTemplate(type, resourcesDefaults, sourceType, templateOptions) as Container,
   );
 
   return (
