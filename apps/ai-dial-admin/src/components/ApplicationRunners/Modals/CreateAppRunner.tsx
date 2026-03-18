@@ -86,7 +86,7 @@ const CreateAppRunner: FC<Props> = ({ isModalOpen, names, onClose }) => {
       disableSubmitButton={!isValid}
     >
       <div className="flex flex-col px-6 py-4">
-        <SchemeProperties names={names} runner={currentScheme} onChangeRunner={onChangeScheme} />
+        <SchemeProperties names={names} runner={currentScheme} onChangeRunner={onChangeScheme} isModal />
       </div>
     </DialFormPopup>
   );
