@@ -28,7 +28,6 @@ const Properties = <T extends object>({
   isUniqueNameError,
   versionsMap,
   entity,
-  isModal,
   ...props
 }: Props<T>) => {
   if (isSimpleEntity(view)) {
@@ -42,7 +41,6 @@ const Properties = <T extends object>({
         runners={runners}
         versionsMap={versionsMap}
         entity={entity as AssetWithVersion}
-        isModal={isModal}
         {...props}
       />
     );
@@ -54,7 +52,6 @@ const Properties = <T extends object>({
       view={view}
       runners={runners}
       isUniqueNameError={isUniqueNameError}
-      isModal={isModal}
       {...props}
     />
   );
