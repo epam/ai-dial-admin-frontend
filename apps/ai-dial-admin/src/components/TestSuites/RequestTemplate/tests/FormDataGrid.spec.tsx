@@ -68,6 +68,12 @@ describe('FormDataGrid', () => {
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Add })).toBeInTheDocument();
   });
 
+  test('does not render Add button when hideAddButton', () => {
+    render(<FormDataGrid content={[]} changeContent={mockChangeContent} hideAddButton />);
+
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.Add })).not.toBeInTheDocument();
+  });
+
   test('renders GridView', () => {
     render(<FormDataGrid content={[]} changeContent={mockChangeContent} />);
 

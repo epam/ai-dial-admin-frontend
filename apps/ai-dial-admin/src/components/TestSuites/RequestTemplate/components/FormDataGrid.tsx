@@ -16,8 +16,10 @@ import { FormDataPart, FormDataType } from '@/src/models/form-data';
 interface Props {
   content: FormDataPart[];
   changeContent: (content: FormDataPart[]) => void;
+  /** When true, Add is shown at request-template tabs level instead */
+  hideAddButton?: boolean;
 }
-const FormDataGrid: FC<Props> = ({ content, changeContent }) => {
+const FormDataGrid: FC<Props> = ({ content, changeContent, hideAddButton }) => {
   const t = useI18n();
   const gridApi = useRef<GridApi>(null);
   const contentRef = useRef(content || []);
@@ -79,9 +81,11 @@ const FormDataGrid: FC<Props> = ({ content, changeContent }) => {
 
   return (
     <div className="flex flex-col gap-3 size-full">
-      <div className="flex flex-row justify-end items-center">
-        <DialGhostButton iconBefore={<IconPlus />} label={t(ButtonsI18nKey.Add)} onClick={() => onAddPart()} />
-      </div>
+      {!hideAddButton && (
+        <div className="flex flex-row justify-end items-center">
+          <DialGhostButton iconBefore={<IconPlus />} label={t(ButtonsI18nKey.Add)} onClick={() => onAddPart()} />
+        </div>
+      )}
       <div className="flex-1 min-h-0 overflow-auto">
         <GridView
           getIsEmptyData={() => !content?.length}

@@ -6,14 +6,17 @@ import { TestSuite, TestSuiteRequestTemplate } from '@/src/models/evaluation/tes
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import TabsContent from '../tabs/TabsContent';
 
-vi.mock('../tabs/BodyTab', () => ({
-  default: ({ template, changeTemplate }: any) => (
-    <div role="region" aria-label="body-tab">
-      <span>Body: {JSON.stringify(template.body ?? null)}</span>
-      <button onClick={() => changeTemplate({ ...template, body: { updated: true } })}>EditBody</button>
-    </div>
-  ),
-}));
+vi.mock('../tabs/BodyTab', () => {
+  const React = require('react');
+  return {
+    default: React.forwardRef(({ template, changeTemplate }: any, _ref: unknown) => (
+      <div role="region" aria-label="body-tab">
+        <span>Body: {JSON.stringify(template.body ?? null)}</span>
+        <button onClick={() => changeTemplate({ ...template, body: { updated: true } })}>EditBody</button>
+      </div>
+    )),
+  };
+});
 
 vi.mock('../tabs/ParamsTab', () => ({
   default: ({ template, changeTemplate, field, title, emptyDataTitle }: any) => (
