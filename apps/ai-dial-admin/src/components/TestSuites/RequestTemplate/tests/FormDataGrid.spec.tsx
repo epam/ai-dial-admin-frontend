@@ -43,10 +43,6 @@ vi.mock('@tabler/icons-react', () => ({
   IconPlus: () => <svg data-icon="plus" />,
 }));
 
-vi.mock('@/src/locales/client', () => ({
-  useI18n: () => (key: string) => key,
-}));
-
 const createPart = (overrides?: Partial<FormDataPart>): FormDataPart => ({
   name: '',
   value: '',
