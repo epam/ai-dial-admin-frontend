@@ -3,10 +3,11 @@ import { useCallback, useMemo, useState } from 'react';
 import { DialTextarea } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
 import { getErrorForDescription } from '@/src/utils/validation/description-error';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getControlClassName } from '@/src/utils/entities/view';
 
 interface Props<T> {
@@ -20,9 +21,11 @@ const DescriptionControl = <T extends { description?: string }>({
   entity,
   onChangeEntity,
   isFullWidth = true,
+  disabled,
   ...props
 }: Props<T>) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { dispatch } = useSaveValidationContext();
   const containerClassName = useMemo(() => getControlClassName(isFullWidth), [isFullWidth]);
 
@@ -48,6 +51,7 @@ const DescriptionControl = <T extends { description?: string }>({
       invalid={!!descriptionError}
       onChange={onChangeDescription}
       containerClassName={containerClassName}
+      disabled={disabled || isReadOnlyAdmin}
       {...props}
     />
   );

@@ -22,13 +22,13 @@ import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 interface Props {
   parentRoles?: string[];
   roles: DialRole[];
-  readonly?: boolean;
+  disabled?: boolean;
   iAppRunnerView?: boolean;
   route: DialAppRoute;
   onChangeRoute: (route: DialAppRoute) => void;
 }
 
-const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, onChangeRoute, roles }) => {
+const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, disabled, onChangeRoute, roles }) => {
   const t = useI18n();
 
   const data = useMemo(() => {
@@ -97,7 +97,7 @@ const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, o
   return (
     <>
       <div className="size-full flex flex-col">
-        {!readonly && (
+        {!disabled && (
           <DialSwitch
             switchId="inheritedAppRoles"
             label={t(RoutesI18nKey.InheritApplicationRoles)}
@@ -113,7 +113,7 @@ const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, o
         )}
         <div className="flex flex-row items-center w-full my-4 justify-between h-[40px]">
           <h1> {t(TabsI18nKey.Roles)}</h1>
-          {!route.isPublic && !readonly && (
+          {!route.isPublic && !disabled && (
             <DialNeutralButton
               iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
               label={t(ButtonsI18nKey.Add)}

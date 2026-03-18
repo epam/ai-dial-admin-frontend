@@ -9,9 +9,10 @@ interface Props {
   onChange: (model: DialAdapter) => void;
   prefix?: string;
   isModal?: boolean;
+  disabled?: boolean;
 }
 
-const AdapterEndpoint: FC<Props> = ({ entity, onChange, isModal, prefix }) => {
+const AdapterEndpoint: FC<Props> = ({ entity, onChange, isModal, prefix, disabled }) => {
   const onChangeEndpoint = useCallback(
     (baseEndpoint?: string) => {
       onChange({ ...entity, baseEndpoint });
@@ -31,6 +32,7 @@ const AdapterEndpoint: FC<Props> = ({ entity, onChange, isModal, prefix }) => {
               source: { ...entity.source, $type: SOURCE_TYPE.CONTAINER, completionEndpointPath },
             });
           }}
+          disabled={disabled}
         />
       ) : (
         <CompletionEndpointControl
@@ -38,6 +40,7 @@ const AdapterEndpoint: FC<Props> = ({ entity, onChange, isModal, prefix }) => {
           endpoint={entity.baseEndpoint}
           onChange={onChangeEndpoint}
           required
+          disabled={disabled}
         />
       )}
     </div>

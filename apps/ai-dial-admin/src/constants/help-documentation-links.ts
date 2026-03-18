@@ -104,7 +104,10 @@ export const HELP_DOCUMENTATION_LINKS: Partial<
   },
   [ApplicationRoute.FoldersStorage]: { listView: 'tutorials/admin/access-management-folders-storage' },
 
-  [ApplicationRoute.ActivityAudit]: { listView: 'tutorials/admin/telemetry-activity-audit' },
+  [ApplicationRoute.ActivityAudit]: {
+    listView: 'tutorials/admin/telemetry-activity-audit',
+    selectedView: 'tutorials/admin/telemetry-activity-audit#activity-details',
+  },
   [ApplicationRoute.Dashboard]: { listView: 'tutorials/admin/telemetry-dashboard' },
   [ApplicationRoute.UsageLog]: { listView: 'tutorials/admin/telemetry-usage-log' },
 

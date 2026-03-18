@@ -24,7 +24,7 @@ describe('Endpoint', () => {
     render(
       <Endpoint
         index={0}
-        readonly={false}
+        disabled={false}
         endpoint={baseEndpoint as any}
         updateEndpoint={updateEndpoint}
         removeEndpoint={removeEndpoint}
@@ -43,7 +43,7 @@ describe('Endpoint', () => {
     render(
       <Endpoint
         index={0}
-        readonly={false}
+        disabled={false}
         endpoint={baseEndpoint as any}
         updateEndpoint={updateEndpoint}
         removeEndpoint={removeEndpoint}
@@ -59,7 +59,7 @@ describe('Endpoint', () => {
     render(
       <Endpoint
         index={0}
-        readonly={false}
+        disabled={false}
         endpoint={baseEndpoint as any}
         updateEndpoint={updateEndpoint}
         removeEndpoint={removeEndpoint}
@@ -79,7 +79,7 @@ describe('Endpoint', () => {
     render(
       <Endpoint
         index={0}
-        readonly={false}
+        disabled={false}
         endpoint={baseEndpoint as any}
         updateEndpoint={updateEndpoint}
         removeEndpoint={removeEndpoint}
@@ -89,11 +89,11 @@ describe('Endpoint', () => {
     expect(removeEndpoint).toHaveBeenCalledWith(0);
   });
 
-  test('does not render remove button if readonly', () => {
+  test('does not render remove button if disabled', () => {
     render(
       <Endpoint
         index={0}
-        readonly={true}
+        disabled={true}
         endpoint={baseEndpoint as any}
         updateEndpoint={updateEndpoint}
         removeEndpoint={removeEndpoint}

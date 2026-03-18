@@ -16,6 +16,10 @@ export interface SchemaFieldRow {
   isAddSubFieldRow?: boolean;
   /** Value of dial:meta from schema (first-level only). Stored as-is, e.g. { "dial:propertyKind": "server", "dial:propertyOrder": 1 }. */
   dialMeta?: Record<string, unknown>;
+  /** Enum values from schema when property has "enum". */
+  enum?: string[];
+  /** Default value from schema (e.g. for bindings row default). */
+  defaultValue?: unknown;
 }
 
 export interface SchemaTreeNode {
@@ -174,18 +178,22 @@ export const jsonSchemaToFields = (schema: JSONSchema7 | undefined, root?: JSONS
       rawDef && typeof rawDef[DIAL_META_KEY] === 'object' && rawDef[DIAL_META_KEY] !== null
         ? (rawDef[DIAL_META_KEY] as Record<string, unknown>)
         : undefined;
+    const propSchema = resolvedDef as JSONSchema7;
+    const enumValues = Array.isArray(propSchema.enum) ? propSchema.enum.map((v) => String(v)) : undefined;
     const field: SchemaFieldRow = {
       id: generateFieldId(),
       name,
       type,
       required: requiredFields.includes(name),
-      title: (resolvedDef as JSONSchema7).title ?? effectiveDef.title ?? '',
-      description: (resolvedDef as JSONSchema7).description ?? effectiveDef.description ?? '',
+      title: propSchema.title ?? effectiveDef.title ?? '',
+      description: propSchema.description ?? effectiveDef.description ?? '',
       expanded: false,
       children: [],
       parentId: null,
       depth: 0,
       ...(dialMeta && Object.keys(dialMeta).length > 0 && { dialMeta }),
+      ...(enumValues?.length && { enum: enumValues }),
+      ...(propSchema.default !== undefined && { defaultValue: propSchema.default }),
     };
 
     if (type === 'object' && effectiveDef.properties) {

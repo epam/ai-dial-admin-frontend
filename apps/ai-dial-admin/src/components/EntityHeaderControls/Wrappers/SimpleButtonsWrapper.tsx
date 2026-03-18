@@ -11,6 +11,7 @@ import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/
 import JsonToggleWithFormats from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggleWithFormats';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import {
   BASE_BUTTON_ICON_PROPS,
   SELECT_ENTITY_HEADER_CLASS,
@@ -52,6 +53,7 @@ const SimpleButtonsWrapper = <T extends object>({
   onRemove,
 }: SimpleButtonsWrapperProps<T>) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const isEditorEnabled = jsonConfiguration?.isEditorEnabled;
   const { isValid, dispatch, jsonErrors } = useSaveValidationContext();
   const { showNotification } = useNotification();
@@ -97,7 +99,9 @@ const SimpleButtonsWrapper = <T extends object>({
   return (
     <>
       <div className={containerClassName}>
-        {isChanged ? (
+        {isReadOnlyAdmin ? (
+          jsonConfiguration && <JsonToggleWithFormats view={view} {...jsonConfiguration} />
+        ) : isChanged ? (
           <ChangedEntityButtons disableSave={isDisableSave} onDiscard={onStartDiscard} onSave={onTryToSave} />
         ) : (
           <div className="flex flex-row items-center w-full gap-x-4">

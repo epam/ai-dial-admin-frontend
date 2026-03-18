@@ -10,7 +10,12 @@ import {
   IMAGE_TYPE_I18N_KEYS,
   STATUS_I18N_KEYS,
 } from '@/src/constants/deployments/images';
-import { formatRequired, getFormattedResourceType } from '@/src/constants/grid-columns/formatters';
+import {
+  formatRequired,
+  getFormattedResourceType,
+  numberValueFormatter,
+  priceValueFormatter,
+} from '@/src/constants/grid-columns/formatters';
 import { ImageVersion } from '@/src/models/deployments/images';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
@@ -338,15 +343,24 @@ export const TELEMETRY_COLUMNS: ColDef[] = [
     headerName: 'Money',
     sort: 'desc',
     ...numericColumn,
-  },
-  {
-    field: 'deployment_cost',
-    headerName: 'Deployment Price',
-    ...priceColumn('Deployment Price'),
+    valueFormatter: ({ value }) => `$${numberValueFormatter(priceValueFormatter(value) as string)}`,
+    filterValueGetter: (params) =>
+      numberValueFormatter(priceValueFormatter(params.data[params.colDef.field || '']) as string),
   },
 ];
 
-export const TELEMETRY_GRID_COLUMNS: ColDef[] = [NAME_COLUMN, ...TELEMETRY_COLUMNS];
+export const TELEMETRY_GRID_COLUMNS: ColDef[] = [
+  NAME_COLUMN,
+  ...TELEMETRY_COLUMNS,
+  {
+    field: 'deployment_cost',
+    headerName: 'Total money',
+    ...numericColumn,
+    valueFormatter: ({ value }) => `$${numberValueFormatter(priceValueFormatter(value) as string)}`,
+    filterValueGetter: (params) =>
+      numberValueFormatter(priceValueFormatter(params.data[params.colDef.field || '']) as string),
+  },
+];
 
 export const USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
   { field: 'completion_time', headerName: 'Completion Time', hide: false, ...dateTimeColumn },

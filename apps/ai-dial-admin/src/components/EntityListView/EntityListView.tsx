@@ -9,6 +9,7 @@ import ListView from '@/src/components/ListView/ListView';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { ENTITIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -53,6 +54,7 @@ const BaseEntityList = <T extends object>({
 }: Props<T>) => {
   const t = useI18n();
   const router = useRouter();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const gridOptions: GridOptions = {
     onCellClicked: (e) => {
       if (e.colDef.field !== ACTIONS_COLUMN_CEL_ID) {
@@ -119,12 +121,15 @@ const BaseEntityList = <T extends object>({
   }, [closeColumnsPanel]);
 
   const getColumns = () => {
+    const remove = isReadOnlyAdmin ? undefined : onOpenDeleteModal;
+    const duplicate = isReadOnlyAdmin ? undefined : onOpenDuplicateModal;
+    const move = isReadOnlyAdmin ? undefined : onOpenMoveModal;
     if (isAssetWithVersion(route)) {
-      return ENTITIES_COLUMNS(baseColumns, onOpenDeleteModal, onOpenDuplicateModal, openInNewTab, onOpenMoveModal);
+      return ENTITIES_COLUMNS(baseColumns, remove, duplicate, openInNewTab, move);
     } else if (route === ApplicationRoute.Files) {
-      return ENTITIES_COLUMNS(baseColumns, onOpenDeleteModal, void 0, openInNewTab, onOpenMoveModal);
+      return ENTITIES_COLUMNS(baseColumns, remove, void 0, openInNewTab, move);
     }
-    return ENTITIES_COLUMNS(baseColumns, onOpenDeleteModal, onOpenDuplicateModal, openInNewTab);
+    return ENTITIES_COLUMNS(baseColumns, remove, duplicate, openInNewTab);
   };
 
   const columns = getColumns();
@@ -154,11 +159,12 @@ const BaseEntityList = <T extends object>({
           route={route}
           showColumnsButton={showColumnsButton && data.length > 0}
           toggleColumnsPanel={toggleColumnsPanel}
-          createEntity={onCreateEntity}
+          createEntity={isReadOnlyAdmin ? undefined : onCreateEntity}
           context={getAssetContext}
           setIsBulkView={setIsBulkView}
           isBulkView={isBulkView}
           gridApi={gridApi}
+          isReadOnlyAdmin={isReadOnlyAdmin}
         />
       </ListView>
       <Actions
@@ -166,7 +172,7 @@ const BaseEntityList = <T extends object>({
         keys={keys}
         route={route}
         versionsMap={versionsMap}
-        onCreateEntity={onCreateEntity}
+        onCreateEntity={isReadOnlyAdmin ? undefined : onCreateEntity}
         onRemoveEntity={onRemoveEntity}
         onMoveFiles={onMoveFiles}
         onBulkDelete={onBulkDelete}

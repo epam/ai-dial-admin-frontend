@@ -2,6 +2,8 @@
 import { ReactNode } from 'react';
 
 import { DialCollapsibleSidebar, DialIconButton, DialTooltip } from '@epam/ai-dial-ui-kit';
+
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { ColDef, GridOptions, GridReadyEvent } from 'ag-grid-community';
 import classNames from 'classnames';
 
@@ -53,6 +55,7 @@ const ListView = <T extends object>({
   allowPadding = true,
 }: Props<T>) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const folderContext = context?.();
   const isCollapseDisable =
     folderContext?.expandedFolders.size === 0 ||
@@ -93,7 +96,7 @@ const ListView = <T extends object>({
               </DialTooltip>
             }
           >
-            <FolderList context={context} view={view} />
+            <FolderList context={context} view={view} disabled={isReadOnlyAdmin} />
           </DialCollapsibleSidebar>
         )}
         {isBulkView ? (

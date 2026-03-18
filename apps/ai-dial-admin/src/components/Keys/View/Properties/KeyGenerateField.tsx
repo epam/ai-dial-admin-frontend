@@ -18,9 +18,10 @@ interface Props {
   keys: string[];
   selectedKey: DialKey;
   changeKey: (key: DialKey) => void;
+  disabled?: boolean;
 }
 
-const KeyGenerateField: FC<Props> = ({ isKeyImmutable, keys, selectedKey, changeKey }) => {
+const KeyGenerateField: FC<Props> = ({ isKeyImmutable, keys, selectedKey, changeKey, disabled }) => {
   const t = useI18n();
 
   const [keyError, setKeyError] = useState<FieldError | null>(null);
@@ -50,22 +51,24 @@ const KeyGenerateField: FC<Props> = ({ isKeyImmutable, keys, selectedKey, change
             error={keyError?.text}
             invalid={!!keyError}
             onChange={onChangeKeyValue}
+            disabled={disabled}
           />
         </div>
-        {isKeyImmutable ? (
-          <CopyButton
-            buttonLabel={isMobile ? '' : t(ButtonsI18nKey.Copy)}
-            value={selectedKey.key}
-            valueLabel={t(EntityFieldsI18nKey.keyValue)}
-          />
-        ) : (
-          <DialGhostButton
-            className="ml-2"
-            iconBefore={<IconSparkles />}
-            label={t(ButtonsI18nKey.Generate)}
-            onClick={onGenerateKey}
-          />
-        )}
+        {!disabled &&
+          (isKeyImmutable ? (
+            <CopyButton
+              buttonLabel={isMobile ? '' : t(ButtonsI18nKey.Copy)}
+              value={selectedKey.key}
+              valueLabel={t(EntityFieldsI18nKey.keyValue)}
+            />
+          ) : (
+            <DialGhostButton
+              className="ml-2"
+              iconBefore={<IconSparkles />}
+              label={t(ButtonsI18nKey.Generate)}
+              onClick={onGenerateKey}
+            />
+          ))}
       </div>
     </div>
   );

@@ -35,6 +35,7 @@ interface Props<T> {
   getAdapters: () => Promise<ServerActionResponse | null>;
   error?: string;
   isModal?: boolean;
+  disabled?: boolean;
 }
 
 const Adapters = <T extends DialModel | DialInterceptor>({
@@ -43,6 +44,7 @@ const Adapters = <T extends DialModel | DialInterceptor>({
   getAdapters,
   error,
   isModal,
+  disabled,
 }: Props<T>) => {
   const t = useI18n();
   const showNotificationRef = useRef(useNotification().showNotification);
@@ -118,6 +120,7 @@ const Adapters = <T extends DialModel | DialInterceptor>({
               value={adapters.find((adapter) => adapter.name === entity.source?.adapterName)?.name}
               placeholder={t(CreateI18nKey.SelectAdapter)}
               label={t(EntityFieldsI18nKey.adapter)}
+              disabled={disabled}
             />
           </div>
         ) : (
@@ -131,6 +134,7 @@ const Adapters = <T extends DialModel | DialInterceptor>({
                 elementId="adapters"
                 errorText={error}
                 emptyValueText={t(EntitiesI18nKey.NoAdapters)}
+                disabled={disabled}
               >
                 <SelectAdapterModal
                   selected={entity.source?.adapterName}
@@ -141,7 +145,7 @@ const Adapters = <T extends DialModel | DialInterceptor>({
                 />
               </DialInputPopup>
             </div>
-            {entity.source?.adapterName && (
+            {entity.source?.adapterName && !disabled && (
               <DialNeutralButton
                 iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
                 className={classNames(error ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
@@ -157,6 +161,7 @@ const Adapters = <T extends DialModel | DialInterceptor>({
           entity={entity}
           prefix={selectedAdapter?.baseEndpoint}
           onChange={onChange as (entity: DialModel) => void}
+          disabled={disabled}
         />
       )}
     </div>

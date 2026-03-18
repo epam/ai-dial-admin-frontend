@@ -1,9 +1,12 @@
 'use client';
 import { createContext, useContext, useState, ReactNode, MouseEvent, SetStateAction, Dispatch } from 'react';
+
+import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
+
 import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storage';
 import { LOCAL_STORAGE_SIDEBAR_OPEN_KEY } from '@/src/constants/main-layout';
-import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
 import { ResourcesDefaults } from '@/src/models/deployments/containers';
+import { UserInfo, UserRole } from '@/src/models/user-info';
 
 export interface AppContextType {
   themeUrl?: string;
@@ -17,6 +20,11 @@ export interface AppContextType {
   sidebar: AppContextSidebar;
   disableDeploymentsJSONEditor?: boolean;
   resourcesDefaults?: ResourcesDefaults;
+
+  // user info
+  userInfo?: UserInfo;
+  /** True when user has READ_ONLY_ADMIN and does not have FULL_ADMIN */
+  isReadOnlyAdmin: boolean;
 }
 
 interface AppContextSidebar {
@@ -37,11 +45,13 @@ export const AppContextProvider = ({
   featureFlags,
   disableDeploymentsJSONEditor,
   resourcesDefaults,
+  userInfo,
 }: {
   children: ReactNode;
   themeUrl?: string;
   featureFlags: Record<string, boolean>;
   disableDeploymentsJSONEditor?: boolean;
+  userInfo?: UserInfo;
   resourcesDefaults?: ResourcesDefaults;
 }) => {
   const isSidebarOpenState = getFromLocalStorage(LOCAL_STORAGE_SIDEBAR_OPEN_KEY) !== 'false';
@@ -80,6 +90,9 @@ export const AppContextProvider = ({
     setShow(false);
   };
 
+  const isReadOnlyAdmin =
+    !!userInfo?.roles?.includes(UserRole.READ_ONLY_ADMIN) && !userInfo?.roles?.includes(UserRole.FULL_ADMIN);
+
   const value = {
     sidebarOpen,
     toggleSidebar,
@@ -100,6 +113,8 @@ export const AppContextProvider = ({
     },
     disableDeploymentsJSONEditor,
     resourcesDefaults,
+    userInfo,
+    isReadOnlyAdmin,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

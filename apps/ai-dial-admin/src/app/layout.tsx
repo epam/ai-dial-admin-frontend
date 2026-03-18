@@ -35,7 +35,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   if (isInvalidSession) {
     return redirect(SIGN_IN_LINK);
   }
-  const isSecure = await utilityApi.getSecurityInfo(token);
+  const userInfo = await utilityApi.getUserInfo(token);
   const themesConfig = await themesApi.getThemesConfiguration();
 
   return (
@@ -54,7 +54,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         />
       </head>
       <body className={classNames(inter.variable, 'font min-w-[360px]')}>
-        {isSecure.success ? children : <Page403 />}
+        {userInfo.success ? children : <Page403 />}
       </body>
     </html>
   );

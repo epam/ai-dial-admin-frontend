@@ -11,6 +11,7 @@ interface Props<T> {
   entity: T;
   originalEntity?: T;
   onChange?: (allowedIpAddressRanges?: string[]) => void;
+  disabled?: boolean;
 }
 
 const AccessRestrictionField = <T extends { allowedIpAddressRanges?: string[] }>({
@@ -18,6 +19,7 @@ const AccessRestrictionField = <T extends { allowedIpAddressRanges?: string[] }>
   onChange,
   entity,
   originalEntity,
+  disabled,
 }: Props<T>) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
@@ -123,6 +125,7 @@ const AccessRestrictionField = <T extends { allowedIpAddressRanges?: string[] }>
           checked={selectedRadio === RestrictionType.ALLOW_ALL}
           onChange={() => handleRadioChange(RestrictionType.ALLOW_ALL)}
           label={t(KeysI18nKey.AllowAllRestriction)}
+          disabled={disabled}
         />
 
         <DialRadioButton
@@ -132,6 +135,7 @@ const AccessRestrictionField = <T extends { allowedIpAddressRanges?: string[] }>
           checked={selectedRadio === RestrictionType.BLOCK_ALL}
           onChange={() => handleRadioChange(RestrictionType.BLOCK_ALL)}
           label={t(KeysI18nKey.BlockAllRestriction)}
+          disabled={disabled}
         />
 
         <DialRadioButton
@@ -141,6 +145,7 @@ const AccessRestrictionField = <T extends { allowedIpAddressRanges?: string[] }>
           checked={selectedRadio === RestrictionType.RANGES}
           onChange={() => handleRadioChange(RestrictionType.RANGES)}
           label={t(KeysI18nKey.RangesRestriction)}
+          disabled={disabled}
         />
       </div>
 
@@ -150,6 +155,7 @@ const AccessRestrictionField = <T extends { allowedIpAddressRanges?: string[] }>
           onAddRange={handleAddRange}
           onUpdateRange={handleUpdateRange}
           onRemoveRange={handleRemoveRange}
+          disabled={disabled}
         />
       )}
     </div>

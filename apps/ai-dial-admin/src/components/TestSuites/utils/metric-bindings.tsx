@@ -1,6 +1,9 @@
+import { JSONSchema7 } from 'json-schema';
+
 import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
-import { MetricBinding } from '@/src/models/evaluation/metric';
+import { Metric, MetricBinding } from '@/src/models/evaluation/metric';
 import { MetricBindingType } from '@/src/types/evaluation';
+import { getSchemaDefaults } from '@/src/utils/schema';
 
 export const createUpdatedMetricBinding = (
   value: string | object,
@@ -8,7 +11,7 @@ export const createUpdatedMetricBinding = (
   field: string,
 ): MetricBinding => {
   const newData: MetricBinding = {
-    ...data,
+    property: data.property,
     source: { ...data.source },
   };
   if (field === 'source.$type') {
@@ -52,4 +55,24 @@ export const generateMetricBindingsRowData = (
   });
 
   return [...configRows, ...inputRows];
+};
+
+export const generateMetricDefaultInputBindings = (schema: JSONSchema7) => {
+  return Object.entries(getSchemaDefaults(schema ?? {})).map(([key, value]) => ({
+    property: key,
+    source: {
+      $type: 'Constant',
+      value: value as string,
+    },
+  }));
+};
+
+export const generateMetricDefaultBindings = (name: string, details: Metric) => {
+  return {
+    name,
+    metricDeclarationId: details?.metricDeclarationId,
+    metricDeclarationVersionId: details?.id,
+    inputBindings: generateMetricDefaultInputBindings(details.inputSchema ?? {}),
+    configBindings: generateMetricDefaultInputBindings(details.configSchema ?? {}),
+  };
 };

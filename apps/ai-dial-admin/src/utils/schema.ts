@@ -115,6 +115,9 @@ function getDefaultOrEmptyValue(
 ): unknown {
   const effective = resolve(schema);
 
+  // Use explicit default before recursing into oneOf/anyOf (e.g. enum with oneOf and default: "citation")
+  if (effective.default !== undefined) return effective.default;
+
   const variants = effective.anyOf ?? effective.oneOf;
   if (Array.isArray(variants) && variants.length) {
     const branch = pickVariant(
@@ -124,8 +127,6 @@ function getDefaultOrEmptyValue(
     );
     return getDefaultOrEmptyValue(branch, rootSchema, resolve, options, getDefaults);
   }
-
-  if (effective.default !== undefined) return effective.default;
 
   const type = getPrimaryType(effective);
 
