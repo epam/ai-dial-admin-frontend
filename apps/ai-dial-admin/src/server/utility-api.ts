@@ -9,6 +9,7 @@ import { GlobalSettings } from '@/src/models/system-properties';
 import { getFileName } from '@/src/utils/api/get-file-name';
 import { API } from './api';
 import { BaseApi } from './base-api';
+import { UserInfo } from '@/src/models/user-info';
 
 export const SYSTEM_PROPERTIES_URL = `${API}/global-settings`;
 export const ADMIN_SETTINGS_URL = `${API}/admin-settings`;
@@ -84,7 +85,7 @@ export class UtilityApi extends BaseApi {
     return this.getActionWithMatchEtag(`${API}${url}`, etag, token);
   }
 
-  getSecurityInfo(token: Token): Promise<ServerActionResponse> {
+  getUserInfo(token: Token): Promise<ServerActionResponse<UserInfo>> {
     return this.getAction(SECURITY_INFO_URL, token);
   }
 }

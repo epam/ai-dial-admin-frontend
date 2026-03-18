@@ -16,6 +16,7 @@ import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from 
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ChatEntity } from '@/src/models/dial/base-entity';
@@ -50,6 +51,7 @@ const DeploymentProperties: FC<Props> = ({
   isModal,
 }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { dispatch } = useSaveValidationContext();
   const { featureFlags } = useAppContext();
   const [displayNameError, setDisplayNameError] = useState<string | undefined>(void 0);
@@ -142,6 +144,7 @@ const DeploymentProperties: FC<Props> = ({
           .sort()
           .map((name) => ({ value: name, label: name }))}
         containerClassName={!isEntityImmutable ? 'w-full' : STANDARD_CONTROL_WIDTH}
+        disabled={isReadOnlyAdmin}
       />
       {isEntitiesWithDisplayVersion(view) && (
         <VersionControl

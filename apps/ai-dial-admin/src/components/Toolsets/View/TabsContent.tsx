@@ -6,6 +6,7 @@ import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
 import EntityRoles from '@/src/components/EntityView/Roles/Roles';
 import Tools from '@/src/components/Tools/Tools';
 import { AuthHeader } from '@/src/components/Toolsets/Auth/Sections/AuthHeader';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { DialRole } from '@/src/models/dial/role';
 import { Toolset } from '@/src/models/dial/toolset';
 import { ExportFormat } from '@/src/types/export';
@@ -35,6 +36,7 @@ const TabsContent: FC<Props> = ({
   originalToolset,
   selectedFormat,
 }) => {
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const headerPostfix = useMemo(() => {
     return <AuthHeader toolset={selectedToolset} />;
   }, [selectedToolset]);
@@ -54,7 +56,12 @@ const TabsContent: FC<Props> = ({
         )}
 
         {activeTab === EntityViewTab.Tools && (
-          <Tools originalToolset={originalToolset} selectedToolset={selectedToolset} onChangeToolset={onChange} />
+          <Tools
+            originalToolset={originalToolset}
+            selectedToolset={selectedToolset}
+            onChangeToolset={onChange}
+            disabled={isReadOnlyAdmin}
+          />
         )}
 
         {activeTab === EntityViewTab.Roles && (

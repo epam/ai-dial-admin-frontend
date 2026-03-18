@@ -13,6 +13,7 @@ import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { DESCRIPTION_COLUMN, DISPLAY_NAME_COLUMN, NAME_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { ButtonsI18nKey, EntitiesI18nKey, InterceptorsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication } from '@/src/models/dial/application';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
@@ -36,6 +37,7 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
   view,
 }: Props<T>) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const [availableInterceptors, setAvailableInterceptors] = useState<DialInterceptor[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [runnerInterceptors, setRunnerInterceptors] = useState<string[]>();
@@ -162,16 +164,16 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
   const localColumns = useMemo(() => {
     return getInterceptorsColumnDefs(
       onOpen,
-      onRemoveInterceptor,
+      isReadOnlyAdmin ? undefined : onRemoveInterceptor,
       (globalInterceptors?.length || 0) + (runnerInterceptors?.length || 0),
     );
-  }, [onRemoveInterceptor, globalInterceptors?.length, runnerInterceptors?.length]);
+  }, [onRemoveInterceptor, globalInterceptors?.length, isReadOnlyAdmin, runnerInterceptors?.length]);
 
   const additionalGridOptions = useMemo(() => {
-    return { rowDragManaged: true, onRowDragEnd };
-  }, [onRowDragEnd]);
+    return isReadOnlyAdmin ? undefined : { rowDragManaged: true, onRowDragEnd };
+  }, [onRowDragEnd, isReadOnlyAdmin]);
 
-  const button = (
+  const button = isReadOnlyAdmin ? null : (
     <DialPrimaryButton
       iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
       label={t(ButtonsI18nKey.Add)}
@@ -214,7 +216,8 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
           {localInterceptors}
         </div>
       )}
-      {isModalOpen &&
+      {!isReadOnlyAdmin &&
+        isModalOpen &&
         createPortal(
           <AddEntitiesGrid
             modalTitle={t(InterceptorsI18nKey.Add)}

@@ -3,6 +3,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import { BasicI18nKey, ButtonsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { JSONEditorError } from '@/src/types/editor';
 
@@ -26,6 +27,7 @@ const JsonEditorInput: FC<Props> = ({
   disableValidation,
 }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const [isValid, setIsValid] = useState(false);
   const [jsonValue, setJsonValue] = useState<string | undefined>(undefined);
   const [isValidJSON, setIsValidJSON] = useState(false);
@@ -73,7 +75,7 @@ const JsonEditorInput: FC<Props> = ({
     <div className="flex flex-col gap-y-2">
       {label && <DialLabel label={label} htmlFor={elementId} />}
       <DialInputPopup
-        disabled={disabled}
+        disabled={disabled || isReadOnlyAdmin}
         open={isModalOpen}
         selectedValue={jsonValue}
         onOpen={onOpenModal}

@@ -29,9 +29,10 @@ interface Props {
   item: DefaultItemDeclaration;
   changeItem: (item: DefaultItemDeclaration, index: number) => void;
   onRemove: (index: number) => void;
+  disabled?: boolean;
 }
 
-const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
+const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove, disabled }) => {
   const t = useI18n();
   const isFirstLine = index === 0;
   const types: SelectOption[] = useMemo(
@@ -105,6 +106,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
             placeholder={t(EntityPlaceholdersI18nKey.Key)}
             labelProps={{ label: isFirstLine ? t(EntityFieldsI18nKey.key) : '' }}
             onChange={onChangeKey}
+            disabled={disabled}
           />
         </div>
         <div className="w-[384px]">
@@ -115,6 +117,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
               placeholder={t(EntityPlaceholdersI18nKey.Value)}
               labelProps={{ label: isFirstLine ? t(BasicI18nKey.Value) : '' }}
               onChange={onChangeValue}
+              disabled={disabled}
             />
           )}
           {item.type === DefaultItemType.number && (
@@ -124,6 +127,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
               placeholder={t(EntityPlaceholdersI18nKey.Value)}
               labelProps={{ label: isFirstLine ? t(BasicI18nKey.Value) : '' }}
               onChange={onChangeValue}
+              disabled={disabled}
             />
           )}
           {item.type === DefaultItemType.boolean && (
@@ -133,6 +137,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
               options={booleans}
               label={isFirstLine ? t(BasicI18nKey.Value) : ''}
               onChange={onChangeValue}
+              disabled={disabled}
             />
           )}
           {item.type === DefaultItemType.object && (
@@ -142,6 +147,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
               label={isFirstLine ? t(BasicI18nKey.Value) : ''}
               onChangeValue={onChangeValue}
               disableValidation
+              disabled={disabled}
             />
           )}
         </div>
@@ -152,12 +158,15 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
             options={types}
             label={isFirstLine ? t(EntityFieldsI18nKey.type) : ''}
             onChange={(type) => onChangeType(type as string)}
+            disabled={disabled}
           />
         </div>
       </div>
-      <div className="w-[40px] shrink-0 mt-[10px]">
-        <DialRemoveButton onClick={() => onRemove(index)} />
-      </div>
+      {!disabled && (
+        <div className="w-[40px] shrink-0 mt-[10px]">
+          <DialRemoveButton onClick={() => onRemove(index)} />
+        </div>
+      )}
     </div>
   );
 };

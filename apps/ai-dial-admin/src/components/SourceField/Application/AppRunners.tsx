@@ -13,6 +13,7 @@ import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ApplicationRoute } from '@/src/types/routes';
 import SelectAppRunnerModal from './SelectAppRunnersModal';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 
 interface Props {
   selectedValue?: string;
@@ -23,6 +24,7 @@ interface Props {
 
 const AppRunners: FC<Props> = ({ selectedValue, runners, onChangeValue, isEntityImmutable = false }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const currentLocale = useCurrentLocale();
   const { dispatch } = useSaveValidationContext();
 
@@ -78,6 +80,7 @@ const AppRunners: FC<Props> = ({ selectedValue, runners, onChangeValue, isEntity
       required
       id="sourceEntity"
       className="w-full"
+      disabled={isReadOnlyAdmin}
       options={dropdownItems}
       label={t(EntitiesI18nKey.AppRunner)}
       placeholder={t(EntityPlaceholdersI18nKey.SelectAppRunner)}
@@ -89,6 +92,7 @@ const AppRunners: FC<Props> = ({ selectedValue, runners, onChangeValue, isEntity
         <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-2')}>
           <DialLabel label={t(EntitiesI18nKey.AppRunner)} required htmlFor="sourceEntity" />
           <DialInputPopup
+            disabled={isReadOnlyAdmin}
             emptyValueText={t(EntitiesI18nKey.NoApplicationRunners)}
             open={isModalOpen}
             onOpen={onOpenModal}

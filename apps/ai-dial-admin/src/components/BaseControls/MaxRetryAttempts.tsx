@@ -2,16 +2,19 @@ import { DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 import { useCallback } from 'react';
 
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 
 interface Props<T> {
   entity?: T;
-  readonly?: boolean;
+  disabled?: boolean;
   onChangeEntity: (entity: T) => void;
 }
 
-const MaxRetryAttempts = <T extends { maxRetryAttempts?: number }>({ entity, onChangeEntity, readonly }: Props<T>) => {
+const MaxRetryAttempts = <T extends { maxRetryAttempts?: number }>({ entity, onChangeEntity, disabled }: Props<T>) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  const isReadonly = disabled || isReadOnlyAdmin;
 
   const items: SelectOption[] = [
     { value: '1', label: '1' },
@@ -31,7 +34,7 @@ const MaxRetryAttempts = <T extends { maxRetryAttempts?: number }>({ entity, onC
 
   return (
     <DialSelectField
-      disabled={readonly}
+      disabled={isReadonly}
       id="maxRetryAttempts"
       containerClassName="w-[180px]"
       label={t(EntityFieldsI18nKey.maxRetryAttempts)}

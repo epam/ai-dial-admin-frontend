@@ -16,9 +16,10 @@ interface Props {
   prefix?: string;
   onChange: (model: DialModel) => void;
   isModal?: boolean;
+  disabled?: boolean;
 }
 
-const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
+const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal, disabled }) => {
   const t = useI18n();
 
   const modelTypeRadio: RadioButtonWithContent[] = [
@@ -105,6 +106,7 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
           fieldTitle={t(EntityFieldsI18nKey.type)}
           orientation={RadioGroupOrientation.Row}
           onChange={onChangeType}
+          disabled={disabled}
         />
       )}
 
@@ -118,6 +120,7 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
           prefix={prefix}
           onChange={onChangePath}
           isFullWidth={isModal}
+          disabled={disabled}
         />
       ) : (
         <ComplexInput
@@ -132,6 +135,7 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
           error={endpointError?.text}
           invalid={!!endpointError}
           copyable={false}
+          disabled={disabled}
         />
       )}
     </div>

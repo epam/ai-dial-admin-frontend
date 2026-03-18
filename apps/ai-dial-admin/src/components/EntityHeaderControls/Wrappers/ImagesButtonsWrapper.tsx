@@ -21,6 +21,7 @@ import {
 } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
@@ -60,6 +61,7 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
   jsonConfiguration,
 }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { showNotification } = useNotification();
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
@@ -180,7 +182,9 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
   return (
     <>
       <div className={containerClassNames}>
-        {isChanged ? (
+        {isReadOnlyAdmin ? (
+          !jsonConfiguration?.hideJsonEditorButton && <JsonToggles {...jsonConfiguration} />
+        ) : isChanged ? (
           <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
             <ChangedEntityButtons
               disableSave={isDisableSave}

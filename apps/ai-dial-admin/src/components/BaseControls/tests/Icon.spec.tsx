@@ -16,8 +16,8 @@ describe('EntityIcon', () => {
     expect(screen.getByText(EntityFieldsI18nKey.iconUrl)).toBeInTheDocument();
   });
 
-  test('renders Field and None if no iconUrl and readonly', () => {
-    render(<IconControl readonly />);
+  test('renders Field and None if no iconUrl and disabled', () => {
+    render(<IconControl disabled />);
     expect(screen.getByText(BasicI18nKey.None)).toBeInTheDocument();
   });
 });

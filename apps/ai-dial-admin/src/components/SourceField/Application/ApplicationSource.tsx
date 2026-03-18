@@ -16,6 +16,7 @@ import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getSchemaDefaults } from '@/src/utils/schema';
 import { SourceTypes } from './constants';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 
 interface Props {
   entity: DialApplication;
@@ -28,6 +29,7 @@ interface Props {
 
 const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, isEntityImmutable, isModal }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const sources: SelectOption[] = useMemo(
     () => [
       {
@@ -119,6 +121,7 @@ const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, i
         id="sourceType"
         options={sources}
         containerClassName="w-[180px]"
+        disabled={isReadOnlyAdmin}
         label={t(EntitiesI18nKey.SourceType)}
         onChange={(source) => onChangeSource(source as string)}
       />
@@ -126,6 +129,7 @@ const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, i
         <div className="flex flex-col gap-y-8">
           <CompletionEndpointControl
             required
+            disabled={isReadOnlyAdmin}
             endpoint={entity.endpoint}
             onChange={onChangeEndpoint}
             isFullWidth={!isEntityImmutable}
@@ -133,8 +137,8 @@ const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, i
           />
           {isEntityImmutable && (
             <>
-              <ViewerUrlControl endpoint={entity.viewerUrl} onChange={onChangeViewerUrl} />
-              <EditorUrlControl endpoint={entity.editorUrl} onChange={onChangeEditorUrl} />
+              <ViewerUrlControl endpoint={entity.viewerUrl} disabled={isReadOnlyAdmin} onChange={onChangeViewerUrl} />
+              <EditorUrlControl endpoint={entity.editorUrl} disabled={isReadOnlyAdmin} onChange={onChangeEditorUrl} />
             </>
           )}
         </div>
