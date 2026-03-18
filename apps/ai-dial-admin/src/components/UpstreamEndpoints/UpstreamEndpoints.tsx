@@ -21,7 +21,7 @@ interface Props {
 const UpstreamEndpoints: FC<Props> = ({ disabled, entity, onChangeEntity, isKeyOptional, required }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
-  const effectiveDisabled = disabled || isReadOnlyAdmin;
+  const isDisabled = disabled || isReadOnlyAdmin;
 
   const onAddEndpoint = useCallback(() => {
     const upstreams = [...(entity.upstreams || []), {}];
@@ -58,7 +58,7 @@ const UpstreamEndpoints: FC<Props> = ({ disabled, entity, onChangeEntity, isKeyO
         {entity.upstreams == null || entity.upstreams.length === 0 ? (
           <Endpoint
             key={0}
-            disabled={effectiveDisabled}
+            disabled={isDisabled}
             endpoint={{}}
             index={0}
             isKeyOptional={isKeyOptional}
@@ -69,7 +69,7 @@ const UpstreamEndpoints: FC<Props> = ({ disabled, entity, onChangeEntity, isKeyO
         ) : (
           entity.upstreams?.map((endpoint, index) => (
             <Endpoint
-              disabled={effectiveDisabled}
+              disabled={isDisabled}
               key={index}
               endpoint={endpoint}
               index={index}
@@ -81,7 +81,7 @@ const UpstreamEndpoints: FC<Props> = ({ disabled, entity, onChangeEntity, isKeyO
           ))
         )}
       </div>
-      {!effectiveDisabled && (
+      {!isDisabled && (
         <div>
           <DialNeutralButton
             label={t(UpstreamEndpointsI18nKey.AddUpstream)}

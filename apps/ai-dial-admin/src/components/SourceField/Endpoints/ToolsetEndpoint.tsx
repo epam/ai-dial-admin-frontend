@@ -24,7 +24,7 @@ interface Props {
 const ToolsetEndpoint: FC<Props> = ({ entity, disabled, onChange, prefix, isModal }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
-  const effectiveDisabled = disabled || isReadOnlyAdmin;
+  const isDisabled = disabled || isReadOnlyAdmin;
   const transportOptions: SelectOption[] = [
     { value: ToolsetTransport.HTTP, label: ToolsetTransport.HTTP.toUpperCase() },
     { value: ToolsetTransport.SSE, label: ToolsetTransport.SSE.toUpperCase() },
@@ -42,7 +42,7 @@ const ToolsetEndpoint: FC<Props> = ({ entity, disabled, onChange, prefix, isModa
       ) : (
         <EndpointControl
           id="endpoint"
-          disabled={effectiveDisabled}
+          disabled={isDisabled}
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
           label={t(EntitiesI18nKey.ExternalEndpoint)}
           endpoint={entity.endpoint}
@@ -53,7 +53,7 @@ const ToolsetEndpoint: FC<Props> = ({ entity, disabled, onChange, prefix, isModa
       )}
       {!isModal && (
         <DialSelectField
-          disabled={effectiveDisabled}
+          disabled={isDisabled}
           label={t(EntityFieldsI18nKey.transport)}
           id="transport"
           containerClassName="w-[180px]"
