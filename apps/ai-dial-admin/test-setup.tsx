@@ -66,14 +66,17 @@ vi.mock('@/src/context/AppContext', () => ({
   }),
 }));
 
-vi.mock('@/src/context/SaveValidationContext', () => ({
-  SaveValidationContextProvider: ({ children }: { children: ReactNode }) => children,
-  useSaveValidationContext: () => ({
-    isValid: true,
-    dispatch: vi.fn(),
-  }),
-  ValidationActionType: { SetField: 'SET_FIELD_VALIDATION', Reset: 'RESET' },
-}));
+vi.mock('@/src/context/SaveValidationContext', () => {
+  const dispatch = vi.fn();
+  return {
+    SaveValidationContextProvider: ({ children }: { children: ReactNode }) => children,
+    useSaveValidationContext: () => ({
+      isValid: true,
+      dispatch,
+    }),
+    ValidationActionType: { SetField: 'SET_FIELD_VALIDATION', Reset: 'RESET' },
+  };
+});
 
 // ------------------ Next Image ------------------
 vi.mock('next/image', () => ({
