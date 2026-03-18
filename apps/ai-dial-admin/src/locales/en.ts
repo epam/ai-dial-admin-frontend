@@ -436,6 +436,7 @@ export default {
     Confirm: 'Confirm',
     GlobalFirewall: 'Global firewall',
     HFRegistry: 'Select from registry',
+    McpRegistry: 'Select from registry',
     TryOut: 'Try out',
   },
   Compare: {
@@ -1063,6 +1064,7 @@ export default {
     Arguments: 'Arguments',
     globalInterceptors: 'Global Interceptors',
     HFModelName: 'Hugging Face model name',
+    McpServerName: 'MCP server name',
     Resources: 'Resources',
     Configuration: 'Configuration',
     Command: 'Command',
@@ -1119,6 +1121,7 @@ export default {
     Status: 'Enter status',
     TypeBucketCopy: 'Select Bucket copy',
     HFModelName: 'Enter Hugging Face model name',
+    McpServerName: 'Enter MCP server name',
     Body: 'Enter Body',
     Order: 'Enter order number',
     ConfigurationEndpoint: 'Enter configuration endpoint',
@@ -1204,6 +1207,9 @@ export default {
     ProbePathError: 'Path should not start with /',
     VariableError: 'User can add only characters, numbers or underscore',
     HFModelName: 'Invalid Hugging Face model name',
+    McpServerName: 'Invalid MCP server name',
+    McpServerNotFound: 'MCP server not found in registry',
+    McpServerNotSupported: 'MCP server does not have a supported OCI package and transport',
     ContainSpace: 'Field may not contain spaces',
     ContainerId: 'Field may contain only lowercase letters (a–z), digits (0–9), and hyphens (-)',
     SpecialChars: 'Field may not contain special symbols',
@@ -1349,6 +1355,8 @@ export default {
     ContainersRestartWarning: '{entityType} with "Running" status will be restarted.',
     ShowRelatedContainers: 'Show containers related to this image',
     SelectModelFromRegistry: 'Select model source from registry',
+    SelectMcpServerFromRegistry: 'Select MCP server from registry',
+    McpServers: 'MCP servers',
     NoDescriptionAvailable: 'No description available for the chosen model',
     Autoscaling: {
       ScaleToZeroNever: 'Never automatically scale to zero',
@@ -1367,6 +1375,7 @@ export default {
     FromInternalAdapterImage: 'From Internal Adapter Image',
     FromInternalInterceptorImage: 'From Internal Interceptor Image',
     FromDockerImageReference: 'From Docker Image Reference',
+    FromMcpRegistry: 'From MCP Registry',
     ImageNotInstalledWarning:
       'Image not installed. This container depends on a {imageName} ({imageVersion}) image that has not been installed. Install the image to enable this container.',
     ImageBuildFailedWarning:

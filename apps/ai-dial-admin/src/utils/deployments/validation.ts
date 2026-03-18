@@ -22,6 +22,9 @@ const MIN_VARIABLE_NAME_SYMBOLS = 1;
 const MAX_VARIABLE_NAME_SYMBOLS = 253;
 const VARIABLE_NAME_REGEX = /^[-._a-zA-Z0-9]+$/;
 
+// MCP server name
+const MCP_SERVER_NAME_REGEX = /^[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+$/;
+
 // HF model name
 const HF_USERNAME_MAX_LENGTH = 42;
 const HF_MODEL_MAX_LENGTH = 96;
@@ -267,6 +270,28 @@ export const getErrorForHfModelName = (
     return {
       type: ErrorType.INVALID,
       text: t ? t(ErrorI18nKey.HFModelName) : '',
+    };
+  }
+
+  return null;
+};
+
+export const getErrorForMcpServerName = (
+  value?: string,
+  t?: (key: string, options?: Record<string, string | number>) => string,
+): FieldError | null => {
+  const trimmed = value?.trim() ?? '';
+  if (!trimmed) {
+    return {
+      type: ErrorType.EMPTY,
+      text: t ? t(ErrorI18nKey.RequiredProperty) : '',
+    };
+  }
+
+  if (!MCP_SERVER_NAME_REGEX.test(trimmed)) {
+    return {
+      type: ErrorType.INVALID,
+      text: t ? t(ErrorI18nKey.McpServerName) : '',
     };
   }
 
