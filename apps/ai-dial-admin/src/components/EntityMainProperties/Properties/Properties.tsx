@@ -17,6 +17,7 @@ interface Props<T> {
   isEntityImmutable?: boolean;
   onChangeEntity: (entity: object) => void;
   initialValues?: Partial<T>;
+  isModal?: boolean;
 }
 
 // TODO: remove this component and use EntityProperties and DeploymentProperties directly in the views

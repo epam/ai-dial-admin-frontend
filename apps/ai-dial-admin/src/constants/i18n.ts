@@ -343,6 +343,7 @@ export enum ButtonsI18nKey {
   Confirm = 'Buttons.Confirm',
   GlobalFirewall = 'Buttons.GlobalFirewall',
   HFRegistry = 'Buttons.HFRegistry',
+  McpRegistry = 'Buttons.McpRegistry',
   TryOut = 'Buttons.TryOut',
 }
 
@@ -909,6 +910,9 @@ export enum ErrorI18nKey {
   ProbePathError = 'Error.ProbePathError',
   VariableError = 'Error.VariableError',
   HFModelName = 'Error.HFModelName',
+  McpServerName = 'Error.McpServerName',
+  McpServerNotFound = 'Error.McpServerNotFound',
+  McpServerNotSupported = 'Error.McpServerNotSupported',
   ContainSpace = 'Error.ContainSpace',
   SpecialChars = 'Error.SpecialChars',
   ContainerId = 'Error.ContainerId',
@@ -959,6 +963,7 @@ export enum EntityPlaceholdersI18nKey {
   Project = 'EntityPlaceholders.Project',
   TypeBucketCopy = 'EntityPlaceholders.TypeBucketCopy',
   HFModelName = 'EntityPlaceholders.HFModelName',
+  McpServerName = 'EntityPlaceholders.McpServerName',
   ContactPoint = 'EntityPlaceholders.ContactPoint',
   Endpoint = 'EntityPlaceholders.Endpoint',
   EditorUrl = 'EntityPlaceholders.EditorUrl',
@@ -1188,6 +1193,7 @@ export enum EntityFieldsI18nKey {
   Arguments = 'EntityFields.Arguments',
   globalInterceptors = 'EntityFields.globalInterceptors',
   HFModelName = 'EntityFields.HFModelName',
+  McpServerName = 'EntityFields.McpServerName',
   Resources = 'EntityFields.Resources',
   StartupProbe = 'EntityFields.StartupProbe',
   Configuration = 'EntityFields.Configuration',
@@ -1325,6 +1331,8 @@ export enum ContainersI18nKey {
   ContainersRestartWarning = 'Containers.ContainersRestartWarning',
   ShowRelatedContainers = 'Containers.ShowRelatedContainers',
   SelectModelFromRegistry = 'Containers.SelectModelFromRegistry',
+  SelectMcpServerFromRegistry = 'Containers.SelectMcpServerFromRegistry',
+  McpServers = 'Containers.McpServers',
   NoDescriptionAvailable = 'Containers.NoDescriptionAvailable',
   ScaleToZeroNever = 'Containers.Autoscaling.ScaleToZeroNever',
   ScaleToZeroAfter5Minutes = 'Containers.Autoscaling.ScaleToZeroAfter5Minutes',
@@ -1341,6 +1349,7 @@ export enum ContainersI18nKey {
   FromInternalAdapterImage = 'Containers.FromInternalAdapterImage',
   FromInternalInterceptorImage = 'Containers.FromInternalInterceptorImage',
   FromDockerImageReference = 'Containers.FromDockerImageReference',
+  FromMcpRegistry = 'Containers.FromMcpRegistry',
   ImageNotInstalledWarning = 'Containers.ImageNotInstalledWarning',
   ImageBuildFailedWarning = 'Containers.ImageBuildFailedWarning',
   InstallImage = 'Containers.InstallImage',
@@ -1380,6 +1389,7 @@ export enum EnvVariablesI18nKey {
   MountTypeSecureFile = 'EnvVariables.MountTypeSecureFile',
   MountTypeSecureContent = 'EnvVariables.MountTypeSecureContent',
   NoFileSelected = 'EnvVariables.NoFileSelected',
+  DuplicateName = 'EnvVariables.DuplicateName',
 }
 
 export enum ApplicationsI18nKey {

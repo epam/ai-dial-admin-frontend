@@ -9,6 +9,7 @@ import { createContainer } from '@/src/app/actions/deployments';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import { ButtonsI18nKey, ContainersI18nKey, CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
@@ -33,6 +34,7 @@ const HeaderButtons: FC<Props> = ({ route, names }) => {
   const router = useRouter();
   const isTabletScreen = useIsTabletScreen();
   const { showNotification } = useNotification();
+  const { featureFlags } = useAppContext();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType>();
@@ -73,6 +75,11 @@ const HeaderButtons: FC<Props> = ({ route, names }) => {
     [t, openHFServingModal, openNIMServingModal],
   );
 
+  const openMcpRegistryModal = useCallback(() => {
+    setIsModalOpen(true);
+    setModalType(ModalType.createMcpRegistry);
+  }, []);
+
   const mcpDropdownItems: DropdownItem[] = useMemo(
     () => [
       {
@@ -85,8 +92,17 @@ const HeaderButtons: FC<Props> = ({ route, names }) => {
         label: t(ContainersI18nKey.FromDockerImageReference),
         onClick: () => handleModalOpen(ModalType.createMcpDockerImage),
       },
+      ...(featureFlags.mcpRegistryEnabled
+        ? [
+            {
+              key: 'mcp-registry',
+              label: t(ContainersI18nKey.FromMcpRegistry),
+              onClick: () => openMcpRegistryModal(),
+            },
+          ]
+        : []),
     ],
-    [t, handleModalOpen],
+    [t, handleModalOpen, openMcpRegistryModal, featureFlags.mcpRegistryEnabled],
   );
 
   const adapterDropdownItems: DropdownItem[] = useMemo(
@@ -265,6 +281,25 @@ const HeaderButtons: FC<Props> = ({ route, names }) => {
             names={names}
             type={CONTAINER_TYPE.INTERCEPTOR}
             sourceType={CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE}
+          />,
+          document.body,
+        )}
+      {isModalOpen &&
+        modalType === ModalType.createMcpRegistry &&
+        createPortal(
+          <ServingCreate
+            header={t(ContainersI18nKey.CreateModalTitle, {
+              type: getTranslatedType(route, t),
+              entityType: getTranslatedDeploymentType(route, t),
+            })}
+            isModalOpen={isModalOpen}
+            onClose={handleModalClose}
+            onApply={onCreateContainer}
+            route={route}
+            names={names}
+            type={CONTAINER_TYPE.MCP}
+            sourceType={CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE}
+            templateOptions={{ mcpRegistry: true }}
           />,
           document.body,
         )}

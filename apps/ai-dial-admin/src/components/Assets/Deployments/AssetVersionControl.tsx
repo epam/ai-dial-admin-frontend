@@ -69,6 +69,7 @@ const AssetVersionControl: FC<Props> = ({
         const newAsset = {
           ...asset,
           version,
+          displayVersion: version,
           path,
         };
         onChangeAsset?.(newAsset);

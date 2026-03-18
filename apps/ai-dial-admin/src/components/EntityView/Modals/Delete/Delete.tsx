@@ -13,6 +13,7 @@ import {
 } from '@epam/ai-dial-ui-kit';
 import { useRouter } from 'next/navigation';
 
+import { removeTryoutResponseFromStorage } from '@/src/components/TestSuites/utils/tryout-storage';
 import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -23,6 +24,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { isAssetView, isBuildersView } from '@/src/utils/is-asset-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import { getNameVersionFromPrompt } from '@/src/utils/prompts/versions';
 import { AllVersionValue } from './constants';
 import RelatedArtefacts from './RelatedArtefact';
 import { getConfirmation, getNotificationDescription, getNotificationTitle, getTitle } from './utils';
@@ -114,7 +116,13 @@ const DeleteConfirmationModal = <T extends Artefact>({
           : existingVersions?.map((version) => getEntityPath(view, entity, true, version)) || [];
     }
 
-    const promises = entityKeys.map((entityKey) => getReqRef.current(onRemoveEntity, entityKey, etag));
+    const promises = entityKeys.map((entityKey) =>
+      getReqRef.current(
+        onRemoveEntity,
+        entityKey,
+        getNameVersionFromPrompt(entityKey).version === entity.version ? etag : undefined,
+      ),
+    );
 
     Promise.all(promises)
       .then((resArr) => {
@@ -123,6 +131,9 @@ const DeleteConfirmationModal = <T extends Artefact>({
         resArr.forEach((res, index) => {
           if (res.success) {
             showSuccessNotification(entityKeys[index]);
+            if (view === ApplicationRoute.TestSuites && id) {
+              removeTryoutResponseFromStorage(id);
+            }
           } else {
             isAllSuccess = false;
             showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
@@ -148,6 +159,7 @@ const DeleteConfirmationModal = <T extends Artefact>({
   }, [
     view,
     entity,
+    id,
     onRemoveEntity,
     onCloseModal,
     onResetEntity,
