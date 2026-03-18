@@ -39,6 +39,7 @@ export default async function Layout({ children, params }: { children: ReactNode
   const featureFlags = {
     dashboardEnabled: !process.env.DISABLE_MENU_ITEMS?.toLowerCase().includes('dashboard'),
     deploymentsEnabled: isValueTruthy(process.env.DEPLOYMENTS_ENABLED),
+    mcpRegistryEnabled: isValueTruthy(process.env.MCP_REGISTRY_ENABLED),
   };
 
   const themesConfiguration = await themesApi.getThemesConfiguration();
