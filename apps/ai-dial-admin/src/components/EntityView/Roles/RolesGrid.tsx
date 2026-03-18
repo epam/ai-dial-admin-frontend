@@ -23,12 +23,13 @@ interface Props {
   onChangeTokensValue?: (value: number, data: DialRole, token: string) => void;
   onOpenAddModal?: () => void;
   onOpenInNewTab: (role?: DialRole) => void;
-  onRemoveRole: (role?: DialRole) => void;
+  onRemoveRole?: (role?: DialRole) => void;
   onResetAllRolesToDefault: () => void;
-  onResetToDefaultRole: (role?: DialRole) => void;
-  onSetNoLimits: (role?: DialRole) => void;
+  onResetToDefaultRole?: (role?: DialRole) => void;
+  onSetNoLimits?: (role?: DialRole) => void;
   isResetToDefaultHidden: (api: GridApi, node: IRowNode) => boolean;
   isSetNoLimitsHidden: (api: GridApi, node: IRowNode) => boolean;
+  isReadOnlyAdmin?: boolean;
 }
 
 const RolesGrid: FC<Props> = ({
@@ -46,6 +47,7 @@ const RolesGrid: FC<Props> = ({
   isResetToDefaultHidden,
   isSetNoLimitsHidden,
   isSkipRefresh,
+  isReadOnlyAdmin,
 }) => {
   const t = useI18n();
   const gridApiRef = useRef<GridApi | null>(null);
@@ -61,6 +63,7 @@ const RolesGrid: FC<Props> = ({
     isResetToDefaultHidden,
     isSetNoLimitsHidden,
     view,
+    isReadOnlyAdmin,
   );
 
   const onGridReady = (event: GridReadyEvent) => {
@@ -103,23 +106,25 @@ const RolesGrid: FC<Props> = ({
           <h1 className="mr-3">
             {t(TabsI18nKey.Roles)}: {data.length}
           </h1>
-          <DialSwitch
-            isOn={!entity.isPublic}
-            label={t(RolesI18nKey.AvailableSpecificRoles)}
-            switchId="specificRoles"
-            onChange={onSwitchSpecificRoles}
-          />
+          {!isReadOnlyAdmin && (
+            <DialSwitch
+              isOn={!entity.isPublic}
+              label={t(RolesI18nKey.AvailableSpecificRoles)}
+              switchId="specificRoles"
+              onChange={onSwitchSpecificRoles}
+            />
+          )}
         </div>
 
         <div className="flex flex-row gap-3">
-          {isResetAvailable(entity) && (
+          {!isReadOnlyAdmin && isResetAvailable(entity) && (
             <DialGhostButton
               iconBefore={<IconReload {...BASE_BUTTON_ICON_PROPS} />}
               label={t(RolesI18nKey.ResetToDefaultLimits)}
               onClick={onResetAllRolesToDefault}
             />
           )}
-          {!entity.isPublic && (
+          {!isReadOnlyAdmin && !entity.isPublic && onOpenAddModal && (
             <DialPrimaryButton
               iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
               label={t(ButtonsI18nKey.Add)}

@@ -16,9 +16,11 @@ interface Props<T> {
   view?: ApplicationRoute;
   isModal?: boolean;
   prefix?: string;
+  disabled?: boolean;
 }
 
-const Endpoints = <T extends object>({ entity, onChange, view, isModal, prefix }: Props<T>) => {
+const Endpoints = <T extends object>({ entity, onChange, view, isModal, prefix, disabled }: Props<T>) => {
+  const toolsetDisabled = (entity as Toolset).source?.$type === SOURCE_TYPE.CONTAINER || disabled;
   return (
     <>
       {view === ApplicationRoute.Models && (
@@ -27,12 +29,13 @@ const Endpoints = <T extends object>({ entity, onChange, view, isModal, prefix }
           onChange={onChange as (entity: DialModel) => void}
           isModal={isModal}
           prefix={prefix}
+          disabled={disabled}
         />
       )}
       {view === ApplicationRoute.Toolsets && (
         <ToolsetEndpoint
           entity={entity as Toolset}
-          disabled={(entity as Toolset).source?.$type === SOURCE_TYPE.CONTAINER}
+          disabled={toolsetDisabled}
           onChange={onChange as (entity: Toolset) => void}
           isModal={isModal}
           prefix={prefix}
@@ -44,6 +47,7 @@ const Endpoints = <T extends object>({ entity, onChange, view, isModal, prefix }
           onChange={onChange as (entity: DialInterceptor) => void}
           prefix={prefix}
           isModal={isModal}
+          disabled={disabled}
         />
       )}
       {view === ApplicationRoute.Adapters && (
@@ -52,6 +56,7 @@ const Endpoints = <T extends object>({ entity, onChange, view, isModal, prefix }
           onChange={onChange as (entity: DialAdapter) => void}
           prefix={prefix}
           isModal={isModal}
+          disabled={disabled}
         />
       )}
     </>

@@ -23,7 +23,7 @@ import WarningIcon from './WarningIcon';
 
 interface Props {
   index: number;
-  readonly?: boolean;
+  disabled?: boolean;
   endpoint: DialModelEndpoint;
   isKeyOptional?: boolean;
   required?: boolean;
@@ -32,7 +32,7 @@ interface Props {
 }
 
 const Endpoint: FC<Props> = ({
-  readonly,
+  disabled,
   index,
   endpoint,
   isKeyOptional,
@@ -120,7 +120,7 @@ const Endpoint: FC<Props> = ({
           className={classNames('flex flex-col mt-4 gap-y-4 lg:flex-row lg:gap-x-2 lg:mt-0', isCollapsed && 'hidden')}
         >
           <EndpointControl
-            disabled={readonly}
+            disabled={disabled}
             id={`upstreamEndpoints-${index}`}
             endpoint={endpoint.endpoint}
             placeholder={t(EntityPlaceholdersI18nKey.UpstreamEndpoint)}
@@ -131,7 +131,7 @@ const Endpoint: FC<Props> = ({
           />
 
           <DialPasswordInput
-            disabled={readonly}
+            disabled={disabled}
             id={`key-${index}`}
             value={endpoint.key}
             placeholder={t(EntityPlaceholdersI18nKey.UpstreamKey)}
@@ -142,7 +142,7 @@ const Endpoint: FC<Props> = ({
 
           <DialNumberInput
             id={`weight-${index}`}
-            disabled={readonly}
+            disabled={disabled}
             value={endpoint.weight}
             labelProps={{ label: isFirstLine || isTablet ? t(EntityFieldsI18nKey.weight) : '' }}
             containerClassName="w-[120px]"
@@ -152,7 +152,7 @@ const Endpoint: FC<Props> = ({
 
           <DialNumberInput
             id={`tier-${index}`}
-            disabled={readonly}
+            disabled={disabled}
             value={endpoint.tier}
             labelProps={{ label: isFirstLine || isTablet ? t(EntityFieldsI18nKey.tier) : '' }}
             containerClassName="w-[120px]"
@@ -163,12 +163,12 @@ const Endpoint: FC<Props> = ({
           <ExtraDataField
             label={isFirstLine || isTablet ? t(EntityFieldsI18nKey.extraData) : ''}
             endpoint={endpoint}
-            disabled={readonly}
+            disabled={disabled}
             onChangeExtraData={onChangeExtraData}
           />
         </div>
       </div>
-      {!readonly && (
+      {!disabled && (
         <div className="w-[40px] shrink-0">
           <DialRemoveButton onClick={onRemove} className={removeButtonClassName} aria-label="remove" />
         </div>

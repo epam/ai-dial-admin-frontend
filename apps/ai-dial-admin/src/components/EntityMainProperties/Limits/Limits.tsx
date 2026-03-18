@@ -10,9 +10,10 @@ interface Props {
   limits?: DialRoleLimits;
   isCostInputs?: boolean;
   onChangeLimits: (limits: DialRoleLimits) => void;
+  disabled?: boolean;
 }
 
-const LimitsControl: FC<Props> = ({ limits, onChangeLimits, ...props }) => {
+const LimitsControl: FC<Props> = ({ limits, onChangeLimits, disabled, ...props }) => {
   const t = useI18n();
 
   return (
@@ -23,6 +24,7 @@ const LimitsControl: FC<Props> = ({ limits, onChangeLimits, ...props }) => {
         limits={limits}
         label={t(RolesI18nKey.PerMinute)}
         onChange={onChangeLimits}
+        disabled={disabled}
         {...props}
       />
 
@@ -32,6 +34,7 @@ const LimitsControl: FC<Props> = ({ limits, onChangeLimits, ...props }) => {
         limits={limits}
         label={t(RolesI18nKey.PerDay)}
         onChange={onChangeLimits}
+        disabled={disabled}
         {...props}
       />
 
@@ -41,6 +44,7 @@ const LimitsControl: FC<Props> = ({ limits, onChangeLimits, ...props }) => {
         limits={limits}
         label={t(RolesI18nKey.PerWeek)}
         onChange={onChangeLimits}
+        disabled={disabled}
         {...props}
       />
 
@@ -50,6 +54,7 @@ const LimitsControl: FC<Props> = ({ limits, onChangeLimits, ...props }) => {
         limits={limits}
         label={t(RolesI18nKey.PerMonth)}
         onChange={onChangeLimits}
+        disabled={disabled}
         {...props}
       />
     </div>

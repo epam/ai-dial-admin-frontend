@@ -3,11 +3,12 @@
 import { FC, useEffect, useState } from 'react';
 import { DialSwitch } from '@epam/ai-dial-ui-kit';
 
+import LimitsControl from '@/src/components/EntityMainProperties/Limits/Limits';
 import { UNLIMITED_VALUE } from '@/src/constants/role';
 import { RolesI18nKey } from '@/src/constants/i18n';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialRole } from '@/src/models/dial/role';
-import LimitsControl from '@/src/components/EntityMainProperties/Limits/Limits';
 
 interface Props {
   selectedRole: DialRole;
@@ -16,6 +17,7 @@ interface Props {
 
 const RoleCostLimit: FC<Props> = ({ selectedRole, onChangeRole }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const [costLimitExist, setCostLimitExist] = useState<boolean>(false);
 
   useEffect(() => {
@@ -48,6 +50,7 @@ const RoleCostLimit: FC<Props> = ({ selectedRole, onChangeRole }) => {
         label={t(RolesI18nKey.SetCostLimits)}
         isOn={costLimitExist}
         onChange={toggleCostLimit}
+        disabled={isReadOnlyAdmin}
       />
       {costLimitExist && (
         <div className="mt-3 pl-[46px]">
@@ -56,6 +59,7 @@ const RoleCostLimit: FC<Props> = ({ selectedRole, onChangeRole }) => {
             controlClassName="w-[240px]"
             isCostInputs={true}
             onChangeLimits={(costLimit) => onChangeRole({ ...selectedRole, costLimit })}
+            disabled={isReadOnlyAdmin}
           />
         </div>
       )}

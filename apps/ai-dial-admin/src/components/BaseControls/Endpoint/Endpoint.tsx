@@ -3,6 +3,7 @@ import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 
 import ComplexInput from '@/src/components/Common/ComplexInput/ComplexInput';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
 import { addTrailingSlash, removeSlash } from '@/src/utils/url';
@@ -34,9 +35,12 @@ const EndpointControl: FC<Props> = ({
   label,
   onChange,
   isFullWidth = false,
+  disabled,
   ...props
 }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  const isDisabled = disabled || isReadOnlyAdmin;
   const { dispatch, resetCounter } = useSaveValidationContext();
   const [endpointError, setEndpointError] = useState<FieldError | null>(null);
 
@@ -96,9 +100,10 @@ const EndpointControl: FC<Props> = ({
       copyable
       fullValue={fullValue}
       label={label}
+      disabled={isDisabled}
       {...props}
     />
-  ) : props.disabled ? (
+  ) : isDisabled ? (
     <ReadonlyInput
       containerClassName={isFullWidth ? 'w-full' : STANDARD_CONTROL_WIDTH}
       id={id}
@@ -115,6 +120,7 @@ const EndpointControl: FC<Props> = ({
       onChange={onChangeEndpoint}
       labelProps={{ label, required }}
       containerClassName={isFullWidth ? 'w-full' : STANDARD_CONTROL_WIDTH}
+      disabled={isDisabled}
       {...props}
     />
   );
