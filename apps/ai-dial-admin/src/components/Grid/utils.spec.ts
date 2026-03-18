@@ -30,10 +30,7 @@ describe('Grid :: updateColumnVisibilityInStorage', () => {
     ];
     updateColumnVisibilityInStorage(ApplicationRoute.Models, colDefs);
 
-    expect(setToLocalStorage).toHaveBeenCalledWith(
-      `${GRID_COLUMNS_KEY}${ApplicationRoute.Models}`,
-      expect.any(String),
-    );
+    expect(setToLocalStorage).toHaveBeenCalledWith(`${GRID_COLUMNS_KEY}${ApplicationRoute.Models}`, expect.any(String));
     const saved = JSON.parse(vi.mocked(setToLocalStorage).mock.calls[0][1] as string);
     expect(saved.columns[0].hide).toBe(false);
     expect(saved.columns[1].hide).toBe(true);
