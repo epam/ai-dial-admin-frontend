@@ -144,16 +144,10 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
     [setSelectedApp],
   );
 
-  const onRemove = useCallback(
-    (entity: string) => {
-      return removeApp(entity, etag);
-    },
-    [etag],
-  );
-
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <AssetHeader
+        etag={etag}
         view={ApplicationRoute.AssetsApplications}
         entity={selectedApp}
         isChanged={isChanged}
@@ -164,7 +158,7 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
         jsonConfiguration={jsonConfiguration}
         activeTab={activeTab}
         onChangeActiveTab={setActiveTab}
-        onRemove={onRemove}
+        onRemove={removeApp}
         getAssetContext={useAppsFolder}
         onChangeAsset={setSelectedApp as (asset: Asset) => void}
       />
