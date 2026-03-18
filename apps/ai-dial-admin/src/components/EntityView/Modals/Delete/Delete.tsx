@@ -22,6 +22,7 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isAssetView, isBuildersView } from '@/src/utils/is-asset-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { removeTryoutResponseFromStorage } from '@/src/components/TestSuites/utils/tryout-storage';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { AllVersionValue } from './constants';
 import RelatedArtefacts from './RelatedArtefact';
@@ -123,6 +124,9 @@ const DeleteConfirmationModal = <T extends Artefact>({
         resArr.forEach((res, index) => {
           if (res.success) {
             showSuccessNotification(entityKeys[index]);
+            if (view === ApplicationRoute.TestSuites && id) {
+              removeTryoutResponseFromStorage(id);
+            }
           } else {
             isAllSuccess = false;
             showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
@@ -148,6 +152,7 @@ const DeleteConfirmationModal = <T extends Artefact>({
   }, [
     view,
     entity,
+    id,
     onRemoveEntity,
     onCloseModal,
     onResetEntity,

@@ -36,6 +36,7 @@ interface Props {
   isEntityImmutable?: boolean;
   onChangeEntity: (entity: ChatEntity) => void;
   initialValues?: Partial<ChatEntity>;
+  isModal?: boolean;
 }
 
 const DeploymentProperties: FC<Props> = ({
@@ -47,6 +48,7 @@ const DeploymentProperties: FC<Props> = ({
   onChangeEntity,
   isEntityImmutable = false,
   initialValues,
+  isModal,
 }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
@@ -164,6 +166,7 @@ const DeploymentProperties: FC<Props> = ({
           runners={runners}
           isEntityImmutable={isEntityImmutable}
           onChangeEntity={onChangeEntity}
+          isModal={isModal}
         />
       )}
 

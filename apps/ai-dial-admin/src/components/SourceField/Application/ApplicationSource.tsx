@@ -24,9 +24,10 @@ interface Props {
   view?: ApplicationRoute;
   isEntityImmutable?: boolean;
   onChangeEntity: (entity: DialApplication) => void;
+  isModal?: boolean;
 }
 
-const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, isEntityImmutable }) => {
+const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, isEntityImmutable, isModal }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const sources: SelectOption[] = useMemo(
@@ -132,6 +133,7 @@ const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, i
             endpoint={entity.endpoint}
             onChange={onChangeEndpoint}
             isFullWidth={!isEntityImmutable}
+            isModal={isModal}
           />
           {isEntityImmutable && (
             <>
