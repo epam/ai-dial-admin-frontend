@@ -126,16 +126,10 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
     [selectedToolset, originalToolset, etag, showNotification, t, router, fetchFiles],
   );
 
-  const onRemove = useCallback(
-    (entity: string) => {
-      return removeToolset(entity, etag);
-    },
-    [etag],
-  );
-
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <AssetHeader
+        etag={etag}
         view={ApplicationRoute.AssetsToolsets}
         entity={selectedToolset}
         isChanged={isChanged}
@@ -146,7 +140,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
         jsonConfiguration={jsonConfiguration}
         activeTab={activeTab}
         onChangeActiveTab={setActiveTab}
-        onRemove={onRemove}
+        onRemove={removeToolset}
         getAssetContext={useToolsetFolder}
         onChangeAsset={setSelectedToolset as (asset: Asset) => void}
       >
