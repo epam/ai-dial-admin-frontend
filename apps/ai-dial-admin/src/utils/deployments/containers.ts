@@ -57,10 +57,15 @@ export const getContainerTypeByRoute = (route: ApplicationRoute): CONTAINER_TYPE
   }
 };
 
+export interface ContainerTemplateOptions {
+  mcpRegistry?: boolean;
+}
+
 export const getContainerTemplate = (
   type: CONTAINER_TYPE,
   defaults?: ResourcesDefaults,
   sourceType?: CONTAINER_SOURCE_TYPE,
+  options?: ContainerTemplateOptions,
 ): Container | null => {
   if (!type) {
     return null;
@@ -92,7 +97,13 @@ export const getContainerTemplate = (
     return {
       ...template,
       ...(sourceType === CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE
-        ? { source: { $type: CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE, imageReference: '' } }
+        ? {
+            source: {
+              $type: CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE,
+              imageReference: '',
+              ...(options?.mcpRegistry ? { externalRegistryRef: { $type: 'mcp-registry', packageName: '' } } : {}),
+            },
+          }
         : {}),
       transport: CONTAINER_TRANSPORT.HTTP,
       scaling: DEFAULT_SCALING,

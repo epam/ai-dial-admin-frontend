@@ -5,6 +5,9 @@ import HeaderButtons from '../HeaderButtons';
 import { ApplicationRoute } from '@/src/types/routes';
 
 vi.mock('@/src/app/actions/deployments');
+vi.mock('@/src/context/AppContext', () => ({
+  useAppContext: () => ({ featureFlags: { mcpRegistryEnabled: true } }),
+}));
 
 describe('HeaderButtons', () => {
   const mockToggleColumnsPanel = vi.fn();
@@ -21,6 +24,18 @@ describe('HeaderButtons', () => {
     render(<HeaderButtons {...defaultProps} />);
 
     expect(screen.getByRole('button', { name: /create/i })).toBeInTheDocument();
+  });
+
+  test('renders 3 dropdown items for MCP containers route', async () => {
+    const user = userEvent.setup();
+    render(<HeaderButtons {...defaultProps} route={ApplicationRoute.McpContainers} />);
+
+    const createButton = screen.getByRole('button', { name: /create/i });
+    await user.click(createButton);
+
+    expect(screen.getByText('Containers.FromInternalMcpImage')).toBeInTheDocument();
+    expect(screen.getByText('Containers.FromDockerImageReference')).toBeInTheDocument();
+    expect(screen.getByText('Containers.FromMcpRegistry')).toBeInTheDocument();
   });
 
   test.skip('opens modal when create button clicked', async () => {
