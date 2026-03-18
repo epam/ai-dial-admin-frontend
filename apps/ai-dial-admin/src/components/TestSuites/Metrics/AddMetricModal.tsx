@@ -16,6 +16,7 @@ import classNames from 'classnames';
 import { getMetricLatestVersion } from '@/src/app/[lang]/test-suites/actions';
 import { jsonSchemaToFields, SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
 import Search from '@/src/components/Common/Search/Search';
+import { generateMetricDefaultBindings } from '@/src/components/TestSuites/utils/metric-bindings';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Metric } from '@/src/models/evaluation/metric';
@@ -103,11 +104,7 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, metrics, onClose, onConfirm })
           <DialPrimaryButton
             label={t(ButtonsI18nKey.Confirm)}
             onClick={() =>
-              onConfirm({
-                name: selectedMetricName,
-                metricDeclarationId: selectedMetricDetails?.metricDeclarationId,
-                metricDeclarationVersionId: selectedMetricDetails?.id,
-              })
+              onConfirm(generateMetricDefaultBindings(selectedMetricName ?? '', selectedMetricDetails ?? {}))
             }
             disabled={!selectedMetricId}
           />

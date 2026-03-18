@@ -58,9 +58,11 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
   const loadMetricDetails = useCallback(
     (metric: Metric) => {
       setIsDetailsLoading(true);
+      setIsMetricsLoading(true);
       getTestSuiteMetricDetailsWithSchema(selectedTestSuite.id as string, metric.id as string).then((response) => {
         setActiveMetricDetails(response);
         setIsDetailsLoading(false);
+        setIsMetricsLoading(false);
       });
     },
     [selectedTestSuite.id],

@@ -177,4 +177,24 @@ describe('getSchemaDefaults', () => {
     expect(getSchemaDefaults(schema, undefined, { variantChoice: 0 })).toEqual({ name: null });
     expect(getSchemaDefaults(schema, undefined, { variantChoice: 1 })).toEqual({ name: '' });
   });
+
+  test('should use top-level default when property has oneOf and default (e.g. enum with oneOf)', () => {
+    const schema: JSONSchema7 = {
+      type: 'object',
+      title: 'Config',
+      properties: {
+        matcher: {
+          enum: ['citation', 'exact'],
+          type: 'string',
+          oneOf: [
+            { const: 'citation', title: 'Citation Matcher' },
+            { const: 'exact', title: 'Exact Matcher' },
+          ],
+          title: 'Matcher',
+          default: 'citation',
+        },
+      },
+    };
+    expect(getSchemaDefaults(schema)).toEqual({ matcher: 'citation' });
+  });
 });
