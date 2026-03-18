@@ -114,20 +114,19 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
         <>
           <div className="flex flex-col gap-y-3">
             <div className="flex items-center justify-between">
-           
-                <div className="flex flex-row items-center gap-x-2">
-                     <h1>{t(ButtonsI18nKey.TryOut)}</h1>
+              <div className="flex flex-row items-center gap-x-2">
+                <h1>{t(ButtonsI18nKey.TryOut)}</h1>
                 {response ? (
                   <DialGhostButton
+                    disabled={isRequestSend}
                     label={t(ButtonsI18nKey.Restart)}
                     iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}
                     onClick={onSendRequest}
                   />
                 ) : null}
-           
               </div>
 
-                     <DialCloseButton onClose={onClose} />
+              <DialCloseButton onClose={onClose} />
             </div>
             <p className="text-secondary dial-small-text">{t(TestSuitesI18nKey.TryoutWarning)}</p>
           </div>
