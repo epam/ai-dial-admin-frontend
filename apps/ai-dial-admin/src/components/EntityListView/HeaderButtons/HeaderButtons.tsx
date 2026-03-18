@@ -183,6 +183,7 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
         names={names || []}
         versionsMap={versionsMap}
         context={context}
+        isModal={true}
       />
     );
   };

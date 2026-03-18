@@ -38,6 +38,7 @@ const AdapterEndpoint: FC<Props> = ({ entity, onChange, isModal, prefix }) => {
           endpoint={entity.baseEndpoint}
           onChange={onChangeEndpoint}
           required
+          isModal={isModal}
         />
       )}
     </div>

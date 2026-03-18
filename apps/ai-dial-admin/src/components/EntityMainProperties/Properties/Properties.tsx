@@ -17,6 +17,7 @@ interface Props<T> {
   isEntityImmutable?: boolean;
   onChangeEntity: (entity: object) => void;
   initialValues?: Partial<T>;
+  isModal?: boolean;
 }
 
 // TODO: remove this component and use EntityProperties and DeploymentProperties directly in the views
@@ -27,6 +28,7 @@ const Properties = <T extends object>({
   isUniqueNameError,
   versionsMap,
   entity,
+  isModal,
   ...props
 }: Props<T>) => {
   if (isSimpleEntity(view)) {
@@ -40,6 +42,7 @@ const Properties = <T extends object>({
         runners={runners}
         versionsMap={versionsMap}
         entity={entity as AssetWithVersion}
+        isModal={isModal}
         {...props}
       />
     );
@@ -51,6 +54,7 @@ const Properties = <T extends object>({
       view={view}
       runners={runners}
       isUniqueNameError={isUniqueNameError}
+      isModal={isModal}
       {...props}
     />
   );

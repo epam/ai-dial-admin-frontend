@@ -16,6 +16,7 @@ export interface EndpointControlProps {
   prefix?: string;
   disabled?: boolean;
   isFullWidth?: boolean;
+  isModal?: boolean;
   onChange?: (endpoint?: string) => void;
 }
 
@@ -24,6 +25,7 @@ export interface Props extends EndpointControlProps {
   label: string;
   placeholder: string;
   iconAfter?: ReactNode;
+  isModal?: boolean;
 }
 
 const EndpointControl: FC<Props> = ({
@@ -34,6 +36,7 @@ const EndpointControl: FC<Props> = ({
   label,
   onChange,
   isFullWidth = false,
+  isModal = false,
   ...props
 }) => {
   const t = useI18n();
@@ -46,10 +49,12 @@ const EndpointControl: FC<Props> = ({
   }, [endpoint, prefix]);
 
   const validateEndpoint = useCallback(
-    (value?: string | null) => {
+    (value?: string | null, shouldShownError = true) => {
       const error = getUrlError(prefix ? `${prefix}${value}` : value, t, required);
-      setEndpointError(error);
       dispatch({ type: ValidationActionType.SetField, field: id, isValid: !error });
+      if (shouldShownError) {
+        setEndpointError(error);
+      }
     },
     [dispatch, id, required, t, prefix],
   );
@@ -65,7 +70,7 @@ const EndpointControl: FC<Props> = ({
 
   useEffect(() => {
     if (required) {
-      validateEndpoint(endpoint);
+      validateEndpoint(endpoint, !isModal);
     } else {
       dispatch({ type: ValidationActionType.SetField, field: id, isValid: true });
     }

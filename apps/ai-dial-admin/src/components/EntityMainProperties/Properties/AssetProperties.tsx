@@ -25,6 +25,7 @@ interface Props {
   onChangeEntity: (entity: object) => void;
   runners?: DialApplicationScheme[];
   initialValues?: Partial<AssetWithVersion>;
+  isModal?: boolean;
 }
 
 const AssetProperties: FC<Props> = ({
@@ -36,6 +37,7 @@ const AssetProperties: FC<Props> = ({
   versionsMap,
   runners,
   initialValues,
+  isModal,
 }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
@@ -101,10 +103,11 @@ const AssetProperties: FC<Props> = ({
           runners={runners}
           isEntityImmutable={isEntityImmutable}
           onChangeEntity={onChangeEntity}
+          isModal={isModal}
         />
       )}
       {view === ApplicationRoute.AssetsToolsets && !isEntityImmutable && (
-        <ToolsetEndpoint isModal={true} entity={entity} onChange={onChangeEntity} />
+        <ToolsetEndpoint isModal={isModal} entity={entity} onChange={onChangeEntity} />
       )}
     </div>
   );

@@ -46,6 +46,7 @@ const ToolsetEndpoint: FC<Props> = ({ entity, disabled, onChange, prefix, isModa
           onChange={(endpoint) => onChange?.({ ...entity, endpoint })}
           required
           isFullWidth={isModal}
+          isModal={isModal}
         />
       )}
       {!isModal && (
