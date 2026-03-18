@@ -44,7 +44,7 @@ import { getFormDataForImport } from '../../EntityListView/HeaderButtons/utils';
 import { FileManagerGridRow } from '@epam/ai-dial-ui-kit/dist/src/components/FileManager/FileManagerContext';
 import { useRouter } from 'next/navigation';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import { getPromptGridColumns } from './utils';
+import { getAllSelectedItemsPaths, getPromptGridColumns } from './utils';
 import { downloadJson } from '@/src/utils/download';
 import { getJsonFileName } from '@/src/utils/import/get-json-name';
 
@@ -91,21 +91,33 @@ const PromptsList: FC = () => {
     return createPrompt(emptyPrompt);
   }, []);
 
-  const handleDeleteItems = useCallback(async (fileNodes: DialDeletedItem[]) => {
-    const files = fileNodes.filter((file) => file.nodeType === DialFileNodeType.ITEM);
-    const folders = fileNodes.filter((file) => file.nodeType === DialFileNodeType.FOLDER);
+  const handleDeleteItems = useCallback(
+    async (fileNodes: DialDeletedItem[]) => {
+      const files = fileNodes.filter((file) => file.nodeType === DialFileNodeType.ITEM);
+      const folders = fileNodes.filter((file) => file.nodeType === DialFileNodeType.FOLDER);
 
-    const promises = [];
-    if (files.length > 0) {
-      const filePaths = files.map((file) => ({ path: file.sourceUrl }));
-      promises.push(bulkDeletePrompts(filePaths));
-    }
-    folders.forEach((folder) => {
-      promises.push(removeFolder(folder.sourceUrl));
-    });
+      const promises = [];
+      if (files.length > 0) {
+        const filePaths: { path: string }[] = [];
+        files.forEach((file) => {
+          const paths = getAllSelectedItemsPaths(file.sourceUrl, selectedVersionsMap);
+          filePaths.push(...paths.map((path) => ({ path: path })));
+          const prefix = file.sourceUrl.substring(0, file.sourceUrl.lastIndexOf('__'));
+          setSelectedVersionsMap({
+            ...selectedVersionsMap,
+            [prefix]: [],
+          });
+        });
+        promises.push(bulkDeletePrompts(filePaths));
+      }
+      folders.forEach((folder) => {
+        promises.push(removeFolder(folder.sourceUrl));
+      });
 
-    return Promise.all(promises);
-  }, []);
+      return Promise.all(promises);
+    },
+    [selectedVersionsMap],
+  );
 
   const handleCreatePromptModalClose = useCallback(() => {
     setIsCreatePromptModalOpen(false);
@@ -163,32 +175,40 @@ const PromptsList: FC = () => {
     [handleCreatePrompt],
   );
 
-  const handleMoveItems = useCallback((items: DialCopiedItem[], sourceFolder: string, destinationFolder: string) => {
-    const files = items.filter((file) => file.nodeType === DialFileNodeType.ITEM);
-    const folders = items.filter((file) => file.nodeType === DialFileNodeType.FOLDER);
+  const handleMoveItems = useCallback(
+    (items: DialCopiedItem[], sourceFolder: string, destinationFolder: string) => {
+      const files = items.filter((file) => file.nodeType === DialFileNodeType.ITEM);
+      const folders = items.filter((file) => file.nodeType === DialFileNodeType.FOLDER);
 
-    const promises: (Promise<ServerActionResponse> | Promise<ServerActionResponse[]>)[] = [];
-    files.forEach((file) => {
-      if (sourceFolder !== destinationFolder) {
-        // Move file
-        const newPath = file.destinationUrl.replaceAll('//', '/').split('/').slice(0, -1).join('/');
-        promises.push(movePrompts([file.sourceUrl.replaceAll('//', '/')], newPath));
-      } else {
-        // Rename file
-      }
-    });
-    folders.forEach((folder) => {
-      promises.push(
-        changeFolder(
-          folder.sourceUrl.replaceAll('//', '/'),
-          folder.destinationUrl.replaceAll('//', '/'),
-          ResourceType.PROMPT,
-        ),
-      );
-    });
+      const promises: (Promise<ServerActionResponse> | Promise<ServerActionResponse[]>)[] = [];
+      files.forEach((file) => {
+        if (sourceFolder !== destinationFolder) {
+          // Move file
+          const filePaths = [];
+          const newPath = file.destinationUrl.replaceAll('//', '/').split('/').slice(0, -1).join('/');
+          const paths = getAllSelectedItemsPaths(file.sourceUrl, selectedVersionsMap);
+          filePaths.push(...paths.map((path) => path.replaceAll('//', '/')));
+          promises.push(movePrompts(filePaths, newPath));
 
-    return Promise.all(promises);
-  }, []);
+          // promises.push(movePrompts([file.sourceUrl.replaceAll('//', '/')], newPath));
+        } else {
+          // Rename file
+        }
+      });
+      folders.forEach((folder) => {
+        promises.push(
+          changeFolder(
+            folder.sourceUrl.replaceAll('//', '/'),
+            folder.destinationUrl.replaceAll('//', '/'),
+            ResourceType.PROMPT,
+          ),
+        );
+      });
+
+      return Promise.all(promises);
+    },
+    [selectedVersionsMap],
+  );
 
   const handleImportPromptModalClose = useCallback(() => {
     setIsImportPromptModalOpen(false);
@@ -290,7 +310,14 @@ const PromptsList: FC = () => {
   );
 
   const onExport = useCallback((files: DialFile[]) => {
-    const filePaths = files.map((file) => file.path);
+    const filePaths: string[] = [];
+    (files as AssetWithVersion[]).forEach((file) => {
+      if (file.selectedVersions) {
+        filePaths.push(...file.selectedVersions.map((version) => `${file.folderId}${file.name}__${version}`));
+      } else {
+        filePaths.push(file.path);
+      }
+    });
 
     return exportPrompts(filePaths).then((res) => {
       downloadJson(res, getJsonFileName(ApplicationRoute.Prompts));

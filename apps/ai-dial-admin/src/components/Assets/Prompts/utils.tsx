@@ -65,3 +65,10 @@ export const getPromptGridColumns = (
     UPDATED_AT_COLUMN('Updated time') as ColDef,
   ];
 };
+
+export const getAllSelectedItemsPaths = (basePath: string, selectedVersions: Record<string, string[]>): string[] => {
+  const prefix = basePath.substring(0, basePath.lastIndexOf('__'));
+  const versions = selectedVersions?.[prefix];
+
+  return versions ? versions.map((v) => `${prefix}__${v}`) : [basePath];
+};
