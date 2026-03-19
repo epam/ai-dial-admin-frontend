@@ -612,6 +612,16 @@ export enum TelemetryI18nKey {
   NoTracesTitle = 'Telemetry.UsageLog.NoTracesTitle',
   ConversationsTitle = 'Telemetry.UsageLog.ConversationsTitle',
   NoConversationsTitle = 'Telemetry.UsageLog.NoConversationsTitle',
+  ViewByLabel = 'Telemetry.ViewByLabel',
+  ViewByChat = 'Telemetry.ViewBy.Chat',
+  ViewByMcp = 'Telemetry.ViewBy.Mcp',
+  TotalMcpCalls = 'Telemetry.TotalMcpCalls',
+  TotalToolCalls = 'Telemetry.TotalToolCalls',
+  McpConsumption = 'Telemetry.McpConsumption',
+  ToolsConsumption = 'Telemetry.ToolsConsumption',
+  CallsByDeployment = 'Telemetry.CallsByDeployment',
+  RequestPerMcpUsage = 'Telemetry.RequestPerMcpUsage',
+  ProjectsConsumptionMcp = 'Telemetry.ProjectsConsumptionMcp',
 }
 
 export enum RoutesI18nKey {

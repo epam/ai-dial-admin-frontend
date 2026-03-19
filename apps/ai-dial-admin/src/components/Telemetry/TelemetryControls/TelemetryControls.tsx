@@ -21,6 +21,8 @@ interface Props {
   route: ApplicationRoute;
   isCustomRange?: boolean;
   setIsCustomRange?: Dispatch<SetStateAction<boolean>>;
+  showFilters?: boolean;
+  isMcpView?: boolean;
 }
 
 const TelemetryControls: FC<Props> = ({
@@ -36,6 +38,8 @@ const TelemetryControls: FC<Props> = ({
   route,
   isCustomRange,
   setIsCustomRange,
+  showFilters = true,
+  isMcpView = false,
 }) => {
   return (
     <div className="flex w-full justify-between flex-wrap">
@@ -48,7 +52,9 @@ const TelemetryControls: FC<Props> = ({
           isCustomRange={isCustomRange}
           setIsCustomRange={setIsCustomRange}
         />
-        <Filters filters={filters} setFilters={setFilters} getData={getData} route={route} />
+        {showFilters && (
+          <Filters filters={filters} setFilters={setFilters} getData={getData} route={route} isMcpView={isMcpView} />
+        )}
       </div>
       <Refresh onChange={onRefreshTimeChange} selectedValue={selectedRefreshValue} />
     </div>
