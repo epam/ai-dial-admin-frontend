@@ -22,10 +22,6 @@ vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
   updateTestSuiteMetric: (...args: unknown[]) => mockUpdateTestSuiteMetric(...args),
 }));
 
-vi.mock('@/src/locales/client', () => ({
-  useI18n: () => (key: string) => key,
-}));
-
 vi.mock('../AddMetricModal', () => ({
   default: ({ isModalOpen, onClose, onConfirm }: any) =>
     isModalOpen ? (

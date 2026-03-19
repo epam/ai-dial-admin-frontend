@@ -6,10 +6,6 @@ import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { FormDataType } from '@/src/models/form-data';
 import ContentTypeSelect from '../components/ContentTypeSelect';
 
-vi.mock('@/src/locales/client', () => ({
-  useI18n: () => (key: string) => key,
-}));
-
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
   return {

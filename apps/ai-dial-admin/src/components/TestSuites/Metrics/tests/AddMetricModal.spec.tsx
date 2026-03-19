@@ -12,10 +12,6 @@ vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
   getMetricLatestVersion: (...args: unknown[]) => mockGetMetricLatestVersion(...args),
 }));
 
-vi.mock('@/src/locales/client', () => ({
-  useI18n: () => (key: string) => key,
-}));
-
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   DialPopup: ({ children, open, header, footer }: any) =>
     open ? (

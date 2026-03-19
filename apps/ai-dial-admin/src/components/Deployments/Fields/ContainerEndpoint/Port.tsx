@@ -13,10 +13,12 @@ import { useI18n } from '@/src/locales/client';
 interface Props {
   container: Container;
   setContainer: (container: Container) => void;
+  disabled?: boolean;
 }
 
-const Port: FC<Props> = ({ container, setContainer }) => {
+const Port: FC<Props> = ({ container, setContainer, disabled }) => {
   const t = useI18n();
+  const isDisabled = disabled ?? isEditDisabled(container);
   const { resetCounter, dispatch } = useSaveValidationContext();
 
   const [portError, setPortError] = useState<FieldError | null>(null);
@@ -85,7 +87,7 @@ const Port: FC<Props> = ({ container, setContainer }) => {
         invalid={!!portError}
         error={portError?.text}
         onChange={onPortChange}
-        disabled={isEditDisabled(container)}
+        disabled={isDisabled}
       />
       {container.source?.$type === CONTAINER_SOURCE_TYPE.NGC_REGISTRY && (
         <DialNumberInput
@@ -97,7 +99,7 @@ const Port: FC<Props> = ({ container, setContainer }) => {
           invalid={!!grpcPortError}
           error={grpcPortError?.text}
           onChange={onGRPCPortChange}
-          disabled={isEditDisabled(container)}
+          disabled={isDisabled}
         />
       )}
     </div>

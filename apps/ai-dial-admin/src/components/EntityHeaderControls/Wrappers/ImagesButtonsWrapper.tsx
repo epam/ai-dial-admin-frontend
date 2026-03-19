@@ -183,7 +183,12 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
     <>
       <div className={containerClassNames}>
         {isReadOnlyAdmin ? (
-          !jsonConfiguration?.hideJsonEditorButton && <JsonToggles {...jsonConfiguration} />
+          <div className="flex flex-row items-center w-full gap-x-4 flex-wrap">
+            {!jsonConfiguration?.isEditorEnabled && (
+              <VersionsSelect selected={image.id} versions={versions} onChange={onVersionChange} />
+            )}
+            {!jsonConfiguration?.hideJsonEditorButton && <JsonToggles {...jsonConfiguration} />}
+          </div>
         ) : isChanged ? (
           <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
             <ChangedEntityButtons

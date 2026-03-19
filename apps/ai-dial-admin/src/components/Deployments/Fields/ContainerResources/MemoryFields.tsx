@@ -12,10 +12,12 @@ import { useI18n } from '@/src/locales/client';
 interface Props {
   container: Container;
   setContainer: (container: Container) => void;
+  disabled?: boolean;
 }
 
-const MemoryFields: FC<Props> = ({ container, setContainer }) => {
+const MemoryFields: FC<Props> = ({ container, setContainer, disabled }) => {
   const t = useI18n();
+  const isDisabled = disabled ?? isEditDisabled(container);
   const { dispatch, resetCounter } = useSaveValidationContext();
 
   const [requestError, setRequestError] = useState<FieldError | null>(null);
@@ -155,7 +157,7 @@ const MemoryFields: FC<Props> = ({ container, setContainer }) => {
         postfix="Mb"
         error={requestError?.text}
         invalid={!!requestError}
-        disabled={isEditDisabled(container)}
+        disabled={isDisabled}
         onChange={onChangeRequest}
       />
       <DialNumberInput
@@ -166,7 +168,7 @@ const MemoryFields: FC<Props> = ({ container, setContainer }) => {
         postfix="Mb"
         error={limitError?.text}
         invalid={!!limitError}
-        disabled={isEditDisabled(container)}
+        disabled={isDisabled}
         onChange={onChangeLimit}
       />
     </div>

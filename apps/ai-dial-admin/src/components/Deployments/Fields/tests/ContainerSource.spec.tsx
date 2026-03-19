@@ -25,6 +25,32 @@ describe('ContainerSource', () => {
     expect(screen.getByRole('textbox')).toBeTruthy();
   });
 
+  test('renders McpServerNameField when IMAGE_REFERENCE has externalRegistryRef', () => {
+    const container: Container = {
+      ...baseContainer,
+      source: {
+        $type: CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE,
+        imageReference: '',
+        externalRegistryRef: { $type: 'mcp-registry', packageName: '' },
+      },
+    };
+
+    render(<ContainerSource container={container} setContainer={vi.fn()} route={ApplicationRoute.McpContainers} />);
+
+    expect(screen.getByText('EntityFields.McpServerName')).toBeTruthy();
+  });
+
+  test('renders Docker Image Reference input for IMAGE_REFERENCE without externalRegistryRef', () => {
+    const container: Container = {
+      ...baseContainer,
+      source: { $type: CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE, imageReference: '' },
+    };
+
+    render(<ContainerSource container={container} setContainer={vi.fn()} route={ApplicationRoute.McpContainers} />);
+
+    expect(screen.getByRole('textbox')).toBeTruthy();
+  });
+
   test('renders Image URI input for NGC_REGISTRY source', () => {
     const container: Container = {
       ...baseContainer,

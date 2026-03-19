@@ -18,10 +18,12 @@ interface Props {
   container: Container;
   setContainer: (container: Container) => void;
   route: ApplicationRoute;
+  disabled?: boolean;
 }
 
-const ContainerResources: FC<Props> = ({ container, setContainer, route }) => {
+const ContainerResources: FC<Props> = ({ container, setContainer, route, disabled }) => {
   const t = useI18n();
+  const isDisabled = disabled ?? isEditDisabled(container);
   const { dispatch, resetCounter, errorFields, isValid } = useSaveValidationContext();
 
   const [error, setError] = useState<FieldError | null>(null);
@@ -79,8 +81,8 @@ const ContainerResources: FC<Props> = ({ container, setContainer, route }) => {
   return (
     <Accordion title={t(EntityFieldsI18nKey.Resources)} errorIndicator={isSectionInvalid}>
       <div className="flex flex-col gap-x-2 gap-y-8">
-        <CPUFields container={container} setContainer={setContainer} />
-        <MemoryFields container={container} setContainer={setContainer} />
+        <CPUFields container={container} setContainer={setContainer} disabled={disabled} />
+        <MemoryFields container={container} setContainer={setContainer} disabled={disabled} />
         {route === ApplicationRoute.ModelServings && (
           <div className="flex gap-2 flex-col lg:flex-row">
             <DialNumberInput
@@ -88,7 +90,7 @@ const ContainerResources: FC<Props> = ({ container, setContainer, route }) => {
               className="w-[180px]"
               labelProps={{ label: t(EntityFieldsI18nKey.GPURequest) }}
               value={container.resources?.requests?.['nvidia.com/gpu'] || ''}
-              disabled={isEditDisabled(container)}
+              disabled={isDisabled}
               onChange={onChangeGpuRequest}
               invalid={!!error}
               error={error?.text}

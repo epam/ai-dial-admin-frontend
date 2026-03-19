@@ -26,9 +26,19 @@ interface Props {
   findColumn?: (name: string) => number;
   moveColumn?: (name: string, atIndex: number) => void;
   disabled?: boolean;
+  existingNames?: string[];
 }
 
-const Variable: FC<Props> = ({ index, variable, updateVariable, removeVariable, findColumn, moveColumn, disabled }) => {
+const Variable: FC<Props> = ({
+  index,
+  variable,
+  updateVariable,
+  removeVariable,
+  findColumn,
+  moveColumn,
+  disabled,
+  existingNames,
+}) => {
   const t = useI18n();
   const isTablet = useIsTabletScreen();
   const { dispatch, resetCounter } = useSaveValidationContext();
@@ -39,7 +49,7 @@ const Variable: FC<Props> = ({ index, variable, updateVariable, removeVariable, 
   const [variableNameError, setVariableNameError] = useState<FieldError | null>(null);
 
   useEffect(() => {
-    const error = getVariableNameError(variable.name as string, t);
+    const error = getVariableNameError(variable.name as string, t, existingNames);
     dispatch({
       type: ValidationActionType.SetField,
       field: `variable_${index}`,
@@ -50,7 +60,7 @@ const Variable: FC<Props> = ({ index, variable, updateVariable, removeVariable, 
 
   useEffect(() => {
     if (resetCounter || (variable.name != null && variable.name?.length > 0)) {
-      const error = getVariableNameError(variable.name as string, t);
+      const error = getVariableNameError(variable.name as string, t, existingNames);
       setVariableNameError(error);
       dispatch({
         type: ValidationActionType.SetField,
@@ -58,7 +68,7 @@ const Variable: FC<Props> = ({ index, variable, updateVariable, removeVariable, 
         isValid: !error,
       });
     }
-  }, [dispatch, index, resetCounter, t, variable.name]);
+  }, [dispatch, existingNames, index, resetCounter, t, variable.name]);
 
   const onRemove = useCallback(() => {
     removeVariable(index);
@@ -66,7 +76,7 @@ const Variable: FC<Props> = ({ index, variable, updateVariable, removeVariable, 
 
   const onChangeName = useCallback(
     (name?: string) => {
-      const error = getVariableNameError(name as string, t);
+      const error = getVariableNameError(name as string, t, existingNames);
       dispatch({
         type: ValidationActionType.SetField,
         field: `variable_${index}`,
@@ -75,7 +85,7 @@ const Variable: FC<Props> = ({ index, variable, updateVariable, removeVariable, 
       setVariableNameError(error);
       updateVariable({ ...variable, name: name as string });
     },
-    [dispatch, index, t, updateVariable, variable],
+    [dispatch, existingNames, index, t, updateVariable, variable],
   );
 
   const onChangeDescription = useCallback(

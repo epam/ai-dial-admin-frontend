@@ -2,23 +2,14 @@
 
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import {
-  ButtonAppearance,
-  DialInputPopup,
-  DialLabel,
-  DialNeutralButton,
-  DialPrimaryButton,
-} from '@epam/ai-dial-ui-kit';
-import { IconEdit, IconExternalLink } from '@tabler/icons-react';
+import { DialInputPopup, DialLabel, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import { getDeployments } from '@/src/app/[lang]/test-suites/actions';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
-import EndpointSchema from '@/src/components/TestSuites/EndpointSchema/EndpointSchema';
 import CreateTestSuite from '@/src/components/TestSuites/Modals/Create/CreateTestSuite';
-import ChangeMethodModal from '@/src/components/TestSuites/Modals/ChangeMethodModal/ChangeMethodModal';
-import RequestTemplate from '@/src/components/TestSuites/RequestTemplate/RequestTemplate';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
@@ -27,25 +18,18 @@ import { Deployment } from '@/src/models/evaluation/deployment';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import MethodEndpoint from '../Methods/Endpoint';
-import TryOutButton from '@/src/components/TestSuites/RequestTemplate/components/TryOutButton';
-
 interface Props {
   isModal?: boolean;
   testSuite: TestSuite;
   onChange: (testSuite: TestSuite, isSkipRefresh?: boolean) => void;
-  isSkipRefresh?: boolean;
 }
 
-const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, isSkipRefresh }) => {
+const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false }) => {
   const t = useI18n();
   const [deployments, setDeployments] = useState<Deployment[] | null>(null);
   const [selectedAppType, setSelectedAppType] = useState<string | undefined>(void 0);
   const [isAppModalOpen, setIsAppModalOpen] = useState(false);
-  const [isChangeMethodModalOpen, setIsChangeMethodModalOpen] = useState(false);
   const isMobile = useIsMobileScreen();
-
-  const selectedApplication = deployments?.find((d) => d.deploymentId === testSuite.deploymentRef?.id) ?? null;
 
   const openInNewTab = useCallback(() => {
     onOpenInNewTab(selectedAppType === 'dial-application' ? ApplicationRoute.Applications : ApplicationRoute.Models, {
@@ -114,36 +98,6 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
                 onClick={() => openInNewTab()}
               />
             </div>
-          </div>
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-col">
-              <h2 className="mb-4 font-semibold">{t(TestSuitesI18nKey.Method)}</h2>
-
-              <div className="flex flex-row justify-between">
-                <MethodEndpoint testSuite={testSuite} />
-
-                <div className="flex flex-row gap-3 items-center">
-                  <DialPrimaryButton
-                    iconBefore={<IconEdit {...BASE_BUTTON_ICON_PROPS} />}
-                    appearance={ButtonAppearance.Ghost}
-                    label={t(TestSuitesI18nKey.ChangeMethod)}
-                    onClick={() => setIsChangeMethodModalOpen(true)}
-                  />
-                  <TryOutButton testSuite={testSuite} />
-                </div>
-              </div>
-            </div>
-
-            <RequestTemplate testSuite={testSuite} onChangeTestSuite={onChange} />
-            <EndpointSchema testSuite={testSuite} onChangeTestSuite={onChange} isSkipRefresh={isSkipRefresh} />
-            <ChangeMethodModal
-              isModal={true}
-              testSuite={testSuite}
-              onChangeTestSuite={(suite) => onChange(suite)}
-              selectedApplication={selectedApplication}
-              isOpen={isChangeMethodModalOpen}
-              onClose={() => setIsChangeMethodModalOpen(false)}
-            />
           </div>
         </>
       )}

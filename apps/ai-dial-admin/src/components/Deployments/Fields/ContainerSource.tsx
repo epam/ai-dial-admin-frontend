@@ -12,15 +12,18 @@ import { getControlClassName } from '@/src/utils/entities/view';
 import { useI18n } from '@/src/locales/client';
 import { ApplicationRoute } from '@/src/types/routes';
 import HFModelNameField from '@/src/components/Deployments/Fields/ContainerSource/HFModelNameField';
+import McpServerNameField from '@/src/components/Deployments/Fields/ContainerSource/McpServerNameField';
 
 interface Props {
   container: Container;
   setContainer: (container: Container) => void;
   isModal?: boolean;
   route: ApplicationRoute;
+  disabled?: boolean;
 }
 
-const ContainerSource: FC<Props> = ({ container, setContainer, isModal = false, route }) => {
+const ContainerSource: FC<Props> = ({ container, setContainer, isModal = false, route, disabled }) => {
+  const isDisabled = disabled ?? isEditDisabled(container);
   const t = useI18n();
   const { dispatch, resetCounter } = useSaveValidationContext();
   const containerClassName = useMemo(() => getControlClassName(isModal), [isModal]);
@@ -75,11 +78,17 @@ const ContainerSource: FC<Props> = ({ container, setContainer, isModal = false, 
     if (sourceType === CONTAINER_SOURCE_TYPE.NGC_REGISTRY) {
       const error = getDeploymentsURIError(container.source?.imageRef);
       dispatch({ type: ValidationActionType.SetField, field: 'modelSourceName', isValid: !error });
-    } else if (sourceType === CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE) {
+    } else if (sourceType === CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE && !container.source?.externalRegistryRef) {
       const error = getDeploymentsURIError(container.source?.imageReference);
       dispatch({ type: ValidationActionType.SetField, field: 'modelSourceName', isValid: !error });
     }
-  }, [container.source?.$type, container.source?.imageRef, container.source?.imageReference, dispatch]);
+  }, [
+    container.source?.$type,
+    container.source?.imageRef,
+    container.source?.imageReference,
+    container.source?.externalRegistryRef,
+    dispatch,
+  ]);
 
   const renderSourceField = () => {
     switch (container.source?.$type) {
@@ -94,10 +103,20 @@ const ContainerSource: FC<Props> = ({ container, setContainer, isModal = false, 
             invalid={!!imageRefError}
             onChange={onChangeImageRef}
             containerClassName={containerClassName}
-            disabled={isEditDisabled(container)}
+            disabled={isDisabled}
           />
         );
       case CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE:
+        if (container.source?.externalRegistryRef) {
+          return (
+            <McpServerNameField
+              container={container}
+              setContainer={setContainer}
+              isModal={isModal}
+              disabled={isDisabled}
+            />
+          );
+        }
         return (
           <DialInput
             id="imageReference"
@@ -108,11 +127,19 @@ const ContainerSource: FC<Props> = ({ container, setContainer, isModal = false, 
             invalid={!!imageReferenceError}
             onChange={onChangeImageReference}
             containerClassName={containerClassName}
-            disabled={isEditDisabled(container)}
+            disabled={isDisabled}
           />
         );
       default:
-        return <HFModelNameField container={container} setContainer={setContainer} isModal={isModal} route={route} />;
+        return (
+          <HFModelNameField
+            container={container}
+            setContainer={setContainer}
+            isModal={isModal}
+            route={route}
+            disabled={isDisabled}
+          />
+        );
     }
   };
 

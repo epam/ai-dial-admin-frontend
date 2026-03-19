@@ -10,6 +10,7 @@ import {
 import { IMAGES_LIST_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
 import { Image, ImageVersion } from '@/src/models/deployments/images';
@@ -36,6 +37,7 @@ interface Props {
 
 const ImagesList: FC<Props> = ({ route, imagesList }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const router = useRouter();
   const { showNotification } = useNotification();
 
@@ -134,11 +136,15 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
     [route, router, showNotification],
   );
 
-  const actionColumn = ACTION_COLUMN([
-    getOpenInNewTabOperation(onOpenInNewTabAction),
-    getDuplicateOperation(onDuplicateAction),
-    getDeleteOperation(onDeleteAction),
-  ]);
+  const actionColumn = ACTION_COLUMN(
+    isReadOnlyAdmin
+      ? [getOpenInNewTabOperation(onOpenInNewTabAction)]
+      : [
+          getOpenInNewTabOperation(onOpenInNewTabAction),
+          getDuplicateOperation(onDuplicateAction),
+          getDeleteOperation(onDeleteAction),
+        ],
+  );
 
   const columnDefs = [...IMAGES_LIST_COLUMNS(t), actionColumn];
 
@@ -171,7 +177,12 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
         storageKey={`${route}/${DEPLOYMENT_ENTITY.images}`}
         onGridReady={onGridReady}
       >
-        <HeaderButtons toggleColumnsPanel={toggleColumnsPanel} route={route} gridApi={gridApi} />
+        <HeaderButtons
+          toggleColumnsPanel={toggleColumnsPanel}
+          route={route}
+          gridApi={gridApi}
+          isReadOnlyAdmin={isReadOnlyAdmin}
+        />
       </ListView>
       {isModalOpen &&
         modalType === ModalType.duplicate &&

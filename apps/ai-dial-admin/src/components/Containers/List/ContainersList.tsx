@@ -29,6 +29,7 @@ import {
 import { CONTAINERS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ContainersI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { Container } from '@/src/models/deployments/containers';
 import { Notification } from '@/src/models/notification';
@@ -48,6 +49,7 @@ interface Props {
 
 const ContainersList: FC<Props> = ({ route, containersList, names }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const router = useRouter();
   const { showNotification } = useNotification();
 
@@ -161,13 +163,17 @@ const ContainersList: FC<Props> = ({ route, containersList, names }) => {
 
   const columnDefs = [
     ...CONTAINERS_COLUMNS(t, getTranslatedType(route, t), route),
-    ACTION_COLUMN([
-      getOpenInNewTabOperation(onOpenInNewTabAction),
-      getDuplicateOperation(onOpenDuplicateModal),
-      getRunOperation(onContainerStatusChange),
-      getStopOperation(onContainerStatusChange),
-      getDeleteOperation(onOpenDeleteModal),
-    ]),
+    ACTION_COLUMN(
+      isReadOnlyAdmin
+        ? [getOpenInNewTabOperation(onOpenInNewTabAction)]
+        : [
+            getOpenInNewTabOperation(onOpenInNewTabAction),
+            getDuplicateOperation(onOpenDuplicateModal),
+            getRunOperation(onContainerStatusChange),
+            getStopOperation(onContainerStatusChange),
+            getDeleteOperation(onOpenDeleteModal),
+          ],
+    ),
   ];
 
   useEffect(() => {
@@ -253,7 +259,7 @@ const ContainersList: FC<Props> = ({ route, containersList, names }) => {
         isEnableColumnPanel
         storageKey={route}
       >
-        <HeaderButtons route={route} names={names} />
+        <HeaderButtons route={route} names={names} isReadOnlyAdmin={isReadOnlyAdmin} />
       </ListEntities>
       {isModalOpen &&
         modalType === ModalType.duplicate &&

@@ -5,10 +5,6 @@ import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { Metric } from '@/src/models/evaluation/metric';
 import Results from '../Results';
 
-vi.mock('@/src/locales/client', () => ({
-  useI18n: () => (key: string) => key,
-}));
-
 describe('Results', () => {
   test('renders Results heading', () => {
     const selectedMetric: Metric = {

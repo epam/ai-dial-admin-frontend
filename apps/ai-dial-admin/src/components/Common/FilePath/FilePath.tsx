@@ -37,35 +37,38 @@ const FilePath: FC<Props> = ({ label, placeholder, disabled, value, modalTitle, 
   }, [setIsModalOpen]);
 
   return (
-    <div className="flex gap-2 items-end">
-      <DialInput
-        id="filePath"
-        disabled={disabled}
-        value={value}
-        onChange={onInputChange}
-        placeholder={placeholder}
-        labelProps={{ label }}
-        containerClassName={`${CONTROL_WITH_BUTTON_WIDTH} flex-none`}
-      />
-      <DialNeutralButton
-        disabled={disabled}
-        onClick={onOpenFilePathModal}
-        label={t(FileManagerI18nKey.Move)}
-        iconBefore={<IconFolderShare {...BASE_BUTTON_ICON_PROPS} />}
-      />
+    <div className="flex">
+      <div className="flex gap-x-2 items-end">
+        <div className={CONTROL_WITH_BUTTON_WIDTH}>
+          <DialInput
+            id="filePath"
+            disabled={disabled}
+            value={value}
+            onChange={onInputChange}
+            placeholder={placeholder}
+            labelProps={{ label }}
+          />
+        </div>
+        <DialNeutralButton
+          disabled={disabled}
+          onClick={onOpenFilePathModal}
+          label={t(FileManagerI18nKey.Move)}
+          iconBefore={<IconFolderShare {...BASE_BUTTON_ICON_PROPS} />}
+        />
 
-      {isModalOpen &&
-        createPortal(
-          <FilePathModal
-            modalTitle={modalTitle}
-            isModalOpen={isModalOpen}
-            onClose={onCloseFilePathModal}
-            onApply={onChange}
-            initialPath={value}
-            context={context}
-          />,
-          document.body,
-        )}
+        {isModalOpen &&
+          createPortal(
+            <FilePathModal
+              modalTitle={modalTitle}
+              isModalOpen={isModalOpen}
+              onClose={onCloseFilePathModal}
+              onApply={onChange}
+              initialPath={value}
+              context={context}
+            />,
+            document.body,
+          )}
+      </div>
     </div>
   );
 };

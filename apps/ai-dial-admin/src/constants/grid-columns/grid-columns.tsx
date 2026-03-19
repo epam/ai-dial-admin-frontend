@@ -901,6 +901,72 @@ export const HF_REGISTRY_COLUMNS: ColDef[] = [
   },
 ];
 
+export const MCP_REGISTRY_COLUMNS: ColDef[] = [
+  { field: 'name', headerName: 'MCP server name', hide: false, sortable: false },
+  {
+    field: 'websiteUrl',
+    headerName: 'Website',
+    hide: false,
+    sortable: false,
+    filter: false,
+    floatingFilter: false,
+  },
+  {
+    field: 'repository.url',
+    headerName: 'Repository',
+    hide: false,
+    sortable: false,
+    filter: false,
+    floatingFilter: false,
+    valueGetter: (params: ValueGetterParams) => params.data?.repository?.url,
+  },
+  {
+    field: 'remotes',
+    headerName: 'Remotes',
+    hide: false,
+    cellRenderer: TagsCellRenderer,
+    cellRendererParams: (params: { data?: { remotes?: { type: string }[] } }) => ({
+      items: params.data?.remotes?.map((r) => r.type),
+    }),
+    tooltipValueGetter: ({ value }) =>
+      Array.isArray(value) ? value.map((r: { type: string }) => r.type).join(', ') : null,
+    sortable: false,
+    filter: false,
+    floatingFilter: false,
+  },
+  {
+    field: 'packages',
+    headerName: 'Packages',
+    hide: false,
+    cellRenderer: TagsCellRenderer,
+    cellRendererParams: (params: { data?: { packages?: { registryType: string }[] } }) => ({
+      items: params.data?.packages?.map((p) => p.registryType),
+    }),
+    tooltipValueGetter: ({ value }) =>
+      Array.isArray(value) ? value.map((p: { registryType: string }) => p.registryType).join(', ') : null,
+    sortable: false,
+    filter: false,
+    floatingFilter: false,
+  },
+  {
+    field: 'version',
+    headerName: 'Version',
+    hide: false,
+    sortable: false,
+    filter: false,
+    floatingFilter: false,
+  },
+  {
+    field: 'updatedAt',
+    headerName: 'Last Update',
+    hide: false,
+    sortable: false,
+    filter: false,
+    floatingFilter: false,
+    ...dateTimeColumn,
+  },
+];
+
 export const getParamsColumns = (
   onChange: (value: string, data: TestSuiteRequestTemplateParam, key: string, rowIndex?: number) => void,
 ) => {

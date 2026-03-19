@@ -21,10 +21,12 @@ import {
 interface Props {
   container: Container;
   setContainer: (container: Container) => void;
+  disabled?: boolean;
 }
 
-const ContainerAutoscaling: FC<Props> = ({ container, setContainer }) => {
+const ContainerAutoscaling: FC<Props> = ({ container, setContainer, disabled }) => {
   const t = useI18n();
+  const isDisabled = disabled ?? isEditDisabled(container);
   const { dispatch, resetCounter, isValid, errorFields } = useSaveValidationContext();
 
   const scalingOptions = useMemo(() => AUTOSCALE_OPTIONS(t), [t]);
@@ -125,7 +127,7 @@ const ContainerAutoscaling: FC<Props> = ({ container, setContainer }) => {
             onChange={onScaleDelayChange}
             label={t(ContainersI18nKey.ScaleToZero)}
             containerClassName="max-w-[280px]"
-            disabled={isEditDisabled(container)}
+            disabled={isDisabled}
           />
           <div className="flex gap-4">
             <DialNumberInput
@@ -135,7 +137,7 @@ const ContainerAutoscaling: FC<Props> = ({ container, setContainer }) => {
               containerClassName="max-w-[80px]"
               disabled={
                 (!!container.scaling?.scaleToZeroDelaySeconds && container.scaling?.scaleToZeroDelaySeconds !== 0) ||
-                isEditDisabled(container)
+                isDisabled
               }
               labelProps={{ label: t(ContainersI18nKey.MinReplicas) }}
             />
@@ -148,7 +150,7 @@ const ContainerAutoscaling: FC<Props> = ({ container, setContainer }) => {
               labelProps={{ label: t(ContainersI18nKey.MaxReplicas) }}
               error={replicasError?.text}
               invalid={!!replicasError}
-              disabled={isEditDisabled(container)}
+              disabled={isDisabled}
             />
           </div>
         </div>
@@ -160,7 +162,7 @@ const ContainerAutoscaling: FC<Props> = ({ container, setContainer }) => {
               onChange={onThresholdChange}
               className="max-w-[80px]"
               labelProps={{ label: t(ContainersI18nKey.Threshold) }}
-              disabled={isEditDisabled(container)}
+              disabled={isDisabled}
             />
           </div>
         )}

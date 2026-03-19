@@ -6,6 +6,7 @@ import { IMAGE_SOURCE_TYPE, IMAGE_TYPE } from '@/src/types/deployments/images';
 import { Image } from '@/src/models/deployments/images';
 import { setTransport } from '@/src/utils/deployments/images';
 import { DEFAULT_IMAGE_SOURCE, IMAGE_TYPES, SOURCE_TYPES } from '@/src/constants/deployments/images';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -17,6 +18,7 @@ interface Props {
 
 const SourceType: FC<Props> = ({ image, setImage, isModal, verifyVersion }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const sourcesList = SOURCE_TYPES(t);
   const imageTypesList = IMAGE_TYPES(t);
 
@@ -55,6 +57,7 @@ const SourceType: FC<Props> = ({ image, setImage, isModal, verifyVersion }) => {
           options={imageTypesList}
           label={t(EntityFieldsI18nKey.type)}
           onChange={onImageTypeChange}
+          disabled={isReadOnlyAdmin}
         />
       )}
       {image.$type === IMAGE_TYPE.MCP && (
@@ -65,6 +68,7 @@ const SourceType: FC<Props> = ({ image, setImage, isModal, verifyVersion }) => {
           options={sourcesList}
           label={t(EntitiesI18nKey.SourceType)}
           onChange={onSourceTypeChange}
+          disabled={isReadOnlyAdmin}
         />
       )}
     </div>

@@ -14,9 +14,11 @@ interface Props {
   setContainer: (container: Container) => void;
   isModal?: boolean;
   names?: string[];
+  disabled?: boolean;
 }
 
-const ContainerBase: FC<Props> = ({ container, setContainer, names, isModal = false }) => {
+const ContainerBase: FC<Props> = ({ container, setContainer, names, isModal = false, disabled }) => {
+  const isDisabled = disabled ?? isEditDisabled(container);
   const [isUniqueNameError, setIsUniqueNameError] = useState<boolean>(false);
 
   const onChangeName = useCallback(
@@ -43,7 +45,7 @@ const ContainerBase: FC<Props> = ({ container, setContainer, names, isModal = fa
           onChangeEntity={onChangeName}
           isUniqueNameError={isUniqueNameError}
           isDeploymentId={true}
-          disabled={isEditDisabled(container)}
+          disabled={isDisabled}
         />
       )}
       <DisplayNameControl
@@ -51,18 +53,18 @@ const ContainerBase: FC<Props> = ({ container, setContainer, names, isModal = fa
         required
         onChange={onChangeDisplayName}
         isFullWidth={isModal}
-        disabled={isEditDisabled(container)}
+        disabled={isDisabled}
       />
       <DescriptionControl
         entity={container}
         onChangeEntity={setContainer}
         isFullWidth={isModal}
-        disabled={isEditDisabled(container)}
+        disabled={isDisabled}
       />
       {!isModal && (
         <>
-          <Maintainer entity={container} onChangeEntity={setContainer} disabled={isEditDisabled(container)} />
-          <TopicsControl entity={container} onChange={setContainer} disabled={isEditDisabled(container)} />
+          <Maintainer entity={container} onChangeEntity={setContainer} disabled={isDisabled} />
+          <TopicsControl entity={container} onChange={setContainer} disabled={isDisabled} />
         </>
       )}
     </div>

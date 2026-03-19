@@ -14,9 +14,10 @@ interface Props {
   isModalOpen: boolean;
   onApply: (domains: string[]) => void;
   getDomains: () => Promise<ServerActionResponse>;
+  disabled?: boolean;
 }
 
-const GlobalWhitelist: FC<Props> = ({ onClose, isModalOpen, onApply, getDomains }) => {
+const GlobalWhitelist: FC<Props> = ({ onClose, isModalOpen, onApply, getDomains, disabled }) => {
   const t = useI18n();
   const { isValid } = useSaveValidationContext();
 
@@ -44,9 +45,9 @@ const GlobalWhitelist: FC<Props> = ({ onClose, isModalOpen, onApply, getDomains 
       onClose={onClose}
       open={isModalOpen}
       header={t(DeploymentsI18nKey.GlobalFirewall)}
-      confirmLabel={t(ButtonsI18nKey.Apply)}
-      onConfirm={handleSubmit}
-      disableConfirmButton={!isValid || domains.some((domain) => !!getWhitelistDomainError(domain))}
+      confirmLabel={disabled ? t(ButtonsI18nKey.Close) : t(ButtonsI18nKey.Apply)}
+      onConfirm={disabled ? onClose : handleSubmit}
+      disableConfirmButton={disabled ? false : !isValid || domains.some((domain) => !!getWhitelistDomainError(domain))}
       isLoading={isLoading}
       size={PopupSize.Md}
     >
@@ -59,6 +60,7 @@ const GlobalWhitelist: FC<Props> = ({ onClose, isModalOpen, onApply, getDomains 
             addItemLabel={t(DeploymentsI18nKey.AddDomain)}
             validate={(value) => getWhitelistDomainError(value, t)}
             isModal={true}
+            disabled={disabled}
           />
         </div>
       </div>

@@ -363,7 +363,7 @@ export const getVariablesColumns = (
     {
       headerName: 'Value',
       field: 'value',
-      cellClass: NO_BORDER_CLASS,
+      cellClass: [NO_BORDER_CLASS, 'relative'],
       cellRendererSelector: (params: ICellRendererParams<InputBindingRowData>) => {
         if (
           params.data?.inferredType == TestCaseItemType.OBJECT ||
@@ -381,26 +381,21 @@ export const getVariablesColumns = (
             component: SelectCellRenderer,
             params: {
               items: [
-                {
-                  value: 'true',
-                  label: 'True',
-                },
-                {
-                  value: 'false',
-                  label: 'False',
-                },
+                { value: 'true', label: 'True' },
+                { value: 'false', label: 'False' },
               ],
               onChange: onChangeEditable,
             },
           };
-        } else {
-          return {
-            component: EditableCellRenderer,
-            params: {
-              onChange: onChangeEditable,
-            },
-          };
         }
+        return {
+          component: EditableCellRenderer,
+          params: {
+            onChange: onChangeEditable,
+            hideTriangle: false,
+            defaultValue: params?.data?.defaultValue,
+          },
+        };
       },
       tooltipValueGetter: (params: ITooltipParams<InputBindingRowData>) => {
         if (
@@ -418,26 +413,6 @@ export const getVariablesColumns = (
       floatingFilter: false,
       filter: false,
       sortable: false,
-    },
-    {
-      headerName: '',
-      cellClass: NO_BORDER_CLASS,
-      cellRenderer: (params: ICellRendererParams<InputBindingRowData>) => {
-        return params.data?.defaultValue != null ? (
-          <div className="w-full cursor-pointer">
-            <DialTooltip tooltip={`Default value: ${params.data.defaultValue}`}>
-              <IconInfoCircle size={20} />
-            </DialTooltip>
-          </div>
-        ) : null;
-      },
-      width: 36,
-      maxWidth: 36,
-      sortable: false,
-      filter: false,
-      floatingFilter: false,
-      resizable: false,
-      suppressMovable: true,
     },
   ];
 };

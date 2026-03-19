@@ -1,6 +1,6 @@
 import { TabModel } from '@epam/ai-dial-ui-kit';
 
-import { TabsI18nKey } from '@/src/constants/i18n';
+import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
@@ -52,6 +52,7 @@ export enum EntityViewTab {
   RequestSchema = 'RequestSchema',
   ResponseSchema = 'ResponseSchema',
   Columns = 'Columns',
+  TestSuiteMethod = 'TestSuiteMethod',
 }
 
 export const propertiesTab = (t: (key: string) => string, warning?: boolean) => ({
@@ -215,6 +216,11 @@ export const relatedContainersTab = (t: (key: string) => string, status?: IMAGE_
   id: EntityViewTab.RelatedContainers,
   label: t(TabsI18nKey.RelatedContainers),
   disabled: status === IMAGE_STATUS.NOT_BUILT,
+});
+
+export const testSuiteMethodTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.TestSuiteMethod,
+  label: t(TestSuitesI18nKey.Method),
 });
 
 export const testCasesTab = (t: (key: string) => string) => ({
@@ -421,7 +427,7 @@ export const getSystemPropertiesTabs = (t: (key: string) => string): TabModel[] 
 };
 
 export const getTestSuiteTabs = (t: (key: string) => string): TabModel[] => {
-  return [propertiesTab(t), testCasesTab(t), runsTab(t), metricsTab(t)];
+  return [propertiesTab(t), testSuiteMethodTab(t), testCasesTab(t), runsTab(t), metricsTab(t)];
 };
 
 export const getPublicationViewTabs = (t: (key: string) => string, view: ApplicationRoute): TabModel[] => {

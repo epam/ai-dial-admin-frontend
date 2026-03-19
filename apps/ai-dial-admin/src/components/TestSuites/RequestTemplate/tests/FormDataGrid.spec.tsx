@@ -43,10 +43,6 @@ vi.mock('@tabler/icons-react', () => ({
   IconPlus: () => <svg data-icon="plus" />,
 }));
 
-vi.mock('@/src/locales/client', () => ({
-  useI18n: () => (key: string) => key,
-}));
-
 const createPart = (overrides?: Partial<FormDataPart>): FormDataPart => ({
   name: '',
   value: '',
@@ -66,6 +62,12 @@ describe('FormDataGrid', () => {
     render(<FormDataGrid content={[]} changeContent={mockChangeContent} />);
 
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Add })).toBeInTheDocument();
+  });
+
+  test('does not render Add button when hideAddButton', () => {
+    render(<FormDataGrid content={[]} changeContent={mockChangeContent} hideAddButton />);
+
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.Add })).not.toBeInTheDocument();
   });
 
   test('renders GridView', () => {

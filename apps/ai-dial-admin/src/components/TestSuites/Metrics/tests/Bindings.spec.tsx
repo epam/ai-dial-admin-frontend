@@ -6,10 +6,6 @@ import { Metric } from '@/src/models/evaluation/metric';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import Bindings from '../Bindings';
 
-vi.mock('@/src/locales/client', () => ({
-  useI18n: () => (key: string) => key,
-}));
-
 let mockOnGridReady: (event: { api: { updateGridOptions: ReturnType<typeof vi.fn> } }) => void;
 
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
