@@ -14,6 +14,7 @@ import ToolsetEndpoint from '@/src/components/SourceField/Endpoints/ToolsetEndpo
 import Authentication from '@/src/components/Toolsets/Auth/Authentication';
 import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { Toolset, ToolsetAuthType } from '@/src/models/dial/toolset';
@@ -27,6 +28,7 @@ interface Props {
 
 const Properties: FC<Props> = ({ selectedToolset, onChange, isPublication }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   return (
     <div className="size-full flex flex-col gap-y-8">
@@ -64,6 +66,7 @@ const Properties: FC<Props> = ({ selectedToolset, onChange, isPublication }) => 
           placeholder={t(EntityPlaceholdersI18nKey.Path)}
           onChange={(folderId) => onChange?.({ ...selectedToolset, folderId })}
           context={useToolsetFolder}
+          disabled={isReadOnlyAdmin}
         />
       )}
       <ToolsetEndpoint entity={selectedToolset} onChange={onChange as (entity: Toolset) => void} />
@@ -76,7 +79,7 @@ const Properties: FC<Props> = ({ selectedToolset, onChange, isPublication }) => 
         isOn={selectedToolset.forwardPerRequestKey}
         label={t(EntityFieldsI18nKey.forwardPerRequestKey)}
         switchId="forwardPerRequestKey"
-        disabled={selectedToolset.authSettings?.authenticationType === ToolsetAuthType.API_KEY}
+        disabled={selectedToolset.authSettings?.authenticationType === ToolsetAuthType.API_KEY || isReadOnlyAdmin}
         onChange={(value: boolean) => {
           onChange({ ...selectedToolset, forwardPerRequestKey: value });
         }}

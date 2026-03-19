@@ -9,6 +9,7 @@ import RulesItem from '@/src/components/Rules/Item/RulesItem';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { CompareI18nKey, FoldersI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { Publication } from '@/src/models/dial/publications';
 import { DialRule } from '@/src/models/dial/rule';
@@ -27,6 +28,7 @@ const PublicationPermissions = <T extends Publication>({
   currentRules,
 }: Props<T>) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
 
@@ -61,10 +63,11 @@ const PublicationPermissions = <T extends Publication>({
           folderName={t(FoldersI18nKey.Permissions)}
           folderDescription={selectedPublication.folderId}
           setLastRuleHeight={() => void 0}
-          onChange={handleRulesChange}
+          onChange={isReadOnlyAdmin ? undefined : handleRulesChange}
+          isReadonly={isReadOnlyAdmin}
         >
           <div className="flex gap-4">
-            {isPermissionsChanged && (
+            {isPermissionsChanged && !isReadOnlyAdmin && (
               <DialNeutralButton
                 label={t(CompareI18nKey.CompareChanges)}
                 iconBefore={<IconReplace {...BASE_BUTTON_ICON_PROPS} />}

@@ -10,6 +10,7 @@ import { ALL_ATTACHMENTS } from '@/src/constants/dial-base-entity';
 import { AttachmentsI18nKey } from '@/src/constants/i18n';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import Suggestions from './Suggestions';
 
 export enum AttachmentType {
@@ -37,6 +38,7 @@ const ALL_ATTACHMENTS_VALUE = [{ label: ALL_ATTACHMENTS, value: ALL_ATTACHMENTS 
 
 const AttachmentInput: FC<Props> = ({ availableItems, initialValues, label, placeholder, id, required, onChange }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const containerRef = useRef<HTMLDivElement>(null);
 
   const selected = useMemo(() => {
@@ -193,6 +195,7 @@ const AttachmentInput: FC<Props> = ({ availableItems, initialValues, label, plac
 
       <div className="flex flex-col gap-3">
         <DialRadioButton
+          disabled={isReadOnlyAdmin}
           inputId={`${id}-none`}
           name={`${id}-attachment-options`}
           value={AttachmentType.NONE}
@@ -202,6 +205,7 @@ const AttachmentInput: FC<Props> = ({ availableItems, initialValues, label, plac
         />
 
         <DialRadioButton
+          disabled={isReadOnlyAdmin}
           inputId={`${id}-all`}
           name={`${id}-attachment-options`}
           value={AttachmentType.ALL}
@@ -211,6 +215,7 @@ const AttachmentInput: FC<Props> = ({ availableItems, initialValues, label, plac
         />
 
         <DialRadioButton
+          disabled={isReadOnlyAdmin}
           inputId={`${id}-specific`}
           name={`${id}-attachment-options`}
           value={AttachmentType.SPECIFIC}
@@ -236,6 +241,7 @@ const AttachmentInput: FC<Props> = ({ availableItems, initialValues, label, plac
                   onChange={handleInputChange}
                   onBlur={handleInputBlur}
                   onKeyDown={handleKeyDown}
+                  disabled={isReadOnlyAdmin}
                   className="outline-none border-none w-full flex-1 p-1 dial-input h-auto"
                   placeholder={placeholder || ''}
                 />

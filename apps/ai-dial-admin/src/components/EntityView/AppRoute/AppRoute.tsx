@@ -18,12 +18,12 @@ interface Props {
   roles?: DialRole[] | null;
   routes?: DialAppRoute[];
   parentRoleLimits?: DialRoleLimitsMap;
-  readonly?: boolean;
+  disabled?: boolean;
   iAppRunnerView?: boolean;
   onChangeRoutes: (routes: DialAppRoute[]) => void;
 }
 
-const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunnerView, routes, onChangeRoutes }) => {
+const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, disabled, iAppRunnerView, routes, onChangeRoutes }) => {
   const t = useI18n();
   const { dispatch, isValid } = useSaveValidationContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -100,7 +100,7 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
           <div className="h-full relative flex flex-col">
             <div className="flex flex-row flex-wrap justify-between items-center mb-6">
               <h1>{t(TabsI18nKey.Routes)}</h1>
-              {!readonly && (
+              {!disabled && (
                 <DialPrimaryButton
                   iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
                   label={t(ButtonsI18nKey.Add)}
@@ -110,7 +110,7 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
               )}
             </div>
             <AppRouteList
-              readonly={readonly}
+              disabled={disabled}
               routes={routes}
               activeRouteIndex={activeRouteIndex}
               onClick={(index) => setActiveRouteIndex(index)}
@@ -127,7 +127,7 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
               roles={roles || []}
               parentRoles={Object.keys(parentRoleLimits || {})}
               onChangeRoute={onChangeRoute}
-              readonly={readonly}
+              disabled={disabled}
               routeNames={routeNames?.filter((_, index) => index !== activeRouteIndex)}
             />
           )}

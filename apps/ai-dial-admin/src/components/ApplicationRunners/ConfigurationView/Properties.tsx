@@ -11,10 +11,11 @@ interface Props {
   runner: DialApplicationScheme;
   isImmutable?: boolean;
   names: string[];
+  isModal?: boolean;
   onChangeRunner: (entity: DialApplicationScheme) => void;
 }
 
-const SchemeProperties: FC<Props> = ({ names, runner, isImmutable, onChangeRunner }) => {
+const SchemeProperties: FC<Props> = ({ names, runner, isImmutable, onChangeRunner, isModal }) => {
   const onChangeId = useCallback(
     (id?: string) => {
       onChangeRunner({
@@ -55,6 +56,7 @@ const SchemeProperties: FC<Props> = ({ names, runner, isImmutable, onChangeRunne
           }
           required
           isFullWidth
+          isModal={isModal}
         />
       )}
     </div>

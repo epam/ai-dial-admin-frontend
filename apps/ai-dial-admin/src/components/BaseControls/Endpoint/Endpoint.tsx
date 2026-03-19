@@ -3,6 +3,7 @@ import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 
 import ComplexInput from '@/src/components/Common/ComplexInput/ComplexInput';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
 import { addTrailingSlash, removeSlash } from '@/src/utils/url';
@@ -16,6 +17,7 @@ export interface EndpointControlProps {
   prefix?: string;
   disabled?: boolean;
   isFullWidth?: boolean;
+  isModal?: boolean;
   onChange?: (endpoint?: string) => void;
 }
 
@@ -24,6 +26,7 @@ export interface Props extends EndpointControlProps {
   label: string;
   placeholder: string;
   iconAfter?: ReactNode;
+  isModal?: boolean;
 }
 
 const EndpointControl: FC<Props> = ({
@@ -34,9 +37,13 @@ const EndpointControl: FC<Props> = ({
   label,
   onChange,
   isFullWidth = false,
+  isModal = false,
+  disabled,
   ...props
 }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  const isDisabled = disabled || isReadOnlyAdmin;
   const { dispatch, resetCounter } = useSaveValidationContext();
   const [endpointError, setEndpointError] = useState<FieldError | null>(null);
 
@@ -46,10 +53,12 @@ const EndpointControl: FC<Props> = ({
   }, [endpoint, prefix]);
 
   const validateEndpoint = useCallback(
-    (value?: string | null) => {
+    (value?: string | null, shouldShownError = true) => {
       const error = getUrlError(prefix ? `${prefix}${value}` : value, t, required);
-      setEndpointError(error);
       dispatch({ type: ValidationActionType.SetField, field: id, isValid: !error });
+      if (shouldShownError) {
+        setEndpointError(error);
+      }
     },
     [dispatch, id, required, t, prefix],
   );
@@ -65,7 +74,7 @@ const EndpointControl: FC<Props> = ({
 
   useEffect(() => {
     if (required) {
-      validateEndpoint(endpoint);
+      validateEndpoint(endpoint, !isModal);
     } else {
       dispatch({ type: ValidationActionType.SetField, field: id, isValid: true });
     }
@@ -96,9 +105,10 @@ const EndpointControl: FC<Props> = ({
       copyable
       fullValue={fullValue}
       label={label}
+      disabled={isDisabled}
       {...props}
     />
-  ) : props.disabled ? (
+  ) : isDisabled ? (
     <ReadonlyInput
       containerClassName={isFullWidth ? 'w-full' : STANDARD_CONTROL_WIDTH}
       id={id}
@@ -115,6 +125,7 @@ const EndpointControl: FC<Props> = ({
       onChange={onChangeEndpoint}
       labelProps={{ label, required }}
       containerClassName={isFullWidth ? 'w-full' : STANDARD_CONTROL_WIDTH}
+      disabled={isDisabled}
       {...props}
     />
   );

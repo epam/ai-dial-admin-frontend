@@ -9,70 +9,32 @@ export const FILES_GRID_COLUMNS: ColDef[] = [
 ];
 
 export const gridActionLabels = [
-  {
-    key: 'addSibling',
-    label: FileManagerI18nKey.AddSibling,
-  },
-  {
-    key: 'addChild',
-    label: FileManagerI18nKey.AddChild,
-  },
-  {
-    key: 'move',
-    label: FileManagerI18nKey.Move,
-  },
-  {
-    key: 'download',
-    label: ButtonsI18nKey.Export,
-  },
-  {
-    key: 'managePermissions',
-    label: FileManagerI18nKey.ManagePermissions,
-  },
-  {
-    key: 'rename',
-    label: FileManagerI18nKey.Rename,
-  },
-  {
-    key: 'delete',
-    label: ButtonsI18nKey.Delete,
-  },
-  {
-    key: 'preview',
-    label: FileManagerI18nKey.Preview,
-  },
+  { key: 'addSibling', label: FileManagerI18nKey.AddSibling },
+  { key: 'addChild', label: FileManagerI18nKey.AddChild },
+  { key: 'move', label: FileManagerI18nKey.Move },
+  { key: 'download', label: ButtonsI18nKey.Export },
+  { key: 'managePermissions', label: FileManagerI18nKey.ManagePermissions },
+  { key: 'rename', label: FileManagerI18nKey.Rename },
+  { key: 'delete', label: ButtonsI18nKey.Delete },
+  { key: 'preview', label: FileManagerI18nKey.Preview },
+];
+
+export const gridActionLabelsReadOnly = [
+  { key: 'download', label: ButtonsI18nKey.Export },
+  { key: 'preview', label: FileManagerI18nKey.Preview },
 ];
 
 export const treeActionLabels = [
-  {
-    key: 'addSibling',
-    label: FileManagerI18nKey.AddSibling,
-  },
-  {
-    key: 'addChild',
-    label: FileManagerI18nKey.AddChild,
-  },
-  {
-    key: 'move',
-    label: FileManagerI18nKey.Move,
-  },
-  {
-    key: 'download',
-    label: ButtonsI18nKey.Export,
-  },
-  {
-    key: 'delete',
-    label: ButtonsI18nKey.Delete,
-  },
-  {
-    key: 'rename',
-    label: FileManagerI18nKey.Rename,
-  },
-  {
-    key: 'managePermissions',
-    label: FileManagerI18nKey.ManagePermissions,
-  },
+  { key: 'addSibling', label: FileManagerI18nKey.AddSibling },
+  { key: 'addChild', label: FileManagerI18nKey.AddChild },
+  { key: 'move', label: FileManagerI18nKey.Move },
+  { key: 'download', label: ButtonsI18nKey.Export },
+  { key: 'delete', label: ButtonsI18nKey.Delete },
+  { key: 'rename', label: FileManagerI18nKey.Rename },
+  { key: 'managePermissions', label: FileManagerI18nKey.ManagePermissions },
 ];
+
+export const treeActionLabelsReadOnly = [{ key: 'download', label: ButtonsI18nKey.Export }];
 
 export const toolbarOptionLabels = [
   {

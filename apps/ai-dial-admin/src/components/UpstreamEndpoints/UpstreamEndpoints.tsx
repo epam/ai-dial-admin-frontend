@@ -3,6 +3,7 @@ import { IconPlus } from '@tabler/icons-react';
 import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 
 import { UpstreamEndpointsI18nKey } from '@/src/constants/i18n';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { DialModel, DialModelEndpoint } from '@/src/models/dial/model';
@@ -11,14 +12,16 @@ import Endpoint from './Endpoint/Endpoint';
 
 interface Props {
   entity: DialRoute | DialModel;
-  readonly?: boolean;
+  disabled?: boolean;
   onChangeEntity: (entity: DialRoute | DialModel) => void;
   isKeyOptional?: boolean;
   required?: boolean;
 }
 
-const UpstreamEndpoints: FC<Props> = ({ readonly, entity, onChangeEntity, isKeyOptional, required }) => {
+const UpstreamEndpoints: FC<Props> = ({ disabled, entity, onChangeEntity, isKeyOptional, required }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  const isDisabled = disabled || isReadOnlyAdmin;
 
   const onAddEndpoint = useCallback(() => {
     const upstreams = [...(entity.upstreams || []), {}];
@@ -55,7 +58,7 @@ const UpstreamEndpoints: FC<Props> = ({ readonly, entity, onChangeEntity, isKeyO
         {entity.upstreams == null || entity.upstreams.length === 0 ? (
           <Endpoint
             key={0}
-            readonly={readonly}
+            disabled={isDisabled}
             endpoint={{}}
             index={0}
             isKeyOptional={isKeyOptional}
@@ -66,7 +69,7 @@ const UpstreamEndpoints: FC<Props> = ({ readonly, entity, onChangeEntity, isKeyO
         ) : (
           entity.upstreams?.map((endpoint, index) => (
             <Endpoint
-              readonly={readonly}
+              disabled={isDisabled}
               key={index}
               endpoint={endpoint}
               index={index}
@@ -78,7 +81,7 @@ const UpstreamEndpoints: FC<Props> = ({ readonly, entity, onChangeEntity, isKeyO
           ))
         )}
       </div>
-      {!readonly && (
+      {!isDisabled && (
         <div>
           <DialNeutralButton
             label={t(UpstreamEndpointsI18nKey.AddUpstream)}

@@ -2,6 +2,7 @@ import { FC, useCallback, useState } from 'react';
 import { DialInputPopup, DialSwitch } from '@epam/ai-dial-ui-kit';
 
 import { EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialModel } from '@/src/models/dial/model';
 import TokenizedModelsModal from './TokenizedModelsModal';
@@ -12,6 +13,7 @@ interface Props {
 }
 const TokenizerModelSwitch: FC<Props> = ({ model, onChangeModel }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const onSwitchTokenizerModel = useCallback(
@@ -51,6 +53,7 @@ const TokenizerModelSwitch: FC<Props> = ({ model, onChangeModel }) => {
         label={t(EntityFieldsI18nKey.tokenizerModel)}
         switchId="tokenizerModel"
         onChange={onSwitchTokenizerModel}
+        disabled={isReadOnlyAdmin}
       />
       {model.tokenizerModel != null && (
         <div className="pl-[42px] w-[300px]">
@@ -59,6 +62,7 @@ const TokenizerModelSwitch: FC<Props> = ({ model, onChangeModel }) => {
             selectedValue={model.tokenizerModel}
             onOpen={onOpenModal}
             emptyValueText={t(EntitiesI18nKey.NoModels)}
+            disabled={isReadOnlyAdmin}
           >
             <TokenizedModelsModal
               model={model}

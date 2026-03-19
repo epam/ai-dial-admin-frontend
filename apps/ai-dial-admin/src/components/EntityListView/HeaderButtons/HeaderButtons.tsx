@@ -48,6 +48,7 @@ interface Props<T> {
   context?: () => AssetsFolderContext;
   setIsBulkView?: Dispatch<SetStateAction<boolean>>;
   isBulkView?: boolean;
+  isReadOnlyAdmin?: boolean;
 }
 
 const EntityListHeaderButtons = <T extends BaseEntity>({
@@ -63,6 +64,7 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
   context,
   setIsBulkView,
   isBulkView,
+  isReadOnlyAdmin,
 }: Props<T>) => {
   const t = useI18n();
   const { showNotification, removeNotification } = useNotification();
@@ -183,6 +185,7 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
         names={names || []}
         versionsMap={versionsMap}
         context={context}
+        isModal={true}
       />
     );
   };
@@ -197,7 +200,7 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
           onClick={onToggleColumnsPanel}
         />
       )}
-      {!isBulkView && (
+      {!isBulkView && !isReadOnlyAdmin && (
         <>
           {isAssetView(route) && (
             <>

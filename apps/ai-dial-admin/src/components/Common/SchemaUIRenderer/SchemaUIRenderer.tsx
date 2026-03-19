@@ -1,3 +1,5 @@
+'use client';
+
 import { createRef, FC, useCallback, useEffect } from 'react';
 
 import Form, { IChangeEvent } from '@rjsf/core';
@@ -5,6 +7,7 @@ import { RJSFSchema } from '@rjsf/utils';
 import validator from '@rjsf/validator-ajv8';
 
 import { SchemaForm } from '@/src/components/Common/SchemaUIRenderer/CustomTemplates/CustomSchemaForm';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { DefaultsValue } from '@/src/models/dial/defaults';
 
 interface Props {
@@ -12,9 +15,11 @@ interface Props {
   data?: Record<string, unknown>;
   onChangeConfiguration: (data: Record<string, DefaultsValue>) => void;
   onGetSchemeDefaults?: (data: Record<string, DefaultsValue>) => void;
-  readonly?: boolean;
+  disabled?: boolean;
 }
-const SchemaUiRenderer: FC<Props> = ({ schema, data, onChangeConfiguration, onGetSchemeDefaults, readonly }) => {
+const SchemaUiRenderer: FC<Props> = ({ schema, data, onChangeConfiguration, onGetSchemeDefaults, disabled }) => {
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  const isReadonly = disabled || isReadOnlyAdmin;
   const onChange = useCallback(
     (data: IChangeEvent<any, RJSFSchema, any>) => {
       onChangeConfiguration(data.formData);
@@ -37,7 +42,7 @@ const SchemaUiRenderer: FC<Props> = ({ schema, data, onChangeConfiguration, onGe
       onChange={onChange}
       onSubmit={onSubmit}
       showErrorList={false}
-      readonly={readonly}
+      readonly={isReadonly}
       noValidate={true}
     >
       <></>

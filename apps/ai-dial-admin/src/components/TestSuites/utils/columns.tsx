@@ -224,9 +224,17 @@ export const getDynamicConfigurationsColumns = (
   ];
 };
 
+const findFieldForProperty = (
+  property: string,
+  configSchema: SchemaFieldRow[],
+  inputSchema: SchemaFieldRow[],
+): SchemaFieldRow | undefined =>
+  configSchema.find((s) => s.name === property) ?? inputSchema.find((s) => s.name === property);
+
 export const getMetricBindingsColumns = (
   onChangeEditable: (value: string | object, data: MetricBinding, column: string, index?: number) => void,
   configSchema: SchemaFieldRow[],
+  inputSchema: SchemaFieldRow[],
   testCaseColumns: string[],
   responseColumns: string[],
   t: (stringToTranslate: string) => string,
@@ -312,6 +320,16 @@ export const getMetricBindingsColumns = (
             },
           };
         } else {
+          const field = findFieldForProperty(params.data?.property ?? '', configSchema, inputSchema);
+          if (field?.enum?.length) {
+            return {
+              component: SelectCellRenderer,
+              params: {
+                items: field.enum.map((v) => ({ value: v, label: v })),
+                onChange: onChangeEditable,
+              },
+            };
+          }
           return {
             component: EditableCellRenderer,
             params: {

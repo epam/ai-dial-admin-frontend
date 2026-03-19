@@ -47,12 +47,18 @@ export enum SCALING_STRATEGY_TYPE {
   HARDWARE = 'hardware_usage',
 }
 
+export interface ExternalRegistryRef {
+  $type: string;
+  packageName: string;
+}
+
 export type ContainerSource = {
   $type: CONTAINER_SOURCE_TYPE;
   imageDefinitionId?: string;
   imageReference?: string;
   imageRef?: string;
   modelName?: string;
+  externalRegistryRef?: ExternalRegistryRef;
 };
 
 export enum MODEL_FORMAT {

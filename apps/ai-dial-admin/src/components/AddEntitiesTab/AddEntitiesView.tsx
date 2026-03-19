@@ -11,6 +11,7 @@ import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getOpenInNewTabOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
@@ -62,6 +63,7 @@ const AddEntitiesView: FC<Props> = ({
   isSkipRefresh,
 }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   const [gridApi, setGridApi] = useState<GridApi>();
   const allEntities = getEntitiesGridData(models, applications, roles, keys, appRunners, toolsets, routes);
@@ -102,9 +104,13 @@ const AddEntitiesView: FC<Props> = ({
     () => [
       ...columns,
       ...(additionalColumns || []),
-      ACTION_COLUMN([getOpenInNewTabOperation(onOpen), ...(customActions || []), getRemoveOperation(onRemoveEntity)]),
+      ACTION_COLUMN([
+        getOpenInNewTabOperation(onOpen),
+        ...(customActions || []),
+        ...(isReadOnlyAdmin ? [] : [getRemoveOperation(onRemoveEntity)]),
+      ]),
     ],
-    [additionalColumns, columns, customActions, onOpen, onRemoveEntity],
+    [additionalColumns, columns, customActions, onOpen, onRemoveEntity, isReadOnlyAdmin],
   );
 
   const onGridReady = (event: GridReadyEvent) => {
@@ -131,7 +137,7 @@ const AddEntitiesView: FC<Props> = ({
           <h1>
             {viewTitle || t(TabsI18nKey.Entities)}: {data.length}
           </h1>
-          {onAdd && (
+          {onAdd && !isReadOnlyAdmin && (
             <DialPrimaryButton
               iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
               label={t(ButtonsI18nKey.Add)}
@@ -145,7 +151,8 @@ const AddEntitiesView: FC<Props> = ({
           emptyDataProps={{ title: emptyDataTitle || t(EntitiesI18nKey.NoEntities) }}
         />
       </div>
-      {isModalOpen &&
+      {!isReadOnlyAdmin &&
+        isModalOpen &&
         createPortal(
           <AddEntitiesGrid
             modalTitle={modalTitle || t(EntitiesI18nKey.AddEntities)}

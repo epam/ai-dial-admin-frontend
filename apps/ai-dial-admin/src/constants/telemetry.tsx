@@ -84,7 +84,7 @@ export const TOTAL_TOKENS_QUERY: TelemetryQuery = {
 export const MONEY_QUERY: TelemetryQuery = {
   $type: 'json',
   query: {
-    expressions: ['sum(price)'],
+    expressions: ['sum(deployment_price)'],
     from: 'analytics',
   },
 };
@@ -95,8 +95,8 @@ export const ENTITY_CONSUMPTION_QUERY: TelemetryQuery = {
     expressions: [
       'deployment',
       'count()',
-      'sum(price) as money',
-      'sum(deployment_price) as deployment_price',
+      'sum(deployment_price) as money',
+      'sum(price) as aggregated_money',
       'sum(prompt_tokens) as tokens_p',
       'sum(completion_tokens) as tokens_c',
     ],
@@ -129,8 +129,7 @@ export const PROJECT_CONSUMPTION_QUERY: TelemetryQuery = {
     expressions: [
       'project_id',
       'count()',
-      'sum(price) as money',
-      'sum(deployment_price) as deployment_price',
+      'sum(deployment_price) as money',
       'sum(prompt_tokens) as tokens_p',
       'sum(completion_tokens) as tokens_c',
     ],
@@ -215,7 +214,7 @@ export const TELEMETRY_GRID_HEADERS_MAP: Record<string, string> = {
   project_id: 'name',
   count: 'requests',
   money: 'cost',
-  deployment_price: 'deployment_cost',
+  aggregated_money: 'deployment_cost',
   tokens_p: 'prompts',
   tokens_c: 'completions',
 };

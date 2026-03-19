@@ -22,8 +22,10 @@ import {
   bulkActionLabels,
   FILES_GRID_COLUMNS,
   gridActionLabels,
+  gridActionLabelsReadOnly,
   toolbarOptionLabels,
   treeActionLabels,
+  treeActionLabelsReadOnly,
 } from './constants';
 import { changeFolder, createFolderWithFiles, removeFolder } from '@/src/app/[lang]/folders-storage/actions';
 import { createEmptyFile } from '../../Common/FileManager/utils';
@@ -168,7 +170,9 @@ const FilesList = () => {
         onExport={onExport}
         view={ApplicationRoute.Files}
         gridActionLabels={gridActionLabels}
+        gridActionLabelsReadOnly={gridActionLabelsReadOnly}
         treeActionLabels={treeActionLabels}
+        treeActionLabelsReadOnly={treeActionLabelsReadOnly}
         toolbarOptionLabels={toolbarOptionLabels}
         bulkActionLabels={bulkActionLabels}
       />

@@ -22,6 +22,7 @@ import { TestSuitesApi } from '@/src/server/eval/test-suites-api';
 import { WhitelistApi } from '@/src/server/deployments/whitelist';
 import { MetricsApi } from '@/src/server/eval/metrics-api';
 import { HuggingfaceApi } from '@/src/server/deployments/huggingface';
+import { McpRegistryApi } from '@/src/server/deployments/mcp-registry';
 import { DeploymentConfigApi } from '@/src/server/deployments/config';
 import { RunsApi } from '@/src/server/eval/runs-api';
 
@@ -110,6 +111,10 @@ export const whitelistApi = new WhitelistApi({
 });
 
 export const huggingFaceApi = new HuggingfaceApi({
+  host: process.env.DIAL_DEPLOYMENTS_API_URL,
+});
+
+export const mcpRegistryApi = new McpRegistryApi({
   host: process.env.DIAL_DEPLOYMENTS_API_URL,
 });
 

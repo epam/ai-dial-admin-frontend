@@ -17,7 +17,14 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { useI18n } from '@/src/locales/client';
 import { FoldersI18nKey, MenuI18nKey } from '@/src/constants/i18n';
-import { bulkActionLabels, gridActionLabels, toolbarOptionLabels, treeActionLabels } from './constants';
+import {
+  bulkActionLabels,
+  gridActionLabels,
+  gridActionLabelsReadOnly,
+  toolbarOptionLabels,
+  treeActionLabels,
+  treeActionLabelsReadOnly,
+} from './constants';
 import {
   DialCopiedItem,
   DialDeletedItem,
@@ -346,7 +353,9 @@ const PromptsList: FC = () => {
         onMoveItems={handleMoveItems}
         onTableFileClick={handleGridItemClick}
         gridActionLabels={gridActionLabels}
+        gridActionLabelsReadOnly={gridActionLabelsReadOnly}
         treeActionLabels={treeActionLabels}
+        treeActionLabelsReadOnly={treeActionLabelsReadOnly}
         toolbarOptionLabels={toolbarOptionLabels}
         bulkActionLabels={bulkActionLabels}
         filterData={processPromptsData}

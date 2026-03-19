@@ -3,6 +3,7 @@ import {
   getDeploymentsURIError,
   getDeploymentsURLError,
   getErrorForHfModelName,
+  getErrorForMcpServerName,
   getMaintainerError,
   getPathError,
   getSemanticVersionError,
@@ -665,6 +666,62 @@ describe('validation utils', () => {
     });
     test('should return null when value is bigger than 0', () => {
       expect(getAdvancedTimingsError(1, t, 10)).toBeNull();
+    });
+  });
+
+  describe('getErrorForMcpServerName', () => {
+    test('returns error for empty value', () => {
+      expect(getErrorForMcpServerName(undefined, t)).toEqual({
+        type: ErrorType.EMPTY,
+        text: ErrorI18nKey.RequiredProperty,
+      });
+      expect(getErrorForMcpServerName('', t)).toEqual({
+        type: ErrorType.EMPTY,
+        text: ErrorI18nKey.RequiredProperty,
+      });
+      expect(getErrorForMcpServerName('   ', t)).toEqual({
+        type: ErrorType.EMPTY,
+        text: ErrorI18nKey.RequiredProperty,
+      });
+    });
+
+    test('returns error for missing slash', () => {
+      expect(getErrorForMcpServerName('servername', t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.McpServerName,
+      });
+    });
+
+    test('returns error for invalid characters', () => {
+      expect(getErrorForMcpServerName('ns/name with spaces', t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.McpServerName,
+      });
+    });
+
+    test('returns error for empty namespace or name', () => {
+      expect(getErrorForMcpServerName('/name', t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.McpServerName,
+      });
+      expect(getErrorForMcpServerName('ns/', t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.McpServerName,
+      });
+    });
+
+    test('returns null for valid server names', () => {
+      expect(getErrorForMcpServerName('ai.cirra/salesforce-mcp', t)).toBeNull();
+      expect(getErrorForMcpServerName('io.github.user/server-name', t)).toBeNull();
+      expect(getErrorForMcpServerName('ai.auteng/docs', t)).toBeNull();
+      expect(getErrorForMcpServerName('simple/name', t)).toBeNull();
+    });
+
+    test('returns empty text when t is not provided', () => {
+      expect(getErrorForMcpServerName('invalid')).toEqual({
+        type: ErrorType.INVALID,
+        text: '',
+      });
     });
   });
 });

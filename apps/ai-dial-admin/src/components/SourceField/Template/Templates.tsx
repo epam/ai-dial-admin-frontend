@@ -26,6 +26,7 @@ interface Props<T> {
   getRunners: () => Promise<ServerActionResponse<InterceptorTemplate[]>>;
   error?: string;
   isModal?: boolean;
+  disabled?: boolean;
 }
 
 const Templates = <T extends DialModel | DialInterceptor>({
@@ -34,6 +35,7 @@ const Templates = <T extends DialModel | DialInterceptor>({
   getRunners,
   error,
   isModal,
+  disabled,
 }: Props<T>) => {
   const t = useI18n();
   const { showNotification } = useNotification();
@@ -107,6 +109,7 @@ const Templates = <T extends DialModel | DialInterceptor>({
               value={runners.find((runner) => runner.name === entity.source?.runnerName)?.name}
               placeholder={t(CreateI18nKey.SelectInterceptorTemplate)}
               label={t(SourceI18nKey.InterceptorTemplate)}
+              disabled={disabled}
             />
           </div>
         ) : (
@@ -120,6 +123,7 @@ const Templates = <T extends DialModel | DialInterceptor>({
                 elementId="templates"
                 errorText={error}
                 emptyValueText={t(EntitiesI18nKey.NoTemplates)}
+                disabled={disabled}
               >
                 <SelectRunnerModal
                   selected={entity.source?.runnerName}
@@ -130,7 +134,7 @@ const Templates = <T extends DialModel | DialInterceptor>({
                 />
               </DialInputPopup>
             </div>
-            {entity.source?.runnerName && (
+            {entity.source?.runnerName && !disabled && (
               <DialNeutralButton
                 iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
                 className={classNames(error ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}

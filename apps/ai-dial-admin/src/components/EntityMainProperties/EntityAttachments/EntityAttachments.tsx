@@ -6,6 +6,7 @@ import { DialNumberInput } from '@epam/ai-dial-ui-kit';
 import AttachmentInput from '@/src/components/Common/AttachmentInput/AttachmentInput';
 import { AttachmentsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { EntityAttachment } from '@/src/models/dial/base-entity';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getMaxAttachmentError } from '@/src/utils/validation/get-max-attachment-error';
@@ -18,6 +19,7 @@ interface Props {
 
 const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   const { dispatch } = useSaveValidationContext();
   const error = useMemo(() => {
@@ -62,6 +64,7 @@ const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
       {!!entity.inputAttachmentTypes?.length && (
         <DialNumberInput
           containerClassName="w-[180px]"
+          disabled={isReadOnlyAdmin}
           id="maxAttachment"
           labelProps={{ label: t(AttachmentsI18nKey.MaxNumber) }}
           placeholder={t(EntityPlaceholdersI18nKey.Number)}

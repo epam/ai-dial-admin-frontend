@@ -14,6 +14,7 @@ import ForwardAuthTokenField from '@/src/components/EntityMainProperties/Forward
 import ApplicationSource from '@/src/components/SourceField/Application/ApplicationSource';
 import { BasicI18nKey, EntitiesI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DeploymentAsset } from '@/src/models/dial/deployment-asset';
@@ -28,6 +29,7 @@ interface Props {
 
 const ApplicationAssetProperties: FC<Props> = ({ asset, runners, onChange, isPublication }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   return (
     <div className="flex flex-col gap-y-8">
@@ -62,6 +64,7 @@ const ApplicationAssetProperties: FC<Props> = ({ asset, runners, onChange, isPub
           placeholder={t(EntityPlaceholdersI18nKey.Path)}
           onChange={(folderId) => onChange?.({ ...asset, folderId })}
           context={useAppsFolder}
+          disabled={isReadOnlyAdmin}
         />
       )}
 
