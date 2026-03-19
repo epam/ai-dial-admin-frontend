@@ -36,8 +36,8 @@ const HelpButton: FC<Props> = ({ docLink }) => {
     return items;
   }, [helpUrl, docLink, onClick]);
 
-  if(!helpUrl) {
-    return null
+  if (!helpUrl) {
+    return null;
   }
   return helpUrl?.title ? (
     <DialDropdown menu={{ items: dropdownItems }} allowedPlacements={['bottom-end']}>
