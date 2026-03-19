@@ -1,5 +1,5 @@
 'use client';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
   DialCloseButton,
@@ -136,7 +136,11 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset, isMcpToolset, co
                 data={requestBody}
               />
             ) : (
-              <JsonEditor entity={requestBody} options={{ stickyScroll: { enabled: false } }} />
+              <JsonEditor
+                entity={requestBody}
+                options={{ stickyScroll: { enabled: false } }}
+                setSelectedEntity={onChangeConfiguration as Dispatch<SetStateAction<Record<string, unknown>>>}
+              />
             )}
           </div>
         </div>
