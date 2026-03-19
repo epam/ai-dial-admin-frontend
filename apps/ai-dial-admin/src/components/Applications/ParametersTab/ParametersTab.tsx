@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialLoader, DialNoDataContent, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { DialLoader, DialNoDataContent, DialPrimaryButton, SelectOption } from '@epam/ai-dial-ui-kit';
 import { RJSFSchema } from '@rjsf/utils';
 import { IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
@@ -13,8 +13,9 @@ import {
   convertJsonSchema,
   generateViewItems,
   getAppRunner,
-  getFrameConfig,
+  getCorrectConfig,
   getInitialParamsView,
+  getTargetUrl,
 } from '@/src/components/Applications/ParametersTab/utils';
 import { getResolvedApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
 import SchemaUiRenderer from '@/src/components/Common/SchemaUIRenderer/SchemaUIRenderer';
@@ -30,7 +31,6 @@ import { ApplicationPropertiesTemp, DialApplication, DialApplicationScheme } fro
 import { DialApplicationResource } from '@/src/models/dial/application-resource';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DefaultsValue } from '@/src/models/dial/defaults';
-import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { ParamsView } from '@/src/types/parameters';
 import { ApplicationRoute } from '@/src/types/routes';
 import TableView from './TableView';
@@ -68,19 +68,29 @@ const ParametersTab: FC<Props> = ({
   const [scheme, setScheme] = useState<DialApplicationScheme | undefined>(undefined);
   const [isSchemeLoading, setIsSchemeLoading] = useState(true);
 
+  const [viewItems, setViewItems] = useState<SelectOption[]>([]);
+  const [paramsView, setParamsView] = useState<ParamsView>(ParamsView.TABLE);
+
   useEffect(() => {
+    let scheme = undefined;
     const foundRunner = getAppRunner(application as DialApplication, applicationSchemes);
-    setScheme(foundRunner ?? undefined);
-    if (!foundRunner?.$id) {
-      setIsSchemeLoading(false);
-      return;
-    }
     setIsSchemeLoading(true);
-    getResolvedApplicationScheme(foundRunner.$id).then((res) => {
+    getResolvedApplicationScheme(foundRunner?.$id ?? '').then((res) => {
       if (res.success && (res.response as { schema?: DialApplicationScheme })?.schema) {
-        setScheme((res.response as { schema: DialApplicationScheme }).schema);
+        scheme = (res.response as { schema: DialApplicationScheme }).schema;
+      } else {
+        scheme = foundRunner ?? undefined;
       }
       setIsSchemeLoading(false);
+      setScheme(scheme);
+      if (!scheme && !appPropertiesTemp) {
+        setAppPropertiesTemp(convertAppPropertiesToArray(application?.applicationProperties || {}));
+      }
+      const config = getCorrectConfig(scheme, application, currentTheme, session as UserSession);
+      const targetUrl = getTargetUrl(view, application, config);
+
+      setViewItems(generateViewItems(t, view, !!targetUrl, !!config));
+      setParamsView(getInitialParamsView(view, !!targetUrl));
     });
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -90,32 +100,12 @@ const ParametersTab: FC<Props> = ({
   const [schemeProperties, setSchemeProperties] = useState<ApplicationPropertiesTemp[]>([]);
   const [isAddClicked, setIsAddClicked] = useState(false);
 
-  if (!scheme && !appPropertiesTemp) {
-    setAppPropertiesTemp(convertAppPropertiesToArray(application?.applicationProperties || {}));
-  }
-
   const frameConfig = useMemo(() => {
-    if (scheme) {
-      return getFrameConfig(scheme, currentTheme, session as UserSession);
-    } else if (application?.editorUrl) {
-      return getFrameConfig(application, currentTheme, session as UserSession);
-    }
-    return null;
+    return getCorrectConfig(scheme, application, currentTheme, session as UserSession);
   }, [currentTheme, application, scheme, session]);
 
   const targetUrl = useMemo(() => {
-    const id =
-      view === ApplicationRoute.AssetsApplications
-        ? `applications/${(application as AssetApp).path}`
-        : application?.name;
-    try {
-      const iframeUrl = `${frameConfig?.host}?authProvider=${frameConfig?.providerId}&theme=${frameConfig?.theme}&id=${id}`;
-      return new URL(iframeUrl);
-    } catch (error) {
-      if (error) {
-        return null;
-      }
-    }
+    return getTargetUrl(view, application, frameConfig);
   }, [application, frameConfig, view]);
 
   const rjsfSchema = useMemo(
@@ -128,9 +118,6 @@ const ParametersTab: FC<Props> = ({
       }) as RJSFSchema,
     [scheme],
   );
-
-  const viewItems = generateViewItems(t, view, !!targetUrl, !!frameConfig);
-  const [paramsView, setParamsView] = useState(getInitialParamsView(view, !!targetUrl));
 
   const showDropdown = useMemo(() => {
     return viewItems.length > 1;
