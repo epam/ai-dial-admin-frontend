@@ -85,7 +85,7 @@ export class UtilityApi extends BaseApi {
     return this.getActionWithMatchEtag(`${API}${url}`, etag, token);
   }
 
-  getUserInfo(token: Token): Promise<ServerActionResponse<UserInfo>> {
+  getUserInfo(token: Token): Promise<ServerActionResponse<{ userInfo: UserInfo }>> {
     return this.getAction(SECURITY_INFO_URL, token);
   }
 }

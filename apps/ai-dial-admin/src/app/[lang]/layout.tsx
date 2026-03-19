@@ -55,7 +55,7 @@ export default async function Layout({ children, params }: { children: ReactNode
           featureFlags={featureFlags}
           disableDeploymentsJSONEditor={isValueTruthy(process.env.DEPLOYMENTS_DISABLE_JSON_EDITOR)}
           resourcesDefaults={JSON.parse(process.env.DEPLOYMENTS_RESOURCES_DEFAULTS || '{}') as ResourcesDefaults}
-          userInfo={(await utilityApi.getUserInfo(token)).response}
+          userInfo={(await utilityApi.getUserInfo(token)).response?.userInfo}
         >
           <ThemeProvider themesConfiguration={themesConfiguration} themeImages={themesImages}>
             <RuleFolderProvider attributes={process.env.PUBLICATION_FILTERS || 'title,role,dial_roles'}>
