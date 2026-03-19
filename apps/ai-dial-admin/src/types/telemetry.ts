@@ -13,3 +13,8 @@ export enum FILTER_TYPE {
   Entity = 'Entity',
   Project = 'Project',
 }
+
+export enum DASHBOARD_VIEW_TYPE {
+  Chat = 'Chat',
+  Mcp = 'Mcp',
+}

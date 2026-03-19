@@ -18,6 +18,7 @@ import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models'
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import AuthButtons from '@/src/components/Toolsets/Auth/AuthButtons';
 import { ROOT_FOLDER } from '@/src/constants/file';
+import { useAppContext } from '@/src/context/AppContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -43,7 +44,8 @@ interface Props {
 
 const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) => {
   const t = useI18n();
-  const tabs = getTabsForAsset(t, ApplicationRoute.AssetsToolsets);
+  const { featureFlags } = useAppContext();
+  const tabs = getTabsForAsset(t, ApplicationRoute.AssetsToolsets, featureFlags);
   const router = useRouter();
   const { fetchFiles } = useToolsetFolder();
   const { showNotification } = useNotification();

@@ -105,23 +105,23 @@ export const ENTITY_CONSUMPTION_QUERY: TelemetryQuery = {
   },
 };
 
-export const ENTITY_QUERY: TelemetryQuery = {
+export const getEntityQuery = (tableName = 'analytics'): TelemetryQuery => ({
   $type: 'json',
   query: {
     distinct: 'true',
     expressions: ['deployment'],
-    from: 'analytics',
+    from: tableName,
   },
-};
+});
 
-export const PROJECT_QUERY: TelemetryQuery = {
+export const getProjectQuery = (tableName = 'analytics'): TelemetryQuery => ({
   $type: 'json',
   query: {
     distinct: 'true',
     expressions: ['project_id'],
-    from: 'analytics',
+    from: tableName,
   },
-};
+});
 
 export const PROJECT_CONSUMPTION_QUERY: TelemetryQuery = {
   $type: 'json',
@@ -209,6 +209,61 @@ export const CONVERSATIONS_QUERY: TelemetryQuery = {
   },
 };
 
+export const MCP_TABLE_NAME = 'mcp_analytics';
+export const TOOLSET_DEPLOYMENT_PREFIX = 'toolsets/';
+
+export const MCP_TOTAL_CALLS_QUERY: TelemetryQuery = {
+  $type: 'json',
+  query: {
+    expressions: ['count()'],
+    from: MCP_TABLE_NAME,
+  },
+};
+
+export const MCP_TOOL_CALLS_QUERY: TelemetryQuery = {
+  $type: 'json',
+  query: {
+    expressions: ['count()'],
+    from: MCP_TABLE_NAME,
+  },
+};
+
+export const MCP_TOOL_CALLS_EXTRA_CONDITIONS = [{ $eq: { left: 'mcp_method', right: "'tools/call'" } }];
+
+export const MCP_CONSUMPTION_QUERY: TelemetryQuery = {
+  $type: 'json',
+  query: {
+    expressions: ['deployment', 'count()'],
+    from: MCP_TABLE_NAME,
+    groupBy: ['deployment'],
+    orderBy: [{ $desc: 'count()' }],
+  },
+};
+
+export const MCP_CALLS_BY_DEPLOYMENT_QUERY: TelemetryQuery = {
+  $type: 'json',
+  query: {
+    expressions: ['deployment', 'count()'],
+    from: MCP_TABLE_NAME,
+    groupBy: ['deployment', 'mcp_tool_call_name'],
+    orderBy: [{ $desc: 'count()' }],
+  },
+};
+
+export const MCP_CALLS_BY_DEPLOYMENT_EXTRA_CONDITIONS = [{ $ne: { left: 'mcp_tool_call_name', right: "'undefined'" } }];
+
+export const MCP_UNIQUE_USERS_QUERY: TelemetryQuery = {
+  $type: 'json',
+  query: {
+    expressions: ['count()'],
+    from: {
+      distinct: 'true',
+      expressions: ['user_hash'],
+      from: MCP_TABLE_NAME,
+    },
+  },
+};
+
 export const TELEMETRY_GRID_HEADERS_MAP: Record<string, string> = {
   deployment: 'name',
   project_id: 'name',
@@ -217,4 +272,5 @@ export const TELEMETRY_GRID_HEADERS_MAP: Record<string, string> = {
   aggregated_money: 'deployment_cost',
   tokens_p: 'prompts',
   tokens_c: 'completions',
+  mcp_tool_call_name: 'mcp_tool_call_name',
 };

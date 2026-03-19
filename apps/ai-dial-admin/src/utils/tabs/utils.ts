@@ -347,12 +347,20 @@ export const getUsageLogTabs = (t: (key: string) => string): TabModel[] => {
   return [tracesTab(t), conversationsTab(t)];
 };
 
-export const getTabsForAsset = (t: (key: string) => string, view: ApplicationRoute): TabModel[] => {
+export const getTabsForAsset = (
+  t: (key: string) => string,
+  view: ApplicationRoute,
+  featureFlags?: Record<string, boolean>,
+): TabModel[] => {
   if (view === ApplicationRoute.AssetsApplications) {
     return [propertiesTab(t), featuresTab(t), parametersTab(t), interceptorsTab(t), dependenciesTab(t)];
   }
   if (view === ApplicationRoute.AssetsToolsets) {
-    return [propertiesTab(t), toolsTab(t)];
+    const tabs = [propertiesTab(t), toolsTab(t)];
+    if (featureFlags?.dashboardEnabled) {
+      tabs.push(auditTab(t));
+    }
+    return tabs;
   }
   return [propertiesTab(t)];
 };
@@ -364,7 +372,14 @@ export const getAuditTabs = (
 ): TabModel[] => {
   const tabs: TabModel[] = [];
 
-  if (featureFlags.dashboardEnabled && (view === ApplicationRoute.Models || view === ApplicationRoute.Applications)) {
+  if (featureFlags.dashboardEnabled && view === ApplicationRoute.AssetsToolsets) {
+    return [dashboardTab(t)];
+  }
+
+  if (
+    featureFlags.dashboardEnabled &&
+    (view === ApplicationRoute.Models || view === ApplicationRoute.Applications || view === ApplicationRoute.Toolsets)
+  ) {
     tabs.push(dashboardTab(t), tracesTab(t), conversationsTab(t));
   }
 

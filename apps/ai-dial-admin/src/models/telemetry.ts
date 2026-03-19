@@ -15,6 +15,7 @@ export interface TelemetryQuery {
     where?: {
       $and?: FilterQuery[];
     };
+    orderBy?: Record<string, string>[];
   };
 }
 

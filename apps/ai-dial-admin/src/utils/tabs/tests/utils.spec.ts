@@ -139,8 +139,16 @@ describe('Entities :: tabs', () => {
     ]);
   });
 
-  test('returns correct tabs for AssetsToolsets', () => {
+  test('returns correct tabs for AssetsToolsets without dashboardEnabled', () => {
     expect(getTabsForAsset(t, ApplicationRoute.AssetsToolsets)).toEqual([propertiesTab(t), toolsTab(t)]);
+  });
+
+  test('returns correct tabs for AssetsToolsets with dashboardEnabled', () => {
+    expect(getTabsForAsset(t, ApplicationRoute.AssetsToolsets, { dashboardEnabled: true })).toEqual([
+      propertiesTab(t),
+      toolsTab(t),
+      auditTab(t),
+    ]);
   });
 
   test('returns correct tabs for toolset', () => {
