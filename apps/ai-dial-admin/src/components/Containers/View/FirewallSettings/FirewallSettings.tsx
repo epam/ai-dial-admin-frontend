@@ -10,15 +10,16 @@ interface Props {
   container: Container;
   setContainer: (image: Container) => void;
   route: ApplicationRoute;
+  disabled?: boolean;
 }
 
-const FirewallSettings: FC<Props> = ({ container, setContainer, route }) => {
+const FirewallSettings: FC<Props> = ({ container, setContainer, route, disabled }) => {
   return (
     <Whitelists
       route={route}
       entity={container}
       setEntity={(container) => setContainer(container as Container)}
-      disabled={isEditDisabled(container)}
+      disabled={!!disabled || isEditDisabled(container)}
     />
   );
 };

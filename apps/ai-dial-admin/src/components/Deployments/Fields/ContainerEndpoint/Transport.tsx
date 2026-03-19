@@ -11,10 +11,12 @@ import { isEditDisabled } from '@/src/utils/deployments/containers';
 interface Props {
   container: Container;
   setContainer: (container: Container) => void;
+  disabled?: boolean;
 }
 
-const Transport: FC<Props> = ({ container, setContainer }) => {
+const Transport: FC<Props> = ({ container, setContainer, disabled }) => {
   const t = useI18n();
+  const isDisabled = disabled ?? isEditDisabled(container);
 
   return (
     <DialSelectField
@@ -32,7 +34,7 @@ const Transport: FC<Props> = ({ container, setContainer }) => {
         });
       }}
       required
-      disabled={isEditDisabled(container)}
+      disabled={isDisabled}
     />
   );
 };
