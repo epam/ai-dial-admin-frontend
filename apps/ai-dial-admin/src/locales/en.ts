@@ -633,6 +633,7 @@ export default {
       ConversationsTitle: 'Conversations',
       NoConversationsTitle: 'No Conversations',
     },
+    ViewByLabel: 'View by: ',
     ViewBy: {
       Chat: 'Chat',
       Mcp: 'MCP',

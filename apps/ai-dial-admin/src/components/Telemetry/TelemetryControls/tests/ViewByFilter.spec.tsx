@@ -8,12 +8,12 @@ describe('ViewByFilter', () => {
   test('renders with Chat value', () => {
     const { container } = render(<ViewByFilter value={DASHBOARD_VIEW_TYPE.Chat} onChange={vi.fn()} />);
     expect(screen.getByRole('button')).toBeInTheDocument();
-    expect(container.textContent).toContain('View by:');
+    expect(container.textContent).toContain('Telemetry.ViewByLabel');
   });
 
   test('renders with MCP value', () => {
     const { container } = render(<ViewByFilter value={DASHBOARD_VIEW_TYPE.Mcp} onChange={vi.fn()} />);
     expect(screen.getByRole('button')).toBeInTheDocument();
-    expect(container.textContent).toContain('View by:');
+    expect(container.textContent).toContain('Telemetry.ViewByLabel');
   });
 });

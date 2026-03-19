@@ -146,9 +146,20 @@ The `getData` callbacks SHALL clone query objects before modifying the `where` c
 - **WHEN** multiple components call `getData` with the same query constant simultaneously
 - **THEN** each call operates on an independent copy and does not affect other calls
 
-### Requirement: Filter values are case-sensitive
-Filter values SHALL NOT be lowercased before being sent in queries.
+### Requirement: Filter values case handling depends on operator
+Filter values for exact match operators (Equal, NotEqual) SHALL preserve original case. Filter values for partial match operators (Contains, NotContains, StartsWith, EndsWith) SHALL be lowercased. Entity name filters (pre-applied from entity views) SHALL preserve original case.
 
-#### Scenario: Entity filter with mixed case
-- **WHEN** a filter value contains uppercase characters
+#### Scenario: Exact match filter preserves case
+- **WHEN** a filter uses Equal or NotEqual operator with a value containing uppercase characters
 - **THEN** the value is sent as-is to the API without lowercasing
+
+#### Scenario: Partial match filter lowercases value
+- **WHEN** a filter uses Contains, NotContains, StartsWith, or EndsWith operator with a value containing uppercase characters
+- **THEN** the value is lowercased before being sent to the API
+
+### Requirement: All user-facing strings use i18n keys
+All user-facing strings in MCP dashboard components SHALL use translation keys from `TelemetryI18nKey`. No hardcoded strings SHALL be used for labels, prefixes, or titles.
+
+#### Scenario: View by dropdown prefix
+- **WHEN** the "View by" dropdown is rendered
+- **THEN** the prefix text uses `TelemetryI18nKey.ViewByLabel` translation key

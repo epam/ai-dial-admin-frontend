@@ -12,26 +12,26 @@ describe('Dashboard view switching', () => {
     expect(screen.getByText(TelemetryI18nKey.SystemUsage)).toBeInTheDocument();
     expect(screen.getByText(TelemetryI18nKey.UniqueUsers)).toBeInTheDocument();
     expect(screen.getByText(TelemetryI18nKey.RequestCount)).toBeInTheDocument();
-    expect(container.textContent).toContain('View by:');
+    expect(container.textContent).toContain(TelemetryI18nKey.ViewByLabel);
   });
 
   test('does not show View by dropdown on Models route', () => {
     const { container } = render(<Dashboard route={ApplicationRoute.Models} />);
 
-    expect(container.textContent).not.toContain('View by:');
+    expect(container.textContent).not.toContain(TelemetryI18nKey.ViewByLabel);
     expect(screen.getByText(TelemetryI18nKey.SystemUsage)).toBeInTheDocument();
   });
 
   test('shows View by dropdown on Applications route', () => {
     const { container } = render(<Dashboard route={ApplicationRoute.Applications} />);
 
-    expect(container.textContent).toContain('View by:');
+    expect(container.textContent).toContain(TelemetryI18nKey.ViewByLabel);
   });
 
   test('renders MCP-only view for Toolsets route without View by dropdown', () => {
     const { container } = render(<Dashboard route={ApplicationRoute.Toolsets} />);
 
-    expect(container.textContent).not.toContain('View by:');
+    expect(container.textContent).not.toContain(TelemetryI18nKey.ViewByLabel);
     expect(screen.getByText(TelemetryI18nKey.RequestPerMcpUsage)).toBeInTheDocument();
     expect(screen.getByText(TelemetryI18nKey.TotalMcpCalls)).toBeInTheDocument();
     expect(screen.getByText(TelemetryI18nKey.TotalToolCalls)).toBeInTheDocument();
@@ -41,7 +41,7 @@ describe('Dashboard view switching', () => {
   test('renders MCP-only view for Asset Toolsets route without View by dropdown', () => {
     const { container } = render(<Dashboard route={ApplicationRoute.AssetsToolsets} />);
 
-    expect(container.textContent).not.toContain('View by:');
+    expect(container.textContent).not.toContain(TelemetryI18nKey.ViewByLabel);
     expect(screen.getByText(TelemetryI18nKey.RequestPerMcpUsage)).toBeInTheDocument();
     expect(screen.getByText(TelemetryI18nKey.TotalMcpCalls)).toBeInTheDocument();
   });

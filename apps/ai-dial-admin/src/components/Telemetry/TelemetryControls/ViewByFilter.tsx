@@ -27,7 +27,7 @@ const ViewByFilter: FC<Props> = ({ value, onChange }) => {
     <DialSelect
       size={SelectSize.Sm}
       variant={SelectVariant.Secondary}
-      prefix="View by: "
+      prefix={t(TelemetryI18nKey.ViewByLabel)}
       options={translatedOptions}
       value={value}
       onChange={(val) => onChange(val as DASHBOARD_VIEW_TYPE)}

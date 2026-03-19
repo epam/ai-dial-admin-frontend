@@ -45,7 +45,9 @@ export const getFormattedDataFilters = (filters: FilterData[], entityName?: stri
 
   filters.forEach((filter) => {
     const left = filterTypeConfig.find((filterType) => filterType.value === filter.type)?.filter;
-    const right = `'${filter.value}'`;
+    const isExactMatch = filter.condition === FILTER_OPERATOR.Equal || filter.condition === FILTER_OPERATOR.NotEqual;
+    const value = isExactMatch ? filter.value : filter.value.toLowerCase();
+    const right = `'${value}'`;
     const operator = filterOperatorConfig[filter.condition];
 
     userFilters.push({ [operator]: { left: left, right: right } });
