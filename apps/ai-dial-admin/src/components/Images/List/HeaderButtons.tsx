@@ -28,9 +28,10 @@ interface Props {
   toggleColumnsPanel: () => void;
   route: ApplicationRoute;
   gridApi?: GridApi | null;
+  isReadOnlyAdmin?: boolean;
 }
 
-const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, gridApi }) => {
+const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, gridApi, isReadOnlyAdmin }) => {
   const t = useI18n();
   const isTabletScreen = useIsTabletScreen();
   const { showNotification } = useNotification();
@@ -86,11 +87,13 @@ const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, gridApi }) => {
           onClick={onToggleColumnsPanel}
         />
 
-        <DialPrimaryButton
-          label={isTabletScreen ? '' : t(ButtonsI18nKey.Add)}
-          iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-          onClick={() => handleModalOpen(ModalType.addImage)}
-        />
+        {!isReadOnlyAdmin && (
+          <DialPrimaryButton
+            label={isTabletScreen ? '' : t(ButtonsI18nKey.Add)}
+            iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
+            onClick={() => handleModalOpen(ModalType.addImage)}
+          />
+        )}
       </div>
 
       {isModalOpen &&
@@ -101,6 +104,7 @@ const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, gridApi }) => {
             onClose={handleModalClose}
             onApply={(domains) => updateGlobalWhitelist(domains)}
             getDomains={getGlobalWhitelist}
+            disabled={isReadOnlyAdmin}
           />,
           document.body,
         )}

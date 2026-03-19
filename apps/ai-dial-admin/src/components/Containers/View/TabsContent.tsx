@@ -29,6 +29,7 @@ import Tools from '@/src/components/Tools/Tools';
 import { BasicI18nKey, ContainersI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { Container, KubEvent, Pod } from '@/src/models/deployments/containers';
 import { Image } from '@/src/models/deployments/images';
@@ -66,13 +67,17 @@ const TabsContent: FC<Props> = ({
   names,
 }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   const router = useRouter();
   const { showNotification } = useNotification();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
-  const editDisabled = useMemo(() => isEditDisabled(selectedContainer), [selectedContainer]);
+  const isDisabled = useMemo(
+    () => isReadOnlyAdmin || isEditDisabled(selectedContainer),
+    [isReadOnlyAdmin, selectedContainer],
+  );
   const imageWarning = isImageNotInstalled(image);
 
   const handleModalClose = useCallback(() => {
@@ -130,14 +135,14 @@ const TabsContent: FC<Props> = ({
                 className="size-auto ml-2 cursor-pointer text-secondary hover:text-accent-primary"
                 icon={<OpenPopup {...BASE_BUTTON_ICON_PROPS} />}
                 onClick={handleModalOpen}
-                disabled={editDisabled}
+                disabled={isDisabled}
               />
             }
           />
         )}
       </>
     );
-  }, [editDisabled, handleModalOpen, image, route, t]);
+  }, [isDisabled, handleModalOpen, image, route, t]);
 
   const onApply = useCallback(
     (id: string) => {
@@ -173,13 +178,15 @@ const TabsContent: FC<Props> = ({
                       { imageName: image.name ?? '', imageVersion: image.version },
                     )}
                   </span>
-                  <DialNeutralButton
-                    className="shrink-0"
-                    size={ElementSize.Small}
-                    label={t(ContainersI18nKey.InstallImage)}
-                    iconBefore={<IconBlocks size={12} />}
-                    onClick={handleInstallModalOpen}
-                  />
+                  {!isReadOnlyAdmin && (
+                    <DialNeutralButton
+                      className="shrink-0"
+                      size={ElementSize.Small}
+                      label={t(ContainersI18nKey.InstallImage)}
+                      iconBefore={<IconBlocks size={12} />}
+                      onClick={handleInstallModalOpen}
+                    />
+                  )}
                 </div>
               }
             />
@@ -205,7 +212,12 @@ const TabsContent: FC<Props> = ({
       {activeTab === EntityViewTab.Events && <Events route={route} events={events} />}
 
       {activeTab === EntityViewTab.Firewall && (
-        <FirewallSettings route={route} container={selectedContainer} setContainer={onChange} />
+        <FirewallSettings
+          route={route}
+          container={selectedContainer}
+          setContainer={onChange}
+          disabled={isReadOnlyAdmin}
+        />
       )}
 
       {isModalOpen &&

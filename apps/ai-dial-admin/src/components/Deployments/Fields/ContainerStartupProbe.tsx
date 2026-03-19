@@ -15,9 +15,10 @@ import AdvancedTiming from '@/src/components/Deployments/Fields/ContainerStartup
 interface Props {
   container: Container;
   setContainer: (container: Container) => void;
+  disabled?: boolean;
 }
 
-const ContainerStartupProbe: FC<Props> = ({ container, setContainer }) => {
+const ContainerStartupProbe: FC<Props> = ({ container, setContainer, disabled }) => {
   const t = useI18n();
   const { errorFields, isValid } = useSaveValidationContext();
 
@@ -59,7 +60,7 @@ const ContainerStartupProbe: FC<Props> = ({ container, setContainer }) => {
     toggleCustomStartupProbe(!enabled);
   }, [enabled, toggleCustomStartupProbe]);
 
-  const disabled = useMemo(() => isEditDisabled(container), [container]);
+  const isDisabled = useMemo(() => disabled ?? isEditDisabled(container), [container, disabled]);
 
   return (
     <Accordion title={t(EntityFieldsI18nKey.StartupProbe)} errorIndicator={isSectionInvalid}>
@@ -69,13 +70,13 @@ const ContainerStartupProbe: FC<Props> = ({ container, setContainer }) => {
           label={t('Enable startup probe')}
           isOn={container.probeProperties?.enabled || false}
           onChange={onChangeEnabled}
-          disabled={isEditDisabled(container)}
+          disabled={isDisabled}
           caption={t(EntityCaptionsI18nKey.ProbeEnableCustom)}
         />
         {container.probeProperties?.enabled && (
           <>
-            <Endpoint container={container} setContainer={setContainer} disabled={disabled} />
-            <AdvancedTiming container={container} setContainer={setContainer} disabled={disabled} />
+            <Endpoint container={container} setContainer={setContainer} disabled={isDisabled} />
+            <AdvancedTiming container={container} setContainer={setContainer} disabled={isDisabled} />
           </>
         )}
       </div>

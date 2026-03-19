@@ -27,9 +27,10 @@ import ServingCreate from '@/src/components/Deployments/Modals/ServingCreate';
 interface Props {
   route: ApplicationRoute;
   names: string[];
+  isReadOnlyAdmin?: boolean;
 }
 
-const HeaderButtons: FC<Props> = ({ route, names }) => {
+const HeaderButtons: FC<Props> = ({ route, names, isReadOnlyAdmin }) => {
   const t = useI18n();
   const router = useRouter();
   const isTabletScreen = useIsTabletScreen();
@@ -175,15 +176,16 @@ const HeaderButtons: FC<Props> = ({ route, names }) => {
   return (
     <>
       <div className="flex gap-4">
-        {showDropdown ? (
-          <DialButtonDropdown items={dropdownItems} label={isTabletScreen ? '' : t(ButtonsI18nKey.Create)} />
-        ) : (
-          <DialPrimaryButton
-            label={isTabletScreen ? '' : t(ButtonsI18nKey.Create)}
-            iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-            onClick={() => handleModalOpen(ModalType.createContainer)}
-          />
-        )}
+        {!isReadOnlyAdmin &&
+          (showDropdown ? (
+            <DialButtonDropdown items={dropdownItems} label={isTabletScreen ? '' : t(ButtonsI18nKey.Create)} />
+          ) : (
+            <DialPrimaryButton
+              label={isTabletScreen ? '' : t(ButtonsI18nKey.Create)}
+              iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
+              onClick={() => handleModalOpen(ModalType.createContainer)}
+            />
+          ))}
       </div>
 
       {isModalOpen &&

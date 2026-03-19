@@ -11,6 +11,7 @@ import FirewallSettings from '@/src/components/Images/View/FirewallSettings/Fire
 import InstallationLog from '@/src/components/Images/View/InstallationLog/InstallationLog';
 import { IMAGE_TYPE_I18N_KEYS, SOURCE_TYPES } from '@/src/constants/deployments/images';
 import { EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -26,6 +27,7 @@ interface Props {
 
 const TabsContent: FC<Props> = ({ activeTab, selectedImage, onChange, onChangeVersions, imageVersions }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   const sourcesList = SOURCE_TYPES(t);
 
@@ -65,7 +67,12 @@ const TabsContent: FC<Props> = ({ activeTab, selectedImage, onChange, onChangeVe
       )}
       {activeTab === EntityViewTab.InstallationLog && <InstallationLog imageBuildId={selectedImage.id} />}
       {activeTab === EntityViewTab.Firewall && (
-        <FirewallSettings image={selectedImage} setImage={onChange} route={ApplicationRoute.Images} />
+        <FirewallSettings
+          image={selectedImage}
+          setImage={onChange}
+          route={ApplicationRoute.Images}
+          disabled={isReadOnlyAdmin}
+        />
       )}
     </>
   );

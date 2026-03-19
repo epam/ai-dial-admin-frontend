@@ -11,10 +11,12 @@ import { isEditDisabled } from '@/src/utils/deployments/containers';
 interface Props {
   container: Container;
   setContainer: (container: Container) => void;
+  disabled?: boolean;
 }
 
-const ContainerConfiguration: FC<Props> = ({ container, setContainer }) => {
+const ContainerConfiguration: FC<Props> = ({ container, setContainer, disabled }) => {
   const t = useI18n();
+  const isDisabled = disabled ?? isEditDisabled(container);
 
   return (
     <Accordion title={t(EntityFieldsI18nKey.Configuration)}>
@@ -25,7 +27,7 @@ const ContainerConfiguration: FC<Props> = ({ container, setContainer }) => {
           value={container.command}
           onChange={(command?: string) => setContainer({ ...container, command })}
           placeholder={t(EntityPlaceholdersI18nKey.Command)}
-          disabled={isEditDisabled(container)}
+          disabled={isDisabled}
         />
 
         <DialInput
@@ -34,7 +36,7 @@ const ContainerConfiguration: FC<Props> = ({ container, setContainer }) => {
           value={container.args}
           onChange={(args?: string) => setContainer({ ...container, args })}
           placeholder={t(EntityPlaceholdersI18nKey.Arguments)}
-          disabled={isEditDisabled(container)}
+          disabled={isDisabled}
         />
       </div>
     </Accordion>
