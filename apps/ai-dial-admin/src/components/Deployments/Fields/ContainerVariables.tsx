@@ -29,6 +29,11 @@ const ContainerVariables: FC<Props> = ({ container, setContainer }) => {
 
   const variables = useMemo(() => container.metadata?.envs || [], [container]);
 
+  const existingNamesByIndex = useMemo(
+    () => variables.map((_, index) => variables.filter((v, i) => i < index && v.name).map((v) => v.name)),
+    [variables],
+  );
+
   const onChangeVariables = useCallback(
     (variables: EnvironmentVariable[]) => {
       setContainer({
@@ -115,6 +120,7 @@ const ContainerVariables: FC<Props> = ({ container, setContainer }) => {
                   findColumn={findColumn}
                   moveColumn={moveColumn}
                   disabled={isEditDisabled(container)}
+                  existingNames={existingNamesByIndex[index]}
                 />
               );
             })}

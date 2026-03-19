@@ -1,6 +1,6 @@
 import semver from 'semver/preload';
 import { ErrorType } from '@/src/types/error-type';
-import { ErrorI18nKey } from '@/src/constants/i18n';
+import { EnvVariablesI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { FieldError } from '@/src/models/error';
 import { isValidHttpUrl } from '@/src/utils/validation/url-error';
 import { MAX_NAME_SYMBOLS, MIN_NAME_SYMBOLS } from '@/src/constants/validation';
@@ -64,6 +64,7 @@ export const getImageNameError = (
 export const getVariableNameError = (
   name: string,
   t?: (str: string, args?: Record<string, string | number>) => string,
+  existingNames?: string[],
 ) => {
   if (!name) {
     return {
@@ -88,6 +89,13 @@ export const getVariableNameError = (
     return {
       type: ErrorType.INVALID,
       text: t ? t(ErrorI18nKey.VariableError) : '',
+    };
+  }
+
+  if (existingNames?.includes(name)) {
+    return {
+      type: ErrorType.EXISTING,
+      text: t ? t(EnvVariablesI18nKey.DuplicateName) : '',
     };
   }
 

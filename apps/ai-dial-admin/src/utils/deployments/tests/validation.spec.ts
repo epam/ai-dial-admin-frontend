@@ -21,7 +21,7 @@ import {
   getAdvancedTimingsError,
 } from '../validation';
 import { ErrorType } from '@/src/types/error-type';
-import { ErrorI18nKey } from '@/src/constants/i18n';
+import { EnvVariablesI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { isValidHttpUrl } from '@/src/utils/validation/url-error';
 import semver from 'semver/preload';
 
@@ -73,6 +73,36 @@ describe('validation utils', () => {
 
     test('returns null for valid name', () => {
       expect(getVariableNameError('VALID_VARIABLE_1', t)).toBeNull();
+    });
+
+    test('returns error for duplicate name', () => {
+      expect(getVariableNameError('DATABASE_URL', t, ['DATABASE_URL', 'API_KEY'])).toEqual({
+        type: ErrorType.EXISTING,
+        text: EnvVariablesI18nKey.DuplicateName,
+      });
+    });
+
+    test('returns null when name is not in existingNames', () => {
+      expect(getVariableNameError('DATABASE_URL', t, ['API_KEY', 'SECRET'])).toBeNull();
+    });
+
+    test('duplicate check is case-sensitive', () => {
+      expect(getVariableNameError('database_url', t, ['DATABASE_URL'])).toBeNull();
+    });
+
+    test('returns null when existingNames is undefined', () => {
+      expect(getVariableNameError('DATABASE_URL', t, undefined)).toBeNull();
+    });
+
+    test('returns null when existingNames is empty', () => {
+      expect(getVariableNameError('DATABASE_URL', t, [])).toBeNull();
+    });
+
+    test('format error takes priority over duplicate error', () => {
+      expect(getVariableNameError('var%!iable', t, ['var%!iable'])).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.VariableError,
+      });
     });
   });
 

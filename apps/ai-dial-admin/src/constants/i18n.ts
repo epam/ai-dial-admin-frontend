@@ -1388,6 +1388,7 @@ export enum EnvVariablesI18nKey {
   MountTypeSecureFile = 'EnvVariables.MountTypeSecureFile',
   MountTypeSecureContent = 'EnvVariables.MountTypeSecureContent',
   NoFileSelected = 'EnvVariables.NoFileSelected',
+  DuplicateName = 'EnvVariables.DuplicateName',
 }
 
 export enum ApplicationsI18nKey {
