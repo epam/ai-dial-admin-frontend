@@ -1,10 +1,11 @@
 'use client';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
   AlertVariant,
   DialAlert,
   DialCloseButton,
+  DialGhostButton,
   DialLoader,
   DialNeutralButton,
   DialPrimaryButton,
@@ -18,6 +19,9 @@ import {
   tryOutTestSuite,
 } from '@/src/app/[lang]/test-suites/actions';
 import Grafana from '@/public/images/icons/grafana.svg';
+import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { IconRefresh } from '@tabler/icons-react';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { saveTryoutResponseToStorage } from '@/src/components/TestSuites/utils/tryout-storage';
 import { convertVariableIntoInitialRequest } from '@/src/components/TestSuites/utils/template-variables';
@@ -106,22 +110,33 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const responseBodyCopyText = useMemo(() => (response ? JSON.stringify(response, null, 2) : ''), [response]);
+
   return (
-    <div className="flex flex-col gap-y-6 size-full min-h-0 py-6">
+    <div className="flex flex-col gap-y-6 size-full min-h-0 pb-6">
       {isLoading ? (
         <DialLoader size={40} />
       ) : (
         <>
-          <div className="flex flex-col gap-y-3 px-6">
+          <div className="flex flex-col gap-y-3">
             <div className="flex items-center justify-between">
-              <h1>{t(ButtonsI18nKey.TryOut)}</h1>
-              <div className="flex flex-row items-center gap-x-4">
-                <DialCloseButton onClose={onClose} />
+              <div className="flex flex-row items-center gap-x-2">
+                <h1>{t(ButtonsI18nKey.TryOut)}</h1>
+                {response ? (
+                  <DialGhostButton
+                    disabled={isRequestSend}
+                    label={t(ButtonsI18nKey.Restart)}
+                    iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}
+                    onClick={onSendRequest}
+                  />
+                ) : null}
               </div>
+
+              <DialCloseButton onClose={onClose} />
             </div>
             <p className="text-secondary dial-small-text">{t(TestSuitesI18nKey.TryoutWarning)}</p>
           </div>
-          <div className="flex-1 flex flex-col gap-y-8 pb-2 min-h-0 px-6">
+          <div className="flex-1 flex flex-col gap-y-8 pb-2 min-h-0">
             {!response && (
               <>
                 <div className="flex flex-col">
@@ -178,7 +193,11 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
                     />
                   )}
                 </CollapsibleSection>
-                <CollapsibleSection title={t(BasicI18nKey.Response)} growOnOpen>
+                <CollapsibleSection
+                  title={t(BasicI18nKey.Response)}
+                  growOnOpen
+                  headerIcon={<CopyButton value={responseBodyCopyText} valueLabel={t(BasicI18nKey.Response)} />}
+                >
                   {isRequestSend ? (
                     <DialLoader />
                   ) : (
@@ -192,14 +211,16 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
               </>
             )}
           </div>
-          <div className="flex justify-end gap-x-4 px-6 py-4 border-t border-secondary">
-            <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-            <DialPrimaryButton
-              label={t(ButtonsI18nKey.SendRequest)}
-              onClick={() => onSendRequest()}
-              disabled={isRequestSend}
-            />
-          </div>
+          {!response ? (
+            <div className="flex justify-end gap-x-4 pt-4 border-t border-secondary">
+              <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+              <DialPrimaryButton
+                label={t(ButtonsI18nKey.SendRequest)}
+                onClick={() => onSendRequest()}
+                disabled={isRequestSend}
+              />
+            </div>
+          ) : null}
         </>
       )}
     </div>

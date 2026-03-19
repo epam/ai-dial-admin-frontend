@@ -7,6 +7,7 @@ import { IconPlus } from '@tabler/icons-react';
 
 import { useI18n } from '@/src/locales/client';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { ContentType } from '@/src/components/TestSuites/constants/content-type';
 import { EntityViewTab, getTestSuiteRequestTemplateTabs } from '@/src/utils/tabs/utils';
 import TabsContent, { TabsContentRef } from './tabs/TabsContent';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -27,9 +28,14 @@ const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
     setActiveTab(id as EntityViewTab);
   }, []);
 
-  const onAddParamOrHeader = useCallback(() => {
+  const onAddRow = useCallback(() => {
     tabsContentRef.current?.add?.();
   }, []);
+
+  const isBodyFormData =
+    activeTab === EntityViewTab.Body && testSuite.requestTemplate?.body?.contentType !== ContentType.JSON;
+
+  const showAddButton = activeTab === EntityViewTab.Parameters || activeTab === EntityViewTab.Headers || isBodyFormData;
 
   return (
     <div className="flex flex-col size-full gap-2 border border-primary rounded p-4">
@@ -40,8 +46,8 @@ const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
 
       <div className="flex flex-row justify-between items-start mb-3">
         <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
-        {activeTab !== EntityViewTab.Body && (
-          <DialNeutralButton iconBefore={<IconPlus />} label={t(ButtonsI18nKey.Add)} onClick={onAddParamOrHeader} />
+        {showAddButton && (
+          <DialNeutralButton iconBefore={<IconPlus />} label={t(ButtonsI18nKey.Add)} onClick={onAddRow} />
         )}
       </div>
 

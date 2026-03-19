@@ -1,3 +1,5 @@
+import { createRef } from 'react';
+
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 
@@ -25,11 +27,12 @@ vi.mock('@/src/components/EntityTabs/JsonEditor/JsonEditor', () => ({
 }));
 
 vi.mock('@/src/components/TestSuites/RequestTemplate/components/FormDataGrid', () => ({
-  default: ({ content, changeContent }: any) => {
+  default: ({ content, changeContent, hideAddButton }: any) => {
     capturedChangeContent = changeContent;
     return (
       <div role="region" aria-label="Form data grid">
         <span>FormData: {JSON.stringify(content)}</span>
+        <span data-hide-add={hideAddButton ? 'true' : 'false'} />
         <button type="button" onClick={() => changeContent([{ name: 'x', type: FormDataType.Text, value: 'y' }])}>
           AddPart
         </button>
@@ -171,6 +174,45 @@ describe('BodyTab', () => {
       );
 
       expect(screen.getByRole('region', { name: 'Form data grid' })).toBeInTheDocument();
+    });
+
+    test('passes hideAddButton to FormDataGrid', () => {
+      const { container } = render(
+        <BodyTab
+          template={createTemplate({ body: { contentType: ContentType.FormData, content: [] } })}
+          changeTemplate={mockChangeTemplate}
+        />,
+      );
+
+      expect(container.querySelector('[data-hide-add="true"]')).toBeTruthy();
+    });
+
+    test('ref.add appends empty form part', () => {
+      const ref = createRef<{ add: () => void }>();
+      const template = createTemplate({ body: { contentType: ContentType.FormData, content: [] } });
+
+      render(<BodyTab ref={ref} template={template} changeTemplate={mockChangeTemplate} />);
+
+      ref.current?.add();
+
+      expect(mockChangeTemplate).toHaveBeenCalledWith({
+        ...template,
+        body: {
+          ...template.body,
+          content: [{ name: '', value: '', type: FormDataType.Text }],
+        },
+      });
+    });
+
+    test('ref.add is no-op for JSON body', () => {
+      const ref = createRef<{ add: () => void }>();
+      const template = createTemplate({ body: { contentType: ContentType.JSON, content: {} } });
+
+      render(<BodyTab ref={ref} template={template} changeTemplate={mockChangeTemplate} />);
+
+      ref.current?.add();
+
+      expect(mockChangeTemplate).not.toHaveBeenCalled();
     });
 
     test('passes template body content to FormDataGrid', () => {

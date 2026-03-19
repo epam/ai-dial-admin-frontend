@@ -99,7 +99,7 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, testCasesActionsRef, onDi
         <SaveValidationContextProvider>
           <TryOut testSuite={selectedTestSuite} testCaseId={testCaseId || ''} />
         </SaveValidationContextProvider>,
-        'w-1/2 max-w-[800px] !p-0',
+        'w-1/2 max-w-[800px]',
       );
       if (sidebarOpen) {
         sidebar.toggleIsMenuClosed?.();
