@@ -76,7 +76,7 @@ describe('Utils :: telemetry :: getSingleValueChartData', () => {
 describe('Utils :: telemetry :: getFormattedDataFilters', () => {
   test('returns filter for entityName only', () => {
     const result = getFormattedDataFilters([], 'EntityName');
-    expect(result).toEqual([{ $eq: { left: 'deployment', right: "'entityname'" } }]);
+    expect(result).toEqual([{ $eq: { left: 'deployment', right: "'EntityName'" } }]);
   });
 
   test('returns filters for data only', () => {
@@ -86,8 +86,8 @@ describe('Utils :: telemetry :: getFormattedDataFilters', () => {
     ];
     const result = getFormattedDataFilters(filters, null);
     expect(result).toEqual([
-      { $eq: { left: 'project_id', right: "'project1'" } },
-      { $ne: { left: 'deployment', right: "'entity1'" } },
+      { $eq: { left: 'project_id', right: "'Project1'" } },
+      { $ne: { left: 'deployment', right: "'Entity1'" } },
     ]);
   });
 
@@ -95,8 +95,8 @@ describe('Utils :: telemetry :: getFormattedDataFilters', () => {
     const filters = [{ type: FILTER_TYPE.Project, value: 'Project1', condition: FILTER_OPERATOR.Equal }];
     const result = getFormattedDataFilters(filters, 'EntityName');
     expect(result).toEqual([
-      { $eq: { left: 'deployment', right: "'entityname'" } },
-      { $eq: { left: 'project_id', right: "'project1'" } },
+      { $eq: { left: 'deployment', right: "'EntityName'" } },
+      { $eq: { left: 'project_id', right: "'Project1'" } },
     ]);
   });
 
@@ -202,6 +202,6 @@ describe('getFormattedFilters', () => {
         right: `'2023-01-02T00:00:00.000Z'`,
       },
     });
-    expect(result.$and[2]).toEqual({ $eq: { left: 'deployment', right: "'entityname'" } });
+    expect(result.$and[2]).toEqual({ $eq: { left: 'deployment', right: "'EntityName'" } });
   });
 });

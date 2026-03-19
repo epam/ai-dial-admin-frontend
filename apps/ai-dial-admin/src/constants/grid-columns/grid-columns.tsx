@@ -463,6 +463,29 @@ export const USAGE_LOG_CONVERSATIONS_COLUMNS: ColDef[] = [
 
 export const PROJECT_GRID_COLUMNS: ColDef[] = [{ field: 'name', headerName: 'Project' }, ...TELEMETRY_COLUMNS];
 
+export const MCP_CONSUMPTION_COLUMNS: ColDef[] = [
+  { field: 'name', headerName: 'MCP Name', hide: false },
+  { field: 'requests', headerName: 'Calls', hide: false, ...numericColumn },
+];
+
+export const TOOLS_CONSUMPTION_COLUMNS: ColDef[] = [
+  { field: 'mcp_name', headerName: 'MCP Name', hide: false },
+  { field: 'tool', headerName: 'Tool', hide: false },
+  { field: 'calls', headerName: 'Calls', hide: false, ...numericColumn },
+];
+
+export const MCP_CALLS_BY_DEPLOYMENT_COLUMNS: ColDef[] = [
+  { field: 'name', headerName: 'Deployment Name', hide: false },
+  { field: 'mcp_tool_call_name', headerName: 'MCP Name', hide: false },
+  { field: 'requests', headerName: 'Calls', hide: false, ...numericColumn },
+];
+
+export const MCP_PROJECTS_CONSUMPTION_COLUMNS: ColDef[] = [
+  { field: 'project', headerName: 'Project', hide: false },
+  { field: 'tool_calls', headerName: 'Tool Calls', hide: false, ...numericColumn },
+  { field: 'mcp_calls', headerName: 'MCP Calls', hide: false, sort: 'desc', ...numericColumn },
+];
+
 export const SOURCE_CONTAINERS_COLUMNS: ColDef[] = [
   NAME_COLUMN_WITH_SORT,
   DESCRIPTION_COLUMN,

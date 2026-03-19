@@ -633,6 +633,17 @@ export default {
       ConversationsTitle: 'Conversations',
       NoConversationsTitle: 'No Conversations',
     },
+    ViewBy: {
+      Chat: 'Chat',
+      Mcp: 'MCP',
+    },
+    TotalMcpCalls: 'Total MCP Calls',
+    TotalToolCalls: 'Total Tool Calls',
+    McpConsumption: 'MCP Consumption',
+    ToolsConsumption: 'Tools Consumption',
+    CallsByDeployment: 'Calls by Deployment',
+    RequestPerMcpUsage: 'Request per MCP usage',
+    ProjectsConsumptionMcp: 'Projects Consumption',
   },
   Routes: {
     AddPaths: 'Add paths',
