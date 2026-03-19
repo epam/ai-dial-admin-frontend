@@ -7,7 +7,10 @@ import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
-import { getSemanticVersionError } from '@/src/utils/deployments/validation';
+import {
+  getAssetVersionBusinessError,
+  SEMANTIC_VERSION_VALIDATION_FIELD,
+} from '@/src/utils/deployments/validation';
 
 interface Props {
   header: string;
@@ -40,7 +43,7 @@ const AddVersionModal: FC<Props> = ({
 
   const validateVersion = useCallback(
     (version?: string) => {
-      const error = getSemanticVersionError(existingVersions, entityName, t, version);
+      const error = getAssetVersionBusinessError(existingVersions, entityName, t, version);
       dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: !error });
       setVersionError(error);
     },
@@ -58,6 +61,7 @@ const AddVersionModal: FC<Props> = ({
   useEffect(() => {
     return () => {
       dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: true });
+      dispatch({ type: ValidationActionType.SetField, field: SEMANTIC_VERSION_VALIDATION_FIELD, isValid: true });
     };
   }, [dispatch]);
 
@@ -77,7 +81,7 @@ const AddVersionModal: FC<Props> = ({
       <div className="flex flex-col gap-4 dial-small-text px-6 py-4">
         {description && <div className="text-secondary">{description}</div>}
 
-        <VersionControl version={version} error={versionError?.text} onChange={onVersionChange} disableValidation />
+        <VersionControl version={version} error={versionError?.text} onChange={onVersionChange} />
       </div>
     </DialFormPopup>
   );

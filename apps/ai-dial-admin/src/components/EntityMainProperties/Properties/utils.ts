@@ -41,6 +41,10 @@ export const getVersionError = (
       return t(ErrorI18nKey.Version);
     }
 
+    if (model.displayVersion && model.displayVersion.length > MAX_NAME_SYMBOLS) {
+      return t(ErrorI18nKey.Length, { number: MAX_NAME_SYMBOLS });
+    }
+
     if (versionsMap[model.displayName as string]?.includes(model.displayVersion || '')) {
       return t(ErrorI18nKey.Unique);
     }

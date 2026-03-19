@@ -148,7 +148,6 @@ const DeploymentProperties: FC<Props> = ({
       />
       {isEntitiesWithDisplayVersion(view) && (
         <VersionControl
-          view={view}
           title={t(EntityFieldsI18nKey.displayVersion)}
           version={(entity as DialModel).displayVersion}
           onChange={onChangeVersion}
