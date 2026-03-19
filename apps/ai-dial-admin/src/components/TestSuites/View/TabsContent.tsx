@@ -7,6 +7,7 @@ import ValidityStatusLabel from '@/src/components/Common/ValidityStatus/Validity
 import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
 import Metrics from '@/src/components/TestSuites/Metrics/Metrics';
 import TestSuiteProperties from '@/src/components/TestSuites/Properties/Properties';
+import MethodTabContent from '@/src/components/TestSuites/View/MethodTabContent';
 import Runs from '@/src/components/TestSuites/Runs/Runs';
 import TestCases from '@/src/components/TestSuites/TestCases/TestCases';
 import { TestCasesActions } from '@/src/components/TestSuites/TestCases/TestCasesList';
@@ -64,8 +65,11 @@ const TabsContent: FC<Props> = ({
           view={ApplicationRoute.TestSuites}
           id={selectedTestSuite.id}
         >
-          <TestSuiteProperties testSuite={selectedTestSuite} onChange={onChange} isSkipRefresh={isSkipRefresh} />
+          <TestSuiteProperties testSuite={selectedTestSuite} onChange={onChange} />
         </PropertiesTabContent>
+      )}
+      {activeTab === EntityViewTab.TestSuiteMethod && (
+        <MethodTabContent testSuite={selectedTestSuite} onChange={onChange} isSkipRefresh={isSkipRefresh} />
       )}
       {activeTab === EntityViewTab.TestCases && (
         <TestCases

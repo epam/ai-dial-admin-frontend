@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 
+import { ContentType } from '@/src/components/TestSuites/constants/content-type';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
@@ -135,10 +136,40 @@ describe('RequestTemplate', () => {
     expect(screen.getByRole('region', { name: `tabs-content-${EntityViewTab.Body}` })).toBeInTheDocument();
   });
 
-  test('does not show Add button when Body tab is active', () => {
-    render(<RequestTemplate testSuite={createTestSuite()} onChangeTestSuite={mockOnChangeTestSuite} />);
+  test('does not show Add button when Body tab is JSON', () => {
+    render(
+      <RequestTemplate
+        testSuite={createTestSuite({
+          requestTemplate: {
+            urlTemplate: '/api',
+            body: { contentType: ContentType.JSON, content: {} },
+            headers: [],
+            queryParams: [],
+          },
+        })}
+        onChangeTestSuite={mockOnChangeTestSuite}
+      />,
+    );
 
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Add })).not.toBeInTheDocument();
+  });
+
+  test('shows Add button when Body tab is form-data', () => {
+    render(
+      <RequestTemplate
+        testSuite={createTestSuite({
+          requestTemplate: {
+            urlTemplate: '/api',
+            body: { contentType: ContentType.FormData, content: [] },
+            headers: [],
+            queryParams: [],
+          },
+        })}
+        onChangeTestSuite={mockOnChangeTestSuite}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Add })).toBeInTheDocument();
   });
 
   test('shows Add button when Parameters tab is active', () => {
@@ -173,10 +204,30 @@ describe('RequestTemplate', () => {
     expect(screen.getByRole('region', { name: `tabs-content-${EntityViewTab.Headers}` })).toBeInTheDocument();
   });
 
-  test('Add button calls tabsContentRef.current.add', () => {
+  test('Add button calls tabsContentRef.current.add on Parameters tab', () => {
     render(<RequestTemplate testSuite={createTestSuite()} onChangeTestSuite={mockOnChangeTestSuite} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Parameters' }));
+    fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.Add }));
+
+    expect(mockAdd).toHaveBeenCalledTimes(1);
+  });
+
+  test('Add button on Body (form-data) calls tabsContentRef.current.add', () => {
+    render(
+      <RequestTemplate
+        testSuite={createTestSuite({
+          requestTemplate: {
+            urlTemplate: '/api',
+            body: { contentType: ContentType.FormData, content: [] },
+            headers: [],
+            queryParams: [],
+          },
+        })}
+        onChangeTestSuite={mockOnChangeTestSuite}
+      />,
+    );
+
     fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.Add }));
 
     expect(mockAdd).toHaveBeenCalledTimes(1);

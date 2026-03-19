@@ -10,10 +10,10 @@ import { BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
-import BodyTab from './BodyTab';
+import BodyTab, { BodyTabRef } from './BodyTab';
 import ParamsTab, { ParamsTabRef } from './ParamsTab';
 
-export type TabsContentRef = ParamsTabRef | null;
+export type TabsContentRef = (ParamsTabRef & BodyTabRef) | null;
 
 interface Props {
   activeTab: EntityViewTab;
@@ -50,7 +50,7 @@ const TabsContent = forwardRef<TabsContentRef, Props>(({ activeTab, onChange, se
         />
       )}
       {activeTab === EntityViewTab.Body && (
-        <BodyTab template={selectedTestSuite.requestTemplate || {}} changeTemplate={onChangeTemplate} />
+        <BodyTab ref={ref} template={selectedTestSuite.requestTemplate || {}} changeTemplate={onChangeTemplate} />
       )}
       {activeTab === EntityViewTab.Headers && (
         <ParamsTab
