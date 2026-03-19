@@ -3,12 +3,15 @@ import { describe, expect, test, vi } from 'vitest';
 import { ParamsView } from '@/src/types/parameters';
 import {
   getAppRunner,
+  getCorrectConfig,
   getFrameConfig,
   getInitialParamsView,
+  getTargetUrl,
   generateViewItems,
   convertJsonSchema,
   getTypeFromUnion,
   convertAppPropertiesToArray,
+  validateAppProperties,
 } from '../utils';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { DialSchemePropertyType } from '@/src/models/dial/scheme';
@@ -679,5 +682,146 @@ describe('convertAppPropertiesToArray', () => {
         isFromScheme: false,
       },
     ]);
+  });
+});
+
+describe('getCorrectConfig', () => {
+  const session = { providerId: 'keycloak' } as any;
+
+  test('should return config from scheme when scheme is provided', () => {
+    const scheme = {
+      'dial:applicationTypeEditorUrl': 'https://editor.com',
+      'dial:applicationTypeDisplayName': 'App',
+    };
+    const result = getCorrectConfig(scheme as any, undefined, 'dark', session);
+
+    expect(result).toEqual({
+      theme: 'dark',
+      providerId: 'keycloak',
+      host: 'https://editor.com',
+      name: 'App',
+    });
+  });
+
+  test('should return config from application editorUrl when no scheme', () => {
+    const application = {
+      editorUrl: 'https://app-editor.com',
+      name: 'App Name',
+    };
+    const result = getCorrectConfig(undefined, application as any, 'light', session);
+
+    expect(result).toEqual({
+      theme: 'light',
+      providerId: 'keycloak',
+      host: 'https://app-editor.com',
+      name: 'App Name',
+    });
+  });
+
+  test('should return null when no scheme and no editorUrl', () => {
+    const application = { name: 'App' };
+    const result = getCorrectConfig(undefined, application as any, 'dark', session);
+
+    expect(result).toBeNull();
+  });
+
+  test('should return null when both scheme and application are undefined', () => {
+    const result = getCorrectConfig(undefined, undefined, 'dark', session);
+
+    expect(result).toBeNull();
+  });
+
+  test('should prefer scheme over application editorUrl', () => {
+    const scheme = {
+      'dial:applicationTypeEditorUrl': 'https://scheme-editor.com',
+      'dial:applicationTypeDisplayName': 'Scheme App',
+    };
+    const application = {
+      editorUrl: 'https://app-editor.com',
+      name: 'App Name',
+    };
+    const result = getCorrectConfig(scheme as any, application as any, 'dark', session);
+
+    expect(result?.host).toBe('https://scheme-editor.com');
+  });
+});
+
+describe('getTargetUrl', () => {
+  const frameConfig = {
+    host: 'https://editor.example.com',
+    providerId: 'keycloak',
+    theme: 'dark',
+  };
+
+  test('should return URL for AssetsApplications route', () => {
+    const application = { path: 'my-app/v1', name: 'my-app' } as any;
+    const result = getTargetUrl(ApplicationRoute.AssetsApplications, application, frameConfig);
+
+    expect(result).toBeInstanceOf(URL);
+    expect(result?.searchParams.get('id')).toBe('applications/my-app/v1');
+    expect(result?.searchParams.get('authProvider')).toBe('keycloak');
+    expect(result?.searchParams.get('theme')).toBe('dark');
+  });
+
+  test('should return URL with application name for non-asset routes', () => {
+    const application = { name: 'my-app' } as any;
+    const result = getTargetUrl(ApplicationRoute.Applications, application, frameConfig);
+
+    expect(result).toBeInstanceOf(URL);
+    expect(result?.searchParams.get('id')).toBe('my-app');
+  });
+
+  test('should return null for invalid host URL', () => {
+    const application = { name: 'app' } as any;
+    const result = getTargetUrl(ApplicationRoute.Applications, application, {
+      host: 'not-a-url',
+      providerId: 'keycloak',
+      theme: 'dark',
+    });
+
+    expect(result).toBeNull();
+  });
+
+  test('should return null when frameConfig is undefined', () => {
+    const application = { name: 'app' } as any;
+    const result = getTargetUrl(ApplicationRoute.Applications, application, undefined);
+
+    expect(result).toBeNull();
+  });
+});
+
+describe('validateAppProperties', () => {
+  test('should return true when all required properties have values', () => {
+    const properties: ApplicationPropertiesTemp[] = [
+      { key: 'name', value: 'test', type: 'string', required: true },
+      { key: 'opt', value: '', type: 'string', required: false },
+    ];
+    expect(validateAppProperties(properties)).toBe(true);
+  });
+
+  test('should return false when a required property has no value', () => {
+    const properties: ApplicationPropertiesTemp[] = [
+      { key: 'name', value: '' as any, type: 'string', required: true },
+    ];
+    expect(validateAppProperties(properties)).toBe(false);
+  });
+
+  test('should return false when a required property has undefined value', () => {
+    const properties: ApplicationPropertiesTemp[] = [
+      { key: 'name', value: undefined as any, type: 'string', required: true },
+    ];
+    expect(validateAppProperties(properties)).toBe(false);
+  });
+
+  test('should return true for empty properties array', () => {
+    expect(validateAppProperties([])).toBe(true);
+  });
+
+  test('should return true when no properties are required', () => {
+    const properties: ApplicationPropertiesTemp[] = [
+      { key: 'a', value: '' as any, type: 'string', required: false },
+      { key: 'b', value: undefined as any, type: 'string', required: false },
+    ];
+    expect(validateAppProperties(properties)).toBe(true);
   });
 });
