@@ -25,7 +25,7 @@ interface Props {
 
 const ContainerFields: FC<Props> = ({ container, setContainer, isModal, route, names }) => {
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
-  const disabled = (!!isModal ? false : isReadOnlyAdmin) || isEditDisabled(container);
+  const disabled = (isModal ? false : isReadOnlyAdmin) || isEditDisabled(container);
 
   return (
     <div className="flex flex-col gap-y-8">
