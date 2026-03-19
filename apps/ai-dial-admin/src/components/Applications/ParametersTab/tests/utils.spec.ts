@@ -800,9 +800,7 @@ describe('validateAppProperties', () => {
   });
 
   test('should return false when a required property has no value', () => {
-    const properties: ApplicationPropertiesTemp[] = [
-      { key: 'name', value: '' as any, type: 'string', required: true },
-    ];
+    const properties: ApplicationPropertiesTemp[] = [{ key: 'name', value: '' as any, type: 'string', required: true }];
     expect(validateAppProperties(properties)).toBe(false);
   });
 
