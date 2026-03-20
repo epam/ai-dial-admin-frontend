@@ -10,3 +10,11 @@ export const getItems = (params: SelectCellRendererParams): { items?: SelectOpti
     allItemsCount,
   };
 };
+
+export const formatEditableValue = (
+  value: string | number,
+  valueFormatter?: (value: string | number) => string,
+  translatedPlaceholder?: string,
+) => {
+  return valueFormatter ? valueFormatter(value) : (value ?? '') !== '' ? value : translatedPlaceholder;
+};
