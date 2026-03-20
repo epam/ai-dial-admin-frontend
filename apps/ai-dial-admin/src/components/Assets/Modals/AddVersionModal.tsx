@@ -7,10 +7,7 @@ import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
-import {
-  getAssetVersionBusinessError,
-  SEMANTIC_VERSION_VALIDATION_FIELD,
-} from '@/src/utils/deployments/validation';
+import { getAssetVersionBusinessError, SEMANTIC_VERSION_VALIDATION_FIELD } from '@/src/utils/deployments/validation';
 
 interface Props {
   header: string;

@@ -7,10 +7,7 @@ import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { getControlClassName } from '@/src/utils/entities/view';
-import {
-  getSemanticVersionFormatError,
-  SEMANTIC_VERSION_VALIDATION_FIELD,
-} from '@/src/utils/deployments/validation';
+import { getSemanticVersionFormatError, SEMANTIC_VERSION_VALIDATION_FIELD } from '@/src/utils/deployments/validation';
 
 interface Props {
   version?: string;
