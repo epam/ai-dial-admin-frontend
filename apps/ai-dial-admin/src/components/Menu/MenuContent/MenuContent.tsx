@@ -15,6 +15,7 @@ import MenuItem from '../MenuItem/MenuItem';
 import MenuAction from './MenuAction';
 import MenuActions from './MenuActions';
 import { useAppContext } from '@/src/context/AppContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 
 interface Props {
   disableMenuItems: string[];
@@ -24,6 +25,7 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
   const t = useI18n();
   const router = useRouter();
   const { featureFlags } = useAppContext();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   // pathname - /en/models/[id]
   // 0 - empty ''
@@ -106,7 +108,12 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
         <MenuActionsBar />
       ) : (
         <div className={classNames(actionsClassName, 'justify-center')}>
-          <MenuActions onExport={handleExport} onImport={handleImport} onOpenProperties={openProperties} />
+          <MenuActions
+            onExport={handleExport}
+            onImport={handleImport}
+            onOpenProperties={openProperties}
+            showImportExport={!isReadOnlyAdmin}
+          />
         </div>
       )}
     </div>

@@ -8,6 +8,7 @@ import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { mergeClasses } from '@/src/utils/merge-classes';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 
 interface Props extends DialInputProps {
   value?: string;
@@ -19,6 +20,7 @@ interface Props extends DialInputProps {
 }
 
 const ComplexInput: FC<Props> = ({ fullValue, label, isFullWidth, copyable = true, required, ...props }) => {
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const t = useI18n();
   return (
     <div className="flex items-end gap-2">
@@ -30,7 +32,9 @@ const ComplexInput: FC<Props> = ({ fullValue, label, isFullWidth, copyable = tru
           )}
           {...props}
         />
-        {copyable && <CopyButton valueLabel={label} value={fullValue} buttonLabel={t(ButtonsI18nKey.Copy)} />}
+        {copyable && !isReadOnlyAdmin && (
+          <CopyButton valueLabel={label} value={fullValue} buttonLabel={t(ButtonsI18nKey.Copy)} />
+        )}
       </div>
     </div>
   );

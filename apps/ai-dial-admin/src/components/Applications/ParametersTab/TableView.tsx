@@ -20,9 +20,17 @@ interface Props {
   onChangeProperties: (properties: ApplicationPropertiesTemp[], isSkipRefresh?: boolean) => void;
   isAddClicked: boolean;
   setIsAddClicked: Dispatch<SetStateAction<boolean>>;
+  disabled?: boolean;
 }
 
-const TableView: FC<Props> = ({ properties, isSkipRefresh, onChangeProperties, isAddClicked, setIsAddClicked }) => {
+const TableView: FC<Props> = ({
+  properties,
+  isSkipRefresh,
+  onChangeProperties,
+  isAddClicked,
+  setIsAddClicked,
+  disabled,
+}) => {
   const t = useI18n();
   const [gridApi, setGridApi] = useState<GridApi>();
   const data = useMemo(() => properties, [properties]);
@@ -106,11 +114,14 @@ const TableView: FC<Props> = ({ properties, isSkipRefresh, onChangeProperties, i
   }, []);
 
   const columns = useMemo(() => {
-    return [
-      ...getAppPropertiesColumns(onChangeParam, onChangeJSON, onChangeSelect, t),
-      ACTION_COLUMN([getRemoveOperation(onRemoveProperty, (api, node) => isRemoveHidden(api, node))], true),
-    ];
-  }, [isRemoveHidden, onChangeJSON, onChangeParam, onChangeSelect, onRemoveProperty, t]);
+    const dataColumns = getAppPropertiesColumns(onChangeParam, onChangeJSON, onChangeSelect, t, !!disabled);
+    return disabled
+      ? dataColumns
+      : [
+          ...dataColumns,
+          ACTION_COLUMN([getRemoveOperation(onRemoveProperty, (api, node) => isRemoveHidden(api, node))], true),
+        ];
+  }, [isRemoveHidden, onChangeJSON, onChangeParam, onChangeSelect, onRemoveProperty, disabled, t]);
 
   const onGridReady = (event: GridReadyEvent) => {
     setGridApi(event.api);
