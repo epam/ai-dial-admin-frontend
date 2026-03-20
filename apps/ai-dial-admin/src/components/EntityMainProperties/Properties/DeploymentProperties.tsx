@@ -155,6 +155,7 @@ const DeploymentProperties: FC<Props> = ({
           optional={isVersionOptional}
           isFullWidth={!isEntityImmutable}
           hideError={!!displayNameError}
+          enableSemanticValidation={false}
         />
       )}
 

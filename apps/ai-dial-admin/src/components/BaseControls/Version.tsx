@@ -22,6 +22,7 @@ interface Props {
   hideError?: boolean;
   title?: string;
   isFullWidth?: boolean;
+  enableSemanticValidation?: boolean;
   onChange?: (version?: string) => void;
 }
 
@@ -34,6 +35,7 @@ const VersionControl: FC<Props> = ({
   onChange,
   title,
   disabled,
+  enableSemanticValidation = true,
   containerClassName,
   ...props
 }) => {
@@ -49,6 +51,15 @@ const VersionControl: FC<Props> = ({
 
   const applySemanticValidation = useCallback(
     (value?: string) => {
+      if (!enableSemanticValidation) {
+        setFormatError(null);
+        dispatch({
+          type: ValidationActionType.SetField,
+          field: SEMANTIC_VERSION_VALIDATION_FIELD,
+          isValid: true,
+        });
+        return;
+      }
       const err = getSemanticVersionFormatError(value, t);
       setFormatError(err);
       dispatch({
@@ -57,7 +68,7 @@ const VersionControl: FC<Props> = ({
         isValid: !err,
       });
     },
-    [dispatch, t],
+    [dispatch, enableSemanticValidation, t],
   );
 
   const onChangeVersion = useCallback(

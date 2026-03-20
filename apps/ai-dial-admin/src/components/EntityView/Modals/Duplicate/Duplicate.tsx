@@ -183,6 +183,7 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
               error={versionError}
               optional={isVersionOptional}
               hideError={!!displayNameError}
+              enableSemanticValidation={false}
             />
           )}
         </div>
