@@ -113,9 +113,13 @@ export const getBaseDirectoryError = (directory?: string, t?: (str: string) => s
   return null;
 };
 
-export const getSemanticVersionError = (
+/** Save-validation map key used by `VersionControl` for semver format only. */
+export const SEMANTIC_VERSION_VALIDATION_FIELD = 'semanticVersion';
+
+/** Required + duplicate name/version only (semver format is validated in `VersionControl`). */
+export const getAssetVersionBusinessError = (
   versionsMap: Record<string, string[]> | undefined,
-  name?: string,
+  name: string | undefined,
   t?: (str: string) => string,
   version?: string,
 ): FieldError | null => {
@@ -126,10 +130,6 @@ export const getSemanticVersionError = (
     };
   }
 
-  if (semver.valid(version) === null) {
-    return { type: ErrorType.INVALID, text: t ? t(ErrorI18nKey.NotSemanticVersion) : '' };
-  }
-
   if (versionsMap && checkNameVersionCombination(versionsMap, name || '', version)) {
     return {
       type: ErrorType.INVALID,
@@ -138,6 +138,34 @@ export const getSemanticVersionError = (
   }
 
   return null;
+};
+
+export const getSemanticVersionFormatError = (
+  version: string | undefined,
+  t?: (str: string) => string,
+): FieldError | null => {
+  if (!version) {
+    return null;
+  }
+
+  if (semver.valid(version) === null) {
+    return { type: ErrorType.INVALID, text: t ? t(ErrorI18nKey.NotSemanticVersion) : '' };
+  }
+
+  return null;
+};
+
+export const getSemanticVersionError = (
+  versionsMap: Record<string, string[]> | undefined,
+  name?: string,
+  t?: (str: string) => string,
+  version?: string,
+): FieldError | null => {
+  const businessError = getAssetVersionBusinessError(versionsMap, name, t, version);
+  if (businessError) {
+    return businessError;
+  }
+  return getSemanticVersionFormatError(version, t);
 };
 
 export const getDeploymentsURLError = (url: string, t?: (str: string) => string): FieldError | null => {

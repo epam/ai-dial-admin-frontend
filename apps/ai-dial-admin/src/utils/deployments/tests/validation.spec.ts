@@ -1,5 +1,6 @@
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 import {
+  getAssetVersionBusinessError,
   getDeploymentsURIError,
   getDeploymentsURLError,
   getErrorForHfModelName,
@@ -7,6 +8,7 @@ import {
   getMaintainerError,
   getPathError,
   getSemanticVersionError,
+  getSemanticVersionFormatError,
   getVariableNameError,
   getCPUValueError,
   getResourcesConflictError,
@@ -134,6 +136,46 @@ describe('validation utils', () => {
     test('returns null if valid ', () => {
       (semver.valid as any).mockReturnValue('1.0.1');
       expect(getSemanticVersionError({ image: ['1.0.0'] }, 'image', t, '1.0.1')).toBeNull();
+    });
+  });
+
+  describe('getSemanticVersionFormatError', () => {
+    test('returns null for empty version', () => {
+      expect(getSemanticVersionFormatError('', t)).toBeNull();
+      expect(getSemanticVersionFormatError(undefined, t)).toBeNull();
+    });
+
+    test('returns error when semver invalid', () => {
+      (semver.valid as any).mockReturnValue(null);
+      expect(getSemanticVersionFormatError('nope', t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.NotSemanticVersion,
+      });
+    });
+
+    test('returns null when semver valid', () => {
+      (semver.valid as any).mockReturnValue('1.0.0');
+      expect(getSemanticVersionFormatError('1.0.0', t)).toBeNull();
+    });
+  });
+
+  describe('getAssetVersionBusinessError', () => {
+    test('returns required when empty', () => {
+      expect(getAssetVersionBusinessError({ a: ['1.0.0'] }, 'a', t, '')).toEqual({
+        type: ErrorType.EMPTY,
+        text: ErrorI18nKey.RequiredField,
+      });
+    });
+
+    test('returns duplicate when combination exists', () => {
+      expect(getAssetVersionBusinessError({ a: ['1.0.0'] }, 'a', t, '1.0.0')).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.NameVersionCombination,
+      });
+    });
+
+    test('returns null when version unique for name', () => {
+      expect(getAssetVersionBusinessError({ a: ['1.0.0'] }, 'a', t, '2.0.0')).toBeNull();
     });
   });
 
