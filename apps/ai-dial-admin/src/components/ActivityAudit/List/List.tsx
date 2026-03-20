@@ -183,12 +183,7 @@ const ActivityAuditList: FC<Props> = ({
 
   const columnDefs = entity
     ? [...ACTIVITY_AUDIT_COLUMNS(t, true)]
-    : getActivityAuditColumns(
-        t,
-        openInNewTab,
-        isReadOnlyAdmin ? undefined : onOpenConfirmationModal,
-        void 0,
-      );
+    : getActivityAuditColumns(t, openInNewTab, isReadOnlyAdmin ? undefined : onOpenConfirmationModal, void 0);
 
   const onRefresh = useCallback(() => {
     if (gridApi) {

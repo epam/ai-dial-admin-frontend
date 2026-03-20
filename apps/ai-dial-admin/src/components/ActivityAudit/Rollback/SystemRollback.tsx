@@ -275,7 +275,8 @@ const SystemRollback: FC = () => {
           />,
           document.body,
         )}
-      {!isReadOnlyAdmin && isRevisionsModalOpen &&
+      {!isReadOnlyAdmin &&
+        isRevisionsModalOpen &&
         createPortal(
           <RollbackRevisions
             initialRevisions={revisions?.filter((r) => r.id !== currentRevision?.id) || []}
