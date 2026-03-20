@@ -1,4 +1,3 @@
-import { importPrompts } from '@/src/app/[lang]/prompts/actions';
 import { importApps } from '@/src/app/[lang]/assets-applications/actions';
 import { importToolsets } from '@/src/app/[lang]/assets-toolsets/actions';
 import { MenuI18nKey } from '@/src/constants/i18n';
@@ -8,6 +7,7 @@ import { ImportData } from '@/src/models/import-asset';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { importFiles } from '@/src/utils/files/import-files';
+import { importPrompts } from '@/src/utils/prompts/import-prompts';
 import { getJsonFileName } from '@/src/utils/import/get-json-name';
 
 export const getFormDataForImport = (

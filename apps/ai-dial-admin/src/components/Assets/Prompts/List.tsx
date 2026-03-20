@@ -8,9 +8,9 @@ import {
   createPrompt,
   exportPrompts,
   getPrompt,
-  importPrompts,
   movePrompts,
 } from '@/src/app/[lang]/prompts/actions';
+import { importPrompts } from '@/src/utils/prompts/import-prompts';
 import { getVersionsPerName } from '@/src/components/Assets/utils';
 import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { ApplicationRoute } from '@/src/types/routes';
