@@ -19,9 +19,11 @@ interface Props {
   setContainer: (container: Container) => void;
   isModal?: boolean;
   route: ApplicationRoute;
+  disabled?: boolean;
 }
 
-const ContainerSource: FC<Props> = ({ container, setContainer, isModal = false, route }) => {
+const ContainerSource: FC<Props> = ({ container, setContainer, isModal = false, route, disabled }) => {
+  const isDisabled = disabled ?? isEditDisabled(container);
   const t = useI18n();
   const { dispatch, resetCounter } = useSaveValidationContext();
   const containerClassName = useMemo(() => getControlClassName(isModal), [isModal]);
@@ -101,12 +103,19 @@ const ContainerSource: FC<Props> = ({ container, setContainer, isModal = false, 
             invalid={!!imageRefError}
             onChange={onChangeImageRef}
             containerClassName={containerClassName}
-            disabled={isEditDisabled(container)}
+            disabled={isDisabled}
           />
         );
       case CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE:
         if (container.source?.externalRegistryRef) {
-          return <McpServerNameField container={container} setContainer={setContainer} isModal={isModal} />;
+          return (
+            <McpServerNameField
+              container={container}
+              setContainer={setContainer}
+              isModal={isModal}
+              disabled={isDisabled}
+            />
+          );
         }
         return (
           <DialInput
@@ -118,11 +127,19 @@ const ContainerSource: FC<Props> = ({ container, setContainer, isModal = false, 
             invalid={!!imageReferenceError}
             onChange={onChangeImageReference}
             containerClassName={containerClassName}
-            disabled={isEditDisabled(container)}
+            disabled={isDisabled}
           />
         );
       default:
-        return <HFModelNameField container={container} setContainer={setContainer} isModal={isModal} route={route} />;
+        return (
+          <HFModelNameField
+            container={container}
+            setContainer={setContainer}
+            isModal={isModal}
+            route={route}
+            disabled={isDisabled}
+          />
+        );
     }
   };
 

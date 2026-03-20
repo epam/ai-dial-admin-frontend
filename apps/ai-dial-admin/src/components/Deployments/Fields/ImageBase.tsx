@@ -7,6 +7,7 @@ import { FieldError } from '@/src/models/error';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getSemanticVersionError, getImageNameError } from '@/src/utils/deployments/validation';
 import { getErrorForName } from '@/src/utils/validation/name-error';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 
 import DescriptionControl from '@/src/components/BaseControls/Description';
@@ -35,6 +36,7 @@ const ImageBase: FC<Props> = ({
   verifyVersion,
 }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { dispatch, resetCounter } = useSaveValidationContext();
 
   const [nameError, setNameError] = useState<FieldError | null>(null);
@@ -108,6 +110,7 @@ const ImageBase: FC<Props> = ({
         onChange={onChangeName}
         error={nameError?.text}
         invalid={!!nameError}
+        disabled={isReadOnlyAdmin}
       />
       {isModal && (
         <DialInput
@@ -119,6 +122,7 @@ const ImageBase: FC<Props> = ({
           error={versionError?.text}
           invalid={!!versionError}
           onChange={onChangeVersion}
+          disabled={isReadOnlyAdmin}
         />
       )}
       <DescriptionControl entity={image} onChangeEntity={setImage} isFullWidth={isModal} />

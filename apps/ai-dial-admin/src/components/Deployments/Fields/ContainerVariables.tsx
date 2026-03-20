@@ -19,10 +19,12 @@ import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 interface Props {
   container: Container;
   setContainer: (container: Container) => void;
+  disabled?: boolean;
 }
 
-const ContainerVariables: FC<Props> = ({ container, setContainer }) => {
+const ContainerVariables: FC<Props> = ({ container, setContainer, disabled }) => {
   const t = useI18n();
+  const isDisabled = disabled ?? isEditDisabled(container);
   const { errorFields, isValid } = useSaveValidationContext();
 
   const [isSectionInvalid, setSectionInvalid] = useState(false);
@@ -119,7 +121,7 @@ const ContainerVariables: FC<Props> = ({ container, setContainer }) => {
                   removeVariable={onRemoveVariable}
                   findColumn={findColumn}
                   moveColumn={moveColumn}
-                  disabled={isEditDisabled(container)}
+                  disabled={isDisabled}
                   existingNames={existingNamesByIndex[index]}
                 />
               );
@@ -132,7 +134,7 @@ const ContainerVariables: FC<Props> = ({ container, setContainer }) => {
             label={t(EnvVariablesI18nKey.AddVariable)}
             iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
             onClick={onAddVariable}
-            disabled={isEditDisabled(container)}
+            disabled={isDisabled}
           />
         </div>
       </div>

@@ -27,9 +27,10 @@ interface Props {
   image: Image;
   route: ApplicationRoute;
   versions: ImageVersion[];
+  disabled?: boolean;
 }
 
-const Containers: FC<Props> = ({ image, route, versions }) => {
+const Containers: FC<Props> = ({ image, route, versions, disabled }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
   const router = useRouter();
@@ -129,7 +130,7 @@ const Containers: FC<Props> = ({ image, route, versions }) => {
         }}
         storageKey={`${route}/related`}
       >
-        {installed && <DialPrimaryButton label={t(ButtonsI18nKey.Add)} onClick={handleModalOpen} />}
+        {installed && !disabled && <DialPrimaryButton label={t(ButtonsI18nKey.Add)} onClick={handleModalOpen} />}
       </ListEntities>
       {isModalOpen &&
         createPortal(

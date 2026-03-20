@@ -6,6 +6,7 @@ import { Image } from '@/src/models/deployments/images';
 import { FieldError } from '@/src/models/error';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getDeploymentsURLError } from '@/src/utils/deployments/validation';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -15,6 +16,7 @@ interface Props {
 
 const CodeUrl: FC<Props> = ({ image, setImage }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { dispatch, resetCounter } = useSaveValidationContext();
 
   const [sourceError, setSourceError] = useState<FieldError | null>(null);
@@ -81,6 +83,7 @@ const CodeUrl: FC<Props> = ({ image, setImage }) => {
       error={sourceError?.text}
       invalid={!!sourceError}
       onChange={onURLChange}
+      disabled={isReadOnlyAdmin}
     />
   );
 };

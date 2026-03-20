@@ -38,14 +38,16 @@ export const getFormattedDataFilters = (filters: FilterData[], entityName?: stri
 
   if (entityName) {
     const left = filterTypeConfig.find((filterType) => filterType.value === FILTER_TYPE.Entity)?.filter;
-    const right = `'${entityName.toLowerCase()}'`;
+    const right = `'${entityName}'`;
     const operator = filterOperatorConfig[FILTER_OPERATOR.Equal];
     userFilters.push({ [operator]: { left: left, right: right } });
   }
 
   filters.forEach((filter) => {
     const left = filterTypeConfig.find((filterType) => filterType.value === filter.type)?.filter;
-    const right = `'${filter.value.toLowerCase()}'`;
+    const isExactMatch = filter.condition === FILTER_OPERATOR.Equal || filter.condition === FILTER_OPERATOR.NotEqual;
+    const value = isExactMatch ? filter.value : filter.value.toLowerCase();
+    const right = `'${value}'`;
     const operator = filterOperatorConfig[filter.condition];
 
     userFilters.push({ [operator]: { left: left, right: right } });
@@ -54,9 +56,18 @@ export const getFormattedDataFilters = (filters: FilterData[], entityName?: stri
   return userFilters;
 };
 
-export const getFormattedFilters = (timePeriod: TimeRange, filters: FilterData[], entityName: string | null) => {
+export const getFormattedFilters = (
+  timePeriod: TimeRange,
+  filters: FilterData[],
+  entityName: string | null,
+  extraConditions?: Record<string, unknown>[],
+) => {
   return {
-    $and: [...getFormattedTimeFilter(timePeriod), ...getFormattedDataFilters(filters, entityName)],
+    $and: [
+      ...getFormattedTimeFilter(timePeriod),
+      ...getFormattedDataFilters(filters, entityName),
+      ...(extraConditions || []),
+    ],
   };
 };
 

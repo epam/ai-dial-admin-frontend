@@ -18,6 +18,7 @@ import { DialApplicationResource } from '@/src/models/dial/application-resource'
 import { DefaultsValue } from '@/src/models/dial/defaults';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialSchemePropertyType } from '@/src/models/dial/scheme';
+import { FrameConfig } from '@/src/models/frame-config';
 import { ParamsFields, ParamsView } from '@/src/types/parameters';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -36,6 +37,37 @@ export const getFrameConfig = (
       (scheme as DialApplicationScheme)?.['dial:applicationTypeDisplayName'] ||
       (scheme as DialApplicationResource)?.name,
   };
+};
+
+export const getCorrectConfig = (
+  scheme: DialApplicationScheme | undefined,
+  application: DialApplication | DialApplicationResource | undefined,
+  currentTheme: string,
+  session?: UserSession,
+) => {
+  if (scheme) {
+    return getFrameConfig(scheme, currentTheme, session as UserSession);
+  } else if (application?.editorUrl) {
+    return getFrameConfig(application, currentTheme, session as UserSession);
+  }
+  return null;
+};
+
+export const getTargetUrl = (
+  view?: ApplicationRoute,
+  application?: DialApplication | DialApplicationResource,
+  frameConfig?: FrameConfig | null,
+) => {
+  const id =
+    view === ApplicationRoute.AssetsApplications ? `applications/${(application as AssetApp).path}` : application?.name;
+  try {
+    const iframeUrl = `${frameConfig?.host}?authProvider=${frameConfig?.providerId}&theme=${frameConfig?.theme}&id=${id}`;
+    return new URL(iframeUrl);
+  } catch (error) {
+    if (error) {
+      return null;
+    }
+  }
 };
 
 export const getAppRunner = (

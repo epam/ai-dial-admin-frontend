@@ -338,6 +338,7 @@ export enum ButtonsI18nKey {
   Run = 'Buttons.Run',
   AddPort = 'Buttons.AddPort',
   SendRequest = 'Buttons.SendRequest',
+  Restart = 'Buttons.Restart',
   ManageTool = 'Buttons.ManageTool',
   Confirm = 'Buttons.Confirm',
   GlobalFirewall = 'Buttons.GlobalFirewall',
@@ -611,6 +612,16 @@ export enum TelemetryI18nKey {
   NoTracesTitle = 'Telemetry.UsageLog.NoTracesTitle',
   ConversationsTitle = 'Telemetry.UsageLog.ConversationsTitle',
   NoConversationsTitle = 'Telemetry.UsageLog.NoConversationsTitle',
+  ViewByLabel = 'Telemetry.ViewByLabel',
+  ViewByChat = 'Telemetry.ViewBy.Chat',
+  ViewByMcp = 'Telemetry.ViewBy.Mcp',
+  TotalMcpCalls = 'Telemetry.TotalMcpCalls',
+  TotalToolCalls = 'Telemetry.TotalToolCalls',
+  McpConsumption = 'Telemetry.McpConsumption',
+  ToolsConsumption = 'Telemetry.ToolsConsumption',
+  CallsByDeployment = 'Telemetry.CallsByDeployment',
+  RequestPerMcpUsage = 'Telemetry.RequestPerMcpUsage',
+  ProjectsConsumptionMcp = 'Telemetry.ProjectsConsumptionMcp',
 }
 
 export enum RoutesI18nKey {
@@ -1405,6 +1416,7 @@ export enum TestSuitesI18nKey {
   Methods = 'TestSuites.Methods',
   Method = 'TestSuites.Method',
   ChangeMethod = 'TestSuites.ChangeMethod',
+  ChangeMethodDisabledWhileTryOutOpen = 'TestSuites.ChangeMethodDisabledWhileTryOutOpen',
   TestCases = 'TestSuites.TestCases',
   NoTestCases = 'TestSuites.NoTestCases',
   FromPC = 'TestSuites.FromPC',

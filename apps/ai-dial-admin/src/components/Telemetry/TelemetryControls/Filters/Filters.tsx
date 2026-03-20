@@ -6,7 +6,7 @@ import AddFilter from '@/src/components/Telemetry/TelemetryControls/Filters/AddF
 import Filter from '@/src/components/Telemetry/TelemetryControls/Filters/Filter';
 import { TelemetryI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-import { ENTITY_QUERY, PROJECT_QUERY } from '@/src/constants/telemetry';
+import { getEntityQuery, getProjectQuery, MCP_TABLE_NAME } from '@/src/constants/telemetry';
 import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { FilterData, TelemetryQuery } from '@/src/models/telemetry';
@@ -18,9 +18,10 @@ interface Props {
   setFilters: Dispatch<SetStateAction<FilterData[]>>;
   getData: (query: TelemetryQuery) => Promise<ServerActionResponse>;
   route: ApplicationRoute;
+  isMcpView?: boolean;
 }
 
-const Filters: FC<Props> = ({ filters, setFilters, getData, route }) => {
+const Filters: FC<Props> = ({ filters, setFilters, getData, route, isMcpView = false }) => {
   const t = useI18n();
   const [projects, setProjects] = useState<SelectOption[]>([]);
   const [entities, setEntities] = useState<SelectOption[]>([]);
@@ -36,7 +37,9 @@ const Filters: FC<Props> = ({ filters, setFilters, getData, route }) => {
       return { data: [] };
     };
 
-    Promise.all([fetch(PROJECT_QUERY), fetch(ENTITY_QUERY)]).then((responses) => {
+    const tableName = isMcpView ? MCP_TABLE_NAME : undefined;
+
+    Promise.all([fetch(getProjectQuery(tableName)), fetch(getEntityQuery(tableName))]).then((responses) => {
       const { data: projectData } = responses[0];
       const { data: entityData } = responses[1];
 
@@ -55,7 +58,7 @@ const Filters: FC<Props> = ({ filters, setFilters, getData, route }) => {
         );
       }
     });
-  }, [getData]);
+  }, [getData, isMcpView]);
 
   const onDelete = useCallback(
     (index: number) => {

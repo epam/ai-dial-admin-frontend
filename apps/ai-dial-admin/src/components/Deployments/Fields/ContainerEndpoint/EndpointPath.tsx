@@ -13,10 +13,12 @@ import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 interface Props {
   container: Container;
   setContainer: (container: Container) => void;
+  disabled?: boolean;
 }
 
-const EndpointPath: FC<Props> = ({ container, setContainer }) => {
+const EndpointPath: FC<Props> = ({ container, setContainer, disabled }) => {
   const t = useI18n();
+  const isDisabled = disabled ?? isEditDisabled(container);
   const { dispatch, resetCounter } = useSaveValidationContext();
   const [pathError, setPathError] = useState<FieldError | null>(null);
 
@@ -66,7 +68,7 @@ const EndpointPath: FC<Props> = ({ container, setContainer }) => {
       error={pathError?.text}
       invalid={!!pathError}
       onChange={onPathChange}
-      disabled={isEditDisabled(container)}
+      disabled={isDisabled}
     />
   );
 };

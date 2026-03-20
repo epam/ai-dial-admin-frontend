@@ -54,6 +54,7 @@ import {
   runsTab,
   summaryTab,
   testCasesTab,
+  testSuiteMethodTab,
   toolsTab,
   tracesTab,
   trendsTab,
@@ -138,8 +139,16 @@ describe('Entities :: tabs', () => {
     ]);
   });
 
-  test('returns correct tabs for AssetsToolsets', () => {
+  test('returns correct tabs for AssetsToolsets without dashboardEnabled', () => {
     expect(getTabsForAsset(t, ApplicationRoute.AssetsToolsets)).toEqual([propertiesTab(t), toolsTab(t)]);
+  });
+
+  test('returns correct tabs for AssetsToolsets with dashboardEnabled', () => {
+    expect(getTabsForAsset(t, ApplicationRoute.AssetsToolsets, { dashboardEnabled: true })).toEqual([
+      propertiesTab(t),
+      toolsTab(t),
+      auditTab(t),
+    ]);
   });
 
   test('returns correct tabs for toolset', () => {
@@ -230,7 +239,13 @@ describe('Entities :: tabs', () => {
   });
 
   test('returns correct tabs for test suite', () => {
-    expect(getTestSuiteTabs(t)).toEqual([propertiesTab(t), testCasesTab(t), runsTab(t), metricsTab(t)]);
+    expect(getTestSuiteTabs(t)).toEqual([
+      propertiesTab(t),
+      testSuiteMethodTab(t),
+      testCasesTab(t),
+      runsTab(t),
+      metricsTab(t),
+    ]);
   });
 
   test('returns correct tabs for run', () => {

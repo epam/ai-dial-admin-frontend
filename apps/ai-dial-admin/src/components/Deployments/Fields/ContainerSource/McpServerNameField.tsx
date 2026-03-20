@@ -24,10 +24,12 @@ interface Props {
   container: Container;
   setContainer: (container: Container) => void;
   isModal?: boolean;
+  disabled?: boolean;
 }
 
-const McpServerNameField: FC<Props> = ({ container, setContainer, isModal }) => {
+const McpServerNameField: FC<Props> = ({ container, setContainer, isModal, disabled }) => {
   const t = useI18n();
+  const isDisabled = (disabled ?? isEditDisabled(container)) || container.status === CONTAINER_STATUS.RUNNING;
   const { dispatch, resetCounter } = useSaveValidationContext();
   const [serverOptions, setServerOptions] = useState<{ value: string; label: string }[]>([]);
   const [serverCache, setServerCache] = useState<Map<string, McpServer>>(new Map());
@@ -197,14 +199,14 @@ const McpServerNameField: FC<Props> = ({ container, setContainer, isModal }) => 
           options={serverOptions}
           error={serverNameError?.text}
           containerClassName={containerClassName}
-          disabled={isEditDisabled(container) || container.status === CONTAINER_STATUS.RUNNING}
+          disabled={isDisabled}
         />
         <DialNeutralButton
           onClick={handleModalOpen}
           label={t(ButtonsI18nKey.McpRegistry)}
           iconBefore={<OpenPopup {...BASE_BUTTON_ICON_PROPS} />}
           className={classNames(serverNameError?.text ? 'self-center mb-1' : 'self-end', 'shrink-0')}
-          disabled={isEditDisabled(container) || container.status === CONTAINER_STATUS.RUNNING}
+          disabled={isDisabled}
         />
       </div>
       {isModalOpen &&

@@ -6,6 +6,7 @@ import { FieldError } from '@/src/models/error';
 import { Image } from '@/src/models/deployments/images';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getDeploymentsURIError } from '@/src/utils/deployments/validation';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -15,6 +16,7 @@ interface Props {
 
 const DockerURI: FC<Props> = ({ image, setImage }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { dispatch, resetCounter } = useSaveValidationContext();
 
   const [sourceError, setSourceError] = useState<FieldError | null>(null);
@@ -79,6 +81,7 @@ const DockerURI: FC<Props> = ({ image, setImage }) => {
       error={sourceError?.text}
       invalid={!!sourceError}
       onChange={onURIChange}
+      disabled={isReadOnlyAdmin}
     />
   );
 };

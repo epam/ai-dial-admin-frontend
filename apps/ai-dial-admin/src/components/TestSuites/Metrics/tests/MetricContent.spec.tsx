@@ -7,10 +7,6 @@ import { Metric } from '@/src/models/evaluation/metric';
 import MetricContent from '../MetricContent';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 
-vi.mock('@/src/locales/client', () => ({
-  useI18n: () => (key: string) => key,
-}));
-
 vi.mock('../Bindings', () => ({
   default: () => <div role="region" aria-label="bindings" />,
 }));

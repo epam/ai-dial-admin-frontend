@@ -4,6 +4,7 @@ import { FC, useMemo } from 'react';
 
 import FoldersStorageLabel from '@/src/components/Assets/Header/FolderStorage';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
+import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
 import Tools from '@/src/components/Tools/Tools';
 import { AuthHeader } from '@/src/components/Toolsets/Auth/Sections/AuthHeader';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
@@ -64,6 +65,10 @@ const TabsContent: FC<Props> = ({ activeTab, onChange, selectedToolset, original
           onChangeToolset={onChange as (toolset: Toolset) => void}
           disabled={isReadOnlyAdmin}
         />
+      )}
+
+      {activeTab === EntityViewTab.Audit && (
+        <EntityAudit entity={selectedToolset} view={ApplicationRoute.AssetsToolsets} />
       )}
     </>
   );
