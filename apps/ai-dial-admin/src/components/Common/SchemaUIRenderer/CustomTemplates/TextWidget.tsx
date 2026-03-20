@@ -20,7 +20,7 @@ export const TextWidget: FC<WidgetProps> = ({
 }) => {
   const t = useI18n();
   const invalid = useMemo(() => {
-    return required ? value === undefined || value === null || value === '' : false;
+    return required ? value == null || value === '' : false;
   }, [required, value]);
 
   const errorText = useMemo(() => {
