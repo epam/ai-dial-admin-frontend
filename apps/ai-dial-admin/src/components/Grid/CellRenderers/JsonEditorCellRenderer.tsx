@@ -7,6 +7,7 @@ import JsonEditorInput from '@/src/components/Common/JsonEditorInput/JsonEditorI
 interface JsonCellRendererParams extends ICellRendererParams {
   onChange?: (value: object, data: unknown, column: string, index?: number) => void;
   disableValidation: boolean;
+  disabled?: boolean;
 }
 
 const JsonEditorCellRenderer: FC<JsonCellRendererParams> = ({
@@ -16,6 +17,7 @@ const JsonEditorCellRenderer: FC<JsonCellRendererParams> = ({
   node,
   onChange,
   disableValidation,
+  disabled,
 }) => {
   const onChangeValue = (json: object) => {
     onChange?.(json, data, colDef?.field as string, node.rowIndex as number);
@@ -27,6 +29,7 @@ const JsonEditorCellRenderer: FC<JsonCellRendererParams> = ({
         onChangeValue={onChangeValue}
         inputClassName="h-8"
         disableValidation={disableValidation}
+        disabled={disabled}
       />
     </div>
   );

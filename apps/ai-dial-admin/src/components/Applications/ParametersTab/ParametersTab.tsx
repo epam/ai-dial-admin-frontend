@@ -25,6 +25,7 @@ import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i1
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useTheme } from '@/src/context/ThemeContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { UserSession } from '@/src/models/auth';
 import { ApplicationPropertiesTemp, DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
@@ -62,6 +63,7 @@ const ParametersTab: FC<Props> = ({
   setSelectedApplication,
 }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { data: session } = useSession();
   const { currentTheme } = useTheme();
   const { dispatch } = useSaveValidationContext();
@@ -191,7 +193,7 @@ const ParametersTab: FC<Props> = ({
             )}
           </div>
           <div className="flex flex-row gap-4">
-            {paramsView === ParamsView.TABLE && (
+            {paramsView === ParamsView.TABLE && !isReadOnlyAdmin && (
               <DialPrimaryButton
                 iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
                 label={t(ButtonsI18nKey.Add)}
@@ -220,6 +222,7 @@ const ParametersTab: FC<Props> = ({
                 properties={appPropertiesTemp || []}
                 onChangeProperties={onChangeProperties}
                 isSkipRefresh={isSkipRefresh}
+                disabled={isReadOnlyAdmin}
               />
             )}
             <div

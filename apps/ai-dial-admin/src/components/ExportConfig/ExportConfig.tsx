@@ -2,6 +2,8 @@
 import { FC, useCallback, useEffect, useRef, useMemo, useState } from 'react';
 
 import {
+  AlertVariant,
+  DialAlert,
   DialNoDataContent,
   DialPrimaryButton,
   DialRadioGroup,
@@ -20,6 +22,7 @@ import ExportDependencies from '@/src/components/ExportConfig/Structure/Dependen
 import { fulDependenciesConfig, getComponents, getComponentTypes } from '@/src/components/ExportConfig/utils';
 import { getDeploymentExportComponents } from '@/src/components/ExportConfig/deployment-utils';
 import { ButtonsI18nKey, ExportI18nKey, ImportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -37,6 +40,7 @@ interface Props {
 
 const ExportConfig: FC<Props> = ({ enableExportConfigMap, deploymentsEnabled }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   const { showNotification } = useNotification();
   const [selectedComponentType, setSelectedComponentType] = useState<ExportComponentType>(ExportComponentType.ADMIN);
@@ -207,6 +211,15 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap, deploymentsEnabled }) 
       setIsExportDisable(exportRequest.components.length === 0);
     }
   }, [exportRequest, isDeploymentContext, customExportData]);
+
+  if (isReadOnlyAdmin) {
+    return (
+      <div className="flex flex-col size-full rounded p-4 bg-layer-2 gap-4">
+        <h1>{t(MenuI18nKey.ExportConfig)}</h1>
+        <DialAlert variant={AlertVariant.Info} message={t(MenuI18nKey.ReadOnlyAdminExportUnavailable)} />
+      </div>
+    );
+  }
 
   return (
     <>
