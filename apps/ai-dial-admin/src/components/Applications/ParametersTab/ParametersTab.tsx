@@ -63,6 +63,7 @@ const ParametersTab: FC<Props> = ({
   setSelectedApplication,
 }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { data: session } = useSession();
   const { currentTheme } = useTheme();
   const { dispatch } = useSaveValidationContext();
