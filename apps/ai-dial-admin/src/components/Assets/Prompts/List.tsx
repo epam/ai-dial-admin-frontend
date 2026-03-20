@@ -17,7 +17,6 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { useI18n } from '@/src/locales/client';
 import { FoldersI18nKey, MenuI18nKey } from '@/src/constants/i18n';
-import { bulkActionLabels, gridActionLabels, gridActionLabelsReadOnly, toolbarOptionLabels } from './constants';
 import {
   DialCopiedItem,
   DialDeletedItem,
@@ -343,10 +342,6 @@ const PromptsList: FC = () => {
         customDuplicateAction={handleDuplicatePromptModalOpen}
         onMoveItems={handleMoveItems}
         onTableFileClick={handleGridItemClick}
-        gridActionLabels={gridActionLabels}
-        gridActionLabelsReadOnly={gridActionLabelsReadOnly}
-        toolbarOptionLabels={toolbarOptionLabels}
-        bulkActionLabels={bulkActionLabels}
         filterData={processPromptsData}
         nonClickableTableColumns={[FileManagerColumnKey.Version]}
         onPathChange={handlePathChange}

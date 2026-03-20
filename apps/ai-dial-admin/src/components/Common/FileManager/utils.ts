@@ -1,77 +1,11 @@
-import { ReactNode } from 'react';
+import { DialUploadFileItem } from '@epam/ai-dial-ui-kit';
 
-import { DialUploadFileItem, GridSelectionMode } from '@epam/ai-dial-ui-kit';
-import { ColDef, ITextFilterParams } from 'ag-grid-community';
-
-import FloatingFilter from '@/src/components/Grid/FloatingFilter/FloatingFilter';
-import { baseColumnComparator } from '@/src/components/Grid/comparators/base-column-comparator';
-import { ROOT_FOLDER } from '@/src/constants/file';
-import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
+import { FileManagerI18nKey } from '@/src/constants/i18n';
 import { CREATE_FOLDER_FORBIDDEN_CHARS, FILE_NAME_MAX_LENGTH } from './constants';
-import { GridOptions } from '@epam/ai-dial-ui-kit/dist/src/components/FileManager/FileManager';
-import { ActionLabel, ActionLabelWithIcon } from './types';
-import { ApplicationRoute } from '@/src/types/routes';
 
 export const getValidationMessages = (t: (key: string) => string) => {
   return { emptyName: t(FileManagerI18nKey.EnterFolderName), duplicateName: t(FileManagerI18nKey.NameExists) };
 };
-
-export const getGridOptions = (gridActionLabels: ActionLabel[], columnDefs: ColDef[], t: (key: string) => string) =>
-  ({
-    alternateOddRowColors: true,
-    columnDefs,
-    selectionMode: GridSelectionMode.MULTIPLE,
-    actionLabels: getActionLabels(gridActionLabels, t),
-    additionalGridOptions: {
-      defaultColDef: {
-        minWidth: 150,
-        floatingFilter: true,
-        floatingFilterComponent: FloatingFilter,
-        resizable: true,
-        flex: 1,
-        filter: 'agTextColumnFilter',
-        filterParams: {
-          filterPlaceholder: 'Enter value',
-          buttons: ['reset'],
-        } as ITextFilterParams,
-        comparator: baseColumnComparator.bind(this),
-      },
-    },
-  }) as GridOptions;
-
-export const getTreeOptions = (
-  treeActionLabels: ActionLabel[],
-  isFetchingFiles: boolean,
-  loadedPaths: Set<string>,
-  expandedPaths: Set<string>,
-  setExpanded: (paths: Set<string>) => void,
-  t: (key: string) => string,
-) => {
-  return {
-    collapsed: false,
-    expandedPaths: expandedPaths,
-    loadedPaths,
-    loadingPaths: isFetchingFiles ? new Set<string>([ROOT_FOLDER]) : new Set<string>(),
-    actionLabels: getActionLabels(treeActionLabels, t),
-    onExpandedPathsChange: setExpanded,
-    header: t(FileManagerI18nKey.FolderTree),
-  };
-};
-
-export const getToolbarOptions = (
-  route: ApplicationRoute,
-  toolbarOptionLabels: ActionLabelWithIcon[],
-  t: (key: string) => string,
-) => ({
-  showHiddenFilesToggle: false,
-  newActions: getActionLabelsWithIcon(toolbarOptionLabels, t),
-  newButtonLabel: route === ApplicationRoute.Files ? t(ButtonsI18nKey.Add) : t(ButtonsI18nKey.Create),
-});
-
-export const getBulkActionsToolbarOptions = (bulkActionLabels: ActionLabel[], t: (key: string) => string) => ({
-  getSelectionLabel: (selectedCount: number) => `${selectedCount} ${t(FileManagerI18nKey.SelectedItems)}`,
-  actionLabels: getActionLabels(bulkActionLabels, t),
-});
 
 export const getDestinationFolderPopupOptions = (
   t: (key: string, options?: Record<string, string | number> | undefined) => string,
@@ -81,23 +15,6 @@ export const getDestinationFolderPopupOptions = (
       ? t(FileManagerI18nKey.MoveItem, { item: itemName })
       : t(FileManagerI18nKey.MoveItems, { count: itemsCount }),
 });
-
-const getActionLabels = (actionLabels: { key: string; label: string }[], t: (key: string) => string) => {
-  return actionLabels.reduce((acc: { [key: string]: string }, item) => {
-    acc[item.key] = t(item.label);
-    return acc;
-  }, {});
-};
-
-const getActionLabelsWithIcon = (
-  actionLabels: { key: string; label: string; icon: ReactNode }[],
-  t: (key: string) => string,
-) => {
-  return actionLabels.reduce((acc: { [key: string]: { label?: ReactNode; icon?: ReactNode } }, item) => {
-    acc[item.key] = { label: t(item.label), icon: item.icon };
-    return acc;
-  }, {});
-};
 
 export const createEmptyFile = () => {
   const fileName = '.dial_folder';

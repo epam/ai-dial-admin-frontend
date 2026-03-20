@@ -18,13 +18,7 @@ import { ImportData } from '@/src/models/import-asset';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import {
-  bulkActionLabels,
-  FILES_GRID_COLUMNS,
-  gridActionLabels,
-  gridActionLabelsReadOnly,
-  toolbarOptionLabels,
-} from './constants';
+import { FILES_GRID_COLUMNS } from './constants';
 import { changeFolder, createFolderWithFiles, removeFolder } from '@/src/app/[lang]/folders-storage/actions';
 import { createEmptyFile } from '@/src/components/Common/FileManager/utils';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -167,10 +161,6 @@ const FilesList = () => {
         onMoveItems={handleMoveFiles}
         onExport={onExport}
         view={ApplicationRoute.Files}
-        gridActionLabels={gridActionLabels}
-        gridActionLabelsReadOnly={gridActionLabelsReadOnly}
-        toolbarOptionLabels={toolbarOptionLabels}
-        bulkActionLabels={bulkActionLabels}
       />
       <Modals
         route={ApplicationRoute.Files}
