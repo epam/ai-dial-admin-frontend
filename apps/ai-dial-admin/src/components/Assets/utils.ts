@@ -1,26 +1,8 @@
 import { ImageVersion } from '@/src/models/deployments/images';
 import { AssetApp, AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { compareVersions, modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
-import { baseColumnComparator } from '@/src/components/Grid/comparators/base-column-comparator';
-import FloatingFilter from '@/src/components/Grid/FloatingFilter/FloatingFilter';
-import { GridOptions, GridSelectionMode } from '@epam/ai-dial-ui-kit';
-import { ColDef, ITextFilterParams } from 'ag-grid-community';
-import { ReactNode } from 'react';
-import { ActionLabel, ActionLabelWithIcon } from './types';
 import { ApplicationRoute } from '@/src/types/routes';
-import {
-  bulkActionLabels,
-  gridActionLabelsFiles,
-  gridActionLabelsPrompts,
-  gridActionLabelsReadOnlyFiles,
-  gridActionLabelsReadOnlyPrompts,
-  toolbarOptionLabelsFiles,
-  toolbarOptionLabelsPrompts,
-  treeActionLabels,
-  treeActionLabelsReadOnly,
-} from './constants';
-import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
-import { ROOT_FOLDER } from '@/src/constants/file';
+import { allActionLabels, allActionLabelsReadOnly, allToolbarOptionLabels } from './constants';
 
 export const filterLatestVersions = (data: AssetWithVersion[]) => {
   const latestVersions: Record<string, AssetWithVersion> = {};
@@ -83,114 +65,32 @@ export const getParentPathByFullPath = (fullPath: string) => {
   return normalized.slice(0, lastSlash + 1);
 };
 
-const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boolean, t: (key: string) => string) => {
-  let actionLabels: ActionLabel[] = [];
+export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boolean) => {
   switch (view) {
     case ApplicationRoute.Files:
-      actionLabels = isReadOnlyAdmin ? gridActionLabelsReadOnlyFiles : gridActionLabelsFiles;
-      break;
+      return isReadOnlyAdmin ? allActionLabelsReadOnly : allActionLabels.filter((item) => item.key !== 'duplicate');
     case ApplicationRoute.Prompts:
-      actionLabels = isReadOnlyAdmin ? gridActionLabelsReadOnlyPrompts : gridActionLabelsPrompts;
-      break;
+      return isReadOnlyAdmin
+        ? allActionLabelsReadOnly.filter((item) => item.key !== 'preview')
+        : allActionLabels.filter((item) => item.key !== 'preview');
     default:
-      actionLabels = [];
+      return [];
   }
-
-  return actionLabels.reduce((acc: { [key: string]: string }, item) => {
-    acc[item.key] = t(item.label);
-    return acc;
-  }, {});
 };
 
-const getTreeActionLabels = (isReadOnlyAdmin: boolean, t: (key: string) => string) => {
-  const actionLabels = isReadOnlyAdmin ? treeActionLabelsReadOnly : treeActionLabels;
-
-  return actionLabels.reduce((acc: { [key: string]: string }, item) => {
-    acc[item.key] = t(item.label);
-    return acc;
-  }, {});
+export const getTreeActionLabels = (isReadOnlyAdmin: boolean) => {
+  return isReadOnlyAdmin
+    ? allActionLabelsReadOnly.filter((item) => item.key !== 'preview')
+    : allActionLabels.filter((item) => item.key !== 'duplicate' && item.key !== 'preview');
 };
 
-const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boolean, t: (key: string) => string) => {
-  let actionLabels: ActionLabelWithIcon[] = [];
+export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boolean) => {
   switch (view) {
     case ApplicationRoute.Files:
-      actionLabels = isReadOnlyAdmin ? [] : toolbarOptionLabelsFiles;
-      break;
+      return isReadOnlyAdmin ? [] : allToolbarOptionLabels.filter((item) => item.key !== 'newItem');
     case ApplicationRoute.Prompts:
-      actionLabels = isReadOnlyAdmin ? [] : toolbarOptionLabelsPrompts;
-      break;
+      return isReadOnlyAdmin ? [] : allToolbarOptionLabels;
     default:
-      actionLabels = [];
+      return [];
   }
-
-  return actionLabels.reduce((acc: { [key: string]: { label?: ReactNode; icon?: ReactNode } }, item) => {
-    acc[item.key] = { label: t(item.label), icon: item.icon };
-    return acc;
-  }, {});
 };
-
-const getBulkActionLabels = (t: (key: string) => string) => {
-  return bulkActionLabels.reduce((acc: { [key: string]: string }, item) => {
-    acc[item.key] = t(item.label);
-    return acc;
-  }, {});
-};
-
-export const getGridOptions = (
-  view: ApplicationRoute,
-  isReadOnlyAdmin: boolean,
-  columnDefs: ColDef[],
-  t: (key: string) => string,
-) =>
-  ({
-    alternateOddRowColors: true,
-    columnDefs,
-    selectionMode: GridSelectionMode.MULTIPLE,
-    actionLabels: getGridActionLabels(view, isReadOnlyAdmin, t),
-    additionalGridOptions: {
-      defaultColDef: {
-        minWidth: 150,
-        floatingFilter: true,
-        floatingFilterComponent: FloatingFilter,
-        resizable: true,
-        flex: 1,
-        filter: 'agTextColumnFilter',
-        filterParams: {
-          filterPlaceholder: 'Enter value',
-          buttons: ['reset'],
-        } as ITextFilterParams,
-        comparator: baseColumnComparator.bind(this),
-      },
-    },
-  }) as GridOptions;
-
-export const getTreeOptions = (
-  isReadOnlyAdmin: boolean,
-  isFetchingFiles: boolean,
-  loadedPaths: Set<string>,
-  expandedPaths: Set<string>,
-  setExpanded: (paths: Set<string>) => void,
-  t: (key: string) => string,
-) => {
-  return {
-    collapsed: false,
-    expandedPaths: expandedPaths,
-    loadedPaths,
-    loadingPaths: isFetchingFiles ? new Set<string>([ROOT_FOLDER]) : new Set<string>(),
-    actionLabels: getTreeActionLabels(isReadOnlyAdmin, t),
-    onExpandedPathsChange: setExpanded,
-    header: t(FileManagerI18nKey.FolderTree),
-  };
-};
-
-export const getToolbarOptions = (route: ApplicationRoute, isReadOnlyAdmin: boolean, t: (key: string) => string) => ({
-  showHiddenFilesToggle: false,
-  newActions: getToolbarOptionLabels(route, isReadOnlyAdmin, t),
-  newButtonLabel: route === ApplicationRoute.Files ? t(ButtonsI18nKey.Add) : t(ButtonsI18nKey.Create),
-});
-
-export const getBulkActionsToolbarOptions = (t: (key: string) => string) => ({
-  getSelectionLabel: (selectedCount: number) => `${selectedCount} ${t(FileManagerI18nKey.SelectedItems)}`,
-  actionLabels: getBulkActionLabels(t),
-});

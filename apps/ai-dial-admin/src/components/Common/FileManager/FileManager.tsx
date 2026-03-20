@@ -13,13 +13,7 @@ import {
 import { ColDef } from 'ag-grid-community';
 
 import { importFiles } from '@/src/utils/files/import-files';
-import {
-  getBulkActionsToolbarOptions,
-  getGridOptions,
-  getParentPathByFullPath,
-  getToolbarOptions,
-  getTreeOptions,
-} from '@/src/components/Assets/utils';
+import { getParentPathByFullPath } from '@/src/components/Assets/utils';
 import { getFormDataForImport, getImportTitle } from '@/src/components/EntityListView/HeaderButtons/utils';
 import { getImportResults } from '@/src/components/EntityListView/Import/utils';
 import { FILE_PREVIEW, PREVIEW_EXTENSIONS, ROOT_FOLDER } from '@/src/constants/file';
@@ -34,7 +28,15 @@ import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
 import { getSuccessNotification } from '@/src/utils/notification';
-import { getDestinationFolderPopupOptions, getValidationMessages, validateCreateFolder } from './utils';
+import {
+  getBulkActionsToolbarOptions,
+  getDestinationFolderPopupOptions,
+  getGridOptions,
+  getToolbarOptions,
+  getTreeOptions,
+  getValidationMessages,
+  validateCreateFolder,
+} from './utils';
 import { NEW_FOLDER_NAME } from './constants';
 import { FileManagerGridRow } from '@epam/ai-dial-ui-kit/dist/src/components/FileManager/FileManagerContext';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';

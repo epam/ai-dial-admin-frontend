@@ -1,17 +1,6 @@
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 
-export const gridActionLabelsFiles = [
-  { key: 'addSibling', label: FileManagerI18nKey.AddSibling },
-  { key: 'addChild', label: FileManagerI18nKey.AddChild },
-  { key: 'move', label: FileManagerI18nKey.Move },
-  { key: 'download', label: ButtonsI18nKey.Export },
-  { key: 'managePermissions', label: FileManagerI18nKey.ManagePermissions },
-  { key: 'rename', label: FileManagerI18nKey.Rename },
-  { key: 'delete', label: ButtonsI18nKey.Delete },
-  { key: 'preview', label: FileManagerI18nKey.Preview },
-];
-
-export const gridActionLabelsPrompts = [
+export const allActionLabels = [
   { key: 'addSibling', label: FileManagerI18nKey.AddSibling },
   { key: 'addChild', label: FileManagerI18nKey.AddChild },
   { key: 'duplicate', label: ButtonsI18nKey.Duplicate },
@@ -20,41 +9,15 @@ export const gridActionLabelsPrompts = [
   { key: 'managePermissions', label: FileManagerI18nKey.ManagePermissions },
   { key: 'rename', label: FileManagerI18nKey.Rename },
   { key: 'delete', label: ButtonsI18nKey.Delete },
+  { key: 'preview', label: FileManagerI18nKey.Preview },
 ];
 
-export const gridActionLabelsReadOnlyFiles = [
+export const allActionLabelsReadOnly = [
   { key: 'download', label: ButtonsI18nKey.Export },
   { key: 'preview', label: FileManagerI18nKey.Preview },
 ];
 
-export const gridActionLabelsReadOnlyPrompts = [{ key: 'download', label: ButtonsI18nKey.Export }];
-
-export const treeActionLabels = [
-  { key: 'addSibling', label: FileManagerI18nKey.AddSibling },
-  { key: 'addChild', label: FileManagerI18nKey.AddChild },
-  { key: 'move', label: FileManagerI18nKey.Move },
-  { key: 'download', label: ButtonsI18nKey.Export },
-  { key: 'delete', label: ButtonsI18nKey.Delete },
-  { key: 'rename', label: FileManagerI18nKey.Rename },
-  { key: 'managePermissions', label: FileManagerI18nKey.ManagePermissions },
-];
-
-export const treeActionLabelsReadOnly = [{ key: 'download', label: ButtonsI18nKey.Export }];
-
-export const toolbarOptionLabelsFiles = [
-  {
-    key: 'newFolder',
-    label: FileManagerI18nKey.Folder,
-    icon: null,
-  },
-  {
-    key: 'uploadFiles',
-    label: FileManagerI18nKey.Files,
-    icon: null,
-  },
-];
-
-export const toolbarOptionLabelsPrompts = [
+export const allToolbarOptionLabels = [
   {
     key: 'newFolder',
     label: FileManagerI18nKey.Folder,

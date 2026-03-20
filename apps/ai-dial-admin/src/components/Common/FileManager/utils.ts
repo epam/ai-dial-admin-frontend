@@ -1,7 +1,15 @@
-import { DialUploadFileItem } from '@epam/ai-dial-ui-kit';
+import { DialUploadFileItem, GridOptions, GridSelectionMode } from '@epam/ai-dial-ui-kit';
 
-import { FileManagerI18nKey } from '@/src/constants/i18n';
 import { CREATE_FOLDER_FORBIDDEN_CHARS, FILE_NAME_MAX_LENGTH } from './constants';
+import { ApplicationRoute } from '@/src/types/routes';
+import { baseColumnComparator } from '@/src/components/Grid/comparators/base-column-comparator';
+import FloatingFilter from '@/src/components/Grid/FloatingFilter/FloatingFilter';
+import { ColDef, ITextFilterParams } from 'ag-grid-community';
+import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
+import { ROOT_FOLDER } from '@/src/constants/file';
+import { getGridActionLabels, getToolbarOptionLabels, getTreeActionLabels } from '@/src/components/Assets/utils';
+import { ReactNode } from 'react';
+import { bulkActionLabels } from '@/src/components/Assets/constants';
 
 export const getValidationMessages = (t: (key: string) => string) => {
   return { emptyName: t(FileManagerI18nKey.EnterFolderName), duplicateName: t(FileManagerI18nKey.NameExists) };
@@ -51,3 +59,78 @@ export const validateCreateFolder = (
 
   return null;
 };
+
+const getActionLabels = (actionLabels: { key: string; label: string }[], t: (key: string) => string) => {
+  return actionLabels.reduce((acc: { [key: string]: string }, item) => {
+    acc[item.key] = t(item.label);
+    return acc;
+  }, {});
+};
+
+const getActionLabelsWithIcon = (
+  actionLabels: { key: string; label: string; icon: ReactNode }[],
+  t: (key: string) => string,
+) => {
+  return actionLabels.reduce((acc: { [key: string]: { label?: ReactNode; icon?: ReactNode } }, item) => {
+    acc[item.key] = { label: t(item.label), icon: item.icon };
+    return acc;
+  }, {});
+};
+
+export const getGridOptions = (
+  view: ApplicationRoute,
+  isReadOnlyAdmin: boolean,
+  columnDefs: ColDef[],
+  t: (key: string) => string,
+) =>
+  ({
+    alternateOddRowColors: true,
+    columnDefs,
+    selectionMode: GridSelectionMode.MULTIPLE,
+    actionLabels: getActionLabels(getGridActionLabels(view, isReadOnlyAdmin), t),
+    additionalGridOptions: {
+      defaultColDef: {
+        minWidth: 150,
+        floatingFilter: true,
+        floatingFilterComponent: FloatingFilter,
+        resizable: true,
+        flex: 1,
+        filter: 'agTextColumnFilter',
+        filterParams: {
+          filterPlaceholder: 'Enter value',
+          buttons: ['reset'],
+        } as ITextFilterParams,
+        comparator: baseColumnComparator.bind(this),
+      },
+    },
+  }) as GridOptions;
+
+export const getTreeOptions = (
+  isReadOnlyAdmin: boolean,
+  isFetchingFiles: boolean,
+  loadedPaths: Set<string>,
+  expandedPaths: Set<string>,
+  setExpanded: (paths: Set<string>) => void,
+  t: (key: string) => string,
+) => {
+  return {
+    collapsed: false,
+    expandedPaths: expandedPaths,
+    loadedPaths,
+    loadingPaths: isFetchingFiles ? new Set<string>([ROOT_FOLDER]) : new Set<string>(),
+    actionLabels: getActionLabels(getTreeActionLabels(isReadOnlyAdmin), t),
+    onExpandedPathsChange: setExpanded,
+    header: t(FileManagerI18nKey.FolderTree),
+  };
+};
+
+export const getToolbarOptions = (route: ApplicationRoute, isReadOnlyAdmin: boolean, t: (key: string) => string) => ({
+  showHiddenFilesToggle: false,
+  newActions: getActionLabelsWithIcon(getToolbarOptionLabels(route, isReadOnlyAdmin), t),
+  newButtonLabel: route === ApplicationRoute.Files ? t(ButtonsI18nKey.Add) : t(ButtonsI18nKey.Create),
+});
+
+export const getBulkActionsToolbarOptions = (t: (key: string) => string) => ({
+  getSelectionLabel: (selectedCount: number) => `${selectedCount} ${t(FileManagerI18nKey.SelectedItems)}`,
+  actionLabels: getActionLabels(bulkActionLabels, t),
+});
