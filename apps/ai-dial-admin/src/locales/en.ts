@@ -126,6 +126,8 @@ export default {
     FilePublications: 'File Publications',
     ImportConfig: 'Import Config',
     ExportConfig: 'Export Config',
+    ReadOnlyAdminImportUnavailable: 'Import is not available for read-only administrators.',
+    ReadOnlyAdminExportUnavailable: 'Export is not available for read-only administrators.',
     SystemProperties: 'System Properties',
 
     Deployments: 'Deployments',

@@ -40,6 +40,8 @@ export enum MenuI18nKey {
   FilePublications = 'Menu.FilePublications',
   ImportConfig = 'Menu.ImportConfig',
   ExportConfig = 'Menu.ExportConfig',
+  ReadOnlyAdminImportUnavailable = 'Menu.ReadOnlyAdminImportUnavailable',
+  ReadOnlyAdminExportUnavailable = 'Menu.ReadOnlyAdminExportUnavailable',
   SystemProperties = 'Menu.SystemProperties',
   Home = 'Menu.Home',
   Homepage = 'Menu.Homepage',
