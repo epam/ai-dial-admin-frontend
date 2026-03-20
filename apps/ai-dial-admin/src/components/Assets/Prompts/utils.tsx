@@ -25,9 +25,6 @@ export const getPromptGridColumns = (
     headerName: 'Author',
     width: 200,
     suppressSizeToFit: true,
-    cellRenderer: (params: { data: DialPrompt }) => {
-      return params.data.author;
-    },
   };
 
   const VERSION_COLUMN = {

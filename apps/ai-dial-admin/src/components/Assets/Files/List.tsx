@@ -24,11 +24,9 @@ import {
   gridActionLabels,
   gridActionLabelsReadOnly,
   toolbarOptionLabels,
-  treeActionLabels,
-  treeActionLabelsReadOnly,
 } from './constants';
 import { changeFolder, createFolderWithFiles, removeFolder } from '@/src/app/[lang]/folders-storage/actions';
-import { createEmptyFile } from '../../Common/FileManager/utils';
+import { createEmptyFile } from '@/src/components/Common/FileManager/utils';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ResourceType } from '@/src/types/resource-type';
 import { downloadFile } from '@/src/utils/download';
@@ -171,8 +169,6 @@ const FilesList = () => {
         view={ApplicationRoute.Files}
         gridActionLabels={gridActionLabels}
         gridActionLabelsReadOnly={gridActionLabelsReadOnly}
-        treeActionLabels={treeActionLabels}
-        treeActionLabelsReadOnly={treeActionLabelsReadOnly}
         toolbarOptionLabels={toolbarOptionLabels}
         bulkActionLabels={bulkActionLabels}
       />

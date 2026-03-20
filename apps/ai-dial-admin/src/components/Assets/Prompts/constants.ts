@@ -3,7 +3,7 @@ import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 export const gridActionLabels = [
   { key: 'addSibling', label: FileManagerI18nKey.AddSibling },
   { key: 'addChild', label: FileManagerI18nKey.AddChild },
-  { key: 'duplicate', label: 'Duplicate' },
+  { key: 'duplicate', label: ButtonsI18nKey.Duplicate },
   { key: 'move', label: FileManagerI18nKey.Move },
   { key: 'download', label: ButtonsI18nKey.Export },
   { key: 'managePermissions', label: FileManagerI18nKey.ManagePermissions },
@@ -12,18 +12,6 @@ export const gridActionLabels = [
 ];
 
 export const gridActionLabelsReadOnly = [{ key: 'download', label: ButtonsI18nKey.Export }];
-
-export const treeActionLabels = [
-  { key: 'addSibling', label: FileManagerI18nKey.AddSibling },
-  { key: 'addChild', label: FileManagerI18nKey.AddChild },
-  { key: 'move', label: FileManagerI18nKey.Move },
-  { key: 'download', label: ButtonsI18nKey.Export },
-  { key: 'delete', label: ButtonsI18nKey.Delete },
-  { key: 'rename', label: FileManagerI18nKey.Rename },
-  { key: 'managePermissions', label: FileManagerI18nKey.ManagePermissions },
-];
-
-export const treeActionLabelsReadOnly = [{ key: 'download', label: ButtonsI18nKey.Export }];
 
 export const toolbarOptionLabels = [
   {

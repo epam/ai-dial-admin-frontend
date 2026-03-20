@@ -17,14 +17,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { useI18n } from '@/src/locales/client';
 import { FoldersI18nKey, MenuI18nKey } from '@/src/constants/i18n';
-import {
-  bulkActionLabels,
-  gridActionLabels,
-  gridActionLabelsReadOnly,
-  toolbarOptionLabels,
-  treeActionLabels,
-  treeActionLabelsReadOnly,
-} from './constants';
+import { bulkActionLabels, gridActionLabels, gridActionLabelsReadOnly, toolbarOptionLabels } from './constants';
 import {
   DialCopiedItem,
   DialDeletedItem,
@@ -34,7 +27,7 @@ import {
   FileManagerColumnKey,
 } from '@epam/ai-dial-ui-kit';
 import { changeFolder, removeFolder } from '@/src/app/[lang]/folders-storage/actions';
-import CreateEntity from '../../EntityListView/CreateEntity/CreateEntity';
+import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
 import { filterNames } from '@/src/utils/entities/filter-names';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { ROOT_FOLDER } from '@/src/constants/file';
@@ -42,12 +35,12 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ResourceType } from '@/src/types/resource-type';
-import DuplicateAsset from '../Deployments/DuplicateAsset';
+import DuplicateAsset from '@/src/components/Assets/Deployments/DuplicateAsset';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
-import ImportModal from '../../EntityListView/Import/ImportModal';
+import ImportModal from '@/src/components/EntityListView/Import/ImportModal';
 import { ImportFileType } from '@/src/types/import';
 import { ImportData } from '@/src/models/import-asset';
-import { getFormDataForImport } from '../../EntityListView/HeaderButtons/utils';
+import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';
 import { FileManagerGridRow } from '@epam/ai-dial-ui-kit/dist/src/components/FileManager/FileManagerContext';
 import { useRouter } from 'next/navigation';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
@@ -196,8 +189,6 @@ const PromptsList: FC = () => {
           const paths = getAllSelectedItemsPaths(file.sourceUrl, selectedVersionsMap);
           filePaths.push(...paths.map((path) => path.replaceAll('//', '/')));
           promises.push(movePrompts(filePaths, newPath));
-
-          // promises.push(movePrompts([file.sourceUrl.replaceAll('//', '/')], newPath));
         } else {
           // Rename file
         }
@@ -354,8 +345,6 @@ const PromptsList: FC = () => {
         onTableFileClick={handleGridItemClick}
         gridActionLabels={gridActionLabels}
         gridActionLabelsReadOnly={gridActionLabelsReadOnly}
-        treeActionLabels={treeActionLabels}
-        treeActionLabelsReadOnly={treeActionLabelsReadOnly}
         toolbarOptionLabels={toolbarOptionLabels}
         bulkActionLabels={bulkActionLabels}
         filterData={processPromptsData}
@@ -373,6 +362,7 @@ const PromptsList: FC = () => {
       )}
       {isCreatePromptModalOpen && (
         <CreateEntity
+          context={getPromptContext}
           route={ApplicationRoute.Prompts}
           isModalOpen={isCreatePromptModalOpen}
           createEntity={handleCreatePrompt}

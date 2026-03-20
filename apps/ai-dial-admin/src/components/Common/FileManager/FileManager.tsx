@@ -37,11 +37,10 @@ import {
   getValidationMessages,
   validateCreateFolder,
 } from './utils';
-import { NEW_FOLDER_NAME } from './constants';
+import { NEW_FOLDER_NAME, treeActionLabels, treeActionLabelsReadOnly } from './constants';
 import { ActionLabel, ActionLabelWithIcon } from './types';
 import { FileManagerGridRow } from '@epam/ai-dial-ui-kit/dist/src/components/FileManager/FileManagerContext';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
-import { gridActionLabelsReadOnly, treeActionLabelsReadOnly } from '../../Assets/Files/constants';
 
 interface Props {
   view: ApplicationRoute;
@@ -62,8 +61,6 @@ interface Props {
   onTableFileClick?: (item: FileManagerGridRow) => void;
   gridActionLabels: ActionLabel[];
   gridActionLabelsReadOnly: ActionLabel[];
-  treeActionLabels: ActionLabel[];
-  treeActionLabelsReadOnly: ActionLabel[];
   toolbarOptionLabels: ActionLabelWithIcon[];
   bulkActionLabels: ActionLabel[];
   filterData?: (data: AssetWithVersion[]) => AssetWithVersion[];
@@ -82,7 +79,7 @@ const FileManager: FC<Props> = ({
   onMoveItems,
   onExport,
   gridActionLabels,
-  treeActionLabels,
+  gridActionLabelsReadOnly,
   toolbarOptionLabels,
   bulkActionLabels,
   filterData,
