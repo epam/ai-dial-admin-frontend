@@ -15,6 +15,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
+import AnalyticsTab from './Analytics';
 import ExtractionResultTab from './ExtractionResult';
 
 interface Props {
@@ -62,6 +63,7 @@ const TabsContent: FC<Props> = ({ run, activeTab }) => {
           <div></div>
         </PropertiesTabContent>
       )}
+      {activeTab === EntityViewTab.Analytics && <AnalyticsTab run={run} />}
     </>
   );
 };

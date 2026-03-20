@@ -42,4 +42,39 @@ describe('ExecutionStatusCellRenderer', () => {
 
     expect(container.firstChild).toBeNull();
   });
+
+  test('renders success icon from AnalyticsResult executionStatus', () => {
+    const { container } = render(
+      <ExecutionStatusCellRenderer data={{ executionStatus: ExtractionResultStatus.SUCCESS }} />,
+    );
+
+    expect(container.querySelector('svg.text-success.shrink-0')).toBeInTheDocument();
+  });
+
+  test('renders error icon from AnalyticsResult executionStatus', () => {
+    const { container } = render(
+      <ExecutionStatusCellRenderer data={{ executionStatus: ExtractionResultStatus.ERROR }} />,
+    );
+
+    expect(container.querySelector('svg.text-error.shrink-0')).toBeInTheDocument();
+  });
+
+  test('prefers executionInfo.status over executionStatus', () => {
+    const { container } = render(
+      <ExecutionStatusCellRenderer
+        data={{
+          executionInfo: { status: ExtractionResultStatus.TIMEOUT },
+          executionStatus: ExtractionResultStatus.SUCCESS,
+        }}
+      />,
+    );
+
+    expect(container.querySelector('svg.text-warning.shrink-0')).toBeInTheDocument();
+  });
+
+  test('renders nothing when neither executionInfo nor executionStatus is present', () => {
+    const { container } = render(<ExecutionStatusCellRenderer data={{}} />);
+
+    expect(container.firstChild).toBeNull();
+  });
 });

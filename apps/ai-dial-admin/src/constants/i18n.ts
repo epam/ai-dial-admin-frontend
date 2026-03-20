@@ -575,6 +575,7 @@ export enum TabsI18nKey {
   RequestSchema = 'Tabs.RequestSchema',
   ResponseSchema = 'Tabs.ResponseSchema',
   Columns = 'Tabs.Columns',
+  Analytics = 'Tabs.Analytics',
 }
 
 export enum InterceptorsI18nKey {
