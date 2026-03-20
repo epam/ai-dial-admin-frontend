@@ -151,8 +151,8 @@ export const getDynamicConfigurationsColumns = (
             },
           };
         } else if (
-          params.data?.inferredType == TestCaseItemType.OBJECT ||
-          params.data?.inferredType == TestCaseItemType.ARRAY
+          params.data?.effectiveType == TestCaseItemType.OBJECT ||
+          params.data?.effectiveType == TestCaseItemType.ARRAY
         ) {
           return {
             component: JsonEditorCellRenderer,
@@ -161,37 +161,19 @@ export const getDynamicConfigurationsColumns = (
               disableValidation: true,
             },
           };
-        } else if (params.data?.inferredType == TestCaseItemType.BOOLEAN) {
-          return {
-            component: SelectCellRenderer,
-            params: {
-              items: [
-                {
-                  value: 'true',
-                  label: 'True',
-                },
-                {
-                  value: 'false',
-                  label: 'False',
-                },
-              ],
-              onChange: onChangeSelect,
-            },
-          };
-        } else {
-          return {
-            component: EditableCellRenderer,
-            params: {
-              inputType: params.data?.inferredType === TestCaseItemType.STRING ? 'text' : 'number',
-              onChange: onChangeEditable,
-            },
-          };
         }
+        return {
+          component: EditableCellRenderer,
+          params: {
+            inputType: 'text',
+            onChange: onChangeEditable,
+          },
+        };
       },
       tooltipValueGetter: (params: ITooltipParams<InputBindingRowData>) => {
         if (
-          params.data?.inferredType === TestCaseItemType.OBJECT ||
-          params.data?.inferredType === TestCaseItemType.BOOLEAN
+          params.data?.effectiveType === TestCaseItemType.OBJECT ||
+          params.data?.effectiveType === TestCaseItemType.BOOLEAN
         ) {
           return void 0;
         }
@@ -366,25 +348,14 @@ export const getVariablesColumns = (
       cellClass: [NO_BORDER_CLASS, 'relative'],
       cellRendererSelector: (params: ICellRendererParams<InputBindingRowData>) => {
         if (
-          params.data?.inferredType == TestCaseItemType.OBJECT ||
-          params.data?.inferredType == TestCaseItemType.ARRAY
+          params.data?.effectiveType == TestCaseItemType.OBJECT ||
+          params.data?.effectiveType == TestCaseItemType.ARRAY
         ) {
           return {
             component: JsonEditorCellRenderer,
             params: {
               onChange: onChangeEditable,
               disableValidation: true,
-            },
-          };
-        } else if (params.data?.inferredType == TestCaseItemType.BOOLEAN) {
-          return {
-            component: SelectCellRenderer,
-            params: {
-              items: [
-                { value: 'true', label: 'True' },
-                { value: 'false', label: 'False' },
-              ],
-              onChange: onChangeEditable,
             },
           };
         }
@@ -399,8 +370,8 @@ export const getVariablesColumns = (
       },
       tooltipValueGetter: (params: ITooltipParams<InputBindingRowData>) => {
         if (
-          params.data?.inferredType === TestCaseItemType.OBJECT ||
-          params.data?.inferredType === TestCaseItemType.BOOLEAN
+          params.data?.effectiveType === TestCaseItemType.OBJECT ||
+          params.data?.effectiveType === TestCaseItemType.BOOLEAN
         ) {
           return void 0;
         }
