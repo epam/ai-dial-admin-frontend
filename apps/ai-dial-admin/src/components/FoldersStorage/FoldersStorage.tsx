@@ -11,11 +11,13 @@ import { useRuleFolder } from '@/src/context/RuleFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import FolderInfo from './FolderInfo';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 interface Props {
   initialPath?: string;
 }
 
 const FoldersStorage: FC<Props> = ({ initialPath }) => {
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const t = useI18n();
   const folderContext = useRuleFolder();
   const isCollapseDisable =
@@ -53,7 +55,7 @@ const FoldersStorage: FC<Props> = ({ initialPath }) => {
         >
           <FolderList context={useRuleFolder} initialPath={initialPath} />
         </DialCollapsibleSidebar>
-        <FolderInfo isReadonly={false} />
+        <FolderInfo isReadonly={isReadOnlyAdmin} />
       </div>
     </div>
   );
