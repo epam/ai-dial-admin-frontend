@@ -21,11 +21,6 @@ const gridActionLabels = [
   { key: 'preview', label: FileManagerI18nKey.Preview },
 ];
 
-const gridActionLabelsReadOnly = [
-  { key: 'download', label: ButtonsI18nKey.Export },
-  { key: 'preview', label: FileManagerI18nKey.Preview },
-];
-
 const treeActionLabels = [
   { key: 'addSibling', label: FileManagerI18nKey.AddSibling },
   { key: 'addChild', label: FileManagerI18nKey.AddChild },
@@ -35,8 +30,6 @@ const treeActionLabels = [
   { key: 'rename', label: FileManagerI18nKey.Rename },
   { key: 'managePermissions', label: FileManagerI18nKey.ManagePermissions },
 ];
-
-const treeActionLabelsReadOnly = [{ key: 'download', label: ButtonsI18nKey.Export }];
 
 const toolbarOptionLabels = [
   {
@@ -75,7 +68,7 @@ export const getGridOptions = (columnDefs: ColDef[], t: (key: string) => string,
     alternateOddRowColors: true,
     columnDefs,
     selectionMode: GridSelectionMode.MULTIPLE,
-    actionLabels: getActionLabels(isReadOnlyAdmin ? gridActionLabelsReadOnly : gridActionLabels, t),
+    actionLabels: getActionLabels(isReadOnlyAdmin ? [] : gridActionLabels, t),
     additionalGridOptions: {
       defaultColDef: {
         minWidth: 150,
@@ -101,7 +94,7 @@ export const getTreeOptions = (
   t: (key: string) => string,
   isReadOnlyAdmin?: boolean,
 ) => {
-  const labels = isReadOnlyAdmin ? treeActionLabelsReadOnly : treeActionLabels;
+  const labels = isReadOnlyAdmin ? [] : treeActionLabels;
   return {
     collapsed: false,
     expandedPaths: expandedPaths,
