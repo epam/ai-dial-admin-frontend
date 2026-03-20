@@ -177,13 +177,13 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
 
           {isEntitiesWithDisplayVersion(view) && (
             <VersionControl
-              view={view}
               title={t(EntityFieldsI18nKey.displayVersion)}
               version={(clonedEntity as DialModel).displayVersion}
               onChange={onChangeVersion}
               error={versionError}
               optional={isVersionOptional}
               hideError={!!displayNameError}
+              enableSemanticValidation={false}
             />
           )}
         </div>
