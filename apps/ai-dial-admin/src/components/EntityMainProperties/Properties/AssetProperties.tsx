@@ -13,8 +13,8 @@ import { DialApplicationScheme } from '@/src/models/dial/application';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getAssetVersionBusinessError } from '@/src/utils/deployments/validation';
 import { isDeploymentAsset } from '@/src/utils/is-asset-view';
-import { getPromptVersionError } from '@/src/utils/validation/version-error';
 
 interface Props {
   view?: ApplicationRoute;
@@ -50,9 +50,9 @@ const AssetProperties: FC<Props> = ({
 
   const validateVersion = useCallback(
     (version?: string) => {
-      const versionError = getPromptVersionError(versionsMap, entity, t, version);
-      setVersionError(versionError);
-      dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: !versionError });
+      const err = getAssetVersionBusinessError(versionsMap, entity.name, t, version);
+      setVersionError(err?.text);
+      dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: !err });
     },
     [dispatch, entity, t, versionsMap],
   );

@@ -53,6 +53,7 @@ export enum EntityViewTab {
   ResponseSchema = 'ResponseSchema',
   Columns = 'Columns',
   TestSuiteMethod = 'TestSuiteMethod',
+  Analytics = 'Analytics',
 }
 
 export const propertiesTab = (t: (key: string) => string, warning?: boolean) => ({
@@ -246,6 +247,11 @@ export const summaryTab = (t: (key: string) => string) => ({
 export const extractionResultTab = (t: (key: string) => string) => ({
   id: EntityViewTab.ExtractionResult,
   label: t(TabsI18nKey.ExtractionResult),
+});
+
+export const analyticsTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.Analytics,
+  label: t(TabsI18nKey.Analytics),
 });
 
 export const permissionsTab = (t: (key: string) => string) => ({
@@ -466,7 +472,7 @@ export const getTestSuiteRequestTemplateTabs = (t: (key: string) => string): Tab
 };
 
 export const getRunTabs = (t: (key: string) => string): TabModel[] => {
-  return [summaryTab(t), extractionResultTab(t)];
+  return [summaryTab(t), extractionResultTab(t), analyticsTab(t)];
 };
 
 export const getEndpointSchemaTabs = (t: (key: string) => string): TabModel[] => {

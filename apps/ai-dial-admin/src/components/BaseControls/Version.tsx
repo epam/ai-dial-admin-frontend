@@ -5,11 +5,9 @@ import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
-import { ApplicationRoute } from '@/src/types/routes';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { getControlClassName } from '@/src/utils/entities/view';
-import { isEntitiesWithDisplayVersion } from '@/src/utils/is-asset-view';
-import { getVersionControlError } from '@/src/utils/validation/version-error';
+import { getSemanticVersionFormatError, SEMANTIC_VERSION_VALIDATION_FIELD } from '@/src/utils/deployments/validation';
 
 interface Props {
   version?: string;
@@ -21,9 +19,8 @@ interface Props {
   hideError?: boolean;
   title?: string;
   isFullWidth?: boolean;
-  view?: ApplicationRoute;
+  enableSemanticValidation?: boolean;
   onChange?: (version?: string) => void;
-  disableValidation?: boolean;
 }
 
 const VersionControl: FC<Props> = ({
@@ -34,10 +31,9 @@ const VersionControl: FC<Props> = ({
   hideError,
   onChange,
   title,
-  view,
   disabled,
+  enableSemanticValidation = true,
   containerClassName,
-  disableValidation,
   ...props
 }) => {
   const t = useI18n();
@@ -48,25 +44,54 @@ const VersionControl: FC<Props> = ({
     [containerClassName, isFullWidth],
   );
 
-  const [versionError, setVersionError] = useState<FieldError | null>(null);
+  const [formatError, setFormatError] = useState<FieldError | null>(null);
+
+  const applySemanticValidation = useCallback(
+    (value?: string) => {
+      if (!enableSemanticValidation) {
+        setFormatError(null);
+        dispatch({
+          type: ValidationActionType.SetField,
+          field: SEMANTIC_VERSION_VALIDATION_FIELD,
+          isValid: true,
+        });
+        return;
+      }
+      const err = getSemanticVersionFormatError(value, t);
+      setFormatError(err);
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: SEMANTIC_VERSION_VALIDATION_FIELD,
+        isValid: !err,
+      });
+    },
+    [dispatch, enableSemanticValidation, t],
+  );
 
   const onChangeVersion = useCallback(
-    (version?: string) => {
-      if (!isEntitiesWithDisplayVersion(view) && !disableValidation) {
-        const error = getVersionControlError(version, optional, hideError, t);
-        setVersionError(error);
-        dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: !error });
-      }
-      onChange?.(version);
+    (value?: string) => {
+      applySemanticValidation(value);
+      onChange?.(value);
     },
-    [dispatch, hideError, onChange, optional, t, view, disableValidation],
+    [applySemanticValidation, onChange],
   );
 
   useEffect(() => {
-    if (!isEntitiesWithDisplayVersion(view) && !disableValidation) {
-      dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: !!version });
-    }
-  }, [version, optional, view, dispatch, disableValidation]);
+    applySemanticValidation(version);
+  }, [version, applySemanticValidation]);
+
+  useEffect(() => {
+    return () => {
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: SEMANTIC_VERSION_VALIDATION_FIELD,
+        isValid: true,
+      });
+    };
+  }, [dispatch]);
+
+  const showFormatError = !hideError && !!formatError;
+  const mergedError = error || (showFormatError ? formatError?.text : undefined);
 
   return (
     <DialInput
@@ -74,8 +99,8 @@ const VersionControl: FC<Props> = ({
       labelProps={{ label: title || t(EntityFieldsI18nKey.version), required: !optional }}
       placeholder={t(EntityPlaceholdersI18nKey.Version)}
       value={version}
-      error={error || versionError?.text}
-      invalid={!!error || !!versionError}
+      error={mergedError}
+      invalid={!!error || showFormatError}
       onChange={onChangeVersion}
       containerClassName={containerClass}
       disabled={disabled || isReadOnlyAdmin}

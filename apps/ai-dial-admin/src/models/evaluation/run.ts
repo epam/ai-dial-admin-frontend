@@ -1,4 +1,4 @@
-export interface ExtractionResult {
+export interface ResultDto {
   id?: string;
   createdAt?: number;
   testCaseId?: string;
@@ -7,6 +7,11 @@ export interface ExtractionResult {
   testSuiteRunId?: string;
   responseStatusCode: number;
   runIndex: number;
+
+  testCaseData?: Record<string, unknown>;
+  extractedColumns?: Record<string, unknown>;
+}
+export interface ExtractionResult extends ResultDto {
   executionInfo?: {
     status?: ExtractionResultStatus;
     startedAt?: number;
@@ -16,10 +21,17 @@ export interface ExtractionResult {
     grafanaTraceUrl?: string;
   };
   requestBody?: Record<string, unknown>;
-  testCaseData?: Record<string, unknown>;
   responseBody?: Record<string, unknown>;
-  extractedColumns?: Record<string, unknown>;
   grafanaExploreUrl?: string;
+}
+
+export interface AnalyticsResult extends ResultDto {
+  executionStatus?: ExtractionResultStatus;
+  execDurationMs?: number;
+  metricValues?: Record<string, Record<string, unknown>>;
+  computationId?: string;
+  computedAt?: number;
+  testCaseRunResultsId?: string;
 }
 
 export enum ExtractionResultStatus {

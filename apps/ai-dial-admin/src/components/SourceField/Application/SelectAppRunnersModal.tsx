@@ -6,7 +6,7 @@ import GridView from '@/src/components/Grid/GridView/GridView';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import { SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
 import { LIST_RUNNER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { BasicI18nKey, ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialApplicationScheme } from '@/src/models/dial/application';
@@ -27,8 +27,7 @@ const SelectAppRunnerModal: FC<Props> = ({ selectedId, sourceEntities, isModalOp
   const isSelectedNode = (data?: DialApplicationScheme | DialAdapter) => {
     const runner = data as DialApplicationScheme;
     const adapter = data as DialAdapter;
-    const id = selectedRunner || t(BasicI18nKey.None);
-    return runner?.$id === id || adapter?.name === id;
+    return runner?.$id === selectedRunner || adapter?.name === selectedRunner;
   };
 
   const options: GridOptions = {
@@ -52,13 +51,7 @@ const SelectAppRunnerModal: FC<Props> = ({ selectedId, sourceEntities, isModalOp
 
   const onGridReady = (event: GridReadyEvent) => {
     event.api?.updateGridOptions({
-      rowData: [
-        {
-          ['dial:applicationTypeDisplayName']: t(BasicI18nKey.None),
-          $id: t(BasicI18nKey.None),
-        },
-        ...(sourceEntities || []),
-      ],
+      rowData: [...(sourceEntities || [])],
     });
     event.api.forEachNode((node) => {
       if (isSelectedNode(node.data)) {
@@ -75,7 +68,7 @@ const SelectAppRunnerModal: FC<Props> = ({ selectedId, sourceEntities, isModalOp
       open={isModalOpen}
       size={PopupSize.Lg}
       className="h-[750px]"
-      onSubmit={() => onApply(selectedRunner === t(BasicI18nKey.None) ? void 0 : selectedRunner)}
+      onSubmit={() => onApply(selectedRunner)}
       disableSubmitButton={!selectedRunner}
       submitLabel={t(ButtonsI18nKey.Apply)}
       cancelLabel={t(ButtonsI18nKey.Cancel)}

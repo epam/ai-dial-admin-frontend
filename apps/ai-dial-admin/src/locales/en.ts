@@ -556,6 +556,7 @@ export default {
     RequestSchema: 'Request Schema',
     ResponseSchema: 'Response Schema',
     Columns: 'Columns',
+    Analytics: 'Analytics',
   },
   ForwardToken: {
     ForwardTokenModalTitle: 'Forward Auth Token',

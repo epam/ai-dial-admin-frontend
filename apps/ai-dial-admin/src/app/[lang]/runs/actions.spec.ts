@@ -1,11 +1,18 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { runsApi } from '@/src/app/api/api';
+import { analyticsApi, runsApi } from '@/src/app/api/api';
 import { FilterDto } from '@/src/models/request';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { getRun, getRunResults, getRuns, removeRun } from './actions';
+import {
+  getRun,
+  getRunResults,
+  getRuns,
+  getTestCaseRunResultDetails,
+  getTestCaseRunResults,
+  removeRun,
+} from './actions';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -69,5 +76,31 @@ describe('Runs :: server actions', () => {
     expect(getUserToken).toHaveBeenCalled();
     expect(runsApi.getRunResults).toHaveBeenCalledWith(TOKEN_MOCK, filters);
     expect(result).toEqual(extractionResults);
+  });
+
+  test('Should call getTestCaseRunResults action and return analytics results', async () => {
+    const filters: FilterDto[] = [
+      { column: 'testSuite', value: 'suite-1' },
+      { column: 'status', value: 'PASSED' },
+    ];
+    const analyticsResults = { content: [{ id: 'analytics-1' }] };
+    (analyticsApi.getTestCaseRunResults as any).mockResolvedValue(analyticsResults);
+
+    const result = await getTestCaseRunResults(filters);
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(analyticsApi.getTestCaseRunResults).toHaveBeenCalledWith(filters, TOKEN_MOCK);
+    expect(result).toEqual(analyticsResults);
+  });
+
+  test('Should call getTestCaseRunResultDetails action and return result details', async () => {
+    const resultDetail = { id: 'analytics-1' };
+    (analyticsApi.getTestCaseRunResultDetails as any).mockResolvedValue(resultDetail);
+
+    const result = await getTestCaseRunResultDetails('analytics-1');
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(analyticsApi.getTestCaseRunResultDetails).toHaveBeenCalledWith('analytics-1', TOKEN_MOCK);
+    expect(result).toEqual(resultDetail);
   });
 });

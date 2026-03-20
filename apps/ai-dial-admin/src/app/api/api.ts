@@ -25,6 +25,7 @@ import { HuggingfaceApi } from '@/src/server/deployments/huggingface';
 import { McpRegistryApi } from '@/src/server/deployments/mcp-registry';
 import { DeploymentConfigApi } from '@/src/server/deployments/config';
 import { RunsApi } from '@/src/server/eval/runs-api';
+import { AnalyticsApi } from '@/src/server/eval/analytics-api';
 
 // Admin APIs
 export const modelsApi = new ModelsApi({
@@ -132,5 +133,9 @@ export const metricsApi = new MetricsApi({
 });
 
 export const runsApi = new RunsApi({
+  host: process.env.DIAL_EVAL_API_URL,
+});
+
+export const analyticsApi = new AnalyticsApi({
   host: process.env.DIAL_EVAL_API_URL,
 });

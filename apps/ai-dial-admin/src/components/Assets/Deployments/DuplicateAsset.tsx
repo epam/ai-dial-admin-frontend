@@ -1,5 +1,6 @@
 import { DialFormPopup, DialRadioGroup, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useState } from 'react';
+import semver from 'semver';
 
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import IdControl from '@/src/components/BaseControls/Id/Id';
@@ -51,6 +52,7 @@ const DuplicateAsset: FC<Props> = ({ view, isModalOpen, entity, versionsMap, con
     setIsInnerValid(
       !!clonedAsset.name &&
         !!clonedAsset.version &&
+        semver.valid(clonedAsset.version) !== null &&
         !checkNameVersionCombination(versionsMap, clonedAsset.name, clonedAsset.version),
     );
   }, [clonedAsset, versionsMap]);
