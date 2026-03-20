@@ -23,6 +23,7 @@ import JsonView from '@/src/components/Common/JsonView/JsonView';
 import { ButtonsI18nKey, EntityFieldsI18nKey, RollbackI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialActivity } from '@/src/models/activity-audit';
 import { BaseEntity } from '@/src/models/dial/base-entity';
@@ -61,6 +62,7 @@ const AuditView: FC<Props> = ({
   isEntityActivity = false,
 }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const router = useRouter();
 
   const { showNotification } = useNotification();
@@ -160,11 +162,13 @@ const AuditView: FC<Props> = ({
             <div className="flex flex-row items-center gap-4 flex-wrap">
               <CompareControl compareView={compareView} setCompareView={setCompareView} />
               <FilterControl diffView={diffView} setDiffView={setDiffView} />
-              <DialNeutralButton
-                iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} />}
-                label={t(RollbackI18nKey.Resource)}
-                onClick={onOpenModal}
-              />
+              {!isReadOnlyAdmin && (
+                <DialNeutralButton
+                  iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} />}
+                  label={t(RollbackI18nKey.Resource)}
+                  onClick={onOpenModal}
+                />
+              )}
               <div className="w-px h-6 bg-layer-4"></div>
               <DialSwitch
                 switchId="jsonView"

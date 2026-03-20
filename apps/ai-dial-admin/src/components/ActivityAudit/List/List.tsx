@@ -28,6 +28,7 @@ import { DEFAULT_TIME_PERIOD } from '@/src/constants/global-time-filter';
 import { ButtonsI18nKey, RollbackI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialActivity } from '@/src/models/activity-audit';
 import { DialApplicationScheme } from '@/src/models/dial/application';
@@ -70,6 +71,7 @@ const ActivityAuditList: FC<Props> = ({
   setIsCustomRange,
 }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const router = useRouter();
 
   const { showNotification } = useNotification();
@@ -181,7 +183,12 @@ const ActivityAuditList: FC<Props> = ({
 
   const columnDefs = entity
     ? [...ACTIVITY_AUDIT_COLUMNS(t, true)]
-    : getActivityAuditColumns(t, openInNewTab, onOpenConfirmationModal, void 0);
+    : getActivityAuditColumns(
+        t,
+        openInNewTab,
+        isReadOnlyAdmin ? undefined : onOpenConfirmationModal,
+        void 0,
+      );
 
   const onRefresh = useCallback(() => {
     if (gridApi) {
@@ -291,7 +298,7 @@ const ActivityAuditList: FC<Props> = ({
             />
           </div>
 
-          {!entity && (
+          {!entity && !isReadOnlyAdmin && (
             <DialNeutralButton
               iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} />}
               label={t(RollbackI18nKey.Rollback)}
