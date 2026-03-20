@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
 import { getControlClassName } from '@/src/utils/entities/view';
@@ -36,6 +37,7 @@ const IdControl = <T extends { name?: string }>({
   isFullWidth = true,
 }: Props<T>) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { dispatch } = useSaveValidationContext();
   const [nameError, setNameError] = useState<FieldError | null>(null);
   const containerClassName = useMemo(() => getControlClassName(isFullWidth), [isFullWidth]);
@@ -44,7 +46,16 @@ const IdControl = <T extends { name?: string }>({
     (name?: string) => {
       const error = isUrlId
         ? getErrorForUrlId(name, names, t)
-        : getErrorForName(name, names, t, isUniqueNameError, true, !!label, isDeploymentId, checkEmptySymbols);
+        : getErrorForName(
+            name,
+            names,
+            t,
+            isUniqueNameError,
+            true,
+            !!label && label !== t(EntityFieldsI18nKey.id),
+            isDeploymentId,
+            checkEmptySymbols,
+          );
       setNameError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !error });
     },
@@ -75,7 +86,7 @@ const IdControl = <T extends { name?: string }>({
       onChange={onChangeName}
       error={nameError?.text}
       invalid={!!nameError}
-      disabled={disabled}
+      disabled={disabled || isReadOnlyAdmin}
       containerClassName={containerClassName}
     />
   );

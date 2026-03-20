@@ -2,6 +2,7 @@ import { DialTooltip } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle } from '@tabler/icons-react';
 import { ColDef, ICellRendererParams, ITooltipParams, ValueGetterParams } from 'ag-grid-community';
 
+import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
 import ValidityStatus from '@/src/components/Common/ValidityStatus/ValidityStatus';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import JsonEditorCellRenderer from '@/src/components/Grid/CellRenderers/JsonEditorCellRenderer';
@@ -10,8 +11,9 @@ import { NO_BORDER_CLASS, UTILITY_COLUMN } from '@/src/constants/ag-grid';
 import { BASE_STATUS_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { TEST_CASES_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
+import { MetricBinding } from '@/src/models/evaluation/metric';
 import { InputBindingRowData, ResponseColumn, TestCase, TestCaseSchema } from '@/src/models/evaluation/test-suite';
-import { InputBindingType, TestCaseItemType } from '@/src/types/evaluation';
+import { InputBindingType, MetricBindingType, TestCaseItemType } from '@/src/types/evaluation';
 
 export type onCellChange = (data: Record<string, unknown>, field: string, value: string | number) => void;
 
@@ -222,6 +224,128 @@ export const getDynamicConfigurationsColumns = (
   ];
 };
 
+const findFieldForProperty = (
+  property: string,
+  configSchema: SchemaFieldRow[],
+  inputSchema: SchemaFieldRow[],
+): SchemaFieldRow | undefined =>
+  configSchema.find((s) => s.name === property) ?? inputSchema.find((s) => s.name === property);
+
+export const getMetricBindingsColumns = (
+  onChangeEditable: (value: string | object, data: MetricBinding, column: string, index?: number) => void,
+  configSchema: SchemaFieldRow[],
+  inputSchema: SchemaFieldRow[],
+  testCaseColumns: string[],
+  responseColumns: string[],
+  t: (stringToTranslate: string) => string,
+): ColDef<MetricBinding>[] => {
+  return [
+    {
+      headerName: 'Property',
+      field: 'property',
+      cellClass: NO_BORDER_CLASS,
+      cellDataType: 'text',
+      flex: 1,
+    },
+    {
+      headerName: 'Schema',
+      cellClass: NO_BORDER_CLASS,
+      valueGetter: (params: ValueGetterParams<MetricBinding>) => {
+        const propName = params.data?.property || '';
+        const value = configSchema.find((s) => s.name === propName);
+        return value ? 'config' : 'input';
+      },
+      flex: 1,
+      maxWidth: 240,
+    },
+    {
+      headerName: 'Type',
+      field: 'source.$type',
+      cellClass: NO_BORDER_CLASS,
+      cellRenderer: SelectCellRenderer,
+      cellRendererParams: {
+        items: [
+          {
+            value: MetricBindingType.Constant,
+            label: t(TestSuitesI18nKey.Constant),
+          },
+          {
+            value: MetricBindingType.TestCase,
+            label: t(TestSuitesI18nKey.TestCase),
+          },
+          {
+            value: MetricBindingType.Response,
+            label: t(TestSuitesI18nKey.Response),
+          },
+        ],
+
+        onChange: onChangeEditable,
+      },
+      flex: 1,
+      maxWidth: 240,
+    },
+    {
+      headerName: 'Value',
+      valueGetter: (params: ValueGetterParams<MetricBinding>) => {
+        if (params.data?.source?.$type === MetricBindingType.Constant) {
+          return params.data?.source?.value;
+        } else {
+          return params.data?.source?.columnName;
+        }
+      },
+      cellClass: NO_BORDER_CLASS,
+      cellRendererSelector: (params: ICellRendererParams<MetricBinding>) => {
+        if (params.data?.source?.$type === MetricBindingType.TestCase) {
+          const items = testCaseColumns.map((s) => ({
+            value: s,
+            label: s,
+          }));
+          return {
+            component: SelectCellRenderer,
+            params: {
+              items: items,
+              onChange: onChangeEditable,
+            },
+          };
+        } else if (params.data?.source?.$type === MetricBindingType.Response) {
+          const items = responseColumns.map((s) => ({
+            value: s,
+            label: s,
+          }));
+          return {
+            component: SelectCellRenderer,
+            params: {
+              items: items,
+              onChange: onChangeEditable,
+            },
+          };
+        } else {
+          const field = findFieldForProperty(params.data?.property ?? '', configSchema, inputSchema);
+          if (field?.enum?.length) {
+            return {
+              component: SelectCellRenderer,
+              params: {
+                items: field.enum.map((v) => ({ value: v, label: v })),
+                onChange: onChangeEditable,
+              },
+            };
+          }
+          return {
+            component: EditableCellRenderer,
+            params: {
+              onChange: onChangeEditable,
+            },
+          };
+        }
+      },
+      cellRendererParams: {
+        hideTriangle: true,
+      },
+      flex: 2,
+    },
+  ];
+};
+
 export const getVariablesColumns = (
   onChangeEditable: (value: string | object, data: InputBindingRowData) => void,
 ): ColDef<InputBindingRowData>[] => {
@@ -239,7 +363,7 @@ export const getVariablesColumns = (
     {
       headerName: 'Value',
       field: 'value',
-      cellClass: NO_BORDER_CLASS,
+      cellClass: [NO_BORDER_CLASS, 'relative'],
       cellRendererSelector: (params: ICellRendererParams<InputBindingRowData>) => {
         if (
           params.data?.inferredType == TestCaseItemType.OBJECT ||
@@ -257,26 +381,21 @@ export const getVariablesColumns = (
             component: SelectCellRenderer,
             params: {
               items: [
-                {
-                  value: 'true',
-                  label: 'True',
-                },
-                {
-                  value: 'false',
-                  label: 'False',
-                },
+                { value: 'true', label: 'True' },
+                { value: 'false', label: 'False' },
               ],
               onChange: onChangeEditable,
             },
           };
-        } else {
-          return {
-            component: EditableCellRenderer,
-            params: {
-              onChange: onChangeEditable,
-            },
-          };
         }
+        return {
+          component: EditableCellRenderer,
+          params: {
+            onChange: onChangeEditable,
+            hideTriangle: false,
+            defaultValue: params?.data?.defaultValue,
+          },
+        };
       },
       tooltipValueGetter: (params: ITooltipParams<InputBindingRowData>) => {
         if (
@@ -294,26 +413,6 @@ export const getVariablesColumns = (
       floatingFilter: false,
       filter: false,
       sortable: false,
-    },
-    {
-      headerName: '',
-      cellClass: NO_BORDER_CLASS,
-      cellRenderer: (params: ICellRendererParams<InputBindingRowData>) => {
-        return params.data?.defaultValue != null ? (
-          <div className="w-full cursor-pointer">
-            <DialTooltip tooltip={`Default value: ${params.data.defaultValue}`}>
-              <IconInfoCircle size={20} />
-            </DialTooltip>
-          </div>
-        ) : null;
-      },
-      width: 36,
-      maxWidth: 36,
-      sortable: false,
-      filter: false,
-      floatingFilter: false,
-      resizable: false,
-      suppressMovable: true,
     },
   ];
 };

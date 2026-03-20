@@ -86,6 +86,28 @@ describe('containers utils', () => {
       expect(template?.source?.imageDefinitionId).toBe('');
     });
 
+    test('returns ADAPTER template with IMAGE_REFERENCE source when sourceType is provided', () => {
+      const template = getContainerTemplate(CONTAINER_TYPE.ADAPTER, undefined, CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE);
+      expect(template?.$type).toBe(CONTAINER_TYPE.ADAPTER);
+      expect(template?.source?.$type).toBe(CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE);
+      expect(template?.source?.imageReference).toBe('');
+      expect(template?.scaling).toEqual({ minReplicas: 1, maxReplicas: 1 });
+      expect(template?.transport).toBeUndefined();
+    });
+
+    test('returns INTERCEPTOR template with IMAGE_REFERENCE source when sourceType is provided', () => {
+      const template = getContainerTemplate(
+        CONTAINER_TYPE.INTERCEPTOR,
+        undefined,
+        CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE,
+      );
+      expect(template?.$type).toBe(CONTAINER_TYPE.INTERCEPTOR);
+      expect(template?.source?.$type).toBe(CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE);
+      expect(template?.source?.imageReference).toBe('');
+      expect(template?.scaling).toEqual({ minReplicas: 1, maxReplicas: 1 });
+      expect(template?.transport).toBeUndefined();
+    });
+
     test('uses defaults if provided', () => {
       const defaults = {
         CPU_REQUEST: '2',
@@ -200,6 +222,47 @@ describe('containers utils', () => {
       };
       expect(getContainerRedeploySnapshot(a)).toEqual(getContainerRedeploySnapshot(b));
     });
+
+    test('detects command change via snapshot inequality', () => {
+      const a: Container = { ...baseContainer, command: '/bin/sh' };
+      const b: Container = { ...baseContainer, command: '/bin/bash' };
+      expect(getContainerRedeploySnapshot(a)).not.toEqual(getContainerRedeploySnapshot(b));
+    });
+
+    test('detects args change via snapshot inequality', () => {
+      const a: Container = { ...baseContainer, args: '--port 8080' };
+      const b: Container = { ...baseContainer, args: '--port 9090' };
+      expect(getContainerRedeploySnapshot(a)).not.toEqual(getContainerRedeploySnapshot(b));
+    });
+
+    test('treats missing command and args as equivalent', () => {
+      const a: Container = { ...baseContainer };
+      const b: Container = { ...baseContainer, command: undefined, args: undefined };
+      expect(getContainerRedeploySnapshot(a)).toEqual(getContainerRedeploySnapshot(b));
+    });
+
+    test('detects scaling change via snapshot inequality', () => {
+      const a: Container = { ...baseContainer, scaling: { minReplicas: 1, maxReplicas: 1 } };
+      const b: Container = { ...baseContainer, scaling: { minReplicas: 1, maxReplicas: 3 } };
+      expect(getContainerRedeploySnapshot(a)).not.toEqual(getContainerRedeploySnapshot(b));
+    });
+
+    test('treats identical scaling as equal', () => {
+      const scaling = {
+        minReplicas: 1,
+        maxReplicas: 3,
+        strategy: { $type: SCALING_STRATEGY_TYPE.REQUESTS, threshold: 2 },
+      };
+      const a: Container = { ...baseContainer, scaling };
+      const b: Container = { ...baseContainer, scaling: { ...scaling } };
+      expect(getContainerRedeploySnapshot(a)).toEqual(getContainerRedeploySnapshot(b));
+    });
+
+    test('treats missing scaling on both sides as equal', () => {
+      const a: Container = { ...baseContainer };
+      const b: Container = { ...baseContainer, scaling: undefined };
+      expect(getContainerRedeploySnapshot(a)).toEqual(getContainerRedeploySnapshot(b));
+    });
   });
 
   describe('normalizeEnvironmentVariables', () => {
@@ -227,6 +290,8 @@ describe('containers utils', () => {
     test('should be false', () => {
       expect(isEditDisabled({ status: CONTAINER_STATUS.FAILED } as Container)).toBeFalsy();
       expect(isEditDisabled({ status: CONTAINER_STATUS.STOPPED } as Container)).toBeFalsy();
+      expect(isEditDisabled({ status: CONTAINER_STATUS.RUNNING } as Container)).toBeFalsy();
+      expect(isEditDisabled({ status: CONTAINER_STATUS.NOT_DEPLOYED } as Container)).toBeFalsy();
     });
   });
 

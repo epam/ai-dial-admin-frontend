@@ -1,5 +1,5 @@
 'use client';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
   DialCloseButton,
@@ -14,6 +14,7 @@ import { RJSFSchema } from '@rjsf/utils';
 
 import { tryOutAssetTool } from '@/src/app/[lang]/assets-toolsets/actions';
 import { tryOutTool } from '@/src/app/[lang]/toolsets/actions';
+import { tryOutContainerTool } from '@/src/app/actions/deployments';
 import Divider from '@/src/components/Common/Divider/Divider';
 import SchemaUiRenderer from '@/src/components/Common/SchemaUIRenderer/SchemaUIRenderer';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
@@ -27,9 +28,11 @@ interface Props {
   tool?: Tool;
   toolSetName: string;
   isAssetToolset?: boolean;
+  isMcpToolset?: boolean;
+  containerId?: string;
 }
 
-const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset }) => {
+const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset, isMcpToolset, containerId }) => {
   const t = useI18n();
   const { sidebar, toggleSidebar } = useAppContext();
 
@@ -61,22 +64,22 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset }) => {
 
   const sendRequest = useCallback(() => {
     setIsRequestSend(true);
-    (isAssetToolset
-      ? tryOutAssetTool({
-          toolSetPath: {
-            path: toolSetName,
-          },
-          callToolRequest: {
-            name: tool?.name,
-            arguments: requestBody,
-          },
-        })
-      : tryOutTool(toolSetName, { name: tool?.name, arguments: requestBody })
+    const callToolBody = { name: tool?.name, arguments: requestBody };
+    (isMcpToolset && containerId
+      ? tryOutContainerTool(containerId, callToolBody)
+      : isAssetToolset
+        ? tryOutAssetTool({
+            toolSetPath: {
+              path: toolSetName,
+            },
+            callToolRequest: callToolBody,
+          })
+        : tryOutTool(toolSetName, callToolBody)
     ).then((res) => {
       setResponse(res.success ? res.response : { error: res.errorMessage });
       setIsRequestSend(false);
     });
-  }, [isAssetToolset, requestBody, tool?.name, toolSetName]);
+  }, [containerId, isAssetToolset, isMcpToolset, requestBody, tool?.name, toolSetName]);
 
   const onChangeConfiguration = useCallback((config: Record<string, unknown>) => {
     setRequestBody(config);
@@ -133,7 +136,11 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset }) => {
                 data={requestBody}
               />
             ) : (
-              <JsonEditor entity={requestBody} options={{ stickyScroll: { enabled: false } }} />
+              <JsonEditor
+                entity={requestBody}
+                options={{ stickyScroll: { enabled: false } }}
+                setSelectedEntity={onChangeConfiguration as Dispatch<SetStateAction<Record<string, unknown>>>}
+              />
             )}
           </div>
         </div>

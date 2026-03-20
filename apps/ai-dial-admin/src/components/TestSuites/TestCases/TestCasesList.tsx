@@ -1,12 +1,15 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { FC, MouseEvent, RefObject, useCallback, useEffect, useRef, useState } from 'react';
 
+import { DialLoader } from '@epam/ai-dial-ui-kit';
 import { CellValueChangedEvent, ColDef, GridApi, GridOptions, GridReadyEvent } from 'ag-grid-community';
 
 import { createTestCase, getTestCases, importTestCase, removeTestCase } from '@/src/app/[lang]/test-suites/actions';
 import ListEntities from '@/src/components/ListView/List';
+import { ApiRoute } from '@/src/constants/api-routes';
 import TryOut from '@/src/components/TestSuites/RequestTemplate/components/TryOut';
 import { getTestCaseColumns } from '@/src/components/TestSuites/utils/columns';
 import { createNewTestCaseRow, getTestCaseGridData, rowToTestCase } from '@/src/components/TestSuites/utils/data';
@@ -20,7 +23,6 @@ import { useI18n } from '@/src/locales/client';
 import { TestCase, TestSuite } from '@/src/models/evaluation/test-suite';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { DialLoader } from '@epam/ai-dial-ui-kit';
 import HeaderButtons from './Header';
 
 export interface TestCasesActions {
@@ -37,6 +39,7 @@ interface Props {
 
 const TestCasesList: FC<Props> = ({ selectedTestSuite, testCasesActionsRef, onDirtyChange }) => {
   const t = useI18n();
+  const router = useRouter();
   const { showNotification } = useNotification();
   const { sidebar, sidebarOpen, toggleSidebar } = useAppContext();
 
@@ -94,7 +97,7 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, testCasesActionsRef, onDi
       e?.stopPropagation();
       sidebar.showSidebar(
         <SaveValidationContextProvider>
-          <TryOut testSuiteId={selectedTestSuite.id || ''} testCaseId={testCaseId || ''} />
+          <TryOut testSuite={selectedTestSuite} testCaseId={testCaseId || ''} />
         </SaveValidationContextProvider>,
         'w-1/2 max-w-[800px]',
       );
@@ -106,24 +109,30 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, testCasesActionsRef, onDi
     [selectedTestSuite.id, sidebar, sidebarOpen, toggleSidebar],
   );
 
-  const refreshGrid = useCallback(() => {
-    setIsLoading(true);
-    getTestCases(selectedTestSuite.id, 0, 1000, [], []).then((res) => {
-      setIsLoading(false);
-      const testCasesData = res?.content || [];
-      const data = res == null || res.content.length === 0 ? [] : getTestCaseGridData(res?.content || []);
+  const refreshGrid = useCallback(
+    (withRefreshPage?: boolean) => {
+      setIsLoading(true);
+      getTestCases(selectedTestSuite.id, 0, 1000, [], []).then((res) => {
+        setIsLoading(false);
+        const testCasesData = res?.content || [];
+        const data = res == null || res.content.length === 0 ? [] : getTestCaseGridData(res?.content || []);
 
-      setData(data);
-      setColumnDefs([
-        ...getTestCaseColumns(testCasesData, onCellChange),
-        { ...ONE_ACTION_COLUMN(getTryOutOperation(onOpenTryOutSidebar)), colId: 'action-tryout' },
-        {
-          ...ONE_ACTION_COLUMN(getRemoveOperation(stableOnRemoveCase, void 0, 'text-error w-4 h-4')),
-          colId: 'action-remove',
-        },
-      ]);
-    });
-  }, [gridApi, onCellChange, onOpenTryOutSidebar, selectedTestSuite.id, stableOnRemoveCase]);
+        setData(data);
+        setColumnDefs([
+          ...getTestCaseColumns(testCasesData, onCellChange),
+          { ...ONE_ACTION_COLUMN(getTryOutOperation(onOpenTryOutSidebar)), colId: 'action-tryout' },
+          {
+            ...ONE_ACTION_COLUMN(getRemoveOperation(stableOnRemoveCase, void 0, 'text-error w-4 h-4')),
+            colId: 'action-remove',
+          },
+        ]);
+      });
+      if (withRefreshPage) {
+        router.refresh();
+      }
+    },
+    [gridApi, onCellChange, onOpenTryOutSidebar, selectedTestSuite.id, stableOnRemoveCase],
+  );
 
   const onGridReady = useCallback(
     ({ api }: GridReadyEvent) => {
@@ -142,7 +151,7 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, testCasesActionsRef, onDi
           showNotification(
             getSuccessNotification(t(TestSuitesI18nKey.ImportSuccess), t(TestSuitesI18nKey.ImportSuccessDescription)),
           );
-          refreshGrid();
+          refreshGrid(true);
         } else {
           showNotification(
             getErrorNotification(t(TestSuitesI18nKey.ImportFailed), res?.errorMessage || 'Unknown error'),
@@ -157,7 +166,7 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, testCasesActionsRef, onDi
     const testSuiteId = selectedTestSuite.id;
     if (!testSuiteId) return;
 
-    window.open(`/api/test-suites/export?id=${encodeURIComponent(testSuiteId)}`, '_blank');
+    window.open(`${ApiRoute.TestSuitesExport}?id=${encodeURIComponent(testSuiteId)}`, '_blank');
   }, [selectedTestSuite.id, showNotification, t]);
 
   const onAddTestCase = useCallback(() => {

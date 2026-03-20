@@ -13,6 +13,7 @@ export const RUN_CONTAINER_URL = (id: string) => `${BASE_CONTAINERS_URL}/${id}/d
 export const STOP_CONTAINER_URL = (id: string) => `${BASE_CONTAINERS_URL}/${id}/undeploy`;
 export const CONTAINER_DETAILS_URL = `${BASE_CONTAINERS_URL}/mcp`;
 export const CONTAINER_TOOLS_URL = (id: string) => `${CONTAINER_DETAILS_URL}/${id}/tools`;
+export const CONTAINER_CALL_TOOL_URL = (id: string) => `${CONTAINER_DETAILS_URL}/${id}/call-tool`;
 export const CONTAINER_RESOURCES_URL = (id: string) => `${CONTAINER_DETAILS_URL}/${id}/resources`;
 export const CONTAINER_PROMPTS_URL = (id: string) => `${CONTAINER_DETAILS_URL}/${id}/prompts`;
 export const CONTAINER_PODS_URL = (id: string) => `${BASE_CONTAINERS_URL}/${id}/pods`;
@@ -95,6 +96,14 @@ export class ContainersApi extends BaseApi {
 
   getContainerTools(containerId: string, token: Token): Promise<ServerActionResponse> {
     return this.getAction(CONTAINER_TOOLS_URL(containerId), token);
+  }
+
+  callContainerTool(
+    containerId: string,
+    body: Record<string, unknown>,
+    token: Token,
+  ): Promise<ServerActionResponse<Record<string, unknown>>> {
+    return this.postAction(CONTAINER_CALL_TOOL_URL(containerId), body, token);
   }
 
   getContainerResources(containerId: string, token: Token): Promise<{ resources: Resource[] } | null> {

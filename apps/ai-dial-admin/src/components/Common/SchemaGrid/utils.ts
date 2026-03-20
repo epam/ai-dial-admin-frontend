@@ -7,6 +7,7 @@ export interface SchemaFieldRow {
   name: string;
   type: JSONSchema7TypeName;
   required: boolean;
+  title: string;
   description: string;
   expanded: boolean;
   children: SchemaFieldRow[];
@@ -15,6 +16,10 @@ export interface SchemaFieldRow {
   isAddSubFieldRow?: boolean;
   /** Value of dial:meta from schema (first-level only). Stored as-is, e.g. { "dial:propertyKind": "server", "dial:propertyOrder": 1 }. */
   dialMeta?: Record<string, unknown>;
+  /** Enum values from schema when property has "enum". */
+  enum?: string[];
+  /** Default value from schema (e.g. for bindings row default). */
+  defaultValue?: unknown;
 }
 
 export interface SchemaTreeNode {
@@ -39,6 +44,7 @@ export const createEmptyField = (parentId: string | null = null, depth = 0): Sch
   name: '',
   type: 'string',
   required: false,
+  title: '',
   description: '',
   expanded: false,
   children: [],
@@ -150,7 +156,7 @@ export const getPrimaryType = (schema: JSONSchema7): JSONSchema7TypeName => {
  * @returns {SchemaFieldRow[]} - array of schema field rows
  */
 export const jsonSchemaToFields = (schema: JSONSchema7 | undefined, root?: JSONSchema7): SchemaFieldRow[] => {
-  if (!schema || schema.type !== 'object' || !schema.properties) {
+  if (!schema || !schema.properties) {
     return [];
   }
   const rootSchema = root ?? schema;
@@ -172,17 +178,22 @@ export const jsonSchemaToFields = (schema: JSONSchema7 | undefined, root?: JSONS
       rawDef && typeof rawDef[DIAL_META_KEY] === 'object' && rawDef[DIAL_META_KEY] !== null
         ? (rawDef[DIAL_META_KEY] as Record<string, unknown>)
         : undefined;
+    const propSchema = resolvedDef as JSONSchema7;
+    const enumValues = Array.isArray(propSchema.enum) ? propSchema.enum.map((v) => String(v)) : undefined;
     const field: SchemaFieldRow = {
       id: generateFieldId(),
       name,
       type,
       required: requiredFields.includes(name),
-      description: effectiveDef.description || resolvedDef.description || '',
+      title: propSchema.title ?? effectiveDef.title ?? '',
+      description: propSchema.description ?? effectiveDef.description ?? '',
       expanded: false,
       children: [],
       parentId: null,
       depth: 0,
       ...(dialMeta && Object.keys(dialMeta).length > 0 && { dialMeta }),
+      ...(enumValues?.length && { enum: enumValues }),
+      ...(propSchema.default !== undefined && { defaultValue: propSchema.default }),
     };
 
     if (type === 'object' && effectiveDef.properties) {
@@ -199,6 +210,7 @@ export const jsonSchemaToFields = (schema: JSONSchema7 | undefined, root?: JSONS
           name: childName,
           type: childType,
           required: nestedRequired.includes(childName),
+          title: childSchema.title || '',
           description: childSchema.description || '',
           expanded: false,
           children: [],
@@ -231,6 +243,7 @@ export const jsonSchemaToFields = (schema: JSONSchema7 | undefined, root?: JSONS
           name: childName,
           type: childType,
           required: nestedRequired.includes(childName),
+          title: childSchema.title || '',
           description: childSchema.description || '',
           expanded: false,
           children: [],
@@ -260,21 +273,26 @@ export const fieldsToJsonSchema = (fields: SchemaFieldRow[]): JSONSchema7 => {
     const fieldName = field.name;
     const prop: JSONSchema7 & Record<string, unknown> = { type: field.type };
 
+    if (field.title) {
+      prop.title = field.title;
+    }
     if (field.description) {
       prop.description = field.description;
     }
 
-    if ((field.type === 'object' || field.type === 'array') && field.children?.length) {
-      if (field.type === 'object') {
+    if (field.type === 'object') {
+      if (field.children?.length) {
         const nested = fieldChildrenToObjectSchema(field.children);
         prop.properties = nested.properties;
         if (nested.required?.length) {
           prop.required = nested.required;
         }
       } else {
-        const items = fieldChildrenToObjectSchema(field.children);
-        prop.items = items;
+        prop.properties = {};
       }
+    } else if (field.type === 'array') {
+      // Always add items for array type: use children schema or { type: 'string' }
+      prop.items = field.children?.length > 0 ? fieldChildrenToObjectSchema(field.children) : { type: 'string' };
     }
 
     if (field.parentId === null && field.dialMeta) {
@@ -307,18 +325,21 @@ const fieldChildrenToObjectSchema = (children: SchemaFieldRow[]): JSONSchema7 =>
   children.forEach((child) => {
     const childName = child.name;
     const childProp: JSONSchema7 = { type: child.type };
+    if (child.title) childProp.title = child.title;
     if (child.description) childProp.description = child.description;
 
-    if ((child.type === 'object' || child.type === 'array') && child.children?.length) {
-      if (child.type === 'object') {
+    if (child.type === 'object') {
+      if (child.children?.length) {
         const nested = fieldChildrenToObjectSchema(child.children);
         childProp.properties = nested.properties;
         if (nested.required?.length) {
           childProp.required = nested.required;
         }
       } else {
-        childProp.items = fieldChildrenToObjectSchema(child.children);
+        childProp.properties = {};
       }
+    } else if (child.type === 'array') {
+      childProp.items = child.children?.length > 0 ? fieldChildrenToObjectSchema(child.children) : { type: 'string' };
     }
 
     schema.properties![childName] = childProp;
@@ -359,6 +380,7 @@ export const flattenFields = (fields: SchemaFieldRow[], depth = 0, isReadonly?: 
           name: '',
           type: 'string',
           required: false,
+          title: '',
           description: '',
           expanded: false,
           children: [],
@@ -376,6 +398,7 @@ export const flattenFields = (fields: SchemaFieldRow[], depth = 0, isReadonly?: 
       name: '',
       type: 'string',
       required: false,
+      title: '',
       description: '',
       expanded: false,
       children: [],

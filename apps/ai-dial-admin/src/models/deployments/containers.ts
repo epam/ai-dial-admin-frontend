@@ -120,6 +120,9 @@ export interface ContainerRedeploySnapshot {
   envs: EnvironmentVariable[];
   resources?: ContainerResources;
   allowedDomains?: string[];
+  command?: string;
+  args?: string;
+  scaling?: Autoscaling;
 }
 
 export interface HuggingFaceModel {

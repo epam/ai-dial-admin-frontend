@@ -8,6 +8,8 @@ interface BooleanButtonCellRendererParams extends ICellRendererParams {
   isReadonly?: boolean;
 }
 
+// TODO: use DialTag after implementing design system for tags
+
 const BooleanButtonCellRenderer = ({
   value,
   trueLabel,
@@ -28,10 +30,8 @@ const BooleanButtonCellRenderer = ({
         onClick={handleClick}
         disabled={isReadonly}
         className={classNames(
-          'tiny p-2 rounded-[10px] select-none border',
-          isRequired
-            ? 'bg-accent-primary-alpha text-accent-primary border-accent-primary'
-            : 'bg-layer-3 text-secondary border-tertiary',
+          'flex items-center gap-1 dial-tiny rounded p-1 h-[22px] text-primary bg-layer-3 border',
+          !isRequired ? 'border-primary hover:bg-layer-4' : 'border-accent-primary hover:bg-accent-primary-alpha',
         )}
       >
         {isRequired ? trueLabel : falseLabel}

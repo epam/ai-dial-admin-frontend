@@ -14,9 +14,10 @@ interface Props {
   onChange?: (publication: FilePublication) => void;
   addedFiles?: File[];
   setAddedFiles: Dispatch<SetStateAction<File[]>>;
+  disabled?: boolean;
 }
 
-const FilesDetails: FC<Props> = ({ publication, onChange, addedFiles, setAddedFiles }) => {
+const FilesDetails: FC<Props> = ({ publication, onChange, addedFiles, setAddedFiles, disabled }) => {
   const t = useI18n();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -57,7 +58,7 @@ const FilesDetails: FC<Props> = ({ publication, onChange, addedFiles, setAddedFi
         <h3 className="text-primary mb-4">
           {t(PublicationsI18nKey.FilesListTitle)}: {(publication.files?.length || 0) + (addedFiles?.length || 0)}
         </h3>
-        {addedFiles && (
+        {!disabled && addedFiles && (
           <>
             <DialGhostButton
               onClick={onAddClick}
@@ -74,9 +75,9 @@ const FilesDetails: FC<Props> = ({ publication, onChange, addedFiles, setAddedFi
         <FilesList
           files={publication.files || []}
           action={publication.action}
-          onChange={handleFilesChange}
+          onChange={disabled ? undefined : handleFilesChange}
           addedFiles={addedFiles}
-          onRemoveAdded={onRemoveAdded}
+          onRemoveAdded={disabled ? undefined : onRemoveAdded}
         />
       </div>
     </div>

@@ -20,6 +20,7 @@ import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isDeploymentAsset } from '@/src/utils/is-asset-view';
 import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
+import { getVersionsPerName } from '../utils';
 
 interface Props {
   view: ApplicationRoute;
@@ -42,6 +43,7 @@ const AssetVersionControl: FC<Props> = ({
 }) => {
   const t = useI18n();
 
+  const existingVersionsMap = useMemo(() => getVersionsPerName(assets || []), [assets]);
   const router = useRouter();
   const getReqRef = useRef(useProtectedRequest());
 
@@ -67,6 +69,7 @@ const AssetVersionControl: FC<Props> = ({
         const newAsset = {
           ...asset,
           version,
+          displayVersion: version,
           path,
         };
         onChangeAsset?.(newAsset);
@@ -147,9 +150,16 @@ const AssetVersionControl: FC<Props> = ({
         modalType === ModalType.addVersion &&
         createPortal(
           <AddVersionModal
-            heading={t(PromptsI18nKey.NewVersionCreate)}
+            header={t(PromptsI18nKey.NewVersionCreate)}
             isModalOpen={isModalOpen}
-            existingVersions={[...versions, ...addedVersions]}
+            initialVersion={asset.version}
+            entityName={asset.name}
+            existingVersions={{
+              ...existingVersionsMap,
+              ...(addedVersions
+                ? { [asset.name as string]: [...(existingVersionsMap[asset.name as string] || []), ...addedVersions] }
+                : {}),
+            }}
             onClose={handleModalClose}
             onConfirm={onAddVersion}
           />,

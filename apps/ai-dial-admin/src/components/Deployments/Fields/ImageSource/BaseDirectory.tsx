@@ -3,6 +3,7 @@ import { DialInput } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { Image } from '@/src/models/deployments/images';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { FieldError } from '@/src/models/error';
@@ -16,6 +17,7 @@ interface Props {
 
 const BaseDirectory: FC<Props> = ({ image, setImage }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { dispatch, resetCounter } = useSaveValidationContext();
 
   const [error, setError] = useState<FieldError | null>(null);
@@ -58,7 +60,7 @@ const BaseDirectory: FC<Props> = ({ image, setImage }) => {
       id="baseDirectory"
       placeholder={t(EntityPlaceholdersI18nKey.BaseDirectory)}
       value={image.source.baseDirectory}
-      disabled={false}
+      disabled={isReadOnlyAdmin}
       containerClassName={STANDARD_CONTROL_WIDTH}
       onChange={onChange}
       invalid={!!error}

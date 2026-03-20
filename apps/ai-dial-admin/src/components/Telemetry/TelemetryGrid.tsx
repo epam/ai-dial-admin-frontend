@@ -19,16 +19,22 @@ interface Props {
   columnDefs: ColDef[];
   title: string;
   getData: (query: TelemetryQuery) => Promise<ServerActionResponse>;
-  query: TelemetryQuery;
+  query?: TelemetryQuery | null;
   refreshTime?: string;
 }
 
 const TelemetryGrid: FC<Props> = ({ columnDefs, title, getData, query, refreshTime }) => {
   const t = useI18n();
   const [data, setData] = useState<Record<string, string>[] | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(!!query);
 
   useEffect(() => {
+    if (!query) {
+      setData(null);
+      setLoading(false);
+      return;
+    }
+
     const fetch = async () => {
       const response = await getData(query);
       if (response?.success) {

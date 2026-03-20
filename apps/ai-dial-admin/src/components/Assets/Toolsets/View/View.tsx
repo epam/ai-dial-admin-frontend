@@ -18,6 +18,7 @@ import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models'
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import AuthButtons from '@/src/components/Toolsets/Auth/AuthButtons';
 import { ROOT_FOLDER } from '@/src/constants/file';
+import { useAppContext } from '@/src/context/AppContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -43,7 +44,8 @@ interface Props {
 
 const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) => {
   const t = useI18n();
-  const tabs = getTabsForAsset(t, ApplicationRoute.AssetsToolsets);
+  const { featureFlags } = useAppContext();
+  const tabs = getTabsForAsset(t, ApplicationRoute.AssetsToolsets, featureFlags);
   const router = useRouter();
   const { fetchFiles } = useToolsetFolder();
   const { showNotification } = useNotification();
@@ -126,16 +128,10 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
     [selectedToolset, originalToolset, etag, showNotification, t, router, fetchFiles],
   );
 
-  const onRemove = useCallback(
-    (entity: string) => {
-      return removeToolset(entity, etag);
-    },
-    [etag],
-  );
-
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <AssetHeader
+        etag={etag}
         view={ApplicationRoute.AssetsToolsets}
         entity={selectedToolset}
         isChanged={isChanged}
@@ -146,7 +142,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
         jsonConfiguration={jsonConfiguration}
         activeTab={activeTab}
         onChangeActiveTab={setActiveTab}
-        onRemove={onRemove}
+        onRemove={removeToolset}
         getAssetContext={useToolsetFolder}
         onChangeAsset={setSelectedToolset as (asset: Asset) => void}
       >

@@ -10,6 +10,7 @@ import IconControl from '@/src/components/BaseControls/Icon';
 import TopicsControl from '@/src/components/BaseControls/Topics';
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme, TypeBucketCopy } from '@/src/models/dial/application';
 
@@ -20,6 +21,7 @@ interface Props {
 
 const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   const typeBucketCopy: SelectOption[] = [
     { value: TypeBucketCopy.ENABLED, label: t(BasicI18nKey.Enabled) },
@@ -79,6 +81,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
         onChange={(title?: string) => {
           onChangeRunner({ ...runner, title });
         }}
+        disabled={isReadOnlyAdmin}
       />
 
       <DialSelectField
@@ -92,6 +95,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
         label={t(EntityFieldsI18nKey['dial:applicationTypeBucketCopy'])}
         placeholder={t(EntityPlaceholdersI18nKey.TypeBucketCopy)}
         onChange={(type) => onChangeTypeCopyBucket(type as string)}
+        disabled={isReadOnlyAdmin}
       />
       <TopicsControl entity={runner} onChange={onChangeRunner} />
 

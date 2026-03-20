@@ -19,6 +19,7 @@ import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { getResetOperation } from '@/src/constants/grid-columns/actions';
 import { RolesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialRole } from '@/src/models/dial/role';
 
@@ -30,6 +31,7 @@ interface Props {
 
 const RoleSharing: FC<Props> = ({ isSkipRefresh, selectedRole, onChangeRole }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const gridApiRef = useRef<GridApi | null>(null);
   const entityRef = useRef(selectedRole);
 
@@ -89,11 +91,10 @@ const RoleSharing: FC<Props> = ({ isSkipRefresh, selectedRole, onChangeRole }) =
   }, [selectedRole.share]);
 
   const columns: ColDef[] = useMemo(() => {
-    return [
-      ...SHARING_COLUMNS(t, onChangeTypeSharing, getDefaultPlaceholder),
-      ACTION_COLUMN([getResetOperation(onResetSharingToDefault, isResetToDefaultHidden)], true),
-    ];
-  }, [onChangeTypeSharing, onResetSharingToDefault, t]);
+    const baseColumns = SHARING_COLUMNS(t, onChangeTypeSharing, getDefaultPlaceholder, isReadOnlyAdmin);
+    const actions = isReadOnlyAdmin ? [] : [getResetOperation(onResetSharingToDefault, isResetToDefaultHidden)];
+    return [...baseColumns, ...(actions.length ? [ACTION_COLUMN(actions, true)] : [])];
+  }, [onChangeTypeSharing, onResetSharingToDefault, t, isReadOnlyAdmin]);
 
   const data = getSharingData(selectedRole);
 
@@ -126,7 +127,7 @@ const RoleSharing: FC<Props> = ({ isSkipRefresh, selectedRole, onChangeRole }) =
     <div className="max-w-[750px] w-full flex flex-col">
       <div className="flex justify-between items-center mb-3 h-[40px]">
         <h1>{t(RolesI18nKey.Sharing)}</h1>
-        {isResetAvailable && (
+        {!isReadOnlyAdmin && isResetAvailable && (
           <DialGhostButton
             iconBefore={<IconReload {...BASE_BUTTON_ICON_PROPS} />}
             label={t(RolesI18nKey.ResetToDefaultLimits)}

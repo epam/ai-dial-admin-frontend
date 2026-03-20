@@ -1,8 +1,10 @@
 import React, { FC } from 'react';
 
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { Container } from '@/src/models/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 import { CONTAINER_SOURCE_TYPE } from '@/src/types/deployments/containers';
+import { isEditDisabled } from '@/src/utils/deployments/containers';
 
 import ContainerBase from '@/src/components/Deployments/Fields/ContainerBase';
 import ContainerSource from '@/src/components/Deployments/Fields/ContainerSource';
@@ -22,23 +24,38 @@ interface Props {
 }
 
 const ContainerFields: FC<Props> = ({ container, setContainer, isModal, route, names }) => {
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  const disabled = (isModal ? false : isReadOnlyAdmin) || isEditDisabled(container);
+
   return (
     <div className="flex flex-col gap-y-8">
-      <ContainerBase container={container} setContainer={setContainer} names={names} isModal={isModal} />
+      <ContainerBase
+        container={container}
+        setContainer={setContainer}
+        names={names}
+        isModal={isModal}
+        disabled={disabled}
+      />
       {(route === ApplicationRoute.ModelServings ||
         container.source?.$type === CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE) && (
-        <ContainerSource container={container} setContainer={setContainer} isModal={isModal} route={route} />
+        <ContainerSource
+          container={container}
+          setContainer={setContainer}
+          isModal={isModal}
+          route={route}
+          disabled={disabled}
+        />
       )}
       {!isModal && (
         <div className="flex flex-col gap-y-8">
-          <ContainerEndpoint container={container} setContainer={setContainer} route={route} />
+          <ContainerEndpoint container={container} setContainer={setContainer} route={route} disabled={disabled} />
           {container.source?.$type !== CONTAINER_SOURCE_TYPE.NGC_REGISTRY && (
-            <ContainerAutoscaling container={container} setContainer={setContainer} />
+            <ContainerAutoscaling container={container} setContainer={setContainer} disabled={disabled} />
           )}
-          <ContainerVariables container={container} setContainer={setContainer} />
-          <ContainerResources container={container} setContainer={setContainer} route={route} />
-          <ContainerConfiguration container={container} setContainer={setContainer} />
-          <ContainerStartupProbe container={container} setContainer={setContainer} />
+          <ContainerVariables container={container} setContainer={setContainer} disabled={disabled} />
+          <ContainerResources container={container} setContainer={setContainer} route={route} disabled={disabled} />
+          <ContainerConfiguration container={container} setContainer={setContainer} disabled={disabled} />
+          <ContainerStartupProbe container={container} setContainer={setContainer} disabled={disabled} />
         </div>
       )}
     </div>

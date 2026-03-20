@@ -34,7 +34,8 @@ export const ENTITY_COLUMNS = (t: (v: string) => string): ColDef[] => [
 
 export const ROLES_ENTITIES_COLUMNS = (
   onChangeLimits: ((value: number, data: DialRole, token: string) => void) | undefined,
-): ColDef[] => [...LIMIT_COLUMNS(void 0, onChangeLimits)];
+  isReadOnlyAdmin?: boolean,
+): ColDef[] => [...LIMIT_COLUMNS(void 0, onChangeLimits, isReadOnlyAdmin)];
 
 /**
  * Get list of entities with type and route for entities view

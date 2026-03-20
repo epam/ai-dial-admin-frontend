@@ -2,6 +2,7 @@ import { DialNumberInput, DialSelectField, SelectOption } from '@epam/ai-dial-ui
 import { FC, useCallback, useMemo } from 'react';
 
 import { BasicI18nKey, EntityPlaceholdersI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialModel } from '@/src/models/dial/model';
 import { LimitType } from './constants';
@@ -14,6 +15,7 @@ interface Props {
 
 const Limits: FC<Props> = ({ model, onChangeModel }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   const items: SelectOption[] = [
     {
@@ -80,6 +82,7 @@ const Limits: FC<Props> = ({ model, onChangeModel }) => {
         containerClassName="w-[220px]"
         label={t(ModelViewI18nKey.InteractionLimit)}
         onChange={(type) => onChangeLimitType(type as string)}
+        disabled={isReadOnlyAdmin}
       />
 
       {activeLimitType === LimitType.Total && (
@@ -91,6 +94,7 @@ const Limits: FC<Props> = ({ model, onChangeModel }) => {
           value={model.limits?.maxTotalTokens}
           onChange={onChangeMaxTotalTokens}
           containerClassName="w-[150px]"
+          disabled={isReadOnlyAdmin}
         />
       )}
 
@@ -104,6 +108,7 @@ const Limits: FC<Props> = ({ model, onChangeModel }) => {
             placeholder={t(EntityPlaceholdersI18nKey.Value)}
             onChange={onChangeMaxPromptTokens}
             containerClassName="w-[150px]"
+            disabled={isReadOnlyAdmin}
           />
           <DialNumberInput
             id="completionsNum"
@@ -113,6 +118,7 @@ const Limits: FC<Props> = ({ model, onChangeModel }) => {
             value={model.limits?.maxCompletionTokens}
             onChange={onChangeMaxCompletionTokens}
             containerClassName="w-[150px]"
+            disabled={isReadOnlyAdmin}
           />
         </>
       )}

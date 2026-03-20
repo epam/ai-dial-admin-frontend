@@ -9,7 +9,9 @@ import isEqual from 'lodash/isEqual';
 
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { BasicI18nKey } from '@/src/constants/i18n';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
+import { DialNeutralButton, ElementSize } from '@epam/ai-dial-ui-kit';
 import { getSchemaGridColumns } from './columns';
 import {
   SchemaFieldRow,
@@ -30,6 +32,8 @@ interface SchemaGridProps {
 
 const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDialSchema, isReadonly }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  const isReadonlyGrid = isReadonly || isReadOnlyAdmin;
   const [fields, setFields] = useState<SchemaFieldRow[]>(() => jsonSchemaToFields(schema, schema));
   const fieldsRef = useRef(fields);
   const gridApiRef = useRef<GridApi | null>(null);
@@ -84,10 +88,10 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
       setFields(updated);
       // Directly push rowData to grid since this bypasses onChange/isSkipRefresh flow
       if (!gridApiRef.current?.isDestroyed()) {
-        gridApiRef.current?.updateGridOptions({ rowData: flattenFields(updated, 0, isReadonly) });
+        gridApiRef.current?.updateGridOptions({ rowData: flattenFields(updated, 0, isReadonlyGrid) });
       }
     },
-    [updateFieldInList, isReadonly],
+    [updateFieldInList, isReadonlyGrid],
   );
 
   const onChangeName = useCallback(
@@ -119,6 +123,14 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
     (value: boolean, data: SchemaFieldRow) => {
       const updated = updateFieldInList(fieldsRef.current, data.id, (f) => ({ ...f, required: value }));
       updateFields(updated);
+    },
+    [updateFieldInList, updateFields],
+  );
+
+  const onChangeTitle = useCallback(
+    (value: string, data: SchemaFieldRow) => {
+      const updated = updateFieldInList(fieldsRef.current, data.id, (f) => ({ ...f, title: value }));
+      updateFields(updated, true);
     },
     [updateFieldInList, updateFields],
   );
@@ -203,7 +215,7 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
     [updateFieldInList, updateFields, findFieldById],
   );
 
-  const rowData = useMemo(() => flattenFields(fields, 0, isReadonly), [fields, isReadonly]);
+  const rowData = useMemo(() => flattenFields(fields, 0, isReadonlyGrid), [fields, isReadonlyGrid]);
 
   const columnDefs: ColDef[] = useMemo(
     () =>
@@ -211,11 +223,12 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
         onToggleExpand,
         onChangeName,
         onChangeType,
+        onChangeTitle,
         onChangeDescription,
         onChangeRequired,
         onRemoveField,
         t,
-        isReadonly,
+        isReadonlyGrid,
         isDialSchema ? onChangeOrder : undefined,
         isDialSchema ? onChangePropertyKind : undefined,
       ),
@@ -223,12 +236,13 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
       onToggleExpand,
       onChangeName,
       onChangeType,
+      onChangeTitle,
       onChangeDescription,
       onChangeRequired,
       onRemoveField,
       t,
       isDialSchema,
-      isReadonly,
+      isReadonlyGrid,
       onChangeOrder,
       onChangePropertyKind,
     ],
@@ -261,13 +275,12 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
       const isRootAdd = !parentId;
       return (
         <div className="flex items-center h-full" style={{ paddingLeft: depth * 24 + 18 + 8 }}>
-          <button
-            className="flex items-center gap-1 tiny text-secondary hover:text-primary"
+          <DialNeutralButton
+            size={ElementSize.Small}
+            iconBefore={<IconPlus size={12} stroke={2.5} />}
+            label={isRootAdd ? t(BasicI18nKey.AddField) : t(BasicI18nKey.AddSubField)}
             onClick={() => (isRootAdd ? onAddField() : onAddSubField(parentId!))}
-          >
-            <IconPlus size={12} stroke={2.5} />
-            {isRootAdd ? t(BasicI18nKey.AddField) : t(BasicI18nKey.AddSubField)}
-          </button>
+          />
         </div>
       );
     },

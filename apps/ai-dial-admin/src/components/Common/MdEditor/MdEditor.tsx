@@ -8,13 +8,19 @@ import { useTheme } from '@/src/context/ThemeContext';
 interface Props {
   content: string;
   onChangeContent?: (content: string) => void;
+  readOnly?: boolean;
 }
 
-const MdEditor: FC<Props> = ({ content, onChangeContent }) => {
+const MdEditor: FC<Props> = ({ content, onChangeContent, readOnly }) => {
   const { currentTheme } = useTheme();
   return (
     <div data-color-mode={currentTheme === 'dark' ? 'dark' : 'light'}>
-      <MDEditor value={content} onChange={(v) => onChangeContent?.(v || '')} />
+      <MDEditor
+        value={content}
+        onChange={readOnly ? undefined : (v) => onChangeContent?.(v || '')}
+        preview={readOnly ? 'preview' : 'live'}
+        visibleDragbar={!readOnly}
+      />
     </div>
   );
 };

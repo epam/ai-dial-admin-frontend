@@ -5,7 +5,7 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { Image } from '@/src/models/deployments/images';
 import { Container } from '@/src/models/deployments/containers';
-import { containersApi, huggingFaceApi, imagesApi, topicApi, whitelistApi } from '@/src/app/api/api';
+import { containersApi, huggingFaceApi, imagesApi, mcpRegistryApi, topicApi, whitelistApi } from '@/src/app/api/api';
 
 export async function getImages() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -132,6 +132,11 @@ export async function getContainerTools(containerId: string) {
   return containersApi.getContainerTools(containerId, token);
 }
 
+export async function tryOutContainerTool(containerId: string, body: Record<string, unknown>) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return containersApi.callContainerTool(containerId, body, token);
+}
+
 export async function getContainerResources(containerId: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return containersApi.getContainerResources(containerId, token);
@@ -155,6 +160,11 @@ export async function getGlobalWhitelist() {
 export async function updateGlobalWhitelist(domainList: string[]) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return whitelistApi.updateGlobalWhitelist(domainList, token);
+}
+
+export async function getMcpServers(params: Record<string, string>) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return mcpRegistryApi.getMcpServers(params, token);
 }
 
 export async function getHuggingFaceModels(params: Record<string, string>) {

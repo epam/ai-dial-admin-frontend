@@ -10,7 +10,12 @@ import {
   IMAGE_TYPE_I18N_KEYS,
   STATUS_I18N_KEYS,
 } from '@/src/constants/deployments/images';
-import { formatRequired, getFormattedResourceType } from '@/src/constants/grid-columns/formatters';
+import {
+  formatRequired,
+  getFormattedResourceType,
+  numberValueFormatter,
+  priceValueFormatter,
+} from '@/src/constants/grid-columns/formatters';
 import { ImageVersion } from '@/src/models/deployments/images';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
@@ -338,10 +343,24 @@ export const TELEMETRY_COLUMNS: ColDef[] = [
     headerName: 'Money',
     sort: 'desc',
     ...numericColumn,
+    valueFormatter: ({ value }) => `$${numberValueFormatter(priceValueFormatter(value) as string)}`,
+    filterValueGetter: (params) =>
+      numberValueFormatter(priceValueFormatter(params.data[params.colDef.field || '']) as string),
   },
 ];
 
-export const TELEMETRY_GRID_COLUMNS: ColDef[] = [NAME_COLUMN, ...TELEMETRY_COLUMNS];
+export const TELEMETRY_GRID_COLUMNS: ColDef[] = [
+  NAME_COLUMN,
+  ...TELEMETRY_COLUMNS,
+  {
+    field: 'deployment_cost',
+    headerName: 'Total money',
+    ...numericColumn,
+    valueFormatter: ({ value }) => `$${numberValueFormatter(priceValueFormatter(value) as string)}`,
+    filterValueGetter: (params) =>
+      numberValueFormatter(priceValueFormatter(params.data[params.colDef.field || '']) as string),
+  },
+];
 
 export const USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
   { field: 'completion_time', headerName: 'Completion Time', hide: false, ...dateTimeColumn },
@@ -443,6 +462,29 @@ export const USAGE_LOG_CONVERSATIONS_COLUMNS: ColDef[] = [
 ];
 
 export const PROJECT_GRID_COLUMNS: ColDef[] = [{ field: 'name', headerName: 'Project' }, ...TELEMETRY_COLUMNS];
+
+export const MCP_CONSUMPTION_COLUMNS: ColDef[] = [
+  { field: 'name', headerName: 'MCP Name', hide: false },
+  { field: 'requests', headerName: 'Calls', hide: false, ...numericColumn },
+];
+
+export const TOOLS_CONSUMPTION_COLUMNS: ColDef[] = [
+  { field: 'mcp_name', headerName: 'MCP Name', hide: false },
+  { field: 'tool', headerName: 'Tool', hide: false },
+  { field: 'calls', headerName: 'Calls', hide: false, ...numericColumn },
+];
+
+export const MCP_CALLS_BY_DEPLOYMENT_COLUMNS: ColDef[] = [
+  { field: 'name', headerName: 'Deployment Name', hide: false },
+  { field: 'mcp_tool_call_name', headerName: 'MCP Name', hide: false },
+  { field: 'requests', headerName: 'Calls', hide: false, ...numericColumn },
+];
+
+export const MCP_PROJECTS_CONSUMPTION_COLUMNS: ColDef[] = [
+  { field: 'project', headerName: 'Project', hide: false },
+  { field: 'tool_calls', headerName: 'Tool Calls', hide: false, ...numericColumn },
+  { field: 'mcp_calls', headerName: 'MCP Calls', hide: false, sort: 'desc', ...numericColumn },
+];
 
 export const SOURCE_CONTAINERS_COLUMNS: ColDef[] = [
   NAME_COLUMN_WITH_SORT,
@@ -856,6 +898,72 @@ export const HF_REGISTRY_COLUMNS: ColDef[] = [
     sortable: false,
     filter: false,
     floatingFilter: false,
+  },
+];
+
+export const MCP_REGISTRY_COLUMNS: ColDef[] = [
+  { field: 'name', headerName: 'MCP server name', hide: false, sortable: false },
+  {
+    field: 'websiteUrl',
+    headerName: 'Website',
+    hide: false,
+    sortable: false,
+    filter: false,
+    floatingFilter: false,
+  },
+  {
+    field: 'repository.url',
+    headerName: 'Repository',
+    hide: false,
+    sortable: false,
+    filter: false,
+    floatingFilter: false,
+    valueGetter: (params: ValueGetterParams) => params.data?.repository?.url,
+  },
+  {
+    field: 'remotes',
+    headerName: 'Remotes',
+    hide: false,
+    cellRenderer: TagsCellRenderer,
+    cellRendererParams: (params: { data?: { remotes?: { type: string }[] } }) => ({
+      items: params.data?.remotes?.map((r) => r.type),
+    }),
+    tooltipValueGetter: ({ value }) =>
+      Array.isArray(value) ? value.map((r: { type: string }) => r.type).join(', ') : null,
+    sortable: false,
+    filter: false,
+    floatingFilter: false,
+  },
+  {
+    field: 'packages',
+    headerName: 'Packages',
+    hide: false,
+    cellRenderer: TagsCellRenderer,
+    cellRendererParams: (params: { data?: { packages?: { registryType: string }[] } }) => ({
+      items: params.data?.packages?.map((p) => p.registryType),
+    }),
+    tooltipValueGetter: ({ value }) =>
+      Array.isArray(value) ? value.map((p: { registryType: string }) => p.registryType).join(', ') : null,
+    sortable: false,
+    filter: false,
+    floatingFilter: false,
+  },
+  {
+    field: 'version',
+    headerName: 'Version',
+    hide: false,
+    sortable: false,
+    filter: false,
+    floatingFilter: false,
+  },
+  {
+    field: 'updatedAt',
+    headerName: 'Last Update',
+    hide: false,
+    sortable: false,
+    filter: false,
+    floatingFilter: false,
+    ...dateTimeColumn,
   },
 ];
 

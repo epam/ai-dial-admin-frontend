@@ -38,6 +38,9 @@ export const getContainerRedeploySnapshot = (container: Container): ContainerRed
     containerGrpcPort: container.containerGrpcPort,
     envs: normalizeEnvironmentVariables(container.metadata?.envs),
     resources: normalizeResources(container.resources),
+    command: container.command,
+    args: container.args,
+    scaling: container.scaling,
   };
 };
 
@@ -54,10 +57,15 @@ export const getContainerTypeByRoute = (route: ApplicationRoute): CONTAINER_TYPE
   }
 };
 
+export interface ContainerTemplateOptions {
+  mcpRegistry?: boolean;
+}
+
 export const getContainerTemplate = (
   type: CONTAINER_TYPE,
   defaults?: ResourcesDefaults,
   sourceType?: CONTAINER_SOURCE_TYPE,
+  options?: ContainerTemplateOptions,
 ): Container | null => {
   if (!type) {
     return null;
@@ -89,9 +97,26 @@ export const getContainerTemplate = (
     return {
       ...template,
       ...(sourceType === CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE
-        ? { source: { $type: CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE, imageReference: '' } }
+        ? {
+            source: {
+              $type: CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE,
+              imageReference: '',
+              ...(options?.mcpRegistry ? { externalRegistryRef: { $type: 'mcp-registry', packageName: '' } } : {}),
+            },
+          }
         : {}),
       transport: CONTAINER_TRANSPORT.HTTP,
+      scaling: DEFAULT_SCALING,
+    };
+  }
+
+  if (
+    (type === CONTAINER_TYPE.ADAPTER || type === CONTAINER_TYPE.INTERCEPTOR) &&
+    sourceType === CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE
+  ) {
+    return {
+      ...template,
+      source: { $type: CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE, imageReference: '' },
       scaling: DEFAULT_SCALING,
     };
   }

@@ -54,6 +54,7 @@ import {
   runsTab,
   summaryTab,
   testCasesTab,
+  testSuiteMethodTab,
   toolsTab,
   tracesTab,
   trendsTab,
@@ -66,6 +67,7 @@ import {
   getApplicationPublicationTabs,
   getToolsetPublicationTabs,
   columnsTab,
+  metricsTab,
 } from '../utils';
 
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
@@ -137,8 +139,16 @@ describe('Entities :: tabs', () => {
     ]);
   });
 
-  test('returns correct tabs for AssetsToolsets', () => {
+  test('returns correct tabs for AssetsToolsets without dashboardEnabled', () => {
     expect(getTabsForAsset(t, ApplicationRoute.AssetsToolsets)).toEqual([propertiesTab(t), toolsTab(t)]);
+  });
+
+  test('returns correct tabs for AssetsToolsets with dashboardEnabled', () => {
+    expect(getTabsForAsset(t, ApplicationRoute.AssetsToolsets, { dashboardEnabled: true })).toEqual([
+      propertiesTab(t),
+      toolsTab(t),
+      auditTab(t),
+    ]);
   });
 
   test('returns correct tabs for toolset', () => {
@@ -229,7 +239,13 @@ describe('Entities :: tabs', () => {
   });
 
   test('returns correct tabs for test suite', () => {
-    expect(getTestSuiteTabs(t)).toEqual([propertiesTab(t), testCasesTab(t), runsTab(t)]);
+    expect(getTestSuiteTabs(t)).toEqual([
+      propertiesTab(t),
+      testSuiteMethodTab(t),
+      testCasesTab(t),
+      runsTab(t),
+      metricsTab(t),
+    ]);
   });
 
   test('returns correct tabs for run', () => {
@@ -246,33 +262,33 @@ describe('Entities :: tabs', () => {
       eventsTab(t),
     ]);
   });
-});
 
-test('returns correct tabs for test suite request template', () => {
-  expect(getTestSuiteRequestTemplateTabs(t)).toEqual([bodyTab(t), parametersTab(t), headersTab(t)]);
-});
+  test('returns correct tabs for test suite request template', () => {
+    expect(getTestSuiteRequestTemplateTabs(t)).toEqual([bodyTab(t), parametersTab(t), headersTab(t)]);
+  });
 
-test('returns correct tabs for test suite request template', () => {
-  expect(getEndpointSchemaTabs(t)).toEqual([requestSchemaTab(t), responseSchemaTab(t), columnsTab(t)]);
-});
+  test('returns correct tabs for test suite request template', () => {
+    expect(getEndpointSchemaTabs(t)).toEqual([requestSchemaTab(t), responseSchemaTab(t), columnsTab(t)]);
+  });
 
-test('returns correct tabs for file publication', () => {
-  expect(getFilePublicationTabs(t)).toEqual([propertiesTab(t), permissionsTab(t)]);
-});
+  test('returns correct tabs for file publication', () => {
+    expect(getFilePublicationTabs(t)).toEqual([propertiesTab(t), permissionsTab(t)]);
+  });
 
-test('returns correct tabs for prompt publication', () => {
-  expect(getPromptPublicationTabs(t)).toEqual([propertiesTab(t), permissionsTab(t)]);
-});
+  test('returns correct tabs for prompt publication', () => {
+    expect(getPromptPublicationTabs(t)).toEqual([propertiesTab(t), permissionsTab(t)]);
+  });
 
-test('returns correct tabs for application publication', () => {
-  expect(getApplicationPublicationTabs(t)).toEqual([
-    propertiesTab(t),
-    parametersTab(t),
-    permissionsTab(t),
-    filesTab(t),
-  ]);
-});
+  test('returns correct tabs for application publication', () => {
+    expect(getApplicationPublicationTabs(t)).toEqual([
+      propertiesTab(t),
+      parametersTab(t),
+      permissionsTab(t),
+      filesTab(t),
+    ]);
+  });
 
-test('returns correct tabs for toolset publication', () => {
-  expect(getToolsetPublicationTabs(t)).toEqual([propertiesTab(t), toolsTab(t), permissionsTab(t)]);
+  test('returns correct tabs for toolset publication', () => {
+    expect(getToolsetPublicationTabs(t)).toEqual([propertiesTab(t), toolsTab(t), permissionsTab(t)]);
+  });
 });

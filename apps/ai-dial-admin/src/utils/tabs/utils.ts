@@ -1,6 +1,6 @@
 import { TabModel } from '@epam/ai-dial-ui-kit';
 
-import { TabsI18nKey } from '@/src/constants/i18n';
+import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
@@ -52,11 +52,13 @@ export enum EntityViewTab {
   RequestSchema = 'RequestSchema',
   ResponseSchema = 'ResponseSchema',
   Columns = 'Columns',
+  TestSuiteMethod = 'TestSuiteMethod',
 }
 
-export const propertiesTab = (t: (key: string) => string) => ({
+export const propertiesTab = (t: (key: string) => string, warning?: boolean) => ({
   id: EntityViewTab.Properties,
   label: t(TabsI18nKey.Properties),
+  warning,
 });
 
 export const featuresTab = (t: (key: string) => string) => ({
@@ -191,7 +193,7 @@ export const promptsTab = (t: (key: string) => string, status?: CONTAINER_STATUS
 export const metricsTab = (t: (key: string) => string, status?: CONTAINER_STATUS) => ({
   id: EntityViewTab.Metrics,
   label: t(TabsI18nKey.Metrics),
-  disabled: status !== CONTAINER_STATUS.RUNNING,
+  disabled: status && status !== CONTAINER_STATUS.RUNNING,
 });
 
 export const executionLogTab = (t: (key: string) => string) => ({
@@ -214,6 +216,11 @@ export const relatedContainersTab = (t: (key: string) => string, status?: IMAGE_
   id: EntityViewTab.RelatedContainers,
   label: t(TabsI18nKey.RelatedContainers),
   disabled: status === IMAGE_STATUS.NOT_BUILT,
+});
+
+export const testSuiteMethodTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.TestSuiteMethod,
+  label: t(TestSuitesI18nKey.Method),
 });
 
 export const testCasesTab = (t: (key: string) => string) => ({
@@ -340,12 +347,20 @@ export const getUsageLogTabs = (t: (key: string) => string): TabModel[] => {
   return [tracesTab(t), conversationsTab(t)];
 };
 
-export const getTabsForAsset = (t: (key: string) => string, view: ApplicationRoute): TabModel[] => {
+export const getTabsForAsset = (
+  t: (key: string) => string,
+  view: ApplicationRoute,
+  featureFlags?: Record<string, boolean>,
+): TabModel[] => {
   if (view === ApplicationRoute.AssetsApplications) {
     return [propertiesTab(t), featuresTab(t), parametersTab(t), interceptorsTab(t), dependenciesTab(t)];
   }
   if (view === ApplicationRoute.AssetsToolsets) {
-    return [propertiesTab(t), toolsTab(t)];
+    const tabs = [propertiesTab(t), toolsTab(t)];
+    if (featureFlags?.dashboardEnabled) {
+      tabs.push(auditTab(t));
+    }
+    return tabs;
   }
   return [propertiesTab(t)];
 };
@@ -357,7 +372,14 @@ export const getAuditTabs = (
 ): TabModel[] => {
   const tabs: TabModel[] = [];
 
-  if (featureFlags.dashboardEnabled && (view === ApplicationRoute.Models || view === ApplicationRoute.Applications)) {
+  if (featureFlags.dashboardEnabled && view === ApplicationRoute.AssetsToolsets) {
+    return [dashboardTab(t)];
+  }
+
+  if (
+    featureFlags.dashboardEnabled &&
+    (view === ApplicationRoute.Models || view === ApplicationRoute.Applications || view === ApplicationRoute.Toolsets)
+  ) {
     tabs.push(dashboardTab(t), tracesTab(t), conversationsTab(t));
   }
 
@@ -371,6 +393,7 @@ export const getDeploymentsViewTabs = (
   t: (key: string) => string,
   status?: CONTAINER_STATUS | IMAGE_STATUS,
   allowedWhitelist?: string[],
+  propertiesWarning?: boolean,
 ): TabModel[] => {
   if (route === ApplicationRoute.Images) {
     return [
@@ -382,7 +405,7 @@ export const getDeploymentsViewTabs = (
   }
   if (route === ApplicationRoute.McpContainers) {
     return [
-      propertiesTab(t),
+      propertiesTab(t, propertiesWarning),
       firewallTab(t, !!allowedWhitelist?.includes(ALLOW_ALL_DOMAINS)),
       deploymentsToolsTab(t, status as CONTAINER_STATUS),
       resourcesTab(t, status as CONTAINER_STATUS),
@@ -392,7 +415,7 @@ export const getDeploymentsViewTabs = (
     ];
   }
   return [
-    propertiesTab(t),
+    propertiesTab(t, propertiesWarning),
     firewallTab(t, !!allowedWhitelist?.includes(ALLOW_ALL_DOMAINS)),
     executionLogTab(t),
     eventsTab(t),
@@ -404,7 +427,7 @@ export const getSystemPropertiesTabs = (t: (key: string) => string): TabModel[] 
 };
 
 export const getTestSuiteTabs = (t: (key: string) => string): TabModel[] => {
-  return [propertiesTab(t), testCasesTab(t), runsTab(t)];
+  return [propertiesTab(t), testSuiteMethodTab(t), testCasesTab(t), runsTab(t), metricsTab(t)];
 };
 
 export const getPublicationViewTabs = (t: (key: string) => string, view: ApplicationRoute): TabModel[] => {

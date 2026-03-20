@@ -3,6 +3,7 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
 import { getControlClassName } from '@/src/utils/entities/view';
@@ -11,7 +12,6 @@ import { getErrorForName } from '@/src/utils/validation/name-error';
 interface Props {
   displayName?: string;
   required?: boolean;
-  readonly?: boolean;
   disabled?: boolean;
   isFullWidth?: boolean;
   names?: string[];
@@ -26,9 +26,11 @@ const DisplayNameControl: FC<Props> = ({
   onChange,
   names,
   allowWhitespace = true,
+  disabled,
   ...props
 }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { dispatch } = useSaveValidationContext();
   const containerClassName = useMemo(() => getControlClassName(isFullWidth), [isFullWidth]);
 
@@ -72,6 +74,7 @@ const DisplayNameControl: FC<Props> = ({
       error={displayNameError?.text}
       invalid={!!displayNameError}
       containerClassName={containerClassName}
+      disabled={disabled || isReadOnlyAdmin}
       {...props}
     />
   );

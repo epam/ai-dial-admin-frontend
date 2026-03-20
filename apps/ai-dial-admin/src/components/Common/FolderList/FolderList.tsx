@@ -39,6 +39,7 @@ interface Props {
   folderPath?: string;
   isFolderDelete?: boolean;
   isBulkDelete?: boolean;
+  disabled?: boolean;
 }
 
 const FolderList: FC<Props> = ({
@@ -50,6 +51,7 @@ const FolderList: FC<Props> = ({
   folderPath,
   isFolderDelete,
   isBulkDelete,
+  disabled,
 }) => {
   const t = useI18n();
   const folderContext = context?.();
@@ -71,7 +73,23 @@ const FolderList: FC<Props> = ({
 
   const showFolderActions = isAssetView(view);
 
+  const scrollToFolder = useCallback(() => {
+    let attempts = 0;
+    const maxAttempts = 20;
+    const scrollInterval = setInterval(() => {
+      const selectedElement = document.querySelector('[aria-selected="true"]');
+      if (selectedElement) {
+        selectedElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        clearInterval(scrollInterval);
+      } else if (attempts >= maxAttempts) {
+        clearInterval(scrollInterval);
+      }
+      attempts++;
+    }, 500);
+  }, []);
+
   const folderCreateItems = (node: DialFolder) => {
+    if (disabled) return [];
     const items = [
       getAddSiblingOperation(() => openCreateFolderModal(addTrailingSlash(getFolderNameAndPath(node.path).path))),
       getAddChildOperation(() => openCreateFolderModal(node.path)),
@@ -80,13 +98,16 @@ const FolderList: FC<Props> = ({
   };
 
   const folderManageItems = (node: DialFolder) => {
-    const items = [
+    if (node.name === ROOT_FOLDER) return [];
+    if (disabled) {
+      return [getManageFolderOperation(() => openFolderStorage(node.path))];
+    }
+    return [
       getRenameFolderOperation(() => openRenameFolderModal(node.path)),
       getMoveFolderOperation(() => openMoveFolderModal(node)),
       getManageFolderOperation(() => openFolderStorage(node.path)),
       getDeleteFolderOperation(() => openDeleteFolderModalState(node)),
     ];
-    return node.name === ROOT_FOLDER ? [] : items;
   };
 
   const handleModalClose = useCallback(() => {
@@ -143,6 +164,7 @@ const FolderList: FC<Props> = ({
     const context = folderContext as RuleFolderContextType;
     if (initialPath && context?.fetchFolderHierarchy && (context?.files == null || context?.files?.length === 0)) {
       context?.fetchFolderHierarchy(initialPath, true);
+      scrollToFolder();
     } else if (
       !disableAutoFetch &&
       !initialPath &&
@@ -151,7 +173,7 @@ const FolderList: FC<Props> = ({
     ) {
       folderContext?.fetchFiles(`${ROOT_FOLDER}/`);
     }
-  }, [folderContext, disableAutoFetch, initialPath, isBulkDelete]);
+  }, [folderContext, disableAutoFetch, initialPath, isBulkDelete, scrollToFolder]);
 
   const getFolderClassName = (node: DialFile, level: number) => {
     const isSelected = folderContext?.filePath === node.path;
@@ -204,6 +226,7 @@ const FolderList: FC<Props> = ({
           {isFolder(nodeType) && (
             <div className="flex flex-col">
               <div
+                aria-selected={path === folderContext?.filePath}
                 className={classNames(
                   'group py-2',
                   baseClassName,

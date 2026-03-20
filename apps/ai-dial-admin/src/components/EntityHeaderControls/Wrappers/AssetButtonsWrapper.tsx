@@ -22,11 +22,13 @@ import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import AssetChangedEntityButtons from '../Buttons/AssetChangedEntityButtons';
 import { SimpleButtonsWrapperProps } from './SimpleButtonsWrapper';
+import { getVersionsPerName } from '@/src/components/Assets/utils';
 
 export interface AssetButtonsWrapperProps extends Omit<SimpleButtonsWrapperProps<AssetWithVersion>, 'onSave'> {
   assets?: AssetWithVersion[] | null;
@@ -54,6 +56,7 @@ const AssetButtonsWrapper: FC<AssetButtonsWrapperProps> = ({
   onChangeAsset,
 }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const isEditorEnabled = jsonConfiguration?.isEditorEnabled;
   const { dispatch, jsonErrors } = useSaveValidationContext();
   const { showNotification } = useNotification();
@@ -107,10 +110,12 @@ const AssetButtonsWrapper: FC<AssetButtonsWrapperProps> = ({
   return (
     <>
       <div className={containerClassName}>
-        {isChanged ? (
+        {isReadOnlyAdmin ? (
+          <JsonToggles isEditorEnabled={isEditorEnabled} onToggleEditor={jsonConfiguration?.onToggleEditor} />
+        ) : isChanged ? (
           <AssetChangedEntityButtons
             version={entity.version}
-            existingVersions={existingVersions}
+            existingVersions={getVersionsPerName(assets || [])}
             onDiscard={onStartDiscard}
             isEditorEnabled={isEditorEnabled}
             onSave={onTryToSave}

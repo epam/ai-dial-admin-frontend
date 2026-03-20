@@ -23,8 +23,10 @@ interface Props {
   setContainer: (container: Container) => void;
   isModal?: boolean;
   route: ApplicationRoute;
+  disabled?: boolean;
 }
-const HfModelNameField: FC<Props> = ({ container, setContainer, isModal, route }) => {
+const HfModelNameField: FC<Props> = ({ container, setContainer, isModal, route, disabled }) => {
+  const isDisabled = (disabled ?? isEditDisabled(container)) || container.status === CONTAINER_STATUS.RUNNING;
   const t = useI18n();
   const { dispatch, resetCounter } = useSaveValidationContext();
   const [modelOptions, setModelOptions] = useState<{ value: string; label: string }[]>([]);
@@ -80,6 +82,12 @@ const HfModelNameField: FC<Props> = ({ container, setContainer, isModal, route }
       setModelNameError(error);
     }
   }, [container.source?.modelName, resetCounter, t]);
+
+  useEffect(() => {
+    const error = getErrorForHfModelName(container.source?.modelName, t);
+    dispatch({ type: ValidationActionType.SetField, field: 'modelName', isValid: !error });
+  }, [container.source?.modelName, dispatch, t]);
+
   return (
     <>
       <div className="flex gap-3">
@@ -96,14 +104,14 @@ const HfModelNameField: FC<Props> = ({ container, setContainer, isModal, route }
           options={modelOptions}
           error={modelNameError?.text}
           containerClassName={containerClassName}
-          disabled={isEditDisabled(container) || container.status === CONTAINER_STATUS.RUNNING}
+          disabled={isDisabled}
         />
         <DialNeutralButton
           onClick={handleModalOpen}
           label={t(ButtonsI18nKey.HFRegistry)}
           iconBefore={<OpenPopup {...BASE_BUTTON_ICON_PROPS} />}
           className={classNames(modelNameError?.text ? 'self-center mb-1' : 'self-end', 'shrink-0')}
-          disabled={isEditDisabled(container) || container.status === CONTAINER_STATUS.RUNNING}
+          disabled={isDisabled}
         />
       </div>
       {isModalOpen &&

@@ -24,6 +24,7 @@ import { getMenuItems } from '@/src/utils/env/get-menu-items';
 import { PromptFolderProvider } from '@/src/context/assets/PromptFolderContext';
 import { ResourcesDefaults } from '@/src/models/deployments/containers';
 import { isValueTruthy } from '@/src/utils/types';
+import { normalizeUrl } from '@/src/utils/url';
 
 export default async function Layout({ children, params }: { children: ReactNode; params: Promise<{ lang: string }> }) {
   const { lang } = await params;
@@ -38,6 +39,7 @@ export default async function Layout({ children, params }: { children: ReactNode
   const featureFlags = {
     dashboardEnabled: !process.env.DISABLE_MENU_ITEMS?.toLowerCase().includes('dashboard'),
     deploymentsEnabled: isValueTruthy(process.env.DEPLOYMENTS_ENABLED),
+    mcpRegistryEnabled: isValueTruthy(process.env.MCP_REGISTRY_ENABLED),
   };
 
   const themesConfiguration = await themesApi.getThemesConfiguration();
@@ -49,17 +51,18 @@ export default async function Layout({ children, params }: { children: ReactNode
     <I18nProvider locale={lang}>
       <NextAuthProvider>
         <AppContextProvider
-          themeUrl={process.env.THEMES_CONFIG_URL}
+          themeUrl={normalizeUrl(process.env.THEMES_CONFIG_URL)}
           featureFlags={featureFlags}
           disableDeploymentsJSONEditor={isValueTruthy(process.env.DEPLOYMENTS_DISABLE_JSON_EDITOR)}
           resourcesDefaults={JSON.parse(process.env.DEPLOYMENTS_RESOURCES_DEFAULTS || '{}') as ResourcesDefaults}
+          userInfo={(await utilityApi.getUserInfo(token)).response?.userInfo}
         >
           <ThemeProvider themesConfiguration={themesConfiguration} themeImages={themesImages}>
             <RuleFolderProvider attributes={process.env.PUBLICATION_FILTERS || 'title,role,dial_roles'}>
               <PromptFolderProvider>
                 <NotificationProvider>
                   <div className="flex flex-col size-full">
-                    <Header isEnableAuth={isEnableAuth} />
+                    <Header isEnableAuth={isEnableAuth} docLink={normalizeUrl(process.env.DIAL_ADMIN_DOCUMENTATION)} />
                     <div className="flex-1 min-h-0">
                       <div className="flex flex-row h-full relative">
                         <Menu disableMenuItems={getMenuItems(process.env.DISABLE_MENU_ITEMS)} />

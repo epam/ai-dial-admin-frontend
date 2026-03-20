@@ -12,9 +12,10 @@ interface Props {
   onChange: (entity: DialInterceptor) => void;
   prefix?: string;
   isModal?: boolean;
+  disabled?: boolean;
 }
 
-const InterceptorEndpoint: FC<Props> = ({ entity, onChange, prefix, isModal }) => {
+const InterceptorEndpoint: FC<Props> = ({ entity, onChange, prefix, isModal, disabled }) => {
   const onChangeCompletionEndpoint = useCallback(
     (endpoint?: string) => {
       onChange({ ...entity, endpoint });
@@ -45,6 +46,7 @@ const InterceptorEndpoint: FC<Props> = ({ entity, onChange, prefix, isModal }) =
                 source: { ...entity.source, $type: SOURCE_TYPE.CONTAINER, completionEndpointPath },
               });
             }}
+            disabled={disabled}
           />
 
           <ConfigurationEndpointControl
@@ -56,6 +58,7 @@ const InterceptorEndpoint: FC<Props> = ({ entity, onChange, prefix, isModal }) =
                 source: { ...entity.source, $type: SOURCE_TYPE.CONTAINER, configurationEndpointPath },
               });
             }}
+            disabled={disabled}
           />
         </>
       ) : (
@@ -64,12 +67,15 @@ const InterceptorEndpoint: FC<Props> = ({ entity, onChange, prefix, isModal }) =
             isFullWidth={isModal}
             endpoint={entity.endpoint}
             onChange={onChangeCompletionEndpoint}
+            isModal={isModal}
             required
+            disabled={disabled}
           />
           {!isModal && (
             <ConfigurationEndpointControl
               endpoint={entity.features?.configurationEndpoint}
               onChange={onChangeConfigurationEndpoint}
+              disabled={disabled}
             />
           )}
         </>

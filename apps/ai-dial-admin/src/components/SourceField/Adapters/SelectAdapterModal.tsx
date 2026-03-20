@@ -1,10 +1,10 @@
 import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 import { FC, useState } from 'react';
-import { GridOptions, GridReadyEvent } from 'ag-grid-community';
+import { GridOptions } from 'ag-grid-community';
 
 import { SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
 import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 
@@ -39,18 +39,6 @@ const SelectAdapterModal: FC<Props> = ({ selected, adapters, isModalOpen, onClos
     },
   };
 
-  const onGridReady = (event: GridReadyEvent) => {
-    event.api?.updateGridOptions({
-      columnDefs: BASE_COLUMNS,
-      rowData: adapters,
-    });
-    event.api.forEachNode((node) => {
-      if (node.data.name === selectedRunner) {
-        node.setSelected(true);
-      }
-    });
-  };
-
   return (
     <DialFormPopup
       onClose={onClose}
@@ -66,7 +54,12 @@ const SelectAdapterModal: FC<Props> = ({ selected, adapters, isModalOpen, onClos
       onCancel={onClose}
     >
       <div className="flex flex-col px-6 py-4 h-full">
-        <GridView columnDefs={BASE_COLUMNS} additionalGridOptions={options} onGridReady={onGridReady} />
+        <GridView
+          columnDefs={BASE_COLUMNS}
+          rowData={adapters}
+          additionalGridOptions={options}
+          emptyDataProps={{ title: t(EntitiesI18nKey.NoAdapters) }}
+        />
       </div>
     </DialFormPopup>
   );

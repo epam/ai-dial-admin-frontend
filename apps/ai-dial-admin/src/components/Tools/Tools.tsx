@@ -37,7 +37,7 @@ interface Props {
   selectedToolset?: Toolset;
   isAssetToolset?: boolean;
   isMcpToolset?: boolean;
-  readonly?: boolean;
+  disabled?: boolean;
   onChangeToolset?: (toolset: Toolset) => void;
 }
 
@@ -47,7 +47,7 @@ const Tools: FC<Props> = ({
   selectedToolset,
   isAssetToolset,
   isMcpToolset,
-  readonly,
+  disabled,
   onChangeToolset,
 }) => {
   const t = useI18n();
@@ -226,7 +226,7 @@ const Tools: FC<Props> = ({
           {`: ${displayTools?.length || 0}`}
         </h1>
 
-        {!readonly && !isMcpToolset && (
+        {!disabled && !isMcpToolset && (
           <DialSwitch
             switchId="useAllTools"
             label={t(ToolsetI18nKey.UseAllTools)}
@@ -251,7 +251,7 @@ const Tools: FC<Props> = ({
               />
             </div>
           )}
-          {!readonly && !isMcpToolset && !useAllTools && (
+          {!disabled && !isMcpToolset && !useAllTools && (
             <DialPrimaryButton
               label={t(ButtonsI18nKey.ManageTool)}
               iconBefore={<IconPencilMinus {...BASE_BUTTON_ICON_PROPS} />}
@@ -277,6 +277,7 @@ const Tools: FC<Props> = ({
                     isAddedManual={!tools?.some((t) => t.name === tool.name)}
                     isMcpToolset={isMcpToolset}
                     isAssetToolset={isAssetToolset}
+                    containerId={containerId}
                     toolSetName={
                       (isAssetToolset ? (selectedToolset as AssetToolset)?.path : selectedToolset?.name) || ''
                     }
@@ -288,10 +289,10 @@ const Tools: FC<Props> = ({
         </div>
       </div>
 
-      {isNotSavedToolset && !readonly && (
+      {isNotSavedToolset && !disabled && (
         <DialAlert variant={AlertVariant.Info} message={t(ToolsetI18nKey.ToolsWarning)} />
       )}
-      {!useAllTools && !readonly && <span className="tiny text-secondary">{t(ToolsetI18nKey.Warning)}</span>}
+      {!useAllTools && !disabled && <span className="tiny text-secondary">{t(ToolsetI18nKey.Warning)}</span>}
       {isModalOpen && (
         <ManageToolsModal
           isModalOpen={isModalOpen}

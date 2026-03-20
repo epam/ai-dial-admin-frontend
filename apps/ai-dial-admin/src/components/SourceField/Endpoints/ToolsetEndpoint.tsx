@@ -4,9 +4,10 @@ import { FC } from 'react';
 import { DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 
 import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
+import { useI18n } from '@/src/locales/client';
 import { Toolset } from '@/src/models/dial/toolset';
 import { ToolsetTransport } from '@/src/types/toolset';
-import { useI18n } from '@/src/locales/client';
 
 import ReadonlyInput from '@/src/components/Common/ReadonlyInput/ReadonlyInput';
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
@@ -22,6 +23,8 @@ interface Props {
 
 const ToolsetEndpoint: FC<Props> = ({ entity, disabled, onChange, prefix, isModal }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  const isDisabled = disabled || isReadOnlyAdmin;
   const transportOptions: SelectOption[] = [
     { value: ToolsetTransport.HTTP, label: ToolsetTransport.HTTP.toUpperCase() },
     { value: ToolsetTransport.SSE, label: ToolsetTransport.SSE.toUpperCase() },
@@ -39,18 +42,19 @@ const ToolsetEndpoint: FC<Props> = ({ entity, disabled, onChange, prefix, isModa
       ) : (
         <EndpointControl
           id="endpoint"
-          disabled={disabled}
+          disabled={isDisabled}
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
           label={t(EntitiesI18nKey.ExternalEndpoint)}
           endpoint={entity.endpoint}
           onChange={(endpoint) => onChange?.({ ...entity, endpoint })}
           required
           isFullWidth={isModal}
+          isModal={isModal}
         />
       )}
       {!isModal && (
         <DialSelectField
-          disabled={disabled}
+          disabled={isDisabled}
           label={t(EntityFieldsI18nKey.transport)}
           id="transport"
           containerClassName="w-[180px]"

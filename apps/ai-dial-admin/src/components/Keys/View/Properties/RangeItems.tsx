@@ -21,9 +21,10 @@ interface Props {
   onAddRange: () => void;
   onRemoveRange: (index: number) => void;
   onUpdateRange: (property: IpRangeProperty, value: string | number | undefined, index: number) => void;
+  disabled?: boolean;
 }
 
-const RangeItems: FC<Props> = ({ ranges, onAddRange, onRemoveRange, onUpdateRange }) => {
+const RangeItems: FC<Props> = ({ ranges, onAddRange, onRemoveRange, onUpdateRange, disabled }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
   const [errors, setErrors] = useState<IpRangeError[]>([]);
@@ -73,6 +74,7 @@ const RangeItems: FC<Props> = ({ ranges, onAddRange, onRemoveRange, onUpdateRang
             invalid={!!errors?.[index]?.ip}
             error={errors?.[index]?.ip?.text}
             value={range.ip || ''}
+            disabled={disabled}
           />
           <span className={classNames('text-secondary leading-[40px]', index === 0 && 'mt-6')}>/</span>
           <DialNumberInput
@@ -86,22 +88,27 @@ const RangeItems: FC<Props> = ({ ranges, onAddRange, onRemoveRange, onUpdateRang
             }}
             invalid={!!errors?.[index]?.mask}
             error={errors?.[index]?.mask?.text}
+            disabled={disabled}
           />
-          <DialRemoveButton
-            className={classNames(index === 0 && 'mt-6')}
-            onClick={() => {
-              onRemoveRange(index);
-            }}
-          />
+          {!disabled && (
+            <DialRemoveButton
+              className={classNames(index === 0 && 'mt-6')}
+              onClick={() => {
+                onRemoveRange(index);
+              }}
+            />
+          )}
         </div>
       ))}
-      <DialPrimaryButton
-        className="w-fit mt-2"
-        appearance={ButtonAppearance.Link}
-        iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-        label={t(ButtonsI18nKey.Add)}
-        onClick={onAddRange}
-      />
+      {!disabled && (
+        <DialPrimaryButton
+          className="w-fit mt-2"
+          appearance={ButtonAppearance.Link}
+          iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
+          label={t(ButtonsI18nKey.Add)}
+          onClick={onAddRange}
+        />
+      )}
     </div>
   );
 };

@@ -10,6 +10,7 @@ import MdEditor from '@/src/components/Common/MdEditor/MdEditor';
 import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { JSONEditorError } from '@/src/types/editor';
@@ -22,6 +23,7 @@ interface Props {
 
 const PromptProperties: FC<Props> = ({ prompt, onChangePrompt, isPublication }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { dispatch } = useSaveValidationContext();
 
   const [isJSONContentMode, setIsJSONContentMode] = useState(false);
@@ -78,21 +80,31 @@ const PromptProperties: FC<Props> = ({ prompt, onChangePrompt, isPublication }) 
       <div>
         <div className="flex justify-between mb-2">
           <div className="tiny mb-2 text-secondary">{t(EntityFieldsI18nKey.content)}</div>
-          <DialSwitch
-            isOn={isJSONContentMode}
-            label="JSON"
-            switchId="content_json_mode"
-            onChange={onChangeContentMode}
-          />
+          {!isReadOnlyAdmin && (
+            <DialSwitch
+              isOn={isJSONContentMode}
+              label="JSON"
+              switchId="content_json_mode"
+              onChange={onChangeContentMode}
+            />
+          )}
         </div>
         {isJSONContentMode ? (
           <div className="h-[300px] border border-primary rounded">
-            <JsonEditorBase value={jsonValue} onChange={onChangeJsonValue} onValidateJSON={onValidateJSON} />
+            <JsonEditorBase
+              value={jsonValue}
+              onChange={onChangeJsonValue}
+              onValidateJSON={onValidateJSON}
+              options={isReadOnlyAdmin ? { readOnly: true } : undefined}
+            />
           </div>
         ) : (
           <MdEditor
             content={prompt.content}
-            onChangeContent={(content: string) => onChangePrompt?.({ ...prompt, content })}
+            onChangeContent={
+              isReadOnlyAdmin ? undefined : (content: string) => onChangePrompt?.({ ...prompt, content })
+            }
+            readOnly={isReadOnlyAdmin}
           />
         )}
       </div>
@@ -104,6 +116,7 @@ const PromptProperties: FC<Props> = ({ prompt, onChangePrompt, isPublication }) 
           placeholder={t(EntityPlaceholdersI18nKey.Path)}
           onChange={(folderId: string) => onChangePrompt?.({ ...prompt, folderId })}
           context={usePromptFolder}
+          disabled={isReadOnlyAdmin}
         />
       )}
     </div>

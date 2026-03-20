@@ -3,10 +3,9 @@
 import { FC, MouseEvent, useCallback, useEffect } from 'react';
 
 import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
-import { IconPlayerPlay } from '@tabler/icons-react';
 
+import Tryout from '@/public/images/icons/tryout.svg';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
@@ -27,7 +26,7 @@ const TryOutButton: FC<Props> = ({ testSuite }) => {
       e.stopPropagation();
       sidebar.showSidebar(
         <SaveValidationContextProvider>
-          <TryOut testSuiteId={testSuite.id || ''} />
+          <TryOut testSuite={testSuite} />
         </SaveValidationContextProvider>,
         'w-1/2 max-w-[800px]',
       );
@@ -36,7 +35,7 @@ const TryOutButton: FC<Props> = ({ testSuite }) => {
         toggleSidebar(e);
       }
     },
-    [sidebar, sidebarOpen, testSuite.id, toggleSidebar],
+    [sidebar, sidebarOpen, testSuite, toggleSidebar],
   );
 
   useEffect(() => {
@@ -44,13 +43,7 @@ const TryOutButton: FC<Props> = ({ testSuite }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return (
-    <DialNeutralButton
-      label={t(ButtonsI18nKey.TryOut)}
-      iconBefore={<IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} />}
-      onClick={openTryOutSidebar}
-    />
-  );
+  return <DialNeutralButton label={t(ButtonsI18nKey.TryOut)} iconBefore={<Tryout />} onClick={openTryOutSidebar} />;
 };
 
 export default TryOutButton;

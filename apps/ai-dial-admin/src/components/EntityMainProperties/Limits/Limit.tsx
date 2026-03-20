@@ -17,9 +17,19 @@ interface Props {
   limits?: DialRoleLimits;
   isCostInputs?: boolean;
   onChange: (limits: DialRoleLimits) => void;
+  disabled?: boolean;
 }
 
-const LimitControl: FC<Props> = ({ limits, controlClassName, isCostInputs, onChange, fieldKey, label, id }) => {
+const LimitControl: FC<Props> = ({
+  limits,
+  controlClassName,
+  isCostInputs,
+  onChange,
+  fieldKey,
+  label,
+  id,
+  disabled,
+}) => {
   const t = useI18n();
 
   const onChangeLimit = useCallback(
@@ -38,6 +48,7 @@ const LimitControl: FC<Props> = ({ limits, controlClassName, isCostInputs, onCha
       iconBefore={isCostInputs ? <IconCurrencyDollar className="text-secondary" {...BASE_BUTTON_ICON_PROPS} /> : null}
       labelProps={{ label }}
       id={id}
+      disabled={disabled}
     />
   );
 };

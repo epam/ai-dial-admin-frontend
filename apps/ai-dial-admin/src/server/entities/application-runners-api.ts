@@ -8,6 +8,7 @@ import { BaseApi } from '../base-api';
 export const APPLICATION_SCHEMES_URL = `${API}/applicationTypeSchemas`;
 export const APPLICATION_SCHEME_URL = (id?: string) => `${APPLICATION_SCHEMES_URL}?id=${id}`;
 export const CORE_APPLICATION_SCHEME_URL = (id: string) => `${APPLICATION_SCHEMES_URL}/core?id=${id}`;
+export const RESOLVED_APPLICATION_SCHEME_URL = (id: string) => `${APPLICATION_SCHEMES_URL}/resolvedSchema?id=${id}`;
 
 export class ApplicationRunnersApi extends BaseApi {
   getApplicationSchemesList(token: Token): Promise<DialApplicationScheme[] | null> {
@@ -16,6 +17,10 @@ export class ApplicationRunnersApi extends BaseApi {
 
   getApplicationScheme(name: string, token: Token, etag: string) {
     return this.getActionWithEtag(APPLICATION_SCHEME_URL(name), etag, token);
+  }
+
+  getResolvedApplicationScheme(name: string, token: Token) {
+    return this.getAction(RESOLVED_APPLICATION_SCHEME_URL(name), token);
   }
 
   removeApplicationScheme(token: Token, id?: string): Promise<ServerActionResponse> {

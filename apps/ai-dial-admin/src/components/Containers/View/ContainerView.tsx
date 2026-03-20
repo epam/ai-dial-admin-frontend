@@ -7,6 +7,7 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getContainer, getContainerPods, updateContainer } from '@/src/app/actions/deployments';
 import ContainersHeader from '@/src/components/EntityHeaderControls/ContainersHeader';
+import { ApiRoute } from '@/src/constants/api-routes';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { IMAGE_BUILD_POLL_INTERVAL } from '@/src/constants/deployments/images';
@@ -24,7 +25,9 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { CONTAINER_STATUS, KubEventType } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getContainerRedeploySnapshot } from '@/src/utils/deployments/containers';
+import { decodeVariables } from '@/src/utils/deployments/variables';
 import { getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
+import { isImageNotInstalled } from '@/src/utils/deployments/images';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getDeploymentsViewTabs } from '@/src/utils/tabs/utils';
@@ -40,14 +43,24 @@ interface Props {
   entityNames: string[];
 }
 
-const ContainerView: FC<Props> = ({ container, route, createEntity, createEntityAsAsset, entityNames, ...props }) => {
+const ContainerView: FC<Props> = ({
+  container,
+  image,
+  route,
+  createEntity,
+  createEntityAsAsset,
+  entityNames,
+  ...props
+}) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
   const { disableDeploymentsJSONEditor } = useAppContext();
 
+  const imageNotInstalled = isImageNotInstalled(image);
+
   const [tabs, setTabs] = useState<TabModel[]>(
-    getDeploymentsViewTabs(route, t, container.status, container.allowedDomains),
+    getDeploymentsViewTabs(route, t, container.status, container.allowedDomains, imageNotInstalled),
   );
   const [selectedContainer, setSelectedContainer] = useState<Container>(cloneDeep(container));
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
@@ -60,8 +73,8 @@ const ContainerView: FC<Props> = ({ container, route, createEntity, createEntity
   const [pods, setPods] = useState<Pod[]>([]);
 
   useEffect(() => {
-    setTabs(getDeploymentsViewTabs(route, t, container.status, container.allowedDomains));
-  }, [container.allowedDomains, container.status, route, t]);
+    setTabs(getDeploymentsViewTabs(route, t, container.status, container.allowedDomains, imageNotInstalled));
+  }, [container.allowedDomains, container.status, imageNotInstalled, route, t]);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -84,17 +97,28 @@ const ContainerView: FC<Props> = ({ container, route, createEntity, createEntity
   }, [container, isEditorEnabled]);
 
   const onSave = useCallback(() => {
-    updateContainer(selectedContainer).then((res) => {
-      if (res.success) {
+    updateContainer(selectedContainer).then(({ success, errorMessage, errorHeader, response, requestId }) => {
+      if (success) {
+        const updatedContainer = response as Container | undefined;
+        if (updatedContainer) {
+          setSelectedContainer(decodeVariables(cloneDeep(updatedContainer)));
+        }
         router.refresh();
       } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        showNotification(getErrorNotification(errorHeader, errorMessage, requestId));
       }
     });
   }, [router, selectedContainer, showNotification]);
 
   useEffect(() => {
-    setSelectedContainer(cloneDeep(container));
+    setSelectedContainer((prev) => {
+      const next = cloneDeep(container);
+      const isTransitioning = prev.status === CONTAINER_STATUS.PENDING || prev.status === CONTAINER_STATUS.STOPPING;
+      if (isTransitioning && container.status === CONTAINER_STATUS.RUNNING) {
+        next.status = prev.status;
+      }
+      return next;
+    });
   }, [container]);
 
   useEffect(() => {
@@ -112,7 +136,7 @@ const ContainerView: FC<Props> = ({ container, route, createEntity, createEntity
 
   useEffect(() => {
     if (selectedContainer.name) {
-      const eventSource = new EventSource(`/api/events?id=${selectedContainer.name}`);
+      const eventSource = new EventSource(`${ApiRoute.Events}?id=${selectedContainer.name}`);
 
       const handleEvent = (event: MessageEvent) => {
         try {
@@ -262,6 +286,7 @@ const ContainerView: FC<Props> = ({ container, route, createEntity, createEntity
           onChangeActiveTab={setActiveTab}
           route={route}
           container={selectedContainer}
+          image={image}
           isChanged={isChanged}
           isRedeployRequired={isRedeployRequired}
           onSave={onSave}
@@ -289,6 +314,7 @@ const ContainerView: FC<Props> = ({ container, route, createEntity, createEntity
               onChange={setSelectedContainer}
               pods={pods}
               restarts={restarts}
+              image={image}
               {...props}
             />
           )}

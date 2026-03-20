@@ -5,12 +5,13 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { CONTAINER_EVENTS_URL } from '@/src/server/deployments/containers';
 import { getAuthorizationHeader } from '@/src/utils/auth/api-headers';
 import { APPLICATION_JSON_TYPE, SSE_STREAM_TYPE } from '@/src/constants/request-headers';
+import { normalizeUrl } from '@/src/utils/url';
 
 export async function GET(req: NextRequest) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   const id = req.nextUrl.searchParams.get('id') ?? '';
 
-  const backendUrl = `${process.env.DIAL_DEPLOYMENTS_API_URL}${CONTAINER_EVENTS_URL(id)}`;
+  const backendUrl = `${normalizeUrl(process.env.DIAL_DEPLOYMENTS_API_URL)}${CONTAINER_EVENTS_URL(id)}`;
   const backendRes = await fetch(backendUrl, {
     method: 'GET',
     headers: {

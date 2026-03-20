@@ -6,6 +6,7 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
 import { ApplicationRoute } from '@/src/types/routes';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { getControlClassName } from '@/src/utils/entities/view';
 import { isEntitiesWithDisplayVersion } from '@/src/utils/is-asset-view';
 import { getVersionControlError } from '@/src/utils/validation/version-error';
@@ -22,6 +23,7 @@ interface Props {
   isFullWidth?: boolean;
   view?: ApplicationRoute;
   onChange?: (version?: string) => void;
+  disableValidation?: boolean;
 }
 
 const VersionControl: FC<Props> = ({
@@ -33,10 +35,13 @@ const VersionControl: FC<Props> = ({
   onChange,
   title,
   view,
+  disabled,
   containerClassName,
+  disableValidation,
   ...props
 }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { dispatch } = useSaveValidationContext();
   const containerClass = useMemo(
     () => containerClassName || getControlClassName(isFullWidth),
@@ -47,21 +52,21 @@ const VersionControl: FC<Props> = ({
 
   const onChangeVersion = useCallback(
     (version?: string) => {
-      if (!isEntitiesWithDisplayVersion(view)) {
+      if (!isEntitiesWithDisplayVersion(view) && !disableValidation) {
         const error = getVersionControlError(version, optional, hideError, t);
         setVersionError(error);
         dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: !error });
       }
       onChange?.(version);
     },
-    [dispatch, hideError, onChange, optional, t, view],
+    [dispatch, hideError, onChange, optional, t, view, disableValidation],
   );
 
   useEffect(() => {
-    if (!isEntitiesWithDisplayVersion(view)) {
+    if (!isEntitiesWithDisplayVersion(view) && !disableValidation) {
       dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: !!version });
     }
-  }, [version, optional, view, dispatch]);
+  }, [version, optional, view, dispatch, disableValidation]);
 
   return (
     <DialInput
@@ -73,6 +78,7 @@ const VersionControl: FC<Props> = ({
       invalid={!!error || !!versionError}
       onChange={onChangeVersion}
       containerClassName={containerClass}
+      disabled={disabled || isReadOnlyAdmin}
       {...props}
     />
   );

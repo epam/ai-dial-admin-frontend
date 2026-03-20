@@ -9,7 +9,7 @@ import { createContainer, createImage, deleteImage, installImage } from '@/src/a
 import VersionsSelect from '@/src/components/Deployments/Common/VersionsSelect/VersionsSelect';
 import ImageCreateContainer from '@/src/components/Deployments/Modals/ImageCreateContainer';
 import ImageInstall from '@/src/components/Deployments/Modals/ImageInstall';
-import ImageNewVersion from '@/src/components/Deployments/Modals/ImageNewVersion';
+import AddVersionModal from '@/src/components/Assets/Modals/AddVersionModal';
 import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import { ButtonsI18nKey, ContainersI18nKey, CreateI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
@@ -21,6 +21,7 @@ import {
 } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
@@ -34,6 +35,7 @@ import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import ImageDelete from '@/src/components/Deployments/Modals/ImageDelete';
 import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
+import { getVersionsPerName } from '@/src/components/Assets/utils';
 
 export interface ImagesButtonsWrapperProps {
   image: Image;
@@ -59,6 +61,7 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
   jsonConfiguration,
 }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { showNotification } = useNotification();
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
@@ -179,7 +182,14 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
   return (
     <>
       <div className={containerClassNames}>
-        {isChanged ? (
+        {isReadOnlyAdmin ? (
+          <div className="flex flex-row items-center w-full gap-x-4 flex-wrap">
+            {!jsonConfiguration?.isEditorEnabled && (
+              <VersionsSelect selected={image.id} versions={versions} onChange={onVersionChange} />
+            )}
+            {!jsonConfiguration?.hideJsonEditorButton && <JsonToggles {...jsonConfiguration} />}
+          </div>
+        ) : isChanged ? (
           <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
             <ChangedEntityButtons
               disableSave={isDisableSave}
@@ -275,28 +285,27 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
       {isModalOpen &&
         modalType === ModalType.saveNewVersion &&
         createPortal(
-          <ImageNewVersion
+          <AddVersionModal
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
-            okLabel={t(ButtonsI18nKey.Save)}
-            title={t(ImagesI18nKey.SaveNewVersionModalTitle)}
-            image={image}
-            onApply={onSaveAsNewVersion}
-            versions={versions}
+            header={t(ImagesI18nKey.SaveNewVersionModalTitle)}
+            submitLabel={t(ButtonsI18nKey.Save)}
+            initialVersion={image.version}
+            onConfirm={(version) => onSaveAsNewVersion({ ...image, version })}
+            existingVersions={getVersionsPerName(versions)}
           />,
           document.body,
         )}
       {isModalOpen &&
         modalType === ModalType.createNewVersion &&
         createPortal(
-          <ImageNewVersion
+          <AddVersionModal
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
-            okLabel={t(ButtonsI18nKey.Create)}
-            title={t(ImagesI18nKey.CreateNewVersionModalTitle)}
-            image={image}
-            onApply={onSaveAsNewVersion}
-            versions={versions}
+            header={t(ImagesI18nKey.CreateNewVersionModalTitle)}
+            initialVersion={image.version}
+            onConfirm={(version) => onSaveAsNewVersion({ ...image, version })}
+            existingVersions={getVersionsPerName(versions)}
           />,
           document.body,
         )}

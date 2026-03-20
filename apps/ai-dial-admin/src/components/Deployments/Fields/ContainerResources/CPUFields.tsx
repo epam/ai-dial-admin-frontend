@@ -12,10 +12,12 @@ import { useI18n } from '@/src/locales/client';
 interface Props {
   container: Container;
   setContainer: (container: Container) => void;
+  disabled?: boolean;
 }
 
-const CPUFields: FC<Props> = ({ container, setContainer }) => {
+const CPUFields: FC<Props> = ({ container, setContainer, disabled }) => {
   const t = useI18n();
+  const isDisabled = disabled ?? isEditDisabled(container);
   const { dispatch, resetCounter } = useSaveValidationContext();
 
   const [requestError, setRequestError] = useState<FieldError | null>(null);
@@ -151,7 +153,7 @@ const CPUFields: FC<Props> = ({ container, setContainer }) => {
         error={requestError?.text}
         invalid={!!requestError}
         postfix="m"
-        disabled={isEditDisabled(container)}
+        disabled={isDisabled}
         onChange={onChangeRequest}
       />
       <DialNumberInput
@@ -162,7 +164,7 @@ const CPUFields: FC<Props> = ({ container, setContainer }) => {
         postfix="m"
         error={limitError?.text}
         invalid={!!limitError}
-        disabled={isEditDisabled(container)}
+        disabled={isDisabled}
         onChange={onChangeLimit}
       />
     </div>

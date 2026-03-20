@@ -3,6 +3,7 @@ import {
   getDeploymentsURIError,
   getDeploymentsURLError,
   getErrorForHfModelName,
+  getErrorForMcpServerName,
   getMaintainerError,
   getPathError,
   getSemanticVersionError,
@@ -20,7 +21,7 @@ import {
   getAdvancedTimingsError,
 } from '../validation';
 import { ErrorType } from '@/src/types/error-type';
-import { ErrorI18nKey } from '@/src/constants/i18n';
+import { EnvVariablesI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { isValidHttpUrl } from '@/src/utils/validation/url-error';
 import semver from 'semver/preload';
 
@@ -73,6 +74,36 @@ describe('validation utils', () => {
     test('returns null for valid name', () => {
       expect(getVariableNameError('VALID_VARIABLE_1', t)).toBeNull();
     });
+
+    test('returns error for duplicate name', () => {
+      expect(getVariableNameError('DATABASE_URL', t, ['DATABASE_URL', 'API_KEY'])).toEqual({
+        type: ErrorType.EXISTING,
+        text: EnvVariablesI18nKey.DuplicateName,
+      });
+    });
+
+    test('returns null when name is not in existingNames', () => {
+      expect(getVariableNameError('DATABASE_URL', t, ['API_KEY', 'SECRET'])).toBeNull();
+    });
+
+    test('duplicate check is case-sensitive', () => {
+      expect(getVariableNameError('database_url', t, ['DATABASE_URL'])).toBeNull();
+    });
+
+    test('returns null when existingNames is undefined', () => {
+      expect(getVariableNameError('DATABASE_URL', t, undefined)).toBeNull();
+    });
+
+    test('returns null when existingNames is empty', () => {
+      expect(getVariableNameError('DATABASE_URL', t, [])).toBeNull();
+    });
+
+    test('format error takes priority over duplicate error', () => {
+      expect(getVariableNameError('var%!iable', t, ['var%!iable'])).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.VariableError,
+      });
+    });
   });
 
   describe('getSemanticVersionError', () => {
@@ -112,11 +143,11 @@ describe('validation utils', () => {
         text: ErrorI18nKey.SpecialChars,
         type: ErrorType.INVALID,
       });
-      expect(getImageNameError('', t)).toEqual({
+      expect(getImageNameError('I', t)).toEqual({
         text: ErrorI18nKey.MinMaxLength,
         type: ErrorType.LENGTH,
       });
-      expect(getImageNameError('')).toEqual({
+      expect(getImageNameError('I')).toEqual({
         text: '',
         type: ErrorType.LENGTH,
       });
@@ -665,6 +696,62 @@ describe('validation utils', () => {
     });
     test('should return null when value is bigger than 0', () => {
       expect(getAdvancedTimingsError(1, t, 10)).toBeNull();
+    });
+  });
+
+  describe('getErrorForMcpServerName', () => {
+    test('returns error for empty value', () => {
+      expect(getErrorForMcpServerName(undefined, t)).toEqual({
+        type: ErrorType.EMPTY,
+        text: ErrorI18nKey.RequiredProperty,
+      });
+      expect(getErrorForMcpServerName('', t)).toEqual({
+        type: ErrorType.EMPTY,
+        text: ErrorI18nKey.RequiredProperty,
+      });
+      expect(getErrorForMcpServerName('   ', t)).toEqual({
+        type: ErrorType.EMPTY,
+        text: ErrorI18nKey.RequiredProperty,
+      });
+    });
+
+    test('returns error for missing slash', () => {
+      expect(getErrorForMcpServerName('servername', t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.McpServerName,
+      });
+    });
+
+    test('returns error for invalid characters', () => {
+      expect(getErrorForMcpServerName('ns/name with spaces', t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.McpServerName,
+      });
+    });
+
+    test('returns error for empty namespace or name', () => {
+      expect(getErrorForMcpServerName('/name', t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.McpServerName,
+      });
+      expect(getErrorForMcpServerName('ns/', t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.McpServerName,
+      });
+    });
+
+    test('returns null for valid server names', () => {
+      expect(getErrorForMcpServerName('ai.cirra/salesforce-mcp', t)).toBeNull();
+      expect(getErrorForMcpServerName('io.github.user/server-name', t)).toBeNull();
+      expect(getErrorForMcpServerName('ai.auteng/docs', t)).toBeNull();
+      expect(getErrorForMcpServerName('simple/name', t)).toBeNull();
+    });
+
+    test('returns empty text when t is not provided', () => {
+      expect(getErrorForMcpServerName('invalid')).toEqual({
+        type: ErrorType.INVALID,
+        text: '',
+      });
     });
   });
 });
