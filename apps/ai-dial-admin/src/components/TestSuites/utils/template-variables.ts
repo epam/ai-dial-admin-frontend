@@ -11,7 +11,7 @@ export const generateInputBindingsRowData = (
     if (binding?.dataField != null) {
       return {
         templateVariable: variable.name,
-        inferredType: variable.inferredType,
+        effectiveType: variable.effectiveType,
         dataField: binding.dataField,
         type: InputBindingType.Attribute,
         value: binding.dataField,
@@ -21,7 +21,7 @@ export const generateInputBindingsRowData = (
 
     return {
       templateVariable: variable.name,
-      inferredType: variable.inferredType,
+      effectiveType: variable.effectiveType,
       constantValue: binding?.constantValue,
       type: InputBindingType.Constant,
       value: binding?.constantValue ?? variable.defaultValue ?? '',
@@ -39,7 +39,7 @@ export const generateVariablesRowData = (
 
     return {
       templateVariable: variable.name,
-      inferredType: variable.inferredType,
+      effectiveType: variable.effectiveType,
       value: binding ?? '',
       defaultValue: variable.defaultValue,
     };

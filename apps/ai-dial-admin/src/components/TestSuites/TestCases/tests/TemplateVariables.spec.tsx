@@ -33,7 +33,7 @@ const createTestSuite = (overrides?: Partial<TestSuite>): TestSuite => ({
 
 const createVariable = (overrides?: Partial<TemplateVariable>): TemplateVariable => ({
   name: 'var1',
-  inferredType: TestCaseItemType.STRING,
+  effectiveType: TestCaseItemType.STRING,
   defaultValue: null,
   hasDefault: false,
   sources: ['body'],

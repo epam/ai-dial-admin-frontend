@@ -30,7 +30,7 @@ vi.mock('@/src/components/TestSuites/utils/template-variables', () => ({
 
 const createVariable = (overrides?: Partial<TemplateVariable>): TemplateVariable => ({
   name: 'var1',
-  inferredType: TestCaseItemType.STRING,
+  effectiveType: TestCaseItemType.STRING,
   defaultValue: null,
   hasDefault: false,
   sources: ['body'],
@@ -64,7 +64,7 @@ describe('Variables', () => {
   test('does not show empty data message when variables have data', () => {
     const variables = [createVariable()];
     mockGenerateVariablesRowData.mockReturnValue([
-      { templateVariable: 'var1', inferredType: TestCaseItemType.STRING, value: '' },
+      { templateVariable: 'var1', effectiveType: TestCaseItemType.STRING, value: '' },
     ]);
 
     render(
@@ -97,26 +97,26 @@ describe('Variables', () => {
     render(<Variables variables={variables} requestBody={requestBody} onChangeRequestBody={mockOnChangeRequestBody} />);
 
     const onChangeParam = mockGetVariablesColumns.mock.calls[0][0];
-    onChangeParam('newValue', { templateVariable: 'myVar', inferredType: TestCaseItemType.STRING });
+    onChangeParam('newValue', { templateVariable: 'myVar', effectiveType: TestCaseItemType.STRING });
 
     expect(mockOnChangeRequestBody).toHaveBeenCalledWith({ myVar: 'newValue' });
   });
 
   test('onChangeParam calls onChangeRequestBody with updated body for OBJECT type', () => {
-    const variables = [createVariable({ name: 'objVar', inferredType: TestCaseItemType.OBJECT })];
+    const variables = [createVariable({ name: 'objVar', effectiveType: TestCaseItemType.OBJECT })];
     const requestBody = { objVar: {} };
 
     render(<Variables variables={variables} requestBody={requestBody} onChangeRequestBody={mockOnChangeRequestBody} />);
 
     const onChangeParam = mockGetVariablesColumns.mock.calls[0][0];
     const newObj = { key: 'value' };
-    onChangeParam(newObj, { templateVariable: 'objVar', inferredType: TestCaseItemType.OBJECT });
+    onChangeParam(newObj, { templateVariable: 'objVar', effectiveType: TestCaseItemType.OBJECT });
 
     expect(mockOnChangeRequestBody).toHaveBeenCalledWith({ objVar: { key: 'value' } });
   });
 
   test('onGridReady updates grid options with columns and data', () => {
-    const rowData = [{ templateVariable: 'var1', inferredType: TestCaseItemType.STRING, value: '' }];
+    const rowData = [{ templateVariable: 'var1', effectiveType: TestCaseItemType.STRING, value: '' }];
     mockGenerateVariablesRowData.mockReturnValue(rowData);
 
     render(<Variables variables={[createVariable()]} requestBody={{}} onChangeRequestBody={mockOnChangeRequestBody} />);
@@ -162,7 +162,7 @@ describe('Variables', () => {
 
   test('getIsEmptyData returns false when row data has items', () => {
     mockGenerateVariablesRowData.mockReturnValue([
-      { templateVariable: 'var1', inferredType: TestCaseItemType.STRING, value: '' },
+      { templateVariable: 'var1', effectiveType: TestCaseItemType.STRING, value: '' },
     ]);
 
     render(
