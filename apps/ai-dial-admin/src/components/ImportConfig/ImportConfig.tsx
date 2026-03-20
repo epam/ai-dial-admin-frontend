@@ -1,13 +1,14 @@
 'use client';
 
-import { DialSteps, StepStatus } from '@epam/ai-dial-ui-kit';
+import { AlertVariant, DialAlert, DialSteps, StepStatus } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { importDeploymentConfig, importJsonConfigs, importZipConfig } from '@/src/app/[lang]/import-config/actions';
 import { isLargeFile } from '@/src/components/EntityListView/Import/utils';
-import { ImportI18nKey } from '@/src/constants/i18n';
+import { ImportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { IMPORT_CONFIG_STEPS } from '@/src/constants/import';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { ExportComponentType } from '@/src/types/export';
@@ -22,6 +23,7 @@ interface Props {
 
 const ImportConfig: FC<Props> = ({ deploymentsEnabled }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { showNotification } = useNotification();
 
   const [importBody, setImportBody] = useState<FormData>(new FormData());
@@ -112,6 +114,15 @@ const ImportConfig: FC<Props> = ({ deploymentsEnabled }) => {
   const onChangeImportBody = useCallback((importBody: FormData) => {
     setImportBody(importBody);
   }, []);
+
+  if (isReadOnlyAdmin) {
+    return (
+      <div className="flex flex-col size-full rounded p-4 bg-layer-2 gap-4">
+        <h1>{t(MenuI18nKey.ImportConfig)}</h1>
+        <DialAlert variant={AlertVariant.Info} message={t(MenuI18nKey.ReadOnlyAdminImportUnavailable)} />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col size-full rounded p-4 bg-layer-2">

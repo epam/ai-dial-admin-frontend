@@ -133,12 +133,14 @@ const RolesGrid: FC<Props> = ({
           )}
         </div>
       </div>
-      <GridView
-        emptyDataProps={{ title: t(EntitiesI18nKey.NoRoles) }}
-        onGridReady={onGridReady}
-        additionalGridOptions={options}
-        getIsEmptyData={() => !data.length}
-      />
+      <div className="flex-1 min-h-0">
+        <GridView
+          emptyDataProps={{ title: t(EntitiesI18nKey.NoRoles) }}
+          onGridReady={onGridReady}
+          additionalGridOptions={options}
+          getIsEmptyData={() => !data.length}
+        />
+      </div>
     </div>
   );
 };

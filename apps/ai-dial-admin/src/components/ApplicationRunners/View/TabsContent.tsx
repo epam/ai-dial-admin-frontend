@@ -2,6 +2,7 @@
 
 import { FC } from 'react';
 
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import AppRunnerApplications from '@/src/components/ApplicationRunners/ConfigurationView/Applications';
 import AppRunnerFeatures from '@/src/components/ApplicationRunners/ConfigurationView/Features';
 import Parameters from '@/src/components/ApplicationRunners/ConfigurationView/Parameters';
@@ -38,6 +39,8 @@ const TabsContent: FC<Props> = ({
   isSkipRefresh,
   onChange,
 }) => {
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
+
   return (
     selectedFormat === ExportFormat.ADMIN && (
       <>
@@ -78,6 +81,7 @@ const TabsContent: FC<Props> = ({
             roles={roles}
             routes={selectedRunner['dial:applicationTypeRoutes']}
             onChangeRoutes={(routes) => onChange({ ...selectedRunner, ['dial:applicationTypeRoutes']: routes })}
+            disabled={isReadOnlyAdmin}
           />
         )}
 

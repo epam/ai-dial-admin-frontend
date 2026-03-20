@@ -10,24 +10,30 @@ interface Props {
   onExport: () => void;
   onImport?: () => void;
   onOpenProperties?: () => void;
+  /** When false, Import / Export entries are omitted (e.g. read-only admin). */
+  showImportExport?: boolean;
 }
 
-const MenuActions: FC<Props> = ({ onExport, onImport, onOpenProperties }) => {
+const MenuActions: FC<Props> = ({ onExport, onImport, onOpenProperties, showImportExport = true }) => {
   const t = useI18n();
 
   const dropdownItems: DropdownItem[] = [
-    {
-      key: t(MenuI18nKey.ImportConfig),
-      label: t(MenuI18nKey.ImportConfig),
-      icon: <IconDownload className="text-secondary" {...BASE_BUTTON_ICON_PROPS} widths={24} height={24} />,
-      onClick: onImport,
-    },
-    {
-      key: t(MenuI18nKey.ExportConfig),
-      label: t(MenuI18nKey.ExportConfig),
-      icon: <IconUpload className="text-secondary" {...BASE_BUTTON_ICON_PROPS} widths={24} height={24} />,
-      onClick: onExport,
-    },
+    ...(showImportExport
+      ? [
+          {
+            key: t(MenuI18nKey.ImportConfig),
+            label: t(MenuI18nKey.ImportConfig),
+            icon: <IconDownload className="text-secondary" {...BASE_BUTTON_ICON_PROPS} widths={24} height={24} />,
+            onClick: onImport,
+          },
+          {
+            key: t(MenuI18nKey.ExportConfig),
+            label: t(MenuI18nKey.ExportConfig),
+            icon: <IconUpload className="text-secondary" {...BASE_BUTTON_ICON_PROPS} widths={24} height={24} />,
+            onClick: onExport,
+          },
+        ]
+      : []),
     {
       key: t(MenuI18nKey.SystemProperties),
       label: t(MenuI18nKey.SystemProperties),
