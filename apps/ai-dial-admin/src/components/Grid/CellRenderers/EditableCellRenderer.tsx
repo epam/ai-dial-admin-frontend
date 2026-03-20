@@ -7,6 +7,7 @@ import Triangle from '@/public/images/icons/cell-triangle.svg';
 import { RolesI18nKey } from '@/src/constants/i18n';
 import { UNLIMITED_ACCEPTED_USERS, UNLIMITED_VALUE } from '@/src/constants/role';
 import { useI18n } from '@/src/locales/client';
+import { formatEditableValue } from './utils';
 
 interface EditableCellRendererParams extends ICellRendererParams {
   placeholder?: string;
@@ -41,7 +42,7 @@ const EditableCellRenderer = ({
   const t = useI18n();
   const initialPlaceholder = placeholder ? t(placeholder) : '';
   const translatedPlaceholder = getDefaultPlaceholder?.(node, colDef) || initialPlaceholder;
-  const initialValue = valueFormatter ? valueFormatter(value) : value || translatedPlaceholder;
+  const initialValue = formatEditableValue(value, valueFormatter, translatedPlaceholder);
 
   const [inputValue, setInputValue] = useState(initialValue);
 
@@ -50,7 +51,7 @@ const EditableCellRenderer = ({
   }, [inputValue, showMaxValue]);
 
   const correctValue = useMemo(() => {
-    return !inputValue || isMaxValue ? '' : inputValue;
+    return (inputValue ?? '') === '' || isMaxValue ? '' : inputValue;
   }, [inputValue, isMaxValue]);
 
   const showTriangle = useMemo(() => {
@@ -77,7 +78,7 @@ const EditableCellRenderer = ({
   };
 
   useEffect(() => {
-    const formattedValue = valueFormatter ? valueFormatter(value) : value || translatedPlaceholder;
+    const formattedValue = formatEditableValue(value, valueFormatter, translatedPlaceholder);
     setInputValue(formattedValue);
   }, [value, valueFormatter, translatedPlaceholder]);
 
