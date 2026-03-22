@@ -1,13 +1,15 @@
 'use client';
 
-import { ColDef } from 'ag-grid-community';
-import { FC, useEffect, useState } from 'react';
+import { ColDef, RowClickedEvent } from 'ag-grid-community';
+import { FC, useCallback, useEffect, useState } from 'react';
 
 import { DialLoader } from '@epam/ai-dial-ui-kit';
 
 import { getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
 import GridView from '@/src/components/Grid/GridView/GridView';
+import RunMetricDetailPanel from '@/src/components/Runs/Details/RunMetricDetailPanel';
 import { EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsResult, Run } from '@/src/models/evaluation/run';
 import { getAnalyticsColumns, RESULT_FILTERS } from './utils';
@@ -18,11 +20,11 @@ interface Props {
 
 const AnalyticsTab: FC<Props> = ({ run }) => {
   const t = useI18n();
-  // const { sidebar } = useAppContext();
+  const { sidebar } = useAppContext();
 
   const [results, setResults] = useState<AnalyticsResult[] | null>(null);
   const [colDefs, setColDefs] = useState<ColDef[]>(() => getAnalyticsColumns([]));
-  // const [selectedResultId, setSelectedResultId] = useState<string | null>(null);
+  const [selectedResultId, setSelectedResultId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -39,21 +41,26 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
     }
   }, [isLoading, results, run]);
 
-  // const onRowClicked = useCallback(
-  //   (event: RowClickedEvent) => {
-  //     if (event.data && selectedResultId !== event.data.id) {
-  //       setSelectedResultId(event.data.id);
-  //       sidebar.showSidebar(
-  //         <RunMetricDetailPanel resultId={event.data.id} onClose={sidebar.closeSidebar} />,
-  //         'w-[500px]',
-  //       );
-  //     } else {
-  //       setSelectedResultId(null);
-  //       sidebar.closeSidebar();
-  //     }
-  //   },
-  //   [selectedResultId, sidebar],
-  // );
+  const onRowClicked = useCallback(
+    (event: RowClickedEvent) => {
+      if (event.data && selectedResultId !== event.data.id) {
+        setSelectedResultId(event.data.id);
+        sidebar.showSidebar(
+          <RunMetricDetailPanel resultId={event.data.id} onClose={sidebar.closeSidebar} />,
+          'w-[500px]',
+        );
+      } else {
+        setSelectedResultId(null);
+        sidebar.closeSidebar();
+      }
+    },
+    [selectedResultId, sidebar],
+  );
+
+  useEffect(() => {
+    return () => sidebar.closeSidebar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="flex flex-col gap-4 h-full min-h-0">
@@ -67,7 +74,7 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
             rowData={results}
             additionalGridOptions={{
               defaultColDef: { filter: false, floatingFilter: false },
-              // onRowClicked,
+              onRowClicked,
             }}
             emptyDataProps={{ title: t(EntitiesI18nKey.NoResults) }}
           />
