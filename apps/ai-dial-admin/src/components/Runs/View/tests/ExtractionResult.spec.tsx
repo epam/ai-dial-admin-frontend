@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getRunResults } from '@/src/app/[lang]/runs/actions';
 import { EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import * as AppContext from '@/src/context/AppContext';
 import { RESULT_FILTERS, getResultColumns } from '../utils';
 import ExtractionResultTab from '../ExtractionResult';
 
@@ -25,6 +26,8 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
   ),
 }));
 
+const mockCloseSidebar = vi.fn();
+
 const createDeferred = <T,>() => {
   let resolve!: (value: T) => void;
   const promise = new Promise<T>((res) => {
@@ -36,6 +39,14 @@ const createDeferred = <T,>() => {
 describe('Runs View :: ExtractionResult', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(AppContext, 'useAppContext').mockReturnValue({
+      sidebar: {
+        show: false,
+        content: null,
+        closeSidebar: mockCloseSidebar,
+        showSidebar: vi.fn(),
+      },
+    } as any);
   });
 
   test('renders heading and does not fetch when run id is missing', () => {
