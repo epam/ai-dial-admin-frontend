@@ -11,6 +11,7 @@ export interface AssetApp extends DialFile, DialApplication, EntityValidityState
   applicationTypeSchemaId?: string;
   reference?: string;
   displayVersion?: string;
+  selectedVersions?: string[];
 }
 
 export interface AssetToolset extends DialFile, Toolset {
@@ -18,6 +19,7 @@ export interface AssetToolset extends DialFile, Toolset {
   items?: AssetToolset[];
   versions?: string[];
   displayVersion?: string;
+  selectedVersions?: string[];
 }
 
 export type DeploymentAsset = AssetApp | AssetToolset;
