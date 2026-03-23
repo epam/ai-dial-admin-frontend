@@ -139,8 +139,10 @@ export const HELP_DOCUMENTATION_LINKS: Partial<
     selectedView: 'tutorials/admin/deployments-mcp#configuration',
     title: 'How to set up MCP Containers',
   },
-  // TODO: update adapter container link when the documentation is ready
-  // [ApplicationRoute.AdapterContainers]: { list: 'tutorials/admin/deployments-adapter-containers', selectedView: 'tutorials/admin/deployments-adapter-containers#configuration' },
+  [ApplicationRoute.AdapterContainers]: {
+    listView: 'tutorials/admin/deployments-adapters',
+    selectedView: 'tutorials/admin/deployments-adapters#configuration',
+  },
 
   // TODO: update eval links when the documentation is ready
   // [ApplicationRoute.Playground]: '/playground',
