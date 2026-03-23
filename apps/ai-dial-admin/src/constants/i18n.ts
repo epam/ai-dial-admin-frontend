@@ -1500,6 +1500,7 @@ export enum FileManagerI18nKey {
   Rename = 'FileManager.Rename',
   Move = 'FileManager.Move',
   Files = 'FileManager.Files',
+  Prompt = 'FileManager.Prompt',
   Folder = 'FileManager.Folder',
   FolderTree = 'FileManager.FolderTree',
   EnterFolderName = 'FileManager.EnterFolderName',
