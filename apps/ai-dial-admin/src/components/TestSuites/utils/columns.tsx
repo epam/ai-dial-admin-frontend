@@ -5,6 +5,7 @@ import { ColDef, ICellRendererParams, ITooltipParams, ValueGetterParams } from '
 import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
 import ValidityStatus from '@/src/components/Common/ValidityStatus/ValidityStatus';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
+import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSelectCellRenderer';
 import JsonEditorCellRenderer from '@/src/components/Grid/CellRenderers/JsonEditorCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import { NO_BORDER_CLASS, UTILITY_COLUMN } from '@/src/constants/ag-grid';
@@ -159,6 +160,13 @@ export const getDynamicConfigurationsColumns = (
             params: {
               onChange: onChangeEditable,
               disableValidation: true,
+            },
+          };
+        } else if (params.data?.effectiveType === TestCaseItemType.FILE) {
+          return {
+            component: FileSelectCellRenderer,
+            params: {
+              onChange: onChangeEditable,
             },
           };
         }
