@@ -12,11 +12,6 @@ export const allActionLabels = [
   { key: 'preview', label: FileManagerI18nKey.Preview },
 ];
 
-export const allActionLabelsReadOnly = [
-  { key: 'download', label: ButtonsI18nKey.Export },
-  { key: 'preview', label: FileManagerI18nKey.Preview },
-];
-
 export const allToolbarOptionLabels = [
   {
     key: 'newFolder',

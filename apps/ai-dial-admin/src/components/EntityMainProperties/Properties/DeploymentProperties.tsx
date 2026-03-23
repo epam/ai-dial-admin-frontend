@@ -148,7 +148,6 @@ const DeploymentProperties: FC<Props> = ({
       />
       {isEntitiesWithDisplayVersion(view) && (
         <VersionControl
-          view={view}
           title={t(EntityFieldsI18nKey.displayVersion)}
           version={(entity as DialModel).displayVersion}
           onChange={onChangeVersion}
@@ -156,6 +155,7 @@ const DeploymentProperties: FC<Props> = ({
           optional={isVersionOptional}
           isFullWidth={!isEntityImmutable}
           hideError={!!displayNameError}
+          enableSemanticValidation={false}
         />
       )}
 

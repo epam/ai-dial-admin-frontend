@@ -9,7 +9,7 @@ import { InputBindingType, TestCaseItemType } from '@/src/types/evaluation';
 
 const createVariable = (overrides?: Partial<TemplateVariable>): TemplateVariable => ({
   name: 'var1',
-  inferredType: TestCaseItemType.STRING,
+  effectiveType: TestCaseItemType.STRING,
   defaultValue: null,
   hasDefault: false,
   sources: ['body'],
@@ -26,7 +26,7 @@ describe('generateInputBindingsRowData', () => {
     const variables: TemplateVariable[] = [
       {
         name: 'var1',
-        inferredType: TestCaseItemType.STRING,
+        effectiveType: TestCaseItemType.STRING,
         defaultValue: 'default',
         hasDefault: true,
         sources: ['body'],
@@ -38,7 +38,7 @@ describe('generateInputBindingsRowData', () => {
     expect(result).toEqual([
       {
         templateVariable: 'var1',
-        inferredType: TestCaseItemType.STRING,
+        effectiveType: TestCaseItemType.STRING,
         constantValue: undefined,
         type: InputBindingType.Constant,
         value: 'default',
@@ -51,7 +51,7 @@ describe('generateInputBindingsRowData', () => {
     const variables: TemplateVariable[] = [
       {
         name: 'var1',
-        inferredType: TestCaseItemType.STRING,
+        effectiveType: TestCaseItemType.STRING,
         defaultValue: null,
         hasDefault: false,
         sources: ['body'],
@@ -69,7 +69,7 @@ describe('generateInputBindingsRowData', () => {
     expect(result).toEqual([
       {
         templateVariable: 'var1',
-        inferredType: TestCaseItemType.STRING,
+        effectiveType: TestCaseItemType.STRING,
         constantValue: 'fixed-value',
         type: InputBindingType.Constant,
         value: 'fixed-value',
@@ -82,7 +82,7 @@ describe('generateInputBindingsRowData', () => {
     const variables: TemplateVariable[] = [
       {
         name: 'var1',
-        inferredType: TestCaseItemType.NUMBER,
+        effectiveType: TestCaseItemType.NUMBER,
         defaultValue: 0,
         hasDefault: true,
         sources: ['query'],
@@ -100,7 +100,7 @@ describe('generateInputBindingsRowData', () => {
     expect(result).toEqual([
       {
         templateVariable: 'var1',
-        inferredType: TestCaseItemType.NUMBER,
+        effectiveType: TestCaseItemType.NUMBER,
         dataField: 'fieldName',
         type: InputBindingType.Attribute,
         value: 'fieldName',
@@ -113,21 +113,21 @@ describe('generateInputBindingsRowData', () => {
     const variables: TemplateVariable[] = [
       {
         name: 'attr_var',
-        inferredType: TestCaseItemType.STRING,
+        effectiveType: TestCaseItemType.STRING,
         defaultValue: 'def1',
         hasDefault: true,
         sources: ['body'],
       },
       {
         name: 'const_var',
-        inferredType: TestCaseItemType.BOOLEAN,
+        effectiveType: TestCaseItemType.BOOLEAN,
         defaultValue: false,
         hasDefault: true,
         sources: ['header'],
       },
       {
         name: 'unbound_var',
-        inferredType: TestCaseItemType.OBJECT,
+        effectiveType: TestCaseItemType.OBJECT,
         defaultValue: null,
         hasDefault: false,
         sources: [],
@@ -149,7 +149,7 @@ describe('generateInputBindingsRowData', () => {
     expect(result).toEqual([
       {
         templateVariable: 'attr_var',
-        inferredType: TestCaseItemType.STRING,
+        effectiveType: TestCaseItemType.STRING,
         dataField: 'myField',
         type: InputBindingType.Attribute,
         value: 'myField',
@@ -157,7 +157,7 @@ describe('generateInputBindingsRowData', () => {
       },
       {
         templateVariable: 'const_var',
-        inferredType: TestCaseItemType.BOOLEAN,
+        effectiveType: TestCaseItemType.BOOLEAN,
         constantValue: true,
         type: InputBindingType.Constant,
         value: true,
@@ -165,7 +165,7 @@ describe('generateInputBindingsRowData', () => {
       },
       {
         templateVariable: 'unbound_var',
-        inferredType: TestCaseItemType.OBJECT,
+        effectiveType: TestCaseItemType.OBJECT,
         constantValue: undefined,
         type: InputBindingType.Constant,
         value: '',
@@ -178,7 +178,7 @@ describe('generateInputBindingsRowData', () => {
     const variables: TemplateVariable[] = [
       {
         name: 'var1',
-        inferredType: TestCaseItemType.STRING,
+        effectiveType: TestCaseItemType.STRING,
         defaultValue: null,
         hasDefault: false,
         sources: [],
@@ -197,7 +197,7 @@ describe('generateInputBindingsRowData', () => {
     expect(result).toEqual([
       {
         templateVariable: 'var1',
-        inferredType: TestCaseItemType.STRING,
+        effectiveType: TestCaseItemType.STRING,
         dataField: 'field1',
         type: InputBindingType.Attribute,
         value: 'field1',
@@ -210,7 +210,7 @@ describe('generateInputBindingsRowData', () => {
     const variables: TemplateVariable[] = [
       {
         name: 'var1',
-        inferredType: TestCaseItemType.ARRAY,
+        effectiveType: TestCaseItemType.ARRAY,
         defaultValue: [],
         hasDefault: true,
         sources: ['body'],
@@ -229,7 +229,7 @@ describe('generateInputBindingsRowData', () => {
     expect(result).toEqual([
       {
         templateVariable: 'var1',
-        inferredType: TestCaseItemType.ARRAY,
+        effectiveType: TestCaseItemType.ARRAY,
         constantValue: 'fallback',
         type: InputBindingType.Constant,
         value: 'fallback',
@@ -242,7 +242,7 @@ describe('generateInputBindingsRowData', () => {
     const variables: TemplateVariable[] = [
       {
         name: 'var1',
-        inferredType: TestCaseItemType.STRING,
+        effectiveType: TestCaseItemType.STRING,
         defaultValue: undefined,
         hasDefault: false,
         sources: [],
@@ -264,21 +264,21 @@ describe('generateInputBindingsRowData', () => {
     const variables: TemplateVariable[] = [
       {
         name: 'zero_var',
-        inferredType: TestCaseItemType.NUMBER,
+        effectiveType: TestCaseItemType.NUMBER,
         defaultValue: null,
         hasDefault: false,
         sources: [],
       },
       {
         name: 'empty_var',
-        inferredType: TestCaseItemType.STRING,
+        effectiveType: TestCaseItemType.STRING,
         defaultValue: null,
         hasDefault: false,
         sources: [],
       },
       {
         name: 'false_var',
-        inferredType: TestCaseItemType.BOOLEAN,
+        effectiveType: TestCaseItemType.BOOLEAN,
         defaultValue: null,
         hasDefault: false,
         sources: [],
@@ -301,21 +301,21 @@ describe('generateInputBindingsRowData', () => {
     const variables: TemplateVariable[] = [
       {
         name: 'c',
-        inferredType: TestCaseItemType.STRING,
+        effectiveType: TestCaseItemType.STRING,
         defaultValue: null,
         hasDefault: false,
         sources: [],
       },
       {
         name: 'a',
-        inferredType: TestCaseItemType.STRING,
+        effectiveType: TestCaseItemType.STRING,
         defaultValue: null,
         hasDefault: false,
         sources: [],
       },
       {
         name: 'b',
-        inferredType: TestCaseItemType.STRING,
+        effectiveType: TestCaseItemType.STRING,
         defaultValue: null,
         hasDefault: false,
         sources: [],
@@ -343,7 +343,7 @@ describe('generateVariablesRowData', () => {
     expect(result).toEqual([
       {
         templateVariable: 'var1',
-        inferredType: TestCaseItemType.STRING,
+        effectiveType: TestCaseItemType.STRING,
         value: 'hello',
         defaultValue: 'default',
       },
@@ -360,9 +360,9 @@ describe('generateVariablesRowData', () => {
 
   test('should handle multiple variables with mixed presence in requestBody', () => {
     const variables = [
-      createVariable({ name: 'present', inferredType: TestCaseItemType.STRING, defaultValue: 'def1' }),
-      createVariable({ name: 'absent', inferredType: TestCaseItemType.NUMBER, defaultValue: 42 }),
-      createVariable({ name: 'also_present', inferredType: TestCaseItemType.BOOLEAN, defaultValue: false }),
+      createVariable({ name: 'present', effectiveType: TestCaseItemType.STRING, defaultValue: 'def1' }),
+      createVariable({ name: 'absent', effectiveType: TestCaseItemType.NUMBER, defaultValue: 42 }),
+      createVariable({ name: 'also_present', effectiveType: TestCaseItemType.BOOLEAN, defaultValue: false }),
     ];
     const requestBody = { present: 'value1', also_present: true };
 
@@ -371,19 +371,19 @@ describe('generateVariablesRowData', () => {
     expect(result).toEqual([
       {
         templateVariable: 'present',
-        inferredType: TestCaseItemType.STRING,
+        effectiveType: TestCaseItemType.STRING,
         value: 'value1',
         defaultValue: 'def1',
       },
       {
         templateVariable: 'absent',
-        inferredType: TestCaseItemType.NUMBER,
+        effectiveType: TestCaseItemType.NUMBER,
         value: '',
         defaultValue: 42,
       },
       {
         templateVariable: 'also_present',
-        inferredType: TestCaseItemType.BOOLEAN,
+        effectiveType: TestCaseItemType.BOOLEAN,
         value: true,
         defaultValue: false,
       },
@@ -392,9 +392,9 @@ describe('generateVariablesRowData', () => {
 
   test('should handle falsy values in requestBody correctly', () => {
     const variables = [
-      createVariable({ name: 'zero_var', inferredType: TestCaseItemType.NUMBER }),
-      createVariable({ name: 'empty_var', inferredType: TestCaseItemType.STRING }),
-      createVariable({ name: 'false_var', inferredType: TestCaseItemType.BOOLEAN }),
+      createVariable({ name: 'zero_var', effectiveType: TestCaseItemType.NUMBER }),
+      createVariable({ name: 'empty_var', effectiveType: TestCaseItemType.STRING }),
+      createVariable({ name: 'false_var', effectiveType: TestCaseItemType.BOOLEAN }),
     ];
     const requestBody = { zero_var: 0, empty_var: '', false_var: false };
 
@@ -407,8 +407,8 @@ describe('generateVariablesRowData', () => {
 
   test('should handle object and array values in requestBody', () => {
     const variables = [
-      createVariable({ name: 'obj_var', inferredType: TestCaseItemType.OBJECT }),
-      createVariable({ name: 'arr_var', inferredType: TestCaseItemType.ARRAY }),
+      createVariable({ name: 'obj_var', effectiveType: TestCaseItemType.OBJECT }),
+      createVariable({ name: 'arr_var', effectiveType: TestCaseItemType.ARRAY }),
     ];
     const objValue = { key: 'value' };
     const arrValue = [1, 2, 3];
@@ -503,11 +503,11 @@ describe('convertVariableIntoInitialRequest', () => {
 
   test('should handle variables of all inferred types', () => {
     const variables = [
-      createVariable({ name: 'str', inferredType: TestCaseItemType.STRING }),
-      createVariable({ name: 'num', inferredType: TestCaseItemType.NUMBER }),
-      createVariable({ name: 'bool', inferredType: TestCaseItemType.BOOLEAN }),
-      createVariable({ name: 'obj', inferredType: TestCaseItemType.OBJECT }),
-      createVariable({ name: 'arr', inferredType: TestCaseItemType.ARRAY }),
+      createVariable({ name: 'str', effectiveType: TestCaseItemType.STRING }),
+      createVariable({ name: 'num', effectiveType: TestCaseItemType.NUMBER }),
+      createVariable({ name: 'bool', effectiveType: TestCaseItemType.BOOLEAN }),
+      createVariable({ name: 'obj', effectiveType: TestCaseItemType.OBJECT }),
+      createVariable({ name: 'arr', effectiveType: TestCaseItemType.ARRAY }),
     ];
 
     const result = convertVariableIntoInitialRequest(variables);

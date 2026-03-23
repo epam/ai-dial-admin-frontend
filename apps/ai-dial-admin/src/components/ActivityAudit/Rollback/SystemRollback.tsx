@@ -26,6 +26,7 @@ import JsonView from '@/src/components/Common/JsonView/JsonView';
 import { ActivityAuditI18nKey, MenuI18nKey, RollbackI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { ActivityAuditDiff, DialActivity } from '@/src/models/activity-audit';
@@ -37,6 +38,7 @@ import { getErrorNotification, getPrepareNotification, getSuccessNotification } 
 
 const SystemRollback: FC = () => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   const tabs = SYSTEM_ROLLBACK_ENTITIES.map((e) => ({
     id: e,
@@ -187,21 +189,30 @@ const SystemRollback: FC = () => {
         <div className="flex flex-row gap-3 items-center">
           <FilterControl diffView={diffView} setDiffView={setDiffView} isResources={true} />
           <div
-            className="flex flex-row items-center small bg-layer-3 rounded h-6 p-2 cursor-pointer"
-            onClick={() => setRevisionModalOpen(true)}
+            className={
+              isReadOnlyAdmin
+                ? 'flex flex-row items-center small bg-layer-3 rounded h-6 p-2'
+                : 'flex flex-row items-center small bg-layer-3 rounded h-6 p-2 cursor-pointer'
+            }
+            onClick={isReadOnlyAdmin ? undefined : () => setRevisionModalOpen(true)}
+            role={isReadOnlyAdmin ? undefined : 'button'}
           >
             <span>{t(RollbackI18nKey.Revision)}</span>
             <span>: {formatDateTimeToLocalString(rollbackRevision?.timestamp)}</span>
-            <div className="pl-1">
-              <OpenPopup />
-            </div>
+            {!isReadOnlyAdmin && (
+              <div className="pl-1">
+                <OpenPopup />
+              </div>
+            )}
           </div>
-          <DialPrimaryButton
-            iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} />}
-            label={t(RollbackI18nKey.Rollback)}
-            onClick={() => setIsRollBackModalOpen(true)}
-            disabled={isLoading}
-          />
+          {!isReadOnlyAdmin && (
+            <DialPrimaryButton
+              iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} />}
+              label={t(RollbackI18nKey.Rollback)}
+              onClick={() => setIsRollBackModalOpen(true)}
+              disabled={isLoading}
+            />
+          )}
           <div className="w-px h-6 bg-layer-4"></div>
           <DialSwitch switchId="jsonView" isOn={isJsonView} onChange={() => setIsJsonView(!isJsonView)} label="JSON" />
         </div>
@@ -253,7 +264,8 @@ const SystemRollback: FC = () => {
         </div>
         <DiffLegend description={true} />
       </div>
-      {isRollBackModalOpen &&
+      {!isReadOnlyAdmin &&
+        isRollBackModalOpen &&
         createPortal(
           <ConfirmationRollback
             revisionDate={formatDateTimeToLocalString(rollbackRevision?.timestamp)}
@@ -263,7 +275,8 @@ const SystemRollback: FC = () => {
           />,
           document.body,
         )}
-      {isRevisionsModalOpen &&
+      {!isReadOnlyAdmin &&
+        isRevisionsModalOpen &&
         createPortal(
           <RollbackRevisions
             initialRevisions={revisions?.filter((r) => r.id !== currentRevision?.id) || []}

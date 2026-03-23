@@ -5,26 +5,26 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { DialLoader } from '@epam/ai-dial-ui-kit';
 
-import { getRunResults } from '@/src/app/[lang]/runs/actions';
+import { getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
 import GridView from '@/src/components/Grid/GridView/GridView';
-import RunResultDetailPanel from '@/src/components/Runs/Details/RunResultDetailPanel';
+import RunMetricDetailPanel from '@/src/components/Runs/Details/RunMetricDetailPanel';
 import { EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
-import { ExtractionResult, Run } from '@/src/models/evaluation/run';
-import { getResultColumns, RESULT_FILTERS } from './utils';
+import { AnalyticsResult, Run } from '@/src/models/evaluation/run';
+import { getAnalyticsColumns, RESULT_FILTERS } from './utils';
 
 interface Props {
   run: Run;
 }
 
-const ExtractionResultTab: FC<Props> = ({ run }) => {
+const AnalyticsTab: FC<Props> = ({ run }) => {
   const t = useI18n();
   const { sidebar } = useAppContext();
 
-  const [results, setResults] = useState<ExtractionResult[] | null>(null);
-  const [colDefs, setColDefs] = useState<ColDef[]>(() => getResultColumns([]));
-  const [selectedResult, setSelectedResult] = useState<ExtractionResult | null>(null);
+  const [results, setResults] = useState<AnalyticsResult[] | null>(null);
+  const [colDefs, setColDefs] = useState<ColDef[]>(() => getAnalyticsColumns([]));
+  const [selectedResultId, setSelectedResultId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -32,10 +32,10 @@ const ExtractionResultTab: FC<Props> = ({ run }) => {
 
     if (!isLoading && !results) {
       setIsLoading(true);
-      getRunResults(RESULT_FILTERS(run)).then((res) => {
+      getTestCaseRunResults(RESULT_FILTERS(run)).then((res) => {
         const content = res?.content || [];
         setResults(content);
-        setColDefs(getResultColumns(content));
+        setColDefs(getAnalyticsColumns(content));
         setIsLoading(false);
       });
     }
@@ -43,22 +43,18 @@ const ExtractionResultTab: FC<Props> = ({ run }) => {
 
   const onRowClicked = useCallback(
     (event: RowClickedEvent) => {
-      if (event.data && selectedResult?.id !== event.data.id) {
-        setSelectedResult(event.data);
+      if (event.data && selectedResultId !== event.data.id) {
+        setSelectedResultId(event.data.id);
         sidebar.showSidebar(
-          <RunResultDetailPanel
-            result={event.data}
-            grafanaExploreUrl={run.grafanaExploreUrl}
-            onClose={sidebar.closeSidebar}
-          />,
+          <RunMetricDetailPanel resultId={event.data.id} onClose={sidebar.closeSidebar} />,
           'w-[500px]',
         );
       } else {
-        setSelectedResult(null);
+        setSelectedResultId(null);
         sidebar.closeSidebar();
       }
     },
-    [selectedResult?.id, sidebar, run.grafanaExploreUrl],
+    [selectedResultId, sidebar],
   );
 
   useEffect(() => {
@@ -68,7 +64,7 @@ const ExtractionResultTab: FC<Props> = ({ run }) => {
 
   return (
     <div className="flex flex-col gap-4 h-full min-h-0">
-      <h2>{t(TabsI18nKey.ExtractionResult)}</h2>
+      <h2>{t(TabsI18nKey.Analytics)}</h2>
       <div className="min-h-0 flex-1">
         {isLoading ? (
           <DialLoader size={40} />
@@ -88,4 +84,4 @@ const ExtractionResultTab: FC<Props> = ({ run }) => {
   );
 };
 
-export default ExtractionResultTab;
+export default AnalyticsTab;

@@ -78,7 +78,7 @@ export interface TestCase {
 export interface TemplateVariable {
   defaultValue: unknown;
   hasDefault: boolean;
-  inferredType: TestCaseItemType;
+  effectiveType: TestCaseItemType;
   name: string;
   sources: string[];
 }
@@ -97,7 +97,7 @@ export interface InputBinding {
 }
 
 export interface InputBindingRowData extends InputBinding {
-  inferredType?: TestCaseItemType;
+  effectiveType?: TestCaseItemType;
   type?: InputBindingType;
   value?: unknown;
   defaultValue?: unknown;

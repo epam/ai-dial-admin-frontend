@@ -8,9 +8,10 @@ import { EntityRoleLimits } from '@/src/models/dial/base-entity';
 interface Props {
   entity: EntityRoleLimits;
   onChangeEntity: (entity: EntityRoleLimits, withRefresh?: boolean) => void;
+  disabled?: boolean;
 }
 
-const RolesDefaults: FC<Props> = ({ entity, onChangeEntity }) => {
+const RolesDefaults: FC<Props> = ({ entity, onChangeEntity, disabled }) => {
   const t = useI18n();
 
   return (
@@ -19,6 +20,7 @@ const RolesDefaults: FC<Props> = ({ entity, onChangeEntity }) => {
       <LimitsControl
         limits={entity.defaultRoleLimit}
         onChangeLimits={(defaultRoleLimit) => onChangeEntity({ ...entity, defaultRoleLimit })}
+        disabled={disabled}
       />
     </div>
   );

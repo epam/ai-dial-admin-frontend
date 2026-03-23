@@ -16,6 +16,7 @@ import { getActualMenuItems } from '@/src/utils/env/get-menu-items';
 import { WelcomeViewI18nKey } from './i18n';
 import MenuGroup from './MenuGroup';
 import { useAppContext } from '@/src/context/AppContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 
 interface Props {
   docLink?: string;
@@ -28,6 +29,7 @@ const WelcomeView: FC<Props> = ({ docLink, dialLink, disableMenuItems, dialButto
   const t = useI18n();
   const isTabletScreen = useIsTabletScreen();
   const { featureFlags } = useAppContext();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   const actualConfig = getActualMenuItems(MENU_CONFIGURATION(40, featureFlags), disableMenuItems);
 
@@ -56,22 +58,26 @@ const WelcomeView: FC<Props> = ({ docLink, dialLink, disableMenuItems, dialButto
       <div className="mb-6 flex flex-col">
         <h2 className="mb-3">{t(WelcomeViewI18nKey.QuickActions)}</h2>
         <div className="flex flex-row gap-x-3">
-          <DialNeutralButton
-            iconBefore={<IconDownload {...BASE_BUTTON_ICON_PROPS} widths={24} height={24} />}
-            className="p-4 lg:px-3 lg:py-2 size-[56px] lg:h-[42px] lg:w-auto"
-            label={isTabletScreen ? '' : t(MenuI18nKey.ImportConfig)}
-            onClick={() => {
-              router.push(ApplicationRoute.ImportConfig);
-            }}
-          />
-          <DialNeutralButton
-            iconBefore={<IconUpload {...BASE_BUTTON_ICON_PROPS} widths={24} height={24} />}
-            className="p-4 lg:px-3 lg:py-2 size-[56px] lg:h-[42px] lg:w-auto"
-            label={isTabletScreen ? '' : t(MenuI18nKey.ExportConfig)}
-            onClick={() => {
-              router.push(ApplicationRoute.ExportConfig);
-            }}
-          />
+          {!isReadOnlyAdmin && (
+            <>
+              <DialNeutralButton
+                iconBefore={<IconDownload {...BASE_BUTTON_ICON_PROPS} widths={24} height={24} />}
+                className="p-4 lg:px-3 lg:py-2 size-[56px] lg:h-[42px] lg:w-auto"
+                label={isTabletScreen ? '' : t(MenuI18nKey.ImportConfig)}
+                onClick={() => {
+                  router.push(ApplicationRoute.ImportConfig);
+                }}
+              />
+              <DialNeutralButton
+                iconBefore={<IconUpload {...BASE_BUTTON_ICON_PROPS} widths={24} height={24} />}
+                className="p-4 lg:px-3 lg:py-2 size-[56px] lg:h-[42px] lg:w-auto"
+                label={isTabletScreen ? '' : t(MenuI18nKey.ExportConfig)}
+                onClick={() => {
+                  router.push(ApplicationRoute.ExportConfig);
+                }}
+              />
+            </>
+          )}
           <DialNeutralButton
             iconBefore={<IconWorldCog {...BASE_BUTTON_ICON_PROPS} widths={24} height={24} />}
             className="p-4 lg:px-3 lg:py-2 size-[56px] lg:h-[42px] lg:w-auto"

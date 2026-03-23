@@ -2,7 +2,7 @@ import { ImageVersion } from '@/src/models/deployments/images';
 import { AssetApp, AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { compareVersions, modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
 import { ApplicationRoute } from '@/src/types/routes';
-import { allActionLabels, allActionLabelsReadOnly, allToolbarOptionLabels } from './constants';
+import { allActionLabels, allToolbarOptionLabels } from './constants';
 
 export const filterLatestVersions = (data: AssetWithVersion[]) => {
   const latestVersions: Record<string, AssetWithVersion> = {};
@@ -68,20 +68,16 @@ export const getParentPathByFullPath = (fullPath: string) => {
 export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boolean) => {
   switch (view) {
     case ApplicationRoute.Files:
-      return isReadOnlyAdmin ? allActionLabelsReadOnly : allActionLabels.filter((item) => item.key !== 'duplicate');
+      return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key !== 'duplicate');
     case ApplicationRoute.Prompts:
-      return isReadOnlyAdmin
-        ? allActionLabelsReadOnly.filter((item) => item.key !== 'preview')
-        : allActionLabels.filter((item) => item.key !== 'preview');
+      return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key !== 'preview');
     default:
       return [];
   }
 };
 
 export const getTreeActionLabels = (isReadOnlyAdmin: boolean) => {
-  return isReadOnlyAdmin
-    ? allActionLabelsReadOnly.filter((item) => item.key !== 'preview')
-    : allActionLabels.filter((item) => item.key !== 'duplicate' && item.key !== 'preview');
+  return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key !== 'duplicate' && item.key !== 'preview');
 };
 
 export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boolean) => {
