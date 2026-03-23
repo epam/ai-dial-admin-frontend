@@ -6,3 +6,8 @@ export const FILES_GRID_COLUMNS: ColDef[] = [
   UPDATED_AT_COLUMN('Updated time') as ColDef,
   SIZE_COLUMN('Size') as ColDef,
 ];
+
+export const FILES_GRID_SIMPLE_COLUMNS: ColDef[] = [
+  NAME_COLUMN('Display name') as ColDef,
+  SIZE_COLUMN('Size') as ColDef,
+];

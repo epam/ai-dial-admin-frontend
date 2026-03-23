@@ -63,11 +63,16 @@ export const getValidationMessages = (t: (key: string) => string) => {
   return { emptyName: t(FileManagerI18nKey.EnterFolderName), duplicateName: t(FileManagerI18nKey.NameExists) };
 };
 
-export const getGridOptions = (columnDefs: ColDef[], t: (key: string) => string, isReadOnlyAdmin?: boolean) =>
+export const getGridOptions = (
+  columnDefs: ColDef[],
+  t: (key: string) => string,
+  isReadOnlyAdmin?: boolean,
+  isSingleSelection?: boolean,
+) =>
   ({
     alternateOddRowColors: true,
     columnDefs,
-    selectionMode: GridSelectionMode.MULTIPLE,
+    selectionMode: isSingleSelection ? GridSelectionMode.SINGLE : GridSelectionMode.MULTIPLE,
     actionLabels: getActionLabels(isReadOnlyAdmin ? [] : gridActionLabels, t),
     additionalGridOptions: {
       defaultColDef: {

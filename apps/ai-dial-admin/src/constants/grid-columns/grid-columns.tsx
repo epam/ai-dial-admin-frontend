@@ -1,7 +1,15 @@
 'use client';
 
 import { ColDef, ICellRendererParams, ITooltipParams, ValueGetterParams } from 'ag-grid-community';
+import { capitalize } from 'lodash';
 
+import StatusIndicator from '@/src/components/Deployments/Common/StatusIndicator/StatusIndicator';
+import VersionsSelect from '@/src/components/Deployments/Common/VersionsSelect/VersionsSelect';
+import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
+import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSelectCellRenderer';
+import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
+import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRenderer';
+import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
 import { ACTION_COLUMN, NO_BORDER_CLASS } from '@/src/constants/ag-grid';
 import { EVENT_TYPES, MODEL_TYPES, POD_OBJECT_KIND } from '@/src/constants/deployments/containers';
 import {
@@ -19,21 +27,15 @@ import {
 import { ImageVersion } from '@/src/models/deployments/images';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
+import { TestSuiteRequestTemplateParam } from '@/src/models/evaluation/test-suite';
+import { FormDataPart, FormDataType } from '@/src/models/form-data';
 import { CONTAINER_STATUS, KubEventType, MODEL_TYPE } from '@/src/types/deployments/containers';
 import { IMAGE_SOURCE_TYPE, IMAGE_STATUS, IMAGE_TRANSPORT_TYPE, IMAGE_TYPE } from '@/src/types/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
 import { formatDeploymentImageName } from '@/src/utils/formatting/deployments';
+import { formatNumberWithExponent } from '@/src/utils/formatting/number-formatting';
 import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 import { getDeleteOperation, getDuplicateOperation, getMoveOperation, getOpenInNewTabOperation } from './actions';
-
-import StatusIndicator from '@/src/components/Deployments/Common/StatusIndicator/StatusIndicator';
-import VersionsSelect from '@/src/components/Deployments/Common/VersionsSelect/VersionsSelect';
-import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
-import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
-import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRenderer';
-import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
-import { TestSuiteRequestTemplateParam } from '@/src/models/evaluation/test-suite';
-import { formatNumberWithExponent } from '@/src/utils/formatting/number-formatting';
 import {
   ASSET_NAME_COLUMN,
   ATTACHMENT_COLUMN,
@@ -58,7 +60,6 @@ import {
 } from './base-columns';
 import { dateTimeColumn, numericColumn, priceColumn } from './configs';
 import { auditStringFilter, evalStringFilter } from './filters';
-import { FormDataPart, FormDataType } from '@/src/models/form-data';
 
 export const COLUMN_PANEL_PREFIX = 'column_';
 
@@ -1024,7 +1025,11 @@ export const getFormDataColumns = (
         items: [
           {
             value: FormDataType.Text,
-            label: FormDataType.Text,
+            label: capitalize(FormDataType.Text),
+          },
+          {
+            value: FormDataType.File,
+            label: capitalize(FormDataType.File),
           },
         ],
       },
@@ -1034,7 +1039,22 @@ export const getFormDataColumns = (
       field: 'value',
       cellClass: NO_BORDER_CLASS,
       tooltipValueGetter: () => undefined,
-      cellRenderer: EditableCellRenderer,
+      cellRendererSelector: (params: ICellRendererParams<FormDataPart>) => {
+        if (params.data?.type === FormDataType.File) {
+          return {
+            component: FileSelectCellRenderer,
+            params: {
+              onChange: onChange,
+            },
+          };
+        }
+        return {
+          component: EditableCellRenderer,
+          params: {
+            onChange: onChange,
+          },
+        };
+      },
       cellRendererParams: {
         onChange,
         hideTriangle: true,
