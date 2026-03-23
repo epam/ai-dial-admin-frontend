@@ -83,11 +83,12 @@ export const getGridOptions = (
   isReadOnlyAdmin: boolean,
   columnDefs: ColDef[],
   t: (key: string) => string,
+  isSingleSelection?: boolean,
 ) =>
   ({
     alternateOddRowColors: true,
     columnDefs,
-    selectionMode: GridSelectionMode.MULTIPLE,
+    selectionMode: isSingleSelection ? GridSelectionMode.SINGLE : GridSelectionMode.MULTIPLE,
     actionLabels: getActionLabels(getGridActionLabels(view, isReadOnlyAdmin), t),
     additionalGridOptions: {
       defaultColDef: {

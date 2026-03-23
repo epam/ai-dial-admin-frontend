@@ -17,6 +17,7 @@ import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { useFileFolder } from '@/src/context/assets/FileFolderContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
+import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
   value: string;
@@ -121,14 +122,14 @@ const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputCl
             filesLoading={isFetchingFiles}
             showNavigationPanel={false}
             treeOptions={getTreeOptions(
+              isReadOnlyAdmin,
               isFetchingFiles,
               loadedPaths,
               expandedFolders,
               setExpandedFolders,
               t,
-              isReadOnlyAdmin,
             )}
-            gridOptions={getGridOptions(FILES_GRID_COLUMNS, t, isReadOnlyAdmin, true)}
+            gridOptions={getGridOptions(ApplicationRoute.Files, isReadOnlyAdmin, FILES_GRID_COLUMNS, t, true)}
             onPathChange={handleOnPathChange}
             onFolderPopupPathChange={handleFolderPopupPathChange}
             handleSelectionClick={handleSelectionClick}
