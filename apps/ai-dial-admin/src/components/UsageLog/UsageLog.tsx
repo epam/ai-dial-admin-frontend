@@ -17,7 +17,7 @@ import {
 } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, TabsI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-import { CONVERSATIONS_QUERY, TRACES_QUERY } from '@/src/constants/telemetry';
+import { CONVERSATIONS_QUERY, MCP_QUERY, TRACES_QUERY } from '@/src/constants/telemetry';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
@@ -168,7 +168,7 @@ const UsageLog: FC<Props> = ({
             route={route}
             getData={getData}
             columnDefs={USAGE_LOG_MCP_COLUMNS}
-            query={CONVERSATIONS_QUERY}
+            query={MCP_QUERY}
           />
         )}
       </div>
