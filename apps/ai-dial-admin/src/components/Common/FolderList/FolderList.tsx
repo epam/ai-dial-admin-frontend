@@ -100,7 +100,7 @@ const FolderList: FC<Props> = ({
   const folderManageItems = (node: DialFolder) => {
     if (node.name === ROOT_FOLDER) return [];
     if (disabled) {
-      return [getManageFolderOperation(() => openFolderStorage(node.path))];
+      return [];
     }
     return [
       getRenameFolderOperation(() => openRenameFolderModal(node.path)),
@@ -214,6 +214,9 @@ const FolderList: FC<Props> = ({
     return nodes?.map((node) => {
       const { path, nodeType, items, name } = node;
       const { baseClassName, selectedClassName, iconClassName } = getFolderClassName(node, level);
+      const createItems = folderCreateItems(node);
+      const manageItems = folderManageItems(node);
+      const hasFolderActions = createItems.length > 0 || manageItems.length > 0;
       const isExpanded = folderContext?.expandedFolders.has(path);
       const isMoveError =
         isFolderMove &&
@@ -257,18 +260,14 @@ const FolderList: FC<Props> = ({
                   <DialEllipsisTooltip text={name} className="text-primary" />
                 </div>
 
-                {showFolderActions && (
+                {showFolderActions && hasFolderActions && (
                   <div className="invisible group-hover:visible text-primary mx-2 flex flex-row gap-2">
-                    {isAssetView(view) && (
-                      <ActionsDropdown
-                        items={folderCreateItems(node)}
-                        icon={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-                      />
+                    {isAssetView(view) && createItems.length > 0 && (
+                      <ActionsDropdown items={createItems} icon={<IconPlus {...BASE_BUTTON_ICON_PROPS} />} />
                     )}
-                    <ActionsDropdown
-                      items={folderManageItems(node)}
-                      icon={<IconDotsVertical {...BASE_BUTTON_ICON_PROPS} />}
-                    />
+                    {manageItems.length > 0 && (
+                      <ActionsDropdown items={manageItems} icon={<IconDotsVertical {...BASE_BUTTON_ICON_PROPS} />} />
+                    )}
                   </div>
                 )}
               </div>

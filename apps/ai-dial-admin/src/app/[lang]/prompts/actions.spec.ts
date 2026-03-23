@@ -12,12 +12,10 @@ import {
   exportPrompts,
   getPrompt,
   getPrompts,
-  importPrompts,
   updatePrompt,
 } from './actions';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { ResourceType } from '@/src/types/resource-type';
-import { ImportFileType } from '@/src/types/import';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -104,20 +102,6 @@ describe('Assets Prompt :: server actions', () => {
     await removePrompt('test');
     expect(getUserToken).toHaveBeenCalled();
     expect(assetsApi.removeAssetWithEtag).toHaveBeenCalledWith(TOKEN_MOCK, 'test', ResourceType.PROMPT, undefined);
-  });
-
-  test('Should call importPrompts action', async () => {
-    (assetsApi.importAssets as any).mockResolvedValue(RESPONSE_MOCK);
-
-    const result = await importPrompts({} as FormData, ImportFileType.ARCHIVE);
-    expect(getUserToken).toHaveBeenCalled();
-    expect(assetsApi.importAssets).toHaveBeenCalledWith(
-      TOKEN_MOCK,
-      {} as FormData,
-      ImportFileType.ARCHIVE,
-      ResourceType.PROMPT,
-    );
-    expect(result).toBe(RESPONSE_MOCK);
   });
 
   test('Should call exportPrompts action', async () => {

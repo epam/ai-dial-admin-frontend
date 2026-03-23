@@ -238,6 +238,7 @@ export const getAppPropertiesColumns = (
   onChangeJSON: (value: object, data: ApplicationPropertiesTemp, column: string, index?: number) => void,
   onChangeSelect: (value: string, data: ApplicationPropertiesTemp, column: string) => void,
   t: (stringToTranslate: string) => string,
+  readOnly = false,
 ): ColDef[] => {
   return [
     {
@@ -254,6 +255,7 @@ export const getAppPropertiesColumns = (
       cellRendererParams: {
         hideTriangle: true,
         onChange: onChangeEditable,
+        isReadonly: readOnly,
       },
       cellDataType: 'text',
       flex: 1,
@@ -270,6 +272,7 @@ export const getAppPropertiesColumns = (
             params: {
               onChange: onChangeJSON,
               disableValidation: true,
+              disabled: readOnly,
             },
           };
         } else if (params.data.type == 'boolean') {
@@ -287,12 +290,17 @@ export const getAppPropertiesColumns = (
                 },
               ],
               onChange: onChangeSelect,
+              isReadonly: readOnly,
             },
           };
         } else {
           return {
             component: EditableCellRenderer,
-            params: { inputType: params.data.type === 'string' ? 'text' : 'number', onChange: onChangeEditable },
+            params: {
+              inputType: params.data.type === 'string' ? 'text' : 'number',
+              onChange: onChangeEditable,
+              isReadonly: readOnly,
+            },
           };
         }
       },
@@ -335,6 +343,7 @@ export const getAppPropertiesColumns = (
           return data.isFromScheme ? items.filter((i) => i.value === data.type) : items;
         },
         onChange: onChangeSelect,
+        isReadonly: readOnly,
       },
       flex: 1,
       maxWidth: 240,

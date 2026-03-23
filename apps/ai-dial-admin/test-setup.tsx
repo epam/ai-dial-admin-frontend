@@ -63,6 +63,7 @@ vi.mock('@/src/context/AppContext', () => ({
   useAppContext: () => ({
     sidebar: { show: false, content: null, showSidebar: vi.fn() },
     featureFlags: { deploymentsEnabled: true },
+    isReadOnlyAdmin: false,
   }),
 }));
 

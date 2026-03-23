@@ -15,6 +15,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { getInterceptorsColumnDefs } from './utils';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 
 interface Props {
   interceptors: DialInterceptor[];
@@ -24,6 +25,7 @@ interface Props {
 
 const GlobalInterceptors: FC<Props> = ({ interceptors, currentInterceptors, onChangeInterceptors }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   const [availableInterceptors, setAvailableInterceptors] = useState<DialInterceptor[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -80,8 +82,8 @@ const GlobalInterceptors: FC<Props> = ({ interceptors, currentInterceptors, onCh
   const rowData = globalInterceptors;
 
   const columns = useMemo(() => {
-    return getInterceptorsColumnDefs(onOpen, onRemoveInterceptor);
-  }, [onRemoveInterceptor]);
+    return getInterceptorsColumnDefs(onOpen, isReadOnlyAdmin ? void 0 : onRemoveInterceptor);
+  }, [onRemoveInterceptor, isReadOnlyAdmin]);
 
   const additionalGridOptions = useMemo(() => {
     return { rowDragManaged: true, onRowDragEnd };
@@ -111,7 +113,7 @@ const GlobalInterceptors: FC<Props> = ({ interceptors, currentInterceptors, onCh
           <h1>
             {t(TabsI18nKey.GlobalInterceptors)}: {globalInterceptors?.length || 0}
           </h1>
-          {button}
+          {!isReadOnlyAdmin && button}
         </div>
         {localInterceptors}
       </div>

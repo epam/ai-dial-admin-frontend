@@ -4,7 +4,7 @@ import { IconAlertCircle, IconCheck, IconClock, IconX } from '@tabler/icons-reac
 import { ICellRendererParams } from 'ag-grid-community';
 import classNames from 'classnames';
 
-import { ExtractionResult, ExtractionResultStatus } from '@/src/models/evaluation/run';
+import { AnalyticsResult, ExtractionResult, ExtractionResultStatus } from '@/src/models/evaluation/run';
 
 const config: Record<ExtractionResultStatus, { Icon: typeof IconCheck; className: string }> = {
   SUCCESS: {
@@ -26,7 +26,8 @@ const config: Record<ExtractionResultStatus, { Icon: typeof IconCheck; className
 };
 
 const ExecutionStatusCellRenderer = (params: ICellRendererParams) => {
-  const status = (params.data as ExtractionResult)?.executionInfo?.status;
+  const status =
+    (params.data as ExtractionResult)?.executionInfo?.status || (params.data as AnalyticsResult)?.executionStatus;
   if (!status) return null;
 
   const { Icon, className } = config[status];

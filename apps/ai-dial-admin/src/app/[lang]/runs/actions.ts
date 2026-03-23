@@ -2,7 +2,7 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { runsApi } from '@/src/app/api/api';
+import { analyticsApi, runsApi } from '@/src/app/api/api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { FilterDto } from '@/src/models/request';
@@ -25,4 +25,14 @@ export async function removeRun(id: string) {
 export async function getRunResults(filters: FilterDto[]) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return runsApi.getRunResults(token, filters);
+}
+
+export async function getTestCaseRunResults(filters: FilterDto[]) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return analyticsApi.getTestCaseRunResults(filters, token);
+}
+
+export async function getTestCaseRunResultDetails(id: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return analyticsApi.getTestCaseRunResultDetails(id, token);
 }

@@ -68,6 +68,7 @@ import {
   getToolsetPublicationTabs,
   columnsTab,
   metricsTab,
+  analyticsTab,
 } from '../utils';
 
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
@@ -249,7 +250,7 @@ describe('Entities :: tabs', () => {
   });
 
   test('returns correct tabs for run', () => {
-    expect(getRunTabs(t)).toEqual([summaryTab(t), extractionResultTab(t)]);
+    expect(getRunTabs(t)).toEqual([summaryTab(t), extractionResultTab(t), analyticsTab(t)]);
   });
 
   test('returns correct tabs for model containers', () => {
