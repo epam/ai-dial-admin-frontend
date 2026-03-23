@@ -1,7 +1,7 @@
 'use client';
 
 import { DialPopup, DialSteps, StepStatus } from '@epam/ai-dial-ui-kit';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 import {
@@ -25,6 +25,8 @@ import ImportConflicts from './ImportConflicts';
 import ImportFileTypeSelector from './ImportFileType';
 
 const MAX_FILES_COUNT = 30;
+const MAX_TOTAL_FILE_SIZE_MB = 64;
+const MAX_TOTAL_FILE_SIZE_BYTES = MAX_TOTAL_FILE_SIZE_MB * 1024 * 1024;
 
 interface Props {
   isModalOpen: boolean;
@@ -56,6 +58,22 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, 
   const [editedFileMap, setEditedFileMap] = useState(new Map<string, FileImportMap>());
 
   const [separateFileMap, setSeparateFileMap] = useState(new Map<string, FileImportMap>());
+
+  const files = useMemo(() => {
+    if (fileType === FileType.ARCHIVE) {
+      return zipFile ? [zipFile] : [];
+    }
+    return fileType === FileType.JSON ? jsonFiles : separateFiles;
+  }, [fileType, zipFile, jsonFiles, separateFiles]);
+
+  const totalFileSizeExceeded = useMemo(() => {
+    if (fileType === FileType.ARCHIVE) {
+      return false;
+    }
+
+    const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+    return totalSize > MAX_TOTAL_FILE_SIZE_BYTES;
+  }, [fileType, files]);
 
   const onReadJsonFile = useCallback(
     (file: File | null, urlToRemove?: string) => {
@@ -166,9 +184,13 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, 
 
   const isInvalidFile = useCallback(
     (file: File) => {
+      if (totalFileSizeExceeded && fileType !== FileType.ARCHIVE) {
+        return true;
+      }
+
       return !!(fileType === FileType.JSON ? jsonFileMap : separateFileMap).get(file?.name)?.isInvalid;
     },
-    [jsonFileMap, separateFileMap, fileType],
+    [jsonFileMap, separateFileMap, fileType, totalFileSizeExceeded],
   );
 
   const onFinishClick = () => {
@@ -206,10 +228,10 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, 
     if (currentStepId === ImportSteps.FILES) {
       const zipStatus = zipFile ? StepStatus.VALID : void 0;
       const filesStatus = getMultipleImportStatus(fileType === FileType.JSON ? jsonFileMap : separateFileMap);
-      const status = fileType === FileType.ARCHIVE ? zipStatus : filesStatus;
+      const status = fileType === FileType.ARCHIVE ? zipStatus : totalFileSizeExceeded ? StepStatus.ERROR : filesStatus;
       onChangeSteps(status);
     }
-  }, [zipFile, fileType, onChangeSteps, jsonFileMap, currentStepId, separateFileMap]);
+  }, [zipFile, fileType, onChangeSteps, jsonFileMap, currentStepId, separateFileMap, totalFileSizeExceeded]);
 
   return (
     <DialPopup
@@ -232,21 +254,14 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, 
         <DialSteps steps={steps} currentStep={currentStepId} onChangeStep={setCurrentStepId} />
         <div className={currentStepId === ImportSteps.FILES ? 'flex flex-col flex-1 min-h-0' : 'hidden'}>
           <ImportFileTypeSelector
-            files={
-              fileType === FileType.ARCHIVE
-                ? zipFile
-                  ? [zipFile]
-                  : []
-                : fileType === FileType.JSON
-                  ? jsonFiles
-                  : separateFiles
-            }
+            files={files}
             fileType={fileType}
             fileTypes={fileTypes}
             onChangeFileType={onChangeFileType}
             onChangeFile={onChangeFile}
             isInvalid={isInvalidFile}
             maxFilesCount={MAX_FILES_COUNT}
+            totalFileSizeExceeded={totalFileSizeExceeded}
             ignorePaths={ignorePaths}
             setIgnorePaths={setIgnorePaths}
             route={route}

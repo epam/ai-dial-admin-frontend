@@ -746,6 +746,7 @@ export enum ImportI18nKey {
   Changes = 'Import.Changes',
   FileSizeErrorHeader = 'Import.FileSizeErrorHeader',
   FileSizeErrorDescription = 'Import.FileSizeErrorDescription',
+  TotalFileSizeErrorDescription = 'Import.TotalFileSizeErrorDescription',
   ArchiveSizeErrorDescription = 'Import.ArchiveSizeErrorDescription',
 }
 
