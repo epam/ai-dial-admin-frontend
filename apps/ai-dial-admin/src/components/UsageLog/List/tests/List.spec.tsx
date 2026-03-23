@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { ApplicationRoute } from '@/src/types/routes';
-import { ButtonsI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, TabsI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 
 import List from '@/src/components/UsageLog/List/List';
 import { TRACES_QUERY } from '@/src/constants/telemetry';
@@ -24,13 +24,13 @@ describe('List', () => {
         getData={getData}
         query={TRACES_QUERY}
         columnDefs={USAGE_LOG_TRACES_COLUMNS}
-        title={TelemetryI18nKey.TracesTitle}
+        title={TabsI18nKey.Traces}
         emptyDataTitle={TelemetryI18nKey.NoTracesTitle}
       />,
     );
 
     waitFor(() => {
-      expect(screen.getByRole('heading', { name: TelemetryI18nKey.TracesTitle })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: TabsI18nKey.Traces })).toBeInTheDocument();
       expect(screen.getByRole('table')).toBeInTheDocument();
       //expect(screen.getByRole('button', { name: ButtonsI18nKey.Export })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: ButtonsI18nKey.Columns })).toBeInTheDocument();
@@ -49,7 +49,7 @@ describe('List', () => {
         getData={getData}
         query={TRACES_QUERY}
         columnDefs={USAGE_LOG_TRACES_COLUMNS}
-        title={TelemetryI18nKey.TracesTitle}
+        listLabel={TabsI18nKey.Traces}
         emptyDataTitle={TelemetryI18nKey.NoTracesTitle}
       />,
     );

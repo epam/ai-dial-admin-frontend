@@ -54,6 +54,7 @@ export enum EntityViewTab {
   Columns = 'Columns',
   TestSuiteMethod = 'TestSuiteMethod',
   Analytics = 'Analytics',
+  MCP = 'MCP',
 }
 
 export const propertiesTab = (t: (key: string) => string, warning?: boolean) => ({
@@ -125,6 +126,11 @@ export const tracesTab = (t: (key: string) => string) => ({
 export const conversationsTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Conversations,
   label: t(TabsI18nKey.Conversations),
+});
+
+export const mcpTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.MCP,
+  label: t(TabsI18nKey.MCP),
 });
 
 export const attachmentsTab = (t: (key: string) => string) => ({
@@ -350,7 +356,7 @@ export const getPublicationTabs = (t: (key: string) => string): TabModel[] => {
 };
 
 export const getUsageLogTabs = (t: (key: string) => string): TabModel[] => {
-  return [tracesTab(t), conversationsTab(t)];
+  return [tracesTab(t), conversationsTab(t), mcpTab(t)];
 };
 
 export const getTabsForAsset = (

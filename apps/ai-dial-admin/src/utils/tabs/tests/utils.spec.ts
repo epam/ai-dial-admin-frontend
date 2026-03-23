@@ -69,6 +69,7 @@ import {
   columnsTab,
   metricsTab,
   analyticsTab,
+  mcpTab,
 } from '../utils';
 
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
@@ -174,7 +175,7 @@ describe('Entities :: tabs', () => {
   });
 
   test('returns correct tabs for usage log', () => {
-    expect(getUsageLogTabs(t)).toEqual([tracesTab(t), conversationsTab(t)]);
+    expect(getUsageLogTabs(t)).toEqual([tracesTab(t), conversationsTab(t), mcpTab(t)]);
   });
 
   test('returns correct tabs for interceptor template', () => {

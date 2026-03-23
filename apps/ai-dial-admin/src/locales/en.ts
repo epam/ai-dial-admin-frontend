@@ -516,6 +516,7 @@ export default {
     Roles: 'Roles',
     Interceptors: 'Interceptors',
     GlobalInterceptors: 'Global Interceptors',
+    MCP: 'MCP',
     ErrorCodes: 'Error Codes',
     Keys: 'Keys',
     Entities: 'Entities',
@@ -633,10 +634,9 @@ export default {
       },
     },
     UsageLog: {
-      TracesTitle: 'Traces',
       NoTracesTitle: 'No Traces',
-      ConversationsTitle: 'Conversations',
       NoConversationsTitle: 'No Conversations',
+      NoMcp: 'No MCP calls',
     },
     ViewByLabel: 'View by: ',
     ViewBy: {

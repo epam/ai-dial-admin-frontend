@@ -461,6 +461,26 @@ export const USAGE_LOG_CONVERSATIONS_COLUMNS: ColDef[] = [
   { field: 'language', headerName: 'Language', hide: true },
 ];
 
+export const USAGE_LOG_MCP_COLUMNS: ColDef[] = [
+  { field: 'completion_time', headerName: 'Last activity', hide: false, ...dateTimeColumn },
+  { field: 'deployment_id', headerName: 'Deployment ID', hide: false },
+  { field: 'project', headerName: 'Project', hide: false },
+  {
+    field: 'method',
+    headerName: 'Method',
+    hide: true,
+  },
+  {
+    field: 'tool_name',
+    headerName: 'Tool Name',
+    hide: false,
+  },
+  {
+    field: 'trace_id',
+    headerName: 'Trace ID',
+    hide: false,
+  },
+];
 export const PROJECT_GRID_COLUMNS: ColDef[] = [{ field: 'name', headerName: 'Project' }, ...TELEMETRY_COLUMNS];
 
 export const MCP_CONSUMPTION_COLUMNS: ColDef[] = [
