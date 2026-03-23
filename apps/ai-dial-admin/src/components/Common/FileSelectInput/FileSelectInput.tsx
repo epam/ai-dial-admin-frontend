@@ -10,7 +10,7 @@ import {
 } from '@epam/ai-dial-ui-kit';
 import { FileManagerGridRow } from '@epam/ai-dial-ui-kit/dist/src/components/FileManager/FileManagerContext';
 
-import { FILES_GRID_SIMPLE_COLUMNS } from '@/src/components/Assets/Files/constants';
+import { FILES_GRID_COLUMNS } from '@/src/components/Assets/Files/constants';
 import { getGridOptions, getTreeOptions } from '@/src/components/Common/FileManager/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
@@ -128,7 +128,7 @@ const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputCl
               t,
               isReadOnlyAdmin,
             )}
-            gridOptions={getGridOptions(FILES_GRID_SIMPLE_COLUMNS, t, isReadOnlyAdmin, true)}
+            gridOptions={getGridOptions(FILES_GRID_COLUMNS, t, isReadOnlyAdmin, true)}
             onPathChange={handleOnPathChange}
             onFolderPopupPathChange={handleFolderPopupPathChange}
             handleSelectionClick={handleSelectionClick}
