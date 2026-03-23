@@ -167,12 +167,28 @@ export const getDetailNestedEntries = (
 ): { title: string; entries: [string, string][] }[] => {
   return Object.entries(data).map(([groupKey, values]) => {
     const hasOnlyNullError = Object.keys(values).length === 1 && 'error' in values && values.error == null;
-    const infoError = additionalData?.[groupKey]?.error;
+    const additionalGroup = additionalData?.[groupKey];
+    const infoError = additionalGroup?.error;
 
-    const entries: Array<[string, string]> =
-      hasOnlyNullError && infoError
-        ? [['error', String(infoError)]]
-        : Object.entries(values).map(([key, val]) => [key, String(val)] as [string, string]);
+    let entries: Array<[string, string]>;
+
+    if (hasOnlyNullError && infoError) {
+      entries = [['error', String(infoError)]];
+    } else {
+      entries = Object.entries(values).flatMap(([key, val]) => {
+        const mainEntry: [string, string] = [key, String(val)];
+        const additionalVal = additionalGroup?.[key];
+
+        if (additionalVal != null && typeof additionalVal === 'object' && !Array.isArray(additionalVal)) {
+          const additionalEntries = Object.entries(additionalVal as Record<string, unknown>).map(
+            ([subKey, subVal]) => [subKey, String(subVal)] as [string, string],
+          );
+          return [mainEntry, ...additionalEntries];
+        }
+
+        return [mainEntry];
+      });
+    }
 
     return { title: groupKey, entries };
   });

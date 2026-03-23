@@ -1,15 +1,16 @@
-import { DialUploadFileItem, GridOptions, GridSelectionMode } from '@epam/ai-dial-ui-kit';
+import { ReactNode } from 'react';
 
-import { CREATE_FOLDER_FORBIDDEN_CHARS, FILE_NAME_MAX_LENGTH } from './constants';
-import { ApplicationRoute } from '@/src/types/routes';
+import { DialUploadFileItem, GridOptions, GridSelectionMode } from '@epam/ai-dial-ui-kit';
+import { ColDef, ITextFilterParams } from 'ag-grid-community';
+
+import { bulkActionLabels } from '@/src/components/Assets/constants';
+import { getGridActionLabels, getToolbarOptionLabels, getTreeActionLabels } from '@/src/components/Assets/utils';
 import { baseColumnComparator } from '@/src/components/Grid/comparators/base-column-comparator';
 import FloatingFilter from '@/src/components/Grid/FloatingFilter/FloatingFilter';
-import { ColDef, ITextFilterParams } from 'ag-grid-community';
-import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { getGridActionLabels, getToolbarOptionLabels, getTreeActionLabels } from '@/src/components/Assets/utils';
-import { ReactNode } from 'react';
-import { bulkActionLabels } from '@/src/components/Assets/constants';
+import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
+import { ApplicationRoute } from '@/src/types/routes';
+import { CREATE_FOLDER_FORBIDDEN_CHARS, FILE_NAME_MAX_LENGTH } from './constants';
 
 export const getValidationMessages = (t: (key: string) => string) => {
   return { emptyName: t(FileManagerI18nKey.EnterFolderName), duplicateName: t(FileManagerI18nKey.NameExists) };
@@ -82,11 +83,12 @@ export const getGridOptions = (
   isReadOnlyAdmin: boolean,
   columnDefs: ColDef[],
   t: (key: string) => string,
+  isSingleSelection?: boolean,
 ) =>
   ({
     alternateOddRowColors: true,
     columnDefs,
-    selectionMode: GridSelectionMode.MULTIPLE,
+    selectionMode: isSingleSelection ? GridSelectionMode.SINGLE : GridSelectionMode.MULTIPLE,
     actionLabels: getActionLabels(getGridActionLabels(view, isReadOnlyAdmin), t),
     additionalGridOptions: {
       defaultColDef: {

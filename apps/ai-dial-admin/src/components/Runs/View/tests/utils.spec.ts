@@ -310,6 +310,113 @@ describe('Runs View :: getDetailNestedEntries', () => {
     ]);
   });
 
+  test('Should append nested additionalData sub-entries after the main entry', () => {
+    const data = {
+      'deepeval.answer_relevancy': { score: 1 },
+    };
+    const additionalData = {
+      'deepeval.answer_relevancy': {
+        score: {
+          reason: 'The score is 1.00 because the output is relevant.',
+          verbose_logs: 'Statements:\n["hello"]',
+        },
+      },
+    };
+
+    const result = getDetailNestedEntries(data, additionalData);
+
+    expect(result).toEqual([
+      {
+        title: 'deepeval.answer_relevancy',
+        entries: [
+          ['score', '1'],
+          ['reason', 'The score is 1.00 because the output is relevant.'],
+          ['verbose_logs', 'Statements:\n["hello"]'],
+        ],
+      },
+    ]);
+  });
+
+  test('Should not expand when additionalData value is a primitive', () => {
+    const data = {
+      metric: { score: 0.95 },
+    };
+    const additionalData = {
+      metric: { score: 'some string' },
+    };
+
+    const result = getDetailNestedEntries(data, additionalData);
+
+    expect(result).toEqual([
+      {
+        title: 'metric',
+        entries: [['score', '0.95']],
+      },
+    ]);
+  });
+
+  test('Should not expand when additionalData value is an array', () => {
+    const data = {
+      metric: { score: 0.95 },
+    };
+    const additionalData = {
+      metric: { score: [1, 2, 3] as any },
+    };
+
+    const result = getDetailNestedEntries(data, additionalData);
+
+    expect(result).toEqual([
+      {
+        title: 'metric',
+        entries: [['score', '0.95']],
+      },
+    ]);
+  });
+
+  test('Should handle mix of expandable and non-expandable additional data', () => {
+    const data = {
+      group: { score: 1, accuracy: 0.9 },
+    };
+    const additionalData = {
+      group: {
+        score: { reason: 'Good', verbose_logs: 'logs' },
+        accuracy: 42,
+      },
+    };
+
+    const result = getDetailNestedEntries(data, additionalData);
+
+    expect(result).toEqual([
+      {
+        title: 'group',
+        entries: [
+          ['score', '1'],
+          ['reason', 'Good'],
+          ['verbose_logs', 'logs'],
+          ['accuracy', '0.9'],
+        ],
+      },
+    ]);
+  });
+
+  test('Should handle additionalData with no matching group key', () => {
+    const data = {
+      metric: { score: 1 },
+    };
+    const additionalData = {
+      other: { score: { reason: 'test' } },
+    };
+
+    const result = getDetailNestedEntries(data, additionalData);
+
+    expect(result).toEqual([
+      {
+        title: 'metric',
+        entries: [['score', '1']],
+      },
+    ]);
+  });
+
   test('Should handle empty data', () => {
     expect(getDetailNestedEntries({})).toEqual([]);
   });

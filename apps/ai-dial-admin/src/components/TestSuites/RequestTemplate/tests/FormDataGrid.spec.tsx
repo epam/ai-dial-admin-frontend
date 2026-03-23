@@ -95,6 +95,7 @@ describe('FormDataGrid', () => {
 
     const mockApi = {
       updateGridOptions: vi.fn(),
+      isDestroyed: vi.fn(() => false),
     };
     capturedOnGridReady({ api: mockApi });
 
@@ -110,6 +111,7 @@ describe('FormDataGrid', () => {
 
     const mockApi = {
       updateGridOptions: vi.fn(),
+      isDestroyed: vi.fn(() => false),
     };
     capturedOnGridReady({ api: mockApi });
 
@@ -128,6 +130,7 @@ describe('FormDataGrid', () => {
     const mockUpdateGridOptions = vi.fn();
     const mockApi = {
       updateGridOptions: mockUpdateGridOptions,
+      isDestroyed: vi.fn(() => false),
     };
     capturedOnGridReady({ api: mockApi });
 
