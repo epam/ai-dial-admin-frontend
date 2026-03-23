@@ -1,7 +1,16 @@
 import { describe, expect, test } from 'vitest';
 
 import { FilterOperatorDto } from '@/src/types/request';
-import { RESULT_FILTERS, getTestCaseStatusClass, getResultColumns, getAnalyticsColumns } from '../utils';
+import {
+  RESULT_FILTERS,
+  getTestCaseStatusClass,
+  getResultColumns,
+  getAnalyticsColumns,
+  getFormattedDuration,
+  getPanelTitle,
+  getDetailEntries,
+  getDetailNestedEntries,
+} from '../utils';
 
 describe('Runs View :: RESULT_FILTERS', () => {
   test('Should return run and suite filters for provided run', () => {
@@ -173,5 +182,135 @@ describe('Runs View :: getAnalyticsColumns', () => {
     expect(columns[0]).toEqual(expect.objectContaining({ headerName: ' ' }));
     expect(columns[1]).toEqual(expect.objectContaining({ headerName: 'EXECUTION' }));
     expect((columns[2] as any).children).toHaveLength(0);
+  });
+});
+
+describe('Runs View :: getFormattedDuration', () => {
+  test('Should return dash for undefined duration', () => {
+    expect(getFormattedDuration(undefined)).toBe('—');
+  });
+
+  test('Should return milliseconds for duration under 1000', () => {
+    expect(getFormattedDuration(250)).toBe('250ms');
+  });
+
+  test('Should return seconds for duration 1000 or above', () => {
+    expect(getFormattedDuration(1000)).toBe('1.0s');
+    expect(getFormattedDuration(1200)).toBe('1.2s');
+    expect(getFormattedDuration(2500)).toBe('2.5s');
+  });
+
+  test('Should handle zero duration', () => {
+    expect(getFormattedDuration(0)).toBe('0ms');
+  });
+});
+
+describe('Runs View :: getPanelTitle', () => {
+  test('Should format title with test case name and run index', () => {
+    expect(getPanelTitle({ testCaseName: 'Login Test', runIndex: 3 } as any)).toBe('Login Test - Run #3');
+  });
+
+  test('Should default run index to 0 when missing', () => {
+    expect(getPanelTitle({ testCaseName: 'Test' } as any)).toBe('Test - Run #0');
+  });
+
+  test('Should handle null result', () => {
+    expect(getPanelTitle(null)).toBe('undefined - Run #0');
+  });
+});
+
+describe('Runs View :: getDetailEntries', () => {
+  test('Should convert record to key-value tuple array', () => {
+    expect(getDetailEntries({ prompt: 'hello', score: 0.95 })).toEqual([
+      ['prompt', 'hello'],
+      ['score', '0.95'],
+    ]);
+  });
+
+  test('Should stringify object values', () => {
+    expect(getDetailEntries({ data: { nested: true } })).toEqual([['data', '[object Object]']]);
+  });
+
+  test('Should handle empty record', () => {
+    expect(getDetailEntries({})).toEqual([]);
+  });
+});
+
+describe('Runs View :: getDetailNestedEntries', () => {
+  test('Should create sections from nested metric values', () => {
+    const data = {
+      Accuracy: { accuracy: 0.95, threshold: 0.9 },
+      Details: { matched: true },
+    };
+
+    const result = getDetailNestedEntries(data);
+
+    expect(result).toHaveLength(2);
+    expect(result[0]).toEqual({
+      title: 'Accuracy',
+      entries: [
+        ['accuracy', '0.95'],
+        ['threshold', '0.9'],
+      ],
+    });
+    expect(result[1]).toEqual({
+      title: 'Details',
+      entries: [['matched', 'true']],
+    });
+  });
+
+  test('Should fall back to additionalData error when metricValues has only null error', () => {
+    const data = {
+      'deepeval.g_eval': { error: null },
+    };
+    const additionalData = {
+      'deepeval.g_eval': { error: '422 Unprocessable Content' },
+    };
+
+    const result = getDetailNestedEntries(data, additionalData);
+
+    expect(result).toEqual([
+      {
+        title: 'deepeval.g_eval',
+        entries: [['error', '422 Unprocessable Content']],
+      },
+    ]);
+  });
+
+  test('Should keep original values when error is not null', () => {
+    const data = {
+      metric: { error: 'some local error' },
+    };
+    const additionalData = {
+      metric: { error: 'info error' },
+    };
+
+    const result = getDetailNestedEntries(data, additionalData);
+
+    expect(result).toEqual([
+      {
+        title: 'metric',
+        entries: [['error', 'some local error']],
+      },
+    ]);
+  });
+
+  test('Should keep null error as entry when no additionalData provided', () => {
+    const data = {
+      metric: { error: null },
+    };
+
+    const result = getDetailNestedEntries(data);
+
+    expect(result).toEqual([
+      {
+        title: 'metric',
+        entries: [['error', 'null']],
+      },
+    ]);
+  });
+
+  test('Should handle empty data', () => {
+    expect(getDetailNestedEntries({})).toEqual([]);
   });
 });
