@@ -29,6 +29,7 @@ export interface AnalyticsResult extends ResultDto {
   executionStatus?: ExtractionResultStatus;
   execDurationMs?: number;
   metricValues?: Record<string, Record<string, unknown>>;
+  metricInfos?: Record<string, Record<string, unknown>>;
   computationId?: string;
   computedAt?: number;
   testCaseRunResultsId?: string;
