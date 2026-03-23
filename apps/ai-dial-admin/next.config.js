@@ -21,6 +21,7 @@ const ContentSecurityPolicy = `
     img-src 'self' blob: data: https://authjs.dev ${process.env.ALLOWED_IMAGE_ORIGINS || ''};
     font-src 'self' data: https://cdn.jsdelivr.net fonts.gstatic.com;
     object-src 'none';
+    frame-src: 'all';
     base-uri 'self';
 `;
 
