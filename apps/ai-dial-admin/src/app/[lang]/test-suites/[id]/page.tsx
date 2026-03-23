@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 
 import TestSuiteView from '@/src/components/TestSuites/View/View';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
+import { FileFolderProvider } from '@/src/context/assets/FileFolderContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { errorObjLog } from '@/src/server/logger';
@@ -28,7 +29,9 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   return (
     <SaveValidationContextProvider>
-      <TestSuiteView originalTestSuite={testSuite} etag={etag} />
+      <FileFolderProvider>
+        <TestSuiteView originalTestSuite={testSuite} etag={etag} />
+      </FileFolderProvider>
     </SaveValidationContextProvider>
   );
 }
