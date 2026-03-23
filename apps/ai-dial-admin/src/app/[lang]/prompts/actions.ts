@@ -50,11 +50,6 @@ export async function movePrompts(paths: string[], newPath: string) {
   return assetsApi.moveAssets(token, paths, newPath, ResourceType.PROMPT);
 }
 
-export async function importPrompts(body: FormData, fileType: ImportFileType) {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.importAssets(token, body, fileType, ResourceType.PROMPT);
-}
-
 export async function exportPrompts(paths: string[], type?: ImportFileType) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return await assetsApi.exportAssets(token, ResourceType.PROMPT, paths, type);
