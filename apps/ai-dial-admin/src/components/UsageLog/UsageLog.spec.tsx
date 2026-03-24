@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import { getDashboardData } from '@/src/app/[lang]/dashboard/actions';
-import { ButtonsI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, TabsI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import UsageLog from './UsageLog';
@@ -30,7 +30,7 @@ describe('UsageLog', () => {
     render(<UsageLog route={ApplicationRoute.Models} entityView={EntityViewTab.Traces} />);
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: TelemetryI18nKey.TracesTitle })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: TabsI18nKey.Traces })).toBeInTheDocument();
       expect(screen.queryByRole('tab')).toBeFalsy();
     });
   });

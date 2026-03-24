@@ -26,6 +26,7 @@ interface Props {
   fileType: string;
   fileTypes: RadioButtonWithContent[];
   maxFilesCount?: number;
+  totalFileSizeExceeded?: boolean;
   ignorePaths?: boolean;
   setIgnorePaths?: Dispatch<SetStateAction<boolean>>;
   onChangeFile: (files: File[]) => void;
@@ -41,6 +42,7 @@ const ImportFileTypeSelector: FC<Props> = ({
   onChangeFileType,
   isInvalid,
   maxFilesCount,
+  totalFileSizeExceeded,
   ignorePaths,
   setIgnorePaths,
   route,
@@ -113,7 +115,11 @@ const ImportFileTypeSelector: FC<Props> = ({
             acceptTypes="application/json"
             fileFormatError={t(ImportI18nKey.JsonFileFormatError)}
             isInvalid={isInvalid}
-            errorText={t(ImportI18nKey.PromptError)}
+            errorText={
+              totalFileSizeExceeded
+                ? t(ImportI18nKey.TotalFileSizeErrorDescription, { size: 64 })
+                : t(ImportI18nKey.PromptError)
+            }
             onChange={onChangeFile}
             maxFilesCount={maxFilesCount}
             deleteAllButtonLabel={t(ButtonsI18nKey.DeleteAll)}
@@ -133,7 +139,11 @@ const ImportFileTypeSelector: FC<Props> = ({
             onChange={onChangeFile}
             isInvalid={isInvalid}
             dynamicIcon={getFileIcon}
-            errorText={t(ImportI18nKey.FileError)}
+            errorText={
+              totalFileSizeExceeded
+                ? t(ImportI18nKey.TotalFileSizeErrorDescription, { size: 64 })
+                : t(ImportI18nKey.FileError)
+            }
             maxFilesCount={maxFilesCount}
             fileSizeError={t(ImportI18nKey.FileSizeErrorDescription, { size: MAX_FILE_SIZE_MB })}
             maxFileSize={MAX_FILE_SIZE_MB}
