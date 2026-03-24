@@ -1415,6 +1415,7 @@ export enum ApplicationsI18nKey {
 export enum TestSuitesI18nKey {
   CreateTestSuite = 'TestSuites.CreateTestSuite',
   UpdateTestSuite = 'TestSuites.UpdateTestSuite',
+  SelectDocument = 'TestSuites.SelectDocument',
   Application = 'TestSuites.Application',
   Target = 'TestSuites.Target',
   Methods = 'TestSuites.Methods',
