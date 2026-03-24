@@ -111,17 +111,15 @@ const Whitelists: FC<Props> = ({ entity, setEntity, route, disabled }) => {
 
   return (
     <div className="flex flex-col gap-8">
-      <div>
-        <DialRadioGroup
-          elementId="policy"
-          fieldTitle={t(DeploymentsI18nKey.WhitelistPolicyLabel)}
-          radioButtons={policyOptions}
-          activeRadioButton={currentPolicy}
-          orientation={RadioGroupOrientation.Column}
-          onChange={(id) => onPolicyChange(id as WHITELIST_POLICY)}
-          disabled={disabled}
-        />
-      </div>
+      <DialRadioGroup
+        elementId="policy"
+        fieldTitle={t(DeploymentsI18nKey.WhitelistPolicyLabel)}
+        radioButtons={policyOptions}
+        activeRadioButton={currentPolicy}
+        orientation={RadioGroupOrientation.Column}
+        onChange={(id) => onPolicyChange(id as WHITELIST_POLICY)}
+        disabled={disabled}
+      />
       {currentPolicy === WHITELIST_POLICY.ALL ? (
         <DialAlert
           id="alert"
@@ -136,24 +134,27 @@ const Whitelists: FC<Props> = ({ entity, setEntity, route, disabled }) => {
           variant={AlertVariant.Warning}
         />
       ) : (
-        <div className="flex flex-col ml-[34px]">
+        <div className="flex flex-col ml-[34px] gap-8">
           {route === ApplicationRoute.Images && !!globalWhitelist.length && (
             <div className="flex flex-col gap-2">
+              <p className="small-text-semi">{t(DeploymentsI18nKey.AllowedDomains)}</p>
               <p className="tiny text-secondary">{t(DeploymentsI18nKey.GlobalWhitelist)}</p>
-              <ul>
+              <ul className="gap-1 flex flex-col">
                 {globalWhitelist.map((domain, index) => (
                   <li key={`domain-${index}`} className="flex items-center gap-2 text-primary">
-                    <span className="text-secondary ">
+                    <span className="text-secondary">
                       <Cloud {...BASE_BUTTON_ICON_PROPS} />
                     </span>
-                    {domain}
+                    <p className="dial-body-text"> {domain}</p>
                   </li>
                 ))}
               </ul>
             </div>
           )}
           <div className="flex flex-col gap-2">
-            <p className="small-text-semi">{t(DeploymentsI18nKey.AllowedDomains)}</p>
+            {!(route === ApplicationRoute.Images && !!globalWhitelist.length) && (
+              <p className="small-text-semi">{t(DeploymentsI18nKey.AllowedDomains)}</p>
+            )}
             <p className="tiny text-secondary">
               {t(DeploymentsI18nKey.SpecificWhitelist, { type: getDeploymentEntityKey(route, t) })}
             </p>
