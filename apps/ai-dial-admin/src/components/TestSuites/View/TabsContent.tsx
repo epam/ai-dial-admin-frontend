@@ -82,7 +82,7 @@ const TabsContent: FC<Props> = ({
         />
       )}
       {activeTab === EntityViewTab.Runs && <Runs selectedTestSuite={selectedTestSuite} runRefreshRef={runRefreshRef} />}
-      {activeTab === EntityViewTab.Metrics && <Metrics selectedTestSuite={selectedTestSuite} />}
+      {activeTab === EntityViewTab.Validations && <Metrics selectedTestSuite={selectedTestSuite} />}
     </>
   );
 };
