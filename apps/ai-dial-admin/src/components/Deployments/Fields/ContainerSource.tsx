@@ -48,7 +48,6 @@ const ContainerSource: FC<Props> = ({ container, setContainer, isModal = false, 
   const onChangeImageReference = useCallback(
     (value?: string) => {
       const error = getDeploymentsURIError(value, t);
-      setImageReferenceError(error);
       dispatch({
         type: ValidationActionType.SetField,
         field: 'modelSourceName',
