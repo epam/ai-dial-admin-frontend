@@ -48,6 +48,7 @@ const ContainerSource: FC<Props> = ({ container, setContainer, isModal = false, 
   const onChangeImageReference = useCallback(
     (value?: string) => {
       const error = getDeploymentsURIError(value, t);
+      setImageReferenceError(error);
       dispatch({
         type: ValidationActionType.SetField,
         field: 'modelSourceName',
@@ -60,17 +61,17 @@ const ContainerSource: FC<Props> = ({ container, setContainer, isModal = false, 
 
   useEffect(() => {
     if (resetCounter || (container.source?.imageRef && container.source?.imageRef.length > 0)) {
-      const error = getDeploymentsURIError(container.source?.imageRef);
+      const error = getDeploymentsURIError(container.source?.imageRef, t);
       setImageRefError(error);
     }
-  }, [container.source?.imageRef, resetCounter]);
+  }, [container.source?.imageRef, resetCounter, t]);
 
   useEffect(() => {
     if (resetCounter || (container.source?.imageReference && container.source?.imageReference.length > 0)) {
-      const error = getDeploymentsURIError(container.source?.imageReference);
+      const error = getDeploymentsURIError(container.source?.imageReference, t);
       setImageReferenceError(error);
     }
-  }, [container.source?.imageReference, resetCounter]);
+  }, [container.source?.imageReference, resetCounter, t]);
 
   useEffect(() => {
     const sourceType = container.source?.$type;
