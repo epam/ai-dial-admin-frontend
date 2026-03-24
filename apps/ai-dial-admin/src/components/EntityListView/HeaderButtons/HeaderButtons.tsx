@@ -31,7 +31,7 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
-import { isAssetView } from '@/src/utils/is-asset-view';
+import { isAssetView } from '@/src/utils/is-view';
 import { getErrorNotification, getPrepareNotification } from '@/src/utils/notification';
 import { getFormDataForImport, getImportFunction, getImportTitle } from './utils';
 

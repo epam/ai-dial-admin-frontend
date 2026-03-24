@@ -15,7 +15,7 @@ import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isAssetWithVersion } from '@/src/utils/is-asset-view';
+import { isAssetWithVersion } from '@/src/utils/is-view';
 import { RefObject } from 'react';
 import { prepareEntityForDuplicate } from './Components/utils';
 

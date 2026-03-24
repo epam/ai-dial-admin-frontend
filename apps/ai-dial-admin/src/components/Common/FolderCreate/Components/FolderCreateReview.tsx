@@ -32,7 +32,7 @@ import { FileImportGridData, FileImportMap } from '@/src/models/file';
 import { AssetImportGridData } from '@/src/models/import-asset';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isAssetWithVersion } from '@/src/utils/is-asset-view';
+import { isAssetWithVersion } from '@/src/utils/is-view';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 interface Props {

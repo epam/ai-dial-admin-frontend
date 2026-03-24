@@ -14,7 +14,7 @@ import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DuplicationTypes } from '@/src/types/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { duplicateEntityMap, getClonedEntityName, getCloneTitle } from '@/src/utils/entities/duplicate-entity';
-import { isDeploymentAsset } from '@/src/utils/is-asset-view';
+import { isDeploymentAsset } from '@/src/utils/is-view';
 import { checkNameVersionCombination, getInitialVersion } from '@/src/utils/prompts/versions';
 import { addTrailingSlash } from '@/src/utils/url';
 

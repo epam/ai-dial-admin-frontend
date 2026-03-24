@@ -17,7 +17,7 @@ import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { Asset } from '@/src/models/dial/deployment-asset';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isAssetView } from '@/src/utils/is-asset-view';
+import { isAssetView } from '@/src/utils/is-view';
 
 interface Props<T> {
   emptyDataTitle: string;

@@ -21,7 +21,7 @@ import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isAssetView, isBuildersView } from '@/src/utils/is-asset-view';
+import { isAssetView, isBuildersView } from '@/src/utils/is-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { getNameVersionFromPrompt } from '@/src/utils/prompts/versions';

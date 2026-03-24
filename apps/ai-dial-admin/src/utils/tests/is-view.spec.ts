@@ -4,7 +4,7 @@ import {
   isBuildersView,
   isEntitiesWithDisplayVersion,
   isEvaluationView,
-} from '../is-asset-view';
+} from '../is-view';
 import { describe, expect, test } from 'vitest';
 import { ApplicationRoute } from '@/src/types/routes';
 

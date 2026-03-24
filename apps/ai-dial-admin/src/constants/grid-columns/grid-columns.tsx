@@ -34,7 +34,7 @@ import { IMAGE_SOURCE_TYPE, IMAGE_STATUS, IMAGE_TRANSPORT_TYPE, IMAGE_TYPE } fro
 import { ApplicationRoute } from '@/src/types/routes';
 import { formatDeploymentImageName } from '@/src/utils/formatting/deployments';
 import { formatNumberWithExponent } from '@/src/utils/formatting/number-formatting';
-import { isAssetWithVersion } from '@/src/utils/is-asset-view';
+import { isAssetWithVersion } from '@/src/utils/is-view';
 import { getDeleteOperation, getDuplicateOperation, getMoveOperation, getOpenInNewTabOperation } from './actions';
 import {
   ASSET_NAME_COLUMN,
@@ -531,6 +531,7 @@ export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, rou
     : [
         {
           headerName: `${type} Image`,
+          field: 'image',
           hide: false,
           valueGetter: (params: ValueGetterParams) =>
             params.data?.source?.$type === 'internal_image' ? params.data.source.imageDefinitionId : undefined,

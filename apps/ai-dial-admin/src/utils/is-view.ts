@@ -27,3 +27,13 @@ export const isEntitiesWithDisplayVersion = (view?: ApplicationRoute) => {
 export const isEvaluationView = (view?: ApplicationRoute): boolean => {
   return view === ApplicationRoute.TestSuites || view === ApplicationRoute.Metrics || view === ApplicationRoute.Runs;
 };
+
+export const isDeploymentManagerView = (view?: ApplicationRoute): boolean => {
+  return (
+    view === ApplicationRoute.Images ||
+    view === ApplicationRoute.McpContainers ||
+    view === ApplicationRoute.ModelServings ||
+    view === ApplicationRoute.InterceptorContainers ||
+    view === ApplicationRoute.AdapterContainers
+  );
+};

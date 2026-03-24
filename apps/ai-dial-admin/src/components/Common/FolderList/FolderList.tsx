@@ -25,7 +25,7 @@ import { DialFolder } from '@/src/models/dial/folder';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
 import { getFolderNameAndPath, isFolder } from '@/src/utils/files/path';
-import { isAssetView } from '@/src/utils/is-asset-view';
+import { isAssetView } from '@/src/utils/is-view';
 import { addTrailingSlash } from '@/src/utils/url';
 import FolderListModals, { ModalType } from './Modals/FolderListModals';
 import { generateFolderListFromBulkPaths } from './utils';

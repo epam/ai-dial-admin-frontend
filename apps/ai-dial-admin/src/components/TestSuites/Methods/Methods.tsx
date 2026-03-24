@@ -98,7 +98,7 @@ const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange, isCreate
   return (
     <div className="flex flex-row size-full gap-2">
       <DialCollapsibleSidebar containerClassName="border border-primary" title={t(MenuI18nKey.Applications)}>
-        <div className="flex flex-col gap-y-4 ">
+        <div className="flex flex-col gap-y-4">
           <div className="flex flex-col gap-y-1">
             <span className="dial-tiny text-secondary block">{t(TestSuitesI18nKey.ChatInterface)}</span>
             <MethodItem

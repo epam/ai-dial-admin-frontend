@@ -160,7 +160,7 @@ const PublicationView = <T extends Publication>({ view, publication, application
           className="mt-8"
           variant={AlertVariant.Warning}
           message={
-            <div className="flex flex-col gap-3 ">
+            <div className="flex flex-col gap-3">
               <h3>{publication.resourceIssues[0].message}</h3>
               <span className="text-sm">{t(PublicationsI18nKey.Warning)}</span>
             </div>
