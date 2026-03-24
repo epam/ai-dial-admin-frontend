@@ -164,7 +164,7 @@ const UsageLog: FC<Props> = ({
         {activeTab === EntityViewTab.MCP && (
           <List
             listLabel={t(TabsI18nKey.MCP)}
-            emptyDataTitle={t(TelemetryI18nKey.NoMcpCallsTitle)}
+            emptyDataTitle={t(TelemetryI18nKey.NoMcpCalls)}
             route={route}
             getData={getData}
             columnDefs={USAGE_LOG_MCP_COLUMNS}

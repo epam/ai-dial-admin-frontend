@@ -637,7 +637,7 @@ export default {
     UsageLog: {
       NoTracesTitle: 'No Traces',
       NoConversationsTitle: 'No Conversations',
-      NoMcp: 'No MCP calls',
+      NoMcpCalls: 'No MCP calls',
     },
     ViewByLabel: 'View by: ',
     ViewBy: {

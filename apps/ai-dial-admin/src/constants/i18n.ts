@@ -614,7 +614,7 @@ export enum TelemetryI18nKey {
   FilterConditionEndsWith = 'Telemetry.Filter.ConditionEndsWith',
   FilterDurationSeconds = 'Telemetry.Filter.Duration.Seconds',
   NoTracesTitle = 'Telemetry.UsageLog.NoTracesTitle',
-  NoMcpCallsTitle = 'Telemetry.UsageLog.NoMcpCallsTitle',
+  NoMcpCalls = 'Telemetry.UsageLog.NoMcpCalls',
   NoConversationsTitle = 'Telemetry.UsageLog.NoConversationsTitle',
   ViewByLabel = 'Telemetry.ViewByLabel',
   ViewByChat = 'Telemetry.ViewBy.Chat',
