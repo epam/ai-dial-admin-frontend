@@ -27,9 +27,6 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
   const functionItems = getOperationItems(t);
   const attributeItems = getAttributeItems(t, attributes);
 
-  const inputClassName = 'shrink-0';
-  const iconClassName = classNames('cursor-pointer mb-[18px]', index === 0 ? 'mt-[24px]' : 'flex items-center');
-
   const setError = useCallback(
     (value: string | string[]) => {
       if (value.length === 0) {
@@ -94,16 +91,10 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
   }, [rule.targets]);
 
   return (
-    <>
-      <div
-        className={classNames(
-          'h-[1px] w-[16px] bg-accent-primary',
-          errorText && 'mb-[18px]',
-          index === 0 && 'mt-[22px]',
-        )}
-      ></div>
-      <div ref={ref} className="flex-1 flex flex-row gap-x-2 items-center">
-        <div className={classNames(inputClassName, 'w-[250px]')}>
+    <div className="flex items-start">
+      <div className={classNames('h-[1px] w-[16px] bg-accent-primary', isFirstLine ? 'mt-11' : 'mt-5')}></div>
+      <div ref={ref} className="flex-1 flex flex-row gap-x-2 items-start">
+        <div className="shrink-0 w-[250px]">
           <DialSelectField
             value={rule.source}
             id={`rule-attribute-${index}`}
@@ -113,7 +104,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
             onChange={(source) => onChangeSource(source as string)}
           />
         </div>
-        <div className={classNames(inputClassName, 'w-[160px]')}>
+        <div className="shrink-0 w-[160px]">
           <DialSelectField
             value={rule.function}
             id={`rule-function-${index}`}
@@ -126,7 +117,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
         <div className="flex-1">
           {rule.function === RuleFunction.REGEX ? (
             <DialInput
-              id={`upstream-endpoints-${index}`}
+              id={`rule-regex-${index}`}
               value={rule.targets?.[0]}
               labelProps={{ label: isFirstLine ? t(BasicI18nKey.Value) : '' }}
               placeholder={t(FoldersI18nKey.RegexPlaceholder)}
@@ -135,23 +126,25 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
               invalid={!!errorText}
             />
           ) : (
-            <div className="mt-[23px]">
-              <DialTagInput
-                elementId="rule-values"
-                label={isFirstLine ? t(BasicI18nKey.Value) : ''}
-                placeholder={t(FoldersI18nKey.ValuePlaceholder)}
-                captionDescription={t(FoldersI18nKey.ValueCaption)}
-                initialTags={rule.targets}
-                onChange={onChangeTags}
-                errorText={errorText}
-                invalid={!!errorText}
-              />
-            </div>
+            <DialTagInput
+              elementId={`rule-tags-${index}`}
+              label={isFirstLine ? t(BasicI18nKey.Value) : ''}
+              placeholder={t(FoldersI18nKey.ValuePlaceholder)}
+              captionDescription={t(FoldersI18nKey.ValueCaption)}
+              initialTags={rule.targets}
+              onChange={onChangeTags}
+              errorText={errorText}
+              invalid={!!errorText}
+              collapseTagOverflow
+            />
           )}
         </div>
-        <DialRemoveButton onClick={onRemoveValue} className={iconClassName} />
+        <DialRemoveButton
+          onClick={onRemoveValue}
+          className={classNames('cursor-pointer', index === 0 ? 'mt-[24px]' : 'flex items-center')}
+        />
       </div>
-    </>
+    </div>
   );
 };
 
