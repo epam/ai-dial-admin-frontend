@@ -36,7 +36,6 @@ vi.mock('@/src/components/Containers/View/ExecutionLog/PodView', () => ({
   ),
 }));
 
-
 vi.mock('../../../../utils/deployments/entity', () => ({
   getTranslatedDeploymentType: () => 'container',
 }));
@@ -104,11 +103,7 @@ describe('ExecutionLog', () => {
 
   test('falls back to first pod when active tab id does not match pod name', () => {
     render(
-      <ExecutionLog
-        containerId="c1"
-        route={ApplicationRoute.McpContainers}
-        pods={[makePod(''), makePod('pod-2')]}
-      />,
+      <ExecutionLog containerId="c1" route={ApplicationRoute.McpContainers} pods={[makePod(''), makePod('pod-2')]} />,
     );
 
     expect(screen.getByText('Pod: empty-name')).toBeInTheDocument();

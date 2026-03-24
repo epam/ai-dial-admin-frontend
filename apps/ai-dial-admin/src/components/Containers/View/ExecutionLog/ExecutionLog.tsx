@@ -9,7 +9,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { useI18n } from '@/src/locales/client';
 
 import PodView from '@/src/components/Containers/View/ExecutionLog/PodView';
-import { getTranslatedDeploymentType } from '../../../../utils/deployments/entity';
+import { getTranslatedDeploymentType } from '@/src/utils/deployments/entity';
 
 interface Props {
   containerId?: string;
