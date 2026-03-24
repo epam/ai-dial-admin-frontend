@@ -576,6 +576,7 @@ export enum TabsI18nKey {
   ResponseSchema = 'Tabs.ResponseSchema',
   Columns = 'Tabs.Columns',
   Analytics = 'Tabs.Analytics',
+  MCP = 'Tabs.MCP',
 }
 
 export enum InterceptorsI18nKey {
@@ -611,9 +612,8 @@ export enum TelemetryI18nKey {
   FilterConditionStartsWith = 'Telemetry.Filter.ConditionStartsWith',
   FilterConditionEndsWith = 'Telemetry.Filter.ConditionEndsWith',
   FilterDurationSeconds = 'Telemetry.Filter.Duration.Seconds',
-  TracesTitle = 'Telemetry.UsageLog.TracesTitle',
   NoTracesTitle = 'Telemetry.UsageLog.NoTracesTitle',
-  ConversationsTitle = 'Telemetry.UsageLog.ConversationsTitle',
+  NoMcpCallsTitle = 'Telemetry.UsageLog.NoMcpCallsTitle',
   NoConversationsTitle = 'Telemetry.UsageLog.NoConversationsTitle',
   ViewByLabel = 'Telemetry.ViewByLabel',
   ViewByChat = 'Telemetry.ViewBy.Chat',
@@ -746,6 +746,7 @@ export enum ImportI18nKey {
   Changes = 'Import.Changes',
   FileSizeErrorHeader = 'Import.FileSizeErrorHeader',
   FileSizeErrorDescription = 'Import.FileSizeErrorDescription',
+  TotalFileSizeErrorDescription = 'Import.TotalFileSizeErrorDescription',
   ArchiveSizeErrorDescription = 'Import.ArchiveSizeErrorDescription',
 }
 

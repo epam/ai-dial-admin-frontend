@@ -24,7 +24,7 @@ const ComplexInput: FC<Props> = ({ fullValue, label, isFullWidth, copyable = tru
   const t = useI18n();
   return (
     <div className="flex items-end gap-2">
-      <div className="flex items-end gap-2">
+      <div className={mergeClasses('flex items-end gap-2', isFullWidth && 'w-full')}>
         <DialInput
           labelProps={{ label, required }}
           containerClassName={mergeClasses(
