@@ -331,7 +331,7 @@ export default {
     Entities: {
       Model: 'Model',
       Application: 'Application',
-      Toolsets: 'Toolsets',
+      Toolsets: 'Toolset',
       Interceptor: 'Interceptor',
       Route: 'Route',
       Role: 'Role',
@@ -1446,6 +1446,7 @@ export default {
   TestSuites: {
     CreateTestSuite: 'Create Test Suite',
     UpdateTestSuite: 'Update Test Suite',
+    SelectDocument: 'Select document',
     Target: 'Target',
     Application: 'Application',
     Methods: 'Methods',
