@@ -84,7 +84,7 @@ const RunMetricDetailPanel: FC<Props> = ({ resultId, onClose }) => {
               key={title}
               title={title}
               list={entries}
-              getKeyClassName={(key) => (key === 'error' ? 'text-error' : undefined)}
+              getKeyClassName={(key) => (key === 'error' ? 'text-error' : 'text-secondary')}
             />
           ))}
         </div>

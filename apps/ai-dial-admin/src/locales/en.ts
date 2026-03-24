@@ -516,6 +516,7 @@ export default {
     Roles: 'Roles',
     Interceptors: 'Interceptors',
     GlobalInterceptors: 'Global Interceptors',
+    MCP: 'MCP',
     ErrorCodes: 'Error Codes',
     Keys: 'Keys',
     Entities: 'Entities',
@@ -633,10 +634,9 @@ export default {
       },
     },
     UsageLog: {
-      TracesTitle: 'Traces',
       NoTracesTitle: 'No Traces',
-      ConversationsTitle: 'Conversations',
       NoConversationsTitle: 'No Conversations',
+      NoMcp: 'No MCP calls',
     },
     ViewByLabel: 'View by: ',
     ViewBy: {
@@ -778,6 +778,7 @@ export default {
     Changes: 'Changes',
     FileSizeErrorHeader: 'File size limit error',
     FileSizeErrorDescription: 'Size of file is more than {size} MB',
+    TotalFileSizeErrorDescription: 'Total size of selected files is more than {size} MB',
     ArchiveSizeErrorDescription: 'Size of archive is more than {size} MB',
     Notifications: {
       ConfigImported: 'Config imported successfully',

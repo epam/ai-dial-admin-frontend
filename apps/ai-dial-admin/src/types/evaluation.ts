@@ -27,4 +27,5 @@ export enum TestCaseItemType {
   BOOLEAN = 'BOOLEAN',
   OBJECT = 'OBJECT',
   ARRAY = 'ARRAY',
+  FILE = 'FILE',
 }

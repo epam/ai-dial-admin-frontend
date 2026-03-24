@@ -72,14 +72,8 @@ const DeleteConfirmationModal = <T extends Artefact>({
 
   const [selectedVersion, setSelectedVersion] = useState(entity?.version);
 
-  const name = useMemo(
-    () => (isAssetView(view) ? entity.name : entity.displayName || entity['dial:applicationTypeDisplayName']),
-    [entity, view],
-  );
-  const id = useMemo(
-    () => (isAssetView(view) ? void 0 : entity.name || entity.$id || (entity as { id?: string }).id),
-    [entity, view],
-  );
+  const name = useMemo(() => entity.displayName || entity['dial:applicationTypeDisplayName'], [entity]);
+  const id = useMemo(() => entity.name || entity.$id || (entity as { id?: string }).id, [entity]);
 
   const showSuccessNotification = useCallback(
     (entityKey: string) => {

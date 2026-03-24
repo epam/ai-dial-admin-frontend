@@ -10,10 +10,14 @@ import { getDashboardData } from '@/src/app/[lang]/dashboard/actions';
 import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
 import List from '@/src/components/UsageLog/List/List';
 import { DEFAULT_TIME_PERIOD } from '@/src/constants/global-time-filter';
-import { USAGE_LOG_CONVERSATIONS_COLUMNS, USAGE_LOG_TRACES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { ButtonsI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
+import {
+  USAGE_LOG_CONVERSATIONS_COLUMNS,
+  USAGE_LOG_MCP_COLUMNS,
+  USAGE_LOG_TRACES_COLUMNS,
+} from '@/src/constants/grid-columns/grid-columns';
+import { ButtonsI18nKey, TabsI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-import { CONVERSATIONS_QUERY, TRACES_QUERY } from '@/src/constants/telemetry';
+import { CONVERSATIONS_QUERY, MCP_QUERY, TRACES_QUERY } from '@/src/constants/telemetry';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
@@ -143,18 +147,28 @@ const UsageLog: FC<Props> = ({
             getData={getData}
             columnDefs={USAGE_LOG_TRACES_COLUMNS}
             query={TRACES_QUERY}
-            listLabel={t(TelemetryI18nKey.TracesTitle)}
+            listLabel={t(TabsI18nKey.Traces)}
             emptyDataTitle={t(TelemetryI18nKey.NoTracesTitle)}
           />
         )}
         {activeTab === EntityViewTab.Conversations && (
           <List
-            listLabel={t(TelemetryI18nKey.ConversationsTitle)}
+            listLabel={t(TabsI18nKey.Conversations)}
             emptyDataTitle={t(TelemetryI18nKey.NoConversationsTitle)}
             route={route}
             getData={getData}
             columnDefs={USAGE_LOG_CONVERSATIONS_COLUMNS}
             query={CONVERSATIONS_QUERY}
+          />
+        )}
+        {activeTab === EntityViewTab.MCP && (
+          <List
+            listLabel={t(TabsI18nKey.MCP)}
+            emptyDataTitle={t(TelemetryI18nKey.NoMcpCallsTitle)}
+            route={route}
+            getData={getData}
+            columnDefs={USAGE_LOG_MCP_COLUMNS}
+            query={MCP_QUERY}
           />
         )}
       </div>
