@@ -25,7 +25,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getNamesConfigurations } from '@/src/utils/entities/filter-names';
 import AdditionalProperties from './AdditionalProperties';
 import { getDisplayNameError, getVersionError } from './utils';
-import { isEntitiesWithDisplayVersion } from '@/src/utils/is-asset-view';
+import { isEntitiesWithDisplayVersion } from '@/src/utils/is-view';
 
 interface Props {
   view: ApplicationRoute;

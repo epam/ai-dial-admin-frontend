@@ -249,6 +249,7 @@ export enum DeleteI18nKey {
   McpContainer = 'DeleteEntity.Entities.McpContainer',
   InterceptorContainer = 'DeleteEntity.Entities.InterceptorContainer',
   ModelServing = 'DeleteEntity.Entities.ModelServing',
+  AdapterContainer = 'DeleteEntity.Entities.AdapterContainer',
   Image = 'DeleteEntity.Entities.Image',
 
   // Bulk Delete

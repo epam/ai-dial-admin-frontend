@@ -286,6 +286,7 @@ export default {
       McpContainer: 'MCP Container',
       InterceptorContainer: 'Interceptor Container',
       ModelServing: 'Model Serving',
+      AdapterContainer: 'Adapter Container',
       Image: 'Image',
       Run: 'Run',
     },

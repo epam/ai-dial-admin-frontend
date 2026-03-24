@@ -1,6 +1,6 @@
 import { UpdateI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isAssetView, isEvaluationView } from '../is-asset-view';
+import { isAssetView, isEvaluationView } from '../is-view';
 
 const createEntityMap: Record<string, UpdateI18nKey> = {
   [ApplicationRoute.Models]: UpdateI18nKey.Model,

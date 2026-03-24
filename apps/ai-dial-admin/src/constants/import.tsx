@@ -4,7 +4,7 @@ import { ImportI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { ConflictResolutionPolicy, ImportFileType, ImportSteps } from '@/src/types/import';
 import { DeploymentImportResolutionPolicy } from '@/src/types/deployments/import';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isAssetWithVersion } from '@/src/utils/is-asset-view';
+import { isAssetWithVersion } from '@/src/utils/is-view';
 
 export const IMPORT_RESOLUTIONS = (
   t: (stringToTranslate: string) => string,
