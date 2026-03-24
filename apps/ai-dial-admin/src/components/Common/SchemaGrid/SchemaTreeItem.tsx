@@ -55,7 +55,7 @@ const SchemaTreeItem: FC<TreeItemProps> = ({ node, depth, expandedSet, onToggleE
               <IconChevronRight size={14} className="text-secondary" />
             ))}
         </div>
-        <span className="flex-1 min-w-0 small truncate ">{node.name}</span>
+        <span className="flex-1 min-w-0 small truncate">{node.name}</span>
         <DialTag tag={node.type} />
         <button
           type="button"
