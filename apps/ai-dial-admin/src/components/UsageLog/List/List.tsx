@@ -29,7 +29,7 @@ const List: FC<Props> = ({ route, getData, query, columnDefs, listLabel, emptyDa
       const response = await getData(query);
       if (response.success) {
         const data = getListingData(response.response as TelemetryData);
-
+console.log('Fetched data:', data);
         setData(data);
       } else {
         setData([]);
