@@ -388,7 +388,7 @@ export const changeFilesMap = (
       if (field === 'version') {
         (targetFile as AssetApp).version = value;
         (targetFile as AssetApp).displayVersion = value;
-      } else if (field === 'name') {
+      } else if (field === 'name' || field === 'assetName') {
         targetFile.name = value;
       }
     }
