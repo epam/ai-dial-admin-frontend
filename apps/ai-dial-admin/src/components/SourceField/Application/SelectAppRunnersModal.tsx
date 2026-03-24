@@ -27,7 +27,7 @@ const SelectAppRunnerModal: FC<Props> = ({ selectedId, sourceEntities, isModalOp
   const isSelectedNode = (data?: DialApplicationScheme | DialAdapter) => {
     const runner = data as DialApplicationScheme;
     const adapter = data as DialAdapter;
-    return runner?.$id === selectedRunner || adapter?.name === selectedRunner;
+    return !!selectedRunner && (runner?.$id === selectedRunner || adapter?.name === selectedRunner);
   };
 
   const options: GridOptions = {
