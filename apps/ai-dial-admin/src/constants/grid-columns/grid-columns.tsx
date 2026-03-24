@@ -531,6 +531,7 @@ export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, rou
     : [
         {
           headerName: `${type} Image`,
+          field: 'image',
           hide: false,
           valueGetter: (params: ValueGetterParams) =>
             params.data?.source?.$type === 'internal_image' ? params.data.source.imageDefinitionId : undefined,
