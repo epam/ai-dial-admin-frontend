@@ -3,7 +3,7 @@ import { MAX_NAME_SYMBOLS, MIN_NAME_SYMBOLS } from '@/src/constants/validation';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isWrongFieldLength } from '@/src/utils/validation/name-error';
 import { DialModel } from '@/src/models/dial/model';
-import { isEntitiesWithDisplayVersion } from '@/src/utils/is-asset-view';
+import { isEntitiesWithDisplayVersion } from '@/src/utils/is-view';
 
 export const getDisplayNameError = (
   view: ApplicationRoute,

@@ -3,7 +3,7 @@ import EntityProperties from '@/src/components/EntityMainProperties/Properties/E
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
-import { isAssetView } from '@/src/utils/is-asset-view';
+import { isAssetView } from '@/src/utils/is-view';
 import AssetProperties from './AssetProperties';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 

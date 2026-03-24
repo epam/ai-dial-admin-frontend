@@ -20,7 +20,7 @@ import {
 } from '@/src/utils/entities/duplicate-entity';
 import { getNamesConfigurations } from '@/src/utils/entities/filter-names';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
-import { isEntitiesWithDisplayVersion } from '@/src/utils/is-asset-view';
+import { isEntitiesWithDisplayVersion } from '@/src/utils/is-view';
 
 type ClonedEntity = BaseEntity | DialModel;
 interface Props {

@@ -17,7 +17,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import FolderCreatePermissions from './FolderCreatePermissions';
 import FolderCreateReview from './FolderCreateReview';
 import FolderCreateSetup from './FolderCreateSetup';
-import { isAssetWithVersion } from '@/src/utils/is-asset-view';
+import { isAssetWithVersion } from '@/src/utils/is-view';
 import { getJsonFileName } from '@/src/utils/import/get-json-name';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 
