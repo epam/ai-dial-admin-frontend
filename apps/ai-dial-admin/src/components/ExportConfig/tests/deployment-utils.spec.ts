@@ -70,7 +70,7 @@ describe('ExportConfig :: getDeploymentButtonTitle', () => {
 
 describe('ExportConfig :: getDeploymentColDefs', () => {
   test('returns container columns without version for non-image tabs', () => {
-    const columns = getDeploymentColDefs(undefined, DeploymentExportEntityType.MCP_CONTAINER);
+    const columns = getDeploymentColDefs((key) => key, undefined, DeploymentExportEntityType.MCP_CONTAINER);
 
     expect(columns).toContainEqual(DISPLAY_NAME_COLUMN_WITH_SORT);
     expect(columns).toContainEqual(DESCRIPTION_COLUMN);
@@ -79,7 +79,7 @@ describe('ExportConfig :: getDeploymentColDefs', () => {
   });
 
   test('returns image columns with version and id for image tab', () => {
-    const columns = getDeploymentColDefs(undefined, DeploymentExportEntityType.IMAGE);
+    const columns = getDeploymentColDefs((key) => key, undefined, DeploymentExportEntityType.IMAGE);
 
     const fields = columns.map((c) => c.field);
     expect(fields).toContain('id');
@@ -89,27 +89,27 @@ describe('ExportConfig :: getDeploymentColDefs', () => {
   });
 
   test('image tab has Display Name header for name column', () => {
-    const columns = getDeploymentColDefs(undefined, DeploymentExportEntityType.IMAGE);
+    const columns = getDeploymentColDefs((key) => key, undefined, DeploymentExportEntityType.IMAGE);
     const nameCol = columns.find((c) => c.field === 'name');
     expect(nameCol?.headerName).toBe('Display Name');
   });
 
   test('image tab has ID header for id column', () => {
-    const columns = getDeploymentColDefs(undefined, DeploymentExportEntityType.IMAGE);
+    const columns = getDeploymentColDefs((key) => key, undefined, DeploymentExportEntityType.IMAGE);
     const idCol = columns.find((c) => c.field === 'id');
     expect(idCol?.headerName).toBe('ID');
   });
 
   test('appends action column when remove callback provided', () => {
     const remove = vi.fn();
-    const columns = getDeploymentColDefs(remove, DeploymentExportEntityType.MCP_CONTAINER);
+    const columns = getDeploymentColDefs((key) => key, remove, DeploymentExportEntityType.MCP_CONTAINER);
 
     const lastCol = columns[columns.length - 1];
     expect(lastCol.field).toBe('actionsColumn');
   });
 
   test('does not append action column when no remove callback', () => {
-    const columns = getDeploymentColDefs(undefined, DeploymentExportEntityType.MCP_CONTAINER);
+    const columns = getDeploymentColDefs((key) => key, undefined, DeploymentExportEntityType.MCP_CONTAINER);
 
     const actionCol = columns.find((c) => c.field === 'actionsColumn');
     expect(actionCol).toBeUndefined();
