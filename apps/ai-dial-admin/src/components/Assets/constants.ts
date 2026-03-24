@@ -25,7 +25,7 @@ export const allToolbarOptionLabels = [
   },
   {
     key: 'uploadFiles',
-    label: ButtonsI18nKey.Import,
+    label: FileManagerI18nKey.Files,
     icon: null,
   },
 ];
