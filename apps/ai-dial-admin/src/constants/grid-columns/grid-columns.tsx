@@ -464,15 +464,15 @@ export const USAGE_LOG_CONVERSATIONS_COLUMNS: ColDef[] = [
 
 export const USAGE_LOG_MCP_COLUMNS: ColDef[] = [
   { field: 'completion_time', headerName: 'Last activity', hide: false, ...dateTimeColumn },
-  { field: 'deployment_id', headerName: 'Deployment ID', hide: false },
-  { field: 'project', headerName: 'Project', hide: false },
+  { field: 'deployment', headerName: 'Deployment ID', hide: false },
+  { field: 'project_id', headerName: 'Project', hide: false },
   {
-    field: 'method',
+    field: 'mcp_method',
     headerName: 'Method',
     hide: true,
   },
   {
-    field: 'tool_name',
+    field: 'mcp_tool_call_name',
     headerName: 'Tool Name',
     hide: false,
   },
