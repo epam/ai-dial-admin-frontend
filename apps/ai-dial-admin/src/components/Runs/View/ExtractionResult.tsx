@@ -51,7 +51,7 @@ const ExtractionResultTab: FC<Props> = ({ run }) => {
             grafanaExploreUrl={run.grafanaExploreUrl}
             onClose={sidebar.closeSidebar}
           />,
-          'w-[500px]',
+          'w-[750px]',
         );
       } else {
         setSelectedResult(null);

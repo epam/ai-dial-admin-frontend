@@ -8,6 +8,7 @@ import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCe
 import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSelectCellRenderer';
 import JsonEditorCellRenderer from '@/src/components/Grid/CellRenderers/JsonEditorCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
+import BooleanColumnHeader from '@/src/components/Grid/HeaderComponents/BooleanColumnHeader';
 import { NO_BORDER_CLASS, UTILITY_COLUMN } from '@/src/constants/ag-grid';
 import { BASE_STATUS_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { TEST_CASES_COLUMN } from '@/src/constants/grid-columns/grid-columns';
@@ -33,6 +34,7 @@ export const getTestCaseColumns = (testCases: TestCase[], onCellChange: onCellCh
     {
       ...UTILITY_COLUMN,
       headerName: '',
+      headerComponent: BooleanColumnHeader,
       field: 'enabled',
       editable: true,
       cellRenderer: 'agCheckboxCellRenderer',

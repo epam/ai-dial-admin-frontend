@@ -77,11 +77,12 @@ function emptyValueByType(type: JSONSchema7TypeName): unknown {
 
 /** How to choose a variant when a property has anyOf/oneOf (e.g. string | null). */
 export type VariantChoice =
-  | 'preferNonNull' /** Use first branch that is not type: 'null' (default). */
-  | number; /** Use branch at this index (0-based). Use e.g. 1 to select null when second branch is null. */
+  | 'preferNullIfNullableUnion' /** Default: if union mixes `null` with other types, default to null; otherwise first non-null. */
+  | 'preferNonNull' /** First branch that is not type `null`. */
+  | number; /** Branch at this index (0-based). */
 
 export interface GetSchemaDefaultsOptions {
-  /** When a property has anyOf/oneOf, which variant to use for the default/empty value. Default: 'preferNonNull'. */
+  /** When a property has anyOf/oneOf, which variant to use. Default: `preferNullIfNullableUnion`. */
   variantChoice?: VariantChoice;
 }
 
@@ -95,12 +96,25 @@ function pickVariant(
   variantChoice: VariantChoice,
   resolve: (s: JSONSchema7) => JSONSchema7,
 ): JSONSchema7 {
+  const resolvedList = variants.map(resolve);
+
   if (variantChoice === 'preferNonNull') {
-    const nonNull = variants.map(resolve).find((r) => !isNullOnlySchema(r));
-    return nonNull ?? resolve(variants[0]!);
+    const nonNull = resolvedList.find((r) => !isNullOnlySchema(r));
+    return nonNull ?? resolvedList[0]!;
   }
-  const index = Math.max(0, Math.min(variantChoice, variants.length - 1));
-  return resolve(variants[index]!);
+
+  if (variantChoice === 'preferNullIfNullableUnion') {
+    const hasNullBranch = resolvedList.some((r) => isNullOnlySchema(r));
+    const hasNonNullBranch = resolvedList.some((r) => !isNullOnlySchema(r));
+    if (hasNullBranch && hasNonNullBranch) {
+      return resolvedList.find((r) => isNullOnlySchema(r))!;
+    }
+    const nonNull = resolvedList.find((r) => !isNullOnlySchema(r));
+    return nonNull ?? resolvedList[0]!;
+  }
+
+  const index = Math.max(0, Math.min(variantChoice as number, variants.length - 1));
+  return resolvedList[index]!;
 }
 
 /**
@@ -113,6 +127,9 @@ function getDefaultOrEmptyValue(
   options: GetSchemaDefaultsOptions | undefined,
   getDefaults: (s: JSONSchema7, root: JSONSchema7, opts?: GetSchemaDefaultsOptions) => Record<string, unknown>,
 ): unknown {
+  // Default on the same object as $ref (e.g. { $ref: "#/$defs/X", default: "gemini-..." }) — not on the resolved target
+  if (schema.default !== undefined) return schema.default;
+
   const effective = resolve(schema);
 
   // Use explicit default before recursing into oneOf/anyOf (e.g. enum with oneOf and default: "citation")
@@ -122,7 +139,7 @@ function getDefaultOrEmptyValue(
   if (Array.isArray(variants) && variants.length) {
     const branch = pickVariant(
       variants.filter((v): v is JSONSchema7 => typeof v === 'object') as JSONSchema7[],
-      options?.variantChoice ?? 'preferNonNull',
+      options?.variantChoice ?? 'preferNullIfNullableUnion',
       resolve,
     );
     return getDefaultOrEmptyValue(branch, rootSchema, resolve, options, getDefaults);
@@ -142,15 +159,15 @@ function getDefaultOrEmptyValue(
 
 /**
  * Fills default values from a JSON Schema (with $ref support).
- * - Uses each property's `default` when present.
+ * - Uses each property's `default` when present (including next to `$ref` on the same schema object).
  * - When no default: returns empty value by type ('' for string, 0 for number/integer, false for boolean, [] for array, {} for object, null for null).
  * - Resolves $ref against the root schema (definitions / $defs).
- * - For anyOf/oneOf: uses `options.variantChoice` to pick which variant to use ('preferNonNull' or branch index, e.g. 1 for null).
+ * - For anyOf/oneOf: default `preferNullIfNullableUnion` (T|null → null); use `preferNonNull` or a numeric index to override.
  * - Recursively fills nested object properties and object items in arrays.
  *
  * @param schema - JSON Schema (typically type: 'object' with properties). May contain $ref.
  * @param root - Root schema used to resolve $ref (default: schema itself).
- * @param options - Optional. variantChoice: 'preferNonNull' (default) or index to select anyOf/oneOf branch.
+ * @param options - Optional. variantChoice: `preferNullIfNullableUnion` (default), `preferNonNull`, or branch index.
  * @returns Plain JS object with property keys and default/empty values.
  */
 export function getSchemaDefaults(

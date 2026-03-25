@@ -175,6 +175,25 @@ describe('Runs View :: getAnalyticsColumns', () => {
     expect(extractedChildren[0]).toEqual(expect.objectContaining({ field: 'score', headerName: 'score' }));
   });
 
+  test('Should merge metric keys from all rows into column groups', () => {
+    const results = [
+      { metricValues: { GroupA: { a: 1 } } },
+      { metricValues: { GroupA: { b: 2 }, GroupB: { x: 3 } } },
+      { metricValues: { GroupA: { a: 10, c: 3 } } },
+    ] as any[];
+
+    const columns = getAnalyticsColumns(results as any);
+    const groupA = columns.find((c: any) => c.headerName === 'GroupA') as any;
+    const groupB = columns.find((c: any) => c.headerName === 'GroupB') as any;
+
+    expect(groupA.children.map((c: any) => c.field)).toEqual(['a', 'b', 'c']);
+    expect(groupB.children.map((c: any) => c.field)).toEqual(['x']);
+
+    const bCol = groupA.children.find((c: any) => c.field === 'b');
+    expect(bCol.valueGetter({ data: { metricValues: { GroupA: { a: 1 } } } })).toBe('—');
+    expect(bCol.valueGetter({ data: { metricValues: { GroupA: { b: 2 } } } })).toBe(2);
+  });
+
   test('Should handle empty results', () => {
     const columns = getAnalyticsColumns([]);
 
