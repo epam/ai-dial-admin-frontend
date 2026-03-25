@@ -143,7 +143,6 @@ export const SYSTEM_USAGE_QUERY: TelemetryQuery = {
   query: {
     expressions: ["window(_time, 1, 'm') as time", 'count() as requests'],
     from: 'analytics',
-    orderBy: [{ $desc: '_time' }],
     groupBy: ["window(_time, 1, 'm')"],
   },
 };
