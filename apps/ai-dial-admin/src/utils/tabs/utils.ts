@@ -54,6 +54,7 @@ export enum EntityViewTab {
   Columns = 'Columns',
   TestSuiteMethod = 'TestSuiteMethod',
   Analytics = 'Analytics',
+  Validations = 'Validations',
   MCP = 'MCP',
 }
 
@@ -197,9 +198,9 @@ export const promptsTab = (t: (key: string) => string, status?: CONTAINER_STATUS
   disabled: status !== CONTAINER_STATUS.RUNNING,
 });
 
-export const metricsTab = (t: (key: string) => string, status?: CONTAINER_STATUS) => ({
-  id: EntityViewTab.Metrics,
-  label: t(TabsI18nKey.Metrics),
+export const validationsTab = (t: (key: string) => string, status?: CONTAINER_STATUS) => ({
+  id: EntityViewTab.Validations,
+  label: t(TabsI18nKey.Validations),
   disabled: status && status !== CONTAINER_STATUS.RUNNING,
 });
 
@@ -439,7 +440,7 @@ export const getSystemPropertiesTabs = (t: (key: string) => string): TabModel[] 
 };
 
 export const getTestSuiteTabs = (t: (key: string) => string): TabModel[] => {
-  return [propertiesTab(t), testSuiteMethodTab(t), testCasesTab(t), runsTab(t), metricsTab(t)];
+  return [propertiesTab(t), testSuiteMethodTab(t), testCasesTab(t), validationsTab(t), runsTab(t)];
 };
 
 export const getPublicationViewTabs = (t: (key: string) => string, view: ApplicationRoute): TabModel[] => {
