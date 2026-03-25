@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import FileManager from '@/src/components/Common/FileManager/FileManager';
 import {
@@ -9,6 +9,7 @@ import {
   exportPrompts,
   getPrompt,
   movePrompts,
+  removePrompt,
 } from '@/src/app/[lang]/prompts/actions';
 import { importPrompts } from '@/src/utils/prompts/import-prompts';
 import { getVersionsPerName } from '@/src/components/Assets/utils';
@@ -19,7 +20,6 @@ import { useI18n } from '@/src/locales/client';
 import { FoldersI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import {
   DialCopiedItem,
-  DialDeletedItem,
   DialFile,
   DialFileNodeType,
   DialUploadFileItem,
@@ -46,17 +46,22 @@ import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { getAllSelectedItemsPaths, getPromptGridColumns } from './utils';
 import { downloadJson } from '@/src/utils/download';
 import { getJsonFileName } from '@/src/utils/import/get-json-name';
+import DeleteModal from './DeleteModal';
 
 const PromptsList: FC = () => {
   const [isCreatePromptModalOpen, setIsCreatePromptModalOpen] = useState(false);
   const [isDuplicatePromptModalOpen, setIsDuplicatePromptModalOpen] = useState(false);
   const [isImportPromptModalOpen, setIsImportPromptModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [destinationFolder, setDestinationFolder] = useState<string | null>(null);
   const [duplicatePrompt, setDuplicatePrompt] = useState<AssetWithVersion | null>(null);
   const [selectedVersionsMap, setSelectedVersionsMap] = useState<Record<string, string[]>>({});
   const [currentPath, setCurrentPath] = useState<string | null>(null);
   const [names, setNames] = useState<string[]>([]);
   const [versionsMap, setVersionsMap] = useState<Record<string, string[]>>({});
+  const [hasSelectedItems, setHasSelectedItems] = useState(false);
+  const [deletedItems, setDeleledItems] = useState<DialFile[] | null>(null);
+  const [selectedPaths, setSelectedPaths] = useState<Set<string>>(() => new Set());
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -64,7 +69,7 @@ const PromptsList: FC = () => {
   const getPromptContext = useCallback(() => {
     return usePromptFolder();
   }, []);
-  const { data, fetchFiles, fetchedFoldersData } = getPromptContext();
+  const { data, fetchFiles, fetchedFoldersData, setFilePath } = getPromptContext();
 
   useEffect(() => {
     let folderData = data;
@@ -89,34 +94,6 @@ const PromptsList: FC = () => {
 
     return createPrompt(emptyPrompt);
   }, []);
-
-  const handleDeleteItems = useCallback(
-    async (fileNodes: DialDeletedItem[]) => {
-      const files = fileNodes.filter((file) => file.nodeType === DialFileNodeType.ITEM);
-      const folders = fileNodes.filter((file) => file.nodeType === DialFileNodeType.FOLDER);
-
-      const promises = [];
-      if (files.length > 0) {
-        const filePaths: { path: string }[] = [];
-        files.forEach((file) => {
-          const paths = getAllSelectedItemsPaths(file.sourceUrl, selectedVersionsMap);
-          filePaths.push(...paths.map((path) => ({ path: path })));
-          const prefix = file.sourceUrl.substring(0, file.sourceUrl.lastIndexOf('__'));
-          setSelectedVersionsMap({
-            ...selectedVersionsMap,
-            [prefix]: [],
-          });
-        });
-        promises.push(bulkDeletePrompts(filePaths));
-      }
-      folders.forEach((folder) => {
-        promises.push(removeFolder(folder.sourceUrl));
-      });
-
-      return Promise.all(promises);
-    },
-    [selectedVersionsMap],
-  );
 
   const handleCreatePromptModalClose = useCallback(() => {
     setIsCreatePromptModalOpen(false);
@@ -327,24 +304,121 @@ const PromptsList: FC = () => {
     }
   }, []);
 
+  const handleSelectedPathsChange = useCallback((paths: Set<string>) => {
+    setSelectedPaths(paths);
+    setHasSelectedItems(paths.size > 0);
+  }, []);
+
+  const columnDefs = useMemo(() => {
+    return getPromptGridColumns(gridItemVersionsChange, selectedVersionsMap, hasSelectedItems);
+  }, [gridItemVersionsChange, hasSelectedItems, selectedVersionsMap]);
+
+  const handleDeleteModalOpen = useCallback((items: DialFile[], parentFolderPath: string) => {
+    setDestinationFolder(parentFolderPath);
+    setDeleledItems(items);
+    setIsDeleteModalOpen(true);
+  }, []);
+
+  const handleDeleteModalClose = useCallback(() => {
+    setIsDeleteModalOpen(false);
+    setDeleledItems(null);
+    setDestinationFolder(null);
+  }, []);
+
+  const removeSelection = useCallback(
+    (paths?: string | string[]) => {
+      if (!paths) {
+        return;
+      }
+
+      const selectionsToRemove = Array.isArray(paths) ? paths : [paths];
+      const newPaths = new Set(selectedPaths);
+      selectionsToRemove.forEach((path) => {
+        newPaths.delete(path);
+      });
+      setSelectedPaths(newPaths);
+      setHasSelectedItems(newPaths.size > 0);
+    },
+    [selectedPaths],
+  );
+
+  const onDeleteFolder = useCallback(() => {
+    const pathToRemove = deletedItems?.[0]?.path;
+    if (pathToRemove) {
+      removeFolder(pathToRemove).then((result) => {
+        if (result.success) {
+          const parentPath = destinationFolder || `${ROOT_FOLDER}/`;
+          setFilePath(parentPath);
+          fetchFiles(parentPath);
+          removeSelection(pathToRemove);
+        }
+      });
+    }
+  }, [deletedItems, destinationFolder, fetchFiles, setFilePath, removeSelection]);
+
+  const onMultipleRemove = useCallback(() => {
+    setIsDeleteModalOpen(false);
+
+    if (deletedItems) {
+      const prompts = deletedItems.filter((item) => item.nodeType === DialFileNodeType.ITEM);
+      const folders = deletedItems.filter((item) => item.nodeType === DialFileNodeType.FOLDER);
+
+      const promises = [];
+      if (prompts.length > 0) {
+        const promptsPaths: { path: string }[] = [];
+        prompts.forEach((prompt) => {
+          const paths = getAllSelectedItemsPaths(prompt.path, selectedVersionsMap);
+          promptsPaths.push(...paths.map((path) => ({ path: path })));
+          const prefix = prompt.path.substring(0, prompt.path.lastIndexOf('__'));
+          setSelectedVersionsMap({
+            ...selectedVersionsMap,
+            [prefix]: [],
+          });
+        });
+        promises.push(bulkDeletePrompts(promptsPaths));
+      }
+      folders.forEach((folder) => {
+        promises.push(removeFolder(folder.path));
+      });
+
+      return Promise.all(promises).then((result) => {
+        const isSuccess = result.every((res) => res.success);
+        if (isSuccess) {
+          const parentPath = destinationFolder || `${ROOT_FOLDER}/`;
+          fetchFiles(parentPath);
+          setFilePath(parentPath);
+          removeSelection(deletedItems?.map((item) => item.path));
+        }
+      });
+    }
+  }, [deletedItems, selectedVersionsMap, destinationFolder, fetchFiles, setFilePath, removeSelection]);
+
+  const resetFolder = useCallback(() => {
+    const parentPath = destinationFolder || `${ROOT_FOLDER}/`;
+    setFilePath(parentPath);
+    fetchFiles(parentPath);
+  }, [destinationFolder, setFilePath, fetchFiles]);
+
   return (
     <>
       <FileManager
         label={t(MenuI18nKey.Prompts)}
-        columnDefs={getPromptGridColumns(gridItemVersionsChange, selectedVersionsMap)}
+        columnDefs={columnDefs}
         getContext={getPromptContext}
         view={ApplicationRoute.Prompts}
         onCreateFolder={handleCreateFolder}
-        onDeleteItems={handleDeleteItems}
         onExport={onExport}
         customUploadFileAction={handleImportPromptModalOpen}
         customCreateNewItemAction={handleCreatePromptModalOpen}
         customDuplicateAction={handleDuplicatePromptModalOpen}
+        customDeleteItemsAction={handleDeleteModalOpen}
         onMoveItems={handleMoveItems}
         onTableFileClick={handleGridItemClick}
         filterData={processPromptsData}
-        nonClickableTableColumns={[FileManagerColumnKey.Version]}
+        nonClickableTableColumns={hasSelectedItems ? [FileManagerColumnKey.Version] : []}
         onPathChange={handlePathChange}
+        onSelectedPathsChange={handleSelectedPathsChange}
+        selectedPaths={selectedPaths}
       />
       {isImportPromptModalOpen && (
         <ImportModal
@@ -375,6 +449,19 @@ const PromptsList: FC = () => {
           onDuplicate={handleDuplicate}
           isModalOpen={isDuplicatePromptModalOpen}
           onClose={handleDuplicatePromptModalClose}
+        />
+      )}
+      {isDeleteModalOpen && deletedItems && (
+        <DeleteModal
+          isOpen={isDeleteModalOpen}
+          itemsToDelete={deletedItems}
+          versionsMap={versionsMap}
+          getAssetContext={getPromptContext}
+          onRemovePrompt={removePrompt}
+          onRemoveFolder={onDeleteFolder}
+          onMultipleRemove={onMultipleRemove}
+          onClose={handleDeleteModalClose}
+          resetFolder={resetFolder}
         />
       )}
     </>
