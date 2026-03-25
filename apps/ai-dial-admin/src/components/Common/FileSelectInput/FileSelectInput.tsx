@@ -18,6 +18,7 @@ import { useFileFolder } from '@/src/context/assets/FileFolderContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getFolderNameAndPath } from '@/src/utils/files/path';
 
 interface Props {
   value: string;
@@ -31,8 +32,16 @@ interface Props {
 const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputClassName, onChangeValue }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
-  const { files, fetchFiles, isFetchingFiles, filePath, setFilePath, expandedFolders, setExpandedFolders } =
-    useFileFolder();
+  const {
+    files,
+    fetchFiles,
+    fetchFolderHierarchy,
+    isFetchingFiles,
+    filePath,
+    setFilePath,
+    expandedFolders,
+    setExpandedFolders,
+  } = useFileFolder();
 
   const [loadedPaths, setLoadedPaths] = useState(new Set(['']));
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
@@ -40,8 +49,13 @@ const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputCl
 
   useEffect(() => {
     if (files == null || files?.length === 0) {
-      fetchFiles(`${ROOT_FOLDER}/`);
-      setLoadedPaths(new Set([`${ROOT_FOLDER}/`]));
+      if (value) {
+        const path = getFolderNameAndPath(value).path;
+        fetchFolderHierarchy?.(`${path}/`, true);
+      } else {
+        fetchFiles(`${ROOT_FOLDER}/`);
+        setLoadedPaths(new Set([`${ROOT_FOLDER}/`]));
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [files]);
@@ -126,11 +140,12 @@ const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputCl
               treeOptions={getTreeOptions(
                 isReadOnlyAdmin,
                 isFetchingFiles,
-                loadedPaths,
+                value ? expandedFolders : loadedPaths,
                 expandedFolders,
                 setExpandedFolders,
                 t,
               )}
+              defaultSelectedPaths={value ? new Set([value]) : void 0}
               gridOptions={getGridOptions(ApplicationRoute.Files, isReadOnlyAdmin, FILES_GRID_COLUMNS, t, true)}
               onPathChange={handleOnPathChange}
               onFolderPopupPathChange={handleFolderPopupPathChange}
