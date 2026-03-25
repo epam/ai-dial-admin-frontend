@@ -13,6 +13,7 @@ import {
 import {
   MCP_CALLS_BY_DEPLOYMENT_QUERY,
   MCP_CONSUMPTION_QUERY,
+  MCP_PROJECTS_CONSUMPTION_QUERY,
   MCP_TOOLS_CONSUMPTION_QUERY,
 } from '@/src/constants/telemetry';
 import { useI18n } from '@/src/locales/client';
@@ -83,7 +84,7 @@ const McpDashboard: FC<Props> = ({
             <TelemetryGrid
               getData={getData}
               refreshTime={refreshTime}
-              query={null}
+              query={MCP_PROJECTS_CONSUMPTION_QUERY}
               columnDefs={MCP_PROJECTS_CONSUMPTION_COLUMNS}
               title={t(TelemetryI18nKey.ProjectsConsumptionMcp)}
             />

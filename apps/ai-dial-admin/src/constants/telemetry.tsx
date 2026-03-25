@@ -294,6 +294,20 @@ export const MCP_UNIQUE_USERS_QUERY: TelemetryQuery = {
   },
 };
 
+export const MCP_PROJECTS_CONSUMPTION_QUERY: TelemetryQuery = {
+  $type: 'json',
+  query: {
+    expressions: [
+      'project_id',
+      "sum(case when mcp_method = 'tools/call' then 1 else 0 end) as tool_calls",
+      'count() as mcp_calls',
+    ],
+    from: MCP_TABLE_NAME,
+    groupBy: ['project_id'],
+    orderBy: [{ $desc: 'count()' }],
+  },
+};
+
 export const TELEMETRY_GRID_HEADERS_MAP: Record<string, string> = {
   deployment: 'name',
   project_id: 'name',
@@ -304,4 +318,6 @@ export const TELEMETRY_GRID_HEADERS_MAP: Record<string, string> = {
   tokens_c: 'completions',
   mcp_tool_call_name: 'mcp_tool_call_name',
   parent_deployment: 'parent_deployment',
+  tool_calls: 'tool_calls',
+  mcp_calls: 'mcp_calls',
 };

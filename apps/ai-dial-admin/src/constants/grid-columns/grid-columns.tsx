@@ -502,7 +502,7 @@ export const MCP_CALLS_BY_DEPLOYMENT_COLUMNS: ColDef[] = [
 ];
 
 export const MCP_PROJECTS_CONSUMPTION_COLUMNS: ColDef[] = [
-  { field: 'project', headerName: 'Project', hide: false },
+  { field: 'name', headerName: 'Project', hide: false },
   { field: 'tool_calls', headerName: 'Tool Calls', hide: false, ...numericColumn },
   { field: 'mcp_calls', headerName: 'MCP Calls', hide: false, sort: 'desc', ...numericColumn },
 ];
