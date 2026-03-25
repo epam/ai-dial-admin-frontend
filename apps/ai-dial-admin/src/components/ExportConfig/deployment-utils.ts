@@ -9,12 +9,12 @@ import {
   NAME_COLUMN,
   VERSION_COLUMN,
 } from '@/src/constants/grid-columns/base-columns';
-import { MenuI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { DeploymentExportComponent } from '@/src/models/export';
 import { DeploymentExportEntityType } from '@/src/types/deployments/export';
 import { getDeploymentExportComponentType } from '@/src/utils/deployments/export';
-import { IMAGE_TYPE_COLUMN } from '../../constants/grid-columns/grid-columns';
+import { IMAGE_TYPE_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 
 const DEPLOYMENT_ENTITY_TABS: { id: DeploymentExportEntityType; labelKey: string }[] = [
   { id: DeploymentExportEntityType.MODEL_SERVING, labelKey: MenuI18nKey.ModelServings },
@@ -34,7 +34,7 @@ export const getDeploymentTabs = (t: (v: string) => string): TabModel[] => {
 export const getDeploymentButtonTitle = (t: (v: string) => string, selectedTab: string): string => {
   const tab = DEPLOYMENT_ENTITY_TABS.find((tab) => tab.id === selectedTab);
   const entity = tab ? t(tab.labelKey) : '';
-  return `${t('Buttons.Add')} ${entity}`;
+  return `${t(ButtonsI18nKey.Add)} ${entity}`;
 };
 
 const IMAGE_ID_COLUMN: ColDef = { field: 'id', colId: 'id', headerName: 'ID', hide: false };

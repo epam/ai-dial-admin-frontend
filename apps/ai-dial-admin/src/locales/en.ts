@@ -615,6 +615,7 @@ export default {
     Custom: 'Custom',
     UniqueUsers: 'Unique users',
     Requests: 'Requests',
+    RequestsNumber: 'Requests number',
     RequestCount: 'Request count',
     TotalTokens: 'Total tokens',
     Money: 'Money',
