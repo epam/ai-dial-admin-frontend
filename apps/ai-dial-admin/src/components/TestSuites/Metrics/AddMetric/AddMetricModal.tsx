@@ -9,7 +9,7 @@ import StepperModalButtons from '@/src/components/Common/StepperModalButtons/Ste
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Metric, MetricBinding } from '@/src/models/evaluation/metric';
-import { generateMetricDefaultBindings } from '../../utils/metric-bindings';
+import { generateMetricDefaultBindings, generateMetricDefaultInputBindings } from '../../utils/metric-bindings';
 import MetricConfiguration from './Configuration';
 import { MetricStep } from './constants';
 import MetricSelection from './MetricSelection';
@@ -44,6 +44,8 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm }) => {
       setIsMetricsLoading(true);
       getMetricLatestVersion(selectedMetricId || '').then((metric) => {
         setSelectedMetricDetails(metric as Metric);
+        setConfigBindings(generateMetricDefaultInputBindings(metric?.configSchema ?? {}));
+        setInputBindings(generateMetricDefaultInputBindings(metric?.inputSchema ?? {}));
         setIsMetricsLoading(false);
       });
     }

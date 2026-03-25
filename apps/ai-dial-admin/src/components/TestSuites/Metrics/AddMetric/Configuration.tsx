@@ -9,6 +9,7 @@ import { EntityFieldsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Metric, MetricBinding } from '@/src/models/evaluation/metric';
 import MetricSchemaSection from './SchemaSection';
+import MetricOutput from './Output';
 
 interface Props {
   metricName?: string;
@@ -32,8 +33,6 @@ const MetricConfiguration: FC<Props> = ({
   onChangeName,
 }) => {
   const t = useI18n();
-
-  console.log('selectedMetricDetails', selectedMetricDetails);
 
   const selectedMetricParameters = useMemo(() => {
     return jsonSchemaToFields(selectedMetricDetails?.configSchema, selectedMetricDetails?.configSchema);
@@ -75,7 +74,7 @@ const MetricConfiguration: FC<Props> = ({
           fields={selectedMetricInputs || []}
           onChange={onChangeInputBindings}
         />
-        <MetricSchemaSection title={t(TestSuitesI18nKey.Outputs)} fields={selectedMetricOutputs || []} />
+        <MetricOutput title={t(TestSuitesI18nKey.Outputs)} fields={selectedMetricOutputs || []} />
       </div>
     </div>
   );

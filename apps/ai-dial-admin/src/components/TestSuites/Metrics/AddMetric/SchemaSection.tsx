@@ -9,12 +9,14 @@ import { MetricBinding } from '@/src/models/evaluation/metric';
 
 interface MetricSchemaFieldInputProps {
   field: SchemaFieldRow;
-  placeholder: string;
   binding?: MetricBinding;
   onChangeValue: (fieldId: string, value: string) => void;
 }
 
-const MetricSchemaFieldInput: FC<MetricSchemaFieldInputProps> = ({ binding, field, placeholder, onChangeValue }) => {
+const MetricSchemaFieldInput: FC<MetricSchemaFieldInputProps> = ({ binding, field, onChangeValue }) => {
+  const t = useI18n();
+  const valuePlaceholder = t(EntityPlaceholdersI18nKey.Value);
+
   return (
     <div key={field.id}>
       {field.type === 'string' &&
@@ -23,7 +25,6 @@ const MetricSchemaFieldInput: FC<MetricSchemaFieldInputProps> = ({ binding, fiel
             id={field.id}
             label={field.name}
             caption={field.description}
-            placeholder={placeholder}
             options={field.enum.map((item) => ({ label: item, value: item }))}
             value={binding?.source.value as string | undefined}
             onChange={(v) => onChangeValue(field.name, (v as string) ?? '')}
@@ -31,7 +32,7 @@ const MetricSchemaFieldInput: FC<MetricSchemaFieldInputProps> = ({ binding, fiel
         ) : (
           <DialInput
             id={field.id}
-            placeholder={placeholder}
+            placeholder={valuePlaceholder}
             labelProps={{ required: field.required, label: field.name, caption: field.description }}
             value={binding?.source.value as string | undefined}
             onChange={(v) => onChangeValue(field.name, (v as string) ?? '')}
@@ -41,7 +42,7 @@ const MetricSchemaFieldInput: FC<MetricSchemaFieldInputProps> = ({ binding, fiel
       {(field.type === 'integer' || field.type === 'number') && (
         <DialNumberInput
           id={field.id}
-          placeholder={placeholder}
+          placeholder={valuePlaceholder}
           labelProps={{ required: field.required, label: field.name, caption: field.description }}
           value={binding?.source.value as number | undefined}
           onChange={(v) => onChangeValue(field.name, (v as string) ?? '')}
@@ -69,9 +70,6 @@ interface Props {
 }
 
 const MetricSchemaSection: FC<Props> = ({ title, fields, bindings, onChange }) => {
-  const t = useI18n();
-  const valuePlaceholder = t(EntityPlaceholdersI18nKey.Value);
-
   const onChangeValue = useCallback(
     (fieldId: string, value: string) => {
       onChange?.(
@@ -91,7 +89,6 @@ const MetricSchemaSection: FC<Props> = ({ title, fields, bindings, onChange }) =
           <MetricSchemaFieldInput
             key={field.id}
             field={field}
-            placeholder={valuePlaceholder}
             binding={bindings?.find((b) => b.property === field.name)}
             onChangeValue={onChangeValue}
           />
