@@ -67,7 +67,7 @@ import {
   getApplicationPublicationTabs,
   getToolsetPublicationTabs,
   columnsTab,
-  metricsTab,
+  validationsTab,
   analyticsTab,
   mcpTab,
 } from '../utils';
@@ -244,9 +244,10 @@ describe('Entities :: tabs', () => {
     expect(getTestSuiteTabs(t)).toEqual([
       propertiesTab(t),
       testSuiteMethodTab(t),
+
       testCasesTab(t),
+      validationsTab(t),
       runsTab(t),
-      metricsTab(t),
     ]);
   });
 

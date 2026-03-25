@@ -67,7 +67,7 @@ const ImportOptionsStep: FC<Props> = ({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col">
-        <h3 className="mb-3">{t(TestSuitesI18nKey.ImportMode)}</h3>
+        <h3 className="mb-4">{t(TestSuitesI18nKey.ImportMode)}</h3>
         <DialRadioGroup
           orientation={RadioGroupOrientation.Column}
           radioButtons={importModeOptions}
@@ -78,7 +78,7 @@ const ImportOptionsStep: FC<Props> = ({
       </div>
 
       <div className="flex flex-col">
-        <h3>{t(TestSuitesI18nKey.OnNameCollision)}</h3>
+        <h3 className="mb-4">{t(TestSuitesI18nKey.OnNameCollision)}</h3>
         <DialRadioGroup
           orientation={RadioGroupOrientation.Column}
           radioButtons={conflictStrategyOptions}

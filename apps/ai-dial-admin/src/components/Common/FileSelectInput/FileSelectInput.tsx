@@ -117,7 +117,8 @@ const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputCl
         >
           <div className="size-full">
             <DialFileManager
-              className="bg-layer-2 p-0 gap-0"
+              className="p-0 gap-0 bg-layer-3"
+              gridClassName="p-3"
               path={filePath}
               items={files as []}
               filesLoading={isFetchingFiles}
