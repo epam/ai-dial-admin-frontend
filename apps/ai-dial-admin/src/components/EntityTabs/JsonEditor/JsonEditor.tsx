@@ -1,6 +1,6 @@
 'use client';
 
-import { Dispatch, SetStateAction, useCallback, useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 
 import { editor } from 'monaco-editor';
 
@@ -30,6 +30,8 @@ const EntityJsonEditor = <T extends object>({
   const { dispatch, jsonErrorNotifications } = useSaveValidationContext();
   const { removeNotification } = useNotification();
   const [entityModel, setEntityModel] = useState<string>('');
+  /** Avoid resetting Monaco value when `entity` updates from our own parse — that resets the cursor. */
+  const skipEntityModelSyncRef = useRef(false);
 
   const setJsonErrors = useCallback(
     (errors: JSONEditorError[]) => {
@@ -39,20 +41,30 @@ const EntityJsonEditor = <T extends object>({
   );
 
   useEffect(() => {
-    if (entity) {
-      setEntityModel(JSON.stringify(entity, null, 4));
+    if (!entity) {
+      return;
     }
-  }, [entity, setEntityModel]);
+    if (skipEntityModelSyncRef.current) {
+      skipEntityModelSyncRef.current = false;
+      return;
+    }
+    setEntityModel(JSON.stringify(entity, null, 4));
+  }, [entity]);
 
   const onChangeJSON = useCallback(
     (updatedConfig?: string) => {
-      if (updatedConfig) {
-        try {
-          setSelectedEntity?.(JSON.parse(updatedConfig));
-        } catch (error) {
-          if (error) {
-            setIsChanged?.(true);
-          }
+      if (!updatedConfig) {
+        return;
+      }
+      try {
+        const parsed = JSON.parse(updatedConfig);
+        if (setSelectedEntity) {
+          skipEntityModelSyncRef.current = true;
+          setSelectedEntity(parsed);
+        }
+      } catch (error) {
+        if (error) {
+          setIsChanged?.(true);
         }
       }
     },

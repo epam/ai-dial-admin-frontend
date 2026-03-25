@@ -1469,6 +1469,8 @@ export default {
     ImportSuccess: 'Test cases imported successfully',
     ImportSuccessDescription: 'You can now see them in the list of test cases',
     ImportFailed: 'Test cases import failed',
+    MetricAddSuccess: 'Metric added successfully',
+    MetricAddFailed: 'Metric add failed',
     MetricUpdateSuccess: 'Metric updated successfully',
     MetricUpdateFailed: 'Metric update failed',
     RemoveSuccess: 'Test case removed successfully',

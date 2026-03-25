@@ -7,11 +7,14 @@ import { GridApi, GridReadyEvent } from 'ag-grid-community';
 import { getTestSuiteTemplateVariables } from '@/src/app/[lang]/test-suites/actions';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { getDynamicConfigurationsColumns } from '@/src/components/TestSuites/utils/columns';
-import { generateInputBindingsRowData } from '@/src/components/TestSuites/utils/template-variables';
+import {
+  generateInputBinding,
+  generateInputBindingsRowData,
+} from '@/src/components/TestSuites/utils/template-variables';
 import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { InputBindingRowData, TemplateVariable, TestSuite } from '@/src/models/evaluation/test-suite';
-import { InputBindingType, TestCaseItemType } from '@/src/types/evaluation';
+import { InputBinding, InputBindingRowData, TemplateVariable, TestSuite } from '@/src/models/evaluation/test-suite';
+import { TestCaseItemType } from '@/src/types/evaluation';
 
 interface Props {
   selectedTestSuite: TestSuite;
@@ -43,14 +46,20 @@ const TemplateVariables: FC<Props> = ({ selectedTestSuite, onChange, isSkipRefre
   }, []);
 
   const onChangeParam = useCallback(
-    (value: string | object, data: InputBindingRowData, _field: string, index?: number) => {
+    (value: string | object, data: InputBindingRowData, _field: string, _index?: number) => {
       const inputBindings = [...bindingsRef.current];
-      const binding = { ...inputBindings[index as number] };
-
-      binding.constantValue = value;
-      binding.templateVariable = data.templateVariable;
-
-      inputBindings.splice(index as number, 1, binding);
+      const index = inputBindings.findIndex((b) => b.templateVariable === data.templateVariable);
+      if (index === -1) {
+        inputBindings.push({
+          templateVariable: data.templateVariable,
+          constantValue: value,
+        });
+      } else {
+        const binding = { ...inputBindings[index as number] };
+        binding.constantValue = value;
+        binding.templateVariable = data.templateVariable;
+        inputBindings.splice(index as number, 1, binding);
+      }
       onChangeRef.current(
         { ...selectedTestSuiteRef.current, inputBindings },
         !(data.effectiveType === TestCaseItemType.FILE),
@@ -59,23 +68,25 @@ const TemplateVariables: FC<Props> = ({ selectedTestSuite, onChange, isSkipRefre
     [],
   );
 
-  const onChangeSelect = useCallback((value: string, data: InputBindingRowData, field: string, index?: number) => {
+  const onChangeSelect = useCallback((value: string, data: InputBindingRowData, field: string, _index?: number) => {
     const inputBindings = [...bindingsRef.current];
-    const binding = { ...inputBindings[index as number] };
-    if (field === 'type') {
-      if (value === InputBindingType.Attribute) {
-        binding.constantValue = void 0;
-        binding.dataField = '';
-      } else {
-        binding.constantValue = '';
-        binding.dataField = void 0;
-      }
-    } else {
-      binding.dataField = value;
-    }
-    binding.templateVariable = data.templateVariable;
+    const index = inputBindings.findIndex((b) => b.templateVariable === data.templateVariable);
+    if (index === -1) {
+      let binding: InputBinding = {
+        templateVariable: data.templateVariable,
+        constantValue: void 0,
+        dataField: void 0,
+      };
+      binding = generateInputBinding(binding, field, value);
 
-    inputBindings.splice(index as number, 1, binding);
+      inputBindings.push(binding);
+    } else {
+      let binding = { ...inputBindings[index as number] };
+      binding = generateInputBinding(binding, field, value);
+
+      binding.templateVariable = data.templateVariable;
+      inputBindings.splice(index as number, 1, binding);
+    }
     onChangeRef.current({ ...selectedTestSuiteRef.current, inputBindings });
   }, []);
 

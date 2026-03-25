@@ -1439,6 +1439,8 @@ export enum TestSuitesI18nKey {
   RemoveSuccess = 'TestSuites.RemoveSuccess',
   RemoveFailed = 'TestSuites.RemoveFailed',
   ImportSuccessDescription = 'TestSuites.ImportSuccessDescription',
+  MetricAddSuccess = 'TestSuites.MetricAddSuccess',
+  MetricAddFailed = 'TestSuites.MetricAddFailed',
   MetricUpdateSuccess = 'TestSuites.MetricUpdateSuccess',
   MetricUpdateFailed = 'TestSuites.MetricUpdateFailed',
   RunEvaluation = 'TestSuites.RunEvaluation',

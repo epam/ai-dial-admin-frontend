@@ -1,17 +1,18 @@
 'use client';
 
-import { FC, useMemo } from 'react';
+import { FC, useMemo, useState } from 'react';
 
-import { DialCloseButton, DialLinkButton } from '@epam/ai-dial-ui-kit';
+import { DialCloseButton, DialLinkButton, DialSwitch } from '@epam/ai-dial-ui-kit';
 
 import Grafana from '@/public/images/icons/grafana.svg';
+import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import {
   getDetailEntries,
   getFormattedDuration,
   getPanelTitle,
   getTestCaseStatusClass,
 } from '@/src/components/Runs/View/utils';
-import { BasicI18nKey, RunsI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, EntitiesI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ExtractionResult } from '@/src/models/evaluation/run';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
@@ -26,6 +27,8 @@ interface Props {
 
 const RunResultDetailPanel: FC<Props> = ({ result, grafanaExploreUrl, onClose }) => {
   const t = useI18n();
+
+  const [isJsonView, setIsJsonView] = useState(false);
   const exploreUrl = result.grafanaExploreUrl ?? grafanaExploreUrl;
 
   const executionEntries: Array<[string, string]> = [
@@ -49,30 +52,42 @@ const RunResultDetailPanel: FC<Props> = ({ result, grafanaExploreUrl, onClose })
     <div className="flex flex-col size-full pb-2">
       <div className="flex items-start justify-between">
         <h1 className="truncate">{title}</h1>
-        <DialCloseButton onClose={onClose} />
+        <div className="flex flex-row gap-4 items-center">
+          <DialSwitch
+            isOn={isJsonView}
+            label={t(EntitiesI18nKey.JSONViewer)}
+            switchId="jsonViewer"
+            onChange={() => setIsJsonView(!isJsonView)}
+          />
+          <DialCloseButton onClose={onClose} />
+        </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto min-h-0 flex flex-col gap-6 mt-4 pr-2">
-        <DetailSection
-          title={t(RunsI18nKey.Execution)}
-          list={executionEntries}
-          getValueClassName={(key) =>
-            key === 'Status' ? getTestCaseStatusClass(result.responseStatusCode) : undefined
-          }
-        >
-          {exploreUrl && (
-            <DialLinkButton
-              className="w-fit mt-3"
-              iconBefore={<Grafana />}
-              label={t(RunsI18nKey.GrafanaDetails)}
-              onClick={() => window.open(exploreUrl, '_blank')}
-            />
-          )}
-        </DetailSection>
-        {testCaseEntries.length > 0 && <DetailSection title={t(RunsI18nKey.TestCaseData)} list={testCaseEntries} />}
-        {<DetailRequestAccordion title={t(BasicI18nKey.Request)} content={requestJson} />}
-        {<DetailRequestAccordion title={t(BasicI18nKey.Response)} content={responseJson} />}
-      </div>
+      {isJsonView ? (
+        <JsonEditor entity={result} options={{ stickyScroll: { enabled: false }, wordWrap: 'off' }} readonly={true} />
+      ) : (
+        <div className="flex-1 overflow-y-auto min-h-0 flex flex-col gap-6 mt-4 pr-2">
+          <DetailSection
+            title={t(RunsI18nKey.Execution)}
+            list={executionEntries}
+            getValueClassName={(key) =>
+              key === 'Status' ? getTestCaseStatusClass(result.responseStatusCode) : undefined
+            }
+          >
+            {exploreUrl && (
+              <DialLinkButton
+                className="w-fit mt-3"
+                iconBefore={<Grafana />}
+                label={t(RunsI18nKey.GrafanaDetails)}
+                onClick={() => window.open(exploreUrl, '_blank')}
+              />
+            )}
+          </DetailSection>
+          {testCaseEntries.length > 0 && <DetailSection title={t(RunsI18nKey.TestCaseData)} list={testCaseEntries} />}
+          {<DetailRequestAccordion title={t(BasicI18nKey.Request)} content={requestJson} />}
+          {<DetailRequestAccordion title={t(BasicI18nKey.Response)} content={responseJson} />}
+        </div>
+      )}
     </div>
   );
 };

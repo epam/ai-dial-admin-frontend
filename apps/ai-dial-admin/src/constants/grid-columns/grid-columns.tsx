@@ -637,21 +637,23 @@ export const IMAGES_LIST_FOR_CONTAINER_COLUMNS = (
   ];
 };
 
+export const IMAGE_TYPE_COLUMN = (t: (key: string) => string): ColDef => ({
+  field: '$type',
+  headerName: 'Type',
+  valueFormatter: ({ value }) => t(IMAGE_TYPE_I18N_KEYS[value as IMAGE_TYPE]) || value,
+  tooltipValueGetter: ({ value }) => t(IMAGE_TYPE_I18N_KEYS[value as IMAGE_TYPE]) || value,
+  filterValueGetter: (params) => {
+    const value = params.data[params.colDef.field || ''];
+    return t(IMAGE_TYPE_I18N_KEYS[value as IMAGE_TYPE]) || value;
+  },
+});
+
 export const IMAGES_LIST_COLUMNS = (t: (key: string) => string): ColDef[] => [
   { field: 'name', headerName: 'Name', hide: false },
   { field: 'version', headerName: 'Version', hide: false },
   DESCRIPTION_COLUMN,
   { field: 'id', headerName: 'ID', hide: false },
-  {
-    field: '$type',
-    headerName: 'Type',
-    valueFormatter: ({ value }) => t(IMAGE_TYPE_I18N_KEYS[value as IMAGE_TYPE]) || value,
-    tooltipValueGetter: ({ value }) => t(IMAGE_TYPE_I18N_KEYS[value as IMAGE_TYPE]) || value,
-    filterValueGetter: (params) => {
-      const value = params.data[params.colDef.field || ''];
-      return t(IMAGE_TYPE_I18N_KEYS[value as IMAGE_TYPE]) || value;
-    },
-  },
+  IMAGE_TYPE_COLUMN(t),
   {
     field: 'source.$type',
     headerName: 'Source',
