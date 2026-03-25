@@ -53,3 +53,19 @@ export const convertVariableIntoInitialRequest = (variables: TemplateVariable[])
   });
   return requestVariables;
 };
+
+export const generateInputBinding = (binding: InputBinding, field: string, value: string): InputBinding => {
+  const newBinding: InputBinding = { ...binding };
+  if (field === 'type') {
+    if (value === InputBindingType.Attribute) {
+      newBinding.constantValue = void 0;
+      newBinding.dataField = '';
+    } else {
+      newBinding.constantValue = '';
+      newBinding.dataField = void 0;
+    }
+  } else {
+    newBinding.dataField = value;
+  }
+  return newBinding;
+};

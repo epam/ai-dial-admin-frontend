@@ -2,9 +2,10 @@
 
 import { FC, useEffect, useMemo, useState } from 'react';
 
-import { DialCloseButton, DialLoader } from '@epam/ai-dial-ui-kit';
+import { DialCloseButton, DialLoader, DialSwitch } from '@epam/ai-dial-ui-kit';
 
 import { getTestCaseRunResultDetails } from '@/src/app/[lang]/runs/actions';
+import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import {
   getDetailEntries,
   getDetailNestedEntries,
@@ -12,7 +13,7 @@ import {
   getPanelTitle,
   getTestCaseStatusClass,
 } from '@/src/components/Runs/View/utils';
-import { RunsI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
@@ -25,6 +26,8 @@ interface Props {
 
 const RunMetricDetailPanel: FC<Props> = ({ resultId, onClose }) => {
   const t = useI18n();
+
+  const [isJsonView, setIsJsonView] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [details, setDetails] = useState<AnalyticsResult | null>(null);
 
@@ -64,30 +67,46 @@ const RunMetricDetailPanel: FC<Props> = ({ resultId, onClose }) => {
     <div className="flex flex-col size-full pb-2">
       <div className="flex items-start justify-between">
         <h1 className="truncate">{title}</h1>
-        <DialCloseButton onClose={onClose} />
+        <div className="flex flex-row gap-4 items-center">
+          <DialSwitch
+            isOn={isJsonView}
+            label={t(EntitiesI18nKey.JSONViewer)}
+            switchId="jsonViewer"
+            onChange={() => setIsJsonView(!isJsonView)}
+          />
+          <DialCloseButton onClose={onClose} />
+        </div>
       </div>
 
-      {isLoading ? (
-        <DialLoader size={40} />
+      {isJsonView ? (
+        <JsonEditor entity={details} options={{ stickyScroll: { enabled: false }, wordWrap: 'off' }} readonly={true} />
       ) : (
-        <div className="flex-1 overflow-y-auto min-h-0 flex flex-col gap-6 mt-4 pr-2">
-          <DetailSection
-            title={t(RunsI18nKey.Execution)}
-            list={executionEntries}
-            getValueClassName={(key) =>
-              key === 'Status' ? getTestCaseStatusClass(details?.responseStatusCode) : undefined
-            }
-          ></DetailSection>
-          {testCaseEntries.length > 0 && <DetailSection title={t(RunsI18nKey.TestCaseData)} list={testCaseEntries} />}
-          {metricSections.map(({ title, entries }) => (
-            <DetailSection
-              key={title}
-              title={title}
-              list={entries}
-              getKeyClassName={(key) => (key === 'error' ? 'text-error' : 'text-secondary')}
-            />
-          ))}
-        </div>
+        <>
+          {isLoading ? (
+            <DialLoader size={40} />
+          ) : (
+            <div className="flex-1 overflow-y-auto min-h-0 flex flex-col gap-6 mt-4 pr-2">
+              <DetailSection
+                title={t(RunsI18nKey.Execution)}
+                list={executionEntries}
+                getValueClassName={(key) =>
+                  key === 'Status' ? getTestCaseStatusClass(details?.responseStatusCode) : undefined
+                }
+              ></DetailSection>
+              {testCaseEntries.length > 0 && (
+                <DetailSection title={t(RunsI18nKey.TestCaseData)} list={testCaseEntries} />
+              )}
+              {metricSections.map(({ title, entries }) => (
+                <DetailSection
+                  key={title}
+                  title={title}
+                  list={entries}
+                  getKeyClassName={(key) => (key === 'error' ? 'text-error' : 'text-secondary')}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
