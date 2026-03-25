@@ -490,9 +490,9 @@ export const MCP_CONSUMPTION_COLUMNS: ColDef[] = [
 ];
 
 export const TOOLS_CONSUMPTION_COLUMNS: ColDef[] = [
-  { field: 'mcp_name', headerName: 'MCP Name', hide: false },
-  { field: 'tool', headerName: 'Tool', hide: false },
-  { field: 'calls', headerName: 'Calls', hide: false, ...numericColumn },
+  { field: 'name', headerName: 'MCP Name', hide: false },
+  { field: 'mcp_tool_call_name', headerName: 'Tool', hide: false },
+  { field: 'requests', headerName: 'Calls', hide: false, ...numericColumn },
 ];
 
 export const MCP_CALLS_BY_DEPLOYMENT_COLUMNS: ColDef[] = [

@@ -6,6 +6,7 @@ import { TelemetryI18nKey } from '@/src/constants/i18n';
 
 const getData = vi.fn().mockResolvedValue({ success: false });
 const getToolCallsData = vi.fn().mockResolvedValue({ success: false });
+const getToolsConsumptionData = vi.fn().mockResolvedValue({ success: false });
 
 describe('McpDashboard', () => {
   test('renders chart placeholder, stat cards, and all tables in global view', () => {
@@ -13,6 +14,7 @@ describe('McpDashboard', () => {
       <McpDashboard
         getData={getData}
         getToolCallsData={getToolCallsData}
+        getToolsConsumptionData={getToolsConsumptionData}
         refreshTime="1m"
       />,
     );
@@ -32,6 +34,7 @@ describe('McpDashboard', () => {
       <McpDashboard
         getData={getData}
         getToolCallsData={getToolCallsData}
+        getToolsConsumptionData={getToolsConsumptionData}
         refreshTime="1m"
         isEntityView
       />,

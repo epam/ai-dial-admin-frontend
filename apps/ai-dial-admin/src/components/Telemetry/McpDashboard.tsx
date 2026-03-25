@@ -10,7 +10,11 @@ import {
   MCP_PROJECTS_CONSUMPTION_COLUMNS,
   TOOLS_CONSUMPTION_COLUMNS,
 } from '@/src/constants/grid-columns/grid-columns';
-import { MCP_CALLS_BY_DEPLOYMENT_QUERY, MCP_CONSUMPTION_QUERY } from '@/src/constants/telemetry';
+import {
+  MCP_CALLS_BY_DEPLOYMENT_QUERY,
+  MCP_CONSUMPTION_QUERY,
+  MCP_TOOLS_CONSUMPTION_QUERY,
+} from '@/src/constants/telemetry';
 import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { TelemetryQuery } from '@/src/models/telemetry';
@@ -18,11 +22,18 @@ import { TelemetryQuery } from '@/src/models/telemetry';
 interface Props {
   getData: (query: TelemetryQuery) => Promise<ServerActionResponse>;
   getToolCallsData: (query: TelemetryQuery) => Promise<ServerActionResponse>;
+  getToolsConsumptionData: (query: TelemetryQuery) => Promise<ServerActionResponse>;
   refreshTime: string;
   isEntityView?: boolean;
 }
 
-const McpDashboard: FC<Props> = ({ getData, getToolCallsData, refreshTime, isEntityView = false }) => {
+const McpDashboard: FC<Props> = ({
+  getData,
+  getToolCallsData,
+  getToolsConsumptionData,
+  refreshTime,
+  isEntityView = false,
+}) => {
   const t = useI18n();
 
   return (
@@ -50,9 +61,9 @@ const McpDashboard: FC<Props> = ({ getData, getToolCallsData, refreshTime, isEnt
           )}
           <div className="flex flex-1 relative">
             <TelemetryGrid
-              getData={getData}
+              getData={getToolsConsumptionData}
               refreshTime={refreshTime}
-              query={null}
+              query={MCP_TOOLS_CONSUMPTION_QUERY}
               columnDefs={TOOLS_CONSUMPTION_COLUMNS}
               title={t(TelemetryI18nKey.ToolsConsumption)}
             />

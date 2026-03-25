@@ -260,6 +260,18 @@ export const MCP_CONSUMPTION_QUERY: TelemetryQuery = {
   },
 };
 
+export const MCP_TOOLS_CONSUMPTION_QUERY: TelemetryQuery = {
+  $type: 'json',
+  query: {
+    expressions: ['deployment', 'mcp_tool_call_name', 'count()'],
+    from: MCP_TABLE_NAME,
+    groupBy: ['deployment', 'mcp_tool_call_name'],
+    orderBy: [{ $desc: 'count()' }],
+  },
+};
+
+export const MCP_TOOLS_CONSUMPTION_EXTRA_CONDITIONS = [{ $ne: { left: 'mcp_tool_call_name', right: "'undefined'" } }];
+
 export const MCP_CALLS_BY_DEPLOYMENT_QUERY: TelemetryQuery = {
   $type: 'json',
   query: {

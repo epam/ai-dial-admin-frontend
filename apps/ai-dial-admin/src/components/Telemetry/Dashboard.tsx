@@ -7,6 +7,7 @@ import {
   DEFAULT_REFRESH_TIME,
   ENTITY_CONSUMPTION_QUERY,
   MCP_TOOL_CALLS_EXTRA_CONDITIONS,
+  MCP_TOOLS_CONSUMPTION_EXTRA_CONDITIONS,
   PROJECT_CONSUMPTION_QUERY,
   TOOLSET_DEPLOYMENT_PREFIX,
 } from '@/src/constants/telemetry';
@@ -113,6 +114,11 @@ const Dashboard: FC<Props> = ({
     [getMcpDataWithConditions],
   );
 
+  const getMcpToolsConsumptionData = useMemo(
+    () => getMcpDataWithConditions(MCP_TOOLS_CONSUMPTION_EXTRA_CONDITIONS),
+    [getMcpDataWithConditions],
+  );
+
   const onRefreshTimeChange = useCallback(
     (time: string) => {
       setRefreshTime(time);
@@ -172,6 +178,7 @@ const Dashboard: FC<Props> = ({
         <McpDashboard
           getData={getData}
           getToolCallsData={getMcpToolCallsData}
+          getToolsConsumptionData={getMcpToolsConsumptionData}
           refreshTime={refreshTime}
           isEntityView={!!entity}
         />
