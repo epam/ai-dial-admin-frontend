@@ -85,14 +85,20 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
         setIsAddModalOpen(false);
         createTestSuiteMetric(selectedTestSuite.id as string, metric).then((response) => {
           if (response?.success) {
-            getTestSuiteMetrics(selectedTestSuite.id as string, 0, 1000).then((response) => {
-              setMetrics(response?.content);
+            showNotification(getSuccessNotification(t(TestSuitesI18nKey.MetricAddSuccess)));
+            getTestSuiteMetrics(selectedTestSuite.id as string, 0, 1000).then((r) => {
+              setMetrics(r?.content);
+              loadMetricDetails(response.response as Metric);
             });
+          } else {
+            showNotification(
+              getErrorNotification(t(TestSuitesI18nKey.MetricAddFailed), response?.errorMessage || 'Unknown error'),
+            );
           }
         });
       }
     },
-    [selectedTestSuite.id],
+    [loadMetricDetails, selectedTestSuite.id, showNotification, t],
   );
 
   const onUpdateMetric = useCallback(

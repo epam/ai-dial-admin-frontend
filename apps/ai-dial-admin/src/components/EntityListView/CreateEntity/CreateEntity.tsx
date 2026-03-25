@@ -22,7 +22,7 @@ import {
   getCreateNotificationDescription,
   getCreateNotificationTitle,
 } from '@/src/utils/entities/create-entity';
-import { isAssetView } from '@/src/utils/is-asset-view';
+import { isAssetView } from '@/src/utils/is-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { RoutesForCheckingUniqueName } from './constants';

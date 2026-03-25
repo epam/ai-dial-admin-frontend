@@ -22,7 +22,7 @@ import { downloadFile, downloadJson } from '@/src/utils/download';
 import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 import { getListOfPathsToBulkDelete, getListOfPathsToMove } from '@/src/utils/files/path';
 import { getJsonFileName } from '@/src/utils/import/get-json-name';
-import { isAssetWithVersion } from '@/src/utils/is-asset-view';
+import { isAssetWithVersion } from '@/src/utils/is-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import BulkButtons from './BulkButtons';

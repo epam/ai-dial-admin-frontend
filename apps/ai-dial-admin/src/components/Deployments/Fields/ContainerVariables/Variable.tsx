@@ -123,7 +123,7 @@ const Variable: FC<Props> = ({
           {isTablet && (
             <div className="flex flex-col justify-center cursor-pointer" onClick={toggleCollapse}>
               <h3 className="small flex items-center">
-                <i className="text-icon-primary mr-2 ">
+                <i className="text-icon-primary mr-2">
                   {isCollapsed ? (
                     <IconChevronRight {...BASE_BUTTON_ICON_PROPS} />
                   ) : (

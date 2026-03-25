@@ -288,14 +288,12 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
   );
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 overflow-auto">
+    <div className="h-[500px]">
       <GridView<SchemaFieldRow>
         getIsEmptyData={() => fields.length === 0}
         emptyDataProps={{ title: t(BasicI18nKey.NoData) }}
         onGridReady={onGridReady}
         additionalGridOptions={{
-          headerHeight: 30,
-          domLayout: 'autoHeight',
           getRowId: (params) => params.data.id,
           isFullWidthRow: (params: IsFullWidthRowParams<SchemaFieldRow>) => !!params.rowNode.data?.isAddSubFieldRow,
           fullWidthCellRenderer,

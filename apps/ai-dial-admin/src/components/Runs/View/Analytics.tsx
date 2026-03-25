@@ -47,7 +47,7 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
         setSelectedResultId(event.data.id);
         sidebar.showSidebar(
           <RunMetricDetailPanel resultId={event.data.id} onClose={sidebar.closeSidebar} />,
-          'w-[500px]',
+          'w-[750px]',
         );
       } else {
         setSelectedResultId(null);

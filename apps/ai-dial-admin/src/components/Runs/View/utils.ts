@@ -42,6 +42,21 @@ const getExtractedColumns = (extracted: Record<string, unknown>) => {
   });
 };
 
+const mergeMetricValuesSchema = (results: AnalyticsResult[]): Record<string, Record<string, unknown>> => {
+  const merged: Record<string, Record<string, unknown>> = {};
+  for (const result of results) {
+    const mv = result.metricValues;
+    if (!mv) continue;
+    for (const [groupKey, groupValues] of Object.entries(mv)) {
+      if (!merged[groupKey]) merged[groupKey] = {};
+      for (const [key, val] of Object.entries(groupValues)) {
+        if (!(key in merged[groupKey])) merged[groupKey][key] = val;
+      }
+    }
+  }
+  return merged;
+};
+
 const getMetricsColumns = (metrics: Record<string, Record<string, unknown>>) => {
   return Object.entries(metrics).map(([groupKey, groupValues]) => ({
     headerName: groupKey,
@@ -126,7 +141,7 @@ export const getResultColumns = (results: ExtractionResult[]) => {
 };
 
 export const getAnalyticsColumns = (results: AnalyticsResult[]) => {
-  const metrics = results[0]?.metricValues || {};
+  const metrics = mergeMetricValuesSchema(results);
 
   return [
     ...staticColumns,

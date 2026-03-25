@@ -25,7 +25,7 @@ const SourceType: FC<Props> = ({ image, setImage, isModal, verifyVersion }) => {
   const onImageTypeChange = useCallback(
     ($type: string | string[]) => {
       const updated = {
-        ...setTransport(image),
+        ...setTransport({ ...image, $type: $type as IMAGE_TYPE }),
         $type: $type as IMAGE_TYPE,
         source: DEFAULT_IMAGE_SOURCE,
       };

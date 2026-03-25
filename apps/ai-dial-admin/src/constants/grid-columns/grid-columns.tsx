@@ -34,7 +34,7 @@ import { IMAGE_SOURCE_TYPE, IMAGE_STATUS, IMAGE_TRANSPORT_TYPE, IMAGE_TYPE } fro
 import { ApplicationRoute } from '@/src/types/routes';
 import { formatDeploymentImageName } from '@/src/utils/formatting/deployments';
 import { formatNumberWithExponent } from '@/src/utils/formatting/number-formatting';
-import { isAssetWithVersion } from '@/src/utils/is-asset-view';
+import { isAssetWithVersion } from '@/src/utils/is-view';
 import { getDeleteOperation, getDuplicateOperation, getMoveOperation, getOpenInNewTabOperation } from './actions';
 import {
   ASSET_NAME_COLUMN,
@@ -464,15 +464,15 @@ export const USAGE_LOG_CONVERSATIONS_COLUMNS: ColDef[] = [
 
 export const USAGE_LOG_MCP_COLUMNS: ColDef[] = [
   { field: 'completion_time', headerName: 'Last activity', hide: false, ...dateTimeColumn },
-  { field: 'deployment_id', headerName: 'Deployment ID', hide: false },
-  { field: 'project', headerName: 'Project', hide: false },
+  { field: 'deployment', headerName: 'Deployment ID', hide: false },
+  { field: 'project_id', headerName: 'Project', hide: false },
   {
-    field: 'method',
+    field: 'mcp_method',
     headerName: 'Method',
     hide: true,
   },
   {
-    field: 'tool_name',
+    field: 'mcp_tool_call_name',
     headerName: 'Tool Name',
     hide: false,
   },
@@ -531,6 +531,7 @@ export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, rou
     : [
         {
           headerName: `${type} Image`,
+          field: 'image',
           hide: false,
           valueGetter: (params: ValueGetterParams) =>
             params.data?.source?.$type === 'internal_image' ? params.data.source.imageDefinitionId : undefined,
@@ -636,21 +637,23 @@ export const IMAGES_LIST_FOR_CONTAINER_COLUMNS = (
   ];
 };
 
+export const IMAGE_TYPE_COLUMN = (t: (key: string) => string): ColDef => ({
+  field: '$type',
+  headerName: 'Type',
+  valueFormatter: ({ value }) => t(IMAGE_TYPE_I18N_KEYS[value as IMAGE_TYPE]) || value,
+  tooltipValueGetter: ({ value }) => t(IMAGE_TYPE_I18N_KEYS[value as IMAGE_TYPE]) || value,
+  filterValueGetter: (params) => {
+    const value = params.data[params.colDef.field || ''];
+    return t(IMAGE_TYPE_I18N_KEYS[value as IMAGE_TYPE]) || value;
+  },
+});
+
 export const IMAGES_LIST_COLUMNS = (t: (key: string) => string): ColDef[] => [
   { field: 'name', headerName: 'Name', hide: false },
   { field: 'version', headerName: 'Version', hide: false },
   DESCRIPTION_COLUMN,
   { field: 'id', headerName: 'ID', hide: false },
-  {
-    field: '$type',
-    headerName: 'Type',
-    valueFormatter: ({ value }) => t(IMAGE_TYPE_I18N_KEYS[value as IMAGE_TYPE]) || value,
-    tooltipValueGetter: ({ value }) => t(IMAGE_TYPE_I18N_KEYS[value as IMAGE_TYPE]) || value,
-    filterValueGetter: (params) => {
-      const value = params.data[params.colDef.field || ''];
-      return t(IMAGE_TYPE_I18N_KEYS[value as IMAGE_TYPE]) || value;
-    },
-  },
+  IMAGE_TYPE_COLUMN(t),
   {
     field: 'source.$type',
     headerName: 'Source',

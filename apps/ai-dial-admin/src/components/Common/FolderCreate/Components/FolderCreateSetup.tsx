@@ -23,7 +23,7 @@ import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import { getIgnorePathTitles } from '@/src/utils/import/get-ignore-path-title';
-import { isAssetView, isAssetWithVersion } from '@/src/utils/is-asset-view';
+import { isAssetView, isAssetWithVersion } from '@/src/utils/is-view';
 import { getErrorForFolderName } from '@/src/utils/validation/folder-error';
 
 interface Props {

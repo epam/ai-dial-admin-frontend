@@ -4,6 +4,7 @@ import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useStat
 import { Asset } from '@/src/models/dial/deployment-asset';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { mergeFiles } from '@/src/utils/files/folder';
+import { isFolder } from '@/src/utils/files/path';
 
 export interface AssetsFolderContext {
   isFetchingFiles: boolean;
@@ -36,6 +37,72 @@ export function createFolderContext(
     const [isFetchingFiles, setIsFetchingFiles] = useState(false);
 
     const [data, setData] = useState<Asset[] | null>([]);
+
+    const fetchFolderHierarchy = (fullPath?: string, fullTree?: boolean) => {
+      if (!fullPath?.includes('/')) return;
+
+      const pathParts = fullPath.split('/').filter(Boolean);
+      const tempFetchedFoldersData: Record<string, Asset[]> = {};
+      const tempExpandedFolders = new Set<string>();
+      let tempFiles: Asset[] = [];
+      let currentPath = '';
+
+      const setTempFolder = (name: string, childPath?: string) => {
+        const newFile = {
+          items: [],
+          name,
+          path: childPath,
+          nodeType: DialFileNodeType.FOLDER,
+        } as unknown as Asset;
+        tempFiles = mergeFiles(tempFiles, [newFile], currentPath) as Asset[];
+      };
+
+      setIsFetchingFiles(true);
+
+      (async () => {
+        try {
+          for (let index = 0; index < pathParts.length; index++) {
+            currentPath += pathParts[index] + '/';
+            tempExpandedFolders.add(currentPath);
+
+            const nextFolderPath = pathParts[index + 1] ? currentPath + pathParts[index + 1] + '/' : undefined;
+            const fetched = await getFilesFunc(currentPath);
+
+            if (fetched === undefined) {
+              setData(null);
+              return;
+            }
+
+            const list = fetched ?? [];
+
+            const folderItems = list.filter((f) => f.nodeType === DialFileNodeType.ITEM) as Asset[];
+            tempFetchedFoldersData[currentPath] = folderItems;
+
+            if (list.length) {
+              const nextFolder = list.find((f) => f.path === nextFolderPath && isFolder(f.nodeType));
+              if (nextFolder && !fullTree) {
+                const newFile = { ...nextFolder, nodeType: DialFileNodeType.FOLDER } as Asset;
+                tempFiles = mergeFiles(tempFiles, [newFile], currentPath) as Asset[];
+              } else if (fullTree) {
+                tempFiles = mergeFiles(tempFiles, list, currentPath) as Asset[];
+              } else if (nextFolderPath) {
+                setTempFolder(pathParts[index], nextFolderPath);
+              }
+            } else if (nextFolderPath) {
+              setTempFolder(pathParts[index + 1], nextFolderPath);
+            }
+          }
+
+          setFiles(tempFiles);
+          setFetchedFoldersData(tempFetchedFoldersData);
+          setExpandedFolders(tempExpandedFolders);
+          setFilePath(currentPath);
+          setData(tempFetchedFoldersData[currentPath] ?? []);
+        } finally {
+          setIsFetchingFiles(false);
+        }
+      })();
+    };
 
     const fetchFiles = (path: string, refreshData?: boolean, resetFolder?: boolean) => {
       setIsFetchingFiles(true);
@@ -90,6 +157,7 @@ export function createFolderContext(
     const value: AssetsFolderContext = {
       isFetchingFiles,
       fetchFiles,
+      fetchFolderHierarchy,
       files,
       expandedFolders,
       setExpandedFolders,

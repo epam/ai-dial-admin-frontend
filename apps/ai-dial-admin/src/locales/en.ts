@@ -286,6 +286,7 @@ export default {
       McpContainer: 'MCP Container',
       InterceptorContainer: 'Interceptor Container',
       ModelServing: 'Model Serving',
+      AdapterContainer: 'Adapter Container',
       Image: 'Image',
       Run: 'Run',
     },
@@ -331,7 +332,7 @@ export default {
     Entities: {
       Model: 'Model',
       Application: 'Application',
-      Toolsets: 'Toolsets',
+      Toolsets: 'Toolset',
       Interceptor: 'Interceptor',
       Route: 'Route',
       Role: 'Role',
@@ -520,6 +521,7 @@ export default {
     ErrorCodes: 'Error Codes',
     Keys: 'Keys',
     Entities: 'Entities',
+    Validations: 'Validations',
     Parameters: 'Parameters',
     Applications: 'Applications',
     Dashboard: 'Dashboard',
@@ -636,7 +638,7 @@ export default {
     UsageLog: {
       NoTracesTitle: 'No Traces',
       NoConversationsTitle: 'No Conversations',
-      NoMcp: 'No MCP calls',
+      NoMcpCalls: 'No MCP calls',
     },
     ViewByLabel: 'View by: ',
     ViewBy: {
@@ -1446,6 +1448,7 @@ export default {
   TestSuites: {
     CreateTestSuite: 'Create Test Suite',
     UpdateTestSuite: 'Update Test Suite',
+    SelectDocument: 'Select document',
     Target: 'Target',
     Application: 'Application',
     Methods: 'Methods',
@@ -1465,6 +1468,8 @@ export default {
     ImportSuccess: 'Test cases imported successfully',
     ImportSuccessDescription: 'You can now see them in the list of test cases',
     ImportFailed: 'Test cases import failed',
+    MetricAddSuccess: 'Metric added successfully',
+    MetricAddFailed: 'Metric add failed',
     MetricUpdateSuccess: 'Metric updated successfully',
     MetricUpdateFailed: 'Metric update failed',
     RemoveSuccess: 'Test case removed successfully',

@@ -12,9 +12,12 @@ interface Props {
 }
 const GlobalError: FC<Props> = ({ error, reset }) => {
   useEffect(() => {
+    if (error.message.includes('UnrecognizedActionError')) {
+      window.location.reload();
+    }
+
     console.error(error);
   }, [error]);
-
   return (
     <html>
       <body>

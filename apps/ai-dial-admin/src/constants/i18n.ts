@@ -249,6 +249,7 @@ export enum DeleteI18nKey {
   McpContainer = 'DeleteEntity.Entities.McpContainer',
   InterceptorContainer = 'DeleteEntity.Entities.InterceptorContainer',
   ModelServing = 'DeleteEntity.Entities.ModelServing',
+  AdapterContainer = 'DeleteEntity.Entities.AdapterContainer',
   Image = 'DeleteEntity.Entities.Image',
 
   // Bulk Delete
@@ -558,6 +559,7 @@ export enum TabsI18nKey {
   Resources = 'Tabs.Resources',
   Prompts = 'Tabs.Prompts',
   Metrics = 'Tabs.Metrics',
+  Validations = 'Tabs.Validations',
   ExecutionLog = 'Tabs.ExecutionLog',
   Images = 'Tabs.Images',
   Containers = 'Tabs.Containers',
@@ -613,7 +615,7 @@ export enum TelemetryI18nKey {
   FilterConditionEndsWith = 'Telemetry.Filter.ConditionEndsWith',
   FilterDurationSeconds = 'Telemetry.Filter.Duration.Seconds',
   NoTracesTitle = 'Telemetry.UsageLog.NoTracesTitle',
-  NoMcpCallsTitle = 'Telemetry.UsageLog.NoMcpCallsTitle',
+  NoMcpCalls = 'Telemetry.UsageLog.NoMcpCalls',
   NoConversationsTitle = 'Telemetry.UsageLog.NoConversationsTitle',
   ViewByLabel = 'Telemetry.ViewByLabel',
   ViewByChat = 'Telemetry.ViewBy.Chat',
@@ -1415,6 +1417,7 @@ export enum ApplicationsI18nKey {
 export enum TestSuitesI18nKey {
   CreateTestSuite = 'TestSuites.CreateTestSuite',
   UpdateTestSuite = 'TestSuites.UpdateTestSuite',
+  SelectDocument = 'TestSuites.SelectDocument',
   Application = 'TestSuites.Application',
   Target = 'TestSuites.Target',
   Methods = 'TestSuites.Methods',
@@ -1435,6 +1438,8 @@ export enum TestSuitesI18nKey {
   RemoveSuccess = 'TestSuites.RemoveSuccess',
   RemoveFailed = 'TestSuites.RemoveFailed',
   ImportSuccessDescription = 'TestSuites.ImportSuccessDescription',
+  MetricAddSuccess = 'TestSuites.MetricAddSuccess',
+  MetricAddFailed = 'TestSuites.MetricAddFailed',
   MetricUpdateSuccess = 'TestSuites.MetricUpdateSuccess',
   MetricUpdateFailed = 'TestSuites.MetricUpdateFailed',
   RunEvaluation = 'TestSuites.RunEvaluation',

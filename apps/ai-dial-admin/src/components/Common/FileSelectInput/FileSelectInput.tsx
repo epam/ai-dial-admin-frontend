@@ -13,11 +13,12 @@ import { FileManagerGridRow } from '@epam/ai-dial-ui-kit/dist/src/components/Fil
 import { FILES_GRID_COLUMNS } from '@/src/components/Assets/Files/constants';
 import { getGridOptions, getTreeOptions } from '@/src/components/Common/FileManager/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useFileFolder } from '@/src/context/assets/FileFolderContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getFolderNameAndPath } from '@/src/utils/files/path';
 
 interface Props {
   value: string;
@@ -31,20 +32,41 @@ interface Props {
 const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputClassName, onChangeValue }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
-  const { files, fetchFiles, isFetchingFiles, filePath, setFilePath, expandedFolders, setExpandedFolders } =
-    useFileFolder();
+  const {
+    files,
+    fetchFiles,
+    fetchFolderHierarchy,
+    isFetchingFiles,
+    filePath,
+    setFilePath,
+    expandedFolders,
+    setExpandedFolders,
+  } = useFileFolder();
 
   const [loadedPaths, setLoadedPaths] = useState(new Set(['']));
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    if (files == null || files?.length === 0) {
-      fetchFiles(`${ROOT_FOLDER}/`);
-      setLoadedPaths(new Set([`${ROOT_FOLDER}/`]));
+    if ((files == null || files?.length === 0) && isModalOpen) {
+      if (value) {
+        const path = getFolderNameAndPath(value).path;
+        fetchFolderHierarchy?.(`${path}/`, true);
+      } else {
+        fetchFiles(`${ROOT_FOLDER}/`);
+        setLoadedPaths(new Set([`${ROOT_FOLDER}/`]));
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [files]);
+  }, [files, isModalOpen]);
+
+  useEffect(() => {
+    if (value && files !== null && files.length > 0 && isModalOpen) {
+      const path = getFolderNameAndPath(value).path;
+      fetchFolderHierarchy?.(`${path}/`, true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, isModalOpen]);
 
   const handleOnPathChange = useCallback(
     (nextPath: string | undefined) => {
@@ -103,7 +125,7 @@ const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputCl
         inputClassName={inputClassName}
       >
         <DialFormPopup
-          header={'Select document'}
+          header={t(TestSuitesI18nKey.SelectDocument)}
           portalId="fileSelect"
           open={isModalOpen}
           cancelLabel={t(ButtonsI18nKey.Cancel)}
@@ -115,25 +137,29 @@ const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputCl
           className="h-[800px]"
           size={PopupSize.Lg}
         >
-          <DialFileManager
-            className="bg-layer-2 p-0 gap-0"
-            path={filePath}
-            items={files as []}
-            filesLoading={isFetchingFiles}
-            showNavigationPanel={false}
-            treeOptions={getTreeOptions(
-              isReadOnlyAdmin,
-              isFetchingFiles,
-              loadedPaths,
-              expandedFolders,
-              setExpandedFolders,
-              t,
-            )}
-            gridOptions={getGridOptions(ApplicationRoute.Files, isReadOnlyAdmin, FILES_GRID_COLUMNS, t, true)}
-            onPathChange={handleOnPathChange}
-            onFolderPopupPathChange={handleFolderPopupPathChange}
-            handleSelectionClick={handleSelectionClick}
-          />
+          <div className="size-full">
+            <DialFileManager
+              className="p-0 gap-0 bg-layer-3"
+              gridClassName="p-3"
+              path={filePath}
+              items={files as []}
+              filesLoading={isFetchingFiles}
+              showNavigationPanel={false}
+              treeOptions={getTreeOptions(
+                isReadOnlyAdmin,
+                isFetchingFiles,
+                value ? expandedFolders : loadedPaths,
+                expandedFolders,
+                setExpandedFolders,
+                t,
+              )}
+              defaultSelectedPaths={value ? new Set([value]) : void 0}
+              gridOptions={getGridOptions(ApplicationRoute.Files, isReadOnlyAdmin, FILES_GRID_COLUMNS, t, true)}
+              onPathChange={handleOnPathChange}
+              onFolderPopupPathChange={handleFolderPopupPathChange}
+              handleSelectionClick={handleSelectionClick}
+            />
+          </div>
         </DialFormPopup>
       </DialInputPopup>
     </div>

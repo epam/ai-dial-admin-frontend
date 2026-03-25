@@ -76,28 +76,25 @@ const RulesValueList: FC<Props> = ({
             if (rulesToExclude || rulesToInclude) {
               ruleDiff = generateRuleDiff(rule, rulesToExclude, rulesToInclude);
             }
-            return (
+            return isReadonly ? (
               <div key={`rule-${i}`} className={ruleIndentClassName}>
-                {isReadonly ? (
-                  <>
-                    <div className={lineHorizontalChildClassName}></div>
-                    <RulesValueReadonly
-                      ruleDiff={ruleDiff}
-                      rule={rule}
-                      setLastValueHeight={isLastItem ? setLastValueHeight : void 0}
-                    />
-                  </>
-                ) : (
-                  <RulesValue
-                    rule={rule}
-                    attributes={availableAttributes}
-                    index={i}
-                    setLastValueHeight={isLastItem ? setLastValueHeight : void 0}
-                    onRemoveValue={() => onRemoveValue(i)}
-                    onChangeValue={(rule: DialRule) => onChangeValue(i, rule)}
-                  />
-                )}
+                <div className={lineHorizontalChildClassName}></div>
+                <RulesValueReadonly
+                  ruleDiff={ruleDiff}
+                  rule={rule}
+                  setLastValueHeight={isLastItem ? setLastValueHeight : void 0}
+                />
               </div>
+            ) : (
+              <RulesValue
+                key={`rule-${i}`}
+                rule={rule}
+                attributes={availableAttributes}
+                index={i}
+                setLastValueHeight={isLastItem ? setLastValueHeight : void 0}
+                onRemoveValue={() => onRemoveValue(i)}
+                onChangeValue={(rule: DialRule) => onChangeValue(i, rule)}
+              />
             );
           })}
         </div>

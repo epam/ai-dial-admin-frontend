@@ -18,7 +18,7 @@ import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import { getIgnorePathTitles } from '@/src/utils/import/get-ignore-path-title';
-import { isAssetView } from '@/src/utils/is-asset-view';
+import { isAssetView } from '@/src/utils/is-view';
 
 interface Props {
   files: File[];

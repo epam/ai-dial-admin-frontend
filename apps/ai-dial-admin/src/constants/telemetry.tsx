@@ -143,6 +143,7 @@ export const SYSTEM_USAGE_QUERY: TelemetryQuery = {
   query: {
     expressions: ["window(_time, 1, 'm') as time", 'count() as requests'],
     from: 'analytics',
+    orderBy: [{ $desc: '_time' }],
     groupBy: ["window(_time, 1, 'm')"],
   },
 };
@@ -175,37 +176,16 @@ export const TRACES_QUERY: TelemetryQuery = {
       //'cached_prompt_tokens',
     ],
     from: 'analytics',
+    orderBy: [{ $desc: '_time' }],
   },
 };
 
 export const MCP_QUERY: TelemetryQuery = {
   $type: 'json',
   query: {
-    expressions: [
-      '_time as completion_time',
-      'model',
-      'deployment',
-      'parent_deployment',
-      'execution_path',
-      'trace_id',
-      'core_span_id',
-      'core_parent_span_id',
-      'project_id',
-      'language',
-      'upstream',
-      'topic',
-      'title as user_title',
-      'response_id',
-      'user_hash',
-      'deployment_price',
-      'price',
-      'number_request_messages',
-      'chat_id',
-      'prompt_tokens',
-      'completion_tokens',
-      //'cached_prompt_tokens',
-    ],
-    from: 'analytics',
+    expressions: ['_time as completion_time', 'deployment', 'project_id', 'mcp_method', 'mcp_tool_call_name'],
+    from: 'mcp_analytics',
+    orderBy: [{ $desc: '_time' }],
   },
 };
 
