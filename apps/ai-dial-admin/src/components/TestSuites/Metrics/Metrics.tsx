@@ -145,7 +145,7 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
 
       <div className="flex-1 min-w-0 min-h-0">
         {metrics?.length ? (
-          <>
+          <div className="flex flex-row gap-4 h-full min-h-0">
             <DialCollapsibleSidebar
               width={280}
               title={t(TabsI18nKey.Metrics)}
@@ -192,7 +192,7 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
                 )
               )}
             </div>
-          </>
+          </div>
         ) : (
           <DialNoDataContent title={t(EntitiesI18nKey.NoMetrics)} />
         )}

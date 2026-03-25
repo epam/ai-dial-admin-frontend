@@ -95,7 +95,7 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, metrics, onClose, onConfirm })
       header={t(TestSuitesI18nKey.AddMetric)}
       portalId="AddMetricModal"
       open={isModalOpen}
-      size={PopupSize.Md}
+      size={PopupSize.Lg}
       className="h-[800px]"
       dividers
       footer={
