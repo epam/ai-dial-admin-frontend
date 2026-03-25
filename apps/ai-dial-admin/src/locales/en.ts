@@ -521,7 +521,6 @@ export default {
     ErrorCodes: 'Error Codes',
     Keys: 'Keys',
     Entities: 'Entities',
-    Validations: 'Validations',
     Parameters: 'Parameters',
     Applications: 'Applications',
     Dashboard: 'Dashboard',

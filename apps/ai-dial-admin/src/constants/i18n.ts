@@ -559,7 +559,6 @@ export enum TabsI18nKey {
   Resources = 'Tabs.Resources',
   Prompts = 'Tabs.Prompts',
   Metrics = 'Tabs.Metrics',
-  Validations = 'Tabs.Validations',
   ExecutionLog = 'Tabs.ExecutionLog',
   Images = 'Tabs.Images',
   Containers = 'Tabs.Containers',
