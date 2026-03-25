@@ -1,26 +1,100 @@
-import { FC } from 'react';
+import { FC, useCallback } from 'react';
 
-import { DialTag } from '@epam/ai-dial-ui-kit';
-import { SchemaFieldRow } from '../../../Common/SchemaGrid/utils';
+import { DialInput, DialNumberInput, DialSelectField, DialSwitch } from '@epam/ai-dial-ui-kit';
+
+import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
+import { EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
+import { MetricBinding } from '@/src/models/evaluation/metric';
+
+interface MetricSchemaFieldInputProps {
+  field: SchemaFieldRow;
+  placeholder: string;
+  binding?: MetricBinding;
+  onChangeValue: (fieldId: string, value: string) => void;
+}
+
+const MetricSchemaFieldInput: FC<MetricSchemaFieldInputProps> = ({ binding, field, placeholder, onChangeValue }) => {
+  return (
+    <div key={field.id}>
+      {field.type === 'string' &&
+        (field.enum ? (
+          <DialSelectField
+            id={field.id}
+            label={field.name}
+            caption={field.description}
+            placeholder={placeholder}
+            options={field.enum.map((item) => ({ label: item, value: item }))}
+            value={binding?.source.value as string | undefined}
+            onChange={(v) => onChangeValue(field.name, (v as string) ?? '')}
+          />
+        ) : (
+          <DialInput
+            id={field.id}
+            placeholder={placeholder}
+            labelProps={{ required: field.required, label: field.name, caption: field.description }}
+            value={binding?.source.value as string | undefined}
+            onChange={(v) => onChangeValue(field.name, (v as string) ?? '')}
+          />
+        ))}
+
+      {(field.type === 'integer' || field.type === 'number') && (
+        <DialNumberInput
+          id={field.id}
+          placeholder={placeholder}
+          labelProps={{ required: field.required, label: field.name, caption: field.description }}
+          value={binding?.source.value as number | undefined}
+          onChange={(v) => onChangeValue(field.name, (v as string) ?? '')}
+        />
+      )}
+
+      {field.type === 'boolean' && (
+        <DialSwitch
+          switchId={field.id}
+          label={field.name}
+          caption={field.description}
+          isOn={binding?.source.value as boolean | undefined}
+          onChange={(v) => onChangeValue(field.name, v.toString() ?? '')}
+        />
+      )}
+    </div>
+  );
+};
 
 interface Props {
   title: string;
+  bindings?: MetricBinding[];
   fields: SchemaFieldRow[];
+  onChange?: (bindings: MetricBinding[]) => void;
 }
 
-const MetricSchemaSection: FC<Props> = ({ title, fields }) => {
+const MetricSchemaSection: FC<Props> = ({ title, fields, bindings, onChange }) => {
+  const t = useI18n();
+  const valuePlaceholder = t(EntityPlaceholdersI18nKey.Value);
+
+  const onChangeValue = useCallback(
+    (fieldId: string, value: string) => {
+      onChange?.(
+        bindings?.map((binding) =>
+          binding.property === fieldId ? { ...binding, source: { ...binding.source, value } } : binding,
+        ) || [],
+      );
+    },
+    [bindings, onChange],
+  );
+
   return fields.length ? (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col">
       <p className="dial-small-semi mb-4">{title}</p>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-4">
         {fields.map((field) => (
-          <div key={field.id} className="flex flex-col gap-1">
-            <div className="flex flex-row gap-1 items-center">
-              <div className="text-sm text-primary">{field.name}</div>
-              <DialTag tag={field.type} />
-            </div>
-            <div className="tiny text-secondary">{field.description}</div>
-          </div>
+          <MetricSchemaFieldInput
+            key={field.id}
+            field={field}
+            placeholder={valuePlaceholder}
+            binding={bindings?.find((b) => b.property === field.name)}
+            onChangeValue={onChangeValue}
+          />
         ))}
       </div>
     </div>

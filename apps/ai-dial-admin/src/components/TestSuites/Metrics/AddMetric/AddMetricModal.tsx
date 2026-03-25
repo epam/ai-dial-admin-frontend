@@ -9,19 +9,19 @@ import StepperModalButtons from '@/src/components/Common/StepperModalButtons/Ste
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Metric, MetricBinding } from '@/src/models/evaluation/metric';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { generateMetricDefaultBindings } from '../../utils/metric-bindings';
 import MetricConfiguration from './Configuration';
 import { MetricStep } from './constants';
 import MetricSelection from './MetricSelection';
+import { validateMetricBindings } from './utils';
 
 interface Props {
   isModalOpen: boolean;
-  selectedTestSuite: TestSuite;
   onClose: () => void;
   onConfirm: (metric?: Metric | null) => void;
 }
 
-const AddMetricModal: FC<Props> = ({ isModalOpen, selectedTestSuite, onClose, onConfirm }) => {
+const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm }) => {
   const t = useI18n();
 
   const [currentStepId, setCurrentStepId] = useState<string>(MetricStep.AddMetric);
@@ -39,8 +39,28 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, selectedTestSuite, onClose, on
 
   const selectedMetric = useMemo(() => metrics?.find((m) => m.id === selectedMetricId), [metrics, selectedMetricId]);
 
+  useEffect(() => {
+    if (selectedMetricId) {
+      setIsMetricsLoading(true);
+      getMetricLatestVersion(selectedMetricId || '').then((metric) => {
+        setSelectedMetricDetails(metric as Metric);
+        setIsMetricsLoading(false);
+      });
+    }
+  }, [selectedMetricId]);
+
+  useEffect(() => {
+    setMetricName(selectedMetric?.name ?? '');
+  }, [selectedMetric]);
+
   const isStep1Valid = !!selectedMetricId;
-  const isStep2Valid = !!metricName?.trim();
+  const isStep2Valid = validateMetricBindings(
+    metricName,
+    configBindings,
+    inputBindings,
+    selectedMetricDetails?.configSchema,
+    selectedMetricDetails?.inputSchema,
+  );
 
   const steps: Step[] = useMemo(
     () => [
@@ -58,61 +78,9 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, selectedTestSuite, onClose, on
     [t, isStep1Valid, isStep2Valid],
   );
 
-  useEffect(() => {
-    if (selectedMetricId) {
-      setIsMetricsLoading(true);
-      getMetricLatestVersion(selectedMetricId || '').then((metric) => {
-        setSelectedMetricDetails(metric as Metric);
-        setIsMetricsLoading(false);
-      });
-    }
-  }, [selectedMetricId]);
-
-  // const validateBindings = useCallback((): boolean => {
-  //   // Check if metric name is non-empty
-  //   if (!metricName?.trim()) {
-  //     return false;
-  //   }
-
-  //   const allBindings = [...configBindings, ...inputBindings];
-
-  //   // Check required bindings from schema
-  //   const requiredConfigFields = selectedMetricParameters.filter((f) => f.required).map((f) => f.name);
-  //   const requiredInputFields = selectedMetricInputs.filter((f) => f.required).map((f) => f.name);
-  //   const requiredFields = [...requiredConfigFields, ...requiredInputFields];
-
-  //   for (const field of requiredFields) {
-  //     const binding = allBindings.find((b) => b.property === field);
-  //     if (!binding) {
-  //       return false;
-  //     }
-  //   }
-
-  //   // Check non-empty values for Constant type bindings
-  //   for (const binding of allBindings) {
-  //     if (binding.source.$type === 'Constant') {
-  //       if (binding.source.value === undefined || binding.source.value === '') {
-  //         return false;
-  //       }
-  //     }
-  //     // Check valid binding types
-  //     if (binding.source.$type !== 'Constant' && binding.source.$type !== 'Column') {
-  //       return false;
-  //     }
-  //   }
-
-  //   return true;
-  // }, [metricName, configBindings, inputBindings, selectedMetricParameters, selectedMetricInputs]);
-
   const onFinishClick = useCallback(() => {
     if (selectedMetricDetails) {
-      onConfirm({
-        name: metricName,
-        metricDeclarationId: selectedMetricDetails.metricDeclarationId,
-        metricDeclarationVersionId: selectedMetricDetails.id,
-        configBindings,
-        inputBindings,
-      } as Metric);
+      onConfirm(generateMetricDefaultBindings(metricName ?? '', selectedMetricDetails, configBindings, inputBindings));
     }
   }, [configBindings, inputBindings, metricName, onConfirm, selectedMetricDetails]);
 
@@ -164,9 +132,12 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, selectedTestSuite, onClose, on
 
           {currentStepId === MetricStep.Configuration && !isMetricsLoading && (
             <MetricConfiguration
+              metricName={metricName}
               selectedMetric={selectedMetric}
               onChangeName={setMetricName}
               selectedMetricDetails={selectedMetricDetails}
+              onChangeConfigBindings={setConfigBindings}
+              onChangeInputBindings={setInputBindings}
             />
           )}
         </div>

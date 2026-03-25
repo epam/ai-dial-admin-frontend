@@ -67,12 +67,19 @@ export const generateMetricDefaultInputBindings = (schema: JSONSchema7) => {
   }));
 };
 
-export const generateMetricDefaultBindings = (name: string, details: Metric) => {
+export const generateMetricDefaultBindings = (
+  name: string,
+  details: Metric,
+  configBindings: MetricBinding[],
+  inputBindings: MetricBinding[],
+) => {
   return {
     name,
     metricDeclarationId: details?.metricDeclarationId,
     metricDeclarationVersionId: details?.id,
-    inputBindings: generateMetricDefaultInputBindings(details.inputSchema ?? {}),
-    configBindings: generateMetricDefaultInputBindings(details.configSchema ?? {}),
+    inputBindings:
+      inputBindings.length > 0 ? inputBindings : generateMetricDefaultInputBindings(details.inputSchema ?? {}),
+    configBindings:
+      configBindings.length > 0 ? configBindings : generateMetricDefaultInputBindings(details.configSchema ?? {}),
   };
 };
