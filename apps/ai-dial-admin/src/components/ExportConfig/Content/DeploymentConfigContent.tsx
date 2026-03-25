@@ -80,7 +80,7 @@ const DeploymentConfigContent: FC<Props> = ({ customExportData, setCustomExportD
   useEffect(() => {
     if (selectedTab) {
       const data = customExportData?.[selectedTab] || [];
-      const columns = getDeploymentColDefs(onRemove, selectedTab);
+      const columns = getDeploymentColDefs(t, onRemove, selectedTab);
       setColDefs(columns);
       setRowData(data);
       gridApi?.setFilterModel(null);
@@ -113,7 +113,7 @@ const DeploymentConfigContent: FC<Props> = ({ customExportData, setCustomExportD
     return getAvailableEntities(existing, all);
   }, [tabData, customExportData, selectedTab]);
 
-  const modalColumnDefs = useMemo(() => getDeploymentColDefs(undefined, selectedTab), [selectedTab]);
+  const modalColumnDefs = useMemo(() => getDeploymentColDefs(t, undefined, selectedTab), [t, selectedTab]);
 
   const itemsCount = customExportData?.[selectedTab]?.length || 0;
 
