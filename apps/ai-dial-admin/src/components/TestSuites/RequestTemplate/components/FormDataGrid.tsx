@@ -26,6 +26,7 @@ const FormDataGrid: FC<Props> = ({ content, changeContent, hideAddButton }) => {
 
   const contentRef = useRef(structuredClone(content) || []);
   const onChangeRef = useRef(changeContent);
+  onChangeRef.current = changeContent;
 
   const onAddPart = useCallback(() => {
     const fieldData = [...contentRef.current];

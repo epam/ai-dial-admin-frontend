@@ -145,7 +145,7 @@ describe('getSchemaDefaults', () => {
     });
   });
 
-  test('should use preferNonNull for anyOf/oneOf (e.g. string | null) by default', () => {
+  test('should use null for anyOf/oneOf that mixes T and null by default (optional nullable)', () => {
     const schema: JSONSchema7 = {
       type: 'object',
       properties: {
@@ -153,10 +153,23 @@ describe('getSchemaDefaults', () => {
         id: { oneOf: [{ type: 'integer' }, { type: 'null' }] },
       },
     };
-    expect(getSchemaDefaults(schema)).toEqual({ name: '', id: 0 });
+    expect(getSchemaDefaults(schema)).toEqual({ name: null, id: null });
   });
 
-  test('should use variantChoice index to select anyOf/oneOf branch (e.g. null)', () => {
+  test('should default integer|null with constraints to null (e.g. optional limit)', () => {
+    const schema: JSONSchema7 = {
+      type: 'object',
+      properties: {
+        limit: {
+          anyOf: [{ type: 'integer', minimum: 1 }, { type: 'null' }],
+          title: 'Truths Extraction Limit',
+        },
+      },
+    };
+    expect(getSchemaDefaults(schema)).toEqual({ limit: null });
+  });
+
+  test('should use preferNonNull when variantChoice is preferNonNull', () => {
     const schema: JSONSchema7 = {
       type: 'object',
       properties: {
@@ -164,6 +177,21 @@ describe('getSchemaDefaults', () => {
         id: { oneOf: [{ type: 'integer' }, { type: 'null' }] },
       },
     };
+    expect(getSchemaDefaults(schema, undefined, { variantChoice: 'preferNonNull' })).toEqual({
+      name: '',
+      id: 0,
+    });
+  });
+
+  test('should use variantChoice index to select anyOf/oneOf branch', () => {
+    const schema: JSONSchema7 = {
+      type: 'object',
+      properties: {
+        name: { anyOf: [{ type: 'string' }, { type: 'null' }] },
+        id: { oneOf: [{ type: 'integer' }, { type: 'null' }] },
+      },
+    };
+    expect(getSchemaDefaults(schema, undefined, { variantChoice: 0 })).toEqual({ name: '', id: 0 });
     expect(getSchemaDefaults(schema, undefined, { variantChoice: 1 })).toEqual({ name: null, id: null });
   });
 
@@ -174,6 +202,7 @@ describe('getSchemaDefaults', () => {
         name: { anyOf: [{ type: 'null' }, { type: 'string' }] },
       },
     };
+    expect(getSchemaDefaults(schema)).toEqual({ name: null });
     expect(getSchemaDefaults(schema, undefined, { variantChoice: 0 })).toEqual({ name: null });
     expect(getSchemaDefaults(schema, undefined, { variantChoice: 1 })).toEqual({ name: '' });
   });
@@ -196,5 +225,25 @@ describe('getSchemaDefaults', () => {
       },
     };
     expect(getSchemaDefaults(schema)).toEqual({ matcher: 'citation' });
+  });
+
+  test('should use default on property next to $ref when resolved definition has no default', () => {
+    const root: JSONSchema7 = {
+      type: 'object',
+      properties: {
+        model: {
+          $ref: '#/$defs/SupportedLLM',
+          default: 'gemini-2.5-flash-lite',
+          description: 'The LLM model to use.',
+        },
+      },
+      $defs: {
+        SupportedLLM: {
+          type: 'string',
+          enum: ['gemini-2.5-flash-lite', 'gpt-4'],
+        },
+      },
+    };
+    expect(getSchemaDefaults(root)).toEqual({ model: 'gemini-2.5-flash-lite' });
   });
 });
