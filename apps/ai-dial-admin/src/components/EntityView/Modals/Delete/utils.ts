@@ -11,7 +11,7 @@ import { getRouteByType } from '@/src/utils/deployments/entity';
 import { IMAGE_TYPE } from '@/src/types/deployments/images';
 import { Container } from '@/src/models/deployments/containers';
 import { AllVersionValue } from '@/src/components/EntityView/Modals/Delete/constants';
-import { isAssetView, isEvaluationView } from '@/src/utils/is-view';
+import { isAssetView, isDeploymentManagerView, isEvaluationView } from '@/src/utils/is-view';
 
 const deleteEntityMap: Record<string, DeleteI18nKey> = {
   [ApplicationRoute.Models]: DeleteI18nKey.Model,
@@ -70,7 +70,7 @@ export const getNotificationDescription = (
   entityId: string,
   t: (str: string, props?: Record<string, string>) => string,
 ) => {
-  if (isAssetView(view) || isEvaluationView(view) || isEvaluationView(view)) {
+  if (isAssetView(view) || isEvaluationView(view) || isDeploymentManagerView(view)) {
     return t(DeleteI18nKey.NotificationDescriptionWithoutRollback, { entity: t(deleteEntityMap[view]), entityId });
   }
 
