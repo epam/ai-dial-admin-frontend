@@ -18,18 +18,11 @@ import { TelemetryQuery } from '@/src/models/telemetry';
 interface Props {
   getData: (query: TelemetryQuery) => Promise<ServerActionResponse>;
   getToolCallsData: (query: TelemetryQuery) => Promise<ServerActionResponse>;
-  getCallsByDeploymentData: (query: TelemetryQuery) => Promise<ServerActionResponse>;
   refreshTime: string;
   isEntityView?: boolean;
 }
 
-const McpDashboard: FC<Props> = ({
-  getData,
-  getToolCallsData,
-  getCallsByDeploymentData,
-  refreshTime,
-  isEntityView = false,
-}) => {
+const McpDashboard: FC<Props> = ({ getData, getToolCallsData, refreshTime, isEntityView = false }) => {
   const t = useI18n();
 
   return (
@@ -68,7 +61,7 @@ const McpDashboard: FC<Props> = ({
         <div className="flex flex-col md:flex-row gap-6">
           <div className="flex flex-1 relative">
             <TelemetryGrid
-              getData={getCallsByDeploymentData}
+              getData={getData}
               refreshTime={refreshTime}
               query={isEntityView ? null : MCP_CALLS_BY_DEPLOYMENT_QUERY}
               columnDefs={MCP_CALLS_BY_DEPLOYMENT_COLUMNS}

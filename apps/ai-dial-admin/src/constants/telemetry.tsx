@@ -263,14 +263,12 @@ export const MCP_CONSUMPTION_QUERY: TelemetryQuery = {
 export const MCP_CALLS_BY_DEPLOYMENT_QUERY: TelemetryQuery = {
   $type: 'json',
   query: {
-    expressions: ['deployment', 'count()'],
+    expressions: ['parent_deployment', 'deployment', 'count()'],
     from: MCP_TABLE_NAME,
-    groupBy: ['deployment', 'mcp_tool_call_name'],
+    groupBy: ['parent_deployment', 'deployment'],
     orderBy: [{ $desc: 'count()' }],
   },
 };
-
-export const MCP_CALLS_BY_DEPLOYMENT_EXTRA_CONDITIONS = [{ $ne: { left: 'mcp_tool_call_name', right: "'undefined'" } }];
 
 export const MCP_UNIQUE_USERS_QUERY: TelemetryQuery = {
   $type: 'json',
@@ -293,4 +291,5 @@ export const TELEMETRY_GRID_HEADERS_MAP: Record<string, string> = {
   tokens_p: 'prompts',
   tokens_c: 'completions',
   mcp_tool_call_name: 'mcp_tool_call_name',
+  parent_deployment: 'parent_deployment',
 };

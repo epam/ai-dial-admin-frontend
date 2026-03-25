@@ -6,7 +6,6 @@ import TelemetryGrid from '@/src/components/Telemetry/TelemetryGrid';
 import {
   DEFAULT_REFRESH_TIME,
   ENTITY_CONSUMPTION_QUERY,
-  MCP_CALLS_BY_DEPLOYMENT_EXTRA_CONDITIONS,
   MCP_TOOL_CALLS_EXTRA_CONDITIONS,
   PROJECT_CONSUMPTION_QUERY,
   TOOLSET_DEPLOYMENT_PREFIX,
@@ -114,11 +113,6 @@ const Dashboard: FC<Props> = ({
     [getMcpDataWithConditions],
   );
 
-  const getMcpCallsByDeploymentData = useMemo(
-    () => getMcpDataWithConditions(MCP_CALLS_BY_DEPLOYMENT_EXTRA_CONDITIONS),
-    [getMcpDataWithConditions],
-  );
-
   const onRefreshTimeChange = useCallback(
     (time: string) => {
       setRefreshTime(time);
@@ -178,7 +172,6 @@ const Dashboard: FC<Props> = ({
         <McpDashboard
           getData={getData}
           getToolCallsData={getMcpToolCallsData}
-          getCallsByDeploymentData={getMcpCallsByDeploymentData}
           refreshTime={refreshTime}
           isEntityView={!!entity}
         />
