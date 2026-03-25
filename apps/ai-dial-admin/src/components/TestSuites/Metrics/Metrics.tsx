@@ -10,10 +10,9 @@ import classNames from 'classnames';
 import {
   createTestSuiteMetric,
   deleteTestSuiteMetric,
-  getMetricDeclarations,
   getTestSuiteMetricDetailsWithSchema,
   getTestSuiteMetrics,
-  updateTestSuiteMetric,
+  updateTestSuiteMetric
 } from '@/src/app/[lang]/test-suites/actions';
 import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -22,7 +21,7 @@ import { useI18n } from '@/src/locales/client';
 import { Metric } from '@/src/models/evaluation/metric';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import AddMetricModal from './AddMetricModal';
+import AddMetricModal from './AddMetric/AddMetricModal';
 import MetricContent from './MetricContent';
 
 interface Props {
@@ -38,7 +37,6 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
 
   const [isMetricsLoading, setIsMetricsLoading] = useState(false);
   const [metrics, setMetrics] = useState<Metric[] | undefined>();
-  const [metricDeclarations, setMetricDeclarations] = useState<Metric[] | undefined>();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
@@ -110,13 +108,7 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
     [loadMetricDetails, selectedTestSuite.id, showNotification, t],
   );
 
-  useEffect(() => {
-    if (!metricDeclarations) {
-      getMetricDeclarations(0, 1000).then((response) => {
-        setMetricDeclarations(response?.content);
-      });
-    }
-  }, [metricDeclarations]);
+
 
   useEffect(() => {
     if (!metrics) {
@@ -139,7 +131,6 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
           iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
           label={t(ButtonsI18nKey.Add)}
           onClick={() => setIsAddModalOpen(true)}
-          disabled={!metricDeclarations || metricDeclarations.length === 0}
         />
       </div>
 
@@ -202,7 +193,7 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
         createPortal(
           <AddMetricModal
             isModalOpen={isAddModalOpen}
-            metrics={metricDeclarations || []}
+            selectedTestSuite={selectedTestSuite}
             onClose={() => setIsAddModalOpen(false)}
             onConfirm={onAddMetric}
           />,

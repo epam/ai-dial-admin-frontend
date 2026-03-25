@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { Metric } from '@/src/models/evaluation/metric';
-import AddMetricModal from '../AddMetricModal';
+import AddMetricModal from '../AddMetric/AddMetricModal';
 
 const mockGetMetricLatestVersion = vi.fn();
 

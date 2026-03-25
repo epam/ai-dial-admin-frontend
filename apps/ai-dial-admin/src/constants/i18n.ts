@@ -1480,7 +1480,7 @@ export enum TestSuitesI18nKey {
   ImportStepOptions = 'TestSuites.ImportStepOptions',
   NoInformationToPreview = 'TestSuites.NoInformationToPreview',
   AddMetric = 'TestSuites.AddMetric',
-  SelectMetricPreview = 'TestSuites.SelectMetricPreview',
+  Configuration = 'TestSuites.Configuration',
   Parameters = 'TestSuites.Parameters',
   Inputs = 'TestSuites.Inputs',
   Outputs = 'TestSuites.Outputs',
