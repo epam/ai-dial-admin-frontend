@@ -48,7 +48,7 @@ const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputCl
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    if (files == null || files?.length === 0) {
+    if ((files == null || files?.length === 0) && isModalOpen) {
       if (value) {
         const path = getFolderNameAndPath(value).path;
         fetchFolderHierarchy?.(`${path}/`, true);
@@ -58,7 +58,15 @@ const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputCl
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [files]);
+  }, [files, isModalOpen]);
+
+  useEffect(() => {
+    if (value && files !== null && files.length > 0 && isModalOpen) {
+      const path = getFolderNameAndPath(value).path;
+      fetchFolderHierarchy?.(`${path}/`, true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, isModalOpen]);
 
   const handleOnPathChange = useCallback(
     (nextPath: string | undefined) => {
