@@ -1,10 +1,9 @@
 import { FC } from 'react';
 
-import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
-
+import McpUsageChart from '@/src/components/Charts/LineChart/McpUsageChart';
 import McpSingleValueChartsDashboard from '@/src/components/Charts/SingleValueChart/McpSingleValueChartsDashboard';
 import TelemetryGrid from '@/src/components/Telemetry/TelemetryGrid';
-import { BasicI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
+import { TelemetryI18nKey } from '@/src/constants/i18n';
 import {
   MCP_CALLS_BY_DEPLOYMENT_COLUMNS,
   MCP_CONSUMPTION_COLUMNS,
@@ -36,10 +35,7 @@ const McpDashboard: FC<Props> = ({
   return (
     <div className="flex flex-col flex-1 min-h-0 min-w-0 overflow-auto">
       <div className="flex flex-col md:flex-row mb-6 md:flex-wrap gap-6">
-        <div className="flex flex-col flex-1 rounded-lg border border-primary p-4 min-h-[280px] min-w-[200px]">
-          <h3 className="text-primary mb-4">{t(TelemetryI18nKey.RequestPerMcpUsage)}</h3>
-          <DialNoDataContent title={t(BasicI18nKey.NoData)} />
-        </div>
+        <McpUsageChart getData={getData} refreshTime={refreshTime} />
         <McpSingleValueChartsDashboard
           getData={getData}
           getToolCallsData={getToolCallsData}

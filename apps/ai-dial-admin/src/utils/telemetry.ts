@@ -2,7 +2,7 @@ import { SelectOption } from '@epam/ai-dial-ui-kit';
 import { Big } from 'big.js';
 import { EChartsOption } from 'echarts-for-react/src/types';
 
-import { lineChartDefaultOptions } from '@/src/components/Charts/LineChart/constants';
+import { lineChartDefaultOptions, multiSeriesLineChartOptions } from '@/src/components/Charts/LineChart/constants';
 import {
   filterConditionConfig,
   filterOperatorConfig,
@@ -121,6 +121,42 @@ export function prepareChartData(data: Record<string, string>[], t: (key: string
 
   (config.xAxis as unknown as { data: string[] }).data = xData;
   (config.series as unknown as { data: string[] }[])[0].data = yData;
+
+  return config;
+}
+
+export function prepareMultiSeriesChartData(data: Record<string, string>[], t: (key: string) => string): EChartsOption {
+  const config = { ...multiSeriesLineChartOptions(t) };
+
+  const timeSet = new Set<string>();
+  const methodSet = new Set<string>();
+
+  for (const row of data) {
+    timeSet.add(row.window);
+    methodSet.add(row.mcp_method);
+  }
+
+  const times = Array.from(timeSet).sort();
+  const methods = Array.from(methodSet).sort();
+
+  const dataByMethod = new Map<string, Map<string, number>>();
+  for (const method of methods) {
+    dataByMethod.set(method, new Map());
+  }
+  for (const row of data) {
+    dataByMethod.get(row.mcp_method)!.set(row.window, Number(row.count));
+  }
+
+  (config.xAxis as unknown as { data: string[] }).data = times;
+  (config as unknown as { series: unknown[] }).series = methods.map((method) => {
+    const methodData = dataByMethod.get(method)!;
+    return {
+      name: method,
+      type: 'line',
+      smooth: true,
+      data: times.map((time) => methodData.get(time) ?? 0),
+    };
+  });
 
   return config;
 }

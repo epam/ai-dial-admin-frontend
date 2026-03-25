@@ -223,6 +223,15 @@ export const CONVERSATIONS_QUERY: TelemetryQuery = {
 export const MCP_TABLE_NAME = 'mcp_analytics';
 export const TOOLSET_DEPLOYMENT_PREFIX = 'toolsets/';
 
+export const MCP_USAGE_QUERY: TelemetryQuery = {
+  $type: 'json',
+  query: {
+    expressions: ["window(_time, 1, 'm')", 'mcp_method', 'count()'],
+    from: MCP_TABLE_NAME,
+    groupBy: ["window(_time, 1, 'm')", 'mcp_method'],
+  },
+};
+
 export const MCP_TOTAL_CALLS_QUERY: TelemetryQuery = {
   $type: 'json',
   query: {
