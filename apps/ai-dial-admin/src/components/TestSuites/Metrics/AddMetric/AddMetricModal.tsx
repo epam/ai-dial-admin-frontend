@@ -134,6 +134,8 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm }) => {
             <MetricConfiguration
               metricName={metricName}
               selectedMetric={selectedMetric}
+              configBindings={configBindings}
+              inputBindings={inputBindings}
               onChangeName={setMetricName}
               selectedMetricDetails={selectedMetricDetails}
               onChangeConfigBindings={setConfigBindings}

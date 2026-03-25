@@ -9,12 +9,13 @@ import { EntityFieldsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Metric, MetricBinding } from '@/src/models/evaluation/metric';
 import MetricSchemaSection from './SchemaSection';
-import { generateMetricDefaultInputBindings } from '../../utils/metric-bindings';
 
 interface Props {
   metricName?: string;
   selectedMetric?: Metric;
   selectedMetricDetails?: Metric;
+  inputBindings?: MetricBinding[];
+  configBindings?: MetricBinding[];
   onChangeName?: (name: string | undefined) => void;
   onChangeConfigBindings?: (bindings: MetricBinding[]) => void;
   onChangeInputBindings?: (bindings: MetricBinding[]) => void;
@@ -26,21 +27,13 @@ const MetricConfiguration: FC<Props> = ({
   onChangeConfigBindings,
   onChangeInputBindings,
   selectedMetricDetails,
+  inputBindings,
+  configBindings,
   onChangeName,
 }) => {
   const t = useI18n();
 
   console.log('selectedMetricDetails', selectedMetricDetails);
-
-  const inputBindings = useMemo(
-    () => generateMetricDefaultInputBindings(selectedMetricDetails?.inputSchema ?? {}),
-    [selectedMetricDetails?.inputSchema],
-  );
-
-  const configBindings = useMemo(
-    () => generateMetricDefaultInputBindings(selectedMetricDetails?.configSchema ?? {}),
-    [selectedMetricDetails?.configSchema],
-  );
 
   const selectedMetricParameters = useMemo(() => {
     return jsonSchemaToFields(selectedMetricDetails?.configSchema, selectedMetricDetails?.configSchema);
