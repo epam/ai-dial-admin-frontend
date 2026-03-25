@@ -120,7 +120,7 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
         <>
           <div className="flex flex-col gap-y-3">
             <div className="flex items-center justify-between">
-              <div className="flex flex-row items-center gap-x-2">
+              <div className="flex flex-row items-center gap-3">
                 <h1>{t(ButtonsI18nKey.TryOut)}</h1>
                 {response ? (
                   <DialGhostButton
