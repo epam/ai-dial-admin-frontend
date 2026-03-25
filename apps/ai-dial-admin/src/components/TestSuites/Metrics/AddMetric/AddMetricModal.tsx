@@ -2,18 +2,17 @@
 
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialLoader, DialPopup, DialSteps, DialTag, PopupSize, Step, StepStatus } from '@epam/ai-dial-ui-kit';
+import { DialLoader, DialPopup, DialSteps, PopupSize, Step, StepStatus } from '@epam/ai-dial-ui-kit';
 
-import { getMetricDeclarations } from '@/src/app/[lang]/test-suites/actions';
-import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
+import { getMetricDeclarations, getMetricLatestVersion } from '@/src/app/[lang]/test-suites/actions';
+import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Metric, MetricBinding } from '@/src/models/evaluation/metric';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
-import StepperModalButtons from '../../../Common/StepperModalButtons/StepperModalButtons';
+import MetricConfiguration from './Configuration';
 import { MetricStep } from './constants';
 import MetricSelection from './MetricSelection';
-import MetricConfiguration from './Configuration';
 
 interface Props {
   isModalOpen: boolean;
@@ -21,30 +20,6 @@ interface Props {
   onClose: () => void;
   onConfirm: (metric?: Metric | null) => void;
 }
-
-interface MetricSchemaSectionProps {
-  title: string;
-  fields: SchemaFieldRow[];
-}
-
-const MetricSchemaSection: FC<MetricSchemaSectionProps> = ({ title, fields }) => {
-  return fields.length ? (
-    <div className="flex flex-col gap-1">
-      <h4 className="text-secondary">{title}</h4>
-      <div className="flex flex-col gap-1 ml-2">
-        {fields.map((field) => (
-          <div key={field.id} className="flex flex-col gap-1">
-            <div className="flex flex-row gap-1 items-center">
-              <div className="text-sm text-primary">{field.name}</div>
-              <DialTag tag={field.type} />
-            </div>
-            <div className="tiny text-secondary">{field.description}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  ) : null;
-};
 
 const AddMetricModal: FC<Props> = ({ isModalOpen, selectedTestSuite, onClose, onConfirm }) => {
   const t = useI18n();
@@ -55,29 +30,44 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, selectedTestSuite, onClose, on
   const [metrics, setMetrics] = useState<Metric[] | undefined>();
 
   const [selectedMetricId, setSelectedMetricId] = useState<string>('');
-  const [metricName, setMetricName] = useState<string>('');
+  const [selectedMetricDetails, setSelectedMetricDetails] = useState<Metric | undefined>();
+
+  const [metricName, setMetricName] = useState<string | undefined>('');
+
   const [configBindings, setConfigBindings] = useState<MetricBinding[]>([]);
   const [inputBindings, setInputBindings] = useState<MetricBinding[]>([]);
 
-  const selectedMetricDetails = useMemo(() => {
-    return metrics?.find((m) => m.id === selectedMetricId);
-  }, [metrics, selectedMetricId]);
+  const selectedMetric = useMemo(() => metrics?.find((m) => m.id === selectedMetricId), [metrics, selectedMetricId]);
 
-  // Load metric details when selected
-  // useEffect(() => {
-  //   if (selectedMetricId) {
-  //     setIsDetailsLoading(true);
-  //     getMetricLatestVersion(selectedMetricId || '').then((metric) => {
-  //       setSelectedMetricDetails(metric);
-  //       setMetricName(metrics.find((m) => m.id === selectedMetricId)?.name || '');
-  //       setConfigBindings(generateMetricDefaultInputBindings(metric?.configSchema ?? {}));
-  //       setInputBindings(generateMetricDefaultInputBindings(metric?.inputSchema ?? {}));
-  //       setIsDetailsLoading(false);
-  //     });
-  //   }
-  // }, [selectedMetricId, metrics]);
+  const isStep1Valid = !!selectedMetricId;
+  const isStep2Valid = !!metricName?.trim();
 
-  // Validation logic
+  const steps: Step[] = useMemo(
+    () => [
+      {
+        id: MetricStep.AddMetric,
+        name: t(TestSuitesI18nKey.AddMetric),
+        status: isStep1Valid ? StepStatus.VALID : undefined,
+      },
+      {
+        id: MetricStep.Configuration,
+        name: t(TestSuitesI18nKey.Configuration),
+        status: isStep2Valid ? StepStatus.VALID : undefined,
+      },
+    ],
+    [t, isStep1Valid, isStep2Valid],
+  );
+
+  useEffect(() => {
+    if (selectedMetricId) {
+      setIsMetricsLoading(true);
+      getMetricLatestVersion(selectedMetricId || '').then((metric) => {
+        setSelectedMetricDetails(metric as Metric);
+        setIsMetricsLoading(false);
+      });
+    }
+  }, [selectedMetricId]);
+
   // const validateBindings = useCallback((): boolean => {
   //   // Check if metric name is non-empty
   //   if (!metricName?.trim()) {
@@ -114,38 +104,17 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, selectedTestSuite, onClose, on
   //   return true;
   // }, [metricName, configBindings, inputBindings, selectedMetricParameters, selectedMetricInputs]);
 
-  // Step validation
-  const isStep1Valid = !!selectedMetricId;
-  const isStep2Valid = true;
-
-  const steps: Step[] = useMemo(
-    () => [
-      {
-        id: MetricStep.AddMetric,
-        name: t(TestSuitesI18nKey.AddMetric),
-        status: isStep1Valid ? StepStatus.VALID : undefined,
-      },
-      {
-        id: MetricStep.Configuration,
-        name: t(TestSuitesI18nKey.Configuration),
-        status: isStep2Valid ? StepStatus.VALID : undefined,
-      },
-    ],
-    [t, isStep1Valid, isStep2Valid],
-  );
-
   const onFinishClick = useCallback(() => {
-    // if (isStep2Valid && selectedMetricDetails) {
-    //   const metric: Metric = {
-    //     name: metricName,
-    //     metricDeclarationId: selectedMetricDetails.metricDeclarationId,
-    //     metricDeclarationVersionId: selectedMetricDetails.id,
-    //     configBindings,
-    //     inputBindings,
-    //   };
-    //   onConfirm(metric);
-    // }
-  }, []);
+    if (selectedMetricDetails) {
+      onConfirm({
+        name: metricName,
+        metricDeclarationId: selectedMetricDetails.metricDeclarationId,
+        metricDeclarationVersionId: selectedMetricDetails.id,
+        configBindings,
+        inputBindings,
+      } as Metric);
+    }
+  }, [configBindings, inputBindings, metricName, onConfirm, selectedMetricDetails]);
 
   useEffect(() => {
     if (!metrics) {
@@ -194,32 +163,12 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, selectedTestSuite, onClose, on
           )}
 
           {currentStepId === MetricStep.Configuration && !isMetricsLoading && (
-            <MetricConfiguration selectedMetricDetails={selectedMetricDetails} />
+            <MetricConfiguration
+              selectedMetric={selectedMetric}
+              onChangeName={setMetricName}
+              selectedMetricDetails={selectedMetricDetails}
+            />
           )}
-
-          {/* <div className="h-full flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <h3 className="text-secondary">{t(TestSuitesI18nKey.MetricName)}</h3>
-              <DialInput
-                containerClassName={STANDARD_CONTROL_WIDTH}
-                id="metricName"
-                value={metricName}
-                onChange={setMetricName}
-              />
-            </div>
-            {selectedMetricDetails && (
-              <BindingsConfiguration
-                selectedTestSuite={selectedTestSuite}
-                selectedMetric={{
-                  ...selectedMetricDetails,
-                  name: metricName,
-                  configBindings,
-                  inputBindings,
-                }}
-                onChange={handleBindingsChange}
-              />
-            )}
-          </div> */}
         </div>
       </div>
     </DialPopup>
