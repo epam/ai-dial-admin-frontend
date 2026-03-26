@@ -166,15 +166,15 @@ describe('Formatters :: sourceTypeFormatter', () => {
 });
 
 describe('formatRequired', () => {
-  test('returns translated Yes when value is truthy', () => {
+  test('returns translated Required when value is truthy', () => {
     const t = (key: string) => key;
     const res = formatRequired('non-empty', t);
-    expect(res).toBe(BasicI18nKey.Yes);
+    expect(res).toBe(BasicI18nKey.Required);
   });
 
-  test('returns translated No when value is falsy', () => {
+  test('returns translated Optional when value is falsy', () => {
     const t = (key: string) => key;
     const res = formatRequired('', t);
-    expect(res).toBe(BasicI18nKey.No);
+    expect(res).toBe(BasicI18nKey.Optional);
   });
 });
