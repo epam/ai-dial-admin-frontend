@@ -10,12 +10,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import EndpointAndMCPContainer from '@/src/components/SourceField/Application/EndpointAndMCPContainer';
 import { useI18n } from '@/src/locales/client';
 
-export enum SourceType {
-  ENDPOINT = 'endpoint',
-  MCP_CONTAINER = 'mcp',
-}
-
-export interface Props {
+interface Props {
   entity: DialApplicationScheme;
   view?: ApplicationRoute;
   isEntityImmutable?: boolean;
