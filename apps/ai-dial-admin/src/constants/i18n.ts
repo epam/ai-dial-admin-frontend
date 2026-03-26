@@ -1488,6 +1488,7 @@ export enum TestSuitesI18nKey {
   Outputs = 'TestSuites.Outputs',
   Bindings = 'TestSuites.Bindings',
   Results = 'TestSuites.Results',
+  FinalPath = 'TestSuites.FinalPath',
 }
 
 export enum RunsI18nKey {
