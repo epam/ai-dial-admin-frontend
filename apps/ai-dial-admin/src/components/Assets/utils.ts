@@ -3,6 +3,7 @@ import { AssetApp, AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { compareVersions, modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
 import { ApplicationRoute } from '@/src/types/routes';
 import { allActionLabels, allToolbarOptionLabels } from './constants';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
 
 export const filterLatestVersions = (data: AssetWithVersion[]) => {
   const latestVersions: Record<string, AssetWithVersion> = {};
@@ -85,7 +86,11 @@ export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: 
     case ApplicationRoute.Files:
       return isReadOnlyAdmin ? [] : allToolbarOptionLabels.filter((item) => item.key !== 'newItem');
     case ApplicationRoute.Prompts:
-      return isReadOnlyAdmin ? [] : allToolbarOptionLabels;
+      return isReadOnlyAdmin
+        ? []
+        : allToolbarOptionLabels.map((option) => {
+            return option.key === 'uploadFiles' ? { ...option, label: ButtonsI18nKey.Import } : option;
+          });
     default:
       return [];
   }

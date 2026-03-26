@@ -1547,6 +1547,10 @@ export default {
     CreateFolderValidateNameLength: 'Folder name should be at most {length} characters long',
     MoveItem: 'Move "{item}" to',
     MoveItems: 'Move {count} items to',
+    DeleteItemsModalTitle: 'Confirm Deleting Items',
+    DeleteItemsModalDescription: 'Do you want to delete the following {length} items?',
+    MoreItems: '... and {length} more',
+    DeleteFolderAlert: 'Folders may contain other prompts.',
   },
   Runs: {
     StartTime: 'Start time',

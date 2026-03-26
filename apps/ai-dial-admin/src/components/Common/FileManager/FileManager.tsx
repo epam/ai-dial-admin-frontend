@@ -47,7 +47,7 @@ interface Props {
   columnDefs: ColDef[];
   getContext: () => AssetsFolderContext;
   onCreateFolder: (file: DialUploadFileItem | undefined, folderPath: string) => Promise<ServerActionResponse>;
-  onDeleteItems: (fileNodes: DialDeletedItem[]) => Promise<ServerActionResponse[]>;
+  onDeleteItems?: (fileNodes: DialDeletedItem[]) => Promise<ServerActionResponse[]>;
   onMoveItems: (
     items: DialCopiedItem[],
     sourceFolder: string,
@@ -57,11 +57,14 @@ interface Props {
   customUploadFileAction?: (currentPath?: string, currentFolder?: DialFile) => void;
   customCreateNewItemAction?: (currentPath?: string, currentFolder?: DialFile) => void;
   customDuplicateAction?: (items?: DialFile[]) => void;
+  customDeleteItemsAction?: (items: DialFile[], parentFolderPath: string) => void;
   onTableFileClick?: (item: FileManagerGridRow) => void;
   filterData?: (data: AssetWithVersion[]) => AssetWithVersion[];
   selectedVersionsMap?: Record<string, string[]>;
   nonClickableTableColumns?: FileManagerColumnKey[];
   onPathChange?: (nextPath?: string) => void;
+  onSelectedPathsChange?: (paths: Set<string>) => void;
+  selectedPaths?: Set<string>;
 }
 
 const FileManager: FC<Props> = ({
@@ -230,7 +233,7 @@ const FileManager: FC<Props> = ({
 
   const handleDeleteFileNodes = useCallback(
     async (fileNodes: DialDeletedItem[]) => {
-      onDeleteItems(fileNodes).then((result) => {
+      onDeleteItems?.(fileNodes).then((result) => {
         const isSuccess = result.every((res) => res.success);
         if (isSuccess) {
           const parentPath = getParentPathByFullPath(fileNodes[0]?.sourceUrl) || `${ROOT_FOLDER}/`;

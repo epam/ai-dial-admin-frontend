@@ -18,6 +18,7 @@ export const getPromptGridColumns = (
     isSelected?: boolean | undefined,
   ) => void,
   selectedVersionsMap: Record<string, string[]>,
+  hasSelectedItems: boolean,
 ) => {
   const AUTHOR_COLUMN = {
     colId: FileManagerColumnKey.Author,
@@ -39,7 +40,7 @@ export const getPromptGridColumns = (
         const selectValue = customSelectedVersions
           ? customSelectedVersions.join(STRINGS_DELIMITER)
           : params.data.selectedVersions.join(STRINGS_DELIMITER);
-        return (
+        return hasSelectedItems ? (
           <SelectCellRenderer
             {...params}
             data={params.data}
@@ -48,6 +49,8 @@ export const getPromptGridColumns = (
             getItems={getItems}
             onChange={onChange}
           />
+        ) : (
+          params.data?.version || ''
         );
       } else {
         return null;
