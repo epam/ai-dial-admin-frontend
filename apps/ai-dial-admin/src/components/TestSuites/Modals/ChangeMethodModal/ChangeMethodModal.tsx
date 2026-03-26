@@ -7,6 +7,7 @@ import { AlertVariant, DialAlert, DialConfirmationPopup, PopupSize } from '@epam
 
 import Methods from '@/src/components/TestSuites/Methods/Methods';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { Deployment } from '@/src/models/evaluation/deployment';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
@@ -29,6 +30,7 @@ const ChangeMethodModal: FC<ChangeMethodModalProps> = ({
   onClose,
 }) => {
   const t = useI18n();
+  const { isValid } = useSaveValidationContext();
   const [currentSuite, setCurrentSuite] = useState<TestSuite>(structuredClone(testSuite));
 
   useEffect(() => {
@@ -43,8 +45,8 @@ const ChangeMethodModal: FC<ChangeMethodModalProps> = ({
   }, [currentSuite, onChangeTestSuite, onClose]);
 
   const disableConfirm = useMemo(
-    () => !currentSuite.endpointRef?.method || !currentSuite.endpointRef?.relativeUrlPattern,
-    [currentSuite.endpointRef?.method, currentSuite.endpointRef?.relativeUrlPattern],
+    () => !currentSuite.endpointRef?.method || !currentSuite.endpointRef?.relativeUrlPattern || !isValid,
+    [currentSuite.endpointRef?.method, currentSuite.endpointRef?.relativeUrlPattern, isValid],
   );
 
   const inlineOnChange = useCallback<Dispatch<SetStateAction<TestSuite>>>(

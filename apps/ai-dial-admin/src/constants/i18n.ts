@@ -601,6 +601,7 @@ export enum TelemetryI18nKey {
   Custom = 'Telemetry.Custom',
   UniqueUsers = 'Telemetry.UniqueUsers',
   Requests = 'Telemetry.Requests',
+  RequestsNumber = 'Telemetry.RequestsNumber',
   RequestCount = 'Telemetry.RequestCount',
   TotalTokens = 'Telemetry.TotalTokens',
   Money = 'Telemetry.Money',
@@ -1489,6 +1490,7 @@ export enum TestSuitesI18nKey {
   Outputs = 'TestSuites.Outputs',
   Bindings = 'TestSuites.Bindings',
   Results = 'TestSuites.Results',
+  FinalPath = 'TestSuites.FinalPath',
 }
 
 export enum RunsI18nKey {
@@ -1520,6 +1522,12 @@ export enum FileManagerI18nKey {
   Preview = 'FileManager.Preview',
   MoveItem = 'FileManager.MoveItem',
   MoveItems = 'FileManager.MoveItems',
+
+  // Modals
+  DeleteItemsModalTitle = 'FileManager.DeleteItemsModalTitle',
+  DeleteItemsModalDescription = 'FileManager.DeleteItemsModalDescription',
+  MoreItems = 'FileManager.MoreItems',
+  DeleteFolderAlert = 'FileManager.DeleteFolderAlert',
 
   // Notifications
   CreateFolderSuccessTitle = 'FileManager.Notifications.CreateFolder.Title',

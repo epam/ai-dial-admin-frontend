@@ -45,11 +45,7 @@ const ContainerStartupProbe: FC<Props> = ({ container, setContainer, disabled })
   const toggleCustomStartupProbe = useCallback(
     (enabled: boolean) => {
       const updated = { ...container };
-      if (!enabled) {
-        delete updated.probeProperties;
-      } else {
-        updated.probeProperties = updated.probeProperties || DEFAULT_PROBE_CONFIG;
-      }
+      updated.probeProperties = { ...(updated.probeProperties || DEFAULT_PROBE_CONFIG), enabled };
       setContainer(updated);
     },
     [container, setContainer],

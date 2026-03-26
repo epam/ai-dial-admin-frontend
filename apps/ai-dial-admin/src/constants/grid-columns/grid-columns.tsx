@@ -490,19 +490,19 @@ export const MCP_CONSUMPTION_COLUMNS: ColDef[] = [
 ];
 
 export const TOOLS_CONSUMPTION_COLUMNS: ColDef[] = [
-  { field: 'mcp_name', headerName: 'MCP Name', hide: false },
-  { field: 'tool', headerName: 'Tool', hide: false },
-  { field: 'calls', headerName: 'Calls', hide: false, ...numericColumn },
+  { field: 'name', headerName: 'MCP Name', hide: false },
+  { field: 'mcp_tool_call_name', headerName: 'Tool', hide: false },
+  { field: 'requests', headerName: 'Calls', hide: false, ...numericColumn },
 ];
 
 export const MCP_CALLS_BY_DEPLOYMENT_COLUMNS: ColDef[] = [
-  { field: 'name', headerName: 'Deployment Name', hide: false },
-  { field: 'mcp_tool_call_name', headerName: 'MCP Name', hide: false },
+  { field: 'parent_deployment', headerName: 'Deployment Name', hide: false },
+  { field: 'name', headerName: 'MCP Name', hide: false },
   { field: 'requests', headerName: 'Calls', hide: false, ...numericColumn },
 ];
 
 export const MCP_PROJECTS_CONSUMPTION_COLUMNS: ColDef[] = [
-  { field: 'project', headerName: 'Project', hide: false },
+  { field: 'name', headerName: 'Project', hide: false },
   { field: 'tool_calls', headerName: 'Tool Calls', hide: false, ...numericColumn },
   { field: 'mcp_calls', headerName: 'MCP Calls', hide: false, sort: 'desc', ...numericColumn },
 ];
@@ -773,15 +773,25 @@ export const METRICS_COLUMN: ColDef[] = [
 ];
 
 export const TOOL_SCHEMA_COLUMNS = (t: (key: string) => string): ColDef[] => [
-  { field: 'field', headerName: 'Field', floatingFilter: false, filter: false, sortable: false },
+  { field: 'field', headerName: 'Name', floatingFilter: false, filter: false, sortable: false },
   { field: 'description', headerName: 'Description', floatingFilter: false, filter: false, sortable: false },
-  { field: 'type', headerName: 'Type', floatingFilter: false, filter: false, sortable: false },
   {
-    field: 'required',
-    headerName: 'Required',
+    field: 'type',
+    headerName: 'Data type',
     floatingFilter: false,
     filter: false,
     sortable: false,
+    minWidth: 140,
+    maxWidth: 140,
+  },
+  {
+    field: 'required',
+    headerName: 'Requirement',
+    floatingFilter: false,
+    filter: false,
+    sortable: false,
+    minWidth: 110,
+    maxWidth: 110,
     cellDataType: false,
     valueFormatter: ({ value }) => formatRequired(value, t),
     tooltipValueGetter: ({ value }) => formatRequired(value, t),
@@ -790,15 +800,25 @@ export const TOOL_SCHEMA_COLUMNS = (t: (key: string) => string): ColDef[] => [
 
 export const PARAMETERS_SCHEMA_COLUMNS = (t: (key: string) => string): ColDef[] => [
   { field: 'name', headerName: 'Name', floatingFilter: false, filter: false, sortable: false },
-  { field: 'in', headerName: 'In', floatingFilter: false, filter: false, sortable: false },
+  { field: 'in', headerName: 'Location', floatingFilter: false, filter: false, sortable: false },
   { field: 'description', headerName: 'Description', floatingFilter: false, filter: false, sortable: false },
-  { field: 'schema.type', headerName: 'Type', floatingFilter: false, filter: false, sortable: false },
   {
-    field: 'required',
-    headerName: 'Required',
+    field: 'schema.type',
+    headerName: 'Data type',
     floatingFilter: false,
     filter: false,
     sortable: false,
+    minWidth: 140,
+    maxWidth: 140,
+  },
+  {
+    field: 'required',
+    headerName: 'Requirement',
+    floatingFilter: false,
+    filter: false,
+    sortable: false,
+    minWidth: 110,
+    maxWidth: 110,
     cellDataType: false,
     valueFormatter: ({ value }) => formatRequired(value, t),
     tooltipValueGetter: ({ value }) => formatRequired(value, t),
