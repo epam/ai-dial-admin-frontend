@@ -112,7 +112,12 @@ const MetricInput: FC<{
       </div>
 
       {binding?.source.$type === MetricBindingType.Constant && (
-        <MetricControl label={false} field={field} binding={binding} onChangeValue={onChangeConstant} />
+        <MetricControl
+          label={false}
+          field={field}
+          binding={binding}
+          onChangeValue={(_field, value) => onChangeConstant(value)}
+        />
       )}
 
       {binding?.source.$type === MetricBindingType.Response && (

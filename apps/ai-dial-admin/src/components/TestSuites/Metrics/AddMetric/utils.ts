@@ -33,13 +33,13 @@ export const validateMetricBindings = (
 
   for (const binding of allBindings) {
     if (binding.source.$type === MetricBindingType.Constant) {
-      if (binding.source.value === undefined || binding.source.value === '') {
+      if (!binding.source.value || binding.source.value === '') {
         return false;
       }
-    }
-
-    if (binding.source.$type !== MetricBindingType.Constant && binding.source.$type !== MetricBindingType.Response) {
-      return false;
+    } else {
+      if (!binding.source.columnName || binding.source.columnName === '') {
+        return false;
+      }
     }
   }
 

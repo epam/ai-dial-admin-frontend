@@ -76,9 +76,10 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
       if (metric) {
         setIsAddModalOpen(false);
         setMetricToEdit(undefined);
-        const newMetric = structuredClone(metric);
+        const newMetric = structuredClone({ ...metricToEdit, ...metric });
         delete newMetric.metricDeclaration;
         delete newMetric.metricDeclarationVersion;
+
         updateTestSuiteMetric(selectedTestSuite.id as string, newMetric).then((response) => {
           if (response?.success) {
             showNotification(getSuccessNotification(t(TestSuitesI18nKey.MetricUpdateSuccess)));
@@ -93,7 +94,7 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
         });
       }
     },
-    [selectedTestSuite.id, showNotification, t],
+    [metricToEdit, selectedTestSuite.id, showNotification, t],
   );
 
   useEffect(() => {

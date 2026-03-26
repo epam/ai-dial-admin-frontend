@@ -105,4 +105,65 @@ describe('validateMetricBindings', () => {
 
     expect(isValid).toBe(true);
   });
+
+  test('returns true for response binding with non-empty columnName', () => {
+    const isValid = validateMetricBindings(
+      'Metric name',
+      [
+        {
+          property: 'threshold',
+          source: {
+            $type: MetricBindingType.Response,
+            columnName: 'scoreColumn',
+          },
+        },
+      ],
+      [
+        {
+          property: 'inputText',
+          source: {
+            $type: MetricBindingType.Response,
+            columnName: 'promptColumn',
+          },
+        },
+      ],
+      configSchema,
+      inputSchema,
+    );
+
+    expect(isValid).toBe(true);
+  });
+
+  test('returns false for response binding with empty columnName', () => {
+    const isValid = validateMetricBindings(
+      'Metric name',
+      [
+        {
+          property: 'threshold',
+          source: {
+            $type: MetricBindingType.Response,
+            columnName: '',
+          },
+        },
+      ],
+      validInputBindings,
+      configSchema,
+      inputSchema,
+    );
+
+    expect(isValid).toBe(false);
+  });
+
+  test('returns true when there are no required fields and no bindings', () => {
+    const schemaWithoutRequired: JSONSchema7 = {
+      type: 'object',
+      properties: {
+        optionalField: { type: 'string' },
+      },
+    };
+
+    const isValid = validateMetricBindings('Metric name', [], [], schemaWithoutRequired, schemaWithoutRequired);
+
+    expect(isValid).toBe(true);
+  });
 });
