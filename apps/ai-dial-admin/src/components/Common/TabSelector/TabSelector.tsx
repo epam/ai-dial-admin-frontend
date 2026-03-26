@@ -16,13 +16,13 @@ interface Props {
 
 const TabSelector: FC<Props> = ({ tabs, activeTab, onChange }) => {
   return (
-    <div className="flex flex-row items-center bg-layer-4 rounded w-fit p-1">
+    <div className="flex flex-row items-center gap-2 bg-layer-4 rounded w-fit p-1">
       {tabs.map((tab) => (
         <div
           key={tab.id}
           className={classNames(
-            'flex flex-row gap-1 h-[24px] items-center py-1 px-2 text-primary cursor-pointer hover:bg-accent-primary-alpha',
-            activeTab === tab.id && 'bg-accent-primary-alpha rounded',
+            'flex flex-row gap-1 h-[24px] items-center py-1 px-2 rounded text-primary cursor-pointer hover:bg-accent-primary-alpha',
+            activeTab === tab.id && 'bg-accent-primary-alpha',
           )}
           onClick={() => onChange(tab.id)}
         >
