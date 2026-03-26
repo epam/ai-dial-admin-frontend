@@ -12,7 +12,7 @@ import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isAssetView, isAssetWithVersion } from '@/src/utils/is-asset-view';
+import { isAssetView, isAssetWithVersion } from '@/src/utils/is-view';
 import { ModalType } from './Modals';
 
 interface Props {

@@ -1,0 +1,169 @@
+import { FC, useCallback, useEffect, useState } from 'react';
+
+import {
+  DialFileManager,
+  DialFileNodeType,
+  DialFormPopup,
+  DialInputPopup,
+  DialLabel,
+  PopupSize,
+} from '@epam/ai-dial-ui-kit';
+import { FileManagerGridRow } from '@epam/ai-dial-ui-kit/dist/src/components/FileManager/FileManagerContext';
+
+import { FILES_GRID_COLUMNS } from '@/src/components/Assets/Files/constants';
+import { getGridOptions, getTreeOptions } from '@/src/components/Common/FileManager/utils';
+import { ROOT_FOLDER } from '@/src/constants/file';
+import { BasicI18nKey, ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { useFileFolder } from '@/src/context/assets/FileFolderContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
+import { useI18n } from '@/src/locales/client';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getFolderNameAndPath } from '@/src/utils/files/path';
+
+interface Props {
+  value: string;
+  label?: string;
+  elementId?: string;
+  disabled?: boolean;
+  inputClassName?: string;
+  onChangeValue: (value: string) => void;
+}
+
+const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputClassName, onChangeValue }) => {
+  const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  const {
+    files,
+    fetchFiles,
+    fetchFolderHierarchy,
+    isFetchingFiles,
+    filePath,
+    setFilePath,
+    expandedFolders,
+    setExpandedFolders,
+  } = useFileFolder();
+
+  const [loadedPaths, setLoadedPaths] = useState(new Set(['']));
+  const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    if ((files == null || files?.length === 0) && isModalOpen) {
+      if (value) {
+        const path = getFolderNameAndPath(value).path;
+        fetchFolderHierarchy?.(`${path}/`, true);
+      } else {
+        fetchFiles(`${ROOT_FOLDER}/`);
+        setLoadedPaths(new Set([`${ROOT_FOLDER}/`]));
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [files, isModalOpen]);
+
+  useEffect(() => {
+    if (value && files !== null && files.length > 0 && isModalOpen) {
+      const path = getFolderNameAndPath(value).path;
+      fetchFolderHierarchy?.(`${path}/`, true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, isModalOpen]);
+
+  const handleOnPathChange = useCallback(
+    (nextPath: string | undefined) => {
+      if (!nextPath) {
+        return;
+      }
+      const newExpanded = new Set(expandedFolders);
+
+      if (newExpanded.has(nextPath)) {
+        newExpanded.delete(nextPath);
+      } else {
+        newExpanded.add(nextPath);
+      }
+      if (!loadedPaths.has(nextPath)) {
+        fetchFiles(nextPath);
+      }
+      setFilePath(nextPath);
+      setLoadedPaths((prev) => new Set(prev).add(nextPath));
+      setExpandedFolders(newExpanded);
+    },
+    [expandedFolders, fetchFiles, loadedPaths, setExpandedFolders, setFilePath],
+  );
+
+  const handleFolderPopupPathChange = useCallback(
+    (nextPath: string | undefined) => {
+      if (nextPath && !loadedPaths.has(nextPath)) {
+        setLoadedPaths((prev) => new Set(prev).add(nextPath));
+        fetchFiles(nextPath);
+      }
+    },
+    [loadedPaths, fetchFiles],
+  );
+
+  const handleSelectionClick = useCallback((files: FileManagerGridRow[]) => {
+    if (files.length > 0 && files[0].nodeType === DialFileNodeType.ITEM) {
+      setSelectedFilePath(files[0].id);
+    } else {
+      setSelectedFilePath(null);
+    }
+  }, []);
+
+  const onConfirm = useCallback(() => {
+    onChangeValue(selectedFilePath ?? '');
+    setIsModalOpen(false);
+  }, [onChangeValue, selectedFilePath]);
+
+  return (
+    <div className="flex flex-col gap-y-2">
+      {label && <DialLabel label={label} htmlFor={elementId} />}
+      <DialInputPopup
+        disabled={disabled || isReadOnlyAdmin}
+        open={isModalOpen}
+        selectedValue={value}
+        onOpen={() => setIsModalOpen(true)}
+        emptyValueText={t(BasicI18nKey.None)}
+        inputClassName={inputClassName}
+      >
+        <DialFormPopup
+          header={t(TestSuitesI18nKey.SelectDocument)}
+          portalId="fileSelect"
+          open={isModalOpen}
+          cancelLabel={t(ButtonsI18nKey.Cancel)}
+          submitLabel={t(ButtonsI18nKey.Confirm)}
+          onSubmit={onConfirm}
+          disableSubmitButton={!selectedFilePath}
+          onClose={() => setIsModalOpen(false)}
+          onCancel={() => setIsModalOpen(false)}
+          className="h-[800px]"
+          size={PopupSize.Lg}
+        >
+          <div className="size-full">
+            <DialFileManager
+              className="p-0 gap-0 bg-layer-3"
+              gridClassName="p-3"
+              path={filePath}
+              items={files as []}
+              filesLoading={isFetchingFiles}
+              showNavigationPanel={false}
+              treeOptions={getTreeOptions(
+                isReadOnlyAdmin,
+                isFetchingFiles,
+                value ? expandedFolders : loadedPaths,
+                expandedFolders,
+                setExpandedFolders,
+                t,
+              )}
+              defaultSelectedPaths={value ? new Set([value]) : void 0}
+              gridOptions={getGridOptions(ApplicationRoute.Files, isReadOnlyAdmin, FILES_GRID_COLUMNS, t, true)}
+              onPathChange={handleOnPathChange}
+              onFolderPopupPathChange={handleFolderPopupPathChange}
+              handleSelectionClick={handleSelectionClick}
+            />
+          </div>
+        </DialFormPopup>
+      </DialInputPopup>
+    </div>
+  );
+};
+
+export default FileSelectInput;

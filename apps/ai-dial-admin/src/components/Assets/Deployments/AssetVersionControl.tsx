@@ -18,7 +18,7 @@ import { useI18n } from '@/src/locales/client';
 import { AssetWithVersion, DeploymentAsset } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isDeploymentAsset } from '@/src/utils/is-asset-view';
+import { isDeploymentAsset } from '@/src/utils/is-view';
 import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
 import { getVersionsPerName } from '../utils';
 

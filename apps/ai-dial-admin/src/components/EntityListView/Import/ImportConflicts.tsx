@@ -21,7 +21,7 @@ import { DialPrompt } from '@/src/models/dial/prompt';
 import { FileImportGridData, FileImportMap } from '@/src/models/file';
 import { ConflictResolutionPolicy } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isAssetWithVersion } from '@/src/utils/is-asset-view';
+import { isAssetWithVersion } from '@/src/utils/is-view';
 import { getImportTitle } from '@/src/components/EntityListView/HeaderButtons/utils';
 
 interface Props {

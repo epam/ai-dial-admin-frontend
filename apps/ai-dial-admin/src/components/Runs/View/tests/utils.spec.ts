@@ -1,7 +1,16 @@
 import { describe, expect, test } from 'vitest';
 
 import { FilterOperatorDto } from '@/src/types/request';
-import { RESULT_FILTERS, getTestCaseStatusClass, getResultColumns, getAnalyticsColumns } from '../utils';
+import {
+  RESULT_FILTERS,
+  getTestCaseStatusClass,
+  getResultColumns,
+  getAnalyticsColumns,
+  getFormattedDuration,
+  getPanelTitle,
+  getDetailEntries,
+  getDetailNestedEntries,
+} from '../utils';
 
 describe('Runs View :: RESULT_FILTERS', () => {
   test('Should return run and suite filters for provided run', () => {
@@ -166,6 +175,25 @@ describe('Runs View :: getAnalyticsColumns', () => {
     expect(extractedChildren[0]).toEqual(expect.objectContaining({ field: 'score', headerName: 'score' }));
   });
 
+  test('Should merge metric keys from all rows into column groups', () => {
+    const results = [
+      { metricValues: { GroupA: { a: 1 } } },
+      { metricValues: { GroupA: { b: 2 }, GroupB: { x: 3 } } },
+      { metricValues: { GroupA: { a: 10, c: 3 } } },
+    ] as any[];
+
+    const columns = getAnalyticsColumns(results as any);
+    const groupA = columns.find((c: any) => c.headerName === 'GroupA') as any;
+    const groupB = columns.find((c: any) => c.headerName === 'GroupB') as any;
+
+    expect(groupA.children.map((c: any) => c.field)).toEqual(['a', 'b', 'c']);
+    expect(groupB.children.map((c: any) => c.field)).toEqual(['x']);
+
+    const bCol = groupA.children.find((c: any) => c.field === 'b');
+    expect(bCol.valueGetter({ data: { metricValues: { GroupA: { a: 1 } } } })).toBe('—');
+    expect(bCol.valueGetter({ data: { metricValues: { GroupA: { b: 2 } } } })).toBe(2);
+  });
+
   test('Should handle empty results', () => {
     const columns = getAnalyticsColumns([]);
 
@@ -173,5 +201,242 @@ describe('Runs View :: getAnalyticsColumns', () => {
     expect(columns[0]).toEqual(expect.objectContaining({ headerName: ' ' }));
     expect(columns[1]).toEqual(expect.objectContaining({ headerName: 'EXECUTION' }));
     expect((columns[2] as any).children).toHaveLength(0);
+  });
+});
+
+describe('Runs View :: getFormattedDuration', () => {
+  test('Should return dash for undefined duration', () => {
+    expect(getFormattedDuration(undefined)).toBe('—');
+  });
+
+  test('Should return milliseconds for duration under 1000', () => {
+    expect(getFormattedDuration(250)).toBe('250ms');
+  });
+
+  test('Should return seconds for duration 1000 or above', () => {
+    expect(getFormattedDuration(1000)).toBe('1.0s');
+    expect(getFormattedDuration(1200)).toBe('1.2s');
+    expect(getFormattedDuration(2500)).toBe('2.5s');
+  });
+
+  test('Should handle zero duration', () => {
+    expect(getFormattedDuration(0)).toBe('0ms');
+  });
+});
+
+describe('Runs View :: getPanelTitle', () => {
+  test('Should format title with test case name and run index', () => {
+    expect(getPanelTitle({ testCaseName: 'Login Test', runIndex: 3 } as any)).toBe('Login Test - Run #3');
+  });
+
+  test('Should default run index to 0 when missing', () => {
+    expect(getPanelTitle({ testCaseName: 'Test' } as any)).toBe('Test - Run #0');
+  });
+
+  test('Should handle null result', () => {
+    expect(getPanelTitle(null)).toBe('undefined - Run #0');
+  });
+});
+
+describe('Runs View :: getDetailEntries', () => {
+  test('Should convert record to key-value tuple array', () => {
+    expect(getDetailEntries({ prompt: 'hello', score: 0.95 })).toEqual([
+      ['prompt', 'hello'],
+      ['score', '0.95'],
+    ]);
+  });
+
+  test('Should stringify object values', () => {
+    expect(getDetailEntries({ data: { nested: true } })).toEqual([['data', '[object Object]']]);
+  });
+
+  test('Should handle empty record', () => {
+    expect(getDetailEntries({})).toEqual([]);
+  });
+});
+
+describe('Runs View :: getDetailNestedEntries', () => {
+  test('Should create sections from nested metric values', () => {
+    const data = {
+      Accuracy: { accuracy: 0.95, threshold: 0.9 },
+      Details: { matched: true },
+    };
+
+    const result = getDetailNestedEntries(data);
+
+    expect(result).toHaveLength(2);
+    expect(result[0]).toEqual({
+      title: 'Accuracy',
+      entries: [
+        ['accuracy', '0.95'],
+        ['threshold', '0.9'],
+      ],
+    });
+    expect(result[1]).toEqual({
+      title: 'Details',
+      entries: [['matched', 'true']],
+    });
+  });
+
+  test('Should fall back to additionalData error when metricValues has only null error', () => {
+    const data = {
+      'deepeval.g_eval': { error: null },
+    };
+    const additionalData = {
+      'deepeval.g_eval': { error: '422 Unprocessable Content' },
+    };
+
+    const result = getDetailNestedEntries(data, additionalData);
+
+    expect(result).toEqual([
+      {
+        title: 'deepeval.g_eval',
+        entries: [['error', '422 Unprocessable Content']],
+      },
+    ]);
+  });
+
+  test('Should keep original values when error is not null', () => {
+    const data = {
+      metric: { error: 'some local error' },
+    };
+    const additionalData = {
+      metric: { error: 'info error' },
+    };
+
+    const result = getDetailNestedEntries(data, additionalData);
+
+    expect(result).toEqual([
+      {
+        title: 'metric',
+        entries: [['error', 'some local error']],
+      },
+    ]);
+  });
+
+  test('Should keep null error as entry when no additionalData provided', () => {
+    const data = {
+      metric: { error: null },
+    };
+
+    const result = getDetailNestedEntries(data);
+
+    expect(result).toEqual([
+      {
+        title: 'metric',
+        entries: [['error', 'null']],
+      },
+    ]);
+  });
+
+  test('Should append nested additionalData sub-entries after the main entry', () => {
+    const data = {
+      'deepeval.answer_relevancy': { score: 1 },
+    };
+    const additionalData = {
+      'deepeval.answer_relevancy': {
+        score: {
+          reason: 'The score is 1.00 because the output is relevant.',
+          verbose_logs: 'Statements:\n["hello"]',
+        },
+      },
+    };
+
+    const result = getDetailNestedEntries(data, additionalData);
+
+    expect(result).toEqual([
+      {
+        title: 'deepeval.answer_relevancy',
+        entries: [
+          ['score', '1'],
+          ['reason', 'The score is 1.00 because the output is relevant.'],
+          ['verbose_logs', 'Statements:\n["hello"]'],
+        ],
+      },
+    ]);
+  });
+
+  test('Should not expand when additionalData value is a primitive', () => {
+    const data = {
+      metric: { score: 0.95 },
+    };
+    const additionalData = {
+      metric: { score: 'some string' },
+    };
+
+    const result = getDetailNestedEntries(data, additionalData);
+
+    expect(result).toEqual([
+      {
+        title: 'metric',
+        entries: [['score', '0.95']],
+      },
+    ]);
+  });
+
+  test('Should not expand when additionalData value is an array', () => {
+    const data = {
+      metric: { score: 0.95 },
+    };
+    const additionalData = {
+      metric: { score: [1, 2, 3] as any },
+    };
+
+    const result = getDetailNestedEntries(data, additionalData);
+
+    expect(result).toEqual([
+      {
+        title: 'metric',
+        entries: [['score', '0.95']],
+      },
+    ]);
+  });
+
+  test('Should handle mix of expandable and non-expandable additional data', () => {
+    const data = {
+      group: { score: 1, accuracy: 0.9 },
+    };
+    const additionalData = {
+      group: {
+        score: { reason: 'Good', verbose_logs: 'logs' },
+        accuracy: 42,
+      },
+    };
+
+    const result = getDetailNestedEntries(data, additionalData);
+
+    expect(result).toEqual([
+      {
+        title: 'group',
+        entries: [
+          ['score', '1'],
+          ['reason', 'Good'],
+          ['verbose_logs', 'logs'],
+          ['accuracy', '0.9'],
+        ],
+      },
+    ]);
+  });
+
+  test('Should handle additionalData with no matching group key', () => {
+    const data = {
+      metric: { score: 1 },
+    };
+    const additionalData = {
+      other: { score: { reason: 'test' } },
+    };
+
+    const result = getDetailNestedEntries(data, additionalData);
+
+    expect(result).toEqual([
+      {
+        title: 'metric',
+        entries: [['score', '1']],
+      },
+    ]);
+  });
+
+  test('Should handle empty data', () => {
+    expect(getDetailNestedEntries({})).toEqual([]);
   });
 });

@@ -215,7 +215,7 @@ const ParametersTab: FC<Props> = ({
                 setIsChanged={setIsChanged}
               />
             )}
-            {paramsView === ParamsView.TABLE && (
+            {paramsView === ParamsView.TABLE && !isEditorEnabled && (
               <TableView
                 isAddClicked={isAddClicked}
                 setIsAddClicked={setIsAddClicked}

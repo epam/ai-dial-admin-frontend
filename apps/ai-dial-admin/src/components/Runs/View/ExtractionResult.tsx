@@ -6,12 +6,12 @@ import { FC, useCallback, useEffect, useState } from 'react';
 import { DialLoader } from '@epam/ai-dial-ui-kit';
 
 import { getRunResults } from '@/src/app/[lang]/runs/actions';
+import GridView from '@/src/components/Grid/GridView/GridView';
+import RunResultDetailPanel from '@/src/components/Runs/Details/RunResultDetailPanel';
 import { EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
 import { ExtractionResult, Run } from '@/src/models/evaluation/run';
-import GridView from '@/src/components/Grid/GridView/GridView';
-import RunResultDetailPanel from './RunResultDetailPanel';
 import { getResultColumns, RESULT_FILTERS } from './utils';
 
 interface Props {
@@ -51,7 +51,7 @@ const ExtractionResultTab: FC<Props> = ({ run }) => {
             grafanaExploreUrl={run.grafanaExploreUrl}
             onClose={sidebar.closeSidebar}
           />,
-          'w-[500px]',
+          'w-[750px]',
         );
       } else {
         setSelectedResult(null);
@@ -60,6 +60,11 @@ const ExtractionResultTab: FC<Props> = ({ run }) => {
     },
     [selectedResult?.id, sidebar, run.grafanaExploreUrl],
   );
+
+  useEffect(() => {
+    return () => sidebar.closeSidebar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="flex flex-col gap-4 h-full min-h-0">

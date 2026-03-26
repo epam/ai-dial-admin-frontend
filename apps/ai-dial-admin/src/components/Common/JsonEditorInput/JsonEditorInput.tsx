@@ -94,7 +94,12 @@ const JsonEditorInput: FC<Props> = ({
           disableSubmitButton={!isValid && !disableValidation}
         >
           <div className="px-6 py-4 h-[540px] max-h-[35vh]">
-            <JsonEditorBase value={jsonValue} onChange={onChangeJsonValue} onValidateJSON={onValidateJSON} />
+            <JsonEditorBase
+              value={jsonValue}
+              onChange={onChangeJsonValue}
+              onValidateJSON={onValidateJSON}
+              options={{ stickyScroll: { enabled: false } }}
+            />
           </div>
         </DialFormPopup>
       </DialInputPopup>

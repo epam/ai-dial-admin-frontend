@@ -10,7 +10,7 @@ import { BaseEntity } from '@/src/models/dial/base-entity';
 import { AssetWithVersion, AssetApp, AssetToolset } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isAssetWithVersion } from '@/src/utils/is-asset-view';
+import { isAssetWithVersion } from '@/src/utils/is-view';
 
 export const getData = async <T>(route: ApplicationRoute, ref: RefObject<T | undefined>) => {
   if (route === ApplicationRoute.Prompts) {

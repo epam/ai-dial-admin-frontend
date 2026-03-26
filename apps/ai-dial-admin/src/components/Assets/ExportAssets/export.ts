@@ -4,7 +4,7 @@ import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getGridFileData } from '@/src/utils/files/grid-data';
-import { isAssetWithVersion } from '@/src/utils/is-asset-view';
+import { isAssetWithVersion } from '@/src/utils/is-view';
 
 /**
  * Converts array of Assets into correct row data, joining multiple versions of prompts into one

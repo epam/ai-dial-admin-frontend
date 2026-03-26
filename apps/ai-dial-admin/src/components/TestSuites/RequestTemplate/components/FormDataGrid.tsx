@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useRef } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { DialGhostButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
@@ -21,63 +21,79 @@ interface Props {
 }
 const FormDataGrid: FC<Props> = ({ content, changeContent, hideAddButton }) => {
   const t = useI18n();
-  const gridApi = useRef<GridApi>(null);
-  const contentRef = useRef(content || []);
+  const [isSkipRefresh, setIsSkipRefresh] = useState(false);
+  const [gridApi, setGridApi] = useState<GridApi>();
+
+  const contentRef = useRef(structuredClone(content) || []);
+  const onChangeRef = useRef(changeContent);
+  onChangeRef.current = changeContent;
 
   const onAddPart = useCallback(() => {
     const fieldData = [...contentRef.current];
     fieldData.push({ name: '', value: '', type: FormDataType.Text });
-    changeContent(fieldData);
-  }, [changeContent]);
+    setIsSkipRefresh(false);
+    onChangeRef.current(fieldData);
+  }, []);
 
-  const onRemovePart = useCallback(
-    (_data?: TestSuiteRequestTemplate, index?: number | null) => {
-      if (index != null) {
-        const fieldData = [...contentRef.current];
-        fieldData.splice(index, 1);
-        changeContent(fieldData);
-      }
-    },
-    [changeContent],
-  );
+  const onRemovePart = useCallback((_data?: TestSuiteRequestTemplate, index?: number | null) => {
+    if (index != null) {
+      const fieldData = [...contentRef.current];
+      fieldData.splice(index, 1);
+      setIsSkipRefresh(false);
+      onChangeRef.current(fieldData);
+    }
+  }, []);
 
   const onChangeValue = useCallback(
     (value: string | FormDataType, _data: FormDataPart, key: string, rowIndex?: number) => {
       if (rowIndex != null) {
+        const isTypeChanged = key === 'type' && value !== contentRef.current[rowIndex].type;
+        const isFileChanged = key === 'value' && contentRef.current[rowIndex].type === FormDataType.File;
         const fieldData = [...contentRef.current];
         fieldData[rowIndex][key as keyof FormDataPart] = value as any;
-        changeContent(fieldData);
+        if (isTypeChanged) {
+          fieldData[rowIndex].value = '';
+        }
+        setIsSkipRefresh(!(isTypeChanged || isFileChanged));
+        onChangeRef.current(fieldData);
       }
     },
-    [changeContent],
+    [],
   );
 
-  const columnDefs: ColDef[] = [
-    ...getFormDataColumns(onChangeValue),
-    ONE_ACTION_COLUMN(getRemoveOperation(onRemovePart, void 0, 'text-error w-4 h-4')),
-  ];
-  const rowData = content || [];
+  const data = useMemo(() => content || [], [content]);
+
+  const columns: ColDef[] = useMemo(
+    () => [
+      ...getFormDataColumns(onChangeValue),
+      ONE_ACTION_COLUMN(getRemoveOperation(onRemovePart, void 0, 'text-error w-4 h-4')),
+    ],
+    [onChangeValue, onRemovePart],
+  );
+
+  useEffect(() => {
+    contentRef.current = structuredClone(content) || [];
+  }, [content]);
 
   const onGridReady = (event: GridReadyEvent) => {
-    gridApi.current = event.api;
-
+    setGridApi(event.api);
     event.api?.updateGridOptions({
-      columnDefs,
-      rowData,
+      columnDefs: columns,
+      rowData: data,
     });
   };
 
   useEffect(() => {
-    contentRef.current = content || [];
-  }, [content]);
+    if (!gridApi?.isDestroyed()) {
+      gridApi?.updateGridOptions({ columnDefs: columns });
+    }
+  }, [columns, gridApi]);
 
   useEffect(() => {
-    gridApi.current?.updateGridOptions({
-      rowData: content,
-    });
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [content?.length, gridApi]);
+    if (!isSkipRefresh && !gridApi?.isDestroyed()) {
+      gridApi?.updateGridOptions({ rowData: data });
+    }
+  }, [isSkipRefresh, data, gridApi]);
 
   return (
     <div className="flex flex-col gap-3 size-full">

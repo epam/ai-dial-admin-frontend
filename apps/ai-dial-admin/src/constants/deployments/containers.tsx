@@ -70,7 +70,7 @@ export const DEFAULT_STRATEGY: AutoscalingStrategy = {
 
 export const DEFAULT_PROBE_CONFIG = {
   enabled: true,
-  initialDelaySeconds: 0,
+  initialDelaySeconds: 1,
   failureThreshold: 3,
   periodSeconds: 10,
   timeoutSeconds: 1,

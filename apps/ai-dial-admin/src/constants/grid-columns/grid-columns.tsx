@@ -1,7 +1,15 @@
 'use client';
 
 import { ColDef, ICellRendererParams, ITooltipParams, ValueGetterParams } from 'ag-grid-community';
+import { capitalize } from 'lodash';
 
+import StatusIndicator from '@/src/components/Deployments/Common/StatusIndicator/StatusIndicator';
+import VersionsSelect from '@/src/components/Deployments/Common/VersionsSelect/VersionsSelect';
+import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
+import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSelectCellRenderer';
+import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
+import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRenderer';
+import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
 import { ACTION_COLUMN, NO_BORDER_CLASS } from '@/src/constants/ag-grid';
 import { EVENT_TYPES, MODEL_TYPES, POD_OBJECT_KIND } from '@/src/constants/deployments/containers';
 import {
@@ -19,21 +27,15 @@ import {
 import { ImageVersion } from '@/src/models/deployments/images';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
+import { TestSuiteRequestTemplateParam } from '@/src/models/evaluation/test-suite';
+import { FormDataPart, FormDataType } from '@/src/models/form-data';
 import { CONTAINER_STATUS, KubEventType, MODEL_TYPE } from '@/src/types/deployments/containers';
 import { IMAGE_SOURCE_TYPE, IMAGE_STATUS, IMAGE_TRANSPORT_TYPE, IMAGE_TYPE } from '@/src/types/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
 import { formatDeploymentImageName } from '@/src/utils/formatting/deployments';
-import { isAssetWithVersion } from '@/src/utils/is-asset-view';
-import { getDeleteOperation, getDuplicateOperation, getMoveOperation, getOpenInNewTabOperation } from './actions';
-
-import StatusIndicator from '@/src/components/Deployments/Common/StatusIndicator/StatusIndicator';
-import VersionsSelect from '@/src/components/Deployments/Common/VersionsSelect/VersionsSelect';
-import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
-import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
-import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRenderer';
-import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
-import { TestSuiteRequestTemplateParam } from '@/src/models/evaluation/test-suite';
 import { formatNumberWithExponent } from '@/src/utils/formatting/number-formatting';
+import { isAssetWithVersion } from '@/src/utils/is-view';
+import { getDeleteOperation, getDuplicateOperation, getMoveOperation, getOpenInNewTabOperation } from './actions';
 import {
   ASSET_NAME_COLUMN,
   ATTACHMENT_COLUMN,
@@ -58,7 +60,6 @@ import {
 } from './base-columns';
 import { dateTimeColumn, numericColumn, priceColumn } from './configs';
 import { auditStringFilter, evalStringFilter } from './filters';
-import { FormDataPart, FormDataType } from '@/src/models/form-data';
 
 export const COLUMN_PANEL_PREFIX = 'column_';
 
@@ -461,6 +462,26 @@ export const USAGE_LOG_CONVERSATIONS_COLUMNS: ColDef[] = [
   { field: 'language', headerName: 'Language', hide: true },
 ];
 
+export const USAGE_LOG_MCP_COLUMNS: ColDef[] = [
+  { field: 'completion_time', headerName: 'Last activity', hide: false, ...dateTimeColumn },
+  { field: 'deployment', headerName: 'Deployment ID', hide: false },
+  { field: 'project_id', headerName: 'Project', hide: false },
+  {
+    field: 'mcp_method',
+    headerName: 'Method',
+    hide: true,
+  },
+  {
+    field: 'mcp_tool_call_name',
+    headerName: 'Tool Name',
+    hide: false,
+  },
+  {
+    field: 'trace_id',
+    headerName: 'Trace ID',
+    hide: false,
+  },
+];
 export const PROJECT_GRID_COLUMNS: ColDef[] = [{ field: 'name', headerName: 'Project' }, ...TELEMETRY_COLUMNS];
 
 export const MCP_CONSUMPTION_COLUMNS: ColDef[] = [
@@ -469,19 +490,19 @@ export const MCP_CONSUMPTION_COLUMNS: ColDef[] = [
 ];
 
 export const TOOLS_CONSUMPTION_COLUMNS: ColDef[] = [
-  { field: 'mcp_name', headerName: 'MCP Name', hide: false },
-  { field: 'tool', headerName: 'Tool', hide: false },
-  { field: 'calls', headerName: 'Calls', hide: false, ...numericColumn },
+  { field: 'name', headerName: 'MCP Name', hide: false },
+  { field: 'mcp_tool_call_name', headerName: 'Tool', hide: false },
+  { field: 'requests', headerName: 'Calls', hide: false, ...numericColumn },
 ];
 
 export const MCP_CALLS_BY_DEPLOYMENT_COLUMNS: ColDef[] = [
-  { field: 'name', headerName: 'Deployment Name', hide: false },
-  { field: 'mcp_tool_call_name', headerName: 'MCP Name', hide: false },
+  { field: 'parent_deployment', headerName: 'Deployment Name', hide: false },
+  { field: 'name', headerName: 'MCP Name', hide: false },
   { field: 'requests', headerName: 'Calls', hide: false, ...numericColumn },
 ];
 
 export const MCP_PROJECTS_CONSUMPTION_COLUMNS: ColDef[] = [
-  { field: 'project', headerName: 'Project', hide: false },
+  { field: 'name', headerName: 'Project', hide: false },
   { field: 'tool_calls', headerName: 'Tool Calls', hide: false, ...numericColumn },
   { field: 'mcp_calls', headerName: 'MCP Calls', hide: false, sort: 'desc', ...numericColumn },
 ];
@@ -510,6 +531,7 @@ export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, rou
     : [
         {
           headerName: `${type} Image`,
+          field: 'image',
           hide: false,
           valueGetter: (params: ValueGetterParams) =>
             params.data?.source?.$type === 'internal_image' ? params.data.source.imageDefinitionId : undefined,
@@ -615,21 +637,23 @@ export const IMAGES_LIST_FOR_CONTAINER_COLUMNS = (
   ];
 };
 
+export const IMAGE_TYPE_COLUMN = (t: (key: string) => string): ColDef => ({
+  field: '$type',
+  headerName: 'Type',
+  valueFormatter: ({ value }) => t(IMAGE_TYPE_I18N_KEYS[value as IMAGE_TYPE]) || value,
+  tooltipValueGetter: ({ value }) => t(IMAGE_TYPE_I18N_KEYS[value as IMAGE_TYPE]) || value,
+  filterValueGetter: (params) => {
+    const value = params.data[params.colDef.field || ''];
+    return t(IMAGE_TYPE_I18N_KEYS[value as IMAGE_TYPE]) || value;
+  },
+});
+
 export const IMAGES_LIST_COLUMNS = (t: (key: string) => string): ColDef[] => [
   { field: 'name', headerName: 'Name', hide: false },
   { field: 'version', headerName: 'Version', hide: false },
   DESCRIPTION_COLUMN,
   { field: 'id', headerName: 'ID', hide: false },
-  {
-    field: '$type',
-    headerName: 'Type',
-    valueFormatter: ({ value }) => t(IMAGE_TYPE_I18N_KEYS[value as IMAGE_TYPE]) || value,
-    tooltipValueGetter: ({ value }) => t(IMAGE_TYPE_I18N_KEYS[value as IMAGE_TYPE]) || value,
-    filterValueGetter: (params) => {
-      const value = params.data[params.colDef.field || ''];
-      return t(IMAGE_TYPE_I18N_KEYS[value as IMAGE_TYPE]) || value;
-    },
-  },
+  IMAGE_TYPE_COLUMN(t),
   {
     field: 'source.$type',
     headerName: 'Source',
@@ -749,15 +773,25 @@ export const METRICS_COLUMN: ColDef[] = [
 ];
 
 export const TOOL_SCHEMA_COLUMNS = (t: (key: string) => string): ColDef[] => [
-  { field: 'field', headerName: 'Field', floatingFilter: false, filter: false, sortable: false },
+  { field: 'field', headerName: 'Name', floatingFilter: false, filter: false, sortable: false },
   { field: 'description', headerName: 'Description', floatingFilter: false, filter: false, sortable: false },
-  { field: 'type', headerName: 'Type', floatingFilter: false, filter: false, sortable: false },
   {
-    field: 'required',
-    headerName: 'Required',
+    field: 'type',
+    headerName: 'Data type',
     floatingFilter: false,
     filter: false,
     sortable: false,
+    minWidth: 140,
+    maxWidth: 140,
+  },
+  {
+    field: 'required',
+    headerName: 'Requirement',
+    floatingFilter: false,
+    filter: false,
+    sortable: false,
+    minWidth: 110,
+    maxWidth: 110,
     cellDataType: false,
     valueFormatter: ({ value }) => formatRequired(value, t),
     tooltipValueGetter: ({ value }) => formatRequired(value, t),
@@ -766,15 +800,25 @@ export const TOOL_SCHEMA_COLUMNS = (t: (key: string) => string): ColDef[] => [
 
 export const PARAMETERS_SCHEMA_COLUMNS = (t: (key: string) => string): ColDef[] => [
   { field: 'name', headerName: 'Name', floatingFilter: false, filter: false, sortable: false },
-  { field: 'in', headerName: 'In', floatingFilter: false, filter: false, sortable: false },
+  { field: 'in', headerName: 'Location', floatingFilter: false, filter: false, sortable: false },
   { field: 'description', headerName: 'Description', floatingFilter: false, filter: false, sortable: false },
-  { field: 'schema.type', headerName: 'Type', floatingFilter: false, filter: false, sortable: false },
   {
-    field: 'required',
-    headerName: 'Required',
+    field: 'schema.type',
+    headerName: 'Data type',
     floatingFilter: false,
     filter: false,
     sortable: false,
+    minWidth: 140,
+    maxWidth: 140,
+  },
+  {
+    field: 'required',
+    headerName: 'Requirement',
+    floatingFilter: false,
+    filter: false,
+    sortable: false,
+    minWidth: 110,
+    maxWidth: 110,
     cellDataType: false,
     valueFormatter: ({ value }) => formatRequired(value, t),
     tooltipValueGetter: ({ value }) => formatRequired(value, t),
@@ -1024,7 +1068,11 @@ export const getFormDataColumns = (
         items: [
           {
             value: FormDataType.Text,
-            label: FormDataType.Text,
+            label: capitalize(FormDataType.Text),
+          },
+          {
+            value: FormDataType.File,
+            label: capitalize(FormDataType.File),
           },
         ],
       },
@@ -1034,7 +1082,22 @@ export const getFormDataColumns = (
       field: 'value',
       cellClass: NO_BORDER_CLASS,
       tooltipValueGetter: () => undefined,
-      cellRenderer: EditableCellRenderer,
+      cellRendererSelector: (params: ICellRendererParams<FormDataPart>) => {
+        if (params.data?.type === FormDataType.File) {
+          return {
+            component: FileSelectCellRenderer,
+            params: {
+              onChange: onChange,
+            },
+          };
+        }
+        return {
+          component: EditableCellRenderer,
+          params: {
+            onChange: onChange,
+          },
+        };
+      },
       cellRendererParams: {
         onChange,
         hideTriangle: true,

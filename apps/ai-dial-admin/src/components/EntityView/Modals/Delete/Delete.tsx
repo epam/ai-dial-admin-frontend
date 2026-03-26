@@ -21,7 +21,7 @@ import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isAssetView, isBuildersView } from '@/src/utils/is-asset-view';
+import { isAssetView, isBuildersView } from '@/src/utils/is-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { getNameVersionFromPrompt } from '@/src/utils/prompts/versions';
@@ -72,14 +72,8 @@ const DeleteConfirmationModal = <T extends Artefact>({
 
   const [selectedVersion, setSelectedVersion] = useState(entity?.version);
 
-  const name = useMemo(
-    () => (isAssetView(view) ? entity.name : entity.displayName || entity['dial:applicationTypeDisplayName']),
-    [entity, view],
-  );
-  const id = useMemo(
-    () => (isAssetView(view) ? void 0 : entity.name || entity.$id || (entity as { id?: string }).id),
-    [entity, view],
-  );
+  const name = useMemo(() => entity.displayName || entity['dial:applicationTypeDisplayName'], [entity]);
+  const id = useMemo(() => entity.name || entity.$id || (entity as { id?: string }).id, [entity]);
 
   const showSuccessNotification = useCallback(
     (entityKey: string) => {

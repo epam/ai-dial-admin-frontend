@@ -67,8 +67,9 @@ import {
   getApplicationPublicationTabs,
   getToolsetPublicationTabs,
   columnsTab,
-  metricsTab,
+  validationsTab,
   analyticsTab,
+  mcpTab,
 } from '../utils';
 
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
@@ -174,7 +175,7 @@ describe('Entities :: tabs', () => {
   });
 
   test('returns correct tabs for usage log', () => {
-    expect(getUsageLogTabs(t)).toEqual([tracesTab(t), conversationsTab(t)]);
+    expect(getUsageLogTabs(t)).toEqual([tracesTab(t), conversationsTab(t), mcpTab(t)]);
   });
 
   test('returns correct tabs for interceptor template', () => {
@@ -243,9 +244,10 @@ describe('Entities :: tabs', () => {
     expect(getTestSuiteTabs(t)).toEqual([
       propertiesTab(t),
       testSuiteMethodTab(t),
+
       testCasesTab(t),
+      validationsTab(t),
       runsTab(t),
-      metricsTab(t),
     ]);
   });
 

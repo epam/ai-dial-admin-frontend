@@ -250,6 +250,7 @@ export enum DeleteI18nKey {
   McpContainer = 'DeleteEntity.Entities.McpContainer',
   InterceptorContainer = 'DeleteEntity.Entities.InterceptorContainer',
   ModelServing = 'DeleteEntity.Entities.ModelServing',
+  AdapterContainer = 'DeleteEntity.Entities.AdapterContainer',
   Image = 'DeleteEntity.Entities.Image',
 
   // Bulk Delete
@@ -559,6 +560,7 @@ export enum TabsI18nKey {
   Resources = 'Tabs.Resources',
   Prompts = 'Tabs.Prompts',
   Metrics = 'Tabs.Metrics',
+  Validations = 'Tabs.Validations',
   ExecutionLog = 'Tabs.ExecutionLog',
   Images = 'Tabs.Images',
   Containers = 'Tabs.Containers',
@@ -577,6 +579,7 @@ export enum TabsI18nKey {
   ResponseSchema = 'Tabs.ResponseSchema',
   Columns = 'Tabs.Columns',
   Analytics = 'Tabs.Analytics',
+  MCP = 'Tabs.MCP',
 }
 
 export enum InterceptorsI18nKey {
@@ -599,6 +602,7 @@ export enum TelemetryI18nKey {
   Custom = 'Telemetry.Custom',
   UniqueUsers = 'Telemetry.UniqueUsers',
   Requests = 'Telemetry.Requests',
+  RequestsNumber = 'Telemetry.RequestsNumber',
   RequestCount = 'Telemetry.RequestCount',
   TotalTokens = 'Telemetry.TotalTokens',
   Money = 'Telemetry.Money',
@@ -612,9 +616,8 @@ export enum TelemetryI18nKey {
   FilterConditionStartsWith = 'Telemetry.Filter.ConditionStartsWith',
   FilterConditionEndsWith = 'Telemetry.Filter.ConditionEndsWith',
   FilterDurationSeconds = 'Telemetry.Filter.Duration.Seconds',
-  TracesTitle = 'Telemetry.UsageLog.TracesTitle',
   NoTracesTitle = 'Telemetry.UsageLog.NoTracesTitle',
-  ConversationsTitle = 'Telemetry.UsageLog.ConversationsTitle',
+  NoMcpCalls = 'Telemetry.UsageLog.NoMcpCalls',
   NoConversationsTitle = 'Telemetry.UsageLog.NoConversationsTitle',
   ViewByLabel = 'Telemetry.ViewByLabel',
   ViewByChat = 'Telemetry.ViewBy.Chat',
@@ -747,6 +750,7 @@ export enum ImportI18nKey {
   Changes = 'Import.Changes',
   FileSizeErrorHeader = 'Import.FileSizeErrorHeader',
   FileSizeErrorDescription = 'Import.FileSizeErrorDescription',
+  TotalFileSizeErrorDescription = 'Import.TotalFileSizeErrorDescription',
   ArchiveSizeErrorDescription = 'Import.ArchiveSizeErrorDescription',
 }
 
@@ -1415,6 +1419,7 @@ export enum ApplicationsI18nKey {
 export enum TestSuitesI18nKey {
   CreateTestSuite = 'TestSuites.CreateTestSuite',
   UpdateTestSuite = 'TestSuites.UpdateTestSuite',
+  SelectDocument = 'TestSuites.SelectDocument',
   Application = 'TestSuites.Application',
   Target = 'TestSuites.Target',
   Methods = 'TestSuites.Methods',
@@ -1435,6 +1440,8 @@ export enum TestSuitesI18nKey {
   RemoveSuccess = 'TestSuites.RemoveSuccess',
   RemoveFailed = 'TestSuites.RemoveFailed',
   ImportSuccessDescription = 'TestSuites.ImportSuccessDescription',
+  MetricAddSuccess = 'TestSuites.MetricAddSuccess',
+  MetricAddFailed = 'TestSuites.MetricAddFailed',
   MetricUpdateSuccess = 'TestSuites.MetricUpdateSuccess',
   MetricUpdateFailed = 'TestSuites.MetricUpdateFailed',
   RunEvaluation = 'TestSuites.RunEvaluation',
@@ -1482,6 +1489,7 @@ export enum TestSuitesI18nKey {
   Outputs = 'TestSuites.Outputs',
   Bindings = 'TestSuites.Bindings',
   Results = 'TestSuites.Results',
+  FinalPath = 'TestSuites.FinalPath',
 }
 
 export enum RunsI18nKey {
@@ -1501,6 +1509,7 @@ export enum FileManagerI18nKey {
   Rename = 'FileManager.Rename',
   Move = 'FileManager.Move',
   Files = 'FileManager.Files',
+  Prompt = 'FileManager.Prompt',
   Folder = 'FileManager.Folder',
   FolderTree = 'FileManager.FolderTree',
   EnterFolderName = 'FileManager.EnterFolderName',
@@ -1512,6 +1521,12 @@ export enum FileManagerI18nKey {
   Preview = 'FileManager.Preview',
   MoveItem = 'FileManager.MoveItem',
   MoveItems = 'FileManager.MoveItems',
+
+  // Modals
+  DeleteItemsModalTitle = 'FileManager.DeleteItemsModalTitle',
+  DeleteItemsModalDescription = 'FileManager.DeleteItemsModalDescription',
+  MoreItems = 'FileManager.MoreItems',
+  DeleteFolderAlert = 'FileManager.DeleteFolderAlert',
 
   // Notifications
   CreateFolderSuccessTitle = 'FileManager.Notifications.CreateFolder.Title',

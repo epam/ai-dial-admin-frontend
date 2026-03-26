@@ -102,5 +102,5 @@ export const sourceValueFormatter = (
 };
 
 export const formatRequired = (value: string, t: (stringToTranslate: string) => string) => {
-  return value ? t(BasicI18nKey.Yes) : t(BasicI18nKey.No);
+  return value ? t(BasicI18nKey.Required) : t(BasicI18nKey.Optional);
 };
