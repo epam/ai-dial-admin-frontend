@@ -2,7 +2,7 @@
 
 import { Dispatch, FC, SetStateAction, useCallback, useMemo, useState } from 'react';
 
-import { DialNeutralButton, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { DialInput, DialNeutralButton, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import { IconPencilMinus } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
 
@@ -12,12 +12,14 @@ import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import ChangeMethodModal from '@/src/components/TestSuites/Modals/ChangeMethodModal/ChangeMethodModal';
 import { PARAMETERS_SCHEMA_COLUMNS, TOOL_SCHEMA_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ContainersI18nKey, EntityFieldsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialScheme } from '@/src/models/dial/scheme';
 import { TestSuite, TestSuiteEndpointRef } from '@/src/models/evaluation/test-suite';
 import { ParamsView } from '@/src/types/parameters';
 import { convertSchemaToTable } from '@/src/utils/schema';
+import { isContainRegexSymbols } from '@/src/utils/validation/path-error';
 import MethodEndpoint from './Endpoint';
 
 interface Props {
@@ -28,11 +30,13 @@ interface Props {
 
 const MethodInfo: FC<Props> = ({ testSuite, onChangeTestSuite, selectedAppType }) => {
   const t = useI18n();
+  const { dispatch } = useSaveValidationContext();
   const SCHEMA_COLUMNS: ColDef[] = useMemo(() => TOOL_SCHEMA_COLUMNS(t), [t]);
   const PARAMETERS_COLUMNS: ColDef[] = useMemo(() => PARAMETERS_SCHEMA_COLUMNS(t), [t]);
 
   const [view, setView] = useState(ParamsView.TABLE);
   const [isMethodModalOpen, setIsMethodModalOpen] = useState(false);
+  const [finalPathError, setFinalPathError] = useState<string | undefined>(undefined);
 
   const inputSchema = useMemo(() => {
     return convertSchemaToTable(testSuite?.endpointRef?.requestBodySchema?.schema);
@@ -46,6 +50,30 @@ const MethodInfo: FC<Props> = ({ testSuite, onChangeTestSuite, selectedAppType }
     return testSuite?.endpointRef?.parameters || [];
   }, [testSuite?.endpointRef?.parameters]);
 
+  const validateFinalPath = useCallback(() => {
+    const urlTemplate = testSuite.requestTemplate?.urlTemplate;
+    const relativeUrlPattern = testSuite.endpointRef?.relativeUrlPattern;
+
+    if (!urlTemplate || !relativeUrlPattern) {
+      return undefined;
+    }
+
+    if (isContainRegexSymbols(relativeUrlPattern)) {
+      try {
+        const regex = new RegExp(relativeUrlPattern);
+
+        if (!regex.test(urlTemplate)) {
+          dispatch({ type: ValidationActionType.SetField, field: 'urlTemplate', isValid: false });
+          return `Not matches with ${relativeUrlPattern} regex`;
+        }
+      } catch (error) {
+        console.error('Invalid regex pattern:', error);
+      }
+    }
+    dispatch({ type: ValidationActionType.SetField, field: 'urlTemplate', isValid: true });
+    return undefined;
+  }, [dispatch, testSuite.endpointRef?.relativeUrlPattern, testSuite.requestTemplate?.urlTemplate]);
+
   const onChangeEndpointRef = useCallback(
     (endpointRef: TestSuiteEndpointRef) => {
       onChangeTestSuite({
@@ -54,6 +82,17 @@ const MethodInfo: FC<Props> = ({ testSuite, onChangeTestSuite, selectedAppType }
       });
     },
     [onChangeTestSuite, testSuite],
+  );
+
+  const onChangeFinalPath = useCallback(
+    (finalPath?: string) => {
+      onChangeTestSuite({
+        ...testSuite,
+        requestTemplate: { ...testSuite.requestTemplate, urlTemplate: finalPath },
+      });
+      setFinalPathError(validateFinalPath());
+    },
+    [onChangeTestSuite, testSuite, validateFinalPath],
   );
 
   const selectedApplicationForModal =
@@ -81,6 +120,17 @@ const MethodInfo: FC<Props> = ({ testSuite, onChangeTestSuite, selectedAppType }
           )}
         </div>
       </div>
+      {testSuite?.endpointRef?.method && (
+        <DialInput
+          id="urlTemplate"
+          value={testSuite.requestTemplate?.urlTemplate || ''}
+          onChange={onChangeFinalPath}
+          labelProps={{ label: t(TestSuitesI18nKey.FinalPath) }}
+          containerClassName={STANDARD_CONTROL_WIDTH}
+          invalid={!!finalPathError}
+          error={finalPathError}
+        />
+      )}
       <div className="flex flex-col gap-4 relative min-h-0 overflow-auto flex-1">
         {view === ParamsView.TABLE ? (
           <>

@@ -1521,6 +1521,7 @@ export default {
     Inputs: 'Inputs',
     Outputs: 'Outputs',
     Results: 'Results',
+    FinalPath: 'Final path',
   },
   FileManager: {
     SelectedItems: 'item(s) selected',
