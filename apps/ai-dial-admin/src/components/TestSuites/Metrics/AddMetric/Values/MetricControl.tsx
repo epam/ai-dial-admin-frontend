@@ -28,7 +28,7 @@ const MetricControl: FC<Props> = ({ binding, field, label = true, onChangeValue 
             caption={field.description}
             options={field.enum.map((item) => ({ label: item, value: item }))}
             value={binding?.source.value as string | undefined}
-            onChange={(v) => onChangeValue(field.name, (v as string) ?? '')}
+            onChange={(v) => onChangeValue(field.name, v as string)}
           />
         ) : (
           <DialInput
@@ -36,7 +36,7 @@ const MetricControl: FC<Props> = ({ binding, field, label = true, onChangeValue 
             placeholder={valuePlaceholder}
             labelProps={label ? { required: field.required, label: field.name, caption: field.description } : undefined}
             value={binding?.source.value as string | undefined}
-            onChange={(v) => onChangeValue(field.name, (v as string) ?? '')}
+            onChange={(v) => onChangeValue(field.name, v as string)}
           />
         ))}
 
@@ -46,7 +46,7 @@ const MetricControl: FC<Props> = ({ binding, field, label = true, onChangeValue 
           placeholder={valuePlaceholder}
           labelProps={label ? { required: field.required, label: field.name, caption: field.description } : undefined}
           value={binding?.source.value as number | undefined}
-          onChange={(v) => onChangeValue(field.name, (v as string) ?? '')}
+          onChange={(v) => onChangeValue(field.name, v as string)}
         />
       )}
 
@@ -56,7 +56,7 @@ const MetricControl: FC<Props> = ({ binding, field, label = true, onChangeValue 
           label={label ? field.name : undefined}
           caption={field.description}
           isOn={binding?.source.value as boolean | undefined}
-          onChange={(v) => onChangeValue(field.name, v.toString() ?? '')}
+          onChange={(v) => onChangeValue(field.name, v.toString())}
         />
       )}
     </div>
