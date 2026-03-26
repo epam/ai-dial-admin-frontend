@@ -8,10 +8,13 @@ import { jsonSchemaToFields } from '@/src/components/Common/SchemaGrid/utils';
 import { EntityFieldsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Metric, MetricBinding } from '@/src/models/evaluation/metric';
-import MetricSchemaSection from './SchemaSection';
-import MetricOutput from './Output';
+import MetricSchemaSection from './Values/SchemaSection';
+import MetricOutputs from './Values/Outputs';
+import MetricInputs from './Values/Inputs';
+import { TestSuite } from '@/src/models/evaluation/test-suite';
 
 interface Props {
+  selectedTestSuite?: TestSuite;
   metricName?: string;
   selectedMetric?: Metric;
   selectedMetricDetails?: Metric;
@@ -31,9 +34,9 @@ const MetricConfiguration: FC<Props> = ({
   inputBindings,
   configBindings,
   onChangeName,
+  selectedTestSuite,
 }) => {
   const t = useI18n();
-
   const selectedMetricParameters = useMemo(() => {
     return jsonSchemaToFields(selectedMetricDetails?.configSchema, selectedMetricDetails?.configSchema);
   }, [selectedMetricDetails]);
@@ -71,13 +74,14 @@ const MetricConfiguration: FC<Props> = ({
           bindings={configBindings}
           onChange={onChangeConfigBindings}
         />
-        <MetricSchemaSection
+        <MetricInputs
           title={t(TestSuitesI18nKey.Inputs)}
           bindings={inputBindings}
           fields={selectedMetricInputs || []}
           onChange={onChangeInputBindings}
+          selectedTestSuite={selectedTestSuite}
         />
-        <MetricOutput title={t(TestSuitesI18nKey.Outputs)} fields={selectedMetricOutputs || []} />
+        <MetricOutputs title={t(TestSuitesI18nKey.Outputs)} fields={selectedMetricOutputs || []} />
       </div>
     </div>
   );

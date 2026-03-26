@@ -4,6 +4,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { EntityFieldsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { Metric, MetricBinding } from '@/src/models/evaluation/metric';
 import MetricConfiguration from '../Configuration';
+import { MetricBindingType } from '@/src/types/evaluation';
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   DialInput: ({ labelProps, value, onChange }: any) => (
@@ -58,9 +59,11 @@ describe('MetricConfiguration', () => {
   };
 
   const configBindings: MetricBinding[] = [
-    { property: 'threshold', source: { $type: 'Constant', value: '1' } },
+    { property: 'threshold', source: { $type: MetricBindingType.Constant, value: '1' } },
   ];
-  const inputBindings: MetricBinding[] = [{ property: 'prompt', source: { $type: 'Column', columnName: 'prompt' } }];
+  const inputBindings: MetricBinding[] = [
+    { property: 'prompt', source: { $type: MetricBindingType.Column, columnName: 'prompt' } },
+  ];
 
   test('renders selected metric name and description', () => {
     render(

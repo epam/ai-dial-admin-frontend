@@ -1454,6 +1454,7 @@ export enum TestSuitesI18nKey {
   DynamicConfiguration = 'TestSuites.DynamicConfiguration',
   RequestBodyPreview = 'TestSuites.RequestBodyPreview',
   Constant = 'TestSuites.Constant',
+  ResponseColumn = 'TestSuites.ResponseColumn',
   Attribute = 'TestSuites.Attribute',
   TestCase = 'TestSuites.TestCase',
   Response = 'TestSuites.Response',

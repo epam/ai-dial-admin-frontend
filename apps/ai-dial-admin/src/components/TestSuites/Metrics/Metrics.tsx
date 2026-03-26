@@ -169,7 +169,7 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
         createPortal(
           <AddMetricModal
             isModalOpen={isAddModalOpen}
-            selectedTestSuiteId={selectedTestSuite.id as string}
+            selectedTestSuite={selectedTestSuite}
             onClose={() => {
               setIsAddModalOpen(false);
               setMetricToEdit(undefined);

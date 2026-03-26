@@ -15,7 +15,7 @@ export const createUpdatedMetricBinding = (
     source: { ...data.source },
   };
   if (field === 'source.$type') {
-    newData.source.$type = value as string;
+    newData.source.$type = value as MetricBindingType;
     newData.source.value = void 0;
     newData.source.columnName = void 0;
   } else {
@@ -33,7 +33,7 @@ export const createUpdatedMetricBinding = (
 const createDefaultBinding = (property: string): MetricBinding => ({
   property,
   source: {
-    $type: 'Constant',
+    $type: MetricBindingType.Constant,
     value: '',
   },
 });
@@ -61,7 +61,7 @@ export const generateMetricDefaultInputBindings = (schema: JSONSchema7) => {
   return Object.entries(getSchemaDefaults(schema ?? {})).map(([key, value]) => ({
     property: key,
     source: {
-      $type: 'Constant',
+      $type: MetricBindingType.Constant,
       value: value as string,
     },
   }));

@@ -2,7 +2,16 @@
 
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialLoader, DialPopup, DialSteps, PopupSize, Step, StepStatus } from '@epam/ai-dial-ui-kit';
+import {
+  DialLoader,
+  DialNeutralButton,
+  DialPopup,
+  DialPrimaryButton,
+  DialSteps,
+  PopupSize,
+  Step,
+  StepStatus,
+} from '@epam/ai-dial-ui-kit';
 
 import {
   getMetricDeclarations,
@@ -10,7 +19,7 @@ import {
   getTestSuiteMetricDetailsWithSchema,
 } from '@/src/app/[lang]/test-suites/actions';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
-import { TestSuitesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Metric, MetricBinding } from '@/src/models/evaluation/metric';
 import classNames from 'classnames';
@@ -19,16 +28,17 @@ import MetricConfiguration from './Configuration';
 import { MetricStep } from './constants';
 import MetricSelection from './MetricSelection';
 import { validateMetricBindings } from './utils';
+import { TestSuite } from '@/src/models/evaluation/test-suite';
 
 interface Props {
   isModalOpen: boolean;
   onClose: () => void;
   onConfirm: (metric?: Metric | null) => void;
   editingMetric?: Metric;
-  selectedTestSuiteId?: string;
+  selectedTestSuite?: TestSuite;
 }
 
-const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMetric, selectedTestSuiteId }) => {
+const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMetric, selectedTestSuite }) => {
   const t = useI18n();
 
   const isEditMode = !!editingMetric;
@@ -42,7 +52,7 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMet
   const [selectedMetricId, setSelectedMetricId] = useState<string>('');
   const [selectedMetricDetails, setSelectedMetricDetails] = useState<Metric | undefined>();
 
-  const [metricName, setMetricName] = useState<string | undefined>(editingMetric?.name ?? '');
+  const [metricName, setMetricName] = useState<string | undefined>('');
 
   const [configBindings, setConfigBindings] = useState<MetricBinding[]>([]);
   const [inputBindings, setInputBindings] = useState<MetricBinding[]>([]);
@@ -62,11 +72,10 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMet
   }, [selectedMetricId]);
 
   useEffect(() => {
-    if (editingMetric?.id && selectedTestSuiteId) {
+    if (editingMetric?.id && selectedTestSuite?.id) {
       setIsMetricsLoading(true);
-      setMetricName(editingMetric.name);
       Promise.all([
-        getTestSuiteMetricDetailsWithSchema(selectedTestSuiteId as string, editingMetric.id as string),
+        getTestSuiteMetricDetailsWithSchema(selectedTestSuite.id as string, editingMetric.id as string),
         getMetricLatestVersion(editingMetric.metricDeclarationId as string),
       ]).then(([metricDetails, metric]) => {
         setConfigBindings(metricDetails?.configBindings ?? []);
@@ -75,11 +84,11 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMet
         setIsMetricsLoading(false);
       });
     }
-  }, [editingMetric?.id, editingMetric?.metricDeclarationId, editingMetric?.name, selectedTestSuiteId]);
+  }, [editingMetric?.id, editingMetric?.metricDeclarationId, editingMetric?.name, selectedTestSuite?.id]);
 
   useEffect(() => {
-    setMetricName(selectedMetric?.name ?? '');
-  }, [selectedMetric]);
+    setMetricName(selectedMetric?.name ?? editingMetric?.name ?? '');
+  }, [selectedMetric, editingMetric?.name]);
 
   const isStep1Valid = !!selectedMetricId;
   const isStep2Valid = validateMetricBindings(
@@ -132,13 +141,20 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMet
       className="h-[800px]"
       dividers
       footer={
-        <StepperModalButtons
-          steps={steps}
-          currentStep={steps.find((s) => s.id === currentStepId)}
-          onChangeStep={setCurrentStepId}
-          onFinishClick={onFinishClick}
-          onClose={onClose}
-        />
+        isEditMode ? (
+          <div className="flex flex-row items-center gap-2 px-6 py-4 justify-end">
+            <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+            <DialPrimaryButton label={t(ButtonsI18nKey.Confirm)} disabled={!isStep2Valid} onClick={onFinishClick} />
+          </div>
+        ) : (
+          <StepperModalButtons
+            steps={steps}
+            currentStep={steps.find((s) => s.id === currentStepId)}
+            onChangeStep={setCurrentStepId}
+            onFinishClick={onFinishClick}
+            onClose={onClose}
+          />
+        )
       }
     >
       <div className="h-full flex flex-col min-h-0 px-6 py-4">
@@ -167,6 +183,7 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMet
               configBindings={configBindings}
               inputBindings={inputBindings}
               onChangeName={setMetricName}
+              selectedTestSuite={selectedTestSuite}
               selectedMetricDetails={selectedMetricDetails}
               onChangeConfigBindings={setConfigBindings}
               onChangeInputBindings={setInputBindings}

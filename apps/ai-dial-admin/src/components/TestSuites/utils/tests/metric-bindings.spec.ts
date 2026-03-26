@@ -37,11 +37,11 @@ describe('generateMetricBindingsRowData', () => {
     expect(result).toHaveLength(2);
     expect(result[0]).toEqual({
       property: 'apiKey',
-      source: { $type: 'Constant', value: '' },
+      source: { $type: MetricBindingType.Constant, value: '' },
     });
     expect(result[1]).toEqual({
       property: 'timeout',
-      source: { $type: 'Constant', value: '' },
+      source: { $type: MetricBindingType.Constant, value: '' },
     });
   });
 
@@ -52,11 +52,11 @@ describe('generateMetricBindingsRowData', () => {
     expect(result).toHaveLength(2);
     expect(result[0]).toEqual({
       property: 'prompt',
-      source: { $type: 'Constant', value: '' },
+      source: { $type: MetricBindingType.Constant, value: '' },
     });
     expect(result[1]).toEqual({
       property: 'model',
-      source: { $type: 'Constant', value: '' },
+      source: { $type: MetricBindingType.Constant, value: '' },
     });
   });
 
@@ -73,66 +73,70 @@ describe('generateMetricBindingsRowData', () => {
   test('uses existing config binding when present', () => {
     const configSchema = [schemaField('apiKey')];
     const existingConfig: MetricBinding[] = [
-      { property: 'apiKey', source: { $type: 'Constant', value: 'secret-123' } },
+      { property: 'apiKey', source: { $type: MetricBindingType.Constant, value: 'secret-123' } },
     ];
     const result = generateMetricBindingsRowData(existingConfig, [], configSchema, []);
 
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual({
       property: 'apiKey',
-      source: { $type: 'Constant', value: 'secret-123' },
+      source: { $type: MetricBindingType.Constant, value: 'secret-123' },
     });
   });
 
   test('uses existing input binding when present', () => {
     const inputSchema = [schemaField('prompt')];
     const existingInput: MetricBinding[] = [
-      { property: 'prompt', source: { $type: 'Column', columnName: 'user_input' } },
+      { property: 'prompt', source: { $type: MetricBindingType.Column, columnName: 'user_input' } },
     ];
     const result = generateMetricBindingsRowData([], existingInput, [], inputSchema);
 
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual({
       property: 'prompt',
-      source: { $type: 'Column', columnName: 'user_input' },
+      source: { $type: MetricBindingType.Column, columnName: 'user_input' },
     });
   });
 
   test('mixes existing bindings with defaults for missing schema fields', () => {
     const configSchema = [schemaField('apiKey'), schemaField('timeout')];
-    const existingConfig: MetricBinding[] = [{ property: 'apiKey', source: { $type: 'Constant', value: 'key' } }];
+    const existingConfig: MetricBinding[] = [
+      { property: 'apiKey', source: { $type: MetricBindingType.Constant, value: 'key' } },
+    ];
     const result = generateMetricBindingsRowData(existingConfig, [], configSchema, []);
 
     expect(result).toHaveLength(2);
-    expect(result[0]).toEqual({ property: 'apiKey', source: { $type: 'Constant', value: 'key' } });
-    expect(result[1]).toEqual({ property: 'timeout', source: { $type: 'Constant', value: '' } });
+    expect(result[0]).toEqual({ property: 'apiKey', source: { $type: MetricBindingType.Constant, value: 'key' } });
+    expect(result[1]).toEqual({ property: 'timeout', source: { $type: MetricBindingType.Constant, value: '' } });
   });
 
   test('combines config and input with existing bindings for both', () => {
     const configSchema = [schemaField('configField')];
     const inputSchema = [schemaField('inputField')];
     const existingConfig: MetricBinding[] = [
-      { property: 'configField', source: { $type: 'Constant', value: 'config-val' } },
+      { property: 'configField', source: { $type: MetricBindingType.Constant, value: 'config-val' } },
     ];
-    const existingInput: MetricBinding[] = [{ property: 'inputField', source: { $type: 'Column', columnName: 'col' } }];
+    const existingInput: MetricBinding[] = [
+      { property: 'inputField', source: { $type: MetricBindingType.Column, columnName: 'col' } },
+    ];
     const result = generateMetricBindingsRowData(existingConfig, existingInput, configSchema, inputSchema);
 
     expect(result).toHaveLength(2);
     expect(result[0]).toEqual({
       property: 'configField',
-      source: { $type: 'Constant', value: 'config-val' },
+      source: { $type: MetricBindingType.Constant, value: 'config-val' },
     });
     expect(result[1]).toEqual({
       property: 'inputField',
-      source: { $type: 'Column', columnName: 'col' },
+      source: { $type: MetricBindingType.Column, columnName: 'col' },
     });
   });
 
   test('ignores existing bindings that do not match any schema field', () => {
     const configSchema = [schemaField('onlyField')];
     const existingConfig: MetricBinding[] = [
-      { property: 'onlyField', source: { $type: 'Constant', value: 'used' } },
-      { property: 'orphan', source: { $type: 'Constant', value: 'ignored' } },
+      { property: 'onlyField', source: { $type: MetricBindingType.Constant, value: 'used' } },
+      { property: 'orphan', source: { $type: MetricBindingType.Constant, value: 'ignored' } },
     ];
     const result = generateMetricBindingsRowData(existingConfig, [], configSchema, []);
 
@@ -239,11 +243,11 @@ describe('generateMetricDefaultInputBindings', () => {
     expect(result).toHaveLength(2);
     expect(result[0]).toEqual({
       property: 'name',
-      source: { $type: 'Constant', value: 'Alice' },
+      source: { $type: MetricBindingType.Constant, value: 'Alice' },
     });
     expect(result[1]).toEqual({
       property: 'count',
-      source: { $type: 'Constant', value: 10 },
+      source: { $type: MetricBindingType.Constant, value: 10 },
     });
   });
 
@@ -260,11 +264,11 @@ describe('generateMetricDefaultInputBindings', () => {
     expect(result).toHaveLength(2);
     expect(result[0]).toEqual({
       property: 'prompt',
-      source: { $type: 'Constant', value: '' },
+      source: { $type: MetricBindingType.Constant, value: '' },
     });
     expect(result[1]).toEqual({
       property: 'score',
-      source: { $type: 'Constant', value: 0 },
+      source: { $type: MetricBindingType.Constant, value: 0 },
     });
   });
 });
@@ -302,7 +306,7 @@ describe('generateMetricDefaultBindings', () => {
     expect(result.inputBindings).toHaveLength(1);
     expect(result.inputBindings![0]).toEqual({
       property: 'query',
-      source: { $type: 'Constant', value: 'default-query' },
+      source: { $type: MetricBindingType.Constant, value: 'default-query' },
     });
     expect(result.configBindings).toEqual([]);
   });
@@ -323,11 +327,11 @@ describe('generateMetricDefaultBindings', () => {
     expect(result.configBindings).toHaveLength(2);
     expect(result.configBindings![0]).toEqual({
       property: 'apiKey',
-      source: { $type: 'Constant', value: '' },
+      source: { $type: MetricBindingType.Constant, value: '' },
     });
     expect(result.configBindings![1]).toEqual({
       property: 'timeout',
-      source: { $type: 'Constant', value: 30 },
+      source: { $type: MetricBindingType.Constant, value: 30 },
     });
     expect(result.inputBindings).toEqual([]);
   });
@@ -363,13 +367,13 @@ describe('generateMetricDefaultBindings', () => {
     const inputBindings: MetricBinding[] = [
       {
         property: 'query',
-        source: { $type: 'Column', columnName: 'user_query' },
+        source: { $type: MetricBindingType.Column, columnName: 'user_query' },
       },
     ];
     const configBindings: MetricBinding[] = [
       {
         property: 'apiKey',
-        source: { $type: 'Constant', value: 'manual-key' },
+        source: { $type: MetricBindingType.Constant, value: 'manual-key' },
       },
     ];
 

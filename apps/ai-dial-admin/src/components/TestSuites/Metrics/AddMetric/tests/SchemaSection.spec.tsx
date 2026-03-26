@@ -4,7 +4,8 @@ import { describe, expect, test, vi } from 'vitest';
 import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
 import { EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { MetricBinding } from '@/src/models/evaluation/metric';
-import MetricSchemaSection from '../SchemaSection';
+import MetricSchemaSection from '../Values/SchemaSection';
+import { MetricBindingType } from '@/src/types/evaluation';
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   DialInput: ({ labelProps, value, onChange, placeholder }: any) => (
@@ -40,7 +41,13 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
   DialSwitch: ({ label, isOn, onChange }: any) => (
     <label>
       <span>{label}</span>
-      <input type="checkbox" role="switch" aria-label={label} checked={!!isOn} onChange={(e) => onChange(e.target.checked)} />
+      <input
+        type="checkbox"
+        role="switch"
+        aria-label={label}
+        checked={!!isOn}
+        onChange={(e) => onChange(e.target.checked)}
+      />
     </label>
   ),
 }));
@@ -69,10 +76,10 @@ describe('MetricSchemaSection', () => {
     ];
 
     const bindings: MetricBinding[] = [
-      { property: 'plainString', source: { $type: 'Constant', value: 'hello' } },
-      { property: 'enumString', source: { $type: 'Constant', value: 'B' } },
-      { property: 'numericField', source: { $type: 'Constant', value: '42' } },
-      { property: 'booleanField', source: { $type: 'Constant', value: true as unknown as string } },
+      { property: 'plainString', source: { $type: MetricBindingType.Constant, value: 'hello' } },
+      { property: 'enumString', source: { $type: MetricBindingType.Constant, value: 'B' } },
+      { property: 'numericField', source: { $type: MetricBindingType.Constant, value: '42' } },
+      { property: 'booleanField', source: { $type: MetricBindingType.Constant, value: true as unknown as string } },
     ];
 
     render(<MetricSchemaSection title="Section Title" fields={fields} bindings={bindings} />);
@@ -96,8 +103,8 @@ describe('MetricSchemaSection', () => {
 
     const fields: SchemaFieldRow[] = [buildField({ id: 'f1', name: 'plainString', type: 'string' })];
     const bindings: MetricBinding[] = [
-      { property: 'plainString', source: { $type: 'Constant', value: 'old' } },
-      { property: 'other', source: { $type: 'Constant', value: 'keep' } },
+      { property: 'plainString', source: { $type: MetricBindingType.Constant, value: 'old' } },
+      { property: 'other', source: { $type: MetricBindingType.Constant, value: 'keep' } },
     ];
 
     render(<MetricSchemaSection title="Section" fields={fields} bindings={bindings} onChange={onChange} />);

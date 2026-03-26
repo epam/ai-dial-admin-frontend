@@ -1,7 +1,8 @@
 import { JSONSchema7 } from 'json-schema';
 
-import { MetricBinding } from '@/src/models/evaluation/metric';
 import { jsonSchemaToFields } from '@/src/components/Common/SchemaGrid/utils';
+import { MetricBinding } from '@/src/models/evaluation/metric';
+import { MetricBindingType } from '@/src/types/evaluation';
 
 export const validateMetricBindings = (
   metricName: string | undefined,
@@ -31,13 +32,13 @@ export const validateMetricBindings = (
   }
 
   for (const binding of allBindings) {
-    if (binding.source.$type === 'Constant') {
+    if (binding.source.$type === MetricBindingType.Constant) {
       if (binding.source.value === undefined || binding.source.value === '') {
         return false;
       }
     }
 
-    if (binding.source.$type !== 'Constant' && binding.source.$type !== 'Column') {
+    if (binding.source.$type !== MetricBindingType.Constant && binding.source.$type !== MetricBindingType.Column) {
       return false;
     }
   }

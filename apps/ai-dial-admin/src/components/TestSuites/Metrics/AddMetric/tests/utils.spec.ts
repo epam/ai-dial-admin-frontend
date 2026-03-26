@@ -3,6 +3,7 @@ import { describe, expect, test } from 'vitest';
 
 import { MetricBinding } from '@/src/models/evaluation/metric';
 import { validateMetricBindings } from '../utils';
+import { MetricBindingType } from '@/src/types/evaluation';
 
 describe('validateMetricBindings', () => {
   const configSchema: JSONSchema7 = {
@@ -26,7 +27,7 @@ describe('validateMetricBindings', () => {
     {
       property: 'threshold',
       source: {
-        $type: 'Constant',
+        $type: MetricBindingType.Constant,
         value: '0.85',
       },
     },
@@ -36,7 +37,7 @@ describe('validateMetricBindings', () => {
     {
       property: 'inputText',
       source: {
-        $type: 'Column',
+        $type: MetricBindingType.Column,
         columnName: 'prompt',
       },
     },
@@ -61,7 +62,7 @@ describe('validateMetricBindings', () => {
         {
           property: 'threshold',
           source: {
-            $type: 'Constant',
+            $type: MetricBindingType.Constant,
             value: '',
           },
         },
@@ -81,7 +82,7 @@ describe('validateMetricBindings', () => {
         {
           property: 'threshold',
           source: {
-            $type: 'UnsupportedType',
+            $type: 'UnsupportedType' as unknown as MetricBindingType,
           },
         },
       ],

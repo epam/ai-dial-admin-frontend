@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
 import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
-import MetricOutput from '../Output';
+import MetricOutputs from '../Outputs';
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   DialTag: ({ tag }: { tag: string }) => <span>{tag}</span>,
@@ -21,9 +21,9 @@ const buildField = (overrides: Partial<SchemaFieldRow>): SchemaFieldRow => ({
   depth: 0,
 });
 
-describe('MetricOutput', () => {
+describe('MetricOutputs', () => {
   test('returns null when fields are empty', () => {
-    const { container } = render(<MetricOutput title="Outputs" fields={[]} />);
+    const { container } = render(<MetricOutputs title="Outputs" fields={[]} />);
 
     expect(container.firstChild).toBeNull();
   });
@@ -34,7 +34,7 @@ describe('MetricOutput', () => {
       buildField({ id: 'f2', name: 'passed', type: 'boolean', description: 'Whether the test passed' }),
     ];
 
-    render(<MetricOutput title="Outputs" fields={fields} />);
+    render(<MetricOutputs title="Outputs" fields={fields} />);
 
     expect(screen.getByText('Outputs')).toBeInTheDocument();
     expect(screen.getByText('score')).toBeInTheDocument();
@@ -50,7 +50,7 @@ describe('MetricOutput', () => {
       buildField({ id: 'f1', name: 'score', type: 'number', description: 'Evaluation score' }),
     ];
 
-    render(<MetricOutput title="Outputs" fields={fields} />);
+    render(<MetricOutputs title="Outputs" fields={fields} />);
 
     const description = screen.getByText('Evaluation score');
     expect(description).toHaveAttribute('title', 'Evaluation score');
