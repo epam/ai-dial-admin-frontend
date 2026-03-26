@@ -12,6 +12,8 @@ export interface DialApplication extends ChatEntity, EntityValidityState {
   dependencies?: string[];
   applicationProperties?: Record<string, DefaultsValue>;
   applicationPropertiesTemp?: ApplicationPropertiesTemp[];
+  applicationTypeSchemaId?: string;
+  mcp?: ApplicationMCPContainer;
 }
 
 export interface DialApplicationScheme extends ModifiedEntity, DialScheme {
@@ -36,8 +38,14 @@ export interface DialApplicationScheme extends ModifiedEntity, DialScheme {
   'dial:applicationTypeIconUrl'?: string;
   'dial:applicationTypeBucketCopy'?: TypeBucketCopy;
   'dial:applicationTypeInterceptors'?: string[];
+  'dial:applicationTypeMcp'?: ApplicationTypeMCP;
   applications?: string[];
   topics?: string[];
+}
+
+export interface ApplicationTypeMCP {
+  ['dial:endpoint']: string;
+  ['dial:transport']?: string;
 }
 
 export enum TypeEntity {
@@ -60,4 +68,10 @@ export interface ApplicationPropertiesTemp {
   type: string;
   required: boolean;
   isFromScheme?: boolean;
+}
+
+export interface ApplicationMCPContainer {
+  endpoint: string;
+  transport?: string;
+  allowedTools?: string[];
 }

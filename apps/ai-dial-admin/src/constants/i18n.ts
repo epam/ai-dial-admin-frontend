@@ -219,6 +219,7 @@ export enum EntitiesI18nKey {
   Container = 'Entities.Container',
   DiscardChanges = 'Entities.DiscardChanges',
   DiscardChangesDescription = 'Entities.DiscardChangesDescription',
+  EndpointAndMCPContainerSource = 'Entities.EndpointAndMCPContainerSource',
 }
 
 export enum DeleteI18nKey {

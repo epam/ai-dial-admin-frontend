@@ -229,6 +229,7 @@ export default {
     DiscardChanges: 'Discard Changes',
     DiscardChangesDescription:
       'Are you sure you want to discard changes? All previously added information will not be saved.',
+    EndpointAndMCPContainerSource: 'Endpoint and MCP container',
     // deployments
     NoImages: 'No Images',
     NoContainersType: 'No {type} {entityType}s',
