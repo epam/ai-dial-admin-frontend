@@ -18,11 +18,12 @@ import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 interface Props {
   selectedValue?: string;
   runners?: DialApplicationScheme[];
+  label?: string;
   isEntityImmutable?: boolean;
   onChangeValue: (value?: string) => void;
 }
 
-const AppRunners: FC<Props> = ({ selectedValue, runners, onChangeValue, isEntityImmutable = false }) => {
+const AppRunners: FC<Props> = ({ selectedValue, runners, onChangeValue, label, isEntityImmutable = false }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const currentLocale = useCurrentLocale();
@@ -79,18 +80,18 @@ const AppRunners: FC<Props> = ({ selectedValue, runners, onChangeValue, isEntity
       searchable={true}
       required
       id="sourceEntity"
-      className="w-full"
+      className="w-full mt-1"
       disabled={isReadOnlyAdmin}
       options={dropdownItems}
-      label={t(EntitiesI18nKey.AppRunner)}
+      label={label}
       placeholder={t(EntityPlaceholdersI18nKey.SelectAppRunner)}
       onChange={(runner) => onChange(runner as string)}
     />
   ) : (
-    <div className="flex">
+    <div className="flex mt-1">
       <div className="flex gap-2 items-end">
         <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-2')}>
-          <DialLabel label={t(EntitiesI18nKey.AppRunner)} required htmlFor="sourceEntity" />
+          <DialLabel label={label} required htmlFor="sourceEntity" />
           <DialInputPopup
             disabled={isReadOnlyAdmin}
             emptyValueText={t(EntitiesI18nKey.NoApplicationRunners)}

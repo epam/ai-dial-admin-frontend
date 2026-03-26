@@ -1,9 +1,10 @@
-import { FC, useCallback, useMemo, useState } from 'react';
+'use client';
 
-import { DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
+import { FC, useCallback, useEffect, useState } from 'react';
+
+import { DialLabel, DialRadioButton } from '@epam/ai-dial-ui-kit';
 import { JSONSchema7 } from 'json-schema';
 
-import CompletionEndpointControl from '@/src/components/BaseControls/Endpoint/CompletionEndpoint';
 import EditorUrlControl from '@/src/components/BaseControls/Endpoint/EditorUrl';
 import ViewerUrlControl from '@/src/components/BaseControls/Endpoint/ViewerUrl';
 import AppRunners from '@/src/components/SourceField/Application/AppRunners';
@@ -15,10 +16,12 @@ import { DefaultsValue } from '@/src/models/dial/defaults';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getSchemaDefaults } from '@/src/utils/schema';
-import { SourceTypes } from './constants';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
+import EndpointAndMCPContainer from './EndpointAndMCPContainer';
+import { SourceType } from './constants';
 
-interface Props {
+export interface Props {
+  id?: string;
   entity: DialApplication;
   runners?: DialApplicationScheme[];
   view?: ApplicationRoute;
@@ -27,55 +30,67 @@ interface Props {
   isModal?: boolean;
 }
 
-const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, isEntityImmutable, isModal }) => {
+const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, isEntityImmutable, id, isModal }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
-  const sources: SelectOption[] = useMemo(
-    () => [
-      {
-        value: SourceTypes.ENDPOINTS,
-        label: t(EntitiesI18nKey.Endpoints),
-      },
-      {
-        value: SourceTypes.APP_RUNNER,
-        label: t(EntitiesI18nKey.AppRunner),
-      },
-    ],
-    [t],
-  );
-  const [sourceType, setSourceType] = useState<SelectOption | undefined>(
-    entity.endpoint || (!entity.customAppSchemaId && !(entity as AssetApp).applicationTypeSchemaId)
-      ? sources[0]
-      : sources[1],
+  const [sourceType, setSourceType] = useState<SourceType>(
+    entity?.endpoint || entity?.mcp || (!entity.customAppSchemaId && !(entity as AssetApp).applicationTypeSchemaId)
+      ? SourceType.ENDPOINT_MCP_CONTEINER
+      : SourceType.APP_RUNNER,
   );
   const { dispatch } = useSaveValidationContext();
 
-  const onChangeEndpoint = useCallback(
-    (endpoint?: string) => {
-      onChangeEntity({ ...entity, endpoint });
-    },
-    [entity, onChangeEntity],
-  );
+  useEffect(() => {
+    const isAppRunerSourceType = entity.customAppSchemaId || (entity as AssetApp).applicationTypeSchemaId;
+    const isMCPSourceType = entity?.endpoint || entity?.mcp;
+    if (isAppRunerSourceType) {
+      setSourceType(SourceType.APP_RUNNER);
+    } else if (isMCPSourceType) {
+      setSourceType(SourceType.ENDPOINT_MCP_CONTEINER);
+    }
+  }, [entity]);
 
-  const onChangeSource = useCallback(
-    (value: string) => {
-      if (sourceType?.value !== value) {
-        // Reset validation states when changing source type
-        dispatch({ type: ValidationActionType.SetField, field: 'endpoint', isValid: true });
-        dispatch({ type: ValidationActionType.SetField, field: 'viewerUrl', isValid: true });
-        dispatch({ type: ValidationActionType.SetField, field: 'editorUrl', isValid: true });
-        dispatch({ type: ValidationActionType.SetField, field: 'completionEndpoint', isValid: true });
-        setSourceType(sources?.find((t) => t.value === value));
-        onChangeEntity({
+  const resetValidation = useCallback(() => {
+    // Reset validation states when changing source type
+    dispatch({ type: ValidationActionType.SetField, field: 'endpoint', isValid: true });
+    dispatch({ type: ValidationActionType.SetField, field: 'mcp_endpoint', isValid: true });
+    dispatch({ type: ValidationActionType.SetField, field: 'viewerUrl', isValid: true });
+    dispatch({ type: ValidationActionType.SetField, field: 'editorUrl', isValid: true });
+    onChangeEntity({
+      ...entity,
+      endpoint: void 0,
+      mcp: void 0,
+      viewerUrl: void 0,
+      editorUrl: void 0,
+      customAppSchemaId: void 0,
+      applicationTypeSchemaId: void 0,
+      applicationProperties: void 0,
+    });
+  }, [entity, onChangeEntity, dispatch]);
+
+  const handleRadioChange = useCallback(
+    (option: SourceType) => {
+      if (option === SourceType.ENDPOINT_MCP_CONTEINER) {
+        setSourceType(SourceType.ENDPOINT_MCP_CONTEINER);
+        const newEntity = {
+          ...entity,
+          applicationTypeSchemaId: void 0,
+          customAppSchemaId: void 0,
+          applicationProperties: void 0,
+        };
+        onChangeEntity(newEntity);
+      } else if (option === SourceType.APP_RUNNER) {
+        setSourceType(SourceType.APP_RUNNER);
+        const newEntity = {
           ...entity,
           endpoint: void 0,
-          viewerUrl: void 0,
-          editorUrl: void 0,
-          customAppSchemaId: void 0,
-        });
+          mcp: void 0,
+        };
+        onChangeEntity(newEntity);
       }
+      resetValidation();
     },
-    [entity, onChangeEntity, sourceType?.value, sources, dispatch],
+    [setSourceType, resetValidation, onChangeEntity, entity],
   );
 
   const onChangeViewerUrl = useCallback(
@@ -100,8 +115,9 @@ const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, i
               ...entity,
               applicationTypeSchemaId: value,
               endpoint: void 0,
+              mcp: void 0,
             }
-          : { ...entity, customAppSchemaId: value, endpoint: void 0 };
+          : { ...entity, customAppSchemaId: value, endpoint: void 0, mcp: void 0 };
       const runner = runners?.find((r) => r.$id === value);
       if (runner) {
         const applicationProperties = getSchemaDefaults(runner as JSONSchema7) as Record<string, DefaultsValue>;
@@ -114,27 +130,56 @@ const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, i
     [entity, isEntityImmutable, onChangeEntity, runners, view],
   );
 
+  const onChangeEndpoint = useCallback(
+    (entity: DialApplication) => {
+      const newEntity = {
+        ...entity,
+        applicationTypeSchemaId: void 0,
+        customAppSchemaId: void 0,
+        applicationProperties: void 0,
+      };
+      onChangeEntity(newEntity);
+    },
+    [onChangeEntity],
+  );
+
   return (
-    <div className="h-full flex flex-col gap-y-8">
-      <DialSelectField
-        value={sourceType?.value}
-        id="sourceType"
-        options={sources}
-        containerClassName="w-[180px]"
-        disabled={isReadOnlyAdmin}
-        label={t(EntitiesI18nKey.SourceType)}
-        onChange={(source) => onChangeSource(source as string)}
-      />
-      {sourceType?.value === SourceTypes.ENDPOINTS && (
-        <div className="flex flex-col gap-y-8">
-          <CompletionEndpointControl
-            required
-            disabled={isReadOnlyAdmin}
-            endpoint={entity.endpoint}
-            onChange={onChangeEndpoint}
-            isFullWidth={!isEntityImmutable}
-            isModal={isModal}
-          />
+    <div className="flex flex-col w-full relative gap-3">
+      <DialLabel label={t(EntitiesI18nKey.SourceType)} required htmlFor={id} />
+
+      <div className="flex flex-col gap-4">
+        <DialRadioButton
+          disabled={isReadOnlyAdmin}
+          inputId={`${id}-mcp-conteiner`}
+          name={`${id}-source-options`}
+          value={SourceType.ENDPOINT_MCP_CONTEINER}
+          checked={sourceType === SourceType.ENDPOINT_MCP_CONTEINER}
+          onChange={() => handleRadioChange(SourceType.ENDPOINT_MCP_CONTEINER)}
+          label={t(EntitiesI18nKey.EndpointAndMCPContainerSource)}
+        />
+
+        <DialRadioButton
+          disabled={isReadOnlyAdmin}
+          inputId={`${id}-app-runner`}
+          name={`${id}-source-options`}
+          value={SourceType.APP_RUNNER}
+          checked={sourceType === SourceType.APP_RUNNER}
+          onChange={() => handleRadioChange(SourceType.APP_RUNNER)}
+          label={t(EntitiesI18nKey.AppRunner)}
+        />
+      </div>
+
+      {sourceType === SourceType.ENDPOINT_MCP_CONTEINER && (
+        <div className="h-full flex flex-col gap-y-8">
+          <div className="border border-primary rounded ml-8 mt-1 p-4">
+            <EndpointAndMCPContainer
+              entity={entity}
+              isEntityImmutable={isEntityImmutable}
+              isReadOnlyAdmin={isReadOnlyAdmin}
+              onChangeEntity={onChangeEndpoint}
+              isModal={isModal}
+            />
+          </div>
           {isEntityImmutable && (
             <>
               <ViewerUrlControl endpoint={entity.viewerUrl} disabled={isReadOnlyAdmin} onChange={onChangeViewerUrl} />
@@ -143,17 +188,21 @@ const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, i
           )}
         </div>
       )}
-      {sourceType?.value === SourceTypes.APP_RUNNER && (
-        <AppRunners
-          selectedValue={
-            view === ApplicationRoute.AssetsApplications
-              ? (entity as AssetApp).applicationTypeSchemaId
-              : entity.customAppSchemaId
-          }
-          runners={runners}
-          isEntityImmutable={isEntityImmutable}
-          onChangeValue={onChangeAppRunner}
-        />
+
+      {sourceType === SourceType.APP_RUNNER && (
+        <div className="ml-8">
+          <AppRunners
+            selectedValue={
+              view === ApplicationRoute.AssetsApplications
+                ? (entity as AssetApp).applicationTypeSchemaId
+                : entity.customAppSchemaId
+            }
+            runners={runners}
+            isEntityImmutable={isEntityImmutable}
+            onChangeValue={onChangeAppRunner}
+            label=""
+          />
+        </div>
       )}
     </div>
   );
