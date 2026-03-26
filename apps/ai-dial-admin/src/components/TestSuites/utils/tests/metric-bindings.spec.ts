@@ -277,7 +277,7 @@ describe('generateMetricDefaultBindings', () => {
       inputSchema: { type: 'object', properties: {} },
       configSchema: { type: 'object', properties: {} },
     };
-    const result = generateMetricDefaultBindings('My Metric', details);
+    const result = generateMetricDefaultBindings('My Metric', details, [], []);
 
     expect(result.name).toBe('My Metric');
     expect(result.metricDeclarationId).toBe('decl-1');
@@ -297,7 +297,7 @@ describe('generateMetricDefaultBindings', () => {
       },
       configSchema: {},
     };
-    const result = generateMetricDefaultBindings('Test', details);
+    const result = generateMetricDefaultBindings('Test', details, [], []);
 
     expect(result.inputBindings).toHaveLength(1);
     expect(result.inputBindings![0]).toEqual({
@@ -318,7 +318,7 @@ describe('generateMetricDefaultBindings', () => {
       },
       inputSchema: {},
     };
-    const result = generateMetricDefaultBindings('Test', details);
+    const result = generateMetricDefaultBindings('Test', details, [], []);
 
     expect(result.configBindings).toHaveLength(2);
     expect(result.configBindings![0]).toEqual({
@@ -333,12 +333,49 @@ describe('generateMetricDefaultBindings', () => {
   });
 
   test('uses empty object when details has no schemas', () => {
-    const result = generateMetricDefaultBindings('Minimal', {} as Metric);
+    const result = generateMetricDefaultBindings('Minimal', {} as Metric, [], []);
 
     expect(result.name).toBe('Minimal');
     expect(result.metricDeclarationId).toBeUndefined();
     expect(result.metricDeclarationVersionId).toBeUndefined();
     expect(result.inputBindings).toEqual([]);
     expect(result.configBindings).toEqual([]);
+  });
+
+  test('uses provided bindings when they are not empty', () => {
+    const details: Metric = {
+      id: 'ver-2',
+      metricDeclarationId: 'decl-2',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          query: { type: 'string', default: 'from-schema' },
+        },
+      },
+      configSchema: {
+        type: 'object',
+        properties: {
+          apiKey: { type: 'string', default: 'from-schema' },
+        },
+      },
+    };
+
+    const inputBindings: MetricBinding[] = [
+      {
+        property: 'query',
+        source: { $type: 'Column', columnName: 'user_query' },
+      },
+    ];
+    const configBindings: MetricBinding[] = [
+      {
+        property: 'apiKey',
+        source: { $type: 'Constant', value: 'manual-key' },
+      },
+    ];
+
+    const result = generateMetricDefaultBindings('Provided', details, configBindings, inputBindings);
+
+    expect(result.inputBindings).toEqual(inputBindings);
+    expect(result.configBindings).toEqual(configBindings);
   });
 });
