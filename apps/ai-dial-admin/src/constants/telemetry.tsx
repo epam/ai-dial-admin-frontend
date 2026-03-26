@@ -143,7 +143,6 @@ export const SYSTEM_USAGE_QUERY: TelemetryQuery = {
   query: {
     expressions: ["window(_time, 1, 'm') as time", 'count() as requests'],
     from: 'analytics',
-    orderBy: [{ $desc: '_time' }],
     groupBy: ["window(_time, 1, 'm')"],
   },
 };
@@ -223,6 +222,15 @@ export const CONVERSATIONS_QUERY: TelemetryQuery = {
 export const MCP_TABLE_NAME = 'mcp_analytics';
 export const TOOLSET_DEPLOYMENT_PREFIX = 'toolsets/';
 
+export const MCP_USAGE_QUERY: TelemetryQuery = {
+  $type: 'json',
+  query: {
+    expressions: ["window(_time, 1, 'm')", 'mcp_method', 'count()'],
+    from: MCP_TABLE_NAME,
+    groupBy: ["window(_time, 1, 'm')", 'mcp_method'],
+  },
+};
+
 export const MCP_TOTAL_CALLS_QUERY: TelemetryQuery = {
   $type: 'json',
   query: {
@@ -251,17 +259,27 @@ export const MCP_CONSUMPTION_QUERY: TelemetryQuery = {
   },
 };
 
-export const MCP_CALLS_BY_DEPLOYMENT_QUERY: TelemetryQuery = {
+export const MCP_TOOLS_CONSUMPTION_QUERY: TelemetryQuery = {
   $type: 'json',
   query: {
-    expressions: ['deployment', 'count()'],
+    expressions: ['deployment', 'mcp_tool_call_name', 'count()'],
     from: MCP_TABLE_NAME,
     groupBy: ['deployment', 'mcp_tool_call_name'],
     orderBy: [{ $desc: 'count()' }],
   },
 };
 
-export const MCP_CALLS_BY_DEPLOYMENT_EXTRA_CONDITIONS = [{ $ne: { left: 'mcp_tool_call_name', right: "'undefined'" } }];
+export const MCP_TOOLS_CONSUMPTION_EXTRA_CONDITIONS = [{ $ne: { left: 'mcp_tool_call_name', right: "'undefined'" } }];
+
+export const MCP_CALLS_BY_DEPLOYMENT_QUERY: TelemetryQuery = {
+  $type: 'json',
+  query: {
+    expressions: ['parent_deployment', 'deployment', 'count()'],
+    from: MCP_TABLE_NAME,
+    groupBy: ['parent_deployment', 'deployment'],
+    orderBy: [{ $desc: 'count()' }],
+  },
+};
 
 export const MCP_UNIQUE_USERS_QUERY: TelemetryQuery = {
   $type: 'json',
@@ -275,6 +293,20 @@ export const MCP_UNIQUE_USERS_QUERY: TelemetryQuery = {
   },
 };
 
+export const MCP_PROJECTS_CONSUMPTION_QUERY: TelemetryQuery = {
+  $type: 'json',
+  query: {
+    expressions: [
+      'project_id',
+      "sum(case when mcp_method = 'tools/call' then 1 else 0 end) as tool_calls",
+      'count() as mcp_calls',
+    ],
+    from: MCP_TABLE_NAME,
+    groupBy: ['project_id'],
+    orderBy: [{ $desc: 'count()' }],
+  },
+};
+
 export const TELEMETRY_GRID_HEADERS_MAP: Record<string, string> = {
   deployment: 'name',
   project_id: 'name',
@@ -284,4 +316,7 @@ export const TELEMETRY_GRID_HEADERS_MAP: Record<string, string> = {
   tokens_p: 'prompts',
   tokens_c: 'completions',
   mcp_tool_call_name: 'mcp_tool_call_name',
+  parent_deployment: 'parent_deployment',
+  tool_calls: 'tool_calls',
+  mcp_calls: 'mcp_calls',
 };

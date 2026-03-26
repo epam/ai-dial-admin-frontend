@@ -601,6 +601,7 @@ export enum TelemetryI18nKey {
   Custom = 'Telemetry.Custom',
   UniqueUsers = 'Telemetry.UniqueUsers',
   Requests = 'Telemetry.Requests',
+  RequestsNumber = 'Telemetry.RequestsNumber',
   RequestCount = 'Telemetry.RequestCount',
   TotalTokens = 'Telemetry.TotalTokens',
   Money = 'Telemetry.Money',
