@@ -219,6 +219,7 @@ export enum EntitiesI18nKey {
   Container = 'Entities.Container',
   DiscardChanges = 'Entities.DiscardChanges',
   DiscardChangesDescription = 'Entities.DiscardChangesDescription',
+  EndpointAndMCPContainerSource = 'Entities.EndpointAndMCPContainerSource',
 }
 
 export enum DeleteI18nKey {
@@ -291,6 +292,7 @@ export enum DuplicateI18nKey {
 export enum ButtonsI18nKey {
   Copy = 'Buttons.Copy',
   Create = 'Buttons.Create',
+  Edit = 'Buttons.Edit',
   Update = 'Buttons.Update',
   Cancel = 'Buttons.Cancel',
   Delete = 'Buttons.Delete',
@@ -559,7 +561,6 @@ export enum TabsI18nKey {
   Resources = 'Tabs.Resources',
   Prompts = 'Tabs.Prompts',
   Metrics = 'Tabs.Metrics',
-  Validations = 'Tabs.Validations',
   ExecutionLog = 'Tabs.ExecutionLog',
   Images = 'Tabs.Images',
   Containers = 'Tabs.Containers',
@@ -1455,6 +1456,7 @@ export enum TestSuitesI18nKey {
   DynamicConfiguration = 'TestSuites.DynamicConfiguration',
   RequestBodyPreview = 'TestSuites.RequestBodyPreview',
   Constant = 'TestSuites.Constant',
+  ResponseColumn = 'TestSuites.ResponseColumn',
   Attribute = 'TestSuites.Attribute',
   TestCase = 'TestSuites.TestCase',
   Response = 'TestSuites.Response',
@@ -1482,7 +1484,8 @@ export enum TestSuitesI18nKey {
   ImportStepOptions = 'TestSuites.ImportStepOptions',
   NoInformationToPreview = 'TestSuites.NoInformationToPreview',
   AddMetric = 'TestSuites.AddMetric',
-  SelectMetricPreview = 'TestSuites.SelectMetricPreview',
+  EditMetric = 'TestSuites.EditMetric',
+  Configuration = 'TestSuites.Configuration',
   Parameters = 'TestSuites.Parameters',
   Inputs = 'TestSuites.Inputs',
   Outputs = 'TestSuites.Outputs',
