@@ -3,20 +3,14 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import {
-  DialLoader,
-  DialNeutralButton,
-  DialNoDataContent,
-  DialPrimaryButton,
-  ElementSize
-} from '@epam/ai-dial-ui-kit';
+import { DialLoader, DialNeutralButton, DialNoDataContent, DialPrimaryButton, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconEdit, IconPlus, IconTrash } from '@tabler/icons-react';
 
 import {
   createTestSuiteMetric,
   deleteTestSuiteMetric,
   getTestSuiteMetrics,
-  updateTestSuiteMetric
+  updateTestSuiteMetric,
 } from '@/src/app/[lang]/test-suites/actions';
 import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
