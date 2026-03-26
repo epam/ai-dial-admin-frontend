@@ -109,9 +109,7 @@ const Endpoint: FC<Props> = ({
             </h3>
             {isCollapsed && (
               <DialTooltip tooltip={endpoint.endpoint || '—'}>
-                <p className="max-w-[220px] md:max-w-1/2 truncate tiny text-secondary mt-3">
-                  {endpoint.endpoint || '—'}
-                </p>
+                <p className="max-w-[220px] truncate tiny text-secondary mt-3">{endpoint.endpoint || '—'}</p>
               </DialTooltip>
             )}
           </div>
