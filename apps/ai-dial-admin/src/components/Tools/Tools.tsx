@@ -274,6 +274,7 @@ const Tools: FC<Props> = ({
                   <ToolComponent
                     tool={tool}
                     key={index}
+                    disabled={disabled}
                     isAddedManual={!tools?.some((t) => t.name === tool.name)}
                     isMcpToolset={isMcpToolset}
                     isAssetToolset={isAssetToolset}
