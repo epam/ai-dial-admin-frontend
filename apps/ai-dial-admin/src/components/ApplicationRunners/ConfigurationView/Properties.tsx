@@ -6,6 +6,7 @@ import IdControl from '@/src/components/BaseControls/Id/Id';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import AppRunnerExtendedProperties from './ExtendedProperties';
 import AppRunnerSource from './AppRunnerSource';
+import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
   runner: DialApplicationScheme;
@@ -54,6 +55,7 @@ const SchemeProperties: FC<Props> = ({ names, runner, isImmutable, onChangeRunne
           onChangeEntity={onChangeRunner}
           isEntityImmutable={isImmutable}
           isModal={isModal}
+          view={ApplicationRoute.ApplicationRunners}
         />
       )}
     </div>

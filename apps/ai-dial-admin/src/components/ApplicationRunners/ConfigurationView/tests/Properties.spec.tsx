@@ -73,7 +73,6 @@ describe('ApplicationRunners :: ConfigurationView :: Properties', () => {
     expect(screen.getByRole('region', { name: 'id-control' })).toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'display-name-control' })).toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'description-control' })).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: 'completion-endpoint-control' })).toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'extended-properties' })).not.toBeInTheDocument();
   });
 
@@ -117,17 +116,6 @@ describe('ApplicationRunners :: ConfigurationView :: Properties', () => {
     expect(onChangeRunner).toHaveBeenCalledWith({
       ...baseRunner,
       description: 'Updated description',
-    });
-  });
-
-  test('updates completion endpoint via CompletionEndpointControl callback', () => {
-    render(<Properties names={names} runner={baseRunner} onChangeRunner={onChangeRunner} />);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Change endpoint' }));
-
-    expect(onChangeRunner).toHaveBeenCalledWith({
-      ...baseRunner,
-      'dial:applicationTypeCompletionEndpoint': 'https://updated.endpoint',
     });
   });
 });

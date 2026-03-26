@@ -35,7 +35,7 @@ const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, i
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const [sourceType, setSourceType] = useState<SourceType>(
     entity?.endpoint || entity?.mcp || (!entity.customAppSchemaId && !(entity as AssetApp).applicationTypeSchemaId)
-      ? SourceType.ENDPOINT_MCP_CONTEINER
+      ? SourceType.ENDPOINT_MCP_CONTAINER
       : SourceType.APP_RUNNER,
   );
   const { dispatch } = useSaveValidationContext();
@@ -46,7 +46,7 @@ const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, i
     if (isAppRunerSourceType) {
       setSourceType(SourceType.APP_RUNNER);
     } else if (isMCPSourceType) {
-      setSourceType(SourceType.ENDPOINT_MCP_CONTEINER);
+      setSourceType(SourceType.ENDPOINT_MCP_CONTAINER);
     }
   }, [entity]);
 
@@ -70,8 +70,8 @@ const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, i
 
   const handleRadioChange = useCallback(
     (option: SourceType) => {
-      if (option === SourceType.ENDPOINT_MCP_CONTEINER) {
-        setSourceType(SourceType.ENDPOINT_MCP_CONTEINER);
+      if (option === SourceType.ENDPOINT_MCP_CONTAINER) {
+        setSourceType(SourceType.ENDPOINT_MCP_CONTAINER);
         const newEntity = {
           ...entity,
           applicationTypeSchemaId: void 0,
@@ -150,11 +150,11 @@ const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, i
       <div className="flex flex-col gap-4">
         <DialRadioButton
           disabled={isReadOnlyAdmin}
-          inputId={`${id}-mcp-conteiner`}
+          inputId={`${id}-mcp-container`}
           name={`${id}-source-options`}
-          value={SourceType.ENDPOINT_MCP_CONTEINER}
-          checked={sourceType === SourceType.ENDPOINT_MCP_CONTEINER}
-          onChange={() => handleRadioChange(SourceType.ENDPOINT_MCP_CONTEINER)}
+          value={SourceType.ENDPOINT_MCP_CONTAINER}
+          checked={sourceType === SourceType.ENDPOINT_MCP_CONTAINER}
+          onChange={() => handleRadioChange(SourceType.ENDPOINT_MCP_CONTAINER)}
           label={t(EntitiesI18nKey.EndpointAndMCPContainerSource)}
         />
 
@@ -169,17 +169,19 @@ const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, i
         />
       </div>
 
-      {sourceType === SourceType.ENDPOINT_MCP_CONTEINER && (
+      {sourceType === SourceType.ENDPOINT_MCP_CONTAINER && (
         <div className="h-full flex flex-col gap-y-8">
-          <div className="border border-primary rounded ml-8 mt-1 p-4">
+          <div className="ml-8">
             <EndpointAndMCPContainer
               entity={entity}
               isEntityImmutable={isEntityImmutable}
               isReadOnlyAdmin={isReadOnlyAdmin}
               onChangeEntity={onChangeEndpoint}
               isModal={isModal}
+              view={view || ApplicationRoute.Applications}
             />
           </div>
+
           {isEntityImmutable && (
             <>
               <ViewerUrlControl endpoint={entity.viewerUrl} disabled={isReadOnlyAdmin} onChange={onChangeViewerUrl} />
@@ -200,7 +202,6 @@ const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, i
             runners={runners}
             isEntityImmutable={isEntityImmutable}
             onChangeValue={onChangeAppRunner}
-            label=""
           />
         </div>
       )}

@@ -1,7 +1,7 @@
 import { SelectOption } from '@epam/ai-dial-ui-kit';
 
 export enum SourceType {
-  ENDPOINT_MCP_CONTEINER = 'endpoint_mcp_conteiner',
+  ENDPOINT_MCP_CONTAINER = 'endpoint_mcp_container',
   APP_RUNNER = 'app_runner',
 }
 

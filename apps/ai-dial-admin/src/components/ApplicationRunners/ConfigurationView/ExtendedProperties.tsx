@@ -13,6 +13,7 @@ import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme, TypeBucketCopy } from '@/src/models/dial/application';
 import AppRunnerSource from './AppRunnerSource';
+import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
   runner: DialApplicationScheme;
@@ -91,7 +92,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
         disabled={isReadOnlyAdmin}
       />
       <TopicsControl entity={runner} onChange={onChangeRunner} />
-      <AppRunnerSource entity={runner} onChangeEntity={onChangeRunner} />
+      <AppRunnerSource entity={runner} onChangeEntity={onChangeRunner} view={ApplicationRoute.ApplicationRunners} />
 
       <ViewerUrlControl endpoint={runner['dial:applicationTypeViewerUrl']} onChange={onChangeViewerUrl} />
       <EditorUrlControl endpoint={runner['dial:applicationTypeEditorUrl']} onChange={onChangeEditorUrl} />
