@@ -125,7 +125,8 @@ const TabsContent = <T extends Publication>({
           originalToolset={(originalPublication as ToolsetPublication).toolSetResources?.[0].toolSetResource}
           selectedToolset={(selectedPublication as ToolsetPublication).toolSetResources?.[0].toolSetResource}
           onChangeToolset={onChangeToolset as (toolset: Toolset) => void}
-          isAssetToolset={true}
+          disabled={isReadOnlyAdmin}
+          isAssetToolset
         />
       )}
 

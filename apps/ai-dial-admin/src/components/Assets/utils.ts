@@ -82,15 +82,15 @@ export const getTreeActionLabels = (isReadOnlyAdmin: boolean) => {
 };
 
 export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boolean) => {
+  if (isReadOnlyAdmin) return [];
+
   switch (view) {
     case ApplicationRoute.Files:
-      return isReadOnlyAdmin ? [] : allToolbarOptionLabels.filter((item) => item.key !== 'newItem');
+      return allToolbarOptionLabels.filter((item) => item.key !== 'newItem');
     case ApplicationRoute.Prompts:
-      return isReadOnlyAdmin
-        ? []
-        : allToolbarOptionLabels.map((option) => {
-            return option.key === 'uploadFiles' ? { ...option, label: ButtonsI18nKey.Import } : option;
-          });
+      return allToolbarOptionLabels.map((option) => {
+        return option.key === 'uploadFiles' ? { ...option, label: ButtonsI18nKey.Import } : option;
+      });
     default:
       return [];
   }

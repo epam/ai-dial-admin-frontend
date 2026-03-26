@@ -87,12 +87,12 @@ const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, disabled, o
 
   const columns = useMemo(() => {
     const actions = [getOpenInNewTabOperation(onOpen)];
-    if (!route.isPublic) {
+    if (!route.isPublic && !disabled) {
       actions.push(getRemoveOperation(onRemoveRole));
     }
 
     return [...BASE_COLUMNS, ACTION_COLUMN(actions)];
-  }, [route, onRemoveRole]);
+  }, [route.isPublic, disabled, onRemoveRole]);
 
   return (
     <>
