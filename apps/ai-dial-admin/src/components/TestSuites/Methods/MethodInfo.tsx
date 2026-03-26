@@ -50,29 +50,31 @@ const MethodInfo: FC<Props> = ({ testSuite, onChangeTestSuite, selectedAppType }
     return testSuite?.endpointRef?.parameters || [];
   }, [testSuite?.endpointRef?.parameters]);
 
-  const validateFinalPath = useCallback(() => {
-    const urlTemplate = testSuite.requestTemplate?.urlTemplate;
-    const relativeUrlPattern = testSuite.endpointRef?.relativeUrlPattern;
+  const validateFinalPath = useCallback(
+    (urlTemplate?: string) => {
+      const relativeUrlPattern = testSuite.endpointRef?.relativeUrlPattern;
 
-    if (!urlTemplate || !relativeUrlPattern) {
-      return undefined;
-    }
-
-    if (isContainRegexSymbols(relativeUrlPattern)) {
-      try {
-        const regex = new RegExp(relativeUrlPattern);
-
-        if (!regex.test(urlTemplate)) {
-          dispatch({ type: ValidationActionType.SetField, field: 'urlTemplate', isValid: false });
-          return `Not matches with ${relativeUrlPattern} regex`;
-        }
-      } catch (error) {
-        console.error('Invalid regex pattern:', error);
+      if (!urlTemplate || !relativeUrlPattern) {
+        return undefined;
       }
-    }
-    dispatch({ type: ValidationActionType.SetField, field: 'urlTemplate', isValid: true });
-    return undefined;
-  }, [dispatch, testSuite.endpointRef?.relativeUrlPattern, testSuite.requestTemplate?.urlTemplate]);
+
+      if (isContainRegexSymbols(relativeUrlPattern)) {
+        try {
+          const regex = new RegExp(relativeUrlPattern);
+
+          if (!regex.test(urlTemplate)) {
+            dispatch({ type: ValidationActionType.SetField, field: 'urlTemplate', isValid: false });
+            return `Not matches with ${relativeUrlPattern} regex`;
+          }
+        } catch (error) {
+          console.error('Invalid regex pattern:', error);
+        }
+      }
+      dispatch({ type: ValidationActionType.SetField, field: 'urlTemplate', isValid: true });
+      return undefined;
+    },
+    [dispatch, testSuite.endpointRef?.relativeUrlPattern],
+  );
 
   const onChangeEndpointRef = useCallback(
     (endpointRef: TestSuiteEndpointRef) => {
@@ -90,7 +92,7 @@ const MethodInfo: FC<Props> = ({ testSuite, onChangeTestSuite, selectedAppType }
         ...testSuite,
         requestTemplate: { ...testSuite.requestTemplate, urlTemplate: finalPath },
       });
-      setFinalPathError(validateFinalPath());
+      setFinalPathError(validateFinalPath(finalPath));
     },
     [onChangeTestSuite, testSuite, validateFinalPath],
   );
