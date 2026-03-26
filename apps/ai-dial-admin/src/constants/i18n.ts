@@ -291,6 +291,7 @@ export enum DuplicateI18nKey {
 export enum ButtonsI18nKey {
   Copy = 'Buttons.Copy',
   Create = 'Buttons.Create',
+  Edit = 'Buttons.Edit',
   Update = 'Buttons.Update',
   Cancel = 'Buttons.Cancel',
   Delete = 'Buttons.Delete',

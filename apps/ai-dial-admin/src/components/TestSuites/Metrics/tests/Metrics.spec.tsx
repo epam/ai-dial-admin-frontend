@@ -47,6 +47,19 @@ vi.mock('../MetricContent', () => ({
   ),
 }));
 
+vi.mock('../MetricBindingsDisplay', () => ({
+  default: ({ bindings }: any) =>
+    bindings?.length ? (
+      <div role="region" aria-label="metric-bindings">
+        {bindings.map((binding: any) => (
+          <div key={binding.property}>
+            {binding.property}: {binding.source.value}
+          </div>
+        ))}
+      </div>
+    ) : null,
+}));
+
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   DialCollapsibleSidebar: ({ children, title }: any) => (
     <aside role="complementary" aria-label={title}>

@@ -388,6 +388,7 @@ export default {
     DeleteAll: 'Delete All',
     Cancel: 'Cancel',
     Duplicate: 'Duplicate',
+    Edit: 'Edit',
     Create: 'Create',
     Update: 'Update',
     Change: 'Change',

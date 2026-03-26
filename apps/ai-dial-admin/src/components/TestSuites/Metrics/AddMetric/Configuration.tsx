@@ -46,6 +46,10 @@ const MetricConfiguration: FC<Props> = ({
     return jsonSchemaToFields(selectedMetricDetails?.outputSchema, selectedMetricDetails?.outputSchema);
   }, [selectedMetricDetails]);
 
+  console.log('selectedMetricDetails', selectedMetricDetails?.configSchema);
+  console.log('selectedMetricParameters', selectedMetricParameters);
+  console.log('configBindings', configBindings);
+
   return (
     <div className="h-full flex flex-col w-1/2 gap-y-6">
       <div className="flex flex-col">
