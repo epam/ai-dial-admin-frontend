@@ -4,7 +4,6 @@ import { JSONSchema7 } from 'json-schema';
 import { describe, expect, test } from 'vitest';
 import { generateMetricDefaultBindings, generateMetricDefaultInputBindings } from '../metric-bindings';
 
-
 describe('generateMetricDefaultInputBindings', () => {
   test('returns empty array for schema with no properties', () => {
     const schema: JSONSchema7 = { type: 'object' };
