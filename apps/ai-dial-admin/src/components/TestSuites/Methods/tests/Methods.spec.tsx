@@ -15,6 +15,8 @@ vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   DialCollapsibleSidebar: ({ children }: any) => <div role="complementary">{children}</div>,
+  DialConditionalResizableContainer: ({ children }: any) => <div>{children}</div>,
+  DialLoader: () => <div role="progressbar" />,
 }));
 
 vi.mock('../MethodItem', () => ({
@@ -110,7 +112,7 @@ describe('Methods component', () => {
       expect(screen.getByRole('button', { name: 'POST /api/users' })).toBeInTheDocument();
     });
 
-    const activeButton = screen.getByRole('button', { name: 'POST /api/users' });
+    expect(screen.getByRole('button', { name: 'POST /api/users' })).toBeInTheDocument();
   });
 
   test('defaults to chat-completion when endpointRef does not match any method', async () => {
@@ -125,7 +127,7 @@ describe('Methods component', () => {
       expect(screen.getByRole('button', { name: /POST.*\/api\/users/ })).toBeInTheDocument();
     });
 
-    const chatButton = screen.getByRole('button', { name: /POST.*\/api\/users/ });
+    expect(screen.getByRole('button', { name: /POST.*\/api\/users/ })).toBeInTheDocument();
   });
 
   test('does not fetch deployment if already loaded', async () => {
