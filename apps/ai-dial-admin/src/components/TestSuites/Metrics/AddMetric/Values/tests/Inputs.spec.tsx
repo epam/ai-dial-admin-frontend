@@ -22,9 +22,21 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
   ),
 }));
 
+vi.mock('@/src/components/Common/TabSelector/TabSelector', () => ({
+  default: ({ tabs, activeTab, onChange }: any) => (
+    <div>
+      {tabs.map((tab: any) => (
+        <button key={tab.id} type="button" data-active={String(activeTab === tab.id)} onClick={() => onChange(tab.id)}>
+          {tab.label}
+        </button>
+      ))}
+    </div>
+  ),
+}));
+
 vi.mock('../MetricControl', () => ({
   default: ({ field, onChangeValue }: any) => (
-    <button type="button" onClick={() => onChangeValue('constant-updated')}>
+    <button type="button" onClick={() => onChangeValue(field.name, 'constant-updated')}>
       Update constant {field.name}
     </button>
   ),

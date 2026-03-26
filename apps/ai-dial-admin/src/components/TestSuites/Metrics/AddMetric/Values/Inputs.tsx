@@ -1,8 +1,8 @@
 import { FC, useCallback, useState } from 'react';
 
 import { DialLabel, DialSelect } from '@epam/ai-dial-ui-kit';
-import { IconCheck } from '@tabler/icons-react';
-import classNames from 'classnames';
+
+import TabSelector from '@/src/components/Common/TabSelector/TabSelector';
 
 import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -92,24 +92,14 @@ const MetricInput: FC<{
   return (
     <div className="flex flex-col gap-2">
       <DialLabel label={field.name} caption={field.description} required={field.required} />
-      <div className="flex flex-row items-center bg-layer-4 rounded w-fit p-1">
-        {tabs.map((tab) => (
-          <div
-            key={tab.id}
-            className={classNames(
-              'flex flex-row gap-1 h-[24px] items-center py-1 px-2 text-primary cursor-pointer hover:bg-accent-primary-alpha',
-              activeTab === tab.id && 'bg-accent-primary-alpha rounded',
-            )}
-            onClick={() => {
-              onReset(tab.id);
-              setActiveTab(tab.id);
-            }}
-          >
-            {activeTab === tab.id && <IconCheck size={16} />}
-            <div className="dial-small-text">{tab.label}</div>
-          </div>
-        ))}
-      </div>
+      <TabSelector
+        tabs={tabs}
+        activeTab={activeTab}
+        onChange={(tabId) => {
+          onReset(tabId as MetricBindingType);
+          setActiveTab(tabId as MetricBindingType);
+        }}
+      />
 
       {binding?.source.$type === MetricBindingType.Constant && (
         <MetricControl
