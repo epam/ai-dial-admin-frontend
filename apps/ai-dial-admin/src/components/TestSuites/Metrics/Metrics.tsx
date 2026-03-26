@@ -4,23 +4,19 @@ import { FC, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import {
-  DIAL_ICON_SIZE,
-  DialCollapsibleSidebar,
   DialLoader,
   DialNeutralButton,
   DialNoDataContent,
   DialPrimaryButton,
-  ElementSize,
+  ElementSize
 } from '@epam/ai-dial-ui-kit';
 import { IconEdit, IconPlus, IconTrash } from '@tabler/icons-react';
-import classNames from 'classnames';
 
 import {
   createTestSuiteMetric,
   deleteTestSuiteMetric,
-  getTestSuiteMetricDetailsWithSchema,
   getTestSuiteMetrics,
-  updateTestSuiteMetric,
+  updateTestSuiteMetric
 } from '@/src/app/[lang]/test-suites/actions';
 import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -31,7 +27,6 @@ import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import AddMetricModal from './AddMetric/AddMetricModal';
 import MetricBindingsDisplay from './MetricBindingsDisplay';
-import MetricContent from './MetricContent';
 
 interface Props {
   selectedTestSuite: TestSuite;
@@ -41,23 +36,11 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
 
-  const [activeMetricDetails, setActiveMetricDetails] = useState<Metric | null>(null);
-
   const [isMetricsLoading, setIsMetricsLoading] = useState(false);
   const [metrics, setMetrics] = useState<Metric[] | undefined>();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-
-  const loadMetricDetails = useCallback(
-    (metric: Metric) => {
-      setIsMetricsLoading(true);
-      getTestSuiteMetricDetailsWithSchema(selectedTestSuite.id as string, metric.id as string).then((response) => {
-        setActiveMetricDetails(response);
-        setIsMetricsLoading(false);
-      });
-    },
-    [selectedTestSuite.id],
-  );
+  const [metricToEdit, setMetricToEdit] = useState<Metric | undefined>();
 
   const onRemoveMetric = useCallback(
     (metricId: string) => {
@@ -66,7 +49,6 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
           getTestSuiteMetrics(selectedTestSuite.id as string, 0, 1000).then((response) => {
             setMetrics(response?.content);
           });
-          setActiveMetricDetails(null);
         }
       });
     },
@@ -77,12 +59,12 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
     (metric?: Metric | null) => {
       if (metric) {
         setIsAddModalOpen(false);
+        setMetricToEdit(undefined);
         createTestSuiteMetric(selectedTestSuite.id as string, metric).then((response) => {
           if (response?.success) {
             showNotification(getSuccessNotification(t(TestSuitesI18nKey.MetricAddSuccess)));
             getTestSuiteMetrics(selectedTestSuite.id as string, 0, 1000).then((r) => {
               setMetrics(r?.content);
-              loadMetricDetails(response.response as Metric);
             });
           } else {
             showNotification(
@@ -92,29 +74,32 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
         });
       }
     },
-    [loadMetricDetails, selectedTestSuite.id, showNotification, t],
+    [selectedTestSuite.id, showNotification, t],
   );
 
-  const onUpdateMetric = useCallback(
+  const onEditMetric = useCallback(
     (metric: Metric) => {
-      const newMetric = structuredClone(metric);
-      delete newMetric.metricDeclaration;
-      delete newMetric.metricDeclarationVersion;
-      updateTestSuiteMetric(selectedTestSuite.id as string, newMetric).then((response) => {
-        if (response?.success) {
-          showNotification(getSuccessNotification(t(TestSuitesI18nKey.MetricUpdateSuccess)));
-          getTestSuiteMetrics(selectedTestSuite.id as string, 0, 1000).then((response) => {
-            setMetrics(response?.content);
-            loadMetricDetails(newMetric);
-          });
-        } else {
-          showNotification(
-            getErrorNotification(t(TestSuitesI18nKey.MetricUpdateFailed), response?.errorMessage || 'Unknown error'),
-          );
-        }
-      });
+      if (metric) {
+        setIsAddModalOpen(false);
+        setMetricToEdit(undefined);
+        const newMetric = structuredClone(metric);
+        delete newMetric.metricDeclaration;
+        delete newMetric.metricDeclarationVersion;
+        updateTestSuiteMetric(selectedTestSuite.id as string, newMetric).then((response) => {
+          if (response?.success) {
+            showNotification(getSuccessNotification(t(TestSuitesI18nKey.MetricUpdateSuccess)));
+            getTestSuiteMetrics(selectedTestSuite.id as string, 0, 1000).then((response) => {
+              setMetrics(response?.content);
+            });
+          } else {
+            showNotification(
+              getErrorNotification(t(TestSuitesI18nKey.MetricUpdateFailed), response?.errorMessage || 'Unknown error'),
+            );
+          }
+        });
+      }
     },
-    [loadMetricDetails, selectedTestSuite.id, showNotification, t],
+    [selectedTestSuite.id, showNotification, t],
   );
 
   useEffect(() => {
@@ -127,7 +112,6 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
     }
   }, [metrics, selectedTestSuite.id]);
 
-  console.log('metrics', metrics);
   return (
     <div className="h-full flex flex-col gap-6">
       <div className="flex flex-row justify-between items-center">
@@ -148,11 +132,7 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
           {metrics?.length ? (
             <div className="grid grid-cols-2 gap-4">
               {metrics.map((metric) => (
-                <div
-                  key={metric.id}
-                  className="rounded border border-secondary p-4 flex flex-col gap-4"
-                  onClick={() => loadMetricDetails(metric)}
-                >
+                <div key={metric.id} className="rounded border border-secondary p-4 flex flex-col gap-4">
                   <div className="flex flex-row items-center justify-between">
                     <span className="dial-body-semi">{metric.name}</span>
 
@@ -166,6 +146,10 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
                       <DialNeutralButton
                         size={ElementSize.Small}
                         label={t(ButtonsI18nKey.Edit)}
+                        onClick={() => {
+                          setMetricToEdit(metric);
+                          setIsAddModalOpen(true);
+                        }}
                         iconBefore={<IconEdit stroke={2} size={16} />}
                       />
                     </div>
@@ -191,8 +175,19 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
         createPortal(
           <AddMetricModal
             isModalOpen={isAddModalOpen}
-            onClose={() => setIsAddModalOpen(false)}
-            onConfirm={onAddMetric}
+            selectedTestSuiteId={selectedTestSuite.id as string}
+            onClose={() => {
+              setIsAddModalOpen(false);
+              setMetricToEdit(undefined);
+            }}
+            onConfirm={(metric) => {
+              if (metricToEdit) {
+                onEditMetric(metric!);
+              } else {
+                onAddMetric(metric);
+              }
+            }}
+            editingMetric={metricToEdit}
           />,
           document.body,
         )}

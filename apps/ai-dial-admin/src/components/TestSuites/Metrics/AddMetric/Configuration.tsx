@@ -46,16 +46,15 @@ const MetricConfiguration: FC<Props> = ({
     return jsonSchemaToFields(selectedMetricDetails?.outputSchema, selectedMetricDetails?.outputSchema);
   }, [selectedMetricDetails]);
 
-  console.log('selectedMetricDetails', selectedMetricDetails?.configSchema);
-  console.log('selectedMetricParameters', selectedMetricParameters);
-  console.log('configBindings', configBindings);
-
   return (
     <div className="h-full flex flex-col w-1/2 gap-y-6">
       <div className="flex flex-col">
-        <p className="dial-small-semi mb-4">{selectedMetric?.name}</p>
-        <span className="dial-tiny-text text-secondary line-clamp-2" title={selectedMetric?.description}>
-          {selectedMetric?.description}
+        <p className="dial-small-semi mb-4">{selectedMetric?.name || selectedMetricDetails?.name}</p>
+        <span
+          className="dial-tiny-text text-secondary line-clamp-2"
+          title={selectedMetric?.description || selectedMetricDetails?.description}
+        >
+          {selectedMetric?.description || selectedMetricDetails?.description}
         </span>
       </div>
 

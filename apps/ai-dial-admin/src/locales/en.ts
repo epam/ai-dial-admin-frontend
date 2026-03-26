@@ -1515,6 +1515,7 @@ export default {
     ConflictStrategyOverrideDesc: 'Replace existing row with incoming row (last wins).',
     NoInformationToPreview: 'No information to preview',
     AddMetric: 'Add metric',
+    EditMetric: 'Edit metric',
     Bindings: 'Bindings',
     Parameters: 'Parameters',
     Inputs: 'Inputs',
