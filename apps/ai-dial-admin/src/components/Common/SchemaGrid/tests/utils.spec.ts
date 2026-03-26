@@ -341,7 +341,7 @@ describe('jsonSchemaToFields', () => {
     expect(fields[0].children).toEqual([]);
   });
 
-  test('should not expand array without object items', () => {
+  test('should create a primitive child for array without object items', () => {
     const schema: JSONSchema7 = {
       type: 'object',
       properties: {
@@ -351,7 +351,14 @@ describe('jsonSchemaToFields', () => {
 
     const fields = jsonSchemaToFields(schema);
     expect(fields[0].expanded).toBe(false);
-    expect(fields[0].children).toEqual([]);
+    expect(fields[0].children).toHaveLength(1);
+    expect(fields[0].children[0]).toMatchObject({
+      name: 'simpleArray',
+      type: 'string',
+      required: false,
+      depth: 1,
+      parentId: fields[0].id,
+    });
   });
 
   test('should resolve $ref from $defs when building fields', () => {
