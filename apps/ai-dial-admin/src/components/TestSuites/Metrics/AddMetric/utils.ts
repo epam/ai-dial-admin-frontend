@@ -38,7 +38,7 @@ export const validateMetricBindings = (
       }
     }
 
-    if (binding.source.$type !== MetricBindingType.Constant && binding.source.$type !== MetricBindingType.Column) {
+    if (binding.source.$type !== MetricBindingType.Constant && binding.source.$type !== MetricBindingType.Response) {
       return false;
     }
   }

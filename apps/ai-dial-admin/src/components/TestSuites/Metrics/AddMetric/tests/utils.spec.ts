@@ -37,8 +37,8 @@ describe('validateMetricBindings', () => {
     {
       property: 'inputText',
       source: {
-        $type: MetricBindingType.Column,
-        columnName: 'prompt',
+        $type: MetricBindingType.Constant,
+        value: 'prompt',
       },
     },
   ];

@@ -8,7 +8,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
   DialTag: ({ tag }: { tag: string }) => <span>{tag}</span>,
 }));
 
-const buildField = (overrides: Partial<SchemaFieldRow>): SchemaFieldRow => ({
+const makeField = (overrides: Partial<SchemaFieldRow>): SchemaFieldRow => ({
   id: overrides.id ?? 'field-id',
   name: overrides.name ?? 'fieldName',
   type: overrides.type ?? 'string',
@@ -28,10 +28,10 @@ describe('MetricOutputs', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  test('renders title and output rows', () => {
+  test('renders title and output rows with tags', () => {
     const fields: SchemaFieldRow[] = [
-      buildField({ id: 'f1', name: 'score', type: 'number', description: 'Evaluation score' }),
-      buildField({ id: 'f2', name: 'passed', type: 'boolean', description: 'Whether the test passed' }),
+      makeField({ id: 'f1', name: 'score', type: 'number', description: 'Evaluation score' }),
+      makeField({ id: 'f2', name: 'passed', type: 'boolean', description: 'Whether passed' }),
     ];
 
     render(<MetricOutputs title="Outputs" fields={fields} />);
@@ -39,15 +39,15 @@ describe('MetricOutputs', () => {
     expect(screen.getByText('Outputs')).toBeInTheDocument();
     expect(screen.getByText('score')).toBeInTheDocument();
     expect(screen.getByText('Evaluation score')).toBeInTheDocument();
-    expect(screen.getByText('passed')).toBeInTheDocument();
-    expect(screen.getByText('Whether the test passed')).toBeInTheDocument();
     expect(screen.getByText('number')).toBeInTheDocument();
+    expect(screen.getByText('passed')).toBeInTheDocument();
+    expect(screen.getByText('Whether passed')).toBeInTheDocument();
     expect(screen.getByText('boolean')).toBeInTheDocument();
   });
 
-  test('sets description title attribute for each field', () => {
+  test('sets title attribute on description text', () => {
     const fields: SchemaFieldRow[] = [
-      buildField({ id: 'f1', name: 'score', type: 'number', description: 'Evaluation score' }),
+      makeField({ id: 'f1', name: 'score', type: 'number', description: 'Evaluation score' }),
     ];
 
     render(<MetricOutputs title="Outputs" fields={fields} />);

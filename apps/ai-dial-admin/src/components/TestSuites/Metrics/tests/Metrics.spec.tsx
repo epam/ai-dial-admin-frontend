@@ -6,6 +6,7 @@ import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey, TestSuitesI18nKey } from 
 import { Metric } from '@/src/models/evaluation/metric';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import Metrics from '../Metrics';
+import { MetricBindingType } from '../../../../types/evaluation';
 
 const mockGetTestSuiteMetrics = vi.fn();
 const mockCreateTestSuiteMetric = vi.fn();
@@ -82,7 +83,7 @@ describe('Metrics', () => {
     id: 'metric-1',
     name: 'Metric One',
     description: 'First metric',
-    configBindings: [{ property: 'threshold', source: { $type: 'Constant', value: '0.5' } }],
+    configBindings: [{ property: 'threshold', source: { $type: MetricBindingType.Constant, value: '0.5' } }],
   };
 
   beforeEach(() => {

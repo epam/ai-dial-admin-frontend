@@ -17,7 +17,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
   ),
 }));
 
-vi.mock('../SchemaSection', () => ({
+vi.mock('../Values/SchemaSection', () => ({
   default: ({ title, fields }: any) => (
     <div role="region" aria-label={title}>
       {`fields:${fields?.length ?? 0}`}
@@ -25,7 +25,15 @@ vi.mock('../SchemaSection', () => ({
   ),
 }));
 
-vi.mock('../Output', () => ({
+vi.mock('../Values/Inputs', () => ({
+  default: ({ title, fields }: any) => (
+    <div role="region" aria-label={title}>
+      {`fields:${fields?.length ?? 0}`}
+    </div>
+  ),
+}));
+
+vi.mock('../Values/Outputs', () => ({
   default: ({ title, fields }: any) => (
     <div role="region" aria-label={title}>
       {`fields:${fields?.length ?? 0}`}
@@ -62,7 +70,7 @@ describe('MetricConfiguration', () => {
     { property: 'threshold', source: { $type: MetricBindingType.Constant, value: '1' } },
   ];
   const inputBindings: MetricBinding[] = [
-    { property: 'prompt', source: { $type: MetricBindingType.Column, columnName: 'prompt' } },
+    { property: 'prompt', source: { $type: MetricBindingType.Response, columnName: 'prompt' } },
   ];
 
   test('renders selected metric name and description', () => {

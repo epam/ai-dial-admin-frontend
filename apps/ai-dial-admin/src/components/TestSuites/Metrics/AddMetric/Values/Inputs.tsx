@@ -89,7 +89,6 @@ const MetricInput: FC<{
     [onChange, binding],
   );
 
-  console.log('binding', binding);
   return (
     <div className="flex flex-col gap-2">
       <DialLabel label={field.name} caption={field.description} required={field.required} />
