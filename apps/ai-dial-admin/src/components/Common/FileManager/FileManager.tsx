@@ -65,6 +65,8 @@ interface Props {
   onPathChange?: (nextPath?: string) => void;
   onSelectedPathsChange?: (paths: Set<string>) => void;
   selectedPaths?: Set<string>;
+  emptyStateTitle?: string;
+  emptyStateDescription?: string;
 }
 
 const FileManager: FC<Props> = ({
