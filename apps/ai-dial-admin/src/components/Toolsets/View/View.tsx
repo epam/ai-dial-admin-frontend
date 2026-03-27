@@ -5,7 +5,14 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { cloneDeep } from 'lodash';
 
-import { getCoreToolset, removeToolset, updateCoreToolset, updateToolset } from '@/src/app/[lang]/toolsets/actions';
+import {
+  getCoreToolset,
+  removeToolset,
+  signInToolset,
+  signOutToolset,
+  updateCoreToolset,
+  updateToolset,
+} from '@/src/app/[lang]/toolsets/actions';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
@@ -193,7 +200,13 @@ const ToolsetView: FC<Props> = ({ names, oAuthCode, etag, roles, originalToolset
         onChangeActiveTab={setActiveTab}
         onRemove={removeToolset}
       >
-        <AuthButtons selectedToolset={selectedToolset} oAuthCode={oAuthCode} view={ApplicationRoute.Toolsets} />
+        <AuthButtons
+          selectedToolset={selectedToolset}
+          oAuthCode={oAuthCode}
+          view={ApplicationRoute.Toolsets}
+          signInToolset={signInToolset}
+          signOutToolset={signOutToolset}
+        />
       </SimpleEntityHeader>
 
       <div className="flex-1 overflow-auto min-h-0">

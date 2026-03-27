@@ -35,8 +35,19 @@ export class ToolsetsApi extends BaseApi {
     return this.postAction(TOOLS_TRY_OUT_URL(name), body, token);
   }
 
-  signInToolset(toolset: Toolset, type: ToolsetAuthCredentialLevel, token: Token, apiKey?: string, authCode?: string) {
-    return this.postAction(TOOLSET_SIGN_IN_URL, getToolsetSignInBody(toolset, type, apiKey, authCode), token);
+  signInToolset(
+    toolset: Toolset,
+    redirectUri: string,
+    type: ToolsetAuthCredentialLevel,
+    token: Token,
+    apiKey?: string,
+    authCode?: string,
+  ) {
+    return this.postAction(
+      TOOLSET_SIGN_IN_URL,
+      getToolsetSignInBody(toolset, type, apiKey, authCode, redirectUri),
+      token,
+    );
   }
 
   signOutToolset(toolset: Toolset, type: ToolsetAuthCredentialLevel, token: Token) {

@@ -6,7 +6,6 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconLogin, IconLogout } from '@tabler/icons-react';
 
-import { signInToolset, signOutToolset } from '@/src/app/[lang]/toolsets/actions';
 import LoginPopup from '@/src/components/Toolsets/Auth/LoginPopup';
 import { ToolsetI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -23,6 +22,8 @@ import {
   isUserLoggedInToToolset,
 } from '@/src/utils/toolset/toolset-auth';
 import { getIsUser, setIsUser, setUrl } from './utils';
+import { ServerActionResponse } from '@/src/models/server-action';
+import { AssetToolset } from '@/src/models/dial/deployment-asset';
 
 export const TOOLSET_AUTH_REDIRECT_URL = '/toolset-signin';
 
@@ -32,9 +33,17 @@ interface Props {
   view: ApplicationRoute;
   oAuthCode?: string | null;
   selectedToolset: Toolset;
+  signInToolset: (
+    toolset: Toolset,
+    type: ToolsetAuthCredentialLevel,
+    redirectUrl: string,
+    apiKeyValue?: string,
+    code?: string,
+  ) => Promise<ServerActionResponse>;
+  signOutToolset: (toolset: Toolset | AssetToolset, type: ToolsetAuthCredentialLevel) => Promise<ServerActionResponse>;
 }
 
-const AuthButtons: FC<Props> = ({ selectedToolset, oAuthCode, view }) => {
+const AuthButtons: FC<Props> = ({ selectedToolset, oAuthCode, view, signInToolset, signOutToolset }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -48,19 +57,28 @@ const AuthButtons: FC<Props> = ({ selectedToolset, oAuthCode, view }) => {
   const signIn = useCallback(
     (type: ToolsetAuthCredentialLevel, apiKeyValue?: string, code?: string) => {
       isSignInProcessed = true;
-      getReqRef.current(signInToolset, selectedToolset, type, apiKeyValue, code).then((res) => {
-        isSignInProcessed = false;
-        if (!res.success) {
-          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
-        } else {
-          showNotification(
-            getSuccessNotification(t(ToolsetI18nKey.SuccessLogin), t(ToolsetI18nKey.SuccessLoginDescription)),
-          );
-        }
-        router.push(getUrnForEntity(view, selectedToolset));
-      });
+      getReqRef
+        .current(
+          signInToolset,
+          selectedToolset,
+          type,
+          `${window.location.origin}${TOOLSET_AUTH_REDIRECT_URL}`,
+          apiKeyValue,
+          code,
+        )
+        .then((res) => {
+          isSignInProcessed = false;
+          if (!res.success) {
+            showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+          } else {
+            showNotification(
+              getSuccessNotification(t(ToolsetI18nKey.SuccessLogin), t(ToolsetI18nKey.SuccessLoginDescription)),
+            );
+          }
+          router.push(getUrnForEntity(view, selectedToolset));
+        });
     },
-    [router, selectedToolset, showNotification, t, view],
+    [router, selectedToolset, showNotification, signInToolset, t, view],
   );
 
   const onLogin = useCallback(
@@ -115,7 +133,7 @@ const AuthButtons: FC<Props> = ({ selectedToolset, oAuthCode, view }) => {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
-  }, [router, selectedToolset, view, showNotification, t]);
+  }, [router, selectedToolset, view, showNotification, t, signOutToolset]);
 
   useEffect(() => {
     if (oAuthCode && !isSignInProcessed) {
