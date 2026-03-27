@@ -12,6 +12,7 @@ import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useRuleFolder } from '@/src/context/RuleFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialRule, RuleDiffModel } from '@/src/models/dial/rule';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 
 const emptyRule = { function: void 0, source: '', targets: [] } as unknown as DialRule;
 
@@ -33,6 +34,7 @@ const RulesValueList: FC<Props> = ({
   onChange,
 }) => {
   const t = useI18n();
+  const isReadonlyAdmin = useIsReadOnlyAdmin();
   const { availableAttributes } = useRuleFolder();
   let ruleDiff: RuleDiffModel | undefined = void 0;
 
@@ -101,7 +103,7 @@ const RulesValueList: FC<Props> = ({
       )}
       <div className={classNames(ruleIndentClassName, isReadonly && 'hidden')}>
         <div className={lineHorizontalChildClassName}></div>
-        <DialPrimaryButton label={t(ButtonsI18nKey.Add)} onClick={onAddValue} />
+        <DialPrimaryButton label={t(ButtonsI18nKey.Add)} onClick={onAddValue} disabled={isReadonlyAdmin} />
       </div>
     </div>
   );
