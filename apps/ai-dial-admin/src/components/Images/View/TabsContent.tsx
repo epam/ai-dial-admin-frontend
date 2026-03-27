@@ -63,7 +63,12 @@ const TabsContent: FC<Props> = ({ activeTab, selectedImage, onChange, onChangeVe
         </PropertiesTabContent>
       )}
       {activeTab === EntityViewTab.RelatedContainers && (
-        <Containers image={selectedImage} route={ApplicationRoute.Images} versions={imageVersions} />
+        <Containers
+          image={selectedImage}
+          route={ApplicationRoute.Images}
+          versions={imageVersions}
+          disabled={isReadOnlyAdmin}
+        />
       )}
       {activeTab === EntityViewTab.InstallationLog && <InstallationLog imageBuildId={selectedImage.id} />}
       {activeTab === EntityViewTab.Firewall && (
