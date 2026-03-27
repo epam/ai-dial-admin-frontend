@@ -1,4 +1,5 @@
 import { JSONSchema7 } from 'json-schema';
+import { MetricBindingType } from '@/src/types/evaluation';
 
 export interface Metric {
   id?: string;
@@ -36,7 +37,7 @@ export interface MetricBinding {
 }
 
 export interface BindingSource {
-  $type: string;
-  value?: string;
+  $type: MetricBindingType;
+  value?: string | string[];
   columnName?: string;
 }

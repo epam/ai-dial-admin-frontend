@@ -229,6 +229,7 @@ export default {
     DiscardChanges: 'Discard Changes',
     DiscardChangesDescription:
       'Are you sure you want to discard changes? All previously added information will not be saved.',
+    EndpointAndMCPContainerSource: 'Endpoint and MCP container',
     // deployments
     NoImages: 'No Images',
     NoContainersType: 'No {type} {entityType}s',
@@ -388,6 +389,7 @@ export default {
     DeleteAll: 'Delete All',
     Cancel: 'Cancel',
     Duplicate: 'Duplicate',
+    Edit: 'Edit',
     Create: 'Create',
     Update: 'Update',
     Change: 'Change',
@@ -521,7 +523,6 @@ export default {
     ErrorCodes: 'Error Codes',
     Keys: 'Keys',
     Entities: 'Entities',
-    Validations: 'Validations',
     Parameters: 'Parameters',
     Applications: 'Applications',
     Dashboard: 'Dashboard',
@@ -1455,6 +1456,7 @@ export default {
     Methods: 'Methods',
     Method: 'Method',
     TestCases: 'Test Cases',
+    Configuration: 'Configuration',
     NoTestCases: 'No Test Cases',
     FromPC: 'From PC storage',
     FromDial: 'From DIAL files system',
@@ -1515,7 +1517,8 @@ export default {
     ConflictStrategyOverrideDesc: 'Replace existing row with incoming row (last wins).',
     NoInformationToPreview: 'No information to preview',
     AddMetric: 'Add metric',
-    SelectMetricPreview: 'Select a metric to preview',
+    EditMetric: 'Edit metric',
+    ResponseColumn: 'Response column',
     Bindings: 'Bindings',
     Parameters: 'Parameters',
     Inputs: 'Inputs',
@@ -1528,6 +1531,7 @@ export default {
     NoSchemaFields: 'No schema fields',
     DuplicateFieldName: 'Field name already exists',
     SchemaDescription: 'Define the data fields available in test cases',
+    FinalPath: 'Final path',
   },
   FileManager: {
     SelectedItems: 'item(s) selected',
@@ -1558,6 +1562,8 @@ export default {
     DeleteItemsModalDescription: 'Do you want to delete the following {length} items?',
     MoreItems: '... and {length} more',
     DeleteFolderAlert: 'Folders may contain other prompts.',
+    PromptEmptyStateTitle: "You don't have any prompts",
+    PromptEmptyStateDescription: 'Create or import a prompt using the Create button',
   },
   Runs: {
     StartTime: 'Start time',

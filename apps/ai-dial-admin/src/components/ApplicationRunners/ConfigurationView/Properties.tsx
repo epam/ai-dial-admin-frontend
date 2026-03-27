@@ -2,10 +2,11 @@ import { FC, useCallback } from 'react';
 
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
-import CompletionEndpointControl from '@/src/components/BaseControls/Endpoint/CompletionEndpoint';
 import IdControl from '@/src/components/BaseControls/Id/Id';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import AppRunnerExtendedProperties from './ExtendedProperties';
+import AppRunnerSource from './AppRunnerSource';
+import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
   runner: DialApplicationScheme;
@@ -49,14 +50,12 @@ const SchemeProperties: FC<Props> = ({ names, runner, isImmutable, onChangeRunne
       {isImmutable && <AppRunnerExtendedProperties runner={runner} onChangeRunner={onChangeRunner} />}
 
       {!isImmutable && (
-        <CompletionEndpointControl
-          endpoint={runner['dial:applicationTypeCompletionEndpoint']}
-          onChange={(endpoint?: string) =>
-            onChangeRunner({ ...runner, 'dial:applicationTypeCompletionEndpoint': endpoint })
-          }
-          required
-          isFullWidth
+        <AppRunnerSource
+          entity={runner}
+          onChangeEntity={onChangeRunner}
+          isEntityImmutable={isImmutable}
           isModal={isModal}
+          view={ApplicationRoute.ApplicationRunners}
         />
       )}
     </div>

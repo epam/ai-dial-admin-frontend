@@ -14,9 +14,11 @@ import { Tool as ToolType } from '@/src/models/dial/toolset';
 interface Props {
   tool: ToolType;
   toolSetName: string;
+  disabled?: boolean;
   isCollapsed?: boolean;
   isAddedManual?: boolean;
   isMcpToolset?: boolean;
+  isPublicationToolset?: boolean;
   isAssetToolset?: boolean;
   containerId?: string;
   viewSelector?: ReactNode;
@@ -25,11 +27,13 @@ interface Props {
 const ToolHeader: FC<Props> = ({
   tool,
   toolSetName,
+  disabled,
   isCollapsed,
   isAddedManual,
   isMcpToolset,
   isAssetToolset,
   containerId,
+  isPublicationToolset,
   viewSelector,
 }) => {
   const t = useI18n();
@@ -71,13 +75,16 @@ const ToolHeader: FC<Props> = ({
       {!isAddedManual && (
         <div className="flex flex-row items-center gap-4" onClick={(e) => e.stopPropagation()}>
           {!isCollapsed && viewSelector}
-          {!isCollapsed && !!viewSelector && <div className="w-px h-6 bg-layer-4"></div>}
-          <DialNeutralButton
-            className={classNames(isCollapsed && 'invisible group-hover/accordion:visible')}
-            iconBefore={<IconPlayerPlay size={20} />}
-            onClick={openTryOutSidebar}
-            label={t(ButtonsI18nKey.TryOut)}
-          />
+          {!isCollapsed && !!viewSelector && !disabled && <div className="w-px h-6 bg-layer-4"></div>}
+
+          {(!disabled || (isAssetToolset && !isPublicationToolset)) && (
+            <DialNeutralButton
+              className={classNames(isCollapsed && 'invisible group-hover/accordion:visible')}
+              iconBefore={<IconPlayerPlay size={20} />}
+              onClick={openTryOutSidebar}
+              label={t(ButtonsI18nKey.TryOut)}
+            />
+          )}
         </div>
       )}
     </div>

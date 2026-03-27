@@ -1,27 +1,17 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import {
-  ButtonAppearance,
-  DialCollapsibleSidebar,
-  DialLoader,
-  DialNoDataContent,
-  DialPrimaryButton,
-} from '@epam/ai-dial-ui-kit';
-import { IconPlus } from '@tabler/icons-react';
-import classNames from 'classnames';
+import { DialLoader, DialNeutralButton, DialNoDataContent, DialPrimaryButton, ElementSize } from '@epam/ai-dial-ui-kit';
+import { IconEdit, IconPlus, IconTrash } from '@tabler/icons-react';
 
 import {
   createTestSuiteMetric,
   deleteTestSuiteMetric,
-  getMetricDeclarations,
-  getTestSuiteMetricDetailsWithSchema,
   getTestSuiteMetrics,
   updateTestSuiteMetric,
 } from '@/src/app/[lang]/test-suites/actions';
-import Search from '@/src/components/Common/Search/Search';
 import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -29,8 +19,8 @@ import { useI18n } from '@/src/locales/client';
 import { Metric } from '@/src/models/evaluation/metric';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import AddMetricModal from './AddMetricModal';
-import MetricContent from './MetricContent';
+import AddMetricModal from './AddMetric/AddMetricModal';
+import MetricBindingsDisplay from './MetricBindingsDisplay';
 
 interface Props {
   selectedTestSuite: TestSuite;
@@ -40,55 +30,35 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
 
-  const [isDetailsLoading, setIsDetailsLoading] = useState(false);
-  const [activeMetricDetails, setActiveMetricDetails] = useState<Metric | null>(null);
-
   const [isMetricsLoading, setIsMetricsLoading] = useState(false);
   const [metrics, setMetrics] = useState<Metric[] | undefined>();
-  const [metricDeclarations, setMetricDeclarations] = useState<Metric[] | undefined>();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [pattern, setPattern] = useState<string>('');
+  const [metricToEdit, setMetricToEdit] = useState<Metric | undefined>();
 
-  const filteredMetrics = useMemo(() => {
-    const patternLower = pattern.toLowerCase();
-    return metrics?.filter((metric) => metric?.name?.toLowerCase().includes(patternLower)) || [];
-  }, [metrics, pattern]);
-
-  const loadMetricDetails = useCallback(
-    (metric: Metric) => {
-      setIsDetailsLoading(true);
-      setIsMetricsLoading(true);
-      getTestSuiteMetricDetailsWithSchema(selectedTestSuite.id as string, metric.id as string).then((response) => {
-        setActiveMetricDetails(response);
-        setIsDetailsLoading(false);
-        setIsMetricsLoading(false);
+  const onRemoveMetric = useCallback(
+    (metricId: string) => {
+      deleteTestSuiteMetric(selectedTestSuite.id as string, metricId).then((response) => {
+        if (response?.success) {
+          getTestSuiteMetrics(selectedTestSuite.id as string, 0, 1000).then((response) => {
+            setMetrics(response?.content);
+          });
+        }
       });
     },
     [selectedTestSuite.id],
   );
 
-  const onRemoveMetric = useCallback(() => {
-    deleteTestSuiteMetric(selectedTestSuite.id as string, activeMetricDetails?.id as string).then((response) => {
-      if (response?.success) {
-        getTestSuiteMetrics(selectedTestSuite.id as string, 0, 1000).then((response) => {
-          setMetrics(response?.content);
-        });
-        setActiveMetricDetails(null);
-      }
-    });
-  }, [selectedTestSuite.id, activeMetricDetails?.id]);
-
   const onAddMetric = useCallback(
     (metric?: Metric | null) => {
       if (metric) {
         setIsAddModalOpen(false);
+        setMetricToEdit(undefined);
         createTestSuiteMetric(selectedTestSuite.id as string, metric).then((response) => {
           if (response?.success) {
             showNotification(getSuccessNotification(t(TestSuitesI18nKey.MetricAddSuccess)));
             getTestSuiteMetrics(selectedTestSuite.id as string, 0, 1000).then((r) => {
               setMetrics(r?.content);
-              loadMetricDetails(response.response as Metric);
             });
           } else {
             showNotification(
@@ -98,38 +68,34 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
         });
       }
     },
-    [loadMetricDetails, selectedTestSuite.id, showNotification, t],
+    [selectedTestSuite.id, showNotification, t],
   );
 
-  const onUpdateMetric = useCallback(
+  const onEditMetric = useCallback(
     (metric: Metric) => {
-      const newMetric = structuredClone(metric);
-      delete newMetric.metricDeclaration;
-      delete newMetric.metricDeclarationVersion;
-      updateTestSuiteMetric(selectedTestSuite.id as string, newMetric).then((response) => {
-        if (response?.success) {
-          showNotification(getSuccessNotification(t(TestSuitesI18nKey.MetricUpdateSuccess)));
-          getTestSuiteMetrics(selectedTestSuite.id as string, 0, 1000).then((response) => {
-            setMetrics(response?.content);
-            loadMetricDetails(newMetric);
-          });
-        } else {
-          showNotification(
-            getErrorNotification(t(TestSuitesI18nKey.MetricUpdateFailed), response?.errorMessage || 'Unknown error'),
-          );
-        }
-      });
-    },
-    [loadMetricDetails, selectedTestSuite.id, showNotification, t],
-  );
+      if (metric) {
+        setIsAddModalOpen(false);
+        setMetricToEdit(undefined);
+        const newMetric = structuredClone({ ...metricToEdit, ...metric });
+        delete newMetric.metricDeclaration;
+        delete newMetric.metricDeclarationVersion;
 
-  useEffect(() => {
-    if (!metricDeclarations) {
-      getMetricDeclarations(0, 1000).then((response) => {
-        setMetricDeclarations(response?.content);
-      });
-    }
-  }, [metricDeclarations]);
+        updateTestSuiteMetric(selectedTestSuite.id as string, newMetric).then((response) => {
+          if (response?.success) {
+            showNotification(getSuccessNotification(t(TestSuitesI18nKey.MetricUpdateSuccess)));
+            getTestSuiteMetrics(selectedTestSuite.id as string, 0, 1000).then((response) => {
+              setMetrics(response?.content);
+            });
+          } else {
+            showNotification(
+              getErrorNotification(t(TestSuitesI18nKey.MetricUpdateFailed), response?.errorMessage || 'Unknown error'),
+            );
+          }
+        });
+      }
+    },
+    [metricToEdit, selectedTestSuite.id, showNotification, t],
+  );
 
   useEffect(() => {
     if (!metrics) {
@@ -142,73 +108,81 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
   }, [metrics, selectedTestSuite.id]);
 
   return (
-    <div className="h-full flex flex-row gap-2">
-      <DialCollapsibleSidebar
-        width={280}
-        title={t(TabsI18nKey.Metrics)}
-        containerClassName="bg-layer-3 h-full border border-primary flex-shrink-0"
-      >
-        <div className="flex flex-col h-full min-h-0">
-          <Search onChange={(search) => setPattern(search)} />
-          <div className="flex flex-col flex-1 min-h-0 gap-4">
-            <div className="flex flex-row justify-between items-center mt-2 pr-[4px]">
-              <span className="small">
-                {t(TabsI18nKey.Metrics)}: {metrics?.length || 0}
-              </span>
-              <DialPrimaryButton
-                appearance={ButtonAppearance.Link}
-                iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-                label={t(ButtonsI18nKey.Add)}
-                onClick={() => setIsAddModalOpen(true)}
-                disabled={!metricDeclarations || metricDeclarations.length === 0}
-              />
-            </div>
-            {isMetricsLoading ? (
-              <DialLoader size={40} />
-            ) : filteredMetrics.length ? (
-              <div className="flex flex-col gap-2" key={activeMetricDetails?.id}>
-                {filteredMetrics.map((metric) => (
-                  <div
-                    key={metric.id}
-                    className={classNames(
-                      'rounded flex flex-row justify-between h-[38px] shrink-0 items-center px-3 cursor-pointer border-l-2 border-transparent hover:bg-accent-primary-alpha',
-                      metric.id === activeMetricDetails?.id && 'bg-accent-primary-alpha border-l-accent-primary',
-                    )}
-                    onClick={() => loadMetricDetails(metric)}
-                  >
-                    <span className="text-primary">{metric.name}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-1">
-                <DialNoDataContent title={t(EntitiesI18nKey.NoMetrics)} />
-              </div>
-            )}
-          </div>
-        </div>
-      </DialCollapsibleSidebar>
-      <div className="border border-primary p-4 w-full overflow-auto">
-        {isDetailsLoading ? (
-          <DialLoader size={40} />
-        ) : activeMetricDetails ? (
-          <MetricContent
-            selectedTestSuite={selectedTestSuite}
-            metric={activeMetricDetails}
-            onUpdate={onUpdateMetric}
-            onDelete={onRemoveMetric}
-          />
-        ) : (
-          <DialNoDataContent title={t(EntitiesI18nKey.NoMetrics)} />
-        )}
+    <div className="h-full flex flex-col gap-6">
+      <div className="flex flex-row justify-between items-center">
+        <h1 className="mb-4">
+          {t(TabsI18nKey.Metrics)}: {metrics?.length || 0}
+        </h1>
+
+        <DialPrimaryButton
+          iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
+          label={t(ButtonsI18nKey.Add)}
+          onClick={() => setIsAddModalOpen(true)}
+        />
       </div>
+      {isMetricsLoading ? (
+        <DialLoader size={44} />
+      ) : (
+        <div className="flex-1 min-w-0 min-h-0">
+          {metrics?.length ? (
+            <div className="grid grid-cols-2 gap-4">
+              {metrics.map((metric) => (
+                <div key={metric.id} className="rounded border border-secondary p-4 flex flex-col gap-4">
+                  <div className="flex flex-row items-center justify-between">
+                    <span className="dial-body-semi">{metric.name}</span>
+
+                    <div className="flex flex-row items-center gap-3">
+                      <DialNeutralButton
+                        size={ElementSize.Small}
+                        label={t(ButtonsI18nKey.Delete)}
+                        onClick={() => onRemoveMetric(metric.id as string)}
+                        iconBefore={<IconTrash stroke={2} size={16} />}
+                      />
+                      <DialNeutralButton
+                        size={ElementSize.Small}
+                        label={t(ButtonsI18nKey.Edit)}
+                        onClick={() => {
+                          setMetricToEdit(metric);
+                          setIsAddModalOpen(true);
+                        }}
+                        iconBefore={<IconEdit stroke={2} size={16} />}
+                      />
+                    </div>
+                  </div>
+
+                  {metric.description && (
+                    <span className="dial-tiny-text text-secondary line-clamp-2" title={metric.description}>
+                      {metric.description}
+                    </span>
+                  )}
+
+                  <MetricBindingsDisplay title={t(TestSuitesI18nKey.Configuration)} bindings={metric.configBindings} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <DialNoDataContent title={t(EntitiesI18nKey.NoMetrics)} />
+          )}
+        </div>
+      )}
+
       {isAddModalOpen &&
         createPortal(
           <AddMetricModal
             isModalOpen={isAddModalOpen}
-            metrics={metricDeclarations || []}
-            onClose={() => setIsAddModalOpen(false)}
-            onConfirm={onAddMetric}
+            selectedTestSuite={selectedTestSuite}
+            onClose={() => {
+              setIsAddModalOpen(false);
+              setMetricToEdit(undefined);
+            }}
+            onConfirm={(metric) => {
+              if (metricToEdit) {
+                onEditMetric(metric!);
+              } else {
+                onAddMetric(metric);
+              }
+            }}
+            editingMetric={metricToEdit}
           />,
           document.body,
         )}

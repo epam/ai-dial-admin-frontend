@@ -226,33 +226,60 @@ export const jsonSchemaToFields = (schema: JSONSchema7 | undefined, root?: JSONS
       effectiveDef.items &&
       !Array.isArray(effectiveDef.items) &&
       typeof effectiveDef.items === 'object' &&
-      isJSONSchema7(effectiveDef.items as JSONSchema7Definition) &&
-      (effectiveDef.items as JSONSchema7).properties
+      isJSONSchema7(effectiveDef.items as JSONSchema7Definition)
     ) {
-      const items = effectiveDef.items as JSONSchema7;
-      const nestedRequired = items.required || [];
-      field.children = Object.entries(items.properties!).map(([childName, childDef]) => {
-        const effectiveChild = getEffectiveSchema(childDef, rootSchema) ?? resolveDef(childDef, rootSchema);
+      if ((effectiveDef.items as JSONSchema7).properties) {
+        const items = effectiveDef.items as JSONSchema7;
+        const nestedRequired = items.required || [];
+        field.children = Object.entries(items.properties!).map(([childName, childDef]) => {
+          const effectiveChild = getEffectiveSchema(childDef, rootSchema) ?? resolveDef(childDef, rootSchema);
+          if (!isJSONSchema7(effectiveChild)) {
+            return { ...createEmptyField(field.id, 1), name: childName };
+          }
+          const childSchema = effectiveChild as JSONSchema7;
+          const childType = getPrimaryType(childSchema);
+          return {
+            id: generateFieldId(),
+            name: childName,
+            type: childType,
+            required: nestedRequired.includes(childName),
+            title: childSchema.title || '',
+            description: childSchema.description || '',
+            expanded: false,
+            children: [],
+            parentId: field.id,
+            depth: 1,
+          };
+        });
+        if (field.children.length) {
+          field.expanded = true;
+        }
+      } else {
+        // evaluation metric
+        const items = effectiveDef.items as JSONSchema7;
+        const effectiveChild = getEffectiveSchema(items, rootSchema) ?? resolveDef(items, rootSchema);
         if (!isJSONSchema7(effectiveChild)) {
-          return { ...createEmptyField(field.id, 1), name: childName };
+          return { ...createEmptyField(field.id, 1), name: field.name };
         }
         const childSchema = effectiveChild as JSONSchema7;
         const childType = getPrimaryType(childSchema);
-        return {
-          id: generateFieldId(),
-          name: childName,
-          type: childType,
-          required: nestedRequired.includes(childName),
-          title: childSchema.title || '',
-          description: childSchema.description || '',
-          expanded: false,
-          children: [],
-          parentId: field.id,
-          depth: 1,
-        };
-      });
-      if (field.children.length) {
-        field.expanded = true;
+        field.children =
+          childSchema.type === 'object'
+            ? jsonSchemaToFields(childSchema, effectiveDef).map((child) => ({ ...child, parentId: field.id, depth: 1 }))
+            : [
+                {
+                  id: generateFieldId(),
+                  name: field.name,
+                  type: childType,
+                  required: field.required,
+                  title: childSchema.title || '',
+                  description: childSchema.description || '',
+                  expanded: false,
+                  children: [],
+                  parentId: field.id,
+                  depth: 1,
+                },
+              ];
       }
     }
 

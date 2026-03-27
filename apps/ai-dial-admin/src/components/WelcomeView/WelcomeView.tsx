@@ -89,7 +89,7 @@ const WelcomeView: FC<Props> = ({ docLink, dialLink, disableMenuItems, dialButto
           {dialLink && (
             <DialNeutralButton
               iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} widths={24} height={24} />}
-              className="secondary p-4 lg:px-3 lg:py-2 h-[56px] lg:h-[42px]"
+              className="p-4 lg:px-3 lg:py-2 h-[56px] lg:h-[42px]"
               label={dialButtonName || t(WelcomeViewI18nKey.OpenDial)}
               onClick={() => {
                 window.open(dialLink, '_blank');

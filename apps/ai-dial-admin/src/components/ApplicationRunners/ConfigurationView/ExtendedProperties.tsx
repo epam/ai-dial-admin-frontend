@@ -2,7 +2,6 @@ import { FC, useCallback } from 'react';
 
 import { DialInput, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 
-import CompletionEndpointControl from '@/src/components/BaseControls/Endpoint/CompletionEndpoint';
 import EditorUrlControl from '@/src/components/BaseControls/Endpoint/EditorUrl';
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import ViewerUrlControl from '@/src/components/BaseControls/Endpoint/ViewerUrl';
@@ -13,6 +12,8 @@ import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme, TypeBucketCopy } from '@/src/models/dial/application';
+import AppRunnerSource from './AppRunnerSource';
+import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
   runner: DialApplicationScheme;
@@ -38,13 +39,6 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
   const onChangeTypeCopyBucket = useCallback(
     (value?: string) => {
       onChange(value, 'dial:applicationTypeBucketCopy');
-    },
-    [onChange],
-  );
-
-  const onChangeCompletionEndPoint = useCallback(
-    (endpoint?: string) => {
-      onChange(endpoint, 'dial:applicationTypeCompletionEndpoint');
     },
     [onChange],
   );
@@ -98,12 +92,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
         disabled={isReadOnlyAdmin}
       />
       <TopicsControl entity={runner} onChange={onChangeRunner} />
-
-      <CompletionEndpointControl
-        endpoint={runner['dial:applicationTypeCompletionEndpoint']}
-        onChange={onChangeCompletionEndPoint}
-        required
-      />
+      <AppRunnerSource entity={runner} onChangeEntity={onChangeRunner} view={ApplicationRoute.ApplicationRunners} />
 
       <ViewerUrlControl endpoint={runner['dial:applicationTypeViewerUrl']} onChange={onChangeViewerUrl} />
       <EditorUrlControl endpoint={runner['dial:applicationTypeEditorUrl']} onChange={onChangeEditorUrl} />
