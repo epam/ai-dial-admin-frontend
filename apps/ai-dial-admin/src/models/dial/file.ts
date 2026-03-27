@@ -27,3 +27,10 @@ export enum DialFileNodeType {
 export enum DialFileResourceType {
   FILE = 'FILE',
 }
+
+export interface CustomFile {
+  path: string;
+  filename: string;
+  contentType: string;
+  sizeBytes: number;
+}

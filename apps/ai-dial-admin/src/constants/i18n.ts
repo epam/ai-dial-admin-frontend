@@ -350,6 +350,7 @@ export enum ButtonsI18nKey {
   HFRegistry = 'Buttons.HFRegistry',
   McpRegistry = 'Buttons.McpRegistry',
   TryOut = 'Buttons.TryOut',
+  Upload = 'Buttons.Upload',
 }
 
 export enum UpdateI18nKey {
@@ -580,6 +581,8 @@ export enum TabsI18nKey {
   Columns = 'Tabs.Columns',
   Analytics = 'Tabs.Analytics',
   MCP = 'Tabs.MCP',
+  Public = 'Tabs.Public',
+  Application = 'Tabs.Application',
 }
 
 export enum InterceptorsI18nKey {
