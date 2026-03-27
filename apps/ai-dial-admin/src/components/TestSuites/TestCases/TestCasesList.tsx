@@ -20,9 +20,10 @@ import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
-import { TestCase, TestSuite } from '@/src/models/evaluation/test-suite';
+import { TestCase, TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import SchemaManager from '@/src/components/TestSuites/TestCaseSchema/SchemaManager';
 import HeaderButtons from './Header';
 
 export interface TestCasesActions {
@@ -32,12 +33,19 @@ export interface TestCasesActions {
 
 interface Props {
   selectedTestSuite: TestSuite;
-  onChange: (testSuite: TestSuite) => void;
+  onChange: (testSuite: TestSuite, isSkipRefresh?: boolean) => void;
+  isSkipRefresh?: boolean;
   testCasesActionsRef?: RefObject<TestCasesActions | null>;
   onDirtyChange?: (hasDirty: boolean) => void;
 }
 
-const TestCasesList: FC<Props> = ({ selectedTestSuite, testCasesActionsRef, onDirtyChange }) => {
+const TestCasesList: FC<Props> = ({
+  selectedTestSuite,
+  onChange,
+  isSkipRefresh: _isSkipRefresh,
+  testCasesActionsRef,
+  onDirtyChange,
+}) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -48,8 +56,20 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, testCasesActionsRef, onDi
   const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState<Record<string, unknown>[]>([]);
   const [columnDefs, setColumnDefs] = useState<ColDef[]>([]);
+  const [isSchemaOpen, setIsSchemaOpen] = useState(false);
   const onRemoveCaseRef = useRef<(data?: TestCase) => void>(() => {});
   const dirtyRowsRef = useRef<Map<string, Record<string, unknown>>>(new Map());
+
+  const onToggleSchema = useCallback(() => {
+    setIsSchemaOpen((prev) => !prev);
+  }, []);
+
+  const onChangeTestCaseSchema = useCallback(
+    (testCaseSchema: TestCaseSchema[], isSkipRefresh?: boolean) => {
+      onChange({ ...selectedTestSuite, testCaseSchema }, isSkipRefresh);
+    },
+    [selectedTestSuite, onChange],
+  );
 
   const updateData = useCallback(
     (row: Record<string, unknown>) => {
@@ -244,29 +264,37 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, testCasesActionsRef, onDi
   }, [onRemoveCase]);
 
   return (
-    <>
-      <div className="flex-1 min-h-0">
-        {isLoading ? (
-          <DialLoader size={40} />
-        ) : (
-          <ListEntities
-            additionalGridOptions={gridOptions}
-            listLabel={t(TestSuitesI18nKey.TestCases)}
-            emptyDataProps={{ title: t(TestSuitesI18nKey.NoTestCases) }}
-            onGridReady={onGridReady}
-            rowData={data}
-            columnDefs={columnDefs}
-          >
-            <HeaderButtons
-              selectedTestSuiteId={selectedTestSuite.id as string}
-              onApplyImport={onApplyImport}
-              onAdd={onAddTestCase}
-              onExport={onExport}
-            />
-          </ListEntities>
-        )}
-      </div>
-    </>
+    <div className="flex-1 min-h-0">
+      {isLoading ? (
+        <DialLoader size={40} />
+      ) : (
+        <ListEntities
+          additionalGridOptions={gridOptions}
+          listLabel={t(TestSuitesI18nKey.TestCases)}
+          emptyDataProps={{ title: t(TestSuitesI18nKey.NoTestCases) }}
+          onGridReady={onGridReady}
+          rowData={data}
+          columnDefs={columnDefs}
+          topContent={
+            isSchemaOpen ? (
+              <SchemaManager
+                testCaseSchema={selectedTestSuite.testCaseSchema || []}
+                onChangeTestCaseSchema={onChangeTestCaseSchema}
+              />
+            ) : undefined
+          }
+        >
+          <HeaderButtons
+            selectedTestSuiteId={selectedTestSuite.id as string}
+            onApplyImport={onApplyImport}
+            onAdd={onAddTestCase}
+            onExport={onExport}
+            onToggleSchema={onToggleSchema}
+            isSchemaOpen={isSchemaOpen}
+          />
+        </ListEntities>
+      )}
+    </div>
   );
 };
 

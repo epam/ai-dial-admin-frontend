@@ -398,6 +398,85 @@ export const getVariablesColumns = (
   ];
 };
 
+export const getSchemaFieldGridColumns = (
+  onChangeEditable: (value: string | number, data: unknown, column: string, index?: number) => void,
+  onChangeSelect: (value: string | string[], data: unknown, column?: string, index?: number) => void,
+): ColDef<TestCaseSchema>[] => {
+  const typeOptions = Object.values(TestCaseItemType).map((type) => ({
+    value: type,
+    label: type.toLowerCase(),
+  }));
+
+  return [
+    {
+      headerName: 'Name',
+      colId: 'name',
+      field: 'name',
+      editable: false,
+      cellClass: NO_BORDER_CLASS,
+      cellRenderer: EditableCellRenderer,
+      valueGetter: (params: ValueGetterParams) => params.data?.name ?? '',
+      cellRendererParams: {
+        onChange: onChangeEditable,
+        hideTriangle: true,
+        skipRequired: true,
+      },
+      sortable: false,
+      filter: false,
+      floatingFilter: false,
+    },
+    {
+      headerName: 'Type',
+      colId: 'type',
+      field: 'type',
+      cellClass: NO_BORDER_CLASS,
+      cellRenderer: SelectCellRenderer,
+      cellRendererParams: {
+        items: typeOptions,
+        onChange: onChangeSelect,
+      },
+      sortable: false,
+      filter: false,
+      floatingFilter: false,
+    },
+    {
+      headerName: 'Required',
+      colId: 'required',
+      field: 'required',
+      editable: true,
+      cellRenderer: 'agCheckboxCellRenderer',
+      cellEditor: 'agCheckboxCellEditor',
+      cellClass: 'flex items-center justify-center',
+      tooltipValueGetter: () => '',
+      valueSetter: (params) => {
+        params.data.required = params.newValue;
+        return true;
+      },
+      sortable: false,
+      filter: false,
+      floatingFilter: false,
+      maxWidth: 100,
+    },
+    {
+      headerName: 'Description',
+      colId: 'description',
+      field: 'description',
+      editable: false,
+      cellClass: NO_BORDER_CLASS,
+      cellRenderer: EditableCellRenderer,
+      valueGetter: (params: ValueGetterParams) => params.data?.description ?? '',
+      cellRendererParams: {
+        onChange: onChangeEditable,
+        hideTriangle: true,
+        skipRequired: true,
+      },
+      sortable: false,
+      filter: false,
+      floatingFilter: false,
+    },
+  ];
+};
+
 export const getColumnsGridColumns = (): ColDef<ResponseColumn>[] => {
   return [
     {

@@ -1488,6 +1488,13 @@ export enum TestSuitesI18nKey {
   Outputs = 'TestSuites.Outputs',
   Bindings = 'TestSuites.Bindings',
   Results = 'TestSuites.Results',
+  TestCaseSchema = 'TestSuites.TestCaseSchema',
+  SchemaField = 'TestSuites.SchemaField',
+  AddField = 'TestSuites.AddField',
+  EditField = 'TestSuites.EditField',
+  NoSchemaFields = 'TestSuites.NoSchemaFields',
+  DuplicateFieldName = 'TestSuites.DuplicateFieldName',
+  SchemaDescription = 'TestSuites.SchemaDescription',
 }
 
 export enum RunsI18nKey {

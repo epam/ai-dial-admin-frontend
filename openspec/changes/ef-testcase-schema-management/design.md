@@ -2,16 +2,14 @@
 
 The `TestSuite` model has a `testCaseSchema?: TestCaseSchema[]` property that defines the structure of test case data fields. Currently this property is read-only in the UI — used only as a dropdown source for input bindings (`TemplateVariables.tsx`) and metric bindings (`Bindings.tsx`). There is no way for users to add, edit, or remove schema fields from the frontend.
 
-The closest existing pattern is the **Response Columns** manager in `EndpointSchema > Columns/Columns.tsx` + `EditColumn.tsx`: an ag-grid listing items with Edit/Remove actions, and an inline edit panel that appears below the grid when editing.
-
 Schema changes are persisted via the existing `updateTestSuite` flow — no new API endpoints are needed. The backend handles data migration for existing test cases when schema changes.
 
 ## Goals / Non-Goals
 
 **Goals:**
-- Let users manage test case schema fields (add, edit properties, remove, reorder) directly in the UI
-- Follow the established Response Columns pattern for consistency
-- Integrate into the Test Cases tab as a collapsible panel
+- Let users manage test case schema fields (add, inline-edit, remove) directly in the UI
+- Use inline grid editing (EditableCellRenderer) consistent with how test case data is edited
+- Integrate into the Test Cases tab as a collapsible panel between header and grid
 - All user-facing strings internationalized
 
 **Non-Goals:**
@@ -19,60 +17,56 @@ Schema changes are persisted via the existing `updateTestSuite` flow — no new 
 - FE-side data migration when schema changes (BE handles this)
 - Validation of existing test case data against schema changes
 - Type coercion or compatibility warnings when changing field types
+- Drag-and-drop reorder (nice-to-have, deferred)
 
 ## Decisions
 
-### 1. Panel placement: collapsible section above the test cases grid
+### 1. Panel placement: topContent inside ListEntities
 
-The schema manager panel lives inside `TestCasesList`, toggled by a button in the `HeaderButtons` toolbar. When expanded, it renders above the ag-grid.
+The schema manager panel is rendered via ListEntities' `topContent` prop, placing it between the header row (with Test Case Schema toggle, Import, Export, Add buttons) and the test cases grid. Both panels are always visible simultaneously when the schema panel is open.
 
-**Why over sidebar:** The Response Columns pattern uses an inline panel, not a sidebar. Sidebars are reserved for heavier workflows (TryOut). A collapsible section keeps the user in context of the test cases they're defining schema for.
+**Why topContent over separate section:** Keeps schema editing contextually near the test cases it defines. The toggle just shows/hides the panel — buttons remain accessible.
 
-**Why in TestCasesList, not TestCases:** The schema is conceptually part of the test case data structure. Placing it near the grid header (alongside Import/Export/Add) makes the relationship clear.
+### 2. Inline grid editing instead of separate edit panel
 
-### 2. Component structure mirrors Response Columns
+The original design mirrored the Response Columns pattern (EditColumn.tsx) with a separate edit panel below the grid. This was changed to **inline grid editing** using EditableCellRenderer for Name/Description, SelectCellRenderer for Type, and ag-grid's built-in checkbox for Required.
 
-```
-src/components/TestSuites/TestCaseSchema/
-├── SchemaManager.tsx      (mirrors Columns.tsx)
-└── EditSchemaField.tsx    (mirrors EditColumn.tsx)
-```
+**Why:** Inline editing is more direct and matches how the test case data grid itself works. It eliminates the extra click to open/close an edit panel. The EditSchemaField component exists but is unused — kept for potential future use.
 
-- `SchemaManager` manages the grid, add/remove operations, and `editableFieldIndex` state
-- `EditSchemaField` is the inline form panel with Name, Type, Required, Description fields
-- Column definitions added to `utils/columns.tsx` as `getSchemaFieldGridColumns()`
+### 3. ag-grid EditableCellRenderer focus pattern
 
-**Why not reuse Columns.tsx directly:** The field shapes differ (ResponseColumn has expression/displayName; TestCaseSchema has name/type/required/description). The pattern is reused, not the component.
+When using EditableCellRenderer in ag-grid columns, the column definition MUST include:
+- `editable: false` — without this explicit setting (vs undefined), ag-grid's keyboard handler steals focus from the input
+- `valueGetter` — without this, ag-grid's change detection on `setValue` triggers cell refresh/recreation
+- In-place data mutation in the onChange callback (`data[field] = value`) — ensures `setValue` sees no change
 
-### 3. Name field is read-only after creation
+This pattern is documented in `openspec/config.yaml` and matches `getTestCaseColumns`.
 
-When adding a new field, Name is editable. When editing an existing field, Name is displayed but disabled. This prevents accidental data loss since rename requires BE coordination that isn't ready yet.
+### 4. Data flow: dirty-ref + flush-on-blur
 
-### 4. Data flow through existing onChange chain
+Unlike the original design (direct onChange on every modification), the implementation uses a **deferred update pattern** to prevent focus loss:
 
 ```
-SchemaManager → onChangeTestCaseSchema(schema[])
+User types in cell → onCellChange mutates data in place + updates schemaRef
+User leaves grid (blur) or unmounts panel → flushToParent(schemaRef.current)
   → TestCasesList → onChange({ ...testSuite, testCaseSchema })
     → View.tsx updates selectedTestSuite state
-      → Save button → updateTestSuite API (includes testCaseSchema)
+      → Save button → updateTestSuite API
 ```
 
-No new context providers or state management needed. The schema panel simply calls the same `onChange` callback that `TestCasesList` already receives from its parent.
+Structural changes (add field, remove field) and checkbox toggles notify the parent immediately since they don't involve text input focus.
 
-### 5. Validation uses SaveValidationContext
+### 5. No SaveValidationContext
 
-Like Response Columns, the schema manager dispatches validation state via `SaveValidationContext`. An empty name on any field marks the form as invalid, preventing save.
+The original design planned to use SaveValidationContext (like Response Columns). The inline editing approach doesn't need it — empty field names are allowed during editing, and validation happens at save time on the backend.
 
-### 6. Reorder via drag-and-drop (nice-to-have)
+### 6. Toggle button in HeaderButtons
 
-The project already has `react-dnd` as a dependency. If implemented, row drag handles in the ag-grid allow reordering schema fields. The reordered array is passed through the same `onChangeTestCaseSchema` callback. This can be added as a follow-up if the core CRUD is delivered first.
-
-### 7. Toggle button in HeaderButtons
-
-A ghost-style button with a settings/schema icon (`IconSettings` or `IconColumns` from `@tabler/icons-react`) is added to `HeaderButtons`. It accepts an `onToggleSchema` callback and an `isSchemaOpen` flag to visually indicate the active state.
+A ghost-style button with `IconSettings` is added to `HeaderButtons`. It shows solid style when schema panel is open. Accepts `onToggleSchema` callback and `isSchemaOpen` flag.
 
 ## Risks / Trade-offs
 
 - **Schema and test case data can diverge** → Mitigated: BE handles reconciliation. FE treats schema as metadata only.
-- **No undo for field removal** → Mitigated: Save is a separate explicit action. User can navigate away without saving to discard changes. Also BE handles data, so removing a schema field doesn't immediately delete test case data.
+- **No undo for field removal** → Mitigated: Save is a separate explicit action. User can navigate away without saving to discard changes.
 - **Grid rebuild after schema change** → The test cases grid derives columns from actual test case data, not from testCaseSchema. Schema changes won't affect the grid columns until the BE processes the update and test cases are re-fetched.
+- **Deferred flush on blur** → If the user clicks Save while a schema field is still focused, the blur fires first (rAF), then the click handler runs. React 18 batching ensures the save reads the updated state.
