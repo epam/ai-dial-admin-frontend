@@ -19,11 +19,20 @@ interface Props {
   routes?: DialAppRoute[];
   parentRoleLimits?: DialRoleLimitsMap;
   disabled?: boolean;
+  isPublicApp?: boolean;
   iAppRunnerView?: boolean;
   onChangeRoutes: (routes: DialAppRoute[]) => void;
 }
 
-const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, disabled, iAppRunnerView, routes, onChangeRoutes }) => {
+const EntityRoutes: FC<Props> = ({
+  roles,
+  parentRoleLimits,
+  isPublicApp,
+  disabled,
+  iAppRunnerView,
+  routes,
+  onChangeRoutes,
+}) => {
   const t = useI18n();
   const { dispatch, isValid } = useSaveValidationContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -125,7 +134,7 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, disabled, iAppRunner
               iAppRunnerView={iAppRunnerView}
               route={routes?.[activeRouteIndex as number] || ({} as DialAppRoute)}
               roles={roles || []}
-              parentRoles={Object.keys(parentRoleLimits || {})}
+              parentRoles={!isPublicApp ? Object.keys(parentRoleLimits || {}) : roles?.map((r) => r.name as string)}
               onChangeRoute={onChangeRoute}
               disabled={disabled}
               routeNames={routeNames?.filter((_, index) => index !== activeRouteIndex)}
