@@ -92,9 +92,15 @@ const TemplateVariables: FC<Props> = ({ selectedTestSuite, onChange, isSkipRefre
 
   const columns = useMemo(() => {
     return [
-      ...getDynamicConfigurationsColumns(onChangeParam, onChangeSelect, selectedTestSuite.testCaseSchema || [], t),
+      ...getDynamicConfigurationsColumns(
+        onChangeParam,
+        onChangeSelect,
+        selectedTestSuite.testCaseSchema || [],
+        selectedTestSuite.id as string,
+        t,
+      ),
     ];
-  }, [onChangeParam, onChangeSelect, selectedTestSuite.testCaseSchema, t]);
+  }, [onChangeParam, onChangeSelect, selectedTestSuite.id, selectedTestSuite.testCaseSchema, t]);
 
   const data = useMemo(
     () => generateInputBindingsRowData(variables || [], selectedTestSuite.inputBindings || []),

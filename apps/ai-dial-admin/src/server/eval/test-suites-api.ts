@@ -1,15 +1,16 @@
 import { Token } from '@/src/models/auth';
+import { CustomFile, DialFile } from '@/src/models/dial/file';
 import { Deployment } from '@/src/models/evaluation/deployment';
+import { Metric, MetricResponse } from '@/src/models/evaluation/metric';
 import { Run } from '@/src/models/evaluation/run';
 import { TemplateVariable, TestCase, TestSuite, TryOutResponse } from '@/src/models/evaluation/test-suite';
 import { EvaluationPageData, FilterDto, SortDto } from '@/src/models/request';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { API } from '@/src/server/api';
 import { BaseApi } from '@/src/server/base-api';
+import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 import { getRequestFiltersStr } from '@/src/utils/request/get-request-filters';
 import { getRequestSortsStr } from '@/src/utils/request/get-request-sorts';
-import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
-import { Metric, MetricResponse } from '@/src/models/evaluation/metric';
 
 export const TEST_SUITES_URL = `${API}/test-suites`;
 export const TEST_SUITE_URL = (id?: string) => `${TEST_SUITES_URL}/${id || ''}`;
@@ -193,5 +194,13 @@ export class TestSuitesApi extends BaseApi {
 
   getTestSuiteMetricDetailsWithSchema(id: string, metricId: string, token: Token): Promise<Metric | null> {
     return this.get(`${TEST_SUITE_METRICS_URL(id)}/${metricId}/aggregated`, token);
+  }
+
+  getTestSuiteFiles(id: string, token: Token): Promise<CustomFile[] | null> {
+    return this.get(`${TEST_SUITE_URL(id)}/files`, token);
+  }
+
+  uploadTestSuiteFiles(id: string, file: FormData, token: Token): Promise<ServerActionResponse<DialFile[]>> {
+    return this.postFiles(`${TEST_SUITE_URL(id)}/files`, file, token);
   }
 }

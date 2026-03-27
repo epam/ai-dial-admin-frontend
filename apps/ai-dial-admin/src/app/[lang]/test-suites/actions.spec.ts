@@ -33,6 +33,8 @@ import {
   tryOutTestCase,
   createTestSuiteMetric,
   updateTestSuiteMetric,
+  uploadTestSuiteFiles,
+  getTestSuiteFiles,
 } from './actions';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '../../../types/evaluation';
 
@@ -297,6 +299,22 @@ describe('TestSuites :: server actions', () => {
     const result = await deleteTestSuiteMetric('suite-id', 'metric-id');
     expect(getUserToken).toHaveBeenCalled();
     expect(testSuitesApi.deleteTestSuiteMetric).toHaveBeenCalledWith('suite-id', 'metric-id', TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getTestSuiteFiles action', async () => {
+    (testSuitesApi.getTestSuiteFiles as any).mockResolvedValue(RESPONSE_MOCK);
+    const result = await getTestSuiteFiles('suite-id');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(testSuitesApi.getTestSuiteFiles).toHaveBeenCalledWith('suite-id', TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call uploadTestSuiteFiles action', async () => {
+    (testSuitesApi.uploadTestSuiteFiles as any).mockResolvedValue(RESPONSE_MOCK);
+    const result = await uploadTestSuiteFiles('suite-id', new FormData());
+    expect(getUserToken).toHaveBeenCalled();
+    expect(testSuitesApi.uploadTestSuiteFiles).toHaveBeenCalledWith('suite-id', new FormData(), TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

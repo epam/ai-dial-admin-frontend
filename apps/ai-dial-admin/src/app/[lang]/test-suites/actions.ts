@@ -164,3 +164,13 @@ export async function getTestSuiteMetricDetailsWithSchema(id: string, metricId: 
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return testSuitesApi.getTestSuiteMetricDetailsWithSchema(id, metricId, token);
 }
+
+export async function getTestSuiteFiles(id: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.getTestSuiteFiles(id, token);
+}
+
+export async function uploadTestSuiteFiles(id: string, file: FormData) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.uploadTestSuiteFiles(id, file, token);
+}
