@@ -66,7 +66,7 @@ const RouteProperties: FC<Props> = ({ route, disabled, isAppRoute, routeNames, o
     if (isAppRoute) {
       return ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD'];
     }
-    return ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE'];
+    return ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD'];
   }, [isAppRoute]);
 
   const [statusError, setStatusError] = useState('');
