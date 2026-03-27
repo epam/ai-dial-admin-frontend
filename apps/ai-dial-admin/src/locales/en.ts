@@ -1555,6 +1555,8 @@ export default {
     DeleteItemsModalDescription: 'Do you want to delete the following {length} items?',
     MoreItems: '... and {length} more',
     DeleteFolderAlert: 'Folders may contain other prompts.',
+    PromptEmptyStateTitle: "You don't have any prompts",
+    PromptEmptyStateDescription: 'Create or import a prompt using the Create button',
   },
   Runs: {
     StartTime: 'Start time',

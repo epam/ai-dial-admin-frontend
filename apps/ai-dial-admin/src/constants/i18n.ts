@@ -1523,6 +1523,8 @@ export enum FileManagerI18nKey {
   Preview = 'FileManager.Preview',
   MoveItem = 'FileManager.MoveItem',
   MoveItems = 'FileManager.MoveItems',
+  PromptEmptyStateTitle = 'FileManager.PromptEmptyStateTitle',
+  PromptEmptyStateDescription = 'FileManager.PromptEmptyStateDescription',
 
   // Modals
   DeleteItemsModalTitle = 'FileManager.DeleteItemsModalTitle',
