@@ -1,10 +1,10 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo, useRef } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
-import { ColDef } from 'ag-grid-community';
+import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { getSchemaFieldGridColumns } from '@/src/components/TestSuites/utils/columns';
@@ -19,14 +19,16 @@ import { TestCaseItemType } from '@/src/types/evaluation';
 interface Props {
   testCaseSchema: TestCaseSchema[];
   onChangeTestCaseSchema: (schema: TestCaseSchema[], isSkipRefresh?: boolean) => void;
+  isSkipRefresh?: boolean;
 }
 
-const SchemaManager: FC<Props> = ({ testCaseSchema, onChangeTestCaseSchema }) => {
+const SchemaManager: FC<Props> = ({ testCaseSchema, onChangeTestCaseSchema, isSkipRefresh }) => {
   const t = useI18n();
+
+  const [gridApi, setGridApi] = useState<GridApi>();
 
   const schemaRef = useRef(testCaseSchema);
   const dirtyRef = useRef(false);
-  const containerRef = useRef<HTMLDivElement | null>(null);
   const onChangeRef = useRef(onChangeTestCaseSchema);
 
   useEffect(() => {
@@ -37,15 +39,7 @@ const SchemaManager: FC<Props> = ({ testCaseSchema, onChangeTestCaseSchema }) =>
     onChangeRef.current = onChangeTestCaseSchema;
   }, [onChangeTestCaseSchema]);
 
-  // Flush pending inline edits to parent — called on blur and unmount
-  const flushToParent = useCallback(() => {
-    if (dirtyRef.current) {
-      dirtyRef.current = false;
-      onChangeRef.current(schemaRef.current, true);
-    }
-  }, []);
-
-  // Flush on unmount so changes aren't lost when panel closes
+  // Flush pending inline edits on unmount so changes aren't lost when panel closes
   useEffect(() => {
     return () => {
       if (dirtyRef.current) {
@@ -53,16 +47,6 @@ const SchemaManager: FC<Props> = ({ testCaseSchema, onChangeTestCaseSchema }) =>
       }
     };
   }, []);
-
-  // Flush when focus leaves the schema grid container entirely
-  const handleContainerBlur = useCallback(() => {
-    const container = containerRef.current;
-    requestAnimationFrame(() => {
-      if (container && !container.contains(document.activeElement)) {
-        flushToParent();
-      }
-    });
-  }, [flushToParent]);
 
   // CRITICAL: mutate row data IN PLACE (same pattern as test cases grid).
   // When EditableCellRenderer calls setValue(), the value is already in the row node data,
@@ -123,12 +107,33 @@ const SchemaManager: FC<Props> = ({ testCaseSchema, onChangeTestCaseSchema }) =>
     [onCellChange, onSelectChange, onChangeRequired, t, onRemoveField],
   );
 
+  const rowData = useMemo(() => testCaseSchema, [testCaseSchema]);
+
+  const onGridReady = useCallback(
+    (event: GridReadyEvent) => {
+      setGridApi(event.api);
+      event.api?.updateGridOptions({
+        columnDefs,
+        rowData,
+      });
+    },
+    [columnDefs, rowData],
+  );
+
+  useEffect(() => {
+    if (!gridApi?.isDestroyed()) {
+      gridApi?.updateGridOptions({ columnDefs });
+    }
+  }, [columnDefs, gridApi]);
+
+  useEffect(() => {
+    if (!isSkipRefresh && !gridApi?.isDestroyed()) {
+      gridApi?.updateGridOptions({ rowData });
+    }
+  }, [isSkipRefresh, rowData, gridApi]);
+
   return (
-    <div
-      ref={containerRef}
-      className="flex flex-col gap-4 border border-primary rounded p-4 mb-4"
-      onBlur={handleContainerBlur}
-    >
+    <div className="flex flex-col gap-4 border border-primary rounded p-4 mb-4">
       <div className="flex flex-row justify-between items-center">
         <div className="flex flex-col gap-1">
           <h3>{t(TestSuitesI18nKey.TestCaseSchema)}</h3>
@@ -142,11 +147,9 @@ const SchemaManager: FC<Props> = ({ testCaseSchema, onChangeTestCaseSchema }) =>
       </div>
       <div className="min-h-0 overflow-auto" style={{ maxHeight: '300px' }}>
         <GridView<TestCaseSchema>
-          columnDefs={columnDefs}
-          rowData={testCaseSchema}
           getIsEmptyData={() => testCaseSchema.length === 0}
           emptyDataProps={{ title: t(TestSuitesI18nKey.NoSchemaFields) }}
-          additionalGridOptions={{}}
+          onGridReady={onGridReady}
         />
       </div>
     </div>

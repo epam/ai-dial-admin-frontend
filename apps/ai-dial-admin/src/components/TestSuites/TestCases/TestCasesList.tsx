@@ -42,7 +42,7 @@ interface Props {
 const TestCasesList: FC<Props> = ({
   selectedTestSuite,
   onChange,
-  isSkipRefresh: _isSkipRefresh,
+  isSkipRefresh,
   testCasesActionsRef,
   onDirtyChange,
 }) => {
@@ -280,6 +280,7 @@ const TestCasesList: FC<Props> = ({
               <SchemaManager
                 testCaseSchema={selectedTestSuite.testCaseSchema || []}
                 onChangeTestCaseSchema={onChangeTestCaseSchema}
+                isSkipRefresh={isSkipRefresh}
               />
             ) : undefined
           }

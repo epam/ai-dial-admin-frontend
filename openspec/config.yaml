@@ -17,7 +17,6 @@ context: |
 
   ## Key Libraries
   - @epam/ai-dial-ui-kit: Design system with base components
-  - @epam/ai-dial-shared: Shared types/utilities across DIAL projects
   - AG Grid for data grids
     - When using EditableCellRenderer (custom cell renderer with an input) in ag-grid columns,
       always set `editable: false` and provide a `valueGetter` on those columns.
