@@ -38,6 +38,6 @@ export interface MetricBinding {
 
 export interface BindingSource {
   $type: MetricBindingType;
-  value?: string;
+  value?: string | string[];
   columnName?: string;
 }

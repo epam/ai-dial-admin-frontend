@@ -106,7 +106,7 @@ const MetricInput: FC<{
           label={false}
           field={field}
           binding={binding}
-          onChangeValue={(_field, value) => onChangeConstant(value)}
+          onChangeValue={(_field, value) => onChangeConstant(value as string)}
         />
       )}
 

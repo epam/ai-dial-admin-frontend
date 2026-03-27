@@ -33,7 +33,7 @@ export const validateMetricBindings = (
 
   for (const binding of allBindings) {
     if (binding.source.$type === MetricBindingType.Constant) {
-      if (!binding.source.value || binding.source.value === '') {
+      if (binding.source.value == null || binding.source.value === '') {
         return false;
       }
     } else {
