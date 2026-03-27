@@ -10,6 +10,21 @@ import { importFiles } from '@/src/utils/files/import-files';
 import { importPrompts } from '@/src/utils/prompts/import-prompts';
 import { getJsonFileName } from '@/src/utils/import/get-json-name';
 
+export const getFormDataForUpload = (files: File[]): { body: FormData; fileSize: number } => {
+  const body = new FormData();
+  let fileSize = 0;
+
+  files.forEach((f) => {
+    body.append('file', f);
+    fileSize += f.size;
+  });
+
+  return {
+    body,
+    fileSize,
+  };
+};
+
 export const getFormDataForImport = (
   path: string,
   file: ImportData,

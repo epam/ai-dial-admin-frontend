@@ -18,8 +18,9 @@ interface Props {
   changeContent: (content: FormDataPart[]) => void;
   /** When true, Add is shown at request-template tabs level instead */
   hideAddButton?: boolean;
+  selectedTestSuiteId: string;
 }
-const FormDataGrid: FC<Props> = ({ content, changeContent, hideAddButton }) => {
+const FormDataGrid: FC<Props> = ({ content, changeContent, hideAddButton, selectedTestSuiteId }) => {
   const t = useI18n();
   const [isSkipRefresh, setIsSkipRefresh] = useState(false);
   const [gridApi, setGridApi] = useState<GridApi>();
@@ -65,10 +66,10 @@ const FormDataGrid: FC<Props> = ({ content, changeContent, hideAddButton }) => {
 
   const columns: ColDef[] = useMemo(
     () => [
-      ...getFormDataColumns(onChangeValue),
+      ...getFormDataColumns(onChangeValue, selectedTestSuiteId),
       ONE_ACTION_COLUMN(getRemoveOperation(onRemovePart, void 0, 'text-error w-4 h-4')),
     ],
-    [onChangeValue, onRemovePart],
+    [onChangeValue, onRemovePart, selectedTestSuiteId],
   );
 
   useEffect(() => {
