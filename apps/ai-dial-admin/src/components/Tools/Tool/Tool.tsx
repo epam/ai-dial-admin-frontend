@@ -13,11 +13,21 @@ interface Props {
   isAddedManual?: boolean;
   isMcpToolset?: boolean;
   isAssetToolset?: boolean;
+  isPublicationToolset?: boolean;
   containerId?: string;
   toolSetName: string;
 }
 
-const Tool: FC<Props> = ({ tool, isAddedManual, disabled, isMcpToolset, isAssetToolset, containerId, toolSetName }) => {
+const Tool: FC<Props> = ({
+  tool,
+  isAddedManual,
+  disabled,
+  isMcpToolset,
+  isPublicationToolset,
+  isAssetToolset,
+  containerId,
+  toolSetName,
+}) => {
   const [view, setView] = useState(ParamsView.TABLE);
 
   return (
@@ -31,6 +41,7 @@ const Tool: FC<Props> = ({ tool, isAddedManual, disabled, isMcpToolset, isAssetT
             isAddedManual={isAddedManual}
             isMcpToolset={isMcpToolset}
             isAssetToolset={isAssetToolset}
+            isPublicationToolset={isPublicationToolset}
             containerId={containerId}
           />
         </div>

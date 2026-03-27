@@ -18,6 +18,7 @@ interface Props {
   isCollapsed?: boolean;
   isAddedManual?: boolean;
   isMcpToolset?: boolean;
+  isPublicationToolset?: boolean;
   isAssetToolset?: boolean;
   containerId?: string;
   viewSelector?: ReactNode;
@@ -32,6 +33,7 @@ const ToolHeader: FC<Props> = ({
   isMcpToolset,
   isAssetToolset,
   containerId,
+  isPublicationToolset,
   viewSelector,
 }) => {
   const t = useI18n();
@@ -75,7 +77,7 @@ const ToolHeader: FC<Props> = ({
           {!isCollapsed && viewSelector}
           {!isCollapsed && !!viewSelector && !disabled && <div className="w-px h-6 bg-layer-4"></div>}
 
-          {(!disabled || isAssetToolset) && (
+          {(!disabled || (isAssetToolset && !isPublicationToolset)) && (
             <DialNeutralButton
               className={classNames(isCollapsed && 'invisible group-hover/accordion:visible')}
               iconBefore={<IconPlayerPlay size={20} />}
