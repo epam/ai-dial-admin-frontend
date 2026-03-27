@@ -37,6 +37,7 @@ interface Props {
   selectedToolset?: Toolset;
   isAssetToolset?: boolean;
   isMcpToolset?: boolean;
+  isPublicationToolset?: boolean;
   disabled?: boolean;
   onChangeToolset?: (toolset: Toolset) => void;
 }
@@ -47,6 +48,7 @@ const Tools: FC<Props> = ({
   selectedToolset,
   isAssetToolset,
   isMcpToolset,
+  isPublicationToolset,
   disabled,
   onChangeToolset,
 }) => {
@@ -278,6 +280,7 @@ const Tools: FC<Props> = ({
                     isAddedManual={!tools?.some((t) => t.name === tool.name)}
                     isMcpToolset={isMcpToolset}
                     isAssetToolset={isAssetToolset}
+                    isPublicationToolset={isPublicationToolset}
                     containerId={containerId}
                     toolSetName={
                       (isAssetToolset ? (selectedToolset as AssetToolset)?.path : selectedToolset?.name) || ''
