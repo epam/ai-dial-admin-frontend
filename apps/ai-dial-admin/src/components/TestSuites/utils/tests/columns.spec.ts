@@ -229,9 +229,7 @@ describe('getSchemaFieldGridColumns', () => {
     const requiredColumn = columns[2];
 
     expect(requiredColumn.cellRenderer).toBeDefined();
-    expect(requiredColumn.cellRendererParams).toEqual(
-      expect.objectContaining({ onChange: onChangeRequired }),
-    );
+    expect(requiredColumn.cellRendererParams).toEqual(expect.objectContaining({ onChange: onChangeRequired }));
     expect(requiredColumn.maxWidth).toBe(100);
   });
 

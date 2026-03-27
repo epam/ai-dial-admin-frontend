@@ -9,7 +9,9 @@ import SchemaManager from '../SchemaManager';
 // Mock GridView since ag-grid doesn't render in jsdom
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
   default: ({ getIsEmptyData, emptyDataProps }: any) => (
-    <div data-testid="grid-view">{getIsEmptyData?.() ? <div>{emptyDataProps?.title}</div> : <div>Grid content</div>}</div>
+    <div data-testid="grid-view">
+      {getIsEmptyData?.() ? <div>{emptyDataProps?.title}</div> : <div>Grid content</div>}
+    </div>
   ),
 }));
 

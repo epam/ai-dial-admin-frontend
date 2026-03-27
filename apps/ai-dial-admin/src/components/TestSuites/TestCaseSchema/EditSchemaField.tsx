@@ -15,6 +15,7 @@ import { BasicI18nKey, ButtonsI18nKey, EntityFieldsI18nKey, TestSuitesI18nKey } 
 import { useI18n } from '@/src/locales/client';
 import { TestCaseSchema } from '@/src/models/evaluation/test-suite';
 import { TYPE_OPTIONS } from '@/src/components/TestSuites/TestCaseSchema/constants';
+import { TestCaseItemType } from '@/src/types/evaluation';
 
 interface Props {
   field: TestCaseSchema;
