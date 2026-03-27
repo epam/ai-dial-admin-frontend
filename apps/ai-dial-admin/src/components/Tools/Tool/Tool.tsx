@@ -9,6 +9,7 @@ import ToolHeader from './ToolHeader';
 
 interface Props {
   tool: ToolType;
+  disabled?: boolean;
   isAddedManual?: boolean;
   isMcpToolset?: boolean;
   isAssetToolset?: boolean;
@@ -16,7 +17,7 @@ interface Props {
   toolSetName: string;
 }
 
-const Tool: FC<Props> = ({ tool, isAddedManual, isMcpToolset, isAssetToolset, containerId, toolSetName }) => {
+const Tool: FC<Props> = ({ tool, isAddedManual, disabled, isMcpToolset, isAssetToolset, containerId, toolSetName }) => {
   const [view, setView] = useState(ParamsView.TABLE);
 
   return (
@@ -25,6 +26,7 @@ const Tool: FC<Props> = ({ tool, isAddedManual, isMcpToolset, isAssetToolset, co
         <div className="flex flex-col rounded border border-primary p-4 pl-[36px]">
           <ToolHeader
             tool={tool}
+            disabled={disabled}
             toolSetName={toolSetName}
             isAddedManual={isAddedManual}
             isMcpToolset={isMcpToolset}
@@ -36,6 +38,7 @@ const Tool: FC<Props> = ({ tool, isAddedManual, isMcpToolset, isAssetToolset, co
         <Accordion
           header={
             <ToolHeader
+              disabled={disabled}
               viewSelector={<ViewSelector view={view} changeView={setView} />}
               tool={tool}
               toolSetName={toolSetName}

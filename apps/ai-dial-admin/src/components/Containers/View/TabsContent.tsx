@@ -202,7 +202,9 @@ const TabsContent: FC<Props> = ({
           </PropertiesTabContent>
         </>
       )}
-      {activeTab === EntityViewTab.Tools && <Tools containerId={selectedContainer.name} isMcpToolset />}
+      {activeTab === EntityViewTab.Tools && (
+        <Tools containerId={selectedContainer.name} isMcpToolset disabled={isReadOnlyAdmin} />
+      )}
       {activeTab === EntityViewTab.Resources && <Resources containerId={selectedContainer.name} />}
       {activeTab === EntityViewTab.Prompts && <Prompts containerId={selectedContainer.name} />}
       {activeTab === EntityViewTab.Metrics && <Metrics />}
