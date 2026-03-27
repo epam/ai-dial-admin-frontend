@@ -102,6 +102,8 @@ rules:
     - Prefer extending existing components from @epam/ai-dial-ui-kit over creating new ones
     - Consider i18n — all user-facing strings go through next-international
     - Follow existing patterns in src/components/ for structuring new features
+    - Name component props interfaces `Props`, not `ComponentNameProps`
+    - Use BooleanButtonCellRenderer (Grid/CellRenderers/) for boolean toggles in AG Grid, not agCheckboxCellRenderer
     - Keep JSX clean — extract handlers, computed values, and complex props into named variables in the component body
     - Apply base accessibility features targeting WCAG AA level
   specs:
