@@ -39,7 +39,7 @@ const List: FC<Props> = ({ route, getData, query, columnDefs, listLabel, emptyDa
     fetchData().catch((error) => console.error(`Getting usage log view data error: ${error}`));
   }, [getData, query]);
 
-  if (!data?.length && loading) {
+  if (loading) {
     return <DialLoader size={40} />;
   }
 
