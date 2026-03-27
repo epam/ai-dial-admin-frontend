@@ -4,6 +4,7 @@ import { ColDef, ICellRendererParams, ITooltipParams, ValueGetterParams } from '
 
 import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
 import ValidityStatus from '@/src/components/Common/ValidityStatus/ValidityStatus';
+import BooleanButtonCellRenderer from '@/src/components/Grid/CellRenderers/BooleanButtonCellRenderer';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSelectCellRenderer';
 import JsonEditorCellRenderer from '@/src/components/Grid/CellRenderers/JsonEditorCellRenderer';
@@ -12,7 +13,8 @@ import BooleanColumnHeader from '@/src/components/Grid/HeaderComponents/BooleanC
 import { NO_BORDER_CLASS, UTILITY_COLUMN } from '@/src/constants/ag-grid';
 import { BASE_STATUS_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { TEST_CASES_COLUMN } from '@/src/constants/grid-columns/grid-columns';
-import { TestSuitesI18nKey } from '@/src/constants/i18n';
+import { TYPE_OPTIONS } from '@/src/components/TestSuites/TestCaseSchema/constants';
+import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { MetricBinding } from '@/src/models/evaluation/metric';
 import { InputBindingRowData, ResponseColumn, TestCase, TestCaseSchema } from '@/src/models/evaluation/test-suite';
 import { InputBindingType, MetricBindingType, TestCaseItemType } from '@/src/types/evaluation';
@@ -401,12 +403,9 @@ export const getVariablesColumns = (
 export const getSchemaFieldGridColumns = (
   onChangeEditable: (value: string | number, data: unknown, column: string, index?: number) => void,
   onChangeSelect: (value: string | string[], data: unknown, column?: string, index?: number) => void,
+  onChangeRequired: (value: boolean, data: TestCaseSchema) => void,
+  t: (key: string) => string,
 ): ColDef<TestCaseSchema>[] => {
-  const typeOptions = Object.values(TestCaseItemType).map((type) => ({
-    value: type,
-    label: type.toLowerCase(),
-  }));
-
   return [
     {
       headerName: 'Name',
@@ -432,7 +431,7 @@ export const getSchemaFieldGridColumns = (
       cellClass: NO_BORDER_CLASS,
       cellRenderer: SelectCellRenderer,
       cellRendererParams: {
-        items: typeOptions,
+        items: TYPE_OPTIONS,
         onChange: onChangeSelect,
       },
       sortable: false,
@@ -443,15 +442,14 @@ export const getSchemaFieldGridColumns = (
       headerName: 'Required',
       colId: 'required',
       field: 'required',
-      editable: true,
-      cellRenderer: 'agCheckboxCellRenderer',
-      cellEditor: 'agCheckboxCellEditor',
-      cellClass: 'flex items-center justify-center',
-      tooltipValueGetter: () => '',
-      valueSetter: (params) => {
-        params.data.required = params.newValue;
-        return true;
+      cellClass: NO_BORDER_CLASS,
+      cellRenderer: BooleanButtonCellRenderer,
+      cellRendererParams: {
+        onChange: onChangeRequired,
+        trueLabel: t(BasicI18nKey.Required),
+        falseLabel: t(BasicI18nKey.Optional),
       },
+      tooltipValueGetter: () => undefined,
       sortable: false,
       filter: false,
       floatingFilter: false,

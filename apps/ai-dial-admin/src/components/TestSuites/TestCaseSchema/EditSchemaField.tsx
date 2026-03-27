@@ -14,9 +14,9 @@ import {
 import { BasicI18nKey, ButtonsI18nKey, EntityFieldsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { TestCaseSchema } from '@/src/models/evaluation/test-suite';
-import { TestCaseItemType } from '@/src/types/evaluation';
+import { TYPE_OPTIONS } from '@/src/components/TestSuites/TestCaseSchema/constants';
 
-interface EditSchemaFieldProps {
+interface Props {
   field: TestCaseSchema;
   isNew: boolean;
   existingNames: string[];
@@ -24,12 +24,7 @@ interface EditSchemaFieldProps {
   onClose: () => void;
 }
 
-const TYPE_OPTIONS = Object.values(TestCaseItemType).map((type) => ({
-  value: type,
-  label: type.toLowerCase(),
-}));
-
-const EditSchemaField: FC<EditSchemaFieldProps> = ({ field, isNew, existingNames, onSave, onClose }) => {
+const EditSchemaField: FC<Props> = ({ field, isNew, existingNames, onSave, onClose }) => {
   const t = useI18n();
   const [editableField, setEditableField] = useState(field);
 
@@ -52,7 +47,7 @@ const EditSchemaField: FC<EditSchemaFieldProps> = ({ field, isNew, existingNames
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-row justify-between">
-        <h3>{t(isNew ? TestSuitesI18nKey.AddField : TestSuitesI18nKey.EditField)}</h3>
+        <h3>{t(isNew ? BasicI18nKey.AddField : TestSuitesI18nKey.EditField)}</h3>
         <DialCloseButton onClose={onClose} />
       </div>
       <div className="flex flex-col gap-4">

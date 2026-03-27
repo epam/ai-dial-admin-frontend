@@ -33,7 +33,7 @@ describe('EditSchemaField', () => {
   test('renders Add field title when isNew is true', () => {
     render(<EditSchemaField {...defaultProps} isNew={true} field={{ name: '', type: TestCaseItemType.STRING, required: false, description: '' }} />);
 
-    expect(screen.getByText(TestSuitesI18nKey.AddField)).toBeInTheDocument();
+    expect(screen.getByText(BasicI18nKey.AddField)).toBeInTheDocument();
   });
 
   test('disables name input for existing fields', () => {

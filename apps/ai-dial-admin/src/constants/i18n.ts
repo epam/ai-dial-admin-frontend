@@ -1493,7 +1493,6 @@ export enum TestSuitesI18nKey {
   Results = 'TestSuites.Results',
   TestCaseSchema = 'TestSuites.TestCaseSchema',
   SchemaField = 'TestSuites.SchemaField',
-  AddField = 'TestSuites.AddField',
   EditField = 'TestSuites.EditField',
   NoSchemaFields = 'TestSuites.NoSchemaFields',
   DuplicateFieldName = 'TestSuites.DuplicateFieldName',

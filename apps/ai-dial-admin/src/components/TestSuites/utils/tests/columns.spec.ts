@@ -184,9 +184,11 @@ describe('getTestCaseColumns', () => {
 describe('getSchemaFieldGridColumns', () => {
   const onChangeEditable = vi.fn();
   const onChangeSelect = vi.fn();
+  const onChangeRequired = vi.fn();
+  const t = (key: string) => key;
 
   test('should return four columns: Name, Type, Required, Description', () => {
-    const columns = getSchemaFieldGridColumns(onChangeEditable, onChangeSelect);
+    const columns = getSchemaFieldGridColumns(onChangeEditable, onChangeSelect, onChangeRequired, t);
 
     expect(columns).toHaveLength(4);
     expect(columns[0]).toEqual(expect.objectContaining({ colId: 'name', field: 'name', headerName: 'Name' }));
@@ -200,7 +202,7 @@ describe('getSchemaFieldGridColumns', () => {
   });
 
   test('should have Name and Description columns with EditableCellRenderer', () => {
-    const columns = getSchemaFieldGridColumns(onChangeEditable, onChangeSelect);
+    const columns = getSchemaFieldGridColumns(onChangeEditable, onChangeSelect, onChangeRequired, t);
 
     expect(columns[0].cellRenderer).toBeDefined();
     expect(columns[0].cellRendererParams).toEqual(
@@ -213,7 +215,7 @@ describe('getSchemaFieldGridColumns', () => {
   });
 
   test('should have Type column with SelectCellRenderer', () => {
-    const columns = getSchemaFieldGridColumns(onChangeEditable, onChangeSelect);
+    const columns = getSchemaFieldGridColumns(onChangeEditable, onChangeSelect, onChangeRequired, t);
     const typeColumn = columns[1];
 
     expect(typeColumn.cellRenderer).toBeDefined();
@@ -222,18 +224,19 @@ describe('getSchemaFieldGridColumns', () => {
     );
   });
 
-  test('should have Required column with checkbox renderer', () => {
-    const columns = getSchemaFieldGridColumns(onChangeEditable, onChangeSelect);
+  test('should have Required column with BooleanButtonCellRenderer', () => {
+    const columns = getSchemaFieldGridColumns(onChangeEditable, onChangeSelect, onChangeRequired, t);
     const requiredColumn = columns[2];
 
-    expect(requiredColumn.editable).toBe(true);
-    expect(requiredColumn.cellRenderer).toBe('agCheckboxCellRenderer');
-    expect(requiredColumn.cellEditor).toBe('agCheckboxCellEditor');
+    expect(requiredColumn.cellRenderer).toBeDefined();
+    expect(requiredColumn.cellRendererParams).toEqual(
+      expect.objectContaining({ onChange: onChangeRequired }),
+    );
     expect(requiredColumn.maxWidth).toBe(100);
   });
 
   test('should have all columns as non-sortable and non-filterable', () => {
-    const columns = getSchemaFieldGridColumns(onChangeEditable, onChangeSelect);
+    const columns = getSchemaFieldGridColumns(onChangeEditable, onChangeSelect, onChangeRequired, t);
 
     columns.forEach((col) => {
       expect(col.sortable).toBe(false);

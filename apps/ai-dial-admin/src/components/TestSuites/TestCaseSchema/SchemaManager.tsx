@@ -4,24 +4,24 @@ import { FC, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
-import { CellValueChangedEvent, ColDef } from 'ag-grid-community';
+import { ColDef } from 'ag-grid-community';
 
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { getSchemaFieldGridColumns } from '@/src/components/TestSuites/utils/columns';
 import { ONE_ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getRemoveOperation } from '@/src/constants/grid-columns/actions';
-import { TestSuitesI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { TestCaseSchema } from '@/src/models/evaluation/test-suite';
 import { TestCaseItemType } from '@/src/types/evaluation';
 
-interface SchemaManagerProps {
+interface Props {
   testCaseSchema: TestCaseSchema[];
   onChangeTestCaseSchema: (schema: TestCaseSchema[], isSkipRefresh?: boolean) => void;
 }
 
-const SchemaManager: FC<SchemaManagerProps> = ({ testCaseSchema, onChangeTestCaseSchema }) => {
+const SchemaManager: FC<Props> = ({ testCaseSchema, onChangeTestCaseSchema }) => {
   const t = useI18n();
 
   const schemaRef = useRef(testCaseSchema);
@@ -85,13 +85,11 @@ const SchemaManager: FC<SchemaManagerProps> = ({ testCaseSchema, onChangeTestCas
     dirtyRef.current = true;
   }, []);
 
-  // Checkbox — valueSetter already mutates data in place, just sync schemaRef and notify parent
-  const onCellValueChanged = useCallback((event: CellValueChangedEvent<TestCaseSchema>) => {
-    if (event.colDef.field === 'required' && event.rowIndex != null) {
-      const schema = [...schemaRef.current];
-      schemaRef.current = schema;
-      onChangeRef.current(schema, true);
-    }
+  const onChangeRequired = useCallback((value: boolean, data: TestCaseSchema) => {
+    data.required = value;
+    const schema = [...schemaRef.current];
+    schemaRef.current = schema;
+    onChangeRef.current(schema, true);
   }, []);
 
   // Structural changes: flush any pending edits, then notify parent immediately
@@ -116,13 +114,13 @@ const SchemaManager: FC<SchemaManagerProps> = ({ testCaseSchema, onChangeTestCas
   // Stable columnDefs — callbacks never change identity
   const columnDefs: ColDef[] = useMemo(
     () => [
-      ...getSchemaFieldGridColumns(onCellChange, onSelectChange),
+      ...getSchemaFieldGridColumns(onCellChange, onSelectChange, onChangeRequired, t),
       {
         ...ONE_ACTION_COLUMN(getRemoveOperation(onRemoveField, undefined, 'text-error w-4 h-4')),
         colId: 'action-remove',
       },
     ],
-    [onCellChange, onSelectChange, onRemoveField],
+    [onCellChange, onSelectChange, onChangeRequired, t, onRemoveField],
   );
 
   return (
@@ -137,7 +135,7 @@ const SchemaManager: FC<SchemaManagerProps> = ({ testCaseSchema, onChangeTestCas
           <span className="text-secondary small">{t(TestSuitesI18nKey.SchemaDescription)}</span>
         </div>
         <DialNeutralButton
-          label={t(TestSuitesI18nKey.AddField)}
+          label={t(BasicI18nKey.AddField)}
           iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
           onClick={onAddField}
         />
@@ -148,7 +146,7 @@ const SchemaManager: FC<SchemaManagerProps> = ({ testCaseSchema, onChangeTestCas
           rowData={testCaseSchema}
           getIsEmptyData={() => testCaseSchema.length === 0}
           emptyDataProps={{ title: t(TestSuitesI18nKey.NoSchemaFields) }}
-          additionalGridOptions={{ onCellValueChanged }}
+          additionalGridOptions={{}}
         />
       </div>
     </div>

@@ -1526,7 +1526,6 @@ export default {
     Results: 'Results',
     TestCaseSchema: 'Test Case Schema',
     SchemaField: 'Schema field',
-    AddField: 'Add field',
     EditField: 'Edit field',
     NoSchemaFields: 'No schema fields',
     DuplicateFieldName: 'Field name already exists',

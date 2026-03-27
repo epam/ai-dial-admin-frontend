@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
-import { TestSuitesI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { TestCaseSchema } from '@/src/models/evaluation/test-suite';
 import { TestCaseItemType } from '@/src/types/evaluation';
 import SchemaManager from '../SchemaManager';
@@ -34,7 +34,7 @@ describe('SchemaManager', () => {
   test('renders Add field button', () => {
     render(<SchemaManager {...defaultProps} />);
 
-    expect(screen.getByText(TestSuitesI18nKey.AddField)).toBeInTheDocument();
+    expect(screen.getByText(BasicI18nKey.AddField)).toBeInTheDocument();
   });
 
   test('renders grid view', () => {
