@@ -1,6 +1,13 @@
 import { FC } from 'react';
 
-import { DialInput, DialNumberInput, DialSelectField, DialSwitch } from '@epam/ai-dial-ui-kit';
+import {
+  DialInput,
+  SelectOption,
+  DialNumberInput,
+  DialSelectField,
+  DialSwitch,
+  DialTagInput,
+} from '@epam/ai-dial-ui-kit';
 
 import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
 import { EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -11,8 +18,51 @@ interface Props {
   field: SchemaFieldRow;
   label?: boolean;
   binding?: MetricBinding;
-  onChangeValue: (fieldId: string, value: string) => void;
+  onChangeValue: (fieldId: string, value: string | string[]) => void;
 }
+
+const MetricArrayControl: FC<Props> = ({ binding, field, label = true, onChangeValue }) => {
+  const t = useI18n();
+  const valuePlaceholder = t(EntityPlaceholdersI18nKey.Value);
+
+  const definition = field.children[0];
+  // TODO: support array of objects
+  return (
+    <div key={field.id}>
+      {definition.type === 'string' &&
+        (definition.enum ? (
+          <DialSelectField
+            id={field.id}
+            multiple
+            label={label ? field.name : undefined}
+            caption={field.description}
+            options={definition?.enum.map((item) => ({ label: item, value: item })) as SelectOption[]}
+            value={binding?.source.value as string | undefined}
+            onChange={(v) => onChangeValue(field.name, v)}
+          />
+        ) : (
+          <DialTagInput
+            elementId={field.id}
+            placeholder={valuePlaceholder}
+            label={label ? field.name : void 0}
+            initialTags={(binding?.source.value as string[]) || []}
+            onChange={(v) => onChangeValue(field.name, v)}
+            collapseTagOverflow
+          />
+        ))}
+      {(definition.type === 'integer' || definition.type === 'number') && (
+        <DialTagInput
+          elementId={field.id}
+          placeholder={valuePlaceholder}
+          label={label ? field.name : void 0}
+          initialTags={(binding?.source.value as string[]) || []}
+          onChange={(v) => onChangeValue(field.name, v)}
+          collapseTagOverflow
+        />
+      )}
+    </div>
+  );
+};
 
 const MetricControl: FC<Props> = ({ binding, field, label = true, onChangeValue }) => {
   const t = useI18n();
@@ -58,6 +108,10 @@ const MetricControl: FC<Props> = ({ binding, field, label = true, onChangeValue 
           isOn={binding?.source.value as boolean | undefined}
           onChange={(v) => onChangeValue(field.name, v.toString())}
         />
+      )}
+
+      {field.type === 'array' && (
+        <MetricArrayControl field={field} binding={binding} label={label} onChangeValue={onChangeValue} />
       )}
     </div>
   );

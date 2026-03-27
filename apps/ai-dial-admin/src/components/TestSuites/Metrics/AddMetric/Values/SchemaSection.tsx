@@ -13,7 +13,7 @@ interface Props {
 
 const MetricSchemaSection: FC<Props> = ({ title, fields, bindings, onChange }) => {
   const onChangeValue = useCallback(
-    (fieldId: string, value: string) => {
+    (fieldId: string, value: string | string[]) => {
       onChange?.(
         bindings?.map((binding) =>
           binding.property === fieldId ? { ...binding, source: { ...binding.source, value } } : binding,

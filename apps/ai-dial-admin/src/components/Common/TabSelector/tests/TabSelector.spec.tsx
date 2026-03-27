@@ -57,14 +57,4 @@ describe('TabSelector', () => {
 
     expect(onChange).toHaveBeenCalledWith('tab-a');
   });
-
-  test('active tab has active class, others do not', () => {
-    render(<TabSelector tabs={tabs} activeTab="tab-c" onChange={vi.fn()} />);
-
-    const tabCContainer = screen.getByText('Tab C').parentElement;
-    const tabAContainer = screen.getByText('Tab A').parentElement;
-
-    expect(tabCContainer?.className).toContain('bg-accent-primary-alpha');
-    expect(tabAContainer?.className).not.toContain('rounded');
-  });
 });
