@@ -13,6 +13,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { Toolset, ToolsetAuthCredentialLevel, ToolsetAuthType } from '@/src/models/dial/toolset';
+import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
@@ -22,8 +23,6 @@ import {
   isUserLoggedInToToolset,
 } from '@/src/utils/toolset/toolset-auth';
 import { getIsUser, setIsUser, setUrl } from './utils';
-import { ServerActionResponse } from '@/src/models/server-action';
-import { AssetToolset } from '@/src/models/dial/deployment-asset';
 
 export const TOOLSET_AUTH_REDIRECT_URL = '/toolset-signin';
 
@@ -34,13 +33,13 @@ interface Props {
   oAuthCode?: string | null;
   selectedToolset: Toolset;
   signInToolset: (
-    toolset: Toolset,
+    toolset: any,
     type: ToolsetAuthCredentialLevel,
     redirectUrl: string,
     apiKeyValue?: string,
     code?: string,
   ) => Promise<ServerActionResponse>;
-  signOutToolset: (toolset: Toolset | AssetToolset, type: ToolsetAuthCredentialLevel) => Promise<ServerActionResponse>;
+  signOutToolset: (toolset: any, type: ToolsetAuthCredentialLevel) => Promise<ServerActionResponse>;
 }
 
 const AuthButtons: FC<Props> = ({ selectedToolset, oAuthCode, view, signInToolset, signOutToolset }) => {
