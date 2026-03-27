@@ -16,6 +16,7 @@ import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { MetricBinding } from '@/src/models/evaluation/metric';
 import { InputBindingRowData, ResponseColumn, TestCase, TestCaseSchema } from '@/src/models/evaluation/test-suite';
 import { InputBindingType, MetricBindingType, TestCaseItemType } from '@/src/types/evaluation';
+import { ApplicationRoute } from '@/src/types/routes';
 
 export type onCellChange = (data: Record<string, unknown>, field: string, value: string | number) => void;
 
@@ -104,6 +105,7 @@ export const getDynamicConfigurationsColumns = (
   onChangeEditable: (value: string | object, data: InputBindingRowData, column: string, index?: number) => void,
   onChangeSelect: (value: string, data: InputBindingRowData, column: string, index?: number) => void,
   schema: TestCaseSchema[],
+  id: string,
   t: (stringToTranslate: string) => string,
 ): ColDef<InputBindingRowData>[] => {
   return [
@@ -169,6 +171,8 @@ export const getDynamicConfigurationsColumns = (
             component: FileSelectCellRenderer,
             params: {
               onChange: onChangeEditable,
+              id: id,
+              view: ApplicationRoute.TestSuites,
             },
           };
         }

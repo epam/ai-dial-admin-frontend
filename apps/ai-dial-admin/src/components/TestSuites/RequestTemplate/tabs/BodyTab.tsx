@@ -13,11 +13,12 @@ export interface BodyTabRef {
 }
 
 interface Props {
+  selectedTestSuiteId: string;
   template: TestSuiteRequestTemplate;
   changeTemplate: (template: TestSuiteRequestTemplate) => void;
 }
 
-const BodyTab = forwardRef<BodyTabRef, Props>(({ template, changeTemplate }, ref) => {
+const BodyTab = forwardRef<BodyTabRef, Props>(({ selectedTestSuiteId, template, changeTemplate }, ref) => {
   const isJsonContent = useMemo(() => template.body?.contentType === ContentType.JSON, [template.body?.contentType]);
 
   const onChangeJson = useCallback(
@@ -71,6 +72,7 @@ const BodyTab = forwardRef<BodyTabRef, Props>(({ template, changeTemplate }, ref
         />
       ) : (
         <FormDataGrid
+          selectedTestSuiteId={selectedTestSuiteId}
           content={(template.body?.content as FormDataPart[]) || []}
           changeContent={(content) => onChangeFormData(content)}
           hideAddButton
