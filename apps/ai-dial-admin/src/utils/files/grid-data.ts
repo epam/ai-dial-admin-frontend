@@ -3,7 +3,7 @@ import { ColDef } from 'ag-grid-community';
 import FileNameCellRenderer from '@/src/components/Grid/CellRenderers/FileNameCellRenderer';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
-import { DialFile } from '@/src/models/dial/file';
+import { CustomFile, DialFile, DialFileNodeType } from '@/src/models/dial/file';
 import { PublicationFile } from '@/src/models/dial/publications';
 import { getNameExtensionFromFile } from './get-extension';
 
@@ -11,6 +11,13 @@ export interface FileRowData {
   name: string;
   extension: string;
   path: string;
+}
+
+export interface CustomFileRowData {
+  contentLength: number;
+  displayName: string;
+  path: string;
+  nodeType: DialFileNodeType;
 }
 
 export const getPublicationGridFileDataFromString = (files: string[]): FileRowData[] => {
@@ -51,6 +58,17 @@ export const getGridFileData = (files: DialFile[]) => {
       ...file,
       name,
       extension,
+    };
+  });
+};
+
+export const generateCustomFileGridData = (files: CustomFile[]): CustomFileRowData[] => {
+  return files.map((file) => {
+    return {
+      displayName: decodeURIComponent(file.filename),
+      path: file.path,
+      contentLength: file.sizeBytes,
+      nodeType: DialFileNodeType.ITEM,
     };
   });
 };

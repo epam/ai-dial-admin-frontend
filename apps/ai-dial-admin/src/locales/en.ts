@@ -444,6 +444,7 @@ export default {
     HFRegistry: 'Select from registry',
     McpRegistry: 'Select from registry',
     TryOut: 'Try out',
+    Upload: 'Upload',
   },
   Compare: {
     CompareChanges: 'Compare changes',
@@ -561,6 +562,8 @@ export default {
     ResponseSchema: 'Response Schema',
     Columns: 'Columns',
     Analytics: 'Analytics',
+    Public: 'Public',
+    Application: 'Application',
   },
   ForwardToken: {
     ForwardTokenModalTitle: 'Forward Auth Token',
