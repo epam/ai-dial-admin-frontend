@@ -77,11 +77,11 @@ const AdaptiveValueRow: FC<Props> = ({ label, value }) => {
 
   return (
     <div
-      className="group grid grid-cols-[minmax(70px,auto)_1fr_auto] gap-x-3 py-[5px] border-b border-tertiary last:border-b-0 items-start text-xs hover:bg-layer-3 hover:-mx-2 hover:px-2 hover:rounded"
+      className="group grid grid-cols-[minmax(70px,140px)_1fr_auto] gap-x-3 py-[5px] border-b border-tertiary last:border-b-0 items-start text-xs hover:bg-layer-3 hover:-mx-2 hover:px-2 hover:rounded"
       onClick={handleToggle}
       role={parsed.isLong ? 'button' : undefined}
     >
-      <span className="text-secondary whitespace-nowrap pt-px">{label}</span>
+      <span className="text-secondary break-words pt-px">{label}</span>
       <span className="font-medium min-w-0 break-words">
         {parsed.typeChip && (
           <span className="inline-block text-[9px] font-semibold text-accent-secondary bg-accent-secondary-alpha px-[5px] py-px rounded-sm uppercase tracking-wide mr-1 leading-[14px]">

@@ -30,7 +30,7 @@ const RunMetricDetailPanel: FC<Props> = ({ resultId, onClose }) => {
   const [isJsonView, setIsJsonView] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [details, setDetails] = useState<AnalyticsResult | null>(null);
-  const [expandedInfoGroup, setExpandedInfoGroup] = useState<string | null>(null);
+  const [selectedMetric, setSelectedMetric] = useState<{ group: string; key: string } | null>(null);
 
   const title = useMemo(() => (isLoading ? null : getPanelTitle(details)), [details, isLoading]);
 
@@ -45,8 +45,8 @@ const RunMetricDetailPanel: FC<Props> = ({ resultId, onClose }) => {
   const requestJson = details?.requestBody != null ? JSON.stringify(details.requestBody) : null;
   const responseJson = details?.responseBody != null ? JSON.stringify(details.responseBody) : null;
 
-  const toggleInfoGroup = useCallback((groupTitle: string) => {
-    setExpandedInfoGroup((prev) => (prev === groupTitle ? null : groupTitle));
+  const toggleMetricSelection = useCallback((group: string, key: string) => {
+    setSelectedMetric((prev) => (prev?.group === group && prev?.key === key ? null : { group, key }));
   }, []);
 
   useEffect(() => {
@@ -107,15 +107,22 @@ const RunMetricDetailPanel: FC<Props> = ({ resultId, onClose }) => {
                       {group.title}
                       <span className={classNames('flex-1 h-px', group.hasError ? 'bg-error' : 'bg-tertiary')} />
                     </div>
-                    <MetricCardsGrid group={group} onToggleInfo={() => toggleInfoGroup(group.title)} />
+                    <MetricCardsGrid
+                      group={group}
+                      selectedMetricKey={selectedMetric?.group === group.title ? selectedMetric.key : undefined}
+                      onMetricClick={(key) => toggleMetricSelection(group.title, key)}
+                    />
                     {group.hasError && group.errorMessage && (
                       <div className="grid grid-cols-[auto_1fr] gap-x-3 text-[11px] mt-1">
                         <span className="text-error">error</span>
                         <span className="text-error break-words">{group.errorMessage}</span>
                       </div>
                     )}
-                    {expandedInfoGroup === group.title && group.infos && (
-                      <MetricInfoPanel infos={group.infos} groupTitle={group.title} />
+                    {selectedMetric?.group === group.title && group.infos?.[selectedMetric.key] && (
+                      <MetricInfoPanel
+                        infos={{ [selectedMetric.key]: group.infos[selectedMetric.key] }}
+                        groupTitle={`${group.title} / ${selectedMetric.key}`}
+                      />
                     )}
                   </section>
                 ))}

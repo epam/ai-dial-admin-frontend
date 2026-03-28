@@ -7,11 +7,12 @@ import MetricCard from './MetricCard';
 
 interface Props {
   group: MetricGroup;
-  onToggleInfo?: () => void;
+  selectedMetricKey?: string;
+  onMetricClick?: (key: string) => void;
 }
 
-const MetricCardsGrid: FC<Props> = ({ group, onToggleInfo }) => {
-  const hasInfos = group.infos != null || group.errorMessage != null;
+const MetricCardsGrid: FC<Props> = ({ group, selectedMetricKey, onMetricClick }) => {
+  const hasInfos = group.infos != null;
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -21,7 +22,8 @@ const MetricCardsGrid: FC<Props> = ({ group, onToggleInfo }) => {
           name={metric.key}
           value={metric.value}
           isError={group.hasError || metric.isError}
-          onClick={hasInfos ? onToggleInfo : undefined}
+          isSelected={selectedMetricKey === metric.key}
+          onClick={hasInfos && group.infos?.[metric.key] ? () => onMetricClick?.(metric.key) : undefined}
         />
       ))}
     </div>

@@ -8,10 +8,11 @@ interface Props {
   name: string;
   value: number | null;
   isError: boolean;
+  isSelected?: boolean;
   onClick?: () => void;
 }
 
-const MetricCard: FC<Props> = ({ name, value, isError, onClick }) => {
+const MetricCard: FC<Props> = ({ name, value, isError, isSelected, onClick }) => {
   const formattedValue = value != null ? value.toFixed(3) : '\u2014';
   const fillWidth = value != null ? Math.min(value * 100, 100) : 0;
 
@@ -19,7 +20,11 @@ const MetricCard: FC<Props> = ({ name, value, isError, onClick }) => {
     <div
       className={classNames(
         'flex-1 min-w-[72px] rounded border p-2 text-center transition-colors',
-        isError ? 'border-error bg-error' : 'border-secondary bg-layer-0 hover:border-hover',
+        isError
+          ? 'border-error bg-error'
+          : isSelected
+            ? 'border-accent-primary bg-accent-primary-alpha'
+            : 'border-secondary bg-layer-0 hover:border-hover',
         onClick && 'cursor-pointer',
       )}
       onClick={onClick}
