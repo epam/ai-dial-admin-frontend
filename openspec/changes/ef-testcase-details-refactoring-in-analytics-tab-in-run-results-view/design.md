@@ -15,7 +15,7 @@ A working prototype at `sandbox/ui-ux-prototyping-with-admin-styles/prototype.ht
 **Goals:**
 - Replace `DetailSection` usage in detail panels with purpose-built components that support progressive disclosure (scan → inspect → deep-dive)
 - Add request/response display to the Analytics detail panel
-- Display `metricInfos` data (reason, verbose_logs, error) with appropriate UX for each
+- Display `metricInfos` data (reason, verbose_logs, highlight, json_explanation, error) with per-metric selection UX
 - Provide fullscreen viewing for large JSON/text content
 - Keep existing `DetailSection` and `DetailRequestAccordion` untouched for other consumers
 
@@ -36,31 +36,25 @@ A working prototype at `sandbox/ui-ux-prototyping-with-admin-styles/prototype.ht
 
 **Alternatives considered**: Extending `DetailSection` with `truncatable`, `copyable`, `expandable` props — rejected because the interaction model is fundamentally different (click-to-expand rows, not just display).
 
-### 2. Lightweight `CodeViewer` with regex-based highlighting — not Monaco
+### 2. Two-tier rendering: lightweight CodeViewer inline, Monaco in fullscreen
 
-**Decision**: Build a custom `<pre>`-based code viewer with regex-based JSON syntax highlighting and a separate line-numbers gutter div.
+**Decision**: Use a custom `<pre>`-based `CodeViewer` for inline collapsible blocks (request, response, metricInfo entries), and Monaco Editor readonly for the `FullscreenViewer` modal.
 
-**Rationale**: Monaco Editor is heavy (~2MB) and designed for editing. The code blocks need to:
-- Render instantly (no editor initialization)
-- Support multiple instances per panel (request + response)
-- Be collapsible with max-height constraint
-- Integrate with the fullscreen viewer
+**Rationale**: Inline blocks need to render instantly, support multiple instances per panel, and be collapsible with a max-height constraint. A lightweight `<pre>` with regex-based JSON syntax highlighting (`highlightJson()`) handles this well. However, the fullscreen viewer displays large content where Monaco's features — proper syntax highlighting, word wrap, folding, `Ctrl+F` search, correct `\n` handling — provide significantly better UX. The `json-highlight.ts` utility handles inline highlighting with `<span>` classes using existing Tailwind theme tokens.
 
-A lightweight `<pre>` with regex highlighting (`"key":` → key class, `"value"` → string class, numbers, booleans, null) provides sufficient readability for JSON inspection. Monaco remains available via the JSON toggle for users who need search, selection, or word-wrap controls.
+**Alternatives considered**: Monaco everywhere (too heavy for inline blocks with 4+ instances), custom `<pre>` everywhere (failed to handle `\n` and large text properly in fullscreen).
 
-**Highlighting approach**: A `highlightJson()` utility function applies regex replacements to produce HTML with `<span>` classes using existing Tailwind theme tokens (`text-accent-secondary` for keys, `text-accent-tertiary` for strings, `text-accent-primary` for numbers, `text-warning` for booleans, `text-secondary` for null).
+### 3. `FullscreenViewer` provider scoped inside each detail panel
 
-### 3. `FullscreenViewer` as a React Portal with context hook
+**Decision**: Wrap `FullscreenViewerProvider` inside `RunResultDetailPanel` and `RunMetricDetailPanel`, not at the app or view level.
 
-**Decision**: Implement `FullscreenViewer` as a React Portal rendered at the app root, controlled via a `useFullscreenViewer()` hook that exposes `open(title, content, type)` and `close()`.
+**Rationale**: The detail panels render inside the `Sidebar` component, which is a sibling of the main content area at the app layout level (rendered via `AppContext.showSidebar()`). The provider in `RunView` was outside the sidebar's React tree, causing `useFullscreenViewer must be used within FullscreenViewerProvider` errors. Scoping the provider inside each panel ensures it wraps all components that need it regardless of where the panel is rendered.
 
-**Rationale**: The fullscreen viewer is a singleton modal that can be triggered from multiple places (CodeViewer expand button, MetricInfoPanel button, AdaptiveValueGrid for huge values). A context-based approach mirrors the existing `AppContext.sidebar` pattern and avoids prop-drilling.
+**Alternatives considered**: Provider in `RunView` (crashed — sidebar renders outside that tree), provider at app layout level (too broad, pollutes the global provider stack for a feature-specific concern).
 
-**Provider placement**: Inside `AppContextProvider` or as a sibling provider in the layout. The viewer state is simple (`{isOpen, title, content, contentType}`).
+### 4. `AdaptiveValueRow` type detection and fixed key column
 
-### 4. `AdaptiveValueRow` type detection is runtime-based
-
-**Decision**: Detect value types at render time to decide truncation and chip display.
+**Decision**: Detect value types at render time via `JSON.parse()` try-catch, and use a fixed key column width of `minmax(70px, 140px)`.
 
 **Logic**:
 - `typeof value === 'string'` and `value.length > 100` → truncate with expand
@@ -68,27 +62,37 @@ A lightweight `<pre>` with regex highlighting (`"key":` → key class, `"value"`
 - `typeof parsed === 'object'` → show `Object` chip + truncated JSON preview
 - Short strings/numbers → render inline, no truncation
 
-The type detection uses `JSON.parse()` in a try-catch on string values to detect stringified arrays/objects (common in test case data).
+The fixed key column (140px max) ensures values start at a consistent vertical line across all rows. Keys longer than 140px wrap instead of pushing values rightward.
 
-### 5. `getMetricGroups()` utility separates values from infos
+**Alternatives considered**: `auto` key column (caused values to start at different positions — looked messy in real data).
 
-**Decision**: Create a new `getMetricGroups()` function that returns structured `MetricGroup[]` instead of flat `[key, string][]` tuples.
+### 5. Per-metric card selection for metricInfos
 
-```typescript
-interface MetricGroup {
-  title: string;
-  metrics: Array<{ key: string; value: number | null; isError: boolean }>;
-  infos?: Record<string, unknown>;
-  hasError: boolean;
-  errorMessage?: string;
-}
-```
+**Decision**: Clicking a specific `MetricCard` shows only that metric's `metricInfos` entry. The selected card gets an accent highlight (`border-accent-primary bg-accent-primary-alpha`). Clicking it again deselects.
 
-**Rationale**: The current `getDetailNestedEntries()` merges values and infos into flat string tuples, which works for `DetailSection` but loses the structure needed for card rendering and expandable info panels. The new function preserves the grouping. `getDetailNestedEntries()` is kept for backward compatibility.
+**State**: `selectedMetric: { group: string; key: string } | null` in `RunMetricDetailPanel`, passed down as `selectedMetricKey` to `MetricCardsGrid` and used to filter `group.infos[selectedMetric.key]` for `MetricInfoPanel`.
 
-### 6. Component file organization
+**Rationale**: The original group-level expand showed all metrics' infos at once (e.g., 3 metrics × 2 fields = 6 entries), pushing request/response code viewers off-screen. Per-metric selection keeps the info panel small, request/response visible, and makes it clear which metric's details are shown.
 
-**Decision**: Place all new components under `apps/ai-dial-admin/src/components/Runs/Details/` alongside existing detail panel files.
+**Alternatives considered**: Group-level toggle (too much content at once, hid request/response), multi-select (more complex, single selection covers the main use case).
+
+### 6. MetricInfoPanel reuses CodeViewer for each value
+
+**Decision**: Each metricInfos entry (e.g., `highlight`, `json_explanation`) renders as a `CodeViewer` block inside `MetricInfoPanel`, giving it the same look as request/response blocks — collapsible header, syntax highlighting, line numbers, Copy + Fullscreen buttons.
+
+**Rationale**: MetricInfos values are often JSON objects or large text. Using the same `CodeViewer` component provides visual consistency with request/response, and each value gets its own Fullscreen button for independent deep-dive.
+
+**Alternatives considered**: Custom `<pre>` blocks (looked different from request/response — user flagged inconsistency), `AdaptiveValueGrid` rows (poor for structured JSON content).
+
+### 7. CodeViewer scrolling: shared container at 400px
+
+**Decision**: The `CodeViewer` body uses `max-h-[400px] overflow-auto` on the wrapper div (not the `<pre>`), so line numbers and code scroll together.
+
+**Rationale**: Original design had `max-h-[200px]` on only the `<pre>`, causing line numbers to render at full height while code was clipped — they got out of sync. 200px was also too small for a 750px sidebar. Moving the constraint to the wrapper and increasing to 400px fixed both issues.
+
+### 8. Component file organization
+
+**Decision**: All new components under `apps/ai-dial-admin/src/components/Runs/Details/` alongside existing detail panel files.
 
 ```
 Runs/Details/
@@ -103,28 +107,37 @@ Runs/Details/
 ├── MetricCardsGrid.tsx             (new)
 ├── MetricCard.tsx                  (new)
 ├── MetricInfoPanel.tsx             (new)
-├── FullscreenViewer.tsx            (new — or in Common/ if reuse expected)
-└── json-highlight.ts               (new utility)
+├── FullscreenViewer.tsx            (new)
+├── json-highlight.ts               (new utility)
+└── tests/
+    ├── ExecutionStatusBar.spec.tsx  (new)
+    ├── AdaptiveValueGrid.spec.tsx   (new)
+    ├── CodeViewer.spec.tsx          (new)
+    ├── MetricCard.spec.tsx          (new)
+    ├── MetricInfoPanel.spec.tsx     (new)
+    └── FullscreenViewer.spec.tsx    (new)
 ```
 
-### 7. Copy-to-clipboard uses existing notification system
+### 9. Copy-to-clipboard uses existing notification system
 
 **Decision**: Use the existing `useNotification()` hook (from `NotificationProvider`) for copy feedback instead of building a custom toast.
 
 **Rationale**: The app already has a notification system that `CopyButton` uses. Reusing it keeps UX consistent. The notification message follows the existing pattern: `"${label} ${t(BasicI18nKey.CopiedSuccessfully)}"`.
 
-### 8. i18n for new UI strings
+### 10. i18n for new UI strings
 
-**Decision**: Add new i18n keys to `RunsI18nKey` enum for new labels: `Computed`, `Request`, `Response`, `CopyValue`, `OpenFullscreen`, `MetricInfo`, `Error`.
+**Decision**: Add new i18n keys to `RunsI18nKey` enum: `Computed`, `Request`, `Response`, `CopyValue`, `OpenFullscreen`, `MetricInfo`.
 
 Existing keys already cover: `Execution`, `TestCaseData`, `GrafanaDetails`.
 
 ## Risks / Trade-offs
 
-- **Regex highlighting is approximate** — Edge cases in JSON (escaped quotes in strings, unicode) may highlight incorrectly. Mitigation: The JSON toggle with Monaco is always available for precise viewing. Regex handles 95%+ of real-world evaluation JSON correctly.
+- **Regex highlighting is approximate** — Edge cases in JSON (escaped quotes in strings, unicode) may highlight incorrectly in inline CodeViewer blocks. Mitigation: The fullscreen viewer uses Monaco for precise highlighting, and the JSON toggle is always available.
 
-- **Multiple expand states per panel** — Each `AdaptiveValueRow`, `CodeViewer`, and `MetricInfoPanel` has independent open/close state. With many rows, this could be many `useState` hooks. Mitigation: Use component-local state (not lifted). React handles this efficiently with functional components.
+- **Monaco in fullscreen adds bundle weight** — Monaco is already loaded for the JSON toggle, so the incremental cost is minimal (just a new `<Editor>` instance on demand).
 
-- **FullscreenViewer context adds to provider stack** — One more context provider. Mitigation: Minimal state surface (`isOpen`, `title`, `content`, `type`). Could alternatively use a simple module-level event emitter, but context is more idiomatic in this codebase.
+- **Multiple expand states per panel** — Each `AdaptiveValueRow`, `CodeViewer`, and metric card selection has independent state. Mitigation: Component-local state, React handles efficiently.
+
+- **FullscreenViewer provider per panel** — Two providers exist (one per panel type) rather than a singleton. Mitigation: Only one panel is open at a time in the sidebar, so only one provider is active.
 
 - **`AnalyticsResult` model change could surface unexpected data** — Adding `requestBody`/`responseBody` to the TypeScript interface means existing code that spreads `AnalyticsResult` objects might pass unexpected data. Mitigation: These are optional fields, and the only consumer is `RunMetricDetailPanel` which renders them explicitly.
