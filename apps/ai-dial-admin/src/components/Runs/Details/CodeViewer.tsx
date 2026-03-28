@@ -83,12 +83,12 @@ const CodeViewer: FC<Props> = ({ title, content }) => {
         </span>
       </div>
       {isOpen && (
-        <div className="flex bg-layer-0">
-          <div className="py-3 px-2 text-right text-secondary opacity-35 text-[11px] leading-[1.6] font-mono select-none border-r border-tertiary shrink-0 whitespace-pre">
+        <div className="flex bg-layer-0 max-h-[400px] overflow-auto">
+          <div className="py-3 px-2 text-right text-secondary opacity-35 text-[11px] leading-[1.6] font-mono select-none border-r border-tertiary shrink-0 whitespace-pre sticky left-0">
             {lineNumbers}
           </div>
           <pre
-            className="flex-1 min-w-0 p-3 font-mono text-[11px] leading-[1.6] overflow-auto whitespace-pre-wrap break-words max-h-[200px]"
+            className="flex-1 min-w-0 p-3 font-mono text-[11px] leading-[1.6] whitespace-pre-wrap break-words"
             dangerouslySetInnerHTML={{ __html: highlighted }}
           />
         </div>
