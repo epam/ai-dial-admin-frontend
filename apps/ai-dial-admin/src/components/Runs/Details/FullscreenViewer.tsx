@@ -2,16 +2,18 @@
 
 import { FC, ReactNode, createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
+import { Editor } from '@monaco-editor/react';
 import { DialCloseButton } from '@epam/ai-dial-ui-kit';
 import { IconCopy } from '@tabler/icons-react';
 import { createPortal } from 'react-dom';
 
 import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { EDITOR_THEMES_CONFIG } from '@/src/constants/editor';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useTheme } from '@/src/context/ThemeContext';
 import { useI18n } from '@/src/locales/client';
+import { EDITOR_THEMES } from '@/src/types/editor';
 import { getSuccessNotification } from '@/src/utils/notification';
-
-import { generateLineNumbers, highlightJson } from './json-highlight';
 
 type ContentType = 'json' | 'text';
 
@@ -35,6 +37,19 @@ export const useFullscreenViewer = () => {
   return ctx;
 };
 
+const formatContent = (content: string, contentType: ContentType): string => {
+  if (contentType === 'json') {
+    try {
+      return JSON.stringify(JSON.parse(content), null, 2);
+    } catch {
+      return content;
+    }
+  }
+  // For text: try to parse as JSON if it looks like JSON, otherwise return as-is
+  // Also handle escaped newlines
+  return content.replace(/\\n/g, '\n').replace(/\\t/g, '\t');
+};
+
 const FullscreenViewerModal: FC<FullscreenViewerState & { onClose: () => void }> = ({
   isOpen,
   title,
@@ -44,6 +59,7 @@ const FullscreenViewerModal: FC<FullscreenViewerState & { onClose: () => void }>
 }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
+  const { currentTheme } = useTheme();
 
   useEffect(() => {
     if (!isOpen) return;
@@ -54,10 +70,23 @@ const FullscreenViewerModal: FC<FullscreenViewerState & { onClose: () => void }>
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
+  const formatted = useMemo(() => formatContent(content, contentType), [content, contentType]);
+
+  const language = useMemo(() => {
+    if (contentType === 'json') return 'json';
+    // Auto-detect JSON in text content
+    try {
+      JSON.parse(content);
+      return 'json';
+    } catch {
+      return 'plaintext';
+    }
+  }, [content, contentType]);
+
   const handleCopy = useCallback(() => {
-    navigator.clipboard.writeText(content);
+    navigator.clipboard.writeText(formatted);
     showNotification(getSuccessNotification(`${title} ${t(BasicI18nKey.CopiedSuccessfully)}`));
-  }, [content, title, showNotification, t]);
+  }, [formatted, title, showNotification, t]);
 
   const handleBackdropClick = useCallback(
     (e: React.MouseEvent) => {
@@ -65,18 +94,6 @@ const FullscreenViewerModal: FC<FullscreenViewerState & { onClose: () => void }>
     },
     [onClose],
   );
-
-  const displayContent = useMemo(() => {
-    if (contentType === 'json') {
-      try {
-        const formatted = JSON.stringify(JSON.parse(content), null, 2);
-        return { html: highlightJson(formatted), lines: generateLineNumbers(formatted), raw: formatted };
-      } catch {
-        return { html: content, lines: generateLineNumbers(content), raw: content };
-      }
-    }
-    return { html: undefined, text: content, lines: generateLineNumbers(content), raw: content };
-  }, [content, contentType]);
 
   if (!isOpen) return null;
 
@@ -90,8 +107,8 @@ const FullscreenViewerModal: FC<FullscreenViewerState & { onClose: () => void }>
     >
       <div className="flex flex-col w-[85vw] max-w-[1200px] h-[80vh] bg-layer-1 border border-primary rounded-md overflow-hidden shadow">
         <div className="flex items-center justify-between px-4 py-3 border-b border-secondary shrink-0">
-          <h3 className="font-semibold text-sm">{title}</h3>
-          <div className="flex items-center gap-2">
+          <h3 className="font-semibold text-sm truncate mr-4">{title}</h3>
+          <div className="flex items-center gap-2 shrink-0">
             <button
               className="flex items-center gap-1 px-2 py-1 text-xs border border-secondary rounded text-secondary hover:text-primary hover:bg-layer-4 transition-colors"
               onClick={handleCopy}
@@ -102,20 +119,30 @@ const FullscreenViewerModal: FC<FullscreenViewerState & { onClose: () => void }>
             <DialCloseButton onClose={onClose} />
           </div>
         </div>
-        <div className="flex flex-1 overflow-auto min-h-0">
-          <div className="py-4 px-3 text-right text-secondary opacity-35 text-[11px] leading-[1.6] font-mono select-none border-r border-tertiary shrink-0 whitespace-pre">
-            {displayContent.lines}
-          </div>
-          {displayContent.html ? (
-            <pre
-              className="flex-1 min-w-0 p-4 font-mono text-xs leading-[1.6] whitespace-pre-wrap break-words"
-              dangerouslySetInnerHTML={{ __html: displayContent.html }}
-            />
-          ) : (
-            <pre className="flex-1 min-w-0 p-4 font-mono text-xs leading-[1.6] whitespace-pre-wrap break-words">
-              {displayContent.text}
-            </pre>
-          )}
+        <div className="flex-1 min-h-0">
+          <Editor
+            height="100%"
+            language={language}
+            value={formatted}
+            theme={currentTheme}
+            beforeMount={(monaco) => {
+              monaco?.editor?.defineTheme(currentTheme, EDITOR_THEMES_CONFIG[currentTheme as EDITOR_THEMES]);
+            }}
+            options={{
+              readOnly: true,
+              minimap: { enabled: false },
+              scrollBeyondLastLine: false,
+              wordWrap: 'on',
+              lineNumbers: 'on',
+              folding: true,
+              fontSize: 12,
+              fontFamily: "'Fira Code', 'Consolas', monospace",
+              renderLineHighlight: 'none',
+              overviewRulerLanes: 0,
+              hideCursorInOverviewRuler: true,
+              scrollbar: { verticalScrollbarSize: 8, horizontalScrollbarSize: 8 },
+            }}
+          />
         </div>
       </div>
     </div>,

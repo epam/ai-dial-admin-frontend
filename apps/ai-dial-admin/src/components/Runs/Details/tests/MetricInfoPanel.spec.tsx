@@ -13,34 +13,33 @@ vi.mock('@/src/context/NotificationContext', () => ({
 }));
 
 describe('MetricInfoPanel', () => {
-  test('Should render flat info entries', () => {
-    render(<MetricInfoPanel infos={{ reason: 'Low overlap' }} groupTitle="retrieval" />);
-
-    expect(screen.getByText('reason')).toBeInTheDocument();
-    expect(screen.getByText('Low overlap')).toBeInTheDocument();
-  });
-
-  test('Should flatten nested info objects into sub-entries', () => {
+  test('Should render metric key header and entry titles', () => {
     const infos = {
-      f1: { reason: 'Explanation text', confidence: 0.92 },
+      f1: { reason: 'Explanation text', confidence: '0.92' },
     };
     render(<MetricInfoPanel infos={infos} groupTitle="group" />);
 
+    expect(screen.getByText('f1')).toBeInTheDocument();
     expect(screen.getByText('reason')).toBeInTheDocument();
-    expect(screen.getByText('Explanation text')).toBeInTheDocument();
     expect(screen.getByText('confidence')).toBeInTheDocument();
   });
 
-  test('Should show fullscreen button when value is large', () => {
-    const infos = { verbose_logs: 'x'.repeat(300) };
+  test('Should render entries as CodeViewer blocks', () => {
+    const infos = { metric: { highlight: '{"corpus": [{"text": "test"}]}' } };
     render(<MetricInfoPanel infos={infos} groupTitle="retrieval" />);
 
-    expect(screen.getByText('Runs.OpenFullscreen')).toBeInTheDocument();
+    expect(screen.getByText('metric')).toBeInTheDocument();
+    expect(screen.getByText('highlight')).toBeInTheDocument();
   });
 
-  test('Should not show fullscreen button when values are short', () => {
-    render(<MetricInfoPanel infos={{ reason: 'Short' }} groupTitle="retrieval" />);
+  test('Should render multiple metric groups', () => {
+    const infos = {
+      context_to_answer: { reason: 'Good coverage' },
+      answer_to_ground_truth: { reason: 'Partial match' },
+    };
+    render(<MetricInfoPanel infos={infos} groupTitle="generation" />);
 
-    expect(screen.queryByText('Runs.OpenFullscreen')).not.toBeInTheDocument();
+    expect(screen.getByText('context_to_answer')).toBeInTheDocument();
+    expect(screen.getByText('answer_to_ground_truth')).toBeInTheDocument();
   });
 });

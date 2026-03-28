@@ -7,6 +7,14 @@ vi.mock('@/src/context/NotificationContext', () => ({
   useNotification: () => ({ showNotification: vi.fn() }),
 }));
 
+vi.mock('@/src/context/ThemeContext', () => ({
+  useTheme: () => ({ currentTheme: 'dark' }),
+}));
+
+vi.mock('@monaco-editor/react', () => ({
+  Editor: ({ value, language }: { value: string; language: string }) => <pre data-language={language}>{value}</pre>,
+}));
+
 const Trigger = () => {
   const { open } = useFullscreenViewer();
   return <button onClick={() => open('Test Title', '{"key":"value"}', 'json')}>Open</button>;
@@ -54,7 +62,7 @@ describe('FullscreenViewer', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  test('Should render plain text content for text type', () => {
+  test('Should render text content via Monaco editor', () => {
     render(
       <FullscreenViewerProvider>
         <TextTrigger />
@@ -63,7 +71,8 @@ describe('FullscreenViewer', () => {
 
     fireEvent.click(screen.getByText('Open Text'));
     expect(screen.getByText('Logs')).toBeInTheDocument();
-    expect(screen.getByText(/Line 1/)).toBeInTheDocument();
+    const editor = screen.getByText(/Line 1/);
+    expect(editor).toBeInTheDocument();
   });
 
   test('Should render copy button in fullscreen viewer', () => {
