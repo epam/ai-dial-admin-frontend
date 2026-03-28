@@ -33,6 +33,8 @@ export interface AnalyticsResult extends ResultDto {
   computationId?: string;
   computedAt?: number;
   testCaseRunResultsId?: string;
+  requestBody?: Record<string, unknown>;
+  responseBody?: Record<string, unknown>;
 }
 
 export enum ExtractionResultStatus {

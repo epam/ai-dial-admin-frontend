@@ -1508,6 +1508,12 @@ export enum RunsI18nKey {
   Execution = 'Runs.Execution',
   GrafanaDetails = 'Runs.GrafanaDetails',
   GrafanaRun = 'Runs.GrafanaRun',
+  Computed = 'Runs.Computed',
+  Request = 'Runs.Request',
+  Response = 'Runs.Response',
+  CopyValue = 'Runs.CopyValue',
+  OpenFullscreen = 'Runs.OpenFullscreen',
+  MetricInfo = 'Runs.MetricInfo',
 }
 
 export enum FileManagerI18nKey {

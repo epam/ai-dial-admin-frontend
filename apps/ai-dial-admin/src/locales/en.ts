@@ -1572,5 +1572,11 @@ export default {
     Execution: 'Execution',
     GrafanaDetails: 'View trace in Grafana',
     GrafanaRun: 'Traces in Grafana',
+    Computed: 'Computed',
+    Request: 'Request',
+    Response: 'Response',
+    CopyValue: 'Value',
+    OpenFullscreen: 'Open in fullscreen viewer',
+    MetricInfo: 'Metric details',
   },
 } as const;

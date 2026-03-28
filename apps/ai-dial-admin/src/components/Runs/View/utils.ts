@@ -176,6 +176,48 @@ export const getDetailEntries = (data: Record<string, unknown>) => {
   });
 };
 
+export interface MetricGroup {
+  title: string;
+  metrics: Array<{ key: string; value: number | null; isError: boolean }>;
+  infos?: Record<string, unknown>;
+  hasError: boolean;
+  errorMessage?: string;
+}
+
+export const getMetricGroups = (
+  metricValues?: Record<string, Record<string, unknown>>,
+  metricInfos?: Record<string, Record<string, unknown>>,
+): MetricGroup[] => {
+  if (!metricValues) return [];
+
+  return Object.entries(metricValues).map(([groupKey, values]) => {
+    const infoGroup = metricInfos?.[groupKey];
+    const hasOnlyNullError = Object.keys(values).length === 1 && 'error' in values && values.error == null;
+    const infoError = infoGroup?.error;
+    const hasError = (hasOnlyNullError && !!infoError) || Object.values(values).every((v) => v == null);
+
+    const metrics = Object.entries(values)
+      .filter(([key]) => key !== 'error' || !hasOnlyNullError)
+      .map(([key, val]) => ({
+        key,
+        value: typeof val === 'number' ? val : null,
+        isError: val == null,
+      }));
+
+    const infos = infoGroup
+      ? Object.fromEntries(Object.entries(infoGroup).filter(([key]) => key !== 'error' || !hasError))
+      : undefined;
+
+    return {
+      title: groupKey,
+      metrics,
+      infos: infos && Object.keys(infos).length > 0 ? infos : undefined,
+      hasError,
+      errorMessage: hasError && infoError ? String(infoError) : undefined,
+    };
+  });
+};
+
 export const getDetailNestedEntries = (
   data: Record<string, Record<string, unknown>>,
   additionalData?: Record<string, Record<string, unknown>>,

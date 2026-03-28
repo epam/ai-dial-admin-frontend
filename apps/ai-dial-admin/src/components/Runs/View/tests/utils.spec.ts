@@ -10,6 +10,7 @@ import {
   getPanelTitle,
   getDetailEntries,
   getDetailNestedEntries,
+  getMetricGroups,
 } from '../utils';
 
 describe('Runs View :: RESULT_FILTERS', () => {
@@ -438,5 +439,83 @@ describe('Runs View :: getDetailNestedEntries', () => {
 
   test('Should handle empty data', () => {
     expect(getDetailNestedEntries({})).toEqual([]);
+  });
+});
+
+describe('Runs View :: getMetricGroups', () => {
+  test('Should return empty array for undefined metricValues', () => {
+    expect(getMetricGroups(undefined)).toEqual([]);
+  });
+
+  test('Should return empty array for empty metricValues', () => {
+    expect(getMetricGroups({})).toEqual([]);
+  });
+
+  test('Should return normal metric group with numeric values', () => {
+    const metricValues = {
+      'aidial_rag_eval.retrieval': { f1: 0.118, mrr: 1, recall: 1, precision: 0.063 },
+    };
+    const result = getMetricGroups(metricValues);
+    expect(result).toHaveLength(1);
+    expect(result[0].title).toBe('aidial_rag_eval.retrieval');
+    expect(result[0].hasError).toBe(false);
+    expect(result[0].metrics).toEqual([
+      { key: 'f1', value: 0.118, isError: false },
+      { key: 'mrr', value: 1, isError: false },
+      { key: 'recall', value: 1, isError: false },
+      { key: 'precision', value: 0.063, isError: false },
+    ]);
+  });
+
+  test('Should detect failed metric group with error fallback from metricInfos', () => {
+    const metricValues = {
+      custom_eval: { error: null },
+    };
+    const metricInfos = {
+      custom_eval: { error: 'Connection refused' },
+    };
+    const result = getMetricGroups(metricValues, metricInfos);
+    expect(result).toHaveLength(1);
+    expect(result[0].hasError).toBe(true);
+    expect(result[0].errorMessage).toBe('Connection refused');
+    expect(result[0].metrics).toEqual([]);
+  });
+
+  test('Should include metricInfos for groups with additional data', () => {
+    const metricValues = {
+      retrieval: { f1: 0.5 },
+    };
+    const metricInfos = {
+      retrieval: { f1: { reason: 'Low overlap', verbose_logs: 'details...' } },
+    };
+    const result = getMetricGroups(metricValues, metricInfos);
+    expect(result[0].infos).toEqual({
+      f1: { reason: 'Low overlap', verbose_logs: 'details...' },
+    });
+  });
+
+  test('Should handle multiple groups with mixed success and failure', () => {
+    const metricValues = {
+      retrieval: { f1: 0.5, recall: 1 },
+      custom: { error: null },
+    };
+    const metricInfos = {
+      custom: { error: 'Timeout' },
+    };
+    const result = getMetricGroups(metricValues, metricInfos);
+    expect(result).toHaveLength(2);
+    expect(result[0].hasError).toBe(false);
+    expect(result[0].metrics).toHaveLength(2);
+    expect(result[1].hasError).toBe(true);
+    expect(result[1].errorMessage).toBe('Timeout');
+  });
+
+  test('Should handle null metric values as errors', () => {
+    const metricValues = {
+      group: { score: null, confidence: null },
+    };
+    const result = getMetricGroups(metricValues);
+    expect(result[0].metrics[0]).toEqual({ key: 'score', value: null, isError: true });
+    expect(result[0].metrics[1]).toEqual({ key: 'confidence', value: null, isError: true });
   });
 });

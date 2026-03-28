@@ -11,6 +11,7 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab, getRunTabs } from '@/src/utils/tabs/utils';
 import { DialLinkButton } from '@epam/ai-dial-ui-kit';
+import { FullscreenViewerProvider } from '@/src/components/Runs/Details/FullscreenViewer';
 import TabsContent from './TabsContent';
 
 interface Props {
@@ -26,31 +27,33 @@ const RunView: FC<Props> = ({ run, onRemove }) => {
   const noop = useCallback(() => {}, []);
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-      <SimpleEntityHeader
-        view={ApplicationRoute.Runs}
-        entity={run}
-        isChanged={false}
-        onDiscard={noop}
-        onSave={noop}
-        tabs={tabs}
-        activeTab={activeTab}
-        onChangeActiveTab={setActiveTab}
-        onRemove={onRemove}
-      >
-        {run.grafanaExploreUrl && (
-          <DialLinkButton
-            iconBefore={<Grafana />}
-            label={t(RunsI18nKey.GrafanaRun)}
-            onClick={() => window.open(run.grafanaExploreUrl, '_blank')}
-          />
-        )}
-      </SimpleEntityHeader>
+    <FullscreenViewerProvider>
+      <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
+        <SimpleEntityHeader
+          view={ApplicationRoute.Runs}
+          entity={run}
+          isChanged={false}
+          onDiscard={noop}
+          onSave={noop}
+          tabs={tabs}
+          activeTab={activeTab}
+          onChangeActiveTab={setActiveTab}
+          onRemove={onRemove}
+        >
+          {run.grafanaExploreUrl && (
+            <DialLinkButton
+              iconBefore={<Grafana />}
+              label={t(RunsI18nKey.GrafanaRun)}
+              onClick={() => window.open(run.grafanaExploreUrl, '_blank')}
+            />
+          )}
+        </SimpleEntityHeader>
 
-      <div className="flex-1 overflow-auto min-h-0">
-        <TabsContent run={run} activeTab={activeTab} />
+        <div className="flex-1 overflow-auto min-h-0">
+          <TabsContent run={run} activeTab={activeTab} />
+        </div>
       </div>
-    </div>
+    </FullscreenViewerProvider>
   );
 };
 
