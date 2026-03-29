@@ -14,11 +14,27 @@ The system SHALL render a 180px-wide sidebar on the left side of the drawer body
 
 ### Requirement: Fields tab shows checkboxes grouped by section
 
-The Fields tab SHALL display a collapsible section for each data section (Execution, Test Case Data, Extracted Columns, Request / Response, and each metric group). Each section SHALL show a header with collapse arrow, section name, and field count. Under each section, individual fields SHALL have a checkbox and field name (monospace). Field names and section names that exceed the 180px sidebar width SHALL be truncated with ellipsis (`text-ellipsis overflow-hidden`) and show the full name via a native `title` tooltip on hover.
+The Fields tab SHALL display a search input at the top for filtering fields by name. Below it, collapsible sections for each data section (Execution, Test Case Data, Extracted Columns, Request / Response, and each metric group). Each section SHALL show a header with collapse arrow, section name, field count, and a "Select All / Deselect All" toggle button. Under each section, individual fields SHALL have a checkbox and field name (monospace). Field names and section names that exceed the 180px sidebar width SHALL be truncated with ellipsis (`text-ellipsis overflow-hidden`) and show the full name via a native `title` tooltip on hover.
 
 #### Scenario: All fields enabled by default
 - **WHEN** the drawer opens for the first time
 - **THEN** all field checkboxes are checked (enabled)
+
+#### Scenario: Search filters fields by name
+- **WHEN** the user types "f1" in the search input
+- **THEN** only fields whose name contains "f1" (case-insensitive) are shown; sections with no matching fields are hidden
+
+#### Scenario: Clear search restores all fields
+- **WHEN** the user clears the search input
+- **THEN** all fields and sections are shown again with their current visibility state
+
+#### Scenario: Select all fields in a section
+- **WHEN** all fields in a section are unchecked and the user clicks the section's "Select All" toggle
+- **THEN** all fields in that section become checked (visible)
+
+#### Scenario: Deselect all fields in a section
+- **WHEN** all fields in a section are checked and the user clicks the section's "Deselect All" toggle
+- **THEN** all fields in that section become unchecked (hidden)
 
 #### Scenario: Collapse a section
 - **WHEN** the user clicks a section header in the Fields tab

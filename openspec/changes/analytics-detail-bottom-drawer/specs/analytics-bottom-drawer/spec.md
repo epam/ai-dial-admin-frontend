@@ -6,7 +6,7 @@ The system SHALL display the bottom drawer panel when the detail mode is "drawer
 
 #### Scenario: Drawer visible in drawer mode
 - **WHEN** the detail mode is "drawer" and a row is selected in the analytics grid
-- **THEN** the bottom drawer is displayed at the bottom of the viewport with default height (380px)
+- **THEN** the bottom drawer is displayed at the bottom of the viewport with default height (`DEFAULT_DRAWER_HEIGHT = 380px`, defined as a named constant)
 
 #### Scenario: Drawer hidden in sidebar mode
 - **WHEN** the detail mode is "sidebar"
@@ -19,6 +19,10 @@ The system SHALL display the bottom drawer panel when the detail mode is "drawer
 #### Scenario: Re-click same row in drawer mode closes drawer
 - **WHEN** the drawer is open showing a test case and the user clicks the same row again
 - **THEN** the drawer closes (pinned and field selector state are cleared), detail mode remains "drawer"
+
+#### Scenario: Click the pinned row (not the active row) in drawer mode
+- **WHEN** the drawer is open with a pinned case "Row A" and an active case "Row B", and the user clicks "Row A" in the grid
+- **THEN** "Row A" becomes the active case (active === pinned, dedup shows single column); the drawer does NOT close
 
 ### Requirement: Drawer shows loading state while fetching detail data
 
@@ -46,7 +50,7 @@ When `getTestCaseRunResultDetails()` returns `null` or the fetch fails, the syst
 
 ### Requirement: Drawer is resizable via drag handle
 
-The system SHALL render a drag handle at the top edge of the drawer. The user SHALL be able to drag the handle vertically to resize the drawer between 200px minimum and `window.innerHeight - 100px` maximum. The resize handle SHALL also support keyboard-driven resize: Arrow Up/Down adjusts height by 20px, Shift+Arrow by 100px.
+The system SHALL render a drag handle at the top edge of the drawer. The handle SHALL be a 6px-tall bar spanning the full drawer width with a centered 32px-wide grip indicator (3 horizontal lines). On hover, the bar SHALL show a `bg-layer-3` background and `cursor: ns-resize`. On focus, it SHALL show the app's standard `focus-visible` ring. The user SHALL be able to drag the handle vertically to resize the drawer between 200px minimum and `window.innerHeight - 100px` maximum. The resize handle SHALL also support keyboard-driven resize: Arrow Up/Down adjusts height by 20px, Shift+Arrow by 100px.
 
 #### Scenario: User drags resize handle upward
 - **WHEN** the user presses and drags the resize handle upward
@@ -110,7 +114,7 @@ The system SHALL render the bottom drawer via `createPortal` to `document.body` 
 
 #### Scenario: Drawer renders outside component tree
 - **WHEN** the drawer is open
-- **THEN** the drawer DOM node is a direct child of `document.body`, not nested inside the analytics grid, with `z-40` (below notifications at `z-[100]` and fullscreen modals at `z-50`)
+- **THEN** the drawer DOM node is a direct child of `document.body`, not nested inside the analytics grid, with `z-[35]` (below Header at `z-40`, notifications at `z-[100]`, and fullscreen modals at `z-50`)
 
 ### Requirement: Pin a test case for comparison
 
@@ -140,7 +144,23 @@ The system SHALL provide a Pin button in the drawer toolbar. Pinning SHALL lock 
 - **WHEN** the analytics grid data refreshes (e.g., new computation) and the pinned result ID no longer exists
 - **THEN** the pinned case is automatically cleared and a single-column view of the active case is shown
 
-Note: `Analytics.tsx` triggers this by calling `useDrawerPanel.clearPinIfMissing(resultIds)` whenever the grid `results` state updates, passing the current array of valid result IDs.
+Note: `Analytics.tsx` triggers this by calling `useDrawerPanel.clearPinIfMissing(resultIds)` whenever the grid `results` state updates, passing the current array of valid result IDs. `clearPinIfMissing` must also clear the cached pinned `AnalyticsResult` ref to prevent stale data from being displayed.
+
+### Requirement: Diff count badge in toolbar
+
+When two test cases are displayed (pinned + active), the drawer toolbar SHALL show a badge with the total number of fields that have different values. The badge SHALL update whenever the active row or field visibility changes. When no pinned case exists, the badge SHALL not be rendered.
+
+#### Scenario: Diff count badge with differences
+- **WHEN** two test cases are compared and 12 out of 30 visible fields differ
+- **THEN** the toolbar shows a badge "12 diffs"
+
+#### Scenario: Diff count badge with no differences
+- **WHEN** two test cases are compared and all visible fields are equal
+- **THEN** the toolbar shows a badge "0 diffs"
+
+#### Scenario: No badge without pinned case
+- **WHEN** only one test case is displayed (no pinned case)
+- **THEN** no diff count badge is shown
 
 ### Requirement: View toggle between Table and Pivot
 
@@ -170,7 +190,7 @@ The drawer toolbar buttons, view toggles, and close/collapse controls SHALL be k
 - **WHEN** the drawer is open and the user presses Escape while focus is within the drawer and no inner overlay is open
 - **THEN** the drawer closes
 
-Note: The Escape handler should check `event.defaultPrevented` before closing — if a child handler (FullscreenViewer modal, dropdown, AG Grid cell editor, etc.) already called `event.preventDefault()`, skip the drawer close. This is more robust than checking specific context states. As a fallback, also check FullscreenViewer context if `defaultPrevented` is not set by the modal's handler.
+Note: The Escape handler uses a two-layer guard: (1) check `event.defaultPrevented` — if a child handler already called `event.preventDefault()`, skip the drawer close; (2) check whether `document.activeElement` is inside the drawer portal — if focus is on an element outside the drawer (e.g., AG Grid popup or external dropdown rendered to `document.body`), skip the drawer close. This is more robust than relying solely on `defaultPrevented`, since some third-party libraries may not call `preventDefault()` on their Escape handlers.
 
 #### Scenario: Toggle view with keyboard
 - **WHEN** the user focuses the Pivot button and presses Enter

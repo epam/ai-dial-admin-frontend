@@ -18,11 +18,19 @@ The Table view SHALL display a comparison table with a "Field" column and one co
 
 ### Requirement: Table view section group rows
 
-Each section group SHALL render a full-width header row with the section name in uppercase, small font, secondary color. The header row SHALL visually separate sections. Section headers in the Table view are **not interactive** — collapsing/hiding sections is controlled exclusively via the Field Selector sidebar.
+Each section group SHALL render a full-width header row with the section name in uppercase, small font, secondary color. The header row SHALL visually separate sections. Section headers in the Table view SHALL be **click-to-collapse** — clicking a section header toggles the visibility of its field rows (collapsed/expanded). This provides a quick inline toggle in addition to the Field Selector sidebar's visibility controls. The collapsed state is local to the Table view and independent of the Field Selector's section hidden state.
 
 #### Scenario: Section headers render
 - **WHEN** the Table view is rendered with data
-- **THEN** each visible section has a header row spanning all columns with the section name
+- **THEN** each visible section has a header row spanning all columns with the section name and a collapse indicator (arrow)
+
+#### Scenario: Click section header to collapse
+- **WHEN** the user clicks a section header in the Table view
+- **THEN** the section's field rows collapse (hidden) and the arrow indicator changes to right-pointing
+
+#### Scenario: Click collapsed section header to expand
+- **WHEN** the user clicks a collapsed section header
+- **THEN** the section's field rows expand (visible) and the arrow indicator changes to down-pointing
 
 ### Requirement: Table view column headers show test case summary
 
@@ -128,6 +136,18 @@ The Pivot view SHALL display a transposed table with test cases as rows and fiel
 - **WHEN** a field "f1" belongs to section "aidial_rag_eval.retrieval"
 - **THEN** the column header shows "AIDIAL_RAG_EVAL.RETRIEVAL" in small text above "f1" in bold
 
+### Requirement: Pivot view indicates spotlighted fields
+
+Although the focus strip is Table-view-only, the Pivot view SHALL visually indicate spotlighted fields by applying a subtle accent-colored top border or background tint to the column headers of spotlighted fields. This provides continuity when the user switches from Table to Pivot with active spotlight selections.
+
+#### Scenario: Spotlighted field column in Pivot view
+- **WHEN** "f1" is spotlighted and the user switches to Pivot view
+- **THEN** the "f1" column header has a subtle accent highlight (e.g., `border-t-2 border-accent-primary`)
+
+#### Scenario: No spotlight indication when no fields spotlighted
+- **WHEN** no fields are spotlighted
+- **THEN** all Pivot column headers render with the default style
+
 ### Requirement: Pivot view diff highlighting
 
 When two test cases are displayed (pinned + active), the Pivot view SHALL apply the same diff highlighting as the Table view — amber for numeric diffs, teal for text diffs — on cells in the active (non-pinned) row where values differ from the pinned row.
@@ -160,9 +180,21 @@ The test case name column (leftmost) SHALL be sticky horizontally. The field col
 - **WHEN** the test case has more fields than fit in the drawer width
 - **THEN** the table is horizontally scrollable with the test case name column remaining sticky on the left
 
+### Requirement: View switch crossfade transition
+
+When toggling between Table and Pivot views, the incoming view SHALL apply a brief crossfade animation (opacity 0→1, 100ms ease-in) to smooth the layout change. This SHALL be CSS-only, using a `key`-driven remount with an `animate-fadeIn` utility class.
+
+#### Scenario: Switch from Table to Pivot
+- **WHEN** the user switches from Table to Pivot view
+- **THEN** the Pivot view fades in over 100ms
+
+#### Scenario: Switch from Pivot to Table
+- **WHEN** the user switches from Pivot to Table view
+- **THEN** the Table view fades in over 100ms
+
 ### Requirement: Comparison data transformation is memoized
 
-The `buildComparisonSections()` utility that transforms `AnalyticsResult` objects into `ComparisonSection[]` SHALL be wrapped in `useMemo`, keyed on the active detail, pinned detail, field visibility, and section order. This prevents re-computation on unrelated re-renders.
+The `buildComparisonSections()` utility that transforms `AnalyticsResult` objects into `ComparisonSection[]` SHALL be wrapped in `useMemo`, keyed on the active detail, pinned detail, field visibility, and section order. To ensure the memo is effective, `fieldVisibility` and `sectionOrder` from `useFieldSelector` SHALL use stable references (via `useReducer` or functional `setState`) so their identity only changes on actual mutations. This prevents re-computation on unrelated re-renders.
 
 #### Scenario: Same inputs produce cached result
 - **WHEN** the component re-renders but active detail, pinned detail, field visibility, and section order have not changed
