@@ -72,6 +72,14 @@ When the user clicks a row in the Analytics grid, the system SHALL open whicheve
 - **WHEN** the detail mode is "drawer" and the user clicks a grid row
 - **THEN** the drawer updates its active ID to the clicked row's ID
 
+#### Scenario: Re-click same row in sidebar mode
+- **WHEN** the sidebar is showing details for a row and the user clicks the same row again
+- **THEN** the sidebar closes, but the detail mode remains "sidebar"
+
+#### Scenario: Re-click same row in drawer mode
+- **WHEN** the drawer is showing details for a row and the user clicks the same row again
+- **THEN** the drawer closes (clearing pinned and field selector state), but the detail mode remains "drawer"
+
 ### Requirement: Closing the active detail view does not change mode preference
 
 When the user closes the sidebar (X button) or the drawer (X button), the detail view closes but the `detailMode` preference remains. The next row click SHALL open the same mode.

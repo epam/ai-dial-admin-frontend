@@ -16,6 +16,10 @@ The system SHALL display the bottom drawer panel when the detail mode is "drawer
 - **WHEN** the drawer is open and the user clicks a different row in the Analytics grid
 - **THEN** the drawer updates to show the newly selected test case's data without closing
 
+#### Scenario: Re-click same row in drawer mode closes drawer
+- **WHEN** the drawer is open showing a test case and the user clicks the same row again
+- **THEN** the drawer closes (pinned and field selector state are cleared), detail mode remains "drawer"
+
 ### Requirement: Drawer shows loading state while fetching detail data
 
 The system SHALL display a loading indicator inside the drawer body while `getTestCaseRunResultDetails()` (server action from `src/app/[lang]/runs/actions.ts`) is in progress. The toolbar SHALL remain visible during loading.
@@ -102,7 +106,7 @@ The system SHALL render the bottom drawer via `createPortal` to `document.body` 
 
 #### Scenario: Drawer renders outside component tree
 - **WHEN** the drawer is open
-- **THEN** the drawer DOM node is a direct child of `document.body`, not nested inside the analytics grid
+- **THEN** the drawer DOM node is a direct child of `document.body`, not nested inside the analytics grid, with `z-40` (below notifications at `z-[100]` and fullscreen modals at `z-50`)
 
 ### Requirement: Pin a test case for comparison
 
@@ -132,6 +136,8 @@ The system SHALL provide a Pin button in the drawer toolbar. Pinning SHALL lock 
 - **WHEN** the analytics grid data refreshes (e.g., new computation) and the pinned result ID no longer exists
 - **THEN** the pinned case is automatically cleared and a single-column view of the active case is shown
 
+Note: `Analytics.tsx` triggers this by calling `useDrawerPanel.clearPinIfMissing(resultIds)` whenever the grid `results` state updates, passing the current array of valid result IDs.
+
 ### Requirement: View toggle between Table and Pivot
 
 The system SHALL provide Table and Pivot toggle buttons in the drawer toolbar. The active view SHALL be visually distinguished. Switching views SHALL preserve the active and pinned selections.
@@ -157,8 +163,10 @@ The drawer toolbar SHALL include a "Switch to Sidebar" button that closes the dr
 The drawer toolbar buttons, view toggles, and close/collapse controls SHALL be keyboard-focusable and activatable via Enter/Space. The Escape key SHALL close the drawer when it has focus.
 
 #### Scenario: Close drawer with Escape
-- **WHEN** the drawer is open and the user presses Escape while focus is within the drawer and no inner overlay (e.g., tooltip, dropdown) is open
+- **WHEN** the drawer is open and the user presses Escape while focus is within the drawer and no inner overlay (e.g., tooltip, dropdown, FullscreenViewer modal) is open
 - **THEN** the drawer closes
+
+Note: The Escape handler must check whether a `FullscreenViewer` modal is currently open (via its context) before closing the drawer. If a fullscreen modal is open, Escape closes the modal first; a second Escape closes the drawer.
 
 #### Scenario: Toggle view with keyboard
 - **WHEN** the user focuses the Pivot button and presses Enter
@@ -179,3 +187,15 @@ When the drawer has a pinned case and the user clicks a new row, the system SHAL
 #### Scenario: Active case loading with pinned data visible
 - **WHEN** the user clicks a new row while a pinned case is loaded
 - **THEN** the pinned column displays its data, the active column shows a loading indicator, and the toolbar updates with the new case name
+
+### Requirement: Drawer cleans up on navigation away
+
+The system SHALL close the drawer and remove its portal DOM node when `Analytics.tsx` unmounts (e.g., user navigates to a different tab or page). The `useDetailMode` hook's cleanup effect SHALL handle both sidebar teardown (`sidebar.closeSidebar()`) and drawer teardown.
+
+#### Scenario: Navigate away while drawer is open
+- **WHEN** the drawer is open and the user navigates away from the Analytics tab
+- **THEN** the drawer portal is removed from `document.body` and no orphaned DOM nodes remain
+
+#### Scenario: Navigate away while drawer is collapsed
+- **WHEN** the drawer is collapsed and the user navigates away
+- **THEN** the collapsed drawer portal is also removed

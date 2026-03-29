@@ -14,7 +14,7 @@ The system SHALL render a 180px-wide sidebar on the left side of the drawer body
 
 ### Requirement: Fields tab shows checkboxes grouped by section
 
-The Fields tab SHALL display a collapsible section for each data section (Execution, Test Case Data, Extracted Columns, Request / Response, and each metric group). Each section SHALL show a header with collapse arrow, section name, and field count. Under each section, individual fields SHALL have a checkbox and field name (monospace).
+The Fields tab SHALL display a collapsible section for each data section (Execution, Test Case Data, Extracted Columns, Request / Response, and each metric group). Each section SHALL show a header with collapse arrow, section name, and field count. Under each section, individual fields SHALL have a checkbox and field name (monospace). Field names and section names that exceed the 180px sidebar width SHALL be truncated with ellipsis (`text-ellipsis overflow-hidden`) and show the full name via a native `title` tooltip on hover.
 
 #### Scenario: All fields enabled by default
 - **WHEN** the drawer opens for the first time
@@ -42,7 +42,7 @@ The system SHALL hide the corresponding row (Table view) or column (Pivot view) 
 
 ### Requirement: Order tab allows drag-to-reorder sections
 
-The Order tab SHALL display a draggable list of sections with: a drag handle (⠿), a numbered position indicator, the section name, and an eye toggle. The user SHALL be able to drag sections to reorder them. Reordering SHALL update the section display order in both Table and Pivot views.
+The Order tab SHALL display a list of sections using `DraggableItem` (from `Common/DraggableItem/`) for drag handle + drop target behavior. Each row shows: a drag handle (⠿ via `DraggableItem`), a numbered position indicator, the section name, and an eye toggle. The user SHALL be able to drag sections to reorder them. Reordering SHALL update the section display order in both Table and Pivot views.
 
 #### Scenario: Drag section to new position
 - **WHEN** the user drags "Test Case Data" from position 2 to position 4

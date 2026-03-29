@@ -18,7 +18,7 @@ The Table view SHALL display a comparison table with a "Field" column and one co
 
 ### Requirement: Table view section group rows
 
-Each section group SHALL render a full-width header row with the section name in uppercase, small font, secondary color. The header row SHALL visually separate sections.
+Each section group SHALL render a full-width header row with the section name in uppercase, small font, secondary color. The header row SHALL visually separate sections. Section headers in the Table view are **not interactive** — collapsing/hiding sections is controlled exclusively via the Field Selector sidebar.
 
 #### Scenario: Section headers render
 - **WHEN** the Table view is rendered with data
@@ -90,7 +90,7 @@ Each field row SHALL display the field name (monospace) in the Field column and 
 
 #### Scenario: Very long value (over 500 characters)
 - **WHEN** a field value exceeds 500 characters
-- **THEN** the cell displays a truncated preview with a "Show more" toggle to expand
+- **THEN** the cell displays the first 200 characters as a truncated preview with a "Show more" link that expands the cell inline to show the full value in a scrollable pre block (max-height 180px). The expanded state is transient — switching rows or toggling views resets it to collapsed
 
 #### Scenario: Null or missing value
 - **WHEN** a field value is null or undefined
@@ -127,6 +127,22 @@ The Pivot view SHALL display a transposed table with test cases as rows and fiel
 #### Scenario: Pivot column headers
 - **WHEN** a field "f1" belongs to section "aidial_rag_eval.retrieval"
 - **THEN** the column header shows "AIDIAL_RAG_EVAL.RETRIEVAL" in small text above "f1" in bold
+
+### Requirement: Pivot view diff highlighting
+
+When two test cases are displayed (pinned + active), the Pivot view SHALL apply the same diff highlighting as the Table view — amber for numeric diffs, teal for text diffs — on cells in the active (non-pinned) row where values differ from the pinned row.
+
+#### Scenario: Numeric diff in Pivot view
+- **WHEN** the pinned case row has f1=0.1176 and the active case row has f1=0.5714
+- **THEN** the active case's f1 cell has an amber background tint
+
+#### Scenario: Text diff in Pivot view
+- **WHEN** the pinned and active cases have different text values for a field
+- **THEN** the active case's cell has a teal background tint
+
+#### Scenario: No diff highlighting with single test case
+- **WHEN** only one test case is displayed (no pinned case)
+- **THEN** no diff highlighting is applied in the Pivot view
 
 ### Requirement: Pivot view sticky headers
 
