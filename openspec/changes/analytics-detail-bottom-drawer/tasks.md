@@ -1,71 +1,66 @@
 ## 1. Types and data utilities
 
-- [ ] 1.1 Create `src/components/Runs/Details/BottomDrawer/types.ts` — define `ComparisonSection`, `ComparisonRow`, `BottomDrawerState` interfaces, `ViewMode` type ('table' | 'pivot'), and `DetailMode` type ('sidebar' | 'drawer')
-- [ ] 1.2 Create `src/components/Runs/Details/BottomDrawer/utils.ts` — implement `buildComparisonSections()` that transforms two `TestCaseRunResultDetails` objects + `MetricGroup[]` into `ComparisonSection[]`, plus `formatFieldValue()` and `getDiffClass()` helpers
-- [ ] 1.3 Add i18n keys to `src/constants/i18n.ts` under `RunsI18nKey` for: Analysis, Fields, Order, Table, Pivot, Pin, Unpin, Collapse, Close, SwitchToDrawer, SwitchToSidebar, and field section names
+- [ ] 1.1 Create `src/components/Runs/Details/BottomDrawer/types.ts` — define `ComparisonSection`, `ComparisonRow`, `DrawerPanelState` interfaces, `ViewMode` type ('table' | 'pivot'), and `DetailMode` type ('sidebar' | 'drawer')
+- [ ] 1.2 Create `src/components/Runs/Details/BottomDrawer/utils.ts` — implement `buildComparisonSections()` that transforms two `AnalyticsResult` objects + field visibility/section order into `ComparisonSection[]`, plus `formatFieldValue()` and `getDiffClass()` helpers
+- [ ] 1.3 Add i18n keys to `src/constants/i18n.ts` under `RunsI18nKey` for: Analysis, Fields, Order, Table, Pivot, Pin, Unpin, Collapse, Close, SwitchToDrawer, SwitchToSidebar, Spotlight, RemoveSpotlight, and field section names (Execution, TestCaseData, ExtractedColumns, RequestResponse)
 - [ ] 1.4 Add i18n values to `src/locales/en.ts` for all new keys
-- [ ] 1.5 Unit tests for `buildComparisonSections()` — test with single detail, two details (pinned + active), null/missing values, metric sections with infos; file: `src/components/Runs/Details/BottomDrawer/tests/utils.spec.ts`
+- [ ] 1.5 Unit tests for `buildComparisonSections()` — test with single `AnalyticsResult`, two results (pinned + active), same result for both (dedup), null/missing values, metric sections with infos, field visibility filtering, section reorder; file: `src/components/Runs/Details/BottomDrawer/tests/utils.spec.ts`
 
-## 2. Detail mode state and switcher
+## 2. Hooks
 
-- [ ] 2.1 Add `detailMode` ('sidebar' | 'drawer') state to `src/components/Runs/View/AnalyticsTab.tsx`; default to 'sidebar'; wire row click to open whichever mode is active
-- [ ] 2.2 Conditionally render `RunMetricDetailPanel` (sidebar) or `AnalyticsBottomDrawer` (drawer) based on `detailMode` — mutual exclusion, only one mounted at a time
-- [ ] 2.3 When switching modes, preserve `selectedResultId`; when switching from drawer to sidebar, clear pinned state
-- [ ] 2.4 Add switcher button to `RunMetricDetailPanel` header — icon button (e.g. `IconLayoutBottombar`) that sets `detailMode` to 'drawer'; passed as a prop or callback from `AnalyticsTab`
-- [ ] 2.5 Ensure closing the active detail view (X button) preserves the mode preference — next row click reopens the same mode
-- [ ] 2.6 Unit tests for detail mode switching — test mutual exclusion, context preservation, close-then-reopen behavior; file: `src/components/Runs/View/tests/AnalyticsTab.spec.tsx` (extend existing)
+- [ ] 2.1 Create `src/components/Runs/Details/BottomDrawer/useDetailMode.ts` — manages `detailMode` ('sidebar' | 'drawer'), coordinates with `useAppContext().sidebar` for showSidebar/closeSidebar calls, exposes `switchToDrawer()`, `switchToSidebar(resultId)`, `openDetail(resultId)`, `closeDetail()`; preserves mode preference across close/reopen
+- [ ] 2.2 Create `src/components/Runs/Details/BottomDrawer/useDrawerPanel.ts` — manages drawer-specific UI: `isOpen`, `panelHeight`, `isCollapsed`, `viewMode`, `activeId`, `pinnedId`; exposes `open(id)`, `close()`, `collapse()`, `expand()`, `pin()`, `unpin()`, `setView()`; handles dedup when active === pinned
+- [ ] 2.3 Create `src/components/Runs/Details/BottomDrawer/useFieldSelector.ts` — manages `fieldVisibility`, `sectionOrder`, `sectionHidden`, `spotlightedFields`; exposes `toggleField()`, `toggleSectionCollapse()`, `toggleSectionHidden()`, `reorderSections()`, `toggleSpotlight()`, `resetAll()`
+- [ ] 2.4 Unit tests for all three hooks — test state transitions, mode switching with sidebar calls, pinned===active dedup, field visibility toggling, section reorder, spotlight toggle, reset on close; file: `src/components/Runs/Details/BottomDrawer/tests/hooks.spec.ts`
 
-## 3. useBottomDrawer hook
+## 3. Detail mode integration in Analytics.tsx
 
-- [ ] 3.1 Create `src/components/Runs/Details/BottomDrawer/useBottomDrawer.ts` — manages `isOpen`, `activeId`, `pinnedId`, `viewMode`, `panelHeight`, `fieldVisibility`, `sectionOrder`, `sectionHidden`, `focusPinnedFields` state; exposes `open(id)`, `close()`, `collapse()`, `pin()`, `unpin()`, `setView()`, `toggleField()`, `toggleSection()`, `reorderSections()`, `toggleFocusPin()`
-- [ ] 3.2 Implement parallel detail fetching: when `activeId` or `pinnedId` changes, call `getTestCaseRunResultDetails()` for each; cache pinned detail until unpin
-- [ ] 3.3 Unit tests for `useBottomDrawer` hook — test open/close/pin/unpin state transitions, detail fetch triggering, field visibility toggling; file: `src/components/Runs/Details/BottomDrawer/tests/useBottomDrawer.spec.ts`
+- [ ] 3.1 Update `src/components/Runs/View/Analytics.tsx` — integrate `useDetailMode` hook; change `onRowClicked` to call `openDetail(resultId)` which routes to sidebar or drawer based on mode
+- [ ] 3.2 In sidebar mode: call `sidebar.showSidebar(<RunMetricDetailPanel resultId={...} onClose={...} onSwitchMode={switchToDrawer} />, 'w-[750px]')`; in drawer mode: render `AnalyticsBottomDrawer` and do NOT call `sidebar.showSidebar()`
+- [ ] 3.3 Add dynamic `padding-bottom` to the grid container tracking the drawer's current rendered height (including collapsed ~34px); no padding in sidebar mode or when drawer is closed
+- [ ] 3.4 Add optional `onSwitchMode?: () => void` prop to `RunMetricDetailPanel` (`src/components/Runs/Details/RunMetricDetailPanel.tsx`); when provided, render a switcher icon button (`IconLayoutBottombar`) in the header next to the close button
+- [ ] 3.5 Update/extend existing Analytics tests to verify: row click opens sidebar in default mode, mode switch closes sidebar and opens drawer, mode switch from drawer closes drawer and opens sidebar, close preserves mode preference, grid padding tracks drawer height; file: `src/components/Runs/View/tests/Analytics.spec.tsx` (extend existing or create)
 
 ## 4. AnalyticsBottomDrawer shell component
 
-- [ ] 4.1 Create `src/components/Runs/Details/BottomDrawer/AnalyticsBottomDrawer.tsx` — portal-rendered fixed-bottom panel with resize handle, toolbar (`DrawerToolbar`), and body containing `FieldSelector` + comparison area
-- [ ] 4.2 Implement resize drag logic on the resize handle (mousedown/mousemove/mouseup on document, min 120px, max viewport - 100px)
-- [ ] 4.3 Implement collapse/expand toggle (hide body + resize bar, reduce to ~34px; restore on second click)
-- [ ] 4.4 Implement Escape key handler to close the drawer when focus is within
-- [ ] 4.5 Component test for `AnalyticsBottomDrawer` — test renders via portal, open/close lifecycle, collapse/expand; file: `src/components/Runs/Details/BottomDrawer/tests/AnalyticsBottomDrawer.spec.tsx`
+- [ ] 4.1 Create `src/components/Runs/Details/BottomDrawer/AnalyticsBottomDrawer.tsx` — portal-rendered (`createPortal` to `document.body`) fixed-bottom panel; receives `useDrawerPanel` and `useFieldSelector` state as props or uses hooks internally; contains resize handle, `DrawerToolbar`, and body with `FieldSelector` + comparison area
+- [ ] 4.2 Implement data fetching: `useEffect` on `activeId`/`pinnedId` calling `getTestCaseRunResultDetails()` from `src/app/[lang]/runs/actions.ts`; parallel fetch with `Promise.all`; cache pinned result until unpin; handle loading state (`DialLoader`) and error state (null result → error message)
+- [ ] 4.3 Implement resize drag logic on the resize handle (mousedown/mousemove/mouseup on document, min 120px, max viewport - 100px)
+- [ ] 4.4 Implement collapse/expand toggle (hide body + resize bar, height → ~34px; restore on second click; report current height to parent for padding-bottom)
+- [ ] 4.5 Implement Escape key handler to close the drawer when focus is within
+- [ ] 4.6 Component test for `AnalyticsBottomDrawer` — test renders via portal, loading state shown during fetch, error state on null result, collapse/expand, Escape closes; file: `src/components/Runs/Details/BottomDrawer/tests/AnalyticsBottomDrawer.spec.tsx`
 
 ## 5. DrawerToolbar component
 
-- [ ] 5.1 Create `src/components/Runs/Details/BottomDrawer/DrawerToolbar.tsx` — renders title ("Analysis"), case count, Pin/Unpin controls, view toggle buttons (Table | Pivot), "Switch to Sidebar" button, Collapse button, Close button
-- [ ] 5.2 Component test for `DrawerToolbar` — test pin/unpin badge display, view toggle active state, switcher callback, button click callbacks; file: `src/components/Runs/Details/BottomDrawer/tests/DrawerToolbar.spec.tsx`
+- [ ] 5.1 Create `src/components/Runs/Details/BottomDrawer/DrawerToolbar.tsx` — renders: title ("Analysis"), case count, Pin/Unpin controls (badge with pinned case name + X), view toggle buttons (Table | Pivot), "Switch to Sidebar" icon button (`IconLayoutSidebarRight`), Collapse button, Close button
+- [ ] 5.2 Component test for `DrawerToolbar` — test pin/unpin badge display, view toggle active state, switcher callback fires, button click callbacks fire; file: `src/components/Runs/Details/BottomDrawer/tests/DrawerToolbar.spec.tsx`
 
 ## 6. FieldSelector component
 
 - [ ] 6.1 Create `src/components/Runs/Details/BottomDrawer/FieldSelector.tsx` — 180px left sidebar with Fields/Order tabs
-- [ ] 6.2 Implement Fields tab: collapsible section headers with arrow + count, per-field checkbox rows with monospace field names
-- [ ] 6.3 Implement Order tab: draggable section rows using `react-dnd` (HTML5Backend, scoped `DndProvider`), numbered positions, eye toggle for section visibility
-- [ ] 6.4 Component test for `FieldSelector` — test tab switching, checkbox toggle updates parent state, section collapse/expand, drag reorder; file: `src/components/Runs/Details/BottomDrawer/tests/FieldSelector.spec.tsx`
+- [ ] 6.2 Implement Fields tab: collapsible section headers with arrow + count, per-field checkbox rows with monospace field names; all fields enabled by default
+- [ ] 6.3 Implement Order tab: draggable section rows using existing `DraggableList`/`DraggableItem` components with scoped `DndProvider` + `HTML5Backend`, numbered positions, eye toggle for section visibility
+- [ ] 6.4 Component test for `FieldSelector` — test tab switching, checkbox toggle updates parent callback, section collapse/expand, eye toggle hides section; file: `src/components/Runs/Details/BottomDrawer/tests/FieldSelector.spec.tsx`
 
 ## 7. ComparisonTableView component
 
-- [ ] 7.1 Create `src/components/Runs/Details/BottomDrawer/ComparisonTableView.tsx` — renders comparison table from `ComparisonSection[]`: sticky header row with test case column headers, section group rows, field rows with values
+- [ ] 7.1 Create `src/components/Runs/Details/BottomDrawer/ComparisonTableView.tsx` — renders comparison table from `ComparisonSection[]`: sticky header row with test case column headers (name, status, duration), section group rows, field rows with values
 - [ ] 7.2 Implement diff highlighting: compare raw values between pinned and active columns, apply amber (numeric) or teal (text) background tint via Tailwind classes
-- [ ] 7.3 Implement per-row pin button to toggle focus strip inclusion
-- [ ] 7.4 Create `src/components/Runs/Details/BottomDrawer/FocusStrip.tsx` — horizontal scrollable strip of pinned field cards above the table; each card shows field label, badge, and values per test case
-- [ ] 7.5 Component test for `ComparisonTableView` — test section grouping, diff class application, focus strip rendering; file: `src/components/Runs/Details/BottomDrawer/tests/ComparisonTableView.spec.tsx`
+- [ ] 7.3 Implement per-row spotlight button (distinct icon from pin 📌) to toggle focus strip inclusion
+- [ ] 7.4 Create `src/components/Runs/Details/BottomDrawer/FocusStrip.tsx` — horizontal scrollable strip of spotlighted field cards above the table; each card shows field label, badge, and values per test case; close button to remove from spotlight
+- [ ] 7.5 Component test for `ComparisonTableView` — test section grouping, diff class application for numeric and text diffs, no diff when values equal, spotlight toggle, focus strip rendering; file: `src/components/Runs/Details/BottomDrawer/tests/ComparisonTableView.spec.tsx`
 
 ## 8. ComparisonPivotView component
 
-- [ ] 8.1 Create `src/components/Runs/Details/BottomDrawer/ComparisonPivotView.tsx` — transposed table: test cases as rows (sticky left column), fields as columns with section/field name headers (sticky top)
-- [ ] 8.2 Component test for `ComparisonPivotView` — test row per test case, column per visible field, sticky positioning classes; file: `src/components/Runs/Details/BottomDrawer/tests/ComparisonPivotView.spec.tsx`
+- [ ] 8.1 Create `src/components/Runs/Details/BottomDrawer/ComparisonPivotView.tsx` — transposed table: test cases as rows (sticky left column with name + status), fields as columns with section/field name headers (sticky top); scrollable both directions
+- [ ] 8.2 Component test for `ComparisonPivotView` — test row per test case, column per visible field, sticky positioning classes, single row when pinned === active; file: `src/components/Runs/Details/BottomDrawer/tests/ComparisonPivotView.spec.tsx`
 
-## 9. Integration and layout
+## 9. Styling
 
-- [ ] 9.1 Wire `AnalyticsTab` row click to call `useBottomDrawer.open(resultId)` when `detailMode === 'drawer'`
-- [ ] 9.2 Add dynamic `padding-bottom` to the analytics grid container matching drawer height when drawer mode is active and drawer is open; no extra padding in sidebar mode
-- [ ] 9.3 Update existing `AnalyticsTab` tests to verify drawer opens on row click in drawer mode, grid padding adjusts, and sidebar opens in sidebar mode
+- [ ] 9.1 Add Tailwind utility classes or component-scoped styles for: drawer layout (fixed bottom, portal), resize handle, field selector (180px sidebar, tabs, checkbox tree), comparison table (section groups, field cells, diff highlighting), pivot table (sticky headers), focus strip (horizontal scroll, cards), spotlight icon, switcher button — use existing theme tokens (`bg-layer-*`, `text-secondary`, `border-primary`, `stroke-accent-primary`, etc.)
 
-## 10. Styling
+## 10. Quality checks
 
-- [ ] 10.1 Add Tailwind utility classes or component-scoped styles for drawer layout, resize handle, field selector, comparison table, pivot table, focus strip, diff highlighting, and switcher button — use existing theme tokens (`bg-layer-*`, `text-secondary`, `border-primary`, etc.)
-
-## 11. Quality checks
-
-- [ ] 11.1 Run `npm run lint` and fix any lint errors
-- [ ] 11.2 Run `npm run format:write` to apply formatting
-- [ ] 11.3 Run `npm run test` and ensure all tests pass (existing + new)
+- [ ] 10.1 Run `npm run lint` and fix any lint errors
+- [ ] 10.2 Run `npm run format:write` to apply formatting
+- [ ] 10.3 Run `npm run test` and ensure all tests pass (existing + new)

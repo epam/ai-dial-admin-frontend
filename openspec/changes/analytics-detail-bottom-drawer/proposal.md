@@ -27,8 +27,9 @@ Different users prefer different detail layouts depending on their workflow and 
 
 ## Impact
 
-- **Components affected**: `AnalyticsTab.tsx` (detail mode state, switcher integration), `RunMetricDetailPanel.tsx` header area (switcher button added)
-- **New components**: `DetailViewSwitcher`, `AnalyticsBottomDrawer`, `ComparisonTableView`, `ComparisonPivotView`, `FieldSelector`, `FocusStrip`
-- **Data**: Reuses existing `getTestCaseRunResultDetails()` server action and `AnalyticsResult` / `MetricGroup` types; may need to fetch 2 results in parallel for comparison in drawer mode
-- **Dependencies**: `react-dnd` (already in project) for section drag-reorder; no new external deps
-- **Layout**: When drawer is the active detail view, the sidebar is hidden and the grid gets padding-bottom equal to drawer height. When sidebar is active, drawer is hidden and grid has no extra padding.
+- **Components affected**: `Analytics.tsx` (detail mode state, switcher integration), `RunMetricDetailPanel.tsx` (new optional `onSwitchMode` prop)
+- **New components**: `AnalyticsBottomDrawer`, `DrawerToolbar`, `ComparisonTableView`, `ComparisonPivotView`, `FieldSelector`, `FocusStrip`
+- **Data**: Reuses existing `getTestCaseRunResultDetails()` server action (`src/app/[lang]/runs/actions.ts`) and `AnalyticsResult` / `MetricGroup` types; fetches 2 results in parallel for comparison in drawer mode
+- **Sidebar integration**: The sidebar is managed via global `AppContext` (`sidebar.showSidebar()` / `sidebar.closeSidebar()`), not conditional rendering. Mode switching calls these APIs.
+- **Dependencies**: `react-dnd` (already in project, v16) for section drag-reorder; reuses existing `DraggableList`/`DraggableItem` components; no new external deps
+- **Layout**: When drawer is the active detail view, `sidebar.closeSidebar()` is called and the grid gets padding-bottom equal to drawer's current height. When sidebar is active, drawer is not rendered and grid has no extra padding.

@@ -2,37 +2,43 @@
 
 ### Requirement: Detail mode switcher toggles between sidebar and drawer
 
-The system SHALL provide a switcher control that allows the user to toggle between two mutually exclusive detail view modes: "Sidebar" (existing right panel) and "Drawer" (new bottom panel). Only one detail view SHALL be visible at a time. The default mode SHALL be "Sidebar".
+The system SHALL provide a switcher control that allows the user to toggle between two mutually exclusive detail view modes: "Sidebar" (existing right panel via AppContext) and "Drawer" (new bottom panel). Only one detail view SHALL be visible at a time. The default mode SHALL be "Sidebar".
 
 #### Scenario: Default mode is sidebar
 - **WHEN** the user opens the Analytics tab and clicks a grid row
-- **THEN** the right sidebar detail panel opens (existing behavior) and no bottom drawer is shown
+- **THEN** the right sidebar opens via `sidebar.showSidebar()` (existing behavior) and no bottom drawer is shown
 
 #### Scenario: Switch from sidebar to drawer
 - **WHEN** the sidebar detail panel is open and the user clicks the "Switch to Drawer" button
-- **THEN** the sidebar closes and the bottom drawer opens, displaying the same selected test case
+- **THEN** `sidebar.closeSidebar()` is called, the sidebar disappears, and the bottom drawer opens displaying the same selected test case
 
 #### Scenario: Switch from drawer to sidebar
 - **WHEN** the bottom drawer is open and the user clicks the "Switch to Sidebar" button
-- **THEN** the bottom drawer closes (clearing pinned state and field selector state) and the sidebar opens for the same selected test case
+- **THEN** the bottom drawer closes (clearing pinned state and field selector state) and `sidebar.showSidebar()` is called with the same selected test case's `resultId`
 
-### Requirement: Switcher button is placed in the active detail view header
+### Requirement: Switcher button in sidebar via `onSwitchMode` prop
 
-The switcher button SHALL appear in the header area of whichever detail view is currently active:
-- In sidebar mode: a button in the `RunMetricDetailPanel` header that switches to drawer mode
-- In drawer mode: a button in the `DrawerToolbar` that switches to sidebar mode
+`RunMetricDetailPanel` SHALL accept an optional `onSwitchMode?: () => void` prop. When provided, the panel header SHALL render an icon button (e.g., `IconLayoutBottombar`) that calls `onSwitchMode()`. When not provided, no switcher button is rendered (preserving backward compatibility with other usages).
 
 #### Scenario: Switcher visible in sidebar header
-- **WHEN** the sidebar is the active detail mode and a test case is selected
-- **THEN** the sidebar header contains a button with a bottom-panel icon labeled/titled "Switch to Drawer"
+- **WHEN** the sidebar is open and `onSwitchMode` prop was provided
+- **THEN** the sidebar header contains a switcher icon button titled "Switch to Drawer"
+
+#### Scenario: No switcher when prop absent
+- **WHEN** `RunMetricDetailPanel` is rendered without `onSwitchMode` prop (e.g., from ExtractionResult tab)
+- **THEN** no switcher button appears in the header
+
+### Requirement: Switcher button in drawer toolbar
+
+The `DrawerToolbar` SHALL include a "Switch to Sidebar" icon button (e.g., `IconLayoutSidebarRight`) that triggers the mode switch callback.
 
 #### Scenario: Switcher visible in drawer toolbar
 - **WHEN** the drawer is the active detail mode
-- **THEN** the drawer toolbar contains a button with a sidebar icon labeled/titled "Switch to Sidebar"
+- **THEN** the drawer toolbar contains a button titled "Switch to Sidebar"
 
 ### Requirement: Selected row context is preserved when switching modes
 
-The system SHALL preserve the currently selected `resultId` when the user switches detail modes. The newly activated detail view SHALL display data for the same test case that was selected in the previous mode.
+The system SHALL preserve the currently selected `resultId` when the user switches detail modes. The newly activated detail view SHALL display data for the same test case. When switching from drawer to sidebar, the `resultId` used SHALL be the drawer's active ID (not the pinned ID).
 
 #### Scenario: Context preserved sidebar to drawer
 - **WHEN** the sidebar shows details for "Row 000029" and the user switches to drawer mode
@@ -40,39 +46,43 @@ The system SHALL preserve the currently selected `resultId` when the user switch
 
 #### Scenario: Context preserved drawer to sidebar
 - **WHEN** the drawer shows details for "Row 000030" (with "Row 000029" pinned) and the user switches to sidebar mode
-- **THEN** the sidebar opens showing details for "Row 000030" (the active, not the pinned)
+- **THEN** `sidebar.showSidebar()` is called with `resultId="Row 000030"` (the active, not the pinned)
 
-### Requirement: Mutual exclusion is enforced
+### Requirement: Mutual exclusion between sidebar and drawer
 
-The system SHALL NOT render both the sidebar and the drawer simultaneously. When one mode is active, the other's component SHALL not be mounted.
+The sidebar (via AppContext) and the drawer (portaled to body) SHALL NOT both be visible simultaneously. When `detailMode` is "sidebar", the drawer component SHALL not be rendered. When `detailMode` is "drawer", `sidebar.closeSidebar()` SHALL be called to ensure the sidebar is hidden.
 
-#### Scenario: Only sidebar rendered in sidebar mode
-- **WHEN** the detail mode is "sidebar"
-- **THEN** the sidebar component is rendered and the drawer component is not mounted in the DOM
+#### Scenario: Only sidebar visible in sidebar mode
+- **WHEN** the detail mode is "sidebar" and a row is selected
+- **THEN** the sidebar shows content and the drawer portal is not rendered
 
-#### Scenario: Only drawer rendered in drawer mode
-- **WHEN** the detail mode is "drawer"
-- **THEN** the drawer component is rendered (via portal) and the sidebar component is not mounted in the DOM
+#### Scenario: Only drawer visible in drawer mode
+- **WHEN** the detail mode is "drawer" and a row is selected
+- **THEN** the drawer is rendered via portal and the sidebar has been closed via `sidebar.closeSidebar()`
 
 ### Requirement: Row click opens the active detail mode
 
-When the user clicks a row in the Analytics grid, the system SHALL open whichever detail mode is currently active (sidebar or drawer). If no detail view is open, the system SHALL open the currently selected mode.
+When the user clicks a row in the Analytics grid, the system SHALL open whichever detail mode is currently active. In sidebar mode, it calls `sidebar.showSidebar()`. In drawer mode, it opens/updates the drawer component.
 
 #### Scenario: Row click in sidebar mode
 - **WHEN** the detail mode is "sidebar" and the user clicks a grid row
-- **THEN** the sidebar opens/updates with the clicked row's details
+- **THEN** `sidebar.showSidebar(<RunMetricDetailPanel resultId={...} onClose={...} onSwitchMode={...} />)` is called
 
 #### Scenario: Row click in drawer mode
 - **WHEN** the detail mode is "drawer" and the user clicks a grid row
-- **THEN** the drawer opens/updates with the clicked row's details
+- **THEN** the drawer updates its active ID to the clicked row's ID
 
 ### Requirement: Closing the active detail view does not change mode preference
 
-When the user closes the sidebar (X button) or the drawer (X button), the detail view closes but the mode preference remains. The next row click SHALL open the same mode.
+When the user closes the sidebar (X button) or the drawer (X button), the detail view closes but the `detailMode` preference remains. The next row click SHALL open the same mode.
 
 #### Scenario: Close drawer then click row
 - **WHEN** the user is in drawer mode, closes the drawer, then clicks a grid row
 - **THEN** the drawer reopens for the clicked row (not the sidebar)
+
+#### Scenario: Close sidebar then click row
+- **WHEN** the user is in sidebar mode, closes the sidebar, then clicks a grid row
+- **THEN** the sidebar reopens for the clicked row
 
 ### Requirement: Switcher is keyboard accessible
 

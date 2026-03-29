@@ -1,10 +1,10 @@
 ## Context
 
-The Analytics tab in Run Detail view (`AnalyticsTab.tsx`) currently renders an AG Grid of test case run results. Clicking a row opens a 750px right sidebar (`RunMetricDetailPanel`) showing execution info, test case data, metric cards, metric infos, and request/response JSON. This works well for inspecting one result at a time.
+The Analytics tab in Run Detail view (`Analytics.tsx`) renders an AG Grid of test case run results. Clicking a row opens a 750px right sidebar via the global `AppContext` sidebar system — calling `sidebar.showSidebar(<RunMetricDetailPanel .../>)`. The sidebar container itself lives in `Content.tsx` in the layout hierarchy, not inside `Analytics.tsx`. `RunMetricDetailPanel` receives a `resultId` and `onClose` callback as props.
 
-Users need to compare multiple results side-by-side — seeing how metric values, test case inputs, extracted outputs, and reasoning differ across test cases. The HTML prototype in `sandbox/ui-ux-prototyping-with-admin-styles/prototype.html` demonstrates the UX: a resizable bottom drawer with Table and Pivot views, a left field selector, pinning, and diff highlighting.
+Users need to compare multiple results side-by-side. The HTML prototype in `sandbox/ui-ux-prototyping-with-admin-styles/prototype.html` demonstrates the UX: a resizable bottom drawer with Table and Pivot views, a left field selector, pinning, and diff highlighting.
 
-The right sidebar and bottom drawer are **mutually exclusive** detail views. A switcher control lets the user choose which layout is active. When one is shown, the other is hidden. The selected row context (which test case is being inspected) carries over when switching.
+The right sidebar and bottom drawer are **mutually exclusive** detail views. A switcher control lets the user choose which layout is active. When one is shown, the other is hidden. The selected row context carries over when switching.
 
 ## Goals / Non-Goals
 
@@ -19,48 +19,54 @@ The right sidebar and bottom drawer are **mutually exclusive** detail views. A s
 - Resizable, collapsible, closable drawer
 - Diff highlighting when comparing pinned vs. active test case
 - Selected row context preserved when switching between modes
+- Loading and error states in the drawer matching existing sidebar patterns
 
 **Non-Goals:**
 - Read/prose view (only Table and Pivot)
 - Persisting detail mode preference across page navigations or sessions
 - Editing test case data from within the drawer
 - Chart/visualization views for metric trends
+- Responsive/mobile layout for the drawer (desktop-first; can be addressed later)
 
 ## Decisions
 
-### 1. Detail mode state: `detailMode` in AnalyticsTab
+### 1. Sidebar is controlled via `AppContext`, not conditional mounting
 
-Add a `detailMode: 'sidebar' | 'drawer'` state to `AnalyticsTab.tsx`. Default is `'sidebar'` (current behavior). The mode determines which detail UI renders. The `selectedResultId` is shared — both modes use the same selected row. When switching modes:
-- If sidebar is open and user switches to drawer → sidebar closes, drawer opens with same `selectedResultId`
-- If drawer is open and user switches to sidebar → drawer closes (clearing pinned state), sidebar opens with same `selectedResultId`
+The sidebar is a **global layout feature** managed by `useAppContext().sidebar`. `Analytics.tsx` calls `sidebar.showSidebar(content, className)` to open and `sidebar.closeSidebar()` to close. The sidebar `<aside>` DOM element always lives in `Content.tsx` — it is never mounted/unmounted by `Analytics.tsx`.
 
-**Alternative considered**: Independent open/close states for each. Rejected — mutual exclusion is simpler and avoids confusing dual-panel states.
+Therefore, the mutual exclusion works as:
+- **Sidebar mode**: `Analytics.tsx` calls `sidebar.showSidebar()` on row click (existing behavior). Drawer component is not rendered.
+- **Drawer mode**: `Analytics.tsx` does *not* call `sidebar.showSidebar()`. Instead, it renders `AnalyticsBottomDrawer` (via portal). `sidebar.closeSidebar()` is called if the sidebar was previously open.
 
-### 2. Switcher placement: in the sidebar header, replicated in the drawer toolbar
+When switching modes:
+- Sidebar → Drawer: call `sidebar.closeSidebar()`, then open drawer with same `selectedResultId`
+- Drawer → Sidebar: close drawer (clearing pinned/field state), then call `sidebar.showSidebar()` with `<RunMetricDetailPanel resultId={selectedResultId} onClose={...} onSwitchMode={...} />`
 
-The switcher is a small toggle/button group rendered in:
-- The `RunMetricDetailPanel` header area (sidebar mode → "Switch to Drawer" icon button)
-- The `DrawerToolbar` (drawer mode → "Switch to Sidebar" icon button)
+### 2. Switcher button: new `onSwitchMode` callback prop on `RunMetricDetailPanel`
 
-This gives the user access to switch from whichever mode they're currently in. The switcher uses `@tabler/icons-react` icons (e.g., `IconLayoutSidebarRight` for sidebar, `IconLayoutBottombar` for drawer).
+`RunMetricDetailPanel` currently accepts `{ resultId, onClose }`. Add an optional `onSwitchMode?: () => void` prop. When provided, the header renders a switcher icon button (e.g., `IconLayoutBottombar` from `@tabler/icons-react`). Clicking it calls `onSwitchMode()`, which `Analytics.tsx` handles by changing `detailMode` to `'drawer'`.
 
-**Alternative considered**: A toggle in the analytics grid toolbar. Rejected — the switcher is contextual to the detail view, not the grid.
+The `DrawerToolbar` has its own "Switch to Sidebar" button that calls the reverse callback.
+
+**Alternative considered**: A shared `DetailViewSwitcher` component used in both places. Rejected — it's just an icon button with a callback; no need for a shared component.
 
 ### 3. Component location: `Runs/Details/BottomDrawer/`
 
-Place all bottom drawer components under `src/components/Runs/Details/BottomDrawer/`. This co-locates them with the existing detail panel components (`RunMetricDetailPanel`, `MetricCard`, etc.) since they consume the same data types.
+Place all bottom drawer components under `src/components/Runs/Details/BottomDrawer/`. Co-located with existing detail panel components.
 
-### 4. State management: local state in AnalyticsTab via a custom hook
+### 4. State management: split into focused hooks
 
-Create a `useBottomDrawer` hook that manages: `isOpen`, `activeId`, `pinnedId`, `viewMode` ('table' | 'pivot'), `panelHeight`, `fieldVisibility`, `sectionOrder`. The hook lives in `BottomDrawer/useBottomDrawer.ts`.
+Instead of one large `useBottomDrawer` hook, split concerns:
 
-The hook fetches detail data for both active and pinned results via `getTestCaseRunResultDetails()`, storing both `TestCaseRunResultDetails` objects. When `activeId` changes, it fetches the new detail. The pinned detail is cached until unpinned.
+- **`useDetailMode`** (in `Analytics.tsx` or `BottomDrawer/useDetailMode.ts`): manages `detailMode` ('sidebar' | 'drawer'), `selectedResultId`, mode switching logic, and sidebar open/close calls
+- **`useDrawerPanel`** (in `BottomDrawer/useDrawerPanel.ts`): manages drawer-specific UI — `isOpen`, `panelHeight`, `isCollapsed`, `viewMode` ('table' | 'pivot'), `pinnedId`, open/close/collapse/pin/unpin
+- **`useFieldSelector`** (in `BottomDrawer/useFieldSelector.ts`): manages `fieldVisibility`, `sectionOrder`, `sectionHidden`, `focusSpotlightedFields` (renamed from "pinned fields" — see Decision #9)
 
-**Alternative considered**: React Context provider. Rejected — the state is only consumed within AnalyticsTab's subtree, and prop drilling is minimal (AnalyticsTab → BottomDrawer).
+Data fetching stays in `AnalyticsBottomDrawer` component using `useEffect` on `activeId`/`pinnedId`, calling the server action `getTestCaseRunResultDetails()` from `src/app/[lang]/runs/actions.ts`.
 
-### 5. Data flow: reuse existing `TestCaseRunResultDetails` type
+### 5. Data flow: reuse existing `AnalyticsResult` type
 
-The comparison views consume the same `TestCaseRunResultDetails` returned by `getTestCaseRunResultDetails()`. A utility `buildComparisonSections()` in `BottomDrawer/utils.ts` transforms two detail objects into a normalized section/row structure:
+The detail API `getTestCaseRunResultDetails(id)` (server action in `src/app/[lang]/runs/actions.ts`) returns `AnalyticsResult | null`. This is the same type used by the existing sidebar. A utility `buildComparisonSections()` in `BottomDrawer/utils.ts` transforms two `AnalyticsResult` objects into a normalized structure:
 
 ```typescript
 interface ComparisonSection {
@@ -75,48 +81,65 @@ interface ComparisonRow {
 }
 ```
 
-This decouples data transformation from rendering. Both Table and Pivot views consume the same `ComparisonSection[]` array.
+Both Table and Pivot views consume `ComparisonSection[]`.
 
 ### 6. Drawer positioning: fixed bottom with portal
 
-Render the drawer via `createPortal` to `document.body` (matching the existing `FullscreenViewerModal` pattern). This avoids layout conflicts with the grid. The main grid container gets `padding-bottom` equal to drawer height when drawer mode is active.
+Render the drawer via `createPortal` to `document.body` (matching the existing `FullscreenViewerModal` pattern). The main grid container gets `padding-bottom` equal to the drawer's **current rendered height** (including collapsed state — 34px when collapsed, full height when expanded).
 
 ### 7. Resize: vanilla mousedown/mousemove
 
-Use a simple `onMouseDown` handler on the resize bar, tracking `mousemove` on `document` to adjust height. Min height: 120px. Max height: `window.innerHeight - 100`.
+`onMouseDown` on the resize bar, `mousemove` on `document` to adjust height. Min: 120px. Max: `window.innerHeight - 100`.
 
-### 8. Field selector: checkbox tree + drag reorder
+### 8. Field selector: checkbox tree + drag reorder via existing `DraggableList`/`DraggableItem`
 
-The Fields tab renders sections as collapsible groups with per-field checkboxes. The Order tab uses `react-dnd` (already in the project) for drag-to-reorder sections, with an eye toggle for section visibility.
+The Fields tab renders collapsible section groups with per-field checkboxes. The Order tab reuses the existing `DraggableList` + `DraggableItem` components from `src/components/Common/` with a scoped `DndProvider` + `HTML5Backend` (matching the pattern in `GridView.tsx`, `ContainerVariables.tsx`).
 
-### 9. Diff highlighting: simple string comparison
+### 9. Naming: "spotlight" for field-level pins, "pin" for test case pins
+
+Two "pin" concepts were confusing. Renamed:
+- **Pin** (test case level): locks a test case as the reference column. Uses 📌 icon. Managed by `useDrawerPanel`.
+- **Spotlight** (field level): highlights a specific field in the focus strip. Uses ⭐ or a distinct icon. Managed by `useFieldSelector` as `focusSpotlightedFields`.
+
+### 10. Diff highlighting: simple string comparison
 
 When a pinned test case exists, each cell in the non-pinned column is compared to the pinned column's value (string equality on raw value). Different values get a subtle background tint — amber for numeric diffs, teal for text diffs. Via conditional Tailwind class names.
 
-### 10. Component breakdown
+### 11. Metric value formatting: match existing `MetricCard` behavior
+
+The existing `MetricCard` component shows a progress bar (0-100%) without fixed color thresholds. The comparison views follow the same approach — display value with 3 decimal places and progress bar fill. No hardcoded green/amber/red thresholds (the existing sidebar doesn't have them either).
+
+### 12. Component breakdown
 
 ```
-AnalyticsTab
-├── detailMode state ('sidebar' | 'drawer')
-├── GridView (AG Grid)
-├── [if sidebar mode] RunMetricDetailPanel (existing, with switcher button added)
-└── [if drawer mode] AnalyticsBottomDrawer (portal)
-    ├── DrawerToolbar (title, pin, view toggle, switcher button, collapse/close)
-    ├── FieldSelector (left sidebar)
+Analytics.tsx
+├── useDetailMode (detailMode, selectedResultId, mode switching)
+├── GridView (AG Grid, onRowClicked)
+├── [sidebar mode] sidebar.showSidebar(<RunMetricDetailPanel onSwitchMode={...} />)
+└── [drawer mode] AnalyticsBottomDrawer (portal to document.body)
+    ├── DrawerToolbar (title, pin, view toggle, switcher, collapse/close)
+    ├── FieldSelector (left sidebar, 180px)
     │   ├── FieldsTab (checkbox tree by section)
-    │   └── OrderTab (drag-to-reorder sections, eye toggle)
+    │   └── OrderTab (DraggableList + eye toggle)
     └── ComparisonArea
-        ├── FocusStrip (pinned field cards, only in Table view)
+        ├── FocusStrip (spotlighted field cards, Table view only)
         ├── ComparisonTableView (fields as rows, cases as columns)
         └── ComparisonPivotView (cases as rows, fields as columns)
 ```
 
 ## Risks / Trade-offs
 
-- **Two parallel data fetches**: When both active and pinned IDs are set, two `getTestCaseRunResultDetails()` calls fire. **Mitigation**: Fetch in parallel with `Promise.all`; cache pinned result so it's only fetched once.
+- **Two parallel data fetches**: When both active and pinned IDs are set, two `getTestCaseRunResultDetails()` calls fire. **Mitigation**: `Promise.all`; cache pinned result until unpin.
 
-- **Mode switch losing drawer state**: Switching from drawer to sidebar clears pinned case, field selection, etc. **Mitigation**: This is acceptable — drawer state is transient. If needed later, state could be preserved in the hook, but YAGNI for now.
+- **Mode switch losing drawer state**: Switching from drawer to sidebar clears pinned case, field selection, etc. **Mitigation**: Acceptable for now — drawer state is transient. Could preserve in hook state later if needed.
 
 - **Performance with many fields**: 50+ rows possible in comparison table. **Mitigation**: Sections collapsible, fields hideable. Memoize `buildComparisonSections()` with `useMemo`.
 
-- **Drag-and-drop in Order tab**: `react-dnd` requires a `DndProvider`. **Mitigation**: Check for existing provider; if none, wrap only the `OrderTab` with a scoped `DndProvider` using `HTML5Backend`.
+- **Scoped DndProvider**: The Order tab wraps its own `DndProvider` + `HTML5Backend`. This is the established pattern in this codebase (`GridView.tsx`, `ContainerVariables.tsx`). No risk of nested DndProvider conflicts since the drawer is portaled outside the grid.
+
+- **`onSwitchMode` prop on `RunMetricDetailPanel`**: This is a new optional prop on an existing component. It's backward-compatible (other callers don't pass it, so no switcher button appears). The ExtractionResult tab's usage of `RunMetricDetailPanel` is unaffected.
+
+## Open Questions
+
+- Should the detail mode preference persist within a session (e.g., via localStorage) so returning to the Analytics tab remembers the last mode? Currently scoped as a non-goal.
+- Should the ExtractionResult tab also support the drawer mode, or is this Analytics-only?

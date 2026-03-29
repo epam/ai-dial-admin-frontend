@@ -16,6 +16,30 @@ The system SHALL display the bottom drawer panel when the detail mode is "drawer
 - **WHEN** the drawer is open and the user clicks a different row in the Analytics grid
 - **THEN** the drawer updates to show the newly selected test case's data without closing
 
+### Requirement: Drawer shows loading state while fetching detail data
+
+The system SHALL display a loading indicator inside the drawer body while `getTestCaseRunResultDetails()` (server action from `src/app/[lang]/runs/actions.ts`) is in progress. The toolbar SHALL remain visible during loading.
+
+#### Scenario: Loading on first open
+- **WHEN** the drawer opens for a newly selected row and detail data has not loaded yet
+- **THEN** the drawer body shows a `DialLoader` spinner; the toolbar is visible with the test case name
+
+#### Scenario: Loading on row switch
+- **WHEN** the user clicks a different row while the drawer is open
+- **THEN** the comparison area shows a loading indicator while the new detail is fetched; previously loaded pinned data remains visible
+
+### Requirement: Drawer handles fetch errors gracefully
+
+When `getTestCaseRunResultDetails()` returns `null` or the fetch fails, the system SHALL display an error state in the drawer body. The drawer SHALL remain open and functional (user can click another row or close).
+
+#### Scenario: Detail fetch returns null
+- **WHEN** `getTestCaseRunResultDetails(resultId)` returns `null`
+- **THEN** the drawer body shows an error message indicating the result could not be loaded
+
+#### Scenario: Detail fetch for pinned case fails
+- **WHEN** the pinned case detail fetch fails but the active case loaded successfully
+- **THEN** the drawer shows only the active case column and displays a warning about the pinned case
+
 ### Requirement: Drawer is resizable via drag handle
 
 The system SHALL render a drag handle at the top edge of the drawer. The user SHALL be able to drag the handle vertically to resize the drawer between 120px minimum and `window.innerHeight - 100px` maximum.
@@ -34,7 +58,7 @@ The system SHALL provide a Collapse button in the drawer toolbar. Collapsing SHA
 
 #### Scenario: Collapse the drawer
 - **WHEN** the user clicks the Collapse button
-- **THEN** the drawer body and resize handle are hidden, leaving only the toolbar visible
+- **THEN** the drawer body and resize handle are hidden, leaving only the toolbar visible at ~34px height
 
 #### Scenario: Expand a collapsed drawer
 - **WHEN** the user clicks the Collapse button on a collapsed drawer
@@ -42,27 +66,31 @@ The system SHALL provide a Collapse button in the drawer toolbar. Collapsing SHA
 
 ### Requirement: Drawer can be closed
 
-The system SHALL provide a Close button (X) in the drawer toolbar. Closing SHALL hide the drawer and clear the pinned test case selection, but SHALL preserve the detail mode as "drawer" so the next row click reopens the drawer.
+The system SHALL provide a Close button (X) in the drawer toolbar. Closing SHALL hide the drawer and clear the pinned test case selection, but SHALL preserve the detail mode as "drawer" so the next row click reopens the drawer. Field selector state (visibility, order) SHALL also be reset on close.
 
 #### Scenario: Close the drawer
 - **WHEN** the user clicks the Close button
-- **THEN** the drawer is hidden, pinned ID is cleared, but detail mode remains "drawer"
+- **THEN** the drawer is hidden, pinned ID and field selector state are cleared, but detail mode remains "drawer"
 
-### Requirement: Main grid adjusts for drawer
+### Requirement: Main grid adjusts padding-bottom for drawer's current height
 
-The system SHALL add padding-bottom to the analytics grid container equal to the drawer's current height when the drawer is open. This SHALL prevent the drawer from obscuring grid content.
+The system SHALL add padding-bottom to the analytics grid container equal to the drawer's **current rendered height** when the drawer is open. This includes tracking collapsed state.
 
-#### Scenario: Drawer open adjusts grid padding
+#### Scenario: Drawer open at full height
 - **WHEN** the drawer is open with height 380px
 - **THEN** the analytics grid container has `padding-bottom: 380px`
 
-#### Scenario: Drawer closed removes padding
+#### Scenario: Drawer collapsed
+- **WHEN** the drawer is collapsed to ~34px
+- **THEN** the analytics grid container has `padding-bottom: 34px`
+
+#### Scenario: Drawer closed or sidebar mode
 - **WHEN** the drawer is closed or detail mode is "sidebar"
 - **THEN** the analytics grid container has no additional padding-bottom
 
 ### Requirement: Drawer renders via portal
 
-The system SHALL render the bottom drawer via `createPortal` to `document.body` to avoid layout conflicts with the existing grid components.
+The system SHALL render the bottom drawer via `createPortal` to `document.body` to avoid layout conflicts with the existing grid and sidebar components.
 
 #### Scenario: Drawer renders outside component tree
 - **WHEN** the drawer is open
@@ -84,6 +112,10 @@ The system SHALL provide a Pin button in the drawer toolbar. Pinning SHALL lock 
 - **WHEN** a test case is pinned and the user clicks a different row in the grid
 - **THEN** the drawer shows the pinned case in the first column and the newly clicked case in the second column
 
+#### Scenario: Active and pinned are the same row
+- **WHEN** a test case is pinned and the user clicks the same row that is pinned
+- **THEN** the drawer shows only a single column for that test case (no duplicate columns)
+
 ### Requirement: View toggle between Table and Pivot
 
 The system SHALL provide Table and Pivot toggle buttons in the drawer toolbar. The active view SHALL be visually distinguished. Switching views SHALL preserve the active and pinned selections.
@@ -98,11 +130,11 @@ The system SHALL provide Table and Pivot toggle buttons in the drawer toolbar. T
 
 ### Requirement: Drawer toolbar includes mode switcher
 
-The drawer toolbar SHALL include a "Switch to Sidebar" button (as defined in `analytics-detail-view-switcher` spec) that closes the drawer and opens the sidebar for the same selected test case.
+The drawer toolbar SHALL include a "Switch to Sidebar" button that closes the drawer and triggers `sidebar.showSidebar()` with the current active test case's `resultId`.
 
 #### Scenario: Switch to sidebar from drawer
 - **WHEN** the user clicks the "Switch to Sidebar" button in the drawer toolbar
-- **THEN** the drawer closes and the sidebar opens with the same active test case
+- **THEN** the drawer closes and `sidebar.showSidebar()` is called with the active test case
 
 ### Requirement: Keyboard accessibility
 

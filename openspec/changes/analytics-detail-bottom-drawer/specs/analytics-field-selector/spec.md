@@ -66,11 +66,11 @@ Each section row in the Order tab SHALL have an eye toggle. Clicking it SHALL hi
 
 ### Requirement: Field selector state persists within drawer session
 
-Field visibility, section order, and section hidden states SHALL persist as long as the drawer is open. Closing the drawer SHALL reset all field selector state to defaults (all visible, original order).
+Field visibility, section order, section hidden states, and spotlighted fields SHALL persist as long as the drawer is open. Closing the drawer (X button) or switching to sidebar mode SHALL reset all field selector state to defaults (all visible, original order, no spotlighted fields).
 
 #### Scenario: Close and reopen resets state
-- **WHEN** the user hides several fields, reorders sections, closes the drawer, then opens it again
-- **THEN** all fields are visible and sections are in their original order
+- **WHEN** the user hides several fields, reorders sections, closes the drawer, then opens it again by clicking a row
+- **THEN** all fields are visible, sections are in their original order, and no fields are spotlighted
 
 #### Scenario: State persists across view toggles
 - **WHEN** the user hides fields in Table view then switches to Pivot view

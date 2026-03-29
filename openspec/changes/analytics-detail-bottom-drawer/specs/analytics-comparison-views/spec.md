@@ -12,6 +12,10 @@ The Table view SHALL display a comparison table with a "Field" column and one co
 - **WHEN** one test case is pinned and a different test case is active
 - **THEN** the table shows a Field column, a pinned column (with pin indicator), and an active column
 
+#### Scenario: Pinned and active are the same test case
+- **WHEN** the pinned and active IDs are the same
+- **THEN** the table shows a Field column and one test case column (no duplication)
+
 ### Requirement: Table view section group rows
 
 Each section group SHALL render a full-width header row with the section name in uppercase, small font, secondary color. The header row SHALL visually separate sections.
@@ -44,20 +48,20 @@ When two test cases are displayed (pinned + active), the system SHALL highlight 
 - **WHEN** both cases have the same value for a field
 - **THEN** no diff highlighting is applied to that cell
 
-### Requirement: Table view focus strip for pinned fields
+### Requirement: Table view focus strip for spotlighted fields
 
-The Table view SHALL display a focus strip above the comparison table when one or more fields are pinned. Each pinned field renders as a card showing the field label, badge, and values for each test case column.
+The Table view SHALL display a focus strip above the comparison table when one or more fields are spotlighted. Each spotlighted field renders as a card showing the field label, badge, and values for each test case column. "Spotlight" is distinct from "pin" (which refers to test case pinning).
 
-#### Scenario: Pin a field to focus strip
-- **WHEN** the user clicks the pin icon on a field row in the Table view
-- **THEN** a card for that field appears in the focus strip, and the pin icon on the row shows as active
+#### Scenario: Spotlight a field to focus strip
+- **WHEN** the user clicks the spotlight icon on a field row in the Table view
+- **THEN** a card for that field appears in the focus strip, and the spotlight icon on the row shows as active
 
-#### Scenario: Unpin a field from focus strip
-- **WHEN** the user clicks the close button on a pinned field card in the focus strip
-- **THEN** the card is removed and the row's pin icon returns to inactive state
+#### Scenario: Remove a field from focus strip
+- **WHEN** the user clicks the close button on a spotlighted field card in the focus strip
+- **THEN** the card is removed and the row's spotlight icon returns to inactive state
 
-#### Scenario: No pinned fields
-- **WHEN** no fields are pinned
+#### Scenario: No spotlighted fields
+- **WHEN** no fields are spotlighted
 - **THEN** the focus strip is not rendered
 
 ### Requirement: Table view field rows display data adaptively
@@ -78,15 +82,19 @@ Each field row SHALL display the field name (monospace) in the Field column and 
 
 ### Requirement: Table view metric value formatting
 
-Metric output values (numbers) SHALL be formatted to 4 decimal places and color-coded: green for values >= 0.7, amber for values >= 0.4, red for values < 0.4. Null metric values SHALL display as a dash.
+Metric output values (numbers) SHALL be formatted to 3 decimal places with a progress bar fill indicating the value from 0 to 1, matching the existing `MetricCard` component pattern. Null metric values SHALL display as a dash. No hardcoded color thresholds — use the standard accent color for the progress bar.
 
-#### Scenario: High metric value
-- **WHEN** a metric value is 0.9200
-- **THEN** the cell displays "0.9200" in green
+#### Scenario: Metric value displayed
+- **WHEN** a metric value is 0.571
+- **THEN** the cell displays "0.571" with a progress bar filled to ~57.1%
 
-#### Scenario: Low metric value
-- **WHEN** a metric value is 0.1176
-- **THEN** the cell displays "0.1176" in red
+#### Scenario: Null metric value
+- **WHEN** a metric value is null
+- **THEN** the cell displays a dash (—) in secondary color
+
+#### Scenario: Error metric (all null in group)
+- **WHEN** all metric values in a group are null and an error message exists in metricInfos
+- **THEN** the metric section shows the error message in error styling
 
 ### Requirement: Pivot view renders test cases as rows
 
@@ -114,7 +122,7 @@ The test case name column (leftmost) SHALL be sticky horizontally. The field col
 
 ### Requirement: Comparison data transformation is memoized
 
-The `buildComparisonSections()` utility that transforms `TestCaseRunResultDetails` into `ComparisonSection[]` SHALL be wrapped in `useMemo`, keyed on the active detail, pinned detail, field visibility, and section order. This prevents re-computation on unrelated re-renders.
+The `buildComparisonSections()` utility that transforms `AnalyticsResult` objects into `ComparisonSection[]` SHALL be wrapped in `useMemo`, keyed on the active detail, pinned detail, field visibility, and section order. This prevents re-computation on unrelated re-renders.
 
 #### Scenario: Same inputs produce cached result
 - **WHEN** the component re-renders but active detail, pinned detail, field visibility, and section order have not changed
