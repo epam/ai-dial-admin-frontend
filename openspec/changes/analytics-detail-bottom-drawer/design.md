@@ -38,9 +38,11 @@ Therefore, the mutual exclusion works as:
 - **Sidebar mode**: `Analytics.tsx` calls `sidebar.showSidebar()` on row click (existing behavior). Drawer component is not rendered.
 - **Drawer mode**: `Analytics.tsx` does *not* call `sidebar.showSidebar()`. Instead, it renders `AnalyticsBottomDrawer` (via portal). `sidebar.closeSidebar()` is called if the sidebar was previously open.
 
+**Ownership**: `useDetailMode` is the **single owner** of sidebar lifecycle within `Analytics.tsx`. All `sidebar.showSidebar()` and `sidebar.closeSidebar()` calls go through `useDetailMode`'s exposed methods (`openDetail`, `switchToSidebar`, `switchToDrawer`, `closeDetail`). `Analytics.tsx` must NOT call `sidebar.*` directly — it delegates to `useDetailMode` which internally coordinates with `useAppContext().sidebar`.
+
 When switching modes:
-- Sidebar → Drawer: call `sidebar.closeSidebar()`, then open drawer with same `selectedResultId`
-- Drawer → Sidebar: close drawer (clearing pinned/field state), then call `sidebar.showSidebar()` with `<RunMetricDetailPanel resultId={selectedResultId} onClose={...} onSwitchMode={...} />`
+- Sidebar → Drawer: `useDetailMode.switchToDrawer()` calls `sidebar.closeSidebar()`, then opens drawer with same `selectedResultId`
+- Drawer → Sidebar: `useDetailMode.switchToSidebar()` closes drawer (clearing pinned/field state), then calls `sidebar.showSidebar()` with `<RunMetricDetailPanel resultId={selectedResultId} onClose={...} onSwitchMode={...} />`
 
 ### 2. Switcher button: new `onSwitchMode` callback prop on `RunMetricDetailPanel`
 
@@ -60,26 +62,40 @@ Instead of one large `useBottomDrawer` hook, split concerns:
 
 - **`useDetailMode`** (in `Analytics.tsx` or `BottomDrawer/useDetailMode.ts`): manages `detailMode` ('sidebar' | 'drawer'), `selectedResultId`, mode switching logic, and sidebar open/close calls
 - **`useDrawerPanel`** (in `BottomDrawer/useDrawerPanel.ts`): manages drawer-specific UI — `isOpen`, `panelHeight`, `isCollapsed`, `viewMode` ('table' | 'pivot'), `pinnedId`, open/close/collapse/pin/unpin
-- **`useFieldSelector`** (in `BottomDrawer/useFieldSelector.ts`): manages `fieldVisibility`, `sectionOrder`, `sectionHidden`, `focusSpotlightedFields` (renamed from "pinned fields" — see Decision #9)
+- **`useFieldSelector`** (in `BottomDrawer/useFieldSelector.ts`): manages `fieldVisibility`, `sectionOrder`, `sectionHidden`, `spotlightedFields` (renamed from "pinned fields" — see Decision #9)
 
 Data fetching stays in `AnalyticsBottomDrawer` component using `useEffect` on `activeId`/`pinnedId`, calling the server action `getTestCaseRunResultDetails()` from `src/app/[lang]/runs/actions.ts`.
 
 ### 5. Data flow: reuse existing `AnalyticsResult` type
 
-The detail API `getTestCaseRunResultDetails(id)` (server action in `src/app/[lang]/runs/actions.ts`) returns `AnalyticsResult | null`. This is the same type used by the existing sidebar. A utility `buildComparisonSections()` in `BottomDrawer/utils.ts` transforms two `AnalyticsResult` objects into a normalized structure:
+The detail API `getTestCaseRunResultDetails(id)` (server action in `src/app/[lang]/runs/actions.ts`) returns `AnalyticsResult | null`. This is the same type used by the existing sidebar.
+
+**Data sharing between modes**: When switching from sidebar to drawer (or vice versa), the already-fetched `AnalyticsResult` for the active `resultId` is NOT shared — each mode fetches independently. This is acceptable because mode switches are infrequent, and the sidebar uses a different component lifecycle. Within the drawer, the pinned result is cached in a `useRef` and reused until unpin (avoiding re-fetch when the user clicks different rows).
+
+A utility `buildComparisonSections()` in `BottomDrawer/utils.ts` transforms one or two `AnalyticsResult` objects into a normalized structure:
 
 ```typescript
 interface ComparisonSection {
-  key: string;
+  key: string;            // e.g. 'execution', 'testCaseData', 'extractedColumns', 'requestResponse', 'metric:groupName'
+  label: string;          // display name for section header
   rows: ComparisonRow[];
 }
 interface ComparisonRow {
   fieldKey: string;
   label: string;
   badge?: 'bound' | 'info';
+  isNumeric: boolean;     // true for metric values — drives diff highlight color (amber vs teal)
   values: Array<{ raw: string | null; display: ReactNode }>;
 }
 ```
+
+**Section generation rules:**
+- "Execution" section: always present, fields = `executionStatus`, `execDurationMs`
+- "Test Case Data" section: from `testCaseData` record keys — union of keys across all provided results
+- "Extracted Columns" section: from `extractedColumns` record keys — union across results. If a result lacks a key present in the other, its value is `null` (rendered as "—")
+- "Request / Response" section: from `requestBody`, `responseBody` — always present if either result has data
+- Metric sections: one per group from `metricValues` keys (reuses `getMetricGroups()` logic). Groups are unioned across results — if one result has a metric group the other doesn't, the missing result shows null values for that group's fields
+- Fields within each section are sorted alphabetically by key
 
 Both Table and Pivot views consume `ComparisonSection[]`.
 
@@ -87,9 +103,11 @@ Both Table and Pivot views consume `ComparisonSection[]`.
 
 Render the drawer via `createPortal` to `document.body` (matching the existing `FullscreenViewerModal` pattern). The main grid container gets `padding-bottom` equal to the drawer's **current rendered height** (including collapsed state — 34px when collapsed, full height when expanded).
 
+**Height communication**: `useDrawerPanel` exposes a `currentHeight` value (number in px) that reflects the actual rendered height: `panelHeight` when expanded, `COLLAPSED_HEIGHT` (34px) when collapsed, `0` when closed. `Analytics.tsx` reads this value and applies it as `style={{ paddingBottom: currentHeight }}` on the grid container div. No ResizeObserver needed — the hook is the single source of truth for height.
+
 ### 7. Resize: vanilla mousedown/mousemove
 
-`onMouseDown` on the resize bar, `mousemove` on `document` to adjust height. Min: 120px. Max: `window.innerHeight - 100`.
+`onMouseDown` on the resize bar, `mousemove` on `document` to adjust height. Min: 200px (toolbar ~34px + field selector tabs ~32px + usable content area). Max: `window.innerHeight - 100`. Keyboard support: when the resize handle is focused, Arrow Up/Down adjusts height by 20px per press, Shift+Arrow by 100px.
 
 ### 8. Field selector: checkbox tree + drag reorder via existing `DraggableList`/`DraggableItem`
 
@@ -99,11 +117,16 @@ The Fields tab renders collapsible section groups with per-field checkboxes. The
 
 Two "pin" concepts were confusing. Renamed:
 - **Pin** (test case level): locks a test case as the reference column. Uses 📌 icon. Managed by `useDrawerPanel`.
-- **Spotlight** (field level): highlights a specific field in the focus strip. Uses ⭐ or a distinct icon. Managed by `useFieldSelector` as `focusSpotlightedFields`.
+- **Spotlight** (field level): highlights a specific field in the focus strip. Uses a star/eye-like icon (distinct from pin 📌). Managed by `useFieldSelector` as `spotlightedFields`. Triggered via a spotlight toggle button on each field row in the **Table view** (not in the Field Selector sidebar). The Field Selector controls visibility (show/hide); Spotlight controls emphasis (focus strip inclusion).
 
 ### 10. Diff highlighting: simple string comparison
 
-When a pinned test case exists, each cell in the non-pinned column is compared to the pinned column's value (string equality on raw value). Different values get a subtle background tint — amber for numeric diffs, teal for text diffs. Via conditional Tailwind class names.
+When a pinned test case exists, each cell in the non-pinned column is compared to the pinned column's value. Comparison rules:
+- **Raw string equality** on the `raw` value from `ComparisonRow.values[]` (the serialized form, not the display ReactNode)
+- **Numeric normalization**: values that parse as numbers are compared via `Number(a) === Number(b)` to avoid false diffs from formatting differences (e.g., "0.500" vs "0.5")
+- **JSON normalization**: values detected as JSON (starting with `{` or `[`) are compared after `JSON.stringify(JSON.parse(v))` to normalize key ordering and whitespace
+- **Null handling**: two nulls are equal; null vs non-null is a diff
+- Different values get a subtle background tint — amber for numeric diffs (`isNumeric: true` on the row), teal for text diffs. Via conditional Tailwind class names in `getDiffClass()` utility.
 
 ### 11. Metric value formatting: match existing `MetricCard` behavior
 
@@ -133,7 +156,9 @@ Analytics.tsx
 
 - **Mode switch losing drawer state**: Switching from drawer to sidebar clears pinned case, field selection, etc. **Mitigation**: Acceptable for now — drawer state is transient. Could preserve in hook state later if needed.
 
-- **Performance with many fields**: 50+ rows possible in comparison table. **Mitigation**: Sections collapsible, fields hideable. Memoize `buildComparisonSections()` with `useMemo`.
+- **Performance with many fields**: 50+ rows possible in comparison table. **Mitigation**: Sections collapsible, fields hideable. Memoize `buildComparisonSections()` with `useMemo`. For the Pivot view, horizontal scrolling with sticky headers handles wide tables; no virtualization needed initially since field count is bounded by test case schema.
+
+- **Large JSON values in table cells**: `requestBody`/`responseBody` can be deeply nested. **Mitigation**: Render in scrollable `<pre>` blocks with `max-height: 180px` and `overflow-y: auto`. Values longer than 500 characters show a truncated preview with "Show more" expand.
 
 - **Scoped DndProvider**: The Order tab wraps its own `DndProvider` + `HTML5Backend`. This is the established pattern in this codebase (`GridView.tsx`, `ContainerVariables.tsx`). No risk of nested DndProvider conflicts since the drawer is portaled outside the grid.
 

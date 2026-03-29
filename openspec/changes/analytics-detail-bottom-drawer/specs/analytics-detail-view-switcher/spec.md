@@ -2,7 +2,7 @@
 
 ### Requirement: Detail mode switcher toggles between sidebar and drawer
 
-The system SHALL provide a switcher control that allows the user to toggle between two mutually exclusive detail view modes: "Sidebar" (existing right panel via AppContext) and "Drawer" (new bottom panel). Only one detail view SHALL be visible at a time. The default mode SHALL be "Sidebar".
+The system SHALL provide a switcher control that allows the user to toggle between two mutually exclusive detail view modes: "Sidebar" (existing right panel via AppContext) and "Drawer" (new bottom panel). Only one detail view SHALL be visible at a time. The default mode SHALL be "Sidebar". The `useDetailMode` hook SHALL be the sole owner of `sidebar.showSidebar()` / `sidebar.closeSidebar()` calls — `Analytics.tsx` SHALL NOT call these APIs directly.
 
 #### Scenario: Default mode is sidebar
 - **WHEN** the user opens the Analytics tab and clicks a grid row

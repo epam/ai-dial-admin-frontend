@@ -52,6 +52,10 @@ The Order tab SHALL display a draggable list of sections with: a drag handle (та
 - **WHEN** the user drags a section over another section
 - **THEN** the drop target shows a top border highlight indicating the insertion point
 
+#### Scenario: Reorder via keyboard
+- **WHEN** the user focuses a section's drag handle and presses Arrow Up or Arrow Down
+- **THEN** the section moves one position in the corresponding direction and position numbers recalculate
+
 ### Requirement: Order tab eye toggle hides entire sections
 
 Each section row in the Order tab SHALL have an eye toggle. Clicking it SHALL hide the entire section (all its fields) from both views. A hidden section's eye icon SHALL appear dimmed.

@@ -48,6 +48,18 @@ When two test cases are displayed (pinned + active), the system SHALL highlight 
 - **WHEN** both cases have the same value for a field
 - **THEN** no diff highlighting is applied to that cell
 
+#### Scenario: Numeric values differ only in formatting
+- **WHEN** pinned case has value "0.500" and active case has value "0.5"
+- **THEN** no diff highlighting is applied (values are numerically equal)
+
+#### Scenario: JSON values differ only in key ordering
+- **WHEN** pinned case has `{"a":1,"b":2}` and active case has `{"b":2,"a":1}`
+- **THEN** no diff highlighting is applied (JSON content is equivalent)
+
+#### Scenario: Null vs non-null value
+- **WHEN** pinned case has value "0.5" and active case has null
+- **THEN** the active case cell shows "—" with diff highlighting applied
+
 ### Requirement: Table view focus strip for spotlighted fields
 
 The Table view SHALL display a focus strip above the comparison table when one or more fields are spotlighted. Each spotlighted field renders as a card showing the field label, badge, and values for each test case column. "Spotlight" is distinct from "pin" (which refers to test case pinning).
@@ -74,11 +86,19 @@ Each field row SHALL display the field name (monospace) in the Field column and 
 
 #### Scenario: Long JSON value
 - **WHEN** a field value is a JSON string longer than 100 characters
-- **THEN** the cell displays the value in a pre-formatted scrollable block
+- **THEN** the cell displays the value in a pre-formatted scrollable block with max-height 180px and overflow-y auto
+
+#### Scenario: Very long value (over 500 characters)
+- **WHEN** a field value exceeds 500 characters
+- **THEN** the cell displays a truncated preview with a "Show more" toggle to expand
 
 #### Scenario: Null or missing value
 - **WHEN** a field value is null or undefined
 - **THEN** the cell displays a dash (—) in secondary color
+
+#### Scenario: Field exists in one test case but not the other
+- **WHEN** the pinned case has an `extractedColumns` field "confidence" but the active case does not
+- **THEN** the active case cell shows "—" for that field; the field row is still visible
 
 ### Requirement: Table view metric value formatting
 
@@ -119,6 +139,10 @@ The test case name column (leftmost) SHALL be sticky horizontally. The field col
 #### Scenario: Vertical scroll
 - **WHEN** the user scrolls the Pivot table vertically
 - **THEN** the field column headers remain fixed at the top
+
+#### Scenario: Many fields in Pivot view
+- **WHEN** the test case has more fields than fit in the drawer width
+- **THEN** the table is horizontally scrollable with the test case name column remaining sticky on the left
 
 ### Requirement: Comparison data transformation is memoized
 

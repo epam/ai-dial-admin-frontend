@@ -42,15 +42,23 @@ When `getTestCaseRunResultDetails()` returns `null` or the fetch fails, the syst
 
 ### Requirement: Drawer is resizable via drag handle
 
-The system SHALL render a drag handle at the top edge of the drawer. The user SHALL be able to drag the handle vertically to resize the drawer between 120px minimum and `window.innerHeight - 100px` maximum.
+The system SHALL render a drag handle at the top edge of the drawer. The user SHALL be able to drag the handle vertically to resize the drawer between 200px minimum and `window.innerHeight - 100px` maximum. The resize handle SHALL also support keyboard-driven resize: Arrow Up/Down adjusts height by 20px, Shift+Arrow by 100px.
 
 #### Scenario: User drags resize handle upward
 - **WHEN** the user presses and drags the resize handle upward
 - **THEN** the drawer height increases, and the cursor changes to `ns-resize` during the drag
 
 #### Scenario: User drags below minimum height
-- **WHEN** the user drags the resize handle so the computed height would be below 120px
-- **THEN** the drawer height stays at 120px
+- **WHEN** the user drags the resize handle so the computed height would be below 200px
+- **THEN** the drawer height stays at 200px
+
+#### Scenario: Resize via keyboard
+- **WHEN** the resize handle is focused and the user presses Arrow Up
+- **THEN** the drawer height increases by 20px (clamped to max)
+
+#### Scenario: Resize via keyboard with Shift
+- **WHEN** the resize handle is focused and the user presses Shift+Arrow Down
+- **THEN** the drawer height decreases by 100px (clamped to min 200px)
 
 ### Requirement: Drawer can be collapsed and expanded
 
@@ -116,6 +124,14 @@ The system SHALL provide a Pin button in the drawer toolbar. Pinning SHALL lock 
 - **WHEN** a test case is pinned and the user clicks the same row that is pinned
 - **THEN** the drawer shows only a single column for that test case (no duplicate columns)
 
+#### Scenario: Unpin returns to single-column view
+- **WHEN** a test case is pinned and the user unpins it
+- **THEN** the drawer shows only the active test case in a single column (no comparison)
+
+#### Scenario: Grid data refreshes while case is pinned
+- **WHEN** the analytics grid data refreshes (e.g., new computation) and the pinned result ID no longer exists
+- **THEN** the pinned case is automatically cleared and a single-column view of the active case is shown
+
 ### Requirement: View toggle between Table and Pivot
 
 The system SHALL provide Table and Pivot toggle buttons in the drawer toolbar. The active view SHALL be visually distinguished. Switching views SHALL preserve the active and pinned selections.
@@ -141,9 +157,25 @@ The drawer toolbar SHALL include a "Switch to Sidebar" button that closes the dr
 The drawer toolbar buttons, view toggles, and close/collapse controls SHALL be keyboard-focusable and activatable via Enter/Space. The Escape key SHALL close the drawer when it has focus.
 
 #### Scenario: Close drawer with Escape
-- **WHEN** the drawer is open and the user presses Escape while focus is within the drawer
+- **WHEN** the drawer is open and the user presses Escape while focus is within the drawer and no inner overlay (e.g., tooltip, dropdown) is open
 - **THEN** the drawer closes
 
 #### Scenario: Toggle view with keyboard
 - **WHEN** the user focuses the Pivot button and presses Enter
 - **THEN** the view switches to Pivot mode
+
+### Requirement: Drawer shows empty state when all fields are hidden
+
+The system SHALL display an empty state message in the comparison area when all fields are hidden via the field selector.
+
+#### Scenario: All fields hidden
+- **WHEN** the user unchecks all fields or hides all sections via the field selector
+- **THEN** the comparison area displays a message: "No fields visible. Use the Fields panel to show fields."
+
+### Requirement: Drawer shows progressive loading for pinned data
+
+When the drawer has a pinned case and the user clicks a new row, the system SHALL show the pinned column data immediately while loading the new active case data.
+
+#### Scenario: Active case loading with pinned data visible
+- **WHEN** the user clicks a new row while a pinned case is loaded
+- **THEN** the pinned column displays its data, the active column shows a loading indicator, and the toolbar updates with the new case name
