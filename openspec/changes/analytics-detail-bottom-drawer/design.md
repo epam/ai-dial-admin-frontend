@@ -114,6 +114,14 @@ interface ComparisonRow {
 - Metric sections: one per group from `metricValues` keys (reuses `getMetricGroups()` logic). Groups are unioned across results — if one result has a metric group the other doesn't, the missing result shows null values for that group's fields
 - Fields within each section are sorted alphabetically by key. Note: this means field order can change when a different active row is selected (if it has different keys in `extractedColumns` or `testCaseData`). This is acceptable — stable order based on the union is preferred over first-seen insertion order, as alpha sort is predictable and reproducible
 
+**Value serialization**: Several `AnalyticsResult` fields are `Record<string, unknown>` (namely `testCaseData`, `extractedColumns`, `requestBody`, `responseBody`, and nested values within `metricValues`). `buildComparisonSections()` converts each value to a `raw: string | null` for `ComparisonRow.values[]` using this logic:
+- `null` / `undefined` → `null`
+- `string` → used as-is
+- `number` / `boolean` → `String(value)`
+- `object` (including arrays) → `JSON.stringify(value, null, 2)` (pretty-printed for display readability; the diff comparison in `valuesAreEqual()` normalizes via `JSON.stringify(JSON.parse(v))` which strips formatting before comparing)
+
+The `display: ReactNode` is derived from `raw` at render time (e.g., wrapping JSON in `<pre>`, formatting metrics with progress bars).
+
 Both Table and Pivot views consume `ComparisonSection[]`.
 
 **Memoization stability**: `buildComparisonSections()` is wrapped in `useMemo` with deps on active result, pinned result, field visibility, and section order. To prevent unnecessary recomputation, `fieldVisibility` and `sectionOrder` in `useFieldSelector` must use stable references — use `useReducer` (or functional `setState`) so that the state object identity only changes on actual mutations, not on every render cycle.
