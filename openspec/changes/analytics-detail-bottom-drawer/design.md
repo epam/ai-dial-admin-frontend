@@ -38,7 +38,9 @@ Therefore, the mutual exclusion works as:
 - **Sidebar mode**: `Analytics.tsx` calls `sidebar.showSidebar()` on row click (existing behavior). Drawer component is not rendered.
 - **Drawer mode**: `Analytics.tsx` does *not* call `sidebar.showSidebar()`. Instead, it renders `AnalyticsBottomDrawer` (via portal). `sidebar.closeSidebar()` is called if the sidebar was previously open.
 
-**Ownership**: `useDetailMode` is the **single owner** of sidebar lifecycle within `Analytics.tsx`. All `sidebar.showSidebar()` and `sidebar.closeSidebar()` calls go through `useDetailMode`'s exposed methods (`openDetail`, `switchToSidebar`, `switchToDrawer`, `closeDetail`). `Analytics.tsx` must NOT call `sidebar.*` directly — it delegates to `useDetailMode` which internally coordinates with `useAppContext().sidebar`.
+**Ownership**: `useDetailMode` is the **single owner** of sidebar lifecycle within `Analytics.tsx`. All `sidebar.showSidebar()` and `sidebar.closeSidebar()` calls go through `useDetailMode`'s exposed methods (`openDetail`, `switchToSidebar`, `switchToDrawer`, `closeDetail`). `Analytics.tsx` must NOT call `sidebar.*` directly — it delegates to `useDetailMode` which internally coordinates with `useAppContext().sidebar`. Note: if another component calls `sidebar.closeSidebar()` externally, `useDetailMode` won't know — this is acceptable because the sidebar is only used for detail panels in the Analytics/ExtractionResult context and no other component closes it while Analytics is mounted.
+
+**Focus management on mode switch**: When switching sidebar → drawer, focus the drawer toolbar's first focusable element. When switching drawer → sidebar, let the sidebar manage its own focus (existing behavior — `RunMetricDetailPanel` receives focus naturally via the sidebar container).
 
 **Row re-click toggle**: Clicking the same row that is already active **closes** the detail view (matching the existing sidebar toggle behavior). In sidebar mode, `closeDetail()` calls `sidebar.closeSidebar()`. In drawer mode, `closeDetail()` closes the drawer (clearing pinned/field state). This preserves the current UX contract. If a pinned case exists and the user clicks the active (non-pinned) row again, the drawer closes entirely (pinned state is cleared).
 
@@ -65,6 +67,8 @@ Instead of one large `useBottomDrawer` hook, split concerns:
 - **`useDetailMode`** (in `Runs/View/useDetailMode.ts`, co-located with `Analytics.tsx`): manages `detailMode` ('sidebar' | 'drawer'), `selectedResultId`, mode switching logic, and sidebar open/close calls. Lives at the Analytics level because it owns sidebar lifecycle via `useAppContext().sidebar` — conceptually it belongs to the view layer, not nested inside `BottomDrawer/`
 - **`useDrawerPanel`** (in `BottomDrawer/useDrawerPanel.ts`): manages drawer-specific UI — `isOpen`, `panelHeight`, `isCollapsed`, `viewMode` ('table' | 'pivot'), `pinnedId`, open/close/collapse/pin/unpin
 - **`useFieldSelector`** (in `BottomDrawer/useFieldSelector.ts`): manages `fieldVisibility`, `sectionOrder`, `sectionHidden`, `spotlightedFields` (renamed from "pinned fields" — see Decision #9)
+
+**Reset orchestration**: `useDetailMode.closeDetail()` and `switchToSidebar()` must call both `useDrawerPanel.close()` AND `useFieldSelector.resetAll()` when closing the drawer. These two hooks are independent, so the orchestrating layer (`useDetailMode` or `AnalyticsBottomDrawer`'s effect on `isOpen` becoming false) is responsible for coordinating the reset.
 
 Data fetching stays in `AnalyticsBottomDrawer` component using `useEffect` on `activeId`/`pinnedId`, calling the server action `getTestCaseRunResultDetails()` from `src/app/[lang]/runs/actions.ts`.
 
@@ -97,7 +101,7 @@ interface ComparisonRow {
 - "Extracted Columns" section: from `extractedColumns` record keys — union across results. If a result lacks a key present in the other, its value is `null` (rendered as "—")
 - "Request / Response" section: from `requestBody`, `responseBody` — always present if either result has data
 - Metric sections: one per group from `metricValues` keys (reuses `getMetricGroups()` logic). Groups are unioned across results — if one result has a metric group the other doesn't, the missing result shows null values for that group's fields
-- Fields within each section are sorted alphabetically by key
+- Fields within each section are sorted alphabetically by key. Note: this means field order can change when a different active row is selected (if it has different keys in `extractedColumns` or `testCaseData`). This is acceptable — stable order based on the union is preferred over first-seen insertion order, as alpha sort is predictable and reproducible
 
 Both Table and Pivot views consume `ComparisonSection[]`.
 
@@ -105,11 +109,17 @@ Both Table and Pivot views consume `ComparisonSection[]`.
 
 Render the drawer via `createPortal` to `document.body` (matching the existing `FullscreenViewerModal` pattern). The drawer uses `z-40` to sit below notifications (`z-[100]`) and fullscreen modals (`z-50`) but above normal page content. The main grid container gets `padding-bottom` equal to the drawer's **current rendered height** (including collapsed state — 34px when collapsed, full height when expanded).
 
-**Height communication**: `useDrawerPanel` exposes a `currentHeight` value (number in px) that reflects the actual rendered height: `panelHeight` when expanded, `COLLAPSED_HEIGHT` (34px) when collapsed, `0` when closed. `Analytics.tsx` reads this value and applies it as `style={{ paddingBottom: currentHeight }}` on the grid container div. No ResizeObserver needed — the hook is the single source of truth for height.
+**Height communication**: `useDrawerPanel` exposes a `currentHeight` value (number in px) that reflects the actual rendered height: `panelHeight` when expanded, `COLLAPSED_HEIGHT` (34px) when collapsed, `0` when closed. `Analytics.tsx` reads this value and adjusts the grid container's available height. No ResizeObserver needed — the hook is the single source of truth for height.
+
+**⚠ AG Grid compatibility**: AG Grid manages its own virtual scroll viewport based on its container's dimensions. Applying `padding-bottom` on the wrapper div may NOT correctly reduce AG Grid's visible area — it calculates row virtualization from its own container height, not the parent's padding. **Preferred approach**: reduce the grid container's `height` or `max-height` (e.g., `style={{ height: \`calc(100% - ${currentHeight}px)\` }}`) rather than adding `padding-bottom`. Verify with AG Grid that virtual scrolling and row rendering update correctly when the container height changes dynamically.
+
+**Browser resize clamping**: `useDrawerPanel` must listen for the `window` `resize` event and clamp `panelHeight` to `window.innerHeight - 100` if it exceeds the new maximum. This prevents the drawer from overflowing the viewport after the browser window shrinks.
 
 ### 7. Resize: vanilla mousedown/mousemove
 
-`onMouseDown` on the resize bar, `mousemove` on `document` to adjust height. Min: 200px (toolbar ~34px + field selector tabs ~32px + usable content area). Max: `window.innerHeight - 100`. Keyboard support: when the resize handle is focused, Arrow Up/Down adjusts height by 20px per press, Shift+Arrow by 100px.
+`onMouseDown` on the resize bar, `mousemove` on `document` to adjust height. Min: 200px (toolbar ~34px + field selector tabs ~32px + usable content area). Max: `window.innerHeight - 100`. Keyboard support: when the resize handle is focused, Arrow Up/Down adjusts height by 20px per press, Shift+Arrow by 100px. Arrow Up = handle moves up = drawer grows taller (follows the "drag the top edge" mental model, not the "scroll" mental model).
+
+**Transitions**: Apply `transition: height 150ms ease` on the drawer container for collapse/expand animations. Disable the transition during active drag resize (add/remove a `dragging` class or inline style) to avoid lag.
 
 **Why not `re-resizable`**: The project uses `re-resizable` for the sidebar (`SideBar.tsx`), but it's designed for left/right resizing on inline elements. The drawer is a fixed-bottom portal that resizes by dragging its top edge upward — `re-resizable`'s `top` handle inverts the drag direction logic and fights with fixed positioning. Vanilla mousedown/mousemove is simpler and more predictable for this specific layout.
 
@@ -119,7 +129,7 @@ The Fields tab renders collapsible section groups with per-field checkboxes. The
 
 **Note**: `DraggableList` (`Common/Lists/DraggableList.tsx`) is NOT reused — it is designed for editable string lists with add/remove input fields (`NewItem` components), which doesn't fit section reordering. A lightweight custom list container with `useDrop` is needed to manage `ComparisonSection` keys.
 
-**Keyboard reorder**: The existing `DraggableItem` has no keyboard handling (no `tabIndex`, no `onKeyDown` on the drag handle). Rather than modifying `DraggableItem` (which would affect all existing usages), the Order tab wraps each `DraggableItem` with an `onKeyDown` handler on a focusable container (`tabIndex={0}`, `role="listitem"`) that intercepts Arrow Up/Down and calls `moveSectionByKeyboard(sectionKey, direction)`. This keeps `DraggableItem` untouched.
+**Keyboard reorder**: The existing `DraggableItem` has no keyboard handling (no `tabIndex`, no `onKeyDown` on the drag handle). Rather than modifying `DraggableItem` (which would affect all existing usages), the Order tab wraps each `DraggableItem` with an `onKeyDown` handler on a focusable container (`tabIndex={0}`, `role="listitem"`) that intercepts Arrow Up/Down and calls `moveSectionByKeyboard(sectionKey, direction)`. This keeps `DraggableItem` untouched. Note: specs that say "focuses a section's drag handle" should be read as "focuses the section row" — the keyboard handler lives on the wrapper, not the drag handle itself.
 
 ### 9. Naming: "spotlight" for field-level pins, "pin" for test case pins
 
@@ -162,7 +172,7 @@ Analytics.tsx
 
 ## Risks / Trade-offs
 
-- **Two parallel data fetches**: When both active and pinned IDs are set, two `getTestCaseRunResultDetails()` calls fire. **Mitigation**: `Promise.all`; cache pinned result until unpin.
+- **Two parallel data fetches**: When both active and pinned IDs are set, two `getTestCaseRunResultDetails()` calls fire. **Mitigation**: `Promise.all`; cache pinned result until unpin. Note: if the underlying data is re-computed (e.g., new metric run), the cached pinned result will show stale data. This is accepted as a known limitation — the pinned cache is invalidated only on unpin or close, not on data refresh. A future enhancement could compare `computedAt` timestamps on grid refresh and invalidate the cache when the pinned result's data has changed.
 
 - **Pinned case invalidation on grid refresh**: When `Analytics.tsx` refreshes grid data (e.g., new computation results), the pinned result ID may no longer exist. **Mitigation**: `Analytics.tsx` calls `useDrawerPanel.clearPinIfMissing(resultIds)` whenever the `results` state updates, passing the current array of valid IDs. The hook auto-clears the pinned case if its ID is absent.
 
@@ -182,3 +192,8 @@ Analytics.tsx
 
 - Should the detail mode preference persist within a session (e.g., via localStorage) so returning to the Analytics tab remembers the last mode? Currently scoped as a non-goal.
 - Should the ExtractionResult tab also support the drawer mode, or is this Analytics-only?
+- Should field selector state persist across close/reopen within the same Analytics session? Currently reset on close — users who carefully configure their view may find this frustrating. Could preserve state in `useFieldSelector` even when `isOpen` is false, only resetting on navigation away or explicit "Reset" action.
+- Should Pivot view visually indicate spotlighted fields (e.g., highlighted column header) even though the focus strip is Table-view-only? Currently spotlight state persists across view toggles but has no visual effect in Pivot.
+- Should section headers in Table view be click-to-collapse as a quick toggle (in addition to Field Selector control)? Currently non-interactive — adds friction for users who want to collapse a section without switching to the sidebar.
+- Should a keyboard shortcut (e.g., `Ctrl+Shift+D`) toggle the drawer open/close or switch between sidebar/drawer modes?
+- Should Pivot view show a hint (e.g., "Pin a test case to compare") when only one test case is displayed?

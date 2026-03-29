@@ -53,7 +53,7 @@ The Order tab SHALL display a list of sections using `DraggableItem` (from `Comm
 - **THEN** the drop target shows a top border highlight indicating the insertion point
 
 #### Scenario: Reorder via keyboard
-- **WHEN** the user focuses a section's drag handle and presses Arrow Up or Arrow Down
+- **WHEN** the user focuses a section row (via the focusable wrapper around `DraggableItem`, not the drag handle itself) and presses Arrow Up or Arrow Down
 - **THEN** the section moves one position in the corresponding direction and position numbers recalculate
 
 ### Requirement: Order tab eye toggle hides entire sections

@@ -50,7 +50,7 @@ The system SHALL render a drag handle at the top edge of the drawer. The user SH
 
 #### Scenario: User drags resize handle upward
 - **WHEN** the user presses and drags the resize handle upward
-- **THEN** the drawer height increases, and the cursor changes to `ns-resize` during the drag
+- **THEN** the drawer height increases, the cursor changes to `ns-resize` during the drag, and the height transition is disabled during active drag (re-enabled on mouseup)
 
 #### Scenario: User drags below minimum height
 - **WHEN** the user drags the resize handle so the computed height would be below 200px
@@ -58,23 +58,27 @@ The system SHALL render a drag handle at the top edge of the drawer. The user SH
 
 #### Scenario: Resize via keyboard
 - **WHEN** the resize handle is focused and the user presses Arrow Up
-- **THEN** the drawer height increases by 20px (clamped to max)
+- **THEN** the drawer height increases by 20px (clamped to max). Arrow Up = handle moves up = drawer grows taller (follows the "drag the top edge" mental model)
 
 #### Scenario: Resize via keyboard with Shift
 - **WHEN** the resize handle is focused and the user presses Shift+Arrow Down
 - **THEN** the drawer height decreases by 100px (clamped to min 200px)
 
+#### Scenario: Browser window resizes while drawer is open
+- **WHEN** the browser window height decreases and the current drawer height exceeds `window.innerHeight - 100px`
+- **THEN** the drawer height is clamped to `window.innerHeight - 100px` to prevent overflow
+
 ### Requirement: Drawer can be collapsed and expanded
 
-The system SHALL provide a Collapse button in the drawer toolbar. Collapsing SHALL reduce the drawer to its toolbar bar only (approximately 34px). Clicking the Collapse button again SHALL restore the previous height.
+The system SHALL provide a Collapse button in the drawer toolbar. Collapsing SHALL reduce the drawer to its toolbar bar only (approximately 34px) with a smooth height transition (150ms ease). Clicking the Collapse button again SHALL restore the previous height with the same transition.
 
 #### Scenario: Collapse the drawer
 - **WHEN** the user clicks the Collapse button
-- **THEN** the drawer body and resize handle are hidden, leaving only the toolbar visible at ~34px height
+- **THEN** the drawer body and resize handle are hidden, leaving only the toolbar visible at ~34px height, with a smooth height transition
 
 #### Scenario: Expand a collapsed drawer
 - **WHEN** the user clicks the Collapse button on a collapsed drawer
-- **THEN** the drawer restores to its previous height with body and resize handle visible
+- **THEN** the drawer restores to its previous height with body and resize handle visible, with a smooth height transition
 
 ### Requirement: Drawer can be closed
 
@@ -84,21 +88,21 @@ The system SHALL provide a Close button (X) in the drawer toolbar. Closing SHALL
 - **WHEN** the user clicks the Close button
 - **THEN** the drawer is hidden, pinned ID and field selector state are cleared, but detail mode remains "drawer"
 
-### Requirement: Main grid adjusts padding-bottom for drawer's current height
+### Requirement: Main grid adjusts available height for drawer
 
-The system SHALL add padding-bottom to the analytics grid container equal to the drawer's **current rendered height** when the drawer is open. This includes tracking collapsed state.
+The system SHALL reduce the analytics grid container's available height by the drawer's **current rendered height** when the drawer is open. This includes tracking collapsed state. Note: AG Grid manages its own virtual scroll viewport — the container's `height` or `max-height` must be reduced (not `padding-bottom`) so AG Grid recalculates row virtualization correctly.
 
 #### Scenario: Drawer open at full height
 - **WHEN** the drawer is open with height 380px
-- **THEN** the analytics grid container has `padding-bottom: 380px`
+- **THEN** the analytics grid container height is reduced by 380px (e.g., `height: calc(100% - 380px)`)
 
 #### Scenario: Drawer collapsed
 - **WHEN** the drawer is collapsed to ~34px
-- **THEN** the analytics grid container has `padding-bottom: 34px`
+- **THEN** the analytics grid container height is reduced by 34px
 
 #### Scenario: Drawer closed or sidebar mode
 - **WHEN** the drawer is closed or detail mode is "sidebar"
-- **THEN** the analytics grid container has no additional padding-bottom
+- **THEN** the analytics grid container uses its full available height
 
 ### Requirement: Drawer renders via portal
 
@@ -163,10 +167,10 @@ The drawer toolbar SHALL include a "Switch to Sidebar" button that closes the dr
 The drawer toolbar buttons, view toggles, and close/collapse controls SHALL be keyboard-focusable and activatable via Enter/Space. The Escape key SHALL close the drawer when it has focus.
 
 #### Scenario: Close drawer with Escape
-- **WHEN** the drawer is open and the user presses Escape while focus is within the drawer and no inner overlay (e.g., tooltip, dropdown, FullscreenViewer modal) is open
+- **WHEN** the drawer is open and the user presses Escape while focus is within the drawer and no inner overlay is open
 - **THEN** the drawer closes
 
-Note: The Escape handler must check whether a `FullscreenViewer` modal is currently open (via its context) before closing the drawer. If a fullscreen modal is open, Escape closes the modal first; a second Escape closes the drawer.
+Note: The Escape handler should check `event.defaultPrevented` before closing — if a child handler (FullscreenViewer modal, dropdown, AG Grid cell editor, etc.) already called `event.preventDefault()`, skip the drawer close. This is more robust than checking specific context states. As a fallback, also check FullscreenViewer context if `defaultPrevented` is not set by the modal's handler.
 
 #### Scenario: Toggle view with keyboard
 - **WHEN** the user focuses the Pivot button and presses Enter

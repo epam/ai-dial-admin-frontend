@@ -42,11 +42,11 @@ The system SHALL preserve the currently selected `resultId` when the user switch
 
 #### Scenario: Context preserved sidebar to drawer
 - **WHEN** the sidebar shows details for "Row 000029" and the user switches to drawer mode
-- **THEN** the drawer opens with "Row 000029" as the active detail
+- **THEN** the drawer opens with "Row 000029" as the active detail and focus moves to the drawer toolbar's first focusable element
 
 #### Scenario: Context preserved drawer to sidebar
 - **WHEN** the drawer shows details for "Row 000030" (with "Row 000029" pinned) and the user switches to sidebar mode
-- **THEN** `sidebar.showSidebar()` is called with `resultId="Row 000030"` (the active, not the pinned)
+- **THEN** `sidebar.showSidebar()` is called with `resultId="Row 000030"` (the active, not the pinned) and the sidebar manages its own focus
 
 ### Requirement: Mutual exclusion between sidebar and drawer
 
