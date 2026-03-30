@@ -98,7 +98,7 @@ rules:
     - Consider impact on existing features — flag if the proposal could affect other parts of the app (shared components, contexts, API routes)
   design:
     - Use existing Tailwind theme tokens and CSS variables — don't introduce hardcoded colors
-    - Prefer extending existing components from @epam/ai-dial-ui-kit over creating new ones
+    - Prefer reusing components from @epam/ai-dial-ui-kit and src/components/Common/ over creating new ones — check Common/ (CopyButton, Accordion, etc.) before building similar UI patterns
     - Consider i18n — all user-facing strings go through next-international
     - Follow existing patterns in src/components/ for structuring new features
     - Name component props interfaces `Props`, not `ComponentNameProps`
@@ -107,6 +107,9 @@ rules:
     - Apply base accessibility features targeting WCAG AA level
     - Use classNames() from the classnames package for conditional CSS classes — not template literal concatenation
     - Use @tabler/icons-react for all icons — do not use unicode characters or inline SVGs
+    - Extract pure functions (no React hooks/JSX) from components into utils files with tests — src/utils/ for cross-cutting, <feature>/utils/ for domain-specific
+    - Place types and interfaces in dedicated model files — src/models/ for domain types, adjacent models.ts for component-local types — avoid inline anonymous object types in interface properties
+    - React contexts, providers, and their hooks go in src/context/ — not co-located with components
   specs:
     - Reference backend API contracts from ai-dial-admin-backend or ai-dial-admin-deployment-manager-backend
     - Include validation requirements for any form fields
