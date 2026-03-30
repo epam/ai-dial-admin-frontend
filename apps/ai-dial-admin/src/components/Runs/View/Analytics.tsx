@@ -1,17 +1,19 @@
 'use client';
 
 import { ColDef, RowClickedEvent } from 'ag-grid-community';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { DialLoader } from '@epam/ai-dial-ui-kit';
 
 import { getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
 import GridView from '@/src/components/Grid/GridView/GridView';
-import RunMetricDetailPanel from '@/src/components/Runs/Details/RunMetricDetailPanel';
+import AnalyticsBottomDrawer from '@/src/components/Runs/Details/BottomDrawer/AnalyticsBottomDrawer';
+import { useDrawerPanel } from '@/src/components/Runs/Details/BottomDrawer/useDrawerPanel';
 import { EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
-import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsResult, Run } from '@/src/models/evaluation/run';
+
+import { useDetailMode } from './useDetailMode';
 import { getAnalyticsColumns, RESULT_FILTERS } from './utils';
 
 interface Props {
@@ -20,11 +22,11 @@ interface Props {
 
 const AnalyticsTab: FC<Props> = ({ run }) => {
   const t = useI18n();
-  const { sidebar } = useAppContext();
+  const detailMode = useDetailMode();
+  const drawerPanel = useDrawerPanel();
 
   const [results, setResults] = useState<AnalyticsResult[] | null>(null);
   const [colDefs, setColDefs] = useState<ColDef[]>(() => getAnalyticsColumns([]));
-  const [selectedResultId, setSelectedResultId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -41,31 +43,52 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
     }
   }, [isLoading, results, run]);
 
+  // Clear pinned if missing from results
+  const resultIds = useMemo(() => (results ?? []).map((r) => r.id!).filter(Boolean), [results]);
+  useEffect(() => {
+    if (resultIds.length > 0) {
+      drawerPanel.clearPinIfMissing(resultIds);
+    }
+  }, [resultIds, drawerPanel]);
+
   const onRowClicked = useCallback(
     (event: RowClickedEvent) => {
-      if (event.data && selectedResultId !== event.data.id) {
-        setSelectedResultId(event.data.id);
-        sidebar.showSidebar(
-          <RunMetricDetailPanel resultId={event.data.id} onClose={sidebar.closeSidebar} />,
-          'w-[750px]',
-        );
-      } else {
-        setSelectedResultId(null);
-        sidebar.closeSidebar();
+      if (!event.data) return;
+      const resultId = event.data.id;
+
+      detailMode.openDetail(resultId);
+
+      // Sync drawer panel state when in drawer mode
+      if (detailMode.detailMode === 'drawer') {
+        if (detailMode.selectedResultId === resultId && detailMode.drawerOpen) {
+          // Will be toggled closed by openDetail
+        } else {
+          drawerPanel.open(resultId);
+        }
       }
     },
-    [selectedResultId, sidebar],
+    [detailMode, drawerPanel],
   );
 
+  // Sync drawer open/close with detailMode
   useEffect(() => {
-    return () => sidebar.closeSidebar();
+    if (detailMode.drawerOpen && detailMode.selectedResultId) {
+      drawerPanel.open(detailMode.selectedResultId);
+    } else if (!detailMode.drawerOpen && drawerPanel.isOpen) {
+      drawerPanel.close();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [detailMode.drawerOpen, detailMode.selectedResultId]);
+
+  const gridStyle = useMemo(
+    () => ({ height: `calc(100% - ${drawerPanel.currentHeight}px)` }),
+    [drawerPanel.currentHeight],
+  );
 
   return (
     <div className="flex flex-col gap-4 h-full min-h-0">
       <h2>{t(TabsI18nKey.Analytics)}</h2>
-      <div className="min-h-0 flex-1">
+      <div className="min-h-0 flex-1" style={gridStyle}>
         {isLoading ? (
           <DialLoader size={40} />
         ) : (
@@ -80,6 +103,15 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
           />
         )}
       </div>
+      {detailMode.detailMode === 'drawer' && detailMode.drawerOpen && (
+        <AnalyticsBottomDrawer
+          drawerPanel={drawerPanel}
+          pendingFocus={detailMode.pendingFocus}
+          clearPendingFocus={detailMode.clearPendingFocus}
+          onClose={detailMode.closeDetail}
+          onSwitchToSidebar={detailMode.switchToSidebar}
+        />
+      )}
     </div>
   );
 };

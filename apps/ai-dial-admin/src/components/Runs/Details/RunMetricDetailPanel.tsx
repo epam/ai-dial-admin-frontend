@@ -3,6 +3,7 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { DialCloseButton, DialLoader, DialSwitch } from '@epam/ai-dial-ui-kit';
+import { IconLayoutBottombar } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import { getTestCaseRunResultDetails } from '@/src/app/[lang]/runs/actions';
@@ -22,9 +23,10 @@ import MetricInfoPanel from './MetricInfoPanel';
 interface Props {
   resultId: string;
   onClose: () => void;
+  onSwitchMode?: () => void;
 }
 
-const RunMetricDetailPanel: FC<Props> = ({ resultId, onClose }) => {
+const RunMetricDetailPanel: FC<Props> = ({ resultId, onClose, onSwitchMode }) => {
   const t = useI18n();
 
   const [isJsonView, setIsJsonView] = useState(false);
@@ -70,6 +72,15 @@ const RunMetricDetailPanel: FC<Props> = ({ resultId, onClose }) => {
               switchId="jsonViewer"
               onChange={() => setIsJsonView(!isJsonView)}
             />
+            {onSwitchMode && (
+              <button
+                onClick={onSwitchMode}
+                className="flex items-center justify-center size-7 rounded hover:bg-layer-3 text-secondary hover:text-primary"
+                title={t(RunsI18nKey.SwitchToDrawer)}
+              >
+                <IconLayoutBottombar size={18} />
+              </button>
+            )}
             <DialCloseButton onClose={onClose} />
           </div>
         </div>
