@@ -15,7 +15,7 @@ import { AnalyticsResult } from '@/src/models/evaluation/run';
 import AdaptiveValueGrid from './AdaptiveValueGrid';
 import CodeViewer from '@/src/components/Common/CodeViewer/CodeViewer';
 import ExecutionStatusBar from './ExecutionStatusBar';
-import { FullscreenViewerProvider } from '@/src/components/Common/FullscreenViewer/FullscreenViewer';
+import { FullscreenViewerProvider } from '@/src/context/FullscreenViewerContext';
 import MetricCardsGrid from './MetricCardsGrid';
 import MetricInfoPanel from './MetricInfoPanel';
 

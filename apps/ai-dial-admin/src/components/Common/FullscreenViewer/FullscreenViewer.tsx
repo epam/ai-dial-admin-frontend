@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, ReactNode, createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo } from 'react';
 
 import { Editor } from '@monaco-editor/react';
 import { DialCloseButton } from '@epam/ai-dial-ui-kit';
@@ -13,19 +13,11 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useI18n } from '@/src/locales/client';
 import { EDITOR_THEMES } from '@/src/types/editor';
-import { FullscreenViewerContextValue, FullscreenViewerState, ViewerContentType } from '@/src/models/evaluation/detail-panel';
+import { FullscreenViewerState } from '@/src/models/evaluation/detail-panel';
 import { formatContent } from '@/src/utils/evaluation/detail-panel';
 import { getSuccessNotification } from '@/src/utils/notification';
 
-const FullscreenViewerContext = createContext<FullscreenViewerContextValue | null>(null);
-
-export const useFullscreenViewer = () => {
-  const ctx = useContext(FullscreenViewerContext);
-  if (!ctx) throw new Error('useFullscreenViewer must be used within FullscreenViewerProvider');
-  return ctx;
-};
-
-const FullscreenViewerModal: FC<FullscreenViewerState & { onClose: () => void }> = ({
+export const FullscreenViewerModal: FC<FullscreenViewerState & { onClose: () => void }> = ({
   isOpen,
   title,
   content,
@@ -49,7 +41,6 @@ const FullscreenViewerModal: FC<FullscreenViewerState & { onClose: () => void }>
 
   const language = useMemo(() => {
     if (contentType === 'json') return 'json';
-    // Auto-detect JSON in text content
     try {
       JSON.parse(content);
       return 'json';
@@ -122,31 +113,5 @@ const FullscreenViewerModal: FC<FullscreenViewerState & { onClose: () => void }>
       </div>
     </div>,
     document.body,
-  );
-};
-
-export const FullscreenViewerProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const [state, setState] = useState<FullscreenViewerState>({
-    isOpen: false,
-    title: '',
-    content: '',
-    contentType: 'text',
-  });
-
-  const open = useCallback((title: string, content: string, contentType: ViewerContentType) => {
-    setState({ isOpen: true, title, content, contentType });
-  }, []);
-
-  const close = useCallback(() => {
-    setState((prev) => ({ ...prev, isOpen: false }));
-  }, []);
-
-  const value = useMemo(() => ({ open, close }), [open, close]);
-
-  return (
-    <FullscreenViewerContext.Provider value={value}>
-      {children}
-      <FullscreenViewerModal {...state} onClose={close} />
-    </FullscreenViewerContext.Provider>
   );
 };

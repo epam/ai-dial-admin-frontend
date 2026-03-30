@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
-import { FullscreenViewerProvider, useFullscreenViewer } from './FullscreenViewer';
+import { FullscreenViewerProvider, useFullscreenViewer } from '@/src/context/FullscreenViewerContext';
 
 vi.mock('@monaco-editor/react', () => ({
   Editor: ({ value, language }: { value: string; language: string }) => <pre data-language={language}>{value}</pre>,

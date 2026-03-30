@@ -4,7 +4,7 @@ import { describe, expect, test, vi } from 'vitest';
 import CodeViewer from './CodeViewer';
 
 const mockOpen = vi.fn();
-vi.mock('../FullscreenViewer/FullscreenViewer', () => ({
+vi.mock('@/src/context/FullscreenViewerContext', () => ({
   useFullscreenViewer: () => ({ open: mockOpen, close: vi.fn() }),
 }));
 
