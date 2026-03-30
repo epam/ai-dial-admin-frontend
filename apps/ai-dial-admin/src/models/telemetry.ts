@@ -7,6 +7,7 @@ export interface TelemetryData {
 
 export interface TelemetryQuery {
   $type: string;
+  fillGaps?: boolean;
   query: {
     distinct?: string;
     expressions: string[];

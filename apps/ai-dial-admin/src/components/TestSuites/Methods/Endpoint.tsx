@@ -6,9 +6,10 @@ import { TestSuite } from '@/src/models/evaluation/test-suite';
 
 interface Props {
   testSuite: TestSuite;
+  showFormattedUrl?: boolean;
 }
 
-const MethodEndpoint: FC<Props> = ({ testSuite }) => {
+const MethodEndpoint: FC<Props> = ({ testSuite, showFormattedUrl = false }) => {
   return (
     <div>
       {testSuite?.endpointRef?.method && (
@@ -16,7 +17,9 @@ const MethodEndpoint: FC<Props> = ({ testSuite }) => {
           {testSuite?.endpointRef.method}
         </span>
       )}
-      <span className="truncate text-primary ml-1">{testSuite?.endpointRef?.relativeUrlPattern}</span>
+      <span className="truncate text-primary ml-1">
+        {showFormattedUrl ? testSuite?.requestTemplate?.urlTemplate : testSuite?.endpointRef?.relativeUrlPattern}
+      </span>
     </div>
   );
 };
