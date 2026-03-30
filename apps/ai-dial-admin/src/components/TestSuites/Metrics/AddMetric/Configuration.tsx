@@ -67,7 +67,7 @@ const MetricConfiguration: FC<Props> = ({
         onChange={onChangeName}
       />
 
-      <div className="flex-1 min-h-0 overflow-y-auto gap-y-6 flex flex-col">
+      <div className="flex-1 min-h-0 gap-y-6 flex flex-col">
         <MetricSchemaSection
           title={t(TestSuitesI18nKey.Configuration)}
           fields={selectedMetricParameters || []}
