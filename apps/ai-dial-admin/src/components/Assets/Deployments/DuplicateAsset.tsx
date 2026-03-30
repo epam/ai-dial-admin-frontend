@@ -42,7 +42,7 @@ const DuplicateAsset: FC<Props> = ({ view, isModalOpen, entity, versionsMap, con
 
   const [clonedAsset, setClonedAsset] = useState<AssetWithVersion>({
     ...entity,
-    name: getClonedEntityName(entity.name, duplicationType === DuplicationTypes.VERSION),
+    name: duplicationType === DuplicationTypes.VERSION ? entity.name : getClonedEntityName(entity.name),
     displayName: isDeploymentAsset(view) ? entity.displayName : void 0,
     version: getInitialVersion(versionsMap, entity?.name),
   });
