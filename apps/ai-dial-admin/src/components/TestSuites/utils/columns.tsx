@@ -11,10 +11,10 @@ import {
 
 import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
 import ValidityStatus from '@/src/components/Common/ValidityStatus/ValidityStatus';
+import BooleanButtonCellRenderer from '@/src/components/Grid/CellRenderers/BooleanButtonCellRenderer';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSelectCellRenderer';
 import JsonEditorCellRenderer from '@/src/components/Grid/CellRenderers/JsonEditorCellRenderer';
-import BooleanButtonCellRenderer from '@/src/components/Grid/CellRenderers/BooleanButtonCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import BooleanColumnHeader from '@/src/components/Grid/HeaderComponents/BooleanColumnHeader';
 import { NO_BORDER_CLASS, UTILITY_COLUMN } from '@/src/constants/ag-grid';
@@ -25,6 +25,7 @@ import { MetricBinding } from '@/src/models/evaluation/metric';
 import { InputBindingRowData, ResponseColumn, TestCase, TestCaseSchema } from '@/src/models/evaluation/test-suite';
 import { InputBindingType, MetricBindingType, TestCaseItemType } from '@/src/types/evaluation';
 import { ApplicationRoute } from '@/src/types/routes';
+import { TYPE_OPTIONS } from '../TestCaseSchema/constants';
 
 export type onCellChange = (data: Record<string, unknown>, field: string, value: string | number | boolean) => void;
 
@@ -451,6 +452,81 @@ export const getVariablesColumns = (
       floatingFilter: false,
       filter: false,
       sortable: false,
+    },
+  ];
+};
+
+export const getSchemaFieldGridColumns = (
+  onChangeEditable: (value: string | number, data: unknown, column: string, index?: number) => void,
+  onChangeSelect: (value: string | string[], data: unknown, column?: string, index?: number) => void,
+  onChangeRequired: (value: boolean, data: TestCaseSchema) => void,
+  t: (key: string) => string,
+): ColDef<TestCaseSchema>[] => {
+  return [
+    {
+      headerName: 'Name',
+      colId: 'name',
+      field: 'name',
+      editable: false,
+      cellClass: NO_BORDER_CLASS,
+      cellRenderer: EditableCellRenderer,
+      valueGetter: (params: ValueGetterParams) => params.data?.name ?? '',
+      cellRendererParams: {
+        onChange: onChangeEditable,
+        hideTriangle: true,
+        skipRequired: true,
+      },
+      sortable: false,
+      filter: false,
+      floatingFilter: false,
+    },
+    {
+      headerName: 'Type',
+      colId: 'type',
+      field: 'type',
+      cellClass: NO_BORDER_CLASS,
+      cellRenderer: SelectCellRenderer,
+      cellRendererParams: {
+        items: TYPE_OPTIONS,
+        onChange: onChangeSelect,
+      },
+      sortable: false,
+      filter: false,
+      floatingFilter: false,
+    },
+    {
+      headerName: 'Required',
+      colId: 'required',
+      field: 'required',
+      cellClass: NO_BORDER_CLASS,
+      cellRenderer: BooleanButtonCellRenderer,
+      cellRendererParams: {
+        onChange: onChangeRequired,
+        trueLabel: t(BasicI18nKey.Required),
+        falseLabel: t(BasicI18nKey.Optional),
+      },
+      tooltipValueGetter: () => undefined,
+      sortable: false,
+      filter: false,
+      floatingFilter: false,
+      maxWidth: 100,
+    },
+    {
+      headerName: 'Description',
+      colId: 'description',
+      field: 'description',
+      editable: false,
+      cellClass: NO_BORDER_CLASS,
+      cellRenderer: EditableCellRenderer,
+      valueGetter: (params: ValueGetterParams) => params.data?.description ?? '',
+      cellRendererParams: {
+        onChange: onChangeEditable,
+        hideTriangle: true,
+        skipRequired: true,
+      },
+      sortable: false,
+      filter: false,
+      floatingFilter: false,
     },
   ];
 };
