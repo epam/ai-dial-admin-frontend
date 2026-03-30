@@ -1526,6 +1526,8 @@ export default {
     Parameters: 'Parameters',
     Inputs: 'Inputs',
     Outputs: 'Outputs',
+    ShowMore: 'Show more',
+    ShowLess: 'Show less',
     Results: 'Results',
     FinalPath: 'Final path',
   },

@@ -1492,6 +1492,8 @@ export enum TestSuitesI18nKey {
   Parameters = 'TestSuites.Parameters',
   Inputs = 'TestSuites.Inputs',
   Outputs = 'TestSuites.Outputs',
+  ShowMore = 'TestSuites.ShowMore',
+  ShowLess = 'TestSuites.ShowLess',
   Bindings = 'TestSuites.Bindings',
   Results = 'TestSuites.Results',
   FinalPath = 'TestSuites.FinalPath',
