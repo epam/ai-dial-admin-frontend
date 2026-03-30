@@ -31,9 +31,9 @@ const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputCl
 
   const tabs = getFileSelectInputTabs(t);
   const showTabs = !!view && !!id;
-  const [activeTab, setActiveTab] = useState(
-    !value || value.includes('public/') ? EntityViewTab.Public : EntityViewTab.Application,
-  );
+
+  const isPublicFile = !value || value.includes('public/');
+  const [activeTab, setActiveTab] = useState(isPublicFile ? EntityViewTab.Public : EntityViewTab.Application);
 
   const onConfirm = useCallback(() => {
     onChangeValue(selectedFilePath ?? '');
@@ -72,7 +72,7 @@ const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputCl
             )}
             {activeTab === EntityViewTab.Public && (
               <PublicFileManager
-                value={value}
+                value={isPublicFile ? value : ''}
                 isModalOpen={isModalOpen}
                 onChangeSelectedFilePath={setSelectedFilePath}
               />

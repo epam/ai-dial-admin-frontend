@@ -6,6 +6,7 @@ import {
   CellContextMenuEvent,
   CellStyleModule,
   CheckboxEditorModule,
+  ClientSideRowModelApiModule,
   ClientSideRowModelModule,
   ColDef,
   colorSchemeDark,
@@ -54,6 +55,7 @@ export interface AgGridProps<T> {
 
 ModuleRegistry.registerModules([
   ClientSideRowModelModule,
+  ClientSideRowModelApiModule,
   ColumnAutoSizeModule,
   CellStyleModule,
   TextFilterModule,
