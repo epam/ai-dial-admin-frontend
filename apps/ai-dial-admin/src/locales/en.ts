@@ -314,6 +314,10 @@ export default {
       InterceptorTemplate: 'Interceptor Template',
       ApplicationRunner: 'Application Runner',
     },
+    Notification: {
+      Title: '{entity} created successfully',
+      Description: '{entity} {entityId} was created successfully.',
+    },
   },
   CreateEntity: {
     Title: 'Create {entity}',

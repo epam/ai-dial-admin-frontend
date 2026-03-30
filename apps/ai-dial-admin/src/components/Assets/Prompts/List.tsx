@@ -17,7 +17,7 @@ import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { ApplicationRoute } from '@/src/types/routes';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { useI18n } from '@/src/locales/client';
-import { FileManagerI18nKey, FoldersI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { DuplicateI18nKey, FileManagerI18nKey, FoldersI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import {
   DialCopiedItem,
   DialFile,
@@ -106,12 +106,22 @@ const PromptsList: FC = () => {
   }, []);
 
   const handleCreatePrompt = useCallback(
-    (prompt: DialPrompt, path?: string) => {
+    (prompt: DialPrompt, path?: string, isCreateDuplicate?: boolean) => {
       const folderPath = path || destinationFolder || `${ROOT_FOLDER}/`;
       return createPrompt({ ...prompt, folderId: folderPath }).then((res) => {
         if (res.success) {
           fetchFiles?.(folderPath);
-          showNotification(getSuccessNotification(t(FoldersI18nKey.Import)));
+          if (isCreateDuplicate) {
+            showNotification(
+              getSuccessNotification(
+                t(DuplicateI18nKey.NotificationTitle, { entity: t(DuplicateI18nKey.Prompt) }),
+                t(DuplicateI18nKey.NotificationDescription, {
+                  entity: t(DuplicateI18nKey.Prompt),
+                  entityId: `${prompt.name}__${prompt.version}`,
+                }),
+              ),
+            );
+          }
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
@@ -145,7 +155,7 @@ const PromptsList: FC = () => {
         ...prompt,
         path: `${prompt.folderId}${prompt.name}__${prompt.version}`,
       };
-      handleCreatePrompt(newPrompt as DialPrompt, prompt.folderId);
+      handleCreatePrompt(newPrompt as DialPrompt, prompt.folderId, true);
       setIsDuplicatePromptModalOpen(false);
     },
     [handleCreatePrompt],
