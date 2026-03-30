@@ -17,11 +17,13 @@ const BooleanButtonCellRenderer = ({
   data,
   onChange,
   isReadonly,
+  setValue,
 }: BooleanButtonCellRendererParams) => {
   const isRequired = !!value;
 
   const handleClick = () => {
     onChange(!isRequired, data);
+    setValue?.(!isRequired);
   };
 
   return (
