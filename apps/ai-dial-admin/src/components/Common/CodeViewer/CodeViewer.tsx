@@ -9,8 +9,8 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { getSuccessNotification } from '@/src/utils/notification';
 
-import { useFullscreenViewer } from './FullscreenViewer';
-import { formatJsonSize, generateLineNumbers, highlightJson } from './json-highlight';
+import { useFullscreenViewer } from '../FullscreenViewer/FullscreenViewer';
+import { formatJsonSize, generateLineNumbers, highlightJson } from '@/src/utils/evaluation/json-highlight';
 
 interface Props {
   title: string;

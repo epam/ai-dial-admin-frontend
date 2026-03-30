@@ -1,15 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
-import { FullscreenViewerProvider, useFullscreenViewer } from '../FullscreenViewer';
-
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: vi.fn() }),
-}));
-
-vi.mock('@/src/context/ThemeContext', () => ({
-  useTheme: () => ({ currentTheme: 'dark' }),
-}));
+import { FullscreenViewerProvider, useFullscreenViewer } from './FullscreenViewer';
 
 vi.mock('@monaco-editor/react', () => ({
   Editor: ({ value, language }: { value: string; language: string }) => <pre data-language={language}>{value}</pre>,

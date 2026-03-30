@@ -11,9 +11,9 @@ import { useI18n } from '@/src/locales/client';
 import { ExtractionResult } from '@/src/models/evaluation/run';
 
 import AdaptiveValueGrid from './AdaptiveValueGrid';
-import CodeViewer from './CodeViewer';
+import CodeViewer from '@/src/components/Common/CodeViewer/CodeViewer';
 import ExecutionStatusBar from './ExecutionStatusBar';
-import { FullscreenViewerProvider } from './FullscreenViewer';
+import { FullscreenViewerProvider } from '@/src/components/Common/FullscreenViewer/FullscreenViewer';
 
 interface Props {
   result: ExtractionResult;

@@ -1575,8 +1575,9 @@ export default {
     Computed: 'Computed',
     Request: 'Request',
     Response: 'Response',
-    CopyValue: 'Value',
     OpenFullscreen: 'Open in fullscreen viewer',
     MetricInfo: 'Metric details',
+    HttpLabel: 'HTTP',
+    DurationLabel: 'Duration',
   },
 } as const;

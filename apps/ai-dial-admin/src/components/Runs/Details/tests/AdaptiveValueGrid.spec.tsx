@@ -4,10 +4,6 @@ import { describe, expect, test, vi } from 'vitest';
 import AdaptiveValueGrid from '../AdaptiveValueGrid';
 import AdaptiveValueRow from '../AdaptiveValueRow';
 
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: vi.fn() }),
-}));
-
 describe('AdaptiveValueGrid', () => {
   test('Should render title and entries', () => {
     const entries: [string, string][] = [

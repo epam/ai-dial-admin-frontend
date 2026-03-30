@@ -1,15 +1,11 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
-import CodeViewer from '../CodeViewer';
+import CodeViewer from './CodeViewer';
 
 const mockOpen = vi.fn();
-vi.mock('../FullscreenViewer', () => ({
+vi.mock('../FullscreenViewer/FullscreenViewer', () => ({
   useFullscreenViewer: () => ({ open: mockOpen, close: vi.fn() }),
-}));
-
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: vi.fn() }),
 }));
 
 const sampleJson = '{"key":"value","num":42}';

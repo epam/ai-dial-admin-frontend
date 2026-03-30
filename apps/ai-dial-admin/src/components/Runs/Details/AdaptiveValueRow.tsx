@@ -4,56 +4,16 @@ import { FC, useCallback, useMemo, useState } from 'react';
 
 import { IconCopy } from '@tabler/icons-react';
 
-import { BasicI18nKey, ButtonsI18nKey, RunsI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
+import { parseValue } from '@/src/utils/evaluation/detail-panel';
 import { getSuccessNotification } from '@/src/utils/notification';
 
 interface Props {
   label: string;
   value: string;
 }
-
-interface ParsedValue {
-  displayText: string;
-  rawText: string;
-  typeChip?: string;
-  isLong: boolean;
-}
-
-const parseValue = (value: string): ParsedValue => {
-  const raw = value;
-
-  try {
-    const parsed = JSON.parse(value);
-    if (Array.isArray(parsed)) {
-      const preview = parsed.length > 0 ? JSON.stringify(parsed[0]).slice(0, 120) : '';
-      return {
-        displayText: preview ? `${preview}...` : '[]',
-        rawText: JSON.stringify(parsed, null, 2),
-        typeChip: `Array\u00B7${parsed.length}`,
-        isLong: true,
-      };
-    }
-    if (typeof parsed === 'object' && parsed !== null) {
-      const keys = Object.keys(parsed);
-      return {
-        displayText: JSON.stringify(parsed).slice(0, 120) + '...',
-        rawText: JSON.stringify(parsed, null, 2),
-        typeChip: `Object`,
-        isLong: true,
-      };
-    }
-  } catch {
-    // Not JSON — treat as plain string
-  }
-
-  return {
-    displayText: raw,
-    rawText: raw,
-    isLong: raw.length > 100,
-  };
-};
 
 const AdaptiveValueRow: FC<Props> = ({ label, value }) => {
   const t = useI18n();
@@ -66,7 +26,7 @@ const AdaptiveValueRow: FC<Props> = ({ label, value }) => {
     (e: React.MouseEvent) => {
       e.stopPropagation();
       navigator.clipboard.writeText(parsed.rawText);
-      showNotification(getSuccessNotification(`${t(RunsI18nKey.CopyValue)} ${t(BasicI18nKey.CopiedSuccessfully)}`));
+      showNotification(getSuccessNotification(`${t(BasicI18nKey.Value)} ${t(BasicI18nKey.CopiedSuccessfully)}`));
     },
     [parsed.rawText, showNotification, t],
   );

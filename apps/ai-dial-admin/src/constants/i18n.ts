@@ -1511,9 +1511,10 @@ export enum RunsI18nKey {
   Computed = 'Runs.Computed',
   Request = 'Runs.Request',
   Response = 'Runs.Response',
-  CopyValue = 'Runs.CopyValue',
   OpenFullscreen = 'Runs.OpenFullscreen',
   MetricInfo = 'Runs.MetricInfo',
+  HttpLabel = 'Runs.HttpLabel',
+  DurationLabel = 'Runs.DurationLabel',
 }
 
 export enum FileManagerI18nKey {

@@ -13,21 +13,9 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useI18n } from '@/src/locales/client';
 import { EDITOR_THEMES } from '@/src/types/editor';
+import { FullscreenViewerContextValue, FullscreenViewerState, ViewerContentType } from '@/src/models/evaluation/detail-panel';
+import { formatContent } from '@/src/utils/evaluation/detail-panel';
 import { getSuccessNotification } from '@/src/utils/notification';
-
-type ContentType = 'json' | 'text';
-
-interface FullscreenViewerState {
-  isOpen: boolean;
-  title: string;
-  content: string;
-  contentType: ContentType;
-}
-
-interface FullscreenViewerContextValue {
-  open: (title: string, content: string, contentType: ContentType) => void;
-  close: () => void;
-}
 
 const FullscreenViewerContext = createContext<FullscreenViewerContextValue | null>(null);
 
@@ -35,19 +23,6 @@ export const useFullscreenViewer = () => {
   const ctx = useContext(FullscreenViewerContext);
   if (!ctx) throw new Error('useFullscreenViewer must be used within FullscreenViewerProvider');
   return ctx;
-};
-
-const formatContent = (content: string, contentType: ContentType): string => {
-  if (contentType === 'json') {
-    try {
-      return JSON.stringify(JSON.parse(content), null, 2);
-    } catch {
-      return content;
-    }
-  }
-  // For text: try to parse as JSON if it looks like JSON, otherwise return as-is
-  // Also handle escaped newlines
-  return content.replace(/\\n/g, '\n').replace(/\\t/g, '\t');
 };
 
 const FullscreenViewerModal: FC<FullscreenViewerState & { onClose: () => void }> = ({
@@ -158,7 +133,7 @@ export const FullscreenViewerProvider: FC<{ children: ReactNode }> = ({ children
     contentType: 'text',
   });
 
-  const open = useCallback((title: string, content: string, contentType: ContentType) => {
+  const open = useCallback((title: string, content: string, contentType: ViewerContentType) => {
     setState({ isOpen: true, title, content, contentType });
   }, []);
 
