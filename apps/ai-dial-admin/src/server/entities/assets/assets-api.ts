@@ -186,12 +186,13 @@ export class AssetsApi extends BaseApi {
     toolset: AssetToolset,
     type: ToolsetAuthCredentialLevel,
     token: Token,
+    redirectUri?: string,
     apiKey?: string,
     authCode?: string,
   ) {
     const url = `${ResourceBasePaths[ResourceType.TOOLSET]}/sign-in`;
 
-    return this.postAction(url, getToolsetSignInBody(toolset, type, apiKey, authCode), token);
+    return this.postAction(url, getToolsetSignInBody(toolset, type, apiKey, authCode, redirectUri), token);
   }
 
   signOutToolset(toolset: AssetToolset, type: ToolsetAuthCredentialLevel, token: Token) {

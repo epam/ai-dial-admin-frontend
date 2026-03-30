@@ -10,6 +10,8 @@ import {
   getToolsets,
   moveToolsets,
   removeToolset,
+  signInToolset,
+  signOutToolset,
   updateToolset,
 } from '@/src/app/[lang]/assets-toolsets/actions';
 import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
@@ -146,7 +148,13 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
         getAssetContext={useToolsetFolder}
         onChangeAsset={setSelectedToolset as (asset: Asset) => void}
       >
-        <AuthButtons view={ApplicationRoute.AssetsToolsets} selectedToolset={selectedToolset} oAuthCode={oAuthCode} />
+        <AuthButtons
+          view={ApplicationRoute.AssetsToolsets}
+          selectedToolset={selectedToolset}
+          signInToolset={signInToolset}
+          signOutToolset={signOutToolset}
+          oAuthCode={oAuthCode}
+        />
       </AssetHeader>
 
       <div className="flex-1 overflow-auto min-h-0">

@@ -50,11 +50,12 @@ export async function tryOutTool(name: string, body: Record<string, unknown>) {
 export async function signInToolset(
   toolset: Toolset,
   type: ToolsetAuthCredentialLevel,
+  redirectUri: string,
   apiKey?: string,
   authCode?: string,
 ) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return toolSetsApi.signInToolset(toolset, type, token, apiKey, authCode);
+  return toolSetsApi.signInToolset(toolset, redirectUri, type, token, apiKey, authCode);
 }
 
 export async function signOutToolset(toolset: Toolset, type: ToolsetAuthCredentialLevel) {
