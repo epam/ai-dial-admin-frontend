@@ -189,16 +189,12 @@ describe('content-with-links utils', () => {
 
     it('should preserve whitespace', () => {
       const result = buildContentParts('Text  with   multiple   spaces');
-      expect(result).toEqual([
-        { type: 'text', content: 'Text  with   multiple   spaces' },
-      ]);
+      expect(result).toEqual([{ type: 'text', content: 'Text  with   multiple   spaces' }]);
     });
 
     it('should handle newlines in text', () => {
       const result = buildContentParts('Line 1\nLine 2');
-      expect(result).toEqual([
-        { type: 'text', content: 'Line 1\nLine 2' },
-      ]);
+      expect(result).toEqual([{ type: 'text', content: 'Line 1\nLine 2' }]);
     });
   });
 });
