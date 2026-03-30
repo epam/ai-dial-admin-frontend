@@ -28,25 +28,12 @@ const SchemaManager: FC<Props> = ({ testCaseSchema, onChangeTestCaseSchema, isSk
   const [gridApi, setGridApi] = useState<GridApi>();
 
   const schemaRef = useRef(testCaseSchema);
-  const dirtyRef = useRef(false);
   const onChangeRef = useRef(onChangeTestCaseSchema);
 
   useEffect(() => {
-    schemaRef.current = testCaseSchema;
-  }, [testCaseSchema]);
-
-  useEffect(() => {
     onChangeRef.current = onChangeTestCaseSchema;
-  }, [onChangeTestCaseSchema]);
-
-  // Flush pending inline edits on unmount so changes aren't lost when panel closes
-  useEffect(() => {
-    return () => {
-      if (dirtyRef.current) {
-        onChangeRef.current(schemaRef.current, true);
-      }
-    };
-  }, []);
+    schemaRef.current = testCaseSchema;
+  }, [onChangeTestCaseSchema, testCaseSchema]);
 
   // CRITICAL: mutate row data IN PLACE (same pattern as test cases grid).
   // When EditableCellRenderer calls setValue(), the value is already in the row node data,
@@ -57,7 +44,7 @@ const SchemaManager: FC<Props> = ({ testCaseSchema, onChangeTestCaseSchema, isSk
     const schema = [...schemaRef.current];
     schema[index] = data as TestCaseSchema;
     schemaRef.current = schema;
-    dirtyRef.current = true;
+    onChangeRef.current(schema, true);
   }, []);
 
   const onSelectChange = useCallback((value: string | string[], data: unknown, column?: string, index?: number) => {
@@ -66,7 +53,7 @@ const SchemaManager: FC<Props> = ({ testCaseSchema, onChangeTestCaseSchema, isSk
     const schema = [...schemaRef.current];
     schema[index] = data as TestCaseSchema;
     schemaRef.current = schema;
-    dirtyRef.current = true;
+    onChangeRef.current(schema, true);
   }, []);
 
   const onChangeRequired = useCallback((value: boolean, data: TestCaseSchema) => {
@@ -76,9 +63,7 @@ const SchemaManager: FC<Props> = ({ testCaseSchema, onChangeTestCaseSchema, isSk
     onChangeRef.current(schema, true);
   }, []);
 
-  // Structural changes: flush any pending edits, then notify parent immediately
   const onAddField = useCallback(() => {
-    dirtyRef.current = false;
     const schema = [
       ...schemaRef.current,
       { name: '', type: TestCaseItemType.STRING, required: false, description: '' },
@@ -88,7 +73,6 @@ const SchemaManager: FC<Props> = ({ testCaseSchema, onChangeTestCaseSchema, isSk
 
   const onRemoveField = useCallback((_?: TestCaseSchema, index?: number) => {
     if (index != null) {
-      dirtyRef.current = false;
       const schema = [...schemaRef.current];
       schema.splice(index, 1);
       onChangeRef.current(schema);
