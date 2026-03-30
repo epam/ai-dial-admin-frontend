@@ -394,6 +394,8 @@ export default {
     Update: 'Update',
     Change: 'Change',
     Save: 'Save',
+    ShowMore: 'Show more',
+    ShowLess: 'Show less',
     Download: 'Download',
     SaveAndRedeploy: 'Save & redeploy',
     Remove: 'Remove',
