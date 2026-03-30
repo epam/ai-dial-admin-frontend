@@ -17,6 +17,7 @@ import { TelemetryI18nKey } from '@/src/constants/i18n';
 import { TimeRange } from '@/src/models/time-range';
 import { FilterData, TelemetryQuery } from '@/src/models/telemetry';
 import { getFormattedFilters } from '@/src/utils/telemetry';
+import { applyResolutionToQuery, getChartResolution } from '@/src/utils/time-filter/get-chart-resolution';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
 import { getDashboardData } from '@/src/app/[lang]/dashboard/actions';
 import { useI18n } from '@/src/locales/client';
@@ -83,6 +84,8 @@ const Dashboard: FC<Props> = ({
     (query: TelemetryQuery) => {
       const q = structuredClone(query);
       const currentTimeRange = getCurrentTimeRange();
+      const resolution = getChartResolution(currentTimeRange);
+      applyResolutionToQuery(q, resolution);
       if (typeof q.query.from === 'string') {
         q.query.where = getFormattedFilters(currentTimeRange, filters, entityFilterName);
       } else {
@@ -98,6 +101,8 @@ const Dashboard: FC<Props> = ({
     (extraConditions: Record<string, unknown>[]) => (query: TelemetryQuery) => {
       const q = structuredClone(query);
       const currentTimeRange = getCurrentTimeRange();
+      const resolution = getChartResolution(currentTimeRange);
+      applyResolutionToQuery(q, resolution);
       if (typeof q.query.from === 'string') {
         q.query.where = getFormattedFilters(currentTimeRange, filters, entityFilterName, extraConditions);
       } else {
