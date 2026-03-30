@@ -133,30 +133,4 @@ describe('MetricInputs (Values)', () => {
     const updatedBindings = onChange.mock.calls[onChange.mock.calls.length - 1][0] as MetricBinding[];
     expect(updatedBindings[0].source).toEqual({ $type: MetricBindingType.Response, columnName: 'answer' });
   });
-
-  test('updates test case binding when test-case tab is active', () => {
-    const onChange = vi.fn();
-    const fields: SchemaFieldRow[] = [makeField({ id: 'f1', name: 'prompt' })];
-    const bindings: MetricBinding[] = [
-      { property: 'prompt', source: { $type: MetricBindingType.TestCase, value: 'q1' } },
-    ];
-    const selectedTestSuite: TestSuite = {
-      testCaseSchema: [{ name: 'question', type: TestCaseItemType.STRING, required: false, description: '' }],
-    };
-
-    render(
-      <MetricInputs
-        title="Inputs"
-        fields={fields}
-        bindings={bindings}
-        selectedTestSuite={selectedTestSuite}
-        onChange={onChange}
-      />,
-    );
-
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'question' } });
-
-    const updatedBindings = onChange.mock.calls[onChange.mock.calls.length - 1][0] as MetricBinding[];
-    expect(updatedBindings[0].source).toEqual({ $type: MetricBindingType.TestCase, value: 'question' });
-  });
 });

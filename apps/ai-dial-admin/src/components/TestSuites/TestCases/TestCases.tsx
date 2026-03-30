@@ -29,7 +29,12 @@ const TestCases: FC<Props> = ({ selectedTestSuite, originalTestSuite, onChange, 
   return (
     <div className="h-full flex flex-col gap-y-6">
       <TemplateVariables selectedTestSuite={selectedTestSuite} onChange={onChange} isSkipRefresh={isSkipRefresh} />
-      <TestCasesList selectedTestSuite={selectedTestSuite} onChange={onChange} {...props} />
+      <TestCasesList
+        selectedTestSuite={selectedTestSuite}
+        onChange={onChange}
+        isSkipRefresh={isSkipRefresh}
+        {...props}
+      />
       {isNotSaved && <DialAlert variant={AlertVariant.Info} message={t(TestSuitesI18nKey.Warning)} />}
     </div>
   );

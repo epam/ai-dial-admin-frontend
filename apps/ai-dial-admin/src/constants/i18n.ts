@@ -351,6 +351,8 @@ export enum ButtonsI18nKey {
   McpRegistry = 'Buttons.McpRegistry',
   TryOut = 'Buttons.TryOut',
   Upload = 'Buttons.Upload',
+  ShowMore = 'Buttons.ShowMore',
+  ShowLess = 'Buttons.ShowLess',
 }
 
 export enum UpdateI18nKey {
@@ -1402,7 +1404,6 @@ export enum EnvVariablesI18nKey {
   EnvVariable = 'EnvVariables.EnvVariable',
   Name = 'EnvVariables.Name',
   Description = 'EnvVariables.Description',
-  Value = 'EnvVariables.Value',
   MountType = 'EnvVariables.MountType',
   Required = 'EnvVariables.Required',
   AddVariable = 'EnvVariables.AddVariable',
@@ -1494,6 +1495,12 @@ export enum TestSuitesI18nKey {
   Outputs = 'TestSuites.Outputs',
   Bindings = 'TestSuites.Bindings',
   Results = 'TestSuites.Results',
+  TestCaseSchema = 'TestSuites.TestCaseSchema',
+  SchemaField = 'TestSuites.SchemaField',
+  EditField = 'TestSuites.EditField',
+  NoSchemaFields = 'TestSuites.NoSchemaFields',
+  DuplicateFieldName = 'TestSuites.DuplicateFieldName',
+  SchemaDescription = 'TestSuites.SchemaDescription',
   FinalPath = 'TestSuites.FinalPath',
 }
 

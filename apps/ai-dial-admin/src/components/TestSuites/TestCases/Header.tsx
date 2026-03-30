@@ -10,7 +10,7 @@ import {
   DialPrimaryButton,
   DropdownItem,
 } from '@epam/ai-dial-ui-kit';
-import { IconDownload, IconPlus } from '@tabler/icons-react';
+import { IconDownload, IconPlus, IconSettings } from '@tabler/icons-react';
 
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -23,8 +23,17 @@ interface Props {
   onApplyImport: (file: File, mode: TestCaseImportMode, strategy: TestCaseConflictStrategy) => void;
   onAdd?: () => void;
   onExport?: () => void;
+  onToggleSchema?: () => void;
+  isSchemaOpen?: boolean;
 }
-const HeaderButtons: FC<Props> = ({ selectedTestSuiteId, onApplyImport, onAdd, onExport }) => {
+const HeaderButtons: FC<Props> = ({
+  selectedTestSuiteId,
+  onApplyImport,
+  onAdd,
+  onExport,
+  onToggleSchema,
+  isSchemaOpen,
+}) => {
   const t = useI18n();
 
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -35,6 +44,15 @@ const HeaderButtons: FC<Props> = ({ selectedTestSuiteId, onApplyImport, onAdd, o
 
   return (
     <div className="flex gap-4">
+      {onToggleSchema && (
+        <DialPrimaryButton
+          label={t(TestSuitesI18nKey.TestCaseSchema)}
+          iconBefore={<IconSettings {...BASE_BUTTON_ICON_PROPS} />}
+          onClick={onToggleSchema}
+          appearance={isSchemaOpen ? ButtonAppearance.Solid : ButtonAppearance.Ghost}
+        />
+      )}
+
       <DialButtonDropdown
         label={t(ButtonsI18nKey.Import)}
         items={items}
