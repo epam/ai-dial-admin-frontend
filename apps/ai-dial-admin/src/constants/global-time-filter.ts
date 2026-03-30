@@ -12,3 +12,12 @@ export const timePeriodOptionsConfig = [
   { value: '7d', label: 'Last 7d', offset: 7 * 24 * 60 * 60 * 1000 },
   { value: '30d', label: 'Last 30d', offset: 30 * 24 * 60 * 60 * 1000 },
 ];
+
+export function getFilteredTimePeriodOptions(maxTimeRangeMs: number) {
+  return timePeriodOptionsConfig.filter((opt) => opt.offset <= maxTimeRangeMs);
+}
+
+export function getDefaultTimePeriod(options: typeof timePeriodOptionsConfig): string {
+  if (options.some((opt) => opt.value === DEFAULT_TIME_PERIOD)) return DEFAULT_TIME_PERIOD;
+  return options.length > 0 ? options[options.length - 1].value : DEFAULT_TIME_PERIOD;
+}

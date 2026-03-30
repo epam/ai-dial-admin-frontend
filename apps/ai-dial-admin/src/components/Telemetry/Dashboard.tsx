@@ -25,6 +25,7 @@ import ViewByFilter from '@/src/components/Telemetry/TelemetryControls/ViewByFil
 import { ApplicationRoute } from '@/src/types/routes';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
+import { useTimePeriodOptions } from '@/src/hooks/use-time-period-options';
 import { DASHBOARD_VIEW_TYPE } from '@/src/types/telemetry';
 
 interface Props {
@@ -50,6 +51,7 @@ const Dashboard: FC<Props> = ({
   const [timePeriod, setTimePeriod] = useState<string | undefined>();
   const [timeRange, setTimeRange] = useState<TimeRange>(getTimeRangeById(DEFAULT_TIME_PERIOD));
   const [viewType, setViewType] = useState<DASHBOARD_VIEW_TYPE>(DASHBOARD_VIEW_TYPE.Chat);
+  const timePeriodOptions = useTimePeriodOptions();
   const getReqRef = useRef(useProtectedRequest());
 
   const isMcpOnly = route === ApplicationRoute.Toolsets || route === ApplicationRoute.AssetsToolsets;
@@ -171,6 +173,7 @@ const Dashboard: FC<Props> = ({
             isCustomRange={isCustomRange}
             setIsCustomRange={setIsCustomRange}
             isMcpView={isMcpView}
+            timePeriodOptions={timePeriodOptions}
           />
         )}
       </div>

@@ -3,6 +3,7 @@ import { Dispatch, FC, SetStateAction } from 'react';
 import Refresh from '@/src/components/Common/Refresh/Refresh';
 import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
 import Filters from '@/src/components/Telemetry/TelemetryControls/Filters/Filters';
+import { timePeriodOptionsConfig } from '@/src/constants/global-time-filter';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { TimeRange } from '@/src/models/time-range';
@@ -23,6 +24,7 @@ interface Props {
   setIsCustomRange?: Dispatch<SetStateAction<boolean>>;
   showFilters?: boolean;
   isMcpView?: boolean;
+  timePeriodOptions?: typeof timePeriodOptionsConfig;
 }
 
 const TelemetryControls: FC<Props> = ({
@@ -40,6 +42,7 @@ const TelemetryControls: FC<Props> = ({
   setIsCustomRange,
   showFilters = true,
   isMcpView = false,
+  timePeriodOptions,
 }) => {
   return (
     <div className="flex w-full justify-between flex-wrap">
@@ -51,6 +54,7 @@ const TelemetryControls: FC<Props> = ({
           onTimeRangeChange={onTimeRangeChange}
           isCustomRange={isCustomRange}
           setIsCustomRange={setIsCustomRange}
+          timePeriodOptions={timePeriodOptions}
         />
         {showFilters && (
           <Filters filters={filters} setFilters={setFilters} getData={getData} route={route} isMcpView={isMcpView} />
