@@ -166,7 +166,7 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMet
           />
         )}
 
-        <div className={classNames('flex-1 min-h-0', { 'mt-4': !isEditMode })}>
+        <div className={classNames('flex-1 min-h-0 overflow-auto', { 'mt-4': !isEditMode })}>
           {isMetricsLoading && <DialLoader size={44} />}
           {currentStepId === MetricStep.AddMetric && !isMetricsLoading && (
             <MetricSelection
