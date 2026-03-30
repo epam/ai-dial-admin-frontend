@@ -44,6 +44,7 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, testCasesActionsRef, onDi
   const { sidebar, sidebarOpen, toggleSidebar } = useAppContext();
 
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
+  const gridApiRef = useRef<GridApi | null>(null);
   const [newTestCases, setNewTestCases] = useState<Record<string, unknown>[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState<Record<string, unknown>[]>([]);
@@ -73,13 +74,21 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, testCasesActionsRef, onDi
   );
 
   const onCellChange = useCallback(
-    (data: Record<string, unknown>, field: string, value: string | number) => {
+    (data: Record<string, unknown>, field: string, value: string | number | boolean) => {
       if (!data) return;
       data[field] = value;
-      if (field !== 'testCaseName' && data.data != null) {
+      if (field !== 'testCaseName' && field !== 'enabled' && data.data != null) {
         data.data = { ...(data.data as Record<string, unknown>), [field]: value };
       }
       updateData(data);
+
+      if (field === 'enabled') {
+        const api = gridApiRef.current;
+        if (!api) return;
+        api.refreshClientSideRowModel('filter');
+        api.refreshCells({ force: true, columns: ['enabled'] });
+        api.refreshHeader();
+      }
     },
     [updateData],
   );
@@ -119,7 +128,7 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, testCasesActionsRef, onDi
 
         setData(data);
         setColumnDefs([
-          ...getTestCaseColumns(testCasesData, onCellChange),
+          ...getTestCaseColumns(testCasesData, onCellChange, t),
           { ...ONE_ACTION_COLUMN(getTryOutOperation(onOpenTryOutSidebar)), colId: 'action-tryout' },
           {
             ...ONE_ACTION_COLUMN(getRemoveOperation(stableOnRemoveCase, void 0, 'text-error w-4 h-4')),
@@ -131,11 +140,12 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, testCasesActionsRef, onDi
         router.refresh();
       }
     },
-    [gridApi, onCellChange, onOpenTryOutSidebar, selectedTestSuite.id, stableOnRemoveCase],
+    [gridApi, onCellChange, onOpenTryOutSidebar, selectedTestSuite.id, stableOnRemoveCase, t],
   );
 
   const onGridReady = useCallback(
     ({ api }: GridReadyEvent) => {
+      gridApiRef.current = api;
       setGridApi(api);
     },
     [refreshGrid],

@@ -1,26 +1,66 @@
 import { DialTooltip } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle } from '@tabler/icons-react';
-import { ColDef, ICellRendererParams, ITooltipParams, ValueGetterParams } from 'ag-grid-community';
+import {
+  ColDef,
+  ICellRendererParams,
+  IFilterOptionDef,
+  ITextFilterParams,
+  ITooltipParams,
+  ValueGetterParams,
+} from 'ag-grid-community';
 
 import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
 import ValidityStatus from '@/src/components/Common/ValidityStatus/ValidityStatus';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSelectCellRenderer';
 import JsonEditorCellRenderer from '@/src/components/Grid/CellRenderers/JsonEditorCellRenderer';
+import BooleanButtonCellRenderer from '@/src/components/Grid/CellRenderers/BooleanButtonCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import BooleanColumnHeader from '@/src/components/Grid/HeaderComponents/BooleanColumnHeader';
 import { NO_BORDER_CLASS, UTILITY_COLUMN } from '@/src/constants/ag-grid';
 import { BASE_STATUS_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { TEST_CASES_COLUMN } from '@/src/constants/grid-columns/grid-columns';
-import { TestSuitesI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { MetricBinding } from '@/src/models/evaluation/metric';
 import { InputBindingRowData, ResponseColumn, TestCase, TestCaseSchema } from '@/src/models/evaluation/test-suite';
 import { InputBindingType, MetricBindingType, TestCaseItemType } from '@/src/types/evaluation';
 import { ApplicationRoute } from '@/src/types/routes';
 
-export type onCellChange = (data: Record<string, unknown>, field: string, value: string | number) => void;
+export type onCellChange = (data: Record<string, unknown>, field: string, value: string | number | boolean) => void;
 
-export const getTestCaseColumns = (testCases: TestCase[], onCellChange: onCellChange): ColDef[] => {
+const getEnabledColumnFilterOptions = (
+  allLabel: string,
+  enabledLabel: string,
+  disabledLabel: string,
+): IFilterOptionDef[] => [
+  {
+    displayKey: 'all',
+    displayName: allLabel,
+    numberOfInputs: 0,
+    predicate: () => true,
+  },
+  {
+    displayKey: 'enabled',
+    displayName: enabledLabel,
+    numberOfInputs: 0,
+    predicate: (_filterValues, cellValue) => cellValue === true,
+  },
+  {
+    displayKey: 'disabled',
+    displayName: disabledLabel,
+    numberOfInputs: 0,
+    predicate: (_filterValues, cellValue) => cellValue !== true,
+  },
+];
+
+export const getTestCaseColumns = (
+  testCases: TestCase[],
+  onCellChange: onCellChange,
+  t?: (key: string) => string,
+): ColDef[] => {
+  const enabledLabel = t?.(BasicI18nKey.Enabled) ?? 'Enabled';
+  const disabledLabel = t?.(BasicI18nKey.Disabled) ?? 'Disabled';
+  const allLabel = 'All';
   const data = testCases.reduce((acc: string[], testCase) => {
     const testCaseFacts = Object.keys(testCase.data || {});
     testCaseFacts.forEach((fact) => {
@@ -37,16 +77,29 @@ export const getTestCaseColumns = (testCases: TestCase[], onCellChange: onCellCh
       headerName: '',
       headerComponent: BooleanColumnHeader,
       field: 'enabled',
-      editable: true,
-      cellRenderer: 'agCheckboxCellRenderer',
-      cellEditor: 'agCheckboxCellEditor',
+      colId: 'enabled',
+      minWidth: 120,
+      width: 120,
+      maxWidth: 140,
+      filter: 'agTextColumnFilter',
+      filterParams: {
+        filterOptions: getEnabledColumnFilterOptions(allLabel, enabledLabel, disabledLabel),
+        defaultOption: 'all',
+        maxNumConditions: 1,
+        buttons: ['reset'],
+      } as ITextFilterParams,
+      floatingFilter: true,
+      floatingFilterComponent: 'agTextColumnFloatingFilter',
+      cellRenderer: BooleanButtonCellRenderer,
+      cellRendererParams: {
+        trueLabel: enabledLabel,
+        falseLabel: disabledLabel,
+        onChange: (value: boolean, data: { id: string }) => {
+          onCellChange(data as Record<string, unknown>, 'enabled', value);
+        },
+      },
       tooltipValueGetter: (params) => {
         return !params.data?.enabled ? 'Disable test case' : 'Enable test case';
-      },
-      valueGetter: (params) => params.data?.enabled,
-      valueSetter: (params) => {
-        params.data.enabled = params.newValue;
-        return true;
       },
     } as ColDef,
     ...TEST_CASES_COLUMN.map((col) => {
