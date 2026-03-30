@@ -15,7 +15,6 @@ import BooleanButtonCellRenderer from '@/src/components/Grid/CellRenderers/Boole
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSelectCellRenderer';
 import JsonEditorCellRenderer from '@/src/components/Grid/CellRenderers/JsonEditorCellRenderer';
-import BooleanButtonCellRenderer from '@/src/components/Grid/CellRenderers/BooleanButtonCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import BooleanColumnHeader from '@/src/components/Grid/HeaderComponents/BooleanColumnHeader';
 import { NO_BORDER_CLASS, UTILITY_COLUMN } from '@/src/constants/ag-grid';
@@ -26,6 +25,7 @@ import { MetricBinding } from '@/src/models/evaluation/metric';
 import { InputBindingRowData, ResponseColumn, TestCase, TestCaseSchema } from '@/src/models/evaluation/test-suite';
 import { InputBindingType, MetricBindingType, TestCaseItemType } from '@/src/types/evaluation';
 import { ApplicationRoute } from '@/src/types/routes';
+import { TYPE_OPTIONS } from '../TestCaseSchema/constants';
 
 export type onCellChange = (data: Record<string, unknown>, field: string, value: string | number | boolean) => void;
 
