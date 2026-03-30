@@ -105,6 +105,8 @@ rules:
     - Use BooleanButtonCellRenderer (Grid/CellRenderers/) for boolean toggles in AG Grid, not agCheckboxCellRenderer
     - Keep JSX clean — extract handlers, computed values, and complex props into named variables in the component body
     - Apply base accessibility features targeting WCAG AA level
+    - Use classNames() from the classnames package for conditional CSS classes — not template literal concatenation
+    - Use @tabler/icons-react for all icons — do not use unicode characters or inline SVGs
   specs:
     - Reference backend API contracts from ai-dial-admin-backend or ai-dial-admin-deployment-manager-backend
     - Include validation requirements for any form fields
