@@ -101,10 +101,17 @@ describe('Toolsets :: server actions', () => {
   test('Should call signInToolset action', async () => {
     (toolSetsApi.signInToolset as any).mockResolvedValue(RESPONSE_MOCK);
 
-    const result = await signInToolset({ name: 'name' }, ToolsetAuthCredentialLevel.GLOBAL, 'key', 'code');
+    const result = await signInToolset(
+      { name: 'name' },
+      ToolsetAuthCredentialLevel.GLOBAL,
+      'https://redirect.example.com/callback',
+      'key',
+      'code',
+    );
     expect(getUserToken).toHaveBeenCalled();
     expect(toolSetsApi.signInToolset).toHaveBeenCalledWith(
       { name: 'name' },
+      'https://redirect.example.com/callback',
       ToolsetAuthCredentialLevel.GLOBAL,
       TOKEN_MOCK,
       'key',

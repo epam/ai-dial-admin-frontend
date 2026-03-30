@@ -355,6 +355,8 @@ export enum ButtonsI18nKey {
   McpRegistry = 'Buttons.McpRegistry',
   TryOut = 'Buttons.TryOut',
   Upload = 'Buttons.Upload',
+  ShowMore = 'Buttons.ShowMore',
+  ShowLess = 'Buttons.ShowLess',
 }
 
 export enum UpdateI18nKey {
@@ -1406,7 +1408,6 @@ export enum EnvVariablesI18nKey {
   EnvVariable = 'EnvVariables.EnvVariable',
   Name = 'EnvVariables.Name',
   Description = 'EnvVariables.Description',
-  Value = 'EnvVariables.Value',
   MountType = 'EnvVariables.MountType',
   Required = 'EnvVariables.Required',
   AddVariable = 'EnvVariables.AddVariable',

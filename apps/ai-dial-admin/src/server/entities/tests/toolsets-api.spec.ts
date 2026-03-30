@@ -154,7 +154,14 @@ describe('Server :: ToolsetsApi', () => {
   test('Should calls signInToolset ', async () => {
     fetchMock.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
-    await instance.signInToolset({ name: 'toolset' }, ToolsetAuthCredentialLevel.GLOBAL, TOKEN_MOCK, 'key', 'code');
+    await instance.signInToolset(
+      { name: 'toolset' },
+      'https://redirect.example.com/callback',
+      ToolsetAuthCredentialLevel.GLOBAL,
+      TOKEN_MOCK,
+      'key',
+      'code',
+    );
 
     expect(fetchMock).toHaveBeenCalledWith(
       `${TEST_URL}${TOOLSET_SIGN_IN_URL}`,
