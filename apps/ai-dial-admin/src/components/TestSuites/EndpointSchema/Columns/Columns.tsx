@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
@@ -10,25 +10,23 @@ import { JSONSchema7 } from 'json-schema';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { getColumnsGridColumns } from '@/src/components/TestSuites/utils/columns';
 import { ONE_ACTION_COLUMN } from '@/src/constants/ag-grid';
-import { getEditOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
+import { getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import { BasicI18nKey, ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { ResponseColumn } from '@/src/models/evaluation/test-suite';
-import EditColumn from './EditColumn';
 
 interface ColumnsProps {
   responseColumns: ResponseColumn[];
-  onChangeResponseColumns: (responseColumns: ResponseColumn[]) => void;
+  onChangeResponseColumns: (responseColumns: ResponseColumn[], isSkipRefresh?: boolean) => void;
+  isSkipRefresh?: boolean;
   responseSchema: JSONSchema7;
 }
 
-const Columns: FC<ColumnsProps> = ({ responseColumns, onChangeResponseColumns, responseSchema }) => {
+const Columns: FC<ColumnsProps> = ({ responseColumns, onChangeResponseColumns, responseSchema, isSkipRefresh }) => {
   const t = useI18n();
   const { isValid, dispatch } = useSaveValidationContext();
-
-  const [editableColumnIndex, setEditableColumnIndex] = useState<number | undefined>(undefined);
 
   const columnsRef = useRef(responseColumns);
   const gridApiRef = useRef<GridApi | null>(null);
@@ -40,13 +38,11 @@ const Columns: FC<ColumnsProps> = ({ responseColumns, onChangeResponseColumns, r
   const onAddColumn = useCallback(() => {
     const columns = [...columnsRef.current, { name: '', displayName: '', expression: '', type: '' }];
     onChangeResponseColumns(columns);
-    setEditableColumnIndex(columns.length - 1);
   }, [onChangeResponseColumns]);
 
   const onRemoveColumn = useCallback(
     (_?: ResponseColumn, index?: number) => {
       if (index != null) {
-        setEditableColumnIndex(void 0);
         const columns = [...columnsRef.current];
         columns.splice(index, 1);
         onChangeResponseColumns(columns);
@@ -56,34 +52,47 @@ const Columns: FC<ColumnsProps> = ({ responseColumns, onChangeResponseColumns, r
   );
 
   const onChangeColumn = useCallback(
-    (updatedColumn: ResponseColumn) => {
-      if (editableColumnIndex != null) {
-        const columns = [...columnsRef.current];
-        columns[editableColumnIndex] = updatedColumn;
+    (value: string, _data: ResponseColumn, column: string, index?: number) => {
+      const columns = [...columnsRef.current];
+      const columnToUpdate = columns[index || 0];
+      if (columnToUpdate) {
+        if (column === 'displayName') {
+          columnToUpdate.displayName = value;
+          columnToUpdate.name = value;
+          onChangeResponseColumns(columns, true);
+        } else if (column === 'type') {
+          columnToUpdate.type = value;
+          onChangeResponseColumns(columns);
+        }
+      }
+    },
+    [onChangeResponseColumns],
+  );
+
+  const onChangeExpression = useCallback(
+    (value: { expression: string; type?: string }, _data: ResponseColumn, column: string, index?: number) => {
+      const columns = [...columnsRef.current];
+      const columnToUpdate = columns[index || 0];
+      if (columnToUpdate) {
+        columnToUpdate.expression = value.expression;
+        columnToUpdate.type = value.type || columnToUpdate.type;
         onChangeResponseColumns(columns);
       }
     },
-    [editableColumnIndex, onChangeResponseColumns],
+    [onChangeResponseColumns],
   );
-
-  const onEditColumn = useCallback((_?: ResponseColumn, index?: number) => {
-    if (index != null) {
-      setEditableColumnIndex(index);
-    }
-  }, []);
 
   const rowData = useMemo(() => responseColumns, [responseColumns]);
 
   const columnDefs: ColDef[] = useMemo(
     () => [
-      ...getColumnsGridColumns(),
-      { ...ONE_ACTION_COLUMN(getEditOperation(onEditColumn)), colId: 'action-edit' },
+      ...getColumnsGridColumns(responseSchema, onChangeColumn, onChangeExpression),
       {
         ...ONE_ACTION_COLUMN(getRemoveOperation(onRemoveColumn, void 0, 'text-error w-4 h-4')),
         colId: 'action-remove',
       },
     ],
-    [onEditColumn, onRemoveColumn],
+    [onChangeColumn, onChangeExpression, onRemoveColumn, responseSchema],
   );
 
   const onGridReady = useCallback(
@@ -95,14 +104,14 @@ const Columns: FC<ColumnsProps> = ({ responseColumns, onChangeResponseColumns, r
   );
 
   useEffect(() => {
-    if (!gridApiRef.current?.isDestroyed()) {
+    if (!isSkipRefresh && !gridApiRef.current?.isDestroyed()) {
       gridApiRef.current?.updateGridOptions({ rowData });
       const error = rowData.some((c) => !c.name || !c.displayName || !c.expression || !c.type);
       dispatch({ type: ValidationActionType.SetField, field: 'columns', isValid: !error });
     } else {
       dispatch({ type: ValidationActionType.SetField, field: 'columns', isValid: true });
     }
-  }, [dispatch, rowData]);
+  }, [dispatch, isSkipRefresh, rowData]);
 
   return (
     <div className="flex flex-col gap-4 flex-1 min-h-0">
@@ -122,14 +131,6 @@ const Columns: FC<ColumnsProps> = ({ responseColumns, onChangeResponseColumns, r
           onGridReady={onGridReady}
         />
       </div>
-      {editableColumnIndex != null && responseColumns[editableColumnIndex] && (
-        <EditColumn
-          column={responseColumns[editableColumnIndex]}
-          onChangeColumn={onChangeColumn}
-          onClose={() => setEditableColumnIndex(void 0)}
-          responseSchema={responseSchema}
-        />
-      )}
     </div>
   );
 };

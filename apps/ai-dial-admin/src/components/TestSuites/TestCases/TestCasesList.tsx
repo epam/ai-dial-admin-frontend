@@ -69,6 +69,12 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, testCasesActionsRef, onDi
       const col = event.column?.getColId();
       if (col === 'action-tryout' || col === 'action-remove' || !event.data?.id) return;
       updateData(event.data as Record<string, unknown>);
+
+      if (col === 'enabled') {
+        const api = gridApiRef.current;
+        if (!api) return;
+        api.refreshClientSideRowModel('filter');
+      }
     },
     [updateData],
   );
@@ -77,18 +83,10 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, testCasesActionsRef, onDi
     (data: Record<string, unknown>, field: string, value: string | number | boolean) => {
       if (!data) return;
       data[field] = value;
-      if (field !== 'testCaseName' && field !== 'enabled' && data.data != null) {
+      if (field !== 'testCaseName' && data.data != null) {
         data.data = { ...(data.data as Record<string, unknown>), [field]: value };
       }
       updateData(data);
-
-      if (field === 'enabled') {
-        const api = gridApiRef.current;
-        if (!api) return;
-        api.refreshClientSideRowModel('filter');
-        api.refreshCells({ force: true, columns: ['enabled'] });
-        api.refreshHeader();
-      }
     },
     [updateData],
   );
