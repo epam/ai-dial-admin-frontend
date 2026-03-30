@@ -6,7 +6,7 @@ import { DialInput, DialLinkButton } from '@epam/ai-dial-ui-kit';
 
 import ContentWithLinks from '@/src/components/Common/ContentWithLinks/ContentWithLinks';
 import { jsonSchemaToFields } from '@/src/components/Common/SchemaGrid/utils';
-import { EntityFieldsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntityFieldsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Metric, MetricBinding } from '@/src/models/evaluation/metric';
 import MetricSchemaSection from './Values/SchemaSection';
@@ -66,9 +66,7 @@ const MetricConfiguration: FC<Props> = ({
           {isLongDescription && (
             <DialLinkButton
               onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-              label={
-                isDescriptionExpanded ? t(TestSuitesI18nKey.ShowLess) : t(TestSuitesI18nKey.ShowMore)
-              }
+              label={isDescriptionExpanded ? t(ButtonsI18nKey.ShowLess) : t(ButtonsI18nKey.ShowMore)}
             />
           )}
         </div>

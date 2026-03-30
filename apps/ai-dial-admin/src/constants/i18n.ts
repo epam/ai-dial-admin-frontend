@@ -351,6 +351,8 @@ export enum ButtonsI18nKey {
   McpRegistry = 'Buttons.McpRegistry',
   TryOut = 'Buttons.TryOut',
   Upload = 'Buttons.Upload',
+  ShowMore = 'Buttons.ShowMore',
+  ShowLess = 'Buttons.ShowLess',
 }
 
 export enum UpdateI18nKey {
@@ -1491,8 +1493,6 @@ export enum TestSuitesI18nKey {
   Parameters = 'TestSuites.Parameters',
   Inputs = 'TestSuites.Inputs',
   Outputs = 'TestSuites.Outputs',
-  ShowMore = 'TestSuites.ShowMore',
-  ShowLess = 'TestSuites.ShowLess',
   Bindings = 'TestSuites.Bindings',
   Results = 'TestSuites.Results',
   FinalPath = 'TestSuites.FinalPath',

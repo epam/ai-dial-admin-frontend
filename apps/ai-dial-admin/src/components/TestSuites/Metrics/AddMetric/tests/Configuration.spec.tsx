@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
-import { EntityFieldsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntityFieldsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { Metric, MetricBinding } from '@/src/models/evaluation/metric';
 import MetricConfiguration from '../Configuration';
 import { MetricBindingType } from '@/src/types/evaluation';
@@ -140,7 +140,7 @@ describe('MetricConfiguration', () => {
 
     render(<MetricConfiguration metricName="Metric Name" selectedMetric={metricWithLongDescription} />);
 
-    expect(screen.getByRole('button', { name: TestSuitesI18nKey.ShowMore })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.ShowMore })).toBeInTheDocument();
   });
 
   test('does not show "Show more" button for short descriptions', () => {
@@ -153,7 +153,7 @@ describe('MetricConfiguration', () => {
 
     render(<MetricConfiguration metricName="Metric Name" selectedMetric={metricWithShortDescription} />);
 
-    expect(screen.queryByRole('button', { name: TestSuitesI18nKey.ShowMore })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.ShowMore })).not.toBeInTheDocument();
   });
 
   test('toggles description expansion when "Show more/less" button is clicked', () => {
@@ -166,13 +166,13 @@ describe('MetricConfiguration', () => {
 
     render(<MetricConfiguration metricName="Metric Name" selectedMetric={metricWithLongDescription} />);
 
-    const button = screen.getByRole('button', { name: TestSuitesI18nKey.ShowMore });
+    const button = screen.getByRole('button', { name: ButtonsI18nKey.ShowMore });
     fireEvent.click(button);
 
-    expect(screen.getByRole('button', { name: TestSuitesI18nKey.ShowLess })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.ShowLess })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: TestSuitesI18nKey.ShowLess }));
-    expect(screen.getByRole('button', { name: TestSuitesI18nKey.ShowMore })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.ShowLess }));
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.ShowMore })).toBeInTheDocument();
   });
 
   test('renders plain URLs as clickable links', () => {
