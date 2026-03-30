@@ -315,7 +315,7 @@ export default {
       ApplicationRunner: 'Application Runner',
     },
     Notification: {
-      Title: '{entity} created successfully',
+      Title: '{entity} duplicated successfully',
       Description: '{entity} {entityId} was created successfully.',
     },
   },
