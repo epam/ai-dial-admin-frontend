@@ -5,18 +5,19 @@ import { FC, useCallback, useEffect, useState } from 'react';
 import { DialLabel, DialRadioButton } from '@epam/ai-dial-ui-kit';
 import { JSONSchema7 } from 'json-schema';
 
+import { getResolvedApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
 import EditorUrlControl from '@/src/components/BaseControls/Endpoint/EditorUrl';
 import ViewerUrlControl from '@/src/components/BaseControls/Endpoint/ViewerUrl';
 import AppRunners from '@/src/components/SourceField/Application/AppRunners';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DefaultsValue } from '@/src/models/dial/defaults';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getSchemaDefaults } from '@/src/utils/schema';
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import EndpointAndMCPContainer from './EndpointAndMCPContainer';
 import { SourceType } from './constants';
 
@@ -120,10 +121,18 @@ const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, i
           : { ...entity, customAppSchemaId: value, endpoint: void 0, mcp: void 0 };
       const runner = runners?.find((r) => r.$id === value);
       if (runner) {
-        const applicationProperties = getSchemaDefaults(runner as JSONSchema7) as Record<string, DefaultsValue>;
-        onChangeEntity({
-          ...newEntity,
-          applicationProperties: isEntityImmutable ? { ...newEntity.applicationProperties } : applicationProperties,
+        let scheme: DialApplicationScheme | undefined;
+        getResolvedApplicationScheme(runner?.$id ?? '').then((res) => {
+          if (res.success && (res.response as { schema?: DialApplicationScheme })?.schema) {
+            scheme = (res.response as { schema: DialApplicationScheme }).schema;
+          } else {
+            scheme = runner ?? undefined;
+          }
+          const applicationProperties = getSchemaDefaults(scheme as JSONSchema7) as Record<string, DefaultsValue>;
+          onChangeEntity({
+            ...newEntity,
+            applicationProperties: isEntityImmutable ? { ...newEntity.applicationProperties } : applicationProperties,
+          });
         });
       }
     },
