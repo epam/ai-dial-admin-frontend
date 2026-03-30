@@ -1402,7 +1402,6 @@ export enum EnvVariablesI18nKey {
   EnvVariable = 'EnvVariables.EnvVariable',
   Name = 'EnvVariables.Name',
   Description = 'EnvVariables.Description',
-  Value = 'EnvVariables.Value',
   MountType = 'EnvVariables.MountType',
   Required = 'EnvVariables.Required',
   AddVariable = 'EnvVariables.AddVariable',
