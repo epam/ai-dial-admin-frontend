@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseUrlsInText, buildContentParts } from '../../components/Common/ContentWithLinks/utils';
+import { parseUrlsInText, buildContentParts } from './utils';
 
 describe('content-with-links utils', () => {
   describe('parseUrlsInText', () => {
