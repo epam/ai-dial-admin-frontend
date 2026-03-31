@@ -17,7 +17,7 @@ import { ButtonsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n'
 import { useI18n } from '@/src/locales/client';
 import { BindingSourceValue, MetricBinding } from '@/src/models/evaluation/metric';
 import { IconPlus } from '@tabler/icons-react';
-import { MetricBindingType } from '../../../../../types/evaluation';
+import { MetricBindingType } from '@/src/types/evaluation';
 
 interface Props {
   field: SchemaFieldRow;
