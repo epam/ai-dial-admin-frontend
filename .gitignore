@@ -56,3 +56,10 @@ lint-staged.config.js
 # Claude Code
 .claude/settings.local.json
 .claude/projects/
+
+# Local sandbox data
+sandbox/
+# Skills work dirs
+.playwright-mcp/
+skills-lock.json
+screenshots/

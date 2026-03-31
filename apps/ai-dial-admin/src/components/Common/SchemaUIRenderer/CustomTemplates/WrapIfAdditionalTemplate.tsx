@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, useState } from 'react';
 
 import { DialInput, DialRemoveButton } from '@epam/ai-dial-ui-kit';
 import { ADDITIONAL_PROPERTY_FLAG, WrapIfAdditionalTemplateProps } from '@rjsf/utils';
@@ -20,6 +20,8 @@ export const WrapIfAdditionalTemplate: FC<WrapIfAdditionalTemplateProps> = ({
   if (!additional) {
     return <div className="w-full">{children}</div>;
   }
+  const [keyValue, setKeyValue] = useState(label);
+
   return (
     <div className={classNames} style={style}>
       <div className="flex flex-row gap-4">
@@ -29,7 +31,8 @@ export const WrapIfAdditionalTemplate: FC<WrapIfAdditionalTemplateProps> = ({
             id={id}
             disabled={disabled || readonly}
             onBlur={({ target }) => onKeyRename(target.value)}
-            defaultValue={label}
+            value={keyValue}
+            onChange={(v) => setKeyValue(v || '')}
           />
         </div>
         <div className="bg-layer-2">{children}</div>

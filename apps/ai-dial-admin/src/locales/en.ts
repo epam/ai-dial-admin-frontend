@@ -1529,6 +1529,12 @@ export default {
     Inputs: 'Inputs',
     Outputs: 'Outputs',
     Results: 'Results',
+    TestCaseSchema: 'Test Case Schema',
+    SchemaField: 'Schema field',
+    EditField: 'Edit field',
+    NoSchemaFields: 'No schema fields',
+    DuplicateFieldName: 'Field name already exists',
+    SchemaDescription: 'Define the data fields available in test cases',
     FinalPath: 'Final path',
   },
   FileManager: {
