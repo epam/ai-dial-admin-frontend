@@ -3,7 +3,7 @@ import { Dispatch, FC, SetStateAction } from 'react';
 import Refresh from '@/src/components/Common/Refresh/Refresh';
 import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
 import Filters from '@/src/components/Telemetry/TelemetryControls/Filters/Filters';
-import { timePeriodOptionsConfig } from '@/src/constants/global-time-filter';
+import { TimePeriodOption } from '@/src/constants/global-time-filter';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { TimeRange } from '@/src/models/time-range';
@@ -24,7 +24,7 @@ interface Props {
   setIsCustomRange?: Dispatch<SetStateAction<boolean>>;
   showFilters?: boolean;
   isMcpView?: boolean;
-  timePeriodOptions?: typeof timePeriodOptionsConfig;
+  timePeriodOptions?: TimePeriodOption[];
 }
 
 const TelemetryControls: FC<Props> = ({

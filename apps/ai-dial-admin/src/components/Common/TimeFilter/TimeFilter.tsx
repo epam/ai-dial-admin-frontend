@@ -3,7 +3,7 @@ import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import { Dispatch, FC, SetStateAction, useCallback, useRef, useState } from 'react';
 
 import RangePicker from '@/src/components/Common/RangePicker/RangePicker';
-import { timePeriodOptionsConfig } from '@/src/constants/global-time-filter';
+import { TimePeriodOption, timePeriodOptionsConfig } from '@/src/constants/global-time-filter';
 import { TelemetryI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
@@ -18,7 +18,7 @@ interface Props {
   onTimeRangeChange: (value: TimeRange, isCustom?: boolean) => void;
   isCustomRange?: boolean;
   setIsCustomRange?: Dispatch<SetStateAction<boolean>>;
-  timePeriodOptions?: typeof timePeriodOptionsConfig;
+  timePeriodOptions?: TimePeriodOption[];
 }
 
 const TimeFilter: FC<Props> = ({
