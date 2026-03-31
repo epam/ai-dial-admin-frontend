@@ -1044,6 +1044,7 @@ export const getParamsColumns = (
 
 export const getFormDataColumns = (
   onChange: (value: string | FormDataType, data: FormDataPart, key: string, rowIndex?: number) => void,
+  id: string,
 ) => {
   const cols: ColDef[] = [
     {
@@ -1088,6 +1089,8 @@ export const getFormDataColumns = (
             component: FileSelectCellRenderer,
             params: {
               onChange: onChange,
+              id: id,
+              view: ApplicationRoute.TestSuites,
             },
           };
         }

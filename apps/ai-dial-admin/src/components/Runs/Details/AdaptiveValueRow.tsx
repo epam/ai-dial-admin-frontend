@@ -23,7 +23,7 @@ const AdaptiveValueRow: FC<Props> = ({ label, value }) => {
   const parsed = useMemo(() => parseValue(value), [value]);
 
   const handleCopy = useCallback(
-    (e: React.MouseEvent) => {
+    (e: MouseEvent) => {
       e.stopPropagation();
       navigator.clipboard.writeText(parsed.rawText);
       showNotification(getSuccessNotification(`${t(BasicI18nKey.Value)} ${t(BasicI18nKey.CopiedSuccessfully)}`));

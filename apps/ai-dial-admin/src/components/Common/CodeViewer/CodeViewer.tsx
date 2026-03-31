@@ -35,7 +35,7 @@ const CodeViewer: FC<Props> = ({ title, content }) => {
   const size = useMemo(() => formatJsonSize(content), [content]);
 
   const handleFullscreen = useCallback(
-    (e: React.MouseEvent) => {
+    (e: MouseEvent) => {
       e.stopPropagation();
       fullscreen.open(title, content, 'json');
     },

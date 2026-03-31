@@ -1,11 +1,12 @@
 'use client';
 
-import { FC, useMemo } from 'react';
+import { FC, useMemo, useState } from 'react';
 
-import { DialInput } from '@epam/ai-dial-ui-kit';
+import { DialInput, DialLinkButton } from '@epam/ai-dial-ui-kit';
 
+import ContentWithLinks from '@/src/components/Common/ContentWithLinks/ContentWithLinks';
 import { jsonSchemaToFields } from '@/src/components/Common/SchemaGrid/utils';
-import { EntityFieldsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntityFieldsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Metric, MetricBinding } from '@/src/models/evaluation/metric';
 import MetricSchemaSection from './Values/SchemaSection';
@@ -37,6 +38,11 @@ const MetricConfiguration: FC<Props> = ({
   selectedTestSuite,
 }) => {
   const t = useI18n();
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+
+  const description = selectedMetric?.description || selectedMetricDetails?.description || '';
+  const isLongDescription = description.length > 150;
+
   const selectedMetricParameters = useMemo(() => {
     return jsonSchemaToFields(selectedMetricDetails?.configSchema, selectedMetricDetails?.configSchema);
   }, [selectedMetricDetails]);
@@ -53,12 +59,17 @@ const MetricConfiguration: FC<Props> = ({
     <div className="h-full flex flex-col w-1/2 gap-y-6">
       <div className="flex flex-col">
         <p className="dial-small-semi mb-4">{selectedMetric?.name || selectedMetricDetails?.name}</p>
-        <span
-          className="dial-tiny-text text-secondary line-clamp-2"
-          title={selectedMetric?.description || selectedMetricDetails?.description}
-        >
-          {selectedMetric?.description || selectedMetricDetails?.description}
-        </span>
+        <div className="dial-tiny-text text-secondary">
+          <div className={!isDescriptionExpanded && isLongDescription ? 'line-clamp-3' : ''}>
+            <ContentWithLinks text={description} />
+          </div>
+          {isLongDescription && (
+            <DialLinkButton
+              onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+              label={isDescriptionExpanded ? t(ButtonsI18nKey.ShowLess) : t(ButtonsI18nKey.ShowMore)}
+            />
+          )}
+        </div>
       </div>
 
       <DialInput
@@ -67,7 +78,7 @@ const MetricConfiguration: FC<Props> = ({
         onChange={onChangeName}
       />
 
-      <div className="flex-1 min-h-0 overflow-y-auto gap-y-6 flex flex-col">
+      <div className="flex-1 min-h-0 gap-y-6 flex flex-col">
         <MetricSchemaSection
           title={t(TestSuitesI18nKey.Configuration)}
           fields={selectedMetricParameters || []}

@@ -350,6 +350,9 @@ export enum ButtonsI18nKey {
   HFRegistry = 'Buttons.HFRegistry',
   McpRegistry = 'Buttons.McpRegistry',
   TryOut = 'Buttons.TryOut',
+  Upload = 'Buttons.Upload',
+  ShowMore = 'Buttons.ShowMore',
+  ShowLess = 'Buttons.ShowLess',
 }
 
 export enum UpdateI18nKey {
@@ -580,6 +583,8 @@ export enum TabsI18nKey {
   Columns = 'Tabs.Columns',
   Analytics = 'Tabs.Analytics',
   MCP = 'Tabs.MCP',
+  Public = 'Tabs.Public',
+  Application = 'Tabs.Application',
 }
 
 export enum InterceptorsI18nKey {
@@ -1399,7 +1404,6 @@ export enum EnvVariablesI18nKey {
   EnvVariable = 'EnvVariables.EnvVariable',
   Name = 'EnvVariables.Name',
   Description = 'EnvVariables.Description',
-  Value = 'EnvVariables.Value',
   MountType = 'EnvVariables.MountType',
   Required = 'EnvVariables.Required',
   AddVariable = 'EnvVariables.AddVariable',
@@ -1548,4 +1552,23 @@ export enum FileManagerI18nKey {
   // Notifications
   CreateFolderSuccessTitle = 'FileManager.Notifications.CreateFolder.Title',
   CreateFolderSuccessDescription = 'FileManager.Notifications.CreateFolder.Description',
+}
+
+export enum JsonAtaI18nKey {
+  JSONAtaDoc = 'JsonAta.JSONAtaDoc',
+  OpenFullDoc = 'JsonAta.OpenFullDoc',
+  JsonAtaDescription = 'JsonAta.JsonAtaDescription',
+  MoreResources = 'JsonAta.MoreResources',
+  SimpleQueries = 'JsonAta.SimpleQueries',
+  Predicates = 'JsonAta.Predicates',
+  StringFunctions = 'JsonAta.StringFunctions',
+  NumericFunctions = 'JsonAta.NumericFunctions',
+  Playground = 'JsonAta.Playground',
+  PathNavigation = 'JsonAta.PathNavigation',
+  ArrayOperations = 'JsonAta.ArrayOperations',
+  ConditionalsNullSafety = 'JsonAta.ConditionalsNullSafety',
+  MathStringFunctions = 'JsonAta.MathStringFunctions',
+  UseCase = 'JsonAta.UseCase',
+  Expression = 'JsonAta.Expression',
+  ResultType = 'JsonAta.ResultType',
 }

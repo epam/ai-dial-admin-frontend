@@ -244,8 +244,8 @@ describe('Entities :: tabs', () => {
     expect(getTestSuiteTabs(t)).toEqual([
       propertiesTab(t),
       testSuiteMethodTab(t),
-      metricsTab(t),
       testCasesTab(t),
+      metricsTab(t),
       runsTab(t),
     ]);
   });

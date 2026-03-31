@@ -4,7 +4,7 @@ import { telemetryApi } from '@/src/app/api/api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { getDashboardData } from './actions';
+import { getDashboardData, getDatasets } from './actions';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -24,6 +24,15 @@ describe('Export config :: actions :: getDashboardData', () => {
     const result = await getDashboardData(query);
 
     expect(telemetryApi.getDashboardData).toHaveBeenCalledWith(query, TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getDatasets action', async () => {
+    (telemetryApi.getDatasets as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getDatasets();
+
+    expect(telemetryApi.getDatasets).toHaveBeenCalledWith(TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

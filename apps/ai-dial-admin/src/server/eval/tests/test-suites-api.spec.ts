@@ -381,4 +381,22 @@ describe('Server :: TestSuiteApi', () => {
       expect.objectContaining({ method: 'DELETE' }),
     );
   });
+
+  test('Should call getTestSuiteFiles', async () => {
+    fetch.mockResponseOnce(JSON.stringify([mockTestSuite]));
+    await instance.getTestSuiteFiles('id', TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_SUITE_URL('id')}/files`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
+  test('Should call uploadTestSuiteFiles', async () => {
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
+    await instance.uploadTestSuiteFiles('id', new FormData(), TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_SUITE_URL('id')}/files`,
+      expect.objectContaining({ method: 'POST' }),
+    );
+  });
 });

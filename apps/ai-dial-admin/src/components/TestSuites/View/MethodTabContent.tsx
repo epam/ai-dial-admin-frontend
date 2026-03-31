@@ -46,7 +46,7 @@ const MethodTabContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh }) => 
       <div className="flex flex-col gap-3">
         <div className="flex flex-col">
           <div className="flex flex-row justify-between">
-            <MethodEndpoint testSuite={testSuite} />
+            <MethodEndpoint testSuite={testSuite} showFormattedUrl />
 
             <div className="flex flex-row gap-3 items-center">
               <DialPrimaryButton

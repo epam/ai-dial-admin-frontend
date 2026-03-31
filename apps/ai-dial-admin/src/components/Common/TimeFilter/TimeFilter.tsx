@@ -3,7 +3,7 @@ import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import { Dispatch, FC, SetStateAction, useCallback, useRef, useState } from 'react';
 
 import RangePicker from '@/src/components/Common/RangePicker/RangePicker';
-import { timePeriodOptionsConfig } from '@/src/constants/global-time-filter';
+import { TimePeriodOption, timePeriodOptionsConfig } from '@/src/constants/global-time-filter';
 import { TelemetryI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
@@ -18,6 +18,7 @@ interface Props {
   onTimeRangeChange: (value: TimeRange, isCustom?: boolean) => void;
   isCustomRange?: boolean;
   setIsCustomRange?: Dispatch<SetStateAction<boolean>>;
+  timePeriodOptions?: TimePeriodOption[];
 }
 
 const TimeFilter: FC<Props> = ({
@@ -27,7 +28,9 @@ const TimeFilter: FC<Props> = ({
   onTimeRangeChange,
   isCustomRange = false,
   setIsCustomRange,
+  timePeriodOptions,
 }) => {
+  const options = timePeriodOptions ?? timePeriodOptionsConfig;
   const t = useI18n();
   const dismissRef = useRef<{ dismiss: () => void }>(null);
   const [showCustomRange, setShowCustomRange] = useState(false);
@@ -70,13 +73,11 @@ const TimeFilter: FC<Props> = ({
       size={SelectSize.Sm}
       variant={SelectVariant.Secondary}
       prefix={t(TelemetryI18nKey.TimePeriod)}
-      options={timePeriodOptionsConfig}
+      options={options}
       value={value}
       dismissRef={dismissRef}
       customSelectedValue={
-        timePeriodOptionsConfig.some((item) => item.value === value)
-          ? void 0
-          : `${t(TelemetryI18nKey.Custom)}: ${value}`
+        options.some((item) => item.value === value) ? void 0 : `${t(TelemetryI18nKey.Custom)}: ${value}`
       }
       header={
         <div className="flex flex-col w-full">

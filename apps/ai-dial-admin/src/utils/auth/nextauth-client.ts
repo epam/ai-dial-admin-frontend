@@ -39,4 +39,14 @@ export class NextClient {
       }, 50);
     });
   }
+
+  public static clearRefreshToken(userId: string): void {
+    if (globalObj._refreshTokenMap && globalObj._refreshTokenMap[userId]) {
+      delete globalObj._refreshTokenMap[userId];
+    }
+  }
+
+  public static clearAllRefreshTokens(): void {
+    globalObj._refreshTokenMap = {};
+  }
 }

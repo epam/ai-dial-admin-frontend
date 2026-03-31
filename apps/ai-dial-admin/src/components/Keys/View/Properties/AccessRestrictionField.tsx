@@ -57,8 +57,10 @@ const AccessRestrictionField = <T extends { allowedIpAddressRanges?: string[] }>
       setSelectedRadio(option);
 
       if (option === RestrictionType.ALLOW_ALL) {
+        setIpRanges([]);
         dispatch({ type: ValidationActionType.SetField, field: 'ipRanges', isValid: true });
       } else if (option === RestrictionType.BLOCK_ALL) {
+        setIpRanges([]);
         dispatch({ type: ValidationActionType.SetField, field: 'ipRanges', isValid: true });
       }
     },

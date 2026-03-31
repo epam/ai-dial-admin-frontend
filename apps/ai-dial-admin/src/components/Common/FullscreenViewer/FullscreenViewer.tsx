@@ -55,7 +55,7 @@ export const FullscreenViewerModal: FC<FullscreenViewerState & { onClose: () => 
   }, [formatted, title, showNotification, t]);
 
   const handleBackdropClick = useCallback(
-    (e: React.MouseEvent) => {
+    (e: MouseEvent) => {
       if (e.target === e.currentTarget) onClose();
     },
     [onClose],

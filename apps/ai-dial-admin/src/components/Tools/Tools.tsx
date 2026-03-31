@@ -112,7 +112,7 @@ const Tools: FC<Props> = ({
       setUseAllTools(value);
       onChangeToolset?.({
         ...selectedToolset,
-        allowedTools: !value ? [''] : [],
+        allowedTools: [],
       });
     },
     [onChangeToolset, selectedToolset],
@@ -204,11 +204,7 @@ const Tools: FC<Props> = ({
   }, [search, tools, manualAddedTools, selectedFilters, useAllTools]);
 
   useEffect(() => {
-    if (originalToolset?.allowedTools?.length === 0) {
-      setUseAllTools(true);
-    } else {
-      setUseAllTools(false);
-    }
+    setUseAllTools(originalToolset?.allowedTools?.length === 0);
   }, [originalToolset]);
 
   useEffect(() => {

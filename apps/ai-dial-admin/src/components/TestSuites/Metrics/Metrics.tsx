@@ -157,6 +157,7 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
                   )}
 
                   <MetricBindingsDisplay title={t(TestSuitesI18nKey.Configuration)} bindings={metric.configBindings} />
+                  <MetricBindingsDisplay title={t(TestSuitesI18nKey.Inputs)} bindings={metric.inputBindings} />
                 </div>
               ))}
             </div>
