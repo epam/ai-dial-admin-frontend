@@ -1495,6 +1495,12 @@ export enum TestSuitesI18nKey {
   Outputs = 'TestSuites.Outputs',
   Bindings = 'TestSuites.Bindings',
   Results = 'TestSuites.Results',
+  TestCaseSchema = 'TestSuites.TestCaseSchema',
+  SchemaField = 'TestSuites.SchemaField',
+  EditField = 'TestSuites.EditField',
+  NoSchemaFields = 'TestSuites.NoSchemaFields',
+  DuplicateFieldName = 'TestSuites.DuplicateFieldName',
+  SchemaDescription = 'TestSuites.SchemaDescription',
   FinalPath = 'TestSuites.FinalPath',
 }
 
@@ -1539,4 +1545,23 @@ export enum FileManagerI18nKey {
   // Notifications
   CreateFolderSuccessTitle = 'FileManager.Notifications.CreateFolder.Title',
   CreateFolderSuccessDescription = 'FileManager.Notifications.CreateFolder.Description',
+}
+
+export enum JsonAtaI18nKey {
+  JSONAtaDoc = 'JsonAta.JSONAtaDoc',
+  OpenFullDoc = 'JsonAta.OpenFullDoc',
+  JsonAtaDescription = 'JsonAta.JsonAtaDescription',
+  MoreResources = 'JsonAta.MoreResources',
+  SimpleQueries = 'JsonAta.SimpleQueries',
+  Predicates = 'JsonAta.Predicates',
+  StringFunctions = 'JsonAta.StringFunctions',
+  NumericFunctions = 'JsonAta.NumericFunctions',
+  Playground = 'JsonAta.Playground',
+  PathNavigation = 'JsonAta.PathNavigation',
+  ArrayOperations = 'JsonAta.ArrayOperations',
+  ConditionalsNullSafety = 'JsonAta.ConditionalsNullSafety',
+  MathStringFunctions = 'JsonAta.MathStringFunctions',
+  UseCase = 'JsonAta.UseCase',
+  Expression = 'JsonAta.Expression',
+  ResultType = 'JsonAta.ResultType',
 }
