@@ -219,7 +219,7 @@ export enum EntitiesI18nKey {
   Container = 'Entities.Container',
   DiscardChanges = 'Entities.DiscardChanges',
   DiscardChangesDescription = 'Entities.DiscardChangesDescription',
-  EndpointAndMCPContainerSource = 'Entities.EndpointAndMCPContainerSource',
+  EndpointsSourceType = 'Entities.EndpointsSourceType',
 }
 
 export enum DeleteI18nKey {
@@ -962,6 +962,8 @@ export enum SourceI18nKey {
   ModelServing = 'Source.ModelServing',
   InterceptorContainer = 'Source.InterceptorContainer',
   McpContainer = 'Source.McpContainer',
+  McpEndpoint = 'Source.McpEndpoint',
+  ChatEndpoint = 'Source.ChatEndpoint',
   AdapterContainer = 'Source.AdapterContainer',
   Endpoint = 'Source.Endpoint',
   ExternalEndpoint = 'Source.ExternalEndpoint',
