@@ -1,4 +1,4 @@
-import { DialIconButton, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { DialIconButton, DialNeutralButton, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconCopy } from '@tabler/icons-react';
 import { FC, useCallback } from 'react';
 
@@ -14,9 +14,10 @@ interface Props {
   valueLabel?: string;
   className?: string;
   value?: string;
+  size?: ElementSize;
 }
 
-const CopyButton: FC<Props> = ({ buttonLabel, value, valueLabel, className }) => {
+const CopyButton: FC<Props> = ({ buttonLabel, value, valueLabel, className, size = ElementSize.Standard }) => {
   const { showNotification } = useNotification();
   const t = useI18n();
 
@@ -32,14 +33,16 @@ const CopyButton: FC<Props> = ({ buttonLabel, value, valueLabel, className }) =>
       label={buttonLabel}
       onClick={onClick}
       aria-label="copy"
-      iconBefore={<IconCopy {...BASE_BUTTON_ICON_PROPS} />}
+      iconBefore={<IconCopy stroke={2} size={size === ElementSize.Small ? 16 : 20} />}
+      size={size}
     />
   ) : (
     <DialIconButton
       className={classNames('cursor-pointer h-[20px] w-[20px] text-secondary hover:text-accent-primary', className)}
       aria-label="copy"
+      size={size}
       onClick={onClick}
-      icon={<IconCopy {...BASE_BUTTON_ICON_PROPS} />}
+      icon={<IconCopy stroke={2} size={size === ElementSize.Small ? 16 : 20} />}
     />
   );
 };

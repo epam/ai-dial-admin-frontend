@@ -6,6 +6,7 @@ import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { parseValue } from '@/src/utils/evaluation/detail-panel';
+import { ElementSize } from '@epam/ai-dial-ui-kit';
 
 interface Props {
   label: string;
@@ -18,17 +19,17 @@ const AdaptiveValueRow: FC<Props> = ({ label, value }) => {
 
   const parsed = useMemo(() => parseValue(value), [value]);
 
-  const handleToggle = useCallback(() => {
+  const onToggle = useCallback(() => {
     if (parsed.isLong) setIsExpanded((prev) => !prev);
   }, [parsed.isLong]);
 
   return (
     <div
-      className="group grid grid-cols-[minmax(70px,140px)_1fr_auto] gap-x-3 py-[5px] border-b border-tertiary last:border-b-0 items-start text-xs hover:bg-layer-3 hover:-mx-2 hover:px-2 hover:rounded"
-      onClick={handleToggle}
+      className="group grid grid-cols-[minmax(70px,140px)_1fr_auto] gap-3 px-2 py-3 border-b border-tertiary last:border-b-0 items-center dial-tiny-text hover:bg-layer-3"
+      onClick={onToggle}
       role={parsed.isLong ? 'button' : undefined}
     >
-      <span className="text-secondary break-words pt-px">{label}</span>
+      <span className="text-secondary break-words">{label}</span>
       <span className="font-medium min-w-0 break-words">
         {parsed.typeChip && (
           <span className="inline-block text-[9px] font-semibold text-accent-secondary bg-accent-secondary-alpha px-[5px] py-px rounded-sm uppercase tracking-wide mr-1 leading-[14px]">
@@ -46,7 +47,12 @@ const AdaptiveValueRow: FC<Props> = ({ label, value }) => {
           </pre>
         )}
       </span>
-      <CopyButton buttonLabel={t(ButtonsI18nKey.Copy)} value={parsed.rawText} valueLabel={label} />
+      <CopyButton
+        buttonLabel={t(ButtonsI18nKey.Copy)}
+        value={parsed.rawText}
+        valueLabel={label}
+        size={ElementSize.Small}
+      />
     </div>
   );
 };

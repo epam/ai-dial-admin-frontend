@@ -12,7 +12,8 @@ interface Props {
 }
 
 const MetricCardsGrid: FC<Props> = ({ group, selectedMetricKey, onMetricClick }) => {
-  const hasInfos = group.infos != null;
+  if (!group.metrics.length) return null;
+  const hasInfos = group.info != null;
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -23,7 +24,7 @@ const MetricCardsGrid: FC<Props> = ({ group, selectedMetricKey, onMetricClick })
           value={metric.value}
           isError={group.hasError || metric.isError}
           isSelected={selectedMetricKey === metric.key}
-          onClick={hasInfos && group.infos?.[metric.key] ? () => onMetricClick?.(metric.key) : undefined}
+          onClick={hasInfos && group.info?.[metric.key] ? () => onMetricClick?.(metric.key) : undefined}
         />
       ))}
     </div>

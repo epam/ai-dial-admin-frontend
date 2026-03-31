@@ -31,11 +31,11 @@ const MetricCard: FC<Props> = ({ name, value, isError, isSelected, onClick }) =>
       role={onClick ? 'button' : undefined}
     >
       <div
-        className={classNames('text-[10px] mb-1 break-all leading-tight', isError ? 'text-error' : 'text-secondary')}
+        className={classNames('dial-tiny-text mb-1 break-all leading-tight', isError ? 'text-error' : 'text-secondary')}
       >
         {name}
       </div>
-      <div className={classNames('text-base font-semibold font-mono', isError ? 'text-error' : 'text-primary')}>
+      <div className={classNames('dial-small-semi-text', isError ? 'text-error' : 'text-primary')}>
         {formattedValue}
       </div>
       <div className="h-[3px] bg-layer-4 rounded-sm mt-1.5 overflow-hidden">

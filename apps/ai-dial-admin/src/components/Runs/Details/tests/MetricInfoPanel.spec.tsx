@@ -13,7 +13,7 @@ describe('MetricInfoPanel', () => {
     const infos = {
       f1: { reason: 'Explanation text', confidence: '0.92' },
     };
-    render(<MetricInfoPanel infos={infos} groupTitle="group" />);
+    render(<MetricInfoPanel info={infos} groupTitle="group" />);
 
     expect(screen.getByText('f1')).toBeInTheDocument();
     expect(screen.getByText('reason')).toBeInTheDocument();
@@ -22,7 +22,7 @@ describe('MetricInfoPanel', () => {
 
   test('Should render entries as CodeViewer blocks', () => {
     const infos = { metric: { highlight: '{"corpus": [{"text": "test"}]}' } };
-    render(<MetricInfoPanel infos={infos} groupTitle="retrieval" />);
+    render(<MetricInfoPanel info={infos} groupTitle="retrieval" />);
 
     expect(screen.getByText('metric')).toBeInTheDocument();
     expect(screen.getByText('highlight')).toBeInTheDocument();
@@ -33,7 +33,7 @@ describe('MetricInfoPanel', () => {
       context_to_answer: { reason: 'Good coverage' },
       answer_to_ground_truth: { reason: 'Partial match' },
     };
-    render(<MetricInfoPanel infos={infos} groupTitle="generation" />);
+    render(<MetricInfoPanel info={infos} groupTitle="generation" />);
 
     expect(screen.getByText('context_to_answer')).toBeInTheDocument();
     expect(screen.getByText('answer_to_ground_truth')).toBeInTheDocument();

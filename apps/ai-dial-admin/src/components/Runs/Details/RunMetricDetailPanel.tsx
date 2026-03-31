@@ -97,15 +97,14 @@ const RunMetricDetailPanel: FC<Props> = ({ resultId, onClose }) => {
                   <AdaptiveValueGrid title={t(RunsI18nKey.TestCaseData)} entries={testCaseEntries} />
                 )}
                 {metricGroups.map((group) => (
-                  <section key={group.title} className="flex flex-col gap-1.5">
+                  <section key={group.title} className="flex flex-col gap-3">
                     <div
                       className={classNames(
-                        'flex items-center gap-1.5 text-xs font-semibold',
+                        'flex items-center gap-3 dial-tiny-semi-text',
                         group.hasError && 'text-error',
                       )}
                     >
                       {group.title}
-                      <span className={classNames('flex-1 h-px', group.hasError ? 'bg-error' : 'bg-tertiary')} />
                     </div>
                     <MetricCardsGrid
                       group={group}
@@ -113,13 +112,13 @@ const RunMetricDetailPanel: FC<Props> = ({ resultId, onClose }) => {
                       onMetricClick={(key) => toggleMetricSelection(group.title, key)}
                     />
                     {group.hasError && group.errorMessage && (
-                      <div className="grid grid-cols-[auto_1fr] gap-x-3 text-[11px] mt-1">
+                      <div className="grid grid-cols-[auto_1fr] gap-x-3 dial-tiny-text mt-1">
                         <span className="text-error">error</span>
                         <span className="text-error break-words">{group.errorMessage}</span>
                       </div>
                     )}
-                    {selectedMetric?.group === group.title && !!group.infos?.[selectedMetric.key] && (
-                      <MetricInfoPanel infos={{ [selectedMetric.key]: group.infos[selectedMetric.key] }} />
+                    {selectedMetric?.group === group.title && !!group.info?.[selectedMetric.key] && (
+                      <MetricInfoPanel info={{ [selectedMetric.key]: group.info[selectedMetric.key] }} />
                     )}
                   </section>
                 ))}

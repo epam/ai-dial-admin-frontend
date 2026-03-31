@@ -11,13 +11,13 @@ import { useI18n } from '@/src/locales/client';
 
 import { useFullscreenViewer } from '@/src/context/FullscreenViewerContext';
 import { formatJsonSize, generateLineNumbers, highlightJson } from '@/src/utils/evaluation/json-highlight';
-import { DialIcon, DialIconButton } from '@epam/ai-dial-ui-kit';
+import { DialGhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
 
 interface Props {
   title: string;
   content: string;
 }
-
+// TODO: monaco editor for better json view with folding and search
 const CodeViewer: FC<Props> = ({ title, content }) => {
   const t = useI18n();
   const fullscreen = useFullscreenViewer();
@@ -35,7 +35,7 @@ const CodeViewer: FC<Props> = ({ title, content }) => {
   const lineNumbers = useMemo(() => generateLineNumbers(formatted), [formatted]);
   const size = useMemo(() => formatJsonSize(content), [content]);
 
-  const handleFullscreen = useCallback(() => {
+  const onOpenFullScreen = useCallback(() => {
     fullscreen.open(title, content, 'json');
   }, [title, content, fullscreen]);
 
@@ -51,25 +51,24 @@ const CodeViewer: FC<Props> = ({ title, content }) => {
           <IconChevronRight size={12} className={classNames('transition-transform', isOpen && 'rotate-90')} />
           {title}
         </span>
-        <span className="flex items-center gap-1">
-          <span className="text-xxs text-secondary opacity-60 font-mono">{size}</span>
-          <span onClick={(e) => e.stopPropagation()}>
-            <CopyButton buttonLabel={t(ButtonsI18nKey.Copy)} value={formatted} valueLabel={title} />
-          </span>
-          <DialIconButton
-            icon={<IconMaximize size={12} />}
-            className="cursor-pointer text-secondary opacity-60 hover:opacity-100 transition-opacity"
-            onClick={handleFullscreen}
+        <span className="flex items-center gap-3">
+          <span className="dial-tiny-text text-secondary opacity-60 font-mono">{size}</span>
+          <CopyButton
+            buttonLabel={t(ButtonsI18nKey.Copy)}
+            value={formatted}
+            valueLabel={title}
+            size={ElementSize.Small}
           />
+          <DialGhostIconButton size={ElementSize.Small} icon={<IconMaximize size={16} />} onClick={onOpenFullScreen} />
         </span>
       </div>
       {isOpen && (
         <div className="flex bg-layer-0 max-h-[400px] overflow-auto">
-          <div className="py-3 px-2 text-right text-secondary opacity-35 text-[11px] leading-[1.6] font-mono select-none border-r border-tertiary shrink-0 whitespace-pre sticky left-0">
+          <div className="py-3 px-2 text-right text-secondary opacity-35 dial-tiny-semi-text font-mono select-none border-r border-tertiary shrink-0 whitespace-pre sticky left-0">
             {lineNumbers}
           </div>
           <pre
-            className="flex-1 min-w-0 p-3 font-mono text-[11px] leading-[1.6] whitespace-pre-wrap break-words"
+            className="flex-1 min-w-0 p-3 font-mono dial-tiny-semi-text whitespace-pre-wrap break-words"
             dangerouslySetInnerHTML={{ __html: highlighted }}
           />
         </div>
