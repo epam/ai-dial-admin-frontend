@@ -126,10 +126,12 @@ const MetricConfiguration: FC<Props> = ({
             <ContentWithLinks text={description} />
           </div>
           {isLongDescription && (
-            <DialLinkButton
-              onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-              label={isDescriptionExpanded ? t(ButtonsI18nKey.ShowLess) : t(ButtonsI18nKey.ShowMore)}
-            />
+            <div>
+              <DialLinkButton
+                onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                label={isDescriptionExpanded ? t(ButtonsI18nKey.ShowLess) : t(ButtonsI18nKey.ShowMore)}
+              />
+            </div>
           )}
         </div>
       </div>

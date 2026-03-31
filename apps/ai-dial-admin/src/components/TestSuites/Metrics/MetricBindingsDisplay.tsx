@@ -1,6 +1,7 @@
 import { FC } from 'react';
 
 import { MetricBinding } from '@/src/models/evaluation/metric';
+import { getBindingDisplayValue } from './MetricBindingsDisplay.utils';
 
 interface Props {
   title: string;
@@ -21,8 +22,7 @@ const MetricBindingsDisplay: FC<Props> = ({ title, bindings }) => {
             key={binding.property}
             className="flex dial-tiny-text flex-row p-1 items-center gap-1 bg-layer-3 rounded"
           >
-            {binding.property}:
-            {(binding.source.value?.toString() as string) || (binding.source.columnName?.toString() as string) || '-'}
+            {binding.property}:{getBindingDisplayValue(binding)}
           </div>
         ))}
       </div>

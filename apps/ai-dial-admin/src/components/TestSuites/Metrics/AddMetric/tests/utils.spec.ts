@@ -75,6 +75,26 @@ describe('validateMetricBindings', () => {
     expect(isValid).toBe(false);
   });
 
+  test('returns false for Constant binding with whitespace-only value', () => {
+    const isValid = validateMetricBindings(
+      'Metric name',
+      [
+        {
+          property: 'threshold',
+          source: {
+            $type: MetricBindingType.Constant,
+            value: '   ',
+          },
+        },
+      ],
+      validInputBindings,
+      configSchema,
+      inputSchema,
+    );
+
+    expect(isValid).toBe(false);
+  });
+
   test('returns false for unsupported binding source type', () => {
     const isValid = validateMetricBindings(
       'Metric name',
@@ -143,6 +163,26 @@ describe('validateMetricBindings', () => {
           source: {
             $type: MetricBindingType.Response,
             columnName: '',
+          },
+        },
+      ],
+      validInputBindings,
+      configSchema,
+      inputSchema,
+    );
+
+    expect(isValid).toBe(false);
+  });
+
+  test('returns false for response binding with whitespace-only columnName', () => {
+    const isValid = validateMetricBindings(
+      'Metric name',
+      [
+        {
+          property: 'threshold',
+          source: {
+            $type: MetricBindingType.Response,
+            columnName: '   ',
           },
         },
       ],
