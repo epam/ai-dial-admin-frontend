@@ -56,6 +56,7 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMet
 
   const [configBindings, setConfigBindings] = useState<MetricBinding[]>([]);
   const [inputBindings, setInputBindings] = useState<MetricBinding[]>([]);
+  const [isJsonView, setIsJsonView] = useState(false);
 
   const selectedMetric = useMemo(() => metrics?.find((m) => m.id === selectedMetricId), [metrics, selectedMetricId]);
 
@@ -91,13 +92,15 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMet
   }, [selectedMetric, editingMetric?.name]);
 
   const isStep1Valid = !!selectedMetricId;
-  const isStep2Valid = validateMetricBindings(
-    metricName,
-    configBindings,
-    inputBindings,
-    selectedMetricDetails?.configSchema,
-    selectedMetricDetails?.inputSchema,
-  );
+  const isStep2Valid = isJsonView
+    ? true
+    : validateMetricBindings(
+        metricName,
+        configBindings,
+        inputBindings,
+        selectedMetricDetails?.configSchema,
+        selectedMetricDetails?.inputSchema,
+      );
 
   const steps: Step[] = useMemo(
     () => [
@@ -187,6 +190,7 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMet
               selectedMetricDetails={selectedMetricDetails}
               onChangeConfigBindings={setConfigBindings}
               onChangeInputBindings={setInputBindings}
+              onJsonViewChange={setIsJsonView}
             />
           )}
         </div>

@@ -5,7 +5,7 @@ import { DialLabel, DialSelect } from '@epam/ai-dial-ui-kit';
 import TabSelector from '@/src/components/Common/TabSelector/TabSelector';
 
 import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
-import { TestSuitesI18nKey } from '@/src/constants/i18n';
+import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { MetricBinding } from '@/src/models/evaluation/metric';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
@@ -55,7 +55,7 @@ const MetricInput: FC<{
   const t = useI18n();
 
   const tabs = [
-    { label: t(TestSuitesI18nKey.TestCases), id: MetricBindingType.TestCase },
+    { label: t(TabsI18nKey.TestCases), id: MetricBindingType.TestCase },
     { label: t(TestSuitesI18nKey.ResponseColumn), id: MetricBindingType.Response },
     { label: t(TestSuitesI18nKey.Constant), id: MetricBindingType.Constant },
   ];

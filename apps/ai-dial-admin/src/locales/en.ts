@@ -44,7 +44,7 @@ export default {
     DetectedTooltip: 'Core version is detected as {version}',
     NotDetectedTooltip: 'Core version is not detected',
     DefaultTooltip:
-      'Core version is not detected. Сonfig is produced for the default version {version}.Version will be updated after detection.',
+      'Core version is not detected. Config is produced for the default version {version}.Version will be updated after detection.',
     ManuallySameTooltip: 'Core version is defined manually and matches detected version.',
     ManuallyDiffTooltip: 'Core version is defined manually and does not matches detected version.',
     ManuallySetDiffTooltip: 'Specified version does not match the detected version {version}',
@@ -1462,7 +1462,7 @@ export default {
     Application: 'Application',
     Methods: 'Methods',
     Method: 'Method',
-    TestCases: 'Test Cases',
+    Controls: 'Controls',
     Configuration: 'Configuration',
     NoTestCases: 'No Test Cases',
     FromPC: 'From PC storage',
