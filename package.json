@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@epam/ai-dial-shared": "^0.43.1",
-    "@epam/ai-dial-ui-kit": "0.8.0-rc.41",
+    "@epam/ai-dial-ui-kit": "0.8.0",
     "@epam/ai-dial-visualizer-connector": "^0.43.1",
     "@floating-ui/react": "^0.27.18",
     "@monaco-editor/react": "^4.7.0",
@@ -32,9 +32,9 @@
     "@opentelemetry/sdk-node": "^0.209.0",
     "@opentelemetry/sdk-trace-node": "^2.3.0",
     "@opentelemetry/semantic-conventions": "^1.38.0",
-    "@rjsf/core": "^6.2.5",
-    "@rjsf/utils": "^6.2.5",
-    "@rjsf/validator-ajv8": "^6.2.5",
+    "@rjsf/core": "^6.4.2",
+    "@rjsf/utils": "^6.4.2",
+    "@rjsf/validator-ajv8": "^6.4.2",
     "@tabler/icons-react": "^3.37.1",
     "@uiw/react-md-editor": "^4.0.11",
     "ag-grid-react": "^34.3.1",
@@ -119,7 +119,7 @@
     "react-dom": "19.1.2",
     "minimatch": "10.2.3",
     "picomatch": "4.0.4",
-    "serialize-javascript": "7.0.3"
+    "serialize-javascript": "7.0.5"
   },
   "engines": {
     "node": ">=24.12.0",

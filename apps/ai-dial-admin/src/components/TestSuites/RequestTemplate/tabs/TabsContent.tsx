@@ -50,7 +50,12 @@ const TabsContent = forwardRef<TabsContentRef, Props>(({ activeTab, onChange, se
         />
       )}
       {activeTab === EntityViewTab.Body && (
-        <BodyTab ref={ref} template={selectedTestSuite.requestTemplate || {}} changeTemplate={onChangeTemplate} />
+        <BodyTab
+          ref={ref}
+          selectedTestSuiteId={selectedTestSuite.id as string}
+          template={selectedTestSuite.requestTemplate || {}}
+          changeTemplate={onChangeTemplate}
+        />
       )}
       {activeTab === EntityViewTab.Headers && (
         <ParamsTab

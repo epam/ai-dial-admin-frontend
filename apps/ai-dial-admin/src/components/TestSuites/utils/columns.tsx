@@ -1,12 +1,21 @@
 import { DialTooltip } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle } from '@tabler/icons-react';
-import { ColDef, ICellRendererParams, ITooltipParams, ValueGetterParams } from 'ag-grid-community';
+import {
+  ColDef,
+  ICellRendererParams,
+  IFilterOptionDef,
+  ITextFilterParams,
+  ITooltipParams,
+  ValueGetterParams,
+} from 'ag-grid-community';
+import { JSONSchema7 } from 'json-schema';
 
-import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
+import { getSchemaTypes, SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
 import ValidityStatus from '@/src/components/Common/ValidityStatus/ValidityStatus';
 import BooleanButtonCellRenderer from '@/src/components/Grid/CellRenderers/BooleanButtonCellRenderer';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSelectCellRenderer';
+import JsonAtaCellRenderer from '@/src/components/Grid/CellRenderers/JsonAtaCellRenderer';
 import JsonEditorCellRenderer from '@/src/components/Grid/CellRenderers/JsonEditorCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import BooleanColumnHeader from '@/src/components/Grid/HeaderComponents/BooleanColumnHeader';
@@ -18,10 +27,43 @@ import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { MetricBinding } from '@/src/models/evaluation/metric';
 import { InputBindingRowData, ResponseColumn, TestCase, TestCaseSchema } from '@/src/models/evaluation/test-suite';
 import { InputBindingType, MetricBindingType, TestCaseItemType } from '@/src/types/evaluation';
+import { ApplicationRoute } from '@/src/types/routes';
 
-export type onCellChange = (data: Record<string, unknown>, field: string, value: string | number) => void;
+export type onCellChange = (data: Record<string, unknown>, field: string, value: string | number | boolean) => void;
 
-export const getTestCaseColumns = (testCases: TestCase[], onCellChange: onCellChange): ColDef[] => {
+const getEnabledColumnFilterOptions = (
+  allLabel: string,
+  enabledLabel: string,
+  disabledLabel: string,
+): IFilterOptionDef[] => [
+  {
+    displayKey: 'all',
+    displayName: allLabel,
+    numberOfInputs: 0,
+    predicate: () => true,
+  },
+  {
+    displayKey: 'enabled',
+    displayName: enabledLabel,
+    numberOfInputs: 0,
+    predicate: (_filterValues, cellValue) => cellValue === true,
+  },
+  {
+    displayKey: 'disabled',
+    displayName: disabledLabel,
+    numberOfInputs: 0,
+    predicate: (_filterValues, cellValue) => cellValue !== true,
+  },
+];
+
+export const getTestCaseColumns = (
+  testCases: TestCase[],
+  onCellChange: onCellChange,
+  t?: (key: string) => string,
+): ColDef[] => {
+  const enabledLabel = t?.(BasicI18nKey.Enabled) ?? 'Enabled';
+  const disabledLabel = t?.(BasicI18nKey.Disabled) ?? 'Disabled';
+  const allLabel = 'All';
   const data = testCases.reduce((acc: string[], testCase) => {
     const testCaseFacts = Object.keys(testCase.data || {});
     testCaseFacts.forEach((fact) => {
@@ -38,16 +80,29 @@ export const getTestCaseColumns = (testCases: TestCase[], onCellChange: onCellCh
       headerName: '',
       headerComponent: BooleanColumnHeader,
       field: 'enabled',
+      colId: 'enabled',
+      minWidth: 120,
+      width: 120,
+      maxWidth: 140,
+      filter: 'agTextColumnFilter',
+      filterParams: {
+        filterOptions: getEnabledColumnFilterOptions(allLabel, enabledLabel, disabledLabel),
+        defaultOption: 'all',
+        maxNumConditions: 1,
+        buttons: ['reset'],
+      } as ITextFilterParams,
+      floatingFilter: true,
+      floatingFilterComponent: 'agTextColumnFloatingFilter',
       editable: true,
       cellRenderer: 'agCheckboxCellRenderer',
       cellEditor: 'agCheckboxCellEditor',
-      tooltipValueGetter: (params) => {
-        return !params.data?.enabled ? 'Disable test case' : 'Enable test case';
-      },
       valueGetter: (params) => params.data?.enabled,
       valueSetter: (params) => {
         params.data.enabled = params.newValue;
         return true;
+      },
+      tooltipValueGetter: (params) => {
+        return !params.data?.enabled ? 'Disable test case' : 'Enable test case';
       },
     } as ColDef,
     ...TEST_CASES_COLUMN.map((col) => {
@@ -106,6 +161,7 @@ export const getDynamicConfigurationsColumns = (
   onChangeEditable: (value: string | object, data: InputBindingRowData, column: string, index?: number) => void,
   onChangeSelect: (value: string, data: InputBindingRowData, column: string, index?: number) => void,
   schema: TestCaseSchema[],
+  id: string,
   t: (stringToTranslate: string) => string,
 ): ColDef<InputBindingRowData>[] => {
   return [
@@ -171,6 +227,8 @@ export const getDynamicConfigurationsColumns = (
             component: FileSelectCellRenderer,
             params: {
               onChange: onChangeEditable,
+              id: id,
+              view: ApplicationRoute.TestSuites,
             },
           };
         }
@@ -475,15 +533,29 @@ export const getSchemaFieldGridColumns = (
   ];
 };
 
-export const getColumnsGridColumns = (): ColDef<ResponseColumn>[] => {
+export const getColumnsGridColumns = (
+  responseSchema: JSONSchema7,
+  onChange: (value: string, data: ResponseColumn, column: string, index?: number) => void,
+  onChangeExpression?: (
+    value: { expression: string; type?: string },
+    data: ResponseColumn,
+    column: string,
+    index?: number,
+  ) => void,
+): ColDef<ResponseColumn>[] => {
   return [
     {
-      headerName: 'Name',
+      headerName: 'Display Name',
       colId: 'displayName',
       field: 'displayName',
       sortable: false,
       filter: false,
       floatingFilter: false,
+      cellRenderer: EditableCellRenderer,
+      cellRendererParams: {
+        onChange,
+        hideTriangle: true,
+      },
     },
     {
       headerName: 'JSONata Expression',
@@ -492,14 +564,24 @@ export const getColumnsGridColumns = (): ColDef<ResponseColumn>[] => {
       sortable: false,
       filter: false,
       floatingFilter: false,
+      cellRenderer: JsonAtaCellRenderer,
+      cellRendererParams: {
+        responseSchema,
+        onChange: onChangeExpression,
+      },
     },
     {
-      headerName: 'Type',
+      headerName: 'Data type',
       colId: 'type',
       field: 'type',
       sortable: false,
       filter: false,
       floatingFilter: false,
+      cellRenderer: SelectCellRenderer,
+      cellRendererParams: {
+        items: getSchemaTypes().map((type) => ({ value: type.toUpperCase(), label: type })),
+        onChange,
+      },
       valueFormatter: ({ value }) => value.toLowerCase(),
       tooltipValueGetter: ({ value }) => value.toLowerCase(),
     },

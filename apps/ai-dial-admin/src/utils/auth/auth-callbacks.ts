@@ -144,6 +144,11 @@ export async function refreshAccessToken(token: NextAuthToken) {
 
 export const callbacks: Partial<CallbacksOptions<Profile & { job_title?: string }, Account>> = {
   jwt: async (options) => {
+    // Handle signout - clear token data
+    if ((options.trigger as any) === 'signOut') {
+      return {};
+    }
+
     if (options.account) {
       return {
         ...options.token,

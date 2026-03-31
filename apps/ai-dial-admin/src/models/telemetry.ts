@@ -7,6 +7,7 @@ export interface TelemetryData {
 
 export interface TelemetryQuery {
   $type: string;
+  fillGaps?: boolean;
   query: {
     distinct?: string;
     expressions: string[];
@@ -23,4 +24,9 @@ export interface FilterData {
   type: FILTER_TYPE;
   condition: FILTER_OPERATOR;
   value: string;
+}
+
+export interface DatasetMetadata {
+  name: string;
+  maxTimeRangeMs: number;
 }

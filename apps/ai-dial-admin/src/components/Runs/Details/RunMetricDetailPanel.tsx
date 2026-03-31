@@ -14,9 +14,9 @@ import { useI18n } from '@/src/locales/client';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 
 import AdaptiveValueGrid from './AdaptiveValueGrid';
-import CodeViewer from './CodeViewer';
+import CodeViewer from '@/src/components/Common/CodeViewer/CodeViewer';
 import ExecutionStatusBar from './ExecutionStatusBar';
-import { FullscreenViewerProvider } from './FullscreenViewer';
+import { FullscreenViewerProvider } from '@/src/context/FullscreenViewerContext';
 import MetricCardsGrid from './MetricCardsGrid';
 import MetricInfoPanel from './MetricInfoPanel';
 
@@ -129,7 +129,7 @@ const RunMetricDetailPanel: FC<Props> = ({ resultId, onClose, onSwitchMode }) =>
                         <span className="text-error break-words">{group.errorMessage}</span>
                       </div>
                     )}
-                    {selectedMetric?.group === group.title && group.infos?.[selectedMetric.key] && (
+                    {selectedMetric?.group === group.title && !!group.infos?.[selectedMetric.key] && (
                       <MetricInfoPanel
                         infos={{ [selectedMetric.key]: group.infos[selectedMetric.key] }}
                         groupTitle={`${group.title} / ${selectedMetric.key}`}

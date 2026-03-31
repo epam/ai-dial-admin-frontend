@@ -4,12 +4,8 @@ import { describe, expect, test, vi } from 'vitest';
 import MetricInfoPanel from '../MetricInfoPanel';
 
 const mockOpen = vi.fn();
-vi.mock('../FullscreenViewer', () => ({
+vi.mock('@/src/context/FullscreenViewerContext', () => ({
   useFullscreenViewer: () => ({ open: mockOpen, close: vi.fn() }),
-}));
-
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: vi.fn() }),
 }));
 
 describe('MetricInfoPanel', () => {

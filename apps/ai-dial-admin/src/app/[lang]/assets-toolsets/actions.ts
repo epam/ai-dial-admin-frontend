@@ -77,11 +77,12 @@ export async function getAssetTools(name: string) {
 export async function signInToolset(
   toolset: AssetToolset,
   type: ToolsetAuthCredentialLevel,
+  redirectUrl: string,
   apiKey?: string,
   authCode?: string,
 ) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.signInToolset(toolset, type, token, apiKey, authCode);
+  return assetsApi.signInToolset(toolset, type, token, redirectUrl, apiKey, authCode);
 }
 
 export async function signOutToolset(toolset: AssetToolset, type: ToolsetAuthCredentialLevel) {

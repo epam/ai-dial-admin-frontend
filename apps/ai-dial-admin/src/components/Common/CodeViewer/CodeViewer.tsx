@@ -2,15 +2,15 @@
 
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import { IconChevronRight, IconCopy, IconMaximize } from '@tabler/icons-react';
+import { IconChevronRight, IconMaximize } from '@tabler/icons-react';
+import classNames from 'classnames';
 
-import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
-import { useNotification } from '@/src/context/NotificationContext';
+import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { getSuccessNotification } from '@/src/utils/notification';
 
-import { useFullscreenViewer } from './FullscreenViewer';
-import { formatJsonSize, generateLineNumbers, highlightJson } from './json-highlight';
+import { useFullscreenViewer } from '@/src/context/FullscreenViewerContext';
+import { formatJsonSize, generateLineNumbers, highlightJson } from '@/src/utils/evaluation/json-highlight';
 
 interface Props {
   title: string;
@@ -19,7 +19,6 @@ interface Props {
 
 const CodeViewer: FC<Props> = ({ title, content }) => {
   const t = useI18n();
-  const { showNotification } = useNotification();
   const fullscreen = useFullscreenViewer();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -35,17 +34,8 @@ const CodeViewer: FC<Props> = ({ title, content }) => {
   const lineNumbers = useMemo(() => generateLineNumbers(formatted), [formatted]);
   const size = useMemo(() => formatJsonSize(content), [content]);
 
-  const handleCopy = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      navigator.clipboard.writeText(formatted);
-      showNotification(getSuccessNotification(`${title} ${t(BasicI18nKey.CopiedSuccessfully)}`));
-    },
-    [formatted, title, showNotification, t],
-  );
-
   const handleFullscreen = useCallback(
-    (e: React.MouseEvent) => {
+    (e: MouseEvent) => {
       e.stopPropagation();
       fullscreen.open(title, content, 'json');
     },
@@ -61,18 +51,14 @@ const CodeViewer: FC<Props> = ({ title, content }) => {
         aria-expanded={isOpen}
       >
         <span className="flex items-center gap-1.5 text-secondary">
-          <IconChevronRight size={12} className={`transition-transform ${isOpen ? 'rotate-90' : ''}`} />
+          <IconChevronRight size={12} className={classNames('transition-transform', isOpen && 'rotate-90')} />
           {title}
         </span>
         <span className="flex items-center gap-1">
           <span className="text-[10px] text-secondary opacity-60 font-mono">{size}</span>
-          <button
-            className="px-2 py-0.5 border border-secondary rounded text-[10px] text-secondary hover:text-primary hover:bg-layer-4 transition-colors"
-            onClick={handleCopy}
-          >
-            <IconCopy size={12} className="inline -mt-px mr-0.5" />
-            {t(ButtonsI18nKey.Copy)}
-          </button>
+          <span onClick={(e) => e.stopPropagation()}>
+            <CopyButton buttonLabel={t(ButtonsI18nKey.Copy)} value={formatted} valueLabel={title} />
+          </span>
           <button
             className="px-1.5 py-0.5 border border-secondary rounded text-[10px] text-secondary hover:text-primary hover:bg-layer-4 transition-colors"
             onClick={handleFullscreen}

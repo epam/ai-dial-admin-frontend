@@ -140,10 +140,12 @@ export const PROJECT_CONSUMPTION_QUERY: TelemetryQuery = {
 
 export const SYSTEM_USAGE_QUERY: TelemetryQuery = {
   $type: 'json',
+  fillGaps: true,
   query: {
     expressions: ["window(_time, 1, 'm') as time", 'count() as requests'],
     from: 'analytics',
     groupBy: ["window(_time, 1, 'm')"],
+    orderBy: [{ $asc: 'time' }],
   },
 };
 
@@ -224,10 +226,12 @@ export const TOOLSET_DEPLOYMENT_PREFIX = 'toolsets/';
 
 export const MCP_USAGE_QUERY: TelemetryQuery = {
   $type: 'json',
+  fillGaps: true,
   query: {
     expressions: ["window(_time, 1, 'm')", 'mcp_method', 'count()'],
     from: MCP_TABLE_NAME,
     groupBy: ["window(_time, 1, 'm')", 'mcp_method'],
+    orderBy: [{ $asc: "window(_time, 1, 'm')" }],
   },
 };
 

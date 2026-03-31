@@ -1,16 +1,18 @@
 'use client';
 
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconPlayerPlay } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 
 import { removeTestSuite, runTestSuite, updateTestCases, updateTestSuite } from '@/src/app/[lang]/test-suites/actions';
-import { TestCasesActions } from '@/src/components/TestSuites/TestCases/TestCasesList';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import RunModal from '@/src/components/TestSuites/Runs/RunModal';
+import { TestCasesActions } from '@/src/components/TestSuites/TestCases/TestCasesList';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -22,8 +24,6 @@ import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getTestSuiteTabs } from '@/src/utils/tabs/utils';
 import TabsContent from './TabsContent';
-import { createPortal } from 'react-dom';
-import RunModal from '../Runs/RunModal';
 
 interface Props {
   originalTestSuite: TestSuite;

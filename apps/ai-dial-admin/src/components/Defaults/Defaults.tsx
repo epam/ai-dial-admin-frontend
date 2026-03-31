@@ -1,18 +1,18 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { IconPlus } from '@tabler/icons-react';
 import { DialGhostButton } from '@epam/ai-dial-ui-kit';
+import { IconPlus } from '@tabler/icons-react';
 
+import Accordion from '@/src/components/Common/Accordion/Accordion';
 import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { EntityDefaults } from '@/src/models/dial/base-entity';
 import { DefaultTemp } from '@/src/models/dial/defaults';
-import { convertDefaultsToArray } from './utils';
-
 import DefaultItemDeclaration from './DefaultItem';
-import Accordion from '@/src/components/Common/Accordion/Accordion';
+import { convertDefaultsToArray } from './utils';
 
 interface Props {
   entity: EntityDefaults;
@@ -22,6 +22,7 @@ interface Props {
 
 const Defaults: FC<Props> = ({ entity, onChangeEntity, disabled }) => {
   const t = useI18n();
+  const { dispatch } = useSaveValidationContext();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const isReadonly = disabled || isReadOnlyAdmin;
 
@@ -58,7 +59,12 @@ const Defaults: FC<Props> = ({ entity, onChangeEntity, disabled }) => {
       const defaults = convertDefaultsToArray(entity.defaults || {});
       setDefaultItems(defaults);
     }
-  }, [entity.defaults, entity.defaultsTemp]);
+    dispatch({
+      type: ValidationActionType.SetField,
+      field: 'defaultKeys',
+      isValid: !entity.defaultsTemp?.some((d) => !d.key),
+    });
+  }, [dispatch, entity.defaults, entity.defaultsTemp]);
 
   useEffect(() => {
     if (defaultItems.length === 1 && !defaultItems[0].key && !defaultItems[0].value) {

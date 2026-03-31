@@ -1,9 +1,12 @@
 import { ColDef } from 'ag-grid-community';
 
+import ExecutionStatusCellRenderer from '@/src/components/Grid/CellRenderers/ExecutionStatusCellRenderer';
 import { AnalyticsResult, ExtractionResult, Run } from '@/src/models/evaluation/run';
 import { FilterDto } from '@/src/models/request';
 import { FilterOperatorDto } from '@/src/types/request';
-import ExecutionStatusCellRenderer from '@/src/components/Grid/CellRenderers/ExecutionStatusCellRenderer';
+
+import { MetricGroup } from './models';
+export type { MetricGroup } from './models';
 
 export const RESULT_FILTERS = (run: Run): FilterDto[] => [
   { column: 'runId', operator: FilterOperatorDto.EQUALS, value: run.id || '' },
@@ -175,14 +178,6 @@ export const getDetailEntries = (data: Record<string, unknown>) => {
     return [key, String(data[key])] as [string, string];
   });
 };
-
-export interface MetricGroup {
-  title: string;
-  metrics: Array<{ key: string; value: number | null; isError: boolean }>;
-  infos?: Record<string, unknown>;
-  hasError: boolean;
-  errorMessage?: string;
-}
 
 export const getMetricGroups = (
   metricValues?: Record<string, Record<string, unknown>>,

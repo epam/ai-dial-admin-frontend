@@ -1,56 +1,23 @@
 'use client';
 
-import { FC, ReactNode, createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo } from 'react';
 
-import { Editor } from '@monaco-editor/react';
 import { DialCloseButton } from '@epam/ai-dial-ui-kit';
-import { IconCopy } from '@tabler/icons-react';
+import { Editor } from '@monaco-editor/react';
 import { createPortal } from 'react-dom';
 
-import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { EDITOR_THEMES_CONFIG } from '@/src/constants/editor';
+import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useI18n } from '@/src/locales/client';
+import { FullscreenViewerState } from '@/src/models/evaluation/detail-panel';
 import { EDITOR_THEMES } from '@/src/types/editor';
+import { formatContent } from '@/src/utils/evaluation/detail-panel';
 import { getSuccessNotification } from '@/src/utils/notification';
+import CopyButton from '../CopyButton/CopyButton';
 
-type ContentType = 'json' | 'text';
-
-interface FullscreenViewerState {
-  isOpen: boolean;
-  title: string;
-  content: string;
-  contentType: ContentType;
-}
-
-interface FullscreenViewerContextValue {
-  open: (title: string, content: string, contentType: ContentType) => void;
-  close: () => void;
-}
-
-const FullscreenViewerContext = createContext<FullscreenViewerContextValue | null>(null);
-
-export const useFullscreenViewer = () => {
-  const ctx = useContext(FullscreenViewerContext);
-  if (!ctx) throw new Error('useFullscreenViewer must be used within FullscreenViewerProvider');
-  return ctx;
-};
-
-const formatContent = (content: string, contentType: ContentType): string => {
-  if (contentType === 'json') {
-    try {
-      return JSON.stringify(JSON.parse(content), null, 2);
-    } catch {
-      return content;
-    }
-  }
-  // For text: try to parse as JSON if it looks like JSON, otherwise return as-is
-  // Also handle escaped newlines
-  return content.replace(/\\n/g, '\n').replace(/\\t/g, '\t');
-};
-
-const FullscreenViewerModal: FC<FullscreenViewerState & { onClose: () => void }> = ({
+export const FullscreenViewerModal: FC<FullscreenViewerState & { onClose: () => void }> = ({
   isOpen,
   title,
   content,
@@ -74,7 +41,6 @@ const FullscreenViewerModal: FC<FullscreenViewerState & { onClose: () => void }>
 
   const language = useMemo(() => {
     if (contentType === 'json') return 'json';
-    // Auto-detect JSON in text content
     try {
       JSON.parse(content);
       return 'json';
@@ -89,7 +55,7 @@ const FullscreenViewerModal: FC<FullscreenViewerState & { onClose: () => void }>
   }, [formatted, title, showNotification, t]);
 
   const handleBackdropClick = useCallback(
-    (e: React.MouseEvent) => {
+    (e: MouseEvent) => {
       if (e.target === e.currentTarget) onClose();
     },
     [onClose],
@@ -109,13 +75,7 @@ const FullscreenViewerModal: FC<FullscreenViewerState & { onClose: () => void }>
         <div className="flex items-center justify-between px-4 py-3 border-b border-secondary shrink-0">
           <h3 className="font-semibold text-sm truncate mr-4">{title}</h3>
           <div className="flex items-center gap-2 shrink-0">
-            <button
-              className="flex items-center gap-1 px-2 py-1 text-xs border border-secondary rounded text-secondary hover:text-primary hover:bg-layer-4 transition-colors"
-              onClick={handleCopy}
-            >
-              <IconCopy size={14} />
-              {t(ButtonsI18nKey.Copy)}
-            </button>
+            <CopyButton buttonLabel={t(ButtonsI18nKey.Copy)} value={formatted} valueLabel={title} />
             <DialCloseButton onClose={onClose} />
           </div>
         </div>
@@ -147,31 +107,5 @@ const FullscreenViewerModal: FC<FullscreenViewerState & { onClose: () => void }>
       </div>
     </div>,
     document.body,
-  );
-};
-
-export const FullscreenViewerProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const [state, setState] = useState<FullscreenViewerState>({
-    isOpen: false,
-    title: '',
-    content: '',
-    contentType: 'text',
-  });
-
-  const open = useCallback((title: string, content: string, contentType: ContentType) => {
-    setState({ isOpen: true, title, content, contentType });
-  }, []);
-
-  const close = useCallback(() => {
-    setState((prev) => ({ ...prev, isOpen: false }));
-  }, []);
-
-  const value = useMemo(() => ({ open, close }), [open, close]);
-
-  return (
-    <FullscreenViewerContext.Provider value={value}>
-      {children}
-      <FullscreenViewerModal {...state} onClose={close} />
-    </FullscreenViewerContext.Provider>
   );
 };
