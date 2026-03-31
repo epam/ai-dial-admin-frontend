@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef } from 'react';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
-import CopyButton from '../../Common/CopyButton/CopyButton';
 
 export interface ContextMenuPosition {
   x: number;
@@ -59,7 +58,14 @@ const CellContextMenu = ({ position, onClose }: CellContextMenuProps) => {
       style={{ left: position.x, top: position.y }}
       role="menu"
     >
-      <CopyButton buttonLabel={t(ButtonsI18nKey.Copy)} value={position.value} valueLabel={t(ButtonsI18nKey.Copy)} />
+      <button
+        className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-primary hover:bg-controls-accent-alpha hover:text-accent-primary"
+        onClick={handleCopy}
+        role="menuitem"
+      >
+        <IconCopy {...BASE_BUTTON_ICON_PROPS} />
+        {t(ButtonsI18nKey.Copy)}
+      </button>
     </div>
   );
 };

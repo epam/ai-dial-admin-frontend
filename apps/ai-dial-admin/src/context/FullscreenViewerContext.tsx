@@ -2,7 +2,11 @@
 
 import { FC, ReactNode, createContext, useCallback, useContext, useMemo, useState } from 'react';
 
-import { FullscreenViewerContextValue, FullscreenViewerState, ViewerContentType } from '@/src/models/evaluation/detail-panel';
+import {
+  FullscreenViewerContextValue,
+  FullscreenViewerState,
+  ViewerContentType,
+} from '@/src/models/evaluation/detail-panel';
 
 import { FullscreenViewerModal } from '@/src/components/Common/FullscreenViewer/FullscreenViewer';
 

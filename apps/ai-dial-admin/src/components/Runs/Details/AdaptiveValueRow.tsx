@@ -2,14 +2,10 @@
 
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import { IconCopy } from '@tabler/icons-react';
-
-import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
-import { useNotification } from '@/src/context/NotificationContext';
+import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { parseValue } from '@/src/utils/evaluation/detail-panel';
-import { getSuccessNotification } from '@/src/utils/notification';
-import CopyButton from '../../Common/CopyButton/CopyButton';
 
 interface Props {
   label: string;
@@ -18,19 +14,9 @@ interface Props {
 
 const AdaptiveValueRow: FC<Props> = ({ label, value }) => {
   const t = useI18n();
-  const { showNotification } = useNotification();
   const [isExpanded, setIsExpanded] = useState(false);
 
   const parsed = useMemo(() => parseValue(value), [value]);
-
-  const handleCopy = useCallback(
-    (e: MouseEvent) => {
-      e.stopPropagation();
-      navigator.clipboard.writeText(parsed.rawText);
-      showNotification(getSuccessNotification(`${t(BasicI18nKey.Value)} ${t(BasicI18nKey.CopiedSuccessfully)}`));
-    },
-    [parsed.rawText, showNotification, t],
-  );
 
   const handleToggle = useCallback(() => {
     if (parsed.isLong) setIsExpanded((prev) => !prev);
@@ -55,7 +41,7 @@ const AdaptiveValueRow: FC<Props> = ({ label, value }) => {
           </span>
         )}
         {isExpanded && (
-          <pre className="mt-1 p-2 bg-layer-0 border border-secondary rounded font-mono text-[11px] whitespace-pre-wrap break-words max-h-[300px] overflow-auto leading-[1.5]">
+          <pre className="mt-1 p-2 bg-layer-0 border border-secondary rounded font-mono text-[11px] whitespace-pre-wrap break-words max-h-[300px] overflow-auto leading-normal">
             {parsed.rawText}
           </pre>
         )}

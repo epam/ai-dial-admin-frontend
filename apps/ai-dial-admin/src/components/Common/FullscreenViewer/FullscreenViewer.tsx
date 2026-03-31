@@ -7,14 +7,12 @@ import { Editor } from '@monaco-editor/react';
 import { createPortal } from 'react-dom';
 
 import { EDITOR_THEMES_CONFIG } from '@/src/constants/editor';
-import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
-import { useNotification } from '@/src/context/NotificationContext';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useI18n } from '@/src/locales/client';
 import { FullscreenViewerState } from '@/src/models/evaluation/detail-panel';
 import { EDITOR_THEMES } from '@/src/types/editor';
 import { formatContent } from '@/src/utils/evaluation/detail-panel';
-import { getSuccessNotification } from '@/src/utils/notification';
 import CopyButton from '../CopyButton/CopyButton';
 
 export const FullscreenViewerModal: FC<FullscreenViewerState & { onClose: () => void }> = ({
@@ -25,7 +23,6 @@ export const FullscreenViewerModal: FC<FullscreenViewerState & { onClose: () => 
   onClose,
 }) => {
   const t = useI18n();
-  const { showNotification } = useNotification();
   const { currentTheme } = useTheme();
 
   useEffect(() => {
@@ -48,11 +45,6 @@ export const FullscreenViewerModal: FC<FullscreenViewerState & { onClose: () => 
       return 'plaintext';
     }
   }, [content, contentType]);
-
-  const handleCopy = useCallback(() => {
-    navigator.clipboard.writeText(formatted);
-    showNotification(getSuccessNotification(`${title} ${t(BasicI18nKey.CopiedSuccessfully)}`));
-  }, [formatted, title, showNotification, t]);
 
   const handleBackdropClick = useCallback(
     (e: MouseEvent) => {

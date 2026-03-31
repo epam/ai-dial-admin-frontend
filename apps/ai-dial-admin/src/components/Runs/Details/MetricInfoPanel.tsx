@@ -7,10 +7,9 @@ import { getInfoEntries, groupInfoEntries } from '@/src/components/TestSuites/ut
 
 interface Props {
   infos: Record<string, unknown>;
-  groupTitle: string;
 }
 
-const MetricInfoPanel: FC<Props> = ({ infos, groupTitle }) => {
+const MetricInfoPanel: FC<Props> = ({ infos }) => {
   const entries = useMemo(() => getInfoEntries(infos), [infos]);
 
   const grouped = useMemo(() => groupInfoEntries(entries), [entries]);
@@ -19,7 +18,7 @@ const MetricInfoPanel: FC<Props> = ({ infos, groupTitle }) => {
     <div className="mt-1.5 flex flex-col gap-3 max-h-[400px] overflow-auto p-2 bg-layer-0 border border-secondary rounded">
       {grouped.map(([metricKey, metricEntries]) => (
         <div key={metricKey} className="flex flex-col gap-1.5">
-          <div className="text-[10px] font-semibold text-accent-secondary uppercase tracking-wide">{metricKey}</div>
+          <div className="text-xxs font-semibold text-accent-secondary uppercase tracking-wide">{metricKey}</div>
           {metricEntries.map((entry) => (
             <CodeViewer key={`${entry.metricKey}-${entry.entryKey}`} title={entry.entryKey} content={entry.value} />
           ))}
