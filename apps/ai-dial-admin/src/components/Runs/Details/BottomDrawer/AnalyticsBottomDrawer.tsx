@@ -181,6 +181,12 @@ const AnalyticsBottomDrawer: FC<Props> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const handlePin = useCallback(() => {
+    if (drawerPanel.activeId) {
+      drawerPanel.pin(drawerPanel.activeId);
+    }
+  }, [drawerPanel]);
+
   const handleSwitchToSidebar = useCallback(() => {
     fieldSelector.resetAll();
     onSwitchToSidebar();
@@ -211,8 +217,11 @@ const AnalyticsBottomDrawer: FC<Props> = ({
         <DrawerToolbar
           viewMode={drawerPanel.viewMode}
           onSetView={drawerPanel.setView}
+          activeId={drawerPanel.activeId}
+          activeName={activeDetail?.testCaseName ?? null}
           pinnedId={drawerPanel.pinnedId}
           pinnedName={pinnedDetail?.testCaseName ?? null}
+          onPin={handlePin}
           onUnpin={drawerPanel.unpin}
           diffCount={diffCount}
           isCollapsed={drawerPanel.isCollapsed}

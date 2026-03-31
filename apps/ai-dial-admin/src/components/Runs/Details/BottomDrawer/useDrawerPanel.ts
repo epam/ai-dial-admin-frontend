@@ -50,14 +50,9 @@ export function useDrawerPanel(): UseDrawerPanelReturn {
     setIsCollapsed(false);
   }, []);
 
-  const pin = useCallback(
-    (id: string) => {
-      // Dedup: don't pin the same as active
-      if (id === activeId) return;
-      setPinnedId(id);
-    },
-    [activeId],
-  );
+  const pin = useCallback((id: string) => {
+    setPinnedId(id);
+  }, []);
 
   const unpin = useCallback(() => {
     setPinnedId(null);

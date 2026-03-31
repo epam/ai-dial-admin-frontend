@@ -88,7 +88,7 @@ describe('ComparisonPivotView', () => {
       />,
     );
     // Text diff -> teal
-    const tealCells = container.querySelectorAll('.bg-teal-500\\/10');
+    const tealCells = container.querySelectorAll('.bg-accent-secondary-alpha');
     expect(tealCells.length).toBeGreaterThan(0);
   });
 

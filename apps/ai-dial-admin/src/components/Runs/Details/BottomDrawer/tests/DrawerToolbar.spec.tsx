@@ -7,8 +7,11 @@ describe('DrawerToolbar', () => {
   const defaultProps = {
     viewMode: 'table' as const,
     onSetView: vi.fn(),
+    activeId: 'r1' as string | null,
+    activeName: 'Active Case' as string | null,
     pinnedId: null as string | null,
     pinnedName: null as string | null,
+    onPin: vi.fn(),
     onUnpin: vi.fn(),
     diffCount: 0,
     isCollapsed: false,
@@ -73,5 +76,28 @@ describe('DrawerToolbar', () => {
     render(<DrawerToolbar {...defaultProps} isCollapsed={true} />);
     await userEvent.click(screen.getByTitle('Runs.Collapse'));
     expect(defaultProps.onExpand).toHaveBeenCalled();
+  });
+
+  it('shows pin button when active case exists and no pinned case', () => {
+    render(<DrawerToolbar {...defaultProps} activeId="r1" activeName="Active Case" pinnedId={null} />);
+    expect(screen.getByTitle('Runs.Pin')).toBeInTheDocument();
+    expect(screen.getByText('Active Case')).toBeInTheDocument();
+  });
+
+  it('calls onPin when pin button clicked', async () => {
+    render(<DrawerToolbar {...defaultProps} activeId="r1" activeName="Active Case" pinnedId={null} />);
+    await userEvent.click(screen.getByTitle('Runs.Pin'));
+    expect(defaultProps.onPin).toHaveBeenCalled();
+  });
+
+  it('hides pin button when a case is already pinned', () => {
+    render(<DrawerToolbar {...defaultProps} activeId="r2" pinnedId="r1" pinnedName="Pinned Case" />);
+    expect(screen.queryByTitle('Runs.Pin')).not.toBeInTheDocument();
+    expect(screen.getByText('Pinned Case')).toBeInTheDocument();
+  });
+
+  it('hides pin button when no active case', () => {
+    render(<DrawerToolbar {...defaultProps} activeId={null} pinnedId={null} />);
+    expect(screen.queryByTitle('Runs.Pin')).not.toBeInTheDocument();
   });
 });

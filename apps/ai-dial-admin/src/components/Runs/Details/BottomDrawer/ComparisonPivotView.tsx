@@ -99,7 +99,7 @@ const ComparisonPivotView: FC<Props> = ({ sections, activeDetail, pinnedDetail, 
                   if (hasTwoRows && !isPinnedRow && field.values.length >= 2) {
                     const pinnedRaw = field.values[0]?.raw ?? null;
                     if (!valuesAreEqual(pinnedRaw, raw)) {
-                      cellDiffClass = field.isNumeric ? 'bg-amber-500/10' : 'bg-teal-500/10';
+                      cellDiffClass = field.isNumeric ? 'bg-warning' : 'bg-accent-secondary-alpha';
                     }
                   }
 

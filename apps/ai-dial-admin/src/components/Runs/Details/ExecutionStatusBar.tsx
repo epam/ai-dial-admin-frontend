@@ -53,7 +53,11 @@ const ExecutionStatusBar: FC<Props> = ({ status, httpCode, durationMs, timestamp
       <div className="flex flex-wrap items-center gap-2 py-2.5 border-b border-tertiary">
         <StatusPill status={status} />
         <MetaSeparator />
-        <MetaTag label={t(RunsI18nKey.HttpLabel)} value={httpCode != null ? String(httpCode) : '—'} className={httpClass} />
+        <MetaTag
+          label={t(RunsI18nKey.HttpLabel)}
+          value={httpCode != null ? String(httpCode) : '—'}
+          className={httpClass}
+        />
         <MetaSeparator />
         <MetaTag label={t(RunsI18nKey.DurationLabel)} value={getFormattedDuration(durationMs)} />
         {timestamp != null && (

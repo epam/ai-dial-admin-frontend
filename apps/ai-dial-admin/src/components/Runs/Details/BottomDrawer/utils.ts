@@ -246,7 +246,7 @@ export function getDiffClass(row: ComparisonRow): string {
   if (row.values.length < 2) return '';
   const [pinned, active] = row.values;
   if (valuesAreEqual(pinned.raw, active.raw)) return '';
-  return row.isNumeric ? 'bg-amber-500/10' : 'bg-teal-500/10';
+  return row.isNumeric ? 'bg-warning' : 'bg-accent-secondary-alpha';
 }
 
 export function countDiffs(sections: ComparisonSection[]): number {

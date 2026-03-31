@@ -94,7 +94,7 @@ describe('ComparisonTableView', () => {
       <ComparisonTableView {...defaultProps} sections={sections} pinnedDetail={pinnedDetail} />,
     );
     // The 'status' row has different text values -> should get teal diff
-    const tealCells = container.querySelectorAll('.bg-teal-500\\/10');
+    const tealCells = container.querySelectorAll('.bg-accent-secondary-alpha');
     expect(tealCells.length).toBeGreaterThan(0);
   });
 
@@ -104,7 +104,7 @@ describe('ComparisonTableView', () => {
     const { container } = render(
       <ComparisonTableView {...defaultProps} sections={sections} pinnedDetail={pinnedDetail} />,
     );
-    const amberCells = container.querySelectorAll('.bg-amber-500\\/10');
+    const amberCells = container.querySelectorAll('.bg-warning');
     expect(amberCells.length).toBeGreaterThan(0);
   });
 });

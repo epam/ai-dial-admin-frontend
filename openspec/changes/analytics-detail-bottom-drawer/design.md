@@ -159,7 +159,7 @@ The Fields tab renders collapsible section groups with per-field checkboxes. The
 **Field name truncation**: Metric group names can be long (e.g., `aidial_rag_eval.retrieval`). Field names in the 180px sidebar are truncated with `text-ellipsis overflow-hidden` and show a native `title` tooltip on hover with the full name.
 
 Two "pin" concepts were confusing. Renamed:
-- **Pin** (test case level): locks a test case as the reference column. Uses 📌 icon. Managed by `useDrawerPanel`.
+- **Pin** (test case level): locks a test case as the reference column. Uses `IconPin` / `IconPinFilled` icons. Managed by `useDrawerPanel`. **Pin trigger**: The `DrawerToolbar` shows an explicit "Pin" button (with the active case name) when no case is currently pinned. Clicking it calls `useDrawerPanel.pin(activeId)`. Once pinned, the button is replaced by a pinned badge (with case name + X to unpin). The flow is: view case A → click Pin → A is pinned → click row B → drawer shows A (pinned) + B (active) side by side. **Dedup**: `useDrawerPanel.pin()` does NOT reject `pin(activeId)` — it always sets `pinnedId`. When `pinnedId === activeId`, `buildComparisonSections()` detects this and produces single-column output (render-time dedup). This is required because the user pins the *current* active case, then navigates to a different row which updates `activeId`.
 - **Spotlight** (field level): highlights a specific field in the focus strip. Uses a star/eye-like icon (distinct from pin 📌). Managed by `useFieldSelector` as `spotlightedFields`. Triggered via a spotlight toggle button on each field row in the **Table view** (not in the Field Selector sidebar). The Field Selector controls visibility (show/hide); Spotlight controls emphasis (focus strip inclusion). **Pivot view**: The focus strip and spotlight toggle buttons are Table-view-only features, but spotlighted fields are visually indicated in Pivot via an accent-colored top border on the column header (`border-t-2 border-accent-primary`). Spotlighted state persists across view toggles so that switching back to Table view restores the focus strip without re-selecting fields.
 
 ### 10. Diff highlighting: simple string comparison
@@ -169,7 +169,7 @@ When a pinned test case exists, each cell in the non-pinned column is compared t
 - **Numeric normalization**: values that parse as numbers are compared via `Number(a) === Number(b)` to avoid false diffs from formatting differences (e.g., "0.500" vs "0.5")
 - **JSON normalization**: values detected as JSON (starting with `{` or `[`) are compared after `JSON.stringify(JSON.parse(v))` to normalize key ordering and whitespace
 - **Null handling**: two nulls are equal; null vs non-null is a diff
-- Different values get a subtle background tint — amber for numeric diffs (`isNumeric: true` on the row), teal for text diffs. Via conditional Tailwind class names in `getDiffClass()` utility.
+- Different values get a subtle background tint — warning color for numeric diffs (`isNumeric: true` on the row, `bg-warning` theme token), accent-secondary-alpha for text diffs (`bg-accent-secondary-alpha` theme token). Via conditional Tailwind class names in `getDiffClass()` utility. Raw Tailwind colors like `bg-amber-500/10` are NOT used because the project's tailwind config replaces the default `backgroundColor` palette with custom theme tokens.
 
 ### 11. Metric value formatting: match existing `MetricCard` behavior
 

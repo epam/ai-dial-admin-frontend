@@ -42,15 +42,15 @@ Each test case column header SHALL display the test case name, execution status 
 
 ### Requirement: Table view diff highlighting
 
-When two test cases are displayed (pinned + active), the system SHALL highlight cells in the non-pinned column where the raw value differs from the pinned column. Numeric differences SHALL use amber highlighting. Text differences SHALL use teal highlighting.
+When two test cases are displayed (pinned + active), the system SHALL highlight cells in the non-pinned column where the raw value differs from the pinned column. Numeric differences SHALL use the theme's warning background color (`bg-warning`). Text differences SHALL use the theme's accent-secondary-alpha background color (`bg-accent-secondary-alpha`). These map to amber-like and teal-like tints respectively via the project's CSS variable theme tokens.
 
 #### Scenario: Numeric metric value differs
 - **WHEN** pinned case has f1=0.1176 and active case has f1=0.5714
-- **THEN** the active case's f1 cell has an amber background tint
+- **THEN** the active case's f1 cell has a warning background tint (`bg-warning`)
 
 #### Scenario: Text value differs
 - **WHEN** pinned case has answer="nappe formations" and active case has answer="Limestone Alps"
-- **THEN** the active case's answer cell has a teal background tint
+- **THEN** the active case's answer cell has an accent-secondary-alpha background tint (`bg-accent-secondary-alpha`)
 
 #### Scenario: Values are identical
 - **WHEN** both cases have the same value for a field
@@ -150,15 +150,15 @@ Although the focus strip is Table-view-only, the Pivot view SHALL visually indic
 
 ### Requirement: Pivot view diff highlighting
 
-When two test cases are displayed (pinned + active), the Pivot view SHALL apply the same diff highlighting as the Table view — amber for numeric diffs, teal for text diffs — on cells in the active (non-pinned) row where values differ from the pinned row.
+When two test cases are displayed (pinned + active), the Pivot view SHALL apply the same diff highlighting as the Table view — `bg-warning` for numeric diffs, `bg-accent-secondary-alpha` for text diffs — on cells in the active (non-pinned) row where values differ from the pinned row.
 
 #### Scenario: Numeric diff in Pivot view
 - **WHEN** the pinned case row has f1=0.1176 and the active case row has f1=0.5714
-- **THEN** the active case's f1 cell has an amber background tint
+- **THEN** the active case's f1 cell has a warning background tint (`bg-warning`)
 
 #### Scenario: Text diff in Pivot view
 - **WHEN** the pinned and active cases have different text values for a field
-- **THEN** the active case's cell has a teal background tint
+- **THEN** the active case's cell has an accent-secondary-alpha background tint (`bg-accent-secondary-alpha`)
 
 #### Scenario: No diff highlighting with single test case
 - **WHEN** only one test case is displayed (no pinned case)

@@ -68,13 +68,13 @@ describe('useDrawerPanel', () => {
     expect(result.current.pinnedId).toBeNull();
   });
 
-  it('deduplicates pin when same as active', () => {
+  it('allows pinning the active case (dedup happens at render)', () => {
     const { result } = renderHook(() => useDrawerPanel());
 
     act(() => result.current.open('r1'));
     act(() => result.current.pin('r1'));
 
-    expect(result.current.pinnedId).toBeNull();
+    expect(result.current.pinnedId).toBe('r1');
   });
 
   it('sets view mode', () => {
