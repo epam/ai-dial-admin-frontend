@@ -119,10 +119,7 @@ const RunMetricDetailPanel: FC<Props> = ({ resultId, onClose }) => {
                       </div>
                     )}
                     {selectedMetric?.group === group.title && !!group.infos?.[selectedMetric.key] && (
-                      <MetricInfoPanel
-                        infos={{ [selectedMetric.key]: group.infos[selectedMetric.key] }}
-                        groupTitle={`${group.title} / ${selectedMetric.key}`}
-                      />
+                      <MetricInfoPanel infos={{ [selectedMetric.key]: group.infos[selectedMetric.key] }} />
                     )}
                   </section>
                 ))}

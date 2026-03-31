@@ -1,11 +1,12 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo } from 'react';
+import { FC, MouseEvent, useCallback, useEffect, useMemo } from 'react';
 
 import { DialCloseButton } from '@epam/ai-dial-ui-kit';
 import { Editor } from '@monaco-editor/react';
 import { createPortal } from 'react-dom';
 
+import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import { EDITOR_THEMES_CONFIG } from '@/src/constants/editor';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useTheme } from '@/src/context/ThemeContext';
@@ -13,7 +14,6 @@ import { useI18n } from '@/src/locales/client';
 import { FullscreenViewerState } from '@/src/models/evaluation/detail-panel';
 import { EDITOR_THEMES } from '@/src/types/editor';
 import { formatContent } from '@/src/utils/evaluation/detail-panel';
-import CopyButton from '../CopyButton/CopyButton';
 
 export const FullscreenViewerModal: FC<FullscreenViewerState & { onClose: () => void }> = ({
   isOpen,
@@ -47,7 +47,7 @@ export const FullscreenViewerModal: FC<FullscreenViewerState & { onClose: () => 
   }, [content, contentType]);
 
   const handleBackdropClick = useCallback(
-    (e: MouseEvent) => {
+    (e: MouseEvent<HTMLDivElement>) => {
       if (e.target === e.currentTarget) onClose();
     },
     [onClose],

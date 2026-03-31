@@ -11,6 +11,7 @@ import { useI18n } from '@/src/locales/client';
 
 import { useFullscreenViewer } from '@/src/context/FullscreenViewerContext';
 import { formatJsonSize, generateLineNumbers, highlightJson } from '@/src/utils/evaluation/json-highlight';
+import { DialIcon, DialIconButton } from '@epam/ai-dial-ui-kit';
 
 interface Props {
   title: string;
@@ -34,13 +35,9 @@ const CodeViewer: FC<Props> = ({ title, content }) => {
   const lineNumbers = useMemo(() => generateLineNumbers(formatted), [formatted]);
   const size = useMemo(() => formatJsonSize(content), [content]);
 
-  const handleFullscreen = useCallback(
-    (e: MouseEvent) => {
-      e.stopPropagation();
-      fullscreen.open(title, content, 'json');
-    },
-    [title, content, fullscreen],
-  );
+  const handleFullscreen = useCallback(() => {
+    fullscreen.open(title, content, 'json');
+  }, [title, content, fullscreen]);
 
   return (
     <div className="border border-secondary rounded overflow-hidden">
@@ -55,17 +52,15 @@ const CodeViewer: FC<Props> = ({ title, content }) => {
           {title}
         </span>
         <span className="flex items-center gap-1">
-          <span className="text-[10px] text-secondary opacity-60 font-mono">{size}</span>
+          <span className="text-xxs text-secondary opacity-60 font-mono">{size}</span>
           <span onClick={(e) => e.stopPropagation()}>
             <CopyButton buttonLabel={t(ButtonsI18nKey.Copy)} value={formatted} valueLabel={title} />
           </span>
-          <button
-            className="px-1.5 py-0.5 border border-secondary rounded text-[10px] text-secondary hover:text-primary hover:bg-layer-4 transition-colors"
+          <DialIconButton
+            icon={<IconMaximize size={12} />}
+            className="cursor-pointer text-secondary opacity-60 hover:opacity-100 transition-opacity"
             onClick={handleFullscreen}
-            aria-label="Fullscreen"
-          >
-            <IconMaximize size={12} />
-          </button>
+          />
         </span>
       </div>
       {isOpen && (
