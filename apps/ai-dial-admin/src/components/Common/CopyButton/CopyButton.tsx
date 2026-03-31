@@ -3,7 +3,6 @@ import { IconCopy } from '@tabler/icons-react';
 import { FC, useCallback } from 'react';
 
 import { BasicI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { getSuccessNotification } from '@/src/utils/notification';
