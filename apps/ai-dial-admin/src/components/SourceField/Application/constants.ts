@@ -6,7 +6,7 @@ export enum SourceType {
   APP_RUNNER = 'app_runner',
 }
 
-export const ApplicationSourceTypes = (t: (stringToTranslate: string) => string): RadioButtonWithContent[] => [
+export const APPLICATION_SOURCE_TYPES = (t: (stringToTranslate: string) => string): RadioButtonWithContent[] => [
   { id: SourceType.ENDPOINTS, name: t(EntitiesI18nKey.EndpointsSourceType) },
   { id: SourceType.APP_RUNNER, name: t(EntitiesI18nKey.AppRunner) },
 ];

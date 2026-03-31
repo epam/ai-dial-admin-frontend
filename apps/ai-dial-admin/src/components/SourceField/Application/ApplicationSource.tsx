@@ -19,7 +19,7 @@ import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getSchemaDefaults } from '@/src/utils/schema';
 import EndpointAndMCPContainer from './EndpointAndMCPContainer';
-import { ApplicationSourceTypes, SourceType } from './constants';
+import { APPLICATION_SOURCE_TYPES, SourceType } from './constants';
 
 export interface Props {
   entity: DialApplication;
@@ -155,7 +155,7 @@ const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, i
     <div className="flex flex-col w-full relative gap-3">
       <DialRadioGroup
         disabled={isReadOnlyAdmin}
-        radioButtons={ApplicationSourceTypes(t)}
+        radioButtons={APPLICATION_SOURCE_TYPES(t)}
         activeRadioButton={sourceType}
         elementId="applicationSourceTypes"
         fieldTitle={t(EntitiesI18nKey.SourceType)}
