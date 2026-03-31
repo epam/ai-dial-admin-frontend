@@ -229,7 +229,7 @@ export default {
     DiscardChanges: 'Discard Changes',
     DiscardChangesDescription:
       'Are you sure you want to discard changes? All previously added information will not be saved.',
-    EndpointAndMCPContainerSource: 'Endpoint and MCP container',
+    EndpointsSourceType: 'Endpoints',
     // deployments
     NoImages: 'No Images',
     NoContainersType: 'No {type} {entityType}s',
@@ -1262,6 +1262,8 @@ export default {
     ModelServing: 'Model serving',
     InterceptorContainer: 'Interceptor Container',
     McpContainer: 'MCP Container',
+    McpEndpoint: 'MCP Endpoint',
+    ChatEndpoint: 'Chat Endpoint',
     Endpoint: 'Endpoint',
     ExternalEndpoint: 'External endpoint',
     Adapter: 'Adapter',
