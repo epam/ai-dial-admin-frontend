@@ -17,6 +17,7 @@ import { ButtonsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n'
 import { useI18n } from '@/src/locales/client';
 import { BindingSourceValue, MetricBinding } from '@/src/models/evaluation/metric';
 import { IconPlus } from '@tabler/icons-react';
+import { MetricBindingType } from '../../../../../types/evaluation';
 
 interface Props {
   field: SchemaFieldRow;
@@ -37,7 +38,7 @@ const MetricArrayControl: FC<Props> = ({ binding, field, label = true, onChangeV
     return null;
   }
 
-  const values = binding?.source.value || [];
+  const values = (binding?.source.value as string[] | Record<string, unknown>[]) || [];
 
   const onAdd = () => {
     const defaultValue = isSinglePrimitiveChild(field) ? '' : {};
@@ -50,14 +51,14 @@ const MetricArrayControl: FC<Props> = ({ binding, field, label = true, onChangeV
     onChangeValue(field.name, newItems as BindingSourceValue);
   };
 
-  const handleItemChange = (index: number, fieldId: string, value: BindingSourceValue) => {
+  const onChange = (index: number, fieldId: string, value: BindingSourceValue) => {
     const newItems = [...values];
-    // If there's only one child field and it's a primitive, replace the whole value
+
     if (isSinglePrimitiveChild(field)) {
-      newItems[index] = value;
+      (newItems as string[])[index] = value as string;
     } else {
       // For multiple fields or complex types, update the specific field in the object
-      newItems[index] = { ...(newItems[index] || {}), [fieldId]: value };
+      newItems[index] = { ...((newItems[index] as Record<string, unknown>) || {}), [fieldId]: value };
     }
     onChangeValue(field.name, newItems as BindingSourceValue);
   };
@@ -70,29 +71,27 @@ const MetricArrayControl: FC<Props> = ({ binding, field, label = true, onChangeV
 
       <div className="space-y-2">
         {values.map((itemValue, index) => (
-          <div key={index} className="flex items-end gap-2 border border-gray-300 rounded p-3">
+          <div key={index} className="flex items-end gap-2 border border-primary rounded p-3">
             <div className="flex-1">
               <div className="space-y-2">
                 {field.children.map((childField) => {
-                  // Determine the value for this child field
                   const fieldValue = isSinglePrimitiveChild(field)
-                    ? itemValue // For single primitive, the itemValue IS the value
-                    : itemValue?.[childField.name]; // For multiple or complex, get from object property
-
-                  const itemBinding: MetricBinding = {
-                    source: {
-                      type: 'static',
-                      value: fieldValue,
-                    },
-                  };
+                    ? itemValue
+                    : ((itemValue as Record<string, unknown>)?.[childField.name] as string);
 
                   return (
                     <MetricControl
                       key={childField.id}
                       field={childField}
-                      binding={itemBinding}
+                      binding={{
+                        property: childField.name,
+                        source: {
+                          $type: MetricBindingType.Constant,
+                          value: fieldValue as string,
+                        },
+                      }}
                       label={field.children.length > 1}
-                      onChangeValue={(fieldId, value) => handleItemChange(index, fieldId, value)}
+                      onChangeValue={(fieldId, value) => onChange(index, fieldId, value)}
                     />
                   );
                 })}
