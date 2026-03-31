@@ -49,7 +49,7 @@ describe('ComparisonTableView', () => {
 
   it('renders section headers', () => {
     render(<ComparisonTableView {...defaultProps} />);
-    expect(screen.getByText('Execution')).toBeInTheDocument();
+    expect(screen.getByText('Runs.Execution')).toBeInTheDocument();
   });
 
   it('renders field rows', () => {
@@ -67,7 +67,7 @@ describe('ComparisonTableView', () => {
 
   it('collapses section on click', async () => {
     render(<ComparisonTableView {...defaultProps} />);
-    const header = screen.getByText('Execution');
+    const header = screen.getByText('Runs.Execution');
     await userEvent.click(header.closest('tr')!);
     expect(screen.queryByText('status')).not.toBeInTheDocument();
   });

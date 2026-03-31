@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { DialLoader } from '@epam/ai-dial-ui-kit';
@@ -148,13 +148,13 @@ const AnalyticsBottomDrawer: FC<Props> = ({
 
   // Resize drag handlers
   const handleDragStart = useCallback(
-    (e: MouseEvent) => {
+    (e: React.MouseEvent) => {
       e.preventDefault();
       setIsDragging(true);
       const startY = e.clientY;
       const startHeight = drawerPanel.panelHeight;
 
-      const handleMouseMove = (moveEvent: MouseEvent) => {
+      const handleMouseMove = (moveEvent: globalThis.MouseEvent) => {
         const delta = startY - moveEvent.clientY;
         const newHeight = Math.max(
           MIN_DRAWER_HEIGHT,
@@ -172,7 +172,7 @@ const AnalyticsBottomDrawer: FC<Props> = ({
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
     },
-    [drawerPanel],
+    [drawerPanel.panelHeight, drawerPanel.setPanelHeight],
   );
 
   // Cleanup on unmount
@@ -188,7 +188,7 @@ const AnalyticsBottomDrawer: FC<Props> = ({
     if (drawerPanel.activeId) {
       drawerPanel.pin(drawerPanel.activeId);
     }
-  }, [drawerPanel]);
+  }, [drawerPanel.activeId, drawerPanel.pin]);
 
   const handleSwitchToSidebar = useCallback(() => {
     fieldSelector.resetAll();

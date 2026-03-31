@@ -40,13 +40,13 @@ describe('FieldSelector', () => {
   it('renders Fields tab by default', () => {
     renderWithHook();
     expect(screen.getByText('Runs.Fields')).toBeInTheDocument();
-    expect(screen.getByText('Execution')).toBeInTheDocument();
+    expect(screen.getByText('Runs.Execution')).toBeInTheDocument();
   });
 
   it('shows all section names', () => {
     renderWithHook();
-    expect(screen.getByText('Execution')).toBeInTheDocument();
-    expect(screen.getByText('Test Case Data')).toBeInTheDocument();
+    expect(screen.getByText('Runs.Execution')).toBeInTheDocument();
+    expect(screen.getByText('Runs.TestCaseData')).toBeInTheDocument();
   });
 
   it('shows field names', () => {
@@ -76,7 +76,7 @@ describe('FieldSelector', () => {
   it('collapses a section', async () => {
     renderWithHook();
     // Click the section header button
-    const execHeader = screen.getByText('Execution').closest('button')!;
+    const execHeader = screen.getByText('Runs.Execution').closest('button')!;
     await userEvent.click(execHeader);
 
     // Field names within Execution should be hidden

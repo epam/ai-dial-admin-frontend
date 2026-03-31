@@ -6,24 +6,17 @@ import classNames from 'classnames';
 
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { AnalyticsResult, ExtractionResultStatus } from '@/src/models/evaluation/run';
+import { AnalyticsResult } from '@/src/models/evaluation/run';
 
+import { StatusBadge } from './ComparisonTableView';
 import { ComparisonSection } from './types';
-import { formatFieldValue, valuesAreEqual } from './utils';
+import { formatFieldValue, SECTION_I18N, valuesAreEqual } from './utils';
 
 interface Props {
   sections: ComparisonSection[];
   activeDetail: AnalyticsResult | null;
   pinnedDetail: AnalyticsResult | null;
   spotlightedFields: Set<string>;
-}
-
-function StatusBadge({ status }: { status?: ExtractionResultStatus }) {
-  if (!status) return null;
-  const isSuccess = status === 'SUCCESS';
-  return (
-    <span className={classNames('text-xxs font-medium', isSuccess ? 'text-success' : 'text-error')}>{status}</span>
-  );
 }
 
 const ComparisonPivotView: FC<Props> = ({ sections, activeDetail, pinnedDetail, spotlightedFields }) => {
@@ -39,18 +32,20 @@ const ComparisonPivotView: FC<Props> = ({ sections, activeDetail, pinnedDetail, 
 
   // Flatten all visible fields across sections
   const flatFields = useMemo(() => {
-    return sections.flatMap((section) =>
-      section.rows.map((row) => ({
+    return sections.flatMap((section) => {
+      const i18nKey = SECTION_I18N[section.key];
+      const resolvedLabel = i18nKey ? t(i18nKey) : section.label;
+      return section.rows.map((row) => ({
         sectionKey: section.key,
-        sectionLabel: section.label,
+        sectionLabel: resolvedLabel,
         fieldKey: row.fieldKey,
         label: row.label,
         isNumeric: row.isNumeric,
         values: row.values,
         fullKey: `${section.key}:${row.fieldKey}`,
-      })),
-    );
-  }, [sections]);
+      }));
+    });
+  }, [sections, t]);
 
   return (
     <div className="animate-fadeIn h-full overflow-auto">
@@ -71,9 +66,7 @@ const ComparisonPivotView: FC<Props> = ({ sections, activeDetail, pinnedDetail, 
                   )}
                 >
                   <div className="flex flex-col">
-                    <span className="text-secondary uppercase" style={{ fontSize: '9px' }}>
-                      {field.sectionLabel}
-                    </span>
+                    <span className="text-xxs text-secondary uppercase">{field.sectionLabel}</span>
                     <span className="font-mono text-primary">{field.label}</span>
                   </div>
                 </th>

@@ -2,6 +2,9 @@ import { FC } from 'react';
 
 import { IconX } from '@tabler/icons-react';
 
+import { RunsI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
+
 import { ComparisonRow } from './types';
 import { formatFieldValue } from './utils';
 
@@ -15,6 +18,7 @@ interface Props {
 }
 
 const FocusStrip: FC<Props> = ({ rows, onRemove }) => {
+  const t = useI18n();
   if (rows.length === 0) return null;
 
   return (
@@ -30,7 +34,11 @@ const FocusStrip: FC<Props> = ({ rows, onRemove }) => {
         >
           <div className="flex items-center justify-between gap-1">
             <span className="text-xxs font-mono font-medium text-primary truncate">{row.label}</span>
-            <button onClick={() => onRemove(row.fullKey)} className="text-secondary hover:text-primary shrink-0">
+            <button
+              onClick={() => onRemove(row.fullKey)}
+              className="text-secondary hover:text-primary shrink-0"
+              title={t(RunsI18nKey.RemoveSpotlight)}
+            >
               <IconX size={12} />
             </button>
           </div>

@@ -13,6 +13,7 @@ import { useI18n } from '@/src/locales/client';
 
 import { ComparisonSection } from './types';
 import { useFieldSelector } from './useFieldSelector';
+import { SECTION_I18N } from './utils';
 
 interface Props {
   sections: ComparisonSection[];
@@ -101,6 +102,8 @@ const FieldSelector: FC<Props> = ({ sections, fieldSelector }) => {
             </div>
             {displaySections.map((section) => {
               const isCollapsed = collapsedFieldSections[section.key];
+              const i18nKey = SECTION_I18N[section.key];
+              const sectionLabel = i18nKey ? t(i18nKey) : section.label;
               const allChecked = section.rows.every((r) => {
                 const visKey = `${section.key}:${r.fieldKey}`;
                 return fieldSelector.fieldVisibility[visKey] !== false;
@@ -114,8 +117,8 @@ const FieldSelector: FC<Props> = ({ sections, fieldSelector }) => {
                       className="flex items-center gap-1 flex-1 min-w-0 text-xxs font-medium text-secondary"
                     >
                       {isCollapsed ? <IconChevronRight size={12} /> : <IconChevronDown size={12} />}
-                      <span className="truncate" title={section.label}>
-                        {section.label}
+                      <span className="truncate" title={sectionLabel}>
+                        {sectionLabel}
                       </span>
                       <span className="text-secondary ml-auto shrink-0">({section.rows.length})</span>
                     </button>
@@ -168,6 +171,8 @@ const FieldSelector: FC<Props> = ({ sections, fieldSelector }) => {
             <div className="p-1.5">
               {orderedSections.map((section, idx) => {
                 const isHidden = fieldSelector.sectionHidden[section.key];
+                const orderI18nKey = SECTION_I18N[section.key];
+                const orderLabel = orderI18nKey ? t(orderI18nKey) : section.label;
                 return (
                   <div
                     key={section.key}
@@ -192,9 +197,9 @@ const FieldSelector: FC<Props> = ({ sections, fieldSelector }) => {
                             'text-xxs truncate flex-1',
                             isHidden ? 'text-secondary line-through' : 'text-primary',
                           )}
-                          title={section.label}
+                          title={orderLabel}
                         >
-                          {section.label}
+                          {orderLabel}
                         </span>
                         <button
                           onClick={() => fieldSelector.toggleSectionHidden(section.key)}

@@ -1590,6 +1590,7 @@ export default {
     Pin: 'Pin',
     Unpin: 'Unpin',
     Collapse: 'Collapse',
+    Expand: 'Expand',
     Close: 'Close',
     SwitchToDrawer: 'Switch to Drawer',
     SwitchToSidebar: 'Switch to Sidebar',
@@ -1608,6 +1609,7 @@ export default {
     RequestResponse: 'Request / Response',
     HttpLabel: 'HTTP',
     DurationLabel: 'Duration',
+    StartedLabel: 'Started',
   },
   JsonAta: {
     JSONAtaDoc: 'JSONata Expression Reference',

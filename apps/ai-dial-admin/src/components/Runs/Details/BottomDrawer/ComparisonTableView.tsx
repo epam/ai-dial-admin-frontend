@@ -11,7 +11,7 @@ import { AnalyticsResult, ExtractionResultStatus } from '@/src/models/evaluation
 
 import FocusStrip from './FocusStrip';
 import { ComparisonRow, ComparisonSection } from './types';
-import { formatFieldValue, getDiffClass } from './utils';
+import { formatFieldValue, getDiffClass, SECTION_I18N } from './utils';
 
 interface Props {
   sections: ComparisonSection[];
@@ -24,7 +24,7 @@ interface Props {
 const TRUNCATE_THRESHOLD = 500;
 const PREVIEW_LENGTH = 200;
 
-function StatusBadge({ status }: { status?: ExtractionResultStatus }) {
+export function StatusBadge({ status }: { status?: ExtractionResultStatus }) {
   if (!status) return null;
   const isSuccess = status === 'SUCCESS';
   return (
@@ -151,13 +151,15 @@ const SectionGroup: FC<SectionGroupProps> = ({
   columnCount,
 }) => {
   const t = useI18n();
+  const i18nKey = SECTION_I18N[section.key];
+  const sectionLabel = i18nKey ? t(i18nKey) : section.label;
   return (
     <>
       <tr className="cursor-pointer hover:bg-layer-2" onClick={onToggle}>
         <td colSpan={1 + columnCount} className="px-3 py-1 border-b border-secondary">
           <div className="flex items-center gap-1 text-xxs font-semibold text-secondary uppercase">
             {isCollapsed ? <IconChevronRight size={12} /> : <IconChevronDown size={12} />}
-            {section.label}
+            {sectionLabel}
           </div>
         </td>
       </tr>

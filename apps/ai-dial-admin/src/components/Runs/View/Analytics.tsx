@@ -49,7 +49,7 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
     if (resultIds.length > 0) {
       drawerPanel.clearPinIfMissing(resultIds);
     }
-  }, [resultIds, drawerPanel]);
+  }, [resultIds, drawerPanel.clearPinIfMissing]);
 
   const onRowClicked = useCallback(
     (event: RowClickedEvent) => {

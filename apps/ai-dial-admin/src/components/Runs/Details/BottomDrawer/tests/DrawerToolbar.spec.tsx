@@ -74,7 +74,7 @@ describe('DrawerToolbar', () => {
 
   it('calls onExpand when collapsed', async () => {
     render(<DrawerToolbar {...defaultProps} isCollapsed={true} />);
-    await userEvent.click(screen.getByTitle('Runs.Collapse'));
+    await userEvent.click(screen.getByTitle('Runs.Expand'));
     expect(defaultProps.onExpand).toHaveBeenCalled();
   });
 

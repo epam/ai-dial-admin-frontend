@@ -1,6 +1,14 @@
+import { RunsI18nKey } from '@/src/constants/i18n';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 
 import { ComparisonRow, ComparisonSection } from './types';
+
+export const SECTION_I18N: Record<string, RunsI18nKey> = {
+  execution: RunsI18nKey.Execution,
+  testCaseData: RunsI18nKey.TestCaseData,
+  extractedColumns: RunsI18nKey.ExtractedColumns,
+  requestResponse: RunsI18nKey.RequestResponse,
+};
 
 function serializeValue(value: unknown): string | null {
   if (value === null || value === undefined) return null;
@@ -25,7 +33,7 @@ function buildRecordRows(
 
     const values: ComparisonRow['values'] = [{ raw: rawA }];
     if (hasTwoResults) {
-      values.push({ raw: rawB! });
+      values.push({ raw: rawB ?? null });
     }
 
     return { fieldKey: key, label: key, isNumeric, values };
@@ -137,7 +145,7 @@ export function buildComparisonSections(
 
       const values: ComparisonRow['values'] = [{ raw: rawA }];
       if (hasTwoResults) {
-        values.push({ raw: rawB! });
+        values.push({ raw: rawB ?? null });
       }
 
       return {

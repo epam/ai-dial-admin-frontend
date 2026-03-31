@@ -1,3 +1,5 @@
+'use client';
+
 import { FC } from 'react';
 
 import {
@@ -125,7 +127,7 @@ const DrawerToolbar: FC<Props> = ({
       <button
         onClick={isCollapsed ? onExpand : onCollapse}
         className="flex items-center justify-center size-6 rounded hover:bg-layer-3 text-secondary hover:text-primary"
-        title={t(RunsI18nKey.Collapse)}
+        title={isCollapsed ? t(RunsI18nKey.Expand) : t(RunsI18nKey.Collapse)}
       >
         {isCollapsed ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
       </button>

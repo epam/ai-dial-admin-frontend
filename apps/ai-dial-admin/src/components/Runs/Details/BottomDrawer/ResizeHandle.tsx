@@ -24,7 +24,7 @@ const ResizeHandle: FC<Props> = ({ onDragStart, drawerPanel }) => {
       const newHeight = Math.max(MIN_DRAWER_HEIGHT, Math.min(maxHeight, drawerPanel.panelHeight + delta));
       drawerPanel.setPanelHeight(newHeight);
     },
-    [drawerPanel],
+    [drawerPanel.panelHeight, drawerPanel.setPanelHeight],
   );
 
   return (

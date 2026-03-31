@@ -29,7 +29,10 @@ const StatusPill: FC<{ status?: ExtractionResultStatus }> = ({ status }) => {
 
   return (
     <span
-      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide ${pillClass}`}
+      className={classNames(
+        'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide',
+        pillClass,
+      )}
     >
       {isSuccess ? <IconCheck size={12} /> : <IconX size={12} />} {status ?? '—'}
     </span>
@@ -63,7 +66,10 @@ const ExecutionStatusBar: FC<Props> = ({ status, httpCode, durationMs, timestamp
         {timestamp != null && (
           <>
             <MetaSeparator />
-            <MetaTag label={timestampLabel ?? 'Started'} value={formatDateTimeToLocalString(timestamp)} />
+            <MetaTag
+              label={timestampLabel ?? t(RunsI18nKey.StartedLabel)}
+              value={formatDateTimeToLocalString(timestamp)}
+            />
           </>
         )}
       </div>

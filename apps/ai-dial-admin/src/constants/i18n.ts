@@ -1525,6 +1525,7 @@ export enum RunsI18nKey {
   Pin = 'Runs.Pin',
   Unpin = 'Runs.Unpin',
   Collapse = 'Runs.Collapse',
+  Expand = 'Runs.Expand',
   Close = 'Runs.Close',
   SwitchToDrawer = 'Runs.SwitchToDrawer',
   SwitchToSidebar = 'Runs.SwitchToSidebar',
@@ -1543,6 +1544,7 @@ export enum RunsI18nKey {
   RequestResponse = 'Runs.RequestResponse',
   HttpLabel = 'Runs.HttpLabel',
   DurationLabel = 'Runs.DurationLabel',
+  StartedLabel = 'Runs.StartedLabel',
 }
 
 export enum FileManagerI18nKey {

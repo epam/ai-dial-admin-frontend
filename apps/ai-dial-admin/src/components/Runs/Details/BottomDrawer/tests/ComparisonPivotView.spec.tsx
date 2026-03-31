@@ -55,7 +55,7 @@ describe('ComparisonPivotView', () => {
     );
     expect(screen.getByText('status')).toBeInTheDocument();
     // CSS uppercase class renders "Execution" as "EXECUTION" visually
-    expect(screen.getByText('Execution')).toBeInTheDocument();
+    expect(screen.getByText('Runs.Execution')).toBeInTheDocument();
   });
 
   it('renders two rows when pinned', () => {
