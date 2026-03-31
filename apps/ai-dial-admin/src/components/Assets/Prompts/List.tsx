@@ -17,7 +17,7 @@ import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { ApplicationRoute } from '@/src/types/routes';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { useI18n } from '@/src/locales/client';
-import { DuplicateI18nKey, FileManagerI18nKey, FoldersI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { FileManagerI18nKey, FoldersI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import {
   DialCopiedItem,
   DialFile,
@@ -47,6 +47,7 @@ import { getAllSelectedItemsPaths, getPromptGridColumns } from './utils';
 import { downloadJson } from '@/src/utils/download';
 import { getJsonFileName } from '@/src/utils/import/get-json-name';
 import DeleteModal from './DeleteModal';
+import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 
 const PromptsList: FC = () => {
   const [isCreatePromptModalOpen, setIsCreatePromptModalOpen] = useState(false);
@@ -114,11 +115,8 @@ const PromptsList: FC = () => {
           if (isCreateDuplicate) {
             showNotification(
               getSuccessNotification(
-                t(DuplicateI18nKey.NotificationTitle, { entity: t(DuplicateI18nKey.Prompt) }),
-                t(DuplicateI18nKey.NotificationDescription, {
-                  entity: t(DuplicateI18nKey.Prompt),
-                  entityId: `${prompt.name}__${prompt.version}`,
-                }),
+                getCreateNotificationTitle(ApplicationRoute.Prompts, t),
+                getCreateNotificationDescription(ApplicationRoute.Prompts, `${prompt.name}__${prompt.version}`, t),
               ),
             );
           }

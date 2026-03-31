@@ -287,10 +287,6 @@ export enum DuplicateI18nKey {
   Adapter = 'DeleteEntity.Entities.Adapter',
   InterceptorTemplate = 'DuplicateEntity.Entities.InterceptorTemplate',
   ApplicationRunner = 'DuplicateEntity.Entities.ApplicationRunner',
-
-  // Notification
-  NotificationTitle = 'DuplicateEntity.Notification.Title',
-  NotificationDescription = 'DuplicateEntity.Notification.Description',
 }
 
 export enum ButtonsI18nKey {

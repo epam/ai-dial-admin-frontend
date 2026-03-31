@@ -314,10 +314,6 @@ export default {
       InterceptorTemplate: 'Interceptor Template',
       ApplicationRunner: 'Application Runner',
     },
-    Notification: {
-      Title: '{entity} duplicated successfully',
-      Description: '{entity} {entityId} was created successfully.',
-    },
   },
   CreateEntity: {
     Title: 'Create {entity}',
