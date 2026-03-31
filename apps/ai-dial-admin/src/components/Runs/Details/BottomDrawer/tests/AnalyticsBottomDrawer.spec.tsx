@@ -1,5 +1,4 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 
 import { useDrawerPanel } from '../useDrawerPanel';
 
@@ -21,7 +20,6 @@ vi.mock('@/src/app/[lang]/runs/actions', () => ({
 function TestWrapper({ initialActiveId = 'r1' }: { initialActiveId?: string }) {
   const drawerPanel = useDrawerPanel();
 
-  // Initialize the drawer as open with an active ID
   if (!drawerPanel.isOpen && initialActiveId) {
     drawerPanel.open(initialActiveId);
   }
@@ -38,37 +36,31 @@ function TestWrapper({ initialActiveId = 'r1' }: { initialActiveId?: string }) {
 }
 
 describe('AnalyticsBottomDrawer', () => {
-  it('renders via portal to document.body', async () => {
+  it('renders as complementary landmark', async () => {
     render(<TestWrapper />);
     await waitFor(() => {
-      expect(screen.getByTestId('analytics-bottom-drawer')).toBeInTheDocument();
+      expect(screen.getByRole('complementary', { name: 'Analysis drawer' })).toBeInTheDocument();
     });
   });
 
   it('shows toolbar', async () => {
     render(<TestWrapper />);
     await waitFor(() => {
-      expect(screen.getByTestId('drawer-toolbar')).toBeInTheDocument();
+      expect(screen.getByRole('toolbar', { name: 'Analysis toolbar' })).toBeInTheDocument();
     });
-  });
-
-  it('shows loading state initially', () => {
-    render(<TestWrapper />);
-    // The loader should be present while fetch is in progress
-    expect(screen.getByTestId('analytics-bottom-drawer')).toBeInTheDocument();
   });
 
   it('renders resize handle', async () => {
     render(<TestWrapper />);
     await waitFor(() => {
-      expect(screen.getByTestId('drawer-resize-handle')).toBeInTheDocument();
+      expect(screen.getByRole('separator', { name: 'Resize drawer' })).toBeInTheDocument();
     });
   });
 
   it('has correct z-index class', async () => {
     render(<TestWrapper />);
     await waitFor(() => {
-      const drawer = screen.getByTestId('analytics-bottom-drawer');
+      const drawer = screen.getByRole('complementary', { name: 'Analysis drawer' });
       expect(drawer.className).toContain('z-[35]');
     });
   });

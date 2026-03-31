@@ -23,9 +23,9 @@ function buildRecordRows(
     const rawA = serializeValue(recordA?.[key]);
     const rawB = hasTwoResults ? serializeValue(recordB?.[key]) : undefined;
 
-    const values: ComparisonRow['values'] = [{ raw: rawA, display: null }];
+    const values: ComparisonRow['values'] = [{ raw: rawA }];
     if (hasTwoResults) {
-      values.push({ raw: rawB!, display: null });
+      values.push({ raw: rawB! });
     }
 
     return { fieldKey: key, label: key, isNumeric, values };
@@ -52,8 +52,8 @@ export function buildComparisonSections(
       label: 'executionStatus',
       isNumeric: false,
       values: [
-        { raw: active.executionStatus ?? null, display: null },
-        ...(hasTwoResults ? [{ raw: effectivePinned.executionStatus ?? null, display: null }] : []),
+        { raw: active.executionStatus ?? null },
+        ...(hasTwoResults ? [{ raw: effectivePinned.executionStatus ?? null }] : []),
       ],
     },
     {
@@ -61,7 +61,7 @@ export function buildComparisonSections(
       label: 'execDurationMs',
       isNumeric: true,
       values: [
-        { raw: active.execDurationMs != null ? String(active.execDurationMs) : null, display: null },
+        { raw: active.execDurationMs != null ? String(active.execDurationMs) : null },
         ...(hasTwoResults
           ? [
               {
@@ -98,8 +98,8 @@ export function buildComparisonSections(
       label: 'requestBody',
       isNumeric: false,
       values: [
-        { raw: serializeValue(active.requestBody), display: null },
-        ...(hasTwoResults ? [{ raw: serializeValue(effectivePinned.requestBody), display: null }] : []),
+        { raw: serializeValue(active.requestBody) },
+        ...(hasTwoResults ? [{ raw: serializeValue(effectivePinned.requestBody) }] : []),
       ],
     });
   }
@@ -109,8 +109,8 @@ export function buildComparisonSections(
       label: 'responseBody',
       isNumeric: false,
       values: [
-        { raw: serializeValue(active.responseBody), display: null },
-        ...(hasTwoResults ? [{ raw: serializeValue(effectivePinned.responseBody), display: null }] : []),
+        { raw: serializeValue(active.responseBody) },
+        ...(hasTwoResults ? [{ raw: serializeValue(effectivePinned.responseBody) }] : []),
       ],
     });
   }
@@ -135,9 +135,9 @@ export function buildComparisonSections(
       const rawA = serializeValue(activeGroup?.[fieldKey]);
       const rawB = hasTwoResults ? serializeValue(pinnedGroup?.[fieldKey]) : undefined;
 
-      const values: ComparisonRow['values'] = [{ raw: rawA, display: null }];
+      const values: ComparisonRow['values'] = [{ raw: rawA }];
       if (hasTwoResults) {
-        values.push({ raw: rawB!, display: null });
+        values.push({ raw: rawB! });
       }
 
       return {
@@ -152,12 +152,13 @@ export function buildComparisonSections(
     sectionsMap.set(sectionKey, { key: sectionKey, label: groupKey, rows });
   }
 
-  // Apply field visibility filtering
-  for (const [, section] of sectionsMap) {
-    section.rows = section.rows.filter((row) => {
+  // Apply field visibility filtering (create new section objects to avoid mutation)
+  for (const [key, section] of sectionsMap) {
+    const filteredRows = section.rows.filter((row) => {
       const visKey = `${section.key}:${row.fieldKey}`;
       return fieldVisibility[visKey] !== false;
     });
+    sectionsMap.set(key, { ...section, rows: filteredRows });
   }
 
   // Apply section hidden

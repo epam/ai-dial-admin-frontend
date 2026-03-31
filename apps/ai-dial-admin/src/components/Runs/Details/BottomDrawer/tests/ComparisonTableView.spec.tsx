@@ -26,23 +26,13 @@ const makeSections = (hasPinned: boolean): ComparisonSection[] => [
         fieldKey: 'status',
         label: 'status',
         isNumeric: false,
-        values: hasPinned
-          ? [
-              { raw: 'SUCCESS', display: null },
-              { raw: 'FAILED', display: null },
-            ]
-          : [{ raw: 'SUCCESS', display: null }],
+        values: hasPinned ? [{ raw: 'SUCCESS' }, { raw: 'FAILED' }] : [{ raw: 'SUCCESS' }],
       },
       {
         fieldKey: 'duration',
         label: 'duration',
         isNumeric: true,
-        values: hasPinned
-          ? [
-              { raw: '1000', display: null },
-              { raw: '2000', display: null },
-            ]
-          : [{ raw: '1000', display: null }],
+        values: hasPinned ? [{ raw: '1000' }, { raw: '2000' }] : [{ raw: '1000' }],
       },
     ],
   },

@@ -55,7 +55,8 @@ const DrawerToolbar: FC<Props> = ({
   return (
     <div
       className="flex items-center gap-2 px-3 h-[34px] border-b border-secondary text-xs shrink-0"
-      data-testid="drawer-toolbar"
+      role="toolbar"
+      aria-label="Analysis toolbar"
     >
       <span className="font-semibold text-primary">{t(RunsI18nKey.Analysis)}</span>
 
@@ -82,7 +83,7 @@ const DrawerToolbar: FC<Props> = ({
 
       {pinnedId && diffCount > 0 && (
         <span className="bg-warning text-warning rounded px-1.5 py-0.5 text-xxs font-medium">
-          {diffCount} {t(RunsI18nKey.Diffs).replace('{count} ', '')}
+          {t(RunsI18nKey.Diffs, { count: diffCount })}
         </span>
       )}
 

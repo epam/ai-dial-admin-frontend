@@ -12,14 +12,14 @@ const mockSections: ComparisonSection[] = [
     key: 'execution',
     label: 'Execution',
     rows: [
-      { fieldKey: 'status', label: 'status', isNumeric: false, values: [{ raw: 'SUCCESS', display: null }] },
-      { fieldKey: 'duration', label: 'duration', isNumeric: true, values: [{ raw: '1000', display: null }] },
+      { fieldKey: 'status', label: 'status', isNumeric: false, values: [{ raw: 'SUCCESS' }] },
+      { fieldKey: 'duration', label: 'duration', isNumeric: true, values: [{ raw: '1000' }] },
     ],
   },
   {
     key: 'testCaseData',
     label: 'Test Case Data',
-    rows: [{ fieldKey: 'input', label: 'input', isNumeric: false, values: [{ raw: 'hello', display: null }] }],
+    rows: [{ fieldKey: 'input', label: 'input', isNumeric: false, values: [{ raw: 'hello' }] }],
   },
 ];
 

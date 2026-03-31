@@ -54,20 +54,9 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
   const onRowClicked = useCallback(
     (event: RowClickedEvent) => {
       if (!event.data) return;
-      const resultId = event.data.id;
-
-      detailMode.openDetail(resultId);
-
-      // Sync drawer panel state when in drawer mode
-      if (detailMode.detailMode === 'drawer') {
-        if (detailMode.selectedResultId === resultId && detailMode.drawerOpen) {
-          // Will be toggled closed by openDetail
-        } else {
-          drawerPanel.open(resultId);
-        }
-      }
+      detailMode.openDetail(event.data.id);
     },
-    [detailMode, drawerPanel],
+    [detailMode],
   );
 
   // Sync drawer open/close with detailMode

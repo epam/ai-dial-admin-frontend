@@ -4,6 +4,8 @@ import { FC, useMemo } from 'react';
 
 import classNames from 'classnames';
 
+import { RunsI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
 import { AnalyticsResult, ExtractionResultStatus } from '@/src/models/evaluation/run';
 
 import { ComparisonSection } from './types';
@@ -25,6 +27,7 @@ function StatusBadge({ status }: { status?: ExtractionResultStatus }) {
 }
 
 const ComparisonPivotView: FC<Props> = ({ sections, activeDetail, pinnedDetail, spotlightedFields }) => {
+  const t = useI18n();
   const hasTwoRows = pinnedDetail != null && pinnedDetail.id !== activeDetail?.id;
 
   const details = useMemo(() => {
@@ -55,7 +58,7 @@ const ComparisonPivotView: FC<Props> = ({ sections, activeDetail, pinnedDetail, 
         <thead className="sticky top-0 z-10 bg-layer-1">
           <tr>
             <th className="sticky left-0 z-20 bg-layer-1 text-left text-xxs text-secondary font-medium px-3 py-1.5 min-w-[160px] border-b border-r border-secondary">
-              Test Case
+              {t(RunsI18nKey.TestCaseColumn)}
             </th>
             {flatFields.map((field) => {
               const isSpotlighted = spotlightedFields.has(field.fullKey);

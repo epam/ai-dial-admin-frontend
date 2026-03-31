@@ -40,12 +40,12 @@ describe('DrawerToolbar', () => {
 
   it('shows diff count when pinned and diffs exist', () => {
     render(<DrawerToolbar {...defaultProps} pinnedId="r1" diffCount={5} />);
-    expect(screen.getByText(/5/)).toBeInTheDocument();
+    expect(screen.getByText('Runs.Diffs')).toBeInTheDocument();
   });
 
   it('does not show diff count when no pinned', () => {
     render(<DrawerToolbar {...defaultProps} diffCount={3} />);
-    expect(screen.queryByText(/3/)).not.toBeInTheDocument();
+    expect(screen.queryByText('Runs.Diffs')).not.toBeInTheDocument();
   });
 
   it('calls onSetView when view toggle clicked', async () => {

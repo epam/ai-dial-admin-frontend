@@ -5,6 +5,8 @@ import { FC, useCallback, useMemo, useState } from 'react';
 import { IconChevronDown, IconChevronRight, IconFocus2 } from '@tabler/icons-react';
 import classNames from 'classnames';
 
+import { RunsI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
 import { AnalyticsResult, ExtractionResultStatus } from '@/src/models/evaluation/run';
 
 import FocusStrip from './FocusStrip';
@@ -37,6 +39,7 @@ const ComparisonTableView: FC<Props> = ({
   spotlightedFields,
   onToggleSpotlight,
 }) => {
+  const t = useI18n();
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const [expandedCells, setExpandedCells] = useState<Set<string>>(new Set());
 
@@ -61,44 +64,29 @@ const ComparisonTableView: FC<Props> = ({
     return arr;
   }, [activeDetail, pinnedDetail, hasTwoColumns]);
 
-  // Collect spotlighted rows
+  // Collect spotlighted rows with full keys for unambiguous removal
   const spotlightedRows = useMemo(() => {
-    const rows: ComparisonRow[] = [];
+    const rows: Array<ComparisonRow & { fullKey: string }> = [];
     for (const section of sections) {
       for (const row of section.rows) {
         const fullKey = `${section.key}:${row.fieldKey}`;
         if (spotlightedFields.has(fullKey)) {
-          rows.push(row);
+          rows.push({ ...row, fullKey });
         }
       }
     }
     return rows;
   }, [sections, spotlightedFields]);
 
-  const handleRemoveSpotlight = useCallback(
-    (fieldKey: string) => {
-      // Find full key from sections
-      for (const section of sections) {
-        for (const row of section.rows) {
-          if (row.fieldKey === fieldKey) {
-            onToggleSpotlight(`${section.key}:${row.fieldKey}`);
-            return;
-          }
-        }
-      }
-    },
-    [sections, onToggleSpotlight],
-  );
-
   return (
     <div className="animate-fadeIn flex flex-col h-full">
-      <FocusStrip rows={spotlightedRows} onRemove={handleRemoveSpotlight} />
+      <FocusStrip rows={spotlightedRows} onRemove={onToggleSpotlight} />
       <div className="flex-1 overflow-auto min-h-0">
         <table className="w-full text-xs border-collapse">
           <thead className="sticky top-0 z-10 bg-layer-1">
             <tr>
               <th className="text-left text-xxs text-secondary font-medium px-3 py-1.5 w-[180px] min-w-[180px] border-b border-secondary">
-                Field
+                {t(RunsI18nKey.FieldColumn)}
               </th>
               {details.map((detail, idx) => (
                 <th
@@ -162,6 +150,7 @@ const SectionGroup: FC<SectionGroupProps> = ({
   onToggleCellExpand,
   columnCount,
 }) => {
+  const t = useI18n();
   return (
     <>
       <tr className="cursor-pointer hover:bg-layer-2" onClick={onToggle}>
@@ -190,7 +179,7 @@ const SectionGroup: FC<SectionGroupProps> = ({
                         ? 'text-accent-primary'
                         : 'text-secondary hover:text-primary opacity-0 group-hover:opacity-100',
                     )}
-                    title={isSpotlighted ? 'Remove spotlight' : 'Spotlight'}
+                    title={isSpotlighted ? t(RunsI18nKey.RemoveSpotlight) : t(RunsI18nKey.Spotlight)}
                   >
                     <IconFocus2 size={12} />
                   </button>
@@ -238,6 +227,7 @@ interface CellValueProps {
 }
 
 const CellValue: FC<CellValueProps> = ({ text, raw, isLong, isExpanded, cellKey, onToggleExpand }) => {
+  const t = useI18n();
   if (raw === null) {
     return <span className="text-xxs text-secondary">—</span>;
   }
@@ -249,7 +239,7 @@ const CellValue: FC<CellValueProps> = ({ text, raw, isLong, isExpanded, cellKey,
       <div className="text-xxs text-primary">
         <span className="whitespace-pre-wrap break-words">{raw.slice(0, PREVIEW_LENGTH)}...</span>
         <button onClick={() => onToggleExpand(cellKey)} className="ml-1 text-accent-primary hover:underline">
-          Show more
+          {t(RunsI18nKey.ShowMore)}
         </button>
       </div>
     );

@@ -1,16 +1,16 @@
-import React, { FC, useCallback } from 'react';
+import { FC, type MouseEvent, type KeyboardEvent, useCallback } from 'react';
 
 import { MIN_DRAWER_HEIGHT, MAX_DRAWER_OFFSET, RESIZE_STEP, RESIZE_STEP_LARGE } from './types';
 import { useDrawerPanel } from './useDrawerPanel';
 
 interface Props {
-  onDragStart: (e: React.MouseEvent) => void;
+  onDragStart: (e: MouseEvent) => void;
   drawerPanel: ReturnType<typeof useDrawerPanel>;
 }
 
 const ResizeHandle: FC<Props> = ({ onDragStart, drawerPanel }) => {
   const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
+    (e: KeyboardEvent<HTMLDivElement>) => {
       let delta = 0;
       if (e.key === 'ArrowUp') {
         delta = e.shiftKey ? RESIZE_STEP_LARGE : RESIZE_STEP;
@@ -33,9 +33,9 @@ const ResizeHandle: FC<Props> = ({ onDragStart, drawerPanel }) => {
       tabIndex={0}
       role="separator"
       aria-orientation="horizontal"
+      aria-label="Resize drawer"
       onMouseDown={onDragStart}
       onKeyDown={handleKeyDown}
-      data-testid="drawer-resize-handle"
     >
       <div className="w-8 flex flex-col gap-px items-center">
         <div className="w-full h-px bg-secondary" />

@@ -1,11 +1,13 @@
 'use client';
 
-import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { DialLoader } from '@epam/ai-dial-ui-kit';
 
 import { getTestCaseRunResultDetails } from '@/src/app/[lang]/runs/actions';
+import { RunsI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 
 import ComparisonPivotView from './ComparisonPivotView';
@@ -33,6 +35,7 @@ const AnalyticsBottomDrawer: FC<Props> = ({
   onClose,
   onSwitchToSidebar,
 }) => {
+  const t = useI18n();
   const [activeDetail, setActiveDetail] = useState<AnalyticsResult | null>(null);
   const [pinnedDetail, setPinnedDetail] = useState<AnalyticsResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -51,12 +54,12 @@ const AnalyticsBottomDrawer: FC<Props> = ({
       if (res) {
         setActiveDetail(res);
       } else {
-        setError('Failed to load test case details');
+        setError(t(RunsI18nKey.LoadError));
         setActiveDetail(null);
       }
       setIsLoading(false);
     });
-  }, [drawerPanel.activeId]);
+  }, [drawerPanel.activeId, t]);
 
   // Fetch pinned detail
   useEffect(() => {
@@ -145,7 +148,7 @@ const AnalyticsBottomDrawer: FC<Props> = ({
 
   // Resize drag handlers
   const handleDragStart = useCallback(
-    (e: React.MouseEvent) => {
+    (e: MouseEvent) => {
       e.preventDefault();
       setIsDragging(true);
       const startY = e.clientY;
@@ -210,7 +213,8 @@ const AnalyticsBottomDrawer: FC<Props> = ({
       ref={drawerRef}
       className="fixed bottom-0 inset-x-0 z-[35] bg-layer-1 border-t border-primary flex flex-col"
       style={panelStyle}
-      data-testid="analytics-bottom-drawer"
+      role="complementary"
+      aria-label="Analysis drawer"
     >
       {!drawerPanel.isCollapsed && <ResizeHandle onDragStart={handleDragStart} drawerPanel={drawerPanel} />}
       <div ref={toolbarRef}>
@@ -243,7 +247,7 @@ const AnalyticsBottomDrawer: FC<Props> = ({
               <div className="flex items-center justify-center h-full text-error text-sm">{error}</div>
             ) : fieldSelector.allFieldsHidden ? (
               <div className="flex items-center justify-center h-full text-secondary text-sm">
-                No fields visible. Use the Fields panel to show fields.
+                {t(RunsI18nKey.NoFieldsVisible)}
               </div>
             ) : drawerPanel.viewMode === 'table' ? (
               <ComparisonTableView

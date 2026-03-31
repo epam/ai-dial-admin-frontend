@@ -1,5 +1,3 @@
-import { ReactNode } from 'react';
-
 export type ViewMode = 'table' | 'pivot';
 export type DetailMode = 'sidebar' | 'drawer';
 
@@ -15,7 +13,7 @@ export interface ComparisonRow {
   label: string;
   badge?: 'bound' | 'info';
   isNumeric: boolean;
-  values: Array<{ raw: string | null; display: ReactNode }>;
+  values: Array<{ raw: string | null }>;
 }
 
 export interface ComparisonSection {

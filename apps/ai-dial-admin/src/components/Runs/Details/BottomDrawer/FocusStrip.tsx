@@ -5,9 +5,13 @@ import { IconX } from '@tabler/icons-react';
 import { ComparisonRow } from './types';
 import { formatFieldValue } from './utils';
 
+interface SpotlightedRow extends ComparisonRow {
+  fullKey: string;
+}
+
 interface Props {
-  rows: ComparisonRow[];
-  onRemove: (fieldKey: string) => void;
+  rows: SpotlightedRow[];
+  onRemove: (fullKey: string) => void;
 }
 
 const FocusStrip: FC<Props> = ({ rows, onRemove }) => {
@@ -16,16 +20,17 @@ const FocusStrip: FC<Props> = ({ rows, onRemove }) => {
   return (
     <div
       className="flex gap-2 px-3 py-1.5 border-b border-secondary overflow-x-auto shrink-0"
-      data-testid="focus-strip"
+      role="list"
+      aria-label="Spotlighted fields"
     >
       {rows.map((row) => (
         <div
-          key={row.fieldKey}
+          key={row.fullKey}
           className="flex flex-col gap-0.5 bg-layer-2 rounded px-2 py-1 min-w-[140px] max-w-[220px] shrink-0"
         >
           <div className="flex items-center justify-between gap-1">
             <span className="text-xxs font-mono font-medium text-primary truncate">{row.label}</span>
-            <button onClick={() => onRemove(row.fieldKey)} className="text-secondary hover:text-primary shrink-0">
+            <button onClick={() => onRemove(row.fullKey)} className="text-secondary hover:text-primary shrink-0">
               <IconX size={12} />
             </button>
           </div>

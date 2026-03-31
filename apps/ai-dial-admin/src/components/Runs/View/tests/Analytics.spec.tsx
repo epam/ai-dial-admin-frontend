@@ -52,13 +52,9 @@ vi.mock('@/src/app/[lang]/runs/actions', () => ({
 
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
   default: ({ additionalGridOptions }: any) => (
-    <div data-testid="grid-view">
-      <button data-testid="row-r1" onClick={() => additionalGridOptions.onRowClicked({ data: { id: 'r1' } })}>
-        Row 1
-      </button>
-      <button data-testid="row-r2" onClick={() => additionalGridOptions.onRowClicked({ data: { id: 'r2' } })}>
-        Row 2
-      </button>
+    <div role="grid" aria-label="Analytics grid">
+      <button onClick={() => additionalGridOptions.onRowClicked({ data: { id: 'r1' } })}>Row 1</button>
+      <button onClick={() => additionalGridOptions.onRowClicked({ data: { id: 'r2' } })}>Row 2</button>
     </div>
   ),
 }));
@@ -82,25 +78,25 @@ describe('AnalyticsTab', () => {
   it('renders grid after loading', async () => {
     render(<AnalyticsTab run={mockRun} />);
     await waitFor(() => {
-      expect(screen.getByTestId('grid-view')).toBeInTheDocument();
+      expect(screen.getByRole('grid', { name: 'Analytics grid' })).toBeInTheDocument();
     });
   });
 
   it('opens sidebar on row click in default mode', async () => {
     render(<AnalyticsTab run={mockRun} />);
-    await waitFor(() => screen.getByTestId('row-r1'));
+    await waitFor(() => screen.getByRole('button', { name: 'Row 1' }));
 
-    await userEvent.click(screen.getByTestId('row-r1'));
+    await userEvent.click(screen.getByRole('button', { name: 'Row 1' }));
 
     expect(mockShowSidebar).toHaveBeenCalledTimes(1);
   });
 
   it('toggles sidebar closed on same row click', async () => {
     render(<AnalyticsTab run={mockRun} />);
-    await waitFor(() => screen.getByTestId('row-r1'));
+    await waitFor(() => screen.getByRole('button', { name: 'Row 1' }));
 
-    await userEvent.click(screen.getByTestId('row-r1'));
-    await userEvent.click(screen.getByTestId('row-r1'));
+    await userEvent.click(screen.getByRole('button', { name: 'Row 1' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Row 1' }));
 
     expect(mockCloseSidebar).toHaveBeenCalled();
   });
