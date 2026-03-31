@@ -25,7 +25,6 @@ import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersBut
 import ListView from '@/src/components/ListView/ListView';
 import { ACTIONS_COLUMN_CEL_ID, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
 import { DEFAULT_TIME_PERIOD } from '@/src/constants/global-time-filter';
-import { useTimePeriodOptions } from '@/src/hooks/use-time-period-options';
 import { ButtonsI18nKey, RollbackI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -74,8 +73,6 @@ const ActivityAuditList: FC<Props> = ({
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const router = useRouter();
-  const timePeriodOptions = useTimePeriodOptions();
-
   const { showNotification } = useNotification();
 
   const [isRollbackModalOpen, setIsRollbackModalOpen] = useState(false);
@@ -283,7 +280,6 @@ const ActivityAuditList: FC<Props> = ({
               onTimeRangeChange={onTimeRangeChange}
               isCustomRange={isCustomRange || innerIsCustomRange}
               setIsCustomRange={setIsCustomRange || setInnerIsCustomRange}
-              timePeriodOptions={timePeriodOptions}
             />
           )}
 
