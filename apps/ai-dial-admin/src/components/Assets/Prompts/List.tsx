@@ -111,7 +111,6 @@ const PromptsList: FC = () => {
       return createPrompt({ ...prompt, folderId: folderPath }).then((res) => {
         if (res.success) {
           fetchFiles?.(folderPath);
-          showNotification(getSuccessNotification(t(FoldersI18nKey.Import)));
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
@@ -121,7 +120,7 @@ const PromptsList: FC = () => {
         return res;
       });
     },
-    [destinationFolder, fetchFiles, handleCreatePromptModalClose, showNotification, t],
+    [destinationFolder, fetchFiles, handleCreatePromptModalClose, showNotification],
   );
 
   const handleDuplicatePromptModalClose = useCallback(() => {
