@@ -3,8 +3,6 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { cloneDeep } from 'lodash';
-
 import {
   getCoreToolset,
   removeToolset,
@@ -56,10 +54,11 @@ const ToolsetView: FC<Props> = ({ names, oAuthCode, etag, roles, originalToolset
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType>();
 
-  const [selectedToolset, setSelectedToolset] = useState(cloneDeep(originalToolset));
+  const [selectedToolset, setSelectedToolset] = useState(structuredClone(originalToolset));
   const [isChanged, setIsChanged] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [isSkipRefresh, setIsSkipRefresh] = useState(true);
+  const [discardKey, setDiscardKey] = useState(0);
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
   const [coreToolset, setCoreToolset] = useState<Toolset | null>(null);
 
@@ -88,7 +87,7 @@ const ToolsetView: FC<Props> = ({ names, oAuthCode, etag, roles, originalToolset
 
   useEffect(() => {
     setSelectedToolset(
-      selectedFormat === ExportFormat.CORE ? cloneDeep(coreToolset as Toolset) : cloneDeep(originalToolset),
+      selectedFormat === ExportFormat.CORE ? structuredClone(coreToolset as Toolset) : structuredClone(originalToolset),
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedFormat, originalToolset]);
@@ -104,8 +103,9 @@ const ToolsetView: FC<Props> = ({ names, oAuthCode, etag, roles, originalToolset
       setSelectedFormat(ExportFormat.ADMIN);
     }
 
-    setSelectedToolset(originalToolset);
+    setSelectedToolset(structuredClone(originalToolset));
     setIsSkipRefresh(false);
+    setDiscardKey((prev) => prev + 1);
   }, [isEditorEnabled, originalToolset]);
 
   const onChangeToolset = useCallback(
@@ -218,6 +218,7 @@ const ToolsetView: FC<Props> = ({ names, oAuthCode, etag, roles, originalToolset
           />
         ) : (
           <TabsContent
+            key={discardKey}
             activeTab={activeTab}
             isSkipRefresh={isSkipRefresh}
             selectedToolset={selectedToolset}

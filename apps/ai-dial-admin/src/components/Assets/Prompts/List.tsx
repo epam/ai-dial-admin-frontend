@@ -47,6 +47,7 @@ import { getAllSelectedItemsPaths, getPromptGridColumns } from './utils';
 import { downloadJson } from '@/src/utils/download';
 import { getJsonFileName } from '@/src/utils/import/get-json-name';
 import DeleteModal from './DeleteModal';
+import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 
 const PromptsList: FC = () => {
   const [isCreatePromptModalOpen, setIsCreatePromptModalOpen] = useState(false);
@@ -106,11 +107,19 @@ const PromptsList: FC = () => {
   }, []);
 
   const handleCreatePrompt = useCallback(
-    (prompt: DialPrompt, path?: string) => {
+    (prompt: DialPrompt, path?: string, isCreateDuplicate?: boolean) => {
       const folderPath = path || destinationFolder || `${ROOT_FOLDER}/`;
       return createPrompt({ ...prompt, folderId: folderPath }).then((res) => {
         if (res.success) {
           fetchFiles?.(folderPath);
+          if (isCreateDuplicate) {
+            showNotification(
+              getSuccessNotification(
+                getCreateNotificationTitle(ApplicationRoute.Prompts, t),
+                getCreateNotificationDescription(ApplicationRoute.Prompts, `${prompt.name}__${prompt.version}`, t),
+              ),
+            );
+          }
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
@@ -120,7 +129,7 @@ const PromptsList: FC = () => {
         return res;
       });
     },
-    [destinationFolder, fetchFiles, handleCreatePromptModalClose, showNotification],
+    [destinationFolder, fetchFiles, handleCreatePromptModalClose, showNotification, t],
   );
 
   const handleDuplicatePromptModalClose = useCallback(() => {
@@ -144,7 +153,7 @@ const PromptsList: FC = () => {
         ...prompt,
         path: `${prompt.folderId}${prompt.name}__${prompt.version}`,
       };
-      handleCreatePrompt(newPrompt as DialPrompt, prompt.folderId);
+      handleCreatePrompt(newPrompt as DialPrompt, prompt.folderId, true);
       setIsDuplicatePromptModalOpen(false);
     },
     [handleCreatePrompt],

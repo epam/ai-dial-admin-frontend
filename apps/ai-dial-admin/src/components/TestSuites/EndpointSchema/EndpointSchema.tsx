@@ -67,8 +67,8 @@ const EndpointSchema: FC<Props> = ({ testSuite, onChangeTestSuite, isSkipRefresh
   );
 
   const onChangeResponseColumns = useCallback(
-    (responseColumns: ResponseColumn[]) => {
-      onChangeTestSuite({ ...testSuite, responseColumns });
+    (responseColumns: ResponseColumn[], isSkipRefresh?: boolean) => {
+      onChangeTestSuite({ ...testSuite, responseColumns }, isSkipRefresh);
     },
     [testSuite, onChangeTestSuite],
   );
@@ -110,6 +110,7 @@ const EndpointSchema: FC<Props> = ({ testSuite, onChangeTestSuite, isSkipRefresh
           responseColumns={testSuite.responseColumns || []}
           onChangeResponseColumns={onChangeResponseColumns}
           responseSchema={(testSuite.endpointRef?.responseBodySchema || {}) as JSONSchema7}
+          isSkipRefresh={isSkipRefresh}
         />
       )}
     </div>
