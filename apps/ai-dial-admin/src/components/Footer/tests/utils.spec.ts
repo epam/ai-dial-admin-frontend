@@ -1,11 +1,11 @@
-import React from 'react';
-import { describe, test, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { getCoreVersionElement, getDefinitionTypes, getIconAfter, getIconBefore } from '../utils';
 import { CoreVersionModalI18nKey } from '@/src/constants/i18n';
+import { render, screen } from '@testing-library/react';
+import { ReactElement } from 'react';
+import { describe, expect, test } from 'vitest';
 import { DefinitionType } from '../types';
+import { getCoreVersionElement, getDefinitionTypes, getIconAfter, getIconBefore } from '../utils';
 
-const renderResult = (element: React.ReactElement | undefined | null) => {
+const renderResult = (element: ReactElement | undefined | null) => {
   if (!element) {
     throw new Error('Expected element but received undefined');
   }

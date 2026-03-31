@@ -194,7 +194,10 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
               route={ApplicationRoute.Applications}
               isModalOpen={isCreateAppModalOpen}
               createEntity={createApplication}
-              onClose={() => setIsCreateAppModalOpen(false)}
+              onClose={() => {
+                setIsCreateAppModalOpen(false);
+                dispatch({ type: ValidationActionType.Reset });
+              }}
               names={names}
               initialValues={{
                 customAppSchemaId: selectedRunner.$id,
@@ -211,7 +214,10 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
             <CreateAsset
               view={ApplicationRoute.AssetsApplications}
               isModalOpen={isCreateAssetAppModalOpen}
-              onClose={() => setIsCreateAssetAppModalOpen(false)}
+              onClose={() => {
+                setIsCreateAssetAppModalOpen(false);
+                dispatch({ type: ValidationActionType.Reset });
+              }}
               onCreate={createApp}
               context={useAppsFolder}
               initialValues={{
