@@ -17,8 +17,15 @@ context: |
 
   ## Key Libraries
   - @epam/ai-dial-ui-kit: Design system with base components
-  - @epam/ai-dial-shared: Shared types/utilities across DIAL projects
   - AG Grid for data grids
+    - When using EditableCellRenderer (custom cell renderer with an input) in ag-grid columns,
+      always set `editable: false` and provide a `valueGetter` on those columns.
+      Without explicit `editable: false`, ag-grid's keyboard handler can steal focus from
+      the input. Without `valueGetter`, ag-grid's change detection on `setValue` can trigger
+      cell refresh/recreation. See getTestCaseColumns in TestSuites/utils/columns.tsx as
+      the reference pattern. Also mutate row data in place inside the onChange callback
+      (e.g., `data[field] = value`) so that when EditableCellRenderer calls setValue(),
+      ag-grid sees no value change and skips cell refresh.
   - ECharts for charts
   - Monaco Editor for code editing
   - @tabler/icons-react + @svgr/webpack for icons/SVGs
@@ -29,8 +36,18 @@ context: |
   ## Path Alias
   - @/* -> apps/ai-dial-admin/*
 
+  ## Commands
+  - Dev server: `npm start` (localhost:4200)
+  - Build: `npm run build`
+  - Lint: `npm run lint` (also pre-commit via husky/lint-staged)
+  - Format: `npm run format` (check) / `npm run format:write` (apply)
+  - Tests: `npm run test` (also pre-push via husky)
+  - Single test file: `npx vitest run src/path/to/file.spec.ts` (run from apps/ai-dial-admin/)
+  - Single test by name: `npx vitest run src/path/to/file.spec.ts -t "pattern"`
+  - Note: vitest must run from apps/ai-dial-admin/ for @/ path alias to resolve
+
   ## Architecture
-  - Single app: apps/ai-dial-admin
+  - Single app: apps/ai-dial-admin, all source under apps/ai-dial-admin/src/
   - Components: pragmatic organization in src/components/ — core app sections,
     reusable common components, entity views/lists with co-located related components
   - Theming: separate themes controlling color palette, icons and more via CSS variables
@@ -39,6 +56,37 @@ context: |
   - Backend APIs:
     - Core admin: github.com/epam/ai-dial-admin-backend
     - Deployment manager: github.com/epam/ai-dial-admin-deployment-manager-backend
+
+  ### Routing
+  - Next.js App Router with [lang] segment for i18n. Each entity: src/app/[lang]/<entity>/page.tsx
+  - Data-fetching pages use `export const dynamic = 'force-dynamic'`
+
+  ### Provider stack ([lang]/layout.tsx)
+  I18nProvider → NextAuthProvider → AppContextProvider → ThemeProvider →
+  RuleFolderProvider → PromptFolderProvider → NotificationProvider
+
+  ### Entity pattern
+  Each domain entity (adapters, models, applications, test-suites, etc.) follows:
+  - View (components/<Entity>/View/View.tsx) — client component, manages tabs/local edits/save/discard.
+    Gets originalEntity + etag from the page server component.
+  - TabsContent — switches content per EntityViewTab.
+  - List (components/<Entity>/List/) — uses BaseEntityList with column defs from constants/grid-columns/.
+
+  ### Server actions
+  Located at src/app/[lang]/<entity>/actions.ts ('use server'). Authenticate via getUserToken(),
+  delegate to API classes in src/server/, return { success, data?, errorHeader?, errorMessage? }.
+
+  ### Grid system
+  GridView wraps AgGridWrapper wraps AgGridReact. Column definitions in constants/grid-columns/
+  and components/<Entity>/utils/columns.tsx. Column state persists to localStorage via storageKey.
+
+  ### i18n
+  useI18n() returns t(). Keys in src/locales/en.ts. Domain keys grouped by <Entity>I18nKey enums
+  in src/constants/i18n.ts. In tests, t() returns the key string as-is (mocked in test-setup.tsx).
+
+  ### Test setup
+  Vitest + jsdom. test-setup.tsx mocks: fetch, useI18n, useSession, all context providers,
+  ResizeObserver, IntersectionObserver, createPortal. Tests co-locate as tests/<name>.spec.ts(x).
 
 rules:
   proposal:
@@ -53,6 +101,8 @@ rules:
     - Prefer extending existing components from @epam/ai-dial-ui-kit over creating new ones
     - Consider i18n — all user-facing strings go through next-international
     - Follow existing patterns in src/components/ for structuring new features
+    - Name component props interfaces `Props`, not `ComponentNameProps`
+    - Use BooleanButtonCellRenderer (Grid/CellRenderers/) for boolean toggles in AG Grid, not agCheckboxCellRenderer
     - Keep JSX clean — extract handlers, computed values, and complex props into named variables in the component body
     - Apply base accessibility features targeting WCAG AA level
   specs:
@@ -65,5 +115,6 @@ rules:
     - Reference specific file paths and component names
     - Require unit tests for all new and updated code as a dedicated task
     - Keep tasks small enough to be reviewable in a single PR
-    - In tests, prefer querying by role and text content over data-testid
+    - Do not use data-testid attributes in tests
+    - Always reuse existing mocks from test-setup.tsx instead of creating new ones
     - Run all code quality checks (lint, format, tests) as a final task after all implementation tasks are complete
