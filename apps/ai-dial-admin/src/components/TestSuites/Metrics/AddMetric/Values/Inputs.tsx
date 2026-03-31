@@ -70,7 +70,7 @@ const MetricInput: FC<{
 
   const onChangeTestCase = useCallback(
     (value: string) => {
-      onChange({ ...binding, source: { $type: MetricBindingType.TestCase, value } } as MetricBinding);
+      onChange({ ...binding, source: { $type: MetricBindingType.TestCase, columnName: value } } as MetricBinding);
     },
     [onChange, binding],
   );

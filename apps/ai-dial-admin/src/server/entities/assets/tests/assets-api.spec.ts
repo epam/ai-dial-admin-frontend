@@ -309,6 +309,7 @@ describe('Toolset', () => {
       { path: 'path', folderId: 'test', nodeType: DialFileNodeType.FOLDER, version: '1.0' },
       ToolsetAuthCredentialLevel.GLOBAL,
       TOKEN_MOCK,
+      'https://redirect.example.com/callback',
       'key',
       'code',
     );
