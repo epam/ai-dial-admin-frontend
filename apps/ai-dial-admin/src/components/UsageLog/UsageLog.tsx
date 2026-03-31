@@ -10,6 +10,7 @@ import { getDashboardData } from '@/src/app/[lang]/dashboard/actions';
 import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
 import List from '@/src/components/UsageLog/List/List';
 import { DEFAULT_TIME_PERIOD } from '@/src/constants/global-time-filter';
+import { useTimePeriodOptions } from '@/src/hooks/use-time-period-options';
 import {
   USAGE_LOG_CONVERSATIONS_COLUMNS,
   USAGE_LOG_MCP_COLUMNS,
@@ -52,6 +53,7 @@ const UsageLog: FC<Props> = ({
   const t = useI18n();
   const tabs = getUsageLogTabs(t);
   const getReqRef = useRef(useProtectedRequest());
+  const timePeriodOptions = useTimePeriodOptions();
 
   const [activeTab, setActiveTab] = useState(entityView || EntityViewTab.Traces);
   const [timePeriod, setTimePeriod] = useState<string | undefined>();
@@ -131,6 +133,7 @@ const UsageLog: FC<Props> = ({
               onTimeRangeChange={onTimeRangeChange}
               isCustomRange={isCustomRange}
               setIsCustomRange={setIsCustomRange}
+              timePeriodOptions={timePeriodOptions}
             />
           )}
           <DialNeutralButton

@@ -22,4 +22,14 @@ describe('Server :: TelemetryApi', () => {
       expect.anything(),
     );
   });
+
+  test('should call getDatasets', async () => {
+    fetch.mockResponseOnce(JSON.stringify([]));
+
+    await instance.getDatasets(TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/metrics/datasets'),
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
 });
