@@ -2,20 +2,20 @@
 
 import { FC, useCallback, useEffect, useMemo } from 'react';
 
-import { Editor } from '@monaco-editor/react';
 import { DialCloseButton } from '@epam/ai-dial-ui-kit';
-import { IconCopy } from '@tabler/icons-react';
+import { Editor } from '@monaco-editor/react';
 import { createPortal } from 'react-dom';
 
-import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { EDITOR_THEMES_CONFIG } from '@/src/constants/editor';
+import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useI18n } from '@/src/locales/client';
-import { EDITOR_THEMES } from '@/src/types/editor';
 import { FullscreenViewerState } from '@/src/models/evaluation/detail-panel';
+import { EDITOR_THEMES } from '@/src/types/editor';
 import { formatContent } from '@/src/utils/evaluation/detail-panel';
 import { getSuccessNotification } from '@/src/utils/notification';
+import CopyButton from '../CopyButton/CopyButton';
 
 export const FullscreenViewerModal: FC<FullscreenViewerState & { onClose: () => void }> = ({
   isOpen,
@@ -75,13 +75,7 @@ export const FullscreenViewerModal: FC<FullscreenViewerState & { onClose: () => 
         <div className="flex items-center justify-between px-4 py-3 border-b border-secondary shrink-0">
           <h3 className="font-semibold text-sm truncate mr-4">{title}</h3>
           <div className="flex items-center gap-2 shrink-0">
-            <button
-              className="flex items-center gap-1 px-2 py-1 text-xs border border-secondary rounded text-secondary hover:text-primary hover:bg-layer-4 transition-colors"
-              onClick={handleCopy}
-            >
-              <IconCopy size={14} />
-              {t(ButtonsI18nKey.Copy)}
-            </button>
+            <CopyButton buttonLabel={t(ButtonsI18nKey.Copy)} value={formatted} valueLabel={title} />
             <DialCloseButton onClose={onClose} />
           </div>
         </div>

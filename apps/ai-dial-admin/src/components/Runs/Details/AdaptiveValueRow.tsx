@@ -9,6 +9,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { parseValue } from '@/src/utils/evaluation/detail-panel';
 import { getSuccessNotification } from '@/src/utils/notification';
+import CopyButton from '../../Common/CopyButton/CopyButton';
 
 interface Props {
   label: string;
@@ -59,13 +60,7 @@ const AdaptiveValueRow: FC<Props> = ({ label, value }) => {
           </pre>
         )}
       </span>
-      <button
-        className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 text-secondary hover:text-accent-primary shrink-0"
-        onClick={handleCopy}
-        title={t(ButtonsI18nKey.Copy)}
-      >
-        <IconCopy size={14} />
-      </button>
+      <CopyButton buttonLabel={t(ButtonsI18nKey.Copy)} value={parsed.rawText} valueLabel={label} />
     </div>
   );
 };
