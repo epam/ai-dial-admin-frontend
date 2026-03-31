@@ -1,7 +1,7 @@
 import { FC } from 'react';
 
 import { MetricBinding } from '@/src/models/evaluation/metric';
-import { getBindingDisplayValue } from './MetricBindingsDisplay.utils';
+import { getBindingDisplayValue } from './utils';
 
 interface Props {
   title: string;

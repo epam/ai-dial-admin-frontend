@@ -76,7 +76,7 @@ const MetricInput: FC<{
   );
 
   const onChangeConstant = useCallback(
-    (value: string) => {
+    (value: string | string[]) => {
       onChange({ ...binding, source: { $type: MetricBindingType.Constant, value } } as MetricBinding);
     },
     [onChange, binding],
