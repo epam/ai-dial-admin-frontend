@@ -1,10 +1,5 @@
+import { InfoEntry } from '@/src/models/evaluation/detail-panel';
 import { beautifyValue } from '@/src/utils/evaluation/detail-panel';
-
-export interface InfoEntry {
-  metricKey: string;
-  entryKey: string;
-  value: string;
-}
 
 export const getInfoEntries = (infos: Record<string, unknown>): InfoEntry[] => {
   return Object.entries(infos).flatMap(([metricKey, val]) => {

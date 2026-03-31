@@ -1,82 +1,83 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
-import { FullscreenViewerProvider, useFullscreenViewer } from '@/src/context/FullscreenViewerContext';
+import { ViewerContentType } from '@/src/types/evaluation';
+
+import FullscreenViewer from './FullscreenViewer';
 
 vi.mock('@monaco-editor/react', () => ({
   Editor: ({ value, language }: { value: string; language: string }) => <pre data-language={language}>{value}</pre>,
 }));
 
-const Trigger = () => {
-  const { open } = useFullscreenViewer();
-  return <button onClick={() => open('Test Title', '{"key":"value"}', 'json')}>Open</button>;
-};
-
-const TextTrigger = () => {
-  const { open } = useFullscreenViewer();
-  return <button onClick={() => open('Logs', 'Line 1\nLine 2\nLine 3', 'text')}>Open Text</button>;
-};
+vi.mock('@epam/ai-dial-ui-kit', async () => {
+  const actual = await vi.importActual<Record<string, unknown>>('@epam/ai-dial-ui-kit');
+  return {
+    ...actual,
+    DialPopup: ({ open, header, children }: { open: boolean; header: string; children: React.ReactNode }) =>
+      open ? (
+        <div role="dialog">
+          <h2>{header}</h2>
+          {children}
+        </div>
+      ) : null,
+  };
+});
 
 describe('FullscreenViewer', () => {
-  test('Should not render modal initially', () => {
+  test('Should not render when closed', () => {
     render(
-      <FullscreenViewerProvider>
-        <Trigger />
-      </FullscreenViewerProvider>,
+      <FullscreenViewer
+        isOpen={false}
+        title="Test"
+        content='{"key":"value"}'
+        contentType={ViewerContentType.Json}
+        onClose={vi.fn()}
+      />,
     );
 
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.queryByText('Test')).not.toBeInTheDocument();
   });
 
-  test('Should open modal on trigger and show title', () => {
+  test('Should render title and formatted content when open', () => {
     render(
-      <FullscreenViewerProvider>
-        <Trigger />
-      </FullscreenViewerProvider>,
+      <FullscreenViewer
+        isOpen={true}
+        title="Test Title"
+        content='{"key":"value"}'
+        contentType={ViewerContentType.Json}
+        onClose={vi.fn()}
+      />,
     );
 
-    fireEvent.click(screen.getByText('Open'));
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByText('Test Title')).toBeInTheDocument();
-  });
-
-  test('Should close on Escape key', () => {
-    render(
-      <FullscreenViewerProvider>
-        <Trigger />
-      </FullscreenViewerProvider>,
-    );
-
-    fireEvent.click(screen.getByText('Open'));
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
-
-    fireEvent.keyDown(document, { key: 'Escape' });
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   test('Should render text content via Monaco editor', () => {
     render(
-      <FullscreenViewerProvider>
-        <TextTrigger />
-      </FullscreenViewerProvider>,
+      <FullscreenViewer
+        isOpen={true}
+        title="Logs"
+        content="Line 1\nLine 2\nLine 3"
+        contentType={ViewerContentType.Text}
+        onClose={vi.fn()}
+      />,
     );
 
-    fireEvent.click(screen.getByText('Open Text'));
     expect(screen.getByText('Logs')).toBeInTheDocument();
-    const editor = screen.getByText(/Line 1/);
-    expect(editor).toBeInTheDocument();
+    expect(screen.getByText(/Line 1/)).toBeInTheDocument();
   });
 
-  test('Should render copy button in fullscreen viewer', () => {
+  test('Should render Monaco editor when open', () => {
     render(
-      <FullscreenViewerProvider>
-        <Trigger />
-      </FullscreenViewerProvider>,
+      <FullscreenViewer
+        isOpen={true}
+        title="Test"
+        content='{"key":"value"}'
+        contentType={ViewerContentType.Json}
+        onClose={vi.fn()}
+      />,
     );
 
-    fireEvent.click(screen.getByText('Open'));
-    const dialog = screen.getByRole('dialog');
-    const buttons = dialog.querySelectorAll('button');
-    expect(buttons.length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
 });

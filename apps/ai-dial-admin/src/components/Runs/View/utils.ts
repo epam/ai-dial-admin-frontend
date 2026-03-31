@@ -206,7 +206,7 @@ export const getMetricGroups = (
     return {
       title: groupKey,
       metrics,
-      infos: infos && Object.keys(infos).length > 0 ? infos : undefined,
+      info: infos && Object.keys(infos).length > 0 ? infos : undefined,
       hasError,
       errorMessage: hasError && infoError ? String(infoError) : undefined,
     };

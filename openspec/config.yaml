@@ -26,6 +26,12 @@ context: |
       the reference pattern. Also mutate row data in place inside the onChange callback
       (e.g., `data[field] = value`) so that when EditableCellRenderer calls setValue(),
       ag-grid sees no value change and skips cell refresh.
+    - When a parent component owns grid data and inline edits should NOT trigger a full grid
+      refresh, use the isSkipRefresh pattern: pass `isSkipRefresh?: boolean` as a prop,
+      and guard `gridApi.updateGridOptions({ rowData })` with `if (!isSkipRefresh)`.
+      The parent passes `isSkipRefresh=true` when flushing batched inline edits, so the grid
+      keeps focus. See SchemaManager in TestSuites/TestCaseSchema/SchemaManager.tsx as the
+      reference pattern.
   - ECharts for charts
   - Monaco Editor for code editing
   - @tabler/icons-react + @svgr/webpack for icons/SVGs

@@ -5,16 +5,8 @@ export interface ParsedValue {
   isLong: boolean;
 }
 
-export type ViewerContentType = 'json' | 'text';
-
-export interface FullscreenViewerState {
-  isOpen: boolean;
-  title: string;
-  content: string;
-  contentType: ViewerContentType;
-}
-
-export interface FullscreenViewerContextValue {
-  open: (title: string, content: string, contentType: ViewerContentType) => void;
-  close: () => void;
+export interface InfoEntry {
+  metricKey: string;
+  entryKey: string;
+  value: string;
 }

@@ -13,7 +13,6 @@ import { ExtractionResult } from '@/src/models/evaluation/run';
 import AdaptiveValueGrid from './AdaptiveValueGrid';
 import CodeViewer from '@/src/components/Common/CodeViewer/CodeViewer';
 import ExecutionStatusBar from './ExecutionStatusBar';
-import { FullscreenViewerProvider } from '@/src/context/FullscreenViewerContext';
 
 interface Props {
   result: ExtractionResult;
@@ -36,42 +35,40 @@ const RunResultDetailPanel: FC<Props> = ({ result, grafanaExploreUrl, onClose })
   const responseJson = result.responseBody != null ? JSON.stringify(result.responseBody) : null;
 
   return (
-    <FullscreenViewerProvider>
-      <div className="flex flex-col size-full pb-2">
-        <div className="flex items-start justify-between">
-          <h1 className="truncate">{title}</h1>
-          <div className="flex flex-row gap-4 items-center">
-            <DialSwitch
-              isOn={isJsonView}
-              label={t(EntitiesI18nKey.JSONViewer)}
-              switchId="jsonViewer"
-              onChange={() => setIsJsonView(!isJsonView)}
-            />
-            <DialCloseButton onClose={onClose} />
-          </div>
+    <div className="flex flex-col size-full pb-2">
+      <div className="flex items-start justify-between">
+        <h1 className="truncate">{title}</h1>
+        <div className="flex flex-row gap-4 items-center">
+          <DialSwitch
+            isOn={isJsonView}
+            label={t(EntitiesI18nKey.JSONViewer)}
+            switchId="jsonViewer"
+            onChange={() => setIsJsonView(!isJsonView)}
+          />
+          <DialCloseButton onClose={onClose} />
         </div>
-
-        {isJsonView ? (
-          <JsonEditor entity={result} options={{ stickyScroll: { enabled: false }, wordWrap: 'off' }} readonly={true} />
-        ) : (
-          <div className="flex-1 overflow-y-auto min-h-0 flex flex-col gap-6 mt-4 pr-2">
-            <ExecutionStatusBar
-              status={result.executionInfo?.status}
-              httpCode={result.responseStatusCode}
-              durationMs={result.executionInfo?.durationMs}
-              timestamp={result.executionInfo?.startedAt}
-              timestampLabel="Started"
-              grafanaUrl={exploreUrl}
-            />
-            {testCaseEntries.length > 0 && (
-              <AdaptiveValueGrid title={t(RunsI18nKey.TestCaseData)} entries={testCaseEntries} />
-            )}
-            {requestJson && <CodeViewer title={t(RunsI18nKey.Request)} content={requestJson} />}
-            {responseJson && <CodeViewer title={t(RunsI18nKey.Response)} content={responseJson} />}
-          </div>
-        )}
       </div>
-    </FullscreenViewerProvider>
+
+      {isJsonView ? (
+        <JsonEditor entity={result} options={{ stickyScroll: { enabled: false }, wordWrap: 'off' }} readonly={true} />
+      ) : (
+        <div className="flex-1 overflow-y-auto min-h-0 flex flex-col gap-6 mt-4 pr-2">
+          <ExecutionStatusBar
+            status={result.executionInfo?.status}
+            httpCode={result.responseStatusCode}
+            durationMs={result.executionInfo?.durationMs}
+            timestamp={result.executionInfo?.startedAt}
+            timestampLabel="Started"
+            grafanaUrl={exploreUrl}
+          />
+          {testCaseEntries.length > 0 && (
+            <AdaptiveValueGrid title={t(RunsI18nKey.TestCaseData)} entries={testCaseEntries} />
+          )}
+          {requestJson && <CodeViewer title={t(RunsI18nKey.Request)} content={requestJson} />}
+          {responseJson && <CodeViewer title={t(RunsI18nKey.Response)} content={responseJson} />}
+        </div>
+      )}
+    </div>
   );
 };
 
