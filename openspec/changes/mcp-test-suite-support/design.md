@@ -72,7 +72,7 @@ The `Variables` table, send/restart buttons, Request/Response collapsibles all r
 
 ### D7: getDeployments filtering — client-side optional params
 
-`getDeployments(type?, interfaceFilter?)` passes query params to the API only when provided. The existing call sites (MethodTabContent, CreateTestSuite) pass no params → unchanged behavior. The new Toolsets tab passes `type=dial-toolset`.
+`getDeployments(type?, interfaceFilter?)` passes query params to the API only when provided. The existing call sites (MethodTabContent, CreateTestSuite) pass no params → unchanged behavior. The new MCP tab passes `interface=mcp` to get all MCP-capable deployments (toolsets + applications with MCP interface) in a single call.
 
 ## Risks / Trade-offs
 
@@ -84,7 +84,7 @@ The `Variables` table, send/restart buttons, Request/Response collapsibles all r
 
 **[Risk] Existing suites without suiteType field** → normalized to `'DEPLOYMENT'` at read time, either in the model transformation layer or via `?? 'DEPLOYMENT'` at every read site. Prefer a single normalization point in `getTestSuite` response mapping.
 
-## Open Questions
+## Resolved Questions
 
-- **OQ1**: Should the Toolsets tab in the create wizard also show MCP-capable applications (`$type: 'dial-application'` with MCP interface)? The BE supports this via `?interface=mcp`. Out of scope for v1 per proposal, but the `Target.tsx` tab structure should accommodate it without rework.
-- **OQ2**: After "Change Tool", should the old `argumentTemplate` be preserved if the new tool has overlapping field names? Decision deferred — v1 resets to fresh template on tool change (simpler, safe).
+- **OQ1 (resolved)**: The MCP tab SHALL include both toolsets (`$type: 'dial-toolset'`) and MCP-capable applications (`$type: 'dial-application'`), fetched via `?interface=mcp`. The tab is labeled "MCP" (not "Toolsets"). A "Type" column in the grid distinguishes them. `mcpDeploymentRef.type` is set from the deployment's `$type` field. The tool picker and invocation path are identical for both types (same MCP proxy endpoint on the backend).
+- **OQ2 (resolved)**: After "Change Tool", `argumentTemplate` is always reset to a fresh template derived from the new tool's `inputSchema` (all fields in Binding mode, empty binding). The user must reconfigure bindings. Preserving overlapping fields is deferred to a future iteration.

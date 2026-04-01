@@ -6,36 +6,36 @@ Extends the test suite create wizard's Target step to support selecting a DIAL t
 
 ## ADDED Requirements
 
-### Requirement: Target step has Applications and Toolsets tabs
+### Requirement: Target step has Applications and MCP tabs
 
-The Target step in the create wizard SHALL display two tabs: "Applications" and "Toolsets". The Applications tab is active by default and shows the existing application grid (behavior unchanged). The Toolsets tab shows a grid of toolsets fetched from `GET /api/v1/deployments?type=dial-toolset`.
+The Target step in the create wizard SHALL display two tabs: "Applications" and "MCP". The Applications tab is active by default and shows the existing application grid (behavior unchanged). The MCP tab shows a grid of all MCP-capable deployments — both toolsets (`$type: 'dial-toolset'`) and applications with MCP interface (`$type: 'dial-application'`) — fetched from `GET /api/v1/deployments?interface=mcp`.
 
 #### Scenario: Default tab is Applications
 - **WHEN** user reaches the Target step
 - **THEN** the "Applications" tab SHALL be active and show the deployments grid as before
 
-#### Scenario: Toolsets tab loads toolset list
-- **WHEN** user clicks the "Toolsets" tab
-- **THEN** the system SHALL call `GET /api/v1/deployments?type=dial-toolset`
-- **AND** display the toolsets in a grid with columns: Display Name, ID, Transport, Created At
+#### Scenario: MCP tab loads all MCP-capable deployments
+- **WHEN** user clicks the "MCP" tab
+- **THEN** the system SHALL call `GET /api/v1/deployments?interface=mcp`
+- **AND** display results in a grid with columns: Display Name, ID, Type (`$type` value: "dial-toolset" or "dial-application"), Transport, Created At
 
-#### Scenario: Toolsets tab shows loading state
-- **WHEN** the toolsets request is in-flight
+#### Scenario: MCP tab shows loading state
+- **WHEN** the MCP deployments request is in-flight
 - **THEN** the system SHALL display a `DialLoader` in place of the grid
 
-#### Scenario: Toolsets tab shows empty state
-- **WHEN** the API returns no toolsets
+#### Scenario: MCP tab shows empty state
+- **WHEN** the API returns no MCP-capable deployments
 - **THEN** the system SHALL display the standard "No data" empty state
 
-### Requirement: Tool picker appears after toolset selection
+### Requirement: Tool picker appears after MCP deployment selection
 
-After selecting a toolset row in the Toolsets grid, the system SHALL display an inline tool picker section below the grid showing available tools for the selected toolset.
+After selecting any row in the MCP grid, the system SHALL display an inline tool picker section below the grid showing available tools for the selected deployment. Tool discovery uses `GET /api/v1/deployments/{$type}/{id}/tools`, which works identically for toolsets and MCP-capable applications.
 
-#### Scenario: Tool picker loads tools on toolset selection
-- **WHEN** user selects a toolset row
-- **THEN** the system SHALL call `GET /api/v1/deployments/dial-toolset/{id}/tools`
+#### Scenario: Tool picker loads tools on MCP deployment selection
+- **WHEN** user selects any row in the MCP grid (toolset or MCP application)
+- **THEN** the system SHALL call `GET /api/v1/deployments/{deployment.$type}/{deployment.deploymentId}/tools`
 - **AND** display the tool list as a selectable grid with columns: Tool Name, Description, Input Schema (field count)
-- **AND** the toolset row SHALL remain visually selected
+- **AND** the selected row SHALL remain visually highlighted
 
 #### Scenario: Tool picker shows loading state
 - **WHEN** the tools request is in-flight
@@ -54,7 +54,7 @@ After selecting a toolset row in the Toolsets grid, the system SHALL display an 
 - **WHEN** user selects a tool from the tool picker
 - **THEN** the suite state SHALL be updated with:
   - `suiteType: 'MCP_TOOL'`
-  - `mcpDeploymentRef: { id, type: 'dial-toolset', name }`
+  - `mcpDeploymentRef: { id: deployment.deploymentId, type: deployment.$type, name: deployment.displayName }`
   - `toolRef: { name, description, inputSchema, outputSchema }`
 - **AND** the Target step status SHALL become valid (green checkmark in stepper)
 
@@ -98,8 +98,8 @@ After the Target step, the Methods step SHALL only appear for `DEPLOYMENT` suite
 - **THEN** the Target step status SHALL remain incomplete
 - **AND** the "Next/Finish" button SHALL be disabled
 
-#### Scenario: Switching from Toolsets tab back to Applications resets MCP fields
-- **WHEN** user is on the Toolsets tab with a selection and then clicks the Applications tab and selects an application
+#### Scenario: Switching from MCP tab back to Applications resets MCP fields
+- **WHEN** user is on the MCP tab with a selection and then clicks the Applications tab and selects an application
 - **THEN** `suiteType` SHALL become `'DEPLOYMENT'`
 - **AND** all MCP fields SHALL be cleared from the suite state
 
@@ -109,8 +109,8 @@ On the MCP method tab of an existing MCP_TOOL suite, a "Change Toolset / Tool" b
 
 #### Scenario: Change Tool modal opens
 - **WHEN** user clicks "Change Toolset / Tool" on the MCP method tab
-- **THEN** a modal SHALL open showing the toolset grid with the current toolset pre-selected
-- **AND** the tool picker SHALL show tools for the current toolset with the current tool pre-selected
+- **THEN** a modal SHALL open showing the MCP deployments grid with the current deployment pre-selected
+- **AND** the tool picker SHALL show tools for the current deployment with the current tool pre-selected
 
 #### Scenario: Confirming Change Tool updates suite
 - **WHEN** user selects a new toolset+tool and clicks "Save"

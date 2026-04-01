@@ -18,7 +18,7 @@ The Evaluation Framework backend now supports MCP (Model Context Protocol) tools
 
 ### New Capabilities
 
-- `mcp-target-selection`: Create-wizard target step with Applications/Toolsets tab toggle, toolset grid filtered by `type=dial-toolset`, inline tool picker after toolset selection, deriving `suiteType`/`mcpDeploymentRef`/`toolRef` from selection
+- `mcp-target-selection`: Create-wizard target step with Applications/MCP tab toggle, MCP grid fetched via `interface=mcp` (includes both toolsets and MCP-capable applications), inline tool picker after deployment selection, deriving `suiteType`/`mcpDeploymentRef`/`toolRef` from selection
 - `argument-template-editor`: Table-based argument template editor driven by `toolRef.inputSchema`; per-field Binding/Constant toggle (object/array fields forced to Constant); JSON editor toggle for raw `argumentTemplate.arguments` editing; "Change Tool" modal to replace `mcpDeploymentRef`+`toolRef` on existing MCP suites
 - `mcp-try-it-out`: Try-it-out panel variant for MCP_TOOL suites — same variables/send flow but MCP-specific labels ("Tool Arguments Preview", "TOOL CALL" display), `isError`-based response status badge
 

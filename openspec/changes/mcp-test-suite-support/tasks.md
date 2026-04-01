@@ -17,8 +17,8 @@
 
 ## 4. Create wizard — Target step with Toolsets tab
 
-- [ ] 4.1 Create `src/components/TestSuites/Modals/Create/Toolsets.tsx`: toolsets grid (calls `getDeployments({ type: 'dial-toolset' })`), single-row-selection, inline tool picker section that appears below on toolset selection (calls `getDeploymentTools`), single-row tool selection; emits `mcpDeploymentRef` + `toolRef` on tool selection
-- [ ] 4.2 Rename `Applications.tsx` → `Target.tsx` (or keep `Applications.tsx` and wrap): add `DialTabs` with "Applications" | "Toolsets" tabs; Applications tab renders existing grid; Toolsets tab renders new `Toolsets` content; on selection, sets `suiteType` on suite state accordingly and clears opposing fields
+- [ ] 4.1 Create `src/components/TestSuites/Modals/Create/McpTargets.tsx`: MCP deployments grid (calls `getDeployments({ interfaceFilter: 'mcp' })` to include both toolsets and MCP-capable applications), grid columns include a "Type" column showing `$type`, single-row-selection, inline tool picker section that appears below on deployment selection (calls `getDeploymentTools(deployment.$type, deployment.deploymentId)`), single-row tool selection; sets `mcpDeploymentRef.type` from `deployment.$type`; emits `mcpDeploymentRef` + `toolRef` on tool selection
+- [ ] 4.2 Rename `Applications.tsx` → `Target.tsx` (or keep `Applications.tsx` and wrap): add `DialTabs` with "Applications" | "MCP" tabs; Applications tab renders existing grid; MCP tab renders new `McpTargets` content; on selection, sets `suiteType` on suite state accordingly and clears opposing fields
 - [ ] 4.3 Update `src/components/TestSuites/Modals/Create/constants.ts`: update `TEST_SUIT_STEPS` to accept `suiteType` param; omit Methods step when `suiteType === 'MCP_TOOL'`; update Target step validity to require toolRef for MCP suites
 - [ ] 4.4 Update `src/components/TestSuites/Modals/Create/CreateTestSuite.tsx`: pass `suiteType` to step generation; handle navigation logic (skip Methods step for MCP); clear MCP fields when switching to Applications tab and vice versa
 
