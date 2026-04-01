@@ -1,7 +1,7 @@
 import { FC, useCallback } from 'react';
 
 import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
-import { MetricBinding } from '@/src/models/evaluation/metric';
+import { BindingSourceValue, MetricBinding } from '@/src/models/evaluation/metric';
 import MetricControl from './MetricControl';
 
 interface Props {
@@ -13,7 +13,7 @@ interface Props {
 
 const MetricSchemaSection: FC<Props> = ({ title, fields, bindings, onChange }) => {
   const onChangeValue = useCallback(
-    (fieldId: string, value: string | string[]) => {
+    (fieldId: string, value: BindingSourceValue) => {
       onChange?.(
         bindings?.map((binding) =>
           binding.property === fieldId ? { ...binding, source: { ...binding.source, value } } : binding,

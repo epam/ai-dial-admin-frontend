@@ -7,6 +7,8 @@ import MetricConfiguration from '../Configuration';
 import { MetricBindingType } from '@/src/types/evaluation';
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
+  SelectSize: { Sm: 'Sm' },
+  SelectVariant: { Secondary: 'Secondary' },
   DialInput: ({ labelProps, value, onChange }: any) => (
     <input
       role="textbox"
@@ -19,6 +21,15 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
     <button type="button" onClick={onClick}>
       {label}
     </button>
+  ),
+  DialSelect: ({ value, onChange, options = [] }: any) => (
+    <select role="combobox" value={value ?? ''} onChange={(e) => onChange?.(e.target.value)}>
+      {options.map((option: { label: string; value: string }) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
   ),
 }));
 
