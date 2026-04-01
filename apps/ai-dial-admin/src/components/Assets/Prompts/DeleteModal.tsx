@@ -18,6 +18,7 @@ import { useI18n } from '@/src/locales/client';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { DialPrompt } from '@/src/models/dial/prompt';
+import { Asset } from '@/src/models/dial/deployment-asset';
 
 interface Props {
   isOpen: boolean;
@@ -43,6 +44,10 @@ const DeleteModal: FC<Props> = ({
   resetFolder,
 }) => {
   const t = useI18n();
+
+  const filterFolderData = useCallback((items: Asset[]) => {
+    return items.filter((item) => item.name && !item.name.startsWith('.'));
+  }, []);
 
   const getMultipleRemoveModalContent = useCallback(() => {
     const prompts = itemsToDelete.filter((item) => item.nodeType === DialFileNodeType.ITEM) as DialPrompt[];
@@ -120,6 +125,7 @@ const DeleteModal: FC<Props> = ({
           onApply={onRemoveFolder}
           context={getAssetContext}
           selectedFolder={itemsToDelete[0]?.path || ''}
+          filterFolderData={filterFolderData}
         />
       )}
       {itemsToDelete.length > 1 && (

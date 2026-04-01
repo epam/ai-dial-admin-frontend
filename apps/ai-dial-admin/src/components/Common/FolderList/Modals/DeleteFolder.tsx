@@ -14,6 +14,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
+import { Asset } from '@/src/models/dial/deployment-asset';
 
 interface Props {
   isModalOpen: boolean;
@@ -23,9 +24,19 @@ interface Props {
   context?: () => AssetsFolderContext;
   onClose: () => void;
   onApply?: () => void;
+  filterFolderData?: (items: Asset[]) => Asset[];
 }
 
-const DeleteFolder: FC<Props> = ({ isModalOpen, view, selectedFolder, isBulkDelete, context, onClose, onApply }) => {
+const DeleteFolder: FC<Props> = ({
+  isModalOpen,
+  view,
+  selectedFolder,
+  isBulkDelete,
+  context,
+  onClose,
+  onApply,
+  filterFolderData,
+}) => {
   const t = useI18n();
 
   const folderContext = context?.();
@@ -71,14 +82,14 @@ const DeleteFolder: FC<Props> = ({ isModalOpen, view, selectedFolder, isBulkDele
   }, [gridApi, columnDefs, rowData]);
 
   useEffect(() => {
-    setRowData(
-      generatePromptRowDataForDelete(
-        isBulkDelete
-          ? (folderContext?.bulkSelectedData[filePath] as DialPrompt[])
-          : (folderContext?.fetchedFoldersData[filePath] as DialPrompt[]),
-      ),
-    );
-  }, [filePath, folderContext, folderContext?.fetchedFoldersData, isBulkDelete]);
+    let folderItems = isBulkDelete
+      ? folderContext?.bulkSelectedData[filePath]
+      : folderContext?.fetchedFoldersData[filePath];
+    if (filterFolderData) {
+      folderItems = filterFolderData(folderItems || []);
+    }
+    setRowData(generatePromptRowDataForDelete(folderItems as DialPrompt[]));
+  }, [filePath, folderContext, folderContext?.fetchedFoldersData, isBulkDelete, filterFolderData]);
 
   return (
     <DialFormPopup

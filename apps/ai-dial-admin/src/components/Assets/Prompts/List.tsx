@@ -88,7 +88,7 @@ const PromptsList: FC = () => {
     const emptyPrompt: DialPrompt = {
       name: '.dial_folder',
       folderId: newPath,
-      version: '0',
+      version: '',
       content: '',
       path: `${newPath}.dial_folder`,
       nodeType: DialFileNodeType.ITEM,
@@ -408,7 +408,8 @@ const PromptsList: FC = () => {
     const parentPath = destinationFolder || `${ROOT_FOLDER}/`;
     setFilePath(parentPath);
     fetchFiles(parentPath);
-  }, [destinationFolder, setFilePath, fetchFiles]);
+    removeSelection(deletedItems?.map((item) => item.path));
+  }, [destinationFolder, setFilePath, fetchFiles, deletedItems, removeSelection]);
 
   return (
     <>
