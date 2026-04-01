@@ -18,14 +18,6 @@ context: |
   ## Key Libraries
   - @epam/ai-dial-ui-kit: Design system with base components
   - AG Grid for data grids
-    - When using EditableCellRenderer (custom cell renderer with an input) in ag-grid columns,
-      always set `editable: false` and provide a `valueGetter` on those columns.
-      Without explicit `editable: false`, ag-grid's keyboard handler can steal focus from
-      the input. Without `valueGetter`, ag-grid's change detection on `setValue` can trigger
-      cell refresh/recreation. See getTestCaseColumns in TestSuites/utils/columns.tsx as
-      the reference pattern. Also mutate row data in place inside the onChange callback
-      (e.g., `data[field] = value`) so that when EditableCellRenderer calls setValue(),
-      ag-grid sees no value change and skips cell refresh.
     - When a parent component owns grid data and inline edits should NOT trigger a full grid
       refresh, use the isSkipRefresh pattern: pass `isSkipRefresh?: boolean` as a prop,
       and guard `gridApi.updateGridOptions({ rowData })` with `if (!isSkipRefresh)`.
