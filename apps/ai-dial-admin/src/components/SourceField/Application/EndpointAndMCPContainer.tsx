@@ -1,5 +1,4 @@
 'use client';
-import { FC, useCallback, useEffect, useState } from 'react';
 import {
   DialCheckbox,
   DialGhostButton,
@@ -8,15 +7,17 @@ import {
   DialRemoveButton,
   DialSelectField,
 } from '@epam/ai-dial-ui-kit';
+import { IconPlus } from '@tabler/icons-react';
+import classNames from 'classnames';
+import { FC, useCallback, useEffect, useState } from 'react';
+
+import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, SourceI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
+import { ONLY_HTTP_TRANSPORTS } from '@/src/constants/transport';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, SourceI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
-import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
-import { IconPlus } from '@tabler/icons-react';
-import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
-import classNames from 'classnames';
 import { ApplicationRoute } from '@/src/types/routes';
-import { TRANSPORTS } from './constants';
 
 export enum SourceType {
   CHAT_ENDPOINT = 'chat_endpoint',
@@ -134,7 +135,8 @@ const EndpointAndMCPContainer: FC<Props> = ({
   const onChangeMCPTransport = useCallback(
     (transportId: string | string[]) => {
       if (view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications) {
-        const selectedTransport = TRANSPORTS.find((source) => source.value === transportId) || TRANSPORTS[0];
+        const selectedTransport =
+          ONLY_HTTP_TRANSPORTS.find((source) => source.value === transportId) || ONLY_HTTP_TRANSPORTS[0];
         const updatedMCPContainer = {
           ...((entity as DialApplication).mcp || {}),
           endpoint: (entity as DialApplication).mcp?.endpoint || '',
@@ -142,7 +144,8 @@ const EndpointAndMCPContainer: FC<Props> = ({
         };
         onChangeEntity({ ...entity, mcp: updatedMCPContainer });
       } else if (view === ApplicationRoute.ApplicationRunners) {
-        const selectedTransport = TRANSPORTS.find((source) => source.value === transportId) || TRANSPORTS[0];
+        const selectedTransport =
+          ONLY_HTTP_TRANSPORTS.find((source) => source.value === transportId) || ONLY_HTTP_TRANSPORTS[0];
         const updatedMCPContainer = {
           ...((entity as DialApplicationScheme)?.['dial:applicationTypeMcp'] || {}),
           ['dial:endpoint']: (entity as DialApplicationScheme)?.['dial:applicationTypeMcp']?.['dial:endpoint'] || '',
@@ -264,8 +267,8 @@ const EndpointAndMCPContainer: FC<Props> = ({
             </div>
             <DialSelectField
               id="transport"
-              value={TRANSPORTS[0].value}
-              options={TRANSPORTS}
+              value={ONLY_HTTP_TRANSPORTS[0].value}
+              options={ONLY_HTTP_TRANSPORTS}
               containerClassName="max-w-[160px]"
               label={t(EntityFieldsI18nKey.Transport)}
               onChange={onChangeMCPTransport}

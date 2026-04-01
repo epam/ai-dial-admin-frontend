@@ -24,20 +24,23 @@ export const validateMetricBindings = (
   const requiredInputFields = selectedMetricInputs.filter((field) => field.required).map((field) => field.name);
   const requiredFields = [...requiredConfigFields, ...requiredInputFields];
 
+  // Only validate required fields
   for (const field of requiredFields) {
     const binding = allBindings.find((item) => item.property === field);
     if (!binding) {
       return false;
     }
-  }
 
-  for (const binding of allBindings) {
+    // Validate the binding value for required fields
     if (binding.source.$type === MetricBindingType.Constant) {
-      if (binding.source.value == null || binding.source.value === '') {
+      if (
+        binding.source.value == null ||
+        (typeof binding.source.value === 'string' && binding.source.value.trim() === '')
+      ) {
         return false;
       }
     } else {
-      if (!binding.source.columnName || binding.source.columnName === '') {
+      if (!binding.source.columnName || binding.source.columnName.trim() === '') {
         return false;
       }
     }
