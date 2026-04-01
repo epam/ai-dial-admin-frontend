@@ -1,5 +1,12 @@
 import { describe, expect, test, vi } from 'vitest';
-import { createEmptyFile, getEmptyFile, validateCreateFolder, findFolderByPath, getUniqueFolderName, getNewFolderPath } from '../utils';
+import {
+  createEmptyFile,
+  getEmptyFile,
+  validateCreateFolder,
+  findFolderByPath,
+  getUniqueFolderName,
+  getNewFolderPath,
+} from '../utils';
 import { CREATE_FOLDER_FORBIDDEN_CHARS, FILE_NAME_MAX_LENGTH } from '../constants';
 import { FileManagerI18nKey } from '@/src/constants/i18n';
 import { DialFile, DialFileNodeType } from '@epam/ai-dial-ui-kit';
@@ -170,9 +177,7 @@ const createItem = (path: string, name: string, parentPath: string): DialFile =>
 
 describe('findFolderByPath', () => {
   const tree: DialFile[] = [
-    createFolder('public/a/', 'a', [
-      createFolder('public/a/b/', 'b', [createFolder('public/a/b/c/', 'c')]),
-    ]),
+    createFolder('public/a/', 'a', [createFolder('public/a/b/', 'b', [createFolder('public/a/b/c/', 'c')])]),
     createFolder('public/d/', 'd'),
   ];
 
