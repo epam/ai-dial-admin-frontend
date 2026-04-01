@@ -405,7 +405,8 @@ const PromptsList: FC = () => {
     const parentPath = destinationFolder || `${ROOT_FOLDER}/`;
     setFilePath(parentPath);
     fetchFiles(parentPath);
-  }, [destinationFolder, setFilePath, fetchFiles]);
+    removeSelection(deletedItems?.map((item) => item.path));
+  }, [destinationFolder, setFilePath, fetchFiles, deletedItems, removeSelection]);
 
   return (
     <>
