@@ -83,7 +83,7 @@ const GRID_THEME_COLORS = {
   borderRadius: 3,
   browserColorScheme: 'dark',
   chromeBackgroundColor: 'var(--bg-layer-1, #090D13)',
-  foregroundColor: 'var(--text-primary, #F3F4F6)',
+  foregroundColor: 'var(--text-primary, #EEF1F7)',
   headerFontSize: 14,
   headerFontWeight: 600,
   headerTextColor: 'var(--text-secondary, #7F8792)',

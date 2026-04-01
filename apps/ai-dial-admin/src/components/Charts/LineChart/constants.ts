@@ -17,7 +17,7 @@ export const lineChartDefaultOptions = (t: (key: string) => string): EChartsOpti
       borderWidth: 1,
       padding: [8, 12],
       textStyle: {
-        color: '#F3F4F6',
+        color: '#EEF1F7',
         fontSize: 12,
       },
       axisPointer: {
@@ -46,7 +46,7 @@ export const lineChartDefaultOptions = (t: (key: string) => string): EChartsOpti
           display: flex;
           align-items: center;
           gap: 6px;
-          color: #F3F4F6;
+          color: #EEF1F7;
           font-size: 10px;
         ">
           <span style="
@@ -138,7 +138,7 @@ export const multiSeriesLineChartOptions = (t: (key: string) => string): ECharts
       borderWidth: 1,
       padding: [8, 12],
       textStyle: {
-        color: '#F3F4F6',
+        color: '#EEF1F7',
         fontSize: 12,
       },
       axisPointer: {
@@ -154,7 +154,7 @@ export const multiSeriesLineChartOptions = (t: (key: string) => string): ECharts
         const items = params
           .map(
             (p) => `
-            <div style="display:flex;align-items:center;gap:6px;color:#F3F4F6;font-size:10px;">
+            <div style="display:flex;align-items:center;gap:6px;color:#EEF1F7;font-size:10px;">
               <span style="width:8px;height:8px;border-radius:50%;background:${p.color};"></span>
               <span>${p.seriesName}: <b>${p.value}</b></span>
             </div>`,

@@ -2,9 +2,9 @@ import { JSONEditorThemeConfig, EDITOR_THEMES, EditorOptions } from '@/src/types
 
 const DEFAULT_COLORS = {
   focusBorder: '#00000000',
-  'editor.foreground': '#F3F4F6',
+  'editor.foreground': '#EEF1F7',
   'editor.background': '#141A23',
-  'editorCursor.foreground': '#F3F4F6',
+  'editorCursor.foreground': '#EEF1F7',
   'editor.selectionBackground': '#5C8DEA2B',
   'editorLineNumber.foreground': '#333942',
   'scrollbarSlider.background': '#333942',
@@ -40,7 +40,7 @@ export const EDITOR_THEMES_CONFIG: Record<EDITOR_THEMES, JSONEditorThemeConfig> 
       { token: 'string.value.json', foreground: '#74A4FF' },
       { token: 'number', foreground: '#D97C27' },
       { token: 'keyword.json', foreground: '#F4CE46' },
-      { token: 'delimiter', foreground: '#F3F4F6' },
+      { token: 'delimiter', foreground: '#EEF1F7' },
       { token: 'delimiter.bracket.json', foreground: '#A972FF' },
       { token: 'delimiter.parenthesis', foreground: '#A972FF' },
     ],
@@ -63,7 +63,7 @@ export const EDITOR_THEMES_CONFIG: Record<EDITOR_THEMES, JSONEditorThemeConfig> 
     colors: {
       ...DEFAULT_COLORS,
       'editor.foreground': '#141A23',
-      'editor.background': '#F3F4F6',
+      'editor.background': '#EEF1F7',
       'editorCursor.foreground': '#141A23',
       'diffEditor.insertedTextBackground': '#CEEBEE',
       'diffEditor.removedTextBackground': '#F3D6D8',
