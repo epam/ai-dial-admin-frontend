@@ -115,7 +115,6 @@ const PublicationView = <T extends Publication>({ view, publication, application
     }, 1000);
 
     return () => clearTimeout(timeout);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPublication.folderId]);
 
   const onDiscard = useCallback(() => {

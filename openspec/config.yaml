@@ -18,14 +18,12 @@ context: |
   ## Key Libraries
   - @epam/ai-dial-ui-kit: Design system with base components
   - AG Grid for data grids
-    - When using EditableCellRenderer (custom cell renderer with an input) in ag-grid columns,
-      always set `editable: false` and provide a `valueGetter` on those columns.
-      Without explicit `editable: false`, ag-grid's keyboard handler can steal focus from
-      the input. Without `valueGetter`, ag-grid's change detection on `setValue` can trigger
-      cell refresh/recreation. See getTestCaseColumns in TestSuites/utils/columns.tsx as
-      the reference pattern. Also mutate row data in place inside the onChange callback
-      (e.g., `data[field] = value`) so that when EditableCellRenderer calls setValue(),
-      ag-grid sees no value change and skips cell refresh.
+    - When a parent component owns grid data and inline edits should NOT trigger a full grid
+      refresh, use the isSkipRefresh pattern: pass `isSkipRefresh?: boolean` as a prop,
+      and guard `gridApi.updateGridOptions({ rowData })` with `if (!isSkipRefresh)`.
+      The parent passes `isSkipRefresh=true` when flushing batched inline edits, so the grid
+      keeps focus. See SchemaManager in TestSuites/TestCaseSchema/SchemaManager.tsx as the
+      reference pattern.
   - ECharts for charts
   - Monaco Editor for code editing
   - @tabler/icons-react + @svgr/webpack for icons/SVGs
@@ -98,13 +96,24 @@ rules:
     - Consider impact on existing features — flag if the proposal could affect other parts of the app (shared components, contexts, API routes)
   design:
     - Use existing Tailwind theme tokens and CSS variables — don't introduce hardcoded colors
-    - Prefer extending existing components from @epam/ai-dial-ui-kit over creating new ones
+    - Prefer reusing components from @epam/ai-dial-ui-kit and src/components/Common/ over creating new ones — check Common/ (CopyButton, Accordion, etc.) before building similar UI patterns
     - Consider i18n — all user-facing strings go through next-international
     - Follow existing patterns in src/components/ for structuring new features
     - Name component props interfaces `Props`, not `ComponentNameProps`
     - Use BooleanButtonCellRenderer (Grid/CellRenderers/) for boolean toggles in AG Grid, not agCheckboxCellRenderer
     - Keep JSX clean — extract handlers, computed values, and complex props into named variables in the component body
     - Apply base accessibility features targeting WCAG AA level
+    - Use classNames() from the classnames package for conditional CSS classes — not template literal concatenation
+    - Use @tabler/icons-react for all icons — do not use unicode characters or inline SVGs
+    - Extract pure functions (no React hooks/JSX) from components into utils files with tests — src/utils/ for cross-cutting, <feature>/utils/ for domain-specific
+    - Place types and interfaces in dedicated model files — src/models/ for domain types, adjacent models.ts for component-local types — avoid inline anonymous object types in interface properties
+    - React contexts, providers, and their hooks go in src/context/ — not co-located with components
+    - Break down complex components into smaller, reusable components — keep components focused and maintainable
+    - Use font classes from the Typography provided by @epam/ai-dial-ui-kit — avoid custom font styling
+    - Use button components from @epam/ai-dial-ui-kit — do not create custom buttons unless absolutely necessary
+    - Do not truncate long values using break-all without a way to access the full content — always provide a way to view it
+    - Use DialEllipsisTooltip from @epam/ai-dial-ui-kit when truncating long text values to ensure full content is accessible
+    - Name handler functions with the on prefix (e.g., onOpenFullScreen, onClick, onSubmit) to keep naming consistent and predictable
   specs:
     - Reference backend API contracts from ai-dial-admin-backend or ai-dial-admin-deployment-manager-backend
     - Include validation requirements for any form fields

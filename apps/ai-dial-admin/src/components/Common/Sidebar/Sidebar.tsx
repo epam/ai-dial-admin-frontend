@@ -10,7 +10,9 @@ const Sidebar = () => {
 
   return (
     <SaveValidationContextProvider>
-      <aside className={mergeClasses('flex shrink-0 min-w-[400px] bg-layer-0 p-4', className)}>{content}</aside>
+      <aside className={mergeClasses('flex shrink-0 min-w-[400px] h-full overflow-hidden bg-layer-0 p-4', className)}>
+        {content}
+      </aside>
     </SaveValidationContextProvider>
   );
 };
