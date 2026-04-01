@@ -1534,6 +1534,9 @@ export enum FileManagerI18nKey {
   Rename = 'FileManager.Rename',
   Move = 'FileManager.Move',
   Files = 'FileManager.Files',
+  Applications = 'FileManager.Applications',
+  Toolsets = 'FileManager.Toolsets',
+  Prompts = 'FileManager.Prompts',
   Prompt = 'FileManager.Prompt',
   Folder = 'FileManager.Folder',
   FolderTree = 'FileManager.FolderTree',
@@ -1546,6 +1549,8 @@ export enum FileManagerI18nKey {
   Preview = 'FileManager.Preview',
   MoveItem = 'FileManager.MoveItem',
   MoveItems = 'FileManager.MoveItems',
+  EmptyMoveFolderTitle = 'FileManager.EmptyMoveFolderTitle',
+  EmptyMoveFolderDescription = 'FileManager.EmptyMoveFolderDescription',
   PromptEmptyStateTitle = 'FileManager.PromptEmptyStateTitle',
   PromptEmptyStateDescription = 'FileManager.PromptEmptyStateDescription',
 
