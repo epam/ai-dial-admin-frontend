@@ -10,6 +10,7 @@ export const allActionLabels = [
   { key: 'rename', label: FileManagerI18nKey.Rename },
   { key: 'delete', label: ButtonsI18nKey.Delete },
   { key: 'preview', label: FileManagerI18nKey.Preview },
+  { key: 'openInNewTab', label: FileManagerI18nKey.OpenInNewTab },
 ];
 
 export const allToolbarOptionLabels = [

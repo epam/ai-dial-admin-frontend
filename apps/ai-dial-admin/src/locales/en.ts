@@ -1579,6 +1579,7 @@ export default {
     DeleteFolderAlert: 'Folders may contain other prompts.',
     PromptEmptyStateTitle: "You don't have any prompts",
     PromptEmptyStateDescription: 'Create or import a prompt using the Create button',
+    OpenInNewTab: 'Open in new tab',
   },
   Runs: {
     StartTime: 'Start time',

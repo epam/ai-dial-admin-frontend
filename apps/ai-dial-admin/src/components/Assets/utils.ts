@@ -69,7 +69,9 @@ export const getParentPathByFullPath = (fullPath: string) => {
 export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boolean) => {
   switch (view) {
     case ApplicationRoute.Files:
-      return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key !== 'duplicate');
+      return isReadOnlyAdmin
+        ? []
+        : allActionLabels.filter((item) => item.key !== 'duplicate' && item.key !== 'openInNewTab');
     case ApplicationRoute.Prompts:
       return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key !== 'preview');
     default:
@@ -78,7 +80,11 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
 };
 
 export const getTreeActionLabels = (isReadOnlyAdmin: boolean) => {
-  return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key !== 'duplicate' && item.key !== 'preview');
+  return isReadOnlyAdmin
+    ? []
+    : allActionLabels.filter(
+        (item) => item.key !== 'duplicate' && item.key !== 'preview' && item.key !== 'openInNewTab',
+      );
 };
 
 export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boolean) => {

@@ -1553,6 +1553,7 @@ export enum FileManagerI18nKey {
   EmptyMoveFolderDescription = 'FileManager.EmptyMoveFolderDescription',
   PromptEmptyStateTitle = 'FileManager.PromptEmptyStateTitle',
   PromptEmptyStateDescription = 'FileManager.PromptEmptyStateDescription',
+  OpenInNewTab = 'FileManager.OpenInNewTab',
 
   // Modals
   DeleteItemsModalTitle = 'FileManager.DeleteItemsModalTitle',
