@@ -27,16 +27,22 @@ All conditional rendering keys off `testSuite.suiteType === 'MCP_TOOL'`. No para
 
 `suiteType` defaults to `'DEPLOYMENT'` for existing suites where the field is absent (backwards compatibility with pre-migration data returned by the API).
 
-### D2: Create wizard — tab toggle inside Target step (Option B)
+### D2: Create wizard — symmetric 3-step structure for both suite types
 
-The Target step gains "Applications" | "Toolsets" tabs rather than adding a new step. Selecting from the Toolsets tab:
-1. Sets `suiteType: 'MCP_TOOL'` on the in-progress suite state
-2. Shows an inline tool picker below the toolsets grid (fetches `getDeploymentTools` on selection)
-3. Sets `mcpDeploymentRef` + `toolRef` on the suite state
+Both paths use the same 3-step shape:
 
-`suiteType` is derived from the tab active at time of selection — it is never an explicit user-facing input.
+```
+DEPLOYMENT:  Properties → Target (pick application)      → Method (pick HTTP endpoint)
+MCP_TOOL:    Properties → Target (pick MCP deployment)   → Tool   (pick tool)
+```
 
-For step navigation: after Target selection, a toolset selection skips to finish (no Methods step); an application selection proceeds to Methods as today. The stepper implements this by checking `testSuite.suiteType` in `TEST_SUIT_STEPS`.
+The Target step gains "Applications" | "MCP" tabs. Selecting from the MCP tab sets `suiteType: 'MCP_TOOL'` and `mcpDeploymentRef` — no tool picker inline. Tool selection happens exclusively in step 3.
+
+Step 3 is always present. Its label adapts ("Method" for DEPLOYMENT, "Tool" for MCP_TOOL). Its content branches on `suiteType`: existing `Methods.tsx` for DEPLOYMENT, new `McpTool.tsx` for MCP_TOOL.
+
+`suiteType` is derived from the tab active when a deployment is selected — never an explicit user-facing input. Target step validity = any deployment selected. Tool/Method step validity = tool or endpoint selected.
+
+Benefits over inline picker: Target step stays focused (one grid, one selection); step validation is consistent across both types; `McpTool.tsx` and `Methods.tsx` are natural parallels; `ChangeMcpToolModal` composition is clean (see D4).
 
 ### D3: ArgumentTemplate builder — table + JSON toggle
 
@@ -50,13 +56,21 @@ JSON toggle (DialSwitch) in the component header switches to a full Monaco `Enti
 
 **Binding mode output**: when a field is in Binding mode with column `colName`, the corresponding `argumentTemplate.arguments[field]` value becomes `${{colName}}`. When a default value is present in `toolRef.inputSchema`, it becomes `${{colName:defaultValue}}`.
 
-### D4: "Change Tool" — single unified picker, context-unaware McpTargets
+### D4: "Change Tool" — modal composes McpTargets + McpTool together
 
-`McpMethodContent` shows a "Change Toolset / Tool" button that opens a `ChangeMcpToolModal`. The modal renders `McpTargets.tsx` directly — the same component used in the create wizard — without an `isModal` prop. `McpTargets.tsx` is context-unaware: it receives `initialDeploymentId`, `initialToolName`, and `onSelect(deployment, tool)` props. The modal footer owns "Save" and "Cancel" buttons; `McpTargets` just fires `onSelect` on tool click and the modal holds pending state until Save is confirmed.
+`McpMethodContent` shows a "Change Toolset / Tool" button that opens `ChangeMcpToolModal`. The modal allows changing both the deployment and the tool in one screen (no step navigation inside the modal). It composes two context-unaware components:
 
-This avoids the `isModal` prop pattern used in `ChangeMethodModal`/`Methods.tsx`. The wizard also calls `McpTargets` via `onSelect` — no wrapper needed.
+```
+ChangeMcpToolModal
+  ├── McpTargets  (deployment grid, pre-selects current mcpDeploymentRef)
+  └── McpTool     (appears after deployment selected, pre-selects current tool
+                   only when deployment matches current mcpDeploymentRef.id)
+  └── footer: Save (disabled until tool selected) / Cancel
+```
 
-On Save: `mcpDeploymentRef`, `toolRef`, and `argumentTemplate` are all replaced. `argumentTemplate` is reset to a fresh template via `buildInitialArguments(newToolRef.inputSchema)` (all fields default to Binding mode, empty binding). This is analogous to `ChangeMethodModal` for HTTP suites but cleaner in composition.
+Both `McpTargets` and `McpTool` are context-unaware — they receive `initialDeploymentId`/`initialToolName` and fire `onSelect` callbacks. The modal holds `pendingDeployment` + `pendingTool` in local state. Save commits both to the suite; Cancel discards.
+
+This is the direct parallel of `ChangeMethodModal` (which wraps `Methods.tsx`). The same `McpTargets.tsx` and `McpTool.tsx` used in the wizard steps are reused here without modification.
 
 ### D5: TryOut MCP branch — minimal divergence
 

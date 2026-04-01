@@ -7,7 +7,7 @@
 
 ## 2. i18n keys
 
-- [ ] 2.1 Add new keys to `src/constants/i18n.ts` `TestSuitesI18nKey`: `Toolsets`, `SuiteType`, `SelectTool`, `ToolArguments`, `ToolArgumentsPreview`, `ToolCallPreview`, `ChangeTool`, `ChangeToolset`, `NoToolsDefined`, `NoArgumentsDefined`, `ToolCallSucceeded`, `ToolCallFailed`, `ToolOutputSchema`
+- [ ] 2.1 Add new keys to `src/constants/i18n.ts` `TestSuitesI18nKey`: `Mcp`, `Tool`, `SuiteType`, `SelectTool`, `ToolArguments`, `ToolArgumentsPreview`, `ToolCallPreview`, `ChangeTool`, `ChangeToolset`, `NoToolsAvailable`, `NoArgumentsDefined`, `ToolCallSucceeded`, `ToolCallFailed`, `ToolOutputSchema`
 - [ ] 2.2 Add corresponding English values to `src/locales/en.ts`
 
 ## 3. Test suites list column
@@ -15,12 +15,13 @@
 - [ ] 3.1 Add `suiteType` column to `TEST_SUITES_COLUMN` in `src/constants/grid-columns/grid-columns.tsx` with `evalStringFilter` and `hide: false`
 - [ ] 3.2 Update `Application` column `valueGetter` in `TEST_SUITES_COLUMN` to fall back to `params.data?.mcpDeploymentRef?.name` when `deploymentRef?.name` is absent
 
-## 4. Create wizard — Target step with Toolsets tab
+## 4. Create wizard — symmetric 3-step structure
 
-- [ ] 4.1 Create `src/components/TestSuites/Modals/Create/McpTargets.tsx`: MCP deployments grid (calls `getDeployments({ interfaceFilter: 'mcp' })` to include both toolsets and MCP-capable applications), grid columns include a "Type" column showing `$type`, single-row-selection, inline tool picker section that appears below on deployment selection (calls `getDeploymentTools(deployment.$type, deployment.deploymentId)`), single-row tool selection; sets `mcpDeploymentRef.type` from `deployment.$type`; emits `mcpDeploymentRef` + `toolRef` on tool selection
-- [ ] 4.2 Rename `Applications.tsx` → `Target.tsx` (or keep `Applications.tsx` and wrap): add `DialTabs` with "Applications" | "MCP" tabs; Applications tab renders existing grid; MCP tab renders new `McpTargets` content; on selection, sets `suiteType` on suite state accordingly and clears opposing fields
-- [ ] 4.3 Update `src/components/TestSuites/Modals/Create/constants.ts`: update `TEST_SUIT_STEPS` to accept `suiteType` param; omit Methods step when `suiteType === 'MCP_TOOL'`; update Target step validity to require toolRef for MCP suites
-- [ ] 4.4 Update `src/components/TestSuites/Modals/Create/CreateTestSuite.tsx`: pass `suiteType` to step generation; handle navigation logic (skip Methods step for MCP); clear MCP fields when switching to Applications tab and vice versa
+- [ ] 4.1 Create `src/components/TestSuites/Modals/Create/McpTargets.tsx`: MCP deployment grid only (no tool picker); calls `getDeployments({ interfaceFilter: 'mcp' })`; grid columns: Display Name, ID, Type (`$type`), Transport, Created At; single-row-selection; fires `onSelect(deployment)` on row click; accepts `initialDeploymentId` for pre-selection; context-unaware (no modal/wizard coupling)
+- [ ] 4.2 Rename `Applications.tsx` → `Target.tsx`: add `DialTabs` with "Applications" | "MCP" tabs; Applications tab renders existing grid (unchanged); MCP tab renders `McpTargets`; on Applications selection sets `suiteType: 'DEPLOYMENT'` + `deploymentRef`, clears MCP fields; on MCP selection sets `suiteType: 'MCP_TOOL'` + `mcpDeploymentRef` (from `deployment.$type`/`deploymentId`/`displayName`), clears HTTP fields + `toolRef`
+- [ ] 4.3 Create `src/components/TestSuites/Modals/Create/McpTool.tsx`: tool picker for a given MCP deployment; calls `getDeploymentTools(deployment.type, deployment.id)` on mount; displays tool grid with columns: Tool Name, Description, Input Schema field count; single-row-selection; fires `onSelect(tool)` on row click; accepts `initialToolName` for pre-selection; shows loading/empty/error states; context-unaware
+- [ ] 4.4 Update `src/components/TestSuites/Modals/Create/constants.ts`: `TEST_SUIT_STEPS` always produces 3 steps; step 3 label is `"Method"` when `suiteType === 'DEPLOYMENT'`, `"Tool"` when `suiteType === 'MCP_TOOL'`; step 3 validity: endpoint selected for DEPLOYMENT, toolRef set for MCP_TOOL
+- [ ] 4.5 Update `src/components/TestSuites/Modals/Create/CreateTestSuite.tsx`: step 3 renders `Methods.tsx` for DEPLOYMENT (existing), `McpTool.tsx` for MCP_TOOL (new); `McpTool` `onSelect` sets `testSuite.toolRef`; pass `suiteType`-aware step list from updated `constants.ts`
 
 ## 5. ArgumentTemplate editor
 
@@ -32,7 +33,7 @@
 
 ## 6. Change Tool modal
 
-- [ ] 6.1 Create `src/components/TestSuites/Modals/ChangeMcpToolModal/ChangeMcpToolModal.tsx`: wraps `McpTargets.tsx` in a `DialPopup` with footer "Save" / "Cancel" buttons; passes `initialDeploymentId={mcpDeploymentRef.id}` and `initialToolName={toolRef.name}` and `onSelect` that stores pending selection in local state; Save commits pending `mcpDeploymentRef`, `toolRef`, and `buildInitialArguments(newToolRef.inputSchema)` into suite; Cancel discards; `McpTargets.tsx` requires no `isModal` prop
+- [ ] 6.1 Create `src/components/TestSuites/Modals/ChangeMcpToolModal/ChangeMcpToolModal.tsx`: `DialPopup` composing `McpTargets` (deployment grid, `initialDeploymentId={mcpDeploymentRef.id}`) and `McpTool` (tool picker, shown once a deployment is selected, `initialToolName` set only when pending deployment matches current `mcpDeploymentRef.id`); modal holds `pendingDeployment` + `pendingTool` in local state via `onSelect` callbacks; "Save" disabled until `pendingTool` set; Save commits `mcpDeploymentRef` from pending deployment, `toolRef` from pending tool, `argumentTemplate` reset via `buildInitialArguments(pendingTool.inputSchema)`; Cancel discards local state; neither `McpTargets` nor `McpTool` requires an `isModal` prop
 
 ## 7. Try-it-out MCP branch
 
