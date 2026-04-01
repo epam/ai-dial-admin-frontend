@@ -399,4 +399,13 @@ describe('Server :: TestSuiteApi', () => {
       expect.objectContaining({ method: 'POST' }),
     );
   });
+
+  test('Should call removeTestSuiteFile', async () => {
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
+    await instance.removeTestSuiteFile('id', 'fileName', TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_SUITE_URL('id')}/files/fileName`,
+      expect.objectContaining({ method: 'DELETE' }),
+    );
+  });
 });

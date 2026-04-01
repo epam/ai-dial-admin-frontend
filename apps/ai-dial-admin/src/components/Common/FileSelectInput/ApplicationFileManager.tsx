@@ -1,24 +1,23 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialFileIcon, DialLoadFileAreaField, SIZE_COLUMN } from '@epam/ai-dial-ui-kit';
+import { DialFileIcon, DialLoader, DialLoadFileAreaField, SIZE_COLUMN } from '@epam/ai-dial-ui-kit';
 import { ColDef, GridOptions } from 'ag-grid-community';
 
-import { getTestSuiteFiles, uploadTestSuiteFiles } from '@/src/app/[lang]/test-suites/actions';
+import { getTestSuiteFiles, removeTestSuiteFile, uploadTestSuiteFiles } from '@/src/app/[lang]/test-suites/actions';
 import { getFormDataForUpload } from '@/src/components/EntityListView/HeaderButtons/utils';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import GridView from '@/src/components/Grid/GridView/GridView';
-import { SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
-import { MAX_FILE_SIZE_MB } from '@/src/constants/file';
+import { ONE_ACTION_COLUMN, SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
+import { getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import { DISPLAY_NAME_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { BasicI18nKey, ButtonsI18nKey, EntitiesI18nKey, ImportI18nKey } from '@/src/constants/i18n';
+import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { CustomFile } from '@/src/models/dial/file';
+import { ApplicationRoute } from '@/src/types/routes';
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
-import { generateCustomFileGridData } from '@/src/utils/files/grid-data';
-
-const MAX_FILES_COUNT = 30;
-const MAX_TOTAL_FILE_SIZE_MB = 64;
-const MAX_TOTAL_FILE_SIZE_BYTES = MAX_TOTAL_FILE_SIZE_MB * 1024 * 1024;
+import { CustomFileRowData, generateCustomFileGridData } from '@/src/utils/files/grid-data';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 
 interface Props {
   id?: string;
@@ -29,15 +28,25 @@ interface Props {
 
 const ApplicationFileManager: FC<Props> = ({ id, value, selectedFilePath, onChangeSelectedFilePath }) => {
   const t = useI18n();
-  const [separateFiles, setSeparateFiles] = useState<File[]>([]);
+  const { showNotification } = useNotification();
 
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [separateFiles, setSeparateFiles] = useState<File[]>([]);
   const [files, setFiles] = useState<CustomFile[]>([]);
   // const [separateFileMap, setSeparateFileMap] = useState(new Map<string, FileImportMap>());
 
+  const getFiles = useCallback(() => {
+    if (id) {
+      getTestSuiteFiles(id).then((res) => {
+        setFiles(res || []);
+        setIsLoading(false);
+      });
+    }
+  }, [id]);
+
   useEffect(() => {
-    getTestSuiteFiles(id as string).then((res) => {
-      setFiles(res || []);
-    });
+    getFiles();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -65,17 +74,43 @@ const ApplicationFileManager: FC<Props> = ({ id, value, selectedFilePath, onChan
 
       const { body } = getFormDataForUpload(files);
       setSeparateFiles(files);
-
+      setIsLoading(true);
       uploadTestSuiteFiles(id as string, body).then((res) => {
         setSeparateFiles([]);
+
         if (res.success) {
-          getTestSuiteFiles(id as string).then((res) => {
-            setFiles(res || []);
-          });
+          showNotification(
+            getSuccessNotification(
+              t(ImportI18nKey.FileUploadSuccessTitle),
+              t(ImportI18nKey.FileUploadSuccessDescription, { folder: `${ApplicationRoute.TestSuites}` }),
+            ),
+          );
+          getFiles();
+        } else {
+          setIsLoading(false);
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
         }
       });
     },
-    [id],
+    [getFiles, id, showNotification, t],
+  );
+
+  const onRemoveFile = useCallback(
+    (data?: CustomFileRowData) => {
+      setIsLoading(true);
+      removeTestSuiteFile(id as string, data?.displayName as string).then((res) => {
+        if (res?.success) {
+          showNotification(
+            getSuccessNotification(t(ImportI18nKey.FileRemovedTitle), t(ImportI18nKey.FileRemovedDescription)),
+          );
+          getFiles();
+        } else {
+          setIsLoading(false);
+          showNotification(getErrorNotification(res?.errorHeader || '', res?.errorMessage || ''));
+        }
+      });
+    },
+    [getFiles, showNotification, t, id],
   );
 
   // after implementing multiple upload, the code above should be used
@@ -89,15 +124,14 @@ const ApplicationFileManager: FC<Props> = ({ id, value, selectedFilePath, onChan
   //   });
   // };
 
-  const totalFileSizeExceeded = useMemo(() => {
-    const totalSize = separateFiles.reduce((sum, file) => sum + file.size, 0);
-    return totalSize > MAX_TOTAL_FILE_SIZE_BYTES;
-  }, [separateFiles]);
-
   const data = useMemo(() => generateCustomFileGridData(files), [files]);
 
   const gridOptions: GridOptions = {
     ...SINGLE_ROW_SELECTION,
+    rowSelection: {
+      mode: 'singleRow',
+      enableClickSelection: false,
+    },
     selectionColumnDef: {
       ...SINGLE_ROW_SELECTION.selectionColumnDef,
       cellRenderer: (data: { data?: CustomFile; id: string }) => (
@@ -106,6 +140,12 @@ const ApplicationFileManager: FC<Props> = ({ id, value, selectedFilePath, onChan
           isChecked={selectedFilePath ? data.data?.path === selectedFilePath : data.data?.path === value}
         />
       ),
+    },
+    onCellClicked: (event) => {
+      if (event.column.getColId() === 'action-remove') {
+        return;
+      }
+      event.node.setSelected(true);
     },
     onRowSelected: (event) => {
       if (event.node.isSelected()) {
@@ -116,7 +156,7 @@ const ApplicationFileManager: FC<Props> = ({ id, value, selectedFilePath, onChan
 
   return (
     <div className="flex flex-col gap-4 py-4 px-6 flex-1 min-h-0">
-      <div className="max-h-[200px]">
+      <div className="h-[200px] shrink-0">
         <DialLoadFileAreaField
           elementId="importFiles"
           fieldTitle={t(ImportI18nKey.Files)}
@@ -128,27 +168,30 @@ const ApplicationFileManager: FC<Props> = ({ id, value, selectedFilePath, onChan
           fileFormatError={t(ImportI18nKey.FileErrorType)}
           onChange={onChangeFile}
           dynamicIcon={getFileIcon}
-          errorText={
-            totalFileSizeExceeded
-              ? t(ImportI18nKey.TotalFileSizeErrorDescription, { size: 64 })
-              : t(ImportI18nKey.FileError)
-          }
-          maxFilesCount={MAX_FILES_COUNT}
-          fileSizeError={t(ImportI18nKey.FileSizeErrorDescription, { size: MAX_FILE_SIZE_MB })}
-          maxFileSize={MAX_FILE_SIZE_MB}
           // deleteAllButtonLabel={t(ButtonsI18nKey.DeleteAll)}
           // addButtonLabel={t(ButtonsI18nKey.Add)}
           // additionalActionButtons={<DialPrimaryButton label={t(ButtonsI18nKey.Upload)} onClick={onUpload} />}
           multiple={false}
         />
       </div>
-      <GridView
-        getIsEmptyData={() => !data.length}
-        emptyDataProps={{ title: t(EntitiesI18nKey.NoFiles) }}
-        columnDefs={[DISPLAY_NAME_COLUMN, SIZE_COLUMN('Size') as ColDef]}
-        rowData={data}
-        additionalGridOptions={gridOptions}
-      />
+      {isLoading ? (
+        <DialLoader size={40} />
+      ) : (
+        <GridView
+          getIsEmptyData={() => !data.length}
+          emptyDataProps={{ title: t(EntitiesI18nKey.NoFiles) }}
+          columnDefs={[
+            DISPLAY_NAME_COLUMN,
+            SIZE_COLUMN('Size') as ColDef,
+            {
+              ...ONE_ACTION_COLUMN(getRemoveOperation(onRemoveFile, void 0, 'text-error w-4 h-4')),
+              colId: 'action-remove',
+            },
+          ]}
+          rowData={data}
+          additionalGridOptions={gridOptions}
+        />
+      )}
     </div>
   );
 };

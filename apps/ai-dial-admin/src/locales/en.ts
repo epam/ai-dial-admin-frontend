@@ -793,6 +793,10 @@ export default {
       ConfigImported: 'Config imported successfully',
       ConfigImportedDescription: 'Changes have been delivered to the system',
     },
+    FileUploadSuccessTitle: 'File uploaded successfully',
+    FileUploadSuccessDescription: 'You can now see it in {folder} folder',
+    FileRemovedTitle: 'File removed successfully',
+    FileRemovedDescription: 'File has been removed from the list',
   },
   Export: {
     Config: 'Config',
