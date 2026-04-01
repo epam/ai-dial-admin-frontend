@@ -7,8 +7,8 @@ The Evaluation Framework backend now supports MCP (Model Context Protocol) tools
 - **TestSuite model extended** — add `suiteType` discriminator (`DEPLOYMENT` | `MCP_TOOL`), `mcpDeploymentRef`, `toolRef`, `argumentTemplate` fields
 - **Deployment model extended** — add `ToolsetDeployment` subtype (`$type: 'dial-toolset'`) with `transport` and `allowedTools`; add `ToolDefinition` interface for tool schema listing
 - **API client extended** — `getDeployments` gains optional `type`/`interface` query params; new `getDeploymentTools` method calling `GET /api/v1/deployments/{type}/{id}/tools`
-- **Create wizard — Target step** — gains "Applications" | "Toolsets" tab toggle; Toolsets tab shows filtered grid + inline tool picker after selection; suite type is derived from selection (immutable after creation)
-- **Create wizard — step flow** — MCP_TOOL suites skip the Methods step (tool is selected in Target); `suiteType` set during wizard, never editable after
+- **Create wizard — Target step** — gains "Applications" | "MCP" tab toggle; MCP tab shows all MCP-capable deployments (toolsets + MCP apps) via `?interface=mcp`; selecting a deployment sets suite type (immutable after creation)
+- **Create wizard — step flow** — symmetric 3-step structure for both suite types (Properties → Target → Method/Tool); step 3 label and content adapt to suite type: existing Methods picker for DEPLOYMENT, new Tool picker for MCP_TOOL
 - **Method tab** — branches on `suiteType`: DEPLOYMENT shows existing RequestTemplate + EndpointSchema (unchanged); MCP_TOOL shows new ArgumentTemplate builder + tool info header + tool output schema
 - **ArgumentTemplate builder** — table view (one row per tool input schema field: argument name, type badge, Binding/Constant toggle, value editor) with JSON editor toggle switching to Monaco editor
 - **Try-it-out** — branches on `suiteType` for labels and response rendering: MCP uses "Tool Arguments Preview" label and `isError` boolean for status; DEPLOYMENT unchanged
@@ -18,7 +18,7 @@ The Evaluation Framework backend now supports MCP (Model Context Protocol) tools
 
 ### New Capabilities
 
-- `mcp-target-selection`: Create-wizard target step with Applications/MCP tab toggle, MCP grid fetched via `interface=mcp` (includes both toolsets and MCP-capable applications), inline tool picker after deployment selection, deriving `suiteType`/`mcpDeploymentRef`/`toolRef` from selection
+- `mcp-target-selection`: Create-wizard target step with Applications/MCP tab toggle; MCP grid fetched via `interface=mcp` (toolsets + MCP-capable applications); deployment selection derives `suiteType`/`mcpDeploymentRef`; dedicated Tool step (step 3) for tool selection deriving `toolRef`; Change Tool modal composing both pickers for existing MCP suites
 - `argument-template-editor`: Table-based argument template editor driven by `toolRef.inputSchema`; per-field Binding/Constant toggle (object/array fields forced to Constant); JSON editor toggle for raw `argumentTemplate.arguments` editing; "Change Tool" modal to replace `mcpDeploymentRef`+`toolRef` on existing MCP suites
 - `mcp-try-it-out`: Try-it-out panel variant for MCP_TOOL suites — same variables/send flow but MCP-specific labels ("Tool Arguments Preview", "TOOL CALL" display), `isError`-based response status badge
 
@@ -34,19 +34,21 @@ The Evaluation Framework backend now supports MCP (Model Context Protocol) tools
 - **Modified actions**: `src/app/[lang]/test-suites/actions.ts` — expose `getDeploymentTools`, optional params on `getDeployments`
 - **Modified components**:
   - `TestSuites/Modals/Create/CreateTestSuite.tsx` — step flow branching
-  - `TestSuites/Modals/Create/Applications.tsx` → `Target.tsx` (add Toolsets tab)
+  - `TestSuites/Modals/Create/Applications.tsx` → `Target.tsx` (add MCP tab)
   - `TestSuites/View/MethodTabContent.tsx` — suiteType branch
   - `TestSuites/RequestTemplate/components/TryOut.tsx` — suiteType branch
   - `constants/grid-columns/grid-columns.tsx` — suiteType column
   - `constants/i18n.ts` + `locales/en.ts` — ~15 new keys
 - **New components**:
-  - `TestSuites/Modals/Create/Toolsets.tsx` — toolset+tool selection step content
+  - `TestSuites/Modals/Create/McpTargets.tsx` — MCP deployment picker (Target step, MCP tab)
+  - `TestSuites/Modals/Create/McpTool.tsx` — tool picker (step 3 for MCP_TOOL suites)
+  - `TestSuites/Modals/ChangeMcpToolModal/ChangeMcpToolModal.tsx` — change tool modal composing both pickers
   - `TestSuites/ArgumentTemplate/ArgumentTemplate.tsx` — table/JSON editor with toggle
-  - `TestSuites/ArgumentTemplate/ArgumentField.tsx` — single row renderer
+  - `TestSuites/ArgumentTemplate/columns.tsx` — AG Grid column defs for argument table
   - `TestSuites/View/McpMethodContent.tsx` — MCP method tab content
 
 ### APIs consumed (already implemented on BE)
-- `GET /api/v1/deployments?type=dial-toolset` — list toolsets
+- `GET /api/v1/deployments?interface=mcp` — list all MCP-capable deployments (toolsets + MCP apps)
 - `GET /api/v1/deployments/{type}/{id}/tools` — list tools for a deployment
 - `POST/PUT /api/v1/test-suites` — extended with MCP fields
 - `POST /api/v1/try-it-out/test-suites/{id}` — works for both suite types

@@ -50,7 +50,7 @@ The `ArgumentTemplate` component renders a table driven by `toolRef.inputSchema.
 - **Argument** — field name from schema (read-only)
 - **Type** — type badge from `inputSchema.properties[name].type`
 - **Mode** — Binding/Constant toggle; `object` and `array` types forced to Constant (no toggle rendered, static "Constant" label)
-- **Value** — Binding mode: column selector (picks from `testSuite.testCaseSchema` field names); Constant mode: text input for `string`, number input for `integer`/`number`, checkbox/switch for `boolean`, inline Monaco for `object`/`array`
+- **Value** — Binding mode: column selector (picks from `testSuite.testCaseSchema` field names); Constant mode: text input for `string`, number input for `integer`/`number`, checkbox/switch for `boolean`, truncated JSON preview + edit icon for `object`/`array` (click opens `DialPopup` Monaco with Apply/Cancel)
 
 JSON toggle (DialSwitch) in the component header switches to a full Monaco `EntityJsonEditor` editing `argumentTemplate.arguments` directly. State flows: table writes → produce `argumentTemplate`; JSON editor writes → produce `argumentTemplate`; both update via the same `onChange` callback.
 
