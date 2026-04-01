@@ -29,3 +29,8 @@ export enum TestCaseItemType {
   ARRAY = 'ARRAY',
   FILE = 'FILE',
 }
+
+export enum ViewerContentType {
+  Json = 'json',
+  Text = 'text',
+}

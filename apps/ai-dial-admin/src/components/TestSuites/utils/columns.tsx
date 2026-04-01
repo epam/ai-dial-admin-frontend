@@ -22,12 +22,12 @@ import BooleanColumnHeader from '@/src/components/Grid/HeaderComponents/BooleanC
 import { NO_BORDER_CLASS, UTILITY_COLUMN } from '@/src/constants/ag-grid';
 import { BASE_STATUS_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { TEST_CASES_COLUMN } from '@/src/constants/grid-columns/grid-columns';
+import { TYPE_OPTIONS } from '@/src/components/TestSuites/TestCaseSchema/constants';
 import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { MetricBinding } from '@/src/models/evaluation/metric';
 import { InputBindingRowData, ResponseColumn, TestCase, TestCaseSchema } from '@/src/models/evaluation/test-suite';
 import { InputBindingType, MetricBindingType, TestCaseItemType } from '@/src/types/evaluation';
 import { ApplicationRoute } from '@/src/types/routes';
-import { TYPE_OPTIONS } from '../TestCaseSchema/constants';
 
 export type onCellChange = (data: Record<string, unknown>, field: string, value: string | number | boolean) => void;
 

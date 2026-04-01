@@ -1583,6 +1583,13 @@ export default {
     Execution: 'Execution',
     GrafanaDetails: 'View trace in Grafana',
     GrafanaRun: 'Traces in Grafana',
+    Computed: 'Computed',
+    Request: 'Request',
+    Response: 'Response',
+    OpenFullscreen: 'Open in fullscreen viewer',
+    MetricInfo: 'Metric details',
+    HttpLabel: 'HTTP',
+    DurationLabel: 'Duration',
   },
   JsonAta: {
     JSONAtaDoc: 'JSONata Expression Reference',
