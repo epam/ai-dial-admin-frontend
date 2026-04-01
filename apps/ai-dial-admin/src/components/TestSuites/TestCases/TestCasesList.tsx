@@ -15,7 +15,7 @@ import { getTestCaseColumns } from '@/src/components/TestSuites/utils/columns';
 import { createNewTestCaseRow, getTestCaseGridData, rowToTestCase } from '@/src/components/TestSuites/utils/data';
 import { ONE_ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getRemoveOperation, getTryOutOperation } from '@/src/constants/grid-columns/actions';
-import { TestSuitesI18nKey } from '@/src/constants/i18n';
+import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
@@ -278,7 +278,7 @@ const TestCasesList: FC<Props> = ({
       ) : (
         <ListEntities
           additionalGridOptions={gridOptions}
-          listLabel={t(TestSuitesI18nKey.TestCases)}
+          listLabel={t(TabsI18nKey.TestCases)}
           emptyDataProps={{ title: t(TestSuitesI18nKey.NoTestCases) }}
           onGridReady={onGridReady}
           rowData={data}
