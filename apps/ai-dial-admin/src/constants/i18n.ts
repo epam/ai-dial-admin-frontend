@@ -757,6 +757,10 @@ export enum ImportI18nKey {
   FileSizeErrorDescription = 'Import.FileSizeErrorDescription',
   TotalFileSizeErrorDescription = 'Import.TotalFileSizeErrorDescription',
   ArchiveSizeErrorDescription = 'Import.ArchiveSizeErrorDescription',
+  FileUploadSuccessTitle = 'Import.FileUploadSuccessTitle',
+  FileUploadSuccessDescription = 'Import.FileUploadSuccessDescription',
+  FileRemovedTitle = 'Import.FileRemovedTitle',
+  FileRemovedDescription = 'Import.FileRemovedDescription',
 }
 
 export enum ExportI18nKey {
@@ -1530,6 +1534,9 @@ export enum FileManagerI18nKey {
   Rename = 'FileManager.Rename',
   Move = 'FileManager.Move',
   Files = 'FileManager.Files',
+  Applications = 'FileManager.Applications',
+  Toolsets = 'FileManager.Toolsets',
+  Prompts = 'FileManager.Prompts',
   Prompt = 'FileManager.Prompt',
   Folder = 'FileManager.Folder',
   FolderTree = 'FileManager.FolderTree',
@@ -1542,6 +1549,8 @@ export enum FileManagerI18nKey {
   Preview = 'FileManager.Preview',
   MoveItem = 'FileManager.MoveItem',
   MoveItems = 'FileManager.MoveItems',
+  EmptyMoveFolderTitle = 'FileManager.EmptyMoveFolderTitle',
+  EmptyMoveFolderDescription = 'FileManager.EmptyMoveFolderDescription',
   PromptEmptyStateTitle = 'FileManager.PromptEmptyStateTitle',
   PromptEmptyStateDescription = 'FileManager.PromptEmptyStateDescription',
 

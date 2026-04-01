@@ -203,4 +203,8 @@ export class TestSuitesApi extends BaseApi {
   uploadTestSuiteFiles(id: string, file: FormData, token: Token): Promise<ServerActionResponse<DialFile[]>> {
     return this.postFiles(`${TEST_SUITE_URL(id)}/files`, file, token);
   }
+
+  removeTestSuiteFile(id: string, fileName: string, token: Token): Promise<ServerActionResponse> {
+    return this.deleteAction(`${TEST_SUITE_URL(id)}/files/${fileName}`, token);
+  }
 }

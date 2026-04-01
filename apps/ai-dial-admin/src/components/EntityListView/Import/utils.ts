@@ -19,7 +19,7 @@ import { FileImportGridData, FileImportMap } from '@/src/models/file';
 import { ImportResult } from '@/src/models/import';
 import { Notification } from '@/src/models/notification';
 import { ParsedAssets, AssetImportGridData } from '@/src/models/import-asset';
-import { ImportStatus } from '@/src/types/import';
+import { ImportFileType, ImportStatus } from '@/src/types/import';
 import { getFolderNameAndPath } from '@/src/utils/files/path';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
@@ -27,6 +27,7 @@ import FileNameCellRenderer from '@/src/components/Grid/CellRenderers/FileNameCe
 import { StepStatus } from '@epam/ai-dial-ui-kit';
 import { ApplicationRoute } from '@/src/types/routes';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
+import { APPLICATION_ZIP_TYPES } from '@/src/constants/request-headers';
 
 /**
  * Generate notifications with results of JSON prompt results
@@ -336,8 +337,8 @@ export const isInvalidJson = (parsedData: ParsedAssets, view?: ApplicationRoute)
  * @param {File} file - file
  * @returns {boolean} - true if filesize > 512 mB (core restriction)
  */
-export const isLargeFile = (file: File) => {
-  const maxSize = 512 * 1024 * 1024;
+export const isLargeFile = (file: File, size = 512) => {
+  const maxSize = size * 1024 * 1024;
   return file.size >= maxSize;
 };
 
@@ -411,4 +412,13 @@ export const getModalTitle = (route: ApplicationRoute | undefined, t: (t: string
     default:
       return '';
   }
+};
+
+export const determineFilesType = (files: File[], fileTypes: string[]) => {
+  const isZipArchive = files.length === 1 && APPLICATION_ZIP_TYPES.includes(files[0].type?.toLocaleLowerCase());
+  if (isZipArchive && fileTypes.includes(ImportFileType.ARCHIVE)) {
+    return ImportFileType.ARCHIVE;
+  }
+
+  return fileTypes?.[1];
 };

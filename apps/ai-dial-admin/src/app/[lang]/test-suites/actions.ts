@@ -174,3 +174,8 @@ export async function uploadTestSuiteFiles(id: string, file: FormData) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return testSuitesApi.uploadTestSuiteFiles(id, file, token);
 }
+
+export async function removeTestSuiteFile(id: string, fileName: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.removeTestSuiteFile(id, fileName, token);
+}
