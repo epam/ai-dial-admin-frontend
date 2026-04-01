@@ -50,9 +50,13 @@ JSON toggle (DialSwitch) in the component header switches to a full Monaco `Enti
 
 **Binding mode output**: when a field is in Binding mode with column `colName`, the corresponding `argumentTemplate.arguments[field]` value becomes `${{colName}}`. When a default value is present in `toolRef.inputSchema`, it becomes `${{colName:defaultValue}}`.
 
-### D4: "Change Tool" — reuse Target step content in a modal
+### D4: "Change Tool" — single unified picker, context-unaware McpTargets
 
-`McpMethodContent` shows a "Change Toolset / Tool" button that opens a `ChangeMcpToolModal`. The modal renders the same `Toolsets.tsx` content (tabs: Applications grayed out or hidden, only Toolsets tab active). On confirm, `mcpDeploymentRef`, `toolRef`, and `argumentTemplate` are all replaced. This is analogous to `ChangeMethodModal` for HTTP suites.
+`McpMethodContent` shows a "Change Toolset / Tool" button that opens a `ChangeMcpToolModal`. The modal renders `McpTargets.tsx` directly — the same component used in the create wizard — without an `isModal` prop. `McpTargets.tsx` is context-unaware: it receives `initialDeploymentId`, `initialToolName`, and `onSelect(deployment, tool)` props. The modal footer owns "Save" and "Cancel" buttons; `McpTargets` just fires `onSelect` on tool click and the modal holds pending state until Save is confirmed.
+
+This avoids the `isModal` prop pattern used in `ChangeMethodModal`/`Methods.tsx`. The wizard also calls `McpTargets` via `onSelect` — no wrapper needed.
+
+On Save: `mcpDeploymentRef`, `toolRef`, and `argumentTemplate` are all replaced. `argumentTemplate` is reset to a fresh template via `buildInitialArguments(newToolRef.inputSchema)` (all fields default to Binding mode, empty binding). This is analogous to `ChangeMethodModal` for HTTP suites but cleaner in composition.
 
 ### D5: TryOut MCP branch — minimal divergence
 

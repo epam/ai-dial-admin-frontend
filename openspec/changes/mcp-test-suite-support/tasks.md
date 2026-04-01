@@ -26,13 +26,13 @@
 
 - [ ] 5.1 Create `src/components/TestSuites/ArgumentTemplate/utils.ts`: `inferFieldMode(value): 'binding' | 'constant'` (checks `${{...}}` pattern); `buildArgumentsFromTable(rows): Record<string, unknown>`; `buildInitialArguments(inputSchema): Record<string, unknown>` (all fields default to Binding with empty placeholder); `extractBindingColumn(value: string): string` (parses `${{colName}}` → `colName`)
 - [ ] 5.2 Create `src/components/TestSuites/ArgumentTemplate/ArgumentTemplate.tsx`: renders header with `DialSwitch` JSON toggle; in table mode renders AG Grid table via `getArgumentColumns`; in JSON mode renders `EntityJsonEditor` on `argumentTemplate.arguments`; sync between modes per design D3; calls `onChange` on every edit
-- [ ] 5.3 Add `src/components/TestSuites/ArgumentTemplate/columns.tsx` (or `utils/columns.ts`): `getArgumentColumns(toolRef, testCaseSchema, onChange)` — AG Grid ColDef array with Argument (read-only), Type badge renderer, Mode toggle (EditableCellRenderer pattern with `editable: false` + `valueGetter`), Value editor (type-aware EditableCellRenderer)
+- [ ] 5.3 Add `src/components/TestSuites/ArgumentTemplate/columns.tsx` (or `utils/columns.ts`): `getArgumentColumns(toolRef, testCaseSchema, onChange)` — AG Grid ColDef array with Argument (read-only, required fields show `*`), Type badge renderer, Mode toggle (EditableCellRenderer pattern with `editable: false` + `valueGetter`), Value editor (type-aware EditableCellRenderer: text input for string, number for integer/number, DialSwitch for boolean, truncated-JSON-preview + edit-icon for object/array — clicking edit icon opens `DialPopup` Monaco editor with Apply/Cancel)
 - [ ] 5.4 Create `src/components/TestSuites/View/McpMethodContent.tsx`: tool call header (deployment name + tool name badges), "Change Toolset / Tool" button, `ArgumentTemplate` component, Tool Output Schema section (read-only Monaco when `toolRef.outputSchema` present), `TryOutButton`
 - [ ] 5.5 Update `src/components/TestSuites/View/MethodTabContent.tsx`: add `isMcp` branch — render `McpMethodContent` when `testSuite.suiteType === 'MCP_TOOL'`, existing content otherwise
 
 ## 6. Change Tool modal
 
-- [ ] 6.1 Create `src/components/TestSuites/Modals/ChangeMcpToolModal/ChangeMcpToolModal.tsx`: wraps `Toolsets.tsx` content in a `DialPopup`; pre-selects current `mcpDeploymentRef` and `toolRef`; on confirm updates suite with new `mcpDeploymentRef`, `toolRef`, and reset `argumentTemplate` (via `buildInitialArguments`); on cancel: no-op
+- [ ] 6.1 Create `src/components/TestSuites/Modals/ChangeMcpToolModal/ChangeMcpToolModal.tsx`: wraps `McpTargets.tsx` in a `DialPopup` with footer "Save" / "Cancel" buttons; passes `initialDeploymentId={mcpDeploymentRef.id}` and `initialToolName={toolRef.name}` and `onSelect` that stores pending selection in local state; Save commits pending `mcpDeploymentRef`, `toolRef`, and `buildInitialArguments(newToolRef.inputSchema)` into suite; Cancel discards; `McpTargets.tsx` requires no `isModal` prop
 
 ## 7. Try-it-out MCP branch
 
