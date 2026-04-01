@@ -5,6 +5,7 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 import {
+  determineFilesType,
   getModalTitle,
   getMultipleImportStatus,
   isInvalidJson,
@@ -23,6 +24,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getJsonFileName } from '@/src/utils/import/get-json-name';
 import ImportConflicts from './ImportConflicts';
 import ImportFileTypeSelector from './ImportFileType';
+import { MAX_FILE_SIZE_MB } from '@/src/constants/file';
 
 const MAX_FILES_COUNT = 30;
 const MAX_TOTAL_FILE_SIZE_MB = 64;
@@ -34,13 +36,14 @@ interface Props {
   getAssetContext?: () => AssetsFolderContext;
   onClose: () => void;
   onApply?: (fileType: FileType, file: ImportData, resolution: string, path: string, ignorePaths?: boolean) => void;
+  preselectedItems?: File[];
 }
 
-const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, onApply }) => {
+const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, onApply, preselectedItems }) => {
   const folderContext = getAssetContext?.();
   const t = useI18n();
 
-  const fileTypes = IMPORT_FILE_TYPES(t, route);
+  const fileTypes = useMemo(() => IMPORT_FILE_TYPES(t, route), [t, route]);
   const [resolutions, setResolutions] = useState(IMPORT_RESOLUTIONS(t));
 
   const [steps, setSteps] = useState(IMPORT_STEPS(t));
@@ -140,13 +143,13 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, 
     [setFileType, t],
   );
 
-  const onChangeFile = useCallback(
-    (files: File[]) => {
-      if (fileType === FileType.ARCHIVE) {
+  const changeFiles = useCallback(
+    (files: File[], type: string) => {
+      if (type === FileType.ARCHIVE) {
         if (files.length === 0 || APPLICATION_ZIP_TYPES.includes(files[0].type)) {
           setZipFile(files[0]);
         }
-      } else if (fileType === FileType.JSON) {
+      } else if (type === FileType.JSON) {
         const sliced = files.slice(0, MAX_FILES_COUNT);
         sliced.forEach((file) => onReadJsonFile(file));
         setJsonFiles(sliced);
@@ -156,7 +159,7 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, 
       } else {
         const sliced = files.slice(0, MAX_FILES_COUNT);
         sliced.forEach((file) => {
-          const isInvalid = isLargeFile(file);
+          const isInvalid = isLargeFile(file, MAX_FILE_SIZE_MB);
           setSeparateFileMap((prev) => {
             const newMap = new Map(prev);
             newMap.set(file.name, { files: [file] as unknown as DialFile[], isInvalid });
@@ -169,7 +172,14 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, 
         setSeparateFiles(sliced);
       }
     },
-    [fileType, onReadJsonFile],
+    [onReadJsonFile],
+  );
+
+  const onChangeFile = useCallback(
+    (files: File[]) => {
+      changeFiles(files, fileType);
+    },
+    [fileType, changeFiles],
   );
 
   const onChangeSteps = useCallback(
@@ -213,6 +223,19 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, 
       );
     }
   };
+
+  useEffect(() => {
+    if (preselectedItems?.length) {
+      const preselectedFileType = determineFilesType(
+        preselectedItems,
+        fileTypes.map((item) => item.id),
+      );
+      if (preselectedFileType) {
+        setFileType(preselectedFileType);
+        changeFiles(preselectedItems, preselectedFileType);
+      }
+    }
+  }, [preselectedItems, fileTypes, changeFiles]);
 
   useEffect(() => {
     onChangeSteps();

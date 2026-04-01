@@ -63,6 +63,7 @@ const PromptsList: FC = () => {
   const [hasSelectedItems, setHasSelectedItems] = useState(false);
   const [deletedItems, setDeleledItems] = useState<DialFile[] | null>(null);
   const [selectedPaths, setSelectedPaths] = useState<Set<string>>(() => new Set());
+  const [dragAndDropsItems, setDragAndDropsItems] = useState<File[]>([]);
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -195,11 +196,13 @@ const PromptsList: FC = () => {
   const handleImportPromptModalClose = useCallback(() => {
     setIsImportPromptModalOpen(false);
     setDestinationFolder(null);
+    setDragAndDropsItems([]);
   }, []);
 
-  const handleImportPromptModalOpen = useCallback((_?: string, currentFolder?: DialFile) => {
+  const handleImportPromptModalOpen = useCallback((_?: string, currentFolder?: DialFile, preselectedItems?: File[]) => {
     setIsImportPromptModalOpen(true);
     setDestinationFolder(currentFolder?.path || null);
+    setDragAndDropsItems(preselectedItems || []);
   }, []);
 
   const onImport = useCallback(
@@ -438,6 +441,7 @@ const PromptsList: FC = () => {
           isModalOpen={isImportPromptModalOpen}
           onClose={handleImportPromptModalClose}
           onApply={onImport}
+          preselectedItems={dragAndDropsItems}
         />
       )}
       {isCreatePromptModalOpen && (
