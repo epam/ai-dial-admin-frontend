@@ -3,6 +3,7 @@ import { createEmptyFile, getEmptyFile, validateCreateFolder, findFolderByPath, 
 import { CREATE_FOLDER_FORBIDDEN_CHARS, FILE_NAME_MAX_LENGTH } from '../constants';
 import { FileManagerI18nKey } from '@/src/constants/i18n';
 import { DialFile, DialFileNodeType } from '@epam/ai-dial-ui-kit';
+import { Asset } from '@/src/models/dial/deployment-asset';
 
 describe('FileManager', () => {
   describe('createEmptyFile', () => {
@@ -220,7 +221,7 @@ describe('getUniqueFolderName', () => {
 });
 
 describe('getNewFolderPath', () => {
-  const rootItems: DialFile[] = [
+  const rootChildren: DialFile[] = [
     createFolder('public/yo/', 'yo', [
       createItem('public/yo/.dial_folder', '.dial_folder', 'public/yo/'),
       createFolder('public/yo/New Folder/', 'New Folder'),
@@ -234,33 +235,40 @@ describe('getNewFolderPath', () => {
     createFolder('public/empty/', 'empty'),
   ];
 
+  const allFiles: Asset[] = [createFolder('public/', 'public', rootChildren)];
+
   describe('child mode', () => {
     test('should create "New Folder" in empty folder', () => {
       const file = createFolder('public/empty/', 'empty');
-      expect(getNewFolderPath(file, rootItems, 'child')).toBe('public/empty/New Folder');
+      expect(getNewFolderPath(file, allFiles, 'child')).toBe('public/empty/New Folder');
     });
 
     test('should create "New Folder 1" when "New Folder" already exists', () => {
       const file = createFolder('public/yo/', 'yo');
-      expect(getNewFolderPath(file, rootItems, 'child')).toBe('public/yo/New Folder 1');
+      expect(getNewFolderPath(file, allFiles, 'child')).toBe('public/yo/New Folder 1');
     });
 
     test('should create "New Folder 2" when "New Folder" and "New Folder 1" exist', () => {
       const file = createFolder('public/other/sub/', 'sub');
-      expect(getNewFolderPath(file, rootItems, 'child')).toBe('public/other/sub/New Folder 2');
+      expect(getNewFolderPath(file, allFiles, 'child')).toBe('public/other/sub/New Folder 2');
+    });
+
+    test('should fall back to root folder items when parent not found in tree', () => {
+      const file = createFolder('public/nonexistent/', 'nonexistent');
+      expect(getNewFolderPath(file, allFiles, 'child')).toBe('public/nonexistent/New Folder');
     });
   });
 
   describe('sibling mode', () => {
     test('should create sibling using parentPath', () => {
       const file = { ...createFolder('public/yo/New Folder/', 'New Folder'), parentPath: 'public/yo/' } as DialFile;
-      expect(getNewFolderPath(file, rootItems, 'sibling')).toBe('public/yo/New Folder 1');
+      expect(getNewFolderPath(file, allFiles, 'sibling')).toBe('public/yo/New Folder 1');
     });
 
     test('should derive parent from path when parentPath is missing', () => {
       const file = createFolder('public/empty/', 'empty');
-      // parent of "public/empty/" is not in rootItems, so no conflicts → "New Folder"
-      expect(getNewFolderPath(file, rootItems, 'sibling')).toContain('New Folder');
+      // parent is "public/" which is allFiles[0] (fallback) with rootChildren
+      expect(getNewFolderPath(file, allFiles, 'sibling')).toContain('New Folder');
     });
 
     test('should create sibling with incremented name in deeply nested folder', () => {
@@ -268,7 +276,7 @@ describe('getNewFolderPath', () => {
         ...createFolder('public/other/sub/New Folder/', 'New Folder'),
         parentPath: 'public/other/sub/',
       } as DialFile;
-      expect(getNewFolderPath(file, rootItems, 'sibling')).toBe('public/other/sub/New Folder 2');
+      expect(getNewFolderPath(file, allFiles, 'sibling')).toBe('public/other/sub/New Folder 2');
     });
   });
 });

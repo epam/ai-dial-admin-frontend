@@ -11,6 +11,7 @@ import { ROOT_FOLDER } from '@/src/constants/file';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import { CREATE_FOLDER_FORBIDDEN_CHARS, FILE_NAME_MAX_LENGTH, NEW_FOLDER_NAME } from './constants';
+import { Asset } from '@/src/models/dial/deployment-asset';
 
 export const findFolderByPath = (items: DialFile[], targetPath: string): DialFile | undefined => {
   for (const item of items) {
@@ -27,7 +28,7 @@ export const findFolderByPath = (items: DialFile[], targetPath: string): DialFil
   return undefined;
 };
 
-export const getUniqueFolderName = (siblingNames: string[]): string => {
+export const getUniqueFolderName = (siblingNames: (string | undefined)[]): string => {
   const namesSet = new Set(siblingNames);
 
   if (!namesSet.has(NEW_FOLDER_NAME)) {
@@ -42,9 +43,10 @@ export const getUniqueFolderName = (siblingNames: string[]): string => {
   return `${NEW_FOLDER_NAME} ${counter}`;
 };
 
-export const getNewFolderPath = (file: DialFile, rootItems: DialFile[], mode: 'child' | 'sibling'): string => {
+export const getNewFolderPath = (file: DialFile, allFiles: Asset[], mode: 'child' | 'sibling'): string => {
+  const rootItems = (allFiles as DialFile[])?.[0]?.items ?? [];
   const parentPath = mode === 'child' ? file.path : (file.parentPath ?? file.path.replace(/[^/]+\/?$/, ''));
-  const parentFolder = findFolderByPath(rootItems, parentPath);
+  const parentFolder = findFolderByPath(rootItems, parentPath) || allFiles?.[0];
   const existingNames = parentFolder?.items?.map((item) => item.name) ?? [];
   const folderName = getUniqueFolderName(existingNames);
   return parentPath + folderName;

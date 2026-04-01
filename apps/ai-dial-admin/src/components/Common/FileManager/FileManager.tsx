@@ -164,8 +164,7 @@ const FileManager: FC<Props> = ({
 
   const handleAddChild = useCallback(
     (files: DialFile[]) => {
-      const rootItems = (filteredFiles as DialFile[])?.[0]?.items ?? [];
-      const newPath = getNewFolderPath(files[0], rootItems, 'child');
+      const newPath = getNewFolderPath(files[0], filteredFiles, 'child');
       handleCreateFolder(void 0, newPath);
     },
     [handleCreateFolder, filteredFiles],
@@ -173,8 +172,7 @@ const FileManager: FC<Props> = ({
 
   const handleAddSibling = useCallback(
     (files: DialFile[]) => {
-      const rootItems = (filteredFiles as DialFile[])?.[0]?.items ?? [];
-      const newPath = getNewFolderPath(files[0], rootItems, 'sibling');
+      const newPath = getNewFolderPath(files[0], filteredFiles, 'sibling');
       handleCreateFolder(void 0, newPath);
     },
     [handleCreateFolder, filteredFiles],
