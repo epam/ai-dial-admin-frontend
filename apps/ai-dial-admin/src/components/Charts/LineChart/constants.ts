@@ -71,7 +71,7 @@ export const lineChartDefaultOptions = (t: (key: string) => string): EChartsOpti
       splitLine: {
         show: true,
         lineStyle: {
-          color: '#222932',
+          color: '#1D2439',
           width: 1,
         },
       },
@@ -100,7 +100,7 @@ export const lineChartDefaultOptions = (t: (key: string) => string): EChartsOpti
       splitLine: {
         show: true,
         lineStyle: {
-          color: '#222932',
+          color: '#1D2439',
           width: 1,
         },
       },
@@ -122,7 +122,7 @@ export const lineChartDefaultOptions = (t: (key: string) => string): EChartsOpti
       top: 10,
       borderColor: '',
     },
-    color: '#74A4FF',
+    color: '#7DA4FF',
   };
 };
 
@@ -180,7 +180,7 @@ export const multiSeriesLineChartOptions = (t: (key: string) => string): ECharts
       splitLine: {
         show: true,
         lineStyle: {
-          color: '#222932',
+          color: '#1D2439',
           width: 1,
         },
       },
@@ -209,7 +209,7 @@ export const multiSeriesLineChartOptions = (t: (key: string) => string): ECharts
       splitLine: {
         show: true,
         lineStyle: {
-          color: '#222932',
+          color: '#1D2439',
           width: 1,
         },
       },

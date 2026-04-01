@@ -77,17 +77,17 @@ ModuleRegistry.registerModules([
 ]);
 
 const GRID_THEME_COLORS = {
-  accentColor: 'var(--controls-bg-solid-primary, #3970DA)',
-  backgroundColor: 'var(--bg-layer-2, #141A23)',
+  accentColor: 'var(--controls-bg-solid-primary, #3664E2)',
+  backgroundColor: 'var(--bg-layer-2, #161B2D)',
   borderColor: 'var(--bg-layer-4, #242C42)',
   borderRadius: 3,
   browserColorScheme: 'dark',
-  chromeBackgroundColor: 'var(--bg-layer-1, #090D13)',
+  chromeBackgroundColor: 'var(--bg-layer-1, #0C101D)',
   foregroundColor: 'var(--text-primary, #EEF1F7)',
   headerFontSize: 14,
   headerFontWeight: 600,
   headerTextColor: 'var(--text-secondary, #7F8792)',
-  oddRowBackgroundColor: 'var(--bg-layer-3, #222932)',
+  oddRowBackgroundColor: 'var(--bg-layer-3, #1D2439)',
   spacing: 4,
   wrapperBorderRadius: 3,
   fontSize: 14,
