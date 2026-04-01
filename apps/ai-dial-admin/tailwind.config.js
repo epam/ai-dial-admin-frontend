@@ -6,7 +6,7 @@ const backgroundsColors = {
   'layer-1': 'var(--bg-layer-1, #090D13)',
   'layer-2': 'var(--bg-layer-2, #141A23)',
   'layer-3': 'var(--bg-layer-3, #222932)',
-  'layer-4': 'var(--bg-layer-4, #333942)',
+  'layer-4': 'var(--bg-layer-4, #242C42)',
   blackout: 'var(--bg-blackout, #090D13B3)',
   error: 'var(--bg-error, #402027)',
   warning: 'var(--bg-warning, #3F3D25)',
@@ -22,7 +22,7 @@ const backgroundsColors = {
   'accent-primary': 'var(--bg-accent-primary, #74A4FF)',
   'accent-secondary': 'var(--bg-accent-secondary, #37BABC)',
   'accent-tertiary': 'var(--bg-accent-tertiary, #A972FF)',
-  secondary: 'var(--bg-secondary, #9AA2AD)',
+  secondary: 'var(--bg-secondary, #9FA6BD)',
   // TODO: need review and change names
   'red-400': 'var(--bg-red-400, #F76464)',
   'red-800': 'var(--bg-red-800, #AE2F2F)',
@@ -46,11 +46,11 @@ const controlsBgColors = {
   'controls-error-alpha-hover': 'var(--controls-bg-alpha-hover, #F7646426)',
   'controls-error-alpha-active': 'var(--controls-bg-error-alpha-active, #F764644D)',
 
-  'controls-disable-accent': 'var(--controls-bg-disable-accent, #69727C)',
-  'controls-disable': 'var(--controls-bg-disable, #333942)',
+  'controls-disable-accent': 'var(--controls-bg-disable-accent, #696E7C)',
+  'controls-disable': 'var(--controls-bg-disable, #242C42)',
 
-  'controls-neutral-hover': 'var(--controls-bg-neutral-hover, #333942)',
-  'controls-neutral-active': 'var(--controls-bg-neutral-active, #5B6570)',
+  'controls-neutral-hover': 'var(--controls-bg-neutral-hover, #242C42)',
+  'controls-neutral-active': 'var(--controls-bg-neutral-active, #575F73)',
 
   'controls-accent-success-alpha-hover': 'var(--controls-bg-accent-success-alpha-hover, #37BABC26)',
   'controls-accent-success-alpha-active': 'var(--controls-bg-accent-success-alpha-active, #37BABC4D)',
@@ -65,8 +65,8 @@ const controlsBgColors = {
 
 const borderColors = {
   transparent: 'transparent',
-  primary: 'var(--stroke-primary, #69727C)',
-  secondary: 'var(--stroke-secondary, #333942)',
+  primary: 'var(--stroke-primary, #696E7C)',
+  secondary: 'var(--stroke-secondary, #242C42)',
   tertiary: 'var(--stroke-tertiary, #090D13)',
   focus: 'var(--stroke-focus, #EEF1F7)',
   error: 'var(--stroke-error, #F76464)',
@@ -84,7 +84,7 @@ const borderColors = {
 const textColors = {
   transparent: 'transparent',
   primary: 'var(--text-primary, #EEF1F7)',
-  secondary: 'var(--text-secondary, #9AA2AD)',
+  secondary: 'var(--text-secondary, #9FA6BD)',
   error: 'var(--text-error, #F76464)',
   warning: 'var(--text-warning, #EEC840)',
   'warning-icon': 'var(--text-warning-icon, #EEC840)',
@@ -105,9 +105,9 @@ const placeholderColor = {
 const controlsTextColors = {
   'controls-permanent': 'var(--controls-text-permanent, #FCFCFC)',
 
-  'controls-accent-disable': 'var(--controls-text-accent-disable, #333942)',
-  'controls-primary-disable': 'var(--controls-text-primary-disable, #808997)',
-  'controls-secondary-disable': 'var(--controls-text-secondary-disable, #5B6570)',
+  'controls-accent-disable': 'var(--controls-text-accent-disable, #242C42)',
+  'controls-primary-disable': 'var(--controls-text-primary-disable, #7C8293)',
+  'controls-secondary-disable': 'var(--controls-text-secondary-disable, #575F73)',
 
   'controls-neutral': 'var(--controls-text-neutral, #FCFCFC)',
 
@@ -116,7 +116,7 @@ const controlsTextColors = {
 
   // TODO: old names, need to remove
   'controls-primary': 'var(--controls-primary, #FCFCFC)',
-  'controls-disable': 'var(--controls-text-disable, #5B6570)',
+  'controls-disable': 'var(--controls-text-disable, #575F73)',
 };
 
 /** @type {import('tailwindcss').Config} */

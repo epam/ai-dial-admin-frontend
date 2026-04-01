@@ -35,7 +35,7 @@ export const lineChartDefaultOptions = (t: (key: string) => string): EChartsOpti
         <!-- Title -->
         <div style="
           font-size: 12px;
-          color: #9AA2AD;
+          color: #9FA6BD;
           margin-bottom: 12px;
         ">
           ${formatDateTimeToLocalString(axisValue)}
@@ -162,7 +162,7 @@ export const multiSeriesLineChartOptions = (t: (key: string) => string): ECharts
           .join('');
 
         return `<div>
-          <div style="font-size:12px;color:#9AA2AD;margin-bottom:12px;">${title}</div>
+          <div style="font-size:12px;color:#9FA6BD;margin-bottom:12px;">${title}</div>
           ${items}
         </div>`;
       },

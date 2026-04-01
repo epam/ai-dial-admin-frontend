@@ -79,7 +79,7 @@ ModuleRegistry.registerModules([
 const GRID_THEME_COLORS = {
   accentColor: 'var(--controls-bg-solid-primary, #3970DA)',
   backgroundColor: 'var(--bg-layer-2, #141A23)',
-  borderColor: 'var(--bg-layer-4, #333942)',
+  borderColor: 'var(--bg-layer-4, #242C42)',
   borderRadius: 3,
   browserColorScheme: 'dark',
   chromeBackgroundColor: 'var(--bg-layer-1, #090D13)',
