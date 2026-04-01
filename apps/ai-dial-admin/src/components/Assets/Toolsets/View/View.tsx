@@ -3,13 +3,13 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { cloneDeep } from 'lodash';
-
 import {
   createToolset,
   getToolsets,
   moveToolsets,
   removeToolset,
+  signInToolset,
+  signOutToolset,
   updateToolset,
 } from '@/src/app/[lang]/assets-toolsets/actions';
 import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
@@ -52,9 +52,10 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
   const getReqRef = useRef(useProtectedRequest());
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
-  const [selectedToolset, setSelectedToolset] = useState(cloneDeep(originalToolset));
+  const [selectedToolset, setSelectedToolset] = useState(structuredClone(originalToolset));
   const [isChanged, setIsChanged] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
+  const [discardKey, setDiscardKey] = useState(0);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -65,7 +66,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
   );
 
   useEffect(() => {
-    setSelectedToolset(cloneDeep(originalToolset));
+    setSelectedToolset(structuredClone(originalToolset));
   }, [originalToolset]);
 
   useEffect(() => {
@@ -75,7 +76,8 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
   }, [selectedToolset, originalToolset]);
 
   const onDiscard = useCallback(() => {
-    setSelectedToolset(cloneDeep(originalToolset));
+    setSelectedToolset(structuredClone(originalToolset));
+    setDiscardKey((prev) => prev + 1);
   }, [originalToolset]);
 
   const onSave = useCallback(
@@ -146,7 +148,13 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
         getAssetContext={useToolsetFolder}
         onChangeAsset={setSelectedToolset as (asset: Asset) => void}
       >
-        <AuthButtons view={ApplicationRoute.AssetsToolsets} selectedToolset={selectedToolset} oAuthCode={oAuthCode} />
+        <AuthButtons
+          view={ApplicationRoute.AssetsToolsets}
+          selectedToolset={selectedToolset}
+          signInToolset={signInToolset}
+          signOutToolset={signOutToolset}
+          oAuthCode={oAuthCode}
+        />
       </AssetHeader>
 
       <div className="flex-1 overflow-auto min-h-0">
@@ -158,6 +166,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
           />
         ) : (
           <TabsContent
+            key={discardKey}
             activeTab={activeTab}
             selectedToolset={selectedToolset}
             originalToolset={originalToolset}

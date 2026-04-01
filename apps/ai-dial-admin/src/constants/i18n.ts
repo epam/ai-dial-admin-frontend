@@ -219,7 +219,7 @@ export enum EntitiesI18nKey {
   Container = 'Entities.Container',
   DiscardChanges = 'Entities.DiscardChanges',
   DiscardChangesDescription = 'Entities.DiscardChangesDescription',
-  EndpointAndMCPContainerSource = 'Entities.EndpointAndMCPContainerSource',
+  EndpointsSourceType = 'Entities.EndpointsSourceType',
 }
 
 export enum DeleteI18nKey {
@@ -351,6 +351,8 @@ export enum ButtonsI18nKey {
   McpRegistry = 'Buttons.McpRegistry',
   TryOut = 'Buttons.TryOut',
   Upload = 'Buttons.Upload',
+  ShowMore = 'Buttons.ShowMore',
+  ShowLess = 'Buttons.ShowLess',
 }
 
 export enum UpdateI18nKey {
@@ -755,6 +757,10 @@ export enum ImportI18nKey {
   FileSizeErrorDescription = 'Import.FileSizeErrorDescription',
   TotalFileSizeErrorDescription = 'Import.TotalFileSizeErrorDescription',
   ArchiveSizeErrorDescription = 'Import.ArchiveSizeErrorDescription',
+  FileUploadSuccessTitle = 'Import.FileUploadSuccessTitle',
+  FileUploadSuccessDescription = 'Import.FileUploadSuccessDescription',
+  FileRemovedTitle = 'Import.FileRemovedTitle',
+  FileRemovedDescription = 'Import.FileRemovedDescription',
 }
 
 export enum ExportI18nKey {
@@ -960,6 +966,8 @@ export enum SourceI18nKey {
   ModelServing = 'Source.ModelServing',
   InterceptorContainer = 'Source.InterceptorContainer',
   McpContainer = 'Source.McpContainer',
+  McpEndpoint = 'Source.McpEndpoint',
+  ChatEndpoint = 'Source.ChatEndpoint',
   AdapterContainer = 'Source.AdapterContainer',
   Endpoint = 'Source.Endpoint',
   ExternalEndpoint = 'Source.ExternalEndpoint',
@@ -1402,7 +1410,6 @@ export enum EnvVariablesI18nKey {
   EnvVariable = 'EnvVariables.EnvVariable',
   Name = 'EnvVariables.Name',
   Description = 'EnvVariables.Description',
-  Value = 'EnvVariables.Value',
   MountType = 'EnvVariables.MountType',
   Required = 'EnvVariables.Required',
   AddVariable = 'EnvVariables.AddVariable',
@@ -1429,7 +1436,7 @@ export enum TestSuitesI18nKey {
   Method = 'TestSuites.Method',
   ChangeMethod = 'TestSuites.ChangeMethod',
   ChangeMethodDisabledWhileTryOutOpen = 'TestSuites.ChangeMethodDisabledWhileTryOutOpen',
-  TestCases = 'TestSuites.TestCases',
+  Controls = 'TestSuites.Controls',
   NoTestCases = 'TestSuites.NoTestCases',
   FromPC = 'TestSuites.FromPC',
   ImportFromPC = 'TestSuites.ImportFromPC',
@@ -1494,6 +1501,12 @@ export enum TestSuitesI18nKey {
   Outputs = 'TestSuites.Outputs',
   Bindings = 'TestSuites.Bindings',
   Results = 'TestSuites.Results',
+  TestCaseSchema = 'TestSuites.TestCaseSchema',
+  SchemaField = 'TestSuites.SchemaField',
+  EditField = 'TestSuites.EditField',
+  NoSchemaFields = 'TestSuites.NoSchemaFields',
+  DuplicateFieldName = 'TestSuites.DuplicateFieldName',
+  SchemaDescription = 'TestSuites.SchemaDescription',
   FinalPath = 'TestSuites.FinalPath',
 }
 
@@ -1505,6 +1518,13 @@ export enum RunsI18nKey {
   Execution = 'Runs.Execution',
   GrafanaDetails = 'Runs.GrafanaDetails',
   GrafanaRun = 'Runs.GrafanaRun',
+  Computed = 'Runs.Computed',
+  Request = 'Runs.Request',
+  Response = 'Runs.Response',
+  OpenFullscreen = 'Runs.OpenFullscreen',
+  MetricInfo = 'Runs.MetricInfo',
+  HttpLabel = 'Runs.HttpLabel',
+  DurationLabel = 'Runs.DurationLabel',
 }
 
 export enum FileManagerI18nKey {
@@ -1514,6 +1534,9 @@ export enum FileManagerI18nKey {
   Rename = 'FileManager.Rename',
   Move = 'FileManager.Move',
   Files = 'FileManager.Files',
+  Applications = 'FileManager.Applications',
+  Toolsets = 'FileManager.Toolsets',
+  Prompts = 'FileManager.Prompts',
   Prompt = 'FileManager.Prompt',
   Folder = 'FileManager.Folder',
   FolderTree = 'FileManager.FolderTree',
@@ -1526,6 +1549,8 @@ export enum FileManagerI18nKey {
   Preview = 'FileManager.Preview',
   MoveItem = 'FileManager.MoveItem',
   MoveItems = 'FileManager.MoveItems',
+  EmptyMoveFolderTitle = 'FileManager.EmptyMoveFolderTitle',
+  EmptyMoveFolderDescription = 'FileManager.EmptyMoveFolderDescription',
   PromptEmptyStateTitle = 'FileManager.PromptEmptyStateTitle',
   PromptEmptyStateDescription = 'FileManager.PromptEmptyStateDescription',
 
@@ -1538,4 +1563,23 @@ export enum FileManagerI18nKey {
   // Notifications
   CreateFolderSuccessTitle = 'FileManager.Notifications.CreateFolder.Title',
   CreateFolderSuccessDescription = 'FileManager.Notifications.CreateFolder.Description',
+}
+
+export enum JsonAtaI18nKey {
+  JSONAtaDoc = 'JsonAta.JSONAtaDoc',
+  OpenFullDoc = 'JsonAta.OpenFullDoc',
+  JsonAtaDescription = 'JsonAta.JsonAtaDescription',
+  MoreResources = 'JsonAta.MoreResources',
+  SimpleQueries = 'JsonAta.SimpleQueries',
+  Predicates = 'JsonAta.Predicates',
+  StringFunctions = 'JsonAta.StringFunctions',
+  NumericFunctions = 'JsonAta.NumericFunctions',
+  Playground = 'JsonAta.Playground',
+  PathNavigation = 'JsonAta.PathNavigation',
+  ArrayOperations = 'JsonAta.ArrayOperations',
+  ConditionalsNullSafety = 'JsonAta.ConditionalsNullSafety',
+  MathStringFunctions = 'JsonAta.MathStringFunctions',
+  UseCase = 'JsonAta.UseCase',
+  Expression = 'JsonAta.Expression',
+  ResultType = 'JsonAta.ResultType',
 }

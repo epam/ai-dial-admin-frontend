@@ -12,13 +12,25 @@ import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import { CREATE_FOLDER_FORBIDDEN_CHARS, FILE_NAME_MAX_LENGTH } from './constants';
 
+const assetEntityMap: Record<string, FileManagerI18nKey> = {
+  [ApplicationRoute.AssetsApplications]: FileManagerI18nKey.Applications,
+  [ApplicationRoute.AssetsToolsets]: FileManagerI18nKey.Toolsets,
+  [ApplicationRoute.Prompts]: FileManagerI18nKey.Prompts,
+  [ApplicationRoute.Files]: FileManagerI18nKey.Files,
+};
+
 export const getValidationMessages = (t: (key: string) => string) => {
   return { emptyName: t(FileManagerI18nKey.EnterFolderName), duplicateName: t(FileManagerI18nKey.NameExists) };
 };
 
 export const getDestinationFolderPopupOptions = (
+  view: ApplicationRoute,
   t: (key: string, options?: Record<string, string | number> | undefined) => string,
 ) => ({
+  emptyStateTitle: t(FileManagerI18nKey.EmptyMoveFolderTitle),
+  emptyStateDescription: t(FileManagerI18nKey.EmptyMoveFolderDescription, {
+    items: t(assetEntityMap[view]).toLowerCase(),
+  }),
   getMoveHeader: (itemsCount: number, itemName?: string) =>
     itemsCount === 1 && itemName
       ? t(FileManagerI18nKey.MoveItem, { item: itemName })

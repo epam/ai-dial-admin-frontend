@@ -25,3 +25,8 @@ export interface FilterData {
   condition: FILTER_OPERATOR;
   value: string;
 }
+
+export interface DatasetMetadata {
+  name: string;
+  maxTimeRangeMs: number;
+}

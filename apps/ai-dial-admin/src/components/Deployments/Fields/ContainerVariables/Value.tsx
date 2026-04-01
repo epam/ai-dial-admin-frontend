@@ -3,7 +3,7 @@ import { IconFileArrowRight } from '@tabler/icons-react';
 import { DialPasswordInput, DialNeutralButton, DialInput } from '@epam/ai-dial-ui-kit';
 
 import { EnvVariableValue } from '@/src/models/deployments/variables';
-import { EntityPlaceholdersI18nKey, EnvVariablesI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { MOUNT_TYPE, VALUE_TYPE } from '@/src/types/deployments/variables';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
@@ -22,7 +22,7 @@ interface Props {
 const ContainerVariableValue: FC<Props> = ({ value, index, onValueChange, mountType, disabled }) => {
   const t = useI18n();
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const fieldName = index === 0 ? t(EnvVariablesI18nKey.Value) : '';
+  const fieldName = index === 0 ? t(BasicI18nKey.Value) : '';
 
   const handleFileUpload = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {

@@ -17,8 +17,13 @@ context: |
 
   ## Key Libraries
   - @epam/ai-dial-ui-kit: Design system with base components
-  - @epam/ai-dial-shared: Shared types/utilities across DIAL projects
   - AG Grid for data grids
+    - When a parent component owns grid data and inline edits should NOT trigger a full grid
+      refresh, use the isSkipRefresh pattern: pass `isSkipRefresh?: boolean` as a prop,
+      and guard `gridApi.updateGridOptions({ rowData })` with `if (!isSkipRefresh)`.
+      The parent passes `isSkipRefresh=true` when flushing batched inline edits, so the grid
+      keeps focus. See SchemaManager in TestSuites/TestCaseSchema/SchemaManager.tsx as the
+      reference pattern.
   - ECharts for charts
   - Monaco Editor for code editing
   - @tabler/icons-react + @svgr/webpack for icons/SVGs
@@ -29,8 +34,18 @@ context: |
   ## Path Alias
   - @/* -> apps/ai-dial-admin/*
 
+  ## Commands
+  - Dev server: `npm start` (localhost:4200)
+  - Build: `npm run build`
+  - Lint: `npm run lint` (also pre-commit via husky/lint-staged)
+  - Format: `npm run format` (check) / `npm run format:write` (apply)
+  - Tests: `npm run test` (also pre-push via husky)
+  - Single test file: `npx vitest run src/path/to/file.spec.ts` (run from apps/ai-dial-admin/)
+  - Single test by name: `npx vitest run src/path/to/file.spec.ts -t "pattern"`
+  - Note: vitest must run from apps/ai-dial-admin/ for @/ path alias to resolve
+
   ## Architecture
-  - Single app: apps/ai-dial-admin
+  - Single app: apps/ai-dial-admin, all source under apps/ai-dial-admin/src/
   - Components: pragmatic organization in src/components/ — core app sections,
     reusable common components, entity views/lists with co-located related components
   - Theming: separate themes controlling color palette, icons and more via CSS variables
@@ -39,6 +54,37 @@ context: |
   - Backend APIs:
     - Core admin: github.com/epam/ai-dial-admin-backend
     - Deployment manager: github.com/epam/ai-dial-admin-deployment-manager-backend
+
+  ### Routing
+  - Next.js App Router with [lang] segment for i18n. Each entity: src/app/[lang]/<entity>/page.tsx
+  - Data-fetching pages use `export const dynamic = 'force-dynamic'`
+
+  ### Provider stack ([lang]/layout.tsx)
+  I18nProvider → NextAuthProvider → AppContextProvider → ThemeProvider →
+  RuleFolderProvider → PromptFolderProvider → NotificationProvider
+
+  ### Entity pattern
+  Each domain entity (adapters, models, applications, test-suites, etc.) follows:
+  - View (components/<Entity>/View/View.tsx) — client component, manages tabs/local edits/save/discard.
+    Gets originalEntity + etag from the page server component.
+  - TabsContent — switches content per EntityViewTab.
+  - List (components/<Entity>/List/) — uses BaseEntityList with column defs from constants/grid-columns/.
+
+  ### Server actions
+  Located at src/app/[lang]/<entity>/actions.ts ('use server'). Authenticate via getUserToken(),
+  delegate to API classes in src/server/, return { success, data?, errorHeader?, errorMessage? }.
+
+  ### Grid system
+  GridView wraps AgGridWrapper wraps AgGridReact. Column definitions in constants/grid-columns/
+  and components/<Entity>/utils/columns.tsx. Column state persists to localStorage via storageKey.
+
+  ### i18n
+  useI18n() returns t(). Keys in src/locales/en.ts. Domain keys grouped by <Entity>I18nKey enums
+  in src/constants/i18n.ts. In tests, t() returns the key string as-is (mocked in test-setup.tsx).
+
+  ### Test setup
+  Vitest + jsdom. test-setup.tsx mocks: fetch, useI18n, useSession, all context providers,
+  ResizeObserver, IntersectionObserver, createPortal. Tests co-locate as tests/<name>.spec.ts(x).
 
 rules:
   proposal:
@@ -50,11 +96,24 @@ rules:
     - Consider impact on existing features — flag if the proposal could affect other parts of the app (shared components, contexts, API routes)
   design:
     - Use existing Tailwind theme tokens and CSS variables — don't introduce hardcoded colors
-    - Prefer extending existing components from @epam/ai-dial-ui-kit over creating new ones
+    - Prefer reusing components from @epam/ai-dial-ui-kit and src/components/Common/ over creating new ones — check Common/ (CopyButton, Accordion, etc.) before building similar UI patterns
     - Consider i18n — all user-facing strings go through next-international
     - Follow existing patterns in src/components/ for structuring new features
+    - Name component props interfaces `Props`, not `ComponentNameProps`
+    - Use BooleanButtonCellRenderer (Grid/CellRenderers/) for boolean toggles in AG Grid, not agCheckboxCellRenderer
     - Keep JSX clean — extract handlers, computed values, and complex props into named variables in the component body
     - Apply base accessibility features targeting WCAG AA level
+    - Use classNames() from the classnames package for conditional CSS classes — not template literal concatenation
+    - Use @tabler/icons-react for all icons — do not use unicode characters or inline SVGs
+    - Extract pure functions (no React hooks/JSX) from components into utils files with tests — src/utils/ for cross-cutting, <feature>/utils/ for domain-specific
+    - Place types and interfaces in dedicated model files — src/models/ for domain types, adjacent models.ts for component-local types — avoid inline anonymous object types in interface properties
+    - React contexts, providers, and their hooks go in src/context/ — not co-located with components
+    - Break down complex components into smaller, reusable components — keep components focused and maintainable
+    - Use font classes from the Typography provided by @epam/ai-dial-ui-kit — avoid custom font styling
+    - Use button components from @epam/ai-dial-ui-kit — do not create custom buttons unless absolutely necessary
+    - Do not truncate long values using break-all without a way to access the full content — always provide a way to view it
+    - Use DialEllipsisTooltip from @epam/ai-dial-ui-kit when truncating long text values to ensure full content is accessible
+    - Name handler functions with the on prefix (e.g., onOpenFullScreen, onClick, onSubmit) to keep naming consistent and predictable
   specs:
     - Reference backend API contracts from ai-dial-admin-backend or ai-dial-admin-deployment-manager-backend
     - Include validation requirements for any form fields
@@ -65,5 +124,6 @@ rules:
     - Reference specific file paths and component names
     - Require unit tests for all new and updated code as a dedicated task
     - Keep tasks small enough to be reviewable in a single PR
-    - In tests, prefer querying by role and text content over data-testid
+    - Do not use data-testid attributes in tests
+    - Always reuse existing mocks from test-setup.tsx instead of creating new ones
     - Run all code quality checks (lint, format, tests) as a final task after all implementation tasks are complete

@@ -1,15 +1,16 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 
-import { BasicI18nKey, TabsI18nKey } from '@/src/constants/i18n';
-import { TestSuite, TestSuiteRequestTemplate } from '@/src/models/evaluation/test-suite';
+import { BasicI18nKey } from '@/src/constants/i18n';
+import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
+import { forwardRef } from 'react';
 import TabsContent from '../tabs/TabsContent';
 
 vi.mock('../tabs/BodyTab', () => {
   const React = require('react');
   return {
-    default: React.forwardRef(({ template, changeTemplate }: any, _ref: unknown) => (
+    default: forwardRef(({ template, changeTemplate }: any, _ref: unknown) => (
       <div role="region" aria-label="body-tab">
         <span>Body: {JSON.stringify(template.body ?? null)}</span>
         <button onClick={() => changeTemplate({ ...template, body: { updated: true } })}>EditBody</button>

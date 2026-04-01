@@ -10,6 +10,7 @@ import UsageLog from './UsageLog';
 
 vi.mock('@/src/app/[lang]/dashboard/actions', () => ({
   getDashboardData: vi.fn(() => Promise.resolve({ data: null })),
+  getDatasets: vi.fn(() => Promise.resolve({ success: false })),
 }));
 
 describe('UsageLog', () => {

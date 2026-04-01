@@ -1,7 +1,7 @@
 'use client';
 
+import { DialSelectField } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
-import { DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 
 import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
@@ -9,9 +9,10 @@ import { useI18n } from '@/src/locales/client';
 import { Toolset } from '@/src/models/dial/toolset';
 import { ToolsetTransport } from '@/src/types/toolset';
 
-import ReadonlyInput from '@/src/components/Common/ReadonlyInput/ReadonlyInput';
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
+import ReadonlyInput from '@/src/components/Common/ReadonlyInput/ReadonlyInput';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { TOOLSET_TRANSPORTS } from '@/src/constants/transport';
 
 interface Props {
   entity: Toolset;
@@ -25,10 +26,6 @@ const ToolsetEndpoint: FC<Props> = ({ entity, disabled, onChange, prefix, isModa
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const isDisabled = disabled || isReadOnlyAdmin;
-  const transportOptions: SelectOption[] = [
-    { value: ToolsetTransport.HTTP, label: ToolsetTransport.HTTP.toUpperCase() },
-    { value: ToolsetTransport.SSE, label: ToolsetTransport.SSE.toUpperCase() },
-  ];
 
   return (
     <div className="w-full flex flex-col gap-y-8">
@@ -59,7 +56,7 @@ const ToolsetEndpoint: FC<Props> = ({ entity, disabled, onChange, prefix, isModa
           id="transport"
           containerClassName="w-[180px]"
           value={entity.transport || ToolsetTransport.SSE}
-          options={transportOptions}
+          options={TOOLSET_TRANSPORTS}
           onChange={(transport) => onChange?.({ ...entity, transport: transport as ToolsetTransport })}
         />
       )}

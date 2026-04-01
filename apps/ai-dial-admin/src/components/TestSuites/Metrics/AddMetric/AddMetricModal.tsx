@@ -46,7 +46,8 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMet
     isEditMode ? MetricStep.Configuration : MetricStep.AddMetric,
   );
 
-  const [isMetricsLoading, setIsMetricsLoading] = useState(false);
+  const [isMetricDeclarationsLoading, setIsMetricDeclarationsLoading] = useState(false);
+  const [isMetricDetailsLoading, setIsMetricDetailsLoading] = useState(false);
   const [metrics, setMetrics] = useState<Metric[] | undefined>();
 
   const [selectedMetricId, setSelectedMetricId] = useState<string>('');
@@ -56,24 +57,25 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMet
 
   const [configBindings, setConfigBindings] = useState<MetricBinding[]>([]);
   const [inputBindings, setInputBindings] = useState<MetricBinding[]>([]);
+  const [isJsonView, setIsJsonView] = useState(false);
 
   const selectedMetric = useMemo(() => metrics?.find((m) => m.id === selectedMetricId), [metrics, selectedMetricId]);
 
   useEffect(() => {
     if (selectedMetricId) {
-      setIsMetricsLoading(true);
+      setIsMetricDetailsLoading(true);
       getMetricLatestVersion(selectedMetricId || '').then((metric) => {
         setSelectedMetricDetails(metric as Metric);
         setConfigBindings(generateMetricDefaultInputBindings(metric?.configSchema ?? {}));
         setInputBindings(generateMetricDefaultInputBindings(metric?.inputSchema ?? {}));
-        setIsMetricsLoading(false);
+        setIsMetricDetailsLoading(false);
       });
     }
   }, [selectedMetricId]);
 
   useEffect(() => {
     if (editingMetric?.id && selectedTestSuite?.id) {
-      setIsMetricsLoading(true);
+      setIsMetricDetailsLoading(true);
       Promise.all([
         getTestSuiteMetricDetailsWithSchema(selectedTestSuite.id as string, editingMetric.id as string),
         getMetricLatestVersion(editingMetric.metricDeclarationId as string),
@@ -81,7 +83,7 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMet
         setConfigBindings(metricDetails?.configBindings ?? []);
         setInputBindings(metricDetails?.inputBindings ?? []);
         setSelectedMetricDetails(metric as Metric);
-        setIsMetricsLoading(false);
+        setIsMetricDetailsLoading(false);
       });
     }
   }, [editingMetric?.id, editingMetric?.metricDeclarationId, editingMetric?.name, selectedTestSuite?.id]);
@@ -91,13 +93,15 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMet
   }, [selectedMetric, editingMetric?.name]);
 
   const isStep1Valid = !!selectedMetricId;
-  const isStep2Valid = validateMetricBindings(
-    metricName,
-    configBindings,
-    inputBindings,
-    selectedMetricDetails?.configSchema,
-    selectedMetricDetails?.inputSchema,
-  );
+  const isStep2Valid = isJsonView
+    ? true
+    : validateMetricBindings(
+        metricName,
+        configBindings,
+        inputBindings,
+        selectedMetricDetails?.configSchema,
+        selectedMetricDetails?.inputSchema,
+      );
 
   const steps: Step[] = useMemo(
     () => [
@@ -123,10 +127,10 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMet
 
   useEffect(() => {
     if (!metrics) {
-      setIsMetricsLoading(true);
+      setIsMetricDeclarationsLoading(true);
       getMetricDeclarations(0, 1000).then((response) => {
         setMetrics(response?.content || []);
-        setIsMetricsLoading(false);
+        setIsMetricDeclarationsLoading(false);
       });
     }
   }, [metrics]);
@@ -166,9 +170,10 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMet
           />
         )}
 
-        <div className={classNames('flex-1 min-h-0', { 'mt-4': !isEditMode })}>
-          {isMetricsLoading && <DialLoader size={44} />}
-          {currentStepId === MetricStep.AddMetric && !isMetricsLoading && (
+        <div className={classNames('flex-1 min-h-0 overflow-auto', { 'mt-4': !isEditMode })}>
+          {currentStepId === MetricStep.AddMetric && isMetricDeclarationsLoading && <DialLoader size={44} />}
+          {currentStepId === MetricStep.Configuration && isMetricDetailsLoading && <DialLoader size={44} />}
+          {currentStepId === MetricStep.AddMetric && !isMetricDeclarationsLoading && (
             <MetricSelection
               metrics={metrics || []}
               selectedMetricId={selectedMetricId}
@@ -176,7 +181,7 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMet
             />
           )}
 
-          {currentStepId === MetricStep.Configuration && !isMetricsLoading && (
+          {currentStepId === MetricStep.Configuration && !isMetricDetailsLoading && (
             <MetricConfiguration
               metricName={metricName}
               selectedMetric={selectedMetric || editingMetric}
@@ -187,6 +192,7 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMet
               selectedMetricDetails={selectedMetricDetails}
               onChangeConfigBindings={setConfigBindings}
               onChangeInputBindings={setInputBindings}
+              onJsonViewChange={setIsJsonView}
             />
           )}
         </div>
