@@ -1,4 +1,4 @@
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 
 import {
   AlertVariant,
@@ -91,6 +91,10 @@ const ForwardAuthTokenField: FC<Props> = ({ view, entity, onChangeEntity, disabl
     },
   ];
 
+  useEffect(() => {
+    setForwardToken(entity.forwardAuthToken);
+  }, [entity.forwardAuthToken]);
+
   return (
     <div className={classNames('flex flex-col', STANDARD_CONTROL_WIDTH)}>
       <DialRadioGroupPopupField
@@ -107,6 +111,11 @@ const ForwardAuthTokenField: FC<Props> = ({ view, entity, onChangeEntity, disabl
         radioButtons={radioButtons}
         onChangeRadioField={onChangeRadioField}
         onApply={onApply}
+        onCancel={() => {
+          setForwardToken(entity.forwardAuthToken);
+          setConfirmName('');
+          setIsValid(false);
+        }}
         disabled={isReadonly}
       />
     </div>
