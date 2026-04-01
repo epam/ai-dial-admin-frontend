@@ -757,6 +757,10 @@ export enum ImportI18nKey {
   FileSizeErrorDescription = 'Import.FileSizeErrorDescription',
   TotalFileSizeErrorDescription = 'Import.TotalFileSizeErrorDescription',
   ArchiveSizeErrorDescription = 'Import.ArchiveSizeErrorDescription',
+  FileUploadSuccessTitle = 'Import.FileUploadSuccessTitle',
+  FileUploadSuccessDescription = 'Import.FileUploadSuccessDescription',
+  FileRemovedTitle = 'Import.FileRemovedTitle',
+  FileRemovedDescription = 'Import.FileRemovedDescription',
 }
 
 export enum ExportI18nKey {
