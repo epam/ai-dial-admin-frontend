@@ -34,10 +34,10 @@ import {
   getGridOptions,
   getToolbarOptions,
   getTreeOptions,
+  getNewFolderPath,
   getValidationMessages,
   validateCreateFolder,
 } from './utils';
-import { NEW_FOLDER_NAME } from './constants';
 import { FileManagerGridRow } from '@epam/ai-dial-ui-kit/dist/src/components/FileManager/FileManagerContext';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 
@@ -164,18 +164,20 @@ const FileManager: FC<Props> = ({
 
   const handleAddChild = useCallback(
     (files: DialFile[]) => {
-      const newPath = files[0].path + NEW_FOLDER_NAME;
+      const rootItems = (filteredFiles as DialFile[])?.[0]?.items ?? [];
+      const newPath = getNewFolderPath(files[0], rootItems, 'child');
       handleCreateFolder(void 0, newPath);
     },
-    [handleCreateFolder],
+    [handleCreateFolder, filteredFiles],
   );
 
   const handleAddSibling = useCallback(
     (files: DialFile[]) => {
-      const newPath = files[0].path.replace(/([^/]+)\/?$/, NEW_FOLDER_NAME);
+      const rootItems = (filteredFiles as DialFile[])?.[0]?.items ?? [];
+      const newPath = getNewFolderPath(files[0], rootItems, 'sibling');
       handleCreateFolder(void 0, newPath);
     },
-    [handleCreateFolder],
+    [handleCreateFolder, filteredFiles],
   );
 
   const handleOnPathChange = useCallback(

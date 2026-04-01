@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 
-import { DialUploadFileItem, GridOptions, GridSelectionMode } from '@epam/ai-dial-ui-kit';
+import { DialFile, DialUploadFileItem, GridOptions, GridSelectionMode } from '@epam/ai-dial-ui-kit';
 import { ColDef, ITextFilterParams } from 'ag-grid-community';
 
 import { bulkActionLabels } from '@/src/components/Assets/constants';
@@ -10,7 +10,45 @@ import FloatingFilter from '@/src/components/Grid/FloatingFilter/FloatingFilter'
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
-import { CREATE_FOLDER_FORBIDDEN_CHARS, FILE_NAME_MAX_LENGTH } from './constants';
+import { CREATE_FOLDER_FORBIDDEN_CHARS, FILE_NAME_MAX_LENGTH, NEW_FOLDER_NAME } from './constants';
+
+export const findFolderByPath = (items: DialFile[], targetPath: string): DialFile | undefined => {
+  for (const item of items) {
+    if (item.path === targetPath) {
+      return item;
+    }
+    if (item.items?.length) {
+      const found = findFolderByPath(item.items, targetPath);
+      if (found) {
+        return found;
+      }
+    }
+  }
+  return undefined;
+};
+
+export const getUniqueFolderName = (siblingNames: string[]): string => {
+  const namesSet = new Set(siblingNames);
+
+  if (!namesSet.has(NEW_FOLDER_NAME)) {
+    return NEW_FOLDER_NAME;
+  }
+
+  let counter = 1;
+  while (namesSet.has(`${NEW_FOLDER_NAME} ${counter}`)) {
+    counter++;
+  }
+
+  return `${NEW_FOLDER_NAME} ${counter}`;
+};
+
+export const getNewFolderPath = (file: DialFile, rootItems: DialFile[], mode: 'child' | 'sibling'): string => {
+  const parentPath = mode === 'child' ? file.path : (file.parentPath ?? file.path.replace(/[^/]+\/?$/, ''));
+  const parentFolder = findFolderByPath(rootItems, parentPath);
+  const existingNames = parentFolder?.items?.map((item) => item.name) ?? [];
+  const folderName = getUniqueFolderName(existingNames);
+  return parentPath + folderName;
+};
 
 const assetEntityMap: Record<string, FileManagerI18nKey> = {
   [ApplicationRoute.AssetsApplications]: FileManagerI18nKey.Applications,
