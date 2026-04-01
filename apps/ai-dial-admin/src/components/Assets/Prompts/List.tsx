@@ -87,7 +87,7 @@ const PromptsList: FC = () => {
     const emptyPrompt: DialPrompt = {
       name: '.dial_folder',
       folderId: newPath,
-      version: '0',
+      version: '',
       content: '',
       path: `${newPath}.dial_folder`,
       nodeType: DialFileNodeType.ITEM,
