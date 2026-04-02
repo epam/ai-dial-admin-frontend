@@ -95,9 +95,14 @@ export async function getTestCase(id: string, testCaseId?: string) {
   return testSuitesApi.getTestCase(id, testCaseId, token);
 }
 
-export async function getDeployments() {
+export async function getDeployments(type?: string, interfaceFilter?: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return testSuitesApi.getDeployments(token);
+  return testSuitesApi.getDeployments(token, type, interfaceFilter);
+}
+
+export async function getDeploymentTools(deploymentType: string, deploymentId: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.getDeploymentTools(deploymentType, deploymentId, token);
 }
 
 export async function getDeployment(id: string, type: string) {

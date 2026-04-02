@@ -1508,6 +1508,20 @@ export enum TestSuitesI18nKey {
   DuplicateFieldName = 'TestSuites.DuplicateFieldName',
   SchemaDescription = 'TestSuites.SchemaDescription',
   FinalPath = 'TestSuites.FinalPath',
+  Mcp = 'TestSuites.Mcp',
+  Tool = 'TestSuites.Tool',
+  SuiteType = 'TestSuites.SuiteType',
+  SelectTool = 'TestSuites.SelectTool',
+  ToolArguments = 'TestSuites.ToolArguments',
+  ToolArgumentsPreview = 'TestSuites.ToolArgumentsPreview',
+  ToolCallPreview = 'TestSuites.ToolCallPreview',
+  ChangeTool = 'TestSuites.ChangeTool',
+  ChangeToolset = 'TestSuites.ChangeToolset',
+  NoToolsAvailable = 'TestSuites.NoToolsAvailable',
+  NoArgumentsDefined = 'TestSuites.NoArgumentsDefined',
+  ToolCallSucceeded = 'TestSuites.ToolCallSucceeded',
+  ToolCallFailed = 'TestSuites.ToolCallFailed',
+  ToolOutputSchema = 'TestSuites.ToolOutputSchema',
 }
 
 export enum RunsI18nKey {

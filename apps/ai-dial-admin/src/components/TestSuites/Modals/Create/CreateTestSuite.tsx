@@ -2,18 +2,16 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { DialPopup, DialSteps, PopupSize, StepStatus } from '@epam/ai-dial-ui-kit';
 
-import { getDeployments } from '@/src/app/[lang]/test-suites/actions';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 import ChangeMethodModal from '@/src/components/TestSuites/Modals/ChangeMethodModal/ChangeMethodModal';
+import McpTool from '@/src/components/TestSuites/Modals/Create/McpTool';
 import TestSuiteProperties from '@/src/components/TestSuites/Properties/Properties';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
-import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
-import { Deployment } from '@/src/models/evaluation/deployment';
+import { Deployment, ToolDefinition } from '@/src/models/evaluation/deployment';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
-import { getErrorNotification } from '@/src/utils/notification';
-import Applications from './Applications';
+import Target from './Target';
 import { TEST_SUIT_STEPS, TestSuitTab } from './constants';
 
 interface Props {
@@ -25,50 +23,59 @@ interface Props {
 
 const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEntity }) => {
   const t = useI18n();
-  const { showNotification } = useNotification();
 
   const { isValid } = useSaveValidationContext();
-  const [steps, setSteps] = useState(TEST_SUIT_STEPS(t, !!currentEntity));
-  const [currentStepId, setCurrentStep] = useState(steps[0].id);
   const [testSuite, setTestSuite] = useState<TestSuite>(structuredClone(currentEntity) || ({} as TestSuite));
+  const [steps, setSteps] = useState(TEST_SUIT_STEPS(t, !!currentEntity, testSuite.suiteType));
+  const [currentStepId, setCurrentStep] = useState(steps[0].id);
   const [selectedApplication, setSelectedApplication] = useState<Deployment | null>(null);
-  const [deployments, setDeployments] = useState<Deployment[] | null>(null);
+
+  const isMcp = testSuite.suiteType === 'MCP_TOOL';
 
   const currentStep = useMemo(() => steps.find((step) => step.id === currentStepId), [steps, currentStepId]);
+
+  const onToolSelect = useCallback((tool: ToolDefinition) => {
+    setTestSuite((prev) => ({
+      ...prev,
+      toolRef: {
+        name: tool.name,
+        description: tool.description,
+        inputSchema: tool.inputSchema,
+        outputSchema: tool.outputSchema,
+      },
+    }));
+  }, []);
 
   const onFinishClick = useCallback(() => {
     onCreate(testSuite);
   }, [onCreate, testSuite]);
 
   useEffect(() => {
-    if (!deployments) {
-      getDeployments().then((res) => {
-        if (res?.success) {
-          setDeployments(res.response || []);
-          if (currentEntity?.deploymentRef?.id) {
-            const app = res.response?.find((d) => d.deploymentId === currentEntity.deploymentRef?.id);
-            setSelectedApplication(app || null);
-          }
-        } else {
-          showNotification(getErrorNotification(res?.errorHeader, res?.errorMessage, res?.requestId));
-        }
-      });
-    }
-  }, [currentEntity?.deploymentRef?.id, deployments, showNotification]);
-
-  useEffect(() => {
-    setSteps((prev) =>
-      prev.map((step) => {
+    const baseSteps = TEST_SUIT_STEPS(t, !!currentEntity, testSuite.suiteType);
+    setSteps(
+      baseSteps.map((step) => {
         if (step.id === TestSuitTab.Target) {
           return { ...step, status: selectedApplication ? StepStatus.VALID : void 0 };
         }
         if (step.id === TestSuitTab.Methods) {
-          return { ...step, status: testSuite.endpointRef?.method ? StepStatus.VALID : void 0 };
+          const methodValid = isMcp ? !!testSuite.toolRef : !!testSuite.endpointRef?.method;
+          return { ...step, status: methodValid ? StepStatus.VALID : void 0 };
         }
         return step.id === TestSuitTab.Properties ? { ...step, status: isValid ? StepStatus.VALID : void 0 } : step;
       }),
     );
-  }, [selectedApplication, currentStepId, testSuite.endpointRef?.method, testSuite.name, isValid]);
+  }, [
+    selectedApplication,
+    currentStepId,
+    testSuite.endpointRef?.method,
+    testSuite.toolRef,
+    testSuite.suiteType,
+    testSuite.name,
+    isValid,
+    t,
+    currentEntity,
+    isMcp,
+  ]);
 
   return (
     <DialPopup
@@ -86,22 +93,30 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEnti
           )}
 
           {currentStepId === TestSuitTab.Target && (
-            <Applications
-              deployments={deployments}
+            <Target
               selectedApplicationId={selectedApplication?.deploymentId}
+              suiteType={testSuite.suiteType}
               onChangeApplication={setSelectedApplication}
               onChange={setTestSuite}
             />
           )}
 
-          {currentStepId === TestSuitTab.Methods && (
-            <ChangeMethodModal
-              isModal={false}
-              testSuite={testSuite}
-              onChangeTestSuite={setTestSuite}
-              selectedApplication={selectedApplication}
-            />
-          )}
+          {currentStepId === TestSuitTab.Methods &&
+            (isMcp && testSuite.mcpDeploymentRef ? (
+              <McpTool
+                deploymentType={testSuite.mcpDeploymentRef.type}
+                deploymentId={testSuite.mcpDeploymentRef.id}
+                initialToolName={testSuite.toolRef?.name}
+                onSelect={onToolSelect}
+              />
+            ) : (
+              <ChangeMethodModal
+                isModal={false}
+                testSuite={testSuite}
+                onChangeTestSuite={setTestSuite}
+                selectedApplication={selectedApplication}
+              />
+            ))}
         </div>
       </div>
 

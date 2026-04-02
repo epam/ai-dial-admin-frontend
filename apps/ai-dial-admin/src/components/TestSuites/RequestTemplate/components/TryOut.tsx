@@ -44,6 +44,7 @@ interface Props {
 const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
   const t = useI18n();
   const { sidebar, toggleSidebar } = useAppContext();
+  const isMcp = testSuite.suiteType === 'MCP_TOOL';
 
   const [requestBody, setRequestBody] = useState<Record<string, unknown>>({});
   const [response, setResponse] = useState<TryOutResponse | null>(null);
@@ -149,9 +150,13 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
                 </div>
 
                 <div className="flex flex-col">
-                  <p className="dial-small-text mb-2">{t(TestSuitesI18nKey.RequestBodyPreview)}</p>
+                  <p className="dial-small-text mb-2">
+                    {isMcp ? t(TestSuitesI18nKey.ToolArgumentsPreview) : t(TestSuitesI18nKey.RequestBodyPreview)}
+                  </p>
                   <p className="text-secondary mb-2 dial-small-text">
-                    {testSuite.endpointRef?.method} {testSuite.endpointRef?.relativeUrlPattern}
+                    {isMcp
+                      ? `TOOL CALL ${testSuite.mcpDeploymentRef?.name}:${testSuite.toolRef?.name}`
+                      : `${testSuite.endpointRef?.method} ${testSuite.endpointRef?.relativeUrlPattern}`}
                   </p>
                   <div className="h-[300px]">
                     <JsonEditor
@@ -167,9 +172,21 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
             {response && (
               <>
                 <DialAlert
-                  message={`${response.statusCode}`}
+                  message={
+                    isMcp
+                      ? (response as Record<string, unknown>).isError
+                        ? t(TestSuitesI18nKey.ToolCallFailed)
+                        : t(TestSuitesI18nKey.ToolCallSucceeded)
+                      : `${response.statusCode}`
+                  }
                   variant={
-                    response.statusCode >= 200 && response.statusCode < 300 ? AlertVariant.Success : AlertVariant.Error
+                    isMcp
+                      ? (response as Record<string, unknown>).isError
+                        ? AlertVariant.Error
+                        : AlertVariant.Success
+                      : response.statusCode >= 200 && response.statusCode < 300
+                        ? AlertVariant.Success
+                        : AlertVariant.Error
                   }
                 >
                   {grafanaTraceUrl && (
