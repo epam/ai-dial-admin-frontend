@@ -17,7 +17,7 @@ export const lineChartDefaultOptions = (t: (key: string) => string): EChartsOpti
       borderWidth: 1,
       padding: [8, 12],
       textStyle: {
-        color: '#F3F4F6',
+        color: '#EEF1F7',
         fontSize: 12,
       },
       axisPointer: {
@@ -35,7 +35,7 @@ export const lineChartDefaultOptions = (t: (key: string) => string): EChartsOpti
         <!-- Title -->
         <div style="
           font-size: 12px;
-          color: #9AA2AD;
+          color: #9FA6BD;
           margin-bottom: 12px;
         ">
           ${formatDateTimeToLocalString(axisValue)}
@@ -46,7 +46,7 @@ export const lineChartDefaultOptions = (t: (key: string) => string): EChartsOpti
           display: flex;
           align-items: center;
           gap: 6px;
-          color: #F3F4F6;
+          color: #EEF1F7;
           font-size: 10px;
         ">
           <span style="
@@ -71,7 +71,7 @@ export const lineChartDefaultOptions = (t: (key: string) => string): EChartsOpti
       splitLine: {
         show: true,
         lineStyle: {
-          color: '#222932',
+          color: '#1D2439',
           width: 1,
         },
       },
@@ -100,7 +100,7 @@ export const lineChartDefaultOptions = (t: (key: string) => string): EChartsOpti
       splitLine: {
         show: true,
         lineStyle: {
-          color: '#222932',
+          color: '#1D2439',
           width: 1,
         },
       },
@@ -122,7 +122,7 @@ export const lineChartDefaultOptions = (t: (key: string) => string): EChartsOpti
       top: 10,
       borderColor: '',
     },
-    color: '#74A4FF',
+    color: '#7DA4FF',
   };
 };
 
@@ -138,7 +138,7 @@ export const multiSeriesLineChartOptions = (t: (key: string) => string): ECharts
       borderWidth: 1,
       padding: [8, 12],
       textStyle: {
-        color: '#F3F4F6',
+        color: '#EEF1F7',
         fontSize: 12,
       },
       axisPointer: {
@@ -154,7 +154,7 @@ export const multiSeriesLineChartOptions = (t: (key: string) => string): ECharts
         const items = params
           .map(
             (p) => `
-            <div style="display:flex;align-items:center;gap:6px;color:#F3F4F6;font-size:10px;">
+            <div style="display:flex;align-items:center;gap:6px;color:#EEF1F7;font-size:10px;">
               <span style="width:8px;height:8px;border-radius:50%;background:${p.color};"></span>
               <span>${p.seriesName}: <b>${p.value}</b></span>
             </div>`,
@@ -162,7 +162,7 @@ export const multiSeriesLineChartOptions = (t: (key: string) => string): ECharts
           .join('');
 
         return `<div>
-          <div style="font-size:12px;color:#9AA2AD;margin-bottom:12px;">${title}</div>
+          <div style="font-size:12px;color:#9FA6BD;margin-bottom:12px;">${title}</div>
           ${items}
         </div>`;
       },
@@ -180,7 +180,7 @@ export const multiSeriesLineChartOptions = (t: (key: string) => string): ECharts
       splitLine: {
         show: true,
         lineStyle: {
-          color: '#222932',
+          color: '#1D2439',
           width: 1,
         },
       },
@@ -209,7 +209,7 @@ export const multiSeriesLineChartOptions = (t: (key: string) => string): ECharts
       splitLine: {
         show: true,
         lineStyle: {
-          color: '#222932',
+          color: '#1D2439',
           width: 1,
         },
       },

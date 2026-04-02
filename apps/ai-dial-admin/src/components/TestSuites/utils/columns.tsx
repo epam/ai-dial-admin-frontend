@@ -8,18 +8,21 @@ import {
   ITooltipParams,
   ValueGetterParams,
 } from 'ag-grid-community';
+import { JSONSchema7 } from 'json-schema';
 
-import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
+import { getSchemaTypes, SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
 import ValidityStatus from '@/src/components/Common/ValidityStatus/ValidityStatus';
+import BooleanButtonCellRenderer from '@/src/components/Grid/CellRenderers/BooleanButtonCellRenderer';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSelectCellRenderer';
+import JsonAtaCellRenderer from '@/src/components/Grid/CellRenderers/JsonAtaCellRenderer';
 import JsonEditorCellRenderer from '@/src/components/Grid/CellRenderers/JsonEditorCellRenderer';
-import BooleanButtonCellRenderer from '@/src/components/Grid/CellRenderers/BooleanButtonCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import BooleanColumnHeader from '@/src/components/Grid/HeaderComponents/BooleanColumnHeader';
 import { NO_BORDER_CLASS, UTILITY_COLUMN } from '@/src/constants/ag-grid';
 import { BASE_STATUS_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { TEST_CASES_COLUMN } from '@/src/constants/grid-columns/grid-columns';
+import { TYPE_OPTIONS } from '@/src/components/TestSuites/TestCaseSchema/constants';
 import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { MetricBinding } from '@/src/models/evaluation/metric';
 import { InputBindingRowData, ResponseColumn, TestCase, TestCaseSchema } from '@/src/models/evaluation/test-suite';
@@ -90,13 +93,13 @@ export const getTestCaseColumns = (
       } as ITextFilterParams,
       floatingFilter: true,
       floatingFilterComponent: 'agTextColumnFloatingFilter',
-      cellRenderer: BooleanButtonCellRenderer,
-      cellRendererParams: {
-        trueLabel: enabledLabel,
-        falseLabel: disabledLabel,
-        onChange: (value: boolean, data: { id: string }) => {
-          onCellChange(data as Record<string, unknown>, 'enabled', value);
-        },
+      editable: true,
+      cellRenderer: 'agCheckboxCellRenderer',
+      cellEditor: 'agCheckboxCellEditor',
+      valueGetter: (params) => params.data?.enabled,
+      valueSetter: (params) => {
+        params.data.enabled = params.newValue;
+        return true;
       },
       tooltipValueGetter: (params) => {
         return !params.data?.enabled ? 'Disable test case' : 'Enable test case';
@@ -455,20 +458,26 @@ export const getVariablesColumns = (
   ];
 };
 
-export const getColumnsGridColumns = (): ColDef<ResponseColumn>[] => {
+export const getSchemaFieldGridColumns = (
+  onChangeEditable: (value: string | number, data: unknown, column: string, index?: number) => void,
+  onChangeSelect: (value: string | string[], data: unknown, column?: string, index?: number) => void,
+  onChangeRequired: (value: boolean, data: TestCaseSchema) => void,
+  t: (key: string) => string,
+): ColDef<TestCaseSchema>[] => {
   return [
     {
       headerName: 'Name',
-      colId: 'displayName',
-      field: 'displayName',
-      sortable: false,
-      filter: false,
-      floatingFilter: false,
-    },
-    {
-      headerName: 'JSONata Expression',
-      colId: 'expression',
-      field: 'expression',
+      colId: 'name',
+      field: 'name',
+      editable: false,
+      cellClass: NO_BORDER_CLASS,
+      cellRenderer: EditableCellRenderer,
+      valueGetter: (params: ValueGetterParams) => params.data?.name ?? '',
+      cellRendererParams: {
+        onChange: onChangeEditable,
+        hideTriangle: true,
+        skipRequired: true,
+      },
       sortable: false,
       filter: false,
       floatingFilter: false,
@@ -477,9 +486,102 @@ export const getColumnsGridColumns = (): ColDef<ResponseColumn>[] => {
       headerName: 'Type',
       colId: 'type',
       field: 'type',
+      cellClass: NO_BORDER_CLASS,
+      cellRenderer: SelectCellRenderer,
+      cellRendererParams: {
+        items: TYPE_OPTIONS,
+        onChange: onChangeSelect,
+      },
       sortable: false,
       filter: false,
       floatingFilter: false,
+    },
+    {
+      headerName: 'Required',
+      colId: 'required',
+      field: 'required',
+      cellClass: NO_BORDER_CLASS,
+      cellRenderer: BooleanButtonCellRenderer,
+      cellRendererParams: {
+        onChange: onChangeRequired,
+        trueLabel: t(BasicI18nKey.Required),
+        falseLabel: t(BasicI18nKey.Optional),
+      },
+      tooltipValueGetter: () => undefined,
+      sortable: false,
+      filter: false,
+      floatingFilter: false,
+      maxWidth: 100,
+    },
+    {
+      headerName: 'Description',
+      colId: 'description',
+      field: 'description',
+      editable: false,
+      cellClass: NO_BORDER_CLASS,
+      cellRenderer: EditableCellRenderer,
+      valueGetter: (params: ValueGetterParams) => params.data?.description ?? '',
+      cellRendererParams: {
+        onChange: onChangeEditable,
+        hideTriangle: true,
+        skipRequired: true,
+      },
+      sortable: false,
+      filter: false,
+      floatingFilter: false,
+    },
+  ];
+};
+
+export const getColumnsGridColumns = (
+  responseSchema: JSONSchema7,
+  onChange: (value: string, data: ResponseColumn, column: string, index?: number) => void,
+  onChangeExpression?: (
+    value: { expression: string; type?: string },
+    data: ResponseColumn,
+    column: string,
+    index?: number,
+  ) => void,
+): ColDef<ResponseColumn>[] => {
+  return [
+    {
+      headerName: 'Display Name',
+      colId: 'displayName',
+      field: 'displayName',
+      sortable: false,
+      filter: false,
+      floatingFilter: false,
+      cellRenderer: EditableCellRenderer,
+      cellRendererParams: {
+        onChange,
+        hideTriangle: true,
+      },
+    },
+    {
+      headerName: 'JSONata Expression',
+      colId: 'expression',
+      field: 'expression',
+      sortable: false,
+      filter: false,
+      floatingFilter: false,
+      cellRenderer: JsonAtaCellRenderer,
+      cellRendererParams: {
+        responseSchema,
+        onChange: onChangeExpression,
+      },
+    },
+    {
+      headerName: 'Data type',
+      colId: 'type',
+      field: 'type',
+      sortable: false,
+      filter: false,
+      floatingFilter: false,
+      cellRenderer: SelectCellRenderer,
+      cellRendererParams: {
+        items: getSchemaTypes().map((type) => ({ value: type.toUpperCase(), label: type })),
+        onChange,
+      },
       valueFormatter: ({ value }) => value.toLowerCase(),
       tooltipValueGetter: ({ value }) => value.toLowerCase(),
     },

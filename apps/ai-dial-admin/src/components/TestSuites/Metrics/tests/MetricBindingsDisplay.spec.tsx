@@ -27,8 +27,8 @@ describe('MetricBindingsDisplay', () => {
     render(<MetricBindingsDisplay title="Configuration" bindings={bindings} />);
 
     expect(screen.getByText('Configuration:')).toBeInTheDocument();
-    expect(screen.getByText('threshold: 0.7')).toBeInTheDocument();
-    expect(screen.getByText('maxTokens: 100')).toBeInTheDocument();
+    expect(screen.getByText(/threshold\s*:\s*0\.7/)).toBeInTheDocument();
+    expect(screen.getByText(/maxTokens\s*:\s*100/)).toBeInTheDocument();
   });
 
   test('renders fallback dash when binding value is empty', () => {
@@ -38,6 +38,39 @@ describe('MetricBindingsDisplay', () => {
 
     render(<MetricBindingsDisplay title="Configuration" bindings={bindings} />);
 
-    expect(screen.getByText('temperature: -')).toBeInTheDocument();
+    expect(screen.getByText(/temperature\s*:\s*-/)).toBeInTheDocument();
+  });
+
+  test('renders object value as key-value entries', () => {
+    const bindings: MetricBinding[] = [
+      {
+        property: 'options',
+        source: {
+          $type: MetricBindingType.Constant,
+          value: { enabled: true, retries: 3 } as unknown as string,
+        },
+      },
+    ];
+
+    render(<MetricBindingsDisplay title="Configuration" bindings={bindings} />);
+
+    expect(screen.getByText(/options\s*:\s*\{enabled:\s*true,\s*retries:\s*3\}/)).toBeInTheDocument();
+  });
+
+  test('renders columnName when value is empty', () => {
+    const bindings: MetricBinding[] = [
+      {
+        property: 'inputText',
+        source: {
+          $type: MetricBindingType.Response,
+          value: '',
+          columnName: 'promptColumn',
+        },
+      },
+    ];
+
+    render(<MetricBindingsDisplay title="Inputs" bindings={bindings} />);
+
+    expect(screen.getByText(/inputText\s*:\s*promptColumn/)).toBeInTheDocument();
   });
 });

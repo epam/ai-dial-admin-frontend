@@ -8,13 +8,20 @@ import {
 } from '../toolset-auth';
 
 describe('toolset-auth utils', () => {
-  test('getToolsetSignInBody returns OAUTH body with code', () => {
+  test('getToolsetSignInBody returns OAUTH body with code and redirectUri', () => {
     const toolset = { authSettings: { authenticationType: ToolsetAuthType.OAUTH } } as any;
-    const result = getToolsetSignInBody(toolset, ToolsetAuthCredentialLevel.APP, void 0, 'authcode');
+    const result = getToolsetSignInBody(
+      toolset,
+      ToolsetAuthCredentialLevel.APP,
+      void 0,
+      'authcode',
+      'https://redirect.example.com/callback',
+    );
     expect(result).toMatchObject({
       credentialsLevel: ToolsetAuthCredentialLevel.APP,
       authenticationType: ToolsetAuthType.OAUTH,
       code: 'authcode',
+      redirectUri: 'https://redirect.example.com/callback',
     });
   });
 

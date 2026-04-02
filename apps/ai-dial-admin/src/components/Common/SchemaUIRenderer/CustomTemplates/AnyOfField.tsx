@@ -141,13 +141,16 @@ class AnyOfField<T = any, S extends StrictRJSFSchema = RJSFSchema, F extends For
       newFormData = this.getNewFormDataByType(newOption?.type as string) as T;
     }
     this.setState({ selectedOption: intOption }, () => {
-      onChange(newFormData, [this.getFieldId()]);
+      onChange(newFormData, this.getFieldId().path);
     });
   };
 
   getFieldId() {
-    const { fieldPathId, schema } = this.props;
-    return `${fieldPathId}${schema.oneOf ? '__oneof_select' : '__anyof_select'}`;
+    const { fieldPathId } = this.props;
+    return {
+      id: fieldPathId.$id,
+      path: fieldPathId.path,
+    };
   }
 
   /** Renders the `AnyOfField` selector along with a `SchemaField` for the value of the `formData`
@@ -232,7 +235,7 @@ class AnyOfField<T = any, S extends StrictRJSFSchema = RJSFSchema, F extends For
           <div className="flex flex-col flex-1">
             <div className="form-group max-w-[300px]">
               <Widget
-                id={this.getFieldId()}
+                id={this.getFieldId().id}
                 name={`${name}${schema.oneOf ? '__oneof_select' : '__anyof_select'}`}
                 schema={{ type: 'number', default: 0 } as S}
                 onChange={this.onOptionChange}

@@ -18,6 +18,7 @@ import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
@@ -38,6 +39,7 @@ const View: FC<Props> = ({ etag, template, names }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
+  const { dispatch } = useSaveValidationContext();
   const getReqRef = useRef(useProtectedRequest());
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
@@ -129,7 +131,10 @@ const View: FC<Props> = ({ etag, template, names }) => {
                   route={ApplicationRoute.Interceptors}
                   isModalOpen={isModalOpen}
                   createEntity={createInterceptor}
-                  onClose={() => setIsModalOpen(false)}
+                  onClose={() => {
+                    setIsModalOpen(false);
+                    dispatch({ type: ValidationActionType.Reset });
+                  }}
                   names={names || []}
                   initialValues={source}
                 />,

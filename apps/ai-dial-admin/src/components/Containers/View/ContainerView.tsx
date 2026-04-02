@@ -11,6 +11,7 @@ import { ApiRoute } from '@/src/constants/api-routes';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { IMAGE_BUILD_POLL_INTERVAL } from '@/src/constants/deployments/images';
+import { CONTAINER_IGNORED_FIELDS } from '@/src/constants/editor';
 import { ErrorI18nKey, ContainersI18nKey, DeploymentsI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -304,6 +305,7 @@ const ContainerView: FC<Props> = ({
               entity={selectedContainer}
               setSelectedEntity={setSelectedContainer}
               setIsChanged={setIsChanged}
+              ignoredFields={CONTAINER_IGNORED_FIELDS}
             />
           ) : (
             <TabsContent

@@ -1,9 +1,12 @@
 import { ColDef } from 'ag-grid-community';
 
+import ExecutionStatusCellRenderer from '@/src/components/Grid/CellRenderers/ExecutionStatusCellRenderer';
 import { AnalyticsResult, ExtractionResult, Run } from '@/src/models/evaluation/run';
 import { FilterDto } from '@/src/models/request';
 import { FilterOperatorDto } from '@/src/types/request';
-import ExecutionStatusCellRenderer from '@/src/components/Grid/CellRenderers/ExecutionStatusCellRenderer';
+
+import { MetricGroup } from './models';
+export type { MetricGroup } from './models';
 
 export const RESULT_FILTERS = (run: Run): FilterDto[] => [
   { column: 'runId', operator: FilterOperatorDto.EQUALS, value: run.id || '' },
@@ -173,6 +176,40 @@ export const getPanelTitle = (result: ExtractionResult | AnalyticsResult | null)
 export const getDetailEntries = (data: Record<string, unknown>) => {
   return Object.keys(data).map((key) => {
     return [key, String(data[key])] as [string, string];
+  });
+};
+
+export const getMetricGroups = (
+  metricValues?: Record<string, Record<string, unknown>>,
+  metricInfos?: Record<string, Record<string, unknown>>,
+): MetricGroup[] => {
+  if (!metricValues) return [];
+
+  return Object.entries(metricValues).map(([groupKey, values]) => {
+    const infoGroup = metricInfos?.[groupKey];
+    const hasOnlyNullError = Object.keys(values).length === 1 && 'error' in values && values.error == null;
+    const infoError = infoGroup?.error;
+    const hasError = (hasOnlyNullError && !!infoError) || Object.values(values).every((v) => v == null);
+
+    const metrics = Object.entries(values)
+      .filter(([key]) => key !== 'error' || !hasOnlyNullError)
+      .map(([key, val]) => ({
+        key,
+        value: typeof val === 'number' ? val : null,
+        isError: val == null,
+      }));
+
+    const infos = infoGroup
+      ? Object.fromEntries(Object.entries(infoGroup).filter(([key]) => key !== 'error' || !hasError))
+      : undefined;
+
+    return {
+      title: groupKey,
+      metrics,
+      info: infos && Object.keys(infos).length > 0 ? infos : undefined,
+      hasError,
+      errorMessage: hasError && infoError ? String(infoError) : undefined,
+    };
   });
 };
 

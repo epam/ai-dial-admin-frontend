@@ -67,6 +67,7 @@ interface Props {
   onDeleteBulk?: () => void;
   onClose: () => void;
   getAssetContext?: () => AssetsFolderContext;
+  preselectedItems?: File[];
 }
 
 const Modals: FC<Props> = ({
@@ -78,6 +79,7 @@ const Modals: FC<Props> = ({
   createModal,
   duplicateModal,
   existingVersions,
+  preselectedItems,
   onExport,
   onImport,
   onMove,
@@ -100,6 +102,7 @@ const Modals: FC<Props> = ({
             isModalOpen={isModalOpen}
             onClose={onClose}
             onApply={onImport}
+            preselectedItems={preselectedItems}
           />,
           document.body,
         )}

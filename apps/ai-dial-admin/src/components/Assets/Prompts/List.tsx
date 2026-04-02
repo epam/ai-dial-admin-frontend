@@ -47,6 +47,7 @@ import { getAllSelectedItemsPaths, getPromptGridColumns } from './utils';
 import { downloadJson } from '@/src/utils/download';
 import { getJsonFileName } from '@/src/utils/import/get-json-name';
 import DeleteModal from './DeleteModal';
+import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 
 const PromptsList: FC = () => {
   const [isCreatePromptModalOpen, setIsCreatePromptModalOpen] = useState(false);
@@ -62,6 +63,7 @@ const PromptsList: FC = () => {
   const [hasSelectedItems, setHasSelectedItems] = useState(false);
   const [deletedItems, setDeleledItems] = useState<DialFile[] | null>(null);
   const [selectedPaths, setSelectedPaths] = useState<Set<string>>(() => new Set());
+  const [dragAndDropsItems, setDragAndDropsItems] = useState<File[]>([]);
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -86,7 +88,7 @@ const PromptsList: FC = () => {
     const emptyPrompt: DialPrompt = {
       name: '.dial_folder',
       folderId: newPath,
-      version: '0',
+      version: '',
       content: '',
       path: `${newPath}.dial_folder`,
       nodeType: DialFileNodeType.ITEM,
@@ -106,12 +108,19 @@ const PromptsList: FC = () => {
   }, []);
 
   const handleCreatePrompt = useCallback(
-    (prompt: DialPrompt, path?: string) => {
+    (prompt: DialPrompt, path?: string, isCreateDuplicate?: boolean) => {
       const folderPath = path || destinationFolder || `${ROOT_FOLDER}/`;
       return createPrompt({ ...prompt, folderId: folderPath }).then((res) => {
         if (res.success) {
           fetchFiles?.(folderPath);
-          showNotification(getSuccessNotification(t(FoldersI18nKey.Import)));
+          if (isCreateDuplicate) {
+            showNotification(
+              getSuccessNotification(
+                getCreateNotificationTitle(ApplicationRoute.Prompts, t),
+                getCreateNotificationDescription(ApplicationRoute.Prompts, `${prompt.name}__${prompt.version}`, t),
+              ),
+            );
+          }
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
@@ -145,7 +154,7 @@ const PromptsList: FC = () => {
         ...prompt,
         path: `${prompt.folderId}${prompt.name}__${prompt.version}`,
       };
-      handleCreatePrompt(newPrompt as DialPrompt, prompt.folderId);
+      handleCreatePrompt(newPrompt as DialPrompt, prompt.folderId, true);
       setIsDuplicatePromptModalOpen(false);
     },
     [handleCreatePrompt],
@@ -187,11 +196,13 @@ const PromptsList: FC = () => {
   const handleImportPromptModalClose = useCallback(() => {
     setIsImportPromptModalOpen(false);
     setDestinationFolder(null);
+    setDragAndDropsItems([]);
   }, []);
 
-  const handleImportPromptModalOpen = useCallback((_?: string, currentFolder?: DialFile) => {
+  const handleImportPromptModalOpen = useCallback((_?: string, currentFolder?: DialFile, preselectedItems?: File[]) => {
     setIsImportPromptModalOpen(true);
     setDestinationFolder(currentFolder?.path || null);
+    setDragAndDropsItems(preselectedItems || []);
   }, []);
 
   const onImport = useCallback(
@@ -397,7 +408,8 @@ const PromptsList: FC = () => {
     const parentPath = destinationFolder || `${ROOT_FOLDER}/`;
     setFilePath(parentPath);
     fetchFiles(parentPath);
-  }, [destinationFolder, setFilePath, fetchFiles]);
+    removeSelection(deletedItems?.map((item) => item.path));
+  }, [destinationFolder, setFilePath, fetchFiles, deletedItems, removeSelection]);
 
   return (
     <>
@@ -429,6 +441,7 @@ const PromptsList: FC = () => {
           isModalOpen={isImportPromptModalOpen}
           onClose={handleImportPromptModalClose}
           onApply={onImport}
+          preselectedItems={dragAndDropsItems}
         />
       )}
       {isCreatePromptModalOpen && (

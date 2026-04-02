@@ -1,7 +1,9 @@
 import { DialAppRoute } from '@/src/models/dial/route';
 
 export const getAppRoutes = (routes: DialAppRoute[] | undefined) => {
-  return routes?.map((route) => ({
+  if (!routes) return undefined;
+  if (!Array.isArray(routes)) return [];
+  return routes.map((route) => ({
     ...route,
     name: route.displayName || route.name,
     paths: clearEmptyAppRoutes(route.paths),
