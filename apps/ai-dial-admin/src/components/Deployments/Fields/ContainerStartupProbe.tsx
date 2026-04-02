@@ -23,7 +23,6 @@ const ContainerStartupProbe: FC<Props> = ({ container, setContainer, disabled })
   const { errorFields, isValid } = useSaveValidationContext();
 
   const [isSectionInvalid, setSectionInvalid] = useState(false);
-  const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
     if (!isValid) {
@@ -52,9 +51,9 @@ const ContainerStartupProbe: FC<Props> = ({ container, setContainer, disabled })
   );
 
   const onChangeEnabled = useCallback(() => {
-    setEnabled(!enabled);
-    toggleCustomStartupProbe(!enabled);
-  }, [enabled, toggleCustomStartupProbe]);
+    const currentEnabled = container.probeProperties?.enabled || false;
+    toggleCustomStartupProbe(!currentEnabled);
+  }, [container.probeProperties?.enabled, toggleCustomStartupProbe]);
 
   const isDisabled = useMemo(() => disabled ?? isEditDisabled(container), [container, disabled]);
 
