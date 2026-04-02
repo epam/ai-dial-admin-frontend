@@ -22,7 +22,7 @@ export const evaluateColumns = async (
       try {
         const expr = jsonata(column.expression);
         result = await expr.evaluate(response);
-        valid = result !== undefined && result !== null;
+        valid = result != null;
         if (!valid) {
           result = null;
         }
