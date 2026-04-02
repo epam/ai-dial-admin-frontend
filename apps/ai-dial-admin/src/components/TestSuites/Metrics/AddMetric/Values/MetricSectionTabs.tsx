@@ -2,10 +2,10 @@ import { FC, ReactNode, useMemo, useState } from 'react';
 import { DialGhostIconButton, DialTabs, ElementSize, TabModel } from '@epam/ai-dial-ui-kit';
 
 import { useI18n } from '@/src/locales/client';
-import { getSectionTabs, SectionView } from '../constants';
+import { getSectionTabs, SectionView } from '@/src/components/TestSuites/Metrics/AddMetric/constants';
 import SchemaViewer from './SchemaViewer';
 import { IconMaximize } from '@tabler/icons-react';
-import { TestSuitesI18nKey } from '../../../../../constants/i18n';
+import { TestSuitesI18nKey } from '@/src/constants/i18n';
 
 interface Props {
   title: string;
