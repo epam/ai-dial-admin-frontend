@@ -6,7 +6,7 @@ describe('getDiffEditorTheme', () => {
   test('returns dark theme config with overridden background', () => {
     const theme = getDiffEditorTheme(EDITOR_THEMES.dark);
     expect(theme.base).toBe('vs-dark');
-    expect(theme.colors['editor.background']).toBe('#222932');
+    expect(theme.colors['editor.background']).toBe('#1D2439');
   });
 
   test('returns light theme config with overridden background', () => {

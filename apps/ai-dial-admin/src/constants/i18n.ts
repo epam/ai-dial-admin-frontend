@@ -287,6 +287,7 @@ export enum DuplicateI18nKey {
   Adapter = 'DeleteEntity.Entities.Adapter',
   InterceptorTemplate = 'DuplicateEntity.Entities.InterceptorTemplate',
   ApplicationRunner = 'DuplicateEntity.Entities.ApplicationRunner',
+  TestSuite = 'DuplicateEntity.Entities.TestSuite',
 }
 
 export enum ButtonsI18nKey {
@@ -581,6 +582,7 @@ export enum TabsI18nKey {
   RequestSchema = 'Tabs.RequestSchema',
   ResponseSchema = 'Tabs.ResponseSchema',
   Columns = 'Tabs.Columns',
+  Response = 'Tabs.Response',
   Analytics = 'Tabs.Analytics',
   MCP = 'Tabs.MCP',
   Public = 'Tabs.Public',
@@ -1439,6 +1441,7 @@ export enum TestSuitesI18nKey {
   ChangeMethod = 'TestSuites.ChangeMethod',
   ChangeMethodDisabledWhileTryOutOpen = 'TestSuites.ChangeMethodDisabledWhileTryOutOpen',
   Controls = 'TestSuites.Controls',
+  Schema = 'TestSuites.Schema',
   NoTestCases = 'TestSuites.NoTestCases',
   FromPC = 'TestSuites.FromPC',
   ImportFromPC = 'TestSuites.ImportFromPC',

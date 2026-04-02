@@ -313,6 +313,7 @@ export default {
       Adapter: 'Adapter',
       InterceptorTemplate: 'Interceptor Template',
       ApplicationRunner: 'Application Runner',
+      TestSuite: 'Test Suite',
     },
   },
   CreateEntity: {
@@ -563,6 +564,7 @@ export default {
     RequestSchema: 'Request Schema',
     ResponseSchema: 'Response Schema',
     Columns: 'Columns',
+    Response: 'Response',
     Analytics: 'Analytics',
     Public: 'Public',
     Application: 'Application',
@@ -1467,6 +1469,7 @@ export default {
     Target: 'Target',
     Application: 'Application',
     Methods: 'Methods',
+    Schema: 'Schema',
     Method: 'Method',
     Controls: 'Controls',
     Configuration: 'Configuration',

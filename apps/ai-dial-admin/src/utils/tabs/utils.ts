@@ -51,6 +51,7 @@ export enum EntityViewTab {
   Headers = 'Headers',
   RequestSchema = 'RequestSchema',
   ResponseSchema = 'ResponseSchema',
+  Response = 'Response',
   Columns = 'Columns',
   TestSuiteMethod = 'TestSuiteMethod',
   Analytics = 'Analytics',
@@ -303,6 +304,11 @@ export const inputSchemaTab = (t: (key: string) => string) => ({
 export const outputSchemaTab = (t: (key: string) => string) => ({
   id: EntityViewTab.OutputSchema,
   label: t(TabsI18nKey.OutputSchema),
+});
+
+export const responseTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.Response,
+  label: t(TabsI18nKey.Response),
 });
 
 export const publicTab = (t: (key: string) => string) => ({

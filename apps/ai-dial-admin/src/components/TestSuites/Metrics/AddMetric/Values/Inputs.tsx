@@ -1,49 +1,48 @@
+import { DialLabel, DialSelect } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useState } from 'react';
 
-import { DialLabel, DialSelect } from '@epam/ai-dial-ui-kit';
-
-import TabSelector from '@/src/components/Common/TabSelector/TabSelector';
-
 import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
+import TabSelector from '@/src/components/Common/TabSelector/TabSelector';
 import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { MetricBinding } from '@/src/models/evaluation/metric';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { MetricBindingType } from '@/src/types/evaluation';
 import MetricControl from './MetricControl';
+import MetricSectionTabs from './MetricSectionTabs';
 
 interface Props {
   title: string;
   bindings?: MetricBinding[];
   fields: SchemaFieldRow[];
+  schema?: object;
   selectedTestSuite?: TestSuite;
   onChange?: (bindings: MetricBinding[]) => void;
 }
 
-const MetricInputs: FC<Props> = ({ selectedTestSuite, fields, title, bindings, onChange }) => {
-  if (!fields.length) {
+const MetricInputs: FC<Props> = ({ selectedTestSuite, fields, title, bindings, schema, onChange }) => {
+  if (!fields.length && !schema) {
     return null;
   }
 
-  return (
-    <div className="flex flex-col">
-      <p className="dial-small-semi mb-4">{title}</p>
-      <div className="flex flex-col gap-4">
-        {fields.map((field) => (
-          <MetricInput
-            key={field.id}
-            field={field}
-            binding={bindings?.find((b) => b.property === field.name)}
-            selectedTestSuite={selectedTestSuite}
-            onChange={(binding) => {
-              const updatedBindings = bindings?.map((b) => (b.property === field.name ? binding : b));
-              onChange?.(updatedBindings || []);
-            }}
-          />
-        ))}
-      </div>
+  const controlsContent = (
+    <div className="flex flex-col gap-4">
+      {fields.map((field) => (
+        <MetricInput
+          key={field.id}
+          field={field}
+          binding={bindings?.find((b) => b.property === field.name)}
+          selectedTestSuite={selectedTestSuite}
+          onChange={(binding) => {
+            const updatedBindings = bindings?.map((b) => (b.property === field.name ? binding : b));
+            onChange?.(updatedBindings || []);
+          }}
+        />
+      ))}
     </div>
   );
+
+  return <MetricSectionTabs title={title} schema={schema} controlsContent={controlsContent} />;
 };
 
 const MetricInput: FC<{
