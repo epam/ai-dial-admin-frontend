@@ -5,7 +5,7 @@ import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } fr
 import { editor } from 'monaco-editor';
 
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
-import { clearResolvedErrors } from '@/src/components/EntityTabs/JsonEditor/utils';
+import { clearResolvedErrors, mergeWithIgnoredFields } from '@/src/components/EntityTabs/JsonEditor/utils';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
@@ -15,6 +15,7 @@ interface Props<T> {
   entity: T | null;
   setSelectedEntity?: Dispatch<SetStateAction<T>>;
   setIsChanged?: Dispatch<SetStateAction<boolean>>;
+  ignoredFields?: (keyof T)[];
   readonly?: boolean;
   options?: editor.IStandaloneEditorConstructionOptions;
 }
@@ -23,6 +24,7 @@ const EntityJsonEditor = <T extends object>({
   entity,
   setSelectedEntity,
   setIsChanged,
+  ignoredFields,
   readonly,
   options,
 }: Props<T>) => {
@@ -60,7 +62,7 @@ const EntityJsonEditor = <T extends object>({
         const parsed = JSON.parse(updatedConfig);
         if (setSelectedEntity) {
           skipEntityModelSyncRef.current = true;
-          setSelectedEntity(parsed);
+          setSelectedEntity((prev) => mergeWithIgnoredFields(prev, parsed, ignoredFields));
         }
       } catch (error) {
         if (error) {
@@ -68,7 +70,7 @@ const EntityJsonEditor = <T extends object>({
         }
       }
     },
-    [setSelectedEntity, setIsChanged],
+    [setSelectedEntity, setIsChanged, ignoredFields],
   );
 
   const onValidateJSON = useCallback(
