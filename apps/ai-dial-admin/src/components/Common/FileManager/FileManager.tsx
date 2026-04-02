@@ -12,9 +12,8 @@ import {
 } from '@epam/ai-dial-ui-kit';
 import { ColDef } from 'ag-grid-community';
 
-import { importFiles } from '@/src/utils/files/import-files';
 import { getParentPathByFullPath } from '@/src/components/Assets/utils';
-import { getFormDataForImport, getImportTitle } from '@/src/components/EntityListView/HeaderButtons/utils';
+import { getImportTitle } from '@/src/components/EntityListView/HeaderButtons/utils';
 import { getImportResults } from '@/src/components/EntityListView/Import/utils';
 import { FILE_PREVIEW, PREVIEW_EXTENSIONS, ROOT_FOLDER } from '@/src/constants/file';
 import { FileManagerI18nKey } from '@/src/constants/i18n';
@@ -24,7 +23,6 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { ImportResult } from '@/src/models/import';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
 import { getSuccessNotification } from '@/src/utils/notification';
@@ -34,10 +32,10 @@ import {
   getGridOptions,
   getToolbarOptions,
   getTreeOptions,
+  getNewFolderPath,
   getValidationMessages,
   validateCreateFolder,
 } from './utils';
-import { NEW_FOLDER_NAME } from './constants';
 import { FileManagerGridRow } from '@epam/ai-dial-ui-kit/dist/src/components/FileManager/FileManagerContext';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 
@@ -54,7 +52,7 @@ interface Props {
     destinationFolder: string,
   ) => Promise<(ServerActionResponse[] | ServerActionResponse)[]>;
   onExport: (files: DialFile[]) => Promise<void>;
-  customUploadFileAction?: (currentPath?: string, currentFolder?: DialFile) => void;
+  customUploadFileAction?: (currentPath?: string, currentFolder?: DialFile, preselectedItems?: File[]) => void;
   customCreateNewItemAction?: (currentPath?: string, currentFolder?: DialFile) => void;
   customDuplicateAction?: (items?: DialFile[]) => void;
   customDeleteItemsAction?: (items: DialFile[], parentFolderPath: string) => void;
@@ -80,6 +78,7 @@ const FileManager: FC<Props> = ({
   onExport,
   filterData,
   onPathChange,
+  customUploadFileAction,
   ...props
 }) => {
   const [loadedPaths, setLoadedPaths] = useState(new Set(['']));
@@ -164,18 +163,18 @@ const FileManager: FC<Props> = ({
 
   const handleAddChild = useCallback(
     (files: DialFile[]) => {
-      const newPath = files[0].path + NEW_FOLDER_NAME;
+      const newPath = getNewFolderPath(files[0], filteredFiles, 'child');
       handleCreateFolder(void 0, newPath);
     },
-    [handleCreateFolder],
+    [handleCreateFolder, filteredFiles],
   );
 
   const handleAddSibling = useCallback(
     (files: DialFile[]) => {
-      const newPath = files[0].path.replace(/([^/]+)\/?$/, NEW_FOLDER_NAME);
+      const newPath = getNewFolderPath(files[0], filteredFiles, 'sibling');
       handleCreateFolder(void 0, newPath);
     },
-    [handleCreateFolder],
+    [handleCreateFolder, filteredFiles],
   );
 
   const handleOnPathChange = useCallback(
@@ -266,29 +265,14 @@ const FileManager: FC<Props> = ({
 
   const handleDragAndDropFiles = useCallback(
     (files: DialUploadFileItem[], destinationFolder: string) => {
-      const promises: Promise<ServerActionResponse>[] = [];
-
-      files.forEach((file) => {
-        const { body } = getFormDataForImport(
-          destinationFolder,
-          [file.fileContent],
-          ImportFileType.FILES,
-          ConflictResolutionPolicy.SKIP,
-          void 0,
-          false,
-          view,
-        );
-        promises.push(importFiles(body, ImportFileType.FILES));
-      });
-
-      Promise.all(promises).then((result) => {
-        const isSuccess = result.every((res) => res.success);
-        if (isSuccess) {
-          fetchFiles?.(destinationFolder);
-        }
-      });
+      const folder = { path: destinationFolder };
+      customUploadFileAction?.(
+        destinationFolder,
+        folder as DialFile,
+        files.map((file) => file.fileContent),
+      );
     },
-    [fetchFiles, view],
+    [customUploadFileAction],
   );
 
   return (
@@ -330,6 +314,7 @@ const FileManager: FC<Props> = ({
       isRenameFileAvailable={false}
       isDuplicateFolderAvailable={false}
       previewExtensions={PREVIEW_EXTENSIONS}
+      customUploadFileAction={customUploadFileAction}
       {...props}
     />
   );

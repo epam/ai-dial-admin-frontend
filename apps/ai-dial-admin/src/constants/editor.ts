@@ -1,3 +1,5 @@
+import { Container } from '@/src/models/deployments/containers';
+import { Image } from '@/src/models/deployments/images';
 import { JSONEditorThemeConfig, EDITOR_THEMES, EditorOptions } from '@/src/types/editor';
 
 const DEFAULT_COLORS = {
@@ -103,3 +105,6 @@ export const editorOptions: EditorOptions = {
   formatOnType: true,
   formatOnPaste: true,
 };
+
+export const IMAGE_IGNORED_FIELDS: (keyof Image)[] = ['id'];
+export const CONTAINER_IGNORED_FIELDS: (keyof Container)[] = ['name', '$type'];
