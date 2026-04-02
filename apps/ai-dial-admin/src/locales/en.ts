@@ -1465,6 +1465,7 @@ export default {
     Target: 'Target',
     Application: 'Application',
     Methods: 'Methods',
+    Schema: 'Schema',
     Method: 'Method',
     Controls: 'Controls',
     Configuration: 'Configuration',
