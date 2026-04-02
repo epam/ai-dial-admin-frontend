@@ -14,7 +14,7 @@ interface Props {
   isFullscreen: boolean;
   setFullScreen: (isFullscreen: boolean) => void;
 }
-
+// TODO: review after implement Evaluation design
 const SchemaViewer: FC<Props> = ({ schema, title, isFullscreen = false, setFullScreen }) => {
   const { currentTheme } = useTheme();
 
