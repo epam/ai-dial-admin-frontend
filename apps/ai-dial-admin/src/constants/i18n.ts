@@ -582,6 +582,7 @@ export enum TabsI18nKey {
   RequestSchema = 'Tabs.RequestSchema',
   ResponseSchema = 'Tabs.ResponseSchema',
   Columns = 'Tabs.Columns',
+  Response = 'Tabs.Response',
   Analytics = 'Tabs.Analytics',
   MCP = 'Tabs.MCP',
   Public = 'Tabs.Public',
