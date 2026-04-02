@@ -142,6 +142,8 @@ const MetricControl: FC<Props> = ({ binding, field, label = true, onChangeValue 
       {(field.type === 'integer' || field.type === 'number') && (
         <DialNumberInput
           id={field.id}
+          max={field.maximum}
+          min={field.minimum}
           placeholder={valuePlaceholder}
           labelProps={label ? { required: field.required, label: field.name, caption: field.description } : undefined}
           value={binding?.source.value as number | undefined}
