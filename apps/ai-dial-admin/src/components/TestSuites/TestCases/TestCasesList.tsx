@@ -60,6 +60,7 @@ const TestCasesList: FC<Props> = ({
   const [isSchemaOpen, setIsSchemaOpen] = useState(false);
   const onRemoveCaseRef = useRef<(data?: TestCase) => void>(() => {});
   const dirtyRowsRef = useRef<Map<string, Record<string, unknown>>>(new Map());
+  const pendingRefreshRef = useRef(false);
 
   const onToggleSchema = useCallback(() => {
     setIsSchemaOpen((prev) => !prev);
@@ -68,6 +69,9 @@ const TestCasesList: FC<Props> = ({
   const onChangeTestCaseSchema = useCallback(
     (testCaseSchema: TestCaseSchema[], isSkipRefresh?: boolean) => {
       onChange({ ...selectedTestSuite, testCaseSchema }, isSkipRefresh);
+      if (!isSkipRefresh) {
+        pendingRefreshRef.current = true;
+      }
     },
     [selectedTestSuite, onChange],
   );
@@ -141,12 +145,10 @@ const TestCasesList: FC<Props> = ({
       setIsLoading(true);
       getTestCases(selectedTestSuite.id, 0, 1000, [], []).then((res) => {
         setIsLoading(false);
-        const testCasesData = res?.content || [];
         const data = res == null || res.content.length === 0 ? [] : getTestCaseGridData(res?.content || []);
-
         setData(data);
         setColumnDefs([
-          ...getTestCaseColumns(testCasesData, onCellChange, t),
+          ...getTestCaseColumns(selectedTestSuite, onCellChange, t),
           { ...ONE_ACTION_COLUMN(getTryOutOperation(onOpenTryOutSidebar)), colId: 'action-tryout' },
           {
             ...ONE_ACTION_COLUMN(getRemoveOperation(stableOnRemoveCase, void 0, 'text-error w-4 h-4')),
@@ -158,7 +160,7 @@ const TestCasesList: FC<Props> = ({
         router.refresh();
       }
     },
-    [gridApi, onCellChange, onOpenTryOutSidebar, selectedTestSuite.id, stableOnRemoveCase, t],
+    [gridApi, onCellChange, onOpenTryOutSidebar, selectedTestSuite, stableOnRemoveCase, t],
   );
 
   const onGridReady = useCallback(
@@ -255,6 +257,13 @@ const TestCasesList: FC<Props> = ({
   useEffect(() => {
     refreshGrid();
   }, []);
+
+  useEffect(() => {
+    if (pendingRefreshRef.current) {
+      pendingRefreshRef.current = false;
+      refreshGrid();
+    }
+  }, [selectedTestSuite.testCaseSchema, refreshGrid]);
 
   useEffect(() => {
     if (!testCasesActionsRef) return;

@@ -287,6 +287,7 @@ export enum DuplicateI18nKey {
   Adapter = 'DeleteEntity.Entities.Adapter',
   InterceptorTemplate = 'DuplicateEntity.Entities.InterceptorTemplate',
   ApplicationRunner = 'DuplicateEntity.Entities.ApplicationRunner',
+  TestSuite = 'DuplicateEntity.Entities.TestSuite',
 }
 
 export enum ButtonsI18nKey {
