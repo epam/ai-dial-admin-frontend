@@ -19,9 +19,11 @@ const FileSelectCellRenderer: FC<FileSelectCellRendererParams> = ({
   onChange,
   view,
   id,
+  setValue,
 }) => {
   const onChangeValue = (value: string) => {
     onChange?.(value, data, colDef?.field as string, node.rowIndex as number);
+    setValue?.(value);
   };
   return (
     <div className="w-full">
