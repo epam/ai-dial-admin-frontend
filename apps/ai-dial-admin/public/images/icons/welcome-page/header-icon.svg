@@ -40,10 +40,10 @@
       <path d="M169 33.129C169 14.8324 183.832 0 202.129 0L489.871 0C508.168 0 523 14.8324 523 33.129V49.9373C523 58.951 515.693 66.2581 506.679 66.2581C503.939 66.2581 503.559 79 500.932 79C498.2 79 493.224 66.2581 490.588 66.2581C467.709 66.2581 282.111 66.2581 202.041 66.2581C183.744 66.2581 169 51.4257 169 33.129Z"/>
     </clipPath>
     <linearGradient id="paint0_linear_87_3097" x1="-14.9755" y1="59.6825" x2="98.8021" y2="179.024" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#74A4FF" stop-opacity="0.1"/>
-      <stop offset="0.376891" stop-color="#74A4FF" stop-opacity="0.8"/>
-      <stop offset="0.703333" stop-color="#74A4FF"/>
-      <stop offset="0.988497" stop-color="#74A4FF"/>
+      <stop stop-color="#7DA4FF" stop-opacity="0.1"/>
+      <stop offset="0.376891" stop-color="#7DA4FF" stop-opacity="0.8"/>
+      <stop offset="0.703333" stop-color="#7DA4FF"/>
+      <stop offset="0.988497" stop-color="#7DA4FF"/>
     </linearGradient>
     <linearGradient id="paint1_linear_87_3097" x1="533.574" y1="-15.522" x2="442.351" y2="68.5596" gradientUnits="userSpaceOnUse">
       <stop stop-color="#A972FF" stop-opacity="0.1"/>
