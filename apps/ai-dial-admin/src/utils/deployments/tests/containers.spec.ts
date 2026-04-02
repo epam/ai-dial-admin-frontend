@@ -4,6 +4,9 @@ import {
   convertMilliCoresToCores,
   getContainerRedeploySnapshot,
   getContainerTemplate,
+  getContainerScaling,
+  getContainerResources,
+  getContainerSource,
   isEditDisabled,
   normalizeEnvironmentVariables,
   convertMbToBytes,
@@ -13,6 +16,7 @@ import {
   isAutoscalingEnabled,
   deriveScaling,
 } from '../containers';
+import { DEFAULT_SCALING, SERVING_SCALING } from '@/src/constants/deployments/containers';
 import {
   CONTAINER_SOURCE_TYPE,
   CONTAINER_STATUS,
@@ -31,43 +35,179 @@ describe('containers utils', () => {
     vi.clearAllMocks();
   });
 
+  describe('getContainerScaling', () => {
+    test('returns SERVING_SCALING for NIM', () => {
+      expect(getContainerScaling(CONTAINER_TYPE.NIM)).toEqual(SERVING_SCALING);
+    });
+
+    test('returns SERVING_SCALING for HF', () => {
+      expect(getContainerScaling(CONTAINER_TYPE.HF)).toEqual(SERVING_SCALING);
+    });
+
+    test('returns DEFAULT_SCALING for MCP', () => {
+      expect(getContainerScaling(CONTAINER_TYPE.MCP)).toEqual(DEFAULT_SCALING);
+    });
+
+    test('returns DEFAULT_SCALING for INTERCEPTOR', () => {
+      expect(getContainerScaling(CONTAINER_TYPE.INTERCEPTOR)).toEqual(DEFAULT_SCALING);
+    });
+
+    test('returns DEFAULT_SCALING for ADAPTER', () => {
+      expect(getContainerScaling(CONTAINER_TYPE.ADAPTER)).toEqual(DEFAULT_SCALING);
+    });
+  });
+
+  describe('getContainerResources', () => {
+    test('includes GPU for NIM', () => {
+      const resources = getContainerResources(CONTAINER_TYPE.NIM);
+      expect(resources.requests?.['nvidia.com/gpu']).toBe('1');
+      expect(resources.limits?.['nvidia.com/gpu']).toBe('1');
+    });
+
+    test('includes GPU for HF', () => {
+      const resources = getContainerResources(CONTAINER_TYPE.HF);
+      expect(resources.requests?.['nvidia.com/gpu']).toBe('1');
+      expect(resources.limits?.['nvidia.com/gpu']).toBe('1');
+    });
+
+    test('does not include GPU for MCP', () => {
+      const resources = getContainerResources(CONTAINER_TYPE.MCP);
+      expect(resources.requests?.['nvidia.com/gpu']).toBeUndefined();
+      expect(resources.limits?.['nvidia.com/gpu']).toBeUndefined();
+    });
+
+    test('does not include GPU for INTERCEPTOR', () => {
+      const resources = getContainerResources(CONTAINER_TYPE.INTERCEPTOR);
+      expect(resources.requests?.['nvidia.com/gpu']).toBeUndefined();
+    });
+
+    test('does not include GPU for ADAPTER', () => {
+      const resources = getContainerResources(CONTAINER_TYPE.ADAPTER);
+      expect(resources.requests?.['nvidia.com/gpu']).toBeUndefined();
+    });
+
+    test('uses provided defaults', () => {
+      const defaults = {
+        CPU_REQUEST: '2',
+        MEMORY_REQUEST: '4096',
+        CPU_LIMIT: '4',
+        MEMORY_LIMIT: '8192',
+        GPU_REQUEST: '2',
+        GPU_LIMIT: '2',
+      };
+      const resources = getContainerResources(CONTAINER_TYPE.HF, defaults);
+      expect(resources.requests?.cpu).toBe('2');
+      expect(resources.requests?.memory).toBe(`${4096 * 1024 * 1024}`);
+      expect(resources.requests?.['nvidia.com/gpu']).toBe('2');
+      expect(resources.limits?.cpu).toBe('4');
+      expect(resources.limits?.memory).toBe(`${8192 * 1024 * 1024}`);
+      expect(resources.limits?.['nvidia.com/gpu']).toBe('2');
+    });
+
+    test('uses fallback values when no defaults provided', () => {
+      const resources = getContainerResources(CONTAINER_TYPE.MCP);
+      expect(resources.requests?.cpu).toBe('1');
+      expect(resources.requests?.memory).toBe(`${2048 * 1024 * 1024}`);
+      expect(resources.limits?.cpu).toBe('1');
+      expect(resources.limits?.memory).toBe(`${2048 * 1024 * 1024}`);
+    });
+  });
+
+  describe('getContainerSource', () => {
+    test('returns NGC_REGISTRY for NIM', () => {
+      const source = getContainerSource(CONTAINER_TYPE.NIM);
+      expect(source.$type).toBe(CONTAINER_SOURCE_TYPE.NGC_REGISTRY);
+    });
+
+    test('returns HUGGINGFACE for HF', () => {
+      const source = getContainerSource(CONTAINER_TYPE.HF);
+      expect(source.$type).toBe(CONTAINER_SOURCE_TYPE.HUGGINGFACE);
+    });
+
+    test('returns IMAGE_REFERENCE when sourceType is IMAGE_REFERENCE', () => {
+      const source = getContainerSource(CONTAINER_TYPE.MCP, CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE);
+      expect(source.$type).toBe(CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE);
+      expect(source.imageReference).toBe('');
+    });
+
+    test('returns IMAGE_REFERENCE with externalRegistryRef for MCP registry', () => {
+      const source = getContainerSource(CONTAINER_TYPE.MCP, CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE, {
+        mcpRegistry: true,
+      });
+      expect(source.$type).toBe(CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE);
+      expect(source.externalRegistryRef).toEqual({ $type: 'mcp-registry', packageName: '' });
+    });
+
+    test('returns INTERNAL_IMAGE by default for MCP', () => {
+      const source = getContainerSource(CONTAINER_TYPE.MCP);
+      expect(source.$type).toBe(CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE);
+      expect(source.imageDefinitionId).toBe('');
+    });
+
+    test('returns IMAGE_REFERENCE for ADAPTER with IMAGE_REFERENCE sourceType', () => {
+      const source = getContainerSource(CONTAINER_TYPE.ADAPTER, CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE);
+      expect(source.$type).toBe(CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE);
+      expect(source.imageReference).toBe('');
+    });
+
+    test('returns INTERNAL_IMAGE for ADAPTER without sourceType', () => {
+      const source = getContainerSource(CONTAINER_TYPE.ADAPTER);
+      expect(source.$type).toBe(CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE);
+      expect(source.imageDefinitionId).toBe('');
+    });
+
+    test('returns INTERNAL_IMAGE for INTERCEPTOR without sourceType', () => {
+      const source = getContainerSource(CONTAINER_TYPE.INTERCEPTOR);
+      expect(source.$type).toBe(CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE);
+      expect(source.imageDefinitionId).toBe('');
+    });
+  });
+
   describe('getContainerTemplate', () => {
-    test('returns template for ModelServings', () => {
+    test('returns template for HF with SERVING_SCALING', () => {
       const template = getContainerTemplate(CONTAINER_TYPE.HF);
       expect(template?.$type).toBe(CONTAINER_TYPE.HF);
       expect(template?.resources?.requests?.['nvidia.com/gpu']).toBe('1');
-      expect(template?.scaling).toEqual({ minReplicas: 1, maxReplicas: 1 });
+      expect(template?.scaling).toEqual(SERVING_SCALING);
+      expect(template?.modelFormat).toBe('huggingface');
     });
 
-    test('returns template for McpContainers', () => {
+    test('returns template for MCP with DEFAULT_SCALING', () => {
       const template = getContainerTemplate(CONTAINER_TYPE.MCP);
       expect(template?.$type).toBe(CONTAINER_TYPE.MCP);
       expect(template?.transport).toBe(CONTAINER_TRANSPORT.HTTP);
-      expect(template?.scaling).toEqual({ minReplicas: 1, maxReplicas: 1 });
+      expect(template?.scaling).toEqual(DEFAULT_SCALING);
     });
 
-    test('returns template for Interceptors', () => {
+    test('returns template for Interceptors with DEFAULT_SCALING', () => {
       const template = getContainerTemplate(CONTAINER_TYPE.INTERCEPTOR);
       expect(template?.$type).toBe(CONTAINER_TYPE.INTERCEPTOR);
-      expect(template?.scaling).toEqual({ minReplicas: 1, maxReplicas: 1 });
+      expect(template?.scaling).toEqual(DEFAULT_SCALING);
     });
 
-    test('returns template for NIM', () => {
+    test('returns template for NIM with SERVING_SCALING', () => {
       const template = getContainerTemplate(CONTAINER_TYPE.NIM);
       expect(template?.$type).toBe(CONTAINER_TYPE.NIM);
-      expect(template?.scaling).toEqual({ minReplicas: 1, maxReplicas: 1 });
+      expect(template?.scaling).toEqual(SERVING_SCALING);
       expect(getContainerTemplate(CONTAINER_TYPE.NIM, { GPU_REQUEST: '2', GPU_LIMIT: '2' })?.$type).toBe(
         CONTAINER_TYPE.NIM,
       );
     });
 
-    test('returns template for ADAPTER with scaling defaults', () => {
+    test('returns template for ADAPTER with DEFAULT_SCALING', () => {
       const template = getContainerTemplate(CONTAINER_TYPE.ADAPTER);
       expect(template?.$type).toBe(CONTAINER_TYPE.ADAPTER);
-      expect(template?.scaling).toEqual({ minReplicas: 1, maxReplicas: 1 });
+      expect(template?.scaling).toEqual(DEFAULT_SCALING);
     });
 
-    test('returns template for McpContainers', () => {
+    test('returns template for ADAPTER with INTERNAL_IMAGE and DEFAULT_SCALING', () => {
+      const template = getContainerTemplate(CONTAINER_TYPE.ADAPTER);
+      expect(template?.$type).toBe(CONTAINER_TYPE.ADAPTER);
+      expect(template?.source?.$type).toBe(CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE);
+      expect(template?.scaling).toEqual(DEFAULT_SCALING);
+    });
+
+    test('returns null for falsy type', () => {
       const template = getContainerTemplate('' as CONTAINER_TYPE);
       expect(template).toBeNull();
     });
@@ -91,7 +231,7 @@ describe('containers utils', () => {
       expect(template?.$type).toBe(CONTAINER_TYPE.ADAPTER);
       expect(template?.source?.$type).toBe(CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE);
       expect(template?.source?.imageReference).toBe('');
-      expect(template?.scaling).toEqual({ minReplicas: 1, maxReplicas: 1 });
+      expect(template?.scaling).toEqual(DEFAULT_SCALING);
       expect(template?.transport).toBeUndefined();
     });
 
@@ -104,7 +244,7 @@ describe('containers utils', () => {
       expect(template?.$type).toBe(CONTAINER_TYPE.INTERCEPTOR);
       expect(template?.source?.$type).toBe(CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE);
       expect(template?.source?.imageReference).toBe('');
-      expect(template?.scaling).toEqual({ minReplicas: 1, maxReplicas: 1 });
+      expect(template?.scaling).toEqual(DEFAULT_SCALING);
       expect(template?.transport).toBeUndefined();
     });
 

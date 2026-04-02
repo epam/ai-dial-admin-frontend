@@ -1,14 +1,20 @@
 import { EnvironmentVariable } from '@/src/models/deployments/variables';
-import { Container, ContainerRedeploySnapshot, ResourcesDefaults } from '@/src/models/deployments/containers';
+import {
+  Autoscaling,
+  Container,
+  ContainerRedeploySnapshot,
+  ResourcesDefaults,
+} from '@/src/models/deployments/containers';
 import {
   CONTAINER_SOURCE_TYPE,
   CONTAINER_STATUS,
   CONTAINER_TRANSPORT,
   CONTAINER_TYPE,
   ContainerResources,
+  ContainerSource,
   MODEL_FORMAT,
 } from '@/src/types/deployments/containers';
-import { DEFAULT_SCALING, DEFAULT_STRATEGY } from '@/src/constants/deployments/containers';
+import { DEFAULT_SCALING, DEFAULT_STRATEGY, SERVING_SCALING } from '@/src/constants/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 
 export const normalizeContainerPorts = (ports?: number[]): number[] => {
@@ -61,6 +67,65 @@ export interface ContainerTemplateOptions {
   mcpRegistry?: boolean;
 }
 
+export const getContainerScaling = (type: CONTAINER_TYPE): Autoscaling => {
+  if (type === CONTAINER_TYPE.NIM || type === CONTAINER_TYPE.HF) {
+    return SERVING_SCALING;
+  }
+  return DEFAULT_SCALING;
+};
+
+export const getContainerResources = (type: CONTAINER_TYPE, defaults?: ResourcesDefaults): ContainerResources => {
+  const base: ContainerResources = {
+    requests: {
+      cpu: defaults?.CPU_REQUEST || '1',
+      memory: `${(Number(defaults?.MEMORY_REQUEST) || 2048) * 1024 * 1024}`,
+    },
+    limits: {
+      cpu: defaults?.CPU_LIMIT || '1',
+      memory: `${(Number(defaults?.MEMORY_LIMIT) || 2048) * 1024 * 1024}`,
+    },
+  };
+
+  if (type === CONTAINER_TYPE.NIM || type === CONTAINER_TYPE.HF) {
+    return {
+      requests: {
+        ...base.requests,
+        'nvidia.com/gpu': defaults?.GPU_REQUEST || '1',
+      },
+      limits: {
+        ...base.limits,
+        'nvidia.com/gpu': defaults?.GPU_LIMIT || '1',
+      },
+    };
+  }
+
+  return base;
+};
+
+export const getContainerSource = (
+  type: CONTAINER_TYPE,
+  sourceType?: CONTAINER_SOURCE_TYPE,
+  options?: ContainerTemplateOptions,
+): ContainerSource => {
+  if (type === CONTAINER_TYPE.NIM) {
+    return { $type: CONTAINER_SOURCE_TYPE.NGC_REGISTRY };
+  }
+
+  if (type === CONTAINER_TYPE.HF) {
+    return { $type: CONTAINER_SOURCE_TYPE.HUGGINGFACE };
+  }
+
+  if (sourceType === CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE) {
+    return {
+      $type: CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE,
+      imageReference: '',
+      ...(options?.mcpRegistry ? { externalRegistryRef: { $type: 'mcp-registry', packageName: '' } } : {}),
+    };
+  }
+
+  return { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE, imageDefinitionId: '' };
+};
+
 export const getContainerTemplate = (
   type: CONTAINER_TYPE,
   defaults?: ResourcesDefaults,
@@ -71,98 +136,19 @@ export const getContainerTemplate = (
     return null;
   }
 
-  const template = {
+  return {
     $type: type,
-    source: { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE, imageDefinitionId: '' },
     displayName: '',
     name: '',
     description: '',
     status: CONTAINER_STATUS.NOT_DEPLOYED,
-    metadata: {
-      envs: [],
-    },
-    resources: {
-      requests: {
-        cpu: defaults?.CPU_REQUEST || '1',
-        memory: `${(Number(defaults?.MEMORY_REQUEST) || 2048) * 1024 * 1024}`,
-      },
-      limits: {
-        cpu: defaults?.CPU_LIMIT || '1',
-        memory: `${(Number(defaults?.MEMORY_LIMIT) || 2048) * 1024 * 1024}`,
-      },
-    },
+    metadata: { envs: [] },
+    source: getContainerSource(type, sourceType, options),
+    scaling: getContainerScaling(type),
+    resources: getContainerResources(type, defaults),
+    ...(type === CONTAINER_TYPE.MCP && { transport: CONTAINER_TRANSPORT.HTTP }),
+    ...(type === CONTAINER_TYPE.HF && { modelFormat: MODEL_FORMAT.HF }),
   };
-
-  if (type === CONTAINER_TYPE.MCP) {
-    return {
-      ...template,
-      ...(sourceType === CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE
-        ? {
-            source: {
-              $type: CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE,
-              imageReference: '',
-              ...(options?.mcpRegistry ? { externalRegistryRef: { $type: 'mcp-registry', packageName: '' } } : {}),
-            },
-          }
-        : {}),
-      transport: CONTAINER_TRANSPORT.HTTP,
-      scaling: DEFAULT_SCALING,
-    };
-  }
-
-  if (
-    (type === CONTAINER_TYPE.ADAPTER || type === CONTAINER_TYPE.INTERCEPTOR) &&
-    sourceType === CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE
-  ) {
-    return {
-      ...template,
-      source: { $type: CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE, imageReference: '' },
-      scaling: DEFAULT_SCALING,
-    };
-  }
-
-  if (type === CONTAINER_TYPE.HF) {
-    return {
-      ...template,
-      source: {
-        $type: CONTAINER_SOURCE_TYPE.HUGGINGFACE,
-      },
-      modelFormat: MODEL_FORMAT.HF,
-      resources: {
-        requests: {
-          ...template.resources?.requests,
-          'nvidia.com/gpu': defaults?.GPU_REQUEST || '1',
-        },
-        limits: {
-          ...template.resources?.limits,
-          'nvidia.com/gpu': defaults?.GPU_LIMIT || '1',
-        },
-      },
-      scaling: DEFAULT_SCALING,
-    };
-  }
-
-  if (type === CONTAINER_TYPE.NIM) {
-    return {
-      ...template,
-      source: {
-        $type: CONTAINER_SOURCE_TYPE.NGC_REGISTRY,
-      },
-      resources: {
-        requests: {
-          ...template.resources?.requests,
-          'nvidia.com/gpu': defaults?.GPU_REQUEST || '1',
-        },
-        limits: {
-          ...template.resources?.limits,
-          'nvidia.com/gpu': defaults?.GPU_LIMIT || '1',
-        },
-      },
-      scaling: DEFAULT_SCALING,
-    };
-  }
-
-  return { ...template, scaling: DEFAULT_SCALING };
 };
 
 export const isEditDisabled = (container: Container): boolean => {

@@ -25,7 +25,13 @@ import { TEST_CASES_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { TYPE_OPTIONS } from '@/src/components/TestSuites/TestCaseSchema/constants';
 import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { MetricBinding } from '@/src/models/evaluation/metric';
-import { InputBindingRowData, ResponseColumn, TestCase, TestCaseSchema } from '@/src/models/evaluation/test-suite';
+import {
+  InputBindingRowData,
+  ResponseColumn,
+  TestCase,
+  TestCaseSchema,
+  TestSuite,
+} from '@/src/models/evaluation/test-suite';
 import { InputBindingType, MetricBindingType, TestCaseItemType } from '@/src/types/evaluation';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -57,23 +63,14 @@ const getEnabledColumnFilterOptions = (
 ];
 
 export const getTestCaseColumns = (
-  testCases: TestCase[],
+  suite: TestSuite,
   onCellChange: onCellChange,
   t?: (key: string) => string,
 ): ColDef[] => {
   const enabledLabel = t?.(BasicI18nKey.Enabled) ?? 'Enabled';
   const disabledLabel = t?.(BasicI18nKey.Disabled) ?? 'Disabled';
   const allLabel = 'All';
-  const data = testCases.reduce((acc: string[], testCase) => {
-    const testCaseFacts = Object.keys(testCase.data || {});
-    testCaseFacts.forEach((fact) => {
-      if (!acc.includes(fact)) {
-        acc.push(fact);
-      }
-    });
-    return acc;
-  }, [] as string[]);
-
+  const schema = suite.testCaseSchema || [];
   return [
     {
       ...UTILITY_COLUMN,
@@ -123,19 +120,44 @@ export const getTestCaseColumns = (
       }
       return col;
     }),
-    ...data.map((fact) => {
+    ...schema.map((s) => {
+      const field = s.name;
       return {
-        field: fact,
-        headerName: fact,
+        field: field,
+        headerName: field,
         editable: false,
         cellRenderer: EditableCellRenderer,
-        valueGetter: (params: ValueGetterParams) => params.data?.data?.[fact] ?? params.data?.[fact] ?? '',
+        valueGetter: (params: ValueGetterParams) => params.data?.data?.[field] ?? params.data?.[field] ?? '',
         cellRendererParams: {
           hideTriangle: true,
           skipRequired: true,
           onChange: (value: string | number, rowData: unknown) => {
-            onCellChange(rowData as Record<string, unknown>, fact, value);
+            onCellChange(rowData as Record<string, unknown>, field, value);
           },
+        },
+        cellRendererSelector: () => {
+          if (s.type === TestCaseItemType.FILE) {
+            return {
+              component: FileSelectCellRenderer,
+              params: {
+                onChange: (value: string | number, rowData: unknown) => {
+                  onCellChange(rowData as Record<string, unknown>, field, value);
+                },
+                id: suite.id,
+                view: ApplicationRoute.TestSuites,
+              },
+            };
+          }
+          return {
+            component: EditableCellRenderer,
+            params: {
+              hideTriangle: true,
+              skipRequired: true,
+              onChange: (value: string | number, rowData: unknown) => {
+                onCellChange(rowData as Record<string, unknown>, field, value);
+              },
+            },
+          };
         },
       };
     }),

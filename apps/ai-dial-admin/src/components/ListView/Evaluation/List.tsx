@@ -14,7 +14,7 @@ import {
 } from 'ag-grid-community';
 import { useRouter } from 'next/navigation';
 
-import { runTestSuite } from '@/src/app/[lang]/test-suites/actions';
+import { duplicateTestSuite, runTestSuite } from '@/src/app/[lang]/test-suites/actions';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 import ListEntities from '@/src/components/ListView/List';
@@ -22,21 +22,25 @@ import RunModal from '@/src/components/TestSuites/Runs/RunModal';
 import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
 import {
   getDeleteOperation,
+  getDuplicateOperation,
   getOpenInNewTabOperation,
   getRunTestSuiteOperation,
 } from '@/src/constants/grid-columns/actions';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { EvaluationPageData, FilterDto, SortDto } from '@/src/models/request';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { emptyDataTitleMap, listViewTitleMap } from '../constants';
+import DuplicateTestSuite from './Duplicate';
 import HeaderButtons from './Header';
 
 interface Props<T> {
@@ -138,6 +142,14 @@ const EvaluationListView = <T extends object>({
     [onModalOpen],
   );
 
+  const onOpenDuplicateModal = useCallback(
+    (entity?: T) => {
+      setCurrentEntity(entity);
+      onOpenModal(ModalType.duplicate);
+    },
+    [onOpenModal],
+  );
+
   const onOpenDeleteModal = useCallback(
     (entity?: T) => {
       setCurrentEntity(entity);
@@ -170,13 +182,41 @@ const EvaluationListView = <T extends object>({
     [currentEntity, onModalClose, showNotification, t],
   );
 
+  const onDuplicate = useCallback(
+    (entity: TestSuite) => {
+      duplicateTestSuite((currentEntity as TestSuite)?.id as string, entity).then((res) => {
+        if (res.success) {
+          showNotification(
+            getSuccessNotification(
+              getCreateNotificationTitle(route, t),
+              getCreateNotificationDescription(route, res.response.suite.name, t),
+            ),
+          );
+          router.push(getUrnForEntity(route, res.response.suite));
+          router.refresh();
+          onModalClose();
+        } else {
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+        }
+      });
+    },
+    [currentEntity, onModalClose, route, router, showNotification, t],
+  );
+
   const actionColumn = [getOpenInNewTabOperation(onOpenInNewTabAction)];
 
   if (route === ApplicationRoute.TestSuites) {
     actionColumn.push(getRunTestSuiteOperation(onOpenRunTestSuiteModal));
   }
 
-  const columnDefs = [...baseColumns, ACTION_COLUMN([...actionColumn, getDeleteOperation(onOpenDeleteModal)])];
+  const columnDefs = [
+    ...baseColumns,
+    ACTION_COLUMN([
+      ...actionColumn,
+      getDuplicateOperation(onOpenDuplicateModal),
+      getDeleteOperation(onOpenDeleteModal),
+    ]),
+  ];
 
   return (
     <>
@@ -215,6 +255,15 @@ const EvaluationListView = <T extends object>({
             selectedTestSuite={currentEntity as TestSuite}
             onRun={onRun}
           />,
+          document.body,
+        )}
+
+      {isModalOpen &&
+        modalType === ModalType.duplicate &&
+        createPortal(
+          <SaveValidationContextProvider>
+            <DuplicateTestSuite isModalOpen={isModalOpen} onClose={onModalClose} onDuplicate={onDuplicate} />
+          </SaveValidationContextProvider>,
           document.body,
         )}
     </>
