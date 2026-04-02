@@ -18,8 +18,7 @@ export const TEST_CASES_URL = (id?: string) => `${TEST_SUITE_URL(id)}/test-cases
 export const TEST_SUITE_RUN_URL = (id?: string) => `${TEST_SUITE_URL(id)}/runs`;
 export const TEST_CASE_URL = (id?: string, testCaseId?: string) => `${TEST_CASES_URL(id)}/${testCaseId || ''}`;
 export const DEPLOYMENTS_URL = `${API}/deployments`;
-export const DEPLOYMENT_TOOLS_URL = (type: string, id: string) =>
-  `${DEPLOYMENTS_URL}/${type}/${encodeURIComponent(id)}/tools`;
+export const DEPLOYMENT_TOOLS_URL = (id: string) => `${DEPLOYMENTS_URL}/tools?deploymentId=${encodeURIComponent(id)}`;
 export const TEST_SUITES_RUNS_URL = `${API}/test-suite-runs`;
 export const TEST_SUITE_TEMPLATE_VARIABLES_URL = (id: string) => `${TEST_SUITE_URL(id)}/template-variables`;
 export const TEST_CASE_TEMPLATE_VARIABLES_URL = (id: string, testCaseId: string) =>
@@ -150,8 +149,8 @@ export class TestSuitesApi extends BaseApi {
     return this.getAction(`${DEPLOYMENTS_URL}${query ? `?${query}` : ''}`, token);
   }
 
-  getDeploymentTools(deploymentType: string, deploymentId: string, token: Token): Promise<ToolDefinition[] | null> {
-    return this.get(DEPLOYMENT_TOOLS_URL(deploymentType, deploymentId), token);
+  getDeploymentTools(deploymentId: string, token: Token): Promise<ToolDefinition[] | null> {
+    return this.get(DEPLOYMENT_TOOLS_URL(deploymentId), token);
   }
 
   getDeployment(id: string, type: string, token: Token): Promise<Deployment | null> {

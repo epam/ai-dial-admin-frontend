@@ -100,9 +100,9 @@ export async function getDeployments(type?: string, interfaceFilter?: string) {
   return testSuitesApi.getDeployments(token, type, interfaceFilter);
 }
 
-export async function getDeploymentTools(deploymentType: string, deploymentId: string) {
+export async function getDeploymentTools(deploymentId: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return testSuitesApi.getDeploymentTools(deploymentType, deploymentId, token);
+  return testSuitesApi.getDeploymentTools(deploymentId, token);
 }
 
 export async function getDeployment(id: string, type: string) {

@@ -8,7 +8,7 @@ import { IconEdit } from '@tabler/icons-react';
 import ArgumentTemplate from '@/src/components/TestSuites/ArgumentTemplate/ArgumentTemplate';
 import ChangeMcpToolModal from '@/src/components/TestSuites/Modals/ChangeMcpToolModal/ChangeMcpToolModal';
 import TryOutButton from '@/src/components/TestSuites/RequestTemplate/components/TryOutButton';
-import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import McpToolSchema from '@/src/components/TestSuites/View/McpToolSchema';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
@@ -18,17 +18,18 @@ import { ArgumentTemplate as ArgumentTemplateModel, TestSuite } from '@/src/mode
 interface Props {
   testSuite: TestSuite;
   onChange: (testSuite: TestSuite, isSkipRefresh?: boolean) => void;
+  isSkipRefresh?: boolean;
 }
 
-const McpMethodContent: FC<Props> = ({ testSuite, onChange }) => {
+const McpMethodContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh }) => {
   const t = useI18n();
   const [isChangeToolModalOpen, setIsChangeToolModalOpen] = useState(false);
   const { sidebar } = useAppContext();
   const isTryOutOpen = sidebar.show;
 
   const onArgumentTemplateChange = useCallback(
-    (argumentTemplate: ArgumentTemplateModel) => {
-      onChange({ ...testSuite, argumentTemplate }, true);
+    (argumentTemplate: ArgumentTemplateModel, isSkipRefresh?: boolean) => {
+      onChange({ ...testSuite, argumentTemplate }, isSkipRefresh);
     },
     [testSuite, onChange],
   );
@@ -69,19 +70,12 @@ const McpMethodContent: FC<Props> = ({ testSuite, onChange }) => {
           <ArgumentTemplate
             toolRef={testSuite.toolRef}
             argumentTemplate={testSuite.argumentTemplate || { arguments: {} }}
-            testCaseSchema={testSuite.testCaseSchema}
             onChange={onArgumentTemplateChange}
+            isSkipRefresh={isSkipRefresh}
           />
         )}
 
-        {testSuite.toolRef?.outputSchema && (
-          <div className="flex flex-col gap-2 border border-primary rounded p-4">
-            <h3>{t(TestSuitesI18nKey.ToolOutputSchema)}</h3>
-            <div className="h-[200px]">
-              <EntityJsonEditor entity={testSuite.toolRef.outputSchema} readonly={true} />
-            </div>
-          </div>
-        )}
+        <McpToolSchema testSuite={testSuite} onChangeTestSuite={onChange} isSkipRefresh={isSkipRefresh} />
       </div>
 
       {isChangeToolModalOpen && (

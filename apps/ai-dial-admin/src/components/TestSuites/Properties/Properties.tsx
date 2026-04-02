@@ -79,7 +79,7 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false }
                 <DialInputPopup
                   open={isAppModalOpen}
                   onOpen={() => setIsAppModalOpen(true)}
-                  selectedValue={`${testSuite.deploymentRef?.name}${testSuite.deploymentRef?.version ? ` (version: ${testSuite.deploymentRef.version})` : ''}`}
+                  selectedValue={`${testSuite.deploymentRef?.name || testSuite.mcpDeploymentRef?.name || ''}${testSuite.deploymentRef?.version ? ` (version: ${testSuite.deploymentRef.version})` : ''}`}
                   elementId="applications"
                   disabled={!deployments}
                 >

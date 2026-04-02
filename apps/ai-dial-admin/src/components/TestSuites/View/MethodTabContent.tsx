@@ -29,7 +29,7 @@ const MethodTabContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh }) => 
   const isMcp = testSuite.suiteType === 'MCP_TOOL';
 
   if (isMcp) {
-    return <McpMethodContent testSuite={testSuite} onChange={onChange} />;
+    return <McpMethodContent testSuite={testSuite} onChange={onChange} isSkipRefresh={isSkipRefresh} />;
   }
 
   return <DeploymentMethodContent testSuite={testSuite} onChange={onChange} isSkipRefresh={isSkipRefresh} />;

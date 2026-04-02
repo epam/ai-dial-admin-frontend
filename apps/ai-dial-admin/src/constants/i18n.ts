@@ -585,6 +585,8 @@ export enum TabsI18nKey {
   MCP = 'Tabs.MCP',
   Public = 'Tabs.Public',
   Application = 'Tabs.Application',
+  InputSchema = 'Tabs.InputSchema',
+  OutputSchema = 'Tabs.OutputSchema',
 }
 
 export enum InterceptorsI18nKey {
@@ -1522,6 +1524,7 @@ export enum TestSuitesI18nKey {
   ToolCallSucceeded = 'TestSuites.ToolCallSucceeded',
   ToolCallFailed = 'TestSuites.ToolCallFailed',
   ToolOutputSchema = 'TestSuites.ToolOutputSchema',
+  ToolSchema = 'TestSuites.ToolSchema',
 }
 
 export enum RunsI18nKey {

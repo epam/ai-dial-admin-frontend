@@ -65,7 +65,7 @@ describe('extractBindingColumn', () => {
 });
 
 describe('buildInitialArguments', () => {
-  test('creates binding placeholders for simple types', () => {
+  test('creates empty strings for simple types', () => {
     const schema = {
       properties: {
         query: { type: 'string' },
@@ -74,8 +74,8 @@ describe('buildInitialArguments', () => {
     };
     const result = buildInitialArguments(schema);
     expect(result).toEqual({
-      query: '${{}}',
-      count: '${{}}',
+      query: '',
+      count: '',
     });
   });
 
@@ -111,15 +111,15 @@ describe('buildInitialArguments', () => {
 describe('buildArgumentsFromTable', () => {
   test('builds arguments from rows', () => {
     const rows: ArgumentRow[] = [
-      { name: 'query', type: 'string', mode: 'binding', value: '${{searchText}}' },
-      { name: 'limit', type: 'integer', mode: 'constant', value: 10 },
-      { name: 'verbose', type: 'boolean', mode: 'constant', value: true },
+      { name: 'query', type: 'string', value: '${{searchText}}' },
+      { name: 'limit', type: 'integer', value: '10' },
+      { name: 'verbose', type: 'boolean', value: 'true' },
     ];
     const result = buildArgumentsFromTable(rows);
     expect(result).toEqual({
       query: '${{searchText}}',
-      limit: 10,
-      verbose: true,
+      limit: '10',
+      verbose: 'true',
     });
   });
 

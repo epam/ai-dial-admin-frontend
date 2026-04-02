@@ -31,13 +31,12 @@ const TOOL_COLUMNS: ColDef[] = [
 ];
 
 interface Props {
-  deploymentType: string;
   deploymentId: string;
   initialToolName?: string;
   onSelect: (tool: ToolDefinition) => void;
 }
 
-const McpTool: FC<Props> = ({ deploymentType, deploymentId, initialToolName, onSelect }) => {
+const McpTool: FC<Props> = ({ deploymentId, initialToolName, onSelect }) => {
   const t = useI18n();
   const [tools, setTools] = useState<ToolDefinition[] | null>(null);
   const [error, setError] = useState(false);
@@ -45,7 +44,7 @@ const McpTool: FC<Props> = ({ deploymentType, deploymentId, initialToolName, onS
   useEffect(() => {
     setTools(null);
     setError(false);
-    getDeploymentTools(deploymentType, deploymentId).then((res) => {
+    getDeploymentTools(deploymentId).then((res) => {
       if (res) {
         setTools(res);
       } else {
@@ -53,7 +52,7 @@ const McpTool: FC<Props> = ({ deploymentType, deploymentId, initialToolName, onS
         setTools([]);
       }
     });
-  }, [deploymentType, deploymentId]);
+  }, [deploymentId]);
 
   const onRowSelected = useCallback(
     (event: RowSelectedEvent) => {

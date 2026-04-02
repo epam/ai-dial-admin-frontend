@@ -17,18 +17,22 @@ vi.mock('@/src/components/TestSuites/RequestTemplate/components/TryOutButton', (
   default: () => <button type="button">TryOut</button>,
 }));
 
-vi.mock('@/src/components/EntityTabs/JsonEditor/JsonEditor', () => ({
-  default: ({ entity }: { entity: unknown }) => <div data-testid="json-editor">{JSON.stringify(entity)}</div>,
+vi.mock('@/src/components/TestSuites/View/McpToolSchema', () => ({
+  default: () => <div data-testid="mcp-tool-schema">McpToolSchema</div>,
 }));
 
-vi.mock('@epam/ai-dial-ui-kit', () => ({
-  ButtonAppearance: { Ghost: 'ghost' },
-  DialPrimaryButton: ({ label, onClick }: { label: string; onClick: () => void }) => (
-    <button type="button" onClick={onClick}>
-      {label}
-    </button>
-  ),
-}));
+vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+  return {
+    ...actual,
+    ButtonAppearance: { Ghost: 'ghost' },
+    DialPrimaryButton: ({ label, onClick }: { label: string; onClick: () => void }) => (
+      <button type="button" onClick={onClick}>
+        {label}
+      </button>
+    ),
+  };
+});
 
 vi.mock('@tabler/icons-react', () => ({
   IconEdit: () => <svg />,
@@ -41,7 +45,7 @@ const baseMcpSuite: TestSuite = {
   toolRef: {
     name: 'search',
     description: 'Search tool',
-    inputSchema: { type: 'object', properties: { query: { type: 'string' } } },
+    inputSchema: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] },
   },
 };
 
@@ -59,28 +63,13 @@ describe('McpMethodContent', () => {
     expect(screen.getByTestId('argument-template')).toBeInTheDocument();
   });
 
-  test('hides output schema when absent', () => {
+  test('renders McpToolSchema', () => {
     render(<McpMethodContent testSuite={baseMcpSuite} onChange={vi.fn()} />);
 
-    expect(screen.queryByText(TestSuitesI18nKey.ToolOutputSchema)).not.toBeInTheDocument();
+    expect(screen.getByTestId('mcp-tool-schema')).toBeInTheDocument();
   });
 
-  test('shows output schema when present', () => {
-    const suiteWithOutput: TestSuite = {
-      ...baseMcpSuite,
-      toolRef: {
-        ...baseMcpSuite.toolRef!,
-        outputSchema: { type: 'object', properties: { result: { type: 'string' } } },
-      },
-    };
-
-    render(<McpMethodContent testSuite={suiteWithOutput} onChange={vi.fn()} />);
-
-    expect(screen.getByText(TestSuitesI18nKey.ToolOutputSchema)).toBeInTheDocument();
-    expect(screen.getByTestId('json-editor')).toBeInTheDocument();
-  });
-
-  test('renders Change Toolset / Tool button', () => {
+  test('renders Change Tool button', () => {
     render(<McpMethodContent testSuite={baseMcpSuite} onChange={vi.fn()} />);
 
     expect(screen.getByText(TestSuitesI18nKey.ChangeTool)).toBeInTheDocument();

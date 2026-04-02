@@ -104,7 +104,6 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEnti
           {currentStepId === TestSuitTab.Methods &&
             (isMcp && testSuite.mcpDeploymentRef ? (
               <McpTool
-                deploymentType={testSuite.mcpDeploymentRef.type}
                 deploymentId={testSuite.mcpDeploymentRef.id}
                 initialToolName={testSuite.toolRef?.name}
                 onSelect={onToolSelect}

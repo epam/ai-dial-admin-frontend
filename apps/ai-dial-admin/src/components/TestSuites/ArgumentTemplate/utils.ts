@@ -22,10 +22,12 @@ export function buildInitialArguments(inputSchema?: Record<string, unknown>): Re
 
   for (const key of Object.keys(properties)) {
     const prop = properties[key] as { type?: string };
-    if (prop?.type === 'object' || prop?.type === 'array') {
-      result[key] = prop.type === 'object' ? {} : [];
+    if (prop?.type === 'object') {
+      result[key] = {};
+    } else if (prop?.type === 'array') {
+      result[key] = [];
     } else {
-      result[key] = '${{}}';
+      result[key] = '';
     }
   }
   return result;
@@ -34,7 +36,6 @@ export function buildInitialArguments(inputSchema?: Record<string, unknown>): Re
 export interface ArgumentRow {
   name: string;
   type: string;
-  mode: 'binding' | 'constant';
   value: unknown;
 }
 

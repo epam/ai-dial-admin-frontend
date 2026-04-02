@@ -58,6 +58,8 @@ export enum EntityViewTab {
   MCP = 'MCP',
   Public = 'Public',
   Application = 'Application',
+  InputSchema = 'InputSchema',
+  OutputSchema = 'OutputSchema',
 }
 
 export const propertiesTab = (t: (key: string) => string, warning?: boolean) => ({
@@ -293,6 +295,16 @@ export const columnsTab = (t: (key: string) => string) => ({
   label: t(TabsI18nKey.Columns),
 });
 
+export const inputSchemaTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.InputSchema,
+  label: t(TabsI18nKey.InputSchema),
+});
+
+export const outputSchemaTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.OutputSchema,
+  label: t(TabsI18nKey.OutputSchema),
+});
+
 export const publicTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Public,
   label: t(TabsI18nKey.Public),
@@ -496,6 +508,10 @@ export const getRunTabs = (t: (key: string) => string): TabModel[] => {
 
 export const getEndpointSchemaTabs = (t: (key: string) => string): TabModel[] => {
   return [requestSchemaTab(t), responseSchemaTab(t), columnsTab(t)];
+};
+
+export const getMcpToolSchemaTabs = (t: (key: string) => string): TabModel[] => {
+  return [columnsTab(t), inputSchemaTab(t), outputSchemaTab(t)];
 };
 
 export const getFileSelectInputTabs = (t: (key: string) => string): TabModel[] => {
