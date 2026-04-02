@@ -52,6 +52,7 @@ export default {
   },
   Basic: {
     None: '- None -',
+    ComingSoon: 'Coming soon',
     Optional: 'Optional',
     Required: 'Required',
     Failed: 'Failed',

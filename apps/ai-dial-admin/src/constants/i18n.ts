@@ -100,6 +100,7 @@ export enum CoreVersionModalI18nKey {
 
 export enum BasicI18nKey {
   None = 'Basic.None',
+  ComingSoon = 'Basic.ComingSoon',
   Optional = 'Basic.Optional',
   Required = 'Basic.Required',
   Failed = 'Basic.Failed',
