@@ -42,6 +42,15 @@ vi.mock('../MetricControl', () => ({
   ),
 }));
 
+vi.mock('../MetricSectionTabs', () => ({
+  default: ({ title, controlsContent }: any) => (
+    <div>
+      <h4>{title}</h4>
+      {controlsContent}
+    </div>
+  ),
+}));
+
 const makeField = (overrides: Partial<SchemaFieldRow>): SchemaFieldRow => ({
   id: overrides.id ?? 'field-id',
   name: overrides.name ?? 'field-name',

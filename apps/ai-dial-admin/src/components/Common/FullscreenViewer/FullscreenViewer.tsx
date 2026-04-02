@@ -22,6 +22,7 @@ interface Props {
   onClose: () => void;
 }
 
+// TODO: review after implement Evaluation design, maybe we can reuse this component for other viewers in Evaluation details page
 const FullscreenViewer: FC<Props> = ({ isOpen, title, content, contentType, onClose }) => {
   const t = useI18n();
   const { currentTheme } = useTheme();

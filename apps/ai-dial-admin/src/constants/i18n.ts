@@ -1439,6 +1439,7 @@ export enum TestSuitesI18nKey {
   ChangeMethod = 'TestSuites.ChangeMethod',
   ChangeMethodDisabledWhileTryOutOpen = 'TestSuites.ChangeMethodDisabledWhileTryOutOpen',
   Controls = 'TestSuites.Controls',
+  Schema = 'TestSuites.Schema',
   NoTestCases = 'TestSuites.NoTestCases',
   FromPC = 'TestSuites.FromPC',
   ImportFromPC = 'TestSuites.ImportFromPC',
