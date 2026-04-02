@@ -53,14 +53,14 @@ const SchemaManager: FC<Props> = ({ testCaseSchema, onChangeTestCaseSchema, isSk
     const schema = [...schemaRef.current];
     schema[index] = data as TestCaseSchema;
     schemaRef.current = schema;
-    onChangeRef.current(schema, true);
+    onChangeRef.current(schema);
   }, []);
 
   const onChangeRequired = useCallback((value: boolean, data: TestCaseSchema) => {
     data.required = value;
     const schema = [...schemaRef.current];
     schemaRef.current = schema;
-    onChangeRef.current(schema, true);
+    onChangeRef.current(schema);
   }, []);
 
   const onAddField = useCallback(() => {

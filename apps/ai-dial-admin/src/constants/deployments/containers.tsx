@@ -54,6 +54,12 @@ export const AUTOSCALE_OPTIONS = (
 ];
 
 export const DEFAULT_SCALING: Autoscaling = {
+  minReplicas: 0,
+  maxReplicas: 1,
+  scaleToZeroDelaySeconds: 300,
+};
+
+export const SERVING_SCALING: Autoscaling = {
   minReplicas: 1,
   maxReplicas: 1,
 };

@@ -117,6 +117,10 @@ export class TestSuitesApi extends BaseApi {
     return this.postAction(TEST_SUITES_URL, suite, token);
   }
 
+  duplicateTestSuite(id: string, body: TestSuite, token: Token): Promise<ServerActionResponse> {
+    return this.postAction(`${TEST_SUITES_URL}/${id}/clone`, body, token);
+  }
+
   removeTestSuite(id: string, token: Token): Promise<ServerActionResponse> {
     return this.deleteAction(TEST_SUITE_URL(id), token);
   }

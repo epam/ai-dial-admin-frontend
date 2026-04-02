@@ -10,7 +10,7 @@ import {
   RadioGroupOrientation,
 } from '@epam/ai-dial-ui-kit';
 
-import { MAX_FILE_SIZE_MB } from '@/src/constants/file';
+import { MAX_FILE_SIZE_MB, MAX_MULTI_FILES_SIZE_MB } from '@/src/constants/file';
 import { BasicI18nKey, ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { APPLICATION_ZIP_TYPES_STR } from '@/src/constants/request-headers';
 import { useI18n } from '@/src/locales/client';
@@ -42,7 +42,6 @@ const ImportFileTypeSelector: FC<Props> = ({
   onChangeFileType,
   isInvalid,
   maxFilesCount,
-  totalFileSizeExceeded,
   ignorePaths,
   setIgnorePaths,
   route,
@@ -115,11 +114,11 @@ const ImportFileTypeSelector: FC<Props> = ({
             acceptTypes="application/json"
             fileFormatError={t(ImportI18nKey.JsonFileFormatError)}
             isInvalid={isInvalid}
-            errorText={
-              totalFileSizeExceeded
-                ? t(ImportI18nKey.TotalFileSizeErrorDescription, { size: 64 })
-                : t(ImportI18nKey.PromptError)
-            }
+            errorText={t(ImportI18nKey.PromptError)}
+            maxFileSize={MAX_FILE_SIZE_MB}
+            maxMultiFilesSize={MAX_MULTI_FILES_SIZE_MB}
+            fileSizeError={t(ImportI18nKey.FileSizeErrorDescription, { size: MAX_FILE_SIZE_MB })}
+            multiFilesSizeError={t(ImportI18nKey.TotalFileSizeErrorDescription, { size: MAX_MULTI_FILES_SIZE_MB })}
             onChange={onChangeFile}
             maxFilesCount={maxFilesCount}
             deleteAllButtonLabel={t(ButtonsI18nKey.DeleteAll)}
@@ -139,14 +138,12 @@ const ImportFileTypeSelector: FC<Props> = ({
             onChange={onChangeFile}
             isInvalid={isInvalid}
             dynamicIcon={getFileIcon}
-            errorText={
-              totalFileSizeExceeded
-                ? t(ImportI18nKey.TotalFileSizeErrorDescription, { size: 64 })
-                : t(ImportI18nKey.FileError)
-            }
+            errorText={t(ImportI18nKey.FileError)}
             maxFilesCount={maxFilesCount}
             fileSizeError={t(ImportI18nKey.FileSizeErrorDescription, { size: MAX_FILE_SIZE_MB })}
+            multiFilesSizeError={t(ImportI18nKey.TotalFileSizeErrorDescription, { size: MAX_MULTI_FILES_SIZE_MB })}
             maxFileSize={MAX_FILE_SIZE_MB}
+            maxMultiFilesSize={MAX_MULTI_FILES_SIZE_MB}
             deleteAllButtonLabel={t(ButtonsI18nKey.DeleteAll)}
             addButtonLabel={t(ButtonsI18nKey.Add)}
           />

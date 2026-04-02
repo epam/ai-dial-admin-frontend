@@ -313,6 +313,7 @@ export default {
       Adapter: 'Adapter',
       InterceptorTemplate: 'Interceptor Template',
       ApplicationRunner: 'Application Runner',
+      TestSuite: 'Test Suite',
     },
   },
   CreateEntity: {
