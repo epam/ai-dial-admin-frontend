@@ -20,6 +20,8 @@ export interface SchemaFieldRow {
   enum?: string[];
   /** Default value from schema (e.g. for bindings row default). */
   defaultValue?: unknown;
+  minimum?: number;
+  maximum?: number;
 }
 
 export interface SchemaTreeNode {
@@ -191,6 +193,8 @@ export const jsonSchemaToFields = (schema: JSONSchema7 | undefined, root?: JSONS
       children: [],
       parentId: null,
       depth: 0,
+      ...(propSchema.minimum !== undefined && { minimum: propSchema.minimum }),
+      ...(propSchema.maximum !== undefined && { maximum: propSchema.maximum }),
       ...(dialMeta && Object.keys(dialMeta).length > 0 && { dialMeta }),
       ...(enumValues?.length && { enum: enumValues }),
       ...(propSchema.default !== undefined && { defaultValue: propSchema.default }),
