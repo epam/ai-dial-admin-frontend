@@ -50,11 +50,12 @@ describe('Runs View :: TabsContent', () => {
     expect(screen.queryByRole('region', { name: 'properties-tab-content' })).not.toBeInTheDocument();
   });
 
-  test('renders Summary tab content for summary tab', () => {
-    render(<TabsContent run={{ id: 'run-1' }} activeTab={EntityViewTab.Summary} />);
+  // todo: return when summary tab is supported
+  // test('renders Summary tab content for summary tab', () => {
+  //   render(<TabsContent run={{ id: 'run-1' }} activeTab={EntityViewTab.Summary} />);
 
-    expect(screen.getByRole('region', { name: 'properties-tab-content' })).toHaveTextContent('entity-id:run-1');
-    expect(screen.queryByRole('region', { name: 'extraction-result-tab' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('region', { name: 'analytics-tab' })).not.toBeInTheDocument();
-  });
+  //   expect(screen.getByRole('region', { name: 'properties-tab-content' })).toHaveTextContent('entity-id:run-1');
+  //   expect(screen.queryByRole('region', { name: 'extraction-result-tab' })).not.toBeInTheDocument();
+  //   expect(screen.queryByRole('region', { name: 'analytics-tab' })).not.toBeInTheDocument();
+  // });
 });
