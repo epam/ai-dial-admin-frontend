@@ -4,14 +4,14 @@ import { JSONEditorThemeConfig, EDITOR_THEMES, EditorOptions } from '@/src/types
 
 const DEFAULT_COLORS = {
   focusBorder: '#00000000',
-  'editor.foreground': '#F3F4F6',
-  'editor.background': '#141A23',
-  'editorCursor.foreground': '#F3F4F6',
+  'editor.foreground': '#EEF1F7',
+  'editor.background': '#161B2D',
+  'editorCursor.foreground': '#EEF1F7',
   'editor.selectionBackground': '#5C8DEA2B',
-  'editorLineNumber.foreground': '#333942',
-  'scrollbarSlider.background': '#333942',
-  'scrollbarSlider.hoverBackground': '#333942',
-  'scrollbarSlider.activeBackground': '#333942',
+  'editorLineNumber.foreground': '#242C42',
+  'scrollbarSlider.background': '#242C42',
+  'scrollbarSlider.hoverBackground': '#242C42',
+  'scrollbarSlider.activeBackground': '#242C42',
   'diffEditor.insertedTextBackground': '#1D3841',
   'diffEditor.removedTextBackground': '#402027',
   'diffEditor.insertedTextBorder': '#37BABC',
@@ -29,7 +29,7 @@ export const getDiffEditorTheme = (theme: EDITOR_THEMES): JSONEditorThemeConfig 
       return { ...template, colors: { ...template.colors, 'editor.background': '#FCFCFC' } };
     case EDITOR_THEMES.dark:
     default:
-      return { ...template, colors: { ...template.colors, 'editor.background': '#222932' } };
+      return { ...template, colors: { ...template.colors, 'editor.background': '#1D2439' } };
   }
 };
 
@@ -39,10 +39,10 @@ export const EDITOR_THEMES_CONFIG: Record<EDITOR_THEMES, JSONEditorThemeConfig> 
     inherit: false,
     rules: [
       { token: 'string.key.json', foreground: '#37BABC' },
-      { token: 'string.value.json', foreground: '#74A4FF' },
+      { token: 'string.value.json', foreground: '#7DA4FF' },
       { token: 'number', foreground: '#D97C27' },
       { token: 'keyword.json', foreground: '#F4CE46' },
-      { token: 'delimiter', foreground: '#F3F4F6' },
+      { token: 'delimiter', foreground: '#EEF1F7' },
       { token: 'delimiter.bracket.json', foreground: '#A972FF' },
       { token: 'delimiter.parenthesis', foreground: '#A972FF' },
     ],
@@ -58,15 +58,15 @@ export const EDITOR_THEMES_CONFIG: Record<EDITOR_THEMES, JSONEditorThemeConfig> 
       { token: 'string.value.json', foreground: '#2764D9' },
       { token: 'number', foreground: '#B25500' },
       { token: 'keyword.json', foreground: '#3F3D25' },
-      { token: 'delimiter', foreground: '#141A23' },
-      { token: 'delimiter.bracket.json', foreground: '#843EF3' },
-      { token: 'delimiter.parenthesis', foreground: '#843EF3' },
+      { token: 'delimiter', foreground: '#161B2D' },
+      { token: 'delimiter.bracket.json', foreground: '#7E39EC' },
+      { token: 'delimiter.parenthesis', foreground: '#7E39EC' },
     ],
     colors: {
       ...DEFAULT_COLORS,
-      'editor.foreground': '#141A23',
-      'editor.background': '#F3F4F6',
-      'editorCursor.foreground': '#141A23',
+      'editor.foreground': '#161B2D',
+      'editor.background': '#EEF1F7',
+      'editorCursor.foreground': '#161B2D',
       'diffEditor.insertedTextBackground': '#CEEBEE',
       'diffEditor.removedTextBackground': '#F3D6D8',
     },
