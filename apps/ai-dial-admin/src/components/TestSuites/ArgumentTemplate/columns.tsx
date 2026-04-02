@@ -57,7 +57,7 @@ export function getArgumentColumns(
         skipRequired: true,
         onChange: (value: string | number, rowData: unknown) => {
           const row = rowData as ArgumentRow;
-          (row as Record<string, unknown>).value = value;
+          (row as unknown as Record<string, unknown>).value = value;
           onCellChange(row.name, String(value));
         },
       },

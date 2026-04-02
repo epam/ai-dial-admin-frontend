@@ -137,7 +137,7 @@ describe('TestSuites :: server actions', () => {
     (testSuitesApi.getDeployments as any).mockResolvedValue(RESPONSE_MOCK);
     const result = await getDeployments();
     expect(getUserToken).toHaveBeenCalled();
-    expect(testSuitesApi.getDeployments).toHaveBeenCalledWith(TOKEN_MOCK);
+    expect(testSuitesApi.getDeployments).toHaveBeenCalledWith(TOKEN_MOCK, undefined, undefined);
     expect(result).toBe(RESPONSE_MOCK);
   });
 
