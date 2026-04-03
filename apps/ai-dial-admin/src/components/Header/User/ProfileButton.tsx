@@ -16,7 +16,6 @@ const ProfileButton = () => {
     <DialButton
       className="flex !h-[48px] items-center justify-center text-secondary md:text-primary"
       onClick={onClick}
-      data-qa="account-settings"
       aria-label="Account settings"
       iconBefore={userMenuOpen ? <IconX className="text-secondary" size={24} id="close-icon" /> : <UserIcon />}
     />
