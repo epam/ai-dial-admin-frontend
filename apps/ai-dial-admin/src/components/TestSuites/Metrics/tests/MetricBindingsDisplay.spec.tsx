@@ -40,4 +40,37 @@ describe('MetricBindingsDisplay', () => {
 
     expect(screen.getByText(/temperature\s*:\s*-/)).toBeInTheDocument();
   });
+
+  test('renders object value as key-value entries', () => {
+    const bindings: MetricBinding[] = [
+      {
+        property: 'options',
+        source: {
+          $type: MetricBindingType.Constant,
+          value: { enabled: true, retries: 3 } as unknown as string,
+        },
+      },
+    ];
+
+    render(<MetricBindingsDisplay title="Configuration" bindings={bindings} />);
+
+    expect(screen.getByText(/options\s*:\s*\{enabled:\s*true,\s*retries:\s*3\}/)).toBeInTheDocument();
+  });
+
+  test('renders columnName when value is empty', () => {
+    const bindings: MetricBinding[] = [
+      {
+        property: 'inputText',
+        source: {
+          $type: MetricBindingType.Response,
+          value: '',
+          columnName: 'promptColumn',
+        },
+      },
+    ];
+
+    render(<MetricBindingsDisplay title="Inputs" bindings={bindings} />);
+
+    expect(screen.getByText(/inputText\s*:\s*promptColumn/)).toBeInTheDocument();
+  });
 });

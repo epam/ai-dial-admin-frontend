@@ -12,6 +12,7 @@ interface Props {
 }
 
 const MetricCardsGrid: FC<Props> = ({ group, selectedMetricKey, onMetricClick }) => {
+  if (!group.metrics.length) return null;
   const hasInfos = group.infos != null;
 
   return (

@@ -6,6 +6,7 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { DialLoader } from '@epam/ai-dial-ui-kit';
 
 import { getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
+import ColorScale from '@/src/components/Common/ColorScale/ColorScale';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import AnalyticsBottomDrawer from '@/src/components/Runs/Details/BottomDrawer/AnalyticsBottomDrawer';
 import { useDrawerPanel } from '@/src/components/Runs/Details/BottomDrawer/useDrawerPanel';
@@ -49,6 +50,7 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
     if (resultIds.length > 0) {
       drawerPanel.clearPinIfMissing(resultIds);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resultIds, drawerPanel.clearPinIfMissing]);
 
   const onRowClicked = useCallback(
@@ -101,6 +103,7 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
           onSwitchToSidebar={detailMode.switchToSidebar}
         />
       )}
+      <ColorScale />
     </div>
   );
 };

@@ -1,4 +1,5 @@
-import { ParsedValue, ViewerContentType } from '@/src/models/evaluation/detail-panel';
+import { ParsedValue } from '@/src/models/evaluation/detail-panel';
+import { ViewerContentType } from '@/src/types/evaluation';
 
 export const parseValue = (value: string): ParsedValue => {
   const raw = value;
@@ -34,7 +35,7 @@ export const parseValue = (value: string): ParsedValue => {
 };
 
 export const formatContent = (content: string, contentType: ViewerContentType): string => {
-  if (contentType === 'json') {
+  if (contentType === ViewerContentType.Json) {
     try {
       return JSON.stringify(JSON.parse(content), null, 2);
     } catch {

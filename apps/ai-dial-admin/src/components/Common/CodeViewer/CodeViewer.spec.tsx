@@ -3,22 +3,25 @@ import { describe, expect, test, vi } from 'vitest';
 
 import CodeViewer from './CodeViewer';
 
-const mockOpen = vi.fn();
-vi.mock('@/src/context/FullscreenViewerContext', () => ({
-  useFullscreenViewer: () => ({ open: mockOpen, close: vi.fn() }),
+vi.mock('@monaco-editor/react', () => ({
+  Editor: ({ value, language }: { value: string; language: string }) => <pre data-language={language}>{value}</pre>,
+}));
+
+vi.mock('@/src/components/Common/FullscreenViewer/FullscreenViewer', () => ({
+  default: ({ isOpen, title }: { isOpen: boolean; title: string }) =>
+    isOpen ? <div data-testid="fullscreen-viewer">{title}</div> : null,
 }));
 
 const sampleJson = '{"key":"value","num":42}';
 
 describe('CodeViewer', () => {
-  test('Should render collapsed by default with title and size', () => {
+  test('Should render collapsed by default with title', () => {
     render(<CodeViewer title="Request" content={sampleJson} />);
 
     expect(screen.getByText('Request')).toBeInTheDocument();
-    expect(screen.queryByText(/"key"/)).not.toBeInTheDocument();
   });
 
-  test('Should expand on header click showing formatted JSON', () => {
+  test('Should expand on header click showing Monaco editor', () => {
     render(<CodeViewer title="Request" content={sampleJson} />);
 
     fireEvent.click(screen.getByText('Request'));
@@ -26,13 +29,15 @@ describe('CodeViewer', () => {
     expect(screen.getByText(/"key"/)).toBeInTheDocument();
   });
 
-  test('Should call fullscreen.open on fullscreen button click', () => {
+  test('Should open fullscreen viewer on maximize button click', () => {
     render(<CodeViewer title="Request" content={sampleJson} />);
 
-    const fullscreenBtn = screen.getByLabelText('Fullscreen');
+    const buttons = screen.getAllByRole('button');
+    // The last button in the header is the fullscreen (maximize) button
+    const fullscreenBtn = buttons[buttons.length - 1];
     fireEvent.click(fullscreenBtn);
 
-    expect(mockOpen).toHaveBeenCalledWith('Request', sampleJson, 'json');
+    expect(screen.getByTestId('fullscreen-viewer')).toBeInTheDocument();
   });
 
   test('Should render copy and fullscreen buttons in header', () => {

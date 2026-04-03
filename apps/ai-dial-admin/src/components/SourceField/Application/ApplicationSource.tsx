@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { DialLabel, DialRadioButton } from '@epam/ai-dial-ui-kit';
+import { DialRadioGroup, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
 import { JSONSchema7 } from 'json-schema';
 
 import { getResolvedApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
@@ -19,10 +19,9 @@ import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getSchemaDefaults } from '@/src/utils/schema';
 import EndpointAndMCPContainer from './EndpointAndMCPContainer';
-import { SourceType } from './constants';
+import { APPLICATION_SOURCE_TYPES, SourceType } from './constants';
 
 export interface Props {
-  id?: string;
   entity: DialApplication;
   runners?: DialApplicationScheme[];
   view?: ApplicationRoute;
@@ -31,12 +30,12 @@ export interface Props {
   isModal?: boolean;
 }
 
-const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, isEntityImmutable, id, isModal }) => {
+const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, isEntityImmutable, isModal }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const [sourceType, setSourceType] = useState<SourceType>(
     entity?.endpoint || entity?.mcp || (!entity.customAppSchemaId && !(entity as AssetApp).applicationTypeSchemaId)
-      ? SourceType.ENDPOINT_MCP_CONTAINER
+      ? SourceType.ENDPOINTS
       : SourceType.APP_RUNNER,
   );
   const { dispatch } = useSaveValidationContext();
@@ -47,7 +46,7 @@ const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, i
     if (isAppRunerSourceType) {
       setSourceType(SourceType.APP_RUNNER);
     } else if (isMCPSourceType) {
-      setSourceType(SourceType.ENDPOINT_MCP_CONTAINER);
+      setSourceType(SourceType.ENDPOINTS);
     }
   }, [entity]);
 
@@ -70,9 +69,9 @@ const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, i
   }, [entity, onChangeEntity, dispatch]);
 
   const handleRadioChange = useCallback(
-    (option: SourceType) => {
-      if (option === SourceType.ENDPOINT_MCP_CONTAINER) {
-        setSourceType(SourceType.ENDPOINT_MCP_CONTAINER);
+    (option: string) => {
+      if (option === SourceType.ENDPOINTS) {
+        setSourceType(SourceType.ENDPOINTS);
         const newEntity = {
           ...entity,
           applicationTypeSchemaId: void 0,
@@ -154,31 +153,17 @@ const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, i
 
   return (
     <div className="flex flex-col w-full relative gap-3">
-      <DialLabel label={t(EntitiesI18nKey.SourceType)} required htmlFor={id} />
+      <DialRadioGroup
+        disabled={isReadOnlyAdmin}
+        radioButtons={APPLICATION_SOURCE_TYPES(t)}
+        activeRadioButton={sourceType}
+        elementId="applicationSourceTypes"
+        fieldTitle={t(EntitiesI18nKey.SourceType)}
+        orientation={RadioGroupOrientation.Column}
+        onChange={handleRadioChange}
+      />
 
-      <div className="flex flex-col gap-4">
-        <DialRadioButton
-          disabled={isReadOnlyAdmin}
-          inputId={`${id}-mcp-container`}
-          name={`${id}-source-options`}
-          value={SourceType.ENDPOINT_MCP_CONTAINER}
-          checked={sourceType === SourceType.ENDPOINT_MCP_CONTAINER}
-          onChange={() => handleRadioChange(SourceType.ENDPOINT_MCP_CONTAINER)}
-          label={t(EntitiesI18nKey.EndpointAndMCPContainerSource)}
-        />
-
-        <DialRadioButton
-          disabled={isReadOnlyAdmin}
-          inputId={`${id}-app-runner`}
-          name={`${id}-source-options`}
-          value={SourceType.APP_RUNNER}
-          checked={sourceType === SourceType.APP_RUNNER}
-          onChange={() => handleRadioChange(SourceType.APP_RUNNER)}
-          label={t(EntitiesI18nKey.AppRunner)}
-        />
-      </div>
-
-      {sourceType === SourceType.ENDPOINT_MCP_CONTAINER && (
+      {sourceType === SourceType.ENDPOINTS && (
         <div className="h-full flex flex-col gap-y-8">
           <div className="ml-8">
             <EndpointAndMCPContainer

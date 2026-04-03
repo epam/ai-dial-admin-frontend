@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import { ViewerContentType } from '@/src/types/evaluation';
+
 import { beautifyValue, formatContent, parseValue } from '../detail-panel';
 
 describe('parseValue', () => {
@@ -56,28 +58,28 @@ describe('parseValue', () => {
 describe('formatContent', () => {
   it('formats valid JSON content with json contentType', () => {
     const input = '{"a":1}';
-    const result = formatContent(input, 'json');
+    const result = formatContent(input, ViewerContentType.Json);
     expect(result).toBe(JSON.stringify({ a: 1 }, null, 2));
   });
 
   it('returns content as-is when json parsing fails for json contentType', () => {
     const input = 'not json';
-    const result = formatContent(input, 'json');
+    const result = formatContent(input, ViewerContentType.Json);
     expect(result).toBe('not json');
   });
 
   it('converts escaped newlines for text contentType', () => {
-    const result = formatContent('line1\\nline2', 'text');
+    const result = formatContent('line1\\nline2', ViewerContentType.Text);
     expect(result).toBe('line1\nline2');
   });
 
   it('converts escaped tabs for text contentType', () => {
-    const result = formatContent('col1\\tcol2', 'text');
+    const result = formatContent('col1\\tcol2', ViewerContentType.Text);
     expect(result).toBe('col1\tcol2');
   });
 
   it('returns plain text as-is for text contentType with no escape sequences', () => {
-    const result = formatContent('plain text', 'text');
+    const result = formatContent('plain text', ViewerContentType.Text);
     expect(result).toBe('plain text');
   });
 });

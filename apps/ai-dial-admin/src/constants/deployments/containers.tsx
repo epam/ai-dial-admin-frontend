@@ -25,11 +25,6 @@ export const EVENT_TYPES: Record<KubEventType, string> = {
   [KubEventType.WARNING]: KubEventsI18nKey.Warning,
 };
 
-export const TRANSPORTS: SelectOption[] = [
-  { label: 'HTTP', value: CONTAINER_TRANSPORT.HTTP },
-  { label: 'SSE', value: CONTAINER_TRANSPORT.SSE },
-];
-
 export const MODEL_TYPES: Record<MODEL_TYPE, ContainersI18nKey> = {
   [MODEL_TYPE.NIM]: ContainersI18nKey.ModelTypeNIM,
   [MODEL_TYPE.HF]: ContainersI18nKey.ModelTypeHF,
@@ -59,6 +54,12 @@ export const AUTOSCALE_OPTIONS = (
 ];
 
 export const DEFAULT_SCALING: Autoscaling = {
+  minReplicas: 0,
+  maxReplicas: 1,
+  scaleToZeroDelaySeconds: 300,
+};
+
+export const SERVING_SCALING: Autoscaling = {
   minReplicas: 1,
   maxReplicas: 1,
 };

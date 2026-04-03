@@ -4,7 +4,7 @@ import { DialSelectField } from '@epam/ai-dial-ui-kit';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { CONTAINER_TRANSPORT } from '@/src/types/deployments/containers';
 import { Container } from '@/src/models/deployments/containers';
-import { TRANSPORTS } from '@/src/constants/deployments/containers';
+import { CONTAINER_TRANSPORTS } from '@/src/constants/transport';
 import { useI18n } from '@/src/locales/client';
 import { isEditDisabled } from '@/src/utils/deployments/containers';
 
@@ -21,12 +21,13 @@ const Transport: FC<Props> = ({ container, setContainer, disabled }) => {
   return (
     <DialSelectField
       id="transport"
-      value={container.transport || TRANSPORTS[0].value}
-      options={TRANSPORTS}
+      value={container.transport || CONTAINER_TRANSPORTS[0].value}
+      options={CONTAINER_TRANSPORTS}
       containerClassName="max-w-[160px]"
       label={t(EntityFieldsI18nKey.Transport)}
       onChange={(transportId) => {
-        const selectedTransport = TRANSPORTS.find((source) => source.value === transportId) || TRANSPORTS[0];
+        const selectedTransport =
+          CONTAINER_TRANSPORTS.find((source) => source.value === transportId) || CONTAINER_TRANSPORTS[0];
 
         setContainer({
           ...container,

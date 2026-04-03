@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { DialLoader } from '@epam/ai-dial-ui-kit';
@@ -148,7 +148,7 @@ const AnalyticsBottomDrawer: FC<Props> = ({
 
   // Resize drag handlers
   const handleDragStart = useCallback(
-    (e: React.MouseEvent) => {
+    (e: MouseEvent<HTMLDivElement>) => {
       e.preventDefault();
       setIsDragging(true);
       const startY = e.clientY;
@@ -172,6 +172,7 @@ const AnalyticsBottomDrawer: FC<Props> = ({
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [drawerPanel.panelHeight, drawerPanel.setPanelHeight],
   );
 
@@ -188,6 +189,7 @@ const AnalyticsBottomDrawer: FC<Props> = ({
     if (drawerPanel.activeId) {
       drawerPanel.pin(drawerPanel.activeId);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [drawerPanel.activeId, drawerPanel.pin]);
 
   const handleSwitchToSidebar = useCallback(() => {

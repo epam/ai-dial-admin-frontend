@@ -24,6 +24,7 @@ const ResizeHandle: FC<Props> = ({ onDragStart, drawerPanel }) => {
       const newHeight = Math.max(MIN_DRAWER_HEIGHT, Math.min(maxHeight, drawerPanel.panelHeight + delta));
       drawerPanel.setPanelHeight(newHeight);
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [drawerPanel.panelHeight, drawerPanel.setPanelHeight],
   );
 

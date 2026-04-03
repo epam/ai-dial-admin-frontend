@@ -1,10 +1,10 @@
 import { TabModel } from '@epam/ai-dial-ui-kit';
 
-import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
-import { ApplicationRoute } from '@/src/types/routes';
-import { IMAGE_STATUS } from '@/src/types/deployments/images';
-import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { ALLOW_ALL_DOMAINS } from '@/src/components/Deployments/Common/Whitelists/Whitelists';
+import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
+import { IMAGE_STATUS } from '@/src/types/deployments/images';
+import { ApplicationRoute } from '@/src/types/routes';
 
 export enum EntityViewTab {
   Properties = 'Properties',
@@ -51,6 +51,7 @@ export enum EntityViewTab {
   Headers = 'Headers',
   RequestSchema = 'RequestSchema',
   ResponseSchema = 'ResponseSchema',
+  Response = 'Response',
   Columns = 'Columns',
   TestSuiteMethod = 'TestSuiteMethod',
   Analytics = 'Analytics',
@@ -293,6 +294,11 @@ export const columnsTab = (t: (key: string) => string) => ({
   label: t(TabsI18nKey.Columns),
 });
 
+export const responseTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.Response,
+  label: t(TabsI18nKey.Response),
+});
+
 export const publicTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Public,
   label: t(TabsI18nKey.Public),
@@ -491,7 +497,7 @@ export const getTestSuiteRequestTemplateTabs = (t: (key: string) => string): Tab
 };
 
 export const getRunTabs = (t: (key: string) => string): TabModel[] => {
-  return [summaryTab(t), extractionResultTab(t), analyticsTab(t)];
+  return [summaryTab(t), analyticsTab(t), extractionResultTab(t)];
 };
 
 export const getEndpointSchemaTabs = (t: (key: string) => string): TabModel[] => {

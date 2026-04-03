@@ -20,6 +20,11 @@ export async function createTestSuite(suite: TestSuite) {
   return testSuitesApi.createTestSuite(suite, token);
 }
 
+export async function duplicateTestSuite(id: string, suite: TestSuite) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.duplicateTestSuite(id, suite, token);
+}
+
 export async function updateTestSuite(suite: TestSuite, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return testSuitesApi.updateTestSuite(suite, etag, token);
@@ -173,4 +178,9 @@ export async function getTestSuiteFiles(id: string) {
 export async function uploadTestSuiteFiles(id: string, file: FormData) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return testSuitesApi.uploadTestSuiteFiles(id, file, token);
+}
+
+export async function removeTestSuiteFile(id: string, fileName: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.removeTestSuiteFile(id, fileName, token);
 }

@@ -1,8 +1,6 @@
-import { IconCopy } from '@tabler/icons-react';
-import { useCallback, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import CopyButton from '../../Common/CopyButton/CopyButton';
 
@@ -20,13 +18,6 @@ interface CellContextMenuProps {
 const CellContextMenu = ({ position, onClose }: CellContextMenuProps) => {
   const t = useI18n();
   const menuRef = useRef<HTMLDivElement>(null);
-
-  const handleCopy = useCallback(async () => {
-    if (position?.value != null) {
-      await navigator.clipboard.writeText(String(position.value));
-    }
-    onClose();
-  }, [position, onClose]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {

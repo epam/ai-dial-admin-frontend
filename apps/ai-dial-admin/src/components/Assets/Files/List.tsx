@@ -28,19 +28,22 @@ import { downloadFile } from '@/src/utils/download';
 const FilesList = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [importFolder, setImportFolder] = useState<DialFile | null>(null);
+  const [dragAndDropsItems, setDragAndDropsItems] = useState<File[]>([]);
 
   const { fetchFiles } = useFileFolder();
   const t = useI18n();
   const { showNotification } = useNotification();
 
-  const handleModalOpen = useCallback((_?: string, currentFolder?: DialFile) => {
+  const handleModalOpen = useCallback((_?: string, currentFolder?: DialFile, preselectedItems?: File[]) => {
     setIsModalOpen(true);
     setImportFolder(currentFolder || null);
+    setDragAndDropsItems(preselectedItems || []);
   }, []);
 
   const handleModalClose = useCallback(() => {
     setIsModalOpen(false);
     setImportFolder(null);
+    setDragAndDropsItems([]);
   }, []);
 
   const onImport = useCallback(
@@ -168,6 +171,7 @@ const FilesList = () => {
         modalType={ModalType.import}
         onImport={onImport}
         onClose={handleModalClose}
+        preselectedItems={dragAndDropsItems}
       />
     </>
   );

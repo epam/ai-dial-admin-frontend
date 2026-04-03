@@ -399,4 +399,26 @@ describe('Server :: TestSuiteApi', () => {
       expect.objectContaining({ method: 'POST' }),
     );
   });
+
+  test('Should call removeTestSuiteFile', async () => {
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
+    await instance.removeTestSuiteFile('id', 'fileName', TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_SUITE_URL('id')}/files/fileName`,
+      expect.objectContaining({ method: 'DELETE' }),
+    );
+  });
+
+  test('Should call duplicateTestSuite', async () => {
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
+    const body = { name: 'Cloned Suite' };
+    await instance.duplicateTestSuite('id', body as any, TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_SUITES_URL}/id/clone`,
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify(body),
+      }),
+    );
+  });
 });

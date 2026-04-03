@@ -50,6 +50,8 @@ const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputCl
         onOpen={() => setIsModalOpen(true)}
         emptyValueText={t(BasicI18nKey.None)}
         inputClassName={inputClassName}
+        editable
+        onValueChange={onChangeValue}
       >
         <DialFormPopup
           header={t(TestSuitesI18nKey.SelectDocument)}
@@ -64,9 +66,9 @@ const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputCl
           className="h-[800px]"
           size={PopupSize.Lg}
         >
-          <div className="size-full flex flex-col gap-2">
+          <div className="size-full flex flex-col">
             {showTabs && (
-              <div className="flex flex-row justify-between py-4 px-6 items-center">
+              <div className="flex flex-row justify-between pt-4 px-6 items-center">
                 <Tabs tabs={tabs} activeTab={activeTab} onChangeActiveTab={setActiveTab} />
               </div>
             )}

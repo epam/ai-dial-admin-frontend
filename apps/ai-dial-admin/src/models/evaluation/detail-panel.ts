@@ -1,3 +1,6 @@
+import { ViewerContentType } from '@/src/types/evaluation';
+export { ViewerContentType } from '@/src/types/evaluation';
+
 export interface ParsedValue {
   displayText: string;
   rawText: string;
@@ -5,7 +8,11 @@ export interface ParsedValue {
   isLong: boolean;
 }
 
-export type ViewerContentType = 'json' | 'text';
+export interface InfoEntry {
+  metricKey: string;
+  entryKey: string;
+  value: string;
+}
 
 export interface FullscreenViewerState {
   isOpen: boolean;

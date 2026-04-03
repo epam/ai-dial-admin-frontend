@@ -6,6 +6,7 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getImage, updateImage } from '@/src/app/actions/deployments';
 import { IMAGE_BUILD_POLL_INTERVAL } from '@/src/constants/deployments/images';
+import { IMAGE_IGNORED_FIELDS } from '@/src/constants/editor';
 import { ImagesI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -143,6 +144,7 @@ const ImageView: FC<Props> = ({ image, containerNames, versions }) => {
             entity={selectedImage}
             setSelectedEntity={setSelectedImage}
             setIsChanged={setIsChanged}
+            ignoredFields={IMAGE_IGNORED_FIELDS}
           />
         ) : (
           <>

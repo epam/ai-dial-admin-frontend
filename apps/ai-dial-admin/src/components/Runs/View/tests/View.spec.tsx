@@ -4,7 +4,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import RunView from '../View';
 
-vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
+vi.mock('@/src/components/EntityHeaderControls/RunHeader', () => ({
   default: ({ view, entity, activeTab, onChangeActiveTab, onRemove }: any) => (
     <div role="region" aria-label="simple-header">
       <div>view:{view}</div>
@@ -37,11 +37,11 @@ describe('Runs View :: View', () => {
 
     expect(screen.getByRole('region', { name: 'simple-header' })).toBeInTheDocument();
     expect(screen.getByText('entity-id:run-1')).toBeInTheDocument();
-    expect(screen.getByText(`active-tab:${EntityViewTab.Summary}`)).toBeInTheDocument();
+    expect(screen.getByText(`active-tab:${EntityViewTab.Analytics}`)).toBeInTheDocument();
 
     expect(screen.getByRole('region', { name: 'tabs-content' })).toBeInTheDocument();
     expect(screen.getByText('run-id:run-1')).toBeInTheDocument();
-    expect(screen.getByText(`tab:${EntityViewTab.Summary}`)).toBeInTheDocument();
+    expect(screen.getByText(`tab:${EntityViewTab.Analytics}`)).toBeInTheDocument();
   });
 
   test('changes tab when header requests active tab update', () => {

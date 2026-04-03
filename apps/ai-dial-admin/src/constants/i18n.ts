@@ -130,6 +130,8 @@ export enum BasicI18nKey {
   Server = 'Basic.Server',
   Client = 'Basic.Client',
   ContentType = 'Basic.ContentType',
+  HighAccuracy = 'Basic.HighAccuracy',
+  LowAccuracy = 'Basic.LowAccuracy',
 }
 
 export enum EntitiesI18nKey {
@@ -219,7 +221,7 @@ export enum EntitiesI18nKey {
   Container = 'Entities.Container',
   DiscardChanges = 'Entities.DiscardChanges',
   DiscardChangesDescription = 'Entities.DiscardChangesDescription',
-  EndpointAndMCPContainerSource = 'Entities.EndpointAndMCPContainerSource',
+  EndpointsSourceType = 'Entities.EndpointsSourceType',
 }
 
 export enum DeleteI18nKey {
@@ -287,6 +289,7 @@ export enum DuplicateI18nKey {
   Adapter = 'DeleteEntity.Entities.Adapter',
   InterceptorTemplate = 'DuplicateEntity.Entities.InterceptorTemplate',
   ApplicationRunner = 'DuplicateEntity.Entities.ApplicationRunner',
+  TestSuite = 'DuplicateEntity.Entities.TestSuite',
 }
 
 export enum ButtonsI18nKey {
@@ -581,6 +584,7 @@ export enum TabsI18nKey {
   RequestSchema = 'Tabs.RequestSchema',
   ResponseSchema = 'Tabs.ResponseSchema',
   Columns = 'Tabs.Columns',
+  Response = 'Tabs.Response',
   Analytics = 'Tabs.Analytics',
   MCP = 'Tabs.MCP',
   Public = 'Tabs.Public',
@@ -757,6 +761,10 @@ export enum ImportI18nKey {
   FileSizeErrorDescription = 'Import.FileSizeErrorDescription',
   TotalFileSizeErrorDescription = 'Import.TotalFileSizeErrorDescription',
   ArchiveSizeErrorDescription = 'Import.ArchiveSizeErrorDescription',
+  FileUploadSuccessTitle = 'Import.FileUploadSuccessTitle',
+  FileUploadSuccessDescription = 'Import.FileUploadSuccessDescription',
+  FileRemovedTitle = 'Import.FileRemovedTitle',
+  FileRemovedDescription = 'Import.FileRemovedDescription',
 }
 
 export enum ExportI18nKey {
@@ -962,6 +970,8 @@ export enum SourceI18nKey {
   ModelServing = 'Source.ModelServing',
   InterceptorContainer = 'Source.InterceptorContainer',
   McpContainer = 'Source.McpContainer',
+  McpEndpoint = 'Source.McpEndpoint',
+  ChatEndpoint = 'Source.ChatEndpoint',
   AdapterContainer = 'Source.AdapterContainer',
   Endpoint = 'Source.Endpoint',
   ExternalEndpoint = 'Source.ExternalEndpoint',
@@ -1430,7 +1440,8 @@ export enum TestSuitesI18nKey {
   Method = 'TestSuites.Method',
   ChangeMethod = 'TestSuites.ChangeMethod',
   ChangeMethodDisabledWhileTryOutOpen = 'TestSuites.ChangeMethodDisabledWhileTryOutOpen',
-  TestCases = 'TestSuites.TestCases',
+  Controls = 'TestSuites.Controls',
+  Schema = 'TestSuites.Schema',
   NoTestCases = 'TestSuites.NoTestCases',
   FromPC = 'TestSuites.FromPC',
   ImportFromPC = 'TestSuites.ImportFromPC',
@@ -1554,6 +1565,9 @@ export enum FileManagerI18nKey {
   Rename = 'FileManager.Rename',
   Move = 'FileManager.Move',
   Files = 'FileManager.Files',
+  Applications = 'FileManager.Applications',
+  Toolsets = 'FileManager.Toolsets',
+  Prompts = 'FileManager.Prompts',
   Prompt = 'FileManager.Prompt',
   Folder = 'FileManager.Folder',
   FolderTree = 'FileManager.FolderTree',
@@ -1566,6 +1580,8 @@ export enum FileManagerI18nKey {
   Preview = 'FileManager.Preview',
   MoveItem = 'FileManager.MoveItem',
   MoveItems = 'FileManager.MoveItems',
+  EmptyMoveFolderTitle = 'FileManager.EmptyMoveFolderTitle',
+  EmptyMoveFolderDescription = 'FileManager.EmptyMoveFolderDescription',
   PromptEmptyStateTitle = 'FileManager.PromptEmptyStateTitle',
   PromptEmptyStateDescription = 'FileManager.PromptEmptyStateDescription',
 

@@ -35,6 +35,8 @@ import {
   updateTestSuiteMetric,
   uploadTestSuiteFiles,
   getTestSuiteFiles,
+  removeTestSuiteFile,
+  duplicateTestSuite,
 } from './actions';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '../../../types/evaluation';
 
@@ -315,6 +317,23 @@ describe('TestSuites :: server actions', () => {
     const result = await uploadTestSuiteFiles('suite-id', new FormData());
     expect(getUserToken).toHaveBeenCalled();
     expect(testSuitesApi.uploadTestSuiteFiles).toHaveBeenCalledWith('suite-id', new FormData(), TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call removeTestSuiteFile action', async () => {
+    (testSuitesApi.removeTestSuiteFile as any).mockResolvedValue(RESPONSE_MOCK);
+    const result = await removeTestSuiteFile('suite-id', 'fileName');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(testSuitesApi.removeTestSuiteFile).toHaveBeenCalledWith('suite-id', 'fileName', TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call duplicateTestSuite action', async () => {
+    (testSuitesApi.duplicateTestSuite as any).mockResolvedValue(RESPONSE_MOCK);
+    const body = { name: 'Cloned Suite' };
+    const result = await duplicateTestSuite('suite-id', body as any);
+    expect(getUserToken).toHaveBeenCalled();
+    expect(testSuitesApi.duplicateTestSuite).toHaveBeenCalledWith('suite-id', body, TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 });
