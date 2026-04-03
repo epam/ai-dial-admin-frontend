@@ -6,6 +6,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 import { DialLoader } from '@epam/ai-dial-ui-kit';
 
 import { getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
+import ColorScale from '@/src/components/Common/ColorScale/ColorScale';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import RunMetricDetailPanel from '@/src/components/Runs/Details/RunMetricDetailPanel';
 import { EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
@@ -80,6 +81,7 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
           />
         )}
       </div>
+      <ColorScale />
     </div>
   );
 };

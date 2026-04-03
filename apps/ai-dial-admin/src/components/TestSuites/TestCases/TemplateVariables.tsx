@@ -14,7 +14,6 @@ import {
 import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { InputBinding, InputBindingRowData, TemplateVariable, TestSuite } from '@/src/models/evaluation/test-suite';
-import { TestCaseItemType } from '@/src/types/evaluation';
 
 interface Props {
   selectedTestSuite: TestSuite;
@@ -60,10 +59,7 @@ const TemplateVariables: FC<Props> = ({ selectedTestSuite, onChange, isSkipRefre
         binding.templateVariable = data.templateVariable;
         inputBindings.splice(index as number, 1, binding);
       }
-      onChangeRef.current(
-        { ...selectedTestSuiteRef.current, inputBindings },
-        !(data.effectiveType === TestCaseItemType.FILE),
-      );
+      onChangeRef.current({ ...selectedTestSuiteRef.current, inputBindings }, true);
     },
     [],
   );
