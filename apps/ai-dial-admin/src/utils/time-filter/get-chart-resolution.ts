@@ -1,10 +1,12 @@
-import { TelemetryQuery } from '@/src/models/telemetry';
 import { TimeRange } from '@/src/models/time-range';
 
 export interface ChartResolution {
   value: number;
   unit: 'm' | 'h' | 'd';
 }
+
+export const formatWindow = (resolution: ChartResolution): string =>
+  `window(_time, ${resolution.value}, '${resolution.unit}')`;
 
 // Nice bucket sizes in minutes, ascending
 const NICE_BUCKETS_MINUTES = [1, 2, 5, 10, 15, 30, 60, 120, 180, 360, 720, 1440];
@@ -31,17 +33,4 @@ export const getChartResolution = (timeRange: TimeRange): ChartResolution => {
     return { value: selectedMinutes / 60, unit: 'h' };
   }
   return { value: selectedMinutes, unit: 'm' };
-};
-
-const WINDOW_PATTERN = /window\(_time,\s*\d+,\s*'[mhd]'\)/g;
-
-export const applyResolutionToQuery = (query: TelemetryQuery, resolution: ChartResolution): void => {
-  const replacement = `window(_time, ${resolution.value}, '${resolution.unit}')`;
-
-  const replaceInArray = (arr: string[]): string[] => arr.map((s) => s.replace(WINDOW_PATTERN, replacement));
-
-  query.query.expressions = replaceInArray(query.query.expressions);
-  if (query.query.groupBy) {
-    query.query.groupBy = replaceInArray(query.query.groupBy);
-  }
 };

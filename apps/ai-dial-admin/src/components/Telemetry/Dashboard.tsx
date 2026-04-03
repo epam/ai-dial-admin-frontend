@@ -17,7 +17,9 @@ import { TelemetryI18nKey } from '@/src/constants/i18n';
 import { TimeRange } from '@/src/models/time-range';
 import { FilterData, TelemetryQuery } from '@/src/models/telemetry';
 import { getFormattedFilters } from '@/src/utils/telemetry';
-import { applyResolutionToQuery, getChartResolution } from '@/src/utils/time-filter/get-chart-resolution';
+import { ChartResolution, getChartResolution } from '@/src/utils/time-filter/get-chart-resolution';
+
+export type QueryInput = TelemetryQuery | ((resolution: ChartResolution) => TelemetryQuery);
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
 import { getDashboardData } from '@/src/app/[lang]/dashboard/actions';
 import { useI18n } from '@/src/locales/client';
@@ -83,11 +85,10 @@ const Dashboard: FC<Props> = ({
   );
 
   const getData = useCallback(
-    (query: TelemetryQuery) => {
-      const q = structuredClone(query);
+    (input: QueryInput) => {
       const currentTimeRange = getCurrentTimeRange();
       const resolution = getChartResolution(currentTimeRange);
-      applyResolutionToQuery(q, resolution);
+      const q = typeof input === 'function' ? input(resolution) : structuredClone(input);
       if (typeof q.query.from === 'string') {
         q.query.where = getFormattedFilters(currentTimeRange, filters, entityFilterName);
       } else {
@@ -100,11 +101,10 @@ const Dashboard: FC<Props> = ({
   );
 
   const getMcpDataWithConditions = useCallback(
-    (extraConditions: Record<string, unknown>[]) => (query: TelemetryQuery) => {
-      const q = structuredClone(query);
+    (extraConditions: Record<string, unknown>[]) => (input: QueryInput) => {
       const currentTimeRange = getCurrentTimeRange();
       const resolution = getChartResolution(currentTimeRange);
-      applyResolutionToQuery(q, resolution);
+      const q = typeof input === 'function' ? input(resolution) : structuredClone(input);
       if (typeof q.query.from === 'string') {
         q.query.where = getFormattedFilters(currentTimeRange, filters, entityFilterName, extraConditions);
       } else {

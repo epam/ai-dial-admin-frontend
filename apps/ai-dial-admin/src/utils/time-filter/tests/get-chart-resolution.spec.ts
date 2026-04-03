@@ -1,6 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { applyResolutionToQuery, getChartResolution } from '../get-chart-resolution';
-import { TelemetryQuery } from '@/src/models/telemetry';
+import { formatWindow, getChartResolution } from '../get-chart-resolution';
 import { TimeRange } from '@/src/models/time-range';
 
 const makeRange = (durationMinutes: number): TimeRange => {
@@ -37,52 +36,16 @@ describe('getChartResolution', () => {
   });
 });
 
-describe('applyResolutionToQuery', () => {
-  test('replaces window pattern in expressions and groupBy', () => {
-    const query: TelemetryQuery = {
-      $type: 'json',
-      query: {
-        expressions: ["window(_time, 1, 'm') as time", 'count() as requests'],
-        from: 'analytics',
-        groupBy: ["window(_time, 1, 'm')"],
-      },
-    };
-
-    applyResolutionToQuery(query, { value: 15, unit: 'm' });
-
-    expect(query.query.expressions[0]).toBe("window(_time, 15, 'm') as time");
-    expect(query.query.expressions[1]).toBe('count() as requests');
-    expect(query.query.groupBy![0]).toBe("window(_time, 15, 'm')");
+describe('formatWindow', () => {
+  test('formats minutes resolution', () => {
+    expect(formatWindow({ value: 5, unit: 'm' })).toBe("window(_time, 5, 'm')");
   });
 
-  test('replaces hour-unit window patterns', () => {
-    const query: TelemetryQuery = {
-      $type: 'json',
-      query: {
-        expressions: ["window(_time, 1, 'h')", 'mcp_method', 'count()'],
-        from: 'mcp_analytics',
-        groupBy: ["window(_time, 1, 'h')", 'mcp_method'],
-      },
-    };
-
-    applyResolutionToQuery(query, { value: 6, unit: 'h' });
-
-    expect(query.query.expressions[0]).toBe("window(_time, 6, 'h')");
-    expect(query.query.groupBy![0]).toBe("window(_time, 6, 'h')");
-    expect(query.query.groupBy![1]).toBe('mcp_method');
+  test('formats hours resolution', () => {
+    expect(formatWindow({ value: 6, unit: 'h' })).toBe("window(_time, 6, 'h')");
   });
 
-  test('is a no-op for queries without window()', () => {
-    const query: TelemetryQuery = {
-      $type: 'json',
-      query: {
-        expressions: ['count()'],
-        from: 'analytics',
-      },
-    };
-
-    const original = JSON.stringify(query);
-    applyResolutionToQuery(query, { value: 5, unit: 'm' });
-    expect(JSON.stringify(query)).toBe(original);
+  test('formats days resolution', () => {
+    expect(formatWindow({ value: 1, unit: 'd' })).toBe("window(_time, 1, 'd')");
   });
 });
