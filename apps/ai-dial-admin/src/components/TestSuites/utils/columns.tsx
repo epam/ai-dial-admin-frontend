@@ -148,6 +148,30 @@ export const getTestCaseColumns = (
               },
             };
           }
+          if (s.type === TestCaseItemType.INTEGER || s.type === TestCaseItemType.NUMBER) {
+            return {
+              component: EditableCellRenderer,
+              params: {
+                hideTriangle: true,
+                skipRequired: true,
+                inputType: 'number' as const,
+                step: s.type === TestCaseItemType.INTEGER ? 1 : 'any',
+                onChange: (value: string | number, rowData: unknown) => {
+                  // For INTEGER type, validate that the value is a whole number
+                  if (s.type === TestCaseItemType.INTEGER) {
+                    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+                    if (value !== '' && !isNaN(numValue) && !Number.isInteger(numValue)) {
+                      // If the value is not an integer, round it to nearest integer
+                      const intValue = Math.round(numValue);
+                      onCellChange(rowData as Record<string, unknown>, field, intValue);
+                      return;
+                    }
+                  }
+                  onCellChange(rowData as Record<string, unknown>, field, value);
+                },
+              },
+            };
+          }
           return {
             component: EditableCellRenderer,
             params: {
