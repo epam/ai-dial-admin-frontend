@@ -121,8 +121,8 @@ export const getTestCaseColumns = (
       }
       return col;
     }),
-    ...schema.map((s) => {
-      const field = s.name;
+    ...schema.map((param) => {
+      const field = param.name;
       return {
         field: field,
         headerName: field,
@@ -137,7 +137,7 @@ export const getTestCaseColumns = (
           },
         },
         cellRendererSelector: () => {
-          if (s.type === TestCaseItemType.FILE) {
+          if (param.type === TestCaseItemType.FILE) {
             return {
               component: FileSelectCellRenderer,
               params: {
@@ -146,6 +146,30 @@ export const getTestCaseColumns = (
                 },
                 id: suite.id,
                 view: ApplicationRoute.TestSuites,
+              },
+            };
+          }
+          if (param.type === TestCaseItemType.INTEGER || param.type === TestCaseItemType.NUMBER) {
+            return {
+              component: EditableCellRenderer,
+              params: {
+                hideTriangle: true,
+                skipRequired: true,
+                inputType: 'number' as const,
+                step: param.type === TestCaseItemType.INTEGER ? 1 : void 0,
+                onChange: (value: string | number, rowData: unknown) => {
+                  // For INTEGER type, validate that the value is a whole number
+                  if (param.type === TestCaseItemType.INTEGER) {
+                    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+                    if (value !== '' && !isNaN(numValue) && !Number.isInteger(numValue)) {
+                      // If the value is not an integer, round it to nearest integer
+                      const intValue = Math.round(numValue);
+                      onCellChange(rowData as Record<string, unknown>, field, intValue);
+                      return;
+                    }
+                  }
+                  onCellChange(rowData as Record<string, unknown>, field, value);
+                },
               },
             };
           }
