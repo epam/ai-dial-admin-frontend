@@ -138,11 +138,11 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
 
   const actionColumn = ACTION_COLUMN(
     isReadOnlyAdmin
-      ? [getOpenInNewTabOperation(onOpenInNewTabAction)]
+      ? [getOpenInNewTabOperation(onOpenInNewTabAction, t)]
       : [
-          getOpenInNewTabOperation(onOpenInNewTabAction),
-          getDuplicateOperation(onDuplicateAction),
-          getDeleteOperation(onDeleteAction),
+          getOpenInNewTabOperation(onOpenInNewTabAction, t),
+          getDuplicateOperation(onDuplicateAction, t),
+          getDeleteOperation(onDeleteAction, t),
         ],
   );
 

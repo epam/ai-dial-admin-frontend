@@ -28,7 +28,7 @@ const Interceptors: FC<Props> = ({ interceptorList }) => {
     onOpenInNewTab(ApplicationRoute.Interceptors, interceptor);
   }, []);
 
-  const colDefs = [...BASE_COLUMNS, ACTION_COLUMN([getOpenInNewTabOperation(onOpen)])];
+  const colDefs = [...BASE_COLUMNS, ACTION_COLUMN([getOpenInNewTabOperation(onOpen, t)])];
 
   useEffect(() => {
     const fetchInterceptors = async () => {

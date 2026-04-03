@@ -19,25 +19,29 @@ import { GridApi, IRowNode } from 'ag-grid-community';
 import OpenPopup from '@/public/images/icons/open-pop-up.svg';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
-import { ActionMenuOperation } from '@/src/types/action-menu-operations';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
+import { ActionMenuOperationI18nKey } from '@/src/constants/i18n';
 
-export function getResourceRollbackOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
+export function getResourceRollbackOperation<T>(
+  onClick: (entity?: T) => void,
+  t: (key: string) => string,
+): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconRefreshDot {...BASE_BUTTON_ICON_PROPS} />,
-    id: ActionMenuOperation.Resource_rollback,
+    id: t(ActionMenuOperationI18nKey.Resource_rollback),
     onClick,
   };
 }
 
 export function getDeleteOperation<T>(
   onClick: (entity?: T, index?: number) => void,
+  t: (key: string) => string,
   hidden?: (api: GridApi, node: IRowNode) => boolean,
   className?: string,
 ): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconTrashX {...BASE_BUTTON_ICON_PROPS} className={className} />,
-    id: ActionMenuOperation.Delete,
+    id: t(ActionMenuOperationI18nKey.Delete),
     onClick,
     hidden,
   };
@@ -45,12 +49,13 @@ export function getDeleteOperation<T>(
 
 export function getRemoveOperation<T>(
   onClick: (entity?: T, index?: number) => void,
+  t: (key: string) => string,
   hidden?: (api: GridApi, node: IRowNode) => boolean,
   className?: string,
 ): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconTrash {...BASE_BUTTON_ICON_PROPS} className={className} />,
-    id: ActionMenuOperation.Remove,
+    id: t(ActionMenuOperationI18nKey.Remove),
     onClick,
     hidden,
   };
@@ -58,11 +63,12 @@ export function getRemoveOperation<T>(
 
 export function getEditOperation<T>(
   onClick: (entity?: T, index?: number) => void,
+  t: (key: string) => string,
   hidden?: (api: GridApi, node: IRowNode) => boolean,
 ): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconPencilMinus {...BASE_BUTTON_ICON_PROPS} />,
-    id: ActionMenuOperation.Edit,
+    id: t(ActionMenuOperationI18nKey.Edit),
     onClick,
     hidden,
   };
@@ -70,11 +76,12 @@ export function getEditOperation<T>(
 
 export function getResetOperation<T>(
   onClick: (entity?: T) => void,
+  t: (key: string) => string,
   hidden?: (api: GridApi, node: IRowNode) => boolean,
 ): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconReload {...BASE_BUTTON_ICON_PROPS} />,
-    id: ActionMenuOperation.Reset_to_default_limits,
+    id: t(ActionMenuOperationI18nKey.Reset_to_default_limits),
     hidden,
     onClick,
   };
@@ -82,31 +89,36 @@ export function getResetOperation<T>(
 
 export function getSetNoLimitsOperation<T>(
   onClick: (entity?: T) => void,
+  t: (key: string) => string,
   hidden?: (api: GridApi, node: IRowNode) => boolean,
 ): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconInfinity {...BASE_BUTTON_ICON_PROPS} />,
-    id: ActionMenuOperation.Set_no_limits,
+    id: t(ActionMenuOperationI18nKey.Set_no_limits),
     hidden,
     onClick,
   };
 }
 
-export function getDuplicateOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
+export function getDuplicateOperation<T>(
+  onClick: (entity?: T) => void,
+  t: (key: string) => string,
+): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconCopy {...BASE_BUTTON_ICON_PROPS} />,
-    id: ActionMenuOperation.Duplicate,
+    id: t(ActionMenuOperationI18nKey.Duplicate),
     onClick,
   };
 }
 
 export function getOpenInNewTabOperation<T>(
   onClick: (entity?: T) => void,
+  t: (key: string) => string,
   hidden?: (api: GridApi, node: IRowNode) => boolean,
 ): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconExternalLink {...BASE_BUTTON_ICON_PROPS} />,
-    id: ActionMenuOperation.Open_in_new_tab,
+    id: t(ActionMenuOperationI18nKey.Open_in_new_tab),
     onClick,
     hidden,
   };
@@ -114,31 +126,36 @@ export function getOpenInNewTabOperation<T>(
 
 export function getViewDetailsOperation<T>(
   onClick: (entity?: T) => void,
+  t: (key: string) => string,
   hidden?: (api: GridApi, node: IRowNode) => boolean,
 ): ActionMenuOperationDeclaration<T> {
   return {
     icon: <OpenPopup {...BASE_BUTTON_ICON_PROPS} />,
-    id: ActionMenuOperation.View_details,
+    id: t(ActionMenuOperationI18nKey.View_details),
     onClick,
     hidden,
   };
 }
 
-export function getMoveOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
+export function getMoveOperation<T>(
+  onClick: (entity?: T) => void,
+  t: (key: string) => string,
+): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconFolderShare {...BASE_BUTTON_ICON_PROPS} />,
-    id: ActionMenuOperation.Move,
+    id: t(ActionMenuOperationI18nKey.Move),
     onClick,
   };
 }
 
 export function getDownloadOperation<T>(
   onClick: (entity?: T) => void,
+  t: (key: string) => string,
   hidden?: (api: GridApi, node: IRowNode) => boolean,
 ): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconDownload {...BASE_BUTTON_ICON_PROPS} />,
-    id: ActionMenuOperation.Download,
+    id: t(ActionMenuOperationI18nKey.Download),
     onClick,
     hidden,
   };
@@ -146,36 +163,46 @@ export function getDownloadOperation<T>(
 
 export function getPreviewOperation<T>(
   onClick: (entity?: T) => void,
+  t: (key: string) => string,
   hidden?: (api: GridApi, node: IRowNode) => boolean,
 ): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconEye {...BASE_BUTTON_ICON_PROPS} />,
-    id: ActionMenuOperation.Preview,
+    id: t(ActionMenuOperationI18nKey.Preview),
     onClick,
     hidden,
   };
 }
 
-export function getCompareChangesOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
+export function getCompareChangesOperation<T>(
+  onClick: (entity?: T) => void,
+  t: (key: string) => string,
+): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconReplace {...BASE_BUTTON_ICON_PROPS} />,
-    id: ActionMenuOperation.Compare_changes,
+    id: t(ActionMenuOperationI18nKey.Compare_changes),
     onClick,
   };
 }
 
-export function getRunTestSuiteOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
+export function getRunTestSuiteOperation<T>(
+  onClick: (entity?: T) => void,
+  t: (key: string) => string,
+): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} />,
-    id: ActionMenuOperation.Run,
+    id: t(ActionMenuOperationI18nKey.Run),
     onClick,
   };
 }
 
-export function getRunOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
+export function getRunOperation<T>(
+  onClick: (entity?: T) => void,
+  t: (key: string) => string,
+): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} />,
-    id: ActionMenuOperation.Run,
+    id: t(ActionMenuOperationI18nKey.Run),
     onClick,
     hidden: (_: GridApi, node: IRowNode) => {
       return (
@@ -187,10 +214,13 @@ export function getRunOperation<T>(onClick: (entity?: T) => void): ActionMenuOpe
   };
 }
 
-export function getStopOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
+export function getStopOperation<T>(
+  onClick: (entity?: T) => void,
+  t: (key: string) => string,
+): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconPlayerPause {...BASE_BUTTON_ICON_PROPS} />,
-    id: ActionMenuOperation.Stop,
+    id: t(ActionMenuOperationI18nKey.Stop),
     onClick,
     hidden: (_: GridApi, node: IRowNode) => {
       return (
@@ -202,10 +232,13 @@ export function getStopOperation<T>(onClick: (entity?: T) => void): ActionMenuOp
   };
 }
 
-export function getTryOutOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
+export function getTryOutOperation<T>(
+  onClick: (entity?: T) => void,
+  t: (key: string) => string,
+): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} className="text-success" />,
-    id: ActionMenuOperation.Try_out,
+    id: t(ActionMenuOperationI18nKey.Try_out),
     onClick,
   };
 }

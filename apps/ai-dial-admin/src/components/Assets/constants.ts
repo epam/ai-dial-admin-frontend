@@ -1,16 +1,16 @@
-import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
+import { ActionMenuOperationI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 
 export const allActionLabels = [
-  { key: 'addSibling', label: FileManagerI18nKey.AddSibling },
-  { key: 'addChild', label: FileManagerI18nKey.AddChild },
-  { key: 'duplicate', label: ButtonsI18nKey.Duplicate },
-  { key: 'move', label: FileManagerI18nKey.Move },
-  { key: 'download', label: ButtonsI18nKey.Export },
-  { key: 'managePermissions', label: FileManagerI18nKey.ManagePermissions },
-  { key: 'rename', label: FileManagerI18nKey.Rename },
-  { key: 'delete', label: ButtonsI18nKey.Delete },
-  { key: 'preview', label: FileManagerI18nKey.Preview },
-  { key: 'openInNewTab', label: FileManagerI18nKey.OpenInNewTab },
+  { key: 'addSibling', label: ActionMenuOperationI18nKey.Add_sibling },
+  { key: 'addChild', label: ActionMenuOperationI18nKey.Add_child },
+  { key: 'duplicate', label: ActionMenuOperationI18nKey.Duplicate },
+  { key: 'move', label: ActionMenuOperationI18nKey.Move_to },
+  { key: 'download', label: ActionMenuOperationI18nKey.Export },
+  { key: 'managePermissions', label: ActionMenuOperationI18nKey.Manage_folder },
+  { key: 'rename', label: ActionMenuOperationI18nKey.Rename },
+  { key: 'delete', label: ActionMenuOperationI18nKey.Delete },
+  { key: 'preview', label: ActionMenuOperationI18nKey.Preview },
+  { key: 'openInNewTab', label: ActionMenuOperationI18nKey.Open_in_new_tab },
 ];
 
 export const allToolbarOptionLabels = [
@@ -32,7 +32,7 @@ export const allToolbarOptionLabels = [
 ];
 
 export const bulkActionLabels = [
-  { key: 'move', label: FileManagerI18nKey.Move },
-  { key: 'download', label: ButtonsI18nKey.Export },
-  { key: 'delete', label: ButtonsI18nKey.Delete },
+  { key: 'move', label: ActionMenuOperationI18nKey.Move_to },
+  { key: 'download', label: ActionMenuOperationI18nKey.Export },
+  { key: 'delete', label: ActionMenuOperationI18nKey.Delete },
 ];

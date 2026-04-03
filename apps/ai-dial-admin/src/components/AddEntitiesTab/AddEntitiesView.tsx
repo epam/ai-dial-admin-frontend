@@ -105,12 +105,12 @@ const AddEntitiesView: FC<Props> = ({
       ...columns,
       ...(additionalColumns || []),
       ACTION_COLUMN([
-        getOpenInNewTabOperation(onOpen),
+        getOpenInNewTabOperation(onOpen, t),
         ...(customActions || []),
-        ...(isReadOnlyAdmin ? [] : [getRemoveOperation(onRemoveEntity)]),
+        ...(isReadOnlyAdmin ? [] : [getRemoveOperation(onRemoveEntity, t)]),
       ]),
     ],
-    [additionalColumns, columns, customActions, onOpen, onRemoveEntity, isReadOnlyAdmin],
+    [additionalColumns, columns, customActions, onOpen, onRemoveEntity, isReadOnlyAdmin, t],
   );
 
   const onGridReady = (event: GridReadyEvent) => {

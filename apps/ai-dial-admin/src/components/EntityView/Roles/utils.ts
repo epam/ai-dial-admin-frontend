@@ -204,23 +204,24 @@ export const getRolesColumnDefs = (
   resetToDefaultHidden: (api: GridApi, node: IRowNode) => boolean,
   isSetNoLimitsHidden: (api: GridApi, node: IRowNode) => boolean,
   view: ApplicationRoute,
+  t: (key: string) => string,
   isReadOnlyAdmin?: boolean,
 ): ColDef[] => {
-  const actions = [getOpenInNewTabOperation(open)];
+  const actions = [getOpenInNewTabOperation(open, t)];
   const colDefs = [...BASE_COLUMNS.slice(0, 3)];
 
   if (view !== ApplicationRoute.Routes && view !== ApplicationRoute.Toolsets) {
     if (resetToDefault) {
-      actions.push(getResetOperation(resetToDefault, resetToDefaultHidden));
+      actions.push(getResetOperation(resetToDefault, t, resetToDefaultHidden));
     }
     if (setNoLimits) {
-      actions.push(getSetNoLimitsOperation(setNoLimits, isSetNoLimitsHidden));
+      actions.push(getSetNoLimitsOperation(setNoLimits, t, isSetNoLimitsHidden));
     }
     colDefs.push(...LIMIT_COLUMNS({ ...entity.defaultRoleLimit }, onChangeLimits, isReadOnlyAdmin));
   }
 
   if (!entity.isPublic && remove) {
-    actions.push(getRemoveOperation(remove));
+    actions.push(getRemoveOperation(remove, t));
   }
 
   return [...colDefs, ACTION_COLUMN(actions)];

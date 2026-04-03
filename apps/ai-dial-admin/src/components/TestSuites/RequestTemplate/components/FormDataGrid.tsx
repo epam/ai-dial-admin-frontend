@@ -67,9 +67,9 @@ const FormDataGrid: FC<Props> = ({ content, changeContent, hideAddButton, select
   const columns: ColDef[] = useMemo(
     () => [
       ...getFormDataColumns(onChangeValue, selectedTestSuiteId),
-      ONE_ACTION_COLUMN(getRemoveOperation(onRemovePart, void 0, 'text-error w-4 h-4')),
+      ONE_ACTION_COLUMN(getRemoveOperation(onRemovePart, t, void 0, 'text-error w-4 h-4')),
     ],
-    [onChangeValue, onRemovePart, selectedTestSuiteId],
+    [onChangeValue, onRemovePart, selectedTestSuiteId, t],
   );
 
   useEffect(() => {

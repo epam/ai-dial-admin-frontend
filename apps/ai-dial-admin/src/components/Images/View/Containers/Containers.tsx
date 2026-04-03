@@ -71,7 +71,7 @@ const Containers: FC<Props> = ({ image, route, versions, disabled }) => {
 
   const columnDefs = [
     ...IMAGE_DEPENDENCIES_COLUMNS(t),
-    ACTION_COLUMN([getOpenInNewTabOperation(onOpenInNewTabAction)]),
+    ACTION_COLUMN([getOpenInNewTabOperation(onOpenInNewTabAction, t)]),
   ];
 
   useEffect(() => {

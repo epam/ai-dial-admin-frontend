@@ -22,7 +22,7 @@ const AdapterModelsGrid: FC<Props> = ({ models }) => {
   };
 
   const rowData = models || [];
-  const columnDefs = [...BASE_COLUMNS, ACTION_COLUMN([getOpenInNewTabOperation(open)])];
+  const columnDefs = [...BASE_COLUMNS, ACTION_COLUMN([getOpenInNewTabOperation(open, t)])];
 
   return (
     <div className="h-full flex flex-col">

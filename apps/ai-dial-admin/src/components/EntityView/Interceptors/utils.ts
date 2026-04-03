@@ -17,13 +17,14 @@ export const getInterceptorsGridData = (
 };
 
 export const getInterceptorsColumnDefs = (
+  t: (key: string) => string,
   open: (entity?: BaseEntity) => void,
   remove?: (entity?: BaseEntity, index?: number) => void,
   startIndex?: number,
 ): ColDef[] => {
-  const actions = [getOpenInNewTabOperation(open)];
+  const actions = [getOpenInNewTabOperation(open, t)];
   if (remove) {
-    actions.push(getRemoveOperation(remove));
+    actions.push(getRemoveOperation(remove, t));
   }
   const columns: ColDef[] = [
     remove ? DRAGGABLE_COL_DEF : UTILITY_COLUMN,

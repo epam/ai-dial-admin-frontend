@@ -63,6 +63,7 @@ const RolesGrid: FC<Props> = ({
     isResetToDefaultHidden,
     isSetNoLimitsHidden,
     view,
+    t,
     isReadOnlyAdmin,
   );
 

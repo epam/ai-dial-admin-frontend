@@ -5,13 +5,12 @@ import { IconDotsVertical, IconTrash } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import ActionsDropdown from '@/src/components/Common/ActionsDropdown/ActionsDropdown';
-import { EntitiesI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, ActionMenuOperationI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
 import { DialAppRoute } from '@/src/models/dial/route';
-import { ActionMenuOperation } from '@/src/types/action-menu-operations';
 
 interface Props {
   disabled?: boolean;
@@ -27,7 +26,7 @@ const AppRouteList: FC<Props> = ({ disabled, routes, activeRouteIndex, onRemove,
   const getOperation = (onClick: () => void): ActionMenuOperationDeclaration<DialAppRoute> => {
     return {
       icon: <IconTrash {...BASE_BUTTON_ICON_PROPS} />,
-      id: ActionMenuOperation.Delete,
+      id: t(ActionMenuOperationI18nKey.Delete),
       onClick,
     };
   };

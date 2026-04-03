@@ -149,9 +149,9 @@ const TestCasesList: FC<Props> = ({
         setData(data);
         setColumnDefs([
           ...getTestCaseColumns(selectedTestSuite, onCellChange, t),
-          { ...ONE_ACTION_COLUMN(getTryOutOperation(onOpenTryOutSidebar)), colId: 'action-tryout' },
+          { ...ONE_ACTION_COLUMN(getTryOutOperation(onOpenTryOutSidebar, t)), colId: 'action-tryout' },
           {
-            ...ONE_ACTION_COLUMN(getRemoveOperation(stableOnRemoveCase, void 0, 'text-error w-4 h-4')),
+            ...ONE_ACTION_COLUMN(getRemoveOperation(stableOnRemoveCase, t, void 0, 'text-error w-4 h-4')),
             colId: 'action-remove',
           },
         ]);

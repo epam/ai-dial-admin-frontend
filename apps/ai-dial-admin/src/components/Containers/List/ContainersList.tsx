@@ -165,13 +165,13 @@ const ContainersList: FC<Props> = ({ route, containersList, names }) => {
     ...CONTAINERS_COLUMNS(t, getTranslatedType(route, t), route),
     ACTION_COLUMN(
       isReadOnlyAdmin
-        ? [getOpenInNewTabOperation(onOpenInNewTabAction)]
+        ? [getOpenInNewTabOperation(onOpenInNewTabAction, t)]
         : [
-            getOpenInNewTabOperation(onOpenInNewTabAction),
-            getDuplicateOperation(onOpenDuplicateModal),
-            getRunOperation(onContainerStatusChange),
-            getStopOperation(onContainerStatusChange),
-            getDeleteOperation(onOpenDeleteModal),
+            getOpenInNewTabOperation(onOpenInNewTabAction, t),
+            getDuplicateOperation(onOpenDuplicateModal, t),
+            getRunOperation(onContainerStatusChange, t),
+            getStopOperation(onContainerStatusChange, t),
+            getDeleteOperation(onOpenDeleteModal, t),
           ],
     ),
   ];

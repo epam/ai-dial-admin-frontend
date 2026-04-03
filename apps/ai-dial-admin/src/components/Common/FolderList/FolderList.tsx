@@ -91,8 +91,8 @@ const FolderList: FC<Props> = ({
   const folderCreateItems = (node: DialFolder) => {
     if (disabled) return [];
     const items = [
-      getAddSiblingOperation(() => openCreateFolderModal(addTrailingSlash(getFolderNameAndPath(node.path).path))),
-      getAddChildOperation(() => openCreateFolderModal(node.path)),
+      getAddSiblingOperation(() => openCreateFolderModal(addTrailingSlash(getFolderNameAndPath(node.path).path)), t),
+      getAddChildOperation(() => openCreateFolderModal(node.path), t),
     ];
     return node.name === ROOT_FOLDER ? [items[1]] : items;
   };
@@ -103,10 +103,10 @@ const FolderList: FC<Props> = ({
       return [];
     }
     return [
-      getRenameFolderOperation(() => openRenameFolderModal(node.path)),
-      getMoveFolderOperation(() => openMoveFolderModal(node)),
-      getManageFolderOperation(() => openFolderStorage(node.path)),
-      getDeleteFolderOperation(() => openDeleteFolderModalState(node)),
+      getRenameFolderOperation(() => openRenameFolderModal(node.path), t),
+      getMoveFolderOperation(() => openMoveFolderModal(node), t),
+      getManageFolderOperation(() => openFolderStorage(node.path), t),
+      getDeleteFolderOperation(() => openDeleteFolderModalState(node), t),
     ];
   };
 

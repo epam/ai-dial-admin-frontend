@@ -118,8 +118,8 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
   }, []);
 
   const columnDefs = useMemo(
-    () => [...RUNS_COLUMN, ACTION_COLUMN([getOpenInNewTabOperation(onOpenInNewTabAction)])],
-    [onOpenInNewTabAction],
+    () => [...RUNS_COLUMN, ACTION_COLUMN([getOpenInNewTabOperation(onOpenInNewTabAction, t)])],
+    [onOpenInNewTabAction, t],
   );
 
   return (

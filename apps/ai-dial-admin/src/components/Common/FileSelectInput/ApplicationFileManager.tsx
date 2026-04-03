@@ -184,7 +184,7 @@ const ApplicationFileManager: FC<Props> = ({ id, value, selectedFilePath, onChan
             DISPLAY_NAME_COLUMN,
             SIZE_COLUMN('Size') as ColDef,
             {
-              ...ONE_ACTION_COLUMN(getRemoveOperation(onRemoveFile, void 0, 'text-error w-4 h-4')),
+              ...ONE_ACTION_COLUMN(getRemoveOperation(onRemoveFile, t, void 0, 'text-error w-4 h-4')),
               colId: 'action-remove',
             },
           ]}

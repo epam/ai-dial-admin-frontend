@@ -18,7 +18,6 @@ import {
 } from '@tabler/icons-react';
 
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-import { ActionMenuOperation } from '@/src/types/action-menu-operations';
 import { describe, expect, test, vi } from 'vitest';
 import {
   getCompareChangesOperation,
@@ -40,104 +39,106 @@ import {
 } from '../actions';
 
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
+import { ActionMenuOperationI18nKey } from '@/src/constants/i18n';
 
 const CLICK = vi.fn();
+const t = vi.fn((key: string) => key);
 
 describe('Actions :: getResourceRollbackOperation', () => {
   test('Should set Rollback operation', () => {
-    const res = getResourceRollbackOperation(CLICK);
-    expect(res.id).toBe(ActionMenuOperation.Resource_rollback);
+    const res = getResourceRollbackOperation(CLICK, t);
+    expect(res.id).toBe(ActionMenuOperationI18nKey.Resource_rollback);
     expect(res.icon).toEqual(<IconRefreshDot {...BASE_BUTTON_ICON_PROPS} />);
     expect(res.onClick).toEqual(CLICK);
   });
 
   test('Should set DELETE_OPERATION', () => {
-    const res = getDeleteOperation(CLICK);
-    expect(res.id).toBe(ActionMenuOperation.Delete);
+    const res = getDeleteOperation(CLICK, t);
+    expect(res.id).toBe(ActionMenuOperationI18nKey.Delete);
     expect(res.icon).toEqual(<IconTrashX {...BASE_BUTTON_ICON_PROPS} />);
     expect(res.onClick).toEqual(CLICK);
   });
 
   test('Should set DUPLICATE_OPERATION', () => {
-    const res = getDuplicateOperation(CLICK);
-    expect(res.id).toBe(ActionMenuOperation.Duplicate);
+    const res = getDuplicateOperation(CLICK, t);
+    expect(res.id).toBe(ActionMenuOperationI18nKey.Duplicate);
     expect(res.icon).toEqual(<IconCopy {...BASE_BUTTON_ICON_PROPS} />);
     expect(res.onClick).toEqual(CLICK);
   });
 
   test('Should set OPEN_NEW_TAB_OPERATION', () => {
-    const res = getOpenInNewTabOperation(CLICK);
-    expect(res.id).toBe(ActionMenuOperation.Open_in_new_tab);
+    const res = getOpenInNewTabOperation(CLICK, t);
+    expect(res.id).toBe(ActionMenuOperationI18nKey.Open_in_new_tab);
     expect(res.icon).toEqual(<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />);
     expect(res.onClick).toEqual(CLICK);
   });
 
   test('Should set REMOVE_OPERATION', () => {
-    const res = getRemoveOperation(CLICK);
-    expect(res.id).toBe(ActionMenuOperation.Remove);
+    const res = getRemoveOperation(CLICK, t);
+    expect(res.id).toBe(ActionMenuOperationI18nKey.Remove);
     expect(res.icon).toEqual(<IconTrash {...BASE_BUTTON_ICON_PROPS} />);
     expect(res.onClick).toEqual(CLICK);
   });
 
   test('Should set EDIT_OPERATION', () => {
-    const res = getEditOperation(CLICK);
-    expect(res.id).toBe(ActionMenuOperation.Edit);
+    const res = getEditOperation(CLICK, t);
+    expect(res.id).toBe(ActionMenuOperationI18nKey.Edit);
     expect(res.icon).toEqual(<IconPencilMinus {...BASE_BUTTON_ICON_PROPS} />);
     expect(res.onClick).toEqual(CLICK);
   });
 
   test('Should set RESET_TO_DEFAULT_OPERATION', () => {
-    const res = getResetOperation(CLICK);
-    expect(res.id).toBe(ActionMenuOperation.Reset_to_default_limits);
+    const res = getResetOperation(CLICK, t);
+    expect(res.id).toBe(ActionMenuOperationI18nKey.Reset_to_default_limits);
     expect(res.icon).toEqual(<IconReload {...BASE_BUTTON_ICON_PROPS} />);
     expect(res.onClick).toEqual(CLICK);
   });
 
   test('Should set SET_NO_LIMITS_OPERATION', () => {
-    const res = getSetNoLimitsOperation(CLICK);
-    expect(res.id).toBe(ActionMenuOperation.Set_no_limits);
+    const res = getSetNoLimitsOperation(CLICK, t);
+    expect(res.id).toBe(ActionMenuOperationI18nKey.Set_no_limits);
     expect(res.icon).toEqual(<IconInfinity {...BASE_BUTTON_ICON_PROPS} />);
     expect(res.onClick).toEqual(CLICK);
   });
 
   test('Should set MOVE_OPERATION', () => {
-    const res = getMoveOperation(CLICK);
-    expect(res.id).toBe(ActionMenuOperation.Move);
+    const res = getMoveOperation(CLICK, t);
+    expect(res.id).toBe(ActionMenuOperationI18nKey.Move);
     expect(res.icon).toEqual(<IconFolderShare {...BASE_BUTTON_ICON_PROPS} />);
     expect(res.onClick).toEqual(CLICK);
   });
 
   test('Should set VIEW_DETAILS_OPERATION', () => {
-    const res = getViewDetailsOperation(CLICK);
-    expect(res.id).toBe(ActionMenuOperation.View_details);
+    const res = getViewDetailsOperation(CLICK, t);
+    expect(res.id).toBe(ActionMenuOperationI18nKey.View_details);
     expect(res.icon).toEqual(<OpenPopup {...BASE_BUTTON_ICON_PROPS} />);
     expect(res.onClick).toEqual(CLICK);
   });
 
   test('Should set VIEW_DETAILS_OPERATION', () => {
-    const res = getDownloadOperation(CLICK);
-    expect(res.id).toBe(ActionMenuOperation.Download);
+    const res = getDownloadOperation(CLICK, t);
+    expect(res.id).toBe(ActionMenuOperationI18nKey.Download);
     expect(res.icon).toEqual(<IconDownload {...BASE_BUTTON_ICON_PROPS} />);
     expect(res.onClick).toEqual(CLICK);
   });
 
   test('Should set Download', () => {
-    const res = getPreviewOperation(CLICK);
-    expect(res.id).toBe(ActionMenuOperation.Preview);
+    const res = getPreviewOperation(CLICK, t);
+    expect(res.id).toBe(ActionMenuOperationI18nKey.Preview);
     expect(res.icon).toEqual(<IconEye {...BASE_BUTTON_ICON_PROPS} />);
     expect(res.onClick).toEqual(CLICK);
   });
 
   test('Should set COMPARE_CHANGES_OPERATION', () => {
-    const res = getCompareChangesOperation(CLICK);
-    expect(res.id).toBe(ActionMenuOperation.Compare_changes);
+    const res = getCompareChangesOperation(CLICK, t);
+    expect(res.id).toBe(ActionMenuOperationI18nKey.Compare_changes);
     expect(res.icon).toEqual(<IconReplace {...BASE_BUTTON_ICON_PROPS} />);
     expect(res.onClick).toEqual(CLICK);
   });
 
   test('Should set RUN_OPERATION and hidden behaviour', () => {
-    const res = getRunOperation(CLICK as any);
-    expect(res.id).toBe(ActionMenuOperation.Run);
+    const res = getRunOperation(CLICK as any, t);
+    expect(res.id).toBe(ActionMenuOperationI18nKey.Run);
     expect(res.icon).toEqual(<IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} />);
     expect(res.onClick).toEqual(CLICK);
 
@@ -156,8 +157,8 @@ describe('Actions :: getResourceRollbackOperation', () => {
   });
 
   test('Should set STOP_OPERATION and hidden behaviour', () => {
-    const res = getStopOperation(CLICK as any);
-    expect(res.id).toBe(ActionMenuOperation.Stop);
+    const res = getStopOperation(CLICK as any, t);
+    expect(res.id).toBe(ActionMenuOperationI18nKey.Stop);
     expect(res.icon).toEqual(<IconPlayerPause {...BASE_BUTTON_ICON_PROPS} />);
     expect(res.onClick).toEqual(CLICK);
 
@@ -178,8 +179,8 @@ describe('Actions :: getResourceRollbackOperation', () => {
   });
 
   test('Should set TRY_OUT_OPERATION', () => {
-    const res = getTryOutOperation(CLICK);
-    expect(res.id).toBe(ActionMenuOperation.Try_out);
+    const res = getTryOutOperation(CLICK, t);
+    expect(res.id).toBe(ActionMenuOperationI18nKey.Try_out);
     expect(res.icon).toEqual(<IconPlayerPlay className="text-success" {...BASE_BUTTON_ICON_PROPS} />);
     expect(res.onClick).toEqual(CLICK);
   });

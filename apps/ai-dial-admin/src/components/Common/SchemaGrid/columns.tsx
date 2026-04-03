@@ -180,7 +180,7 @@ export const getSchemaGridColumns = (
   if (!isReadonly) {
     baseColumns.push({
       ...(ONE_ACTION_COLUMN(
-        getDeleteOperation(onRemoveField, undefined, 'text-error w-4 h-4'),
+        getDeleteOperation(onRemoveField, t, undefined, 'text-error w-4 h-4'),
       ) as ColDef<SchemaFieldRow>),
       floatingFilter: false,
     });

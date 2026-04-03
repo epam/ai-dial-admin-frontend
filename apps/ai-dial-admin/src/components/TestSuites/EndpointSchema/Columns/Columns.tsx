@@ -93,11 +93,11 @@ const Columns: FC<ColumnsProps> = ({ responseColumns, onChangeResponseColumns, r
     () => [
       ...getColumnsGridColumns(responseSchema, onChangeColumn, onChangeExpression),
       {
-        ...ONE_ACTION_COLUMN(getRemoveOperation(onRemoveColumn, void 0, 'text-error w-4 h-4')),
+        ...ONE_ACTION_COLUMN(getRemoveOperation(onRemoveColumn, t, void 0, 'text-error w-4 h-4')),
         colId: 'action-remove',
       },
     ],
-    [onChangeColumn, onChangeExpression, onRemoveColumn, responseSchema],
+    [onChangeColumn, onChangeExpression, onRemoveColumn, responseSchema, t],
   );
 
   const onGridReady = useCallback(

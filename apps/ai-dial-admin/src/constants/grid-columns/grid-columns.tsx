@@ -294,14 +294,18 @@ export const PUBLICATION_COLUMNS: ColDef[] = [
   { ...CREATED_AT_COLUMN, sort: 'asc' },
 ];
 
-export const getPublicationColumns = (open: (publication?: Publication) => void): ColDef[] => {
-  const actions = [getOpenInNewTabOperation(open)];
+export const getPublicationColumns = (
+  open: (publication?: Publication) => void,
+  t: (key: string) => string,
+): ColDef[] => {
+  const actions = [getOpenInNewTabOperation(open, t)];
 
   return [...PUBLICATION_COLUMNS, ACTION_COLUMN(actions)];
 };
 
 export const ENTITIES_COLUMNS = <T extends object>(
   columns: ColDef[],
+  t: (key: string) => string,
   remove?: (entity?: T) => void,
   duplicate?: (entity?: T) => void,
   open?: (entity?: T) => void,
@@ -309,16 +313,16 @@ export const ENTITIES_COLUMNS = <T extends object>(
 ): ColDef[] => {
   const actions = [];
   if (open) {
-    actions.push(getOpenInNewTabOperation(open));
+    actions.push(getOpenInNewTabOperation(open, t));
   }
   if (duplicate) {
-    actions.push(getDuplicateOperation(duplicate));
+    actions.push(getDuplicateOperation(duplicate, t));
   }
   if (move) {
-    actions.push(getMoveOperation(move));
+    actions.push(getMoveOperation(move, t));
   }
   if (remove) {
-    actions.push(getDeleteOperation(remove));
+    actions.push(getDeleteOperation(remove, t));
   }
   return [...columns, ACTION_COLUMN(actions)];
 };

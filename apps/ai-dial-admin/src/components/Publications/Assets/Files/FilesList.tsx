@@ -87,10 +87,10 @@ const FilesList: FC<Props> = ({ files, action, onChange, addedFiles, onRemoveAdd
   }, [files, addedFiles]);
 
   const actions = [
-    getPreviewOperation(preview, isPreviewActionHidden),
-    getOpenInNewTabOperation(openInNewTab, isOpenActionHidden),
-    getDownloadOperation(download, isPreviewActionHidden),
-    getRemoveOperation(remove, isRemoveActionHidden),
+    getPreviewOperation(preview, t, isPreviewActionHidden),
+    getOpenInNewTabOperation(openInNewTab, t, isOpenActionHidden),
+    getDownloadOperation(download, t, isPreviewActionHidden),
+    getRemoveOperation(remove, t, isRemoveActionHidden),
   ];
 
   const columnDefs = getGridFileColumns(FILES_COLUMNS, actions);

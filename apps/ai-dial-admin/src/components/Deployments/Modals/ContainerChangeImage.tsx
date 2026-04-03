@@ -63,9 +63,9 @@ const ContainerChangeImage: FC<Props> = ({
   const colDefs = useMemo(
     () => [
       ...IMAGES_LIST_FOR_CONTAINER_COLUMNS(onVersionsChange),
-      ACTION_COLUMN([getOpenInNewTabOperation(onOpenInNewTabAction)]),
+      ACTION_COLUMN([getOpenInNewTabOperation(onOpenInNewTabAction, t)]),
     ],
-    [onOpenInNewTabAction, onVersionsChange],
+    [onOpenInNewTabAction, onVersionsChange, t],
   );
 
   useEffect(() => {

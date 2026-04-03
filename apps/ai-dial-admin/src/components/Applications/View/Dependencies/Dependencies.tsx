@@ -66,8 +66,8 @@ const Dependencies: FC<Props> = ({ application, applications, models, onChange }
       ...DEPENDENCIES_COLUMNS,
       ACTION_COLUMN(
         isReadOnlyAdmin
-          ? [getOpenInNewTabOperation(onOpen)]
-          : [getOpenInNewTabOperation(onOpen), getRemoveOperation(onRemoveDependency)],
+          ? [getOpenInNewTabOperation(onOpen, t)]
+          : [getOpenInNewTabOperation(onOpen, t), getRemoveOperation(onRemoveDependency, t)],
       ),
     ],
     [t, isReadOnlyAdmin, onRemoveDependency],

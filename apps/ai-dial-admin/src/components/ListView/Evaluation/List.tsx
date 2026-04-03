@@ -203,18 +203,18 @@ const EvaluationListView = <T extends object>({
     [currentEntity, onModalClose, route, router, showNotification, t],
   );
 
-  const actionColumn = [getOpenInNewTabOperation(onOpenInNewTabAction)];
+  const actionColumn = [getOpenInNewTabOperation(onOpenInNewTabAction, t)];
 
   if (route === ApplicationRoute.TestSuites) {
-    actionColumn.push(getRunTestSuiteOperation(onOpenRunTestSuiteModal));
+    actionColumn.push(getRunTestSuiteOperation(onOpenRunTestSuiteModal, t));
   }
 
   const columnDefs = [
     ...baseColumns,
     ACTION_COLUMN([
       ...actionColumn,
-      getDuplicateOperation(onOpenDuplicateModal),
-      getDeleteOperation(onOpenDeleteModal),
+      getDuplicateOperation(onOpenDuplicateModal, t),
+      getDeleteOperation(onOpenDeleteModal, t),
     ]),
   ];
 
