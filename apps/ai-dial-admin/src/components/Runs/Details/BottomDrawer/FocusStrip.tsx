@@ -1,11 +1,12 @@
 import { FC } from 'react';
 
 import { IconX } from '@tabler/icons-react';
+import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
-import { SpotlightedRow } from './types';
+import { SpotlightedRow } from './models';
 import { formatFieldValue } from './utils';
 
 interface Props {
@@ -29,7 +30,7 @@ const FocusStrip: FC<Props> = ({ rows, onRemove }) => {
           className="flex flex-col gap-0.5 bg-layer-2 rounded px-2 py-1 min-w-[140px] max-w-[220px] shrink-0"
         >
           <div className="flex items-center justify-between gap-1">
-            <span className="text-xxs font-mono font-medium text-primary truncate">{row.label}</span>
+            <DialEllipsisTooltip text={row.label} className="text-xxs font-mono font-medium text-primary" />
             <button
               onClick={() => onRemove(row.fullKey)}
               className="text-secondary hover:text-primary shrink-0"
@@ -39,9 +40,7 @@ const FocusStrip: FC<Props> = ({ rows, onRemove }) => {
             </button>
           </div>
           {row.values.map((val, idx) => (
-            <span key={idx} className="text-xxs text-secondary truncate">
-              {formatFieldValue(val.raw)}
-            </span>
+            <DialEllipsisTooltip key={idx} text={formatFieldValue(val.raw)} className="text-xxs text-secondary" />
           ))}
         </div>
       ))}

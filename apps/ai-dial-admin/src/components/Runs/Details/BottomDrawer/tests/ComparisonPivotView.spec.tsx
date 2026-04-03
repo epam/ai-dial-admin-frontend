@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 
-import { ComparisonSection } from '../types';
+import { ComparisonSection } from '../models';
 
 import ComparisonPivotView from '../ComparisonPivotView';
 

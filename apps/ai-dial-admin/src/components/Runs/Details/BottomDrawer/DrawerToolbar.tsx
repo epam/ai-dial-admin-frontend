@@ -13,12 +13,12 @@ import {
   IconX,
 } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { DialCloseButton, DialGhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
+import { DialCloseButton, DialEllipsisTooltip, DialGhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
 
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
-import { ViewMode } from './types';
+import { ViewMode } from './models';
 
 interface Props {
   viewMode: ViewMode;
@@ -70,14 +70,14 @@ const DrawerToolbar: FC<Props> = ({
           title={t(RunsI18nKey.Pin)}
         >
           <IconPin size={12} />
-          <span className="text-xxs truncate max-w-[120px]">{activeName ?? activeId}</span>
+          <DialEllipsisTooltip text={activeName ?? activeId ?? ''} className="text-xxs max-w-[120px]" />
         </button>
       )}
 
       {pinnedId && (
         <div className="flex items-center gap-1 bg-layer-3 rounded px-1.5 py-0.5 text-secondary">
           <IconPinFilled size={12} />
-          <span className="truncate max-w-[120px]">{pinnedName ?? pinnedId}</span>
+          <DialEllipsisTooltip text={pinnedName ?? pinnedId ?? ''} className="max-w-[120px]" />
           <button onClick={onUnpin} className="ml-0.5 hover:text-primary" title={t(RunsI18nKey.Unpin)}>
             <IconX size={12} />
           </button>

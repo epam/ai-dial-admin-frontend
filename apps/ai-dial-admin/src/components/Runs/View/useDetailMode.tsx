@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import RunMetricDetailPanel from '@/src/components/Runs/Details/RunMetricDetailPanel';
 import { useAppContext } from '@/src/context/AppContext';
 
-import { DetailMode } from '../Details/BottomDrawer/types';
+import { DetailMode } from '../Details/BottomDrawer/models';
 
 interface UseDetailModeReturn {
   detailMode: DetailMode;

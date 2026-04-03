@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useReducer, useState } from 'react';
 
-import { ComparisonSection } from './types';
+import { ComparisonSection } from './models';
 
 type VisibilityAction =
   | { type: 'toggle'; key: string }

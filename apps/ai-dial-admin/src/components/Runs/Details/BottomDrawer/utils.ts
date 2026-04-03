@@ -1,7 +1,7 @@
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 
-import { ComparisonRow, ComparisonSection } from './types';
+import { ComparisonRow, ComparisonSection } from './models';
 
 export const SECTION_I18N: Record<string, RunsI18nKey> = {
   execution: RunsI18nKey.Execution,

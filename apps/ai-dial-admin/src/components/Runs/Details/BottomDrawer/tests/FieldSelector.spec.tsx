@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderHook, act } from '@testing-library/react';
 
-import { ComparisonSection } from '../types';
+import { ComparisonSection } from '../models';
 import { useFieldSelector } from '../useFieldSelector';
 
 import FieldSelector from '../FieldSelector';

@@ -3,7 +3,7 @@ import { FC, type MouseEvent, type KeyboardEvent, useCallback } from 'react';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
-import { MIN_DRAWER_HEIGHT, MAX_DRAWER_OFFSET, RESIZE_STEP, RESIZE_STEP_LARGE } from './types';
+import { MIN_DRAWER_HEIGHT, MAX_DRAWER_OFFSET, RESIZE_STEP, RESIZE_STEP_LARGE } from './models';
 import { useDrawerPanel } from './useDrawerPanel';
 
 interface Props {

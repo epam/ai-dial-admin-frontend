@@ -8,12 +8,16 @@ export const COLLAPSED_HEIGHT = 34;
 export const RESIZE_STEP = 20;
 export const RESIZE_STEP_LARGE = 100;
 
+export interface CellValue {
+  raw: string | null;
+}
+
 export interface ComparisonRow {
   fieldKey: string;
   label: string;
   badge?: 'bound' | 'info';
   isNumeric: boolean;
-  values: Array<{ raw: string | null }>;
+  values: CellValue[];
 }
 
 export interface ComparisonSection {

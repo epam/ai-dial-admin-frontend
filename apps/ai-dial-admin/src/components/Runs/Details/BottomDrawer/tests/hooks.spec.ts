@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 
-import { ComparisonSection } from '../types';
+import { ComparisonSection } from '../models';
 import { useDrawerPanel } from '../useDrawerPanel';
 import { useFieldSelector } from '../useFieldSelector';
 

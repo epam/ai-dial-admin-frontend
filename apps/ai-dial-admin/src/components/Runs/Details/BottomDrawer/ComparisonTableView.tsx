@@ -4,6 +4,7 @@ import { FC, useCallback, useMemo, useState } from 'react';
 
 import { IconChevronDown, IconChevronRight, IconFocus2, IconMaximize } from '@tabler/icons-react';
 import classNames from 'classnames';
+import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -11,7 +12,7 @@ import { AnalyticsResult, ExtractionResultStatus } from '@/src/models/evaluation
 
 import FocusStrip from './FocusStrip';
 import FullscreenDiffViewer from './FullscreenDiffViewer';
-import { ComparisonRow, ComparisonSection, DiffViewState } from './types';
+import { ComparisonRow, ComparisonSection, DiffViewState } from './models';
 import { formatFieldValue, getDiffClass, SECTION_I18N } from './utils';
 
 interface Props {
@@ -104,7 +105,7 @@ const ComparisonTableView: FC<Props> = ({
                   className="text-left text-xxs font-medium px-3 py-1.5 border-b border-secondary"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-primary truncate">{detail.testCaseName ?? detail.id}</span>
+                    <DialEllipsisTooltip text={detail.testCaseName ?? detail.id ?? ''} className="text-primary" />
                     <StatusBadge status={detail.executionStatus} />
                     {detail.execDurationMs != null && <span className="text-secondary">{detail.execDurationMs}ms</span>}
                   </div>
@@ -218,9 +219,7 @@ const SectionGroup: FC<SectionGroupProps> = ({
                       <IconMaximize size={12} />
                     </button>
                   )}
-                  <span className="text-xxs font-mono text-primary truncate" title={row.label}>
-                    {row.label}
-                  </span>
+                  <DialEllipsisTooltip text={row.label} className="text-xxs font-mono text-primary" />
                 </div>
               </td>
               {row.values.map((val, idx) => {

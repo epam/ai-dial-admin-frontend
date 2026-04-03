@@ -6,12 +6,13 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 
 import { IconChevronDown, IconChevronRight, IconEye, IconEyeOff, IconSearch } from '@tabler/icons-react';
 import classNames from 'classnames';
+import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
 import DraggableItem from '@/src/components/Common/DraggableItem/DraggableItem';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
-import { ComparisonSection } from './types';
+import { ComparisonSection } from './models';
 import { useFieldSelector } from './useFieldSelector';
 import { SECTION_I18N } from './utils';
 
@@ -117,9 +118,7 @@ const FieldSelector: FC<Props> = ({ sections, fieldSelector }) => {
                       className="flex items-center gap-1 flex-1 min-w-0 text-xxs font-medium text-secondary"
                     >
                       {isCollapsed ? <IconChevronRight size={12} /> : <IconChevronDown size={12} />}
-                      <span className="truncate" title={sectionLabel}>
-                        {sectionLabel}
-                      </span>
+                      <DialEllipsisTooltip text={sectionLabel} />
                       <span className="text-secondary ml-auto shrink-0">({section.rows.length})</span>
                     </button>
                     <button
@@ -154,9 +153,7 @@ const FieldSelector: FC<Props> = ({ sections, fieldSelector }) => {
                             onChange={() => fieldSelector.toggleField(visKey)}
                             className="shrink-0 accent-accent-primary"
                           />
-                          <span className="text-xxs font-mono text-primary truncate" title={row.label}>
-                            {row.label}
-                          </span>
+                          <DialEllipsisTooltip text={row.label} className="text-xxs font-mono text-primary" />
                         </label>
                       );
                     })}
@@ -192,15 +189,13 @@ const FieldSelector: FC<Props> = ({ sections, fieldSelector }) => {
                     <DraggableItem id={section.key} findItem={findItem} moveItem={moveItem}>
                       <div className="flex items-center gap-1.5 flex-1 min-w-0 py-0.5">
                         <span className="text-xxs text-secondary w-4 text-right shrink-0">{idx + 1}</span>
-                        <span
+                        <DialEllipsisTooltip
+                          text={orderLabel}
                           className={classNames(
-                            'text-xxs truncate flex-1',
+                            'text-xxs flex-1',
                             isHidden ? 'text-secondary line-through' : 'text-primary',
                           )}
-                          title={orderLabel}
-                        >
-                          {orderLabel}
-                        </span>
+                        />
                         <button
                           onClick={() => fieldSelector.toggleSectionHidden(section.key)}
                           className={classNames(

@@ -3,13 +3,14 @@
 import { FC, useMemo } from 'react';
 
 import classNames from 'classnames';
+import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 
 import { StatusBadge } from './ComparisonTableView';
-import { ComparisonSection } from './types';
+import { ComparisonSection } from './models';
 import { formatFieldValue, SECTION_I18N, valuesAreEqual } from './utils';
 
 interface Props {
@@ -81,7 +82,10 @@ const ComparisonPivotView: FC<Props> = ({ sections, activeDetail, pinnedDetail, 
               <tr key={detail.id ?? rowIdx} className="border-b border-secondary">
                 <td className="sticky left-0 z-10 bg-layer-1 px-3 py-1.5 border-r border-secondary align-top">
                   <div className="flex items-center gap-2">
-                    <span className="text-primary truncate max-w-[140px]">{detail.testCaseName ?? detail.id}</span>
+                    <DialEllipsisTooltip
+                      text={detail.testCaseName ?? detail.id ?? ''}
+                      className="text-primary max-w-[140px]"
+                    />
                     <StatusBadge status={detail.executionStatus} />
                   </div>
                 </td>
