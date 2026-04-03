@@ -68,7 +68,7 @@ import {
   testCasesTab,
   testSuiteMethodTab,
   toolsTab,
-  tracesTab
+  tracesTab,
 } from '../utils';
 
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
