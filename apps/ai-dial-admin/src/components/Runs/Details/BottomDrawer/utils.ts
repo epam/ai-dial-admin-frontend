@@ -74,7 +74,6 @@ export function buildComparisonSections(
           ? [
               {
                 raw: effectivePinned.execDurationMs != null ? String(effectivePinned.execDurationMs) : null,
-                display: null,
               },
             ]
           : []),

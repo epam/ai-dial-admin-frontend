@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialCloseButton, DialLoader, DialSwitch } from '@epam/ai-dial-ui-kit';
+import { DialCloseButton, DialGhostIconButton, DialLoader, DialSwitch, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconLayoutBottombar } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -46,7 +46,7 @@ const RunMetricDetailPanel: FC<Props> = ({ resultId, onClose, onSwitchMode }) =>
   const requestJson = details?.requestBody != null ? JSON.stringify(details.requestBody) : null;
   const responseJson = details?.responseBody != null ? JSON.stringify(details.responseBody) : null;
 
-  const toggleMetricSelection = useCallback((group: string, key: string) => {
+  const onToggleMetricSelection = useCallback((group: string, key: string) => {
     setSelectedMetric((prev) => (prev?.group === group && prev?.key === key ? null : { group, key }));
   }, []);
 
@@ -71,13 +71,12 @@ const RunMetricDetailPanel: FC<Props> = ({ resultId, onClose, onSwitchMode }) =>
             onChange={() => setIsJsonView(!isJsonView)}
           />
           {onSwitchMode && (
-            <button
+            <DialGhostIconButton
+              size={ElementSize.Small}
+              icon={<IconLayoutBottombar size={16} />}
               onClick={onSwitchMode}
-              className="flex items-center justify-center size-6 rounded hover:bg-layer-3 text-secondary hover:text-primary"
               title={t(RunsI18nKey.SwitchToDrawer)}
-            >
-              <IconLayoutBottombar size={16} />
-            </button>
+            />
           )}
           <DialCloseButton onClose={onClose} />
         </div>
@@ -114,7 +113,7 @@ const RunMetricDetailPanel: FC<Props> = ({ resultId, onClose, onSwitchMode }) =>
                   <MetricCardsGrid
                     group={group}
                     selectedMetricKey={selectedMetric?.group === group.title ? selectedMetric.key : undefined}
-                    onMetricClick={(key) => toggleMetricSelection(group.title, key)}
+                    onMetricClick={(key) => onToggleMetricSelection(group.title, key)}
                   />
                   {group.hasError && group.errorMessage && (
                     <div className="grid grid-cols-[auto_1fr] gap-x-3 dial-tiny-text mt-1">

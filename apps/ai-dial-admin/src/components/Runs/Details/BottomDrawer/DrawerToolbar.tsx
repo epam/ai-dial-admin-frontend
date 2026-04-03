@@ -13,6 +13,7 @@ import {
   IconX,
 } from '@tabler/icons-react';
 import classNames from 'classnames';
+import { DialCloseButton, DialGhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
 
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -58,7 +59,7 @@ const DrawerToolbar: FC<Props> = ({
     <div
       className="flex items-center gap-2 px-3 h-[34px] border-b border-secondary text-xs shrink-0"
       role="toolbar"
-      aria-label="Analysis toolbar"
+      aria-label={t(RunsI18nKey.AnalysisToolbarLabel)}
     >
       <span className="font-semibold text-primary">{t(RunsI18nKey.Analysis)}</span>
 
@@ -116,29 +117,21 @@ const DrawerToolbar: FC<Props> = ({
         </button>
       </div>
 
-      <button
+      <DialGhostIconButton
+        size={ElementSize.Small}
+        icon={<IconLayoutSidebarRight size={16} />}
         onClick={onSwitchToSidebar}
-        className="flex items-center justify-center size-6 rounded hover:bg-layer-3 text-secondary hover:text-primary"
         title={t(RunsI18nKey.SwitchToSidebar)}
-      >
-        <IconLayoutSidebarRight size={16} />
-      </button>
+      />
 
-      <button
+      <DialGhostIconButton
+        size={ElementSize.Small}
+        icon={isCollapsed ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
         onClick={isCollapsed ? onExpand : onCollapse}
-        className="flex items-center justify-center size-6 rounded hover:bg-layer-3 text-secondary hover:text-primary"
         title={isCollapsed ? t(RunsI18nKey.Expand) : t(RunsI18nKey.Collapse)}
-      >
-        {isCollapsed ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
-      </button>
+      />
 
-      <button
-        onClick={onClose}
-        className="flex items-center justify-center size-6 rounded hover:bg-layer-3 text-secondary hover:text-primary"
-        title={t(RunsI18nKey.Close)}
-      >
-        <IconX size={16} />
-      </button>
+      <DialCloseButton onClose={onClose} ariaLabel={t(RunsI18nKey.Close)} />
     </div>
   );
 };

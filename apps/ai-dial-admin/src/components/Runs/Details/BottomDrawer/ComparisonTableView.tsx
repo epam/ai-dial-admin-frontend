@@ -11,14 +11,8 @@ import { AnalyticsResult, ExtractionResultStatus } from '@/src/models/evaluation
 
 import FocusStrip from './FocusStrip';
 import FullscreenDiffViewer from './FullscreenDiffViewer';
-import { ComparisonRow, ComparisonSection } from './types';
+import { ComparisonRow, ComparisonSection, DiffViewState } from './types';
 import { formatFieldValue, getDiffClass, SECTION_I18N } from './utils';
-
-interface DiffViewState {
-  fieldLabel: string;
-  original: string;
-  modified: string;
-}
 
 interface Props {
   sections: ComparisonSection[];
@@ -51,7 +45,7 @@ const ComparisonTableView: FC<Props> = ({
   const [expandedCells, setExpandedCells] = useState<Set<string>>(new Set());
   const [diffViewState, setDiffViewState] = useState<DiffViewState | null>(null);
 
-  const handleOpenDiff = useCallback((row: ComparisonRow) => {
+  const onOpenDiff = useCallback((row: ComparisonRow) => {
     setDiffViewState({
       fieldLabel: row.label,
       original: row.values[0]?.raw ?? '',
@@ -59,11 +53,11 @@ const ComparisonTableView: FC<Props> = ({
     });
   }, []);
 
-  const toggleSectionCollapse = useCallback((key: string) => {
+  const onToggleSectionCollapse = useCallback((key: string) => {
     setCollapsedSections((prev) => ({ ...prev, [key]: !prev[key] }));
   }, []);
 
-  const toggleCellExpand = useCallback((cellKey: string) => {
+  const onToggleCellExpand = useCallback((cellKey: string) => {
     setExpandedCells((prev) => {
       const next = new Set(prev);
       if (next.has(cellKey)) next.delete(cellKey);
@@ -126,14 +120,14 @@ const ComparisonTableView: FC<Props> = ({
                   key={section.key}
                   section={section}
                   isCollapsed={isCollapsed}
-                  onToggle={() => toggleSectionCollapse(section.key)}
+                  onToggle={() => onToggleSectionCollapse(section.key)}
                   hasTwoColumns={hasTwoColumns}
                   spotlightedFields={spotlightedFields}
                   onToggleSpotlight={onToggleSpotlight}
                   expandedCells={expandedCells}
-                  onToggleCellExpand={toggleCellExpand}
+                  onToggleCellExpand={onToggleCellExpand}
                   columnCount={details.length}
-                  onOpenDiff={handleOpenDiff}
+                  onOpenDiff={onOpenDiff}
                 />
               );
             })}

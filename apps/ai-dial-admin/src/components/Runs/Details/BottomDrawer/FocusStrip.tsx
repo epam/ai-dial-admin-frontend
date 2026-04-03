@@ -5,12 +5,8 @@ import { IconX } from '@tabler/icons-react';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
-import { ComparisonRow } from './types';
+import { SpotlightedRow } from './types';
 import { formatFieldValue } from './utils';
-
-interface SpotlightedRow extends ComparisonRow {
-  fullKey: string;
-}
 
 interface Props {
   rows: SpotlightedRow[];
@@ -25,7 +21,7 @@ const FocusStrip: FC<Props> = ({ rows, onRemove }) => {
     <div
       className="flex gap-2 px-3 py-1.5 border-b border-secondary overflow-x-auto shrink-0"
       role="list"
-      aria-label="Spotlighted fields"
+      aria-label={t(RunsI18nKey.SpotlightedFieldsLabel)}
     >
       {rows.map((row) => (
         <div

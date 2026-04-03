@@ -1,5 +1,8 @@
 import { FC, type MouseEvent, type KeyboardEvent, useCallback } from 'react';
 
+import { RunsI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
+
 import { MIN_DRAWER_HEIGHT, MAX_DRAWER_OFFSET, RESIZE_STEP, RESIZE_STEP_LARGE } from './types';
 import { useDrawerPanel } from './useDrawerPanel';
 
@@ -9,7 +12,8 @@ interface Props {
 }
 
 const ResizeHandle: FC<Props> = ({ onDragStart, drawerPanel }) => {
-  const handleKeyDown = useCallback(
+  const t = useI18n();
+  const onKeyDown = useCallback(
     (e: KeyboardEvent<HTMLDivElement>) => {
       let delta = 0;
       if (e.key === 'ArrowUp') {
@@ -34,9 +38,9 @@ const ResizeHandle: FC<Props> = ({ onDragStart, drawerPanel }) => {
       tabIndex={0}
       role="separator"
       aria-orientation="horizontal"
-      aria-label="Resize drawer"
+      aria-label={t(RunsI18nKey.ResizeDrawerLabel)}
       onMouseDown={onDragStart}
-      onKeyDown={handleKeyDown}
+      onKeyDown={onKeyDown}
     >
       <div className="w-8 flex flex-col gap-px items-center">
         <div className="w-full h-px bg-secondary" />

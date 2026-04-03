@@ -147,8 +147,8 @@ const AnalyticsBottomDrawer: FC<Props> = ({
   }, [onClose]);
 
   // Resize drag handlers
-  const handleDragStart = useCallback(
-    (e: MouseEvent<HTMLDivElement>) => {
+  const onDragStart = useCallback(
+    (e: MouseEvent) => {
       e.preventDefault();
       setIsDragging(true);
       const startY = e.clientY;
@@ -185,19 +185,19 @@ const AnalyticsBottomDrawer: FC<Props> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handlePin = useCallback(() => {
+  const onPinActive = useCallback(() => {
     if (drawerPanel.activeId) {
       drawerPanel.pin(drawerPanel.activeId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [drawerPanel.activeId, drawerPanel.pin]);
 
-  const handleSwitchToSidebar = useCallback(() => {
+  const onSwitchSidebar = useCallback(() => {
     fieldSelector.resetAll();
     onSwitchToSidebar();
   }, [fieldSelector, onSwitchToSidebar]);
 
-  const handleClose = useCallback(() => {
+  const onCloseDrawer = useCallback(() => {
     fieldSelector.resetAll();
     onClose();
   }, [fieldSelector, onClose]);
@@ -216,9 +216,9 @@ const AnalyticsBottomDrawer: FC<Props> = ({
       className="fixed bottom-0 inset-x-0 z-[35] bg-layer-1 border-t border-primary flex flex-col"
       style={panelStyle}
       role="complementary"
-      aria-label="Analysis drawer"
+      aria-label={t(RunsI18nKey.AnalysisDrawerLabel)}
     >
-      {!drawerPanel.isCollapsed && <ResizeHandle onDragStart={handleDragStart} drawerPanel={drawerPanel} />}
+      {!drawerPanel.isCollapsed && <ResizeHandle onDragStart={onDragStart} drawerPanel={drawerPanel} />}
       <div ref={toolbarRef}>
         <DrawerToolbar
           viewMode={drawerPanel.viewMode}
@@ -227,14 +227,14 @@ const AnalyticsBottomDrawer: FC<Props> = ({
           activeName={activeDetail?.testCaseName ?? null}
           pinnedId={drawerPanel.pinnedId}
           pinnedName={pinnedDetail?.testCaseName ?? null}
-          onPin={handlePin}
+          onPin={onPinActive}
           onUnpin={drawerPanel.unpin}
           diffCount={diffCount}
           isCollapsed={drawerPanel.isCollapsed}
           onCollapse={drawerPanel.collapse}
           onExpand={drawerPanel.expand}
-          onClose={handleClose}
-          onSwitchToSidebar={handleSwitchToSidebar}
+          onClose={onCloseDrawer}
+          onSwitchToSidebar={onSwitchSidebar}
         />
       </div>
       {!drawerPanel.isCollapsed && (

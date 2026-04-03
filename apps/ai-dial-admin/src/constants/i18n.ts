@@ -1557,6 +1557,10 @@ export enum RunsI18nKey {
   DurationLabel = 'Runs.DurationLabel',
   StartedLabel = 'Runs.StartedLabel',
   CompareFullscreen = 'Runs.CompareFullscreen',
+  AnalysisDrawerLabel = 'Runs.AnalysisDrawerLabel',
+  AnalysisToolbarLabel = 'Runs.AnalysisToolbarLabel',
+  ResizeDrawerLabel = 'Runs.ResizeDrawerLabel',
+  SpotlightedFieldsLabel = 'Runs.SpotlightedFieldsLabel',
 }
 
 export enum FileManagerI18nKey {

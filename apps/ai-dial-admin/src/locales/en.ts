@@ -1627,6 +1627,10 @@ export default {
     DurationLabel: 'Duration',
     StartedLabel: 'Started',
     CompareFullscreen: 'Compare in fullscreen',
+    AnalysisDrawerLabel: 'Analysis drawer',
+    AnalysisToolbarLabel: 'Analysis toolbar',
+    ResizeDrawerLabel: 'Resize drawer',
+    SpotlightedFieldsLabel: 'Spotlighted fields',
   },
   JsonAta: {
     JSONAtaDoc: 'JSONata Expression Reference',

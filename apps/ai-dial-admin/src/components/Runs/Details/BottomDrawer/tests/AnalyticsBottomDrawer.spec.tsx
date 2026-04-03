@@ -39,28 +39,28 @@ describe('AnalyticsBottomDrawer', () => {
   it('renders as complementary landmark', async () => {
     render(<TestWrapper />);
     await waitFor(() => {
-      expect(screen.getByRole('complementary', { name: 'Analysis drawer' })).toBeInTheDocument();
+      expect(screen.getByRole('complementary', { name: 'Runs.AnalysisDrawerLabel' })).toBeInTheDocument();
     });
   });
 
   it('shows toolbar', async () => {
     render(<TestWrapper />);
     await waitFor(() => {
-      expect(screen.getByRole('toolbar', { name: 'Analysis toolbar' })).toBeInTheDocument();
+      expect(screen.getByRole('toolbar', { name: 'Runs.AnalysisToolbarLabel' })).toBeInTheDocument();
     });
   });
 
   it('renders resize handle', async () => {
     render(<TestWrapper />);
     await waitFor(() => {
-      expect(screen.getByRole('separator', { name: 'Resize drawer' })).toBeInTheDocument();
+      expect(screen.getByRole('separator', { name: 'Runs.ResizeDrawerLabel' })).toBeInTheDocument();
     });
   });
 
   it('has correct z-index class', async () => {
     render(<TestWrapper />);
     await waitFor(() => {
-      const drawer = screen.getByRole('complementary', { name: 'Analysis drawer' });
+      const drawer = screen.getByRole('complementary', { name: 'Runs.AnalysisDrawerLabel' });
       expect(drawer.className).toContain('z-[35]');
     });
   });

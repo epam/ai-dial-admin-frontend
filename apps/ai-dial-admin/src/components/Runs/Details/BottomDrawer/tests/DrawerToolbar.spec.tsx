@@ -62,7 +62,7 @@ describe('DrawerToolbar', () => {
 
   it('calls onClose', async () => {
     render(<DrawerToolbar {...defaultProps} />);
-    await userEvent.click(screen.getByTitle('Runs.Close'));
+    await userEvent.click(screen.getByRole('button', { name: 'Runs.Close' }));
     expect(defaultProps.onClose).toHaveBeenCalled();
   });
 

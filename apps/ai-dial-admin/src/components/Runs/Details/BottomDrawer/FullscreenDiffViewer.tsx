@@ -45,7 +45,7 @@ const FullscreenDiffViewer: FC<Props> = ({
     return 'plaintext';
   }, [original, modified]);
 
-  function handleBeforeMount(monaco: Monaco) {
+  function onBeforeMount(monaco: Monaco) {
     monaco?.editor?.defineTheme(currentTheme, getDiffEditorTheme(currentTheme as EDITOR_THEMES));
   }
 
@@ -68,7 +68,7 @@ const FullscreenDiffViewer: FC<Props> = ({
             original={original}
             modified={modified}
             language={language}
-            beforeMount={handleBeforeMount}
+            beforeMount={onBeforeMount}
             height="100%"
             width="100%"
             theme={currentTheme}

@@ -27,7 +27,7 @@ const FieldSelector: FC<Props> = ({ sections, fieldSelector }) => {
   const [activeTab, setActiveTab] = useState<Tab>('fields');
   const [collapsedFieldSections, setCollapsedFieldSections] = useState<Record<string, boolean>>({});
 
-  const toggleFieldSectionCollapse = useCallback((key: string) => {
+  const onToggleFieldSectionCollapse = useCallback((key: string) => {
     setCollapsedFieldSections((prev) => ({ ...prev, [key]: !prev[key] }));
   }, []);
 
@@ -113,7 +113,7 @@ const FieldSelector: FC<Props> = ({ sections, fieldSelector }) => {
                 <div key={section.key}>
                   <div className="flex items-center gap-1 px-1.5 py-1 hover:bg-layer-2">
                     <button
-                      onClick={() => toggleFieldSectionCollapse(section.key)}
+                      onClick={() => onToggleFieldSectionCollapse(section.key)}
                       className="flex items-center gap-1 flex-1 min-w-0 text-xxs font-medium text-secondary"
                     >
                       {isCollapsed ? <IconChevronRight size={12} /> : <IconChevronDown size={12} />}

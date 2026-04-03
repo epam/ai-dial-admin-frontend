@@ -31,3 +31,13 @@ export interface DrawerPanelState {
   pinnedId: string | null;
   currentHeight: number;
 }
+
+export interface DiffViewState {
+  fieldLabel: string;
+  original: string;
+  modified: string;
+}
+
+export interface SpotlightedRow extends ComparisonRow {
+  fullKey: string;
+}
