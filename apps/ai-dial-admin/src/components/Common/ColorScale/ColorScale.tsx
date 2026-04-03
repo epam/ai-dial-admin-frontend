@@ -2,18 +2,17 @@
 
 import { FC } from 'react';
 
-import classNames from 'classnames';
-
+import { BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ACCURACY_COLOR_MAP, ACCURACY_THRESHOLDS } from './constants';
 
-const ColorLine: FC = () => {
+const ColorScale: FC = () => {
   const t = useI18n();
   return (
-    <div className={classNames('inline-flex w-[700px] flex-col gap-0.5')}>
+    <div className="inline-flex w-[700px] flex-col gap-0.5">
       <div className="flex justify-between text-sm text-secondary">
-        <span>{t('Basic.LowAccuracy')}</span>
-        <span>{t('Basic.HighAccuracy')}</span>
+        <span>{t(BasicI18nKey.LowAccuracy)}</span>
+        <span>{t(BasicI18nKey.HighAccuracy)}</span>
       </div>
 
       <div className="flex">
@@ -26,7 +25,6 @@ const ColorLine: FC = () => {
               className="h-2 w-[70px]"
               style={{
                 backgroundColor: color.bg,
-                borderBottomRightRadius: '2px',
                 borderColor: color.border,
                 borderRight: `2px solid ${color.border}`,
                 borderBottom: `2px solid ${color.border}`,
@@ -54,4 +52,4 @@ const ColorLine: FC = () => {
   );
 };
 
-export default ColorLine;
+export default ColorScale;
