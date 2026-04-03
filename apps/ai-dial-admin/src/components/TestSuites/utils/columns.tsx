@@ -19,10 +19,10 @@ import JsonAtaCellRenderer from '@/src/components/Grid/CellRenderers/JsonAtaCell
 import JsonEditorCellRenderer from '@/src/components/Grid/CellRenderers/JsonEditorCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import BooleanColumnHeader from '@/src/components/Grid/HeaderComponents/BooleanColumnHeader';
+import { TYPE_OPTIONS } from '@/src/components/TestSuites/TestCaseSchema/constants';
 import { NO_BORDER_CLASS, UTILITY_COLUMN } from '@/src/constants/ag-grid';
 import { BASE_STATUS_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { TEST_CASES_COLUMN } from '@/src/constants/grid-columns/grid-columns';
-import { TYPE_OPTIONS } from '@/src/components/TestSuites/TestCaseSchema/constants';
 import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { MetricBinding } from '@/src/models/evaluation/metric';
 import {
@@ -93,6 +93,7 @@ export const getTestCaseColumns = (
       editable: true,
       cellRenderer: 'agCheckboxCellRenderer',
       cellEditor: 'agCheckboxCellEditor',
+      cellClass: 'flex justify-center',
       valueGetter: (params) => params.data?.enabled,
       valueSetter: (params) => {
         params.data.enabled = params.newValue;

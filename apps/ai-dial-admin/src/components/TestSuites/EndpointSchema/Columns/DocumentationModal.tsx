@@ -8,11 +8,12 @@ import {
   ElementSize,
   PopupSize,
 } from '@epam/ai-dial-ui-kit';
+import { IconExternalLink } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
 import { JSONSchema7 } from 'json-schema';
-import { IconExternalLink } from '@tabler/icons-react';
 
 import GridView from '@/src/components/Grid/GridView/GridView';
+import { CHAT_COMPLETION_METHOD } from '@/src/components/TestSuites/constants/chat-completion-method';
 import { JsonAtaI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { GRID_SECTIONS, RESOURCE_LINKS } from './constants';
@@ -69,14 +70,15 @@ const DocumentationModal: FC<Props> = ({ schema, isModalOpen, onClose }) => {
     [t],
   );
 
-  const sections = useMemo(
-    () =>
-      GRID_SECTIONS.map((section) => ({
-        titleKey: section.titleKey,
-        rowData: section.buildRows(schema),
-      })),
-    [schema],
-  );
+  const sections = useMemo(() => {
+    const schemaToUse = Object.keys(schema).length
+      ? schema
+      : (CHAT_COMPLETION_METHOD.responseBodySchema as JSONSchema7);
+    return GRID_SECTIONS.map((section) => ({
+      titleKey: section.titleKey,
+      rowData: section.buildRows(schemaToUse),
+    }));
+  }, [schema]);
 
   return (
     <DialPopup
