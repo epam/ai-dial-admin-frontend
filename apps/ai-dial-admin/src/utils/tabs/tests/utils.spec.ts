@@ -2,31 +2,38 @@ import { TabsI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test, vi } from 'vitest';
 import {
+  analyticsTab,
   applicationRunnersTab,
   applicationsTab,
   appRouteTab,
   attachmentsTab,
   auditTab,
   bodyTab,
+  columnsTab,
   conversationsTab,
   dependenciesTab,
   deploymentsToolsTab,
   entitiesTab,
   eventsTab,
   executionLogTab,
+  extractionResultTab,
   featuresTab,
   filesTab,
   firewallTab,
   getAdapterTabs,
+  getApplicationPublicationTabs,
   getApplicationTabs,
   getAppRouteTabs,
   getAppRunnerTabs,
   getAuditTabs,
   getDeploymentsViewTabs,
+  getEndpointSchemaTabs,
+  getFilePublicationTabs,
   getInterceptorTabs,
   getInterceptorTemplateTabs,
   getKeyTabs,
   getModelsTabs,
+  getPromptPublicationTabs,
   getPublicationTabs,
   getRoleTabs,
   getRouteTabs,
@@ -35,6 +42,7 @@ import {
   getTabsForAsset,
   getTestSuiteRequestTemplateTabs,
   getTestSuiteTabs,
+  getToolsetPublicationTabs,
   getToolsetTabs,
   getUsageLogTabs,
   globalInterceptorsTab,
@@ -42,34 +50,25 @@ import {
   installationLogTab,
   interceptorsTab,
   keysTab,
-  extractionResultTab,
+  mcpTab,
+  metricsTab,
   modelsTab,
   parameterSchemaTab,
   parametersTab,
+  permissionsTab,
   promptsTab,
   propertiesTab,
   relatedContainersTab,
+  requestSchemaTab,
   resourcesTab,
+  responseSchemaTab,
   rolesTab,
   runsTab,
   summaryTab,
   testCasesTab,
   testSuiteMethodTab,
   toolsTab,
-  tracesTab,
-  trendsTab,
-  getEndpointSchemaTabs,
-  requestSchemaTab,
-  responseSchemaTab,
-  getFilePublicationTabs,
-  permissionsTab,
-  getPromptPublicationTabs,
-  getApplicationPublicationTabs,
-  getToolsetPublicationTabs,
-  columnsTab,
-  metricsTab,
-  analyticsTab,
-  mcpTab,
+  tracesTab
 } from '../utils';
 
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
@@ -251,7 +250,7 @@ describe('Entities :: tabs', () => {
   });
 
   test('returns correct tabs for run', () => {
-    expect(getRunTabs(t)).toEqual([summaryTab(t), extractionResultTab(t), analyticsTab(t)]);
+    expect(getRunTabs(t)).toEqual([summaryTab(t), analyticsTab(t), extractionResultTab(t)]);
   });
 
   test('returns correct tabs for model containers', () => {

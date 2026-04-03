@@ -1,10 +1,10 @@
 import { TabModel } from '@epam/ai-dial-ui-kit';
 
-import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
-import { ApplicationRoute } from '@/src/types/routes';
-import { IMAGE_STATUS } from '@/src/types/deployments/images';
-import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { ALLOW_ALL_DOMAINS } from '@/src/components/Deployments/Common/Whitelists/Whitelists';
+import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
+import { IMAGE_STATUS } from '@/src/types/deployments/images';
+import { ApplicationRoute } from '@/src/types/routes';
 
 export enum EntityViewTab {
   Properties = 'Properties',
@@ -497,7 +497,7 @@ export const getTestSuiteRequestTemplateTabs = (t: (key: string) => string): Tab
 };
 
 export const getRunTabs = (t: (key: string) => string): TabModel[] => {
-  return [summaryTab(t), extractionResultTab(t), analyticsTab(t)];
+  return [summaryTab(t), analyticsTab(t), extractionResultTab(t)];
 };
 
 export const getEndpointSchemaTabs = (t: (key: string) => string): TabModel[] => {
