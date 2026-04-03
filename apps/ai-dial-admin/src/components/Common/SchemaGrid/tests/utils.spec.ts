@@ -234,6 +234,31 @@ describe('jsonSchemaToFields', () => {
     });
   });
 
+  test('should preserve minimum and maximum for numeric fields', () => {
+    const schema: JSONSchema7 = {
+      type: 'object',
+      properties: {
+        threshold: {
+          type: 'number',
+          minimum: 0,
+          maximum: 1,
+        },
+      },
+      required: ['threshold'],
+    };
+
+    const fields = jsonSchemaToFields(schema);
+
+    expect(fields).toHaveLength(1);
+    expect(fields[0]).toMatchObject({
+      name: 'threshold',
+      type: 'number',
+      required: true,
+      minimum: 0,
+      maximum: 1,
+    });
+  });
+
   test('should default type to string when not specified', () => {
     const schema: JSONSchema7 = {
       type: 'object',
