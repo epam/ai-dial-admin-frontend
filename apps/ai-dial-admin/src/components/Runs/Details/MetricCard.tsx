@@ -4,6 +4,8 @@ import { FC } from 'react';
 
 import classNames from 'classnames';
 
+import { getAccuracyColors } from '@/src/components/Common/ColorScale/utils';
+
 interface Props {
   name: string;
   value: number | null;
@@ -40,11 +42,11 @@ const MetricCard: FC<Props> = ({ name, value, isError, isSelected, onClick }) =>
       </div>
       <div className="h-[3px] bg-layer-4 rounded-sm mt-1.5 overflow-hidden">
         <div
-          className={classNames(
-            'h-full rounded-sm transition-[width] duration-400',
-            isError ? 'bg-error' : 'bg-accent-primary',
-          )}
-          style={{ width: `${fillWidth}%` }}
+          className={classNames('h-full rounded-sm transition-[width] duration-400', isError && 'bg-error')}
+          style={{
+            width: `${fillWidth}%`,
+            ...(!isError && value != null ? { backgroundColor: getAccuracyColors(value).bg } : {}),
+          }}
         />
       </div>
     </div>
