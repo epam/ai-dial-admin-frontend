@@ -1,3 +1,7 @@
+export enum GlobalI18nKey {
+  User = 'User',
+}
+
 export enum MenuI18nKey {
   Entities = 'Menu.Entities',
   EntitiesDescription = 'Menu.EntitiesDescription',

@@ -1,17 +1,14 @@
-import { IconChevronDown } from '@tabler/icons-react';
-import { DialConfirmationPopup, DialDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
-import { FC, useEffect, useMemo, useState } from 'react';
-import classNames from 'classnames';
+import { DialConfirmationPopup, DialDropdown } from '@epam/ai-dial-ui-kit';
+import { FC, useEffect, useState } from 'react';
 
 import SettingsModal from '@/src/components/SettingsModal/SettingsModal';
-import { AuthI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { AuthI18nKey, GlobalI18nKey } from '@/src/constants/i18n';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useLogout } from '@/src/hooks/use-logout';
 import { useI18n } from '@/src/locales/client';
 import LogoutItem from './LogoutItem';
 import SettingsItem from './SettingsItem';
-import UserInfo from './UserInfo';
+import { UserIcon } from './UserIcon';
 
 interface Props {
   isEnableAuth: boolean;
@@ -53,46 +50,42 @@ const UserMenu: FC<Props> = ({ isEnableAuth, isMobile }) => {
     return () => window.clearTimeout(timeoutId);
   }, [isOpen]);
 
-  const dropdownItems: DropdownItem[] = useMemo(() => {
-    const res = [];
-    if (themes?.length) {
-      res.push({ key: 'settings', label: <SettingsItem />, onClick: handleSettingsClick });
-    }
-
-    if (isEnableAuth) {
-      res.push({
-        key: 'logout',
-        label: <LogoutItem session={session} />,
-        onClick: () => {
-          if (!session) {
-            handleLogout();
-          } else {
-            setIsLogoutConfirmationOpen(true);
-          }
-        },
-      });
-    }
-    return res;
-  }, [handleLogout, isEnableAuth, session, themes?.length]);
-
   return (
     <>
       {isMobile ? (
         <div className="flex flex-col w-full divide-y divide-tertiary">
-          <UserInfo session={session} />
+          <UserIcon userName={session?.user?.name || t(GlobalI18nKey.User)} />
           <div className="flex flex-col gap-3 p-4">
             {themes?.length && <SettingsItem onClick={handleSettingsClick} />}
             {isEnableAuth && <LogoutItem session={session} onClick={handleLogOutClick} />}
           </div>
         </div>
       ) : (
-        <DialDropdown menu={{ items: dropdownItems }} onOpenChange={(open) => setIsOpen(open)}>
-          <div role="menuitem" className="flex min-w-[120px] cursor-pointer items-center justify-between gap-2 pr-6">
-            <UserInfo session={session} />
-            <IconChevronDown
-              {...BASE_BUTTON_ICON_PROPS}
-              className={classNames('shrink-0 text-primary transition-all', isOpen && 'rotate-180')}
-            />
+        <DialDropdown
+          listClassName="!w-[280px]"
+          onOpenChange={(open) => setIsOpen(open)}
+          renderOverlay={() => (
+            <div className="flex flex-col w-[280px]">
+              <div className="flex flex-row items-center gap-3 border-b border-secondary p-3">
+                <UserIcon userName={session?.user?.name || t(GlobalI18nKey.User)} />
+
+                <p className="dial-small-semi-text">{session?.user?.name}</p>
+              </div>
+              {themes?.length && (
+                <div className="px-3 hover:bg-accent-primary-alpha h-[34px] flex items-center cursor-pointer">
+                  <SettingsItem onClick={handleSettingsClick} />
+                </div>
+              )}
+              {isEnableAuth && (
+                <div className="px-3 hover:bg-accent-primary-alpha h-[34px] flex items-center cursor-pointer">
+                  <LogoutItem session={session} onClick={handleLogOutClick} />
+                </div>
+              )}
+            </div>
+          )}
+        >
+          <div role="menuitem" className="flex cursor-pointer items-center justify-between gap-2 pr-6">
+            <UserIcon userName={session?.user?.name || t(GlobalI18nKey.User)} />
           </div>
         </DialDropdown>
       )}
