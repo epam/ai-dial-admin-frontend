@@ -130,6 +130,8 @@ export enum BasicI18nKey {
   Server = 'Basic.Server',
   Client = 'Basic.Client',
   ContentType = 'Basic.ContentType',
+  HighAccuracy = 'Basic.HighAccuracy',
+  LowAccuracy = 'Basic.LowAccuracy',
 }
 
 export enum EntitiesI18nKey {

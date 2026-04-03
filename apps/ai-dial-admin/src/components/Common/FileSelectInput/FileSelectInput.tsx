@@ -50,6 +50,8 @@ const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputCl
         onOpen={() => setIsModalOpen(true)}
         emptyValueText={t(BasicI18nKey.None)}
         inputClassName={inputClassName}
+        editable
+        onValueChange={onChangeValue}
       >
         <DialFormPopup
           header={t(TestSuitesI18nKey.SelectDocument)}
