@@ -1,7 +1,7 @@
 'use client';
 
 import { ColDef, RowClickedEvent } from 'ag-grid-community';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 
 import { DialLoader } from '@epam/ai-dial-ui-kit';
 
@@ -61,8 +61,9 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
     [detailMode],
   );
 
-  // Sync drawer open/close with detailMode
-  useEffect(() => {
+  // Sync drawer open/close with detailMode — useLayoutEffect ensures activeId is set
+  // before the drawer's useEffect (fetch) fires on mount.
+  useLayoutEffect(() => {
     if (detailMode.drawerOpen && detailMode.selectedResultId) {
       drawerPanel.open(detailMode.selectedResultId);
     } else if (!detailMode.drawerOpen && drawerPanel.isOpen) {

@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import { IconChevronDown, IconChevronRight, IconFocus2 } from '@tabler/icons-react';
+import { IconChevronDown, IconChevronRight, IconFocus2, IconMaximize } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import { RunsI18nKey } from '@/src/constants/i18n';
@@ -10,8 +10,15 @@ import { useI18n } from '@/src/locales/client';
 import { AnalyticsResult, ExtractionResultStatus } from '@/src/models/evaluation/run';
 
 import FocusStrip from './FocusStrip';
+import FullscreenDiffViewer from './FullscreenDiffViewer';
 import { ComparisonRow, ComparisonSection } from './types';
 import { formatFieldValue, getDiffClass, SECTION_I18N } from './utils';
+
+interface DiffViewState {
+  fieldLabel: string;
+  original: string;
+  modified: string;
+}
 
 interface Props {
   sections: ComparisonSection[];
@@ -42,6 +49,15 @@ const ComparisonTableView: FC<Props> = ({
   const t = useI18n();
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const [expandedCells, setExpandedCells] = useState<Set<string>>(new Set());
+  const [diffViewState, setDiffViewState] = useState<DiffViewState | null>(null);
+
+  const handleOpenDiff = useCallback((row: ComparisonRow) => {
+    setDiffViewState({
+      fieldLabel: row.label,
+      original: row.values[0]?.raw ?? '',
+      modified: row.values[1]?.raw ?? '',
+    });
+  }, []);
 
   const toggleSectionCollapse = useCallback((key: string) => {
     setCollapsedSections((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -117,12 +133,24 @@ const ComparisonTableView: FC<Props> = ({
                   expandedCells={expandedCells}
                   onToggleCellExpand={toggleCellExpand}
                   columnCount={details.length}
+                  onOpenDiff={handleOpenDiff}
                 />
               );
             })}
           </tbody>
         </table>
       </div>
+      {diffViewState && (
+        <FullscreenDiffViewer
+          isOpen={true}
+          fieldLabel={diffViewState.fieldLabel}
+          original={diffViewState.original}
+          modified={diffViewState.modified}
+          originalLabel={pinnedDetail?.testCaseName ?? pinnedDetail?.id ?? ''}
+          modifiedLabel={activeDetail?.testCaseName ?? activeDetail?.id ?? ''}
+          onClose={() => setDiffViewState(null)}
+        />
+      )}
     </div>
   );
 };
@@ -137,6 +165,7 @@ interface SectionGroupProps {
   expandedCells: Set<string>;
   onToggleCellExpand: (cellKey: string) => void;
   columnCount: number;
+  onOpenDiff: (row: ComparisonRow) => void;
 }
 
 const SectionGroup: FC<SectionGroupProps> = ({
@@ -149,6 +178,7 @@ const SectionGroup: FC<SectionGroupProps> = ({
   expandedCells,
   onToggleCellExpand,
   columnCount,
+  onOpenDiff,
 }) => {
   const t = useI18n();
   const i18nKey = SECTION_I18N[section.key];
@@ -185,6 +215,15 @@ const SectionGroup: FC<SectionGroupProps> = ({
                   >
                     <IconFocus2 size={12} />
                   </button>
+                  {hasTwoColumns && diffClass && (
+                    <button
+                      onClick={() => onOpenDiff(row)}
+                      className="shrink-0 text-secondary hover:text-accent-primary"
+                      title={t(RunsI18nKey.CompareFullscreen)}
+                    >
+                      <IconMaximize size={12} />
+                    </button>
+                  )}
                   <span className="text-xxs font-mono text-primary truncate" title={row.label}>
                     {row.label}
                   </span>

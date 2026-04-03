@@ -1556,6 +1556,7 @@ export enum RunsI18nKey {
   HttpLabel = 'Runs.HttpLabel',
   DurationLabel = 'Runs.DurationLabel',
   StartedLabel = 'Runs.StartedLabel',
+  CompareFullscreen = 'Runs.CompareFullscreen',
 }
 
 export enum FileManagerI18nKey {

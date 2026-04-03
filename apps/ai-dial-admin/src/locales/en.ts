@@ -1626,6 +1626,7 @@ export default {
     HttpLabel: 'HTTP',
     DurationLabel: 'Duration',
     StartedLabel: 'Started',
+    CompareFullscreen: 'Compare in fullscreen',
   },
   JsonAta: {
     JSONAtaDoc: 'JSONata Expression Reference',
