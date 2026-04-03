@@ -14,6 +14,7 @@ import {
   createApp,
   importApps,
   exportApps,
+  getAssetTools,
 } from './actions';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { ResourceType } from '@/src/types/resource-type';
@@ -177,6 +178,15 @@ describe('Assets application :: server actions', () => {
     const result = await bulkDeleteApps([{ path: 'path' }]);
     expect(getUserToken).toHaveBeenCalled();
     expect(assetsApi.bulkDeleteAssets).toHaveBeenCalledWith(TOKEN_MOCK, [{ path: 'path' }], ResourceType.APPLICATION);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getAssetTools action for APPLICATION resource type', async () => {
+    (assetsApi.getTools as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getAssetTools('test');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(assetsApi.getTools).toHaveBeenCalledWith('test', TOKEN_MOCK, ResourceType.APPLICATION);
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

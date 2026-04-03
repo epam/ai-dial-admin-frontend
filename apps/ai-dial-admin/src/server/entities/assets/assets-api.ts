@@ -177,8 +177,8 @@ export class AssetsApi extends BaseApi {
 
   // Toolset specific
 
-  getTools(name: string, token: Token) {
-    const url = `${ResourceBasePaths[ResourceType.TOOLSET]}/discovered-tools`;
+  getTools(name: string, token: Token, resourceType: ResourceType = ResourceType.TOOLSET): Promise<Tool[]> {
+    const url = `${ResourceBasePaths[resourceType]}/discovered-tools`;
     return this.post(url, { path: name }, token).then((res) => (res as { tools: Tool[] })?.tools || []);
   }
 
@@ -201,8 +201,8 @@ export class AssetsApi extends BaseApi {
     return this.postAction(url, getToolsetBasicBody(toolset, type), token);
   }
 
-  tryOutTool(body: Record<string, unknown>, token: Token) {
-    const url = `${ResourceBasePaths[ResourceType.TOOLSET]}/call-tool`;
+  tryOutTool(body: Record<string, unknown>, token: Token, resourceType: ResourceType = ResourceType.TOOLSET) {
+    const url = `${ResourceBasePaths[resourceType]}/call-tool`;
     return this.postAction(url, body, token);
   }
 }
