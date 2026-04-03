@@ -14,7 +14,7 @@ const ProfileButton = () => {
 
   return (
     <DialButton
-      className="flex !h-full items-center justify-center text-secondary md:text-primary"
+      className="flex !h-[48px] items-center justify-center text-secondary md:text-primary"
       onClick={onClick}
       data-qa="account-settings"
       aria-label="Account settings"

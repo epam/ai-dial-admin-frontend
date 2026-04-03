@@ -120,8 +120,8 @@ export const getTestCaseColumns = (
       }
       return col;
     }),
-    ...schema.map((s) => {
-      const field = s.name;
+    ...schema.map((param) => {
+      const field = param.name;
       return {
         field: field,
         headerName: field,
@@ -136,7 +136,7 @@ export const getTestCaseColumns = (
           },
         },
         cellRendererSelector: () => {
-          if (s.type === TestCaseItemType.FILE) {
+          if (param.type === TestCaseItemType.FILE) {
             return {
               component: FileSelectCellRenderer,
               params: {
@@ -148,17 +148,17 @@ export const getTestCaseColumns = (
               },
             };
           }
-          if (s.type === TestCaseItemType.INTEGER || s.type === TestCaseItemType.NUMBER) {
+          if (param.type === TestCaseItemType.INTEGER || param.type === TestCaseItemType.NUMBER) {
             return {
               component: EditableCellRenderer,
               params: {
                 hideTriangle: true,
                 skipRequired: true,
                 inputType: 'number' as const,
-                step: s.type === TestCaseItemType.INTEGER ? 1 : 'any',
+                step: param.type === TestCaseItemType.INTEGER ? 1 : void 0,
                 onChange: (value: string | number, rowData: unknown) => {
                   // For INTEGER type, validate that the value is a whole number
-                  if (s.type === TestCaseItemType.INTEGER) {
+                  if (param.type === TestCaseItemType.INTEGER) {
                     const numValue = typeof value === 'string' ? parseFloat(value) : value;
                     if (value !== '' && !isNaN(numValue) && !Number.isInteger(numValue)) {
                       // If the value is not an integer, round it to nearest integer

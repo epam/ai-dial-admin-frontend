@@ -1,5 +1,5 @@
-import { DialConfirmationPopup, DialDropdown } from '@epam/ai-dial-ui-kit';
-import { FC, useEffect, useState } from 'react';
+import { DialConfirmationPopup, DialDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
+import { FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import SettingsModal from '@/src/components/SettingsModal/SettingsModal';
 import { AuthI18nKey, GlobalI18nKey } from '@/src/constants/i18n';
@@ -17,6 +17,7 @@ interface Props {
 
 const UserMenu: FC<Props> = ({ isEnableAuth, isMobile }) => {
   const t = useI18n();
+  const dismissRef = useRef<{ dismiss: () => void }>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isLogoutConfirmationOpen, setIsLogoutConfirmationOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -27,9 +28,13 @@ const UserMenu: FC<Props> = ({ isEnableAuth, isMobile }) => {
     setTheme(theme as string);
   };
 
-  const handleSettingsClick = () => setIsSettingsModalOpen(true);
+  const handleSettingsClick = () => {
+    dismissRef.current?.dismiss();
+    setIsSettingsModalOpen(true);
+  };
 
   const handleLogOutClick = () => {
+    dismissRef.current?.dismiss();
     if (!session) {
       handleLogout();
       return;
@@ -50,39 +55,49 @@ const UserMenu: FC<Props> = ({ isEnableAuth, isMobile }) => {
     return () => window.clearTimeout(timeoutId);
   }, [isOpen]);
 
+  const dropdownItems: DropdownItem[] = useMemo(() => {
+    const res = [];
+    if (themes?.length) {
+      res.push({ key: 'settings', label: <SettingsItem />, onClick: handleSettingsClick });
+    }
+
+    if (isEnableAuth) {
+      res.push({
+        key: 'logout',
+        label: <LogoutItem session={session} />,
+        onClick: () => {
+          if (!session) {
+            handleLogout();
+          } else {
+            setIsLogoutConfirmationOpen(true);
+          }
+        },
+      });
+    }
+    return res;
+  }, [handleLogout, isEnableAuth, session, themes?.length]);
+
   return (
     <>
       {isMobile ? (
-        <div className="flex flex-col w-full divide-y divide-tertiary">
-          <UserIcon userName={session?.user?.name || t(GlobalI18nKey.User)} />
-          <div className="flex flex-col gap-3 p-4">
-            {themes?.length && <SettingsItem onClick={handleSettingsClick} />}
-            {isEnableAuth && <LogoutItem session={session} onClick={handleLogOutClick} />}
-          </div>
+        <div className="flex flex-col gap-3 p-4 w-full">
+          {themes?.length && <SettingsItem onClick={handleSettingsClick} />}
+          {isEnableAuth && <LogoutItem session={session} onClick={handleLogOutClick} />}
         </div>
       ) : (
         <DialDropdown
           listClassName="!w-[280px]"
           onOpenChange={(open) => setIsOpen(open)}
-          renderOverlay={() => (
-            <div className="flex flex-col w-[280px]">
+          menu={{
+            items: dropdownItems,
+            header: (
               <div className="flex flex-row items-center gap-3 border-b border-secondary p-3">
                 <UserIcon userName={session?.user?.name || t(GlobalI18nKey.User)} />
 
                 <p className="dial-small-semi-text">{session?.user?.name}</p>
               </div>
-              {themes?.length && (
-                <div className="px-3 hover:bg-accent-primary-alpha h-[34px] flex items-center cursor-pointer">
-                  <SettingsItem onClick={handleSettingsClick} />
-                </div>
-              )}
-              {isEnableAuth && (
-                <div className="px-3 hover:bg-accent-primary-alpha h-[34px] flex items-center cursor-pointer">
-                  <LogoutItem session={session} onClick={handleLogOutClick} />
-                </div>
-              )}
-            </div>
-          )}
+            ),
+          }}
         >
           <div role="menuitem" className="flex cursor-pointer items-center justify-between gap-2 pr-6">
             <UserIcon userName={session?.user?.name || t(GlobalI18nKey.User)} />
