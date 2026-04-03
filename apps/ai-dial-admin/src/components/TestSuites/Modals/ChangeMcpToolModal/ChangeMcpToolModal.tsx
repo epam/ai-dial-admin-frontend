@@ -29,7 +29,7 @@ const ChangeMcpToolModal: FC<Props> = ({ testSuite, isOpen, onClose, onSave }) =
     setPendingTool(tool);
   }, []);
 
-  const handleConfirm = useCallback(() => {
+  const onConfirm = useCallback(() => {
     if (!pendingTool) return;
     const updated: TestSuite = {
       ...testSuite,
@@ -56,7 +56,7 @@ const ChangeMcpToolModal: FC<Props> = ({ testSuite, isOpen, onClose, onSave }) =
       onClose={onClose}
       confirmLabel={t(ButtonsI18nKey.Save)}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
-      onConfirm={handleConfirm}
+      onConfirm={onConfirm}
       disableConfirmButton={!pendingTool}
       size={PopupSize.Lg}
       className="h-[600px]"

@@ -1528,6 +1528,7 @@ export enum TestSuitesI18nKey {
   ToolCallFailed = 'TestSuites.ToolCallFailed',
   ToolOutputSchema = 'TestSuites.ToolOutputSchema',
   ToolSchema = 'TestSuites.ToolSchema',
+  FailedToLoadTools = 'TestSuites.FailedToLoadTools',
 }
 
 export enum RunsI18nKey {

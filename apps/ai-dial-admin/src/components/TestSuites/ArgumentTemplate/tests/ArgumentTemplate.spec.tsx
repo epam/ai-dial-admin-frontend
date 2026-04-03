@@ -14,8 +14,8 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
     getIsEmptyData?: () => boolean;
   }) => {
     const isEmpty = getIsEmptyData?.() ?? true;
-    if (isEmpty) return <div data-testid="grid-empty">Empty</div>;
-    return <div data-testid="grid-view">Grid rendered</div>;
+    if (isEmpty) return <div>Empty</div>;
+    return <div>Grid rendered</div>;
   },
 }));
 
@@ -42,7 +42,7 @@ describe('ArgumentTemplate', () => {
   test('renders grid when inputSchema has properties', () => {
     render(<ArgumentTemplate toolRef={baseToolRef} argumentTemplate={baseArgumentTemplate} onChange={vi.fn()} />);
 
-    expect(screen.getByTestId('grid-view')).toBeInTheDocument();
+    expect(screen.getByText('Grid rendered')).toBeInTheDocument();
   });
 
   test('shows empty state when no schema properties', () => {

@@ -30,16 +30,16 @@ vi.mock('@/src/components/TestSuites/utils/template-variables', () => ({
 }));
 
 vi.mock('@/src/components/EntityTabs/JsonEditor/JsonEditor', () => ({
-  default: () => <div data-testid="json-editor">JsonEditor</div>,
+  default: () => <div>JsonEditor</div>,
 }));
 
 vi.mock('../components/Variables', () => ({
-  default: () => <div data-testid="variables">Variables</div>,
+  default: () => <div>Variables</div>,
 }));
 
 vi.mock('../components/CollapsibleSection', () => ({
   default: ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <div data-testid="collapsible">
+    <div>
       <span>{title}</span>
       {children}
     </div>
@@ -56,7 +56,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
     ...actual,
     AlertVariant: { Success: 'success', Error: 'error' },
     DialAlert: ({ message, variant }: { message: string; variant: string }) => (
-      <div data-testid="dial-alert" data-variant={variant}>
+      <div>
         {message}
       </div>
     ),

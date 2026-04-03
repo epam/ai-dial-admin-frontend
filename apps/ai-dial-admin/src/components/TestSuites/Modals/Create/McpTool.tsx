@@ -103,7 +103,7 @@ const McpTool: FC<Props> = ({ deploymentId, initialToolName, onSelect }) => {
           rowData={tools}
           additionalGridOptions={additionalGridOptions}
           emptyDataProps={{
-            title: error ? 'Failed to load tools' : t(TestSuitesI18nKey.NoToolsAvailable),
+            title: error ? t(TestSuitesI18nKey.FailedToLoadTools) : t(TestSuitesI18nKey.NoToolsAvailable),
           }}
         />
       </div>

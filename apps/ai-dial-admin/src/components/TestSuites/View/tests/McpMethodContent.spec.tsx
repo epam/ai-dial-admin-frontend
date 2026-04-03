@@ -6,11 +6,11 @@ import { TestSuite } from '@/src/models/evaluation/test-suite';
 import McpMethodContent from '../McpMethodContent';
 
 vi.mock('@/src/components/TestSuites/ArgumentTemplate/ArgumentTemplate', () => ({
-  default: () => <div data-testid="argument-template">ArgumentTemplate</div>,
+  default: () => <div>ArgumentTemplate</div>,
 }));
 
 vi.mock('@/src/components/TestSuites/Modals/ChangeMcpToolModal/ChangeMcpToolModal', () => ({
-  default: () => <div data-testid="change-tool-modal">ChangeMcpToolModal</div>,
+  default: () => <div>ChangeMcpToolModal</div>,
 }));
 
 vi.mock('@/src/components/TestSuites/RequestTemplate/components/TryOutButton', () => ({
@@ -18,7 +18,7 @@ vi.mock('@/src/components/TestSuites/RequestTemplate/components/TryOutButton', (
 }));
 
 vi.mock('@/src/components/TestSuites/View/McpToolSchema', () => ({
-  default: () => <div data-testid="mcp-tool-schema">McpToolSchema</div>,
+  default: () => <div>McpToolSchema</div>,
 }));
 
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
@@ -60,13 +60,13 @@ describe('McpMethodContent', () => {
   test('renders ArgumentTemplate', () => {
     render(<McpMethodContent testSuite={baseMcpSuite} onChange={vi.fn()} />);
 
-    expect(screen.getByTestId('argument-template')).toBeInTheDocument();
+    expect(screen.getByText('ArgumentTemplate')).toBeInTheDocument();
   });
 
   test('renders McpToolSchema', () => {
     render(<McpMethodContent testSuite={baseMcpSuite} onChange={vi.fn()} />);
 
-    expect(screen.getByTestId('mcp-tool-schema')).toBeInTheDocument();
+    expect(screen.getByText('McpToolSchema')).toBeInTheDocument();
   });
 
   test('renders Change Tool button', () => {
