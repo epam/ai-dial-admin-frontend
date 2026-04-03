@@ -9,21 +9,12 @@ export interface ChartResolution {
 // Nice bucket sizes in minutes, ascending
 const NICE_BUCKETS_MINUTES = [1, 2, 5, 10, 15, 30, 60, 120, 180, 360, 720, 1440];
 
-const DEFAULT_MAX_DATA_POINTS = 200;
-
-const getMaxDataPoints = (): number => {
-  const env = process.env.NEXT_PUBLIC_CHART_MAX_DATA_POINTS;
-  if (!env) return DEFAULT_MAX_DATA_POINTS;
-  const parsed = Number(env);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_MAX_DATA_POINTS;
-};
-
 export const getChartResolution = (timeRange: TimeRange): ChartResolution => {
   const durationMs = timeRange.endDate.getTime() - timeRange.startDate.getTime();
   const durationMinutes = durationMs / (60 * 1000);
 
-  const maxDataPoints = getMaxDataPoints();
-  const minBucket = durationMinutes / maxDataPoints;
+  // Pick the smallest nice bucket that keeps data points <= 200
+  const minBucket = durationMinutes / 200;
 
   let selectedMinutes = NICE_BUCKETS_MINUTES[NICE_BUCKETS_MINUTES.length - 1];
   for (const bucket of NICE_BUCKETS_MINUTES) {
