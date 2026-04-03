@@ -95,7 +95,7 @@ export async function exportToolsets(paths: string[], type?: ImportFileType) {
   return await assetsApi.exportAssets(token, ResourceType.TOOLSET, paths, type);
 }
 
-export async function tryOutAssetTool(body: Record<string, unknown>) {
+export async function tryOutAssetTool(body: Record<string, unknown>, resourceType = ResourceType.TOOLSET) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.tryOutTool(body, token);
+  return assetsApi.tryOutTool(body, token, resourceType);
 }

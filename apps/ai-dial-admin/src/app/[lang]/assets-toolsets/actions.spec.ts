@@ -210,7 +210,16 @@ describe('Assets Toolset :: server actions', () => {
 
     const result = await tryOutAssetTool({});
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetsApi.tryOutTool).toHaveBeenCalledWith({}, TOKEN_MOCK);
+    expect(assetsApi.tryOutTool).toHaveBeenCalledWith({}, TOKEN_MOCK, ResourceType.TOOLSET);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call tryOutAssetTool action for APPLICATION resource type', async () => {
+    (assetsApi.tryOutTool as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await tryOutAssetTool({}, ResourceType.APPLICATION);
+    expect(getUserToken).toHaveBeenCalled();
+    expect(assetsApi.tryOutTool).toHaveBeenCalledWith({}, TOKEN_MOCK, ResourceType.APPLICATION);
     expect(result).toBe(RESPONSE_MOCK);
   });
 });
