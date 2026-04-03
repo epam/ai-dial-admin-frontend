@@ -49,13 +49,12 @@ const FormDataGrid: FC<Props> = ({ content, changeContent, hideAddButton, select
     (value: string | FormDataType, _data: FormDataPart, key: string, rowIndex?: number) => {
       if (rowIndex != null) {
         const isTypeChanged = key === 'type' && value !== contentRef.current[rowIndex].type;
-        const isFileChanged = key === 'value' && contentRef.current[rowIndex].type === FormDataType.File;
         const fieldData = [...contentRef.current];
         fieldData[rowIndex][key as keyof FormDataPart] = value as any;
         if (isTypeChanged) {
           fieldData[rowIndex].value = '';
         }
-        setIsSkipRefresh(!(isTypeChanged || isFileChanged));
+        setIsSkipRefresh(!isTypeChanged);
         onChangeRef.current(fieldData);
       }
     },

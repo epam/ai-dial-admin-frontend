@@ -37,11 +37,11 @@ describe('Runs View :: View', () => {
 
     expect(screen.getByRole('region', { name: 'simple-header' })).toBeInTheDocument();
     expect(screen.getByText('entity-id:run-1')).toBeInTheDocument();
-    expect(screen.getByText(`active-tab:${EntityViewTab.ExtractionResult}`)).toBeInTheDocument();
+    expect(screen.getByText(`active-tab:${EntityViewTab.Analytics}`)).toBeInTheDocument();
 
     expect(screen.getByRole('region', { name: 'tabs-content' })).toBeInTheDocument();
     expect(screen.getByText('run-id:run-1')).toBeInTheDocument();
-    expect(screen.getByText(`tab:${EntityViewTab.ExtractionResult}`)).toBeInTheDocument();
+    expect(screen.getByText(`tab:${EntityViewTab.Analytics}`)).toBeInTheDocument();
   });
 
   test('changes tab when header requests active tab update', () => {

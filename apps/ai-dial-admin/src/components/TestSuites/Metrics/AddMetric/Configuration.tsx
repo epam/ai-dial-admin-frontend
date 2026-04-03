@@ -153,20 +153,30 @@ const MetricConfiguration: FC<Props> = ({
           />
 
           <div className="flex-1 min-h-0 gap-y-6 flex flex-col">
-            <MetricSchemaSection
-              title={t(TestSuitesI18nKey.Configuration)}
-              fields={selectedMetricParameters || []}
-              bindings={configBindings}
-              onChange={onChangeConfigBindings}
-            />
-            <MetricInputs
-              title={t(TestSuitesI18nKey.Inputs)}
-              bindings={inputBindings}
-              fields={selectedMetricInputs || []}
-              onChange={onChangeInputBindings}
-              selectedTestSuite={selectedTestSuite}
-            />
-            <MetricOutputs title={t(TestSuitesI18nKey.Outputs)} fields={selectedMetricOutputs || []} />
+            <div className="flex flex-col gap-y-4 border border-primary rounded p-4">
+              <MetricSchemaSection
+                title={t(TestSuitesI18nKey.Configuration)}
+                fields={selectedMetricParameters || []}
+                bindings={configBindings}
+                schema={selectedMetricDetails?.configSchema}
+                onChange={onChangeConfigBindings}
+              />
+            </div>
+
+            <div className="flex flex-col gap-y-4 border border-primary rounded p-4">
+              <MetricInputs
+                title={t(TestSuitesI18nKey.Inputs)}
+                bindings={inputBindings}
+                fields={selectedMetricInputs || []}
+                schema={selectedMetricDetails?.inputSchema}
+                onChange={onChangeInputBindings}
+                selectedTestSuite={selectedTestSuite}
+              />
+            </div>
+
+            <div className="flex flex-col gap-y-4 border border-primary rounded p-4">
+              <MetricOutputs title={t(TestSuitesI18nKey.Outputs)} fields={selectedMetricOutputs || []} />
+            </div>
           </div>
         </>
       )}

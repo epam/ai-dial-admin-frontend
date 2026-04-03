@@ -1,10 +1,10 @@
 import { ColDef } from 'ag-grid-community';
 
+import { getAccuracyColors } from '@/src/components/Common/ColorScale/utils';
 import ExecutionStatusCellRenderer from '@/src/components/Grid/CellRenderers/ExecutionStatusCellRenderer';
 import { AnalyticsResult, ExtractionResult, Run } from '@/src/models/evaluation/run';
 import { FilterDto } from '@/src/models/request';
 import { FilterOperatorDto } from '@/src/types/request';
-
 import { MetricGroup } from './models';
 export type { MetricGroup } from './models';
 
@@ -72,6 +72,14 @@ const getMetricsColumns = (metrics: Record<string, Record<string, unknown>>) => 
             const value = params.data?.metricValues?.[groupKey]?.[key];
             if (typeof value === 'object') return JSON.stringify(value);
             return value ?? '—';
+          },
+          cellStyle: (params) => {
+            const value = params.data?.metricValues?.[groupKey]?.[key];
+            if (typeof value === 'number' && value >= 0 && value <= 1) {
+              const colors = getAccuracyColors(value);
+              return { backgroundColor: colors.bg };
+            }
+            return undefined;
           },
         }) as ColDef,
     ),
