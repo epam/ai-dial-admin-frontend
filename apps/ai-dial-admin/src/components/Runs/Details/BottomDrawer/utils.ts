@@ -18,23 +18,19 @@ function serializeValue(value: unknown): string | null {
 }
 
 function buildRecordRows(
-  recordA: Record<string, unknown> | undefined,
-  recordB: Record<string, unknown> | undefined,
+  pinnedRecord: Record<string, unknown> | undefined,
+  activeRecord: Record<string, unknown> | undefined,
   isNumeric: boolean,
   hasTwoResults: boolean,
 ): ComparisonRow[] {
   const keys = new Set<string>();
-  if (recordA) Object.keys(recordA).forEach((k) => keys.add(k));
-  if (recordB) Object.keys(recordB).forEach((k) => keys.add(k));
+  if (pinnedRecord) Object.keys(pinnedRecord).forEach((k) => keys.add(k));
+  if (activeRecord) Object.keys(activeRecord).forEach((k) => keys.add(k));
 
   return [...keys].sort().map((key) => {
-    const rawA = serializeValue(recordA?.[key]);
-    const rawB = hasTwoResults ? serializeValue(recordB?.[key]) : undefined;
-
-    const values: ComparisonRow['values'] = [{ raw: rawA }];
-    if (hasTwoResults) {
-      values.push({ raw: rawB ?? null });
-    }
+    const values: ComparisonRow['values'] = hasTwoResults
+      ? [{ raw: serializeValue(pinnedRecord?.[key]) }, { raw: serializeValue(activeRecord?.[key]) }]
+      : [{ raw: serializeValue(activeRecord?.[key]) }];
 
     return { fieldKey: key, label: key, isNumeric, values };
   });
@@ -53,43 +49,38 @@ export function buildComparisonSections(
 
   const sectionsMap = new Map<string, ComparisonSection>();
 
-  // Execution section
+  // Execution section — values order: [pinned, active] when two results, [active] when single
   const execRows: ComparisonRow[] = [
     {
       fieldKey: 'executionStatus',
       label: 'executionStatus',
       isNumeric: false,
-      values: [
-        { raw: active.executionStatus ?? null },
-        ...(hasTwoResults ? [{ raw: effectivePinned.executionStatus ?? null }] : []),
-      ],
+      values: hasTwoResults
+        ? [{ raw: effectivePinned.executionStatus ?? null }, { raw: active.executionStatus ?? null }]
+        : [{ raw: active.executionStatus ?? null }],
     },
     {
       fieldKey: 'execDurationMs',
       label: 'execDurationMs',
       isNumeric: true,
-      values: [
-        { raw: active.execDurationMs != null ? String(active.execDurationMs) : null },
-        ...(hasTwoResults
-          ? [
-              {
-                raw: effectivePinned.execDurationMs != null ? String(effectivePinned.execDurationMs) : null,
-              },
-            ]
-          : []),
-      ],
+      values: hasTwoResults
+        ? [
+            { raw: effectivePinned.execDurationMs != null ? String(effectivePinned.execDurationMs) : null },
+            { raw: active.execDurationMs != null ? String(active.execDurationMs) : null },
+          ]
+        : [{ raw: active.execDurationMs != null ? String(active.execDurationMs) : null }],
     },
   ];
   sectionsMap.set('execution', { key: 'execution', label: 'Execution', rows: execRows });
 
   // Test Case Data section
-  const tcRows = buildRecordRows(active.testCaseData, effectivePinned?.testCaseData, false, hasTwoResults);
+  const tcRows = buildRecordRows(effectivePinned?.testCaseData, active.testCaseData, false, hasTwoResults);
   if (tcRows.length > 0) {
     sectionsMap.set('testCaseData', { key: 'testCaseData', label: 'Test Case Data', rows: tcRows });
   }
 
   // Extracted Columns section
-  const ecRows = buildRecordRows(active.extractedColumns, effectivePinned?.extractedColumns, false, hasTwoResults);
+  const ecRows = buildRecordRows(effectivePinned?.extractedColumns, active.extractedColumns, false, hasTwoResults);
   if (ecRows.length > 0) {
     sectionsMap.set('extractedColumns', { key: 'extractedColumns', label: 'Extracted Columns', rows: ecRows });
   }
@@ -104,10 +95,9 @@ export function buildComparisonSections(
       fieldKey: 'requestBody',
       label: 'requestBody',
       isNumeric: false,
-      values: [
-        { raw: serializeValue(active.requestBody) },
-        ...(hasTwoResults ? [{ raw: serializeValue(effectivePinned.requestBody) }] : []),
-      ],
+      values: hasTwoResults
+        ? [{ raw: serializeValue(effectivePinned.requestBody) }, { raw: serializeValue(active.requestBody) }]
+        : [{ raw: serializeValue(active.requestBody) }],
     });
   }
   if (hasResponse) {
@@ -115,10 +105,9 @@ export function buildComparisonSections(
       fieldKey: 'responseBody',
       label: 'responseBody',
       isNumeric: false,
-      values: [
-        { raw: serializeValue(active.responseBody) },
-        ...(hasTwoResults ? [{ raw: serializeValue(effectivePinned.responseBody) }] : []),
-      ],
+      values: hasTwoResults
+        ? [{ raw: serializeValue(effectivePinned.responseBody) }, { raw: serializeValue(active.responseBody) }]
+        : [{ raw: serializeValue(active.responseBody) }],
     });
   }
   if (rrRows.length > 0) {
@@ -139,13 +128,9 @@ export function buildComparisonSections(
     if (pinnedGroup) Object.keys(pinnedGroup).forEach((k) => fieldKeys.add(k));
 
     const rows: ComparisonRow[] = [...fieldKeys].sort().map((fieldKey) => {
-      const rawA = serializeValue(activeGroup?.[fieldKey]);
-      const rawB = hasTwoResults ? serializeValue(pinnedGroup?.[fieldKey]) : undefined;
-
-      const values: ComparisonRow['values'] = [{ raw: rawA }];
-      if (hasTwoResults) {
-        values.push({ raw: rawB ?? null });
-      }
+      const values: ComparisonRow['values'] = hasTwoResults
+        ? [{ raw: serializeValue(pinnedGroup?.[fieldKey]) }, { raw: serializeValue(activeGroup?.[fieldKey]) }]
+        : [{ raw: serializeValue(activeGroup?.[fieldKey]) }];
 
       return {
         fieldKey,
