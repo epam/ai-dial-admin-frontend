@@ -10,7 +10,7 @@ interface Props {
 
 const StatusBadge: FC<Props> = ({ status }) => {
   if (!status) return null;
-  const isSuccess = status === 'SUCCESS';
+  const isSuccess = status === ExtractionResultStatus.SUCCESS;
   return (
     <span className={classNames('text-xxs font-medium', isSuccess ? 'text-success' : 'text-error')}>{status}</span>
   );

@@ -2,8 +2,6 @@
 
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import { IconChevronDown, IconChevronRight, IconFocus2, IconMaximize } from '@tabler/icons-react';
-import classNames from 'classnames';
 import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
 import { RunsI18nKey } from '@/src/constants/i18n';
@@ -12,9 +10,9 @@ import { AnalyticsResult } from '@/src/models/evaluation/run';
 
 import FocusStrip from './FocusStrip';
 import FullscreenDiffViewer from './FullscreenDiffViewer';
+import SectionGroup from './SectionGroup';
 import StatusBadge from './StatusBadge';
 import { ComparisonRow, ComparisonSection, DiffViewState } from './models';
-import { formatFieldValue, getDiffClass, SECTION_I18N } from './utils';
 
 interface Props {
   sections: ComparisonSection[];
@@ -23,9 +21,6 @@ interface Props {
   spotlightedFields: Set<string>;
   onToggleSpotlight: (fieldKey: string) => void;
 }
-
-const TRUNCATE_THRESHOLD = 500;
-const PREVIEW_LENGTH = 200;
 
 const ComparisonTableView: FC<Props> = ({
   sections,
@@ -141,146 +136,6 @@ const ComparisonTableView: FC<Props> = ({
       )}
     </div>
   );
-};
-
-interface SectionGroupProps {
-  section: ComparisonSection;
-  isCollapsed: boolean;
-  onToggle: () => void;
-  hasTwoColumns: boolean;
-  spotlightedFields: Set<string>;
-  onToggleSpotlight: (fieldKey: string) => void;
-  expandedCells: Set<string>;
-  onToggleCellExpand: (cellKey: string) => void;
-  columnCount: number;
-  onOpenDiff: (row: ComparisonRow) => void;
-}
-
-const SectionGroup: FC<SectionGroupProps> = ({
-  section,
-  isCollapsed,
-  onToggle,
-  hasTwoColumns,
-  spotlightedFields,
-  onToggleSpotlight,
-  expandedCells,
-  onToggleCellExpand,
-  columnCount,
-  onOpenDiff,
-}) => {
-  const t = useI18n();
-  const i18nKey = SECTION_I18N[section.key];
-  const sectionLabel = i18nKey ? t(i18nKey) : section.label;
-  return (
-    <>
-      <tr className="cursor-pointer hover:bg-layer-2" onClick={onToggle}>
-        <td colSpan={1 + columnCount} className="px-3 py-1 border-b border-secondary">
-          <div className="flex items-center gap-1 text-xxs font-semibold text-secondary uppercase">
-            {isCollapsed ? <IconChevronRight size={12} /> : <IconChevronDown size={12} />}
-            {sectionLabel}
-          </div>
-        </td>
-      </tr>
-      {!isCollapsed &&
-        section.rows.map((row) => {
-          const fullKey = `${section.key}:${row.fieldKey}`;
-          const isSpotlighted = spotlightedFields.has(fullKey);
-          const diffClass = hasTwoColumns ? getDiffClass(row) : '';
-
-          return (
-            <tr key={fullKey} className="group border-b border-secondary">
-              <td className="px-3 py-1 align-top">
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => onToggleSpotlight(fullKey)}
-                    className={classNames(
-                      'shrink-0',
-                      isSpotlighted
-                        ? 'text-accent-primary'
-                        : 'text-secondary hover:text-primary opacity-0 group-hover:opacity-100',
-                    )}
-                    title={isSpotlighted ? t(RunsI18nKey.RemoveSpotlight) : t(RunsI18nKey.Spotlight)}
-                  >
-                    <IconFocus2 size={12} />
-                  </button>
-                  {hasTwoColumns && diffClass && (
-                    <button
-                      onClick={() => onOpenDiff(row)}
-                      className="shrink-0 text-secondary hover:text-accent-primary"
-                      title={t(RunsI18nKey.CompareFullscreen)}
-                    >
-                      <IconMaximize size={12} />
-                    </button>
-                  )}
-                  <DialEllipsisTooltip text={row.label} className="text-xxs font-mono text-primary" />
-                </div>
-              </td>
-              {row.values.map((val, idx) => {
-                const cellKey = `${fullKey}:${idx}`;
-                const isExpanded = expandedCells.has(cellKey);
-                const raw = val.raw;
-                const displayText = formatFieldValue(raw);
-                const isLong = raw !== null && raw.length > TRUNCATE_THRESHOLD;
-                const isActiveColumn = hasTwoColumns && idx === 1;
-                const cellDiffClass = isActiveColumn ? diffClass : '';
-
-                return (
-                  <td key={idx} className={classNames('px-3 py-1 align-top', cellDiffClass)}>
-                    <CellValue
-                      text={displayText}
-                      raw={raw}
-                      isLong={isLong}
-                      isExpanded={isExpanded}
-                      cellKey={cellKey}
-                      onToggleExpand={onToggleCellExpand}
-                    />
-                  </td>
-                );
-              })}
-            </tr>
-          );
-        })}
-    </>
-  );
-};
-
-interface CellValueProps {
-  text: string;
-  raw: string | null;
-  isLong: boolean;
-  isExpanded: boolean;
-  cellKey: string;
-  onToggleExpand: (key: string) => void;
-}
-
-const CellValue: FC<CellValueProps> = ({ text, raw, isLong, isExpanded, cellKey, onToggleExpand }) => {
-  const t = useI18n();
-  if (raw === null) {
-    return <span className="text-xxs text-secondary">—</span>;
-  }
-
-  const isJson = raw.includes('\n') || raw.length > 100;
-
-  if (isLong && !isExpanded) {
-    return (
-      <div className="text-xxs text-primary">
-        <span className="whitespace-pre-wrap break-words">{raw.slice(0, PREVIEW_LENGTH)}...</span>
-        <button onClick={() => onToggleExpand(cellKey)} className="ml-1 text-accent-primary hover:underline">
-          {t(RunsI18nKey.ShowMore)}
-        </button>
-      </div>
-    );
-  }
-
-  if (isJson || isLong) {
-    return (
-      <pre className="text-xxs text-primary whitespace-pre-wrap break-words overflow-y-auto max-h-[180px] font-mono">
-        {text}
-      </pre>
-    );
-  }
-
-  return <span className="text-xxs text-primary">{text}</span>;
 };
 
 export default ComparisonTableView;

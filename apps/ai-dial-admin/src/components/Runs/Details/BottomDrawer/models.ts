@@ -1,3 +1,5 @@
+export const TRUNCATE_THRESHOLD = 500;
+
 export type ViewMode = 'table' | 'pivot';
 export type DetailMode = 'sidebar' | 'drawer';
 
