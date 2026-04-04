@@ -9,7 +9,7 @@ import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 
-import { StatusBadge } from './ComparisonTableView';
+import StatusBadge from './StatusBadge';
 import { ComparisonSection } from './models';
 import { formatFieldValue, SECTION_I18N, valuesAreEqual } from './utils';
 

@@ -136,14 +136,14 @@ const AnalyticsBottomDrawer: FC<Props> = ({
 
   // Escape key handler
   useEffect(() => {
-    const handleEscape = (event: KeyboardEvent) => {
+    const onEscapeKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
       if (event.defaultPrevented) return;
       if (drawerRef.current && !drawerRef.current.contains(document.activeElement)) return;
       onClose();
     };
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
+    window.addEventListener('keydown', onEscapeKeyDown);
+    return () => window.removeEventListener('keydown', onEscapeKeyDown);
   }, [onClose]);
 
   // Resize drag handlers
@@ -154,7 +154,7 @@ const AnalyticsBottomDrawer: FC<Props> = ({
       const startY = e.clientY;
       const startHeight = drawerPanel.panelHeight;
 
-      const handleMouseMove = (moveEvent: globalThis.MouseEvent) => {
+      const onMouseMove = (moveEvent: globalThis.MouseEvent) => {
         const delta = startY - moveEvent.clientY;
         const newHeight = Math.max(
           MIN_DRAWER_HEIGHT,
@@ -163,14 +163,14 @@ const AnalyticsBottomDrawer: FC<Props> = ({
         drawerPanel.setPanelHeight(newHeight);
       };
 
-      const handleMouseUp = () => {
+      const onMouseUp = () => {
         setIsDragging(false);
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
       };
 
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [drawerPanel.panelHeight, drawerPanel.setPanelHeight],

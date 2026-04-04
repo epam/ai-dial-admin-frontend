@@ -10,12 +10,12 @@ export interface ContextMenuPosition {
   value: string;
 }
 
-interface CellContextMenuProps {
+interface Props {
   position: ContextMenuPosition | null;
   onClose: () => void;
 }
 
-const CellContextMenu = ({ position, onClose }: CellContextMenuProps) => {
+const CellContextMenu = ({ position, onClose }: Props) => {
   const t = useI18n();
   const menuRef = useRef<HTMLDivElement>(null);
 

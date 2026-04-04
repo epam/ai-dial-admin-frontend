@@ -8,10 +8,11 @@ import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { AnalyticsResult, ExtractionResultStatus } from '@/src/models/evaluation/run';
+import { AnalyticsResult } from '@/src/models/evaluation/run';
 
 import FocusStrip from './FocusStrip';
 import FullscreenDiffViewer from './FullscreenDiffViewer';
+import StatusBadge from './StatusBadge';
 import { ComparisonRow, ComparisonSection, DiffViewState } from './models';
 import { formatFieldValue, getDiffClass, SECTION_I18N } from './utils';
 
@@ -25,14 +26,6 @@ interface Props {
 
 const TRUNCATE_THRESHOLD = 500;
 const PREVIEW_LENGTH = 200;
-
-export function StatusBadge({ status }: { status?: ExtractionResultStatus }) {
-  if (!status) return null;
-  const isSuccess = status === 'SUCCESS';
-  return (
-    <span className={classNames('text-xxs font-medium', isSuccess ? 'text-success' : 'text-error')}>{status}</span>
-  );
-}
 
 const ComparisonTableView: FC<Props> = ({
   sections,
