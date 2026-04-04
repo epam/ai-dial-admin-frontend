@@ -168,6 +168,12 @@
       @apply bg-transparent;
     }
   }
+  .ag-active-detail-row {
+    @apply bg-controls-accent-alpha;
+    &.ag-row-hover:not(.ag-full-width-row):before {
+      @apply bg-transparent;
+    }
+  }
 }
 
 .ag-grid-no-checkbox {

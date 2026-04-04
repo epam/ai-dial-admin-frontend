@@ -1,7 +1,7 @@
 'use client';
 
-import { ColDef, RowClickedEvent } from 'ag-grid-community';
-import { FC, useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import { ColDef, GridApi, GridReadyEvent, RowClassRules, RowClickedEvent } from 'ag-grid-community';
+import { FC, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { DialLoader } from '@epam/ai-dial-ui-kit';
 
@@ -26,6 +26,7 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
   const detailMode = useDetailMode();
   const drawerPanel = useDrawerPanel();
 
+  const gridApiRef = useRef<GridApi | null>(null);
   const [results, setResults] = useState<AnalyticsResult[] | null>(null);
   const [colDefs, setColDefs] = useState<ColDef[]>(() => getAnalyticsColumns([]));
   const [isLoading, setIsLoading] = useState(false);
@@ -72,6 +73,25 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detailMode.drawerOpen, detailMode.selectedResultId]);
 
+  const selectedResultIdRef = useRef(detailMode.selectedResultId);
+  selectedResultIdRef.current = detailMode.selectedResultId;
+
+  const rowClassRules = useMemo<RowClassRules>(
+    () => ({
+      'ag-active-detail-row': (params) => params.data?.id === selectedResultIdRef.current,
+    }),
+    [],
+  );
+
+  const onGridReady = useCallback((event: GridReadyEvent) => {
+    gridApiRef.current = event.api;
+  }, []);
+
+  // Redraw rows when selected result changes so rowClassRules re-evaluate
+  useEffect(() => {
+    gridApiRef.current?.redrawRows();
+  }, [detailMode.selectedResultId]);
+
   const gridStyle = useMemo(
     () => ({ height: `calc(100% - ${drawerPanel.currentHeight}px)` }),
     [drawerPanel.currentHeight],
@@ -87,9 +107,11 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
           <GridView
             columnDefs={colDefs}
             rowData={results}
+            onGridReady={onGridReady}
             additionalGridOptions={{
               defaultColDef: { filter: false, floatingFilter: false },
               onRowClicked,
+              rowClassRules,
             }}
             emptyDataProps={{ title: t(EntitiesI18nKey.NoResults) }}
           />

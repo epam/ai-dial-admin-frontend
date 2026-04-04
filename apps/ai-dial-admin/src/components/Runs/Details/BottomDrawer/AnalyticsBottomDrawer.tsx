@@ -176,10 +176,11 @@ const AnalyticsBottomDrawer: FC<Props> = ({
     [drawerPanel.panelHeight, drawerPanel.setPanelHeight],
   );
 
-  // Cleanup on unmount
+  // Reset local selector state on unmount; drawer lifecycle (open/close) is
+  // managed by the parent via useLayoutEffect so we must NOT call drawerPanel.close()
+  // here — doing so races with the parent's drawerPanel.open() when switching modes.
   useEffect(() => {
     return () => {
-      drawerPanel.close();
       fieldSelector.resetAll();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -241,7 +242,7 @@ const AnalyticsBottomDrawer: FC<Props> = ({
         <div className="flex flex-1 min-h-0 overflow-hidden">
           <FieldSelector sections={sections} fieldSelector={fieldSelector} />
           <div className="flex-1 overflow-auto min-h-0">
-            {isLoading ? (
+            {isLoading || (!activeDetail && !error) ? (
               <div className="flex items-center justify-center h-full">
                 <DialLoader size={32} />
               </div>

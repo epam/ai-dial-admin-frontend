@@ -60,7 +60,7 @@ const FieldSelector: FC<Props> = ({ sections, fieldSelector }) => {
   }, [sections, fieldSelector.sectionOrder]);
 
   return (
-    <div className="w-[180px] border-r border-secondary flex flex-col shrink-0 overflow-hidden">
+    <div className="w-[180px] border-r border-secondary flex flex-col shrink-0 overflow-hidden text-xxs">
       <div className="flex border-b border-secondary">
         <button
           onClick={() => setActiveTab('fields')}
@@ -115,11 +115,11 @@ const FieldSelector: FC<Props> = ({ sections, fieldSelector }) => {
                   <div className="flex items-center gap-1 px-1.5 py-1 hover:bg-layer-2">
                     <button
                       onClick={() => onToggleFieldSectionCollapse(section.key)}
-                      className="flex items-center gap-1 flex-1 min-w-0 text-xxs font-medium text-secondary"
+                      className="flex items-center gap-1 flex-1 min-w-0 text-xxs font-semibold text-secondary uppercase"
                     >
                       {isCollapsed ? <IconChevronRight size={12} /> : <IconChevronDown size={12} />}
                       <DialEllipsisTooltip text={sectionLabel} />
-                      <span className="text-secondary ml-auto shrink-0">({section.rows.length})</span>
+                      <span className="text-secondary ml-auto shrink-0 normal-case">({section.rows.length})</span>
                     </button>
                     <button
                       onClick={() =>
@@ -145,7 +145,7 @@ const FieldSelector: FC<Props> = ({ sections, fieldSelector }) => {
                       return (
                         <label
                           key={visKey}
-                          className="flex items-center gap-1.5 px-3 py-0.5 hover:bg-layer-2 cursor-pointer"
+                          className="flex items-center gap-1.5 px-3 py-0.5 hover:bg-layer-2 cursor-pointer font-mono"
                         >
                           <input
                             type="checkbox"
@@ -153,7 +153,9 @@ const FieldSelector: FC<Props> = ({ sections, fieldSelector }) => {
                             onChange={() => fieldSelector.toggleField(visKey)}
                             className="shrink-0 accent-accent-primary"
                           />
-                          <DialEllipsisTooltip text={row.label} className="text-xxs font-mono text-primary" />
+                          <span className="text-primary truncate" title={row.label}>
+                            {row.label}
+                          </span>
                         </label>
                       );
                     })}
