@@ -188,7 +188,7 @@ const SectionGroup: FC<SectionGroupProps> = ({
           const diffClass = hasTwoColumns ? getDiffClass(row) : '';
 
           return (
-            <tr key={fullKey} className="border-b border-secondary">
+            <tr key={fullKey} className="group border-b border-secondary">
               <td className="px-3 py-1 align-top">
                 <div className="flex items-center gap-1">
                   <button

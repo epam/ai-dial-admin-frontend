@@ -1,3 +1,5 @@
+'use client';
+
 import { FC } from 'react';
 
 import { IconX } from '@tabler/icons-react';

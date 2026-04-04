@@ -1,3 +1,5 @@
+'use client';
+
 import { FC, type MouseEvent, type KeyboardEvent, useCallback } from 'react';
 
 import { RunsI18nKey } from '@/src/constants/i18n';
