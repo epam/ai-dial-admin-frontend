@@ -98,7 +98,8 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
     } else {
       setTabs(getApplicationTabs(t));
     }
-  }, [originalApplication.mcp?.endpoint, t]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [originalApplication.mcp?.endpoint]);
 
   useEffect(() => {
     const name = originalApplication?.name;
