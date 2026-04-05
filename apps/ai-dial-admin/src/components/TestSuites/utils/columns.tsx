@@ -447,6 +447,7 @@ export const getMetricBindingsColumns = (
 
 export const getVariablesColumns = (
   onChangeEditable: (value: string | object, data: InputBindingRowData) => void,
+  id: string,
 ): ColDef<InputBindingRowData>[] => {
   return [
     {
@@ -464,15 +465,13 @@ export const getVariablesColumns = (
       field: 'value',
       cellClass: [NO_BORDER_CLASS, 'relative'],
       cellRendererSelector: (params: ICellRendererParams<InputBindingRowData>) => {
-        if (
-          params.data?.effectiveType == TestCaseItemType.OBJECT ||
-          params.data?.effectiveType == TestCaseItemType.ARRAY
-        ) {
+        if (params.data?.effectiveType == TestCaseItemType.FILE) {
           return {
-            component: JsonEditorCellRenderer,
+            component: FileSelectCellRenderer,
             params: {
               onChange: onChangeEditable,
-              disableValidation: true,
+              id: id,
+              view: ApplicationRoute.TestSuites,
             },
           };
         }
@@ -482,6 +481,7 @@ export const getVariablesColumns = (
             onChange: onChangeEditable,
             hideTriangle: false,
             defaultValue: params?.data?.defaultValue,
+            isReadonly: params?.data?.isReadonly,
           },
         };
       },
