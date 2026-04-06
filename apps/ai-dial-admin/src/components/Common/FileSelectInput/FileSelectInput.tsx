@@ -4,6 +4,7 @@ import { DialFormPopup, DialInputPopup, DialLabel, PopupSize } from '@epam/ai-di
 
 import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
 import { BasicI18nKey, ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { FileFolderProvider } from '@/src/context/assets/FileFolderContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -41,56 +42,58 @@ const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputCl
   }, [onChangeValue, selectedFilePath]);
 
   return (
-    <div className="flex flex-col gap-y-2">
-      {label && <DialLabel label={label} htmlFor={elementId} />}
-      <DialInputPopup
-        disabled={disabled || isReadOnlyAdmin}
-        open={isModalOpen}
-        selectedValue={value}
-        onOpen={() => setIsModalOpen(true)}
-        emptyValueText={t(BasicI18nKey.None)}
-        inputClassName={inputClassName}
-        editable
-        onValueChange={onChangeValue}
-      >
-        <DialFormPopup
-          header={t(TestSuitesI18nKey.SelectDocument)}
-          portalId="fileSelect"
+    <FileFolderProvider>
+      <div className="flex flex-col gap-y-2">
+        {label && <DialLabel label={label} htmlFor={elementId} />}
+        <DialInputPopup
+          disabled={disabled || isReadOnlyAdmin}
           open={isModalOpen}
-          cancelLabel={t(ButtonsI18nKey.Cancel)}
-          submitLabel={t(ButtonsI18nKey.Confirm)}
-          onSubmit={onConfirm}
-          disableSubmitButton={!selectedFilePath}
-          onClose={() => setIsModalOpen(false)}
-          onCancel={() => setIsModalOpen(false)}
-          className="h-[800px]"
-          size={PopupSize.Lg}
+          selectedValue={value}
+          onOpen={() => setIsModalOpen(true)}
+          emptyValueText={t(BasicI18nKey.None)}
+          inputClassName={inputClassName}
+          editable
+          onValueChange={onChangeValue}
         >
-          <div className="size-full flex flex-col">
-            {showTabs && (
-              <div className="flex flex-row justify-between pt-4 px-6 items-center">
-                <Tabs tabs={tabs} activeTab={activeTab} onChangeActiveTab={setActiveTab} />
-              </div>
-            )}
-            {activeTab === EntityViewTab.Public && (
-              <PublicFileManager
-                value={isPublicFile ? value : ''}
-                isModalOpen={isModalOpen}
-                onChangeSelectedFilePath={setSelectedFilePath}
-              />
-            )}
-            {activeTab === EntityViewTab.Application && (
-              <ApplicationFileManager
-                id={id}
-                value={value}
-                selectedFilePath={selectedFilePath}
-                onChangeSelectedFilePath={setSelectedFilePath}
-              />
-            )}
-          </div>
-        </DialFormPopup>
-      </DialInputPopup>
-    </div>
+          <DialFormPopup
+            header={t(TestSuitesI18nKey.SelectDocument)}
+            portalId="fileSelect"
+            open={isModalOpen}
+            cancelLabel={t(ButtonsI18nKey.Cancel)}
+            submitLabel={t(ButtonsI18nKey.Confirm)}
+            onSubmit={onConfirm}
+            disableSubmitButton={!selectedFilePath}
+            onClose={() => setIsModalOpen(false)}
+            onCancel={() => setIsModalOpen(false)}
+            className="h-[800px]"
+            size={PopupSize.Lg}
+          >
+            <div className="size-full flex flex-col">
+              {showTabs && (
+                <div className="flex flex-row justify-between pt-4 px-6 items-center">
+                  <Tabs tabs={tabs} activeTab={activeTab} onChangeActiveTab={setActiveTab} />
+                </div>
+              )}
+              {activeTab === EntityViewTab.Public && (
+                <PublicFileManager
+                  value={isPublicFile ? value : ''}
+                  isModalOpen={isModalOpen}
+                  onChangeSelectedFilePath={setSelectedFilePath}
+                />
+              )}
+              {activeTab === EntityViewTab.Application && (
+                <ApplicationFileManager
+                  id={id}
+                  value={value}
+                  selectedFilePath={selectedFilePath}
+                  onChangeSelectedFilePath={setSelectedFilePath}
+                />
+              )}
+            </div>
+          </DialFormPopup>
+        </DialInputPopup>
+      </div>
+    </FileFolderProvider>
   );
 };
 

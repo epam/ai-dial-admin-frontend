@@ -20,10 +20,11 @@ import MetricInfoPanel from './MetricInfoPanel';
 
 interface Props {
   resultId: string;
+  grafanaTraceUrl?: string;
   onClose: () => void;
 }
 
-const RunMetricDetailPanel: FC<Props> = ({ resultId, onClose }) => {
+const RunMetricDetailPanel: FC<Props> = ({ resultId, grafanaTraceUrl, onClose }) => {
   const t = useI18n();
 
   const [isJsonView, setIsJsonView] = useState(false);
@@ -31,6 +32,7 @@ const RunMetricDetailPanel: FC<Props> = ({ resultId, onClose }) => {
   const [details, setDetails] = useState<AnalyticsResult | null>(null);
   const [selectedMetric, setSelectedMetric] = useState<{ group: string; key: string } | null>(null);
 
+  const grafanaUrl = details?.grafanaTraceUrl ?? grafanaTraceUrl;
   const title = useMemo(() => (isLoading ? null : getPanelTitle(details)), [details, isLoading]);
 
   const testCaseEntries = useMemo(() => {
@@ -86,6 +88,7 @@ const RunMetricDetailPanel: FC<Props> = ({ resultId, onClose }) => {
                 durationMs={details?.execDurationMs}
                 timestamp={details?.computedAt}
                 timestampLabel={t(RunsI18nKey.Computed)}
+                grafanaUrl={grafanaUrl}
               />
               {testCaseEntries.length > 0 && (
                 <AdaptiveValueGrid title={t(RunsI18nKey.TestCaseData)} entries={testCaseEntries} />
