@@ -5,6 +5,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
 import TryOut from '../components/TryOut';
+import { getTryoutResponseFromStorage } from '../../utils/tryout-storage';
 
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
   getTestSuiteTemplateVariables: vi.fn(() => Promise.resolve([])),
@@ -23,6 +24,7 @@ vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
 
 vi.mock('@/src/components/TestSuites/utils/tryout-storage', () => ({
   saveTryoutResponseToStorage: vi.fn(),
+  getTryoutResponseFromStorage: vi.fn(),
 }));
 
 vi.mock('@/src/components/TestSuites/utils/template-variables', () => ({
