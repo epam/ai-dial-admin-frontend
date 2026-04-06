@@ -1,6 +1,6 @@
 import { Token } from '@/src/models/auth';
 import { CustomFile, DialFile } from '@/src/models/dial/file';
-import { Deployment, ToolDefinition } from '@/src/models/evaluation/deployment';
+import { Deployment, DeploymentType, ToolDefinition } from '@/src/models/evaluation/deployment';
 import { Metric, MetricResponse } from '@/src/models/evaluation/metric';
 import { Run } from '@/src/models/evaluation/run';
 import { TemplateVariable, TestCase, TestSuite, TryOutResponse } from '@/src/models/evaluation/test-suite';
@@ -143,7 +143,7 @@ export class TestSuitesApi extends BaseApi {
 
   getDeployments(
     token: Token,
-    type?: string,
+    type?: DeploymentType,
     interfaceFilter?: string,
   ): Promise<ServerActionResponse<Deployment[]> | null> {
     const params = new URLSearchParams();

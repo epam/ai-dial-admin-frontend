@@ -8,7 +8,7 @@ import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { convertVariableIntoInitialRequest } from '@/src/components/TestSuites/utils/template-variables';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { TemplateVariable, TestSuite } from '@/src/models/evaluation/test-suite';
+import { SuiteType, TemplateVariable, TestSuite } from '@/src/models/evaluation/test-suite';
 import Variables from './Variables';
 
 interface Props {
@@ -62,12 +62,12 @@ const TryOutRequestPreview: FC<Props> = ({
 
       <div className="flex flex-col">
         <p className="dial-small-text mb-2">
-          {testSuite.suiteType === 'MCP_TOOL'
+          {testSuite.suiteType === SuiteType.McpTool
             ? t(TestSuitesI18nKey.ToolArgumentsPreview)
             : t(TestSuitesI18nKey.RequestBodyPreview)}
         </p>
         <p className="text-secondary mb-2 dial-small-text">
-          {testSuite.suiteType === 'MCP_TOOL'
+          {testSuite.suiteType === SuiteType.McpTool
             ? `TOOL CALL ${testSuite.mcpDeploymentRef?.name}:${testSuite.toolRef?.name}`
             : `${testSuite.endpointRef?.method} ${testSuite.endpointRef?.relativeUrlPattern}`}
         </p>

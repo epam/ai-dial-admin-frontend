@@ -17,7 +17,7 @@ import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
 import McpMethodContent from '@/src/components/TestSuites/View/McpMethodContent';
 import { Deployment } from '@/src/models/evaluation/deployment';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
 
 interface Props {
   testSuite: TestSuite;
@@ -26,7 +26,7 @@ interface Props {
 }
 
 const MethodTabContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh }) => {
-  const isMcp = testSuite.suiteType === 'MCP_TOOL';
+  const isMcp = testSuite.suiteType === SuiteType.McpTool;
 
   if (isMcp) {
     return <McpMethodContent testSuite={testSuite} onChange={onChange} isSkipRefresh={isSkipRefresh} />;

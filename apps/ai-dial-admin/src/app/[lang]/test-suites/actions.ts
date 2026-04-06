@@ -3,6 +3,7 @@
 import { cookies, headers } from 'next/headers';
 
 import { testSuitesApi } from '@/src/app/api/api';
+import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { TestCase, TestSuite } from '@/src/models/evaluation/test-suite';
 import { FilterDto, SortDto } from '@/src/models/request';
 import type { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
@@ -100,7 +101,7 @@ export async function getTestCase(id: string, testCaseId?: string) {
   return testSuitesApi.getTestCase(id, testCaseId, token);
 }
 
-export async function getDeployments(type?: string, interfaceFilter?: string) {
+export async function getDeployments(type?: DeploymentType, interfaceFilter?: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return testSuitesApi.getDeployments(token, type, interfaceFilter);
 }

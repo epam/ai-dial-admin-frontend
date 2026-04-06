@@ -1,5 +1,10 @@
 import { DialRoute } from '@/src/models/dial/route';
 
+export enum DeploymentType {
+  Application = 'dial-application',
+  Model = 'dial-model',
+}
+
 export interface Deployment {
   $type: string;
   deploymentId: string;

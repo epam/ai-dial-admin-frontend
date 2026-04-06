@@ -2,7 +2,10 @@ import { DialScheme } from '@/src/models/dial/scheme';
 import { FormDataPart } from '@/src/models/form-data';
 import { InputBindingType, TestCaseItemType } from '@/src/types/evaluation';
 
-export type SuiteType = 'DEPLOYMENT' | 'MCP_TOOL';
+export enum SuiteType {
+  Deployment = 'DEPLOYMENT',
+  McpTool = 'MCP_TOOL',
+}
 
 export interface TestSuite {
   id?: string;
@@ -131,6 +134,12 @@ export interface TryOutResponse {
   resolvedRequest: Record<string, unknown>;
   response: Record<string, unknown>;
   grafanaTraceUrl?: string;
+}
+
+export interface ArgumentRow {
+  name: string;
+  type: string;
+  value: unknown;
 }
 
 export interface ResponseColumn {

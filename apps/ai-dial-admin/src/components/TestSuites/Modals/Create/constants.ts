@@ -9,7 +9,7 @@ export enum TestSuitTab {
 }
 
 export const TEST_SUIT_STEPS = (t: (key: string) => string, hideProperties: boolean, suiteType?: SuiteType) => {
-  const step3Label = suiteType === 'MCP_TOOL' ? t(TestSuitesI18nKey.Tool) : t(TestSuitesI18nKey.Methods);
+  const step3Label = suiteType === SuiteType.McpTool ? t(TestSuitesI18nKey.Tool) : t(TestSuitesI18nKey.Methods);
 
   const steps = [
     {

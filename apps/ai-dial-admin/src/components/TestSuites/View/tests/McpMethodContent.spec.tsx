@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
 import McpMethodContent from '../McpMethodContent';
 
 vi.mock('@/src/components/TestSuites/ArgumentTemplate/ArgumentTemplate', () => ({
@@ -40,7 +40,7 @@ vi.mock('@tabler/icons-react', () => ({
 
 const baseMcpSuite: TestSuite = {
   id: 'suite-1',
-  suiteType: 'MCP_TOOL',
+  suiteType: SuiteType.McpTool,
   mcpDeploymentRef: { id: 'deploy-1', type: 'dial-toolset', name: 'My Toolset' },
   toolRef: {
     name: 'search',

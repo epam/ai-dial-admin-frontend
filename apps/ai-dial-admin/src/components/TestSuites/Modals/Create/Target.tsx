@@ -15,7 +15,7 @@ import { EVALUATION_DEPLOYMENTS_COLUMNS } from '@/src/constants/grid-columns/gri
 import { ButtonsI18nKey, EntitiesI18nKey, MenuI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
-import { Deployment } from '@/src/models/evaluation/deployment';
+import { Deployment, DeploymentType } from '@/src/models/evaluation/deployment';
 import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
 
 enum TargetTab {
@@ -24,8 +24,38 @@ enum TargetTab {
   Mcp = 'mcp',
 }
 
+function buildDeploymentUpdate(data: Deployment): Partial<TestSuite> {
+  return {
+    suiteType: SuiteType.Deployment,
+    deploymentRef: {
+      id: data.deploymentId,
+      name: data.displayName,
+      version: data.version,
+    },
+    endpointRef: void 0,
+    mcpDeploymentRef: void 0,
+    toolRef: void 0,
+    argumentTemplate: void 0,
+  };
+}
+
+function buildMcpDeploymentUpdate(deployment: Deployment): Partial<TestSuite> {
+  return {
+    suiteType: SuiteType.McpTool,
+    mcpDeploymentRef: {
+      id: deployment.deploymentId,
+      type: deployment.$type,
+      name: deployment.displayName || deployment.deploymentId,
+    },
+    deploymentRef: void 0,
+    endpointRef: void 0,
+    requestTemplate: void 0,
+    toolRef: void 0,
+  };
+}
+
 function getInitialTab(suiteType?: SuiteType): TargetTab {
-  if (suiteType === 'MCP_TOOL') return TargetTab.Mcp;
+  if (suiteType === SuiteType.McpTool) return TargetTab.Mcp;
   return TargetTab.Applications;
 }
 
@@ -54,14 +84,14 @@ const Target: FC<Props> = ({ selectedApplicationId, suiteType, onChangeApplicati
 
   useEffect(() => {
     if (activeTab === TargetTab.Applications && applications == null) {
-      getDeployments('dial-application').then((res) => {
+      getDeployments(DeploymentType.Application).then((res) => {
         if (res?.success) {
           setApplications(res.response || []);
         }
       });
     }
     if (activeTab === TargetTab.Models && models == null) {
-      getDeployments('dial-model').then((res) => {
+      getDeployments(DeploymentType.Model).then((res) => {
         if (res?.success) {
           setModels(res.response || []);
         }
@@ -75,38 +105,14 @@ const Target: FC<Props> = ({ selectedApplicationId, suiteType, onChangeApplicati
   const onRowSelected = (event: RowSelectedEvent) => {
     if (event.node.isSelected()) {
       onChangeApplication(event.data || '');
-      onChange((prev: TestSuite) => ({
-        ...prev,
-        suiteType: 'DEPLOYMENT',
-        deploymentRef: {
-          id: event.data.deploymentId,
-          name: event.data.displayName,
-          version: event.data.version,
-        },
-        endpointRef: void 0,
-        mcpDeploymentRef: void 0,
-        toolRef: void 0,
-        argumentTemplate: void 0,
-      }));
+      onChange((prev: TestSuite) => ({ ...prev, ...buildDeploymentUpdate(event.data) }));
     }
   };
 
   const onMcpSelect = useCallback(
     (deployment: Deployment) => {
       onChangeApplication(deployment);
-      onChange((prev: TestSuite) => ({
-        ...prev,
-        suiteType: 'MCP_TOOL',
-        mcpDeploymentRef: {
-          id: deployment.deploymentId,
-          type: deployment.$type,
-          name: deployment.displayName || deployment.deploymentId,
-        },
-        deploymentRef: void 0,
-        endpointRef: void 0,
-        requestTemplate: void 0,
-        toolRef: void 0,
-      }));
+      onChange((prev: TestSuite) => ({ ...prev, ...buildMcpDeploymentUpdate(deployment) }));
     },
     [onChangeApplication, onChange],
   );

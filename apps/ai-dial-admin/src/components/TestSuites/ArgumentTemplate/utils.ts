@@ -33,11 +33,9 @@ export function buildInitialArguments(inputSchema?: Record<string, unknown>): Re
   return result;
 }
 
-export interface ArgumentRow {
-  name: string;
-  type: string;
-  value: unknown;
-}
+import { ArgumentRow } from '@/src/models/evaluation/test-suite';
+
+export type { ArgumentRow };
 
 export function buildArgumentsFromTable(rows: ArgumentRow[]): Record<string, unknown> {
   const result: Record<string, unknown> = {};

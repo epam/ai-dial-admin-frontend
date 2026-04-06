@@ -10,7 +10,7 @@ import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { Deployment, ToolDefinition } from '@/src/models/evaluation/deployment';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
 import Target from './Target';
 import { TEST_SUIT_STEPS, TestSuitTab } from './constants';
 
@@ -30,7 +30,7 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEnti
   const [currentStepId, setCurrentStep] = useState(steps[0].id);
   const [selectedApplication, setSelectedApplication] = useState<Deployment | null>(null);
 
-  const isMcp = testSuite.suiteType === 'MCP_TOOL';
+  const isMcp = testSuite.suiteType === SuiteType.McpTool;
 
   const currentStep = useMemo(() => steps.find((step) => step.id === currentStepId), [steps, currentStepId]);
 

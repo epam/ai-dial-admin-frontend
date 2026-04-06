@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
 import TryOut from '../components/TryOut';
 
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
@@ -108,7 +108,7 @@ vi.mock('@/src/context/AppContext', () => ({
 
 const mcpSuite: TestSuite = {
   id: 'suite-mcp',
-  suiteType: 'MCP_TOOL',
+  suiteType: SuiteType.McpTool,
   mcpDeploymentRef: { id: 'deploy-1', type: 'dial-toolset', name: 'My Toolset' },
   toolRef: {
     name: 'search',
@@ -118,7 +118,7 @@ const mcpSuite: TestSuite = {
 
 const deploymentSuite: TestSuite = {
   id: 'suite-dep',
-  suiteType: 'DEPLOYMENT',
+  suiteType: SuiteType.Deployment,
   endpointRef: { method: 'POST', relativeUrlPattern: '/api/search' },
 };
 
