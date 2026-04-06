@@ -108,7 +108,7 @@ This documentation describes the structure and contents of the menu items array 
     - **Key**: `FilePublications`
     - **Description**: Navigate to the file publications page to review and approve files before they are shared.
 
-### 7. **Evaluation**
+### 7. **Evaluation** [Preview]
 
 - **Description**: A section for managing test suites and evaluation runs.
 - **Items**:
