@@ -59,6 +59,9 @@ import {
   tracesTab,
   trendsTab,
   getEndpointSchemaTabs,
+  getMcpToolSchemaTabs,
+  inputSchemaTab,
+  outputSchemaTab,
   requestSchemaTab,
   responseSchemaTab,
   getFilePublicationTabs,
@@ -292,5 +295,9 @@ describe('Entities :: tabs', () => {
 
   test('returns correct tabs for toolset publication', () => {
     expect(getToolsetPublicationTabs(t)).toEqual([propertiesTab(t), toolsTab(t), permissionsTab(t)]);
+  });
+
+  test('returns correct tabs for MCP tool schema', () => {
+    expect(getMcpToolSchemaTabs(t)).toEqual([columnsTab(t), inputSchemaTab(t), outputSchemaTab(t)]);
   });
 });

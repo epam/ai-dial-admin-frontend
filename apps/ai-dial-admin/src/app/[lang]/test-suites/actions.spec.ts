@@ -37,6 +37,7 @@ import {
   getTestSuiteFiles,
   removeTestSuiteFile,
   duplicateTestSuite,
+  getDeploymentTools,
 } from './actions';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '../../../types/evaluation';
 
@@ -138,6 +139,14 @@ describe('TestSuites :: server actions', () => {
     const result = await getDeployments();
     expect(getUserToken).toHaveBeenCalled();
     expect(testSuitesApi.getDeployments).toHaveBeenCalledWith(TOKEN_MOCK, undefined, undefined);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getDeploymentTools action', async () => {
+    (testSuitesApi.getDeploymentTools as any).mockResolvedValue(RESPONSE_MOCK);
+    const result = await getDeploymentTools('deploy-1');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(testSuitesApi.getDeploymentTools).toHaveBeenCalledWith('deploy-1', TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 
