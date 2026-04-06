@@ -560,6 +560,137 @@ describe('jsonSchemaToFields', () => {
     expect(fields[0].children).toHaveLength(1);
     expect(fields[0].children[0]).toMatchObject({ name: 'boolChild' });
   });
+
+  test('should deeply resolve $ref for nested object children (e.g. orchestrator.deployment)', () => {
+    const schema: JSONSchema7 = {
+      type: 'object',
+      properties: {
+        orchestrator: {
+          type: 'object',
+          properties: {
+            deployment: { $ref: '#/$defs/DialDeploymentConfig', description: 'Deployment config' },
+            system_prompt: { type: 'string', title: 'System Prompt' },
+          },
+          required: ['deployment', 'system_prompt'],
+          title: 'OrchestratorConfig',
+        },
+      },
+      required: ['orchestrator'],
+      $defs: {
+        DialDeploymentConfig: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', description: 'Deployment name' },
+            parameters: { type: 'object', properties: {} },
+          },
+          required: ['name'],
+          title: 'DialDeploymentConfig',
+        },
+      },
+    };
+
+    const fields = jsonSchemaToFields(schema, schema);
+
+    expect(fields).toHaveLength(1);
+    const orchestrator = fields[0];
+    expect(orchestrator).toMatchObject({ name: 'orchestrator', type: 'object', expanded: true });
+    expect(orchestrator.children).toHaveLength(2);
+
+    const deployment = orchestrator.children[0];
+    expect(deployment).toMatchObject({
+      name: 'deployment',
+      type: 'object',
+      required: true,
+      expanded: true,
+      depth: 1,
+      parentId: orchestrator.id,
+    });
+    expect(deployment.children).toHaveLength(2);
+    expect(deployment.children[0]).toMatchObject({
+      name: 'name',
+      type: 'string',
+      required: true,
+      description: 'Deployment name',
+      depth: 2,
+      parentId: deployment.id,
+    });
+    expect(deployment.children[1]).toMatchObject({
+      name: 'parameters',
+      type: 'object',
+      required: false,
+      depth: 2,
+      parentId: deployment.id,
+    });
+
+    const systemPrompt = orchestrator.children[1];
+    expect(systemPrompt).toMatchObject({
+      name: 'system_prompt',
+      type: 'string',
+      required: true,
+      depth: 1,
+    });
+  });
+
+  test('should deeply resolve $ref within array item children', () => {
+    const schema: JSONSchema7 = {
+      type: 'object',
+      properties: {
+        tool_sets: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              config: { $ref: '#/$defs/ToolConfig' },
+            },
+            required: ['name', 'config'],
+          },
+        },
+      },
+      $defs: {
+        ToolConfig: {
+          type: 'object',
+          properties: {
+            endpoint: { type: 'string', description: 'API endpoint' },
+            timeout: { type: 'integer' },
+          },
+          required: ['endpoint'],
+          title: 'ToolConfig',
+        },
+      },
+    };
+
+    const fields = jsonSchemaToFields(schema, schema);
+
+    expect(fields).toHaveLength(1);
+    const toolSets = fields[0];
+    expect(toolSets).toMatchObject({ name: 'tool_sets', type: 'array', expanded: true });
+    expect(toolSets.children).toHaveLength(2);
+
+    const config = toolSets.children[1];
+    expect(config).toMatchObject({
+      name: 'config',
+      type: 'object',
+      required: true,
+      expanded: true,
+      depth: 1,
+    });
+    expect(config.children).toHaveLength(2);
+    expect(config.children[0]).toMatchObject({
+      name: 'endpoint',
+      type: 'string',
+      required: true,
+      description: 'API endpoint',
+      depth: 2,
+      parentId: config.id,
+    });
+    expect(config.children[1]).toMatchObject({
+      name: 'timeout',
+      type: 'integer',
+      required: false,
+      depth: 2,
+    });
+  });
 });
 
 describe('fieldsToJsonSchema', () => {

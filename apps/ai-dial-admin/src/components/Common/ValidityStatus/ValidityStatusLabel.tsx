@@ -16,7 +16,7 @@ const ValidityStatusLabel: FC<Props> = ({ ...props }) => {
   return (
     props.valid != null && (
       <LabelledText label={t(EntityFieldsI18nKey.status)}>
-        <ValidityStatus {...props} />
+        <ValidityStatus {...props} label={t(EntityFieldsI18nKey.status)} />
       </LabelledText>
     )
   );

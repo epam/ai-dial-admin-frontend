@@ -12,8 +12,9 @@ import {
 } from '@epam/ai-dial-ui-kit';
 import { RJSFSchema } from '@rjsf/utils';
 
+import { tryOutTool } from '@/src/app/[lang]/applications/actions';
 import { tryOutAssetTool } from '@/src/app/[lang]/assets-toolsets/actions';
-import { tryOutTool } from '@/src/app/[lang]/toolsets/actions';
+import { tryOutTool as tryOutToolsetTool } from '@/src/app/[lang]/toolsets/actions';
 import { tryOutContainerTool } from '@/src/app/actions/deployments';
 import Divider from '@/src/components/Common/Divider/Divider';
 import SchemaUiRenderer from '@/src/components/Common/SchemaUIRenderer/SchemaUIRenderer';
@@ -23,6 +24,8 @@ import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
 import { Tool } from '@/src/models/dial/toolset';
 import { ParamsView } from '@/src/types/parameters';
+import { ResourceType } from '@/src/types/resource-type';
+import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
   tool?: Tool;
@@ -30,9 +33,10 @@ interface Props {
   isAssetToolset?: boolean;
   isMcpToolset?: boolean;
   containerId?: string;
+  view?: ApplicationRoute;
 }
 
-const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset, isMcpToolset, containerId }) => {
+const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset, isMcpToolset, containerId, view }) => {
   const t = useI18n();
   const { sidebar, toggleSidebar } = useAppContext();
 
@@ -62,24 +66,29 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset, isMcpToolset, co
     );
   }, [tool?.inputSchema]);
 
-  const sendRequest = useCallback(() => {
+  const sendRequest = useCallback(async () => {
     setIsRequestSend(true);
+
     const callToolBody = { name: tool?.name, arguments: requestBody };
-    (isMcpToolset && containerId
-      ? tryOutContainerTool(containerId, callToolBody)
-      : isAssetToolset
-        ? tryOutAssetTool({
-            toolSetPath: {
-              path: toolSetName,
-            },
-            callToolRequest: callToolBody,
-          })
-        : tryOutTool(toolSetName, callToolBody)
-    ).then((res) => {
-      setResponse(res.success ? res.response : { error: res.errorMessage });
-      setIsRequestSend(false);
-    });
-  }, [containerId, isAssetToolset, isMcpToolset, requestBody, tool?.name, toolSetName]);
+    const isApplicationTool = view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications;
+    const resourceType = isApplicationTool ? ResourceType.APPLICATION : ResourceType.TOOLSET;
+
+    const getToolRequest = () => {
+      if (isMcpToolset && containerId) {
+        return tryOutContainerTool(containerId, callToolBody);
+      }
+
+      if (isAssetToolset) {
+        return tryOutAssetTool({ toolSetPath: { path: toolSetName }, callToolRequest: callToolBody }, resourceType);
+      }
+
+      return isApplicationTool ? tryOutTool(toolSetName, callToolBody) : tryOutToolsetTool(toolSetName, callToolBody);
+    };
+
+    const res = await getToolRequest();
+    setResponse(res.success ? res.response : { error: res.errorMessage });
+    setIsRequestSend(false);
+  }, [containerId, isAssetToolset, isMcpToolset, requestBody, tool?.name, toolSetName, view]);
 
   const onChangeConfiguration = useCallback((config: Record<string, unknown>) => {
     setRequestBody(config);

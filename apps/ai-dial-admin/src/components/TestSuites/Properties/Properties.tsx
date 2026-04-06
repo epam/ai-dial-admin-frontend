@@ -59,6 +59,10 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const applicationName = testSuite.deploymentRef?.name || testSuite.mcpDeploymentRef?.name || '';
+  const versionSuffix = testSuite.deploymentRef?.version ? ` (version: ${testSuite.deploymentRef.version})` : '';
+  const selectedApplicationValue = `${applicationName}${versionSuffix}`;
+
   return (
     <div className="flex flex-col gap-y-8">
       {isModal && (
@@ -79,7 +83,7 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false }
                 <DialInputPopup
                   open={isAppModalOpen}
                   onOpen={() => setIsAppModalOpen(true)}
-                  selectedValue={`${testSuite.deploymentRef?.name}${testSuite.deploymentRef?.version ? ` (version: ${testSuite.deploymentRef.version})` : ''}`}
+                  selectedValue={selectedApplicationValue}
                   elementId="applications"
                   disabled={!deployments}
                 >

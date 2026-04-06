@@ -84,6 +84,7 @@ const ApplicationAssetProperties: FC<Props> = ({ asset, runners, onChange, isPub
         view={ApplicationRoute.AssetsApplications}
         entity={asset}
         onChangeEntity={onChange as (entity: DialApplication) => void}
+        disabled
       />
       <MaxRetryAttempts entity={asset} onChangeEntity={onChange} />
     </div>

@@ -59,11 +59,12 @@ const TabsContent: FC<Props> = ({ activeTab, onChange, selectedToolset, original
 
       {activeTab === EntityViewTab.Tools && (
         <Tools
-          isAssetToolset
-          originalToolset={originalToolset}
-          selectedToolset={selectedToolset}
-          onChangeToolset={onChange as (toolset: Toolset) => void}
+          isAsset
+          originalEntity={originalToolset}
+          selectedEntity={selectedToolset}
+          onChangeEntity={onChange as (toolset: Toolset) => void}
           disabled={isReadOnlyAdmin}
+          view={ApplicationRoute.AssetsToolsets}
         />
       )}
 

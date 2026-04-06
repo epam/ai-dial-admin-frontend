@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { TabModel } from '@epam/ai-dial-ui-kit';
 import { cloneDeep } from 'lodash';
 
 import { createApp, getApps, moveApps, removeApp, updateApp } from '@/src/app/[lang]/assets-applications/actions';
@@ -28,7 +29,7 @@ import { changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/uti
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
+import { EntityViewTab, getTabsForAsset, toolsTab } from '@/src/utils/tabs/utils';
 import { addTrailingSlash } from '@/src/utils/url';
 
 interface Props {
@@ -43,11 +44,12 @@ interface Props {
 
 const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, schemes, interceptors }) => {
   const t = useI18n();
-  const tabs = getTabsForAsset(t, ApplicationRoute.AssetsApplications);
   const router = useRouter();
   const { fetchFiles } = useAppsFolder();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
+
+  const [tabs, setTabs] = useState<TabModel[]>(getTabsForAsset(t, ApplicationRoute.AssetsApplications));
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedApp, setSelectedApp] = useState(cloneDeep(originalApp));
@@ -69,6 +71,15 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
     }),
     [activeTab, isEditorEnabled, schemes, selectedApp],
   );
+
+  useEffect(() => {
+    if (originalApp.mcp?.endpoint) {
+      setTabs(getTabsForAsset(t, ApplicationRoute.AssetsApplications).toSpliced(1, 0, toolsTab(t)));
+    } else {
+      setTabs(getTabsForAsset(t, ApplicationRoute.AssetsApplications));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [originalApp.mcp?.endpoint]);
 
   useEffect(() => {
     setSelectedApp(cloneDeep(originalApp));
@@ -176,6 +187,7 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
             interceptors={interceptors}
             view={ApplicationRoute.AssetsApplications}
             selectedApplication={selectedApp}
+            originalApplication={originalApp}
             isEditorEnabled={isEditorEnabled}
             isSkipRefresh={isSkipRefresh}
             isChanged={isChanged}

@@ -1,3 +1,7 @@
+export enum GlobalI18nKey {
+  User = 'User',
+}
+
 export enum MenuI18nKey {
   Entities = 'Menu.Entities',
   EntitiesDescription = 'Menu.EntitiesDescription',
@@ -589,6 +593,8 @@ export enum TabsI18nKey {
   MCP = 'Tabs.MCP',
   Public = 'Tabs.Public',
   Application = 'Tabs.Application',
+  InputSchema = 'Tabs.InputSchema',
+  OutputSchema = 'Tabs.OutputSchema',
 }
 
 export enum InterceptorsI18nKey {
@@ -1513,6 +1519,21 @@ export enum TestSuitesI18nKey {
   DuplicateFieldName = 'TestSuites.DuplicateFieldName',
   SchemaDescription = 'TestSuites.SchemaDescription',
   FinalPath = 'TestSuites.FinalPath',
+  Tool = 'TestSuites.Tool',
+  SuiteType = 'TestSuites.SuiteType',
+  SelectTool = 'TestSuites.SelectTool',
+  ToolArguments = 'TestSuites.ToolArguments',
+  ToolArgumentsPreview = 'TestSuites.ToolArgumentsPreview',
+  ToolCallPreview = 'TestSuites.ToolCallPreview',
+  ChangeTool = 'TestSuites.ChangeTool',
+  ChangeToolset = 'TestSuites.ChangeToolset',
+  NoToolsAvailable = 'TestSuites.NoToolsAvailable',
+  NoArgumentsDefined = 'TestSuites.NoArgumentsDefined',
+  ToolCallSucceeded = 'TestSuites.ToolCallSucceeded',
+  ToolCallFailed = 'TestSuites.ToolCallFailed',
+  ToolOutputSchema = 'TestSuites.ToolOutputSchema',
+  ToolSchema = 'TestSuites.ToolSchema',
+  FailedToLoadTools = 'TestSuites.FailedToLoadTools',
 }
 
 export enum RunsI18nKey {

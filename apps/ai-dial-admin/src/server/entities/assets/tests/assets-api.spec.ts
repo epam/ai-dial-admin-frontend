@@ -302,6 +302,20 @@ describe('Toolset', () => {
     );
   });
 
+  test('Should calls getTools for app ', async () => {
+    fetchMock.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
+
+    await instance.getTools('path', TOKEN_MOCK, ResourceType.APPLICATION);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${TEST_URL}${ResourceBasePaths[ResourceType.APPLICATION]}/discovered-tools`,
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ path: 'path' }),
+      }),
+    );
+  });
+
   test('Should calls signInToolset ', async () => {
     fetchMock.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 

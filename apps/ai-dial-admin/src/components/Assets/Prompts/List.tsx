@@ -125,6 +125,12 @@ const PromptsList: FC = () => {
                 getCreateNotificationDescription(ApplicationRoute.Prompts, `${prompt.name}__${prompt.version}`, t),
               ),
             );
+            router.push(
+              getUrnForEntity(ApplicationRoute.Prompts, {
+                name: prompt.name,
+                path: prompt.path,
+              }),
+            );
           }
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
@@ -135,7 +141,7 @@ const PromptsList: FC = () => {
         return res;
       });
     },
-    [destinationFolder, fetchFiles, handleCreatePromptModalClose, showNotification, t],
+    [destinationFolder, fetchFiles, handleCreatePromptModalClose, showNotification, t, router],
   );
 
   const handleDuplicatePromptModalClose = useCallback(() => {

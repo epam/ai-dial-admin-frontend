@@ -10,6 +10,7 @@ import { useAppContext } from '@/src/context/AppContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { Tool as ToolType } from '@/src/models/dial/toolset';
+import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
   tool: ToolType;
@@ -22,6 +23,7 @@ interface Props {
   isAssetToolset?: boolean;
   containerId?: string;
   viewSelector?: ReactNode;
+  view?: ApplicationRoute;
 }
 
 const ToolHeader: FC<Props> = ({
@@ -35,6 +37,7 @@ const ToolHeader: FC<Props> = ({
   containerId,
   isPublicationToolset,
   viewSelector,
+  view,
 }) => {
   const t = useI18n();
   const { sidebar, sidebarOpen, toggleSidebar } = useAppContext();
@@ -50,6 +53,7 @@ const ToolHeader: FC<Props> = ({
             isAssetToolset={isAssetToolset}
             isMcpToolset={isMcpToolset}
             containerId={containerId}
+            view={view}
           />
         </SaveValidationContextProvider>,
         'w-1/2 max-w-[800px]',
@@ -59,7 +63,7 @@ const ToolHeader: FC<Props> = ({
         toggleSidebar(e);
       }
     },
-    [containerId, isAssetToolset, isMcpToolset, sidebar, sidebarOpen, toggleSidebar, tool, toolSetName],
+    [containerId, isAssetToolset, isMcpToolset, sidebar, sidebarOpen, toggleSidebar, tool, toolSetName, view],
   );
 
   return (

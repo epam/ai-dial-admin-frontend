@@ -61,3 +61,13 @@ export async function updateCoreApplication(app: DialApplication, name: string, 
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return applicationsApi.updateCoreApplication(app, name, eTag, token);
 }
+
+export async function getTools(name: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return applicationsApi.getTools(name, token);
+}
+
+export async function tryOutTool(name: string, body: Record<string, unknown>) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return applicationsApi.tryOutTool(name, body, token);
+}
