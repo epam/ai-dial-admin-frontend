@@ -26,7 +26,7 @@ export const evaluateColumns = async (
         if (!valid) {
           result = null;
         } else {
-          result = typeof evaluated === 'object' ? JSON.stringify(evaluated) : String(evaluated);
+          result = typeof evaluated === 'object' ? JSON.stringify(evaluated) : evaluated;
         }
       } catch {
         result = null;
