@@ -164,6 +164,31 @@ export const EVALUATION_DEPLOYMENTS_COLUMNS = (t: (str: string) => string): ColD
   MAX_INPUT_ATTACHMENTS_COLUMN,
 ];
 
+export const MCP_DEPLOYMENTS_COLUMNS: ColDef[] = [
+  DISPLAY_NAME_COLUMN_WITH_SORT,
+  { field: 'deploymentId', headerName: 'ID', hide: false },
+  { field: '$type', headerName: 'Type', hide: false },
+  { field: 'transport', headerName: 'Transport', hide: false },
+  CREATED_AT_COLUMN,
+];
+
+export const MCP_TOOLS_COLUMNS: ColDef[] = [
+  { field: 'name', headerName: 'Tool Name', hide: false },
+  DESCRIPTION_COLUMN,
+  {
+    field: 'inputSchemaFieldCount',
+    headerName: 'Input Schema Fields',
+    hide: false,
+    valueGetter: (params) => {
+      const schema = params.data?.inputSchema;
+      if (schema?.properties) {
+        return Object.keys(schema.properties).length;
+      }
+      return 0;
+    },
+  },
+];
+
 export const ACTIVITY_AUDIT_COLUMNS = (t: (s: string) => string, isSingleEntity?: boolean): ColDef[] => {
   const columns: ColDef[] = [
     { field: 'activityType', headerName: 'Activity type', ...auditStringFilter },

@@ -1,25 +1,13 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-
-import { DialLoader } from '@epam/ai-dial-ui-kit';
-import { ColDef, FirstDataRenderedEvent, GridOptions, RowSelectedEvent } from 'ag-grid-community';
+import { FC, useEffect, useState } from 'react';
 
 import { getDeployments } from '@/src/app/[lang]/test-suites/actions';
-import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
-import GridView from '@/src/components/Grid/GridView/GridView';
-import { SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
+import RadioSelectGrid from '@/src/components/TestSuites/Modals/Create/RadioSelectGrid';
+import { MCP_DEPLOYMENTS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Deployment } from '@/src/models/evaluation/deployment';
-
-const MCP_DEPLOYMENTS_COLUMNS: ColDef[] = [
-  { field: 'displayName', headerName: 'Display Name', hide: false },
-  { field: 'deploymentId', headerName: 'ID', hide: false },
-  { field: '$type', headerName: 'Type', hide: false },
-  { field: 'transport', headerName: 'Transport', hide: false },
-  { field: 'createdAt', headerName: 'Created At', hide: false },
-];
 
 interface Props {
   initialDeploymentId?: string;
@@ -38,61 +26,15 @@ const McpTargets: FC<Props> = ({ initialDeploymentId, onSelect }) => {
     });
   }, []);
 
-  const onRowSelected = useCallback(
-    (event: RowSelectedEvent) => {
-      if (event.node.isSelected() && event.data) {
-        onSelect(event.data);
-      }
-    },
-    [onSelect],
-  );
-
-  const additionalGridOptions: GridOptions = useMemo(
-    () => ({
-      ...SINGLE_ROW_SELECTION,
-      selectionColumnDef: {
-        ...SINGLE_ROW_SELECTION.selectionColumnDef,
-        cellRenderer: (data: { data?: { deploymentId: string }; deploymentId: string }) => (
-          <RadioButtonRenderer
-            inputId={data.data?.deploymentId || data.deploymentId}
-            isChecked={data.data?.deploymentId === initialDeploymentId}
-          />
-        ),
-      },
-      onRowSelected,
-      onFirstDataRendered: (event: FirstDataRenderedEvent) => {
-        if (initialDeploymentId) {
-          event.api.forEachNode((node) => {
-            if (node.data?.deploymentId === initialDeploymentId) {
-              node.setSelected(true);
-              event.api.ensureNodeVisible(node, 'middle');
-            }
-          });
-        }
-      },
-    }),
-    [initialDeploymentId, onRowSelected],
-  );
-
-  if (deployments == null) {
-    return (
-      <div className="size-full flex flex-col">
-        <DialLoader size={40} />
-      </div>
-    );
-  }
-
   return (
-    <div className="size-full flex flex-col">
-      <div className="flex-1 min-h-0">
-        <GridView
-          columnDefs={MCP_DEPLOYMENTS_COLUMNS}
-          rowData={deployments}
-          additionalGridOptions={additionalGridOptions}
-          emptyDataProps={{ title: t(EntitiesI18nKey.NoApplications) }}
-        />
-      </div>
-    </div>
+    <RadioSelectGrid
+      data={deployments}
+      columnDefs={MCP_DEPLOYMENTS_COLUMNS}
+      idField="deploymentId"
+      initialSelectedId={initialDeploymentId}
+      emptyTitle={t(EntitiesI18nKey.NoApplications)}
+      onSelect={onSelect}
+    />
   );
 };
 

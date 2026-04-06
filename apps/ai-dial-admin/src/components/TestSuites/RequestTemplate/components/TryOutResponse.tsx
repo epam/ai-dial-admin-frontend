@@ -29,26 +29,19 @@ const TryOutResponsePreview: FC<Props> = ({
 }) => {
   const t = useI18n();
 
+  const isError = isMcp
+    ? (response as Record<string, unknown>).isError
+    : !(response.statusCode >= 200 && response.statusCode < 300);
+  const alertMessage = isMcp
+    ? isError
+      ? t(TestSuitesI18nKey.ToolCallFailed)
+      : t(TestSuitesI18nKey.ToolCallSucceeded)
+    : `${response.statusCode}`;
+  const alertVariant = isError ? AlertVariant.Error : AlertVariant.Success;
+
   return (
     <>
-      <DialAlert
-        message={
-          isMcp
-            ? (response as Record<string, unknown>).isError
-              ? t(TestSuitesI18nKey.ToolCallFailed)
-              : t(TestSuitesI18nKey.ToolCallSucceeded)
-            : `${response.statusCode}`
-        }
-        variant={
-          isMcp
-            ? (response as Record<string, unknown>).isError
-              ? AlertVariant.Error
-              : AlertVariant.Success
-            : response.statusCode >= 200 && response.statusCode < 300
-              ? AlertVariant.Success
-              : AlertVariant.Error
-        }
-      >
+      <DialAlert message={alertMessage} variant={alertVariant}>
         {grafanaTraceUrl && (
           <DialNeutralButton
             size={ElementSize.Small}
