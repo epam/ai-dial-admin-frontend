@@ -16,6 +16,7 @@ interface Props {
   testCaseId?: string;
   resolvedRequest: Record<string, unknown>;
   isRequestSend?: boolean;
+  requestBody: Record<string, unknown>;
   onChangeRequestBody: (body: Record<string, unknown>) => void;
 }
 
@@ -24,10 +25,10 @@ const TryOutRequestPreview: FC<Props> = ({
   testCaseId,
   resolvedRequest,
   isRequestSend,
+  requestBody,
   onChangeRequestBody,
 }) => {
   const t = useI18n();
-  const [requestBody, setRequestBody] = useState<Record<string, unknown>>({});
   const [variables, setVariables] = useState<TemplateVariable[]>([]);
   const [isVariablesLoading, setIsVariablesLoading] = useState(false);
 
@@ -41,7 +42,7 @@ const TryOutRequestPreview: FC<Props> = ({
 
         const vars = res || [];
         setVariables(vars);
-        setRequestBody(convertVariableIntoInitialRequest(vars));
+        onChangeRequestBody(convertVariableIntoInitialRequest(vars));
       } finally {
         setIsVariablesLoading(false);
       }

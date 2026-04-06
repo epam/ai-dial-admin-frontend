@@ -1,5 +1,5 @@
 'use client';
-import { FC, useCallback, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
   DialCloseButton,
@@ -15,7 +15,10 @@ import { tryOutTestCase, tryOutTestSuite } from '@/src/app/[lang]/test-suites/ac
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
-import { saveTryoutResponseToStorage } from '@/src/components/TestSuites/utils/tryout-storage';
+import {
+  getTryoutResponseFromStorage,
+  saveTryoutResponseToStorage,
+} from '@/src/components/TestSuites/utils/tryout-storage';
 import { BasicI18nKey, ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
@@ -73,26 +76,27 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
         setResolvedRequest(res.response?.resolvedRequest || {});
         setResponse(tryoutResponse);
         setGrafanaTraceUrl(res.response?.grafanaTraceUrl);
-        saveTryoutResponseToStorage(testSuiteId, tryoutResponse);
+        saveTryoutResponseToStorage(testSuiteId, res.response);
       } else {
-        const errorResponse = { error: res?.errorMessage || 'Unknown error', statusCode: 500 } as TryOutResponse;
+        const errorResponse = { response: { error: res?.errorMessage || 'Unknown error', statusCode: 500 } };
         setResolvedRequest(requestBody || {});
-        setResponse(errorResponse);
-        saveTryoutResponseToStorage(testSuiteId, errorResponse);
+        setResponse(errorResponse.response);
+        saveTryoutResponseToStorage(testSuiteId, errorResponse as any);
       }
     } finally {
       setIsRequestSend(false);
     }
   }, [testSuite, testCaseId, requestBody]);
 
+  // todo: possible change this component to codeViewer
   const responseBodyCopyText = useMemo(() => (response ? JSON.stringify(response, null, 2) : ''), [response]);
-
   const responseBody = useMemo(() => {
     return (
       <CollapsibleSection
         title={t(BasicI18nKey.Response)}
-        growOnOpen
+        fullViewContent={responseBodyCopyText}
         headerIcon={<CopyButton value={responseBodyCopyText} valueLabel={t(BasicI18nKey.Response)} />}
+        growOnOpen
       >
         {isRequestSend ? (
           <DialLoader />
@@ -105,7 +109,17 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
         )}
       </CollapsibleSection>
     );
-  }, [response, responseBodyCopyText, t, isRequestSend]);
+  }, [t, responseBodyCopyText, isRequestSend, response]);
+
+  useEffect(() => {
+    const responseFromStorage = getTryoutResponseFromStorage(testSuite.id || '');
+    if (responseFromStorage) {
+      setResponse(responseFromStorage.response as TryOutResponse);
+      setResolvedRequest(responseFromStorage.resolvedRequest || {});
+      setGrafanaTraceUrl(responseFromStorage.grafanaTraceUrl);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className={classNames('flex flex-col gap-y-6 size-full min-h-0', !response && 'pb-4')}>
@@ -148,6 +162,7 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
                   testCaseId={testCaseId}
                   resolvedRequest={resolvedRequest}
                   isRequestSend={isRequestSend}
+                  requestBody={requestBody}
                   onChangeRequestBody={onChangeRequestBody}
                 />
               )}

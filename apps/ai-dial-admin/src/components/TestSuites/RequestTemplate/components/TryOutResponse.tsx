@@ -1,9 +1,10 @@
 'use client';
-import { FC, ReactNode } from 'react';
+import { FC, ReactNode, useMemo } from 'react';
 
 import Grafana from '@/public/images/icons/grafana.svg';
 import { AlertVariant, DialAlert, DialLoader, DialNeutralButton, ElementSize } from '@epam/ai-dial-ui-kit';
 
+import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { BasicI18nKey, RunsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -28,7 +29,7 @@ const TryOutResponsePreview: FC<Props> = ({
   isMcp,
 }) => {
   const t = useI18n();
-
+  const requestBodyCopyText = useMemo(() => (response ? JSON.stringify(response, null, 2) : ''), [response]);
   const isError = isMcp
     ? (response as Record<string, unknown>).isError
     : !(response.statusCode >= 200 && response.statusCode < 300);
@@ -52,7 +53,14 @@ const TryOutResponsePreview: FC<Props> = ({
           />
         )}
       </DialAlert>
-      <CollapsibleSection title={t(BasicI18nKey.Request)} growOnOpen>
+
+      {/* todo: possible change this component to codeViewer */}
+      <CollapsibleSection
+        title={t(BasicI18nKey.Request)}
+        fullViewContent={JSON.stringify(resolvedRequest, null, 2)}
+        headerIcon={<CopyButton value={requestBodyCopyText} valueLabel={t(BasicI18nKey.Response)} />}
+        growOnOpen
+      >
         {isRequestSend ? (
           <DialLoader />
         ) : (
