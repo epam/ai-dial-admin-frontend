@@ -13,12 +13,13 @@ import { InputBindingRowData, TemplateVariable } from '@/src/models/evaluation/t
 import { TestCaseItemType } from '@/src/types/evaluation';
 
 interface Props {
+  testSuiteId: string;
   variables: TemplateVariable[];
   requestBody: Record<string, unknown>;
   onChangeRequestBody: (requestBody: Record<string, unknown>) => void;
 }
 
-const Variables: FC<Props> = ({ variables, requestBody, onChangeRequestBody }) => {
+const Variables: FC<Props> = ({ testSuiteId, variables, requestBody, onChangeRequestBody }) => {
   const t = useI18n();
   const [isSkipRefresh, setIsSkipRefresh] = useState(false);
   const [gridApi, setGridApi] = useState<GridApi>();
@@ -38,8 +39,8 @@ const Variables: FC<Props> = ({ variables, requestBody, onChangeRequestBody }) =
   );
 
   const columns = useMemo(() => {
-    return [...getVariablesColumns(onChangeParam)];
-  }, [onChangeParam]);
+    return [...getVariablesColumns(onChangeParam, testSuiteId)];
+  }, [onChangeParam, testSuiteId]);
 
   const data = useMemo(() => generateVariablesRowData(variables || [], requestBody || {}), [variables, requestBody]);
 

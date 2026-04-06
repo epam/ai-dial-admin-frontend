@@ -47,7 +47,11 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
       if (event.data && selectedResultId !== event.data.id) {
         setSelectedResultId(event.data.id);
         sidebar.showSidebar(
-          <RunMetricDetailPanel resultId={event.data.id} onClose={sidebar.closeSidebar} />,
+          <RunMetricDetailPanel
+            resultId={event.data.id}
+            onClose={sidebar.closeSidebar}
+            grafanaTraceUrl={run.grafanaExploreUrl}
+          />,
           'w-[750px]',
         );
       } else {
@@ -55,7 +59,7 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
         sidebar.closeSidebar();
       }
     },
-    [selectedResultId, sidebar],
+    [run.grafanaExploreUrl, selectedResultId, sidebar],
   );
 
   useEffect(() => {

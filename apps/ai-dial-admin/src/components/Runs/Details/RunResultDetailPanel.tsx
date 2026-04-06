@@ -24,7 +24,7 @@ const RunResultDetailPanel: FC<Props> = ({ result, grafanaExploreUrl, onClose })
   const t = useI18n();
   const [isJsonView, setIsJsonView] = useState(false);
 
-  const exploreUrl = result.grafanaExploreUrl ?? grafanaExploreUrl;
+  const grafanaUrl = result.grafanaExploreUrl ?? grafanaExploreUrl;
   const title = useMemo(() => getPanelTitle(result), [result]);
 
   const testCaseEntries = useMemo(() => {
@@ -59,7 +59,7 @@ const RunResultDetailPanel: FC<Props> = ({ result, grafanaExploreUrl, onClose })
             durationMs={result.executionInfo?.durationMs}
             timestamp={result.executionInfo?.startedAt}
             timestampLabel="Started"
-            grafanaUrl={exploreUrl}
+            grafanaUrl={grafanaUrl}
           />
           {testCaseEntries.length > 0 && (
             <AdaptiveValueGrid title={t(RunsI18nKey.TestCaseData)} entries={testCaseEntries} />

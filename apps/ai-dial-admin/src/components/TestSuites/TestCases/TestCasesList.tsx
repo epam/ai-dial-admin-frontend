@@ -2,7 +2,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, MouseEvent, RefObject, useCallback, useEffect, useRef, useState } from 'react';
+import { FC, RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { DialLoader } from '@epam/ai-dial-ui-kit';
@@ -120,17 +120,16 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
   }, []);
 
   const onOpenTryOutSidebar = useCallback(
-    (e?: MouseEvent<HTMLButtonElement>, testCaseId?: string) => {
-      e?.stopPropagation();
+    (e?: TestCase) => {
       sidebar.showSidebar(
         <SaveValidationContextProvider>
-          <TryOut testSuite={selectedTestSuite} testCaseId={testCaseId || ''} />
+          <TryOut testSuite={selectedTestSuite} testCaseId={e?.id || ''} />
         </SaveValidationContextProvider>,
         'w-1/2 max-w-[800px]',
       );
       if (sidebarOpen) {
         sidebar.toggleIsMenuClosed?.();
-        toggleSidebar(e);
+        toggleSidebar();
       }
     },
     [selectedTestSuite.id, sidebar, sidebarOpen, toggleSidebar],
