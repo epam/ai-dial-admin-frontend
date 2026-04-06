@@ -12,6 +12,8 @@ import {
   updateCoreApplication,
   getApplication,
   getApplications,
+  getTools,
+  tryOutTool,
 } from './actions';
 
 vi.mock('@/src/utils/auth/auth-request');
@@ -117,8 +119,26 @@ describe('Applications :: server actions', () => {
   test('Should call getApplications action', async () => {
     (applicationsApi.getApplicationsListAction as any).mockResolvedValue(RESPONSE_MOCK);
 
-    const result = await getApplications();
+    await getApplications();
     expect(getUserToken).toHaveBeenCalled();
     expect(applicationsApi.getApplicationsListAction).toHaveBeenCalledWith(TOKEN_MOCK);
+  });
+
+  test('Should call getTools action', async () => {
+    (applicationsApi.getTools as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getTools('test');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(applicationsApi.getTools).toHaveBeenCalledWith('test', TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call tryOutTool action', async () => {
+    (applicationsApi.tryOutTool as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await tryOutTool('testSet', { name: 'test' });
+    expect(getUserToken).toHaveBeenCalled();
+    expect(applicationsApi.tryOutTool).toHaveBeenCalledWith('testSet', { name: 'test' }, TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
   });
 });

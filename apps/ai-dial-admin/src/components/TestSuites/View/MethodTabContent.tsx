@@ -1,6 +1,7 @@
 'use client';
 
 import { FC, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { ButtonAppearance, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconEdit } from '@tabler/icons-react';
@@ -77,14 +78,18 @@ const DeploymentMethodContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh
 
         <RequestTemplate testSuite={testSuite} onChangeTestSuite={onChange} />
         <EndpointSchema testSuite={testSuite} onChangeTestSuite={onChange} isSkipRefresh={isSkipRefresh} />
-        <ChangeMethodModal
-          isModal={true}
-          testSuite={testSuite}
-          onChangeTestSuite={onChange}
-          selectedApplication={selectedApplication}
-          isOpen={isChangeMethodModalOpen}
-          onClose={() => setIsChangeMethodModalOpen(false)}
-        />
+
+        {isChangeMethodModalOpen &&
+          createPortal(
+            <ChangeMethodModal
+              testSuite={testSuite}
+              onChangeTestSuite={onChange}
+              selectedApplication={selectedApplication}
+              isOpen={isChangeMethodModalOpen}
+              onClose={() => setIsChangeMethodModalOpen(false)}
+            />,
+            document.body,
+          )}
       </div>
     </div>
   );

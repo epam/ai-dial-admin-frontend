@@ -1,9 +1,9 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialPopup, DialSteps, PopupSize, StepStatus } from '@epam/ai-dial-ui-kit';
+import { AlertVariant, DialAlert, DialPopup, DialSteps, PopupSize, StepStatus } from '@epam/ai-dial-ui-kit';
 
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
-import ChangeMethodModal from '@/src/components/TestSuites/Modals/ChangeMethodModal/ChangeMethodModal';
+import Methods from '@/src/components/TestSuites/Methods/Methods';
 import McpTool from '@/src/components/TestSuites/Modals/Create/McpTool';
 import TestSuiteProperties from '@/src/components/TestSuites/Properties/Properties';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -109,12 +109,16 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEnti
                 onSelect={onToolSelect}
               />
             ) : (
-              <ChangeMethodModal
-                isModal={false}
-                testSuite={testSuite}
-                onChangeTestSuite={setTestSuite}
+              <Methods
                 selectedApplication={selectedApplication}
-              />
+                testSuite={testSuite}
+                onChange={setTestSuite}
+                isCreate={!currentEntity}
+              >
+                {!!currentEntity && (
+                  <DialAlert message={t(TestSuitesI18nKey.MethodChangeWarning)} variant={AlertVariant.Warning} />
+                )}
+              </Methods>
             ))}
         </div>
       </div>

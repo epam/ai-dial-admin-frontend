@@ -8,7 +8,7 @@ import {
   DialNeutralButton,
   DialPrimaryButton,
 } from '@epam/ai-dial-ui-kit';
-import { IconRefresh } from '@tabler/icons-react';
+import { IconEdit, IconRefresh } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import { tryOutTestCase, tryOutTestSuite } from '@/src/app/[lang]/test-suites/actions';
@@ -115,12 +115,19 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
             <div className="flex flex-row items-center gap-3">
               <h1>{t(ButtonsI18nKey.TryOut)}</h1>
               {response ? (
-                <DialGhostButton
-                  disabled={isRequestSend}
-                  label={t(ButtonsI18nKey.Restart)}
-                  iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}
-                  onClick={onSendRequest}
-                />
+                <div className="flex flex-row items-center gap-4">
+                  <DialGhostButton
+                    disabled={isRequestSend}
+                    label={t(ButtonsI18nKey.Restart)}
+                    iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}
+                    onClick={onSendRequest}
+                  />
+                  <DialNeutralButton
+                    iconBefore={<IconEdit {...BASE_BUTTON_ICON_PROPS} />}
+                    label={t(ButtonsI18nKey.Change)}
+                    onClick={() => setResponse(null)}
+                  />
+                </div>
               ) : null}
             </div>
 

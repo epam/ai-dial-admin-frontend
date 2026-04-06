@@ -4,6 +4,7 @@ import Accordion from '@/src/components/Common/Accordion/Accordion';
 import ViewSelector from '@/src/components/Common/ViewSelector/ViewSelector';
 import { Tool as ToolType } from '@/src/models/dial/toolset';
 import { ParamsView } from '@/src/types/parameters';
+import { ApplicationRoute } from '@/src/types/routes';
 import ToolContent from './ToolContent';
 import ToolHeader from './ToolHeader';
 
@@ -16,6 +17,7 @@ interface Props {
   isPublicationToolset?: boolean;
   containerId?: string;
   toolSetName: string;
+  view?: ApplicationRoute;
 }
 
 const Tool: FC<Props> = ({
@@ -27,8 +29,9 @@ const Tool: FC<Props> = ({
   isAssetToolset,
   containerId,
   toolSetName,
+  view,
 }) => {
-  const [view, setView] = useState(ParamsView.TABLE);
+  const [currentView, setCurrentView] = useState(ParamsView.TABLE);
 
   return (
     <>
@@ -43,6 +46,7 @@ const Tool: FC<Props> = ({
             isAssetToolset={isAssetToolset}
             isPublicationToolset={isPublicationToolset}
             containerId={containerId}
+            view={view}
           />
         </div>
       ) : (
@@ -50,18 +54,19 @@ const Tool: FC<Props> = ({
           header={
             <ToolHeader
               disabled={disabled}
-              viewSelector={<ViewSelector view={view} changeView={setView} />}
+              viewSelector={<ViewSelector view={currentView} changeView={setCurrentView} />}
               tool={tool}
               toolSetName={toolSetName}
               isAddedManual={isAddedManual}
               isMcpToolset={isMcpToolset}
               isAssetToolset={isAssetToolset}
               containerId={containerId}
+              view={view}
             />
           }
           containerClassName={isMcpToolset ? '' : 'px-4 py-2'}
         >
-          <ToolContent tool={tool} view={view} />
+          <ToolContent tool={tool} view={currentView} />
         </Accordion>
       )}
     </>

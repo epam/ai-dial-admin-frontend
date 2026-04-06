@@ -108,6 +108,7 @@ export interface TemplateVariable {
   effectiveType: TestCaseItemType;
   name: string;
   sources: string[];
+  resolvedValue?: unknown;
 }
 
 export interface TestCaseSchema {

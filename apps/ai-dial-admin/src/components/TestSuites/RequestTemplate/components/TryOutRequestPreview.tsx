@@ -57,7 +57,12 @@ const TryOutRequestPreview: FC<Props> = ({
     <>
       <div className="flex flex-col">
         <p className="dial-small-text mb-2">{t(TestSuitesI18nKey.DynamicConfiguration)}</p>
-        <Variables variables={variables} requestBody={requestBody} onChangeRequestBody={onChangeRequestBody} />
+        <Variables
+          testSuiteId={testSuite.id as string}
+          variables={variables}
+          requestBody={requestBody}
+          onChangeRequestBody={onChangeRequestBody}
+        />
       </div>
 
       <div className="flex flex-col">

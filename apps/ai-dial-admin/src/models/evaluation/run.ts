@@ -35,6 +35,7 @@ export interface AnalyticsResult extends ResultDto {
   testCaseRunResultsId?: string;
   requestBody?: Record<string, unknown>;
   responseBody?: Record<string, unknown>;
+  grafanaTraceUrl?: string;
 }
 
 export enum ExtractionResultStatus {

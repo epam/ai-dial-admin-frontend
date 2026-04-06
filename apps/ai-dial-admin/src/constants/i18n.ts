@@ -1,3 +1,7 @@
+export enum GlobalI18nKey {
+  User = 'User',
+}
+
 export enum MenuI18nKey {
   Entities = 'Menu.Entities',
   EntitiesDescription = 'Menu.EntitiesDescription',
@@ -130,6 +134,8 @@ export enum BasicI18nKey {
   Server = 'Basic.Server',
   Client = 'Basic.Client',
   ContentType = 'Basic.ContentType',
+  HighAccuracy = 'Basic.HighAccuracy',
+  LowAccuracy = 'Basic.LowAccuracy',
 }
 
 export enum EntitiesI18nKey {

@@ -3,17 +3,17 @@
 import { FC, useMemo } from 'react';
 
 import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
+import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
 import EntityRoles from '@/src/components/EntityView/Roles/Roles';
 import Tools from '@/src/components/Tools/Tools';
 import { AuthHeader } from '@/src/components/Toolsets/Auth/Sections/AuthHeader';
+import ToolsetProperties from '@/src/components/Toolsets/Properties/Properties';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { DialRole } from '@/src/models/dial/role';
 import { Toolset } from '@/src/models/dial/toolset';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
-import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
-import ToolsetProperties from '../Properties/Properties';
 
 interface Props {
   selectedFormat: ExportFormat;
@@ -57,10 +57,11 @@ const TabsContent: FC<Props> = ({
 
         {activeTab === EntityViewTab.Tools && (
           <Tools
-            originalToolset={originalToolset}
-            selectedToolset={selectedToolset}
-            onChangeToolset={onChange}
+            originalEntity={originalToolset}
+            selectedEntity={selectedToolset}
+            onChangeEntity={onChange}
             disabled={isReadOnlyAdmin}
+            view={ApplicationRoute.Toolsets}
           />
         )}
 
