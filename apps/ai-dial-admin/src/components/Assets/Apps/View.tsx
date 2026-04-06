@@ -78,7 +78,8 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
     } else {
       setTabs(getTabsForAsset(t, ApplicationRoute.AssetsApplications));
     }
-  }, [originalApp.mcp?.endpoint, t]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [originalApp.mcp?.endpoint]);
 
   useEffect(() => {
     setSelectedApp(cloneDeep(originalApp));
