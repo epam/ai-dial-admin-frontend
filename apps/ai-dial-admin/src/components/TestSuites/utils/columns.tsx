@@ -481,7 +481,6 @@ export const getVariablesColumns = (
             onChange: onChangeEditable,
             hideTriangle: false,
             defaultValue: params?.data?.defaultValue,
-            isReadonly: params?.data?.isReadonly,
           },
         };
       },
