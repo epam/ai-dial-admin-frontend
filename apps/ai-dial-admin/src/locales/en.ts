@@ -1549,7 +1549,6 @@ export default {
     DuplicateFieldName: 'Field name already exists',
     SchemaDescription: 'Define the data fields available in test cases',
     FinalPath: 'Final path',
-    Mcp: 'MCP',
     Tool: 'Tool',
     SuiteType: 'Suite Type',
     SelectTool: 'Select tool',

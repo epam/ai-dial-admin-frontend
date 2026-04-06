@@ -1519,7 +1519,6 @@ export enum TestSuitesI18nKey {
   DuplicateFieldName = 'TestSuites.DuplicateFieldName',
   SchemaDescription = 'TestSuites.SchemaDescription',
   FinalPath = 'TestSuites.FinalPath',
-  Mcp = 'TestSuites.Mcp',
   Tool = 'TestSuites.Tool',
   SuiteType = 'TestSuites.SuiteType',
   SelectTool = 'TestSuites.SelectTool',

@@ -8,7 +8,7 @@ import { getDeployments } from '@/src/app/[lang]/test-suites/actions';
 import McpTargets from '@/src/components/TestSuites/Modals/Create/McpTargets';
 import RadioSelectGrid from '@/src/components/TestSuites/Modals/Create/RadioSelectGrid';
 import { EVALUATION_DEPLOYMENTS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { EntitiesI18nKey, MenuI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Deployment, DeploymentType } from '@/src/models/evaluation/deployment';
 import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
@@ -32,7 +32,7 @@ const Target: FC<Props> = ({ selectedApplicationId, suiteType, onChangeApplicati
     () => [
       { id: TargetTab.Applications, label: t(MenuI18nKey.Applications) },
       { id: TargetTab.Models, label: t(MenuI18nKey.Models) },
-      { id: TargetTab.Mcp, label: t(TestSuitesI18nKey.Mcp) },
+      { id: TargetTab.Mcp, label: t(EntitiesI18nKey.MCP) },
     ],
     [t],
   );
