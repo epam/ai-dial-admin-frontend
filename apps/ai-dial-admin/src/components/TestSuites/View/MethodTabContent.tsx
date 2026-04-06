@@ -16,8 +16,9 @@ import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
+import McpMethodContent from '@/src/components/TestSuites/View/McpMethodContent';
 import { Deployment } from '@/src/models/evaluation/deployment';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
 
 interface Props {
   testSuite: TestSuite;
@@ -26,6 +27,16 @@ interface Props {
 }
 
 const MethodTabContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh }) => {
+  const isMcp = testSuite.suiteType === SuiteType.McpTool;
+
+  if (isMcp) {
+    return <McpMethodContent testSuite={testSuite} onChange={onChange} isSkipRefresh={isSkipRefresh} />;
+  }
+
+  return <DeploymentMethodContent testSuite={testSuite} onChange={onChange} isSkipRefresh={isSkipRefresh} />;
+};
+
+const DeploymentMethodContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh }) => {
   const t = useI18n();
   const [deployments, setDeployments] = useState<Deployment[] | null>(null);
   const [isChangeMethodModalOpen, setIsChangeMethodModalOpen] = useState(false);
