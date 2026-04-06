@@ -3,7 +3,7 @@ import classNames from 'classnames';
 import Link from 'next/link';
 import { FC } from 'react';
 
-import { ComingSoonTag } from '@/src/components/Common/ComingSoonTag/ComingSoonTag';
+import { PreviewTag } from '@/src/components/Common/PreviewTag/PreviewTag';
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { MenuItem } from '../menu-configuration';
@@ -42,7 +42,7 @@ const MenuItemContent: FC<Props> = ({ menuItem, isActive, isSidebarOpen }) => {
             {isSidebarOpen && <DialEllipsisTooltip className="ml-4" text={t(menuItem.key)} />}
           </div>
         </div>
-        {menuItem.key === MenuI18nKey.TestSuites || menuItem.key === MenuI18nKey.Runs ? <ComingSoonTag /> : null}
+        {menuItem.key === MenuI18nKey.TestSuites || menuItem.key === MenuI18nKey.Runs ? <PreviewTag /> : null}
       </Link>
     </DialTooltip>
   );

@@ -109,7 +109,7 @@ const ImportFileModal: FC<Props> = ({ selectedTestSuiteId, isModalOpen, onClose,
               {testCases && !isLoading && (
                 <div className="flex flex-col h-full">
                   <SelectedFile file={selectedFile} onChangeFile={onChangeFile} />
-                  <span className="dial-small-sime-text mb-1 mt-4 text-secondary">{t(TestSuitesI18nKey.Preview)}:</span>
+                  <span className="dial-small-sime-text mb-1 mt-4 text-secondary">{t(BasicI18nKey.Preview)}:</span>
                   <div className="flex-1 min-h-0">
                     <GridView columnDefs={columnDefs} rowData={testCases || []} />
                   </div>
