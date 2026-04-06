@@ -25,7 +25,7 @@ import { ImportResult } from '@/src/models/import';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
-import { getSuccessNotification } from '@/src/utils/notification';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import {
   getBulkActionsToolbarOptions,
   getDestinationFolderPopupOptions,
@@ -240,10 +240,30 @@ const FileManager: FC<Props> = ({
           const parentPath = getParentPathByFullPath(fileNodes[0]?.sourceUrl) || `${ROOT_FOLDER}/`;
           fetchFiles(parentPath);
           setFilePath(parentPath);
+
+          const isDeleteSeveralFiles = fileNodes.length > 1;
+
+          if (view === ApplicationRoute.Files) {
+            showNotification(
+              getSuccessNotification(
+                isDeleteSeveralFiles
+                  ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Files) })
+                  : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.File) }),
+                isDeleteSeveralFiles
+                  ? t(FileManagerI18nKey.DeleteSuccessDescriptionForMany, {
+                      count: fileNodes.length,
+                    })
+                  : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
+                      item: t(FileManagerI18nKey.File),
+                      name: fileNodes[0].sourceUrl,
+                    }),
+              ),
+            );
+          }
         }
       });
     },
-    [onDeleteItems, fetchFiles, setFilePath],
+    [onDeleteItems, fetchFiles, setFilePath, showNotification, t, view],
   );
 
   const handleMoveToFiles = useCallback(
@@ -253,10 +273,57 @@ const FileManager: FC<Props> = ({
         if (isSuccess) {
           fetchFiles(destinationFolder);
           fetchFiles(sourceFolder);
+          const isMoveSeveralFiles = items.length > 1;
+
+          switch (view) {
+            case ApplicationRoute.Files:
+              showNotification(
+                getSuccessNotification(
+                  isMoveSeveralFiles
+                    ? t(FileManagerI18nKey.MoveSuccessTitle, { item: t(FileManagerI18nKey.Files) })
+                    : t(FileManagerI18nKey.MoveSuccessTitle, { item: t(FileManagerI18nKey.File) }),
+                  isMoveSeveralFiles
+                    ? t(FileManagerI18nKey.MoveSuccessDescriptionForMany, {
+                        count: items.length,
+                        path: destinationFolder,
+                      })
+                    : t(FileManagerI18nKey.MoveSuccessDescriptionForOne, {
+                        item: t(FileManagerI18nKey.File),
+                        name: items[0].sourceUrl,
+                        path: destinationFolder,
+                      }),
+                ),
+              );
+              break;
+            case ApplicationRoute.Prompts:
+              showNotification(
+                getSuccessNotification(
+                  isMoveSeveralFiles
+                    ? t(FileManagerI18nKey.MoveSuccessTitle, { item: t(FileManagerI18nKey.Prompts) })
+                    : t(FileManagerI18nKey.MoveSuccessTitle, { item: t(FileManagerI18nKey.Prompt) }),
+                  isMoveSeveralFiles
+                    ? t(FileManagerI18nKey.MoveSuccessDescriptionForMany, {
+                        count: items.length,
+                        path: destinationFolder,
+                      })
+                    : t(FileManagerI18nKey.MoveSuccessDescriptionForOne, {
+                        item: t(FileManagerI18nKey.Prompt),
+                        name: items[0].sourceUrl,
+                        path: destinationFolder,
+                      }),
+                ),
+              );
+              break;
+          }
+        } else {
+          const errorRes = result.flat().find((res) => !res.success);
+          if (errorRes) {
+            showNotification(getErrorNotification(errorRes.errorHeader, errorRes.errorMessage, errorRes.requestId));
+          }
         }
       });
     },
-    [fetchFiles, onMoveItems],
+    [fetchFiles, onMoveItems, showNotification, t, view],
   );
 
   const handlePreviewFile = useCallback((path?: string) => {

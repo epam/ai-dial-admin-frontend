@@ -10,7 +10,7 @@ import FileManager from '@/src/components/Common/FileManager/FileManager';
 import Modals, { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { FoldersI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { FileManagerI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { useFileFolder } from '@/src/context/assets/FileFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -65,10 +65,37 @@ const FilesList = () => {
         ApplicationRoute.Files,
       );
 
+      const isImportSeveralFiles = Array.isArray(file) && file.length > 1;
+
       importFiles(body, fileType).then((res) => {
         if (res.success) {
           fetchFiles?.(destinationFolder);
-          showNotification(getSuccessNotification(t(FoldersI18nKey.Import)));
+          if (isImportSeveralFiles) {
+            showNotification(
+              getSuccessNotification(
+                t(FileManagerI18nKey.ImportSuccessTitle, { item: t(FileManagerI18nKey.Files) }),
+                t(FileManagerI18nKey.ImportSuccessDescriptionForMany, {
+                  count: file.length,
+                  path: destinationFolder,
+                }),
+              ),
+            );
+          } else {
+            showNotification(
+              getSuccessNotification(
+                t(FileManagerI18nKey.ImportSuccessTitle, { item: t(FileManagerI18nKey.File) }),
+                fileType === ImportFileType.ARCHIVE
+                  ? t(FileManagerI18nKey.ImportSuccessDescriptionForArchive, {
+                      item: t(FileManagerI18nKey.Files),
+                      path: destinationFolder,
+                    })
+                  : t(FileManagerI18nKey.ImportSuccessDescriptionForOne, {
+                      item: t(FileManagerI18nKey.File),
+                      path: destinationFolder,
+                    }),
+              ),
+            );
+          }
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
@@ -143,14 +170,35 @@ const FilesList = () => {
     [],
   );
 
-  const onExport = useCallback((files: DialFile[]) => {
-    const filePaths = files.map((file) => file.path);
+  const onExport = useCallback(
+    (files: DialFile[]) => {
+      const filePaths = files.map((file) => file.path);
+      const isExportSeveralFiles =
+        files.length > 1 || (files.length === 1 && files[0].nodeType === DialFileNodeType.FOLDER);
 
-    return exportFiles(filePaths).then((res) => {
-      const { blob, fileName } = res as { blob: Blob; fileName: string };
-      downloadFile(blob, fileName);
-    });
-  }, []);
+      return exportFiles(filePaths).then((res) => {
+        const { blob, fileName } = res as { blob: Blob; fileName: string };
+        downloadFile(blob, fileName);
+
+        if (isExportSeveralFiles) {
+          showNotification(
+            getSuccessNotification(
+              t(FileManagerI18nKey.ExportSuccessTitle, { item: t(FileManagerI18nKey.Files) }),
+              t(FileManagerI18nKey.ExportSuccessDescriptionForMany),
+            ),
+          );
+        } else {
+          showNotification(
+            getSuccessNotification(
+              t(FileManagerI18nKey.ExportSuccessTitle, { item: t(FileManagerI18nKey.File) }),
+              t(FileManagerI18nKey.ExportSuccessDescriptionForOne, { item: t(FileManagerI18nKey.File) }),
+            ),
+          );
+        }
+      });
+    },
+    [showNotification, t],
+  );
 
   return (
     <>

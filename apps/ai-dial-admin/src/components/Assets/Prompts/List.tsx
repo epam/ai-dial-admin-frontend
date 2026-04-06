@@ -17,7 +17,7 @@ import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { ApplicationRoute } from '@/src/types/routes';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { useI18n } from '@/src/locales/client';
-import { FileManagerI18nKey, FoldersI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { FileManagerI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import {
   DialCopiedItem,
   DialFile,
@@ -38,7 +38,7 @@ import DuplicateAsset from '@/src/components/Assets/Deployments/DuplicateAsset';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import ImportModal from '@/src/components/EntityListView/Import/ImportModal';
 import { ImportFileType } from '@/src/types/import';
-import { ImportData } from '@/src/models/import-asset';
+import { ImportData, ParsedAssets } from '@/src/models/import-asset';
 import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';
 import { FileManagerGridRow } from '@epam/ai-dial-ui-kit/dist/src/components/FileManager/FileManagerContext';
 import { useRouter } from 'next/navigation';
@@ -224,10 +224,38 @@ const PromptsList: FC = () => {
         ApplicationRoute.Prompts,
       );
 
+      const prompts = (file as ParsedAssets)?.prompts;
+      const isImportSeveralPrompts = Array.isArray(prompts) && prompts.length > 1;
+
       importPrompts(body, fileType).then((res) => {
         if (res.success) {
           fetchFiles?.(importFolder);
-          showNotification(getSuccessNotification(t(FoldersI18nKey.Import)));
+          if (isImportSeveralPrompts) {
+            showNotification(
+              getSuccessNotification(
+                t(FileManagerI18nKey.ImportSuccessTitle, { item: t(FileManagerI18nKey.Prompts) }),
+                t(FileManagerI18nKey.ImportSuccessDescriptionForMany, {
+                  count: prompts.length,
+                  path: importFolder,
+                }),
+              ),
+            );
+          } else {
+            showNotification(
+              getSuccessNotification(
+                t(FileManagerI18nKey.ImportSuccessTitle, { item: t(FileManagerI18nKey.Prompt) }),
+                fileType === ImportFileType.ARCHIVE
+                  ? t(FileManagerI18nKey.ImportSuccessDescriptionForArchive, {
+                      item: t(FileManagerI18nKey.Prompts),
+                      path: importFolder,
+                    })
+                  : t(FileManagerI18nKey.ImportSuccessDescriptionForOne, {
+                      item: t(FileManagerI18nKey.Prompt),
+                      path: importFolder,
+                    }),
+              ),
+            );
+          }
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
@@ -294,20 +322,41 @@ const PromptsList: FC = () => {
     [selectedVersionsMap],
   );
 
-  const onExport = useCallback((files: DialFile[]) => {
-    const filePaths: string[] = [];
-    (files as AssetWithVersion[]).forEach((file) => {
-      if (file.selectedVersions) {
-        filePaths.push(...file.selectedVersions.map((version) => `${file.folderId}${file.name}__${version}`));
-      } else {
-        filePaths.push(file.path);
-      }
-    });
+  const onExport = useCallback(
+    (files: DialFile[]) => {
+      const filePaths: string[] = [];
+      (files as AssetWithVersion[]).forEach((file) => {
+        if (file.selectedVersions) {
+          filePaths.push(...file.selectedVersions.map((version) => `${file.folderId}${file.name}__${version}`));
+        } else {
+          filePaths.push(file.path);
+        }
+      });
 
-    return exportPrompts(filePaths).then((res) => {
-      downloadJson(res, getJsonFileName(ApplicationRoute.Prompts));
-    });
-  }, []);
+      const isExportSeveralFiles =
+        filePaths.length > 1 || (files.length === 1 && files[0].nodeType === DialFileNodeType.FOLDER);
+
+      return exportPrompts(filePaths).then((res) => {
+        downloadJson(res, getJsonFileName(ApplicationRoute.Prompts));
+        if (isExportSeveralFiles) {
+          showNotification(
+            getSuccessNotification(
+              t(FileManagerI18nKey.ExportSuccessTitle, { item: t(FileManagerI18nKey.Prompts) }),
+              t(FileManagerI18nKey.ExportSuccessDescriptionForMany),
+            ),
+          );
+        } else {
+          showNotification(
+            getSuccessNotification(
+              t(FileManagerI18nKey.ExportSuccessTitle, { item: t(FileManagerI18nKey.Prompt) }),
+              t(FileManagerI18nKey.ExportSuccessDescriptionForOne, { item: t(FileManagerI18nKey.Prompt) }),
+            ),
+          );
+        }
+      });
+    },
+    [showNotification, t],
+  );
 
   const handlePathChange = useCallback((nextPath?: string) => {
     if (nextPath) {
@@ -362,10 +411,20 @@ const PromptsList: FC = () => {
           setFilePath(parentPath);
           fetchFiles(parentPath);
           removeSelection(pathToRemove);
+          showNotification(
+            getSuccessNotification(
+              t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Prompt) }),
+              t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
+                item: t(FileManagerI18nKey.Prompt),
+                name: deletedItems?.[0].name || '',
+                path: parentPath,
+              }),
+            ),
+          );
         }
       });
     }
-  }, [deletedItems, destinationFolder, fetchFiles, setFilePath, removeSelection]);
+  }, [deletedItems, destinationFolder, fetchFiles, setFilePath, removeSelection, showNotification, t]);
 
   const onMultipleRemove = useCallback(() => {
     setIsDeleteModalOpen(false);
@@ -399,12 +458,34 @@ const PromptsList: FC = () => {
           fetchFiles(parentPath);
           setFilePath(parentPath);
           removeSelection(deletedItems?.map((item) => item.path));
+          showNotification(
+            getSuccessNotification(
+              t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Prompts) }),
+              t(FileManagerI18nKey.DeleteSuccessDescriptionForMany, {
+                count: deletedItems.length,
+              }),
+            ),
+          );
+        } else {
+          const errorRes = result.flat().find((res) => !res.success);
+          if (errorRes) {
+            showNotification(getErrorNotification(errorRes.errorHeader, errorRes.errorMessage, errorRes.requestId));
+          }
         }
       });
     }
-  }, [deletedItems, selectedVersionsMap, destinationFolder, fetchFiles, setFilePath, removeSelection]);
+  }, [
+    deletedItems,
+    selectedVersionsMap,
+    destinationFolder,
+    fetchFiles,
+    setFilePath,
+    removeSelection,
+    showNotification,
+    t,
+  ]);
 
-  const resetFolder = useCallback(() => {
+  const onRemovePromptEndHandler = useCallback(() => {
     const parentPath = destinationFolder || `${ROOT_FOLDER}/`;
     setFilePath(parentPath);
     fetchFiles(parentPath);
@@ -476,7 +557,7 @@ const PromptsList: FC = () => {
           onRemoveFolder={onDeleteFolder}
           onMultipleRemove={onMultipleRemove}
           onClose={handleDeleteModalClose}
-          resetFolder={resetFolder}
+          onRemovePromptEnd={onRemovePromptEndHandler}
         />
       )}
     </>
