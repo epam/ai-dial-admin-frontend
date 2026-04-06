@@ -10,8 +10,10 @@ import {
 } from '@epam/ai-dial-ui-kit';
 import { isEqual } from 'lodash';
 
-import { getAssetTools } from '@/src/app/[lang]/assets-toolsets/actions';
-import { getTools } from '@/src/app/[lang]/toolsets/actions';
+import { getTools } from '@/src/app/[lang]/applications/actions';
+import { getAssetTools } from '@/src/app/[lang]/assets-applications/actions';
+import { getAssetTools as getAssetToolsetTools } from '@/src/app/[lang]/assets-toolsets/actions';
+import { getTools as getToolsetTools } from '@/src/app/[lang]/toolsets/actions';
 import { getContainerTools } from '@/src/app/actions/deployments';
 import Search from '@/src/components/Common/Search/Search';
 import ToolsFilter from '@/src/components/Tools/Filter/ToolsFilter';
@@ -22,8 +24,10 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
+import { ApplicationMCPContainer, DialApplication } from '@/src/models/dial/application';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { Tool, Toolset } from '@/src/models/dial/toolset';
+import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import { IconPencilMinus } from '@tabler/icons-react';
 import ManageToolsModal from './ManageToolsModal/ManageToolsModal';
@@ -32,25 +36,27 @@ import ToolComponent from './Tool/Tool';
 const filtersConfiguration = [ToolFilter.AutoDetected, ToolFilter.AddedManually];
 
 interface Props {
+  view?: ApplicationRoute;
   containerId?: string;
-  originalToolset?: Toolset;
-  selectedToolset?: Toolset;
-  isAssetToolset?: boolean;
+  originalEntity?: Toolset | DialApplication;
+  selectedEntity?: Toolset | DialApplication;
+  isAsset?: boolean;
   isMcpToolset?: boolean;
   isPublicationToolset?: boolean;
   disabled?: boolean;
-  onChangeToolset?: (toolset: Toolset) => void;
+  onChangeEntity?: (toolset: Toolset | DialApplication) => void;
 }
 
 const Tools: FC<Props> = ({
+  view,
   containerId,
-  originalToolset,
-  selectedToolset,
-  isAssetToolset,
+  originalEntity,
+  selectedEntity,
+  isAsset,
   isMcpToolset,
   isPublicationToolset,
   disabled,
-  onChangeToolset,
+  onChangeEntity,
 }) => {
   const t = useI18n();
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -66,11 +72,18 @@ const Tools: FC<Props> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const isNotSavedToolset = useMemo(() => {
-    return originalToolset?.endpoint !== selectedToolset?.endpoint;
-  }, [originalToolset, selectedToolset]);
+    return originalEntity?.endpoint !== selectedEntity?.endpoint;
+  }, [originalEntity, selectedEntity]);
+
+  const isApplicationTools = useMemo(() => {
+    return view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications;
+  }, [view]);
 
   const manualAddedTools = useMemo(() => {
-    return (selectedToolset?.allowedTools || []).reduce((acc, curr) => {
+    const allowed = isApplicationTools
+      ? (selectedEntity as DialApplication)?.mcp?.allowedTools || []
+      : (selectedEntity as Toolset)?.allowedTools || [];
+    return allowed.reduce((acc, curr) => {
       if (!tools?.some((tool) => tool.name === curr) && curr !== '') {
         acc.push({
           name: curr,
@@ -78,7 +91,7 @@ const Tools: FC<Props> = ({
       }
       return acc;
     }, [] as Tool[]);
-  }, [tools, selectedToolset]);
+  }, [isApplicationTools, selectedEntity, tools]);
 
   const onSelectAll = useCallback(() => {
     if (isEqual(filtersConfiguration, selectedFilters)) {
@@ -110,25 +123,40 @@ const Tools: FC<Props> = ({
   const onUseAllToolsSwitch = useCallback(
     (value: boolean) => {
       setUseAllTools(value);
-      onChangeToolset?.({
-        ...selectedToolset,
-        allowedTools: [],
-      });
+      if (isApplicationTools) {
+        onChangeEntity?.({
+          ...(selectedEntity as DialApplication),
+          mcp: {
+            ...((selectedEntity as DialApplication)?.mcp || {}),
+            allowedTools: [],
+          } as ApplicationMCPContainer,
+        });
+      } else {
+        onChangeEntity?.({
+          ...(selectedEntity as Toolset),
+          allowedTools: [],
+        });
+      }
     },
-    [onChangeToolset, selectedToolset],
+    [isApplicationTools, onChangeEntity, selectedEntity],
   );
 
   useEffect(() => {
-    if (selectedToolset?.name && !isMcpToolset) {
+    if (selectedEntity?.name && !isMcpToolset) {
+      let getFunction;
+      if (isApplicationTools) {
+        getFunction = isAsset ? getAssetTools : getTools;
+      } else {
+        getFunction = isAsset ? getAssetToolsetTools : getToolsetTools;
+      }
+      const path = isAsset ? (selectedEntity as AssetToolset)?.path : selectedEntity?.name;
       setLoading(true);
-      (isAssetToolset ? getAssetTools((selectedToolset as AssetToolset)?.path) : getTools(selectedToolset?.name)).then(
-        (tools) => {
-          setLoading(false);
-          setTools(tools || []);
-        },
-      );
+      getFunction(path).then((tools) => {
+        setLoading(false);
+        setTools(tools || []);
+      });
     }
-  }, [isAssetToolset, isMcpToolset, selectedToolset]);
+  }, [isApplicationTools, isAsset, isMcpToolset, selectedEntity]);
 
   useEffect(() => {
     const fetchTools = async (id: string) => {
@@ -161,7 +189,9 @@ const Tools: FC<Props> = ({
 
     debounceTimeout.current = setTimeout(() => {
       const allTools = [...(tools || []), ...manualAddedTools];
-      const allowedTools = selectedToolset?.allowedTools?.filter((toolName) => toolName !== '') || [];
+      const allowedTools = isApplicationTools
+        ? (selectedEntity as DialApplication)?.mcp?.allowedTools?.filter((toolName) => toolName !== '') || []
+        : (selectedEntity as Toolset)?.allowedTools?.filter((toolName) => toolName !== '') || [];
       const allToolNames = allTools.map((tool) => tool.name);
 
       if (search.length) {
@@ -204,8 +234,12 @@ const Tools: FC<Props> = ({
   }, [search, tools, manualAddedTools, selectedFilters, useAllTools]);
 
   useEffect(() => {
-    setUseAllTools(originalToolset?.allowedTools?.length === 0);
-  }, [originalToolset]);
+    setUseAllTools(
+      isApplicationTools
+        ? (originalEntity as DialApplication)?.mcp?.allowedTools?.length === 0
+        : (originalEntity as Toolset)?.allowedTools?.length === 0,
+    );
+  }, [isApplicationTools, originalEntity]);
 
   useEffect(() => {
     return () => sidebar.closeSidebar();
@@ -275,12 +309,11 @@ const Tools: FC<Props> = ({
                     disabled={disabled}
                     isAddedManual={!tools?.some((t) => t.name === tool.name)}
                     isMcpToolset={isMcpToolset}
-                    isAssetToolset={isAssetToolset}
+                    isAssetToolset={isAsset}
                     isPublicationToolset={isPublicationToolset}
                     containerId={containerId}
-                    toolSetName={
-                      (isAssetToolset ? (selectedToolset as AssetToolset)?.path : selectedToolset?.name) || ''
-                    }
+                    toolSetName={(isAsset ? (selectedEntity as AssetToolset)?.path : selectedEntity?.name) || ''}
+                    view={view}
                   />
                 );
               })}
@@ -298,8 +331,8 @@ const Tools: FC<Props> = ({
           isModalOpen={isModalOpen}
           onClose={onCloseModal}
           tools={tools || []}
-          originalToolset={selectedToolset || {}}
-          onConfirm={onChangeToolset}
+          originalEntity={selectedEntity || {}}
+          onConfirm={onChangeEntity}
         />
       )}
     </div>

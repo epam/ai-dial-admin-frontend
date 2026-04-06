@@ -6,6 +6,7 @@ import { ButtonsI18nKey } from '@/src/constants/i18n';
 const mockTryOutContainerTool = vi.fn();
 const mockTryOutTool = vi.fn();
 const mockTryOutAssetTool = vi.fn();
+const mockTryOutApplicationTool = vi.fn();
 
 vi.mock('@/src/app/actions/deployments', () => ({
   tryOutContainerTool: (...args: unknown[]) => mockTryOutContainerTool(...args),
@@ -17,6 +18,10 @@ vi.mock('@/src/app/[lang]/toolsets/actions', () => ({
 
 vi.mock('@/src/app/[lang]/assets-toolsets/actions', () => ({
   tryOutAssetTool: (...args: unknown[]) => mockTryOutAssetTool(...args),
+}));
+
+vi.mock('@/src/app/[lang]/applications/actions', () => ({
+  tryOutTool: (...args: unknown[]) => mockTryOutApplicationTool(...args),
 }));
 
 vi.mock('@/src/context/AppContext', () => ({
