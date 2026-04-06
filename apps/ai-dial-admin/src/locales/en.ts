@@ -83,6 +83,8 @@ export default {
     Server: 'Server',
     Client: 'Client',
     ContentType: 'Content-Type',
+    HighAccuracy: 'High accuracy',
+    LowAccuracy: 'Low accuracy',
   },
   Menu: {
     Entities: 'Entities',
@@ -565,6 +567,7 @@ export default {
     RequestSchema: 'Request Schema',
     ResponseSchema: 'Response Schema',
     Columns: 'Columns',
+    Response: 'Response',
     Analytics: 'Analytics',
     Public: 'Public',
     Application: 'Application',

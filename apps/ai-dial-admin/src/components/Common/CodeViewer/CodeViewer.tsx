@@ -2,20 +2,18 @@
 
 import { FC, MouseEvent, useCallback, useMemo, useState } from 'react';
 
+import { DialGhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
+import { Editor } from '@monaco-editor/react';
 import { IconChevronRight, IconMaximize } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import FullscreenViewer from '@/src/components/Common/FullscreenViewer/FullscreenViewer';
 import { EDITOR_THEMES_CONFIG } from '@/src/constants/editor';
-import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useTheme } from '@/src/context/ThemeContext';
-import { useI18n } from '@/src/locales/client';
 import { EDITOR_THEMES } from '@/src/types/editor';
 import { ViewerContentType } from '@/src/types/evaluation';
 import { formatJsonSize } from '@/src/utils/evaluation/json-highlight';
-import { DialGhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
-import { Editor } from '@monaco-editor/react';
 
 interface Props {
   title: string;
@@ -23,7 +21,6 @@ interface Props {
 }
 
 const CodeViewer: FC<Props> = ({ title, content }) => {
-  const t = useI18n();
   const { currentTheme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -60,12 +57,7 @@ const CodeViewer: FC<Props> = ({ title, content }) => {
           <span className="flex items-center gap-3">
             <span className="dial-tiny-text text-secondary opacity-60 font-mono">{size}</span>
             <span onClick={(e) => e.stopPropagation()}>
-              <CopyButton
-                buttonLabel={t(ButtonsI18nKey.Copy)}
-                value={formatted}
-                valueLabel={title}
-                size={ElementSize.Small}
-              />
+              <CopyButton value={formatted} valueLabel={title} size={ElementSize.Small} />
             </span>
             <DialGhostIconButton
               size={ElementSize.Small}

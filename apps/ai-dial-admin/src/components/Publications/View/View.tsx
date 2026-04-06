@@ -98,7 +98,7 @@ const PublicationView = <T extends Publication>({ view, publication, application
   }, [isPermissionsChanged]);
 
   useEffect(() => {
-    if (selectedPublication.folderId === addTrailingSlash(ROOT_FOLDER)) {
+    if (selectedPublication.folderId === addTrailingSlash(ROOT_FOLDER) || !selectedPublication.folderId.endsWith('/')) {
       setIsPermissionsChanged(false);
       return;
     }
@@ -127,10 +127,12 @@ const PublicationView = <T extends Publication>({ view, publication, application
       view === ApplicationRoute.ApplicationPublications
         ? getCorrectPublication(selectedPublication)
         : selectedPublication;
+    const correctFolderId = addTrailingSlash(correctedPublication.folderId);
     const body = getFormDataForPublication(
       {
         ...correctedPublication,
-        folderId: addTrailingSlash(selectedPublication.folderId),
+        folderId: correctFolderId,
+        rules: correctFolderId === addTrailingSlash(ROOT_FOLDER) ? [] : selectedPublication.rules, // if publication is in root folder, it can't have any rules, so we set it to empty array
       },
       addedFiles,
     );

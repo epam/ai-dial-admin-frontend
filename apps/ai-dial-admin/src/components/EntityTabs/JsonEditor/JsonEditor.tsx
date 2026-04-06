@@ -62,7 +62,7 @@ const EntityJsonEditor = <T extends object>({
         const parsed = JSON.parse(updatedConfig);
         if (setSelectedEntity) {
           skipEntityModelSyncRef.current = true;
-          setSelectedEntity((prev) => mergeWithIgnoredFields(prev, parsed, ignoredFields));
+          setSelectedEntity(mergeWithIgnoredFields(entity as T, parsed, ignoredFields));
         }
       } catch (error) {
         if (error) {
@@ -70,7 +70,7 @@ const EntityJsonEditor = <T extends object>({
         }
       }
     },
-    [setSelectedEntity, setIsChanged, ignoredFields],
+    [setSelectedEntity, entity, ignoredFields, setIsChanged],
   );
 
   const onValidateJSON = useCallback(

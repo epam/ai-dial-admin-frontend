@@ -1,3 +1,7 @@
+export enum GlobalI18nKey {
+  User = 'User',
+}
+
 export enum MenuI18nKey {
   Entities = 'Menu.Entities',
   EntitiesDescription = 'Menu.EntitiesDescription',
@@ -131,6 +135,8 @@ export enum BasicI18nKey {
   Server = 'Basic.Server',
   Client = 'Basic.Client',
   ContentType = 'Basic.ContentType',
+  HighAccuracy = 'Basic.HighAccuracy',
+  LowAccuracy = 'Basic.LowAccuracy',
 }
 
 export enum EntitiesI18nKey {
@@ -583,6 +589,7 @@ export enum TabsI18nKey {
   RequestSchema = 'Tabs.RequestSchema',
   ResponseSchema = 'Tabs.ResponseSchema',
   Columns = 'Tabs.Columns',
+  Response = 'Tabs.Response',
   Analytics = 'Tabs.Analytics',
   MCP = 'Tabs.MCP',
   Public = 'Tabs.Public',

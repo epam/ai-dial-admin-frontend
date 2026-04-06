@@ -6,7 +6,7 @@ import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFolder } from '@/src/models/dial/folder';
-import { checkPaths, checkSelectedPath, removeTrailingSlash } from '@/src/utils/files/path';
+import { checkPaths, checkSelectedPath } from '@/src/utils/files/path';
 
 interface Props {
   isModalOpen: boolean;
@@ -50,7 +50,7 @@ const FilePathModal: FC<Props> = ({
       cancelLabel={t(ButtonsI18nKey.Cancel)}
       submitLabel={t(ButtonsI18nKey.Apply)}
       onSubmit={() => {
-        onApply(removeTrailingSlash(folderContext?.filePath));
+        onApply(folderContext?.filePath || '');
         onClose();
       }}
       onCancel={onClose}

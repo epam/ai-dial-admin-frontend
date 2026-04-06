@@ -44,7 +44,7 @@ const RunHeader = <T extends Entity>({
 
   const headerPostfix = useMemo(() => {
     return (
-      <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-primary">
+      <div className="flex flex-row flex-wrap gap-8 pb-8 border-b border-primary">
         {!!run?.startedAt && (
           <LabelledText label={t(RunsI18nKey.StartTime)} text={formatDateTimeToLocalString(run?.startedAt)} />
         )}

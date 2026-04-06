@@ -131,7 +131,6 @@ const AssetButtonsWrapper: FC<AssetButtonsWrapperProps> = ({
                   onChangeAddedVersion={onChangeAddedVersion}
                   assets={assets}
                   onChangeAsset={onChangeAsset}
-                  etag={etag}
                 />
                 <DialNeutralButton
                   className={buttonsClassName}

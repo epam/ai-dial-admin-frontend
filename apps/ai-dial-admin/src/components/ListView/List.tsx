@@ -17,7 +17,6 @@ interface Props<T> extends Omit<GridViewProps<T>, 'showColumnsPanel' | 'toggleCo
   listLabel?: string;
   className?: string;
   children?: ReactNode;
-  topContent?: ReactNode;
   infoPanel?: ReactNode;
   isEnableColumnPanel?: boolean;
   isMainListView?: boolean;
@@ -30,7 +29,6 @@ const ListEntities = <T extends object>({
   isEnableColumnPanel = false,
   isMainListView = false,
   isEmbedToModal = false,
-  topContent,
   infoPanel,
   children,
   onGridReady: onGridReadyCallback,
@@ -91,7 +89,6 @@ const ListEntities = <T extends object>({
           {children}
         </div>
       </div>
-      {topContent}
       <div className="flex-1 min-h-0 flex flex-row gap-x-3">
         <div className="flex-1 min-w-0">
           <GridView

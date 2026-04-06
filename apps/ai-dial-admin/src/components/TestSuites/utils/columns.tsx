@@ -19,10 +19,10 @@ import JsonAtaCellRenderer from '@/src/components/Grid/CellRenderers/JsonAtaCell
 import JsonEditorCellRenderer from '@/src/components/Grid/CellRenderers/JsonEditorCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import BooleanColumnHeader from '@/src/components/Grid/HeaderComponents/BooleanColumnHeader';
+import { TYPE_OPTIONS } from '@/src/components/TestSuites/TestCaseSchema/constants';
 import { NO_BORDER_CLASS, UTILITY_COLUMN } from '@/src/constants/ag-grid';
 import { BASE_STATUS_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { TEST_CASES_COLUMN } from '@/src/constants/grid-columns/grid-columns';
-import { TYPE_OPTIONS } from '@/src/components/TestSuites/TestCaseSchema/constants';
 import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { MetricBinding } from '@/src/models/evaluation/metric';
 import {
@@ -93,6 +93,7 @@ export const getTestCaseColumns = (
       editable: true,
       cellRenderer: 'agCheckboxCellRenderer',
       cellEditor: 'agCheckboxCellEditor',
+      cellClass: 'flex justify-center',
       valueGetter: (params) => params.data?.enabled,
       valueSetter: (params) => {
         params.data.enabled = params.newValue;
@@ -120,8 +121,8 @@ export const getTestCaseColumns = (
       }
       return col;
     }),
-    ...schema.map((s) => {
-      const field = s.name;
+    ...schema.map((param) => {
+      const field = param.name;
       return {
         field: field,
         headerName: field,
@@ -136,7 +137,7 @@ export const getTestCaseColumns = (
           },
         },
         cellRendererSelector: () => {
-          if (s.type === TestCaseItemType.FILE) {
+          if (param.type === TestCaseItemType.FILE) {
             return {
               component: FileSelectCellRenderer,
               params: {
@@ -145,6 +146,30 @@ export const getTestCaseColumns = (
                 },
                 id: suite.id,
                 view: ApplicationRoute.TestSuites,
+              },
+            };
+          }
+          if (param.type === TestCaseItemType.INTEGER || param.type === TestCaseItemType.NUMBER) {
+            return {
+              component: EditableCellRenderer,
+              params: {
+                hideTriangle: true,
+                skipRequired: true,
+                inputType: 'number' as const,
+                step: param.type === TestCaseItemType.INTEGER ? 1 : void 0,
+                onChange: (value: string | number, rowData: unknown) => {
+                  // For INTEGER type, validate that the value is a whole number
+                  if (param.type === TestCaseItemType.INTEGER) {
+                    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+                    if (value !== '' && !isNaN(numValue) && !Number.isInteger(numValue)) {
+                      // If the value is not an integer, round it to nearest integer
+                      const intValue = Math.round(numValue);
+                      onCellChange(rowData as Record<string, unknown>, field, intValue);
+                      return;
+                    }
+                  }
+                  onCellChange(rowData as Record<string, unknown>, field, value);
+                },
               },
             };
           }
@@ -422,6 +447,7 @@ export const getMetricBindingsColumns = (
 
 export const getVariablesColumns = (
   onChangeEditable: (value: string | object, data: InputBindingRowData) => void,
+  id: string,
 ): ColDef<InputBindingRowData>[] => {
   return [
     {
@@ -439,15 +465,13 @@ export const getVariablesColumns = (
       field: 'value',
       cellClass: [NO_BORDER_CLASS, 'relative'],
       cellRendererSelector: (params: ICellRendererParams<InputBindingRowData>) => {
-        if (
-          params.data?.effectiveType == TestCaseItemType.OBJECT ||
-          params.data?.effectiveType == TestCaseItemType.ARRAY
-        ) {
+        if (params.data?.effectiveType == TestCaseItemType.FILE) {
           return {
-            component: JsonEditorCellRenderer,
+            component: FileSelectCellRenderer,
             params: {
               onChange: onChangeEditable,
-              disableValidation: true,
+              id: id,
+              view: ApplicationRoute.TestSuites,
             },
           };
         }

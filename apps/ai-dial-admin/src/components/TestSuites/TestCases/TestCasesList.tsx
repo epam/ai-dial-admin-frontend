@@ -2,18 +2,19 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, MouseEvent, RefObject, useCallback, useEffect, useRef, useState } from 'react';
+import { FC, RefObject, useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { DialLoader } from '@epam/ai-dial-ui-kit';
 import { CellValueChangedEvent, ColDef, GridApi, GridOptions, GridReadyEvent } from 'ag-grid-community';
 
 import { createTestCase, getTestCases, importTestCase, removeTestCase } from '@/src/app/[lang]/test-suites/actions';
 import ListEntities from '@/src/components/ListView/List';
-import { ApiRoute } from '@/src/constants/api-routes';
 import TryOut from '@/src/components/TestSuites/RequestTemplate/components/TryOut';
 import { getTestCaseColumns } from '@/src/components/TestSuites/utils/columns';
 import { createNewTestCaseRow, getTestCaseGridData, rowToTestCase } from '@/src/components/TestSuites/utils/data';
 import { ONE_ACTION_COLUMN } from '@/src/constants/ag-grid';
+import { ApiRoute } from '@/src/constants/api-routes';
 import { getRemoveOperation, getTryOutOperation } from '@/src/constants/grid-columns/actions';
 import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
@@ -23,8 +24,8 @@ import { useI18n } from '@/src/locales/client';
 import { TestCase, TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import SchemaManager from '@/src/components/TestSuites/TestCaseSchema/SchemaManager';
 import HeaderButtons from './Header';
+import TestCasesSchemaModal from './TestCasesSchemaModal';
 
 export interface TestCasesActions {
   getDirtyTestCases: () => TestCase[];
@@ -34,18 +35,11 @@ export interface TestCasesActions {
 interface Props {
   selectedTestSuite: TestSuite;
   onChange: (testSuite: TestSuite, isSkipRefresh?: boolean) => void;
-  isSkipRefresh?: boolean;
   testCasesActionsRef?: RefObject<TestCasesActions | null>;
   onDirtyChange?: (hasDirty: boolean) => void;
 }
 
-const TestCasesList: FC<Props> = ({
-  selectedTestSuite,
-  onChange,
-  isSkipRefresh,
-  testCasesActionsRef,
-  onDirtyChange,
-}) => {
+const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesActionsRef, onDirtyChange }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -57,21 +51,23 @@ const TestCasesList: FC<Props> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState<Record<string, unknown>[]>([]);
   const [columnDefs, setColumnDefs] = useState<ColDef[]>([]);
-  const [isSchemaOpen, setIsSchemaOpen] = useState(false);
+  const [isSchemaModalOpen, setIsSchemaModalOpen] = useState(false);
   const onRemoveCaseRef = useRef<(data?: TestCase) => void>(() => {});
   const dirtyRowsRef = useRef<Map<string, Record<string, unknown>>>(new Map());
   const pendingRefreshRef = useRef(false);
 
-  const onToggleSchema = useCallback(() => {
-    setIsSchemaOpen((prev) => !prev);
+  const onOpenSchemaModal = useCallback(() => {
+    setIsSchemaModalOpen(true);
+  }, []);
+
+  const onCloseSchemaModal = useCallback(() => {
+    setIsSchemaModalOpen(false);
   }, []);
 
   const onChangeTestCaseSchema = useCallback(
-    (testCaseSchema: TestCaseSchema[], isSkipRefresh?: boolean) => {
-      onChange({ ...selectedTestSuite, testCaseSchema }, isSkipRefresh);
-      if (!isSkipRefresh) {
-        pendingRefreshRef.current = true;
-      }
+    (testCaseSchema: TestCaseSchema[]) => {
+      onChange({ ...selectedTestSuite, testCaseSchema });
+      pendingRefreshRef.current = true;
     },
     [selectedTestSuite, onChange],
   );
@@ -124,17 +120,16 @@ const TestCasesList: FC<Props> = ({
   }, []);
 
   const onOpenTryOutSidebar = useCallback(
-    (e?: MouseEvent<HTMLButtonElement>, testCaseId?: string) => {
-      e?.stopPropagation();
+    (e?: TestCase) => {
       sidebar.showSidebar(
         <SaveValidationContextProvider>
-          <TryOut testSuite={selectedTestSuite} testCaseId={testCaseId || ''} />
+          <TryOut testSuite={selectedTestSuite} testCaseId={e?.id || ''} />
         </SaveValidationContextProvider>,
         'w-1/2 max-w-[800px]',
       );
       if (sidebarOpen) {
         sidebar.toggleIsMenuClosed?.();
-        toggleSidebar(e);
+        toggleSidebar();
       }
     },
     [selectedTestSuite.id, sidebar, sidebarOpen, toggleSidebar],
@@ -292,26 +287,26 @@ const TestCasesList: FC<Props> = ({
           onGridReady={onGridReady}
           rowData={data}
           columnDefs={columnDefs}
-          topContent={
-            isSchemaOpen ? (
-              <SchemaManager
-                testCaseSchema={selectedTestSuite.testCaseSchema || []}
-                onChangeTestCaseSchema={onChangeTestCaseSchema}
-                isSkipRefresh={isSkipRefresh}
-              />
-            ) : undefined
-          }
         >
           <HeaderButtons
             selectedTestSuiteId={selectedTestSuite.id as string}
             onApplyImport={onApplyImport}
             onAdd={onAddTestCase}
             onExport={onExport}
-            onToggleSchema={onToggleSchema}
-            isSchemaOpen={isSchemaOpen}
+            onOpenSchemaModal={onOpenSchemaModal}
           />
         </ListEntities>
       )}
+      {isSchemaModalOpen &&
+        createPortal(
+          <TestCasesSchemaModal
+            isModalOpen={isSchemaModalOpen}
+            selectedTestSuite={selectedTestSuite}
+            onClose={onCloseSchemaModal}
+            onApply={onChangeTestCaseSchema}
+          />,
+          document.body,
+        )}
     </div>
   );
 };
