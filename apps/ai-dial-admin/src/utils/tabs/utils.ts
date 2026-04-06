@@ -420,11 +420,12 @@ export const getAuditTabs = (
     return [dashboardTab(t), tracesTab(t)];
   }
 
-  if (
-    featureFlags.dashboardEnabled &&
-    (view === ApplicationRoute.Models || view === ApplicationRoute.Applications || view === ApplicationRoute.Toolsets)
-  ) {
+  if (featureFlags.dashboardEnabled && (view === ApplicationRoute.Models || view === ApplicationRoute.Applications)) {
     tabs.push(dashboardTab(t), tracesTab(t), conversationsTab(t));
+  }
+
+  if (featureFlags.dashboardEnabled && view === ApplicationRoute.Toolsets) {
+    tabs.push(dashboardTab(t), tracesTab(t));
   }
 
   tabs.push(activitiesTab(t));
