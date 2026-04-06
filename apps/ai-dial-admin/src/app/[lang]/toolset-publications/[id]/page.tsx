@@ -12,13 +12,15 @@ import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Page(params: { searchParams: Promise<{ path: string }> }) {
+export default async function Page(params: { searchParams: Promise<{ path: string; code?: string }> }) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  const searchParams = await params.searchParams;
+  const oAuthCode = searchParams.code || null;
 
   let data: Publication | null = null;
 
   try {
-    data = await publicationsApi.getPublication(token, (await params.searchParams).path);
+    data = await publicationsApi.getPublication(token, searchParams.path);
   } catch (e) {
     errorObjLog(e, 'Failed to fetch publication toolset view data');
   }
@@ -29,7 +31,11 @@ export default async function Page(params: { searchParams: Promise<{ path: strin
 
   return (
     <SaveValidationContextProvider>
-      <PublicationView publication={data as Publication} view={ApplicationRoute.ToolsetPublications} />
+      <PublicationView
+        publication={data as Publication}
+        view={ApplicationRoute.ToolsetPublications}
+        oAuthCode={oAuthCode}
+      />
     </SaveValidationContextProvider>
   );
 }
