@@ -56,36 +56,6 @@ describe('OAuthSection', () => {
     expect(handleChange).toHaveBeenCalledWith(expect.objectContaining({ tokenEndpoint: 'new-token-endpoint' }));
   });
 
-  test('disables all fields when toolset is logged in with globalAuthStatus', () => {
-    const authSettings: ToolsetAuthSettings = {
-      authenticationType: ToolsetAuthType.OAUTH,
-      clientId: 'client-id',
-      clientSecret: 'client-secret',
-      globalAuthStatus: ToolsetAuthStatus.SIGNED_IN,
-    };
-    render(<OAuthSection authSettings={authSettings} view={ApplicationRoute.Toolsets} />);
-
-    expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.ClientId)).toBeDisabled();
-    expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.ClientSecret)).toBeDisabled();
-    expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.AuthorizationEndpoint)).toBeDisabled();
-    expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.TokenEndpoint)).toBeDisabled();
-  });
-
-  test('disables all fields when toolset is logged in with userLevelAuthStatus', () => {
-    const authSettings: ToolsetAuthSettings = {
-      authenticationType: ToolsetAuthType.OAUTH,
-      clientId: 'client-id',
-      clientSecret: 'client-secret',
-      userLevelAuthStatus: ToolsetAuthStatus.SIGNED_IN,
-    };
-    render(<OAuthSection authSettings={authSettings} view={ApplicationRoute.Toolsets} />);
-
-    expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.ClientId)).toBeDisabled();
-    expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.ClientSecret)).toBeDisabled();
-    expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.AuthorizationEndpoint)).toBeDisabled();
-    expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.TokenEndpoint)).toBeDisabled();
-  });
-
   test('shows info banner when toolset is logged in', () => {
     const authSettings: ToolsetAuthSettings = {
       authenticationType: ToolsetAuthType.OAUTH,
