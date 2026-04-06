@@ -5,7 +5,7 @@ import Grafana from '@/public/images/icons/grafana.svg';
 import { AlertVariant, DialAlert, DialLoader, DialNeutralButton, ElementSize } from '@epam/ai-dial-ui-kit';
 
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
-import { BasicI18nKey, RunsI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, RunsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import CollapsibleSection from './CollapsibleSection';
 import { TryOutResponse } from './TryOut';
@@ -16,6 +16,7 @@ interface Props {
   grafanaTraceUrl?: string;
   isRequestSend?: boolean;
   responseBody: ReactNode;
+  isMcp?: boolean;
 }
 
 const TryOutResponsePreview: FC<Props> = ({
@@ -24,15 +25,23 @@ const TryOutResponsePreview: FC<Props> = ({
   grafanaTraceUrl,
   isRequestSend,
   responseBody,
+  isMcp,
 }) => {
   const t = useI18n();
 
+  const isError = isMcp
+    ? (response as Record<string, unknown>).isError
+    : !(response.statusCode >= 200 && response.statusCode < 300);
+  const alertMessage = isMcp
+    ? isError
+      ? t(TestSuitesI18nKey.ToolCallFailed)
+      : t(TestSuitesI18nKey.ToolCallSucceeded)
+    : `${response.statusCode}`;
+  const alertVariant = isError ? AlertVariant.Error : AlertVariant.Success;
+
   return (
     <>
-      <DialAlert
-        message={`${response.statusCode}`}
-        variant={response.statusCode >= 200 && response.statusCode < 300 ? AlertVariant.Success : AlertVariant.Error}
-      >
+      <DialAlert message={alertMessage} variant={alertVariant}>
         {grafanaTraceUrl && (
           <DialNeutralButton
             size={ElementSize.Small}

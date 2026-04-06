@@ -8,7 +8,7 @@ import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { convertVariableIntoInitialRequest } from '@/src/components/TestSuites/utils/template-variables';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { TemplateVariable, TestSuite } from '@/src/models/evaluation/test-suite';
+import { SuiteType, TemplateVariable, TestSuite } from '@/src/models/evaluation/test-suite';
 import Variables from './Variables';
 
 interface Props {
@@ -51,6 +51,12 @@ const TryOutRequestPreview: FC<Props> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const isMcp = testSuite.suiteType === SuiteType.McpTool;
+  const previewLabel = isMcp ? t(TestSuitesI18nKey.ToolArgumentsPreview) : t(TestSuitesI18nKey.RequestBodyPreview);
+  const previewDescription = isMcp
+    ? `TOOL CALL ${testSuite.mcpDeploymentRef?.name}:${testSuite.toolRef?.name}`
+    : `${testSuite.endpointRef?.method} ${testSuite.endpointRef?.relativeUrlPattern}`;
+
   return isVariablesLoading || isRequestSend ? (
     <DialLoader size={40} />
   ) : (
@@ -66,10 +72,8 @@ const TryOutRequestPreview: FC<Props> = ({
       </div>
 
       <div className="flex flex-col">
-        <p className="dial-small-text mb-2">{t(TestSuitesI18nKey.RequestBodyPreview)}</p>
-        <p className="text-secondary mb-2 dial-small-text">
-          {testSuite.endpointRef?.method} {testSuite.endpointRef?.relativeUrlPattern}
-        </p>
+        <p className="dial-small-text mb-2">{previewLabel}</p>
+        <p className="text-secondary mb-2 dial-small-text">{previewDescription}</p>
         <div className="h-[300px]">
           <JsonEditor
             entity={resolvedRequest}

@@ -20,7 +20,7 @@ import { BasicI18nKey, ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
 import { columnsTab, EntityViewTab, responseTab } from '@/src/utils/tabs/utils';
 import CollapsibleSection from './CollapsibleSection';
 import TryOutColumns from './TryOutColumns';
@@ -39,6 +39,7 @@ interface Props {
 const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
   const t = useI18n();
   const { sidebar, toggleSidebar } = useAppContext();
+  const isMcp = testSuite.suiteType === SuiteType.McpTool;
   const tabs = [responseTab(t), columnsTab(t)];
   const [activeTab, setActiveTab] = useState(tabs[0].id as EntityViewTab);
   const [requestBody, setRequestBody] = useState<Record<string, unknown>>({});
@@ -158,6 +159,7 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
                   grafanaTraceUrl={grafanaTraceUrl}
                   isRequestSend={isRequestSend}
                   responseBody={responseBody}
+                  isMcp={isMcp}
                 />
               )}
             </div>
