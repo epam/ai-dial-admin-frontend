@@ -9,7 +9,7 @@ import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButton
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
 
-interface Props<T> {
+interface Props<T extends object> {
   data: T[] | null;
   columnDefs: ColDef[];
   idField: string;
@@ -20,7 +20,7 @@ interface Props<T> {
   onSelect: (item: T) => void;
 }
 
-function RadioSelectGrid<T>({
+function RadioSelectGrid<T extends object>({
   data,
   columnDefs,
   idField,

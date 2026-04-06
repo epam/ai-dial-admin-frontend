@@ -55,11 +55,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   return {
     ...actual,
     AlertVariant: { Success: 'success', Error: 'error' },
-    DialAlert: ({ message, variant }: { message: string; variant: string }) => (
-      <div>
-        {message}
-      </div>
-    ),
+    DialAlert: ({ message, variant }: { message: string; variant: string }) => <div>{message}</div>,
     DialCloseButton: ({ onClose }: { onClose: () => void }) => (
       <button type="button" onClick={onClose}>
         Close
