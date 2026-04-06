@@ -48,7 +48,9 @@ describe('Variables', () => {
   });
 
   test('renders GridView component', () => {
-    render(<Variables variables={[]} requestBody={{}} onChangeRequestBody={mockOnChangeRequestBody} />);
+    render(
+      <Variables testSuiteId="id" variables={[]} requestBody={{}} onChangeRequestBody={mockOnChangeRequestBody} />,
+    );
 
     expect(screen.getByRole('region', { name: 'grid' })).toBeInTheDocument();
   });
@@ -56,7 +58,9 @@ describe('Variables', () => {
   test('shows empty data message when no variables provided', () => {
     mockGenerateVariablesRowData.mockReturnValue([]);
 
-    render(<Variables variables={[]} requestBody={{}} onChangeRequestBody={mockOnChangeRequestBody} />);
+    render(
+      <Variables testSuiteId="id" variables={[]} requestBody={{}} onChangeRequestBody={mockOnChangeRequestBody} />,
+    );
 
     expect(screen.getByRole('status')).toHaveTextContent(BasicI18nKey.NoVariables);
   });
@@ -68,7 +72,12 @@ describe('Variables', () => {
     ]);
 
     render(
-      <Variables variables={variables} requestBody={{ var1: '' }} onChangeRequestBody={mockOnChangeRequestBody} />,
+      <Variables
+        testSuiteId="id"
+        variables={variables}
+        requestBody={{ var1: '' }}
+        onChangeRequestBody={mockOnChangeRequestBody}
+      />,
     );
 
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
@@ -78,23 +87,39 @@ describe('Variables', () => {
     const variables = [createVariable({ name: 'alpha' })];
     const requestBody = { alpha: 'value1' };
 
-    render(<Variables variables={variables} requestBody={requestBody} onChangeRequestBody={mockOnChangeRequestBody} />);
+    render(
+      <Variables
+        testSuiteId="id"
+        variables={variables}
+        requestBody={requestBody}
+        onChangeRequestBody={mockOnChangeRequestBody}
+      />,
+    );
 
     expect(mockGenerateVariablesRowData).toHaveBeenCalledWith(variables, requestBody);
   });
 
   test('calls getVariablesColumns with onChangeParam callback', () => {
-    render(<Variables variables={[]} requestBody={{}} onChangeRequestBody={mockOnChangeRequestBody} />);
+    render(
+      <Variables testSuiteId="id" variables={[]} requestBody={{}} onChangeRequestBody={mockOnChangeRequestBody} />,
+    );
 
     expect(mockGetVariablesColumns).toHaveBeenCalledTimes(1);
-    expect(mockGetVariablesColumns).toHaveBeenCalledWith(expect.any(Function));
+    expect(mockGetVariablesColumns).toHaveBeenCalledWith(expect.any(Function), 'id');
   });
 
   test('onChangeParam calls onChangeRequestBody with updated body for STRING type', () => {
     const variables = [createVariable({ name: 'myVar' })];
     const requestBody = { myVar: 'old' };
 
-    render(<Variables variables={variables} requestBody={requestBody} onChangeRequestBody={mockOnChangeRequestBody} />);
+    render(
+      <Variables
+        testSuiteId="id"
+        variables={variables}
+        requestBody={requestBody}
+        onChangeRequestBody={mockOnChangeRequestBody}
+      />,
+    );
 
     const onChangeParam = mockGetVariablesColumns.mock.calls[0][0];
     onChangeParam('newValue', { templateVariable: 'myVar', effectiveType: TestCaseItemType.STRING });
@@ -106,7 +131,14 @@ describe('Variables', () => {
     const variables = [createVariable({ name: 'objVar', effectiveType: TestCaseItemType.OBJECT })];
     const requestBody = { objVar: {} };
 
-    render(<Variables variables={variables} requestBody={requestBody} onChangeRequestBody={mockOnChangeRequestBody} />);
+    render(
+      <Variables
+        testSuiteId="id"
+        variables={variables}
+        requestBody={requestBody}
+        onChangeRequestBody={mockOnChangeRequestBody}
+      />,
+    );
 
     const onChangeParam = mockGetVariablesColumns.mock.calls[0][0];
     const newObj = { key: 'value' };
@@ -119,7 +151,14 @@ describe('Variables', () => {
     const rowData = [{ templateVariable: 'var1', effectiveType: TestCaseItemType.STRING, value: '' }];
     mockGenerateVariablesRowData.mockReturnValue(rowData);
 
-    render(<Variables variables={[createVariable()]} requestBody={{}} onChangeRequestBody={mockOnChangeRequestBody} />);
+    render(
+      <Variables
+        testSuiteId="id"
+        variables={[createVariable()]}
+        requestBody={{}}
+        onChangeRequestBody={mockOnChangeRequestBody}
+      />,
+    );
 
     const mockUpdateGridOptions = vi.fn();
     const mockApi = { updateGridOptions: mockUpdateGridOptions, isDestroyed: () => false };
@@ -133,7 +172,7 @@ describe('Variables', () => {
 
   test('renders with correct container classes', () => {
     const { container } = render(
-      <Variables variables={[]} requestBody={{}} onChangeRequestBody={mockOnChangeRequestBody} />,
+      <Variables testSuiteId="id" variables={[]} requestBody={{}} onChangeRequestBody={mockOnChangeRequestBody} />,
     );
 
     const wrapper = container.firstChild as HTMLElement;
@@ -141,13 +180,27 @@ describe('Variables', () => {
   });
 
   test('uses empty array fallback for undefined variables', () => {
-    render(<Variables variables={undefined as any} requestBody={{}} onChangeRequestBody={mockOnChangeRequestBody} />);
+    render(
+      <Variables
+        testSuiteId="id"
+        variables={undefined as any}
+        requestBody={{}}
+        onChangeRequestBody={mockOnChangeRequestBody}
+      />,
+    );
 
     expect(mockGenerateVariablesRowData).toHaveBeenCalledWith([], {});
   });
 
   test('uses empty object fallback for undefined requestBody', () => {
-    render(<Variables variables={[]} requestBody={undefined as any} onChangeRequestBody={mockOnChangeRequestBody} />);
+    render(
+      <Variables
+        testSuiteId="id"
+        variables={[]}
+        requestBody={undefined as any}
+        onChangeRequestBody={mockOnChangeRequestBody}
+      />,
+    );
 
     expect(mockGenerateVariablesRowData).toHaveBeenCalledWith([], {});
   });
@@ -155,7 +208,9 @@ describe('Variables', () => {
   test('getIsEmptyData returns true when row data is empty', () => {
     mockGenerateVariablesRowData.mockReturnValue([]);
 
-    render(<Variables variables={[]} requestBody={{}} onChangeRequestBody={mockOnChangeRequestBody} />);
+    render(
+      <Variables testSuiteId="id" variables={[]} requestBody={{}} onChangeRequestBody={mockOnChangeRequestBody} />,
+    );
 
     expect(capturedGetIsEmptyData()).toBe(true);
   });
@@ -167,6 +222,7 @@ describe('Variables', () => {
 
     render(
       <Variables
+        testSuiteId="id"
         variables={[createVariable()]}
         requestBody={{ var1: '' }}
         onChangeRequestBody={mockOnChangeRequestBody}
@@ -180,13 +236,23 @@ describe('Variables', () => {
     const variables = [createVariable({ name: 'x' })];
 
     const { rerender } = render(
-      <Variables variables={variables} requestBody={{ x: 'a' }} onChangeRequestBody={mockOnChangeRequestBody} />,
+      <Variables
+        testSuiteId="id"
+        variables={variables}
+        requestBody={{ x: 'a' }}
+        onChangeRequestBody={mockOnChangeRequestBody}
+      />,
     );
 
     mockGenerateVariablesRowData.mockClear();
 
     rerender(
-      <Variables variables={variables} requestBody={{ x: 'b' }} onChangeRequestBody={mockOnChangeRequestBody} />,
+      <Variables
+        testSuiteId="id"
+        variables={variables}
+        requestBody={{ x: 'b' }}
+        onChangeRequestBody={mockOnChangeRequestBody}
+      />,
     );
 
     expect(mockGenerateVariablesRowData).toHaveBeenCalledWith(variables, { x: 'b' });
@@ -195,6 +261,7 @@ describe('Variables', () => {
   test('recalculates row data when variables change', () => {
     const { rerender } = render(
       <Variables
+        testSuiteId="id"
         variables={[createVariable({ name: 'a' })]}
         requestBody={{}}
         onChangeRequestBody={mockOnChangeRequestBody}
@@ -204,7 +271,9 @@ describe('Variables', () => {
     mockGenerateVariablesRowData.mockClear();
     const newVars = [createVariable({ name: 'b' })];
 
-    rerender(<Variables variables={newVars} requestBody={{}} onChangeRequestBody={mockOnChangeRequestBody} />);
+    rerender(
+      <Variables testSuiteId="id" variables={newVars} requestBody={{}} onChangeRequestBody={mockOnChangeRequestBody} />,
+    );
 
     expect(mockGenerateVariablesRowData).toHaveBeenCalledWith(newVars, {});
   });
