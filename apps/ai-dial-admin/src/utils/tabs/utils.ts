@@ -399,7 +399,7 @@ export const getTabsForAsset = (
 
 export const getAuditTabs = (
   t: (key: string) => string,
-  featureFlags: Record<string, boolean>,
+  featureFlags: FeatureFlags,
   view: ApplicationRoute,
 ): TabModel[] => {
   const tabs: TabModel[] = [];
