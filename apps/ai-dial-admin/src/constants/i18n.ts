@@ -1559,6 +1559,7 @@ export enum FileManagerI18nKey {
   AddChild = 'FileManager.AddChild',
   Rename = 'FileManager.Rename',
   Move = 'FileManager.Move',
+  File = 'FileManager.File',
   Files = 'FileManager.Files',
   Applications = 'FileManager.Applications',
   Toolsets = 'FileManager.Toolsets',
@@ -1588,6 +1589,19 @@ export enum FileManagerI18nKey {
   // Notifications
   CreateFolderSuccessTitle = 'FileManager.Notifications.CreateFolder.Title',
   CreateFolderSuccessDescription = 'FileManager.Notifications.CreateFolder.Description',
+  ExportSuccessTitle = 'FileManager.Notifications.Export.Title',
+  ExportSuccessDescriptionForOne = 'FileManager.Notifications.Export.DescriptionForOne',
+  ExportSuccessDescriptionForMany = 'FileManager.Notifications.Export.DescriptionForMany',
+  ImportSuccessTitle = 'FileManager.Notifications.Import.Title',
+  ImportSuccessDescriptionForOne = 'FileManager.Notifications.Import.DescriptionForOne',
+  ImportSuccessDescriptionForMany = 'FileManager.Notifications.Import.DescriptionForMany',
+  ImportSuccessDescriptionForArchive = 'FileManager.Notifications.Import.DescriptionForArchive',
+  MoveSuccessTitle = 'FileManager.Notifications.Move.Title',
+  MoveSuccessDescriptionForOne = 'FileManager.Notifications.Move.DescriptionForOne',
+  MoveSuccessDescriptionForMany = 'FileManager.Notifications.Move.DescriptionForMany',
+  DeleteSuccessTitle = 'FileManager.Notifications.Delete.Title',
+  DeleteSuccessDescriptionForOne = 'FileManager.Notifications.Delete.DescriptionForOne',
+  DeleteSuccessDescriptionForMany = 'FileManager.Notifications.Delete.DescriptionForMany',
 }
 
 export enum JsonAtaI18nKey {
