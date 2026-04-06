@@ -1,4 +1,4 @@
-import React, { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { Dispatch, FC, SetStateAction, useCallback, useMemo, useRef, useState } from 'react';
 import LineChart from '@/src/components/Charts/LineChart/LineChart';
 import SingleValueChartsDashboard from '@/src/components/Charts/SingleValueChart/SingleValueChartsDashboard';
 import McpDashboard from '@/src/components/Telemetry/McpDashboard';
@@ -48,8 +48,14 @@ const Dashboard: FC<Props> = ({
   const t = useI18n();
   const [filters, setFilters] = useState<FilterData[]>([]);
   const [refreshTime, setRefreshTime] = useState(DEFAULT_REFRESH_TIME);
-  const [timePeriod, setTimePeriod] = useState<string | undefined>();
-  const [timeRange, setTimeRange] = useState<TimeRange>(getTimeRangeById(DEFAULT_TIME_PERIOD));
+  const [timePeriod, setTimePeriod] = useState<string | undefined>(
+    !isCustomRange ? (initTimeFilter as string) || DEFAULT_TIME_PERIOD : DEFAULT_TIME_PERIOD,
+  );
+  const [timeRange, setTimeRange] = useState<TimeRange>(
+    isCustomRange
+      ? (initTimeFilter as TimeRange) || getTimeRangeById(DEFAULT_TIME_PERIOD)
+      : getTimeRangeById((initTimeFilter as string) || DEFAULT_TIME_PERIOD),
+  );
   const [viewType, setViewType] = useState<DASHBOARD_VIEW_TYPE>(DASHBOARD_VIEW_TYPE.Chat);
   const timePeriodOptions = useTimePeriodOptions();
   const getReqRef = useRef(useProtectedRequest());
@@ -63,18 +69,6 @@ const Dashboard: FC<Props> = ({
     }
     return entity?.name || null;
   }, [route, entity]);
-
-  useEffect(() => {
-    if (!timePeriod) {
-      if (!isCustomRange) {
-        setTimePeriod((initTimeFilter as string) || DEFAULT_TIME_PERIOD);
-        setTimeRange(getTimeRangeById((initTimeFilter as string) || DEFAULT_TIME_PERIOD));
-      } else {
-        setTimePeriod(DEFAULT_TIME_PERIOD);
-        setTimeRange((initTimeFilter as TimeRange) || getTimeRangeById(DEFAULT_TIME_PERIOD));
-      }
-    }
-  }, [initTimeFilter, timePeriod, isCustomRange]);
 
   const getCurrentTimeRange = useCallback(
     () => (isCustomRange ? timeRange : getTimeRangeById(timePeriod || DEFAULT_TIME_PERIOD)),

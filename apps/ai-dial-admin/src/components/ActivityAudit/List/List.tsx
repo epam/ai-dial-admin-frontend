@@ -80,22 +80,16 @@ const ActivityAuditList: FC<Props> = ({
 
   const [isLoading, setIsLoading] = useState(false);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
-  const [timePeriod, setTimePeriod] = useState<string | undefined>();
-  const [timeRange, setTimeRange] = useState<TimeRange>(getTimeRangeById(DEFAULT_TIME_PERIOD));
+  const [timePeriod, setTimePeriod] = useState<string | undefined>(
+    !isCustomRange ? (initTimeFilter as string) || DEFAULT_TIME_PERIOD : DEFAULT_TIME_PERIOD,
+  );
+  const [timeRange, setTimeRange] = useState<TimeRange>(
+    isCustomRange
+      ? (initTimeFilter as TimeRange) || getTimeRangeById(DEFAULT_TIME_PERIOD)
+      : getTimeRangeById((initTimeFilter as string) || DEFAULT_TIME_PERIOD),
+  );
   const [selectedActivity, setSelectedActivity] = useState<DialActivity | undefined>(void 0);
   const [innerIsCustomRange, setInnerIsCustomRange] = useState(false);
-
-  useEffect(() => {
-    if (!timePeriod) {
-      if (!isCustomRange) {
-        setTimePeriod((initTimeFilter as string) || DEFAULT_TIME_PERIOD);
-        setTimeRange(getTimeRangeById((initTimeFilter as string) || DEFAULT_TIME_PERIOD));
-      } else {
-        setTimePeriod(DEFAULT_TIME_PERIOD);
-        setTimeRange((initTimeFilter as TimeRange) || getTimeRangeById(DEFAULT_TIME_PERIOD));
-      }
-    }
-  }, [initTimeFilter, timePeriod, isCustomRange]);
 
   const onCloseModal = useCallback(() => {
     setIsRollbackModalOpen(false);

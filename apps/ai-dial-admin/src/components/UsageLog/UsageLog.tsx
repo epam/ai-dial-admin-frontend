@@ -1,6 +1,6 @@
 'use client';
 
-import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Dispatch, FC, SetStateAction, useCallback, useMemo, useRef, useState } from 'react';
 
 import { DialNeutralButton, DialTabs } from '@epam/ai-dial-ui-kit';
 import { IconRefresh } from '@tabler/icons-react';
@@ -60,20 +60,14 @@ const UsageLog: FC<Props> = ({
   const timePeriodOptions = useTimePeriodOptions();
 
   const [activeTab, setActiveTab] = useState(entityView || EntityViewTab.Traces);
-  const [timePeriod, setTimePeriod] = useState<string | undefined>();
-  const [timeRange, setTimeRange] = useState<TimeRange>(getTimeRangeById(DEFAULT_TIME_PERIOD));
-
-  useEffect(() => {
-    if (!timePeriod) {
-      if (!isCustomRange) {
-        setTimePeriod((initTimeFilter as string) || DEFAULT_TIME_PERIOD);
-        setTimeRange(getTimeRangeById((initTimeFilter as string) || DEFAULT_TIME_PERIOD));
-      } else {
-        setTimePeriod(DEFAULT_TIME_PERIOD);
-        setTimeRange((initTimeFilter as TimeRange) || getTimeRangeById(DEFAULT_TIME_PERIOD));
-      }
-    }
-  }, [initTimeFilter, timePeriod, isCustomRange]);
+  const [timePeriod, setTimePeriod] = useState<string | undefined>(
+    !isCustomRange ? (initTimeFilter as string) || DEFAULT_TIME_PERIOD : DEFAULT_TIME_PERIOD,
+  );
+  const [timeRange, setTimeRange] = useState<TimeRange>(
+    isCustomRange
+      ? (initTimeFilter as TimeRange) || getTimeRangeById(DEFAULT_TIME_PERIOD)
+      : getTimeRangeById((initTimeFilter as string) || DEFAULT_TIME_PERIOD),
+  );
 
   const entityFilterName = useMemo(() => {
     if (route === ApplicationRoute.AssetsToolsets) {
