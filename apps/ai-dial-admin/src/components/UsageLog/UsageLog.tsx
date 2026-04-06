@@ -14,6 +14,7 @@ import { useTimePeriodOptions } from '@/src/hooks/use-time-period-options';
 import {
   USAGE_LOG_CONVERSATIONS_COLUMNS,
   USAGE_LOG_MCP_COLUMNS,
+  USAGE_LOG_TOOLSET_TRACES_COLUMNS,
   USAGE_LOG_TRACES_COLUMNS,
 } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, TabsI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
@@ -28,6 +29,8 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab, getUsageLogTabs } from '@/src/utils/tabs/utils';
 import { getFormattedFilters } from '@/src/utils/telemetry';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
+
+const isToolsetRoute = (route: ApplicationRoute) => route === ApplicationRoute.Toolsets;
 
 interface Props {
   route: ApplicationRoute;
@@ -148,8 +151,8 @@ const UsageLog: FC<Props> = ({
           <List
             route={route}
             getData={getData}
-            columnDefs={USAGE_LOG_TRACES_COLUMNS}
-            query={TRACES_QUERY}
+            columnDefs={isToolsetRoute(route) ? USAGE_LOG_TOOLSET_TRACES_COLUMNS : USAGE_LOG_TRACES_COLUMNS}
+            query={isToolsetRoute(route) ? MCP_QUERY : TRACES_QUERY}
             listLabel={t(TabsI18nKey.Traces)}
             emptyDataTitle={t(TelemetryI18nKey.NoTracesTitle)}
           />
