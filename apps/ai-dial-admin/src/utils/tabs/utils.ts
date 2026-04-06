@@ -417,7 +417,7 @@ export const getAuditTabs = (
   const tabs: TabModel[] = [];
 
   if (featureFlags.dashboardEnabled && view === ApplicationRoute.AssetsToolsets) {
-    return [dashboardTab(t)];
+    return [dashboardTab(t), tracesTab(t)];
   }
 
   if (
