@@ -12,7 +12,11 @@ import {
 } from '@epam/ai-dial-ui-kit';
 import { ColDef } from 'ag-grid-community';
 
-import { getParentPathByFullPath } from '@/src/components/Assets/utils';
+import {
+  getDeleteNotificationContent,
+  getMoveNotificationContent,
+  getParentPathByFullPath,
+} from '@/src/components/Assets/utils';
 import { getImportTitle } from '@/src/components/EntityListView/HeaderButtons/utils';
 import { getImportResults } from '@/src/components/EntityListView/Import/utils';
 import { FILE_PREVIEW, PREVIEW_EXTENSIONS, ROOT_FOLDER } from '@/src/constants/file';
@@ -241,25 +245,8 @@ const FileManager: FC<Props> = ({
           fetchFiles(parentPath);
           setFilePath(parentPath);
 
-          const isDeleteSeveralFiles = fileNodes.length > 1;
-
-          if (view === ApplicationRoute.Files) {
-            showNotification(
-              getSuccessNotification(
-                isDeleteSeveralFiles
-                  ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Files) })
-                  : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.File) }),
-                isDeleteSeveralFiles
-                  ? t(FileManagerI18nKey.DeleteSuccessDescriptionForMany, {
-                      count: fileNodes.length,
-                    })
-                  : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
-                      item: t(FileManagerI18nKey.File),
-                      name: fileNodes[0].sourceUrl,
-                    }),
-              ),
-            );
-          }
+          const { title, description } = getDeleteNotificationContent(view, fileNodes, t);
+          showNotification(getSuccessNotification(title, description));
         }
       });
     },
@@ -273,48 +260,9 @@ const FileManager: FC<Props> = ({
         if (isSuccess) {
           fetchFiles(destinationFolder);
           fetchFiles(sourceFolder);
-          const isMoveSeveralFiles = items.length > 1;
 
-          switch (view) {
-            case ApplicationRoute.Files:
-              showNotification(
-                getSuccessNotification(
-                  isMoveSeveralFiles
-                    ? t(FileManagerI18nKey.MoveSuccessTitle, { item: t(FileManagerI18nKey.Files) })
-                    : t(FileManagerI18nKey.MoveSuccessTitle, { item: t(FileManagerI18nKey.File) }),
-                  isMoveSeveralFiles
-                    ? t(FileManagerI18nKey.MoveSuccessDescriptionForMany, {
-                        count: items.length,
-                        path: destinationFolder,
-                      })
-                    : t(FileManagerI18nKey.MoveSuccessDescriptionForOne, {
-                        item: t(FileManagerI18nKey.File),
-                        name: items[0].sourceUrl,
-                        path: destinationFolder,
-                      }),
-                ),
-              );
-              break;
-            case ApplicationRoute.Prompts:
-              showNotification(
-                getSuccessNotification(
-                  isMoveSeveralFiles
-                    ? t(FileManagerI18nKey.MoveSuccessTitle, { item: t(FileManagerI18nKey.Prompts) })
-                    : t(FileManagerI18nKey.MoveSuccessTitle, { item: t(FileManagerI18nKey.Prompt) }),
-                  isMoveSeveralFiles
-                    ? t(FileManagerI18nKey.MoveSuccessDescriptionForMany, {
-                        count: items.length,
-                        path: destinationFolder,
-                      })
-                    : t(FileManagerI18nKey.MoveSuccessDescriptionForOne, {
-                        item: t(FileManagerI18nKey.Prompt),
-                        name: items[0].sourceUrl,
-                        path: destinationFolder,
-                      }),
-                ),
-              );
-              break;
-          }
+          const { title, description } = getMoveNotificationContent(view, items, destinationFolder, t);
+          showNotification(getSuccessNotification(title, description));
         } else {
           const errorRes = result.flat().find((res) => !res.success);
           if (errorRes) {

@@ -12,7 +12,12 @@ import {
   removePrompt,
 } from '@/src/app/[lang]/prompts/actions';
 import { importPrompts } from '@/src/utils/prompts/import-prompts';
-import { getVersionsPerName } from '@/src/components/Assets/utils';
+import {
+  getDeleteNotificationContent,
+  getExportNotificationContent,
+  getImportNotificationContent,
+  getVersionsPerName,
+} from '@/src/components/Assets/utils';
 import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { ApplicationRoute } from '@/src/types/routes';
 import { DialPrompt } from '@/src/models/dial/prompt';
@@ -38,7 +43,7 @@ import DuplicateAsset from '@/src/components/Assets/Deployments/DuplicateAsset';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import ImportModal from '@/src/components/EntityListView/Import/ImportModal';
 import { ImportFileType } from '@/src/types/import';
-import { ImportData, ParsedAssets } from '@/src/models/import-asset';
+import { ImportData } from '@/src/models/import-asset';
 import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';
 import { FileManagerGridRow } from '@epam/ai-dial-ui-kit/dist/src/components/FileManager/FileManagerContext';
 import { useRouter } from 'next/navigation';
@@ -224,38 +229,17 @@ const PromptsList: FC = () => {
         ApplicationRoute.Prompts,
       );
 
-      const prompts = (file as ParsedAssets)?.prompts;
-      const isImportSeveralPrompts = Array.isArray(prompts) && prompts.length > 1;
-
       importPrompts(body, fileType).then((res) => {
         if (res.success) {
           fetchFiles?.(importFolder);
-          if (isImportSeveralPrompts) {
-            showNotification(
-              getSuccessNotification(
-                t(FileManagerI18nKey.ImportSuccessTitle, { item: t(FileManagerI18nKey.Prompts) }),
-                t(FileManagerI18nKey.ImportSuccessDescriptionForMany, {
-                  count: prompts.length,
-                  path: importFolder,
-                }),
-              ),
-            );
-          } else {
-            showNotification(
-              getSuccessNotification(
-                t(FileManagerI18nKey.ImportSuccessTitle, { item: t(FileManagerI18nKey.Prompt) }),
-                fileType === ImportFileType.ARCHIVE
-                  ? t(FileManagerI18nKey.ImportSuccessDescriptionForArchive, {
-                      item: t(FileManagerI18nKey.Prompts),
-                      path: importFolder,
-                    })
-                  : t(FileManagerI18nKey.ImportSuccessDescriptionForOne, {
-                      item: t(FileManagerI18nKey.Prompt),
-                      path: importFolder,
-                    }),
-              ),
-            );
-          }
+          const { title, description } = getImportNotificationContent(
+            ApplicationRoute.Files,
+            file,
+            fileType,
+            importFolder,
+            t,
+          );
+          showNotification(getSuccessNotification(title, description));
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
@@ -333,26 +317,11 @@ const PromptsList: FC = () => {
         }
       });
 
-      const isExportSeveralFiles =
-        filePaths.length > 1 || (files.length === 1 && files[0].nodeType === DialFileNodeType.FOLDER);
-
       return exportPrompts(filePaths).then((res) => {
         downloadJson(res, getJsonFileName(ApplicationRoute.Prompts));
-        if (isExportSeveralFiles) {
-          showNotification(
-            getSuccessNotification(
-              t(FileManagerI18nKey.ExportSuccessTitle, { item: t(FileManagerI18nKey.Prompts) }),
-              t(FileManagerI18nKey.ExportSuccessDescriptionForMany),
-            ),
-          );
-        } else {
-          showNotification(
-            getSuccessNotification(
-              t(FileManagerI18nKey.ExportSuccessTitle, { item: t(FileManagerI18nKey.Prompt) }),
-              t(FileManagerI18nKey.ExportSuccessDescriptionForOne, { item: t(FileManagerI18nKey.Prompt) }),
-            ),
-          );
-        }
+
+        const { title, description } = getExportNotificationContent(ApplicationRoute.Prompts, files, t, filePaths);
+        showNotification(getSuccessNotification(title, description));
       });
     },
     [showNotification, t],
@@ -411,16 +380,13 @@ const PromptsList: FC = () => {
           setFilePath(parentPath);
           fetchFiles(parentPath);
           removeSelection(pathToRemove);
-          showNotification(
-            getSuccessNotification(
-              t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Prompt) }),
-              t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
-                item: t(FileManagerI18nKey.Prompt),
-                name: deletedItems?.[0].name || '',
-                path: parentPath,
-              }),
-            ),
+          const { title, description } = getDeleteNotificationContent(
+            ApplicationRoute.Prompts,
+            deletedItems as DialFile[],
+            t,
+            parentPath,
           );
+          showNotification(getSuccessNotification(title, description));
         }
       });
     }
@@ -458,14 +424,13 @@ const PromptsList: FC = () => {
           fetchFiles(parentPath);
           setFilePath(parentPath);
           removeSelection(deletedItems?.map((item) => item.path));
-          showNotification(
-            getSuccessNotification(
-              t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Prompts) }),
-              t(FileManagerI18nKey.DeleteSuccessDescriptionForMany, {
-                count: deletedItems.length,
-              }),
-            ),
+          const { title, description } = getDeleteNotificationContent(
+            ApplicationRoute.Prompts,
+            deletedItems as DialFile[],
+            t,
+            parentPath,
           );
+          showNotification(getSuccessNotification(title, description));
         } else {
           const errorRes = result.flat().find((res) => !res.success);
           if (errorRes) {
