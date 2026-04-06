@@ -52,6 +52,7 @@ export default {
   },
   Basic: {
     None: '- None -',
+    Preview: 'Preview',
     Optional: 'Optional',
     Required: 'Required',
     Failed: 'Failed',
@@ -1481,7 +1482,6 @@ export default {
     ImportFromPC: 'Import from PC storage',
     Other: 'Other',
     ChatInterface: 'Chat interface',
-    Preview: 'Preview',
     ChangeMethod: 'Change method',
     ChangeMethodDisabledWhileTryOutOpen: 'Close Try out to change the method',
     RequestBodyPreview: 'Request body preview',
@@ -1581,7 +1581,6 @@ export default {
     EnterFolderName: 'Please enter a folder name or press Esc to cancel',
     NameExists: 'A folder with this name already exists in this location',
     ManagePermissions: 'Manage Permissions',
-    Preview: 'Preview',
     FolderTree: 'Folder Tree',
     Notifications: {
       CreateFolder: {

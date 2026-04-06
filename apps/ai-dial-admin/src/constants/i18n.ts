@@ -104,6 +104,7 @@ export enum CoreVersionModalI18nKey {
 
 export enum BasicI18nKey {
   None = 'Basic.None',
+  Preview = 'Basic.Preview',
   Optional = 'Basic.Optional',
   Required = 'Basic.Required',
   Failed = 'Basic.Failed',
@@ -1454,7 +1455,6 @@ export enum TestSuitesI18nKey {
   FromDial = 'TestSuites.FromDial',
   Other = 'TestSuites.Other',
   ChatInterface = 'TestSuites.ChatInterface',
-  Preview = 'TestSuites.Preview',
   MethodChangeWarning = 'TestSuites.MethodChangeWarning',
   ImportSuccess = 'TestSuites.ImportSuccess',
   ImportFailed = 'TestSuites.ImportFailed',
@@ -1573,7 +1573,6 @@ export enum FileManagerI18nKey {
   CreateFolderValidate = 'FileManager.CreateFolderValidate',
   CreateFolderValidateFirstSymbol = 'FileManager.CreateFolderValidateFirstSymbol',
   CreateFolderValidateNameLength = 'FileManager.CreateFolderValidateNameLength',
-  Preview = 'FileManager.Preview',
   MoveItem = 'FileManager.MoveItem',
   MoveItems = 'FileManager.MoveItems',
   EmptyMoveFolderTitle = 'FileManager.EmptyMoveFolderTitle',

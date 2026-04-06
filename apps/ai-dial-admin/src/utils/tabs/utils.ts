@@ -2,6 +2,7 @@ import { TabModel } from '@epam/ai-dial-ui-kit';
 
 import { ALLOW_ALL_DOMAINS } from '@/src/components/Deployments/Common/Whitelists/Whitelists';
 import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { FeatureFlags } from '@/src/models/feature-flags';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -393,7 +394,7 @@ export const getUsageLogTabs = (t: (key: string) => string): TabModel[] => {
 export const getTabsForAsset = (
   t: (key: string) => string,
   view: ApplicationRoute,
-  featureFlags?: Record<string, boolean>,
+  featureFlags?: FeatureFlags,
 ): TabModel[] => {
   if (view === ApplicationRoute.AssetsApplications) {
     return [propertiesTab(t), featuresTab(t), parametersTab(t), interceptorsTab(t), dependenciesTab(t)];
@@ -410,7 +411,7 @@ export const getTabsForAsset = (
 
 export const getAuditTabs = (
   t: (key: string) => string,
-  featureFlags: Record<string, boolean>,
+  featureFlags: FeatureFlags,
   view: ApplicationRoute,
 ): TabModel[] => {
   const tabs: TabModel[] = [];

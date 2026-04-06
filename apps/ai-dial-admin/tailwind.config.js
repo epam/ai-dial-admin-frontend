@@ -79,6 +79,7 @@ const borderColors = {
 
   // TODO: need review
   hover: 'var(--stroke-hover, #EEF1F7)',
+  blue800: 'var(--stroke-blue-800, #2764D9)',
 };
 
 const textColors = {
