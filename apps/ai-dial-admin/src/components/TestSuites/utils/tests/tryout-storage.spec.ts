@@ -46,10 +46,7 @@ describe('saveTryoutResponseToStorage', () => {
   test('should store undefined response (key omitted in JSON)', () => {
     saveTryoutResponseToStorage('suite-2', undefined);
 
-    expect(localStorage.setItem).toHaveBeenCalledWith(
-      TEST_SUITES_TRYOUT_STORAGE_KEY,
-      JSON.stringify({}),
-    );
+    expect(localStorage.setItem).toHaveBeenCalledWith(TEST_SUITES_TRYOUT_STORAGE_KEY, JSON.stringify({}));
   });
 
   test('should merge with existing map when key already exists in storage', () => {
