@@ -21,10 +21,12 @@ export const evaluateColumns = async (
 
       try {
         const expr = jsonata(column.expression);
-        result = await expr.evaluate(response);
-        valid = result != null;
+        const evaluated = await expr.evaluate(response);
+        valid = evaluated != null;
         if (!valid) {
           result = null;
+        } else {
+          result = typeof evaluated === 'object' ? JSON.stringify(evaluated) : String(evaluated);
         }
       } catch {
         result = null;
