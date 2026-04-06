@@ -8,6 +8,7 @@ import { MenuI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { MenuItem } from '../menu-configuration';
 
+const PREVIEW_TAG_MENU_ITEMS = new Set([MenuI18nKey.TestSuites, MenuI18nKey.Runs]);
 interface Props {
   menuItem: MenuItem;
   isActive: boolean;
@@ -42,7 +43,7 @@ const MenuItemContent: FC<Props> = ({ menuItem, isActive, isSidebarOpen }) => {
             {isSidebarOpen && <DialEllipsisTooltip className="ml-4" text={t(menuItem.key)} />}
           </div>
         </div>
-        {menuItem.key === MenuI18nKey.TestSuites || menuItem.key === MenuI18nKey.Runs ? <PreviewTag /> : null}
+        {PREVIEW_TAG_MENU_ITEMS.has(menuItem.key) ? <PreviewTag /> : null}
       </Link>
     </DialTooltip>
   );
