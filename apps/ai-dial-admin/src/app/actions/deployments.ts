@@ -162,9 +162,40 @@ export async function updateGlobalWhitelist(domainList: string[]) {
   return whitelistApi.updateGlobalWhitelist(domainList, token);
 }
 
-export async function getMcpServers(params: Record<string, string>) {
+export async function getContainerMcpServers(params: {
+  search?: string;
+  cursor?: string;
+  limit?: number;
+  minResults?: number;
+}) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return mcpRegistryApi.getMcpServers(params, token);
+  const { minResults, ...requestParams } = params;
+
+  if (!minResults) {
+    return mcpRegistryApi.getContainerMcpServers(requestParams, token);
+  }
+
+  const allServers: unknown[] = [];
+  let cursor = params.cursor;
+
+  while (allServers.length < minResults) {
+    const result = await mcpRegistryApi.getContainerMcpServers({ ...requestParams, cursor }, token);
+    if (!result.success) return result;
+
+    const servers = result.response?.servers ?? [];
+    allServers.push(...servers);
+
+    cursor = result.response?.metadata?.nextCursor;
+    if (!cursor) break;
+  }
+
+  return {
+    success: true,
+    response: {
+      servers: allServers,
+      metadata: { nextCursor: cursor },
+    },
+  };
 }
 
 export async function getHuggingFaceModels(params: Record<string, string>) {

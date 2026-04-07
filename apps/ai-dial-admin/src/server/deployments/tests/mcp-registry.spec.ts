@@ -2,7 +2,7 @@ import { describe, test, expect, vi } from 'vitest';
 
 import createFetchMock from 'vitest-fetch-mock';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { MCP_REGISTRY_SERVERS, McpRegistryApi } from '@/src/server/deployments/mcp-registry';
+import { MCP_REGISTRY_SERVERS_LIST, McpRegistryApi } from '@/src/server/deployments/mcp-registry';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
@@ -10,21 +10,59 @@ fetch.enableMocks();
 describe('McpRegistryApi', () => {
   const instance = new McpRegistryApi({ host: TEST_URL });
 
-  test('getMcpServers calls servers url', async () => {
+  test('getContainerMcpServers sends POST with OCI and transport filters', async () => {
     fetch.mockResponseOnce(JSON.stringify({ servers: [], metadata: {} }));
-    await instance.getMcpServers({}, TOKEN_MOCK);
+    await instance.getContainerMcpServers({ limit: 100 }, TOKEN_MOCK);
     expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining(MCP_REGISTRY_SERVERS({})),
-      expect.objectContaining({ method: 'GET' }),
+      expect.stringContaining(MCP_REGISTRY_SERVERS_LIST),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          limit: 100,
+          filter: {
+            packageRegistryTypes: ['oci'],
+            packageTransportTypes: ['streamable-http', 'sse'],
+          },
+        }),
+      }),
     );
   });
 
-  test('getMcpServers calls servers url with search param', async () => {
+  test('getContainerMcpServers includes search and cursor when provided', async () => {
     fetch.mockResponseOnce(JSON.stringify({ servers: [], metadata: {} }));
-    await instance.getMcpServers({ search: 'test', limit: '5' }, TOKEN_MOCK);
+    await instance.getContainerMcpServers({ search: 'test', cursor: 'abc', limit: 5 }, TOKEN_MOCK);
     expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining(MCP_REGISTRY_SERVERS({ search: 'test', limit: '5' })),
-      expect.objectContaining({ method: 'GET' }),
+      expect.stringContaining(MCP_REGISTRY_SERVERS_LIST),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          search: 'test',
+          cursor: 'abc',
+          limit: 5,
+          filter: {
+            packageRegistryTypes: ['oci'],
+            packageTransportTypes: ['streamable-http', 'sse'],
+          },
+        }),
+      }),
+    );
+  });
+
+  test('getContainerMcpServers omits undefined search and empty cursor', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ servers: [], metadata: {} }));
+    await instance.getContainerMcpServers({ search: undefined, cursor: '', limit: 100 }, TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(MCP_REGISTRY_SERVERS_LIST),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          limit: 100,
+          filter: {
+            packageRegistryTypes: ['oci'],
+            packageTransportTypes: ['streamable-http', 'sse'],
+          },
+        }),
+      }),
     );
   });
 });
