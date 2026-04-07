@@ -660,6 +660,7 @@ export default {
     CallsByDeployment: 'Calls by Deployment',
     RequestPerMcpUsage: 'Request per MCP usage',
     ProjectsConsumptionMcp: 'Projects Consumption',
+    Unknown: 'Unknown',
   },
   Routes: {
     AddPaths: 'Add paths',

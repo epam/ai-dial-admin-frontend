@@ -635,6 +635,7 @@ export enum TelemetryI18nKey {
   CallsByDeployment = 'Telemetry.CallsByDeployment',
   RequestPerMcpUsage = 'Telemetry.RequestPerMcpUsage',
   ProjectsConsumptionMcp = 'Telemetry.ProjectsConsumptionMcp',
+  Unknown = 'Telemetry.Unknown',
 }
 
 export enum RoutesI18nKey {
