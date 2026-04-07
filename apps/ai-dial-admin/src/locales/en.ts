@@ -1611,7 +1611,7 @@ export default {
         DescriptionForMany: '{count} items have been deleted',
       },
     },
-    CreateFolderValidate: 'Folder name contains forbidden characters: < > : " / \\ | ? *',
+    CreateFolderValidate: 'Folder name contains forbidden characters: ; : , = / {} % & \\',
     CreateFolderValidateFirstSymbol: 'Folder name cannot start with a dot',
     CreateFolderValidateNameLength: 'Folder name should be at most {length} characters long',
     MoveItem: 'Move "{item}" to',
