@@ -106,11 +106,22 @@ export const getDeleteNotificationContent = (
   destinationFolder?: string,
 ) => {
   const isDeleteSeveralFiles = fileNodes.length > 1;
+  const isDeleteFolder =
+    fileNodes.length === 1 && (fileNodes[0] as DialDeletedItem).nodeType === DialFileNodeType.FOLDER;
+
+  if (isDeleteFolder) {
+    const title = t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Folder) });
+    const description = t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
+      item: t(FileManagerI18nKey.Folder),
+      name: (fileNodes as DialDeletedItem[])[0]?.sourceUrl || (fileNodes as DialFile[])[0]?.path,
+    });
+    return { title, description };
+  }
 
   switch (view) {
     case ApplicationRoute.Files: {
       const title = isDeleteSeveralFiles
-        ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Files) })
+        ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Items) })
         : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.File) });
       const description = isDeleteSeveralFiles
         ? t(FileManagerI18nKey.DeleteSuccessDescriptionForMany, {
@@ -124,7 +135,7 @@ export const getDeleteNotificationContent = (
     }
     case ApplicationRoute.Prompts: {
       const title = isDeleteSeveralFiles
-        ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Prompts) })
+        ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Items) })
         : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Prompt) });
       const description = isDeleteSeveralFiles
         ? t(FileManagerI18nKey.DeleteSuccessDescriptionForMany, {
@@ -148,15 +159,32 @@ export const getDeleteNotificationContent = (
 export const getMoveNotificationContent = (
   view: ApplicationRoute,
   items: DialCopiedItem[],
+  sourceFolder: string,
   destinationFolder: string,
   t: (key: string, options?: Record<string, string | number>) => string,
 ) => {
   const isMoveSeveralFiles = items.length > 1;
+  const isRenameFolder =
+    items.length === 1 && items[0].nodeType === DialFileNodeType.FOLDER && sourceFolder === destinationFolder;
+  const isMoveFolder =
+    items.length === 1 && items[0].nodeType === DialFileNodeType.FOLDER && sourceFolder !== destinationFolder;
+
+  if (isRenameFolder) {
+    return { title: t(FileManagerI18nKey.RenameFolderSuccessTitle), description: '' };
+  }
+  if (isMoveFolder) {
+    const title = t(FileManagerI18nKey.MoveSuccessTitle, { item: t(FileManagerI18nKey.Folder) });
+    const description = t(FileManagerI18nKey.MoveSuccessDescriptionForOne, {
+      item: t(FileManagerI18nKey.Folder),
+      name: items[0].sourceUrl,
+    });
+    return { title, description };
+  }
 
   switch (view) {
     case ApplicationRoute.Files: {
       const title = isMoveSeveralFiles
-        ? t(FileManagerI18nKey.MoveSuccessTitle, { item: t(FileManagerI18nKey.Files) })
+        ? t(FileManagerI18nKey.MoveSuccessTitle, { item: t(FileManagerI18nKey.Items) })
         : t(FileManagerI18nKey.MoveSuccessTitle, { item: t(FileManagerI18nKey.File) });
       const description = isMoveSeveralFiles
         ? t(FileManagerI18nKey.MoveSuccessDescriptionForMany, {
@@ -173,7 +201,7 @@ export const getMoveNotificationContent = (
     }
     case ApplicationRoute.Prompts: {
       const title = isMoveSeveralFiles
-        ? t(FileManagerI18nKey.MoveSuccessTitle, { item: t(FileManagerI18nKey.Prompts) })
+        ? t(FileManagerI18nKey.MoveSuccessTitle, { item: t(FileManagerI18nKey.Items) })
         : t(FileManagerI18nKey.MoveSuccessTitle, { item: t(FileManagerI18nKey.Prompt) });
       const description = isMoveSeveralFiles
         ? t(FileManagerI18nKey.MoveSuccessDescriptionForMany, {

@@ -239,7 +239,7 @@ const PromptsList: FC = () => {
         if (res.success) {
           fetchFiles?.(importFolder);
           const { title, description } = getImportNotificationContent(
-            ApplicationRoute.Files,
+            ApplicationRoute.Prompts,
             file,
             fileType,
             importFolder,
