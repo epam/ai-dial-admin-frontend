@@ -9,7 +9,7 @@ tmp
 node_modules
 
 # IDEs and editors
-/.idea
+.idea
 .project
 .classpath
 .c9/
@@ -63,3 +63,7 @@ sandbox/
 .playwright-mcp/
 skills-lock.json
 screenshots/
+
+# Build artifacts
+*.tsbuildinfo
+*.tsconfig.tsbuildinfo

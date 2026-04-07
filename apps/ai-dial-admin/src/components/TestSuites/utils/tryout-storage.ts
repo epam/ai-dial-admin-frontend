@@ -1,3 +1,5 @@
+import { TryOutResponse } from '@/src/models/evaluation/test-suite';
+
 export const TEST_SUITES_TRYOUT_STORAGE_KEY = 'testSuitesTryout';
 
 export interface TryOutResponseStorage {
@@ -5,10 +7,10 @@ export interface TryOutResponseStorage {
   [key: string]: unknown;
 }
 
-export function saveTryoutResponseToStorage(testSuiteId: string, response: TryOutResponseStorage | null): void {
+export function saveTryoutResponseToStorage(testSuiteId: string, response: TryOutResponse | undefined): void {
   try {
     const raw = localStorage.getItem(TEST_SUITES_TRYOUT_STORAGE_KEY);
-    const map: Record<string, TryOutResponseStorage | null> = raw ? JSON.parse(raw) : {};
+    const map: Record<string, TryOutResponse | undefined> = raw ? JSON.parse(raw) : {};
     map[testSuiteId] = response;
     localStorage.setItem(TEST_SUITES_TRYOUT_STORAGE_KEY, JSON.stringify(map));
   } catch {
@@ -16,21 +18,21 @@ export function saveTryoutResponseToStorage(testSuiteId: string, response: TryOu
   }
 }
 
-export function getTryoutResponseFromStorage(testSuiteId: string): TryOutResponseStorage | null {
+export function getTryoutResponseFromStorage(testSuiteId: string): TryOutResponse | undefined {
   try {
     const raw = localStorage.getItem(TEST_SUITES_TRYOUT_STORAGE_KEY);
-    const map: Record<string, TryOutResponseStorage | null> = raw ? JSON.parse(raw) : {};
-    return map[testSuiteId] || null;
+    const map: Record<string, TryOutResponse | undefined> = raw ? JSON.parse(raw) : {};
+    return map[testSuiteId] || undefined;
   } catch {
     console.error('Failed to get tryout response from storage');
-    return null;
+    return undefined;
   }
 }
 
 export function removeTryoutResponseFromStorage(testSuiteId: string): void {
   try {
     const raw = localStorage.getItem(TEST_SUITES_TRYOUT_STORAGE_KEY);
-    const map: Record<string, TryOutResponseStorage | null> = raw ? JSON.parse(raw) : {};
+    const map: Record<string, TryOutResponse | undefined> = raw ? JSON.parse(raw) : {};
     delete map[testSuiteId];
     localStorage.setItem(TEST_SUITES_TRYOUT_STORAGE_KEY, JSON.stringify(map));
   } catch {

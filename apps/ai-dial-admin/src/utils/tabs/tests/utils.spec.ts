@@ -29,12 +29,15 @@ import {
   getDeploymentsViewTabs,
   getEndpointSchemaTabs,
   getFilePublicationTabs,
+  getFileSelectInputTabs,
   getInterceptorTabs,
   getInterceptorTemplateTabs,
   getKeyTabs,
+  getMcpToolSchemaTabs,
   getModelsTabs,
   getPromptPublicationTabs,
   getPublicationTabs,
+  getPublicationViewTabs,
   getRoleTabs,
   getRouteTabs,
   getRunTabs,
@@ -47,19 +50,23 @@ import {
   getUsageLogTabs,
   globalInterceptorsTab,
   headersTab,
+  inputSchemaTab,
   installationLogTab,
   interceptorsTab,
   keysTab,
   mcpTab,
   metricsTab,
   modelsTab,
+  outputSchemaTab,
   parameterSchemaTab,
   parametersTab,
   permissionsTab,
   promptsTab,
   propertiesTab,
+  publicTab,
   relatedContainersTab,
   requestSchemaTab,
+  responseTab,
   resourcesTab,
   responseSchemaTab,
   rolesTab,
@@ -69,6 +76,8 @@ import {
   testSuiteMethodTab,
   toolsTab,
   tracesTab,
+  trendsTab,
+  applicationTab,
 } from '../utils';
 
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
@@ -130,6 +139,20 @@ describe('Entities :: tabs', () => {
     const tabs = getAuditTabs(t, { dashboardEnabled: true }, ApplicationRoute.Home);
     expect(tabs).toEqual([{ id: 'Activities', label: TabsI18nKey.Activities }]);
   });
+
+  test('returns only dashboard tab for AssetsToolsets when dashboardEnabled is true', () => {
+    const tabs = getAuditTabs(t, { dashboardEnabled: true }, ApplicationRoute.AssetsToolsets);
+    expect(tabs).toEqual([{ id: 'Dashboard', label: TabsI18nKey.Dashboard }]);
+  });
+
+  test('returns dashboard and activities tabs for Toolsets when dashboardEnabled is true', () => {
+    const tabs = getAuditTabs(t, { dashboardEnabled: true }, ApplicationRoute.Toolsets);
+    expect(tabs).toEqual([
+      { id: 'Dashboard', label: TabsI18nKey.Dashboard },
+      { id: 'Activities', label: TabsI18nKey.Activities },
+    ]);
+  });
+
   test('returns correct tabs for AssetsApplications', () => {
     expect(getTabsForAsset(t, ApplicationRoute.AssetsApplications)).toEqual([
       propertiesTab(t),
@@ -253,6 +276,52 @@ describe('Entities :: tabs', () => {
     expect(getRunTabs(t)).toEqual([summaryTab(t), analyticsTab(t), extractionResultTab(t)]);
   });
 
+  test('returns correct trends tab', () => {
+    expect(trendsTab(t)).toEqual({ id: 'Trends', label: TabsI18nKey.Trends });
+  });
+
+  test('returns correct response tab', () => {
+    expect(responseTab(t)).toEqual({ id: 'Response', label: TabsI18nKey.Response });
+  });
+
+  test('returns disabled tabs when statuses are not ready', () => {
+    expect(installationLogTab(t, IMAGE_STATUS.NOT_BUILT)).toEqual({
+      id: 'Installation log',
+      label: TabsI18nKey.InstallationLog,
+      disabled: true,
+    });
+
+    expect(relatedContainersTab(t, IMAGE_STATUS.NOT_BUILT)).toEqual({
+      id: 'Related Containers',
+      label: TabsI18nKey.RelatedContainers,
+      disabled: true,
+    });
+
+    expect(deploymentsToolsTab(t, CONTAINER_STATUS.STOPPED)).toEqual({
+      id: 'Tools',
+      label: TabsI18nKey.Tools,
+      disabled: true,
+    });
+
+    expect(resourcesTab(t, CONTAINER_STATUS.STOPPED)).toEqual({
+      id: 'Resources',
+      label: TabsI18nKey.Resources,
+      disabled: true,
+    });
+
+    expect(promptsTab(t, CONTAINER_STATUS.STOPPED)).toEqual({
+      id: 'Prompts',
+      label: TabsI18nKey.Prompts,
+      disabled: true,
+    });
+
+    expect(metricsTab(t, CONTAINER_STATUS.STOPPED)).toEqual({
+      id: 'Metrics',
+      label: TabsI18nKey.Metrics,
+      disabled: true,
+    });
+  });
+
   test('returns correct tabs for model containers', () => {
     const status = CONTAINER_STATUS.RUNNING;
 
@@ -291,5 +360,29 @@ describe('Entities :: tabs', () => {
 
   test('returns correct tabs for toolset publication', () => {
     expect(getToolsetPublicationTabs(t)).toEqual([propertiesTab(t), toolsTab(t), permissionsTab(t)]);
+  });
+
+  test('returns correct tabs for publication view routes and default', () => {
+    expect(getPublicationViewTabs(t, ApplicationRoute.FilePublications)).toEqual([propertiesTab(t), permissionsTab(t)]);
+    expect(getPublicationViewTabs(t, ApplicationRoute.PromptPublications)).toEqual([
+      propertiesTab(t),
+      permissionsTab(t),
+    ]);
+    expect(getPublicationViewTabs(t, ApplicationRoute.ApplicationPublications)).toEqual([
+      propertiesTab(t),
+      parametersTab(t),
+      permissionsTab(t),
+      filesTab(t),
+    ]);
+    expect(getPublicationViewTabs(t, ApplicationRoute.ToolsetPublications)).toEqual([
+      propertiesTab(t),
+      toolsTab(t),
+      permissionsTab(t),
+    ]);
+    expect(getPublicationViewTabs(t, ApplicationRoute.Home)).toEqual([]);
+  });
+
+  test('returns correct file select input tabs', () => {
+    expect(getFileSelectInputTabs(t)).toEqual([publicTab(t), applicationTab(t)]);
   });
 });

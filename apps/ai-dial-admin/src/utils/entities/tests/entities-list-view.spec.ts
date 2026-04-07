@@ -5,6 +5,7 @@ import {
   getAdaptersForEntitiesGrid,
   getApplicationsForEntitiesGrid,
   getInterceptorsForEntitiesGrid,
+  getInterceptorTemplatesForEntitiesGrid,
   getTemplatesForEntitiesGrid,
   getKeysForEntitiesGrid,
   getModelsForEntitiesGrid,
@@ -179,5 +180,27 @@ describe('Utils :: getAdaptersForEntitiesGrid', () => {
     const res1 = getAdaptersForEntitiesGrid([{ name: 'adapter' }]);
 
     expect(res1).toEqual([{ name: 'adapter', type: MenuI18nKey.Adapters, route: ApplicationRoute.Adapters }]);
+  });
+});
+
+describe('Utils :: getInterceptorTemplatesForEntitiesGrid', () => {
+  test('Should return empty array', () => {
+    const res1 = getInterceptorTemplatesForEntitiesGrid(null);
+    const res2 = getInterceptorTemplatesForEntitiesGrid();
+
+    expect(res1).toEqual([]);
+    expect(res2).toEqual([]);
+  });
+
+  test('Should return array with type and route', () => {
+    const res1 = getInterceptorTemplatesForEntitiesGrid([{ name: 'interceptorTemplate' }]);
+
+    expect(res1).toEqual([
+      {
+        name: 'interceptorTemplate',
+        type: MenuI18nKey.InterceptorTemplates,
+        route: ApplicationRoute.InterceptorTemplates,
+      },
+    ]);
   });
 });

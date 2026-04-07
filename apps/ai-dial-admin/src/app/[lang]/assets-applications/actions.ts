@@ -69,3 +69,8 @@ export async function exportApps(paths: string[], type?: ImportFileType) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return await assetsApi.exportAssets(token, ResourceType.APPLICATION, paths, type);
 }
+
+export async function getAssetTools(name: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return assetsApi.getTools(name, token, ResourceType.APPLICATION);
+}

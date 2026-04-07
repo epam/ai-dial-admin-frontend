@@ -1,19 +1,11 @@
 'use client';
-import {
-  DialCheckbox,
-  DialGhostButton,
-  DialInput,
-  DialLabel,
-  DialRemoveButton,
-  DialSelectField,
-} from '@epam/ai-dial-ui-kit';
-import { IconPlus } from '@tabler/icons-react';
+import { DialCheckbox, DialSelectField } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
-import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, SourceI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
+import { EntityFieldsI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import { CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { ONLY_HTTP_TRANSPORTS } from '@/src/constants/transport';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
@@ -157,48 +149,6 @@ const EndpointAndMCPContainer: FC<Props> = ({
     [entity, onChangeEntity, view],
   );
 
-  const onChangeTool = useCallback(
-    (index: number, value?: string) => {
-      const currentEntity = entity as DialApplication;
-      const newMcpTools = [...(currentEntity.mcp?.allowedTools || [])];
-      newMcpTools[index] = value || '';
-
-      const updatedMCPContainer = {
-        ...(currentEntity.mcp || {}),
-        endpoint: currentEntity.mcp?.endpoint || '',
-        allowedTools: newMcpTools,
-      };
-      onChangeEntity({ ...entity, mcp: updatedMCPContainer });
-    },
-    [entity, onChangeEntity],
-  );
-
-  const onAddTool = useCallback(() => {
-    const currentEntity = entity as DialApplication;
-    const newMcpTools = [...(currentEntity.mcp?.allowedTools || []), ''];
-    const updatedMCPContainer = {
-      ...(currentEntity.mcp || {}),
-      endpoint: currentEntity.mcp?.endpoint || '',
-      allowedTools: newMcpTools,
-    };
-    onChangeEntity({ ...entity, mcp: updatedMCPContainer });
-  }, [entity, onChangeEntity]);
-
-  const onRemoveTool = useCallback(
-    (index: number) => {
-      const currentEntity = entity as DialApplication;
-      const newMcpTools = [...(currentEntity.mcp?.allowedTools || [])];
-      newMcpTools.splice(index, 1);
-      const updatedMCPContainer = {
-        ...(currentEntity.mcp || {}),
-        endpoint: currentEntity.mcp?.endpoint || '',
-        allowedTools: newMcpTools,
-      };
-      onChangeEntity({ ...entity, mcp: updatedMCPContainer });
-    },
-    [entity, onChangeEntity],
-  );
-
   return (
     <div className="flex flex-col w-full gap-8 border border-primary rounded p-4">
       <div className="flex flex-col w-full gap-4">
@@ -274,33 +224,6 @@ const EndpointAndMCPContainer: FC<Props> = ({
               onChange={onChangeMCPTransport}
               disabled
             />
-            {(view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications) && (
-              <div className={classNames(CONTROL_WITH_BUTTON_WIDTH)}>
-                <DialLabel label={t(EntityFieldsI18nKey.allowedTools)} />
-                {((entity as DialApplication)?.mcp?.allowedTools || []).map((item, index) => (
-                  <div className="flex gap-x-2 items-end">
-                    <DialInput
-                      id={`mcp-container-tool-${index}`}
-                      containerClassName="w-full"
-                      value={item}
-                      placeholder={t(EntityPlaceholdersI18nKey.ToolName)}
-                      onChange={(value) => {
-                        onChangeTool(index, value);
-                      }}
-                    />
-                    <div className="w-[40px] shrink-0 mt-[10px]">
-                      <DialRemoveButton onClick={() => onRemoveTool(index)} />
-                    </div>
-                  </div>
-                ))}
-                <DialGhostButton
-                  label={t(ToolsetI18nKey.AddTools)}
-                  iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-                  className="mt-2 min-h-[34px] h-[34px]"
-                  onClick={onAddTool}
-                />
-              </div>
-            )}
           </div>
         )}
       </div>

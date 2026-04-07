@@ -29,7 +29,7 @@ interface Props {
   onRemoveFolder: () => void;
   onMultipleRemove: () => void;
   onClose: () => void;
-  resetFolder: () => void;
+  onRemovePromptEnd: () => void;
 }
 
 const DeleteModal: FC<Props> = ({
@@ -41,7 +41,7 @@ const DeleteModal: FC<Props> = ({
   onRemoveFolder,
   onMultipleRemove,
   onClose,
-  resetFolder,
+  onRemovePromptEnd,
 }) => {
   const t = useI18n();
 
@@ -114,7 +114,7 @@ const DeleteModal: FC<Props> = ({
           onCloseModal={onClose}
           getAssetContext={getAssetContext}
           existingVersions={versionsMap[itemsToDelete[0].name]}
-          onResetEntity={resetFolder}
+          onResetEntity={onRemovePromptEnd}
         />
       )}
       {itemsToDelete.length === 1 && itemsToDelete[0].nodeType === DialFileNodeType.FOLDER && (

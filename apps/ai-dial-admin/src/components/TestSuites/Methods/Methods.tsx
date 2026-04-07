@@ -1,6 +1,6 @@
 'use client';
 
-import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Dispatch, FC, ReactNode, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { DialCollapsibleSidebar, DialConditionalResizableContainer, DialLoader } from '@epam/ai-dial-ui-kit';
 
@@ -22,9 +22,10 @@ interface Props {
   onChange: Dispatch<SetStateAction<TestSuite>>;
   selectedApplication?: Deployment | null;
   isCreate?: boolean;
+  children?: ReactNode;
 }
 
-const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange, isCreate }) => {
+const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange, isCreate, children }) => {
   const t = useI18n();
 
   const [activeMethodIndex, setActiveMethodIndex] = useState<number | null>();
@@ -52,6 +53,14 @@ const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange, isCreate
               content: CHAT_COMPLETION_BODY,
             },
           },
+          responseColumns: [
+            {
+              name: 'answer',
+              displayName: 'answer',
+              expression: 'choices[0].message.content',
+              type: 'string',
+            },
+          ],
         }));
       } else {
         const route = methods[index - 1];
@@ -114,63 +123,70 @@ const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange, isCreate
   return isLoading ? (
     <DialLoader size={40} />
   ) : (
-    <div className="flex flex-row size-full gap-2">
-      <DialConditionalResizableContainer
-        defaultWidth={sidebarCurrentWidth}
-        width={sidebarCurrentWidth}
-        onResizeStop={setSidebarCurrentWidth}
-        onResize={sidebarResizingHandler}
-        minWidth={100}
-        maxWidth={600}
-        enabled={isSidebarOpened}
-      >
-        <DialCollapsibleSidebar
-          width={sidebarCurrentWidth}
-          containerClassName="border border-primary h-full"
-          title={t(TestSuitesI18nKey.Methods)}
-          isOpened={isSidebarOpened}
-          onToggle={setIsSidebarOpened}
-        >
-          <div className="flex flex-col gap-y-4">
-            <div className="flex flex-col gap-y-1">
-              <span className="dial-tiny text-secondary block">{t(TestSuitesI18nKey.ChatInterface)}</span>
-              <MethodItem
-                key="chat-completion"
-                item={CHAT_COMPLETION_METHOD}
-                index={0}
-                isActive={activeMethodIndex === 0}
-                onClick={onMethodClick}
+    <div className="size-full flex flex-col gap-4">
+      <div className="flex-1 min-h-0 overflow-auto">
+        <div className="flex flex-row size-full gap-2">
+          <DialConditionalResizableContainer
+            defaultWidth={sidebarCurrentWidth}
+            width={sidebarCurrentWidth}
+            onResizeStop={setSidebarCurrentWidth}
+            onResize={sidebarResizingHandler}
+            minWidth={100}
+            maxWidth={600}
+            enabled={isSidebarOpened}
+          >
+            <DialCollapsibleSidebar
+              width={sidebarCurrentWidth}
+              containerClassName="border border-primary h-full"
+              title={t(TestSuitesI18nKey.Methods)}
+              isOpened={isSidebarOpened}
+              onToggle={setIsSidebarOpened}
+            >
+              <div className="flex flex-col gap-y-4">
+                <div className="flex flex-col gap-y-1">
+                  <span className="dial-tiny text-secondary block">{t(TestSuitesI18nKey.ChatInterface)}</span>
+                  <MethodItem
+                    key="chat-completion"
+                    item={CHAT_COMPLETION_METHOD}
+                    index={0}
+                    isActive={activeMethodIndex === 0}
+                    onClick={onMethodClick}
+                  />
+                </div>
+                <div className="flex flex-col gap-y-1">
+                  {!!methods.length && (
+                    <span className="dial-tiny text-secondary block">{t(TestSuitesI18nKey.Other)}</span>
+                  )}
+                  {methods.map((method, routeIndex) => (
+                    <MethodItem
+                      key={(method?.relativeUrlPattern || '') + method.method}
+                      item={method}
+                      index={routeIndex + 1}
+                      isActive={activeMethodIndex === routeIndex + 1}
+                      onClick={onMethodClick}
+                    />
+                  ))}
+                </div>
+              </div>
+            </DialCollapsibleSidebar>
+          </DialConditionalResizableContainer>
+          <div className="flex-1 min-w-0 border border-primary rounded">
+            {activeMethodIndex != null && (
+              <MethodInfo
+                testSuite={{
+                  ...testSuite,
+                  endpointRef: {
+                    ...testSuite.endpointRef,
+                    ...methodInfo,
+                  },
+                }}
+                onChangeTestSuite={onChange}
               />
-            </div>
-            <div className="flex flex-col gap-y-1">
-              {!!methods.length && <span className="dial-tiny text-secondary block">{t(TestSuitesI18nKey.Other)}</span>}
-              {methods.map((method, routeIndex) => (
-                <MethodItem
-                  key={(method?.relativeUrlPattern || '') + method.method}
-                  item={method}
-                  index={routeIndex + 1}
-                  isActive={activeMethodIndex === routeIndex + 1}
-                  onClick={onMethodClick}
-                />
-              ))}
-            </div>
+            )}
           </div>
-        </DialCollapsibleSidebar>
-      </DialConditionalResizableContainer>
-      <div className="flex-1 min-w-0 border border-primary rounded">
-        {activeMethodIndex != null && (
-          <MethodInfo
-            testSuite={{
-              ...testSuite,
-              endpointRef: {
-                ...testSuite.endpointRef,
-                ...methodInfo,
-              },
-            }}
-            onChangeTestSuite={onChange}
-          />
-        )}
+        </div>
       </div>
+      {children}
     </div>
   );
 };

@@ -6,10 +6,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AlertVariant, DialAlert } from '@epam/ai-dial-ui-kit';
 
 import { getRules } from '@/src/app/[lang]/folders-storage/actions';
+import { signInToolset, signOutToolset } from '@/src/app/[lang]/toolsets/actions';
 import { updatePublication } from '@/src/app/actions/publications';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import PublicationsHeader from '@/src/components/EntityHeaderControls/PublicationsHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import AuthButtons from '@/src/components/Toolsets/Auth/AuthButtons';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { PublicationsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -17,8 +19,9 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { Publication } from '@/src/models/dial/publications';
+import { Publication, ToolsetPublication } from '@/src/models/dial/publications';
 import { DialRule } from '@/src/models/dial/rule';
+import { Toolset } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -32,15 +35,24 @@ interface Props<T> {
   view: ApplicationRoute;
   publication: T;
   applicationSchemes?: DialApplicationScheme[];
+  oAuthCode?: string | null;
 }
 
-const PublicationView = <T extends Publication>({ view, publication, applicationSchemes }: Props<T>) => {
+const PublicationView = <T extends Publication>({ view, publication, applicationSchemes, oAuthCode }: Props<T>) => {
   const t = useI18n();
   const router = useRouter();
   const getReqRef = useRef(useProtectedRequest());
   const showNotificationRef = useRef(useNotification().showNotification);
   const { dispatch } = useSaveValidationContext();
   const { showNotification } = useNotification();
+
+  const toolset = useMemo(() => {
+    if (view === ApplicationRoute.ToolsetPublications) {
+      const toolsetPub = publication as unknown as ToolsetPublication;
+      return toolsetPub.toolSetResources?.[0]?.toolSetResource as unknown as Toolset;
+    }
+    return null;
+  }, [view, publication]);
 
   const [tabs, setTabs] = useState(() => getPublicationViewTabs(t, view));
 
@@ -98,7 +110,7 @@ const PublicationView = <T extends Publication>({ view, publication, application
   }, [isPermissionsChanged]);
 
   useEffect(() => {
-    if (selectedPublication.folderId === addTrailingSlash(ROOT_FOLDER)) {
+    if (selectedPublication.folderId === addTrailingSlash(ROOT_FOLDER) || !selectedPublication.folderId.endsWith('/')) {
       setIsPermissionsChanged(false);
       return;
     }
@@ -127,10 +139,12 @@ const PublicationView = <T extends Publication>({ view, publication, application
       view === ApplicationRoute.ApplicationPublications
         ? getCorrectPublication(selectedPublication)
         : selectedPublication;
+    const correctFolderId = addTrailingSlash(correctedPublication.folderId);
     const body = getFormDataForPublication(
       {
         ...correctedPublication,
-        folderId: addTrailingSlash(selectedPublication.folderId),
+        folderId: correctFolderId,
+        rules: correctFolderId === addTrailingSlash(ROOT_FOLDER) ? [] : selectedPublication.rules, // if publication is in root folder, it can't have any rules, so we set it to empty array
       },
       addedFiles,
     );
@@ -183,7 +197,17 @@ const PublicationView = <T extends Publication>({ view, publication, application
         activeTab={activeTab}
         warning={warning}
         onChangeActiveTab={setActiveTab}
-      />
+      >
+        {view === ApplicationRoute.ToolsetPublications && toolset && (
+          <AuthButtons
+            selectedToolset={toolset}
+            oAuthCode={oAuthCode}
+            view={ApplicationRoute.ToolsetPublications}
+            signInToolset={signInToolset}
+            signOutToolset={signOutToolset}
+          />
+        )}
+      </PublicationsHeader>
       <div className="flex-1 overflow-auto min-h-0">
         {isEditorEnabled ? (
           <EntityJsonEditor

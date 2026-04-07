@@ -1,12 +1,15 @@
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { Token } from '@/src/models/auth';
 import { DialApplication } from '@/src/models/dial/application';
+import { Tool } from '@/src/models/dial/toolset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { API } from '../api';
 import { BaseApi } from '../base-api';
 
 export const APPLICATIONS_URL = `${API}/applications`;
 export const APPLICATION_URL = (name?: string) => `${APPLICATIONS_URL}/${name || ''}`;
+export const TOOLS_URL = (name: string) => `${APPLICATION_URL(name)}/discovered-tools`;
+export const TOOLS_TRY_OUT_URL = (name: string) => `${APPLICATION_URL(name)}/call-tool`;
 export const CORE_APPLICATION_URL = (name: string) => `${APPLICATIONS_URL}/core/${name}`;
 
 export class ApplicationsApi extends BaseApi {
@@ -20,6 +23,18 @@ export class ApplicationsApi extends BaseApi {
 
   getApplication(name: string, token: Token, eTag: string) {
     return this.getActionWithEtag(APPLICATION_URL(name), eTag, token);
+  }
+
+  getTools(name: string, token: Token): Promise<Tool[] | null> {
+    return this.get(TOOLS_URL(name), token).then((res) => (res as { tools: Tool[] })?.tools || []);
+  }
+
+  tryOutTool(
+    name: string,
+    body: Record<string, unknown>,
+    token: Token,
+  ): Promise<ServerActionResponse<Record<string, unknown>>> {
+    return this.postAction(TOOLS_TRY_OUT_URL(name), body, token);
   }
 
   removeApplication(token: Token, name?: string): Promise<ServerActionResponse> {

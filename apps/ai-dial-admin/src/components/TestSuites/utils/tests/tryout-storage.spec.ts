@@ -43,13 +43,10 @@ describe('saveTryoutResponseToStorage', () => {
     );
   });
 
-  test('should store null response', () => {
-    saveTryoutResponseToStorage('suite-2', null);
+  test('should store undefined response (key omitted in JSON)', () => {
+    saveTryoutResponseToStorage('suite-2', undefined);
 
-    expect(localStorage.setItem).toHaveBeenCalledWith(
-      TEST_SUITES_TRYOUT_STORAGE_KEY,
-      JSON.stringify({ 'suite-2': null }),
-    );
+    expect(localStorage.setItem).toHaveBeenCalledWith(TEST_SUITES_TRYOUT_STORAGE_KEY, JSON.stringify({}));
   });
 
   test('should merge with existing map when key already exists in storage', () => {
@@ -134,30 +131,30 @@ describe('getTryoutResponseFromStorage', () => {
     expect(result).toEqual(response);
   });
 
-  test('should return null when testSuiteId is not in storage', () => {
+  test('should return undefined when testSuiteId is not in storage', () => {
     localStorageMock[TEST_SUITES_TRYOUT_STORAGE_KEY] = JSON.stringify({
       'other-suite': { statusCode: 201 },
     });
 
     const result = getTryoutResponseFromStorage('suite-1');
 
-    expect(result).toBeNull();
+    expect(result).toBeUndefined();
   });
 
-  test('should return null when storage key is missing', () => {
+  test('should return undefined when storage key is missing', () => {
     const result = getTryoutResponseFromStorage('suite-1');
 
-    expect(result).toBeNull();
+    expect(result).toBeUndefined();
   });
 
-  test('should return null when stored value for testSuiteId is null', () => {
+  test('should return undefined when stored value for testSuiteId is null', () => {
     localStorageMock[TEST_SUITES_TRYOUT_STORAGE_KEY] = JSON.stringify({
       'suite-1': null,
     });
 
     const result = getTryoutResponseFromStorage('suite-1');
 
-    expect(result).toBeNull();
+    expect(result).toBeUndefined();
   });
 
   test('should return correct response when map has multiple entries', () => {
@@ -173,22 +170,22 @@ describe('getTryoutResponseFromStorage', () => {
     expect(result).toEqual(responseB);
   });
 
-  test('should return null when getItem returns invalid JSON', () => {
+  test('should return undefined when getItem returns invalid JSON', () => {
     localStorageMock[TEST_SUITES_TRYOUT_STORAGE_KEY] = 'not valid json';
 
     const result = getTryoutResponseFromStorage('suite-1');
 
-    expect(result).toBeNull();
+    expect(result).toBeUndefined();
   });
 
-  test('should return null when getItem throws', () => {
+  test('should return undefined when getItem throws', () => {
     vi.mocked(localStorage.getItem).mockImplementationOnce(() => {
       throw new Error('Storage unavailable');
     });
 
     const result = getTryoutResponseFromStorage('suite-1');
 
-    expect(result).toBeNull();
+    expect(result).toBeUndefined();
   });
 });
 

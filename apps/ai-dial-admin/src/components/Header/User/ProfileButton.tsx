@@ -1,31 +1,24 @@
+import { DialButton } from '@epam/ai-dial-ui-kit';
 import { IconX } from '@tabler/icons-react';
-import { useSession } from 'next-auth/react';
 import { useCallback } from 'react';
 
 import { useAppContext } from '@/src/context/AppContext';
-import UserInfo from './UserMenu/UserInfo';
+import { UserIcon } from './UserMenu/UserIcon';
 
 const ProfileButton = () => {
   const { userMenuOpen, toggleUserMenu } = useAppContext();
-
-  const { data: session } = useSession();
 
   const onClick = useCallback(() => {
     toggleUserMenu();
   }, [toggleUserMenu]);
 
   return (
-    <button
-      className="flex size-full items-center pr-3 justify-center text-secondary md:text-primary"
+    <DialButton
+      className="flex !h-[48px] items-center justify-center text-secondary md:text-primary"
       onClick={onClick}
       aria-label="Account settings"
-    >
-      {userMenuOpen ? (
-        <IconX className="text-secondary" width={24} height={24} id="close-icon" />
-      ) : (
-        <UserInfo isUserIcon={true} session={session} />
-      )}
-    </button>
+      iconBefore={userMenuOpen ? <IconX className="text-secondary" size={24} id="close-icon" /> : <UserIcon />}
+    />
   );
 };
 export default ProfileButton;

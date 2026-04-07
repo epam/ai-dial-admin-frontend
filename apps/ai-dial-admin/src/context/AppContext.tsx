@@ -7,6 +7,7 @@ import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storag
 import { LOCAL_STORAGE_SIDEBAR_OPEN_KEY } from '@/src/constants/main-layout';
 import { ResourcesDefaults } from '@/src/models/deployments/containers';
 import { UserInfo, UserRole } from '@/src/models/user-info';
+import { FeatureFlags } from '@/src/models/feature-flags';
 
 export interface AppContextType {
   themeUrl?: string;
@@ -16,7 +17,7 @@ export interface AppContextType {
   toggleUserMenu: () => void;
   visualizerConnector?: VisualizerConnector | null;
   setVisualizerConnector?: Dispatch<SetStateAction<VisualizerConnector | null>>;
-  featureFlags: Record<string, boolean>;
+  featureFlags: FeatureFlags;
   sidebar: AppContextSidebar;
   disableDeploymentsJSONEditor?: boolean;
   resourcesDefaults?: ResourcesDefaults;
@@ -49,7 +50,7 @@ export const AppContextProvider = ({
 }: {
   children: ReactNode;
   themeUrl?: string;
-  featureFlags: Record<string, boolean>;
+  featureFlags: FeatureFlags;
   disableDeploymentsJSONEditor?: boolean;
   userInfo?: UserInfo;
   resourcesDefaults?: ResourcesDefaults;

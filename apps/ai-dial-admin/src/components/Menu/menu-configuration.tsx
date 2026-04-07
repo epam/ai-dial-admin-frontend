@@ -1,4 +1,3 @@
-import { JSX } from 'react';
 import {
   IconDashboard,
   IconFlask,
@@ -8,9 +7,11 @@ import {
   IconSettings2,
   IconShieldCog,
 } from '@tabler/icons-react';
+import { JSX } from 'react';
 
 import Approvals from '@/public/images/icons/menu/approvals.svg';
 import { MenuI18nKey } from '@/src/constants/i18n';
+import { FeatureFlags } from '@/src/models/feature-flags';
 import { ApplicationRoute } from '@/src/types/routes';
 
 export interface MenuGroupConfiguration {
@@ -25,10 +26,7 @@ export interface MenuItem {
   href: string;
 }
 
-export const MENU_CONFIGURATION = (
-  iconSize: number,
-  featureFlags: Record<string, boolean>,
-): MenuGroupConfiguration[] => {
+export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags): MenuGroupConfiguration[] => {
   const config = [
     {
       key: MenuI18nKey.Entities,
@@ -160,8 +158,10 @@ export const MENU_CONFIGURATION = (
       key: MenuI18nKey.Evaluation,
       descriptionKey: MenuI18nKey.EvaluationDescription,
       icon: <IconFlask width={iconSize} height={iconSize} />,
-      items: [],
-      // items: [{ key: MenuI18nKey.TestSuits, href: ApplicationRoute.TestSuits }],
+      items: [
+        { key: MenuI18nKey.TestSuites, href: ApplicationRoute.TestSuites },
+        { key: MenuI18nKey.Runs, href: ApplicationRoute.Runs },
+      ],
     },
     {
       key: MenuI18nKey.Audit,
@@ -184,9 +184,14 @@ export const MENU_CONFIGURATION = (
     },
   ];
 
+  let result = [...config];
   if (!featureFlags.deploymentsEnabled) {
-    return config.filter((item) => item.key !== MenuI18nKey.Deployments);
+    result = config.filter((item) => item.key !== MenuI18nKey.Deployments);
   }
 
-  return config;
+  if (!featureFlags.evaluationEnabled) {
+    result = config.filter((item) => item.key !== MenuI18nKey.Evaluation);
+  }
+
+  return result;
 };

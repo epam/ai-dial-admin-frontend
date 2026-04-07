@@ -7,6 +7,7 @@ import StatusIndicator from '@/src/components/Deployments/Common/StatusIndicator
 import VersionsSelect from '@/src/components/Deployments/Common/VersionsSelect/VersionsSelect';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSelectCellRenderer';
+import RunStatusCellRenderer from '@/src/components/Grid/CellRenderers/RunStatusCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRenderer';
 import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
@@ -162,6 +163,31 @@ export const EVALUATION_DEPLOYMENTS_COLUMNS = (t: (str: string) => string): ColD
   TOPICS_COLUMN,
   ATTACHMENT_COLUMN(t),
   MAX_INPUT_ATTACHMENTS_COLUMN,
+];
+
+export const MCP_DEPLOYMENTS_COLUMNS: ColDef[] = [
+  DISPLAY_NAME_COLUMN_WITH_SORT,
+  { field: 'deploymentId', headerName: 'ID', hide: false },
+  { field: '$type', headerName: 'Type', hide: false },
+  { field: 'transport', headerName: 'Transport', hide: false },
+  CREATED_AT_COLUMN,
+];
+
+export const MCP_TOOLS_COLUMNS: ColDef[] = [
+  { field: 'name', headerName: 'Tool Name', hide: false },
+  DESCRIPTION_COLUMN,
+  {
+    field: 'inputSchemaFieldCount',
+    headerName: 'Input Schema Fields',
+    hide: false,
+    valueGetter: (params) => {
+      const schema = params.data?.inputSchema;
+      if (schema?.properties) {
+        return Object.keys(schema.properties).length;
+      }
+      return 0;
+    },
+  },
 ];
 
 export const ACTIVITY_AUDIT_COLUMNS = (t: (s: string) => string, isSingleEntity?: boolean): ColDef[] => {
@@ -725,13 +751,14 @@ export const TEST_SUITES_COLUMN: ColDef[] = [
   { field: 'name', colId: 'name', headerName: 'Display Name', hide: false, ...evalStringFilter },
   { ...DESCRIPTION_COLUMN, sortable: false, filter: false },
   { field: 'id', colId: 'id', headerName: 'ID', hide: false, filter: false },
+  { field: 'suiteType', colId: 'suiteType', headerName: 'Suite Type', hide: false, ...evalStringFilter },
   {
     field: 'application',
     headerName: 'Application',
     hide: false,
     sortable: false,
     filter: false,
-    valueGetter: (params) => params.data?.deploymentRef?.name || '',
+    valueGetter: (params) => params.data?.deploymentRef?.name || params.data?.mcpDeploymentRef?.name || '',
   },
   CREATED_AT_COLUMN,
   UPDATED_AT_COLUMN,
@@ -766,7 +793,12 @@ export const RUNS_COLUMN: ColDef[] = [
   { field: 'numberOfTestCases', colId: 'numberOfTestCases', headerName: 'Number of test cases' },
   { field: 'startedAt', headerName: 'Start date', ...dateTimeColumn },
   { field: 'completedAt', headerName: 'End date', ...dateTimeColumn },
-  { field: 'status', headerName: 'Status' },
+  {
+    field: 'status',
+    headerName: 'Status',
+    cellRenderer: RunStatusCellRenderer,
+    tooltipValueGetter: () => undefined,
+  },
 ];
 
 export const METRICS_COLUMN: ColDef[] = [
