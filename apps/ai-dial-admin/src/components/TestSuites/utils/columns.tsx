@@ -104,6 +104,9 @@ export const getTestCaseColumns = (
       },
     } as ColDef,
     ...TEST_CASES_COLUMN.map((col) => {
+      if (col.field === 'id') {
+        return { ...col, cellClass: 'select-none cursor-pointer' };
+      }
       if (col.field === 'testCaseName' && onCellChange) {
         return {
           ...col,
