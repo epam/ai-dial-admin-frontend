@@ -3,6 +3,7 @@ import {
   getGridData,
   getSingleValueChartData,
   prepareChartData,
+  prepareMultiSeriesChartData,
   getFilterTypeConfig,
   getFilterConditionConfig,
   getFormattedDataFilters,
@@ -141,6 +142,56 @@ describe('Utils :: telemetry :: prepareChartData', () => {
     expect(result.series).toEqual([{ ...lineChartDefaultOptions(() => 'key').series[0], data: ['100'] }]);
 
     vi.useRealTimers();
+  });
+});
+
+describe('Utils :: telemetry :: prepareMultiSeriesChartData', () => {
+  const t = (key: string) => key;
+
+  test('maps rows with empty mcp_method to Unknown series', () => {
+    const data = [
+      { window: '2023-10-01T00:00:00Z', mcp_method: '', count: '5' },
+      { window: '2023-10-01T01:00:00Z', mcp_method: '', count: '10' },
+    ];
+    const result = prepareMultiSeriesChartData(data, t);
+    const series = result.series as { name: string; data: number[] }[];
+
+    expect(series).toHaveLength(1);
+    expect(series[0].name).toBe('Telemetry.Unknown');
+    expect(series[0].data).toEqual([5, 10]);
+  });
+
+  test('maps rows with undefined mcp_method to Unknown series', () => {
+    const data = [{ window: '2023-10-01T00:00:00Z', count: '3' } as Record<string, string>];
+    const result = prepareMultiSeriesChartData(data, t);
+    const series = result.series as { name: string; data: number[] }[];
+
+    expect(series).toHaveLength(1);
+    expect(series[0].name).toBe('Telemetry.Unknown');
+  });
+
+  test('keeps named series unchanged', () => {
+    const data = [
+      { window: '2023-10-01T00:00:00Z', mcp_method: 'tools/list', count: '7' },
+      { window: '2023-10-01T00:00:00Z', mcp_method: 'tools/call', count: '3' },
+    ];
+    const result = prepareMultiSeriesChartData(data, t);
+    const series = result.series as { name: string; data: number[] }[];
+
+    expect(series).toHaveLength(2);
+    expect(series.map((s) => s.name).sort()).toEqual(['tools/call', 'tools/list']);
+  });
+
+  test('groups empty and named methods correctly', () => {
+    const data = [
+      { window: '2023-10-01T00:00:00Z', mcp_method: 'tools/list', count: '7' },
+      { window: '2023-10-01T00:00:00Z', mcp_method: '', count: '2' },
+    ];
+    const result = prepareMultiSeriesChartData(data, t);
+    const series = result.series as { name: string; data: number[] }[];
+
+    expect(series).toHaveLength(2);
+    expect(series.map((s) => s.name).sort()).toEqual(['Telemetry.Unknown', 'tools/list']);
   });
 });
 
