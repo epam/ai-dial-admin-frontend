@@ -1552,6 +1552,9 @@ export enum RunsI18nKey {
   MetricInfo = 'Runs.MetricInfo',
   HttpLabel = 'Runs.HttpLabel',
   DurationLabel = 'Runs.DurationLabel',
+  Completed = 'Runs.Status.Completed',
+  Failed = 'Runs.Status.Failed',
+  Running = 'Runs.Status.Running',
 }
 
 export enum FileManagerI18nKey {
