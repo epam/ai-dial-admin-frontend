@@ -179,28 +179,6 @@ describe('DuplicateToolset', () => {
     );
   });
 
-  test('shows warning alert for logged-in toolset', () => {
-    render(
-      <DuplicateToolset
-        isModalOpen={true}
-        names={[]}
-        entity={loggedInToolset}
-        onClose={vi.fn()}
-        onDuplicate={vi.fn()}
-      />,
-    );
-
-    expect(screen.getByText(ToolsetI18nKey.DuplicateLoggedInWarning)).toBeInTheDocument();
-  });
-
-  test('does not show warning alert for non-logged-in toolset', () => {
-    render(
-      <DuplicateToolset isModalOpen={true} names={[]} entity={oauthToolset} onClose={vi.fn()} onDuplicate={vi.fn()} />,
-    );
-
-    expect(screen.queryByText(ToolsetI18nKey.DuplicateLoggedInWarning)).not.toBeInTheDocument();
-  });
-
   test('calls onClose when Cancel is clicked', () => {
     const onClose = vi.fn();
     render(

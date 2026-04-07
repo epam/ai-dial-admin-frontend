@@ -17,7 +17,7 @@ import { Toolset } from '@/src/models/dial/toolset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isAssetWithVersion } from '@/src/utils/is-view';
+import { isAssetWithVersion, isToolsetRoute } from '@/src/utils/is-view';
 import { RefObject } from 'react';
 import { prepareEntityForDuplicate } from './Components/utils';
 
@@ -83,7 +83,7 @@ export const getDuplicateModal = async <T extends object>(
     );
   }
 
-  if (route === ApplicationRoute.Toolsets) {
+  if (isToolsetRoute(route)) {
     return (
       <DuplicateToolset
         entity={preparedEntity as Toolset}
