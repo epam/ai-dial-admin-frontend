@@ -666,6 +666,7 @@ export default {
     CallsByDeployment: 'Calls by Deployment',
     RequestPerMcpUsage: 'Request per MCP usage',
     ProjectsConsumptionMcp: 'Projects Consumption',
+    Unknown: 'Unknown',
   },
   Routes: {
     AddPaths: 'Add paths',
@@ -1611,7 +1612,7 @@ export default {
         DescriptionForMany: '{count} items have been deleted',
       },
     },
-    CreateFolderValidate: 'Folder name contains forbidden characters: < > : " / \\ | ? *',
+    CreateFolderValidate: 'Folder name contains forbidden characters: ; : , = / {} % & \\',
     CreateFolderValidateFirstSymbol: 'Folder name cannot start with a dot',
     CreateFolderValidateNameLength: 'Folder name should be at most {length} characters long',
     MoveItem: 'Move "{item}" to',
@@ -1640,6 +1641,11 @@ export default {
     MetricInfo: 'Metric details',
     HttpLabel: 'HTTP',
     DurationLabel: 'Duration',
+    Status: {
+      Completed: 'Completed',
+      Running: 'Running',
+      Failed: 'Failed',
+    },
   },
   JsonAta: {
     JSONAtaDoc: 'JSONata Expression Reference',
