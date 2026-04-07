@@ -26,7 +26,8 @@ const AppRouteList: FC<Props> = ({ disabled, routes, activeRouteIndex, onRemove,
   const getOperation = (onClick: () => void): ActionMenuOperationDeclaration<DialAppRoute> => {
     return {
       icon: <IconTrash {...BASE_BUTTON_ICON_PROPS} />,
-      id: t(ActionMenuOperationI18nKey.Delete),
+      id: ActionMenuOperationI18nKey.Delete,
+      label: t(ActionMenuOperationI18nKey.Delete),
       onClick,
     };
   };

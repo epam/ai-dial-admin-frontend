@@ -28,7 +28,8 @@ export function getResourceRollbackOperation<T>(
 ): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconRefreshDot {...BASE_BUTTON_ICON_PROPS} />,
-    id: t(ActionMenuOperationI18nKey.Resource_rollback),
+    id: ActionMenuOperationI18nKey.Resource_rollback,
+    label: t(ActionMenuOperationI18nKey.Resource_rollback),
     onClick,
   };
 }
@@ -41,7 +42,8 @@ export function getDeleteOperation<T>(
 ): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconTrashX {...BASE_BUTTON_ICON_PROPS} className={className} />,
-    id: t(ActionMenuOperationI18nKey.Delete),
+    id: ActionMenuOperationI18nKey.Delete,
+    label: t(ActionMenuOperationI18nKey.Delete),
     onClick,
     hidden,
   };
@@ -55,7 +57,8 @@ export function getRemoveOperation<T>(
 ): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconTrash {...BASE_BUTTON_ICON_PROPS} className={className} />,
-    id: t(ActionMenuOperationI18nKey.Remove),
+    id: ActionMenuOperationI18nKey.Remove,
+    label: t(ActionMenuOperationI18nKey.Remove),
     onClick,
     hidden,
   };
@@ -68,7 +71,8 @@ export function getEditOperation<T>(
 ): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconPencilMinus {...BASE_BUTTON_ICON_PROPS} />,
-    id: t(ActionMenuOperationI18nKey.Edit),
+    id: ActionMenuOperationI18nKey.Edit,
+    label: t(ActionMenuOperationI18nKey.Edit),
     onClick,
     hidden,
   };
@@ -81,7 +85,8 @@ export function getResetOperation<T>(
 ): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconReload {...BASE_BUTTON_ICON_PROPS} />,
-    id: t(ActionMenuOperationI18nKey.Reset_to_default_limits),
+    id: ActionMenuOperationI18nKey.Reset_to_default_limits,
+    label: t(ActionMenuOperationI18nKey.Reset_to_default_limits),
     hidden,
     onClick,
   };
@@ -94,7 +99,8 @@ export function getSetNoLimitsOperation<T>(
 ): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconInfinity {...BASE_BUTTON_ICON_PROPS} />,
-    id: t(ActionMenuOperationI18nKey.Set_no_limits),
+    id: ActionMenuOperationI18nKey.Set_no_limits,
+    label: t(ActionMenuOperationI18nKey.Set_no_limits),
     hidden,
     onClick,
   };
@@ -106,7 +112,8 @@ export function getDuplicateOperation<T>(
 ): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconCopy {...BASE_BUTTON_ICON_PROPS} />,
-    id: t(ActionMenuOperationI18nKey.Duplicate),
+    id: ActionMenuOperationI18nKey.Duplicate,
+    label: t(ActionMenuOperationI18nKey.Duplicate),
     onClick,
   };
 }
@@ -118,7 +125,8 @@ export function getOpenInNewTabOperation<T>(
 ): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconExternalLink {...BASE_BUTTON_ICON_PROPS} />,
-    id: t(ActionMenuOperationI18nKey.Open_in_new_tab),
+    id: ActionMenuOperationI18nKey.Open_in_new_tab,
+    label: t(ActionMenuOperationI18nKey.Open_in_new_tab),
     onClick,
     hidden,
   };
@@ -131,7 +139,8 @@ export function getViewDetailsOperation<T>(
 ): ActionMenuOperationDeclaration<T> {
   return {
     icon: <OpenPopup {...BASE_BUTTON_ICON_PROPS} />,
-    id: t(ActionMenuOperationI18nKey.View_details),
+    id: ActionMenuOperationI18nKey.View_details,
+    label: t(ActionMenuOperationI18nKey.View_details),
     onClick,
     hidden,
   };
@@ -143,7 +152,8 @@ export function getMoveOperation<T>(
 ): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconFolderShare {...BASE_BUTTON_ICON_PROPS} />,
-    id: t(ActionMenuOperationI18nKey.Move),
+    id: ActionMenuOperationI18nKey.Move,
+    label: t(ActionMenuOperationI18nKey.Move),
     onClick,
   };
 }
@@ -155,7 +165,8 @@ export function getDownloadOperation<T>(
 ): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconDownload {...BASE_BUTTON_ICON_PROPS} />,
-    id: t(ActionMenuOperationI18nKey.Download),
+    id: ActionMenuOperationI18nKey.Download,
+    label: t(ActionMenuOperationI18nKey.Download),
     onClick,
     hidden,
   };
@@ -168,7 +179,8 @@ export function getPreviewOperation<T>(
 ): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconEye {...BASE_BUTTON_ICON_PROPS} />,
-    id: t(ActionMenuOperationI18nKey.Preview),
+    id: ActionMenuOperationI18nKey.Preview,
+    label: t(ActionMenuOperationI18nKey.Preview),
     onClick,
     hidden,
   };
@@ -180,7 +192,8 @@ export function getCompareChangesOperation<T>(
 ): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconReplace {...BASE_BUTTON_ICON_PROPS} />,
-    id: t(ActionMenuOperationI18nKey.Compare_changes),
+    id: ActionMenuOperationI18nKey.Compare_changes,
+    label: t(ActionMenuOperationI18nKey.Compare_changes),
     onClick,
   };
 }
@@ -191,7 +204,8 @@ export function getRunTestSuiteOperation<T>(
 ): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} />,
-    id: t(ActionMenuOperationI18nKey.Run),
+    id: ActionMenuOperationI18nKey.Run,
+    label: t(ActionMenuOperationI18nKey.Run),
     onClick,
   };
 }
@@ -202,7 +216,8 @@ export function getRunOperation<T>(
 ): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} />,
-    id: t(ActionMenuOperationI18nKey.Run),
+    id: ActionMenuOperationI18nKey.Run,
+    label: t(ActionMenuOperationI18nKey.Run),
     onClick,
     hidden: (_: GridApi, node: IRowNode) => {
       return (
@@ -220,7 +235,8 @@ export function getStopOperation<T>(
 ): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconPlayerPause {...BASE_BUTTON_ICON_PROPS} />,
-    id: t(ActionMenuOperationI18nKey.Stop),
+    id: ActionMenuOperationI18nKey.Stop,
+    label: t(ActionMenuOperationI18nKey.Stop),
     onClick,
     hidden: (_: GridApi, node: IRowNode) => {
       return (
@@ -238,7 +254,8 @@ export function getTryOutOperation<T>(
 ): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} className="text-success" />,
-    id: t(ActionMenuOperationI18nKey.Try_out),
+    id: ActionMenuOperationI18nKey.Try_out,
+    label: t(ActionMenuOperationI18nKey.Try_out),
     onClick,
   };
 }

@@ -12,7 +12,8 @@ export const getAddSiblingOperation = <T extends object>(
 ): ActionMenuOperationDeclaration<T> => {
   return {
     icon: <AddSiblingIcon {...BASE_BUTTON_ICON_PROPS} />,
-    id: t(ActionMenuOperationI18nKey.Add_sibling),
+    id: ActionMenuOperationI18nKey.Add_sibling,
+    label: t(ActionMenuOperationI18nKey.Add_sibling),
     onClick,
   };
 };
@@ -23,7 +24,8 @@ export const getAddChildOperation = <T extends object>(
 ): ActionMenuOperationDeclaration<T> => {
   return {
     icon: <AddChildIcon {...BASE_BUTTON_ICON_PROPS} />,
-    id: t(ActionMenuOperationI18nKey.Add_child),
+    id: ActionMenuOperationI18nKey.Add_child,
+    label: t(ActionMenuOperationI18nKey.Add_child),
     onClick,
   };
 };
@@ -34,7 +36,8 @@ export const getManageFolderOperation = <T extends object>(
 ): ActionMenuOperationDeclaration<T> => {
   return {
     icon: <IconExternalLink {...BASE_BUTTON_ICON_PROPS} />,
-    id: t(ActionMenuOperationI18nKey.Manage_folder),
+    id: ActionMenuOperationI18nKey.Manage_folder,
+    label: t(ActionMenuOperationI18nKey.Manage_folder),
     onClick,
   };
 };
@@ -45,7 +48,8 @@ export const getRenameFolderOperation = <T extends object>(
 ): ActionMenuOperationDeclaration<T> => {
   return {
     icon: <IconPencilMinus {...BASE_BUTTON_ICON_PROPS} />,
-    id: t(ActionMenuOperationI18nKey.Rename),
+    id: ActionMenuOperationI18nKey.Rename,
+    label: t(ActionMenuOperationI18nKey.Rename),
     onClick,
   };
 };
@@ -56,7 +60,8 @@ export const getMoveFolderOperation = <T extends object>(
 ): ActionMenuOperationDeclaration<T> => {
   return {
     icon: <IconFolderShare {...BASE_BUTTON_ICON_PROPS} />,
-    id: t(ActionMenuOperationI18nKey.Move_to),
+    id: ActionMenuOperationI18nKey.Move_to,
+    label: t(ActionMenuOperationI18nKey.Move_to),
     onClick,
   };
 };
@@ -67,7 +72,8 @@ export const getDeleteFolderOperation = <T extends object>(
 ): ActionMenuOperationDeclaration<T> => {
   return {
     icon: <IconTrashX {...BASE_BUTTON_ICON_PROPS} />,
-    id: t(ActionMenuOperationI18nKey.Delete),
+    id: ActionMenuOperationI18nKey.Delete,
+    label: t(ActionMenuOperationI18nKey.Delete),
     onClick,
   };
 };

@@ -49,7 +49,7 @@ const ActionItem = <T extends object>({ item, data, rowIndex }: ActionProps<T>) 
       onClick={() => item.onClick(data, rowIndex)}
     >
       {item.icon}
-      <span className="text-primary small">{item.id}</span>
+      <span className="text-primary small">{item.label}</span>
     </div>
   );
 };
