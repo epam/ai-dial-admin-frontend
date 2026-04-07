@@ -50,81 +50,94 @@ const ComparisonPivotView: FC<Props> = ({ sections, activeDetail, pinnedDetail, 
 
   return (
     <div className="animate-fadeIn h-full overflow-auto">
-      <table className="text-xs border-collapse">
-        <thead className="sticky top-0 z-10 bg-layer-1">
-          <tr>
-            <th className="sticky left-0 z-20 bg-layer-1 text-left text-xxs text-secondary font-medium px-3 py-1.5 min-w-[160px] border-b border-r border-secondary">
-              {t(RunsI18nKey.TestCaseColumn)}
-            </th>
-            {flatFields.map((field) => {
-              const isSpotlighted = spotlightedFields.has(field.fullKey);
-              return (
-                <th
-                  key={field.fullKey}
-                  className={classNames(
-                    'text-left text-xxs font-medium px-3 py-1.5 min-w-[120px] border-b border-secondary',
-                    isSpotlighted && 'border-t-2 border-t-accent-primary',
-                  )}
-                >
-                  <div className="flex flex-col">
-                    <span className="text-xxs text-secondary uppercase">{field.sectionLabel}</span>
-                    <span className="font-mono text-primary">{field.label}</span>
-                  </div>
-                </th>
-              );
-            })}
-          </tr>
-        </thead>
-        <tbody>
-          {details.map((detail, rowIdx) => {
-            const isPinnedRow = hasTwoRows && rowIdx === 0;
-            return (
-              <tr key={detail.id ?? rowIdx} className="border-b border-secondary">
-                <td className="sticky left-0 z-10 bg-layer-1 px-3 py-1.5 border-r border-secondary align-top">
-                  <div className="flex items-center gap-2">
-                    <DialEllipsisTooltip
-                      text={detail.testCaseName ?? detail.id ?? ''}
-                      className="text-primary max-w-[140px]"
-                    />
-                    <StatusBadge status={detail.executionStatus} />
-                  </div>
-                </td>
-                {flatFields.map((field) => {
-                  const val = field.values[rowIdx];
-                  const raw = val?.raw ?? null;
-                  const displayText = formatFieldValue(raw);
+      <div
+        className="text-xs"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: `minmax(160px, auto) repeat(${flatFields.length}, minmax(120px, 1fr))`,
+        }}
+      >
+        {/* Header row */}
+        <div
+          className="sticky top-0 left-0 z-20 bg-layer-1 text-left text-xxs text-secondary font-medium px-3 py-1.5 border-b border-r border-secondary"
+          style={{ gridColumn: 1, gridRow: 1 }}
+        >
+          {t(RunsI18nKey.TestCaseColumn)}
+        </div>
+        {flatFields.map((field, colIdx) => {
+          const isSpotlighted = spotlightedFields.has(field.fullKey);
+          return (
+            <div
+              key={field.fullKey}
+              className={classNames(
+                'sticky top-0 z-10 bg-layer-1 text-left text-xxs font-medium px-3 py-1.5 border-b border-secondary',
+                isSpotlighted && 'border-t-2 border-t-accent-primary',
+              )}
+              style={{ gridColumn: colIdx + 2, gridRow: 1 }}
+            >
+              <div className="flex flex-col">
+                <span className="text-xxs text-secondary uppercase">{field.sectionLabel}</span>
+                <span className="font-mono text-primary">{field.label}</span>
+              </div>
+            </div>
+          );
+        })}
 
-                  // Diff highlighting on active row (non-pinned)
-                  let cellDiffClass = '';
-                  if (hasTwoRows && !isPinnedRow && field.values.length >= 2) {
-                    const pinnedRaw = field.values[0]?.raw ?? null;
-                    if (!valuesAreEqual(pinnedRaw, raw)) {
-                      cellDiffClass = field.isNumeric ? 'bg-warning' : 'bg-accent-secondary-alpha';
-                    }
+        {/* Data rows */}
+        {details.map((detail, rowIdx) => {
+          const isPinnedRow = hasTwoRows && rowIdx === 0;
+          const gridRow = rowIdx + 2; // +2 because header is row 1
+
+          return (
+            <div key={detail.id ?? rowIdx} className="contents">
+              <div
+                className="sticky left-0 z-10 bg-layer-1 px-3 py-1.5 border-b border-r border-secondary"
+                style={{ gridColumn: 1, gridRow }}
+              >
+                <div className="flex items-center gap-2">
+                  <DialEllipsisTooltip
+                    text={detail.testCaseName ?? detail.id ?? ''}
+                    className="text-primary max-w-[140px]"
+                  />
+                  <StatusBadge status={detail.executionStatus} />
+                </div>
+              </div>
+              {flatFields.map((field, colIdx) => {
+                const val = field.values[rowIdx];
+                const raw = val?.raw ?? null;
+                const displayText = formatFieldValue(raw);
+
+                // Diff highlighting on active row (non-pinned)
+                let cellDiffClass = '';
+                if (hasTwoRows && !isPinnedRow && field.values.length >= 2) {
+                  const pinnedRaw = field.values[0]?.raw ?? null;
+                  if (!valuesAreEqual(pinnedRaw, raw)) {
+                    cellDiffClass = field.isNumeric ? 'bg-warning' : 'bg-accent-secondary-alpha';
                   }
+                }
 
-                  return (
-                    <td
-                      key={`${detail.id}-${field.fullKey}`}
-                      className={classNames('px-3 py-1.5 align-top', cellDiffClass)}
-                    >
-                      {raw === null ? (
-                        <span className="text-xxs text-secondary">—</span>
-                      ) : raw.includes('\n') || raw.length > 100 ? (
-                        <pre className="text-xxs text-primary whitespace-pre-wrap break-words overflow-y-auto max-h-[120px] font-mono">
-                          {displayText}
-                        </pre>
-                      ) : (
-                        <span className="text-xxs text-primary">{displayText}</span>
-                      )}
-                    </td>
-                  );
-                })}
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                return (
+                  <div
+                    key={`${detail.id}-${field.fullKey}`}
+                    className={classNames('px-3 py-1.5 border-b border-secondary', cellDiffClass)}
+                    style={{ gridColumn: colIdx + 2, gridRow }}
+                  >
+                    {raw === null ? (
+                      <span className="text-xxs text-secondary">—</span>
+                    ) : raw.includes('\n') || raw.length > 100 ? (
+                      <pre className="text-xxs text-primary whitespace-pre-wrap break-words overflow-y-auto max-h-[120px] font-mono">
+                        {displayText}
+                      </pre>
+                    ) : (
+                      <span className="text-xxs text-primary">{displayText}</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };

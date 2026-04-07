@@ -111,6 +111,7 @@ rules:
     - Break down complex components into smaller, reusable components — keep components focused and maintainable
     - Use font classes from the Typography provided by @epam/ai-dial-ui-kit — avoid custom font styling
     - Use button components from @epam/ai-dial-ui-kit — do not create custom buttons unless absolutely necessary
+    - Avoid HTML <table> elements for layout — use CSS grid or flexbox instead
     - Do not truncate long values using break-all without a way to access the full content — always provide a way to view it
     - Use DialEllipsisTooltip from @epam/ai-dial-ui-kit when truncating long text values to ensure full content is accessible
     - Name handler functions with the on prefix (e.g., onOpenFullScreen, onClick, onSubmit) to keep naming consistent and predictable

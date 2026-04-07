@@ -489,7 +489,7 @@ describe('Runs View :: getMetricGroups', () => {
       retrieval: { f1: { reason: 'Low overlap', verbose_logs: 'details...' } },
     };
     const result = getMetricGroups(metricValues, metricInfos);
-    expect(result[0].infos).toEqual({
+    expect(result[0].info).toEqual({
       f1: { reason: 'Low overlap', verbose_logs: 'details...' },
     });
   });

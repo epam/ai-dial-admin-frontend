@@ -124,8 +124,8 @@ const RunMetricDetailPanel: FC<Props> = ({ resultId, grafanaTraceUrl, onClose, o
                       <span className="text-error break-words">{group.errorMessage}</span>
                     </div>
                   )}
-                  {selectedMetric?.group === group.title && !!group.infos?.[selectedMetric.key] && (
-                    <MetricInfoPanel info={{ [selectedMetric.key]: group.infos[selectedMetric.key] }} />
+                  {selectedMetric?.group === group.title && !!group.info?.[selectedMetric.key] && (
+                    <MetricInfoPanel info={{ [selectedMetric.key]: group.info[selectedMetric.key] }} />
                   )}
                 </section>
               ))}

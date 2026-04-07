@@ -22,7 +22,6 @@ interface Props {
   onToggleSpotlight: (fieldKey: string) => void;
   expandedCells: Set<string>;
   onToggleCellExpand: (cellKey: string) => void;
-  columnCount: number;
   onOpenDiff: (row: ComparisonRow) => void;
 }
 
@@ -35,7 +34,6 @@ const SectionGroup: FC<Props> = ({
   onToggleSpotlight,
   expandedCells,
   onToggleCellExpand,
-  columnCount,
   onOpenDiff,
 }) => {
   const t = useI18n();
@@ -43,14 +41,17 @@ const SectionGroup: FC<Props> = ({
   const sectionLabel = i18nKey ? t(i18nKey) : section.label;
   return (
     <>
-      <tr className="cursor-pointer hover:bg-layer-2" onClick={onToggle}>
-        <td colSpan={1 + columnCount} className="px-3 py-1 border-b border-secondary">
-          <div className="flex items-center gap-1 text-xxs font-semibold text-secondary uppercase">
-            {isCollapsed ? <IconChevronRight size={12} /> : <IconChevronDown size={12} />}
-            {sectionLabel}
-          </div>
-        </td>
-      </tr>
+      {/* Section header — spans all grid columns */}
+      <div
+        className="cursor-pointer hover:bg-layer-2 px-3 py-1 border-b border-secondary"
+        style={{ gridColumn: `1 / -1` }}
+        onClick={onToggle}
+      >
+        <div className="flex items-center gap-1 text-xxs font-semibold text-secondary uppercase">
+          {isCollapsed ? <IconChevronRight size={12} /> : <IconChevronDown size={12} />}
+          {sectionLabel}
+        </div>
+      </div>
       {!isCollapsed &&
         section.rows.map((row) => {
           const fullKey = `${section.key}:${row.fieldKey}`;
@@ -58,8 +59,8 @@ const SectionGroup: FC<Props> = ({
           const diffClass = hasTwoColumns ? getDiffClass(row) : '';
 
           return (
-            <tr key={fullKey} className="group border-b border-secondary">
-              <td className="px-3 py-1 align-top">
+            <div key={fullKey} className="contents">
+              <div className="group px-3 py-1 border-b border-secondary">
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => onToggleSpotlight(fullKey)}
@@ -84,7 +85,7 @@ const SectionGroup: FC<Props> = ({
                   )}
                   <DialEllipsisTooltip text={row.label} className="text-xxs font-mono text-primary" />
                 </div>
-              </td>
+              </div>
               {row.values.map((val, idx) => {
                 const cellKey = `${fullKey}:${idx}`;
                 const isExpanded = expandedCells.has(cellKey);
@@ -95,7 +96,7 @@ const SectionGroup: FC<Props> = ({
                 const cellDiffClass = isActiveColumn ? diffClass : '';
 
                 return (
-                  <td key={idx} className={classNames('px-3 py-1 align-top', cellDiffClass)}>
+                  <div key={idx} className={classNames('px-3 py-1 border-b border-secondary', cellDiffClass)}>
                     <CellValue
                       text={displayText}
                       raw={raw}
@@ -104,10 +105,10 @@ const SectionGroup: FC<Props> = ({
                       cellKey={cellKey}
                       onToggleExpand={onToggleCellExpand}
                     />
-                  </td>
+                  </div>
                 );
               })}
-            </tr>
+            </div>
           );
         })}
     </>

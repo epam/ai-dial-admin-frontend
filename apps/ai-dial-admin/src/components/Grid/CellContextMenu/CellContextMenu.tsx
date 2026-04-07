@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import CopyButton from '../../Common/CopyButton/CopyButton';
+import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 
 export interface ContextMenuPosition {
   x: number;

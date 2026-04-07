@@ -7,7 +7,7 @@ export interface MetricEntry {
 export interface MetricGroup {
   title: string;
   metrics: MetricEntry[];
-  infos?: Record<string, unknown>;
+  info?: Record<string, unknown>;
   hasError: boolean;
   errorMessage?: string;
 }

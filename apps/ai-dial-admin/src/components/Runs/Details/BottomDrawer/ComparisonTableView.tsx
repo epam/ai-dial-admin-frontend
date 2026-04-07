@@ -81,47 +81,49 @@ const ComparisonTableView: FC<Props> = ({
     <div className="animate-fadeIn flex flex-col h-full">
       <FocusStrip rows={spotlightedRows} onRemove={onToggleSpotlight} />
       <div className="flex-1 overflow-auto min-h-0">
-        <table className="w-full text-xs border-collapse">
-          <thead className="sticky top-0 z-10 bg-layer-1">
-            <tr>
-              <th className="text-left text-xxs text-secondary font-medium px-3 py-1.5 w-[180px] min-w-[180px] border-b border-secondary">
-                {t(RunsI18nKey.FieldColumn)}
-              </th>
-              {details.map((detail, idx) => (
-                <th
-                  key={detail.id ?? idx}
-                  className="text-left text-xxs font-medium px-3 py-1.5 border-b border-secondary"
-                >
-                  <div className="flex items-center gap-2">
-                    <DialEllipsisTooltip text={detail.testCaseName ?? detail.id ?? ''} className="text-primary" />
-                    <StatusBadge status={detail.executionStatus} />
-                    {detail.execDurationMs != null && <span className="text-secondary">{detail.execDurationMs}ms</span>}
-                  </div>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {sections.map((section) => {
-              const isCollapsed = collapsedSections[section.key];
-              return (
-                <SectionGroup
-                  key={section.key}
-                  section={section}
-                  isCollapsed={isCollapsed}
-                  onToggle={() => onToggleSectionCollapse(section.key)}
-                  hasTwoColumns={hasTwoColumns}
-                  spotlightedFields={spotlightedFields}
-                  onToggleSpotlight={onToggleSpotlight}
-                  expandedCells={expandedCells}
-                  onToggleCellExpand={onToggleCellExpand}
-                  columnCount={details.length}
-                  onOpenDiff={onOpenDiff}
-                />
-              );
-            })}
-          </tbody>
-        </table>
+        <div
+          className="w-full text-xs"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: `minmax(180px, auto) repeat(${details.length}, minmax(0, 1fr))`,
+          }}
+        >
+          {/* Header row */}
+          <div className="sticky top-0 z-10 bg-layer-1 text-left text-xxs text-secondary font-medium px-3 py-1.5 border-b border-secondary">
+            {t(RunsI18nKey.FieldColumn)}
+          </div>
+          {details.map((detail, idx) => (
+            <div
+              key={detail.id ?? idx}
+              className="sticky top-0 z-10 bg-layer-1 text-left text-xxs font-medium px-3 py-1.5 border-b border-secondary"
+            >
+              <div className="flex items-center gap-2">
+                <DialEllipsisTooltip text={detail.testCaseName ?? detail.id ?? ''} className="text-primary" />
+                <StatusBadge status={detail.executionStatus} />
+                {detail.execDurationMs != null && <span className="text-secondary">{detail.execDurationMs}ms</span>}
+              </div>
+            </div>
+          ))}
+
+          {/* Section rows */}
+          {sections.map((section) => {
+            const isCollapsed = collapsedSections[section.key];
+            return (
+              <SectionGroup
+                key={section.key}
+                section={section}
+                isCollapsed={isCollapsed}
+                onToggle={() => onToggleSectionCollapse(section.key)}
+                hasTwoColumns={hasTwoColumns}
+                spotlightedFields={spotlightedFields}
+                onToggleSpotlight={onToggleSpotlight}
+                expandedCells={expandedCells}
+                onToggleCellExpand={onToggleCellExpand}
+                onOpenDiff={onOpenDiff}
+              />
+            );
+          })}
+        </div>
       </div>
       {diffViewState && (
         <FullscreenDiffViewer
