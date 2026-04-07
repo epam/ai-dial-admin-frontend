@@ -28,6 +28,10 @@ export const isEvaluationView = (view?: ApplicationRoute): boolean => {
   return view === ApplicationRoute.TestSuites || view === ApplicationRoute.Metrics || view === ApplicationRoute.Runs;
 };
 
+export const isToolsetRoute = (route?: ApplicationRoute): boolean => {
+  return route === ApplicationRoute.Toolsets || route === ApplicationRoute.AssetsToolsets;
+};
+
 export const isDeploymentManagerView = (view?: ApplicationRoute): boolean => {
   return (
     view === ApplicationRoute.Images ||

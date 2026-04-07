@@ -263,7 +263,7 @@ const FileManager: FC<Props> = ({
           fetchFiles(destinationFolder);
           fetchFiles(sourceFolder);
 
-          const { title, description } = getMoveNotificationContent(view, items, destinationFolder, t);
+          const { title, description } = getMoveNotificationContent(view, items, sourceFolder, destinationFolder, t);
           showNotification(getSuccessNotification(title, description));
         } else {
           const errorRes = result.flat().find((res) => !res.success);

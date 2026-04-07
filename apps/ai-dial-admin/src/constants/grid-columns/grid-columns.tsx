@@ -512,6 +512,26 @@ export const USAGE_LOG_MCP_COLUMNS: ColDef[] = [
     hide: false,
   },
 ];
+export const USAGE_LOG_TOOLSET_TRACES_COLUMNS: ColDef[] = [
+  { field: 'completion_time', headerName: 'Last activity', hide: false, ...dateTimeColumn },
+  { field: 'project_id', headerName: 'Project', hide: false },
+  {
+    field: 'mcp_method',
+    headerName: 'Method',
+    hide: true,
+  },
+  {
+    field: 'mcp_tool_call_name',
+    headerName: 'Tool Name',
+    hide: false,
+  },
+  {
+    field: 'trace_id',
+    headerName: 'Trace ID',
+    hide: false,
+  },
+];
+
 export const PROJECT_GRID_COLUMNS: ColDef[] = [{ field: 'name', headerName: 'Project' }, ...TELEMETRY_COLUMNS];
 
 export const MCP_CONSUMPTION_COLUMNS: ColDef[] = [
