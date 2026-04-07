@@ -27,11 +27,9 @@ import { TelemetryQuery } from '@/src/models/telemetry';
 import { TimeRange } from '@/src/models/time-range';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab, getUsageLogTabs } from '@/src/utils/tabs/utils';
+import { isToolsetRoute } from '@/src/utils/is-view';
 import { getFormattedFilters } from '@/src/utils/telemetry';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
-
-const isToolsetRoute = (route: ApplicationRoute) =>
-  route === ApplicationRoute.Toolsets || route === ApplicationRoute.AssetsToolsets;
 
 interface Props {
   route: ApplicationRoute;
