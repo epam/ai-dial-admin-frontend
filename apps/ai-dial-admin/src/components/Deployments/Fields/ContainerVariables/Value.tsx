@@ -71,7 +71,7 @@ const ContainerVariableValue: FC<Props> = ({ value, index, onValueChange, mountT
     <div className="flex w-full relative pr-[50px]">
       {value.$type === VALUE_TYPE.SIMPLE && (
         <div className="flex-1">
-          {mountType === MOUNT_TYPE.SECURE_CONTENT ? (
+          {mountType === MOUNT_TYPE.SECURE_CONTENT || mountType === MOUNT_TYPE.SECURE_FILE ? (
             <DialPasswordInput
               id={`value_${index}`}
               value={value.value}

@@ -40,7 +40,7 @@ const DeleteFolder: FC<Props> = ({
   const t = useI18n();
 
   const folderContext = context?.();
-  const filePath = folderContext?.filePath as string;
+  const filePath = selectedFolder || (folderContext?.filePath as string);
 
   const [gridApi, setGridApi] = useState<GridApi>();
   const [rowData, setRowData] = useState<DialFile[]>([]);

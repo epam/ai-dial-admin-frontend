@@ -3,6 +3,7 @@ import { Big } from 'big.js';
 import { EChartsOption } from 'echarts-for-react/src/types';
 
 import { lineChartDefaultOptions, multiSeriesLineChartOptions } from '@/src/components/Charts/LineChart/constants';
+import { TelemetryI18nKey } from '@/src/constants/i18n';
 import {
   filterConditionConfig,
   filterOperatorConfig,
@@ -131,9 +132,11 @@ export function prepareMultiSeriesChartData(data: Record<string, string>[], t: (
   const timeSet = new Set<string>();
   const methodSet = new Set<string>();
 
+  const unknownLabel = t(TelemetryI18nKey.Unknown);
+
   for (const row of data) {
     timeSet.add(row.window);
-    methodSet.add(row.mcp_method);
+    methodSet.add(row.mcp_method || unknownLabel);
   }
 
   const times = Array.from(timeSet).sort();
@@ -144,7 +147,7 @@ export function prepareMultiSeriesChartData(data: Record<string, string>[], t: (
     dataByMethod.set(method, new Map());
   }
   for (const row of data) {
-    dataByMethod.get(row.mcp_method)!.set(row.window, Number(row.count));
+    dataByMethod.get(row.mcp_method || unknownLabel)!.set(row.window, Number(row.count));
   }
 
   (config.xAxis as unknown as { data: string[] }).data = times;

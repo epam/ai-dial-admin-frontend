@@ -10,9 +10,9 @@ import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getErrorForMcpServerName } from '@/src/utils/deployments/validation';
 import { ErrorType } from '@/src/types/error-type';
-import { getPreferredOciPackage, isServerSelectable, mapTransportType } from '@/src/utils/deployments/mcp-registry';
+import { getPreferredOciPackage, mapTransportType } from '@/src/utils/deployments/mcp-registry';
 import { debounce } from 'lodash';
-import { getMcpServers } from '@/src/app/actions/deployments';
+import { getContainerMcpServers } from '@/src/app/actions/deployments';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import OpenPopup from '@/public/images/icons/open-pop-up.svg';
 import { createPortal } from 'react-dom';
@@ -75,7 +75,7 @@ const McpServerNameField: FC<Props> = ({ container, setContainer, isModal, disab
 
   const validateAndApplyServer = useCallback(
     (value: string) => {
-      getMcpServers({ search: value, limit: '10' }).then(({ success, response }) => {
+      getContainerMcpServers({ search: value, limit: 10 }).then(({ success, response }) => {
         if (!success) return;
 
         const servers = (response.servers || []).map((s: McpServerResponse) => s.server) as McpServer[];
@@ -83,13 +83,6 @@ const McpServerNameField: FC<Props> = ({ container, setContainer, isModal, disab
 
         if (!exactMatch) {
           const error = { type: ErrorType.INVALID, text: t(ErrorI18nKey.McpServerNotFound) };
-          setServerNameError(error);
-          dispatch({ type: ValidationActionType.SetField, field: 'mcpServerName', isValid: false });
-          return;
-        }
-
-        if (!isServerSelectable(exactMatch)) {
-          const error = { type: ErrorType.INVALID, text: t(ErrorI18nKey.McpServerNotSupported) };
           setServerNameError(error);
           dispatch({ type: ValidationActionType.SetField, field: 'mcpServerName', isValid: false });
           return;
@@ -142,23 +135,23 @@ const McpServerNameField: FC<Props> = ({ container, setContainer, isModal, disab
   const onServerNameType = useMemo(
     () =>
       debounce((value: string) => {
-        if (value.length > 2) {
-          getMcpServers({ search: value, limit: '5' }).then(({ success, response }) => {
-            if (success) {
-              const servers = ((response.servers || []).map((s: McpServerResponse) => s.server) as McpServer[]).filter(
-                isServerSelectable,
-              );
-              if (servers.length) {
-                setServerOptions(servers.map((s) => ({ value: s.name, label: s.name })));
-                setServerCache((prev) => {
-                  const next = new Map(prev);
-                  servers.forEach((s) => next.set(s.name, s));
-                  return next;
-                });
-              }
-            }
-          });
+        if (value.length <= 2) {
+          setServerOptions([]);
+          return;
         }
+        getContainerMcpServers({ search: value, limit: 5 }).then(({ success, response }) => {
+          if (success) {
+            const servers = (response.servers || []).map((s: McpServerResponse) => s.server) as McpServer[];
+            if (servers.length) {
+              setServerOptions(servers.map((s) => ({ value: s.name, label: s.name })));
+              setServerCache((prev) => {
+                const next = new Map(prev);
+                servers.forEach((s) => next.set(s.name, s));
+                return next;
+              });
+            }
+          }
+        });
       }, 100),
     [],
   );
@@ -215,6 +208,7 @@ const McpServerNameField: FC<Props> = ({ container, setContainer, isModal, disab
             isModalOpen={isModalOpen}
             onClose={handleModalClose}
             onApply={(server) => applyServer(server)}
+            fetchServers={getContainerMcpServers}
           />,
           document.body,
         )}
