@@ -2,50 +2,55 @@
 
 import { GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
 import { isEqual } from 'lodash';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { getMcpServers } from '@/src/app/actions/deployments';
 import { infiniteGridOptions, SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
 import { ContainersI18nKey } from '@/src/constants/i18n';
 import { MCP_REGISTRY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { useI18n } from '@/src/locales/client';
 import { FilterDto } from '@/src/models/request';
+import { ServerActionResponse } from '@/src/models/server-action';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
-import { isServerSelectable } from '@/src/utils/deployments/mcp-registry';
 import { McpServer, McpServerResponse } from '@/src/types/deployments/mcp-registry';
 
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import ListEntities from '@/src/components/ListView/List';
 
+export type McpRegistryFetchFn = (params: {
+  search?: string;
+  cursor?: string;
+  limit?: number;
+  minResults?: number;
+}) => Promise<ServerActionResponse>;
+
 interface Props {
   selectedServer?: McpServer;
   onSelect: (server: McpServer) => void;
+  fetchServers: McpRegistryFetchFn;
 }
 
-const McpRegistryGrid: FC<Props> = ({ selectedServer, onSelect }) => {
+const REGISTRY_META_KEY = 'io.modelcontextprotocol.registry/official';
+
+const McpRegistryGrid: FC<Props> = ({ selectedServer, onSelect, fetchServers }) => {
   const t = useI18n();
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
+  const fetchServersRef = useRef(fetchServers);
+  fetchServersRef.current = fetchServers;
 
   const gridOptions: GridOptions = {
     ...infiniteGridOptions,
     ...SINGLE_ROW_SELECTION,
     selectionColumnDef: {
       ...SINGLE_ROW_SELECTION.selectionColumnDef,
-      cellRenderer: (data: { data?: McpServer }) => (
-        <RadioButtonRenderer inputId={data.data?.name as string} isChecked={data.data?.name === selectedServer?.name} />
-      ),
+      cellRenderer: (data: { data?: McpServer }) => {
+        if (!data.data) return null;
+        return <RadioButtonRenderer inputId={data.data.name} isChecked={data.data.name === selectedServer?.name} />;
+      },
     },
-    isRowSelectable: (node) => isServerSelectable(node.data),
     onRowSelected: (event) => {
       if (event.node.isSelected() && event.data) {
         onSelect(event.data);
       }
-    },
-    getRowStyle: (params) => {
-      if (params.data && !isServerSelectable(params.data)) {
-        return { opacity: '0.5' };
-      }
-      return undefined;
     },
   };
 
@@ -61,28 +66,24 @@ const McpRegistryGrid: FC<Props> = ({ selectedServer, onSelect }) => {
         }
         filters = currentFilters;
 
-        const requestFilters = Object.fromEntries(
-          currentFilters.map(({ column, value }) => [column === 'name' ? 'search' : column, encodeURIComponent(value)]),
-        );
+        const searchFilter = currentFilters.find(({ column }) => column === 'name');
+        const search = searchFilter ? String(searchFilter.value) : undefined;
 
-        getMcpServers({
-          cursor: nextCursor,
-          limit: '100',
-          ...requestFilters,
-        })
+        fetchServersRef
+          .current({
+            cursor: nextCursor || undefined,
+            limit: 100,
+            minResults: 100,
+            search,
+          })
           .then(({ response, success }) => {
             if (success) {
-              const REGISTRY_META_KEY = 'io.modelcontextprotocol.registry/official';
               const servers = (response.servers || []).map((s: McpServerResponse) => ({
                 ...s.server,
                 updatedAt: (s._meta?.[REGISTRY_META_KEY] as Record<string, unknown>)?.updatedAt,
               }));
-              if (servers.length === 0) {
-                params.successCallback([], 0);
-              } else {
-                nextCursor = response.metadata?.nextCursor || '';
-                params.successCallback(servers, nextCursor ? undefined : params.startRow + servers.length);
-              }
+              nextCursor = String(response.metadata?.nextCursor || '');
+              params.successCallback(servers, nextCursor ? undefined : params.startRow + servers.length);
             } else {
               params.failCallback();
             }
