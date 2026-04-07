@@ -20,6 +20,9 @@ interface EditableCellRendererParams extends ICellRendererParams {
   getDefaultPlaceholder?: (node: IRowNode, colDef?: ColDef) => string;
   showMaxValue?: boolean;
   isReadonly?: boolean;
+  step?: string | number;
+  min?: string | number;
+  max?: string | number;
 }
 
 const EditableCellRenderer = ({
@@ -38,6 +41,9 @@ const EditableCellRenderer = ({
   node,
   showMaxValue,
   isReadonly,
+  step,
+  min,
+  max,
 }: EditableCellRendererParams) => {
   const t = useI18n();
   const initialPlaceholder = placeholder ? t(placeholder) : '';
@@ -94,6 +100,9 @@ const EditableCellRenderer = ({
         value={correctValue}
         placeholder={correctPlaceholder}
         onChange={handleChange}
+        step={step}
+        min={min}
+        max={max}
         className={classNames(
           'leading-[18px] h-[32px] dial-input px-2 py-1',
           !skipRequired && data.required && (correctValue == null || correctValue === '') && 'dial-input-error',

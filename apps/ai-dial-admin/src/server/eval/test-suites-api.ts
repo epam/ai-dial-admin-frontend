@@ -1,6 +1,6 @@
 import { Token } from '@/src/models/auth';
 import { CustomFile, DialFile } from '@/src/models/dial/file';
-import { Deployment } from '@/src/models/evaluation/deployment';
+import { Deployment, DeploymentType, ToolDefinition } from '@/src/models/evaluation/deployment';
 import { Metric, MetricResponse } from '@/src/models/evaluation/metric';
 import { Run } from '@/src/models/evaluation/run';
 import { TemplateVariable, TestCase, TestSuite, TryOutResponse } from '@/src/models/evaluation/test-suite';
@@ -18,6 +18,7 @@ export const TEST_CASES_URL = (id?: string) => `${TEST_SUITE_URL(id)}/test-cases
 export const TEST_SUITE_RUN_URL = (id?: string) => `${TEST_SUITE_URL(id)}/runs`;
 export const TEST_CASE_URL = (id?: string, testCaseId?: string) => `${TEST_CASES_URL(id)}/${testCaseId || ''}`;
 export const DEPLOYMENTS_URL = `${API}/deployments`;
+export const DEPLOYMENT_TOOLS_URL = (id: string) => `${DEPLOYMENTS_URL}/tools?deploymentId=${encodeURIComponent(id)}`;
 export const TEST_SUITES_RUNS_URL = `${API}/test-suite-runs`;
 export const TEST_SUITE_TEMPLATE_VARIABLES_URL = (id: string) => `${TEST_SUITE_URL(id)}/template-variables`;
 export const TEST_CASE_TEMPLATE_VARIABLES_URL = (id: string, testCaseId: string) =>
@@ -140,8 +141,20 @@ export class TestSuitesApi extends BaseApi {
     return `${filtersStr || sortsStr ? '&' : ''}${filtersStr}${sortsStr ? '&' : ''}${sortsStr}`;
   }
 
-  getDeployments(token: Token): Promise<ServerActionResponse<Deployment[]> | null> {
-    return this.getAction(DEPLOYMENTS_URL, token);
+  getDeployments(
+    token: Token,
+    type?: DeploymentType,
+    interfaceFilter?: string,
+  ): Promise<ServerActionResponse<Deployment[]> | null> {
+    const params = new URLSearchParams();
+    if (type) params.set('type', type);
+    if (interfaceFilter) params.set('interface', interfaceFilter);
+    const query = params.toString();
+    return this.getAction(`${DEPLOYMENTS_URL}${query ? `?${query}` : ''}`, token);
+  }
+
+  getDeploymentTools(deploymentId: string, token: Token): Promise<ToolDefinition[] | null> {
+    return this.get(DEPLOYMENT_TOOLS_URL(deploymentId), token);
   }
 
   getDeployment(id: string, type: string, token: Token): Promise<Deployment | null> {

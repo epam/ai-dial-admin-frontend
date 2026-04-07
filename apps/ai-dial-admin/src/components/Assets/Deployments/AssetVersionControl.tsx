@@ -10,7 +10,9 @@ import { getToolset } from '@/src/app/[lang]/assets-toolsets/actions';
 import { getPrompt } from '@/src/app/[lang]/prompts/actions';
 import AddVersionModal from '@/src/components/Assets/Modals/AddVersionModal';
 import CompareVersions from '@/src/components/Assets/Modals/CompareVersions';
+import { getVersionsPerName } from '@/src/components/Assets/utils';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { ButtonsI18nKey, CompareI18nKey, EntityFieldsI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -20,11 +22,9 @@ import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isDeploymentAsset } from '@/src/utils/is-view';
 import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
-import { getVersionsPerName } from '../utils';
 
 interface Props {
   view: ApplicationRoute;
-  etag?: string;
   asset: AssetWithVersion;
   assets?: AssetWithVersion[] | null;
   onChangeAsset?: (asset: AssetWithVersion) => void;
@@ -34,7 +34,6 @@ interface Props {
 
 const AssetVersionControl: FC<Props> = ({
   view,
-  etag,
   asset,
   assets,
   onChangeAsset,
@@ -87,7 +86,7 @@ const AssetVersionControl: FC<Props> = ({
           : view === ApplicationRoute.AssetsToolsets
             ? getToolset
             : getPrompt;
-      getReqRef.current(getAsset, asset.folderId, asset.name as string, version, etag).then((res) => {
+      getReqRef.current(getAsset, asset.folderId, asset.name as string, version, DEFAULT_ETAG).then((res) => {
         if (res.success) {
           const newVersionAsset = res.response as DeploymentAsset;
           changeAssetForNewVersion(version, newVersionAsset);
@@ -96,7 +95,7 @@ const AssetVersionControl: FC<Props> = ({
         }
       });
     },
-    [asset, view, etag, changeAssetForNewVersion],
+    [asset, view, changeAssetForNewVersion],
   );
 
   const handleModalClose = useCallback(() => {

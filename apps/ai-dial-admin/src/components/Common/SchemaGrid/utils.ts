@@ -151,7 +151,139 @@ export const getPrimaryType = (schema: JSONSchema7): JSONSchema7TypeName => {
 };
 
 /**
+ * Recursively convert a single schema property definition into a SchemaFieldRow.
+ * Handles $ref resolution, anyOf/oneOf, and nested object/array children at any depth.
+ *
+ * @param {string} name - property name
+ * @param {JSONSchema7Definition} def - raw definition from the schema
+ * @param {JSONSchema7} rootSchema - root schema for resolving $ref
+ * @param {(string | null)} parentId - id of the parent field row
+ * @param {number} depth - current depth level
+ * @param {boolean} isRequired - whether this property is required
+ * @param {boolean} isFirstLevel - whether this is a first-level (depth 0) property (for dialMeta extraction)
+ * @returns {SchemaFieldRow} - the resulting schema field row with children recursively resolved
+ */
+const convertPropertyToField = (
+  name: string,
+  def: JSONSchema7Definition,
+  rootSchema: JSONSchema7,
+  parentId: string | null,
+  depth: number,
+  isRequired: boolean,
+  isFirstLevel: boolean,
+): SchemaFieldRow => {
+  const resolvedDef = resolveDef(def, rootSchema);
+  if (!isJSONSchema7(resolvedDef)) {
+    return { ...createEmptyField(parentId, depth), name };
+  }
+
+  const effectiveDef = getEffectiveSchema(def, rootSchema) ?? (resolvedDef as JSONSchema7);
+  const type = getPrimaryType(effectiveDef);
+  const rawDef = isFirstLevel && typeof def === 'object' && def !== null ? (def as Record<string, unknown>) : null;
+  const dialMeta =
+    rawDef && typeof rawDef[DIAL_META_KEY] === 'object' && rawDef[DIAL_META_KEY] !== null
+      ? (rawDef[DIAL_META_KEY] as Record<string, unknown>)
+      : undefined;
+  const propSchema = resolvedDef as JSONSchema7;
+  const enumValues = Array.isArray(propSchema.enum) ? propSchema.enum.map((v) => String(v)) : undefined;
+
+  const field: SchemaFieldRow = {
+    id: generateFieldId(),
+    name,
+    type,
+    required: isRequired,
+    title: propSchema.title ?? effectiveDef.title ?? '',
+    description: propSchema.description ?? effectiveDef.description ?? '',
+    expanded: false,
+    children: [],
+    parentId,
+    depth,
+    ...(propSchema.minimum !== undefined && { minimum: propSchema.minimum }),
+    ...(propSchema.maximum !== undefined && { maximum: propSchema.maximum }),
+    ...(dialMeta && Object.keys(dialMeta).length > 0 && { dialMeta }),
+    ...(enumValues?.length && { enum: enumValues }),
+    ...(propSchema.default !== undefined && { defaultValue: propSchema.default }),
+  };
+
+  if (type === 'object' && effectiveDef.properties) {
+    const nestedRequired = effectiveDef.required || [];
+    field.children = Object.entries(effectiveDef.properties).map(([childName, childDef]) =>
+      convertPropertyToField(
+        childName,
+        childDef,
+        rootSchema,
+        field.id,
+        depth + 1,
+        nestedRequired.includes(childName),
+        false,
+      ),
+    );
+    if (field.children.length) {
+      field.expanded = true;
+    }
+  } else if (
+    type === 'array' &&
+    effectiveDef.items &&
+    !Array.isArray(effectiveDef.items) &&
+    typeof effectiveDef.items === 'object' &&
+    isJSONSchema7(effectiveDef.items as JSONSchema7Definition)
+  ) {
+    if ((effectiveDef.items as JSONSchema7).properties) {
+      const items = effectiveDef.items as JSONSchema7;
+      const nestedRequired = items.required || [];
+      field.children = Object.entries(items.properties!).map(([childName, childDef]) =>
+        convertPropertyToField(
+          childName,
+          childDef,
+          rootSchema,
+          field.id,
+          depth + 1,
+          nestedRequired.includes(childName),
+          false,
+        ),
+      );
+      if (field.children.length) {
+        field.expanded = true;
+      }
+    } else {
+      // evaluation metric
+      const items = effectiveDef.items as JSONSchema7;
+      const effectiveChild = getEffectiveSchema(items, rootSchema) ?? resolveDef(items, rootSchema);
+      if (!isJSONSchema7(effectiveChild)) {
+        return { ...createEmptyField(field.id, depth + 1), name: field.name };
+      }
+      const childSchema = effectiveChild as JSONSchema7;
+      const childType = getPrimaryType(childSchema);
+      field.children =
+        childSchema.type === 'object'
+          ? jsonSchemaToFields(childSchema, rootSchema).map((child) => ({
+              ...child,
+              parentId: field.id,
+              depth: depth + 1,
+            }))
+          : [
+              {
+                id: generateFieldId(),
+                name: field.name,
+                type: childType,
+                required: field.required,
+                title: childSchema.title || '',
+                description: childSchema.description || '',
+                expanded: false,
+                children: [],
+                parentId: field.id,
+                depth: depth + 1,
+              },
+            ];
+    }
+  }
+
+  return field;
+};
+
+/**
  * Convert every definition into grid row, handle all types and nested structures, resolve $ref and effective schema for correct type detection.
+ * Uses recursive convertPropertyToField to deeply resolve $ref at any nesting level.
  *
  * @param {(JSONSchema7 | undefined)} schema - JSON schema to convert, expected to be of type 'object' with properties
  * @param {?JSONSchema7} [root] - root schema for resolving $ref
@@ -164,131 +296,9 @@ export const jsonSchemaToFields = (schema: JSONSchema7 | undefined, root?: JSONS
   const rootSchema = root ?? schema;
   const requiredFields = schema.required || [];
 
-  return Object.entries(schema.properties).map(([name, def]) => {
-    const resolvedDef = resolveDef(def, rootSchema);
-    if (!isJSONSchema7(resolvedDef)) {
-      return {
-        ...createEmptyField(null, 0),
-        name,
-      };
-    }
-
-    const effectiveDef = getEffectiveSchema(def, rootSchema) ?? (resolvedDef as JSONSchema7);
-    const type = getPrimaryType(effectiveDef);
-    const rawDef = typeof def === 'object' && def !== null ? (def as Record<string, unknown>) : null;
-    const dialMeta =
-      rawDef && typeof rawDef[DIAL_META_KEY] === 'object' && rawDef[DIAL_META_KEY] !== null
-        ? (rawDef[DIAL_META_KEY] as Record<string, unknown>)
-        : undefined;
-    const propSchema = resolvedDef as JSONSchema7;
-    const enumValues = Array.isArray(propSchema.enum) ? propSchema.enum.map((v) => String(v)) : undefined;
-    const field: SchemaFieldRow = {
-      id: generateFieldId(),
-      name,
-      type,
-      required: requiredFields.includes(name),
-      title: propSchema.title ?? effectiveDef.title ?? '',
-      description: propSchema.description ?? effectiveDef.description ?? '',
-      expanded: false,
-      children: [],
-      parentId: null,
-      depth: 0,
-      ...(propSchema.minimum !== undefined && { minimum: propSchema.minimum }),
-      ...(propSchema.maximum !== undefined && { maximum: propSchema.maximum }),
-      ...(dialMeta && Object.keys(dialMeta).length > 0 && { dialMeta }),
-      ...(enumValues?.length && { enum: enumValues }),
-      ...(propSchema.default !== undefined && { defaultValue: propSchema.default }),
-    };
-
-    if (type === 'object' && effectiveDef.properties) {
-      const nestedRequired = effectiveDef.required || [];
-      field.children = Object.entries(effectiveDef.properties).map(([childName, childDef]) => {
-        const effectiveChild = getEffectiveSchema(childDef, rootSchema) ?? resolveDef(childDef, rootSchema);
-        if (!isJSONSchema7(effectiveChild)) {
-          return { ...createEmptyField(field.id, 1), name: childName };
-        }
-        const childSchema = effectiveChild as JSONSchema7;
-        const childType = getPrimaryType(childSchema);
-        return {
-          id: generateFieldId(),
-          name: childName,
-          type: childType,
-          required: nestedRequired.includes(childName),
-          title: childSchema.title || '',
-          description: childSchema.description || '',
-          expanded: false,
-          children: [],
-          parentId: field.id,
-          depth: 1,
-        };
-      });
-      if (field.children.length) {
-        field.expanded = true;
-      }
-    } else if (
-      type === 'array' &&
-      effectiveDef.items &&
-      !Array.isArray(effectiveDef.items) &&
-      typeof effectiveDef.items === 'object' &&
-      isJSONSchema7(effectiveDef.items as JSONSchema7Definition)
-    ) {
-      if ((effectiveDef.items as JSONSchema7).properties) {
-        const items = effectiveDef.items as JSONSchema7;
-        const nestedRequired = items.required || [];
-        field.children = Object.entries(items.properties!).map(([childName, childDef]) => {
-          const effectiveChild = getEffectiveSchema(childDef, rootSchema) ?? resolveDef(childDef, rootSchema);
-          if (!isJSONSchema7(effectiveChild)) {
-            return { ...createEmptyField(field.id, 1), name: childName };
-          }
-          const childSchema = effectiveChild as JSONSchema7;
-          const childType = getPrimaryType(childSchema);
-          return {
-            id: generateFieldId(),
-            name: childName,
-            type: childType,
-            required: nestedRequired.includes(childName),
-            title: childSchema.title || '',
-            description: childSchema.description || '',
-            expanded: false,
-            children: [],
-            parentId: field.id,
-            depth: 1,
-          };
-        });
-        if (field.children.length) {
-          field.expanded = true;
-        }
-      } else {
-        // evaluation metric
-        const items = effectiveDef.items as JSONSchema7;
-        const effectiveChild = getEffectiveSchema(items, rootSchema) ?? resolveDef(items, rootSchema);
-        if (!isJSONSchema7(effectiveChild)) {
-          return { ...createEmptyField(field.id, 1), name: field.name };
-        }
-        const childSchema = effectiveChild as JSONSchema7;
-        const childType = getPrimaryType(childSchema);
-        field.children =
-          childSchema.type === 'object'
-            ? jsonSchemaToFields(childSchema, effectiveDef).map((child) => ({ ...child, parentId: field.id, depth: 1 }))
-            : [
-                {
-                  id: generateFieldId(),
-                  name: field.name,
-                  type: childType,
-                  required: field.required,
-                  title: childSchema.title || '',
-                  description: childSchema.description || '',
-                  expanded: false,
-                  children: [],
-                  parentId: field.id,
-                  depth: 1,
-                },
-              ];
-      }
-    }
-
-    return field;
-  });
+  return Object.entries(schema.properties).map(([name, def]) =>
+    convertPropertyToField(name, def, rootSchema, null, 0, requiredFields.includes(name), true),
+  );
 };
 
 /**

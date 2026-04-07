@@ -5,15 +5,15 @@ import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { ButtonsI18nKey, EntitiesI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ApplicationRoute } from '@/src/types/routes';
 import SelectAppRunnerModal from './SelectAppRunnersModal';
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 
 interface Props {
   selectedValue?: string;
@@ -94,7 +94,7 @@ const AppRunners: FC<Props> = ({ selectedValue, runners, onChangeValue, label, i
           <DialLabel label={label} required htmlFor="sourceEntity" />
           <DialInputPopup
             disabled={isReadOnlyAdmin}
-            emptyValueText={t(EntitiesI18nKey.NoApplicationRunners)}
+            placeholder={t(EntityPlaceholdersI18nKey.SelectAppRunner)}
             open={isModalOpen}
             onOpen={onOpenModal}
             selectedValue={valueTitle}

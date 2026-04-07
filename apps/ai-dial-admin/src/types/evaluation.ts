@@ -24,6 +24,7 @@ export enum TestCaseConflictStrategy {
 export enum TestCaseItemType {
   STRING = 'STRING',
   NUMBER = 'NUMBER',
+  INTEGER = 'INTEGER',
   BOOLEAN = 'BOOLEAN',
   OBJECT = 'OBJECT',
   ARRAY = 'ARRAY',
