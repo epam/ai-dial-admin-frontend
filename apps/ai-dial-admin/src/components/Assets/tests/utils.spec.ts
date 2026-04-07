@@ -153,6 +153,7 @@ describe('getDeleteNotificationContent', () => {
     if (key === FileManagerI18nKey.File) return 'File';
     if (key === FileManagerI18nKey.Prompts) return 'Prompts';
     if (key === FileManagerI18nKey.Prompt) return 'Prompt';
+    if (key === FileManagerI18nKey.Items) return 'Items';
     return key;
   };
 
@@ -168,7 +169,7 @@ describe('getDeleteNotificationContent', () => {
     const fileNodes = [{ sourceUrl: 'file1.txt' }, { sourceUrl: 'file2.txt' }, { sourceUrl: 'file3.txt' }] as any[];
     const result = getDeleteNotificationContent(ApplicationRoute.Files, fileNodes, mockT);
 
-    expect(result.title).toBe('Delete Files Success');
+    expect(result.title).toBe('Delete Items Success');
     expect(result.description).toContain('3');
   });
 
@@ -184,7 +185,7 @@ describe('getDeleteNotificationContent', () => {
     const fileNodes = [{ name: 'Prompt1' }, { name: 'Prompt2' }] as any[];
     const result = getDeleteNotificationContent(ApplicationRoute.Prompts, fileNodes, mockT);
 
-    expect(result.title).toBe('Delete Prompts Success');
+    expect(result.title).toBe('Delete Items Success');
     expect(result.description).toContain('2');
   });
 });
@@ -204,12 +205,19 @@ describe('getMoveNotificationContent', () => {
     if (key === FileManagerI18nKey.File) return 'File';
     if (key === FileManagerI18nKey.Prompts) return 'Prompts';
     if (key === FileManagerI18nKey.Prompt) return 'Prompt';
+    if (key === FileManagerI18nKey.Items) return 'Items';
     return key;
   };
 
   test('should return correct notification for single file move in Files view', () => {
     const items = [{ sourceUrl: 'file.txt' }] as any[];
-    const result = getMoveNotificationContent(ApplicationRoute.Files, items, '/destination/', mockT);
+    const result = getMoveNotificationContent(
+      ApplicationRoute.Files,
+      items,
+      '/destination/',
+      '/destination/folder/',
+      mockT,
+    );
 
     expect(result.title).toBe('Move File Success');
     expect(result.description).toContain('file.txt');
@@ -218,16 +226,22 @@ describe('getMoveNotificationContent', () => {
 
   test('should return correct notification for multiple files move in Files view', () => {
     const items = [{ sourceUrl: 'file1.txt' }, { sourceUrl: 'file2.txt' }, { sourceUrl: 'file3.txt' }] as any[];
-    const result = getMoveNotificationContent(ApplicationRoute.Files, items, '/destination/folder/', mockT);
+    const result = getMoveNotificationContent(
+      ApplicationRoute.Files,
+      items,
+      '/destination/folder/',
+      '/destination/',
+      mockT,
+    );
 
-    expect(result.title).toBe('Move Files Success');
+    expect(result.title).toBe('Move Items Success');
     expect(result.description).toContain('3');
-    expect(result.description).toContain('/destination/folder/');
+    expect(result.description).toContain('/destination/');
   });
 
   test('should return correct notification for single prompt move in Prompts view', () => {
     const items = [{ sourceUrl: 'My Prompt' }] as any[];
-    const result = getMoveNotificationContent(ApplicationRoute.Prompts, items, '/prompts/', mockT);
+    const result = getMoveNotificationContent(ApplicationRoute.Prompts, items, '/prompts/', '/prompts/folder/', mockT);
 
     expect(result.title).toBe('Move Prompt Success');
     expect(result.description).toContain('My Prompt');
@@ -236,9 +250,9 @@ describe('getMoveNotificationContent', () => {
 
   test('should return correct notification for multiple prompts move in Prompts view', () => {
     const items = [{ sourceUrl: 'Prompt1' }, { sourceUrl: 'Prompt2' }] as any[];
-    const result = getMoveNotificationContent(ApplicationRoute.Prompts, items, '/prompts/folder/', mockT);
+    const result = getMoveNotificationContent(ApplicationRoute.Prompts, items, '/prompts/', '/prompts/folder/', mockT);
 
-    expect(result.title).toBe('Move Prompts Success');
+    expect(result.title).toBe('Move Items Success');
     expect(result.description).toContain('2');
     expect(result.description).toContain('/prompts/folder/');
   });
