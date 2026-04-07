@@ -8,10 +8,12 @@ import DuplicateAsset from '@/src/components/Assets/Deployments/DuplicateAsset';
 import DuplicatePopup from '@/src/components/EntityView/Modals/Duplicate/Duplicate';
 import DuplicateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Duplicate';
 import DuplicateKey from '@/src/components/Keys/Modals/DuplicateKey';
+import DuplicateToolset from '@/src/components/Toolsets/Modals/DuplicateToolset';
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
+import { Toolset } from '@/src/models/dial/toolset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -77,6 +79,18 @@ export const getDuplicateModal = async <T extends object>(
         names={names}
         keys={keys}
         onClose={handleModalClose}
+      />
+    );
+  }
+
+  if (route === ApplicationRoute.Toolsets) {
+    return (
+      <DuplicateToolset
+        entity={preparedEntity as Toolset}
+        onDuplicate={onDuplicate}
+        isModalOpen={isModalOpen}
+        onClose={handleModalClose}
+        names={names}
       />
     );
   }

@@ -9,6 +9,7 @@ import { DialApplication } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { AssetWithVersion, AssetApp, AssetToolset } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
+import { Toolset, ToolsetAuthType } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isAssetWithVersion } from '@/src/utils/is-view';
 
@@ -109,6 +110,25 @@ export const prepareEntityForDuplicate = async <T>(
     return {
       ...toolset,
       ...entity,
+    };
+  }
+
+  if (route === ApplicationRoute.Toolsets) {
+    const toolset = entity as Toolset;
+    return {
+      ...entity,
+      authSettings: toolset.authSettings
+        ? {
+            ...toolset.authSettings,
+            globalAuthStatus: undefined,
+            userLevelAuthStatus: undefined,
+            clientSecret: '',
+            apiKeyHeader:
+              toolset.authSettings.authenticationType === ToolsetAuthType.API_KEY
+                ? ''
+                : toolset.authSettings.apiKeyHeader,
+          }
+        : undefined,
     };
   }
 
