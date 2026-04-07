@@ -66,15 +66,15 @@ describe('FileManager', () => {
       });
     });
 
-    test('should return error message for folder names with "<" character', () => {
-      const result = validateCreateFolder('test<folder', mockTranslate);
+    test('should return error message for folder names with ";" character', () => {
+      const result = validateCreateFolder('test;folder', mockTranslate);
 
       expect(result).toBe(FileManagerI18nKey.CreateFolderValidate);
       expect(mockTranslate).toHaveBeenCalledWith(FileManagerI18nKey.CreateFolderValidate);
     });
 
-    test('should return error message for folder names with ">" character', () => {
-      const result = validateCreateFolder('test>folder', mockTranslate);
+    test('should return error message for folder names with "," character', () => {
+      const result = validateCreateFolder('test,folder', mockTranslate);
 
       expect(result).toBe(FileManagerI18nKey.CreateFolderValidate);
     });
@@ -103,26 +103,32 @@ describe('FileManager', () => {
       expect(result).toBe(FileManagerI18nKey.CreateFolderValidate);
     });
 
-    test('should return error message for folder names with "|" character', () => {
-      const result = validateCreateFolder('test|folder', mockTranslate);
+    test('should return error message for folder names with "{" character', () => {
+      const result = validateCreateFolder('test{folder', mockTranslate);
 
       expect(result).toBe(FileManagerI18nKey.CreateFolderValidate);
     });
 
-    test('should return error message for folder names with "?" character', () => {
-      const result = validateCreateFolder('test?folder', mockTranslate);
+    test('should return error message for folder names with "}" character', () => {
+      const result = validateCreateFolder('test}folder', mockTranslate);
 
       expect(result).toBe(FileManagerI18nKey.CreateFolderValidate);
     });
 
-    test('should return error message for folder names with "*" character', () => {
-      const result = validateCreateFolder('test*folder', mockTranslate);
+    test('should return error message for folder names with "%" character', () => {
+      const result = validateCreateFolder('test%folder', mockTranslate);
+
+      expect(result).toBe(FileManagerI18nKey.CreateFolderValidate);
+    });
+
+    test('should return error message for folder names with "&" character', () => {
+      const result = validateCreateFolder('test&folder', mockTranslate);
 
       expect(result).toBe(FileManagerI18nKey.CreateFolderValidate);
     });
 
     test('should validate against CREATE_FOLDER_FORBIDDEN_CHARS constant', () => {
-      const forbiddenChars = ['<', '>', ':', '"', '/', '\\', '|', '?', '*'];
+      const forbiddenChars = [';', ':', ',', '=', '/', '{', '}', '%', '&', '\\'];
 
       forbiddenChars.forEach((char) => {
         const testName = `folder${char}name`;

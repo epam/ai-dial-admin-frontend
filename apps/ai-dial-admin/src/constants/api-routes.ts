@@ -9,6 +9,7 @@ export enum ApiRoute {
   FilesImport = '/api/files/import',
   FilesPreview = '/api/files/preview',
   PromptsImport = '/api/prompts/import',
+  RunsStatusStream = '/api/runs/status-stream',
   Sse = '/api/sse',
   TestSuitesExport = '/api/test-suites/export',
   Themes = '/api/themes',

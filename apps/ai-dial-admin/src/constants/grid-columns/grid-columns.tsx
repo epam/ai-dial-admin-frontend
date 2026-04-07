@@ -7,6 +7,7 @@ import StatusIndicator from '@/src/components/Deployments/Common/StatusIndicator
 import VersionsSelect from '@/src/components/Deployments/Common/VersionsSelect/VersionsSelect';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSelectCellRenderer';
+import RunStatusCellRenderer from '@/src/components/Grid/CellRenderers/RunStatusCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRenderer';
 import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
@@ -788,7 +789,12 @@ export const RUNS_COLUMN: ColDef[] = [
   { field: 'numberOfTestCases', colId: 'numberOfTestCases', headerName: 'Number of test cases' },
   { field: 'startedAt', headerName: 'Start date', ...dateTimeColumn },
   { field: 'completedAt', headerName: 'End date', ...dateTimeColumn },
-  { field: 'status', headerName: 'Status' },
+  {
+    field: 'status',
+    headerName: 'Status',
+    cellRenderer: RunStatusCellRenderer,
+    tooltipValueGetter: () => undefined,
+  },
 ];
 
 export const METRICS_COLUMN: ColDef[] = [

@@ -645,6 +645,7 @@ export enum TelemetryI18nKey {
   CallsByDeployment = 'Telemetry.CallsByDeployment',
   RequestPerMcpUsage = 'Telemetry.RequestPerMcpUsage',
   ProjectsConsumptionMcp = 'Telemetry.ProjectsConsumptionMcp',
+  Unknown = 'Telemetry.Unknown',
 }
 
 export enum RoutesI18nKey {
@@ -1552,6 +1553,9 @@ export enum RunsI18nKey {
   MetricInfo = 'Runs.MetricInfo',
   HttpLabel = 'Runs.HttpLabel',
   DurationLabel = 'Runs.DurationLabel',
+  Completed = 'Runs.Status.Completed',
+  Failed = 'Runs.Status.Failed',
+  Running = 'Runs.Status.Running',
 }
 
 export enum FileManagerI18nKey {
