@@ -152,25 +152,17 @@ export const ROUTES_COLUMNS: ColDef[] = [
   UPDATED_AT_COLUMN,
 ];
 
-export const EVALUATION_DEPLOYMENTS_COLUMNS = (t: (str: string) => string): ColDef[] => [
-  { field: '$type', headerName: 'Type', hide: false },
+export const EVALUATION_DEPLOYMENTS_COLUMNS: ColDef[] = [
   DISPLAY_NAME_COLUMN_WITH_SORT,
   VERSION_COLUMN,
   DESCRIPTION_COLUMN,
   { field: 'deploymentId', headerName: 'ID', hide: false },
-  ENDPOINT_COLUMN,
-  { field: 'owner', headerName: 'Owner', hide: false },
-  TOPICS_COLUMN,
-  ATTACHMENT_COLUMN(t),
-  MAX_INPUT_ATTACHMENTS_COLUMN,
 ];
 
 export const MCP_DEPLOYMENTS_COLUMNS: ColDef[] = [
   DISPLAY_NAME_COLUMN_WITH_SORT,
   { field: 'deploymentId', headerName: 'ID', hide: false },
-  { field: '$type', headerName: 'Type', hide: false },
   { field: 'transport', headerName: 'Transport', hide: false },
-  CREATED_AT_COLUMN,
 ];
 
 export const MCP_TOOLS_COLUMNS: ColDef[] = [

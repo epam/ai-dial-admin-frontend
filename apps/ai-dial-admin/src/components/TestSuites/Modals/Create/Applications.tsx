@@ -104,7 +104,7 @@ const Applications: FC<Props> = ({ deployments, selectedApplicationId, onChangeA
 
       <div className="flex-1 min-h-0">
         <GridView
-          columnDefs={EVALUATION_DEPLOYMENTS_COLUMNS(t)}
+          columnDefs={EVALUATION_DEPLOYMENTS_COLUMNS}
           rowData={data}
           additionalGridOptions={additionalGridOptions}
           emptyDataProps={{ title: t(EntitiesI18nKey.NoApplications) }}
