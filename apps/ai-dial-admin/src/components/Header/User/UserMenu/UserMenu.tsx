@@ -1,17 +1,14 @@
-import { IconChevronDown } from '@tabler/icons-react';
 import { DialConfirmationPopup, DialDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
-import { FC, useEffect, useMemo, useState } from 'react';
-import classNames from 'classnames';
+import { FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import SettingsModal from '@/src/components/SettingsModal/SettingsModal';
-import { AuthI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { AuthI18nKey, GlobalI18nKey } from '@/src/constants/i18n';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useLogout } from '@/src/hooks/use-logout';
 import { useI18n } from '@/src/locales/client';
 import LogoutItem from './LogoutItem';
 import SettingsItem from './SettingsItem';
-import UserInfo from './UserInfo';
+import { UserIcon } from './UserIcon';
 
 interface Props {
   isEnableAuth: boolean;
@@ -20,6 +17,7 @@ interface Props {
 
 const UserMenu: FC<Props> = ({ isEnableAuth, isMobile }) => {
   const t = useI18n();
+  const dismissRef = useRef<{ dismiss: () => void }>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isLogoutConfirmationOpen, setIsLogoutConfirmationOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -30,9 +28,13 @@ const UserMenu: FC<Props> = ({ isEnableAuth, isMobile }) => {
     setTheme(theme as string);
   };
 
-  const handleSettingsClick = () => setIsSettingsModalOpen(true);
+  const handleSettingsClick = () => {
+    dismissRef.current?.dismiss();
+    setIsSettingsModalOpen(true);
+  };
 
   const handleLogOutClick = () => {
+    dismissRef.current?.dismiss();
     if (!session) {
       handleLogout();
       return;
@@ -78,21 +80,27 @@ const UserMenu: FC<Props> = ({ isEnableAuth, isMobile }) => {
   return (
     <>
       {isMobile ? (
-        <div className="flex flex-col w-full divide-y divide-tertiary">
-          <UserInfo session={session} />
-          <div className="flex flex-col gap-3 p-4">
-            {themes?.length && <SettingsItem onClick={handleSettingsClick} />}
-            {isEnableAuth && <LogoutItem session={session} onClick={handleLogOutClick} />}
-          </div>
+        <div className="flex flex-col gap-3 p-4 w-full">
+          {themes?.length && <SettingsItem onClick={handleSettingsClick} />}
+          {isEnableAuth && <LogoutItem session={session} onClick={handleLogOutClick} />}
         </div>
       ) : (
-        <DialDropdown menu={{ items: dropdownItems }} onOpenChange={(open) => setIsOpen(open)}>
-          <div role="menuitem" className="flex min-w-[120px] cursor-pointer items-center justify-between gap-2 pr-6">
-            <UserInfo session={session} />
-            <IconChevronDown
-              {...BASE_BUTTON_ICON_PROPS}
-              className={classNames('shrink-0 text-primary transition-all', isOpen && 'rotate-180')}
-            />
+        <DialDropdown
+          listClassName="!w-[280px]"
+          onOpenChange={(open) => setIsOpen(open)}
+          menu={{
+            items: dropdownItems,
+            header: (
+              <div className="flex flex-row items-center gap-3 border-b border-secondary p-3">
+                <UserIcon userName={session?.user?.name || t(GlobalI18nKey.User)} />
+
+                <p className="dial-small-semi-text">{session?.user?.name}</p>
+              </div>
+            ),
+          }}
+        >
+          <div role="menuitem" className="flex cursor-pointer items-center justify-between gap-2 pr-6">
+            <UserIcon userName={session?.user?.name || t(GlobalI18nKey.User)} />
           </div>
         </DialDropdown>
       )}

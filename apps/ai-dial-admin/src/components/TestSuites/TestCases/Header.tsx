@@ -23,17 +23,9 @@ interface Props {
   onApplyImport: (file: File, mode: TestCaseImportMode, strategy: TestCaseConflictStrategy) => void;
   onAdd?: () => void;
   onExport?: () => void;
-  onToggleSchema?: () => void;
-  isSchemaOpen?: boolean;
+  onOpenSchemaModal?: () => void;
 }
-const HeaderButtons: FC<Props> = ({
-  selectedTestSuiteId,
-  onApplyImport,
-  onAdd,
-  onExport,
-  onToggleSchema,
-  isSchemaOpen,
-}) => {
+const HeaderButtons: FC<Props> = ({ selectedTestSuiteId, onApplyImport, onAdd, onExport, onOpenSchemaModal }) => {
   const t = useI18n();
 
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -44,12 +36,12 @@ const HeaderButtons: FC<Props> = ({
 
   return (
     <div className="flex gap-4">
-      {onToggleSchema && (
+      {onOpenSchemaModal && (
         <DialPrimaryButton
           label={t(TestSuitesI18nKey.TestCaseSchema)}
           iconBefore={<IconSettings {...BASE_BUTTON_ICON_PROPS} />}
-          onClick={onToggleSchema}
-          appearance={isSchemaOpen ? ButtonAppearance.Solid : ButtonAppearance.Ghost}
+          onClick={onOpenSchemaModal}
+          appearance={ButtonAppearance.Ghost}
         />
       )}
 

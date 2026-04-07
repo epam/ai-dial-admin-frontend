@@ -35,6 +35,7 @@ export interface AnalyticsResult extends ResultDto {
   testCaseRunResultsId?: string;
   requestBody?: Record<string, unknown>;
   responseBody?: Record<string, unknown>;
+  grafanaTraceUrl?: string;
 }
 
 export enum ExtractionResultStatus {
@@ -48,7 +49,7 @@ export interface Run {
   id?: string;
   testSuiteId?: string;
   testRunName?: string;
-  status?: string;
+  status?: RunStatus;
   runConfig?: {
     numberOfRuns?: number;
     testRunName?: string;
@@ -68,4 +69,10 @@ export interface Run {
   updatedAt?: number;
   /** Rows for the Extraction results tab (per–test-case metrics and extracted values) */
   extractionResults?: ExtractionResult[];
+}
+
+export enum RunStatus {
+  COMPLETED = 'COMPLETED',
+  RUNNING = 'RUNNING',
+  FAILED = 'FAILED',
 }

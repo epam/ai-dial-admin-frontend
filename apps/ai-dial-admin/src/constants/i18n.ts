@@ -1,3 +1,7 @@
+export enum GlobalI18nKey {
+  User = 'User',
+}
+
 export enum MenuI18nKey {
   Entities = 'Menu.Entities',
   EntitiesDescription = 'Menu.EntitiesDescription',
@@ -100,6 +104,7 @@ export enum CoreVersionModalI18nKey {
 
 export enum BasicI18nKey {
   None = 'Basic.None',
+  Preview = 'Basic.Preview',
   Optional = 'Basic.Optional',
   Required = 'Basic.Required',
   Failed = 'Basic.Failed',
@@ -130,6 +135,8 @@ export enum BasicI18nKey {
   Server = 'Basic.Server',
   Client = 'Basic.Client',
   ContentType = 'Basic.ContentType',
+  HighAccuracy = 'Basic.HighAccuracy',
+  LowAccuracy = 'Basic.LowAccuracy',
 }
 
 export enum EntitiesI18nKey {
@@ -582,10 +589,13 @@ export enum TabsI18nKey {
   RequestSchema = 'Tabs.RequestSchema',
   ResponseSchema = 'Tabs.ResponseSchema',
   Columns = 'Tabs.Columns',
+  Response = 'Tabs.Response',
   Analytics = 'Tabs.Analytics',
   MCP = 'Tabs.MCP',
   Public = 'Tabs.Public',
   Application = 'Tabs.Application',
+  InputSchema = 'Tabs.InputSchema',
+  OutputSchema = 'Tabs.OutputSchema',
 }
 
 export enum InterceptorsI18nKey {
@@ -1285,6 +1295,7 @@ export enum ToolsetI18nKey {
   AvailableForYou = 'Toolset.AvailableForYou',
   OtherInAToolset = 'Toolset.OtherInAToolset',
   CustomToolDescription = 'Toolset.CustomToolDescription',
+  AuthSettingsLockedMessage = 'Toolset.AuthSettingsLockedMessage',
 }
 
 export enum ImagesI18nKey {
@@ -1439,13 +1450,13 @@ export enum TestSuitesI18nKey {
   ChangeMethod = 'TestSuites.ChangeMethod',
   ChangeMethodDisabledWhileTryOutOpen = 'TestSuites.ChangeMethodDisabledWhileTryOutOpen',
   Controls = 'TestSuites.Controls',
+  Schema = 'TestSuites.Schema',
   NoTestCases = 'TestSuites.NoTestCases',
   FromPC = 'TestSuites.FromPC',
   ImportFromPC = 'TestSuites.ImportFromPC',
   FromDial = 'TestSuites.FromDial',
   Other = 'TestSuites.Other',
   ChatInterface = 'TestSuites.ChatInterface',
-  Preview = 'TestSuites.Preview',
   MethodChangeWarning = 'TestSuites.MethodChangeWarning',
   ImportSuccess = 'TestSuites.ImportSuccess',
   ImportFailed = 'TestSuites.ImportFailed',
@@ -1510,6 +1521,21 @@ export enum TestSuitesI18nKey {
   DuplicateFieldName = 'TestSuites.DuplicateFieldName',
   SchemaDescription = 'TestSuites.SchemaDescription',
   FinalPath = 'TestSuites.FinalPath',
+  Tool = 'TestSuites.Tool',
+  SuiteType = 'TestSuites.SuiteType',
+  SelectTool = 'TestSuites.SelectTool',
+  ToolArguments = 'TestSuites.ToolArguments',
+  ToolArgumentsPreview = 'TestSuites.ToolArgumentsPreview',
+  ToolCallPreview = 'TestSuites.ToolCallPreview',
+  ChangeTool = 'TestSuites.ChangeTool',
+  ChangeToolset = 'TestSuites.ChangeToolset',
+  NoToolsAvailable = 'TestSuites.NoToolsAvailable',
+  NoArgumentsDefined = 'TestSuites.NoArgumentsDefined',
+  ToolCallSucceeded = 'TestSuites.ToolCallSucceeded',
+  ToolCallFailed = 'TestSuites.ToolCallFailed',
+  ToolOutputSchema = 'TestSuites.ToolOutputSchema',
+  ToolSchema = 'TestSuites.ToolSchema',
+  FailedToLoadTools = 'TestSuites.FailedToLoadTools',
 }
 
 export enum RunsI18nKey {
@@ -1527,6 +1553,9 @@ export enum RunsI18nKey {
   MetricInfo = 'Runs.MetricInfo',
   HttpLabel = 'Runs.HttpLabel',
   DurationLabel = 'Runs.DurationLabel',
+  Completed = 'Runs.Status.Completed',
+  Failed = 'Runs.Status.Failed',
+  Running = 'Runs.Status.Running',
 }
 
 export enum FileManagerI18nKey {
@@ -1535,6 +1564,7 @@ export enum FileManagerI18nKey {
   AddChild = 'FileManager.AddChild',
   Rename = 'FileManager.Rename',
   Move = 'FileManager.Move',
+  File = 'FileManager.File',
   Files = 'FileManager.Files',
   Applications = 'FileManager.Applications',
   Toolsets = 'FileManager.Toolsets',
@@ -1548,7 +1578,6 @@ export enum FileManagerI18nKey {
   CreateFolderValidate = 'FileManager.CreateFolderValidate',
   CreateFolderValidateFirstSymbol = 'FileManager.CreateFolderValidateFirstSymbol',
   CreateFolderValidateNameLength = 'FileManager.CreateFolderValidateNameLength',
-  Preview = 'FileManager.Preview',
   MoveItem = 'FileManager.MoveItem',
   MoveItems = 'FileManager.MoveItems',
   EmptyMoveFolderTitle = 'FileManager.EmptyMoveFolderTitle',
@@ -1565,6 +1594,19 @@ export enum FileManagerI18nKey {
   // Notifications
   CreateFolderSuccessTitle = 'FileManager.Notifications.CreateFolder.Title',
   CreateFolderSuccessDescription = 'FileManager.Notifications.CreateFolder.Description',
+  ExportSuccessTitle = 'FileManager.Notifications.Export.Title',
+  ExportSuccessDescriptionForOne = 'FileManager.Notifications.Export.DescriptionForOne',
+  ExportSuccessDescriptionForMany = 'FileManager.Notifications.Export.DescriptionForMany',
+  ImportSuccessTitle = 'FileManager.Notifications.Import.Title',
+  ImportSuccessDescriptionForOne = 'FileManager.Notifications.Import.DescriptionForOne',
+  ImportSuccessDescriptionForMany = 'FileManager.Notifications.Import.DescriptionForMany',
+  ImportSuccessDescriptionForArchive = 'FileManager.Notifications.Import.DescriptionForArchive',
+  MoveSuccessTitle = 'FileManager.Notifications.Move.Title',
+  MoveSuccessDescriptionForOne = 'FileManager.Notifications.Move.DescriptionForOne',
+  MoveSuccessDescriptionForMany = 'FileManager.Notifications.Move.DescriptionForMany',
+  DeleteSuccessTitle = 'FileManager.Notifications.Delete.Title',
+  DeleteSuccessDescriptionForOne = 'FileManager.Notifications.Delete.DescriptionForOne',
+  DeleteSuccessDescriptionForMany = 'FileManager.Notifications.Delete.DescriptionForMany',
 }
 
 export enum JsonAtaI18nKey {

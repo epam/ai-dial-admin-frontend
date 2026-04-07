@@ -36,11 +36,10 @@ export const generateVariablesRowData = (
 ): InputBindingRowData[] => {
   return variables.map((variable) => {
     const binding = requestBody[variable.name];
-
     return {
       templateVariable: variable.name,
       effectiveType: variable.effectiveType,
-      value: binding ?? '',
+      value: variable.resolvedValue ?? binding ?? '',
       defaultValue: variable.defaultValue,
     };
   });
@@ -49,7 +48,7 @@ export const generateVariablesRowData = (
 export const convertVariableIntoInitialRequest = (variables: TemplateVariable[]): Record<string, unknown> => {
   const requestVariables: Record<string, unknown> = {};
   variables.forEach((variable) => {
-    requestVariables[variable.name] = variable.defaultValue ?? '';
+    requestVariables[variable.name] = variable.defaultValue ?? variable.resolvedValue ?? '';
   });
   return requestVariables;
 };

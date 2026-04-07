@@ -18,6 +18,7 @@ import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { RUN_FILTER } from './constants';
+import { useRunStatusStream } from './useRunStatusStream';
 
 interface Props {
   runRefreshRef: RefObject<(() => void) | null>;
@@ -27,10 +28,12 @@ interface Props {
 const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
   const t = useI18n();
 
-  let isLoading = false;
+  const [isLoading, setIsLoading] = useState(false);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const [runs, setRuns] = useState<Run[] | null>(null);
   const [totalElements, setTotalElements] = useState(0);
+
+  useRunStatusStream(selectedTestSuite.id, gridApi);
 
   const gridOptions: GridOptions = {
     ...infiniteGridOptions,
@@ -38,19 +41,18 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
 
   useEffect(() => {
     if (!runs && !isLoading) {
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      isLoading = true;
+      setIsLoading(true);
       getRuns(0, PAGE_SIZE, [], [RUN_FILTER(selectedTestSuite.id as string)]).then((res) => {
         if (runs) {
           return;
         }
-        isLoading = false;
+        setIsLoading(false);
         const runsData = (res?.content || []) as Run[];
         setTotalElements(res?.totalElements || 0);
         setRuns(runsData);
       });
     }
-  }, [selectedTestSuite.id]);
+  }, [isLoading, runs, selectedTestSuite.id]);
 
   const gridDataSource: IDatasource = useMemo(
     () => ({

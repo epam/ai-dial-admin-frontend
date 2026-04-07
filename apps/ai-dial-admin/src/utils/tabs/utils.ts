@@ -1,10 +1,11 @@
 import { TabModel } from '@epam/ai-dial-ui-kit';
 
-import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
-import { ApplicationRoute } from '@/src/types/routes';
-import { IMAGE_STATUS } from '@/src/types/deployments/images';
-import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { ALLOW_ALL_DOMAINS } from '@/src/components/Deployments/Common/Whitelists/Whitelists';
+import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { FeatureFlags } from '@/src/models/feature-flags';
+import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
+import { IMAGE_STATUS } from '@/src/types/deployments/images';
+import { ApplicationRoute } from '@/src/types/routes';
 
 export enum EntityViewTab {
   Properties = 'Properties',
@@ -51,6 +52,7 @@ export enum EntityViewTab {
   Headers = 'Headers',
   RequestSchema = 'RequestSchema',
   ResponseSchema = 'ResponseSchema',
+  Response = 'Response',
   Columns = 'Columns',
   TestSuiteMethod = 'TestSuiteMethod',
   Analytics = 'Analytics',
@@ -58,6 +60,8 @@ export enum EntityViewTab {
   MCP = 'MCP',
   Public = 'Public',
   Application = 'Application',
+  InputSchema = 'InputSchema',
+  OutputSchema = 'OutputSchema',
 }
 
 export const propertiesTab = (t: (key: string) => string, warning?: boolean) => ({
@@ -293,6 +297,21 @@ export const columnsTab = (t: (key: string) => string) => ({
   label: t(TabsI18nKey.Columns),
 });
 
+export const inputSchemaTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.InputSchema,
+  label: t(TabsI18nKey.InputSchema),
+});
+
+export const outputSchemaTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.OutputSchema,
+  label: t(TabsI18nKey.OutputSchema),
+});
+
+export const responseTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.Response,
+  label: t(TabsI18nKey.Response),
+});
+
 export const publicTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Public,
   label: t(TabsI18nKey.Public),
@@ -375,7 +394,7 @@ export const getUsageLogTabs = (t: (key: string) => string): TabModel[] => {
 export const getTabsForAsset = (
   t: (key: string) => string,
   view: ApplicationRoute,
-  featureFlags?: Record<string, boolean>,
+  featureFlags?: FeatureFlags,
 ): TabModel[] => {
   if (view === ApplicationRoute.AssetsApplications) {
     return [propertiesTab(t), featuresTab(t), parametersTab(t), interceptorsTab(t), dependenciesTab(t)];
@@ -392,20 +411,21 @@ export const getTabsForAsset = (
 
 export const getAuditTabs = (
   t: (key: string) => string,
-  featureFlags: Record<string, boolean>,
+  featureFlags: FeatureFlags,
   view: ApplicationRoute,
 ): TabModel[] => {
   const tabs: TabModel[] = [];
 
-  if (featureFlags.dashboardEnabled && view === ApplicationRoute.AssetsToolsets) {
-    return [dashboardTab(t)];
-  }
+  if (featureFlags.dashboardEnabled) {
+    if (view === ApplicationRoute.AssetsToolsets) {
+      return [dashboardTab(t)];
+    }
 
-  if (
-    featureFlags.dashboardEnabled &&
-    (view === ApplicationRoute.Models || view === ApplicationRoute.Applications || view === ApplicationRoute.Toolsets)
-  ) {
-    tabs.push(dashboardTab(t), tracesTab(t), conversationsTab(t));
+    if (view === ApplicationRoute.Models || view === ApplicationRoute.Applications) {
+      tabs.push(dashboardTab(t), tracesTab(t), conversationsTab(t));
+    } else if (view === ApplicationRoute.Toolsets) {
+      tabs.push(dashboardTab(t));
+    }
   }
 
   tabs.push(activitiesTab(t));
@@ -491,11 +511,15 @@ export const getTestSuiteRequestTemplateTabs = (t: (key: string) => string): Tab
 };
 
 export const getRunTabs = (t: (key: string) => string): TabModel[] => {
-  return [summaryTab(t), extractionResultTab(t), analyticsTab(t)];
+  return [summaryTab(t), analyticsTab(t), extractionResultTab(t)];
 };
 
 export const getEndpointSchemaTabs = (t: (key: string) => string): TabModel[] => {
   return [requestSchemaTab(t), responseSchemaTab(t), columnsTab(t)];
+};
+
+export const getMcpToolSchemaTabs = (t: (key: string) => string): TabModel[] => {
+  return [columnsTab(t), inputSchemaTab(t), outputSchemaTab(t)];
 };
 
 export const getFileSelectInputTabs = (t: (key: string) => string): TabModel[] => {

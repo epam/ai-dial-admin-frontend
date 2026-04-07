@@ -122,11 +122,11 @@ const TabsContent = <T extends Publication>({
 
       {activeTab === EntityViewTab.Tools && (
         <Tools
-          originalToolset={(originalPublication as ToolsetPublication).toolSetResources?.[0].toolSetResource}
-          selectedToolset={(selectedPublication as ToolsetPublication).toolSetResources?.[0].toolSetResource}
-          onChangeToolset={onChangeToolset as (toolset: Toolset) => void}
+          originalEntity={(originalPublication as ToolsetPublication).toolSetResources?.[0].toolSetResource}
+          selectedEntity={(selectedPublication as ToolsetPublication).toolSetResources?.[0].toolSetResource}
+          onChangeEntity={onChangeToolset as (toolset: Toolset) => void}
           disabled={isReadOnlyAdmin}
-          isAssetToolset
+          isAsset
           isPublicationToolset
         />
       )}

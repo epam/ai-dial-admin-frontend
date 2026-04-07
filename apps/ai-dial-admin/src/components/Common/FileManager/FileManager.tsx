@@ -12,7 +12,11 @@ import {
 } from '@epam/ai-dial-ui-kit';
 import { ColDef } from 'ag-grid-community';
 
-import { getParentPathByFullPath } from '@/src/components/Assets/utils';
+import {
+  getDeleteNotificationContent,
+  getMoveNotificationContent,
+  getParentPathByFullPath,
+} from '@/src/components/Assets/utils';
 import { getImportTitle } from '@/src/components/EntityListView/HeaderButtons/utils';
 import { getImportResults } from '@/src/components/EntityListView/Import/utils';
 import { FILE_PREVIEW, PREVIEW_EXTENSIONS, ROOT_FOLDER } from '@/src/constants/file';
@@ -25,7 +29,7 @@ import { ImportResult } from '@/src/models/import';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
-import { getSuccessNotification } from '@/src/utils/notification';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import {
   getBulkActionsToolbarOptions,
   getDestinationFolderPopupOptions,
@@ -240,10 +244,13 @@ const FileManager: FC<Props> = ({
           const parentPath = getParentPathByFullPath(fileNodes[0]?.sourceUrl) || `${ROOT_FOLDER}/`;
           fetchFiles(parentPath);
           setFilePath(parentPath);
+
+          const { title, description } = getDeleteNotificationContent(view, fileNodes, t);
+          showNotification(getSuccessNotification(title, description));
         }
       });
     },
-    [onDeleteItems, fetchFiles, setFilePath],
+    [onDeleteItems, fetchFiles, setFilePath, showNotification, t, view],
   );
 
   const handleMoveToFiles = useCallback(
@@ -253,10 +260,18 @@ const FileManager: FC<Props> = ({
         if (isSuccess) {
           fetchFiles(destinationFolder);
           fetchFiles(sourceFolder);
+
+          const { title, description } = getMoveNotificationContent(view, items, destinationFolder, t);
+          showNotification(getSuccessNotification(title, description));
+        } else {
+          const errorRes = result.flat().find((res) => !res.success);
+          if (errorRes) {
+            showNotification(getErrorNotification(errorRes.errorHeader, errorRes.errorMessage, errorRes.requestId));
+          }
         }
       });
     },
-    [fetchFiles, onMoveItems],
+    [fetchFiles, onMoveItems, showNotification, t, view],
   );
 
   const handlePreviewFile = useCallback((path?: string) => {

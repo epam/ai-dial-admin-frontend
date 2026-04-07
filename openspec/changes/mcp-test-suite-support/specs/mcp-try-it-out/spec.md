@@ -39,8 +39,8 @@ For MCP_TOOL suites, the response status badge SHALL use the `isError` boolean f
 
 #### Scenario: MCP response displays full MCP envelope in Response collapsible
 - **WHEN** try-it-out completes for an MCP suite
-- **THEN** the "Response" collapsible section SHALL display the full MCP response object as JSON
-- **AND** SHALL include `content`, `isError`, and `structuredContent` (if present) fields
+- **THEN** the "Response" collapsible section SHALL display the full MCP response envelope via the existing read-only Monaco JSON viewer (`EntityJsonEditor`)
+- **AND** no special rendering of content blocks or structuredContent is applied — the raw JSON envelope is shown as-is
 
 #### Scenario: HTTP status code not shown for MCP response
 - **WHEN** try-it-out completes for an MCP suite

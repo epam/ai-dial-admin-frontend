@@ -22,6 +22,7 @@ interface Props {
   onClose: () => void;
 }
 
+// TODO: review after implement Evaluation design, maybe we can reuse this component for other viewers in Evaluation details page
 const FullscreenViewer: FC<Props> = ({ isOpen, title, content, contentType, onClose }) => {
   const t = useI18n();
   const { currentTheme } = useTheme();
@@ -42,15 +43,17 @@ const FullscreenViewer: FC<Props> = ({ isOpen, title, content, contentType, onCl
     <DialPopup
       onClose={onClose}
       header={title}
+      footer={
+        <div className="flex items-center justify-center px-4 py-2 shrink-0">
+          <CopyButton buttonLabel={t(ButtonsI18nKey.Copy)} value={formatted} valueLabel={title} />
+        </div>
+      }
       portalId="FullscreenCodeViewer"
       open={isOpen}
       size={PopupSize.Lg}
       className="h-[80vh]"
     >
       <div className="flex flex-col h-full">
-        <div className="flex items-center justify-end px-4 py-2 shrink-0">
-          <CopyButton buttonLabel={t(ButtonsI18nKey.Copy)} value={formatted} valueLabel={title} />
-        </div>
         <div className="flex-1 min-h-0">
           <Editor
             height="100%"

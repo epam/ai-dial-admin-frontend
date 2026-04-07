@@ -10,7 +10,7 @@ import FileManager from '@/src/components/Common/FileManager/FileManager';
 import Modals, { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { FoldersI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { MenuI18nKey } from '@/src/constants/i18n';
 import { useFileFolder } from '@/src/context/assets/FileFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -24,6 +24,7 @@ import { createEmptyFile } from '@/src/components/Common/FileManager/utils';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ResourceType } from '@/src/types/resource-type';
 import { downloadFile } from '@/src/utils/download';
+import { getExportNotificationContent, getImportNotificationContent } from '../utils';
 
 const FilesList = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -68,7 +69,14 @@ const FilesList = () => {
       importFiles(body, fileType).then((res) => {
         if (res.success) {
           fetchFiles?.(destinationFolder);
-          showNotification(getSuccessNotification(t(FoldersI18nKey.Import)));
+          const { title, description } = getImportNotificationContent(
+            ApplicationRoute.Files,
+            file,
+            fileType,
+            destinationFolder,
+            t,
+          );
+          showNotification(getSuccessNotification(title, description));
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
@@ -143,14 +151,20 @@ const FilesList = () => {
     [],
   );
 
-  const onExport = useCallback((files: DialFile[]) => {
-    const filePaths = files.map((file) => file.path);
+  const onExport = useCallback(
+    (files: DialFile[]) => {
+      const filePaths = files.map((file) => file.path);
 
-    return exportFiles(filePaths).then((res) => {
-      const { blob, fileName } = res as { blob: Blob; fileName: string };
-      downloadFile(blob, fileName);
-    });
-  }, []);
+      return exportFiles(filePaths).then((res) => {
+        const { blob, fileName } = res as { blob: Blob; fileName: string };
+        downloadFile(blob, fileName);
+
+        const { title, description } = getExportNotificationContent(ApplicationRoute.Files, files, t);
+        showNotification(getSuccessNotification(title, description));
+      });
+    },
+    [showNotification, t],
+  );
 
   return (
     <>

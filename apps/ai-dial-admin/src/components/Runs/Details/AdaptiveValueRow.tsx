@@ -2,11 +2,10 @@
 
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
-import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
-import { parseValue } from '@/src/utils/evaluation/detail-panel';
 import { ElementSize } from '@epam/ai-dial-ui-kit';
+
+import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
+import { parseValue } from '@/src/utils/evaluation/detail-panel';
 
 interface Props {
   label: string;
@@ -14,7 +13,6 @@ interface Props {
 }
 
 const AdaptiveValueRow: FC<Props> = ({ label, value }) => {
-  const t = useI18n();
   const [isExpanded, setIsExpanded] = useState(false);
 
   const parsed = useMemo(() => parseValue(value), [value]);
@@ -47,12 +45,7 @@ const AdaptiveValueRow: FC<Props> = ({ label, value }) => {
           </pre>
         )}
       </span>
-      <CopyButton
-        buttonLabel={t(ButtonsI18nKey.Copy)}
-        value={parsed.rawText}
-        valueLabel={label}
-        size={ElementSize.Small}
-      />
+      <CopyButton value={parsed.rawText} valueLabel={label} size={ElementSize.Small} />
     </div>
   );
 };

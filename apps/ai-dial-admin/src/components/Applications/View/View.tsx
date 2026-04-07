@@ -3,6 +3,13 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import {
+  VisualizerConnectorEvents,
+  VisualizerConnectorRequest,
+  VisualizerConnectorRequests,
+} from '@epam/ai-dial-shared';
+import { TabModel } from '@epam/ai-dial-ui-kit';
+import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
 import { cloneDeep } from 'lodash';
 
 import {
@@ -34,13 +41,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { EntityViewTab, getApplicationTabs } from '@/src/utils/tabs/utils';
-import {
-  VisualizerConnectorEvents,
-  VisualizerConnectorRequest,
-  VisualizerConnectorRequests,
-} from '@epam/ai-dial-shared';
-import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
+import { EntityViewTab, getApplicationTabs, toolsTab } from '@/src/utils/tabs/utils';
 import TabsContent from './TabsContent';
 
 interface Props {
@@ -61,8 +62,7 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
   const { dispatch } = useSaveValidationContext();
   const getReqRef = useRef(useProtectedRequest());
 
-  const tabs = getApplicationTabs(t);
-
+  const [tabs, setTabs] = useState<TabModel[]>(getApplicationTabs(t));
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [isSkipRefresh, setIsSkipRefresh] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -91,6 +91,15 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
     }),
     [isEditorEnabled, selectedFormat],
   );
+
+  useEffect(() => {
+    if (originalApplication.mcp?.endpoint) {
+      setTabs(getApplicationTabs(t).toSpliced(1, 0, toolsTab(t)));
+    } else {
+      setTabs(getApplicationTabs(t));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [originalApplication.mcp?.endpoint]);
 
   useEffect(() => {
     const name = originalApplication?.name;
@@ -286,6 +295,7 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
             view={ApplicationRoute.Applications}
             activeTab={activeTab}
             selectedApplication={selectedApplication}
+            originalApplication={originalApplication}
             onChangeApplication={onChangeApplication}
             isSkipRefresh={isSkipRefresh}
             isEditorEnabled={isEditorEnabled}

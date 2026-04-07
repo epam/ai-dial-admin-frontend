@@ -2,37 +2,35 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
-  AlertVariant,
-  DialAlert,
   DialCloseButton,
   DialGhostButton,
   DialLoader,
   DialNeutralButton,
   DialPrimaryButton,
-  ElementSize,
 } from '@epam/ai-dial-ui-kit';
+import { IconEdit, IconRefresh } from '@tabler/icons-react';
+import classNames from 'classnames';
 
-import {
-  getTestCaseTemplateVariables,
-  getTestSuiteTemplateVariables,
-  tryOutTestCase,
-  tryOutTestSuite,
-} from '@/src/app/[lang]/test-suites/actions';
-import Grafana from '@/public/images/icons/grafana.svg';
+import { tryOutTestCase, tryOutTestSuite } from '@/src/app/[lang]/test-suites/actions';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-import { IconRefresh } from '@tabler/icons-react';
+import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
-import { saveTryoutResponseToStorage } from '@/src/components/TestSuites/utils/tryout-storage';
-import { convertVariableIntoInitialRequest } from '@/src/components/TestSuites/utils/template-variables';
-import { BasicI18nKey, ButtonsI18nKey, RunsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import {
+  getTryoutResponseFromStorage,
+  saveTryoutResponseToStorage,
+} from '@/src/components/TestSuites/utils/tryout-storage';
+import { BasicI18nKey, ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
-import { TemplateVariable, TestSuite } from '@/src/models/evaluation/test-suite';
+import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
+import { columnsTab, EntityViewTab, responseTab } from '@/src/utils/tabs/utils';
 import CollapsibleSection from './CollapsibleSection';
-import Variables from './Variables';
+import TryOutColumns from './TryOutColumns';
+import TryOutRequestPreview from './TryOutRequestPreview';
+import TryOutResponsePreview from './TryOutResponse';
 
-interface TryOutResponse {
+export interface TryOutResponse {
   statusCode: number;
   [key: string]: unknown;
 }
@@ -44,14 +42,14 @@ interface Props {
 const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
   const t = useI18n();
   const { sidebar, toggleSidebar } = useAppContext();
-
+  const isMcp = testSuite.suiteType === SuiteType.McpTool;
+  const tabs = [responseTab(t), columnsTab(t)];
+  const [activeTab, setActiveTab] = useState(tabs[0].id as EntityViewTab);
   const [requestBody, setRequestBody] = useState<Record<string, unknown>>({});
   const [response, setResponse] = useState<TryOutResponse | null>(null);
   const [resolvedRequest, setResolvedRequest] = useState<Record<string, unknown>>({});
   const [isRequestSend, setIsRequestSend] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [grafanaTraceUrl, setGrafanaTraceUrl] = useState<string | undefined>(undefined);
-  const [variables, setVariables] = useState<TemplateVariable[]>([]);
 
   const onChangeRequestBody = useCallback((body: Record<string, unknown>) => {
     setRequestBody(body);
@@ -78,151 +76,130 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
         setResolvedRequest(res.response?.resolvedRequest || {});
         setResponse(tryoutResponse);
         setGrafanaTraceUrl(res.response?.grafanaTraceUrl);
-        saveTryoutResponseToStorage(testSuiteId, tryoutResponse);
+        saveTryoutResponseToStorage(testSuiteId, res.response);
       } else {
-        const errorResponse = { error: res?.errorMessage || 'Unknown error', statusCode: 500 } as TryOutResponse;
+        const errorResponse = { response: { error: res?.errorMessage || 'Unknown error', statusCode: 500 } };
         setResolvedRequest(requestBody || {});
-        setResponse(errorResponse);
-        saveTryoutResponseToStorage(testSuiteId, errorResponse);
+        setResponse(errorResponse.response);
+        saveTryoutResponseToStorage(testSuiteId, errorResponse as any);
       }
     } finally {
       setIsRequestSend(false);
     }
   }, [testSuite, testCaseId, requestBody]);
 
+  // todo: possible change this component to codeViewer
+  const responseBodyCopyText = useMemo(() => (response ? JSON.stringify(response, null, 2) : ''), [response]);
+  const responseBody = useMemo(() => {
+    return (
+      <CollapsibleSection
+        title={t(BasicI18nKey.Response)}
+        fullViewContent={responseBodyCopyText}
+        headerIcon={<CopyButton value={responseBodyCopyText} valueLabel={t(BasicI18nKey.Response)} />}
+        growOnOpen
+      >
+        {isRequestSend ? (
+          <DialLoader />
+        ) : (
+          <JsonEditor
+            entity={response}
+            options={{ stickyScroll: { enabled: false }, wordWrap: 'off' }}
+            readonly={true}
+          />
+        )}
+      </CollapsibleSection>
+    );
+  }, [t, responseBodyCopyText, isRequestSend, response]);
+
   useEffect(() => {
-    const fetchVariables = async () => {
-      setIsLoading(true);
-      try {
-        const res = testCaseId
-          ? await getTestCaseTemplateVariables(testSuite.id || '', testCaseId || '')
-          : await getTestSuiteTemplateVariables(testSuite.id || '');
-
-        const vars = res || [];
-        setVariables(vars);
-        setRequestBody(convertVariableIntoInitialRequest(vars));
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchVariables();
+    const responseFromStorage = getTryoutResponseFromStorage(testSuite.id || '');
+    if (responseFromStorage) {
+      setResponse(responseFromStorage.response as TryOutResponse);
+      setResolvedRequest(responseFromStorage.resolvedRequest || {});
+      setGrafanaTraceUrl(responseFromStorage.grafanaTraceUrl);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const responseBodyCopyText = useMemo(() => (response ? JSON.stringify(response, null, 2) : ''), [response]);
-
   return (
-    <div className="flex flex-col gap-y-6 size-full min-h-0 pb-6">
-      {isLoading ? (
-        <DialLoader size={40} />
-      ) : (
-        <>
-          <div className="flex flex-col gap-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex flex-row items-center gap-3">
-                <h1>{t(ButtonsI18nKey.TryOut)}</h1>
-                {response ? (
+    <div className={classNames('flex flex-col gap-y-6 size-full min-h-0', !response && 'pb-4')}>
+      <>
+        <div className="flex flex-col gap-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex flex-row items-center gap-3">
+              <h1>{t(ButtonsI18nKey.TryOut)}</h1>
+              {response ? (
+                <div className="flex flex-row items-center gap-4">
                   <DialGhostButton
                     disabled={isRequestSend}
                     label={t(ButtonsI18nKey.Restart)}
                     iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}
                     onClick={onSendRequest}
                   />
-                ) : null}
-              </div>
-
-              <DialCloseButton onClose={onClose} />
-            </div>
-            <p className="text-secondary dial-small-text">{t(TestSuitesI18nKey.TryoutWarning)}</p>
-          </div>
-          <div className="flex-1 flex flex-col gap-y-8 pb-2 min-h-0">
-            {!response && (
-              <>
-                <div className="flex flex-col">
-                  <p className="dial-small-text mb-2">{t(TestSuitesI18nKey.DynamicConfiguration)}</p>
-                  <Variables
-                    variables={variables}
-                    requestBody={requestBody}
-                    onChangeRequestBody={onChangeRequestBody}
+                  <DialNeutralButton
+                    iconBefore={<IconEdit {...BASE_BUTTON_ICON_PROPS} />}
+                    label={t(ButtonsI18nKey.Change)}
+                    onClick={() => setResponse(null)}
                   />
                 </div>
-
-                <div className="flex flex-col">
-                  <p className="dial-small-text mb-2">{t(TestSuitesI18nKey.RequestBodyPreview)}</p>
-                  <p className="text-secondary mb-2 dial-small-text">
-                    {testSuite.endpointRef?.method} {testSuite.endpointRef?.relativeUrlPattern}
-                  </p>
-                  <div className="h-[300px]">
-                    <JsonEditor
-                      entity={resolvedRequest}
-                      options={{ stickyScroll: { enabled: false }, wordWrap: 'bounded' }}
-                      readonly={true}
-                    />
-                  </div>
-                </div>
-              </>
-            )}
-
-            {response && (
-              <>
-                <DialAlert
-                  message={`${response.statusCode}`}
-                  variant={
-                    response.statusCode >= 200 && response.statusCode < 300 ? AlertVariant.Success : AlertVariant.Error
-                  }
-                >
-                  {grafanaTraceUrl && (
-                    <DialNeutralButton
-                      size={ElementSize.Small}
-                      className="w-fit"
-                      iconBefore={<Grafana />}
-                      label={t(RunsI18nKey.GrafanaRun)}
-                      onClick={() => window.open(grafanaTraceUrl, '_blank')}
-                    />
-                  )}
-                </DialAlert>
-                <CollapsibleSection title={t(BasicI18nKey.Request)} growOnOpen>
-                  {isRequestSend ? (
-                    <DialLoader />
-                  ) : (
-                    <JsonEditor
-                      entity={resolvedRequest}
-                      options={{ stickyScroll: { enabled: false }, wordWrap: 'bounded' }}
-                      readonly={true}
-                    />
-                  )}
-                </CollapsibleSection>
-                <CollapsibleSection
-                  title={t(BasicI18nKey.Response)}
-                  growOnOpen
-                  headerIcon={<CopyButton value={responseBodyCopyText} valueLabel={t(BasicI18nKey.Response)} />}
-                >
-                  {isRequestSend ? (
-                    <DialLoader />
-                  ) : (
-                    <JsonEditor
-                      entity={response}
-                      options={{ stickyScroll: { enabled: false }, wordWrap: 'off' }}
-                      readonly={true}
-                    />
-                  )}
-                </CollapsibleSection>
-              </>
-            )}
-          </div>
-          {!response ? (
-            <div className="flex justify-end gap-x-4 pt-4 border-t border-secondary">
-              <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-              <DialPrimaryButton
-                label={t(ButtonsI18nKey.SendRequest)}
-                onClick={() => onSendRequest()}
-                disabled={isRequestSend}
-              />
+              ) : null}
             </div>
-          ) : null}
-        </>
-      )}
+
+            <DialCloseButton onClose={onClose} />
+          </div>
+          <p className="text-secondary dial-small-text">{t(TestSuitesI18nKey.TryoutWarning)}</p>
+        </div>
+        <div className="flex">
+          <Tabs tabs={tabs} activeTab={activeTab} onChangeActiveTab={setActiveTab} />
+        </div>
+
+        {activeTab === EntityViewTab.Response && (
+          <>
+            <div className="flex-1 flex flex-col gap-y-8 pb-2 min-h-0">
+              {!response && (
+                <TryOutRequestPreview
+                  testSuite={testSuite}
+                  testCaseId={testCaseId}
+                  resolvedRequest={resolvedRequest}
+                  isRequestSend={isRequestSend}
+                  requestBody={requestBody}
+                  onChangeRequestBody={onChangeRequestBody}
+                />
+              )}
+
+              {response && (
+                <TryOutResponsePreview
+                  response={response}
+                  resolvedRequest={resolvedRequest}
+                  grafanaTraceUrl={grafanaTraceUrl}
+                  isRequestSend={isRequestSend}
+                  responseBody={responseBody}
+                  isMcp={isMcp}
+                />
+              )}
+            </div>
+            {!response ? (
+              <div className="flex justify-end gap-x-4 pt-4 border-t border-secondary">
+                <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+                <DialPrimaryButton
+                  label={t(ButtonsI18nKey.SendRequest)}
+                  onClick={() => onSendRequest()}
+                  disabled={isRequestSend}
+                />
+              </div>
+            ) : null}
+          </>
+        )}
+
+        {activeTab === EntityViewTab.Columns && (
+          <TryOutColumns
+            columns={testSuite.responseColumns}
+            response={response?.body as Record<string, unknown>}
+            isLoading={isRequestSend}
+            responseBody={responseBody}
+          />
+        )}
+      </>
     </div>
   );
 };

@@ -3,7 +3,14 @@ import createFetchMock from 'vitest-fetch-mock';
 
 import { DialApplication } from '@/src/models/dial/application';
 import { RESPONSE_MOCK, TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { APPLICATIONS_URL, APPLICATION_URL, ApplicationsApi, CORE_APPLICATION_URL } from '../applications-api';
+import {
+  APPLICATIONS_URL,
+  APPLICATION_URL,
+  ApplicationsApi,
+  CORE_APPLICATION_URL,
+  TOOLS_TRY_OUT_URL,
+  TOOLS_URL,
+} from '../applications-api';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
@@ -129,5 +136,41 @@ describe('Server :: ApplicationsApi', () => {
         method: 'DELETE',
       }),
     );
+  });
+
+  test('Should calls getTools with correct url', async () => {
+    const mockTools = { tools: [{ name: 'tool1' }, { name: 'tool2' }] };
+    fetch.mockResponseOnce(JSON.stringify(mockTools));
+
+    await instance.getTools(mockApp.name || '', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TOOLS_URL(mockApp.name || '')}`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
+  test('Should calls getTools and return empty array when no tools', async () => {
+    fetch.mockResponseOnce(JSON.stringify(null));
+
+    const result = await instance.getTools(mockApp.name || '', TOKEN_MOCK);
+
+    expect(result).toEqual([]);
+  });
+
+  test('Should calls tryOutTool with correct payload', async () => {
+    const mockBody = { toolName: 'tool1', input: { key: 'value' } };
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
+
+    const result = await instance.tryOutTool(mockApp.name || '', mockBody, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TOOLS_TRY_OUT_URL(mockApp.name || '')}`,
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify(mockBody),
+      }),
+    );
+    expect(result.response).toEqual(JSON.stringify(RESPONSE_MOCK));
   });
 });
