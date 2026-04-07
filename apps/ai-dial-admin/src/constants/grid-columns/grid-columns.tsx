@@ -154,9 +154,8 @@ export const ROUTES_COLUMNS: ColDef[] = [
 
 export const EVALUATION_DEPLOYMENTS_COLUMNS: ColDef[] = [
   DISPLAY_NAME_COLUMN_WITH_SORT,
-  VERSION_COLUMN,
-  DESCRIPTION_COLUMN,
   { field: 'deploymentId', headerName: 'ID', hide: false },
+  DESCRIPTION_COLUMN,
 ];
 
 export const MCP_DEPLOYMENTS_COLUMNS: ColDef[] = [
