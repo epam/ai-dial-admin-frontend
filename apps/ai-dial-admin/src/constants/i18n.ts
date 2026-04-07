@@ -1571,6 +1571,7 @@ export enum FileManagerI18nKey {
   Prompts = 'FileManager.Prompts',
   Prompt = 'FileManager.Prompt',
   Folder = 'FileManager.Folder',
+  Items = 'FileManager.Items',
   FolderTree = 'FileManager.FolderTree',
   EnterFolderName = 'FileManager.EnterFolderName',
   NameExists = 'FileManager.NameExists',
@@ -1607,6 +1608,7 @@ export enum FileManagerI18nKey {
   DeleteSuccessTitle = 'FileManager.Notifications.Delete.Title',
   DeleteSuccessDescriptionForOne = 'FileManager.Notifications.Delete.DescriptionForOne',
   DeleteSuccessDescriptionForMany = 'FileManager.Notifications.Delete.DescriptionForMany',
+  RenameFolderSuccessTitle = 'FileManager.Notifications.RenameFolder.Title',
 }
 
 export enum JsonAtaI18nKey {
