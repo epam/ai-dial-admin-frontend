@@ -418,13 +418,13 @@ export const getAuditTabs = (
 
   if (featureFlags.dashboardEnabled) {
     if (view === ApplicationRoute.AssetsToolsets) {
-      return [dashboardTab(t)];
+      return [dashboardTab(t), tracesTab(t)];
     }
 
     if (view === ApplicationRoute.Models || view === ApplicationRoute.Applications) {
       tabs.push(dashboardTab(t), tracesTab(t), conversationsTab(t));
     } else if (view === ApplicationRoute.Toolsets) {
-      tabs.push(dashboardTab(t));
+      tabs.push(dashboardTab(t), tracesTab(t));
     }
   }
 
