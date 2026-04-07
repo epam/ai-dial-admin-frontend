@@ -1294,6 +1294,7 @@ export enum ToolsetI18nKey {
   AvailableForYou = 'Toolset.AvailableForYou',
   OtherInAToolset = 'Toolset.OtherInAToolset',
   CustomToolDescription = 'Toolset.CustomToolDescription',
+  AuthSettingsLockedMessage = 'Toolset.AuthSettingsLockedMessage',
 }
 
 export enum ImagesI18nKey {

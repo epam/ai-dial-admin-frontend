@@ -1318,6 +1318,8 @@ export default {
     OtherInAToolset: 'Others in a toolset',
     CustomToolDescription:
       'You can add tools from the toolset to which you don’t have direct access. Enter exact names to add them.',
+    AuthSettingsLockedMessage:
+      'Authentication settings cannot be modified while the toolset is logged in. Please log out to edit.',
   },
   Images: {
     ImagesListTitle: 'Images',

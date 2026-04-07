@@ -416,16 +416,16 @@ export const getAuditTabs = (
 ): TabModel[] => {
   const tabs: TabModel[] = [];
 
-  if (featureFlags.dashboardEnabled && view === ApplicationRoute.AssetsToolsets) {
-    return [dashboardTab(t), tracesTab(t)];
-  }
+  if (featureFlags.dashboardEnabled) {
+    if (view === ApplicationRoute.AssetsToolsets) {
+      return [dashboardTab(t), tracesTab(t)];
+    }
 
-  if (featureFlags.dashboardEnabled && (view === ApplicationRoute.Models || view === ApplicationRoute.Applications)) {
-    tabs.push(dashboardTab(t), tracesTab(t), conversationsTab(t));
-  }
-
-  if (featureFlags.dashboardEnabled && view === ApplicationRoute.Toolsets) {
-    tabs.push(dashboardTab(t), tracesTab(t));
+    if (view === ApplicationRoute.Models || view === ApplicationRoute.Applications) {
+      tabs.push(dashboardTab(t), tracesTab(t), conversationsTab(t));
+    } else if (view === ApplicationRoute.Toolsets) {
+      tabs.push(dashboardTab(t), tracesTab(t));
+    }
   }
 
   tabs.push(activitiesTab(t));

@@ -1,12 +1,19 @@
-import { FC } from 'react';
+import { FC, useMemo } from 'react';
 
-import { DialPasswordInput, DialSelectField, DialInput, SelectOption } from '@epam/ai-dial-ui-kit';
+import {
+  AlertVariant,
+  DialAlert,
+  DialPasswordInput,
+  DialSelectField,
+  DialInput,
+  SelectOption,
+} from '@epam/ai-dial-ui-kit';
 
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { ToolsetAuthSettings, ToolsetCodeChallengeMethod } from '@/src/models/dial/toolset';
+import { ToolsetAuthSettings, ToolsetAuthStatus, ToolsetCodeChallengeMethod } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 
 enum AuthType {
@@ -32,11 +39,25 @@ const OAuthSection: FC<Props> = ({ disabled, authSettings, view, onChange }) => 
     { value: ToolsetCodeChallengeMethod.S256, label: ToolsetCodeChallengeMethod.S256 },
   ];
 
+  const isLoggedIn = useMemo(() => {
+    return (
+      authSettings?.globalAuthStatus === ToolsetAuthStatus.SIGNED_IN ||
+      authSettings?.userLevelAuthStatus === ToolsetAuthStatus.SIGNED_IN
+    );
+  }, [authSettings]);
+
+  const isAuthDisabled = disabled || isLoggedIn;
+
   return (
     <div className="flex flex-col pl-[26px]">
+      {isLoggedIn && (
+        <div className="mb-3">
+          <DialAlert variant={AlertVariant.Info} message={t(ToolsetI18nKey.AuthSettingsLockedMessage)} />
+        </div>
+      )}
       <DialSelectField
         id="type"
-        disabled={disabled}
+        disabled={isAuthDisabled}
         label={t(ToolsetI18nKey.ClientRegistrationType)}
         value={AuthType.EXISTING}
         options={types}
@@ -50,7 +71,7 @@ const OAuthSection: FC<Props> = ({ disabled, authSettings, view, onChange }) => 
 
       <div className="flex flex-col gap-y-3 mt-3 w-full">
         <DialInput
-          disabled={disabled}
+          disabled={isAuthDisabled}
           id="clientId"
           labelProps={{ label: t(EntityFieldsI18nKey.clientId), required: true }}
           value={authSettings?.clientId || ''}
@@ -58,7 +79,7 @@ const OAuthSection: FC<Props> = ({ disabled, authSettings, view, onChange }) => 
           onChange={(clientId) => onChange?.({ ...(authSettings || {}), clientId } as ToolsetAuthSettings)}
         />
         <DialPasswordInput
-          disabled={disabled}
+          disabled={isAuthDisabled}
           id="clientSecret"
           labelProps={{ label: t(EntityFieldsI18nKey.clientSecret), required: true }}
           value={authSettings?.clientSecret || ''}
@@ -67,7 +88,7 @@ const OAuthSection: FC<Props> = ({ disabled, authSettings, view, onChange }) => 
         />
         <Multiselect
           elementId="scopes"
-          disabled={disabled}
+          disabled={isAuthDisabled}
           selectedItems={authSettings?.scopesSupported}
           allItems={authSettings?.scopesSupported}
           onChangeItems={(scopesSupported: string[]) => {
@@ -78,7 +99,7 @@ const OAuthSection: FC<Props> = ({ disabled, authSettings, view, onChange }) => 
           addTitle={t(BasicI18nKey.AddField)}
         />
         <EndpointControl
-          disabled={disabled}
+          disabled={isAuthDisabled}
           required
           id="authEndpoint"
           label={t(EntityFieldsI18nKey.authorizationEndpoint)}
@@ -91,7 +112,7 @@ const OAuthSection: FC<Props> = ({ disabled, authSettings, view, onChange }) => 
 
         <EndpointControl
           id="tokenEndpoint"
-          disabled={disabled}
+          disabled={isAuthDisabled}
           label={t(EntityFieldsI18nKey.tokenEndpoint)}
           endpoint={authSettings?.tokenEndpoint || ''}
           placeholder={t(EntityPlaceholdersI18nKey.TokenEndpoint)}
@@ -101,7 +122,7 @@ const OAuthSection: FC<Props> = ({ disabled, authSettings, view, onChange }) => 
         <DialSelectField
           containerClassName="w-[192px]"
           id="type"
-          disabled={disabled}
+          disabled={isAuthDisabled}
           label={t(EntityFieldsI18nKey.codeChallengeMethod)}
           value={!authSettings?.codeChallengeMethod ? BasicI18nKey.None : authSettings.codeChallengeMethod}
           options={methods}
