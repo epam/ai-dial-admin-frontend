@@ -7,13 +7,11 @@ import { createPortal } from 'react-dom';
 
 import { DialLoader } from '@epam/ai-dial-ui-kit';
 import {
-  CellClickedEvent,
   CellValueChangedEvent,
   ColDef,
   GridApi,
   GridOptions,
   GridReadyEvent,
-  IRowNode,
   SelectionChangedEvent,
 } from 'ag-grid-community';
 
@@ -131,36 +129,37 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
     setSelectedRows(event.api.getSelectedRows() as TestCase[]);
   }, []);
 
-  const onCellClicked = useCallback((event: CellClickedEvent) => {
-    if (event.column.getColId() !== 'id') return;
+  // todo: apply when BE supports batch-delete
+  // const onCellClicked = useCallback((event: CellClickedEvent) => {
+  //   if (event.column.getColId() !== 'id') return;
 
-    const mouseEvent = event.event as MouseEvent;
-    const shiftKey = mouseEvent.shiftKey;
+  //   const mouseEvent = event.event as MouseEvent;
+  //   const shiftKey = mouseEvent.shiftKey;
 
-    if (shiftKey) {
-      mouseEvent.preventDefault();
-      const allNodes: IRowNode[] = [];
-      event.api.forEachNodeAfterFilterAndSort((node) => allNodes.push(node));
-      const currentIndex = allNodes.findIndex((n) => n.id === event.node.id);
-      const selectedNodes = event.api.getSelectedNodes();
-      if (selectedNodes.length > 0) {
-        const lastSelected = selectedNodes[selectedNodes.length - 1];
-        const lastIndex = allNodes.findIndex((n) => n.id === lastSelected.id);
-        const start = Math.min(currentIndex, lastIndex);
-        const end = Math.max(currentIndex, lastIndex);
-        allNodes.slice(start, end + 1).forEach((n) => n.setSelected(true, false));
-      } else {
-        event.node.setSelected(true, false);
-      }
-    } else {
-      event.node.setSelected(!event.node.isSelected(), false);
-    }
-  }, []);
+  //   if (shiftKey) {
+  //     mouseEvent.preventDefault();
+  //     const allNodes: IRowNode[] = [];
+  //     event.api.forEachNodeAfterFilterAndSort((node) => allNodes.push(node));
+  //     const currentIndex = allNodes.findIndex((n) => n.id === event.node.id);
+  //     const selectedNodes = event.api.getSelectedNodes();
+  //     if (selectedNodes.length > 0) {
+  //       const lastSelected = selectedNodes[selectedNodes.length - 1];
+  //       const lastIndex = allNodes.findIndex((n) => n.id === lastSelected.id);
+  //       const start = Math.min(currentIndex, lastIndex);
+  //       const end = Math.max(currentIndex, lastIndex);
+  //       allNodes.slice(start, end + 1).forEach((n) => n.setSelected(true, false));
+  //     } else {
+  //       event.node.setSelected(true, false);
+  //     }
+  //   } else {
+  //     event.node.setSelected(!event.node.isSelected(), false);
+  //   }
+  // }, []);
 
   const gridOptions: GridOptions = {
     onCellValueChanged,
     onSelectionChanged,
-    onCellClicked,
+    // onCellClicked,
     rowSelection: {
       mode: 'multiRow',
       checkboxes: false,
