@@ -12,17 +12,18 @@ import Header from '@/src/components/Header/Header';
 import Menu from '@/src/components/Menu/Menu';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { AppContextProvider } from '@/src/context/AppContext';
+import { PromptFolderProvider } from '@/src/context/assets/PromptFolderContext';
 import { I18nProvider } from '@/src/context/I18nProvider';
 import { NextAuthProvider } from '@/src/context/NextAuthProvider';
 import { NotificationProvider } from '@/src/context/NotificationContext';
 import { RuleFolderProvider } from '@/src/context/RuleFolderContext';
 import { ThemeProvider } from '@/src/context/ThemeContext';
+import { ResourcesDefaults } from '@/src/models/deployments/containers';
+import { FeatureFlags } from '@/src/models/feature-flags';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getMenuItems } from '@/src/utils/env/get-menu-items';
-import { PromptFolderProvider } from '@/src/context/assets/PromptFolderContext';
-import { ResourcesDefaults } from '@/src/models/deployments/containers';
 import { isValueTruthy } from '@/src/utils/types';
 import { normalizeUrl } from '@/src/utils/url';
 
@@ -36,9 +37,10 @@ export default async function Layout({ children, params }: { children: ReactNode
     return redirect(SIGN_IN_LINK);
   }
 
-  const featureFlags = {
+  const featureFlags: FeatureFlags = {
     dashboardEnabled: !process.env.DISABLE_MENU_ITEMS?.toLowerCase().includes('dashboard'),
     deploymentsEnabled: isValueTruthy(process.env.DEPLOYMENTS_ENABLED),
+    evaluationEnabled: process.env.DIAL_EVAL_API_URL != null,
     mcpRegistryEnabled: isValueTruthy(process.env.MCP_REGISTRY_ENABLED),
   };
 

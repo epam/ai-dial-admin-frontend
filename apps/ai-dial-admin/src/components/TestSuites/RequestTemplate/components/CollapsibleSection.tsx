@@ -1,14 +1,19 @@
 'use client';
 import { FC, PropsWithChildren, ReactNode, useCallback, useState } from 'react';
 
-import { IconChevronDown } from '@tabler/icons-react';
+import { DialGhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
+import { IconChevronDown, IconMaximize } from '@tabler/icons-react';
 import classNames from 'classnames';
+
+import FullscreenViewer from '@/src/components/Common/FullscreenViewer/FullscreenViewer';
+import { ViewerContentType } from '@/src/types/evaluation';
 
 interface Props {
   title: string;
   growOnOpen?: boolean;
   defaultOpen?: boolean;
   headerIcon?: ReactNode;
+  fullViewContent?: string;
 }
 
 const CollapsibleSection: FC<PropsWithChildren<Props>> = ({
@@ -16,9 +21,11 @@ const CollapsibleSection: FC<PropsWithChildren<Props>> = ({
   growOnOpen = false,
   defaultOpen = true,
   headerIcon,
+  fullViewContent,
   children,
 }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const toggle = useCallback(() => setIsOpen((prev) => !prev), []);
 
@@ -33,10 +40,24 @@ const CollapsibleSection: FC<PropsWithChildren<Props>> = ({
           {title}
         </p>
         {headerIcon}
+        {fullViewContent && (
+          <DialGhostIconButton
+            size={ElementSize.Small}
+            icon={<IconMaximize size={16} />}
+            onClick={() => setIsFullscreen(true)}
+          />
+        )}
       </div>
       {isOpen && (
         <div className={classNames('min-h-0 overflow-y-auto flex flex-col', growOnOpen && 'flex-1')}>{children}</div>
       )}
+      <FullscreenViewer
+        isOpen={isFullscreen}
+        title={title}
+        content={fullViewContent || ''}
+        contentType={ViewerContentType.Json}
+        onClose={() => setIsFullscreen(false)}
+      />
     </div>
   );
 };

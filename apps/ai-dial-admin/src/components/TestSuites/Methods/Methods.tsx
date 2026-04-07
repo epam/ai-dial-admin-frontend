@@ -53,6 +53,14 @@ const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange, isCreate
               content: CHAT_COMPLETION_BODY,
             },
           },
+          responseColumns: [
+            {
+              name: 'answer',
+              displayName: 'answer',
+              expression: 'choices[0].message.content',
+              type: 'string',
+            },
+          ],
         }));
       } else {
         const route = methods[index - 1];
