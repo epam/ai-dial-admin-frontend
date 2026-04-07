@@ -52,3 +52,17 @@ export interface McpServersResponse {
     count?: number;
   };
 }
+
+export interface McpServerFilterDto {
+  packageRegistryTypes?: string[];
+  packageTransportTypes?: string[];
+  remoteTransportTypes?: string[];
+  repositoryExists?: boolean;
+}
+
+export interface McpServersRequestDto {
+  search?: string;
+  cursor?: string;
+  limit?: number;
+  filter?: McpServerFilterDto;
+}

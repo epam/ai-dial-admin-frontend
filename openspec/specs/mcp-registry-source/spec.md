@@ -4,13 +4,16 @@ UI flow for creating MCP containers from the MCP Registry, including registry br
 
 ### Backend API Contract
 
-**List/search servers**: `GET /api/v1/mcp-registry/servers`
-- Query params: `search` (string), `cursor` (string), `limit` (number, default 100, max 1000), `updatedSince` (RFC3339), `version` (string)
+**List/search servers**: `POST /api/v1/mcp-registry/servers/list`
+- Request body: `McpServersRequestDto` with fields: `search` (string), `cursor` (string), `limit` (number, default 100, max 1000), `filter` (McpServerFilterDto, optional)
+- `McpServerFilterDto`: `{ packageRegistryTypes?: string[], packageTransportTypes?: string[], remoteTransportTypes?: string[], repositoryExists?: boolean }`
 - Response: `{ servers: ServerResponseDto[], metadata: { nextCursor?, count? } }`
 - Each `ServerResponseDto`: `{ server: ServerDetail, _meta: Map }`
 - `ServerDetail`: `{ name, description, title?, version, repository?, websiteUrl?, packages?, remotes?, icons? }`
 - `Package`: `{ registryType: "npm"|"pypi"|"oci"|"nuget"|"mcpb", identifier, version?, transport: { type }, runtimeHint?, environmentVariables? }`
 - `Remote`: `{ type: "streamable-http"|"sse", url, headers?, variables? }`
+
+The system SHALL use `POST /api/v1/mcp-registry/servers/list` for all MCP registry server requests instead of `GET /api/v1/mcp-registry/servers`.
 
 ### Feature Flag
 
@@ -27,37 +30,57 @@ UI flow for creating MCP containers from the MCP Registry, including registry br
 
 ### Server Selectability
 
-A server is selectable (in both grid and autocomplete) when it has **both**:
-1. At least one package with `registryType === "oci"`
-2. At least one OCI package with `transport.type === "streamable-http"` or `transport.type === "sse"`
+With server-side filtering by `packageRegistryTypes` and `packageTransportTypes`, all returned servers are selectable. All rows in the MCP registry grid SHALL be selectable.
 
-Transport is read from `packages[].transport.type` (NOT from `remotes[]`).
+### Server-side Container Pre-filter
 
-A server is blocked when:
-- No packages at all
-- No OCI package
-- OCI packages only have unsupported transport (e.g., `stdio`)
+All container-related MCP registry server requests (grid pagination, autocomplete search, freeform validation) SHALL include a `filter` with `packageRegistryTypes: ["oci"]` and `packageTransportTypes: ["streamable-http", "sse"]` so that only servers with OCI packages and supported transports are returned.
+
+### Purpose-specific API Method for Containers
+
+`McpRegistryApi` SHALL expose a `getContainerMcpServers()` method that accepts `search`, `cursor`, and `limit` params, constructs a `McpServersRequestDto` with `filter: { packageRegistryTypes: ["oci"], packageTransportTypes: ["streamable-http", "sse"] }` internally, and sends a POST request to `/api/v1/mcp-registry/servers/list`.
+
+Callers SHALL NOT provide filter values — the filter is an implementation detail of the API method.
+
+### Purpose-specific Server Action for Containers
+
+A `getContainerMcpServers()` server action SHALL be created that accepts `{ search?, cursor?, limit }`, authenticates, and delegates to `McpRegistryApi.getContainerMcpServers()`. This replaces the current generic `getMcpServers()` action for container use cases.
+
+### Server Action Accumulates Results with minResults
+
+The `getContainerMcpServers` server action SHALL accept an optional `minResults` param. When provided, it SHALL fetch multiple BE pages until `minResults` results are accumulated or the upstream cursor is exhausted. When omitted, a single fetch SHALL be made.
+
+The accumulation loop SHALL NOT break on empty responses — only when the cursor is exhausted.
+
+### Typed Request and Filter DTOs
+
+The system SHALL define TypeScript interfaces mirroring the BE contract:
+
+- `McpServerFilterDto` with optional fields: `packageRegistryTypes` (`string[]`), `packageTransportTypes` (`string[]`), `remoteTransportTypes` (`string[]`), `repositoryExists` (`boolean`)
+- `McpServersRequestDto` with optional fields: `search` (`string`), `cursor` (`string`), `limit` (`number`), `filter` (`McpServerFilterDto`)
+
+These interfaces SHALL be located in `src/types/deployments/mcp-registry.ts`.
 
 ### MCP Server Name Field
 
 - SHALL render a `DialSelectField` with inline search (debounced, same pattern as `HFModelNameField`)
-- Autocomplete SHALL call `getMcpServers({ search: value, limit: "5" })` on input (debounce ~100ms, trigger after 2+ characters)
-- Autocomplete results SHALL be filtered to only selectable servers (`isServerSelectable`)
+- Autocomplete SHALL call `getContainerMcpServers({ search: value, limit: 5 })` on input (debounce ~100ms, trigger after 2+ characters)
+- All autocomplete results SHALL be shown as options without client-side filtering
 - SHALL maintain a server cache (`Map<string, McpServer>`) for instant pre-fill on autocomplete selection
 - SHALL render a "Select from registry" button that opens the registry browser modal
 - SHALL validate server name against pattern `^[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+$`
 - SHALL register validity with `SaveValidationContext` (field: `mcpServerName`)
 - SHALL be disabled when container is in edit-disabled state or running
+- SHALL clear dropdown options when input has 2 or fewer characters
 
 ### Freeform Validation
 
 When user types a server name that is not in the local cache:
 1. `imageReference` SHALL be cleared immediately
 2. `mcpServerName` field SHALL be marked invalid (Save blocked, no error message shown)
-3. A fetch SHALL be made to `getMcpServers({ search: value, limit: "10" })`
-4. If exact name match found and selectable → `applyServer()` called, field becomes valid
-5. If exact match found but not selectable → error: "MCP server does not have a supported OCI package and transport"
-6. If no exact match → error: "MCP server not found in registry"
+3. A fetch SHALL be made to `getContainerMcpServers({ search: value, limit: 10 })`
+4. If exact name match found → `applyServer()` called, field becomes valid
+5. If no exact match → error: "MCP server not found in registry"
 
 ### On Server Selection (autocomplete or modal)
 
@@ -83,9 +106,12 @@ Package preference: prefer OCI package with `streamable-http` transport over `ss
 
 - SHALL use ag-grid with infinite scroll and cursor-based pagination
 - SHALL support single-row radio selection
-- Rows not passing `isServerSelectable` SHALL be disabled (not selectable, visually greyed with opacity 0.5)
+- All rows SHALL be selectable (server-side filtering ensures only compatible servers are returned)
 - Search filter on server name column SHALL map to `search` query parameter
 - `updatedAt` SHALL be flattened from `_meta["io.modelcontextprotocol.registry/official"].updatedAt` during response mapping
+- SHALL accept a `fetchServers: McpRegistryFetchFn` prop and use it for all data fetching (no direct action import)
+- `McpRegistryModal` SHALL accept and pass through the `fetchServers` prop to `McpRegistryGrid`
+- Radio button cell renderer SHALL return `null` when the row has no data (placeholder rows)
 
 **Columns:**
 
@@ -103,7 +129,6 @@ Package preference: prefer OCI package with `streamable-http` transport over `ss
 
 - MCP server name: required, pattern `^[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+$`
 - Server existence: validated against registry on freeform input
-- Server selectability: must have OCI + supported transport
 - `source.imageReference`: populated automatically from OCI identifier
 
 ### Error Handling
@@ -115,6 +140,5 @@ Package preference: prefer OCI package with `streamable-http` transport over `ss
 ### Accessibility
 
 - Registry grid SHALL be keyboard navigable (ag-grid default)
-- Disabled rows SHALL have reduced opacity (0.5) visual indicator
 - Modal SHALL trap focus (handled by `DialFormPopup`)
 - "Select from registry" button SHALL have descriptive label for screen readers
