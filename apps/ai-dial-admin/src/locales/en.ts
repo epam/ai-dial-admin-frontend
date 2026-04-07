@@ -1638,6 +1638,11 @@ export default {
     MetricInfo: 'Metric details',
     HttpLabel: 'HTTP',
     DurationLabel: 'Duration',
+    Status: {
+      Completed: 'Completed',
+      Running: 'Running',
+      Failed: 'Failed',
+    },
   },
   JsonAta: {
     JSONAtaDoc: 'JSONata Expression Reference',
