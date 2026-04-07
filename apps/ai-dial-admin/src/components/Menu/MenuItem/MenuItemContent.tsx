@@ -43,7 +43,7 @@ const MenuItemContent: FC<Props> = ({ menuItem, isActive, isSidebarOpen }) => {
             {isSidebarOpen && <DialEllipsisTooltip className="ml-4" text={t(menuItem.key)} />}
           </div>
         </div>
-        {PREVIEW_TAG_MENU_ITEMS.has(menuItem.key) ? <PreviewTag /> : null}
+        {PREVIEW_TAG_MENU_ITEMS.has(menuItem.key) && isSidebarOpen ? <PreviewTag /> : null}
       </Link>
     </DialTooltip>
   );
