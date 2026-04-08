@@ -155,7 +155,7 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
         router.refresh();
       }
     },
-    [gridApi, onCellChange, onOpenTryOutSidebar, selectedTestSuite, stableOnRemoveCase],
+    [gridApi, onCellChange, onOpenTryOutSidebar, selectedTestSuite, stableOnRemoveCase, t],
   );
 
   const onGridReady = useCallback(

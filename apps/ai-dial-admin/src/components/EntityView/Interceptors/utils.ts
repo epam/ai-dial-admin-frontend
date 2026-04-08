@@ -17,7 +17,6 @@ export const getInterceptorsGridData = (
 };
 
 export const getInterceptorsColumnDefs = (
-  t: (key: string) => string,
   open: (entity?: BaseEntity) => void,
   remove?: (entity?: BaseEntity, index?: number) => void,
   startIndex?: number,

@@ -204,7 +204,6 @@ export const getRolesColumnDefs = (
   resetToDefaultHidden: (api: GridApi, node: IRowNode) => boolean,
   isSetNoLimitsHidden: (api: GridApi, node: IRowNode) => boolean,
   view: ApplicationRoute,
-  t: (key: string) => string,
   isReadOnlyAdmin?: boolean,
 ): ColDef[] => {
   const actions = [getOpenInNewTabOperation(open)];

@@ -328,7 +328,6 @@ export const getPublicationColumns = (open: (publication?: Publication) => void)
 
 export const ENTITIES_COLUMNS = <T extends object>(
   columns: ColDef[],
-  t: (key: string) => string,
   remove?: (entity?: T) => void,
   duplicate?: (entity?: T) => void,
   open?: (entity?: T) => void,

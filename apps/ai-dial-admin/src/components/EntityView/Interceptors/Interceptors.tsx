@@ -135,9 +135,9 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
 
   const rowData = getInterceptorsGridData(interceptors, entityInterceptors);
 
-  const globalColumns = getInterceptorsColumnDefs(t, onOpen);
+  const globalColumns = getInterceptorsColumnDefs(onOpen);
 
-  const runnerColumns = getInterceptorsColumnDefs(t, onOpen, void 0, globalInterceptors?.length);
+  const runnerColumns = getInterceptorsColumnDefs(onOpen, void 0, globalInterceptors?.length);
 
   const onRemoveInterceptor = useCallback(
     (_?: DialInterceptor, index?: number) => {
@@ -163,12 +163,11 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
 
   const localColumns = useMemo(() => {
     return getInterceptorsColumnDefs(
-      t,
       onOpen,
       isReadOnlyAdmin ? undefined : onRemoveInterceptor,
       (globalInterceptors?.length || 0) + (runnerInterceptors?.length || 0),
     );
-  }, [onRemoveInterceptor, globalInterceptors?.length, isReadOnlyAdmin, runnerInterceptors?.length, t]);
+  }, [onRemoveInterceptor, globalInterceptors?.length, isReadOnlyAdmin, runnerInterceptors?.length]);
 
   const additionalGridOptions = useMemo(() => {
     return isReadOnlyAdmin ? undefined : { rowDragManaged: true, onRowDragEnd };

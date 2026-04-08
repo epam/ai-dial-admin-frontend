@@ -125,11 +125,11 @@ const BaseEntityList = <T extends object>({
     const duplicate = isReadOnlyAdmin ? undefined : onOpenDuplicateModal;
     const move = isReadOnlyAdmin ? undefined : onOpenMoveModal;
     if (isAssetWithVersion(route)) {
-      return ENTITIES_COLUMNS(baseColumns, t, remove, duplicate, openInNewTab, move);
+      return ENTITIES_COLUMNS(baseColumns, remove, duplicate, openInNewTab, move);
     } else if (route === ApplicationRoute.Files) {
-      return ENTITIES_COLUMNS(baseColumns, t, remove, void 0, openInNewTab, move);
+      return ENTITIES_COLUMNS(baseColumns, remove, void 0, openInNewTab, move);
     }
-    return ENTITIES_COLUMNS(baseColumns, t, remove, duplicate, openInNewTab);
+    return ENTITIES_COLUMNS(baseColumns, remove, duplicate, openInNewTab);
   };
 
   const columns = getColumns();

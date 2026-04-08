@@ -42,7 +42,6 @@ import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { ActionMenuOperationI18nKey } from '@/src/constants/i18n';
 
 const CLICK = vi.fn();
-const t = vi.fn((key: string) => key);
 
 describe('Actions :: getResourceRollbackOperation', () => {
   test('Should set Rollback operation', () => {

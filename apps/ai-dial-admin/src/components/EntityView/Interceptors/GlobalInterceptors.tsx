@@ -82,8 +82,8 @@ const GlobalInterceptors: FC<Props> = ({ interceptors, currentInterceptors, onCh
   const rowData = globalInterceptors;
 
   const columns = useMemo(() => {
-    return getInterceptorsColumnDefs(t, onOpen, isReadOnlyAdmin ? void 0 : onRemoveInterceptor);
-  }, [onRemoveInterceptor, isReadOnlyAdmin, t]);
+    return getInterceptorsColumnDefs(onOpen, isReadOnlyAdmin ? void 0 : onRemoveInterceptor);
+  }, [onRemoveInterceptor, isReadOnlyAdmin]);
 
   const additionalGridOptions = useMemo(() => {
     return { rowDragManaged: true, onRowDragEnd };
