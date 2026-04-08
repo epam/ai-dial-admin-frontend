@@ -1,10 +1,32 @@
 import { render, screen } from '@testing-library/react';
 
+import { ColDef, ColGroupDef } from 'ag-grid-community';
+
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 
 import { ComparisonSection } from '../models';
 
 import ComparisonPivotView from '../ComparisonPivotView';
+
+let capturedColumnDefs: (ColDef | ColGroupDef)[] | undefined;
+let capturedRowData: unknown[] | null | undefined;
+
+vi.mock('@/src/components/Grid/AgGridWrapper', () => ({
+  default: ({ columnDefs, rowData }: { columnDefs?: (ColDef | ColGroupDef)[]; rowData?: unknown[] | null }) => {
+    capturedColumnDefs = columnDefs;
+    capturedRowData = rowData;
+    return (
+      <div data-testid="ag-grid-wrapper">
+        {/* Render row test-case names so text assertions still work */}
+        {(rowData ?? []).map((row: any) => (
+          <div key={row._id} data-testid={`row-${row._id}`}>
+            <span>{row._testCaseName}</span>
+          </div>
+        ))}
+      </div>
+    );
+  },
+}));
 
 const makeDetail = (overrides: Partial<AnalyticsResult> = {}): AnalyticsResult => ({
   id: 'r1',
@@ -31,6 +53,11 @@ const makeSections = (hasPinned: boolean): ComparisonSection[] => [
   },
 ];
 
+beforeEach(() => {
+  capturedColumnDefs = undefined;
+  capturedRowData = undefined;
+});
+
 describe('ComparisonPivotView', () => {
   it('renders test case as row', () => {
     render(
@@ -44,7 +71,7 @@ describe('ComparisonPivotView', () => {
     expect(screen.getByText('Test Case 1')).toBeInTheDocument();
   });
 
-  it('renders field as column header', () => {
+  it('builds column defs with field columns grouped by section', () => {
     render(
       <ComparisonPivotView
         sections={makeSections(false)}
@@ -53,9 +80,16 @@ describe('ComparisonPivotView', () => {
         spotlightedFields={new Set()}
       />,
     );
-    expect(screen.getByText('status')).toBeInTheDocument();
-    // CSS uppercase class renders "Execution" as "EXECUTION" visually
-    expect(screen.getByText('Runs.Execution')).toBeInTheDocument();
+    expect(capturedColumnDefs).toBeDefined();
+    // First col is the test case column
+    const testCaseCol = capturedColumnDefs![0] as ColDef;
+    expect(testCaseCol.colId).toBe('_testCaseName');
+
+    // Second item is a column group for "Execution"
+    const group = capturedColumnDefs![1] as ColGroupDef;
+    expect(group.headerName).toBe('Runs.Execution');
+    expect(group.children).toHaveLength(1);
+    expect((group.children[0] as ColDef).headerName).toBe('status');
   });
 
   it('renders two rows when pinned', () => {
@@ -70,11 +104,12 @@ describe('ComparisonPivotView', () => {
     );
     expect(screen.getByText('Test Case 1')).toBeInTheDocument();
     expect(screen.getByText('Test Case 2')).toBeInTheDocument();
+    expect(capturedRowData).toHaveLength(2);
   });
 
-  it('applies diff highlighting on active row', () => {
+  it('applies diff class on active row cell data', () => {
     const pinnedDetail = makeDetail({ id: 'r2', testCaseName: 'Test Case 2' });
-    const { container } = render(
+    render(
       <ComparisonPivotView
         sections={makeSections(true)}
         activeDetail={makeDetail()}
@@ -82,13 +117,17 @@ describe('ComparisonPivotView', () => {
         spotlightedFields={new Set()}
       />,
     );
-    // Text diff -> teal
-    const tealCells = container.querySelectorAll('.bg-accent-secondary-alpha');
-    expect(tealCells.length).toBeGreaterThan(0);
+    // Row 0 is pinned — no diff class; row 1 is active — should have diff class
+    const rows = capturedRowData as any[];
+    const pinnedCell = rows[0]['execution:status'];
+    const activeCell = rows[1]['execution:status'];
+    expect(pinnedCell.diffClass).toBe('');
+    // Text diff -> accent-secondary-alpha
+    expect(activeCell.diffClass).toBe('bg-accent-secondary-alpha');
   });
 
-  it('shows spotlighted field with accent border', () => {
-    const { container } = render(
+  it('marks spotlighted field column with spotlight header class', () => {
+    render(
       <ComparisonPivotView
         sections={makeSections(false)}
         activeDetail={makeDetail()}
@@ -96,8 +135,9 @@ describe('ComparisonPivotView', () => {
         spotlightedFields={new Set(['execution:status'])}
       />,
     );
-    const accentHeaders = container.querySelectorAll('.border-t-accent-primary');
-    expect(accentHeaders.length).toBeGreaterThan(0);
+    const group = capturedColumnDefs![1] as ColGroupDef;
+    const fieldCol = group.children[0] as ColDef;
+    expect(fieldCol.headerClass).toContain('pivot-spotlight-header');
   });
 
   it('has fadeIn animation class', () => {
@@ -124,5 +164,6 @@ describe('ComparisonPivotView', () => {
     );
     const rows = screen.getAllByText('Test Case 1');
     expect(rows).toHaveLength(1);
+    expect(capturedRowData).toHaveLength(1);
   });
 });

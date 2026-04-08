@@ -2,9 +2,9 @@
 
 import { FC, useMemo } from 'react';
 
-import classNames from 'classnames';
-import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
+import { ColDef, ColGroupDef, ICellRendererParams } from 'ag-grid-community';
 
+import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
@@ -20,6 +20,63 @@ interface Props {
   pinnedDetail: AnalyticsResult | null;
   spotlightedFields: Set<string>;
 }
+
+/** Shape of each row fed to the ag-grid. */
+interface PivotRow {
+  /** Unique row id */
+  _id: string;
+  /** Display name for the test case column */
+  _testCaseName: string;
+  /** Execution status for the badge */
+  _executionStatus?: string;
+  /** Index of this detail inside the `details` array (0 = pinned when two rows) */
+  _rowIndex: number;
+  /** Whether two rows are displayed (pinned + active) */
+  _hasTwoRows: boolean;
+  /**
+   * Field values keyed by `sectionKey:fieldKey`.
+   * Each value stores the raw string and a pre-computed diff CSS class.
+   */
+  [fullKey: string]: unknown;
+}
+
+interface FieldValueCell {
+  raw: string | null;
+  diffClass: string;
+}
+
+// ── Cell renderer for the Test Case column ──────────────────────────────────
+const TestCaseCellRenderer: FC<ICellRendererParams<PivotRow>> = (params) => {
+  const row = params.data;
+  if (!row) return null;
+  return (
+    <div className="flex items-center gap-2 overflow-hidden">
+      <span className="truncate text-primary">{row._testCaseName}</span>
+      <StatusBadge status={row._executionStatus as never} />
+    </div>
+  );
+};
+
+// ── Cell renderer for field value columns ───────────────────────────────────
+const FieldValueCellRenderer: FC<ICellRendererParams<PivotRow>> = (params) => {
+  const cell = params.value as FieldValueCell | undefined;
+  if (!cell) return <span className="dial-caption-text text-secondary">—</span>;
+
+  const { raw } = cell;
+  const displayText = formatFieldValue(raw);
+
+  if (raw === null) {
+    return <span className="dial-caption-text text-secondary">—</span>;
+  }
+  if (raw.includes('\n') || raw.length > 100) {
+    return (
+      <pre className="dial-caption-text whitespace-pre-wrap break-words overflow-y-auto max-h-[120px] font-mono">
+        {displayText}
+      </pre>
+    );
+  }
+  return <span className="dial-caption-text">{displayText}</span>;
+};
 
 const ComparisonPivotView: FC<Props> = ({ sections, activeDetail, pinnedDetail, spotlightedFields }) => {
   const t = useI18n();
@@ -49,95 +106,144 @@ const ComparisonPivotView: FC<Props> = ({ sections, activeDetail, pinnedDetail, 
     });
   }, [sections, t]);
 
+  // ── Build row data ──────────────────────────────────────────────────────
+  const rowData = useMemo<PivotRow[]>(() => {
+    return details.map((detail, rowIdx) => {
+      const row: PivotRow = {
+        _id: detail.id ?? String(rowIdx),
+        _testCaseName: detail.testCaseName ?? detail.id ?? '',
+        _executionStatus: detail.executionStatus,
+        _rowIndex: rowIdx,
+        _hasTwoRows: hasTwoRows,
+      };
+
+      const isPinnedRow = hasTwoRows && rowIdx === 0;
+
+      for (const field of flatFields) {
+        const val = field.values[rowIdx];
+        const raw = val?.raw ?? null;
+
+        // Diff highlighting on active row (non-pinned)
+        let diffClass = '';
+        if (hasTwoRows && !isPinnedRow && field.values.length >= 2) {
+          const pinnedRaw = field.values[0]?.raw ?? null;
+          if (!valuesAreEqual(pinnedRaw, raw)) {
+            diffClass = field.isNumeric ? 'bg-warning' : 'bg-accent-secondary-alpha';
+          }
+        }
+
+        row[field.fullKey] = { raw, diffClass } satisfies FieldValueCell;
+      }
+
+      return row;
+    });
+  }, [details, flatFields, hasTwoRows]);
+
+  // ── Build column definitions ────────────────────────────────────────────
+  const columnDefs = useMemo<(ColDef | ColGroupDef)[]>(() => {
+    // Test Case column (pinned left)
+    const testCaseCol: ColDef<PivotRow> = {
+      headerName: t(RunsI18nKey.TestCaseColumn),
+      colId: '_testCaseName',
+      field: '_testCaseName',
+      pinned: 'left',
+      minWidth: 160,
+      cellRenderer: TestCaseCellRenderer,
+      filter: false,
+      sortable: false,
+    };
+
+    // Group fields by section
+    const sectionGroupMap = new Map<string, { label: string; columns: ColDef<PivotRow>[] }>();
+
+    for (const field of flatFields) {
+      let group = sectionGroupMap.get(field.sectionKey);
+      if (!group) {
+        group = { label: field.sectionLabel, columns: [] };
+        sectionGroupMap.set(field.sectionKey, group);
+      }
+
+      const isSpotlighted = spotlightedFields.has(field.fullKey);
+
+      const col: ColDef<PivotRow> = {
+        colId: field.fullKey,
+        headerName: field.label,
+        minWidth: 120,
+        flex: 1,
+        filter: false,
+        sortable: false,
+        valueGetter: (params) => params.data?.[field.fullKey] as FieldValueCell | undefined,
+        cellRenderer: FieldValueCellRenderer,
+        cellStyle: (params) => {
+          const cell = params.value as FieldValueCell | undefined;
+          if (cell?.diffClass === 'bg-warning') {
+            return { backgroundColor: 'var(--bg-warning)' };
+          }
+          if (cell?.diffClass === 'bg-accent-secondary-alpha') {
+            return { backgroundColor: 'var(--bg-accent-secondary-alpha)' };
+          }
+          return undefined;
+        },
+        cellClass: (params) => {
+          const cell = params.value as FieldValueCell | undefined;
+          return cell?.diffClass || '';
+        },
+        headerClass: isSpotlighted ? 'pivot-spotlight-header' : '',
+      };
+
+      group.columns.push(col);
+    }
+
+    // Build column groups (one per section)
+    const groupDefs: (ColDef | ColGroupDef)[] = [];
+    for (const [, group] of sectionGroupMap) {
+      if (group.columns.length === 1) {
+        // Single column in a section — wrap in a group anyway to show the section label
+        groupDefs.push({
+          headerName: group.label,
+          headerClass: 'uppercase text-secondary',
+          children: group.columns,
+        } as ColGroupDef);
+      } else {
+        groupDefs.push({
+          headerName: group.label,
+          headerClass: 'uppercase text-secondary',
+          children: group.columns,
+        } as ColGroupDef);
+      }
+    }
+
+    return [testCaseCol, ...groupDefs];
+  }, [t, flatFields, spotlightedFields]);
+
   return (
-    <div className="animate-fadeIn h-full overflow-auto">
-      <div
-        className="dial-tiny-text grid"
-        style={{
-          gridTemplateColumns: `minmax(160px, auto) repeat(${flatFields.length}, minmax(120px, 1fr))`,
+    <div className="animate-fadeIn h-full overflow-auto pivot-grid-container">
+      <style>{`
+        .pivot-spotlight-header {
+          border-top: 2px solid var(--controls-bg-solid-primary, #3664E2) !important;
+        }
+        .pivot-grid-container .ag-header-group-cell {
+          font-size: 12px;
+          text-transform: uppercase;
+        }
+      `}</style>
+      <AgGridWrapper
+        columnDefs={columnDefs}
+        rowData={rowData}
+        additionalGridOptions={{
+          headerHeight: 56,
+          groupHeaderHeight: 20,
+          rowHeight: 36,
+          defaultColDef: {
+            filter: false,
+            floatingFilter: false,
+            resizable: true,
+            suppressMovable: true,
+          },
+          suppressCellFocus: true,
+          domLayout: details.length <= 2 ? 'autoHeight' : 'normal',
         }}
-      >
-        {/* Header row */}
-        <div
-          className="sticky top-0 left-0 z-20 bg-layer-1 text-left dial-tiny-semi-text text-secondary font-medium px-3 py-1.5 border-b border-r border-secondary"
-          style={{ gridColumn: 1, gridRow: 1 }}
-        >
-          {t(RunsI18nKey.TestCaseColumn)}
-        </div>
-        {flatFields.map((field, colIdx) => {
-          const isSpotlighted = spotlightedFields.has(field.fullKey);
-          return (
-            <div
-              key={field.fullKey}
-              className={classNames(
-                'sticky top-0 z-10 bg-layer-1 text-left dial-caption-semi-text font-medium px-3 py-1.5 border-b border-secondary',
-                isSpotlighted && 'border-t-2 border-t-accent-primary',
-              )}
-              style={{ gridColumn: colIdx + 2, gridRow: 1 }}
-            >
-              <div className="flex flex-col">
-                <span className="dial-caption-text text-secondary uppercase">{field.sectionLabel}</span>
-                <span className="font-mono text-primary">{field.label}</span>
-              </div>
-            </div>
-          );
-        })}
-
-        {/* Data rows */}
-        {details.map((detail, rowIdx) => {
-          const isPinnedRow = hasTwoRows && rowIdx === 0;
-          const gridRow = rowIdx + 2; // +2 because header is row 1
-
-          return (
-            <div key={detail.id ?? rowIdx} className="contents">
-              <div
-                className="sticky left-0 z-10 bg-layer-1 px-3 py-1.5 border-b border-r border-secondary"
-                style={{ gridColumn: 1, gridRow }}
-              >
-                <div className="flex items-center gap-2">
-                  <DialEllipsisTooltip
-                    text={detail.testCaseName ?? detail.id ?? ''}
-                    className="text-primary max-w-[140px]"
-                  />
-                  <StatusBadge status={detail.executionStatus} />
-                </div>
-              </div>
-              {flatFields.map((field, colIdx) => {
-                const val = field.values[rowIdx];
-                const raw = val?.raw ?? null;
-                const displayText = formatFieldValue(raw);
-
-                // Diff highlighting on active row (non-pinned)
-                let cellDiffClass = '';
-                if (hasTwoRows && !isPinnedRow && field.values.length >= 2) {
-                  const pinnedRaw = field.values[0]?.raw ?? null;
-                  if (!valuesAreEqual(pinnedRaw, raw)) {
-                    cellDiffClass = field.isNumeric ? 'bg-warning' : 'bg-accent-secondary-alpha';
-                  }
-                }
-
-                return (
-                  <div
-                    key={`${detail.id}-${field.fullKey}`}
-                    className={classNames('px-3 py-1.5 border-b border-secondary', cellDiffClass)}
-                    style={{ gridColumn: colIdx + 2, gridRow }}
-                  >
-                    {raw === null ? (
-                      <span className="dial-caption-text text-secondary">—</span>
-                    ) : raw.includes('\n') || raw.length > 100 ? (
-                      <pre className="dial-caption-text whitespace-pre-wrap break-words overflow-y-auto max-h-[120px] font-mono">
-                        {displayText}
-                      </pre>
-                    ) : (
-                      <span className="dial-caption-text">{displayText}</span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          );
-        })}
-      </div>
+      />
     </div>
   );
 };

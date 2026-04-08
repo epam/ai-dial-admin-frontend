@@ -61,7 +61,8 @@ describe('AnalyticsBottomDrawer', () => {
     render(<TestWrapper />);
     await waitFor(() => {
       const drawer = screen.getByRole('complementary', { name: 'Runs.AnalysisDrawerLabel' });
-      expect(drawer.className).toContain('z-[35]');
+      // z-index is on the Resizable wrapper (parent), not the complementary element itself
+      expect(drawer.parentElement?.className).toContain('z-[35]');
     });
   });
 });

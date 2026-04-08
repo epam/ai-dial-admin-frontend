@@ -93,15 +93,10 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
     gridApiRef.current?.redrawRows();
   }, [detailMode.selectedResultId]);
 
-  const gridStyle = useMemo(
-    () => ({ height: `calc(100% - ${drawerPanel.currentHeight}px)` }),
-    [drawerPanel.currentHeight],
-  );
-
   return (
     <div className="flex flex-col gap-4 h-full min-h-0">
       <h2>{t(TabsI18nKey.Analytics)}</h2>
-      <div className="min-h-0 flex-1" style={gridStyle}>
+      <div className="min-h-0 flex-1">
         {isLoading ? (
           <DialLoader size={40} />
         ) : (

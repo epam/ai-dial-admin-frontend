@@ -4,37 +4,6 @@ import { useCallback, useMemo, useReducer, useState } from 'react';
 
 import { ComparisonSection } from './models';
 
-type VisibilityAction =
-  | { type: 'toggle'; key: string }
-  | { type: 'selectAll'; sectionKey: string; fieldKeys: string[] }
-  | { type: 'deselectAll'; sectionKey: string; fieldKeys: string[] }
-  | { type: 'reset' };
-
-function visibilityReducer(state: Record<string, boolean>, action: VisibilityAction): Record<string, boolean> {
-  switch (action.type) {
-    case 'toggle': {
-      const current = state[action.key] !== false;
-      return { ...state, [action.key]: !current };
-    }
-    case 'selectAll': {
-      const next = { ...state };
-      for (const fk of action.fieldKeys) {
-        next[`${action.sectionKey}:${fk}`] = true;
-      }
-      return next;
-    }
-    case 'deselectAll': {
-      const next = { ...state };
-      for (const fk of action.fieldKeys) {
-        next[`${action.sectionKey}:${fk}`] = false;
-      }
-      return next;
-    }
-    case 'reset':
-      return {};
-  }
-}
-
 type OrderAction =
   | { type: 'reorder'; order: string[] }
   | { type: 'move'; sectionKey: string; direction: 'up' | 'down' }
@@ -79,7 +48,7 @@ interface UseFieldSelectorReturn {
 }
 
 export function useFieldSelector(sections: ComparisonSection[]): UseFieldSelectorReturn {
-  const [fieldVisibility, dispatchVisibility] = useReducer(visibilityReducer, {});
+  const [fieldVisibility, setFieldVisibility] = useState<Record<string, boolean>>({});
   const [sectionOrder, dispatchOrder] = useReducer(
     orderReducer,
     sections.map((s) => s.key),
@@ -89,7 +58,10 @@ export function useFieldSelector(sections: ComparisonSection[]): UseFieldSelecto
   const [searchQuery, setSearchQuery] = useState('');
 
   const toggleField = useCallback((key: string) => {
-    dispatchVisibility({ type: 'toggle', key });
+    setFieldVisibility((prev) => {
+      const current = prev[key] !== false;
+      return { ...prev, [key]: !current };
+    });
   }, []);
 
   const toggleSectionHidden = useCallback((sectionKey: string) => {
@@ -97,11 +69,23 @@ export function useFieldSelector(sections: ComparisonSection[]): UseFieldSelecto
   }, []);
 
   const selectAllInSection = useCallback((sectionKey: string, fieldKeys: string[]) => {
-    dispatchVisibility({ type: 'selectAll', sectionKey, fieldKeys });
+    setFieldVisibility((prev) => {
+      const next = { ...prev };
+      for (const fk of fieldKeys) {
+        next[`${sectionKey}:${fk}`] = true;
+      }
+      return next;
+    });
   }, []);
 
   const deselectAllInSection = useCallback((sectionKey: string, fieldKeys: string[]) => {
-    dispatchVisibility({ type: 'deselectAll', sectionKey, fieldKeys });
+    setFieldVisibility((prev) => {
+      const next = { ...prev };
+      for (const fk of fieldKeys) {
+        next[`${sectionKey}:${fk}`] = false;
+      }
+      return next;
+    });
   }, []);
 
   const reorderSections = useCallback((order: string[]) => {
@@ -125,7 +109,7 @@ export function useFieldSelector(sections: ComparisonSection[]): UseFieldSelecto
   }, []);
 
   const resetAll = useCallback((defaultOrder?: string[]) => {
-    dispatchVisibility({ type: 'reset' });
+    setFieldVisibility({});
     if (defaultOrder) {
       dispatchOrder({ type: 'reset', defaultOrder });
     }

@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { DialLoader } from '@epam/ai-dial-ui-kit';
@@ -9,6 +9,7 @@ import { getTestCaseRunResultDetails } from '@/src/app/[lang]/runs/actions';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
+import { Resizable } from 're-resizable';
 
 import ComparisonPivotView from './ComparisonPivotView';
 import ComparisonTableView from './ComparisonTableView';
@@ -44,7 +45,6 @@ const AnalyticsBottomDrawer: FC<Props> = ({
   const pinnedCacheRef = useRef<AnalyticsResult | null>(null);
   const toolbarRef = useRef<HTMLDivElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
 
   // Fetch active detail
   useEffect(() => {
@@ -147,36 +147,6 @@ const AnalyticsBottomDrawer: FC<Props> = ({
     return () => window.removeEventListener('keydown', onEscapeKeyDown);
   }, [onClose]);
 
-  // Resize drag handlers
-  const onDragStart = useCallback(
-    (e: MouseEvent) => {
-      e.preventDefault();
-      setIsDragging(true);
-      const startY = e.clientY;
-      const startHeight = drawerPanel.panelHeight;
-
-      const onMouseMove = (moveEvent: globalThis.MouseEvent) => {
-        const delta = startY - moveEvent.clientY;
-        const newHeight = Math.max(
-          MIN_DRAWER_HEIGHT,
-          Math.min(window.innerHeight - MAX_DRAWER_OFFSET, startHeight + delta),
-        );
-        drawerPanel.setPanelHeight(newHeight);
-      };
-
-      const onMouseUp = () => {
-        setIsDragging(false);
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onMouseUp);
-      };
-
-      document.addEventListener('mousemove', onMouseMove);
-      document.addEventListener('mouseup', onMouseUp);
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [drawerPanel.panelHeight, drawerPanel.setPanelHeight],
-  );
-
   // Reset local selector state on unmount; drawer lifecycle (open/close) is
   // managed by the parent via useLayoutEffect so we must NOT call drawerPanel.close()
   // here — doing so races with the parent's drawerPanel.open() when switching modes.
@@ -204,77 +174,85 @@ const AnalyticsBottomDrawer: FC<Props> = ({
     onClose();
   }, [fieldSelector, onClose]);
 
-  const panelStyle = useMemo(
-    () => ({
-      height: drawerPanel.isCollapsed ? COLLAPSED_HEIGHT : drawerPanel.panelHeight,
-      transition: isDragging ? 'none' : 'height 150ms ease',
-    }),
-    [drawerPanel.isCollapsed, drawerPanel.panelHeight, isDragging],
-  );
+  const maxHeight = typeof window !== 'undefined' ? window.innerHeight - MAX_DRAWER_OFFSET : MIN_DRAWER_HEIGHT;
+
+  const panelHeight = drawerPanel.isCollapsed ? COLLAPSED_HEIGHT : drawerPanel.panelHeight;
 
   return createPortal(
-    <div
-      ref={drawerRef}
-      className="fixed bottom-0 inset-x-0 z-[35] bg-layer-1 border-t border-primary flex flex-col"
-      style={panelStyle}
-      role="complementary"
-      aria-label={t(RunsI18nKey.AnalysisDrawerLabel)}
+    <Resizable
+      size={{ width: '100%', height: panelHeight }}
+      minHeight={MIN_DRAWER_HEIGHT}
+      maxHeight={maxHeight}
+      enable={{ top: !drawerPanel.isCollapsed }}
+      handleComponent={{ top: <ResizeHandle /> }}
+      handleStyles={{ top: { height: '6px', top: 0 } }}
+      onResizeStop={(_e, _dir, _ref, delta) => {
+        drawerPanel.setPanelHeight(drawerPanel.panelHeight + delta.height);
+      }}
+      className="fixed !bottom-0 !inset-x-0 z-[35] bg-layer-1 border-t border-primary flex flex-col"
+      style={{ position: 'fixed', bottom: 0, left: 0, right: 0, top: 'auto' }}
     >
-      {!drawerPanel.isCollapsed && <ResizeHandle onDragStart={onDragStart} drawerPanel={drawerPanel} />}
-      <div ref={toolbarRef}>
-        <DrawerToolbar
-          viewMode={drawerPanel.viewMode}
-          onSetView={drawerPanel.setView}
-          activeId={drawerPanel.activeId}
-          activeName={activeDetail?.testCaseName ?? null}
-          pinnedId={drawerPanel.pinnedId}
-          pinnedName={pinnedDetail?.testCaseName ?? null}
-          onPin={onPinActive}
-          onUnpin={drawerPanel.unpin}
-          diffCount={diffCount}
-          isCollapsed={drawerPanel.isCollapsed}
-          onCollapse={drawerPanel.collapse}
-          onExpand={drawerPanel.expand}
-          onClose={onCloseDrawer}
-          onSwitchToSidebar={onSwitchSidebar}
-        />
-      </div>
-      {!drawerPanel.isCollapsed && (
-        <div className="flex flex-1 min-h-0 overflow-hidden">
-          <FieldSelector sections={sections} fieldSelector={fieldSelector} />
-          <div className="flex-1 overflow-auto min-h-0">
-            {isLoading || (!activeDetail && !error) ? (
-              <div className="flex items-center justify-center h-full">
-                <DialLoader size={32} />
-              </div>
-            ) : error ? (
-              <div className="flex items-center justify-center h-full text-error dial-small-text">{error}</div>
-            ) : fieldSelector.allFieldsHidden ? (
-              <div className="flex items-center justify-center h-full text-secondary dial-small-text">
-                {t(RunsI18nKey.NoFieldsVisible)}
-              </div>
-            ) : drawerPanel.viewMode === ViewMode.Table ? (
-              <ComparisonTableView
-                key="table"
-                sections={visibleSections}
-                activeDetail={activeDetail}
-                pinnedDetail={pinnedDetail}
-                spotlightedFields={fieldSelector.spotlightedFields}
-                onToggleSpotlight={fieldSelector.toggleSpotlight}
-              />
-            ) : (
-              <ComparisonPivotView
-                key="pivot"
-                sections={visibleSections}
-                activeDetail={activeDetail}
-                pinnedDetail={pinnedDetail}
-                spotlightedFields={fieldSelector.spotlightedFields}
-              />
-            )}
-          </div>
+      <div
+        ref={drawerRef}
+        className="flex flex-col size-full"
+        role="complementary"
+        aria-label={t(RunsI18nKey.AnalysisDrawerLabel)}
+      >
+        <div ref={toolbarRef}>
+          <DrawerToolbar
+            viewMode={drawerPanel.viewMode}
+            onSetView={drawerPanel.setView}
+            activeId={drawerPanel.activeId}
+            activeName={activeDetail?.testCaseName ?? null}
+            pinnedId={drawerPanel.pinnedId}
+            pinnedName={pinnedDetail?.testCaseName ?? null}
+            onPin={onPinActive}
+            onUnpin={drawerPanel.unpin}
+            diffCount={diffCount}
+            isCollapsed={drawerPanel.isCollapsed}
+            onCollapse={drawerPanel.collapse}
+            onExpand={drawerPanel.expand}
+            onClose={onCloseDrawer}
+            onSwitchToSidebar={onSwitchSidebar}
+          />
         </div>
-      )}
-    </div>,
+        {!drawerPanel.isCollapsed && (
+          <div className="flex flex-1 min-h-0 overflow-hidden">
+            <FieldSelector sections={sections} fieldSelector={fieldSelector} />
+            <div className="flex-1 overflow-auto min-h-0">
+              {isLoading || (!activeDetail && !error) ? (
+                <div className="flex items-center justify-center h-full">
+                  <DialLoader size={32} />
+                </div>
+              ) : error ? (
+                <div className="flex items-center justify-center h-full text-error dial-small-text">{error}</div>
+              ) : fieldSelector.allFieldsHidden ? (
+                <div className="flex items-center justify-center h-full text-secondary dial-small-text">
+                  {t(RunsI18nKey.NoFieldsVisible)}
+                </div>
+              ) : drawerPanel.viewMode === ViewMode.Table ? (
+                <ComparisonTableView
+                  key="table"
+                  sections={visibleSections}
+                  activeDetail={activeDetail}
+                  pinnedDetail={pinnedDetail}
+                  spotlightedFields={fieldSelector.spotlightedFields}
+                  onToggleSpotlight={fieldSelector.toggleSpotlight}
+                />
+              ) : (
+                <ComparisonPivotView
+                  key="pivot"
+                  sections={visibleSections}
+                  activeDetail={activeDetail}
+                  pinnedDetail={pinnedDetail}
+                  spotlightedFields={fieldSelector.spotlightedFields}
+                />
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </Resizable>,
     document.body,
   );
 };
