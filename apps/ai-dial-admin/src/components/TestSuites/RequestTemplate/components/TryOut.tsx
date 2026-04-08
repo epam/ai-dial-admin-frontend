@@ -76,12 +76,12 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
         setResolvedRequest(res.response?.resolvedRequest || {});
         setResponse(tryoutResponse);
         setGrafanaTraceUrl(res.response?.grafanaTraceUrl);
-        saveTryoutResponseToStorage(testSuiteId, res.response);
+        if (!testCaseId) saveTryoutResponseToStorage(testSuiteId, res.response);
       } else {
         const errorResponse = { response: { error: res?.errorMessage || 'Unknown error', statusCode: 500 } };
         setResolvedRequest(requestBody || {});
         setResponse(errorResponse.response);
-        saveTryoutResponseToStorage(testSuiteId, errorResponse as any);
+        if (!testCaseId) saveTryoutResponseToStorage(testSuiteId, errorResponse as any);
       }
     } finally {
       setIsRequestSend(false);
@@ -112,12 +112,15 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
   }, [t, responseBodyCopyText, isRequestSend, response]);
 
   useEffect(() => {
-    const responseFromStorage = getTryoutResponseFromStorage(testSuite.id || '');
-    if (responseFromStorage) {
-      setResponse(responseFromStorage.response as TryOutResponse);
-      setResolvedRequest(responseFromStorage.resolvedRequest || {});
-      setGrafanaTraceUrl(responseFromStorage.grafanaTraceUrl);
+    if (!testCaseId) {
+      const responseFromStorage = getTryoutResponseFromStorage(testSuite.id || '');
+      if (responseFromStorage) {
+        setResponse(responseFromStorage.response as TryOutResponse);
+        setResolvedRequest(responseFromStorage.resolvedRequest || {});
+        setGrafanaTraceUrl(responseFromStorage.grafanaTraceUrl);
+      }
     }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

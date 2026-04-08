@@ -1556,6 +1556,7 @@ export enum RunsI18nKey {
   Completed = 'Runs.Status.Completed',
   Failed = 'Runs.Status.Failed',
   Running = 'Runs.Status.Running',
+  MetricFailedText = 'Runs.MetricFailedText',
 }
 
 export enum FileManagerI18nKey {

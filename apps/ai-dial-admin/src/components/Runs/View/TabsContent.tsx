@@ -25,7 +25,11 @@ const TabsContent: FC<Props> = ({ run, activeTab }) => {
   //         <LabelledText label={t(RunsI18nKey.EndTime)} text={formatDateTimeToLocalString(run?.completedAt)} />
   //       )}
 
-  //       {!!run?.status && <LabelledText label={t(EntityFieldsI18nKey.status)} text={run.status} />}
+  //       {!!run?.status && (
+  //   <LabelledText label={t(EntityFieldsI18nKey.status)}>
+  //     <RunStatusComponent status={run.status} />
+  //   </LabelledText>
+  // )}
   //       {!!run?.testRunName && (
   //         <DialLabelledText
   //           label={t(RunsI18nKey.TestSuite)}
