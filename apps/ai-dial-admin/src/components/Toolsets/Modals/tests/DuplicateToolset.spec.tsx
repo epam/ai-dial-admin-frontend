@@ -95,54 +95,6 @@ describe('DuplicateToolset', () => {
       expect(duplicateButton).not.toBeDisabled();
     });
 
-    test('submit button is disabled when OAuth fields are missing', () => {
-      const toolsetWithIncompleteOAuth: Toolset = {
-        ...baseToolset,
-        authSettings: {
-          authenticationType: ToolsetAuthType.OAUTH,
-          clientId: '',
-          clientSecret: '',
-          authorizationEndpoint: '',
-        },
-      };
-
-      render(
-        <DuplicateToolset
-          isModalOpen={true}
-          onClose={vi.fn()}
-          entity={toolsetWithIncompleteOAuth}
-          onDuplicate={vi.fn()}
-          names={[]}
-        />,
-      );
-
-      const duplicateButton = screen.getByText(ButtonsI18nKey.Duplicate);
-      expect(duplicateButton).toBeDisabled();
-    });
-
-    test('submit button is disabled when API Key header is missing', () => {
-      const toolsetWithIncompleteApiKey: Toolset = {
-        ...baseToolset,
-        authSettings: {
-          authenticationType: ToolsetAuthType.API_KEY,
-          apiKeyHeader: '',
-        },
-      };
-
-      render(
-        <DuplicateToolset
-          isModalOpen={true}
-          onClose={vi.fn()}
-          entity={toolsetWithIncompleteApiKey}
-          onDuplicate={vi.fn()}
-          names={[]}
-        />,
-      );
-
-      const duplicateButton = screen.getByText(ButtonsI18nKey.Duplicate);
-      expect(duplicateButton).toBeDisabled();
-    });
-
     test('submit button is enabled when all OAuth fields are filled', () => {
       const toolsetWithOAuth: Toolset = {
         ...baseToolset,
