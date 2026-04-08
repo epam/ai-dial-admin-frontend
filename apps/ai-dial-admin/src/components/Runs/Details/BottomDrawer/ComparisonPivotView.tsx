@@ -51,15 +51,14 @@ const ComparisonPivotView: FC<Props> = ({ sections, activeDetail, pinnedDetail, 
   return (
     <div className="animate-fadeIn h-full overflow-auto">
       <div
-        className="text-xs"
+        className="dial-tiny-text grid"
         style={{
-          display: 'grid',
           gridTemplateColumns: `minmax(160px, auto) repeat(${flatFields.length}, minmax(120px, 1fr))`,
         }}
       >
         {/* Header row */}
         <div
-          className="sticky top-0 left-0 z-20 bg-layer-1 text-left text-xxs text-secondary font-medium px-3 py-1.5 border-b border-r border-secondary"
+          className="sticky top-0 left-0 z-20 bg-layer-1 text-left dial-tiny-semi-text text-secondary font-medium px-3 py-1.5 border-b border-r border-secondary"
           style={{ gridColumn: 1, gridRow: 1 }}
         >
           {t(RunsI18nKey.TestCaseColumn)}
@@ -70,13 +69,13 @@ const ComparisonPivotView: FC<Props> = ({ sections, activeDetail, pinnedDetail, 
             <div
               key={field.fullKey}
               className={classNames(
-                'sticky top-0 z-10 bg-layer-1 text-left text-xxs font-medium px-3 py-1.5 border-b border-secondary',
+                'sticky top-0 z-10 bg-layer-1 text-left dial-caption-semi-text font-medium px-3 py-1.5 border-b border-secondary',
                 isSpotlighted && 'border-t-2 border-t-accent-primary',
               )}
               style={{ gridColumn: colIdx + 2, gridRow: 1 }}
             >
               <div className="flex flex-col">
-                <span className="text-xxs text-secondary uppercase">{field.sectionLabel}</span>
+                <span className="dial-caption-text text-secondary uppercase">{field.sectionLabel}</span>
                 <span className="font-mono text-primary">{field.label}</span>
               </div>
             </div>
@@ -123,13 +122,13 @@ const ComparisonPivotView: FC<Props> = ({ sections, activeDetail, pinnedDetail, 
                     style={{ gridColumn: colIdx + 2, gridRow }}
                   >
                     {raw === null ? (
-                      <span className="text-xxs text-secondary">—</span>
+                      <span className="dial-caption-text text-secondary">—</span>
                     ) : raw.includes('\n') || raw.length > 100 ? (
-                      <pre className="text-xxs text-primary whitespace-pre-wrap break-words overflow-y-auto max-h-[120px] font-mono">
+                      <pre className="dial-caption-text whitespace-pre-wrap break-words overflow-y-auto max-h-[120px] font-mono">
                         {displayText}
                       </pre>
                     ) : (
-                      <span className="text-xxs text-primary">{displayText}</span>
+                      <span className="dial-caption-text">{displayText}</span>
                     )}
                   </div>
                 );

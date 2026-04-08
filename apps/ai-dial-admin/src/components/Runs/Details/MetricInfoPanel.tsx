@@ -18,7 +18,7 @@ const MetricInfoPanel: FC<Props> = ({ info }) => {
     <div className="flex flex-col gap-3 max-h-[400px] overflow-auto p-2 bg-layer-0 border border-secondary rounded">
       {grouped.map(([metricKey, metricEntries]) => (
         <div key={metricKey} className="flex flex-col gap-3">
-          <div className="text-xxs font-semibold text-accent-secondary uppercase tracking-wide">{metricKey}</div>
+          <div className="dial-tiny-semi-text text-accent-secondary uppercase tracking-wide">{metricKey}</div>
           {metricEntries.map((entry) => (
             <CodeViewer key={`${entry.metricKey}-${entry.entryKey}`} title={entry.entryKey} content={entry.value} />
           ))}

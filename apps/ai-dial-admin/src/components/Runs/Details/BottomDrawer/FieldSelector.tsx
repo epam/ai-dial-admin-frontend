@@ -60,7 +60,7 @@ const FieldSelector: FC<Props> = ({ sections, fieldSelector }) => {
   }, [sections, fieldSelector.sectionOrder]);
 
   return (
-    <div className="w-[180px] border-r border-secondary flex flex-col shrink-0 overflow-hidden text-xxs">
+    <div className="w-[250px] border-r border-secondary flex flex-col shrink-0 overflow-hidden">
       <div className="flex border-b border-secondary">
         <button
           onClick={() => setActiveTab('fields')}
@@ -115,7 +115,7 @@ const FieldSelector: FC<Props> = ({ sections, fieldSelector }) => {
                   <div className="flex items-center gap-1 px-1.5 py-1 hover:bg-layer-2">
                     <button
                       onClick={() => onToggleFieldSectionCollapse(section.key)}
-                      className="flex items-center gap-1 flex-1 min-w-0 text-xxs font-semibold text-secondary uppercase"
+                      className="flex items-center gap-1 flex-1 min-w-0 dial-tiny-semi-text text-secondary uppercase"
                     >
                       {isCollapsed ? <IconChevronRight size={12} /> : <IconChevronDown size={12} />}
                       <DialEllipsisTooltip text={sectionLabel} />
@@ -133,7 +133,7 @@ const FieldSelector: FC<Props> = ({ sections, fieldSelector }) => {
                               section.rows.map((r) => r.fieldKey),
                             )
                       }
-                      className="text-xxs text-accent-primary hover:underline shrink-0"
+                      className="dial-tiny-text text-accent-primary hover:underline shrink-0"
                     >
                       {allChecked ? t(RunsI18nKey.DeselectAll) : t(RunsI18nKey.SelectAll)}
                     </button>
@@ -190,11 +190,11 @@ const FieldSelector: FC<Props> = ({ sections, fieldSelector }) => {
                   >
                     <DraggableItem id={section.key} findItem={findItem} moveItem={moveItem}>
                       <div className="flex items-center gap-1.5 flex-1 min-w-0 py-0.5">
-                        <span className="text-xxs text-secondary w-4 text-right shrink-0">{idx + 1}</span>
+                        <span className="dial-tiny-text text-secondary w-4 text-right shrink-0">{idx + 1}</span>
                         <DialEllipsisTooltip
                           text={orderLabel}
                           className={classNames(
-                            'text-xxs flex-1',
+                            'dial-tiny-text flex-1',
                             isHidden ? 'text-secondary line-through' : 'text-primary',
                           )}
                         />

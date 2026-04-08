@@ -82,20 +82,19 @@ const ComparisonTableView: FC<Props> = ({
       <FocusStrip rows={spotlightedRows} onRemove={onToggleSpotlight} />
       <div className="flex-1 overflow-auto min-h-0">
         <div
-          className="w-full text-xs"
+          className="w-full dial-tiny-text grid"
           style={{
-            display: 'grid',
             gridTemplateColumns: `minmax(180px, auto) repeat(${details.length}, minmax(0, 1fr))`,
           }}
         >
           {/* Header row */}
-          <div className="sticky top-0 z-10 bg-layer-1 text-left text-xxs text-secondary font-medium px-3 py-1.5 border-b border-secondary">
+          <div className="sticky top-0 z-10 bg-layer-1 text-left dial-caption-semi-text text-secondary font-medium px-3 py-1.5 border-b border-secondary">
             {t(RunsI18nKey.FieldColumn)}
           </div>
           {details.map((detail, idx) => (
             <div
               key={detail.id ?? idx}
-              className="sticky top-0 z-10 bg-layer-1 text-left text-xxs font-medium px-3 py-1.5 border-b border-secondary"
+              className="sticky top-0 z-10 bg-layer-1 text-left dial-caption-semi-text font-medium px-3 py-1.5 border-b border-secondary"
             >
               <div className="flex items-center gap-2">
                 <DialEllipsisTooltip text={detail.testCaseName ?? detail.id ?? ''} className="text-primary" />

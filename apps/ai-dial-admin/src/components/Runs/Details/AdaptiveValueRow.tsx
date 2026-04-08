@@ -40,7 +40,7 @@ const AdaptiveValueRow: FC<Props> = ({ label, value }) => {
           </span>
         )}
         {isExpanded && (
-          <pre className="mt-1 p-2 bg-layer-0 border border-secondary rounded font-mono text-[11px] whitespace-pre-wrap break-words max-h-[300px] overflow-auto leading-normal">
+          <pre className="mt-1 p-2 bg-layer-0 border border-secondary rounded font-mono dial-tiny-text whitespace-pre-wrap break-words max-h-[300px] overflow-auto leading-normal">
             {parsed.rawText}
           </pre>
         )}

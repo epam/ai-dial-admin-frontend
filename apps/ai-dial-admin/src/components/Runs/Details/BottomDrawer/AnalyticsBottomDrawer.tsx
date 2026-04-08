@@ -247,9 +247,9 @@ const AnalyticsBottomDrawer: FC<Props> = ({
                 <DialLoader size={32} />
               </div>
             ) : error ? (
-              <div className="flex items-center justify-center h-full text-error text-sm">{error}</div>
+              <div className="flex items-center justify-center h-full text-error dial-small-text">{error}</div>
             ) : fieldSelector.allFieldsHidden ? (
-              <div className="flex items-center justify-center h-full text-secondary text-sm">
+              <div className="flex items-center justify-center h-full text-secondary dial-small-text">
                 {t(RunsI18nKey.NoFieldsVisible)}
               </div>
             ) : drawerPanel.viewMode === 'table' ? (

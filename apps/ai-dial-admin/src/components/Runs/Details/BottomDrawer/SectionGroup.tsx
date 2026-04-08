@@ -47,7 +47,7 @@ const SectionGroup: FC<Props> = ({
         style={{ gridColumn: `1 / -1` }}
         onClick={onToggle}
       >
-        <div className="flex items-center gap-1 text-xxs font-semibold text-secondary uppercase">
+        <div className="flex items-center gap-1 dial-caption-text font-semibold text-secondary uppercase">
           {isCollapsed ? <IconChevronRight size={12} /> : <IconChevronDown size={12} />}
           {sectionLabel}
         </div>
@@ -83,7 +83,7 @@ const SectionGroup: FC<Props> = ({
                       <IconMaximize size={12} />
                     </button>
                   )}
-                  <DialEllipsisTooltip text={row.label} className="text-xxs font-mono text-primary" />
+                  <DialEllipsisTooltip text={row.label} className="dial-caption-text font-mono text-primary" />
                 </div>
               </div>
               {row.values.map((val, idx) => {
