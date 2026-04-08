@@ -115,6 +115,15 @@ rules:
     - Do not truncate long values using break-all without a way to access the full content — always provide a way to view it
     - Use DialEllipsisTooltip from @epam/ai-dial-ui-kit when truncating long text values to ensure full content is accessible
     - Name handler functions with the on prefix (e.g., onOpenFullScreen, onClick, onSubmit) to keep naming consistent and predictable
+    - Always use the @/ path alias for imports — never use relative paths that go outside the current directory (e.g., ../../Common/)
+    - Name hook files in kebab-case (use-detail-mode.tsx), not camelCase (useDetailMode.tsx) — the exported function name stays camelCase
+    - Use TypeScript enums for fixed string sets (modes, statuses, view types) — not string union types
+    - Separate constants (constants.ts) from types/interfaces (models.ts) in feature directories — don't mix const values with type definitions
+    - Before adding i18n keys to a feature-specific enum (e.g., RunsI18nKey), check if the key already exists in shared sections (BasicI18nKey, ButtonsI18nKey, EntitiesI18nKey) — reuse shared keys for common labels like Close, Search, SelectAll
+    - Use @epam/ai-dial-ui-kit form and interactive components over custom HTML — DialSearch for search inputs, DialCheckbox for checkboxes, DialTabs for tab navigation, DialIconButton/DialGhostIconButton for icon buttons, DialPopup for modal overlays
+    - Use ag-grid (GridView/AgGridWrapper) for all tabular data display — not custom CSS grid or flexbox tables
+    - Reuse existing project dependencies for common UI patterns — re-resizable for resizable panels, react-dnd for drag-and-drop — don't reimplement these behaviors from scratch
+    - Prefer useState for simple state management — reserve useReducer for cases with genuinely complex state transitions involving multiple interdependent fields
   specs:
     - Reference backend API contracts from ai-dial-admin-backend or ai-dial-admin-deployment-manager-backend
     - Include validation requirements for any form fields
