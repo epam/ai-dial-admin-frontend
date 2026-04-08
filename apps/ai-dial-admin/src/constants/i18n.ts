@@ -934,6 +934,7 @@ export enum ErrorI18nKey {
   MinMaxLength = 'Error.MinMaxLength',
   KeyValueExists = 'Error.KeyValueExists',
   ForbiddenChars = 'Error.ForbiddenChars',
+  AlphanumericUnderscore = 'Error.AlphanumericUnderscore',
   RequiredProperty = 'Error.RequiredProperty',
   InvalidPath = 'Error.InvalidPath',
   InvalidStatus = 'Error.InvalidStatus',
