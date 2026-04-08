@@ -53,6 +53,14 @@ vi.mock('@/src/app/[lang]/folders-storage/actions', () => ({
   getRules: vi.fn(),
 }));
 
+vi.mock('@/src/context/assets/ToolsetsFolderContext', () => ({
+  ToolsetFolderProvider: ({ children }: any) => <>{children}</>,
+  useToolsetFolder: () => ({
+    fetchFiles: vi.fn(),
+    files: [],
+  }),
+}));
+
 const createMockPublication = (authType: ToolsetAuthType | null): ToolsetPublication => ({
   path: 'test/publication/path',
   requestName: 'Test Publication',
