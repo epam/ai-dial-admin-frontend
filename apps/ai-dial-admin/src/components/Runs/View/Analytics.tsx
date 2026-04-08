@@ -9,6 +9,7 @@ import { getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
 import ColorScale from '@/src/components/Common/ColorScale/ColorScale';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import AnalyticsBottomDrawer from '@/src/components/Runs/Details/BottomDrawer/AnalyticsBottomDrawer';
+import { DetailMode } from '@/src/components/Runs/Details/BottomDrawer/models';
 import { useDrawerPanel } from '@/src/components/Runs/Details/BottomDrawer/useDrawerPanel';
 import { EntitiesI18nKey, RunsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -117,7 +118,7 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
           />
         )}
       </div>
-      {detailMode.detailMode === 'drawer' && detailMode.drawerOpen && (
+      {detailMode.detailMode === DetailMode.Drawer && detailMode.drawerOpen && (
         <AnalyticsBottomDrawer
           drawerPanel={drawerPanel}
           pendingFocus={detailMode.pendingFocus}

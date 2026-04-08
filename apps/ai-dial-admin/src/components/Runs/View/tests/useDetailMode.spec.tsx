@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 
+import { DetailMode } from '../../Details/BottomDrawer/models';
 import { useDetailMode } from '../useDetailMode';
 
 const mockShowSidebar = vi.fn();
@@ -26,7 +27,7 @@ describe('useDetailMode', () => {
   it('initializes with sidebar mode', () => {
     const { result } = renderHook(() => useDetailMode());
 
-    expect(result.current.detailMode).toBe('sidebar');
+    expect(result.current.detailMode).toBe(DetailMode.Sidebar);
     expect(result.current.selectedResultId).toBeNull();
     expect(result.current.drawerOpen).toBe(false);
   });
@@ -56,7 +57,7 @@ describe('useDetailMode', () => {
     act(() => result.current.openDetail('r1'));
     act(() => result.current.switchToDrawer());
 
-    expect(result.current.detailMode).toBe('drawer');
+    expect(result.current.detailMode).toBe(DetailMode.Drawer);
     expect(result.current.drawerOpen).toBe(true);
     expect(result.current.pendingFocus).toBe(true);
     expect(mockCloseSidebar).toHaveBeenCalled();
@@ -97,7 +98,7 @@ describe('useDetailMode', () => {
     act(() => result.current.switchToDrawer());
     act(() => result.current.closeDetail());
 
-    expect(result.current.detailMode).toBe('drawer');
+    expect(result.current.detailMode).toBe(DetailMode.Drawer);
     expect(result.current.drawerOpen).toBe(false);
   });
 

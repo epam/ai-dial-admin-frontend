@@ -137,6 +137,7 @@ export enum BasicI18nKey {
   ContentType = 'Basic.ContentType',
   HighAccuracy = 'Basic.HighAccuracy',
   LowAccuracy = 'Basic.LowAccuracy',
+  DeselectAll = 'Basic.DeselectAll',
 }
 
 export enum EntitiesI18nKey {
@@ -1561,16 +1562,11 @@ export enum RunsI18nKey {
   Unpin = 'Runs.Unpin',
   Collapse = 'Runs.Collapse',
   Expand = 'Runs.Expand',
-  Close = 'Runs.Close',
   SwitchToDrawer = 'Runs.SwitchToDrawer',
   SwitchToSidebar = 'Runs.SwitchToSidebar',
   Spotlight = 'Runs.Spotlight',
   RemoveSpotlight = 'Runs.RemoveSpotlight',
   NoFieldsVisible = 'Runs.NoFieldsVisible',
-  ShowMore = 'Runs.ShowMore',
-  SelectAll = 'Runs.SelectAll',
-  DeselectAll = 'Runs.DeselectAll',
-  Search = 'Runs.Search',
   Diffs = 'Runs.Diffs',
   LoadError = 'Runs.LoadError',
   FieldColumn = 'Runs.FieldColumn',

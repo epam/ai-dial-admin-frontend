@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 
-import { RunsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 const PREVIEW_LENGTH = 200;
@@ -29,7 +29,7 @@ const CellValue: FC<Props> = ({ text, raw, isLong, isExpanded, cellKey, onToggle
       <div className="dial-caption-text">
         <span className="whitespace-pre-wrap break-words">{raw.slice(0, PREVIEW_LENGTH)}...</span>
         <button onClick={() => onToggleExpand(cellKey)} className="ml-1 text-accent-primary hover:underline">
-          {t(RunsI18nKey.ShowMore)}
+          {t(ButtonsI18nKey.ShowMore)}
         </button>
       </div>
     );

@@ -9,7 +9,7 @@ import classNames from 'classnames';
 import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
 import DraggableItem from '@/src/components/Common/DraggableItem/DraggableItem';
-import { RunsI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 import { ComparisonSection } from './models';
@@ -96,7 +96,7 @@ const FieldSelector: FC<Props> = ({ sections, fieldSelector }) => {
                   type="text"
                   value={fieldSelector.searchQuery}
                   onChange={(e) => fieldSelector.setSearchQuery(e.target.value)}
-                  placeholder={t(RunsI18nKey.Search)}
+                  placeholder={t(BasicI18nKey.Search)}
                   className="bg-transparent text-xxs text-primary placeholder:text-secondary outline-none flex-1 min-w-0"
                 />
               </div>
@@ -135,7 +135,7 @@ const FieldSelector: FC<Props> = ({ sections, fieldSelector }) => {
                       }
                       className="dial-tiny-text text-accent-primary hover:underline shrink-0"
                     >
-                      {allChecked ? t(RunsI18nKey.DeselectAll) : t(RunsI18nKey.SelectAll)}
+                      {allChecked ? t(BasicI18nKey.DeselectAll) : t(BasicI18nKey.SelectAll)}
                     </button>
                   </div>
                   {!isCollapsed &&

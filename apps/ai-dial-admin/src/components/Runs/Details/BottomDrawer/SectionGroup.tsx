@@ -10,7 +10,8 @@ import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 import CellValue from './CellValue';
-import { ComparisonRow, ComparisonSection, TRUNCATE_THRESHOLD } from './models';
+import { TRUNCATE_THRESHOLD } from './constants';
+import { ComparisonRow, ComparisonSection } from './models';
 import { formatFieldValue, getDiffClass, SECTION_I18N } from './utils';
 
 interface Props {

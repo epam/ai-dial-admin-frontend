@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { COLLAPSED_HEIGHT, DEFAULT_DRAWER_HEIGHT, DrawerPanelState, MAX_DRAWER_OFFSET, ViewMode } from './models';
+import { COLLAPSED_HEIGHT, DEFAULT_DRAWER_HEIGHT, MAX_DRAWER_OFFSET } from './constants';
+import { DrawerPanelState, ViewMode } from './models';
 
 interface UseDrawerPanelReturn extends DrawerPanelState {
   open: (id: string) => void;

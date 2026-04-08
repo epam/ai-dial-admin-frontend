@@ -15,7 +15,7 @@ import {
 import classNames from 'classnames';
 import { DialCloseButton, DialEllipsisTooltip, DialGhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
 
-import { RunsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 import { ViewMode } from './models';
@@ -131,7 +131,7 @@ const DrawerToolbar: FC<Props> = ({
         title={isCollapsed ? t(RunsI18nKey.Expand) : t(RunsI18nKey.Collapse)}
       />
 
-      <DialCloseButton onClose={onClose} ariaLabel={t(RunsI18nKey.Close)} />
+      <DialCloseButton onClose={onClose} ariaLabel={t(ButtonsI18nKey.Close)} />
     </div>
   );
 };

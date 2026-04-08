@@ -21,7 +21,7 @@ interface UseDetailModeReturn {
 
 export function useDetailMode(): UseDetailModeReturn {
   const { sidebar } = useAppContext();
-  const [detailMode, setDetailMode] = useState<DetailMode>('sidebar');
+  const [detailMode, setDetailMode] = useState<DetailMode>(DetailMode.Sidebar);
   const [selectedResultId, setSelectedResultId] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [pendingFocus, setPendingFocus] = useState(false);
@@ -51,13 +51,13 @@ export function useDetailMode(): UseDetailModeReturn {
 
   const switchToDrawer = useCallback(() => {
     sidebarRef.current.closeSidebar();
-    setDetailMode('drawer');
+    setDetailMode(DetailMode.Drawer);
     setDrawerOpen(true);
     setPendingFocus(true);
   }, []);
 
   const switchToSidebar = useCallback(() => {
-    setDetailMode('sidebar');
+    setDetailMode(DetailMode.Sidebar);
     setDrawerOpen(false);
     const currentId = selectedResultId;
     if (currentId) {
@@ -72,7 +72,7 @@ export function useDetailMode(): UseDetailModeReturn {
 
   const openDetail = useCallback(
     (resultId: string) => {
-      if (detailMode === 'sidebar') {
+      if (detailMode === DetailMode.Sidebar) {
         if (selectedResultId === resultId) {
           // Toggle close
           setSelectedResultId(null);
@@ -97,7 +97,7 @@ export function useDetailMode(): UseDetailModeReturn {
 
   const closeDetail = useCallback(() => {
     setSelectedResultId(null);
-    if (detailMode === 'sidebar') {
+    if (detailMode === DetailMode.Sidebar) {
       sidebar.closeSidebar();
     } else {
       setDrawerOpen(false);

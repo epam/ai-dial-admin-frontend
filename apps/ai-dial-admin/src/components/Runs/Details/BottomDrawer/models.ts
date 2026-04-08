@@ -1,14 +1,8 @@
-export const TRUNCATE_THRESHOLD = 500;
-
 export type ViewMode = 'table' | 'pivot';
-export type DetailMode = 'sidebar' | 'drawer';
-
-export const DEFAULT_DRAWER_HEIGHT = 380;
-export const MIN_DRAWER_HEIGHT = 200;
-export const MAX_DRAWER_OFFSET = 100;
-export const COLLAPSED_HEIGHT = 34;
-export const RESIZE_STEP = 20;
-export const RESIZE_STEP_LARGE = 100;
+export enum DetailMode {
+  Sidebar = 'sidebar',
+  Drawer = 'drawer',
+}
 
 export interface CellValue {
   raw: string | null;
