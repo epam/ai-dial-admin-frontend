@@ -493,4 +493,3 @@ describe('Utils :: preparePathForAsset', () => {
     });
   });
 });
-
