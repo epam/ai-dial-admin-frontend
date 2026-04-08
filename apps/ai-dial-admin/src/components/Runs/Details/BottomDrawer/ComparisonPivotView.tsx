@@ -215,10 +215,6 @@ const ComparisonPivotView: FC<Props> = ({ sections, activeDetail, pinnedDetail, 
           return cell?.diffClass || '';
         },
         headerClass: isSpotlighted ? 'pivot-spotlight-header' : '',
-        tooltipValueGetter: (params) => {
-          const cell = params.value as FieldValueCell | undefined;
-          return cell?.raw ?? '';
-        },
       };
 
       group.columns.push(col);
@@ -264,7 +260,6 @@ const ComparisonPivotView: FC<Props> = ({ sections, activeDetail, pinnedDetail, 
           headerHeight: 56,
           groupHeaderHeight: 28,
           rowHeight: 48,
-          tooltipShowDelay: 300,
           defaultColDef: {
             filter: false,
             floatingFilter: false,
@@ -272,6 +267,7 @@ const ComparisonPivotView: FC<Props> = ({ sections, activeDetail, pinnedDetail, 
             suppressMovable: true,
           },
           suppressCellFocus: true,
+          suppressRowHoverHighlight: true,
           domLayout: details.length <= 2 ? 'autoHeight' : 'normal',
           onCellClicked,
         }}
