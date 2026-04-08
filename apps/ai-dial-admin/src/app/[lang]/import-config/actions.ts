@@ -36,3 +36,8 @@ export async function importDeploymentConfig(file: FormData, resolutionPolicy: s
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return deploymentConfigApi.importConfig(file, resolutionPolicy, token);
 }
+
+export async function previewDeploymentImportConfig(file: FormData, resolutionPolicy: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return deploymentConfigApi.previewImportConfig(file, resolutionPolicy, token);
+}
