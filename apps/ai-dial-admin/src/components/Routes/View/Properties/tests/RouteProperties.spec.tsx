@@ -3,6 +3,7 @@ import {
   CreateI18nKey,
   EntityFieldsI18nKey,
   EntityPlaceholdersI18nKey,
+  ErrorI18nKey,
   RoutesI18nKey,
 } from '@/src/constants/i18n';
 import { fireEvent, render, screen } from '@testing-library/react';
@@ -78,6 +79,14 @@ describe('RouteProperties', () => {
 
     fireEvent.click(resetBtn);
     expect(updateRoute).toHaveBeenCalledWith(expect.objectContaining({ order: ORDER_DEFAULT_VALUE }));
+  });
+
+  test('shows alphanumeric error when app route name contains forbidden character', () => {
+    render(<RouteProperties route={baseRoute} isAppRoute={true} onChange={vi.fn()} />);
+    fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.DisplayName), {
+      target: { value: 'my-route' },
+    });
+    expect(screen.getByText(ErrorI18nKey.AlphanumericUnderscore)).toBeInTheDocument();
   });
 
   test('calls updateRoute when order changes', () => {
