@@ -27,7 +27,7 @@ import { BaseEntity } from '@/src/models/dial/base-entity';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useTimePeriodOptions } from '@/src/hooks/use-time-period-options';
 import { DASHBOARD_VIEW_TYPE } from '@/src/types/telemetry';
-import { isToolsetRoute } from '../../utils/is-view';
+import { isToolsetRoute } from '@/src/utils/is-view';
 
 interface Props {
   route: ApplicationRoute;
