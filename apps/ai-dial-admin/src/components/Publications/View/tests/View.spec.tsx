@@ -86,12 +86,7 @@ describe('PublicationView - AuthButtons conditional rendering', () => {
   test('should not render AuthButtons when authentication type is NONE', () => {
     const publication = createMockPublication(ToolsetAuthType.NONE);
 
-    render(
-      <PublicationView
-        view={ApplicationRoute.ToolsetPublications}
-        publication={publication}
-      />,
-    );
+    render(<PublicationView view={ApplicationRoute.ToolsetPublications} publication={publication} />);
 
     const authButtons = screen.queryByRole('region', { name: 'auth-buttons' });
     expect(authButtons).not.toBeInTheDocument();
@@ -100,12 +95,7 @@ describe('PublicationView - AuthButtons conditional rendering', () => {
   test('should render AuthButtons when authentication type is API_KEY', () => {
     const publication = createMockPublication(ToolsetAuthType.API_KEY);
 
-    render(
-      <PublicationView
-        view={ApplicationRoute.ToolsetPublications}
-        publication={publication}
-      />,
-    );
+    render(<PublicationView view={ApplicationRoute.ToolsetPublications} publication={publication} />);
 
     const authButtons = screen.getByRole('region', { name: 'auth-buttons' });
     expect(authButtons).toBeInTheDocument();
@@ -115,12 +105,7 @@ describe('PublicationView - AuthButtons conditional rendering', () => {
   test('should render AuthButtons when authentication type is OAUTH', () => {
     const publication = createMockPublication(ToolsetAuthType.OAUTH);
 
-    render(
-      <PublicationView
-        view={ApplicationRoute.ToolsetPublications}
-        publication={publication}
-      />,
-    );
+    render(<PublicationView view={ApplicationRoute.ToolsetPublications} publication={publication} />);
 
     const authButtons = screen.getByRole('region', { name: 'auth-buttons' });
     expect(authButtons).toBeInTheDocument();
@@ -130,12 +115,7 @@ describe('PublicationView - AuthButtons conditional rendering', () => {
   test('should not render AuthButtons when authSettings is undefined', () => {
     const publication = createMockPublication(null);
 
-    render(
-      <PublicationView
-        view={ApplicationRoute.ToolsetPublications}
-        publication={publication}
-      />,
-    );
+    render(<PublicationView view={ApplicationRoute.ToolsetPublications} publication={publication} />);
 
     const authButtons = screen.queryByRole('region', { name: 'auth-buttons' });
     expect(authButtons).not.toBeInTheDocument();
