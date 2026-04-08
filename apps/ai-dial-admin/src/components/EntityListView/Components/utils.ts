@@ -105,9 +105,7 @@ export const prepareEntityForDuplicate = async <T>(
   }
 
   if (isToolsetRoute(route)) {
-    // For AssetsToolsets, merge fullEntity which contains version info
-    const baseEntity =
-      route === ApplicationRoute.AssetsToolsets ? { ...(fullEntity as AssetToolset | null), ...entity } : entity;
+    const baseEntity = route === ApplicationRoute.AssetsToolsets ? fullEntity : entity;
 
     const toolset = baseEntity as Toolset;
     return {
