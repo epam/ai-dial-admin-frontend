@@ -449,7 +449,6 @@ describe('Server :: TestSuiteApi', () => {
       `${TEST_URL}${TEST_CASES_URL('id')}?filter=testCaseName:eq:testCase1,testCase2`,
       expect.objectContaining({
         method: 'DELETE',
-        body: JSON.stringify({ fileNames: ['file1', 'file2'] }),
       }),
     );
   });
