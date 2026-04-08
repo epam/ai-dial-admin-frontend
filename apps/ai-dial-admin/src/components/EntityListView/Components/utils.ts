@@ -105,19 +105,24 @@ export const prepareEntityForDuplicate = async <T>(
   }
 
   if (isToolsetRoute(route)) {
-    const toolset = entity as Toolset;
+    // For AssetsToolsets, merge fullEntity which contains version info
+    const baseEntity =
+      route === ApplicationRoute.AssetsToolsets ? { ...(fullEntity as AssetToolset | null), ...entity } : entity;
+
+    const toolset = baseEntity as Toolset;
     return {
-      ...entity,
+      ...baseEntity,
       authSettings: toolset.authSettings
         ? {
             ...toolset.authSettings,
             globalAuthStatus: undefined,
             userLevelAuthStatus: undefined,
             clientSecret: '',
+            // Keep apiKeyHeader name for API_KEY auth, clear for others
             apiKeyHeader:
               toolset.authSettings.authenticationType === ToolsetAuthType.API_KEY
-                ? ''
-                : toolset.authSettings.apiKeyHeader,
+                ? toolset.authSettings.apiKeyHeader
+                : undefined,
           }
         : undefined,
     };
