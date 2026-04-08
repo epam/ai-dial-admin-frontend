@@ -55,11 +55,13 @@ interface Props {
     sourceFolder: string,
     destinationFolder: string,
   ) => Promise<(ServerActionResponse[] | ServerActionResponse)[]>;
-  onExport: (files: DialFile[]) => Promise<void>;
   customUploadFileAction?: (currentPath?: string, currentFolder?: DialFile, preselectedItems?: File[]) => void;
+  onExport?: (files: DialFile[]) => Promise<void>;
+  onOpenInNewTab?: (file: DialFile) => void;
   customCreateNewItemAction?: (currentPath?: string, currentFolder?: DialFile) => void;
   customDuplicateAction?: (items?: DialFile[]) => void;
   customDeleteItemsAction?: (items: DialFile[], parentFolderPath: string) => void;
+  customDownloadItemsAction?: (items?: DialFile[]) => void;
   onTableFileClick?: (item: FileManagerGridRow) => void;
   filterData?: (data: AssetWithVersion[]) => AssetWithVersion[];
   selectedVersionsMap?: Record<string, string[]>;
@@ -261,7 +263,7 @@ const FileManager: FC<Props> = ({
           fetchFiles(destinationFolder);
           fetchFiles(sourceFolder);
 
-          const { title, description } = getMoveNotificationContent(view, items, destinationFolder, t);
+          const { title, description } = getMoveNotificationContent(view, items, sourceFolder, destinationFolder, t);
           showNotification(getSuccessNotification(title, description));
         } else {
           const errorRes = result.flat().find((res) => !res.success);

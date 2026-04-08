@@ -1,6 +1,7 @@
 import { ColDef } from 'ag-grid-community';
 
 import { getAccuracyColors } from '@/src/components/Common/ColorScale/utils';
+import ErrorCellRenderer from '@/src/components/Grid/CellRenderers/ErrorCellRenderer';
 import ExecutionStatusCellRenderer from '@/src/components/Grid/CellRenderers/ExecutionStatusCellRenderer';
 import { AnalyticsResult, ExtractionResult, Run } from '@/src/models/evaluation/run';
 import { FilterDto } from '@/src/models/request';
@@ -61,7 +62,7 @@ const mergeMetricValuesSchema = (results: AnalyticsResult[]): Record<string, Rec
   return merged;
 };
 
-const getMetricsColumns = (metrics: Record<string, Record<string, unknown>>) => {
+const getMetricsColumns = (metrics: Record<string, Record<string, unknown>>, errorText?: string) => {
   return Object.entries(metrics).map(([groupKey, groupValues]) => ({
     headerName: groupKey,
     children: Object.keys(groupValues).map(
@@ -69,10 +70,19 @@ const getMetricsColumns = (metrics: Record<string, Record<string, unknown>>) => 
         ({
           field: key,
           headerName: key,
+          cellRendererSelector: (params) => {
+            const value = params.data?.metricValues?.[groupKey]?.[key];
+            if (value == null) {
+              return { component: ErrorCellRenderer, params: { errorText } };
+            }
+          },
           valueGetter: (params) => {
             const value = params.data?.metricValues?.[groupKey]?.[key];
             if (typeof value === 'object') return JSON.stringify(value);
-            return value ?? '—';
+            if (value != null) {
+              return +value.toFixed(3);
+            }
+            return '—';
           },
           cellStyle: (params) => {
             const value = params.data?.metricValues?.[groupKey]?.[key];
@@ -152,12 +162,12 @@ export const getResultColumns = (results: ExtractionResult[]) => {
   ];
 };
 
-export const getAnalyticsColumns = (results: AnalyticsResult[]) => {
+export const getAnalyticsColumns = (results: AnalyticsResult[], errorText?: string) => {
   const metrics = mergeMetricValuesSchema(results);
 
   return [
     ...staticColumns,
-    ...getMetricsColumns(metrics),
+    ...getMetricsColumns(metrics, errorText),
     {
       headerName: 'EXTRACTED',
       children: getExtractedColumns(results[0]?.extractedColumns || {}),

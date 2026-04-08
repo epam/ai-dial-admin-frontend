@@ -6,7 +6,7 @@ import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getCreateEntityTitle } from '@/src/utils/entities/create-entity';
-import { getErrorForName } from '@/src/utils/validation/name-error';
+import { getErrorForAppRouteName } from '@/src/utils/validation/name-error';
 
 interface Props {
   isModalOpen: boolean;
@@ -23,7 +23,7 @@ const CreateRoute: FC<Props> = ({ isModalOpen, routeNames, onClose, onCreate }) 
 
   const validateName = useCallback(
     (name?: string) => {
-      const error = getErrorForName(name, routeNames, t, false, true, true);
+      const error = getErrorForAppRouteName(name, routeNames, t);
       setNameError(error);
     },
     [routeNames, t],

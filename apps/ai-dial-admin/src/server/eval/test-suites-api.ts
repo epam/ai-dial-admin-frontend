@@ -95,6 +95,11 @@ export class TestSuitesApi extends BaseApi {
     return this.deleteAction(TEST_CASE_URL(id, testCaseId), token);
   }
 
+  removeMultipleTestCases(id: string, testCaseNames: string[], token: Token): Promise<ServerActionResponse> {
+    const names = testCaseNames.map((name) => `${encodeURIComponent(name)}`).join(',');
+    return this.deleteAction(`${TEST_CASES_URL(id)}?filter=testCaseName:eq:${names}`, token);
+  }
+
   createTestCase(
     testSuiteId: string,
     body: Pick<TestCase, 'testCaseName' | 'data'>,

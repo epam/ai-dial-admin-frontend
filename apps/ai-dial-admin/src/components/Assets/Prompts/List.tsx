@@ -47,14 +47,16 @@ import { ImportData } from '@/src/models/import-asset';
 import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';
 import { FileManagerGridRow } from '@epam/ai-dial-ui-kit/dist/src/components/FileManager/FileManagerContext';
 import { useRouter } from 'next/navigation';
-import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
+import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { getAllSelectedItemsPaths, getPromptGridColumns } from './utils';
-import { downloadJson } from '@/src/utils/download';
+import { downloadFile, downloadJson } from '@/src/utils/download';
 import { getJsonFileName } from '@/src/utils/import/get-json-name';
 import DeleteModal from './DeleteModal';
 import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
+import ExportModal from '@/src/components/EntityListView/Export/ExportModal';
 
 const PromptsList: FC = () => {
+  const [isExportPromptModalOpen, setIsExportPromptModalOpen] = useState(false);
   const [isCreatePromptModalOpen, setIsCreatePromptModalOpen] = useState(false);
   const [isDuplicatePromptModalOpen, setIsDuplicatePromptModalOpen] = useState(false);
   const [isImportPromptModalOpen, setIsImportPromptModalOpen] = useState(false);
@@ -67,6 +69,7 @@ const PromptsList: FC = () => {
   const [versionsMap, setVersionsMap] = useState<Record<string, string[]>>({});
   const [hasSelectedItems, setHasSelectedItems] = useState(false);
   const [deletedItems, setDeleledItems] = useState<DialFile[] | null>(null);
+  const [exportedItems, setExportedItems] = useState<DialFile[] | null>(null);
   const [selectedPaths, setSelectedPaths] = useState<Set<string>>(() => new Set());
   const [dragAndDropsItems, setDragAndDropsItems] = useState<File[]>([]);
   const t = useI18n();
@@ -239,7 +242,7 @@ const PromptsList: FC = () => {
         if (res.success) {
           fetchFiles?.(importFolder);
           const { title, description } = getImportNotificationContent(
-            ApplicationRoute.Files,
+            ApplicationRoute.Prompts,
             file,
             fileType,
             importFolder,
@@ -312,10 +315,22 @@ const PromptsList: FC = () => {
     [selectedVersionsMap],
   );
 
+  const handleExportPromptModalOpen = useCallback((files?: DialFile[]) => {
+    if (files?.length) {
+      setIsExportPromptModalOpen(true);
+      setExportedItems(files);
+    }
+  }, []);
+
+  const handleExportPromptModalClose = useCallback(() => {
+    setIsExportPromptModalOpen(false);
+    setExportedItems(null);
+  }, []);
+
   const onExport = useCallback(
-    (files: DialFile[]) => {
+    (fileType: ImportFileType) => {
       const filePaths: string[] = [];
-      (files as AssetWithVersion[]).forEach((file) => {
+      (exportedItems as AssetWithVersion[]).forEach((file) => {
         if (file.selectedVersions) {
           filePaths.push(...file.selectedVersions.map((version) => `${file.folderId}${file.name}__${version}`));
         } else {
@@ -323,14 +338,24 @@ const PromptsList: FC = () => {
         }
       });
 
-      return exportPrompts(filePaths).then((res) => {
-        downloadJson(res, getJsonFileName(ApplicationRoute.Prompts));
-
-        const { title, description } = getExportNotificationContent(ApplicationRoute.Prompts, files, t, filePaths);
+      exportPrompts(filePaths, fileType).then((res) => {
+        if (fileType === ImportFileType.ARCHIVE) {
+          const { blob, fileName } = res as { blob: Blob; fileName: string };
+          downloadFile(blob, fileName);
+        } else {
+          downloadJson(res, getJsonFileName(ApplicationRoute.Prompts));
+        }
+        const { title, description } = getExportNotificationContent(
+          ApplicationRoute.Prompts,
+          exportedItems || [],
+          t,
+          filePaths,
+        );
         showNotification(getSuccessNotification(title, description));
       });
+      handleExportPromptModalClose();
     },
-    [showNotification, t],
+    [exportedItems, handleExportPromptModalClose, showNotification, t],
   );
 
   const handlePathChange = useCallback((nextPath?: string) => {
@@ -463,6 +488,10 @@ const PromptsList: FC = () => {
     removeSelection(deletedItems?.map((item) => item.path));
   }, [destinationFolder, setFilePath, fetchFiles, deletedItems, removeSelection]);
 
+  const handleOpenInNewTab = useCallback((file: DialFile) => {
+    onOpenInNewTab(ApplicationRoute.Prompts, file);
+  }, []);
+
   return (
     <>
       <FileManager
@@ -471,12 +500,13 @@ const PromptsList: FC = () => {
         getContext={getPromptContext}
         view={ApplicationRoute.Prompts}
         onCreateFolder={handleCreateFolder}
-        onExport={onExport}
+        customDownloadItemsAction={handleExportPromptModalOpen}
         customUploadFileAction={handleImportPromptModalOpen}
         customCreateNewItemAction={handleCreatePromptModalOpen}
         customDuplicateAction={handleDuplicatePromptModalOpen}
         customDeleteItemsAction={handleDeleteModalOpen}
         onMoveItems={handleMoveItems}
+        onOpenInNewTab={handleOpenInNewTab}
         onTableFileClick={handleGridItemClick}
         filterData={processPromptsData}
         nonClickableTableColumns={hasSelectedItems ? [FileManagerColumnKey.Version] : []}
@@ -529,6 +559,14 @@ const PromptsList: FC = () => {
           onMultipleRemove={onMultipleRemove}
           onClose={handleDeleteModalClose}
           onRemovePromptEnd={onRemovePromptEndHandler}
+        />
+      )}
+      {isExportPromptModalOpen && (
+        <ExportModal
+          route={ApplicationRoute.Prompts}
+          isModalOpen={isExportPromptModalOpen}
+          onClose={handleExportPromptModalClose}
+          onApply={onExport}
         />
       )}
     </>

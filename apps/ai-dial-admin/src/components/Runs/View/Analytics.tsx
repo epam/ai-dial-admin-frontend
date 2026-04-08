@@ -10,7 +10,7 @@ import ColorScale from '@/src/components/Common/ColorScale/ColorScale';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import AnalyticsBottomDrawer from '@/src/components/Runs/Details/BottomDrawer/AnalyticsBottomDrawer';
 import { useDrawerPanel } from '@/src/components/Runs/Details/BottomDrawer/useDrawerPanel';
-import { EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, RunsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsResult, Run } from '@/src/models/evaluation/run';
 
@@ -39,11 +39,11 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
       getTestCaseRunResults(RESULT_FILTERS(run)).then((res) => {
         const content = res?.content || [];
         setResults(content);
-        setColDefs(getAnalyticsColumns(content));
+        setColDefs(getAnalyticsColumns(content, t(RunsI18nKey.MetricFailedText)));
         setIsLoading(false);
       });
     }
-  }, [isLoading, results, run]);
+  }, [isLoading, results, run, t]);
 
   // Clear pinned if missing from results
   const resultIds = useMemo(() => (results ?? []).map((r) => r.id!).filter(Boolean), [results]);
