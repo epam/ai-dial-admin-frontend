@@ -95,4 +95,24 @@ describe('mergeWithIgnoredFields', () => {
 
     expect(result).toEqual({ id: '2', name: 'updated' });
   });
+
+  test('should remove fields that are absent in parsed but present in prev', () => {
+    const prev = { id: '1', name: 'original', version: '1.0' };
+    const parsed = { id: '1', name: 'updated' } as Partial<typeof prev>;
+
+    const result = mergeWithIgnoredFields(prev, parsed);
+
+    expect(result).toEqual({ id: '1', name: 'updated' });
+    expect(result).not.toHaveProperty('version');
+  });
+
+  test('should restore ignored fields even when absent in parsed', () => {
+    const prev = { id: 'abc', name: 'original', version: '1.0' };
+    const parsed = { name: 'updated' } as Partial<typeof prev>;
+
+    const result = mergeWithIgnoredFields(prev, parsed, ['id']);
+
+    expect(result).toEqual({ id: 'abc', name: 'updated' });
+    expect(result).not.toHaveProperty('version');
+  });
 });
