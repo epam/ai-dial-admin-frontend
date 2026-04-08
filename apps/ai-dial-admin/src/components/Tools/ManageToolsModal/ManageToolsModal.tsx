@@ -12,6 +12,7 @@ import {
   PopupSize,
 } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
+import { v4 as uuidv4 } from 'uuid';
 
 import Search from '@/src/components/Common/Search/Search';
 import ViewSelector from '@/src/components/Common/ViewSelector/ViewSelector';
@@ -19,16 +20,16 @@ import ToolContent from '@/src/components/Tools/Tool/ToolContent';
 import { ButtonsI18nKey, EntitiesI18nKey, ErrorI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
+import { DialApplication } from '@/src/models/dial/application';
 import { Tool, Toolset } from '@/src/models/dial/toolset';
 import { ErrorType } from '@/src/types/error-type';
 import { ParamsView } from '@/src/types/parameters';
-
+import { ApplicationRoute } from '@/src/types/routes';
 import AddNewTool from './AddNewTool';
 import { defaultToolName } from './constants';
 import ToolSwitcher from './ToolSwitcher';
 import { CustomToolConfig, ToolConfig } from './types';
 import { generateUniqueName, getCustomToolErrorType, getToggledToolsConfig } from './utils';
-import { v4 as uuidv4 } from 'uuid';
 
 interface Props {
   isModalOpen: boolean;
@@ -36,21 +37,33 @@ interface Props {
   originalEntity: Toolset;
   onClose: () => void;
   onConfirm?: (newValue: Toolset) => void;
+  view?: ApplicationRoute;
 }
 
-const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalEntity, onClose, onConfirm }) => {
+const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalEntity, onClose, onConfirm, view }) => {
   const t = useI18n();
-  const [view, setView] = useState(ParamsView.TABLE);
+  const [currentView, setCurrentView] = useState(ParamsView.TABLE);
+
+  const isApplicationTools = useMemo(() => {
+    return view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications;
+  }, [view]);
+
+  const allowedTools = useMemo(() => {
+    return isApplicationTools
+      ? (originalEntity as DialApplication).mcp?.allowedTools || []
+      : originalEntity.allowedTools || [];
+  }, [originalEntity, isApplicationTools]);
 
   const [toolsConfig, setToolsConfig] = useState<ToolConfig[]>(() => {
     return tools.map((tool) => ({
       ...tool,
-      isAllowed: (originalEntity.allowedTools || []).includes(tool.name),
+      isAllowed: allowedTools.includes(tool.name),
       id: uuidv4(),
     }));
   });
+
   const [customToolsConfig, setCustomToolsConfig] = useState<CustomToolConfig[]>(() => {
-    return (originalEntity.allowedTools || []).reduce((acc, curr) => {
+    return allowedTools.reduce((acc, curr) => {
       if (!tools.some((tool) => tool.name === curr) && curr !== '') {
         acc.push({
           id: uuidv4(),
@@ -174,12 +187,23 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalEntity, onClo
     const allowedCustomTools = customToolsConfig.filter((tool) => tool.isAllowed).map((tool) => tool.name);
 
     const uniqueAllowedTools = [...new Set([...allowedTools, ...allowedCustomTools])];
-    onConfirm?.({
-      ...originalEntity,
-      allowedTools: uniqueAllowedTools?.length ? uniqueAllowedTools : [''],
-    });
+
+    const newEntity = isApplicationTools
+      ? {
+          ...originalEntity,
+          mcp: {
+            ...((originalEntity as DialApplication).mcp || {}),
+            allowedTools: uniqueAllowedTools.length ? uniqueAllowedTools : [''],
+          },
+        }
+      : {
+          ...originalEntity,
+          allowedTools: uniqueAllowedTools.length ? uniqueAllowedTools : [''],
+        };
+
+    onConfirm?.(newEntity);
     onClose();
-  }, [originalEntity, onConfirm, onClose, toolsConfig, customToolsConfig]);
+  }, [toolsConfig, customToolsConfig, isApplicationTools, originalEntity, onConfirm, onClose]);
 
   return (
     <DialPopup
@@ -272,9 +296,9 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalEntity, onClo
             <>
               <div className="flex flex-row justify-between">
                 <h2 className="mt-2">{activeTool.name}</h2>
-                <ViewSelector view={view} changeView={setView} />
+                <ViewSelector view={currentView} changeView={setCurrentView} />
               </div>
-              <ToolContent tool={activeTool} view={view} />
+              <ToolContent tool={activeTool} view={currentView} />
             </>
           )}
         </div>

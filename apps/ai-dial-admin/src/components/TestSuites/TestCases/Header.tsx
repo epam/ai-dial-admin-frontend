@@ -7,10 +7,11 @@ import {
   ButtonAppearance,
   ButtonVariant,
   DialButtonDropdown,
+  DialNeutralButton,
   DialPrimaryButton,
   DropdownItem,
 } from '@epam/ai-dial-ui-kit';
-import { IconDownload, IconPlus, IconSettings } from '@tabler/icons-react';
+import { IconDownload, IconPlus, IconSettings, IconTrashX } from '@tabler/icons-react';
 
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -24,8 +25,18 @@ interface Props {
   onAdd?: () => void;
   onExport?: () => void;
   onOpenSchemaModal?: () => void;
+  onBatchDelete?: () => void;
+  showBatchDelete?: boolean;
 }
-const HeaderButtons: FC<Props> = ({ selectedTestSuiteId, onApplyImport, onAdd, onExport, onOpenSchemaModal }) => {
+const HeaderButtons: FC<Props> = ({
+  selectedTestSuiteId,
+  onApplyImport,
+  onAdd,
+  onExport,
+  onOpenSchemaModal,
+  onBatchDelete,
+  showBatchDelete,
+}) => {
   const t = useI18n();
 
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -66,6 +77,14 @@ const HeaderButtons: FC<Props> = ({ selectedTestSuiteId, onApplyImport, onAdd, o
         iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
         onClick={onAdd}
       />
+
+      {showBatchDelete && (
+        <DialNeutralButton
+          label={t(ButtonsI18nKey.Delete)}
+          iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
+          onClick={onBatchDelete}
+        />
+      )}
 
       {isImportModalOpen &&
         createPortal(

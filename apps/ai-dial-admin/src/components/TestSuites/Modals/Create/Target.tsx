@@ -72,8 +72,6 @@ const Target: FC<Props> = ({ selectedApplicationId, suiteType, onChangeApplicati
     [onChangeApplication, onChange],
   );
 
-  const columnDefs = useMemo(() => EVALUATION_DEPLOYMENTS_COLUMNS(t), [t]);
-
   const isDeploymentTab = activeTab === TargetTab.Applications || activeTab === TargetTab.Models;
 
   return (
@@ -88,7 +86,7 @@ const Target: FC<Props> = ({ selectedApplicationId, suiteType, onChangeApplicati
         {isDeploymentTab && (
           <RadioSelectGrid
             data={deployments}
-            columnDefs={columnDefs}
+            columnDefs={EVALUATION_DEPLOYMENTS_COLUMNS}
             idField="deploymentId"
             initialSelectedId={selectedApplicationId}
             emptyTitle={t(EntitiesI18nKey.NoApplications)}
