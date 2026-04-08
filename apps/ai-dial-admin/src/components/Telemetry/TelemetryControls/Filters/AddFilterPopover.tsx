@@ -26,6 +26,7 @@ interface Props {
   reset: () => void;
   children: ReactElement;
   route: ApplicationRoute;
+  isMcpView?: boolean;
 }
 
 const AddFilterPopover: FC<Props> = ({
@@ -40,6 +41,7 @@ const AddFilterPopover: FC<Props> = ({
   reset,
   children,
   route,
+  isMcpView = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { refs, floatingStyles, context } = useFloating({
@@ -94,6 +96,7 @@ const AddFilterPopover: FC<Props> = ({
                 setValue={setValue}
                 dropdownData={dropdownData}
                 route={route}
+                isMcpView={isMcpView}
               />
             </div>
           </FloatingFocusManager>

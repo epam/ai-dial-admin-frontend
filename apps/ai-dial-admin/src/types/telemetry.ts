@@ -12,6 +12,7 @@ export enum FILTER_OPERATOR {
 export enum FILTER_TYPE {
   Entity = 'Entity',
   Project = 'Project',
+  Mcp = 'Mcp',
 }
 
 export enum DASHBOARD_VIEW_TYPE {

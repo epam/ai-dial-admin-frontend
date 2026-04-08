@@ -98,9 +98,10 @@ const Filters: FC<Props> = ({ filters, setFilters, getData, route, isMcpView = f
             onEdit={addFilter}
             dropdownData={{ projects, entities }}
             route={route}
+            isMcpView={isMcpView}
           />
         ))}
-      <AddFilter addFilter={addFilter} dropdownData={{ projects, entities }} route={route}>
+      <AddFilter addFilter={addFilter} dropdownData={{ projects, entities }} route={route} isMcpView={isMcpView}>
         <DialGhostButton label={t(TelemetryI18nKey.AddFilter)} iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />} />
       </AddFilter>
     </>
