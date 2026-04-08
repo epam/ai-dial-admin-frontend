@@ -12,12 +12,17 @@ import {
   removePrompt,
 } from '@/src/app/[lang]/prompts/actions';
 import { importPrompts } from '@/src/utils/prompts/import-prompts';
-import { getVersionsPerName } from '@/src/components/Assets/utils';
+import {
+  getDeleteNotificationContent,
+  getExportNotificationContent,
+  getImportNotificationContent,
+  getVersionsPerName,
+} from '@/src/components/Assets/utils';
 import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { ApplicationRoute } from '@/src/types/routes';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { useI18n } from '@/src/locales/client';
-import { FileManagerI18nKey, FoldersI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { FileManagerI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import {
   DialCopiedItem,
   DialFile,
@@ -120,6 +125,12 @@ const PromptsList: FC = () => {
                 getCreateNotificationDescription(ApplicationRoute.Prompts, `${prompt.name}__${prompt.version}`, t),
               ),
             );
+            router.push(
+              getUrnForEntity(ApplicationRoute.Prompts, {
+                name: prompt.name,
+                path: prompt.path,
+              }),
+            );
           }
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
@@ -130,7 +141,7 @@ const PromptsList: FC = () => {
         return res;
       });
     },
-    [destinationFolder, fetchFiles, handleCreatePromptModalClose, showNotification, t],
+    [destinationFolder, fetchFiles, handleCreatePromptModalClose, showNotification, t, router],
   );
 
   const handleDuplicatePromptModalClose = useCallback(() => {
@@ -227,7 +238,14 @@ const PromptsList: FC = () => {
       importPrompts(body, fileType).then((res) => {
         if (res.success) {
           fetchFiles?.(importFolder);
-          showNotification(getSuccessNotification(t(FoldersI18nKey.Import)));
+          const { title, description } = getImportNotificationContent(
+            ApplicationRoute.Prompts,
+            file,
+            fileType,
+            importFolder,
+            t,
+          );
+          showNotification(getSuccessNotification(title, description));
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
@@ -294,20 +312,26 @@ const PromptsList: FC = () => {
     [selectedVersionsMap],
   );
 
-  const onExport = useCallback((files: DialFile[]) => {
-    const filePaths: string[] = [];
-    (files as AssetWithVersion[]).forEach((file) => {
-      if (file.selectedVersions) {
-        filePaths.push(...file.selectedVersions.map((version) => `${file.folderId}${file.name}__${version}`));
-      } else {
-        filePaths.push(file.path);
-      }
-    });
+  const onExport = useCallback(
+    (files: DialFile[]) => {
+      const filePaths: string[] = [];
+      (files as AssetWithVersion[]).forEach((file) => {
+        if (file.selectedVersions) {
+          filePaths.push(...file.selectedVersions.map((version) => `${file.folderId}${file.name}__${version}`));
+        } else {
+          filePaths.push(file.path);
+        }
+      });
 
-    return exportPrompts(filePaths).then((res) => {
-      downloadJson(res, getJsonFileName(ApplicationRoute.Prompts));
-    });
-  }, []);
+      return exportPrompts(filePaths).then((res) => {
+        downloadJson(res, getJsonFileName(ApplicationRoute.Prompts));
+
+        const { title, description } = getExportNotificationContent(ApplicationRoute.Prompts, files, t, filePaths);
+        showNotification(getSuccessNotification(title, description));
+      });
+    },
+    [showNotification, t],
+  );
 
   const handlePathChange = useCallback((nextPath?: string) => {
     if (nextPath) {
@@ -362,10 +386,17 @@ const PromptsList: FC = () => {
           setFilePath(parentPath);
           fetchFiles(parentPath);
           removeSelection(pathToRemove);
+          const { title, description } = getDeleteNotificationContent(
+            ApplicationRoute.Prompts,
+            deletedItems as DialFile[],
+            t,
+            parentPath,
+          );
+          showNotification(getSuccessNotification(title, description));
         }
       });
     }
-  }, [deletedItems, destinationFolder, fetchFiles, setFilePath, removeSelection]);
+  }, [deletedItems, destinationFolder, fetchFiles, setFilePath, removeSelection, showNotification, t]);
 
   const onMultipleRemove = useCallback(() => {
     setIsDeleteModalOpen(false);
@@ -399,12 +430,33 @@ const PromptsList: FC = () => {
           fetchFiles(parentPath);
           setFilePath(parentPath);
           removeSelection(deletedItems?.map((item) => item.path));
+          const { title, description } = getDeleteNotificationContent(
+            ApplicationRoute.Prompts,
+            deletedItems as DialFile[],
+            t,
+            parentPath,
+          );
+          showNotification(getSuccessNotification(title, description));
+        } else {
+          const errorRes = result.flat().find((res) => !res.success);
+          if (errorRes) {
+            showNotification(getErrorNotification(errorRes.errorHeader, errorRes.errorMessage, errorRes.requestId));
+          }
         }
       });
     }
-  }, [deletedItems, selectedVersionsMap, destinationFolder, fetchFiles, setFilePath, removeSelection]);
+  }, [
+    deletedItems,
+    selectedVersionsMap,
+    destinationFolder,
+    fetchFiles,
+    setFilePath,
+    removeSelection,
+    showNotification,
+    t,
+  ]);
 
-  const resetFolder = useCallback(() => {
+  const onRemovePromptEndHandler = useCallback(() => {
     const parentPath = destinationFolder || `${ROOT_FOLDER}/`;
     setFilePath(parentPath);
     fetchFiles(parentPath);
@@ -476,7 +528,7 @@ const PromptsList: FC = () => {
           onRemoveFolder={onDeleteFolder}
           onMultipleRemove={onMultipleRemove}
           onClose={handleDeleteModalClose}
-          resetFolder={resetFolder}
+          onRemovePromptEnd={onRemovePromptEndHandler}
         />
       )}
     </>

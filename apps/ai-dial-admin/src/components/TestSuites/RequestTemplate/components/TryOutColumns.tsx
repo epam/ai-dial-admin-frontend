@@ -65,7 +65,9 @@ const TryOutColumns: FC<Props> = ({ isLoading, responseBody, columns, response }
                   />
                 </div>
                 <div className="text-secondary text-sm">{column.expression}</div>
-                <div className="text-primary text-sm">{column.result !== null ? column.result : 'Null'}</div>
+                <div className="text-primary text-sm overflow-auto">
+                  {column.result !== null ? column.result : 'Null'}
+                </div>
               </div>
             ))}
           </div>

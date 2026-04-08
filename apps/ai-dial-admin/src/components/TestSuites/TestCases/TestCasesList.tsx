@@ -2,13 +2,26 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, MouseEvent, RefObject, useCallback, useEffect, useRef, useState } from 'react';
+import { FC, RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { DialLoader } from '@epam/ai-dial-ui-kit';
-import { CellValueChangedEvent, ColDef, GridApi, GridOptions, GridReadyEvent } from 'ag-grid-community';
+import {
+  CellValueChangedEvent,
+  ColDef,
+  GridApi,
+  GridOptions,
+  GridReadyEvent,
+  SelectionChangedEvent,
+} from 'ag-grid-community';
 
-import { createTestCase, getTestCases, importTestCase, removeTestCase } from '@/src/app/[lang]/test-suites/actions';
+import {
+  createTestCase,
+  getTestCases,
+  importTestCase,
+  removeMultipleTestCases,
+  removeTestCase,
+} from '@/src/app/[lang]/test-suites/actions';
 import ListEntities from '@/src/components/ListView/List';
 import TryOut from '@/src/components/TestSuites/RequestTemplate/components/TryOut';
 import { getTestCaseColumns } from '@/src/components/TestSuites/utils/columns';
@@ -52,6 +65,7 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
   const [data, setData] = useState<Record<string, unknown>[]>([]);
   const [columnDefs, setColumnDefs] = useState<ColDef[]>([]);
   const [isSchemaModalOpen, setIsSchemaModalOpen] = useState(false);
+  const [selectedRows, setSelectedRows] = useState<TestCase[]>([]);
   const onRemoveCaseRef = useRef<(data?: TestCase) => void>(() => {});
   const dirtyRowsRef = useRef<Map<string, Record<string, unknown>>>(new Map());
   const pendingRefreshRef = useRef(false);
@@ -111,8 +125,47 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
     [updateData],
   );
 
+  const onSelectionChanged = useCallback((event: SelectionChangedEvent) => {
+    setSelectedRows(event.api.getSelectedRows() as TestCase[]);
+  }, []);
+
+  // todo: apply when BE supports batch-delete
+  // const onCellClicked = useCallback((event: CellClickedEvent) => {
+  //   if (event.column.getColId() !== 'id') return;
+
+  //   const mouseEvent = event.event as MouseEvent;
+  //   const shiftKey = mouseEvent.shiftKey;
+
+  //   if (shiftKey) {
+  //     mouseEvent.preventDefault();
+  //     const allNodes: IRowNode[] = [];
+  //     event.api.forEachNodeAfterFilterAndSort((node) => allNodes.push(node));
+  //     const currentIndex = allNodes.findIndex((n) => n.id === event.node.id);
+  //     const selectedNodes = event.api.getSelectedNodes();
+  //     if (selectedNodes.length > 0) {
+  //       const lastSelected = selectedNodes[selectedNodes.length - 1];
+  //       const lastIndex = allNodes.findIndex((n) => n.id === lastSelected.id);
+  //       const start = Math.min(currentIndex, lastIndex);
+  //       const end = Math.max(currentIndex, lastIndex);
+  //       allNodes.slice(start, end + 1).forEach((n) => n.setSelected(true, false));
+  //     } else {
+  //       event.node.setSelected(true, false);
+  //     }
+  //   } else {
+  //     event.node.setSelected(!event.node.isSelected(), false);
+  //   }
+  // }, []);
+
   const gridOptions: GridOptions = {
     onCellValueChanged,
+    onSelectionChanged,
+    // onCellClicked,
+    rowSelection: {
+      mode: 'multiRow',
+      checkboxes: false,
+      headerCheckbox: false,
+      enableClickSelection: false,
+    },
   };
 
   const stableOnRemoveCase = useCallback((data?: TestCase) => {
@@ -120,17 +173,16 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
   }, []);
 
   const onOpenTryOutSidebar = useCallback(
-    (e?: MouseEvent<HTMLButtonElement>, testCaseId?: string) => {
-      e?.stopPropagation();
+    (e?: TestCase) => {
       sidebar.showSidebar(
         <SaveValidationContextProvider>
-          <TryOut testSuite={selectedTestSuite} testCaseId={testCaseId || ''} />
+          <TryOut testSuite={selectedTestSuite} testCaseId={e?.id || ''} />
         </SaveValidationContextProvider>,
         'w-1/2 max-w-[800px]',
       );
       if (sidebarOpen) {
         sidebar.toggleIsMenuClosed?.();
-        toggleSidebar(e);
+        toggleSidebar();
       }
     },
     [selectedTestSuite.id, sidebar, sidebarOpen, toggleSidebar],
@@ -141,7 +193,13 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
       setIsLoading(true);
       getTestCases(selectedTestSuite.id, 0, 1000, [], []).then((res) => {
         setIsLoading(false);
-        const data = res == null || res.content.length === 0 ? [] : getTestCaseGridData(res?.content || []);
+        let data = res == null || res.content.length === 0 ? [] : getTestCaseGridData(res?.content || []);
+        if (dirtyRowsRef.current.size > 0) {
+          data = data.map((row) => {
+            const id = String(row.id);
+            return dirtyRowsRef.current.has(id) ? dirtyRowsRef.current.get(id)! : row;
+          });
+        }
         setData(data);
         setColumnDefs([
           ...getTestCaseColumns(selectedTestSuite, onCellChange, t),
@@ -229,6 +287,18 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
     [newTestCases, selectedTestSuite.id, onDirtyChange, showNotification, t, refreshGrid],
   );
 
+  const onBatchDelete = useCallback(() => {
+    const namesToDelete = selectedRows.map((r) => r.testCaseName as string);
+    removeMultipleTestCases(selectedTestSuite.id as string, namesToDelete).then((res) => {
+      if (res?.success) {
+        showNotification(getSuccessNotification(t(TestSuitesI18nKey.RemoveSuccess)));
+        refreshGrid();
+      } else {
+        showNotification(getErrorNotification(t(TestSuitesI18nKey.RemoveFailed), res?.errorMessage || 'Unknown error'));
+      }
+    });
+  }, [selectedRows]);
+
   const getDirtyTestCases = useCallback((): TestCase[] => {
     const dirty = Array.from(dirtyRowsRef.current.values()).map((row) => rowToTestCase(row));
     const newCases = newTestCases.map((row) => rowToTestCase(row));
@@ -295,6 +365,8 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
             onAdd={onAddTestCase}
             onExport={onExport}
             onOpenSchemaModal={onOpenSchemaModal}
+            onBatchDelete={onBatchDelete}
+            showBatchDelete={selectedRows.length > 0}
           />
         </ListEntities>
       )}

@@ -3,6 +3,7 @@
 import { cookies, headers } from 'next/headers';
 
 import { testSuitesApi } from '@/src/app/api/api';
+import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { TestCase, TestSuite } from '@/src/models/evaluation/test-suite';
 import { FilterDto, SortDto } from '@/src/models/request';
 import type { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
@@ -81,6 +82,11 @@ export async function removeTestCase(id: string, testCaseId: string) {
   return testSuitesApi.removeTestCase(id, testCaseId, token);
 }
 
+export async function removeMultipleTestCases(id: string, testCaseNames: string[]) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.removeMultipleTestCases(id, testCaseNames, token);
+}
+
 export async function createTestCase(
   testSuiteId: string,
   body: Pick<TestCase, 'testCaseName' | 'data'>,
@@ -100,9 +106,14 @@ export async function getTestCase(id: string, testCaseId?: string) {
   return testSuitesApi.getTestCase(id, testCaseId, token);
 }
 
-export async function getDeployments() {
+export async function getDeployments(type?: DeploymentType, interfaceFilter?: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return testSuitesApi.getDeployments(token);
+  return testSuitesApi.getDeployments(token, type, interfaceFilter);
+}
+
+export async function getDeploymentTools(deploymentId: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.getDeploymentTools(deploymentId, token);
 }
 
 export async function getDeployment(id: string, type: string) {

@@ -1,3 +1,4 @@
+import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 import { RESPONSE_MOCK, TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
@@ -5,6 +6,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 import {
   DEPLOYMENTS_URL,
+  DEPLOYMENT_TOOLS_URL,
   METRIC_DECLARATIONS_URL,
   TEST_CASES_URL,
   TEST_CASE_TEMPLATE_VARIABLES_URL,
@@ -163,6 +165,24 @@ describe('Server :: TestSuiteApi', () => {
     fetch.mockResponseOnce(JSON.stringify(mockTestSuite));
     await instance.getDeployments(TOKEN_MOCK);
     expect(fetch).toHaveBeenCalledWith(`${TEST_URL}${DEPLOYMENTS_URL}`, expect.objectContaining({ method: 'GET' }));
+  });
+
+  test('Should call getDeployments with type and interface filter', async () => {
+    fetch.mockResponseOnce(JSON.stringify([]));
+    await instance.getDeployments(TOKEN_MOCK, DeploymentType.Application, 'mcp');
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${DEPLOYMENTS_URL}?type=dial-application&interface=mcp`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
+  test('Should call getDeploymentTools', async () => {
+    fetch.mockResponseOnce(JSON.stringify([]));
+    await instance.getDeploymentTools('deploy-1', TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${DEPLOYMENT_TOOLS_URL('deploy-1')}`,
+      expect.objectContaining({ method: 'GET' }),
+    );
   });
 
   test('Should call getDeployment', async () => {
@@ -418,6 +438,17 @@ describe('Server :: TestSuiteApi', () => {
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify(body),
+      }),
+    );
+  });
+
+  test('Should call removeMultipleTestCases', async () => {
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
+    await instance.removeMultipleTestCases('id', ['testCase1', 'testCase2'], TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_CASES_URL('id')}?filter=testCaseName:eq:testCase1,testCase2`,
+      expect.objectContaining({
+        method: 'DELETE',
       }),
     );
   });

@@ -33,24 +33,24 @@ import { v4 as uuidv4 } from 'uuid';
 interface Props {
   isModalOpen: boolean;
   tools: Tool[];
-  originalToolset: Toolset;
+  originalEntity: Toolset;
   onClose: () => void;
   onConfirm?: (newValue: Toolset) => void;
 }
 
-const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalToolset, onClose, onConfirm }) => {
+const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalEntity, onClose, onConfirm }) => {
   const t = useI18n();
   const [view, setView] = useState(ParamsView.TABLE);
 
   const [toolsConfig, setToolsConfig] = useState<ToolConfig[]>(() => {
     return tools.map((tool) => ({
       ...tool,
-      isAllowed: (originalToolset.allowedTools || []).includes(tool.name),
+      isAllowed: (originalEntity.allowedTools || []).includes(tool.name),
       id: uuidv4(),
     }));
   });
   const [customToolsConfig, setCustomToolsConfig] = useState<CustomToolConfig[]>(() => {
-    return (originalToolset.allowedTools || []).reduce((acc, curr) => {
+    return (originalEntity.allowedTools || []).reduce((acc, curr) => {
       if (!tools.some((tool) => tool.name === curr) && curr !== '') {
         acc.push({
           id: uuidv4(),
@@ -175,11 +175,11 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalToolset, onCl
 
     const uniqueAllowedTools = [...new Set([...allowedTools, ...allowedCustomTools])];
     onConfirm?.({
-      ...originalToolset,
+      ...originalEntity,
       allowedTools: uniqueAllowedTools?.length ? uniqueAllowedTools : [''],
     });
     onClose();
-  }, [originalToolset, onConfirm, onClose, toolsConfig, customToolsConfig]);
+  }, [originalEntity, onConfirm, onClose, toolsConfig, customToolsConfig]);
 
   return (
     <DialPopup

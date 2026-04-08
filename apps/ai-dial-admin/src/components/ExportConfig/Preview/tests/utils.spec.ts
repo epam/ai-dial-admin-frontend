@@ -105,6 +105,21 @@ describe('Export Config Utils :: getPreviewTabs', () => {
     expect(convertedData.ADAPTER).toEqual([{ id: 'adapter1' }]);
   });
 
+  test('should handle interceptorRunners correctly', () => {
+    const data = {
+      interceptorRunners: [{ id: 'interceptorRunner1' }],
+    };
+
+    const mockEntities = [{ id: 'interceptorRunner1' }];
+    entitiesUtils.getInterceptorTemplatesForEntitiesGrid.mockReturnValue(mockEntities);
+
+    const { tabs, convertedData } = getPreviewTabs(data, false, ExportFormat.ADMIN, t);
+
+    expect(tabs).toEqual([{ id: 'INTERCEPTOR_RUNNER', label: 'translated(Menu.InterceptorTemplates): 1' }]);
+
+    expect(convertedData.INTERCEPTOR_RUNNER).toEqual([{ id: 'interceptorRunner1' }]);
+  });
+
   test('should merge entities from applications and routes as well', () => {
     const mockEntitiesFromApplications = [{ id: 'app1' }];
     const mockEntitiesFromRoutes = [{ id: 'route1' }];

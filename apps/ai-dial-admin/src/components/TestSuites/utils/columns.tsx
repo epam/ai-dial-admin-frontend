@@ -104,6 +104,10 @@ export const getTestCaseColumns = (
       },
     } as ColDef,
     ...TEST_CASES_COLUMN.map((col) => {
+      // todo add when batch delete
+      // if (col.field === 'id') {
+      //   return { ...col, cellClass: 'select-none cursor-pointer' };
+      // }
       if (col.field === 'testCaseName' && onCellChange) {
         return {
           ...col,
@@ -121,8 +125,8 @@ export const getTestCaseColumns = (
       }
       return col;
     }),
-    ...schema.map((s) => {
-      const field = s.name;
+    ...schema.map((param) => {
+      const field = param.name;
       return {
         field: field,
         headerName: field,
@@ -137,7 +141,7 @@ export const getTestCaseColumns = (
           },
         },
         cellRendererSelector: () => {
-          if (s.type === TestCaseItemType.FILE) {
+          if (param.type === TestCaseItemType.FILE) {
             return {
               component: FileSelectCellRenderer,
               params: {
@@ -146,6 +150,30 @@ export const getTestCaseColumns = (
                 },
                 id: suite.id,
                 view: ApplicationRoute.TestSuites,
+              },
+            };
+          }
+          if (param.type === TestCaseItemType.INTEGER || param.type === TestCaseItemType.NUMBER) {
+            return {
+              component: EditableCellRenderer,
+              params: {
+                hideTriangle: true,
+                skipRequired: true,
+                inputType: 'number' as const,
+                step: param.type === TestCaseItemType.INTEGER ? 1 : void 0,
+                onChange: (value: string | number, rowData: unknown) => {
+                  // For INTEGER type, validate that the value is a whole number
+                  if (param.type === TestCaseItemType.INTEGER) {
+                    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+                    if (value !== '' && !isNaN(numValue) && !Number.isInteger(numValue)) {
+                      // If the value is not an integer, round it to nearest integer
+                      const intValue = Math.round(numValue);
+                      onCellChange(rowData as Record<string, unknown>, field, intValue);
+                      return;
+                    }
+                  }
+                  onCellChange(rowData as Record<string, unknown>, field, value);
+                },
               },
             };
           }
@@ -423,6 +451,7 @@ export const getMetricBindingsColumns = (
 
 export const getVariablesColumns = (
   onChangeEditable: (value: string | object, data: InputBindingRowData) => void,
+  id: string,
 ): ColDef<InputBindingRowData>[] => {
   return [
     {
@@ -440,15 +469,13 @@ export const getVariablesColumns = (
       field: 'value',
       cellClass: [NO_BORDER_CLASS, 'relative'],
       cellRendererSelector: (params: ICellRendererParams<InputBindingRowData>) => {
-        if (
-          params.data?.effectiveType == TestCaseItemType.OBJECT ||
-          params.data?.effectiveType == TestCaseItemType.ARRAY
-        ) {
+        if (params.data?.effectiveType == TestCaseItemType.FILE) {
           return {
-            component: JsonEditorCellRenderer,
+            component: FileSelectCellRenderer,
             params: {
               onChange: onChangeEditable,
-              disableValidation: true,
+              id: id,
+              view: ApplicationRoute.TestSuites,
             },
           };
         }

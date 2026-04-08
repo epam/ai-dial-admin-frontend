@@ -11,6 +11,7 @@ import {
   getKeysForEntitiesGrid,
   getToolsetsForEntitiesGrid,
   getRunnersForEntitiesGrid,
+  getInterceptorTemplatesForEntitiesGrid,
 } from '@/src/utils/entities/entities-list-view';
 import { DialModel } from '@/src/models/dial/model';
 import { EntityType } from '@/src/types/entity-type';
@@ -122,6 +123,14 @@ export const getPreviewTabs = (
         tabs.push({
           id: EntityType.TOOLSET,
           label: `${t(MenuI18nKey.Toolsets)}: ${data[key].length}`,
+        });
+      }
+
+      if (key === 'interceptorRunners') {
+        convertedData[EntityType.INTERCEPTOR_RUNNER] = getInterceptorTemplatesForEntitiesGrid(data[key]);
+        tabs.push({
+          id: EntityType.INTERCEPTOR_RUNNER,
+          label: `${t(MenuI18nKey.InterceptorTemplates)}: ${data[key].length}`,
         });
       }
     }

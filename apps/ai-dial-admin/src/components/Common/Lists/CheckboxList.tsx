@@ -39,6 +39,8 @@ const CheckboxList: FC<Props> = ({
   useEffect(() => {
     if (filter) {
       setList(items.filter((i) => i.toLowerCase().includes(filter.toLowerCase())));
+    } else {
+      setList(items);
     }
   }, [filter, items]);
 

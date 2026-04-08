@@ -2,19 +2,20 @@
 
 import { Dispatch, FC, SetStateAction, useMemo } from 'react';
 
+import ParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
 import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
 import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
 import EntityFeatures from '@/src/components/EntityTabs/Features/Features';
 import ApplicationAppRoutes from '@/src/components/EntityView/AppRoute/ApplicationAppRoutes';
 import EntityInterceptors from '@/src/components/EntityView/Interceptors/Interceptors';
 import EntityRoles from '@/src/components/EntityView/Roles/Roles';
+import Tools from '@/src/components/Tools/Tools';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
-import ParametersTab from '../ParametersTab/ParametersTab';
 import Dependencies from './Dependencies/Dependencies';
 import TabContent from './Properties/TabContent';
 
@@ -27,6 +28,7 @@ interface Props {
   interceptors: DialInterceptor[] | null;
   applicationSchemes: DialApplicationScheme[];
   selectedApplication: DialApplication;
+  originalApplication?: DialApplication;
   isSkipRefresh: boolean;
   names: string[];
   isEditorEnabled: boolean;
@@ -42,6 +44,7 @@ const TabsContent: FC<Props> = ({
   activeTab,
   applicationSchemes,
   selectedApplication,
+  originalApplication,
   onChangeApplication,
   applications,
   names,
@@ -70,6 +73,16 @@ const TabsContent: FC<Props> = ({
           names={names}
           view={view}
           onChange={onChangeApplication}
+        />
+      )}
+
+      {activeTab === EntityViewTab.Tools && (
+        <Tools
+          isAsset={view === ApplicationRoute.AssetsApplications}
+          originalEntity={originalApplication}
+          selectedEntity={selectedApplication}
+          onChangeEntity={onChangeApplication}
+          view={view}
         />
       )}
 

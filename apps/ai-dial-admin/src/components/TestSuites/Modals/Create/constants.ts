@@ -1,5 +1,6 @@
 import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { Step, StepStatus } from '@epam/ai-dial-ui-kit';
+import { SuiteType } from '@/src/models/evaluation/test-suite';
 
 export enum TestSuitTab {
   Properties = 'Properties',
@@ -7,7 +8,9 @@ export enum TestSuitTab {
   Methods = 'Methods',
 }
 
-export const TEST_SUIT_STEPS = (t: (key: string) => string, hideProperties: boolean) => {
+export const TEST_SUIT_STEPS = (t: (key: string) => string, hideProperties: boolean, suiteType?: SuiteType) => {
+  const step3Label = suiteType === SuiteType.McpTool ? t(TestSuitesI18nKey.Tool) : t(TestSuitesI18nKey.Methods);
+
   const steps = [
     {
       id: TestSuitTab.Target,
@@ -16,7 +19,7 @@ export const TEST_SUIT_STEPS = (t: (key: string) => string, hideProperties: bool
 
     {
       id: TestSuitTab.Methods,
-      name: t(TestSuitesI18nKey.Methods),
+      name: step3Label,
       status: StepStatus.VALID,
     },
   ];

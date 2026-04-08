@@ -136,3 +136,19 @@ export const getAdaptersForEntitiesGrid = (adapters?: DialAdapter[] | null): Ent
     route: ApplicationRoute.Adapters,
   }));
 };
+
+/** Get list of InterceptorRunner with type and route for entities view
+ *
+ * @param {?(InterceptorTemplate[] | null)} [interceptorRunners] - Interceptor runners array
+ * @returns {EntitiesGridData[]} - EntitiesGridData array
+ */
+
+export const getInterceptorTemplatesForEntitiesGrid = (
+  interceptorTemplates?: InterceptorTemplate[] | null,
+): EntitiesGridData[] => {
+  return [...(interceptorTemplates || [])].map((template) => ({
+    ...template,
+    type: MenuI18nKey.InterceptorTemplates,
+    route: ApplicationRoute.InterceptorTemplates,
+  }));
+};

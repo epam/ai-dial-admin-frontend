@@ -42,19 +42,42 @@ This documentation describes the structure and contents of the menu items array 
 
 ### 3. **Assets**
 
-- **Description**: A section for managing assets like prompts and files.
+- **Description**: A section for managing assets like applications, toolsets, prompts, and files.
 - **Items**:
+  - **Applications**
+    - **Key**: `Applications`
+    - **Description**: Navigate to the assets applications page for uploading and managing system applications.
+  - **Toolsets**
+    - **Key**: `Toolsets`
+    - **Description**: Navigate to the assets toolsets page to manage toolset assets.
   - **Prompts**
     - **Key**: `Prompts`
     - **Description**: Navigate to the prompts page to manage and create prompts used in various workflows.
   - **Files**
     - **Key**: `Files`
     - **Description**: Navigate to the files page for uploading and managing system files.
-  - **Applications**
-    - **Key**: `Applications`
-    - **Description**: Navigate to the applications page for uploading and managing system applications.
 
-### 4. **Access Management**
+### 4. **Deployments**
+
+- **Description**: A section for managing deployments and containers (MCP, interceptors, adapters).
+- **Items**:
+  - **Model Servings**
+    - **Key**: `ModelServings`
+    - **Description**: Navigate to the model servings page to manage deployed model instances.
+  - **MCP Containers**
+    - **Key**: `McpContainers`
+    - **Description**: Navigate to the MCP containers page to manage Model Context Protocol containers.
+  - **Interceptor Containers**
+    - **Key**: `InterceptorContainers`
+    - **Description**: Navigate to the interceptor containers page to manage deployed interceptor containers.
+  - **Adapter Containers**
+    - **Key**: `AdapterContainers`
+    - **Description**: Navigate to the adapter containers page to manage deployed adapter containers.
+  - **Images**
+    - **Key**: `Images`
+    - **Description**: Navigate to the images page to manage container images.
+
+### 5. **Access Management**
 
 - **Description**: A section for managing roles, keys, and folder storage.
 - **Items**:
@@ -68,13 +91,16 @@ This documentation describes the structure and contents of the menu items array 
     - **Key**: `FoldersStorage`
     - **Description**: Manage folder storage and organization for different assets and files.
 
-### 5. **Approvals**
+### 6. **Approvals**
 
-- **Description**: A section for managing prompt and file approvals.
+- **Description**: A section for managing application, toolset, prompt, and file approvals.
 - **Items**:
   - **Application Publications**
     - **Key**: `ApplicationPublications`
     - **Description**: Navigate to the application publications page to review and approve application submissions.
+  - **Toolset Publications**
+    - **Key**: `ToolsetPublications`
+    - **Description**: Navigate to the toolset publications page to review and approve toolset submissions.
   - **Prompt Publications**
     - **Key**: `PromptPublications`
     - **Description**: Navigate to the prompt publications page to review and approve prompt submissions.
@@ -82,9 +108,20 @@ This documentation describes the structure and contents of the menu items array 
     - **Key**: `FilePublications`
     - **Description**: Navigate to the file publications page to review and approve files before they are shared.
 
-### 6. **Audit**
+### 7. **Evaluation** [Preview]
 
-- **Description**: A section for accessing telemetry data, logs and audit.
+- **Description**: A section for managing test suites and evaluation runs.
+- **Items**:
+  - **Test Suites**
+    - **Key**: `TestSuites`
+    - **Description**: Navigate to the test suites page to create and manage test suites for evaluation.
+  - **Runs**
+    - **Key**: `Runs`
+    - **Description**: Navigate to the runs page to view and manage evaluation run history and results.
+
+### 8. **Audit**
+
+- **Description**: A section for accessing telemetry data, logs, and audit information.
 - **Items**:
   - **Dashboard**
     - **Key**: `Dashboard`
@@ -92,3 +129,6 @@ This documentation describes the structure and contents of the menu items array 
   - **Activity Audit**
     - **Key**: `ActivityAudit`
     - **Description**: Navigate to the activity audit page to track system activities and user actions.
+  - **Usage Log**
+    - **Key**: `UsageLog`
+    - **Description**: Navigate to the usage log page to view detailed usage logs and analytics.

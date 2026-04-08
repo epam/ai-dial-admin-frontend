@@ -37,6 +37,8 @@ import {
   getTestSuiteFiles,
   removeTestSuiteFile,
   duplicateTestSuite,
+  getDeploymentTools,
+  removeMultipleTestCases,
 } from './actions';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '../../../types/evaluation';
 
@@ -137,7 +139,15 @@ describe('TestSuites :: server actions', () => {
     (testSuitesApi.getDeployments as any).mockResolvedValue(RESPONSE_MOCK);
     const result = await getDeployments();
     expect(getUserToken).toHaveBeenCalled();
-    expect(testSuitesApi.getDeployments).toHaveBeenCalledWith(TOKEN_MOCK);
+    expect(testSuitesApi.getDeployments).toHaveBeenCalledWith(TOKEN_MOCK, undefined, undefined);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getDeploymentTools action', async () => {
+    (testSuitesApi.getDeploymentTools as any).mockResolvedValue(RESPONSE_MOCK);
+    const result = await getDeploymentTools('deploy-1');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(testSuitesApi.getDeploymentTools).toHaveBeenCalledWith('deploy-1', TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 
@@ -334,6 +344,14 @@ describe('TestSuites :: server actions', () => {
     const result = await duplicateTestSuite('suite-id', body as any);
     expect(getUserToken).toHaveBeenCalled();
     expect(testSuitesApi.duplicateTestSuite).toHaveBeenCalledWith('suite-id', body, TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call removeMultipleTestCases action', async () => {
+    (testSuitesApi.removeMultipleTestCases as any).mockResolvedValue(RESPONSE_MOCK);
+    const result = await removeMultipleTestCases('suite-id', ['case1', 'case2']);
+    expect(getUserToken).toHaveBeenCalled();
+    expect(testSuitesApi.removeMultipleTestCases).toHaveBeenCalledWith('suite-id', ['case1', 'case2'], TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

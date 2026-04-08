@@ -24,8 +24,8 @@ export const getIsUser = () => {
 export const setUrl = (view: ApplicationRoute, selectedToolset: Toolset) => {
   if (typeof window !== 'undefined') {
     const url =
-      view === ApplicationRoute.Toolsets
-        ? `${getUrnForEntity(ApplicationRoute.Toolsets, selectedToolset)}?`
+      view === ApplicationRoute.Toolsets || view === ApplicationRoute.ToolsetPublications
+        ? `${getUrnForEntity(view, selectedToolset)}?`
         : `${getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset)}&`;
     localStorage.setItem(urlKey, url);
   }

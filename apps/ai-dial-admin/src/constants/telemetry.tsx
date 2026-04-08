@@ -185,7 +185,14 @@ export const TRACES_QUERY: TelemetryQuery = {
 export const MCP_QUERY: TelemetryQuery = {
   $type: 'json',
   query: {
-    expressions: ['_time as completion_time', 'deployment', 'project_id', 'mcp_method', 'mcp_tool_call_name'],
+    expressions: [
+      '_time as completion_time',
+      'deployment',
+      'project_id',
+      'mcp_method',
+      'mcp_tool_call_name',
+      'trace_id',
+    ],
     from: 'mcp_analytics',
     orderBy: [{ $desc: '_time' }],
   },
