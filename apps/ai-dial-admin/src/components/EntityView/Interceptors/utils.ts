@@ -22,9 +22,9 @@ export const getInterceptorsColumnDefs = (
   remove?: (entity?: BaseEntity, index?: number) => void,
   startIndex?: number,
 ): ColDef[] => {
-  const actions = [getOpenInNewTabOperation(open, t)];
+  const actions = [getOpenInNewTabOperation(open)];
   if (remove) {
-    actions.push(getRemoveOperation(remove, t));
+    actions.push(getRemoveOperation(remove));
   }
   const columns: ColDef[] = [
     remove ? DRAGGABLE_COL_DEF : UTILITY_COLUMN,

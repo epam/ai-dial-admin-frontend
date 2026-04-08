@@ -207,21 +207,21 @@ export const getRolesColumnDefs = (
   t: (key: string) => string,
   isReadOnlyAdmin?: boolean,
 ): ColDef[] => {
-  const actions = [getOpenInNewTabOperation(open, t)];
+  const actions = [getOpenInNewTabOperation(open)];
   const colDefs = [...BASE_COLUMNS.slice(0, 3)];
 
   if (view !== ApplicationRoute.Routes && view !== ApplicationRoute.Toolsets) {
     if (resetToDefault) {
-      actions.push(getResetOperation(resetToDefault, t, resetToDefaultHidden));
+      actions.push(getResetOperation(resetToDefault, resetToDefaultHidden));
     }
     if (setNoLimits) {
-      actions.push(getSetNoLimitsOperation(setNoLimits, t, isSetNoLimitsHidden));
+      actions.push(getSetNoLimitsOperation(setNoLimits, isSetNoLimitsHidden));
     }
     colDefs.push(...LIMIT_COLUMNS({ ...entity.defaultRoleLimit }, onChangeLimits, isReadOnlyAdmin));
   }
 
   if (!entity.isPublic && remove) {
-    actions.push(getRemoveOperation(remove, t));
+    actions.push(getRemoveOperation(remove));
   }
 
   return [...colDefs, ACTION_COLUMN(actions)];

@@ -61,7 +61,7 @@ export const getDeploymentColDefs = (
   const columns = getBaseColumns(t, selectedTab);
 
   if (remove) {
-    const actions = [getRemoveOperation(remove, t)];
+    const actions = [getRemoveOperation(remove)];
     return [...columns, ACTION_COLUMN(actions)];
   }
 

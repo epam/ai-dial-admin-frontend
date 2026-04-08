@@ -37,13 +37,13 @@ export const getActivityAuditColumns = (
 ): ColDef[] => {
   const actions = [];
   if (open) {
-    actions.push(getOpenInNewTabOperation(open, t));
+    actions.push(getOpenInNewTabOperation(open));
   }
   if (viewDetails) {
-    actions.push(getViewDetailsOperation(viewDetails, t));
+    actions.push(getViewDetailsOperation(viewDetails));
   }
   if (resourceRollback) {
-    actions.push(getResourceRollbackOperation(resourceRollback, t));
+    actions.push(getResourceRollbackOperation(resourceRollback));
   }
 
   return [...ACTIVITY_AUDIT_COLUMNS(t, isSingleEntity), ACTION_COLUMN(actions)];

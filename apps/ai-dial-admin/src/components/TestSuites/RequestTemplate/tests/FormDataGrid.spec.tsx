@@ -26,9 +26,9 @@ vi.mock('@/src/constants/ag-grid', () => ({
   ONE_ACTION_COLUMN: (action: any) => ({ headerName: 'Actions', cellRenderer: 'action', ...action }),
 }));
 
-const mockGetRemoveOperation = vi.fn((_onRemove: any, _t: any, _a?: unknown, _b?: unknown) => ({ field: 'remove' }));
+const mockGetRemoveOperation = vi.fn((_onRemove: any, _a?: unknown, _b?: unknown) => ({ field: 'remove' }));
 vi.mock('@/src/constants/grid-columns/actions', () => ({
-  getRemoveOperation: (onRemove: any, t: any, a?: unknown, b?: unknown) => mockGetRemoveOperation(onRemove, t, a, b),
+  getRemoveOperation: (onRemove: any, a?: unknown, b?: unknown) => mockGetRemoveOperation(onRemove, a, b),
 }));
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
@@ -177,12 +177,7 @@ describe('FormDataGrid', () => {
   test('getRemoveOperation is called with onRemovePart callback', () => {
     render(<FormDataGrid content={[]} changeContent={mockChangeContent} selectedTestSuiteId="test-suite-id" />);
 
-    expect(mockGetRemoveOperation).toHaveBeenCalledWith(
-      expect.any(Function),
-      expect.any(Function),
-      undefined,
-      'text-error w-4 h-4',
-    );
+    expect(mockGetRemoveOperation).toHaveBeenCalledWith(expect.any(Function), undefined, 'text-error w-4 h-4');
   });
 
   test('onRemovePart removes item at index and calls changeContent', () => {

@@ -77,9 +77,9 @@ export const getActualColDefs = (
     });
   }
 
-  const actions = [getOpenInNewTabOperation(openInNewTab, t)];
+  const actions = [getOpenInNewTabOperation(openInNewTab)];
   if (remove) {
-    actions.push(getRemoveOperation(remove, t));
+    actions.push(getRemoveOperation(remove));
   }
 
   return [...columns, ACTION_COLUMN(actions)];

@@ -92,7 +92,7 @@ const RoleSharing: FC<Props> = ({ isSkipRefresh, selectedRole, onChangeRole }) =
 
   const columns: ColDef[] = useMemo(() => {
     const baseColumns = SHARING_COLUMNS(t, onChangeTypeSharing, getDefaultPlaceholder, isReadOnlyAdmin);
-    const actions = isReadOnlyAdmin ? [] : [getResetOperation(onResetSharingToDefault, t, isResetToDefaultHidden)];
+    const actions = isReadOnlyAdmin ? [] : [getResetOperation(onResetSharingToDefault, isResetToDefaultHidden)];
     return [...baseColumns, ...(actions.length ? [ACTION_COLUMN(actions, true)] : [])];
   }, [onChangeTypeSharing, onResetSharingToDefault, t, isReadOnlyAdmin]);
 

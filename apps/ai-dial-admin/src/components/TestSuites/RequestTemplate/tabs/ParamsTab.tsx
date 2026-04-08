@@ -7,7 +7,6 @@ import { ONE_ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getDeleteOperation } from '@/src/constants/grid-columns/actions';
 import { getParamsColumns } from '@/src/constants/grid-columns/grid-columns';
 import { TestSuiteRequestTemplate, TestSuiteRequestTemplateParam } from '@/src/models/evaluation/test-suite';
-import { useI18n } from '@/src/locales/client';
 
 export interface ParamsTabRef {
   add: () => void;
@@ -24,7 +23,6 @@ const ParamsTab = forwardRef<ParamsTabRef, Props>(({ template, changeTemplate, f
   const [visibleIndex, setVisibleIndex] = useState<number | undefined>();
   const gridApi = useRef<GridApi>(null);
   const configRef = useRef(template?.[field] || []);
-  const t = useI18n();
 
   const onAddParam = useCallback(() => {
     const fieldData = [...configRef.current];
@@ -59,7 +57,7 @@ const ParamsTab = forwardRef<ParamsTabRef, Props>(({ template, changeTemplate, f
 
   const columnDefs: ColDef[] = [
     ...getParamsColumns(onChangeValue),
-    ONE_ACTION_COLUMN(getDeleteOperation(onRemoveParam, t, void 0, 'text-error w-4 h-4')),
+    ONE_ACTION_COLUMN(getDeleteOperation(onRemoveParam, void 0, 'text-error w-4 h-4')),
   ];
   const rowData = template?.[field] || [];
 

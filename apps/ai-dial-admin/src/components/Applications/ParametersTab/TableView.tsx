@@ -119,7 +119,7 @@ const TableView: FC<Props> = ({
       ? dataColumns
       : [
           ...dataColumns,
-          ACTION_COLUMN([getRemoveOperation(onRemoveProperty, t, (api, node) => isRemoveHidden(api, node))], true),
+          ACTION_COLUMN([getRemoveOperation(onRemoveProperty, (api, node) => isRemoveHidden(api, node))], true),
         ];
   }, [isRemoveHidden, onChangeJSON, onChangeParam, onChangeSelect, onRemoveProperty, disabled, t]);
 

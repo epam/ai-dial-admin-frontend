@@ -84,7 +84,7 @@ const SchemaManager: FC<Props> = ({ testCaseSchema, onChangeTestCaseSchema, isSk
     () => [
       ...getSchemaFieldGridColumns(onCellChange, onSelectChange, onChangeRequired, t),
       {
-        ...ONE_ACTION_COLUMN(getRemoveOperation(onRemoveField, t, undefined, 'text-error w-4 h-4')),
+        ...ONE_ACTION_COLUMN(getRemoveOperation(onRemoveField, undefined, 'text-error w-4 h-4')),
         colId: 'action-remove',
       },
     ],

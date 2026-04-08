@@ -144,7 +144,7 @@ export const getComponentColDefs = (
   t: (v: string) => string,
   compare: (entity?: BaseEntity) => void,
 ): ColDef[] => {
-  const actionColumn = ACTION_COLUMN([getCompareChangesOperation(compare, t)]);
+  const actionColumn = ACTION_COLUMN([getCompareChangesOperation(compare)]);
   if (type === EntityType.MODEL) {
     return [getComponentActionColumn(), ...MODELS_COLUMNS(t), actionColumn];
   }

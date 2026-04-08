@@ -28,7 +28,7 @@ const PublicationsList = <T extends Publication>({ data, route }: Props<T>) => {
     [route],
   );
 
-  const gridColumns = getPublicationColumns(openInNewTab, t);
+  const gridColumns = getPublicationColumns(openInNewTab);
 
   const gridOptions: GridOptions = {
     onCellClicked: (e) => {
