@@ -47,11 +47,20 @@ export const getFormattedDataFilters = (filters: FilterData[], entityName?: stri
   filters.forEach((filter) => {
     const left = filterTypeConfig.find((filterType) => filterType.value === filter.type)?.filter;
     const isExactMatch = filter.condition === FILTER_OPERATOR.Equal || filter.condition === FILTER_OPERATOR.NotEqual;
-    const value = isExactMatch ? filter.value : filter.value.toLowerCase();
-    const right = `'${value}'`;
-    const operator = filterOperatorConfig[filter.condition];
 
-    userFilters.push({ [operator]: { left: left, right: right } });
+    // Handle multi-value filters with $in/$nin operators
+    if (isExactMatch && filter.value.length > 1) {
+      const operator = filter.condition === FILTER_OPERATOR.Equal ? '$in' : '$nin';
+      userFilters.push({ [operator]: { left: left, right: filter.value } });
+    } else {
+      // Single value or text input conditions
+      const singleValue = filter.value[0] || '';
+      const value = isExactMatch ? singleValue : singleValue.toLowerCase();
+      const right = `'${value}'`;
+      const operator = filterOperatorConfig[filter.condition];
+
+      userFilters.push({ [operator]: { left: left, right: right } });
+    }
   });
 
   return userFilters;
@@ -104,15 +113,15 @@ export const getDefaultFilterValue = (
   type: FILTER_TYPE,
   entities: SelectOption[],
   projects: SelectOption[],
-): string => {
+): string[] => {
   if (entities.length && projects.length) {
     if (type === FILTER_TYPE.Entity) {
-      return entities[0].value;
+      return [entities[0].value];
     } else {
-      return projects[0].value;
+      return [projects[0].value];
     }
   }
-  return '';
+  return [];
 };
 
 export function prepareChartData(data: Record<string, string>[], t: (key: string) => string): EChartsOption {

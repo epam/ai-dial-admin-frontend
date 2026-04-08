@@ -7,17 +7,17 @@ import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { BasicI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
-import { getDefaultFilterValue, getFilterConditionConfig, getFilterTypeConfig } from '@/src/utils/telemetry';
+import { getFilterConditionConfig, getFilterTypeConfig } from '@/src/utils/telemetry';
 import { ApplicationRoute } from '@/src/types/routes';
 import CloseButton from '@/src/components/Common/CloseButton/CloseButton';
 
 interface Props {
   type: FILTER_TYPE;
   condition: FILTER_OPERATOR;
-  value: string;
+  value: string[];
   setType: Dispatch<SetStateAction<FILTER_TYPE>>;
   setCondition: Dispatch<SetStateAction<FILTER_OPERATOR>>;
-  setValue: Dispatch<SetStateAction<string>>;
+  setValue: Dispatch<SetStateAction<string[]>>;
   onClose: () => void;
   dropdownData: { projects: SelectOption[]; entities: SelectOption[] };
   route: ApplicationRoute;
@@ -45,37 +45,31 @@ const CreateFilter: FC<Props> = ({
       setCondition((prev) => {
         if (prev !== value) {
           if (value === FILTER_OPERATOR.Equal || value === FILTER_OPERATOR.NotEqual) {
-            setValue(getDefaultFilterValue(type, entities, projects));
+            setValue([]); // Empty array for multi-select
           } else {
-            setValue('');
+            setValue(['']); // Single empty string for text input
           }
         }
         return value;
       });
     },
-    [entities, projects, setCondition, type, setValue],
+    [setCondition, setValue],
   );
 
   const setTypeHandler = useCallback(
     (value: FILTER_TYPE) => {
-      if (entities.length && projects.length) {
-        setType((prev) => {
-          if (prev !== value) {
-            if (condition === FILTER_OPERATOR.Equal || condition === FILTER_OPERATOR.NotEqual) {
-              if (type === FILTER_TYPE.Entity) {
-                setValue(entities[0].value);
-              } else {
-                setValue(projects[0].value);
-              }
-            } else {
-              setValue('');
-            }
+      setType((prev) => {
+        if (prev !== value) {
+          if (condition === FILTER_OPERATOR.Equal || condition === FILTER_OPERATOR.NotEqual) {
+            setValue([]); // Clear selection when switching Entity ↔ Project
+          } else {
+            setValue(['']); // Single empty string for text input
           }
-          return value;
-        });
-      }
+        }
+        return value;
+      });
     },
-    [entities, projects, setType, condition, type, setValue],
+    [setType, condition, setValue],
   );
 
   return (
@@ -98,7 +92,7 @@ const CreateFilter: FC<Props> = ({
       </>
       <div className="md:mr-4 md:mb-0 mb-4 min-w-[160px]">
         <DialSelectField
-          value={filterConditionConfig.find((item) => item.value === type)?.value}
+          value={filterConditionConfig.find((item) => item.value === condition)?.value}
           id="Condition"
           onChange={(type) => setConditionHandler(type as FILTER_OPERATOR)}
           options={filterConditionConfig}
@@ -109,26 +103,30 @@ const CreateFilter: FC<Props> = ({
           <>
             {type === FILTER_TYPE.Entity ? (
               <DialSelectField
-                value={entities.find((item) => item.value === value)?.value}
+                value={value}
                 id="entities"
-                onChange={(type) => setValue(type as string)}
+                onChange={(selected) => setValue(selected as string[])}
                 options={entities}
+                multiple={true}
+                placeholder={value.length === 0 ? 'Select entities...' : undefined}
               />
             ) : (
               <DialSelectField
-                value={projects.find((item) => item.value === value)?.value}
+                value={value}
                 id="projects"
-                onChange={(type) => setValue(type as string)}
+                onChange={(selected) => setValue(selected as string[])}
                 options={projects}
+                multiple={true}
+                placeholder={value.length === 0 ? 'Select projects...' : undefined}
               />
             )}
           </>
         ) : (
           <DialInput
             id="filterValue"
-            onChange={(v) => setValue(v || '')}
+            onChange={(v) => setValue([v || ''])}
             placeholder={t(BasicI18nKey.Value)}
-            value={value}
+            value={value[0] || ''}
             className="py-[9px]"
           />
         )}

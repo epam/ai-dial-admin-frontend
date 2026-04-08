@@ -11,10 +11,10 @@ import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
 interface Props {
   type: FILTER_TYPE;
   condition: FILTER_OPERATOR;
-  value: string;
+  value: string[];
   setType: Dispatch<SetStateAction<FILTER_TYPE>>;
   setCondition: Dispatch<SetStateAction<FILTER_OPERATOR>>;
-  setValue: Dispatch<SetStateAction<string>>;
+  setValue: Dispatch<SetStateAction<string[]>>;
   onCreate: () => void;
   dropdownData: { projects: SelectOption[]; entities: SelectOption[] };
   reset: () => void;
@@ -60,7 +60,7 @@ const AddFilterModal: FC<Props> = ({
             portalId="AddFilter"
             onSubmit={addFilter}
             onCancel={onClose}
-            disableSubmitButton={!(type && condition && value)}
+            disableSubmitButton={!(type && condition && value.length > 0)}
             submitLabel={t(ButtonsI18nKey.Apply)}
             cancelLabel={t(ButtonsI18nKey.Cancel)}
             open={isOpen}
