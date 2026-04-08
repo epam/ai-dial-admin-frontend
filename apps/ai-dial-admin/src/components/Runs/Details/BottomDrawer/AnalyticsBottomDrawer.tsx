@@ -185,7 +185,7 @@ const AnalyticsBottomDrawer: FC<Props> = ({
       maxHeight={maxHeight}
       enable={{ top: !drawerPanel.isCollapsed }}
       handleComponent={{ top: <ResizeHandle /> }}
-      handleStyles={{ top: { height: '6px', top: 0 } }}
+      handleStyles={{ top: { height: '10px', top: 0 } }}
       onResizeStop={(_e, _dir, _ref, delta) => {
         drawerPanel.setPanelHeight(drawerPanel.panelHeight + delta.height);
       }}

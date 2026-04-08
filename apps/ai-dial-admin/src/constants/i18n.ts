@@ -1585,6 +1585,8 @@ export enum RunsI18nKey {
   Failed = 'Runs.Status.Failed',
   Running = 'Runs.Status.Running',
   MetricFailedText = 'Runs.MetricFailedText',
+  NumericDiff = 'Runs.NumericDiff',
+  TextDiff = 'Runs.TextDiff',
 }
 
 export enum FileManagerI18nKey {

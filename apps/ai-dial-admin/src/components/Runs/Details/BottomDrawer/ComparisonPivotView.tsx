@@ -1,16 +1,17 @@
 'use client';
 
-import { FC, useMemo } from 'react';
+import { FC, useCallback, useMemo, useState } from 'react';
 
-import { ColDef, ColGroupDef, ICellRendererParams } from 'ag-grid-community';
+import { CellClickedEvent, ColDef, ColGroupDef, ICellRendererParams } from 'ag-grid-community';
 
 import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 
+import FullscreenDiffViewer from './FullscreenDiffViewer';
 import StatusBadge from './StatusBadge';
-import { ComparisonSection } from './models';
+import { ComparisonSection, DiffViewState } from './models';
 import { SECTION_I18N } from './constants';
 import { formatFieldValue, valuesAreEqual } from './utils';
 
@@ -81,6 +82,7 @@ const FieldValueCellRenderer: FC<ICellRendererParams<PivotRow>> = (params) => {
 const ComparisonPivotView: FC<Props> = ({ sections, activeDetail, pinnedDetail, spotlightedFields }) => {
   const t = useI18n();
   const hasTwoRows = pinnedDetail != null && pinnedDetail.id !== activeDetail?.id;
+  const [diffViewState, setDiffViewState] = useState<DiffViewState | null>(null);
 
   const details = useMemo(() => {
     const arr: AnalyticsResult[] = [];
@@ -139,6 +141,30 @@ const ComparisonPivotView: FC<Props> = ({ sections, activeDetail, pinnedDetail, 
     });
   }, [details, flatFields, hasTwoRows]);
 
+  // ── Open fullscreen diff on cell click ───────────────────────────────────
+  const onCellClicked = useCallback(
+    (event: CellClickedEvent<PivotRow>) => {
+      if (!hasTwoRows || rowData.length < 2) return;
+      const colId = event.column.getColId();
+      if (colId === '_testCaseName') return;
+
+      const activeRow = rowData[rowData.length - 1];
+      const activeCell = activeRow[colId] as FieldValueCell | undefined;
+      if (!activeCell?.diffClass) return;
+
+      const pinnedRow = rowData[0];
+      const pinnedCell = pinnedRow[colId] as FieldValueCell | undefined;
+      const field = flatFields.find((f) => f.fullKey === colId);
+
+      setDiffViewState({
+        fieldLabel: field?.label ?? colId,
+        original: pinnedCell?.raw ?? '',
+        modified: activeCell?.raw ?? '',
+      });
+    },
+    [hasTwoRows, rowData, flatFields],
+  );
+
   // ── Build column definitions ────────────────────────────────────────────
   const columnDefs = useMemo<(ColDef | ColGroupDef)[]>(() => {
     // Test Case column (pinned left)
@@ -147,7 +173,7 @@ const ComparisonPivotView: FC<Props> = ({ sections, activeDetail, pinnedDetail, 
       colId: '_testCaseName',
       field: '_testCaseName',
       pinned: 'left',
-      minWidth: 160,
+      minWidth: 200,
       cellRenderer: TestCaseCellRenderer,
       filter: false,
       sortable: false,
@@ -168,7 +194,7 @@ const ComparisonPivotView: FC<Props> = ({ sections, activeDetail, pinnedDetail, 
       const col: ColDef<PivotRow> = {
         colId: field.fullKey,
         headerName: field.label,
-        minWidth: 120,
+        minWidth: 180,
         flex: 1,
         filter: false,
         sortable: false,
@@ -177,10 +203,10 @@ const ComparisonPivotView: FC<Props> = ({ sections, activeDetail, pinnedDetail, 
         cellStyle: (params) => {
           const cell = params.value as FieldValueCell | undefined;
           if (cell?.diffClass === 'bg-warning') {
-            return { backgroundColor: 'var(--bg-warning)' };
+            return { backgroundColor: 'var(--bg-warning)', cursor: 'pointer' };
           }
           if (cell?.diffClass === 'bg-accent-secondary-alpha') {
-            return { backgroundColor: 'var(--bg-accent-secondary-alpha)' };
+            return { backgroundColor: 'var(--bg-accent-secondary-alpha)', cursor: 'pointer' };
           }
           return undefined;
         },
@@ -189,6 +215,10 @@ const ComparisonPivotView: FC<Props> = ({ sections, activeDetail, pinnedDetail, 
           return cell?.diffClass || '';
         },
         headerClass: isSpotlighted ? 'pivot-spotlight-header' : '',
+        tooltipValueGetter: (params) => {
+          const cell = params.value as FieldValueCell | undefined;
+          return cell?.raw ?? '';
+        },
       };
 
       group.columns.push(col);
@@ -201,13 +231,13 @@ const ComparisonPivotView: FC<Props> = ({ sections, activeDetail, pinnedDetail, 
         // Single column in a section — wrap in a group anyway to show the section label
         groupDefs.push({
           headerName: group.label,
-          headerClass: 'uppercase text-secondary',
+          headerClass: 'uppercase text-secondary dial-caption-semi-text',
           children: group.columns,
         } as ColGroupDef);
       } else {
         groupDefs.push({
           headerName: group.label,
-          headerClass: 'uppercase text-secondary',
+          headerClass: 'uppercase text-secondary dial-caption-semi-text',
           children: group.columns,
         } as ColGroupDef);
       }
@@ -232,8 +262,9 @@ const ComparisonPivotView: FC<Props> = ({ sections, activeDetail, pinnedDetail, 
         rowData={rowData}
         additionalGridOptions={{
           headerHeight: 56,
-          groupHeaderHeight: 20,
-          rowHeight: 36,
+          groupHeaderHeight: 28,
+          rowHeight: 48,
+          tooltipShowDelay: 300,
           defaultColDef: {
             filter: false,
             floatingFilter: false,
@@ -242,8 +273,20 @@ const ComparisonPivotView: FC<Props> = ({ sections, activeDetail, pinnedDetail, 
           },
           suppressCellFocus: true,
           domLayout: details.length <= 2 ? 'autoHeight' : 'normal',
+          onCellClicked,
         }}
       />
+      {diffViewState && (
+        <FullscreenDiffViewer
+          isOpen={true}
+          fieldLabel={diffViewState.fieldLabel}
+          original={diffViewState.original}
+          modified={diffViewState.modified}
+          originalLabel={pinnedDetail?.testCaseName ?? pinnedDetail?.id ?? ''}
+          modifiedLabel={activeDetail?.testCaseName ?? activeDetail?.id ?? ''}
+          onClose={() => setDiffViewState(null)}
+        />
+      )}
     </div>
   );
 };

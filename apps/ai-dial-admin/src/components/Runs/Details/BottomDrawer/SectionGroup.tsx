@@ -10,9 +10,8 @@ import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 import CellValue from './CellValue';
-import { TRUNCATE_THRESHOLD } from './constants';
+import { SECTION_I18N, TRUNCATE_THRESHOLD } from './constants';
 import { ComparisonRow, ComparisonSection } from './models';
-import { SECTION_I18N } from './constants';
 import { formatFieldValue, getDiffClass } from './utils';
 
 interface Props {
@@ -49,7 +48,7 @@ const SectionGroup: FC<Props> = ({
         style={{ gridColumn: `1 / -1` }}
         onClick={onToggle}
       >
-        <div className="flex items-center gap-1 dial-tiny-semi-text text-secondary uppercase">
+        <div className="flex items-center gap-1 dial-caption-semi-text text-secondary uppercase">
           {isCollapsed ? <IconChevronRight size={12} /> : <IconChevronDown size={12} />}
           {sectionLabel}
         </div>

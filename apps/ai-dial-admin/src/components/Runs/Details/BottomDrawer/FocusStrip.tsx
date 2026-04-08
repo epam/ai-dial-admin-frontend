@@ -42,7 +42,11 @@ const FocusStrip: FC<Props> = ({ rows, onRemove }) => {
             </button>
           </div>
           {row.values.map((val, idx) => (
-            <DialEllipsisTooltip key={idx} text={formatFieldValue(val.raw)} className="dial-caption-text text-secondary" />
+            <DialEllipsisTooltip
+              key={idx}
+              text={formatFieldValue(val.raw)}
+              className="dial-caption-text text-secondary"
+            />
           ))}
         </div>
       ))}

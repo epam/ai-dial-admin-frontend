@@ -3,14 +3,7 @@
 import { FC, useCallback, useState } from 'react';
 
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
-import {
-  ButtonAppearance,
-  DialCheckbox,
-  DialEllipsisTooltip,
-  DialPrimaryButton,
-  DialSearch,
-  ElementSize,
-} from '@epam/ai-dial-ui-kit';
+import { DialCheckbox, DialEllipsisTooltip, DialSearch, ElementSize } from '@epam/ai-dial-ui-kit';
 
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -66,27 +59,22 @@ const FieldsTab: FC<Props> = ({ fieldSelector }) => {
         return (
           <div key={section.key}>
             <div className="flex items-center gap-1 px-1.5 py-1 hover:bg-layer-2">
+              <DialCheckbox id={`section-${section.key}`} checked={allChecked} onChange={onToggleAll} />
               <button
                 onClick={() => onToggleFieldSectionCollapse(section.key)}
-                className="flex items-center gap-1 flex-1 min-w-0 dial-tiny-semi-text text-secondary uppercase"
+                className="flex items-center gap-1 flex-1 min-w-0 dial-caption-semi-text text-secondary"
               >
                 {isCollapsed ? <IconChevronRight size={12} /> : <IconChevronDown size={12} />}
                 <DialEllipsisTooltip text={sectionLabel} />
-                <span className="text-secondary ml-auto shrink-0 normal-case">({section.rows.length})</span>
               </button>
-              <DialPrimaryButton
-                appearance={ButtonAppearance.Ghost}
-                size={ElementSize.Small}
-                label={allChecked ? t(BasicI18nKey.DeselectAll) : t(BasicI18nKey.SelectAll)}
-                onClick={onToggleAll}
-              />
+              <span className="dial-tiny-text text-secondary shrink-0">({section.rows.length})</span>
             </div>
             {!isCollapsed &&
               section.rows.map((row) => {
                 const visKey = `${section.key}:${row.fieldKey}`;
                 const isVisible = fieldSelector.fieldVisibility[visKey] !== false;
                 return (
-                  <div key={visKey} className="flex items-center gap-1.5 px-3 py-0.5 hover:bg-layer-2 font-mono">
+                  <div key={visKey} className="flex items-center gap-1.5 px-3 py-1 hover:bg-layer-2 font-mono">
                     <DialCheckbox
                       id={visKey}
                       checked={isVisible}

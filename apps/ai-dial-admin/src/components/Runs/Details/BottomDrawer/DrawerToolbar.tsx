@@ -57,42 +57,52 @@ const DrawerToolbar: FC<Props> = ({
 
   return (
     <div
-      className="flex items-center gap-2 px-3 h-[34px] border-b border-secondary dial-tiny-text shrink-0"
+      className="flex items-center h-[34px] border-b border-secondary dial-tiny-text shrink-0"
       role="toolbar"
       aria-label={t(RunsI18nKey.AnalysisToolbarLabel)}
     >
-      <span className="font-semibold text-primary">{t(RunsI18nKey.Analysis)}</span>
+      {/* Left group — identity & pin */}
+      <div className="flex items-center gap-2 px-3 flex-1 min-w-0">
+        <span className="font-semibold text-primary shrink-0">{t(RunsI18nKey.Analysis)}</span>
 
-      {!pinnedId && activeId && (
-        <button
-          onClick={onPin}
-          className="flex items-center gap-1 bg-layer-2 rounded px-1.5 py-0.5 text-secondary hover:text-primary hover:bg-layer-3"
-          title={t(RunsI18nKey.Pin)}
-        >
-          <IconPin size={12} />
-          <DialEllipsisTooltip text={activeName ?? activeId ?? ''} className="dial-caption-text max-w-[120px]" />
-        </button>
-      )}
-
-      {pinnedId && (
-        <div className="flex items-center gap-1 bg-layer-3 rounded px-1.5 py-0.5 text-secondary">
-          <IconPinFilled size={12} />
-          <DialEllipsisTooltip text={pinnedName ?? pinnedId ?? ''} className="max-w-[120px]" />
-          <button onClick={onUnpin} className="ml-0.5 hover:text-primary" title={t(RunsI18nKey.Unpin)}>
-            <IconX size={12} />
+        {!pinnedId && activeId && (
+          <button
+            onClick={onPin}
+            className="flex items-center gap-1 bg-layer-2 rounded px-1.5 py-0.5 text-secondary hover:text-primary hover:bg-layer-3"
+            title={t(RunsI18nKey.Pin)}
+          >
+            <IconPin size={12} />
+            <DialEllipsisTooltip text={activeName ?? activeId ?? ''} className="dial-caption-text max-w-[120px]" />
           </button>
-        </div>
-      )}
+        )}
 
-      {pinnedId && diffCount > 0 && (
-        <span className="bg-warning text-warning rounded px-1.5 py-0.5 dial-caption-text">
-          {t(RunsI18nKey.Diffs, { count: diffCount })}
-        </span>
-      )}
+        {pinnedId && (
+          <div className="flex items-center gap-1 bg-layer-3 rounded px-1.5 py-0.5 text-secondary">
+            <IconPinFilled size={12} />
+            <DialEllipsisTooltip text={pinnedName ?? pinnedId ?? ''} className="max-w-[120px]" />
+            <button onClick={onUnpin} className="ml-0.5 hover:text-primary" title={t(RunsI18nKey.Unpin)}>
+              <IconX size={12} />
+            </button>
+          </div>
+        )}
 
-      <div className="flex-1" />
+        {pinnedId && diffCount > 0 && (
+          <div className="flex items-center gap-2">
+            <span className="bg-warning text-warning rounded px-1.5 py-0.5 dial-caption-semi-text">
+              {t(RunsI18nKey.Diffs, { count: diffCount })}
+            </span>
+            <span className="flex items-center gap-1 text-secondary">
+              <span className="inline-block size-2.5 rounded-sm bg-warning" />
+              <span className="dial-tiny-text">{t(RunsI18nKey.NumericDiff)}</span>
+              <span className="inline-block size-2.5 rounded-sm bg-accent-secondary-alpha ml-1" />
+              <span className="dial-tiny-text">{t(RunsI18nKey.TextDiff)}</span>
+            </span>
+          </div>
+        )}
+      </div>
 
-      <div className="flex items-center gap-0.5 bg-layer-2 rounded p-0.5">
+      {/* Center — view switcher */}
+      <div className="flex items-center gap-0.5 bg-layer-2 rounded p-0.5 shrink-0">
         <button
           onClick={() => onSetView(ViewMode.Table)}
           className={classNames(
@@ -117,21 +127,24 @@ const DrawerToolbar: FC<Props> = ({
         </button>
       </div>
 
-      <DialGhostIconButton
-        size={ElementSize.Small}
-        icon={<IconLayoutSidebarRight size={16} />}
-        onClick={onSwitchToSidebar}
-        title={t(RunsI18nKey.SwitchToSidebar)}
-      />
+      {/* Right group — actions */}
+      <div className="flex items-center gap-1 px-3 flex-1 justify-end">
+        <DialGhostIconButton
+          size={ElementSize.Small}
+          icon={<IconLayoutSidebarRight size={16} />}
+          onClick={onSwitchToSidebar}
+          title={t(RunsI18nKey.SwitchToSidebar)}
+        />
 
-      <DialGhostIconButton
-        size={ElementSize.Small}
-        icon={isCollapsed ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
-        onClick={isCollapsed ? onExpand : onCollapse}
-        title={isCollapsed ? t(RunsI18nKey.Expand) : t(RunsI18nKey.Collapse)}
-      />
+        <DialGhostIconButton
+          size={ElementSize.Small}
+          icon={isCollapsed ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
+          onClick={isCollapsed ? onExpand : onCollapse}
+          title={isCollapsed ? t(RunsI18nKey.Expand) : t(RunsI18nKey.Collapse)}
+        />
 
-      <DialCloseButton onClose={onClose} ariaLabel={t(ButtonsI18nKey.Close)} />
+        <DialCloseButton onClose={onClose} ariaLabel={t(ButtonsI18nKey.Close)} />
+      </div>
     </div>
   );
 };

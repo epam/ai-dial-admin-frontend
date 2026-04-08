@@ -10,16 +10,12 @@ const ResizeHandle: FC = () => {
 
   return (
     <div
-      className="h-1.5 cursor-ns-resize flex items-center justify-center hover:bg-layer-3"
+      className="h-2.5 cursor-ns-resize flex items-center justify-center hover:bg-layer-2 transition-colors"
       role="separator"
       aria-orientation="horizontal"
       aria-label={t(RunsI18nKey.ResizeDrawerLabel)}
     >
-      <div className="w-8 flex flex-col gap-px items-center">
-        <div className="w-full h-px bg-secondary" />
-        <div className="w-full h-px bg-secondary" />
-        <div className="w-full h-px bg-secondary" />
-      </div>
+      <div className="w-10 h-1 rounded-full bg-tertiary" />
     </div>
   );
 };
