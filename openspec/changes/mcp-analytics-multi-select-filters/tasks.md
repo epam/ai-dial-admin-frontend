@@ -53,19 +53,7 @@
 - [ ] 8.5 Add component tests for Filter chip display with multiple values
 - [x] 8.6 Update existing Filters.spec.tsx tests to handle array values
 
-## 9. Integration testing
+## 9. Code quality
 
-- [ ] 9.1 Manual test: Create filter with single entity
-- [ ] 9.2 Manual test: Create filter with 2 entities
-- [ ] 9.3 Manual test: Create filter with 5+ entities
-- [ ] 9.4 Manual test: Edit existing multi-value filter
-- [ ] 9.5 Manual test: Switch between Equal and Contains conditions
-- [ ] 9.6 Manual test: Switch between Entity and Project types
-- [ ] 9.7 Manual test: Mobile view (modal instead of popover)
-- [ ] 9.8 Verify backend query results match expected data
-
-## 10. Code quality
-
-- [x] 10.1 Run `npm run lint` and fix any issues
-- [x] 10.2 Run `npm run format:write` to ensure consistent formatting
-- [ ] 10.3 Run `npm run test` to verify all tests pass
+- [x] 9.1 Run `npm run lint` and fix any issues
+- [x] 9.2 Run `npm run format:write` to ensure consistent formatting

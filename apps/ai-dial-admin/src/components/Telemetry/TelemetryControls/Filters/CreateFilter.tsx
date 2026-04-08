@@ -108,7 +108,8 @@ const CreateFilter: FC<Props> = ({
                 onChange={(selected) => setValue(selected as string[])}
                 options={entities}
                 multiple={true}
-                placeholder={value.length === 0 ? 'Select entities...' : undefined}
+                listClassName="w-[250px]"
+                placeholder={value.length === 0 ? t(TelemetryI18nKey.SelectEntities) : undefined}
               />
             ) : (
               <DialSelectField
@@ -117,7 +118,7 @@ const CreateFilter: FC<Props> = ({
                 onChange={(selected) => setValue(selected as string[])}
                 options={projects}
                 multiple={true}
-                placeholder={value.length === 0 ? 'Select projects...' : undefined}
+                placeholder={value.length === 0 ? t(TelemetryI18nKey.SelectProjects) : undefined}
               />
             )}
           </>
