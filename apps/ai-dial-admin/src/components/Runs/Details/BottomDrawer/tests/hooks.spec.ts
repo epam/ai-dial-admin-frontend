@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 
-import { ComparisonSection } from '../models';
+import { ComparisonSection, ViewMode } from '../models';
 import { useDrawerPanel } from '../useDrawerPanel';
 import { useFieldSelector } from '../useFieldSelector';
 
@@ -11,7 +11,7 @@ describe('useDrawerPanel', () => {
     expect(result.current.isOpen).toBe(false);
     expect(result.current.panelHeight).toBe(380);
     expect(result.current.isCollapsed).toBe(false);
-    expect(result.current.viewMode).toBe('table');
+    expect(result.current.viewMode).toBe(ViewMode.Table);
     expect(result.current.activeId).toBeNull();
     expect(result.current.pinnedId).toBeNull();
     expect(result.current.currentHeight).toBe(0);
@@ -80,9 +80,9 @@ describe('useDrawerPanel', () => {
   it('sets view mode', () => {
     const { result } = renderHook(() => useDrawerPanel());
 
-    act(() => result.current.setView('pivot'));
+    act(() => result.current.setView(ViewMode.Pivot));
 
-    expect(result.current.viewMode).toBe('pivot');
+    expect(result.current.viewMode).toBe(ViewMode.Pivot);
   });
 
   it('clearPinIfMissing clears when id not in list', () => {

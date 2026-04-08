@@ -1,4 +1,7 @@
-export type ViewMode = 'table' | 'pivot';
+export enum ViewMode {
+  Table = 'table',
+  Pivot = 'pivot',
+}
 export enum DetailMode {
   Sidebar = 'sidebar',
   Drawer = 'drawer',

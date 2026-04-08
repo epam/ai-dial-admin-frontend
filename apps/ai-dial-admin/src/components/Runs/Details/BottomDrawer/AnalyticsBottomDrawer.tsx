@@ -16,6 +16,7 @@ import DrawerToolbar from './DrawerToolbar';
 import FieldSelector from './FieldSelector';
 import ResizeHandle from './ResizeHandle';
 import { COLLAPSED_HEIGHT, MIN_DRAWER_HEIGHT, MAX_DRAWER_OFFSET } from './constants';
+import { ViewMode } from './models';
 import { useDrawerPanel } from './useDrawerPanel';
 import { useFieldSelector } from './useFieldSelector';
 import { buildComparisonSections, countDiffs } from './utils';
@@ -252,7 +253,7 @@ const AnalyticsBottomDrawer: FC<Props> = ({
               <div className="flex items-center justify-center h-full text-secondary dial-small-text">
                 {t(RunsI18nKey.NoFieldsVisible)}
               </div>
-            ) : drawerPanel.viewMode === 'table' ? (
+            ) : drawerPanel.viewMode === ViewMode.Table ? (
               <ComparisonTableView
                 key="table"
                 sections={visibleSections}

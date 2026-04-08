@@ -2,10 +2,11 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import DrawerToolbar from '../DrawerToolbar';
+import { ViewMode } from '../models';
 
 describe('DrawerToolbar', () => {
   const defaultProps = {
-    viewMode: 'table' as const,
+    viewMode: ViewMode.Table,
     onSetView: vi.fn(),
     activeId: 'r1' as string | null,
     activeName: 'Active Case' as string | null,
@@ -49,9 +50,9 @@ describe('DrawerToolbar', () => {
   });
 
   it('calls onSetView when view toggle clicked', async () => {
-    render(<DrawerToolbar {...defaultProps} viewMode="table" />);
+    render(<DrawerToolbar {...defaultProps} viewMode={ViewMode.Table} />);
     await userEvent.click(screen.getByTitle('Runs.Pivot'));
-    expect(defaultProps.onSetView).toHaveBeenCalledWith('pivot');
+    expect(defaultProps.onSetView).toHaveBeenCalledWith(ViewMode.Pivot);
   });
 
   it('calls onSwitchToSidebar', async () => {

@@ -22,7 +22,7 @@ export function useDrawerPanel(): UseDrawerPanelReturn {
   const [isOpen, setIsOpen] = useState(false);
   const [panelHeight, setPanelHeight] = useState(DEFAULT_DRAWER_HEIGHT);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>('table');
+  const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Table);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [pinnedId, setPinnedId] = useState<string | null>(null);
 

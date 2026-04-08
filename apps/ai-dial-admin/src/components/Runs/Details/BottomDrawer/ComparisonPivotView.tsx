@@ -11,7 +11,8 @@ import { AnalyticsResult } from '@/src/models/evaluation/run';
 
 import StatusBadge from './StatusBadge';
 import { ComparisonSection } from './models';
-import { formatFieldValue, SECTION_I18N, valuesAreEqual } from './utils';
+import { SECTION_I18N } from './constants';
+import { formatFieldValue, valuesAreEqual } from './utils';
 
 interface Props {
   sections: ComparisonSection[];

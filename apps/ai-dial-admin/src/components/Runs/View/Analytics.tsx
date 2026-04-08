@@ -15,7 +15,7 @@ import { EntitiesI18nKey, RunsI18nKey, TabsI18nKey } from '@/src/constants/i18n'
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsResult, Run } from '@/src/models/evaluation/run';
 
-import { useDetailMode } from './useDetailMode';
+import { useDetailMode } from './use-detail-mode';
 import { getAnalyticsColumns, RESULT_FILTERS } from './utils';
 
 interface Props {

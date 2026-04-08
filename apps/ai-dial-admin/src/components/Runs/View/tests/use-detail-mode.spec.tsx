@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 
 import { DetailMode } from '../../Details/BottomDrawer/models';
-import { useDetailMode } from '../useDetailMode';
+import { useDetailMode } from '../use-detail-mode';
 
 const mockShowSidebar = vi.fn();
 const mockCloseSidebar = vi.fn();

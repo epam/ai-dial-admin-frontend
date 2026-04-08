@@ -94,10 +94,10 @@ const DrawerToolbar: FC<Props> = ({
 
       <div className="flex items-center gap-0.5 bg-layer-2 rounded p-0.5">
         <button
-          onClick={() => onSetView('table')}
+          onClick={() => onSetView(ViewMode.Table)}
           className={classNames(
             'flex items-center gap-1 px-1.5 py-0.5 rounded dial-caption-text',
-            viewMode === 'table' ? 'bg-layer-3 text-primary' : 'text-secondary hover:text-primary',
+            viewMode === ViewMode.Table ? 'bg-layer-3 text-primary' : 'text-secondary hover:text-primary',
           )}
           title={t(RunsI18nKey.Table)}
         >
@@ -105,10 +105,10 @@ const DrawerToolbar: FC<Props> = ({
           {t(RunsI18nKey.Table)}
         </button>
         <button
-          onClick={() => onSetView('pivot')}
+          onClick={() => onSetView(ViewMode.Pivot)}
           className={classNames(
             'flex items-center gap-1 px-1.5 py-0.5 rounded dial-caption-text',
-            viewMode === 'pivot' ? 'bg-layer-3 text-primary' : 'text-secondary hover:text-primary',
+            viewMode === ViewMode.Pivot ? 'bg-layer-3 text-primary' : 'text-secondary hover:text-primary',
           )}
           title={t(RunsI18nKey.Pivot)}
         >

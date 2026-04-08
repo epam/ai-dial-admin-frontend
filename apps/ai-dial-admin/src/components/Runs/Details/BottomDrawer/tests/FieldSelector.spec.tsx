@@ -87,7 +87,7 @@ describe('FieldSelector', () => {
 
   it('filters fields by search', async () => {
     renderWithHook();
-    const searchInput = screen.getByPlaceholderText('Runs.Search');
+    const searchInput = screen.getByPlaceholderText('Basic.Search');
     await userEvent.type(searchInput, 'input');
 
     // Only 'input' field should be visible
