@@ -59,39 +59,45 @@ describe('FormDataGrid', () => {
   });
 
   test('renders Add button', () => {
-    render(<FormDataGrid content={[]} changeContent={mockChangeContent} />);
+    render(<FormDataGrid content={[]} changeContent={mockChangeContent} selectedTestSuiteId="test-suite-id" />);
 
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Add })).toBeInTheDocument();
   });
 
   test('does not render Add button when hideAddButton', () => {
-    render(<FormDataGrid content={[]} changeContent={mockChangeContent} hideAddButton />);
+    render(
+      <FormDataGrid content={[]} changeContent={mockChangeContent} hideAddButton selectedTestSuiteId="test-suite-id" />,
+    );
 
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Add })).not.toBeInTheDocument();
   });
 
   test('renders GridView', () => {
-    render(<FormDataGrid content={[]} changeContent={mockChangeContent} />);
-
+    render(<FormDataGrid content={[]} changeContent={mockChangeContent} selectedTestSuiteId="test-suite-id" />);
     expect(screen.getByRole('region', { name: 'grid' })).toBeInTheDocument();
   });
 
   test('shows empty state when content is empty', () => {
-    render(<FormDataGrid content={[]} changeContent={mockChangeContent} />);
+    render(<FormDataGrid content={[]} changeContent={mockChangeContent} selectedTestSuiteId="test-suite-id" />);
 
     expect(capturedGetIsEmptyData()).toBe(true);
     expect(screen.getByRole('status')).toHaveTextContent('No form data');
   });
 
   test('does not show empty state when content has items', () => {
-    render(<FormDataGrid content={[createPart({ name: 'a', value: '1' })]} changeContent={mockChangeContent} />);
-
+    render(
+      <FormDataGrid
+        content={[createPart({ name: 'a', value: '1' })]}
+        changeContent={mockChangeContent}
+        selectedTestSuiteId="test-suite-id"
+      />,
+    );
     expect(capturedGetIsEmptyData()).toBe(false);
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 
   test('calls changeContent with new part when Add is clicked', () => {
-    render(<FormDataGrid content={[]} changeContent={mockChangeContent} />);
+    render(<FormDataGrid content={[]} changeContent={mockChangeContent} selectedTestSuiteId="test-suite-id" />);
 
     const mockApi = {
       updateGridOptions: vi.fn(),
@@ -107,7 +113,7 @@ describe('FormDataGrid', () => {
 
   test('appends new part to existing content when Add is clicked', () => {
     const existing = [createPart({ name: 'x', value: 'y' })];
-    render(<FormDataGrid content={existing} changeContent={mockChangeContent} />);
+    render(<FormDataGrid content={existing} changeContent={mockChangeContent} selectedTestSuiteId="test-suite-id" />);
 
     const mockApi = {
       updateGridOptions: vi.fn(),
@@ -125,7 +131,7 @@ describe('FormDataGrid', () => {
 
   test('onGridReady updates grid options with columnDefs and rowData', () => {
     const content = [createPart({ name: 'field1', value: 'val1' }), createPart({ name: 'field2', value: 'val2' })];
-    render(<FormDataGrid content={content} changeContent={mockChangeContent} />);
+    render(<FormDataGrid content={content} changeContent={mockChangeContent} selectedTestSuiteId="test-suite-id" />);
 
     const mockUpdateGridOptions = vi.fn();
     const mockApi = {
@@ -141,7 +147,7 @@ describe('FormDataGrid', () => {
   });
 
   test('calls getFormDataColumns with onChange callback', () => {
-    render(<FormDataGrid content={[]} changeContent={mockChangeContent} />);
+    render(<FormDataGrid content={[]} changeContent={mockChangeContent} selectedTestSuiteId="test-suite-id" />);
 
     expect(mockGetFormDataColumns).toHaveBeenCalledTimes(1);
     expect(mockGetFormDataColumns).toHaveBeenCalledWith(expect.any(Function));
@@ -149,7 +155,7 @@ describe('FormDataGrid', () => {
 
   test('onChangeValue from getFormDataColumns calls changeContent with updated part', () => {
     const content = [createPart({ name: 'a', value: 'old' })];
-    render(<FormDataGrid content={content} changeContent={mockChangeContent} />);
+    render(<FormDataGrid content={content} changeContent={mockChangeContent} selectedTestSuiteId="test-suite-id" />);
 
     const onChangeValue = mockGetFormDataColumns.mock.calls[0][0];
     onChangeValue('new-value', content[0], 'value', 0);
@@ -160,7 +166,7 @@ describe('FormDataGrid', () => {
 
   test('onChangeValue does nothing when rowIndex is undefined', () => {
     const content = [createPart({ name: 'a', value: 'v' })];
-    render(<FormDataGrid content={content} changeContent={mockChangeContent} />);
+    render(<FormDataGrid content={content} changeContent={mockChangeContent} selectedTestSuiteId="test-suite-id" />);
 
     const onChangeValue = mockGetFormDataColumns.mock.calls[0][0];
     onChangeValue('x', content[0], 'value', undefined);
@@ -169,7 +175,7 @@ describe('FormDataGrid', () => {
   });
 
   test('getRemoveOperation is called with onRemovePart callback', () => {
-    render(<FormDataGrid content={[]} changeContent={mockChangeContent} />);
+    render(<FormDataGrid content={[]} changeContent={mockChangeContent} selectedTestSuiteId="test-suite-id" />);
 
     expect(mockGetRemoveOperation).toHaveBeenCalledWith(expect.any(Function), undefined, 'text-error w-4 h-4');
   });
@@ -180,7 +186,7 @@ describe('FormDataGrid', () => {
       createPart({ name: 'b', value: '2' }),
       createPart({ name: 'c', value: '3' }),
     ];
-    render(<FormDataGrid content={content} changeContent={mockChangeContent} />);
+    render(<FormDataGrid content={content} changeContent={mockChangeContent} selectedTestSuiteId="test-suite-id" />);
 
     expect(mockGetRemoveOperation).toHaveBeenCalled();
     const call = mockGetRemoveOperation.mock.calls[0];
@@ -196,7 +202,7 @@ describe('FormDataGrid', () => {
 
   test('onRemovePart does nothing when index is null', () => {
     const content = [createPart({ name: 'a', value: '1' })];
-    render(<FormDataGrid content={content} changeContent={mockChangeContent} />);
+    render(<FormDataGrid content={content} changeContent={mockChangeContent} selectedTestSuiteId="test-suite-id" />);
 
     expect(mockGetRemoveOperation).toHaveBeenCalled();
     const call = mockGetRemoveOperation.mock.calls[0];
@@ -208,7 +214,9 @@ describe('FormDataGrid', () => {
   });
 
   test('treats undefined content as empty array', () => {
-    render(<FormDataGrid content={undefined as any} changeContent={mockChangeContent} />);
+    render(
+      <FormDataGrid content={undefined as any} changeContent={mockChangeContent} selectedTestSuiteId="test-suite-id" />,
+    );
 
     expect(capturedGetIsEmptyData()).toBe(true);
   });
