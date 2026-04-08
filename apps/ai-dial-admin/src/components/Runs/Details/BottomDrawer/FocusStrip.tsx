@@ -32,7 +32,7 @@ const FocusStrip: FC<Props> = ({ rows, onRemove }) => {
           className="flex flex-col gap-0.5 bg-layer-2 rounded px-2 py-1 min-w-[140px] max-w-[220px] shrink-0"
         >
           <div className="flex items-center justify-between gap-1">
-            <DialEllipsisTooltip text={row.label} className="text-xxs font-mono font-medium text-primary" />
+            <DialEllipsisTooltip text={row.label} className="dial-caption-text font-mono font-medium text-primary" />
             <button
               onClick={() => onRemove(row.fullKey)}
               className="text-secondary hover:text-primary shrink-0"
@@ -42,7 +42,7 @@ const FocusStrip: FC<Props> = ({ rows, onRemove }) => {
             </button>
           </div>
           {row.values.map((val, idx) => (
-            <DialEllipsisTooltip key={idx} text={formatFieldValue(val.raw)} className="text-xxs text-secondary" />
+            <DialEllipsisTooltip key={idx} text={formatFieldValue(val.raw)} className="dial-caption-text text-secondary" />
           ))}
         </div>
       ))}

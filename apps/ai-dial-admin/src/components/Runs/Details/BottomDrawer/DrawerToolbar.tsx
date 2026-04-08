@@ -57,7 +57,7 @@ const DrawerToolbar: FC<Props> = ({
 
   return (
     <div
-      className="flex items-center gap-2 px-3 h-[34px] border-b border-secondary text-xs shrink-0"
+      className="flex items-center gap-2 px-3 h-[34px] border-b border-secondary dial-tiny-text shrink-0"
       role="toolbar"
       aria-label={t(RunsI18nKey.AnalysisToolbarLabel)}
     >
@@ -70,7 +70,7 @@ const DrawerToolbar: FC<Props> = ({
           title={t(RunsI18nKey.Pin)}
         >
           <IconPin size={12} />
-          <DialEllipsisTooltip text={activeName ?? activeId ?? ''} className="text-xxs max-w-[120px]" />
+          <DialEllipsisTooltip text={activeName ?? activeId ?? ''} className="dial-caption-text max-w-[120px]" />
         </button>
       )}
 
@@ -85,7 +85,7 @@ const DrawerToolbar: FC<Props> = ({
       )}
 
       {pinnedId && diffCount > 0 && (
-        <span className="bg-warning text-warning rounded px-1.5 py-0.5 text-xxs font-medium">
+        <span className="bg-warning text-warning rounded px-1.5 py-0.5 dial-caption-text">
           {t(RunsI18nKey.Diffs, { count: diffCount })}
         </span>
       )}
@@ -96,7 +96,7 @@ const DrawerToolbar: FC<Props> = ({
         <button
           onClick={() => onSetView('table')}
           className={classNames(
-            'flex items-center gap-1 px-1.5 py-0.5 rounded text-xxs',
+            'flex items-center gap-1 px-1.5 py-0.5 rounded dial-caption-text',
             viewMode === 'table' ? 'bg-layer-3 text-primary' : 'text-secondary hover:text-primary',
           )}
           title={t(RunsI18nKey.Table)}
@@ -107,7 +107,7 @@ const DrawerToolbar: FC<Props> = ({
         <button
           onClick={() => onSetView('pivot')}
           className={classNames(
-            'flex items-center gap-1 px-1.5 py-0.5 rounded text-xxs',
+            'flex items-center gap-1 px-1.5 py-0.5 rounded dial-caption-text',
             viewMode === 'pivot' ? 'bg-layer-3 text-primary' : 'text-secondary hover:text-primary',
           )}
           title={t(RunsI18nKey.Pivot)}
