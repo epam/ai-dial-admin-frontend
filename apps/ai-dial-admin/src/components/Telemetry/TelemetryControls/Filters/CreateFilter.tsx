@@ -21,6 +21,7 @@ interface Props {
   onClose: () => void;
   dropdownData: { projects: SelectOption[]; entities: SelectOption[] };
   route: ApplicationRoute;
+  isMcpView?: boolean;
 }
 
 const CreateFilter: FC<Props> = ({
@@ -33,9 +34,10 @@ const CreateFilter: FC<Props> = ({
   onClose,
   dropdownData,
   route,
+  isMcpView = false,
 }) => {
   const t = useI18n();
-  const filterTypeConfig = getFilterTypeConfig(t);
+  const filterTypeConfig = getFilterTypeConfig(t, isMcpView);
   const filterConditionConfig = getFilterConditionConfig(t);
   const isMobile = useIsMobileScreen();
   const { projects, entities } = dropdownData;
@@ -101,7 +103,7 @@ const CreateFilter: FC<Props> = ({
       <div className="md:mr-2 md:mb-0 mb-4 min-w-[190px] max-w-[250px]">
         {condition === FILTER_OPERATOR.Equal || condition === FILTER_OPERATOR.NotEqual ? (
           <>
-            {type === FILTER_TYPE.Entity ? (
+            {isDeploymentFilter(type) ? (
               <DialSelectField
                 value={value}
                 id="entities"

@@ -20,6 +20,7 @@ interface Props {
   reset: () => void;
   children: ReactElement;
   route: ApplicationRoute;
+  isMcpView?: boolean;
 }
 
 const AddFilterModal: FC<Props> = ({
@@ -34,6 +35,7 @@ const AddFilterModal: FC<Props> = ({
   reset,
   children,
   route,
+  isMcpView = false,
 }) => {
   const t = useI18n();
   const [isOpen, setIsOpen] = useState(false);
@@ -76,6 +78,7 @@ const AddFilterModal: FC<Props> = ({
                 setValue={setValue}
                 dropdownData={dropdownData}
                 route={route}
+                isMcpView={isMcpView}
               />
             </div>
           </DialFormPopup>,

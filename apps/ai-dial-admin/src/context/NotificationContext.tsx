@@ -9,7 +9,7 @@ interface NotificationManager {
   removeNotification: (id: string) => void;
 }
 
-const DEFAULT_DURATION = 3000;
+const DEFAULT_DURATION = 6000;
 
 const NotificationContext = createContext<NotificationManager | null>(null);
 
