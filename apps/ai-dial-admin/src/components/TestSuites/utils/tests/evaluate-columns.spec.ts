@@ -56,7 +56,7 @@ describe('evaluateColumns', () => {
     const results = await evaluateColumns(columns, chatResponse);
 
     expect(results).toHaveLength(1);
-    expect(results[0].result).toBe(739);
+    expect(results[0].result).toBe('739');
     expect(results[0].valid).toBe(true);
     expect(results[0].type).toBe('NUMBER');
   });
@@ -70,21 +70,21 @@ describe('evaluateColumns', () => {
     expect(results[0].valid).toBe(true);
   });
 
-  test('should return valid=false and result=null for non-existent path', async () => {
+  test('should return valid=false and result=empty string for non-existent path', async () => {
     const columns = [makeColumn({ expression: 'nonexistent.path' })];
 
     const results = await evaluateColumns(columns, chatResponse);
 
-    expect(results[0].result).toBeNull();
+    expect(results[0].result).toBe('');
     expect(results[0].valid).toBe(false);
   });
 
-  test('should return valid=false and result=null for invalid expression syntax', async () => {
+  test('should return valid=false and result=empty string for invalid expression syntax', async () => {
     const columns = [makeColumn({ expression: '[[[invalid' })];
 
     const results = await evaluateColumns(columns, chatResponse);
 
-    expect(results[0].result).toBeNull();
+    expect(results[0].result).toBe('');
     expect(results[0].valid).toBe(false);
   });
 
@@ -100,7 +100,7 @@ describe('evaluateColumns', () => {
     expect(results).toHaveLength(3);
     expect(results[0]).toMatchObject({ name: 'answer', result: 'The capital of Belarus is Minsk.', valid: true });
     expect(results[1]).toMatchObject({ name: 'model', result: 'gpt-4.1-2025-04-14', valid: true });
-    expect(results[2]).toMatchObject({ name: 'tokens', result: 739, valid: true });
+    expect(results[2]).toMatchObject({ name: 'tokens', result: '739', valid: true });
   });
 
   test('should return empty array when columns array is empty', async () => {
@@ -114,7 +114,7 @@ describe('evaluateColumns', () => {
 
     const results = await evaluateColumns(columns, {});
 
-    expect(results[0].result).toBeNull();
+    expect(results[0].result).toBe('');
     expect(results[0].valid).toBe(false);
   });
 
@@ -123,7 +123,7 @@ describe('evaluateColumns', () => {
 
     const results = await evaluateColumns(columns, chatResponse);
 
-    expect(results[0].result).toBe(1);
+    expect(results[0].result).toBe('1');
     expect(results[0].valid).toBe(true);
   });
 
@@ -143,7 +143,7 @@ describe('evaluateColumns', () => {
 
     const results = await evaluateColumns(columns, chatResponse);
 
-    expect(results[0].result).toBe(739);
+    expect(results[0].result).toBe('739');
     expect(results[0].valid).toBe(true);
   });
 
@@ -164,7 +164,7 @@ describe('evaluateColumns', () => {
 
     const results = await evaluateColumns(columns, response);
 
-    expect(results[0].result).toBe(false);
+    expect(results[0].result).toBe('false');
     expect(results[0].valid).toBe(true);
   });
 
@@ -174,7 +174,7 @@ describe('evaluateColumns', () => {
 
     const results = await evaluateColumns(columns, response);
 
-    expect(results[0].result).toBe(0);
+    expect(results[0].result).toBe('0');
     expect(results[0].valid).toBe(true);
   });
 

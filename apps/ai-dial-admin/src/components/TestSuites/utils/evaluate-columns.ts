@@ -6,7 +6,7 @@ export interface EvaluatedColumn {
   name: string;
   expression: string;
   type: string;
-  result: string | null;
+  result: string;
   valid: boolean;
 }
 
@@ -16,7 +16,7 @@ export const evaluateColumns = async (
 ): Promise<EvaluatedColumn[]> => {
   return Promise.all(
     columns.map(async (column) => {
-      let result: string | null = null;
+      let result: string = '';
       let valid = false;
 
       try {
@@ -24,12 +24,12 @@ export const evaluateColumns = async (
         const evaluated = await expr.evaluate(response);
         valid = evaluated != null;
         if (!valid) {
-          result = null;
+          result = '';
         } else {
-          result = typeof evaluated === 'object' ? JSON.stringify(evaluated) : evaluated;
+          result = typeof evaluated === 'object' ? JSON.stringify(evaluated) : String(evaluated);
         }
       } catch {
-        result = null;
+        result = '';
         valid = false;
       }
 
