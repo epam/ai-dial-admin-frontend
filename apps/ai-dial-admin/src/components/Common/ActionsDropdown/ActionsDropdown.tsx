@@ -3,6 +3,7 @@ import classNames from 'classnames';
 import { DialDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
 
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
+import { useI18n } from '@/src/locales/client';
 
 interface ActionsProps<T> {
   actionTriggerClassName?: string;
@@ -43,13 +44,15 @@ const ActionTrigger: FC<{ icon: ReactNode; actionTriggerClassName?: string }> = 
 };
 
 const ActionItem = <T extends object>({ item, data, rowIndex }: ActionProps<T>) => {
+  const t = useI18n();
+
   return (
     <div
       className="text-secondary flex-row flex size-full gap-2 items-center"
       onClick={() => item.onClick(data, rowIndex)}
     >
       {item.icon}
-      <span className="text-primary small">{item.id}</span>
+      <span className="text-primary small">{t(item.label)}</span>
     </div>
   );
 };
