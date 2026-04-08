@@ -7,7 +7,12 @@ import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { BasicI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
-import { getDefaultFilterValue, getFilterConditionConfig, getFilterTypeConfig } from '@/src/utils/telemetry';
+import {
+  getDefaultFilterValue,
+  getFilterConditionConfig,
+  getFilterTypeConfig,
+  isDeploymentFilter,
+} from '@/src/utils/telemetry';
 import { ApplicationRoute } from '@/src/types/routes';
 import CloseButton from '@/src/components/Common/CloseButton/CloseButton';
 
@@ -21,6 +26,7 @@ interface Props {
   onClose: () => void;
   dropdownData: { projects: SelectOption[]; entities: SelectOption[] };
   route: ApplicationRoute;
+  isMcpView?: boolean;
 }
 
 const CreateFilter: FC<Props> = ({
@@ -33,9 +39,10 @@ const CreateFilter: FC<Props> = ({
   onClose,
   dropdownData,
   route,
+  isMcpView = false,
 }) => {
   const t = useI18n();
-  const filterTypeConfig = getFilterTypeConfig(t);
+  const filterTypeConfig = getFilterTypeConfig(t, isMcpView);
   const filterConditionConfig = getFilterConditionConfig(t);
   const isMobile = useIsMobileScreen();
   const { projects, entities } = dropdownData;
@@ -62,7 +69,7 @@ const CreateFilter: FC<Props> = ({
         setType((prev) => {
           if (prev !== value) {
             if (condition === FILTER_OPERATOR.Equal || condition === FILTER_OPERATOR.NotEqual) {
-              if (type === FILTER_TYPE.Entity) {
+              if (isDeploymentFilter(type)) {
                 setValue(entities[0].value);
               } else {
                 setValue(projects[0].value);
@@ -107,7 +114,7 @@ const CreateFilter: FC<Props> = ({
       <div className="md:mr-2 md:mb-0 mb-4 min-w-[190px] max-w-[250px]">
         {condition === FILTER_OPERATOR.Equal || condition === FILTER_OPERATOR.NotEqual ? (
           <>
-            {type === FILTER_TYPE.Entity ? (
+            {isDeploymentFilter(type) ? (
               <DialSelectField
                 value={entities.find((item) => item.value === value)?.value}
                 id="entities"

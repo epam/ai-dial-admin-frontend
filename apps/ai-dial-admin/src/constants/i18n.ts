@@ -623,6 +623,7 @@ export enum TelemetryI18nKey {
   TotalTokens = 'Telemetry.TotalTokens',
   Money = 'Telemetry.Money',
   Grafana = 'Telemetry.OpenGrafana',
+  FilterTypeMcp = 'Telemetry.Filter.TypeMcp',
   FilterTypeProjects = 'Telemetry.Filter.TypeProjects',
   FilterTypeEntities = 'Telemetry.Filter.TypeEntities',
   FilterConditionContain = 'Telemetry.Filter.ConditionContain',

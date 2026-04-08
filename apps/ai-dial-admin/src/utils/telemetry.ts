@@ -8,6 +8,7 @@ import {
   filterConditionConfig,
   filterOperatorConfig,
   filterTypeConfig,
+  mcpFilterTypeConfig,
   TELEMETRY_GRID_HEADERS_MAP,
 } from '@/src/constants/telemetry';
 import { FilterData, TelemetryData } from '@/src/models/telemetry';
@@ -100,13 +101,17 @@ export const getListingData = (data: TelemetryData): Record<string, string>[] =>
   );
 };
 
+export const isDeploymentFilter = (type: FILTER_TYPE): boolean => {
+  return type === FILTER_TYPE.Entity || type === FILTER_TYPE.Mcp;
+};
+
 export const getDefaultFilterValue = (
   type: FILTER_TYPE,
   entities: SelectOption[],
   projects: SelectOption[],
 ): string => {
   if (entities.length && projects.length) {
-    if (type === FILTER_TYPE.Entity) {
+    if (isDeploymentFilter(type)) {
       return entities[0].value;
     } else {
       return projects[0].value;
@@ -164,8 +169,9 @@ export function prepareMultiSeriesChartData(data: Record<string, string>[], t: (
   return config;
 }
 
-export function getFilterTypeConfig(t: (key: string) => string): SelectOption[] {
-  return getTranslatedConfig(filterTypeConfig, t);
+export function getFilterTypeConfig(t: (key: string) => string, isMcpView = false): SelectOption[] {
+  const config = isMcpView ? mcpFilterTypeConfig : filterTypeConfig;
+  return getTranslatedConfig(config, t);
 }
 
 export function getFilterConditionConfig(t: (key: string) => string) {
