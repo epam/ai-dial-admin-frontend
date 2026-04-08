@@ -14,13 +14,7 @@ describe('DuplicateToolset', () => {
   describe('Rendering', () => {
     test('renders basic fields without auth settings', () => {
       render(
-        <DuplicateToolset
-          isModalOpen={true}
-          onClose={vi.fn()}
-          entity={baseToolset}
-          onDuplicate={vi.fn()}
-          names={[]}
-        />,
+        <DuplicateToolset isModalOpen={true} onClose={vi.fn()} entity={baseToolset} onDuplicate={vi.fn()} names={[]} />,
       );
 
       expect(screen.getByText(EntityFieldsI18nKey.id)).toBeInTheDocument();
@@ -94,13 +88,7 @@ describe('DuplicateToolset', () => {
   describe('Validation', () => {
     test('submit button is enabled when all required fields are filled for toolset without auth', () => {
       render(
-        <DuplicateToolset
-          isModalOpen={true}
-          onClose={vi.fn()}
-          entity={baseToolset}
-          onDuplicate={vi.fn()}
-          names={[]}
-        />,
+        <DuplicateToolset isModalOpen={true} onClose={vi.fn()} entity={baseToolset} onDuplicate={vi.fn()} names={[]} />,
       );
 
       const duplicateButton = screen.getByText(ButtonsI18nKey.Duplicate);
