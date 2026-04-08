@@ -82,6 +82,11 @@ export async function removeTestCase(id: string, testCaseId: string) {
   return testSuitesApi.removeTestCase(id, testCaseId, token);
 }
 
+export async function removeMultipleTestCases(id: string, testCaseNames: string[]) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.removeMultipleTestCases(id, testCaseNames, token);
+}
+
 export async function createTestCase(
   testSuiteId: string,
   body: Pick<TestCase, 'testCaseName' | 'data'>,

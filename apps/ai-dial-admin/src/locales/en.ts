@@ -1650,6 +1650,7 @@ export default {
       Running: 'Running',
       Failed: 'Failed',
     },
+    MetricFailedText: 'Metric evaluation failed',
   },
   JsonAta: {
     JSONAtaDoc: 'JSONata Expression Reference',
