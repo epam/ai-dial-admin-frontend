@@ -934,6 +934,7 @@ export enum ErrorI18nKey {
   MinMaxLength = 'Error.MinMaxLength',
   KeyValueExists = 'Error.KeyValueExists',
   ForbiddenChars = 'Error.ForbiddenChars',
+  AlphanumericUnderscore = 'Error.AlphanumericUnderscore',
   RequiredProperty = 'Error.RequiredProperty',
   InvalidPath = 'Error.InvalidPath',
   InvalidStatus = 'Error.InvalidStatus',
@@ -1561,10 +1562,6 @@ export enum RunsI18nKey {
 
 export enum FileManagerI18nKey {
   SelectedItems = 'FileManager.SelectedItems',
-  AddSibling = 'FileManager.AddSibling',
-  AddChild = 'FileManager.AddChild',
-  Rename = 'FileManager.Rename',
-  Move = 'FileManager.Move',
   File = 'FileManager.File',
   Files = 'FileManager.Files',
   Applications = 'FileManager.Applications',
@@ -1610,6 +1607,36 @@ export enum FileManagerI18nKey {
   DeleteSuccessDescriptionForOne = 'FileManager.Notifications.Delete.DescriptionForOne',
   DeleteSuccessDescriptionForMany = 'FileManager.Notifications.Delete.DescriptionForMany',
   RenameFolderSuccessTitle = 'FileManager.Notifications.RenameFolder.Title',
+}
+
+export enum ActionMenuOperationI18nKey {
+  Delete = 'ActionMenuOperation.Delete',
+  Duplicate = 'ActionMenuOperation.Duplicate',
+  Open_in_new_tab = 'ActionMenuOperation.Open_in_new_tab',
+  Remove = 'ActionMenuOperation.Remove',
+  Reset_to_default_limits = 'ActionMenuOperation.Reset_to_default_limits',
+  Set_no_limits = 'ActionMenuOperation.Set_no_limits',
+  Move = 'ActionMenuOperation.Move',
+  Publish = 'ActionMenuOperation.Publish',
+  Unpublish = 'ActionMenuOperation.Unpublish',
+  Decline = 'ActionMenuOperation.Decline',
+  Download = 'ActionMenuOperation.Download',
+  Preview = 'ActionMenuOperation.Preview',
+  Resource_rollback = 'ActionMenuOperation.Resource_rollback',
+  View_details = 'ActionMenuOperation.View_details',
+  Add_child = 'ActionMenuOperation.Add_child',
+  Add_sibling = 'ActionMenuOperation.Add_sibling',
+  Manage_folder = 'ActionMenuOperation.Manage_folder',
+  Rename = 'ActionMenuOperation.Rename',
+  Move_to = 'ActionMenuOperation.Move_to',
+  Compare_changes = 'ActionMenuOperation.Compare_changes',
+  Install = 'ActionMenuOperation.Install',
+  Run = 'ActionMenuOperation.Run',
+  Stop = 'ActionMenuOperation.Stop',
+  CreateNewVersion = 'ActionMenuOperation.CreateNewVersion',
+  Try_out = 'ActionMenuOperation.Try_out',
+  Edit = 'ActionMenuOperation.Edit',
+  Export = 'ActionMenuOperation.Export',
 }
 
 export enum JsonAtaI18nKey {

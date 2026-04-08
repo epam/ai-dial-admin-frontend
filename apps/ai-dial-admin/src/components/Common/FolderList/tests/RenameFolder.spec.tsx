@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import RenameFolder from '../Modals/RenameFolder';
-import { ButtonsI18nKey, FileManagerI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
+import { ActionMenuOperationI18nKey, ButtonsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 
 describe('RenameFolder', () => {
   const baseProps = {
@@ -12,7 +12,7 @@ describe('RenameFolder', () => {
   };
   test('renders DeleteFolder', () => {
     render(<RenameFolder {...baseProps} />);
-    expect(screen.getByText(FileManagerI18nKey.Rename)).toBeInTheDocument();
+    expect(screen.getByText(ActionMenuOperationI18nKey.Rename)).toBeInTheDocument();
   });
 
   test('calls onClose when Cancel is clicked', () => {
