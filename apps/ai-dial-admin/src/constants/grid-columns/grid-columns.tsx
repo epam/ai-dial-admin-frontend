@@ -152,25 +152,16 @@ export const ROUTES_COLUMNS: ColDef[] = [
   UPDATED_AT_COLUMN,
 ];
 
-export const EVALUATION_DEPLOYMENTS_COLUMNS = (t: (str: string) => string): ColDef[] => [
-  { field: '$type', headerName: 'Type', hide: false },
+export const EVALUATION_DEPLOYMENTS_COLUMNS: ColDef[] = [
   DISPLAY_NAME_COLUMN_WITH_SORT,
-  VERSION_COLUMN,
-  DESCRIPTION_COLUMN,
   { field: 'deploymentId', headerName: 'ID', hide: false },
-  ENDPOINT_COLUMN,
-  { field: 'owner', headerName: 'Owner', hide: false },
-  TOPICS_COLUMN,
-  ATTACHMENT_COLUMN(t),
-  MAX_INPUT_ATTACHMENTS_COLUMN,
+  DESCRIPTION_COLUMN,
 ];
 
 export const MCP_DEPLOYMENTS_COLUMNS: ColDef[] = [
   DISPLAY_NAME_COLUMN_WITH_SORT,
   { field: 'deploymentId', headerName: 'ID', hide: false },
-  { field: '$type', headerName: 'Type', hide: false },
   { field: 'transport', headerName: 'Transport', hide: false },
-  CREATED_AT_COLUMN,
 ];
 
 export const MCP_TOOLS_COLUMNS: ColDef[] = [
@@ -508,6 +499,26 @@ export const USAGE_LOG_MCP_COLUMNS: ColDef[] = [
     hide: false,
   },
 ];
+export const USAGE_LOG_TOOLSET_TRACES_COLUMNS: ColDef[] = [
+  { field: 'completion_time', headerName: 'Last activity', hide: false, ...dateTimeColumn },
+  { field: 'project_id', headerName: 'Project', hide: false },
+  {
+    field: 'mcp_method',
+    headerName: 'Method',
+    hide: true,
+  },
+  {
+    field: 'mcp_tool_call_name',
+    headerName: 'Tool Name',
+    hide: false,
+  },
+  {
+    field: 'trace_id',
+    headerName: 'Trace ID',
+    hide: false,
+  },
+];
+
 export const PROJECT_GRID_COLUMNS: ColDef[] = [{ field: 'name', headerName: 'Project' }, ...TELEMETRY_COLUMNS];
 
 export const MCP_CONSUMPTION_COLUMNS: ColDef[] = [

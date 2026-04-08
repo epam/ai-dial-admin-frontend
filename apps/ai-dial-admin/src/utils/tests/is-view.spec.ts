@@ -4,6 +4,7 @@ import {
   isBuildersView,
   isEntitiesWithDisplayVersion,
   isEvaluationView,
+  isToolsetRoute,
 } from '../is-view';
 import { describe, expect, test } from 'vitest';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -91,4 +92,17 @@ describe('Utils :: isViewWithDisplayVersion', () => {
     const result = isEntitiesWithDisplayVersion(ApplicationRoute.Keys);
     expect(result).toBeFalsy();
   });
+});
+
+describe('Utils :: isToolsetRoute', () => {
+  test.each([ApplicationRoute.Toolsets, ApplicationRoute.AssetsToolsets])('Should return true for %s', (route) => {
+    expect(isToolsetRoute(route)).toBeTruthy();
+  });
+
+  test.each([ApplicationRoute.Models, ApplicationRoute.Applications, undefined])(
+    'Should return false for %s',
+    (route) => {
+      expect(isToolsetRoute(route)).toBeFalsy();
+    },
+  );
 });

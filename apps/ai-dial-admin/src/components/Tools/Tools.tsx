@@ -333,6 +333,7 @@ const Tools: FC<Props> = ({
           tools={tools || []}
           originalEntity={selectedEntity || {}}
           onConfirm={onChangeEntity}
+          view={view}
         />
       )}
     </div>

@@ -1578,6 +1578,7 @@ export default {
     Files: 'Files',
     Prompt: 'Prompt',
     Prompts: 'Prompts',
+    Items: 'Items',
     Applications: 'Applications',
     Toolsets: 'Toolsets',
     Folder: 'Folder',
@@ -1610,6 +1611,9 @@ export default {
         Title: '{item} deleted successfully',
         DescriptionForOne: '{item} {name} has been deleted',
         DescriptionForMany: '{count} items have been deleted',
+      },
+      RenameFolder: {
+        Title: 'Folder renamed successfully',
       },
     },
     CreateFolderValidate: 'Folder name contains forbidden characters: ; : , = / {} % & \\',
@@ -1646,6 +1650,7 @@ export default {
       Running: 'Running',
       Failed: 'Failed',
     },
+    MetricFailedText: 'Metric evaluation failed',
   },
   JsonAta: {
     JSONAtaDoc: 'JSONata Expression Reference',

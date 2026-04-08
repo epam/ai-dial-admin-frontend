@@ -1,6 +1,6 @@
 'use client';
 
-import { Dispatch, FC, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { DialNeutralButton, DialTabs } from '@epam/ai-dial-ui-kit';
 import { IconRefresh } from '@tabler/icons-react';
@@ -14,11 +14,12 @@ import { useTimePeriodOptions } from '@/src/hooks/use-time-period-options';
 import {
   USAGE_LOG_CONVERSATIONS_COLUMNS,
   USAGE_LOG_MCP_COLUMNS,
+  USAGE_LOG_TOOLSET_TRACES_COLUMNS,
   USAGE_LOG_TRACES_COLUMNS,
 } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, TabsI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-import { CONVERSATIONS_QUERY, MCP_QUERY, TRACES_QUERY } from '@/src/constants/telemetry';
+import { CONVERSATIONS_QUERY, MCP_QUERY, TOOLSET_DEPLOYMENT_PREFIX, TRACES_QUERY } from '@/src/constants/telemetry';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
@@ -26,6 +27,7 @@ import { TelemetryQuery } from '@/src/models/telemetry';
 import { TimeRange } from '@/src/models/time-range';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab, getUsageLogTabs } from '@/src/utils/tabs/utils';
+import { isToolsetRoute } from '@/src/utils/is-view';
 import { getFormattedFilters } from '@/src/utils/telemetry';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
 
@@ -71,17 +73,25 @@ const UsageLog: FC<Props> = ({
     }
   }, [initTimeFilter, timePeriod, isCustomRange]);
 
+  const entityFilterName = useMemo(() => {
+    if (route === ApplicationRoute.AssetsToolsets) {
+      const path = (entity as unknown as { path?: string })?.path;
+      return path ? `${TOOLSET_DEPLOYMENT_PREFIX}${path}` : entity?.name || null;
+    }
+    return entity?.name || null;
+  }, [route, entity]);
+
   const getData = useCallback(
     (query: TelemetryQuery) => {
       if (typeof query.query.from === 'string') {
-        query.query.where = getFormattedFilters(timeRange, [], entity?.name || null);
+        query.query.where = getFormattedFilters(timeRange, [], entityFilterName);
       } else {
-        query.query.from.where = getFormattedFilters(timeRange, [], entity?.name || null);
+        query.query.from.where = getFormattedFilters(timeRange, [], entityFilterName);
       }
 
       return getReqRef.current(getDashboardData, query);
     },
-    [entity?.name, timeRange],
+    [entityFilterName, timeRange],
   );
 
   const onTimePeriodChange = useCallback(
@@ -148,8 +158,8 @@ const UsageLog: FC<Props> = ({
           <List
             route={route}
             getData={getData}
-            columnDefs={USAGE_LOG_TRACES_COLUMNS}
-            query={TRACES_QUERY}
+            columnDefs={isToolsetRoute(route) ? USAGE_LOG_TOOLSET_TRACES_COLUMNS : USAGE_LOG_TRACES_COLUMNS}
+            query={isToolsetRoute(route) ? MCP_QUERY : TRACES_QUERY}
             listLabel={t(TabsI18nKey.Traces)}
             emptyDataTitle={t(TelemetryI18nKey.NoTracesTitle)}
           />

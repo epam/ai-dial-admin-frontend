@@ -140,15 +140,19 @@ describe('Entities :: tabs', () => {
     expect(tabs).toEqual([{ id: 'Activities', label: TabsI18nKey.Activities }]);
   });
 
-  test('returns only dashboard tab for AssetsToolsets when dashboardEnabled is true', () => {
+  test('returns dashboard and traces tabs for AssetsToolsets when dashboardEnabled is true', () => {
     const tabs = getAuditTabs(t, { dashboardEnabled: true }, ApplicationRoute.AssetsToolsets);
-    expect(tabs).toEqual([{ id: 'Dashboard', label: TabsI18nKey.Dashboard }]);
+    expect(tabs).toEqual([
+      { id: 'Dashboard', label: TabsI18nKey.Dashboard },
+      { id: 'Traces', label: TabsI18nKey.Traces },
+    ]);
   });
 
-  test('returns dashboard and activities tabs for Toolsets when dashboardEnabled is true', () => {
+  test('returns dashboard, traces and activities tabs for Toolsets when dashboardEnabled is true', () => {
     const tabs = getAuditTabs(t, { dashboardEnabled: true }, ApplicationRoute.Toolsets);
     expect(tabs).toEqual([
       { id: 'Dashboard', label: TabsI18nKey.Dashboard },
+      { id: 'Traces', label: TabsI18nKey.Traces },
       { id: 'Activities', label: TabsI18nKey.Activities },
     ]);
   });
