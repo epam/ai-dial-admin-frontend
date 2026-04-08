@@ -19,9 +19,10 @@ import {
 import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { TelemetryQuery } from '@/src/models/telemetry';
+import { QueryInput } from '@/src/components/Telemetry/Dashboard';
 
 interface Props {
-  getData: (query: TelemetryQuery) => Promise<ServerActionResponse>;
+  getData: (input: QueryInput) => Promise<ServerActionResponse>;
   getToolCallsData: (query: TelemetryQuery) => Promise<ServerActionResponse>;
   getToolsConsumptionData: (query: TelemetryQuery) => Promise<ServerActionResponse>;
   refreshTime: string;
