@@ -32,6 +32,7 @@ interface Props {
   view: ApplicationRoute;
   oAuthCode?: string | null;
   selectedToolset: Toolset;
+  publicationName?: string;
   signInToolset: (
     toolset: any,
     type: ToolsetAuthCredentialLevel,
@@ -42,7 +43,14 @@ interface Props {
   signOutToolset: (toolset: any, type: ToolsetAuthCredentialLevel) => Promise<ServerActionResponse>;
 }
 
-const AuthButtons: FC<Props> = ({ selectedToolset, oAuthCode, view, signInToolset, signOutToolset }) => {
+const AuthButtons: FC<Props> = ({
+  selectedToolset,
+  publicationName,
+  oAuthCode,
+  view,
+  signInToolset,
+  signOutToolset,
+}) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -74,10 +82,10 @@ const AuthButtons: FC<Props> = ({ selectedToolset, oAuthCode, view, signInToolse
               getSuccessNotification(t(ToolsetI18nKey.SuccessLogin), t(ToolsetI18nKey.SuccessLoginDescription)),
             );
           }
-          router.push(getUrnForEntity(view, selectedToolset));
+          router.push(getUrnForEntity(view, { ...selectedToolset, requestName: publicationName }));
         });
     },
-    [router, selectedToolset, showNotification, signInToolset, t, view],
+    [router, selectedToolset, showNotification, signInToolset, t, view, publicationName],
   );
 
   const onLogin = useCallback(
@@ -124,7 +132,7 @@ const AuthButtons: FC<Props> = ({ selectedToolset, oAuthCode, view, signInToolse
       : ToolsetAuthCredentialLevel.GLOBAL;
     getReqRef.current(signOutToolset, selectedToolset, level).then((res) => {
       if (res.success) {
-        router.push(getUrnForEntity(view, selectedToolset));
+        router.push(getUrnForEntity(view, { ...selectedToolset, requestName: publicationName }));
         showNotification(
           getSuccessNotification(t(ToolsetI18nKey.SuccessLogout), t(ToolsetI18nKey.SuccessLogoutDescription)),
         );
@@ -132,7 +140,7 @@ const AuthButtons: FC<Props> = ({ selectedToolset, oAuthCode, view, signInToolse
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
-  }, [router, selectedToolset, view, showNotification, t, signOutToolset]);
+  }, [router, selectedToolset, view, showNotification, t, signOutToolset, publicationName]);
 
   useEffect(() => {
     if (oAuthCode && !isSignInProcessed) {

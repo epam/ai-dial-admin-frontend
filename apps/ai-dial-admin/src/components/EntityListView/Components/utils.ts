@@ -9,8 +9,9 @@ import { DialApplication } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { AssetWithVersion, AssetApp, AssetToolset } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
+import { Toolset, ToolsetAuthType } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isAssetWithVersion } from '@/src/utils/is-view';
+import { isAssetWithVersion, isToolsetRoute } from '@/src/utils/is-view';
 
 export const getData = async <T>(route: ApplicationRoute, ref: RefObject<T | undefined>) => {
   if (route === ApplicationRoute.Prompts) {
@@ -103,12 +104,25 @@ export const prepareEntityForDuplicate = async <T>(
     };
   }
 
-  if (route === ApplicationRoute.AssetsToolsets) {
-    const toolset = fullEntity as AssetToolset | null;
+  if (isToolsetRoute(route)) {
+    const baseEntity = route === ApplicationRoute.AssetsToolsets ? fullEntity : entity;
 
+    const toolset = baseEntity as Toolset;
     return {
-      ...toolset,
-      ...entity,
+      ...baseEntity,
+      authSettings: toolset.authSettings
+        ? {
+            ...toolset.authSettings,
+            globalAuthStatus: undefined,
+            userLevelAuthStatus: undefined,
+            clientSecret: '',
+            // Keep apiKeyHeader name for API_KEY auth, clear for others
+            apiKeyHeader:
+              toolset.authSettings.authenticationType === ToolsetAuthType.API_KEY
+                ? toolset.authSettings.apiKeyHeader
+                : undefined,
+          }
+        : undefined,
     };
   }
 
