@@ -537,8 +537,29 @@ describe('validation utils', () => {
   });
 
   describe('Port field validation', () => {
-    test('returns value error', () => {
+    test('returns value error for out of range', () => {
       expect(getPortError(65536, t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.PortError,
+      });
+    });
+
+    test('returns value error for float', () => {
+      expect(getPortError(8080.5, t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.PortError,
+      });
+    });
+
+    test('returns value error for NaN', () => {
+      expect(getPortError(NaN, t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.PortError,
+      });
+    });
+
+    test('returns value error for string value', () => {
+      expect(getPortError('-', t)).toEqual({
         type: ErrorType.INVALID,
         text: ErrorI18nKey.PortError,
       });

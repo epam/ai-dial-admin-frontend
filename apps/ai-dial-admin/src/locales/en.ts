@@ -1232,6 +1232,8 @@ export default {
     MinMaxLength: 'User can add any allowed characters, but not less than {min} and not more than {max}.',
     MaxNumberError: 'Max allowed number of attachments is {max}',
     ForbiddenChars: 'Field must not contain forbidden characters: {list}',
+    AlphanumericUnderscore:
+      'Field must not contain forbidden characters. Only alphanumeric characters and underscore are allowed.',
     KeyValueExists: 'This value already exists.',
     DisplayNameErrorVersion:
       'This name is used by versionless entity. Specify version for entity with this display name to group entities.',
