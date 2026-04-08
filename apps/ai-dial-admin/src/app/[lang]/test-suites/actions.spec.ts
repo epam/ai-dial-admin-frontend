@@ -38,6 +38,7 @@ import {
   removeTestSuiteFile,
   duplicateTestSuite,
   getDeploymentTools,
+  removeMultipleTestCases,
 } from './actions';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '../../../types/evaluation';
 
@@ -343,6 +344,14 @@ describe('TestSuites :: server actions', () => {
     const result = await duplicateTestSuite('suite-id', body as any);
     expect(getUserToken).toHaveBeenCalled();
     expect(testSuitesApi.duplicateTestSuite).toHaveBeenCalledWith('suite-id', body, TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call removeMultipleTestCases action', async () => {
+    (testSuitesApi.removeMultipleTestCases as any).mockResolvedValue(RESPONSE_MOCK);
+    const result = await removeMultipleTestCases('suite-id', ['case1', 'case2']);
+    expect(getUserToken).toHaveBeenCalled();
+    expect(testSuitesApi.removeMultipleTestCases).toHaveBeenCalledWith('suite-id', ['case1', 'case2'], TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

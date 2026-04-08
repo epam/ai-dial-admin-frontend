@@ -9,6 +9,7 @@ import { IconExternalLink } from '@tabler/icons-react';
 
 import ReadonlyId from '@/src/components/BaseControls/Id/ReadonlyId';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
+import RunStatusComponent from '@/src/components/Common/RunStatus/RunStatus';
 import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
 import { EntityFieldsI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -52,7 +53,11 @@ const RunHeader = <T extends Entity>({
           <LabelledText label={t(RunsI18nKey.EndTime)} text={formatDateTimeToLocalString(run?.completedAt)} />
         )}
 
-        {!!run?.status && <LabelledText label={t(EntityFieldsI18nKey.status)} text={run.status} />}
+        {!!run?.status && (
+          <LabelledText label={t(EntityFieldsI18nKey.status)}>
+            <RunStatusComponent status={run.status} />
+          </LabelledText>
+        )}
         {!!run?.testRunName && (
           <DialLabelledText
             label={t(RunsI18nKey.TestSuite)}
