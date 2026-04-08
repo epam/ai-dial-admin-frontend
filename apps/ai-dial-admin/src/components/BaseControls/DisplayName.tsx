@@ -7,7 +7,7 @@ import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
 import { getControlClassName } from '@/src/utils/entities/view';
-import { getErrorForName } from '@/src/utils/validation/name-error';
+import { getErrorForAppRouteName, getErrorForName } from '@/src/utils/validation/name-error';
 
 interface Props {
   displayName?: string;
@@ -16,6 +16,7 @@ interface Props {
   isFullWidth?: boolean;
   names?: string[];
   allowWhitespace?: boolean;
+  alphanumericOnly?: boolean;
   onChange?: (displayName?: string) => void;
 }
 
@@ -26,6 +27,7 @@ const DisplayNameControl: FC<Props> = ({
   onChange,
   names,
   allowWhitespace = true,
+  alphanumericOnly = false,
   disabled,
   ...props
 }) => {
@@ -38,11 +40,13 @@ const DisplayNameControl: FC<Props> = ({
 
   const validateDisplayName = useCallback(
     (displayName?: string) => {
-      const error = getErrorForName(displayName, names, t, false, !allowWhitespace, true);
+      const error = alphanumericOnly
+        ? getErrorForAppRouteName(displayName, names, t)
+        : getErrorForName(displayName, names, t, false, !allowWhitespace, true);
       setDisplayNameError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !error });
     },
-    [dispatch, t, names, allowWhitespace],
+    [dispatch, t, names, allowWhitespace, alphanumericOnly],
   );
 
   // initial validation

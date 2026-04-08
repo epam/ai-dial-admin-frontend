@@ -5,6 +5,7 @@ import {
   MIN_NAME_SYMBOLS,
   FORBIDDEN_NAME_SYMBOLS,
   MAX_DEPLOYMENT_ID_SYMBOLS,
+  APP_ROUTE_NAME_REGEX,
 } from '@/src/constants/validation';
 import { ErrorType } from '@/src/types/error-type';
 import { isValidHttpUrl } from './url-error';
@@ -115,6 +116,37 @@ export const isWrongFieldLength = (value: string, isDeploymentId?: boolean): boo
   return (
     value.length < MIN_NAME_SYMBOLS || value.length > (isDeploymentId ? MAX_DEPLOYMENT_ID_SYMBOLS : MAX_NAME_SYMBOLS)
   );
+};
+
+export const getErrorForAppRouteName = (
+  name?: string,
+  names?: string[],
+  t?: (str: string, args?: Record<string, string | number>) => string,
+) => {
+  const isIncludesName = name && names?.includes(name);
+  if (isIncludesName) {
+    return {
+      type: ErrorType.EXISTING,
+      text: t ? t(ErrorI18nKey.DisplayNameExists) : '',
+    };
+  }
+
+  const isWrongLength = isWrongFieldLength(name || '');
+  if (isWrongLength) {
+    return {
+      type: ErrorType.LENGTH,
+      text: t ? t(ErrorI18nKey.MinMaxLength, { min: MIN_NAME_SYMBOLS, max: MAX_NAME_SYMBOLS }) : '',
+    };
+  }
+
+  if (name && !APP_ROUTE_NAME_REGEX.test(name)) {
+    return {
+      type: ErrorType.FORBIDDEN_CHARS,
+      text: t ? t(ErrorI18nKey.AlphanumericUnderscore) : '',
+    };
+  }
+
+  return null;
 };
 
 export const hasInvalidCharacters = (value?: string): boolean => {
