@@ -113,6 +113,11 @@ export async function exportDeploymentConfig(exportConfig: DeploymentExportReque
   return await deploymentConfigApi.exportConfig(exportConfig, token);
 }
 
+export async function previewDeploymentExportConfig(exportConfig: DeploymentExportRequest) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return await deploymentConfigApi.previewExportConfig(exportConfig, token);
+}
+
 export async function getDeploymentEntities(type: string): Promise<EntitiesGridData[]> {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 

@@ -3,7 +3,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import Filter from '../Filter';
 
-const baseFilterData = { type: 'Project', condition: 'Equal', value: 'val' };
+const baseFilterData = { type: 'Project', condition: 'Equal', value: ['val'] };
 const baseDropdownData = { projects: [], entities: [] };
 
 describe('Filter', () => {

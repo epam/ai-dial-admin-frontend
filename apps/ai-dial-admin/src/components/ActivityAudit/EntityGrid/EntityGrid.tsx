@@ -7,6 +7,7 @@ import { CellClickedEvent, ColDef, GridApi, GridOptions, GridReadyEvent } from '
 import { getColumnsByParameter, getCurrentAndRollbackEntities } from '@/src/components/ActivityAudit/EntityGrid/utils';
 import ActivityDetails from '@/src/components/ActivityAudit/Modals/Details';
 import GridView from '@/src/components/Grid/GridView/GridView';
+import { DIFF_ROW_CLASS_RULES } from '@/src/constants/ag-grid';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ActivityAuditDiff, DialActivity } from '@/src/models/activity-audit';
@@ -78,20 +79,7 @@ const AuditEntityGrid: FC<Props> = ({
     domLayout: 'autoHeight',
     onGridReady,
     onCellClicked: activity && onRowClicked,
-    rowClassRules: {
-      'ag-error-row ag-error-border': (params) => {
-        return (params.data as ActivityAuditDiff).diffStatus === DiffStatus.REMOVED;
-      },
-      'ag-new-row ag-new-border': (params) => {
-        return (params.data as ActivityAuditDiff).diffStatus === DiffStatus.ADDED;
-      },
-      'ag-changed-row ag-changed-border': (params) => {
-        return (params.data as ActivityAuditDiff).diffStatus === DiffStatus.CHANGED;
-      },
-      'ag-empty-row': (params) => {
-        return (params.data as ActivityAuditDiff).diffStatus === DiffStatus.MIRROR;
-      },
-    },
+    rowClassRules: DIFF_ROW_CLASS_RULES,
   };
 
   return !data?.length ? (

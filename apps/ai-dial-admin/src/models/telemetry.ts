@@ -23,7 +23,7 @@ export interface TelemetryQuery {
 export interface FilterData {
   type: FILTER_TYPE;
   condition: FILTER_OPERATOR;
-  value: string;
+  value: string[];
 }
 
 export interface DatasetMetadata {
