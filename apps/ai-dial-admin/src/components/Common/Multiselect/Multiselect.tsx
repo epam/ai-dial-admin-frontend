@@ -56,6 +56,7 @@ const Multiselect: FC<Props> = ({
         selectedValue={selectedItems}
         onOpen={onOpenModal}
         emptyValueText={t(BasicI18nKey.None)}
+        collapseTagOverflow
       >
         <MultiselectModal
           initSelectedItems={selectedItems}
