@@ -45,7 +45,9 @@ const Filter: FC<Props> = ({ id, onClose, onEdit, dropdownData, filterData, rout
         <p className="flex items-center">
           <span className="mr-1">{typeText}</span>
           <i className="mr-1">{conditionIcon}</i>
-          <span className="mr-1 max-w-[250px] break-words">{value}</span>
+          <span className="mr-1 max-w-[250px] break-words">
+            {value.length <= 2 ? value.join(', ') : `${value.slice(0, 2).join(', ')}, +${value.length - 2} more`}
+          </span>
         </p>
 
         <button

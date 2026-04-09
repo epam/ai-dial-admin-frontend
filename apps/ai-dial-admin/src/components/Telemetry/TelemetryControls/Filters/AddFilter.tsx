@@ -34,12 +34,12 @@ const AddFilter: FC<Props> = ({ addFilter, dropdownData, children, filterData, r
   const [condition, setCondition] = useState<FILTER_OPERATOR>(
     (filterData?.condition ?? filterConditionConfig[0].value) as FILTER_OPERATOR,
   );
-  const [value, setValue] = useState<string>(filterData?.value ?? '');
+  const [value, setValue] = useState<string[]>(filterData?.value ?? []);
 
   const reset = useCallback(() => {
     setType((filterData?.type ?? typeValue ?? filterTypeConfig[0].value) as FILTER_TYPE);
     setCondition((filterData?.condition ?? filterConditionConfig[0].value) as FILTER_OPERATOR);
-    setValue(filterData?.value ?? '');
+    setValue(filterData?.value ?? []);
   }, [filterData, typeValue, filterTypeConfig, filterConditionConfig]);
 
   const onCreate = useCallback(() => {

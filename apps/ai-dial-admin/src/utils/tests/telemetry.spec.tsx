@@ -80,10 +80,10 @@ describe('Utils :: telemetry :: getFormattedDataFilters', () => {
     expect(result).toEqual([{ $eq: { left: 'deployment', right: "'EntityName'" } }]);
   });
 
-  test('returns filters for data only', () => {
+  test('returns filters for data only with single values', () => {
     const filters = [
-      { type: FILTER_TYPE.Project, value: 'Project1', condition: FILTER_OPERATOR.Equal },
-      { type: FILTER_TYPE.Entity, value: 'Entity1', condition: FILTER_OPERATOR.NotEqual },
+      { type: FILTER_TYPE.Project, value: ['Project1'], condition: FILTER_OPERATOR.Equal },
+      { type: FILTER_TYPE.Entity, value: ['Entity1'], condition: FILTER_OPERATOR.NotEqual },
     ];
     const result = getFormattedDataFilters(filters, null);
     expect(result).toEqual([
@@ -93,12 +93,34 @@ describe('Utils :: telemetry :: getFormattedDataFilters', () => {
   });
 
   test('returns filters for both entityName and data', () => {
-    const filters = [{ type: FILTER_TYPE.Project, value: 'Project1', condition: FILTER_OPERATOR.Equal }];
+    const filters = [{ type: FILTER_TYPE.Project, value: ['Project1'], condition: FILTER_OPERATOR.Equal }];
     const result = getFormattedDataFilters(filters, 'EntityName');
     expect(result).toEqual([
       { $eq: { left: 'deployment', right: "'EntityName'" } },
       { $eq: { left: 'project_id', right: "'Project1'" } },
     ]);
+  });
+
+  test('returns $in operator for multiple values with Equal condition', () => {
+    const filters = [
+      { type: FILTER_TYPE.Entity, value: ['Entity1', 'Entity2', 'Entity3'], condition: FILTER_OPERATOR.Equal },
+    ];
+    const result = getFormattedDataFilters(filters, null);
+    expect(result).toEqual([{ $in: { left: 'deployment', right: ['Entity1', 'Entity2', 'Entity3'] } }]);
+  });
+
+  test('returns $nin operator for multiple values with NotEqual condition', () => {
+    const filters = [
+      { type: FILTER_TYPE.Project, value: ['Project1', 'Project2'], condition: FILTER_OPERATOR.NotEqual },
+    ];
+    const result = getFormattedDataFilters(filters, null);
+    expect(result).toEqual([{ $nin: { left: 'project_id', right: ['Project1', 'Project2'] } }]);
+  });
+
+  test('handles text input conditions with array values', () => {
+    const filters = [{ type: FILTER_TYPE.Entity, value: ['test'], condition: FILTER_OPERATOR.Contain }];
+    const result = getFormattedDataFilters(filters, null);
+    expect(result).toEqual([{ $contains: { left: 'deployment', right: "'test'" } }]);
   });
 
   test('returns empty array for no filters and no entityName', () => {
@@ -204,19 +226,21 @@ describe('Utils :: telemetry :: getFilterTypeConfig', () => {
 });
 
 describe('Utils :: telemetry :: getDefaultFilterValue', () => {
-  test('returns correct result', () => {
+  test('returns array with first value for Entity type', () => {
     expect(
       getDefaultFilterValue(FILTER_TYPE.Entity, [{ label: 'a', value: 'aValue' }], [{ label: 'b', value: 'bValue' }]),
-    ).toEqual('aValue');
-
-    expect(
-      getDefaultFilterValue(FILTER_TYPE.Project, [{ label: 'a', value: 'aValue' }], [{ label: 'b', value: 'bValue' }]),
-    ).toEqual('bValue');
+    ).toEqual(['aValue']);
   });
 
-  test('returns correct result', () => {
+  test('returns array with first value for Project type', () => {
+    expect(
+      getDefaultFilterValue(FILTER_TYPE.Project, [{ label: 'a', value: 'aValue' }], [{ label: 'b', value: 'bValue' }]),
+    ).toEqual(['bValue']);
+  });
+
+  test('returns empty array when no options available', () => {
     const result = getDefaultFilterValue(FILTER_TYPE.Entity, [], []);
-    expect(result).toBe('');
+    expect(result).toEqual([]);
   });
 });
 
@@ -236,8 +260,8 @@ const mockTimeRange = {
 describe('getFormattedFilters', () => {
   test('returns $and with time and data filters', () => {
     const filters = [
-      { type: 'entity', value: 'Entity1', condition: 'eq' },
-      { type: 'project', value: 'Project1', condition: 'neq' },
+      { type: 'entity', value: ['Entity1'], condition: 'eq' },
+      { type: 'project', value: ['Project1'], condition: 'neq' },
     ];
 
     const result = getFormattedFilters(mockTimeRange, filters, 'EntityName');
