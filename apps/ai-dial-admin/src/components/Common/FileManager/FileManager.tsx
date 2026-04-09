@@ -48,7 +48,10 @@ interface Props {
   label: string;
   columnDefs: ColDef[];
   getContext: () => AssetsFolderContext;
-  onCreateFolder: (file: DialUploadFileItem | undefined, folderPath: string) => Promise<ServerActionResponse>;
+  onCreateFolder: (
+    file: DialUploadFileItem | undefined,
+    folderPath: string,
+  ) => Promise<ServerActionResponse | undefined>;
   onDeleteItems?: (fileNodes: DialDeletedItem[]) => Promise<ServerActionResponse[]>;
   onMoveItems: (
     items: DialCopiedItem[],
@@ -130,7 +133,7 @@ const FileManager: FC<Props> = ({
       const newPath = `${folderPath.replaceAll('//', '/')}/`;
 
       onCreateFolder(_, folderPath).then((res) => {
-        if (res.success) {
+        if (res && res.success) {
           const parentPath = getParentPathByFullPath(newPath) || `${ROOT_FOLDER}/`;
 
           fetchFiles(parentPath);

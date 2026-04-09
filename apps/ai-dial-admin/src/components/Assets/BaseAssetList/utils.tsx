@@ -1,0 +1,235 @@
+import { FileManagerColumnKey, NAME_COLUMN, SelectOption, UPDATED_AT_COLUMN } from '@epam/ai-dial-ui-kit';
+import { ColDef } from 'ag-grid-community';
+import SelectCellRenderer, { SelectCellRendererParams } from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
+import { STRINGS_DELIMITER } from '@/src/constants/prompt';
+import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
+import { DialFileNodeType } from '@/src/models/dial/file';
+import { ApplicationRoute } from '@/src/types/routes';
+import { FileManagerI18nKey } from '@/src/constants/i18n';
+import { ToolsetTransport } from '@/src/types/toolset';
+import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
+import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
+import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
+import {
+  bulkDeleteApps,
+  createApp,
+  exportApps,
+  getApp,
+  importApps,
+  moveApps,
+  removeApp,
+} from '@/src/app/[lang]/assets-applications/actions';
+import {
+  bulkDeletePrompts,
+  createPrompt,
+  exportPrompts,
+  getPrompt,
+  movePrompts,
+  removePrompt,
+} from '@/src/app/[lang]/prompts/actions';
+import {
+  bulkDeleteToolsets,
+  createToolset,
+  exportToolsets,
+  getToolset,
+  importToolsets,
+  moveToolsets,
+  removeToolset,
+} from '@/src/app/[lang]/assets-toolsets/actions';
+import { ResourceType } from '@/src/types/resource-type';
+import { importPrompts } from '@/src/utils/prompts/import-prompts';
+
+export const getItems = (data: unknown) => {
+  const asset = data as AssetWithVersion;
+  return asset?.versions?.map((v) => ({ value: v, label: v })) as SelectOption[];
+};
+
+export const getGridColumns = (
+  onChange: (
+    value: string | string[],
+    data: unknown,
+    column?: string | undefined,
+    index?: number | undefined,
+    isSelected?: boolean | undefined,
+  ) => void,
+  selectedVersionsMap: Record<string, string[]>,
+  hasSelectedItems: boolean,
+) => {
+  const AUTHOR_COLUMN = {
+    colId: FileManagerColumnKey.Author,
+    field: 'author',
+    headerName: 'Author',
+    width: 200,
+    suppressSizeToFit: true,
+  };
+
+  const VERSION_COLUMN = {
+    colId: FileManagerColumnKey.Version,
+    field: 'version',
+    headerName: 'Version',
+    width: 200,
+    suppressSizeToFit: true,
+    cellRenderer: (params: SelectCellRendererParams & { data: AssetWithVersion }) => {
+      if (params.data?.versions) {
+        const customSelectedVersions = selectedVersionsMap?.[`${params.data.folderId}${params.data.name}`];
+        const selectValue = customSelectedVersions
+          ? customSelectedVersions.join(STRINGS_DELIMITER)
+          : params.data.selectedVersions.join(STRINGS_DELIMITER);
+        return hasSelectedItems ? (
+          <SelectCellRenderer
+            {...params}
+            data={params.data}
+            value={selectValue}
+            isMulti
+            getItems={getItems}
+            onChange={onChange}
+          />
+        ) : (
+          params.data?.version || ''
+        );
+      } else {
+        return null;
+      }
+    },
+  };
+
+  return [
+    NAME_COLUMN('Display name') as ColDef,
+    VERSION_COLUMN,
+    AUTHOR_COLUMN,
+    UPDATED_AT_COLUMN('Updated time') as ColDef,
+  ];
+};
+
+export const getAllSelectedItemsPaths = (basePath: string, selectedVersions: Record<string, string[]>): string[] => {
+  const prefix = basePath.substring(0, basePath.lastIndexOf('__'));
+  const versions = selectedVersions?.[prefix];
+
+  return versions ? versions.map((v) => `${prefix}__${v}`) : [basePath];
+};
+
+export const getEmptyAsset = (view: ApplicationRoute, path: string): AssetWithVersion => {
+  const baseEmptyAsset = {
+    name: '',
+    folderId: path,
+    version: '',
+    path: `${path}.dial_folder`,
+    nodeType: DialFileNodeType.ITEM,
+  };
+
+  switch (view) {
+    case ApplicationRoute.Prompts:
+      return { ...baseEmptyAsset, content: '' };
+    case ApplicationRoute.AssetsApplications:
+      return { ...baseEmptyAsset, name: '.dial_folder', endpoint: '' };
+    case ApplicationRoute.AssetsToolsets:
+      return {
+        ...baseEmptyAsset,
+        endpoint: 'http://mock',
+        displayName: '.dial_folder',
+        name: '.dial_folder',
+        transport: ToolsetTransport.HTTP,
+      };
+    default:
+      return baseEmptyAsset;
+  }
+};
+
+export const getFileManagerLabel = (view: ApplicationRoute): string => {
+  switch (view) {
+    case ApplicationRoute.Prompts:
+      return FileManagerI18nKey.Prompts;
+    case ApplicationRoute.AssetsApplications:
+      return FileManagerI18nKey.Applications;
+    case ApplicationRoute.AssetsToolsets:
+      return FileManagerI18nKey.Toolsets;
+    default:
+      return '';
+  }
+};
+
+export const getEmptyStateContent = (
+  view: ApplicationRoute,
+  t: (key: string) => string,
+): { title: string; description: string } => {
+  switch (view) {
+    case ApplicationRoute.Prompts:
+      return {
+        title: t(FileManagerI18nKey.PromptEmptyStateTitle),
+        description: t(FileManagerI18nKey.PromptEmptyStateDescription),
+      };
+    case ApplicationRoute.AssetsApplications:
+      return {
+        title: t(FileManagerI18nKey.ApplicationsEmptyStateTitle),
+        description: t(FileManagerI18nKey.ApplicationsEmptyStateDescription),
+      };
+    case ApplicationRoute.AssetsToolsets:
+      return {
+        title: t(FileManagerI18nKey.ToolsetsEmptyStateTitle),
+        description: t(FileManagerI18nKey.ToolsetsEmptyStateDescription),
+      };
+    default:
+      return { title: '', description: '' };
+  }
+};
+
+export const getResourceTypeByRoute = (view: ApplicationRoute) => {
+  switch (view) {
+    case ApplicationRoute.Prompts:
+      return ResourceType.PROMPT;
+    case ApplicationRoute.AssetsApplications:
+      return ResourceType.APPLICATION;
+    case ApplicationRoute.AssetsToolsets:
+      return ResourceType.TOOLSET;
+    default:
+      return null;
+  }
+};
+
+export const AssetFolderContextMap = {
+  [ApplicationRoute.Prompts]: usePromptFolder,
+  [ApplicationRoute.AssetsApplications]: useAppsFolder,
+  [ApplicationRoute.AssetsToolsets]: useToolsetFolder,
+};
+
+export const GetAssetActionMap = {
+  [ApplicationRoute.Prompts]: getPrompt,
+  [ApplicationRoute.AssetsApplications]: getApp,
+  [ApplicationRoute.AssetsToolsets]: getToolset,
+};
+
+export const CreateAssetActionMap = {
+  [ApplicationRoute.Prompts]: createPrompt,
+  [ApplicationRoute.AssetsApplications]: createApp,
+  [ApplicationRoute.AssetsToolsets]: createToolset,
+};
+
+export const MoveAssetActionMap = {
+  [ApplicationRoute.Prompts]: movePrompts,
+  [ApplicationRoute.AssetsApplications]: moveApps,
+  [ApplicationRoute.AssetsToolsets]: moveToolsets,
+};
+
+export const ImportAssetActionMap = {
+  [ApplicationRoute.Prompts]: importPrompts,
+  [ApplicationRoute.AssetsApplications]: importApps,
+  [ApplicationRoute.AssetsToolsets]: importToolsets,
+};
+
+export const ExportAssetActionMap = {
+  [ApplicationRoute.Prompts]: exportPrompts,
+  [ApplicationRoute.AssetsApplications]: exportApps,
+  [ApplicationRoute.AssetsToolsets]: exportToolsets,
+};
+
+export const RemoveAssetActionMap = {
+  [ApplicationRoute.Prompts]: removePrompt,
+  [ApplicationRoute.AssetsApplications]: removeApp,
+  [ApplicationRoute.AssetsToolsets]: removeToolset,
+};
+
+export const BulkDeleteAssetActionMap = {
+  [ApplicationRoute.Prompts]: bulkDeletePrompts,
+  [ApplicationRoute.AssetsApplications]: bulkDeleteApps,
+  [ApplicationRoute.AssetsToolsets]: bulkDeleteToolsets,
+};

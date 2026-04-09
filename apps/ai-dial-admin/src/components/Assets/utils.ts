@@ -2,7 +2,7 @@ import { ImageVersion } from '@/src/models/deployments/images';
 import { AssetApp, AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { compareVersions, modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
 import { ApplicationRoute } from '@/src/types/routes';
-import { allActionLabels, allToolbarOptionLabels } from './constants';
+import { allActionLabels, baseToolbarOptionLabels } from './constants';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { ImportFileType } from '@/src/types/import';
 import { ImportData, ParsedAssets } from '@/src/models/import-asset';
@@ -75,6 +75,8 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
       return isReadOnlyAdmin
         ? []
         : allActionLabels.filter((item) => item.key !== 'duplicate' && item.key !== 'openInNewTab');
+    case ApplicationRoute.AssetsApplications:
+    case ApplicationRoute.AssetsToolsets:
     case ApplicationRoute.Prompts:
       return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key !== 'preview');
     default:
@@ -95,11 +97,49 @@ export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: 
 
   switch (view) {
     case ApplicationRoute.Files:
-      return allToolbarOptionLabels.filter((item) => item.key !== 'newItem');
+      return [...baseToolbarOptionLabels, { key: 'uploadFiles', label: FileManagerI18nKey.Files, icon: null }];
+    case ApplicationRoute.AssetsApplications:
+      return [
+        ...baseToolbarOptionLabels,
+        {
+          key: 'newItem',
+          label: FileManagerI18nKey.Application,
+          icon: null,
+        },
+        {
+          key: 'uploadFiles',
+          label: ButtonsI18nKey.Import,
+          icon: null,
+        },
+      ];
+    case ApplicationRoute.AssetsToolsets:
+      return [
+        ...baseToolbarOptionLabels,
+        {
+          key: 'newItem',
+          label: FileManagerI18nKey.Toolset,
+          icon: null,
+        },
+        {
+          key: 'uploadFiles',
+          label: ButtonsI18nKey.Import,
+          icon: null,
+        },
+      ];
     case ApplicationRoute.Prompts:
-      return allToolbarOptionLabels.map((option) => {
-        return option.key === 'uploadFiles' ? { ...option, label: ButtonsI18nKey.Import } : option;
-      });
+      return [
+        ...baseToolbarOptionLabels,
+        {
+          key: 'newItem',
+          label: FileManagerI18nKey.Prompt,
+          icon: null,
+        },
+        {
+          key: 'uploadFiles',
+          label: ButtonsI18nKey.Import,
+          icon: null,
+        },
+      ];
     default:
       return [];
   }
@@ -149,6 +189,36 @@ export const getDeleteNotificationContent = (
           })
         : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
             item: t(FileManagerI18nKey.Prompt),
+            name: (fileNodes as DialFile[])?.[0].name || '',
+            path: destinationFolder || '/',
+          });
+      return { title, description };
+    }
+    case ApplicationRoute.AssetsApplications: {
+      const title = isDeleteSeveralFiles
+        ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Items) })
+        : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Application) });
+      const description = isDeleteSeveralFiles
+        ? t(FileManagerI18nKey.DeleteSuccessDescriptionForMany, {
+            count: fileNodes.length,
+          })
+        : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
+            item: t(FileManagerI18nKey.Application),
+            name: (fileNodes as DialFile[])?.[0].name || '',
+            path: destinationFolder || '/',
+          });
+      return { title, description };
+    }
+    case ApplicationRoute.AssetsToolsets: {
+      const title = isDeleteSeveralFiles
+        ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Items) })
+        : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Toolset) });
+      const description = isDeleteSeveralFiles
+        ? t(FileManagerI18nKey.DeleteSuccessDescriptionForMany, {
+            count: fileNodes.length,
+          })
+        : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
+            item: t(FileManagerI18nKey.Toolset),
             name: (fileNodes as DialFile[])?.[0].name || '',
             path: destinationFolder || '/',
           });
@@ -222,6 +292,38 @@ export const getMoveNotificationContent = (
 
       return { title, description };
     }
+    case ApplicationRoute.AssetsApplications: {
+      const title = isMoveSeveralFiles
+        ? t(FileManagerI18nKey.MoveSuccessTitle, { item: t(FileManagerI18nKey.Items) })
+        : t(FileManagerI18nKey.MoveSuccessTitle, { item: t(FileManagerI18nKey.Application) });
+      const description = isMoveSeveralFiles
+        ? t(FileManagerI18nKey.MoveSuccessDescriptionForMany, {
+            count: items.length,
+            path: destinationFolder,
+          })
+        : t(FileManagerI18nKey.MoveSuccessDescriptionForOne, {
+            item: t(FileManagerI18nKey.Application),
+            name: items[0].sourceUrl,
+            path: destinationFolder,
+          });
+      return { title, description };
+    }
+    case ApplicationRoute.AssetsToolsets: {
+      const title = isMoveSeveralFiles
+        ? t(FileManagerI18nKey.MoveSuccessTitle, { item: t(FileManagerI18nKey.Items) })
+        : t(FileManagerI18nKey.MoveSuccessTitle, { item: t(FileManagerI18nKey.Toolset) });
+      const description = isMoveSeveralFiles
+        ? t(FileManagerI18nKey.MoveSuccessDescriptionForMany, {
+            count: items.length,
+            path: destinationFolder,
+          })
+        : t(FileManagerI18nKey.MoveSuccessDescriptionForOne, {
+            item: t(FileManagerI18nKey.Toolset),
+            name: items[0].sourceUrl,
+            path: destinationFolder,
+          });
+      return { title, description };
+    }
     default:
       return {
         title: '',
@@ -258,6 +360,30 @@ export const getExportNotificationContent = (
       const description = isExportSeveralPrompt
         ? t(FileManagerI18nKey.ExportSuccessDescriptionForMany)
         : t(FileManagerI18nKey.ExportSuccessDescriptionForOne, { item: t(FileManagerI18nKey.Prompt) });
+
+      return { title, description };
+    }
+    case ApplicationRoute.AssetsApplications: {
+      const isExportSeveralApps =
+        filePaths.length > 1 || (files.length === 1 && files[0].nodeType === DialFileNodeType.FOLDER);
+      const title = isExportSeveralApps
+        ? t(FileManagerI18nKey.ExportSuccessTitle, { item: t(FileManagerI18nKey.Applications) })
+        : t(FileManagerI18nKey.ExportSuccessTitle, { item: t(FileManagerI18nKey.Application) });
+      const description = isExportSeveralApps
+        ? t(FileManagerI18nKey.ExportSuccessDescriptionForMany)
+        : t(FileManagerI18nKey.ExportSuccessDescriptionForOne, { item: t(FileManagerI18nKey.Application) });
+
+      return { title, description };
+    }
+    case ApplicationRoute.AssetsToolsets: {
+      const isExportSeveralToolsets =
+        filePaths.length > 1 || (files.length === 1 && files[0].nodeType === DialFileNodeType.FOLDER);
+      const title = isExportSeveralToolsets
+        ? t(FileManagerI18nKey.ExportSuccessTitle, { item: t(FileManagerI18nKey.Toolsets) })
+        : t(FileManagerI18nKey.ExportSuccessTitle, { item: t(FileManagerI18nKey.Toolset) });
+      const description = isExportSeveralToolsets
+        ? t(FileManagerI18nKey.ExportSuccessDescriptionForMany)
+        : t(FileManagerI18nKey.ExportSuccessDescriptionForOne, { item: t(FileManagerI18nKey.Toolset) });
 
       return { title, description };
     }
@@ -327,6 +453,66 @@ export const getImportNotificationContent = (
             })
           : t(FileManagerI18nKey.ImportSuccessDescriptionForOne, {
               item: t(FileManagerI18nKey.Prompt),
+              path: destinationFolder,
+            });
+      }
+
+      return {
+        title,
+        description,
+      };
+    }
+    case ApplicationRoute.AssetsApplications: {
+      const applications = (file as ParsedAssets)?.applications;
+      const isImportSeveralApplications = Array.isArray(applications) && applications.length > 1;
+
+      const title = isImportSeveralApplications
+        ? t(FileManagerI18nKey.ImportSuccessTitle, { item: t(FileManagerI18nKey.Applications) })
+        : t(FileManagerI18nKey.ImportSuccessTitle, { item: t(FileManagerI18nKey.Application) });
+      let description = '';
+      if (fileType === ImportFileType.ARCHIVE) {
+        description = t(FileManagerI18nKey.ImportSuccessDescriptionForArchive, {
+          item: t(FileManagerI18nKey.Applications),
+          path: destinationFolder,
+        });
+      } else {
+        description = isImportSeveralApplications
+          ? t(FileManagerI18nKey.ImportSuccessDescriptionForMany, {
+              count: applications.length,
+              path: destinationFolder,
+            })
+          : t(FileManagerI18nKey.ImportSuccessDescriptionForOne, {
+              item: t(FileManagerI18nKey.Application),
+              path: destinationFolder,
+            });
+      }
+
+      return {
+        title,
+        description,
+      };
+    }
+    case ApplicationRoute.AssetsToolsets: {
+      const toolsets = (file as ParsedAssets)?.toolSets;
+      const isImportSeveralToolsets = Array.isArray(toolsets) && toolsets.length > 1;
+
+      const title = isImportSeveralToolsets
+        ? t(FileManagerI18nKey.ImportSuccessTitle, { item: t(FileManagerI18nKey.Toolsets) })
+        : t(FileManagerI18nKey.ImportSuccessTitle, { item: t(FileManagerI18nKey.Toolset) });
+      let description = '';
+      if (fileType === ImportFileType.ARCHIVE) {
+        description = t(FileManagerI18nKey.ImportSuccessDescriptionForArchive, {
+          item: t(FileManagerI18nKey.Toolsets),
+          path: destinationFolder,
+        });
+      } else {
+        description = isImportSeveralToolsets
+          ? t(FileManagerI18nKey.ImportSuccessDescriptionForMany, {
+              count: toolsets.length,
+              path: destinationFolder,
+            })
+          : t(FileManagerI18nKey.ImportSuccessDescriptionForOne, {
+              item: t(FileManagerI18nKey.Toolset),
               path: destinationFolder,
             });
       }
