@@ -253,6 +253,7 @@ export const getMoveNotificationContent = (
     const description = t(FileManagerI18nKey.MoveSuccessDescriptionForOne, {
       item: t(FileManagerI18nKey.Folder),
       name: items[0].sourceUrl,
+      path: destinationFolder,
     });
     return { title, description };
   }
