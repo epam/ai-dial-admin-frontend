@@ -209,7 +209,7 @@ const RouteProperties: FC<Props> = ({ route, disabled, isAppRoute, routeNames, o
         onChange={onChangeDisplayName}
         disabled={disabled}
         names={isAppRoute ? routeNames || [] : void 0}
-        allowWhitespace={false}
+        allowWhitespace={!isAppRoute}
         alphanumericOnly={isAppRoute}
       />
       {!isAppRoute && <DescriptionControl entity={route} onChangeEntity={onChange} isFullWidth={false} />}

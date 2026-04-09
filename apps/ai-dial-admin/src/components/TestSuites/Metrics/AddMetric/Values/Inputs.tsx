@@ -124,7 +124,7 @@ const MetricInput: FC<{
         <DialSelect
           elementId={field.id}
           options={selectedTestSuite?.testCaseSchema?.map((item) => ({ label: item.name, value: item.name })) || []}
-          value={binding?.source.value as string | undefined}
+          value={binding?.source.columnName as string | undefined}
           onChange={(v) => onChangeTestCase(v as string)}
         />
       )}
