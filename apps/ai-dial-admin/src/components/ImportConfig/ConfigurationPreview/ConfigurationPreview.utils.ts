@@ -19,7 +19,7 @@ import { BaseEntity, ChatEntity } from '@/src/models/dial/base-entity';
 import { FileComponentItem, FileConfiguration } from '@/src/models/import';
 import { ActivityAuditEntity } from '@/src/types/activity-audit';
 import { DeploymentExportEntityType } from '@/src/types/deployments/export';
-import { DeploymentImportPreviewResponse } from '@/src/types/deployments/preview';
+import { DeploymentImportPreviewResponse } from '@/src/models/deployments/preview';
 import { EntityType } from '@/src/types/entity-type';
 import { ImportConfigurationAction } from '@/src/types/import';
 import { getEntitiesList } from '@/src/utils/entities/get-entities-list';

@@ -17,7 +17,7 @@ import {
 import { DialModel } from '@/src/models/dial/model';
 import { EntityType } from '@/src/types/entity-type';
 import { ExportFormat } from '@/src/types/export';
-import { DeploymentExportPreviewResponse, ExportComponentInfo } from '@/src/types/deployments/preview';
+import { DeploymentExportPreviewResponse, ExportComponentInfo } from '@/src/models/deployments/preview';
 import { DeploymentExportComponentType, DeploymentExportEntityType } from '@/src/types/deployments/export';
 
 /**

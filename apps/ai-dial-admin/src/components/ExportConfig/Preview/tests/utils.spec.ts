@@ -3,7 +3,7 @@ import { buildDeploymentExportPreviewRequest } from '@/src/components/ExportConf
 import { getDeploymentExportPreviewTabs, getPreviewTabs } from '../utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { DeploymentExportComponentType, DeploymentExportEntityType } from '@/src/types/deployments/export';
-import { DeploymentExportPreviewResponse } from '@/src/types/deployments/preview';
+import { DeploymentExportPreviewResponse } from '@/src/models/deployments/preview';
 import { ExportFormat, ExportType } from '@/src/types/export';
 
 vi.mock('@/src/utils/entities/entities-list-view');

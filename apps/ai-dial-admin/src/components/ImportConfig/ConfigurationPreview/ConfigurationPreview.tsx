@@ -23,7 +23,7 @@ import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { FileComponentItem, FileConfiguration } from '@/src/models/import';
 import { ActivityAuditEntity } from '@/src/types/activity-audit';
-import { DeploymentImportPreviewResponse } from '@/src/types/deployments/preview';
+import { DeploymentImportPreviewResponse } from '@/src/models/deployments/preview';
 import { EntityType } from '@/src/types/entity-type';
 import { ImportFileType } from '@/src/types/import';
 import { getErrorNotification } from '@/src/utils/notification';

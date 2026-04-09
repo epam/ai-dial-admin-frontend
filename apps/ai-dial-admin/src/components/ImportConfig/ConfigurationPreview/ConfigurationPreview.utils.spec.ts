@@ -1,5 +1,5 @@
 import { DeploymentExportEntityType } from '@/src/types/deployments/export';
-import { DeploymentImportPreviewResponse } from '@/src/types/deployments/preview';
+import { DeploymentImportPreviewResponse } from '@/src/models/deployments/preview';
 import { EntityType } from '@/src/types/entity-type';
 import { ImportConfigurationAction } from '@/src/types/import';
 import { describe, expect, test } from 'vitest';

@@ -12,7 +12,7 @@ import { useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { DeploymentExportRequest, ExportRequest } from '@/src/models/export';
 import { EntityType } from '@/src/types/entity-type';
-import { DeploymentExportPreviewResponse } from '@/src/types/deployments/preview';
+import { DeploymentExportPreviewResponse } from '@/src/models/deployments/preview';
 import { ExportType } from '@/src/types/export';
 import { getErrorNotification } from '@/src/utils/notification';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
