@@ -613,6 +613,8 @@ export enum TelemetryI18nKey {
   EntitiesConsumption = 'Telemetry.EntitiesConsumption',
   ProjectsConsumption = 'Telemetry.ProjectsConsumption',
   AutoRefresh = 'Telemetry.AutoRefresh',
+  SelectEntities = 'Telemetry.SelectEntities',
+  SelectProjects = 'Telemetry.SelectProjects',
   AddFilter = 'Telemetry.AddFilter',
   TimePeriod = 'Telemetry.TimePeriod',
   CustomTimeRage = 'Telemetry.CustomTimeRage',
