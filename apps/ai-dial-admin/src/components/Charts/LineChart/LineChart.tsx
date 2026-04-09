@@ -5,14 +5,15 @@ import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import ReactECharts, { EChartsOption } from 'echarts-for-react';
 
 import { BasicI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
-import { refreshOptionsConfig, SYSTEM_USAGE_QUERY } from '@/src/constants/telemetry';
+import { createSystemUsageQuery, refreshOptionsConfig } from '@/src/constants/telemetry';
 import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { TelemetryData, TelemetryQuery } from '@/src/models/telemetry';
+import { TelemetryData } from '@/src/models/telemetry';
 import { getListingData, prepareChartData } from '@/src/utils/telemetry';
+import { QueryInput } from '@/src/components/Telemetry/Dashboard';
 
 interface Props {
-  getData: (query: TelemetryQuery) => Promise<ServerActionResponse>;
+  getData: (input: QueryInput) => Promise<ServerActionResponse>;
   refreshTime?: string;
 }
 
@@ -25,7 +26,7 @@ const LineChart: FC<Props> = ({ getData, refreshTime }) => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      const response = await getData(SYSTEM_USAGE_QUERY);
+      const response = await getData(createSystemUsageQuery);
 
       if (response.success) {
         const data = getListingData(response.response as TelemetryData);

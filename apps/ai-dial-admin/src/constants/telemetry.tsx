@@ -4,6 +4,7 @@ import NotContains from '@/public/images/icons/filter/not-contains.svg';
 import StartsWith from '@/public/images/icons/filter/starts-with.svg';
 import { TelemetryI18nKey } from '@/src/constants/i18n';
 import { TelemetryQuery } from '@/src/models/telemetry';
+import { ChartResolution, formatWindow } from '@/src/utils/time-filter/get-chart-resolution';
 import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
 import { IconEqual, IconEqualNot } from '@tabler/icons-react';
 import { BASE_BUTTON_ICON_PROPS } from './main-layout';
@@ -143,16 +144,16 @@ export const PROJECT_CONSUMPTION_QUERY: TelemetryQuery = {
   },
 };
 
-export const SYSTEM_USAGE_QUERY: TelemetryQuery = {
+export const createSystemUsageQuery = (resolution: ChartResolution): TelemetryQuery => ({
   $type: 'json',
   fillGaps: true,
   query: {
-    expressions: ["window(_time, 1, 'm') as time", 'count() as requests'],
+    expressions: [`${formatWindow(resolution)} as time`, 'count() as requests'],
     from: 'analytics',
-    groupBy: ["window(_time, 1, 'm')"],
+    groupBy: [formatWindow(resolution)],
     orderBy: [{ $asc: 'time' }],
   },
-};
+});
 
 export const TRACES_QUERY: TelemetryQuery = {
   $type: 'json',
@@ -236,16 +237,16 @@ export const CONVERSATIONS_QUERY: TelemetryQuery = {
 export const MCP_TABLE_NAME = 'mcp_analytics';
 export const TOOLSET_DEPLOYMENT_PREFIX = 'toolsets/';
 
-export const MCP_USAGE_QUERY: TelemetryQuery = {
+export const createMcpUsageQuery = (resolution: ChartResolution): TelemetryQuery => ({
   $type: 'json',
   fillGaps: true,
   query: {
-    expressions: ["window(_time, 1, 'm')", 'mcp_method', 'count()'],
+    expressions: [formatWindow(resolution), 'mcp_method', 'count()'],
     from: MCP_TABLE_NAME,
-    groupBy: ["window(_time, 1, 'm')", 'mcp_method'],
-    orderBy: [{ $asc: "window(_time, 1, 'm')" }],
+    groupBy: [formatWindow(resolution), 'mcp_method'],
+    orderBy: [{ $asc: formatWindow(resolution) }],
   },
-};
+});
 
 export const MCP_TOTAL_CALLS_QUERY: TelemetryQuery = {
   $type: 'json',
