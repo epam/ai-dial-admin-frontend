@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-this-alias */
 /* eslint-disable @next/next/no-img-element */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable jsx-a11y/alt-text */
+
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 import { ReactNode } from 'react';

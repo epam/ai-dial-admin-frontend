@@ -636,6 +636,7 @@ export default {
     OpenGrafana: 'Open Grafana',
     Filter: {
       TypeProjects: 'Projects',
+      TypeMcp: 'MCP',
       TypeEntities: 'Entities',
       ConditionContain: 'Contain',
       ConditionNotContain: 'Not Contain',

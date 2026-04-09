@@ -21,7 +21,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { Publication, ToolsetPublication } from '@/src/models/dial/publications';
 import { DialRule } from '@/src/models/dial/rule';
-import { Toolset } from '@/src/models/dial/toolset';
+import { Toolset, ToolsetAuthType } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -198,16 +198,19 @@ const PublicationView = <T extends Publication>({ view, publication, application
         warning={warning}
         onChangeActiveTab={setActiveTab}
       >
-        {view === ApplicationRoute.ToolsetPublications && toolset && (
-          <AuthButtons
-            selectedToolset={toolset}
-            oAuthCode={oAuthCode}
-            publicationName={publication.requestName}
-            view={ApplicationRoute.ToolsetPublications}
-            signInToolset={signInToolset}
-            signOutToolset={signOutToolset}
-          />
-        )}
+        {view === ApplicationRoute.ToolsetPublications &&
+          toolset &&
+          toolset.authSettings?.authenticationType &&
+          toolset.authSettings?.authenticationType !== ToolsetAuthType.NONE && (
+            <AuthButtons
+              selectedToolset={toolset}
+              oAuthCode={oAuthCode}
+              publicationName={publication.requestName}
+              view={ApplicationRoute.ToolsetPublications}
+              signInToolset={signInToolset}
+              signOutToolset={signOutToolset}
+            />
+          )}
       </PublicationsHeader>
       <div className="flex-1 overflow-auto min-h-0">
         {isEditorEnabled ? (
