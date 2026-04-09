@@ -7,7 +7,7 @@ import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { BasicI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
-import { getFilterConditionConfig, getFilterTypeConfig } from '@/src/utils/telemetry';
+import { getFilterConditionConfig, getFilterTypeConfig, isDeploymentFilter } from '@/src/utils/telemetry';
 import { ApplicationRoute } from '@/src/types/routes';
 import CloseButton from '@/src/components/Common/CloseButton/CloseButton';
 
