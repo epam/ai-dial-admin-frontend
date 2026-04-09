@@ -20,7 +20,10 @@ import DeploymentConfigContent from '@/src/components/ExportConfig/Content/Deplo
 import PreviewModal from '@/src/components/ExportConfig/Preview/PreviewModal';
 import ExportDependencies from '@/src/components/ExportConfig/Structure/Dependencies';
 import { fulDependenciesConfig, getComponents, getComponentTypes } from '@/src/components/ExportConfig/utils';
-import { getDeploymentExportComponents } from '@/src/components/ExportConfig/deployment-utils';
+import {
+  buildDeploymentExportPreviewRequest,
+  getDeploymentExportComponents,
+} from '@/src/components/ExportConfig/deployment-utils';
 import { ButtonsI18nKey, ExportI18nKey, ImportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -295,6 +298,9 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap, deploymentsEnabled }) 
       {isModalOpen && (
         <PreviewModal
           exportRequest={isDeploymentContext ? undefined : exportRequest}
+          deploymentExportRequest={
+            isDeploymentContext ? buildDeploymentExportPreviewRequest(customExportData) : undefined
+          }
           isDeploymentExport={isDeploymentContext}
           isModalOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}

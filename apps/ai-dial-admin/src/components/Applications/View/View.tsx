@@ -75,6 +75,7 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
   const [coreApplication, setCoreApplication] = useState<DialApplication | null>(null);
+  const [discardKey, setDiscardKey] = useState(0);
 
   const { visualizerConnector } = useAppContext();
 
@@ -156,6 +157,7 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
 
     setSelectedApplication(originalApplication);
     setIsSkipRefresh(false);
+    setDiscardKey((prev) => prev + 1);
   }, [isEditorEnabled, originalApplication]);
 
   const onChangeApplication = useCallback(
@@ -292,6 +294,7 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
           />
         ) : (
           <TabsContent
+            key={discardKey}
             view={ApplicationRoute.Applications}
             activeTab={activeTab}
             selectedApplication={selectedApplication}

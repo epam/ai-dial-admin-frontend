@@ -12,10 +12,14 @@ import {
   MODELS_COLUMNS,
   BASE_COLUMNS,
 } from '@/src/constants/grid-columns/grid-columns';
+import { DEPLOYMENT_ENTITY_TABS } from '@/src/components/ExportConfig/deployment-utils';
+import { DeploymentsI18nKey } from '@/src/constants/i18n';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity, ChatEntity } from '@/src/models/dial/base-entity';
 import { FileComponentItem, FileConfiguration } from '@/src/models/import';
 import { ActivityAuditEntity } from '@/src/types/activity-audit';
+import { DeploymentExportEntityType } from '@/src/types/deployments/export';
+import { DeploymentImportPreviewResponse } from '@/src/models/deployments/preview';
 import { EntityType } from '@/src/types/entity-type';
 import { ImportConfigurationAction } from '@/src/types/import';
 import { getEntitiesList } from '@/src/utils/entities/get-entities-list';
@@ -126,7 +130,7 @@ export const getActionClassName = (action: string): string => {
   return 'bg-controls-disable';
 };
 
-const getComponentActionColumn = (): ColDef => {
+export const getComponentActionColumn = (): ColDef => {
   return {
     field: 'action',
     headerName: 'Action',
@@ -168,4 +172,63 @@ export const getEntityByIdentifier = (allEntities: ActivityAuditEntity[], entity
   return allEntities.find(
     (e) => e?.name === (entity as ChatEntity)?.name || (e?.$id && e?.$id === (entity as DialApplicationScheme)?.$id),
   ) as ActivityAuditEntity;
+};
+
+const DEPLOYMENT_IMPORT_KEY_MAP: Record<string, DeploymentExportEntityType> = {
+  mcpDeployments: DeploymentExportEntityType.MCP_CONTAINER,
+  adapterDeployments: DeploymentExportEntityType.ADAPTER_CONTAINER,
+  interceptorDeployments: DeploymentExportEntityType.INTERCEPTOR_CONTAINER,
+  nimDeployments: DeploymentExportEntityType.MODEL_SERVING,
+  inferenceDeployments: DeploymentExportEntityType.MODEL_SERVING,
+  mcpImageDefinitions: DeploymentExportEntityType.IMAGE,
+  adapterImageDefinitions: DeploymentExportEntityType.IMAGE,
+  interceptorImageDefinitions: DeploymentExportEntityType.IMAGE,
+};
+
+export const GLOBAL_FIREWALL_TAB_ID = 'GLOBAL_FIREWALL';
+
+export const getDeploymentConfigurationPreview = (
+  response: DeploymentImportPreviewResponse,
+  t: (v: string) => string,
+): {
+  previewData: Record<string, BaseEntity[]>;
+  prevData: Record<string, (BaseEntity | undefined)[]>;
+  tabs: TabModel[];
+  globalFirewall: FileComponentItem | null;
+} => {
+  const grouped: Record<string, FileComponentItem[]> = {};
+
+  for (const [key, entityType] of Object.entries(DEPLOYMENT_IMPORT_KEY_MAP)) {
+    const items = response[key as keyof DeploymentImportPreviewResponse] as FileComponentItem[] | null;
+    if (items && Array.isArray(items) && items.length > 0) {
+      if (!grouped[entityType]) grouped[entityType] = [];
+      grouped[entityType].push(...items);
+    }
+  }
+
+  const previewData: Record<string, BaseEntity[]> = {};
+  const prevData: Record<string, (BaseEntity | undefined)[]> = {};
+  const tabs: TabModel[] = [];
+
+  for (const { id, labelKey } of DEPLOYMENT_ENTITY_TABS) {
+    const items = grouped[id];
+    if (items && items.length > 0) {
+      previewData[id] = getConfigurationItems(items, t);
+      prevData[id] = getPrevItems(items);
+      tabs.push({
+        id,
+        label: `${t(labelKey)}: ${items.length}`,
+      });
+    }
+  }
+
+  const globalFirewall = response.globalImageBuildDomainWhitelist;
+  if (globalFirewall) {
+    tabs.push({
+      id: GLOBAL_FIREWALL_TAB_ID,
+      label: t(DeploymentsI18nKey.GlobalFirewall),
+    });
+  }
+
+  return { previewData, prevData, tabs, globalFirewall };
 };
