@@ -1365,6 +1365,9 @@ export default {
     BuilderRoot: 'Root',
     BuilderRootlessCaption: 'Builds the image without root privileges for improved security and reduced risk.',
     BuilderRootCaption: 'Builds the image with root privileges. Increasing security risks.',
+    AddImage: 'Add Image',
+    FromMcpRegistry: 'From MCP Registry',
+    AddFromMcpRegistryModalTitle: 'Add Image from MCP Registry',
   },
   Containers: {
     ContainersListTitle: '{type} {entityType}s',
