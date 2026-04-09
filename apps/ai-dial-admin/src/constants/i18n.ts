@@ -361,6 +361,7 @@ export enum ButtonsI18nKey {
   Upload = 'Buttons.Upload',
   ShowMore = 'Buttons.ShowMore',
   ShowLess = 'Buttons.ShowLess',
+  PrepareFile = 'Buttons.PrepareFile',
 }
 
 export enum UpdateI18nKey {

@@ -13,6 +13,10 @@ const defaultProps = {
 
 vi.mock('@/src/app/[lang]/export-config/actions', () => ({
   previewExportConfig: vi.fn().mockResolvedValue({ success: true, response: {} }),
+  previewDeploymentExportConfig: vi.fn().mockResolvedValue({
+    success: true,
+    response: { deployments: [], imageDefinitions: [], globalImageBuildDomainWhitelist: [] },
+  }),
 }));
 
 describe('PreviewModal', () => {
@@ -42,5 +46,32 @@ describe('PreviewModal', () => {
     expect(switchLabel).toBeInTheDocument();
     fireEvent.click(switchLabel);
     // No assertion for state, but this covers the toggle
+  });
+
+  test('renders "Prepare file" button for deployment export', async () => {
+    render(
+      <PreviewModal
+        {...defaultProps}
+        exportRequest={undefined}
+        deploymentExportRequest={{ $type: ExportType.Custom, components: [] }}
+        isDeploymentExport={true}
+      />,
+    );
+    expect(screen.getByText(ExportI18nKey.FilePreview)).toBeInTheDocument();
+    const prepareBtn = await screen.findByRole('button', { name: ButtonsI18nKey.PrepareFile });
+    expect(prepareBtn).toBeInTheDocument();
+  });
+
+  test('shows include global firewall checkbox for deployment export', async () => {
+    render(
+      <PreviewModal
+        {...defaultProps}
+        exportRequest={undefined}
+        deploymentExportRequest={{ $type: ExportType.Custom, components: [] }}
+        isDeploymentExport={true}
+      />,
+    );
+    const firewallLabel = await screen.findByText(ExportI18nKey.IncludeGlobalFirewall);
+    expect(firewallLabel).toBeInTheDocument();
   });
 });

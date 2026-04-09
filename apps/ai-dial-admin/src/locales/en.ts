@@ -400,6 +400,7 @@ export default {
     Save: 'Save',
     ShowMore: 'Show more',
     ShowLess: 'Show less',
+    PrepareFile: 'Prepare file',
     Download: 'Download',
     SaveAndRedeploy: 'Save & redeploy',
     Remove: 'Remove',

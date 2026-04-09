@@ -6,7 +6,7 @@ import { deploymentConfigApi } from '@/src/app/api/api';
 import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { DeploymentExportComponentType } from '@/src/types/deployments/export';
 import { ExportType } from '@/src/types/export';
-import { exportDeploymentConfig } from '../actions';
+import { exportDeploymentConfig, previewDeploymentExportConfig } from '../actions';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -73,6 +73,32 @@ describe('Export config actions :: exportDeploymentConfig', () => {
     const result = await exportDeploymentConfig(request);
 
     expect(deploymentConfigApi.exportConfig).toHaveBeenCalledWith(request, TOKEN_MOCK);
+    expect(result).toBe(mockResponse);
+  });
+});
+
+describe('Export config actions :: previewDeploymentExportConfig', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (getUserToken as any).mockResolvedValue(TOKEN_MOCK);
+    (getIsEnableAuthToggle as any).mockReturnValue(true);
+  });
+
+  test('calls deploymentConfigApi.previewExportConfig with request and token', async () => {
+    const mockResponse = { success: true, response: { deployments: [], imageDefinitions: [] } };
+    (deploymentConfigApi.previewExportConfig as any).mockResolvedValue(mockResponse);
+
+    const request = {
+      $type: ExportType.Custom,
+      addSecrets: false,
+      addGlobalImageBuildDomainWhitelist: false,
+      components: [{ name: 'mcp-1', type: DeploymentExportComponentType.MCP_DEPLOYMENT }],
+    };
+
+    const result = await previewDeploymentExportConfig(request);
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(deploymentConfigApi.previewExportConfig).toHaveBeenCalledWith(request, TOKEN_MOCK);
     expect(result).toBe(mockResponse);
   });
 });
