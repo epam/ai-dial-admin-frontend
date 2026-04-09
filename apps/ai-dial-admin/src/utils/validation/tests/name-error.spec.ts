@@ -3,7 +3,13 @@ import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { ErrorI18nKey } from '@/src/constants/i18n';
 import { FORBIDDEN_NAME_SYMBOLS } from '@/src/constants/validation';
 import { ErrorType } from '@/src/types/error-type';
-import { getErrorForDisplayName, getErrorForName, getErrorForUrlId, hasInvalidCharacters } from '../name-error';
+import {
+  getErrorForAppRouteName,
+  getErrorForDisplayName,
+  getErrorForName,
+  getErrorForUrlId,
+  hasInvalidCharacters,
+} from '../name-error';
 
 const mockT = vi.fn().mockReturnValue('Translated Text');
 
@@ -360,5 +366,88 @@ describe('getErrorForDisplayName', () => {
 describe('hasInvalidCharacters', () => {
   test('returns false if value is n void 0', () => {
     expect(hasInvalidCharacters()).toBe(false);
+  });
+});
+
+describe('getErrorForAppRouteName', () => {
+  const t = vi.fn().mockReturnValue('Translated Text');
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test('returns null for valid alphanumeric name', () => {
+    expect(getErrorForAppRouteName('routeName123', [], t)).toBeNull();
+  });
+
+  test('returns null for name with underscore', () => {
+    expect(getErrorForAppRouteName('my_route_1', [], t)).toBeNull();
+  });
+
+  test('returns null for exactly 2 valid characters', () => {
+    expect(getErrorForAppRouteName('ab', [], t)).toBeNull();
+  });
+
+  test('returns FORBIDDEN_CHARS error for name with hyphen', () => {
+    expect(getErrorForAppRouteName('my-route', [], t)).toEqual({
+      type: ErrorType.FORBIDDEN_CHARS,
+      text: 'Translated Text',
+    });
+  });
+
+  test('returns FORBIDDEN_CHARS error for name with space', () => {
+    expect(getErrorForAppRouteName('my route', [], t)).toEqual({
+      type: ErrorType.FORBIDDEN_CHARS,
+      text: 'Translated Text',
+    });
+  });
+
+  test('returns FORBIDDEN_CHARS error for name with @', () => {
+    expect(getErrorForAppRouteName('route@1', [], t)).toEqual({
+      type: ErrorType.FORBIDDEN_CHARS,
+      text: 'Translated Text',
+    });
+  });
+
+  test('returns FORBIDDEN_CHARS error without t', () => {
+    expect(getErrorForAppRouteName('my-route', [])).toEqual({
+      type: ErrorType.FORBIDDEN_CHARS,
+      text: '',
+    });
+  });
+
+  test('returns EXISTING error for duplicate name', () => {
+    expect(getErrorForAppRouteName('route1', ['route1'], t)).toEqual({
+      type: ErrorType.EXISTING,
+      text: 'Translated Text',
+    });
+  });
+
+  test('returns LENGTH error for name too short', () => {
+    expect(getErrorForAppRouteName('a', [], t)).toEqual({
+      type: ErrorType.LENGTH,
+      text: 'Translated Text',
+    });
+  });
+
+  test('returns LENGTH error for empty string', () => {
+    expect(getErrorForAppRouteName('', [], t)).toEqual({
+      type: ErrorType.LENGTH,
+      text: 'Translated Text',
+    });
+  });
+
+  test('returns LENGTH error for name exceeding max length', () => {
+    expect(getErrorForAppRouteName('a'.repeat(256), [], t)).toEqual({
+      type: ErrorType.LENGTH,
+      text: 'Translated Text',
+    });
+  });
+
+  test('returns null for undefined name treated as empty (length error)', () => {
+    expect(getErrorForAppRouteName(undefined, [], t)).toEqual({
+      type: ErrorType.LENGTH,
+      text: 'Translated Text',
+    });
   });
 });

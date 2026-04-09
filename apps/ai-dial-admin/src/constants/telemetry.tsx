@@ -25,6 +25,11 @@ export const filterTypeConfig = [
   { value: FILTER_TYPE.Project, label: TelemetryI18nKey.FilterTypeProjects, filter: 'project_id' },
 ];
 
+export const mcpFilterTypeConfig = [
+  { value: FILTER_TYPE.Mcp, label: TelemetryI18nKey.FilterTypeMcp, filter: 'deployment' },
+  { value: FILTER_TYPE.Project, label: TelemetryI18nKey.FilterTypeProjects, filter: 'project_id' },
+];
+
 export const filterConditionConfig = [
   { value: FILTER_OPERATOR.Contain, label: TelemetryI18nKey.FilterConditionContain, icon: <Contains /> },
   { value: FILTER_OPERATOR.NotContains, label: TelemetryI18nKey.FilterConditionNotContain, icon: <NotContains /> },

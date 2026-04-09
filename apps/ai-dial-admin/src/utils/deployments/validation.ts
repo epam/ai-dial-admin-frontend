@@ -427,7 +427,7 @@ export const getWhitelistDomainError = (
 };
 
 export const getPortError = (
-  value: number,
+  value: number | string,
   t?: (key: string, options?: Record<string, string | number>) => string,
   required?: boolean,
 ) => {
@@ -437,7 +437,7 @@ export const getPortError = (
       text: t ? t(ErrorI18nKey.RequiredField) : '',
     };
   }
-  if (value < 1 || value > 65535) {
+  if (typeof value === 'string' || !Number.isInteger(value) || value < 1 || value > 65535) {
     return {
       type: ErrorType.INVALID,
       text: t ? t(ErrorI18nKey.PortError) : '',

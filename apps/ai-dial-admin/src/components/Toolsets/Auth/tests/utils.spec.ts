@@ -148,6 +148,16 @@ describe('Toolsets Auth Utils', () => {
       expect(localStorage.getItem('toolset-auth-redirect-url')).toBe(`${mockUrn}?`);
     });
 
+    test('should set URL with query parameter for ToolsetPublications route', () => {
+      const mockUrn = '/toolsets/toolset-123';
+      vi.mocked(openInNewTab.getUrnForEntity).mockReturnValue(mockUrn);
+
+      setUrl(ApplicationRoute.ToolsetPublications, mockToolset);
+
+      expect(openInNewTab.getUrnForEntity).toHaveBeenCalledWith(ApplicationRoute.ToolsetPublications, mockToolset);
+      expect(localStorage.getItem('toolset-auth-redirect-url')).toBe(`${mockUrn}?`);
+    });
+
     test('should set URL with ampersand for AssetsToolsets route', () => {
       const mockUrn = '/assets/toolsets/toolset-123';
       vi.mocked(openInNewTab.getUrnForEntity).mockReturnValue(mockUrn);

@@ -30,6 +30,7 @@ import { BaseEntity } from '@/src/models/dial/base-entity';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useTimePeriodOptions } from '@/src/hooks/use-time-period-options';
 import { DASHBOARD_VIEW_TYPE } from '@/src/types/telemetry';
+import { isToolsetRoute } from '@/src/utils/is-view';
 
 interface Props {
   route: ApplicationRoute;
@@ -57,7 +58,7 @@ const Dashboard: FC<Props> = ({
   const timePeriodOptions = useTimePeriodOptions();
   const getReqRef = useRef(useProtectedRequest());
 
-  const isMcpOnly = route === ApplicationRoute.Toolsets || route === ApplicationRoute.AssetsToolsets;
+  const isMcpOnly = isToolsetRoute(route);
   const isMcpView = isMcpOnly || viewType === DASHBOARD_VIEW_TYPE.Mcp;
   const entityFilterName = useMemo(() => {
     if (route === ApplicationRoute.AssetsToolsets) {
