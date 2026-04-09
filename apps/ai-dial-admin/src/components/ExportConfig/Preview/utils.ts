@@ -157,7 +157,7 @@ const toDeploymentGridData = (item: ExportComponentInfo): EntitiesGridData => ({
   name: item.id,
   displayName: item.displayName ?? '',
   description: item.description ?? '',
-  $type: item.type,
+  type: item.type,
 });
 
 const toImageGridData = (item: ExportComponentInfo): EntitiesGridData => ({
@@ -165,7 +165,7 @@ const toImageGridData = (item: ExportComponentInfo): EntitiesGridData => ({
   name: item.displayName ?? item.id,
   description: item.description ?? '',
   version: item.version ?? undefined,
-  $type: item.type,
+  type: item.type,
 });
 
 export const getDeploymentExportPreviewTabs = (
