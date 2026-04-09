@@ -626,6 +626,8 @@ export default {
     AddFilter: 'Add filter',
     CustomTimeRage: 'Custom Time Range',
     Custom: 'Custom',
+    SelectEntities: 'Select entities',
+    SelectProjects: 'Select projects',
     UniqueUsers: 'Unique users',
     Requests: 'Requests',
     RequestsNumber: 'Requests number',
