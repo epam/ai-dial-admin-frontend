@@ -35,16 +35,13 @@ import {
   FileManagerColumnKey,
 } from '@epam/ai-dial-ui-kit';
 import { changeFolder, removeFolder } from '@/src/app/[lang]/folders-storage/actions';
-import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
 import { filterNames } from '@/src/utils/entities/filter-names';
 import { AssetApp, AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { useNotification } from '@/src/context/NotificationContext';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { ServerActionResponse } from '@/src/models/server-action';
-import DuplicateAsset from '@/src/components/Assets/Deployments/DuplicateAsset';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
-import ImportModal from '@/src/components/EntityListView/Import/ImportModal';
 import { ImportFileType } from '@/src/types/import';
 import { ImportData } from '@/src/models/import-asset';
 import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';
@@ -53,11 +50,10 @@ import { useRouter } from 'next/navigation';
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { downloadFile, downloadJson } from '@/src/utils/download';
 import { getJsonFileName } from '@/src/utils/import/get-json-name';
-import DeleteModal from './DeleteModal';
 import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import ExportModal from '@/src/components/EntityListView/Export/ExportModal';
-import { BaseAssetRoute } from './types';
+import { BaseAssetRoute, ModalType } from './types';
+import Modals from './Modals';
 
 interface Props {
   view: ApplicationRoute;
@@ -65,11 +61,8 @@ interface Props {
 }
 
 const BaseAssetList: FC<Props> = ({ view, runners }) => {
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalType, setModalType] = useState<ModalType | null>(null);
   const [destinationFolder, setDestinationFolder] = useState<string | null>(null);
   const [duplicateItem, setDuplicateItem] = useState<AssetWithVersion | null>(null);
   const [selectedVersionsMap, setSelectedVersionsMap] = useState<Record<string, string[]>>({});
@@ -106,13 +99,9 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
   }, [currentPath, fetchedFoldersData, data]);
 
   const handleCreateModalOpen = useCallback((_?: string, currentFolder?: DialFile) => {
-    setIsCreateModalOpen(true);
+    setIsModalOpen(true);
+    setModalType(ModalType.create);
     setDestinationFolder(currentFolder?.path || null);
-  }, []);
-
-  const handleCreateModalClose = useCallback(() => {
-    setIsCreateModalOpen(false);
-    setDestinationFolder(null);
   }, []);
 
   const handleDuplicateModalOpen = useCallback(
@@ -125,23 +114,15 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
       const getAsset = GetAssetActionMap[view as BaseAssetRoute];
       const fullAsset = await getAsset(folderId, name, version, DEFAULT_ETAG);
       setDuplicateItem(fullAsset?.response as AssetWithVersion);
-      setIsDuplicateModalOpen(true);
+      setIsModalOpen(true);
+      setModalType(ModalType.duplicate);
     },
     [view],
   );
 
-  const handleDuplicateModalClose = useCallback(() => {
-    setIsDuplicateModalOpen(false);
-  }, []);
-
-  const handleImportModalClose = useCallback(() => {
-    setIsImportModalOpen(false);
-    setDestinationFolder(null);
-    setDragAndDropsItems([]);
-  }, []);
-
   const handleImportModalOpen = useCallback((_?: string, currentFolder?: DialFile, preselectedItems?: File[]) => {
-    setIsImportModalOpen(true);
+    setIsModalOpen(true);
+    setModalType(ModalType.import);
     setDestinationFolder(currentFolder?.path || null);
     setDragAndDropsItems(preselectedItems || []);
   }, []);
@@ -149,25 +130,26 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
   const handleDeleteModalOpen = useCallback((items: DialFile[], parentFolderPath: string) => {
     setDestinationFolder(parentFolderPath);
     setDeleledItems(items);
-    setIsDeleteModalOpen(true);
-  }, []);
-
-  const handleDeleteModalClose = useCallback(() => {
-    setIsDeleteModalOpen(false);
-    setDeleledItems(null);
-    setDestinationFolder(null);
+    setIsModalOpen(true);
+    setModalType(ModalType.delete);
   }, []);
 
   const handleExportModalOpen = useCallback((files?: DialFile[]) => {
     if (files?.length) {
-      setIsExportModalOpen(true);
+      setIsModalOpen(true);
+      setModalType(ModalType.export);
       setExportedItems(files);
     }
   }, []);
 
-  const handleExportModalClose = useCallback(() => {
-    setIsExportModalOpen(false);
+  const handleModalClose = useCallback(() => {
+    setIsModalOpen(false);
+    setModalType(null);
+    setDestinationFolder(null);
+    setDragAndDropsItems([]);
+    setDeleledItems(null);
     setExportedItems(null);
+    setDuplicateItem(null);
   }, []);
 
   const handleGridItemClick = useCallback(
@@ -263,12 +245,12 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
 
-        handleCreateModalClose();
+        handleModalClose();
 
         return res;
       });
     },
-    [destinationFolder, fetchFiles, handleCreateModalClose, showNotification, t, router, view],
+    [destinationFolder, fetchFiles, handleModalClose, showNotification, t, router, view],
   );
 
   const handleDuplicate = useCallback(
@@ -278,9 +260,9 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
         path: `${asset.folderId}${asset.name}__${asset.version}`,
       };
       handleCreateAsset(newAsset as AssetApp, asset.folderId, true);
-      setIsDuplicateModalOpen(false);
+      handleModalClose();
     },
-    [handleCreateAsset],
+    [handleCreateAsset, handleModalClose],
   );
 
   const handleMoveItems = useCallback(
@@ -354,9 +336,9 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
         }
       });
 
-      handleImportModalClose();
+      handleModalClose();
     },
-    [destinationFolder, handleImportModalClose, fetchFiles, showNotification, view, t],
+    [destinationFolder, handleModalClose, fetchFiles, showNotification, view, t],
   );
 
   const processAssetsData = useCallback(
@@ -415,9 +397,9 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
         const { title, description } = getExportNotificationContent(view, exportedItems || [], t, filePaths);
         showNotification(getSuccessNotification(title, description));
       });
-      handleExportModalClose();
+      handleModalClose();
     },
-    [exportedItems, handleExportModalClose, showNotification, t, view],
+    [exportedItems, handleModalClose, showNotification, t, view],
   );
 
   const onDeleteFolder = useCallback(() => {
@@ -436,9 +418,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
     }
   }, [deletedItems, destinationFolder, fetchFiles, setFilePath, removeSelection, showNotification, t, view]);
 
-  const onMultipleRemove = useCallback(() => {
-    setIsDeleteModalOpen(false);
-
+  const onMultipleRemove = useCallback(async () => {
     if (deletedItems) {
       const assets = deletedItems.filter((item) => item.nodeType === DialFileNodeType.ITEM);
       const folders = deletedItems.filter((item) => item.nodeType === DialFileNodeType.FOLDER);
@@ -461,6 +441,8 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
       folders.forEach((folder) => {
         promises.push(removeFolder(folder.path));
       });
+
+      handleModalClose();
 
       return Promise.all(promises).then((result) => {
         const isSuccess = result.every((res) => res.success);
@@ -489,6 +471,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
     showNotification,
     t,
     view,
+    handleModalClose,
   ]);
 
   const onRemoveAssetEndHandler = useCallback(() => {
@@ -529,57 +512,27 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
         emptyStateTitle={emptyStateContent.title}
         emptyStateDescription={emptyStateContent.description}
       />
-      {isImportModalOpen && (
-        <ImportModal
-          route={view}
-          getAssetContext={getContext}
-          isModalOpen={isImportModalOpen}
-          onClose={handleImportModalClose}
-          onApply={onImport}
-          preselectedItems={dragAndDropsItems}
-        />
-      )}
-      {isCreateModalOpen && (
-        <CreateEntity
-          context={getContext}
-          route={view}
-          isModalOpen={isCreateModalOpen}
-          createEntity={handleCreateAsset}
-          onClose={handleCreateModalClose}
-          names={names || []}
-          versionsMap={versionsMap}
-          runners={runners}
-          isModal
-        />
-      )}
-      {isDuplicateModalOpen && (
-        <DuplicateAsset
-          context={getContext}
-          view={view}
-          entity={duplicateItem as AssetWithVersion}
-          versionsMap={versionsMap}
-          onDuplicate={handleDuplicate}
-          isModalOpen={isDuplicateModalOpen}
-          onClose={handleDuplicateModalClose}
-        />
-      )}
-      {isDeleteModalOpen && deletedItems && (
-        <DeleteModal
-          view={view}
-          isOpen={isDeleteModalOpen}
-          itemsToDelete={deletedItems}
-          versionsMap={versionsMap}
-          getAssetContext={getContext}
-          onRemoveAsset={RemoveAssetActionMap[view as BaseAssetRoute]}
-          onRemoveFolder={onDeleteFolder}
-          onMultipleRemove={onMultipleRemove}
-          onClose={handleDeleteModalClose}
-          onRemovePromptEnd={onRemoveAssetEndHandler}
-        />
-      )}
-      {isExportModalOpen && (
-        <ExportModal route={view} isModalOpen={isExportModalOpen} onClose={handleExportModalClose} onApply={onExport} />
-      )}
+      <Modals
+        view={view}
+        isModalOpen={isModalOpen}
+        modalType={modalType}
+        names={names}
+        runners={runners || []}
+        versionsMap={versionsMap}
+        preselectedItems={dragAndDropsItems}
+        duplicateItem={duplicateItem}
+        deletedItems={deletedItems}
+        getContext={getContext}
+        onClose={handleModalClose}
+        onCreate={handleCreateAsset}
+        onImport={onImport}
+        onExport={onExport}
+        onDuplicate={handleDuplicate}
+        onRemove={RemoveAssetActionMap[view as BaseAssetRoute]}
+        onDeleteFolder={onDeleteFolder}
+        onMultipleRemove={onMultipleRemove}
+        onRemoveAssetEnd={onRemoveAssetEndHandler}
+      />
     </>
   );
 };
