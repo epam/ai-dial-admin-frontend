@@ -1342,6 +1342,9 @@ export enum ImagesI18nKey {
   BuilderRoot = 'Images.BuilderRoot',
   BuilderRootlessCaption = 'Images.BuilderRootlessCaption',
   BuilderRootCaption = 'Images.BuilderRootCaption',
+  AddImage = 'Images.AddImage',
+  FromMcpRegistry = 'Images.FromMcpRegistry',
+  AddFromMcpRegistryModalTitle = 'Images.AddFromMcpRegistryModalTitle',
 }
 
 export enum ContainersI18nKey {

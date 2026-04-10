@@ -4,9 +4,8 @@ import { DialConfirmationPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 import { Image } from '@/src/models/deployments/images';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
-import { IMAGE_TEMPLATE } from '@/src/constants/deployments/images';
+import { getImageTemplate } from '@/src/utils/deployments/images';
 import { useI18n } from '@/src/locales/client';
-
 import ImageFields from '@/src/components/Images/Fields/ImageFields';
 
 interface Props {
@@ -14,13 +13,14 @@ interface Props {
   modalTitle: string;
   onClose: () => void;
   onApply: (image: Image) => void;
+  isRegistry?: boolean;
 }
 
-const ImageAdd: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply }) => {
+const ImageAdd: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply, isRegistry }) => {
   const t = useI18n();
   const { isValid } = useSaveValidationContext();
 
-  const [image, setImage] = useState<Image>(IMAGE_TEMPLATE as Image);
+  const [image, setImage] = useState<Image>(() => getImageTemplate(isRegistry));
 
   return (
     <DialConfirmationPopup

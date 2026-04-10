@@ -5,6 +5,8 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   getActionClass,
+  getImageSource,
+  getImageTemplate,
   getImageType,
   getUniqueImagesNames,
   getUniqueLatestImages,
@@ -336,6 +338,36 @@ describe('images utils', () => {
       const result = getUniqueImagesNames(images, IMAGE_TYPE.ADAPTER);
       expect(result).toEqual(['ImageName', 'imagename', 'IMAGENAME']);
       expect(result).toHaveLength(3);
+    });
+  });
+
+  describe('getImageSource', () => {
+    test('returns DOCKER source by default', () => {
+      const source = getImageSource();
+      expect(source.$type).toBe(IMAGE_SOURCE_TYPE.DOCKER);
+      expect(source.imageUri).toBe('');
+      expect(source.externalRegistryRef).toBeUndefined();
+    });
+
+    test('returns CODE source with externalRegistryRef when isRegistry is true', () => {
+      const source = getImageSource(true);
+      expect(source.$type).toBe(IMAGE_SOURCE_TYPE.CODE);
+      expect(source.url).toBe('');
+      expect(source.externalRegistryRef).toEqual({ $type: 'mcp-registry', packageName: '' });
+    });
+  });
+
+  describe('getImageTemplate', () => {
+    test('returns default template without options', () => {
+      const template = getImageTemplate();
+      expect(template.source.$type).toBe(IMAGE_SOURCE_TYPE.DOCKER);
+      expect(template.source.externalRegistryRef).toBeUndefined();
+    });
+
+    test('returns template with registry source', () => {
+      const template = getImageTemplate(true);
+      expect(template.source.$type).toBe(IMAGE_SOURCE_TYPE.CODE);
+      expect(template.source.externalRegistryRef).toEqual({ $type: 'mcp-registry', packageName: '' });
     });
   });
 });

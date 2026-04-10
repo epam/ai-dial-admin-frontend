@@ -2,7 +2,7 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { DialInput } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { CONTAINER_SOURCE_TYPE } from '@/src/types/deployments/containers';
+import { CONTAINER_SOURCE_TYPE, CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { Container } from '@/src/models/deployments/containers';
 import { FieldError } from '@/src/models/error';
 import { getDeploymentsURIError } from '@/src/utils/deployments/validation';
@@ -13,6 +13,9 @@ import { useI18n } from '@/src/locales/client';
 import { ApplicationRoute } from '@/src/types/routes';
 import HFModelNameField from '@/src/components/Deployments/Fields/ContainerSource/HFModelNameField';
 import McpServerNameField from '@/src/components/Deployments/Fields/ContainerSource/McpServerNameField';
+import { getContainerMcpServers } from '@/src/app/actions/deployments';
+import { getPreferredOciPackage, mapTransportType } from '@/src/utils/deployments/mcp-registry';
+import { McpServer } from '@/src/types/deployments/mcp-registry';
 
 interface Props {
   container: Container;
@@ -30,6 +33,47 @@ const ContainerSource: FC<Props> = ({ container, setContainer, isModal = false, 
 
   const [imageRefError, setImageRefError] = useState<FieldError | null>(null);
   const [imageReferenceError, setImageReferenceError] = useState<FieldError | null>(null);
+
+  const mcpServerName = container.source?.externalRegistryRef?.packageName || '';
+
+  const onContainerServerSelect = useCallback(
+    (server: McpServer) => {
+      const preferredPackage = getPreferredOciPackage(server);
+      const ociIdentifier = preferredPackage?.identifier;
+      const transport = preferredPackage?.transport?.type
+        ? mapTransportType(preferredPackage.transport.type)
+        : undefined;
+
+      setContainer({
+        ...container,
+        ...(transport ? { transport } : {}),
+        source: {
+          ...container.source,
+          imageReference: ociIdentifier || '',
+          externalRegistryRef: {
+            $type: 'mcp-registry',
+            packageName: server.name,
+            version: server.version,
+          },
+        },
+      });
+    },
+    [container, setContainer],
+  );
+
+  const onContainerServerNameChange = useCallback(
+    (name: string) => {
+      setContainer({
+        ...container,
+        source: {
+          ...container.source,
+          imageReference: '',
+          externalRegistryRef: { $type: 'mcp-registry', packageName: name },
+        },
+      });
+    },
+    [container, setContainer],
+  );
 
   const onChangeImageRef = useCallback(
     (value?: string) => {
@@ -110,10 +154,12 @@ const ContainerSource: FC<Props> = ({ container, setContainer, isModal = false, 
         if (container.source?.externalRegistryRef) {
           return (
             <McpServerNameField
-              container={container}
-              setContainer={setContainer}
+              fetchServers={getContainerMcpServers}
+              onServerSelect={onContainerServerSelect}
+              serverName={mcpServerName}
+              onServerNameChange={onContainerServerNameChange}
               isModal={isModal}
-              disabled={isDisabled}
+              disabled={isDisabled || container.status === CONTAINER_STATUS.RUNNING}
             />
           );
         }
