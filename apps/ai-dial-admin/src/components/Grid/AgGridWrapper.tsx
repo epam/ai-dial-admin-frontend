@@ -157,6 +157,9 @@ const AgGridWrapper = <T extends object>({
   }, [columnDefs, gridApi, rowData, setGridColumnsState, storageKey]);
 
   const tooltipRenderer = (params: { value: string }) => {
+    if (typeof params.value !== 'string') {
+      return null;
+    }
     return (
       <div className="tooltip relative break-words">
         {params.value}
