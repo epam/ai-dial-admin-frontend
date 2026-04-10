@@ -234,6 +234,42 @@ export async function getImageMcpServers(params: {
   };
 }
 
+export async function getToolsetMcpServers(params: {
+  search?: string;
+  cursor?: string;
+  limit?: number;
+  minResults?: number;
+}) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  const { minResults, ...requestParams } = params;
+
+  if (!minResults) {
+    return mcpRegistryApi.getToolsetMcpServers(requestParams, token);
+  }
+
+  const allServers: unknown[] = [];
+  let cursor = params.cursor;
+
+  while (allServers.length < minResults) {
+    const result = await mcpRegistryApi.getToolsetMcpServers({ ...requestParams, cursor }, token);
+    if (!result.success) return result;
+
+    const servers = result.response?.servers ?? [];
+    allServers.push(...servers);
+
+    cursor = result.response?.metadata?.nextCursor;
+    if (!cursor) break;
+  }
+
+  return {
+    success: true,
+    response: {
+      servers: allServers,
+      metadata: { nextCursor: cursor },
+    },
+  };
+}
+
 export async function getHuggingFaceModels(params: Record<string, string>) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return huggingFaceApi.getHuggingFaceModels(params, token);

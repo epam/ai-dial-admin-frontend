@@ -3,7 +3,11 @@ import { describe, test, expect, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { MCP_REGISTRY_SERVERS_LIST, McpRegistryApi } from '@/src/server/deployments/mcp-registry';
-import { CONTAINER_MCP_REGISTRY_FILTER, IMAGE_MCP_REGISTRY_FILTER } from '@/src/constants/deployments/mcp-registry';
+import {
+  CONTAINER_MCP_REGISTRY_FILTER,
+  IMAGE_MCP_REGISTRY_FILTER,
+  TOOLSET_MCP_REGISTRY_FILTER,
+} from '@/src/constants/deployments/mcp-registry';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
@@ -100,6 +104,53 @@ describe('McpRegistryApi', () => {
         body: JSON.stringify({
           limit: 100,
           filter: IMAGE_MCP_REGISTRY_FILTER,
+        }),
+      }),
+    );
+  });
+
+  test('getToolsetMcpServers sends POST with remoteTransportTypes filter', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ servers: [], metadata: {} }));
+    await instance.getToolsetMcpServers({ limit: 100 }, TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(MCP_REGISTRY_SERVERS_LIST),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          limit: 100,
+          filter: TOOLSET_MCP_REGISTRY_FILTER,
+        }),
+      }),
+    );
+  });
+
+  test('getToolsetMcpServers includes search and cursor when provided', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ servers: [], metadata: {} }));
+    await instance.getToolsetMcpServers({ search: 'weather', cursor: 'cur1', limit: 10 }, TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(MCP_REGISTRY_SERVERS_LIST),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          search: 'weather',
+          cursor: 'cur1',
+          limit: 10,
+          filter: TOOLSET_MCP_REGISTRY_FILTER,
+        }),
+      }),
+    );
+  });
+
+  test('getToolsetMcpServers omits undefined optional params', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ servers: [], metadata: {} }));
+    await instance.getToolsetMcpServers({ search: undefined, cursor: '', limit: 100 }, TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(MCP_REGISTRY_SERVERS_LIST),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          limit: 100,
+          filter: TOOLSET_MCP_REGISTRY_FILTER,
         }),
       }),
     );

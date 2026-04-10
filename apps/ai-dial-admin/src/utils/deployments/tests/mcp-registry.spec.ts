@@ -1,7 +1,8 @@
 import { describe, expect, test } from 'vitest';
-import { getPreferredOciPackage, mapTransportType } from '../mcp-registry';
+import { getPreferredOciPackage, getPreferredRemote, mapRemoteTransportType, mapTransportType } from '../mcp-registry';
 import { McpServer } from '@/src/types/deployments/mcp-registry';
 import { CONTAINER_TRANSPORT } from '@/src/types/deployments/containers';
+import { ToolsetTransport } from '@/src/types/toolset';
 
 const makeServer = (overrides: Partial<McpServer> = {}): McpServer => ({
   name: 'test/server',
@@ -61,5 +62,59 @@ describe('mapTransportType', () => {
 
   test('returns undefined for unknown type', () => {
     expect(mapTransportType('grpc')).toBeUndefined();
+  });
+});
+
+describe('getPreferredRemote', () => {
+  test('prefers streamable-http over sse', () => {
+    const server = makeServer({
+      remotes: [
+        { type: 'sse', url: 'https://sse.example.com' },
+        { type: 'streamable-http', url: 'https://http.example.com' },
+      ],
+    });
+    expect(getPreferredRemote(server)?.url).toBe('https://http.example.com');
+  });
+
+  test('returns sse remote when no streamable-http', () => {
+    const server = makeServer({
+      remotes: [{ type: 'sse', url: 'https://sse.example.com' }],
+    });
+    expect(getPreferredRemote(server)?.type).toBe('sse');
+  });
+
+  test('skips unsupported remote types', () => {
+    const server = makeServer({
+      remotes: [
+        { type: 'websocket', url: 'https://ws.example.com' },
+        { type: 'streamable-http', url: 'https://http.example.com' },
+      ],
+    });
+    expect(getPreferredRemote(server)?.type).toBe('streamable-http');
+  });
+
+  test('returns undefined when no compatible remotes', () => {
+    const server = makeServer({
+      remotes: [{ type: 'websocket', url: 'https://ws.example.com' }],
+    });
+    expect(getPreferredRemote(server)).toBeUndefined();
+  });
+
+  test('returns undefined when no remotes', () => {
+    expect(getPreferredRemote(makeServer())).toBeUndefined();
+  });
+});
+
+describe('mapRemoteTransportType', () => {
+  test('maps streamable-http to HTTP', () => {
+    expect(mapRemoteTransportType('streamable-http')).toBe(ToolsetTransport.HTTP);
+  });
+
+  test('maps sse to SSE', () => {
+    expect(mapRemoteTransportType('sse')).toBe(ToolsetTransport.SSE);
+  });
+
+  test('returns undefined for unknown type', () => {
+    expect(mapRemoteTransportType('grpc')).toBeUndefined();
   });
 });
