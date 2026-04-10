@@ -254,6 +254,18 @@ describe('Runs View :: getDetailEntries', () => {
   test('Should handle empty record', () => {
     expect(getDetailEntries({})).toEqual([]);
   });
+
+  test('Should return string-array values as string[]', () => {
+    expect(getDetailEntries({ tags: ['alpha', 'beta', 'gamma'] })).toEqual([['tags', ['alpha', 'beta', 'gamma']]]);
+  });
+
+  test('Should stringify mixed arrays', () => {
+    expect(getDetailEntries({ mixed: ['a', 1, true] })).toEqual([['mixed', 'a,1,true']]);
+  });
+
+  test('Should stringify number values', () => {
+    expect(getDetailEntries({ count: 42 })).toEqual([['count', '42']]);
+  });
 });
 
 describe('Runs View :: getDetailNestedEntries', () => {
