@@ -4,7 +4,7 @@ import { FilterOperatorDto } from '@/src/types/request';
 import { RESPONSE_MOCK, TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
-import { ANALYTICS_RESULTS_URL, AnalyticsApi } from '../analytics-api';
+import { ANALYTICS_RESULTS_URL, ANALYTICS_RUN_METRIC_SNAPSHOTS_URL, AnalyticsApi } from '../analytics-api';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
@@ -55,6 +55,30 @@ describe('Server :: AnalyticsApi', () => {
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${ANALYTICS_RESULTS_URL}/${resultId}`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
+  test('Should call getMetricSnapshots with filters and build correct URL', async () => {
+    fetch.mockResponseOnce(JSON.stringify([]));
+
+    const filters: FilterDto[] = [{ column: 'runId', operator: FilterOperatorDto.EQUALS, value: 'run-1' }];
+
+    await instance.getMetricSnapshots(filters, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${ANALYTICS_RUN_METRIC_SNAPSHOTS_URL}?filter=runId:eq:run-1`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
+  test('Should call getMetricSnapshots with empty filters', async () => {
+    fetch.mockResponseOnce(JSON.stringify([]));
+
+    await instance.getMetricSnapshots([], TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${ANALYTICS_RUN_METRIC_SNAPSHOTS_URL}?`,
       expect.objectContaining({ method: 'GET' }),
     );
   });
