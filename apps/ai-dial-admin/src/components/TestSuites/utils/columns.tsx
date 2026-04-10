@@ -176,6 +176,17 @@ export const getTestCaseColumns = (
               },
             };
           }
+          if (param.type == TestCaseItemType.OBJECT || param.type == TestCaseItemType.ARRAY) {
+            return {
+              component: JsonEditorCellRenderer,
+              params: {
+                onChange: (value: string | number, rowData: unknown) => {
+                  onCellChange(rowData as Record<string, unknown>, field, value);
+                },
+                disableValidation: true,
+              },
+            };
+          }
           return {
             component: EditableCellRenderer,
             params: {
