@@ -42,13 +42,17 @@ import {
 } from './utils';
 import { FileManagerGridRow } from '@epam/ai-dial-ui-kit/dist/src/components/FileManager/FileManagerContext';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
+import { DialRootFolder } from '@epam/ai-dial-ui-kit/dist/src/models/file';
 
 interface Props {
   view: ApplicationRoute;
   label: string;
   columnDefs: ColDef[];
   getContext: () => AssetsFolderContext;
-  onCreateFolder: (file: DialUploadFileItem | undefined, folderPath: string) => Promise<ServerActionResponse>;
+  onCreateFolder: (
+    file: DialUploadFileItem | undefined,
+    folderPath: string,
+  ) => Promise<ServerActionResponse | undefined>;
   onDeleteItems?: (fileNodes: DialDeletedItem[]) => Promise<ServerActionResponse[]>;
   onMoveItems: (
     items: DialCopiedItem[],
@@ -130,7 +134,7 @@ const FileManager: FC<Props> = ({
       const newPath = `${folderPath.replaceAll('//', '/')}/`;
 
       onCreateFolder(_, folderPath).then((res) => {
-        if (res.success) {
+        if (res && res.success) {
           const parentPath = getParentPathByFullPath(newPath) || `${ROOT_FOLDER}/`;
 
           fetchFiles(parentPath);
@@ -299,6 +303,7 @@ const FileManager: FC<Props> = ({
       path={filePath}
       defaultPath={`${ROOT_FOLDER}/`}
       items={filteredFiles as []}
+      rootItem={filteredFiles?.[0] as DialRootFolder}
       filesLoading={isFetchingFiles}
       showNavigationPanel={false}
       bulkActionsToolbarOptions={getBulkActionsToolbarOptions(t)}

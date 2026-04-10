@@ -51,8 +51,8 @@ vi.mock('@/src/context/assets/AppsFolderContext', () => ({
 }));
 
 vi.mock('@/src/context/assets/ToolsetsFolderContext', () => ({
-  useToolsetsFolder: createFnContext,
-  ToolsetsFolderProvider: ({ children }: any) => <div>{children}</div>,
+  useToolsetFolder: createFnContext,
+  ToolsetFolderProvider: ({ children }: any) => <div>{children}</div>,
 }));
 
 vi.mock('@/src/context/ThemeContext', () => ({ useTheme: createFnContext }));

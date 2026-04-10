@@ -13,35 +13,36 @@ import {
 } from '@epam/ai-dial-ui-kit';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 import DeleteFolder from '../../Common/FolderList/Modals/DeleteFolder';
-import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, FileManagerI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { DialPrompt } from '@/src/models/dial/prompt';
-import { Asset } from '@/src/models/dial/deployment-asset';
+import { Asset, AssetWithVersion } from '@/src/models/dial/deployment-asset';
 
 interface Props {
+  view: ApplicationRoute;
   isOpen: boolean;
   itemsToDelete: DialFile[];
   versionsMap: Record<string, string[]>;
   getAssetContext: () => AssetsFolderContext;
-  onRemovePrompt: (entity: string) => Promise<ServerActionResponse>;
+  onRemoveAsset: ((entity: string) => Promise<ServerActionResponse>) | null;
   onRemoveFolder: () => void;
   onMultipleRemove: () => void;
   onClose: () => void;
-  onRemovePromptEnd: () => void;
+  onRemoveAssetEnd: () => void;
 }
 
 const DeleteModal: FC<Props> = ({
+  view,
   isOpen,
   itemsToDelete,
   versionsMap,
   getAssetContext,
-  onRemovePrompt,
+  onRemoveAsset,
   onRemoveFolder,
   onMultipleRemove,
   onClose,
-  onRemovePromptEnd,
+  onRemoveAssetEnd,
 }) => {
   const t = useI18n();
 
@@ -50,13 +51,13 @@ const DeleteModal: FC<Props> = ({
   }, []);
 
   const getMultipleRemoveModalContent = useCallback(() => {
-    const prompts = itemsToDelete.filter((item) => item.nodeType === DialFileNodeType.ITEM) as DialPrompt[];
+    const assets = itemsToDelete.filter((item) => item.nodeType === DialFileNodeType.ITEM) as AssetWithVersion[];
     const folders = itemsToDelete.filter((item) => item.nodeType === DialFileNodeType.FOLDER);
 
     const foldersNames = folders?.map((folder) => folder.name) || [];
-    const promptsNames: string[] = [];
-    prompts.forEach((prompt) => {
-      promptsNames.push(...(prompt?.selectedVersions?.map((v) => `${prompt.name}__${v}`) || []));
+    const assetNames: string[] = [];
+    assets.forEach((asset) => {
+      assetNames.push(...(asset?.selectedVersions?.map((v) => `${prompt.name}__${v}`) || []));
     });
 
     return (
@@ -69,11 +70,11 @@ const DeleteModal: FC<Props> = ({
           />
         )}
         <p className="text-secondary mb-3">
-          {t(FileManagerI18nKey.DeleteItemsModalDescription, { length: foldersNames.length + promptsNames.length })}
+          {t(FileManagerI18nKey.DeleteItemsModalDescription, { length: foldersNames.length + assetNames.length })}
         </p>
         {foldersNames.length > 0 && (
           <>
-            <p className="text-secondary mb-1">Folders:</p>
+            <p className="text-secondary mb-1">{`${t(FoldersI18nKey.Folders)}:`}</p>
             <ul className="space-y-1 text-primary list-none mb-2 ml-2">
               {foldersNames.slice(0, 10).map((item) => (
                 <li key={item} className="truncate">
@@ -83,11 +84,11 @@ const DeleteModal: FC<Props> = ({
             </ul>
           </>
         )}
-        {promptsNames.length > 0 && foldersNames.length < 10 && (
+        {assetNames.length > 0 && foldersNames.length < 10 && (
           <>
-            <p className="text-secondary mb-1">Prompts:</p>
+            <p className="text-secondary mb-1">{`${t(FileManagerI18nKey.Items)}:`}</p>
             <ul className="space-y-1 text-primary list-none mb-2 ml-2">
-              {promptsNames.slice(0, 10 - foldersNames.length).map((item) => (
+              {assetNames.slice(0, 10 - foldersNames.length).map((item) => (
                 <li key={item} className="truncate">
                   {item}
                 </li>
@@ -95,9 +96,9 @@ const DeleteModal: FC<Props> = ({
             </ul>
           </>
         )}
-        {promptsNames.length + foldersNames.length > 10 && (
+        {assetNames.length + foldersNames.length > 10 && (
           <p className="text-secondary italic">
-            {t(FileManagerI18nKey.MoreItems, { length: promptsNames.length + foldersNames.length - 10 })}
+            {t(FileManagerI18nKey.MoreItems, { length: assetNames.length + foldersNames.length - 10 })}
           </p>
         )}
       </div>
@@ -106,20 +107,20 @@ const DeleteModal: FC<Props> = ({
 
   return (
     <>
-      {itemsToDelete.length === 1 && itemsToDelete[0].nodeType === DialFileNodeType.ITEM && (
+      {itemsToDelete.length === 1 && itemsToDelete[0].nodeType === DialFileNodeType.ITEM && onRemoveAsset && (
         <DeleteConfirmationModal
           entity={itemsToDelete[0]}
-          onRemoveEntity={onRemovePrompt}
-          view={ApplicationRoute.Prompts}
+          onRemoveEntity={onRemoveAsset}
+          view={view}
           onCloseModal={onClose}
           getAssetContext={getAssetContext}
           existingVersions={versionsMap[itemsToDelete[0].name]}
-          onResetEntity={onRemovePromptEnd}
+          onResetEntity={onRemoveAssetEnd}
         />
       )}
       {itemsToDelete.length === 1 && itemsToDelete[0].nodeType === DialFileNodeType.FOLDER && (
         <DeleteFolder
-          view={ApplicationRoute.Prompts}
+          view={view}
           isModalOpen={isOpen}
           onClose={onClose}
           onApply={onRemoveFolder}
