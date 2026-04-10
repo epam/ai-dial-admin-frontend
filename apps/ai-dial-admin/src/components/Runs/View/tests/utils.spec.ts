@@ -546,7 +546,10 @@ describe('Runs View :: snapshotsToBindingsMap', () => {
   });
 
   test('Should skip snapshots without tsmdName', () => {
-    const snapshots = [{ configBindings: [], inputBindings: [] }, { tsmdName: 'Metric A', configBindings: [], inputBindings: [] }];
+    const snapshots = [
+      { configBindings: [], inputBindings: [] },
+      { tsmdName: 'Metric A', configBindings: [], inputBindings: [] },
+    ];
     const result = snapshotsToBindingsMap(snapshots as any);
     expect(Object.keys(result)).toEqual(['Metric A']);
   });
