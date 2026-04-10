@@ -5,6 +5,7 @@ import {
   IMAGE_TRANSPORT_TYPE,
   IMAGE_TYPE,
 } from '@/src/types/deployments/images';
+import { ExternalRegistryRef } from '@/src/types/deployments/mcp-registry';
 import { BaseEntity } from '../dial/base-entity';
 
 export interface Image extends BaseEntity {
@@ -43,4 +44,5 @@ export interface ImageSource {
   branchName?: string;
   sha?: string;
   baseDirectory?: string;
+  externalRegistryRef?: ExternalRegistryRef;
 }

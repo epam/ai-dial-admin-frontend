@@ -1342,6 +1342,9 @@ export enum ImagesI18nKey {
   BuilderRoot = 'Images.BuilderRoot',
   BuilderRootlessCaption = 'Images.BuilderRootlessCaption',
   BuilderRootCaption = 'Images.BuilderRootCaption',
+  AddImage = 'Images.AddImage',
+  FromMcpRegistry = 'Images.FromMcpRegistry',
+  AddFromMcpRegistryModalTitle = 'Images.AddFromMcpRegistryModalTitle',
 }
 
 export enum ContainersI18nKey {
@@ -1562,6 +1565,7 @@ export enum RunsI18nKey {
   Failed = 'Runs.Status.Failed',
   Running = 'Runs.Status.Running',
   MetricFailedText = 'Runs.MetricFailedText',
+  ExtractedColumns = 'Runs.ExtractedColumns',
 }
 
 export enum FileManagerI18nKey {

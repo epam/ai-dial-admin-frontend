@@ -39,6 +39,10 @@ const RunMetricDetailPanel: FC<Props> = ({ resultId, grafanaTraceUrl, onClose })
     return getDetailEntries(details?.testCaseData ?? {});
   }, [details?.testCaseData]);
 
+  const extractedColumnsEntries = useMemo(() => {
+    return getDetailEntries(details?.extractedColumns ?? {});
+  }, [details?.extractedColumns]);
+
   const metricGroups = useMemo(() => {
     return getMetricGroups(details?.metricValues, details?.metricInfos);
   }, [details?.metricValues, details?.metricInfos]);
@@ -92,6 +96,9 @@ const RunMetricDetailPanel: FC<Props> = ({ resultId, grafanaTraceUrl, onClose })
               />
               {testCaseEntries.length > 0 && (
                 <AdaptiveValueGrid title={t(RunsI18nKey.TestCaseData)} entries={testCaseEntries} />
+              )}
+              {extractedColumnsEntries.length > 0 && (
+                <AdaptiveValueGrid title={t(RunsI18nKey.ExtractedColumns)} entries={extractedColumnsEntries} />
               )}
               {metricGroups.map((group) => (
                 <section key={group.title} className="flex flex-col gap-3">
