@@ -200,6 +200,7 @@ const PublicationView = <T extends Publication>({ view, publication, application
       >
         {view === ApplicationRoute.ToolsetPublications &&
           toolset &&
+          !isChanged &&
           toolset.authSettings?.authenticationType &&
           toolset.authSettings?.authenticationType !== ToolsetAuthType.NONE && (
             <AuthButtons

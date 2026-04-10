@@ -11,12 +11,13 @@ import {
 } from '@/src/constants/grid-columns/base-columns';
 import { ButtonsI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
-import { DeploymentExportComponent } from '@/src/models/export';
+import { DeploymentExportComponent, DeploymentExportRequest } from '@/src/models/export';
 import { DeploymentExportEntityType } from '@/src/types/deployments/export';
+import { ExportType } from '@/src/types/export';
 import { getDeploymentExportComponentType } from '@/src/utils/deployments/export';
 import { IMAGE_TYPE_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 
-const DEPLOYMENT_ENTITY_TABS: { id: DeploymentExportEntityType; labelKey: string }[] = [
+export const DEPLOYMENT_ENTITY_TABS: { id: DeploymentExportEntityType; labelKey: string }[] = [
   { id: DeploymentExportEntityType.MODEL_SERVING, labelKey: MenuI18nKey.ModelServings },
   { id: DeploymentExportEntityType.MCP_CONTAINER, labelKey: MenuI18nKey.McpContainers },
   { id: DeploymentExportEntityType.INTERCEPTOR_CONTAINER, labelKey: MenuI18nKey.InterceptorContainers },
@@ -67,6 +68,15 @@ export const getDeploymentColDefs = (
 
   return columns;
 };
+
+export const buildDeploymentExportPreviewRequest = (
+  customExportData: Record<string, EntitiesGridData[]>,
+): DeploymentExportRequest => ({
+  $type: ExportType.Custom,
+  addSecrets: false,
+  addGlobalImageBuildDomainWhitelist: false,
+  components: getDeploymentExportComponents(customExportData),
+});
 
 export const getDeploymentExportComponents = (
   customExportData: Record<string, EntitiesGridData[]>,

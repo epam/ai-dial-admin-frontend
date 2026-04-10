@@ -56,6 +56,7 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
   const [isChanged, setIsChanged] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [isSkipRefresh, setIsSkipRefresh] = useState(true);
+  const [discardKey, setDiscardKey] = useState(0);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -93,6 +94,7 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
 
   const onDiscard = useCallback(() => {
     setIsSkipRefresh(false);
+    setDiscardKey((prev) => prev + 1);
     setSelectedApp(cloneDeep(originalApp));
   }, [originalApp]);
 
@@ -179,6 +181,7 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
           <EntityJsonEditor entity={selectedApp} setSelectedEntity={setSelectedApp} setIsChanged={setIsChanged} />
         ) : (
           <TabsContent
+            key={discardKey}
             activeTab={activeTab}
             names={[]}
             models={models}

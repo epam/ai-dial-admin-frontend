@@ -3,6 +3,8 @@ import { ColDef, GridOptions } from 'ag-grid-community';
 import ActionCellRenderer from '@/src/components/Grid/ActionColumn/ActionCellRenderer';
 import ActionColumn from '@/src/components/Grid/ActionColumn/ActionColumn';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
+import { ActivityAuditDiff } from '@/src/models/activity-audit';
+import { DiffStatus } from '@/src/types/activity-audit';
 
 export const PAGE_SIZE = 100;
 export const CACHE_LIMIT = 1000;
@@ -111,4 +113,11 @@ export const SINGLE_ROW_SELECTION: Partial<GridOptions> = {
   selectionColumnDef: {
     ...RADIO_BUTTON_COL_DEF,
   },
+};
+
+export const DIFF_ROW_CLASS_RULES: GridOptions['rowClassRules'] = {
+  'ag-error-row ag-error-border': (params) => (params.data as ActivityAuditDiff).diffStatus === DiffStatus.REMOVED,
+  'ag-new-row ag-new-border': (params) => (params.data as ActivityAuditDiff).diffStatus === DiffStatus.ADDED,
+  'ag-changed-row ag-changed-border': (params) => (params.data as ActivityAuditDiff).diffStatus === DiffStatus.CHANGED,
+  'ag-empty-row': (params) => (params.data as ActivityAuditDiff).diffStatus === DiffStatus.MIRROR,
 };

@@ -7,11 +7,11 @@ const setFilters = vi.fn();
 const getData = vi.fn().mockReturnValue({ data: [] });
 
 describe('Components - Filters', () => {
-  test('renders correctly', () => {
+  test('renders correctly with single value', () => {
     const filters = [
       {
         condition: FILTER_OPERATOR.Equal,
-        value: 'asd',
+        value: ['asd'],
         type: FILTER_TYPE.Entity,
       },
     ];
@@ -20,11 +20,24 @@ describe('Components - Filters', () => {
     expect(screen.getByText('asd')).toBeInTheDocument();
   });
 
+  test('renders correctly with multiple values', () => {
+    const filters = [
+      {
+        condition: FILTER_OPERATOR.Equal,
+        value: ['value1', 'value2', 'value3'],
+        type: FILTER_TYPE.Entity,
+      },
+    ];
+    render(<Filters filters={filters} setFilters={setFilters} route={ApplicationRoute.Dashboard} getData={getData} />);
+
+    expect(screen.getByText('value1, value2, +1 more')).toBeInTheDocument();
+  });
+
   test('user can add new filter', () => {
     const filters = [
       {
         condition: FILTER_OPERATOR.Equal,
-        value: 'asd',
+        value: ['asd'],
         type: FILTER_TYPE.Entity,
       },
     ];

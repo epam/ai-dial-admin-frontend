@@ -1,7 +1,10 @@
 import * as entitiesUtils from '@/src/utils/entities/entities-list-view';
-import { getPreviewTabs } from '../utils';
+import { buildDeploymentExportPreviewRequest } from '@/src/components/ExportConfig/deployment-utils';
+import { getDeploymentExportPreviewTabs, getPreviewTabs } from '../utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { ExportFormat } from '@/src/types/export';
+import { DeploymentExportComponentType, DeploymentExportEntityType } from '@/src/types/deployments/export';
+import { DeploymentExportPreviewResponse } from '@/src/models/deployments/preview';
+import { ExportFormat, ExportType } from '@/src/types/export';
 
 vi.mock('@/src/utils/entities/entities-list-view');
 
@@ -139,5 +142,167 @@ describe('Export Config Utils :: getPreviewTabs', () => {
       { id: 'APPLICATION', label: 'translated(Menu.Applications): 1' },
       { id: 'ROUTE', label: 'translated(Menu.Routes): 1' },
     ]);
+  });
+});
+
+describe('Export Config Utils :: getDeploymentExportPreviewTabs', () => {
+  const emptyResponse: DeploymentExportPreviewResponse = {
+    deployments: [],
+    imageDefinitions: [],
+    globalImageBuildDomainWhitelist: [],
+  };
+
+  test('returns empty tabs for empty response', () => {
+    const { tabs, convertedData } = getDeploymentExportPreviewTabs(emptyResponse, t);
+    expect(tabs).toHaveLength(0);
+    expect(Object.keys(convertedData)).toHaveLength(0);
+  });
+
+  test('groups MCP deployments into MCP_CONTAINER tab', () => {
+    const response: DeploymentExportPreviewResponse = {
+      ...emptyResponse,
+      deployments: [
+        {
+          id: 'mcp-1',
+          displayName: 'MCP 1',
+          description: 'desc',
+          version: null,
+          type: DeploymentExportComponentType.MCP_DEPLOYMENT,
+        },
+      ],
+    };
+    const { tabs, convertedData } = getDeploymentExportPreviewTabs(response, t);
+    expect(tabs.some((tab) => tab.id === DeploymentExportEntityType.MCP_CONTAINER)).toBe(true);
+    expect(convertedData[DeploymentExportEntityType.MCP_CONTAINER]).toHaveLength(1);
+    expect(convertedData[DeploymentExportEntityType.MCP_CONTAINER][0].name).toBe('mcp-1');
+  });
+
+  test('handles lowercase type values from BE', () => {
+    const response: DeploymentExportPreviewResponse = {
+      ...emptyResponse,
+      deployments: [
+        { id: 'mcp-1', displayName: 'MCP 1', description: '', version: null, type: 'mcp_deployment' },
+        { id: 'int-1', displayName: 'INT 1', description: '', version: null, type: 'interceptor_deployment' },
+      ],
+    };
+    const { tabs, convertedData } = getDeploymentExportPreviewTabs(response, t);
+    expect(tabs.some((tab) => tab.id === DeploymentExportEntityType.MCP_CONTAINER)).toBe(true);
+    expect(tabs.some((tab) => tab.id === DeploymentExportEntityType.INTERCEPTOR_CONTAINER)).toBe(true);
+    expect(convertedData[DeploymentExportEntityType.MCP_CONTAINER]).toHaveLength(1);
+    expect(convertedData[DeploymentExportEntityType.INTERCEPTOR_CONTAINER]).toHaveLength(1);
+  });
+
+  test('groups image definitions into IMAGE tab', () => {
+    const response: DeploymentExportPreviewResponse = {
+      ...emptyResponse,
+      imageDefinitions: [
+        {
+          id: 'img-1',
+          displayName: 'Image 1',
+          description: null,
+          version: '1.0.0',
+          type: DeploymentExportComponentType.MCP_IMAGE_DEFINITION,
+        },
+        {
+          id: 'img-2',
+          displayName: 'Image 2',
+          description: null,
+          version: '2.0.0',
+          type: DeploymentExportComponentType.ADAPTER_IMAGE_DEFINITION,
+        },
+      ],
+    };
+    const { tabs, convertedData } = getDeploymentExportPreviewTabs(response, t);
+    expect(tabs.some((tab) => tab.id === DeploymentExportEntityType.IMAGE)).toBe(true);
+    expect(convertedData[DeploymentExportEntityType.IMAGE]).toHaveLength(2);
+  });
+
+  test('groups NIM and INFERENCE into MODEL_SERVING tab', () => {
+    const response: DeploymentExportPreviewResponse = {
+      ...emptyResponse,
+      deployments: [
+        {
+          id: 'nim-1',
+          displayName: 'NIM 1',
+          description: null,
+          version: null,
+          type: DeploymentExportComponentType.NIM_DEPLOYMENT,
+        },
+        {
+          id: 'inf-1',
+          displayName: 'INF 1',
+          description: null,
+          version: null,
+          type: DeploymentExportComponentType.INFERENCE_DEPLOYMENT,
+        },
+      ],
+    };
+    const { tabs, convertedData } = getDeploymentExportPreviewTabs(response, t);
+    expect(tabs.some((tab) => tab.id === DeploymentExportEntityType.MODEL_SERVING)).toBe(true);
+    expect(convertedData[DeploymentExportEntityType.MODEL_SERVING]).toHaveLength(2);
+  });
+
+  test('tab labels include counts', () => {
+    const response: DeploymentExportPreviewResponse = {
+      ...emptyResponse,
+      deployments: [
+        {
+          id: 'mcp-1',
+          displayName: 'MCP 1',
+          description: null,
+          version: null,
+          type: DeploymentExportComponentType.MCP_DEPLOYMENT,
+        },
+        {
+          id: 'mcp-2',
+          displayName: 'MCP 2',
+          description: null,
+          version: null,
+          type: DeploymentExportComponentType.MCP_DEPLOYMENT,
+        },
+      ],
+    };
+    const { tabs } = getDeploymentExportPreviewTabs(response, t);
+    const mcpTab = tabs.find((tab) => tab.id === DeploymentExportEntityType.MCP_CONTAINER);
+    expect(mcpTab?.label).toContain('2');
+  });
+
+  test('maps ExportComponentInfo fields to EntitiesGridData correctly', () => {
+    const response: DeploymentExportPreviewResponse = {
+      ...emptyResponse,
+      deployments: [
+        {
+          id: 'test-id',
+          displayName: 'Test Name',
+          description: 'Test Desc',
+          version: null,
+          type: DeploymentExportComponentType.ADAPTER_DEPLOYMENT,
+        },
+      ],
+    };
+    const { convertedData } = getDeploymentExportPreviewTabs(response, t);
+    const item = convertedData[DeploymentExportEntityType.ADAPTER_CONTAINER][0];
+    expect(item.name).toBe('test-id');
+    expect(item.displayName).toBe('Test Name');
+    expect(item.description).toBe('Test Desc');
+  });
+});
+
+describe('buildDeploymentExportPreviewRequest', () => {
+  test('builds request with custom type and no secrets', () => {
+    const result = buildDeploymentExportPreviewRequest({});
+    expect(result.$type).toBe(ExportType.Custom);
+    expect(result.addSecrets).toBe(false);
+    expect(result.addGlobalImageBuildDomainWhitelist).toBe(false);
+    expect(result.components).toEqual([]);
+  });
+
+  test('includes components from custom export data', () => {
+    const data = {
+      MCP_CONTAINER: [{ name: 'mcp-1', $type: 'mcp' }],
+    };
+    const result = buildDeploymentExportPreviewRequest(data as any);
+    expect(result.components.length).toBe(1);
+    expect(result.components[0].name).toBe('mcp-1');
   });
 });

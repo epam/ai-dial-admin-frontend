@@ -89,6 +89,23 @@ describe('RouteProperties', () => {
     expect(screen.getByText(ErrorI18nKey.AlphanumericUnderscore)).toBeInTheDocument();
   });
 
+  test('shows alphanumeric error when app route name contains spaces', () => {
+    render(<RouteProperties route={baseRoute} isAppRoute={true} onChange={vi.fn()} />);
+    fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.DisplayName), {
+      target: { value: 'my route' },
+    });
+    expect(screen.getByText(ErrorI18nKey.AlphanumericUnderscore)).toBeInTheDocument();
+  });
+
+  test('allows spaces in regular route display name', () => {
+    render(<RouteProperties route={baseRoute} isAppRoute={false} onChange={vi.fn()} />);
+    fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.DisplayName), {
+      target: { value: 'My Route Name' },
+    });
+    expect(screen.queryByText(ErrorI18nKey.ContainSpace)).not.toBeInTheDocument();
+    expect(screen.queryByText(ErrorI18nKey.AlphanumericUnderscore)).not.toBeInTheDocument();
+  });
+
   test('calls updateRoute when order changes', () => {
     const updateRoute = vi.fn();
     render(<RouteProperties route={baseRoute} isAppRoute={true} onChange={updateRoute} />);
