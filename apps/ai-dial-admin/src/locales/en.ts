@@ -1646,6 +1646,8 @@ export default {
     EndTime: 'End time',
     TestSuite: 'Test suite',
     TestCaseData: 'Test case data',
+    ExtractedColumns: 'Extracted Columns',
+    MetricBindings: 'Metric bindings',
     Execution: 'Execution',
     GrafanaDetails: 'View trace in Grafana',
     GrafanaRun: 'Traces in Grafana',

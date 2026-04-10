@@ -22,7 +22,9 @@ interface Props {
 const SelectContainerModal: FC<Props> = ({ selectedId, containers, isModalOpen, onClose, onApply }) => {
   const t = useI18n();
 
-  const [selectedContainer, setSelectedContainer] = useState(selectedId);
+  const [selectedContainer, setSelectedContainer] = useState(
+    containers?.some((c) => c.name === selectedId) ? selectedId : undefined,
+  );
 
   const options: GridOptions = {
     ...SINGLE_ROW_SELECTION,

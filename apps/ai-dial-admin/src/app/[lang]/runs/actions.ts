@@ -36,3 +36,8 @@ export async function getTestCaseRunResultDetails(id: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return analyticsApi.getTestCaseRunResultDetails(id, token);
 }
+
+export async function getMetricSnapshots(filters: FilterDto[]) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return analyticsApi.getMetricSnapshots(filters, token);
+}

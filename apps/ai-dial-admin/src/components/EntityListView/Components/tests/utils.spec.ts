@@ -182,7 +182,7 @@ describe('Utils :: prepareEntityForDuplicate', () => {
       authSettings: {
         authenticationType: 'oauth',
         clientId: 'client-123',
-        clientSecret: '',
+        clientSecret: undefined,
         authorizationEndpoint: 'https://auth.example.com',
         globalAuthStatus: undefined,
         userLevelAuthStatus: undefined,
@@ -221,7 +221,7 @@ describe('Utils :: prepareEntityForDuplicate', () => {
         apiKeyHeader: 'X-API-Key',
         globalAuthStatus: undefined,
         userLevelAuthStatus: undefined,
-        clientSecret: '',
+        clientSecret: undefined,
       },
     });
   });
@@ -252,7 +252,7 @@ describe('Utils :: prepareEntityForDuplicate', () => {
       authSettings: {
         authenticationType: 'oauth',
         clientId: 'client-789',
-        clientSecret: '',
+        clientSecret: undefined,
         authorizationEndpoint: 'https://auth2.example.com',
         globalAuthStatus: undefined,
         userLevelAuthStatus: undefined,
@@ -363,7 +363,7 @@ describe('Utils :: prepareEntityForDuplicate', () => {
         apiKeyHeader: 'X-Custom-Key',
         globalAuthStatus: undefined,
         userLevelAuthStatus: undefined,
-        clientSecret: '',
+        clientSecret: undefined,
       },
     });
   });

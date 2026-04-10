@@ -5,12 +5,10 @@ import { Dispatch, FC, ReactNode, SetStateAction, useCallback, useEffect, useMem
 import { DialCollapsibleSidebar, DialConditionalResizableContainer, DialLoader } from '@epam/ai-dial-ui-kit';
 
 import { getDeployment } from '@/src/app/[lang]/test-suites/actions';
-import { CHAT_COMPLETION_BODY } from '@/src/components/TestSuites/constants/chat-completion-body';
 import { CHAT_COMPLETION_METHOD } from '@/src/components/TestSuites/constants/chat-completion-method';
-import { CHAT_COMPLETION_RELATIVE_URL } from '@/src/components/TestSuites/constants/methods';
+import { CHAT_COMPLETION_SUITE, DEFAULT_SUITE } from '@/src/components/TestSuites/constants/methods';
 import { generateMethodPathCombinations } from '@/src/components/TestSuites/utils/method';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
-import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
 import { useI18n } from '@/src/locales/client';
 import { Deployment } from '@/src/models/evaluation/deployment';
 import { TestSuite, TestSuiteEndpointRef } from '@/src/models/evaluation/test-suite';
@@ -45,35 +43,14 @@ const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange, isCreate
       if (index === 0) {
         onChange((prev: TestSuite) => ({
           ...prev,
-          endpointRef: CHAT_COMPLETION_METHOD,
-          requestTemplate: {
-            urlTemplate: CHAT_COMPLETION_RELATIVE_URL,
-            body: {
-              contentType: APPLICATION_JSON_TYPE,
-              content: CHAT_COMPLETION_BODY,
-            },
-          },
-          responseColumns: [
-            {
-              name: 'answer',
-              displayName: 'answer',
-              expression: 'choices[0].message.content',
-              type: 'string',
-            },
-          ],
+          ...CHAT_COMPLETION_SUITE,
         }));
       } else {
         const route = methods[index - 1];
         if (!route) return;
         onChange((prev: TestSuite) => ({
           ...prev,
-          endpointRef: {
-            method: route.method,
-            relativeUrlPattern: route.relativeUrlPattern,
-          },
-          requestTemplate: {
-            urlTemplate: route.relativeUrlPattern,
-          },
+          ...DEFAULT_SUITE(route),
         }));
       }
     },
