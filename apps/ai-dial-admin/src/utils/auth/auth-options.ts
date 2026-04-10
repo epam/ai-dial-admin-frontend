@@ -1,4 +1,5 @@
 import { AuthOptions } from 'next-auth';
+import { requestRegistry } from '@/src/utils/api/request-registry';
 import { callbacks } from './auth-callbacks';
 import { cookies } from './auth-cookies';
 import { authProviders } from './auth-providers';
@@ -14,6 +15,7 @@ export const authOptions = {
   },
   events: {
     signOut: async () => {
+      requestRegistry.cancelAll();
       NextClient.clearAllRefreshTokens();
     },
   },
