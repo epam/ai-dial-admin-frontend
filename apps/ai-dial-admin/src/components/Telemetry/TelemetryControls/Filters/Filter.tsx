@@ -15,12 +15,13 @@ interface Props {
   filterData: FilterData;
   dropdownData: { projects: SelectOption[]; entities: SelectOption[] };
   route: ApplicationRoute;
+  isMcpView?: boolean;
 }
 
-const Filter: FC<Props> = ({ id, onClose, onEdit, dropdownData, filterData, route }) => {
+const Filter: FC<Props> = ({ id, onClose, onEdit, dropdownData, filterData, route, isMcpView = false }) => {
   const { type, condition, value } = filterData;
   const t = useI18n();
-  const filterTypeConfig = getFilterTypeConfig(t);
+  const filterTypeConfig = getFilterTypeConfig(t, isMcpView);
   const filterConditionConfig = getFilterConditionConfig(t);
   const typeText = filterTypeConfig.find((item) => item.value === type)?.value;
   const conditionIcon = filterConditionConfig.find((item) => item.value === condition)?.icon;
@@ -33,12 +34,20 @@ const Filter: FC<Props> = ({ id, onClose, onEdit, dropdownData, filterData, rout
   );
 
   return (
-    <AddFilter addFilter={addFilter} dropdownData={dropdownData} filterData={filterData} route={route}>
+    <AddFilter
+      addFilter={addFilter}
+      dropdownData={dropdownData}
+      filterData={filterData}
+      route={route}
+      isMcpView={isMcpView}
+    >
       <div className="flex text-primary small rounded bg-layer-3 my-[5px] mr-4 px-1.5 py-1">
         <p className="flex items-center">
           <span className="mr-1">{typeText}</span>
           <i className="mr-1">{conditionIcon}</i>
-          <span className="mr-1 max-w-[250px] break-words">{value}</span>
+          <span className="mr-1 max-w-[250px] break-words">
+            {value.length <= 2 ? value.join(', ') : `${value.slice(0, 2).join(', ')}, +${value.length - 2} more`}
+          </span>
         </p>
 
         <button

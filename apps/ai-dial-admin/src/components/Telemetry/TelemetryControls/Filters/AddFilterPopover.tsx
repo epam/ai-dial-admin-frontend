@@ -17,15 +17,16 @@ import { SelectOption } from '@epam/ai-dial-ui-kit';
 interface Props {
   type: FILTER_TYPE;
   condition: FILTER_OPERATOR;
-  value: string;
+  value: string[];
   setType: Dispatch<SetStateAction<FILTER_TYPE>>;
   setCondition: Dispatch<SetStateAction<FILTER_OPERATOR>>;
-  setValue: Dispatch<SetStateAction<string>>;
+  setValue: Dispatch<SetStateAction<string[]>>;
   onCreate: () => void;
   dropdownData: { projects: SelectOption[]; entities: SelectOption[] };
   reset: () => void;
   children: ReactElement;
   route: ApplicationRoute;
+  isMcpView?: boolean;
 }
 
 const AddFilterPopover: FC<Props> = ({
@@ -40,6 +41,7 @@ const AddFilterPopover: FC<Props> = ({
   reset,
   children,
   route,
+  isMcpView = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { refs, floatingStyles, context } = useFloating({
@@ -53,7 +55,7 @@ const AddFilterPopover: FC<Props> = ({
   const role = useRole(context, { role: 'tooltip' });
   const dismiss = useDismiss(context, {
     outsidePress: () => {
-      if (type && condition && value) {
+      if (type && condition && value.length > 0) {
         onCreate();
         onClose();
       }
@@ -94,6 +96,7 @@ const AddFilterPopover: FC<Props> = ({
                 setValue={setValue}
                 dropdownData={dropdownData}
                 route={route}
+                isMcpView={isMcpView}
               />
             </div>
           </FloatingFocusManager>

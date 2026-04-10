@@ -5,9 +5,11 @@ export const mergeWithIgnoredFields = <T extends object>(
   parsed: Partial<T>,
   ignoredFields?: (keyof T)[],
 ): T => {
-  const merged = { ...prev, ...parsed };
+  const merged = { ...parsed } as T;
   for (const field of ignoredFields ?? []) {
-    merged[field] = prev[field];
+    if (field in prev) {
+      merged[field] = prev[field];
+    }
   }
   return merged;
 };

@@ -16,12 +16,13 @@ interface Props {
   children: ReactElement;
   filterData?: FilterData;
   route: ApplicationRoute;
+  isMcpView?: boolean;
 }
 
-const AddFilter: FC<Props> = ({ addFilter, dropdownData, children, filterData, route }) => {
+const AddFilter: FC<Props> = ({ addFilter, dropdownData, children, filterData, route, isMcpView = false }) => {
   const isMobile = useIsMobileScreen();
   const t = useI18n();
-  const filterTypeConfig = getFilterTypeConfig(t);
+  const filterTypeConfig = getFilterTypeConfig(t, isMcpView);
   const filterConditionConfig = getFilterConditionConfig(t);
   const typeValue =
     route === ApplicationRoute.Dashboard
@@ -33,12 +34,12 @@ const AddFilter: FC<Props> = ({ addFilter, dropdownData, children, filterData, r
   const [condition, setCondition] = useState<FILTER_OPERATOR>(
     (filterData?.condition ?? filterConditionConfig[0].value) as FILTER_OPERATOR,
   );
-  const [value, setValue] = useState<string>(filterData?.value ?? '');
+  const [value, setValue] = useState<string[]>(filterData?.value ?? []);
 
   const reset = useCallback(() => {
     setType((filterData?.type ?? typeValue ?? filterTypeConfig[0].value) as FILTER_TYPE);
     setCondition((filterData?.condition ?? filterConditionConfig[0].value) as FILTER_OPERATOR);
-    setValue(filterData?.value ?? '');
+    setValue(filterData?.value ?? []);
   }, [filterData, typeValue, filterTypeConfig, filterConditionConfig]);
 
   const onCreate = useCallback(() => {
@@ -59,6 +60,7 @@ const AddFilter: FC<Props> = ({ addFilter, dropdownData, children, filterData, r
           dropdownData={dropdownData}
           reset={reset}
           route={route}
+          isMcpView={isMcpView}
         >
           {children}
         </AddFilterModal>
@@ -74,6 +76,7 @@ const AddFilter: FC<Props> = ({ addFilter, dropdownData, children, filterData, r
           dropdownData={dropdownData}
           reset={reset}
           route={route}
+          isMcpView={isMcpView}
         >
           {children}
         </AddFilterPopover>

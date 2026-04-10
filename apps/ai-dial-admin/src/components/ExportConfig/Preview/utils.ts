@@ -1,3 +1,4 @@
+import { DEPLOYMENT_ENTITY_TABS } from '@/src/components/ExportConfig/deployment-utils';
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { TabModel } from '@epam/ai-dial-ui-kit';
@@ -16,6 +17,8 @@ import {
 import { DialModel } from '@/src/models/dial/model';
 import { EntityType } from '@/src/types/entity-type';
 import { ExportFormat } from '@/src/types/export';
+import { DeploymentExportPreviewResponse, ExportComponentInfo } from '@/src/models/deployments/preview';
+import { DeploymentExportComponentType, DeploymentExportEntityType } from '@/src/types/deployments/export';
 
 /**
  * Get converted data and tabs for export preview
@@ -135,6 +138,69 @@ export const getPreviewTabs = (
       }
     }
   });
+
+  return { tabs, convertedData };
+};
+
+const COMPONENT_TYPE_TO_ENTITY_TYPE: Record<string, DeploymentExportEntityType> = {
+  [DeploymentExportComponentType.MCP_DEPLOYMENT]: DeploymentExportEntityType.MCP_CONTAINER,
+  [DeploymentExportComponentType.ADAPTER_DEPLOYMENT]: DeploymentExportEntityType.ADAPTER_CONTAINER,
+  [DeploymentExportComponentType.INTERCEPTOR_DEPLOYMENT]: DeploymentExportEntityType.INTERCEPTOR_CONTAINER,
+  [DeploymentExportComponentType.NIM_DEPLOYMENT]: DeploymentExportEntityType.MODEL_SERVING,
+  [DeploymentExportComponentType.INFERENCE_DEPLOYMENT]: DeploymentExportEntityType.MODEL_SERVING,
+  [DeploymentExportComponentType.MCP_IMAGE_DEFINITION]: DeploymentExportEntityType.IMAGE,
+  [DeploymentExportComponentType.ADAPTER_IMAGE_DEFINITION]: DeploymentExportEntityType.IMAGE,
+  [DeploymentExportComponentType.INTERCEPTOR_IMAGE_DEFINITION]: DeploymentExportEntityType.IMAGE,
+};
+
+const toDeploymentGridData = (item: ExportComponentInfo): EntitiesGridData => ({
+  name: item.id,
+  displayName: item.displayName ?? '',
+  description: item.description ?? '',
+  type: item.type,
+});
+
+const toImageGridData = (item: ExportComponentInfo): EntitiesGridData => ({
+  id: item.id,
+  name: item.displayName ?? item.id,
+  description: item.description ?? '',
+  version: item.version ?? undefined,
+  type: item.type,
+});
+
+export const getDeploymentExportPreviewTabs = (
+  data: DeploymentExportPreviewResponse,
+  t: (v: string) => string,
+): { tabs: TabModel[]; convertedData: Record<string, EntitiesGridData[]> } => {
+  const grouped: Record<string, EntitiesGridData[]> = {};
+
+  for (const deployment of data.deployments) {
+    const entityType = COMPONENT_TYPE_TO_ENTITY_TYPE[deployment.type.toUpperCase()];
+    if (entityType) {
+      if (!grouped[entityType]) grouped[entityType] = [];
+      grouped[entityType].push(toDeploymentGridData(deployment));
+    }
+  }
+
+  for (const image of data.imageDefinitions) {
+    const entityType = DeploymentExportEntityType.IMAGE;
+    if (!grouped[entityType]) grouped[entityType] = [];
+    grouped[entityType].push(toImageGridData(image));
+  }
+
+  const tabs: TabModel[] = [];
+  const convertedData: Record<string, EntitiesGridData[]> = {};
+
+  for (const { id, labelKey } of DEPLOYMENT_ENTITY_TABS) {
+    const items = grouped[id];
+    if (items && items.length > 0) {
+      tabs.push({
+        id,
+        label: `${t(labelKey)}: ${items.length}`,
+      });
+      convertedData[id] = items;
+    }
+  }
 
   return { tabs, convertedData };
 };

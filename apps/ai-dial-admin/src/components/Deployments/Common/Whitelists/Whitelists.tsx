@@ -1,6 +1,5 @@
 'use client';
 
-import Cloud from '@/public/images/icons/cloud.svg';
 import {
   AlertVariant,
   DialAlert,
@@ -12,7 +11,6 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { getGlobalWhitelist } from '@/src/app/actions/deployments';
 import { DeploymentsI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { Container } from '@/src/models/deployments/containers';
@@ -22,6 +20,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getCurrentPolicy, getDeploymentEntityKey, getTranslatedDeploymentType } from '@/src/utils/deployments/entity';
 import { getWhitelistDomainError } from '@/src/utils/deployments/validation';
 
+import DomainList from '@/src/components/Deployments/Common/Whitelists/DomainList';
 import ItemsList from '@/src/components/Deployments/Common/ItemsList/ItemsList';
 
 interface Props {
@@ -139,16 +138,7 @@ const Whitelists: FC<Props> = ({ entity, setEntity, route, disabled }) => {
             <div className="flex flex-col gap-2">
               <p className="small-text-semi">{t(DeploymentsI18nKey.AllowedDomains)}</p>
               <p className="tiny text-secondary">{t(DeploymentsI18nKey.GlobalWhitelist)}</p>
-              <ul className="gap-1 flex flex-col">
-                {globalWhitelist.map((domain, index) => (
-                  <li key={`domain-${index}`} className="flex items-center gap-2 text-primary">
-                    <span className="text-secondary">
-                      <Cloud {...BASE_BUTTON_ICON_PROPS} />
-                    </span>
-                    <p className="dial-body-text"> {domain}</p>
-                  </li>
-                ))}
-              </ul>
+              <DomainList domains={globalWhitelist} />
             </div>
           )}
           <div className="flex flex-col gap-2">
