@@ -1,3 +1,5 @@
+import { ServerActionResponse } from '@/src/models/server-action';
+
 export interface McpRepository {
   url: string;
   source: string;
@@ -53,12 +55,25 @@ export interface McpServersResponse {
   };
 }
 
+export interface ExternalRegistryRef {
+  $type: string;
+  packageName: string;
+  version?: string;
+}
+
 export interface McpServerFilterDto {
   packageRegistryTypes?: string[];
   packageTransportTypes?: string[];
   remoteTransportTypes?: string[];
   repositoryExists?: boolean;
 }
+
+export type McpRegistryFetchFn = (params: {
+  search?: string;
+  cursor?: string;
+  limit?: number;
+  minResults?: number;
+}) => Promise<ServerActionResponse>;
 
 export interface McpServersRequestDto {
   search?: string;
