@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ValidationActionType } from '@/src/context/SaveValidationContext';
 import ClientSecretControl from '../ClientSecretControl';
@@ -11,10 +11,6 @@ vi.mock('@/src/context/SaveValidationContext', () => ({
   ValidationActionType: {
     SetField: 'SetField',
   },
-}));
-
-vi.mock('@/src/locales/client', () => ({
-  useI18n: () => (key: string) => key,
 }));
 
 describe('ClientSecretControl', () => {
