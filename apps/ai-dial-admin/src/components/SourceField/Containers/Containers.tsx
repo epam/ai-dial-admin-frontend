@@ -97,8 +97,10 @@ const Containers = <T extends DialInterceptor | DialModel>({
   );
 
   const openContainer = useCallback(() => {
-    onOpenInNewTab(getContainerRoute(view), selectedContainer);
-  }, [selectedContainer, view]);
+    if (entity.source?.containerId) {
+      onOpenInNewTab(getContainerRoute(view), { name: entity.source.containerId });
+    }
+  }, [entity.source?.containerId, view]);
 
   useEffect(() => {
     const fetchContainers = async () => {
