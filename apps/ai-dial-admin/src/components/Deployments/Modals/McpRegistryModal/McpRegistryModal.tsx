@@ -1,10 +1,10 @@
 import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useState } from 'react';
 
-import McpRegistryGrid, { McpRegistryFetchFn } from '@/src/components/Deployments/McpRegistryGrid/McpRegistryGrid';
+import McpRegistryGrid from '@/src/components/Deployments/McpRegistryGrid/McpRegistryGrid';
 import { ButtonsI18nKey, ContainersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { McpServer } from '@/src/types/deployments/mcp-registry';
+import { McpRegistryFetchFn, McpServer } from '@/src/types/deployments/mcp-registry';
 
 interface Props {
   isModalOpen: boolean;
