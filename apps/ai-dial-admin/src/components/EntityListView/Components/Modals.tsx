@@ -41,6 +41,7 @@ export enum ModalType {
   createAdapterDockerImage = 'createAdapterDockerImage',
   createInterceptorDockerImage = 'createInterceptorDockerImage',
   createMcpRegistry = 'createMcpRegistry',
+  addImageFromMcpRegistry = 'addImageFromMcpRegistry',
   runTestSuite = 'runTestSuite',
 }
 

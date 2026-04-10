@@ -1,3 +1,5 @@
+import { ExternalRegistryRef } from '@/src/types/deployments/mcp-registry';
+
 export enum CONTAINER_STATUS {
   RUNNING = 'running',
   PENDING = 'pending',
@@ -45,11 +47,6 @@ export enum MODEL_TYPE {
 export enum SCALING_STRATEGY_TYPE {
   REQUESTS = 'active_requests',
   HARDWARE = 'hardware_usage',
-}
-
-export interface ExternalRegistryRef {
-  $type: string;
-  packageName: string;
 }
 
 export type ContainerSource = {

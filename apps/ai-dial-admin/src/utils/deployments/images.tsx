@@ -1,9 +1,15 @@
 import { SelectOption } from '@epam/ai-dial-ui-kit';
 import { STATUS_CLASSNAMES } from '@/src/constants/deployments/images';
-import { IMAGE_STATUS, IMAGE_TRANSPORT_TYPE, IMAGE_TYPE } from '@/src/types/deployments/images';
+import {
+  IMAGE_BUILDER_TYPE,
+  IMAGE_SOURCE_TYPE,
+  IMAGE_STATUS,
+  IMAGE_TRANSPORT_TYPE,
+  IMAGE_TYPE,
+} from '@/src/types/deployments/images';
 import { CONTAINER_STATUS, CONTAINER_TYPE } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
-import { Image, ImageGroup, ImageVersion } from '@/src/models/deployments/images';
+import { Image, ImageGroup, ImageSource, ImageVersion } from '@/src/models/deployments/images';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 import StatusIcon from '@/src/components/Deployments/Common/StatusIndicator/StatusIcon';
@@ -103,3 +109,31 @@ export const setTransport = (image: Image) => {
 
   return updatedImage;
 };
+
+export const getImageSource = (isRegistry?: boolean): ImageSource => {
+  if (isRegistry) {
+    return {
+      $type: IMAGE_SOURCE_TYPE.CODE,
+      url: '',
+      externalRegistryRef: { $type: 'mcp-registry', packageName: '' },
+    };
+  }
+
+  return {
+    $type: IMAGE_SOURCE_TYPE.DOCKER,
+    imageUri: '',
+  };
+};
+
+export const getImageTemplate = (isRegistry?: boolean): Image => ({
+  id: '',
+  $type: IMAGE_TYPE.MCP,
+  version: '1.0.0',
+  name: '',
+  description: '',
+  source: getImageSource(isRegistry),
+  transportType: IMAGE_TRANSPORT_TYPE.LOCAL,
+  imageBuilder: IMAGE_BUILDER_TYPE.ROOTLESS,
+  topics: [],
+  buildStatus: IMAGE_STATUS.NOT_BUILT,
+});
