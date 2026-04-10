@@ -131,7 +131,6 @@ export const getTestCaseColumns = (
         field: field,
         headerName: field,
         editable: false,
-        cellRenderer: EditableCellRenderer,
         valueGetter: (params: ValueGetterParams) => params.data?.data?.[field] ?? params.data?.[field] ?? '',
         cellRendererParams: {
           hideTriangle: true,
@@ -172,7 +171,7 @@ export const getTestCaseColumns = (
                       return;
                     }
                   }
-                  onCellChange(rowData as Record<string, unknown>, field, value);
+                  onCellChange(rowData as Record<string, unknown>, field, +value);
                 },
               },
             };
