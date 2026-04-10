@@ -115,7 +115,7 @@ export const prepareEntityForDuplicate = async <T>(
             ...toolset.authSettings,
             globalAuthStatus: undefined,
             userLevelAuthStatus: undefined,
-            clientSecret: '',
+            clientSecret: undefined,
             // Keep apiKeyHeader name for API_KEY auth, clear for others
             apiKeyHeader:
               toolset.authSettings.authenticationType === ToolsetAuthType.API_KEY
