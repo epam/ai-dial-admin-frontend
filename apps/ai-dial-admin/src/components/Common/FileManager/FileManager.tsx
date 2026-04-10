@@ -42,6 +42,7 @@ import {
 } from './utils';
 import { FileManagerGridRow } from '@epam/ai-dial-ui-kit/dist/src/components/FileManager/FileManagerContext';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
+import { DialRootFolder } from '@epam/ai-dial-ui-kit/dist/src/models/file';
 
 interface Props {
   view: ApplicationRoute;
@@ -302,6 +303,7 @@ const FileManager: FC<Props> = ({
       path={filePath}
       defaultPath={`${ROOT_FOLDER}/`}
       items={filteredFiles as []}
+      rootItem={filteredFiles?.[0] as DialRootFolder}
       filesLoading={isFetchingFiles}
       showNavigationPanel={false}
       bulkActionsToolbarOptions={getBulkActionsToolbarOptions(t)}
