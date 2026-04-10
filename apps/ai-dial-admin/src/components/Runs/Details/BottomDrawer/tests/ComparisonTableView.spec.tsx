@@ -68,7 +68,7 @@ describe('ComparisonTableView', () => {
   it('collapses section on click', async () => {
     render(<ComparisonTableView {...defaultProps} />);
     const header = screen.getByText('Runs.Execution');
-    await userEvent.click(header.closest('tr')!);
+    await userEvent.click(header.closest('div[style]')!);
     expect(screen.queryByText('status')).not.toBeInTheDocument();
   });
 
