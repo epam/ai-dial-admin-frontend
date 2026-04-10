@@ -110,7 +110,7 @@ export const getAllSelectedItemsPaths = (basePath: string, selectedVersions: Rec
 
 export const getEmptyAsset = (view: ApplicationRoute, path: string): AssetWithVersion => {
   const baseEmptyAsset = {
-    name: '',
+    name: '.dial_folder',
     folderId: path,
     version: '',
     path: `${path}.dial_folder`,
@@ -121,13 +121,12 @@ export const getEmptyAsset = (view: ApplicationRoute, path: string): AssetWithVe
     case ApplicationRoute.Prompts:
       return { ...baseEmptyAsset, content: '' };
     case ApplicationRoute.AssetsApplications:
-      return { ...baseEmptyAsset, name: '.dial_folder', endpoint: '' };
+      return { ...baseEmptyAsset, endpoint: '' };
     case ApplicationRoute.AssetsToolsets:
       return {
         ...baseEmptyAsset,
         endpoint: 'http://mock',
         displayName: '.dial_folder',
-        name: '.dial_folder',
         transport: ToolsetTransport.HTTP,
       };
     default:
