@@ -43,3 +43,19 @@ export interface BindingSource {
 }
 
 export type BindingSourceValue = string | string[] | Record<string, unknown>[];
+
+export interface MetricSnapshot {
+  id?: string;
+  computationId?: string;
+  testSuiteRunId?: string;
+  tsmdId?: string;
+  tsmdName?: string;
+  metricDeclarationId?: string;
+  metricDeclarationVersionId?: string;
+  configBindings?: MetricBinding[];
+  inputBindings?: MetricBinding[];
+  outputSchema?: JSONSchema7;
+  computedAtMs?: number;
+}
+
+export type MetricBindings = { configBindings: MetricBinding[]; inputBindings: MetricBinding[] };

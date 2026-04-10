@@ -1566,6 +1566,7 @@ export enum RunsI18nKey {
   Running = 'Runs.Status.Running',
   MetricFailedText = 'Runs.MetricFailedText',
   ExtractedColumns = 'Runs.ExtractedColumns',
+  MetricBindings = 'Runs.MetricBindings',
 }
 
 export enum FileManagerI18nKey {

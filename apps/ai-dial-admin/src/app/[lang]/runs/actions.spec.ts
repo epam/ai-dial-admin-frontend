@@ -9,6 +9,7 @@ import {
   getRun,
   getRunResults,
   getRuns,
+  getMetricSnapshots,
   getTestCaseRunResultDetails,
   getTestCaseRunResults,
   removeRun,
@@ -102,5 +103,17 @@ describe('Runs :: server actions', () => {
     expect(getUserToken).toHaveBeenCalled();
     expect(analyticsApi.getTestCaseRunResultDetails).toHaveBeenCalledWith('analytics-1', TOKEN_MOCK);
     expect(result).toEqual(resultDetail);
+  });
+
+  test('Should call getMetricSnapshots action and return snapshots', async () => {
+    const filters: FilterDto[] = [{ column: 'runId', value: 'run-1' }];
+    const snapshots = [{ id: 'snap-1', tsmdName: 'RAGAS Faithfulness' }];
+    (analyticsApi.getMetricSnapshots as any).mockResolvedValue(snapshots);
+
+    const result = await getMetricSnapshots(filters);
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(analyticsApi.getMetricSnapshots).toHaveBeenCalledWith(filters, TOKEN_MOCK);
+    expect(result).toEqual(snapshots);
   });
 });
