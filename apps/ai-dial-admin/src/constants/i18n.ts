@@ -361,6 +361,7 @@ export enum ButtonsI18nKey {
   Upload = 'Buttons.Upload',
   ShowMore = 'Buttons.ShowMore',
   ShowLess = 'Buttons.ShowLess',
+  PrepareFile = 'Buttons.PrepareFile',
 }
 
 export enum UpdateI18nKey {
@@ -612,6 +613,8 @@ export enum TelemetryI18nKey {
   EntitiesConsumption = 'Telemetry.EntitiesConsumption',
   ProjectsConsumption = 'Telemetry.ProjectsConsumption',
   AutoRefresh = 'Telemetry.AutoRefresh',
+  SelectEntities = 'Telemetry.SelectEntities',
+  SelectProjects = 'Telemetry.SelectProjects',
   AddFilter = 'Telemetry.AddFilter',
   TimePeriod = 'Telemetry.TimePeriod',
   CustomTimeRage = 'Telemetry.CustomTimeRage',

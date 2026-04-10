@@ -1,37 +1,39 @@
-import {
-  DialCheckbox,
-  DialFormPopup,
-  DialLoader,
-  DialNoDataContent,
-  DialTabs,
-  PopupSize,
-  TabModel,
-} from '@epam/ai-dial-ui-kit';
-import { IconEyeOff } from '@tabler/icons-react';
+import { DialCheckbox, DialFormPopup, DialLoader, DialTabs, PopupSize, TabModel } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
-import { previewExportConfig } from '@/src/app/[lang]/export-config/actions';
+import { previewDeploymentExportConfig, previewExportConfig } from '@/src/app/[lang]/export-config/actions';
 import ConfigContentGrid from '@/src/components/ExportConfig/Content/ConfigContentGrid';
-import { getPreviewTabs } from '@/src/components/ExportConfig/Preview/utils';
-import { ButtonsI18nKey, ExportI18nKey } from '@/src/constants/i18n';
+import { getDeploymentColDefs } from '@/src/components/ExportConfig/deployment-utils';
+import { getDeploymentExportPreviewTabs, getPreviewTabs } from '@/src/components/ExportConfig/Preview/utils';
+import GridView from '@/src/components/Grid/GridView/GridView';
+import { ButtonsI18nKey, EntitiesI18nKey, ExportI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
-import { ExportRequest } from '@/src/models/export';
+import { DeploymentExportRequest, ExportRequest } from '@/src/models/export';
 import { EntityType } from '@/src/types/entity-type';
+import { DeploymentExportPreviewResponse } from '@/src/models/deployments/preview';
 import { ExportType } from '@/src/types/export';
 import { getErrorNotification } from '@/src/utils/notification';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   exportRequest?: Partial<ExportRequest>;
+  deploymentExportRequest?: DeploymentExportRequest;
   isDeploymentExport?: boolean;
   isModalOpen: boolean;
   onClose: () => void;
   onPrepare: (isIncludeSecret: boolean, addGlobalFirewall?: boolean) => void;
 }
 
-const PreviewModal: FC<Props> = ({ exportRequest, isDeploymentExport, onPrepare, isModalOpen, onClose }) => {
+const PreviewModal: FC<Props> = ({
+  exportRequest,
+  deploymentExportRequest,
+  isDeploymentExport,
+  onPrepare,
+  isModalOpen,
+  onClose,
+}) => {
   const t = useI18n();
 
   const { showNotification } = useNotification();
@@ -52,6 +54,7 @@ const PreviewModal: FC<Props> = ({ exportRequest, isDeploymentExport, onPrepare,
     setIsIncludeGlobalFirewall((prev) => !prev);
   }, []);
 
+  // Admin export preview
   useEffect(() => {
     if (isDeploymentExport || !exportRequest) {
       return;
@@ -82,6 +85,34 @@ const PreviewModal: FC<Props> = ({ exportRequest, isDeploymentExport, onPrepare,
       });
   }, [exportRequest, isDeploymentExport, isIncludeSecret, showNotification, t]);
 
+  // Deployment export preview
+  useEffect(() => {
+    if (!isDeploymentExport || !deploymentExportRequest) {
+      return;
+    }
+
+    if (deploymentExportRequest.$type === ExportType.Custom && deploymentExportRequest.components?.length === 0) {
+      return;
+    }
+
+    setIsLoadingData(true);
+    getReqRef.current(previewDeploymentExportConfig, deploymentExportRequest).then((res) => {
+      setIsLoadingData(false);
+      if (res.success) {
+        const response = res.response as DeploymentExportPreviewResponse;
+        const { convertedData, tabs } = getDeploymentExportPreviewTabs(response, t);
+
+        setData(convertedData);
+        setTabs(tabs);
+        setSelectedTab(tabs[0]?.id);
+      } else {
+        showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+      }
+    });
+  }, [deploymentExportRequest, isDeploymentExport, showNotification, t]);
+
+  const submitLabel = isDeploymentExport ? t(ButtonsI18nKey.PrepareFile) : t(ButtonsI18nKey.Export);
+
   return (
     <DialFormPopup
       onClose={onClose}
@@ -90,17 +121,28 @@ const PreviewModal: FC<Props> = ({ exportRequest, isDeploymentExport, onPrepare,
       open={isModalOpen}
       className="h-[754px]"
       size={PopupSize.Lg}
-      submitLabel={t(ButtonsI18nKey.Export)}
+      submitLabel={submitLabel}
       onSubmit={() => onPrepare(isIncludeSecret, isDeploymentExport ? isIncludeGlobalFirewall : undefined)}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
       onCancel={onClose}
     >
       <div className="flex flex-col gap-4 p-6 h-full">
         <div className="flex-1 min-h-0">
-          {isDeploymentExport ? (
-            <DialNoDataContent title={t(ExportI18nKey.PreviewUnavailable)} icon={<IconEyeOff size={50} />} />
-          ) : isLoadingData ? (
+          {isLoadingData ? (
             <DialLoader size={50} />
+          ) : isDeploymentExport ? (
+            <div className="flex flex-col h-full">
+              <div className="mb-3">
+                <DialTabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab)} />
+              </div>
+              <div className="flex-1 min-h-0">
+                <GridView
+                  columnDefs={getDeploymentColDefs(t, undefined, selectedTab)}
+                  rowData={data[selectedTab] || []}
+                  emptyDataProps={{ title: t(EntitiesI18nKey.NoEntities) }}
+                />
+              </div>
+            </div>
           ) : (
             <div className="flex flex-col h-full">
               <div className="mb-3">

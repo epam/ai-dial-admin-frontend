@@ -58,6 +58,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [containers, setContainers] = useState<Container[]>([]);
   const [selectedContainer, setSelectedContainer] = useState<Container | null>(null);
+  const [currentContainerDisplayName, setCurrentContainerDisplayName] = useState<string>();
 
   const isMobile = useIsMobileScreen();
 
@@ -103,14 +104,18 @@ const Containers = <T extends DialInterceptor | DialModel>({
     const fetchContainers = async () => {
       const containers = (await getReqRef.current(getContainers)).response as Container[] | null;
       if (containers?.length) {
-        setContainers(containers.filter((container) => container.status === 'running') || []);
+        const current = containers.find((c) => c.name === entity.source?.containerId);
+        if (current) {
+          setCurrentContainerDisplayName(current.displayName);
+        }
+        setContainers(containers.filter((container) => container.status === 'running'));
       }
     };
 
     fetchContainers().catch((error) =>
       showNotificationRef.current(getErrorNotification(error.errorHeader, error.errorMessage, error.requestId)),
     );
-  }, [getContainers]);
+  }, [entity.source?.containerId, getContainers]);
 
   useEffect(() => {
     setSelectedContainer(containers?.find((container) => container.name === entity.source?.containerId) || null);
@@ -143,7 +148,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
               <DialInputPopup
                 open={isModalOpen}
                 onOpen={onOpenModal}
-                selectedValue={selectedContainer?.displayName}
+                selectedValue={selectedContainer?.displayName || currentContainerDisplayName}
                 elementId="containers"
                 emptyValueText={t(EntitiesI18nKey.NoContainers)}
                 disabled={disabled || !featureFlags.deploymentsEnabled}

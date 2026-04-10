@@ -1,5 +1,6 @@
 'use client';
 
+import Cloud from '@/public/images/icons/cloud.svg';
 import { ColDef, ICellRendererParams, ITooltipParams, ValueGetterParams } from 'ag-grid-community';
 import { capitalize } from 'lodash';
 
@@ -12,6 +13,7 @@ import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRe
 import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRenderer';
 import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
 import { ACTION_COLUMN, NO_BORDER_CLASS } from '@/src/constants/ag-grid';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { EVENT_TYPES, MODEL_TYPES, POD_OBJECT_KIND } from '@/src/constants/deployments/containers';
 import {
   IMAGE_SOURCE_TYPE_I18N_KEYS,
@@ -1152,4 +1154,24 @@ export const getFormDataColumns = (
   ];
 
   return cols;
+};
+
+export const DOMAIN_COLUMN: ColDef = {
+  field: 'domain',
+  headerName: 'Domain',
+  flex: 1,
+  filter: false,
+  floatingFilter: false,
+  sortable: false,
+  cellRenderer: (params: ICellRendererParams) => {
+    if (!params.value) return null;
+    return (
+      <span className="flex items-center gap-2">
+        <span className="text-secondary">
+          <Cloud {...BASE_BUTTON_ICON_PROPS} />
+        </span>
+        {params.value}
+      </span>
+    );
+  },
 };
