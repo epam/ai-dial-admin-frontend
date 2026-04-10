@@ -12,8 +12,7 @@ import {
   RadioGroupOrientation,
 } from '@epam/ai-dial-ui-kit';
 
-import { ButtonsI18nKey, ExportI18nKey, TypeI18nKey } from '@/src/constants/i18n';
-import { ARCHIVE_IMPORT_TYPE } from '@/src/constants/import';
+import { ButtonsI18nKey, ExportI18nKey, ImportI18nKey, TypeI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ImportFileType as FileType, ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -30,7 +29,7 @@ const ExportModal: FC<Props> = ({ isModalOpen, route, onClose, onApply }) => {
   const t = useI18n();
 
   const exportTypeRadio: RadioButtonWithContent[] = [
-    ARCHIVE_IMPORT_TYPE(t),
+    { id: ImportFileType.ARCHIVE, name: t(ImportI18nKey.DialArchive) },
     { id: ImportFileType.JSON, name: t(TypeI18nKey.JSON) },
   ];
 
