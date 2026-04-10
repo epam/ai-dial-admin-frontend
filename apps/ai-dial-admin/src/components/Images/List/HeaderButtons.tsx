@@ -1,12 +1,12 @@
 'use client';
 
-import { FC, MouseEvent, useCallback, useState } from 'react';
+import { FC, MouseEvent, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { IconColumns2, IconPlus } from '@tabler/icons-react';
 import Cloud from '@/public/images/icons/cloud.svg';
 import { GridApi } from 'ag-grid-community';
-import { DialGhostButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { DialButtonDropdown, DialGhostButton, DialPrimaryButton, DropdownItem } from '@epam/ai-dial-ui-kit';
 
 import { ApplicationRoute } from '@/src/types/routes';
 import { Image } from '@/src/models/deployments/images';
@@ -19,6 +19,7 @@ import { getErrorNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
+import { useAppContext } from '@/src/context/AppContext';
 
 import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
 import GlobalWhitelist from '@/src/components/Deployments/Modals/GlobalWhitelist';
@@ -36,6 +37,7 @@ const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, gridApi, isReadOn
   const isTabletScreen = useIsTabletScreen();
   const { showNotification } = useNotification();
   const router = useRouter();
+  const { featureFlags } = useAppContext();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType>();
@@ -72,6 +74,22 @@ const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, gridApi, isReadOn
     [toggleColumnsPanel],
   );
 
+  const dropdownItems: DropdownItem[] = useMemo(
+    () => [
+      {
+        key: 'add-image',
+        label: t(ImagesI18nKey.AddImage),
+        onClick: () => handleModalOpen(ModalType.addImage),
+      },
+      {
+        key: 'mcp-registry',
+        label: t(ImagesI18nKey.FromMcpRegistry),
+        onClick: () => handleModalOpen(ModalType.addImageFromMcpRegistry),
+      },
+    ],
+    [t, handleModalOpen],
+  );
+
   return (
     <>
       <div className="flex gap-4">
@@ -87,13 +105,16 @@ const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, gridApi, isReadOn
           onClick={onToggleColumnsPanel}
         />
 
-        {!isReadOnlyAdmin && (
-          <DialPrimaryButton
-            label={isTabletScreen ? '' : t(ButtonsI18nKey.Add)}
-            iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-            onClick={() => handleModalOpen(ModalType.addImage)}
-          />
-        )}
+        {!isReadOnlyAdmin &&
+          (featureFlags.mcpRegistryEnabled ? (
+            <DialButtonDropdown items={dropdownItems} label={isTabletScreen ? '' : t(ButtonsI18nKey.Add)} />
+          ) : (
+            <DialPrimaryButton
+              label={isTabletScreen ? '' : t(ButtonsI18nKey.Add)}
+              iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
+              onClick={() => handleModalOpen(ModalType.addImage)}
+            />
+          ))}
       </div>
 
       {isModalOpen &&
@@ -117,6 +138,19 @@ const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, gridApi, isReadOn
             modalTitle={t(ImagesI18nKey.AddModalTitle)}
             onClose={handleModalClose}
             onApply={onCreateImage}
+          />,
+          document.body,
+        )}
+
+      {isModalOpen &&
+        modalType === ModalType.addImageFromMcpRegistry &&
+        createPortal(
+          <ImageAdd
+            isModalOpen={isModalOpen}
+            modalTitle={t(ImagesI18nKey.AddFromMcpRegistryModalTitle)}
+            onClose={handleModalClose}
+            onApply={onCreateImage}
+            isRegistry
           />,
           document.body,
         )}
