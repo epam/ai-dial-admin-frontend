@@ -191,9 +191,13 @@ export const getPanelTitle = (result: ExtractionResult | AnalyticsResult | null)
   return `${result?.testCaseName} - Run #${result?.runIndex ?? 0}`;
 };
 
-export const getDetailEntries = (data: Record<string, unknown>) => {
+export const getDetailEntries = (data: Record<string, unknown>): Array<[string, string | string[]]> => {
   return Object.keys(data).map((key) => {
-    return [key, String(data[key])] as [string, string];
+    const val = data[key];
+    if (Array.isArray(val) && val.every((v) => typeof v === 'string')) {
+      return [key, val as string[]];
+    }
+    return [key, String(val)];
   });
 };
 

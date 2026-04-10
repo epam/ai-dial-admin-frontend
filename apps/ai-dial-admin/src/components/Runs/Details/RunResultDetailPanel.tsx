@@ -31,6 +31,10 @@ const RunResultDetailPanel: FC<Props> = ({ result, grafanaExploreUrl, onClose })
     return getDetailEntries(result.testCaseData ?? {});
   }, [result.testCaseData]);
 
+  const extractedColumnsEntries = useMemo(() => {
+    return getDetailEntries(result.extractedColumns ?? {});
+  }, [result.extractedColumns]);
+
   const requestJson = result.requestBody != null ? JSON.stringify(result.requestBody) : null;
   const responseJson = result.responseBody != null ? JSON.stringify(result.responseBody) : null;
 
@@ -63,6 +67,9 @@ const RunResultDetailPanel: FC<Props> = ({ result, grafanaExploreUrl, onClose })
           />
           {testCaseEntries.length > 0 && (
             <AdaptiveValueGrid title={t(RunsI18nKey.TestCaseData)} entries={testCaseEntries} />
+          )}
+          {extractedColumnsEntries.length > 0 && (
+            <AdaptiveValueGrid title={t(RunsI18nKey.ExtractedColumns)} entries={extractedColumnsEntries} />
           )}
           {requestJson && <CodeViewer title={t(RunsI18nKey.Request)} content={requestJson} />}
           {responseJson && <CodeViewer title={t(RunsI18nKey.Response)} content={responseJson} />}
