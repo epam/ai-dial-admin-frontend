@@ -11,6 +11,7 @@ import {
   getDetailEntries,
   getDetailNestedEntries,
   getMetricGroups,
+  snapshotsToBindingsMap,
 } from '../utils';
 
 describe('Runs View :: RESULT_FILTERS', () => {
@@ -253,6 +254,18 @@ describe('Runs View :: getDetailEntries', () => {
 
   test('Should handle empty record', () => {
     expect(getDetailEntries({})).toEqual([]);
+  });
+
+  test('Should return string-array values as string[]', () => {
+    expect(getDetailEntries({ tags: ['alpha', 'beta', 'gamma'] })).toEqual([['tags', ['alpha', 'beta', 'gamma']]]);
+  });
+
+  test('Should stringify mixed arrays', () => {
+    expect(getDetailEntries({ mixed: ['a', 1, true] })).toEqual([['mixed', 'a,1,true']]);
+  });
+
+  test('Should stringify number values', () => {
+    expect(getDetailEntries({ count: 42 })).toEqual([['count', '42']]);
   });
 });
 
@@ -517,5 +530,38 @@ describe('Runs View :: getMetricGroups', () => {
     const result = getMetricGroups(metricValues);
     expect(result[0].metrics[0]).toEqual({ key: 'score', value: null, isError: true });
     expect(result[0].metrics[1]).toEqual({ key: 'confidence', value: null, isError: true });
+  });
+});
+
+describe('Runs View :: snapshotsToBindingsMap', () => {
+  test('Should map named snapshots to bindings record', () => {
+    const snapshots = [
+      { tsmdName: 'Metric A', configBindings: [{ property: 'p1', source: { $type: 'Constant' } }], inputBindings: [] },
+      { tsmdName: 'Metric B', configBindings: [], inputBindings: [{ property: 'p2', source: { $type: 'TestCase' } }] },
+    ];
+    const result = snapshotsToBindingsMap(snapshots as any);
+    expect(Object.keys(result)).toEqual(['Metric A', 'Metric B']);
+    expect(result['Metric A'].configBindings).toHaveLength(1);
+    expect(result['Metric B'].inputBindings).toHaveLength(1);
+  });
+
+  test('Should skip snapshots without tsmdName', () => {
+    const snapshots = [
+      { configBindings: [], inputBindings: [] },
+      { tsmdName: 'Metric A', configBindings: [], inputBindings: [] },
+    ];
+    const result = snapshotsToBindingsMap(snapshots as any);
+    expect(Object.keys(result)).toEqual(['Metric A']);
+  });
+
+  test('Should return empty record for empty array', () => {
+    expect(snapshotsToBindingsMap([])).toEqual({});
+  });
+
+  test('Should default undefined bindings to empty arrays', () => {
+    const snapshots = [{ tsmdName: 'Metric A' }];
+    const result = snapshotsToBindingsMap(snapshots as any);
+    expect(result['Metric A'].configBindings).toEqual([]);
+    expect(result['Metric A'].inputBindings).toEqual([]);
   });
 });

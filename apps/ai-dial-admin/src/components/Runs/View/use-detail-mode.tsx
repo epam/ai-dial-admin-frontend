@@ -5,7 +5,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import RunMetricDetailPanel from '@/src/components/Runs/Details/RunMetricDetailPanel';
 import { useAppContext } from '@/src/context/AppContext';
 
+import { getMetricSnapshots } from '@/src/app/[lang]/runs/actions';
+import { MetricBindings } from '@/src/models/evaluation/metric';
 import { DetailMode } from '../Details/BottomDrawer/models';
+import { RUN_FILTER, snapshotsToBindingsMap } from './utils';
 
 interface UseDetailModeReturn {
   detailMode: DetailMode;
@@ -25,12 +28,20 @@ export function useDetailMode(): UseDetailModeReturn {
   const [selectedResultId, setSelectedResultId] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [pendingFocus, setPendingFocus] = useState(false);
+  const [metricBindings, setMetricBindings] = useState<Record<string, MetricBindings>>({});
+
   const sidebarRef = useRef(sidebar);
   sidebarRef.current = sidebar;
 
   const clearPendingFocus = useCallback(() => {
     setPendingFocus(false);
   }, []);
+
+  useEffect(() => {
+    getMetricSnapshots(RUN_FILTER(selectedResultId)).then((snapshots) => {
+      setMetricBindings(snapshotsToBindingsMap(snapshots || []));
+    });
+  }, [selectedResultId]);
 
   const showSidebarPanel = useCallback(
     (resultId: string, onSwitchMode: () => void) => {
@@ -42,11 +53,12 @@ export function useDetailMode(): UseDetailModeReturn {
             sidebar.closeSidebar();
           }}
           onSwitchMode={onSwitchMode}
+          metricBindings={metricBindings}
         />,
         'w-[750px]',
       );
     },
-    [sidebar],
+    [sidebar, metricBindings],
   );
 
   const switchToDrawer = useCallback(() => {

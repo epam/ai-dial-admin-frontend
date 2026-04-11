@@ -3,6 +3,7 @@ import { ColDef } from 'ag-grid-community';
 import { getAccuracyColors } from '@/src/components/Common/ColorScale/utils';
 import ErrorCellRenderer from '@/src/components/Grid/CellRenderers/ErrorCellRenderer';
 import ExecutionStatusCellRenderer from '@/src/components/Grid/CellRenderers/ExecutionStatusCellRenderer';
+import { MetricBindings, MetricSnapshot } from '@/src/models/evaluation/metric';
 import { AnalyticsResult, ExtractionResult, Run } from '@/src/models/evaluation/run';
 import { FilterDto } from '@/src/models/request';
 import { FilterOperatorDto } from '@/src/types/request';
@@ -10,8 +11,12 @@ import { FilterOperatorDto } from '@/src/types/request';
 import { MetricGroup } from './models';
 export type { MetricGroup } from './models';
 
+export const RUN_FILTER = (id?: string | null): FilterDto[] => [
+  { column: 'runId', operator: FilterOperatorDto.EQUALS, value: id || '' },
+];
+
 export const RESULT_FILTERS = (run: Run): FilterDto[] => [
-  { column: 'runId', operator: FilterOperatorDto.EQUALS, value: run.id || '' },
+  ...RUN_FILTER(run.id),
   {
     column: 'suiteId',
     operator: FilterOperatorDto.EQUALS,
@@ -192,9 +197,13 @@ export const getPanelTitle = (result: ExtractionResult | AnalyticsResult | null)
   return `${result?.testCaseName} - Run #${result?.runIndex ?? 0}`;
 };
 
-export const getDetailEntries = (data: Record<string, unknown>) => {
+export const getDetailEntries = (data: Record<string, unknown>): Array<[string, string | string[]]> => {
   return Object.keys(data).map((key) => {
-    return [key, String(data[key])] as [string, string];
+    const val = data[key];
+    if (Array.isArray(val) && val.every((v) => typeof v === 'string')) {
+      return [key, val as string[]];
+    }
+    return [key, String(val)];
   });
 };
 
@@ -230,6 +239,21 @@ export const getMetricGroups = (
       errorMessage: hasError && infoError ? String(infoError) : undefined,
     };
   });
+};
+
+export const snapshotsToBindingsMap = (snapshots: MetricSnapshot[]): Record<string, MetricBindings> => {
+  return snapshots.reduce(
+    (acc, snapshot) => {
+      if (snapshot.tsmdName) {
+        acc[snapshot.tsmdName] = {
+          configBindings: snapshot.configBindings ?? [],
+          inputBindings: snapshot.inputBindings ?? [],
+        };
+      }
+      return acc;
+    },
+    {} as Record<string, MetricBindings>,
+  );
 };
 
 export const getDetailNestedEntries = (

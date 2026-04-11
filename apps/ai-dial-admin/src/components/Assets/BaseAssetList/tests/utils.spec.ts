@@ -1,7 +1,7 @@
 import { describe, expect, test, vi } from 'vitest';
 import { getAllSelectedItemsPaths } from '../utils';
 
-describe('Prompts', () => {
+describe('BaseAssetList', () => {
   describe('getAllSelectedItemsPaths', () => {
     test('should get all selected paths for base path', () => {
       const mockSelectedVersionsMap = {

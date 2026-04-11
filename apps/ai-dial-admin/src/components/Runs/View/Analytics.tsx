@@ -37,12 +37,15 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
 
     if (!isLoading && !results) {
       setIsLoading(true);
-      getTestCaseRunResults(RESULT_FILTERS(run)).then((res) => {
-        const content = res?.content || [];
-        setResults(content);
-        setColDefs(getAnalyticsColumns(content, t(RunsI18nKey.MetricFailedText)));
-        setIsLoading(false);
-      });
+      getTestCaseRunResults(RESULT_FILTERS(run))
+        .then((resultsSettled) => {
+          const content = resultsSettled?.content || [];
+          setResults(content);
+          setColDefs(getAnalyticsColumns(content, t(RunsI18nKey.MetricFailedText)));
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
     }
   }, [isLoading, results, run, t]);
 

@@ -9,19 +9,11 @@ import { ContainersI18nKey } from '@/src/constants/i18n';
 import { MCP_REGISTRY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { useI18n } from '@/src/locales/client';
 import { FilterDto } from '@/src/models/request';
-import { ServerActionResponse } from '@/src/models/server-action';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
-import { McpServer, McpServerResponse } from '@/src/types/deployments/mcp-registry';
+import { McpRegistryFetchFn, McpServer, McpServerResponse } from '@/src/types/deployments/mcp-registry';
 
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import ListEntities from '@/src/components/ListView/List';
-
-export type McpRegistryFetchFn = (params: {
-  search?: string;
-  cursor?: string;
-  limit?: number;
-  minResults?: number;
-}) => Promise<ServerActionResponse>;
 
 interface Props {
   selectedServer?: McpServer;

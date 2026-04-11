@@ -3,6 +3,7 @@ import { describe, test, expect, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { MCP_REGISTRY_SERVERS_LIST, McpRegistryApi } from '@/src/server/deployments/mcp-registry';
+import { CONTAINER_MCP_REGISTRY_FILTER, IMAGE_MCP_REGISTRY_FILTER } from '@/src/constants/deployments/mcp-registry';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
@@ -19,10 +20,7 @@ describe('McpRegistryApi', () => {
         method: 'POST',
         body: JSON.stringify({
           limit: 100,
-          filter: {
-            packageRegistryTypes: ['oci'],
-            packageTransportTypes: ['streamable-http', 'sse'],
-          },
+          filter: CONTAINER_MCP_REGISTRY_FILTER,
         }),
       }),
     );
@@ -39,10 +37,7 @@ describe('McpRegistryApi', () => {
           search: 'test',
           cursor: 'abc',
           limit: 5,
-          filter: {
-            packageRegistryTypes: ['oci'],
-            packageTransportTypes: ['streamable-http', 'sse'],
-          },
+          filter: CONTAINER_MCP_REGISTRY_FILTER,
         }),
       }),
     );
@@ -57,10 +52,54 @@ describe('McpRegistryApi', () => {
         method: 'POST',
         body: JSON.stringify({
           limit: 100,
-          filter: {
-            packageRegistryTypes: ['oci'],
-            packageTransportTypes: ['streamable-http', 'sse'],
-          },
+          filter: CONTAINER_MCP_REGISTRY_FILTER,
+        }),
+      }),
+    );
+  });
+
+  test('getImageMcpServers sends POST with repositoryExists filter', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ servers: [], metadata: {} }));
+    await instance.getImageMcpServers({ limit: 100 }, TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(MCP_REGISTRY_SERVERS_LIST),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          limit: 100,
+          filter: IMAGE_MCP_REGISTRY_FILTER,
+        }),
+      }),
+    );
+  });
+
+  test('getImageMcpServers includes search and cursor when provided', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ servers: [], metadata: {} }));
+    await instance.getImageMcpServers({ search: 'github', cursor: 'xyz', limit: 50 }, TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(MCP_REGISTRY_SERVERS_LIST),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          search: 'github',
+          cursor: 'xyz',
+          limit: 50,
+          filter: IMAGE_MCP_REGISTRY_FILTER,
+        }),
+      }),
+    );
+  });
+
+  test('getImageMcpServers omits undefined optional params', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ servers: [], metadata: {} }));
+    await instance.getImageMcpServers({ search: undefined, cursor: '', limit: 100 }, TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(MCP_REGISTRY_SERVERS_LIST),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          limit: 100,
+          filter: IMAGE_MCP_REGISTRY_FILTER,
         }),
       }),
     );
