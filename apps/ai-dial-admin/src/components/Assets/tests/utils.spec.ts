@@ -154,6 +154,10 @@ describe('getDeleteNotificationContent', () => {
     if (key === FileManagerI18nKey.Prompts) return 'Prompts';
     if (key === FileManagerI18nKey.Prompt) return 'Prompt';
     if (key === FileManagerI18nKey.Items) return 'Items';
+    if (key === FileManagerI18nKey.Applications) return 'Applications';
+    if (key === FileManagerI18nKey.Application) return 'Application';
+    if (key === FileManagerI18nKey.Toolsets) return 'Toolsets';
+    if (key === FileManagerI18nKey.Toolset) return 'Toolset';
     return key;
   };
 
@@ -188,6 +192,38 @@ describe('getDeleteNotificationContent', () => {
     expect(result.title).toBe('Delete Items Success');
     expect(result.description).toContain('2');
   });
+
+  test('should return correct notification for single application delete in Applications view', () => {
+    const fileNodes = [{ name: 'My Application' }] as any[];
+    const result = getDeleteNotificationContent(ApplicationRoute.AssetsApplications, fileNodes, mockT);
+
+    expect(result.title).toBe('Delete Application Success');
+    expect(result.description).toContain('My Application');
+  });
+
+  test('should return correct notification for multiple applications delete in Applications view', () => {
+    const fileNodes = [{ name: 'Application1' }, { name: 'Application2' }] as any[];
+    const result = getDeleteNotificationContent(ApplicationRoute.AssetsApplications, fileNodes, mockT);
+
+    expect(result.title).toBe('Delete Items Success');
+    expect(result.description).toContain('2');
+  });
+
+  test('should return correct notification for single toolset delete in Toolsets view', () => {
+    const fileNodes = [{ name: 'My Toolset' }] as any[];
+    const result = getDeleteNotificationContent(ApplicationRoute.AssetsToolsets, fileNodes, mockT);
+
+    expect(result.title).toBe('Delete Toolset Success');
+    expect(result.description).toContain('My Toolset');
+  });
+
+  test('should return correct notification for multiple toolsets delete in Toolsets view', () => {
+    const fileNodes = [{ name: 'Toolset1' }, { name: 'Toolset2' }] as any[];
+    const result = getDeleteNotificationContent(ApplicationRoute.AssetsToolsets, fileNodes, mockT);
+
+    expect(result.title).toBe('Delete Items Success');
+    expect(result.description).toContain('2');
+  });
 });
 
 describe('getMoveNotificationContent', () => {
@@ -206,6 +242,10 @@ describe('getMoveNotificationContent', () => {
     if (key === FileManagerI18nKey.Prompts) return 'Prompts';
     if (key === FileManagerI18nKey.Prompt) return 'Prompt';
     if (key === FileManagerI18nKey.Items) return 'Items';
+    if (key === FileManagerI18nKey.Applications) return 'Applications';
+    if (key === FileManagerI18nKey.Application) return 'Application';
+    if (key === FileManagerI18nKey.Toolsets) return 'Toolsets';
+    if (key === FileManagerI18nKey.Toolset) return 'Toolset';
     return key;
   };
 
@@ -256,8 +296,65 @@ describe('getMoveNotificationContent', () => {
     expect(result.description).toContain('2');
     expect(result.description).toContain('/prompts/folder/');
   });
-});
 
+  test('should return correct notification for single application move in Applications view', () => {
+    const items = [{ sourceUrl: 'My Application' }] as any[];
+    const result = getMoveNotificationContent(
+      ApplicationRoute.AssetsApplications,
+      items,
+      '/applications/',
+      '/applications/folder/',
+      mockT,
+    );
+
+    expect(result.title).toBe('Move Application Success');
+    expect(result.description).toContain('My Application');
+    expect(result.description).toContain('/applications/');
+  });
+
+  test('should return correct notification for multiple applications move in Applications view', () => {
+    const items = [{ sourceUrl: 'Application1' }, { sourceUrl: 'Application2' }] as any[];
+    const result = getMoveNotificationContent(
+      ApplicationRoute.AssetsApplications,
+      items,
+      '/applications/',
+      '/applications/folder/',
+      mockT,
+    );
+
+    expect(result.title).toBe('Move Items Success');
+    expect(result.description).toContain('2');
+    expect(result.description).toContain('/applications/folder/');
+  });
+
+  test('should return correct notification for single toolset move in Toolsets view', () => {
+    const items = [{ sourceUrl: 'My Toolset' }] as any[];
+    const result = getMoveNotificationContent(
+      ApplicationRoute.AssetsToolsets,
+      items,
+      '/toolsets/',
+      '/toolsets/folder/',
+      mockT,
+    );
+    expect(result.title).toBe('Move Toolset Success');
+    expect(result.description).toContain('My Toolset');
+    expect(result.description).toContain('/toolsets/');
+  });
+
+  test('should return correct notification for multiple toolsets move in Toolsets view', () => {
+    const items = [{ sourceUrl: 'Toolset1' }, { sourceUrl: 'Toolset2' }] as any[];
+    const result = getMoveNotificationContent(
+      ApplicationRoute.AssetsToolsets,
+      items,
+      '/toolsets/',
+      '/toolsets/folder/',
+      mockT,
+    );
+    expect(result.title).toBe('Move Items Success');
+    expect(result.description).toContain('2');
+    expect(result.description).toContain('/toolsets/folder/');
+  });
+});
 describe('getExportNotificationContent', () => {
   const mockT = (key: string, options?: Record<string, string | number>) => {
     if (key === FileManagerI18nKey.ExportSuccessTitle) {
@@ -273,6 +370,11 @@ describe('getExportNotificationContent', () => {
     if (key === FileManagerI18nKey.File) return 'File';
     if (key === FileManagerI18nKey.Prompts) return 'Prompts';
     if (key === FileManagerI18nKey.Prompt) return 'Prompt';
+    if (key === FileManagerI18nKey.Items) return 'Items';
+    if (key === FileManagerI18nKey.Applications) return 'Applications';
+    if (key === FileManagerI18nKey.Application) return 'Application';
+    if (key === FileManagerI18nKey.Toolsets) return 'Toolsets';
+    if (key === FileManagerI18nKey.Toolset) return 'Toolset';
     return key;
   };
 
@@ -307,6 +409,41 @@ describe('getExportNotificationContent', () => {
     expect(result.title).toBe('Export Prompts Success');
     expect(result.description).toBe('Successfully exported many items');
   });
+
+  test('should return correct notification for single application export in Applications view', () => {
+    const files = [{ nodeType: 'FILE' }] as any[];
+    const result = getExportNotificationContent(ApplicationRoute.AssetsApplications, files, mockT, ['/app1']);
+
+    expect(result.title).toBe('Export Application Success');
+    expect(result.description).toBe('Successfully exported one Application');
+  });
+
+  test('should return correct notification for multiple applications export in Applications view', () => {
+    const files = [{ nodeType: 'FILE' }, { nodeType: 'FILE' }] as any[];
+    const result = getExportNotificationContent(ApplicationRoute.AssetsApplications, files, mockT, ['/app1', '/app2']);
+
+    expect(result.title).toBe('Export Applications Success');
+    expect(result.description).toBe('Successfully exported many items');
+  });
+
+  test('should return correct notification for single toolset export in Toolsets view', () => {
+    const files = [{ nodeType: 'FILE' }] as any[];
+    const result = getExportNotificationContent(ApplicationRoute.AssetsToolsets, files, mockT, ['/toolset1']);
+
+    expect(result.title).toBe('Export Toolset Success');
+    expect(result.description).toBe('Successfully exported one Toolset');
+  });
+
+  test('should return correct notification for multiple toolsets export in Toolsets view', () => {
+    const files = [{ nodeType: 'FILE' }, { nodeType: 'FILE' }] as any[];
+    const result = getExportNotificationContent(ApplicationRoute.AssetsToolsets, files, mockT, [
+      '/toolset1',
+      '/toolset2',
+    ]);
+
+    expect(result.title).toBe('Export Toolsets Success');
+    expect(result.description).toBe('Successfully exported many items');
+  });
 });
 
 describe('getImportNotificationContent', () => {
@@ -327,6 +464,11 @@ describe('getImportNotificationContent', () => {
     if (key === FileManagerI18nKey.File) return 'File';
     if (key === FileManagerI18nKey.Prompts) return 'Prompts';
     if (key === FileManagerI18nKey.Prompt) return 'Prompt';
+    if (key === FileManagerI18nKey.Items) return 'Items';
+    if (key === FileManagerI18nKey.Applications) return 'Applications';
+    if (key === FileManagerI18nKey.Application) return 'Application';
+    if (key === FileManagerI18nKey.Toolsets) return 'Toolsets';
+    if (key === FileManagerI18nKey.Toolset) return 'Toolset';
     return key;
   };
 
@@ -376,5 +518,83 @@ describe('getImportNotificationContent', () => {
 
     expect(result.title).toBe('Import Prompt Success');
     expect(result.description).toBe('Successfully imported archive Prompts to /dest');
+  });
+
+  test('should return correct notification for single application import in Applications view', () => {
+    const file = { applications: [{ name: 'Application1' }] } as any;
+    const result = getImportNotificationContent(
+      ApplicationRoute.AssetsApplications,
+      file,
+      ImportFileType.FILES,
+      '/dest',
+      mockT,
+    );
+
+    expect(result.title).toBe('Import Application Success');
+    expect(result.description).toBe('Successfully imported one Application to /dest');
+  });
+
+  test('should return correct notification for multiple applications import in Applications view', () => {
+    const file = { applications: [{ name: 'Application1' }, { name: 'Application2' }] } as any;
+    const result = getImportNotificationContent(
+      ApplicationRoute.AssetsApplications,
+      file,
+      ImportFileType.FILES,
+      '/dest',
+      mockT,
+    );
+
+    expect(result.title).toBe('Import Applications Success');
+    expect(result.description).toBe('Successfully imported 2 items to /dest');
+  });
+
+  test('should return correct notification for archive import in Applications view', () => {
+    const file = { applications: [{ name: 'Application1' }] } as any;
+    const result = getImportNotificationContent(
+      ApplicationRoute.AssetsApplications,
+      file,
+      ImportFileType.ARCHIVE,
+      '/dest',
+      mockT,
+    );
+    expect(result.title).toBe('Import Application Success');
+    expect(result.description).toBe('Successfully imported archive Applications to /dest');
+  });
+
+  test('should return correct notification for single toolset import in Toolsets view', () => {
+    const file = { toolSets: [{ name: 'Toolset1' }] } as any;
+    const result = getImportNotificationContent(
+      ApplicationRoute.AssetsToolsets,
+      file,
+      ImportFileType.FILES,
+      '/dest',
+      mockT,
+    );
+    expect(result.title).toBe('Import Toolset Success');
+    expect(result.description).toBe('Successfully imported one Toolset to /dest');
+  });
+  test('should return correct notification for multiple toolsets import in Toolsets view', () => {
+    const file = { toolSets: [{ name: 'Toolset1' }, { name: 'Toolset2' }] } as any;
+    const result = getImportNotificationContent(
+      ApplicationRoute.AssetsToolsets,
+      file,
+      ImportFileType.FILES,
+      '/dest',
+      mockT,
+    );
+    expect(result.title).toBe('Import Toolsets Success');
+    expect(result.description).toBe('Successfully imported 2 items to /dest');
+  });
+  test('should return correct notification for archive import in Toolsets view', () => {
+    const file = { toolSets: [{ name: 'Toolset1' }] } as any;
+    const result = getImportNotificationContent(
+      ApplicationRoute.AssetsToolsets,
+      file,
+      ImportFileType.ARCHIVE,
+      '/dest',
+      mockT,
+    );
+    expect(result.title).toBe('Import Toolset Success');
+    expect(result.description).toBe('Successfully imported archive Toolsets to /dest');
   });
 });

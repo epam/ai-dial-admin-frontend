@@ -98,20 +98,14 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
     [newTestCases, onDirtyChange],
   );
 
-  const onCellValueChanged = useCallback(
-    (event: CellValueChangedEvent) => {
-      const col = event.column?.getColId();
-      if (col === 'action-tryout' || col === 'action-remove' || !event.data?.id) return;
-      updateData(event.data as Record<string, unknown>);
-
-      if (col === 'enabled') {
-        const api = gridApiRef.current;
-        if (!api) return;
-        api.refreshClientSideRowModel('filter');
-      }
-    },
-    [updateData],
-  );
+  const onCellValueChanged = useCallback((event: CellValueChangedEvent) => {
+    const col = event.column?.getColId();
+    if (col === 'enabled') {
+      const api = gridApiRef.current;
+      if (!api) return;
+      api.refreshClientSideRowModel('filter');
+    }
+  }, []);
 
   const onCellChange = useCallback(
     (data: Record<string, unknown>, field: string, value: string | number | boolean) => {
