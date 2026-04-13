@@ -3,14 +3,19 @@ import { ColDef } from 'ag-grid-community';
 import { getAccuracyColors } from '@/src/components/Common/ColorScale/utils';
 import ErrorCellRenderer from '@/src/components/Grid/CellRenderers/ErrorCellRenderer';
 import ExecutionStatusCellRenderer from '@/src/components/Grid/CellRenderers/ExecutionStatusCellRenderer';
+import { MetricBindings, MetricSnapshot } from '@/src/models/evaluation/metric';
 import { AnalyticsResult, ExtractionResult, Run } from '@/src/models/evaluation/run';
 import { FilterDto } from '@/src/models/request';
 import { FilterOperatorDto } from '@/src/types/request';
 import { MetricGroup } from './models';
 export type { MetricGroup } from './models';
 
-export const RESULT_FILTERS = (run: Run): FilterDto[] => [
+export const RUN_FILTER = (run: Run): FilterDto[] => [
   { column: 'runId', operator: FilterOperatorDto.EQUALS, value: run.id || '' },
+];
+
+export const RESULT_FILTERS = (run: Run): FilterDto[] => [
+  ...RUN_FILTER(run),
   {
     column: 'suiteId',
     operator: FilterOperatorDto.EQUALS,
@@ -233,6 +238,21 @@ export const getMetricGroups = (
       errorMessage: hasError && infoError ? String(infoError) : undefined,
     };
   });
+};
+
+export const snapshotsToBindingsMap = (snapshots: MetricSnapshot[]): Record<string, MetricBindings> => {
+  return snapshots.reduce(
+    (acc, snapshot) => {
+      if (snapshot.tsmdName) {
+        acc[snapshot.tsmdName] = {
+          configBindings: snapshot.configBindings ?? [],
+          inputBindings: snapshot.inputBindings ?? [],
+        };
+      }
+      return acc;
+    },
+    {} as Record<string, MetricBindings>,
+  );
 };
 
 export const getDetailNestedEntries = (

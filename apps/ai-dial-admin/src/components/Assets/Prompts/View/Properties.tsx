@@ -56,7 +56,7 @@ const PromptProperties: FC<Props> = ({ prompt, onChangePrompt, isPublication }) 
 
   useEffect(() => {
     try {
-      const parsed = JSON.parse(prompt.content);
+      const parsed = JSON.parse(prompt?.content || '');
 
       if (typeof parsed === 'object') {
         setJsonValue(JSON.stringify(parsed, null, 2));
@@ -100,7 +100,7 @@ const PromptProperties: FC<Props> = ({ prompt, onChangePrompt, isPublication }) 
           </div>
         ) : (
           <MdEditor
-            content={prompt.content}
+            content={prompt.content || ''}
             onChangeContent={
               isReadOnlyAdmin ? undefined : (content: string) => onChangePrompt?.({ ...prompt, content })
             }

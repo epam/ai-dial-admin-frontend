@@ -1569,6 +1569,7 @@ export enum RunsI18nKey {
   Running = 'Runs.Status.Running',
   MetricFailedText = 'Runs.MetricFailedText',
   ExtractedColumns = 'Runs.ExtractedColumns',
+  MetricBindings = 'Runs.MetricBindings',
 }
 
 export enum FileManagerI18nKey {
@@ -1576,7 +1577,9 @@ export enum FileManagerI18nKey {
   File = 'FileManager.File',
   Files = 'FileManager.Files',
   Applications = 'FileManager.Applications',
+  Application = 'FileManager.Application',
   Toolsets = 'FileManager.Toolsets',
+  Toolset = 'FileManager.Toolset',
   Prompts = 'FileManager.Prompts',
   Prompt = 'FileManager.Prompt',
   Folder = 'FileManager.Folder',
@@ -1594,6 +1597,10 @@ export enum FileManagerI18nKey {
   EmptyMoveFolderDescription = 'FileManager.EmptyMoveFolderDescription',
   PromptEmptyStateTitle = 'FileManager.PromptEmptyStateTitle',
   PromptEmptyStateDescription = 'FileManager.PromptEmptyStateDescription',
+  ApplicationsEmptyStateTitle = 'FileManager.ApplicationsEmptyStateTitle',
+  ApplicationsEmptyStateDescription = 'FileManager.ApplicationsEmptyStateDescription',
+  ToolsetsEmptyStateTitle = 'FileManager.ToolsetsEmptyStateTitle',
+  ToolsetsEmptyStateDescription = 'FileManager.ToolsetsEmptyStateDescription',
 
   // Modals
   DeleteItemsModalTitle = 'FileManager.DeleteItemsModalTitle',

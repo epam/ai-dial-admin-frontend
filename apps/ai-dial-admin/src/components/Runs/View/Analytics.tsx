@@ -5,15 +5,16 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { DialLoader } from '@epam/ai-dial-ui-kit';
 
-import { getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
+import { getMetricSnapshots, getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
 import ColorScale from '@/src/components/Common/ColorScale/ColorScale';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import RunMetricDetailPanel from '@/src/components/Runs/Details/RunMetricDetailPanel';
 import { EntitiesI18nKey, RunsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
+import { MetricBindings } from '@/src/models/evaluation/metric';
 import { AnalyticsResult, Run } from '@/src/models/evaluation/run';
-import { getAnalyticsColumns, RESULT_FILTERS } from './utils';
+import { getAnalyticsColumns, RESULT_FILTERS, RUN_FILTER, snapshotsToBindingsMap } from './utils';
 
 interface Props {
   run: Run;
@@ -27,18 +28,27 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
   const [colDefs, setColDefs] = useState<ColDef[]>(() => getAnalyticsColumns([]));
   const [selectedResultId, setSelectedResultId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [metricBindings, setMetricBindings] = useState<Record<string, MetricBindings>>({});
 
   useEffect(() => {
     if (!run?.id) return;
 
     if (!isLoading && !results) {
       setIsLoading(true);
-      getTestCaseRunResults(RESULT_FILTERS(run)).then((res) => {
-        const content = res?.content || [];
-        setResults(content);
-        setColDefs(getAnalyticsColumns(content, t(RunsI18nKey.MetricFailedText)));
-        setIsLoading(false);
-      });
+      Promise.allSettled([getTestCaseRunResults(RESULT_FILTERS(run)), getMetricSnapshots(RUN_FILTER(run))])
+        .then(([resultsSettled, snapshotsSettled]) => {
+          if (resultsSettled.status === 'fulfilled') {
+            const content = resultsSettled.value?.content || [];
+            setResults(content);
+            setColDefs(getAnalyticsColumns(content, t(RunsI18nKey.MetricFailedText)));
+          }
+          if (snapshotsSettled.status === 'fulfilled') {
+            setMetricBindings(snapshotsToBindingsMap(snapshotsSettled.value || []));
+          }
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
     }
   }, [isLoading, results, run, t]);
 
@@ -51,6 +61,7 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
             resultId={event.data.id}
             onClose={sidebar.closeSidebar}
             grafanaTraceUrl={run.grafanaExploreUrl}
+            metricBindings={metricBindings}
           />,
           'w-[750px]',
         );
@@ -59,7 +70,7 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
         sidebar.closeSidebar();
       }
     },
-    [run.grafanaExploreUrl, selectedResultId, sidebar],
+    [metricBindings, run.grafanaExploreUrl, selectedResultId, sidebar],
   );
 
   useEffect(() => {
