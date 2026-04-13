@@ -25,9 +25,15 @@ When the export scope is Deployments, the `PreviewModal` SHALL call `POST /confi
 
 #### Scenario: Grid columns match export content grid
 - **WHEN** a container tab is selected
-- **THEN** the grid SHALL show `getDeploymentColDefs` columns: Display name, Description, ID
+- **THEN** the grid SHALL show columns: Display name, Description, ID
 - **WHEN** the Images tab is selected
-- **THEN** the grid SHALL show: Display name (from `name` field), Description, ID (from `id` field), Version, Type
+- **THEN** the grid SHALL show columns: Display name, Description, Version, ID
+- **AND** image data SHALL be normalized to use `displayName` for Display name, `description` for Description, `version` for Version, and `name` for ID — same base fields as containers plus Version
+
+#### Scenario: Grid columns refresh on tab switch
+- **WHEN** user switches between tabs with different column counts (e.g., containers to images)
+- **THEN** the grid SHALL remount to display the correct columns for the selected tab
+- **AND** this SHALL be achieved via `key={selectedTab}` on the `GridView` component
 
 #### Scenario: Empty entity types are not shown as tabs
 - **WHEN** the preview response contains an entity type with zero entities
