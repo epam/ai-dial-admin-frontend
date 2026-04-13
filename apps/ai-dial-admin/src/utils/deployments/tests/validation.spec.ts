@@ -568,6 +568,18 @@ describe('validation utils', () => {
     test('returns null when valid', () => {
       expect(getPortError(1123, t)).toBeNull();
     });
+
+    test('returns null for undefined when not required', () => {
+      expect(getPortError(undefined as unknown as number, t)).toBeNull();
+      expect(getPortError(undefined as unknown as number, t, false)).toBeNull();
+    });
+
+    test('returns error for undefined when required', () => {
+      expect(getPortError(undefined as unknown as number, t, true)).toEqual({
+        type: ErrorType.EMPTY,
+        text: ErrorI18nKey.RequiredField,
+      });
+    });
   });
 
   describe('Whitelist domain validation', () => {
@@ -741,6 +753,29 @@ describe('validation utils', () => {
         type: ErrorType.INVALID,
         text: `Translated: ${ErrorI18nKey.ReplicasError}`,
       });
+    });
+
+    test('should return error when min is 0 and scaleToZeroDisabled is true', () => {
+      const result = getReplicasError(0, 1, mockT, true);
+      expect(result).toEqual({
+        type: ErrorType.INVALID,
+        text: `Translated: ${ErrorI18nKey.MinReplicasZeroError}`,
+      });
+    });
+
+    test('should return null when min is 1 and scaleToZeroDisabled is true', () => {
+      const result = getReplicasError(1, 1, mockT, true);
+      expect(result).toBeNull();
+    });
+
+    test('should return null when min is 0 and scaleToZeroDisabled is false', () => {
+      const result = getReplicasError(0, 1, mockT, false);
+      expect(result).toBeNull();
+    });
+
+    test('should return null when min is 0 and scaleToZeroDisabled is undefined', () => {
+      const result = getReplicasError(0, 1, mockT);
+      expect(result).toBeNull();
     });
   });
 
