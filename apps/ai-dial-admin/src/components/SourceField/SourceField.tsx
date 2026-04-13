@@ -18,6 +18,7 @@ import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 import { useI18n } from '@/src/locales/client';
 
 import Containers from '@/src/components/SourceField/Containers/Containers';
+import McpRegistry from '@/src/components/SourceField/McpRegistry/McpRegistry';
 import Templates from '@/src/components/SourceField/Template/Templates';
 import Adapters from '@/src/components/SourceField/Adapters/Adapters';
 import Endpoints from '@/src/components/SourceField/Endpoints/Endpoints';
@@ -153,6 +154,15 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
           getAdapters={getAdapters}
           isModal={isModal}
           error={source === SOURCE_TYPE.ADAPTER ? errorText : ''}
+          disabled={isReadonly}
+        />
+      )}
+      {source === SOURCE_TYPE.MCP_REGISTRY && (
+        <McpRegistry
+          entity={entity as Toolset}
+          onChange={onChangeEntity as (entity: Toolset) => void}
+          view={view}
+          isModal={isModal}
           disabled={isReadonly}
         />
       )}

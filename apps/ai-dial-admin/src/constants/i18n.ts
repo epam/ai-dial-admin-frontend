@@ -990,6 +990,9 @@ export enum SourceI18nKey {
   Endpoint = 'Source.Endpoint',
   ExternalEndpoint = 'Source.ExternalEndpoint',
   Adapter = 'Source.Adapter',
+  McpRegistry = 'Source.McpRegistry',
+  InternalImage = 'Source.InternalImage',
+  DockerImageReference = 'Source.DockerImageReference',
 }
 
 export enum TypeI18nKey {

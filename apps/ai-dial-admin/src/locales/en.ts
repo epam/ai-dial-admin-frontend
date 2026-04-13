@@ -1287,6 +1287,9 @@ export default {
     ExternalEndpoint: 'External endpoint',
     Adapter: 'Adapter',
     AdapterContainer: 'Adapter Container',
+    McpRegistry: 'MCP Registry',
+    InternalImage: 'Internal {type} Image',
+    DockerImageReference: 'Docker Image Reference',
   },
   Toolset: {
     Tools: 'Tools',

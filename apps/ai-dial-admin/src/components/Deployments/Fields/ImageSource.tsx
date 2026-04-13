@@ -5,6 +5,7 @@ import { IMAGE_SOURCE_TYPE, IMAGE_TYPE } from '@/src/types/deployments/images';
 import { Image } from '@/src/models/deployments/images';
 import { getControlClassName } from '@/src/utils/entities/view';
 import { McpServer } from '@/src/types/deployments/mcp-registry';
+import { ApplicationRoute } from '@/src/types/routes';
 import { getImageMcpServers } from '@/src/app/actions/deployments';
 
 import BaseDirectory from '@/src/components/Deployments/Fields/ImageSource/BaseDirectory';
@@ -71,6 +72,15 @@ const ImageSource: FC<Props> = ({ image, setImage, isModal = false, verifyVersio
             onServerSelect={onImageServerSelect}
             serverName={mcpServerName}
             onServerNameChange={onImageServerNameChange}
+            preselectedServer={
+              image.source?.externalRegistryRef
+                ? {
+                    name: image.source.externalRegistryRef.packageName,
+                    version: image.source.externalRegistryRef.version || '',
+                  }
+                : undefined
+            }
+            view={ApplicationRoute.Images}
           />
         ) : (
           <>
