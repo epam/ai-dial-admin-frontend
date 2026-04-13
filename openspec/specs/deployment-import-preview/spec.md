@@ -36,8 +36,10 @@ When the import scope is Deployments, `ConfigurationPreview` SHALL call `POST /c
 - **AND** "Skip" actions SHALL show a gray dot (`bg-controls-disable`)
 
 #### Scenario: Grid columns match deployment grid
-- **WHEN** a deployment entity tab is selected
-- **THEN** the grid SHALL show: Action + `getDeploymentColDefs` columns (Display name, Description, ID; Version + Type for Images)
+- **WHEN** a container entity tab is selected
+- **THEN** the grid SHALL show: Action + Display name, Description, ID
+- **WHEN** the Images tab is selected
+- **THEN** the grid SHALL show: Action + Display name, Description, Version, ID
 
 #### Scenario: Empty entity types are not shown as tabs
 - **WHEN** the preview response contains an entity type with zero entities

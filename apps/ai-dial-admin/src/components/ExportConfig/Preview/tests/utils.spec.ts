@@ -286,6 +286,27 @@ describe('Export Config Utils :: getDeploymentExportPreviewTabs', () => {
     expect(item.displayName).toBe('Test Name');
     expect(item.description).toBe('Test Desc');
   });
+
+  test('maps image ExportComponentInfo fields to same base fields as containers', () => {
+    const response: DeploymentExportPreviewResponse = {
+      ...emptyResponse,
+      imageDefinitions: [
+        {
+          id: 'img-uuid',
+          displayName: 'My Image',
+          description: 'Img Desc',
+          version: '1.0.0',
+          type: DeploymentExportComponentType.MCP_IMAGE_DEFINITION,
+        },
+      ],
+    };
+    const { convertedData } = getDeploymentExportPreviewTabs(response, t);
+    const item = convertedData[DeploymentExportEntityType.IMAGE][0];
+    expect(item.name).toBe('img-uuid');
+    expect(item.displayName).toBe('My Image');
+    expect(item.description).toBe('Img Desc');
+    expect(item.version).toBe('1.0.0');
+  });
 });
 
 describe('buildDeploymentExportPreviewRequest', () => {
