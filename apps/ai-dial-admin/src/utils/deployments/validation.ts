@@ -380,7 +380,11 @@ export const getReplicasError = (
   min?: number,
   max?: number,
   t?: (key: string, options?: Record<string, string | number>) => string,
+  scaleToZeroDisabled?: boolean,
 ): FieldError | null => {
+  if (scaleToZeroDisabled && min != null && min === 0) {
+    return { type: ErrorType.INVALID, text: t ? t(ErrorI18nKey.MinReplicasZeroError) : '' };
+  }
   if (min != null && min < 0) {
     return { type: ErrorType.INVALID, text: t ? t(ErrorI18nKey.ReplicasError) : '' };
   }
@@ -436,6 +440,9 @@ export const getPortError = (
       type: ErrorType.EMPTY,
       text: t ? t(ErrorI18nKey.RequiredField) : '',
     };
+  }
+  if (!required && value === void 0) {
+    return null;
   }
   if (typeof value === 'string' || !Number.isInteger(value) || value < 1 || value > 65535) {
     return {
