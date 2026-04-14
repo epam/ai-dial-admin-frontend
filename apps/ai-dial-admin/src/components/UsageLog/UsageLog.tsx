@@ -1,6 +1,6 @@
 'use client';
 
-import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useMemo, useRef, useState } from 'react';
 
 import { DialNeutralButton, DialTabs } from '@epam/ai-dial-ui-kit';
 import { IconRefresh } from '@tabler/icons-react';
@@ -8,8 +8,9 @@ import classNames from 'classnames';
 
 import { getDashboardData } from '@/src/app/[lang]/dashboard/actions';
 import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
+import { useAppContext } from '@/src/context/AppContext';
+import { useTimeFilter } from '@/src/hooks/use-time-filter';
 import List from '@/src/components/UsageLog/List/List';
-import { DEFAULT_TIME_PERIOD } from '@/src/constants/global-time-filter';
 import { useTimePeriodOptions } from '@/src/hooks/use-time-period-options';
 import {
   USAGE_LOG_CONVERSATIONS_COLUMNS,
@@ -24,54 +25,33 @@ import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { TelemetryQuery } from '@/src/models/telemetry';
-import { TimeRange } from '@/src/models/time-range';
+import { CalendarAlignment, TimeFilterValue } from '@/src/models/time-range';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab, getUsageLogTabs } from '@/src/utils/tabs/utils';
 import { isToolsetRoute } from '@/src/utils/is-view';
 import { getFormattedFilters } from '@/src/utils/telemetry';
-import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
 
 interface Props {
   route: ApplicationRoute;
   entity?: BaseEntity;
   entityView?: EntityViewTab;
   className?: string;
-  initTimeFilter?: string | TimeRange;
-  onChangeTimeFilter?: (filter: string | TimeRange) => void;
-  isCustomRange?: boolean;
-  setIsCustomRange?: Dispatch<SetStateAction<boolean>>;
+  defaultTimeFilter?: TimeFilterValue;
+  onTimeFilterChange?: (filter: TimeFilterValue) => void;
 }
 
-const UsageLog: FC<Props> = ({
-  route,
-  className,
-  entity,
-  entityView,
-  onChangeTimeFilter,
-  initTimeFilter,
-  isCustomRange,
-  setIsCustomRange,
-}) => {
+const UsageLog: FC<Props> = ({ route, className, entity, entityView, onTimeFilterChange, defaultTimeFilter }) => {
   const t = useI18n();
+  const { auditMaxRangeDays } = useAppContext();
   const tabs = getUsageLogTabs(t);
   const getReqRef = useRef(useProtectedRequest());
   const timePeriodOptions = useTimePeriodOptions();
 
   const [activeTab, setActiveTab] = useState(entityView || EntityViewTab.Traces);
-  const [timePeriod, setTimePeriod] = useState<string | undefined>();
-  const [timeRange, setTimeRange] = useState<TimeRange>(getTimeRangeById(DEFAULT_TIME_PERIOD));
-
-  useEffect(() => {
-    if (!timePeriod) {
-      if (!isCustomRange) {
-        setTimePeriod((initTimeFilter as string) || DEFAULT_TIME_PERIOD);
-        setTimeRange(getTimeRangeById((initTimeFilter as string) || DEFAULT_TIME_PERIOD));
-      } else {
-        setTimePeriod(DEFAULT_TIME_PERIOD);
-        setTimeRange((initTimeFilter as TimeRange) || getTimeRangeById(DEFAULT_TIME_PERIOD));
-      }
-    }
-  }, [initTimeFilter, timePeriod, isCustomRange]);
+  const { timePeriod, timeRange, isCustom, onTimePeriodChange, onTimeRangeChange } = useTimeFilter({
+    defaultTimeFilter,
+    onTimeFilterChange,
+  });
 
   const entityFilterName = useMemo(() => {
     if (route === ApplicationRoute.AssetsToolsets) {
@@ -94,25 +74,6 @@ const UsageLog: FC<Props> = ({
     [entityFilterName, timeRange],
   );
 
-  const onTimePeriodChange = useCallback(
-    (period: string) => {
-      setTimePeriod(period);
-      onChangeTimeFilter?.(period);
-      setTimeRange(getTimeRangeById(period));
-    },
-    [onChangeTimeFilter],
-  );
-
-  const onTimeRangeChange = useCallback(
-    (range: TimeRange, isCustom?: boolean) => {
-      setTimeRange(range);
-      if (isCustom) {
-        onChangeTimeFilter?.(range);
-      }
-    },
-    [onChangeTimeFilter],
-  );
-
   const onChangeActiveTab = useCallback(
     (tab: string) => {
       if (tab !== activeTab) {
@@ -123,8 +84,10 @@ const UsageLog: FC<Props> = ({
   );
 
   const onRefresh = useCallback(() => {
-    setTimeRange(getTimeRangeById(timePeriod || ''));
-  }, [timePeriod]);
+    if (!isCustom && timePeriod) {
+      onTimePeriodChange(timePeriod);
+    }
+  }, [timePeriod, isCustom, onTimePeriodChange]);
 
   return (
     <div className={classNames('flex flex-col size-full', className)}>
@@ -135,17 +98,15 @@ const UsageLog: FC<Props> = ({
           </div>
         )}
         <div className={classNames('flex items-center gap-4', entityView && 'justify-between w-full')}>
-          {timePeriod && (
-            <TimeFilter
-              timePeriod={timePeriod}
-              onTimePeriodChange={onTimePeriodChange}
-              timeRange={timeRange}
-              onTimeRangeChange={onTimeRangeChange}
-              isCustomRange={isCustomRange}
-              setIsCustomRange={setIsCustomRange}
-              timePeriodOptions={timePeriodOptions}
-            />
-          )}
+          <TimeFilter
+            timePeriod={timePeriod}
+            onTimePeriodChange={onTimePeriodChange}
+            timeRange={timeRange}
+            onTimeRangeChange={onTimeRangeChange}
+            timePeriodOptions={timePeriodOptions}
+            maxRangeDays={auditMaxRangeDays}
+            calendarAlignment={CalendarAlignment.Left}
+          />
           <DialNeutralButton
             label={t(ButtonsI18nKey.Refresh)}
             iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}

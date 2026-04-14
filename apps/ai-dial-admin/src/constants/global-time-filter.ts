@@ -15,8 +15,6 @@ export const timePeriodOptionsConfig: TimePeriodOption[] = [
   { value: '12h', label: 'Last 12h', offset: 12 * 60 * 60 * 1000 },
   { value: '24h', label: 'Last 24h', offset: 24 * 60 * 60 * 1000 },
   { value: '2d', label: 'Last 2d', offset: 2 * 24 * 60 * 60 * 1000 },
-  { value: '7d', label: 'Last 7d', offset: 7 * 24 * 60 * 60 * 1000 },
-  { value: '30d', label: 'Last 30d', offset: 30 * 24 * 60 * 60 * 1000 },
 ];
 
 export function getFilteredTimePeriodOptions(maxTimeRangeMs: number) {

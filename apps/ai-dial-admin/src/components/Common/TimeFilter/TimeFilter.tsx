@@ -1,24 +1,33 @@
-import { DialSelect, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
-import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
-import { Dispatch, FC, SetStateAction, useCallback, useRef, useState } from 'react';
+import {
+  DialPrimaryButton,
+  DialNeutralButton,
+  DialSelect,
+  SelectSize,
+  SelectVariant,
+  ElementSize,
+} from '@epam/ai-dial-ui-kit';
+import { FC, useCallback, useRef, useState } from 'react';
 
 import RangePicker from '@/src/components/Common/RangePicker/RangePicker';
 import { TimePeriodOption, timePeriodOptionsConfig } from '@/src/constants/global-time-filter';
-import { TelemetryI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { ButtonsI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { TimeRange } from '@/src/models/time-range';
+import { CalendarAlignment, TimeRange } from '@/src/models/time-range';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
 import { formatDate } from './utils';
+
+type DraftMode = { mode: 'preset'; presetId: string } | { mode: 'custom'; range: TimeRange | null };
+
+const CUSTOM_VALUE_SENTINEL = '__custom__';
 
 interface Props {
   timePeriod: string;
   onTimePeriodChange: (value: string) => void;
   timeRange: TimeRange;
   onTimeRangeChange: (value: TimeRange, isCustom?: boolean) => void;
-  isCustomRange?: boolean;
-  setIsCustomRange?: Dispatch<SetStateAction<boolean>>;
   timePeriodOptions?: TimePeriodOption[];
+  maxRangeDays?: number;
+  calendarAlignment?: CalendarAlignment;
 }
 
 const TimeFilter: FC<Props> = ({
@@ -26,47 +35,89 @@ const TimeFilter: FC<Props> = ({
   onTimePeriodChange,
   timeRange,
   onTimeRangeChange,
-  isCustomRange = false,
-  setIsCustomRange,
   timePeriodOptions,
+  maxRangeDays,
+  calendarAlignment = CalendarAlignment.Right,
 }) => {
-  const options = timePeriodOptions ?? timePeriodOptionsConfig;
   const t = useI18n();
+  const options = timePeriodOptions ?? timePeriodOptionsConfig;
   const dismissRef = useRef<{ dismiss: () => void }>(null);
-  const [showCustomRange, setShowCustomRange] = useState(false);
-  const [value, setValue] = useState<string>(
-    isCustomRange ? `${formatDate(timeRange.startDate)} - ${formatDate(timeRange.endDate)}` : timePeriod,
-  );
+  const [isCustom, setIsCustom] = useState(false);
 
-  const onRangeChange = useCallback(
-    (range: TimeRange) => {
-      const { startDate, endDate } = range;
-      if (startDate && endDate) {
-        onTimeRangeChange(range, true);
-        const value = `${formatDate(startDate)} - ${formatDate(endDate)}`;
-        dismissRef.current?.dismiss();
-        setValue(value);
-        setIsCustomRange?.(true);
-      }
+  const [draft, setDraft] = useState<DraftMode>({ mode: 'preset', presetId: timePeriod });
+
+  const resetDraft = useCallback(() => {
+    setDraft(isCustom ? { mode: 'custom', range: timeRange } : { mode: 'preset', presetId: timePeriod });
+  }, [isCustom, timeRange, timePeriod]);
+
+  const handlePresetSelect = useCallback(
+    (value: string | string[]) => {
+      const presetId = value as string;
+      onTimePeriodChange(presetId);
+      onTimeRangeChange(getTimeRangeById(presetId), false);
+      setIsCustom(false);
+      setDraft({ mode: 'preset', presetId });
     },
-    [onTimeRangeChange, setIsCustomRange],
+    [onTimePeriodChange, onTimeRangeChange],
   );
 
-  const onItemSelect = useCallback(
-    (value: string) => {
-      setValue(value);
-      onTimePeriodChange(value);
-      onTimeRangeChange(getTimeRangeById(value), false);
-      setIsCustomRange?.(false);
-    },
-    [onTimePeriodChange, onTimeRangeChange, setIsCustomRange],
-  );
+  const handleCustomClick = useCallback(() => {
+    setDraft({ mode: 'custom', range: isCustom ? timeRange : null });
+  }, [isCustom, timeRange]);
 
-  const onClick = useCallback(() => {
-    setShowCustomRange((prev) => {
-      return !prev;
-    });
-  }, [setShowCustomRange]);
+  const handleRangeChange = useCallback((range: TimeRange | null) => {
+    setDraft({ mode: 'custom', range });
+  }, []);
+
+  const handleApply = useCallback(() => {
+    if (draft.mode !== 'custom' || !draft.range) return;
+    onTimeRangeChange(draft.range, true);
+    setIsCustom(true);
+    dismissRef.current?.dismiss();
+  }, [draft, onTimeRangeChange]);
+
+  const handleCancel = useCallback(() => {
+    resetDraft();
+    dismissRef.current?.dismiss();
+  }, [resetDraft]);
+
+  const showCalendar = draft.mode === 'custom';
+  const canApply = draft.mode === 'custom' && draft.range !== null;
+
+  const footer = (
+    <div className="relative border-t border-secondary">
+      <button
+        type="button"
+        onClick={handleCustomClick}
+        className={`w-full text-left px-3 py-2 small hover:bg-layer-3 ${showCalendar ? 'bg-layer-3' : ''}`}
+      >
+        <span className="text-primary">{t(TelemetryI18nKey.Custom)}</span>
+        {draft.mode === 'custom' && draft.range && (
+          <span className="text-secondary ml-2">
+            {formatDate(draft.range.startDate)} - {formatDate(draft.range.endDate)}
+          </span>
+        )}
+      </button>
+      {showCalendar && (
+        <div
+          className={`absolute bottom-0 flex flex-col bg-layer-0 border border-secondary shadow-lg ${
+            calendarAlignment === CalendarAlignment.Left ? 'right-full rounded-l' : 'left-full rounded-r'
+          }`}
+        >
+          <RangePicker value={draft.range} onChange={handleRangeChange} maxDays={maxRangeDays} />
+          <div className="flex justify-end gap-2 px-3 pb-3">
+            <DialNeutralButton size={ElementSize.Small} label={t(ButtonsI18nKey.Cancel)} onClick={handleCancel} />
+            <DialPrimaryButton
+              size={ElementSize.Small}
+              label={t(ButtonsI18nKey.Apply)}
+              onClick={handleApply}
+              disabled={!canApply}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <DialSelect
@@ -74,27 +125,23 @@ const TimeFilter: FC<Props> = ({
       variant={SelectVariant.Secondary}
       prefix={t(TelemetryI18nKey.TimePeriod)}
       options={options}
-      value={value}
-      dismissRef={dismissRef}
+      value={showCalendar || isCustom ? CUSTOM_VALUE_SENTINEL : timePeriod}
       customSelectedValue={
-        options.some((item) => item.value === value) ? void 0 : `${t(TelemetryI18nKey.Custom)}: ${value}`
+        showCalendar
+          ? draft.range
+            ? `${t(TelemetryI18nKey.Custom)}: ${formatDate(draft.range.startDate)} - ${formatDate(draft.range.endDate)}`
+            : t(TelemetryI18nKey.Custom)
+          : isCustom
+            ? `${t(TelemetryI18nKey.Custom)}: ${formatDate(timeRange.startDate)} - ${formatDate(timeRange.endDate)}`
+            : options.find((o) => o.value === timePeriod)?.label
       }
-      header={
-        <div className="flex flex-col w-full">
-          <button className="flex items-center p-3 border-b border-b-secondary" onClick={onClick} aria-label="button">
-            <i className="mr-3">
-              {showCustomRange ? (
-                <IconChevronDown {...BASE_BUTTON_ICON_PROPS} />
-              ) : (
-                <IconChevronRight {...BASE_BUTTON_ICON_PROPS} />
-              )}
-            </i>
-            <p className="small text-primary">{t(TelemetryI18nKey.CustomTimeRage)}</p>
-          </button>
-          {showCustomRange && <RangePicker onChange={onRangeChange} timeRange={timeRange} />}
-        </div>
-      }
-      onChange={(v) => onItemSelect(v as string)}
+      dismissRef={dismissRef}
+      listClassName="overflow-visible min-w-[200px]"
+      onOpenChange={(open) => {
+        if (!open) resetDraft();
+      }}
+      onChange={handlePresetSelect}
+      footer={footer}
     />
   );
 };

@@ -1,86 +1,100 @@
-import { FC, useCallback, useState } from 'react';
-import { DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
+import { FC, useCallback, useMemo, useState } from 'react';
+import ReactDatePicker from 'react-datepicker';
 
-import DatePicker from '@/src/components/Common/DatePicker/DatePicker';
-import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { TelemetryI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { TimeRange } from '@/src/models/time-range';
-import { topOffset } from './constants';
+
+import { RangeFsmState, differenceInCalendarDays, hydrate, reduce, toCommit, toDisplayRange } from './range-fsm';
+
+import 'react-datepicker/dist/react-datepicker.css';
 
 interface Props {
-  timeRange: TimeRange | null;
-  onChange: (range: TimeRange) => void;
+  value: TimeRange | null;
+  onChange: (range: TimeRange | null) => void;
+  maxDays?: number;
 }
 
-const RangePicker: FC<Props> = ({ onChange, timeRange }) => {
+const monthLabel = (date: Date) => date.toLocaleString(undefined, { month: 'long', year: 'numeric' });
+
+const RangePicker: FC<Props> = ({ value, onChange, maxDays }) => {
   const t = useI18n();
-  const [startDate, setStartDate] = useState<Date | null>(timeRange?.startDate || null);
-  const [endDate, setEndDate] = useState<Date | null>(timeRange?.endDate || null);
+  const [state, setState] = useState<RangeFsmState>(() => hydrate(value));
 
-  const onClick = useCallback(() => {
-    if (startDate && endDate) {
-      onChange({ startDate, endDate });
-    }
-  }, [onChange, startDate, endDate]);
+  const handleDayClick = useCallback(
+    (day: Date | null) => {
+      if (!day) return;
+      const next = reduce(state, day, maxDays);
+      setState(next);
+      onChange(toCommit(next));
+    },
+    [state, maxDays, onChange],
+  );
 
-  const onStartDateChange = useCallback((startDate: Date | null) => {
-    if (startDate) {
-      // reset hours, minutes, seconds, milliseconds to 0
-      startDate.setHours(0, 0, 0, 0);
-      setStartDate(startDate);
-    }
+  const display = toDisplayRange(state);
+  const selected = display?.start ?? null;
+  const startDate = display?.start ?? null;
+  const endDate = display?.end ?? null;
+
+  const todayEnd = useMemo(() => {
+    const d = new Date();
+    d.setHours(23, 59, 59, 999);
+    return d.getTime();
   }, []);
 
-  const onEndDateChange = useCallback((endDate: Date | null) => {
-    if (endDate) {
-      endDate.setHours(23, 59, 59, 999);
-      setEndDate(endDate);
-    }
-  }, []);
+  const dayClassName = useCallback(
+    (date: Date): string => {
+      if (!maxDays || state.kind !== 'single') return '';
+      if (date.getTime() > todayEnd) return '';
+      const delta = differenceInCalendarDays(date, state.date);
+      return delta > maxDays - 1 ? 'dial-range-picker__day--out-of-reach' : '';
+    },
+    [state, maxDays, todayEnd],
+  );
 
   return (
-    <div className="flex flex-col w-full p-3">
-      <p className="tiny text-secondary mb-2 cursor-default">{t(BasicI18nKey.From)}</p>
-      <DatePicker
-        id="start-date"
-        className="dial-input cursor-pointer"
-        date={startDate}
-        setDate={onStartDateChange}
+    <div className="dial-range-calendar flex flex-col gap-3 p-3">
+      {maxDays && (
+        <div className="self-start px-2 py-0.5 rounded border border-warning text-primary tiny" role="status">
+          {t(TelemetryI18nKey.MaxRangeDays, { days: maxDays })}
+        </div>
+      )}
+      <ReactDatePicker
+        inline
+        selectsRange
+        selected={selected}
         startDate={startDate}
         endDate={endDate}
-        maxDate={endDate === null ? void 0 : endDate}
-        popperPlacement="bottom"
-        popperModifiers={[
-          {
-            name: 'flip',
-            fn: (state) => {
-              const yPosition = state.rects.reference.y + state.rects.reference.height + topOffset;
-              return { ...state, y: yPosition };
-            },
-          },
-        ]}
+        maxDate={new Date()}
+        onChange={() => {}}
+        onSelect={handleDayClick}
+        calendarStartDay={1}
+        shouldCloseOnSelect={false}
+        disabledKeyboardNavigation
+        dayClassName={dayClassName}
+        renderCustomHeader={({ monthDate, decreaseMonth, increaseMonth }) => {
+          const now = new Date();
+          const isCurrentMonth =
+            monthDate.getMonth() === now.getMonth() && monthDate.getFullYear() === now.getFullYear();
+          return (
+            <div className="flex items-center justify-between px-2">
+              <button type="button" onClick={decreaseMonth} aria-label="previous-month">
+                <IconChevronLeft {...BASE_BUTTON_ICON_PROPS} />
+              </button>
+              <span className="text-primary">{monthLabel(monthDate)}</span>
+              {isCurrentMonth ? (
+                <span className="w-6" />
+              ) : (
+                <button type="button" onClick={increaseMonth} aria-label="next-month">
+                  <IconChevronRight {...BASE_BUTTON_ICON_PROPS} />
+                </button>
+              )}
+            </div>
+          );
+        }}
       />
-      <p className="tiny text-secondary mb-2 cursor-default">{t(BasicI18nKey.To)}</p>
-      <DatePicker
-        id="end-date"
-        className="dial-input cursor-pointer"
-        date={endDate}
-        setDate={onEndDateChange}
-        startDate={startDate}
-        endDate={endDate}
-        minDate={startDate === null ? void 0 : startDate} // minDate: Date | undefined
-        popperPlacement="bottom"
-        popperModifiers={[
-          {
-            name: 'flip',
-            fn: (state) => {
-              const yPosition = state.rects.reference.y + state.rects.reference.height + topOffset;
-              return { ...state, y: yPosition };
-            },
-          },
-        ]}
-      />
-      <DialPrimaryButton label={t(ButtonsI18nKey.Apply)} onClick={onClick} className="w-max" />
     </div>
   );
 };

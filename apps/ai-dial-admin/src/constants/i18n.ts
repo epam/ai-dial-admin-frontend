@@ -619,6 +619,7 @@ export enum TelemetryI18nKey {
   TimePeriod = 'Telemetry.TimePeriod',
   CustomTimeRage = 'Telemetry.CustomTimeRage',
   Custom = 'Telemetry.Custom',
+  MaxRangeDays = 'Telemetry.MaxRangeDays',
   UniqueUsers = 'Telemetry.UniqueUsers',
   Requests = 'Telemetry.Requests',
   RequestsNumber = 'Telemetry.RequestsNumber',

@@ -13,17 +13,15 @@
   }
 }
 
-.react-datepicker-popper {
-  .react-datepicker__triangle {
-    @apply hidden;
-  }
-
+// Shared calendar theme — both popper and inline modes
+.react-datepicker-popper,
+.dial-range-calendar {
   .react-datepicker {
     @apply bg-layer-0 text-secondary small rounded border-primary px-3 py-4;
   }
 
   .react-datepicker__header {
-    @apply bg-layer-0 border-b-primary p-0 pb-3;
+    @apply bg-layer-0 border-b-primary p-0 pb-2 mb-2;
 
     .react-datepicker__current-month {
       @apply mb-3 text-secondary;
@@ -52,7 +50,7 @@
 
   .react-datepicker__month-container {
     .react-datepicker__month {
-      @apply m-0;
+      @apply m-0 pt-2;
     }
 
     .react-datepicker__day,
@@ -67,12 +65,30 @@
         @apply border-accent-primary hover:border-accent-primary;
       }
 
-      &--selected {
-        @apply text-primary bg-accent-primary hover:bg-accent-primary hover:border-accent-primary;
+      &--selected,
+      &--range-start,
+      &--range-end {
+        @apply bg-controls-accent-primary text-primary;
+
+        &:hover {
+          @apply bg-controls-accent-primary;
+        }
       }
 
-      &--in-range:not(&--selected) {
-        @apply bg-transparent;
+      &--in-range:not(&--range-start):not(&--range-end):not(&--selected) {
+        @apply bg-accent-primary-alpha text-primary;
+
+        &:hover {
+          @apply bg-accent-primary-alpha;
+        }
+      }
+
+      &--disabled {
+        @apply opacity-30 cursor-default;
+
+        &:hover {
+          @apply bg-transparent border-transparent;
+        }
       }
     }
 
@@ -80,6 +96,25 @@
       @apply tiny text-secondary;
     }
   }
+}
+
+// Popper-only: hide the triangle arrow
+.react-datepicker-popper {
+  .react-datepicker__triangle {
+    @apply hidden;
+  }
+}
+
+// Inline-only: strip border/padding since it's embedded in the panel
+.dial-range-calendar {
+  .react-datepicker {
+    @apply border-0 p-0;
+  }
+}
+
+// Cosmetic hint: days beyond the reachable window are dimmed
+.dial-range-picker__day--out-of-reach {
+  @apply opacity-50;
 }
 
 .react-datepicker__input-time-container {

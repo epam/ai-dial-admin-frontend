@@ -1,4 +1,4 @@
-import React, { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { FC, useCallback, useMemo, useRef, useState } from 'react';
 import LineChart from '@/src/components/Charts/LineChart/LineChart';
 import SingleValueChartsDashboard from '@/src/components/Charts/SingleValueChart/SingleValueChartsDashboard';
 import McpDashboard from '@/src/components/Telemetry/McpDashboard';
@@ -12,15 +12,13 @@ import {
   TOOLSET_DEPLOYMENT_PREFIX,
 } from '@/src/constants/telemetry';
 import { PROJECT_GRID_COLUMNS, TELEMETRY_GRID_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { DEFAULT_TIME_PERIOD } from '@/src/constants/global-time-filter';
 import { TelemetryI18nKey } from '@/src/constants/i18n';
-import { TimeRange } from '@/src/models/time-range';
+import { TimeFilterValue } from '@/src/models/time-range';
 import { FilterData, TelemetryQuery } from '@/src/models/telemetry';
 import { getFormattedFilters } from '@/src/utils/telemetry';
 import { ChartResolution, getChartResolution } from '@/src/utils/time-filter/get-chart-resolution';
 
 export type QueryInput = TelemetryQuery | ((resolution: ChartResolution) => TelemetryQuery);
-import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
 import { getDashboardData } from '@/src/app/[lang]/dashboard/actions';
 import { useI18n } from '@/src/locales/client';
 import TelemetryControls from '@/src/components/Telemetry/TelemetryControls/TelemetryControls';
@@ -28,33 +26,27 @@ import ViewByFilter from '@/src/components/Telemetry/TelemetryControls/ViewByFil
 import { ApplicationRoute } from '@/src/types/routes';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
+import { useTimeFilter } from '@/src/hooks/use-time-filter';
 import { useTimePeriodOptions } from '@/src/hooks/use-time-period-options';
 import { DASHBOARD_VIEW_TYPE } from '@/src/types/telemetry';
 import { isToolsetRoute } from '@/src/utils/is-view';
 
 interface Props {
   route: ApplicationRoute;
-  initTimeFilter?: string | TimeRange;
+  defaultTimeFilter?: TimeFilterValue;
   entity?: BaseEntity;
-  onChangeTimeFilter?: (filter: string | TimeRange) => void;
-  isCustomRange?: boolean;
-  setIsCustomRange?: Dispatch<SetStateAction<boolean>>;
+  onTimeFilterChange?: (filter: TimeFilterValue) => void;
 }
 
-const Dashboard: FC<Props> = ({
-  route,
-  entity,
-  initTimeFilter,
-  onChangeTimeFilter,
-  isCustomRange,
-  setIsCustomRange,
-}) => {
+const Dashboard: FC<Props> = ({ route, entity, defaultTimeFilter, onTimeFilterChange }) => {
   const t = useI18n();
   const [filters, setFilters] = useState<FilterData[]>([]);
   const [refreshTime, setRefreshTime] = useState(DEFAULT_REFRESH_TIME);
-  const [timePeriod, setTimePeriod] = useState<string | undefined>();
-  const [timeRange, setTimeRange] = useState<TimeRange>(getTimeRangeById(DEFAULT_TIME_PERIOD));
   const [viewType, setViewType] = useState<DASHBOARD_VIEW_TYPE>(DASHBOARD_VIEW_TYPE.Chat);
+  const { timePeriod, timeRange, getCurrentTimeRange, onTimePeriodChange, onTimeRangeChange } = useTimeFilter({
+    defaultTimeFilter,
+    onTimeFilterChange,
+  });
   const timePeriodOptions = useTimePeriodOptions();
   const getReqRef = useRef(useProtectedRequest());
 
@@ -67,23 +59,6 @@ const Dashboard: FC<Props> = ({
     }
     return entity?.name || null;
   }, [route, entity]);
-
-  useEffect(() => {
-    if (!timePeriod) {
-      if (!isCustomRange) {
-        setTimePeriod((initTimeFilter as string) || DEFAULT_TIME_PERIOD);
-        setTimeRange(getTimeRangeById((initTimeFilter as string) || DEFAULT_TIME_PERIOD));
-      } else {
-        setTimePeriod(DEFAULT_TIME_PERIOD);
-        setTimeRange((initTimeFilter as TimeRange) || getTimeRangeById(DEFAULT_TIME_PERIOD));
-      }
-    }
-  }, [initTimeFilter, timePeriod, isCustomRange]);
-
-  const getCurrentTimeRange = useCallback(
-    () => (isCustomRange ? timeRange : getTimeRangeById(timePeriod || DEFAULT_TIME_PERIOD)),
-    [isCustomRange, timeRange, timePeriod],
-  );
 
   const getData = useCallback(
     (input: QueryInput) => {
@@ -134,25 +109,6 @@ const Dashboard: FC<Props> = ({
     [setRefreshTime],
   );
 
-  const onTimePeriodChange = useCallback(
-    (period: string) => {
-      setTimePeriod(period);
-      onChangeTimeFilter?.(period);
-      setTimeRange(getTimeRangeById(period));
-    },
-    [onChangeTimeFilter],
-  );
-
-  const onTimeRangeChange = useCallback(
-    (range: TimeRange, isCustom?: boolean) => {
-      setTimeRange(range);
-      if (isCustom) {
-        onChangeTimeFilter?.(range);
-      }
-    },
-    [onChangeTimeFilter],
-  );
-
   const onViewTypeChange = useCallback((type: DASHBOARD_VIEW_TYPE) => {
     setViewType(type);
     setFilters([]);
@@ -164,24 +120,20 @@ const Dashboard: FC<Props> = ({
         {(route === ApplicationRoute.Dashboard || route === ApplicationRoute.Applications) && (
           <ViewByFilter value={viewType} onChange={onViewTypeChange} />
         )}
-        {timePeriod && (
-          <TelemetryControls
-            selectedRefreshValue={refreshTime}
-            onRefreshTimeChange={onRefreshTimeChange}
-            timePeriod={timePeriod}
-            onTimePeriodChange={onTimePeriodChange}
-            onTimeRangeChange={onTimeRangeChange}
-            filters={filters}
-            timeRange={timeRange}
-            setFilters={setFilters}
-            getData={getData}
-            route={route}
-            isCustomRange={isCustomRange}
-            setIsCustomRange={setIsCustomRange}
-            isMcpView={isMcpView}
-            timePeriodOptions={timePeriodOptions}
-          />
-        )}
+        <TelemetryControls
+          selectedRefreshValue={refreshTime}
+          onRefreshTimeChange={onRefreshTimeChange}
+          timePeriod={timePeriod}
+          onTimePeriodChange={onTimePeriodChange}
+          onTimeRangeChange={onTimeRangeChange}
+          filters={filters}
+          timeRange={timeRange}
+          setFilters={setFilters}
+          getData={getData}
+          route={route}
+          isMcpView={isMcpView}
+          timePeriodOptions={timePeriodOptions}
+        />
       </div>
       {isMcpView ? (
         <McpDashboard
