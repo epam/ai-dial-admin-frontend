@@ -9,7 +9,7 @@ import {
 import { FC, useCallback, useRef, useState } from 'react';
 
 import RangePicker from '@/src/components/Common/RangePicker/RangePicker';
-import { TimePeriodOption, timePeriodOptionsConfig } from '@/src/constants/global-time-filter';
+import { TimePeriodOption, getTimePeriodOptionsByMaxDays } from '@/src/constants/global-time-filter';
 import { ButtonsI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { CalendarAlignment, TimeRange } from '@/src/models/time-range';
@@ -40,7 +40,7 @@ const TimeFilter: FC<Props> = ({
   calendarAlignment = CalendarAlignment.Right,
 }) => {
   const t = useI18n();
-  const options = timePeriodOptions ?? timePeriodOptionsConfig;
+  const options = timePeriodOptions ?? getTimePeriodOptionsByMaxDays(maxRangeDays);
   const dismissRef = useRef<{ dismiss: () => void }>(null);
   const [isCustom, setIsCustom] = useState(false);
 
