@@ -128,10 +128,15 @@ const FilesList = () => {
 
       const promises: (Promise<ServerActionResponse> | Promise<ServerActionResponse[]>)[] = [];
       files.forEach((file) => {
+        const duplicateName = file.destinationUrl
+          .split('/')
+          .filter((p) => p != null)
+          .pop();
+
         if (sourceFolder !== destinationFolder) {
           // Move file
           const newPath = file.destinationUrl.replaceAll('//', '/').split('/').slice(0, -1).join('/');
-          promises.push(moveFiles([file.sourceUrl.replaceAll('//', '/')], newPath));
+          promises.push(moveFiles([file.sourceUrl.replaceAll('//', '/')], newPath, file?.overwrite, duplicateName));
         } else {
           // Rename file
         }

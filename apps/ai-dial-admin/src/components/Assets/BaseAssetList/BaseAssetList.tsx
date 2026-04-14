@@ -273,6 +273,11 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
 
       const promises: (Promise<ServerActionResponse> | Promise<ServerActionResponse[]>)[] = [];
       files.forEach((file) => {
+        const duplicateName = file.destinationUrl
+          .split('/')
+          .filter((p) => p != null)
+          .pop();
+
         if (sourceFolder !== destinationFolder) {
           // Move file
           const filePaths = [];
@@ -280,7 +285,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
           const paths = getAllSelectedItemsPaths(file.sourceUrl, selectedVersionsMap);
           filePaths.push(...paths.map((path: string) => path.replaceAll('//', '/')));
           if (moveAsset) {
-            promises.push(moveAsset(filePaths, newPath));
+            promises.push(moveAsset(filePaths, newPath, file?.overwrite, duplicateName));
           }
         } else {
           // Rename file
