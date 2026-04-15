@@ -91,22 +91,26 @@ const DuplicateAsset: FC<Props> = ({ view, isModalOpen, entity, versionsMap, con
   useEffect(() => {
     if (authType === ToolsetAuthType.OAUTH) {
       const toolset = entity as AssetToolset;
-      dispatch({ type: ValidationActionType.SetField, field: 'clientId', isValid: !!toolset.authSettings?.clientId });
       dispatch({
         type: ValidationActionType.SetField,
-        field: 'clientSecret',
+        field: 'authSettings.clientId',
+        isValid: !!toolset.authSettings?.clientId,
+      });
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'authSettings.clientSecret',
         isValid: !!toolset.authSettings?.clientSecret,
       });
       dispatch({
         type: ValidationActionType.SetField,
-        field: 'authorizationEndpoint',
+        field: 'authSettings.authorizationEndpoint',
         isValid: !!toolset.authSettings?.authorizationEndpoint,
       });
     } else if (authType === ToolsetAuthType.API_KEY) {
       const toolset = entity as AssetToolset;
       dispatch({
         type: ValidationActionType.SetField,
-        field: 'apiKeyHeader',
+        field: 'authSettings.apiKeyHeader',
         isValid: !!toolset.authSettings?.apiKeyHeader,
       });
     }
@@ -157,7 +161,7 @@ const DuplicateAsset: FC<Props> = ({ view, isModalOpen, entity, versionsMap, con
         ...toolset,
         authSettings: { ...toolset.authSettings!, clientId },
       });
-      dispatch({ type: ValidationActionType.SetField, field: 'clientId', isValid: !!clientId });
+      dispatch({ type: ValidationActionType.SetField, field: 'authSettings.clientId', isValid: !!clientId });
     },
     [clonedAsset, dispatch],
   );
@@ -169,7 +173,7 @@ const DuplicateAsset: FC<Props> = ({ view, isModalOpen, entity, versionsMap, con
         ...toolset,
         authSettings: { ...toolset.authSettings!, clientSecret },
       });
-      dispatch({ type: ValidationActionType.SetField, field: 'clientSecret', isValid: !!clientSecret });
+      dispatch({ type: ValidationActionType.SetField, field: 'authSettings.clientSecret', isValid: !!clientSecret });
     },
     [clonedAsset, dispatch],
   );
@@ -183,7 +187,7 @@ const DuplicateAsset: FC<Props> = ({ view, isModalOpen, entity, versionsMap, con
       });
       dispatch({
         type: ValidationActionType.SetField,
-        field: 'authorizationEndpoint',
+        field: 'authSettings.authorizationEndpoint',
         isValid: !!authorizationEndpoint,
       });
     },
@@ -197,7 +201,7 @@ const DuplicateAsset: FC<Props> = ({ view, isModalOpen, entity, versionsMap, con
         ...toolset,
         authSettings: { ...toolset.authSettings!, apiKeyHeader },
       });
-      dispatch({ type: ValidationActionType.SetField, field: 'apiKeyHeader', isValid: !!apiKeyHeader });
+      dispatch({ type: ValidationActionType.SetField, field: 'authSettings.apiKeyHeader', isValid: !!apiKeyHeader });
     },
     [clonedAsset, dispatch],
   );

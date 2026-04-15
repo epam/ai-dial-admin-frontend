@@ -43,23 +43,23 @@ const DuplicateToolset: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose,
     if (authType === ToolsetAuthType.OAUTH) {
       dispatch({
         type: ValidationActionType.SetField,
-        field: 'clientId',
+        field: 'authSettings.clientId',
         isValid: !!clonedEntity.authSettings?.clientId,
       });
       dispatch({
         type: ValidationActionType.SetField,
-        field: 'clientSecret',
+        field: 'authSettings.clientSecret',
         isValid: !!clonedEntity.authSettings?.clientSecret,
       });
       dispatch({
         type: ValidationActionType.SetField,
-        field: 'authorizationEndpoint',
+        field: 'authSettings.authorizationEndpoint',
         isValid: !!clonedEntity.authSettings?.authorizationEndpoint,
       });
     } else if (authType === ToolsetAuthType.API_KEY) {
       dispatch({
         type: ValidationActionType.SetField,
-        field: 'apiKeyHeader',
+        field: 'authSettings.apiKeyHeader',
         isValid: !!clonedEntity.authSettings?.apiKeyHeader,
       });
     }
@@ -81,7 +81,7 @@ const DuplicateToolset: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose,
         authSettings: { ...clonedEntity.authSettings!, clientId },
       };
       setEntity(updatedEntity);
-      dispatch({ type: ValidationActionType.SetField, field: 'clientId', isValid: !!clientId });
+      dispatch({ type: ValidationActionType.SetField, field: 'authSettings.clientId', isValid: !!clientId });
     },
     [clonedEntity, dispatch],
   );
@@ -93,7 +93,7 @@ const DuplicateToolset: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose,
         authSettings: { ...clonedEntity.authSettings!, clientSecret },
       };
       setEntity(updatedEntity);
-      dispatch({ type: ValidationActionType.SetField, field: 'clientSecret', isValid: !!clientSecret });
+      dispatch({ type: ValidationActionType.SetField, field: 'authSettings.clientSecret', isValid: !!clientSecret });
     },
     [clonedEntity, dispatch],
   );
@@ -107,7 +107,7 @@ const DuplicateToolset: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose,
       setEntity(updatedEntity);
       dispatch({
         type: ValidationActionType.SetField,
-        field: 'authorizationEndpoint',
+        field: 'authSettings.authorizationEndpoint',
         isValid: !!authorizationEndpoint,
       });
     },
@@ -121,7 +121,7 @@ const DuplicateToolset: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose,
         authSettings: { ...clonedEntity.authSettings!, apiKeyHeader },
       };
       setEntity(updatedEntity);
-      dispatch({ type: ValidationActionType.SetField, field: 'apiKeyHeader', isValid: !!apiKeyHeader });
+      dispatch({ type: ValidationActionType.SetField, field: 'authSettings.apiKeyHeader', isValid: !!apiKeyHeader });
     },
     [clonedEntity, dispatch],
   );

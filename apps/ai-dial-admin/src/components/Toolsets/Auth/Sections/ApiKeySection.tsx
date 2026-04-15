@@ -6,7 +6,7 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useI18n } from '@/src/locales/client';
 import { ToolsetAuthSettings } from '@/src/models/dial/toolset';
 import { FieldError } from '@/src/models/error';
-import { getErrorForApiKeyHeader } from '../../../../utils/validation/toolset-auth-error';
+import { getErrorForApiKeyHeader } from '@/src/utils/validation/toolset-auth-error';
 
 interface Props {
   authSettings?: ToolsetAuthSettings;
