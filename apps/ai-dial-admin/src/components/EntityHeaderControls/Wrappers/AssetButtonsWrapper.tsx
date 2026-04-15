@@ -119,6 +119,7 @@ const AssetButtonsWrapper: FC<AssetButtonsWrapperProps> = ({
             onDiscard={onStartDiscard}
             isEditorEnabled={isEditorEnabled}
             onSave={onTryToSave}
+            entityName={entity.name}
           />
         ) : (
           <div className="flex flex-row items-center w-full gap-x-4">

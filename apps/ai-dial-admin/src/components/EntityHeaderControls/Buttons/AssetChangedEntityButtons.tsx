@@ -16,13 +16,21 @@ import { useI18n } from '@/src/locales/client';
 
 interface Props {
   version?: string;
+  entityName?: string;
   existingVersions?: Record<string, string[]>;
   isEditorEnabled?: boolean;
   onDiscard: () => void;
   onSave: (newVersion?: string) => void;
 }
 
-const AssetChangedEntityButtons: FC<Props> = ({ version, isEditorEnabled, onDiscard, onSave, existingVersions }) => {
+const AssetChangedEntityButtons: FC<Props> = ({
+  version,
+  isEditorEnabled,
+  onDiscard,
+  onSave,
+  existingVersions,
+  entityName,
+}) => {
   const t = useI18n();
 
   const { isValid, dispatch } = useSaveValidationContext();
@@ -82,6 +90,7 @@ const AssetChangedEntityButtons: FC<Props> = ({ version, isEditorEnabled, onDisc
             existingVersions={existingVersions}
             onClose={() => setIsModalOpen(false)}
             onConfirm={onTryToSave}
+            entityName={entityName}
           />,
           document.body,
         )}
