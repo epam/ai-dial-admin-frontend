@@ -89,6 +89,7 @@ const OAuthSection: FC<Props> = ({ disabled, authSettings, view, onChange }) => 
           label={t(EntityFieldsI18nKey.scopes)}
           addTitle={t(BasicI18nKey.AddField)}
         />
+
         <EndpointControl
           disabled={isAuthDisabled}
           required
@@ -104,6 +105,7 @@ const OAuthSection: FC<Props> = ({ disabled, authSettings, view, onChange }) => 
         <EndpointControl
           id="tokenEndpoint"
           disabled={isAuthDisabled}
+          required
           label={t(EntityFieldsI18nKey.tokenEndpoint)}
           endpoint={authSettings?.tokenEndpoint || ''}
           placeholder={t(EntityPlaceholdersI18nKey.TokenEndpoint)}

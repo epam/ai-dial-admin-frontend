@@ -21,3 +21,13 @@ export const getErrorForClientSecret = (clientSecret?: string, t?: (str: string)
   }
   return null;
 };
+
+export const getErrorForApiKeyHeader = (apiKeyHeader?: string, t?: (str: string) => string): FieldError | null => {
+  if (!apiKeyHeader || apiKeyHeader.trim().length === 0) {
+    return {
+      type: ErrorType.EMPTY,
+      text: t ? t(ErrorI18nKey.RequiredField) : '',
+    };
+  }
+  return null;
+};

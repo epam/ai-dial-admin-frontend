@@ -11,6 +11,7 @@ import { Toolset, ToolsetAuthType } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 import AuthTypeSection from './Sections/AuthTypeSection';
 import { TOOLSET_AUTH_REDIRECT_URL } from './AuthButtons';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
   toolset: Toolset;
@@ -26,6 +27,7 @@ export interface AuthConfig {
 }
 const Authentication: FC<Props> = ({ disabled, view, toolset, onChange, ...props }) => {
   const t = useI18n();
+  const { dispatch } = useSaveValidationContext();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const isDisabled = disabled || isReadOnlyAdmin;
   const selectedAuthType = useMemo(() => toolset.authSettings?.authenticationType || ToolsetAuthType.NONE, [toolset]);
@@ -38,6 +40,7 @@ const Authentication: FC<Props> = ({ disabled, view, toolset, onChange, ...props
 
   const onChangeAuthType = useCallback(
     (authenticationType: ToolsetAuthType) => {
+      dispatch({ type: ValidationActionType.Reset });
       onChange?.({
         ...toolset,
         forwardPerRequestKey: authenticationType === ToolsetAuthType.API_KEY ? false : toolset.forwardPerRequestKey,
