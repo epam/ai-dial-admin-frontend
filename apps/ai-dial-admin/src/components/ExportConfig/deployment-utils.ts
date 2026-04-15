@@ -15,8 +15,6 @@ import { DeploymentExportComponent, DeploymentExportRequest } from '@/src/models
 import { DeploymentExportEntityType } from '@/src/types/deployments/export';
 import { ExportType } from '@/src/types/export';
 import { getDeploymentExportComponentType } from '@/src/utils/deployments/export';
-import { IMAGE_TYPE_COLUMN } from '@/src/constants/grid-columns/grid-columns';
-
 export const DEPLOYMENT_ENTITY_TABS: { id: DeploymentExportEntityType; labelKey: string }[] = [
   { id: DeploymentExportEntityType.MODEL_SERVING, labelKey: MenuI18nKey.ModelServings },
   { id: DeploymentExportEntityType.MCP_CONTAINER, labelKey: MenuI18nKey.McpContainers },
@@ -38,18 +36,9 @@ export const getDeploymentButtonTitle = (t: (v: string) => string, selectedTab: 
   return `${t(ButtonsI18nKey.Add)} ${entity}`;
 };
 
-const IMAGE_ID_COLUMN: ColDef = { field: 'id', colId: 'id', headerName: 'ID', hide: false };
-const IMAGE_NAME_COLUMN: ColDef = {
-  field: 'name',
-  colId: 'name',
-  headerName: 'Display Name',
-  hide: false,
-  sort: 'asc',
-};
-
-const getBaseColumns = (t: (v: string) => string, selectedTab?: string): ColDef[] => {
+const getBaseColumns = (selectedTab?: string): ColDef[] => {
   if (selectedTab === DeploymentExportEntityType.IMAGE) {
-    return [IMAGE_NAME_COLUMN, DESCRIPTION_COLUMN, IMAGE_ID_COLUMN, VERSION_COLUMN, IMAGE_TYPE_COLUMN(t)];
+    return [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN, VERSION_COLUMN, NAME_COLUMN];
   }
   return [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN, NAME_COLUMN];
 };
@@ -59,7 +48,7 @@ export const getDeploymentColDefs = (
   remove?: (entity?: EntitiesGridData) => void,
   selectedTab?: string,
 ): ColDef[] => {
-  const columns = getBaseColumns(t, selectedTab);
+  const columns = getBaseColumns(selectedTab);
 
   if (remove) {
     const actions = [getRemoveOperation(remove)];
@@ -86,12 +75,8 @@ export const getDeploymentExportComponents = (
   Object.entries(customExportData).forEach(([entityType, entities]) => {
     entities.forEach((entity) => {
       const subType = (entity as Record<string, unknown>).$type as string;
-      const id =
-        entityType === DeploymentExportEntityType.IMAGE
-          ? ((entity as Record<string, unknown>).id as string)
-          : entity.name || '';
       components.push({
-        name: id,
+        name: entity.name || '',
         type: getDeploymentExportComponentType(entityType, subType),
       });
     });

@@ -137,6 +137,7 @@ const PreviewModal: FC<Props> = ({
               </div>
               <div className="flex-1 min-h-0">
                 <GridView
+                  key={selectedTab}
                   columnDefs={getDeploymentColDefs(t, undefined, selectedTab)}
                   rowData={data[selectedTab] || []}
                   emptyDataProps={{ title: t(EntitiesI18nKey.NoEntities) }}
