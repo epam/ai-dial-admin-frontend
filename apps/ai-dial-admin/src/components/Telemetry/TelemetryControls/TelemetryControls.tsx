@@ -24,6 +24,7 @@ interface Props {
   showFilters?: boolean;
   isMcpView?: boolean;
   timePeriodOptions?: TimePeriodOption[];
+  canAutoRefresh?: boolean;
 }
 
 const TelemetryControls: FC<Props> = ({
@@ -40,6 +41,7 @@ const TelemetryControls: FC<Props> = ({
   showFilters = true,
   isMcpView = false,
   timePeriodOptions,
+  canAutoRefresh = true,
 }) => {
   const { auditMaxRangeDays } = useAppContext();
   return (
@@ -57,7 +59,7 @@ const TelemetryControls: FC<Props> = ({
           <Filters filters={filters} setFilters={setFilters} getData={getData} route={route} isMcpView={isMcpView} />
         )}
       </div>
-      <Refresh onChange={onRefreshTimeChange} selectedValue={selectedRefreshValue} />
+      <Refresh onChange={onRefreshTimeChange} selectedValue={selectedRefreshValue} disabled={!canAutoRefresh} />
     </div>
   );
 };

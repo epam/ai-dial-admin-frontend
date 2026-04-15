@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 
 import { DEFAULT_TIME_PERIOD } from '@/src/constants/global-time-filter';
-import { TimeFilterValue, TimeRange, isTimeRange } from '@/src/models/time-range';
+import { TimeFilterValue, TimeRange, isRangeIncludingToday, isTimeRange } from '@/src/models/time-range';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
 
 interface UseTimeFilterOptions {
@@ -45,10 +45,16 @@ export function useTimeFilter({ defaultTimeFilter, onTimeFilterChange }: UseTime
     [onTimeFilterChange],
   );
 
+  // Auto-refresh only makes sense when the range includes "now":
+  // - preset mode (sliding window always includes now)
+  // - custom mode with endDate >= today
+  const canAutoRefresh = !isCustom || isRangeIncludingToday(timeRange);
+
   return {
     timePeriod,
     timeRange,
     isCustom,
+    canAutoRefresh,
     getCurrentTimeRange,
     onTimePeriodChange,
     onTimeRangeChange,

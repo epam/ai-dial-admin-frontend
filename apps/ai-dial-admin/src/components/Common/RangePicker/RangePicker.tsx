@@ -1,5 +1,5 @@
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
-import { FC, useCallback, useMemo, useState } from 'react';
+import { FC, useCallback, useState } from 'react';
 import ReactDatePicker from 'react-datepicker';
 
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -38,20 +38,13 @@ const RangePicker: FC<Props> = ({ value, onChange, maxDays }) => {
   const startDate = display?.start ?? null;
   const endDate = display?.end ?? null;
 
-  const todayEnd = useMemo(() => {
-    const d = new Date();
-    d.setHours(23, 59, 59, 999);
-    return d.getTime();
-  }, []);
-
   const dayClassName = useCallback(
     (date: Date): string => {
       if (!maxDays || state.kind !== 'single') return '';
-      if (date.getTime() > todayEnd) return '';
       const delta = differenceInCalendarDays(date, state.date);
       return delta > maxDays - 1 ? 'dial-range-picker__day--out-of-reach' : '';
     },
-    [state, maxDays, todayEnd],
+    [state, maxDays],
   );
 
   return (

@@ -25,7 +25,7 @@ import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { TelemetryQuery } from '@/src/models/telemetry';
-import { CalendarAlignment, TimeFilterValue } from '@/src/models/time-range';
+import { TimeFilterValue } from '@/src/models/time-range';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab, getUsageLogTabs } from '@/src/utils/tabs/utils';
 import { isToolsetRoute } from '@/src/utils/is-view';
@@ -105,7 +105,6 @@ const UsageLog: FC<Props> = ({ route, className, entity, entityView, onTimeFilte
             onTimeRangeChange={onTimeRangeChange}
             timePeriodOptions={timePeriodOptions}
             maxRangeDays={auditMaxRangeDays}
-            calendarAlignment={CalendarAlignment.Left}
           />
           <DialNeutralButton
             label={t(ButtonsI18nKey.Refresh)}

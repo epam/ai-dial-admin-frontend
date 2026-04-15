@@ -43,10 +43,12 @@ const Dashboard: FC<Props> = ({ route, entity, defaultTimeFilter, onTimeFilterCh
   const [filters, setFilters] = useState<FilterData[]>([]);
   const [refreshTime, setRefreshTime] = useState(DEFAULT_REFRESH_TIME);
   const [viewType, setViewType] = useState<DASHBOARD_VIEW_TYPE>(DASHBOARD_VIEW_TYPE.Chat);
-  const { timePeriod, timeRange, getCurrentTimeRange, onTimePeriodChange, onTimeRangeChange } = useTimeFilter({
-    defaultTimeFilter,
-    onTimeFilterChange,
-  });
+  const { timePeriod, timeRange, canAutoRefresh, getCurrentTimeRange, onTimePeriodChange, onTimeRangeChange } =
+    useTimeFilter({
+      defaultTimeFilter,
+      onTimeFilterChange,
+    });
+  const effectiveRefreshTime = canAutoRefresh ? refreshTime : 'off';
   const timePeriodOptions = useTimePeriodOptions();
   const getReqRef = useRef(useProtectedRequest());
 
@@ -121,7 +123,7 @@ const Dashboard: FC<Props> = ({ route, entity, defaultTimeFilter, onTimeFilterCh
           <ViewByFilter value={viewType} onChange={onViewTypeChange} />
         )}
         <TelemetryControls
-          selectedRefreshValue={refreshTime}
+          selectedRefreshValue={effectiveRefreshTime}
           onRefreshTimeChange={onRefreshTimeChange}
           timePeriod={timePeriod}
           onTimePeriodChange={onTimePeriodChange}
@@ -131,6 +133,7 @@ const Dashboard: FC<Props> = ({ route, entity, defaultTimeFilter, onTimeFilterCh
           setFilters={setFilters}
           getData={getData}
           route={route}
+          canAutoRefresh={canAutoRefresh}
           isMcpView={isMcpView}
           timePeriodOptions={timePeriodOptions}
         />
@@ -140,21 +143,21 @@ const Dashboard: FC<Props> = ({ route, entity, defaultTimeFilter, onTimeFilterCh
           getData={getData}
           getToolCallsData={getMcpToolCallsData}
           getToolsConsumptionData={getMcpToolsConsumptionData}
-          refreshTime={refreshTime}
+          refreshTime={effectiveRefreshTime}
           isEntityView={!!entity}
         />
       ) : (
         <div className="flex flex-col flex-1 min-h-0 min-w-0 overflow-auto">
           <div className="flex flex-col md:flex-row mb-6 md:flex-wrap gap-6">
-            <LineChart getData={getData} refreshTime={refreshTime} />
-            <SingleValueChartsDashboard getData={getData} refreshTime={refreshTime} />
+            <LineChart getData={getData} refreshTime={effectiveRefreshTime} />
+            <SingleValueChartsDashboard getData={getData} refreshTime={effectiveRefreshTime} />
           </div>
           <div className="flex flex-col w-full">
             {route === ApplicationRoute.Dashboard && (
               <div className="flex mb-6 w-full relative">
                 <TelemetryGrid
                   getData={getData}
-                  refreshTime={refreshTime}
+                  refreshTime={effectiveRefreshTime}
                   query={ENTITY_CONSUMPTION_QUERY}
                   columnDefs={TELEMETRY_GRID_COLUMNS}
                   title={t(TelemetryI18nKey.EntitiesConsumption)}
@@ -164,7 +167,7 @@ const Dashboard: FC<Props> = ({ route, entity, defaultTimeFilter, onTimeFilterCh
             <div className="flex size-full relative">
               <TelemetryGrid
                 getData={getData}
-                refreshTime={refreshTime}
+                refreshTime={effectiveRefreshTime}
                 query={PROJECT_CONSUMPTION_QUERY}
                 columnDefs={PROJECT_GRID_COLUMNS}
                 title={t(TelemetryI18nKey.ProjectsConsumption)}

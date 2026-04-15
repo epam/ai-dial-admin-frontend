@@ -25,9 +25,12 @@ export function getFilteredTimePeriodOptions(maxTimeRangeMs: number) {
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
-export function getTimePeriodOptionsByMaxDays(maxDays?: number): TimePeriodOption[] {
-  if (!maxDays) return timePeriodOptionsConfig;
-  return timePeriodOptionsConfig.filter((opt) => opt.offset <= maxDays * MS_PER_DAY);
+export function getTimePeriodOptionsByMaxDays(
+  maxDays?: number,
+  options: TimePeriodOption[] = timePeriodOptionsConfig,
+): TimePeriodOption[] {
+  if (!maxDays) return options;
+  return options.filter((opt) => opt.offset <= maxDays * MS_PER_DAY);
 }
 
 export function getDefaultTimePeriod(options: TimePeriodOption[]): string {

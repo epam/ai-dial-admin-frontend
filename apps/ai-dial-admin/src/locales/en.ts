@@ -625,7 +625,6 @@ export default {
     AutoRefresh: 'Auto Refresh: ',
     TimePeriod: 'Time Period: ',
     AddFilter: 'Add filter',
-    CustomTimeRage: 'Custom Time Range',
     Custom: 'Custom',
     MaxRangeDays: 'Max {days} days',
     SelectEntities: 'Select entities',

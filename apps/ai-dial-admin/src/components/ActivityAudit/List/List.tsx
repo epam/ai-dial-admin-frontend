@@ -35,7 +35,7 @@ import { DialActivity } from '@/src/models/activity-audit';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { FilterDto } from '@/src/models/request';
-import { CalendarAlignment, TimeFilterValue, TimeRange } from '@/src/models/time-range';
+import { TimeFilterValue, TimeRange } from '@/src/models/time-range';
 import { ApplicationRoute } from '@/src/types/routes';
 import { rollbackEntityPerType } from '@/src/utils/audit/get-rollback-request';
 import {
@@ -253,7 +253,6 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
             timeRange={timeRange}
             onTimeRangeChange={handleTimeRangeChange}
             maxRangeDays={auditMaxRangeDays}
-            calendarAlignment={CalendarAlignment.Left}
           />
 
           <div className="flex flex-row gap-x-4">
