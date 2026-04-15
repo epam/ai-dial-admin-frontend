@@ -261,6 +261,10 @@ const FileManager: FC<Props> = ({
 
   const handleMoveToFiles = useCallback(
     async (items: DialCopiedItem[], sourceFolder: string, destinationFolder: string) => {
+      if (!items?.length) {
+        return;
+      }
+
       onMoveItems(items, sourceFolder, destinationFolder).then((result) => {
         const isSuccess = result.every((res) => (Array.isArray(res) ? res.every((r) => r.success) : res.success));
         if (isSuccess) {
