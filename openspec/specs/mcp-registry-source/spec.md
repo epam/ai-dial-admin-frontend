@@ -36,11 +36,15 @@ With server-side filtering by `packageRegistryTypes` and `packageTransportTypes`
 
 All container-related MCP registry server requests (grid pagination, autocomplete search, freeform validation) SHALL include a `filter` with `packageRegistryTypes: ["oci"]` and `packageTransportTypes: ["streamable-http", "sse"]` so that only servers with OCI packages and supported transports are returned.
 
-### Purpose-specific API Method for Containers
+### Toolset MCP Registry Filter Constant
 
-`McpRegistryApi` SHALL expose a `getContainerMcpServers()` method that accepts `search`, `cursor`, and `limit` params, constructs a `McpServersRequestDto` with `filter: { packageRegistryTypes: ["oci"], packageTransportTypes: ["streamable-http", "sse"] }` internally, and sends a POST request to `/api/v1/mcp-registry/servers/list`.
+`constants/deployments/mcp-registry.ts` SHALL export `TOOLSET_MCP_REGISTRY_FILTER: McpServerFilterDto` with value `{ remoteTransportTypes: ['streamable-http', 'sse'] }`, alongside the existing `CONTAINER_MCP_REGISTRY_FILTER` and `IMAGE_MCP_REGISTRY_FILTER`.
 
-Callers SHALL NOT provide filter values — the filter is an implementation detail of the API method.
+### Purpose-specific API Methods
+
+`McpRegistryApi` SHALL expose `getContainerMcpServers()`, `getImageMcpServers()`, and `getToolsetMcpServers()` methods. Each accepts `search`, `cursor`, and `limit` params, constructs a `McpServersRequestDto` with its respective filter internally, and sends a POST request to `/api/v1/mcp-registry/servers/list`.
+
+Callers SHALL NOT provide filter values — the filter is an implementation detail of each API method.
 
 ### Purpose-specific Server Action for Containers
 
@@ -60,6 +64,10 @@ The system SHALL define TypeScript interfaces mirroring the BE contract:
 - `McpServersRequestDto` with optional fields: `search` (`string`), `cursor` (`string`), `limit` (`number`), `filter` (`McpServerFilterDto`)
 
 These interfaces SHALL be located in `src/types/deployments/mcp-registry.ts`.
+
+### Remote Utility Functions
+
+`utils/deployments/mcp-registry.ts` SHALL export `getPreferredRemote(server: McpServer)` and `mapRemoteTransportType(type: string)` alongside existing `getPreferredOciPackage()` and `mapTransportType()`.
 
 ### MCP Server Name Field
 

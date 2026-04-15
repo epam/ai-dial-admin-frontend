@@ -3,7 +3,7 @@ import { DialFile } from './file';
 
 export interface DialPrompt extends DialFile, BaseEntity {
   version: string;
-  content: string;
+  content?: string;
   id?: string;
   items?: DialPrompt[];
   versions?: string[];

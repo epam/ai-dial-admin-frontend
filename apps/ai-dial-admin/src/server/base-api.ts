@@ -6,6 +6,7 @@ import { ErrorObject, getError, getErrorMessage, getParsedError } from '@/src/ut
 import { fileRequest } from '@/src/utils/api/file-request';
 import { sendRequest } from '@/src/utils/api/send-request';
 import { getApiHeaders, getAuthorizationHeader } from '@/src/utils/auth/api-headers';
+import { requestRegistry } from '@/src/utils/api/request-registry';
 import { errorLog } from './logger';
 import { normalizeUrl } from '../utils/url';
 
@@ -90,50 +91,89 @@ export class BaseApi {
     return streamRequest(`${this.config.host || ''}${url}`, fileName, token, isPreview);
   }
 
-  protected sendActionRequest<T extends object>(
+  protected async sendActionRequest<T extends object>(
     url: string,
     type: string,
     token?: Token,
     dto?: T,
     initHeaders?: HeadersInit,
   ): Promise<ServerActionResponse> {
-    return sendRequest(`${this.config.host || ''}${url}`, type, { ...getApiHeaders(token), ...initHeaders }, dto).then(
-      (res) => this.handleResponse(res, type),
-    );
+    const requestId = crypto.randomUUID();
+    const controller = requestRegistry.register(requestId);
+
+    try {
+      const res = await sendRequest(
+        `${this.config.host || ''}${url}`,
+        type,
+        { ...getApiHeaders(token), ...initHeaders },
+        dto,
+        controller.signal,
+      );
+      return this.handleResponse(res, type);
+    } catch (error) {
+      // Request cancelled during logout, this is expected
+      if ((error as Error).name === 'AbortError') {
+        return {
+          success: false,
+          status: 0,
+          errorMessage: 'Request cancelled',
+        };
+      }
+      throw error;
+    } finally {
+      requestRegistry.unregister(requestId);
+    }
   }
 
-  protected sendRequest<T extends object, R>(
+  protected async sendRequest<T extends object, R>(
     url: string,
     type: string,
     dto?: T,
     token?: Token,
     initHeaders?: HeadersInit,
   ): Promise<Response | R | null | undefined> {
-    return sendRequest(`${this.config.host || ''}${url}`, type, { ...getApiHeaders(token), ...initHeaders }, dto).then(
-      (res) => {
-        if (isFailedRequest(res)) {
-          const traceparent = res.headers.get('traceparent');
-          errorLog(`Request status ${res.status}`);
-          errorLog(`Request error Url  ${res.url}`);
-          errorLog(`Request error traceparent  ${traceparent}`);
+    const requestId = crypto.randomUUID();
+    const controller = requestRegistry.register(requestId);
 
-          if (res.status === 403) {
-            return void 0;
-          }
+    try {
+      const res = await sendRequest(
+        `${this.config.host || ''}${url}`,
+        type,
+        { ...getApiHeaders(token), ...initHeaders },
+        dto,
+        controller.signal,
+      );
 
-          return res.text().then((error) => {
-            errorLog(`Request error ${res.status} ${error}`);
-            return null;
-          });
+      if (isFailedRequest(res)) {
+        const traceparent = res.headers.get('traceparent');
+        errorLog(`Request status ${res.status}`);
+        errorLog(`Request error Url  ${res.url}`);
+        errorLog(`Request error traceparent  ${traceparent}`);
+
+        if (res.status === 403) {
+          return void 0;
         }
 
-        if (res.headers.get('content-type')?.includes('application/octet-stream')) {
-          return res;
-        }
+        return res.text().then((error) => {
+          errorLog(`Request error ${res.status} ${error}`);
+          return null;
+        });
+      }
 
-        return getResponse<R>(type, res);
-      },
-    );
+      if (res.headers.get('content-type')?.includes('application/octet-stream')) {
+        return res;
+      }
+
+      return getResponse<R>(type, res);
+    } catch (error) {
+      // Request cancelled during logout, this is expected
+      if ((error as Error).name === 'AbortError') {
+        return null;
+      }
+      throw error;
+    } finally {
+      requestRegistry.unregister(requestId);
+    }
   }
 
   private handleResponse(res: Response, type: string): Promise<ServerActionResponse> {

@@ -1,8 +1,7 @@
 'use client';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ColDef } from 'ag-grid-community';
 import { DialGhostButton } from '@epam/ai-dial-ui-kit';
 import { IconReplace } from '@tabler/icons-react';
 
@@ -32,22 +31,12 @@ interface Props {
 const DeploymentConfigurationGrid: FC<Props> = ({ selectedTab, tabData, globalFirewall }) => {
   const t = useI18n();
 
-  const [rowData, setRowData] = useState<BaseEntity[]>([]);
-  const [colDefs, setColDefs] = useState<ColDef[]>([]);
   const [isFirewallModalOpen, setIsFirewallModalOpen] = useState(false);
 
   const isGlobalFirewallTab = selectedTab === GLOBAL_FIREWALL_TAB_ID;
-
-  useEffect(() => {
-    if (selectedTab && !isGlobalFirewallTab) {
-      const baseColumns = getDeploymentColDefs(t, undefined, selectedTab);
-      setColDefs([getComponentActionColumn(), ...baseColumns]);
-      setRowData(tabData[selectedTab] || []);
-    } else {
-      setColDefs([]);
-      setRowData([]);
-    }
-  }, [selectedTab, t, tabData, isGlobalFirewallTab]);
+  const showGrid = selectedTab && !isGlobalFirewallTab;
+  const colDefs = showGrid ? [getComponentActionColumn(), ...getDeploymentColDefs(t, undefined, selectedTab)] : [];
+  const rowData = showGrid ? tabData[selectedTab] || [] : [];
 
   const firewallNext = globalFirewall?.next as string[] | null;
   const firewallPrev = globalFirewall?.prev as string[] | null;
@@ -88,7 +77,14 @@ const DeploymentConfigurationGrid: FC<Props> = ({ selectedTab, tabData, globalFi
     );
   }
 
-  return <GridView columnDefs={colDefs} rowData={rowData} emptyDataProps={{ title: t(EntitiesI18nKey.NoEntities) }} />;
+  return (
+    <GridView
+      key={selectedTab}
+      columnDefs={colDefs}
+      rowData={rowData}
+      emptyDataProps={{ title: t(EntitiesI18nKey.NoEntities) }}
+    />
+  );
 };
 
 export default DeploymentConfigurationGrid;

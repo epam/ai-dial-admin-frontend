@@ -13,20 +13,10 @@ export const allActionLabels = [
   { key: 'openInNewTab', label: ActionMenuOperationI18nKey.Open_in_new_tab },
 ];
 
-export const allToolbarOptionLabels = [
+export const baseToolbarOptionLabels = [
   {
     key: 'newFolder',
     label: FileManagerI18nKey.Folder,
-    icon: null,
-  },
-  {
-    key: 'newItem',
-    label: FileManagerI18nKey.Prompt,
-    icon: null,
-  },
-  {
-    key: 'uploadFiles',
-    label: FileManagerI18nKey.Files,
     icon: null,
   },
 ];
