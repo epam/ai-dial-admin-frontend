@@ -19,6 +19,7 @@ export const TOOLSET_SOURCE_ITEMS: SelectOption[] = [
   // NOTE: Keep order
   { value: SOURCE_TYPE.ENDPOINTS, label: 'External Endpoint' },
   { value: SOURCE_TYPE.CONTAINER, label: 'MCP Container' },
+  { value: SOURCE_TYPE.MCP_REGISTRY, label: 'MCP Registry' },
 ];
 
 export const ADAPTER_SOURCE_ITEMS: SelectOption[] = [
@@ -42,16 +43,16 @@ const getItems = (route: ApplicationRoute) => {
   }
 };
 
-export const getSourceItems = (route: ApplicationRoute, deploymentsEnabled?: boolean) => {
+export const getSourceItems = (route: ApplicationRoute, deploymentsEnabled?: boolean, mcpRegistryEnabled?: boolean) => {
   const items = getItems(route);
 
-  if (!deploymentsEnabled) {
-    return items.map((item) => {
-      if (item.value === SOURCE_TYPE.CONTAINER) {
-        item.disabled = true;
-      }
-      return item;
-    });
-  }
-  return items;
+  return items.map((item) => {
+    if (item.value === SOURCE_TYPE.CONTAINER && !deploymentsEnabled) {
+      return { ...item, disabled: true };
+    }
+    if (item.value === SOURCE_TYPE.MCP_REGISTRY && !mcpRegistryEnabled) {
+      return { ...item, disabled: true };
+    }
+    return item;
+  });
 };

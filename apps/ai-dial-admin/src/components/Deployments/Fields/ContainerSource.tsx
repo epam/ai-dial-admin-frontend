@@ -158,6 +158,15 @@ const ContainerSource: FC<Props> = ({ container, setContainer, isModal = false, 
               onServerSelect={onContainerServerSelect}
               serverName={mcpServerName}
               onServerNameChange={onContainerServerNameChange}
+              preselectedServer={
+                container.source?.externalRegistryRef
+                  ? {
+                      name: container.source.externalRegistryRef.packageName,
+                      version: container.source.externalRegistryRef.version || '',
+                    }
+                  : undefined
+              }
+              view={route}
               isModal={isModal}
               disabled={isDisabled || container.status === CONTAINER_STATUS.RUNNING}
             />

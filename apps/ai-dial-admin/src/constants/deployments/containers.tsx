@@ -49,8 +49,6 @@ export const AUTOSCALE_OPTIONS = (
   { label: t(ContainersI18nKey.ScaleToZeroAfter15Minutes), value: '900' },
   { label: t(ContainersI18nKey.ScaleToZeroAfter30Minutes), value: '1800' },
   { label: t(ContainersI18nKey.ScaleToZeroAfter1Hour), value: '3600' },
-  { label: t(ContainersI18nKey.ScaleToZeroAfter2Hours), value: '7200' },
-  { label: t(ContainersI18nKey.ScaleToZeroAfter6Hours), value: '21600' },
 ];
 
 export const DEFAULT_SCALING: Autoscaling = {

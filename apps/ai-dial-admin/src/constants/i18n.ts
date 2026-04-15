@@ -963,6 +963,7 @@ export enum ErrorI18nKey {
   BaseDirectoryError = 'Error.BaseDirectoryError',
   LimitRequestError = 'Error.LimitRequestError',
   ReplicasError = 'Error.ReplicasError',
+  MinReplicasZeroError = 'Error.MinReplicasZeroError',
   FailedToStart = 'Error.FailedToStart',
   RunOutOfMemory = 'Error.RunOutOfMemory',
   ExitedWithError = 'Error.ExitedWithError',
@@ -989,6 +990,9 @@ export enum SourceI18nKey {
   Endpoint = 'Source.Endpoint',
   ExternalEndpoint = 'Source.ExternalEndpoint',
   Adapter = 'Source.Adapter',
+  McpRegistry = 'Source.McpRegistry',
+  InternalImage = 'Source.InternalImage',
+  DockerImageReference = 'Source.DockerImageReference',
 }
 
 export enum TypeI18nKey {
@@ -1389,8 +1393,6 @@ export enum ContainersI18nKey {
   ScaleToZeroAfter15Minutes = 'Containers.Autoscaling.ScaleToZeroAfter15Minutes',
   ScaleToZeroAfter30Minutes = 'Containers.Autoscaling.ScaleToZeroAfter30Minutes',
   ScaleToZeroAfter1Hour = 'Containers.Autoscaling.ScaleToZeroAfter1Hour',
-  ScaleToZeroAfter2Hours = 'Containers.Autoscaling.ScaleToZeroAfter2Hours',
-  ScaleToZeroAfter6Hours = 'Containers.Autoscaling.ScaleToZeroAfter6Hours',
   Threshold = 'Containers.Autoscaling.Threshold',
   MaxReplicas = 'Containers.Autoscaling.MaxReplicas',
   MinReplicas = 'Containers.Autoscaling.MinReplicas',

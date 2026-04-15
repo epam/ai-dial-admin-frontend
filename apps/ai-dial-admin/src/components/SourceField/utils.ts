@@ -18,6 +18,9 @@ export const isValidSourceField = (entity: DialModel | DialInterceptor | Toolset
   if (source?.$type === SOURCE_TYPE.RUNNER) {
     return !!source.runnerName;
   }
+  if (source?.$type === SOURCE_TYPE.MCP_REGISTRY) {
+    return !!source.serverName;
+  }
   if (source?.$type === SOURCE_TYPE.ENDPOINTS) {
     return getUrlError((entity as DialModel).endpoint || (entity as DialAdapter).baseEndpoint, void 0, true) === null;
   }

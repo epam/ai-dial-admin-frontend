@@ -213,7 +213,15 @@ export const getDeploymentConfigurationPreview = (
   for (const { id, labelKey } of DEPLOYMENT_ENTITY_TABS) {
     const items = grouped[id];
     if (items && items.length > 0) {
-      previewData[id] = getConfigurationItems(items, t);
+      const baseItems = getConfigurationItems(items, t);
+      previewData[id] =
+        id === DeploymentExportEntityType.IMAGE
+          ? baseItems.map((item, index) => ({
+              ...item,
+              displayName: item.name,
+              name: (items[index]?.prev as { id?: string } | undefined)?.id ?? '',
+            }))
+          : baseItems;
       prevData[id] = getPrevItems(items);
       tabs.push({
         id,

@@ -21,7 +21,10 @@ import {
   IMAGE_TYPE_I18N_KEYS,
   STATUS_I18N_KEYS,
 } from '@/src/constants/deployments/images';
+import { SourceI18nKey } from '@/src/constants/i18n';
 import {
+  containerSourceNameLabel,
+  containerSourceTypeLabel,
   formatRequired,
   getFormattedResourceType,
   numberValueFormatter,
@@ -569,17 +572,21 @@ export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, rou
       ]
     : [
         {
-          headerName: `${type} Image`,
-          field: 'image',
+          headerName: 'Source type',
+          field: 'source.$type',
           hide: false,
-          valueGetter: (params: ValueGetterParams) =>
-            params.data?.source?.$type === 'internal_image' ? params.data.source.imageDefinitionId : undefined,
-          cellRenderer: (params: ICellRendererParams) => formatDeploymentImageName(params.data) ?? params.value,
-          tooltipValueGetter: (params: ITooltipParams) => formatDeploymentImageName(params.data) ?? params.value,
-          filterValueGetter: (params: ValueGetterParams) =>
-            formatDeploymentImageName(params.data) ??
-            (params.data?.source?.$type === 'internal_image' ? params.data.source.imageDefinitionId : ''),
-        },
+          valueFormatter: ({ data }) => containerSourceTypeLabel(data?.source, t, type),
+          tooltipValueGetter: ({ data }) => containerSourceTypeLabel(data?.source, t, type),
+          filterValueGetter: (params) => containerSourceTypeLabel(params.data?.source, t, type),
+        } as ColDef,
+        {
+          headerName: 'Source Name',
+          field: 'source',
+          hide: false,
+          valueFormatter: ({ data }) => containerSourceNameLabel(data?.source),
+          tooltipValueGetter: ({ data }) => containerSourceNameLabel(data?.source),
+          filterValueGetter: (params) => containerSourceNameLabel(params.data?.source),
+        } as ColDef,
       ]),
   {
     ...BASE_STATUS_COLUMN,
@@ -697,11 +704,19 @@ export const IMAGES_LIST_COLUMNS = (t: (key: string) => string): ColDef[] => [
     field: 'source.$type',
     headerName: 'Source',
     hide: true,
-    valueFormatter: ({ value }) => t(IMAGE_SOURCE_TYPE_I18N_KEYS[value as IMAGE_SOURCE_TYPE]) || value,
-    tooltipValueGetter: ({ value }) => t(IMAGE_SOURCE_TYPE_I18N_KEYS[value as IMAGE_SOURCE_TYPE]) || value,
+    valueFormatter: ({ data, value }) =>
+      data?.source?.externalRegistryRef
+        ? t(SourceI18nKey.McpRegistry)
+        : t(IMAGE_SOURCE_TYPE_I18N_KEYS[value as IMAGE_SOURCE_TYPE]) || value,
+    tooltipValueGetter: ({ data, value }) =>
+      data?.source?.externalRegistryRef
+        ? t(SourceI18nKey.McpRegistry)
+        : t(IMAGE_SOURCE_TYPE_I18N_KEYS[value as IMAGE_SOURCE_TYPE]) || value,
     filterValueGetter: (params) => {
-      const value = params.data.source.$type;
-      return t(IMAGE_SOURCE_TYPE_I18N_KEYS[value as IMAGE_SOURCE_TYPE]) || value;
+      const source = params.data.source;
+      return source?.externalRegistryRef
+        ? t(SourceI18nKey.McpRegistry)
+        : t(IMAGE_SOURCE_TYPE_I18N_KEYS[source?.$type as IMAGE_SOURCE_TYPE]) || source?.$type;
     },
   },
   {

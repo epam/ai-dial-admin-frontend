@@ -78,26 +78,19 @@ describe('ExportConfig :: getDeploymentColDefs', () => {
     expect(columns).not.toContainEqual(VERSION_COLUMN);
   });
 
-  test('returns image columns with version and id for image tab', () => {
+  test('returns image columns with version for image tab', () => {
     const columns = getDeploymentColDefs((key) => key, undefined, DeploymentExportEntityType.IMAGE);
 
+    expect(columns).toContainEqual(DISPLAY_NAME_COLUMN_WITH_SORT);
+    expect(columns).toContainEqual(DESCRIPTION_COLUMN);
+    expect(columns).toContainEqual(VERSION_COLUMN);
+    expect(columns).toContainEqual(NAME_COLUMN);
+  });
+
+  test('image tab columns are in correct order: Display name, Description, Version, ID', () => {
+    const columns = getDeploymentColDefs((key) => key, undefined, DeploymentExportEntityType.IMAGE);
     const fields = columns.map((c) => c.field);
-    expect(fields).toContain('id');
-    expect(fields).toContain('name');
-    expect(fields).toContain('description');
-    expect(fields).toContain('version');
-  });
-
-  test('image tab has Display Name header for name column', () => {
-    const columns = getDeploymentColDefs((key) => key, undefined, DeploymentExportEntityType.IMAGE);
-    const nameCol = columns.find((c) => c.field === 'name');
-    expect(nameCol?.headerName).toBe('Display Name');
-  });
-
-  test('image tab has ID header for id column', () => {
-    const columns = getDeploymentColDefs((key) => key, undefined, DeploymentExportEntityType.IMAGE);
-    const idCol = columns.find((c) => c.field === 'id');
-    expect(idCol?.headerName).toBe('ID');
+    expect(fields).toEqual(['displayName', 'description', 'version', 'name']);
   });
 
   test('appends action column when remove callback provided', () => {
@@ -132,10 +125,10 @@ describe('ExportConfig :: getDeploymentExportComponents', () => {
     expect(result).toEqual([{ name: 'container-1', type: DeploymentExportComponentType.MCP_DEPLOYMENT }]);
   });
 
-  test('maps image entities using id field instead of name', () => {
+  test('maps image entities using name field (remapped from id upstream)', () => {
     const data: Record<string, EntitiesGridData[]> = {
       [DeploymentExportEntityType.IMAGE]: [
-        { name: 'image-name', id: 'image-id-123', $type: IMAGE_TYPE.ADAPTER } as unknown as EntitiesGridData,
+        { name: 'image-id-123', displayName: 'image-name', $type: IMAGE_TYPE.ADAPTER } as unknown as EntitiesGridData,
       ],
     };
 
@@ -152,7 +145,7 @@ describe('ExportConfig :: getDeploymentExportComponents', () => {
         { name: 'c2', $type: CONTAINER_TYPE.ADAPTER } as unknown as EntitiesGridData,
       ],
       [DeploymentExportEntityType.IMAGE]: [
-        { name: 'img-name', id: 'img-id', $type: IMAGE_TYPE.INTERCEPTOR } as unknown as EntitiesGridData,
+        { name: 'img-id', displayName: 'img-name', $type: IMAGE_TYPE.INTERCEPTOR } as unknown as EntitiesGridData,
       ],
     };
 
@@ -167,7 +160,7 @@ describe('ExportConfig :: getDeploymentExportComponents', () => {
     const data: Record<string, EntitiesGridData[]> = {
       [DeploymentExportEntityType.MCP_CONTAINER]: [],
       [DeploymentExportEntityType.IMAGE]: [
-        { name: 'img', id: 'id-1', $type: IMAGE_TYPE.MCP } as unknown as EntitiesGridData,
+        { name: 'id-1', displayName: 'img', $type: IMAGE_TYPE.MCP } as unknown as EntitiesGridData,
       ],
     };
 
