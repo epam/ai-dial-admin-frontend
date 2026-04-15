@@ -75,6 +75,7 @@ interface Props {
   selectedPaths?: Set<string>;
   emptyStateTitle?: string;
   emptyStateDescription?: string;
+  showHiddenFileSwitcherInDestinationPopup?: boolean;
 }
 
 const FileManager: FC<Props> = ({
