@@ -478,7 +478,9 @@ describe('Deployments actions', () => {
     });
 
     test('getImageMcpServers keeps first occurrence on dedup', async () => {
-      const repoVersion = { server: { name: 'org/server', version: '1.0.0', repository: { url: 'https://github.com' } } };
+      const repoVersion = {
+        server: { name: 'org/server', version: '1.0.0', repository: { url: 'https://github.com' } },
+      };
       const ociVersion = { server: { name: 'org/server', version: '1.0.0', packages: [{ registryType: 'oci' }] } };
 
       (mcpRegistryApi.getImageMcpServersByRepo as any).mockResolvedValue({

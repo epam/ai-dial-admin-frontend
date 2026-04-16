@@ -9,10 +9,26 @@ vi.mock('@/src/components/Deployments/Fields/ContainerSource/McpServerNameField'
     <div>
       <span>McpServerNameField</span>
       <span>{serverName}</span>
-      <button onClick={() => onServerSelect({ name: 'org/server', version: '1.0.0', repository: { url: 'https://github.com/org/server', source: 'github' } })}>
+      <button
+        onClick={() =>
+          onServerSelect({
+            name: 'org/server',
+            version: '1.0.0',
+            repository: { url: 'https://github.com/org/server', source: 'github' },
+          })
+        }
+      >
         select-repo
       </button>
-      <button onClick={() => onServerSelect({ name: 'org/oci-only', version: '2.0.0', packages: [{ registryType: 'oci', identifier: 'docker.io/org/img:2.0', transport: { type: 'stdio' } }] })}>
+      <button
+        onClick={() =>
+          onServerSelect({
+            name: 'org/oci-only',
+            version: '2.0.0',
+            packages: [{ registryType: 'oci', identifier: 'docker.io/org/img:2.0', transport: { type: 'stdio' } }],
+          })
+        }
+      >
         select-oci
       </button>
     </div>
@@ -39,9 +55,7 @@ describe('ImageMcpRegistry', () => {
   };
 
   test('renders McpServerNameField with server name', () => {
-    render(
-      <ImageMcpRegistry image={baseImage} setImage={vi.fn()} onServerChange={vi.fn()} />,
-    );
+    render(<ImageMcpRegistry image={baseImage} setImage={vi.fn()} onServerChange={vi.fn()} />);
 
     expect(screen.getByText('McpServerNameField')).toBeTruthy();
     expect(screen.getByText('org/server')).toBeTruthy();
@@ -50,9 +64,7 @@ describe('ImageMcpRegistry', () => {
   test('selects server with repo — sets CODE source', () => {
     const setImage = vi.fn();
     const onServerChange = vi.fn();
-    render(
-      <ImageMcpRegistry image={baseImage} setImage={setImage} onServerChange={onServerChange} />,
-    );
+    render(<ImageMcpRegistry image={baseImage} setImage={setImage} onServerChange={onServerChange} />);
 
     screen.getByText('select-repo').click();
 
@@ -70,9 +82,7 @@ describe('ImageMcpRegistry', () => {
   test('selects OCI-only server — sets DOCKER source', () => {
     const setImage = vi.fn();
     const onServerChange = vi.fn();
-    render(
-      <ImageMcpRegistry image={baseImage} setImage={setImage} onServerChange={onServerChange} />,
-    );
+    render(<ImageMcpRegistry image={baseImage} setImage={setImage} onServerChange={onServerChange} />);
 
     screen.getByText('select-oci').click();
 
