@@ -1095,6 +1095,7 @@ export enum EntityFieldsI18nKey {
   isPublic = 'EntityFields.isPublic',
   apiKeyHeader = 'EntityFields.apiKeyHeader',
   apiKeyValue = 'EntityFields.apiKeyValue',
+  configDelivery = 'EntityFields.configDelivery',
   costLimit = 'EntityFields.costLimit',
   defaultRoleLimit = 'EntityFields.defaultRoleLimit',
   fieldsHashingOrder = 'EntityFields.fieldsHashingOrder',

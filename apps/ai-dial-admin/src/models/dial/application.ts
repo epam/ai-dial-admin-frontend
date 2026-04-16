@@ -1,3 +1,4 @@
+import App from 'next/app';
 import { ChatEntity, EntityValidityState, ModifiedEntity } from './base-entity';
 import { DefaultsValue } from './defaults';
 import { DialRoute } from './route';
@@ -39,6 +40,7 @@ export interface DialApplicationScheme extends ModifiedEntity, DialScheme {
   'dial:applicationTypeBucketCopy'?: TypeBucketCopy;
   'dial:applicationTypeInterceptors'?: string[];
   'dial:applicationTypeMcp'?: ApplicationTypeMCP;
+
   applications?: string[];
   topics?: string[];
 }
@@ -46,6 +48,8 @@ export interface DialApplicationScheme extends ModifiedEntity, DialScheme {
 export interface ApplicationTypeMCP {
   ['dial:endpoint']: string;
   ['dial:transport']?: string;
+  ['dial:forwardPerRequestKey']?: boolean;
+  ['dial:configDelivery']?: ApplicationMCPConfigDelivery;
 }
 
 export enum TypeEntity {
@@ -74,4 +78,11 @@ export interface ApplicationMCPContainer {
   endpoint: string;
   transport?: string;
   allowedTools?: string[];
+  forwardPerRequestKey?: boolean;
+  configDelivery?: ApplicationMCPConfigDelivery;
+}
+
+export enum ApplicationMCPConfigDelivery {
+  META = 'META',
+  HEADER = 'HEADER',
 }

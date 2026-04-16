@@ -959,6 +959,7 @@ export default {
     fieldsHashingOrder: 'Hashing order',
     endpoint: 'Endpoint',
     keyValue: 'Key value',
+    configDelivery: 'Configuration delivery',
     container: 'Container',
     authSettings: 'Authentication',
     authenticationType: 'Authentication type',
