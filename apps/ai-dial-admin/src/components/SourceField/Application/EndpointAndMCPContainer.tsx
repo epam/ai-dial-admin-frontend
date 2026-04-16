@@ -4,7 +4,7 @@ import classNames from 'classnames';
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
-import { EntityFieldsI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, SourceI18nKey } from '@/src/constants/i18n';
 import { CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { ONLY_HTTP_TRANSPORTS } from '@/src/constants/transport';
 import { useI18n } from '@/src/locales/client';
@@ -202,7 +202,7 @@ const EndpointAndMCPContainer: FC<Props> = ({
               <EndpointControl
                 label=""
                 id="mcp_endpoint"
-                placeholder="Enter MCP endpoint"
+                placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
                 required
                 disabled={isReadOnlyAdmin}
                 endpoint={
@@ -224,6 +224,8 @@ const EndpointAndMCPContainer: FC<Props> = ({
               onChange={onChangeMCPTransport}
               disabled
             />
+
+
           </div>
         )}
       </div>
