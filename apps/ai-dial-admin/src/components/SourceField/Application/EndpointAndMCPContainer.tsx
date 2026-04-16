@@ -224,8 +224,6 @@ const EndpointAndMCPContainer: FC<Props> = ({
               onChange={onChangeMCPTransport}
               disabled
             />
-
-
           </div>
         )}
       </div>
