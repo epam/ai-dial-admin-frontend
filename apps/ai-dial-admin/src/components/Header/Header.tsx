@@ -41,9 +41,8 @@ const Header: FC<Props> = ({ isEnableAuth, docLink }) => {
         {!isTabletScreen && <Breadcrumbs mobile={false} />}
       </div>
 
-      <div className="flex items-center">
+      <div className="flex items-center gap-3">
         {docLink && <HelpButton docLink={docLink} />}
-        <div className="w-px h-[16px] bg-controls-disable-accent ml-2 mr-[-8px]" />
         <User isEnableAuth={isEnableAuth} />
       </div>
     </header>
