@@ -10,7 +10,7 @@ interface Props {
 const User: FC<Props> = ({ isEnableAuth }) => {
   return (
     <>
-      <div className="h-full lg:hidden border-l border-l-tertiary pl-3 lg:border-none">
+      <div className="h-full lg:hidden border-l border-l-tertiary lg:border-none flex items-center">
         <ProfileButton />
       </div>
 

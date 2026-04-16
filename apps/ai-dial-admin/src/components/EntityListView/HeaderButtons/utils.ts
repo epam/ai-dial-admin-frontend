@@ -3,7 +3,7 @@ import { importToolsets } from '@/src/app/[lang]/assets-toolsets/actions';
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
 import { DialRule } from '@/src/models/dial/rule';
-import { ImportData } from '@/src/models/import-asset';
+import { ImportData, ParsedAssets } from '@/src/models/import-asset';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { importFiles } from '@/src/utils/files/import-files';
@@ -25,6 +25,15 @@ export const getFormDataForUpload = (files: File[]): { body: FormData; fileSize:
   };
 };
 
+export const getAssetIdByNameAndVersion = (id: string, name?: string, version?: string) => {
+  const parts = id.split('/');
+  const last = parts[parts.length - 1];
+  const [oldName, oldVersion] = last.split('__');
+
+  parts[parts.length - 1] = `${name || oldName}__${version || oldVersion}`;
+  return parts.join('/');
+};
+
 export const getFormDataForImport = (
   path: string,
   file: ImportData,
@@ -34,6 +43,28 @@ export const getFormDataForImport = (
   flatImport?: boolean,
   route?: ApplicationRoute,
 ): { body: FormData; fileSize: number } => {
+  if (resolutionStrategy === ConflictResolutionPolicy.MANUAL) {
+    switch (route) {
+      case ApplicationRoute.Prompts: {
+        (file as ParsedAssets).prompts?.forEach((prompt) => {
+          prompt.id = prompt.id && getAssetIdByNameAndVersion(prompt.id, prompt.name, prompt.version);
+        });
+        break;
+      }
+      case ApplicationRoute.AssetsApplications: {
+        (file as ParsedAssets).applications?.forEach((application) => {
+          application.id =
+            application.id && getAssetIdByNameAndVersion(application.id, application.name, application.version);
+        });
+        break;
+      }
+      case ApplicationRoute.AssetsToolsets: {
+        (file as ParsedAssets).toolSets?.forEach((toolSet) => {
+          toolSet.id = toolSet.id && getAssetIdByNameAndVersion(toolSet.id, toolSet.name, toolSet.version);
+        });
+      }
+    }
+  }
   const config: { path: string; conflictResolutionStrategy: string; rules?: DialRule[]; flatImport?: boolean } = {
     flatImport,
     path,

@@ -1,3 +1,4 @@
+import { MouseEvent } from 'react';
 import { FileManagerColumnKey, NAME_COLUMN, SelectOption, UPDATED_AT_COLUMN } from '@epam/ai-dial-ui-kit';
 import { ColDef } from 'ag-grid-community';
 import SelectCellRenderer, { SelectCellRendererParams } from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
@@ -38,10 +39,19 @@ import {
 } from '@/src/app/[lang]/assets-toolsets/actions';
 import { ResourceType } from '@/src/types/resource-type';
 import { importPrompts } from '@/src/utils/prompts/import-prompts';
+import MultiSelectTagsRenderer from '../../Grid/CellRenderers/MultiSelectTagsRenderer';
 
 export const getItems = (data: unknown) => {
   const asset = data as AssetWithVersion;
   return asset?.versions?.map((v) => ({ value: v, label: v })) as SelectOption[];
+};
+
+export const customMultiSelectTagsRenderer = (
+  options: SelectOption[],
+  selectedValues: string[],
+  handleRemoveTag: (event: MouseEvent<HTMLButtonElement>, val: string) => void,
+) => {
+  return <MultiSelectTagsRenderer items={selectedValues} options={options} handleRemoveTag={handleRemoveTag} />;
 };
 
 export const getGridColumns = (
@@ -83,6 +93,7 @@ export const getGridColumns = (
             isMulti
             getItems={getItems}
             onChange={onChange}
+            customMultiSelectTagsRenderer={customMultiSelectTagsRenderer}
           />
         ) : (
           params.data?.version || ''

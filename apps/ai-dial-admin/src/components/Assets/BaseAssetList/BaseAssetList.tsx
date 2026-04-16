@@ -516,6 +516,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
         selectedPaths={selectedPaths}
         emptyStateTitle={emptyStateContent.title}
         emptyStateDescription={emptyStateContent.description}
+        showHiddenFileSwitcherInDestinationPopup={false}
       />
       <Modals
         view={view}
