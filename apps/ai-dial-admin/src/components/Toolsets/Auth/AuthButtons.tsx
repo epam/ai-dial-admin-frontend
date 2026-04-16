@@ -33,6 +33,7 @@ interface Props {
   oAuthCode?: string | null;
   selectedToolset: Toolset;
   publicationName?: string;
+  publicationPath?: string;
   signInToolset: (
     toolset: any,
     type: ToolsetAuthCredentialLevel,
@@ -48,6 +49,7 @@ const AuthButtons: FC<Props> = ({
   publicationName,
   oAuthCode,
   view,
+  publicationPath,
   signInToolset,
   signOutToolset,
 }) => {
@@ -82,10 +84,12 @@ const AuthButtons: FC<Props> = ({
               getSuccessNotification(t(ToolsetI18nKey.SuccessLogin), t(ToolsetI18nKey.SuccessLoginDescription)),
             );
           }
-          router.push(getUrnForEntity(view, { ...selectedToolset, requestName: publicationName }));
+          router.push(
+            getUrnForEntity(view, { ...selectedToolset, requestName: publicationName, path: publicationPath }),
+          );
         });
     },
-    [router, selectedToolset, showNotification, signInToolset, t, view, publicationName],
+    [router, selectedToolset, showNotification, signInToolset, t, view, publicationName, publicationPath],
   );
 
   const onLogin = useCallback(
@@ -132,7 +136,7 @@ const AuthButtons: FC<Props> = ({
       : ToolsetAuthCredentialLevel.GLOBAL;
     getReqRef.current(signOutToolset, selectedToolset, level).then((res) => {
       if (res.success) {
-        router.push(getUrnForEntity(view, { ...selectedToolset, requestName: publicationName }));
+        router.push(getUrnForEntity(view, { ...selectedToolset, requestName: publicationName, path: publicationPath }));
         showNotification(
           getSuccessNotification(t(ToolsetI18nKey.SuccessLogout), t(ToolsetI18nKey.SuccessLogoutDescription)),
         );
@@ -140,7 +144,7 @@ const AuthButtons: FC<Props> = ({
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
-  }, [router, selectedToolset, view, showNotification, t, signOutToolset, publicationName]);
+  }, [router, selectedToolset, view, showNotification, t, signOutToolset, publicationName, publicationPath]);
 
   useEffect(() => {
     if (oAuthCode && !isSignInProcessed) {

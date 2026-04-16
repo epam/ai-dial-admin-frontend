@@ -1,16 +1,11 @@
 import { FC, useMemo } from 'react';
 
-import {
-  AlertVariant,
-  DialAlert,
-  DialPasswordInput,
-  DialSelectField,
-  DialInput,
-  SelectOption,
-} from '@epam/ai-dial-ui-kit';
+import { AlertVariant, DialAlert, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
+import ClientIdControl from '@/src/components/Toolsets/Auth/Controls/ClientIdControl';
+import ClientSecretControl from '@/src/components/Toolsets/Auth/Controls/ClientSecretControl';
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ToolsetAuthSettings, ToolsetAuthStatus, ToolsetCodeChallengeMethod } from '@/src/models/dial/toolset';
@@ -70,20 +65,16 @@ const OAuthSection: FC<Props> = ({ disabled, authSettings, view, onChange }) => 
       />
 
       <div className="flex flex-col gap-y-3 mt-3 w-full">
-        <DialInput
+        <ClientIdControl
+          clientId={authSettings?.clientId}
           disabled={isAuthDisabled}
-          id="clientId"
-          labelProps={{ label: t(EntityFieldsI18nKey.clientId), required: true }}
-          value={authSettings?.clientId || ''}
-          placeholder={t(EntityPlaceholdersI18nKey.ClientId)}
+          isLoggedIn={isLoggedIn}
           onChange={(clientId) => onChange?.({ ...(authSettings || {}), clientId } as ToolsetAuthSettings)}
         />
-        <DialPasswordInput
+        <ClientSecretControl
+          clientSecret={authSettings?.clientSecret}
           disabled={isAuthDisabled}
-          id="clientSecret"
-          labelProps={{ label: t(EntityFieldsI18nKey.clientSecret), required: true }}
-          value={authSettings?.clientSecret || ''}
-          placeholder={t(EntityPlaceholdersI18nKey.ClientSecret)}
+          isLoggedIn={isLoggedIn}
           onChange={(clientSecret) => onChange?.({ ...(authSettings || {}), clientSecret } as ToolsetAuthSettings)}
         />
         <Multiselect
@@ -98,6 +89,7 @@ const OAuthSection: FC<Props> = ({ disabled, authSettings, view, onChange }) => 
           label={t(EntityFieldsI18nKey.scopes)}
           addTitle={t(BasicI18nKey.AddField)}
         />
+
         <EndpointControl
           disabled={isAuthDisabled}
           required
@@ -113,6 +105,7 @@ const OAuthSection: FC<Props> = ({ disabled, authSettings, view, onChange }) => 
         <EndpointControl
           id="tokenEndpoint"
           disabled={isAuthDisabled}
+          required
           label={t(EntityFieldsI18nKey.tokenEndpoint)}
           endpoint={authSettings?.tokenEndpoint || ''}
           placeholder={t(EntityPlaceholdersI18nKey.TokenEndpoint)}
