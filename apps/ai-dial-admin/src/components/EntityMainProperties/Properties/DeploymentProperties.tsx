@@ -186,7 +186,7 @@ const DeploymentProperties: FC<Props> = ({
           onChange={onChangeEntity}
           getContainers={view === ApplicationRoute.Models ? getModelContainers : getMCPContainers}
           label={t(EntitiesI18nKey.SourceType)}
-          sourceItems={getSourceItems(view, featureFlags.deploymentsEnabled)}
+          sourceItems={getSourceItems(view, featureFlags.deploymentsEnabled, featureFlags.mcpRegistryEnabled)}
           getAdapters={getModelsAdapters}
           isModal={!isEntityImmutable}
         />

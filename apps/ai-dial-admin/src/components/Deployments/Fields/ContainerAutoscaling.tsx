@@ -48,7 +48,13 @@ const ContainerAutoscaling: FC<Props> = ({ container, setContainer, disabled }) 
 
   useEffect(() => {
     if (resetCounter || (container.scaling?.maxReplicas && container.scaling.maxReplicas)) {
-      const error = getReplicasError(container.scaling?.minReplicas, container.scaling?.maxReplicas, t);
+      const isScaleToZeroDisabled = !container.scaling?.scaleToZeroDelaySeconds;
+      const error = getReplicasError(
+        container.scaling?.minReplicas,
+        container.scaling?.maxReplicas,
+        t,
+        isScaleToZeroDisabled,
+      );
       setReplicasError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'scaling', isValid: !error });
     }
@@ -59,7 +65,7 @@ const ContainerAutoscaling: FC<Props> = ({ container, setContainer, disabled }) 
       if (value === '0') {
         const scaling = deriveScaling(container.scaling, { minReplicas: 1 });
         delete scaling.scaleToZeroDelaySeconds;
-        const error = getReplicasError(scaling.minReplicas, scaling.maxReplicas, t);
+        const error = getReplicasError(scaling.minReplicas, scaling.maxReplicas, t, true);
         dispatch({ type: ValidationActionType.SetField, field: 'scaling', isValid: !error });
         setReplicasError(error);
         setContainer({ ...container, scaling });
@@ -68,7 +74,7 @@ const ContainerAutoscaling: FC<Props> = ({ container, setContainer, disabled }) 
           scaleToZeroDelaySeconds: Number(value),
           minReplicas: 0,
         });
-        const error = getReplicasError(scaling.minReplicas, scaling.maxReplicas, t);
+        const error = getReplicasError(scaling.minReplicas, scaling.maxReplicas, t, false);
         dispatch({ type: ValidationActionType.SetField, field: 'scaling', isValid: !error });
         setReplicasError(error);
         setContainer({ ...container, scaling });
@@ -80,7 +86,8 @@ const ContainerAutoscaling: FC<Props> = ({ container, setContainer, disabled }) 
   const onMinScaleChange = useCallback(
     (minReplicas?: number | string) => {
       const scaling = deriveScaling(container.scaling, { minReplicas: minReplicas as number });
-      const error = getReplicasError(scaling.minReplicas, scaling.maxReplicas, t);
+      const isScaleToZeroDisabled = !scaling.scaleToZeroDelaySeconds;
+      const error = getReplicasError(scaling.minReplicas, scaling.maxReplicas, t, isScaleToZeroDisabled);
       dispatch({ type: ValidationActionType.SetField, field: 'scaling', isValid: !error });
       setReplicasError(error);
       setContainer({ ...container, scaling });
@@ -91,7 +98,8 @@ const ContainerAutoscaling: FC<Props> = ({ container, setContainer, disabled }) 
   const onMaxScaleChange = useCallback(
     (maxReplicas?: number | string) => {
       const scaling = deriveScaling(container.scaling, { maxReplicas: maxReplicas as number });
-      const error = getReplicasError(scaling.minReplicas, scaling.maxReplicas, t);
+      const isScaleToZeroDisabled = !scaling.scaleToZeroDelaySeconds;
+      const error = getReplicasError(scaling.minReplicas, scaling.maxReplicas, t, isScaleToZeroDisabled);
       dispatch({ type: ValidationActionType.SetField, field: 'scaling', isValid: !error });
       setReplicasError(error);
       setContainer({ ...container, scaling });
@@ -140,6 +148,8 @@ const ContainerAutoscaling: FC<Props> = ({ container, setContainer, disabled }) 
                 isDisabled
               }
               labelProps={{ label: t(ContainersI18nKey.MinReplicas) }}
+              error={replicasError?.text}
+              invalid={!!replicasError}
             />
             <DialNumberInput
               id="maxScale"

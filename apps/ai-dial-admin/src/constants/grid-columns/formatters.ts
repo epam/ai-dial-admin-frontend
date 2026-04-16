@@ -5,6 +5,7 @@ import { AttachmentsI18nKey, BasicI18nKey, EntitiesI18nKey, MenuI18nKey, SourceI
 import { ActivityAuditResourceType } from '@/src/types/activity-audit';
 import { formatNumberByDelimiter } from '@/src/utils/formatting/number-formatting';
 import { SOURCE_FIELD, SOURCE_TYPE } from '@/src/components/SourceField/types';
+import { CONTAINER_SOURCE_TYPE, ContainerSource } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 
 export const getFormattedResourceType = (value: string, t: (key: string) => string): string => {
@@ -73,6 +74,8 @@ export const sourceTypeFormatter = (value: string, t: (key: string) => string, v
       default:
         return t(SourceI18nKey.Endpoint);
     }
+  } else if (value === SOURCE_TYPE.MCP_REGISTRY) {
+    return t(SourceI18nKey.McpRegistry);
   } else if (value === SOURCE_TYPE.RUNNER) {
     return t(SourceI18nKey.InterceptorTemplate);
   } else {
@@ -94,11 +97,47 @@ export const sourceValueFormatter = (
     return data.source.runnerName;
   } else if (data.source.$type === SOURCE_TYPE.CONTAINER) {
     return data.source.containerId;
+  } else if (data.source.$type === SOURCE_TYPE.MCP_REGISTRY) {
+    return data.source.serverVersion
+      ? `${data.source.serverName} (${data.source.serverVersion})`
+      : data.source.serverName;
   } else if (data.source.$type === SOURCE_TYPE.ENDPOINTS) {
     return view === ApplicationRoute.Adapters ? data.baseEndpoint : data.endpoint;
   } else {
     return value;
   }
+};
+
+export const containerSourceTypeLabel = (
+  source: ContainerSource | undefined,
+  t: (key: string, options?: Record<string, string>) => string,
+  type: string,
+): string => {
+  if (source?.externalRegistryRef) {
+    return t(SourceI18nKey.McpRegistry);
+  }
+  switch (source?.$type) {
+    case CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE:
+      return t(SourceI18nKey.InternalImage, { type });
+    case CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE:
+      return t(SourceI18nKey.DockerImageReference);
+    default:
+      return source?.$type || '';
+  }
+};
+
+export const containerSourceNameLabel = (source: ContainerSource | undefined): string => {
+  if (source?.externalRegistryRef) {
+    const ref = source.externalRegistryRef;
+    return ref.version ? `${ref.packageName} (${ref.version})` : ref.packageName;
+  }
+  if (source?.$type === CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE) {
+    return source.imageDefinitionId || '';
+  }
+  if (source?.$type === CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE) {
+    return source.imageReference || '';
+  }
+  return '';
 };
 
 export const formatRequired = (value: string, t: (stringToTranslate: string) => string) => {

@@ -161,11 +161,10 @@ const toDeploymentGridData = (item: ExportComponentInfo): EntitiesGridData => ({
 });
 
 const toImageGridData = (item: ExportComponentInfo): EntitiesGridData => ({
-  id: item.id,
-  name: item.displayName ?? item.id,
+  name: item.id,
+  displayName: item.displayName ?? '',
   description: item.description ?? '',
   version: item.version ?? undefined,
-  type: item.type,
 });
 
 export const getDeploymentExportPreviewTabs = (

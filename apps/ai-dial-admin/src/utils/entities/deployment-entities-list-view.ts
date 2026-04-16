@@ -16,7 +16,8 @@ export const getContainersForEntitiesGrid = (
 export const getImagesForEntitiesGrid = (images: Image[] | null | undefined): EntitiesGridData[] => {
   return [...(images || [])].map((image) => ({
     ...image,
-    name: image.name,
+    displayName: image.name,
+    name: image.id,
     type: DeploymentExportEntityType.IMAGE,
   }));
 };

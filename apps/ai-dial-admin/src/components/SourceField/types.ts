@@ -3,6 +3,7 @@ export enum SOURCE_TYPE {
   CONTAINER = 'container',
   RUNNER = 'runner',
   ADAPTER = 'adapter',
+  MCP_REGISTRY = 'mcp-registry',
 }
 
 export interface SOURCE_FIELD {
@@ -12,4 +13,6 @@ export interface SOURCE_FIELD {
   containerId?: string;
   completionEndpointPath?: string;
   configurationEndpointPath?: string;
+  serverName?: string;
+  serverVersion?: string;
 }

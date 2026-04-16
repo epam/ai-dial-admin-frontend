@@ -207,6 +207,7 @@ const PublicationView = <T extends Publication>({ view, publication, application
               selectedToolset={toolset}
               oAuthCode={oAuthCode}
               publicationName={publication.requestName}
+              publicationPath={publication.path}
               view={ApplicationRoute.ToolsetPublications}
               signInToolset={signInToolset}
               signOutToolset={signOutToolset}

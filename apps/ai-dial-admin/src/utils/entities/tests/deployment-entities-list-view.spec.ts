@@ -64,23 +64,26 @@ describe('Utils :: getContainersForEntitiesGrid', () => {
 });
 
 describe('Utils :: getImagesForEntitiesGrid', () => {
-  test('maps images to grid data with IMAGE type', () => {
-    const images = [mockImage({ name: 'img-a' }), mockImage({ name: 'img-b' })];
+  test('maps images to grid data with IMAGE type and remaps name/id for shared columns', () => {
+    const images = [mockImage({ id: 'id-a', name: 'img-a' }), mockImage({ id: 'id-b', name: 'img-b' })];
     const result = getImagesForEntitiesGrid(images);
 
     expect(result).toHaveLength(2);
-    expect(result[0].name).toBe('img-a');
+    expect(result[0].name).toBe('id-a');
+    expect(result[0].displayName).toBe('img-a');
     expect(result[0].type).toBe(DeploymentExportEntityType.IMAGE);
-    expect(result[1].name).toBe('img-b');
+    expect(result[1].name).toBe('id-b');
+    expect(result[1].displayName).toBe('img-b');
     expect(result[1].type).toBe(DeploymentExportEntityType.IMAGE);
   });
 
-  test('preserves image properties', () => {
-    const image = mockImage({ id: 'my-id', displayName: 'My Image', version: '2.0' });
+  test('preserves image properties and maps name to displayName', () => {
+    const image = mockImage({ id: 'my-id', name: 'my-image', version: '2.0' });
     const result = getImagesForEntitiesGrid([image]);
 
     expect((result[0] as any).id).toBe('my-id');
-    expect(result[0].displayName).toBe('My Image');
+    expect(result[0].name).toBe('my-id');
+    expect(result[0].displayName).toBe('my-image');
     expect((result[0] as any).version).toBe('2.0');
   });
 

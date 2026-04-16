@@ -14,12 +14,15 @@ import { createPortal } from 'react-dom';
 import McpRegistryModal from '@/src/components/Deployments/Modals/McpRegistryModal/McpRegistryModal';
 import classNames from 'classnames';
 import { McpRegistryFetchFn, McpServer, McpServerResponse } from '@/src/types/deployments/mcp-registry';
+import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
   fetchServers: McpRegistryFetchFn;
   onServerSelect: (server: McpServer) => void;
   serverName: string;
   onServerNameChange: (name: string) => void;
+  preselectedServer?: Pick<McpServer, 'name' | 'version'>;
+  view: ApplicationRoute;
   isModal?: boolean;
   disabled?: boolean;
 }
@@ -28,14 +31,15 @@ const McpServerNameField: FC<Props> = ({
   fetchServers,
   onServerSelect,
   serverName,
+  preselectedServer,
+  view,
   onServerNameChange,
   isModal,
   disabled,
 }) => {
   const t = useI18n();
   const { dispatch, resetCounter } = useSaveValidationContext();
-  const [serverOptions, setServerOptions] = useState<{ value: string; label: string }[]>([]);
-  const [serverCache, setServerCache] = useState<Map<string, McpServer>>(new Map());
+  const [serverOptions, setServerOptions] = useState<{ value: string; label: string; description?: string }[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [serverNameError, setServerNameError] = useState<FieldError | null>(null);
@@ -72,7 +76,6 @@ const McpServerNameField: FC<Props> = ({
           return;
         }
 
-        setServerCache((prev) => new Map(prev).set(value, exactMatch));
         applyServer(exactMatch);
       });
     },
@@ -89,17 +92,12 @@ const McpServerNameField: FC<Props> = ({
         return;
       }
 
-      const cached = serverCache.get(value || '');
-      if (cached) {
-        applyServer(cached);
-      } else {
-        setServerNameError(null);
-        dispatch({ type: ValidationActionType.SetField, field: 'mcpServerName', isValid: false });
-        onServerNameChange(value || '');
-        validateAndApplyServer(value || '');
-      }
+      setServerNameError(null);
+      dispatch({ type: ValidationActionType.SetField, field: 'mcpServerName', isValid: false });
+      onServerNameChange(value || '');
+      validateAndApplyServer(value || '');
     },
-    [dispatch, t, serverCache, applyServer, validateAndApplyServer, onServerNameChange],
+    [dispatch, t, validateAndApplyServer, onServerNameChange],
   );
 
   const onServerNameType = useMemo(
@@ -113,12 +111,7 @@ const McpServerNameField: FC<Props> = ({
           if (success) {
             const servers = (response.servers || []).map((s: McpServerResponse) => s.server) as McpServer[];
             if (servers.length) {
-              setServerOptions(servers.map((s) => ({ value: s.name, label: s.name })));
-              setServerCache((prev) => {
-                const next = new Map(prev);
-                servers.forEach((s) => next.set(s.name, s));
-                return next;
-              });
+              setServerOptions(servers.map((s) => ({ value: s.name, label: s.name, description: s.version })));
             }
           }
         });
@@ -156,7 +149,9 @@ const McpServerNameField: FC<Props> = ({
           placeholder={t(EntityPlaceholdersI18nKey.McpServerName)}
           inlineSearch={true}
           value={serverName}
-          customSelectedValue={serverName}
+          customSelectedValue={
+            serverName && preselectedServer?.version ? `${serverName} (${preselectedServer.version})` : serverName
+          }
           onChange={(value) => onChangeServerName(value as string)}
           onInlineQueryChange={(value) => onServerNameType(value)}
           options={serverOptions}
@@ -179,6 +174,8 @@ const McpServerNameField: FC<Props> = ({
             onClose={handleModalClose}
             onApply={(server) => applyServer(server)}
             fetchServers={fetchServers}
+            preselectedServer={preselectedServer}
+            view={view}
           />,
           document.body,
         )}

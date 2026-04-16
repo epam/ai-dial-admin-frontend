@@ -11,19 +11,21 @@ import { useI18n } from '@/src/locales/client';
 import { FilterDto } from '@/src/models/request';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 import { McpRegistryFetchFn, McpServer, McpServerResponse } from '@/src/types/deployments/mcp-registry';
+import { ApplicationRoute } from '@/src/types/routes';
 
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import ListEntities from '@/src/components/ListView/List';
 
 interface Props {
-  selectedServer?: McpServer;
+  selectedServer?: Pick<McpServer, 'name' | 'version'>;
   onSelect: (server: McpServer) => void;
   fetchServers: McpRegistryFetchFn;
+  view: ApplicationRoute;
 }
 
 const REGISTRY_META_KEY = 'io.modelcontextprotocol.registry/official';
 
-const McpRegistryGrid: FC<Props> = ({ selectedServer, onSelect, fetchServers }) => {
+const McpRegistryGrid: FC<Props> = ({ selectedServer, onSelect, fetchServers, view }) => {
   const t = useI18n();
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const fetchServersRef = useRef(fetchServers);
@@ -36,7 +38,8 @@ const McpRegistryGrid: FC<Props> = ({ selectedServer, onSelect, fetchServers }) 
       ...SINGLE_ROW_SELECTION.selectionColumnDef,
       cellRenderer: (data: { data?: McpServer }) => {
         if (!data.data) return null;
-        return <RadioButtonRenderer inputId={data.data.name} isChecked={data.data.name === selectedServer?.name} />;
+        const isChecked = data.data.name === selectedServer?.name && data.data.version === selectedServer?.version;
+        return <RadioButtonRenderer inputId={`${data.data.name}@${data.data.version}`} isChecked={isChecked} />;
       },
     },
     onRowSelected: (event) => {
@@ -104,7 +107,7 @@ const McpRegistryGrid: FC<Props> = ({ selectedServer, onSelect, fetchServers }) 
       columnDefs={MCP_REGISTRY_COLUMNS}
       listLabel={t(ContainersI18nKey.McpServers)}
       emptyDataProps={{ title: t(ContainersI18nKey.McpServers) }}
-      storageKey="mcp-registry"
+      storageKey={`mcp-registry-${view}`}
       additionalGridOptions={gridOptions}
       onGridReady={onGridReady}
       isEmbedToModal

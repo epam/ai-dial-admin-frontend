@@ -61,6 +61,7 @@ const nextConfig = {
     ];
   },
   nx: {},
+  transpilePackages: ['@epam/ai-dial-ui-kit'],
   experimental: {
     serverActions: {
       bodySizeLimit: '64mb',
