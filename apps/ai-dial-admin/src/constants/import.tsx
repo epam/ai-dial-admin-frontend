@@ -59,11 +59,9 @@ export const IMPORT_FILE_TYPES = (
 ): RadioButtonWithContent[] => {
   const buttons = [ARCHIVE_IMPORT_TYPE(t)];
 
-  if (isAssetWithVersion(route)) {
-    return [...buttons, DIAL_JSON_IMPORT_TYPE(t)];
-  }
-  if (route === ApplicationRoute.Files) {
+  if (isAssetWithVersion(route) || route === ApplicationRoute.Files) {
     return [...buttons, SEPARATE_FILES_IMPORT_TYPE(t)];
   }
+
   return buttons;
 };
