@@ -1,9 +1,16 @@
 import { describe, expect, test, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { Container } from '@/src/models/deployments/containers';
+import { Image } from '@/src/models/deployments/images';
 import { CONTAINER_SOURCE_TYPE, CONTAINER_STATUS, CONTAINER_TYPE } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 import ContainerSource from '@/src/components/Deployments/Fields/ContainerSource';
+
+vi.mock('@/src/components/Deployments/Fields/ContainerSource/InternalImageField', () => ({
+  default: ({ image }: { image?: Image }) => (
+    <div aria-label="internal-image-field">internal-image:{image?.name ?? 'none'}</div>
+  ),
+}));
 
 describe('ContainerSource', () => {
   const baseContainer: Container = {
@@ -61,5 +68,24 @@ describe('ContainerSource', () => {
     render(<ContainerSource container={container} setContainer={vi.fn()} route={ApplicationRoute.ModelServings} />);
 
     expect(screen.getByRole('textbox')).toBeTruthy();
+  });
+
+  test('renders InternalImageField for INTERNAL_IMAGE source and forwards image prop', () => {
+    const image = { id: 'img-1', name: 'Github', version: '1.2.1' } as Image;
+    const container: Container = {
+      ...baseContainer,
+      source: { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE, imageDefinitionId: 'img-1' },
+    };
+
+    render(
+      <ContainerSource
+        container={container}
+        setContainer={vi.fn()}
+        image={image}
+        route={ApplicationRoute.McpContainers}
+      />,
+    );
+
+    expect(screen.getByLabelText('internal-image-field')).toHaveTextContent('internal-image:Github');
   });
 });

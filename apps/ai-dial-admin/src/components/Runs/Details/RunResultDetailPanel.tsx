@@ -62,7 +62,7 @@ const RunResultDetailPanel: FC<Props> = ({ result, grafanaExploreUrl, onClose })
             httpCode={result.responseStatusCode}
             durationMs={result.executionInfo?.durationMs}
             timestamp={result.executionInfo?.startedAt}
-            timestampLabel="Started"
+            timestampLabel={t(RunsI18nKey.StartedLabel)}
             grafanaUrl={grafanaUrl}
           />
           {testCaseEntries.length > 0 && (
