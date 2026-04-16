@@ -15,7 +15,9 @@ import {
   MODEL_FORMAT,
 } from '@/src/types/deployments/containers';
 import { DEFAULT_SCALING, DEFAULT_STRATEGY, SERVING_SCALING } from '@/src/constants/deployments/containers';
+import { SourceI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getTranslatedType } from '@/src/utils/deployments/entity';
 
 export const normalizeContainerPorts = (ports?: number[]): number[] => {
   return [...(ports ?? [])].slice().sort((a, b) => a - b);
@@ -149,6 +151,25 @@ export const getContainerTemplate = (
     ...(type === CONTAINER_TYPE.MCP && { transport: CONTAINER_TRANSPORT.HTTP }),
     ...(type === CONTAINER_TYPE.HF && { modelFormat: MODEL_FORMAT.HF }),
   };
+};
+
+export const getContainerSourceTypeLabel = (
+  source: ContainerSource,
+  route: ApplicationRoute,
+  t: (key: string, params?: Record<string, string>) => string,
+): string => {
+  switch (source.$type) {
+    case CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE:
+      return t(SourceI18nKey.InternalImage, { type: getTranslatedType(route, t) });
+    case CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE:
+      return t(SourceI18nKey.DockerImage);
+    case CONTAINER_SOURCE_TYPE.NGC_REGISTRY:
+      return t(SourceI18nKey.NgcRegistry);
+    case CONTAINER_SOURCE_TYPE.HUGGINGFACE:
+      return t(SourceI18nKey.HuggingFace);
+    default:
+      return '';
+  }
 };
 
 export const isEditDisabled = (container: Container): boolean => {
