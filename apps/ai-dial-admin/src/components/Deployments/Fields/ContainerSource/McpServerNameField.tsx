@@ -149,9 +149,7 @@ const McpServerNameField: FC<Props> = ({
           placeholder={t(EntityPlaceholdersI18nKey.McpServerName)}
           inlineSearch={true}
           value={serverName}
-          customSelectedValue={
-            serverName && preselectedServer?.version ? `${serverName} (${preselectedServer.version})` : serverName
-          }
+          customSelectedValue={serverName}
           onChange={(value) => onChangeServerName(value as string)}
           onInlineQueryChange={(value) => onServerNameType(value)}
           options={serverOptions}
