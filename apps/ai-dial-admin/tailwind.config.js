@@ -159,6 +159,15 @@ module.exports = {
       fontSize: {
         xxs: '10px',
       },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+      },
+      animation: {
+        fadeIn: 'fadeIn 100ms ease-in',
+      },
       typography: {
         DEFAULT: {
           css: {

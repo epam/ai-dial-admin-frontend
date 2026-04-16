@@ -96,6 +96,15 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
   useEffect(() => {
     if (originalApplication.mcp?.endpoint) {
       setTabs(getApplicationTabs(t).toSpliced(1, 0, toolsTab(t)));
+    } else if (originalApplication?.customAppSchemaId) {
+      const selectedAppRunner = props.applicationSchemes.find(
+        (scheme) => scheme?.$id === originalApplication?.customAppSchemaId,
+      );
+      if (selectedAppRunner && selectedAppRunner?.['dial:applicationTypeMcp']) {
+        setTabs(getApplicationTabs(t).toSpliced(1, 0, toolsTab(t)));
+      } else {
+        setTabs(getApplicationTabs(t));
+      }
     } else {
       setTabs(getApplicationTabs(t));
     }
