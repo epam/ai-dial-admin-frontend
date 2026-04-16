@@ -1,10 +1,19 @@
 'use client';
 
-import { GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
+import {
+  CellClickedEvent,
+  ColDef,
+  GridApi,
+  GridOptions,
+  GridReadyEvent,
+  IDatasource,
+  IGetRowsParams,
+} from 'ag-grid-community';
+import { IconFileDescription } from '@tabler/icons-react';
 import { isEqual } from 'lodash';
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { infiniteGridOptions, SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
+import { infiniteGridOptions, SINGLE_ROW_SELECTION, UTILITY_COLUMN } from '@/src/constants/ag-grid';
 import { ContainersI18nKey } from '@/src/constants/i18n';
 import { MCP_REGISTRY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { useI18n } from '@/src/locales/client';
@@ -21,11 +30,13 @@ interface Props {
   onSelect: (server: McpServer) => void;
   fetchServers: McpRegistryFetchFn;
   view: ApplicationRoute;
+  infoPanel?: ReactNode;
+  onShowDetails?: (server: McpServer) => void;
 }
 
 const REGISTRY_META_KEY = 'io.modelcontextprotocol.registry/official';
 
-const McpRegistryGrid: FC<Props> = ({ selectedServer, onSelect, fetchServers, view }) => {
+const McpRegistryGrid: FC<Props> = ({ selectedServer, onSelect, fetchServers, view, infoPanel, onShowDetails }) => {
   const t = useI18n();
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const fetchServersRef = useRef(fetchServers);
@@ -47,7 +58,27 @@ const McpRegistryGrid: FC<Props> = ({ selectedServer, onSelect, fetchServers, vi
         onSelect(event.data);
       }
     },
+    onCellClicked: (event: CellClickedEvent) => {
+      if (event.colDef.field === 'detailsColumn' && event.data) {
+        onShowDetails?.(event.data);
+      }
+    },
   };
+
+  const columnDefs = useMemo<ColDef[]>(
+    () => [
+      ...MCP_REGISTRY_COLUMNS,
+      {
+        ...UTILITY_COLUMN,
+        field: 'detailsColumn',
+        cellRenderer: () => <IconFileDescription className="text-secondary" />,
+        cellClass: 'relative',
+        pinned: 'right',
+        lockPinned: true,
+      } as ColDef,
+    ],
+    [],
+  );
 
   const gridDataSource: IDatasource = useMemo(() => {
     let nextCursor = '';
@@ -104,12 +135,13 @@ const McpRegistryGrid: FC<Props> = ({ selectedServer, onSelect, fetchServers, vi
 
   return (
     <ListEntities
-      columnDefs={MCP_REGISTRY_COLUMNS}
+      columnDefs={columnDefs}
       listLabel={t(ContainersI18nKey.McpServers)}
       emptyDataProps={{ title: t(ContainersI18nKey.McpServers) }}
       storageKey={`mcp-registry-${view}`}
       additionalGridOptions={gridOptions}
       onGridReady={onGridReady}
+      infoPanel={infoPanel}
       isEmbedToModal
       isEnableColumnPanel
     />

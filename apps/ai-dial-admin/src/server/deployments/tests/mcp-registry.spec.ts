@@ -2,7 +2,11 @@ import { describe, test, expect, vi } from 'vitest';
 
 import createFetchMock from 'vitest-fetch-mock';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { MCP_REGISTRY_SERVERS_LIST, McpRegistryApi } from '@/src/server/deployments/mcp-registry';
+import {
+  MCP_REGISTRY_SERVER_VERSIONS,
+  MCP_REGISTRY_SERVERS_LIST,
+  McpRegistryApi,
+} from '@/src/server/deployments/mcp-registry';
 import {
   CONTAINER_MCP_REGISTRY_FILTER,
   IMAGE_MCP_REGISTRY_FILTER,
@@ -151,6 +155,21 @@ describe('McpRegistryApi', () => {
         body: JSON.stringify({
           limit: 100,
           filter: TOOLSET_MCP_REGISTRY_FILTER,
+        }),
+      }),
+    );
+  });
+
+  test('getMcpServerVersion sends POST with serverName and version', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ servers: [], metadata: {} }));
+    await instance.getMcpServerVersion('ai.aliengiraffe/spotdb', 'v0.1.0', TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(MCP_REGISTRY_SERVER_VERSIONS),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          serverName: 'ai.aliengiraffe/spotdb',
+          version: 'v0.1.0',
         }),
       }),
     );

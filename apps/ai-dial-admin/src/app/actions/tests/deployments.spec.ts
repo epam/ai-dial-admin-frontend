@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { containersApi, huggingFaceApi, imagesApi, topicApi, whitelistApi } from '@/src/app/api/api';
+import { containersApi, huggingFaceApi, imagesApi, mcpRegistryApi, topicApi, whitelistApi } from '@/src/app/api/api';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
   createContainer,
@@ -34,6 +34,7 @@ import {
   getGlobalWhitelist,
   updateGlobalWhitelist,
   getHuggingFaceModels,
+  getMcpServerVersion,
   getModelDetails,
 } from '../deployments';
 import { ResourceType } from '@/src/types/resource-type';
@@ -415,6 +416,45 @@ describe('Deployments actions', () => {
       expect(getUserToken).toHaveBeenCalled();
       expect(huggingFaceApi.getModelDetails).toHaveBeenCalledWith('test', 'sha', TOKEN_MOCK);
       expect(result).toBe(mockResponse);
+    });
+  });
+
+  describe('MCP Registry actions', () => {
+    test('getMcpServerVersion delegates to mcpRegistryApi and unwraps the single-item list', async () => {
+      const server = { name: 'ai.aliengiraffe/spotdb', description: 'desc', version: 'v0.1.0' };
+      const singleItem = { server, _meta: { published: true } };
+      (mcpRegistryApi.getMcpServerVersion as any).mockResolvedValue({
+        success: true,
+        response: { servers: [singleItem], metadata: { count: 1 } },
+      });
+
+      const result = await getMcpServerVersion('ai.aliengiraffe/spotdb', 'v0.1.0');
+
+      expect(getUserToken).toHaveBeenCalled();
+      expect(mcpRegistryApi.getMcpServerVersion).toHaveBeenCalledWith('ai.aliengiraffe/spotdb', 'v0.1.0', TOKEN_MOCK);
+      expect(result.success).toBe(true);
+      expect(result.response).toEqual(singleItem);
+    });
+
+    test('getMcpServerVersion returns null response when upstream list is empty', async () => {
+      (mcpRegistryApi.getMcpServerVersion as any).mockResolvedValue({
+        success: true,
+        response: { servers: [], metadata: { count: 0 } },
+      });
+
+      const result = await getMcpServerVersion('missing/server', 'v0.0.1');
+
+      expect(result.success).toBe(true);
+      expect(result.response).toBeNull();
+    });
+
+    test('getMcpServerVersion propagates upstream failure unchanged', async () => {
+      const failed = { success: false, errorHeader: 'Not found', errorMessage: 'version not found' };
+      (mcpRegistryApi.getMcpServerVersion as any).mockResolvedValue(failed);
+
+      const result = await getMcpServerVersion('missing/server', 'v0.0.1');
+
+      expect(result).toEqual(failed);
     });
   });
 });

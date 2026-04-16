@@ -10,6 +10,7 @@ import {
 import { McpServersRequestDto } from '@/src/types/deployments/mcp-registry';
 
 export const MCP_REGISTRY_SERVERS_LIST = `${API}/mcp-registry/servers/list`;
+export const MCP_REGISTRY_SERVER_VERSIONS = `${API}/mcp-registry/servers/versions`;
 
 export class McpRegistryApi extends BaseApi {
   getContainerMcpServers(
@@ -52,5 +53,9 @@ export class McpRegistryApi extends BaseApi {
     };
 
     return this.postAction(MCP_REGISTRY_SERVERS_LIST, body, token);
+  }
+
+  getMcpServerVersion(serverName: string, version: string, token: Token): Promise<ServerActionResponse> {
+    return this.postAction(MCP_REGISTRY_SERVER_VERSIONS, { serverName, version }, token);
   }
 }

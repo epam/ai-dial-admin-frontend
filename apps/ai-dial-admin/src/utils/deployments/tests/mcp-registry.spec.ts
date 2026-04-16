@@ -1,6 +1,12 @@
 import { describe, expect, test } from 'vitest';
-import { getPreferredOciPackage, getPreferredRemote, mapRemoteTransportType, mapTransportType } from '../mcp-registry';
-import { McpServer } from '@/src/types/deployments/mcp-registry';
+import {
+  getPreferredOciPackage,
+  getPreferredRemote,
+  mapRemoteTransportType,
+  mapTransportType,
+  unwrapSingleServerResponse,
+} from '../mcp-registry';
+import { McpServer, McpServerResponse } from '@/src/types/deployments/mcp-registry';
 import { CONTAINER_TRANSPORT } from '@/src/types/deployments/containers';
 import { ToolsetTransport } from '@/src/types/toolset';
 
@@ -116,5 +122,45 @@ describe('mapRemoteTransportType', () => {
 
   test('returns undefined for unknown type', () => {
     expect(mapRemoteTransportType('grpc')).toBeUndefined();
+  });
+});
+
+describe('unwrapSingleServerResponse', () => {
+  const singleItem: McpServerResponse = {
+    server: makeServer({ name: 'ai.aliengiraffe/spotdb', version: 'v0.1.0' }),
+    _meta: { published: true },
+  };
+
+  test('returns the first server from a single-item list', () => {
+    const result = unwrapSingleServerResponse({
+      success: true,
+      response: { servers: [singleItem], metadata: { count: 1 } },
+    });
+    expect(result.success).toBe(true);
+    expect(result.response).toEqual(singleItem);
+  });
+
+  test('returns null when servers array is empty', () => {
+    const result = unwrapSingleServerResponse({
+      success: true,
+      response: { servers: [], metadata: { count: 0 } },
+    });
+    expect(result.success).toBe(true);
+    expect(result.response).toBeNull();
+  });
+
+  test('returns null when response is missing', () => {
+    const result = unwrapSingleServerResponse({ success: true });
+    expect(result.success).toBe(true);
+    expect(result.response).toBeNull();
+  });
+
+  test('passes through failed upstream response unchanged', () => {
+    const failed = {
+      success: false,
+      errorHeader: 'Not found',
+      errorMessage: 'Server version not found',
+    };
+    expect(unwrapSingleServerResponse(failed)).toEqual(failed);
   });
 });
