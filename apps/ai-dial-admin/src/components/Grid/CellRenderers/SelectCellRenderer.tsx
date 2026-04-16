@@ -4,6 +4,7 @@ import { ICellRendererParams } from 'ag-grid-community';
 
 import { STRINGS_DELIMITER } from '@/src/constants/prompt';
 import { getItems } from './utils';
+import { ReactNode, MouseEvent } from 'react';
 
 export interface SelectCellRendererParams extends ICellRendererParams {
   isMulti?: boolean;
@@ -11,6 +12,11 @@ export interface SelectCellRendererParams extends ICellRendererParams {
   items?: SelectOption[];
   getItems?: (data: unknown) => SelectOption[];
   onChange: (value: string | string[], data: unknown, column?: string, index?: number, isSelected?: boolean) => void;
+  customMultiSelectTagsRenderer?: (
+    options: SelectOption[],
+    selectedValues: string[],
+    handleRemoveTag: (event: MouseEvent<HTMLButtonElement>, val: string) => void,
+  ) => ReactNode;
 }
 
 const SelectCellRenderer = (params: SelectCellRendererParams) => {
@@ -50,6 +56,7 @@ const SelectCellRenderer = (params: SelectCellRendererParams) => {
         value={params.isMulti ? multipleValues : value}
         multiple={params.isMulti}
         onChange={(value) => onChangeValue(value as string)}
+        customMultiSelectTagsRenderer={params.customMultiSelectTagsRenderer}
       />
     </div>
   );
