@@ -1,20 +1,22 @@
 'use client';
 
-import { ColDef, RowClickedEvent } from 'ag-grid-community';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { ColDef, GridApi, GridReadyEvent, RowClassRules, RowClickedEvent } from 'ag-grid-community';
+import { FC, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { DialLoader } from '@epam/ai-dial-ui-kit';
 
-import { getMetricSnapshots, getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
+import { getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
 import ColorScale from '@/src/components/Common/ColorScale/ColorScale';
 import GridView from '@/src/components/Grid/GridView/GridView';
-import RunMetricDetailPanel from '@/src/components/Runs/Details/RunMetricDetailPanel';
+import AnalyticsBottomDrawer from '@/src/components/Runs/Details/BottomDrawer/AnalyticsBottomDrawer';
+import { DetailMode } from '@/src/components/Runs/Details/BottomDrawer/models';
+import { useDrawerPanel } from '@/src/components/Runs/Details/BottomDrawer/useDrawerPanel';
 import { EntitiesI18nKey, RunsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
-import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
-import { MetricBindings } from '@/src/models/evaluation/metric';
 import { AnalyticsResult, Run } from '@/src/models/evaluation/run';
-import { getAnalyticsColumns, RESULT_FILTERS, RUN_FILTER, snapshotsToBindingsMap } from './utils';
+
+import { useDetailMode } from './use-detail-mode';
+import { getAnalyticsColumns, RESULT_FILTERS } from './utils';
 
 interface Props {
   run: Run;
@@ -22,29 +24,24 @@ interface Props {
 
 const AnalyticsTab: FC<Props> = ({ run }) => {
   const t = useI18n();
-  const { sidebar } = useAppContext();
+  const detailMode = useDetailMode();
+  const drawerPanel = useDrawerPanel();
 
+  const gridApiRef = useRef<GridApi | null>(null);
   const [results, setResults] = useState<AnalyticsResult[] | null>(null);
   const [colDefs, setColDefs] = useState<ColDef[]>(() => getAnalyticsColumns([]));
-  const [selectedResultId, setSelectedResultId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [metricBindings, setMetricBindings] = useState<Record<string, MetricBindings>>({});
 
   useEffect(() => {
     if (!run?.id) return;
 
     if (!isLoading && !results) {
       setIsLoading(true);
-      Promise.allSettled([getTestCaseRunResults(RESULT_FILTERS(run)), getMetricSnapshots(RUN_FILTER(run))])
-        .then(([resultsSettled, snapshotsSettled]) => {
-          if (resultsSettled.status === 'fulfilled') {
-            const content = resultsSettled.value?.content || [];
-            setResults(content);
-            setColDefs(getAnalyticsColumns(content, t(RunsI18nKey.MetricFailedText)));
-          }
-          if (snapshotsSettled.status === 'fulfilled') {
-            setMetricBindings(snapshotsToBindingsMap(snapshotsSettled.value || []));
-          }
+      getTestCaseRunResults(RESULT_FILTERS(run))
+        .then((resultsSettled) => {
+          const content = resultsSettled?.content || [];
+          setResults(content);
+          setColDefs(getAnalyticsColumns(content, t(RunsI18nKey.MetricFailedText)));
         })
         .finally(() => {
           setIsLoading(false);
@@ -52,31 +49,52 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
     }
   }, [isLoading, results, run, t]);
 
+  // Clear pinned if missing from results
+  const resultIds = useMemo(() => (results ?? []).map((r) => r.id!).filter(Boolean), [results]);
+  useEffect(() => {
+    if (resultIds.length > 0) {
+      drawerPanel.clearPinIfMissing(resultIds);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resultIds, drawerPanel.clearPinIfMissing]);
+
   const onRowClicked = useCallback(
     (event: RowClickedEvent) => {
-      if (event.data && selectedResultId !== event.data.id) {
-        setSelectedResultId(event.data.id);
-        sidebar.showSidebar(
-          <RunMetricDetailPanel
-            resultId={event.data.id}
-            onClose={sidebar.closeSidebar}
-            grafanaTraceUrl={run.grafanaExploreUrl}
-            metricBindings={metricBindings}
-          />,
-          'w-[750px]',
-        );
-      } else {
-        setSelectedResultId(null);
-        sidebar.closeSidebar();
-      }
+      if (!event.data) return;
+      detailMode.openDetail(event.data.id);
     },
-    [metricBindings, run.grafanaExploreUrl, selectedResultId, sidebar],
+    [detailMode],
   );
 
-  useEffect(() => {
-    return () => sidebar.closeSidebar();
+  // Sync drawer open/close with detailMode — useLayoutEffect ensures activeId is set
+  // before the drawer's useEffect (fetch) fires on mount.
+  useLayoutEffect(() => {
+    if (detailMode.drawerOpen && detailMode.selectedResultId) {
+      drawerPanel.open(detailMode.selectedResultId);
+    } else if (!detailMode.drawerOpen && drawerPanel.isOpen) {
+      drawerPanel.close();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [detailMode.drawerOpen, detailMode.selectedResultId]);
+
+  const selectedResultIdRef = useRef(detailMode.selectedResultId);
+  selectedResultIdRef.current = detailMode.selectedResultId;
+
+  const rowClassRules = useMemo<RowClassRules>(
+    () => ({
+      'ag-active-detail-row': (params) => params.data?.id === selectedResultIdRef.current,
+    }),
+    [],
+  );
+
+  const onGridReady = useCallback((event: GridReadyEvent) => {
+    gridApiRef.current = event.api;
   }, []);
+
+  // Redraw rows when selected result changes so rowClassRules re-evaluate
+  useEffect(() => {
+    gridApiRef.current?.redrawRows();
+  }, [detailMode.selectedResultId]);
 
   return (
     <div className="flex flex-col gap-4 h-full min-h-0">
@@ -88,14 +106,25 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
           <GridView
             columnDefs={colDefs}
             rowData={results}
+            onGridReady={onGridReady}
             additionalGridOptions={{
               defaultColDef: { filter: false, floatingFilter: false },
               onRowClicked,
+              rowClassRules,
             }}
             emptyDataProps={{ title: t(EntitiesI18nKey.NoResults) }}
           />
         )}
       </div>
+      {detailMode.detailMode === DetailMode.Drawer && detailMode.drawerOpen && (
+        <AnalyticsBottomDrawer
+          drawerPanel={drawerPanel}
+          pendingFocus={detailMode.pendingFocus}
+          clearPendingFocus={detailMode.clearPendingFocus}
+          onClose={detailMode.closeDetail}
+          onSwitchToSidebar={detailMode.switchToSidebar}
+        />
+      )}
       <ColorScale />
     </div>
   );

@@ -7,15 +7,16 @@ import { MetricBindings, MetricSnapshot } from '@/src/models/evaluation/metric';
 import { AnalyticsResult, ExtractionResult, Run } from '@/src/models/evaluation/run';
 import { FilterDto } from '@/src/models/request';
 import { FilterOperatorDto } from '@/src/types/request';
+
 import { MetricGroup } from './models';
 export type { MetricGroup } from './models';
 
-export const RUN_FILTER = (run: Run): FilterDto[] => [
-  { column: 'runId', operator: FilterOperatorDto.EQUALS, value: run.id || '' },
+export const RUN_FILTER = (id?: string | null): FilterDto[] => [
+  { column: 'runId', operator: FilterOperatorDto.EQUALS, value: id || '' },
 ];
 
 export const RESULT_FILTERS = (run: Run): FilterDto[] => [
-  ...RUN_FILTER(run),
+  ...RUN_FILTER(run.id),
   {
     column: 'suiteId',
     operator: FilterOperatorDto.EQUALS,
