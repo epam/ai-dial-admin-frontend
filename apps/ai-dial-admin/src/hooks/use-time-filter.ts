@@ -1,7 +1,8 @@
 import { useCallback, useState } from 'react';
 
 import { DEFAULT_TIME_PERIOD } from '@/src/constants/global-time-filter';
-import { TimeFilterValue, TimeRange, isRangeIncludingToday, isTimeRange } from '@/src/models/time-range';
+import { TimeFilterValue, TimeRange } from '@/src/models/time-range';
+import { isRangeIncludingToday, isTimeRange } from '@/src/utils/time-filter/time-range';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
 
 interface UseTimeFilterOptions {
