@@ -53,7 +53,7 @@ const Authentication: FC<Props> = ({ disabled, view, toolset, onChange, ...props
         },
       });
     },
-    [onChange, toolset],
+    [dispatch, onChange, toolset],
   );
 
   return (
