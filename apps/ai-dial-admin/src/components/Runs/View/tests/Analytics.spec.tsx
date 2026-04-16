@@ -20,6 +20,7 @@ vi.mock('@/src/context/AppContext', () => ({
 }));
 
 vi.mock('@/src/app/[lang]/runs/actions', () => ({
+  getMetricSnapshots: vi.fn().mockResolvedValue([]),
   getTestCaseRunResults: vi.fn().mockResolvedValue({
     content: [
       {
