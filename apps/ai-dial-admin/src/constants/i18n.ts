@@ -993,6 +993,9 @@ export enum SourceI18nKey {
   McpRegistry = 'Source.McpRegistry',
   InternalImage = 'Source.InternalImage',
   DockerImageReference = 'Source.DockerImageReference',
+  DockerImage = 'Source.DockerImage',
+  NgcRegistry = 'Source.NgcRegistry',
+  HuggingFace = 'Source.HuggingFace',
 }
 
 export enum TypeI18nKey {

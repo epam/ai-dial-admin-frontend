@@ -14,8 +14,10 @@ interface Props {
   names: string[];
 }
 
-const Properties: FC<Props> = ({ container, setContainer, route, names }) => {
-  return <ContainerFields container={container} setContainer={setContainer} route={route} names={names} />;
+const Properties: FC<Props> = ({ container, image, setContainer, route, names }) => {
+  return (
+    <ContainerFields container={container} setContainer={setContainer} image={image} route={route} names={names} />
+  );
 };
 
 export default Properties;

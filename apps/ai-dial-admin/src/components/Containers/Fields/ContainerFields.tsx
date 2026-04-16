@@ -2,6 +2,7 @@ import React, { FC } from 'react';
 
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { Container } from '@/src/models/deployments/containers';
+import { Image } from '@/src/models/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
 import { CONTAINER_SOURCE_TYPE } from '@/src/types/deployments/containers';
 import { isEditDisabled } from '@/src/utils/deployments/containers';
@@ -18,12 +19,13 @@ import ContainerStartupProbe from '@/src/components/Deployments/Fields/Container
 interface Props {
   container: Container;
   setContainer: (container: Container) => void;
+  image?: Image;
   names?: string[];
   isModal?: boolean;
   route: ApplicationRoute;
 }
 
-const ContainerFields: FC<Props> = ({ container, setContainer, isModal, route, names }) => {
+const ContainerFields: FC<Props> = ({ container, setContainer, image, isModal, route, names }) => {
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const disabled = (isModal ? false : isReadOnlyAdmin) || isEditDisabled(container);
 
@@ -36,11 +38,11 @@ const ContainerFields: FC<Props> = ({ container, setContainer, isModal, route, n
         isModal={isModal}
         disabled={disabled}
       />
-      {(route === ApplicationRoute.ModelServings ||
-        container.source?.$type === CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE) && (
+      {(!isModal || container.source?.$type !== CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE) && (
         <ContainerSource
           container={container}
           setContainer={setContainer}
+          image={image}
           isModal={isModal}
           route={route}
           disabled={disabled}

@@ -1290,6 +1290,9 @@ export default {
     McpRegistry: 'MCP Registry',
     InternalImage: 'Internal {type} Image',
     DockerImageReference: 'Docker Image Reference',
+    DockerImage: 'Docker Image',
+    NgcRegistry: 'NGC Registry',
+    HuggingFace: 'Hugging Face',
   },
   Toolset: {
     Tools: 'Tools',
