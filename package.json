@@ -119,6 +119,7 @@
     "react-dom": "19.1.2",
     "minimatch": "10.2.3",
     "picomatch": "4.0.4",
+    "protobufjs": "8.0.1",
     "serialize-javascript": "7.0.5"
   },
   "engines": {
