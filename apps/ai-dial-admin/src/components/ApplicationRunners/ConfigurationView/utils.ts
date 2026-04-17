@@ -26,6 +26,7 @@ const fields: (keyof DialApplicationScheme)[] = [
   'dial:applicationTypeAssistantAttachmentsInRequestSupported',
   'dial:applicationTypeIconUrl',
   'dial:applicationTypeBucketCopy',
+  'dial:applicationTypeMcp',
 ];
 
 export const clearSchemeForEditor = (scheme: DialApplicationScheme) => {
