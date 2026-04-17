@@ -204,6 +204,33 @@ describe('Runs View :: getAnalyticsColumns', () => {
     expect(columns[1]).toEqual(expect.objectContaining({ headerName: 'EXECUTION' }));
     expect((columns[2] as any).children).toHaveLength(0);
   });
+
+  test('Should sort error metric cells last for ascending and first for descending', () => {
+    const results = [{ metricValues: { Accuracy: { score: 0.8 } } }] as any[];
+    const columns = getAnalyticsColumns(results as any);
+    const accuracyColumn = columns.find((column: any) => column.headerName === 'Accuracy') as any;
+    const scoreColumn = accuracyColumn.children.find((child: any) => child.field === 'score');
+
+    const missingMetricRow = { data: { metricValues: { Accuracy: { score: null } } } };
+    const validMetricRow = { data: { metricValues: { Accuracy: { score: 0.8 } } } };
+
+    expect(scoreColumn.comparator('—', 0.8, missingMetricRow, validMetricRow, false)).toBe(1);
+    expect(scoreColumn.comparator('—', 0.8, missingMetricRow, validMetricRow, true)).toBe(-1);
+  });
+
+  test('Should sort numeric metrics by value', () => {
+    const results = [{ metricValues: { Accuracy: { score: 0.8 } } }] as any[];
+    const columns = getAnalyticsColumns(results as any);
+    const accuracyColumn = columns.find((column: any) => column.headerName === 'Accuracy') as any;
+    const scoreColumn = accuracyColumn.children.find((child: any) => child.field === 'score');
+
+    const lowerValueRow = { data: { metricValues: { Accuracy: { score: 0.5 } } } };
+    const higherValueRow = { data: { metricValues: { Accuracy: { score: 0.9 } } } };
+
+    expect(scoreColumn.comparator(0.5, 0.9, lowerValueRow, higherValueRow, false)).toBe(-1);
+    expect(scoreColumn.comparator(0.9, 0.5, higherValueRow, lowerValueRow, false)).toBe(1);
+    expect(scoreColumn.comparator(0.5, 0.5, lowerValueRow, lowerValueRow, false)).toBe(0);
+  });
 });
 
 describe('Runs View :: getFormattedDuration', () => {
