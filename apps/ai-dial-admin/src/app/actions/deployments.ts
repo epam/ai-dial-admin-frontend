@@ -6,6 +6,7 @@ import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { Image } from '@/src/models/deployments/images';
 import { Container } from '@/src/models/deployments/containers';
 import { containersApi, huggingFaceApi, imagesApi, mcpRegistryApi, topicApi, whitelistApi } from '@/src/app/api/api';
+import { unwrapSingleServerResponse } from '@/src/utils/deployments/mcp-registry';
 
 export async function getImages() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -295,6 +296,12 @@ export async function getToolsetMcpServers(params: {
       metadata: { nextCursor: cursor },
     },
   };
+}
+
+export async function getMcpServerVersion(serverName: string, version: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  const result = await mcpRegistryApi.getMcpServerVersion(serverName, version, token);
+  return unwrapSingleServerResponse(result);
 }
 
 export async function getHuggingFaceModels(params: Record<string, string>) {

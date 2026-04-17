@@ -46,4 +46,13 @@ describe('CodeViewer', () => {
     const buttons = container.querySelectorAll('button');
     expect(buttons.length).toBeGreaterThanOrEqual(2);
   });
+
+  test('Should omit fullscreen button when hideFullscreen is true', () => {
+    const { container } = render(<CodeViewer title="Response" content={sampleJson} hideFullscreen />);
+
+    // Only the copy button should remain in the header
+    const buttons = container.querySelectorAll('button');
+    expect(buttons.length).toBe(1);
+    expect(screen.queryByTestId('fullscreen-viewer')).not.toBeInTheDocument();
+  });
 });

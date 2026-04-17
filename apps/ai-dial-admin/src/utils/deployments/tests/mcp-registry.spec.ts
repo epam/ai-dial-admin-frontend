@@ -2,12 +2,13 @@ import { describe, expect, test } from 'vitest';
 import {
   getPreferredOciPackage,
   getPreferredRemote,
-  hasRepoAndOci,
-  mapImageTransportType,
   mapRemoteTransportType,
   mapTransportType,
+  unwrapSingleServerResponse,
+  hasRepoAndOci,
+  mapImageTransportType,
 } from '../mcp-registry';
-import { McpServer } from '@/src/types/deployments/mcp-registry';
+import { McpServer, McpServerResponse } from '@/src/types/deployments/mcp-registry';
 import { CONTAINER_TRANSPORT } from '@/src/types/deployments/containers';
 import { IMAGE_TRANSPORT_TYPE } from '@/src/types/deployments/images';
 import { ToolsetTransport } from '@/src/types/toolset';
@@ -178,5 +179,45 @@ describe('mapImageTransportType', () => {
 
   test('maps unknown type to REMOTE', () => {
     expect(mapImageTransportType('grpc')).toBe(IMAGE_TRANSPORT_TYPE.REMOTE);
+  });
+});
+
+describe('unwrapSingleServerResponse', () => {
+  const singleItem: McpServerResponse = {
+    server: makeServer({ name: 'ai.aliengiraffe/spotdb', version: 'v0.1.0' }),
+    _meta: { published: true },
+  };
+
+  test('returns the first server from a single-item list', () => {
+    const result = unwrapSingleServerResponse({
+      success: true,
+      response: { servers: [singleItem], metadata: { count: 1 } },
+    });
+    expect(result.success).toBe(true);
+    expect(result.response).toEqual(singleItem);
+  });
+
+  test('returns undefined when servers array is empty', () => {
+    const result = unwrapSingleServerResponse({
+      success: true,
+      response: { servers: [], metadata: { count: 0 } },
+    });
+    expect(result.success).toBe(true);
+    expect(result.response).toBeUndefined();
+  });
+
+  test('returns undefined when response is missing', () => {
+    const result = unwrapSingleServerResponse({ success: true });
+    expect(result.success).toBe(true);
+    expect(result.response).toBeUndefined();
+  });
+
+  test('passes through failed upstream response unchanged', () => {
+    const failed = {
+      success: false,
+      errorHeader: 'Not found',
+      errorMessage: 'Server version not found',
+    };
+    expect(unwrapSingleServerResponse(failed)).toEqual(failed);
   });
 });

@@ -18,9 +18,10 @@ import { formatJsonSize } from '@/src/utils/evaluation/json-highlight';
 interface Props {
   title: string;
   content: string;
+  hideFullscreen?: boolean;
 }
 
-const CodeViewer: FC<Props> = ({ title, content }) => {
+const CodeViewer: FC<Props> = ({ title, content, hideFullscreen }) => {
   const { currentTheme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -59,11 +60,13 @@ const CodeViewer: FC<Props> = ({ title, content }) => {
             <span onClick={(e) => e.stopPropagation()}>
               <CopyButton value={formatted} valueLabel={title} size={ElementSize.Small} />
             </span>
-            <DialGhostIconButton
-              size={ElementSize.Small}
-              icon={<IconMaximize size={16} />}
-              onClick={onOpenFullscreen}
-            />
+            {!hideFullscreen && (
+              <DialGhostIconButton
+                size={ElementSize.Small}
+                icon={<IconMaximize size={16} />}
+                onClick={onOpenFullscreen}
+              />
+            )}
           </span>
         </div>
         {isOpen && (
@@ -94,13 +97,15 @@ const CodeViewer: FC<Props> = ({ title, content }) => {
           </div>
         )}
       </div>
-      <FullscreenViewer
-        isOpen={isFullscreen}
-        title={title}
-        content={content}
-        contentType={ViewerContentType.Json}
-        onClose={() => setIsFullscreen(false)}
-      />
+      {!hideFullscreen && (
+        <FullscreenViewer
+          isOpen={isFullscreen}
+          title={title}
+          content={content}
+          contentType={ViewerContentType.Json}
+          onClose={() => setIsFullscreen(false)}
+        />
+      )}
     </>
   );
 };
