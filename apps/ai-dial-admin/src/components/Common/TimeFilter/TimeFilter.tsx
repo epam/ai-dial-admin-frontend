@@ -3,7 +3,7 @@ import { IconChevronDown } from '@tabler/icons-react';
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import RangePicker from '@/src/components/Common/RangePicker/RangePicker';
-import { TimePeriodOption, getTimePeriodOptionsByMaxDays } from '@/src/constants/global-time-filter';
+import { MS_PER_DAY, TimePeriodOption, getTimePeriodOptionsByMaxMs } from '@/src/constants/global-time-filter';
 import { ButtonsI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
@@ -19,7 +19,7 @@ interface Props {
   timeRange: TimeRange;
   onTimeRangeChange: (value: TimeRange, isCustom?: boolean) => void;
   timePeriodOptions?: TimePeriodOption[];
-  maxRangeDays?: number;
+  maxRangeMs?: number;
 }
 
 const TimeFilter: FC<Props> = ({
@@ -28,10 +28,11 @@ const TimeFilter: FC<Props> = ({
   timeRange,
   onTimeRangeChange,
   timePeriodOptions,
-  maxRangeDays,
+  maxRangeMs,
 }) => {
   const t = useI18n();
-  const options = getTimePeriodOptionsByMaxDays(maxRangeDays, timePeriodOptions);
+  const options = getTimePeriodOptionsByMaxMs(timePeriodOptions, maxRangeMs);
+  const maxDays = maxRangeMs != null ? Math.floor(maxRangeMs / MS_PER_DAY) : undefined;
   const [isOpen, setIsOpen] = useState(false);
   const [isCustom, setIsCustom] = useState(false);
 
@@ -121,7 +122,7 @@ const TimeFilter: FC<Props> = ({
 
   const calendarPanel = showCalendar && (
     <div className="flex flex-col border-l border-secondary">
-      <RangePicker value={draft.range} onChange={handleRangeChange} maxDays={maxRangeDays} />
+      <RangePicker value={draft.range} onChange={handleRangeChange} maxDays={maxDays} />
       <div className="flex justify-end gap-2 px-3 pb-3 mt-auto">
         <DialNeutralButton size={ElementSize.Small} label={t(ButtonsI18nKey.Cancel)} onClick={handleCancel} />
         <DialPrimaryButton
