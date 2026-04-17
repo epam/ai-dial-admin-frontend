@@ -1,7 +1,16 @@
 import { describe, expect, test } from 'vitest';
-import { getPreferredOciPackage, getPreferredRemote, mapRemoteTransportType, mapTransportType } from '../mcp-registry';
-import { McpServer } from '@/src/types/deployments/mcp-registry';
+import {
+  getPreferredOciPackage,
+  getPreferredRemote,
+  mapRemoteTransportType,
+  mapTransportType,
+  unwrapSingleServerResponse,
+  hasRepoAndOci,
+  mapImageTransportType,
+} from '../mcp-registry';
+import { McpServer, McpServerResponse } from '@/src/types/deployments/mcp-registry';
 import { CONTAINER_TRANSPORT } from '@/src/types/deployments/containers';
+import { IMAGE_TRANSPORT_TYPE } from '@/src/types/deployments/images';
 import { ToolsetTransport } from '@/src/types/toolset';
 
 const makeServer = (overrides: Partial<McpServer> = {}): McpServer => ({
@@ -48,6 +57,42 @@ describe('getPreferredOciPackage', () => {
 
   test('returns undefined when no packages', () => {
     expect(getPreferredOciPackage(makeServer())).toBeUndefined();
+  });
+});
+
+describe('hasRepoAndOci', () => {
+  test('returns true when server has both repository and OCI package', () => {
+    const server = makeServer({
+      repository: { url: 'https://github.com/test', source: 'github' },
+      packages: [{ registryType: 'oci', identifier: 'img:1.0' }],
+    });
+    expect(hasRepoAndOci(server)).toBe(true);
+  });
+
+  test('returns false when server has only repository', () => {
+    const server = makeServer({
+      repository: { url: 'https://github.com/test', source: 'github' },
+    });
+    expect(hasRepoAndOci(server)).toBe(false);
+  });
+
+  test('returns false when server has only OCI package', () => {
+    const server = makeServer({
+      packages: [{ registryType: 'oci', identifier: 'img:1.0' }],
+    });
+    expect(hasRepoAndOci(server)).toBe(false);
+  });
+
+  test('returns false when server has neither', () => {
+    expect(hasRepoAndOci(makeServer())).toBe(false);
+  });
+
+  test('returns false when server has non-OCI packages and repository', () => {
+    const server = makeServer({
+      repository: { url: 'https://github.com/test', source: 'github' },
+      packages: [{ registryType: 'npm', identifier: 'pkg' }],
+    });
+    expect(hasRepoAndOci(server)).toBe(false);
   });
 });
 
@@ -116,5 +161,63 @@ describe('mapRemoteTransportType', () => {
 
   test('returns undefined for unknown type', () => {
     expect(mapRemoteTransportType('grpc')).toBeUndefined();
+  });
+});
+
+describe('mapImageTransportType', () => {
+  test('maps stdio to LOCAL', () => {
+    expect(mapImageTransportType('stdio')).toBe(IMAGE_TRANSPORT_TYPE.LOCAL);
+  });
+
+  test('maps streamable-http to REMOTE', () => {
+    expect(mapImageTransportType('streamable-http')).toBe(IMAGE_TRANSPORT_TYPE.REMOTE);
+  });
+
+  test('maps sse to REMOTE', () => {
+    expect(mapImageTransportType('sse')).toBe(IMAGE_TRANSPORT_TYPE.REMOTE);
+  });
+
+  test('maps unknown type to REMOTE', () => {
+    expect(mapImageTransportType('grpc')).toBe(IMAGE_TRANSPORT_TYPE.REMOTE);
+  });
+});
+
+describe('unwrapSingleServerResponse', () => {
+  const singleItem: McpServerResponse = {
+    server: makeServer({ name: 'ai.aliengiraffe/spotdb', version: 'v0.1.0' }),
+    _meta: { published: true },
+  };
+
+  test('returns the first server from a single-item list', () => {
+    const result = unwrapSingleServerResponse({
+      success: true,
+      response: { servers: [singleItem], metadata: { count: 1 } },
+    });
+    expect(result.success).toBe(true);
+    expect(result.response).toEqual(singleItem);
+  });
+
+  test('returns undefined when servers array is empty', () => {
+    const result = unwrapSingleServerResponse({
+      success: true,
+      response: { servers: [], metadata: { count: 0 } },
+    });
+    expect(result.success).toBe(true);
+    expect(result.response).toBeUndefined();
+  });
+
+  test('returns undefined when response is missing', () => {
+    const result = unwrapSingleServerResponse({ success: true });
+    expect(result.success).toBe(true);
+    expect(result.response).toBeUndefined();
+  });
+
+  test('passes through failed upstream response unchanged', () => {
+    const failed = {
+      success: false,
+      errorHeader: 'Not found',
+      errorMessage: 'Server version not found',
+    };
+    expect(unwrapSingleServerResponse(failed)).toEqual(failed);
   });
 });

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, test, expect, vi } from 'vitest';
 
 import Containers from '@/src/components/SourceField/Containers/Containers';
@@ -17,6 +17,23 @@ vi.mock('@/src/hooks/use-protected-request', () => ({
   useProtectedRequest: () => vi.fn((fn) => fn()),
 }));
 
+vi.mock('@epam/ai-dial-ui-kit', async () => {
+  const actual = await vi.importActual<Record<string, unknown>>('@epam/ai-dial-ui-kit');
+  return {
+    ...actual,
+    DialSelectField: ({ options, onChange, id, value }: any) => (
+      <select aria-label={id} value={value ?? ''} onChange={(e) => onChange(e.target.value)}>
+        <option value="">--</option>
+        {options?.map((o: any) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    ),
+  };
+});
+
 const runningContainer: Container = {
   name: 'container-running',
   displayName: 'Running Container',
@@ -34,6 +51,16 @@ const stoppedContainer: Container = {
   source: { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE },
   status: CONTAINER_STATUS.STOPPED,
   url: '',
+  metadata: { envs: [] },
+};
+
+const hfContainer: Container = {
+  name: 'container-hf',
+  displayName: 'HF Container',
+  $type: CONTAINER_TYPE.HF,
+  source: { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE },
+  status: CONTAINER_STATUS.RUNNING,
+  url: 'http://hf.local',
   metadata: { envs: [] },
 };
 
@@ -97,5 +124,48 @@ describe('Containers component', () => {
     await waitFor(() => {
       expect(screen.getByText('Entities.NoContainers')).toBeInTheDocument();
     });
+  });
+
+  test('applies v1 prefix when a NIM container is selected', async () => {
+    const onChange = vi.fn();
+    const entity = createEntity('');
+
+    render(
+      <Containers
+        entity={entity}
+        onChange={onChange}
+        getContainers={mockGetContainers([runningContainer, hfContainer])}
+        view={ApplicationRoute.Models}
+        isModal
+      />,
+    );
+
+    const select = await screen.findByRole('combobox');
+    fireEvent.change(select, { target: { value: 'container-running' } });
+
+    const lastCall = onChange.mock.calls.at(-1)?.[0] as DialModel;
+    expect(lastCall.source?.completionEndpointPath?.startsWith('v1/')).toBe(true);
+    expect(lastCall.source?.completionEndpointPath?.startsWith('openai/')).toBe(false);
+  });
+
+  test('applies openai/v1 prefix when a non-NIM container is selected', async () => {
+    const onChange = vi.fn();
+    const entity = createEntity('');
+
+    render(
+      <Containers
+        entity={entity}
+        onChange={onChange}
+        getContainers={mockGetContainers([runningContainer, hfContainer])}
+        view={ApplicationRoute.Models}
+        isModal
+      />,
+    );
+
+    const select = await screen.findByRole('combobox');
+    fireEvent.change(select, { target: { value: 'container-hf' } });
+
+    const lastCall = onChange.mock.calls.at(-1)?.[0] as DialModel;
+    expect(lastCall.source?.completionEndpointPath?.startsWith('openai/v1/')).toBe(true);
   });
 });

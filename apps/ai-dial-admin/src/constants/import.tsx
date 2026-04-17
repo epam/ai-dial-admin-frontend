@@ -39,7 +39,7 @@ export const ARCHIVE_IMPORT_TYPE = (t: (stringToTranslate: string) => string) =>
 export const DIAL_JSON_IMPORT_TYPE = (t: (stringToTranslate: string) => string) => ({
   id: ImportFileType.JSON,
   name: t(ImportI18nKey.DialCoreFiles),
-  content: <div className="dial-tiny-text ml-[33px]">{t(ImportI18nKey.JsonDescription)}</div>,
+  content: <div className="dial-tiny-text ml-[33px]">{t(ImportI18nKey.SeparateFilesDescription)}</div>,
 });
 
 export const SEPARATE_FILES_IMPORT_TYPE = (t: (stringToTranslate: string) => string) => ({
@@ -65,5 +65,6 @@ export const IMPORT_FILE_TYPES = (
   if (route === ApplicationRoute.Files) {
     return [...buttons, SEPARATE_FILES_IMPORT_TYPE(t)];
   }
+
   return buttons;
 };

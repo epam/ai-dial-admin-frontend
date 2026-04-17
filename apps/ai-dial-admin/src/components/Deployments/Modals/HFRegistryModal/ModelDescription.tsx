@@ -1,8 +1,9 @@
-import { DialCloseButton, DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import { FC, useEffect, useState } from 'react';
 
 import { getModelDetails } from '@/src/app/actions/deployments';
 import MdViewer from '@/src/components/Common/MdViewer/MdViewer';
+import SidePanel from '@/src/components/Common/SidePanel/SidePanel';
 import { ContainersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
@@ -32,28 +33,22 @@ const ModelDescription: FC<Props> = ({ descriptionModelData, isDescriptionShown,
     }
   }, [descriptionModelData, isDescriptionShown]);
 
+  const hasModelContext = Boolean(descriptionModelData.modelName && descriptionModelData.sha);
+
   return (
-    isDescriptionShown &&
-    descriptionModelData.modelName &&
-    descriptionModelData.sha && (
-      <div className="flex flex-col lg:w-[420px] p-4 border border-primary rounded h-full">
-        <div className="flex flex-row justify-between items-center mb-4">
-          <p className="dial-tiny-text text-secondary">{t(ContainersI18nKey.ModelDetails)}</p>
-          <DialCloseButton className="h-[24px]" size={24} onClose={() => onChangeIsDescriptionShown(false)} />
-        </div>
-        {isLoading ? (
-          <DialLoader size={40} />
-        ) : (
-          <>
-            {descriptionData.length ? (
-              <MdViewer content={descriptionData} />
-            ) : (
-              <DialNoDataContent title={t(ContainersI18nKey.NoDescriptionAvailable)} />
-            )}
-          </>
-        )}
-      </div>
-    )
+    <SidePanel
+      label={t(ContainersI18nKey.ModelDetails)}
+      isOpen={isDescriptionShown && hasModelContext}
+      onClose={() => onChangeIsDescriptionShown(false)}
+    >
+      {isLoading ? (
+        <DialLoader size={40} />
+      ) : descriptionData.length ? (
+        <MdViewer content={descriptionData} />
+      ) : (
+        <DialNoDataContent title={t(ContainersI18nKey.NoDescriptionAvailable)} />
+      )}
+    </SidePanel>
   );
 };
 

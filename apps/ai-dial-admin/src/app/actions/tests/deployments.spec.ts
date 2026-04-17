@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { containersApi, huggingFaceApi, imagesApi, topicApi, whitelistApi } from '@/src/app/api/api';
+import { containersApi, huggingFaceApi, imagesApi, mcpRegistryApi, topicApi, whitelistApi } from '@/src/app/api/api';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
   createContainer,
@@ -34,7 +34,9 @@ import {
   getGlobalWhitelist,
   updateGlobalWhitelist,
   getHuggingFaceModels,
+  getMcpServerVersion,
   getModelDetails,
+  getImageMcpServers,
 } from '../deployments';
 import { ResourceType } from '@/src/types/resource-type';
 
@@ -415,6 +417,125 @@ describe('Deployments actions', () => {
       expect(getUserToken).toHaveBeenCalled();
       expect(huggingFaceApi.getModelDetails).toHaveBeenCalledWith('test', 'sha', TOKEN_MOCK);
       expect(result).toBe(mockResponse);
+    });
+  });
+
+  describe('MCP Registry image actions', () => {
+    const makeServerResponse = (name: string, version: string) => ({
+      server: { name, version },
+    });
+
+    test('getImageMcpServers makes two parallel requests and merges results', async () => {
+      const repoServer = makeServerResponse('org/repo-server', '1.0.0');
+      const ociServer = makeServerResponse('org/oci-server', '2.0.0');
+
+      (mcpRegistryApi.getImageMcpServersByRepo as any).mockResolvedValue({
+        success: true,
+        response: { servers: [repoServer], metadata: {} },
+      });
+      (mcpRegistryApi.getImageMcpServersByOci as any).mockResolvedValue({
+        success: true,
+        response: { servers: [ociServer], metadata: {} },
+      });
+
+      const result = await getImageMcpServers({ limit: 100 });
+
+      expect(mcpRegistryApi.getImageMcpServersByRepo).toHaveBeenCalledWith({ limit: 100 }, TOKEN_MOCK);
+      expect(mcpRegistryApi.getImageMcpServersByOci).toHaveBeenCalledWith({ limit: 100 }, TOKEN_MOCK);
+      expect(result.success).toBe(true);
+      expect(result.response.servers).toHaveLength(2);
+    });
+
+    test('getImageMcpServers deduplicates by name+version', async () => {
+      const sharedServer = makeServerResponse('org/shared', '1.0.0');
+
+      (mcpRegistryApi.getImageMcpServersByRepo as any).mockResolvedValue({
+        success: true,
+        response: { servers: [sharedServer], metadata: {} },
+      });
+      (mcpRegistryApi.getImageMcpServersByOci as any).mockResolvedValue({
+        success: true,
+        response: { servers: [sharedServer], metadata: {} },
+      });
+
+      const result = await getImageMcpServers({ limit: 100 });
+
+      expect(result.response.servers).toHaveLength(1);
+    });
+
+    test('getImageMcpServers returns error if repo request fails', async () => {
+      (mcpRegistryApi.getImageMcpServersByRepo as any).mockResolvedValue({
+        success: false,
+        errorMessage: 'repo error',
+      });
+      (mcpRegistryApi.getImageMcpServersByOci as any).mockResolvedValue({
+        success: true,
+        response: { servers: [], metadata: {} },
+      });
+
+      const result = await getImageMcpServers({ limit: 100 });
+
+      expect(result.success).toBe(false);
+    });
+
+    test('getImageMcpServers keeps first occurrence on dedup', async () => {
+      const repoVersion = {
+        server: { name: 'org/server', version: '1.0.0', repository: { url: 'https://github.com' } },
+      };
+      const ociVersion = { server: { name: 'org/server', version: '1.0.0', packages: [{ registryType: 'oci' }] } };
+
+      (mcpRegistryApi.getImageMcpServersByRepo as any).mockResolvedValue({
+        success: true,
+        response: { servers: [repoVersion], metadata: {} },
+      });
+      (mcpRegistryApi.getImageMcpServersByOci as any).mockResolvedValue({
+        success: true,
+        response: { servers: [ociVersion], metadata: {} },
+      });
+
+      const result = await getImageMcpServers({ limit: 100 });
+
+      expect(result.response.servers).toHaveLength(1);
+      expect(result.response.servers[0]).toBe(repoVersion);
+    });
+  });
+
+  describe('MCP Registry actions', () => {
+    test('getMcpServerVersion delegates to mcpRegistryApi and unwraps the single-item list', async () => {
+      const server = { name: 'ai.aliengiraffe/spotdb', description: 'desc', version: 'v0.1.0' };
+      const singleItem = { server, _meta: { published: true } };
+      (mcpRegistryApi.getMcpServerVersion as any).mockResolvedValue({
+        success: true,
+        response: { servers: [singleItem], metadata: { count: 1 } },
+      });
+
+      const result = await getMcpServerVersion('ai.aliengiraffe/spotdb', 'v0.1.0');
+
+      expect(getUserToken).toHaveBeenCalled();
+      expect(mcpRegistryApi.getMcpServerVersion).toHaveBeenCalledWith('ai.aliengiraffe/spotdb', 'v0.1.0', TOKEN_MOCK);
+      expect(result.success).toBe(true);
+      expect(result.response).toEqual(singleItem);
+    });
+
+    test('getMcpServerVersion returns undefined response when upstream list is empty', async () => {
+      (mcpRegistryApi.getMcpServerVersion as any).mockResolvedValue({
+        success: true,
+        response: { servers: [], metadata: { count: 0 } },
+      });
+
+      const result = await getMcpServerVersion('missing/server', 'v0.0.1');
+
+      expect(result.success).toBe(true);
+      expect(result.response).toBeUndefined();
+    });
+
+    test('getMcpServerVersion propagates upstream failure unchanged', async () => {
+      const failed = { success: false, errorHeader: 'Not found', errorMessage: 'version not found' };
+      (mcpRegistryApi.getMcpServerVersion as any).mockResolvedValue(failed);
+
+      const result = await getMcpServerVersion('missing/server', 'v0.0.1');
+
+      expect(result).toEqual(failed);
     });
   });
 });

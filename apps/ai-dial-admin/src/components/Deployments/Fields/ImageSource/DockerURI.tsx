@@ -12,9 +12,10 @@ import { useI18n } from '@/src/locales/client';
 interface Props {
   image: Image;
   setImage: (image: Image) => void;
+  disabled?: boolean;
 }
 
-const DockerURI: FC<Props> = ({ image, setImage }) => {
+const DockerURI: FC<Props> = ({ image, setImage, disabled }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { dispatch, resetCounter } = useSaveValidationContext();
@@ -81,7 +82,7 @@ const DockerURI: FC<Props> = ({ image, setImage }) => {
       error={sourceError?.text}
       invalid={!!sourceError}
       onChange={onURIChange}
-      disabled={isReadOnlyAdmin}
+      disabled={isReadOnlyAdmin || disabled}
     />
   );
 };

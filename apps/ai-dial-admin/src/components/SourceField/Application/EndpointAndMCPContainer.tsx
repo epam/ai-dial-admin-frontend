@@ -1,14 +1,20 @@
 'use client';
-import { DialCheckbox, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { DialCheckbox, DialSelectField, DialSwitch } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
-import { EntityFieldsI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, SourceI18nKey } from '@/src/constants/i18n';
 import { CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { ONLY_HTTP_TRANSPORTS } from '@/src/constants/transport';
 import { useI18n } from '@/src/locales/client';
-import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
+import {
+  ApplicationMCPConfigDelivery,
+  ApplicationMCPContainer,
+  ApplicationTypeMCP,
+  DialApplication,
+  DialApplicationScheme,
+} from '@/src/models/dial/application';
 import { ApplicationRoute } from '@/src/types/routes';
 
 export enum SourceType {
@@ -124,6 +130,26 @@ const EndpointAndMCPContainer: FC<Props> = ({
     [entity, onChangeEntity, view],
   );
 
+  const onChangeForwardPerRequestKey = useCallback(
+    (newValue?: boolean) => {
+      if (view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications) {
+        const updatedMCPContainer = {
+          ...((entity as DialApplication)?.mcp || {}),
+          forwardPerRequestKey: newValue,
+        } as ApplicationMCPContainer;
+
+        onChangeEntity({ ...entity, mcp: updatedMCPContainer });
+      } else if (view === ApplicationRoute.ApplicationRunners) {
+        const updatedMCPContainer = {
+          ...((entity as DialApplicationScheme)?.[`dial:applicationTypeMcp`] || {}),
+          ['dial:forwardPerRequestKey']: newValue,
+        } as ApplicationTypeMCP;
+        onChangeEntity({ ...entity, 'dial:applicationTypeMcp': updatedMCPContainer });
+      }
+    },
+    [entity, onChangeEntity, view],
+  );
+
   const onChangeMCPTransport = useCallback(
     (transportId: string | string[]) => {
       if (view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications) {
@@ -142,6 +168,33 @@ const EndpointAndMCPContainer: FC<Props> = ({
           ...((entity as DialApplicationScheme)?.['dial:applicationTypeMcp'] || {}),
           ['dial:endpoint']: (entity as DialApplicationScheme)?.['dial:applicationTypeMcp']?.['dial:endpoint'] || '',
           ['dial:transport']: selectedTransport.value,
+        };
+        onChangeEntity({ ...entity, ['dial:applicationTypeMcp']: updatedMCPContainer });
+      }
+    },
+    [entity, onChangeEntity, view],
+  );
+
+  const onChangeMCPConfigDelivery = useCallback(
+    (configDeliveryId: string | string[]) => {
+      if (view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications) {
+        const selectedConfigDelivery =
+          Object.values(ApplicationMCPConfigDelivery).find((source) => source === configDeliveryId) ||
+          Object.values(ApplicationMCPConfigDelivery)[0];
+        const updatedMCPContainer = {
+          ...((entity as DialApplication).mcp || {}),
+          endpoint: (entity as DialApplication).mcp?.endpoint || '',
+          configDelivery: selectedConfigDelivery,
+        };
+        onChangeEntity({ ...entity, mcp: updatedMCPContainer });
+      } else if (view === ApplicationRoute.ApplicationRunners) {
+        const selectedConfigDelivery =
+          Object.values(ApplicationMCPConfigDelivery).find((source) => source === configDeliveryId) ||
+          Object.values(ApplicationMCPConfigDelivery)[0];
+        const updatedMCPContainer = {
+          ...((entity as DialApplicationScheme)?.['dial:applicationTypeMcp'] || {}),
+          ['dial:endpoint']: (entity as DialApplicationScheme)?.['dial:applicationTypeMcp']?.['dial:endpoint'] || '',
+          ['dial:configDelivery']: selectedConfigDelivery,
         };
         onChangeEntity({ ...entity, ['dial:applicationTypeMcp']: updatedMCPContainer });
       }
@@ -197,12 +250,12 @@ const EndpointAndMCPContainer: FC<Props> = ({
         />
 
         {checkboxStates[SourceType.MCP_ENDPOINT] && (
-          <div className="h-full flex flex-col gap-y-3 pl-6">
+          <div className="h-full flex flex-col gap-y-4 pl-6">
             <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-row gap-x-2')}>
               <EndpointControl
                 label=""
                 id="mcp_endpoint"
-                placeholder="Enter MCP endpoint"
+                placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
                 required
                 disabled={isReadOnlyAdmin}
                 endpoint={
@@ -215,6 +268,7 @@ const EndpointAndMCPContainer: FC<Props> = ({
                 isModal={isModal}
               />
             </div>
+
             <DialSelectField
               id="transport"
               value={ONLY_HTTP_TRANSPORTS[0].value}
@@ -223,6 +277,34 @@ const EndpointAndMCPContainer: FC<Props> = ({
               label={t(EntityFieldsI18nKey.Transport)}
               onChange={onChangeMCPTransport}
               disabled
+            />
+
+            <DialSwitch
+              switchId="forwardPerRequestKey"
+              isOn={
+                view === ApplicationRoute.ApplicationRunners
+                  ? (entity as DialApplicationScheme)?.[`dial:applicationTypeMcp`]?.['dial:forwardPerRequestKey']
+                  : (entity as DialApplication).mcp?.forwardPerRequestKey
+              }
+              label={t(EntityFieldsI18nKey.forwardPerRequestKey)}
+              onChange={onChangeForwardPerRequestKey}
+              disabled={isReadOnlyAdmin}
+            />
+
+            <DialSelectField
+              id="configDelivery"
+              value={
+                view === ApplicationRoute.ApplicationRunners
+                  ? (entity as DialApplicationScheme)?.[`dial:applicationTypeMcp`]?.['dial:configDelivery']
+                  : (entity as DialApplication).mcp?.configDelivery
+              }
+              options={Object.values(ApplicationMCPConfigDelivery).map((value) => ({
+                value,
+                label: value,
+              }))}
+              containerClassName="max-w-[160px]"
+              label={t(EntityFieldsI18nKey.configDelivery)}
+              onChange={onChangeMCPConfigDelivery}
             />
           </div>
         )}

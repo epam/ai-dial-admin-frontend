@@ -4,6 +4,7 @@ import { DialInput } from '@epam/ai-dial-ui-kit';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { CONTAINER_SOURCE_TYPE, CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { Container } from '@/src/models/deployments/containers';
+import { Image } from '@/src/models/deployments/images';
 import { FieldError } from '@/src/models/error';
 import { getDeploymentsURIError } from '@/src/utils/deployments/validation';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -12,6 +13,7 @@ import { getControlClassName } from '@/src/utils/entities/view';
 import { useI18n } from '@/src/locales/client';
 import { ApplicationRoute } from '@/src/types/routes';
 import HFModelNameField from '@/src/components/Deployments/Fields/ContainerSource/HFModelNameField';
+import InternalImageField from '@/src/components/Deployments/Fields/ContainerSource/InternalImageField';
 import McpServerNameField from '@/src/components/Deployments/Fields/ContainerSource/McpServerNameField';
 import { getContainerMcpServers } from '@/src/app/actions/deployments';
 import { getPreferredOciPackage, mapTransportType } from '@/src/utils/deployments/mcp-registry';
@@ -20,12 +22,13 @@ import { McpServer } from '@/src/types/deployments/mcp-registry';
 interface Props {
   container: Container;
   setContainer: (container: Container) => void;
+  image?: Image;
   isModal?: boolean;
   route: ApplicationRoute;
   disabled?: boolean;
 }
 
-const ContainerSource: FC<Props> = ({ container, setContainer, isModal = false, route, disabled }) => {
+const ContainerSource: FC<Props> = ({ container, setContainer, image, isModal = false, route, disabled }) => {
   const isDisabled = disabled ?? isEditDisabled(container);
   const t = useI18n();
   const { dispatch, resetCounter } = useSaveValidationContext();
@@ -136,6 +139,8 @@ const ContainerSource: FC<Props> = ({ container, setContainer, isModal = false, 
 
   const renderSourceField = () => {
     switch (container.source?.$type) {
+      case CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE:
+        return <InternalImageField container={container} image={image} route={route} disabled={isDisabled} />;
       case CONTAINER_SOURCE_TYPE.NGC_REGISTRY:
         return (
           <DialInput
@@ -151,28 +156,21 @@ const ContainerSource: FC<Props> = ({ container, setContainer, isModal = false, 
           />
         );
       case CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE:
-        if (container.source?.externalRegistryRef) {
-          return (
-            <McpServerNameField
-              fetchServers={getContainerMcpServers}
-              onServerSelect={onContainerServerSelect}
-              serverName={mcpServerName}
-              onServerNameChange={onContainerServerNameChange}
-              preselectedServer={
-                container.source?.externalRegistryRef
-                  ? {
-                      name: container.source.externalRegistryRef.packageName,
-                      version: container.source.externalRegistryRef.version || '',
-                    }
-                  : undefined
-              }
-              view={route}
-              isModal={isModal}
-              disabled={isDisabled || container.status === CONTAINER_STATUS.RUNNING}
-            />
-          );
-        }
-        return (
+        return container.source?.externalRegistryRef ? (
+          <McpServerNameField
+            fetchServers={getContainerMcpServers}
+            onServerSelect={onContainerServerSelect}
+            serverName={mcpServerName}
+            onServerNameChange={onContainerServerNameChange}
+            preselectedServer={{
+              name: container.source.externalRegistryRef.packageName,
+              version: container.source.externalRegistryRef.version || '',
+            }}
+            view={route}
+            isModal={isModal}
+            disabled={isDisabled || container.status === CONTAINER_STATUS.RUNNING}
+          />
+        ) : (
           <DialInput
             id="imageReference"
             labelProps={{ label: t(EntityFieldsI18nKey.DockerImageReference), required: true }}
@@ -185,7 +183,7 @@ const ContainerSource: FC<Props> = ({ container, setContainer, isModal = false, 
             disabled={isDisabled}
           />
         );
-      default:
+      case CONTAINER_SOURCE_TYPE.HUGGINGFACE:
         return (
           <HFModelNameField
             container={container}
@@ -195,6 +193,8 @@ const ContainerSource: FC<Props> = ({ container, setContainer, isModal = false, 
             disabled={isDisabled}
           />
         );
+      default:
+        return null;
     }
   };
 
