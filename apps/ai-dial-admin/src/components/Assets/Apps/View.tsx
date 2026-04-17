@@ -74,15 +74,10 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
   );
 
   useEffect(() => {
-    if (originalApp.mcp?.endpoint) {
+    const appRunner = getAppRunner(originalApp, schemes);
+
+    if (originalApp.mcp?.endpoint || (appRunner && appRunner?.['dial:applicationTypeMcp'])) {
       setTabs(getTabsForAsset(t, ApplicationRoute.AssetsApplications).toSpliced(1, 0, toolsTab(t)));
-    } else if (originalApp?.customAppSchemaId) {
-      const selectedAppRunner = schemes.find((scheme) => scheme?.$id === originalApp?.customAppSchemaId);
-      if (selectedAppRunner && selectedAppRunner?.['dial:applicationTypeMcp']) {
-        setTabs(getTabsForAsset(t, ApplicationRoute.AssetsApplications).toSpliced(1, 0, toolsTab(t)));
-      } else {
-        setTabs(getTabsForAsset(t, ApplicationRoute.AssetsApplications));
-      }
     } else {
       setTabs(getTabsForAsset(t, ApplicationRoute.AssetsApplications));
     }
