@@ -158,7 +158,11 @@ export const getComponentColDefs = (
   }
 
   if (type === EntityType.APPLICATION_TYPE_SCHEMA) {
-    return [getComponentActionColumn(), ...LIST_RUNNER_COLUMNS, actionColumn];
+    return [
+      getComponentActionColumn(),
+      ...LIST_RUNNER_COLUMNS.filter((col) => col.field !== 'updatedAt'),
+      actionColumn,
+    ];
   }
 
   if (type === EntityType.KEY) {
