@@ -1,4 +1,3 @@
-import App from 'next/app';
 import { ChatEntity, EntityValidityState, ModifiedEntity } from './base-entity';
 import { DefaultsValue } from './defaults';
 import { DialRoute } from './route';
