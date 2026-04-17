@@ -41,7 +41,7 @@ describe('ImageSource', () => {
     expect(screen.getByText('EntityFields.BranchName')).toBeTruthy();
   });
 
-  test('does not render CodeURL when externalRegistryRef exists', () => {
+  test('renders CodeURL disabled when externalRegistryRef exists in view', () => {
     const image: Image = {
       ...baseImage,
       source: {
@@ -52,6 +52,22 @@ describe('ImageSource', () => {
     };
 
     render(<ImageSource image={image} setImage={vi.fn()} verifyVersion={vi.fn()} />);
+
+    expect(screen.getByText('EntityFields.SourceURL')).toBeTruthy();
+    expect(screen.getByDisplayValue('https://github.com/user/repo')).toBeDisabled();
+  });
+
+  test('does not render CodeURL when externalRegistryRef exists in modal', () => {
+    const image: Image = {
+      ...baseImage,
+      source: {
+        $type: IMAGE_SOURCE_TYPE.CODE,
+        url: 'https://github.com/user/repo',
+        externalRegistryRef: { $type: 'mcp-registry', packageName: 'io.github.user/server' },
+      },
+    };
+
+    render(<ImageSource image={image} setImage={vi.fn()} verifyVersion={vi.fn()} isModal />);
 
     expect(screen.queryByText('EntityFields.SourceURL')).toBeNull();
   });

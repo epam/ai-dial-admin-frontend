@@ -4,7 +4,8 @@ import { API } from '@/src/server/api';
 import { BaseApi } from '@/src/server/base-api';
 import {
   CONTAINER_MCP_REGISTRY_FILTER,
-  IMAGE_MCP_REGISTRY_FILTER,
+  IMAGE_MCP_REGISTRY_REPO_FILTER,
+  IMAGE_MCP_REGISTRY_OCI_FILTER,
   TOOLSET_MCP_REGISTRY_FILTER,
 } from '@/src/constants/deployments/mcp-registry';
 import { McpServersRequestDto } from '@/src/types/deployments/mcp-registry';
@@ -26,7 +27,7 @@ export class McpRegistryApi extends BaseApi {
     return this.postAction(MCP_REGISTRY_SERVERS_LIST, body, token);
   }
 
-  getImageMcpServers(
+  getImageMcpServersByRepo(
     params: { search?: string; cursor?: string; limit?: number },
     token: Token,
   ): Promise<ServerActionResponse> {
@@ -34,7 +35,21 @@ export class McpRegistryApi extends BaseApi {
       ...(params.search ? { search: params.search } : {}),
       ...(params.cursor ? { cursor: params.cursor } : {}),
       ...(params.limit != null ? { limit: params.limit } : {}),
-      filter: IMAGE_MCP_REGISTRY_FILTER,
+      filter: IMAGE_MCP_REGISTRY_REPO_FILTER,
+    };
+
+    return this.postAction(MCP_REGISTRY_SERVERS_LIST, body, token);
+  }
+
+  getImageMcpServersByOci(
+    params: { search?: string; cursor?: string; limit?: number },
+    token: Token,
+  ): Promise<ServerActionResponse> {
+    const body: McpServersRequestDto = {
+      ...(params.search ? { search: params.search } : {}),
+      ...(params.cursor ? { cursor: params.cursor } : {}),
+      ...(params.limit != null ? { limit: params.limit } : {}),
+      filter: IMAGE_MCP_REGISTRY_OCI_FILTER,
     };
 
     return this.postAction(MCP_REGISTRY_SERVERS_LIST, body, token);
