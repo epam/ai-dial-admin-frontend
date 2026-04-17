@@ -1,19 +1,18 @@
-import { FC, useCallback, useMemo } from 'react';
+import { FC, useCallback, useMemo, useState } from 'react';
 import classNames from 'classnames';
 
 import { IMAGE_SOURCE_TYPE, IMAGE_TYPE } from '@/src/types/deployments/images';
 import { Image } from '@/src/models/deployments/images';
 import { getControlClassName } from '@/src/utils/entities/view';
 import { McpServer } from '@/src/types/deployments/mcp-registry';
-import { ApplicationRoute } from '@/src/types/routes';
-import { getImageMcpServers } from '@/src/app/actions/deployments';
+import { hasRepoAndOci } from '@/src/utils/deployments/mcp-registry';
 
 import BaseDirectory from '@/src/components/Deployments/Fields/ImageSource/BaseDirectory';
 import Branch from '@/src/components/Deployments/Fields/ImageSource/Branch';
 import SourceType from '@/src/components/Deployments/Fields/ImageSource/SourceType';
 import CodeURL from '@/src/components/Deployments/Fields/ImageSource/CodeURL';
 import DockerURI from '@/src/components/Deployments/Fields/ImageSource/DockerURI';
-import McpServerNameField from '@/src/components/Deployments/Fields/ContainerSource/McpServerNameField';
+import ImageMcpRegistry from '@/src/components/Deployments/Fields/ImageSource/ImageMcpRegistry';
 
 interface Props {
   image: Image;
@@ -25,73 +24,52 @@ interface Props {
 const ImageSource: FC<Props> = ({ image, setImage, isModal = false, verifyVersion }) => {
   const className = useMemo(() => getControlClassName(isModal), [isModal]);
   const hasExternalRegistryRef = !!image.source?.externalRegistryRef;
-  const mcpServerName = useMemo(
-    () => image.source?.externalRegistryRef?.packageName || '',
-    [image.source?.externalRegistryRef?.packageName],
-  );
 
-  const onImageServerSelect = useCallback(
-    (server: McpServer) => {
-      setImage({
-        ...image,
-        source: {
-          ...image.source,
-          $type: IMAGE_SOURCE_TYPE.CODE,
-          url: server.repository?.url || '',
-          externalRegistryRef: {
-            $type: 'mcp-registry',
-            packageName: server.name,
-            version: server.version,
-          },
-        },
-      });
-    },
-    [image, setImage],
-  );
+  const [registryServer, setRegistryServer] = useState<McpServer | undefined>(undefined);
+  const serverHasBoth = registryServer ? hasRepoAndOci(registryServer) : false;
 
-  const onImageServerNameChange = useCallback(
-    (name: string) => {
-      setImage({
-        ...image,
-        source: {
-          ...image.source,
-          url: '',
-          externalRegistryRef: { $type: 'mcp-registry', packageName: name },
-        },
-      });
-    },
-    [image, setImage],
-  );
+  const onServerChange = useCallback((server: McpServer | undefined) => {
+    setRegistryServer(server);
+  }, []);
+
+  const isRegistryView = hasExternalRegistryRef && !isModal;
+  const showSourceType =
+    image.$type === IMAGE_TYPE.MCP &&
+    (!hasExternalRegistryRef || (isModal && registryServer && serverHasBoth) || isRegistryView);
 
   return (
     <div className="flex flex-col gap-y-8">
-      <div className={classNames('flex', isModal ? 'flex-col gap-y-8' : 'flex-row gap-x-4', className)}>
-        {hasExternalRegistryRef ? (
-          <McpServerNameField
-            fetchServers={getImageMcpServers}
-            onServerSelect={onImageServerSelect}
-            serverName={mcpServerName}
-            onServerNameChange={onImageServerNameChange}
-            preselectedServer={
-              image.source?.externalRegistryRef
-                ? {
-                    name: image.source.externalRegistryRef.packageName,
-                    version: image.source.externalRegistryRef.version || '',
-                  }
-                : undefined
-            }
-            view={ApplicationRoute.Images}
+      {hasExternalRegistryRef && (
+        <div className={classNames('flex', isModal ? 'flex-col gap-y-8' : 'flex-row gap-x-4', className)}>
+          <ImageMcpRegistry
+            image={image}
+            setImage={setImage}
+            selectedServer={registryServer}
+            onServerChange={onServerChange}
+            isModal={isModal}
           />
-        ) : (
-          <>
-            {(isModal || image.$type === IMAGE_TYPE.MCP) && (
-              <SourceType image={image} setImage={setImage} isModal={isModal} verifyVersion={verifyVersion} />
+        </div>
+      )}
+
+      <div className={classNames('flex', isModal ? 'flex-col gap-y-8' : 'flex-row gap-x-4', className)}>
+        {showSourceType && (
+          <SourceType
+            image={image}
+            setImage={setImage}
+            isModal={isModal}
+            verifyVersion={verifyVersion}
+            registryServer={registryServer}
+          />
+        )}
+        {!isModal && (
+          <div className="flex-1">
+            {image.source?.$type === IMAGE_SOURCE_TYPE.CODE && (
+              <CodeURL image={image} setImage={setImage} disabled={isRegistryView} />
             )}
-            <div className="flex-1">
-              {image.source?.$type === IMAGE_SOURCE_TYPE.CODE && <CodeURL image={image} setImage={setImage} />}
-              {image.source?.$type === IMAGE_SOURCE_TYPE.DOCKER && <DockerURI image={image} setImage={setImage} />}
-            </div>
-          </>
+            {image.source?.$type === IMAGE_SOURCE_TYPE.DOCKER && (
+              <DockerURI image={image} setImage={setImage} disabled={isRegistryView} />
+            )}
+          </div>
         )}
       </div>
 

@@ -38,7 +38,10 @@ const McpRegistryGrid: FC<Props> = ({ selectedServer, onSelect, fetchServers, vi
       ...SINGLE_ROW_SELECTION.selectionColumnDef,
       cellRenderer: (data: { data?: McpServer }) => {
         if (!data.data) return null;
-        const isChecked = data.data.name === selectedServer?.name && data.data.version === selectedServer?.version;
+        const isChecked =
+          !!selectedServer?.version &&
+          data.data.name === selectedServer.name &&
+          data.data.version === selectedServer.version;
         return <RadioButtonRenderer inputId={`${data.data.name}@${data.data.version}`} isChecked={isChecked} />;
       },
     },
