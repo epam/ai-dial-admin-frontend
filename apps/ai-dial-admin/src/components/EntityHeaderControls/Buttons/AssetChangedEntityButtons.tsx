@@ -23,14 +23,7 @@ interface Props {
   onSave: (newVersion?: string) => void;
 }
 
-const AssetChangedEntityButtons: FC<Props> = ({
-  version,
-  isEditorEnabled,
-  onDiscard,
-  onSave,
-  existingVersions,
-  entityName,
-}) => {
+const AssetChangedEntityButtons: FC<Props> = ({ isEditorEnabled, onDiscard, onSave, existingVersions, entityName }) => {
   const t = useI18n();
 
   const { isValid, dispatch } = useSaveValidationContext();
@@ -86,7 +79,6 @@ const AssetChangedEntityButtons: FC<Props> = ({
             header={t(PromptsI18nKey.NewVersionSave)}
             description={t(PromptsI18nKey.NewVersionSaveDescription)}
             isModalOpen={isModalOpen}
-            initialVersion={version}
             existingVersions={existingVersions}
             onClose={() => setIsModalOpen(false)}
             onConfirm={onTryToSave}

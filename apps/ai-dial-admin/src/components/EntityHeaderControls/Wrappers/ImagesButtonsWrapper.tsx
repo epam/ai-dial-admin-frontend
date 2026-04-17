@@ -290,7 +290,6 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
             onClose={onCloseModal}
             header={t(ImagesI18nKey.SaveNewVersionModalTitle)}
             submitLabel={t(ButtonsI18nKey.Save)}
-            initialVersion={image.version}
             onConfirm={(version) => onSaveAsNewVersion({ ...image, version })}
             existingVersions={getVersionsPerName(versions)}
           />,
@@ -303,7 +302,6 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
             header={t(ImagesI18nKey.CreateNewVersionModalTitle)}
-            initialVersion={image.version}
             onConfirm={(version) => onSaveAsNewVersion({ ...image, version })}
             existingVersions={getVersionsPerName(versions)}
           />,

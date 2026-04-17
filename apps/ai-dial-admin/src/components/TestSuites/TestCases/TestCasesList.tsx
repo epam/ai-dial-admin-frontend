@@ -104,6 +104,7 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
       const api = gridApiRef.current;
       if (!api) return;
       api.refreshClientSideRowModel('filter');
+      onCellChange(event.data, col, event.newValue);
     }
   }, []);
 
@@ -114,6 +115,7 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
       if (field !== 'testCaseName' && data.data != null) {
         data.data = { ...(data.data as Record<string, unknown>), [field]: value };
       }
+
       updateData(data);
     },
     [updateData],
