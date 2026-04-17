@@ -208,15 +208,42 @@ export async function getImageMcpServers(params: {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   const { minResults, ...requestParams } = params;
 
+  const fetchMerged = async (fetchParams: { search?: string; cursor?: string; limit?: number }) => {
+    const [repoResult, ociResult] = await Promise.all([
+      mcpRegistryApi.getImageMcpServersByRepo(fetchParams, token),
+      mcpRegistryApi.getImageMcpServersByOci(fetchParams, token),
+    ]);
+
+    if (!repoResult.success) return repoResult;
+    if (!ociResult.success) return ociResult;
+
+    const repoServers = repoResult.response?.servers ?? [];
+    const ociServers = ociResult.response?.servers ?? [];
+
+    const seen = new Set<string>();
+    const merged: unknown[] = [];
+    for (const s of [...repoServers, ...ociServers]) {
+      const server = (s as { server: { name: string; version: string } }).server;
+      const key = `${server.name}:${server.version}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        merged.push(s);
+      }
+    }
+
+    const nextCursor = repoResult.response?.metadata?.nextCursor || ociResult.response?.metadata?.nextCursor;
+    return { success: true as const, response: { servers: merged, metadata: { nextCursor } } };
+  };
+
   if (!minResults) {
-    return mcpRegistryApi.getImageMcpServers(requestParams, token);
+    return fetchMerged(requestParams);
   }
 
   const allServers: unknown[] = [];
   let cursor = params.cursor;
 
   while (allServers.length < minResults) {
-    const result = await mcpRegistryApi.getImageMcpServers({ ...requestParams, cursor }, token);
+    const result = await fetchMerged({ ...requestParams, cursor });
     if (!result.success) return result;
 
     const servers = result.response?.servers ?? [];

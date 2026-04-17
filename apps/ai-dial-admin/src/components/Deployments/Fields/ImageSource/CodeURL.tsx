@@ -12,9 +12,10 @@ import { useI18n } from '@/src/locales/client';
 interface Props {
   image: Image;
   setImage: (image: Image) => void;
+  disabled?: boolean;
 }
 
-const CodeUrl: FC<Props> = ({ image, setImage }) => {
+const CodeUrl: FC<Props> = ({ image, setImage, disabled }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { dispatch, resetCounter } = useSaveValidationContext();
@@ -83,7 +84,7 @@ const CodeUrl: FC<Props> = ({ image, setImage }) => {
       error={sourceError?.text}
       invalid={!!sourceError}
       onChange={onURLChange}
-      disabled={isReadOnlyAdmin}
+      disabled={isReadOnlyAdmin || disabled}
     />
   );
 };

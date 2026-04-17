@@ -5,9 +5,12 @@ import {
   mapRemoteTransportType,
   mapTransportType,
   unwrapSingleServerResponse,
+  hasRepoAndOci,
+  mapImageTransportType,
 } from '../mcp-registry';
 import { McpServer, McpServerResponse } from '@/src/types/deployments/mcp-registry';
 import { CONTAINER_TRANSPORT } from '@/src/types/deployments/containers';
+import { IMAGE_TRANSPORT_TYPE } from '@/src/types/deployments/images';
 import { ToolsetTransport } from '@/src/types/toolset';
 
 const makeServer = (overrides: Partial<McpServer> = {}): McpServer => ({
@@ -54,6 +57,42 @@ describe('getPreferredOciPackage', () => {
 
   test('returns undefined when no packages', () => {
     expect(getPreferredOciPackage(makeServer())).toBeUndefined();
+  });
+});
+
+describe('hasRepoAndOci', () => {
+  test('returns true when server has both repository and OCI package', () => {
+    const server = makeServer({
+      repository: { url: 'https://github.com/test', source: 'github' },
+      packages: [{ registryType: 'oci', identifier: 'img:1.0' }],
+    });
+    expect(hasRepoAndOci(server)).toBe(true);
+  });
+
+  test('returns false when server has only repository', () => {
+    const server = makeServer({
+      repository: { url: 'https://github.com/test', source: 'github' },
+    });
+    expect(hasRepoAndOci(server)).toBe(false);
+  });
+
+  test('returns false when server has only OCI package', () => {
+    const server = makeServer({
+      packages: [{ registryType: 'oci', identifier: 'img:1.0' }],
+    });
+    expect(hasRepoAndOci(server)).toBe(false);
+  });
+
+  test('returns false when server has neither', () => {
+    expect(hasRepoAndOci(makeServer())).toBe(false);
+  });
+
+  test('returns false when server has non-OCI packages and repository', () => {
+    const server = makeServer({
+      repository: { url: 'https://github.com/test', source: 'github' },
+      packages: [{ registryType: 'npm', identifier: 'pkg' }],
+    });
+    expect(hasRepoAndOci(server)).toBe(false);
   });
 });
 
@@ -122,6 +161,24 @@ describe('mapRemoteTransportType', () => {
 
   test('returns undefined for unknown type', () => {
     expect(mapRemoteTransportType('grpc')).toBeUndefined();
+  });
+});
+
+describe('mapImageTransportType', () => {
+  test('maps stdio to LOCAL', () => {
+    expect(mapImageTransportType('stdio')).toBe(IMAGE_TRANSPORT_TYPE.LOCAL);
+  });
+
+  test('maps streamable-http to REMOTE', () => {
+    expect(mapImageTransportType('streamable-http')).toBe(IMAGE_TRANSPORT_TYPE.REMOTE);
+  });
+
+  test('maps sse to REMOTE', () => {
+    expect(mapImageTransportType('sse')).toBe(IMAGE_TRANSPORT_TYPE.REMOTE);
+  });
+
+  test('maps unknown type to REMOTE', () => {
+    expect(mapImageTransportType('grpc')).toBe(IMAGE_TRANSPORT_TYPE.REMOTE);
   });
 });
 

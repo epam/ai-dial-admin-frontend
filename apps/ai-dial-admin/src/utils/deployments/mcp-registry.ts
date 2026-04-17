@@ -2,6 +2,7 @@ import { SUPPORTED_MCP_TRANSPORT_TYPES } from '@/src/constants/deployments/mcp-r
 import { ServerActionResponse } from '@/src/models/server-action';
 import { McpPackage, McpRemote, McpServer, McpServerResponse } from '@/src/types/deployments/mcp-registry';
 import { CONTAINER_TRANSPORT } from '@/src/types/deployments/containers';
+import { IMAGE_TRANSPORT_TYPE } from '@/src/types/deployments/images';
 import { ToolsetTransport } from '@/src/types/toolset';
 
 export const getPreferredOciPackage = (server: McpServer): McpPackage | undefined => {
@@ -39,6 +40,13 @@ export const getPreferredRemote = (server: McpServer): McpRemote | undefined => 
     server.remotes.find((remote) => remote.type === SUPPORTED_MCP_TRANSPORT_TYPES[0]) ||
     server.remotes.find((remote) => SUPPORTED_MCP_TRANSPORT_TYPES.includes(remote.type))
   );
+};
+
+export const hasRepoAndOci = (server: McpServer): boolean =>
+  !!server.repository?.url && !!server.packages?.some((p) => p.registryType === 'oci');
+
+export const mapImageTransportType = (transportType: string): IMAGE_TRANSPORT_TYPE => {
+  return transportType === 'stdio' ? IMAGE_TRANSPORT_TYPE.LOCAL : IMAGE_TRANSPORT_TYPE.REMOTE;
 };
 
 export const mapRemoteTransportType = (type: string): ToolsetTransport | undefined => {

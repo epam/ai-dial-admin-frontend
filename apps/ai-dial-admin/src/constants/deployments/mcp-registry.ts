@@ -7,8 +7,12 @@ export const CONTAINER_MCP_REGISTRY_FILTER: McpServerFilterDto = {
   packageTransportTypes: SUPPORTED_MCP_TRANSPORT_TYPES,
 };
 
-export const IMAGE_MCP_REGISTRY_FILTER: McpServerFilterDto = {
+export const IMAGE_MCP_REGISTRY_REPO_FILTER: McpServerFilterDto = {
   repositoryExists: true,
+};
+
+export const IMAGE_MCP_REGISTRY_OCI_FILTER: McpServerFilterDto = {
+  packageRegistryTypes: ['oci'],
 };
 
 export const TOOLSET_MCP_REGISTRY_FILTER: McpServerFilterDto = {
