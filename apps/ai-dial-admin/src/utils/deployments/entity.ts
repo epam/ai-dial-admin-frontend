@@ -6,7 +6,7 @@ import { SOURCE_FIELD, SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { DialModel, DialModelType } from '@/src/models/dial/model';
 import { Toolset } from '@/src/models/dial/toolset';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
+import { getEndpointPostfix, getEndpointPrefix } from '@/src/utils/models/model-endpoint';
 import { ENTITY_TRANSPORT } from '@/src/constants/deployments/containers';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { IMAGE_TYPE } from '@/src/types/deployments/images';
@@ -116,7 +116,7 @@ export const getEntityTemplate = (
     (template as DialModel).type = DialModelType.Chat;
     template.source = {
       ...(template.source as SOURCE_FIELD),
-      completionEndpointPath: `openai/v1${getEndpointPostfix((template as DialModel).type)}`,
+      completionEndpointPath: `${getEndpointPrefix(container.$type)}${getEndpointPostfix((template as DialModel).type)}`,
     };
     (template as DialModel).overrideName = container.name;
     (template as DialModel).displayVersion = '';
