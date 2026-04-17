@@ -27,7 +27,6 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useTimeFilter } from '@/src/hooks/use-time-filter';
-import { useTimePeriodOptions } from '@/src/hooks/use-time-period-options';
 import { DASHBOARD_VIEW_TYPE } from '@/src/types/telemetry';
 import { isToolsetRoute } from '@/src/utils/is-view';
 
@@ -49,7 +48,6 @@ const Dashboard: FC<Props> = ({ route, entity, defaultTimeFilter, onTimeFilterCh
       onTimeFilterChange,
     });
   const effectiveRefreshTime = canAutoRefresh ? refreshTime : 'off';
-  const timePeriodOptions = useTimePeriodOptions();
   const getReqRef = useRef(useProtectedRequest());
 
   const isMcpOnly = isToolsetRoute(route);
@@ -135,7 +133,6 @@ const Dashboard: FC<Props> = ({ route, entity, defaultTimeFilter, onTimeFilterCh
           route={route}
           canAutoRefresh={canAutoRefresh}
           isMcpView={isMcpView}
-          timePeriodOptions={timePeriodOptions}
         />
       </div>
       {isMcpView ? (

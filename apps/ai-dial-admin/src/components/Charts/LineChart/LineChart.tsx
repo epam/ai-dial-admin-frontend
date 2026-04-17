@@ -58,16 +58,12 @@ const LineChart: FC<Props> = ({ getData, refreshTime }) => {
     <div className="flex flex-col flex-1 rounded-lg border border-primary p-4 min-h-[280px] min-w-[200px]">
       <h3 className="text-primary mb-4">{t(TelemetryI18nKey.SystemUsage)}</h3>
 
-      {loading ? (
+      {loading && !data ? (
         <DialLoader size={24} />
+      ) : !data?.length ? (
+        <DialNoDataContent title={t(BasicI18nKey.NoData)} />
       ) : (
-        <>
-          {!data?.length ? (
-            <DialNoDataContent title={t(BasicI18nKey.NoData)} />
-          ) : (
-            <div>{options && <ReactECharts option={options} className="flex size-full min-h-[280px] m-0 p-0" />}</div>
-          )}
-        </>
+        options && <ReactECharts option={options} className="flex size-full min-h-[280px] m-0 p-0" />
       )}
     </div>
   );

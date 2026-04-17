@@ -3,58 +3,43 @@ import { describe, expect, test } from 'vitest';
 import {
   DEFAULT_TIME_PERIOD,
   getDefaultTimePeriod,
-  getFilteredTimePeriodOptions,
-  getTimePeriodOptionsByMaxDays,
+  getTimePeriodOptionsByMaxMs,
   timePeriodOptionsConfig,
 } from '../global-time-filter';
 
 describe('Constants :: global-time-filter', () => {
-  describe('getFilteredTimePeriodOptions', () => {
-    test('Should return options with offset <= maxTimeRangeMs', () => {
-      const maxTimeRangeMs = 60 * 60 * 1000; // 1 hour
-      const result = getFilteredTimePeriodOptions(maxTimeRangeMs);
-
-      expect(result).toEqual([
-        expect.objectContaining({ value: '15m' }),
-        expect.objectContaining({ value: '30m' }),
-        expect.objectContaining({ value: '1h' }),
-      ]);
+  describe('getTimePeriodOptionsByMaxMs', () => {
+    test('Should return all options when maxRangeMs is undefined', () => {
+      expect(getTimePeriodOptionsByMaxMs()).toEqual(timePeriodOptionsConfig);
     });
 
-    test('Should return empty array when maxTimeRangeMs is 0', () => {
-      expect(getFilteredTimePeriodOptions(0)).toEqual([]);
+    test('Should return all options when passing options but no maxRangeMs', () => {
+      expect(getTimePeriodOptionsByMaxMs(timePeriodOptionsConfig)).toEqual(timePeriodOptionsConfig);
     });
 
-    test('Should return all options when maxTimeRangeMs is very large', () => {
-      const result = getFilteredTimePeriodOptions(Number.MAX_SAFE_INTEGER);
-      expect(result).toEqual(timePeriodOptionsConfig);
-    });
-  });
+    test('Should return options with offset <= maxRangeMs (1 hour)', () => {
+      const maxRangeMs = 60 * 60 * 1000;
+      const result = getTimePeriodOptionsByMaxMs(timePeriodOptionsConfig, maxRangeMs);
 
-  describe('getTimePeriodOptionsByMaxDays', () => {
-    test('Should return all options when maxDays is undefined', () => {
-      expect(getTimePeriodOptionsByMaxDays()).toEqual(timePeriodOptionsConfig);
+      expect(result.map((o) => o.value)).toEqual(['15m', '30m', '1h']);
     });
 
     test('Should return options up to 3 days', () => {
-      const result = getTimePeriodOptionsByMaxDays(3);
+      const result = getTimePeriodOptionsByMaxMs(timePeriodOptionsConfig, 3 * 24 * 60 * 60 * 1000);
       const values = result.map((o) => o.value);
       expect(values).toContain('2d');
       expect(values).not.toContain('7d');
       expect(values).not.toContain('30d');
     });
 
-    test('Should return options up to 10 days', () => {
-      const result = getTimePeriodOptionsByMaxDays(10);
-      const values = result.map((o) => o.value);
-      expect(values).toContain('7d');
-      expect(values).not.toContain('30d');
+    test('Should return empty array when maxRangeMs is 0', () => {
+      expect(getTimePeriodOptionsByMaxMs(timePeriodOptionsConfig, 0)).toEqual([]);
     });
 
-    test('Should return all options for 31 days', () => {
-      const result = getTimePeriodOptionsByMaxDays(31);
-      const values = result.map((o) => o.value);
-      expect(values).toContain('30d');
+    test('Should return all options when maxRangeMs is very large', () => {
+      expect(getTimePeriodOptionsByMaxMs(timePeriodOptionsConfig, Number.MAX_SAFE_INTEGER)).toEqual(
+        timePeriodOptionsConfig,
+      );
     });
   });
 

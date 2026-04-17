@@ -11,7 +11,6 @@ import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
 import { useAppContext } from '@/src/context/AppContext';
 import { useTimeFilter } from '@/src/hooks/use-time-filter';
 import List from '@/src/components/UsageLog/List/List';
-import { useTimePeriodOptions } from '@/src/hooks/use-time-period-options';
 import {
   USAGE_LOG_CONVERSATIONS_COLUMNS,
   USAGE_LOG_MCP_COLUMNS,
@@ -42,10 +41,9 @@ interface Props {
 
 const UsageLog: FC<Props> = ({ route, className, entity, entityView, onTimeFilterChange, defaultTimeFilter }) => {
   const t = useI18n();
-  const { auditMaxRangeDays } = useAppContext();
+  const { telemetryMaxRangeMs } = useAppContext();
   const tabs = getUsageLogTabs(t);
   const getReqRef = useRef(useProtectedRequest());
-  const timePeriodOptions = useTimePeriodOptions();
 
   const [activeTab, setActiveTab] = useState(entityView || EntityViewTab.Traces);
   const { timePeriod, timeRange, isCustom, onTimePeriodChange, onTimeRangeChange } = useTimeFilter({
@@ -103,8 +101,7 @@ const UsageLog: FC<Props> = ({ route, className, entity, entityView, onTimeFilte
             onTimePeriodChange={onTimePeriodChange}
             timeRange={timeRange}
             onTimeRangeChange={onTimeRangeChange}
-            timePeriodOptions={timePeriodOptions}
-            maxRangeDays={auditMaxRangeDays}
+            maxRangeMs={telemetryMaxRangeMs}
           />
           <DialNeutralButton
             label={t(ButtonsI18nKey.Refresh)}
