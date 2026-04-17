@@ -52,12 +52,10 @@ export const mapRemoteTransportType = (type: string): ToolsetTransport | undefin
   }
 };
 
-export const unwrapSingleServerResponse = (
-  response: ServerActionResponse,
-): ServerActionResponse<McpServerResponse | null> => {
+export const unwrapSingleServerResponse = (response: ServerActionResponse): ServerActionResponse<McpServerResponse> => {
   if (!response.success) {
     return response;
   }
   const servers = (response.response?.servers as McpServerResponse[] | undefined) ?? [];
-  return { ...response, response: servers.length > 0 ? servers[0] : null };
+  return { ...response, response: servers[0] };
 };

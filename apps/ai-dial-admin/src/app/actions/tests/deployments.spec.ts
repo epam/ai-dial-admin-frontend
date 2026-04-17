@@ -436,7 +436,7 @@ describe('Deployments actions', () => {
       expect(result.response).toEqual(singleItem);
     });
 
-    test('getMcpServerVersion returns null response when upstream list is empty', async () => {
+    test('getMcpServerVersion returns undefined response when upstream list is empty', async () => {
       (mcpRegistryApi.getMcpServerVersion as any).mockResolvedValue({
         success: true,
         response: { servers: [], metadata: { count: 0 } },
@@ -445,7 +445,7 @@ describe('Deployments actions', () => {
       const result = await getMcpServerVersion('missing/server', 'v0.0.1');
 
       expect(result.success).toBe(true);
-      expect(result.response).toBeNull();
+      expect(result.response).toBeUndefined();
     });
 
     test('getMcpServerVersion propagates upstream failure unchanged', async () => {

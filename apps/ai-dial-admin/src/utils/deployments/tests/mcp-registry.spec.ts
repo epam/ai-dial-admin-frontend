@@ -140,19 +140,19 @@ describe('unwrapSingleServerResponse', () => {
     expect(result.response).toEqual(singleItem);
   });
 
-  test('returns null when servers array is empty', () => {
+  test('returns undefined when servers array is empty', () => {
     const result = unwrapSingleServerResponse({
       success: true,
       response: { servers: [], metadata: { count: 0 } },
     });
     expect(result.success).toBe(true);
-    expect(result.response).toBeNull();
+    expect(result.response).toBeUndefined();
   });
 
-  test('returns null when response is missing', () => {
+  test('returns undefined when response is missing', () => {
     const result = unwrapSingleServerResponse({ success: true });
     expect(result.success).toBe(true);
-    expect(result.response).toBeNull();
+    expect(result.response).toBeUndefined();
   });
 
   test('passes through failed upstream response unchanged', () => {
