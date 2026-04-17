@@ -1,18 +1,10 @@
-import {
-  AlertVariant,
-  DialAlert,
-  DialIconButton,
-  DialLabelledText,
-  DialNeutralButton,
-  ElementSize,
-} from '@epam/ai-dial-ui-kit';
+import { AlertVariant, DialAlert, DialLabelledText, DialNeutralButton, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconBlocks } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import OpenPopup from '@/public/images/icons/open-pop-up.svg';
-import { installImage, updateContainer } from '@/src/app/actions/deployments';
+import { installImage } from '@/src/app/actions/deployments';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import Events from '@/src/components/Containers/View/Events/Events';
 import ExecutionLog from '@/src/components/Containers/View/ExecutionLog/ExecutionLog';
@@ -22,12 +14,10 @@ import Prompts from '@/src/components/Containers/View/Prompts/Prompts';
 import Properties from '@/src/components/Containers/View/Properties/Properties';
 import Resources from '@/src/components/Containers/View/Resources/Resources';
 import StatusIndicator from '@/src/components/Deployments/Common/StatusIndicator/StatusIndicator';
-import ContainerChangeImage from '@/src/components/Deployments/Modals/ContainerChangeImage';
 import ImageInstall from '@/src/components/Deployments/Modals/ImageInstall';
 import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
 import Tools from '@/src/components/Tools/Tools';
-import { BasicI18nKey, ContainersI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { BasicI18nKey, ContainersI18nKey, EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
@@ -36,7 +26,7 @@ import { Image } from '@/src/models/deployments/images';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isEditDisabled } from '@/src/utils/deployments/containers';
+import { getContainerSourceTypeLabel } from '@/src/utils/deployments/containers';
 import { getTranslatedType } from '@/src/utils/deployments/entity';
 import { isImageNotInstalled } from '@/src/utils/deployments/images';
 import { getErrorNotification } from '@/src/utils/notification';
@@ -72,21 +62,9 @@ const TabsContent: FC<Props> = ({
   const router = useRouter();
   const { showNotification } = useNotification();
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
-  const isDisabled = useMemo(
-    () => isReadOnlyAdmin || isEditDisabled(selectedContainer),
-    [isReadOnlyAdmin, selectedContainer],
-  );
+
   const imageWarning = isImageNotInstalled(image);
-
-  const handleModalClose = useCallback(() => {
-    setIsModalOpen(false);
-  }, []);
-
-  const handleModalOpen = useCallback(() => {
-    setIsModalOpen(true);
-  }, []);
 
   const handleInstallModalOpen = useCallback(() => {
     setIsInstallModalOpen(true);
@@ -123,41 +101,14 @@ const TabsContent: FC<Props> = ({
     );
   }, [restarts, selectedContainer.status, selectedContainer.url, t]);
 
-  const headerPrefix = useMemo(() => {
-    return (
-      <>
-        {image && (
-          <DialLabelledText
-            label={t(ContainersI18nKey.ContainerImage, { type: getTranslatedType(route, t) })}
-            text={`${image.name} (${image.version})`}
-            postfix={
-              <DialIconButton
-                className="size-auto ml-2 cursor-pointer text-secondary hover:text-accent-primary"
-                icon={<OpenPopup {...BASE_BUTTON_ICON_PROPS} />}
-                onClick={handleModalOpen}
-                disabled={isDisabled}
-              />
-            }
-          />
-        )}
-      </>
-    );
-  }, [isDisabled, handleModalOpen, image, route, t]);
-
-  const onApply = useCallback(
-    (id: string) => {
-      updateContainer({
-        ...selectedContainer,
-        source: { ...selectedContainer.source, imageDefinitionId: id },
-      }).then((res) => {
-        if (res.success) {
-          router.refresh();
-        } else {
-          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
-        }
-      });
-    },
-    [router, selectedContainer, showNotification],
+  const headerPrefix = useMemo(
+    () => (
+      <DialLabelledText
+        label={t(EntitiesI18nKey.SourceType)}
+        text={getContainerSourceTypeLabel(selectedContainer.source, route, t)}
+      />
+    ),
+    [route, selectedContainer.source, t],
   );
 
   return (
@@ -198,7 +149,13 @@ const TabsContent: FC<Props> = ({
             headerPostfix={headerPostfix}
             headerPrefix={headerPrefix}
           >
-            <Properties container={selectedContainer} setContainer={onChange} route={route} names={names} />
+            <Properties
+              container={selectedContainer}
+              setContainer={onChange}
+              image={image}
+              route={route}
+              names={names}
+            />
           </PropertiesTabContent>
         </>
       )}
@@ -222,20 +179,6 @@ const TabsContent: FC<Props> = ({
         />
       )}
 
-      {isModalOpen &&
-        image &&
-        createPortal(
-          <ContainerChangeImage
-            modalTitle={t(ContainersI18nKey.ContainerImage, { type: getTranslatedType(route, t) })}
-            isModalOpen={isModalOpen}
-            onClose={handleModalClose}
-            onApply={onApply}
-            image={image}
-            route={route}
-            containerStatus={selectedContainer.status}
-          />,
-          document.body,
-        )}
       {isInstallModalOpen &&
         image &&
         createPortal(
