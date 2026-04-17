@@ -1,17 +1,16 @@
 'use client';
 
 import { DialLabelledText, DialLoader } from '@epam/ai-dial-ui-kit';
-import { IconExternalLink } from '@tabler/icons-react';
 import { FC, useMemo } from 'react';
 
 import CodeViewer from '@/src/components/Common/CodeViewer/CodeViewer';
+import ExternalLink from '@/src/components/Deployments/Common/ExternalLink/ExternalLink';
 import SidePanel from '@/src/components/Common/SidePanel/SidePanel';
 import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRenderer';
 import { ContainersI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { McpServer, McpServerResponse } from '@/src/types/deployments/mcp-registry';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
-import { isValidHttpUrl } from '@/src/utils/validation/url-error';
 
 interface Props {
   server?: McpServer & { updatedAt?: string };
@@ -52,19 +51,7 @@ const McpServerDetails: FC<Props> = ({ server, serverResponse, isLoading, isOpen
 
           {server.repository?.url && (
             <DialLabelledText label={t(ContainersI18nKey.Repository)}>
-              {isValidHttpUrl(server.repository.url) ? (
-                <a
-                  href={server.repository.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-accent-primary hover:underline inline-flex items-center gap-1"
-                >
-                  {server.repository.url}
-                  <IconExternalLink size={14} />
-                </a>
-              ) : (
-                <span>{server.repository.url}</span>
-              )}
+              <ExternalLink value={server.repository.url} />
             </DialLabelledText>
           )}
 

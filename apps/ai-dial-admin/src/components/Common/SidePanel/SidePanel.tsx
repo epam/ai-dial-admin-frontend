@@ -4,6 +4,9 @@ import { DialCloseButton } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 import { FC, ReactNode } from 'react';
 
+// TODO: adopt SidePanel in all ad-hoc details panels (Runs detail panels, MetricInfoPanel, etc.)
+//       so the app has a single source of truth for titled closable side-chrome.
+
 interface Props {
   label: ReactNode;
   isOpen: boolean;
