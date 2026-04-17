@@ -57,6 +57,7 @@ export default async function Layout({ children, params }: { children: ReactNode
           featureFlags={featureFlags}
           disableDeploymentsJSONEditor={isValueTruthy(process.env.DEPLOYMENTS_DISABLE_JSON_EDITOR)}
           resourcesDefaults={JSON.parse(process.env.DEPLOYMENTS_RESOURCES_DEFAULTS || '{}') as ResourcesDefaults}
+          auditMaxRangeDays={process.env.AUDIT_MAX_RANGE_DAYS ? Number(process.env.AUDIT_MAX_RANGE_DAYS) : undefined}
           userInfo={(await utilityApi.getUserInfo(token)).response?.userInfo}
         >
           <ThemeProvider themesConfiguration={themesConfiguration} themeImages={themesImages}>

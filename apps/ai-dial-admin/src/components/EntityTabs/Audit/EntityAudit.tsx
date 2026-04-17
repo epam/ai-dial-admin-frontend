@@ -14,7 +14,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { TabOrientation } from '@/src/types/tab';
 import { EntityViewTab, getAuditTabs } from '@/src/utils/tabs/utils';
 import { DEFAULT_TIME_PERIOD } from '@/src/constants/global-time-filter';
-import { TimeRange } from '@/src/models/time-range';
+import { TimeFilterValue } from '@/src/models/time-range';
 
 interface Props {
   entity: BaseEntity;
@@ -28,8 +28,7 @@ const EntityAudit: FC<Props> = ({ entity, view }) => {
   const tabs = getAuditTabs(t, featureFlags, view);
   const [activeTab, setActiveTab] = useState(tabs[0].id);
 
-  const [timeFilter, setTimeFilter] = useState<string | TimeRange>(DEFAULT_TIME_PERIOD);
-  const [isCustomRange, setIsCustomRange] = useState(false);
+  const [timeFilter, setTimeFilter] = useState<TimeFilterValue>(DEFAULT_TIME_PERIOD);
 
   return (
     <div className="flex flex-row gap-4 size-full">
@@ -46,46 +45,33 @@ const EntityAudit: FC<Props> = ({ entity, view }) => {
       </div>
       <div className="flex flex-col flex-1 min-h-0 w-full relative">
         {activeTab === EntityViewTab.Dashboard && (
-          <Dashboard
-            initTimeFilter={timeFilter}
-            onChangeTimeFilter={setTimeFilter}
-            entity={entity}
-            route={view}
-            isCustomRange={isCustomRange}
-            setIsCustomRange={setIsCustomRange}
-          />
+          <Dashboard defaultTimeFilter={timeFilter} onTimeFilterChange={setTimeFilter} entity={entity} route={view} />
         )}
         {activeTab === EntityViewTab.Traces && (
           <UsageLog
-            initTimeFilter={timeFilter}
-            onChangeTimeFilter={setTimeFilter}
+            defaultTimeFilter={timeFilter}
+            onTimeFilterChange={setTimeFilter}
             entity={entity}
             route={view}
             entityView={activeTab}
-            isCustomRange={isCustomRange}
-            setIsCustomRange={setIsCustomRange}
           />
         )}
         {activeTab === EntityViewTab.Conversations && (
           <UsageLog
-            initTimeFilter={timeFilter}
-            onChangeTimeFilter={setTimeFilter}
+            defaultTimeFilter={timeFilter}
+            onTimeFilterChange={setTimeFilter}
             entity={entity}
             route={view}
             entityView={activeTab}
-            isCustomRange={isCustomRange}
-            setIsCustomRange={setIsCustomRange}
           />
         )}
         {activeTab === EntityViewTab.Activities && (
           <ActivityAuditList
-            initTimeFilter={timeFilter}
-            onChangeTimeFilter={setTimeFilter}
+            defaultTimeFilter={timeFilter}
+            onTimeFilterChange={setTimeFilter}
             entity={entity}
             entityType={routeAuditResource[view]}
             refresh
-            isCustomRange={isCustomRange}
-            setIsCustomRange={setIsCustomRange}
           />
         )}
       </div>

@@ -13,17 +13,15 @@
   }
 }
 
-.react-datepicker-popper {
-  .react-datepicker__triangle {
-    @apply hidden;
-  }
-
+// Shared calendar theme — both popper and inline modes
+.react-datepicker-popper,
+.dial-range-calendar {
   .react-datepicker {
     @apply bg-layer-0 text-secondary small rounded border-primary px-3 py-4;
   }
 
   .react-datepicker__header {
-    @apply bg-layer-0 border-b-primary p-0 pb-3;
+    @apply bg-layer-0 p-0 pb-2 mb-2 border-0;
 
     .react-datepicker__current-month {
       @apply mb-3 text-secondary;
@@ -52,7 +50,7 @@
 
   .react-datepicker__month-container {
     .react-datepicker__month {
-      @apply m-0;
+      @apply m-0 pt-2;
     }
 
     .react-datepicker__day,
@@ -61,18 +59,60 @@
     }
 
     .react-datepicker__day {
-      @apply m-[1px] w-[30px] h-[30px] rounded-full border border-transparent items-center content-center hover:rounded-full hover:border-secondary hover:bg-accent-primary-alpha;
+      @apply m-0 w-[30px] h-[30px] text-primary items-center content-center;
+
+      &:hover {
+        @apply bg-layer-3;
+      }
 
       &--today {
-        @apply border-accent-primary hover:border-accent-primary;
+        @apply text-accent-primary;
       }
 
-      &--selected {
-        @apply text-primary bg-accent-primary hover:bg-accent-primary hover:border-accent-primary;
+      &--selected,
+      &--range-start,
+      &--range-end {
+        @apply bg-controls-accent-primary text-primary;
+
+        &:hover {
+          @apply bg-controls-accent-primary;
+        }
       }
 
-      &--in-range:not(&--selected) {
-        @apply bg-transparent;
+      &--selected:not(&--range-start):not(&--range-end),
+      &--selected:not(&--range-start):not(&--range-end):hover {
+        @apply rounded;
+      }
+
+      &--range-start,
+      &--range-start:hover {
+        @apply rounded-l rounded-r-none;
+      }
+
+      &--range-end,
+      &--range-end:hover {
+        @apply rounded-r rounded-l-none;
+      }
+
+      &--in-range:not(&--range-start):not(&--range-end):not(&--selected) {
+        @apply bg-layer-4 text-primary rounded-none;
+
+        &:hover {
+          @apply bg-layer-4 rounded-none;
+        }
+      }
+
+      // Disable native forward hover preview so behavior is consistent on both sides
+      &--in-selecting-range:not(&--range-start):not(&--range-end):not(&--selected):not(&--in-range) {
+        background-color: transparent !important;
+      }
+
+      &--disabled {
+        @apply text-secondary cursor-default;
+
+        &:hover {
+          @apply bg-transparent;
+        }
       }
     }
 
@@ -80,6 +120,31 @@
       @apply tiny text-secondary;
     }
   }
+}
+
+// Popper-only: hide the triangle arrow
+.react-datepicker-popper {
+  .react-datepicker__triangle {
+    @apply hidden;
+  }
+}
+
+// Inline-only: strip border/padding since it's embedded in the panel
+.dial-range-calendar {
+  .react-datepicker {
+    @apply border-0 p-0;
+  }
+}
+
+// Cosmetic hint: days beyond the reachable window are dimmed
+.dial-range-picker__day--out-of-reach {
+  @apply opacity-50;
+}
+
+// Exceptions: today and disabled days (future) keep full opacity — they have their own styling
+.react-datepicker__day--today.dial-range-picker__day--out-of-reach,
+.react-datepicker__day--disabled.dial-range-picker__day--out-of-reach {
+  @apply opacity-100;
 }
 
 .react-datepicker__input-time-container {

@@ -4,6 +4,7 @@ import {
   DEFAULT_TIME_PERIOD,
   getDefaultTimePeriod,
   getFilteredTimePeriodOptions,
+  getTimePeriodOptionsByMaxDays,
   timePeriodOptionsConfig,
 } from '../global-time-filter';
 
@@ -27,6 +28,33 @@ describe('Constants :: global-time-filter', () => {
     test('Should return all options when maxTimeRangeMs is very large', () => {
       const result = getFilteredTimePeriodOptions(Number.MAX_SAFE_INTEGER);
       expect(result).toEqual(timePeriodOptionsConfig);
+    });
+  });
+
+  describe('getTimePeriodOptionsByMaxDays', () => {
+    test('Should return all options when maxDays is undefined', () => {
+      expect(getTimePeriodOptionsByMaxDays()).toEqual(timePeriodOptionsConfig);
+    });
+
+    test('Should return options up to 3 days', () => {
+      const result = getTimePeriodOptionsByMaxDays(3);
+      const values = result.map((o) => o.value);
+      expect(values).toContain('2d');
+      expect(values).not.toContain('7d');
+      expect(values).not.toContain('30d');
+    });
+
+    test('Should return options up to 10 days', () => {
+      const result = getTimePeriodOptionsByMaxDays(10);
+      const values = result.map((o) => o.value);
+      expect(values).toContain('7d');
+      expect(values).not.toContain('30d');
+    });
+
+    test('Should return all options for 31 days', () => {
+      const result = getTimePeriodOptionsByMaxDays(31);
+      const values = result.map((o) => o.value);
+      expect(values).toContain('30d');
     });
   });
 
