@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { DialConfirmationPopup, DialNeutralButton, DialTooltip } from '@epam/ai-dial-ui-kit';
@@ -20,11 +20,12 @@ import {
 import ActivityDetails from '@/src/components/ActivityAudit/Modals/Details';
 import { SYSTEM_ROLLBACK_ID } from '@/src/components/ActivityAudit/Rollback/constants';
 import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
+import { useAppContext } from '@/src/context/AppContext';
+import { useTimeFilter } from '@/src/hooks/use-time-filter';
 import { emptyDataTitleMap, listViewTitleMap } from '@/src/components/ListView/constants';
 import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
 import ListView from '@/src/components/ListView/ListView';
 import { ACTIONS_COLUMN_CEL_ID, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
-import { DEFAULT_TIME_PERIOD } from '@/src/constants/global-time-filter';
 import { ButtonsI18nKey, RollbackI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -34,7 +35,7 @@ import { DialActivity } from '@/src/models/activity-audit';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { FilterDto } from '@/src/models/request';
-import { TimeRange } from '@/src/models/time-range';
+import { TimeFilterValue, TimeRange } from '@/src/models/time-range';
 import { ApplicationRoute } from '@/src/types/routes';
 import { rollbackEntityPerType } from '@/src/utils/audit/get-rollback-request';
 import {
@@ -55,22 +56,13 @@ interface Props {
   entity?: BaseEntity | DialApplicationScheme;
   entityType?: string;
   refresh?: boolean;
-  initTimeFilter?: string | TimeRange;
-  onChangeTimeFilter?: (filter: string | TimeRange) => void;
-  isCustomRange?: boolean;
-  setIsCustomRange?: Dispatch<SetStateAction<boolean>>;
+  defaultTimeFilter?: TimeFilterValue;
+  onTimeFilterChange?: (filter: TimeFilterValue) => void;
 }
 
-const ActivityAuditList: FC<Props> = ({
-  entity,
-  entityType,
-  refresh,
-  initTimeFilter,
-  onChangeTimeFilter,
-  isCustomRange,
-  setIsCustomRange,
-}) => {
+const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTimeFilter, onTimeFilterChange }) => {
   const t = useI18n();
+  const { auditMaxRangeDays } = useAppContext();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -80,22 +72,11 @@ const ActivityAuditList: FC<Props> = ({
 
   const [isLoading, setIsLoading] = useState(false);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
-  const [timePeriod, setTimePeriod] = useState<string | undefined>();
-  const [timeRange, setTimeRange] = useState<TimeRange>(getTimeRangeById(DEFAULT_TIME_PERIOD));
+  const { timePeriod, timeRange, isCustom, onTimePeriodChange, onTimeRangeChange } = useTimeFilter({
+    defaultTimeFilter,
+    onTimeFilterChange,
+  });
   const [selectedActivity, setSelectedActivity] = useState<DialActivity | undefined>(void 0);
-  const [innerIsCustomRange, setInnerIsCustomRange] = useState(false);
-
-  useEffect(() => {
-    if (!timePeriod) {
-      if (!isCustomRange) {
-        setTimePeriod((initTimeFilter as string) || DEFAULT_TIME_PERIOD);
-        setTimeRange(getTimeRangeById((initTimeFilter as string) || DEFAULT_TIME_PERIOD));
-      } else {
-        setTimePeriod(DEFAULT_TIME_PERIOD);
-        setTimeRange((initTimeFilter as TimeRange) || getTimeRangeById(DEFAULT_TIME_PERIOD));
-      }
-    }
-  }, [initTimeFilter, timePeriod, isCustomRange]);
 
   const onCloseModal = useCallback(() => {
     setIsRollbackModalOpen(false);
@@ -115,10 +96,9 @@ const ActivityAuditList: FC<Props> = ({
   const gridDataSource: IDatasource = useMemo(
     () => ({
       getRows: (params: IGetRowsParams) => {
-        const actualTimeRange =
-          isCustomRange || innerIsCustomRange
-            ? { startDate: getStartOfDay(timeRange.startDate), endDate: getEndOfDay(timeRange.endDate) }
-            : getTimeRangeById(timePeriod || '');
+        const actualTimeRange = isCustom
+          ? { startDate: getStartOfDay(timeRange.startDate), endDate: getEndOfDay(timeRange.endDate) }
+          : getTimeRangeById(timePeriod || '');
         gridApi?.setGridOption('loading', true);
         const page = Math.floor(params.startRow / PAGE_SIZE);
         const sorts = getRequestSorts(params.sortModel);
@@ -155,7 +135,7 @@ const ActivityAuditList: FC<Props> = ({
           });
       },
     }),
-    [isCustomRange, innerIsCustomRange, timePeriod, timeRange, gridApi, entity, entityType],
+    [isCustom, timePeriod, timeRange, gridApi, entity, entityType],
   );
 
   useEffect(() => {
@@ -192,25 +172,20 @@ const ActivityAuditList: FC<Props> = ({
     }
   }, [gridApi, gridDataSource]);
 
-  const onTimePeriodChange = useCallback(
+  const handleTimePeriodChange = useCallback(
     (period: string) => {
-      setTimePeriod(period);
-      onChangeTimeFilter?.(period);
-      setTimeRange(getTimeRangeById(period));
+      onTimePeriodChange(period);
       onRefresh();
     },
-    [onRefresh, onChangeTimeFilter],
+    [onTimePeriodChange, onRefresh],
   );
 
-  const onTimeRangeChange = useCallback(
-    (range: TimeRange, isCustom?: boolean) => {
-      setTimeRange(range);
-      if (isCustom) {
-        onChangeTimeFilter?.(range);
-      }
+  const handleTimeRangeChange = useCallback(
+    (range: TimeRange, custom?: boolean) => {
+      onTimeRangeChange(range, custom);
       onRefresh();
     },
-    [onRefresh, onChangeTimeFilter],
+    [onTimeRangeChange, onRefresh],
   );
 
   const resourceRollback = useCallback(() => {
@@ -272,16 +247,13 @@ const ActivityAuditList: FC<Props> = ({
       >
         <div className={classNames('flex gap-4', entity ? 'flex-1 justify-between' : 'justify-end')}>
           {!entity && <ResetFiltersButton gridApi={gridApi} />}
-          {timePeriod && (
-            <TimeFilter
-              timePeriod={timePeriod as string}
-              onTimePeriodChange={onTimePeriodChange}
-              timeRange={timeRange}
-              onTimeRangeChange={onTimeRangeChange}
-              isCustomRange={isCustomRange || innerIsCustomRange}
-              setIsCustomRange={setIsCustomRange || setInnerIsCustomRange}
-            />
-          )}
+          <TimeFilter
+            timePeriod={timePeriod}
+            onTimePeriodChange={handleTimePeriodChange}
+            timeRange={timeRange}
+            onTimeRangeChange={handleTimeRangeChange}
+            maxRangeDays={auditMaxRangeDays}
+          />
 
           <div className="flex flex-row gap-x-4">
             {entity && <ResetFiltersButton gridApi={gridApi} />}

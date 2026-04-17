@@ -23,6 +23,16 @@ export function getFilteredTimePeriodOptions(maxTimeRangeMs: number) {
   return timePeriodOptionsConfig.filter((opt) => opt.offset <= maxTimeRangeMs);
 }
 
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+export function getTimePeriodOptionsByMaxDays(
+  maxDays?: number,
+  options: TimePeriodOption[] = timePeriodOptionsConfig,
+): TimePeriodOption[] {
+  if (!maxDays) return options;
+  return options.filter((opt) => opt.offset <= maxDays * MS_PER_DAY);
+}
+
 export function getDefaultTimePeriod(options: TimePeriodOption[]): string {
   if (options.some((opt) => opt.value === DEFAULT_TIME_PERIOD)) return DEFAULT_TIME_PERIOD;
   return options.length > 0 ? options[options.length - 1].value : DEFAULT_TIME_PERIOD;
