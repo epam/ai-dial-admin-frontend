@@ -8,15 +8,17 @@ import { useI18n } from '@/src/locales/client';
 interface Props {
   selectedValue: string;
   onChange: (value: string) => void;
+  disabled?: boolean;
 }
 
-const Refresh: FC<Props> = ({ selectedValue, onChange }) => {
+const Refresh: FC<Props> = ({ selectedValue, onChange, disabled }) => {
   const t = useI18n();
   return (
     <DialSelect
       prefix={t(TelemetryI18nKey.AutoRefresh)}
       options={refreshOptionsConfig}
       value={selectedValue}
+      disabled={disabled}
       onChange={(value) => onChange(value as string)}
     />
   );

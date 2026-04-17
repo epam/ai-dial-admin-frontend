@@ -34,6 +34,7 @@ import {
   getGlobalWhitelist,
   updateGlobalWhitelist,
   getHuggingFaceModels,
+  getMcpServerVersion,
   getModelDetails,
   getImageMcpServers,
 } from '../deployments';
@@ -496,6 +497,45 @@ describe('Deployments actions', () => {
 
       expect(result.response.servers).toHaveLength(1);
       expect(result.response.servers[0]).toBe(repoVersion);
+    });
+  });
+
+  describe('MCP Registry actions', () => {
+    test('getMcpServerVersion delegates to mcpRegistryApi and unwraps the single-item list', async () => {
+      const server = { name: 'ai.aliengiraffe/spotdb', description: 'desc', version: 'v0.1.0' };
+      const singleItem = { server, _meta: { published: true } };
+      (mcpRegistryApi.getMcpServerVersion as any).mockResolvedValue({
+        success: true,
+        response: { servers: [singleItem], metadata: { count: 1 } },
+      });
+
+      const result = await getMcpServerVersion('ai.aliengiraffe/spotdb', 'v0.1.0');
+
+      expect(getUserToken).toHaveBeenCalled();
+      expect(mcpRegistryApi.getMcpServerVersion).toHaveBeenCalledWith('ai.aliengiraffe/spotdb', 'v0.1.0', TOKEN_MOCK);
+      expect(result.success).toBe(true);
+      expect(result.response).toEqual(singleItem);
+    });
+
+    test('getMcpServerVersion returns undefined response when upstream list is empty', async () => {
+      (mcpRegistryApi.getMcpServerVersion as any).mockResolvedValue({
+        success: true,
+        response: { servers: [], metadata: { count: 0 } },
+      });
+
+      const result = await getMcpServerVersion('missing/server', 'v0.0.1');
+
+      expect(result.success).toBe(true);
+      expect(result.response).toBeUndefined();
+    });
+
+    test('getMcpServerVersion propagates upstream failure unchanged', async () => {
+      const failed = { success: false, errorHeader: 'Not found', errorMessage: 'version not found' };
+      (mcpRegistryApi.getMcpServerVersion as any).mockResolvedValue(failed);
+
+      const result = await getMcpServerVersion('missing/server', 'v0.0.1');
+
+      expect(result).toEqual(failed);
     });
   });
 });

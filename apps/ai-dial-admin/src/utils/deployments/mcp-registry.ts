@@ -1,5 +1,6 @@
 import { SUPPORTED_MCP_TRANSPORT_TYPES } from '@/src/constants/deployments/mcp-registry';
-import { McpPackage, McpRemote, McpServer } from '@/src/types/deployments/mcp-registry';
+import { ServerActionResponse } from '@/src/models/server-action';
+import { McpPackage, McpRemote, McpServer, McpServerResponse } from '@/src/types/deployments/mcp-registry';
 import { CONTAINER_TRANSPORT } from '@/src/types/deployments/containers';
 import { IMAGE_TRANSPORT_TYPE } from '@/src/types/deployments/images';
 import { ToolsetTransport } from '@/src/types/toolset';
@@ -57,4 +58,12 @@ export const mapRemoteTransportType = (type: string): ToolsetTransport | undefin
     default:
       return undefined;
   }
+};
+
+export const unwrapSingleServerResponse = (response: ServerActionResponse): ServerActionResponse<McpServerResponse> => {
+  if (!response.success) {
+    return response;
+  }
+  const servers = (response.response?.servers as McpServerResponse[] | undefined) ?? [];
+  return { ...response, response: servers[0] };
 };
