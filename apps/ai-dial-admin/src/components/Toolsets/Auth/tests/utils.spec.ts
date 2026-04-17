@@ -155,7 +155,7 @@ describe('Toolsets Auth Utils', () => {
       setUrl(ApplicationRoute.ToolsetPublications, mockToolset);
 
       expect(openInNewTab.getUrnForEntity).toHaveBeenCalledWith(ApplicationRoute.ToolsetPublications, mockToolset);
-      expect(localStorage.getItem('toolset-auth-redirect-url')).toBe(`${mockUrn}?`);
+      expect(localStorage.getItem('toolset-auth-redirect-url')).toBe(`${mockUrn}&`);
     });
 
     test('should set URL with ampersand for AssetsToolsets route', () => {

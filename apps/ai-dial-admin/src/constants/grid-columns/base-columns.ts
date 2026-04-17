@@ -103,6 +103,8 @@ export const PATHS_COLUMN: ColDef = {
   cellRendererParams: (params: { data?: { paths?: string[] } }) => ({
     items: params.data?.paths,
   }),
+  filterValueGetter: (params) => params.data?.paths,
+  tooltipValueGetter: (params) => params.data?.paths?.join(', ') || null,
 };
 
 export const VALIDITY_STATUS_COLUMN = (t: (str: string) => string): ColDef => {
