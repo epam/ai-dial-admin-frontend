@@ -13,7 +13,7 @@ export const ANALYTICS_RUN_METRIC_SNAPSHOTS_URL = `${ANALYTICS_URL}/run-metric-s
 export class AnalyticsApi extends BaseApi {
   getTestCaseRunResults(filters: FilterDto[], token: Token): Promise<{ content: AnalyticsResult[] } | null> {
     return this.get<{ content: AnalyticsResult[] }>(
-      `${ANALYTICS_RESULTS_URL}?${getRequestFiltersStr(filters)}&computation=latest`,
+      `${ANALYTICS_RESULTS_URL}?${getRequestFiltersStr(filters)}&computation=latest&size=10000`,
       token,
     );
   }
