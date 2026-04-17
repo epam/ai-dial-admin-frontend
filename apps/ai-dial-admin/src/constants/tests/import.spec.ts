@@ -66,7 +66,7 @@ describe('IMPORT_FILE_TYPES', () => {
   test('returns ARCHIVE and JSON for Prompts route', () => {
     const result = IMPORT_FILE_TYPES(t, ApplicationRoute.Prompts);
     expect(result.some((r) => r.id === ImportFileType.ARCHIVE)).toBe(true);
-    expect(result.some((r) => r.id === ImportFileType.FILES)).toBe(true);
+    expect(result.some((r) => r.id === ImportFileType.JSON)).toBe(true);
   });
 
   test('returns ARCHIVE and FILES for Files route', () => {
