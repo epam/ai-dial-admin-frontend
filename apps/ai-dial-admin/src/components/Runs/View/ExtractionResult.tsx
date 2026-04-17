@@ -8,7 +8,7 @@ import { DialLoader } from '@epam/ai-dial-ui-kit';
 import { getRunResults } from '@/src/app/[lang]/runs/actions';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import RunResultDetailPanel from '@/src/components/Runs/Details/RunResultDetailPanel';
-import { EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
 import { ExtractionResult, Run } from '@/src/models/evaluation/run';
@@ -68,22 +68,19 @@ const ExtractionResultTab: FC<Props> = ({ run }) => {
 
   return (
     <div className="flex flex-col gap-4 h-full min-h-0">
-      <h2>{t(TabsI18nKey.ExtractionResult)}</h2>
-      <div className="min-h-0 flex-1">
-        {isLoading ? (
-          <DialLoader size={40} />
-        ) : (
-          <GridView
-            columnDefs={colDefs}
-            rowData={results}
-            additionalGridOptions={{
-              defaultColDef: { filter: false, floatingFilter: false },
-              onRowClicked,
-            }}
-            emptyDataProps={{ title: t(EntitiesI18nKey.NoResults) }}
-          />
-        )}
-      </div>
+      {isLoading ? (
+        <DialLoader size={40} />
+      ) : (
+        <GridView
+          columnDefs={colDefs}
+          rowData={results}
+          additionalGridOptions={{
+            defaultColDef: { filter: false, floatingFilter: false },
+            onRowClicked,
+          }}
+          emptyDataProps={{ title: t(EntitiesI18nKey.NoResults) }}
+        />
+      )}
     </div>
   );
 };
