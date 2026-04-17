@@ -60,7 +60,7 @@ export const getActualColDefs = (
     columns = [...BASE_KEYS_COLUMNS];
   }
   if (type === EntityType.APPLICATION_TYPE_SCHEMA) {
-    columns = [...LIST_RUNNER_COLUMNS];
+    columns = [...LIST_RUNNER_COLUMNS].filter((col) => col.field !== 'updatedAt');
   }
   if (type === EntityType.ADAPTER) {
     columns = [...BASE_COLUMNS];

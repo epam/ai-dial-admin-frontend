@@ -108,7 +108,7 @@ const AuthButtons: FC<Props> = ({
         url.searchParams.set('client_id', authSettings.clientId as string);
 
         setIsUser(type);
-        setUrl(view, selectedToolset);
+        setUrl(view, { ...selectedToolset, requestName: publicationName, path: publicationPath });
         url.searchParams.set('redirect_uri', `${window.location.origin}${TOOLSET_AUTH_REDIRECT_URL}`);
         if (authSettings.codeChallenge) {
           url.searchParams.set('code_challenge', authSettings.codeChallenge);
@@ -127,7 +127,7 @@ const AuthButtons: FC<Props> = ({
         signIn(type, apiKeyValue);
       }
     },
-    [selectedToolset, signIn, view],
+    [publicationName, publicationPath, selectedToolset, signIn, view],
   );
 
   const onLogout = useCallback(() => {

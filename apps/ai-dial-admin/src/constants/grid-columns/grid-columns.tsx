@@ -287,7 +287,7 @@ export const EXPORT_COLUMNS = (
   onChange: (value: string[], data: unknown, field: string, index: number, isSelected: boolean) => void,
   route?: ApplicationRoute,
 ): ColDef[] => {
-  const columns: ColDef[] = [NAME_COLUMN_WITH_SORT, AUTHOR_COLUMN, UPDATED_AT_COLUMN];
+  const columns: ColDef[] = [NAME_COLUMN_WITH_SORT, AUTHOR_COLUMN];
 
   if (isAssetWithVersion(route)) {
     columns.splice(1, 0, {
@@ -304,6 +304,7 @@ export const EXPORT_COLUMNS = (
       },
     });
   }
+
   if (route === ApplicationRoute.Files) {
     return FILES_COLUMNS;
   }
