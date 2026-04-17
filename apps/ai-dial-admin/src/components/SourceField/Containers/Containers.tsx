@@ -25,7 +25,7 @@ import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
+import { getEndpointPostfix, getEndpointPrefix } from '@/src/utils/models/model-endpoint';
 import { getErrorNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { addTrailingSlash } from '@/src/utils/url';
@@ -88,12 +88,13 @@ const Containers = <T extends DialInterceptor | DialModel>({
         },
       };
       if (view === ApplicationRoute.Models) {
-        updatedEntity.source.completionEndpointPath = `openai/v1${getEndpointPostfix((entity as DialModel).type)}`;
+        const selected = containers.find((c) => c.name === id);
+        updatedEntity.source.completionEndpointPath = `${getEndpointPrefix(selected?.$type)}${getEndpointPostfix((entity as DialModel).type)}`;
       }
       onChange(updatedEntity);
       onCloseModal();
     },
-    [entity, onChange, onCloseModal, view],
+    [containers, entity, onChange, onCloseModal, view],
   );
 
   const openContainer = useCallback(() => {
