@@ -20,7 +20,6 @@ import {
 import ActivityDetails from '@/src/components/ActivityAudit/Modals/Details';
 import { SYSTEM_ROLLBACK_ID } from '@/src/components/ActivityAudit/Rollback/constants';
 import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
-import { useAppContext } from '@/src/context/AppContext';
 import { useTimeFilter } from '@/src/hooks/use-time-filter';
 import { emptyDataTitleMap, listViewTitleMap } from '@/src/components/ListView/constants';
 import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
@@ -62,7 +61,6 @@ interface Props {
 
 const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTimeFilter, onTimeFilterChange }) => {
   const t = useI18n();
-  const { auditMaxRangeDays } = useAppContext();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -252,7 +250,6 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
             onTimePeriodChange={handleTimePeriodChange}
             timeRange={timeRange}
             onTimeRangeChange={handleTimeRangeChange}
-            maxRangeDays={auditMaxRangeDays}
           />
 
           <div className="flex flex-row gap-x-4">

@@ -11,8 +11,3 @@ export async function getDashboardData(query: TelemetryQuery) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return telemetryApi.getDashboardData(query, token);
 }
-
-export async function getDatasets() {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return telemetryApi.getDatasets(token);
-}
