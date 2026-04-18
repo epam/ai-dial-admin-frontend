@@ -11,6 +11,8 @@ import { BASE_BUTTON_ICON_PROPS } from './main-layout';
 
 export const DEFAULT_REFRESH_TIME = '1m';
 
+export const TELEMETRY_DATASET_NAME = 'dial_analytics_realtime';
+
 export const filterOperatorConfig: Record<string, string> = {
   [FILTER_OPERATOR.Contain]: '$contains',
   [FILTER_OPERATOR.NotContains]: '$not_contains',

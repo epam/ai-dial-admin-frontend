@@ -31,7 +31,7 @@ describe('Server :: AnalyticsApi', () => {
     await instance.getTestCaseRunResults(filters, TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
-      `${TEST_URL}${ANALYTICS_RESULTS_URL}?filter=status:eq:PASSED&filter=name:co:smoke%20test&computation=latest`,
+      `${TEST_URL}${ANALYTICS_RESULTS_URL}?filter=status:eq:PASSED&filter=name:co:smoke%20test&computation=latest&size=1000`,
       expect.objectContaining({ method: 'GET' }),
     );
   });
@@ -42,7 +42,7 @@ describe('Server :: AnalyticsApi', () => {
     await instance.getTestCaseRunResults([], TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
-      `${TEST_URL}${ANALYTICS_RESULTS_URL}?&computation=latest`,
+      `${TEST_URL}${ANALYTICS_RESULTS_URL}?&computation=latest&size=1000`,
       expect.objectContaining({ method: 'GET' }),
     );
   });

@@ -1,11 +1,10 @@
+import { MS_PER_DAY } from '@/src/constants/global-time-filter';
 import { TimeRange } from '@/src/models/time-range';
 
 export type RangeFsmState =
   | { kind: 'empty' }
   | { kind: 'single'; date: Date }
   | { kind: 'interval'; anchor: Date; latest: Date };
-
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 /**
  * Calendar-day difference between two dates (absolute value).

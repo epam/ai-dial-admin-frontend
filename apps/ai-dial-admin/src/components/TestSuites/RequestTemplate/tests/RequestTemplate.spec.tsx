@@ -31,6 +31,8 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
 
 vi.mock('@tabler/icons-react', () => ({
   IconPlus: () => <svg data-icon="plus" />,
+  IconEqual: () => <svg />,
+  IconEqualNot: () => <svg />,
 }));
 
 const mockAdd = vi.fn();

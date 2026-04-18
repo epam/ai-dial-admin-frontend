@@ -52,7 +52,6 @@ describe('Runs View :: ExtractionResult', () => {
   test('renders heading and does not fetch when run id is missing', () => {
     render(<ExtractionResultTab run={{}} />);
 
-    expect(screen.getByRole('heading', { name: TabsI18nKey.ExtractionResult })).toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'grid-view' })).toBeInTheDocument();
     expect(screen.getByText(`empty-title:${EntitiesI18nKey.NoResults}`)).toBeInTheDocument();
     expect(getRunResults).not.toHaveBeenCalled();

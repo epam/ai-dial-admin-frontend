@@ -21,7 +21,7 @@ export interface AppContextType {
   sidebar: AppContextSidebar;
   disableDeploymentsJSONEditor?: boolean;
   resourcesDefaults?: ResourcesDefaults;
-  auditMaxRangeDays?: number;
+  telemetryMaxRangeMs?: number;
 
   // user info
   userInfo?: UserInfo;
@@ -48,7 +48,7 @@ export const AppContextProvider = ({
   disableDeploymentsJSONEditor,
   resourcesDefaults,
   userInfo,
-  auditMaxRangeDays,
+  telemetryMaxRangeMs,
 }: {
   children: ReactNode;
   themeUrl?: string;
@@ -56,7 +56,7 @@ export const AppContextProvider = ({
   disableDeploymentsJSONEditor?: boolean;
   userInfo?: UserInfo;
   resourcesDefaults?: ResourcesDefaults;
-  auditMaxRangeDays?: number;
+  telemetryMaxRangeMs?: number;
 }) => {
   const isSidebarOpenState = getFromLocalStorage(LOCAL_STORAGE_SIDEBAR_OPEN_KEY) !== 'false';
 
@@ -117,7 +117,7 @@ export const AppContextProvider = ({
     },
     disableDeploymentsJSONEditor,
     resourcesDefaults,
-    auditMaxRangeDays,
+    telemetryMaxRangeMs,
     userInfo,
     isReadOnlyAdmin,
   };

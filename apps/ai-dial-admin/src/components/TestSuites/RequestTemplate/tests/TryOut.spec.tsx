@@ -81,6 +81,8 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
 
 vi.mock('@tabler/icons-react', () => ({
   IconRefresh: () => <svg />,
+  IconEqual: () => <svg />,
+  IconEqualNot: () => <svg />,
 }));
 
 vi.mock('@/public/images/icons/grafana.svg', () => ({

@@ -9,9 +9,11 @@ import {
   filterOperatorConfig,
   filterTypeConfig,
   mcpFilterTypeConfig,
+  TELEMETRY_DATASET_NAME,
   TELEMETRY_GRID_HEADERS_MAP,
 } from '@/src/constants/telemetry';
-import { FilterData, TelemetryData } from '@/src/models/telemetry';
+import { ServerActionResponse } from '@/src/models/server-action';
+import { DatasetMetadata, FilterData, TelemetryData } from '@/src/models/telemetry';
 import { TimeRange } from '@/src/models/time-range';
 import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
 
@@ -194,4 +196,10 @@ function getTranslatedConfig<T extends { value: string }>(config: T[], t: (key: 
       label: t(item.value),
     };
   });
+}
+
+export function extractTelemetryMaxRangeMs(res: ServerActionResponse): number | undefined {
+  if (!res.success || !Array.isArray(res.response)) return undefined;
+  const dataset = (res.response as DatasetMetadata[]).find((d) => d.name === TELEMETRY_DATASET_NAME);
+  return dataset?.maxTimeRangeMs ?? undefined;
 }

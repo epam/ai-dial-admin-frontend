@@ -73,7 +73,7 @@ describe('Server :: RunsApi', () => {
     await instance.getRunResults(TOKEN_MOCK, filters);
 
     expect(fetch).toHaveBeenCalledWith(
-      `${TEST_URL}${RUN_RESULTS_URL}?filter=status:eq:PASSED&filter=name:co:smoke%20test`,
+      `${TEST_URL}${RUN_RESULTS_URL}?size=1000&filter=status:eq:PASSED&filter=name:co:smoke%20test`,
       expect.objectContaining({ method: 'GET' }),
     );
   });

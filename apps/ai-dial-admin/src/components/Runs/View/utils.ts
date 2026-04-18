@@ -97,6 +97,27 @@ const getMetricsColumns = (metrics: Record<string, Record<string, unknown>>, err
             }
             return undefined;
           },
+          comparator(valueA, valueB, nodeA, nodeB, isDescending) {
+            const metricA = nodeA?.data?.metricValues?.[groupKey]?.[key];
+            const metricB = nodeB?.data?.metricValues?.[groupKey]?.[key];
+
+            const isErrorA = metricA == null;
+            const isErrorB = metricB == null;
+
+            if (isErrorA && isErrorB) return 0;
+            if (isErrorA) return isDescending ? -1 : 1;
+            if (isErrorB) return isDescending ? 1 : -1;
+
+            if (typeof metricA === 'number' && typeof metricB === 'number') {
+              if (metricA === metricB) return 0;
+              return metricA > metricB ? 1 : -1;
+            }
+
+            const normalizedA = typeof valueA === 'string' ? valueA : String(valueA);
+            const normalizedB = typeof valueB === 'string' ? valueB : String(valueB);
+
+            return normalizedA.localeCompare(normalizedB);
+          },
         }) as ColDef,
     ),
   }));

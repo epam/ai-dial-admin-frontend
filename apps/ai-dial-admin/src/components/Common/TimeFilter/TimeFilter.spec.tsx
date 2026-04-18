@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
+import { MS_PER_DAY } from '@/src/constants/global-time-filter';
 import TimeFilter from './TimeFilter';
 
 const getDate = (year: number, month: number, day: number, h = 12) => new Date(year, month - 1, day, h, 0, 0, 0);
@@ -11,7 +12,7 @@ const baseProps = () => ({
   onTimePeriodChange: vi.fn(),
   timeRange: { startDate: getDate(2026, 3, 1), endDate: getDate(2026, 3, 3) },
   onTimeRangeChange: vi.fn(),
-  maxRangeDays: 3,
+  maxRangeMs: 3 * MS_PER_DAY,
 });
 
 describe('TimeFilter', () => {
@@ -91,6 +92,31 @@ describe('TimeFilter', () => {
     expect(rangeArg).toHaveProperty('startDate');
     expect(rangeArg).toHaveProperty('endDate');
     expect(isCustom).toBe(true);
+  });
+
+  test('filters preset list by maxRangeMs', async () => {
+    const user = userEvent.setup();
+    render(<TimeFilter {...baseProps()} maxRangeMs={3 * MS_PER_DAY} />);
+
+    await user.click(screen.getAllByText(/Last 2d/i)[0]);
+
+    expect(screen.queryByText(/Last 7d/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Last 30d/i)).not.toBeInTheDocument();
+  });
+
+  test('renders the max-days badge when maxRangeMs is set (ms→days floor)', async () => {
+    const user = userEvent.setup();
+    render(<TimeFilter {...baseProps()} maxRangeMs={7.5 * MS_PER_DAY} />);
+
+    await user.click(screen.getByText(/Last 2d/i));
+    const customButtons = screen
+      .getAllByRole('button')
+      .filter((b) => b.textContent?.trim().startsWith('Telemetry.Custom'));
+    await user.click(customButtons[0]);
+
+    await waitFor(() => {
+      expect(screen.getByRole('status')).toBeInTheDocument();
+    });
   });
 
   test('Cancel does not commit', async () => {

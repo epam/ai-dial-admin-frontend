@@ -11,7 +11,7 @@ import GridView from '@/src/components/Grid/GridView/GridView';
 import AnalyticsBottomDrawer from '@/src/components/Runs/Details/BottomDrawer/AnalyticsBottomDrawer';
 import { DetailMode } from '@/src/components/Runs/Details/BottomDrawer/models';
 import { useDrawerPanel } from '@/src/components/Runs/Details/BottomDrawer/useDrawerPanel';
-import { EntitiesI18nKey, RunsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsResult, Run } from '@/src/models/evaluation/run';
 
@@ -49,7 +49,6 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
     }
   }, [isLoading, results, run, t]);
 
-  // Clear pinned if missing from results
   const resultIds = useMemo(() => (results ?? []).map((r) => r.id!).filter(Boolean), [results]);
   useEffect(() => {
     if (resultIds.length > 0) {
@@ -98,8 +97,7 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
 
   return (
     <div className="flex flex-col gap-4 h-full min-h-0">
-      <h2>{t(TabsI18nKey.Analytics)}</h2>
-      <div className="min-h-0 flex-1">
+      <div className="flex-1 min-h-0">
         {isLoading ? (
           <DialLoader size={40} />
         ) : (

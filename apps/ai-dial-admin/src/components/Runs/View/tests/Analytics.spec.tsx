@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import AnalyticsTab from '../Analytics';
 
 const mockShowSidebar = vi.fn();
@@ -71,19 +71,14 @@ describe('AnalyticsTab', () => {
     vi.clearAllMocks();
   });
 
-  it('renders heading', async () => {
-    render(<AnalyticsTab run={mockRun} />);
-    expect(screen.getByText('Tabs.Analytics')).toBeInTheDocument();
-  });
-
-  it('renders grid after loading', async () => {
+  test('renders grid after loading', async () => {
     render(<AnalyticsTab run={mockRun} />);
     await waitFor(() => {
       expect(screen.getByRole('grid', { name: 'Analytics grid' })).toBeInTheDocument();
     });
   });
 
-  it('opens sidebar on row click in default mode', async () => {
+  test('opens sidebar on row click in default mode', async () => {
     render(<AnalyticsTab run={mockRun} />);
     await waitFor(() => screen.getByRole('button', { name: 'Row 1' }));
 
@@ -92,7 +87,7 @@ describe('AnalyticsTab', () => {
     expect(mockShowSidebar).toHaveBeenCalledTimes(1);
   });
 
-  it('toggles sidebar closed on same row click', async () => {
+  test('toggles sidebar closed on same row click', async () => {
     render(<AnalyticsTab run={mockRun} />);
     await waitFor(() => screen.getByRole('button', { name: 'Row 1' }));
 
@@ -102,7 +97,7 @@ describe('AnalyticsTab', () => {
     expect(mockCloseSidebar).toHaveBeenCalled();
   });
 
-  it('calls closeSidebar on unmount', async () => {
+  test('calls closeSidebar on unmount', async () => {
     const { unmount } = render(<AnalyticsTab run={mockRun} />);
     mockCloseSidebar.mockClear();
 

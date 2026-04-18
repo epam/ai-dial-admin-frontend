@@ -3,7 +3,6 @@ import { Dispatch, FC, SetStateAction } from 'react';
 import Refresh from '@/src/components/Common/Refresh/Refresh';
 import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
 import Filters from '@/src/components/Telemetry/TelemetryControls/Filters/Filters';
-import { TimePeriodOption } from '@/src/constants/global-time-filter';
 import { useAppContext } from '@/src/context/AppContext';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -23,7 +22,6 @@ interface Props {
   route: ApplicationRoute;
   showFilters?: boolean;
   isMcpView?: boolean;
-  timePeriodOptions?: TimePeriodOption[];
   canAutoRefresh?: boolean;
 }
 
@@ -40,10 +38,9 @@ const TelemetryControls: FC<Props> = ({
   route,
   showFilters = true,
   isMcpView = false,
-  timePeriodOptions,
   canAutoRefresh = true,
 }) => {
-  const { auditMaxRangeDays } = useAppContext();
+  const { telemetryMaxRangeMs } = useAppContext();
   return (
     <div className="flex w-full justify-between flex-wrap">
       <div className="flex gap-x-3 items-center flex-wrap mb-1 md:mb-0 lg:mb-0">
@@ -52,8 +49,7 @@ const TelemetryControls: FC<Props> = ({
           onTimePeriodChange={onTimePeriodChange}
           timeRange={timeRange}
           onTimeRangeChange={onTimeRangeChange}
-          timePeriodOptions={timePeriodOptions}
-          maxRangeDays={auditMaxRangeDays}
+          maxRangeMs={telemetryMaxRangeMs}
         />
         {showFilters && (
           <Filters filters={filters} setFilters={setFilters} getData={getData} route={route} isMcpView={isMcpView} />
