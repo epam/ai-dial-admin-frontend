@@ -62,12 +62,14 @@ const McpServerNameField: FC<Props> = ({
   );
 
   const validateAndApplyServer = useCallback(
-    (value: string) => {
-      fetchServers({ search: value, limit: 10 }).then(({ success, response }) => {
+    (name: string, version?: string) => {
+      fetchServers({ search: name, limit: 10 }).then(({ success, response }) => {
         if (!success) return;
 
         const servers = (response.servers || []).map((s: McpServerResponse) => s.server) as McpServer[];
-        const exactMatch = servers.find((s) => s.name === value);
+        const exactMatch = version
+          ? servers.find((s) => s.name === name && s.version === version)
+          : servers.find((s) => s.name === name);
 
         if (!exactMatch) {
           const error = { type: ErrorType.INVALID, text: t(ErrorI18nKey.McpServerNotFound) };
@@ -84,18 +86,26 @@ const McpServerNameField: FC<Props> = ({
 
   const onChangeServerName = useCallback(
     (value?: string) => {
-      const formatError = getErrorForMcpServerName(value, t);
+      const raw = value || '';
+      const atIndex = raw.indexOf('@');
+      const isTypeaheadPick = atIndex >= 0;
+      const name = isTypeaheadPick ? raw.slice(0, atIndex) : raw;
+      const version = isTypeaheadPick ? raw.slice(atIndex + 1) : undefined;
+
+      const formatError = getErrorForMcpServerName(name, t);
       if (formatError) {
         setServerNameError(formatError);
         dispatch({ type: ValidationActionType.SetField, field: 'mcpServerName', isValid: false });
-        onServerNameChange(value || '');
+        onServerNameChange(name);
         return;
       }
 
       setServerNameError(null);
       dispatch({ type: ValidationActionType.SetField, field: 'mcpServerName', isValid: false });
-      onServerNameChange(value || '');
-      validateAndApplyServer(value || '');
+      if (!isTypeaheadPick) {
+        onServerNameChange(name);
+      }
+      validateAndApplyServer(name, version);
     },
     [dispatch, t, validateAndApplyServer, onServerNameChange],
   );
@@ -111,7 +121,9 @@ const McpServerNameField: FC<Props> = ({
           if (success) {
             const servers = (response.servers || []).map((s: McpServerResponse) => s.server) as McpServer[];
             if (servers.length) {
-              setServerOptions(servers.map((s) => ({ value: s.name, label: s.name, description: s.version })));
+              setServerOptions(
+                servers.map((s) => ({ value: `${s.name}@${s.version}`, label: s.name, description: s.version })),
+              );
             }
           }
         });

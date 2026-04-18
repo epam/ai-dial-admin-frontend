@@ -65,8 +65,11 @@ const ImageMcpRegistry: FC<Props> = ({ image, setImage, selectedServer, onServer
         ...image,
         source: {
           ...image.source,
-          url: '',
-          externalRegistryRef: { $type: SOURCE_TYPE.MCP_REGISTRY, packageName: name },
+          externalRegistryRef: {
+            $type: SOURCE_TYPE.MCP_REGISTRY,
+            packageName: name,
+            version: image.source?.externalRegistryRef?.version,
+          },
         },
       });
     },

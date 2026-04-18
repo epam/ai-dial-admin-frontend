@@ -13,6 +13,7 @@ import { Image, ImageGroup, ImageSource, ImageVersion } from '@/src/models/deplo
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 import StatusIcon from '@/src/components/Deployments/Common/StatusIndicator/StatusIcon';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 
 export function isImageNotInstalled(image?: Image): boolean {
   return image?.buildStatus === IMAGE_STATUS.NOT_BUILT || image?.buildStatus === IMAGE_STATUS.BUILD_FAILED;
@@ -115,7 +116,7 @@ export const getImageSource = (isRegistry?: boolean): ImageSource => {
     return {
       $type: IMAGE_SOURCE_TYPE.CODE,
       url: '',
-      externalRegistryRef: { $type: 'mcp-registry', packageName: '' },
+      externalRegistryRef: { $type: SOURCE_TYPE.MCP_REGISTRY, packageName: '' },
     };
   }
 

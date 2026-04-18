@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { Image } from '@/src/models/deployments/images';
 import { IMAGE_SOURCE_TYPE, IMAGE_STATUS, IMAGE_TYPE } from '@/src/types/deployments/images';
 import ImageSource from '@/src/components/Deployments/Fields/ImageSource';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 
 vi.mock('@/src/components/Deployments/Fields/ContainerSource/McpServerNameField', () => ({
   default: () => <div>McpServerNameField</div>,
@@ -31,7 +32,7 @@ describe('ImageSource', () => {
       source: {
         $type: IMAGE_SOURCE_TYPE.CODE,
         url: 'https://github.com/user/repo',
-        externalRegistryRef: { $type: 'mcp-registry', packageName: 'io.github.user/server' },
+        externalRegistryRef: { $type: SOURCE_TYPE.MCP_REGISTRY, packageName: 'io.github.user/server' },
       },
     };
 
@@ -47,7 +48,7 @@ describe('ImageSource', () => {
       source: {
         $type: IMAGE_SOURCE_TYPE.CODE,
         url: 'https://github.com/user/repo',
-        externalRegistryRef: { $type: 'mcp-registry', packageName: 'io.github.user/server' },
+        externalRegistryRef: { $type: SOURCE_TYPE.MCP_REGISTRY, packageName: 'io.github.user/server' },
       },
     };
 
@@ -63,7 +64,7 @@ describe('ImageSource', () => {
       source: {
         $type: IMAGE_SOURCE_TYPE.CODE,
         url: 'https://github.com/user/repo',
-        externalRegistryRef: { $type: 'mcp-registry', packageName: 'io.github.user/server' },
+        externalRegistryRef: { $type: SOURCE_TYPE.MCP_REGISTRY, packageName: 'io.github.user/server' },
       },
     };
 
