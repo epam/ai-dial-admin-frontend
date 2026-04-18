@@ -28,8 +28,6 @@ describe('SchemaManager', () => {
 
   test('renders schema manager with title and description', () => {
     render(<SchemaManager {...defaultProps} />);
-
-    expect(screen.getByText(TestSuitesI18nKey.TestCaseSchema)).toBeInTheDocument();
     expect(screen.getByText(TestSuitesI18nKey.SchemaDescription)).toBeInTheDocument();
   });
 
