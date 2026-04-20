@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { Image } from '@/src/models/deployments/images';
 import { IMAGE_SOURCE_TYPE, IMAGE_STATUS, IMAGE_TYPE } from '@/src/types/deployments/images';
 import ImageMcpRegistry from '@/src/components/Deployments/Fields/ImageSource/ImageMcpRegistry';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 
 vi.mock('@/src/components/Deployments/Fields/ContainerSource/McpServerNameField', () => ({
   default: ({ serverName, onServerSelect }: { serverName: string; onServerSelect: (s: unknown) => void }) => (
@@ -50,7 +51,7 @@ describe('ImageMcpRegistry', () => {
     source: {
       $type: IMAGE_SOURCE_TYPE.CODE,
       url: '',
-      externalRegistryRef: { $type: 'mcp-registry', packageName: 'org/server' },
+      externalRegistryRef: { $type: SOURCE_TYPE.MCP_REGISTRY, packageName: 'org/server' },
     },
   };
 
@@ -61,7 +62,7 @@ describe('ImageMcpRegistry', () => {
     expect(screen.getByText('org/server')).toBeTruthy();
   });
 
-  test('selects server with repo — sets CODE source', () => {
+  test('selects server with repo — sets CODE source with version in externalRegistryRef', () => {
     const setImage = vi.fn();
     const onServerChange = vi.fn();
     render(<ImageMcpRegistry image={baseImage} setImage={setImage} onServerChange={onServerChange} />);
@@ -74,12 +75,17 @@ describe('ImageMcpRegistry', () => {
         source: expect.objectContaining({
           $type: IMAGE_SOURCE_TYPE.CODE,
           url: 'https://github.com/org/server',
+          externalRegistryRef: {
+            $type: SOURCE_TYPE.MCP_REGISTRY,
+            packageName: 'org/server',
+            version: '1.0.0',
+          },
         }),
       }),
     );
   });
 
-  test('selects OCI-only server — sets DOCKER source', () => {
+  test('selects OCI-only server — sets DOCKER source with version in externalRegistryRef', () => {
     const setImage = vi.fn();
     const onServerChange = vi.fn();
     render(<ImageMcpRegistry image={baseImage} setImage={setImage} onServerChange={onServerChange} />);
@@ -92,6 +98,44 @@ describe('ImageMcpRegistry', () => {
         source: expect.objectContaining({
           $type: IMAGE_SOURCE_TYPE.DOCKER,
           imageUri: 'docker.io/org/img:2.0',
+          externalRegistryRef: {
+            $type: SOURCE_TYPE.MCP_REGISTRY,
+            packageName: 'org/oci-only',
+            version: '2.0.0',
+          },
+        }),
+      }),
+    );
+  });
+
+  test('updateImage payload round-trip includes externalRegistryRef.version', async () => {
+    const putAction = vi.fn().mockResolvedValue({ success: true });
+    vi.doMock('@/src/app/api/api', () => ({
+      imagesApi: {
+        updateImage: (server: Partial<Image>) => {
+          const { id: _id, ...rest } = server;
+          return putAction(rest);
+        },
+      },
+    }));
+    const { imagesApi } = await import('@/src/app/api/api');
+
+    let captured: Image | undefined;
+    const setImage = (img: Image) => {
+      captured = img;
+    };
+    render(<ImageMcpRegistry image={baseImage} setImage={setImage} onServerChange={vi.fn()} />);
+
+    screen.getByText('select-repo').click();
+
+    expect(captured?.source.externalRegistryRef?.version).toBe('1.0.0');
+
+    await imagesApi.updateImage({ ...baseImage, ...captured! } as Partial<Image>, {} as never);
+
+    expect(putAction).toHaveBeenCalledWith(
+      expect.objectContaining({
+        source: expect.objectContaining({
+          externalRegistryRef: expect.objectContaining({ version: '1.0.0' }),
         }),
       }),
     );

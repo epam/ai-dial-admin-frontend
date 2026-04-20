@@ -18,6 +18,7 @@ import McpServerNameField from '@/src/components/Deployments/Fields/ContainerSou
 import { getContainerMcpServers } from '@/src/app/actions/deployments';
 import { getPreferredOciPackage, mapTransportType } from '@/src/utils/deployments/mcp-registry';
 import { McpServer } from '@/src/types/deployments/mcp-registry';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 
 interface Props {
   container: Container;
@@ -54,7 +55,7 @@ const ContainerSource: FC<Props> = ({ container, setContainer, image, isModal = 
           ...container.source,
           imageReference: ociIdentifier || '',
           externalRegistryRef: {
-            $type: 'mcp-registry',
+            $type: SOURCE_TYPE.MCP_REGISTRY,
             packageName: server.name,
             version: server.version,
           },
@@ -70,8 +71,11 @@ const ContainerSource: FC<Props> = ({ container, setContainer, image, isModal = 
         ...container,
         source: {
           ...container.source,
-          imageReference: '',
-          externalRegistryRef: { $type: 'mcp-registry', packageName: name },
+          externalRegistryRef: {
+            $type: SOURCE_TYPE.MCP_REGISTRY,
+            packageName: name,
+            version: container.source?.externalRegistryRef?.version,
+          },
         },
       });
     },

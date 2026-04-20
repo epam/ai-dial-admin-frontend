@@ -5,6 +5,7 @@ import { Image } from '@/src/models/deployments/images';
 import { CONTAINER_SOURCE_TYPE, CONTAINER_STATUS, CONTAINER_TYPE } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 import ContainerSource from '@/src/components/Deployments/Fields/ContainerSource';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 
 vi.mock('@/src/components/Deployments/Fields/ContainerSource/InternalImageField', () => ({
   default: ({ image }: { image?: Image }) => (
@@ -38,7 +39,7 @@ describe('ContainerSource', () => {
       source: {
         $type: CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE,
         imageReference: '',
-        externalRegistryRef: { $type: 'mcp-registry', packageName: '' },
+        externalRegistryRef: { $type: SOURCE_TYPE.MCP_REGISTRY, packageName: '' },
       },
     };
 
