@@ -25,6 +25,7 @@ export enum CONTAINER_TYPE {
   NIM = 'nim',
   HF = 'inference',
   ADAPTER = 'adapter',
+  APPLICATION = 'application',
 }
 
 export enum CreateSteps {

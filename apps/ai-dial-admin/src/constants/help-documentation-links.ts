@@ -144,6 +144,11 @@ export const HELP_DOCUMENTATION_LINKS: Partial<
     selectedView: 'tutorials/admin/deployments-adapters#configuration',
     title: 'How to set up Adapter Containers',
   },
+  [ApplicationRoute.ApplicationContainers]: {
+    listView: 'tutorials/admin/deployments-applications',
+    selectedView: 'tutorials/admin/deployments-applications#configuration',
+    title: 'How to set up Application Containers',
+  },
 
   // TODO: update eval links when the documentation is ready
   // [ApplicationRoute.Playground]: '/playground',

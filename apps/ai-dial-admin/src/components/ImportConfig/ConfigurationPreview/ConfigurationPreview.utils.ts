@@ -181,11 +181,13 @@ export const getEntityByIdentifier = (allEntities: ActivityAuditEntity[], entity
 const DEPLOYMENT_IMPORT_KEY_MAP: Record<string, DeploymentExportEntityType> = {
   mcpDeployments: DeploymentExportEntityType.MCP_CONTAINER,
   adapterDeployments: DeploymentExportEntityType.ADAPTER_CONTAINER,
+  applicationDeployments: DeploymentExportEntityType.APPLICATION_CONTAINER,
   interceptorDeployments: DeploymentExportEntityType.INTERCEPTOR_CONTAINER,
   nimDeployments: DeploymentExportEntityType.MODEL_SERVING,
   inferenceDeployments: DeploymentExportEntityType.MODEL_SERVING,
   mcpImageDefinitions: DeploymentExportEntityType.IMAGE,
   adapterImageDefinitions: DeploymentExportEntityType.IMAGE,
+  applicationImageDefinitions: DeploymentExportEntityType.IMAGE,
   interceptorImageDefinitions: DeploymentExportEntityType.IMAGE,
 };
 

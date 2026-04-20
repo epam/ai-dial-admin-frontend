@@ -20,9 +20,9 @@ import {
 const mockT = (key: string) => key;
 
 describe('ExportConfig :: getDeploymentTabs', () => {
-  test('returns 5 tabs', () => {
+  test('returns 6 tabs', () => {
     const tabs = getDeploymentTabs(mockT);
-    expect(tabs).toHaveLength(5);
+    expect(tabs).toHaveLength(6);
   });
 
   test('returns tabs with correct ids', () => {
@@ -33,6 +33,7 @@ describe('ExportConfig :: getDeploymentTabs', () => {
       DeploymentExportEntityType.MCP_CONTAINER,
       DeploymentExportEntityType.INTERCEPTOR_CONTAINER,
       DeploymentExportEntityType.ADAPTER_CONTAINER,
+      DeploymentExportEntityType.APPLICATION_CONTAINER,
       DeploymentExportEntityType.IMAGE,
     ]);
   });
@@ -41,7 +42,7 @@ describe('ExportConfig :: getDeploymentTabs', () => {
     const translate = vi.fn((key: string) => `translated_${key}`);
     const tabs = getDeploymentTabs(translate);
 
-    expect(translate).toHaveBeenCalledTimes(5);
+    expect(translate).toHaveBeenCalledTimes(6);
     expect(tabs[0].label).toBe('translated_Menu.ModelServings');
   });
 });

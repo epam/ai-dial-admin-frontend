@@ -61,6 +61,8 @@ export const getContainerTypeByRoute = (route: ApplicationRoute): CONTAINER_TYPE
       return CONTAINER_TYPE.INTERCEPTOR;
     case ApplicationRoute.AdapterContainers:
       return CONTAINER_TYPE.ADAPTER;
+    case ApplicationRoute.ApplicationContainers:
+      return CONTAINER_TYPE.APPLICATION;
     default:
       return CONTAINER_TYPE.MCP;
   }

@@ -56,13 +56,13 @@ export interface ContainersButtonsWrapperProps {
   isChanged: boolean;
   isRedeployRequired: boolean;
   children?: ReactNode;
-  entityNames: string[];
+  entityNames?: string[];
   jsonConfiguration: JsonConfiguration;
   transport?: CONTAINER_TRANSPORT;
 
   onDiscard: () => void;
   onSave: () => void;
-  createEntity: (entity: BaseEntity) => Promise<ServerActionResponse>;
+  createEntity?: (entity: BaseEntity) => Promise<ServerActionResponse>;
   createEntityAsAsset?: (entity: AssetToolset) => Promise<ServerActionResponse>;
 }
 
@@ -194,7 +194,7 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
           <div className="flex flex-row items-center w-full gap-x-4">
             {!jsonConfiguration.isEditorEnabled && (
               <div className="flex flex-row gap-3">
-                {container.status === CONTAINER_STATUS.RUNNING && (
+                {createEntity && container.status === CONTAINER_STATUS.RUNNING && (
                   <>
                     {route === ApplicationRoute.McpContainers ? (
                       <DialButtonDropdown
@@ -263,11 +263,12 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
         )}
       {isModalOpen &&
         modalType === ModalType.createEntity &&
+        createEntity &&
         createPortal(
           <CreateEntity
             route={getEntityRoute(route)}
             isModalOpen={isModalOpen}
-            names={entityNames}
+            names={entityNames ?? []}
             onClose={onCloseModal}
             createEntity={createEntity}
             initialValues={getEntityTemplate(route, container, t, transport)}

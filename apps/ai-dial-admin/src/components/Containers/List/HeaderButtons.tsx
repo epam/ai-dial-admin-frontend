@@ -122,6 +122,22 @@ const HeaderButtons: FC<Props> = ({ route, names, isReadOnlyAdmin }) => {
     [t, handleModalOpen],
   );
 
+  const applicationDropdownItems: DropdownItem[] = useMemo(
+    () => [
+      {
+        key: 'internal-image',
+        label: t(ContainersI18nKey.FromInternalApplicationImage),
+        onClick: () => handleModalOpen(ModalType.createContainer),
+      },
+      {
+        key: 'docker-image',
+        label: t(ContainersI18nKey.FromDockerImageReference),
+        onClick: () => handleModalOpen(ModalType.createApplicationDockerImage),
+      },
+    ],
+    [t, handleModalOpen],
+  );
+
   const interceptorDropdownItems: DropdownItem[] = useMemo(
     () => [
       {
@@ -155,6 +171,7 @@ const HeaderButtons: FC<Props> = ({ route, names, isReadOnlyAdmin }) => {
     route === ApplicationRoute.ModelServings ||
     route === ApplicationRoute.McpContainers ||
     route === ApplicationRoute.AdapterContainers ||
+    route === ApplicationRoute.ApplicationContainers ||
     route === ApplicationRoute.InterceptorContainers;
 
   const getDropdownItems = () => {
@@ -165,6 +182,8 @@ const HeaderButtons: FC<Props> = ({ route, names, isReadOnlyAdmin }) => {
         return mcpDropdownItems;
       case ApplicationRoute.AdapterContainers:
         return adapterDropdownItems;
+      case ApplicationRoute.ApplicationContainers:
+        return applicationDropdownItems;
       case ApplicationRoute.InterceptorContainers:
         return interceptorDropdownItems;
       default:
@@ -264,6 +283,24 @@ const HeaderButtons: FC<Props> = ({ route, names, isReadOnlyAdmin }) => {
             route={route}
             names={names}
             type={CONTAINER_TYPE.ADAPTER}
+            sourceType={CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE}
+          />,
+          document.body,
+        )}
+      {isModalOpen &&
+        modalType === ModalType.createApplicationDockerImage &&
+        createPortal(
+          <ServingCreate
+            header={t(ContainersI18nKey.CreateModalTitle, {
+              type: getTranslatedType(route, t),
+              entityType: getTranslatedDeploymentType(route, t),
+            })}
+            isModalOpen={isModalOpen}
+            onClose={handleModalClose}
+            onApply={onCreateContainer}
+            route={route}
+            names={names}
+            type={CONTAINER_TYPE.APPLICATION}
             sourceType={CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE}
           />,
           document.body,

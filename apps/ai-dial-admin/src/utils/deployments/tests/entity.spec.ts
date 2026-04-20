@@ -42,6 +42,10 @@ describe('entity utils', () => {
       expect(getRouteByType(IMAGE_TYPE.ADAPTER)).toBe(ApplicationRoute.AdapterContainers);
     });
 
+    test('returns ApplicationContainers for APPLICATION', () => {
+      expect(getRouteByType(IMAGE_TYPE.APPLICATION)).toBe(ApplicationRoute.ApplicationContainers);
+    });
+
     test('returns ModelServings for INTERCEPTOR', () => {
       expect(getRouteByType('any' as any)).toBe(ApplicationRoute.ModelServings);
     });
@@ -80,6 +84,12 @@ describe('entity utils', () => {
     });
     test('returns Interceptor for InterceptorContainers', () => {
       expect(getTranslatedType(ApplicationRoute.InterceptorContainers, t)).toBe(EntitiesI18nKey.Interceptor);
+    });
+    test('returns Adapter for AdapterContainers', () => {
+      expect(getTranslatedType(ApplicationRoute.AdapterContainers, t)).toBe(EntitiesI18nKey.Adapter);
+    });
+    test('returns Application for ApplicationContainers', () => {
+      expect(getTranslatedType(ApplicationRoute.ApplicationContainers, t)).toBe(EntitiesI18nKey.Application);
     });
     test('returns Model for other routes', () => {
       expect(getTranslatedType(ApplicationRoute.ModelServings, t)).toBe(EntitiesI18nKey.Model);

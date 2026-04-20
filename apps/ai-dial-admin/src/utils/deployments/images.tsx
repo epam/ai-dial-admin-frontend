@@ -31,6 +31,8 @@ export function getImageType(route: ApplicationRoute): string {
       return 'MCP';
     case ApplicationRoute.AdapterContainers:
       return 'ADAPTER';
+    case ApplicationRoute.ApplicationContainers:
+      return 'APPLICATION';
     default:
       return '';
   }
@@ -44,6 +46,8 @@ export const getContainerTypeByImageType = (type: IMAGE_TYPE): CONTAINER_TYPE =>
       return CONTAINER_TYPE.INTERCEPTOR;
     case IMAGE_TYPE.ADAPTER:
       return CONTAINER_TYPE.ADAPTER;
+    case IMAGE_TYPE.APPLICATION:
+      return CONTAINER_TYPE.APPLICATION;
     default:
       return CONTAINER_TYPE.MCP;
   }
@@ -102,7 +106,11 @@ export const updateSelectedVersion = (images: ImageGroup[], id: string) => {
 
 export const setTransport = (image: Image) => {
   const updatedImage = { ...image };
-  if (updatedImage.$type === IMAGE_TYPE.INTERCEPTOR || updatedImage.$type === IMAGE_TYPE.ADAPTER) {
+  if (
+    updatedImage.$type === IMAGE_TYPE.INTERCEPTOR ||
+    updatedImage.$type === IMAGE_TYPE.ADAPTER ||
+    updatedImage.$type === IMAGE_TYPE.APPLICATION
+  ) {
     delete updatedImage.transportType;
   } else {
     updatedImage.transportType = IMAGE_TRANSPORT_TYPE.LOCAL;

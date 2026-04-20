@@ -5,6 +5,7 @@ export const DEPLOYMENT_IMAGE_DEP = {
   MCP: 'MCP_IMAGE',
   INTERCEPTOR: 'INTERCEPTOR_IMAGE',
   ADAPTER: 'ADAPTER_IMAGE',
+  APPLICATION: 'APPLICATION_IMAGE',
 } as const;
 
 export const getAllAvailableDependencies = (type?: EntityType, isCore?: boolean): EntityType[] => {
@@ -50,6 +51,10 @@ export const getAllAvailableDependencies = (type?: EntityType, isCore?: boolean)
 
   if (type === (DeploymentExportEntityType.ADAPTER_CONTAINER as string)) {
     return [DEPLOYMENT_IMAGE_DEP.ADAPTER as unknown as EntityType];
+  }
+
+  if (type === (DeploymentExportEntityType.APPLICATION_CONTAINER as string)) {
+    return [DEPLOYMENT_IMAGE_DEP.APPLICATION as unknown as EntityType];
   }
 
   return [];

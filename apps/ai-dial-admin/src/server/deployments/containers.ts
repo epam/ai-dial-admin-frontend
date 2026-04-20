@@ -41,6 +41,10 @@ export class ContainersApi extends BaseApi {
     return this.getAction(`${BASE_CONTAINERS_URL}?type=ADAPTER`, token);
   }
 
+  getApplicationContainers(token: Token): Promise<ServerActionResponse> {
+    return this.getAction(`${BASE_CONTAINERS_URL}?type=APPLICATION`, token);
+  }
+
   getModelContainers(token: Token): Promise<ServerActionResponse> {
     return this.getAction(`${BASE_CONTAINERS_URL}?type=NIM,INFERENCE`, token);
   }

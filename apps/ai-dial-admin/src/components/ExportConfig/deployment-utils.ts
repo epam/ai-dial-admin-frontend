@@ -20,6 +20,7 @@ export const DEPLOYMENT_ENTITY_TABS: { id: DeploymentExportEntityType; labelKey:
   { id: DeploymentExportEntityType.MCP_CONTAINER, labelKey: MenuI18nKey.McpContainers },
   { id: DeploymentExportEntityType.INTERCEPTOR_CONTAINER, labelKey: MenuI18nKey.InterceptorContainers },
   { id: DeploymentExportEntityType.ADAPTER_CONTAINER, labelKey: MenuI18nKey.AdapterContainers },
+  { id: DeploymentExportEntityType.APPLICATION_CONTAINER, labelKey: MenuI18nKey.ApplicationContainers },
   { id: DeploymentExportEntityType.IMAGE, labelKey: MenuI18nKey.Images },
 ];
 
