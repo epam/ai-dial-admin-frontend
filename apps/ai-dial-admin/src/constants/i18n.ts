@@ -53,6 +53,7 @@ export enum MenuI18nKey {
   McpContainers = 'Menu.McpContainers',
   InterceptorContainers = 'Menu.InterceptorContainers',
   AdapterContainers = 'Menu.AdapterContainers',
+  ApplicationContainers = 'Menu.ApplicationContainers',
   ModelServings = 'Menu.ModelServings',
   InterceptorTemplates = 'Menu.InterceptorTemplates',
   ActivityAudit = 'Menu.ActivityAudit',
@@ -196,6 +197,7 @@ export enum EntitiesI18nKey {
   Action = 'Entities.Action',
   Runner = 'Entities.Runner',
   Adapter = 'Entities.Adapter',
+  Application = 'Entities.Application',
   FolderStorage = 'Entities.FolderStorage',
   ApplicationDisplayName = 'Entities.ApplicationDisplayName',
   ChangeIcon = 'Entities.ChangeIcon',
@@ -259,6 +261,7 @@ export enum DeleteI18nKey {
   InterceptorContainer = 'DeleteEntity.Entities.InterceptorContainer',
   ModelServing = 'DeleteEntity.Entities.ModelServing',
   AdapterContainer = 'DeleteEntity.Entities.AdapterContainer',
+  ApplicationContainer = 'DeleteEntity.Entities.ApplicationContainer',
   Image = 'DeleteEntity.Entities.Image',
 
   // Bulk Delete
@@ -809,6 +812,7 @@ export enum ExportI18nKey {
   McpImage = 'Export.McpImage',
   InterceptorImage = 'Export.InterceptorImage',
   AdapterImage = 'Export.AdapterImage',
+  ApplicationImage = 'Export.ApplicationImage',
 }
 
 export enum FoldersI18nKey {
@@ -988,6 +992,7 @@ export enum SourceI18nKey {
   McpEndpoint = 'Source.McpEndpoint',
   ChatEndpoint = 'Source.ChatEndpoint',
   AdapterContainer = 'Source.AdapterContainer',
+  ApplicationContainer = 'Source.ApplicationContainer',
   Endpoint = 'Source.Endpoint',
   ExternalEndpoint = 'Source.ExternalEndpoint',
   Adapter = 'Source.Adapter',
@@ -1345,6 +1350,7 @@ export enum ImagesI18nKey {
   ImageTypeMCP = 'Images.ImageTypeMCP',
   ImageTypeInterceptor = 'Images.ImageTypeInterceptor',
   ImageTypeAdapter = 'Images.ImageTypeAdapter',
+  ImageTypeApplication = 'Images.ImageTypeApplication',
   ImageWhitelistType = 'Images.ImageWhitelistType',
   BuildPrivileges = 'Images.BuildPrivileges',
   BuilderRootless = 'Images.BuilderRootless',
@@ -1410,6 +1416,7 @@ export enum ContainersI18nKey {
   ScaleToZero = 'Containers.Autoscaling.ScaleToZero',
   FromInternalMcpImage = 'Containers.FromInternalMcpImage',
   FromInternalAdapterImage = 'Containers.FromInternalAdapterImage',
+  FromInternalApplicationImage = 'Containers.FromInternalApplicationImage',
   FromInternalInterceptorImage = 'Containers.FromInternalInterceptorImage',
   FromDockerImageReference = 'Containers.FromDockerImageReference',
   FromMcpRegistry = 'Containers.FromMcpRegistry',

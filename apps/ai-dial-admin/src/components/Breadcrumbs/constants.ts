@@ -269,6 +269,15 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig | null>
       { name: 'Id', href: false },
     ],
   },
+  [ApplicationRoute.ApplicationContainers]: {
+    segments: [
+      {
+        name: 'ApplicationContainers',
+        i18nKey: MenuI18nKey.ApplicationContainers,
+      },
+      { name: 'Id', href: false },
+    ],
+  },
   [ApplicationRoute.Images]: {
     segments: [
       {

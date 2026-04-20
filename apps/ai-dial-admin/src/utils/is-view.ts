@@ -38,6 +38,7 @@ export const isDeploymentManagerView = (view?: ApplicationRoute): boolean => {
     view === ApplicationRoute.McpContainers ||
     view === ApplicationRoute.ModelServings ||
     view === ApplicationRoute.InterceptorContainers ||
-    view === ApplicationRoute.AdapterContainers
+    view === ApplicationRoute.AdapterContainers ||
+    view === ApplicationRoute.ApplicationContainers
   );
 };

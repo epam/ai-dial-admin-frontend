@@ -78,6 +78,11 @@ export async function getAdapterContainers() {
   return containersApi.getAdapterContainers(token);
 }
 
+export async function getApplicationContainers() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return containersApi.getApplicationContainers(token);
+}
+
 export async function getModelContainers() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return containersApi.getModelContainers(token);

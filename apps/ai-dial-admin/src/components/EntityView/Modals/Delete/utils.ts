@@ -34,6 +34,7 @@ const deleteEntityMap: Record<string, DeleteI18nKey> = {
   [ApplicationRoute.InterceptorContainers]: DeleteI18nKey.InterceptorContainer,
   [ApplicationRoute.ModelServings]: DeleteI18nKey.ModelServing,
   [ApplicationRoute.AdapterContainers]: DeleteI18nKey.AdapterContainer,
+  [ApplicationRoute.ApplicationContainers]: DeleteI18nKey.ApplicationContainer,
   [ApplicationRoute.Images]: DeleteI18nKey.Image,
 };
 

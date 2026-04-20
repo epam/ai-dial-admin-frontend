@@ -14,6 +14,7 @@ export enum IMAGE_TYPE {
   MCP = 'mcp',
   INTERCEPTOR = 'interceptor',
   ADAPTER = 'adapter',
+  APPLICATION = 'application',
 }
 
 export enum IMAGE_TRANSPORT_TYPE {

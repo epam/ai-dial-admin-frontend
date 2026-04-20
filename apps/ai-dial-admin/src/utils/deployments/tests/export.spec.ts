@@ -28,6 +28,14 @@ describe('Utils :: getDeploymentExportComponentType', () => {
       expect(result).toBe(DeploymentExportComponentType.ADAPTER_DEPLOYMENT);
     });
 
+    test('maps APPLICATION container to APPLICATION_DEPLOYMENT', () => {
+      const result = getDeploymentExportComponentType(
+        DeploymentExportEntityType.APPLICATION_CONTAINER,
+        CONTAINER_TYPE.APPLICATION,
+      );
+      expect(result).toBe(DeploymentExportComponentType.APPLICATION_DEPLOYMENT);
+    });
+
     test('maps NIM container to NIM_DEPLOYMENT', () => {
       const result = getDeploymentExportComponentType(DeploymentExportEntityType.MODEL_SERVING, CONTAINER_TYPE.NIM);
       expect(result).toBe(DeploymentExportComponentType.NIM_DEPLOYMENT);
@@ -58,6 +66,11 @@ describe('Utils :: getDeploymentExportComponentType', () => {
     test('maps INTERCEPTOR image to INTERCEPTOR_IMAGE_DEFINITION', () => {
       const result = getDeploymentExportComponentType(DeploymentExportEntityType.IMAGE, IMAGE_TYPE.INTERCEPTOR);
       expect(result).toBe(DeploymentExportComponentType.INTERCEPTOR_IMAGE_DEFINITION);
+    });
+
+    test('maps APPLICATION image to APPLICATION_IMAGE_DEFINITION', () => {
+      const result = getDeploymentExportComponentType(DeploymentExportEntityType.IMAGE, IMAGE_TYPE.APPLICATION);
+      expect(result).toBe(DeploymentExportComponentType.APPLICATION_IMAGE_DEFINITION);
     });
 
     test('falls back to MCP_IMAGE_DEFINITION for unknown image subType', () => {

@@ -48,6 +48,9 @@ export const getRouteByType = (type: IMAGE_TYPE): ApplicationRoute => {
   if (type === IMAGE_TYPE.ADAPTER) {
     return ApplicationRoute.AdapterContainers;
   }
+  if (type === IMAGE_TYPE.APPLICATION) {
+    return ApplicationRoute.ApplicationContainers;
+  }
   return ApplicationRoute.ModelServings;
 };
 
@@ -60,6 +63,9 @@ export const getTranslatedType = (route: ApplicationRoute, t: (key: string) => s
   }
   if (route === ApplicationRoute.AdapterContainers) {
     return t(EntitiesI18nKey.Adapter);
+  }
+  if (route === ApplicationRoute.ApplicationContainers) {
+    return t(EntitiesI18nKey.Application);
   }
   return t(EntitiesI18nKey.Model);
 };
