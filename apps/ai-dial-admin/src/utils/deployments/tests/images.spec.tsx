@@ -62,6 +62,7 @@ describe('images utils', () => {
       expect(getImageType(ApplicationRoute.InterceptorContainers)).toBe('INTERCEPTOR');
       expect(getImageType(ApplicationRoute.McpContainers)).toBe('MCP');
       expect(getImageType(ApplicationRoute.AdapterContainers)).toBe('ADAPTER');
+      expect(getImageType(ApplicationRoute.ApplicationContainers)).toBe('APPLICATION');
       expect(getImageType('unknown' as ApplicationRoute)).toBe('');
     });
   });
@@ -178,6 +179,15 @@ describe('images utils', () => {
         setTransport({
           ...image,
           $type: IMAGE_TYPE.ADAPTER,
+        } as any).transportType,
+      ).toBeUndefined();
+    });
+
+    test('updates image and delete transportType if type is IMAGE_TYPE.APPLICATION', () => {
+      expect(
+        setTransport({
+          ...image,
+          $type: IMAGE_TYPE.APPLICATION,
         } as any).transportType,
       ).toBeUndefined();
     });

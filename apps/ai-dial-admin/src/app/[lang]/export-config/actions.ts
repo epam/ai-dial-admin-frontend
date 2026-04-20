@@ -137,6 +137,10 @@ export async function getDeploymentEntities(type: string): Promise<EntitiesGridD
     const res = await containersApi.getAdapterContainers(token);
     return getContainersForEntitiesGrid(res.success ? res.response : null, type);
   }
+  if (type === DeploymentExportEntityType.APPLICATION_CONTAINER) {
+    const res = await containersApi.getApplicationContainers(token);
+    return getContainersForEntitiesGrid(res.success ? res.response : null, type);
+  }
   if (type === DeploymentExportEntityType.IMAGE) {
     const res = await imagesApi.getImages(token);
     return getImagesForEntitiesGrid(res.success ? res.response : null);

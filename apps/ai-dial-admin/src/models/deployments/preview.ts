@@ -17,11 +17,13 @@ export interface DeploymentExportPreviewResponse {
 export interface DeploymentImportPreviewResponse {
   mcpDeployments: FileComponentItem[];
   adapterDeployments: FileComponentItem[];
+  applicationDeployments: FileComponentItem[];
   interceptorDeployments: FileComponentItem[];
   nimDeployments: FileComponentItem[];
   inferenceDeployments: FileComponentItem[];
   mcpImageDefinitions: FileComponentItem[];
   adapterImageDefinitions: FileComponentItem[];
+  applicationImageDefinitions: FileComponentItem[];
   interceptorImageDefinitions: FileComponentItem[];
   globalImageBuildDomainWhitelist: FileComponentItem | null;
 }

@@ -239,6 +239,27 @@ describe('containers utils', () => {
       expect(template?.transport).toBeUndefined();
     });
 
+    test('returns APPLICATION template with INTERNAL_IMAGE and DEFAULT_SCALING', () => {
+      const template = getContainerTemplate(CONTAINER_TYPE.APPLICATION);
+      expect(template?.$type).toBe(CONTAINER_TYPE.APPLICATION);
+      expect(template?.source?.$type).toBe(CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE);
+      expect(template?.scaling).toEqual(DEFAULT_SCALING);
+      expect(template?.transport).toBeUndefined();
+    });
+
+    test('returns APPLICATION template with IMAGE_REFERENCE source when sourceType is provided', () => {
+      const template = getContainerTemplate(
+        CONTAINER_TYPE.APPLICATION,
+        undefined,
+        CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE,
+      );
+      expect(template?.$type).toBe(CONTAINER_TYPE.APPLICATION);
+      expect(template?.source?.$type).toBe(CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE);
+      expect(template?.source?.imageReference).toBe('');
+      expect(template?.scaling).toEqual(DEFAULT_SCALING);
+      expect(template?.transport).toBeUndefined();
+    });
+
     test('returns INTERCEPTOR template with IMAGE_REFERENCE source when sourceType is provided', () => {
       const template = getContainerTemplate(
         CONTAINER_TYPE.INTERCEPTOR,

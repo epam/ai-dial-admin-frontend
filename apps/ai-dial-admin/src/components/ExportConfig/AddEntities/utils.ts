@@ -22,10 +22,12 @@ const entityTypeToMenuKey: Record<string, string> = {
   [DeploymentExportEntityType.MCP_CONTAINER]: MenuI18nKey.McpContainers,
   [DeploymentExportEntityType.INTERCEPTOR_CONTAINER]: MenuI18nKey.InterceptorContainers,
   [DeploymentExportEntityType.ADAPTER_CONTAINER]: MenuI18nKey.AdapterContainers,
+  [DeploymentExportEntityType.APPLICATION_CONTAINER]: MenuI18nKey.ApplicationContainers,
   [DeploymentExportEntityType.IMAGE]: MenuI18nKey.Images,
   [DEPLOYMENT_IMAGE_DEP.MCP]: ExportI18nKey.McpImage,
   [DEPLOYMENT_IMAGE_DEP.INTERCEPTOR]: ExportI18nKey.InterceptorImage,
   [DEPLOYMENT_IMAGE_DEP.ADAPTER]: ExportI18nKey.AdapterImage,
+  [DEPLOYMENT_IMAGE_DEP.APPLICATION]: ExportI18nKey.ApplicationImage,
 };
 
 export const getButtonTitle = (t: (v: string) => string, selectedTab?: EntityType, full?: boolean) => {
