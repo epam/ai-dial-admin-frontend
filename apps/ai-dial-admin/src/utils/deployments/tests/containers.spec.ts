@@ -18,6 +18,7 @@ import {
   deriveScaling,
 } from '../containers';
 import { ApplicationRoute } from '@/src/types/routes';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { SourceI18nKey } from '@/src/constants/i18n';
 import { DEFAULT_SCALING, SERVING_SCALING } from '@/src/constants/deployments/containers';
 import {
@@ -138,7 +139,7 @@ describe('containers utils', () => {
         mcpRegistry: true,
       });
       expect(source.$type).toBe(CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE);
-      expect(source.externalRegistryRef).toEqual({ $type: 'mcp-registry', packageName: '' });
+      expect(source.externalRegistryRef).toEqual({ $type: SOURCE_TYPE.MCP_REGISTRY, packageName: '' });
     });
 
     test('returns INTERNAL_IMAGE by default for MCP', () => {

@@ -34,8 +34,9 @@ const ImageSource: FC<Props> = ({ image, setImage, isModal = false, verifyVersio
 
   const isRegistryView = hasExternalRegistryRef && !isModal;
   const showSourceType =
-    image.$type === IMAGE_TYPE.MCP &&
-    (!hasExternalRegistryRef || (isModal && registryServer && serverHasBoth) || isRegistryView);
+    (isModal && !hasExternalRegistryRef) ||
+    (image.$type === IMAGE_TYPE.MCP &&
+      (!hasExternalRegistryRef || (isModal && registryServer && serverHasBoth) || isRegistryView));
 
   return (
     <div className="flex flex-col gap-y-8">
@@ -61,22 +62,22 @@ const ImageSource: FC<Props> = ({ image, setImage, isModal = false, verifyVersio
             registryServer={registryServer}
           />
         )}
-        {!isModal && (
+        {(!isModal || !hasExternalRegistryRef) && (
           <div className="flex-1">
             {image.source?.$type === IMAGE_SOURCE_TYPE.CODE && (
-              <CodeURL image={image} setImage={setImage} disabled={isRegistryView} />
+              <CodeURL image={image} setImage={setImage} disabled={hasExternalRegistryRef} />
             )}
             {image.source?.$type === IMAGE_SOURCE_TYPE.DOCKER && (
-              <DockerURI image={image} setImage={setImage} disabled={isRegistryView} />
+              <DockerURI image={image} setImage={setImage} disabled={hasExternalRegistryRef} />
             )}
           </div>
         )}
       </div>
 
-      {image.source?.$type === IMAGE_SOURCE_TYPE.CODE && !(hasExternalRegistryRef && isModal) && (
+      {image.source?.$type === IMAGE_SOURCE_TYPE.CODE && !isModal && (
         <>
           <Branch image={image} setImage={setImage} isModal={isModal} />
-          {!isModal && <BaseDirectory image={image} setImage={setImage} />}
+          <BaseDirectory image={image} setImage={setImage} />
         </>
       )}
     </div>

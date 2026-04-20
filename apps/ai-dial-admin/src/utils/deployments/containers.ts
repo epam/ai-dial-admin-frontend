@@ -15,6 +15,7 @@ import {
   MODEL_FORMAT,
 } from '@/src/types/deployments/containers';
 import { DEFAULT_SCALING, DEFAULT_STRATEGY, SERVING_SCALING } from '@/src/constants/deployments/containers';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { SourceI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getTranslatedType } from '@/src/utils/deployments/entity';
@@ -121,7 +122,7 @@ export const getContainerSource = (
     return {
       $type: CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE,
       imageReference: '',
-      ...(options?.mcpRegistry ? { externalRegistryRef: { $type: 'mcp-registry', packageName: '' } } : {}),
+      ...(options?.mcpRegistry ? { externalRegistryRef: { $type: SOURCE_TYPE.MCP_REGISTRY, packageName: '' } } : {}),
     };
   }
 

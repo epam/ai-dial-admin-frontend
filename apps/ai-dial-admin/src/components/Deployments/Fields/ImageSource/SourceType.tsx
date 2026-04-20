@@ -94,7 +94,7 @@ const SourceType: FC<Props> = ({ image, setImage, isModal, verifyVersion, regist
 
   return (
     <div className="flex gap-x-4">
-      {isModal && (
+      {isModal && !image.source?.externalRegistryRef && (
         <DialSelectField
           id="imagesType"
           containerClassName="w-[220px]"

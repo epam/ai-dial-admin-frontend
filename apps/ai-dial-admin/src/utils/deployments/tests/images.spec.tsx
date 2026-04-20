@@ -2,6 +2,7 @@ import { Image } from '@/src/models/deployments/images';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { IMAGE_SOURCE_TYPE, IMAGE_STATUS, IMAGE_TRANSPORT_TYPE, IMAGE_TYPE } from '@/src/types/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   getActionClass,
@@ -353,7 +354,7 @@ describe('images utils', () => {
       const source = getImageSource(true);
       expect(source.$type).toBe(IMAGE_SOURCE_TYPE.CODE);
       expect(source.url).toBe('');
-      expect(source.externalRegistryRef).toEqual({ $type: 'mcp-registry', packageName: '' });
+      expect(source.externalRegistryRef).toEqual({ $type: SOURCE_TYPE.MCP_REGISTRY, packageName: '' });
     });
   });
 
@@ -367,7 +368,7 @@ describe('images utils', () => {
     test('returns template with registry source', () => {
       const template = getImageTemplate(true);
       expect(template.source.$type).toBe(IMAGE_SOURCE_TYPE.CODE);
-      expect(template.source.externalRegistryRef).toEqual({ $type: 'mcp-registry', packageName: '' });
+      expect(template.source.externalRegistryRef).toEqual({ $type: SOURCE_TYPE.MCP_REGISTRY, packageName: '' });
     });
   });
 });
