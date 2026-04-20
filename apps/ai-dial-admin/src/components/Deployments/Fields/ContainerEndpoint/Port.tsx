@@ -79,6 +79,7 @@ const Port: FC<Props> = ({ container, setContainer, disabled }) => {
   return (
     <div className="flex gap-4">
       <DialNumberInput
+        integer
         containerClassName="max-w-[125px]"
         id="containerPort"
         labelProps={{ label: t(EntityFieldsI18nKey.Port) }}
@@ -91,6 +92,7 @@ const Port: FC<Props> = ({ container, setContainer, disabled }) => {
       />
       {container.source?.$type === CONTAINER_SOURCE_TYPE.NGC_REGISTRY && (
         <DialNumberInput
+          integer
           containerClassName="max-w-[125px]"
           id="containerGRPCPort"
           labelProps={{ label: t(EntityFieldsI18nKey.GRPCPort) }}

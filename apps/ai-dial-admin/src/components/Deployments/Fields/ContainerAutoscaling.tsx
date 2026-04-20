@@ -139,6 +139,7 @@ const ContainerAutoscaling: FC<Props> = ({ container, setContainer, disabled }) 
           />
           <div className="flex gap-4">
             <DialNumberInput
+              integer
               id="minScale"
               value={container.scaling?.minReplicas}
               onChange={onMinScaleChange}
@@ -152,6 +153,7 @@ const ContainerAutoscaling: FC<Props> = ({ container, setContainer, disabled }) 
               invalid={!!replicasError}
             />
             <DialNumberInput
+              integer
               id="maxScale"
               min={1}
               value={container.scaling?.maxReplicas}
