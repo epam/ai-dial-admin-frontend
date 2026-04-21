@@ -7,11 +7,19 @@ const ENDPOINT_REGEX =
 const WARNING_ENDPOINT_REGEX = /^http:\/\//;
 
 export const isValidHttpUrl = (value: string) => {
+  if (/\s/.test(value)) {
+    return false;
+  }
+
   let url: URL | null = null;
 
   try {
     url = new URL(value);
   } catch {
+    return false;
+  }
+
+  if (url.pathname.includes('//')) {
     return false;
   }
 
