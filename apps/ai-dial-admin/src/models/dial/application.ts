@@ -1,15 +1,13 @@
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { ChatEntity, EntityValidityState, ModifiedEntity } from './base-entity';
 import { DefaultsValue } from './defaults';
 import { DialRoute } from './route';
 import { DialScheme } from './scheme';
 
-export enum ApplicationSourceType {
-  ENDPOINTS = 'endpoints',
-  SCHEMA = 'schema',
-}
+export { SOURCE_TYPE as ApplicationSourceType } from '@/src/components/SourceField/types';
 
 export interface ApplicationSource {
-  $type: ApplicationSourceType;
+  $type: SOURCE_TYPE;
   applicationTypeSchemaId?: string;
 }
 
