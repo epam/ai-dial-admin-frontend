@@ -20,6 +20,7 @@ import {
   getImageLogs,
   getImageVersions,
   getImagesWithVersions,
+  getApplicationContainers,
   getInterceptorContainers,
   getMCPContainers,
   getImages,
@@ -198,6 +199,17 @@ describe('Deployments actions', () => {
 
       expect(getUserToken).toHaveBeenCalled();
       expect(containersApi.getInterceptorContainers).toHaveBeenCalledWith(TOKEN_MOCK);
+      expect(result).toBe(mockResponse);
+    });
+
+    test('getApplicationContainers calls containersApi.getApplicationContainers with token', async () => {
+      const mockResponse = [{ id: '1', name: 'application-container' }];
+      (containersApi.getApplicationContainers as any).mockResolvedValue(mockResponse);
+
+      const result = await getApplicationContainers();
+
+      expect(getUserToken).toHaveBeenCalled();
+      expect(containersApi.getApplicationContainers).toHaveBeenCalledWith(TOKEN_MOCK);
       expect(result).toBe(mockResponse);
     });
 
