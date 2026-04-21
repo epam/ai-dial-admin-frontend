@@ -9,16 +9,15 @@ import { getMCPContainers, getModelContainers } from '@/src/app/actions/deployme
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import IdControl from '@/src/components/BaseControls/Id/Id';
 import VersionControl from '@/src/components/BaseControls/Version';
-import ApplicationSource from '@/src/components/SourceField/Application/ApplicationSource';
 import SourceField from '@/src/components/SourceField/SourceField';
-import { getSourceItems } from '@/src/components/SourceField/constants';
+import { APPLICATION_SOURCE_ITEMS, getSourceItems } from '@/src/components/SourceField/constants';
 import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
-import { DialApplicationScheme } from '@/src/models/dial/application';
+import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { ChatEntity } from '@/src/models/dial/base-entity';
 import { DialModel } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -161,11 +160,15 @@ const DeploymentProperties: FC<Props> = ({
 
       <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} isFullWidth={!isEntityImmutable} />
       {view === ApplicationRoute.Applications && !isEntityImmutable && !initialValues && (
-        <ApplicationSource
-          entity={entity}
+        <SourceField
+          id="sourceType"
+          view={view}
+          label={t(EntitiesI18nKey.SourceType)}
+          sourceItems={APPLICATION_SOURCE_ITEMS}
+          entity={entity as DialApplication}
+          onChange={onChangeEntity as (entity: DialApplication) => void}
           runners={runners}
           isEntityImmutable={isEntityImmutable}
-          onChangeEntity={onChangeEntity}
           isModal={isModal}
         />
       )}
