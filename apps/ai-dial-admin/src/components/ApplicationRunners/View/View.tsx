@@ -33,6 +33,7 @@ import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialRole } from '@/src/models/dial/role';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
+import { createSchemaSource } from '@/src/utils/entities/application-source';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
@@ -200,7 +201,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
               }}
               names={names}
               initialValues={{
-                customAppSchemaId: selectedRunner.$id,
+                source: selectedRunner.$id ? createSchemaSource(selectedRunner.$id) : undefined,
                 applicationProperties: getSchemaDefaults(selectedRunner as JSONSchema7) as Record<
                   string,
                   DefaultsValue

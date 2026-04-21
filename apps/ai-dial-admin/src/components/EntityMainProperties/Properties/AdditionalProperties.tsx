@@ -5,6 +5,7 @@ import { FC } from 'react';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { ChatEntity } from '@/src/models/dial/base-entity';
+import { getSchemaSourceId } from '@/src/utils/entities/application-source';
 import { ApplicationRoute } from '@/src/types/routes';
 import { Toolset } from '@/src/models/dial/toolset';
 import { useI18n } from '@/src/locales/client';
@@ -26,7 +27,9 @@ interface Props {
 const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity, isEntityImmutable = false }) => {
   const t = useI18n();
 
-  const applicationRunner = runners?.find((runner) => runner.$id === (entity as DialApplication).customAppSchemaId);
+  const applicationRunner = runners?.find(
+    (runner) => runner.$id === getSchemaSourceId((entity as DialApplication).source),
+  );
 
   const isShowCompletionEndpoint = view === ApplicationRoute.Applications && !!applicationRunner;
   const isShowMaintainer =

@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import ParametersTab from '../ParametersTab';
 import { BasicI18nKey } from '@/src/constants/i18n';
+import { ApplicationSourceType } from '@/src/models/dial/application';
 
 vi.mock('@/src/app/[lang]/application-runners/actions', () => ({
   getResolvedApplicationScheme: vi.fn().mockResolvedValue({ success: false }),
@@ -11,7 +12,7 @@ describe('Applications - ApplicationParametersTab', () => {
   test('Should correctly render notification', async () => {
     render(
       <ParametersTab
-        application={{ customAppSchemaId: 'scheme1' }}
+        application={{ source: { $type: ApplicationSourceType.SCHEMA, applicationTypeSchemaId: 'scheme1' } }}
         applicationSchemes={[
           {
             $id: 'scheme1',

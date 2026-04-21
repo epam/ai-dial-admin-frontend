@@ -1,5 +1,4 @@
 import { BaseEntity } from '@/src/models/dial/base-entity';
-import { DialModel } from '@/src/models/dial/model';
 
 export const getNamesConfigurations = (namesWithVersions: string[]) => {
   const names: string[] = [];
@@ -20,7 +19,10 @@ export const getNamesConfigurations = (namesWithVersions: string[]) => {
   };
 };
 
-export const filterDisplayNamesWithVersions = (entities?: DialModel[] | null, currentModel?: DialModel): string[] => {
+export const filterDisplayNamesWithVersions = (
+  entities?: { displayName?: string; displayVersion?: string }[] | null,
+  currentModel?: { displayName?: string; displayVersion?: string },
+): string[] => {
   return (
     (entities?.reduce((acc, curr) => {
       if (curr.displayName != null && curr.displayName !== currentModel?.displayName) {
