@@ -1,10 +1,11 @@
-import { DialFormPopup, DialInput, DialPasswordInput } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
-import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import IdControl from '@/src/components/BaseControls/Id/Id';
-import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
+import ApiKeyHeaderControl from '@/src/components/Toolsets/Auth/Controls/ApiKeyHeaderControl';
+import OAuthAuthSectionControl from '@/src/components/Toolsets/Auth/Controls/OAuthAuthSectionControl';
+import { ButtonsI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { Toolset, ToolsetAuthType } from '@/src/models/dial/toolset';
@@ -75,27 +76,25 @@ const DuplicateToolset: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose,
   );
 
   const onChangeClientId = useCallback(
-    (clientId?: string) => {
+    (clientId: string) => {
       const updatedEntity = {
         ...clonedEntity,
         authSettings: { ...clonedEntity.authSettings!, clientId },
       };
       setEntity(updatedEntity);
-      dispatch({ type: ValidationActionType.SetField, field: 'authSettings.clientId', isValid: !!clientId });
     },
-    [clonedEntity, dispatch],
+    [clonedEntity],
   );
 
   const onChangeClientSecret = useCallback(
-    (clientSecret?: string) => {
+    (clientSecret: string) => {
       const updatedEntity = {
         ...clonedEntity,
         authSettings: { ...clonedEntity.authSettings!, clientSecret },
       };
       setEntity(updatedEntity);
-      dispatch({ type: ValidationActionType.SetField, field: 'authSettings.clientSecret', isValid: !!clientSecret });
     },
-    [clonedEntity, dispatch],
+    [clonedEntity],
   );
 
   const onChangeAuthorizationEndpoint = useCallback(
@@ -115,15 +114,14 @@ const DuplicateToolset: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose,
   );
 
   const onChangeApiKeyHeader = useCallback(
-    (apiKeyHeader?: string) => {
+    (apiKeyHeader: string) => {
       const updatedEntity = {
         ...clonedEntity,
         authSettings: { ...clonedEntity.authSettings!, apiKeyHeader },
       };
       setEntity(updatedEntity);
-      dispatch({ type: ValidationActionType.SetField, field: 'authSettings.apiKeyHeader', isValid: !!apiKeyHeader });
     },
-    [clonedEntity, dispatch],
+    [clonedEntity],
   );
 
   return (
@@ -152,39 +150,20 @@ const DuplicateToolset: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose,
           )}
 
           {authType === ToolsetAuthType.OAUTH && (
-            <>
-              <DialInput
-                id="clientId"
-                labelProps={{ label: t(EntityFieldsI18nKey.clientId), required: true }}
-                value={clonedEntity.authSettings?.clientId || ''}
-                placeholder={t(EntityPlaceholdersI18nKey.ClientId)}
-                onChange={onChangeClientId}
-              />
-              <DialPasswordInput
-                id="clientSecret"
-                labelProps={{ label: t(EntityFieldsI18nKey.clientSecret), required: true }}
-                value={clonedEntity.authSettings?.clientSecret || ''}
-                placeholder={t(EntityPlaceholdersI18nKey.ClientSecret)}
-                onChange={onChangeClientSecret}
-              />
-              <EndpointControl
-                id="authorizationEndpoint"
-                required
-                isFullWidth
-                label={t(EntityFieldsI18nKey.authorizationEndpoint)}
-                endpoint={clonedEntity.authSettings?.authorizationEndpoint || ''}
-                placeholder={t(EntityPlaceholdersI18nKey.AuthorizationEndpoint)}
-                onChange={onChangeAuthorizationEndpoint}
-              />
-            </>
+            <OAuthAuthSectionControl
+              clientId={clonedEntity.authSettings?.clientId}
+              clientSecret={clonedEntity.authSettings?.clientSecret}
+              authorizationEndpoint={clonedEntity.authSettings?.authorizationEndpoint}
+              showTokenEndpoint={false}
+              onChangeClientId={onChangeClientId}
+              onChangeClientSecret={onChangeClientSecret}
+              onChangeAuthorizationEndpoint={onChangeAuthorizationEndpoint}
+            />
           )}
 
           {authType === ToolsetAuthType.API_KEY && (
-            <DialInput
-              id="apiKeyHeader"
-              labelProps={{ label: t(EntityFieldsI18nKey.apiKeyHeader), required: true }}
-              placeholder={t(EntityPlaceholdersI18nKey.Header)}
-              value={clonedEntity.authSettings?.apiKeyHeader || ''}
+            <ApiKeyHeaderControl
+              apiKeyHeader={clonedEntity.authSettings?.apiKeyHeader}
               onChange={onChangeApiKeyHeader}
             />
           )}
