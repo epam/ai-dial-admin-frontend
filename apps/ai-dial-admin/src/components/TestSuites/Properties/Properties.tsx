@@ -95,12 +95,14 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false }
                   />
                 </DialInputPopup>
               </div>
-              <DialNeutralButton
-                iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
-                className="self-end shrink-0"
-                label={isMobile ? '' : t(ButtonsI18nKey.Open)}
-                onClick={() => openInNewTab()}
-              />
+              {deployments && (
+                <DialNeutralButton
+                  iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
+                  className="self-end shrink-0"
+                  label={isMobile ? '' : t(ButtonsI18nKey.Open)}
+                  onClick={() => openInNewTab()}
+                />
+              )}
             </div>
           </div>
         </>
