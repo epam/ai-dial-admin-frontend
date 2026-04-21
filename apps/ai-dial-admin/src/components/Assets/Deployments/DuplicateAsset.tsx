@@ -1,24 +1,17 @@
-import {
-  DialFormPopup,
-  DialInput,
-  DialPasswordInput,
-  DialRadioGroup,
-  RadioButtonWithContent,
-  RadioGroupOrientation,
-} from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, DialRadioGroup, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import semver from 'semver';
 
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
-import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import IdControl from '@/src/components/BaseControls/Id/Id';
 import VersionControl from '@/src/components/BaseControls/Version';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
+import ApiKeyHeaderControl from '@/src/components/Toolsets/Auth/Controls/ApiKeyHeaderControl';
+import OAuthAuthSectionControl from '@/src/components/Toolsets/Auth/Controls/OAuthAuthSectionControl';
 import {
   BasicI18nKey,
   ButtonsI18nKey,
   EntitiesI18nKey,
-  EntityFieldsI18nKey,
   EntityPlaceholdersI18nKey,
   ToolsetI18nKey,
 } from '@/src/constants/i18n';
@@ -194,16 +187,27 @@ const DuplicateAsset: FC<Props> = ({ view, isModalOpen, entity, versionsMap, con
     [clonedAsset, dispatch],
   );
 
+  const onChangeTokenEndpoint = useCallback(
+    (tokenEndpoint?: string) => {
+      const toolset = clonedAsset as AssetToolset;
+      setClonedAsset({
+        ...toolset,
+        authSettings: { ...toolset.authSettings!, tokenEndpoint },
+      });
+      dispatch({ type: ValidationActionType.SetField, field: 'authSettings.tokenEndpoint', isValid: !!tokenEndpoint });
+    },
+    [clonedAsset, dispatch],
+  );
+
   const onChangeApiKeyHeader = useCallback(
-    (apiKeyHeader?: string) => {
+    (apiKeyHeader: string) => {
       const toolset = clonedAsset as AssetToolset;
       setClonedAsset({
         ...toolset,
         authSettings: { ...toolset.authSettings!, apiKeyHeader },
       });
-      dispatch({ type: ValidationActionType.SetField, field: 'authSettings.apiKeyHeader', isValid: !!apiKeyHeader });
     },
-    [clonedAsset, dispatch],
+    [clonedAsset],
   );
 
   return (
@@ -246,39 +250,21 @@ const DuplicateAsset: FC<Props> = ({ view, isModalOpen, entity, versionsMap, con
         )}
 
         {authType === ToolsetAuthType.OAUTH && (
-          <>
-            <DialInput
-              id="clientId"
-              labelProps={{ label: t(EntityFieldsI18nKey.clientId), required: true }}
-              value={(clonedAsset as AssetToolset).authSettings?.clientId || ''}
-              placeholder={t(EntityPlaceholdersI18nKey.ClientId)}
-              onChange={onChangeClientId}
-            />
-            <DialPasswordInput
-              id="clientSecret"
-              labelProps={{ label: t(EntityFieldsI18nKey.clientSecret), required: true }}
-              value={(clonedAsset as AssetToolset).authSettings?.clientSecret || ''}
-              placeholder={t(EntityPlaceholdersI18nKey.ClientSecret)}
-              onChange={onChangeClientSecret}
-            />
-            <EndpointControl
-              id="authorizationEndpoint"
-              required
-              isFullWidth
-              label={t(EntityFieldsI18nKey.authorizationEndpoint)}
-              endpoint={(clonedAsset as AssetToolset).authSettings?.authorizationEndpoint || ''}
-              placeholder={t(EntityPlaceholdersI18nKey.AuthorizationEndpoint)}
-              onChange={onChangeAuthorizationEndpoint}
-            />
-          </>
+          <OAuthAuthSectionControl
+            clientId={(clonedAsset as AssetToolset).authSettings?.clientId}
+            clientSecret={(clonedAsset as AssetToolset).authSettings?.clientSecret}
+            authorizationEndpoint={(clonedAsset as AssetToolset).authSettings?.authorizationEndpoint}
+            tokenEndpoint={(clonedAsset as AssetToolset).authSettings?.tokenEndpoint}
+            onChangeClientId={onChangeClientId}
+            onChangeClientSecret={onChangeClientSecret}
+            onChangeAuthorizationEndpoint={onChangeAuthorizationEndpoint}
+            onChangeTokenEndpoint={onChangeTokenEndpoint}
+          />
         )}
 
         {authType === ToolsetAuthType.API_KEY && (
-          <DialInput
-            id="apiKeyHeader"
-            labelProps={{ label: t(EntityFieldsI18nKey.apiKeyHeader), required: true }}
-            placeholder={t(EntityPlaceholdersI18nKey.Header)}
-            value={(clonedAsset as AssetToolset).authSettings?.apiKeyHeader || ''}
+          <ApiKeyHeaderControl
+            apiKeyHeader={(clonedAsset as AssetToolset).authSettings?.apiKeyHeader}
             onChange={onChangeApiKeyHeader}
           />
         )}
