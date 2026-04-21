@@ -17,6 +17,7 @@ import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication } from '@/src/models/dial/application';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
+import { getSchemaSourceId } from '@/src/utils/entities/application-source';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
@@ -68,7 +69,7 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
 
   useEffect(() => {
     const name =
-      (entity as DialApplication).customAppSchemaId || (entity as unknown as AssetApp).applicationTypeSchemaId;
+      getSchemaSourceId((entity as DialApplication).source) || (entity as unknown as AssetApp).applicationTypeSchemaId;
     if (name && !runnerInterceptors) {
       getApplicationScheme(name, DEFAULT_ETAG).then((res) => {
         setRunnerInterceptors(res.response?.['dial:applicationTypeInterceptors']);

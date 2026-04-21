@@ -3,8 +3,18 @@ import { DefaultsValue } from './defaults';
 import { DialRoute } from './route';
 import { DialScheme } from './scheme';
 
+export enum ApplicationSourceType {
+  ENDPOINTS = 'endpoints',
+  SCHEMA = 'schema',
+}
+
+export interface ApplicationSource {
+  $type: ApplicationSourceType;
+  applicationTypeSchemaId?: string;
+}
+
 export interface DialApplication extends ChatEntity, EntityValidityState {
-  customAppSchemaId?: string;
+  source?: ApplicationSource;
   viewerUrl?: string;
   editorUrl?: string;
   routes?: DialRoute[];

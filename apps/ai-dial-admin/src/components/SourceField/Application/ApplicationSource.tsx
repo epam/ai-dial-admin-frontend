@@ -17,6 +17,12 @@ import { DialApplication, DialApplicationScheme } from '@/src/models/dial/applic
 import { DefaultsValue } from '@/src/models/dial/defaults';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { ApplicationRoute } from '@/src/types/routes';
+import {
+  ENDPOINTS_SOURCE,
+  SCHEMA_SOURCE,
+  createSchemaSource,
+  getSchemaSourceId,
+} from '@/src/utils/entities/application-source';
 import { getSchemaDefaults } from '@/src/utils/schema';
 import EndpointAndMCPContainer from './EndpointAndMCPContainer';
 import { APPLICATION_SOURCE_TYPES, SourceType } from './constants';
@@ -34,63 +40,65 @@ const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, i
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const [sourceType, setSourceType] = useState<SourceType>(
-    entity?.endpoint || entity?.mcp || (!entity.customAppSchemaId && !(entity as AssetApp).applicationTypeSchemaId)
+    entity?.endpoint ||
+      entity?.mcp ||
+      (!getSchemaSourceId(entity.source) && !(entity as AssetApp).applicationTypeSchemaId)
       ? SourceType.ENDPOINTS
       : SourceType.APP_RUNNER,
   );
   const { dispatch } = useSaveValidationContext();
 
   useEffect(() => {
-    const isAppRunerSourceType = entity.customAppSchemaId || (entity as AssetApp).applicationTypeSchemaId;
+    const isAppRunnerSourceType = getSchemaSourceId(entity.source) || (entity as AssetApp).applicationTypeSchemaId;
     const isMCPSourceType = entity?.endpoint || entity?.mcp;
-    if (isAppRunerSourceType) {
+    if (isAppRunnerSourceType) {
       setSourceType(SourceType.APP_RUNNER);
     } else if (isMCPSourceType) {
       setSourceType(SourceType.ENDPOINTS);
     }
   }, [entity]);
 
-  const resetValidation = useCallback(() => {
-    // Reset validation states when changing source type
-    dispatch({ type: ValidationActionType.SetField, field: 'endpoint', isValid: true });
-    dispatch({ type: ValidationActionType.SetField, field: 'mcp_endpoint', isValid: true });
-    dispatch({ type: ValidationActionType.SetField, field: 'viewerUrl', isValid: true });
-    dispatch({ type: ValidationActionType.SetField, field: 'editorUrl', isValid: true });
-    onChangeEntity({
-      ...entity,
-      endpoint: void 0,
-      mcp: void 0,
-      viewerUrl: void 0,
-      editorUrl: void 0,
-      customAppSchemaId: void 0,
-      applicationTypeSchemaId: void 0,
-      applicationProperties: void 0,
-    });
-  }, [entity, onChangeEntity, dispatch]);
+  useEffect(() => {
+    if (view !== ApplicationRoute.AssetsApplications && !entity.source) {
+      onChangeEntity({ ...entity, source: ENDPOINTS_SOURCE });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleRadioChange = useCallback(
     (option: string) => {
+      dispatch({ type: ValidationActionType.SetField, field: 'endpoint', isValid: true });
+      dispatch({ type: ValidationActionType.SetField, field: 'mcp_endpoint', isValid: true });
+      dispatch({ type: ValidationActionType.SetField, field: 'viewerUrl', isValid: true });
+      dispatch({ type: ValidationActionType.SetField, field: 'editorUrl', isValid: true });
+
       if (option === SourceType.ENDPOINTS) {
         setSourceType(SourceType.ENDPOINTS);
-        const newEntity = {
-          ...entity,
-          applicationTypeSchemaId: void 0,
-          customAppSchemaId: void 0,
-          applicationProperties: void 0,
-        };
-        onChangeEntity(newEntity);
-      } else if (option === SourceType.APP_RUNNER) {
-        setSourceType(SourceType.APP_RUNNER);
-        const newEntity = {
+        onChangeEntity({
           ...entity,
           endpoint: void 0,
           mcp: void 0,
-        };
-        onChangeEntity(newEntity);
+          viewerUrl: void 0,
+          editorUrl: void 0,
+          source: ENDPOINTS_SOURCE,
+          applicationTypeSchemaId: void 0,
+          applicationProperties: void 0,
+        });
+      } else if (option === SourceType.APP_RUNNER) {
+        setSourceType(SourceType.APP_RUNNER);
+        onChangeEntity({
+          ...entity,
+          endpoint: void 0,
+          mcp: void 0,
+          viewerUrl: void 0,
+          editorUrl: void 0,
+          source: SCHEMA_SOURCE,
+          applicationTypeSchemaId: void 0,
+          applicationProperties: void 0,
+        });
       }
-      resetValidation();
     },
-    [setSourceType, resetValidation, onChangeEntity, entity],
+    [setSourceType, onChangeEntity, entity, dispatch],
   );
 
   const onChangeViewerUrl = useCallback(
@@ -117,7 +125,12 @@ const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, i
               endpoint: void 0,
               mcp: void 0,
             }
-          : { ...entity, customAppSchemaId: value, endpoint: void 0, mcp: void 0 };
+          : {
+              ...entity,
+              source: value ? createSchemaSource(value) : void 0,
+              endpoint: void 0,
+              mcp: void 0,
+            };
       const runner = runners?.find((r) => r.$id === value);
       if (runner) {
         let scheme: DialApplicationScheme | undefined;
@@ -143,7 +156,7 @@ const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, i
       const newEntity = {
         ...entity,
         applicationTypeSchemaId: void 0,
-        customAppSchemaId: void 0,
+        source: ENDPOINTS_SOURCE,
         applicationProperties: void 0,
       };
       onChangeEntity(newEntity);
@@ -191,7 +204,7 @@ const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, i
             selectedValue={
               view === ApplicationRoute.AssetsApplications
                 ? (entity as AssetApp).applicationTypeSchemaId
-                : entity.customAppSchemaId
+                : getSchemaSourceId(entity.source)
             }
             runners={runners}
             isEntityImmutable={isEntityImmutable}

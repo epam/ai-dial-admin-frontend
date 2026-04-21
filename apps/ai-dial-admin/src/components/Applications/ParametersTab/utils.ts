@@ -14,6 +14,7 @@ import {
   DialApplicationScheme,
   TypeEntity,
 } from '@/src/models/dial/application';
+import { getSchemaSourceId } from '@/src/utils/entities/application-source';
 import { DialApplicationResource } from '@/src/models/dial/application-resource';
 import { DefaultsValue } from '@/src/models/dial/defaults';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
@@ -78,12 +79,12 @@ export const getAppRunner = (
 
   return applicationSchemes?.find((scheme) => {
     const appTypeSchemaId = (entity as AssetApp)?.applicationTypeSchemaId;
-    const customAppSchemaId = entity?.customAppSchemaId;
+    const schemaSourceId = getSchemaSourceId((entity as DialApplication).source);
     const editorUrl = entity?.editorUrl;
 
     return (
       (scheme.$id && appTypeSchemaId && scheme.$id === appTypeSchemaId) ||
-      (scheme.$id && customAppSchemaId && scheme.$id === customAppSchemaId) ||
+      (scheme.$id && schemaSourceId && scheme.$id === schemaSourceId) ||
       (scheme['dial:applicationTypeEditorUrl'] && editorUrl && scheme['dial:applicationTypeEditorUrl'] === editorUrl)
     );
   });
