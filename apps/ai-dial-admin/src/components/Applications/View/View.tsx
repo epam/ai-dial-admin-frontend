@@ -43,6 +43,7 @@ import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getApplicationTabs, toolsTab } from '@/src/utils/tabs/utils';
 import TabsContent from './TabsContent';
+import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
 
 interface Props {
   etag: string;
@@ -94,7 +95,9 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
   );
 
   useEffect(() => {
-    if (originalApplication.mcp?.endpoint) {
+    const appRunner = getAppRunner(originalApplication, props.applicationSchemes);
+
+    if (originalApplication.mcp?.endpoint || (appRunner && appRunner?.['dial:applicationTypeMcp'])) {
       setTabs(getApplicationTabs(t).toSpliced(1, 0, toolsTab(t)));
     } else {
       setTabs(getApplicationTabs(t));

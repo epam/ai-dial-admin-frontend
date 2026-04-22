@@ -79,7 +79,6 @@ const SchemaManager: FC<Props> = ({ testCaseSchema, onChangeTestCaseSchema, isSk
     }
   }, []);
 
-  // Stable columnDefs — callbacks never change identity
   const columnDefs: ColDef[] = useMemo(
     () => [
       ...getSchemaFieldGridColumns(onCellChange, onSelectChange, onChangeRequired, t),
@@ -117,19 +116,17 @@ const SchemaManager: FC<Props> = ({ testCaseSchema, onChangeTestCaseSchema, isSk
   }, [isSkipRefresh, rowData, gridApi]);
 
   return (
-    <div className="flex flex-col gap-4 border border-primary rounded p-4 mb-4">
+    <div className="flex flex-col gap-4">
       <div className="flex flex-row justify-between items-center">
-        <div className="flex flex-col gap-1">
-          <h3>{t(TestSuitesI18nKey.TestCaseSchema)}</h3>
-          <span className="text-secondary small">{t(TestSuitesI18nKey.SchemaDescription)}</span>
-        </div>
+        <span className="dial-small-text">{t(TestSuitesI18nKey.SchemaDescription)}</span>
         <DialNeutralButton
           label={t(BasicI18nKey.AddField)}
           iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
           onClick={onAddField}
         />
       </div>
-      <div className="min-h-0 overflow-auto" style={{ maxHeight: '300px' }}>
+
+      <div className="min-h-0 overflow-auto h-[300px]">
         <GridView<TestCaseSchema>
           getIsEmptyData={() => testCaseSchema.length === 0}
           emptyDataProps={{ title: t(TestSuitesI18nKey.NoSchemaFields) }}

@@ -23,6 +23,9 @@ export class RunsApi extends BaseApi {
   }
 
   getRunResults(token: Token, filters: FilterDto[]): Promise<{ content: ExtractionResult[] } | null> {
-    return this.get<{ content: ExtractionResult[] }>(`${RUN_RESULTS_URL}?${getRequestFiltersStr(filters)}`, token);
+    return this.get<{ content: ExtractionResult[] }>(
+      `${RUN_RESULTS_URL}?size=1000&${getRequestFiltersStr(filters)}`,
+      token,
+    );
   }
 }

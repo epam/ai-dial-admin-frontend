@@ -34,6 +34,7 @@ import {
 } from '@/src/models/evaluation/test-suite';
 import { InputBindingType, MetricBindingType, TestCaseItemType } from '@/src/types/evaluation';
 import { ApplicationRoute } from '@/src/types/routes';
+import { isValueTruthy } from '@/src/utils/types';
 
 export type onCellChange = (data: Record<string, unknown>, field: string, value: string | number | boolean) => void;
 
@@ -184,6 +185,28 @@ export const getTestCaseColumns = (
                   onCellChange(rowData as Record<string, unknown>, field, value);
                 },
                 disableValidation: true,
+              },
+            };
+          }
+          if (param.type == TestCaseItemType.BOOLEAN) {
+            return {
+              component: SelectCellRenderer,
+              params: {
+                getItems: () => {
+                  return [
+                    {
+                      value: true.toString(),
+                      label: true.toString(),
+                    },
+                    {
+                      value: false.toString(),
+                      label: false.toString(),
+                    },
+                  ];
+                },
+                onChange: (value: string | number, rowData: unknown) => {
+                  onCellChange(rowData as Record<string, unknown>, field, isValueTruthy(value as string));
+                },
               },
             };
           }

@@ -158,7 +158,11 @@ export const getComponentColDefs = (
   }
 
   if (type === EntityType.APPLICATION_TYPE_SCHEMA) {
-    return [getComponentActionColumn(), ...LIST_RUNNER_COLUMNS, actionColumn];
+    return [
+      getComponentActionColumn(),
+      ...LIST_RUNNER_COLUMNS.filter((col) => col.field !== 'updatedAt'),
+      actionColumn,
+    ];
   }
 
   if (type === EntityType.KEY) {
@@ -177,11 +181,13 @@ export const getEntityByIdentifier = (allEntities: ActivityAuditEntity[], entity
 const DEPLOYMENT_IMPORT_KEY_MAP: Record<string, DeploymentExportEntityType> = {
   mcpDeployments: DeploymentExportEntityType.MCP_CONTAINER,
   adapterDeployments: DeploymentExportEntityType.ADAPTER_CONTAINER,
+  applicationDeployments: DeploymentExportEntityType.APPLICATION_CONTAINER,
   interceptorDeployments: DeploymentExportEntityType.INTERCEPTOR_CONTAINER,
   nimDeployments: DeploymentExportEntityType.MODEL_SERVING,
   inferenceDeployments: DeploymentExportEntityType.MODEL_SERVING,
   mcpImageDefinitions: DeploymentExportEntityType.IMAGE,
   adapterImageDefinitions: DeploymentExportEntityType.IMAGE,
+  applicationImageDefinitions: DeploymentExportEntityType.IMAGE,
   interceptorImageDefinitions: DeploymentExportEntityType.IMAGE,
 };
 

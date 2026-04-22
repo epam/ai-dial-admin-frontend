@@ -1,4 +1,4 @@
-import { Toolset, ToolsetAuthCredentialLevel } from '@/src/models/dial/toolset';
+import { ToolsetAuthCredentialLevel } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { isValueTruthy } from '@/src/utils/types';
@@ -21,12 +21,12 @@ export const getIsUser = () => {
   return null;
 };
 
-export const setUrl = (view: ApplicationRoute, selectedToolset: Toolset) => {
+export const setUrl = (view: ApplicationRoute, selectedToolset: unknown) => {
   if (typeof window !== 'undefined') {
     const url =
-      view === ApplicationRoute.Toolsets || view === ApplicationRoute.ToolsetPublications
+      view === ApplicationRoute.Toolsets
         ? `${getUrnForEntity(view, selectedToolset)}?`
-        : `${getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset)}&`;
+        : `${getUrnForEntity(view, selectedToolset)}&`;
     localStorage.setItem(urlKey, url);
   }
 };

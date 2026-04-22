@@ -4,6 +4,8 @@ export interface TimePeriodOption {
   offset: number;
 }
 
+export const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
 export const DEFAULT_TIME_PERIOD = '2d';
 
 export const timePeriodOptionsConfig: TimePeriodOption[] = [
@@ -19,8 +21,12 @@ export const timePeriodOptionsConfig: TimePeriodOption[] = [
   { value: '30d', label: 'Last 30d', offset: 30 * 24 * 60 * 60 * 1000 },
 ];
 
-export function getFilteredTimePeriodOptions(maxTimeRangeMs: number) {
-  return timePeriodOptionsConfig.filter((opt) => opt.offset <= maxTimeRangeMs);
+export function getTimePeriodOptionsByMaxMs(
+  options: TimePeriodOption[] = timePeriodOptionsConfig,
+  maxRangeMs?: number,
+): TimePeriodOption[] {
+  if (maxRangeMs == null) return options;
+  return options.filter((opt) => opt.offset <= maxRangeMs);
 }
 
 export function getDefaultTimePeriod(options: TimePeriodOption[]): string {

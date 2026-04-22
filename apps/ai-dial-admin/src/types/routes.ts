@@ -43,6 +43,7 @@ export enum ApplicationRoute {
   ModelServings = '/model-servings',
   McpContainers = '/mcp-containers',
   AdapterContainers = '/adapter-containers',
+  ApplicationContainers = '/application-containers',
   Images = '/deployment-images',
 
   // evaluations

@@ -1,10 +1,13 @@
+import { SOURCE_FIELD } from '@/src/components/SourceField/types';
 import { ChatEntity, EntityValidityState, ModifiedEntity } from './base-entity';
 import { DefaultsValue } from './defaults';
 import { DialRoute } from './route';
 import { DialScheme } from './scheme';
 
+export { SOURCE_TYPE as ApplicationSourceType } from '@/src/components/SourceField/types';
+
 export interface DialApplication extends ChatEntity, EntityValidityState {
-  customAppSchemaId?: string;
+  source?: SOURCE_FIELD;
   viewerUrl?: string;
   editorUrl?: string;
   routes?: DialRoute[];
@@ -39,6 +42,7 @@ export interface DialApplicationScheme extends ModifiedEntity, DialScheme {
   'dial:applicationTypeBucketCopy'?: TypeBucketCopy;
   'dial:applicationTypeInterceptors'?: string[];
   'dial:applicationTypeMcp'?: ApplicationTypeMCP;
+
   applications?: string[];
   topics?: string[];
 }
@@ -46,6 +50,9 @@ export interface DialApplicationScheme extends ModifiedEntity, DialScheme {
 export interface ApplicationTypeMCP {
   ['dial:endpoint']: string;
   ['dial:transport']?: string;
+  ['dial:forwardPerRequestKey']?: boolean;
+  ['dial:mcpConfigDelivery']?: ApplicationMCPConfigDelivery;
+  ['dial:allowedTools']?: string[];
 }
 
 export enum TypeEntity {
@@ -74,4 +81,11 @@ export interface ApplicationMCPContainer {
   endpoint: string;
   transport?: string;
   allowedTools?: string[];
+  forwardPerRequestKey?: boolean;
+  configDelivery?: ApplicationMCPConfigDelivery;
+}
+
+export enum ApplicationMCPConfigDelivery {
+  META = 'META',
+  HEADER = 'HEADER',
 }

@@ -116,6 +116,10 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
           href: ApplicationRoute.AdapterContainers,
         },
         {
+          key: MenuI18nKey.ApplicationContainers,
+          href: ApplicationRoute.ApplicationContainers,
+        },
+        {
           key: MenuI18nKey.Images,
           href: ApplicationRoute.Images,
         },

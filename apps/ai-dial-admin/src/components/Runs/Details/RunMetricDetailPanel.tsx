@@ -2,7 +2,7 @@
 
 import { FC, useEffect, useMemo, useState } from 'react';
 
-import { DialCloseButton, DialLoader, DialSwitch } from '@epam/ai-dial-ui-kit';
+import { DialCloseButton, DialGhostIconButton, DialLoader, DialSwitch, ElementSize } from '@epam/ai-dial-ui-kit';
 
 import { getTestCaseRunResultDetails } from '@/src/app/[lang]/runs/actions';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
@@ -16,15 +16,17 @@ import AdaptiveValueGrid from './AdaptiveValueGrid';
 import CodeViewer from '@/src/components/Common/CodeViewer/CodeViewer';
 import ExecutionStatusBar from './ExecutionStatusBar';
 import MetricGroup from './MetricGroup';
+import { IconLayoutBottombar } from '@tabler/icons-react';
 
 interface Props {
   resultId: string;
   grafanaTraceUrl?: string;
   onClose: () => void;
   metricBindings?: Record<string, MetricBindings>;
+  onSwitchMode?: () => void;
 }
 
-const RunMetricDetailPanel: FC<Props> = ({ resultId, grafanaTraceUrl, onClose, metricBindings }) => {
+const RunMetricDetailPanel: FC<Props> = ({ resultId, grafanaTraceUrl, onClose, metricBindings, onSwitchMode }) => {
   const t = useI18n();
 
   const [isJsonView, setIsJsonView] = useState(false);
@@ -69,6 +71,14 @@ const RunMetricDetailPanel: FC<Props> = ({ resultId, grafanaTraceUrl, onClose, m
             switchId="jsonViewer"
             onChange={() => setIsJsonView(!isJsonView)}
           />
+          {onSwitchMode && (
+            <DialGhostIconButton
+              size={ElementSize.Small}
+              icon={<IconLayoutBottombar size={16} />}
+              onClick={onSwitchMode}
+              title={t(RunsI18nKey.SwitchToDrawer)}
+            />
+          )}
           <DialCloseButton onClose={onClose} />
         </div>
       </div>

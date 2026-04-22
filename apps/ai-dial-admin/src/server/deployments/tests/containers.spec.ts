@@ -103,6 +103,15 @@ describe('ContainersApi', () => {
     );
   });
 
+  test('calls getApplicationContainers with correct URL and method', async () => {
+    fetch.mockResponseOnce(JSON.stringify(['container1']));
+    await instance.getApplicationContainers(TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(`${BASE_CONTAINERS_URL}?type=APPLICATION`),
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
   test('calls getModelContainers with correct URL and method', async () => {
     fetch.mockResponseOnce(JSON.stringify(['container2']));
     await instance.getModelContainers(TOKEN_MOCK);

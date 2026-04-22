@@ -6,7 +6,7 @@ import '@epam/ai-dial-ui-kit/styles.css';
 
 import '@/src/app/[lang]/global.scss';
 
-import { themesApi, utilityApi } from '@/src/app/api/api';
+import { telemetryApi, themesApi, utilityApi } from '@/src/app/api/api';
 import Content from '@/src/components/Content/Content';
 import Header from '@/src/components/Header/Header';
 import Menu from '@/src/components/Menu/Menu';
@@ -24,6 +24,7 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getMenuItems } from '@/src/utils/env/get-menu-items';
+import { extractTelemetryMaxRangeMs } from '@/src/utils/telemetry';
 import { isValueTruthy } from '@/src/utils/types';
 import { normalizeUrl } from '@/src/utils/url';
 
@@ -48,6 +49,7 @@ export default async function Layout({ children, params }: { children: ReactNode
   const themesImages = await themesApi.getImages();
 
   const beVersion = await utilityApi.getBeVersion(token);
+  const telemetryMaxRangeMs = extractTelemetryMaxRangeMs(await telemetryApi.getDatasets(token));
 
   return (
     <I18nProvider locale={lang}>
@@ -57,6 +59,7 @@ export default async function Layout({ children, params }: { children: ReactNode
           featureFlags={featureFlags}
           disableDeploymentsJSONEditor={isValueTruthy(process.env.DEPLOYMENTS_DISABLE_JSON_EDITOR)}
           resourcesDefaults={JSON.parse(process.env.DEPLOYMENTS_RESOURCES_DEFAULTS || '{}') as ResourcesDefaults}
+          telemetryMaxRangeMs={telemetryMaxRangeMs}
           userInfo={(await utilityApi.getUserInfo(token)).response?.userInfo}
         >
           <ThemeProvider themesConfiguration={themesConfiguration} themeImages={themesImages}>

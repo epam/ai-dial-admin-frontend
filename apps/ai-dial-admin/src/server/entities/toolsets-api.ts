@@ -23,8 +23,8 @@ export class ToolsetsApi extends BaseApi {
     return this.getActionWithEtag(TOOLSET_URL(name), eTag, token);
   }
 
-  getTools(name: string, token: Token): Promise<Tool[] | null> {
-    return this.get(TOOLS_URL(name), token).then((res) => (res as { tools: Tool[] })?.tools || []);
+  getTools(name: string, token: Token): Promise<ServerActionResponse<{ tools: Tool[] }>> {
+    return this.getAction(TOOLS_URL(name), token);
   }
 
   tryOutTool(

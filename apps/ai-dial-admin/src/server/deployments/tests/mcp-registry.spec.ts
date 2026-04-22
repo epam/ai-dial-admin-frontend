@@ -2,10 +2,15 @@ import { describe, test, expect, vi } from 'vitest';
 
 import createFetchMock from 'vitest-fetch-mock';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { MCP_REGISTRY_SERVERS_LIST, McpRegistryApi } from '@/src/server/deployments/mcp-registry';
+import {
+  MCP_REGISTRY_SERVER_VERSIONS,
+  MCP_REGISTRY_SERVERS_LIST,
+  McpRegistryApi,
+} from '@/src/server/deployments/mcp-registry';
 import {
   CONTAINER_MCP_REGISTRY_FILTER,
-  IMAGE_MCP_REGISTRY_FILTER,
+  IMAGE_MCP_REGISTRY_REPO_FILTER,
+  IMAGE_MCP_REGISTRY_OCI_FILTER,
   TOOLSET_MCP_REGISTRY_FILTER,
 } from '@/src/constants/deployments/mcp-registry';
 
@@ -62,24 +67,39 @@ describe('McpRegistryApi', () => {
     );
   });
 
-  test('getImageMcpServers sends POST with repositoryExists filter', async () => {
+  test('getImageMcpServersByRepo sends POST with repositoryExists filter', async () => {
     fetch.mockResponseOnce(JSON.stringify({ servers: [], metadata: {} }));
-    await instance.getImageMcpServers({ limit: 100 }, TOKEN_MOCK);
+    await instance.getImageMcpServersByRepo({ limit: 100 }, TOKEN_MOCK);
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining(MCP_REGISTRY_SERVERS_LIST),
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify({
           limit: 100,
-          filter: IMAGE_MCP_REGISTRY_FILTER,
+          filter: IMAGE_MCP_REGISTRY_REPO_FILTER,
         }),
       }),
     );
   });
 
-  test('getImageMcpServers includes search and cursor when provided', async () => {
+  test('getImageMcpServersByOci sends POST with packageRegistryTypes filter', async () => {
     fetch.mockResponseOnce(JSON.stringify({ servers: [], metadata: {} }));
-    await instance.getImageMcpServers({ search: 'github', cursor: 'xyz', limit: 50 }, TOKEN_MOCK);
+    await instance.getImageMcpServersByOci({ limit: 100 }, TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(MCP_REGISTRY_SERVERS_LIST),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          limit: 100,
+          filter: IMAGE_MCP_REGISTRY_OCI_FILTER,
+        }),
+      }),
+    );
+  });
+
+  test('getImageMcpServersByRepo includes search and cursor when provided', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ servers: [], metadata: {} }));
+    await instance.getImageMcpServersByRepo({ search: 'github', cursor: 'xyz', limit: 50 }, TOKEN_MOCK);
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining(MCP_REGISTRY_SERVERS_LIST),
       expect.objectContaining({
@@ -88,22 +108,22 @@ describe('McpRegistryApi', () => {
           search: 'github',
           cursor: 'xyz',
           limit: 50,
-          filter: IMAGE_MCP_REGISTRY_FILTER,
+          filter: IMAGE_MCP_REGISTRY_REPO_FILTER,
         }),
       }),
     );
   });
 
-  test('getImageMcpServers omits undefined optional params', async () => {
+  test('getImageMcpServersByRepo omits undefined optional params', async () => {
     fetch.mockResponseOnce(JSON.stringify({ servers: [], metadata: {} }));
-    await instance.getImageMcpServers({ search: undefined, cursor: '', limit: 100 }, TOKEN_MOCK);
+    await instance.getImageMcpServersByRepo({ search: undefined, cursor: '', limit: 100 }, TOKEN_MOCK);
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining(MCP_REGISTRY_SERVERS_LIST),
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify({
           limit: 100,
-          filter: IMAGE_MCP_REGISTRY_FILTER,
+          filter: IMAGE_MCP_REGISTRY_REPO_FILTER,
         }),
       }),
     );
@@ -151,6 +171,21 @@ describe('McpRegistryApi', () => {
         body: JSON.stringify({
           limit: 100,
           filter: TOOLSET_MCP_REGISTRY_FILTER,
+        }),
+      }),
+    );
+  });
+
+  test('getMcpServerVersion sends POST with serverName and version', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ servers: [], metadata: {} }));
+    await instance.getMcpServerVersion('ai.aliengiraffe/spotdb', 'v0.1.0', TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(MCP_REGISTRY_SERVER_VERSIONS),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          serverName: 'ai.aliengiraffe/spotdb',
+          version: 'v0.1.0',
         }),
       }),
     );

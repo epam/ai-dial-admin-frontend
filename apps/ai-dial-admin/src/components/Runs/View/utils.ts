@@ -7,15 +7,16 @@ import { MetricBindings, MetricSnapshot } from '@/src/models/evaluation/metric';
 import { AnalyticsResult, ExtractionResult, Run } from '@/src/models/evaluation/run';
 import { FilterDto } from '@/src/models/request';
 import { FilterOperatorDto } from '@/src/types/request';
+
 import { MetricGroup } from './models';
 export type { MetricGroup } from './models';
 
-export const RUN_FILTER = (run: Run): FilterDto[] => [
-  { column: 'runId', operator: FilterOperatorDto.EQUALS, value: run.id || '' },
+export const RUN_FILTER = (id?: string | null): FilterDto[] => [
+  { column: 'runId', operator: FilterOperatorDto.EQUALS, value: id || '' },
 ];
 
 export const RESULT_FILTERS = (run: Run): FilterDto[] => [
-  ...RUN_FILTER(run),
+  ...RUN_FILTER(run.id),
   {
     column: 'suiteId',
     operator: FilterOperatorDto.EQUALS,
@@ -95,6 +96,27 @@ const getMetricsColumns = (metrics: Record<string, Record<string, unknown>>, err
               return { backgroundColor: colors.bg };
             }
             return undefined;
+          },
+          comparator(valueA, valueB, nodeA, nodeB, isDescending) {
+            const metricA = nodeA?.data?.metricValues?.[groupKey]?.[key];
+            const metricB = nodeB?.data?.metricValues?.[groupKey]?.[key];
+
+            const isErrorA = metricA == null;
+            const isErrorB = metricB == null;
+
+            if (isErrorA && isErrorB) return 0;
+            if (isErrorA) return isDescending ? -1 : 1;
+            if (isErrorB) return isDescending ? 1 : -1;
+
+            if (typeof metricA === 'number' && typeof metricB === 'number') {
+              if (metricA === metricB) return 0;
+              return metricA > metricB ? 1 : -1;
+            }
+
+            const normalizedA = typeof valueA === 'string' ? valueA : String(valueA);
+            const normalizedB = typeof valueB === 'string' ? valueB : String(valueB);
+
+            return normalizedA.localeCompare(normalizedB);
           },
         }) as ColDef,
     ),

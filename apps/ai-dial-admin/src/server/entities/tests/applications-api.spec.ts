@@ -150,12 +150,13 @@ describe('Server :: ApplicationsApi', () => {
     );
   });
 
-  test('Should calls getTools and return empty array when no tools', async () => {
-    fetch.mockResponseOnce(JSON.stringify(null));
+  test('Should calls getTools and return ServerActionResponse', async () => {
+    const mockTools = { tools: [{ name: 'tool1' }] };
+    fetch.mockResponseOnce(JSON.stringify(mockTools));
 
     const result = await instance.getTools(mockApp.name || '', TOKEN_MOCK);
 
-    expect(result).toEqual([]);
+    expect(result.response).toEqual(JSON.stringify(mockTools));
   });
 
   test('Should calls tryOutTool with correct payload', async () => {

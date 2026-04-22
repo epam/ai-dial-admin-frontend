@@ -7,6 +7,7 @@ import { capitalize } from 'lodash';
 import StatusIndicator from '@/src/components/Deployments/Common/StatusIndicator/StatusIndicator';
 import VersionsSelect from '@/src/components/Deployments/Common/VersionsSelect/VersionsSelect';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
+import ExternalUrlCellRenderer from '@/src/components/Grid/CellRenderers/ExternalUrlCellRenderer';
 import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSelectCellRenderer';
 import RunStatusCellRenderer from '@/src/components/Grid/CellRenderers/RunStatusCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
@@ -286,7 +287,7 @@ export const EXPORT_COLUMNS = (
   onChange: (value: string[], data: unknown, field: string, index: number, isSelected: boolean) => void,
   route?: ApplicationRoute,
 ): ColDef[] => {
-  const columns: ColDef[] = [NAME_COLUMN_WITH_SORT, AUTHOR_COLUMN, UPDATED_AT_COLUMN];
+  const columns: ColDef[] = [NAME_COLUMN_WITH_SORT, AUTHOR_COLUMN];
 
   if (isAssetWithVersion(route)) {
     columns.splice(1, 0, {
@@ -303,6 +304,7 @@ export const EXPORT_COLUMNS = (
       },
     });
   }
+
   if (route === ApplicationRoute.Files) {
     return FILES_COLUMNS;
   }
@@ -1014,6 +1016,7 @@ export const MCP_REGISTRY_COLUMNS: ColDef[] = [
     sortable: false,
     filter: false,
     floatingFilter: false,
+    cellRenderer: ExternalUrlCellRenderer,
   },
   {
     field: 'repository.url',
@@ -1023,6 +1026,7 @@ export const MCP_REGISTRY_COLUMNS: ColDef[] = [
     filter: false,
     floatingFilter: false,
     valueGetter: (params: ValueGetterParams) => params.data?.repository?.url,
+    cellRenderer: ExternalUrlCellRenderer,
   },
   {
     field: 'remotes',

@@ -39,9 +39,9 @@ interface Props {
   image?: Image;
   route: ApplicationRoute;
   names: string[];
-  createEntity: (entity: DialModel | Toolset | DialInterceptor) => Promise<ServerActionResponse>;
+  createEntity?: (entity: DialModel | Toolset | DialInterceptor) => Promise<ServerActionResponse>;
   createEntityAsAsset?: (entity: AssetToolset) => Promise<ServerActionResponse>;
-  entityNames: string[];
+  entityNames?: string[];
 }
 
 const ContainerView: FC<Props> = ({

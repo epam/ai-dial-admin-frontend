@@ -104,6 +104,7 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
       const api = gridApiRef.current;
       if (!api) return;
       api.refreshClientSideRowModel('filter');
+      onCellChange(event.data, col, event.newValue);
     }
   }, []);
 
@@ -111,9 +112,10 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
     (data: Record<string, unknown>, field: string, value: string | number | boolean) => {
       if (!data) return;
       data[field] = value;
-      if (field !== 'testCaseName' && data.data != null) {
+      if (field !== 'testCaseName' && field !== 'enabled' && data.data != null) {
         data.data = { ...(data.data as Record<string, unknown>), [field]: value };
       }
+
       updateData(data);
     },
     [updateData],

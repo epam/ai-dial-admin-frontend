@@ -38,6 +38,17 @@ describe('HeaderButtons', () => {
     expect(screen.getByText('Containers.FromMcpRegistry')).toBeInTheDocument();
   });
 
+  test('renders application dropdown items for Application Containers route', async () => {
+    const user = userEvent.setup();
+    render(<HeaderButtons {...defaultProps} route={ApplicationRoute.ApplicationContainers} />);
+
+    const createButton = screen.getByRole('button', { name: /create/i });
+    await user.click(createButton);
+
+    expect(screen.getByText('Containers.FromInternalApplicationImage')).toBeInTheDocument();
+    expect(screen.getByText('Containers.FromDockerImageReference')).toBeInTheDocument();
+  });
+
   test.skip('opens modal when create button clicked', async () => {
     const user = userEvent.setup();
     render(<HeaderButtons {...defaultProps} />);

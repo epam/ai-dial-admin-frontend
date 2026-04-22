@@ -1,5 +1,6 @@
 export enum SOURCE_TYPE {
   ENDPOINTS = 'endpoints',
+  SCHEMA = 'schema',
   CONTAINER = 'container',
   RUNNER = 'runner',
   ADAPTER = 'adapter',
@@ -15,4 +16,5 @@ export interface SOURCE_FIELD {
   configurationEndpointPath?: string;
   serverName?: string;
   serverVersion?: string;
+  applicationTypeSchemaId?: string;
 }

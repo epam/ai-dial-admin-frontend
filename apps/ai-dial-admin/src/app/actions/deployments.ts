@@ -6,6 +6,7 @@ import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { Image } from '@/src/models/deployments/images';
 import { Container } from '@/src/models/deployments/containers';
 import { containersApi, huggingFaceApi, imagesApi, mcpRegistryApi, topicApi, whitelistApi } from '@/src/app/api/api';
+import { unwrapSingleServerResponse } from '@/src/utils/deployments/mcp-registry';
 
 export async function getImages() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -75,6 +76,11 @@ export async function getInterceptorContainers() {
 export async function getAdapterContainers() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return containersApi.getAdapterContainers(token);
+}
+
+export async function getApplicationContainers() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return containersApi.getApplicationContainers(token);
 }
 
 export async function getModelContainers() {
@@ -207,15 +213,42 @@ export async function getImageMcpServers(params: {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   const { minResults, ...requestParams } = params;
 
+  const fetchMerged = async (fetchParams: { search?: string; cursor?: string; limit?: number }) => {
+    const [repoResult, ociResult] = await Promise.all([
+      mcpRegistryApi.getImageMcpServersByRepo(fetchParams, token),
+      mcpRegistryApi.getImageMcpServersByOci(fetchParams, token),
+    ]);
+
+    if (!repoResult.success) return repoResult;
+    if (!ociResult.success) return ociResult;
+
+    const repoServers = repoResult.response?.servers ?? [];
+    const ociServers = ociResult.response?.servers ?? [];
+
+    const seen = new Set<string>();
+    const merged: unknown[] = [];
+    for (const s of [...repoServers, ...ociServers]) {
+      const server = (s as { server: { name: string; version: string } }).server;
+      const key = `${server.name}:${server.version}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        merged.push(s);
+      }
+    }
+
+    const nextCursor = repoResult.response?.metadata?.nextCursor || ociResult.response?.metadata?.nextCursor;
+    return { success: true as const, response: { servers: merged, metadata: { nextCursor } } };
+  };
+
   if (!minResults) {
-    return mcpRegistryApi.getImageMcpServers(requestParams, token);
+    return fetchMerged(requestParams);
   }
 
   const allServers: unknown[] = [];
   let cursor = params.cursor;
 
   while (allServers.length < minResults) {
-    const result = await mcpRegistryApi.getImageMcpServers({ ...requestParams, cursor }, token);
+    const result = await fetchMerged({ ...requestParams, cursor });
     if (!result.success) return result;
 
     const servers = result.response?.servers ?? [];
@@ -268,6 +301,12 @@ export async function getToolsetMcpServers(params: {
       metadata: { nextCursor: cursor },
     },
   };
+}
+
+export async function getMcpServerVersion(serverName: string, version: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  const result = await mcpRegistryApi.getMcpServerVersion(serverName, version, token);
+  return unwrapSingleServerResponse(result);
 }
 
 export async function getHuggingFaceModels(params: Record<string, string>) {

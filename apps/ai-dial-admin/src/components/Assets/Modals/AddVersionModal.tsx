@@ -14,7 +14,6 @@ interface Props {
   isModalOpen: boolean;
   existingVersions?: Record<string, string[]>;
   entityName?: string;
-  initialVersion?: string;
   submitLabel?: string;
   onClose: () => void;
   description?: string;
@@ -24,7 +23,6 @@ interface Props {
 const AddVersionModal: FC<Props> = ({
   submitLabel,
   onConfirm,
-  initialVersion,
   header,
   isModalOpen,
   onClose,
@@ -35,7 +33,13 @@ const AddVersionModal: FC<Props> = ({
   const t = useI18n();
   const { isValid, dispatch } = useSaveValidationContext();
 
-  const [version, setVersion] = useState(initialVersion ? semver.inc(initialVersion, 'patch') || '0.0.1' : '0.0.1');
+  const [version, setVersion] = useState(() => {
+    const versions = existingVersions?.[entityName || ''] || [];
+    const maxVersion = versions?.length
+      ? versions.reduce((max, v) => (semver.gt(v, max) ? v : max), versions[0])
+      : '0.0.0';
+    return semver.inc(maxVersion, 'patch') || '0.0.1';
+  });
   const [versionError, setVersionError] = useState<FieldError | null>(null);
 
   const validateVersion = useCallback(

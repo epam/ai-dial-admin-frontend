@@ -3,6 +3,7 @@ import {
   convertCoresToMilliCores,
   convertMilliCoresToCores,
   getContainerRedeploySnapshot,
+  getContainerSourceTypeLabel,
   getContainerTemplate,
   getContainerScaling,
   getContainerResources,
@@ -16,6 +17,9 @@ import {
   isAutoscalingEnabled,
   deriveScaling,
 } from '../containers';
+import { ApplicationRoute } from '@/src/types/routes';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
+import { SourceI18nKey } from '@/src/constants/i18n';
 import { DEFAULT_SCALING, SERVING_SCALING } from '@/src/constants/deployments/containers';
 import {
   CONTAINER_SOURCE_TYPE,
@@ -135,7 +139,7 @@ describe('containers utils', () => {
         mcpRegistry: true,
       });
       expect(source.$type).toBe(CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE);
-      expect(source.externalRegistryRef).toEqual({ $type: 'mcp-registry', packageName: '' });
+      expect(source.externalRegistryRef).toEqual({ $type: SOURCE_TYPE.MCP_REGISTRY, packageName: '' });
     });
 
     test('returns INTERNAL_IMAGE by default for MCP', () => {
@@ -229,6 +233,27 @@ describe('containers utils', () => {
     test('returns ADAPTER template with IMAGE_REFERENCE source when sourceType is provided', () => {
       const template = getContainerTemplate(CONTAINER_TYPE.ADAPTER, undefined, CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE);
       expect(template?.$type).toBe(CONTAINER_TYPE.ADAPTER);
+      expect(template?.source?.$type).toBe(CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE);
+      expect(template?.source?.imageReference).toBe('');
+      expect(template?.scaling).toEqual(DEFAULT_SCALING);
+      expect(template?.transport).toBeUndefined();
+    });
+
+    test('returns APPLICATION template with INTERNAL_IMAGE and DEFAULT_SCALING', () => {
+      const template = getContainerTemplate(CONTAINER_TYPE.APPLICATION);
+      expect(template?.$type).toBe(CONTAINER_TYPE.APPLICATION);
+      expect(template?.source?.$type).toBe(CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE);
+      expect(template?.scaling).toEqual(DEFAULT_SCALING);
+      expect(template?.transport).toBeUndefined();
+    });
+
+    test('returns APPLICATION template with IMAGE_REFERENCE source when sourceType is provided', () => {
+      const template = getContainerTemplate(
+        CONTAINER_TYPE.APPLICATION,
+        undefined,
+        CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE,
+      );
+      expect(template?.$type).toBe(CONTAINER_TYPE.APPLICATION);
       expect(template?.source?.$type).toBe(CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE);
       expect(template?.source?.imageReference).toBe('');
       expect(template?.scaling).toEqual(DEFAULT_SCALING);
@@ -565,6 +590,76 @@ describe('containers utils', () => {
         $type: SCALING_STRATEGY_TYPE.REQUESTS,
         threshold: 2,
       });
+    });
+  });
+
+  describe('getContainerSourceTypeLabel', () => {
+    const t = (key: string, params?: Record<string, string>) => (params ? `${key}|${JSON.stringify(params)}` : key);
+
+    test('returns Internal {type} Image key with MCP type for INTERNAL_IMAGE on McpContainers route', () => {
+      const result = getContainerSourceTypeLabel(
+        { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE, imageDefinitionId: 'img-1' },
+        ApplicationRoute.McpContainers,
+        t,
+      );
+      expect(result).toContain(SourceI18nKey.InternalImage);
+      expect(result).toContain('Entities.MCP');
+    });
+
+    test('returns Internal {type} Image key with Adapter type for INTERNAL_IMAGE on AdapterContainers route', () => {
+      const result = getContainerSourceTypeLabel(
+        { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE, imageDefinitionId: 'img-1' },
+        ApplicationRoute.AdapterContainers,
+        t,
+      );
+      expect(result).toContain(SourceI18nKey.InternalImage);
+      expect(result).toContain('Entities.Adapter');
+    });
+
+    test('returns Internal {type} Image key with Interceptor type for INTERNAL_IMAGE on InterceptorContainers route', () => {
+      const result = getContainerSourceTypeLabel(
+        { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE, imageDefinitionId: 'img-1' },
+        ApplicationRoute.InterceptorContainers,
+        t,
+      );
+      expect(result).toContain(SourceI18nKey.InternalImage);
+      expect(result).toContain('Entities.Interceptor');
+    });
+
+    test('returns DockerImage key for IMAGE_REFERENCE', () => {
+      expect(
+        getContainerSourceTypeLabel(
+          { $type: CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE, imageReference: 'foo' },
+          ApplicationRoute.McpContainers,
+          t,
+        ),
+      ).toBe(SourceI18nKey.DockerImage);
+    });
+
+    test('returns NgcRegistry key for NGC_REGISTRY', () => {
+      expect(
+        getContainerSourceTypeLabel(
+          { $type: CONTAINER_SOURCE_TYPE.NGC_REGISTRY, imageRef: 'foo' },
+          ApplicationRoute.ModelServings,
+          t,
+        ),
+      ).toBe(SourceI18nKey.NgcRegistry);
+    });
+
+    test('returns HuggingFace key for HUGGINGFACE', () => {
+      expect(
+        getContainerSourceTypeLabel(
+          { $type: CONTAINER_SOURCE_TYPE.HUGGINGFACE, modelName: 'foo' },
+          ApplicationRoute.ModelServings,
+          t,
+        ),
+      ).toBe(SourceI18nKey.HuggingFace);
+    });
+
+    test('returns empty string for unknown source type', () => {
+      expect(
+        getContainerSourceTypeLabel({ $type: 'unknown' as CONTAINER_SOURCE_TYPE }, ApplicationRoute.McpContainers, t),
+      ).toBe('');
     });
   });
 });

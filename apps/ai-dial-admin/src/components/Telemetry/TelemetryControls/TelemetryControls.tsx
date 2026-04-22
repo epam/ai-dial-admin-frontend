@@ -3,7 +3,7 @@ import { Dispatch, FC, SetStateAction } from 'react';
 import Refresh from '@/src/components/Common/Refresh/Refresh';
 import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
 import Filters from '@/src/components/Telemetry/TelemetryControls/Filters/Filters';
-import { TimePeriodOption } from '@/src/constants/global-time-filter';
+import { useAppContext } from '@/src/context/AppContext';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { TimeRange } from '@/src/models/time-range';
@@ -20,11 +20,9 @@ interface Props {
   setFilters: Dispatch<SetStateAction<FilterData[]>>;
   getData: (query: TelemetryQuery) => Promise<ServerActionResponse>;
   route: ApplicationRoute;
-  isCustomRange?: boolean;
-  setIsCustomRange?: Dispatch<SetStateAction<boolean>>;
   showFilters?: boolean;
   isMcpView?: boolean;
-  timePeriodOptions?: TimePeriodOption[];
+  canAutoRefresh?: boolean;
 }
 
 const TelemetryControls: FC<Props> = ({
@@ -38,12 +36,11 @@ const TelemetryControls: FC<Props> = ({
   setFilters,
   getData,
   route,
-  isCustomRange,
-  setIsCustomRange,
   showFilters = true,
   isMcpView = false,
-  timePeriodOptions,
+  canAutoRefresh = true,
 }) => {
+  const { telemetryMaxRangeMs } = useAppContext();
   return (
     <div className="flex w-full justify-between flex-wrap">
       <div className="flex gap-x-3 items-center flex-wrap mb-1 md:mb-0 lg:mb-0">
@@ -52,15 +49,13 @@ const TelemetryControls: FC<Props> = ({
           onTimePeriodChange={onTimePeriodChange}
           timeRange={timeRange}
           onTimeRangeChange={onTimeRangeChange}
-          isCustomRange={isCustomRange}
-          setIsCustomRange={setIsCustomRange}
-          timePeriodOptions={timePeriodOptions}
+          maxRangeMs={telemetryMaxRangeMs}
         />
         {showFilters && (
           <Filters filters={filters} setFilters={setFilters} getData={getData} route={route} isMcpView={isMcpView} />
         )}
       </div>
-      <Refresh onChange={onRefreshTimeChange} selectedValue={selectedRefreshValue} />
+      <Refresh onChange={onRefreshTimeChange} selectedValue={selectedRefreshValue} disabled={!canAutoRefresh} />
     </div>
   );
 };

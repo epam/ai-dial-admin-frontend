@@ -16,8 +16,8 @@ import {
 } from '../entity';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntitiesI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
-import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
-import { CONTAINER_TRANSPORT } from '@/src/types/deployments/containers';
+import { getEndpointPostfix, getEndpointPrefix } from '@/src/utils/models/model-endpoint';
+import { CONTAINER_TRANSPORT, CONTAINER_TYPE } from '@/src/types/deployments/containers';
 import { ENTITY_TRANSPORT } from '@/src/constants/deployments/containers';
 import { DialModelType } from '@/src/models/dial/model';
 import { IMAGE_TYPE } from '@/src/types/deployments/images';
@@ -40,6 +40,10 @@ describe('entity utils', () => {
 
     test('returns AdapterContainers for ADAPTER', () => {
       expect(getRouteByType(IMAGE_TYPE.ADAPTER)).toBe(ApplicationRoute.AdapterContainers);
+    });
+
+    test('returns ApplicationContainers for APPLICATION', () => {
+      expect(getRouteByType(IMAGE_TYPE.APPLICATION)).toBe(ApplicationRoute.ApplicationContainers);
     });
 
     test('returns ModelServings for INTERCEPTOR', () => {
@@ -80,6 +84,12 @@ describe('entity utils', () => {
     });
     test('returns Interceptor for InterceptorContainers', () => {
       expect(getTranslatedType(ApplicationRoute.InterceptorContainers, t)).toBe(EntitiesI18nKey.Interceptor);
+    });
+    test('returns Adapter for AdapterContainers', () => {
+      expect(getTranslatedType(ApplicationRoute.AdapterContainers, t)).toBe(EntitiesI18nKey.Adapter);
+    });
+    test('returns Application for ApplicationContainers', () => {
+      expect(getTranslatedType(ApplicationRoute.ApplicationContainers, t)).toBe(EntitiesI18nKey.Application);
     });
     test('returns Model for other routes', () => {
       expect(getTranslatedType(ApplicationRoute.ModelServings, t)).toBe(EntitiesI18nKey.Model);
@@ -129,9 +139,23 @@ describe('entity utils', () => {
       expect(template.source?.containerId).toBe('123');
     });
 
-    test('configures model specific fields for ModelServings', () => {
+    test('uses v1 prefix for NIM ModelServings container', () => {
       (getEndpointPostfix as any).mockReturnValue('/chat');
-      const container = { displayName: 'MyContainer', name: '123' } as any;
+      (getEndpointPrefix as any).mockImplementation((type: CONTAINER_TYPE | undefined) =>
+        type === CONTAINER_TYPE.NIM ? 'v1' : 'openai/v1',
+      );
+      const container = { displayName: 'MyContainer', name: '123', $type: CONTAINER_TYPE.NIM } as any;
+      const template = getEntityTemplate(ApplicationRoute.ModelServings, container, t) as any;
+      expect(template.type).toBe(DialModelType.Chat);
+      expect(template.source.completionEndpointPath).toBe('v1/chat');
+    });
+
+    test('uses openai/v1 prefix for HF (inference) ModelServings container', () => {
+      (getEndpointPostfix as any).mockReturnValue('/chat');
+      (getEndpointPrefix as any).mockImplementation((type: CONTAINER_TYPE | undefined) =>
+        type === CONTAINER_TYPE.NIM ? 'v1' : 'openai/v1',
+      );
+      const container = { displayName: 'MyContainer', name: '123', $type: CONTAINER_TYPE.HF } as any;
       const template = getEntityTemplate(ApplicationRoute.ModelServings, container, t) as any;
       expect(template.type).toBe(DialModelType.Chat);
       expect(template.source.completionEndpointPath).toBe('openai/v1/chat');

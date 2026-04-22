@@ -13,6 +13,7 @@ import { Image, ImageGroup, ImageSource, ImageVersion } from '@/src/models/deplo
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 import StatusIcon from '@/src/components/Deployments/Common/StatusIndicator/StatusIcon';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 
 export function isImageNotInstalled(image?: Image): boolean {
   return image?.buildStatus === IMAGE_STATUS.NOT_BUILT || image?.buildStatus === IMAGE_STATUS.BUILD_FAILED;
@@ -30,6 +31,8 @@ export function getImageType(route: ApplicationRoute): string {
       return 'MCP';
     case ApplicationRoute.AdapterContainers:
       return 'ADAPTER';
+    case ApplicationRoute.ApplicationContainers:
+      return 'APPLICATION';
     default:
       return '';
   }
@@ -43,6 +46,8 @@ export const getContainerTypeByImageType = (type: IMAGE_TYPE): CONTAINER_TYPE =>
       return CONTAINER_TYPE.INTERCEPTOR;
     case IMAGE_TYPE.ADAPTER:
       return CONTAINER_TYPE.ADAPTER;
+    case IMAGE_TYPE.APPLICATION:
+      return CONTAINER_TYPE.APPLICATION;
     default:
       return CONTAINER_TYPE.MCP;
   }
@@ -101,7 +106,11 @@ export const updateSelectedVersion = (images: ImageGroup[], id: string) => {
 
 export const setTransport = (image: Image) => {
   const updatedImage = { ...image };
-  if (updatedImage.$type === IMAGE_TYPE.INTERCEPTOR || updatedImage.$type === IMAGE_TYPE.ADAPTER) {
+  if (
+    updatedImage.$type === IMAGE_TYPE.INTERCEPTOR ||
+    updatedImage.$type === IMAGE_TYPE.ADAPTER ||
+    updatedImage.$type === IMAGE_TYPE.APPLICATION
+  ) {
     delete updatedImage.transportType;
   } else {
     updatedImage.transportType = IMAGE_TRANSPORT_TYPE.LOCAL;
@@ -115,7 +124,7 @@ export const getImageSource = (isRegistry?: boolean): ImageSource => {
     return {
       $type: IMAGE_SOURCE_TYPE.CODE,
       url: '',
-      externalRegistryRef: { $type: 'mcp-registry', packageName: '' },
+      externalRegistryRef: { $type: SOURCE_TYPE.MCP_REGISTRY, packageName: '' },
     };
   }
 

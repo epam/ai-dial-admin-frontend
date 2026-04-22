@@ -1,4 +1,5 @@
 import {
+  extractTelemetryMaxRangeMs,
   getListingData,
   getGridData,
   getSingleValueChartData,
@@ -278,5 +279,46 @@ describe('getFormattedFilters', () => {
       },
     });
     expect(result.$and[2]).toEqual({ $eq: { left: 'deployment', right: "'EntityName'" } });
+  });
+});
+
+describe('Utils :: telemetry :: extractTelemetryMaxRangeMs', () => {
+  test('returns maxTimeRangeMs for the dial_analytics_realtime dataset', () => {
+    const res = {
+      success: true,
+      response: [
+        { name: 'other_dataset', maxTimeRangeMs: 1000 },
+        { name: 'dial_analytics_realtime', maxTimeRangeMs: 604_800_000 },
+      ],
+    };
+    expect(extractTelemetryMaxRangeMs(res)).toBe(604_800_000);
+  });
+
+  test('returns undefined when the request failed', () => {
+    expect(extractTelemetryMaxRangeMs({ success: false })).toBeUndefined();
+  });
+
+  test('returns undefined when the telemetry dataset is absent', () => {
+    expect(
+      extractTelemetryMaxRangeMs({
+        success: true,
+        response: [{ name: 'other_dataset', maxTimeRangeMs: 1000 }],
+      }),
+    ).toBeUndefined();
+  });
+
+  test('returns undefined when maxTimeRangeMs is missing on the dataset', () => {
+    expect(
+      extractTelemetryMaxRangeMs({
+        success: true,
+        response: [{ name: 'dial_analytics_realtime' }],
+      }),
+    ).toBeUndefined();
+  });
+
+  test('returns undefined when response is not an array', () => {
+    expect(extractTelemetryMaxRangeMs({ success: true, response: undefined })).toBeUndefined();
+    expect(extractTelemetryMaxRangeMs({ success: true, response: {} })).toBeUndefined();
+    expect(extractTelemetryMaxRangeMs({ success: true, response: 'string' as any })).toBeUndefined();
   });
 });
