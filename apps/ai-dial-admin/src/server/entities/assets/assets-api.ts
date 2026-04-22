@@ -177,9 +177,13 @@ export class AssetsApi extends BaseApi {
 
   // Toolset specific
 
-  getTools(name: string, token: Token, resourceType: ResourceType = ResourceType.TOOLSET): Promise<Tool[]> {
+  getTools(
+    name: string,
+    token: Token,
+    resourceType: ResourceType = ResourceType.TOOLSET,
+  ): Promise<ServerActionResponse<{ tools: Tool[] }>> {
     const url = `${ResourceBasePaths[resourceType]}/discovered-tools`;
-    return this.post(url, { path: name }, token).then((res) => (res as { tools: Tool[] })?.tools || []);
+    return this.postAction(url, { path: name }, token);
   }
 
   signInToolset(

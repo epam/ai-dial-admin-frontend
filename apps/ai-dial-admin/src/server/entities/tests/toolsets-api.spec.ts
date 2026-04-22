@@ -50,7 +50,8 @@ describe('Server :: ToolsetsApi', () => {
   });
 
   test('Should calls getTools ', async () => {
-    fetch.mockResponseOnce({ tools: [{ name: 't1' }, { name: 't2' }] });
+    const mockTools = { tools: [{ name: 't1' }, { name: 't2' }] };
+    fetch.mockResponseOnce(JSON.stringify(mockTools));
 
     const result = await instance.getTools(mockToolset.name as string, TOKEN_MOCK);
 
@@ -58,7 +59,7 @@ describe('Server :: ToolsetsApi', () => {
       `${TEST_URL}${TOOLS_URL(mockToolset.name as string)}`,
       expect.objectContaining({ method: 'GET' }),
     );
-    expect(result).toEqual([]);
+    expect(result.response).toEqual(JSON.stringify(mockTools));
   });
 
   test('Should calls getCoreToolset by name and return toolSet', async () => {
