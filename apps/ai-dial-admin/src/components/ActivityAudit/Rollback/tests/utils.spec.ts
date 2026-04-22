@@ -40,7 +40,7 @@ describe('getSystemRollbackColumns', () => {
 
   test('returns BASE_COLUMNS for APPLICATION', () => {
     const cols = getSystemRollbackColumns(ActivityAuditResourceType.APPLICATION, t);
-    expect(cols.length).toEqual(11);
+    expect(cols.length).toEqual(12);
   });
 
   test('returns BASE_COLUMNS for INTERCEPTOR TEMPLATE', () => {

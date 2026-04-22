@@ -19,6 +19,7 @@ import { useI18n } from '@/src/locales/client';
 import { Container, KubEvent, Pod } from '@/src/models/deployments/containers';
 import { Image } from '@/src/models/deployments/images';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
+import { DialApplication } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { Toolset } from '@/src/models/dial/toolset';
@@ -39,7 +40,7 @@ interface Props {
   image?: Image;
   route: ApplicationRoute;
   names: string[];
-  createEntity?: (entity: DialModel | Toolset | DialInterceptor) => Promise<ServerActionResponse>;
+  createEntity?: (entity: DialModel | Toolset | DialInterceptor | DialApplication) => Promise<ServerActionResponse>;
   createEntityAsAsset?: (entity: AssetToolset) => Promise<ServerActionResponse>;
   entityNames?: string[];
 }

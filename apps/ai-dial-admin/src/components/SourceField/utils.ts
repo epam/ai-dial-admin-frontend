@@ -5,9 +5,11 @@ import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { Toolset } from '@/src/models/dial/toolset';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialApplication } from '@/src/models/dial/application';
+import { Container } from '@/src/models/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getEndpointPostfix, getEndpointPrefix } from '@/src/utils/models/model-endpoint';
 
-const isDialApplication = (
+export const isDialApplication = (
   entity: DialModel | DialInterceptor | Toolset | DialAdapter | DialApplication,
 ): entity is DialApplication => {
   return 'mcp' in entity || 'applicationProperties' in entity || 'viewerUrl' in entity || 'editorUrl' in entity;
@@ -44,6 +46,42 @@ export const isValidSourceField = (
   return false;
 };
 
+export const buildContainerSelection = <T extends DialInterceptor | DialModel | DialApplication>(
+  view: ApplicationRoute,
+  entity: T,
+  id: string | undefined,
+  container: Container | undefined,
+): T => {
+  switch (view) {
+    case ApplicationRoute.Applications:
+      return {
+        ...entity,
+        source: {
+          ...entity.source,
+          $type: SOURCE_TYPE.CONTAINER,
+          containerId: id,
+        },
+      } as T;
+    default: {
+      const source = {
+        ...entity.source,
+        $type: entity.source?.$type || SOURCE_TYPE.CONTAINER,
+        containerId: id,
+      };
+      if (view === ApplicationRoute.Models) {
+        source.completionEndpointPath = `${getEndpointPrefix(container?.$type)}${getEndpointPostfix((entity as DialModel).type)}`;
+      }
+      return {
+        ...entity,
+        endpoint: '',
+        configurationEndpoint: '',
+        baseEndpoint: '',
+        source,
+      } as T;
+    }
+  }
+};
+
 export const getContainerRoute = (route: ApplicationRoute) => {
   switch (route) {
     case ApplicationRoute.Models:
@@ -52,6 +90,8 @@ export const getContainerRoute = (route: ApplicationRoute) => {
       return ApplicationRoute.AdapterContainers;
     case ApplicationRoute.Interceptors:
       return ApplicationRoute.InterceptorContainers;
+    case ApplicationRoute.Applications:
+      return ApplicationRoute.ApplicationContainers;
     default:
       return ApplicationRoute.McpContainers;
   }
