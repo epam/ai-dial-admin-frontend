@@ -19,6 +19,24 @@ describe('isValidHttpUrl', () => {
     expect(isValidHttpUrl('not-a-url')).toBe(false);
     expect(isValidHttpUrl('')).toBe(false);
   });
+
+  test('returns false for URLs with empty path segments', () => {
+    expect(isValidHttpUrl('https://example.com//chat/completions')).toBe(false);
+    expect(isValidHttpUrl('https://example.com/chat//completions')).toBe(false);
+    expect(isValidHttpUrl('https://example.com//')).toBe(false);
+  });
+
+  test('allows double slashes in query strings', () => {
+    expect(isValidHttpUrl('https://example.com/path?query=a//b')).toBe(true);
+  });
+
+  test('returns false for URLs containing whitespace', () => {
+    expect(isValidHttpUrl(' https://example.com')).toBe(false);
+    expect(isValidHttpUrl('https://example.com ')).toBe(false);
+    expect(isValidHttpUrl('https://exa mple.com')).toBe(false);
+    expect(isValidHttpUrl('https://example.com/\tpath')).toBe(false);
+    expect(isValidHttpUrl('https://example.com/path\n')).toBe(false);
+  });
 });
 
 describe('isValidEndpoint', () => {
