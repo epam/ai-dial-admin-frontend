@@ -147,7 +147,7 @@ const ApplicationEndpoint: FC<Props> = ({ entity, onChange, isEntityImmutable, i
               <div className={classNames(CONTROL_WIDTH, 'flex flex-col gap-y-2')}>
                 <EndpointControl
                   label={t(EntityFieldsI18nKey.completionEndpoint)}
-                  id="completionEndpoint"
+                  id="endpoint"
                   placeholder={t(EntityPlaceholdersI18nKey.CompletionEndpoint)}
                   required
                   disabled={disabled}
