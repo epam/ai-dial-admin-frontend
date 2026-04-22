@@ -1,11 +1,12 @@
 import { FC, useCallback } from 'react';
-import { IconPlus } from '@tabler/icons-react';
+
 import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { IconPlus } from '@tabler/icons-react';
 
 import { UpstreamEndpointsI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { DialModel, DialModelEndpoint } from '@/src/models/dial/model';
 import { DialRoute } from '@/src/models/dial/route';
 import Endpoint from './Endpoint/Endpoint';
@@ -16,9 +17,10 @@ interface Props {
   onChangeEntity: (entity: DialRoute | DialModel) => void;
   isKeyOptional?: boolean;
   required?: boolean;
+  withResponses?: boolean;
 }
 
-const UpstreamEndpoints: FC<Props> = ({ disabled, entity, onChangeEntity, isKeyOptional, required }) => {
+const UpstreamEndpoints: FC<Props> = ({ disabled, entity, onChangeEntity, isKeyOptional, required, withResponses }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const isDisabled = disabled || isReadOnlyAdmin;
@@ -65,6 +67,7 @@ const UpstreamEndpoints: FC<Props> = ({ disabled, entity, onChangeEntity, isKeyO
             required={required}
             updateEndpoint={(point) => onUpdateEndPoint(point, 0)}
             removeEndpoint={onRemoveEndpoint}
+            withResponses={withResponses}
           />
         ) : (
           entity.upstreams?.map((endpoint, index) => (
@@ -77,6 +80,7 @@ const UpstreamEndpoints: FC<Props> = ({ disabled, entity, onChangeEntity, isKeyO
               required={required}
               updateEndpoint={(point) => onUpdateEndPoint(point, index)}
               removeEndpoint={onRemoveEndpoint}
+              withResponses={withResponses}
             />
           ))
         )}

@@ -11,7 +11,6 @@ interface Props {
   clientSecret?: string;
   authorizationEndpoint?: string;
   tokenEndpoint?: string;
-  showTokenEndpoint?: boolean;
   onChangeClientId: (clientId: string) => void;
   onChangeClientSecret: (clientSecret: string) => void;
   onChangeAuthorizationEndpoint: (authorizationEndpoint?: string) => void;
@@ -23,7 +22,6 @@ const OAuthAuthSectionControl: FC<Props> = ({
   clientSecret,
   authorizationEndpoint,
   tokenEndpoint,
-  showTokenEndpoint = true,
   onChangeClientId,
   onChangeClientSecret,
   onChangeAuthorizationEndpoint,
@@ -45,16 +43,15 @@ const OAuthAuthSectionControl: FC<Props> = ({
         onChange={onChangeAuthorizationEndpoint}
       />
 
-      {showTokenEndpoint && onChangeTokenEndpoint && (
-        <EndpointControl
-          id="tokenEndpoint"
-          required
-          label={t(EntityFieldsI18nKey.tokenEndpoint)}
-          endpoint={tokenEndpoint || ''}
-          placeholder={t(EntityPlaceholdersI18nKey.TokenEndpoint)}
-          onChange={onChangeTokenEndpoint}
-        />
-      )}
+      <EndpointControl
+        id="tokenEndpoint"
+        required
+        isFullWidth
+        label={t(EntityFieldsI18nKey.tokenEndpoint)}
+        endpoint={tokenEndpoint || ''}
+        placeholder={t(EntityPlaceholdersI18nKey.TokenEndpoint)}
+        onChange={onChangeTokenEndpoint}
+      />
     </>
   );
 };

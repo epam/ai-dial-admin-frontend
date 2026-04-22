@@ -41,7 +41,7 @@ const ModelProperties: FC<Props> = ({ model, modelsNames, onChangeModel }) => {
 
       <Defaults entity={model} onChangeEntity={onChangeModel} />
 
-      <UpstreamEndpoints entity={model} onChangeEntity={onChangeModel} isKeyOptional={true} />
+      <UpstreamEndpoints entity={model} onChangeEntity={onChangeModel} isKeyOptional withResponses />
 
       <TokenizerModelSwitch model={model} onChangeModel={onChangeModel} />
 
