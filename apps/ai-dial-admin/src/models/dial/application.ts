@@ -51,7 +51,8 @@ export interface ApplicationTypeMCP {
   ['dial:endpoint']: string;
   ['dial:transport']?: string;
   ['dial:forwardPerRequestKey']?: boolean;
-  ['dial:configDelivery']?: ApplicationMCPConfigDelivery;
+  ['dial:mcpConfigDelivery']?: ApplicationMCPConfigDelivery;
+  ['dial:allowedTools']?: string[];
 }
 
 export enum TypeEntity {
