@@ -92,6 +92,19 @@ vi.mock('@/src/components/BaseControls/Endpoint/EditorUrl', () => ({
   ),
 }));
 
+vi.mock('@/src/components/Common/ComplexInput/ComplexInput', () => ({
+  __esModule: true,
+  default: ({ id, value, onChange, disabled }: any) => (
+    <input
+      type="text"
+      data-testid={`complex-${id}`}
+      value={value ?? ''}
+      disabled={!!disabled}
+      onChange={(e) => onChange(e.target.value)}
+    />
+  ),
+}));
+
 const makeEntity = (fields: Partial<DialApplication> = {}): DialApplication =>
   ({
     name: 'test-app',
@@ -212,5 +225,68 @@ describe('ApplicationEndpoint', () => {
     fireEvent.change(screen.getByTestId('editor-url'), { target: { value: 'https://editor.example.com' } });
     last = onChange.mock.calls.at(-1)?.[0] as DialApplication;
     expect(last.editorUrl).toBe('https://editor.example.com');
+  });
+});
+
+describe('ApplicationEndpoint — prefix / container mode', () => {
+  const PREFIX = 'http://container.internal/';
+
+  test('chat checkbox is locked checked when prefix is provided', () => {
+    render(<ApplicationEndpoint entity={makeEntity()} onChange={vi.fn()} prefix={PREFIX} />);
+
+    const chatCheckbox = screen.getByTestId('checkbox-chat_endpoint') as HTMLInputElement;
+    expect(chatCheckbox.checked).toBe(true);
+    expect(chatCheckbox.disabled).toBe(true);
+  });
+
+  test('MCP checkbox is interactive (not auto-disabled) when prefix is provided', () => {
+    render(<ApplicationEndpoint entity={makeEntity()} onChange={vi.fn()} prefix={PREFIX} />);
+
+    const mcpCheckbox = screen.getByTestId('checkbox-mcp_endpoint') as HTMLInputElement;
+    expect(mcpCheckbox.disabled).toBe(false);
+  });
+
+  test('chat path input writes to entity.source.completionEndpointPath', () => {
+    const onChange = vi.fn();
+    const entity = makeEntity({ source: { $type: 'CONTAINER', containerId: 'c1' } as any });
+    render(<ApplicationEndpoint entity={entity} onChange={onChange} prefix={PREFIX} />);
+
+    fireEvent.change(screen.getByTestId('complex-endpoint'), { target: { value: '/v1/chat/completions' } });
+
+    const last = onChange.mock.calls.at(-1)?.[0] as DialApplication;
+    expect(last.source?.completionEndpointPath).toBe('/v1/chat/completions');
+    expect(last.endpoint).toBeUndefined();
+  });
+
+  test('MCP path input writes to entity.source.mcpEndpointPath, not entity.mcp', () => {
+    const onChange = vi.fn();
+    const entity = makeEntity({
+      source: { $type: 'CONTAINER', containerId: 'c1', mcpEndpointPath: '/mcp/' } as any,
+      mcp: { endpoint: '' },
+    });
+    render(<ApplicationEndpoint entity={entity} onChange={onChange} prefix={PREFIX} />);
+
+    fireEvent.change(screen.getByTestId('complex-mcp_endpoint'), { target: { value: '/mcp/v2/' } });
+
+    const last = onChange.mock.calls.at(-1)?.[0] as DialApplication;
+    expect(last.source?.mcpEndpointPath).toBe('/mcp/v2/');
+    // mcp.endpoint is untouched — path writes go to source, not mcp.endpoint
+    expect(last.mcp?.endpoint).toBe('');
+  });
+
+  test('unchecking MCP clears entity.mcp and sets entity.source.mcpEndpointPath to null', () => {
+    const onChange = vi.fn();
+    const entity = makeEntity({
+      source: { $type: 'CONTAINER', containerId: 'c1', mcpEndpointPath: '/mcp/' } as any,
+      mcp: { endpoint: '' },
+    });
+    render(<ApplicationEndpoint entity={entity} onChange={onChange} prefix={PREFIX} />);
+
+    const mcpCheckbox = screen.getByTestId('checkbox-mcp_endpoint');
+    fireEvent.click(mcpCheckbox);
+
+    const last = onChange.mock.calls.at(-1)?.[0] as DialApplication;
+    expect(last.mcp).toBeUndefined();
+    expect(last.source?.mcpEndpointPath).toBeNull();
   });
 });

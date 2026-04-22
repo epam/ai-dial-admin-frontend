@@ -64,6 +64,8 @@ export const sourceTypeFormatter = (value: string, t: (key: string) => string, v
         return t(SourceI18nKey.McpContainer);
       case ApplicationRoute.Adapters:
         return t(SourceI18nKey.AdapterContainer);
+      case ApplicationRoute.Applications:
+        return t(SourceI18nKey.ApplicationContainer);
       default:
         return value;
     }
@@ -74,6 +76,8 @@ export const sourceTypeFormatter = (value: string, t: (key: string) => string, v
       default:
         return t(SourceI18nKey.Endpoint);
     }
+  } else if (value === SOURCE_TYPE.SCHEMA) {
+    return t(EntitiesI18nKey.AppRunner);
   } else if (value === SOURCE_TYPE.MCP_REGISTRY) {
     return t(SourceI18nKey.McpRegistry);
   } else if (value === SOURCE_TYPE.RUNNER) {
@@ -97,6 +101,8 @@ export const sourceValueFormatter = (
     return data.source.runnerName;
   } else if (data.source.$type === SOURCE_TYPE.CONTAINER) {
     return data.source.containerId;
+  } else if (data.source.$type === SOURCE_TYPE.SCHEMA) {
+    return data.source.applicationTypeSchemaId;
   } else if (data.source.$type === SOURCE_TYPE.MCP_REGISTRY) {
     return data.source.serverVersion
       ? `${data.source.serverName} (${data.source.serverVersion})`

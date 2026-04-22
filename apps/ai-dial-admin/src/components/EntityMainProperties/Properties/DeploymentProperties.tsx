@@ -5,7 +5,7 @@ import { uniq } from 'lodash';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
-import { getMCPContainers, getModelContainers } from '@/src/app/actions/deployments';
+import { getApplicationContainers, getMCPContainers, getModelContainers } from '@/src/app/actions/deployments';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import IdControl from '@/src/components/BaseControls/Id/Id';
 import VersionControl from '@/src/components/BaseControls/Version';
@@ -168,6 +168,7 @@ const DeploymentProperties: FC<Props> = ({
           entity={entity as DialApplication}
           onChange={onChangeEntity as (entity: DialApplication) => void}
           runners={runners}
+          getContainers={getApplicationContainers}
           isEntityImmutable={isEntityImmutable}
           isModal={isModal}
         />

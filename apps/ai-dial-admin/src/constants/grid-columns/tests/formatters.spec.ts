@@ -134,6 +134,14 @@ describe('Formatters :: sourceValueFormatter', () => {
       ),
     ).toBe('http://example.com');
   });
+
+  test('formats source value for SCHEMA type', () => {
+    expect(
+      sourceValueFormatter({
+        source: { $type: SOURCE_TYPE.SCHEMA, applicationTypeSchemaId: 'urn:runner:my-runner' },
+      } as any),
+    ).toBe('urn:runner:my-runner');
+  });
 });
 
 describe('Formatters :: sourceTypeFormatter', () => {
@@ -157,7 +165,14 @@ describe('Formatters :: sourceTypeFormatter', () => {
     expect(sourceTypeFormatter(SOURCE_TYPE.CONTAINER, t, ApplicationRoute.Models)).toBe(SourceI18nKey.ModelServing);
 
     expect(sourceTypeFormatter(SOURCE_TYPE.CONTAINER, t, ApplicationRoute.Toolsets)).toBe(SourceI18nKey.McpContainer);
-    expect(sourceTypeFormatter(SOURCE_TYPE.CONTAINER, t, ApplicationRoute.Applications)).toBe(SOURCE_TYPE.CONTAINER);
+    expect(sourceTypeFormatter(SOURCE_TYPE.CONTAINER, t, ApplicationRoute.Applications)).toBe(
+      SourceI18nKey.ApplicationContainer,
+    );
+  });
+
+  test('formats source type for SCHEMA type', () => {
+    expect(sourceTypeFormatter(SOURCE_TYPE.SCHEMA, t)).toBe(EntitiesI18nKey.AppRunner);
+    expect(sourceTypeFormatter(SOURCE_TYPE.SCHEMA, t, ApplicationRoute.Applications)).toBe(EntitiesI18nKey.AppRunner);
   });
 
   test('formats source type for unknown type', () => {

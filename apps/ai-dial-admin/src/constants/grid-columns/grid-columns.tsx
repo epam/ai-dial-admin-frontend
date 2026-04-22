@@ -53,7 +53,6 @@ import {
   DISPLAY_NAME_COLUMN,
   DISPLAY_NAME_COLUMN_WITH_SORT,
   DISPLAY_VERSION_COLUMN,
-  ENDPOINT_COLUMN,
   MAX_INPUT_ATTACHMENTS_COLUMN,
   NAME_COLUMN,
   NAME_COLUMN_WITH_SORT,
@@ -118,7 +117,7 @@ export const APPLICATIONS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   DISPLAY_VERSION_COLUMN,
   DESCRIPTION_COLUMN,
   NAME_COLUMN,
-  ENDPOINT_COLUMN,
+  ...SOURCE_FIELD_COLUMNS(t, ApplicationRoute.Applications),
   VALIDITY_STATUS_COLUMN(t),
   AUTHOR_COLUMN,
   TOPICS_COLUMN,
@@ -552,9 +551,17 @@ export const MCP_PROJECTS_CONSUMPTION_COLUMNS: ColDef[] = [
 ];
 
 export const SOURCE_CONTAINERS_COLUMNS: ColDef[] = [
-  NAME_COLUMN_WITH_SORT,
+  DISPLAY_NAME_COLUMN_WITH_SORT,
   DESCRIPTION_COLUMN,
-  { field: 'image', headerName: 'Image' },
+  NAME_COLUMN,
+  {
+    headerName: 'Image',
+    field: 'source',
+    hide: false,
+    valueFormatter: ({ data }) => containerSourceNameLabel(data?.source),
+    tooltipValueGetter: ({ data }) => containerSourceNameLabel(data?.source),
+    filterValueGetter: (params) => containerSourceNameLabel(params.data?.source),
+  },
 ];
 
 export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, route: ApplicationRoute): ColDef[] => [
