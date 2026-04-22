@@ -10,6 +10,7 @@ import { ONLY_HTTP_TRANSPORTS } from '@/src/constants/transport';
 import { useI18n } from '@/src/locales/client';
 import { ApplicationMCPConfigDelivery, ApplicationTypeMCP, DialApplicationScheme } from '@/src/models/dial/application';
 import { ApplicationRoute } from '@/src/types/routes';
+import AddTool from './AddTool';
 
 export enum SourceType {
   CHAT_ENDPOINT = 'chat_endpoint',
@@ -120,7 +121,7 @@ const EndpointAndMCPContainer: FC<Props> = ({
       const updatedMCPContainer: ApplicationTypeMCP = {
         ...(entity?.['dial:applicationTypeMcp'] || {}),
         ['dial:endpoint']: entity?.['dial:applicationTypeMcp']?.['dial:endpoint'] || '',
-        ['dial:configDelivery']: selectedConfigDelivery,
+        ['dial:mcpConfigDelivery']: selectedConfigDelivery,
       };
       onChangeEntity({ ...entity, ['dial:applicationTypeMcp']: updatedMCPContainer });
     },
@@ -186,6 +187,8 @@ const EndpointAndMCPContainer: FC<Props> = ({
               />
             </div>
 
+            <AddTool entity={entity} onChangeEntity={onChangeEntity} />
+
             <DialSelectField
               id="transport"
               value={ONLY_HTTP_TRANSPORTS[0].value}
@@ -206,7 +209,7 @@ const EndpointAndMCPContainer: FC<Props> = ({
 
             <DialSelectField
               id="configDelivery"
-              value={entity?.['dial:applicationTypeMcp']?.['dial:configDelivery']}
+              value={entity?.['dial:applicationTypeMcp']?.['dial:mcpConfigDelivery']}
               options={Object.values(ApplicationMCPConfigDelivery).map((value) => ({
                 value,
                 label: value,
