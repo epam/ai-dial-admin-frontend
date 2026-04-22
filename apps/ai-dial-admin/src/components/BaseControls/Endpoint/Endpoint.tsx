@@ -27,6 +27,7 @@ export interface Props extends EndpointControlProps {
   placeholder: string;
   iconAfter?: ReactNode;
   isModal?: boolean;
+  caption?: string;
 }
 
 const EndpointControl: FC<Props> = ({

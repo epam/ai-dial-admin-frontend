@@ -11,6 +11,7 @@ export interface DialModel extends ChatEntity {
   displayVersion?: string;
   upstreams?: DialModelEndpoint[];
   source?: SOURCE_FIELD;
+  responsesEndpoint?: string;
 }
 
 export interface DialTokenizer {
@@ -44,6 +45,7 @@ export interface DialModelEndpoint {
   weight?: number | string;
   tier?: number | string;
   extraData?: DialEndpointExtraData;
+  responsesEndpoint?: string;
 }
 
 export enum DialModelType {

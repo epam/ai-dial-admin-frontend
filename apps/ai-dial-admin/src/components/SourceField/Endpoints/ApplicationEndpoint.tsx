@@ -8,7 +8,7 @@ import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import ViewerUrlControl from '@/src/components/BaseControls/Endpoint/ViewerUrl';
 import ComplexInput from '@/src/components/Common/ComplexInput/ComplexInput';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, SourceI18nKey } from '@/src/constants/i18n';
-import { CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
+import { CONTROL_WIDTH, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { ONLY_HTTP_TRANSPORTS } from '@/src/constants/transport';
 import { useI18n } from '@/src/locales/client';
 import { ApplicationMCPConfigDelivery, ApplicationMCPContainer, DialApplication } from '@/src/models/dial/application';
@@ -73,6 +73,9 @@ const ApplicationEndpoint: FC<Props> = ({ entity, onChange, isEntityImmutable, i
         onChange({
           ...entity,
           endpoint: newCheckboxStates[ApplicationEndpointCheckbox.CHAT_ENDPOINT] ? entity?.endpoint : undefined,
+          responsesEndpoint: newCheckboxStates[ApplicationEndpointCheckbox.CHAT_ENDPOINT]
+            ? entity?.responsesEndpoint
+            : undefined,
           mcp: newCheckboxStates[ApplicationEndpointCheckbox.MCP_ENDPOINT] ? entity?.mcp : undefined,
         });
       }
@@ -192,33 +195,50 @@ const ApplicationEndpoint: FC<Props> = ({ entity, onChange, isEntityImmutable, i
 
           {(isContainerMode || checkboxStates[ApplicationEndpointCheckbox.CHAT_ENDPOINT]) && (
             <div className="w-full pl-6">
-              {isContainerMode ? (
-                <ComplexInput
-                  id="endpoint"
-                  label=""
-                  prefix={prefix}
-                  value={entity.source?.completionEndpointPath || ''}
-                  fullValue={`${prefix}${entity.source?.completionEndpointPath || ''}`}
-                  onChange={onChangeChatPath}
-                  isFullWidth={!isEntityImmutable}
-                  disabled={disabled}
-                  placeholder=""
-                />
-              ) : (
-                <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-row gap-x-2')}>
-                  <EndpointControl
-                    label=""
+              <div
+                className={classNames(
+                  isContainerMode ? CONTROL_WITH_BUTTON_WIDTH : CONTROL_WIDTH,
+                  'flex flex-col gap-y-2',
+                )}
+              >
+                {isContainerMode ? (
+                  <ComplexInput
                     id="endpoint"
-                    placeholder="Enter endpoint"
-                    required
-                    disabled={disabled}
-                    endpoint={entity?.endpoint}
-                    onChange={onChangeEndpoint}
+                    label={t(EntityFieldsI18nKey.completionEndpoint)}
+                    prefix={prefix}
+                    value={entity.source?.completionEndpointPath || ''}
+                    fullValue={`${prefix}${entity.source?.completionEndpointPath || ''}`}
+                    onChange={onChangeChatPath}
                     isFullWidth={!isEntityImmutable}
-                    isModal={isModal}
+                    disabled={disabled}
+                    placeholder=""
                   />
-                </div>
-              )}
+                ) : (
+                  <>
+                    <EndpointControl
+                      label={t(EntityFieldsI18nKey.completionEndpoint)}
+                      id="endpoint"
+                      placeholder="Enter endpoint"
+                      required
+                      disabled={disabled}
+                      endpoint={entity?.endpoint}
+                      onChange={onChangeEndpoint}
+                      isFullWidth={!isEntityImmutable}
+                      isModal={isModal}
+                    />
+                    <EndpointControl
+                      label={t(EntityFieldsI18nKey.responsesEndpoint)}
+                      id="responsesEndpoint"
+                      placeholder={t(EntityPlaceholdersI18nKey.ResponsesEndpoint)}
+                      disabled={disabled}
+                      endpoint={entity?.responsesEndpoint}
+                      onChange={(responsesEndpoint) => onChange({ ...entity, responsesEndpoint })}
+                      isFullWidth={!isEntityImmutable}
+                      isModal={isModal}
+                    />
+                  </>
+                )}
+              </div>
             </div>
           )}
         </div>
