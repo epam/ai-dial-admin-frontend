@@ -292,6 +292,7 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
             submitLabel={t(ButtonsI18nKey.Save)}
             onConfirm={(version) => onSaveAsNewVersion({ ...image, version })}
             existingVersions={getVersionsPerName(versions)}
+            entityName={image.name}
           />,
           document.body,
         )}
@@ -304,6 +305,7 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
             header={t(ImagesI18nKey.CreateNewVersionModalTitle)}
             onConfirm={(version) => onSaveAsNewVersion({ ...image, version })}
             existingVersions={getVersionsPerName(versions)}
+            entityName={image.name}
           />,
           document.body,
         )}

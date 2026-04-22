@@ -32,7 +32,11 @@ const Parameters: FC<Props> = ({ runner, onChangeRunner, isSkipRefresh }) => {
     (schema: RJSFSchema, skipRefresh?: boolean) => {
       const current = runnerRef.current;
       if (!current) return;
-      onChangeRunner({ ...current, ...(schema as unknown as DialApplicationScheme) }, skipRefresh);
+      const merged = { ...current, ...(schema as unknown as DialApplicationScheme) };
+      if (!('required' in (schema as object))) {
+        delete merged.required;
+      }
+      onChangeRunner(merged, skipRefresh);
     },
     [onChangeRunner],
   );

@@ -76,18 +76,22 @@ const ImageMcpRegistry: FC<Props> = ({ image, setImage, selectedServer, onServer
     [image, setImage, onServerChange],
   );
 
+  const selectedVersion = image.source?.externalRegistryRef?.version;
+
   useEffect(() => {
-    if (!isModal && serverName && !selectedServer) {
-      getImageMcpServers({ search: serverName, limit: 10 }).then(({ success, response }) => {
-        if (!success) return;
-        const servers = (response.servers || []).map((s: McpServerResponse) => s.server) as McpServer[];
-        const exactMatch = servers.find((s) => s.name === serverName);
-        if (exactMatch) {
-          onServerChange(exactMatch);
-        }
-      });
-    }
-  }, [isModal, serverName, selectedServer, onServerChange]);
+    if (isModal || !serverName) return;
+    const isMatch = selectedServer?.name === serverName && selectedServer?.version === selectedVersion;
+    if (isMatch) return;
+
+    getImageMcpServers({ search: serverName, limit: 10 }).then(({ success, response }) => {
+      if (!success) return;
+      const servers = (response.servers || []).map((s: McpServerResponse) => s.server) as McpServer[];
+      const exactMatch = selectedVersion
+        ? servers.find((s) => s.name === serverName && s.version === selectedVersion)
+        : servers.find((s) => s.name === serverName);
+      onServerChange(exactMatch);
+    });
+  }, [isModal, serverName, selectedVersion, selectedServer, onServerChange]);
 
   return (
     <McpServerNameField
