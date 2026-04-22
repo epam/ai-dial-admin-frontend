@@ -273,7 +273,9 @@ const FileManager: FC<Props> = ({
         return;
       }
 
-      setIsMoveModalOpen(true);
+      if (sourceFolder !== destinationFolder) {
+        setIsMoveModalOpen(true);
+      }
 
       onMoveItems(items, sourceFolder, destinationFolder).then((result) => {
         setTimeout(() => {
