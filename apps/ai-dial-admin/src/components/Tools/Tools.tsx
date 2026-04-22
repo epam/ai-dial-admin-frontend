@@ -151,12 +151,17 @@ const Tools: FC<Props> = ({
       }
       const path = isAsset ? (selectedEntity as AssetToolset)?.path : selectedEntity?.name;
       setLoading(true);
-      getFunction(path).then((tools) => {
+      getFunction(path).then((res) => {
+        if (res.success) {
+          setTools((res.response as { tools: Tool[] }).tools || []);
+        } else {
+          setTools([]);
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        }
         setLoading(false);
-        setTools(tools || []);
       });
     }
-  }, [isApplicationTools, isAsset, isMcpToolset, selectedEntity]);
+  }, [isApplicationTools, isAsset, isMcpToolset, selectedEntity, showNotification]);
 
   useEffect(() => {
     const fetchTools = async (id: string) => {
