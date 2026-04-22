@@ -218,7 +218,7 @@ const ApplicationEndpoint: FC<Props> = ({ entity, onChange, isEntityImmutable, i
                     <EndpointControl
                       label={t(EntityFieldsI18nKey.completionEndpoint)}
                       id="endpoint"
-                      placeholder="Enter endpoint"
+                      placeholder={t(EntityPlaceholdersI18nKey.CompletionEndpoint)}
                       required
                       disabled={disabled}
                       endpoint={entity?.endpoint}
