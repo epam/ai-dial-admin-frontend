@@ -82,7 +82,9 @@ const EndpointAndMCPContainer: FC<Props> = ({
           onChangeEntity({
             ...entity,
             endpoint: newCheckboxStates[SourceType.CHAT_ENDPOINT] ? (entity as DialApplication)?.endpoint : undefined,
-            mcp: newCheckboxStates[SourceType.MCP_ENDPOINT] ? (entity as DialApplication)?.mcp : undefined,
+            mcp: newCheckboxStates[SourceType.MCP_ENDPOINT]
+              ? ({ ...(entity as DialApplication)?.mcp, forwardPerRequestKey: true } as ApplicationMCPContainer)
+              : undefined,
           });
         } else if (view === ApplicationRoute.ApplicationRunners) {
           onChangeEntity({
@@ -91,7 +93,10 @@ const EndpointAndMCPContainer: FC<Props> = ({
               ? (entity as DialApplicationScheme)?.['dial:applicationTypeCompletionEndpoint']
               : undefined,
             [`dial:applicationTypeMcp`]: newCheckboxStates[SourceType.MCP_ENDPOINT]
-              ? (entity as DialApplicationScheme)?.[`dial:applicationTypeMcp`]
+              ? ({
+                  ...(entity as DialApplicationScheme)?.[`dial:applicationTypeMcp`],
+                  ['dial:forwardPerRequestKey']: true,
+                } as ApplicationTypeMCP)
               : undefined,
           });
         }
