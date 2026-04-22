@@ -1642,6 +1642,8 @@ export default {
     ApplicationsEmptyStateDescription: 'Create or import an application using the Create button',
     ToolsetsEmptyStateTitle: "You don't have any toolsets",
     ToolsetsEmptyStateDescription: 'Create or import a toolset using the Create button',
+    MovingItems: 'Moving items',
+    MovingProgress: '{count} of {total} items moved...',
   },
   Runs: {
     StartTime: 'Start time',

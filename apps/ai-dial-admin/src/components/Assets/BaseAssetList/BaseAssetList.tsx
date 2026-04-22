@@ -74,6 +74,8 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
   const [exportedItems, setExportedItems] = useState<DialFile[] | null>(null);
   const [selectedPaths, setSelectedPaths] = useState<Set<string>>(() => new Set());
   const [dragAndDropsItems, setDragAndDropsItems] = useState<File[]>([]);
+  const [movingItems, setMovingItems] = useState(0);
+  const [movedItems, setMovedItems] = useState(0);
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -269,9 +271,11 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
     (items: DialCopiedItem[], sourceFolder: string, destinationFolder: string) => {
       const files = items.filter((file) => file.nodeType === DialFileNodeType.ITEM);
       const folders = items.filter((file) => file.nodeType === DialFileNodeType.FOLDER);
+      setMovingItems((files?.length || 0) + (folders?.length || 0));
+      setMovedItems(0);
       const moveAsset = MoveAssetActionMap[view as BaseAssetRoute];
 
-      const promises: (Promise<ServerActionResponse> | Promise<ServerActionResponse[]>)[] = [];
+      const promises: Promise<ServerActionResponse | ServerActionResponse[]>[] = [];
       files.forEach((file) => {
         const duplicateName = file.destinationUrl
           .split('/')
@@ -285,7 +289,12 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
           const paths = getAllSelectedItemsPaths(file.sourceUrl, selectedVersionsMap);
           filePaths.push(...paths.map((path: string) => path.replaceAll('//', '/')));
           if (moveAsset) {
-            promises.push(moveAsset(filePaths, newPath, file?.overwrite, duplicateName));
+            promises.push(
+              moveAsset(filePaths, newPath, file?.overwrite, duplicateName).then((res) => {
+                setMovedItems((prev) => prev + filePaths.length);
+                return res;
+              }),
+            );
           }
         } else {
           // Rename file
@@ -300,7 +309,10 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
               folder.sourceUrl.replaceAll('//', '/'),
               folder.destinationUrl.replaceAll('//', '/'),
               resourceType,
-            ),
+            ).then((res) => {
+              setMovedItems((prev) => prev + 1);
+              return res;
+            }),
           );
         });
       }
@@ -517,6 +529,8 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
         emptyStateTitle={emptyStateContent.title}
         emptyStateDescription={emptyStateContent.description}
         showHiddenFileSwitcherInDestinationPopup={false}
+        movingItems={movingItems}
+        movedItems={movedItems}
       />
       <Modals
         view={view}

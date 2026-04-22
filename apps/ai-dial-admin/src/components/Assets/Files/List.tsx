@@ -30,6 +30,8 @@ const FilesList = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [importFolder, setImportFolder] = useState<DialFile | null>(null);
   const [dragAndDropsItems, setDragAndDropsItems] = useState<File[]>([]);
+  const [movingItems, setMovingItems] = useState(0);
+  const [movedItems, setMovedItems] = useState(0);
 
   const { fetchFiles } = useFileFolder();
   const t = useI18n();
@@ -109,7 +111,7 @@ const FilesList = () => {
     const files = fileNodes.filter((file) => file.nodeType === DialFileNodeType.ITEM);
     const folders = fileNodes.filter((file) => file.nodeType === DialFileNodeType.FOLDER);
 
-    const promises = [];
+    const promises: Promise<ServerActionResponse | ServerActionResponse[]>[] = [];
     if (files.length > 0) {
       const filePaths = files.map((file) => ({ path: file.sourceUrl }));
       promises.push(bulkDeleteFiles(filePaths));
@@ -125,8 +127,10 @@ const FilesList = () => {
     async (items: DialCopiedItem[], sourceFolder: string, destinationFolder: string) => {
       const files = items.filter((file) => file.nodeType === DialFileNodeType.ITEM);
       const folders = items.filter((file) => file.nodeType === DialFileNodeType.FOLDER);
+      setMovingItems((files?.length || 0) + (folders?.length || 0));
+      setMovedItems(0);
 
-      const promises: (Promise<ServerActionResponse> | Promise<ServerActionResponse[]>)[] = [];
+      const promises: Promise<ServerActionResponse | ServerActionResponse[]>[] = [];
       files.forEach((file) => {
         const duplicateName = file.destinationUrl
           .split('/')
@@ -136,7 +140,12 @@ const FilesList = () => {
         if (sourceFolder !== destinationFolder) {
           // Move file
           const newPath = file.destinationUrl.replaceAll('//', '/').split('/').slice(0, -1).join('/');
-          promises.push(moveFiles([file.sourceUrl.replaceAll('//', '/')], newPath, file?.overwrite, duplicateName));
+          promises.push(
+            moveFiles([file.sourceUrl.replaceAll('//', '/')], newPath, file?.overwrite, duplicateName).then((res) => {
+              setMovedItems((prev) => prev + 1);
+              return res;
+            }),
+          );
         } else {
           // Rename file
         }
@@ -147,7 +156,10 @@ const FilesList = () => {
             folder.sourceUrl.replaceAll('//', '/'),
             folder.destinationUrl.replaceAll('//', '/'),
             ResourceType.FILE,
-          ),
+          ).then((res) => {
+            setMovedItems((prev) => prev + 1);
+            return res;
+          }),
         );
       });
 
@@ -183,6 +195,8 @@ const FilesList = () => {
         onMoveItems={handleMoveFiles}
         onExport={onExport}
         view={ApplicationRoute.Files}
+        movingItems={movingItems}
+        movedItems={movedItems}
       />
       <Modals
         route={ApplicationRoute.Files}
