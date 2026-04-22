@@ -16,4 +16,5 @@ export interface SOURCE_FIELD {
   configurationEndpointPath?: string;
   serverName?: string;
   serverVersion?: string;
+  applicationTypeSchemaId?: string;
 }
