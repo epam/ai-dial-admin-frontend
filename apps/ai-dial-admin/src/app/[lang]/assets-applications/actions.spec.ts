@@ -168,7 +168,14 @@ describe('Assets application :: server actions', () => {
 
     const result = await moveApps(['path'], 'newPath');
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetsApi.moveAssets).toHaveBeenCalledWith(TOKEN_MOCK, ['path'], 'newPath', ResourceType.APPLICATION);
+    expect(assetsApi.moveAssets).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ['path'],
+      'newPath',
+      ResourceType.APPLICATION,
+      undefined,
+      undefined,
+    );
     expect(result).toBe(RESPONSE_MOCK);
   });
 

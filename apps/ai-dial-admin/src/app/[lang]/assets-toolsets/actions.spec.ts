@@ -122,7 +122,14 @@ describe('Assets Toolset :: server actions', () => {
 
     const result = await moveToolsets(['path'], 'newPath');
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetsApi.moveAssets).toHaveBeenCalledWith(TOKEN_MOCK, ['path'], 'newPath', ResourceType.TOOLSET);
+    expect(assetsApi.moveAssets).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ['path'],
+      'newPath',
+      ResourceType.TOOLSET,
+      undefined,
+      undefined,
+    );
     expect(result).toBe(RESPONSE_MOCK);
   });
 
