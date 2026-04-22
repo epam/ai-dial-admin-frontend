@@ -165,6 +165,58 @@ describe('SourceField view-aware clearing (Applications view)', () => {
 
     expect(screen.getByTestId('endpoints-branch')).toBeInTheDocument();
   });
+
+  test('ENDPOINTS → CONTAINER clears mcp/viewerUrl/editorUrl/applicationTypeSchemaId/applicationProperties', () => {
+    const onChange = vi.fn();
+    const entity = makeApp({
+      source: { $type: SOURCE_TYPE.ENDPOINTS },
+      endpoint: 'https://chat.example.com',
+      mcp: { endpoint: 'https://mcp.example.com' },
+      viewerUrl: 'https://viewer.example.com',
+      editorUrl: 'https://editor.example.com',
+      applicationProperties: { key: 'val' } as any,
+    });
+
+    render(
+      <SourceField
+        id="sourceType"
+        view={ApplicationRoute.Applications}
+        sourceItems={APPLICATION_SOURCE_ITEMS}
+        entity={entity}
+        onChange={onChange}
+        getContainers={vi.fn()}
+      />,
+    );
+
+    fireEvent.change(screen.getByTestId('select-sourceType'), { target: { value: SOURCE_TYPE.CONTAINER } });
+
+    const last = onChange.mock.calls.at(-1)?.[0] as DialApplication;
+    expect(last.source?.$type).toBe(SOURCE_TYPE.CONTAINER);
+    expect(last.endpoint).toBe('');
+    expect(last.mcp).toBeUndefined();
+    expect(last.viewerUrl).toBeUndefined();
+    expect(last.editorUrl).toBeUndefined();
+    expect(last.applicationProperties).toBeUndefined();
+  });
+
+  test('renders CONTAINER branch when source type is CONTAINER', () => {
+    const entity = makeApp({
+      source: { $type: SOURCE_TYPE.CONTAINER, containerId: 'c1' },
+    });
+
+    render(
+      <SourceField
+        id="sourceType"
+        view={ApplicationRoute.Applications}
+        sourceItems={APPLICATION_SOURCE_ITEMS}
+        entity={entity}
+        onChange={vi.fn()}
+        getContainers={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByTestId('containers-branch')).toBeInTheDocument();
+  });
 });
 
 describe('SourceField clearing (non-Applications view)', () => {

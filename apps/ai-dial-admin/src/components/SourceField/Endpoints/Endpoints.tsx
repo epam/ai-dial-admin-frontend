@@ -77,6 +77,7 @@ const Endpoints = <T extends object>({
           isEntityImmutable={isEntityImmutable}
           isModal={isModal}
           disabled={disabled}
+          prefix={prefix}
         />
       )}
     </>

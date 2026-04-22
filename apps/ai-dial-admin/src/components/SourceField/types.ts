@@ -14,6 +14,7 @@ export interface SOURCE_FIELD {
   containerId?: string;
   completionEndpointPath?: string;
   configurationEndpointPath?: string;
+  mcpEndpointPath?: string;
   serverName?: string;
   serverVersion?: string;
   applicationTypeSchemaId?: string;
