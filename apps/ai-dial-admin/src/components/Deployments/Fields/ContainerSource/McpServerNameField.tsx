@@ -153,7 +153,7 @@ const McpServerNameField: FC<Props> = ({
 
   return (
     <>
-      <div className="flex gap-3">
+      <div className="flex gap-3 w-full">
         <DialSelectField
           id="mcpServerName"
           label={t(EntityFieldsI18nKey.McpServerName)}
