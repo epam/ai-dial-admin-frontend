@@ -62,18 +62,26 @@ const HeaderButtons: FC<Props> = ({ route, names, isReadOnlyAdmin }) => {
 
   const servingsDropdownItems: DropdownItem[] = useMemo(
     () => [
-      {
-        key: CONTAINER_TYPE.HF,
-        label: t(EntitiesI18nKey.ModelServing, { type: t(ContainersI18nKey.ModelTypeHF) }),
-        onClick: () => openHFServingModal(),
-      },
-      {
-        key: CONTAINER_TYPE.NIM,
-        label: t(EntitiesI18nKey.ModelServing, { type: t(ContainersI18nKey.ModelTypeNIM) }),
-        onClick: () => openNIMServingModal(),
-      },
+      ...(featureFlags.hfEnabled
+        ? [
+            {
+              key: CONTAINER_TYPE.HF,
+              label: t(EntitiesI18nKey.ModelServing, { type: t(ContainersI18nKey.ModelTypeHF) }),
+              onClick: () => openHFServingModal(),
+            },
+          ]
+        : []),
+      ...(featureFlags.nimEnabled
+        ? [
+            {
+              key: CONTAINER_TYPE.NIM,
+              label: t(EntitiesI18nKey.ModelServing, { type: t(ContainersI18nKey.ModelTypeNIM) }),
+              onClick: () => openNIMServingModal(),
+            },
+          ]
+        : []),
     ],
-    [t, openHFServingModal, openNIMServingModal],
+    [t, openHFServingModal, openNIMServingModal, featureFlags.hfEnabled, featureFlags.nimEnabled],
   );
 
   const openMcpRegistryModal = useCallback(() => {
