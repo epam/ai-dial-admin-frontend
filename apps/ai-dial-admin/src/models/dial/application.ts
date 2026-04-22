@@ -17,6 +17,7 @@ export interface DialApplication extends ChatEntity, EntityValidityState {
   applicationPropertiesTemp?: ApplicationPropertiesTemp[];
   applicationTypeSchemaId?: string;
   mcp?: ApplicationMCPContainer;
+  responsesEndpoint?: string;
 }
 
 export interface DialApplicationScheme extends ModifiedEntity, DialScheme {
@@ -30,6 +31,7 @@ export interface DialApplicationScheme extends ModifiedEntity, DialScheme {
   'dial:applicationTypeViewerUrl'?: string;
   'dial:applicationTypeDisplayName'?: string;
   'dial:applicationTypeCompletionEndpoint'?: string;
+  'dial:applicationTypeResponsesEndpoint'?: string;
   'dial:applicationTypeConfigurationEndpoint'?: string;
   'dial:applicationTypeRateEndpoint'?: string;
   'dial:applicationTypeTokenizeEndpoint'?: string;
