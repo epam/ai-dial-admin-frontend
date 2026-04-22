@@ -1595,7 +1595,6 @@ export default {
     ToolCallFailed: 'Tool call returned an error',
     ToolOutputSchema: 'Tool Output Schema',
     ToolSchema: 'Tool Schema',
-    FailedToLoadTools: 'Failed to load tools',
   },
   FileManager: {
     SelectedItems: 'item(s) selected',

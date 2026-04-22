@@ -2,21 +2,18 @@
 
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialLoader, DialTabs } from '@epam/ai-dial-ui-kit';
+import { DialTabs } from '@epam/ai-dial-ui-kit';
 
 import { getDeployments } from '@/src/app/[lang]/test-suites/actions';
-import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
-import GridView from '@/src/components/Grid/GridView/GridView';
-import { SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
 import { TEMP_FOLDER } from '@/src/constants/file';
 import { EVALUATION_DEPLOYMENTS_COLUMNS, MCP_DEPLOYMENTS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Deployment, DeploymentType } from '@/src/models/evaluation/deployment';
 import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
-import { FirstDataRenderedEvent, GridOptions, RowSelectedEvent } from 'ag-grid-community';
+import RadioSelectGrid from '@/src/components/Grid/GridView/RadioSelectGrid';
 import { TargetTab } from './types';
-import { buildDeploymentUpdate, getInitialTab } from './utils';
+import { buildDeploymentUpdate, buildMcpDeploymentUpdate, getInitialTab } from './utils';
 
 interface Props {
   selectedTargetId?: string;
@@ -40,50 +37,26 @@ const Target: FC<Props> = ({ selectedTargetId, suiteType, onChangeTarget, onChan
     [t],
   );
 
-  const onRowSelected = useCallback(
-    (event: RowSelectedEvent) => {
-      if (event.node.isSelected() && event.data) {
-        onChangeTarget(event.data);
-        onChange((prev: TestSuite) => ({ ...prev, ...buildDeploymentUpdate(event.data) }));
-      }
+  const onSelect = useCallback(
+    (data: Deployment) => {
+      onChangeTarget(data);
+      onChange((prev: TestSuite) => ({
+        ...prev,
+        ...(activeTab === TargetTab.Mcp ? buildMcpDeploymentUpdate(data) : buildDeploymentUpdate(data)),
+      }));
     },
-    [onChangeTarget, onChange],
-  );
-
-  const additionalGridOptions: GridOptions = useMemo(
-    () => ({
-      ...SINGLE_ROW_SELECTION,
-      selectionColumnDef: {
-        ...SINGLE_ROW_SELECTION.selectionColumnDef,
-        cellRenderer: (params: { data?: Record<string, string> }) => (
-          <RadioButtonRenderer
-            inputId={params.data?.deploymentId || ''}
-            isChecked={params.data?.deploymentId === selectedTargetId}
-          />
-        ),
-      },
-      onRowSelected,
-      onFirstDataRendered: (event: FirstDataRenderedEvent) => {
-        if (selectedTargetId) {
-          event.api.forEachNode((node) => {
-            if (node.data?.deploymentId === selectedTargetId) {
-              node.setSelected(true);
-              event.api.ensureNodeVisible(node, 'middle');
-            }
-          });
-        }
-      },
-    }),
-    [onRowSelected, selectedTargetId],
+    [onChangeTarget, onChange, activeTab],
   );
 
   useEffect(() => {
+    setDeployments([]);
     const type =
       activeTab === TargetTab.Applications
         ? DeploymentType.Application
         : activeTab === TargetTab.Models
           ? DeploymentType.Model
           : void 0;
+
     setIsLoading(true);
 
     getDeployments(type, activeTab === TargetTab.Mcp ? 'mcp' : void 0).then((res) => {
@@ -103,22 +76,15 @@ const Target: FC<Props> = ({ selectedTargetId, suiteType, onChangeTarget, onChan
       </div>
 
       <div className="flex-1 min-h-0">
-        {isLoading ? (
-          <div className="size-full flex flex-col">
-            <DialLoader size={40} />
-          </div>
-        ) : (
-          <div className="size-full flex flex-col">
-            <div className="flex-1 min-h-0">
-              <GridView
-                columnDefs={activeTab === TargetTab.Mcp ? MCP_DEPLOYMENTS_COLUMNS : EVALUATION_DEPLOYMENTS_COLUMNS}
-                rowData={deployments}
-                additionalGridOptions={additionalGridOptions}
-                emptyDataProps={{ title: t(EntitiesI18nKey.NoApplications) }}
-              />
-            </div>
-          </div>
-        )}
+        <RadioSelectGrid
+          isLoading={isLoading}
+          columnDefs={activeTab === TargetTab.Mcp ? MCP_DEPLOYMENTS_COLUMNS : EVALUATION_DEPLOYMENTS_COLUMNS}
+          data={deployments}
+          idField="deploymentId"
+          onSelect={onSelect}
+          selectedId={selectedTargetId}
+          emptyTitle={t(EntitiesI18nKey.NoApplications)}
+        />
       </div>
     </div>
   );
