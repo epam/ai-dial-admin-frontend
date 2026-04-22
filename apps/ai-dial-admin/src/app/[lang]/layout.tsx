@@ -43,6 +43,8 @@ export default async function Layout({ children, params }: { children: ReactNode
     deploymentsEnabled: isValueTruthy(process.env.DEPLOYMENTS_ENABLED),
     evaluationEnabled: process.env.DIAL_EVAL_API_URL != null,
     mcpRegistryEnabled: isValueTruthy(process.env.MCP_REGISTRY_ENABLED),
+    nimEnabled: isValueTruthy(process.env.NIM_ENABLED),
+    hfEnabled: isValueTruthy(process.env.HF_ENABLED),
   };
 
   const themesConfiguration = await themesApi.getThemesConfiguration();
