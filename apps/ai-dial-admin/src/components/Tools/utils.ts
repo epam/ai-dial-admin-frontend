@@ -20,3 +20,21 @@ export const getFilteredTools = (tools: string[], selectedFilters: ToolFilter[],
 
   return [...availableTools, ...customTools].filter((t) => filteredTools.includes(t.name));
 };
+
+export const getAllTools = (
+  useAllTools: boolean,
+  allToolNames: string[],
+  isAppRunner: boolean,
+  runnerTools: string[],
+  allowedTools: string[],
+): string[] => {
+  if (useAllTools) {
+    return allToolNames;
+  }
+
+  if (isAppRunner) {
+    return runnerTools.length ? runnerTools : allToolNames;
+  }
+
+  return allowedTools;
+};
