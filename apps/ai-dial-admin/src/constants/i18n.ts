@@ -429,6 +429,8 @@ export enum UpstreamEndpointsI18nKey {
   Upstream = 'UpstreamEndpoints.Upstream',
   AddUpstream = 'UpstreamEndpoints.AddUpstream',
   Endpoints = 'UpstreamEndpoints.Endpoints',
+  EndpointsWithResponses = 'UpstreamEndpoints.EndpointsWithResponses',
+  EndpointResponseCaption = 'UpstreamEndpoints.EndpointResponseCaption',
   Keys = 'UpstreamEndpoints.Keys',
 }
 
@@ -1041,6 +1043,7 @@ export enum EntityPlaceholdersI18nKey {
   Tier = 'EntityPlaceholders.Tier',
   Weight = 'EntityPlaceholders.Weight',
   UpstreamEndpoint = 'EntityPlaceholders.UpstreamEndpoint',
+  UpstreamEndpointWithResponses = 'EntityPlaceholders.UpstreamEndpointWithResponses',
   UpstreamKey = 'EntityPlaceholders.UpstreamKey',
   Value = 'EntityPlaceholders.Value',
   Select = 'EntityPlaceholders.Select',
@@ -1056,6 +1059,7 @@ export enum EntityPlaceholdersI18nKey {
   SelectPermission = 'EntityPlaceholders.SelectPermission',
   ConfigurationEndpoint = 'EntityPlaceholders.ConfigurationEndpoint',
   CompletionEndpoint = 'EntityPlaceholders.CompletionEndpoint',
+  ResponsesEndpoint = 'EntityPlaceholders.ResponsesEndpoint',
   RateEndpoint = 'EntityPlaceholders.RateEndpoint',
   TokenizeEndpoint = 'EntityPlaceholders.TokenizeEndpoint',
   TruncatePromptEndpoint = 'EntityPlaceholders.TruncatePromptEndpoint',
@@ -1204,6 +1208,7 @@ export enum EntityFieldsI18nKey {
   baseEndpoint = 'EntityFields.baseEndpoint',
   dependencies = 'EntityFields.dependencies',
   completionEndpoint = 'EntityFields.completionEndpoint',
+  responsesEndpoint = 'EntityFields.responsesEndpoint',
   container = 'EntityFields.container',
   $type = 'EntityFields.SourceType',
   adapterName = 'EntityFields.SourceAdapter',
