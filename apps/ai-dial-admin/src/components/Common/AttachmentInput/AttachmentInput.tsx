@@ -227,7 +227,7 @@ const AttachmentInput: FC<Props> = ({ availableItems, initialValues, label, plac
 
       {selectedRadio === AttachmentType.SPECIFIC && (
         <div className={classNames('flex flex-col', STANDARD_CONTROL_WIDTH)}>
-          <div className="dial-input min-h-[40px] p-[6px]">
+          <div className="dial-input h-auto min-h-[40px] p-[6px]">
             <div
               ref={containerRef}
               className={classNames('flex flex-wrap items-start gap-2', wraps ? 'flex-col-reverse' : 'flex-row')}

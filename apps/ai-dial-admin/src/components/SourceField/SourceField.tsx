@@ -8,6 +8,7 @@ import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { Container } from '@/src/models/deployments/containers';
 import { DialModel, DialModelType } from '@/src/models/dial/model';
 import { DialAdapter } from '@/src/models/dial/adapter';
+import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { Toolset } from '@/src/models/dial/toolset';
@@ -22,11 +23,12 @@ import McpRegistry from '@/src/components/SourceField/McpRegistry/McpRegistry';
 import Templates from '@/src/components/SourceField/Template/Templates';
 import Adapters from '@/src/components/SourceField/Adapters/Adapters';
 import Endpoints from '@/src/components/SourceField/Endpoints/Endpoints';
+import AppRunners from '@/src/components/SourceField/Application/AppRunners';
 
 interface Props<T> {
   entity: T;
   onChange: (entity: T) => void;
-  getContainers: () => Promise<ServerActionResponse<Container[]>>;
+  getContainers?: () => Promise<ServerActionResponse<Container[]>>;
   getRunners?: () => Promise<ServerActionResponse<InterceptorTemplate[]>>;
   getAdapters?: () => Promise<ServerActionResponse | null>;
   sourceItems: SelectOption[];
@@ -34,11 +36,13 @@ interface Props<T> {
   label?: string;
   view: ApplicationRoute;
   adapters?: DialAdapter[];
+  runners?: DialApplicationScheme[];
+  isEntityImmutable?: boolean;
   isModal?: boolean;
   disabled?: boolean;
 }
 
-const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
+const SourceField = <T extends DialInterceptor | DialModel | Toolset | DialApplication>({
   entity,
   onChange,
   getContainers,
@@ -48,6 +52,8 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
   label,
   view,
   sourceItems,
+  runners,
+  isEntityImmutable,
   isModal,
   disabled,
 }: Props<T>) => {
@@ -86,10 +92,25 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
           isValid: true,
         });
 
-        onChangeEntity({ ...entity, source: { ...entity.source, $type: sourceType as SOURCE_TYPE }, endpoint: '' });
+        const reset: Partial<T> = { endpoint: '' } as Partial<T>;
+        if (view === ApplicationRoute.Applications) {
+          Object.assign(reset, {
+            mcp: undefined,
+            viewerUrl: undefined,
+            editorUrl: undefined,
+            applicationTypeSchemaId: undefined,
+            applicationProperties: undefined,
+          });
+        }
+
+        onChangeEntity({
+          ...entity,
+          source: { ...entity.source, $type: sourceType as SOURCE_TYPE },
+          ...reset,
+        });
       }
     },
-    [dispatch, entity, onChangeEntity, source],
+    [dispatch, entity, onChangeEntity, source, view],
   );
 
   useEffect(() => {
@@ -124,9 +145,16 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
       />
 
       {source === SOURCE_TYPE.ENDPOINTS && (
-        <Endpoints entity={entity} onChange={onChangeEntity} view={view} isModal={isModal} disabled={isReadonly} />
+        <Endpoints
+          entity={entity}
+          onChange={onChangeEntity}
+          view={view}
+          isModal={isModal}
+          isEntityImmutable={isEntityImmutable}
+          disabled={isReadonly}
+        />
       )}
-      {source === SOURCE_TYPE.CONTAINER && (
+      {source === SOURCE_TYPE.CONTAINER && getContainers && (
         <Containers
           entity={entity}
           onChange={onChangeEntity}
@@ -162,6 +190,16 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
           entity={entity as Toolset}
           onChange={onChangeEntity as (entity: Toolset) => void}
           view={view}
+          isModal={isModal}
+          disabled={isReadonly}
+        />
+      )}
+      {source === SOURCE_TYPE.SCHEMA && (
+        <AppRunners
+          entity={entity as DialApplication}
+          onChange={onChangeEntity as (entity: DialApplication) => void}
+          runners={runners}
+          isEntityImmutable={isEntityImmutable}
           isModal={isModal}
           disabled={isReadonly}
         />
