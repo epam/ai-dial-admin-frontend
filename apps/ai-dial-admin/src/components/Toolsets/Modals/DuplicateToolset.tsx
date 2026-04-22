@@ -3,7 +3,6 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import IdControl from '@/src/components/BaseControls/Id/Id';
-import ApiKeyHeaderControl from '@/src/components/Toolsets/Auth/Controls/ApiKeyHeaderControl';
 import OAuthAuthSectionControl from '@/src/components/Toolsets/Auth/Controls/OAuthAuthSectionControl';
 import { ButtonsI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -11,6 +10,7 @@ import { useI18n } from '@/src/locales/client';
 import { Toolset, ToolsetAuthType } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getClonedEntityName, getCloneTitle } from '@/src/utils/entities/duplicate-entity';
+import ApiKeyHeaderControl from '../Auth/Controls/ApiKeyHeaderControl';
 
 interface Props {
   isModalOpen: boolean;
@@ -113,6 +113,22 @@ const DuplicateToolset: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose,
     [clonedEntity, dispatch],
   );
 
+  const onChangeTokenEndpoint = useCallback(
+    (tokenEndpoint?: string) => {
+      const updatedEntity = {
+        ...clonedEntity,
+        authSettings: { ...clonedEntity.authSettings!, tokenEndpoint },
+      };
+      setEntity(updatedEntity);
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'authSettings.tokenEndpoint',
+        isValid: !!tokenEndpoint,
+      });
+    },
+    [clonedEntity, dispatch],
+  );
+
   const onChangeApiKeyHeader = useCallback(
     (apiKeyHeader: string) => {
       const updatedEntity = {
@@ -154,10 +170,11 @@ const DuplicateToolset: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose,
               clientId={clonedEntity.authSettings?.clientId}
               clientSecret={clonedEntity.authSettings?.clientSecret}
               authorizationEndpoint={clonedEntity.authSettings?.authorizationEndpoint}
-              showTokenEndpoint={false}
+              tokenEndpoint={clonedEntity.authSettings?.tokenEndpoint}
               onChangeClientId={onChangeClientId}
               onChangeClientSecret={onChangeClientSecret}
               onChangeAuthorizationEndpoint={onChangeAuthorizationEndpoint}
+              onChangeTokenEndpoint={onChangeTokenEndpoint}
             />
           )}
 
