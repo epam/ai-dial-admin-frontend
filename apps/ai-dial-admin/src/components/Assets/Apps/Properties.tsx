@@ -17,7 +17,7 @@ import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { DeploymentAsset } from '@/src/models/dial/deployment-asset';
+import { AssetApp, DeploymentAsset } from '@/src/models/dial/deployment-asset';
 import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
@@ -69,11 +69,10 @@ const ApplicationAssetProperties: FC<Props> = ({ asset, runners, onChange, isPub
       )}
 
       <ApplicationSource
-        entity={asset}
+        entity={asset as AssetApp}
         onChangeEntity={onChange as (entity: DialApplication) => void}
         runners={runners}
         isEntityImmutable={true}
-        view={ApplicationRoute.AssetsApplications}
       />
       <EntityAttachments
         entity={asset as DialApplication}

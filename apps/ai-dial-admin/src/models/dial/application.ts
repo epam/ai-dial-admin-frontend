@@ -1,4 +1,4 @@
-import { SOURCE_TYPE } from '@/src/components/SourceField/types';
+import { SOURCE_FIELD } from '@/src/components/SourceField/types';
 import { ChatEntity, EntityValidityState, ModifiedEntity } from './base-entity';
 import { DefaultsValue } from './defaults';
 import { DialRoute } from './route';
@@ -6,13 +6,8 @@ import { DialScheme } from './scheme';
 
 export { SOURCE_TYPE as ApplicationSourceType } from '@/src/components/SourceField/types';
 
-export interface ApplicationSource {
-  $type: SOURCE_TYPE;
-  applicationTypeSchemaId?: string;
-}
-
 export interface DialApplication extends ChatEntity, EntityValidityState {
-  source?: ApplicationSource;
+  source?: SOURCE_FIELD;
   viewerUrl?: string;
   editorUrl?: string;
   routes?: DialRoute[];

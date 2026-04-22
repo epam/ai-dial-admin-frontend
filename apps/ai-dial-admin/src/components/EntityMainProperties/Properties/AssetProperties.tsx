@@ -10,7 +10,7 @@ import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
+import { AssetApp, AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getAssetVersionBusinessError } from '@/src/utils/deployments/validation';
@@ -98,8 +98,7 @@ const AssetProperties: FC<Props> = ({
 
       {view === ApplicationRoute.AssetsApplications && !isEntityImmutable && !initialValues && (
         <ApplicationSource
-          view={view}
-          entity={entity}
+          entity={entity as AssetApp}
           runners={runners}
           isEntityImmutable={isEntityImmutable}
           onChangeEntity={onChangeEntity}

@@ -28,6 +28,12 @@ export const ADAPTER_SOURCE_ITEMS: SelectOption[] = [
   { value: SOURCE_TYPE.CONTAINER, label: 'Adapter Container' },
 ];
 
+export const APPLICATION_SOURCE_ITEMS: SelectOption[] = [
+  // NOTE: Keep order
+  { value: SOURCE_TYPE.ENDPOINTS, label: 'Endpoints' },
+  { value: SOURCE_TYPE.SCHEMA, label: 'App Runner' },
+];
+
 const getItems = (route: ApplicationRoute) => {
   switch (route) {
     case ApplicationRoute.Interceptors:
@@ -38,6 +44,8 @@ const getItems = (route: ApplicationRoute) => {
       return TOOLSET_SOURCE_ITEMS;
     case ApplicationRoute.Adapters:
       return ADAPTER_SOURCE_ITEMS;
+    case ApplicationRoute.Applications:
+      return APPLICATION_SOURCE_ITEMS;
     default:
       return [];
   }
