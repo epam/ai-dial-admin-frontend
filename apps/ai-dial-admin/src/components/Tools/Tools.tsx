@@ -18,13 +18,13 @@ import { getContainerTools } from '@/src/app/actions/deployments';
 import Search from '@/src/components/Common/Search/Search';
 import ToolsFilter from '@/src/components/Tools/Filter/ToolsFilter';
 import { ToolFilter } from '@/src/components/Tools/type';
-import { getFilteredTools } from '@/src/components/Tools/utils';
+import { getAllTools, getFilteredTools } from '@/src/components/Tools/utils';
 import { ButtonsI18nKey, EntitiesI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
-import { ApplicationMCPContainer, DialApplication } from '@/src/models/dial/application';
+import { ApplicationMCPContainer, DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { Tool, Toolset } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -45,6 +45,7 @@ interface Props {
   isPublicationToolset?: boolean;
   disabled?: boolean;
   onChangeEntity?: (toolset: Toolset | DialApplication) => void;
+  appRunner?: DialApplicationScheme;
 }
 
 const Tools: FC<Props> = ({
@@ -57,6 +58,7 @@ const Tools: FC<Props> = ({
   isPublicationToolset,
   disabled,
   onChangeEntity,
+  appRunner,
 }) => {
   const t = useI18n();
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -70,6 +72,16 @@ const Tools: FC<Props> = ({
   const [search, setSearch] = useState<string>('');
   const [selectedFilters, setSelectedFilters] = useState(filtersConfiguration);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const showManagementButtons = useMemo(
+    () => !disabled && !isMcpToolset && !appRunner,
+    [disabled, isMcpToolset, appRunner],
+  );
+
+  const runnerTools = useMemo(() => {
+    if (!appRunner) return [];
+    return appRunner['dial:applicationTypeMcp']?.['dial:allowedTools'] || [];
+  }, [appRunner]);
 
   const isNotSavedToolset = useMemo(() => {
     return originalEntity?.endpoint !== selectedEntity?.endpoint;
@@ -151,12 +163,17 @@ const Tools: FC<Props> = ({
       }
       const path = isAsset ? (selectedEntity as AssetToolset)?.path : selectedEntity?.name;
       setLoading(true);
-      getFunction(path).then((tools) => {
+      getFunction(path).then((res) => {
+        if (res.success) {
+          setTools((res.response as { tools: Tool[] }).tools || []);
+        } else {
+          setTools([]);
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        }
         setLoading(false);
-        setTools(tools || []);
       });
     }
-  }, [isApplicationTools, isAsset, isMcpToolset, selectedEntity]);
+  }, [isApplicationTools, isAsset, isMcpToolset, selectedEntity, showNotification]);
 
   useEffect(() => {
     const fetchTools = async (id: string) => {
@@ -193,6 +210,7 @@ const Tools: FC<Props> = ({
         ? (selectedEntity as DialApplication)?.mcp?.allowedTools?.filter((toolName) => toolName !== '') || []
         : (selectedEntity as Toolset)?.allowedTools?.filter((toolName) => toolName !== '') || [];
       const allToolNames = allTools.map((tool) => tool.name);
+      const filteredTools = getAllTools(useAllTools, allToolNames, !!appRunner, runnerTools, allowedTools);
 
       if (search.length) {
         const searchText = search.toLowerCase().trim();
@@ -207,7 +225,7 @@ const Tools: FC<Props> = ({
                   JSON.stringify(tool.annotations)?.toLowerCase().includes(searchText),
               )
             : getFilteredTools(
-                useAllTools ? allToolNames : allowedTools,
+                filteredTools,
                 useAllTools ? [...filtersConfiguration] : selectedFilters,
                 tools || [],
               ).filter((tool) => tool.name.toLowerCase().includes(searchText) && tool.name !== ''),
@@ -216,11 +234,7 @@ const Tools: FC<Props> = ({
         setDisplayTools(
           isMcpToolset
             ? allTools
-            : getFilteredTools(
-                useAllTools ? allToolNames : allowedTools,
-                useAllTools ? [...filtersConfiguration] : selectedFilters,
-                tools || [],
-              ),
+            : getFilteredTools(filteredTools, useAllTools ? [...filtersConfiguration] : selectedFilters, tools || []),
         );
       }
     }, 300);
@@ -258,7 +272,7 @@ const Tools: FC<Props> = ({
           {`: ${displayTools?.length || 0}`}
         </h1>
 
-        {!disabled && !isMcpToolset && (
+        {showManagementButtons && (
           <DialSwitch
             switchId="useAllTools"
             label={t(ToolsetI18nKey.UseAllTools)}
@@ -273,7 +287,7 @@ const Tools: FC<Props> = ({
         </div>
 
         <div className="flex flex-row gap-4">
-          {!useAllTools && !isMcpToolset && (
+          {!useAllTools && showManagementButtons && (
             <div className="flex items-center gap-x-6">
               <ToolsFilter
                 isAllSelected={isEqual(filtersConfiguration, selectedFilters)}
@@ -283,7 +297,7 @@ const Tools: FC<Props> = ({
               />
             </div>
           )}
-          {!disabled && !isMcpToolset && !useAllTools && (
+          {!useAllTools && showManagementButtons && (
             <DialPrimaryButton
               label={t(ButtonsI18nKey.ManageTool)}
               iconBefore={<IconPencilMinus {...BASE_BUTTON_ICON_PROPS} />}

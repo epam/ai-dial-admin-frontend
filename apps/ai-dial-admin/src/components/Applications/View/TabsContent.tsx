@@ -83,6 +83,7 @@ const TabsContent: FC<Props> = ({
           selectedEntity={selectedApplication}
           onChangeEntity={onChangeApplication}
           view={view}
+          appRunner={appRunner}
         />
       )}
 

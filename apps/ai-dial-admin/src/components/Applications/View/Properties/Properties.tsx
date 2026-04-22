@@ -7,8 +7,11 @@ import Defaults from '@/src/components/Defaults/Defaults';
 import EntityAttachments from '@/src/components/EntityMainProperties/EntityAttachments/EntityAttachments';
 import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
 import DeploymentProperties from '@/src/components/EntityMainProperties/Properties/DeploymentProperties';
-import ApplicationSource from '@/src/components/SourceField/Application/ApplicationSource';
-import { DialApplicationScheme } from '@/src/models/dial/application';
+import SourceField from '@/src/components/SourceField/SourceField';
+import { APPLICATION_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
+import { EntitiesI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
+import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { ChatEntity } from '@/src/models/dial/base-entity';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -21,6 +24,8 @@ interface Props {
 }
 
 const EntityProperties: FC<Props> = ({ runners, view, ...props }) => {
+  const t = useI18n();
+
   return (
     <div className="h-full flex flex-col gap-y-8">
       <DeploymentProperties
@@ -35,7 +40,16 @@ const EntityProperties: FC<Props> = ({ runners, view, ...props }) => {
         onChange={(icon) => props.onChangeEntity({ ...props.entity, iconUrl: icon })}
       />
       <TopicsControl {...props} onChange={props.onChangeEntity} />
-      <ApplicationSource {...props} runners={runners} isEntityImmutable={true} />
+      <SourceField
+        id="sourceType"
+        view={view}
+        label={t(EntitiesI18nKey.SourceType)}
+        sourceItems={APPLICATION_SOURCE_ITEMS}
+        entity={props.entity as DialApplication}
+        onChange={props.onChangeEntity as (entity: DialApplication) => void}
+        runners={runners}
+        isEntityImmutable={true}
+      />
       <EntityAttachments {...props} />
       <Defaults {...props} />
       <ForwardAuthTokenField view={view} {...props} />

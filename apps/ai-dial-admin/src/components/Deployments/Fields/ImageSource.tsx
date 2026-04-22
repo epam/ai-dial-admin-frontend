@@ -41,7 +41,7 @@ const ImageSource: FC<Props> = ({ image, setImage, isModal = false, verifyVersio
   return (
     <div className="flex flex-col gap-y-8">
       {hasExternalRegistryRef && (
-        <div className={classNames('flex', isModal ? 'flex-col gap-y-8' : 'flex-row gap-x-4', className)}>
+        <div className={classNames('flex', isModal ? 'flex-col gap-y-8' : 'flex-row gap-x-4')}>
           <ImageMcpRegistry
             image={image}
             setImage={setImage}
