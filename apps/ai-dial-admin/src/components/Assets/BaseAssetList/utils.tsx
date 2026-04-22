@@ -40,6 +40,7 @@ import {
 import { ResourceType } from '@/src/types/resource-type';
 import { importPrompts } from '@/src/utils/prompts/import-prompts';
 import MultiSelectTagsRenderer from '../../Grid/CellRenderers/MultiSelectTagsRenderer';
+import { TEMP_FOLDER } from '@/src/constants/file';
 
 export const getItems = (data: unknown) => {
   const asset = data as AssetWithVersion;
@@ -121,10 +122,10 @@ export const getAllSelectedItemsPaths = (basePath: string, selectedVersions: Rec
 
 export const getEmptyAsset = (view: ApplicationRoute, path: string): AssetWithVersion => {
   const baseEmptyAsset = {
-    name: '.dial_folder',
+    name: TEMP_FOLDER,
     folderId: path,
     version: '',
-    path: `${path}.dial_folder`,
+    path: `${path}${TEMP_FOLDER}`,
     nodeType: DialFileNodeType.ITEM,
   };
 
@@ -137,7 +138,7 @@ export const getEmptyAsset = (view: ApplicationRoute, path: string): AssetWithVe
       return {
         ...baseEmptyAsset,
         endpoint: 'http://mock',
-        displayName: '.dial_folder',
+        displayName: TEMP_FOLDER,
         transport: ToolsetTransport.HTTP,
       };
     default:

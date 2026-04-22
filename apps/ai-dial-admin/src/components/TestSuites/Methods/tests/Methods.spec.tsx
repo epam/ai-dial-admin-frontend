@@ -68,7 +68,7 @@ describe('Methods component', () => {
     const testSuite: any = { endpointRef: {} };
     const selectedApplication: any = { deploymentId: 'test-deployment', $type: 'application' };
 
-    render(<Methods testSuite={testSuite} selectedApplication={selectedApplication} onChange={onChange} />);
+    render(<Methods testSuite={testSuite} selectedTarget={selectedApplication} onChange={onChange} />);
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /POST.*\/api\/users/ })).toBeInTheDocument();
@@ -79,7 +79,7 @@ describe('Methods component', () => {
     const testSuite: any = { endpointRef: {} };
     const selectedApplication: any = { deploymentId: 'test-deployment', $type: 'application' };
 
-    render(<Methods testSuite={testSuite} selectedApplication={selectedApplication} onChange={onChange} />);
+    render(<Methods testSuite={testSuite} selectedTarget={selectedApplication} onChange={onChange} />);
 
     await waitFor(() => {
       expect(mockGetDeployment).toHaveBeenCalledWith('test-deployment', 'application');
@@ -91,7 +91,7 @@ describe('Methods component', () => {
     const testSuite: any = { endpointRef: {} };
     const selectedApplication: any = { deploymentId: 'test-deployment', $type: 'application' };
 
-    render(<Methods testSuite={testSuite} selectedApplication={selectedApplication} onChange={onChange} />);
+    render(<Methods testSuite={testSuite} selectedTarget={selectedApplication} onChange={onChange} />);
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'GET /api/users' })).toBeInTheDocument();
@@ -106,7 +106,7 @@ describe('Methods component', () => {
     };
     const selectedApplication: any = { deploymentId: 'test-deployment', $type: 'application' };
 
-    render(<Methods testSuite={testSuite} selectedApplication={selectedApplication} onChange={onChange} />);
+    render(<Methods testSuite={testSuite} selectedTarget={selectedApplication} onChange={onChange} />);
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'POST /api/users' })).toBeInTheDocument();
@@ -121,7 +121,7 @@ describe('Methods component', () => {
     };
     const selectedApplication: any = { deploymentId: 'test-deployment', $type: 'application' };
 
-    render(<Methods testSuite={testSuite} selectedApplication={selectedApplication} onChange={onChange} />);
+    render(<Methods testSuite={testSuite} selectedTarget={selectedApplication} onChange={onChange} />);
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /POST.*\/api\/users/ })).toBeInTheDocument();
@@ -135,14 +135,14 @@ describe('Methods component', () => {
     const selectedApplication: any = { deploymentId: 'test-deployment', $type: 'application' };
 
     const { rerender } = render(
-      <Methods testSuite={testSuite} selectedApplication={selectedApplication} onChange={onChange} />,
+      <Methods testSuite={testSuite} selectedTarget={selectedApplication} onChange={onChange} />,
     );
 
     await waitFor(() => {
       expect(mockGetDeployment).toHaveBeenCalledTimes(1);
     });
 
-    rerender(<Methods testSuite={testSuite} selectedApplication={selectedApplication} onChange={onChange} />);
+    rerender(<Methods testSuite={testSuite} selectedTarget={selectedApplication} onChange={onChange} />);
 
     expect(mockGetDeployment).toHaveBeenCalledTimes(1);
   });

@@ -18,12 +18,12 @@ import MethodItem from './MethodItem';
 interface Props {
   testSuite: TestSuite;
   onChange: Dispatch<SetStateAction<TestSuite>>;
-  selectedApplication?: Deployment | null;
+  selectedTarget?: Deployment | null;
   isCreate?: boolean;
   children?: ReactNode;
 }
 
-const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange, isCreate, children }) => {
+const Methods: FC<Props> = ({ testSuite, selectedTarget, onChange, isCreate, children }) => {
   const t = useI18n();
 
   const [activeMethodIndex, setActiveMethodIndex] = useState<number | null>();
@@ -58,8 +58,8 @@ const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange, isCreate
   );
 
   useEffect(() => {
-    if (!fullApplication && selectedApplication) {
-      const { deploymentId, $type } = selectedApplication;
+    if (!fullApplication && selectedTarget) {
+      const { deploymentId, $type } = selectedTarget;
       getDeployment(deploymentId, $type)
         .then((data) => {
           setFullApplication(data);
@@ -84,7 +84,7 @@ const Methods: FC<Props> = ({ testSuite, selectedApplication, onChange, isCreate
         });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fullApplication, selectedApplication]);
+  }, [fullApplication, selectedTarget]);
 
   const [sidebarCurrentWidth, setSidebarCurrentWidth] = useState(400);
   const [isSidebarOpened, setIsSidebarOpened] = useState(true);
