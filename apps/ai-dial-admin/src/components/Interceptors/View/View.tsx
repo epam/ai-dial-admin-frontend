@@ -13,7 +13,9 @@ import {
   updateInterceptor,
 } from '@/src/app/[lang]/interceptors/actions';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
+import ContainerStatusBanner from '@/src/components/Deployments/Common/ContainerStatusBanner/ContainerStatusBanner';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -145,6 +147,13 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, etag, ...props
         onChangeActiveTab={setActiveTab}
         onRemove={removeInterceptor}
       />
+
+      {originalInterceptor.source?.$type === SOURCE_TYPE.CONTAINER && originalInterceptor.source?.containerId && (
+        <ContainerStatusBanner
+          view={ApplicationRoute.Interceptors}
+          containerId={originalInterceptor.source.containerId}
+        />
+      )}
 
       <div className="flex-1 overflow-auto min-h-0">
         {isEditorEnabled ? (

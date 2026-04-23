@@ -1,3 +1,9 @@
+import {
+  getApplicationContainers,
+  getInterceptorContainers,
+  getMCPContainers,
+  getModelContainers,
+} from '@/src/app/actions/deployments';
 import { EnvironmentVariable } from '@/src/models/deployments/variables';
 import {
   Autoscaling,
@@ -5,6 +11,7 @@ import {
   ContainerRedeploySnapshot,
   ResourcesDefaults,
 } from '@/src/models/deployments/containers';
+import { ServerActionResponse } from '@/src/models/server-action';
 import {
   CONTAINER_SOURCE_TYPE,
   CONTAINER_STATUS,
@@ -220,4 +227,27 @@ export const deriveScaling = (
   }
 
   return merged;
+};
+
+/**
+ * Returns the list-containers server action that matches the given entity route, or `null`
+ * if the route has no container source concept. Supported routes: Models, Applications,
+ * Toolsets, Interceptors. Adapters are intentionally omitted — they have containers but
+ * the ContainerStatusBanner is not wired for them yet.
+ */
+export const getContainersByView = (
+  view: ApplicationRoute,
+): (() => Promise<ServerActionResponse<Container[]>>) | null => {
+  switch (view) {
+    case ApplicationRoute.Models:
+      return getModelContainers;
+    case ApplicationRoute.Applications:
+      return getApplicationContainers;
+    case ApplicationRoute.Toolsets:
+      return getMCPContainers;
+    case ApplicationRoute.Interceptors:
+      return getInterceptorContainers;
+    default:
+      return null;
+  }
 };

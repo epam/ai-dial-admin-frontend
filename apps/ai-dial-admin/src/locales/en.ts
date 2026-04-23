@@ -1416,6 +1416,10 @@ export default {
     ContainerRunFailed: '{type} Container failed to run',
     Running: 'Running',
     NotRunning: 'Not running',
+    ContainerNotRunningTitle: '{type} container for this {typeLower} is not running.',
+    ContainerNotRunningDescription:
+      'This {typeLower} will not be available in the Chat interface until the container is started or reconfigured.',
+    GoToContainer: 'Go to Container',
     Preparing: 'Preparing...',
     Failed: 'Failed',
     Stopped: 'Stopped',
