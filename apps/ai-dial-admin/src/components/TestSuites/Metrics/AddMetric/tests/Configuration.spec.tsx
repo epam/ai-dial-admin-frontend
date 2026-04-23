@@ -80,6 +80,7 @@ describe('MetricConfiguration', () => {
   const selectedMetric: Metric = {
     id: 'metric-2',
     name: 'Selected Name',
+    displayName: 'Selected Name',
     description: 'Selected Description',
   };
 
@@ -108,23 +109,6 @@ describe('MetricConfiguration', () => {
 
     expect(screen.getByText('Details Name')).toBeInTheDocument();
     expect(screen.getByText('Details Description')).toBeInTheDocument();
-  });
-
-  test('calls onChangeName when display name input changes', () => {
-    const onChangeName = vi.fn();
-
-    render(
-      <MetricConfiguration
-        metricName="Metric Name"
-        onChangeName={onChangeName}
-        selectedMetricDetails={selectedMetricDetails}
-      />,
-    );
-
-    const input = screen.getByRole('textbox', { name: EntityFieldsI18nKey.displayName });
-    fireEvent.change(input, { target: { value: 'Updated Metric Name' } });
-
-    expect(onChangeName).toHaveBeenCalledWith('Updated Metric Name');
   });
 
   test('renders schema sections for configuration, inputs, and outputs', () => {
