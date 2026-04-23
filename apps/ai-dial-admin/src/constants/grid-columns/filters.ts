@@ -25,6 +25,6 @@ export const auditStringFilter: Partial<ColDef> = {
 export const evalStringFilter: Partial<ColDef> = {
   filterParams: {
     ...stringFilter.filterParams,
-    filterOptions: [GridFilterType.EQUALS],
+    filterOptions: [GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS],
   } as ITextFilterParams,
 };

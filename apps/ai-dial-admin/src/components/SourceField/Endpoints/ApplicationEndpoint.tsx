@@ -67,7 +67,7 @@ const ApplicationEndpoint: FC<Props> = ({ entity, onChange, isEntityImmutable, i
             ...(entity.source as SOURCE_FIELD),
             mcpEndpointPath: mcpEnabled ? entity.source?.mcpEndpointPath : null,
           } as SOURCE_FIELD,
-          mcp: mcpEnabled ? entity.mcp || { endpoint: '' } : undefined,
+          mcp: mcpEnabled ? { ...(entity.mcp || { endpoint: '' }), forwardPerRequestKey: true } : undefined,
         });
       } else {
         onChange({

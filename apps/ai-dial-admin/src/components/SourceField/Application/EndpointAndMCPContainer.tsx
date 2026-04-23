@@ -66,7 +66,7 @@ const EndpointAndMCPContainer: FC<Props> = ({
           ? entity?.['dial:applicationTypeResponsesEndpoint']
           : undefined,
         ['dial:applicationTypeMcp']: newCheckboxStates[SourceType.MCP_ENDPOINT]
-          ? entity?.['dial:applicationTypeMcp']
+          ? ({ ...entity?.['dial:applicationTypeMcp'], 'dial:forwardPerRequestKey': true } as ApplicationTypeMCP)
           : undefined,
       });
     },
