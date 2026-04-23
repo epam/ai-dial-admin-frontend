@@ -195,7 +195,7 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMet
           {currentStepId === MetricStep.Configuration && !isMetricDetailsLoading && (
             <MetricConfiguration
               metricName={metricName}
-              displayMetricName={metricName}
+              displayMetricName={metricDisplayName}
               selectedMetric={selectedMetric || editingMetric}
               configBindings={configBindings}
               inputBindings={inputBindings}
