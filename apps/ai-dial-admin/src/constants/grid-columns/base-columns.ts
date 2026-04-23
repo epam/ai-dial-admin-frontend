@@ -105,6 +105,7 @@ export const PATHS_COLUMN: ColDef = {
   }),
   filterValueGetter: (params) => params.data?.paths,
   tooltipValueGetter: (params) => params.data?.paths?.join(', ') || null,
+  hide: false,
 };
 
 export const VALIDITY_STATUS_COLUMN = (t: (str: string) => string): ColDef => {
