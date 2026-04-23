@@ -54,7 +54,6 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMet
   const [selectedMetricDetails, setSelectedMetricDetails] = useState<Metric | undefined>();
 
   const [metricName, setMetricName] = useState<string | undefined>('');
-  const [metricDisplayName, setMetricDisplayName] = useState<string | undefined>('');
 
   const [configBindings, setConfigBindings] = useState<MetricBinding[]>([]);
   const [inputBindings, setInputBindings] = useState<MetricBinding[]>([]);
@@ -90,16 +89,14 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMet
   }, [editingMetric?.id, editingMetric?.metricDeclarationId, editingMetric?.name, selectedTestSuite?.id]);
 
   useEffect(() => {
-    setMetricName(selectedMetric?.name ?? editingMetric?.name ?? '');
-    setMetricDisplayName(selectedMetric?.displayName ?? editingMetric?.displayName ?? '');
-  }, [selectedMetric, editingMetric?.name, editingMetric?.displayName]);
+    setMetricName(selectedMetric?.displayName ?? editingMetric?.displayName ?? '');
+  }, [selectedMetric, editingMetric?.displayName]);
 
   const isStep1Valid = !!selectedMetricId;
   const isStep2Valid = isJsonView
     ? true
     : validateMetricBindings(
         metricName,
-        metricDisplayName,
         configBindings,
         inputBindings,
         selectedMetricDetails?.configSchema,
@@ -124,17 +121,9 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMet
 
   const onFinishClick = useCallback(() => {
     if (selectedMetricDetails) {
-      onConfirm(
-        generateMetricDefaultBindings(
-          metricName ?? '',
-          metricDisplayName ?? '',
-          selectedMetricDetails,
-          configBindings,
-          inputBindings,
-        ),
-      );
+      onConfirm(generateMetricDefaultBindings(metricName ?? '', selectedMetricDetails, configBindings, inputBindings));
     }
-  }, [configBindings, inputBindings, metricName, metricDisplayName, onConfirm, selectedMetricDetails]);
+  }, [configBindings, inputBindings, metricName, onConfirm, selectedMetricDetails]);
 
   useEffect(() => {
     if (!metrics) {
@@ -195,12 +184,10 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMet
           {currentStepId === MetricStep.Configuration && !isMetricDetailsLoading && (
             <MetricConfiguration
               metricName={metricName}
-              displayMetricName={metricDisplayName}
               selectedMetric={selectedMetric || editingMetric}
               configBindings={configBindings}
               inputBindings={inputBindings}
               onChangeName={setMetricName}
-              onChangeDisplayName={setMetricDisplayName}
               selectedTestSuite={selectedTestSuite}
               selectedMetricDetails={selectedMetricDetails}
               onChangeConfigBindings={setConfigBindings}

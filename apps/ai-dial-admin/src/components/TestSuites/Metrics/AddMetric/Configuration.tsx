@@ -19,13 +19,11 @@ import MetricSchemaSection from './Values/SchemaSection';
 interface Props {
   selectedTestSuite?: TestSuite;
   metricName?: string;
-  displayMetricName?: string;
   selectedMetric?: Metric;
   selectedMetricDetails?: Metric;
   inputBindings?: MetricBinding[];
   configBindings?: MetricBinding[];
   onChangeName?: (name: string | undefined) => void;
-  onChangeDisplayName?: (displayName: string | undefined) => void;
   onChangeConfigBindings?: (bindings: MetricBinding[]) => void;
   onChangeInputBindings?: (bindings: MetricBinding[]) => void;
   onJsonViewChange?: (isJsonView: boolean) => void;
@@ -39,7 +37,6 @@ interface MetricConfigurationData {
 
 const MetricConfiguration: FC<Props> = ({
   metricName,
-  displayMetricName,
   selectedMetric,
   onChangeConfigBindings,
   onChangeInputBindings,
@@ -150,12 +147,6 @@ const MetricConfiguration: FC<Props> = ({
         </div>
       ) : (
         <>
-          <DialInput
-            labelProps={{ label: t(EntityFieldsI18nKey.displayName), required: true }}
-            value={displayMetricName}
-            onChange={onChangeDisplayName}
-          />
-
           <DialInput
             labelProps={{ label: t(EntityFieldsI18nKey.name), required: true }}
             value={metricName}
