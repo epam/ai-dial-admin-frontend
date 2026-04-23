@@ -89,8 +89,8 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMet
   }, [editingMetric?.id, editingMetric?.metricDeclarationId, editingMetric?.name, selectedTestSuite?.id]);
 
   useEffect(() => {
-    setMetricName(selectedMetric?.name ?? editingMetric?.name ?? '');
-  }, [selectedMetric, editingMetric?.name]);
+    setMetricName(selectedMetric?.displayName ?? editingMetric?.displayName ?? '');
+  }, [selectedMetric, editingMetric?.displayName]);
 
   const isStep1Valid = !!selectedMetricId;
   const isStep2Valid = isJsonView

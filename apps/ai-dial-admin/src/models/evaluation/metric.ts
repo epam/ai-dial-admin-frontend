@@ -4,6 +4,7 @@ import { MetricBindingType } from '@/src/types/evaluation';
 export interface Metric {
   id?: string;
   name?: string;
+  displayName?: string;
   description?: string;
   createdAt?: string;
   providerId?: string;
