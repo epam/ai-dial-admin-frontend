@@ -14,6 +14,11 @@ import { useI18n } from '@/src/locales/client';
 import { ApplicationMCPConfigDelivery, ApplicationMCPContainer, DialApplication } from '@/src/models/dial/application';
 import { SOURCE_FIELD } from '@/src/components/SourceField/types';
 
+const MCP_CONFIG_DELIVERY_I18N_MAP: Record<ApplicationMCPConfigDelivery, EntityFieldsI18nKey> = {
+  [ApplicationMCPConfigDelivery.META]: EntityFieldsI18nKey.configDeliveryMeta,
+  [ApplicationMCPConfigDelivery.HEADER]: EntityFieldsI18nKey.configDeliveryHeader,
+};
+
 enum ApplicationEndpointCheckbox {
   CHAT_ENDPOINT = 'chat_endpoint',
   MCP_ENDPOINT = 'mcp_endpoint',
@@ -311,7 +316,7 @@ const ApplicationEndpoint: FC<Props> = ({ entity, onChange, isEntityImmutable, i
                 value={entity.mcp?.configDelivery}
                 options={Object.values(ApplicationMCPConfigDelivery).map((value) => ({
                   value,
-                  label: value,
+                  label: t(MCP_CONFIG_DELIVERY_I18N_MAP[value]),
                 }))}
                 containerClassName="max-w-[160px]"
                 label={t(EntityFieldsI18nKey.configDelivery)}

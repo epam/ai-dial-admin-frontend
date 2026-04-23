@@ -967,6 +967,8 @@ export default {
     endpoint: 'Endpoint',
     keyValue: 'Key value',
     configDelivery: 'Configuration delivery',
+    configDeliveryMeta: 'Meta',
+    configDeliveryHeader: 'Header',
     container: 'Container',
     authSettings: 'Authentication',
     authenticationType: 'Authentication type',

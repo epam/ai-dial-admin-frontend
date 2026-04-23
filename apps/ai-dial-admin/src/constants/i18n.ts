@@ -1109,6 +1109,8 @@ export enum EntityFieldsI18nKey {
   apiKeyHeader = 'EntityFields.apiKeyHeader',
   apiKeyValue = 'EntityFields.apiKeyValue',
   configDelivery = 'EntityFields.configDelivery',
+  configDeliveryMeta = 'EntityFields.configDeliveryMeta',
+  configDeliveryHeader = 'EntityFields.configDeliveryHeader',
   costLimit = 'EntityFields.costLimit',
   defaultRoleLimit = 'EntityFields.defaultRoleLimit',
   fieldsHashingOrder = 'EntityFields.fieldsHashingOrder',
