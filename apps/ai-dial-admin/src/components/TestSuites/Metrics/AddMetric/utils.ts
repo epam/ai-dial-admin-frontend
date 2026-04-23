@@ -6,12 +6,13 @@ import { MetricBindingType } from '@/src/types/evaluation';
 
 export const validateMetricBindings = (
   metricName: string | undefined,
+  metricDisplayName: string | undefined,
   configBindings: MetricBinding[],
   inputBindings: MetricBinding[],
   configSchema?: JSONSchema7,
   inputSchema?: JSONSchema7,
 ): boolean => {
-  if (!metricName?.trim()) {
+  if (!metricName?.trim() || !metricDisplayName?.trim()) {
     return false;
   }
 

@@ -19,11 +19,13 @@ import MetricSchemaSection from './Values/SchemaSection';
 interface Props {
   selectedTestSuite?: TestSuite;
   metricName?: string;
+  displayMetricName?: string;
   selectedMetric?: Metric;
   selectedMetricDetails?: Metric;
   inputBindings?: MetricBinding[];
   configBindings?: MetricBinding[];
   onChangeName?: (name: string | undefined) => void;
+  onChangeDisplayName?: (displayName: string | undefined) => void;
   onChangeConfigBindings?: (bindings: MetricBinding[]) => void;
   onChangeInputBindings?: (bindings: MetricBinding[]) => void;
   onJsonViewChange?: (isJsonView: boolean) => void;
@@ -37,6 +39,7 @@ interface MetricConfigurationData {
 
 const MetricConfiguration: FC<Props> = ({
   metricName,
+  displayMetricName,
   selectedMetric,
   onChangeConfigBindings,
   onChangeInputBindings,
@@ -45,6 +48,7 @@ const MetricConfiguration: FC<Props> = ({
   configBindings,
   onChangeName,
   selectedTestSuite,
+  onChangeDisplayName,
   onJsonViewChange,
 }) => {
   const t = useI18n();
@@ -109,7 +113,7 @@ const MetricConfiguration: FC<Props> = ({
     <div className={classnames('h-full flex flex-col gap-y-6', isJsonView ? 'w-full' : 'w-1/2')}>
       <div className="flex flex-col">
         <div className="flex flex-row justify-between items-start mb-4">
-          <p className="dial-small-semi">{selectedMetric?.name || selectedMetricDetails?.name}</p>
+          <p className="dial-small-semi">{selectedMetric?.displayName || selectedMetricDetails?.displayName}</p>
           <DialSelect
             prefix={`${t(CompareI18nKey.View)}: `}
             size={SelectSize.Sm}
@@ -148,6 +152,12 @@ const MetricConfiguration: FC<Props> = ({
         <>
           <DialInput
             labelProps={{ label: t(EntityFieldsI18nKey.displayName), required: true }}
+            value={displayMetricName}
+            onChange={onChangeDisplayName}
+          />
+
+          <DialInput
+            labelProps={{ label: t(EntityFieldsI18nKey.name), required: true }}
             value={metricName}
             onChange={onChangeName}
           />
