@@ -16,14 +16,12 @@ export const generateMetricDefaultInputBindings = (schema: JSONSchema7) => {
 
 export const generateMetricDefaultBindings = (
   name: string,
-  metricDisplayName: string,
   details: Metric,
   configBindings: MetricBinding[],
   inputBindings: MetricBinding[],
 ) => {
   return {
     name,
-    displayName: metricDisplayName,
     metricDeclarationId: details?.metricDeclarationId,
     metricDeclarationVersionId: details?.id,
     inputBindings:
