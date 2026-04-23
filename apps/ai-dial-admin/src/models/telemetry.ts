@@ -1,3 +1,6 @@
+import { SortModelItem } from 'ag-grid-community';
+
+import { TimeRange } from '@/src/models/time-range';
 import { FILTER_OPERATOR, FILTER_TYPE, FilterQuery } from '@/src/types/telemetry';
 
 export interface TelemetryData {
@@ -17,7 +20,28 @@ export interface TelemetryQuery {
       $and?: FilterQuery[];
     };
     orderBy?: Record<string, string>[];
+    limit?: number;
+    offset?: number;
   };
+}
+
+export interface AgGridTextFilter {
+  filterType: 'text';
+  type?: string;
+  filter?: string;
+}
+
+export type UsageLogFilterModel = Record<string, AgGridTextFilter>;
+export type UsageLogFilterClause = Record<string, { left: string; right: string | number }>;
+
+export interface BuildUsageLogQueryParams {
+  baseQuery: TelemetryQuery;
+  startRow: number;
+  pageSize: number;
+  sortModel: SortModelItem[];
+  filterModel: UsageLogFilterModel | null | undefined;
+  timeRange: TimeRange;
+  entityName: string | null;
 }
 
 export interface FilterData {
