@@ -1,4 +1,5 @@
 import {
+  buildUsageLogQuery,
   extractTelemetryMaxRangeMs,
   getListingData,
   getGridData,
@@ -10,10 +11,14 @@ import {
   getFormattedDataFilters,
   getFormattedFilters,
   getDefaultFilterValue,
+  translateUsageLogFilterModel,
+  translateUsageLogSortModel,
 } from '../telemetry';
 import { describe, test, vi, expect } from 'vitest';
 
 import { lineChartDefaultOptions } from '@/src/components/Charts/LineChart/constants';
+import { TRACES_QUERY } from '@/src/constants/telemetry';
+import { TimeRange } from '@/src/models/time-range';
 import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
 
 describe('Utils :: telemetry :: getListingData', () => {
@@ -261,8 +266,8 @@ const mockTimeRange = {
 describe('getFormattedFilters', () => {
   test('returns $and with time and data filters', () => {
     const filters = [
-      { type: 'entity', value: ['Entity1'], condition: 'eq' },
-      { type: 'project', value: ['Project1'], condition: 'neq' },
+      { type: FILTER_TYPE.Entity, value: ['Entity1'], condition: FILTER_OPERATOR.Equal },
+      { type: FILTER_TYPE.Project, value: ['Project1'], condition: FILTER_OPERATOR.NotEqual },
     ];
 
     const result = getFormattedFilters(mockTimeRange, filters, 'EntityName');
@@ -320,5 +325,226 @@ describe('Utils :: telemetry :: extractTelemetryMaxRangeMs', () => {
     expect(extractTelemetryMaxRangeMs({ success: true, response: undefined })).toBeUndefined();
     expect(extractTelemetryMaxRangeMs({ success: true, response: {} })).toBeUndefined();
     expect(extractTelemetryMaxRangeMs({ success: true, response: 'string' as any })).toBeUndefined();
+  });
+});
+
+describe('Utils :: telemetry :: translateUsageLogSortModel', () => {
+  test('falls back to default completion_time DESC when sort model is empty', () => {
+    expect(translateUsageLogSortModel([])).toEqual([{ $desc: '_time' }]);
+  });
+
+  test('translates descending sort on a bare column', () => {
+    expect(translateUsageLogSortModel([{ colId: 'model', sort: 'desc' }])).toEqual([{ $desc: 'model' }]);
+  });
+
+  test('translates ascending sort', () => {
+    expect(translateUsageLogSortModel([{ colId: 'price', sort: 'asc' }])).toEqual([{ $asc: 'price' }]);
+  });
+
+  test('maps completion_time alias to _time source column', () => {
+    expect(translateUsageLogSortModel([{ colId: 'completion_time', sort: 'asc' }])).toEqual([{ $asc: '_time' }]);
+  });
+
+  test('maps user_title alias to title source column', () => {
+    expect(translateUsageLogSortModel([{ colId: 'user_title', sort: 'desc' }])).toEqual([{ $desc: 'title' }]);
+  });
+
+  test('truncates to the first sort entry when grid reports multiple', () => {
+    expect(
+      translateUsageLogSortModel([
+        { colId: 'model', sort: 'desc' },
+        { colId: 'price', sort: 'asc' },
+      ]),
+    ).toEqual([{ $desc: 'model' }]);
+  });
+});
+
+describe('Utils :: telemetry :: translateUsageLogFilterModel', () => {
+  test('returns an empty list for null/undefined filter model', () => {
+    expect(translateUsageLogFilterModel(null)).toEqual([]);
+    expect(translateUsageLogFilterModel(undefined)).toEqual([]);
+  });
+
+  test('returns an empty list for empty filter model', () => {
+    expect(translateUsageLogFilterModel({})).toEqual([]);
+  });
+
+  test('translates text contains filter', () => {
+    expect(
+      translateUsageLogFilterModel({
+        model: { filterType: 'text', type: 'contains', filter: 'gpt-4' },
+      }),
+    ).toEqual([{ $contains: { left: 'model', right: "'gpt-4'" } }]);
+  });
+
+  test('translates every supported text operator', () => {
+    const cases: Array<[string, string]> = [
+      ['contains', '$contains'],
+      ['notContains', '$not_contains'],
+      ['equals', '$eq'],
+      ['notEqual', '$ne'],
+      ['startsWith', '$starts_with'],
+      ['endsWith', '$ends_with'],
+    ];
+    for (const [agType, beOp] of cases) {
+      expect(
+        translateUsageLogFilterModel({
+          deployment: { filterType: 'text', type: agType, filter: 'x' },
+        }),
+      ).toEqual([{ [beOp]: { left: 'deployment', right: "'x'" } }]);
+    }
+  });
+
+  test('skips text filters with empty or missing value', () => {
+    expect(
+      translateUsageLogFilterModel({
+        model: { filterType: 'text', type: 'contains', filter: '' },
+      }),
+    ).toEqual([]);
+    expect(
+      translateUsageLogFilterModel({
+        model: { filterType: 'text', type: 'contains' },
+      }),
+    ).toEqual([]);
+  });
+
+  test('skips filters with unsupported operator', () => {
+    expect(
+      translateUsageLogFilterModel({
+        model: { filterType: 'text', type: 'blank', filter: 'x' },
+      }),
+    ).toEqual([]);
+  });
+
+  test('coerces text filter on a numeric column to $eq with a parsed number', () => {
+    expect(
+      translateUsageLogFilterModel({
+        price: { filterType: 'text', type: 'contains', filter: '100' },
+      }),
+    ).toEqual([{ $eq: { left: 'price', right: 100 } }]);
+
+    expect(
+      translateUsageLogFilterModel({
+        prompt_tokens: { filterType: 'text', type: 'equals', filter: '42' },
+      }),
+    ).toEqual([{ $eq: { left: 'prompt_tokens', right: 42 } }]);
+  });
+
+  test('uses $ne for negating text operators on numeric columns', () => {
+    expect(
+      translateUsageLogFilterModel({
+        price: { filterType: 'text', type: 'notContains', filter: '100' },
+      }),
+    ).toEqual([{ $ne: { left: 'price', right: 100 } }]);
+
+    expect(
+      translateUsageLogFilterModel({
+        price: { filterType: 'text', type: 'notEqual', filter: '100' },
+      }),
+    ).toEqual([{ $ne: { left: 'price', right: 100 } }]);
+  });
+
+  test('skips numeric-column text filter when value is not a valid number', () => {
+    expect(
+      translateUsageLogFilterModel({
+        price: { filterType: 'text', type: 'contains', filter: 'abc' },
+      }),
+    ).toEqual([]);
+  });
+
+  test('numeric coercion accepts "0" — it is a legitimate filter value, not empty', () => {
+    expect(
+      translateUsageLogFilterModel({
+        prompt_tokens: { filterType: 'text', type: 'equals', filter: '0' },
+      }),
+    ).toEqual([{ $eq: { left: 'prompt_tokens', right: 0 } }]);
+  });
+});
+
+describe('Utils :: telemetry :: buildUsageLogQuery', () => {
+  const timeRange: TimeRange = {
+    startDate: new Date('2026-04-01T00:00:00.000Z'),
+    endDate: new Date('2026-04-02T00:00:00.000Z'),
+  };
+
+  test('always populates limit and offset', () => {
+    const result = buildUsageLogQuery({
+      baseQuery: TRACES_QUERY,
+      startRow: 200,
+      pageSize: 100,
+      sortModel: [],
+      filterModel: null,
+      timeRange,
+      entityName: null,
+    });
+
+    expect(result.query.limit).toBe(100);
+    expect(result.query.offset).toBe(200);
+  });
+
+  test('preserves baseQuery expressions and from without mutating the constant', () => {
+    const snapshot = JSON.parse(JSON.stringify(TRACES_QUERY));
+    const result = buildUsageLogQuery({
+      baseQuery: TRACES_QUERY,
+      startRow: 0,
+      pageSize: 100,
+      sortModel: [],
+      filterModel: null,
+      timeRange,
+      entityName: null,
+    });
+
+    expect(result.query.expressions).toEqual(TRACES_QUERY.query.expressions);
+    expect(result.query.from).toEqual(TRACES_QUERY.query.from);
+    expect(TRACES_QUERY).toEqual(snapshot);
+  });
+
+  test('composes time range, entity name, and grid filters inside where.$and', () => {
+    const result = buildUsageLogQuery({
+      baseQuery: TRACES_QUERY,
+      startRow: 0,
+      pageSize: 100,
+      sortModel: [],
+      filterModel: {
+        model: { filterType: 'text', type: 'contains', filter: 'gpt-4' },
+      },
+      timeRange,
+      entityName: 'my-entity',
+    });
+
+    expect(result.query.where?.$and).toEqual([
+      { $gte: { left: '_time', right: "'2026-04-01T00:00:00.000Z'" } },
+      { $lt: { left: '_time', right: "'2026-04-02T00:00:00.000Z'" } },
+      { $eq: { left: 'deployment', right: "'my-entity'" } },
+      { $contains: { left: 'model', right: "'gpt-4'" } },
+    ]);
+  });
+
+  test('uses grid sort model when present', () => {
+    const result = buildUsageLogQuery({
+      baseQuery: TRACES_QUERY,
+      startRow: 0,
+      pageSize: 100,
+      sortModel: [{ colId: 'model', sort: 'asc' }],
+      filterModel: null,
+      timeRange,
+      entityName: null,
+    });
+
+    expect(result.query.orderBy).toEqual([{ $asc: 'model' }]);
+  });
+
+  test('falls back to default sort when grid sort model is empty', () => {
+    const result = buildUsageLogQuery({
+      baseQuery: TRACES_QUERY,
+      startRow: 0,
+      pageSize: 100,
+      sortModel: [],
+      filterModel: null,
+      timeRange,
+      entityName: null,
+    });
+
+    expect(result.query.orderBy).toEqual([{ $desc: '_time' }]);
   });
 });
