@@ -22,9 +22,9 @@ vi.mock('@/src/components/Common/Search/Search', () => ({
 
 describe('MetricSelection', () => {
   const metrics: Metric[] = [
-    { id: 'metric-1', name: 'Alpha Metric', description: 'First metric' },
-    { id: 'metric-2', name: 'Beta Metric', description: 'Second metric' },
-    { id: 'metric-3', name: 'Gamma Metric', description: 'Third metric' },
+    { id: 'metric-1', name: 'Alpha Metric', displayName: 'Alpha Metric', description: 'First metric' },
+    { id: 'metric-2', name: 'Beta Metric', displayName: 'Beta Metric', description: 'Second metric' },
+    { id: 'metric-3', name: 'Gamma Metric', displayName: 'Gamma Metric', description: 'Third metric' },
   ];
 
   test('renders metrics heading', () => {
