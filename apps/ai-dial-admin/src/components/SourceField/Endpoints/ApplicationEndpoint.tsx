@@ -82,7 +82,7 @@ const ApplicationEndpoint: FC<Props> = ({ entity, onChange, isEntityImmutable, i
             ? entity?.responsesEndpoint
             : undefined,
           mcp: newCheckboxStates[ApplicationEndpointCheckbox.MCP_ENDPOINT]
-            ? { ...entity?.mcp, forwardPerRequestKey: true }
+            ? ({ ...entity?.mcp, forwardPerRequestKey: true } as ApplicationMCPContainer)
             : undefined,
         });
       }
