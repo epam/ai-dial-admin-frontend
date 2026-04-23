@@ -109,7 +109,7 @@ const MetricConfiguration: FC<Props> = ({
     <div className={classnames('h-full flex flex-col gap-y-6', isJsonView ? 'w-full' : 'w-1/2')}>
       <div className="flex flex-col">
         <div className="flex flex-row justify-between items-start mb-4">
-          <p className="dial-small-semi">{selectedMetric?.name || selectedMetricDetails?.name}</p>
+          <p className="dial-small-semi">{selectedMetric?.displayName || selectedMetricDetails?.displayName}</p>
           <DialSelect
             prefix={`${t(CompareI18nKey.View)}: `}
             size={SelectSize.Sm}
@@ -147,7 +147,7 @@ const MetricConfiguration: FC<Props> = ({
       ) : (
         <>
           <DialInput
-            labelProps={{ label: t(EntityFieldsI18nKey.displayName), required: true }}
+            labelProps={{ label: t(EntityFieldsI18nKey.name), required: true }}
             value={metricName}
             onChange={onChangeName}
           />
