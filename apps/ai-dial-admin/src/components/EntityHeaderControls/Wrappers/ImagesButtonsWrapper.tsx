@@ -36,10 +36,11 @@ import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models'
 import ImageDelete from '@/src/components/Deployments/Modals/ImageDelete';
 import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
 import { getVersionsPerName } from '@/src/components/Assets/utils';
+import { hasOnlyMetadataChanges } from '@/src/utils/deployments/images';
 
 export interface ImagesButtonsWrapperProps {
   image: Image;
-  originalImageName: string;
+  originalImage: Image;
   isChanged: boolean;
   children?: ReactNode;
   containerNames?: string[];
@@ -51,7 +52,7 @@ export interface ImagesButtonsWrapperProps {
 
 const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
   image,
-  originalImageName,
+  originalImage,
   isChanged,
   onDiscard,
   onSave,
@@ -82,11 +83,23 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
     return image.buildStatus !== IMAGE_STATUS.BUILT && image.buildStatus !== IMAGE_STATUS.BUILDING;
   }, [image.buildStatus]);
 
+  const isOnlyMetadataChange = useMemo(() => hasOnlyMetadataChanges(originalImage, image), [originalImage, image]);
+
+  const allowSave = useMemo(() => {
+    if (image.buildStatus === IMAGE_STATUS.BUILDING) {
+      return false;
+    }
+    if (image.buildStatus === IMAGE_STATUS.BUILT) {
+      return isOnlyMetadataChange;
+    }
+    return true;
+  }, [image.buildStatus, isOnlyMetadataChange]);
+
   const forceNewVersion = useMemo(() => {
-    const isNameChanged = (image.name ?? '').trim() !== (originalImageName ?? '').trim();
+    const isNameChanged = (image.name ?? '').trim() !== (originalImage.name ?? '').trim();
 
     return isNameChanged && versions.some((v: ImageVersion) => v.version === image.version);
-  }, [image.name, image.version, originalImageName, versions]);
+  }, [image.name, image.version, originalImage.name, versions]);
 
   const onOpenModal = useCallback((modalType: ModalType) => {
     setIsModalOpen(true);
@@ -195,7 +208,7 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
               disableSave={isDisableSave}
               onDiscard={onDiscard}
               onSave={onSave}
-              isSaveAllowed={allowEditing && !forceNewVersion}
+              isSaveAllowed={allowSave && !forceNewVersion}
             >
               <DialPrimaryButton
                 className={buttonsClassNames}

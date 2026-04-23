@@ -125,7 +125,7 @@ const ImageView: FC<Props> = ({ image, containerNames, versions }) => {
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <ImagesHeader
         tabs={tabs}
-        originalImageName={image.name || ''}
+        originalImage={image}
         activeTab={activeTab}
         onChangeActiveTab={setActiveTab}
         jsonConfiguration={jsonConfiguration}
