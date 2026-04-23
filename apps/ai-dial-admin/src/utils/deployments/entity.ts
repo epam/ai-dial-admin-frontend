@@ -11,6 +11,7 @@ import { ENTITY_TRANSPORT } from '@/src/constants/deployments/containers';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { IMAGE_TYPE } from '@/src/types/deployments/images';
 import { DialAdapter } from '@/src/models/dial/adapter';
+import { DialApplication } from '@/src/models/dial/application';
 import { ALLOW_ALL_DOMAINS } from '@/src/components/Deployments/Common/Whitelists/Whitelists';
 import { Image } from '@/src/models/deployments/images';
 import { WHITELIST_POLICY } from '@/src/types/deployments/entity';
@@ -24,6 +25,9 @@ export const getEntityRoute = (route: ApplicationRoute) => {
   }
   if (route === ApplicationRoute.AdapterContainers) {
     return ApplicationRoute.Adapters;
+  }
+  if (route === ApplicationRoute.ApplicationContainers) {
+    return ApplicationRoute.Applications;
   }
   return ApplicationRoute.Models;
 };
@@ -90,6 +94,9 @@ export const getTranslatedEntity = (route: ApplicationRoute, t: (key: string) =>
   if (route === ApplicationRoute.AdapterContainers) {
     return t(EntitiesI18nKey.Adapter);
   }
+  if (route === ApplicationRoute.ApplicationContainers) {
+    return t(EntitiesI18nKey.Application);
+  }
   return t(EntitiesI18nKey.Model);
 };
 
@@ -110,7 +117,20 @@ export const getEntityTemplate = (
   container: Container,
   t: (key: string, options?: Record<string, string | number>) => string,
   transport?: CONTAINER_TRANSPORT,
-): DialModel | Toolset | DialInterceptor => {
+): DialModel | Toolset | DialInterceptor | DialApplication => {
+  if (route === ApplicationRoute.ApplicationContainers) {
+    const appTemplate: DialApplication = {
+      name: getEntityId(container),
+      displayName: getEntityName(container),
+      description: '',
+      source: {
+        $type: SOURCE_TYPE.CONTAINER,
+        containerId: container.name,
+      },
+    };
+    return appTemplate;
+  }
+
   const template: DialModel | Toolset | DialInterceptor = {
     name: getEntityId(container),
     displayName: getEntityName(container),

@@ -1,6 +1,7 @@
 import { ApiRoute } from '@/src/constants/api-routes';
 
 export const ROOT_FOLDER = 'public';
+export const TEMP_FOLDER = '.dial_folder';
 export const FILE_DOWNLOAD = ApiRoute.FilesDownload;
 export const FILE_PREVIEW = ApiRoute.FilesPreview;
 export const PREVIEW_EXTENSIONS = [

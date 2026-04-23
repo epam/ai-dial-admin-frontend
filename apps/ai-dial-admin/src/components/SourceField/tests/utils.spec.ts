@@ -1,8 +1,14 @@
 import { describe, expect, test } from 'vitest';
-import { isValidSourceField } from '../utils';
+import { buildContainerSelection, isValidSourceField } from '../utils';
+
 import { SOURCE_TYPE } from '../types';
 import { Toolset } from '@/src/models/dial/toolset';
 import { DialApplication } from '@/src/models/dial/application';
+import { DialModel, DialModelType } from '@/src/models/dial/model';
+import { DialInterceptor } from '@/src/models/dial/interceptor';
+import { Container } from '@/src/models/deployments/containers';
+import { ApplicationRoute } from '@/src/types/routes';
+import { CONTAINER_STATUS, CONTAINER_SOURCE_TYPE, CONTAINER_TYPE } from '@/src/types/deployments/containers';
 
 describe('isValidSourceField', () => {
   describe('MCP_REGISTRY source type', () => {
@@ -116,5 +122,77 @@ describe('isValidSourceField', () => {
       });
       expect(isValidSourceField(app)).toBe(true);
     });
+  });
+});
+
+const makeContainer = (overrides: Partial<Container> = {}): Container => ({
+  name: 'app-container',
+  displayName: 'App Container',
+  $type: CONTAINER_TYPE.APPLICATION,
+  source: { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE },
+  status: CONTAINER_STATUS.RUNNING,
+  url: 'http://app-container.internal/',
+  metadata: { envs: [] },
+  ...overrides,
+});
+
+describe('buildContainerSelection', () => {
+  test('Applications: writes containerId, does not clear endpoint fields', () => {
+    const entity = {
+      name: 'app',
+      mcp: undefined,
+      source: { $type: SOURCE_TYPE.CONTAINER },
+    } as unknown as DialApplication;
+    const container = makeContainer();
+
+    const result = buildContainerSelection(ApplicationRoute.Applications, entity, 'app-container', container);
+
+    expect(result.source?.containerId).toBe('app-container');
+    expect('endpoint' in result).toBe(false);
+    expect('baseEndpoint' in result).toBe(false);
+  });
+
+  test('Applications: containerId is set even when container is not found', () => {
+    const entity = {
+      name: 'app',
+      mcp: undefined,
+      source: { $type: SOURCE_TYPE.CONTAINER },
+    } as unknown as DialApplication;
+
+    const result = buildContainerSelection(ApplicationRoute.Applications, entity, 'missing', undefined);
+
+    expect(result.source?.containerId).toBe('missing');
+  });
+
+  test('Models: writes containerId and completionEndpointPath, clears endpoint fields', () => {
+    const entity: DialModel = {
+      name: 'model',
+      type: DialModelType.Chat,
+      endpoint: 'https://old.example.com',
+      source: { $type: SOURCE_TYPE.CONTAINER },
+    } as unknown as DialModel;
+    const container = makeContainer({ $type: CONTAINER_TYPE.NIM });
+
+    const result = buildContainerSelection(ApplicationRoute.Models, entity, 'app-container', container) as DialModel;
+
+    expect(result.source?.containerId).toBe('app-container');
+    expect(result.source?.completionEndpointPath).toBeTruthy();
+    expect(result.endpoint).toBe('');
+    expect(result.baseEndpoint).toBe('');
+  });
+
+  test('default (Interceptors): writes containerId, clears endpoint, no completionEndpointPath', () => {
+    const entity = {
+      name: 'interceptor',
+      endpoint: 'https://old.example.com',
+      source: { $type: SOURCE_TYPE.CONTAINER },
+    } as unknown as DialInterceptor;
+    const container = makeContainer();
+
+    const result = buildContainerSelection(ApplicationRoute.Interceptors, entity, 'app-container', container);
+
+    expect(result.source?.containerId).toBe('app-container');
+    expect(result.source?.completionEndpointPath).toBeUndefined();
+    expect((result as DialInterceptor).endpoint).toBe('');
   });
 });

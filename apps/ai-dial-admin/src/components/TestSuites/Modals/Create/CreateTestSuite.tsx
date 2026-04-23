@@ -28,7 +28,7 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEnti
   const [testSuite, setTestSuite] = useState<TestSuite>(structuredClone(currentEntity) || ({} as TestSuite));
   const [steps, setSteps] = useState(TEST_SUIT_STEPS(t, !!currentEntity, testSuite.suiteType));
   const [currentStepId, setCurrentStep] = useState(steps[0].id);
-  const [selectedApplication, setSelectedApplication] = useState<Deployment | null>(null);
+  const [selectedTarget, setSelectedTarget] = useState<Deployment | null>(null);
 
   const isMcp = testSuite.suiteType === SuiteType.McpTool;
 
@@ -55,7 +55,7 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEnti
     setSteps(
       baseSteps.map((step) => {
         if (step.id === TestSuitTab.Target) {
-          return { ...step, status: selectedApplication ? StepStatus.VALID : void 0 };
+          return { ...step, status: selectedTarget ? StepStatus.VALID : void 0 };
         }
         if (step.id === TestSuitTab.Methods) {
           const methodValid = isMcp ? !!testSuite.toolRef : !!testSuite.endpointRef?.method;
@@ -65,7 +65,7 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEnti
       }),
     );
   }, [
-    selectedApplication,
+    selectedTarget,
     currentStepId,
     testSuite.endpointRef?.method,
     testSuite.toolRef,
@@ -94,9 +94,9 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEnti
 
           {currentStepId === TestSuitTab.Target && (
             <Target
-              selectedApplicationId={selectedApplication?.deploymentId}
+              selectedTargetId={selectedTarget?.deploymentId}
               suiteType={testSuite.suiteType}
-              onChangeApplication={setSelectedApplication}
+              onChangeTarget={setSelectedTarget}
               onChange={setTestSuite}
             />
           )}
@@ -110,7 +110,7 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEnti
               />
             ) : (
               <Methods
-                selectedApplication={selectedApplication}
+                selectedTarget={selectedTarget}
                 testSuite={testSuite}
                 onChange={setTestSuite}
                 isCreate={!currentEntity}
