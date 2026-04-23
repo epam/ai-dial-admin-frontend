@@ -35,24 +35,6 @@ describe('Applications schemes :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should transform uppercase config delivery to lowercase in getCoreRunner', async () => {
-    const mockResponse = {
-      success: true,
-      response: {
-        $id: 'test',
-        'dial:applicationTypeMcp': {
-          'dial:endpoint': 'http://example.com',
-          'dial:mcpConfigDelivery': 'HEADER',
-        },
-      },
-    };
-    (applicationRunnersApi.getCoreRunner as any).mockResolvedValue(mockResponse);
-
-    const result = await getCoreRunner('test');
-
-    expect(result.response?.['dial:applicationTypeMcp']?.['dial:mcpConfigDelivery']).toBe('header');
-  });
-
   test('Should call removeApplicationScheme action', async () => {
     (applicationRunnersApi.removeApplicationScheme as any).mockResolvedValue(RESPONSE_MOCK);
 
@@ -98,24 +80,6 @@ describe('Applications schemes :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should transform uppercase config delivery to lowercase in getApplicationScheme', async () => {
-    const mockResponse = {
-      success: true,
-      response: {
-        $id: 'test',
-        'dial:applicationTypeMcp': {
-          'dial:endpoint': 'http://example.com',
-          'dial:mcpConfigDelivery': 'META',
-        },
-      },
-    };
-    (applicationRunnersApi.getApplicationScheme as any).mockResolvedValue(mockResponse);
-
-    const result = await getApplicationScheme('test', 'etag');
-
-    expect(result.response?.['dial:applicationTypeMcp']?.['dial:mcpConfigDelivery']).toBe('meta');
-  });
-
   test('Should call getResolvedApplicationScheme action', async () => {
     (applicationRunnersApi.getResolvedApplicationScheme as any).mockResolvedValue(RESPONSE_MOCK);
 
@@ -123,24 +87,6 @@ describe('Applications schemes :: server actions', () => {
     expect(getUserToken).toHaveBeenCalled();
     expect(applicationRunnersApi.getResolvedApplicationScheme).toHaveBeenCalledWith('test', TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
-  });
-
-  test('Should transform uppercase config delivery to lowercase in getResolvedApplicationScheme', async () => {
-    const mockResponse = {
-      success: true,
-      response: {
-        $id: 'test',
-        'dial:applicationTypeMcp': {
-          'dial:endpoint': 'http://example.com',
-          'dial:mcpConfigDelivery': 'META',
-        },
-      },
-    };
-    (applicationRunnersApi.getResolvedApplicationScheme as any).mockResolvedValue(mockResponse);
-
-    const result = await getResolvedApplicationScheme('test');
-
-    expect(result.response?.['dial:applicationTypeMcp']?.['dial:mcpConfigDelivery']).toBe('meta');
   });
 
   describe('MCP Config Delivery Transformation', () => {
