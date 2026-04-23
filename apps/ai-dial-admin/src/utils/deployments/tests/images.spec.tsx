@@ -12,6 +12,7 @@ import {
   getUniqueImagesNames,
   getUniqueLatestImages,
   getVersionsList,
+  hasOnlyMetadataChanges,
   isImageNotInstalled,
   isValidVersion,
   setTransport,
@@ -379,6 +380,64 @@ describe('images utils', () => {
       const template = getImageTemplate(true);
       expect(template.source.$type).toBe(IMAGE_SOURCE_TYPE.CODE);
       expect(template.source.externalRegistryRef).toEqual({ $type: SOURCE_TYPE.MCP_REGISTRY, packageName: '' });
+    });
+  });
+
+  describe('hasOnlyMetadataChanges', () => {
+    const baseImage: Image = {
+      id: 'id-1',
+      $type: IMAGE_TYPE.MCP,
+      buildStatus: IMAGE_STATUS.BUILT,
+      name: 'img',
+      version: '1.0.0',
+      description: 'initial',
+      author: 'alice',
+      topics: ['a', 'b'],
+      source: { $type: IMAGE_SOURCE_TYPE.DOCKER, imageUri: 'img:1' },
+      transportType: IMAGE_TRANSPORT_TYPE.LOCAL,
+      allowedDomains: ['example.com'],
+    };
+
+    test('returns true when only description changed', () => {
+      expect(hasOnlyMetadataChanges(baseImage, { ...baseImage, description: 'new' })).toBe(true);
+    });
+
+    test('returns true when description and topics both changed', () => {
+      expect(hasOnlyMetadataChanges(baseImage, { ...baseImage, description: 'new', topics: ['x'] })).toBe(true);
+    });
+
+    test('returns false when transportType changed', () => {
+      expect(hasOnlyMetadataChanges(baseImage, { ...baseImage, transportType: IMAGE_TRANSPORT_TYPE.REMOTE })).toBe(
+        false,
+      );
+    });
+
+    test('returns false when allowedDomains changed', () => {
+      expect(hasOnlyMetadataChanges(baseImage, { ...baseImage, allowedDomains: ['example.com', 'other.com'] })).toBe(
+        false,
+      );
+    });
+
+    test('returns false when source changed', () => {
+      expect(
+        hasOnlyMetadataChanges(baseImage, {
+          ...baseImage,
+          source: { $type: IMAGE_SOURCE_TYPE.DOCKER, imageUri: 'img:2' },
+        }),
+      ).toBe(false);
+    });
+
+    test('returns true when topics reordered — topics is a whitelisted metadata field', () => {
+      expect(hasOnlyMetadataChanges(baseImage, { ...baseImage, topics: ['b', 'a'] })).toBe(true);
+    });
+
+    test('returns true when no fields changed', () => {
+      expect(hasOnlyMetadataChanges(baseImage, { ...baseImage })).toBe(true);
+    });
+
+    test('treats an author added on one side as a metadata-only change', () => {
+      const { author: __author, ...withoutAuthor } = baseImage;
+      expect(hasOnlyMetadataChanges(withoutAuthor as Image, baseImage)).toBe(true);
     });
   });
 });
