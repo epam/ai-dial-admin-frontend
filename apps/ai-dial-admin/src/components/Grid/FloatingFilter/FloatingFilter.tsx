@@ -1,18 +1,42 @@
-import React, { ChangeEvent } from 'react';
+import { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
 
 import { IconSearch } from '@tabler/icons-react';
 import { IFloatingFilterParams, IFloatingFilterParent } from 'ag-grid-community';
+import { debounce } from 'lodash';
 
 import { BasicI18nKey } from '@/src/constants/i18n';
+import { FLOATING_FILTER_DEBOUNCE_MS } from '@/src/constants/ag-grid';
 import { useI18n } from '@/src/locales/client';
 
 const FloatingFilter = (props: IFloatingFilterParams) => {
   const t = useI18n();
 
+  const parentValue = (props.currentParentModel()?.filter as string) ?? '';
+  const [value, setValue] = useState<string>(parentValue);
+
+  const parentFilterInstanceRef = useRef(props.parentFilterInstance);
+  parentFilterInstanceRef.current = props.parentFilterInstance;
+
+  const applyFilter = useMemo(
+    () =>
+      debounce((nextValue: string) => {
+        parentFilterInstanceRef.current((instance: IFloatingFilterParent) => {
+          instance.onFloatingFilterChanged('contains', nextValue);
+        });
+      }, FLOATING_FILTER_DEBOUNCE_MS),
+    [],
+  );
+
+  useEffect(() => () => applyFilter.cancel(), [applyFilter]);
+
+  useEffect(() => {
+    setValue(parentValue);
+  }, [parentValue]);
+
   const onInputChanged = (e: ChangeEvent<HTMLInputElement>) => {
-    props.parentFilterInstance((instance: IFloatingFilterParent) => {
-      instance.onFloatingFilterChanged('contains', e.target.value);
-    });
+    const nextValue = e.target.value;
+    setValue(nextValue);
+    applyFilter(nextValue);
   };
 
   return (
@@ -21,7 +45,7 @@ const FloatingFilter = (props: IFloatingFilterParams) => {
       <input
         type="text"
         className="w-full border-0 dial-tiny dial-input px-3 py-2"
-        value={props.currentParentModel()?.filter || ''}
+        value={value}
         onChange={onInputChanged}
         placeholder={t(BasicI18nKey.Search)}
       />

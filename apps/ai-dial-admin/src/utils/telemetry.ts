@@ -1,4 +1,5 @@
 import { SelectOption } from '@epam/ai-dial-ui-kit';
+import { SortModelItem } from 'ag-grid-community';
 import { Big } from 'big.js';
 import { EChartsOption } from 'echarts-for-react/src/types';
 
@@ -11,9 +12,22 @@ import {
   mcpFilterTypeConfig,
   TELEMETRY_DATASET_NAME,
   TELEMETRY_GRID_HEADERS_MAP,
+  USAGE_LOG_COLUMN_ID_TO_SOURCE,
+  USAGE_LOG_DEFAULT_ORDER_BY,
+  USAGE_LOG_TEXT_OPERATOR_MAP,
 } from '@/src/constants/telemetry';
+import { USAGE_LOG_NUMERIC_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { DatasetMetadata, FilterData, TelemetryData } from '@/src/models/telemetry';
+import {
+  AgGridTextFilter,
+  BuildUsageLogQueryParams,
+  DatasetMetadata,
+  FilterData,
+  TelemetryData,
+  TelemetryQuery,
+  UsageLogFilterClause,
+  UsageLogFilterModel,
+} from '@/src/models/telemetry';
 import { TimeRange } from '@/src/models/time-range';
 import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
 
@@ -203,3 +217,70 @@ export function extractTelemetryMaxRangeMs(res: ServerActionResponse): number | 
   const dataset = (res.response as DatasetMetadata[]).find((d) => d.name === TELEMETRY_DATASET_NAME);
   return dataset?.maxTimeRangeMs ?? undefined;
 }
+
+const toUsageLogSourceColumn = (colId: string): string => USAGE_LOG_COLUMN_ID_TO_SOURCE[colId] ?? colId;
+
+const NEGATING_TEXT_OPERATORS = new Set(['$ne', '$not_contains']);
+
+const translateUsageLogTextFilter = (colId: string, filter: AgGridTextFilter): UsageLogFilterClause | null => {
+  const operator = filter.type ? USAGE_LOG_TEXT_OPERATOR_MAP[filter.type] : undefined;
+  if (!operator || filter.filter == null || filter.filter === '') {
+    return null;
+  }
+  const column = toUsageLogSourceColumn(colId);
+  if (USAGE_LOG_NUMERIC_COLUMNS.has(column)) {
+    const asNumber = Number(filter.filter);
+    if (Number.isNaN(asNumber)) {
+      return null;
+    }
+    const numericOperator = NEGATING_TEXT_OPERATORS.has(operator) ? '$ne' : '$eq';
+    return { [numericOperator]: { left: column, right: asNumber } };
+  }
+  return { [operator]: { left: column, right: `'${filter.filter}'` } };
+};
+
+export const translateUsageLogFilterModel = (
+  filterModel: UsageLogFilterModel | null | undefined,
+): UsageLogFilterClause[] => {
+  if (!filterModel) {
+    return [];
+  }
+  return Object.entries(filterModel).flatMap(([colId, filter]) => {
+    const clause = translateUsageLogTextFilter(colId, filter);
+    return clause == null ? [] : [clause];
+  });
+};
+
+export const translateUsageLogSortModel = (sortModel: SortModelItem[]): Record<string, string>[] => {
+  const [first] = sortModel;
+  if (!first) {
+    return USAGE_LOG_DEFAULT_ORDER_BY;
+  }
+  return [{ [first.sort === 'desc' ? '$desc' : '$asc']: toUsageLogSourceColumn(first.colId) }];
+};
+
+export const buildUsageLogQuery = ({
+  baseQuery,
+  startRow,
+  pageSize,
+  sortModel,
+  filterModel,
+  timeRange,
+  entityName,
+}: BuildUsageLogQueryParams): TelemetryQuery => {
+  const baseFilters = getFormattedFilters(timeRange, [], entityName);
+  const gridFilters = translateUsageLogFilterModel(filterModel);
+
+  return {
+    ...baseQuery,
+    query: {
+      ...baseQuery.query,
+      where: {
+        $and: [...(baseFilters.$and ?? []), ...gridFilters],
+      },
+      orderBy: translateUsageLogSortModel(sortModel),
+      limit: pageSize,
+      offset: startRow,
+    },
+  };
+};

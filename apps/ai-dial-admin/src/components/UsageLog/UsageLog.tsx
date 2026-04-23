@@ -4,6 +4,7 @@ import { FC, useCallback, useMemo, useRef, useState } from 'react';
 
 import { DialNeutralButton, DialTabs } from '@epam/ai-dial-ui-kit';
 import { IconRefresh } from '@tabler/icons-react';
+import { GridApi, GridReadyEvent } from 'ag-grid-community';
 import classNames from 'classnames';
 
 import { getDashboardData } from '@/src/app/[lang]/dashboard/actions';
@@ -28,7 +29,6 @@ import { TimeFilterValue } from '@/src/models/time-range';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab, getUsageLogTabs } from '@/src/utils/tabs/utils';
 import { isToolsetRoute } from '@/src/utils/is-view';
-import { getFormattedFilters } from '@/src/utils/telemetry';
 
 interface Props {
   route: ApplicationRoute;
@@ -44,6 +44,7 @@ const UsageLog: FC<Props> = ({ route, className, entity, entityView, onTimeFilte
   const { telemetryMaxRangeMs } = useAppContext();
   const tabs = getUsageLogTabs(t);
   const getReqRef = useRef(useProtectedRequest());
+  const gridApiRef = useRef<GridApi | null>(null);
 
   const [activeTab, setActiveTab] = useState(entityView || EntityViewTab.Traces);
   const { timePeriod, timeRange, isCustom, onTimePeriodChange, onTimeRangeChange } = useTimeFilter({
@@ -59,22 +60,18 @@ const UsageLog: FC<Props> = ({ route, className, entity, entityView, onTimeFilte
     return entity?.name || null;
   }, [route, entity]);
 
-  const getData = useCallback(
-    (query: TelemetryQuery) => {
-      if (typeof query.query.from === 'string') {
-        query.query.where = getFormattedFilters(timeRange, [], entityFilterName);
-      } else {
-        query.query.from.where = getFormattedFilters(timeRange, [], entityFilterName);
-      }
+  const getData = useCallback((query: TelemetryQuery) => {
+    return getReqRef.current(getDashboardData, query);
+  }, []);
 
-      return getReqRef.current(getDashboardData, query);
-    },
-    [entityFilterName, timeRange],
-  );
+  const onGridReady = useCallback((event: GridReadyEvent) => {
+    gridApiRef.current = event.api;
+  }, []);
 
   const onChangeActiveTab = useCallback(
     (tab: string) => {
       if (tab !== activeTab) {
+        gridApiRef.current = null;
         setActiveTab(tab as EntityViewTab);
       }
     },
@@ -85,6 +82,7 @@ const UsageLog: FC<Props> = ({ route, className, entity, entityView, onTimeFilte
     if (!isCustom && timePeriod) {
       onTimePeriodChange(timePeriod);
     }
+    gridApiRef.current?.purgeInfiniteCache();
   }, [timePeriod, isCustom, onTimePeriodChange]);
 
   return (
@@ -119,6 +117,9 @@ const UsageLog: FC<Props> = ({ route, className, entity, entityView, onTimeFilte
             query={isToolsetRoute(route) ? MCP_QUERY : TRACES_QUERY}
             listLabel={t(TabsI18nKey.Traces)}
             emptyDataTitle={t(TelemetryI18nKey.NoTracesTitle)}
+            timeRange={timeRange}
+            entityName={entityFilterName}
+            onGridReady={onGridReady}
           />
         )}
         {activeTab === EntityViewTab.Conversations && (
@@ -129,6 +130,9 @@ const UsageLog: FC<Props> = ({ route, className, entity, entityView, onTimeFilte
             getData={getData}
             columnDefs={USAGE_LOG_CONVERSATIONS_COLUMNS}
             query={CONVERSATIONS_QUERY}
+            timeRange={timeRange}
+            entityName={entityFilterName}
+            onGridReady={onGridReady}
           />
         )}
         {activeTab === EntityViewTab.MCP && (
@@ -139,6 +143,9 @@ const UsageLog: FC<Props> = ({ route, className, entity, entityView, onTimeFilte
             getData={getData}
             columnDefs={USAGE_LOG_MCP_COLUMNS}
             query={MCP_QUERY}
+            timeRange={timeRange}
+            entityName={entityFilterName}
+            onGridReady={onGridReady}
           />
         )}
       </div>

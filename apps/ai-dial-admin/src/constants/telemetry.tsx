@@ -185,7 +185,6 @@ export const TRACES_QUERY: TelemetryQuery = {
       //'cached_prompt_tokens',
     ],
     from: 'analytics',
-    orderBy: [{ $desc: '_time' }],
   },
 };
 
@@ -201,7 +200,6 @@ export const MCP_QUERY: TelemetryQuery = {
       'trace_id',
     ],
     from: 'mcp_analytics',
-    orderBy: [{ $desc: '_time' }],
   },
 };
 
@@ -338,4 +336,20 @@ export const TELEMETRY_GRID_HEADERS_MAP: Record<string, string> = {
   parent_deployment: 'parent_deployment',
   tool_calls: 'tool_calls',
   mcp_calls: 'mcp_calls',
+};
+
+export const USAGE_LOG_COLUMN_ID_TO_SOURCE: Record<string, string> = {
+  completion_time: '_time',
+  user_title: 'title',
+};
+
+export const USAGE_LOG_DEFAULT_ORDER_BY: Record<string, string>[] = [{ $desc: '_time' }];
+
+export const USAGE_LOG_TEXT_OPERATOR_MAP: Record<string, string> = {
+  contains: '$contains',
+  notContains: '$not_contains',
+  equals: '$eq',
+  notEqual: '$ne',
+  startsWith: '$starts_with',
+  endsWith: '$ends_with',
 };

@@ -8,6 +8,7 @@ import { DiffStatus } from '@/src/types/activity-audit';
 
 export const PAGE_SIZE = 100;
 export const CACHE_LIMIT = 1000;
+export const FLOATING_FILTER_DEBOUNCE_MS = 400;
 
 export const infiniteGridOptions: Partial<GridOptions> = {
   rowModelType: 'infinite',
