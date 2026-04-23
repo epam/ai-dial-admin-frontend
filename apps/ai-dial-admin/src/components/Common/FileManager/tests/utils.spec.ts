@@ -1,26 +1,27 @@
+import { TEMP_FOLDER } from '@/src/constants/file';
+import { FileManagerI18nKey } from '@/src/constants/i18n';
+import { Asset } from '@/src/models/dial/deployment-asset';
+import { DialFile, DialFileNodeType } from '@epam/ai-dial-ui-kit';
 import { describe, expect, test, vi } from 'vitest';
+import { CREATE_FOLDER_FORBIDDEN_CHARS, FILE_NAME_MAX_LENGTH } from '../constants';
 import {
   createEmptyFile,
-  getEmptyFile,
-  validateCreateFolder,
   findFolderByPath,
-  getUniqueFolderName,
+  getEmptyFile,
   getNewFolderPath,
+  getUniqueFolderName,
+  validateCreateFolder,
 } from '../utils';
-import { CREATE_FOLDER_FORBIDDEN_CHARS, FILE_NAME_MAX_LENGTH } from '../constants';
-import { FileManagerI18nKey } from '@/src/constants/i18n';
-import { DialFile, DialFileNodeType } from '@epam/ai-dial-ui-kit';
-import { Asset } from '@/src/models/dial/deployment-asset';
 
 describe('FileManager', () => {
   describe('createEmptyFile', () => {
     test('should create an empty file with correct properties', () => {
       const { emptyFile, fileName, fileType } = createEmptyFile();
 
-      expect(fileName).toBe('.dial_folder');
+      expect(fileName).toBe(TEMP_FOLDER);
       expect(fileType).toBe('text/plain');
       expect(emptyFile).toBeInstanceOf(File);
-      expect(emptyFile.name).toBe('.dial_folder');
+      expect(emptyFile.name).toBe(TEMP_FOLDER);
       expect(emptyFile.type).toBe('text/plain');
       expect(emptyFile.size).toBeGreaterThan(0);
     });
@@ -32,7 +33,7 @@ describe('FileManager', () => {
 
       expect(uploadFileItem).toHaveProperty('fileContent');
       expect(uploadFileItem).toHaveProperty('name');
-      expect(uploadFileItem.name).toBe('.dial_folder');
+      expect(uploadFileItem.name).toBe(TEMP_FOLDER);
       expect(uploadFileItem.fileContent).toBeInstanceOf(File);
     });
 
@@ -234,7 +235,7 @@ describe('getUniqueFolderName', () => {
 describe('getNewFolderPath', () => {
   const rootChildren: DialFile[] = [
     createFolder('public/yo/', 'yo', [
-      createItem('public/yo/.dial_folder', '.dial_folder', 'public/yo/'),
+      createItem('public/yo/.dial_folder', TEMP_FOLDER, 'public/yo/'),
       createFolder('public/yo/New Folder/', 'New Folder'),
     ]),
     createFolder('public/other/', 'other', [

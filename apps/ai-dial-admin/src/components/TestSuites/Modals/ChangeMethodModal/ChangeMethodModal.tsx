@@ -60,7 +60,7 @@ const ChangeMethodModal: FC<ChangeMethodModalProps> = ({
       className="h-[800px]"
     >
       <div className="size-full flex flex-col gap-4 px-6 py-4">
-        <Methods selectedApplication={selectedApplication} testSuite={currentSuite} onChange={setCurrentSuite}>
+        <Methods selectedTarget={selectedApplication} testSuite={currentSuite} onChange={setCurrentSuite}>
           <DialAlert message={t(TestSuitesI18nKey.MethodChangeWarning)} variant={AlertVariant.Warning} />
         </Methods>
       </div>

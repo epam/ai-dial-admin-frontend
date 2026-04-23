@@ -3,7 +3,7 @@
 import { FC, useEffect, useState } from 'react';
 
 import { getDeploymentTools } from '@/src/app/[lang]/test-suites/actions';
-import RadioSelectGrid from '@/src/components/TestSuites/Modals/Create/RadioSelectGrid';
+import RadioSelectGrid from '@/src/components/Grid/GridView/RadioSelectGrid';
 import { MCP_TOOLS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -17,32 +17,32 @@ interface Props {
 
 const McpTool: FC<Props> = ({ deploymentId, initialToolName, onSelect }) => {
   const t = useI18n();
+  const [isLoading, setIsLoading] = useState(false);
   const [tools, setTools] = useState<ToolDefinition[] | null>(null);
-  const [error, setError] = useState(false);
 
   useEffect(() => {
     setTools(null);
-    setError(false);
+    setIsLoading(true);
+
     getDeploymentTools(deploymentId).then((res) => {
       if (res) {
         setTools(res);
       } else {
-        setError(true);
         setTools([]);
       }
+      setIsLoading(false);
     });
   }, [deploymentId]);
 
   return (
     <RadioSelectGrid
-      data={tools}
+      isLoading={isLoading}
       columnDefs={MCP_TOOLS_COLUMNS}
+      data={tools}
       idField="name"
-      initialSelectedId={initialToolName}
-      emptyTitle={t(TestSuitesI18nKey.NoToolsAvailable)}
-      errorTitle={t(TestSuitesI18nKey.FailedToLoadTools)}
-      hasError={error}
       onSelect={onSelect}
+      selectedId={initialToolName}
+      emptyTitle={t(TestSuitesI18nKey.NoToolsAvailable)}
     />
   );
 };
