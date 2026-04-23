@@ -200,6 +200,7 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMet
               configBindings={configBindings}
               inputBindings={inputBindings}
               onChangeName={setMetricName}
+              onChangeDisplayName={setMetricDisplayName}
               selectedTestSuite={selectedTestSuite}
               selectedMetricDetails={selectedMetricDetails}
               onChangeConfigBindings={setConfigBindings}
