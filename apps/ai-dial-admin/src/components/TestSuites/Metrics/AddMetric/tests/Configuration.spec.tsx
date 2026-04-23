@@ -61,6 +61,7 @@ describe('MetricConfiguration', () => {
   const selectedMetricDetails: Metric = {
     id: 'metric-1',
     name: 'Details Name',
+    displayName: 'Details Name',
     description: 'Details Description',
     configSchema: {
       type: 'object',
