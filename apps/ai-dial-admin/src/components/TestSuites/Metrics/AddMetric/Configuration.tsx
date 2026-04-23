@@ -45,7 +45,6 @@ const MetricConfiguration: FC<Props> = ({
   configBindings,
   onChangeName,
   selectedTestSuite,
-  onChangeDisplayName,
   onJsonViewChange,
 }) => {
   const t = useI18n();
