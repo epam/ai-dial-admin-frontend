@@ -88,6 +88,6 @@ export interface ApplicationMCPContainer {
 }
 
 export enum ApplicationMCPConfigDelivery {
-  META = 'META',
-  HEADER = 'HEADER',
+  META = 'meta',
+  HEADER = 'header',
 }
