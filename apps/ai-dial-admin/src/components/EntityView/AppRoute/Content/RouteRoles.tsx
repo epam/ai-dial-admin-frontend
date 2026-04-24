@@ -23,12 +23,12 @@ interface Props {
   parentRoles?: string[];
   roles: DialRole[];
   disabled?: boolean;
-  iAppRunnerView?: boolean;
+  isAppRunnerView?: boolean;
   route: DialAppRoute;
   onChangeRoute: (route: DialAppRoute) => void;
 }
 
-const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, disabled, onChangeRoute, roles }) => {
+const RouteRoles: FC<Props> = ({ route, isAppRunnerView, parentRoles, disabled, onChangeRoute, roles }) => {
   const t = useI18n();
 
   const data = useMemo(() => {
@@ -125,7 +125,7 @@ const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, disabled, o
           <div className="h-full">
             {data.length > 0 ? (
               <GridView columnDefs={columns} rowData={data} />
-            ) : iAppRunnerView && route.isPublic ? (
+            ) : isAppRunnerView && route.isPublic ? (
               <DialNoDataContent
                 icon={<IconReplace size={60} stroke={0.5} />}
                 title={t(RoutesI18nKey.InheritRolesWarning)}
