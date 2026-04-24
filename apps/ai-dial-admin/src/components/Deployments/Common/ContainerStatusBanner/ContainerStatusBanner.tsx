@@ -56,15 +56,15 @@ const ContainerStatusBanner = ({ view, containerId }: Props) => {
 
   return (
     <DialAlert
-      className="mt-4"
+      className="mb-6"
       variant={AlertVariant.Warning}
       message={
-        <div className="flex flex-col gap-1">
-          <h3>{t(ContainersI18nKey.ContainerNotRunningTitle, { type, typeLower: type.toLowerCase() })}</h3>
-          <span className="text-sm">
-            {t(ContainersI18nKey.ContainerNotRunningDescription, { typeLower: type.toLowerCase() })}
-          </span>
-        </div>
+        <span className="small">
+          <span className="small-text-semi">
+            {t(ContainersI18nKey.ContainerNotRunningTitle, { type, typeLower: type.toLowerCase() })}
+          </span>{' '}
+          {t(ContainersI18nKey.ContainerNotRunningDescription, { typeLower: type.toLowerCase() })}
+        </span>
       }
     >
       <DialNeutralButton
