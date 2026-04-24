@@ -1,9 +1,11 @@
 import { notFound } from 'next/navigation';
 
 import { getApplicationContainers, getContainer, getImage } from '@/src/app/actions/deployments';
+import { createApplication, getApplications } from '@/src/app/[lang]/applications/actions';
 import ContainerView from '@/src/components/Containers/View/ContainerView';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { Container } from '@/src/models/deployments/containers';
+import { DialApplication } from '@/src/models/dial/application';
 import { Image } from '@/src/models/deployments/images';
 import { errorObjLog } from '@/src/server/logger';
 import { CONTAINER_SOURCE_TYPE } from '@/src/types/deployments/containers';
@@ -21,6 +23,7 @@ export default async function Page(params: Params) {
   let container: Container | null = null;
   let containers: Container[] | null = null;
   let image: Image | null = null;
+  let applications: DialApplication[] | null = null;
 
   try {
     const containerResponse = await getContainer((await params.params).id);
@@ -39,6 +42,11 @@ export default async function Page(params: Params) {
       }
       image = imageResponse.response as Image;
     }
+
+    const applicationsResponse = await getApplications();
+    if (applicationsResponse.success) {
+      applications = applicationsResponse.response as DialApplication[];
+    }
   } catch (e) {
     errorObjLog(e, 'Failed to fetch application container page');
   }
@@ -55,6 +63,8 @@ export default async function Page(params: Params) {
         image={image ?? void 0}
         route={ApplicationRoute.ApplicationContainers}
         names={containers?.map((container) => container.name as string).filter((name) => name !== container.name) || []}
+        createEntity={createApplication}
+        entityNames={applications?.map((app) => app.name as string) || []}
       />
     </SaveValidationContextProvider>
   );

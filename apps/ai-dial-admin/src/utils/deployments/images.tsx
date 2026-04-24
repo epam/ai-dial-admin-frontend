@@ -1,4 +1,5 @@
 import { SelectOption } from '@epam/ai-dial-ui-kit';
+import { isEqual } from 'lodash';
 import { STATUS_CLASSNAMES } from '@/src/constants/deployments/images';
 import {
   IMAGE_BUILDER_TYPE,
@@ -11,6 +12,20 @@ import { CONTAINER_STATUS, CONTAINER_TYPE } from '@/src/types/deployments/contai
 import { ApplicationRoute } from '@/src/types/routes';
 import { Image, ImageGroup, ImageSource, ImageVersion } from '@/src/models/deployments/images';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
+
+export const METADATA_ONLY_IMAGE_FIELDS: readonly (keyof Image)[] = ['description', 'author', 'topics'] as const;
+
+export const hasOnlyMetadataChanges = (original: Image, edited: Image): boolean => {
+  const keys = new Set<keyof Image>([
+    ...(Object.keys(original) as (keyof Image)[]),
+    ...(Object.keys(edited) as (keyof Image)[]),
+  ]);
+  for (const key of keys) {
+    if (METADATA_ONLY_IMAGE_FIELDS.includes(key)) continue;
+    if (!isEqual(original[key], edited[key])) return false;
+  }
+  return true;
+};
 
 import StatusIcon from '@/src/components/Deployments/Common/StatusIndicator/StatusIcon';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';

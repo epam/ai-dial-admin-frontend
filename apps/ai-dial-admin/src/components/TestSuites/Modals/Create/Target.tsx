@@ -5,28 +5,28 @@ import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState
 import { DialTabs } from '@epam/ai-dial-ui-kit';
 
 import { getDeployments } from '@/src/app/[lang]/test-suites/actions';
-import McpTargets from '@/src/components/TestSuites/Modals/Create/McpTargets';
-import RadioSelectGrid from '@/src/components/TestSuites/Modals/Create/RadioSelectGrid';
-import { EVALUATION_DEPLOYMENTS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { TEMP_FOLDER } from '@/src/constants/file';
+import { EVALUATION_DEPLOYMENTS_COLUMNS, MCP_DEPLOYMENTS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Deployment, DeploymentType } from '@/src/models/evaluation/deployment';
 import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
+import RadioSelectGrid from '@/src/components/Grid/GridView/RadioSelectGrid';
 import { TargetTab } from './types';
 import { buildDeploymentUpdate, buildMcpDeploymentUpdate, getInitialTab } from './utils';
 
 interface Props {
-  selectedApplicationId?: string;
+  selectedTargetId?: string;
   suiteType?: SuiteType;
-  onChangeApplication: (deployment: Deployment) => void;
+  onChangeTarget: (deployment: Deployment) => void;
   onChange: Dispatch<SetStateAction<TestSuite>>;
 }
 
-const Target: FC<Props> = ({ selectedApplicationId, suiteType, onChangeApplication, onChange }) => {
+const Target: FC<Props> = ({ selectedTargetId, suiteType, onChangeTarget, onChange }) => {
   const t = useI18n();
+  const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<string>(getInitialTab(suiteType));
-  const [applications, setApplications] = useState<Deployment[] | null>(null);
-  const [models, setModels] = useState<Deployment[] | null>(null);
+  const [deployments, setDeployments] = useState<Deployment[] | null>(null);
 
   const tabs = useMemo(
     () => [
@@ -37,42 +37,35 @@ const Target: FC<Props> = ({ selectedApplicationId, suiteType, onChangeApplicati
     [t],
   );
 
+  const onSelect = useCallback(
+    (data: Deployment) => {
+      onChangeTarget(data);
+      onChange((prev: TestSuite) => ({
+        ...prev,
+        ...(activeTab === TargetTab.Mcp ? buildMcpDeploymentUpdate(data) : buildDeploymentUpdate(data)),
+      }));
+    },
+    [onChangeTarget, onChange, activeTab],
+  );
+
   useEffect(() => {
-    if (activeTab === TargetTab.Applications && applications == null) {
-      getDeployments(DeploymentType.Application).then((res) => {
-        if (res?.success) {
-          setApplications(res.response || []);
-        }
-      });
-    }
-    if (activeTab === TargetTab.Models && models == null) {
-      getDeployments(DeploymentType.Model).then((res) => {
-        if (res?.success) {
-          setModels(res.response || []);
-        }
-      });
-    }
-  }, [activeTab, applications, models]);
+    setDeployments([]);
+    const type =
+      activeTab === TargetTab.Applications
+        ? DeploymentType.Application
+        : activeTab === TargetTab.Models
+          ? DeploymentType.Model
+          : void 0;
 
-  const deployments = activeTab === TargetTab.Models ? models : applications;
+    setIsLoading(true);
 
-  const onDeploymentSelect = useCallback(
-    (deployment: Deployment) => {
-      onChangeApplication(deployment);
-      onChange((prev: TestSuite) => ({ ...prev, ...buildDeploymentUpdate(deployment) }));
-    },
-    [onChangeApplication, onChange],
-  );
-
-  const onMcpSelect = useCallback(
-    (deployment: Deployment) => {
-      onChangeApplication(deployment);
-      onChange((prev: TestSuite) => ({ ...prev, ...buildMcpDeploymentUpdate(deployment) }));
-    },
-    [onChangeApplication, onChange],
-  );
-
-  const isDeploymentTab = activeTab === TargetTab.Applications || activeTab === TargetTab.Models;
+    getDeployments(type, activeTab === TargetTab.Mcp ? 'mcp' : void 0).then((res) => {
+      if (res?.success) {
+        setDeployments(res.response?.filter((res) => res.displayName !== TEMP_FOLDER) || []);
+      }
+      setIsLoading(false);
+    });
+  }, [activeTab]);
 
   return (
     <div className="size-full flex flex-col">
@@ -83,20 +76,15 @@ const Target: FC<Props> = ({ selectedApplicationId, suiteType, onChangeApplicati
       </div>
 
       <div className="flex-1 min-h-0">
-        {isDeploymentTab && (
-          <RadioSelectGrid
-            data={deployments}
-            columnDefs={EVALUATION_DEPLOYMENTS_COLUMNS}
-            idField="deploymentId"
-            initialSelectedId={selectedApplicationId}
-            emptyTitle={t(EntitiesI18nKey.NoApplications)}
-            onSelect={onDeploymentSelect}
-          />
-        )}
-
-        {activeTab === TargetTab.Mcp && (
-          <McpTargets initialDeploymentId={selectedApplicationId} onSelect={onMcpSelect} />
-        )}
+        <RadioSelectGrid
+          isLoading={isLoading}
+          columnDefs={activeTab === TargetTab.Mcp ? MCP_DEPLOYMENTS_COLUMNS : EVALUATION_DEPLOYMENTS_COLUMNS}
+          data={deployments}
+          idField="deploymentId"
+          onSelect={onSelect}
+          selectedId={selectedTargetId}
+          emptyTitle={t(EntitiesI18nKey.NoApplications)}
+        />
       </div>
     </div>
   );

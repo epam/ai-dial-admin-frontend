@@ -9,6 +9,7 @@ import ForwardAuthTokenField from '@/src/components/EntityMainProperties/Forward
 import DeploymentProperties from '@/src/components/EntityMainProperties/Properties/DeploymentProperties';
 import SourceField from '@/src/components/SourceField/SourceField';
 import { APPLICATION_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
+import { getApplicationContainers } from '@/src/app/actions/deployments';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
@@ -48,6 +49,7 @@ const EntityProperties: FC<Props> = ({ runners, view, ...props }) => {
         entity={props.entity as DialApplication}
         onChange={props.onChangeEntity as (entity: DialApplication) => void}
         runners={runners}
+        getContainers={getApplicationContainers}
         isEntityImmutable={true}
       />
       <EntityAttachments {...props} />

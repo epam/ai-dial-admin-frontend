@@ -8,7 +8,12 @@ import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, SourceI18nKey } from '@
 import { CONTROL_WIDTH, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { ONLY_HTTP_TRANSPORTS } from '@/src/constants/transport';
 import { useI18n } from '@/src/locales/client';
-import { ApplicationMCPConfigDelivery, ApplicationTypeMCP, DialApplicationScheme } from '@/src/models/dial/application';
+import {
+  ApplicationMCPConfigDelivery,
+  ApplicationTypeMCP,
+  DialApplicationScheme,
+  MCP_CONFIG_DELIVERY_I18N_MAP,
+} from '@/src/models/dial/application';
 import { ApplicationRoute } from '@/src/types/routes';
 import AddTool from './AddTool';
 
@@ -66,7 +71,7 @@ const EndpointAndMCPContainer: FC<Props> = ({
           ? entity?.['dial:applicationTypeResponsesEndpoint']
           : undefined,
         ['dial:applicationTypeMcp']: newCheckboxStates[SourceType.MCP_ENDPOINT]
-          ? entity?.['dial:applicationTypeMcp']
+          ? ({ ...entity?.['dial:applicationTypeMcp'], 'dial:forwardPerRequestKey': true } as ApplicationTypeMCP)
           : undefined,
       });
     },
@@ -229,10 +234,10 @@ const EndpointAndMCPContainer: FC<Props> = ({
 
             <DialSelectField
               id="configDelivery"
-              value={entity?.['dial:applicationTypeMcp']?.['dial:mcpConfigDelivery']}
+              value={entity?.['dial:applicationTypeMcp']?.['dial:mcpConfigDelivery']?.toLowerCase() || ''}
               options={Object.values(ApplicationMCPConfigDelivery).map((value) => ({
                 value,
-                label: value,
+                label: t(MCP_CONFIG_DELIVERY_I18N_MAP[value]),
               }))}
               containerClassName="max-w-[160px]"
               label={t(EntityFieldsI18nKey.configDelivery)}

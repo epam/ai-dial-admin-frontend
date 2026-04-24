@@ -13,21 +13,20 @@ interface Props<T extends object> {
   data: T[] | null;
   columnDefs: ColDef[];
   idField: string;
-  initialSelectedId?: string;
+  selectedId?: string;
   emptyTitle: string;
-  errorTitle?: string;
-  hasError?: boolean;
+  isLoading?: boolean;
   onSelect: (item: T) => void;
 }
 
+// TODO: use for all cases
 function RadioSelectGrid<T extends object>({
   data,
   columnDefs,
   idField,
-  initialSelectedId,
+  selectedId,
   emptyTitle,
-  errorTitle,
-  hasError,
+  isLoading,
   onSelect,
 }: Props<T>) {
   const onRowSelected = useCallback(
@@ -47,15 +46,15 @@ function RadioSelectGrid<T extends object>({
         cellRenderer: (params: { data?: Record<string, string> }) => (
           <RadioButtonRenderer
             inputId={params.data?.[idField] || ''}
-            isChecked={params.data?.[idField] === initialSelectedId}
+            isChecked={params.data?.[idField] === selectedId}
           />
         ),
       },
       onRowSelected,
       onFirstDataRendered: (event: FirstDataRenderedEvent) => {
-        if (initialSelectedId) {
+        if (selectedId) {
           event.api.forEachNode((node) => {
-            if (node.data?.[idField] === initialSelectedId) {
+            if (node.data?.[idField] === selectedId) {
               node.setSelected(true);
               event.api.ensureNodeVisible(node, 'middle');
             }
@@ -63,10 +62,10 @@ function RadioSelectGrid<T extends object>({
         }
       },
     }),
-    [initialSelectedId, onRowSelected, idField],
+    [selectedId, onRowSelected, idField],
   );
 
-  if (data == null) {
+  if (isLoading) {
     return (
       <div className="size-full flex flex-col">
         <DialLoader size={40} />
@@ -81,7 +80,7 @@ function RadioSelectGrid<T extends object>({
           columnDefs={columnDefs}
           rowData={data}
           additionalGridOptions={additionalGridOptions}
-          emptyDataProps={{ title: hasError && errorTitle ? errorTitle : emptyTitle }}
+          emptyDataProps={{ title: emptyTitle }}
         />
       </div>
     </div>

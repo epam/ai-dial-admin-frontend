@@ -53,7 +53,6 @@ import {
   DISPLAY_NAME_COLUMN,
   DISPLAY_NAME_COLUMN_WITH_SORT,
   DISPLAY_VERSION_COLUMN,
-  ENDPOINT_COLUMN,
   MAX_INPUT_ATTACHMENTS_COLUMN,
   NAME_COLUMN,
   NAME_COLUMN_WITH_SORT,
@@ -118,7 +117,7 @@ export const APPLICATIONS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   DISPLAY_VERSION_COLUMN,
   DESCRIPTION_COLUMN,
   NAME_COLUMN,
-  ENDPOINT_COLUMN,
+  ...SOURCE_FIELD_COLUMNS(t, ApplicationRoute.Applications),
   VALIDITY_STATUS_COLUMN(t),
   AUTHOR_COLUMN,
   TOPICS_COLUMN,
@@ -387,29 +386,24 @@ export const TELEMETRY_GRID_COLUMNS: ColDef[] = [
   },
 ];
 
+const completionTimeColumn = (headerName: string): ColDef => ({
+  field: 'completion_time',
+  headerName,
+  hide: false,
+  sort: 'desc',
+  filter: false,
+  floatingFilter: false,
+  ...dateTimeColumn,
+});
+
 export const USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
-  { field: 'completion_time', headerName: 'Completion Time', hide: false, ...dateTimeColumn },
+  completionTimeColumn('Completion Time'),
   { field: 'trace_id', headerName: 'Trace ID', hide: false },
   { field: 'topic', headerName: 'Topic', hide: false },
   { field: 'reactions', headerName: 'Reactions', hide: true }, // TODO: not implemented
-  {
-    field: 'cached_prompt_tokens',
-    headerName: 'Cached Prompt Tokens',
-    hide: true,
-    ...numericColumn,
-  },
-  {
-    field: 'prompt_tokens',
-    headerName: 'Prompt Tokens',
-    hide: false,
-    ...numericColumn,
-  },
-  {
-    field: 'completion_tokens',
-    headerName: 'Completion Tokens',
-    hide: false,
-    ...numericColumn,
-  },
+  { field: 'cached_prompt_tokens', headerName: 'Cached Prompt Tokens', hide: true, ...numericColumn },
+  { field: 'prompt_tokens', headerName: 'Prompt Tokens', hide: false, ...numericColumn },
+  { field: 'completion_tokens', headerName: 'Completion Tokens', hide: false, ...numericColumn },
   {
     field: 'deployment_price',
     headerName: 'Deployment Price',
@@ -417,18 +411,8 @@ export const USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
     hide: false,
     ...priceColumn('Deployment Price'),
   },
-  {
-    field: 'price',
-    headerName: 'Total Price',
-    hide: false,
-    ...priceColumn('Total Price'),
-  },
-  {
-    field: 'number_request_messages',
-    headerName: 'Number of Request Messages',
-    hide: true,
-    ...numericColumn,
-  },
+  { field: 'price', headerName: 'Total Price', hide: false, ...priceColumn('Total Price') },
+  { field: 'number_request_messages', headerName: 'Number of Request Messages', hide: true, ...numericColumn },
   { field: 'deployment', headerName: 'Deployment ID', hide: false },
   { field: 'parent_deployment', headerName: 'Parent Deployment ID', hide: true },
   { field: 'model', headerName: 'Model', hide: true },
@@ -445,40 +429,14 @@ export const USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
 ];
 
 export const USAGE_LOG_CONVERSATIONS_COLUMNS: ColDef[] = [
-  { field: 'completion_time', headerName: 'Last activity', hide: false, ...dateTimeColumn },
+  completionTimeColumn('Last activity'),
   { field: 'chat_id', headerName: 'Conversation ID', hide: false },
   { field: 'topic', headerName: 'Topic', hide: false },
-  {
-    field: 'cached_prompt_tokens',
-    headerName: 'Cached Prompt Tokens',
-    hide: true,
-    ...numericColumn,
-  },
-  {
-    field: 'prompt_tokens',
-    headerName: 'Prompt Tokens',
-    hide: false,
-    ...numericColumn,
-  },
-  {
-    field: 'completion_tokens',
-    headerName: 'Completion Tokens',
-    hide: false,
-    ...numericColumn,
-  },
-  {
-    field: 'deployment_price',
-    headerName: 'Total Price',
-    hide: false,
-    ...priceColumn('Total Price'),
-  },
-  {
-    field: 'number_request_messages',
-    headerName: 'Number of Request Messages',
-    hide: true,
-    ...numericColumn,
-  },
-
+  { field: 'cached_prompt_tokens', headerName: 'Cached Prompt Tokens', hide: true, ...numericColumn },
+  { field: 'prompt_tokens', headerName: 'Prompt Tokens', hide: false, ...numericColumn },
+  { field: 'completion_tokens', headerName: 'Completion Tokens', hide: false, ...numericColumn },
+  { field: 'deployment_price', headerName: 'Total Price', hide: false, ...priceColumn('Total Price') },
+  { field: 'number_request_messages', headerName: 'Number of Request Messages', hide: true, ...numericColumn },
   { field: 'deployment', headerName: 'Deployment ID', hide: false },
   { field: 'project_id', headerName: 'Project', hide: false },
   { field: 'user_hash', headerName: 'User', hide: false },
@@ -487,44 +445,35 @@ export const USAGE_LOG_CONVERSATIONS_COLUMNS: ColDef[] = [
 ];
 
 export const USAGE_LOG_MCP_COLUMNS: ColDef[] = [
-  { field: 'completion_time', headerName: 'Last activity', hide: false, ...dateTimeColumn },
+  completionTimeColumn('Last activity'),
   { field: 'deployment', headerName: 'Deployment ID', hide: false },
   { field: 'project_id', headerName: 'Project', hide: false },
-  {
-    field: 'mcp_method',
-    headerName: 'Method',
-    hide: true,
-  },
-  {
-    field: 'mcp_tool_call_name',
-    headerName: 'Tool Name',
-    hide: false,
-  },
-  {
-    field: 'trace_id',
-    headerName: 'Trace ID',
-    hide: false,
-  },
+  { field: 'mcp_method', headerName: 'Method', hide: true },
+  { field: 'mcp_tool_call_name', headerName: 'Tool Name', hide: false },
+  { field: 'trace_id', headerName: 'Trace ID', hide: false },
 ];
+
 export const USAGE_LOG_TOOLSET_TRACES_COLUMNS: ColDef[] = [
-  { field: 'completion_time', headerName: 'Last activity', hide: false, ...dateTimeColumn },
+  completionTimeColumn('Last activity'),
   { field: 'project_id', headerName: 'Project', hide: false },
-  {
-    field: 'mcp_method',
-    headerName: 'Method',
-    hide: true,
-  },
-  {
-    field: 'mcp_tool_call_name',
-    headerName: 'Tool Name',
-    hide: false,
-  },
-  {
-    field: 'trace_id',
-    headerName: 'Trace ID',
-    hide: false,
-  },
+  { field: 'mcp_method', headerName: 'Method', hide: true },
+  { field: 'mcp_tool_call_name', headerName: 'Tool Name', hide: false },
+  { field: 'trace_id', headerName: 'Trace ID', hide: false },
 ];
+
+// Derived from the column defs — any column spread with ...numericColumn or
+// ...priceColumn(...) carries cellClass 'align-right', which we treat as the
+// marker for backend-numeric columns (see translateUsageLogTextFilter).
+export const USAGE_LOG_NUMERIC_COLUMNS = new Set<string>(
+  [
+    ...USAGE_LOG_TRACES_COLUMNS,
+    ...USAGE_LOG_CONVERSATIONS_COLUMNS,
+    ...USAGE_LOG_MCP_COLUMNS,
+    ...USAGE_LOG_TOOLSET_TRACES_COLUMNS,
+  ]
+    .filter((c) => c.cellClass === 'align-right' && c.field)
+    .map((c) => c.field as string),
+);
 
 export const PROJECT_GRID_COLUMNS: ColDef[] = [{ field: 'name', headerName: 'Project' }, ...TELEMETRY_COLUMNS];
 
@@ -552,9 +501,17 @@ export const MCP_PROJECTS_CONSUMPTION_COLUMNS: ColDef[] = [
 ];
 
 export const SOURCE_CONTAINERS_COLUMNS: ColDef[] = [
-  NAME_COLUMN_WITH_SORT,
+  DISPLAY_NAME_COLUMN_WITH_SORT,
   DESCRIPTION_COLUMN,
-  { field: 'image', headerName: 'Image' },
+  NAME_COLUMN,
+  {
+    headerName: 'Image',
+    field: 'source',
+    hide: false,
+    valueFormatter: ({ data }) => containerSourceNameLabel(data?.source),
+    tooltipValueGetter: ({ data }) => containerSourceNameLabel(data?.source),
+    filterValueGetter: (params) => containerSourceNameLabel(params.data?.source),
+  },
 ];
 
 export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, route: ApplicationRoute): ColDef[] => [

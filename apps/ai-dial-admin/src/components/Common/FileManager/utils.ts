@@ -7,7 +7,7 @@ import { bulkActionLabels } from '@/src/components/Assets/constants';
 import { getGridActionLabels, getToolbarOptionLabels, getTreeActionLabels } from '@/src/components/Assets/utils';
 import { baseColumnComparator } from '@/src/components/Grid/comparators/base-column-comparator';
 import FloatingFilter from '@/src/components/Grid/FloatingFilter/FloatingFilter';
-import { ROOT_FOLDER } from '@/src/constants/file';
+import { ROOT_FOLDER, TEMP_FOLDER } from '@/src/constants/file';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import { CREATE_FOLDER_FORBIDDEN_CHARS, FILE_NAME_MAX_LENGTH, NEW_FOLDER_NAME } from './constants';
@@ -78,13 +78,12 @@ export const getDestinationFolderPopupOptions = (
 });
 
 export const createEmptyFile = () => {
-  const fileName = '.dial_folder';
   const fileType = 'text/plain';
 
-  const emptyFile = new File(['1'], fileName, {
+  const emptyFile = new File(['1'], TEMP_FOLDER, {
     type: fileType,
   });
-  return { emptyFile, fileName, fileType };
+  return { emptyFile, fileName: TEMP_FOLDER, fileType };
 };
 
 export const getEmptyFile = () => {

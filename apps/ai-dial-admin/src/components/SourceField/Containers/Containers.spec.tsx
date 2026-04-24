@@ -3,6 +3,7 @@ import { describe, test, expect, vi } from 'vitest';
 
 import Containers from '@/src/components/SourceField/Containers/Containers';
 import { DialModel, DialModelType } from '@/src/models/dial/model';
+import { DialApplication } from '@/src/models/dial/application';
 import { Container } from '@/src/models/deployments/containers';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -167,5 +168,33 @@ describe('Containers component', () => {
 
     const lastCall = onChange.mock.calls.at(-1)?.[0] as DialModel;
     expect(lastCall.source?.completionEndpointPath?.startsWith('openai/v1/')).toBe(true);
+  });
+
+  test('Application branch: writes containerId, skips completionEndpointPath', async () => {
+    const onChange = vi.fn();
+    // mcp must be present (even as undefined) so that isDialApplication() returns true
+    const entity: DialApplication = {
+      name: 'test-app',
+      displayName: 'Test App',
+      mcp: undefined,
+      source: { $type: SOURCE_TYPE.CONTAINER, containerId: '' },
+    } as unknown as DialApplication;
+
+    render(
+      <Containers
+        entity={entity}
+        onChange={onChange}
+        getContainers={mockGetContainers([runningContainer])}
+        view={ApplicationRoute.Applications}
+        isModal
+      />,
+    );
+
+    const select = await screen.findByRole('combobox');
+    fireEvent.change(select, { target: { value: 'container-running' } });
+
+    const lastCall = onChange.mock.calls.at(-1)?.[0] as DialApplication;
+    expect(lastCall.source?.containerId).toBe('container-running');
+    expect(lastCall.source?.completionEndpointPath).toBeUndefined();
   });
 });

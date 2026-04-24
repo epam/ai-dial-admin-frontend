@@ -1109,6 +1109,8 @@ export enum EntityFieldsI18nKey {
   apiKeyHeader = 'EntityFields.apiKeyHeader',
   apiKeyValue = 'EntityFields.apiKeyValue',
   configDelivery = 'EntityFields.configDelivery',
+  configDeliveryMeta = 'EntityFields.configDeliveryMeta',
+  configDeliveryHeader = 'EntityFields.configDeliveryHeader',
   costLimit = 'EntityFields.costLimit',
   defaultRoleLimit = 'EntityFields.defaultRoleLimit',
   fieldsHashingOrder = 'EntityFields.fieldsHashingOrder',
@@ -1386,6 +1388,9 @@ export enum ContainersI18nKey {
   ModelTypeHF = 'Containers.ModelTypeHF',
   Running = 'Containers.Running',
   NotRunning = 'Containers.NotRunning',
+  ContainerNotRunningTitle = 'Containers.ContainerNotRunningTitle',
+  ContainerNotRunningDescription = 'Containers.ContainerNotRunningDescription',
+  GoToContainer = 'Containers.GoToContainer',
   Preparing = 'Containers.Preparing',
   Failed = 'Containers.Failed',
   Stopped = 'Containers.Stopped',
@@ -1568,7 +1573,6 @@ export enum TestSuitesI18nKey {
   ToolCallFailed = 'TestSuites.ToolCallFailed',
   ToolOutputSchema = 'TestSuites.ToolOutputSchema',
   ToolSchema = 'TestSuites.ToolSchema',
-  FailedToLoadTools = 'TestSuites.FailedToLoadTools',
 }
 
 export enum RunsI18nKey {

@@ -967,6 +967,8 @@ export default {
     endpoint: 'Endpoint',
     keyValue: 'Key value',
     configDelivery: 'Configuration delivery',
+    configDeliveryMeta: 'Meta',
+    configDeliveryHeader: 'Header',
     container: 'Container',
     authSettings: 'Authentication',
     authenticationType: 'Authentication type',
@@ -1416,6 +1418,10 @@ export default {
     ContainerRunFailed: '{type} Container failed to run',
     Running: 'Running',
     NotRunning: 'Not running',
+    ContainerNotRunningTitle: '{type} container for this {typeLower} is not running.',
+    ContainerNotRunningDescription:
+      'This {typeLower} will not be available in the Chat interface until the container is started or reconfigured.',
+    GoToContainer: 'Go to Container',
     Preparing: 'Preparing...',
     Failed: 'Failed',
     Stopped: 'Stopped',
@@ -1601,7 +1607,6 @@ export default {
     ToolCallFailed: 'Tool call returned an error',
     ToolOutputSchema: 'Tool Output Schema',
     ToolSchema: 'Tool Schema',
-    FailedToLoadTools: 'Failed to load tools',
   },
   FileManager: {
     SelectedItems: 'item(s) selected',

@@ -1,8 +1,11 @@
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { Toolset, ToolsetAuthType } from '@/src/models/dial/toolset';
-import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, test, vi } from 'vitest';
+import { checkIsUniqueDeploymentName } from '@/src/app/actions';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { describe, expect, test, vi, beforeEach } from 'vitest';
 import DuplicateToolset from '../DuplicateToolset';
+
+vi.mock('@/src/app/actions');
 
 describe('DuplicateToolset', () => {
   const baseToolset: Toolset = {
@@ -10,6 +13,11 @@ describe('DuplicateToolset', () => {
     displayName: 'Toolset One',
     description: 'Test toolset',
   };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (checkIsUniqueDeploymentName as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+  });
 
   describe('Rendering', () => {
     test('renders basic fields without auth settings', () => {
@@ -155,7 +163,7 @@ describe('DuplicateToolset', () => {
       expect(onClose).toHaveBeenCalled();
     });
 
-    test('calls onDuplicate with correct entity when Duplicate is clicked', () => {
+    test('calls onDuplicate with correct entity when Duplicate is clicked', async () => {
       const onDuplicate = vi.fn();
       render(
         <DuplicateToolset
@@ -169,15 +177,17 @@ describe('DuplicateToolset', () => {
 
       fireEvent.click(screen.getByText(ButtonsI18nKey.Duplicate));
 
-      expect(onDuplicate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          name: expect.stringContaining('toolset1'),
-          displayName: expect.stringContaining('Toolset One'),
-        }),
+      await waitFor(() =>
+        expect(onDuplicate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            name: expect.stringContaining('toolset1'),
+            displayName: expect.stringContaining('Toolset One'),
+          }),
+        ),
       );
     });
 
-    test('updates clientId when OAuth field changes', () => {
+    test('updates clientId when OAuth field changes', async () => {
       const toolsetWithOAuth: Toolset = {
         ...baseToolset,
         authSettings: {
@@ -204,16 +214,18 @@ describe('DuplicateToolset', () => {
 
       fireEvent.click(screen.getByText(ButtonsI18nKey.Duplicate));
 
-      expect(onDuplicate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          authSettings: expect.objectContaining({
-            clientId: 'new-client-id',
+      await waitFor(() =>
+        expect(onDuplicate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            authSettings: expect.objectContaining({
+              clientId: 'new-client-id',
+            }),
           }),
-        }),
+        ),
       );
     });
 
-    test('updates clientSecret when OAuth field changes', () => {
+    test('updates clientSecret when OAuth field changes', async () => {
       const toolsetWithOAuth: Toolset = {
         ...baseToolset,
         authSettings: {
@@ -240,16 +252,18 @@ describe('DuplicateToolset', () => {
 
       fireEvent.click(screen.getByText(ButtonsI18nKey.Duplicate));
 
-      expect(onDuplicate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          authSettings: expect.objectContaining({
-            clientSecret: 'new-secret',
+      await waitFor(() =>
+        expect(onDuplicate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            authSettings: expect.objectContaining({
+              clientSecret: 'new-secret',
+            }),
           }),
-        }),
+        ),
       );
     });
 
-    test('updates authorizationEndpoint when OAuth field changes', () => {
+    test('updates authorizationEndpoint when OAuth field changes', async () => {
       const toolsetWithOAuth: Toolset = {
         ...baseToolset,
         authSettings: {
@@ -276,16 +290,18 @@ describe('DuplicateToolset', () => {
 
       fireEvent.click(screen.getByText(ButtonsI18nKey.Duplicate));
 
-      expect(onDuplicate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          authSettings: expect.objectContaining({
-            authorizationEndpoint: 'https://new-auth.example.com',
+      await waitFor(() =>
+        expect(onDuplicate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            authSettings: expect.objectContaining({
+              authorizationEndpoint: 'https://new-auth.example.com',
+            }),
           }),
-        }),
+        ),
       );
     });
 
-    test('updates apiKeyHeader when API Key field changes', () => {
+    test('updates apiKeyHeader when API Key field changes', async () => {
       const toolsetWithApiKey: Toolset = {
         ...baseToolset,
         authSettings: {
@@ -310,16 +326,18 @@ describe('DuplicateToolset', () => {
 
       fireEvent.click(screen.getByText(ButtonsI18nKey.Duplicate));
 
-      expect(onDuplicate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          authSettings: expect.objectContaining({
-            apiKeyHeader: 'X-Custom-API-Key',
+      await waitFor(() =>
+        expect(onDuplicate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            authSettings: expect.objectContaining({
+              apiKeyHeader: 'X-Custom-API-Key',
+            }),
           }),
-        }),
+        ),
       );
     });
 
-    test('updates displayName when field changes', () => {
+    test('updates displayName when field changes', async () => {
       const onDuplicate = vi.fn();
       render(
         <DuplicateToolset
@@ -336,16 +354,18 @@ describe('DuplicateToolset', () => {
 
       fireEvent.click(screen.getByText(ButtonsI18nKey.Duplicate));
 
-      expect(onDuplicate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          displayName: 'New Toolset Name',
-        }),
+      await waitFor(() =>
+        expect(onDuplicate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            displayName: 'New Toolset Name',
+          }),
+        ),
       );
     });
   });
 
   describe('Entity Name Cloning', () => {
-    test('initializes with cloned name and displayName', () => {
+    test('initializes with cloned name and displayName', async () => {
       const onDuplicate = vi.fn();
       render(
         <DuplicateToolset
@@ -359,11 +379,13 @@ describe('DuplicateToolset', () => {
 
       fireEvent.click(screen.getByText(ButtonsI18nKey.Duplicate));
 
-      expect(onDuplicate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          name: expect.stringContaining('toolset1'),
-          displayName: expect.stringContaining('Toolset One'),
-        }),
+      await waitFor(() =>
+        expect(onDuplicate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            name: expect.stringContaining('toolset1'),
+            displayName: expect.stringContaining('Toolset One'),
+          }),
+        ),
       );
     });
   });

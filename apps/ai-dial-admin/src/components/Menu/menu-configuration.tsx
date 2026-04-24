@@ -99,10 +99,14 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
       descriptionKey: MenuI18nKey.MCPDescription,
       icon: <IconRocket width={iconSize} height={iconSize} />,
       items: [
-        {
-          key: MenuI18nKey.ModelServings,
-          href: ApplicationRoute.ModelServings,
-        },
+        ...(featureFlags.nimEnabled || featureFlags.hfEnabled
+          ? [
+              {
+                key: MenuI18nKey.ModelServings,
+                href: ApplicationRoute.ModelServings,
+              },
+            ]
+          : []),
         {
           key: MenuI18nKey.McpContainers,
           href: ApplicationRoute.McpContainers,

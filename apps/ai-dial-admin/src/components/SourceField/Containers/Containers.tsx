@@ -5,8 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import SelectContainerModal from '@/src/components/SourceField/Containers/SelectContainerModal';
 import Endpoints from '@/src/components/SourceField/Endpoints/Endpoints';
-import { SOURCE_TYPE } from '@/src/components/SourceField/types';
-import { getContainerRoute } from '@/src/components/SourceField/utils';
+import { buildContainerSelection, getContainerRoute } from '@/src/components/SourceField/utils';
 import {
   ButtonsI18nKey,
   CreateI18nKey,
@@ -21,11 +20,11 @@ import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { Container } from '@/src/models/deployments/containers';
+import { DialApplication } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getEndpointPostfix, getEndpointPrefix } from '@/src/utils/models/model-endpoint';
 import { getErrorNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { addTrailingSlash } from '@/src/utils/url';
@@ -40,7 +39,7 @@ interface Props<T> {
   disabled?: boolean;
 }
 
-const Containers = <T extends DialInterceptor | DialModel>({
+const Containers = <T extends DialInterceptor | DialModel | DialApplication>({
   entity,
   onChange,
   getContainers,
@@ -76,22 +75,8 @@ const Containers = <T extends DialInterceptor | DialModel>({
 
   const onSelect = useCallback(
     (id?: string) => {
-      const updatedEntity = {
-        ...entity,
-        endpoint: '',
-        configurationEndpoint: '',
-        baseEndpoint: '',
-        source: {
-          ...entity.source,
-          $type: entity.source?.$type || SOURCE_TYPE.CONTAINER,
-          containerId: id,
-        },
-      };
-      if (view === ApplicationRoute.Models) {
-        const selected = containers.find((c) => c.name === id);
-        updatedEntity.source.completionEndpointPath = `${getEndpointPrefix(selected?.$type)}${getEndpointPostfix((entity as DialModel).type)}`;
-      }
-      onChange(updatedEntity);
+      const selected = containers.find((c) => c.name === id);
+      onChange(buildContainerSelection(view, entity, id, selected));
       onCloseModal();
     },
     [containers, entity, onChange, onCloseModal, view],
