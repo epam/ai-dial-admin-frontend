@@ -56,12 +56,12 @@ const RollbackRevisions: FC<Props> = ({ initialRevisions, rollBackRevision, isMo
         .current(getRevisions, 1000, 0, sorts, [
           {
             column: 'timestamp',
-            operator: FilterOperatorDto.GREATER_THEN_OR_EQUAL,
+            operator: FilterOperatorDto.GREATER_THAN_OR_EQUAL,
             value: startDate.getTime(),
           },
           {
             column: 'timestamp',
-            operator: FilterOperatorDto.LESS_THEN_OR_EQUAL,
+            operator: FilterOperatorDto.LESS_THAN_OR_EQUAL,
             value: endDate.getTime(),
           },
         ])

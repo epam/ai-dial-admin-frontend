@@ -8,8 +8,8 @@ export enum FilterOperatorDto {
   NOT_EQUAL = 'ne',
   CONTAINS = 'co',
   NOT_CONTAINS = 'nc',
-  LESS_THEN = 'lt',
-  GREATER_THEN = 'gt',
-  LESS_THEN_OR_EQUAL = 'le',
-  GREATER_THEN_OR_EQUAL = 'ge',
+  LESS_THAN = 'lt',
+  GREATER_THAN = 'gt',
+  LESS_THAN_OR_EQUAL = 'le',
+  GREATER_THAN_OR_EQUAL = 'ge',
 }
