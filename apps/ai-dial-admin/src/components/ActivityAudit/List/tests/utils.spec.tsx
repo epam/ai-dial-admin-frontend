@@ -68,12 +68,12 @@ describe('Activity Audit List utils :: getGridFilters', () => {
       { column: 'age', value: '30', operator: FilterOperatorDto.EQUALS },
       {
         column: 'epochTimestampMs',
-        operator: FilterOperatorDto.GREATER_THEN_OR_EQUAL,
+        operator: FilterOperatorDto.GREATER_THAN_OR_EQUAL,
         value: mockStartDate.getTime().toString(),
       },
       {
         column: 'epochTimestampMs',
-        operator: FilterOperatorDto.LESS_THEN_OR_EQUAL,
+        operator: FilterOperatorDto.LESS_THAN_OR_EQUAL,
         value: mockEndDate.getTime().toString(),
       },
     ]);
@@ -85,12 +85,12 @@ describe('Activity Audit List utils :: getGridFilters', () => {
     expect(result).toEqual([
       {
         column: 'epochTimestampMs',
-        operator: FilterOperatorDto.GREATER_THEN_OR_EQUAL,
+        operator: FilterOperatorDto.GREATER_THAN_OR_EQUAL,
         value: mockStartDate.getTime().toString(),
       },
       {
         column: 'epochTimestampMs',
-        operator: FilterOperatorDto.LESS_THEN_OR_EQUAL,
+        operator: FilterOperatorDto.LESS_THAN_OR_EQUAL,
         value: mockEndDate.getTime().toString(),
       },
     ]);
