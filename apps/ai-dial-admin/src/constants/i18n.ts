@@ -1367,6 +1367,11 @@ export enum ImagesI18nKey {
   AddImage = 'Images.AddImage',
   FromMcpRegistry = 'Images.FromMcpRegistry',
   AddFromMcpRegistryModalTitle = 'Images.AddFromMcpRegistryModalTitle',
+  BuildStopped = 'Images.BuildStopped',
+  StopBuildModalTitle = 'Images.StopBuildModalTitle',
+  StopBuildModalDescription = 'Images.StopBuildModalDescription',
+  BuildStoppedSuccess = 'Images.BuildStoppedSuccess',
+  BuildStoppedSuccessDescription = 'Images.BuildStoppedSuccessDescription',
 }
 
 export enum ContainersI18nKey {
