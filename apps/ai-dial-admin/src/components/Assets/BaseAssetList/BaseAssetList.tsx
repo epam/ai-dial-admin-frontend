@@ -309,6 +309,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
               folder.sourceUrl.replaceAll('//', '/'),
               folder.destinationUrl.replaceAll('//', '/'),
               resourceType,
+              folder?.overwrite,
             ).then((res) => {
               setMovedItems((prev) => prev + 1);
               return res;

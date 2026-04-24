@@ -156,6 +156,7 @@ const FilesList = () => {
             folder.sourceUrl.replaceAll('//', '/'),
             folder.destinationUrl.replaceAll('//', '/'),
             ResourceType.FILE,
+            folder?.overwrite,
           ).then((res) => {
             setMovedItems((prev) => prev + 1);
             return res;
