@@ -87,9 +87,10 @@ describe('Folders storage :: server actions', () => {
 
   test('Should call changeFolder action', async () => {
     (foldersApi.changeFolder as any).mockResolvedValue(RESPONSE_MOCK);
-    const result = await changeFolder('path', 'new', ResourceType.PROMPT);
+    const overwrite = false;
+    const result = await changeFolder('path', 'new', ResourceType.PROMPT, overwrite);
     expect(getUserToken).toHaveBeenCalled();
-    expect(foldersApi.changeFolder).toHaveBeenCalledWith(TOKEN_MOCK, 'path', 'new', ResourceType.PROMPT);
+    expect(foldersApi.changeFolder).toHaveBeenCalledWith(TOKEN_MOCK, 'path', 'new', ResourceType.PROMPT, overwrite);
     expect(result).toBe(RESPONSE_MOCK);
   });
 

@@ -147,7 +147,14 @@ describe('Assets Prompt :: server actions', () => {
 
     const result = await movePrompts(['path'], 'newPath');
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetsApi.moveAssets).toHaveBeenCalledWith(TOKEN_MOCK, ['path'], 'newPath', ResourceType.PROMPT);
+    expect(assetsApi.moveAssets).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ['path'],
+      'newPath',
+      ResourceType.PROMPT,
+      undefined,
+      undefined,
+    );
     expect(result).toBe(RESPONSE_MOCK);
   });
 

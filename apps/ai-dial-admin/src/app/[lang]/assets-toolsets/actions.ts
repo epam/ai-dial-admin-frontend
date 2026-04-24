@@ -64,9 +64,9 @@ export async function bulkDeleteToolsets(paths: { path: string }[]) {
   return assetsApi.bulkDeleteAssets(token, paths, ResourceType.TOOLSET);
 }
 
-export async function moveToolsets(paths: string[], newPath: string) {
+export async function moveToolsets(paths: string[], newPath: string, overwrite?: boolean, duplicateName?: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.moveAssets(token, paths, newPath, ResourceType.TOOLSET);
+  return assetsApi.moveAssets(token, paths, newPath, ResourceType.TOOLSET, overwrite, duplicateName);
 }
 
 export async function getAssetTools(name: string) {

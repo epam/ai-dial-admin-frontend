@@ -60,9 +60,9 @@ export async function bulkDeleteApps(paths: { path: string }[]) {
   return assetsApi.bulkDeleteAssets(token, paths, ResourceType.APPLICATION);
 }
 
-export async function moveApps(paths: string[], newPath: string) {
+export async function moveApps(paths: string[], newPath: string, overwrite?: boolean, duplicateName?: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.moveAssets(token, paths, newPath, ResourceType.APPLICATION);
+  return assetsApi.moveAssets(token, paths, newPath, ResourceType.APPLICATION, overwrite, duplicateName);
 }
 
 export async function exportApps(paths: string[], type?: ImportFileType) {
