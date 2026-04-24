@@ -15,11 +15,14 @@ const transformApplicationSchemeForServer = (scheme: DialApplicationScheme): Dia
   const configDelivery = mcp['dial:mcpConfigDelivery'];
   if (!configDelivery) return scheme;
 
+  const allowedTools = mcp['dial:allowedTools'];
+
   return {
     ...scheme,
     'dial:applicationTypeMcp': {
       ...mcp,
       'dial:mcpConfigDelivery': configDelivery.toUpperCase() as ApplicationMCPConfigDelivery,
+      ...(allowedTools && { 'dial:allowedTools': allowedTools.filter(Boolean) }),
     },
   };
 };
