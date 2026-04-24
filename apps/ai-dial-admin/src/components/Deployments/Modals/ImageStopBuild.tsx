@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopupVariant, DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey, EntityFieldsI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
 import { Image } from '@/src/models/deployments/images';
@@ -21,6 +21,7 @@ const ImageStopBuild: FC<Props> = ({ isModalOpen, title, onClose, onApply, image
       portalId="ImageStopBuildModal"
       onClose={onClose}
       header={title}
+      variant={ConfirmationPopupVariant.Danger}
       open={isModalOpen}
       confirmLabel={t(ButtonsI18nKey.Stop)}
       onConfirm={() => {
@@ -29,8 +30,8 @@ const ImageStopBuild: FC<Props> = ({ isModalOpen, title, onClose, onApply, image
       }}
     >
       <div className="flex flex-col h-full overflow-auto px-6 py-4 gap-2">
-        <p className="text-secondary small-150">{t(ImagesI18nKey.StopBuildModalDescription)}</p>
-        <p className="text-secondary small-150">
+        <p className="text-secondary diam-small-text">{t(ImagesI18nKey.StopBuildModalDescription)}</p>
+        <p className="text-secondary diam-small-text">
           {t(EntityFieldsI18nKey.version)}:<span className="text-primary ml-1">{image.version}</span>
         </p>
       </div>
