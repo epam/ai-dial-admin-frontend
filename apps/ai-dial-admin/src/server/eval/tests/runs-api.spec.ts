@@ -23,7 +23,7 @@ describe('Server :: RunsApi', () => {
   test('Should call getRuns and return paginated list', async () => {
     fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
-    await instance.getRuns(0, 10, TOKEN_MOCK);
+    await instance.getRuns(0, 10, [], [], TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${RUNS_URL}?page=0&size=10&includeTotalCount=true`,
@@ -34,7 +34,7 @@ describe('Server :: RunsApi', () => {
   test('Should call getRuns with different page and size', async () => {
     fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
-    await instance.getRuns(2, 25, TOKEN_MOCK);
+    await instance.getRuns(2, 25, [], [], TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${RUNS_URL}?page=2&size=25&includeTotalCount=true`,

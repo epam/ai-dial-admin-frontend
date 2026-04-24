@@ -5,11 +5,11 @@ import { cookies, headers } from 'next/headers';
 import { analyticsApi, runsApi } from '@/src/app/api/api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { FilterDto } from '@/src/models/request';
+import { FilterDto, SortDto } from '@/src/models/request';
 
-export async function getRuns(page: number, size: number) {
+export async function getRuns(page: number, size: number, sorts: SortDto[], filters: FilterDto[]) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return runsApi.getRuns(page, size, token);
+  return runsApi.getRuns(page, size, sorts, filters, token);
 }
 
 export async function getRun(id: string) {

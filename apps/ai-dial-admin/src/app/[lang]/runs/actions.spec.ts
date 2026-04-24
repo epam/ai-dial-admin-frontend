@@ -37,10 +37,10 @@ describe('Runs :: server actions', () => {
   test('Should call getRuns action and return page data', async () => {
     (runsApi.getRuns as any).mockResolvedValue(mockPageData);
 
-    const result = await getRuns(1, 10);
+    const result = await getRuns(1, 10, [], []);
 
     expect(getUserToken).toHaveBeenCalled();
-    expect(runsApi.getRuns).toHaveBeenCalledWith(1, 10, TOKEN_MOCK);
+    expect(runsApi.getRuns).toHaveBeenCalledWith(1, 10, [], [], TOKEN_MOCK);
     expect(result).toEqual(mockPageData);
   });
 

@@ -65,7 +65,8 @@ import {
   VERSION_COLUMN,
 } from './base-columns';
 import { dateTimeColumn, numericColumn, priceColumn } from './configs';
-import { auditStringFilter, evalStringFilter } from './filters';
+import { auditStringFilter, dateFilter, evalStringFilter, runsFilter } from './filters';
+import { GridFilterType } from '@/src/types/grid-filter';
 
 export const COLUMN_PANEL_PREFIX = 'column_';
 
@@ -770,17 +771,53 @@ export const TEST_CASES_COLUMN: ColDef[] = [
 ];
 
 export const RUNS_COLUMN: ColDef[] = [
-  { field: 'id', colId: 'id', headerName: 'ID' },
-  { field: 'testRunName', colId: 'testRunName', headerName: 'Test run name' },
-  { field: 'runConfig.numberOfRuns', colId: 'runConfig.numberOfRuns', headerName: 'Number of runs' },
-  { field: 'numberOfTestCases', colId: 'numberOfTestCases', headerName: 'Number of test cases' },
-  { field: 'startedAt', headerName: 'Start date', ...dateTimeColumn },
-  { field: 'completedAt', headerName: 'End date', ...dateTimeColumn },
+  {
+    field: 'id',
+    colId: 'id',
+    headerName: 'ID',
+    ...runsFilter([GridFilterType.EQUALS]),
+    hide: false,
+  },
+  {
+    field: 'testSuiteId',
+    colId: 'testSuiteId',
+    headerName: 'Test Suite ID',
+    ...runsFilter([GridFilterType.EQUALS]),
+    hide: true,
+  },
+  {
+    field: 'testRunName',
+    colId: 'testRunName',
+    headerName: 'Test run name',
+    ...runsFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
+    hide: false,
+  },
+  {
+    field: 'runConfig.numberOfRuns',
+    colId: 'runConfig.numberOfRuns',
+    headerName: 'Number of runs',
+    filter: false,
+    sortable: false,
+    hide: false,
+  },
+  {
+    field: 'numberOfTestCases',
+    colId: 'numberOfTestCases',
+    headerName: 'Number of test cases',
+    filter: false,
+    sortable: false,
+    hide: false,
+  },
+  { field: 'createdAt', headerName: 'Created date', ...dateTimeColumn, ...dateFilter, hide: true },
+  { field: 'startedAt', headerName: 'Start date', ...dateTimeColumn, ...dateFilter, hide: false },
+  { field: 'completedAt', headerName: 'End date', ...dateTimeColumn, ...dateFilter, hide: false },
   {
     field: 'status',
     headerName: 'Status',
     cellRenderer: RunStatusCellRenderer,
     tooltipValueGetter: () => undefined,
+    ...runsFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL]),
+    hide: false,
   },
 ];
 

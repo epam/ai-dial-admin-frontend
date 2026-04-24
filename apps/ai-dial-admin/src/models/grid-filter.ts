@@ -4,4 +4,5 @@ export interface GridFilter {
   filter: string;
   filterType: string;
   type: GridFilterType;
+  dateFrom?: string;
 }
