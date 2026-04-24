@@ -1659,6 +1659,8 @@ export enum FileManagerI18nKey {
   ApplicationsEmptyStateDescription = 'FileManager.ApplicationsEmptyStateDescription',
   ToolsetsEmptyStateTitle = 'FileManager.ToolsetsEmptyStateTitle',
   ToolsetsEmptyStateDescription = 'FileManager.ToolsetsEmptyStateDescription',
+  MovingItems = 'FileManager.MovingItems',
+  MovingProgress = 'FileManager.MovingProgress',
 
   // Modals
   DeleteItemsModalTitle = 'FileManager.DeleteItemsModalTitle',

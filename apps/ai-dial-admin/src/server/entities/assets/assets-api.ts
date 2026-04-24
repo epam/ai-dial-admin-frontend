@@ -9,7 +9,7 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
 import { getFileName } from '@/src/utils/api/get-file-name';
-import { changePath, getFolderNameAndPath } from '@/src/utils/files/path';
+import { changePath, extractVersionByPath, getFolderNameAndPath } from '@/src/utils/files/path';
 import { getToolsetBasicBody, getToolsetSignInBody } from '@/src/utils/toolset/toolset-auth';
 import { BaseApi } from '../../base-api';
 import { ResourceBasePaths, ResourceOperation } from './constants';
@@ -99,13 +99,29 @@ export class AssetsApi extends BaseApi {
     return this.postAction(url, { paths }, token);
   }
 
-  moveAssets(token: Token, paths: string[], newPath: string, type: ResourceType): Promise<ServerActionResponse[]> {
+  moveAssets(
+    token: Token,
+    paths: string[],
+    newPath: string,
+    type: ResourceType,
+    overwrite = false,
+    duplicateName?: string,
+  ): Promise<ServerActionResponse[]> {
     const url = buildAssetUrl(type, ResourceOperation.MOVE);
     const requests = paths.map((path) => {
+      let destinationUrl = '';
+      if (duplicateName) {
+        const version = extractVersionByPath(path);
+        const newName = version ? `${duplicateName}__${version}` : duplicateName;
+        destinationUrl = changePath(path, newPath, newName);
+      } else {
+        destinationUrl = changePath(path, newPath);
+      }
+
       const body = {
         sourceUrl: path,
-        destinationUrl: changePath(path, newPath),
-        overwrite: false,
+        destinationUrl,
+        overwrite,
       };
       return this.postAction(url, { ...body }, token);
     });

@@ -20,7 +20,7 @@ interface Props {
   parentRoleLimits?: DialRoleLimitsMap;
   disabled?: boolean;
   isPublicApp?: boolean;
-  iAppRunnerView?: boolean;
+  isAppRunnerView?: boolean;
   onChangeRoutes: (routes: DialAppRoute[]) => void;
 }
 
@@ -29,7 +29,7 @@ const EntityRoutes: FC<Props> = ({
   parentRoleLimits,
   isPublicApp,
   disabled,
-  iAppRunnerView,
+  isAppRunnerView,
   routes,
   onChangeRoutes,
 }) => {
@@ -131,7 +131,7 @@ const EntityRoutes: FC<Props> = ({
         <div className="flex flex-col flex-1 min-h-0 min-w-0 relative border border-primary rounded">
           {routes?.[activeRouteIndex as number] && (
             <RouteContent
-              iAppRunnerView={iAppRunnerView}
+              isAppRunnerView={isAppRunnerView}
               route={routes?.[activeRouteIndex as number] || ({} as DialAppRoute)}
               roles={roles || []}
               parentRoles={!isPublicApp ? Object.keys(parentRoleLimits || {}) : roles?.map((r) => r.name as string)}
