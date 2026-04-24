@@ -11,13 +11,13 @@ import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, SourceI18nKey } from '@
 import { CONTROL_WIDTH, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { ONLY_HTTP_TRANSPORTS } from '@/src/constants/transport';
 import { useI18n } from '@/src/locales/client';
-import { ApplicationMCPConfigDelivery, ApplicationMCPContainer, DialApplication } from '@/src/models/dial/application';
+import {
+  ApplicationMCPConfigDelivery,
+  ApplicationMCPContainer,
+  DialApplication,
+  MCP_CONFIG_DELIVERY_I18N_MAP,
+} from '@/src/models/dial/application';
 import { SOURCE_FIELD } from '@/src/components/SourceField/types';
-
-const MCP_CONFIG_DELIVERY_I18N_MAP: Record<ApplicationMCPConfigDelivery, EntityFieldsI18nKey> = {
-  [ApplicationMCPConfigDelivery.META]: EntityFieldsI18nKey.configDeliveryMeta,
-  [ApplicationMCPConfigDelivery.HEADER]: EntityFieldsI18nKey.configDeliveryHeader,
-};
 
 enum ApplicationEndpointCheckbox {
   CHAT_ENDPOINT = 'chat_endpoint',

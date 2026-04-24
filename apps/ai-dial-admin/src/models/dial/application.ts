@@ -1,4 +1,5 @@
 import { SOURCE_FIELD } from '@/src/components/SourceField/types';
+import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { ChatEntity, EntityValidityState, ModifiedEntity } from './base-entity';
 import { DefaultsValue } from './defaults';
 import { DialRoute } from './route';
@@ -91,3 +92,8 @@ export enum ApplicationMCPConfigDelivery {
   META = 'meta',
   HEADER = 'header',
 }
+
+export const MCP_CONFIG_DELIVERY_I18N_MAP: Record<ApplicationMCPConfigDelivery, EntityFieldsI18nKey> = {
+  [ApplicationMCPConfigDelivery.META]: EntityFieldsI18nKey.configDeliveryMeta,
+  [ApplicationMCPConfigDelivery.HEADER]: EntityFieldsI18nKey.configDeliveryHeader,
+};
