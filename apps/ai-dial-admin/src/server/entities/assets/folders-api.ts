@@ -57,12 +57,14 @@ export class FoldersApi extends BaseApi {
     oldPath: string,
     newPath: string,
     resourceType: ResourceType,
+    overwrite = false,
   ): Promise<ServerActionResponse> {
     return this.postAction(
       `${FOLDERS_MOVE_URL}`,
       {
         oldPath,
         newPath,
+        overwrite,
         resourceTypes: [resourceType],
       },
       token,

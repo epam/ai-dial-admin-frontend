@@ -22,9 +22,9 @@ export async function removeFile(path: string) {
   return assetsApi.removeAsset(token, path, ResourceType.FILE);
 }
 
-export async function moveFiles(paths: string[], newPath: string) {
+export async function moveFiles(paths: string[], newPath: string, overwrite?: boolean, duplicateName?: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.moveAssets(token, paths, newPath, ResourceType.FILE);
+  return assetsApi.moveAssets(token, paths, newPath, ResourceType.FILE, overwrite, duplicateName);
 }
 
 export async function exportFiles(paths: string[]) {
