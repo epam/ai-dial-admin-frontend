@@ -1394,6 +1394,12 @@ export default {
     AddImage: 'Add Image',
     FromMcpRegistry: 'From MCP Registry',
     AddFromMcpRegistryModalTitle: 'Add Image from MCP Registry',
+    BuildStopped: 'Build stopped',
+    StopBuildModalTitle: 'Stop Build',
+    StopBuildModalDescription:
+      'Are you sure you want to stop building this image? The build process will be interrupted and you can restart it later.',
+    BuildStoppedSuccess: '{type} Image build stopped',
+    BuildStoppedSuccessDescription: 'Latest progress has been preserved',
   },
   Containers: {
     ContainersListTitle: '{type} {entityType}s',

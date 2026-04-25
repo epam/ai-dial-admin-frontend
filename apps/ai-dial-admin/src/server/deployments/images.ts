@@ -46,6 +46,10 @@ export class ImagesApi extends BaseApi {
     return this.postAction(INSTALL_IMAGES_URL, { imageDefinitionId: id }, token);
   }
 
+  stopBuild(id: string, token: Token): Promise<ServerActionResponse> {
+    return this.deleteAction(`${INSTALL_IMAGES_URL}/${id}`, token);
+  }
+
   getImageLogs(id: string, token: Token): Promise<Image | null> {
     return this.get(IMAGE_LOGS_URL(id), token);
   }

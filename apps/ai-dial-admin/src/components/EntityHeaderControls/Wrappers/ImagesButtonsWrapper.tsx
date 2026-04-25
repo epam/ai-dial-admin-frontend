@@ -1,14 +1,15 @@
 import { DialNeutralButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
-import { IconBlocks, IconPlus, IconTrashX } from '@tabler/icons-react';
+import { IconBlocks, IconPlayerPause, IconPlus, IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { useRouter } from 'next/navigation';
 import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { createContainer, createImage, deleteImage, installImage } from '@/src/app/actions/deployments';
+import { createContainer, createImage, deleteImage, installImage, stopBuild } from '@/src/app/actions/deployments';
 import VersionsSelect from '@/src/components/Deployments/Common/VersionsSelect/VersionsSelect';
 import ImageCreateContainer from '@/src/components/Deployments/Modals/ImageCreateContainer';
 import ImageInstall from '@/src/components/Deployments/Modals/ImageInstall';
+import ImageStopBuild from '@/src/components/Deployments/Modals/ImageStopBuild';
 import AddVersionModal from '@/src/components/Assets/Modals/AddVersionModal';
 import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
@@ -125,6 +126,26 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
     [router, showNotification],
   );
 
+  const onStopBuild = useCallback(
+    (image: Image) => {
+      stopBuild(image.id).then((res) => {
+        if (res.success) {
+          const type = getTranslatedType(getRouteByType(image.$type), t);
+          showNotification(
+            getSuccessNotification(
+              t(ImagesI18nKey.BuildStoppedSuccess, { type }),
+              t(ImagesI18nKey.BuildStoppedSuccessDescription),
+            ),
+          );
+          router.refresh();
+        } else {
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        }
+      });
+    },
+    [router, showNotification, t],
+  );
+
   const onOpenDeleteModal = useCallback(() => {
     onOpenModal(ModalType.delete);
   }, [onOpenModal]);
@@ -143,6 +164,10 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
 
   const onOpenInstallModal = useCallback(() => {
     onOpenModal(ModalType.install);
+  }, [onOpenModal]);
+
+  const onOpenStopModal = useCallback(() => {
+    onOpenModal(ModalType.stopBuild);
   }, [onOpenModal]);
 
   const onCreateContainer = useCallback(
@@ -234,6 +259,14 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
                   iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
                   onClick={onOpenDeleteModal}
                 />
+                {image.buildStatus === IMAGE_STATUS.BUILDING && (
+                  <DialNeutralButton
+                    className={buttonsClassNames}
+                    label={t(ButtonsI18nKey.Stop)}
+                    iconBefore={<IconPlayerPause {...BASE_BUTTON_ICON_PROPS} />}
+                    onClick={onOpenStopModal}
+                  />
+                )}
                 {image.buildStatus === IMAGE_STATUS.BUILT && (
                   <DialNeutralButton
                     className={buttonsClassNames}
@@ -331,6 +364,18 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
             onApply={onInstallImage}
+          />,
+          document.body,
+        )}
+      {isModalOpen &&
+        modalType === ModalType.stopBuild &&
+        createPortal(
+          <ImageStopBuild
+            image={image}
+            title={t(ImagesI18nKey.StopBuildModalTitle)}
+            isModalOpen={isModalOpen}
+            onClose={onCloseModal}
+            onApply={onStopBuild}
           />,
           document.body,
         )}

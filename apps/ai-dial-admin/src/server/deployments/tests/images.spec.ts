@@ -94,4 +94,14 @@ describe('ImagesApi', () => {
       expect.objectContaining({ method: 'GET' }),
     );
   });
+
+  test('stopBuild calls build endpoint with DELETE method', async () => {
+    fetch.mockResponseOnce(JSON.stringify({}));
+    await instance.stopBuild('build1', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(`${INSTALL_IMAGES_URL}/build1`),
+      expect.objectContaining({ method: 'DELETE' }),
+    );
+  });
 });
