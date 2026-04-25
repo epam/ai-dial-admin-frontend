@@ -10,7 +10,7 @@ interface Props {
   refreshTime?: string;
 }
 
-const SingleValueChartsDashboard: FC<Props> = ({ getData, refreshTime }) => {
+const ChartsDashboard: FC<Props> = ({ getData, refreshTime }) => {
   const config = [
     { title: TelemetryI18nKey.UniqueUsers, query: UNIQ_USERS_QUERY },
     { title: TelemetryI18nKey.RequestCount, query: REQUEST_COUNT_QUERY },
@@ -35,4 +35,4 @@ const SingleValueChartsDashboard: FC<Props> = ({ getData, refreshTime }) => {
   );
 };
 
-export default SingleValueChartsDashboard;
+export default ChartsDashboard;

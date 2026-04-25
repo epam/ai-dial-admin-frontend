@@ -1,7 +1,7 @@
 import { FC } from 'react';
 
 import McpUsageChart from '@/src/components/Charts/LineChart/McpUsageChart';
-import McpSingleValueChartsDashboard from '@/src/components/Charts/SingleValueChart/McpSingleValueChartsDashboard';
+import McpChartsDashboard from '@/src/components/Charts/SingleValueChart/McpChartsDashboard';
 import TelemetryGrid from '@/src/components/Telemetry/TelemetryGrid';
 import { TelemetryI18nKey } from '@/src/constants/i18n';
 import {
@@ -42,7 +42,7 @@ const McpDashboard: FC<Props> = ({
     <div className="flex flex-col flex-1 min-h-0 min-w-0 overflow-auto">
       <div className="flex flex-col md:flex-row mb-6 md:flex-wrap gap-6">
         <McpUsageChart getData={getData} refreshTime={refreshTime} />
-        <McpSingleValueChartsDashboard
+        <McpChartsDashboard
           getData={getData}
           getToolCallsData={getToolCallsData}
           refreshTime={refreshTime}

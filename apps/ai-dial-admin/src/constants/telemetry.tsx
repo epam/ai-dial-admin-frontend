@@ -353,3 +353,25 @@ export const USAGE_LOG_TEXT_OPERATOR_MAP: Record<string, string> = {
   startsWith: '$starts_with',
   endsWith: '$ends_with',
 };
+
+export const ROUTE_TABLE_NAME = 'routes_analytics';
+
+export const ROUTE_UNIQUE_USERS_QUERY: TelemetryQuery = {
+  $type: 'json',
+  query: {
+    expressions: ['count()'],
+    from: {
+      distinct: 'true',
+      expressions: ['user_hash'],
+      from: ROUTE_TABLE_NAME,
+    },
+  },
+};
+
+export const ROUTE_TOTAL_CALLS_QUERY: TelemetryQuery = {
+  $type: 'json',
+  query: {
+    expressions: ['count()'],
+    from: ROUTE_TABLE_NAME,
+  },
+};

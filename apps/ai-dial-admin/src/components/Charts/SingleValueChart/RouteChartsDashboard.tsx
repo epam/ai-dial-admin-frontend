@@ -1,0 +1,37 @@
+import { FC } from 'react';
+
+import SingleValueChart from '@/src/components/Charts/SingleValueChart/SingleValueChart';
+import { TelemetryI18nKey } from '@/src/constants/i18n';
+import { ROUTE_TOTAL_CALLS_QUERY, ROUTE_UNIQUE_USERS_QUERY } from '@/src/constants/telemetry';
+import { ServerActionResponse } from '@/src/models/server-action';
+import { TelemetryQuery } from '@/src/models/telemetry';
+
+interface Props {
+  getData: (query: TelemetryQuery) => Promise<ServerActionResponse>;
+  refreshTime?: string;
+}
+
+const RouteChartsDashboard: FC<Props> = ({ getData, refreshTime }) => {
+  return (
+    <div className="flex flex-col shrink-0 overflow-auto gap-6">
+      <SingleValueChart
+        title={TelemetryI18nKey.UniqueUsers}
+        getData={getData}
+        refreshTime={refreshTime}
+        query={ROUTE_UNIQUE_USERS_QUERY}
+        unit={null}
+      />
+      <div className="grid grid-cols-2 gap-6 w-full">
+        <SingleValueChart
+          title={TelemetryI18nKey.TotalMcpCalls}
+          getData={getData}
+          refreshTime={refreshTime}
+          query={ROUTE_TOTAL_CALLS_QUERY}
+          unit={null}
+        />
+      </div>
+    </div>
+  );
+};
+
+export default RouteChartsDashboard;

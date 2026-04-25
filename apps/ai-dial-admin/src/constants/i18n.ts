@@ -648,6 +648,7 @@ export enum TelemetryI18nKey {
   ViewByLabel = 'Telemetry.ViewByLabel',
   ViewByChat = 'Telemetry.ViewBy.Chat',
   ViewByMcp = 'Telemetry.ViewBy.Mcp',
+  ViewByRoute = 'Telemetry.ViewBy.Route',
   TotalMcpCalls = 'Telemetry.TotalMcpCalls',
   TotalToolCalls = 'Telemetry.TotalToolCalls',
   McpConsumption = 'Telemetry.McpConsumption',

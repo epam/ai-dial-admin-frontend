@@ -12,7 +12,7 @@ interface Props {
   refreshTime?: string;
 }
 
-const McpSingleValueChartsDashboard: FC<Props> = ({ getData, getToolCallsData, refreshTime }) => {
+const McpChartsDashboard: FC<Props> = ({ getData, getToolCallsData, refreshTime }) => {
   return (
     <div className="flex flex-col shrink-0 overflow-auto gap-6">
       <SingleValueChart
@@ -42,4 +42,4 @@ const McpSingleValueChartsDashboard: FC<Props> = ({ getData, getToolCallsData, r
   );
 };
 
-export default McpSingleValueChartsDashboard;
+export default McpChartsDashboard;
