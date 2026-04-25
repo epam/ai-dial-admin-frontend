@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
-import McpDashboard from '../Dashboards/McpDashboard';
+import McpDashboard from '../Dashboards/Mcp/McpDashboard';
 import { TelemetryI18nKey } from '@/src/constants/i18n';
 
 const getData = vi.fn().mockResolvedValue({ success: false });

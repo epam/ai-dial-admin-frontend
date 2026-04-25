@@ -1,5 +1,5 @@
 import { getDashboardData } from '@/src/app/[lang]/dashboard/actions';
-import McpDashboard from '@/src/components/Telemetry/Dashboards/McpDashboard';
+import McpDashboard from '@/src/components/Telemetry/Dashboards/Mcp/McpDashboard';
 import TelemetryControls from '@/src/components/Telemetry/TelemetryControls/TelemetryControls';
 import ViewByFilter from '@/src/components/Telemetry/TelemetryControls/ViewByFilter';
 import {
@@ -21,7 +21,7 @@ import { getFormattedFilters } from '@/src/utils/telemetry';
 import { ChartResolution, getChartResolution } from '@/src/utils/time-filter/get-chart-resolution';
 import { FC, useCallback, useMemo, useRef, useState } from 'react';
 import SimpleDashboard from './Dashboards/SimpleDashboard';
-import RouteDashboard from './Dashboards/RouteDashboard';
+import RouteDashboard from './Dashboards/Route/RouteDashboard';
 
 export type QueryInput = TelemetryQuery | ((resolution: ChartResolution) => TelemetryQuery);
 

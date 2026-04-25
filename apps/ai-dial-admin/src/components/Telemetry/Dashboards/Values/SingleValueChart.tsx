@@ -13,7 +13,7 @@ interface Props {
   title: string;
   getData: (query: TelemetryQuery) => Promise<ServerActionResponse>;
   query: TelemetryQuery;
-  unit: string | null;
+  unit?: string;
   refreshTime?: string;
 }
 
@@ -25,7 +25,6 @@ const SingleValueChart: FC<Props> = ({ title, getData, unit, query, refreshTime 
   useEffect(() => {
     const fetch = async () => {
       const response = await getData(query);
-      console.log('SingleValueChart response', response);
       if (response.success) {
         setData(getSingleValueChartData(response.response as TelemetryData));
       } else {

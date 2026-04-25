@@ -3,7 +3,7 @@ import { SortModelItem } from 'ag-grid-community';
 import { Big } from 'big.js';
 import { EChartsOption } from 'echarts-for-react/src/types';
 
-import { lineChartDefaultOptions, multiSeriesLineChartOptions } from '@/src/components/Charts/LineChart/constants';
+import { lineChartDefaultOptions, multiSeriesLineChartOptions } from '@/src/components/Telemetry/Dashboards/LineChart/constants';
 import { TelemetryI18nKey } from '@/src/constants/i18n';
 import {
   filterConditionConfig,

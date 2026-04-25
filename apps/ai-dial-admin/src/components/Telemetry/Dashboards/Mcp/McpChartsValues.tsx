@@ -1,6 +1,6 @@
 import { FC } from 'react';
 
-import SingleValueChart from '@/src/components/Charts/SingleValueChart/SingleValueChart';
+import SingleValueChart from '@/src/components/Telemetry/Dashboards/SingleValueChart/SingleValueChart';
 import { TelemetryI18nKey } from '@/src/constants/i18n';
 import { MCP_TOTAL_CALLS_QUERY, MCP_TOOL_CALLS_QUERY, MCP_UNIQUE_USERS_QUERY } from '@/src/constants/telemetry';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -12,7 +12,7 @@ interface Props {
   refreshTime?: string;
 }
 
-const McpChartsDashboard: FC<Props> = ({ getData, getToolCallsData, refreshTime }) => {
+const McpChartsValues: FC<Props> = ({ getData, getToolCallsData, refreshTime }) => {
   return (
     <div className="flex flex-col shrink-0 overflow-auto gap-6">
       <SingleValueChart
@@ -20,7 +20,6 @@ const McpChartsDashboard: FC<Props> = ({ getData, getToolCallsData, refreshTime 
         getData={getData}
         refreshTime={refreshTime}
         query={MCP_UNIQUE_USERS_QUERY}
-        unit={null}
       />
       <div className="grid grid-cols-2 gap-6 w-full">
         <SingleValueChart
@@ -28,18 +27,16 @@ const McpChartsDashboard: FC<Props> = ({ getData, getToolCallsData, refreshTime 
           getData={getData}
           refreshTime={refreshTime}
           query={MCP_TOTAL_CALLS_QUERY}
-          unit={null}
         />
         <SingleValueChart
           title={TelemetryI18nKey.TotalToolCalls}
           getData={getToolCallsData}
           refreshTime={refreshTime}
           query={MCP_TOOL_CALLS_QUERY}
-          unit={null}
         />
       </div>
     </div>
   );
 };
 
-export default McpChartsDashboard;
+export default McpChartsValues;

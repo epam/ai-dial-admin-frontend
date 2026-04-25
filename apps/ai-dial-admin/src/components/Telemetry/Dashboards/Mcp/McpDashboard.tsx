@@ -1,11 +1,27 @@
 import { FC } from 'react';
 
-import RouteUsageChart from '@/src/components/Charts/LineChart/RouteUsageChart';
-import RouteChartsDashboard from '@/src/components/Charts/SingleValueChart/RouteChartsDashboard';
+import McpChartsValues from '@/src/components/Telemetry/Dashboards/Mcp/McpChartsValues';
 import { QueryInput } from '@/src/components/Telemetry/Dashboard';
+import TelemetryGrid from '@/src/components/Telemetry/TelemetryGrid';
+import {
+  MCP_CALLS_BY_DEPLOYMENT_COLUMNS,
+  MCP_CONSUMPTION_COLUMNS,
+  MCP_PROJECTS_CONSUMPTION_COLUMNS,
+  TOOLS_CONSUMPTION_COLUMNS,
+} from '@/src/constants/grid-columns/grid-columns';
+import { TelemetryI18nKey } from '@/src/constants/i18n';
+import {
+  createMcpUsageQuery,
+  MCP_CALLS_BY_DEPLOYMENT_QUERY,
+  MCP_CONSUMPTION_QUERY,
+  MCP_PROJECTS_CONSUMPTION_QUERY,
+  MCP_TOOLS_CONSUMPTION_QUERY,
+} from '@/src/constants/telemetry';
 import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { TelemetryQuery } from '@/src/models/telemetry';
+import { prepareMultiSeriesChartData } from '@/src/utils/telemetry';
+import LineChart from '../LineChart/LineChart';
 
 interface Props {
   getData: (input: QueryInput) => Promise<ServerActionResponse>;
@@ -15,7 +31,7 @@ interface Props {
   isEntityView?: boolean;
 }
 
-const RouteDashboard: FC<Props> = ({
+const McpDashboard: FC<Props> = ({
   getData,
   getToolCallsData,
   getToolsConsumptionData,
@@ -27,10 +43,16 @@ const RouteDashboard: FC<Props> = ({
   return (
     <div className="flex flex-col flex-1 min-h-0 min-w-0 overflow-auto">
       <div className="flex flex-col md:flex-row mb-6 md:flex-wrap gap-6">
-        <RouteUsageChart getData={getData} refreshTime={refreshTime} />
-        <RouteChartsDashboard getData={getData} refreshTime={refreshTime} />
+        <LineChart
+          title={t(TelemetryI18nKey.RequestPerMcpUsage)}
+          query={createMcpUsageQuery}
+          getData={getData}
+          prepareData={prepareMultiSeriesChartData}
+          refreshTime={refreshTime}
+        />
+        <McpChartsValues getData={getData} getToolCallsData={getToolCallsData} refreshTime={refreshTime} />
       </div>
-      {/* <div className="flex flex-col w-full gap-6">
+      <div className="flex flex-col w-full gap-6">
         <div className="flex flex-col md:flex-row gap-6">
           {!isEntityView && (
             <div className="flex flex-1 relative">
@@ -73,9 +95,9 @@ const RouteDashboard: FC<Props> = ({
             />
           </div>
         </div>
-      </div> */}
+      </div>
     </div>
   );
 };
 
-export default RouteDashboard;
+export default McpDashboard;

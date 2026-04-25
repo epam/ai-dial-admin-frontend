@@ -650,11 +650,13 @@ export enum TelemetryI18nKey {
   ViewByMcp = 'Telemetry.ViewBy.Mcp',
   ViewByRoute = 'Telemetry.ViewBy.Route',
   TotalMcpCalls = 'Telemetry.TotalMcpCalls',
+  TotalRouteCalls = 'Telemetry.TotalRouteCalls',
   TotalToolCalls = 'Telemetry.TotalToolCalls',
   McpConsumption = 'Telemetry.McpConsumption',
   ToolsConsumption = 'Telemetry.ToolsConsumption',
   CallsByDeployment = 'Telemetry.CallsByDeployment',
   RequestPerMcpUsage = 'Telemetry.RequestPerMcpUsage',
+  RouteRequests = 'Telemetry.RouteRequests',
   ProjectsConsumptionMcp = 'Telemetry.ProjectsConsumptionMcp',
   Unknown = 'Telemetry.Unknown',
 }

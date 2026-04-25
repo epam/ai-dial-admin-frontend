@@ -375,3 +375,14 @@ export const ROUTE_TOTAL_CALLS_QUERY: TelemetryQuery = {
     from: ROUTE_TABLE_NAME,
   },
 };
+
+export const createRouteUsageQuery = (resolution: ChartResolution): TelemetryQuery => ({
+  $type: 'json',
+  fillGaps: true,
+  query: {
+    expressions: [formatWindow(resolution), 'route_method', 'count()'],
+    from: ROUTE_TABLE_NAME,
+    groupBy: [formatWindow(resolution), 'route_method'],
+    orderBy: [{ $asc: formatWindow(resolution) }],
+  },
+});

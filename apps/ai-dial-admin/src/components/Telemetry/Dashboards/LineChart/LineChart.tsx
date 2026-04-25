@@ -4,20 +4,23 @@ import { FC, useEffect, useState } from 'react';
 import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import ReactECharts, { EChartsOption } from 'echarts-for-react';
 
-import { BasicI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
-import { createSystemUsageQuery, refreshOptionsConfig } from '@/src/constants/telemetry';
+import { QueryInput } from '@/src/components/Telemetry/Dashboard';
+import { BasicI18nKey } from '@/src/constants/i18n';
+import { refreshOptionsConfig } from '@/src/constants/telemetry';
 import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { TelemetryData } from '@/src/models/telemetry';
 import { getListingData, prepareChartData } from '@/src/utils/telemetry';
-import { QueryInput } from '@/src/components/Telemetry/Dashboard';
 
 interface Props {
+  query: QueryInput;
+  title?: string;
+  prepareData?: (data: Record<string, string>[], t: (key: string) => string) => EChartsOption;
   getData: (input: QueryInput) => Promise<ServerActionResponse>;
   refreshTime?: string;
 }
 
-const LineChart: FC<Props> = ({ getData, refreshTime }) => {
+const LineChart: FC<Props> = ({ getData, prepareData, query, title, refreshTime }) => {
   const t = useI18n();
   const [data, setData] = useState<Record<string, string>[] | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -26,12 +29,12 @@ const LineChart: FC<Props> = ({ getData, refreshTime }) => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      const response = await getData(createSystemUsageQuery);
+      const response = await getData(query);
 
       if (response.success) {
         const data = getListingData(response.response as TelemetryData);
         setData(data);
-        setOptions(prepareChartData(data, t));
+        setOptions(prepareData ? prepareData(data, t) : prepareChartData(data, t));
       } else {
         setData(null);
       }
@@ -52,11 +55,11 @@ const LineChart: FC<Props> = ({ getData, refreshTime }) => {
     return () => {
       clearInterval(intervalId);
     };
-  }, [getData, t, refreshTime]);
+  }, [getData, t, refreshTime, prepareData, query]);
 
   return (
     <div className="flex flex-col flex-1 rounded-lg border border-primary p-4 min-h-[280px] min-w-[200px]">
-      <h3 className="text-primary mb-4">{t(TelemetryI18nKey.SystemUsage)}</h3>
+      <h3 className="text-primary mb-4">{title}</h3>
 
       {loading && !data ? (
         <DialLoader size={24} />

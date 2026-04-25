@@ -1,9 +1,9 @@
 import { FC } from 'react';
-import SingleValueChart from '@/src/components/Charts/SingleValueChart/SingleValueChart';
 import { TelemetryQuery } from '@/src/models/telemetry';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { TelemetryI18nKey } from '@/src/constants/i18n';
 import { MONEY_QUERY, REQUEST_COUNT_QUERY, TOTAL_TOKENS_QUERY, UNIQ_USERS_QUERY } from '@/src/constants/telemetry';
+import SingleValueChart from '../Values/SingleValueChart';
 
 interface Props {
   getData: (query: TelemetryQuery) => Promise<ServerActionResponse>;
@@ -27,7 +27,7 @@ const ChartsDashboard: FC<Props> = ({ getData, refreshTime }) => {
             getData={getData}
             refreshTime={refreshTime}
             query={query}
-            unit={unit || null}
+            unit={unit || void 0}
           />
         ))}
       </div>

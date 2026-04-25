@@ -40,7 +40,7 @@ import {
   getDeploymentTools,
   removeMultipleTestCases,
 } from './actions';
-import { TestCaseConflictStrategy, TestCaseImportMode } from '../../../types/evaluation';
+import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');

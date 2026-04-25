@@ -16,7 +16,7 @@ import {
 } from '../telemetry';
 import { describe, test, vi, expect } from 'vitest';
 
-import { lineChartDefaultOptions } from '@/src/components/Charts/LineChart/constants';
+import { lineChartDefaultOptions } from '@/src/components/Telemetry/Dashboards/LineChart/constants';
 import { TRACES_QUERY } from '@/src/constants/telemetry';
 import { TimeRange } from '@/src/models/time-range';
 import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';

@@ -1,10 +1,11 @@
 import { getDashboardData } from '@/src/app/[lang]/dashboard/actions';
-import LineChart from '@/src/components/Charts/LineChart/LineChart';
-import ChartsDashboard from '@/src/components/Charts/SingleValueChart/ChartsDashboard';
+import LineChart from '@/src/components/Telemetry/Dashboards/LineChart/LineChart';
+import ChartsDashboard from '@/src/components/Telemetry/Dashboards/SingleValueChart/ChartsDashboard';
 import TelemetryGrid from '@/src/components/Telemetry/TelemetryGrid';
 import { PROJECT_GRID_COLUMNS, TELEMETRY_GRID_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { TelemetryI18nKey } from '@/src/constants/i18n';
 import {
+  createSystemUsageQuery,
   ENTITY_CONSUMPTION_QUERY,
   PROJECT_CONSUMPTION_QUERY,
   TOOLSET_DEPLOYMENT_PREFIX,
@@ -73,7 +74,12 @@ const SimpleDashboard: FC<Props> = ({
   return (
     <div className="flex flex-col flex-1 min-h-0 min-w-0 overflow-auto">
       <div className="flex flex-col md:flex-row mb-6 md:flex-wrap gap-6">
-        <LineChart getData={getData} refreshTime={effectiveRefreshTime} />
+        <LineChart
+          title={t(TelemetryI18nKey.SystemUsage)}
+          query={createSystemUsageQuery}
+          getData={getData}
+          refreshTime={effectiveRefreshTime}
+        />
         <ChartsDashboard getData={getData} refreshTime={effectiveRefreshTime} />
       </div>
       <div className="flex flex-col w-full">
