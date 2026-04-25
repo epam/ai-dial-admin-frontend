@@ -6,7 +6,7 @@ import ReactECharts, { EChartsOption } from 'echarts-for-react';
 
 import { QueryInput } from '@/src/components/Telemetry/Dashboard';
 import { BasicI18nKey } from '@/src/constants/i18n';
-import { refreshOptionsConfig } from '@/src/constants/telemetry';
+import { refreshOptionsConfig } from '@/src/constants/telemetry/filters';
 import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { TelemetryData } from '@/src/models/telemetry';

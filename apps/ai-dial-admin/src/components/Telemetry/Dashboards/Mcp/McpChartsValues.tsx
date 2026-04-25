@@ -1,10 +1,10 @@
 import { FC } from 'react';
 
-import SingleValueChart from '@/src/components/Telemetry/Dashboards/SingleValueChart/SingleValueChart';
 import { TelemetryI18nKey } from '@/src/constants/i18n';
 import { MCP_TOTAL_CALLS_QUERY, MCP_TOOL_CALLS_QUERY, MCP_UNIQUE_USERS_QUERY } from '@/src/constants/telemetry';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { TelemetryQuery } from '@/src/models/telemetry';
+import SingleValueChart from '../Values/SingleValueChart';
 
 interface Props {
   getData: (query: TelemetryQuery) => Promise<ServerActionResponse>;

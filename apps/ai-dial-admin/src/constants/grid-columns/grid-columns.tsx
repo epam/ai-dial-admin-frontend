@@ -501,6 +501,28 @@ export const MCP_PROJECTS_CONSUMPTION_COLUMNS: ColDef[] = [
   { field: 'mcp_calls', headerName: 'MCP Calls', hide: false, sort: 'desc', ...numericColumn },
 ];
 
+export const CALL_BY_DEPLOYMENT_COLUMNS: ColDef[] = [
+  { field: 'deployment', headerName: 'Deployment', hide: false },
+  { field: 'requests', headerName: 'Calls', hide: false, ...numericColumn },
+];
+
+export const CALL_BY_PARENT_DEPLOYMENT_COLUMNS: ColDef[] = [
+  { field: 'parent_deployment', headerName: 'Parent Deployment', hide: false },
+  { field: 'requests', headerName: 'Calls', hide: false, ...numericColumn },
+];
+
+export const CALL_BY_PROJECT_COLUMNS: ColDef[] = [
+  { field: 'project_id', headerName: 'Project', hide: false },
+  { field: 'requests', headerName: 'Calls', hide: false, ...numericColumn },
+];
+
+export const CALL_BY_ROUTES_COLUMNS: ColDef[] = [
+  { field: 'deployment', headerName: 'Deployment', hide: false },
+  { field: 'route_path', headerName: 'Route', hide: false },
+  { field: 'http_method', headerName: 'Method', hide: false },
+  { field: 'requests', headerName: 'Calls', hide: false, ...numericColumn },
+];
+
 export const SOURCE_CONTAINERS_COLUMNS: ColDef[] = [
   DISPLAY_NAME_COLUMN_WITH_SORT,
   DESCRIPTION_COLUMN,

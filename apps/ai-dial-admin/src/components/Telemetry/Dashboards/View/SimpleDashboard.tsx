@@ -1,6 +1,5 @@
 import { getDashboardData } from '@/src/app/[lang]/dashboard/actions';
 import LineChart from '@/src/components/Telemetry/Dashboards/LineChart/LineChart';
-import ChartsDashboard from '@/src/components/Telemetry/Dashboards/SingleValueChart/ChartsDashboard';
 import TelemetryGrid from '@/src/components/Telemetry/TelemetryGrid';
 import { PROJECT_GRID_COLUMNS, TELEMETRY_GRID_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { TelemetryI18nKey } from '@/src/constants/i18n';
@@ -20,6 +19,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getFormattedFilters } from '@/src/utils/telemetry';
 import { ChartResolution, getChartResolution } from '@/src/utils/time-filter/get-chart-resolution';
 import { FC, useCallback, useMemo, useRef } from 'react';
+import ChartsDashboard from './ChartsDashboard';
 
 export type QueryInput = TelemetryQuery | ((resolution: ChartResolution) => TelemetryQuery);
 

@@ -7,7 +7,7 @@ import { TelemetryData, TelemetryQuery } from '@/src/models/telemetry';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { getSingleValueChartData } from '@/src/utils/telemetry';
-import { refreshOptionsConfig } from '@/src/constants/telemetry';
+import { refreshOptionsConfig } from '@/src/constants/telemetry/filters';
 
 interface Props {
   title: string;
