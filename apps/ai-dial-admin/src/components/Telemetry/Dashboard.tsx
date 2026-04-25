@@ -10,7 +10,6 @@ import {
 } from '@/src/constants/telemetry';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useTimeFilter } from '@/src/hooks/use-time-filter';
-import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { FilterData, TelemetryQuery } from '@/src/models/telemetry';
 import { TimeFilterValue } from '@/src/models/time-range';
@@ -20,8 +19,8 @@ import { isToolsetRoute } from '@/src/utils/is-view';
 import { getFormattedFilters } from '@/src/utils/telemetry';
 import { ChartResolution, getChartResolution } from '@/src/utils/time-filter/get-chart-resolution';
 import { FC, useCallback, useMemo, useRef, useState } from 'react';
-import SimpleDashboard from './Dashboards/SimpleDashboard';
 import RouteDashboard from './Dashboards/Route/RouteDashboard';
+import SimpleDashboard from './Dashboards/View/SimpleDashboard';
 
 export type QueryInput = TelemetryQuery | ((resolution: ChartResolution) => TelemetryQuery);
 
@@ -33,7 +32,6 @@ interface Props {
 }
 
 const Dashboard: FC<Props> = ({ route, entity, defaultTimeFilter, onTimeFilterChange }) => {
-  const t = useI18n();
   const [filters, setFilters] = useState<FilterData[]>([]);
   const [refreshTime, setRefreshTime] = useState(DEFAULT_REFRESH_TIME);
   const [viewType, setViewType] = useState<DASHBOARD_VIEW_TYPE>(DASHBOARD_VIEW_TYPE.Chat);
