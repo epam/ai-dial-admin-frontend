@@ -110,7 +110,7 @@ describe('getTestCaseColumns', () => {
     const result = getTestCaseColumns(suite, onCellChange);
 
     // First columns should be from TEST_CASES_COLUMN
-    expect(result[1]).toEqual(TEST_CASES_COLUMN[0]);
+    expect(result[1]).toEqual({ ...TEST_CASES_COLUMN[0], cellClass: 'select-none cursor-pointer' });
     expect(result[2]).toEqual(expect.objectContaining(TEST_CASES_COLUMN[1]));
     // Then schema columns
     expect(result[3]).toEqual(expect.objectContaining({ field: 'customFact', headerName: 'customFact' }));

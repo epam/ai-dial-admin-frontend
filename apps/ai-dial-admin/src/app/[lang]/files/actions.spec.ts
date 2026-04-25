@@ -41,7 +41,14 @@ describe('Files :: server actions', () => {
 
     const result = await moveFiles(['path'], 'newPath');
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetsApi.moveAssets).toHaveBeenCalledWith(TOKEN_MOCK, ['path'], 'newPath', ResourceType.FILE);
+    expect(assetsApi.moveAssets).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ['path'],
+      'newPath',
+      ResourceType.FILE,
+      undefined,
+      undefined,
+    );
     expect(result).toBe(RESPONSE_MOCK);
   });
 

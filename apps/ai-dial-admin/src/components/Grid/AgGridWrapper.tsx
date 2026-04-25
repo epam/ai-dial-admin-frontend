@@ -13,6 +13,7 @@ import {
   ColumnApiModule,
   ColumnAutoSizeModule,
   ColumnState,
+  DateFilterModule,
   EventApiModule,
   GridApi,
   GridOptions,
@@ -74,6 +75,7 @@ ModuleRegistry.registerModules([
   ScrollApiModule,
   CheckboxEditorModule,
   PinnedRowModule,
+  DateFilterModule,
 ]);
 
 const GRID_THEME_COLORS = {

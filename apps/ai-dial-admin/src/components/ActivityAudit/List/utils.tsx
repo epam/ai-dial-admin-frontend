@@ -61,12 +61,12 @@ export const getGridFilters = (gridFilter: Record<string, GridFilter>, timeRange
   const timeFilters: FilterDto[] = [
     {
       column: 'epochTimestampMs',
-      operator: FilterOperatorDto.GREATER_THEN_OR_EQUAL,
+      operator: FilterOperatorDto.GREATER_THAN_OR_EQUAL,
       value: timeRange.startDate.getTime().toString(),
     },
     {
       column: 'epochTimestampMs',
-      operator: FilterOperatorDto.LESS_THEN_OR_EQUAL,
+      operator: FilterOperatorDto.LESS_THAN_OR_EQUAL,
       value: timeRange.endDate.getTime().toString(),
     },
   ];

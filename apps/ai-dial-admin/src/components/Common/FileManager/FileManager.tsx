@@ -43,6 +43,8 @@ import {
 import { FileManagerGridRow } from '@epam/ai-dial-ui-kit/dist/src/components/FileManager/FileManagerContext';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialRootFolder } from '@epam/ai-dial-ui-kit/dist/src/models/file';
+import MoveItemsModal from './MoveItemsModal';
+import { MOVE_ITEMS_INDICATOR_DELAY } from './constants';
 
 interface Props {
   view: ApplicationRoute;
@@ -53,7 +55,7 @@ interface Props {
     file: DialUploadFileItem | undefined,
     folderPath: string,
   ) => Promise<ServerActionResponse | undefined>;
-  onDeleteItems?: (fileNodes: DialDeletedItem[]) => Promise<ServerActionResponse[]>;
+  onDeleteItems?: (fileNodes: DialDeletedItem[]) => Promise<(ServerActionResponse[] | ServerActionResponse)[]>;
   onMoveItems: (
     items: DialCopiedItem[],
     sourceFolder: string,
@@ -76,6 +78,8 @@ interface Props {
   emptyStateTitle?: string;
   emptyStateDescription?: string;
   showHiddenFileSwitcherInDestinationPopup?: boolean;
+  movingItems: number;
+  movedItems: number;
 }
 
 const FileManager: FC<Props> = ({
@@ -90,6 +94,8 @@ const FileManager: FC<Props> = ({
   filterData,
   onPathChange,
   customUploadFileAction,
+  movingItems,
+  movedItems,
   ...props
 }) => {
   const [loadedPaths, setLoadedPaths] = useState(new Set(['']));
@@ -97,6 +103,7 @@ const FileManager: FC<Props> = ({
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { showNotification } = useNotification();
+  const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
   const { files, fetchFiles, isFetchingFiles, filePath, setFilePath, expandedFolders, setExpandedFolders } =
     getContext();
 
@@ -246,7 +253,7 @@ const FileManager: FC<Props> = ({
   const handleDeleteFileNodes = useCallback(
     async (fileNodes: DialDeletedItem[]) => {
       onDeleteItems?.(fileNodes).then((result) => {
-        const isSuccess = result.every((res) => res.success);
+        const isSuccess = result.every((res) => (Array.isArray(res) ? res.every((r) => r.success) : res.success));
         if (isSuccess) {
           const parentPath = getParentPathByFullPath(fileNodes[0]?.sourceUrl) || `${ROOT_FOLDER}/`;
           fetchFiles(parentPath);
@@ -266,7 +273,15 @@ const FileManager: FC<Props> = ({
         return;
       }
 
+      if (sourceFolder !== destinationFolder) {
+        setIsMoveModalOpen(true);
+      }
+
       onMoveItems(items, sourceFolder, destinationFolder).then((result) => {
+        setTimeout(() => {
+          setIsMoveModalOpen(false);
+        }, MOVE_ITEMS_INDICATOR_DELAY);
+
         const isSuccess = result.every((res) => (Array.isArray(res) ? res.every((r) => r.success) : res.success));
         if (isSuccess) {
           fetchFiles(destinationFolder);
@@ -301,49 +316,61 @@ const FileManager: FC<Props> = ({
     [customUploadFileAction],
   );
 
+  const handleMoveModalClose = useCallback(() => {
+    setIsMoveModalOpen(false);
+  }, []);
+
   return (
-    <DialFileManager
-      managerLabel={managerLabel}
-      className="bg-layer-2 py-4 px-6"
-      path={filePath}
-      defaultPath={`${ROOT_FOLDER}/`}
-      items={filteredFiles as []}
-      rootItem={filteredFiles?.[0] as DialRootFolder}
-      filesLoading={isFetchingFiles}
-      showNavigationPanel={false}
-      bulkActionsToolbarOptions={getBulkActionsToolbarOptions(t)}
-      toolbarOptions={getToolbarOptions(view, isReadOnlyAdmin, t)}
-      treeOptions={getTreeOptions(
-        isReadOnlyAdmin,
-        isFetchingFiles,
-        loadedPaths,
-        expandedFolders,
-        setExpandedFolders,
-        t,
-      )}
-      gridOptions={getGridOptions(view, isReadOnlyAdmin, columnDefs, t)}
-      onPathChange={handleOnPathChange}
-      onAddChild={isReadOnlyAdmin ? undefined : handleAddChild}
-      onAddSibling={isReadOnlyAdmin ? undefined : handleAddSibling}
-      onCreateFolder={isReadOnlyAdmin ? undefined : handleCreateFolder}
-      onDownloadFiles={handleDownloadFiles}
-      onCreateFolderValidate={handleCreateFolderValidate}
-      onRenameValidate={handleCreateFolderValidate}
-      onDeleteFiles={isReadOnlyAdmin ? undefined : handleDeleteFileNodes}
-      onMoveToFiles={isReadOnlyAdmin ? undefined : handleMoveToFiles}
-      onFolderPopupPathChange={handleFolderPopupPathChange}
-      onManagePermissions={isReadOnlyAdmin ? undefined : handleManagePermissions}
-      onPreview={handlePreviewFile}
-      onUploadFiles={isReadOnlyAdmin ? undefined : handleDragAndDropFiles}
-      folderCreationValidationMessages={getValidationMessages(t)}
-      renameValidationMessages={getValidationMessages(t)}
-      destinationFolderPopupOptions={getDestinationFolderPopupOptions(view, t)}
-      isRenameFileAvailable={false}
-      isDuplicateFolderAvailable={false}
-      previewExtensions={PREVIEW_EXTENSIONS}
-      customUploadFileAction={customUploadFileAction}
-      {...props}
-    />
+    <>
+      <DialFileManager
+        managerLabel={managerLabel}
+        className="bg-layer-2 py-4 px-6"
+        path={filePath}
+        defaultPath={`${ROOT_FOLDER}/`}
+        items={filteredFiles as []}
+        rootItem={filteredFiles?.[0] as DialRootFolder}
+        filesLoading={isFetchingFiles}
+        showNavigationPanel={false}
+        bulkActionsToolbarOptions={getBulkActionsToolbarOptions(t)}
+        toolbarOptions={getToolbarOptions(view, isReadOnlyAdmin, t)}
+        treeOptions={getTreeOptions(
+          isReadOnlyAdmin,
+          isFetchingFiles,
+          loadedPaths,
+          expandedFolders,
+          setExpandedFolders,
+          t,
+        )}
+        gridOptions={getGridOptions(view, isReadOnlyAdmin, columnDefs, t)}
+        onPathChange={handleOnPathChange}
+        onAddChild={isReadOnlyAdmin ? undefined : handleAddChild}
+        onAddSibling={isReadOnlyAdmin ? undefined : handleAddSibling}
+        onCreateFolder={isReadOnlyAdmin ? undefined : handleCreateFolder}
+        onDownloadFiles={handleDownloadFiles}
+        onCreateFolderValidate={handleCreateFolderValidate}
+        onRenameValidate={handleCreateFolderValidate}
+        onDeleteFiles={isReadOnlyAdmin ? undefined : handleDeleteFileNodes}
+        onMoveToFiles={isReadOnlyAdmin ? undefined : handleMoveToFiles}
+        onFolderPopupPathChange={handleFolderPopupPathChange}
+        onManagePermissions={isReadOnlyAdmin ? undefined : handleManagePermissions}
+        onPreview={handlePreviewFile}
+        onUploadFiles={isReadOnlyAdmin ? undefined : handleDragAndDropFiles}
+        folderCreationValidationMessages={getValidationMessages(t)}
+        renameValidationMessages={getValidationMessages(t)}
+        destinationFolderPopupOptions={getDestinationFolderPopupOptions(view, t)}
+        isRenameFileAvailable={false}
+        isDuplicateFolderAvailable={false}
+        previewExtensions={PREVIEW_EXTENSIONS}
+        customUploadFileAction={customUploadFileAction}
+        {...props}
+      />
+      <MoveItemsModal
+        isModalOpen={isMoveModalOpen}
+        onCancel={handleMoveModalClose}
+        totalItems={movingItems}
+        movedItems={movedItems}
+      />
+    </>
   );
 };
 
