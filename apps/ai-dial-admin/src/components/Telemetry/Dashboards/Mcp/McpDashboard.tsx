@@ -91,7 +91,7 @@ const McpDashboard: FC<Props> = ({
               refreshTime={refreshTime}
               query={MCP_PROJECTS_CONSUMPTION_QUERY}
               columnDefs={MCP_PROJECTS_CONSUMPTION_COLUMNS}
-              title={t(TelemetryI18nKey.ProjectsConsumptionMcp)}
+              title={t(TelemetryI18nKey.CallsByProject)}
             />
           </div>
         </div>

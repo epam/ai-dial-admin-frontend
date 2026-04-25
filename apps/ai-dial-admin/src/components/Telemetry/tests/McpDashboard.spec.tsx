@@ -26,7 +26,7 @@ describe('McpDashboard', () => {
     expect(screen.getByText(TelemetryI18nKey.McpConsumption)).toBeInTheDocument();
     expect(screen.getByText(TelemetryI18nKey.ToolsConsumption)).toBeInTheDocument();
     expect(screen.getByText(TelemetryI18nKey.CallsByDeployment)).toBeInTheDocument();
-    expect(screen.getByText(TelemetryI18nKey.ProjectsConsumptionMcp)).toBeInTheDocument();
+    expect(screen.getByText(TelemetryI18nKey.CallsByProject)).toBeInTheDocument();
   });
 
   test('hides MCP Consumption table in entity view', () => {
@@ -43,6 +43,6 @@ describe('McpDashboard', () => {
     expect(screen.queryByText(TelemetryI18nKey.McpConsumption)).toBeNull();
     expect(screen.getByText(TelemetryI18nKey.ToolsConsumption)).toBeInTheDocument();
     expect(screen.getByText(TelemetryI18nKey.CallsByDeployment)).toBeInTheDocument();
-    expect(screen.getByText(TelemetryI18nKey.ProjectsConsumptionMcp)).toBeInTheDocument();
+    expect(screen.getByText(TelemetryI18nKey.CallsByProject)).toBeInTheDocument();
   });
 });
