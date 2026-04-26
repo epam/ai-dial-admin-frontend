@@ -152,6 +152,22 @@ export const MCP_QUERY: TelemetryQuery = {
   },
 };
 
+export const ROUTES_QUERY: TelemetryQuery = {
+  $type: 'json',
+  query: {
+    expressions: [
+      '_time as completion_time',
+      'deployment',
+      'project_id',
+      'route_path',
+      'http_method',
+      'upstream',
+      'trace_id',
+    ],
+    from: ROUTE_TABLE_NAME,
+  },
+};
+
 export const CONVERSATIONS_QUERY: TelemetryQuery = {
   $type: 'json',
   query: {

@@ -545,7 +545,8 @@ export default {
     Files: 'Files',
     Activities: 'Activities',
     Dependencies: 'Dependencies',
-    Routes: 'App Routes',
+    AppRoutes: 'App Routes',
+    Routes: 'Routes',
     Traces: 'Traces',
     Tools: 'Tools Overview',
     Conversations: 'Conversations',
@@ -662,6 +663,7 @@ export default {
       NoTracesTitle: 'No Traces',
       NoConversationsTitle: 'No Conversations',
       NoMcpCalls: 'No MCP calls',
+      NoRoutes: 'No Route calls',
     },
     ViewByLabel: 'View by: ',
     ViewBy: {

@@ -454,6 +454,16 @@ export const USAGE_LOG_MCP_COLUMNS: ColDef[] = [
   { field: 'trace_id', headerName: 'Trace ID', hide: false },
 ];
 
+export const USAGE_LOG_ROUTES_COLUMNS: ColDef[] = [
+  completionTimeColumn('Last activity'),
+  { field: 'project_id', headerName: 'Project', hide: false },
+  { field: 'deployment', headerName: 'Deployment ID', hide: false },
+  { field: 'route_path', headerName: 'Route', hide: true },
+  { field: 'http_method', headerName: 'Method', hide: true },
+  { field: 'upstream', headerName: 'Upstream', hide: false },
+  { field: 'trace_id', headerName: 'Trace ID', hide: false },
+];
+
 export const USAGE_LOG_TOOLSET_TRACES_COLUMNS: ColDef[] = [
   completionTimeColumn('Last activity'),
   { field: 'project_id', headerName: 'Project', hide: false },
