@@ -1,12 +1,10 @@
-import { KEYS_COLUMNS, LIST_RUNNER_COLUMNS, BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { BASE_COLUMNS, KEYS_COLUMNS, LIST_RUNNER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ActivityAuditResourceType } from '@/src/types/activity-audit';
-import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test } from 'vitest';
 import { getSystemRollbackColumns } from '../utils';
 
 describe('getSystemRollbackColumns', () => {
   const t = (s: string) => `t:${s}`;
-  const view = ApplicationRoute.Models;
 
   test('returns BASE_COLUMNS for ADAPTER', () => {
     const cols = getSystemRollbackColumns(ActivityAuditResourceType.ADAPTER, t);
@@ -35,12 +33,12 @@ describe('getSystemRollbackColumns', () => {
 
   test('returns BASE_COLUMNS for MODEL', () => {
     const cols = getSystemRollbackColumns(ActivityAuditResourceType.MODEL, t);
-    expect(cols.length).toEqual(13);
+    expect(cols.length).toEqual(15);
   });
 
   test('returns BASE_COLUMNS for APPLICATION', () => {
     const cols = getSystemRollbackColumns(ActivityAuditResourceType.APPLICATION, t);
-    expect(cols.length).toEqual(12);
+    expect(cols.length).toEqual(13);
   });
 
   test('returns BASE_COLUMNS for INTERCEPTOR TEMPLATE', () => {

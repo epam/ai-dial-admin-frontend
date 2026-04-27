@@ -74,7 +74,12 @@ export const COLUMN_PANEL_PREFIX = 'column_';
 
 export const BASE_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN, NAME_COLUMN];
 
-export const BASE_COLUMNS_WITH_TOPICS: ColDef[] = [...BASE_COLUMNS, TOPICS_COLUMN, UPDATED_AT_COLUMN];
+export const BASE_COLUMNS_WITH_TOPICS: ColDef[] = [
+  ...BASE_COLUMNS,
+  TOPICS_COLUMN,
+  { ...CREATED_AT_COLUMN, filter: false },
+  { ...UPDATED_AT_COLUMN, filter: false },
+];
 
 export const DEPENDENCIES_COLUMNS = [DISPLAY_NAME_COLUMN, VERSION_COLUMN, DESCRIPTION_COLUMN, NAME_COLUMN];
 
@@ -82,7 +87,8 @@ export const ADAPTER_COLUMNS = (t: (str: string) => string): ColDef[] => [
   ...BASE_COLUMNS,
   TOPICS_COLUMN,
   ...SOURCE_FIELD_COLUMNS(t, ApplicationRoute.Adapters),
-  UPDATED_AT_COLUMN,
+  { ...CREATED_AT_COLUMN, filter: false },
+  { ...UPDATED_AT_COLUMN, filter: false },
 ];
 
 export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
@@ -93,6 +99,8 @@ export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   ...SOURCE_FIELD_COLUMNS(t, ApplicationRoute.Models),
   AUTHOR_COLUMN,
   TOPICS_COLUMN,
+  { ...CREATED_AT_COLUMN, filter: false },
+  { ...UPDATED_AT_COLUMN, filter: false },
   ATTACHMENT_COLUMN(t),
   MAX_INPUT_ATTACHMENTS_COLUMN,
   {
@@ -124,7 +132,8 @@ export const APPLICATIONS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   VALIDITY_STATUS_COLUMN(t),
   AUTHOR_COLUMN,
   TOPICS_COLUMN,
-  UPDATED_AT_COLUMN,
+  { ...CREATED_AT_COLUMN, filter: false },
+  { ...UPDATED_AT_COLUMN, filter: false },
   ATTACHMENT_COLUMN(t),
   MAX_INPUT_ATTACHMENTS_COLUMN,
 ];
@@ -136,7 +145,8 @@ export const TOOLSETS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   ...SOURCE_FIELD_COLUMNS(t, ApplicationRoute.Toolsets),
   AUTHOR_COLUMN,
   TOPICS_COLUMN,
-  UPDATED_AT_COLUMN,
+  { ...CREATED_AT_COLUMN, filter: false },
+  { ...UPDATED_AT_COLUMN, filter: false },
 ];
 
 export const INTERCEPTORS_COLUMNS = (t: (str: string) => string): ColDef[] => [
@@ -146,7 +156,8 @@ export const INTERCEPTORS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   ...SOURCE_FIELD_COLUMNS(t, ApplicationRoute.Interceptors),
   AUTHOR_COLUMN,
   TOPICS_COLUMN,
-  UPDATED_AT_COLUMN,
+  { ...CREATED_AT_COLUMN, filter: false },
+  { ...UPDATED_AT_COLUMN, filter: false },
   BASE_STATUS_COLUMN,
 ];
 
@@ -157,7 +168,8 @@ export const ROUTES_COLUMNS: ColDef[] = [
   PATHS_COLUMN,
   ORDER_COLUMN,
   TOPICS_COLUMN,
-  UPDATED_AT_COLUMN,
+  { ...CREATED_AT_COLUMN, filter: false },
+  { ...UPDATED_AT_COLUMN, filter: false },
 ];
 
 export const EVALUATION_DEPLOYMENTS_COLUMNS: ColDef[] = [
@@ -241,7 +253,8 @@ export const BASE_KEYS_COLUMNS: ColDef[] = [
   DISPLAY_NAME_COLUMN,
   DESCRIPTION_COLUMN,
   NAME_COLUMN_WITH_SORT,
-  CREATED_AT_COLUMN,
+  { ...CREATED_AT_COLUMN, filter: false },
+  { ...UPDATED_AT_COLUMN, filter: false },
   {
     field: 'keyGeneratedAt',
     headerName: 'Key generation time',
@@ -258,7 +271,8 @@ export const KEYS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   ...BASE_KEYS_COLUMNS,
   VALIDITY_STATUS_COLUMN(t),
   TOPICS_COLUMN,
-  UPDATED_AT_COLUMN,
+  { ...CREATED_AT_COLUMN, filter: false },
+  { ...UPDATED_AT_COLUMN, filter: false },
   {
     headerName: 'Project',
     field: 'project',
@@ -282,11 +296,26 @@ export const RUNNERS_COLUMNS: ColDef[] = [
   { field: '$id', headerName: 'ID' },
 ];
 
-export const LIST_RUNNER_COLUMNS: ColDef[] = [...RUNNERS_COLUMNS, TOPICS_COLUMN, UPDATED_AT_COLUMN];
+export const LIST_RUNNER_COLUMNS: ColDef[] = [
+  ...RUNNERS_COLUMNS,
+  TOPICS_COLUMN,
+  { ...CREATED_AT_COLUMN, filter: false },
+  { ...UPDATED_AT_COLUMN, filter: false },
+];
 
-export const INTERCEPTOR_TEMPLATES_COLUMNS: ColDef[] = [...BASE_COLUMNS, TOPICS_COLUMN, UPDATED_AT_COLUMN];
+export const INTERCEPTOR_TEMPLATES_COLUMNS: ColDef[] = [
+  ...BASE_COLUMNS,
+  TOPICS_COLUMN,
+  { ...CREATED_AT_COLUMN, filter: false },
+  { ...UPDATED_AT_COLUMN, filter: false },
+];
 
-export const ASSETS_COLUMNS: ColDef[] = [VERSION_COLUMN, AUTHOR_COLUMN, UPDATED_AT_COLUMN];
+export const ASSETS_COLUMNS: ColDef[] = [
+  VERSION_COLUMN,
+  AUTHOR_COLUMN,
+  { ...CREATED_AT_COLUMN, filter: false },
+  { ...UPDATED_AT_COLUMN, filter: false },
+];
 
 export const DEPLOYMENT_ASSETS_COLUMNS: ColDef[] = [NAME_COLUMN, ...ASSETS_COLUMNS];
 
@@ -576,8 +605,8 @@ export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, rou
   { field: 'url', headerName: 'Container URL', hide: true },
   AUTHOR_COLUMN,
   TOPICS_COLUMN,
-  UPDATED_AT_COLUMN,
-  CREATED_AT_COLUMN,
+  { ...CREATED_AT_COLUMN, filter: false },
+  { ...UPDATED_AT_COLUMN, filter: false },
 ];
 
 export const CONTAINER_EVENTS = (t: (key: string, options?: Record<string, string | number>) => string): ColDef[] => [
@@ -719,8 +748,8 @@ export const IMAGES_LIST_COLUMNS = (t: (key: string) => string): ColDef[] => [
   },
   AUTHOR_COLUMN,
   TOPICS_COLUMN,
-  CREATED_AT_COLUMN,
-  UPDATED_AT_COLUMN,
+  { ...CREATED_AT_COLUMN, filter: false },
+  { ...UPDATED_AT_COLUMN, filter: false },
 ];
 
 export const IMAGE_DEPENDENCIES_COLUMNS = (t: (key: string) => string, showImageColumn?: boolean): ColDef[] => [
