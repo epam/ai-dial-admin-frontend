@@ -105,10 +105,10 @@ const EntityRoutes: FC<Props> = ({
   return (
     <>
       <div className="flex flex-row gap-4 size-full">
-        <DialCollapsibleSidebar width={296} title={t(TabsI18nKey.Routes)} containerClassName="bg-layer-3 mr-4">
+        <DialCollapsibleSidebar width={296} title={t(TabsI18nKey.AppRoutes)} containerClassName="bg-layer-3 mr-4">
           <div className="h-full relative flex flex-col">
             <div className="flex flex-row flex-wrap justify-between items-center mb-6">
-              <h1>{t(TabsI18nKey.Routes)}</h1>
+              <h1>{t(TabsI18nKey.AppRoutes)}</h1>
               {!disabled && (
                 <DialPrimaryButton
                   iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
