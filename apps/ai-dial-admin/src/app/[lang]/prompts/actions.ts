@@ -45,9 +45,9 @@ export async function bulkDeletePrompts(paths: { path: string }[]) {
   return assetsApi.bulkDeleteAssets(token, paths, ResourceType.PROMPT);
 }
 
-export async function movePrompts(paths: string[], newPath: string) {
+export async function movePrompts(paths: string[], newPath: string, overwrite?: boolean, duplicateName?: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.moveAssets(token, paths, newPath, ResourceType.PROMPT);
+  return assetsApi.moveAssets(token, paths, newPath, ResourceType.PROMPT, overwrite, duplicateName);
 }
 
 export async function exportPrompts(paths: string[], type?: ImportFileType) {

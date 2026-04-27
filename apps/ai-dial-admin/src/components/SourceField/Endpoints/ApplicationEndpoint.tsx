@@ -11,7 +11,12 @@ import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, SourceI18nKey } from '@
 import { CONTROL_WIDTH, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { ONLY_HTTP_TRANSPORTS } from '@/src/constants/transport';
 import { useI18n } from '@/src/locales/client';
-import { ApplicationMCPConfigDelivery, ApplicationMCPContainer, DialApplication } from '@/src/models/dial/application';
+import {
+  ApplicationMCPConfigDelivery,
+  ApplicationMCPContainer,
+  DialApplication,
+  MCP_CONFIG_DELIVERY_I18N_MAP,
+} from '@/src/models/dial/application';
 import { SOURCE_FIELD } from '@/src/components/SourceField/types';
 
 enum ApplicationEndpointCheckbox {
@@ -76,7 +81,9 @@ const ApplicationEndpoint: FC<Props> = ({ entity, onChange, isEntityImmutable, i
           responsesEndpoint: newCheckboxStates[ApplicationEndpointCheckbox.CHAT_ENDPOINT]
             ? entity?.responsesEndpoint
             : undefined,
-          mcp: newCheckboxStates[ApplicationEndpointCheckbox.MCP_ENDPOINT] ? entity?.mcp : undefined,
+          mcp: newCheckboxStates[ApplicationEndpointCheckbox.MCP_ENDPOINT]
+            ? ({ ...entity?.mcp, forwardPerRequestKey: true } as ApplicationMCPContainer)
+            : undefined,
         });
       }
     },
@@ -311,7 +318,7 @@ const ApplicationEndpoint: FC<Props> = ({ entity, onChange, isEntityImmutable, i
                 value={entity.mcp?.configDelivery}
                 options={Object.values(ApplicationMCPConfigDelivery).map((value) => ({
                   value,
-                  label: value,
+                  label: t(MCP_CONFIG_DELIVERY_I18N_MAP[value]),
                 }))}
                 containerClassName="max-w-[160px]"
                 label={t(EntityFieldsI18nKey.configDelivery)}

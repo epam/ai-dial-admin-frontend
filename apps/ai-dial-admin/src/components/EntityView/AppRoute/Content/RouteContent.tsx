@@ -13,7 +13,7 @@ import RouteRoles from './RouteRoles';
 
 interface Props {
   route: DialAppRoute;
-  iAppRunnerView?: boolean;
+  isAppRunnerView?: boolean;
   roles: DialRole[];
   disabled?: boolean;
   parentRoles?: string[];
@@ -41,6 +41,7 @@ const RouteContent: FC<Props> = ({ route, disabled, routeNames, onChangeRoute, .
             isAppRoute={true}
             routeNames={routeNames}
             disabled={disabled}
+            isAppRunnerView={props.isAppRunnerView}
           />
         )}
 

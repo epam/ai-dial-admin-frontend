@@ -97,7 +97,7 @@ export class TestSuitesApi extends BaseApi {
 
   removeMultipleTestCases(id: string, testCaseNames: string[], token: Token): Promise<ServerActionResponse> {
     const names = testCaseNames.map((name) => `${encodeURIComponent(name)}`).join(',');
-    return this.deleteAction(`${TEST_CASES_URL(id)}?filter=testCaseName:eq:${names}`, token);
+    return this.deleteAction(`${TEST_CASES_URL(id)}?filter=testCaseName:in:${names}`, token);
   }
 
   createTestCase(

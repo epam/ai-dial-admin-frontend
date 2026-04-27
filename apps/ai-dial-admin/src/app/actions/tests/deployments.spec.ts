@@ -27,6 +27,7 @@ import {
   getModelContainers,
   getTopics,
   installImage,
+  stopBuild,
   runContainer,
   stopContainer,
   updateContainer,
@@ -142,6 +143,16 @@ describe('Deployments actions', () => {
 
       expect(getUserToken).toHaveBeenCalled();
       expect(imagesApi.installImage).toHaveBeenCalledWith('image-1', TOKEN_MOCK);
+      expect(result).toBe(RESPONSE_MOCK);
+    });
+
+    test('stopBuild calls imagesApi.stopBuild with id and token', async () => {
+      (imagesApi.stopBuild as any).mockResolvedValue(RESPONSE_MOCK);
+
+      const result = await stopBuild('build-1');
+
+      expect(getUserToken).toHaveBeenCalled();
+      expect(imagesApi.stopBuild).toHaveBeenCalledWith('build-1', TOKEN_MOCK);
       expect(result).toBe(RESPONSE_MOCK);
     });
 

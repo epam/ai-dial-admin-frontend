@@ -4,6 +4,7 @@ import {
   convertMilliCoresToCores,
   getContainerRedeploySnapshot,
   getContainerSourceTypeLabel,
+  getContainersByView,
   getContainerTemplate,
   getContainerScaling,
   getContainerResources,
@@ -17,6 +18,12 @@ import {
   isAutoscalingEnabled,
   deriveScaling,
 } from '../containers';
+import {
+  getApplicationContainers,
+  getInterceptorContainers,
+  getMCPContainers,
+  getModelContainers,
+} from '@/src/app/actions/deployments';
 import { ApplicationRoute } from '@/src/types/routes';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { SourceI18nKey } from '@/src/constants/i18n';
@@ -660,6 +667,28 @@ describe('containers utils', () => {
       expect(
         getContainerSourceTypeLabel({ $type: 'unknown' as CONTAINER_SOURCE_TYPE }, ApplicationRoute.McpContainers, t),
       ).toBe('');
+    });
+  });
+
+  describe('getContainersByView', () => {
+    test('returns getModelContainers for Models', () => {
+      expect(getContainersByView(ApplicationRoute.Models)).toBe(getModelContainers);
+    });
+
+    test('returns getApplicationContainers for Applications', () => {
+      expect(getContainersByView(ApplicationRoute.Applications)).toBe(getApplicationContainers);
+    });
+
+    test('returns getMCPContainers for Toolsets', () => {
+      expect(getContainersByView(ApplicationRoute.Toolsets)).toBe(getMCPContainers);
+    });
+
+    test('returns getInterceptorContainers for Interceptors', () => {
+      expect(getContainersByView(ApplicationRoute.Interceptors)).toBe(getInterceptorContainers);
+    });
+
+    test('returns null for an unsupported route', () => {
+      expect(getContainersByView(ApplicationRoute.Home)).toBeNull();
     });
   });
 });

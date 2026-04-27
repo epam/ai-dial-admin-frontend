@@ -49,7 +49,7 @@ export async function removeFolder(path: string) {
   return foldersApi.deleteFolder(token, path);
 }
 
-export async function changeFolder(oldPath: string, newPath: string, resourceType: ResourceType) {
+export async function changeFolder(oldPath: string, newPath: string, resourceType: ResourceType, overwrite?: boolean) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return foldersApi.changeFolder(token, oldPath, newPath, resourceType);
+  return foldersApi.changeFolder(token, oldPath, newPath, resourceType, overwrite);
 }

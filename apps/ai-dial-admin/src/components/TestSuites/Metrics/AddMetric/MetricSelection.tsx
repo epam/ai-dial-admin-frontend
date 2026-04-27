@@ -23,7 +23,7 @@ const MetricSelection: FC<Props> = ({ metrics, selectedMetricId, onSelectMetric 
 
   const filteredMetrics = useMemo(() => {
     const patternLower = pattern.toLowerCase();
-    return metrics?.filter((metric) => metric?.name?.toLowerCase().includes(patternLower)) || [];
+    return metrics?.filter((metric) => metric?.displayName?.toLowerCase().includes(patternLower)) || [];
   }, [metrics, pattern]);
 
   return (
@@ -46,7 +46,7 @@ const MetricSelection: FC<Props> = ({ metrics, selectedMetricId, onSelectMetric 
                 )}
                 onClick={() => onSelectMetric?.(metric.id ?? '')}
               >
-                <p className="dial-small-semi mb-4">{metric.name}</p>
+                <p className="dial-small-semi mb-4">{metric.displayName}</p>
                 <span className="dial-tiny-text text-secondary line-clamp-2">{metric.description}</span>
               </div>
             ))}

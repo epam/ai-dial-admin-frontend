@@ -5,12 +5,17 @@ import { useRouter } from 'next/navigation';
 import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { createContainer, createImage, deleteImage, installImage } from '@/src/app/actions/deployments';
+import { createContainer, createImage, deleteImage, installImage, stopBuild } from '@/src/app/actions/deployments';
+import AddVersionModal from '@/src/components/Assets/Modals/AddVersionModal';
+import { getVersionsPerName } from '@/src/components/Assets/utils';
 import VersionsSelect from '@/src/components/Deployments/Common/VersionsSelect/VersionsSelect';
 import ImageCreateContainer from '@/src/components/Deployments/Modals/ImageCreateContainer';
+import ImageDelete from '@/src/components/Deployments/Modals/ImageDelete';
 import ImageInstall from '@/src/components/Deployments/Modals/ImageInstall';
-import AddVersionModal from '@/src/components/Assets/Modals/AddVersionModal';
+import ImageStopBuild from '@/src/components/Deployments/Modals/ImageStopBuild';
+import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
 import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
+import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import { ButtonsI18nKey, ContainersI18nKey, CreateI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
 import {
@@ -21,8 +26,8 @@ import {
 } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { Container } from '@/src/models/deployments/containers';
@@ -30,16 +35,13 @@ import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getRouteByType, getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
+import { hasOnlyMetadataChanges } from '@/src/utils/deployments/images';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
-import ImageDelete from '@/src/components/Deployments/Modals/ImageDelete';
-import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
-import { getVersionsPerName } from '@/src/components/Assets/utils';
 
 export interface ImagesButtonsWrapperProps {
   image: Image;
-  originalImageName: string;
+  originalImage: Image;
   isChanged: boolean;
   children?: ReactNode;
   containerNames?: string[];
@@ -51,7 +53,7 @@ export interface ImagesButtonsWrapperProps {
 
 const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
   image,
-  originalImageName,
+  originalImage,
   isChanged,
   onDiscard,
   onSave,
@@ -82,11 +84,23 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
     return image.buildStatus !== IMAGE_STATUS.BUILT && image.buildStatus !== IMAGE_STATUS.BUILDING;
   }, [image.buildStatus]);
 
+  const isOnlyMetadataChange = useMemo(() => hasOnlyMetadataChanges(originalImage, image), [originalImage, image]);
+
+  const allowSave = useMemo(() => {
+    if (image.buildStatus === IMAGE_STATUS.BUILDING) {
+      return false;
+    }
+    if (image.buildStatus === IMAGE_STATUS.BUILT) {
+      return isOnlyMetadataChange;
+    }
+    return true;
+  }, [image.buildStatus, isOnlyMetadataChange]);
+
   const forceNewVersion = useMemo(() => {
-    const isNameChanged = (image.name ?? '').trim() !== (originalImageName ?? '').trim();
+    const isNameChanged = (image.name ?? '').trim() !== (originalImage.name ?? '').trim();
 
     return isNameChanged && versions.some((v: ImageVersion) => v.version === image.version);
-  }, [image.name, image.version, originalImageName, versions]);
+  }, [image.name, image.version, originalImage.name, versions]);
 
   const onOpenModal = useCallback((modalType: ModalType) => {
     setIsModalOpen(true);
@@ -112,6 +126,26 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
     [router, showNotification],
   );
 
+  const onStopBuild = useCallback(
+    (image: Image) => {
+      stopBuild(image.id).then((res) => {
+        if (res.success) {
+          const type = getTranslatedType(getRouteByType(image.$type), t);
+          showNotification(
+            getSuccessNotification(
+              t(ImagesI18nKey.BuildStoppedSuccess, { type }),
+              t(ImagesI18nKey.BuildStoppedSuccessDescription),
+            ),
+          );
+          router.refresh();
+        } else {
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        }
+      });
+    },
+    [router, showNotification, t],
+  );
+
   const onOpenDeleteModal = useCallback(() => {
     onOpenModal(ModalType.delete);
   }, [onOpenModal]);
@@ -131,6 +165,10 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
   const onOpenInstallModal = useCallback(() => {
     onOpenModal(ModalType.install);
   }, [onOpenModal]);
+
+  // const onOpenStopModal = useCallback(() => {
+  //   onOpenModal(ModalType.stopBuild);
+  // }, [onOpenModal]);
 
   const onCreateContainer = useCallback(
     (container: Container) => {
@@ -195,7 +233,7 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
               disableSave={isDisableSave}
               onDiscard={onDiscard}
               onSave={onSave}
-              isSaveAllowed={allowEditing && !forceNewVersion}
+              isSaveAllowed={allowSave && !forceNewVersion}
             >
               <DialPrimaryButton
                 className={buttonsClassNames}
@@ -221,6 +259,14 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
                   iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
                   onClick={onOpenDeleteModal}
                 />
+                {/* {image.buildStatus === IMAGE_STATUS.BUILDING && (
+                  <DialNeutralButton
+                    className={buttonsClassNames}
+                    label={t(ButtonsI18nKey.Stop)}
+                    iconBefore={<IconPlayerPause {...BASE_BUTTON_ICON_PROPS} />}
+                    onClick={onOpenStopModal}
+                  />
+                )} */}
                 {image.buildStatus === IMAGE_STATUS.BUILT && (
                   <DialNeutralButton
                     className={buttonsClassNames}
@@ -318,6 +364,18 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
             onApply={onInstallImage}
+          />,
+          document.body,
+        )}
+      {isModalOpen &&
+        modalType === ModalType.stopBuild &&
+        createPortal(
+          <ImageStopBuild
+            image={image}
+            title={t(ImagesI18nKey.StopBuildModalTitle)}
+            isModalOpen={isModalOpen}
+            onClose={onCloseModal}
+            onApply={onStopBuild}
           />,
           document.body,
         )}

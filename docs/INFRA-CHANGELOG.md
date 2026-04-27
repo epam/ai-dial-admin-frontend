@@ -1,12 +1,21 @@
-# Changelog
+# Infrastructure Changelog
 
-All notable changes to this project will be documented in this file.
+All notable infrastructure-relevant changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [Unreleased]
+## 0.16.0
 
 ### Added
 
-- Infrastructure task issue template for requesting environment variable, secret, and config changes (`03_infra_task.yml`)
+#### Providers
+
+- `NIM_ENABLED` — enables the NIM Model Serving option in the Deployments section; when both this and `HF_ENABLED` are disabled, the Model Servings tab is hidden
+- `HF_ENABLED` — enables the HF Model Serving option in the Deployments section; when both this and `NIM_ENABLED` are disabled, the Model Servings tab is hidden
+
+---
+
+### Changed
+
+#### Configuration Management
+
+- `MCP_REGISTRY_ENABLED` — documented as a preview feature for MCP Registry integration
+- `DIAL_EVAL_API_URL` — documented as a preview feature for Evaluation API integration

@@ -446,7 +446,7 @@ describe('Server :: TestSuiteApi', () => {
     fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
     await instance.removeMultipleTestCases('id', ['testCase1', 'testCase2'], TOKEN_MOCK);
     expect(fetch).toHaveBeenCalledWith(
-      `${TEST_URL}${TEST_CASES_URL('id')}?filter=testCaseName:eq:testCase1,testCase2`,
+      `${TEST_URL}${TEST_CASES_URL('id')}?filter=testCaseName:in:testCase1,testCase2`,
       expect.objectContaining({
         method: 'DELETE',
       }),

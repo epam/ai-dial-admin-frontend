@@ -972,6 +972,8 @@ export default {
     endpoint: 'Endpoint',
     keyValue: 'Key value',
     configDelivery: 'Configuration delivery',
+    configDeliveryMeta: 'Meta',
+    configDeliveryHeader: 'Header',
     container: 'Container',
     authSettings: 'Authentication',
     authenticationType: 'Authentication type',
@@ -1397,6 +1399,12 @@ export default {
     AddImage: 'Add Image',
     FromMcpRegistry: 'From MCP Registry',
     AddFromMcpRegistryModalTitle: 'Add Image from MCP Registry',
+    BuildStopped: 'Build stopped',
+    StopBuildModalTitle: 'Stop Build',
+    StopBuildModalDescription:
+      'Are you sure you want to stop building this image? The build process will be interrupted and you can restart it later.',
+    BuildStoppedSuccess: '{type} Image build stopped',
+    BuildStoppedSuccessDescription: 'Latest progress has been preserved',
   },
   Containers: {
     ContainersListTitle: '{type} {entityType}s',
@@ -1421,6 +1429,10 @@ export default {
     ContainerRunFailed: '{type} Container failed to run',
     Running: 'Running',
     NotRunning: 'Not running',
+    ContainerNotRunningTitle: '{type} container for this {typeLower} is not running.',
+    ContainerNotRunningDescription:
+      'This {typeLower} will not be available in the Chat interface until the container is started or reconfigured.',
+    GoToContainer: 'Go to Container',
     Preparing: 'Preparing...',
     Failed: 'Failed',
     Stopped: 'Stopped',
@@ -1670,6 +1682,8 @@ export default {
     ApplicationsEmptyStateDescription: 'Create or import an application using the Create button',
     ToolsetsEmptyStateTitle: "You don't have any toolsets",
     ToolsetsEmptyStateDescription: 'Create or import a toolset using the Create button',
+    MovingItems: 'Moving items',
+    MovingProgress: '{count} of {total} items moved...',
   },
   Runs: {
     StartTime: 'Start time',

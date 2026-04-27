@@ -19,7 +19,9 @@ import {
   updateCoreApplication,
 } from '@/src/app/[lang]/applications/actions';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
+import ContainerStatusBanner from '@/src/components/Deployments/Common/ContainerStatusBanner/ContainerStatusBanner';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { ModalType } from '@/src/components/EntityView/Modals/constants';
 import EntityViewModals from '@/src/components/EntityView/Modals/EntityViewModals';
@@ -287,6 +289,13 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
         onChangeActiveTab={onChangeActiveTab}
         onRemove={removeApplication}
       />
+
+      {originalApplication.source?.$type === SOURCE_TYPE.CONTAINER && originalApplication.source?.containerId && (
+        <ContainerStatusBanner
+          view={ApplicationRoute.Applications}
+          containerId={originalApplication.source.containerId}
+        />
+      )}
 
       <div className="flex-1 overflow-auto min-h-0">
         {isEditorEnabled && !(activeTab === EntityViewTab.Parameters) ? (

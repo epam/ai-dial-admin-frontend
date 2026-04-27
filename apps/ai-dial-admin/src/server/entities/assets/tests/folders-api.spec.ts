@@ -216,7 +216,7 @@ describe('Server :: FoldersApi', () => {
     const mockResponse: ServerActionResponse = { success: true };
     fetchMock.mockResponseOnce(JSON.stringify(mockResponse));
 
-    await instance.changeFolder(TOKEN_MOCK, 'oldPath', 'newPath', 'prompt');
+    await instance.changeFolder(TOKEN_MOCK, 'oldPath', 'newPath', ResourceType.PROMPT);
 
     expect(fetchMock).toHaveBeenCalledWith(
       `${TEST_URL}${FOLDERS_MOVE_URL}`,
@@ -225,7 +225,8 @@ describe('Server :: FoldersApi', () => {
         body: JSON.stringify({
           oldPath: 'oldPath',
           newPath: 'newPath',
-          resourceTypes: ['prompt'],
+          overwrite: false,
+          resourceTypes: [ResourceType.PROMPT],
         }),
       }),
     );

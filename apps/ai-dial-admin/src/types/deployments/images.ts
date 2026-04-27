@@ -3,6 +3,7 @@ export enum IMAGE_STATUS {
   BUILDING = 'building',
   NOT_BUILT = 'not_built',
   BUILD_FAILED = 'build_failed',
+  BUILD_STOPPED = 'build_stopped',
 }
 
 export enum IMAGE_SOURCE_TYPE {

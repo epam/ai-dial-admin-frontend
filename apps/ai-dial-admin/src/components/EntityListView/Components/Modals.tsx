@@ -32,6 +32,7 @@ export enum ModalType {
   saveNewVersion = 'saveNewVersion',
   createNewVersion = 'createNewVersion',
   install = 'install',
+  stopBuild = 'stopBuild',
   globalFirewall = 'globalFirewall',
   addImage = 'addImage',
   createContainer = 'createContainer',

@@ -136,4 +136,5 @@ rules:
     - Keep tasks small enough to be reviewable in a single PR
     - Do not use data-testid attributes in tests
     - Always reuse existing mocks from test-setup.tsx instead of creating new ones
+    - Do not add manual testing tasks
     - Run all code quality checks (lint, format, tests) as a final task after all implementation tasks are complete

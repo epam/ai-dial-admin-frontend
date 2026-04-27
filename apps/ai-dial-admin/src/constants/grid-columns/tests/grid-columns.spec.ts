@@ -18,7 +18,12 @@ import {
   CONTAINER_EVENTS,
   HF_REGISTRY_COLUMNS,
   ADAPTER_COLUMNS,
+  USAGE_LOG_TRACES_COLUMNS,
+  USAGE_LOG_CONVERSATIONS_COLUMNS,
+  USAGE_LOG_MCP_COLUMNS,
+  USAGE_LOG_TOOLSET_TRACES_COLUMNS,
 } from '../grid-columns';
+import { ColDef } from 'ag-grid-community';
 import { describe, expect, test, vi } from 'vitest';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -180,6 +185,30 @@ describe('Constants :: grid columns', () => {
     expect(PROJECT_GRID_COLUMNS.some((c) => c.field === 'name')).toBe(true);
     expect(PROJECT_GRID_COLUMNS.some((c) => c.field === 'requests')).toBe(true);
     expect(PROJECT_GRID_COLUMNS.some((c) => c.field === 'cost')).toBe(true);
+  });
+
+  const assertUsageLogColumnSet = (columns: ColDef[]) => {
+    const completionTime = columns.find((c) => c.field === 'completion_time');
+    expect(completionTime?.sort).toBe('desc');
+  };
+
+  test('USAGE_LOG_TRACES_COLUMNS default-sorts on completion_time', () => {
+    assertUsageLogColumnSet(USAGE_LOG_TRACES_COLUMNS);
+    expect(USAGE_LOG_TRACES_COLUMNS.some((c) => c.field === 'trace_id')).toBe(true);
+    expect(USAGE_LOG_TRACES_COLUMNS.some((c) => c.field === 'price')).toBe(true);
+    expect(USAGE_LOG_TRACES_COLUMNS.some((c) => c.field === 'model')).toBe(true);
+  });
+
+  test('USAGE_LOG_CONVERSATIONS_COLUMNS default-sorts on completion_time', () => {
+    assertUsageLogColumnSet(USAGE_LOG_CONVERSATIONS_COLUMNS);
+  });
+
+  test('USAGE_LOG_MCP_COLUMNS default-sorts on completion_time', () => {
+    assertUsageLogColumnSet(USAGE_LOG_MCP_COLUMNS);
+  });
+
+  test('USAGE_LOG_TOOLSET_TRACES_COLUMNS default-sorts on completion_time', () => {
+    assertUsageLogColumnSet(USAGE_LOG_TOOLSET_TRACES_COLUMNS);
   });
 
   test('HF_REGISTRY_COLUMNS returns expected columns', () => {

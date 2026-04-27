@@ -65,9 +65,10 @@ import {
   VERSION_COLUMN,
 } from './base-columns';
 import { dateTimeColumn, numericColumn, priceColumn } from './configs';
-import { auditStringFilter, evalStringFilter } from './filters';
+import { auditStringFilter, dateFilter, evalStringFilter } from './filters';
 import RowExpanderCellRenderer from '@/src/components/Grid/CellRenderers/RowExpanderCellRenderer';
 import ChildrenActivityTypeCellRenderer from '@/src/components/Grid/CellRenderers/ChildrenActivityTypeCellRenderer';
+import { GridFilterType } from '@/src/types/grid-filter';
 
 export const COLUMN_PANEL_PREFIX = 'column_';
 
@@ -405,29 +406,24 @@ export const TELEMETRY_GRID_COLUMNS: ColDef[] = [
   },
 ];
 
+const completionTimeColumn = (headerName: string): ColDef => ({
+  field: 'completion_time',
+  headerName,
+  hide: false,
+  sort: 'desc',
+  filter: false,
+  floatingFilter: false,
+  ...dateTimeColumn,
+});
+
 export const USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
-  { field: 'completion_time', headerName: 'Completion Time', hide: false, ...dateTimeColumn },
+  completionTimeColumn('Completion Time'),
   { field: 'trace_id', headerName: 'Trace ID', hide: false },
   { field: 'topic', headerName: 'Topic', hide: false },
   { field: 'reactions', headerName: 'Reactions', hide: true }, // TODO: not implemented
-  {
-    field: 'cached_prompt_tokens',
-    headerName: 'Cached Prompt Tokens',
-    hide: true,
-    ...numericColumn,
-  },
-  {
-    field: 'prompt_tokens',
-    headerName: 'Prompt Tokens',
-    hide: false,
-    ...numericColumn,
-  },
-  {
-    field: 'completion_tokens',
-    headerName: 'Completion Tokens',
-    hide: false,
-    ...numericColumn,
-  },
+  { field: 'cached_prompt_tokens', headerName: 'Cached Prompt Tokens', hide: true, ...numericColumn },
+  { field: 'prompt_tokens', headerName: 'Prompt Tokens', hide: false, ...numericColumn },
+  { field: 'completion_tokens', headerName: 'Completion Tokens', hide: false, ...numericColumn },
   {
     field: 'deployment_price',
     headerName: 'Deployment Price',
@@ -435,18 +431,8 @@ export const USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
     hide: false,
     ...priceColumn('Deployment Price'),
   },
-  {
-    field: 'price',
-    headerName: 'Total Price',
-    hide: false,
-    ...priceColumn('Total Price'),
-  },
-  {
-    field: 'number_request_messages',
-    headerName: 'Number of Request Messages',
-    hide: true,
-    ...numericColumn,
-  },
+  { field: 'price', headerName: 'Total Price', hide: false, ...priceColumn('Total Price') },
+  { field: 'number_request_messages', headerName: 'Number of Request Messages', hide: true, ...numericColumn },
   { field: 'deployment', headerName: 'Deployment ID', hide: false },
   { field: 'parent_deployment', headerName: 'Parent Deployment ID', hide: true },
   { field: 'model', headerName: 'Model', hide: true },
@@ -463,40 +449,14 @@ export const USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
 ];
 
 export const USAGE_LOG_CONVERSATIONS_COLUMNS: ColDef[] = [
-  { field: 'completion_time', headerName: 'Last activity', hide: false, ...dateTimeColumn },
+  completionTimeColumn('Last activity'),
   { field: 'chat_id', headerName: 'Conversation ID', hide: false },
   { field: 'topic', headerName: 'Topic', hide: false },
-  {
-    field: 'cached_prompt_tokens',
-    headerName: 'Cached Prompt Tokens',
-    hide: true,
-    ...numericColumn,
-  },
-  {
-    field: 'prompt_tokens',
-    headerName: 'Prompt Tokens',
-    hide: false,
-    ...numericColumn,
-  },
-  {
-    field: 'completion_tokens',
-    headerName: 'Completion Tokens',
-    hide: false,
-    ...numericColumn,
-  },
-  {
-    field: 'deployment_price',
-    headerName: 'Total Price',
-    hide: false,
-    ...priceColumn('Total Price'),
-  },
-  {
-    field: 'number_request_messages',
-    headerName: 'Number of Request Messages',
-    hide: true,
-    ...numericColumn,
-  },
-
+  { field: 'cached_prompt_tokens', headerName: 'Cached Prompt Tokens', hide: true, ...numericColumn },
+  { field: 'prompt_tokens', headerName: 'Prompt Tokens', hide: false, ...numericColumn },
+  { field: 'completion_tokens', headerName: 'Completion Tokens', hide: false, ...numericColumn },
+  { field: 'deployment_price', headerName: 'Total Price', hide: false, ...priceColumn('Total Price') },
+  { field: 'number_request_messages', headerName: 'Number of Request Messages', hide: true, ...numericColumn },
   { field: 'deployment', headerName: 'Deployment ID', hide: false },
   { field: 'project_id', headerName: 'Project', hide: false },
   { field: 'user_hash', headerName: 'User', hide: false },
@@ -505,44 +465,35 @@ export const USAGE_LOG_CONVERSATIONS_COLUMNS: ColDef[] = [
 ];
 
 export const USAGE_LOG_MCP_COLUMNS: ColDef[] = [
-  { field: 'completion_time', headerName: 'Last activity', hide: false, ...dateTimeColumn },
+  completionTimeColumn('Last activity'),
   { field: 'deployment', headerName: 'Deployment ID', hide: false },
   { field: 'project_id', headerName: 'Project', hide: false },
-  {
-    field: 'mcp_method',
-    headerName: 'Method',
-    hide: true,
-  },
-  {
-    field: 'mcp_tool_call_name',
-    headerName: 'Tool Name',
-    hide: false,
-  },
-  {
-    field: 'trace_id',
-    headerName: 'Trace ID',
-    hide: false,
-  },
+  { field: 'mcp_method', headerName: 'Method', hide: true },
+  { field: 'mcp_tool_call_name', headerName: 'Tool Name', hide: false },
+  { field: 'trace_id', headerName: 'Trace ID', hide: false },
 ];
+
 export const USAGE_LOG_TOOLSET_TRACES_COLUMNS: ColDef[] = [
-  { field: 'completion_time', headerName: 'Last activity', hide: false, ...dateTimeColumn },
+  completionTimeColumn('Last activity'),
   { field: 'project_id', headerName: 'Project', hide: false },
-  {
-    field: 'mcp_method',
-    headerName: 'Method',
-    hide: true,
-  },
-  {
-    field: 'mcp_tool_call_name',
-    headerName: 'Tool Name',
-    hide: false,
-  },
-  {
-    field: 'trace_id',
-    headerName: 'Trace ID',
-    hide: false,
-  },
+  { field: 'mcp_method', headerName: 'Method', hide: true },
+  { field: 'mcp_tool_call_name', headerName: 'Tool Name', hide: false },
+  { field: 'trace_id', headerName: 'Trace ID', hide: false },
 ];
+
+// Derived from the column defs — any column spread with ...numericColumn or
+// ...priceColumn(...) carries cellClass 'align-right', which we treat as the
+// marker for backend-numeric columns (see translateUsageLogTextFilter).
+export const USAGE_LOG_NUMERIC_COLUMNS = new Set<string>(
+  [
+    ...USAGE_LOG_TRACES_COLUMNS,
+    ...USAGE_LOG_CONVERSATIONS_COLUMNS,
+    ...USAGE_LOG_MCP_COLUMNS,
+    ...USAGE_LOG_TOOLSET_TRACES_COLUMNS,
+  ]
+    .filter((c) => c.cellClass === 'align-right' && c.field)
+    .map((c) => c.field as string),
+);
 
 export const PROJECT_GRID_COLUMNS: ColDef[] = [{ field: 'name', headerName: 'Project' }, ...TELEMETRY_COLUMNS];
 
@@ -800,10 +751,22 @@ export const IMAGE_DEPENDENCIES_COLUMNS = (t: (key: string) => string, showImage
 ];
 
 export const TEST_SUITES_COLUMN: ColDef[] = [
-  { field: 'name', colId: 'name', headerName: 'Display Name', hide: false, ...evalStringFilter },
-  { ...DESCRIPTION_COLUMN, sortable: false, filter: false },
-  { field: 'id', colId: 'id', headerName: 'ID', hide: false, filter: false },
-  { field: 'suiteType', colId: 'suiteType', headerName: 'Suite Type', hide: false, ...evalStringFilter },
+  {
+    field: 'name',
+    colId: 'name',
+    headerName: 'Display Name',
+    hide: false,
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
+  },
+  { ...DESCRIPTION_COLUMN, sortable: false, ...evalStringFilter([GridFilterType.CONTAINS]) },
+  { field: 'id', colId: 'id', headerName: 'ID', hide: false, ...evalStringFilter([GridFilterType.EQUALS]) },
+  {
+    field: 'suiteType',
+    colId: 'suiteType',
+    headerName: 'Suite Type',
+    hide: false,
+    ...evalStringFilter([GridFilterType.EQUALS]),
+  },
   {
     field: 'application',
     headerName: 'Application',
@@ -812,9 +775,14 @@ export const TEST_SUITES_COLUMN: ColDef[] = [
     filter: false,
     valueGetter: (params) => params.data?.deploymentRef?.name || params.data?.mcpDeploymentRef?.name || '',
   },
-  CREATED_AT_COLUMN,
-  UPDATED_AT_COLUMN,
-  { field: 'createdBy', headerName: 'Created By', hide: false, ...evalStringFilter },
+  { ...CREATED_AT_COLUMN, ...dateFilter },
+  { ...UPDATED_AT_COLUMN, ...dateFilter },
+  {
+    field: 'createdBy',
+    headerName: 'Created By',
+    hide: false,
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL]),
+  },
   {
     field: 'method',
     headerName: 'Method',
@@ -839,17 +807,53 @@ export const TEST_CASES_COLUMN: ColDef[] = [
 ];
 
 export const RUNS_COLUMN: ColDef[] = [
-  { field: 'id', colId: 'id', headerName: 'ID' },
-  { field: 'testRunName', colId: 'testRunName', headerName: 'Test run name' },
-  { field: 'runConfig.numberOfRuns', colId: 'runConfig.numberOfRuns', headerName: 'Number of runs' },
-  { field: 'numberOfTestCases', colId: 'numberOfTestCases', headerName: 'Number of test cases' },
-  { field: 'startedAt', headerName: 'Start date', ...dateTimeColumn },
-  { field: 'completedAt', headerName: 'End date', ...dateTimeColumn },
+  {
+    field: 'id',
+    colId: 'id',
+    headerName: 'ID',
+    ...evalStringFilter([GridFilterType.EQUALS]),
+    hide: false,
+  },
+  {
+    field: 'testSuiteId',
+    colId: 'testSuiteId',
+    headerName: 'Test Suite ID',
+    ...evalStringFilter([GridFilterType.EQUALS]),
+    hide: true,
+  },
+  {
+    field: 'testRunName',
+    colId: 'testRunName',
+    headerName: 'Test run name',
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
+    hide: false,
+  },
+  {
+    field: 'runConfig.numberOfRuns',
+    colId: 'runConfig.numberOfRuns',
+    headerName: 'Number of runs',
+    filter: false,
+    sortable: false,
+    hide: false,
+  },
+  {
+    field: 'numberOfTestCases',
+    colId: 'numberOfTestCases',
+    headerName: 'Number of test cases',
+    filter: false,
+    sortable: false,
+    hide: false,
+  },
+  { field: 'createdAt', headerName: 'Created date', ...dateTimeColumn, ...dateFilter, hide: true },
+  { field: 'startedAt', headerName: 'Start date', ...dateTimeColumn, ...dateFilter, hide: false },
+  { field: 'completedAt', headerName: 'End date', ...dateTimeColumn, ...dateFilter, hide: false },
   {
     field: 'status',
     headerName: 'Status',
     cellRenderer: RunStatusCellRenderer,
     tooltipValueGetter: () => undefined,
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL]),
+    hide: false,
   },
 ];
 
