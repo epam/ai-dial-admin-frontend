@@ -21,7 +21,7 @@ import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { TelemetryQuery } from '@/src/models/telemetry';
 import { prepareMultiSeriesChartData } from '@/src/utils/telemetry';
-import LineChart from '../LineChart/LineChart';
+import LineChart from '@/src/components/Telemetry/Dashboards/LineChart/LineChart';
 
 interface Props {
   getData: (input: QueryInput) => Promise<ServerActionResponse>;

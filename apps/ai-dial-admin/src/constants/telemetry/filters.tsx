@@ -5,7 +5,7 @@ import StartsWith from '@/public/images/icons/filter/starts-with.svg';
 import { TelemetryI18nKey } from '@/src/constants/i18n';
 import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
 import { IconEqual, IconEqualNot } from '@tabler/icons-react';
-import { BASE_BUTTON_ICON_PROPS } from '../main-layout';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 
 export const refreshOptionsConfig = [
   { value: 'off', label: 'Off', timeout: null },

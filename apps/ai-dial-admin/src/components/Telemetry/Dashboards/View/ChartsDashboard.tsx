@@ -3,7 +3,7 @@ import { TelemetryQuery } from '@/src/models/telemetry';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { TelemetryI18nKey } from '@/src/constants/i18n';
 import { MONEY_QUERY, REQUEST_COUNT_QUERY, TOTAL_TOKENS_QUERY, UNIQ_USERS_QUERY } from '@/src/constants/telemetry';
-import SingleValueChart from '../Values/SingleValueChart';
+import SingleValueChart from '@/src/components/Telemetry/Dashboards/Values/SingleValueChart';
 
 interface Props {
   getData: (query: TelemetryQuery) => Promise<ServerActionResponse>;

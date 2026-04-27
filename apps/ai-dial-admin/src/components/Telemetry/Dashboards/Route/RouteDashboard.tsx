@@ -19,8 +19,8 @@ import {
 import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { TelemetryQuery } from '@/src/models/telemetry';
-import TelemetryGrid from '../../TelemetryGrid';
-import LineChart from '../LineChart/LineChart';
+import TelemetryGrid from '@/src/components/Telemetry/TelemetryGrid';
+import LineChart from '@/src/components/Telemetry/Dashboards/LineChart/LineChart';
 
 interface Props {
   getData: (input: QueryInput) => Promise<ServerActionResponse>;
