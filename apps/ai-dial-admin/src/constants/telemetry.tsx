@@ -331,9 +331,9 @@ export const ROUTE_DEPLOYMENT_QUERY: TelemetryQuery = {
 export const ROUTE_PARENT_DEPLOYMENT_QUERY: TelemetryQuery = {
   $type: 'json',
   query: {
-    expressions: ['parent_deployment', 'count()'],
+    expressions: ['parent_deployment', 'deployment', 'count()'],
     from: ROUTE_TABLE_NAME,
-    groupBy: ['parent_deployment'],
+    groupBy: ['parent_deployment', 'deployment'],
     orderBy: [{ $desc: 'count()' }],
   },
 };
@@ -351,9 +351,9 @@ export const ROUTE_PROJECT_QUERY: TelemetryQuery = {
 export const ROUTE_QUERY: TelemetryQuery = {
   $type: 'json',
   query: {
-    expressions: ['project_id', 'count()'],
+    expressions: ['deployment', 'route_path', 'http_method', 'count()'],
     from: ROUTE_TABLE_NAME,
-    groupBy: ['project_id'],
+    groupBy: ['deployment', 'route_path', 'http_method'],
     orderBy: [{ $desc: 'count()' }],
   },
 };

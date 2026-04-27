@@ -1,7 +1,9 @@
 import { FC } from 'react';
 
 import { QueryInput } from '@/src/components/Telemetry/Dashboard';
+import LineChart from '@/src/components/Telemetry/Dashboards/LineChart/LineChart';
 import RouteChartsValues from '@/src/components/Telemetry/Dashboards/Route/RouteChartsValues';
+import TelemetryGrid from '@/src/components/Telemetry/TelemetryGrid';
 import {
   CALL_BY_DEPLOYMENT_COLUMNS,
   CALL_BY_PARENT_DEPLOYMENT_COLUMNS,
@@ -18,18 +20,14 @@ import {
 } from '@/src/constants/telemetry';
 import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { TelemetryQuery } from '@/src/models/telemetry';
-import TelemetryGrid from '@/src/components/Telemetry/TelemetryGrid';
-import LineChart from '@/src/components/Telemetry/Dashboards/LineChart/LineChart';
 
 interface Props {
   getData: (input: QueryInput) => Promise<ServerActionResponse>;
-  getToolsConsumptionData: (query: TelemetryQuery) => Promise<ServerActionResponse>;
   refreshTime: string;
   isEntityView?: boolean;
 }
 
-const RouteDashboard: FC<Props> = ({ getData, getToolsConsumptionData, refreshTime, isEntityView = false }) => {
+const RouteDashboard: FC<Props> = ({ getData, refreshTime, isEntityView = false }) => {
   const t = useI18n();
 
   return (
@@ -59,7 +57,7 @@ const RouteDashboard: FC<Props> = ({ getData, getToolsConsumptionData, refreshTi
 
           <div className="flex flex-1 relative">
             <TelemetryGrid
-              getData={getToolsConsumptionData}
+              getData={getData}
               refreshTime={refreshTime}
               query={ROUTE_QUERY}
               columnDefs={CALL_BY_ROUTES_COLUMNS}
