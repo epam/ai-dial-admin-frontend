@@ -19,3 +19,8 @@ export enum DASHBOARD_VIEW_TYPE {
   Chat = 'Chat',
   Mcp = 'Mcp',
 }
+
+export enum ACTIVITY_VIEW_TYPE {
+  Config = 'Config',
+  Asset = 'Asset',
+}

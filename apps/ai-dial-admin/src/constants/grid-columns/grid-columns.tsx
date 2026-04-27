@@ -66,6 +66,8 @@ import {
 } from './base-columns';
 import { dateTimeColumn, numericColumn, priceColumn } from './configs';
 import { auditStringFilter, evalStringFilter } from './filters';
+import RowExpanderCellRenderer from '@/src/components/Grid/CellRenderers/RowExpanderCellRenderer';
+import ChildrenActivityTypeCellRenderer from '@/src/components/Grid/CellRenderers/ChildrenActivityTypeCellRenderer';
 
 export const COLUMN_PANEL_PREFIX = 'column_';
 
@@ -188,7 +190,23 @@ export const MCP_TOOLS_COLUMNS: ColDef[] = [
 
 export const ACTIVITY_AUDIT_COLUMNS = (t: (s: string) => string, isSingleEntity?: boolean): ColDef[] => {
   const columns: ColDef[] = [
-    { field: 'activityType', headerName: 'Activity type', ...auditStringFilter },
+    {
+      headerName: '',
+      field: 'expanderColumn',
+      cellClass: NO_BORDER_CLASS,
+      flex: 1,
+      maxWidth: 30,
+      sortable: false,
+      filter: false,
+      floatingFilter: false,
+      cellRenderer: RowExpanderCellRenderer,
+    },
+    {
+      field: 'activityType',
+      headerName: 'Activity type',
+      ...auditStringFilter,
+      cellRenderer: ChildrenActivityTypeCellRenderer,
+    },
     {
       field: 'resourceType',
       headerName: 'Resource type',
@@ -208,10 +226,11 @@ export const ACTIVITY_AUDIT_COLUMNS = (t: (s: string) => string, isSingleEntity?
     },
     { field: 'initiatedEmail', headerName: 'Initiated', ...auditStringFilter },
     { field: 'activityId', headerName: 'Activity ID', ...auditStringFilter },
+    { field: 'parentActivityId', headerName: 'Parent ID', ...auditStringFilter },
   ];
 
   if (isSingleEntity) {
-    return [columns[0], ...columns.slice(3)];
+    return [columns[1], ...columns.slice(4)];
   }
 
   return columns;

@@ -656,6 +656,9 @@ export enum TelemetryI18nKey {
   RequestPerMcpUsage = 'Telemetry.RequestPerMcpUsage',
   ProjectsConsumptionMcp = 'Telemetry.ProjectsConsumptionMcp',
   Unknown = 'Telemetry.Unknown',
+  ActivityViewLabel = 'Telemetry.ActivityViewLabel',
+  ActivityViewConfig = 'Telemetry.ActivityView.Config',
+  ActivityViewAsset = 'Telemetry.ActivityView.Asset',
 }
 
 export enum RoutesI18nKey {

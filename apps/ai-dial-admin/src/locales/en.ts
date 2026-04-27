@@ -677,6 +677,11 @@ export default {
     RequestPerMcpUsage: 'Request per MCP usage',
     ProjectsConsumptionMcp: 'Projects Consumption',
     Unknown: 'Unknown',
+    ActivityViewLabel: 'View:',
+    ActivityView: {
+      Config: 'Config',
+      Asset: 'Asset',
+    },
   },
   Routes: {
     AddPaths: 'Add paths',

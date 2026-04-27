@@ -43,7 +43,11 @@ export const getActivityAuditColumns = (
     actions.push(getViewDetailsOperation(viewDetails));
   }
   if (resourceRollback) {
-    actions.push(getResourceRollbackOperation(resourceRollback));
+    actions.push(
+      getResourceRollbackOperation(resourceRollback, (_, node) => {
+        return !!(node.data as DialActivity & { children?: DialActivity[] })?.children?.length;
+      }),
+    );
   }
 
   return [...ACTIVITY_AUDIT_COLUMNS(t, isSingleEntity), ACTION_COLUMN(actions)];
