@@ -285,6 +285,8 @@ export const TELEMETRY_GRID_HEADERS_MAP: Record<string, string> = {
   parent_deployment: 'parent_deployment',
   tool_calls: 'tool_calls',
   mcp_calls: 'mcp_calls',
+  route_path: 'route_path',
+  http_method: 'http_method',
 };
 
 export const USAGE_LOG_COLUMN_ID_TO_SOURCE: Record<string, string> = {
@@ -311,9 +313,9 @@ export const createRouteUsageQuery = (resolution: ChartResolution): TelemetryQue
   $type: 'json',
   fillGaps: true,
   query: {
-    expressions: [formatWindow(resolution), 'route_method', 'count()'],
+    expressions: [formatWindow(resolution), 'count()'],
     from: ROUTE_TABLE_NAME,
-    groupBy: [formatWindow(resolution), 'route_method'],
+    groupBy: [formatWindow(resolution)],
     orderBy: [{ $asc: formatWindow(resolution) }],
   },
 });
