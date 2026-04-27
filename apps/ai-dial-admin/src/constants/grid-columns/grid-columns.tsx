@@ -65,7 +65,7 @@ import {
   VERSION_COLUMN,
 } from './base-columns';
 import { dateTimeColumn, numericColumn, priceColumn } from './configs';
-import { auditStringFilter, dateFilter, evalStringFilter, runsFilter } from './filters';
+import { auditStringFilter, dateFilter, evalStringFilter } from './filters';
 import { GridFilterType } from '@/src/types/grid-filter';
 
 export const COLUMN_PANEL_PREFIX = 'column_';
@@ -764,10 +764,22 @@ export const IMAGE_DEPENDENCIES_COLUMNS = (t: (key: string) => string, showImage
 ];
 
 export const TEST_SUITES_COLUMN: ColDef[] = [
-  { field: 'name', colId: 'name', headerName: 'Display Name', hide: false, ...evalStringFilter },
-  { ...DESCRIPTION_COLUMN, sortable: false, filter: false },
-  { field: 'id', colId: 'id', headerName: 'ID', hide: false, filter: false },
-  { field: 'suiteType', colId: 'suiteType', headerName: 'Suite Type', hide: false, ...evalStringFilter },
+  {
+    field: 'name',
+    colId: 'name',
+    headerName: 'Display Name',
+    hide: false,
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
+  },
+  { ...DESCRIPTION_COLUMN, sortable: false, ...evalStringFilter([GridFilterType.CONTAINS]) },
+  { field: 'id', colId: 'id', headerName: 'ID', hide: false, ...evalStringFilter([GridFilterType.EQUALS]) },
+  {
+    field: 'suiteType',
+    colId: 'suiteType',
+    headerName: 'Suite Type',
+    hide: false,
+    ...evalStringFilter([GridFilterType.EQUALS]),
+  },
   {
     field: 'application',
     headerName: 'Application',
@@ -776,9 +788,14 @@ export const TEST_SUITES_COLUMN: ColDef[] = [
     filter: false,
     valueGetter: (params) => params.data?.deploymentRef?.name || params.data?.mcpDeploymentRef?.name || '',
   },
-  CREATED_AT_COLUMN,
-  UPDATED_AT_COLUMN,
-  { field: 'createdBy', headerName: 'Created By', hide: false, ...evalStringFilter },
+  { ...CREATED_AT_COLUMN, ...dateFilter },
+  { ...UPDATED_AT_COLUMN, ...dateFilter },
+  {
+    field: 'createdBy',
+    headerName: 'Created By',
+    hide: false,
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL]),
+  },
   {
     field: 'method',
     headerName: 'Method',
@@ -807,21 +824,21 @@ export const RUNS_COLUMN: ColDef[] = [
     field: 'id',
     colId: 'id',
     headerName: 'ID',
-    ...runsFilter([GridFilterType.EQUALS]),
+    ...evalStringFilter([GridFilterType.EQUALS]),
     hide: false,
   },
   {
     field: 'testSuiteId',
     colId: 'testSuiteId',
     headerName: 'Test Suite ID',
-    ...runsFilter([GridFilterType.EQUALS]),
+    ...evalStringFilter([GridFilterType.EQUALS]),
     hide: true,
   },
   {
     field: 'testRunName',
     colId: 'testRunName',
     headerName: 'Test run name',
-    ...runsFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
     hide: false,
   },
   {
@@ -848,7 +865,7 @@ export const RUNS_COLUMN: ColDef[] = [
     headerName: 'Status',
     cellRenderer: RunStatusCellRenderer,
     tooltipValueGetter: () => undefined,
-    ...runsFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL]),
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL]),
     hide: false,
   },
 ];
