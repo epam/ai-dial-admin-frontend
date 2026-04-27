@@ -460,6 +460,18 @@ describe('getImportNotificationContent', () => {
     if (key === FileManagerI18nKey.ImportSuccessDescriptionForOne) {
       return `Successfully imported one ${options?.item || 'item'} to ${options?.path}`;
     }
+    if (key === FileManagerI18nKey.ImportErrorTitle) {
+      return `Import ${options?.count} ${options?.item} Failed`;
+    }
+    if (key === FileManagerI18nKey.ImportErrorDescription) {
+      return `Failed to import ${options?.list}`;
+    }
+    if (key === FileManagerI18nKey.ImportSkippedTitle) {
+      return `Import ${options?.count} ${options?.item} Skipped`;
+    }
+    if (key === FileManagerI18nKey.ImportSkippedDescription) {
+      return `Skipped import of ${options?.list}`;
+    }
     if (key === FileManagerI18nKey.Files) return 'Files';
     if (key === FileManagerI18nKey.File) return 'File';
     if (key === FileManagerI18nKey.Prompts) return 'Prompts';
@@ -473,58 +485,157 @@ describe('getImportNotificationContent', () => {
   };
 
   test('should return correct notification for single file import in Files view', () => {
-    const file = [{ name: 'file1.txt' }] as any;
-    const result = getImportNotificationContent(ApplicationRoute.Files, file, ImportFileType.FILES, '/dest', mockT);
+    const importResults = [{ targetPath: '/dest/file1.txt', status: 'success' }];
+    const result = getImportNotificationContent(
+      ApplicationRoute.Files,
+      importResults,
+      ImportFileType.FILES,
+      '/dest',
+      mockT,
+    );
 
     expect(result.title).toBe('Import File Success');
     expect(result.description).toBe('Successfully imported one File to /dest');
   });
 
   test('should return correct notification for multiple files import in Files view', () => {
-    const file = [{ name: 'file1.txt' }, { name: 'file2.txt' }] as any;
-    const result = getImportNotificationContent(ApplicationRoute.Files, file, ImportFileType.FILES, '/dest', mockT);
+    const importResults = [
+      { targetPath: '/dest/file1.txt', status: 'success' },
+      { targetPath: '/dest/file2.txt', status: 'success' },
+    ];
+    const result = getImportNotificationContent(
+      ApplicationRoute.Files,
+      importResults,
+      ImportFileType.FILES,
+      '/dest',
+      mockT,
+    );
 
     expect(result.title).toBe('Import Files Success');
     expect(result.description).toBe('Successfully imported 2 items to /dest');
   });
 
   test('should return correct notification for archive import in Files view', () => {
-    const file = { archive: true } as any;
-    const result = getImportNotificationContent(ApplicationRoute.Files, file, ImportFileType.ARCHIVE, '/dest', mockT);
+    const importResults = [{ targetPath: '/dest/archive.zip', status: 'success' }];
+    const result = getImportNotificationContent(
+      ApplicationRoute.Files,
+      importResults,
+      ImportFileType.ARCHIVE,
+      '/dest',
+      mockT,
+    );
 
     expect(result.title).toBe('Import File Success');
     expect(result.description).toBe('Successfully imported archive Files to /dest');
   });
 
+  test('should return error notification for failed import in Files view', () => {
+    const importResults = [
+      { targetPath: '/dest/file1.txt', status: 'failure' },
+      { targetPath: '/dest/file2.txt', status: 'success' },
+    ];
+    const result = getImportNotificationContent(
+      ApplicationRoute.Files,
+      importResults,
+      ImportFileType.FILES,
+      '/dest',
+      mockT,
+    );
+
+    expect(result.title).toBe('Import File Success');
+    expect(result.description).toBe('Successfully imported one File to /dest');
+    expect(result.errorTitle).toBe('Import 1 File Failed');
+    expect(result.errorDescription).toBe('Failed to import /dest/file1.txt');
+  });
+
+  test('should return skipped notification for skipped import in Files view', () => {
+    const importResults = [
+      { targetPath: '/dest/file1.txt', status: 'skipped' },
+      { targetPath: '/dest/file2.txt', status: 'success' },
+    ];
+    const result = getImportNotificationContent(
+      ApplicationRoute.Files,
+      importResults,
+      ImportFileType.FILES,
+      '/dest',
+      mockT,
+    );
+
+    expect(result.title).toBe('Import File Success');
+    expect(result.description).toBe('Successfully imported one File to /dest');
+    expect(result.skippedTitle).toBe('Import 1 File Skipped');
+    expect(result.skippedDescription).toBe('Skipped import of /dest/file1.txt');
+  });
+
   test('should return correct notification for single prompt import in Prompts view', () => {
-    const file = { prompts: [{ name: 'Prompt1' }] } as any;
-    const result = getImportNotificationContent(ApplicationRoute.Prompts, file, ImportFileType.FILES, '/dest', mockT);
+    const importResults = [{ targetPath: '/dest/prompt1', status: 'success' }];
+    const result = getImportNotificationContent(
+      ApplicationRoute.Prompts,
+      importResults,
+      ImportFileType.FILES,
+      '/dest',
+      mockT,
+    );
 
     expect(result.title).toBe('Import Prompt Success');
     expect(result.description).toBe('Successfully imported one Prompt to /dest');
   });
 
   test('should return correct notification for multiple prompts import in Prompts view', () => {
-    const file = { prompts: [{ name: 'Prompt1' }, { name: 'Prompt2' }] } as any;
-    const result = getImportNotificationContent(ApplicationRoute.Prompts, file, ImportFileType.FILES, '/dest', mockT);
+    const importResults = [
+      { targetPath: '/dest/prompt1', status: 'success' },
+      { targetPath: '/dest/prompt2', status: 'success' },
+    ];
+    const result = getImportNotificationContent(
+      ApplicationRoute.Prompts,
+      importResults,
+      ImportFileType.FILES,
+      '/dest',
+      mockT,
+    );
 
     expect(result.title).toBe('Import Prompts Success');
     expect(result.description).toBe('Successfully imported 2 items to /dest');
   });
 
   test('should return correct notification for archive import in Prompts view', () => {
-    const file = { prompts: [{ name: 'Prompt1' }] } as any;
-    const result = getImportNotificationContent(ApplicationRoute.Prompts, file, ImportFileType.ARCHIVE, '/dest', mockT);
+    const importResults = [{ targetPath: '/dest/archive.zip', status: 'success' }];
+    const result = getImportNotificationContent(
+      ApplicationRoute.Prompts,
+      importResults,
+      ImportFileType.ARCHIVE,
+      '/dest',
+      mockT,
+    );
 
     expect(result.title).toBe('Import Prompt Success');
     expect(result.description).toBe('Successfully imported archive Prompts to /dest');
   });
 
+  test('should return skipped notification for skipped import in Prompts view', () => {
+    const importResults = [
+      { targetPath: '/dest/prompt1', status: 'skipped' },
+      { targetPath: '/dest/prompt2', status: 'success' },
+    ];
+    const result = getImportNotificationContent(
+      ApplicationRoute.Prompts,
+      importResults,
+      ImportFileType.FILES,
+      '/dest',
+      mockT,
+    );
+
+    expect(result.title).toBe('Import Prompt Success');
+    expect(result.description).toBe('Successfully imported one Prompt to /dest');
+    expect(result.skippedTitle).toBe('Import 1 Prompt Skipped');
+    expect(result.skippedDescription).toBe('Skipped import of /dest/prompt1');
+  });
+
   test('should return correct notification for single application import in Applications view', () => {
-    const file = { applications: [{ name: 'Application1' }] } as any;
+    const importResults = [{ targetPath: '/dest/app1', status: 'success' }];
     const result = getImportNotificationContent(
       ApplicationRoute.AssetsApplications,
-      file,
+      importResults,
       ImportFileType.FILES,
       '/dest',
       mockT,
@@ -535,10 +646,13 @@ describe('getImportNotificationContent', () => {
   });
 
   test('should return correct notification for multiple applications import in Applications view', () => {
-    const file = { applications: [{ name: 'Application1' }, { name: 'Application2' }] } as any;
+    const importResults = [
+      { targetPath: '/dest/app1', status: 'success' },
+      { targetPath: '/dest/app2', status: 'success' },
+    ];
     const result = getImportNotificationContent(
       ApplicationRoute.AssetsApplications,
-      file,
+      importResults,
       ImportFileType.FILES,
       '/dest',
       mockT,
@@ -549,10 +663,10 @@ describe('getImportNotificationContent', () => {
   });
 
   test('should return correct notification for archive import in Applications view', () => {
-    const file = { applications: [{ name: 'Application1' }] } as any;
+    const importResults = [{ targetPath: '/dest/app-archive.zip', status: 'success' }];
     const result = getImportNotificationContent(
       ApplicationRoute.AssetsApplications,
-      file,
+      importResults,
       ImportFileType.ARCHIVE,
       '/dest',
       mockT,
@@ -561,11 +675,29 @@ describe('getImportNotificationContent', () => {
     expect(result.description).toBe('Successfully imported archive Applications to /dest');
   });
 
+  test('should return skipped notification for skipped import in Applications view', () => {
+    const importResults = [
+      { targetPath: '/dest/app1', status: 'skipped' },
+      { targetPath: '/dest/app2', status: 'success' },
+    ];
+    const result = getImportNotificationContent(
+      ApplicationRoute.AssetsApplications,
+      importResults,
+      ImportFileType.FILES,
+      '/dest',
+      mockT,
+    );
+    expect(result.title).toBe('Import Application Success');
+    expect(result.description).toBe('Successfully imported one Application to /dest');
+    expect(result.skippedTitle).toBe('Import 1 Application Skipped');
+    expect(result.skippedDescription).toBe('Skipped import of /dest/app1');
+  });
+
   test('should return correct notification for single toolset import in Toolsets view', () => {
-    const file = { toolSets: [{ name: 'Toolset1' }] } as any;
+    const importResults = [{ targetPath: '/dest/toolset1', status: 'success' }];
     const result = getImportNotificationContent(
       ApplicationRoute.AssetsToolsets,
-      file,
+      importResults,
       ImportFileType.FILES,
       '/dest',
       mockT,
@@ -573,11 +705,15 @@ describe('getImportNotificationContent', () => {
     expect(result.title).toBe('Import Toolset Success');
     expect(result.description).toBe('Successfully imported one Toolset to /dest');
   });
+
   test('should return correct notification for multiple toolsets import in Toolsets view', () => {
-    const file = { toolSets: [{ name: 'Toolset1' }, { name: 'Toolset2' }] } as any;
+    const importResults = [
+      { targetPath: '/dest/toolset1', status: 'success' },
+      { targetPath: '/dest/toolset2', status: 'success' },
+    ];
     const result = getImportNotificationContent(
       ApplicationRoute.AssetsToolsets,
-      file,
+      importResults,
       ImportFileType.FILES,
       '/dest',
       mockT,
@@ -585,16 +721,35 @@ describe('getImportNotificationContent', () => {
     expect(result.title).toBe('Import Toolsets Success');
     expect(result.description).toBe('Successfully imported 2 items to /dest');
   });
+
   test('should return correct notification for archive import in Toolsets view', () => {
-    const file = { toolSets: [{ name: 'Toolset1' }] } as any;
+    const importResults = [{ targetPath: '/dest/toolset-archive.zip', status: 'success' }];
     const result = getImportNotificationContent(
       ApplicationRoute.AssetsToolsets,
-      file,
+      importResults,
       ImportFileType.ARCHIVE,
       '/dest',
       mockT,
     );
     expect(result.title).toBe('Import Toolset Success');
     expect(result.description).toBe('Successfully imported archive Toolsets to /dest');
+  });
+
+  test('should return skipped notification for skipped import in Toolsets view', () => {
+    const importResults = [
+      { targetPath: '/dest/toolset1', status: 'skipped' },
+      { targetPath: '/dest/toolset2', status: 'success' },
+    ];
+    const result = getImportNotificationContent(
+      ApplicationRoute.AssetsToolsets,
+      importResults,
+      ImportFileType.FILES,
+      '/dest',
+      mockT,
+    );
+    expect(result.title).toBe('Import Toolset Success');
+    expect(result.description).toBe('Successfully imported one Toolset to /dest');
+    expect(result.skippedTitle).toBe('Import 1 Toolset Skipped');
+    expect(result.skippedDescription).toBe('Skipped import of /dest/toolset1');
   });
 });
