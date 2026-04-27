@@ -3,11 +3,13 @@ import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import WarningIcon from '@/src/components/Common/WarningIcon/WarningIcon';
 import SelectContainerModal from '@/src/components/SourceField/Containers/SelectContainerModal';
 import Endpoints from '@/src/components/SourceField/Endpoints/Endpoints';
 import { buildContainerSelection, getContainerRoute } from '@/src/components/SourceField/utils';
 import {
   ButtonsI18nKey,
+  ContainersI18nKey,
   CreateI18nKey,
   EntitiesI18nKey,
   EntityFieldsI18nKey,
@@ -20,6 +22,7 @@ import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { Container } from '@/src/models/deployments/containers';
+import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { DialApplication } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
@@ -57,7 +60,7 @@ const Containers = <T extends DialInterceptor | DialModel | DialApplication>({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [containers, setContainers] = useState<Container[]>([]);
   const [selectedContainer, setSelectedContainer] = useState<Container | null>(null);
-  const [currentContainerDisplayName, setCurrentContainerDisplayName] = useState<string>();
+  const [currentContainer, setCurrentContainer] = useState<Container | null>(null);
 
   const isMobile = useIsMobileScreen();
 
@@ -92,10 +95,7 @@ const Containers = <T extends DialInterceptor | DialModel | DialApplication>({
     const fetchContainers = async () => {
       const containers = (await getReqRef.current(getContainers)).response as Container[] | null;
       if (containers?.length) {
-        const current = containers.find((c) => c.name === entity.source?.containerId);
-        if (current) {
-          setCurrentContainerDisplayName(current.displayName);
-        }
+        setCurrentContainer(containers.find((c) => c.name === entity.source?.containerId) ?? null);
         setContainers(containers.filter((container) => container.status === 'running'));
       }
     };
@@ -136,11 +136,20 @@ const Containers = <T extends DialInterceptor | DialModel | DialApplication>({
               <DialInputPopup
                 open={isModalOpen}
                 onOpen={onOpenModal}
-                selectedValue={selectedContainer?.displayName || currentContainerDisplayName}
+                selectedValue={selectedContainer?.displayName || currentContainer?.displayName}
                 elementId="containers"
                 emptyValueText={t(EntitiesI18nKey.NoContainers)}
                 disabled={disabled || !featureFlags.deploymentsEnabled}
                 errorText={error}
+                iconBefore={
+                  <WarningIcon
+                    warningText={
+                      currentContainer && currentContainer.status !== CONTAINER_STATUS.RUNNING
+                        ? t(ContainersI18nKey.ContainerNotRunningTooltip)
+                        : undefined
+                    }
+                  />
+                }
               >
                 <SelectContainerModal
                   selectedId={entity.source?.containerId}
