@@ -139,12 +139,7 @@ const Dashboard: FC<Props> = ({ route, entity, defaultTimeFilter, onTimeFilterCh
           isEntityView={!!entity}
         />
       ) : isRouteDashboards ? (
-        <RouteDashboard
-          getData={getData}
-          getToolsConsumptionData={getMcpToolsConsumptionData}
-          refreshTime={effectiveRefreshTime}
-          isEntityView={!!entity}
-        />
+        <RouteDashboard getData={getData} refreshTime={effectiveRefreshTime} isEntityView={!!entity} />
       ) : (
         <SimpleDashboard
           route={route}
