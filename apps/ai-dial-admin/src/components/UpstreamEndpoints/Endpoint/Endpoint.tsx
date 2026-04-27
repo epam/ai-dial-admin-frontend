@@ -19,7 +19,7 @@ import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { DialEndpointExtraData, DialModelEndpoint } from '@/src/models/dial/model';
 import { isDangerEndpoint } from '@/src/utils/validation/url-error';
-import WarningIcon from './WarningIcon';
+import WarningIcon from '@/src/components/Common/WarningIcon/WarningIcon';
 
 interface Props {
   index: number;
@@ -145,7 +145,7 @@ const Endpoint: FC<Props> = ({
                 : ''
             }
             onChange={onChangeEndPointUrl}
-            iconAfter={<WarningIcon endpointWarning={endpointWarning} />}
+            iconAfter={<WarningIcon warningText={endpointWarning} />}
             required={required}
           />
 
@@ -158,7 +158,7 @@ const Endpoint: FC<Props> = ({
               caption={t(UpstreamEndpointsI18nKey.EndpointResponseCaption)}
               label={isFirstLine || isTablet ? t(EntityFieldsI18nKey.responsesEndpoint) : ''}
               onChange={onChangeResponses}
-              iconAfter={<WarningIcon endpointWarning={responsesEndpointWarning} />}
+              iconAfter={<WarningIcon warningText={responsesEndpointWarning} />}
               required={required}
             />
           )}

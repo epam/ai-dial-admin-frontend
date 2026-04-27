@@ -1402,6 +1402,8 @@ export enum ContainersI18nKey {
   NotRunning = 'Containers.NotRunning',
   ContainerNotRunningTitle = 'Containers.ContainerNotRunningTitle',
   ContainerNotRunningDescription = 'Containers.ContainerNotRunningDescription',
+  ContainerNotRunningTooltip = 'Containers.ContainerNotRunningTooltip',
+  ImageNotInstalledTooltip = 'Containers.ImageNotInstalledTooltip',
   GoToContainer = 'Containers.GoToContainer',
   Preparing = 'Containers.Preparing',
   Failed = 'Containers.Failed',
