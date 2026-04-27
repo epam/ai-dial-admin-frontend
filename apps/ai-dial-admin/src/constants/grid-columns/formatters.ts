@@ -47,6 +47,11 @@ export const priceValueFormatter = (value?: string | number) => {
   return price;
 };
 
+export const currencyValueFormatter = (value?: string | number): string => {
+  const formatted = priceValueFormatter(value);
+  return formatted ? `$${formatted}` : '';
+};
+
 export const numberValueFormatter = (value?: string | number) => {
   return formatNumberByDelimiter(value);
 };

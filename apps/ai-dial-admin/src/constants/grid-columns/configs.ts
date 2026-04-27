@@ -3,7 +3,11 @@
 import { ColDef } from 'ag-grid-community';
 
 import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
-import { numberValueFormatter, priceValueFormatter } from '@/src/constants/grid-columns/formatters';
+import {
+  currencyValueFormatter,
+  numberValueFormatter,
+  priceValueFormatter,
+} from '@/src/constants/grid-columns/formatters';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 
 import HeaderWithHintButton from '@/src/components/Grid/HeaderComponents/HeaderWithHintButton';
@@ -11,7 +15,7 @@ import HeaderWithHintButton from '@/src/components/Grid/HeaderComponents/HeaderW
 export const dateTimeColumn: Partial<ColDef> = {
   valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
   tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
-  filterValueGetter: (params) => formatDateTimeToLocalString(params.data[params.colDef.field || '']),
+  filterValueGetter: (params) => formatDateTimeToLocalString(params.data?.[params.colDef.field || '']),
 };
 
 export const numericColumn: Partial<ColDef> = {
@@ -19,7 +23,7 @@ export const numericColumn: Partial<ColDef> = {
   headerClass: 'align-right',
   comparator: numberValueComparator,
   valueFormatter: ({ value }) => numberValueFormatter(value),
-  filterValueGetter: (params) => numberValueFormatter(params.data[params.colDef.field || '']),
+  filterValueGetter: (params) => numberValueFormatter(params.data?.[params.colDef.field || '']),
 };
 
 export const priceColumn = (title: string): Partial<ColDef> => {
@@ -34,7 +38,7 @@ export const priceColumn = (title: string): Partial<ColDef> => {
         hintTitle: title,
       },
     },
-    valueFormatter: ({ value }) => `$${priceValueFormatter(value)}`,
-    filterValueGetter: (params) => priceValueFormatter(params.data[params.colDef.field || '']),
+    valueFormatter: ({ value }) => currencyValueFormatter(value),
+    filterValueGetter: (params) => priceValueFormatter(params.data?.[params.colDef.field || '']),
   };
 };

@@ -5,6 +5,7 @@ import {
   changePath,
   checkPaths,
   checkSelectedPath,
+  extractVersionByPath,
   getFolderNameAndPath,
   getListOfPathsToBulkDelete,
   getListOfPathsToMove,
@@ -20,6 +21,11 @@ describe('Utils :: files :: changePath', () => {
   test('Should change folder path', () => {
     const res = changePath('folder1/folder2/all/folder', 'newPath');
     expect(res).toEqual('newPath/folder');
+  });
+
+  test('Should change path with duplicate name', () => {
+    const res = changePath('folder1/folder2/file.txt', 'newPath', 'file(1).txt');
+    expect(res).toEqual('newPath/file(1).txt');
   });
 });
 
@@ -377,5 +383,37 @@ describe('Utils :: files :: updatePathWithNameAndVersion', () => {
     const oldPath = 'abc123XYZ456/def789/item-name__1.0.0';
     const result = updatePathWithNameAndVersion(oldPath, 'new-item', '1.5.0');
     expect(result).toBe('abc123XYZ456/def789/new-item__1.5.0');
+  });
+});
+
+describe('Utils :: files :: extractVersionByPath', () => {
+  test('Should extract version from path with double underscore', () => {
+    const path = 'folder/item__1.0.0';
+    const result = extractVersionByPath(path);
+    expect(result).toBe('1.0.0');
+  });
+
+  test('Should return null when no version separator found', () => {
+    const path = 'folder/item';
+    const result = extractVersionByPath(path);
+    expect(result).toBeNull();
+  });
+
+  test('Should extract version when path ends with version', () => {
+    const path = 'item__1.0.0';
+    const result = extractVersionByPath(path);
+    expect(result).toBe('1.0.0');
+  });
+
+  test('Should handle empty string', () => {
+    const path = '';
+    const result = extractVersionByPath(path);
+    expect(result).toBeNull();
+  });
+
+  test('Should handle path with only double underscore', () => {
+    const path = 'item__';
+    const result = extractVersionByPath(path);
+    expect(result).toBeNull();
   });
 });

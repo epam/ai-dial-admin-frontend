@@ -82,6 +82,7 @@ describe('Metrics', () => {
   const metric: Metric = {
     id: 'metric-1',
     name: 'Metric One',
+    displayName: 'Metric One',
     description: 'First metric',
     configBindings: [{ property: 'threshold', source: { $type: MetricBindingType.Constant, value: '0.5' } }],
   };

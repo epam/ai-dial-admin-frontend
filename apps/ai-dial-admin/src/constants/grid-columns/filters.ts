@@ -2,6 +2,21 @@ import { ColDef, ITextFilterParams } from 'ag-grid-community';
 
 import { GridFilterType } from '@/src/types/grid-filter';
 
+export const dateFilter: Partial<ColDef> = {
+  filter: 'agDateColumnFilter',
+  filterParams: {
+    maxNumConditions: 1,
+    buttons: ['reset', 'apply'],
+    closeOnApply: true,
+    filterOptions: [
+      GridFilterType.GREATER_THAN,
+      GridFilterType.GREATER_THAN_OR_EQUAL,
+      GridFilterType.LESS_THAN,
+      GridFilterType.LESS_THAN_OR_EQUAL,
+    ],
+  } as ITextFilterParams,
+};
+
 const stringFilter: Partial<ColDef> = {
   filterParams: {
     maxNumConditions: 1,
@@ -22,9 +37,9 @@ export const auditStringFilter: Partial<ColDef> = {
   } as ITextFilterParams,
 };
 
-export const evalStringFilter: Partial<ColDef> = {
+export const evalStringFilter = (options: GridFilterType[]): Partial<ColDef> => ({
   filterParams: {
     ...stringFilter.filterParams,
-    filterOptions: [GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS],
+    filterOptions: options,
   } as ITextFilterParams,
-};
+});

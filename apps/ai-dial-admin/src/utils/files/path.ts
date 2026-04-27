@@ -30,10 +30,10 @@ export const getFolderNameAndPath = (fullPath: string) => {
   return { name, path };
 };
 
-export const changePath = (oldPath: string, newPath: string) => {
+export const changePath = (oldPath: string, newPath: string, duplicateName?: string) => {
   const parts = oldPath.split('/').filter((p) => p != null);
   const fileName = parts.pop();
-  return `${newPath}/${fileName}`;
+  return `${newPath}/${duplicateName || fileName}`;
 };
 
 export const changeFolderName = (oldPath: string, newFolderName: string): string => {
@@ -88,4 +88,9 @@ export const updatePathWithNameAndVersion = (oldPath: string, newName: string, n
   parts.pop();
   parts.push(`${newName}__${newVersion}`);
   return parts.join('/');
+};
+
+export const extractVersionByPath = (path: string) => {
+  const match = path.match(/__(.+)$/);
+  return match ? match[1] : null;
 };

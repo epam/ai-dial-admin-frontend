@@ -42,9 +42,10 @@ interface Props {
   disabled?: boolean;
   routeNames?: string[];
   onChange: (route: DialRoute | DialAppRoute) => void;
+  isAppRunnerView?: boolean;
 }
 
-const RouteProperties: FC<Props> = ({ route, disabled, isAppRoute, routeNames, onChange }) => {
+const RouteProperties: FC<Props> = ({ route, disabled, isAppRoute, routeNames, onChange, isAppRunnerView }) => {
   const t = useI18n();
   const { dispatch, resetCounter } = useSaveValidationContext();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
@@ -210,7 +211,7 @@ const RouteProperties: FC<Props> = ({ route, disabled, isAppRoute, routeNames, o
         disabled={disabled}
         names={isAppRoute ? routeNames || [] : void 0}
         allowWhitespace={!isAppRoute}
-        alphanumericOnly={isAppRoute}
+        alphanumericOnly={isAppRoute && isAppRunnerView}
       />
       {!isAppRoute && <DescriptionControl entity={route} onChangeEntity={onChange} isFullWidth={false} />}
       <Paths

@@ -82,7 +82,7 @@ describe('RouteProperties', () => {
   });
 
   test('shows alphanumeric error when app route name contains forbidden character', () => {
-    render(<RouteProperties route={baseRoute} isAppRoute={true} onChange={vi.fn()} />);
+    render(<RouteProperties route={baseRoute} isAppRoute={true} isAppRunnerView={true} onChange={vi.fn()} />);
     fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.DisplayName), {
       target: { value: 'my-route' },
     });
@@ -90,7 +90,7 @@ describe('RouteProperties', () => {
   });
 
   test('shows alphanumeric error when app route name contains spaces', () => {
-    render(<RouteProperties route={baseRoute} isAppRoute={true} onChange={vi.fn()} />);
+    render(<RouteProperties route={baseRoute} isAppRoute={true} isAppRunnerView={true} onChange={vi.fn()} />);
     fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.DisplayName), {
       target: { value: 'my route' },
     });

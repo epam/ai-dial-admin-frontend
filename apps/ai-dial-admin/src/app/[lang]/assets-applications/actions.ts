@@ -17,7 +17,18 @@ export async function getApps(path: string) {
 
 export async function createApp(app: AssetApp) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.createAsset({ ...app, displayVersion: app.version }, ResourceType.APPLICATION, token);
+  const applicationProperties =
+    app.applicationPropertiesTemp || app.applicationProperties
+      ? app.applicationPropertiesTemp
+        ? { ...convertDefaultsToRecord(app.applicationPropertiesTemp) }
+        : { ...app.applicationProperties }
+      : undefined;
+  const asset = {
+    ...app,
+    ...(applicationProperties !== undefined && { applicationProperties }),
+    displayVersion: app.version,
+  };
+  return assetsApi.createAsset(asset, ResourceType.APPLICATION, token);
 }
 
 export async function getApp(folderId: string, name: string, version: string, etag: string) {
@@ -60,9 +71,9 @@ export async function bulkDeleteApps(paths: { path: string }[]) {
   return assetsApi.bulkDeleteAssets(token, paths, ResourceType.APPLICATION);
 }
 
-export async function moveApps(paths: string[], newPath: string) {
+export async function moveApps(paths: string[], newPath: string, overwrite?: boolean, duplicateName?: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.moveAssets(token, paths, newPath, ResourceType.APPLICATION);
+  return assetsApi.moveAssets(token, paths, newPath, ResourceType.APPLICATION, overwrite, duplicateName);
 }
 
 export async function exportApps(paths: string[], type?: ImportFileType) {

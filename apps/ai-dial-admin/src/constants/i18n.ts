@@ -1109,6 +1109,8 @@ export enum EntityFieldsI18nKey {
   apiKeyHeader = 'EntityFields.apiKeyHeader',
   apiKeyValue = 'EntityFields.apiKeyValue',
   configDelivery = 'EntityFields.configDelivery',
+  configDeliveryMeta = 'EntityFields.configDeliveryMeta',
+  configDeliveryHeader = 'EntityFields.configDeliveryHeader',
   costLimit = 'EntityFields.costLimit',
   defaultRoleLimit = 'EntityFields.defaultRoleLimit',
   fieldsHashingOrder = 'EntityFields.fieldsHashingOrder',
@@ -1365,6 +1367,11 @@ export enum ImagesI18nKey {
   AddImage = 'Images.AddImage',
   FromMcpRegistry = 'Images.FromMcpRegistry',
   AddFromMcpRegistryModalTitle = 'Images.AddFromMcpRegistryModalTitle',
+  BuildStopped = 'Images.BuildStopped',
+  StopBuildModalTitle = 'Images.StopBuildModalTitle',
+  StopBuildModalDescription = 'Images.StopBuildModalDescription',
+  BuildStoppedSuccess = 'Images.BuildStoppedSuccess',
+  BuildStoppedSuccessDescription = 'Images.BuildStoppedSuccessDescription',
 }
 
 export enum ContainersI18nKey {
@@ -1652,6 +1659,8 @@ export enum FileManagerI18nKey {
   ApplicationsEmptyStateDescription = 'FileManager.ApplicationsEmptyStateDescription',
   ToolsetsEmptyStateTitle = 'FileManager.ToolsetsEmptyStateTitle',
   ToolsetsEmptyStateDescription = 'FileManager.ToolsetsEmptyStateDescription',
+  MovingItems = 'FileManager.MovingItems',
+  MovingProgress = 'FileManager.MovingProgress',
 
   // Modals
   DeleteItemsModalTitle = 'FileManager.DeleteItemsModalTitle',
