@@ -1,17 +1,21 @@
 import { DialNeutralButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
-import { IconBlocks, IconPlayerPause, IconPlus, IconTrashX } from '@tabler/icons-react';
+import { IconBlocks, IconPlus, IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { useRouter } from 'next/navigation';
 import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { createContainer, createImage, deleteImage, installImage, stopBuild } from '@/src/app/actions/deployments';
+import AddVersionModal from '@/src/components/Assets/Modals/AddVersionModal';
+import { getVersionsPerName } from '@/src/components/Assets/utils';
 import VersionsSelect from '@/src/components/Deployments/Common/VersionsSelect/VersionsSelect';
 import ImageCreateContainer from '@/src/components/Deployments/Modals/ImageCreateContainer';
+import ImageDelete from '@/src/components/Deployments/Modals/ImageDelete';
 import ImageInstall from '@/src/components/Deployments/Modals/ImageInstall';
 import ImageStopBuild from '@/src/components/Deployments/Modals/ImageStopBuild';
-import AddVersionModal from '@/src/components/Assets/Modals/AddVersionModal';
+import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
 import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
+import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import { ButtonsI18nKey, ContainersI18nKey, CreateI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
 import {
@@ -22,8 +26,8 @@ import {
 } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { Container } from '@/src/models/deployments/containers';
@@ -31,13 +35,9 @@ import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getRouteByType, getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
+import { hasOnlyMetadataChanges } from '@/src/utils/deployments/images';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
-import ImageDelete from '@/src/components/Deployments/Modals/ImageDelete';
-import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
-import { getVersionsPerName } from '@/src/components/Assets/utils';
-import { hasOnlyMetadataChanges } from '@/src/utils/deployments/images';
 
 export interface ImagesButtonsWrapperProps {
   image: Image;
@@ -166,9 +166,9 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
     onOpenModal(ModalType.install);
   }, [onOpenModal]);
 
-  const onOpenStopModal = useCallback(() => {
-    onOpenModal(ModalType.stopBuild);
-  }, [onOpenModal]);
+  // const onOpenStopModal = useCallback(() => {
+  //   onOpenModal(ModalType.stopBuild);
+  // }, [onOpenModal]);
 
   const onCreateContainer = useCallback(
     (container: Container) => {
@@ -259,14 +259,14 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
                   iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
                   onClick={onOpenDeleteModal}
                 />
-                {image.buildStatus === IMAGE_STATUS.BUILDING && (
+                {/* {image.buildStatus === IMAGE_STATUS.BUILDING && (
                   <DialNeutralButton
                     className={buttonsClassNames}
                     label={t(ButtonsI18nKey.Stop)}
                     iconBefore={<IconPlayerPause {...BASE_BUTTON_ICON_PROPS} />}
                     onClick={onOpenStopModal}
                   />
-                )}
+                )} */}
                 {image.buildStatus === IMAGE_STATUS.BUILT && (
                   <DialNeutralButton
                     className={buttonsClassNames}
