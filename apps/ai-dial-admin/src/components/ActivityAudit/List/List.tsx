@@ -33,7 +33,7 @@ import { emptyDataTitleMap, listViewTitleMap } from '@/src/components/ListView/c
 import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
 import ListView from '@/src/components/ListView/ListView';
 import { ACTIONS_COLUMN_CEL_ID, EXPANDER_COLUMN_CEL_ID, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
-import { ButtonsI18nKey, RollbackI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, CompareI18nKey, RollbackI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
@@ -330,7 +330,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
               <DialSelect
                 size={SelectSize.Sm}
                 variant={SelectVariant.Secondary}
-                prefix={t(TelemetryI18nKey.ActivityViewLabel)}
+                prefix={`${t(CompareI18nKey.View)}:`}
                 options={activityViewOptions}
                 value={activityViewType}
                 onChange={(val) => onActivityViewChange(val as ACTIVITY_VIEW_TYPE)}
