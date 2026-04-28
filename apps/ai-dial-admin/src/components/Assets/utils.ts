@@ -5,7 +5,6 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { allActionLabels, baseToolbarOptionLabels } from './constants';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { ImportFileType } from '@/src/types/import';
-import { ImportData, ParsedAssets } from '@/src/models/import-asset';
 import { DialCopiedItem, DialDeletedItem, DialFile, DialFileNodeType } from '@epam/ai-dial-ui-kit';
 
 export const filterLatestVersions = (data: AssetWithVersion[]) => {
@@ -398,16 +397,21 @@ export const getExportNotificationContent = (
 
 export const getImportNotificationContent = (
   view: ApplicationRoute,
-  file: ImportData,
+  importResults: { targetPath: string; status: string; error?: string }[],
   fileType: ImportFileType,
   destinationFolder: string,
   t: (key: string, options?: Record<string, string | number>) => string,
 ) => {
+  const successfullyItems = importResults?.filter((result) => result.status === 'success') || [];
+  const failedItems =
+    importResults?.filter((result) => result.status === 'failure').map((result) => result.targetPath) || [];
+  const skippedItems =
+    importResults?.filter((result) => result.status === 'skipped').map((result) => result.targetPath) || [];
+  const isImportSeveralItems = successfullyItems.length > 1;
+
   switch (view) {
     case ApplicationRoute.Files: {
-      const isImportSeveralFiles = Array.isArray(file) && file.length > 1;
-
-      const title = isImportSeveralFiles
+      const title = isImportSeveralItems
         ? t(FileManagerI18nKey.ImportSuccessTitle, { item: t(FileManagerI18nKey.Files) })
         : t(FileManagerI18nKey.ImportSuccessTitle, { item: t(FileManagerI18nKey.File) });
       let description = '';
@@ -417,9 +421,9 @@ export const getImportNotificationContent = (
           path: destinationFolder,
         });
       } else {
-        description = isImportSeveralFiles
+        description = isImportSeveralItems
           ? t(FileManagerI18nKey.ImportSuccessDescriptionForMany, {
-              count: file.length,
+              count: successfullyItems.length,
               path: destinationFolder,
             })
           : t(FileManagerI18nKey.ImportSuccessDescriptionForOne, {
@@ -429,15 +433,39 @@ export const getImportNotificationContent = (
       }
 
       return {
-        title,
-        description,
+        title: successfullyItems.length > 0 ? title : '',
+        description: successfullyItems.length > 0 ? description : '',
+        skippedTitle:
+          skippedItems.length > 0
+            ? t(FileManagerI18nKey.ImportSkippedTitle, {
+                count: skippedItems.length,
+                item: skippedItems.length > 1 ? t(FileManagerI18nKey.Files) : t(FileManagerI18nKey.File),
+              })
+            : '',
+        skippedDescription:
+          skippedItems.length > 0
+            ? t(FileManagerI18nKey.ImportSkippedDescription, {
+                item: skippedItems.length > 1 ? t(FileManagerI18nKey.Files) : t(FileManagerI18nKey.File),
+                list: skippedItems.join(', '),
+              })
+            : '',
+        errorTitle:
+          failedItems.length > 0
+            ? t(FileManagerI18nKey.ImportErrorTitle, {
+                count: failedItems.length,
+                item: failedItems.length > 1 ? t(FileManagerI18nKey.Files) : t(FileManagerI18nKey.File),
+              })
+            : '',
+        errorDescription:
+          failedItems.length > 0
+            ? t(FileManagerI18nKey.ImportErrorDescription, {
+                list: failedItems.join(', '),
+              })
+            : '',
       };
     }
     case ApplicationRoute.Prompts: {
-      const prompts = (file as ParsedAssets)?.prompts;
-      const isImportSeveralPrompts = Array.isArray(prompts) && prompts.length > 1;
-
-      const title = isImportSeveralPrompts
+      const title = isImportSeveralItems
         ? t(FileManagerI18nKey.ImportSuccessTitle, { item: t(FileManagerI18nKey.Prompts) })
         : t(FileManagerI18nKey.ImportSuccessTitle, { item: t(FileManagerI18nKey.Prompt) });
       let description = '';
@@ -447,9 +475,9 @@ export const getImportNotificationContent = (
           path: destinationFolder,
         });
       } else {
-        description = isImportSeveralPrompts
+        description = isImportSeveralItems
           ? t(FileManagerI18nKey.ImportSuccessDescriptionForMany, {
-              count: prompts.length,
+              count: successfullyItems.length,
               path: destinationFolder,
             })
           : t(FileManagerI18nKey.ImportSuccessDescriptionForOne, {
@@ -459,15 +487,39 @@ export const getImportNotificationContent = (
       }
 
       return {
-        title,
-        description,
+        title: successfullyItems.length > 0 ? title : '',
+        description: successfullyItems.length > 0 ? description : '',
+        skippedTitle:
+          skippedItems.length > 0
+            ? t(FileManagerI18nKey.ImportSkippedTitle, {
+                count: skippedItems.length,
+                item: skippedItems.length > 1 ? t(FileManagerI18nKey.Prompts) : t(FileManagerI18nKey.Prompt),
+              })
+            : '',
+        skippedDescription:
+          skippedItems.length > 0
+            ? t(FileManagerI18nKey.ImportSkippedDescription, {
+                item: skippedItems.length > 1 ? t(FileManagerI18nKey.Prompts) : t(FileManagerI18nKey.Prompt),
+                list: skippedItems.join(', '),
+              })
+            : '',
+        errorTitle:
+          failedItems.length > 0
+            ? t(FileManagerI18nKey.ImportErrorTitle, {
+                count: failedItems.length,
+                item: failedItems.length > 1 ? t(FileManagerI18nKey.Prompts) : t(FileManagerI18nKey.Prompt),
+              })
+            : '',
+        errorDescription:
+          failedItems.length > 0
+            ? t(FileManagerI18nKey.ImportErrorDescription, {
+                list: failedItems.join(', '),
+              })
+            : '',
       };
     }
     case ApplicationRoute.AssetsApplications: {
-      const applications = (file as ParsedAssets)?.applications;
-      const isImportSeveralApplications = Array.isArray(applications) && applications.length > 1;
-
-      const title = isImportSeveralApplications
+      const title = isImportSeveralItems
         ? t(FileManagerI18nKey.ImportSuccessTitle, { item: t(FileManagerI18nKey.Applications) })
         : t(FileManagerI18nKey.ImportSuccessTitle, { item: t(FileManagerI18nKey.Application) });
       let description = '';
@@ -477,9 +529,9 @@ export const getImportNotificationContent = (
           path: destinationFolder,
         });
       } else {
-        description = isImportSeveralApplications
+        description = isImportSeveralItems
           ? t(FileManagerI18nKey.ImportSuccessDescriptionForMany, {
-              count: applications.length,
+              count: successfullyItems.length,
               path: destinationFolder,
             })
           : t(FileManagerI18nKey.ImportSuccessDescriptionForOne, {
@@ -489,15 +541,39 @@ export const getImportNotificationContent = (
       }
 
       return {
-        title,
-        description,
+        title: successfullyItems.length > 0 ? title : '',
+        description: successfullyItems.length > 0 ? description : '',
+        skippedTitle:
+          skippedItems.length > 0
+            ? t(FileManagerI18nKey.ImportSkippedTitle, {
+                count: skippedItems.length,
+                item: skippedItems.length > 1 ? t(FileManagerI18nKey.Applications) : t(FileManagerI18nKey.Application),
+              })
+            : '',
+        skippedDescription:
+          skippedItems.length > 0
+            ? t(FileManagerI18nKey.ImportSkippedDescription, {
+                item: skippedItems.length > 1 ? t(FileManagerI18nKey.Applications) : t(FileManagerI18nKey.Application),
+                list: skippedItems.join(', '),
+              })
+            : '',
+        errorTitle:
+          failedItems.length > 0
+            ? t(FileManagerI18nKey.ImportErrorTitle, {
+                count: failedItems.length,
+                item: failedItems.length > 1 ? t(FileManagerI18nKey.Applications) : t(FileManagerI18nKey.Application),
+              })
+            : '',
+        errorDescription:
+          failedItems.length > 0
+            ? t(FileManagerI18nKey.ImportErrorDescription, {
+                list: failedItems.join(', '),
+              })
+            : '',
       };
     }
     case ApplicationRoute.AssetsToolsets: {
-      const toolsets = (file as ParsedAssets)?.toolSets;
-      const isImportSeveralToolsets = Array.isArray(toolsets) && toolsets.length > 1;
-
-      const title = isImportSeveralToolsets
+      const title = isImportSeveralItems
         ? t(FileManagerI18nKey.ImportSuccessTitle, { item: t(FileManagerI18nKey.Toolsets) })
         : t(FileManagerI18nKey.ImportSuccessTitle, { item: t(FileManagerI18nKey.Toolset) });
       let description = '';
@@ -507,9 +583,9 @@ export const getImportNotificationContent = (
           path: destinationFolder,
         });
       } else {
-        description = isImportSeveralToolsets
+        description = isImportSeveralItems
           ? t(FileManagerI18nKey.ImportSuccessDescriptionForMany, {
-              count: toolsets.length,
+              count: successfullyItems.length,
               path: destinationFolder,
             })
           : t(FileManagerI18nKey.ImportSuccessDescriptionForOne, {
@@ -519,14 +595,45 @@ export const getImportNotificationContent = (
       }
 
       return {
-        title,
-        description,
+        title: successfullyItems.length > 0 ? title : '',
+        description: successfullyItems.length > 0 ? description : '',
+        skippedTitle:
+          skippedItems.length > 0
+            ? t(FileManagerI18nKey.ImportSkippedTitle, {
+                count: skippedItems.length,
+                item: skippedItems.length > 1 ? t(FileManagerI18nKey.Toolsets) : t(FileManagerI18nKey.Toolset),
+              })
+            : '',
+        skippedDescription:
+          skippedItems.length > 0
+            ? t(FileManagerI18nKey.ImportSkippedDescription, {
+                item: skippedItems.length > 1 ? t(FileManagerI18nKey.Toolsets) : t(FileManagerI18nKey.Toolset),
+                list: skippedItems.join(', '),
+              })
+            : '',
+        errorTitle:
+          failedItems.length > 0
+            ? t(FileManagerI18nKey.ImportErrorTitle, {
+                count: failedItems.length,
+                item: failedItems.length > 1 ? t(FileManagerI18nKey.Toolsets) : t(FileManagerI18nKey.Toolset),
+              })
+            : '',
+        errorDescription:
+          failedItems.length > 0
+            ? t(FileManagerI18nKey.ImportErrorDescription, {
+                list: failedItems.join(', '),
+              })
+            : '',
       };
     }
     default:
       return {
         title: '',
         description: '',
+        errorTitle: '',
+        errorDescription: '',
+        skippedTitle: '',
+        skippedDescription: '',
       };
   }
 };

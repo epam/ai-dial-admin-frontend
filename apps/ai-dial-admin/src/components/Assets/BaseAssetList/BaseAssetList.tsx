@@ -347,8 +347,17 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
       importAssetAction(body, fileType).then((res) => {
         if (res.success) {
           fetchFiles?.(importFolder);
-          const { title, description } = getImportNotificationContent(view, file, fileType, importFolder, t);
-          showNotification(getSuccessNotification(title, description));
+          const { title, description, errorTitle, errorDescription, skippedTitle, skippedDescription } =
+            getImportNotificationContent(view, res.response.importResults, fileType, importFolder, t);
+          if (title && description) {
+            showNotification(getSuccessNotification(title, description));
+          }
+          if (errorTitle && errorDescription) {
+            showNotification(getErrorNotification(errorTitle, errorDescription));
+          }
+          if (skippedTitle && skippedDescription) {
+            showNotification(getErrorNotification(skippedTitle, skippedDescription));
+          }
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }

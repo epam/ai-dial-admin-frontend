@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useState } from 'react';
 
 import { updateContainer } from '@/src/app/actions/deployments';
+import WarningIcon from '@/src/components/Common/WarningIcon/WarningIcon';
 import ContainerChangeImage from '@/src/components/Deployments/Modals/ContainerChangeImage';
 import { ContainersI18nKey } from '@/src/constants/i18n';
 import { CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
@@ -12,6 +13,7 @@ import { Container } from '@/src/models/deployments/containers';
 import { Image } from '@/src/models/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getTranslatedType } from '@/src/utils/deployments/entity';
+import { isImageNotInstalled } from '@/src/utils/deployments/images';
 import { getErrorNotification } from '@/src/utils/notification';
 
 interface Props {
@@ -65,6 +67,11 @@ const InternalImageField: FC<Props> = ({ container, image, route, disabled }) =>
         selectedValue={selectedValue}
         elementId="internalImage"
         disabled={isChangeDisabled}
+        iconBefore={
+          <WarningIcon
+            warningText={isImageNotInstalled(image) ? t(ContainersI18nKey.ImageNotInstalledTooltip) : undefined}
+          />
+        }
       >
         {isModalOpen && image && (
           <ContainerChangeImage

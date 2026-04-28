@@ -170,6 +170,65 @@ describe('Containers component', () => {
     expect(lastCall.source?.completionEndpointPath?.startsWith('openai/v1/')).toBe(true);
   });
 
+  test('renders warning icon when saved container is not running', async () => {
+    const entity = createEntity('container-stopped');
+
+    const { container } = render(
+      <Containers
+        entity={entity}
+        onChange={vi.fn()}
+        getContainers={mockGetContainers([runningContainer, stoppedContainer])}
+        view={ApplicationRoute.Models}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Stopped Container')).toBeInTheDocument();
+    });
+    const visibleWarningIcon = container.querySelector('svg.tabler-icon-alert-triangle-filled.text-warning-icon');
+    expect(visibleWarningIcon).not.toBeNull();
+    expect(visibleWarningIcon?.getAttribute('class') ?? '').not.toContain('hidden');
+  });
+
+  test('does not render visible warning icon when saved container is running', async () => {
+    const entity = createEntity('container-running');
+
+    const { container } = render(
+      <Containers
+        entity={entity}
+        onChange={vi.fn()}
+        getContainers={mockGetContainers([runningContainer, stoppedContainer])}
+        view={ApplicationRoute.Models}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Running Container')).toBeInTheDocument();
+    });
+    const warningIcon = container.querySelector('svg.tabler-icon-alert-triangle-filled');
+    // Icon node may exist but is hidden via the `hidden` class when warningText is undefined
+    expect(warningIcon === null || (warningIcon.getAttribute('class') ?? '').includes('hidden')).toBe(true);
+  });
+
+  test('does not render visible warning icon when containerId does not match any fetched container', async () => {
+    const entity = createEntity('container-deleted');
+
+    const { container } = render(
+      <Containers
+        entity={entity}
+        onChange={vi.fn()}
+        getContainers={mockGetContainers([runningContainer])}
+        view={ApplicationRoute.Models}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Entities.NoContainers')).toBeInTheDocument();
+    });
+    const warningIcon = container.querySelector('svg.tabler-icon-alert-triangle-filled');
+    expect(warningIcon === null || (warningIcon.getAttribute('class') ?? '').includes('hidden')).toBe(true);
+  });
+
   test('Application branch: writes containerId, skips completionEndpointPath', async () => {
     const onChange = vi.fn();
     // mcp must be present (even as undefined) so that isDialApplication() returns true
