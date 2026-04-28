@@ -683,6 +683,10 @@ export default {
     CallsByProject: 'Calls by Project',
     RequestPerMcpUsage: 'Request per MCP usage',
     Unknown: 'Unknown',
+    ActivityView: {
+      Config: 'Config',
+      Asset: 'Asset',
+    },
   },
   Routes: {
     AddPaths: 'Add paths',

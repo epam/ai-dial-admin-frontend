@@ -20,3 +20,8 @@ export enum DASHBOARD_VIEW_TYPE {
   Mcp = 'Mcp',
   Route = 'Route',
 }
+
+export enum ACTIVITY_VIEW_TYPE {
+  Config = 'Config',
+  Asset = 'Asset',
+}
