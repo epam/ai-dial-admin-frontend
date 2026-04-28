@@ -17,6 +17,7 @@ interface Props {
   names?: string[];
   allowWhitespace?: boolean;
   alphanumericOnly?: boolean;
+  trackGlobalValidity?: boolean;
   onChange?: (displayName?: string) => void;
 }
 
@@ -28,6 +29,7 @@ const DisplayNameControl: FC<Props> = ({
   names,
   allowWhitespace = true,
   alphanumericOnly = false,
+  trackGlobalValidity = true,
   disabled,
   ...props
 }) => {
@@ -39,21 +41,23 @@ const DisplayNameControl: FC<Props> = ({
   const [displayNameError, setDisplayNameError] = useState<FieldError | null>(null);
 
   const validateDisplayName = useCallback(
-    (displayName?: string) => {
+    (value?: string) => {
       const error = alphanumericOnly
-        ? getErrorForAppRouteName(displayName, names, t)
-        : getErrorForName(displayName, names, t, false, !allowWhitespace, true);
+        ? getErrorForAppRouteName(value, names, t)
+        : getErrorForName(value, names, t, false, !allowWhitespace, true);
       setDisplayNameError(error);
-      dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !error });
+      if (trackGlobalValidity) {
+        dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !error });
+      }
     },
-    [dispatch, t, names, allowWhitespace, alphanumericOnly],
+    [dispatch, t, names, allowWhitespace, alphanumericOnly, trackGlobalValidity],
   );
 
   // initial validation
   useEffect(() => {
     if (displayName) {
       validateDisplayName(displayName);
-    } else {
+    } else if (trackGlobalValidity) {
       dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !!displayName });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
