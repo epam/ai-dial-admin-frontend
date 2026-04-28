@@ -151,24 +151,20 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, 
         }
       } else if (type === FileType.JSON) {
         const sliced = files.slice(0, MAX_FILES_COUNT);
+
+        setJsonFileMap(new Map());
         sliced.forEach((file) => onReadJsonFile(file));
         setJsonFiles(sliced);
-        if (sliced.length === 0) {
-          setJsonFileMap(new Map());
-        }
       } else {
         const sliced = files.slice(0, MAX_FILES_COUNT);
+        const newSeparateFileMap = new Map<string, FileImportMap>();
+
         sliced.forEach((file) => {
           const isInvalid = isLargeFile(file, MAX_FILE_SIZE_MB);
-          setSeparateFileMap((prev) => {
-            const newMap = new Map(prev);
-            newMap.set(file.name, { files: [file] as unknown as DialFile[], isInvalid });
-            return newMap;
-          });
+          newSeparateFileMap.set(file.name, { files: [file] as unknown as DialFile[], isInvalid });
         });
-        if (sliced.length === 0) {
-          setSeparateFileMap(new Map());
-        }
+
+        setSeparateFileMap(newSeparateFileMap);
         setSeparateFiles(sliced);
       }
     },
