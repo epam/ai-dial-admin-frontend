@@ -20,10 +20,8 @@ const getCountQuery = (tableName: string, params?: Record<string, string | strin
   $type: 'json',
   query: {
     expressions: ['count()'],
-    from: {
-      ...(params || {}),
-      from: tableName,
-    },
+    from: tableName,
+    ...(params || {}),
   },
 });
 
