@@ -12,11 +12,15 @@ export const ROUTE_TABLE_NAME = 'routes_analytics';
 
 const getUniqueUsersQuery = (tableName: string, params?: Record<string, string | string[]>): TelemetryQuery =>
   getCountQuery(tableName, {
-    expressions: ['user_hash'],
-    ...(params || {}),
+    from: {
+      distinct: 'true',
+      expressions: ['user_hash'],
+      from: tableName,
+      ...(params || {}),
+    },
   });
 
-const getCountQuery = (tableName: string, params?: Record<string, string | string[]>): TelemetryQuery => ({
+const getCountQuery = (tableName: string, params?: Record<string, any>): TelemetryQuery => ({
   $type: 'json',
   query: {
     expressions: ['count()'],
