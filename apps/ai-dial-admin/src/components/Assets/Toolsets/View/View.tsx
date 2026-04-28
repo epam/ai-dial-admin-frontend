@@ -57,6 +57,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [discardKey, setDiscardKey] = useState(0);
 
+  const [addedVersions, setAddedVersions] = useState<string[]>([]);
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
       isEditorEnabled,
@@ -77,6 +78,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
 
   const onDiscard = useCallback(() => {
     setSelectedToolset(structuredClone(originalToolset));
+    setAddedVersions([]);
     setDiscardKey((prev) => prev + 1);
   }, [originalToolset]);
 
@@ -147,6 +149,8 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
         onRemove={removeToolset}
         getAssetContext={useToolsetFolder}
         onChangeAsset={setSelectedToolset as (asset: Asset) => void}
+        addedVersions={addedVersions}
+        onChangeAddedVersion={setAddedVersions}
       >
         <AuthButtons
           view={ApplicationRoute.AssetsToolsets}
