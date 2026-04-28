@@ -1653,6 +1653,10 @@ export default {
         DescriptionForOne: '{item} imported successfully and is available at {path}',
         DescriptionForMany: '{count} items imported successfully and are available at {path}',
         DescriptionForArchive: '{item} from archive imported successfully and are available at {path}',
+        SkippedTitle: '{count} {item} import skipped',
+        SkippedDescription: 'Files skipped as {item} with the same properties already exists in the system: {list}',
+        ErrorTitle: '{count} {item} import failed',
+        ErrorDescription: 'Error occured while importing: {list}',
       },
       Move: {
         Title: '{item} moved successfully',
