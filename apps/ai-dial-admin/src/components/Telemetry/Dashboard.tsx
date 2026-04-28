@@ -141,14 +141,7 @@ const Dashboard: FC<Props> = ({ route, entity, defaultTimeFilter, onTimeFilterCh
       ) : isRouteDashboards ? (
         <RouteDashboard getData={getData} refreshTime={effectiveRefreshTime} isEntityView={!!entity} />
       ) : (
-        <SimpleDashboard
-          route={route}
-          effectiveRefreshTime={effectiveRefreshTime}
-          entity={entity}
-          filters={filters}
-          defaultTimeFilter={defaultTimeFilter}
-          onTimeFilterChange={onTimeFilterChange}
-        />
+        <SimpleDashboard route={route} effectiveRefreshTime={effectiveRefreshTime} getData={getData} />
       )}
     </div>
   );
