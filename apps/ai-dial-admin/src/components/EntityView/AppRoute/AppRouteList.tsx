@@ -7,7 +7,6 @@ import classNames from 'classnames';
 import ActionsDropdown from '@/src/components/Common/ActionsDropdown/ActionsDropdown';
 import { EntitiesI18nKey, ActionMenuOperationI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
 import { DialAppRoute } from '@/src/models/dial/route';
@@ -22,7 +21,6 @@ interface Props {
 
 const AppRouteList: FC<Props> = ({ disabled, routes, activeRouteIndex, onRemove, onClick }) => {
   const t = useI18n();
-  const { isValid } = useSaveValidationContext();
   const getOperation = (onClick: () => void): ActionMenuOperationDeclaration<DialAppRoute> => {
     return {
       icon: <IconTrash {...BASE_BUTTON_ICON_PROPS} />,
@@ -42,8 +40,7 @@ const AppRouteList: FC<Props> = ({ disabled, routes, activeRouteIndex, onRemove,
                 key={route.name}
                 role="tab"
                 className={classNames(
-                  'rounded group pl-3 py-2 flex flex-row gap-2 h-[32px] w-full small',
-                  !isValid ? 'pointer-events-none opacity-50' : 'cursor-pointer hover:text-accent-primary',
+                  'rounded group pl-3 py-2 flex flex-row gap-2 h-[32px] w-full small cursor-pointer hover:text-accent-primary',
                   activeRouteIndex === index
                     ? 'bg-accent-primary-alpha border-l-2 border-l-accent-primary'
                     : 'text-primary',
