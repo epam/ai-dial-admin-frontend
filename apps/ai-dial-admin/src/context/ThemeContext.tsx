@@ -18,7 +18,7 @@ interface ThemeContextType {
   setTheme: (themeId: string) => void;
 }
 
-const DEFAULT_THEME = 'dark';
+const THEME_DARK = 'dark';
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
@@ -31,7 +31,7 @@ export const ThemeProvider = ({
   themesConfiguration: ThemeConfiguration | null;
   themeImages?: { name: string }[] | null;
 }) => {
-  const [currentThemeId, setCurrentThemeId] = useState<string>(DEFAULT_THEME);
+  const [currentThemeId, setCurrentThemeId] = useState<string>(THEME_DARK);
   const [currentThemeLogo, setCurrentThemeLogo] = useState<string | undefined>(void 0);
 
   const excludedImageNames = ['logo', 'favicon', 'config'];
@@ -53,7 +53,7 @@ export const ThemeProvider = ({
       const root = document.documentElement;
       applyThemeColors(root, theme);
       setCurrentThemeId(themeId);
-      setCurrentThemeLogo(theme?.['app-logo']);
+      setCurrentThemeLogo(themeId === THEME_DARK ? 'logo-dark.svg' : 'logo-light.svg');
     },
     [themesConfiguration],
   );
