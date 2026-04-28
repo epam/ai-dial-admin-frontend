@@ -36,7 +36,7 @@ export function createFolderContext(
     const [bulkSelectedData, setBulkSelectedData] = useState<Record<string, Asset[]>>({});
     const [isFetchingFiles, setIsFetchingFiles] = useState(false);
 
-    const [data, setData] = useState<Asset[] | null>([]);
+    const [data, setData] = useState<Asset[] | null>(null);
 
     const fetchFolderHierarchy = (fullPath?: string, fullTree?: boolean) => {
       if (!fullPath?.includes('/')) return;
