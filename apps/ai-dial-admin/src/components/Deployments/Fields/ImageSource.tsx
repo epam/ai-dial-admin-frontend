@@ -74,10 +74,10 @@ const ImageSource: FC<Props> = ({ image, setImage, isModal = false, verifyVersio
         )}
       </div>
 
-      {image.source?.$type === IMAGE_SOURCE_TYPE.CODE && !isModal && (
+      {image.source?.$type === IMAGE_SOURCE_TYPE.CODE && (
         <>
           <Branch image={image} setImage={setImage} isModal={isModal} />
-          <BaseDirectory image={image} setImage={setImage} />
+          {!isModal && <BaseDirectory image={image} setImage={setImage} />}
         </>
       )}
     </div>

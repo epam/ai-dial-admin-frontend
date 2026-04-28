@@ -48,6 +48,7 @@ const Branch: FC<Props> = ({ image, isModal = false, setImage }) => {
   return (
     <div className={classNames('flex flex-row gap-x-4', className)}>
       <DialInput
+        containerClassName="flex-1"
         labelProps={{ label: t(EntityFieldsI18nKey.BranchName) }}
         id="branch"
         placeholder={t(EntityPlaceholdersI18nKey.Branch)}
@@ -56,6 +57,7 @@ const Branch: FC<Props> = ({ image, isModal = false, setImage }) => {
         onChange={onBranchChange}
       />
       <DialInput
+        containerClassName="flex-1"
         labelProps={{ label: t(EntityFieldsI18nKey.SHA) }}
         id="SHA"
         placeholder={t(EntityPlaceholdersI18nKey.SHA)}
