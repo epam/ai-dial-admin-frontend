@@ -65,14 +65,21 @@ import {
   VERSION_COLUMN,
 } from './base-columns';
 import { dateTimeColumn, numericColumn, priceColumn } from './configs';
-import { auditStringFilter, dateFilter, evalStringFilter, runsFilter } from './filters';
+import { auditStringFilter, dateFilter, evalStringFilter } from './filters';
+import RowExpanderCellRenderer from '@/src/components/Grid/CellRenderers/RowExpanderCellRenderer';
+import ChildrenActivityTypeCellRenderer from '@/src/components/Grid/CellRenderers/ChildrenActivityTypeCellRenderer';
 import { GridFilterType } from '@/src/types/grid-filter';
 
 export const COLUMN_PANEL_PREFIX = 'column_';
 
 export const BASE_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN, NAME_COLUMN];
 
-export const BASE_COLUMNS_WITH_TOPICS: ColDef[] = [...BASE_COLUMNS, TOPICS_COLUMN, UPDATED_AT_COLUMN];
+export const BASE_COLUMNS_WITH_TOPICS: ColDef[] = [
+  ...BASE_COLUMNS,
+  TOPICS_COLUMN,
+  { ...CREATED_AT_COLUMN, filter: false },
+  { ...UPDATED_AT_COLUMN, filter: false },
+];
 
 export const DEPENDENCIES_COLUMNS = [DISPLAY_NAME_COLUMN, VERSION_COLUMN, DESCRIPTION_COLUMN, NAME_COLUMN];
 
@@ -80,7 +87,8 @@ export const ADAPTER_COLUMNS = (t: (str: string) => string): ColDef[] => [
   ...BASE_COLUMNS,
   TOPICS_COLUMN,
   ...SOURCE_FIELD_COLUMNS(t, ApplicationRoute.Adapters),
-  UPDATED_AT_COLUMN,
+  { ...CREATED_AT_COLUMN, filter: false },
+  { ...UPDATED_AT_COLUMN, filter: false },
 ];
 
 export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
@@ -91,6 +99,8 @@ export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   ...SOURCE_FIELD_COLUMNS(t, ApplicationRoute.Models),
   AUTHOR_COLUMN,
   TOPICS_COLUMN,
+  { ...CREATED_AT_COLUMN, filter: false },
+  { ...UPDATED_AT_COLUMN, filter: false },
   ATTACHMENT_COLUMN(t),
   MAX_INPUT_ATTACHMENTS_COLUMN,
   {
@@ -122,7 +132,8 @@ export const APPLICATIONS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   VALIDITY_STATUS_COLUMN(t),
   AUTHOR_COLUMN,
   TOPICS_COLUMN,
-  UPDATED_AT_COLUMN,
+  { ...CREATED_AT_COLUMN, filter: false },
+  { ...UPDATED_AT_COLUMN, filter: false },
   ATTACHMENT_COLUMN(t),
   MAX_INPUT_ATTACHMENTS_COLUMN,
 ];
@@ -134,7 +145,8 @@ export const TOOLSETS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   ...SOURCE_FIELD_COLUMNS(t, ApplicationRoute.Toolsets),
   AUTHOR_COLUMN,
   TOPICS_COLUMN,
-  UPDATED_AT_COLUMN,
+  { ...CREATED_AT_COLUMN, filter: false },
+  { ...UPDATED_AT_COLUMN, filter: false },
 ];
 
 export const INTERCEPTORS_COLUMNS = (t: (str: string) => string): ColDef[] => [
@@ -144,7 +156,8 @@ export const INTERCEPTORS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   ...SOURCE_FIELD_COLUMNS(t, ApplicationRoute.Interceptors),
   AUTHOR_COLUMN,
   TOPICS_COLUMN,
-  UPDATED_AT_COLUMN,
+  { ...CREATED_AT_COLUMN, filter: false },
+  { ...UPDATED_AT_COLUMN, filter: false },
   BASE_STATUS_COLUMN,
 ];
 
@@ -155,7 +168,8 @@ export const ROUTES_COLUMNS: ColDef[] = [
   PATHS_COLUMN,
   ORDER_COLUMN,
   TOPICS_COLUMN,
-  UPDATED_AT_COLUMN,
+  { ...CREATED_AT_COLUMN, filter: false },
+  { ...UPDATED_AT_COLUMN, filter: false },
 ];
 
 export const EVALUATION_DEPLOYMENTS_COLUMNS: ColDef[] = [
@@ -189,7 +203,23 @@ export const MCP_TOOLS_COLUMNS: ColDef[] = [
 
 export const ACTIVITY_AUDIT_COLUMNS = (t: (s: string) => string, isSingleEntity?: boolean): ColDef[] => {
   const columns: ColDef[] = [
-    { field: 'activityType', headerName: 'Activity type', ...auditStringFilter },
+    {
+      headerName: '',
+      field: 'expanderColumn',
+      cellClass: NO_BORDER_CLASS,
+      flex: 1,
+      maxWidth: 30,
+      sortable: false,
+      filter: false,
+      floatingFilter: false,
+      cellRenderer: RowExpanderCellRenderer,
+    },
+    {
+      field: 'activityType',
+      headerName: 'Activity type',
+      ...auditStringFilter,
+      cellRenderer: ChildrenActivityTypeCellRenderer,
+    },
     {
       field: 'resourceType',
       headerName: 'Resource type',
@@ -209,10 +239,11 @@ export const ACTIVITY_AUDIT_COLUMNS = (t: (s: string) => string, isSingleEntity?
     },
     { field: 'initiatedEmail', headerName: 'Initiated', ...auditStringFilter },
     { field: 'activityId', headerName: 'Activity ID', ...auditStringFilter },
+    { field: 'parentActivityId', headerName: 'Parent ID', ...auditStringFilter },
   ];
 
   if (isSingleEntity) {
-    return [columns[0], ...columns.slice(3)];
+    return [columns[1], ...columns.slice(4)];
   }
 
   return columns;
@@ -222,7 +253,8 @@ export const BASE_KEYS_COLUMNS: ColDef[] = [
   DISPLAY_NAME_COLUMN,
   DESCRIPTION_COLUMN,
   NAME_COLUMN_WITH_SORT,
-  CREATED_AT_COLUMN,
+  { ...CREATED_AT_COLUMN, filter: false },
+  { ...UPDATED_AT_COLUMN, filter: false },
   {
     field: 'keyGeneratedAt',
     headerName: 'Key generation time',
@@ -239,7 +271,8 @@ export const KEYS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   ...BASE_KEYS_COLUMNS,
   VALIDITY_STATUS_COLUMN(t),
   TOPICS_COLUMN,
-  UPDATED_AT_COLUMN,
+  { ...CREATED_AT_COLUMN, filter: false },
+  { ...UPDATED_AT_COLUMN, filter: false },
   {
     headerName: 'Project',
     field: 'project',
@@ -263,11 +296,26 @@ export const RUNNERS_COLUMNS: ColDef[] = [
   { field: '$id', headerName: 'ID' },
 ];
 
-export const LIST_RUNNER_COLUMNS: ColDef[] = [...RUNNERS_COLUMNS, TOPICS_COLUMN, UPDATED_AT_COLUMN];
+export const LIST_RUNNER_COLUMNS: ColDef[] = [
+  ...RUNNERS_COLUMNS,
+  TOPICS_COLUMN,
+  { ...CREATED_AT_COLUMN, filter: false },
+  { ...UPDATED_AT_COLUMN, filter: false },
+];
 
-export const INTERCEPTOR_TEMPLATES_COLUMNS: ColDef[] = [...BASE_COLUMNS, TOPICS_COLUMN, UPDATED_AT_COLUMN];
+export const INTERCEPTOR_TEMPLATES_COLUMNS: ColDef[] = [
+  ...BASE_COLUMNS,
+  TOPICS_COLUMN,
+  { ...CREATED_AT_COLUMN, filter: false },
+  { ...UPDATED_AT_COLUMN, filter: false },
+];
 
-export const ASSETS_COLUMNS: ColDef[] = [VERSION_COLUMN, AUTHOR_COLUMN, UPDATED_AT_COLUMN];
+export const ASSETS_COLUMNS: ColDef[] = [
+  VERSION_COLUMN,
+  AUTHOR_COLUMN,
+  { ...CREATED_AT_COLUMN, filter: false },
+  { ...UPDATED_AT_COLUMN, filter: false },
+];
 
 export const DEPLOYMENT_ASSETS_COLUMNS: ColDef[] = [NAME_COLUMN, ...ASSETS_COLUMNS];
 
@@ -454,6 +502,16 @@ export const USAGE_LOG_MCP_COLUMNS: ColDef[] = [
   { field: 'trace_id', headerName: 'Trace ID', hide: false },
 ];
 
+export const USAGE_LOG_ROUTES_COLUMNS: ColDef[] = [
+  completionTimeColumn('Last activity'),
+  { field: 'project_id', headerName: 'Project', hide: false },
+  { field: 'deployment', headerName: 'Deployment ID', hide: false },
+  { field: 'route_path', headerName: 'Route', hide: true },
+  { field: 'http_method', headerName: 'Method', hide: true },
+  { field: 'upstream', headerName: 'Upstream', hide: false },
+  { field: 'trace_id', headerName: 'Trace ID', hide: false },
+];
+
 export const USAGE_LOG_TOOLSET_TRACES_COLUMNS: ColDef[] = [
   completionTimeColumn('Last activity'),
   { field: 'project_id', headerName: 'Project', hide: false },
@@ -499,6 +557,28 @@ export const MCP_PROJECTS_CONSUMPTION_COLUMNS: ColDef[] = [
   { field: 'name', headerName: 'Project', hide: false },
   { field: 'tool_calls', headerName: 'Tool Calls', hide: false, ...numericColumn },
   { field: 'mcp_calls', headerName: 'MCP Calls', hide: false, sort: 'desc', ...numericColumn },
+];
+
+export const CALL_BY_DEPLOYMENT_COLUMNS: ColDef[] = [
+  { field: 'name', headerName: 'Deployment', hide: false },
+  { field: 'requests', headerName: 'Calls', hide: false, ...numericColumn },
+];
+
+export const CALL_BY_PARENT_DEPLOYMENT_COLUMNS: ColDef[] = [
+  { field: 'parent_deployment', headerName: 'Parent Deployment', hide: false },
+  { field: 'requests', headerName: 'Calls', hide: false, ...numericColumn },
+];
+
+export const CALL_BY_PROJECT_COLUMNS: ColDef[] = [
+  { field: 'name', headerName: 'Project', hide: false },
+  { field: 'requests', headerName: 'Calls', hide: false, ...numericColumn },
+];
+
+export const CALL_BY_ROUTES_COLUMNS: ColDef[] = [
+  { field: 'name', headerName: 'Deployment', hide: false },
+  { field: 'route_path', headerName: 'Route', hide: false },
+  { field: 'http_method', headerName: 'Method', hide: false },
+  { field: 'requests', headerName: 'Calls', hide: false, ...numericColumn },
 ];
 
 export const SOURCE_CONTAINERS_COLUMNS: ColDef[] = [
@@ -557,8 +637,8 @@ export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, rou
   { field: 'url', headerName: 'Container URL', hide: true },
   AUTHOR_COLUMN,
   TOPICS_COLUMN,
-  UPDATED_AT_COLUMN,
-  CREATED_AT_COLUMN,
+  { ...CREATED_AT_COLUMN, filter: false },
+  { ...UPDATED_AT_COLUMN, filter: false },
 ];
 
 export const CONTAINER_EVENTS = (t: (key: string, options?: Record<string, string | number>) => string): ColDef[] => [
@@ -700,8 +780,8 @@ export const IMAGES_LIST_COLUMNS = (t: (key: string) => string): ColDef[] => [
   },
   AUTHOR_COLUMN,
   TOPICS_COLUMN,
-  CREATED_AT_COLUMN,
-  UPDATED_AT_COLUMN,
+  { ...CREATED_AT_COLUMN, filter: false },
+  { ...UPDATED_AT_COLUMN, filter: false },
 ];
 
 export const IMAGE_DEPENDENCIES_COLUMNS = (t: (key: string) => string, showImageColumn?: boolean): ColDef[] => [
@@ -732,10 +812,22 @@ export const IMAGE_DEPENDENCIES_COLUMNS = (t: (key: string) => string, showImage
 ];
 
 export const TEST_SUITES_COLUMN: ColDef[] = [
-  { field: 'name', colId: 'name', headerName: 'Display Name', hide: false, ...evalStringFilter },
-  { ...DESCRIPTION_COLUMN, sortable: false, filter: false },
-  { field: 'id', colId: 'id', headerName: 'ID', hide: false, filter: false },
-  { field: 'suiteType', colId: 'suiteType', headerName: 'Suite Type', hide: false, ...evalStringFilter },
+  {
+    field: 'name',
+    colId: 'name',
+    headerName: 'Display Name',
+    hide: false,
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
+  },
+  { ...DESCRIPTION_COLUMN, sortable: false, ...evalStringFilter([GridFilterType.CONTAINS]) },
+  { field: 'id', colId: 'id', headerName: 'ID', hide: false, ...evalStringFilter([GridFilterType.EQUALS]) },
+  {
+    field: 'suiteType',
+    colId: 'suiteType',
+    headerName: 'Suite Type',
+    hide: false,
+    ...evalStringFilter([GridFilterType.EQUALS]),
+  },
   {
     field: 'application',
     headerName: 'Application',
@@ -744,9 +836,14 @@ export const TEST_SUITES_COLUMN: ColDef[] = [
     filter: false,
     valueGetter: (params) => params.data?.deploymentRef?.name || params.data?.mcpDeploymentRef?.name || '',
   },
-  CREATED_AT_COLUMN,
-  UPDATED_AT_COLUMN,
-  { field: 'createdBy', headerName: 'Created By', hide: false, ...evalStringFilter },
+  { ...CREATED_AT_COLUMN, ...dateFilter },
+  { ...UPDATED_AT_COLUMN, ...dateFilter },
+  {
+    field: 'createdBy',
+    headerName: 'Created By',
+    hide: false,
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL]),
+  },
   {
     field: 'method',
     headerName: 'Method',
@@ -775,21 +872,21 @@ export const RUNS_COLUMN: ColDef[] = [
     field: 'id',
     colId: 'id',
     headerName: 'ID',
-    ...runsFilter([GridFilterType.EQUALS]),
+    ...evalStringFilter([GridFilterType.EQUALS]),
     hide: false,
   },
   {
     field: 'testSuiteId',
     colId: 'testSuiteId',
     headerName: 'Test Suite ID',
-    ...runsFilter([GridFilterType.EQUALS]),
+    ...evalStringFilter([GridFilterType.EQUALS]),
     hide: true,
   },
   {
     field: 'testRunName',
     colId: 'testRunName',
     headerName: 'Test run name',
-    ...runsFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
     hide: false,
   },
   {
@@ -816,7 +913,7 @@ export const RUNS_COLUMN: ColDef[] = [
     headerName: 'Status',
     cellRenderer: RunStatusCellRenderer,
     tooltipValueGetter: () => undefined,
-    ...runsFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL]),
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL]),
     hide: false,
   },
 ];

@@ -56,6 +56,11 @@ export async function installImage(id: string) {
   return imagesApi.installImage(id, token);
 }
 
+export async function stopBuild(id: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return imagesApi.stopBuild(id, token);
+}
+
 export async function getImageLogs(id: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return imagesApi.getImageLogs(id, token);

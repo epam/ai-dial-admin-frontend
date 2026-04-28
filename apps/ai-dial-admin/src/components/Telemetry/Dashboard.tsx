@@ -1,34 +1,28 @@
-import React, { FC, useCallback, useMemo, useRef, useState } from 'react';
-import LineChart from '@/src/components/Charts/LineChart/LineChart';
-import SingleValueChartsDashboard from '@/src/components/Charts/SingleValueChart/SingleValueChartsDashboard';
-import McpDashboard from '@/src/components/Telemetry/McpDashboard';
-import TelemetryGrid from '@/src/components/Telemetry/TelemetryGrid';
-import {
-  DEFAULT_REFRESH_TIME,
-  ENTITY_CONSUMPTION_QUERY,
-  MCP_TOOL_CALLS_EXTRA_CONDITIONS,
-  MCP_TOOLS_CONSUMPTION_EXTRA_CONDITIONS,
-  PROJECT_CONSUMPTION_QUERY,
-  TOOLSET_DEPLOYMENT_PREFIX,
-} from '@/src/constants/telemetry';
-import { PROJECT_GRID_COLUMNS, TELEMETRY_GRID_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { TelemetryI18nKey } from '@/src/constants/i18n';
-import { TimeFilterValue } from '@/src/models/time-range';
-import { FilterData, TelemetryQuery } from '@/src/models/telemetry';
-import { getFormattedFilters } from '@/src/utils/telemetry';
-import { ChartResolution, getChartResolution } from '@/src/utils/time-filter/get-chart-resolution';
-
-export type QueryInput = TelemetryQuery | ((resolution: ChartResolution) => TelemetryQuery);
 import { getDashboardData } from '@/src/app/[lang]/dashboard/actions';
-import { useI18n } from '@/src/locales/client';
+import McpDashboard from '@/src/components/Telemetry/Dashboards/Mcp/McpDashboard';
 import TelemetryControls from '@/src/components/Telemetry/TelemetryControls/TelemetryControls';
 import ViewByFilter from '@/src/components/Telemetry/TelemetryControls/ViewByFilter';
-import { ApplicationRoute } from '@/src/types/routes';
-import { BaseEntity } from '@/src/models/dial/base-entity';
+import {
+  DEFAULT_REFRESH_TIME,
+  MCP_TOOL_CALLS_EXTRA_CONDITIONS,
+  MCP_TOOLS_CONSUMPTION_EXTRA_CONDITIONS,
+  TOOLSET_DEPLOYMENT_PREFIX,
+} from '@/src/constants/telemetry';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useTimeFilter } from '@/src/hooks/use-time-filter';
+import { BaseEntity } from '@/src/models/dial/base-entity';
+import { FilterData, TelemetryQuery } from '@/src/models/telemetry';
+import { TimeFilterValue } from '@/src/models/time-range';
+import { ApplicationRoute } from '@/src/types/routes';
 import { DASHBOARD_VIEW_TYPE } from '@/src/types/telemetry';
 import { isToolsetRoute } from '@/src/utils/is-view';
+import { getFormattedFilters } from '@/src/utils/telemetry';
+import { ChartResolution, getChartResolution } from '@/src/utils/time-filter/get-chart-resolution';
+import { FC, useCallback, useMemo, useRef, useState } from 'react';
+import RouteDashboard from './Dashboards/Route/RouteDashboard';
+import SimpleDashboard from './Dashboards/View/SimpleDashboard';
+
+export type QueryInput = TelemetryQuery | ((resolution: ChartResolution) => TelemetryQuery);
 
 interface Props {
   route: ApplicationRoute;
@@ -38,7 +32,6 @@ interface Props {
 }
 
 const Dashboard: FC<Props> = ({ route, entity, defaultTimeFilter, onTimeFilterChange }) => {
-  const t = useI18n();
   const [filters, setFilters] = useState<FilterData[]>([]);
   const [refreshTime, setRefreshTime] = useState(DEFAULT_REFRESH_TIME);
   const [viewType, setViewType] = useState<DASHBOARD_VIEW_TYPE>(DASHBOARD_VIEW_TYPE.Chat);
@@ -51,7 +44,9 @@ const Dashboard: FC<Props> = ({ route, entity, defaultTimeFilter, onTimeFilterCh
   const getReqRef = useRef(useProtectedRequest());
 
   const isMcpOnly = isToolsetRoute(route);
-  const isMcpView = isMcpOnly || viewType === DASHBOARD_VIEW_TYPE.Mcp;
+  const isMcpDashboards = isMcpOnly || viewType === DASHBOARD_VIEW_TYPE.Mcp;
+  const isRouteDashboards = viewType === DASHBOARD_VIEW_TYPE.Route;
+
   const entityFilterName = useMemo(() => {
     if (route === ApplicationRoute.AssetsToolsets) {
       const path = (entity as unknown as { path?: string })?.path;
@@ -132,10 +127,10 @@ const Dashboard: FC<Props> = ({ route, entity, defaultTimeFilter, onTimeFilterCh
           getData={getData}
           route={route}
           canAutoRefresh={canAutoRefresh}
-          isMcpView={isMcpView}
+          isMcpView={isMcpDashboards}
         />
       </div>
-      {isMcpView ? (
+      {isMcpDashboards ? (
         <McpDashboard
           getData={getData}
           getToolCallsData={getMcpToolCallsData}
@@ -143,35 +138,10 @@ const Dashboard: FC<Props> = ({ route, entity, defaultTimeFilter, onTimeFilterCh
           refreshTime={effectiveRefreshTime}
           isEntityView={!!entity}
         />
+      ) : isRouteDashboards ? (
+        <RouteDashboard getData={getData} refreshTime={effectiveRefreshTime} isEntityView={!!entity} />
       ) : (
-        <div className="flex flex-col flex-1 min-h-0 min-w-0 overflow-auto">
-          <div className="flex flex-col md:flex-row mb-6 md:flex-wrap gap-6">
-            <LineChart getData={getData} refreshTime={effectiveRefreshTime} />
-            <SingleValueChartsDashboard getData={getData} refreshTime={effectiveRefreshTime} />
-          </div>
-          <div className="flex flex-col w-full">
-            {route === ApplicationRoute.Dashboard && (
-              <div className="flex mb-6 w-full relative">
-                <TelemetryGrid
-                  getData={getData}
-                  refreshTime={effectiveRefreshTime}
-                  query={ENTITY_CONSUMPTION_QUERY}
-                  columnDefs={TELEMETRY_GRID_COLUMNS}
-                  title={t(TelemetryI18nKey.EntitiesConsumption)}
-                />
-              </div>
-            )}
-            <div className="flex size-full relative">
-              <TelemetryGrid
-                getData={getData}
-                refreshTime={effectiveRefreshTime}
-                query={PROJECT_CONSUMPTION_QUERY}
-                columnDefs={PROJECT_GRID_COLUMNS}
-                title={t(TelemetryI18nKey.ProjectsConsumption)}
-              />
-            </div>
-          </div>
-        </div>
+        <SimpleDashboard route={route} effectiveRefreshTime={effectiveRefreshTime} getData={getData} />
       )}
     </div>
   );

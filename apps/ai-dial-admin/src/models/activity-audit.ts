@@ -9,6 +9,7 @@ export interface DialActivity {
   initiatedEmail: string;
   activityId: string;
   revision: number;
+  parentActivityId?: string;
   action?: string;
 }
 

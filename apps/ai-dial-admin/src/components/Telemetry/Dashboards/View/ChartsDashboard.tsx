@@ -1,16 +1,16 @@
 import { FC } from 'react';
-import SingleValueChart from '@/src/components/Charts/SingleValueChart/SingleValueChart';
 import { TelemetryQuery } from '@/src/models/telemetry';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { TelemetryI18nKey } from '@/src/constants/i18n';
 import { MONEY_QUERY, REQUEST_COUNT_QUERY, TOTAL_TOKENS_QUERY, UNIQ_USERS_QUERY } from '@/src/constants/telemetry';
+import SingleValueChart from '@/src/components/Telemetry/Dashboards/Values/SingleValueChart';
 
 interface Props {
   getData: (query: TelemetryQuery) => Promise<ServerActionResponse>;
   refreshTime?: string;
 }
 
-const SingleValueChartsDashboard: FC<Props> = ({ getData, refreshTime }) => {
+const ChartsDashboard: FC<Props> = ({ getData, refreshTime }) => {
   const config = [
     { title: TelemetryI18nKey.UniqueUsers, query: UNIQ_USERS_QUERY },
     { title: TelemetryI18nKey.RequestCount, query: REQUEST_COUNT_QUERY },
@@ -27,7 +27,7 @@ const SingleValueChartsDashboard: FC<Props> = ({ getData, refreshTime }) => {
             getData={getData}
             refreshTime={refreshTime}
             query={query}
-            unit={unit || null}
+            unit={unit || void 0}
           />
         ))}
       </div>
@@ -35,4 +35,4 @@ const SingleValueChartsDashboard: FC<Props> = ({ getData, refreshTime }) => {
   );
 };
 
-export default SingleValueChartsDashboard;
+export default ChartsDashboard;

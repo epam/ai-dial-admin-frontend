@@ -1,91 +1,43 @@
-import Contains from '@/public/images/icons/filter/contains.svg';
-import EndsWith from '@/public/images/icons/filter/ends-with.svg';
-import NotContains from '@/public/images/icons/filter/not-contains.svg';
-import StartsWith from '@/public/images/icons/filter/starts-with.svg';
-import { TelemetryI18nKey } from '@/src/constants/i18n';
 import { TelemetryQuery } from '@/src/models/telemetry';
 import { ChartResolution, formatWindow } from '@/src/utils/time-filter/get-chart-resolution';
-import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
-import { IconEqual, IconEqualNot } from '@tabler/icons-react';
-import { BASE_BUTTON_ICON_PROPS } from './main-layout';
 
 export const DEFAULT_REFRESH_TIME = '1m';
 
 export const TELEMETRY_DATASET_NAME = 'dial_analytics_realtime';
+export const TOOLSET_DEPLOYMENT_PREFIX = 'toolsets/';
 
-export const filterOperatorConfig: Record<string, string> = {
-  [FILTER_OPERATOR.Contain]: '$contains',
-  [FILTER_OPERATOR.NotContains]: '$not_contains',
-  [FILTER_OPERATOR.Equal]: '$eq',
-  [FILTER_OPERATOR.NotEqual]: '$ne',
-  [FILTER_OPERATOR.StartsWith]: '$starts_with',
-  [FILTER_OPERATOR.EndsWith]: '$ends_with',
-};
+const ANALYTICS_TABLE_NAME = 'analytics';
+export const MCP_TABLE_NAME = 'mcp_analytics';
+export const ROUTE_TABLE_NAME = 'routes_analytics';
 
-export const filterTypeConfig = [
-  { value: FILTER_TYPE.Entity, label: TelemetryI18nKey.FilterTypeEntities, filter: 'deployment' },
-  { value: FILTER_TYPE.Project, label: TelemetryI18nKey.FilterTypeProjects, filter: 'project_id' },
-];
-
-export const mcpFilterTypeConfig = [
-  { value: FILTER_TYPE.Mcp, label: TelemetryI18nKey.FilterTypeMcp, filter: 'deployment' },
-  { value: FILTER_TYPE.Project, label: TelemetryI18nKey.FilterTypeProjects, filter: 'project_id' },
-];
-
-export const filterConditionConfig = [
-  { value: FILTER_OPERATOR.Contain, label: TelemetryI18nKey.FilterConditionContain, icon: <Contains /> },
-  { value: FILTER_OPERATOR.NotContains, label: TelemetryI18nKey.FilterConditionNotContain, icon: <NotContains /> },
-  {
-    value: FILTER_OPERATOR.Equal,
-    label: TelemetryI18nKey.FilterConditionEqual,
-    icon: <IconEqual {...BASE_BUTTON_ICON_PROPS} />,
-  },
-  {
-    value: FILTER_OPERATOR.NotEqual,
-    label: TelemetryI18nKey.FilterConditionNotEqual,
-    icon: <IconEqualNot {...BASE_BUTTON_ICON_PROPS} />,
-  },
-  { value: FILTER_OPERATOR.StartsWith, label: TelemetryI18nKey.FilterConditionStartsWith, icon: <StartsWith /> },
-  { value: FILTER_OPERATOR.EndsWith, label: TelemetryI18nKey.FilterConditionEndsWith, icon: <EndsWith /> },
-];
-
-export const refreshOptionsConfig = [
-  { value: 'off', label: 'Off', timeout: null },
-  { value: '30s', label: '30s', timeout: 30 * 1000 },
-  { value: '1m', label: '1m', timeout: 60 * 1000 },
-  { value: '5m', label: '5m', timeout: 5 * 60 * 1000 },
-  { value: '15m', label: '15m', timeout: 15 * 60 * 1000 },
-  { value: '30m', label: '30m', timeout: 30 * 60 * 1000 },
-  { value: '1h', label: '1h', timeout: 60 * 60 * 1000 },
-  { value: '2h', label: '2h', timeout: 2 * 60 * 60 * 1000 },
-  { value: '1d', label: '1d', timeout: 24 * 60 * 60 * 1000 },
-];
-
-export const UNIQ_USERS_QUERY: TelemetryQuery = {
-  $type: 'json',
-  query: {
-    expressions: ['count()'],
+const getUniqueUsersQuery = (tableName: string, params?: Record<string, string | string[]>): TelemetryQuery =>
+  getCountQuery(tableName, {
     from: {
       distinct: 'true',
       expressions: ['user_hash'],
-      from: 'analytics',
+      from: tableName,
+      ...(params || {}),
     },
-  },
-};
+  });
 
-export const REQUEST_COUNT_QUERY: TelemetryQuery = {
+const getCountQuery = (tableName: string, params?: Record<string, any>): TelemetryQuery => ({
   $type: 'json',
   query: {
     expressions: ['count()'],
-    from: 'analytics',
+    from: tableName,
+    ...(params || {}),
   },
-};
+});
+
+export const UNIQ_USERS_QUERY: TelemetryQuery = getUniqueUsersQuery(ANALYTICS_TABLE_NAME, { distinct: 'true' });
+
+export const REQUEST_COUNT_QUERY: TelemetryQuery = getCountQuery(ANALYTICS_TABLE_NAME);
 
 export const TOTAL_TOKENS_QUERY: TelemetryQuery = {
   $type: 'json',
   query: {
     expressions: ['sum(prompt_tokens)', 'sum(completion_tokens)'],
-    from: 'analytics',
+    from: ANALYTICS_TABLE_NAME,
   },
 };
 
@@ -93,7 +45,7 @@ export const MONEY_QUERY: TelemetryQuery = {
   $type: 'json',
   query: {
     expressions: ['sum(deployment_price)'],
-    from: 'analytics',
+    from: ANALYTICS_TABLE_NAME,
   },
 };
 
@@ -108,12 +60,12 @@ export const ENTITY_CONSUMPTION_QUERY: TelemetryQuery = {
       'sum(prompt_tokens) as tokens_p',
       'sum(completion_tokens) as tokens_c',
     ],
-    from: 'analytics',
+    from: ANALYTICS_TABLE_NAME,
     groupBy: ['deployment'],
   },
 };
 
-export const getEntityQuery = (tableName = 'analytics'): TelemetryQuery => ({
+export const getEntityQuery = (tableName = ANALYTICS_TABLE_NAME): TelemetryQuery => ({
   $type: 'json',
   query: {
     distinct: 'true',
@@ -122,7 +74,7 @@ export const getEntityQuery = (tableName = 'analytics'): TelemetryQuery => ({
   },
 });
 
-export const getProjectQuery = (tableName = 'analytics'): TelemetryQuery => ({
+export const getProjectQuery = (tableName = ANALYTICS_TABLE_NAME): TelemetryQuery => ({
   $type: 'json',
   query: {
     distinct: 'true',
@@ -141,7 +93,7 @@ export const PROJECT_CONSUMPTION_QUERY: TelemetryQuery = {
       'sum(prompt_tokens) as tokens_p',
       'sum(completion_tokens) as tokens_c',
     ],
-    from: 'analytics',
+    from: ANALYTICS_TABLE_NAME,
     groupBy: ['project_id'],
   },
 };
@@ -151,7 +103,7 @@ export const createSystemUsageQuery = (resolution: ChartResolution): TelemetryQu
   fillGaps: true,
   query: {
     expressions: [`${formatWindow(resolution)} as time`, 'count() as requests'],
-    from: 'analytics',
+    from: ANALYTICS_TABLE_NAME,
     groupBy: [formatWindow(resolution)],
     orderBy: [{ $asc: 'time' }],
   },
@@ -182,9 +134,8 @@ export const TRACES_QUERY: TelemetryQuery = {
       'chat_id',
       'prompt_tokens',
       'completion_tokens',
-      //'cached_prompt_tokens',
     ],
-    from: 'analytics',
+    from: ANALYTICS_TABLE_NAME,
   },
 };
 
@@ -199,7 +150,23 @@ export const MCP_QUERY: TelemetryQuery = {
       'mcp_tool_call_name',
       'trace_id',
     ],
-    from: 'mcp_analytics',
+    from: MCP_TABLE_NAME,
+  },
+};
+
+export const ROUTES_QUERY: TelemetryQuery = {
+  $type: 'json',
+  query: {
+    expressions: [
+      '_time as completion_time',
+      'deployment',
+      'project_id',
+      'route_path',
+      'http_method',
+      'upstream',
+      'trace_id',
+    ],
+    from: ROUTE_TABLE_NAME,
   },
 };
 
@@ -228,14 +195,10 @@ export const CONVERSATIONS_QUERY: TelemetryQuery = {
       'chat_id',
       'prompt_tokens',
       'completion_tokens',
-      //'cached_prompt_tokens',
     ],
-    from: 'analytics',
+    from: ANALYTICS_TABLE_NAME,
   },
 };
-
-export const MCP_TABLE_NAME = 'mcp_analytics';
-export const TOOLSET_DEPLOYMENT_PREFIX = 'toolsets/';
 
 export const createMcpUsageQuery = (resolution: ChartResolution): TelemetryQuery => ({
   $type: 'json',
@@ -248,21 +211,9 @@ export const createMcpUsageQuery = (resolution: ChartResolution): TelemetryQuery
   },
 });
 
-export const MCP_TOTAL_CALLS_QUERY: TelemetryQuery = {
-  $type: 'json',
-  query: {
-    expressions: ['count()'],
-    from: MCP_TABLE_NAME,
-  },
-};
+export const MCP_TOTAL_CALLS_QUERY: TelemetryQuery = getCountQuery(MCP_TABLE_NAME);
 
-export const MCP_TOOL_CALLS_QUERY: TelemetryQuery = {
-  $type: 'json',
-  query: {
-    expressions: ['count()'],
-    from: MCP_TABLE_NAME,
-  },
-};
+export const MCP_TOOL_CALLS_QUERY: TelemetryQuery = getCountQuery(MCP_TABLE_NAME);
 
 export const MCP_TOOL_CALLS_EXTRA_CONDITIONS = [{ $eq: { left: 'mcp_method', right: "'tools/call'" } }];
 
@@ -336,6 +287,8 @@ export const TELEMETRY_GRID_HEADERS_MAP: Record<string, string> = {
   parent_deployment: 'parent_deployment',
   tool_calls: 'tool_calls',
   mcp_calls: 'mcp_calls',
+  route_path: 'route_path',
+  http_method: 'http_method',
 };
 
 export const USAGE_LOG_COLUMN_ID_TO_SOURCE: Record<string, string> = {
@@ -352,4 +305,59 @@ export const USAGE_LOG_TEXT_OPERATOR_MAP: Record<string, string> = {
   notEqual: '$ne',
   startsWith: '$starts_with',
   endsWith: '$ends_with',
+};
+
+export const ROUTE_UNIQUE_USERS_QUERY: TelemetryQuery = getUniqueUsersQuery(ROUTE_TABLE_NAME);
+
+export const ROUTE_TOTAL_CALLS_QUERY: TelemetryQuery = getCountQuery(ROUTE_TABLE_NAME);
+
+export const createRouteUsageQuery = (resolution: ChartResolution): TelemetryQuery => ({
+  $type: 'json',
+  fillGaps: true,
+  query: {
+    expressions: [formatWindow(resolution), 'count()'],
+    from: ROUTE_TABLE_NAME,
+    groupBy: [formatWindow(resolution)],
+    orderBy: [{ $asc: formatWindow(resolution) }],
+  },
+});
+
+export const ROUTE_DEPLOYMENT_QUERY: TelemetryQuery = {
+  $type: 'json',
+  query: {
+    expressions: ['deployment', 'count()'],
+    from: ROUTE_TABLE_NAME,
+    groupBy: ['deployment'],
+    orderBy: [{ $desc: 'count()' }],
+  },
+};
+
+export const ROUTE_PARENT_DEPLOYMENT_QUERY: TelemetryQuery = {
+  $type: 'json',
+  query: {
+    expressions: ['parent_deployment', 'deployment', 'count()'],
+    from: ROUTE_TABLE_NAME,
+    groupBy: ['parent_deployment', 'deployment'],
+    orderBy: [{ $desc: 'count()' }],
+  },
+};
+
+export const ROUTE_PROJECT_QUERY: TelemetryQuery = {
+  $type: 'json',
+  query: {
+    expressions: ['project_id', 'count()'],
+    from: ROUTE_TABLE_NAME,
+    groupBy: ['project_id'],
+    orderBy: [{ $desc: 'count()' }],
+  },
+};
+
+export const ROUTE_QUERY: TelemetryQuery = {
+  $type: 'json',
+  query: {
+    expressions: ['deployment', 'route_path', 'http_method', 'count()'],
+    from: ROUTE_TABLE_NAME,
+    groupBy: ['deployment', 'route_path', 'http_method'],
+    orderBy: [{ $desc: 'count()' }],
+  },
 };
