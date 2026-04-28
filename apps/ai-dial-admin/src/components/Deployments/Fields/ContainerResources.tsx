@@ -7,10 +7,9 @@ import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { FieldError } from '@/src/models/error';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getGpuError } from '@/src/utils/deployments/validation';
-import { isEditDisabled, isErrorPresent } from '@/src/utils/deployments/containers';
+import { isEditDisabled } from '@/src/utils/deployments/containers';
 import { useI18n } from '@/src/locales/client';
 
-import Accordion from '@/src/components/Common/Accordion/Accordion';
 import CPUFields from '@/src/components/Deployments/Fields/ContainerResources/CPUFields';
 import MemoryFields from '@/src/components/Deployments/Fields/ContainerResources/MemoryFields';
 
@@ -24,20 +23,9 @@ interface Props {
 const ContainerResources: FC<Props> = ({ container, setContainer, route, disabled }) => {
   const t = useI18n();
   const isDisabled = disabled ?? isEditDisabled(container);
-  const { dispatch, resetCounter, errorFields, isValid } = useSaveValidationContext();
+  const { dispatch, resetCounter } = useSaveValidationContext();
 
   const [error, setError] = useState<FieldError | null>(null);
-  const [isSectionInvalid, setSectionInvalid] = useState(false);
-
-  useEffect(() => {
-    if (!isValid) {
-      setSectionInvalid(
-        isErrorPresent(errorFields, ['gpuRequest', 'cpuRequest', 'cpuLimit', 'memoryRequest', 'memoryLimit']),
-      );
-    } else {
-      setSectionInvalid(false);
-    }
-  }, [errorFields, isValid]);
 
   const onChangeGpuRequest = useCallback(
     (gpuRequest?: string | number) => {
@@ -79,7 +67,8 @@ const ContainerResources: FC<Props> = ({ container, setContainer, route, disable
   }, [container.resources?.requests, dispatch, resetCounter, t]);
 
   return (
-    <Accordion title={t(EntityFieldsI18nKey.Resources)} errorIndicator={isSectionInvalid}>
+    <div className="flex flex-col gap-3">
+      <h4 className="text-sm font-semibold text-primary">{t(EntityFieldsI18nKey.Resources)}</h4>
       <div className="flex flex-col gap-x-2 gap-y-8">
         <CPUFields container={container} setContainer={setContainer} disabled={disabled} />
         <MemoryFields container={container} setContainer={setContainer} disabled={disabled} />
@@ -98,7 +87,7 @@ const ContainerResources: FC<Props> = ({ container, setContainer, route, disable
           </div>
         )}
       </div>
-    </Accordion>
+    </div>
   );
 };
 

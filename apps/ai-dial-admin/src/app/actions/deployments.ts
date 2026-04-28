@@ -5,7 +5,15 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { Image } from '@/src/models/deployments/images';
 import { Container } from '@/src/models/deployments/containers';
-import { containersApi, huggingFaceApi, imagesApi, mcpRegistryApi, topicApi, whitelistApi } from '@/src/app/api/api';
+import {
+  containersApi,
+  huggingFaceApi,
+  imagesApi,
+  mcpRegistryApi,
+  nodePoolsApi,
+  topicApi,
+  whitelistApi,
+} from '@/src/app/api/api';
 import { unwrapSingleServerResponse } from '@/src/utils/deployments/mcp-registry';
 
 export async function getImages() {
@@ -56,6 +64,11 @@ export async function getImageLogs(id: string) {
 export async function getTopics() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return topicApi.getTopics(token);
+}
+
+export async function getNodePools() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return nodePoolsApi.getNodePools(token);
 }
 
 export async function getContainers(type?: string) {
