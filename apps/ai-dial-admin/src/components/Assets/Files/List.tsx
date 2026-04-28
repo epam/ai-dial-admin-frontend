@@ -71,14 +71,23 @@ const FilesList = () => {
       importFiles(body, fileType).then((res) => {
         if (res.success) {
           fetchFiles?.(destinationFolder);
-          const { title, description } = getImportNotificationContent(
-            ApplicationRoute.Files,
-            file,
-            fileType,
-            destinationFolder,
-            t,
-          );
-          showNotification(getSuccessNotification(title, description));
+          const { title, description, errorTitle, errorDescription, skippedTitle, skippedDescription } =
+            getImportNotificationContent(
+              ApplicationRoute.Files,
+              res.response.importResults,
+              fileType,
+              destinationFolder,
+              t,
+            );
+          if (title && description) {
+            showNotification(getSuccessNotification(title, description));
+          }
+          if (errorTitle && errorDescription) {
+            showNotification(getErrorNotification(errorTitle, errorDescription));
+          }
+          if (skippedTitle && skippedDescription) {
+            showNotification(getErrorNotification(skippedTitle, skippedDescription));
+          }
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
