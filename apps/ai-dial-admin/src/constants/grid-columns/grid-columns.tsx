@@ -66,6 +66,8 @@ import {
 } from './base-columns';
 import { dateTimeColumn, numericColumn, priceColumn } from './configs';
 import { auditStringFilter, dateFilter, evalStringFilter } from './filters';
+import RowExpanderCellRenderer from '@/src/components/Grid/CellRenderers/RowExpanderCellRenderer';
+import ChildrenActivityTypeCellRenderer from '@/src/components/Grid/CellRenderers/ChildrenActivityTypeCellRenderer';
 import { GridFilterType } from '@/src/types/grid-filter';
 
 export const COLUMN_PANEL_PREFIX = 'column_';
@@ -201,7 +203,23 @@ export const MCP_TOOLS_COLUMNS: ColDef[] = [
 
 export const ACTIVITY_AUDIT_COLUMNS = (t: (s: string) => string, isSingleEntity?: boolean): ColDef[] => {
   const columns: ColDef[] = [
-    { field: 'activityType', headerName: 'Activity type', ...auditStringFilter },
+    {
+      headerName: '',
+      field: 'expanderColumn',
+      cellClass: NO_BORDER_CLASS,
+      flex: 1,
+      maxWidth: 30,
+      sortable: false,
+      filter: false,
+      floatingFilter: false,
+      cellRenderer: RowExpanderCellRenderer,
+    },
+    {
+      field: 'activityType',
+      headerName: 'Activity type',
+      ...auditStringFilter,
+      cellRenderer: ChildrenActivityTypeCellRenderer,
+    },
     {
       field: 'resourceType',
       headerName: 'Resource type',
@@ -221,10 +239,11 @@ export const ACTIVITY_AUDIT_COLUMNS = (t: (s: string) => string, isSingleEntity?
     },
     { field: 'initiatedEmail', headerName: 'Initiated', ...auditStringFilter },
     { field: 'activityId', headerName: 'Activity ID', ...auditStringFilter },
+    { field: 'parentActivityId', headerName: 'Parent ID', ...auditStringFilter },
   ];
 
   if (isSingleEntity) {
-    return [columns[0], ...columns.slice(3)];
+    return [columns[1], ...columns.slice(4)];
   }
 
   return columns;
@@ -483,6 +502,16 @@ export const USAGE_LOG_MCP_COLUMNS: ColDef[] = [
   { field: 'trace_id', headerName: 'Trace ID', hide: false },
 ];
 
+export const USAGE_LOG_ROUTES_COLUMNS: ColDef[] = [
+  completionTimeColumn('Last activity'),
+  { field: 'project_id', headerName: 'Project', hide: false },
+  { field: 'deployment', headerName: 'Deployment ID', hide: false },
+  { field: 'route_path', headerName: 'Route', hide: true },
+  { field: 'http_method', headerName: 'Method', hide: true },
+  { field: 'upstream', headerName: 'Upstream', hide: false },
+  { field: 'trace_id', headerName: 'Trace ID', hide: false },
+];
+
 export const USAGE_LOG_TOOLSET_TRACES_COLUMNS: ColDef[] = [
   completionTimeColumn('Last activity'),
   { field: 'project_id', headerName: 'Project', hide: false },
@@ -528,6 +557,28 @@ export const MCP_PROJECTS_CONSUMPTION_COLUMNS: ColDef[] = [
   { field: 'name', headerName: 'Project', hide: false },
   { field: 'tool_calls', headerName: 'Tool Calls', hide: false, ...numericColumn },
   { field: 'mcp_calls', headerName: 'MCP Calls', hide: false, sort: 'desc', ...numericColumn },
+];
+
+export const CALL_BY_DEPLOYMENT_COLUMNS: ColDef[] = [
+  { field: 'name', headerName: 'Deployment', hide: false },
+  { field: 'requests', headerName: 'Calls', hide: false, ...numericColumn },
+];
+
+export const CALL_BY_PARENT_DEPLOYMENT_COLUMNS: ColDef[] = [
+  { field: 'parent_deployment', headerName: 'Parent Deployment', hide: false },
+  { field: 'requests', headerName: 'Calls', hide: false, ...numericColumn },
+];
+
+export const CALL_BY_PROJECT_COLUMNS: ColDef[] = [
+  { field: 'name', headerName: 'Project', hide: false },
+  { field: 'requests', headerName: 'Calls', hide: false, ...numericColumn },
+];
+
+export const CALL_BY_ROUTES_COLUMNS: ColDef[] = [
+  { field: 'name', headerName: 'Deployment', hide: false },
+  { field: 'route_path', headerName: 'Route', hide: false },
+  { field: 'http_method', headerName: 'Method', hide: false },
+  { field: 'requests', headerName: 'Calls', hide: false, ...numericColumn },
 ];
 
 export const SOURCE_CONTAINERS_COLUMNS: ColDef[] = [

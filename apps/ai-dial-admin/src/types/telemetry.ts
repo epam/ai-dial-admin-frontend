@@ -18,4 +18,10 @@ export enum FILTER_TYPE {
 export enum DASHBOARD_VIEW_TYPE {
   Chat = 'Chat',
   Mcp = 'Mcp',
+  Route = 'Route',
+}
+
+export enum ACTIVITY_VIEW_TYPE {
+  Config = 'Config',
+  Asset = 'Asset',
 }

@@ -15,12 +15,19 @@ import List from '@/src/components/UsageLog/List/List';
 import {
   USAGE_LOG_CONVERSATIONS_COLUMNS,
   USAGE_LOG_MCP_COLUMNS,
+  USAGE_LOG_ROUTES_COLUMNS,
   USAGE_LOG_TOOLSET_TRACES_COLUMNS,
   USAGE_LOG_TRACES_COLUMNS,
 } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, TabsI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-import { CONVERSATIONS_QUERY, MCP_QUERY, TOOLSET_DEPLOYMENT_PREFIX, TRACES_QUERY } from '@/src/constants/telemetry';
+import {
+  CONVERSATIONS_QUERY,
+  MCP_QUERY,
+  ROUTES_QUERY,
+  TOOLSET_DEPLOYMENT_PREFIX,
+  TRACES_QUERY,
+} from '@/src/constants/telemetry';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
@@ -143,6 +150,20 @@ const UsageLog: FC<Props> = ({ route, className, entity, entityView, onTimeFilte
             getData={getData}
             columnDefs={USAGE_LOG_MCP_COLUMNS}
             query={MCP_QUERY}
+            timeRange={timeRange}
+            entityName={entityFilterName}
+            onGridReady={onGridReady}
+          />
+        )}
+
+        {activeTab === EntityViewTab.Routes && (
+          <List
+            listLabel={t(TabsI18nKey.Routes)}
+            emptyDataTitle={t(TelemetryI18nKey.NoRoutes)}
+            route={route}
+            getData={getData}
+            columnDefs={USAGE_LOG_ROUTES_COLUMNS}
+            query={ROUTES_QUERY}
             timeRange={timeRange}
             entityName={entityFilterName}
             onGridReady={onGridReady}
