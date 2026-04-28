@@ -11,6 +11,7 @@ import { errorObjLog } from '@/src/server/logger';
 import { CONTAINER_SOURCE_TYPE } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 import { decodeVariables } from '@/src/utils/deployments/variables';
+import { filterDisplayNamesWithVersions } from '@/src/utils/entities/filter-names';
 
 export const dynamic = 'force-dynamic';
 
@@ -64,7 +65,7 @@ export default async function Page(params: Params) {
         route={ApplicationRoute.ApplicationContainers}
         names={containers?.map((container) => container.name as string).filter((name) => name !== container.name) || []}
         createEntity={createApplication}
-        entityNames={applications?.map((app) => app.name as string) || []}
+        entityNames={filterDisplayNamesWithVersions(applications) || []}
       />
     </SaveValidationContextProvider>
   );
