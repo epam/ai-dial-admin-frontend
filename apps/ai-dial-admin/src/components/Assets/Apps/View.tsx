@@ -58,6 +58,8 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
   const [isSkipRefresh, setIsSkipRefresh] = useState(true);
   const [discardKey, setDiscardKey] = useState(0);
 
+  const [addedVersions, setAddedVersions] = useState<string[]>([]);
+
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
       isEditorEnabled,
@@ -96,6 +98,7 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
 
   const onDiscard = useCallback(() => {
     setIsSkipRefresh(false);
+    setAddedVersions([]);
     setDiscardKey((prev) => prev + 1);
     setSelectedApp(cloneDeep(originalApp));
   }, [originalApp]);
@@ -176,6 +179,8 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
         onRemove={removeApp}
         getAssetContext={useAppsFolder}
         onChangeAsset={setSelectedApp as (asset: Asset) => void}
+        addedVersions={addedVersions}
+        onChangeAddedVersion={setAddedVersions}
       />
 
       <div className="flex-1 overflow-auto min-h-0">
