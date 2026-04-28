@@ -483,6 +483,16 @@ export const USAGE_LOG_MCP_COLUMNS: ColDef[] = [
   { field: 'trace_id', headerName: 'Trace ID', hide: false },
 ];
 
+export const USAGE_LOG_ROUTES_COLUMNS: ColDef[] = [
+  completionTimeColumn('Last activity'),
+  { field: 'project_id', headerName: 'Project', hide: false },
+  { field: 'deployment', headerName: 'Deployment ID', hide: false },
+  { field: 'route_path', headerName: 'Route', hide: true },
+  { field: 'http_method', headerName: 'Method', hide: true },
+  { field: 'upstream', headerName: 'Upstream', hide: false },
+  { field: 'trace_id', headerName: 'Trace ID', hide: false },
+];
+
 export const USAGE_LOG_TOOLSET_TRACES_COLUMNS: ColDef[] = [
   completionTimeColumn('Last activity'),
   { field: 'project_id', headerName: 'Project', hide: false },
@@ -528,6 +538,28 @@ export const MCP_PROJECTS_CONSUMPTION_COLUMNS: ColDef[] = [
   { field: 'name', headerName: 'Project', hide: false },
   { field: 'tool_calls', headerName: 'Tool Calls', hide: false, ...numericColumn },
   { field: 'mcp_calls', headerName: 'MCP Calls', hide: false, sort: 'desc', ...numericColumn },
+];
+
+export const CALL_BY_DEPLOYMENT_COLUMNS: ColDef[] = [
+  { field: 'name', headerName: 'Deployment', hide: false },
+  { field: 'requests', headerName: 'Calls', hide: false, ...numericColumn },
+];
+
+export const CALL_BY_PARENT_DEPLOYMENT_COLUMNS: ColDef[] = [
+  { field: 'parent_deployment', headerName: 'Parent Deployment', hide: false },
+  { field: 'requests', headerName: 'Calls', hide: false, ...numericColumn },
+];
+
+export const CALL_BY_PROJECT_COLUMNS: ColDef[] = [
+  { field: 'name', headerName: 'Project', hide: false },
+  { field: 'requests', headerName: 'Calls', hide: false, ...numericColumn },
+];
+
+export const CALL_BY_ROUTES_COLUMNS: ColDef[] = [
+  { field: 'name', headerName: 'Deployment', hide: false },
+  { field: 'route_path', headerName: 'Route', hide: false },
+  { field: 'http_method', headerName: 'Method', hide: false },
+  { field: 'requests', headerName: 'Calls', hide: false, ...numericColumn },
 ];
 
 export const SOURCE_CONTAINERS_COLUMNS: ColDef[] = [

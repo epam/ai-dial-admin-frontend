@@ -60,6 +60,7 @@ const PublicationView = <T extends Publication>({ view, publication, application
 
   const [isChanged, setIsChanged] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
+  const [discardKey, setDiscardKey] = useState(0);
 
   const [selectedPublication, setSelectedPublication] = useState(structuredClone(publication));
   const [isPermissionsChanged, setIsPermissionsChanged] = useState(false);
@@ -132,6 +133,7 @@ const PublicationView = <T extends Publication>({ view, publication, application
   const onDiscard = useCallback(() => {
     setSelectedPublication(structuredClone(publication));
     setAddedFiles([]);
+    setDiscardKey((prev) => prev + 1);
   }, [publication]);
 
   const onSave = useCallback(() => {
@@ -224,6 +226,7 @@ const PublicationView = <T extends Publication>({ view, publication, application
         ) : (
           !warning && (
             <TabsContent
+              key={discardKey}
               view={view}
               activeTab={activeTab}
               selectedPublication={selectedPublication}

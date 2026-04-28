@@ -8,6 +8,7 @@ import { DASHBOARD_VIEW_TYPE } from '@/src/types/telemetry';
 const viewByOptions = [
   { value: DASHBOARD_VIEW_TYPE.Chat, label: TelemetryI18nKey.ViewByChat },
   { value: DASHBOARD_VIEW_TYPE.Mcp, label: TelemetryI18nKey.ViewByMcp },
+  { value: DASHBOARD_VIEW_TYPE.Route, label: TelemetryI18nKey.ViewByRoute },
 ];
 
 interface Props {
