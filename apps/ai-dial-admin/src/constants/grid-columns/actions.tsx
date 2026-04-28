@@ -22,12 +22,16 @@ import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operati
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { ActionMenuOperationI18nKey } from '@/src/constants/i18n';
 
-export function getResourceRollbackOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
+export function getResourceRollbackOperation<T>(
+  onClick: (entity?: T) => void,
+  hidden?: (api: GridApi, node: IRowNode) => boolean,
+): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconRefreshDot {...BASE_BUTTON_ICON_PROPS} />,
     id: ActionMenuOperationI18nKey.Resource_rollback,
     label: ActionMenuOperationI18nKey.Resource_rollback,
     onClick,
+    hidden,
   };
 }
 

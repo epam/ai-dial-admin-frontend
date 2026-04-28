@@ -663,6 +663,8 @@ export enum TelemetryI18nKey {
   RequestPerMcpUsage = 'Telemetry.RequestPerMcpUsage',
   RouteRequests = 'Telemetry.RouteRequests',
   Unknown = 'Telemetry.Unknown',
+  ActivityViewConfig = 'Telemetry.ActivityView.Config',
+  ActivityViewAsset = 'Telemetry.ActivityView.Asset',
 }
 
 export enum RoutesI18nKey {
