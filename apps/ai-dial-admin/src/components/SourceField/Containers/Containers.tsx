@@ -1,4 +1,4 @@
-import { DialInputPopup, DialLabel, DialNeutralButton, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { DialInput, DialInputPopup, DialLabel, DialNeutralButton, DialSelectField } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -13,6 +13,7 @@ import {
   CreateI18nKey,
   EntitiesI18nKey,
   EntityFieldsI18nKey,
+  EntityPlaceholdersI18nKey,
   SourceI18nKey,
 } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
@@ -179,6 +180,34 @@ const Containers = <T extends DialInterceptor | DialModel | DialApplication>({
           prefix={addTrailingSlash(selectedContainer?.url || '')}
           disabled={disabled}
         />
+      )}
+      {entity.source?.containerId && selectedContainer && isModal && view === ApplicationRoute.Adapters && (
+        <div className="flex flex-col gap-y-8">
+          <DialInput
+            id="completionEndpointPath"
+            labelProps={{ label: t(EntityFieldsI18nKey.completionEndpointPath) }}
+            placeholder={t(EntityPlaceholdersI18nKey.CompletionEndpointPath)}
+            value={entity.source?.completionEndpointPath}
+            onChange={(completionEndpointPath) => {
+              onChange({
+                ...entity,
+                source: { ...entity.source, completionEndpointPath },
+              });
+            }}
+          />
+          <DialInput
+            id="responsesEndpointPath"
+            labelProps={{ label: t(EntityFieldsI18nKey.responsesEndpointPath) }}
+            placeholder={t(EntityPlaceholdersI18nKey.ResponsesEndpointPath)}
+            value={entity.source?.responsesEndpointPath}
+            onChange={(responsesEndpointPath) => {
+              onChange({
+                ...entity,
+                source: { ...entity.source, responsesEndpointPath },
+              });
+            }}
+          />
+        </div>
       )}
     </div>
   );

@@ -13,6 +13,7 @@ export interface SOURCE_FIELD {
   adapterName?: string;
   containerId?: string;
   completionEndpointPath?: string;
+  responsesEndpointPath?: string;
   configurationEndpointPath?: string;
   mcpEndpointPath?: string;
   serverName?: string;

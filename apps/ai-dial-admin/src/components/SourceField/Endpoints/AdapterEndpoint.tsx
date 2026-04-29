@@ -1,8 +1,11 @@
-import { FC, useCallback } from 'react';
-import { DialAdapter } from '@/src/models/dial/adapter';
+import { FC } from 'react';
 
-import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import CompletionEndpointControl from '@/src/components/BaseControls/Endpoint/CompletionEndpoint';
+import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
+import { DialAdapter } from '@/src/models/dial/adapter';
 
 interface Props {
   entity: DialAdapter;
@@ -13,13 +16,7 @@ interface Props {
 }
 
 const AdapterEndpoint: FC<Props> = ({ entity, onChange, isModal, prefix, disabled }) => {
-  const onChangeEndpoint = useCallback(
-    (baseEndpoint?: string) => {
-      onChange({ ...entity, baseEndpoint });
-    },
-    [onChange, entity],
-  );
-
+  const t = useI18n();
   return (
     <div className="w-full flex flex-col gap-y-8">
       {prefix ? (
@@ -38,9 +35,36 @@ const AdapterEndpoint: FC<Props> = ({ entity, onChange, isModal, prefix, disable
         <CompletionEndpointControl
           isFullWidth={isModal}
           endpoint={entity.baseEndpoint}
-          onChange={onChangeEndpoint}
+          onChange={(baseEndpoint) => onChange({ ...entity, baseEndpoint })}
           required
           isModal={isModal}
+          disabled={disabled}
+        />
+      )}
+
+      {prefix ? (
+        <EndpointControl
+          id="responsesEndpoint"
+          label={t(EntityFieldsI18nKey.responsesEndpoint)}
+          placeholder={t(EntityPlaceholdersI18nKey.ResponsesEndpoint)}
+          endpoint={entity.source?.responsesEndpointPath}
+          prefix={prefix}
+          onChange={(responsesEndpointPath) => {
+            onChange({
+              ...entity,
+              source: { ...entity.source, $type: SOURCE_TYPE.CONTAINER, responsesEndpointPath },
+            });
+          }}
+          disabled={disabled}
+        />
+      ) : (
+        <EndpointControl
+          id="responsesEndpoint"
+          endpoint={entity.responsesEndpoint}
+          label={t(EntityFieldsI18nKey.responsesEndpoint)}
+          isFullWidth={isModal}
+          placeholder={t(EntityPlaceholdersI18nKey.ResponsesEndpoint)}
+          onChange={(responsesEndpoint) => onChange({ ...entity, responsesEndpoint })}
           disabled={disabled}
         />
       )}
