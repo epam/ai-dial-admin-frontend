@@ -129,7 +129,7 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
               {metrics.map((metric) => (
                 <div key={metric.id} className="rounded border border-secondary p-4 flex flex-col gap-4">
                   <div className="flex flex-row items-center justify-between">
-                    <span className="dial-body-semi">{metric.displayName}</span>
+                    <span className="dial-body-semi">{metric.name}</span>
 
                     <div className="flex flex-row items-center gap-3">
                       <DialNeutralButton
