@@ -156,12 +156,13 @@ const Adapters = <T extends DialModel | DialInterceptor>({
           </div>
         )}
       </div>
-      {entity.source?.adapterName && selectedAdapter && !isModal && (
+      {entity.source?.adapterName && selectedAdapter && selectedAdapter.baseEndpoint && !isModal && (
         <ModelEndpoint
           entity={entity}
           prefix={selectedAdapter?.baseEndpoint}
           onChange={onChange as (entity: DialModel) => void}
           disabled={disabled}
+          hideResponsesEndpoint
         />
       )}
       {entity.source?.adapterName && selectedAdapter && selectedAdapter.responsesEndpoint && (

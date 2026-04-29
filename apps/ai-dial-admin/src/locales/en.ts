@@ -629,6 +629,7 @@ export default {
   Telemetry: {
     SystemUsage: 'System Usage',
     EntitiesConsumption: 'Calls by Entities',
+    ProjectsConsumption: 'Calls by Projects',
     AutoRefresh: 'Auto Refresh: ',
     TimePeriod: 'Time Period: ',
     AddFilter: 'Add filter',

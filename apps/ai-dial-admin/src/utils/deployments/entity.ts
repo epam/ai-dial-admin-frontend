@@ -155,7 +155,7 @@ export const getEntityTemplate = (
   }
 
   if (route === ApplicationRoute.AdapterContainers) {
-    (template as DialAdapter).baseEndpoint = container.url;
+    ((template as DialAdapter).source as SOURCE_FIELD).completionEndpointPath = 'v1';
   }
 
   return template;

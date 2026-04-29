@@ -119,7 +119,12 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
           />
         ) : (
           <>
-            <TabsContent activeTab={activeTab} selectedAdapter={selectedAdapter} onChangeAdapter={setSelectedAdapter} />
+            <TabsContent
+              activeTab={activeTab}
+              selectedAdapter={selectedAdapter}
+              originalAdapter={originalAdapter}
+              onChangeAdapter={setSelectedAdapter}
+            />
 
             {isModalOpen &&
               createPortal(

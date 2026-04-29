@@ -12,9 +12,7 @@ import {
   updateToolset,
 } from '@/src/app/[lang]/toolsets/actions';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
-import ContainerStatusBanner from '@/src/components/Deployments/Common/ContainerStatusBanner/ContainerStatusBanner';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
-import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { ModalType } from '@/src/components/EntityView/Modals/constants';
 import EntityViewModals from '@/src/components/EntityView/Modals/EntityViewModals';
@@ -210,10 +208,6 @@ const ToolsetView: FC<Props> = ({ names, oAuthCode, etag, roles, originalToolset
           signOutToolset={signOutToolset}
         />
       </SimpleEntityHeader>
-
-      {originalToolset.source?.$type === SOURCE_TYPE.CONTAINER && originalToolset.source?.containerId && (
-        <ContainerStatusBanner view={ApplicationRoute.Toolsets} containerId={originalToolset.source.containerId} />
-      )}
 
       <div className="flex-1 overflow-auto min-h-0">
         {isEditorEnabled ? (

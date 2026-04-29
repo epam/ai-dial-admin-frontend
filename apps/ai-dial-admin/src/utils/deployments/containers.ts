@@ -1,4 +1,5 @@
 import {
+  getAdapterContainers,
   getApplicationContainers,
   getInterceptorContainers,
   getMCPContainers,
@@ -232,8 +233,7 @@ export const deriveScaling = (
 /**
  * Returns the list-containers server action that matches the given entity route, or `null`
  * if the route has no container source concept. Supported routes: Models, Applications,
- * Toolsets, Interceptors. Adapters are intentionally omitted — they have containers but
- * the ContainerStatusBanner is not wired for them yet.
+ * Toolsets, Interceptors, Adapters.
  */
 export const getContainersByView = (
   view: ApplicationRoute,
@@ -247,6 +247,8 @@ export const getContainersByView = (
       return getMCPContainers;
     case ApplicationRoute.Interceptors:
       return getInterceptorContainers;
+    case ApplicationRoute.Adapters:
+      return getAdapterContainers;
     default:
       return null;
   }

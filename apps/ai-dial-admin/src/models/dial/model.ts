@@ -11,6 +11,7 @@ export interface DialModel extends ChatEntity {
   displayVersion?: string;
   upstreams?: DialModelEndpoint[];
   source?: SOURCE_FIELD;
+  responsesEndpoint?: string;
 }
 
 export interface DialTokenizer {
