@@ -2,9 +2,11 @@
 
 import { FC, useMemo } from 'react';
 
+import ContainerStatusBanner from '@/src/components/Deployments/Common/ContainerStatusBanner/ContainerStatusBanner';
 import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
 import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
 import EntityRoles from '@/src/components/EntityView/Roles/Roles';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import Tools from '@/src/components/Tools/Tools';
 import { AuthHeader } from '@/src/components/Toolsets/Auth/Sections/AuthHeader';
 import ToolsetProperties from '@/src/components/Toolsets/Properties/Properties';
@@ -45,14 +47,22 @@ const TabsContent: FC<Props> = ({
     selectedFormat === ExportFormat.ADMIN && (
       <>
         {activeTab === EntityViewTab.Properties && (
-          <PropertiesTabContent
-            entity={selectedToolset}
-            view={ApplicationRoute.Toolsets}
-            id={selectedToolset.name}
-            headerPostfix={headerPostfix}
-          >
-            <ToolsetProperties selectedToolset={selectedToolset} onChangeToolset={onChange} names={names} />
-          </PropertiesTabContent>
+          <>
+            {originalToolset.source?.$type === SOURCE_TYPE.CONTAINER && originalToolset.source?.containerId && (
+              <ContainerStatusBanner
+                view={ApplicationRoute.Toolsets}
+                containerId={originalToolset.source.containerId}
+              />
+            )}
+            <PropertiesTabContent
+              entity={selectedToolset}
+              view={ApplicationRoute.Toolsets}
+              id={selectedToolset.name}
+              headerPostfix={headerPostfix}
+            >
+              <ToolsetProperties selectedToolset={selectedToolset} onChangeToolset={onChange} names={names} />
+            </PropertiesTabContent>
+          </>
         )}
 
         {activeTab === EntityViewTab.Tools && (

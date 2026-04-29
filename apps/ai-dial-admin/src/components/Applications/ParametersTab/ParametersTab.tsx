@@ -36,6 +36,7 @@ import { ParamsView } from '@/src/types/parameters';
 import { ApplicationRoute } from '@/src/types/routes';
 import TableView from './TableView';
 import ViewControl from './ViewControl';
+import { AssetApp } from '@/src/models/dial/deployment-asset';
 
 interface Props {
   application?: DialApplication | DialApplicationResource;
@@ -96,7 +97,7 @@ const ParametersTab: FC<Props> = ({
     });
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [(application as AssetApp)?.version]);
 
   const [appPropertiesTemp, setAppPropertiesTemp] = useState<ApplicationPropertiesTemp[] | undefined>();
   const [schemeProperties, setSchemeProperties] = useState<ApplicationPropertiesTemp[]>([]);
