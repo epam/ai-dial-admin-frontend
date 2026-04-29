@@ -17,9 +17,10 @@ interface Props {
   onChange: (model: DialModel) => void;
   isModal?: boolean;
   disabled?: boolean;
+  hideResponsesEndpoint?: boolean;
 }
 
-const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal, disabled }) => {
+const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal, disabled, hideResponsesEndpoint }) => {
   const t = useI18n();
 
   const modelTypeRadio: RadioButtonWithContent[] = [
@@ -178,17 +179,19 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal, disabled 
       )}
 
       {prefix ? (
-        <ComplexInput
-          id="responsesEndpoint"
-          value={responsesEndpoint}
-          fullValue={`${prefix}${responsesEndpoint}${responsesPostfix}`}
-          label={t(EntityFieldsI18nKey.responsesEndpoint)}
-          postfix={responsesPostfix}
-          prefix={prefix}
-          onChange={onChangeResponsesPath}
-          isFullWidth={isModal}
-          disabled={disabled}
-        />
+        hideResponsesEndpoint ? null : (
+          <ComplexInput
+            id="responsesEndpoint"
+            value={responsesEndpoint}
+            fullValue={`${prefix}${responsesEndpoint}${responsesPostfix}`}
+            label={t(EntityFieldsI18nKey.responsesEndpoint)}
+            postfix={responsesPostfix}
+            prefix={prefix}
+            onChange={onChangeResponsesPath}
+            isFullWidth={isModal}
+            disabled={disabled}
+          />
+        )
       ) : (
         <ComplexInput
           id="responsesEndpoint"
