@@ -6,7 +6,9 @@ import { cloneDeep } from 'lodash';
 
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
 import { getRelevantAppRunnersForInterceptor } from '@/src/components/AddEntitiesTab/utils';
+import ContainerStatusBanner from '@/src/components/Deployments/Common/ContainerStatusBanner/ContainerStatusBanner';
 import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { RUNNERS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -92,17 +94,25 @@ const TabsContent: FC<Props> = ({
     selectedFormat === ExportFormat.ADMIN && (
       <>
         {activeTab === EntityViewTab.Properties && (
-          <PropertiesTabContent
-            entity={selectedInterceptor}
-            view={ApplicationRoute.Interceptors}
-            id={selectedInterceptor.name}
-          >
-            <InterceptorProperties
-              selectedInterceptor={selectedInterceptor}
-              onChangeInterceptor={onChange}
-              names={names}
-            />
-          </PropertiesTabContent>
+          <>
+            {originalInterceptor.source?.$type === SOURCE_TYPE.CONTAINER && originalInterceptor.source?.containerId && (
+              <ContainerStatusBanner
+                view={ApplicationRoute.Interceptors}
+                containerId={originalInterceptor.source.containerId}
+              />
+            )}
+            <PropertiesTabContent
+              entity={selectedInterceptor}
+              view={ApplicationRoute.Interceptors}
+              id={selectedInterceptor.name}
+            >
+              <InterceptorProperties
+                selectedInterceptor={selectedInterceptor}
+                onChangeInterceptor={onChange}
+                names={names}
+              />
+            </PropertiesTabContent>
+          </>
         )}
         {activeTab === EntityViewTab.ParameterSchema && (
           <ParameterSchema
