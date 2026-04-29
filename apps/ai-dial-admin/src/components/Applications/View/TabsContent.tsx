@@ -118,7 +118,7 @@ const TabsContent: FC<Props> = ({
           onChange={onChangeApplication}
         />
       )}
-      {activeTab === EntityViewTab.Routes && (
+      {activeTab === EntityViewTab.AppRoutes && (
         <ApplicationAppRoutes
           roles={roles}
           applicationRunners={applicationSchemes || []}

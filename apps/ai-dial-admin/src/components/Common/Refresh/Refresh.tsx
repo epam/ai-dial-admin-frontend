@@ -2,7 +2,7 @@ import { DialSelect } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 
 import { TelemetryI18nKey } from '@/src/constants/i18n';
-import { refreshOptionsConfig } from '@/src/constants/telemetry';
+import { refreshOptionsConfig } from '@/src/constants/telemetry/filters';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {

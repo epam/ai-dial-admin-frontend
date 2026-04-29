@@ -4,6 +4,9 @@ import classNames from 'classnames';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
+import ReadonlyInput from '@/src/components/Common/ReadonlyInput/ReadonlyInput';
+import SelectAdapterModal from '@/src/components/SourceField/Adapters/SelectAdapterModal';
+import ModelEndpoint from '@/src/components/SourceField/Endpoints/ModelEndpoint';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import {
   ButtonsI18nKey,
@@ -12,22 +15,19 @@ import {
   EntityFieldsI18nKey,
   SourceI18nKey,
 } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 import { getErrorNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-
-import SelectAdapterModal from '@/src/components/SourceField/Adapters/SelectAdapterModal';
-import ModelEndpoint from '@/src/components/SourceField/Endpoints/ModelEndpoint';
-import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
-import { useProtectedRequest } from '@/src/hooks/use-protected-request';
-import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 
 interface Props<T> {
   entity: T;
@@ -162,6 +162,14 @@ const Adapters = <T extends DialModel | DialInterceptor>({
           prefix={selectedAdapter?.baseEndpoint}
           onChange={onChange as (entity: DialModel) => void}
           disabled={disabled}
+        />
+      )}
+      {entity.source?.adapterName && selectedAdapter && selectedAdapter.responsesEndpoint && (
+        <ReadonlyInput
+          containerClassName={isModal ? 'w-full' : STANDARD_CONTROL_WIDTH}
+          id="responsesEndpoint"
+          label={t(EntityFieldsI18nKey.responsesEndpoint)}
+          value={selectedAdapter.responsesEndpoint || ''}
         />
       )}
     </div>

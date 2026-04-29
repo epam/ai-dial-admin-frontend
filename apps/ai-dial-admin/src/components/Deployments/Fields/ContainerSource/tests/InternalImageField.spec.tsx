@@ -5,6 +5,7 @@ import InternalImageField from '@/src/components/Deployments/Fields/ContainerSou
 import { Container } from '@/src/models/deployments/containers';
 import { Image } from '@/src/models/deployments/images';
 import { CONTAINER_SOURCE_TYPE, CONTAINER_STATUS, CONTAINER_TYPE } from '@/src/types/deployments/containers';
+import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
 
 const refreshMock = vi.fn();
@@ -137,5 +138,34 @@ describe('InternalImageField', () => {
       expect(showNotificationMock).toHaveBeenCalled();
     });
     expect(refreshMock).not.toHaveBeenCalled();
+  });
+
+  test('renders warning icon when image is not built', () => {
+    const notBuilt = { ...sampleImage, buildStatus: IMAGE_STATUS.NOT_BUILT } as Image;
+    const { container } = render(
+      <InternalImageField container={baseContainer()} image={notBuilt} route={ApplicationRoute.McpContainers} />,
+    );
+    const warningIcon = container.querySelector('svg.tabler-icon-alert-triangle-filled.text-warning-icon');
+    expect(warningIcon).not.toBeNull();
+    expect(warningIcon?.getAttribute('class') ?? '').not.toContain('hidden');
+  });
+
+  test('renders warning icon when image build failed', () => {
+    const buildFailed = { ...sampleImage, buildStatus: IMAGE_STATUS.BUILD_FAILED } as Image;
+    const { container } = render(
+      <InternalImageField container={baseContainer()} image={buildFailed} route={ApplicationRoute.McpContainers} />,
+    );
+    const warningIcon = container.querySelector('svg.tabler-icon-alert-triangle-filled.text-warning-icon');
+    expect(warningIcon).not.toBeNull();
+    expect(warningIcon?.getAttribute('class') ?? '').not.toContain('hidden');
+  });
+
+  test('does not render visible warning icon when image is healthy', () => {
+    const healthy = { ...sampleImage, buildStatus: IMAGE_STATUS.BUILT } as Image;
+    const { container } = render(
+      <InternalImageField container={baseContainer()} image={healthy} route={ApplicationRoute.McpContainers} />,
+    );
+    const warningIcon = container.querySelector('svg.tabler-icon-alert-triangle-filled');
+    expect(warningIcon === null || (warningIcon.getAttribute('class') ?? '').includes('hidden')).toBe(true);
   });
 });

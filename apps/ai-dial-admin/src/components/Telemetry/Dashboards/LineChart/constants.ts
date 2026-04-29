@@ -168,11 +168,22 @@ export const multiSeriesLineChartOptions = (t: (key: string) => string): ECharts
       },
     },
     legend: {
+      type: 'scroll',
       bottom: 0,
       textStyle: {
         color: '#7F8792',
         fontSize: 12,
       },
+      pageIconColor: '#7F8792',
+      pageIconInactiveColor: '#3B4256',
+      pageTextStyle: { color: '#7F8792', fontSize: 12 },
+      pageIcons: {
+        horizontal: [
+          'path://M15.7,6.7 L9.7,12 L15.7,17.3 L14.3,18.7 L7,12 L14.3,5.3 Z',
+          'path://M8.3,6.7 L14.3,12 L8.3,17.3 L9.7,18.7 L17,12 L9.7,5.3 Z',
+        ],
+      },
+      pageIconSize: 10,
     },
     xAxis: {
       type: 'category',
@@ -218,7 +229,7 @@ export const multiSeriesLineChartOptions = (t: (key: string) => string): ECharts
     grid: {
       left: 30,
       right: 0,
-      bottom: 40,
+      bottom: 50,
       top: 10,
       borderColor: '',
     },

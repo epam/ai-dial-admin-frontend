@@ -23,6 +23,7 @@ export enum EntityViewTab {
   Activities = 'Activities',
   Dashboard = 'Dashboard',
   Dependencies = 'Dependencies',
+  AppRoutes = 'AppRoutes',
   Routes = 'Routes',
   Traces = 'Traces',
   Conversations = 'Conversations',
@@ -121,8 +122,8 @@ export const dependenciesTab = (t: (key: string) => string) => ({
 });
 
 export const appRouteTab = (t: (key: string) => string) => ({
-  id: EntityViewTab.Routes,
-  label: t(TabsI18nKey.Routes),
+  id: EntityViewTab.AppRoutes,
+  label: t(TabsI18nKey.AppRoutes),
 });
 
 export const tracesTab = (t: (key: string) => string) => ({
@@ -138,6 +139,11 @@ export const conversationsTab = (t: (key: string) => string) => ({
 export const mcpTab = (t: (key: string) => string) => ({
   id: EntityViewTab.MCP,
   label: t(TabsI18nKey.MCP),
+});
+
+export const routesTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.Routes,
+  label: t(TabsI18nKey.Routes),
 });
 
 export const attachmentsTab = (t: (key: string) => string) => ({
@@ -388,7 +394,7 @@ export const getPublicationTabs = (t: (key: string) => string): TabModel[] => {
 };
 
 export const getUsageLogTabs = (t: (key: string) => string): TabModel[] => {
-  return [tracesTab(t), conversationsTab(t), mcpTab(t)];
+  return [tracesTab(t), conversationsTab(t), mcpTab(t), routesTab(t)];
 };
 
 export const getTabsForAsset = (

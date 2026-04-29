@@ -9,19 +9,15 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import classNames from 'classnames';
 
 interface Props {
-  endpointWarning?: string;
+  warningText?: string;
 }
 
-const WarningIcon: FC<Props> = ({ endpointWarning }) => {
+const WarningIcon: FC<Props> = ({ warningText }) => {
   return (
-    <DialTooltip
-      tooltip={endpointWarning}
-      placement="bottom"
-      triggerClassName={endpointWarning ? 'w-[20px]' : 'hidden'}
-    >
+    <DialTooltip tooltip={warningText} placement="bottom" triggerClassName={warningText ? 'w-[20px]' : 'hidden'}>
       <IconAlertTriangleFilled
         {...BASE_BUTTON_ICON_PROPS}
-        className={classNames('text-warning-icon', !endpointWarning && 'hidden')}
+        className={classNames('text-warning-icon', !warningText && 'hidden')}
       />
     </DialTooltip>
   );

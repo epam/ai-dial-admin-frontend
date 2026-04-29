@@ -12,6 +12,7 @@ import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import Suggestions from './Suggestions';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 export enum AttachmentType {
   NONE = 'none',
@@ -38,6 +39,7 @@ const ALL_ATTACHMENTS_VALUE = [{ label: ALL_ATTACHMENTS, value: ALL_ATTACHMENTS 
 
 const AttachmentInput: FC<Props> = ({ availableItems, initialValues, label, placeholder, id, required, onChange }) => {
   const t = useI18n();
+  const { dispatch } = useSaveValidationContext();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -95,11 +97,21 @@ const AttachmentInput: FC<Props> = ({ availableItems, initialValues, label, plac
     (items?: AttachmentOption[]) => {
       if (!items) {
         onChange?.(void 0);
+        dispatch({
+          type: ValidationActionType.SetField,
+          field: 'attachments',
+          isValid: true,
+        });
         return;
       }
       onChange?.(items?.map((i) => i.value));
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'attachments',
+        isValid: items.length > 0,
+      });
     },
-    [onChange],
+    [dispatch, onChange],
   );
 
   const setValues = useCallback(

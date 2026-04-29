@@ -50,6 +50,9 @@ const RouteProperties: FC<Props> = ({ route, disabled, isAppRoute, routeNames, o
   const { dispatch, resetCounter } = useSaveValidationContext();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
+  // When true, all field-level validation is delegated to EntityRoutes aggregate key
+  const skipGlobalValidation = !!(isAppRoute && isAppRunnerView);
+
   const outputRadio: RadioButtonWithContent[] = [
     { id: RouteOutput.UPSTREAMS, name: t(EntityFieldsI18nKey.upstreams) },
     { id: RouteOutput.RESPONSE, name: t(EntityFieldsI18nKey.response) },
@@ -72,16 +75,19 @@ const RouteProperties: FC<Props> = ({ route, disabled, isAppRoute, routeNames, o
   const [isUpstreamsRequired, setIsUpstreamsRequired] = useState(!route.response);
 
   useEffect(() => {
+    if (skipGlobalValidation) return;
     dispatch({ type: ValidationActionType.SetField, field: 'status', isValid: !statusError });
-  }, [dispatch, statusError]);
+  }, [dispatch, statusError, skipGlobalValidation]);
 
   useEffect(() => {
+    if (skipGlobalValidation) return;
     dispatch({ type: ValidationActionType.SetField, field: 'body', isValid: !bodyError });
-  }, [dispatch, bodyError]);
+  }, [dispatch, bodyError, skipGlobalValidation]);
 
   useEffect(() => {
+    if (skipGlobalValidation) return;
     dispatch({ type: ValidationActionType.SetField, field: 'methods', isValid: !!route.methods?.length });
-  }, [dispatch, route.methods]);
+  }, [dispatch, route.methods, skipGlobalValidation]);
 
   useEffect(() => {
     if (resetCounter) {
@@ -91,14 +97,14 @@ const RouteProperties: FC<Props> = ({ route, disabled, isAppRoute, routeNames, o
   }, [resetCounter]);
 
   useEffect(() => {
-    if (isAppRoute) {
+    if (isAppRoute && !skipGlobalValidation) {
       dispatch({
         type: ValidationActionType.SetField,
         field: 'endpoints',
         isValid: !!route.response || !!route.upstreams?.length,
       });
     }
-  }, [isAppRoute, dispatch, route.upstreams?.length, route.response]);
+  }, [isAppRoute, dispatch, route.upstreams?.length, route.response, skipGlobalValidation]);
 
   const selectedPermissions = useMemo(() => {
     return (route as DialAppRoute).permissions?.map(
@@ -186,10 +192,12 @@ const RouteProperties: FC<Props> = ({ route, disabled, isAppRoute, routeNames, o
   const onChangeOrder = useCallback(
     (order?: string | number) => {
       onChange({ ...route, order: order ? +order : undefined });
-      dispatch({ type: ValidationActionType.SetField, field: 'order', isValid: !!order });
+      if (!skipGlobalValidation) {
+        dispatch({ type: ValidationActionType.SetField, field: 'order', isValid: !!order });
+      }
       setOrderError(order ? '' : t(ErrorI18nKey.RequiredField));
     },
-    [route, onChange, dispatch, t],
+    [route, onChange, dispatch, t, skipGlobalValidation],
   );
 
   const onResetOrder = useCallback(() => {
@@ -197,9 +205,11 @@ const RouteProperties: FC<Props> = ({ route, disabled, isAppRoute, routeNames, o
       ...route,
       order: ORDER_DEFAULT_VALUE,
     });
-    dispatch({ type: ValidationActionType.SetField, field: 'order', isValid: true });
+    if (!skipGlobalValidation) {
+      dispatch({ type: ValidationActionType.SetField, field: 'order', isValid: true });
+    }
     setOrderError('');
-  }, [route, onChange, dispatch]);
+  }, [route, onChange, dispatch, skipGlobalValidation]);
 
   return (
     <div className="flex flex-col size-full gap-y-8">
@@ -212,6 +222,7 @@ const RouteProperties: FC<Props> = ({ route, disabled, isAppRoute, routeNames, o
         names={isAppRoute ? routeNames || [] : void 0}
         allowWhitespace={!isAppRoute}
         alphanumericOnly={isAppRoute && isAppRunnerView}
+        trackGlobalValidity={!skipGlobalValidation}
       />
       {!isAppRoute && <DescriptionControl entity={route} onChangeEntity={onChange} isFullWidth={false} />}
       <Paths
@@ -220,6 +231,7 @@ const RouteProperties: FC<Props> = ({ route, disabled, isAppRoute, routeNames, o
         onChangePaths={onChangePaths}
         required
         disabled={disabled || isReadOnlyAdmin}
+        trackGlobalValidity={!skipGlobalValidation}
       />
       <DialSwitch
         isOn={route.rewritePath}

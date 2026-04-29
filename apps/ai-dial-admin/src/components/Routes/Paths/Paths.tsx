@@ -16,18 +16,28 @@ interface Props {
   required?: boolean;
   paths?: string[];
   disableValidation?: boolean;
+  trackGlobalValidity?: boolean;
   onChangePaths: (path: string[]) => void;
 }
 
-const Paths: FC<Props> = ({ label, required, disabled, paths, disableValidation, onChangePaths }) => {
+const Paths: FC<Props> = ({
+  label,
+  required,
+  disabled,
+  paths,
+  disableValidation,
+  trackGlobalValidity = true,
+  onChangePaths,
+}) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
 
   const [pathError, setPathError] = useState('');
 
   useEffect(() => {
+    if (!trackGlobalValidity) return;
     dispatch({ type: ValidationActionType.SetField, field: 'path', isValid: !pathError });
-  }, [dispatch, pathError]);
+  }, [dispatch, pathError, trackGlobalValidity]);
 
   useEffect(() => {
     setPathError(
@@ -85,6 +95,7 @@ const Paths: FC<Props> = ({ label, required, disabled, paths, disableValidation,
           onRemove={onRemove}
           onChangePath={onChangePath}
           disableValidation={disableValidation}
+          trackGlobalValidity={trackGlobalValidity}
         />
       ))}
       {!disabled && (

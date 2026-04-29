@@ -12,6 +12,8 @@ import { useI18n } from '@/src/locales/client';
 import { DialRole } from '@/src/models/dial/role';
 import { DialRoleLimitsMap } from '@/src/models/dial/role-limits';
 import { DialAppRoute } from '@/src/models/dial/route';
+import { isValidRoutePath } from '@/src/utils/validation/path-error';
+import { getErrorForAppRouteName } from '@/src/utils/validation/name-error';
 import AppRouteList from './AppRouteList';
 
 interface Props {
@@ -48,6 +50,22 @@ const EntityRoutes: FC<Props> = ({
       setActiveRouteIndex(0);
     }
   }, [routes, activeRouteIndex]);
+
+  // Aggregate validity for all app routes — covers name, paths, methods, endpoints
+  useEffect(() => {
+    if (!isAppRunnerView) return;
+
+    const allValid = (routes || []).every((route, index) => {
+      const otherNames = (routes || []).filter((_, i) => i !== index).map((r) => r.name || '');
+      const nameValid = !getErrorForAppRouteName(route.name, otherNames, t);
+      const pathsValid = !!route.paths?.length && route.paths.every((p) => !!p && isValidRoutePath(p));
+      const methodsValid = !!route.methods?.length;
+      const endpointsValid = !!route.response || !!route.upstreams?.length;
+      return nameValid && pathsValid && methodsValid && endpointsValid;
+    });
+
+    dispatch({ type: ValidationActionType.SetField, field: 'appRoutes', isValid: allValid });
+  }, [routes, isAppRunnerView, t, dispatch]);
 
   const handleModalClose = useCallback(() => {
     setIsModalOpen(false);
@@ -90,25 +108,18 @@ const EntityRoutes: FC<Props> = ({
   const onRemoveRoute = useCallback(
     (name?: string) => {
       const newRoutes = routes?.filter((route) => route.name !== name) || [];
-      const statusErrors = newRoutes.some(
-        (r) => r.response?.status && (+r.response?.status < 100 || +r.response?.status > 999),
-      );
-      const methodErrors = newRoutes.some((r) => !r.methods?.length);
-
-      dispatch({ type: ValidationActionType.SetField, field: 'status', isValid: !statusErrors });
-      dispatch({ type: ValidationActionType.SetField, field: 'methods', isValid: !methodErrors });
       onChangeRoutes(newRoutes);
     },
-    [dispatch, onChangeRoutes, routes],
+    [onChangeRoutes, routes],
   );
 
   return (
     <>
       <div className="flex flex-row gap-4 size-full">
-        <DialCollapsibleSidebar width={296} title={t(TabsI18nKey.Routes)} containerClassName="bg-layer-3 mr-4">
+        <DialCollapsibleSidebar width={296} title={t(TabsI18nKey.AppRoutes)} containerClassName="bg-layer-3 mr-4">
           <div className="h-full relative flex flex-col">
             <div className="flex flex-row flex-wrap justify-between items-center mb-6">
-              <h1>{t(TabsI18nKey.Routes)}</h1>
+              <h1>{t(TabsI18nKey.AppRoutes)}</h1>
               {!disabled && (
                 <DialPrimaryButton
                   iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}

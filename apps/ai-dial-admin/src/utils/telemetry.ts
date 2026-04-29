@@ -3,19 +3,24 @@ import { SortModelItem } from 'ag-grid-community';
 import { Big } from 'big.js';
 import { EChartsOption } from 'echarts-for-react/src/types';
 
-import { lineChartDefaultOptions, multiSeriesLineChartOptions } from '@/src/components/Charts/LineChart/constants';
+import {
+  lineChartDefaultOptions,
+  multiSeriesLineChartOptions,
+} from '@/src/components/Telemetry/Dashboards/LineChart/constants';
 import { TelemetryI18nKey } from '@/src/constants/i18n';
 import {
-  filterConditionConfig,
-  filterOperatorConfig,
-  filterTypeConfig,
-  mcpFilterTypeConfig,
   TELEMETRY_DATASET_NAME,
   TELEMETRY_GRID_HEADERS_MAP,
   USAGE_LOG_COLUMN_ID_TO_SOURCE,
   USAGE_LOG_DEFAULT_ORDER_BY,
   USAGE_LOG_TEXT_OPERATOR_MAP,
 } from '@/src/constants/telemetry';
+import {
+  filterConditionConfig,
+  filterOperatorConfig,
+  filterTypeConfig,
+  mcpFilterTypeConfig,
+} from '@/src/constants/telemetry/filters';
 import { USAGE_LOG_NUMERIC_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ServerActionResponse } from '@/src/models/server-action';
 import {
