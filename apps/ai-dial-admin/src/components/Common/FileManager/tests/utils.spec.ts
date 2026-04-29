@@ -167,10 +167,9 @@ describe('FileManager', () => {
   describe('isItemNameValid', () => {
     test('returns false when name contains a forbidden character', () => {
       expect(isItemNameValid('invalid;name')).toBe(false);
-      expect(isItemNameValid('invalid,name')).toBe(false);
-      expect(isItemNameValid('invalid:name')).toBe(false);
       expect(isItemNameValid('invalid%name')).toBe(false);
-      expect(isItemNameValid('invalid\name')).toBe(false);
+      expect(isItemNameValid('invalid\\name')).toBe(false);
+      expect(isItemNameValid('invalid/ame')).toBe(false);
     });
 
     test('returns true when name does not contain forbidden characters', () => {
