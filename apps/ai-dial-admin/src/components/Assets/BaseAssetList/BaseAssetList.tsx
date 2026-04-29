@@ -403,6 +403,8 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
 
   const onExport = useCallback(
     (fileType: ImportFileType) => {
+      setSelectedPaths(new Set());
+      setHasSelectedItems(false);
       const filePaths: string[] = [];
       (exportedItems as AssetWithVersion[]).forEach((file) => {
         if (file.selectedVersions) {
