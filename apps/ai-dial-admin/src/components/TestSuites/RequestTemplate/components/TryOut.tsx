@@ -89,7 +89,10 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
   }, [testSuite, testCaseId, requestBody]);
 
   // todo: possible change this component to codeViewer
-  const responseBodyCopyText = useMemo(() => (response ? JSON.stringify(response, null, 2) : ''), [response]);
+  const responseBodyCopyText = useMemo(
+    () => (response?.body ? JSON.stringify(response?.body, null, 2) : ''),
+    [response],
+  );
   const responseBody = useMemo(() => {
     return (
       <CollapsibleSection
@@ -102,7 +105,7 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
           <DialLoader />
         ) : (
           <JsonEditor
-            entity={response}
+            entity={response?.body as object}
             options={{ stickyScroll: { enabled: false }, wordWrap: 'off' }}
             readonly={true}
           />
