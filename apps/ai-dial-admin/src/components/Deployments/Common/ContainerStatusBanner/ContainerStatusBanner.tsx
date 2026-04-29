@@ -1,9 +1,10 @@
 'use client';
 
-import { AlertVariant, DialAlert, DialNeutralButton, ElementSize } from '@epam/ai-dial-ui-kit';
+import { DialNeutralButton, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconArrowDown } from '@tabler/icons-react';
 import { useEffect, useRef, useState } from 'react';
 
+import EntityBanner from '@/src/components/Deployments/Common/EntityBanner/EntityBanner';
 import { getContainerRoute } from '@/src/components/SourceField/utils';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { ContainersI18nKey } from '@/src/constants/i18n';
@@ -55,17 +56,10 @@ const ContainerStatusBanner = ({ view, containerId }: Props) => {
   const type = getTranslatedEntity(getContainerRoute(view), t);
 
   return (
-    <DialAlert
+    <EntityBanner
       className="mb-6"
-      variant={AlertVariant.Warning}
-      message={
-        <span className="small">
-          <span className="small-text-semi">
-            {t(ContainersI18nKey.ContainerNotRunningTitle, { type, typeLower: type.toLowerCase() })}
-          </span>{' '}
-          {t(ContainersI18nKey.ContainerNotRunningDescription, { typeLower: type.toLowerCase() })}
-        </span>
-      }
+      title={t(ContainersI18nKey.ContainerNotRunningTitle, { type, typeLower: type.toLowerCase() })}
+      message={t(ContainersI18nKey.ContainerNotRunningDescription, { typeLower: type.toLowerCase() })}
     >
       <DialNeutralButton
         size={ElementSize.Small}
@@ -74,7 +68,7 @@ const ContainerStatusBanner = ({ view, containerId }: Props) => {
         label={t(ContainersI18nKey.GoToContainer)}
         onClick={() => onOpenInNewTab(getContainerRoute(view), { name: containerId })}
       />
-    </DialAlert>
+    </EntityBanner>
   );
 };
 

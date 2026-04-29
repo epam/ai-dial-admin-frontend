@@ -112,7 +112,7 @@ const Containers = <T extends DialInterceptor | DialModel | DialApplication>({
 
   return (
     <div className="flex flex-col gap-y-8">
-      <div className="flex lg:flex-row flex-col gap-2 items-end">
+      <div className="flex lg:flex-row flex-col gap-2">
         {isModal ? (
           <div className="flex flex-col w-full">
             <DialSelectField
