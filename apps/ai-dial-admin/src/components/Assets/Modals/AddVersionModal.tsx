@@ -15,6 +15,7 @@ interface Props {
   existingVersions?: Record<string, string[]>;
   entityName?: string;
   submitLabel?: string;
+  defaultVersion?: string;
   onClose: () => void;
   description?: string;
   onConfirm: (version: string) => void;
@@ -29,11 +30,15 @@ const AddVersionModal: FC<Props> = ({
   description,
   existingVersions,
   entityName,
+  defaultVersion,
 }) => {
   const t = useI18n();
   const { isValid, dispatch } = useSaveValidationContext();
 
   const [version, setVersion] = useState(() => {
+    if (defaultVersion) {
+      return defaultVersion;
+    }
     const versions = existingVersions?.[entityName || ''] || [];
     const maxVersion = versions?.length
       ? versions.reduce((max, v) => (semver.gt(v, max) ? v : max), versions[0])

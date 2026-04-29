@@ -46,4 +46,35 @@ describe('Common components - AddVersionModal', () => {
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
     expect(onConfirm).toHaveBeenCalled();
   });
+
+  test('uses defaultVersion as the initial value when provided', () => {
+    render(
+      <AddVersionModal
+        header="header"
+        existingVersions={{ name: ['1.2.3', '1.3.0'] }}
+        entityName="name"
+        defaultVersion="1.0.0"
+        isModalOpen={true}
+        onClose={onClose}
+        onConfirm={onConfirm}
+      />,
+    );
+
+    expect(screen.getByRole('textbox')).toHaveValue('1.0.0');
+  });
+
+  test('falls back to patch-bump of the entity max version when defaultVersion is omitted', () => {
+    render(
+      <AddVersionModal
+        header="header"
+        existingVersions={{ name: ['1.2.3', '1.3.0'] }}
+        entityName="name"
+        isModalOpen={true}
+        onClose={onClose}
+        onConfirm={onConfirm}
+      />,
+    );
+
+    expect(screen.getByRole('textbox')).toHaveValue('1.3.1');
+  });
 });
