@@ -4,11 +4,13 @@ import { Dispatch, FC, SetStateAction, useMemo } from 'react';
 
 import ParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
 import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
+import ContainerStatusBanner from '@/src/components/Deployments/Common/ContainerStatusBanner/ContainerStatusBanner';
 import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
 import EntityFeatures from '@/src/components/EntityTabs/Features/Features';
 import ApplicationAppRoutes from '@/src/components/EntityView/AppRoute/ApplicationAppRoutes';
 import EntityInterceptors from '@/src/components/EntityView/Interceptors/Interceptors';
 import EntityRoles from '@/src/components/EntityView/Roles/Roles';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import Tools from '@/src/components/Tools/Tools';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
@@ -67,13 +69,21 @@ const TabsContent: FC<Props> = ({
   return (
     <>
       {activeTab === EntityViewTab.Properties && (
-        <TabContent
-          selectedApp={selectedApplication}
-          applicationSchemes={applicationSchemes || []}
-          names={names}
-          view={view}
-          onChange={onChangeApplication}
-        />
+        <>
+          {originalApplication?.source?.$type === SOURCE_TYPE.CONTAINER && originalApplication?.source?.containerId && (
+            <ContainerStatusBanner
+              view={ApplicationRoute.Applications}
+              containerId={originalApplication.source.containerId}
+            />
+          )}
+          <TabContent
+            selectedApp={selectedApplication}
+            applicationSchemes={applicationSchemes || []}
+            names={names}
+            view={view}
+            onChange={onChangeApplication}
+          />
+        </>
       )}
 
       {activeTab === EntityViewTab.Tools && (

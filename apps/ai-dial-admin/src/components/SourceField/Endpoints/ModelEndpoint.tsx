@@ -17,9 +17,10 @@ interface Props {
   onChange: (model: DialModel) => void;
   isModal?: boolean;
   disabled?: boolean;
+  hideResponsesEndpoint?: boolean;
 }
 
-const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal, disabled }) => {
+const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal, disabled, hideResponsesEndpoint }) => {
   const t = useI18n();
 
   const modelTypeRadio: RadioButtonWithContent[] = [
@@ -32,8 +33,12 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal, disabled 
   const [responsesEndpoint, setResponsesEndpoint] = useState('');
 
   const endpointError = useMemo(() => {
-    return getUrlError(entity.endpoint, t, true);
-  }, [entity.endpoint, t]);
+    return getUrlError(entity.endpoint, t, !entity.responsesEndpoint);
+  }, [entity.endpoint, entity.responsesEndpoint, t]);
+
+  const responsesEndpointError = useMemo(() => {
+    return getUrlError(entity.responsesEndpoint, t, !entity.endpoint);
+  }, [entity.endpoint, entity.responsesEndpoint, t]);
 
   const fullValue = useMemo(() => {
     if (prefix) {
@@ -47,7 +52,10 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal, disabled 
       setEndpoint(value || '');
       onChange({
         ...entity,
-        source: { ...(entity.source as SOURCE_FIELD), completionEndpointPath: `${value || ''}${postfix}` },
+        source: {
+          ...(entity.source as SOURCE_FIELD),
+          completionEndpointPath: value ? `${value || ''}${postfix}` : void 0,
+        },
       });
     },
     [entity, onChange, postfix],
@@ -58,10 +66,13 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal, disabled 
       setResponsesEndpoint(value || '');
       onChange({
         ...entity,
-        responsesEndpoint: `${prefix}${value || ''}${responsesPostfix}`,
+        source: {
+          ...(entity.source as SOURCE_FIELD),
+          responsesEndpointPath: value ? `${value || ''}${responsesPostfix}` : void 0,
+        },
       });
     },
-    [entity, onChange, prefix],
+    [entity, onChange],
   );
 
   const onChangeEndpoint = useCallback(
@@ -69,7 +80,7 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal, disabled 
       setEndpoint(value || '');
       onChange({
         ...entity,
-        endpoint: `${value || ''}${postfix}`,
+        endpoint: value ? `${value || ''}${postfix}` : void 0,
       });
     },
     [entity, onChange, postfix],
@@ -80,7 +91,7 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal, disabled 
       setResponsesEndpoint(value || '');
       onChange({
         ...entity,
-        responsesEndpoint: `${value || ''}${responsesPostfix}`,
+        responsesEndpoint: value ? `${value || ''}${responsesPostfix}` : void 0,
       });
     },
     [entity, onChange],
@@ -118,7 +129,9 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal, disabled 
     setPostfix(postfix);
     setEndpoint(name);
 
-    const responsesEndpoint = entity.responsesEndpoint?.split(responsesPostfix)[0]?.split(prefix || '')[1] || '';
+    const responsesEndpoint = prefix
+      ? entity.source?.responsesEndpointPath?.split(responsesPostfix)[0] || ''
+      : entity.responsesEndpoint?.split(responsesPostfix)[0] || '';
     setResponsesEndpoint(responsesEndpoint);
   }, [isModal, entity, prefix]);
 
@@ -166,17 +179,19 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal, disabled 
       )}
 
       {prefix ? (
-        <ComplexInput
-          id="responsesEndpoint"
-          value={responsesEndpoint}
-          fullValue={`${prefix}${responsesEndpoint}${responsesPostfix}`}
-          label={t(EntityFieldsI18nKey.responsesEndpoint)}
-          postfix={responsesPostfix}
-          prefix={prefix}
-          onChange={onChangeResponsesPath}
-          isFullWidth={isModal}
-          disabled={disabled}
-        />
+        hideResponsesEndpoint ? null : (
+          <ComplexInput
+            id="responsesEndpoint"
+            value={responsesEndpoint}
+            fullValue={`${prefix}${responsesEndpoint}${responsesPostfix}`}
+            label={t(EntityFieldsI18nKey.responsesEndpoint)}
+            postfix={responsesPostfix}
+            prefix={prefix}
+            onChange={onChangeResponsesPath}
+            isFullWidth={isModal}
+            disabled={disabled}
+          />
+        )
       ) : (
         <ComplexInput
           id="responsesEndpoint"
@@ -186,6 +201,8 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal, disabled 
           isFullWidth={isModal}
           placeholder={t(EntityPlaceholdersI18nKey.ResponsesEndpoint)}
           onChange={onChangeResponsesEndpoint}
+          error={responsesEndpointError?.text}
+          invalid={!!responsesEndpointError}
           copyable={false}
           disabled={disabled}
         />

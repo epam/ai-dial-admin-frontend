@@ -149,6 +149,7 @@ const McpServerNameField: FC<Props> = ({
   useEffect(() => {
     const error = getErrorForMcpServerName(serverName, t);
     dispatch({ type: ValidationActionType.SetField, field: 'mcpServerName', isValid: !error });
+    return () => dispatch({ type: ValidationActionType.RemoveField, field: 'mcpServerName' });
   }, [serverName, dispatch, t]);
 
   return (
