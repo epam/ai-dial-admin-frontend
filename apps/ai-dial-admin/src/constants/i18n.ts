@@ -1540,6 +1540,7 @@ export enum TestSuitesI18nKey {
   ResponseColumn = 'TestSuites.ResponseColumn',
   Attribute = 'TestSuites.Attribute',
   TestCase = 'TestSuites.TestCase',
+  TestCaseError = 'TestSuites.TestCaseError',
   Response = 'TestSuites.Response',
   Warning = 'TestSuites.Warning',
   ColumnsDescription = 'TestSuites.ColumnsDescription',
