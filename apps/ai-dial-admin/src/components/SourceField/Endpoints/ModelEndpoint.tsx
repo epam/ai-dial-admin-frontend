@@ -26,13 +26,18 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal, disabled 
     { id: DialModelType.Chat, name: t(ModelViewI18nKey.Chat) },
     { id: DialModelType.Embedding, name: t(ModelViewI18nKey.Embedding) },
   ];
-
+  const responsesPostfix = '/responses';
   const [postfix, setPostfix] = useState('');
   const [endpoint, setEndpoint] = useState('');
+  const [responsesEndpoint, setResponsesEndpoint] = useState('');
 
   const endpointError = useMemo(() => {
-    return getUrlError(entity.endpoint, t, true);
-  }, [entity.endpoint, t]);
+    return getUrlError(entity.endpoint, t, !entity.responsesEndpoint);
+  }, [entity.endpoint, entity.responsesEndpoint, t]);
+
+  const responsesEndpointError = useMemo(() => {
+    return getUrlError(entity.responsesEndpoint, t, !entity.endpoint);
+  }, [entity.endpoint, entity.responsesEndpoint, t]);
 
   const fullValue = useMemo(() => {
     if (prefix) {
@@ -46,10 +51,27 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal, disabled 
       setEndpoint(value || '');
       onChange({
         ...entity,
-        source: { ...(entity.source as SOURCE_FIELD), completionEndpointPath: `${value || ''}${postfix}` },
+        source: {
+          ...(entity.source as SOURCE_FIELD),
+          completionEndpointPath: value ? `${value || ''}${postfix}` : void 0,
+        },
       });
     },
     [entity, onChange, postfix],
+  );
+
+  const onChangeResponsesPath = useCallback(
+    (value?: string) => {
+      setResponsesEndpoint(value || '');
+      onChange({
+        ...entity,
+        source: {
+          ...(entity.source as SOURCE_FIELD),
+          responsesEndpointPath: value ? `${value || ''}${responsesPostfix}` : void 0,
+        },
+      });
+    },
+    [entity, onChange],
   );
 
   const onChangeEndpoint = useCallback(
@@ -57,10 +79,21 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal, disabled 
       setEndpoint(value || '');
       onChange({
         ...entity,
-        endpoint: `${value || ''}${postfix}`,
+        endpoint: value ? `${value || ''}${postfix}` : void 0,
       });
     },
     [entity, onChange, postfix],
+  );
+
+  const onChangeResponsesEndpoint = useCallback(
+    (value?: string) => {
+      setResponsesEndpoint(value || '');
+      onChange({
+        ...entity,
+        responsesEndpoint: value ? `${value || ''}${responsesPostfix}` : void 0,
+      });
+    },
+    [entity, onChange],
   );
 
   const onChangeType = useCallback(
@@ -94,6 +127,11 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal, disabled 
 
     setPostfix(postfix);
     setEndpoint(name);
+
+    const responsesEndpoint = prefix
+      ? entity.source?.responsesEndpointPath?.split(responsesPostfix)[0] || ''
+      : entity.responsesEndpoint?.split(responsesPostfix)[0] || '';
+    setResponsesEndpoint(responsesEndpoint);
   }, [isModal, entity, prefix]);
 
   return (
@@ -112,10 +150,10 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal, disabled 
 
       {prefix ? (
         <ComplexInput
-          id="endpoint"
+          id="completionEndpoint"
           value={endpoint}
           fullValue={fullValue}
-          label={t(EntityFieldsI18nKey.endpoint)}
+          label={t(EntityFieldsI18nKey.completionEndpoint)}
           postfix={postfix}
           prefix={prefix}
           onChange={onChangePath}
@@ -124,13 +162,13 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal, disabled 
         />
       ) : (
         <ComplexInput
-          id="endpoint"
+          id="completionEndpoint"
           value={endpoint}
           fullValue={fullValue}
-          label={t(EntityFieldsI18nKey.endpoint)}
+          label={t(EntityFieldsI18nKey.completionEndpoint)}
           postfix={postfix}
           isFullWidth={isModal}
-          placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
+          placeholder={t(EntityPlaceholdersI18nKey.CompletionEndpoint)}
           onChange={onChangeEndpoint}
           error={endpointError?.text}
           invalid={!!endpointError}
@@ -138,7 +176,36 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal, disabled 
           disabled={disabled}
         />
       )}
+
+      {prefix ? (
+        <ComplexInput
+          id="responsesEndpoint"
+          value={responsesEndpoint}
+          fullValue={`${prefix}${responsesEndpoint}${responsesPostfix}`}
+          label={t(EntityFieldsI18nKey.responsesEndpoint)}
+          postfix={responsesPostfix}
+          prefix={prefix}
+          onChange={onChangeResponsesPath}
+          isFullWidth={isModal}
+          disabled={disabled}
+        />
+      ) : (
+        <ComplexInput
+          id="responsesEndpoint"
+          value={responsesEndpoint}
+          label={t(EntityFieldsI18nKey.responsesEndpoint)}
+          postfix={responsesPostfix}
+          isFullWidth={isModal}
+          placeholder={t(EntityPlaceholdersI18nKey.ResponsesEndpoint)}
+          onChange={onChangeResponsesEndpoint}
+          error={responsesEndpointError?.text}
+          invalid={!!responsesEndpointError}
+          copyable={false}
+          disabled={disabled}
+        />
+      )}
     </div>
   );
 };
+
 export default ModelEndpoint;
