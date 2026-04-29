@@ -1577,6 +1577,7 @@ export default {
     Constant: 'Constant',
     Attribute: 'Attribute',
     TestCase: 'Test case',
+    TestCaseError: 'Test case error',
     Response: 'Response',
     ColumnsDescription: 'Extracted response fields shown as columns in eval results',
     EditColumn: 'Edit column',
