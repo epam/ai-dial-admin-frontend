@@ -86,6 +86,7 @@ const HfModelNameField: FC<Props> = ({ container, setContainer, isModal, route, 
   useEffect(() => {
     const error = getErrorForHfModelName(container.source?.modelName, t);
     dispatch({ type: ValidationActionType.SetField, field: 'modelName', isValid: !error });
+    return () => dispatch({ type: ValidationActionType.RemoveField, field: 'modelName' });
   }, [container.source?.modelName, dispatch, t]);
 
   return (
