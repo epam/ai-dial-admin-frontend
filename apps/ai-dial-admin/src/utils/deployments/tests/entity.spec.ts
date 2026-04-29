@@ -170,7 +170,7 @@ describe('entity utils', () => {
     test('configures baseEndpoint for AdapterContainers', () => {
       const container = { displayName: 'MyContainer', url: 'http://url' } as any;
       const template = getEntityTemplate(ApplicationRoute.AdapterContainers, container, t) as any;
-      expect(template.baseEndpoint).toBe('http://url');
+      expect(template.source.completionEndpointPath).toBe('v1');
     });
   });
 

@@ -162,6 +162,7 @@ const Adapters = <T extends DialModel | DialInterceptor>({
           prefix={selectedAdapter?.baseEndpoint}
           onChange={onChange as (entity: DialModel) => void}
           disabled={disabled}
+          hideResponsesEndpoint
         />
       )}
       {entity.source?.adapterName && selectedAdapter && selectedAdapter.responsesEndpoint && (
