@@ -96,11 +96,34 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
     return true;
   }, [image.buildStatus, isOnlyMetadataChange]);
 
-  const forceNewVersion = useMemo(() => {
-    const isNameChanged = (image.name ?? '').trim() !== (originalImage.name ?? '').trim();
+  const isNameChanged = useMemo(
+    () => (image.name ?? '').trim() !== (originalImage.name ?? '').trim(),
+    [image.name, originalImage.name],
+  );
 
+  const forceNewVersion = useMemo(() => {
     return isNameChanged && versions.some((v: ImageVersion) => v.version === image.version);
-  }, [image.name, image.version, originalImage.name, versions]);
+  }, [isNameChanged, image.version, versions]);
+
+  const existingVersionsByName = useMemo(() => getVersionsPerName(versions), [versions]);
+
+  const saveAsNewLabel = useMemo(
+    () => (isNameChanged ? t(ButtonsI18nKey.SaveAsNewImage) : t(ButtonsI18nKey.SaveAsNewVersion)),
+    [isNameChanged, t],
+  );
+
+  const saveAsNewModalHeader = useMemo(
+    () => (isNameChanged ? t(ImagesI18nKey.SaveNewImageModalTitle) : t(ImagesI18nKey.SaveNewVersionModalTitle)),
+    [isNameChanged, t],
+  );
+
+  const saveAsNewDefaultVersion = useMemo(() => {
+    if (!isNameChanged) {
+      return undefined;
+    }
+    const versionsForTypedName = existingVersionsByName[image.name ?? ''] ?? [];
+    return versionsForTypedName.length > 0 ? undefined : '1.0.0';
+  }, [isNameChanged, existingVersionsByName, image.name]);
 
   const onOpenModal = useCallback((modalType: ModalType) => {
     setIsModalOpen(true);
@@ -237,7 +260,7 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
             >
               <DialPrimaryButton
                 className={buttonsClassNames}
-                label={t(ButtonsI18nKey.SaveAsNewVersion)}
+                label={saveAsNewLabel}
                 onClick={onOpenSaveNewVersionModal}
                 disabled={isDisableSave}
               />
@@ -334,11 +357,12 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
           <AddVersionModal
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
-            header={t(ImagesI18nKey.SaveNewVersionModalTitle)}
+            header={saveAsNewModalHeader}
             submitLabel={t(ButtonsI18nKey.Save)}
             onConfirm={(version) => onSaveAsNewVersion({ ...image, version })}
-            existingVersions={getVersionsPerName(versions)}
+            existingVersions={existingVersionsByName}
             entityName={image.name}
+            defaultVersion={saveAsNewDefaultVersion}
           />,
           document.body,
         )}
