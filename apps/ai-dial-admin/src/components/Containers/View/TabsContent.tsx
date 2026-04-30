@@ -33,6 +33,7 @@ interface Props {
   names: string[];
   restarts: number;
   onChange: (container: Container) => void;
+  setHasBlockedDomains: (value: boolean) => void;
 }
 
 const TabsContent: FC<Props> = ({
@@ -45,6 +46,7 @@ const TabsContent: FC<Props> = ({
   events,
   onChange,
   names,
+  setHasBlockedDomains,
 }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
@@ -102,7 +104,13 @@ const TabsContent: FC<Props> = ({
       {activeTab === EntityViewTab.Prompts && <Prompts containerId={selectedContainer.name} />}
       {activeTab === EntityViewTab.Metrics && <Metrics />}
       {activeTab === EntityViewTab.ExecutionLog && (
-        <ExecutionLog containerId={selectedContainer.name} route={route} pods={pods} />
+        <ExecutionLog
+          route={route}
+          pods={pods}
+          selectedContainer={selectedContainer}
+          onChange={onChange}
+          setHasBlockedDomains={setHasBlockedDomains}
+        />
       )}
       {activeTab === EntityViewTab.Events && <Events route={route} events={events} />}
 

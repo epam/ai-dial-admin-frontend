@@ -1,18 +1,25 @@
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
-const mockAddEventListener = vi.fn();
-const mockRemoveEventListener = vi.fn();
-const mockClose = vi.fn();
+type Listener = (event: MessageEvent) => void;
 
 class MockEventSource {
   constructor(public url: string) {
     MockEventSource.instances.push(this);
   }
   static instances: MockEventSource[] = [];
-  addEventListener = mockAddEventListener;
-  removeEventListener = mockRemoveEventListener;
-  close = mockClose;
+  listeners: Record<string, Listener[]> = {};
+  addEventListener = vi.fn((event: string, cb: Listener) => {
+    this.listeners[event] = this.listeners[event] ?? [];
+    this.listeners[event].push(cb);
+  });
+  removeEventListener = vi.fn((event: string, cb: Listener) => {
+    this.listeners[event] = (this.listeners[event] ?? []).filter((fn) => fn !== cb);
+  });
+  close = vi.fn();
+  dispatch(event: string, data: unknown) {
+    (this.listeners[event] ?? []).forEach((cb) => cb({ data: JSON.stringify(data) } as MessageEvent));
+  }
 }
 
 vi.stubGlobal('EventSource', MockEventSource);
@@ -80,5 +87,34 @@ describe('PodView', () => {
   test('hides restart info when restartCount is absent', () => {
     render(<PodView pod={makePod('pod-1')} containerId="c1" route={ApplicationRoute.McpContainers} />);
     expect(screen.queryByTestId(`label-${EntityFieldsI18nKey.Restarts}`)).not.toBeInTheDocument();
+  });
+
+  test('calls onBlockedDomain when a BLOCKED domain event arrives', () => {
+    const onBlockedDomain = vi.fn();
+    render(
+      <PodView
+        pod={makePod('pod-1')}
+        containerId="c1"
+        route={ApplicationRoute.McpContainers}
+        onBlockedDomain={onBlockedDomain}
+      />,
+    );
+    MockEventSource.instances[0].dispatch('domain', { domain: 'blocked.example.com', verdict: 'BLOCKED' });
+    expect(onBlockedDomain).toHaveBeenCalledTimes(1);
+    expect(onBlockedDomain).toHaveBeenCalledWith('blocked.example.com');
+  });
+
+  test('does not call onBlockedDomain for an ALLOWED domain event', () => {
+    const onBlockedDomain = vi.fn();
+    render(
+      <PodView
+        pod={makePod('pod-1')}
+        containerId="c1"
+        route={ApplicationRoute.McpContainers}
+        onBlockedDomain={onBlockedDomain}
+      />,
+    );
+    MockEventSource.instances[0].dispatch('domain', { domain: 'allowed.example.com', verdict: 'ALLOWED' });
+    expect(onBlockedDomain).not.toHaveBeenCalled();
   });
 });

@@ -1417,6 +1417,8 @@ export default {
       'Are you sure you want to stop building this image? The build process will be interrupted and you can restart it later.',
     BuildStoppedSuccess: '{type} Image build stopped',
     BuildStoppedSuccessDescription: 'Latest progress has been preserved',
+    BlockedDomainInBuild:
+      'Domain {domain} was blocked in last build. Add domain to allowed domains and install the image.',
   },
   Containers: {
     ContainersListTitle: '{type} {entityType}s',
@@ -1489,6 +1491,8 @@ export default {
     ImageBuildFailedWarning:
       'Image installation failed. This container depends on a {imageName} ({imageVersion}) image whose installation has failed. Reinstall the image to enable this container.',
     InstallImage: 'Install image',
+    BlockedDomainsInRun:
+      'Domain {domains} was blocked in last run. Add domain to allowed domains and redeploy the container.',
   },
   KubEvents: {
     Normal: 'Normal',
@@ -1531,6 +1535,7 @@ export default {
     WhitelistPolicyCustom: 'Specific domains (recommended)',
     WhitelistPolicyCustomCaption: 'Allow network access only to selected domains.',
     AddDomain: 'Add domain',
+    AddToAllowedDomains: 'Add to allowed domains',
     EventsError: 'Error getting Events',
     LogsError: 'Error getting Logs',
   },

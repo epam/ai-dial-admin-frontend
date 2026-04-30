@@ -18,9 +18,10 @@ interface Props {
   pod: Pod;
   containerId?: string;
   route: ApplicationRoute;
+  onBlockedDomain?: (domain: string) => void;
 }
 
-const PodView: FC<Props> = ({ pod, containerId, route }) => {
+const PodView: FC<Props> = ({ pod, containerId, route, onBlockedDomain }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
   const [logs, setLogs] = useState('');
@@ -38,6 +39,16 @@ const PodView: FC<Props> = ({ pod, containerId, route }) => {
       const handleLogs = (event: MessageEvent) => {
         setLogs((prev) => prev + event.data + '\n');
       };
+      const handleDomain = (event: MessageEvent) => {
+        try {
+          const { domain, verdict } = JSON.parse(event.data);
+          if (verdict === 'BLOCKED' && domain) {
+            onBlockedDomain?.(domain);
+          }
+        } catch (e) {
+          console.error('[SSE] Error parsing event: domain', e);
+        }
+      };
       const handleError = (event: Event) => {
         const messageEvent = event as MessageEvent;
         try {
@@ -52,18 +63,20 @@ const PodView: FC<Props> = ({ pod, containerId, route }) => {
         setLogs('');
       };
       eventSource.addEventListener('logs', handleLogs);
+      eventSource.addEventListener('domain', handleDomain);
       eventSource.addEventListener('error', handleError);
       eventSource.addEventListener('open', handleOpen);
 
       return () => {
         eventSource.removeEventListener('logs', handleLogs);
+        eventSource.removeEventListener('domain', handleDomain);
         eventSource.removeEventListener('error', handleError);
         eventSource.removeEventListener('open', handleOpen);
         eventSource?.close();
         setLogs('');
       };
     }
-  }, [containerId, podData.name, showNotification, t]);
+  }, [containerId, onBlockedDomain, podData.name, showNotification, t]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 h-full gap-4">

@@ -17,7 +17,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getRouteByType, getTranslatedType } from '@/src/utils/deployments/entity';
 import { validateImageChanged } from '@/src/utils/deployments/images';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { EntityViewTab, getDeploymentsViewTabs } from '@/src/utils/tabs/utils';
+import { EntityViewTab, getDeploymentsViewTabs, withFlags } from '@/src/utils/tabs/utils';
 
 import ImagesHeader from '@/src/components/EntityHeaderControls/ImagesHeader';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
@@ -42,6 +42,7 @@ const ImageView: FC<Props> = ({ image, containerNames, versions }) => {
   const [isChanged, setIsChanged] = useState<boolean>(false);
   const [key, setKey] = useState(0);
   const [imageVersions, setImageVersions] = useState<ImageVersion[]>(versions);
+  const [hasBlockedDomains, setHasBlockedDomains] = useState<boolean>(false);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -56,12 +57,15 @@ const ImageView: FC<Props> = ({ image, containerNames, versions }) => {
     setImageVersions(versions);
   }, [versions]);
 
-  const tabs = getDeploymentsViewTabs(
+  const baseTabs = getDeploymentsViewTabs(
     ApplicationRoute.Images,
     t,
     selectedImage.buildStatus,
     selectedImage.allowedDomains,
   );
+  const tabs = withFlags(baseTabs, {
+    [EntityViewTab.InstallationLog]: { invalid: hasBlockedDomains },
+  });
 
   useEffect(() => {
     setSelectedImage(cloneDeep(image));
@@ -154,6 +158,7 @@ const ImageView: FC<Props> = ({ image, containerNames, versions }) => {
               onChange={setSelectedImage}
               selectedImage={selectedImage}
               onChangeVersions={setImageVersions}
+              setHasBlockedDomains={setHasBlockedDomains}
             />
           </>
         )}

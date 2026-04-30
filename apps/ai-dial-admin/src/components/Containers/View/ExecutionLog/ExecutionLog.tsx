@@ -1,20 +1,24 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 import { DialCollapsibleSidebar, DialNoDataContent, DialTabs, TabModel, TabOrientation } from '@epam/ai-dial-ui-kit';
 
-import { Pod } from '@/src/models/deployments/containers';
-import { ContainersI18nKey, EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { Container, Pod } from '@/src/models/deployments/containers';
+import { ContainersI18nKey, DeploymentsI18nKey, EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import { ApplicationRoute } from '@/src/types/routes';
 
 import { useI18n } from '@/src/locales/client';
 
+import BlockedDomainBanner from '@/src/components/Deployments/Common/BlockedDomainBanner/BlockedDomainBanner';
 import PodView from '@/src/components/Containers/View/ExecutionLog/PodView';
+import { mergeAllowedDomains } from '@/src/utils/deployments/whitelist';
 import { getTranslatedDeploymentType } from '@/src/utils/deployments/entity';
 
 interface Props {
-  containerId?: string;
   route: ApplicationRoute;
   pods: Pod[];
+  selectedContainer: Container;
+  onChange: (container: Container) => void;
+  setHasBlockedDomains: (value: boolean) => void;
 }
 
 function getPodsTabs(pods: Pod[], t: (key: string) => string): TabModel[] {
@@ -34,11 +38,12 @@ function getPodsTabs(pods: Pod[], t: (key: string) => string): TabModel[] {
   }));
 }
 
-const ExecutionLog: FC<Props> = ({ containerId, route, pods }) => {
+const ExecutionLog: FC<Props> = ({ route, pods, selectedContainer, onChange, setHasBlockedDomains }) => {
   const t = useI18n();
 
   const [tabs, setTabs] = useState<TabModel[]>([]);
   const [activeTab, setActiveTab] = useState<string>('');
+  const [blockedDomains, setBlockedDomains] = useState<string[]>([]);
 
   const onChangeActiveTab = useCallback(
     (tab: string) => {
@@ -57,8 +62,33 @@ const ExecutionLog: FC<Props> = ({ containerId, route, pods }) => {
     }
   }, [pods, t]);
 
+  const onBlockedDomain = useCallback(
+    (domain: string) => {
+      if (selectedContainer.allowedDomains?.includes(domain)) return;
+      setBlockedDomains((prev) => (prev.includes(domain) ? prev : [...prev, domain]));
+      setHasBlockedDomains(true);
+    },
+    [selectedContainer.allowedDomains, setHasBlockedDomains],
+  );
+
+  const onAddToAllowed = useCallback(() => {
+    onChange({
+      ...selectedContainer,
+      allowedDomains: mergeAllowedDomains(selectedContainer.allowedDomains, blockedDomains),
+    });
+    setBlockedDomains([]);
+    setHasBlockedDomains(false);
+  }, [blockedDomains, onChange, selectedContainer, setHasBlockedDomains]);
+
   return (
-    <div className="flex flex-col size-full">
+    <div className="flex flex-col size-full gap-4">
+      {blockedDomains.length > 0 && (
+        <BlockedDomainBanner
+          message={t(ContainersI18nKey.BlockedDomainsInRun, { domains: blockedDomains.join(', ') })}
+          buttonLabel={t(DeploymentsI18nKey.AddToAllowedDomains)}
+          onAddToAllowed={onAddToAllowed}
+        />
+      )}
       {tabs.length ? (
         <div className="flex h-full min-h-0 gap-8">
           {tabs.length > 1 && (
@@ -79,8 +109,9 @@ const ExecutionLog: FC<Props> = ({ containerId, route, pods }) => {
           )}
           <PodView
             pod={pods.find((pod) => pod.name === activeTab) ?? pods[0]}
-            containerId={containerId}
+            containerId={selectedContainer.name}
             route={route}
+            onBlockedDomain={onBlockedDomain}
           />
         </div>
       ) : (

@@ -1,6 +1,5 @@
 'use client';
 
-import { TabModel } from '@epam/ai-dial-ui-kit';
 import { cloneDeep } from 'lodash';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
@@ -32,7 +31,7 @@ import { getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/depl
 import { isImageNotInstalled } from '@/src/utils/deployments/images';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { EntityViewTab, getDeploymentsViewTabs } from '@/src/utils/tabs/utils';
+import { EntityViewTab, getDeploymentsViewTabs, withFlags } from '@/src/utils/tabs/utils';
 import TabsContent from './TabsContent';
 
 interface Props {
@@ -61,9 +60,6 @@ const ContainerView: FC<Props> = ({
 
   const imageNotInstalled = isImageNotInstalled(image);
 
-  const [tabs, setTabs] = useState<TabModel[]>(
-    getDeploymentsViewTabs(route, t, container.status, container.allowedDomains, imageNotInstalled),
-  );
   const [selectedContainer, setSelectedContainer] = useState<Container>(cloneDeep(container));
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [isEditorEnabled, setIsEditorEnabled] = useState<boolean>(false);
@@ -73,10 +69,16 @@ const ContainerView: FC<Props> = ({
   const [events, setEvents] = useState<KubEvent[]>([]);
   const [restarts, setRestarts] = useState(0);
   const [pods, setPods] = useState<Pod[]>([]);
+  const [hasBlockedDomains, setHasBlockedDomains] = useState<boolean>(false);
+  const [hasWarningEvents, setHasWarningEvents] = useState<boolean>(false);
 
-  useEffect(() => {
-    setTabs(getDeploymentsViewTabs(route, t, container.status, container.allowedDomains, imageNotInstalled));
-  }, [container.allowedDomains, container.status, imageNotInstalled, route, t]);
+  const tabs = useMemo(() => {
+    const baseTabs = getDeploymentsViewTabs(route, t, container.status, container.allowedDomains, imageNotInstalled);
+    return withFlags(baseTabs, {
+      [EntityViewTab.ExecutionLog]: { invalid: hasBlockedDomains },
+      [EntityViewTab.Events]: { invalid: hasWarningEvents },
+    });
+  }, [container.allowedDomains, container.status, hasBlockedDomains, hasWarningEvents, imageNotInstalled, route, t]);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -144,11 +146,11 @@ const ContainerView: FC<Props> = ({
         try {
           const data = JSON.parse(event.data) as KubEvent;
           if (data.eventType === KubEventType.WARNING) {
-            setTabs((prev) => prev.map((tab) => (tab.id === EntityViewTab.Events ? { ...tab, invalid: true } : tab)));
+            setHasWarningEvents(true);
           }
           setEvents((prev) => [...prev, data].sort((a, b) => b.firstTimestamp - a.firstTimestamp));
         } catch (e) {
-          console.error('Failed to parse SSE event:', e);
+          console.error('[SSE] Error parsing event: event', e);
         }
       };
 
@@ -318,6 +320,7 @@ const ContainerView: FC<Props> = ({
               pods={pods}
               restarts={restarts}
               image={image}
+              setHasBlockedDomains={setHasBlockedDomains}
               {...props}
             />
           )}

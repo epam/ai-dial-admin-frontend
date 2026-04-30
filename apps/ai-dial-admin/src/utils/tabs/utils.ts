@@ -65,6 +65,14 @@ export enum EntityViewTab {
   OutputSchema = 'OutputSchema',
 }
 
+export type TabFlags = Pick<TabModel, 'invalid' | 'warning' | 'disabled'>;
+
+export const withFlags = (tabs: TabModel[], flagsMap: Partial<Record<EntityViewTab, TabFlags>>): TabModel[] =>
+  tabs.map((tab) => {
+    const flags = flagsMap[tab.id as EntityViewTab];
+    return flags ? { ...tab, ...flags } : tab;
+  });
+
 export const propertiesTab = (t: (key: string) => string, warning?: boolean) => ({
   id: EntityViewTab.Properties,
   label: t(TabsI18nKey.Properties),

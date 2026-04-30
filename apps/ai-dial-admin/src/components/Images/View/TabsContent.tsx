@@ -23,9 +23,17 @@ interface Props {
   imageVersions: ImageVersion[];
   onChange: (image: Image) => void;
   onChangeVersions: (versions: ImageVersion[]) => void;
+  setHasBlockedDomains: (value: boolean) => void;
 }
 
-const TabsContent: FC<Props> = ({ activeTab, selectedImage, onChange, onChangeVersions, imageVersions }) => {
+const TabsContent: FC<Props> = ({
+  activeTab,
+  selectedImage,
+  onChange,
+  onChangeVersions,
+  imageVersions,
+  setHasBlockedDomains,
+}) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
@@ -70,7 +78,13 @@ const TabsContent: FC<Props> = ({ activeTab, selectedImage, onChange, onChangeVe
           disabled={isReadOnlyAdmin}
         />
       )}
-      {activeTab === EntityViewTab.InstallationLog && <InstallationLog imageBuildId={selectedImage.id} />}
+      {activeTab === EntityViewTab.InstallationLog && (
+        <InstallationLog
+          selectedImage={selectedImage}
+          onChange={onChange}
+          setHasBlockedDomains={setHasBlockedDomains}
+        />
+      )}
       {activeTab === EntityViewTab.Firewall && (
         <FirewallSettings
           image={selectedImage}

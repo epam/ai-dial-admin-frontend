@@ -1387,6 +1387,7 @@ export enum ImagesI18nKey {
   StopBuildModalDescription = 'Images.StopBuildModalDescription',
   BuildStoppedSuccess = 'Images.BuildStoppedSuccess',
   BuildStoppedSuccessDescription = 'Images.BuildStoppedSuccessDescription',
+  BlockedDomainInBuild = 'Images.BlockedDomainInBuild',
 }
 
 export enum ContainersI18nKey {
@@ -1455,6 +1456,7 @@ export enum ContainersI18nKey {
   ImageNotInstalledWarning = 'Containers.ImageNotInstalledWarning',
   ImageBuildFailedWarning = 'Containers.ImageBuildFailedWarning',
   InstallImage = 'Containers.InstallImage',
+  BlockedDomainsInRun = 'Containers.BlockedDomainsInRun',
 }
 
 export enum DeploymentsI18nKey {
@@ -1470,6 +1472,7 @@ export enum DeploymentsI18nKey {
   WhitelistPolicyCustom = 'Deployments.WhitelistPolicyCustom',
   WhitelistPolicyCustomCaption = 'Deployments.WhitelistPolicyCustomCaption',
   AddDomain = 'Deployments.AddDomain',
+  AddToAllowedDomains = 'Deployments.AddToAllowedDomains',
   EventsError = 'Deployments.EventsError',
   LogsError = 'Deployments.LogsError',
 }
