@@ -13,7 +13,6 @@ import { RUNNERS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { DefaultsValue } from '@/src/models/dial/defaults';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
@@ -117,7 +116,9 @@ const TabsContent: FC<Props> = ({
         {activeTab === EntityViewTab.ParameterSchema && (
           <ParameterSchema
             configuration={
-              selectedInterceptor.defaults?.custom_fields?.['interceptor_configuration' as keyof DefaultsValue]
+              (selectedInterceptor.defaults?.custom_fields as Record<string, Record<string, unknown>>)?.[
+                'interceptor_configuration'
+              ]
             }
             onChangeConfiguration={onChangeConfiguration}
             schemaURL={

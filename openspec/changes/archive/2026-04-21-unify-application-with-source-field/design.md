@@ -133,7 +133,7 @@ onChange(updatedEntity);
 We apply the same convention to `AppRunners` (SCHEMA branch). When a runner is selected:
 
 1. Fetch the resolved scheme via `getResolvedApplicationScheme(runner.$id)`.
-2. Derive defaults via `getSchemaDefaults(scheme)` as `Record<string, DefaultsValue>`.
+2. Derive defaults via `getSchemaDefaults(scheme)` as `Record<string, unknown>`.
 3. Call `onChange` once with `{ ...entity, source: { $type: SCHEMA, applicationTypeSchemaId: runnerId }, applicationProperties }`.
 
 `SourceField.tsx` stays fully generic — no knowledge of runners or `applicationProperties`.
