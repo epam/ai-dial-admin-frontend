@@ -13,14 +13,13 @@ import {
   TypeI18nKey,
 } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DefaultsValue } from '@/src/models/dial/defaults';
 import { BooleanType } from '@/src/types/boolean';
 import { DefaultItemType } from './types';
 import { getDefaultValueByType, getValueByType } from './utils';
 
 interface DefaultItemDeclaration {
   key: string;
-  value: DefaultsValue;
+  value: unknown;
   type: string;
 }
 
@@ -132,7 +131,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove, disabled })
           )}
           {item.type === DefaultItemType.boolean && (
             <DialSelectField
-              value={item.value.toString()}
+              value={String(item.value)}
               id={`entity-default-value=${index}`}
               options={booleans}
               label={isFirstLine ? t(BasicI18nKey.Value) : ''}

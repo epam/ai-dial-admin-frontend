@@ -14,7 +14,6 @@ import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { DefaultsValue } from '@/src/models/dial/defaults';
 import { ApplicationRoute } from '@/src/types/routes';
 import { createSchemaSource, getSchemaSourceId } from '@/src/utils/entities/application-source';
 import { getSchemaDefaults } from '@/src/utils/schema';
@@ -101,7 +100,7 @@ const AppRunners: FC<Props> = ({
             res.success && (res.response as { schema?: DialApplicationScheme })?.schema
               ? (res.response as { schema: DialApplicationScheme }).schema
               : runner;
-          const applicationProperties = getSchemaDefaults(scheme as JSONSchema7) as Record<string, DefaultsValue>;
+          const applicationProperties = getSchemaDefaults(scheme as JSONSchema7) as Record<string, unknown>;
           onChange({
             ...baseEntity,
             applicationProperties: isEntityImmutable ? { ...baseEntity.applicationProperties } : applicationProperties,

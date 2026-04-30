@@ -1,6 +1,4 @@
 import { EntityParameterKeys } from '@/src/components/ActivityAudit/constants';
-import { ActivityAuditDiff } from '@/src/models/dial/activity-audit';
-import { DefaultsValue } from '@/src/models/dial/defaults';
 import { DialModelEndpoint } from '@/src/models/dial/model';
 import { ActivityAuditEntity, ActivityAuditResourceType, DiffStatus } from '@/src/types/activity-audit';
 import { describe, expect, test } from 'vitest';
@@ -11,6 +9,7 @@ import {
   generateCurrentResource,
   mergeEntityMaps,
 } from '../generate-diffs';
+import { ActivityAuditDiff } from '@/src/models/activity-audit';
 
 describe('Activity audit :: generateCurrentResource ', () => {
   test('should return only empty properties array', () => {
@@ -102,8 +101,8 @@ describe('Activity audit :: compareObjectArray', () => {
 
   test('should call compareDefaults for DEFAULTS key', () => {
     const diffs: Record<string, ActivityAuditDiff[]> = {};
-    const val1: Record<string, DefaultsValue> = { key1: 'val1', key2: 'val2' };
-    const val2: Record<string, DefaultsValue> = { key2: 'val2', key3: 'val3' };
+    const val1: Record<string, unknown> = { key1: 'val1', key2: 'val2' };
+    const val2: Record<string, unknown> = { key2: 'val2', key3: 'val3' };
 
     compareObjectArray(diffs, EntityParameterKeys.DEFAULTS, val1, val2);
 
@@ -150,7 +149,7 @@ describe('Activity audit :: fillObjectArray', () => {
 
   test('should fill diffs for DEFAULTS key', () => {
     const diffMap: Record<string, ActivityAuditDiff[]> = {};
-    const value: Record<string, DefaultsValue> = {
+    const value: Record<string, unknown> = {
       key1: 'val1',
       key2: 'val2',
     };
