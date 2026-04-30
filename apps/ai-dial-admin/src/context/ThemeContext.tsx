@@ -53,7 +53,13 @@ export const ThemeProvider = ({
       const root = document.documentElement;
       applyThemeColors(root, theme);
       setCurrentThemeId(themeId);
-      setCurrentThemeLogo(themeId === THEME_DARK ? 'logo-dark.svg' : 'logo-light.svg');
+      const updatedLogo =
+        themesConfiguration?.images['admin-logo-light'] && themesConfiguration?.images['admin-logo-dark']
+          ? themeId === THEME_DARK
+            ? themesConfiguration?.images['admin-logo-dark']
+            : themesConfiguration?.images['admin-logo-light']
+          : theme?.['app-logo'];
+      setCurrentThemeLogo(updatedLogo);
     },
     [themesConfiguration],
   );

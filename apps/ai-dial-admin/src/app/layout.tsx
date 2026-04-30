@@ -38,20 +38,15 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const userInfo = await utilityApi.getUserInfo(token);
   const themesConfig = await themesApi.getThemesConfiguration();
 
+  const faviconUrl = themesConfig
+    ? getIconPath(themesConfig?.images['admin-favicon'] || themesConfig?.images.favicon)
+    : undefined;
+
   return (
     <html>
       <head>
-        <link
-          rel="icon"
-          href={(themesConfig && getIconPath(themesConfig?.images.favicon)) || '/'}
-          sizes="any"
-          type="image/png"
-        />
-        <link
-          rel="apple-touch-icon"
-          href={(themesConfig && getIconPath(themesConfig?.images.favicon)) || '/'}
-          type="image/png"
-        />
+        <link rel="icon" href={faviconUrl || '/'} sizes="any" type="image/png" />
+        <link rel="apple-touch-icon" href={faviconUrl || '/'} type="image/png" />
       </head>
       <body className={classNames(inter.variable, 'font min-w-[360px]')}>
         {userInfo.success ? children : <Page403 />}
