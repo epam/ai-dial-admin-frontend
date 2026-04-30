@@ -1,6 +1,20 @@
 import { ApplicationRoute } from '@/src/types/routes';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { getEntityPath, getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { escapePercentSign, getEntityPath, getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+
+describe('escapePercentSign', () => {
+  test('escapes single percent sign', () => {
+    expect(escapePercentSign('file%name')).toBe('file%25name');
+  });
+
+  test('escapes multiple percent signs', () => {
+    expect(escapePercentSign('%file%name%')).toBe('%25file%25name%25');
+  });
+
+  test('does nothing when no percent sign is present', () => {
+    expect(escapePercentSign('filename')).toBe('filename');
+  });
+});
 
 describe('getUrnForEntity', () => {
   test('returns correct URN for Prompts', () => {
