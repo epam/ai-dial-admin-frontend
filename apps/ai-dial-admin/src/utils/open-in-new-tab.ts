@@ -5,6 +5,10 @@ import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
 
+export const escapePercentSign = (str: string): string => {
+  return str.replace(/%/g, '%25');
+};
+
 export const onOpenInNewTab = (route?: ApplicationRoute, entity?: unknown) => {
   const url = getUrnForEntity(route, entity);
   window.open(url, '_blank');
@@ -36,7 +40,7 @@ export const getEntityPath = (
           `${(data as DialPrompt).folderId}${(data as DialPrompt).name}__${(data as DialPrompt).version}`;
 
       return forRemove
-        ? decodeURIComponent(path)
+        ? decodeURIComponent(escapePercentSign(path))
         : `${encodeURIComponent((data as DialPrompt).name as string)}?path=${encodeURIComponent(path)}`;
     }
 

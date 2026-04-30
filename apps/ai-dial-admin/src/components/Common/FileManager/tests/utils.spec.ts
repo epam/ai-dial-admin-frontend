@@ -10,6 +10,7 @@ import {
   getEmptyFile,
   getNewFolderPath,
   getUniqueFolderName,
+  isItemNameValid,
   validateCreateFolder,
 } from '../utils';
 
@@ -162,6 +163,22 @@ describe('FileManager', () => {
       expect(result).toBe(FileManagerI18nKey.CreateFolderValidateNameLength);
     });
   });
+
+  describe('isItemNameValid', () => {
+    test('returns false when name contains a forbidden character', () => {
+      expect(isItemNameValid('invalid;name')).toBe(false);
+      expect(isItemNameValid('invalid%name')).toBe(false);
+      expect(isItemNameValid('invalid\\name')).toBe(false);
+      expect(isItemNameValid('invalid/ame')).toBe(false);
+    });
+
+    test('returns true when name does not contain forbidden characters', () => {
+      expect(isItemNameValid('valid-name')).toBe(true);
+      expect(isItemNameValid('valid name')).toBe(true);
+      expect(isItemNameValid('valid_name')).toBe(true);
+      expect(isItemNameValid('valid123')).toBe(true);
+    });
+  });
 });
 
 const createFolder = (path: string, name: string, items?: DialFile[]): DialFile =>
@@ -247,7 +264,7 @@ describe('getNewFolderPath', () => {
     createFolder('public/empty/', 'empty'),
   ];
 
-  const allFiles: Asset[] = [createFolder('public/', 'public', rootChildren)];
+  const allFiles = [createFolder('public/', 'public', rootChildren)] as Asset[];
 
   describe('child mode', () => {
     test('should create "New Folder" in empty folder', () => {
