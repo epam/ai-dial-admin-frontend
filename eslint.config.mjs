@@ -58,19 +58,22 @@ export default [
       tailwindcss: tailwindPlugin,
     },
 
+    settings: {
+      tailwindcss: {
+        config: 'apps/ai-dial-admin/tailwind.config.js',
+        callees: ['classnames', 'clsx', 'cn'],
+      },
+    },
+
     rules: {
       ...tsPlugin.configs.recommended.rules,
       ...nextPlugin.configs.recommended.rules,
       ...importPlugin.configs.recommended.rules,
-      ...tailwindPlugin.configs.recommended.rules,
       '@next/next/no-html-link-for-pages': 'off',
       'react-hooks/exhaustive-deps': 'error',
       'import/no-unresolved': 'off',
       'import/no-duplicates': 'error',
       'import/named': 'off',
-      'tailwindcss/no-custom-classname': 'off',
-      'tailwindcss/classnames-order': 'off',
-      'tailwindcss/enforces-shorthand': 'error',
       '@nx/enforce-module-boundaries': [
         'error',
         {
