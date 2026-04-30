@@ -28,7 +28,6 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { DefaultsValue } from '@/src/models/dial/defaults';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialRole } from '@/src/models/dial/role';
 import { ExportFormat } from '@/src/types/export';
@@ -202,10 +201,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
               names={names}
               initialValues={{
                 source: selectedRunner.$id ? createSchemaSource(selectedRunner.$id) : undefined,
-                applicationProperties: getSchemaDefaults(selectedRunner as JSONSchema7) as Record<
-                  string,
-                  DefaultsValue
-                >,
+                applicationProperties: getSchemaDefaults(selectedRunner as JSONSchema7) as Record<string, unknown>,
               }}
             />,
             document.body,

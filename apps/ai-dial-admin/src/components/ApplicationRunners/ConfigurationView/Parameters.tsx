@@ -2,8 +2,7 @@
 
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
-import { RJSFSchema } from '@rjsf/utils';
+import { DialLoader, DialNoDataContent, JsonSchema } from '@epam/ai-dial-ui-kit';
 import { JSONSchema7 } from 'json-schema';
 
 import SchemaGrid from '@/src/components/Common/SchemaGrid/SchemaGrid';
@@ -26,10 +25,10 @@ const Parameters: FC<Props> = ({ runner, onChangeRunner, isSkipRefresh }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isReadonly, setIsReadonly] = useState(false);
 
-  const [resolvedSchema, setResolvedSchema] = useState<RJSFSchema | null>(null);
+  const [resolvedSchema, setResolvedSchema] = useState<JsonSchema | null>(null);
 
   const onChangeSchema = useCallback(
-    (schema: RJSFSchema, skipRefresh?: boolean) => {
+    (schema: JSONSchema7, skipRefresh?: boolean) => {
       const current = runnerRef.current;
       if (!current) return;
       const merged = { ...current, ...(schema as unknown as DialApplicationScheme) };
@@ -56,7 +55,7 @@ const Parameters: FC<Props> = ({ runner, onChangeRunner, isSkipRefresh }) => {
         setResolvedSchema(isReadOnly ? res.response.schema : null);
       } else {
         setIsReadonly(false);
-        setResolvedSchema(runner as RJSFSchema);
+        setResolvedSchema(runner as JsonSchema);
       }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps

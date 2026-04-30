@@ -16,7 +16,6 @@ import {
 } from '@/src/models/dial/application';
 import { getSchemaSourceId } from '@/src/utils/entities/application-source';
 import { DialApplicationResource } from '@/src/models/dial/application-resource';
-import { DefaultsValue } from '@/src/models/dial/defaults';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialSchemePropertyType } from '@/src/models/dial/scheme';
 import { FrameConfig } from '@/src/models/frame-config';
@@ -135,7 +134,7 @@ export const generateViewItems = (
 //todo support multiple types from scheme
 export const convertJsonSchema = (
   schema: DialApplicationScheme,
-  schemeData: Record<string, DefaultsValue>,
+  schemeData: Record<string, unknown>,
 ): ApplicationPropertiesTemp[] => {
   const result = [];
 
@@ -201,7 +200,7 @@ export const getTypeFromUnion = (types: DialSchemePropertyType[]): string => {
 };
 
 export const convertAppPropertiesToArray = (
-  properties: Record<string, DefaultsValue>,
+  properties: Record<string, unknown>,
   schemeProperties: ApplicationPropertiesTemp[] = [],
 ) => {
   const mergedSchema = [...schemeProperties];

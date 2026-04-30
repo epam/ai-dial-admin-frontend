@@ -207,13 +207,14 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
   );
 
   const onSaveAsNewVersion = useCallback(
-    (image: Image) => {
+    (image: Image, isNewImage: boolean) => {
       createImage(image).then((res) => {
         if (res.success) {
           const type = getTranslatedType(getRouteByType(image.$type), t);
+          const entity = isNewImage ? 'Image' : 'Image version';
           showNotification(
             getSuccessNotification(
-              t(ImagesI18nKey.ImagesSaveSuccess, { type }),
+              t(ImagesI18nKey.ImagesSaveSuccess, { type, entity }),
               t(ImagesI18nKey.ImagesSaveSuccessDescription, { type, version: image.version }),
             ),
           );
@@ -359,7 +360,7 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
             onClose={onCloseModal}
             header={saveAsNewModalHeader}
             submitLabel={t(ButtonsI18nKey.Save)}
-            onConfirm={(version) => onSaveAsNewVersion({ ...image, version })}
+            onConfirm={(version) => onSaveAsNewVersion({ ...image, version }, isNameChanged)}
             existingVersions={existingVersionsByName}
             entityName={image.name}
             defaultVersion={saveAsNewDefaultVersion}
@@ -373,7 +374,7 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
             header={t(ImagesI18nKey.CreateNewVersionModalTitle)}
-            onConfirm={(version) => onSaveAsNewVersion({ ...image, version })}
+            onConfirm={(version) => onSaveAsNewVersion({ ...image, version }, false)}
             existingVersions={getVersionsPerName(versions)}
             entityName={image.name}
           />,

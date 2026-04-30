@@ -1,12 +1,11 @@
 import { FC, useEffect, useRef, useState } from 'react';
-import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { DialLoader, DialNoDataContent, JsonSchema } from '@epam/ai-dial-ui-kit';
 
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { getConfigurationSchema } from '@/src/app/[lang]/interceptors/actions';
 import { useI18n } from '@/src/locales/client';
 
 import SchemaUiRenderer from '@/src/components/Common/SchemaUIRenderer/SchemaUIRenderer';
-import { RJSFSchema } from '@rjsf/utils';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
@@ -19,7 +18,7 @@ interface Props {
 const ParameterSchema: FC<Props> = ({ schemaURL, name, configuration, onChangeConfiguration }) => {
   const t = useI18n();
   const getReqRef = useRef(useProtectedRequest());
-  const [schema, setSchema] = useState<RJSFSchema | null>(null);
+  const [schema, setSchema] = useState<JsonSchema | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {

@@ -6,11 +6,11 @@ import {
   DialLoader,
   DialPrimaryButton,
   DialSelect,
+  JsonSchema,
   SelectOption,
   SelectSize,
   SelectVariant,
 } from '@epam/ai-dial-ui-kit';
-import { RJSFSchema } from '@rjsf/utils';
 
 import { tryOutTool } from '@/src/app/[lang]/applications/actions';
 import { tryOutAssetTool } from '@/src/app/[lang]/assets-toolsets/actions';
@@ -139,7 +139,7 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset, isMcpToolset, co
               <div className="flex-1 flex items-center justify-center">{t(EntitiesI18nKey.NoInputs)}</div>
             ) : responseView === ParamsView.FORM ? (
               <SchemaUiRenderer
-                schema={{ ...(tool?.inputSchema as RJSFSchema), isRoot: true }}
+                schema={{ ...(tool?.inputSchema as JsonSchema), isRoot: true }}
                 onChangeConfiguration={onChangeConfiguration}
                 onGetSchemeDefaults={onChangeConfiguration}
                 data={requestBody}
