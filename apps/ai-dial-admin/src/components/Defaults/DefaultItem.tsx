@@ -70,7 +70,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove, disabled })
   );
 
   const onChangeValue = useCallback(
-    (v?: string | number | boolean | object, newType?: string) => {
+    (v?: unknown, newType?: string) => {
       const type = newType || item.type;
       const value = getValueByType(v, type);
       changeItem({ ...item, value, type }, index);
