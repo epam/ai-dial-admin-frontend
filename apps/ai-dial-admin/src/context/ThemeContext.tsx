@@ -3,6 +3,8 @@ import React, { createContext, useContext, useState, ReactNode, useMemo, useCall
 import { Theme, ThemeConfiguration, ThemeImages } from '@/src/models/theme';
 import { getFromLocalStorage } from '@/src/utils/local-storage';
 import { applyThemeColors } from '@/src/utils/themes/apply-theme-colors';
+import { DEFAULT_THEME } from '@/src/constants/theme';
+import { getLogoPath } from '@/src/utils/themes/logo-path';
 
 interface ThemeContextType {
   currentTheme: string;
@@ -18,8 +20,6 @@ interface ThemeContextType {
   setTheme: (themeId: string) => void;
 }
 
-const THEME_DARK = 'dark';
-
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider = ({
@@ -31,7 +31,7 @@ export const ThemeProvider = ({
   themesConfiguration: ThemeConfiguration | null;
   themeImages?: { name: string }[] | null;
 }) => {
-  const [currentThemeId, setCurrentThemeId] = useState<string>(THEME_DARK);
+  const [currentThemeId, setCurrentThemeId] = useState<string>(DEFAULT_THEME);
   const [currentThemeLogo, setCurrentThemeLogo] = useState<string | undefined>(void 0);
 
   const excludedImageNames = ['logo', 'favicon', 'config'];
@@ -53,12 +53,7 @@ export const ThemeProvider = ({
       const root = document.documentElement;
       applyThemeColors(root, theme);
       setCurrentThemeId(themeId);
-      const updatedLogo =
-        themesConfiguration?.images['admin-logo-light'] && themesConfiguration?.images['admin-logo-dark']
-          ? themeId === THEME_DARK
-            ? themesConfiguration?.images['admin-logo-dark']
-            : themesConfiguration?.images['admin-logo-light']
-          : theme?.['app-logo'];
+      const updatedLogo = getLogoPath(themesConfiguration as ThemeConfiguration, themeId);
       setCurrentThemeLogo(updatedLogo);
     },
     [themesConfiguration],
