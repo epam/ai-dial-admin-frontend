@@ -102,9 +102,7 @@ describe('InstallationLog', () => {
   });
 
   test('does not open EventSource when image id is empty', () => {
-    render(
-      <InstallationLog selectedImage={makeImage({ id: '' })} onChange={vi.fn()} setHasBlockedDomains={vi.fn()} />,
-    );
+    render(<InstallationLog selectedImage={makeImage({ id: '' })} onChange={vi.fn()} setHasBlockedDomains={vi.fn()} />);
     expect(MockEventSource.instances).toHaveLength(0);
   });
 
