@@ -2,7 +2,6 @@ import { dateKeys, EntityParameterKeys } from '@/src/components/ActivityAudit/co
 import { roleLimitsKeys } from '@/src/components/ActivityAudit/View/DiffReport/utils';
 import { NO_LIMITS_KEY } from '@/src/constants/role';
 import { ActivityAuditDiff } from '@/src/models/activity-audit';
-import { DefaultsValue } from '@/src/models/dial/defaults';
 import { DialModelEndpoint } from '@/src/models/dial/model';
 import { DialRoleLimits } from '@/src/models/dial/role-limits';
 import { DiffStatus } from '@/src/types/activity-audit';
@@ -229,15 +228,15 @@ export const fillUpstreams = (diffMap: Record<string, ActivityAuditDiff[]>, valu
  *
  * @param {Record<string, ActivityAuditDiff[]>} diffMap - result map
  * @param {string} key - resource key
- * @param {Record<string, DefaultsValue>} val1 - first value to compare
- * @param {Record<string, DefaultsValue>} val2 - second value to compare
+ * @param {Record<string, unknown>} val1 - first value to compare
+ * @param {Record<string, unknown>} val2 - second value to compare
  * @param {?boolean} [isCurrent] - flag if current state is compared
  */
 export const compareDefaults = (
   diffMap: Record<string, ActivityAuditDiff[]>,
   key: string,
-  val1: Record<string, DefaultsValue> = {},
-  val2: Record<string, DefaultsValue> = {},
+  val1: Record<string, unknown> = {},
+  val2: Record<string, unknown> = {},
   isCurrent?: boolean,
 ): void => {
   const allKeys = [...new Set([...Object.keys(val1), ...Object.keys(val2)])].sort();
@@ -269,12 +268,12 @@ export const compareDefaults = (
  *
  * @param {Record<string, ActivityAuditDiff[]>} diffMap - result map
  * @param {string} key - resource key
- * @param {Record<string, DefaultsValue>} value - value to fill
+ * @param {Record<string, unknown>} value - value to fill
  */
 export const fillDefaults = (
   diffMap: Record<string, ActivityAuditDiff[]>,
   key: string,
-  value: Record<string, DefaultsValue>,
+  value: Record<string, unknown>,
 ) => {
   Object.keys(value).forEach((val, index) => {
     const sectionKey = `${key}${index}`;

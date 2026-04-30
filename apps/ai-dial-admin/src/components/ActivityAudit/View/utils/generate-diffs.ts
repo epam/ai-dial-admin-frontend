@@ -28,7 +28,6 @@ import {
   fillStringArray,
   fillUpstreams,
 } from './create-complex-diffs';
-import { DefaultsValue } from '@/src/models/dial/defaults';
 import { DialModelEndpoint } from '@/src/models/dial/model';
 import { DialRoleLimits, DialRoleShare } from '@/src/models/dial/role-limits';
 import {
@@ -206,21 +205,15 @@ export const fillObjectTypes = (
 export const compareObjectArray = (
   diffMap: Record<string, ActivityAuditDiff[]>,
   key: string,
-  val1: object[] | Record<string, DefaultsValue>,
-  val2: object[] | Record<string, DefaultsValue>,
+  val1: object[] | Record<string, unknown>,
+  val2: object[] | Record<string, unknown>,
   isCurrent?: boolean,
 ): void => {
   if (key === EntityParameterKeys.UPSTREAMS) {
     compareUpstreams(diffMap, val1 as DialModelEndpoint[], val2 as DialModelEndpoint[], isCurrent);
   }
   if (key === EntityParameterKeys.DEFAULTS || key === EntityParameterKeys.APP_PROPERTIES) {
-    compareDefaults(
-      diffMap,
-      key,
-      val1 as Record<string, DefaultsValue>,
-      val2 as Record<string, DefaultsValue>,
-      isCurrent,
-    );
+    compareDefaults(diffMap, key, val1 as Record<string, unknown>, val2 as Record<string, unknown>, isCurrent);
   }
 };
 
@@ -234,13 +227,13 @@ export const compareObjectArray = (
 export const fillObjectArray = (
   diffMap: Record<string, ActivityAuditDiff[]>,
   key: string,
-  value: object[] | Record<string, DefaultsValue>,
+  value: object[] | Record<string, unknown>,
 ): void => {
   if (key === EntityParameterKeys.UPSTREAMS) {
     fillUpstreams(diffMap, value as DialModelEndpoint[]);
   }
   if (key === EntityParameterKeys.DEFAULTS || key === EntityParameterKeys.APP_PROPERTIES) {
-    fillDefaults(diffMap, key, value as Record<string, DefaultsValue>);
+    fillDefaults(diffMap, key, value as Record<string, unknown>);
   }
 };
 

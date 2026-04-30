@@ -23,7 +23,6 @@ import {
   TypeEntity,
 } from '@/src/models/dial/application';
 import { UserSession } from '@/src/models/auth';
-import { DefaultsValue } from '@/src/models/dial/defaults';
 
 describe('getFrameConfig', () => {
   test('returns config for DialApplicationScheme', () => {
@@ -296,7 +295,7 @@ describe('convertJsonSchema', () => {
       required: ['field1'],
     };
 
-    const schemeData: Record<string, DefaultsValue> = {
+    const schemeData: Record<string, unknown> = {
       field1: 'value1',
       field2: 'value2',
     };
@@ -329,7 +328,7 @@ describe('convertJsonSchema', () => {
       required: [],
     };
 
-    const schemeData: Record<string, DefaultsValue> = {
+    const schemeData: Record<string, unknown> = {
       field1: 'value1',
     };
 
@@ -354,7 +353,7 @@ describe('convertJsonSchema', () => {
       required: [],
     };
 
-    const schemeData: Record<string, DefaultsValue> = {
+    const schemeData: Record<string, unknown> = {
       field1: true,
     };
 
@@ -379,7 +378,7 @@ describe('convertJsonSchema', () => {
       required: [],
     };
 
-    const schemeData: Record<string, DefaultsValue> = {
+    const schemeData: Record<string, unknown> = {
       field1: ['value1', 'value2'],
     };
 
@@ -402,7 +401,7 @@ describe('convertJsonSchema', () => {
       required: [],
     };
 
-    const schemeData: Record<string, DefaultsValue> = {};
+    const schemeData: Record<string, unknown> = {};
 
     const result: ApplicationPropertiesTemp[] = convertJsonSchema(schema, schemeData);
 
@@ -418,7 +417,7 @@ describe('convertJsonSchema', () => {
       required: [],
     };
 
-    const schemeData: Record<string, DefaultsValue> = {
+    const schemeData: Record<string, unknown> = {
       field1: 'value1',
       field2: 123,
     };
@@ -520,7 +519,7 @@ describe('getTypeFromUnion', () => {
 
 describe('convertAppPropertiesToArray', () => {
   test('should convert properties to array correctly', () => {
-    const properties: Record<string, DefaultsValue> = {
+    const properties: Record<string, unknown> = {
       field1: 'value1',
       field2: 123,
     };
@@ -546,7 +545,7 @@ describe('convertAppPropertiesToArray', () => {
   });
 
   test('should update existing properties if they already exist in schemeProperties', () => {
-    const properties: Record<string, DefaultsValue> = {
+    const properties: Record<string, unknown> = {
       field1: 'new value',
     };
 
@@ -574,7 +573,7 @@ describe('convertAppPropertiesToArray', () => {
   });
 
   test('should add new properties if they do not exist in schemeProperties', () => {
-    const properties: Record<string, DefaultsValue> = {
+    const properties: Record<string, unknown> = {
       field1: 'value1',
     };
 
@@ -594,7 +593,7 @@ describe('convertAppPropertiesToArray', () => {
   });
 
   test('should sort the result based on isFromScheme property', () => {
-    const properties: Record<string, DefaultsValue> = {
+    const properties: Record<string, unknown> = {
       field1: 'value1',
       field2: 123,
     };
@@ -637,7 +636,7 @@ describe('convertAppPropertiesToArray', () => {
   });
 
   test('should handle empty properties object and return empty array', () => {
-    const properties: Record<string, DefaultsValue> = {};
+    const properties: Record<string, unknown> = {};
 
     const result = convertAppPropertiesToArray(properties);
 
@@ -645,7 +644,7 @@ describe('convertAppPropertiesToArray', () => {
   });
 
   test('should work when no schemeProperties are provided', () => {
-    const properties: Record<string, DefaultsValue> = {
+    const properties: Record<string, unknown> = {
       field1: 'value1',
       field2: 123,
     };
@@ -671,7 +670,7 @@ describe('convertAppPropertiesToArray', () => {
   });
 
   test('should handle multiple properties with the same key', () => {
-    const properties: Record<string, DefaultsValue> = {
+    const properties: Record<string, unknown> = {
       field1: 'value1',
       field2: 123,
     };
