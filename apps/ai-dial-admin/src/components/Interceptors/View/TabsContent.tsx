@@ -115,7 +115,11 @@ const TabsContent: FC<Props> = ({
         )}
         {activeTab === EntityViewTab.ParameterSchema && (
           <ParameterSchema
-            configuration={selectedInterceptor.defaults?.custom_fields?.['interceptor_configuration']}
+            configuration={
+              (selectedInterceptor.defaults?.custom_fields as Record<string, Record<string, unknown>>)?.[
+                'interceptor_configuration'
+              ]
+            }
             onChangeConfiguration={onChangeConfiguration}
             schemaURL={
               selectedInterceptor.features?.configurationEndpoint || interceptorTemplate?.configurationEndpoint
