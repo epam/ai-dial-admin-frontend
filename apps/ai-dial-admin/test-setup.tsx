@@ -75,7 +75,11 @@ vi.mock('@/src/context/SaveValidationContext', () => {
       isValid: true,
       dispatch,
     }),
-    ValidationActionType: { SetField: 'SET_FIELD_VALIDATION', Reset: 'RESET' },
+    ValidationActionType: {
+      SetField: 'SET_FIELD_VALIDATION',
+      RemoveField: 'REMOVE_FIELD_VALIDATION',
+      Reset: 'RESET',
+    },
   };
 });
 

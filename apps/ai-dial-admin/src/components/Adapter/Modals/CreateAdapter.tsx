@@ -42,8 +42,15 @@ const CreateAdapter: FC<Props> = ({ isModalOpen, onClose, names }) => {
   const onChangeAdapter = useCallback(
     (entity: DialAdapter) => {
       setCurrentAdapter({ ...currentAdapter, ...entity });
+      if (entity.source?.containerId) {
+        dispatch({
+          type: ValidationActionType.SetField,
+          field: 'containerEnpoints',
+          isValid: !!entity.source?.completionEndpointPath || !!entity.source?.responsesEndpointPath,
+        });
+      }
     },
-    [currentAdapter, setCurrentAdapter],
+    [currentAdapter, dispatch],
   );
 
   // initial validation on creation adapter (disable save when no values entered yet)

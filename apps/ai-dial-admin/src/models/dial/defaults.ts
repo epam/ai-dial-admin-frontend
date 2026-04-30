@@ -1,7 +1,5 @@
 export interface DefaultTemp {
   key: string;
-  value: DefaultsValue;
+  value: unknown;
   type: string;
 }
-
-export type DefaultsValue = string | number | boolean | object;

@@ -54,6 +54,7 @@ import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseAssetRoute, ModalType } from './types';
 import Modals from './Modals';
+import { isItemNameValid } from '@/src/components/Common/FileManager/utils';
 
 interface Props {
   view: ApplicationRoute;
@@ -156,12 +157,14 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
 
   const handleGridItemClick = useCallback(
     (file: FileManagerGridRow) => {
-      router.push(
-        getUrnForEntity(view, {
-          name: file.name,
-          path: file.path,
-        }),
-      );
+      if (isItemNameValid(file.name)) {
+        router.push(
+          getUrnForEntity(view, {
+            name: file.name,
+            path: file.path,
+          }),
+        );
+      }
     },
     [view, router],
   );
@@ -403,6 +406,8 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
 
   const onExport = useCallback(
     (fileType: ImportFileType) => {
+      setSelectedPaths(new Set());
+      setHasSelectedItems(false);
       const filePaths: string[] = [];
       (exportedItems as AssetWithVersion[]).forEach((file) => {
         if (file.selectedVersions) {

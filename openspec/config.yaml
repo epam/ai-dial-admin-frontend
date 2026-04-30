@@ -28,7 +28,6 @@ context: |
   - Monaco Editor for code editing
   - @tabler/icons-react + @svgr/webpack for icons/SVGs
   - react-dnd for drag and drop
-  - @rjsf for dynamic JSON Schema-driven forms
   - Custom validation context for standard form validation
 
   ## Path Alias

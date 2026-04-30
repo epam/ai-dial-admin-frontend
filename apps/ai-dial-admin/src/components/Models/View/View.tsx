@@ -6,9 +6,7 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { cloneDeep } from 'lodash';
 
 import { getCoreModel, removeModel, updateCoreModel, updateModel } from '@/src/app/[lang]/models/actions';
-import ContainerStatusBanner from '@/src/components/Deployments/Common/ContainerStatusBanner/ContainerStatusBanner';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
-import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { ModalType } from '@/src/components/EntityView/Modals/constants';
@@ -202,10 +200,6 @@ const View: FC<Props> = ({ originalModel, etag, ...props }) => {
           onRemove={removeModel}
         />
 
-        {originalModel.source?.$type === SOURCE_TYPE.CONTAINER && originalModel.source?.containerId && (
-          <ContainerStatusBanner view={ApplicationRoute.Models} containerId={originalModel.source.containerId} />
-        )}
-
         <div className="flex-1 overflow-auto min-h-0">
           {isEditorEnabled ? (
             <EntityJsonEditor entity={selectedModel} setSelectedEntity={setSelectedModel} setIsChanged={setIsChanged} />
@@ -213,6 +207,7 @@ const View: FC<Props> = ({ originalModel, etag, ...props }) => {
             <TabsContent
               activeTab={activeTab}
               selectedModel={selectedModel}
+              originalModel={originalModel}
               isSkipRefresh={isSkipRefresh}
               onChange={onChangeModel}
               {...props}
