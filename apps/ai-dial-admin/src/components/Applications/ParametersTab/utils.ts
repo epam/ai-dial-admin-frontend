@@ -135,7 +135,7 @@ export const generateViewItems = (
 //todo support multiple types from scheme
 export const convertJsonSchema = (
   schema: DialApplicationScheme,
-  schemeData: Record<string, DefaultsValue>,
+  schemeData: Record<string, unknown>,
 ): ApplicationPropertiesTemp[] => {
   const result = [];
 

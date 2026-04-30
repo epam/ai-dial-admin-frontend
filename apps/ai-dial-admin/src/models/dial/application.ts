@@ -74,7 +74,7 @@ export enum TypeBucketCopy {
 
 export interface ApplicationPropertiesTemp {
   key: string;
-  value: DefaultsValue;
+  value: unknown;
   type: string;
   required: boolean;
   isFromScheme?: boolean;

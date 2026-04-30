@@ -2,9 +2,9 @@ import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { Token } from '@/src/models/auth';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { RJSFSchema } from '@rjsf/utils';
 import { API } from '../api';
 import { BaseApi } from '../base-api';
+import { JsonSchema } from '@epam/ai-dial-ui-kit';
 
 export const INTERCEPTORS_URL = `${API}/interceptors`;
 export const INTERCEPTOR_URL = (name?: string) => `${INTERCEPTORS_URL}/${name || ''}`;
@@ -41,7 +41,7 @@ export class InterceptorsApi extends BaseApi {
     );
   }
 
-  getConfigurationSchema(name: string, token: Token): Promise<ServerActionResponse<RJSFSchema>> {
+  getConfigurationSchema(name: string, token: Token): Promise<ServerActionResponse<JsonSchema>> {
     return this.getAction(CONFIGURATION_URL(name), token);
   }
 
