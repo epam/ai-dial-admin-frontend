@@ -262,7 +262,12 @@ const EvaluationListView = <T extends object>({
         modalType === ModalType.duplicate &&
         createPortal(
           <SaveValidationContextProvider>
-            <DuplicateTestSuite isModalOpen={isModalOpen} onClose={onModalClose} onDuplicate={onDuplicate} />
+            <DuplicateTestSuite
+              isModalOpen={isModalOpen}
+              onClose={onModalClose}
+              onDuplicate={onDuplicate}
+              entity={currentEntity as TestSuite}
+            />
           </SaveValidationContextProvider>,
           document.body,
         )}
