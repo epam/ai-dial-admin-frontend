@@ -17,9 +17,8 @@ describe('getGridDataFromImportPreview', () => {
 
     const result = getGridDataFromImportPreview(importPreview);
 
-    expect(result.colDefs[0]).toEqual({ field: 'testCaseName', colId: 'testCaseName', headerName: 'Test case name' });
-    expect(result.colDefs[1]).toEqual({ field: 'name', headerName: 'Name' });
-    expect(result.colDefs[2]).toEqual({ field: 'age', headerName: 'Age' });
+    expect(result.colDefs[0]).toEqual({ field: 'name', headerName: 'Name' });
+    expect(result.colDefs[1]).toEqual({ field: 'age', headerName: 'Age' });
   });
 
   test('should map sampleRows with facts and parameters to rowData correctly', () => {
@@ -80,7 +79,6 @@ describe('getGridDataFromImportPreview', () => {
 
     const result = getGridDataFromImportPreview(importPreview);
 
-    expect(result.colDefs[0]).toEqual({ field: 'testCaseName', colId: 'testCaseName', headerName: 'Test case name' });
     expect(result.rowData).toEqual([]);
   });
 
@@ -95,7 +93,7 @@ describe('getGridDataFromImportPreview', () => {
 
     const result = getGridDataFromImportPreview(importPreview);
 
-    expect(result.colDefs[1]).toEqual({ field: 'name', headerName: 'Name' });
+    expect(result.colDefs[0]).toEqual({ field: 'name', headerName: 'Name' });
     expect(result.rowData).toEqual([]);
   });
 

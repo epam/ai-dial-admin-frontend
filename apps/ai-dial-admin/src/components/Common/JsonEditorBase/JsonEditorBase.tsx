@@ -6,7 +6,7 @@ import { EDITOR_THEMES_CONFIG, editorOptions } from '@/src/constants/editor';
 import { useTheme } from '@/src/context/ThemeContext';
 import { EDITOR_THEMES } from '@/src/types/editor';
 import { Editor, Monaco, OnValidate } from '@monaco-editor/react';
-import { editor } from 'monaco-editor';
+import { editor, json } from 'monaco-editor';
 
 export interface Props {
   value: string | undefined;
@@ -19,7 +19,7 @@ const JsonEditorBase: FC<Props> = ({ value, onChange, onValidateJSON, options })
   const { currentTheme } = useTheme();
   function handleBeforeMount(monaco: Monaco) {
     monaco?.editor?.defineTheme(currentTheme, EDITOR_THEMES_CONFIG[currentTheme as EDITOR_THEMES]);
-    monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
+    json.jsonDefaults.setDiagnosticsOptions({
       validate: true,
       enableSchemaRequest: false,
       schemas: [
