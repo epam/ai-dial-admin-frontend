@@ -1,60 +1,60 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-
-import FileManager from '@/src/components/Common/FileManager/FileManager';
-import {
-  getDeleteNotificationContent,
-  getExportNotificationContent,
-  getImportNotificationContent,
-  getVersionsPerName,
-} from '@/src/components/Assets/utils';
-import {
-  getResourceTypeByRoute,
-  getAllSelectedItemsPaths,
-  getEmptyAsset,
-  getEmptyStateContent,
-  getFileManagerLabel,
-  getGridColumns,
-  AssetFolderContextMap,
-  GetAssetActionMap,
-  CreateAssetActionMap,
-  MoveAssetActionMap,
-  ImportAssetActionMap,
-  ExportAssetActionMap,
-  RemoveAssetActionMap,
-  BulkDeleteAssetActionMap,
-} from './utils';
-import { ApplicationRoute } from '@/src/types/routes';
-import { useI18n } from '@/src/locales/client';
 import {
   DialCopiedItem,
   DialFile,
   DialFileNodeType,
   DialUploadFileItem,
   FileManagerColumnKey,
+  FileManagerGridRow,
 } from '@epam/ai-dial-ui-kit';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+
 import { changeFolder, removeFolder } from '@/src/app/[lang]/folders-storage/actions';
-import { filterNames } from '@/src/utils/entities/filter-names';
-import { AssetApp, AssetWithVersion } from '@/src/models/dial/deployment-asset';
+import {
+  getDeleteNotificationContent,
+  getExportNotificationContent,
+  getImportNotificationContent,
+  getVersionsPerName,
+} from '@/src/components/Assets/utils';
+import FileManager from '@/src/components/Common/FileManager/FileManager';
+import { isItemNameValid } from '@/src/components/Common/FileManager/utils';
+import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { useNotification } from '@/src/context/NotificationContext';
-import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { ServerActionResponse } from '@/src/models/server-action';
-import { DEFAULT_ETAG } from '@/src/constants/api-headers';
-import { ImportFileType } from '@/src/types/import';
-import { ImportData } from '@/src/models/import-asset';
-import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';
-import { FileManagerGridRow } from '@epam/ai-dial-ui-kit/dist/src/components/FileManager/FileManagerContext';
-import { useRouter } from 'next/navigation';
-import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import { downloadFile, downloadJson } from '@/src/utils/download';
-import { getJsonFileName } from '@/src/utils/import/get-json-name';
-import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
+import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { BaseAssetRoute, ModalType } from './types';
+import { AssetApp, AssetWithVersion } from '@/src/models/dial/deployment-asset';
+import { ImportData } from '@/src/models/import-asset';
+import { ServerActionResponse } from '@/src/models/server-action';
+import { ImportFileType } from '@/src/types/import';
+import { ApplicationRoute } from '@/src/types/routes';
+import { downloadFile, downloadJson } from '@/src/utils/download';
+import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
+import { filterNames } from '@/src/utils/entities/filter-names';
+import { getJsonFileName } from '@/src/utils/import/get-json-name';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { useRouter } from 'next/navigation';
 import Modals from './Modals';
-import { isItemNameValid } from '@/src/components/Common/FileManager/utils';
+import { BaseAssetRoute, ModalType } from './types';
+import {
+  AssetFolderContextMap,
+  BulkDeleteAssetActionMap,
+  CreateAssetActionMap,
+  ExportAssetActionMap,
+  getAllSelectedItemsPaths,
+  GetAssetActionMap,
+  getEmptyAsset,
+  getEmptyStateContent,
+  getFileManagerLabel,
+  getGridColumns,
+  getResourceTypeByRoute,
+  ImportAssetActionMap,
+  MoveAssetActionMap,
+  RemoveAssetActionMap,
+} from './utils';
 
 interface Props {
   view: ApplicationRoute;
@@ -71,12 +71,13 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
   const [names, setNames] = useState<string[]>([]);
   const [versionsMap, setVersionsMap] = useState<Record<string, string[]>>({});
   const [hasSelectedItems, setHasSelectedItems] = useState(false);
-  const [deletedItems, setDeleledItems] = useState<DialFile[] | null>(null);
+  const [deletedItems, setDeletedItems] = useState<DialFile[] | null>(null);
   const [exportedItems, setExportedItems] = useState<DialFile[] | null>(null);
   const [selectedPaths, setSelectedPaths] = useState<Set<string>>(() => new Set());
   const [dragAndDropsItems, setDragAndDropsItems] = useState<File[]>([]);
   const [movingItems, setMovingItems] = useState(0);
   const [movedItems, setMovedItems] = useState(0);
+  const [folderToRefetch, setFolderToRefetch] = useState<string | null>(null);
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -132,7 +133,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
 
   const handleDeleteModalOpen = useCallback((items: DialFile[], parentFolderPath: string) => {
     setDestinationFolder(parentFolderPath);
-    setDeleledItems(items);
+    setDeletedItems(items);
     setIsModalOpen(true);
     setModalType(ModalType.delete);
   }, []);
@@ -150,7 +151,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
     setModalType(null);
     setDestinationFolder(null);
     setDragAndDropsItems([]);
-    setDeleledItems(null);
+    setDeletedItems(null);
     setExportedItems(null);
     setDuplicateItem(null);
   }, []);
@@ -335,6 +336,8 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
       ignorePaths?: boolean,
     ) => {
       let importFolder = destinationFolder || `${ROOT_FOLDER}/`;
+      setFolderToRefetch(importFolder);
+
       const { body } = getFormDataForImport(
         importFolder,
         file,
@@ -348,6 +351,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
       const importAssetAction = ImportAssetActionMap[view as BaseAssetRoute];
 
       importAssetAction(body, fileType).then((res) => {
+        setFolderToRefetch(null);
         if (res.success) {
           fetchFiles?.(importFolder);
           const { title, description, errorTitle, errorDescription, skippedTitle, skippedDescription } =
@@ -546,6 +550,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
         showHiddenFileSwitcherInDestinationPopup={false}
         movingItems={movingItems}
         movedItems={movedItems}
+        folderToRefetch={folderToRefetch}
       />
       <Modals
         view={view}

@@ -1,7 +1,6 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { DialFileManager, DialFileNodeType } from '@epam/ai-dial-ui-kit';
-import { FileManagerGridRow } from '@epam/ai-dial-ui-kit/dist/src/components/FileManager/FileManagerContext';
+import { DialFileManager, DialFileNodeType, FileManagerGridRow } from '@epam/ai-dial-ui-kit';
 
 import { FILES_GRID_COLUMNS } from '@/src/components/Assets/Files/constants';
 import { getGridOptions, getTreeOptions } from '@/src/components/Common/FileManager/utils';
