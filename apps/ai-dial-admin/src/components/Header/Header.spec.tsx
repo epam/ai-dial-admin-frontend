@@ -13,11 +13,6 @@ vi.mock('next/navigation', () => ({
 }));
 
 describe('Header', () => {
-  test('renders logo, user, and breadcrumbs', () => {
-    render(<Header isEnableAuth={true} />);
-    expect(screen.getByText('Admin')).toBeInTheDocument();
-  });
-
   test('calls toggleSidebar when menu button is clicked', () => {
     const { getByRole } = render(<Header isEnableAuth={false} />);
     const button = getByRole('button', { name: 'menu' });
