@@ -9,7 +9,7 @@ const Logo: FC = () => {
   const { currentThemeLogo } = useTheme();
 
   return (
-    <div className="absolute left-1/2 lg:left-[130px] top-0 flex h-full -translate-x-1/2 justify-center text-primary">
+    <div className="absolute left-1/2 lg:left-[140px] top-0 flex h-full -translate-x-1/2 justify-center text-primary">
       {currentThemeLogo ? (
         <Link
           href="/"
