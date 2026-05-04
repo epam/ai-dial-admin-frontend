@@ -67,3 +67,7 @@ screenshots/
 # Build artifacts
 *.tsbuildinfo
 *.tsconfig.tsbuildinfo
+
+.claude/worktrees
+.nx/polygraph
+.nx/self-healing
