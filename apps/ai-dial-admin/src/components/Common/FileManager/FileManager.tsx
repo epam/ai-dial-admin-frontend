@@ -80,6 +80,7 @@ interface Props {
   showHiddenFileSwitcherInDestinationPopup?: boolean;
   movingItems: number;
   movedItems: number;
+  folderToRefetch?: string | null;
 }
 
 const FileManager: FC<Props> = ({
@@ -96,6 +97,7 @@ const FileManager: FC<Props> = ({
   customUploadFileAction,
   movingItems,
   movedItems,
+  folderToRefetch,
   ...props
 }) => {
   const [loadedPaths, setLoadedPaths] = useState(new Set(['']));
@@ -106,6 +108,30 @@ const FileManager: FC<Props> = ({
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
   const { files, fetchFiles, isFetchingFiles, filePath, setFilePath, expandedFolders, setExpandedFolders } =
     getContext();
+
+  useEffect(() => {
+    if (!folderToRefetch) {
+      return;
+    }
+
+    const normalizedFolderPath = folderToRefetch.replaceAll('//', '/');
+    setLoadedPaths((prev) => {
+      const newLoadedPaths = new Set<string>();
+
+      prev.forEach((path) => {
+        const normalizedPath = path.replaceAll('//', '/');
+        if (
+          normalizedPath === normalizedFolderPath ||
+          normalizedPath === `${normalizedFolderPath}/` ||
+          !normalizedPath.includes(normalizedFolderPath)
+        ) {
+          newLoadedPaths.add(path);
+        }
+      });
+
+      return newLoadedPaths;
+    });
+  }, [folderToRefetch]);
 
   useEffect(() => {
     if (files == null || files?.length === 0) {

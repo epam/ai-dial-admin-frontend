@@ -77,6 +77,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
   const [dragAndDropsItems, setDragAndDropsItems] = useState<File[]>([]);
   const [movingItems, setMovingItems] = useState(0);
   const [movedItems, setMovedItems] = useState(0);
+  const [folderToRefetch, setFolderToRefetch] = useState<string | null>(null);
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -335,6 +336,8 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
       ignorePaths?: boolean,
     ) => {
       let importFolder = destinationFolder || `${ROOT_FOLDER}/`;
+      setFolderToRefetch(importFolder);
+
       const { body } = getFormDataForImport(
         importFolder,
         file,
@@ -348,6 +351,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
       const importAssetAction = ImportAssetActionMap[view as BaseAssetRoute];
 
       importAssetAction(body, fileType).then((res) => {
+        setFolderToRefetch(null);
         if (res.success) {
           fetchFiles?.(importFolder);
           const { title, description, errorTitle, errorDescription, skippedTitle, skippedDescription } =
@@ -546,6 +550,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
         showHiddenFileSwitcherInDestinationPopup={false}
         movingItems={movingItems}
         movedItems={movedItems}
+        folderToRefetch={folderToRefetch}
       />
       <Modals
         view={view}
