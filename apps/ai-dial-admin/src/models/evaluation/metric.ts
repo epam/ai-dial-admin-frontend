@@ -43,7 +43,7 @@ export interface BindingSource {
   columnName?: string;
 }
 
-export type BindingSourceValue = string | string[] | Record<string, unknown>[];
+export type BindingSourceValue = string | string[] | Record<string, unknown>[] | number | boolean;
 
 export interface MetricSnapshot {
   id?: string;
