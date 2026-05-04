@@ -15,7 +15,7 @@ const Logo: FC = () => {
           href="/"
           aria-label="Admin logo"
           style={{ backgroundImage: `url(${getIconPath(currentThemeLogo)})` }}
-          className="bg-right bg-no-repeat min-w-[110px] h-full bg-contain"
+          className="bg-right bg-no-repeat min-w-[125px] h-full bg-contain"
         />
       ) : null}
     </div>
