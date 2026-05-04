@@ -3,7 +3,8 @@ import { FC, useCallback } from 'react';
 import ReactDatePicker, { DatePickerProps } from 'react-datepicker';
 
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-// @ts-expect-error
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import 'react-datepicker/dist/react-datepicker.css';
 
 type PickerProps = Omit<DatePickerProps, 'date'>;
