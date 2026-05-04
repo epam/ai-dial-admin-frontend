@@ -42,7 +42,6 @@ interface Props {
   selectedEntity?: Toolset | DialApplication;
   isAsset?: boolean;
   isMcpToolset?: boolean;
-  isPublicationToolset?: boolean;
   disabled?: boolean;
   onChangeEntity?: (toolset: Toolset | DialApplication) => void;
   appRunner?: DialApplicationScheme;
@@ -55,7 +54,6 @@ const Tools: FC<Props> = ({
   selectedEntity,
   isAsset,
   isMcpToolset,
-  isPublicationToolset,
   disabled,
   onChangeEntity,
   appRunner,
@@ -324,7 +322,6 @@ const Tools: FC<Props> = ({
                     isAddedManual={!tools?.some((t) => t.name === tool.name)}
                     isMcpToolset={isMcpToolset}
                     isAssetToolset={isAsset}
-                    isPublicationToolset={isPublicationToolset}
                     containerId={containerId}
                     toolSetName={(isAsset ? (selectedEntity as AssetToolset)?.path : selectedEntity?.name) || ''}
                     view={view}

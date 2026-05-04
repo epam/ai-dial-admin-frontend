@@ -14,7 +14,6 @@ interface Props {
   isAddedManual?: boolean;
   isMcpToolset?: boolean;
   isAssetToolset?: boolean;
-  isPublicationToolset?: boolean;
   containerId?: string;
   toolSetName: string;
   view?: ApplicationRoute;
@@ -25,7 +24,6 @@ const Tool: FC<Props> = ({
   isAddedManual,
   disabled,
   isMcpToolset,
-  isPublicationToolset,
   isAssetToolset,
   containerId,
   toolSetName,
@@ -44,7 +42,6 @@ const Tool: FC<Props> = ({
             isAddedManual={isAddedManual}
             isMcpToolset={isMcpToolset}
             isAssetToolset={isAssetToolset}
-            isPublicationToolset={isPublicationToolset}
             containerId={containerId}
             view={view}
           />
