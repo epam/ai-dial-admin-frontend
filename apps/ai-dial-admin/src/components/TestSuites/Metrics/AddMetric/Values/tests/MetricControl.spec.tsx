@@ -130,7 +130,7 @@ describe('MetricControl', () => {
     const switchInput = screen.getByRole('switch', { name: 'enabled' });
     fireEvent.click(switchInput);
 
-    expect(onChangeValue).toHaveBeenCalledWith('enabled', 'true');
+    expect(onChangeValue).toHaveBeenCalledWith('enabled', true);
   });
 
   test('renders controls without field label when label prop is false', () => {
