@@ -74,6 +74,7 @@ export default [
       'import/no-unresolved': 'off',
       'import/no-duplicates': 'error',
       'import/named': 'off',
+      '@typescript-eslint/ban-ts-comment': 'off',
       '@nx/enforce-module-boundaries': [
         'error',
         {
