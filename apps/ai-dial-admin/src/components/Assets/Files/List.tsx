@@ -32,6 +32,7 @@ const FilesList = () => {
   const [dragAndDropsItems, setDragAndDropsItems] = useState<File[]>([]);
   const [movingItems, setMovingItems] = useState(0);
   const [movedItems, setMovedItems] = useState(0);
+  const [folderToRefetch, setFolderToRefetch] = useState<string | null>(null);
 
   const { fetchFiles } = useFileFolder();
   const t = useI18n();
@@ -58,6 +59,8 @@ const FilesList = () => {
       ignorePaths?: boolean,
     ) => {
       let destinationFolder = importFolder?.path ? importFolder.path : `${ROOT_FOLDER}/`;
+      setFolderToRefetch(destinationFolder);
+
       const { body } = getFormDataForImport(
         destinationFolder,
         file,
@@ -69,6 +72,7 @@ const FilesList = () => {
       );
 
       importFiles(body, fileType).then((res) => {
+        setFolderToRefetch(null);
         if (res.success) {
           fetchFiles?.(destinationFolder);
           const { title, description, errorTitle, errorDescription, skippedTitle, skippedDescription } =
@@ -207,6 +211,7 @@ const FilesList = () => {
         view={ApplicationRoute.Files}
         movingItems={movingItems}
         movedItems={movedItems}
+        folderToRefetch={folderToRefetch}
       />
       <Modals
         route={ApplicationRoute.Files}
