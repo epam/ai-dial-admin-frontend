@@ -104,7 +104,10 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
 
   const getProcessedActivityMap = useCallback(
     (data: DialActivity[]) => {
-      const activityMap: Record<string, DialActivity & { children?: DialActivity[] }> = {};
+      const activityMap: Record<
+        string,
+        DialActivity & { children?: DialActivity[]; canToggleExpand?: boolean; expanded?: boolean }
+      > = {};
 
       const existingIds = new Set(fullActivityList.map((a) => a.activityId));
       const newActivities = data.filter((a) => !existingIds.has(a.activityId));
@@ -116,6 +119,8 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
           activityMap[activity.activityId] = {
             ...activity,
             children: updatedActivityList.filter((a) => a.parentActivityId === activity.activityId),
+            expanded: true,
+            canToggleExpand: false,
           };
         }
       });
@@ -157,9 +162,10 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
             if (res == null || res.data.length === 0) {
               params.successCallback([], 0);
             } else {
-              const activityMap: Record<string, DialActivity & { children?: DialActivity[] }> = getProcessedActivityMap(
-                res.data,
-              );
+              const activityMap: Record<
+                string,
+                DialActivity & { children?: DialActivity[]; canToggleExpand?: boolean; expanded?: boolean }
+              > = getProcessedActivityMap(res.data);
 
               const newData: DialActivity[] = [];
               res.data.forEach((activity: DialActivity) => {
@@ -167,6 +173,8 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
                   const activityWithChildren = {
                     ...activity,
                     children: activityMap[activity.activityId]?.children || [],
+                    expanded: true,
+                    canToggleExpand: false,
                   };
                   newData.push(activityWithChildren);
                 }
