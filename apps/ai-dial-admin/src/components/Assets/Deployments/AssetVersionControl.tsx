@@ -2,7 +2,14 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialGhostButton, DialNeutralButton, DialSelect, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
+import {
+  DialGhostButton,
+  DialLoader,
+  DialNeutralButton,
+  DialSelect,
+  SelectSize,
+  SelectVariant,
+} from '@epam/ai-dial-ui-kit';
 import { IconPlus, IconReplace } from '@tabler/icons-react';
 
 import { getApp } from '@/src/app/[lang]/assets-applications/actions';
@@ -46,6 +53,7 @@ const AssetVersionControl: FC<Props> = ({
   const router = useRouter();
   const getReqRef = useRef(useProtectedRequest());
 
+  const [isVersionLoading, setIsVersionLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType>();
 
@@ -60,7 +68,6 @@ const AssetVersionControl: FC<Props> = ({
   const changeAssetForNewVersion = useCallback(
     (version: string, newAsset?: AssetWithVersion | null) => {
       if (newAsset) {
-        onChangeAsset?.({} as DeploymentAsset);
         const path = `${encodeURIComponent(newAsset.name as string)}?path=${encodeURIComponent(newAsset.path)}`;
         router.push(`${view}/${path}`);
       } else {
@@ -86,11 +93,13 @@ const AssetVersionControl: FC<Props> = ({
           : view === ApplicationRoute.AssetsToolsets
             ? getToolset
             : getPrompt;
+      setIsVersionLoading(true);
       getReqRef.current(getAsset, asset.folderId, asset.name as string, version, DEFAULT_ETAG).then((res) => {
         if (res.success) {
           const newVersionAsset = res.response as DeploymentAsset;
           changeAssetForNewVersion(version, newVersionAsset);
         } else {
+          setIsVersionLoading(false);
           changeAssetForNewVersion(version);
         }
       });
@@ -120,22 +129,26 @@ const AssetVersionControl: FC<Props> = ({
   return (
     <>
       <div className="flex items-center gap-4">
-        <DialSelect
-          prefix={`${t(EntityFieldsI18nKey.version)}: `}
-          size={SelectSize.Sm}
-          variant={SelectVariant.Secondary}
-          options={items}
-          value={asset.version}
-          onChange={(v) => onChangeVersion(v as string)}
-          footer={
-            <DialGhostButton
-              className="w-full min-h-[34px] h-[34px]"
-              iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-              label={t(ButtonsI18nKey.Create)}
-            />
-          }
-          onFooterClick={() => handleModalOpen(ModalType.addVersion)}
-        />
+        <div className="flex items-center gap-2">
+          <DialSelect
+            prefix={`${t(EntityFieldsI18nKey.version)}: `}
+            size={SelectSize.Sm}
+            variant={SelectVariant.Secondary}
+            options={items}
+            value={asset.version}
+            disabled={isVersionLoading}
+            onChange={(v) => onChangeVersion(v as string)}
+            footer={
+              <DialGhostButton
+                className="w-full min-h-[34px] h-[34px]"
+                iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
+                label={t(ButtonsI18nKey.Create)}
+              />
+            }
+            onFooterClick={() => handleModalOpen(ModalType.addVersion)}
+          />
+          {isVersionLoading && <DialLoader fullWidth={false} size={16} />}
+        </div>
 
         {!!assets?.length && assets.length > 1 && !isDeploymentAsset(view) && (
           <DialNeutralButton

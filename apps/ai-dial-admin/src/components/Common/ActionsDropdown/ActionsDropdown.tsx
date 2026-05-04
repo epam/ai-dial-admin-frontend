@@ -13,17 +13,18 @@ interface ActionsProps<T> {
   rowIndex?: number;
 }
 
-interface ActionProps<T> {
-  item: ActionMenuOperationDeclaration<T>;
-  data?: T;
-  rowIndex?: number;
-}
-
 const ActionsDropdown = <T extends object>({ items, data, rowIndex, ...props }: ActionsProps<T>) => {
+  const t = useI18n();
   const dropdownItems: DropdownItem[] = items.map((item) => ({
     key: item.id,
     disabled: item.disabled,
-    label: <ActionItem item={item} data={data as T} rowIndex={rowIndex as number} />,
+    label: (
+      <div className="text-secondary flex-row flex size-full gap-2 items-center">
+        {item.icon}
+        <span className="text-primary small">{t(item.label)}</span>
+      </div>
+    ),
+    onClick: () => item.onClick(data, rowIndex as number),
   }));
 
   if (!items.length) {
@@ -41,20 +42,6 @@ const ActionsDropdown = <T extends object>({ items, data, rowIndex, ...props }: 
 
 const ActionTrigger: FC<{ icon: ReactNode; actionTriggerClassName?: string }> = ({ icon, actionTriggerClassName }) => {
   return <div className={classNames('cursor-pointer', actionTriggerClassName)}>{icon}</div>;
-};
-
-const ActionItem = <T extends object>({ item, data, rowIndex }: ActionProps<T>) => {
-  const t = useI18n();
-
-  return (
-    <div
-      className="text-secondary flex-row flex size-full gap-2 items-center"
-      onClick={() => item.onClick(data, rowIndex)}
-    >
-      {item.icon}
-      <span className="text-primary small">{t(item.label)}</span>
-    </div>
-  );
 };
 
 export default ActionsDropdown;

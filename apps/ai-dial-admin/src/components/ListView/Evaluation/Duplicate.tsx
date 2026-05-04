@@ -8,19 +8,20 @@ import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getCloneTitle } from '@/src/utils/entities/duplicate-entity';
+import { getClonedEntityName, getCloneTitle } from '@/src/utils/entities/duplicate-entity';
 
 interface Props {
+  entity: TestSuite;
   isModalOpen: boolean;
   onClose: () => void;
   onDuplicate: (entity: TestSuite) => void;
 }
 
-const DuplicateTestSuite: FC<Props> = ({ isModalOpen, onClose, onDuplicate }) => {
+const DuplicateTestSuite: FC<Props> = ({ entity, isModalOpen, onClose, onDuplicate }) => {
   const t = useI18n();
 
   const [clonedEntity, setEntity] = useState<TestSuite>({
-    name: '',
+    name: getClonedEntityName(entity.name),
     description: '',
   });
   const { isValid } = useSaveValidationContext();

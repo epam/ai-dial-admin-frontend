@@ -1,9 +1,9 @@
 import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
 import { CHAT_COMPLETION_BODY } from './chat-completion-body';
 import { TestSuiteEndpointRef } from '@/src/models/evaluation/test-suite';
+import { CHAT_COMPLETION_METHOD } from './chat-completion-method';
 
 export const CHAT_COMPLETION_RELATIVE_URL = '/chat/completions';
-export const CHAT_COMPLETION_METHOD = { method: 'POST', relativeUrlPattern: CHAT_COMPLETION_RELATIVE_URL };
 export const CHAT_COMPLETION_SUITE = {
   endpointRef: CHAT_COMPLETION_METHOD,
   requestTemplate: {

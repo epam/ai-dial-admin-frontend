@@ -157,7 +157,7 @@ const MetricControl: FC<Props> = ({ binding, field, label = true, onChangeValue 
           label={label ? field.name : undefined}
           caption={field.description}
           isOn={binding?.source.value as boolean | undefined}
-          onChange={(v) => onChangeValue(field.name, v.toString())}
+          onChange={(v) => onChangeValue(field.name, v)}
         />
       )}
 
