@@ -196,6 +196,10 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
   const gridOptions: GridOptions = {
     ...infiniteGridOptions,
     onCellClicked: (e) => {
+      if (e.data?.children?.length > 0) {
+        return;
+      }
+
       if (e.colDef.field !== ACTIONS_COLUMN_CEL_ID && e.colDef.field !== EXPANDER_COLUMN_CEL_ID) {
         if (entity) {
           const href = getAuditActivityHref(entity, entityType as ActivityAuditResourceType, e.data.activityId);
@@ -291,7 +295,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
   const activityViewOptions = useMemo(
     () => [
       { value: ACTIVITY_VIEW_TYPE.Config, label: t(TelemetryI18nKey.ActivityViewConfig) },
-      { value: ACTIVITY_VIEW_TYPE.Asset, label: t(TelemetryI18nKey.ActivityViewAsset) },
+      { value: ACTIVITY_VIEW_TYPE.Asset, label: t(TelemetryI18nKey.ActivityViewAsset), disabled: true },
     ],
     [t],
   );

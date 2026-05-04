@@ -7,7 +7,7 @@ const RowExpanderCellRenderer = ({ data }: ICellRendererParams) => {
   if (!hasChildren) return null;
 
   return (
-    <div className={'flex items-center justify-center size-[18px] shrink-0 rounded cursor-pointer hover:bg-layer-3'}>
+    <div className={'flex items-center justify-center size-[18px] shrink-0 rounded'}>
       <IconChevronDown size={14} className="text-secondary" />
     </div>
   );

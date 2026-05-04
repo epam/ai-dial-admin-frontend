@@ -37,7 +37,11 @@ export const getActivityAuditColumns = (
 ): ColDef[] => {
   const actions = [];
   if (open) {
-    actions.push(getOpenInNewTabOperation(open));
+    actions.push(
+      getOpenInNewTabOperation(open, void 0, (_, node) => {
+        return !!(node.data as DialActivity & { children?: DialActivity[] })?.children?.length;
+      }),
+    );
   }
   if (viewDetails) {
     actions.push(getViewDetailsOperation(viewDetails));
