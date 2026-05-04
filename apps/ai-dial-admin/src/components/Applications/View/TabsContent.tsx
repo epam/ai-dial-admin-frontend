@@ -12,6 +12,7 @@ import EntityInterceptors from '@/src/components/EntityView/Interceptors/Interce
 import EntityRoles from '@/src/components/EntityView/Roles/Roles';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import Tools from '@/src/components/Tools/Tools';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
@@ -60,6 +61,7 @@ const TabsContent: FC<Props> = ({
   setIsChanged,
   setSelectedApplication,
 }) => {
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const appRunner = useMemo(() => {
     if (view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications) {
       return getAppRunner(selectedApplication, applicationSchemes);
@@ -88,6 +90,7 @@ const TabsContent: FC<Props> = ({
 
       {activeTab === EntityViewTab.Tools && (
         <Tools
+          disabled={isReadOnlyAdmin}
           isAsset={view === ApplicationRoute.AssetsApplications}
           originalEntity={originalApplication}
           selectedEntity={selectedApplication}

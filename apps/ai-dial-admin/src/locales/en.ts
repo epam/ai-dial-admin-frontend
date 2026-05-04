@@ -1606,6 +1606,7 @@ export default {
     NoInformationToPreview: 'No information to preview',
     AddMetric: 'Add metric',
     EditMetric: 'Edit metric',
+    Metric: 'Metric',
     ResponseColumn: 'Response column',
     Bindings: 'Bindings',
     Parameters: 'Parameters',
