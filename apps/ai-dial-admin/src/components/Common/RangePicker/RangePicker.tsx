@@ -8,7 +8,7 @@ import { useI18n } from '@/src/locales/client';
 import { TimeRange } from '@/src/models/time-range';
 
 import { RangeFsmState, differenceInCalendarDays, hydrate, reduce, toCommit, toDisplayRange } from './range-fsm';
-
+// @ts-expect-error
 import 'react-datepicker/dist/react-datepicker.css';
 
 interface Props {

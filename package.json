@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@epam/ai-dial-shared": "^0.44.8",
-    "@epam/ai-dial-ui-kit": "0.10.0-dev.2",
+    "@epam/ai-dial-ui-kit": "0.10.0-dev.3",
     "@epam/ai-dial-visualizer-connector": "^0.44.8",
     "@floating-ui/react": "^0.27.19",
     "@monaco-editor/react": "^4.7.0",
@@ -103,7 +103,7 @@
     "tailwindcss": "^3.4.19",
     "ts-node": "^10.9.2",
     "tslib": "^2.8.1",
-    "typescript": "~6.0.3",
+    "typescript": "~5.9.3",
     "typescript-eslint": "^8.59.1",
     "vite": "^7.3.1",
     "vitest": "^4.1.5",
