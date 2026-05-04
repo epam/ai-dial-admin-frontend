@@ -104,6 +104,17 @@ Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
   value: () => {},
 });
 
+// ------------------ Monaco Editor (jsdom) ------------------
+// Monaco 0.55+ evaluates clipboard support at import time via queryCommandSupported;
+// jsdom does not implement this deprecated DOM API.
+if (typeof Document.prototype.queryCommandSupported !== 'function') {
+  Object.defineProperty(Document.prototype, 'queryCommandSupported', {
+    configurable: true,
+    writable: true,
+    value: () => false,
+  });
+}
+
 // ------------------ Mock ResizeObserver ------------------
 class ResizeObserverMock {
   constructor(public callback: ResizeObserverCallback) {}
