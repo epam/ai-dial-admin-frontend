@@ -213,6 +213,10 @@ export const ACTIVITY_AUDIT_COLUMNS = (t: (s: string) => string, isSingleEntity?
       filter: false,
       floatingFilter: false,
       cellRenderer: RowExpanderCellRenderer,
+      cellRendererParams: {
+        isExpanded: true,
+        canToggleExpand: false,
+      },
     },
     {
       field: 'activityType',
