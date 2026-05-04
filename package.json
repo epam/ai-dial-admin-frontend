@@ -58,7 +58,8 @@
     "react-dom": "^19.2.5",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
-    "tailwind-merge": "^3.5.0"
+    "tailwind-merge": "^3.5.0",
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
@@ -116,8 +117,7 @@
     "follow-redirects": "1.16.0",
     "yaml": "2.8.3",
     "dompurify": "3.4.0",
-    "postcss": "^8.5.12",
-    "uuid": "^14.0.0"
+    "postcss": "^8.5.12"
   },
   "engines": {
     "node": ">=24.12.0",

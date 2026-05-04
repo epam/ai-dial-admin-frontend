@@ -7,8 +7,10 @@ import {
   DialDeletedItem,
   DialFile,
   DialFileManager,
+  DialRootFolder,
   DialUploadFileItem,
   FileManagerColumnKey,
+  FileManagerGridRow,
 } from '@epam/ai-dial-ui-kit';
 import { ColDef } from 'ag-grid-community';
 
@@ -31,7 +33,6 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { DialRootFolder, FileManagerGridRow } from '@epam/ai-dial-ui-kit';
 import MoveItemsModal from './MoveItemsModal';
 import { MOVE_ITEMS_INDICATOR_DELAY } from './constants';
 import {
