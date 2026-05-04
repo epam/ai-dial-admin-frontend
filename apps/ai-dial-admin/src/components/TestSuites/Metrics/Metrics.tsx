@@ -3,7 +3,14 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialLoader, DialNeutralButton, DialNoDataContent, DialPrimaryButton, ElementSize } from '@epam/ai-dial-ui-kit';
+import {
+  DialConfirmationPopup,
+  DialLoader,
+  DialNeutralButton,
+  DialNoDataContent,
+  DialPrimaryButton,
+  ElementSize,
+} from '@epam/ai-dial-ui-kit';
 import { IconEdit, IconPlus, IconTrash } from '@tabler/icons-react';
 
 import {
@@ -12,7 +19,7 @@ import {
   getTestSuiteMetrics,
   updateTestSuiteMetric,
 } from '@/src/app/[lang]/test-suites/actions';
-import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, DeleteI18nKey, EntitiesI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -34,11 +41,14 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
   const [metrics, setMetrics] = useState<Metric[] | undefined>();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [metricToEdit, setMetricToEdit] = useState<Metric | undefined>();
 
   const onRemoveMetric = useCallback(
     (metricId: string) => {
       deleteTestSuiteMetric(selectedTestSuite.id as string, metricId).then((response) => {
+        setIsDeleteModalOpen(false);
+        setMetricToEdit(undefined);
         if (response?.success) {
           getTestSuiteMetrics(selectedTestSuite.id as string, 0, 1000).then((response) => {
             setMetrics(response?.content);
@@ -135,7 +145,10 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
                       <DialNeutralButton
                         size={ElementSize.Small}
                         label={t(ButtonsI18nKey.Delete)}
-                        onClick={() => onRemoveMetric(metric.id as string)}
+                        onClick={() => {
+                          setMetricToEdit(metric);
+                          setIsDeleteModalOpen(true);
+                        }}
                         iconBefore={<IconTrash stroke={2} size={16} />}
                       />
                       <DialNeutralButton
@@ -185,6 +198,24 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
             }}
             editingMetric={metricToEdit}
           />,
+          document.body,
+        )}
+      {isDeleteModalOpen &&
+        createPortal(
+          <DialConfirmationPopup
+            open={isDeleteModalOpen}
+            header={t(DeleteI18nKey.Title, { entity: t(TestSuitesI18nKey.Metric) })}
+            onConfirm={() => onRemoveMetric(metricToEdit?.id as string)}
+            onClose={() => {
+              setIsDeleteModalOpen(false);
+              setMetricToEdit(undefined);
+            }}
+            confirmLabel={t(ButtonsI18nKey.Delete)}
+            description={t(DeleteI18nKey.Confirming, {
+              entity: `${metricToEdit?.name} ${t(TestSuitesI18nKey.Metric)}`,
+            })}
+          />,
+
           document.body,
         )}
     </div>
