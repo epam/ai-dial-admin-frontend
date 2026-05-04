@@ -5,7 +5,8 @@ import { redirect } from 'next/navigation';
 import { ReactNode } from 'react';
 
 import classNames from 'classnames';
-
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import '@/src/app/[lang]/global.scss';
 import Page403 from '@/src/components/Page403/Page403';
 import { SIGN_IN_LINK } from '@/src/constants/auth';

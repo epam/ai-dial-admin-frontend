@@ -1,4 +1,4 @@
-import { SelectOption } from '@epam/ai-dial-ui-kit/dist/src/models/select';
+import { SelectOption } from '@epam/ai-dial-ui-kit';
 import { MOUNT_TYPE } from '@/src/types/deployments/variables';
 import { EnvVariablesI18nKey } from '@/src/constants/i18n';
 

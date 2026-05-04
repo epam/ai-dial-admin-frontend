@@ -1,5 +1,5 @@
 'use client';
-import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { DialNoDataContent, DialNoDataContentProps } from '@epam/ai-dial-ui-kit';
 import { ColDef } from 'ag-grid-community';
 import classNames from 'classnames';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -11,8 +11,8 @@ import ColumnsPanel from '@/src/components/Grid/ColumnsPanel/ColumnsPanel';
 import { checkColDefsChanges } from '@/src/components/Grid/comparators/base-column-comparator';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
+
 import { getColumnVisibilityFromGridState, updateColumnVisibilityInStorage } from '../utils';
-import { DialNoDataContentProps } from '@epam/ai-dial-ui-kit/dist/src/components/NoDataContent/NoDataContent';
 
 export interface GridViewProps<T> extends AgGridProps<T> {
   emptyDataProps?: DialNoDataContentProps;
