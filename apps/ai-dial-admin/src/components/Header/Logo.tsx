@@ -2,12 +2,10 @@
 import Link from 'next/link';
 import { FC } from 'react';
 
-import { useI18n } from '@/src/locales/client';
-import { getIconPath } from '@/src/utils/themes/icon-path';
 import { useTheme } from '@/src/context/ThemeContext';
+import { getIconPath } from '@/src/utils/themes/icon-path';
 
 const Logo: FC = () => {
-  const t = useI18n();
   const { currentThemeLogo } = useTheme();
 
   return (
@@ -20,9 +18,6 @@ const Logo: FC = () => {
           className="bg-right bg-no-repeat min-w-[110px] h-full bg-contain"
         />
       ) : null}
-      <Link className="relative" href="/" aria-label="Admin title">
-        <h2 className="ml-2 absolute top-[12px]">{t('Admin')}</h2>
-      </Link>
     </div>
   );
 };

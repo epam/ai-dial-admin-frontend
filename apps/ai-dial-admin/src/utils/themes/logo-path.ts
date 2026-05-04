@@ -5,9 +5,11 @@ export const getLogoPath = (themesConfiguration: ThemeConfiguration, themeId: st
   const theme = themesConfiguration?.themes.find((t) => t.id === themeId);
   const fallbackLogo = theme?.['app-logo'] || '';
 
-  return themesConfiguration?.images['admin-logo-light'] && themesConfiguration?.images['admin-logo-dark']
-    ? themeId === DEFAULT_THEME
+  if (themesConfiguration?.images['admin-logo-light'] && themesConfiguration?.images['admin-logo-dark']) {
+    return themeId === DEFAULT_THEME
       ? themesConfiguration?.images['admin-logo-dark']
-      : themesConfiguration?.images['admin-logo-light']
-    : fallbackLogo;
+      : themesConfiguration?.images['admin-logo-light'];
+  }
+
+  return fallbackLogo;
 };
