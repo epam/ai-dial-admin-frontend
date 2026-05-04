@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import { DialGhostButton } from '@epam/ai-dial-ui-kit';
 import { IconReplace } from '@tabler/icons-react';
 
-import { ColDef } from 'ag-grid-community';
+import { ColDef, GridOptions, RowClassParams } from 'ag-grid-community';
 
 import DomainList from '@/src/components/Deployments/Common/Whitelists/DomainList';
 import { getDeploymentColDefs } from '@/src/components/ExportConfig/deployment-utils';
@@ -19,8 +19,10 @@ import { ROW_IMPORT_META_KEY } from '@/src/constants/import';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
+import { RowImportMeta } from '@/src/models/deployments/import';
 import { FileComponentItem } from '@/src/models/import';
 import { ActivityAuditEntity } from '@/src/types/activity-audit';
+import { ValidationState } from '@/src/types/deployments/import';
 
 interface Props {
   selectedTab: string;
@@ -48,6 +50,13 @@ const DeploymentConfigurationGrid: FC<Props> = ({ selectedTab, tabData, globalFi
     ? [getComponentActionColumn(), ...getDeploymentColDefs(t, undefined, selectedTab), importValidationColumn]
     : [];
   const rowData = showGrid ? tabData[selectedTab] || [] : [];
+
+  const gridOptions: GridOptions = {
+    getRowClass: (params: RowClassParams) => {
+      const meta = params.data?.[ROW_IMPORT_META_KEY] as RowImportMeta | undefined;
+      return meta?.validationState === ValidationState.FAILED ? 'ag-error-row' : undefined;
+    },
+  };
 
   const firewallNext = globalFirewall?.next as string[] | null;
   const firewallPrev = globalFirewall?.prev as string[] | null;
@@ -93,6 +102,7 @@ const DeploymentConfigurationGrid: FC<Props> = ({ selectedTab, tabData, globalFi
       key={selectedTab}
       columnDefs={colDefs}
       rowData={rowData}
+      additionalGridOptions={gridOptions}
       emptyDataProps={{ title: t(EntitiesI18nKey.NoEntities) }}
     />
   );
