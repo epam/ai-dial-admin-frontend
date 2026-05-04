@@ -109,6 +109,7 @@ export enum BasicI18nKey {
   Optional = 'Basic.Optional',
   Required = 'Basic.Required',
   Failed = 'Basic.Failed',
+  Validated = 'Basic.Validated',
   NoData = 'Basic.NoData',
   NoParameters = 'Basic.NoParameters',
   NoVariables = 'Basic.NoVariables',
@@ -793,6 +794,10 @@ export enum ImportI18nKey {
   FileUploadSuccessDescription = 'Import.FileUploadSuccessDescription',
   FileRemovedTitle = 'Import.FileRemovedTitle',
   FileRemovedDescription = 'Import.FileRemovedDescription',
+  ValidationBannerHeading = 'Import.ValidationBannerHeading',
+  ValidationBannerHelp = 'Import.ValidationBannerHelp',
+  ImportBlockedTooltip = 'Import.ImportBlockedTooltip',
+  State = 'Import.State',
 }
 
 export enum ExportI18nKey {

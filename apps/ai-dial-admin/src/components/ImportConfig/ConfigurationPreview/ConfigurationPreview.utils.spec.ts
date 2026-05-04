@@ -2,14 +2,21 @@ import { DeploymentExportEntityType } from '@/src/types/deployments/export';
 import { DeploymentImportPreviewResponse } from '@/src/models/deployments/preview';
 import { EntityType } from '@/src/types/entity-type';
 import { ImportConfigurationAction } from '@/src/types/import';
+import { ExportConfigComponentType, ValidationError, ValidationState } from '@/src/types/deployments/import';
+import { RowImportMeta } from '@/src/models/deployments/import';
 import { describe, expect, test } from 'vitest';
 import {
+  buildErrorsByTab,
+  filterArtifactErrors,
+  formatValidationLine,
   getActionClassName,
   getComponentColDefs,
   getConfigurationPreview,
   getDeploymentConfigurationPreview,
-  GLOBAL_FIREWALL_TAB_ID,
+  groupErrorsByEntity,
 } from './ConfigurationPreview.utils';
+import { COMPONENT_TYPE_TO_TAB_ID, GLOBAL_FIREWALL_TAB_ID } from '@/src/constants/deployments/import';
+import { ROW_IMPORT_META_KEY } from '@/src/constants/import';
 import { FileComponentItem, FileConfiguration } from '@/src/models/import';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 
@@ -295,6 +302,246 @@ describe('ConfigurationPreview.utils', () => {
 
       expect(prevData[DeploymentExportEntityType.ADAPTER_CONTAINER]).toBeDefined();
       expect(prevData[DeploymentExportEntityType.ADAPTER_CONTAINER][0]).toBeDefined();
+    });
+  });
+
+  describe('validation utilities', () => {
+    const error = (overrides: Partial<ValidationError>): ValidationError => ({
+      entityType: ExportConfigComponentType.MCP_DEPLOYMENT,
+      entityIdentifier: 'echo',
+      fieldPath: 'name',
+      message: 'must not be null',
+      ...overrides,
+    });
+
+    test('filterArtifactErrors drops GLOBAL_DOMAIN_WHITELIST entries', () => {
+      const errors = [
+        error({ entityType: ExportConfigComponentType.MCP_DEPLOYMENT }),
+        error({
+          entityType: ExportConfigComponentType.GLOBAL_DOMAIN_WHITELIST,
+          fieldPath: 'globalImageBuildDomainWhitelist',
+        }),
+        error({ entityType: ExportConfigComponentType.ADAPTER_DEPLOYMENT, entityIdentifier: 'foo' }),
+      ];
+      const result = filterArtifactErrors(errors);
+      expect(result).toHaveLength(2);
+      expect(result.every((e) => e.entityType !== ExportConfigComponentType.GLOBAL_DOMAIN_WHITELIST)).toBe(true);
+    });
+
+    test('filterArtifactErrors handles undefined input', () => {
+      expect(filterArtifactErrors(undefined)).toEqual([]);
+    });
+
+    test('groupErrorsByEntity groups errors for the same entity', () => {
+      const errors = [
+        error({ fieldPath: 'name' }),
+        error({ fieldPath: 'displayName' }),
+        error({ fieldPath: 'description' }),
+      ];
+      const result = groupErrorsByEntity(errors);
+      expect(result.get(`${ExportConfigComponentType.MCP_DEPLOYMENT}::echo`)).toHaveLength(3);
+    });
+
+    test('groupErrorsByEntity keeps same identifier under different types separate', () => {
+      const errors = [
+        error({ entityType: ExportConfigComponentType.MCP_DEPLOYMENT }),
+        error({ entityType: ExportConfigComponentType.ADAPTER_DEPLOYMENT }),
+      ];
+      const result = groupErrorsByEntity(errors);
+      expect(result.size).toBe(2);
+    });
+
+    test('buildErrorsByTab counts unique entities, not raw errors', () => {
+      const errors = [
+        error({ entityType: ExportConfigComponentType.MCP_DEPLOYMENT, entityIdentifier: 'a' }),
+        error({
+          entityType: ExportConfigComponentType.MCP_DEPLOYMENT,
+          entityIdentifier: 'a',
+          fieldPath: 'displayName',
+        }),
+        error({ entityType: ExportConfigComponentType.MCP_DEPLOYMENT, entityIdentifier: 'b' }),
+        error({ entityType: ExportConfigComponentType.MCP_IMAGE_DEFINITION, entityIdentifier: 'img-1' }),
+      ];
+      const result = buildErrorsByTab(errors);
+      expect(result[DeploymentExportEntityType.MCP_CONTAINER]).toBe(2);
+      expect(result[DeploymentExportEntityType.IMAGE]).toBe(1);
+    });
+
+    test('NIM and Inference both map to MODEL_SERVING tab', () => {
+      expect(COMPONENT_TYPE_TO_TAB_ID[ExportConfigComponentType.NIM_DEPLOYMENT]).toBe(
+        DeploymentExportEntityType.MODEL_SERVING,
+      );
+      expect(COMPONENT_TYPE_TO_TAB_ID[ExportConfigComponentType.INFERENCE_DEPLOYMENT]).toBe(
+        DeploymentExportEntityType.MODEL_SERVING,
+      );
+    });
+
+    test('formatValidationLine: non-empty fieldPath → "field: message"', () => {
+      expect(formatValidationLine(error({ fieldPath: 'name', message: 'bad' }))).toBe('name: bad');
+    });
+
+    test('formatValidationLine: empty fieldPath → message only', () => {
+      expect(formatValidationLine(error({ fieldPath: '', message: 'Mapping failed: NPE' }))).toBe(
+        'Mapping failed: NPE',
+      );
+    });
+  });
+
+  describe('getDeploymentConfigurationPreview — validation enrichment', () => {
+    const baseResponse = (): DeploymentImportPreviewResponse => ({
+      mcpDeployments: [],
+      adapterDeployments: [],
+      applicationDeployments: [],
+      interceptorDeployments: [],
+      nimDeployments: [],
+      inferenceDeployments: [],
+      mcpImageDefinitions: [],
+      adapterImageDefinitions: [],
+      applicationImageDefinitions: [],
+      interceptorImageDefinitions: [],
+      globalImageBuildDomainWhitelist: null,
+    });
+
+    const error = (overrides: Partial<ValidationError>): ValidationError => ({
+      entityType: ExportConfigComponentType.MCP_DEPLOYMENT,
+      entityIdentifier: 'echo',
+      fieldPath: 'name',
+      message: 'must not be null',
+      ...overrides,
+    });
+
+    test('absent validationErrors → all rows VALIDATED, summary clean, no tab marked invalid', () => {
+      const response = baseResponse();
+      response.mcpDeployments = [makeItem('CREATE', { name: 'echo' }), makeItem('CREATE', { name: 'gpt-world' })];
+
+      const { previewData, tabs, validationSummary } = getDeploymentConfigurationPreview(response, t);
+      const rows = previewData[DeploymentExportEntityType.MCP_CONTAINER] as Array<Record<string, unknown>>;
+      rows.forEach((r) => {
+        expect((r[ROW_IMPORT_META_KEY] as { validationState: ValidationState }).validationState).toBe(
+          ValidationState.VALIDATED,
+        );
+      });
+      expect(validationSummary).toEqual({ totalFailed: 0, errorsByTab: {} });
+      expect(tabs.find((tab) => tab.id === DeploymentExportEntityType.MCP_CONTAINER)?.invalid).toBe(false);
+    });
+
+    test('mixed valid/invalid → only failing rows are FAILED; tab marked invalid', () => {
+      const response = baseResponse();
+      response.mcpDeployments = [makeItem('CREATE', { name: 'echo' }), makeItem('CREATE', { name: 'gpt-world' })];
+      response.validationErrors = [error({ entityIdentifier: 'echo' })];
+
+      const { previewData, tabs, validationSummary } = getDeploymentConfigurationPreview(response, t);
+      const rows = previewData[DeploymentExportEntityType.MCP_CONTAINER] as Array<Record<string, unknown>>;
+      const echoMeta = rows.find((r) => r.name === 'echo')?.[ROW_IMPORT_META_KEY] as {
+        validationState: ValidationState;
+      };
+      const gptMeta = rows.find((r) => r.name === 'gpt-world')?.[ROW_IMPORT_META_KEY] as {
+        validationState: ValidationState;
+      };
+      expect(echoMeta.validationState).toBe(ValidationState.FAILED);
+      expect(gptMeta.validationState).toBe(ValidationState.VALIDATED);
+      expect(validationSummary.totalFailed).toBe(1);
+      expect(tabs.find((tab) => tab.id === DeploymentExportEntityType.MCP_CONTAINER)?.invalid).toBe(true);
+    });
+
+    test('GLOBAL_DOMAIN_WHITELIST errors filtered out — summary clean', () => {
+      const response = baseResponse();
+      response.mcpDeployments = [makeItem('CREATE', { name: 'echo' })];
+      response.validationErrors = [
+        error({
+          entityType: ExportConfigComponentType.GLOBAL_DOMAIN_WHITELIST,
+          entityIdentifier: '',
+          fieldPath: 'globalImageBuildDomainWhitelist',
+        }),
+      ];
+
+      const { tabs, validationSummary } = getDeploymentConfigurationPreview(response, t);
+      expect(validationSummary).toEqual({ totalFailed: 0, errorsByTab: {} });
+      tabs.forEach((tab) => expect(tab.invalid ?? false).toBe(false));
+    });
+
+    test('IMAGE-tab join: error matches by next.name even after row.name is clobbered', () => {
+      const response = baseResponse();
+      response.mcpImageDefinitions = [
+        makeItem(
+          'UPDATE',
+          { name: 'img-foo' } as Partial<BaseEntity>,
+          { id: 'prev-uuid-123' } as unknown as BaseEntity,
+        ),
+      ];
+      response.validationErrors = [
+        error({ entityType: ExportConfigComponentType.MCP_IMAGE_DEFINITION, entityIdentifier: 'img-foo' }),
+      ];
+
+      const { previewData } = getDeploymentConfigurationPreview(response, t);
+      const rows = previewData[DeploymentExportEntityType.IMAGE] as Array<Record<string, unknown>>;
+      expect(rows[0].name).toBe('prev-uuid-123');
+      expect(rows[0].displayName).toBe('img-foo');
+
+      const meta = rows[0][ROW_IMPORT_META_KEY] as RowImportMeta;
+      expect(meta.validationState).toBe(ValidationState.FAILED);
+      expect(meta.validationErrors).toHaveLength(1);
+    });
+
+    test('identifier collision across types does not bleed errors', () => {
+      const response = baseResponse();
+      response.mcpDeployments = [makeItem('CREATE', { name: 'echo' })];
+      response.adapterDeployments = [makeItem('CREATE', { name: 'echo' })];
+      response.validationErrors = [
+        error({ entityType: ExportConfigComponentType.MCP_DEPLOYMENT, entityIdentifier: 'echo' }),
+      ];
+
+      const { previewData } = getDeploymentConfigurationPreview(response, t);
+      const mcpMeta = (previewData[DeploymentExportEntityType.MCP_CONTAINER][0] as Record<string, unknown>)[
+        ROW_IMPORT_META_KEY
+      ] as { validationState: ValidationState };
+      const adapterMeta = (previewData[DeploymentExportEntityType.ADAPTER_CONTAINER][0] as Record<string, unknown>)[
+        ROW_IMPORT_META_KEY
+      ] as { validationState: ValidationState };
+      expect(mcpMeta.validationState).toBe(ValidationState.FAILED);
+      expect(adapterMeta.validationState).toBe(ValidationState.VALIDATED);
+    });
+
+    test('IMAGE error keyed as `${name}(${version})` matches by composite candidate', () => {
+      const response = baseResponse();
+      response.mcpImageDefinitions = [
+        makeItem(
+          'UPDATE',
+          { name: 'Registry image', version: '1.0.0' } as Partial<BaseEntity>,
+          { id: '3ae3b052-21f6' } as unknown as BaseEntity,
+        ),
+      ];
+      response.validationErrors = [
+        error({
+          entityType: ExportConfigComponentType.MCP_IMAGE_DEFINITION,
+          entityIdentifier: 'Registry image(1.0.0)',
+          fieldPath: 'source.externalRegistryRef.version',
+          message: 'must not be blank',
+        }),
+      ];
+
+      const { previewData, validationSummary } = getDeploymentConfigurationPreview(response, t);
+      const rows = previewData[DeploymentExportEntityType.IMAGE] as Array<Record<string, unknown>>;
+      const meta = rows[0][ROW_IMPORT_META_KEY] as RowImportMeta;
+      expect(meta.validationState).toBe(ValidationState.FAILED);
+      expect(meta.validationErrors).toHaveLength(1);
+      expect(validationSummary.totalFailed).toBe(1);
+    });
+
+    test('multiple errors for the same entity surface in row meta; totalFailed counts entities', () => {
+      const response = baseResponse();
+      response.mcpDeployments = [makeItem('CREATE', { name: 'echo' })];
+      response.validationErrors = [
+        error({ fieldPath: 'name', message: 'bad' }),
+        error({ fieldPath: 'displayName', message: 'must not be null' }),
+      ];
+
+      const { previewData, validationSummary } = getDeploymentConfigurationPreview(response, t);
+      const meta = (previewData[DeploymentExportEntityType.MCP_CONTAINER][0] as Record<string, unknown>)[
+        ROW_IMPORT_META_KEY
+      ] as { validationErrors: ValidationError[] };
+      expect(meta.validationErrors).toHaveLength(2);
+      expect(validationSummary.totalFailed).toBe(1);
     });
   });
 });

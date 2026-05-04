@@ -13,7 +13,13 @@ import {
   BASE_COLUMNS,
 } from '@/src/constants/grid-columns/grid-columns';
 import { DEPLOYMENT_ENTITY_TABS } from '@/src/components/ExportConfig/deployment-utils';
+import {
+  COMPONENT_TYPE_TO_TAB_ID,
+  DEPLOYMENT_RESPONSE_KEYS,
+  GLOBAL_FIREWALL_TAB_ID,
+} from '@/src/constants/deployments/import';
 import { DeploymentsI18nKey } from '@/src/constants/i18n';
+import { ROW_IMPORT_META_KEY } from '@/src/constants/import';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity, ChatEntity } from '@/src/models/dial/base-entity';
 import { FileComponentItem, FileConfiguration } from '@/src/models/import';
@@ -22,6 +28,8 @@ import { DeploymentExportEntityType } from '@/src/types/deployments/export';
 import { DeploymentImportPreviewResponse } from '@/src/models/deployments/preview';
 import { EntityType } from '@/src/types/entity-type';
 import { ImportConfigurationAction } from '@/src/types/import';
+import { ExportConfigComponentType, ValidationError, ValidationState } from '@/src/types/deployments/import';
+import { RowImportMeta, ValidationSummary } from '@/src/models/deployments/import';
 import { getEntitiesList } from '@/src/utils/entities/get-entities-list';
 
 const getConfigurationItems = (componentItems: FileComponentItem[], t: (v: string) => string) => {
@@ -178,20 +186,78 @@ export const getEntityByIdentifier = (allEntities: ActivityAuditEntity[], entity
   ) as ActivityAuditEntity;
 };
 
-const DEPLOYMENT_IMPORT_KEY_MAP: Record<string, DeploymentExportEntityType> = {
-  mcpDeployments: DeploymentExportEntityType.MCP_CONTAINER,
-  adapterDeployments: DeploymentExportEntityType.ADAPTER_CONTAINER,
-  applicationDeployments: DeploymentExportEntityType.APPLICATION_CONTAINER,
-  interceptorDeployments: DeploymentExportEntityType.INTERCEPTOR_CONTAINER,
-  nimDeployments: DeploymentExportEntityType.MODEL_SERVING,
-  inferenceDeployments: DeploymentExportEntityType.MODEL_SERVING,
-  mcpImageDefinitions: DeploymentExportEntityType.IMAGE,
-  adapterImageDefinitions: DeploymentExportEntityType.IMAGE,
-  applicationImageDefinitions: DeploymentExportEntityType.IMAGE,
-  interceptorImageDefinitions: DeploymentExportEntityType.IMAGE,
+export const filterArtifactErrors = (errors: ValidationError[] | undefined): ValidationError[] => {
+  if (!errors) return [];
+  return errors.filter((e) => e.entityType !== ExportConfigComponentType.GLOBAL_DOMAIN_WHITELIST);
 };
 
-export const GLOBAL_FIREWALL_TAB_ID = 'GLOBAL_FIREWALL';
+const errorKey = (entityType: string, entityIdentifier: string): string => `${entityType}::${entityIdentifier}`;
+
+export const groupErrorsByEntity = (errors: ValidationError[]): Map<string, ValidationError[]> => {
+  const grouped = new Map<string, ValidationError[]>();
+  for (const error of errors) {
+    const key = errorKey(error.entityType, error.entityIdentifier);
+    const existing = grouped.get(key);
+    if (existing) {
+      existing.push(error);
+    } else {
+      grouped.set(key, [error]);
+    }
+  }
+  return grouped;
+};
+
+export const buildErrorsByTab = (errors: ValidationError[]): Partial<Record<DeploymentExportEntityType, number>> => {
+  const seenByTab: Partial<Record<DeploymentExportEntityType, Set<string>>> = {};
+  for (const error of errors) {
+    const tabId = COMPONENT_TYPE_TO_TAB_ID[error.entityType as ExportConfigComponentType];
+    if (!tabId) continue;
+    const key = errorKey(error.entityType, error.entityIdentifier);
+    if (!seenByTab[tabId]) seenByTab[tabId] = new Set();
+    seenByTab[tabId]!.add(key);
+  }
+  const counts: Partial<Record<DeploymentExportEntityType, number>> = {};
+  for (const [tabId, keys] of Object.entries(seenByTab) as [DeploymentExportEntityType, Set<string>][]) {
+    counts[tabId] = keys.size;
+  }
+  return counts;
+};
+
+export const formatValidationLine = (e: ValidationError): string =>
+  e.fieldPath ? `${e.fieldPath}: ${e.message}` : e.message;
+
+interface DeploymentRowEntry {
+  item: FileComponentItem;
+  componentType: ExportConfigComponentType;
+}
+
+const getRowCandidateIdentifiers = (item: FileComponentItem): string[] => {
+  type Side = { name?: string; id?: string; version?: string } | undefined;
+  const next = item.next as Side;
+  const prev = item.prev as Side;
+  const candidates: (string | undefined)[] = [];
+  for (const side of [next, prev]) {
+    if (!side) continue;
+    candidates.push(side.name);
+    candidates.push(side.id);
+    if (side.name && side.version) candidates.push(`${side.name}(${side.version})`);
+  }
+  return Array.from(new Set(candidates.filter((v): v is string => typeof v === 'string' && v.length > 0)));
+};
+
+const buildRowImportMeta = (
+  item: FileComponentItem,
+  componentType: ExportConfigComponentType,
+  groupedErrors: Map<string, ValidationError[]>,
+): RowImportMeta => {
+  for (const candidate of getRowCandidateIdentifiers(item)) {
+    const matched = groupedErrors.get(errorKey(componentType, candidate));
+    if (matched && matched.length > 0) {
+      return { validationState: ValidationState.FAILED, validationErrors: matched };
+    }
+  }
+  return { validationState: ValidationState.VALIDATED, validationErrors: [] };
+};
 
 export const getDeploymentConfigurationPreview = (
   response: DeploymentImportPreviewResponse,
@@ -201,14 +267,22 @@ export const getDeploymentConfigurationPreview = (
   prevData: Record<string, (BaseEntity | undefined)[]>;
   tabs: TabModel[];
   globalFirewall: FileComponentItem | null;
+  validationSummary: ValidationSummary;
 } => {
-  const grouped: Record<string, FileComponentItem[]> = {};
+  const filteredErrors = filterArtifactErrors(response.validationErrors);
+  const groupedErrors = groupErrorsByEntity(filteredErrors);
+  const errorsByTab = buildErrorsByTab(filteredErrors);
 
-  for (const [key, entityType] of Object.entries(DEPLOYMENT_IMPORT_KEY_MAP)) {
+  const grouped: Record<string, DeploymentRowEntry[]> = {};
+
+  for (const [key, componentType] of Object.entries(DEPLOYMENT_RESPONSE_KEYS)) {
     const items = response[key as keyof DeploymentImportPreviewResponse] as FileComponentItem[] | null;
-    if (items && Array.isArray(items) && items.length > 0) {
-      if (!grouped[entityType]) grouped[entityType] = [];
-      grouped[entityType].push(...items);
+    if (!items?.length) continue;
+    const tabId = COMPONENT_TYPE_TO_TAB_ID[componentType];
+    if (!tabId) continue;
+    if (!grouped[tabId]) grouped[tabId] = [];
+    for (const item of items) {
+      grouped[tabId].push({ item, componentType });
     }
   }
 
@@ -217,21 +291,31 @@ export const getDeploymentConfigurationPreview = (
   const tabs: TabModel[] = [];
 
   for (const { id, labelKey } of DEPLOYMENT_ENTITY_TABS) {
-    const items = grouped[id];
-    if (items && items.length > 0) {
+    const entries = grouped[id];
+    if (entries && entries.length > 0) {
+      const items = entries.map((entry) => entry.item);
       const baseItems = getConfigurationItems(items, t);
+      const enrichedBase = baseItems.map((row, index) => {
+        const entry = entries[index];
+        return {
+          ...row,
+          [ROW_IMPORT_META_KEY]: buildRowImportMeta(entry.item, entry.componentType, groupedErrors),
+        };
+      });
+
       previewData[id] =
         id === DeploymentExportEntityType.IMAGE
-          ? baseItems.map((item, index) => ({
+          ? enrichedBase.map((item, index) => ({
               ...item,
               displayName: item.name,
               name: (items[index]?.prev as { id?: string } | undefined)?.id ?? '',
             }))
-          : baseItems;
+          : enrichedBase;
       prevData[id] = getPrevItems(items);
       tabs.push({
         id,
         label: `${t(labelKey)}: ${items.length}`,
+        invalid: (errorsByTab[id] ?? 0) > 0,
       });
     }
   }
@@ -244,5 +328,10 @@ export const getDeploymentConfigurationPreview = (
     });
   }
 
-  return { previewData, prevData, tabs, globalFirewall };
+  const validationSummary: ValidationSummary = {
+    totalFailed: groupedErrors.size,
+    errorsByTab,
+  };
+
+  return { previewData, prevData, tabs, globalFirewall, validationSummary };
 };

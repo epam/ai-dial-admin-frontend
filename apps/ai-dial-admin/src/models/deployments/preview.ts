@@ -1,4 +1,5 @@
 import { FileComponentItem } from '@/src/models/import';
+import { ValidationError } from '@/src/types/deployments/import';
 
 export interface ExportComponentInfo {
   id: string;
@@ -26,4 +27,5 @@ export interface DeploymentImportPreviewResponse {
   applicationImageDefinitions: FileComponentItem[];
   interceptorImageDefinitions: FileComponentItem[];
   globalImageBuildDomainWhitelist: FileComponentItem | null;
+  validationErrors?: ValidationError[];
 }
