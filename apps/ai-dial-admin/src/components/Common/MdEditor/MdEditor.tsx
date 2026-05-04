@@ -1,5 +1,9 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import '@uiw/react-markdown-preview/markdown.css';
 import MDEditor from '@uiw/react-md-editor';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import '@uiw/react-md-editor/markdown-editor.css';
 
 import { FC } from 'react';

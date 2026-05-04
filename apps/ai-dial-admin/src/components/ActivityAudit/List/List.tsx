@@ -104,7 +104,10 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
 
   const getProcessedActivityMap = useCallback(
     (data: DialActivity[]) => {
-      const activityMap: Record<string, DialActivity & { children?: DialActivity[] }> = {};
+      const activityMap: Record<
+        string,
+        DialActivity & { children?: DialActivity[]; canToggleExpand?: boolean; expanded?: boolean }
+      > = {};
 
       const existingIds = new Set(fullActivityList.map((a) => a.activityId));
       const newActivities = data.filter((a) => !existingIds.has(a.activityId));
@@ -116,6 +119,8 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
           activityMap[activity.activityId] = {
             ...activity,
             children: updatedActivityList.filter((a) => a.parentActivityId === activity.activityId),
+            expanded: true,
+            canToggleExpand: false,
           };
         }
       });
@@ -157,9 +162,10 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
             if (res == null || res.data.length === 0) {
               params.successCallback([], 0);
             } else {
-              const activityMap: Record<string, DialActivity & { children?: DialActivity[] }> = getProcessedActivityMap(
-                res.data,
-              );
+              const activityMap: Record<
+                string,
+                DialActivity & { children?: DialActivity[]; canToggleExpand?: boolean; expanded?: boolean }
+              > = getProcessedActivityMap(res.data);
 
               const newData: DialActivity[] = [];
               res.data.forEach((activity: DialActivity) => {
@@ -167,6 +173,8 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
                   const activityWithChildren = {
                     ...activity,
                     children: activityMap[activity.activityId]?.children || [],
+                    expanded: true,
+                    canToggleExpand: false,
                   };
                   newData.push(activityWithChildren);
                 }
@@ -196,6 +204,10 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
   const gridOptions: GridOptions = {
     ...infiniteGridOptions,
     onCellClicked: (e) => {
+      if (e.data?.children?.length > 0) {
+        return;
+      }
+
       if (e.colDef.field !== ACTIONS_COLUMN_CEL_ID && e.colDef.field !== EXPANDER_COLUMN_CEL_ID) {
         if (entity) {
           const href = getAuditActivityHref(entity, entityType as ActivityAuditResourceType, e.data.activityId);
@@ -291,7 +303,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
   const activityViewOptions = useMemo(
     () => [
       { value: ACTIVITY_VIEW_TYPE.Config, label: t(TelemetryI18nKey.ActivityViewConfig) },
-      { value: ACTIVITY_VIEW_TYPE.Asset, label: t(TelemetryI18nKey.ActivityViewAsset) },
+      { value: ACTIVITY_VIEW_TYPE.Asset, label: t(TelemetryI18nKey.ActivityViewAsset), disabled: true },
     ],
     [t],
   );

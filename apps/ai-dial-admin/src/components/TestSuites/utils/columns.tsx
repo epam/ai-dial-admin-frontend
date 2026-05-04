@@ -101,7 +101,7 @@ export const getTestCaseColumns = (
         return true;
       },
       tooltipValueGetter: (params) => {
-        return !params.data?.enabled ? 'Disable test case' : 'Enable test case';
+        return params.data?.enabled ? 'Disable test case' : 'Enable test case';
       },
     } as ColDef,
     ...TEST_CASES_COLUMN.map((col) => {

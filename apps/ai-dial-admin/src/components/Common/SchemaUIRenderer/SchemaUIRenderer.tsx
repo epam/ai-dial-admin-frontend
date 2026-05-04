@@ -4,7 +4,7 @@ import { FC, useCallback } from 'react';
 
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
-import { DialSchemeRenderer, JsonSchema } from '@epam/ai-dial-ui-kit';
+import { DialSchemaRenderer, JsonSchema } from '@epam/ai-dial-ui-kit';
 
 interface Props {
   schema: JsonSchema;
@@ -32,7 +32,7 @@ const SchemaUiRenderer: FC<Props> = ({
   );
 
   return (
-    <DialSchemeRenderer
+    <DialSchemaRenderer
       schema={schema}
       onChange={onChange}
       defaultValue={data}

@@ -206,17 +206,12 @@ const EvaluationListView = <T extends object>({
   const actionColumn = [getOpenInNewTabOperation(onOpenInNewTabAction)];
 
   if (route === ApplicationRoute.TestSuites) {
-    actionColumn.push(getRunTestSuiteOperation(onOpenRunTestSuiteModal));
+    actionColumn.push(
+      ...[getRunTestSuiteOperation(onOpenRunTestSuiteModal), getDuplicateOperation(onOpenDuplicateModal)],
+    );
   }
 
-  const columnDefs = [
-    ...baseColumns,
-    ACTION_COLUMN([
-      ...actionColumn,
-      getDuplicateOperation(onOpenDuplicateModal),
-      getDeleteOperation(onOpenDeleteModal),
-    ]),
-  ];
+  const columnDefs = [...baseColumns, ACTION_COLUMN([...actionColumn, getDeleteOperation(onOpenDeleteModal)])];
 
   return (
     <>
@@ -262,7 +257,12 @@ const EvaluationListView = <T extends object>({
         modalType === ModalType.duplicate &&
         createPortal(
           <SaveValidationContextProvider>
-            <DuplicateTestSuite isModalOpen={isModalOpen} onClose={onModalClose} onDuplicate={onDuplicate} />
+            <DuplicateTestSuite
+              isModalOpen={isModalOpen}
+              onClose={onModalClose}
+              onDuplicate={onDuplicate}
+              entity={currentEntity as TestSuite}
+            />
           </SaveValidationContextProvider>,
           document.body,
         )}

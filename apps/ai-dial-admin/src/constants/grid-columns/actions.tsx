@@ -114,6 +114,7 @@ export function getDuplicateOperation<T>(onClick: (entity?: T) => void): ActionM
 export function getOpenInNewTabOperation<T>(
   onClick: (entity?: T) => void,
   hidden?: (api: GridApi, node: IRowNode) => boolean,
+  disabled?: boolean | ((api: GridApi, node: IRowNode) => boolean),
 ): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconExternalLink {...BASE_BUTTON_ICON_PROPS} />,
@@ -121,6 +122,7 @@ export function getOpenInNewTabOperation<T>(
     label: ActionMenuOperationI18nKey.Open_in_new_tab,
     onClick,
     hidden,
+    disabled,
   };
 }
 

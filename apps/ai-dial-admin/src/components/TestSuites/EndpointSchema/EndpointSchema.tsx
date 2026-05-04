@@ -46,8 +46,8 @@ const EndpointSchema: FC<Props> = ({ testSuite, onChangeTestSuite, isSkipRefresh
 
   const currentSchema =
     activeSchemaTab === EntityViewTab.RequestSchema
-      ? (testSuite.endpointRef?.requestBodySchema?.schema as unknown as JSONSchema7 | undefined)
-      : (testSuite.endpointRef?.responseBodySchema as unknown as JSONSchema7 | undefined);
+      ? (testSuite.endpointRef?.requestBodySchema?.schema as unknown as JSONSchema7 | undefined) || {}
+      : (testSuite.endpointRef?.responseBodySchema as unknown as JSONSchema7 | undefined) || {};
 
   const onChangeSchema = useCallback(
     (schema: JSONSchema7, isSkipRefresh?: boolean) => {
