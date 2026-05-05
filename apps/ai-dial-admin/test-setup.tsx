@@ -14,10 +14,13 @@ const fetchMocker = createFetchMock(vi);
 fetchMocker.enableMocks();
 
 // ------------------ Mocks for Locales ------------------
-vi.mock('@/src/locales/client', () => ({
-  useI18n: () => (key: string) => key,
-  useCurrentLocale: () => 'en',
-}));
+vi.mock('@/src/locales/client', () => {
+  const t = (key: string) => key;
+  return {
+    useI18n: () => t,
+    useCurrentLocale: () => 'en',
+  };
+});
 
 // ------------------ NextAuth ------------------
 vi.mock('next-auth/react', () => ({

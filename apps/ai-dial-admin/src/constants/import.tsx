@@ -6,6 +6,8 @@ import { DeploymentImportResolutionPolicy } from '@/src/types/deployments/import
 import { ApplicationRoute } from '@/src/types/routes';
 import { isAssetWithVersion } from '@/src/utils/is-view';
 
+export const ROW_IMPORT_META_KEY = '__import' as const;
+
 export const IMPORT_RESOLUTIONS = (
   t: (stringToTranslate: string) => string,
   importType?: string,
