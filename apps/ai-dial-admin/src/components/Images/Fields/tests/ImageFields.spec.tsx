@@ -69,4 +69,15 @@ describe('ImageFields', () => {
     expect(parentDiv.className).toContain('divide-y');
     expect(parentDiv.className).toContain('divide-primary');
   });
+
+  test('should not render dividers or extra spacing in modal mode', () => {
+    const { container } = render(<ImageFields image={mockImage} setImage={vi.fn()} isModal={true} />);
+
+    const parentDiv = container.firstChild as HTMLElement;
+    expect(parentDiv.className).not.toContain('divide-y');
+    expect(parentDiv.className).not.toContain('divide-primary');
+
+    const sourceGroup = screen.getByText('ImageSource').parentElement as HTMLElement;
+    expect(sourceGroup.className).not.toContain('pt-8');
+  });
 });
