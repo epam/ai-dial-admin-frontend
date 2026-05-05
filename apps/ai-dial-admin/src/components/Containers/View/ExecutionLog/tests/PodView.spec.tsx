@@ -1,18 +1,44 @@
 import { describe, expect, test, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 
-const mockAddEventListener = vi.fn();
-const mockRemoveEventListener = vi.fn();
-const mockClose = vi.fn();
+const { showNotificationSpy } = vi.hoisted(() => ({
+  showNotificationSpy: vi.fn(),
+}));
+
+vi.mock('@/src/context/NotificationContext', () => ({
+  useNotification: () => ({ showNotification: showNotificationSpy }),
+}));
+
+type Listener = (event: { data?: unknown }) => void;
 
 class MockEventSource {
-  constructor(public url: string) {
+  static CONNECTING = 0;
+  static OPEN = 1;
+  static CLOSED = 2;
+  static instances: MockEventSource[] = [];
+
+  url: string;
+  readyState: number = MockEventSource.CONNECTING;
+  listeners: Record<string, Listener[]> = {};
+
+  addEventListener = vi.fn((name: string, fn: Listener) => {
+    (this.listeners[name] ||= []).push(fn);
+  });
+  removeEventListener = vi.fn((name: string, fn: Listener) => {
+    this.listeners[name] = (this.listeners[name] || []).filter((listener) => listener !== fn);
+  });
+  close = vi.fn(() => {
+    this.readyState = MockEventSource.CLOSED;
+  });
+
+  constructor(url: string) {
+    this.url = url;
     MockEventSource.instances.push(this);
   }
-  static instances: MockEventSource[] = [];
-  addEventListener = mockAddEventListener;
-  removeEventListener = mockRemoveEventListener;
-  close = mockClose;
+
+  dispatch(name: string, data?: unknown) {
+    (this.listeners[name] || []).forEach((fn) => fn({ data }));
+  }
 }
 
 vi.stubGlobal('EventSource', MockEventSource);
@@ -23,7 +49,11 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
 
 vi.mock('@/src/components/Common/LogViewer/LogViewer', () => ({
   __esModule: true,
-  default: ({ logs }: any) => <div data-testid="log-viewer">{logs}</div>,
+  default: ({ logs }: any) => (
+    <div role="log" aria-label="pod-logs">
+      {logs}
+    </div>
+  ),
 }));
 
 vi.mock('@/src/components/Common/LabelledText/LabelledText', () => ({
@@ -32,7 +62,7 @@ vi.mock('@/src/components/Common/LabelledText/LabelledText', () => ({
 }));
 
 import PodView from '../PodView';
-import { EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { DeploymentsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import type { Pod } from '@/src/models/deployments/containers';
 
@@ -80,5 +110,96 @@ describe('PodView', () => {
   test('hides restart info when restartCount is absent', () => {
     render(<PodView pod={makePod('pod-1')} containerId="c1" route={ApplicationRoute.McpContainers} />);
     expect(screen.queryByTestId(`label-${EntityFieldsI18nKey.Restarts}`)).not.toBeInTheDocument();
+  });
+
+  test('appends incoming log lines to the rendered buffer', () => {
+    render(<PodView pod={makePod('pod-1')} containerId="c1" route={ApplicationRoute.McpContainers} />);
+    const source = MockEventSource.instances[0];
+    act(() => {
+      source.dispatch('logs', 'first line');
+      source.dispatch('logs', 'second line');
+    });
+    const log = screen.getByRole('log');
+    expect(log.textContent).toContain('first line');
+    expect(log.textContent).toContain('second line');
+  });
+
+  test('native error in CONNECTING state stays silent and does not close', () => {
+    render(<PodView pod={makePod('pod-1')} containerId="c1" route={ApplicationRoute.McpContainers} />);
+    const source = MockEventSource.instances[0];
+    expect(source.readyState).toBe(MockEventSource.CONNECTING);
+
+    act(() => {
+      source.dispatch('error');
+    });
+    expect(showNotificationSpy).not.toHaveBeenCalled();
+    expect(source.close).not.toHaveBeenCalled();
+  });
+
+  test('native error in CLOSED state shows generic LogsError notification', () => {
+    render(<PodView pod={makePod('pod-1')} containerId="c1" route={ApplicationRoute.McpContainers} />);
+    const source = MockEventSource.instances[0];
+
+    act(() => {
+      source.readyState = MockEventSource.CLOSED;
+      source.dispatch('error');
+    });
+    expect(showNotificationSpy).toHaveBeenCalledTimes(1);
+    const notification = showNotificationSpy.mock.calls[0][0];
+    expect(notification.description).toBe(DeploymentsI18nKey.LogsError);
+  });
+
+  test('server-sent named error event surfaces backend message and closes', () => {
+    render(<PodView pod={makePod('pod-1')} containerId="c1" route={ApplicationRoute.McpContainers} />);
+    const source = MockEventSource.instances[0];
+
+    act(() => {
+      source.dispatch('error', JSON.stringify({ message: 'pod gone' }));
+    });
+    expect(source.close).toHaveBeenCalledTimes(1);
+    expect(showNotificationSpy).toHaveBeenCalledTimes(1);
+    const notification = showNotificationSpy.mock.calls[0][0];
+    expect(notification.description).toBe('pod gone');
+  });
+
+  test('reconnect open clears the buffer because the backend re-streams the full log', () => {
+    render(<PodView pod={makePod('pod-1')} containerId="c1" route={ApplicationRoute.McpContainers} />);
+    const source = MockEventSource.instances[0];
+
+    act(() => {
+      source.dispatch('open');
+      source.dispatch('logs', 'first line');
+      source.dispatch('logs', 'second line');
+    });
+    expect(screen.getByRole('log').textContent).toContain('first line');
+
+    act(() => {
+      source.dispatch('open');
+    });
+    // Buffer cleared on reconnect; LogViewer unmounts and the no-data placeholder renders.
+    expect(screen.queryByRole('log')).not.toBeInTheDocument();
+    expect(screen.getByTestId('no-data')).toBeInTheDocument();
+
+    act(() => {
+      source.dispatch('logs', 'first line');
+      source.dispatch('logs', 'second line');
+      source.dispatch('logs', 'third line');
+    });
+    const log = screen.getByRole('log');
+    expect(log.textContent).toContain('first line');
+    expect(log.textContent).toContain('third line');
+    // No duplication of previous-session lines.
+    expect(log.textContent?.match(/first line/g)).toHaveLength(1);
+  });
+
+  test('unmount closes EventSource and removes every listener it added', () => {
+    const { unmount } = render(
+      <PodView pod={makePod('pod-1')} containerId="c1" route={ApplicationRoute.McpContainers} />,
+    );
+    const source = MockEventSource.instances[0];
+    const addedListenerCount = source.addEventListener.mock.calls.length;
+    unmount();
+    expect(source.close).toHaveBeenCalledTimes(1);
+    expect(source.removeEventListener).toHaveBeenCalledTimes(addedListenerCount);
   });
 });
