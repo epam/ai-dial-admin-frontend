@@ -4,7 +4,7 @@ import { cookies, headers } from 'next/headers';
 
 import { testSuitesApi } from '@/src/app/api/api';
 import { DeploymentType } from '@/src/models/evaluation/deployment';
-import { TestCase, TestSuite } from '@/src/models/evaluation/test-suite';
+import { TestCase, TestCaseBulkPatchRequest, TestSuite } from '@/src/models/evaluation/test-suite';
 import { FilterDto, SortDto } from '@/src/models/request';
 import type { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 import { FilterOperatorDto } from '@/src/types/request';
@@ -111,6 +111,11 @@ export async function createTestCase(
 export async function updateTestCases(id: string, testCases: TestCase[]) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return testSuitesApi.updateTestCases(id, testCases, token);
+}
+
+export async function bulkPatchTestCases(id: string, request: TestCaseBulkPatchRequest) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.bulkPatchTestCases(id, request, token);
 }
 
 export async function getTestCase(id: string, testCaseId?: string) {
