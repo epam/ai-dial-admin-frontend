@@ -7,7 +7,13 @@ import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconPlayerPlay } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 
-import { removeTestSuite, runTestSuite, updateTestCases, updateTestSuite } from '@/src/app/[lang]/test-suites/actions';
+import {
+  bulkPatchTestCases,
+  removeTestSuite,
+  runTestSuite,
+  updateTestCases,
+  updateTestSuite,
+} from '@/src/app/[lang]/test-suites/actions';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
@@ -81,28 +87,59 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
       router.refresh();
     };
 
-    updateTestSuite(selectedTestSuite, etag).then((res) => {
-      if (!res.success) {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+    const handleError = (header: string | undefined, message: string | undefined, requestId?: string) => {
+      showNotification(getErrorNotification(header, message, requestId));
+      router.refresh();
+    };
+
+    updateTestSuite(selectedTestSuite, etag).then((suiteRes) => {
+      if (!suiteRes.success) {
+        handleError(suiteRes.errorHeader, suiteRes.errorMessage, suiteRes.requestId);
         return;
       }
+
       const dirtyTestCases = testCasesActionsRef.current?.getDirtyTestCases() ?? [];
+      const enabledOnlyChanges = testCasesActionsRef.current?.getEnabledOnlyChanges() ?? new Map<string, boolean>();
+
+      const runBulkPatch = () => {
+        if (enabledOnlyChanges.size === 0 || !selectedTestSuite.id) return Promise.resolve(true);
+
+        const enabledTrueIds = [...enabledOnlyChanges.entries()].filter(([, v]) => v).map(([id]) => id);
+        const enabledFalseIds = [...enabledOnlyChanges.entries()].filter(([, v]) => !v).map(([id]) => id);
+        const bulkOperations = [
+          ...(enabledTrueIds.length > 0 ? [{ selector: { ids: enabledTrueIds }, patch: { enabled: true } }] : []),
+          ...(enabledFalseIds.length > 0 ? [{ selector: { ids: enabledFalseIds }, patch: { enabled: false } }] : []),
+        ];
+
+        return bulkPatchTestCases(selectedTestSuite.id, { bulkOperations, itemOperations: [] }).then((bulkRes) => {
+          if (!bulkRes.success) {
+            handleError(bulkRes.errorHeader, bulkRes.errorMessage, bulkRes.requestId);
+            return false;
+          }
+          return true;
+        });
+      };
+
       if (dirtyTestCases.length > 0 && selectedTestSuite.id) {
         updateTestCases(selectedTestSuite.id, dirtyTestCases).then((testCasesRes) => {
-          if (testCasesRes.success) {
+          if (!testCasesRes.success) {
+            handleError(testCasesRes.errorHeader, testCasesRes.errorMessage, testCasesRes.requestId);
+            return;
+          }
+          runBulkPatch().then((bulkOk) => {
+            if (!bulkOk) return;
             testCasesActionsRef.current?.clearDirtyAndRefresh();
             setHasTestCaseChanges(false);
             showSuccessAndRefresh();
-          } else {
-            showNotification(
-              getErrorNotification(testCasesRes.errorHeader, testCasesRes.errorMessage, testCasesRes.requestId),
-            );
-          }
+          });
         });
       } else {
-        testCasesActionsRef.current?.clearDirtyAndRefresh();
-        setHasTestCaseChanges(false);
-        showSuccessAndRefresh();
+        runBulkPatch().then((bulkOk) => {
+          if (!bulkOk) return;
+          testCasesActionsRef.current?.clearDirtyAndRefresh();
+          setHasTestCaseChanges(false);
+          showSuccessAndRefresh();
+        });
       }
     });
   }, [selectedTestSuite, etag, showNotification, t, router]);

@@ -3,7 +3,13 @@ import { CustomFile, DialFile } from '@/src/models/dial/file';
 import { Deployment, DeploymentType, ToolDefinition } from '@/src/models/evaluation/deployment';
 import { Metric, MetricResponse } from '@/src/models/evaluation/metric';
 import { Run } from '@/src/models/evaluation/run';
-import { TemplateVariable, TestCase, TestSuite, TryOutResponse } from '@/src/models/evaluation/test-suite';
+import {
+  TemplateVariable,
+  TestCase,
+  TestSuite,
+  TryOutResponse,
+  TestCaseBulkPatchRequest,
+} from '@/src/models/evaluation/test-suite';
 import { EvaluationPageData, FilterDto, SortDto } from '@/src/models/request';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { API } from '@/src/server/api';
@@ -27,6 +33,7 @@ export const TEST_SUITE_TRY_OUT_URL = (id: string) => `${TEST_SUITE_URL(id)}/try
 export const TEST_CASE_TRY_OUT_URL = (id: string, testCaseId: string) => `${TEST_CASE_URL(id, testCaseId)}/try-it-out`;
 export const METRIC_DECLARATIONS_URL = `${API}/metric-declarations`;
 export const TEST_SUITE_METRICS_URL = (id: string) => `${TEST_SUITE_URL(id)}/metric-definitions`;
+export const TEST_CASES_BULK_URL = (id?: string) => `${TEST_CASES_URL(id)}:bulk`;
 
 export class TestSuitesApi extends BaseApi {
   getTestSuites(
@@ -112,6 +119,10 @@ export class TestSuitesApi extends BaseApi {
 
   updateTestCases(id: string, testCases: TestCase[], token: Token): Promise<ServerActionResponse> {
     return this.putAction(TEST_CASES_URL(id), testCases, token);
+  }
+
+  bulkPatchTestCases(id: string, request: TestCaseBulkPatchRequest, token: Token): Promise<ServerActionResponse> {
+    return this.patchAction(TEST_CASES_BULK_URL(id), request, token);
   }
 
   exportTestCasesCsv(testSuiteId: string, token: Token) {
