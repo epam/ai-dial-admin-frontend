@@ -1,4 +1,5 @@
 import { FC, useMemo, useState } from 'react';
+import classNames from 'classnames';
 
 import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { FieldError } from '@/src/models/error';
@@ -77,7 +78,7 @@ const ImageFields: FC<Props> = ({ image, setImage, isModal, setImageVersions }) 
   );
 
   return (
-    <div className="flex flex-col size-full gap-y-8 divide-y divide-primary">
+    <div className={classNames('flex flex-col size-full gap-y-8', !isModal && 'divide-y divide-primary')}>
       <div className="flex flex-col gap-y-8">
         <ImageBase
           image={image}
@@ -90,7 +91,7 @@ const ImageFields: FC<Props> = ({ image, setImage, isModal, setImageVersions }) 
         />
         {!isModal && <ImageBuildPrivileges image={image} setImage={setImage} />}
       </div>
-      <div className="flex flex-col gap-y-8 pt-8">
+      <div className={classNames('flex flex-col gap-y-8', !isModal && 'pt-8')}>
         <ImageSource image={image} setImage={setImage} isModal={isModal} verifyVersion={verifyVersion} />
         {!isModal && <ImageTransport image={image} setImage={setImage} />}
       </div>

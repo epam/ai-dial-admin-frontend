@@ -8,6 +8,7 @@ import {
   DEPLOYMENTS_URL,
   DEPLOYMENT_TOOLS_URL,
   METRIC_DECLARATIONS_URL,
+  TEST_CASES_BULK_URL,
   TEST_CASES_URL,
   TEST_CASE_TEMPLATE_VARIABLES_URL,
   TEST_CASE_TRY_OUT_URL,
@@ -449,6 +450,21 @@ describe('Server :: TestSuiteApi', () => {
       `${TEST_URL}${TEST_CASES_URL('id')}?filter=testCaseName:in:testCase1,testCase2`,
       expect.objectContaining({
         method: 'DELETE',
+      }),
+    );
+  });
+
+  test('Should call bulkPatchTestCases with PATCH method and correct payload', async () => {
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
+    const request = {
+      bulkOperations: [{ selector: { type: 'ids', ids: ['case1', 'case2'] }, patch: { enabled: false } }],
+    };
+    await instance.bulkPatchTestCases('id', request as any, TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_CASES_BULK_URL('id')}`,
+      expect.objectContaining({
+        method: 'PATCH',
+        body: JSON.stringify(request),
       }),
     );
   });
