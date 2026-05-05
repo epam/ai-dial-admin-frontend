@@ -43,6 +43,15 @@ export class BaseApi {
     return this.sendActionRequest<T>(url, 'PUT', token, dto, initHeaders);
   }
 
+  protected async patchAction<T extends object>(
+    url: string,
+    dto: T,
+    token?: Token,
+    initHeaders?: HeadersInit,
+  ): Promise<ServerActionResponse> {
+    return this.sendActionRequest<T>(url, 'PATCH', token, dto, initHeaders);
+  }
+
   protected async post<T extends object, R>(
     url: string,
     dto: T,

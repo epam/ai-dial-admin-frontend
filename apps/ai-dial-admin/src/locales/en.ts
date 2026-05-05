@@ -55,6 +55,7 @@ export default {
     Optional: 'Optional',
     Required: 'Required',
     Failed: 'Failed',
+    Validated: 'Validated',
     NoData: 'No Data',
     NoParameters: 'No Parameters',
     NoVariables: 'No Variables',
@@ -826,6 +827,10 @@ export default {
     FileUploadSuccessDescription: 'You can now see it in {folder} folder',
     FileRemovedTitle: 'File removed successfully',
     FileRemovedDescription: 'File has been removed from the list',
+    ValidationBannerHeading: '{count} artifacts could not be imported.',
+    ValidationBannerHelp: 'Update or replace the invalid files and try uploading again.',
+    ImportBlockedTooltip: 'File errors must be resolved before importing',
+    State: 'State',
   },
   Export: {
     Config: 'Config',

@@ -2,11 +2,12 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { AlertVariant, DialAlert, DialPopup, DialSteps, PopupSize, StepStatus } from '@epam/ai-dial-ui-kit';
 
+import { getTestSuiteByName } from '@/src/app/[lang]/test-suites/actions';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 import Methods from '@/src/components/TestSuites/Methods/Methods';
 import McpTool from '@/src/components/TestSuites/Modals/Create/McpTool';
 import TestSuiteProperties from '@/src/components/TestSuites/Properties/Properties';
-import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, ErrorI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { Deployment, ToolDefinition } from '@/src/models/evaluation/deployment';
@@ -29,6 +30,8 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEnti
   const [steps, setSteps] = useState(TEST_SUIT_STEPS(t, !!currentEntity, testSuite.suiteType));
   const [currentStepId, setCurrentStep] = useState(steps[0].id);
   const [selectedTarget, setSelectedTarget] = useState<Deployment | null>(null);
+  const [nameExistsError, setNameExistsError] = useState<string>();
+  const [isCheckingName, setIsCheckingName] = useState(false);
 
   const isMcp = testSuite.suiteType === SuiteType.McpTool;
 
@@ -49,6 +52,35 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEnti
   const onFinishClick = useCallback(() => {
     onCreate(testSuite);
   }, [onCreate, testSuite]);
+
+  const onTestSuiteChange = useCallback(
+    (updated: TestSuite) => {
+      if (updated.name !== testSuite.name) {
+        setNameExistsError(undefined);
+      }
+      setTestSuite(updated);
+    },
+    [testSuite.name],
+  );
+
+  const onNextStepWithNameCheck = useCallback(async () => {
+    if (currentStepId !== TestSuitTab.Properties) {
+      const stepIndex = steps.findIndex((s) => s.id === currentStepId);
+      setCurrentStep(steps[stepIndex + 1]?.id as string);
+      return;
+    }
+
+    setIsCheckingName(true);
+    const res = await getTestSuiteByName(testSuite.name!);
+    setIsCheckingName(false);
+
+    if (res && res.content?.length > 0) {
+      setNameExistsError(t(ErrorI18nKey.DisplayNameExists));
+    } else {
+      const stepIndex = steps.findIndex((s) => s.id === currentStepId);
+      setCurrentStep(steps[stepIndex + 1]?.id as string);
+    }
+  }, [currentStepId, steps, testSuite.name, t]);
 
   useEffect(() => {
     const baseSteps = TEST_SUIT_STEPS(t, !!currentEntity, testSuite.suiteType);
@@ -89,7 +121,12 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEnti
         <DialSteps steps={steps} currentStep={currentStepId} onChangeStep={setCurrentStep} />
         <div className="flex-1 min-h-0">
           {currentStepId === TestSuitTab.Properties && (
-            <TestSuiteProperties testSuite={testSuite} onChange={setTestSuite} isModal={true} />
+            <TestSuiteProperties
+              testSuite={testSuite}
+              onChange={onTestSuiteChange}
+              isModal={true}
+              nameExistsError={nameExistsError}
+            />
           )}
 
           {currentStepId === TestSuitTab.Target && (
@@ -130,6 +167,8 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEnti
         steps={steps}
         currentStep={currentStep}
         finishButtonLabel={t(currentEntity ? ButtonsI18nKey.Update : ButtonsI18nKey.Create)}
+        onNextStep={!currentEntity ? () => onNextStepWithNameCheck() : undefined}
+        isLoading={isCheckingName}
       />
     </DialPopup>
   );
