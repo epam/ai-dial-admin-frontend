@@ -3,6 +3,7 @@ import { describe, expect, test, vi } from 'vitest';
 
 import { ViewerContentType } from '@/src/types/evaluation';
 
+import { ReactNode } from 'react';
 import FullscreenViewer from './FullscreenViewer';
 
 vi.mock('@monaco-editor/react', () => ({
@@ -13,7 +14,7 @@ vi.mock('@epam/ai-dial-ui-kit', async () => {
   const actual = await vi.importActual<Record<string, unknown>>('@epam/ai-dial-ui-kit');
   return {
     ...actual,
-    DialPopup: ({ open, header, children }: { open: boolean; header: string; children: React.ReactNode }) =>
+    DialPopup: ({ open, header, children }: { open: boolean; header: string; children: ReactNode }) =>
       open ? (
         <div role="dialog">
           <h2>{header}</h2>

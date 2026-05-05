@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
 import EntityBanner from '@/src/components/Deployments/Common/EntityBanner/EntityBanner';
+import { ReactNode } from 'react';
 
 vi.mock('@epam/ai-dial-ui-kit', async () => {
   const actual = await vi.importActual<Record<string, unknown>>('@epam/ai-dial-ui-kit');
@@ -16,8 +17,8 @@ vi.mock('@epam/ai-dial-ui-kit', async () => {
     }: {
       variant: AlertVariant;
       className?: string;
-      message: React.ReactNode;
-      children?: React.ReactNode;
+      message: ReactNode;
+      children?: ReactNode;
     }) => (
       <div data-variant={variant} className={className}>
         <div data-role="message">{message}</div>
