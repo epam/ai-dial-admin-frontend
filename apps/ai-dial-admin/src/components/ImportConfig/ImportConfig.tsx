@@ -75,6 +75,16 @@ const ImportConfig: FC<Props> = ({ deploymentsEnabled }) => {
     [currentStepId],
   );
 
+  const onValidationChange = useCallback((hasErrors: boolean) => {
+    setSteps((previousSteps) =>
+      previousSteps.map((step) =>
+        step.id === ImportSteps.CONFIGURATION
+          ? { ...step, status: hasErrors ? StepStatus.ERROR : StepStatus.VALID }
+          : step,
+      ),
+    );
+  }, []);
+
   const isFilesValid = useCallback(() => {
     return files?.length && files.every((file) => !isLargeFile(file));
   }, [files]);
@@ -149,6 +159,7 @@ const ImportConfig: FC<Props> = ({ deploymentsEnabled }) => {
           importBody={importBody}
           fileType={fileType}
           isDeployments={isDeployments}
+          onValidationChange={onValidationChange}
         />
       )}
     </div>
