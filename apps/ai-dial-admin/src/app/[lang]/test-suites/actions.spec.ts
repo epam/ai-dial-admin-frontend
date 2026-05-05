@@ -13,6 +13,7 @@ import {
   getMetricDeclarations,
   getMetricLatestVersion,
   getRuns,
+  getTestSuiteByName,
   getTestSuiteMetricDetails,
   getTestSuiteMetricDetailsWithSchema,
   getTestSuiteMetrics,
@@ -41,6 +42,7 @@ import {
   removeMultipleTestCases,
 } from './actions';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
+import { FilterOperatorDto } from '@/src/types/request';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -92,6 +94,20 @@ describe('TestSuites :: server actions', () => {
     const result = await getTestSuites(1, 10, [], []);
     expect(getUserToken).toHaveBeenCalled();
     expect(testSuitesApi.getTestSuites).toHaveBeenCalledWith(1, 10, [], [], TOKEN_MOCK);
+    expect(result).toEqual([RESPONSE_MOCK]);
+  });
+
+  test('Should call getTestSuiteByName action', async () => {
+    (testSuitesApi.getTestSuites as any).mockResolvedValue([RESPONSE_MOCK]);
+    const result = await getTestSuiteByName('my-suite');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(testSuitesApi.getTestSuites).toHaveBeenCalledWith(
+      0,
+      1,
+      [],
+      [{ column: 'name', value: 'my-suite', operator: FilterOperatorDto.EQUALS }],
+      TOKEN_MOCK,
+    );
     expect(result).toEqual([RESPONSE_MOCK]);
   });
 
