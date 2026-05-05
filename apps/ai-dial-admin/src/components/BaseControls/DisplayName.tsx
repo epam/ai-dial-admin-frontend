@@ -6,6 +6,7 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
+import { ErrorType } from '@/src/types/error-type';
 import { getControlClassName } from '@/src/utils/entities/view';
 import { getErrorForAppRouteName, getErrorForName } from '@/src/utils/validation/name-error';
 
@@ -18,6 +19,7 @@ interface Props {
   allowWhitespace?: boolean;
   alphanumericOnly?: boolean;
   trackGlobalValidity?: boolean;
+  externalError?: string;
   onChange?: (displayName?: string) => void;
 }
 
@@ -30,6 +32,7 @@ const DisplayNameControl: FC<Props> = ({
   allowWhitespace = true,
   alphanumericOnly = false,
   trackGlobalValidity = true,
+  externalError,
   disabled,
   ...props
 }) => {
@@ -72,6 +75,15 @@ const DisplayNameControl: FC<Props> = ({
     [onChange, validateDisplayName],
   );
 
+  useEffect(() => {
+    if (externalError && trackGlobalValidity) {
+      dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: false });
+    }
+  }, [externalError, dispatch, trackGlobalValidity]);
+
+  const activeError: FieldError | null =
+    displayNameError ?? (externalError ? { text: externalError, type: ErrorType.EXISTING } : null);
+
   return (
     <DialInput
       labelProps={{ label: t(EntityFieldsI18nKey.displayName), required }}
@@ -79,8 +91,8 @@ const DisplayNameControl: FC<Props> = ({
       id="displayName"
       value={displayName}
       onChange={onChangeDisplayName}
-      error={displayNameError?.text}
-      invalid={!!displayNameError}
+      error={activeError?.text}
+      invalid={!!activeError}
       containerClassName={containerClassName}
       disabled={disabled || isReadOnlyAdmin}
       {...props}

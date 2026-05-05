@@ -17,6 +17,8 @@ interface Props {
   onChangeStep: (id: string) => void;
   onFinishClick: () => void;
   onClose: () => void;
+  onNextStep?: () => void;
+  isLoading?: boolean;
 }
 
 const StepperModalButtons: FC<Props> = ({
@@ -26,13 +28,17 @@ const StepperModalButtons: FC<Props> = ({
   onChangeStep,
   onFinishClick,
   onClose,
+  onNextStep,
+  isLoading,
 }) => {
   const t = useI18n();
 
-  const onNextStep = () => {
+  const onDefaultNextStep = () => {
     const stepIndex = steps.findIndex((s) => s.id === currentStep?.id);
     onChangeStep(steps[stepIndex + 1]?.id as string);
   };
+
+  const handleNextStep = onNextStep ?? onDefaultNextStep;
 
   const onPrevStep = () => {
     const stepIndex = steps.findIndex((s) => s.id === currentStep?.id);
@@ -59,15 +65,15 @@ const StepperModalButtons: FC<Props> = ({
         {currentStep?.id !== steps.at(-1)?.id && (
           <DialPrimaryButton
             label={t(ButtonsI18nKey.Next)}
-            onClick={onNextStep}
+            onClick={handleNextStep}
             iconAfter={<IconArrowNarrowRight {...BASE_BUTTON_ICON_PROPS} />}
-            disabled={currentStep?.status !== StepStatus.VALID}
+            disabled={currentStep?.status !== StepStatus.VALID || !!isLoading}
           />
         )}
         {currentStep?.id === steps.at(-1)?.id && (
           <DialPrimaryButton
             label={finishButtonLabel || t(ButtonsI18nKey.Finish)}
-            disabled={steps.some((s) => s.status !== StepStatus.VALID)}
+            disabled={steps.some((s) => s.status !== StepStatus.VALID) || !!isLoading}
             onClick={onFinishClick}
           />
         )}
