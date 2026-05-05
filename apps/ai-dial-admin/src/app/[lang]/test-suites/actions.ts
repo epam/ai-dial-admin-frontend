@@ -7,6 +7,7 @@ import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { TestCase, TestCaseBulkPatchRequest, TestSuite } from '@/src/models/evaluation/test-suite';
 import { FilterDto, SortDto } from '@/src/models/request';
 import type { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
+import { FilterOperatorDto } from '@/src/types/request';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { Metric } from '@/src/models/evaluation/metric';
@@ -39,6 +40,17 @@ export async function runTestSuite(id?: string, numberOfRuns?: number | string) 
 export async function getTestSuites(page: number, size: number, sorts: SortDto[], filters: FilterDto[]) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return testSuitesApi.getTestSuites(page, size, sorts, filters, token);
+}
+
+export async function getTestSuiteByName(name: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.getTestSuites(
+    0,
+    1,
+    [],
+    [{ column: 'name', value: name, operator: FilterOperatorDto.EQUALS }],
+    token,
+  );
 }
 
 export async function getRuns(page: number, size: number, sorts: SortDto[], filters: FilterDto[]) {
