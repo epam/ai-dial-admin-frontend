@@ -149,3 +149,18 @@ export interface ResponseColumn {
   expression: string;
   type: string;
 }
+
+export interface TestCaseBulkSelectorDto {
+  ids?: string[];
+  filter?: string[];
+}
+
+export interface TestCaseBulkOperationDto {
+  selector: TestCaseBulkSelectorDto;
+  patch: { enabled: boolean };
+}
+
+export interface TestCaseBulkPatchRequest {
+  bulkOperations: TestCaseBulkOperationDto[];
+  itemOperations: [];
+}
