@@ -30,8 +30,11 @@ export const getTopics = (data?: { topics?: string[]; descriptionKeywords?: stri
 export const formatAttachment = (value: string, t: (stringToTranslate: string) => string) => {
   if (value && value?.[0] === ALL_ATTACHMENTS) {
     return t(AttachmentsI18nKey.AllAttachments);
+  } else if (value) {
+    return value.toString();
+  } else {
+    return '';
   }
-  return value;
 };
 
 export const priceValueFormatter = (value?: string | number) => {

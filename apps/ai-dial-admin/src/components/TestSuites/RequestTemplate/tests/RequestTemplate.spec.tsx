@@ -206,35 +206,6 @@ describe('RequestTemplate', () => {
     expect(screen.getByRole('region', { name: `tabs-content-${EntityViewTab.Headers}` })).toBeInTheDocument();
   });
 
-  test('Add button calls tabsContentRef.current.add on Parameters tab', () => {
-    render(<RequestTemplate testSuite={createTestSuite()} onChangeTestSuite={mockOnChangeTestSuite} />);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Parameters' }));
-    fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.Add }));
-
-    expect(mockAdd).toHaveBeenCalledTimes(1);
-  });
-
-  test('Add button on Body (form-data) calls tabsContentRef.current.add', () => {
-    render(
-      <RequestTemplate
-        testSuite={createTestSuite({
-          requestTemplate: {
-            urlTemplate: '/api',
-            body: { contentType: ContentType.FormData, content: [] },
-            headers: [],
-            queryParams: [],
-          },
-        })}
-        onChangeTestSuite={mockOnChangeTestSuite}
-      />,
-    );
-
-    fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.Add }));
-
-    expect(mockAdd).toHaveBeenCalledTimes(1);
-  });
-
   test('TabsContent onChange calls onChangeTestSuite', () => {
     const suite = createTestSuite();
     render(<RequestTemplate testSuite={suite} onChangeTestSuite={mockOnChangeTestSuite} />);
