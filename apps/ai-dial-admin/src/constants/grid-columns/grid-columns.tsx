@@ -9,6 +9,7 @@ import VersionsSelect from '@/src/components/Deployments/Common/VersionsSelect/V
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import ExternalUrlCellRenderer from '@/src/components/Grid/CellRenderers/ExternalUrlCellRenderer';
 import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSelectCellRenderer';
+import ImportValidationCellRenderer from '@/src/components/Grid/CellRenderers/ImportValidationCellRenderer';
 import RunStatusCellRenderer from '@/src/components/Grid/CellRenderers/RunStatusCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRenderer';
@@ -22,7 +23,10 @@ import {
   IMAGE_TYPE_I18N_KEYS,
   STATUS_I18N_KEYS,
 } from '@/src/constants/deployments/images';
-import { SourceI18nKey } from '@/src/constants/i18n';
+import { ROW_IMPORT_META_KEY } from '@/src/constants/import';
+import { BasicI18nKey, ImportI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import { RowImportMeta } from '@/src/models/deployments/import';
+import { ValidationState } from '@/src/types/deployments/import';
 import {
   containerSourceNameLabel,
   containerSourceTypeLabel,
@@ -1285,3 +1289,18 @@ export const DOMAIN_COLUMN: ColDef = {
     );
   },
 };
+
+const getImportValidationStateLabel = (data: unknown, t: (str: string) => string): string => {
+  const meta = (data as Record<string, unknown> | null | undefined)?.[ROW_IMPORT_META_KEY] as RowImportMeta | undefined;
+  if (!meta) return '';
+  return meta.validationState === ValidationState.FAILED ? t(BasicI18nKey.Failed) : t(BasicI18nKey.Validated);
+};
+
+export const IMPORT_VALIDATION_COLUMN = (t: (str: string) => string): ColDef => ({
+  field: ROW_IMPORT_META_KEY,
+  headerName: t(ImportI18nKey.State),
+  cellRenderer: ImportValidationCellRenderer,
+  sortable: false,
+  tooltipValueGetter: ({ data }) => getImportValidationStateLabel(data, t),
+  filterValueGetter: ({ data }) => getImportValidationStateLabel(data, t),
+});

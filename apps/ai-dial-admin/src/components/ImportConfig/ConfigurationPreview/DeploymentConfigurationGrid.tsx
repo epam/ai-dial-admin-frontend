@@ -5,16 +5,16 @@ import { createPortal } from 'react-dom';
 import { DialGhostButton } from '@epam/ai-dial-ui-kit';
 import { IconReplace } from '@tabler/icons-react';
 
-import { ColDef, GridOptions, RowClassParams } from 'ag-grid-community';
+import { GridOptions, RowClassParams } from 'ag-grid-community';
 
 import DomainList from '@/src/components/Deployments/Common/Whitelists/DomainList';
 import { getDeploymentColDefs } from '@/src/components/ExportConfig/deployment-utils';
-import ImportValidationCellRenderer from '@/src/components/Grid/CellRenderers/ImportValidationCellRenderer';
 import { getComponentActionColumn } from '@/src/components/ImportConfig/ConfigurationPreview/ConfigurationPreview.utils';
 import { GLOBAL_FIREWALL_TAB_ID } from '@/src/constants/deployments/import';
 import GlobalFirewallCompareModal from '@/src/components/ImportConfig/ConfigurationPreview/GlobalFirewallCompareModal';
 import GridView from '@/src/components/Grid/GridView/GridView';
-import { CompareI18nKey, DeploymentsI18nKey, EntitiesI18nKey, ImportI18nKey } from '@/src/constants/i18n';
+import { IMPORT_VALIDATION_COLUMN } from '@/src/constants/grid-columns/grid-columns';
+import { CompareI18nKey, DeploymentsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { ROW_IMPORT_META_KEY } from '@/src/constants/import';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
@@ -39,15 +39,9 @@ const DeploymentConfigurationGrid: FC<Props> = ({ selectedTab, tabData, globalFi
 
   const isGlobalFirewallTab = selectedTab === GLOBAL_FIREWALL_TAB_ID;
   const showGrid = selectedTab && !isGlobalFirewallTab;
-  const importValidationColumn: ColDef = {
-    field: ROW_IMPORT_META_KEY,
-    headerName: t(ImportI18nKey.State),
-    cellRenderer: ImportValidationCellRenderer,
-    sortable: false,
-    filter: false,
-  };
+
   const colDefs = showGrid
-    ? [getComponentActionColumn(), ...getDeploymentColDefs(t, undefined, selectedTab), importValidationColumn]
+    ? [getComponentActionColumn(), ...getDeploymentColDefs(t, undefined, selectedTab), IMPORT_VALIDATION_COLUMN(t)]
     : [];
   const rowData = showGrid ? tabData[selectedTab] || [] : [];
 
