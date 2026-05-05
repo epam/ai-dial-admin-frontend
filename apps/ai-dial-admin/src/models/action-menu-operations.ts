@@ -7,5 +7,5 @@ export interface ActionMenuOperationDeclaration<T> {
   label: string;
   onClick: (entity?: T, index?: number) => void;
   hidden?: (api: GridApi, node: IRowNode) => boolean;
-  disabled?: boolean;
+  disabled?: boolean | ((api: GridApi, node: IRowNode) => boolean);
 }

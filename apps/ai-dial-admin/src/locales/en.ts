@@ -1,5 +1,4 @@
 export default {
-  Admin: 'Admin',
   User: 'User',
   Home: {
     Title: 'Powering Artificial Intelligence with DIAL',
