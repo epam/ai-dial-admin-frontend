@@ -3,6 +3,8 @@ import React, { createContext, useContext, useState, ReactNode, useMemo, useCall
 import { Theme, ThemeConfiguration, ThemeImages } from '@/src/models/theme';
 import { getFromLocalStorage } from '@/src/utils/local-storage';
 import { applyThemeColors } from '@/src/utils/themes/apply-theme-colors';
+import { DEFAULT_THEME } from '@/src/constants/theme';
+import { getLogoPath } from '@/src/utils/themes/logo-path';
 
 interface ThemeContextType {
   currentTheme: string;
@@ -17,8 +19,6 @@ interface ThemeContextType {
     | null;
   setTheme: (themeId: string) => void;
 }
-
-const DEFAULT_THEME = 'dark';
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
@@ -53,7 +53,8 @@ export const ThemeProvider = ({
       const root = document.documentElement;
       applyThemeColors(root, theme);
       setCurrentThemeId(themeId);
-      setCurrentThemeLogo(theme?.['app-logo']);
+      const updatedLogo = getLogoPath(themesConfiguration as ThemeConfiguration, themeId);
+      setCurrentThemeLogo(updatedLogo);
     },
     [themesConfiguration],
   );

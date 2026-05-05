@@ -17,7 +17,7 @@ const ActionsDropdown = <T extends object>({ items, data, rowIndex, ...props }: 
   const t = useI18n();
   const dropdownItems: DropdownItem[] = items.map((item) => ({
     key: item.id,
-    disabled: item.disabled,
+    disabled: item.disabled as boolean,
     label: (
       <div className="text-secondary flex-row flex size-full gap-2 items-center">
         {item.icon}
