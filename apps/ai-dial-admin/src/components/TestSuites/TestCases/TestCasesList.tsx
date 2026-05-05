@@ -44,6 +44,7 @@ import TestCasesSchemaModal from './TestCasesSchemaModal';
 
 export interface TestCasesActions {
   getDirtyTestCases: () => TestCase[];
+  getEnabledOnlyChanges: () => Map<string, boolean>;
   clearDirtyAndRefresh: () => void;
 }
 
@@ -70,6 +71,7 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
   const [selectedRows, setSelectedRows] = useState<TestCase[]>([]);
   const onRemoveCaseRef = useRef<(data?: TestCase) => void>(() => {});
   const dirtyRowsRef = useRef<Map<string, Record<string, unknown>>>(new Map());
+  const dirtyEnabledRef = useRef<Map<string, boolean>>(new Map());
 
   const onOpenSchemaModal = useCallback(() => {
     setIsSchemaModalOpen(true);
@@ -91,22 +93,40 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
       if (newTestCases.some((r) => r.id === row.id)) {
         setNewTestCases((prev) => prev.map((r) => (r.id === row.id ? ({ ...row } as Record<string, unknown>) : r)));
       } else {
-        dirtyRowsRef.current.set(String(row.id), { ...row });
+        const id = String(row.id);
+        const enabledOverride = dirtyEnabledRef.current.get(id);
+        dirtyRowsRef.current.set(id, enabledOverride !== undefined ? { ...row, enabled: enabledOverride } : { ...row });
       }
       onDirtyChange?.(true);
     },
     [newTestCases, onDirtyChange],
   );
 
-  const onCellValueChanged = useCallback((event: CellValueChangedEvent) => {
-    const col = event.column?.getColId();
-    if (col === 'enabled') {
+  const onCellValueChanged = useCallback(
+    (event: CellValueChangedEvent) => {
+      const col = event.column?.getColId();
+      if (col !== 'enabled') return;
+
       const api = gridApiRef.current;
-      if (!api) return;
-      api.refreshClientSideRowModel('filter');
-      onCellChange(event.data, col, event.newValue);
-    }
-  }, []);
+      if (api) api.refreshClientSideRowModel('filter');
+
+      const rowId = String(event.data.id);
+      const isNewCase = newTestCases.some((r) => r.id === rowId);
+
+      if (isNewCase) {
+        onCellChange(event.data, col, event.newValue);
+        return;
+      }
+
+      dirtyEnabledRef.current.set(rowId, event.newValue as boolean);
+      if (dirtyRowsRef.current.has(rowId)) {
+        const existing = dirtyRowsRef.current.get(rowId)!;
+        dirtyRowsRef.current.set(rowId, { ...existing, enabled: event.newValue });
+      }
+      onDirtyChange?.(true);
+    },
+    [newTestCases],
+  );
 
   const onCellChange = useCallback(
     (data: Record<string, unknown>, field: string, value: string | number | boolean) => {
@@ -212,13 +232,10 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
     [gridApi, onCellChange, onOpenTryOutSidebar, selectedTestSuite, stableOnRemoveCase, t],
   );
 
-  const onGridReady = useCallback(
-    ({ api }: GridReadyEvent) => {
-      gridApiRef.current = api;
-      setGridApi(api);
-    },
-    [refreshGrid],
-  );
+  const onGridReady = useCallback(({ api }: GridReadyEvent) => {
+    gridApiRef.current = api;
+    setGridApi(api);
+  }, []);
 
   const onApplyImport = useCallback(
     (file: File, mode: TestCaseImportMode, strategy: TestCaseConflictStrategy) => {
@@ -301,8 +318,19 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
     return [...dirty, ...newCases];
   }, [newTestCases]);
 
+  const getEnabledOnlyChanges = useCallback((): Map<string, boolean> => {
+    const result = new Map<string, boolean>();
+    dirtyEnabledRef.current.forEach((value, id) => {
+      if (!dirtyRowsRef.current.has(id)) {
+        result.set(id, value);
+      }
+    });
+    return result;
+  }, []);
+
   const clearDirtyAndRefresh = useCallback(() => {
     dirtyRowsRef.current.clear();
+    dirtyEnabledRef.current.clear();
     setNewTestCases([]);
     onDirtyChange?.(false);
     refreshGrid();
@@ -316,20 +344,23 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
     }
   }, [gridApi, newTestCases]);
 
+  const testCaseSchemaKey = JSON.stringify(selectedTestSuite.testCaseSchema);
+
   useEffect(() => {
     refreshGrid();
-  }, [selectedTestSuite.testCaseSchema]);
+  }, [testCaseSchemaKey]);
 
   useEffect(() => {
     if (!testCasesActionsRef) return;
     testCasesActionsRef.current = {
       getDirtyTestCases,
+      getEnabledOnlyChanges,
       clearDirtyAndRefresh,
     };
     return () => {
       testCasesActionsRef.current = null;
     };
-  }, [testCasesActionsRef, getDirtyTestCases, clearDirtyAndRefresh]);
+  }, [testCasesActionsRef, getDirtyTestCases, getEnabledOnlyChanges, clearDirtyAndRefresh]);
 
   useEffect(() => {
     onRemoveCaseRef.current = onRemoveCase;

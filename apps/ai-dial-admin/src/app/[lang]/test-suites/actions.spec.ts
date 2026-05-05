@@ -5,6 +5,7 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
+  bulkPatchTestCases,
   createTestCase,
   createTestSuite,
   deleteTestSuiteMetric,
@@ -352,6 +353,15 @@ describe('TestSuites :: server actions', () => {
     const result = await removeMultipleTestCases('suite-id', ['case1', 'case2']);
     expect(getUserToken).toHaveBeenCalled();
     expect(testSuitesApi.removeMultipleTestCases).toHaveBeenCalledWith('suite-id', ['case1', 'case2'], TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call bulkPatchTestCases action', async () => {
+    (testSuitesApi.bulkPatchTestCases as any).mockResolvedValue(RESPONSE_MOCK);
+    const request = { bulkOperations: [{ selector: { type: 'ids', ids: ['case1'] }, patch: { enabled: true } }] };
+    const result = await bulkPatchTestCases('suite-id', request as any);
+    expect(getUserToken).toHaveBeenCalled();
+    expect(testSuitesApi.bulkPatchTestCases).toHaveBeenCalledWith('suite-id', request, TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 });
