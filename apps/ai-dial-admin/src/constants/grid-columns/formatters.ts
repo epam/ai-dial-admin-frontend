@@ -33,7 +33,7 @@ export const formatAttachment = (value: string, t: (stringToTranslate: string) =
   } else if (value) {
     return value.toString();
   } else {
-    return null;
+    return '';
   }
 };
 
