@@ -456,7 +456,9 @@ describe('Server :: TestSuiteApi', () => {
 
   test('Should call bulkPatchTestCases with PATCH method and correct payload', async () => {
     fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
-    const request = { bulkOperations: [{ selector: { type: 'ids', ids: ['case1', 'case2'] }, patch: { enabled: false } }] };
+    const request = {
+      bulkOperations: [{ selector: { type: 'ids', ids: ['case1', 'case2'] }, patch: { enabled: false } }],
+    };
     await instance.bulkPatchTestCases('id', request as any, TOKEN_MOCK);
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${TEST_CASES_BULK_URL('id')}`,
