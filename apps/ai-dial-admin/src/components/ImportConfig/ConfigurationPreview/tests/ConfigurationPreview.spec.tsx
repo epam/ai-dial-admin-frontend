@@ -153,11 +153,17 @@ describe('ConfigurationPreview (deployments) — validation', () => {
     expect(screen.queryByText(ImportI18nKey.ValidationBannerHeading)).not.toBeInTheDocument();
   });
 
-  test('banner reflects only the active tab — switching tabs swaps the count', async () => {
+  test('banner shows the global total across tabs and stays visible on tab switch', async () => {
     const response = baseResponse();
     response.mcpDeployments = [{ importAction: 'create', next: { name: 'echo', displayName: 'Echo' } }];
     response.adapterDeployments = [{ importAction: 'create', next: { name: 'a-1', displayName: 'A1' } }];
     response.validationErrors = [
+      {
+        entityType: ExportConfigComponentType.MCP_DEPLOYMENT,
+        entityIdentifier: 'echo',
+        fieldPath: 'name',
+        message: 'invalid',
+      },
       {
         entityType: ExportConfigComponentType.ADAPTER_DEPLOYMENT,
         entityIdentifier: 'a-1',
@@ -169,13 +175,10 @@ describe('ConfigurationPreview (deployments) — validation', () => {
 
     renderPreview();
 
-    // Initial selected tab is the first artifact tab — MCP_CONTAINER (no errors there)
     await waitFor(() => {
-      expect(screen.getByTestId('tabs')).toBeInTheDocument();
+      expect(screen.getByText(ImportI18nKey.ValidationBannerHeading)).toBeInTheDocument();
     });
-    expect(screen.queryByText(ImportI18nKey.ValidationBannerHeading)).not.toBeInTheDocument();
 
-    // Switch to the ADAPTER_CONTAINER tab — should show banner
     fireEvent.click(screen.getByText(/AdapterContainers/i));
     expect(screen.getByText(ImportI18nKey.ValidationBannerHeading)).toBeInTheDocument();
   });
