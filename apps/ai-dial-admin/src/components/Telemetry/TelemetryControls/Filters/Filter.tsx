@@ -16,9 +16,19 @@ interface Props {
   dropdownData: { projects: SelectOption[]; entities: SelectOption[] };
   route: ApplicationRoute;
   isMcpView?: boolean;
+  isRouteView?: boolean;
 }
 
-const Filter: FC<Props> = ({ id, onClose, onEdit, dropdownData, filterData, route, isMcpView = false }) => {
+const Filter: FC<Props> = ({
+  id,
+  onClose,
+  onEdit,
+  dropdownData,
+  filterData,
+  route,
+  isMcpView = false,
+  isRouteView = false,
+}) => {
   const { type, condition, value } = filterData;
   const t = useI18n();
   const filterTypeConfig = getFilterTypeConfig(t, isMcpView);
@@ -40,6 +50,7 @@ const Filter: FC<Props> = ({ id, onClose, onEdit, dropdownData, filterData, rout
       filterData={filterData}
       route={route}
       isMcpView={isMcpView}
+      isRouteView={isRouteView}
     >
       <div className="flex text-primary small rounded bg-layer-3 my-[5px] mr-4 px-1.5 py-1">
         <p className="flex items-center">

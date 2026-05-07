@@ -647,6 +647,7 @@ export default {
     Filter: {
       TypeProjects: 'Projects',
       TypeMcp: 'MCP',
+      TypeDeployment: 'Deployment',
       TypeEntities: 'Entities',
       ConditionContain: 'Contain',
       ConditionNotContain: 'Not Contain',
