@@ -1,13 +1,16 @@
 'use client';
 
 import { FC, RefObject, useCallback, useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
 
+import { removeRun } from '@/src/app/[lang]/runs/actions';
 import { getRuns } from '@/src/app/[lang]/test-suites/actions';
+import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { ACTION_COLUMN, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
-import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
+import { getDeleteOperation, getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
 import { RUNS_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -32,6 +35,8 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const [runs, setRuns] = useState<Run[] | null>(null);
   const [totalElements, setTotalElements] = useState(0);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedRun, setSelectedRun] = useState<Run | undefined>(undefined);
 
   useRunStatusStream(selectedTestSuite.id, gridApi);
 
@@ -60,12 +65,15 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
         gridApi?.hideOverlay();
         gridApi?.setGridOption('loading', true);
         const page = Math.floor(params.startRow / PAGE_SIZE);
-        if (page === 0 && runs) {
+        const sorts = getRequestSorts(params.sortModel);
+        const filters = getRequestFilters(params.filterModel);
+        const hasSorts = sorts.length > 0;
+        const hasFilters = filters.length > 0;
+
+        if (page === 0 && runs && !hasSorts && !hasFilters) {
           onSetData(runs, totalElements, params);
           return;
         }
-        const sorts = getRequestSorts(params.sortModel);
-        const filters = getRequestFilters(params.filterModel);
 
         getRuns(page, PAGE_SIZE, sorts, [RUN_FILTER(selectedTestSuite.id as string), ...filters])
           .then((res) => {
@@ -101,6 +109,27 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
     }
   }, [gridApi, gridDataSource]);
 
+  const onOpenDeleteModal = useCallback((run?: Run) => {
+    setSelectedRun(run);
+    setIsDeleteModalOpen(true);
+  }, []);
+
+  const onCloseDeleteModal = useCallback(() => {
+    setSelectedRun(undefined);
+    setIsDeleteModalOpen(false);
+  }, []);
+
+  const onRemoveRun = useCallback(
+    async (id: string) => {
+      const response = await removeRun(id);
+      if (response.success) {
+        refreshGrid();
+      }
+      return response;
+    },
+    [refreshGrid],
+  );
+
   useEffect(() => {
     runRefreshRef.current = refreshGrid;
   }, [refreshGrid, runRefreshRef]);
@@ -120,17 +149,32 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
   }, []);
 
   const columnDefs = useMemo(
-    () => [...RUNS_COLUMN, ACTION_COLUMN([getOpenInNewTabOperation(onOpenInNewTabAction)])],
-    [onOpenInNewTabAction],
+    () => [
+      ...RUNS_COLUMN,
+      ACTION_COLUMN([getOpenInNewTabOperation(onOpenInNewTabAction), getDeleteOperation(onOpenDeleteModal)]),
+    ],
+    [onOpenDeleteModal, onOpenInNewTabAction],
   );
 
   return (
-    <GridView
-      columnDefs={columnDefs}
-      additionalGridOptions={gridOptions}
-      emptyDataProps={{ title: t(EntitiesI18nKey.NoRuns) }}
-      onGridReady={onGridReady}
-    />
+    <>
+      <GridView
+        columnDefs={columnDefs}
+        additionalGridOptions={gridOptions}
+        emptyDataProps={{ title: t(EntitiesI18nKey.NoRuns) }}
+        onGridReady={onGridReady}
+      />
+      {isDeleteModalOpen &&
+        createPortal(
+          <DeleteConfirmationModal
+            entity={selectedRun as { id?: string; $id?: string } | undefined}
+            view={ApplicationRoute.Runs}
+            onCloseModal={onCloseDeleteModal}
+            onRemoveEntity={onRemoveRun}
+          />,
+          document.body,
+        )}
+    </>
   );
 };
 
