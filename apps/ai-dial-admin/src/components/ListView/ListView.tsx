@@ -35,6 +35,7 @@ interface Props<T> {
   onGridReady?: (gridApi: GridReadyEvent) => void;
   isBulkView?: boolean;
   allowPadding?: boolean;
+  getHref?: (data: unknown) => string | undefined;
 }
 
 const ListView = <T extends object>({
@@ -53,6 +54,7 @@ const ListView = <T extends object>({
   onGridReady,
   isBulkView,
   allowPadding = true,
+  getHref,
 }: Props<T>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
@@ -111,6 +113,7 @@ const ListView = <T extends object>({
             toggleColumnsPanel={toggleColumnsPanel}
             storageKey={storageKey || view}
             onGridReady={onGridReady}
+            getHref={getHref}
           />
         )}
       </div>
