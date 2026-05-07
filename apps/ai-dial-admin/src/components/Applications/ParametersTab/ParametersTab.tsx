@@ -90,8 +90,8 @@ const ParametersTab: FC<Props> = ({
       const config = getCorrectConfig(scheme, application, currentTheme, session as UserSession);
       const targetUrl = getTargetUrl(view, application, config);
 
-      setViewItems(generateViewItems(t, view, !!targetUrl, !!config));
-      setParamsView(getInitialParamsView(view, !!targetUrl));
+      setViewItems(generateViewItems(t, view, !!targetUrl && !isReadOnlyAdmin, !!config));
+      setParamsView(getInitialParamsView(view, !!targetUrl && !isReadOnlyAdmin));
     });
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
