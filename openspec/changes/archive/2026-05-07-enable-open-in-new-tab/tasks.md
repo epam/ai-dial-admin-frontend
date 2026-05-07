@@ -35,6 +35,6 @@
 
 ## 6. Quality Checks
 
-- [ ] 6.1 Run `npm run lint` from repo root and fix any issues
-- [ ] 6.2 Run `npm run format:write` from repo root
-- [ ] 6.3 Run `npm run test` from `apps/ai-dial-admin/` and ensure all tests pass
+- [x] 6.1 Run `npm run lint` from repo root and fix any issues
+- [x] 6.2 Run `npm run format:write` from repo root
+- [x] 6.3 Run `npm run test` from `apps/ai-dial-admin/` and ensure all tests pass
