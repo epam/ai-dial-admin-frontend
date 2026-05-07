@@ -200,7 +200,7 @@ const EndpointAndMCPContainer: FC<Props> = ({
           <div className="h-full flex flex-col gap-y-4 pl-6">
             <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-row gap-x-2')}>
               <EndpointControl
-                label=""
+                label={t(EntityFieldsI18nKey.endpoint)}
                 id="mcp_endpoint"
                 placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
                 required
