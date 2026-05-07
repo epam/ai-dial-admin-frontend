@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { createEvent, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import EditableCellRenderer from '../EditableCellRenderer';
 
@@ -77,5 +77,32 @@ describe('EditableCellRenderer', () => {
     const input = screen.getByPlaceholderText(placeholder);
     expect(input).toBeInTheDocument();
     expect(input).toHaveValue(placeholder);
+  });
+
+  test('stopPropagation is called on Ctrl+A keydown', () => {
+    render(<EditableCellRenderer value="hello" colDef={{}} data={{}} />);
+    const input = screen.getByRole('textbox');
+    const event = createEvent.keyDown(input, { key: 'a', ctrlKey: true });
+    const spy = vi.spyOn(event, 'stopPropagation');
+    fireEvent(input, event);
+    expect(spy).toHaveBeenCalled();
+  });
+
+  test('stopPropagation is called on Cmd+A keydown', () => {
+    render(<EditableCellRenderer value="hello" colDef={{}} data={{}} />);
+    const input = screen.getByRole('textbox');
+    const event = createEvent.keyDown(input, { key: 'a', metaKey: true });
+    const spy = vi.spyOn(event, 'stopPropagation');
+    fireEvent(input, event);
+    expect(spy).toHaveBeenCalled();
+  });
+
+  test('stopPropagation is NOT called on plain keydown', () => {
+    render(<EditableCellRenderer value="hello" colDef={{}} data={{}} />);
+    const input = screen.getByRole('textbox');
+    const event = createEvent.keyDown(input, { key: 'a' });
+    const spy = vi.spyOn(event, 'stopPropagation');
+    fireEvent(input, event);
+    expect(spy).not.toHaveBeenCalled();
   });
 });

@@ -69,6 +69,13 @@ const EditableCellRenderer = ({
     return isMaxValue ? t(RolesI18nKey.Unlimited) : translatedPlaceholder;
   }, [isMaxValue, t, translatedPlaceholder]);
 
+  const handleKeyDown = (e: { ctrlKey: boolean; metaKey: boolean; stopPropagation(): void }) => {
+    console.log('Key down event:', e);
+    if (e.ctrlKey || e.metaKey) {
+      e.stopPropagation();
+    }
+  };
+
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
     const formattedValue = valueFormatter ? valueFormatter(newValue) : newValue;
@@ -100,6 +107,7 @@ const EditableCellRenderer = ({
         value={correctValue}
         placeholder={correctPlaceholder}
         onChange={handleChange}
+        onKeyDown={handleKeyDown}
         step={step}
         min={min}
         max={max}
