@@ -70,6 +70,7 @@ const AddFilter: FC<Props> = ({
           reset={reset}
           route={route}
           isMcpView={isMcpView}
+          isRouteView={isRouteView}
         >
           {children}
         </AddFilterModal>
@@ -86,6 +87,7 @@ const AddFilter: FC<Props> = ({
           reset={reset}
           route={route}
           isMcpView={isMcpView}
+          isRouteView={isRouteView}
         >
           {children}
         </AddFilterPopover>

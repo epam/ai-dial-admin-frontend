@@ -31,7 +31,7 @@ const Filter: FC<Props> = ({
 }) => {
   const { type, condition, value } = filterData;
   const t = useI18n();
-  const filterTypeConfig = getFilterTypeConfig(t, isMcpView);
+  const filterTypeConfig = getFilterTypeConfig(t, isMcpView, isRouteView);
   const filterConditionConfig = getFilterConditionConfig(t);
   const typeText = filterTypeConfig.find((item) => item.value === type)?.value;
   const conditionIcon = filterConditionConfig.find((item) => item.value === condition)?.icon;
