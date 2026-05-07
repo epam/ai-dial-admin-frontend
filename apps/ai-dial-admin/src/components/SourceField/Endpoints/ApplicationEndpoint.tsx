@@ -270,7 +270,7 @@ const ApplicationEndpoint: FC<Props> = ({ entity, onChange, isEntityImmutable, i
               {isContainerMode ? (
                 <ComplexInput
                   id="mcp_endpoint"
-                  label=""
+                  label={t(EntityFieldsI18nKey.endpoint)}
                   prefix={prefix}
                   value={entity.source?.mcpEndpointPath || ''}
                   fullValue={`${prefix}${entity.source?.mcpEndpointPath || ''}`}
@@ -282,7 +282,7 @@ const ApplicationEndpoint: FC<Props> = ({ entity, onChange, isEntityImmutable, i
               ) : (
                 <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-row gap-x-2')}>
                   <EndpointControl
-                    label=""
+                    label={t(EntityFieldsI18nKey.endpoint)}
                     id="mcp_endpoint"
                     placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
                     required
