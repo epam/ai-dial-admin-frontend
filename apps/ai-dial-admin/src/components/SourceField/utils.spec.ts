@@ -44,6 +44,48 @@ describe('isValidSourceField', () => {
     expect(isValidSourceField(entity as any)).toBe(false);
   });
 
+  test('returns false for model ENDPOINTS source when both endpoints are missing', () => {
+    const entity = { source: { $type: SOURCE_TYPE.ENDPOINTS } };
+    expect(isValidSourceField(entity as any, ApplicationRoute.Models)).toBe(false);
+  });
+
+  test('returns true for model ENDPOINTS source when only endpoint is valid', () => {
+    const entity = { source: { $type: SOURCE_TYPE.ENDPOINTS }, endpoint: 'https://valid.com/chat/completions' };
+    expect(isValidSourceField(entity as any, ApplicationRoute.Models)).toBe(true);
+  });
+
+  test('returns true for model ENDPOINTS source when only responsesEndpoint is valid', () => {
+    const entity = { source: { $type: SOURCE_TYPE.ENDPOINTS }, responsesEndpoint: 'https://valid.com/responses' };
+    expect(isValidSourceField(entity as any, ApplicationRoute.Models)).toBe(true);
+  });
+
+  test('returns true for model ENDPOINTS source when both endpoints are valid', () => {
+    const entity = {
+      source: { $type: SOURCE_TYPE.ENDPOINTS },
+      endpoint: 'https://valid.com/chat/completions',
+      responsesEndpoint: 'https://valid.com/responses',
+    };
+    expect(isValidSourceField(entity as any, ApplicationRoute.Models)).toBe(true);
+  });
+
+  test('returns false for model ENDPOINTS source when endpoint is invalid', () => {
+    const entity = {
+      source: { $type: SOURCE_TYPE.ENDPOINTS },
+      endpoint: 'invalid-url',
+      responsesEndpoint: 'https://valid.com/responses',
+    };
+    expect(isValidSourceField(entity as any, ApplicationRoute.Models)).toBe(false);
+  });
+
+  test('returns false for model ENDPOINTS source when responsesEndpoint is invalid', () => {
+    const entity = {
+      source: { $type: SOURCE_TYPE.ENDPOINTS },
+      endpoint: 'https://valid.com/chat/completions',
+      responsesEndpoint: 'invalid-url',
+    };
+    expect(isValidSourceField(entity as any, ApplicationRoute.Models)).toBe(false);
+  });
+
   test('returns false for unknown source type', () => {
     const entity = { source: { $type: 'UNKNOWN' } };
     expect(isValidSourceField(entity as any)).toBe(false);
