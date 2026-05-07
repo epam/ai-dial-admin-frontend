@@ -242,6 +242,7 @@ const EndpointAndMCPContainer: FC<Props> = ({
               containerClassName="max-w-[160px]"
               label={t(EntityFieldsI18nKey.configDelivery)}
               onChange={onChangeMCPConfigDelivery}
+              disabled={isReadOnlyAdmin}
             />
           </div>
         )}

@@ -323,6 +323,7 @@ const ApplicationEndpoint: FC<Props> = ({ entity, onChange, isEntityImmutable, i
                 containerClassName="max-w-[160px]"
                 label={t(EntityFieldsI18nKey.configDelivery)}
                 onChange={onChangeMCPConfigDelivery}
+                disabled={disabled}
               />
             </div>
           )}
