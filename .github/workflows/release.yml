@@ -27,5 +27,4 @@ jobs:
       node-version: 24
       publish-enabled: false
       maximize-build-space: true
-      ort-version: 85.0.0 # HACK: pin ORT version due to java.util.NoSuchElementException in 85.1.0
     secrets: inherit
