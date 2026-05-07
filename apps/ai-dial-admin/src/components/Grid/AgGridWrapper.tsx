@@ -52,6 +52,7 @@ export interface AgGridProps<T> {
   additionalGridOptions?: Omit<GridOptions, 'columnDefs' | 'rowData' | 'onGridReady'>;
   storageKey?: string;
   onGridReady?: (gridApi: GridReadyEvent) => void;
+  getHref?: (data: unknown) => string | undefined;
 }
 
 ModuleRegistry.registerModules([
@@ -104,6 +105,7 @@ const AgGridWrapper = <T extends object>({
   additionalGridOptions,
   storageKey,
   onGridReady: gridReadyCb,
+  getHref,
 }: AgGridProps<T>) => {
   const [gridApi, setGridApi] = useState<GridApi>();
   const [contextMenu, setContextMenu] = useState<ContextMenuPosition | null>(null);
@@ -197,21 +199,25 @@ const AgGridWrapper = <T extends object>({
     };
   }, []);
 
-  const onCellContextMenu = useCallback((event: CellContextMenuEvent) => {
-    const mouseEvent = event.event as MouseEvent;
-    mouseEvent.preventDefault();
-    const formattedValue = event.api.getCellValue({
-      rowNode: event.node!,
-      colKey: event.column,
-      useFormatter: true,
-    });
-    const displayValue = formattedValue ?? event.value;
-    setContextMenu({
-      x: mouseEvent.clientX,
-      y: mouseEvent.clientY,
-      value: displayValue != null ? String(displayValue) : '',
-    });
-  }, []);
+  const onCellContextMenu = useCallback(
+    (event: CellContextMenuEvent) => {
+      const mouseEvent = event.event as MouseEvent;
+      mouseEvent.preventDefault();
+      const formattedValue = event.api.getCellValue({
+        rowNode: event.node!,
+        colKey: event.column,
+        useFormatter: true,
+      });
+      const displayValue = formattedValue ?? event.value;
+      setContextMenu({
+        x: mouseEvent.clientX,
+        y: mouseEvent.clientY,
+        value: displayValue != null ? String(displayValue) : '',
+        href: getHref?.(event.data),
+      });
+    },
+    [getHref],
+  );
 
   const closeContextMenu = useCallback(() => {
     setContextMenu(null);
