@@ -17,6 +17,7 @@ export const isDialApplication = (
 
 export const isValidSourceField = (
   entity: DialModel | DialInterceptor | Toolset | DialAdapter | DialApplication,
+  view?: ApplicationRoute,
 ): boolean => {
   const source = entity.source;
 
@@ -36,6 +37,13 @@ export const isValidSourceField = (
     return !!source.applicationTypeSchemaId;
   }
   if (source?.$type === SOURCE_TYPE.ENDPOINTS) {
+    if (view === ApplicationRoute.Models) {
+      const model = entity as DialModel;
+      const endpointError = getUrlError(model.endpoint, void 0, !model.responsesEndpoint);
+      const responsesEndpointError = getUrlError(model.responsesEndpoint, void 0, !model.endpoint);
+      return endpointError === null && responsesEndpointError === null;
+    }
+
     if (isDialApplication(entity)) {
       const chatValid = entity.endpoint ? getUrlError(entity.endpoint, void 0, true) === null : false;
       const mcpValid = entity.mcp?.endpoint ? getUrlError(entity.mcp.endpoint, void 0, true) === null : false;
