@@ -70,7 +70,6 @@ const EditableCellRenderer = ({
   }, [isMaxValue, t, translatedPlaceholder]);
 
   const handleKeyDown = (e: { ctrlKey: boolean; metaKey: boolean; stopPropagation(): void }) => {
-    console.log('Key down event:', e);
     if (e.ctrlKey || e.metaKey) {
       e.stopPropagation();
     }
