@@ -366,7 +366,7 @@ describe('jsonSchemaToFields', () => {
     expect(fields[0].children).toEqual([]);
   });
 
-  test('should create a primitive child for array without object items', () => {
+  test('should set itemsType and have no children for array with primitive items', () => {
     const schema: JSONSchema7 = {
       type: 'object',
       properties: {
@@ -376,14 +376,8 @@ describe('jsonSchemaToFields', () => {
 
     const fields = jsonSchemaToFields(schema);
     expect(fields[0].expanded).toBe(false);
-    expect(fields[0].children).toHaveLength(1);
-    expect(fields[0].children[0]).toMatchObject({
-      name: 'simpleArray',
-      type: 'string',
-      required: false,
-      depth: 1,
-      parentId: fields[0].id,
-    });
+    expect(fields[0].itemsType).toBe('string');
+    expect(fields[0].children).toHaveLength(0);
   });
 
   test('should resolve $ref from $defs when building fields', () => {
@@ -983,6 +977,24 @@ describe('fieldsToJsonSchema and jsonSchemaToFields round-trip', () => {
     expect(result).toEqual(original);
   });
 
+  test('should round-trip an array with primitive items', () => {
+    const original: JSONSchema7 = {
+      type: 'object',
+      properties: {
+        tags: {
+          type: 'array',
+          items: { type: 'string' },
+        },
+      },
+    };
+
+    const fields = jsonSchemaToFields(original);
+    expect(fields[0].itemsType).toBe('string');
+    expect(fields[0].children).toHaveLength(0);
+    const result = fieldsToJsonSchema(fields);
+    expect(result).toEqual(original);
+  });
+
   test('should round-trip an array with object items', () => {
     const original: JSONSchema7 = {
       type: 'object',
@@ -1133,12 +1145,13 @@ describe('flattenFields', () => {
     expect(result[3]).toMatchObject({ id: 'add-root-field', isAddSubFieldRow: true });
   });
 
-  test('should flatten expanded array field the same as object', () => {
+  test('should flatten expanded array with object itemsType the same as object', () => {
     const fields: SchemaFieldRow[] = [
       {
         id: 'f1',
         name: 'items',
         type: 'array',
+        itemsType: 'object',
         required: false,
         description: '',
         expanded: true,
@@ -1167,6 +1180,31 @@ describe('flattenFields', () => {
     expect(result[1]).toMatchObject({ id: 'c1', depth: 1 });
     expect(result[2]).toMatchObject({ id: 'add-sub-f1', isAddSubFieldRow: true, depth: 1 });
     expect(result[3]).toMatchObject({ id: 'add-root-field' });
+  });
+
+  test('should not show add-sub-field row for array with primitive itemsType', () => {
+    const fields: SchemaFieldRow[] = [
+      {
+        id: 'f1',
+        name: 'tags',
+        type: 'array',
+        itemsType: 'string',
+        required: false,
+        description: '',
+        expanded: true,
+        children: [],
+        parentId: null,
+        depth: 0,
+      },
+    ];
+
+    const result = flattenFields(fields);
+
+    // f1, add-root-field only — no add-sub row since itemsType is primitive
+    expect(result).toHaveLength(2);
+    expect(result[0]).toMatchObject({ id: 'f1' });
+    expect(result[1]).toMatchObject({ id: 'add-root-field' });
+    expect(result.some((r) => r.isAddSubFieldRow && r.parentId === 'f1')).toBe(false);
   });
 
   test('should not flatten children of collapsed object/array', () => {

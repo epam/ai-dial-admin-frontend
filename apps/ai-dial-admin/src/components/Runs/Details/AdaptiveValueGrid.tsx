@@ -5,12 +5,11 @@ import { FC, useCallback, useState } from 'react';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-
 import AdaptiveValueRow from './AdaptiveValueRow';
 
 interface Props {
   title: string;
-  entries: Array<[string, string | string[]]>;
+  entries: Array<[string, unknown]>;
 }
 
 const AdaptiveValueGrid: FC<Props> = ({ title, entries }) => {

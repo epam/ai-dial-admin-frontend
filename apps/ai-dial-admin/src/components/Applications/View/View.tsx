@@ -3,13 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import {
-  VisualizerConnectorEvents,
-  VisualizerConnectorRequest,
-  VisualizerConnectorRequests,
-} from '@epam/ai-dial-shared';
 import { TabModel } from '@epam/ai-dial-ui-kit';
-import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
 import { cloneDeep } from 'lodash';
 
 import {
@@ -22,15 +16,14 @@ import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models'
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { ModalType } from '@/src/components/EntityView/Modals/constants';
+import { useParametersTabGuard } from '@/src/components/EntityView/hooks/use-parameters-tab-guard';
 import EntityViewModals from '@/src/components/EntityView/Modals/EntityViewModals';
 import { isDisableRole } from '@/src/components/EntityView/Roles/utils';
-import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
-import { DialAttachmentData } from '@/src/models/attachment-data';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
@@ -66,13 +59,9 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
   const [tabs, setTabs] = useState<TabModel[]>(getApplicationTabs(t));
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [isSkipRefresh, setIsSkipRefresh] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalType, setModalType] = useState<ModalType>();
-  const [isIframeChanged, setIsIframeChanged] = useState(false);
 
   const [selectedApplication, setSelectedApplication] = useState(cloneDeep(originalApplication));
   const [isChanged, setIsChanged] = useState(false);
-  const [nextTab, setNextTab] = useState<string>();
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
   const [coreApplication, setCoreApplication] = useState<DialApplication | null>(null);
@@ -129,30 +118,6 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
     setIsChanged(selectedFormat === ExportFormat.CORE ? !isEqualCoreApplication : !isEqualAdminApplication);
   }, [selectedFormat, originalApplication, selectedApplication, coreApplication]);
 
-  const handleMessage = useCallback(
-    (event: MessageEvent<VisualizerConnectorRequest>) => {
-      if (event.data?.type?.split('/')[1] !== VisualizerConnectorEvents.sendMessage) return;
-      setIsIframeChanged((event.data as { payload: { isChanged: boolean } }).payload.isChanged);
-    },
-    [setIsIframeChanged],
-  );
-
-  const sendMessage = useCallback(async (visualizer?: VisualizerConnector | null) => {
-    const messagePayload: DialAttachmentData = {
-      mimeType: APPLICATION_JSON_TYPE,
-      visualizerData: {
-        saveChanges: true,
-        layout: { width: 0, height: 0 },
-      },
-    };
-    visualizer?.send(VisualizerConnectorRequests.sendVisualizeData, messagePayload);
-  }, []);
-
-  useEffect(() => {
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [handleMessage]);
-
   const onDiscard = useCallback(() => {
     if (isEditorEnabled) {
       setSelectedFormat(ExportFormat.ADMIN);
@@ -169,39 +134,6 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
       setIsSkipRefresh(!!skipRefresh);
     },
     [setSelectedApplication],
-  );
-
-  const onModalClose = useCallback(() => {
-    setIsModalOpen(false);
-    setModalType(void 0);
-  }, []);
-
-  const onChangeTab = useCallback(() => {
-    setActiveTab(nextTab as EntityViewTab);
-    setNextTab(void 0);
-  }, [nextTab]);
-
-  const onModalOpen = useCallback((modalType: ModalType) => {
-    setModalType(modalType);
-    setIsModalOpen(true);
-  }, []);
-
-  const onModalCancel = useCallback(
-    (type: ModalType) => {
-      if (type === ModalType.entity) {
-        onDiscard();
-        onModalClose();
-        onChangeTab();
-      }
-      if (type === ModalType.parameters) {
-        onModalClose();
-        onChangeTab();
-      }
-      if (type === ModalType.emptyRoles) {
-        onModalClose();
-      }
-    },
-    [onChangeTab, onModalClose, onDiscard],
   );
 
   const onSave = useCallback(() => {
@@ -227,43 +159,15 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
     });
   }, [selectedFormat, selectedApplication, originalApplication.name, etag, dispatch, showNotification, t, router]);
 
-  const onModalConfirm = useCallback(
-    (type: ModalType) => {
-      if (type === ModalType.entity) {
-        onSave();
-        onModalClose();
-        onChangeTab();
-      }
-      if (type === ModalType.parameters) {
-        sendMessage(visualizerConnector);
-        onModalClose();
-        // need to wait saving until change tab
-        setTimeout(() => {
-          onChangeTab();
-        }, 2000);
-      }
-      if (type === ModalType.emptyRoles) {
-        onSave();
-        onModalClose();
-      }
-    },
-    [onChangeTab, onModalClose, onSave, sendMessage, visualizerConnector],
-  );
-
-  const onChangeActiveTab = useCallback(
-    (tab: EntityViewTab) => {
-      if (tab === EntityViewTab.Parameters && isChanged) {
-        setNextTab(tab);
-        onModalOpen(ModalType.entity);
-      } else if (activeTab === EntityViewTab.Parameters && (isIframeChanged || isChanged)) {
-        setNextTab(tab);
-        onModalOpen(ModalType.parameters);
-      } else {
-        setActiveTab(tab);
-      }
-    },
-    [activeTab, onModalOpen, isChanged, isIframeChanged],
-  );
+  const { isModalOpen, modalType, onModalOpen, onModalClose, onModalCancel, onModalConfirm, onChangeActiveTab } =
+    useParametersTabGuard({
+      activeTab,
+      isChanged,
+      visualizerConnector,
+      onSaveEntity: onSave,
+      onDiscardEntity: onDiscard,
+      onSetActiveTab: setActiveTab,
+    });
 
   const onTryToSave = useCallback(() => {
     if (selectedFormat !== ExportFormat.CORE && isDisableRole(selectedApplication as EntityRoleLimits)) {
@@ -272,6 +176,29 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
       onSave();
     }
   }, [onModalOpen, selectedFormat, onSave, selectedApplication]);
+
+  const onCancelModal = useCallback(
+    (type: ModalType) => {
+      if (type === ModalType.emptyRoles) {
+        onModalClose();
+      } else {
+        onModalCancel(type);
+      }
+    },
+    [onModalCancel, onModalClose],
+  );
+
+  const onConfirmModal = useCallback(
+    (type: ModalType) => {
+      if (type === ModalType.emptyRoles) {
+        onSave();
+        onModalClose();
+      } else {
+        onModalConfirm(type);
+      }
+    },
+    [onModalClose, onModalConfirm, onSave],
+  );
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
@@ -317,9 +244,9 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
       <EntityViewModals
         isModalOpen={isModalOpen}
         modalType={modalType}
-        handleConfirm={onModalConfirm}
+        handleConfirm={onConfirmModal}
         handleClose={onModalClose}
-        handleCancel={onModalCancel}
+        handleCancel={onCancelModal}
       />
     </div>
   );
