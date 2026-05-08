@@ -25,8 +25,8 @@ const TreeNameCellRenderer = ({
 
   if (!data) return null;
 
-  const { type, expanded, depth } = data;
-  const hasChildren = type === 'object' || type === 'array';
+  const { type, expanded, depth, itemsType } = data;
+  const hasChildren = type === 'object' || (type === 'array' && (itemsType === 'object' || !itemsType));
 
   return (
     <div className="flex items-center h-full gap-1" style={{ paddingLeft: depth * 24 }}>

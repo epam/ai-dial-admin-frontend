@@ -6,13 +6,24 @@ import { getSchemaTypes, SchemaFieldRow } from '@/src/components/Common/SchemaGr
 import BooleanButtonCellRenderer from '@/src/components/Grid/CellRenderers/BooleanButtonCellRenderer';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
-import TreeNameCellRenderer from '@/src/components/Grid/CellRenderers/TreeNameCellRenderer';
+import TreeNameCellRenderer from '@/src/components/Common/SchemaGrid/TreeNameCellRenderer';
 import { NO_BORDER_CLASS, ONE_ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getDeleteOperation } from '@/src/constants/grid-columns/actions';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { startCase } from 'lodash';
 
-const SCHEMA_TYPE_OPTIONS: SelectOption[] = getSchemaTypes().map((t) => ({ value: t, label: startCase(t) }));
+const SCHEMA_TYPE_OPTIONS: SelectOption[] = [
+  ...getSchemaTypes()
+    .filter((t) => t !== 'array')
+    .map((t) => ({ value: t, label: startCase(t) })),
+  {
+    value: 'array',
+    label: 'Array',
+    children: getSchemaTypes()
+      .filter((t) => t !== 'array' && t !== 'null')
+      .map((t) => ({ value: `array:${t}`, label: `${startCase(t)}[]` })),
+  },
+];
 
 const getPropertyKindOptions = (t: (key: BasicI18nKey) => string): SelectOption[] => [
   { value: 'server', label: t(BasicI18nKey.Server) },
@@ -56,7 +67,7 @@ export const getSchemaGridColumns = (
       filter: false,
       floatingFilter: false,
       valueGetter: (params: ValueGetterParams<SchemaFieldRow>) =>
-        `${params.data?.name}|${params.data?.expanded}|${params.data?.type}`,
+        `${params.data?.name}|${params.data?.expanded}|${params.data?.type}|${params.data?.itemsType}`,
       cellRenderer: TreeNameCellRenderer,
       cellRendererParams: {
         onToggleExpand,
@@ -100,13 +111,19 @@ export const getSchemaGridColumns = (
     },
     {
       headerName: 'Data type',
-      field: 'type',
+      colId: 'dataType',
       cellClass: NO_BORDER_CLASS,
       width: 140,
       maxWidth: 160,
       sortable: false,
       filter: false,
       floatingFilter: false,
+      valueGetter: (params: ValueGetterParams<SchemaFieldRow>) => {
+        if (params.data?.type === 'array') {
+          return `array:${params.data.itemsType ?? 'string'}`;
+        }
+        return params.data?.type;
+      },
       cellRenderer: SelectCellRenderer,
       cellRendererParams: {
         items: SCHEMA_TYPE_OPTIONS,
