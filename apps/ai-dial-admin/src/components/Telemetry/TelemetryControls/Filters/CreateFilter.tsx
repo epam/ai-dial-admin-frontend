@@ -22,6 +22,7 @@ interface Props {
   dropdownData: { projects: SelectOption[]; entities: SelectOption[] };
   route: ApplicationRoute;
   isMcpView?: boolean;
+  isRouteView?: boolean;
 }
 
 const CreateFilter: FC<Props> = ({
@@ -35,9 +36,10 @@ const CreateFilter: FC<Props> = ({
   dropdownData,
   route,
   isMcpView = false,
+  isRouteView = false,
 }) => {
   const t = useI18n();
-  const filterTypeConfig = getFilterTypeConfig(t, isMcpView);
+  const filterTypeConfig = getFilterTypeConfig(t, isMcpView, isRouteView);
   const filterConditionConfig = getFilterConditionConfig(t);
   const isMobile = useIsMobileScreen();
   const { projects, entities } = dropdownData;
