@@ -89,6 +89,7 @@ describe('AdaptiveValueRow', () => {
   test('Should render string-array value as stacked items', () => {
     render(<AdaptiveValueRow label="tags" value={['alpha', 'beta', 'gamma']} />);
 
+    expect(screen.getByText('Array\u00B73')).toBeInTheDocument();
     expect(screen.getByText('alpha')).toBeInTheDocument();
     expect(screen.getByText('beta')).toBeInTheDocument();
     expect(screen.getByText('gamma')).toBeInTheDocument();
@@ -129,5 +130,98 @@ describe('AdaptiveValueRow', () => {
     fireEvent.click(copyBtn!);
 
     expect(writeText).toHaveBeenCalledWith('a\nb');
+  });
+
+  test('Should render nested array items in readable JSON form', () => {
+    render(<AdaptiveValueRow label="payload" value={['alpha', ['beta', 'gamma'], { key: 'value' }]} />);
+
+    expect(screen.getByText('alpha')).toBeInTheDocument();
+    expect(screen.getByText('["beta","gamma"]')).toBeInTheDocument();
+    expect(screen.getByText('{"key":"value"}')).toBeInTheDocument();
+  });
+
+  test('Should render array-of-objects items in readable JSON form', () => {
+    render(
+      <AdaptiveValueRow
+        label="records"
+        value={[
+          { id: 1, name: 'alice' },
+          { id: 2, active: true },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText('{"id":1,"name":"alice"}')).toBeInTheDocument();
+    expect(screen.getByText('{"id":2,"active":true}')).toBeInTheDocument();
+  });
+
+  test('Should clamp and expand array item when object element is large', () => {
+    render(
+      <AdaptiveValueRow
+        label="records"
+        value={[{ id: 1, payload: 'x'.repeat(180) }]}
+      />,
+    );
+
+    fireEvent.click(screen.getByText(/"payload":"x+/));
+
+    expect(screen.getByText(/"payload":/)).toBeInTheDocument();
+  });
+
+  test('Should expand only clicked array object item', () => {
+    render(
+      <AdaptiveValueRow
+        label="records"
+        value={[
+          { id: 1, payload: 'x'.repeat(180) },
+          { id: 2, payload: 'y'.repeat(180) },
+        ]}
+      />,
+    );
+
+    fireEvent.click(screen.getByText(/"id":1,"payload":"x+/));
+
+    expect(screen.getByText(/"id": 1/)).toBeInTheDocument();
+    expect(screen.queryByText(/"id": 2/)).not.toBeInTheDocument();
+  });
+
+  test('Should keep long array items clamped after "show more" until item click', () => {
+    const longPayload = 'x'.repeat(180);
+    render(
+      <AdaptiveValueRow
+        label="records"
+        value={[
+          { id: 1, payload: longPayload },
+          { id: 2, payload: longPayload },
+          { id: 3, payload: longPayload },
+          { id: 4, payload: longPayload },
+        ]}
+      />,
+    );
+
+    const row = screen.getByText('records').closest('[role="button"]');
+    expect(row).toBeTruthy();
+    fireEvent.click(row!);
+
+    const compactFourthItem = screen.getByText(/"id":4,"payload":"x+/);
+    expect(compactFourthItem).toHaveClass('line-clamp-2');
+
+    fireEvent.click(compactFourthItem);
+
+    expect(screen.getByText(/"id": 4/)).toBeInTheDocument();
+  });
+
+  test('Should render object value with type chip and expandable raw JSON', () => {
+    const value = { nested: { ok: true }, message: 'x'.repeat(180) };
+    render(<AdaptiveValueRow label="meta" value={value} />);
+
+    expect(screen.getByText('Object')).toBeInTheDocument();
+
+    const row = screen.getByText('meta').closest('[role="button"]');
+    expect(row).toBeTruthy();
+    fireEvent.click(row!);
+
+    expect(screen.getByText(/"nested":/)).toBeInTheDocument();
+    expect(screen.getByText(/"ok": true/)).toBeInTheDocument();
   });
 });
