@@ -2,7 +2,7 @@ import { ActivityAuditResourceType } from '@/src/types/activity-audit';
 import { EntityType } from '@/src/types/entity-type';
 import { ApplicationRoute } from '@/src/types/routes';
 
-export const auditResourceRoute: Record<ActivityAuditResourceType, ApplicationRoute> = {
+export const auditResourceRoute: Partial<Record<ActivityAuditResourceType, ApplicationRoute>> = {
   [ActivityAuditResourceType.MODEL]: ApplicationRoute.Models,
   [ActivityAuditResourceType.APPLICATION]: ApplicationRoute.Applications,
   [ActivityAuditResourceType.ADAPTER]: ApplicationRoute.Adapters,

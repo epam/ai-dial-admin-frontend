@@ -110,7 +110,16 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
       > = {};
 
       const existingIds = new Set(fullActivityList.map((a) => a.activityId));
-      const newActivities = data.filter((a) => !existingIds.has(a.activityId));
+      const newActivities = data
+        .filter((a) => !existingIds.has(a.activityId))
+        .map((a) => ({
+          ...a,
+          resourceId:
+            a.resourceType === ActivityAuditResourceType.ADMIN_PROPERTIES ||
+            a.resourceType === ActivityAuditResourceType.SYSTEM_PROPERTIES
+              ? ''
+              : a.resourceId,
+        }));
       const updatedActivityList = [...fullActivityList, ...newActivities];
       setFullActivityList(updatedActivityList);
 
@@ -172,6 +181,11 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
                 if (!activity?.parentActivityId) {
                   const activityWithChildren = {
                     ...activity,
+                    resourceId:
+                      activity.resourceType === ActivityAuditResourceType.ADMIN_PROPERTIES ||
+                      activity.resourceType === ActivityAuditResourceType.SYSTEM_PROPERTIES
+                        ? ''
+                        : activity.resourceId,
                     children: activityMap[activity.activityId]?.children || [],
                     expanded: true,
                     canToggleExpand: false,
