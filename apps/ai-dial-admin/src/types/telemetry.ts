@@ -13,6 +13,7 @@ export enum FILTER_TYPE {
   Entity = 'Entity',
   Project = 'Project',
   Mcp = 'Mcp',
+  Deployment = 'Deployment',
 }
 
 export enum DASHBOARD_VIEW_TYPE {

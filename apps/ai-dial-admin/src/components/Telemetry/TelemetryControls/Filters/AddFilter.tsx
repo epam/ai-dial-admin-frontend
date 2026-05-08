@@ -17,12 +17,21 @@ interface Props {
   filterData?: FilterData;
   route: ApplicationRoute;
   isMcpView?: boolean;
+  isRouteView?: boolean;
 }
 
-const AddFilter: FC<Props> = ({ addFilter, dropdownData, children, filterData, route, isMcpView = false }) => {
+const AddFilter: FC<Props> = ({
+  addFilter,
+  dropdownData,
+  children,
+  filterData,
+  route,
+  isRouteView = false,
+  isMcpView = false,
+}) => {
   const isMobile = useIsMobileScreen();
   const t = useI18n();
-  const filterTypeConfig = getFilterTypeConfig(t, isMcpView);
+  const filterTypeConfig = getFilterTypeConfig(t, isMcpView, isRouteView);
   const filterConditionConfig = getFilterConditionConfig(t);
   const typeValue =
     route === ApplicationRoute.Dashboard
@@ -61,6 +70,7 @@ const AddFilter: FC<Props> = ({ addFilter, dropdownData, children, filterData, r
           reset={reset}
           route={route}
           isMcpView={isMcpView}
+          isRouteView={isRouteView}
         >
           {children}
         </AddFilterModal>
@@ -77,6 +87,7 @@ const AddFilter: FC<Props> = ({ addFilter, dropdownData, children, filterData, r
           reset={reset}
           route={route}
           isMcpView={isMcpView}
+          isRouteView={isRouteView}
         >
           {children}
         </AddFilterPopover>
