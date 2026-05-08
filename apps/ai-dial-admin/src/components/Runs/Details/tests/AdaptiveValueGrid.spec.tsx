@@ -156,12 +156,7 @@ describe('AdaptiveValueRow', () => {
   });
 
   test('Should clamp and expand array item when object element is large', () => {
-    render(
-      <AdaptiveValueRow
-        label="records"
-        value={[{ id: 1, payload: 'x'.repeat(180) }]}
-      />,
-    );
+    render(<AdaptiveValueRow label="records" value={[{ id: 1, payload: 'x'.repeat(180) }]} />);
 
     fireEvent.click(screen.getByText(/"payload":"x+/));
 
