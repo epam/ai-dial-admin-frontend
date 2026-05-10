@@ -1,6 +1,6 @@
 ---
 name: openspec-apply-change
-description: Implement tasks from an OpenSpec change. Use when the user wants to start implementing, continue implementation, or work through tasks.
+description: "Execute implementation tasks from an OpenSpec change definition — reads context artifacts (proposal, design, specs, tasks), applies code changes task-by-task, marks progress via checkbox updates, and reports completion status. Use when the user wants to implement a change, apply specs, start or continue implementation, work through tasks, resume coding, or build from a proposal."
 license: MIT
 compatibility: Requires openspec CLI.
 metadata:
@@ -9,7 +9,7 @@ metadata:
   generatedBy: "1.2.0"
 ---
 
-Implement tasks from an OpenSpec change.
+Execute implementation tasks from an OpenSpec change by reading context artifacts, applying code changes sequentially, and tracking progress.
 
 **Input**: Optionally specify a change name. If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
 
@@ -24,13 +24,11 @@ Implement tasks from an OpenSpec change.
 
    Always announce: "Using change: <name>" and how to override (e.g., `/opsx:apply <other>`).
 
-2. **Check status to understand the schema**
+2. **Check status**
    ```bash
    openspec status --change "<name>" --json
    ```
-   Parse the JSON to understand:
-   - `schemaName`: The workflow being used (e.g., "spec-driven")
-   - Which artifact contains the tasks (typically "tasks" for spec-driven, check status for others)
+   Key fields: `schemaName` (workflow type, e.g. "spec-driven"), artifact containing tasks (typically "tasks" for spec-driven).
 
 3. **Get apply instructions**
 
@@ -38,39 +36,27 @@ Implement tasks from an OpenSpec change.
    openspec instructions apply --change "<name>" --json
    ```
 
-   This returns:
-   - Context file paths (varies by schema - could be proposal/specs/design/tasks or spec/tests/implementation/docs)
-   - Progress (total, complete, remaining)
-   - Task list with status
-   - Dynamic instruction based on current state
+   Returns: `contextFiles` (paths to read), progress counts, task list with status, and dynamic instruction.
 
    **Handle states:**
-   - If `state: "blocked"` (missing artifacts): show message, suggest using openspec-continue-change
-   - If `state: "all_done"`: congratulate, suggest archive
+   - `state: "blocked"` (missing artifacts): show message, suggest openspec-continue-change
+   - `state: "all_done"`: congratulate, suggest archive
    - Otherwise: proceed to implementation
 
 4. **Read context files**
 
-   Read the files listed in `contextFiles` from the apply instructions output.
-   The files depend on the schema being used:
-   - **spec-driven**: proposal, specs, design, tasks
-   - Other schemas: follow the contextFiles from CLI output
+   Read all files listed in `contextFiles` from the apply instructions output. Do not assume specific file names — use what the CLI returns.
 
 5. **Show current progress**
 
-   Display:
-   - Schema being used
-   - Progress: "N/M tasks complete"
-   - Remaining tasks overview
-   - Dynamic instruction from CLI
+   Display: schema name, "N/M tasks complete", remaining tasks overview, dynamic instruction from CLI.
 
 6. **Implement tasks (loop until done or blocked)**
 
    For each pending task:
    - Show which task is being worked on
-   - Make the code changes required
-   - Keep changes minimal and focused
-   - Mark task complete in the tasks file: `- [ ]` → `- [x]`
+   - Make the code changes required — keep changes minimal and focused
+   - Mark task complete: `- [ ]` → `- [x]`
    - Continue to next task
 
    **Pause if:**
@@ -81,9 +67,7 @@ Implement tasks from an OpenSpec change.
 
 7. **On completion or pause, show status**
 
-   Display:
-   - Tasks completed this session
-   - Overall progress: "N/M tasks complete"
+   Display: tasks completed this session, overall "N/M tasks complete" progress.
    - If all done: suggest archive
    - If paused: explain why and wait for guidance
 
@@ -139,18 +123,12 @@ What would you like to do?
 ```
 
 **Guardrails**
-- Keep going through tasks until done or blocked
-- Always read context files before starting (from the apply instructions output)
-- If task is ambiguous, pause and ask before implementing
-- If implementation reveals issues, pause and suggest artifact updates
-- Keep code changes minimal and scoped to each task
+- Read context files before starting implementation
+- Keep code changes scoped to each task
 - Update task checkbox immediately after completing each task
-- Pause on errors, blockers, or unclear requirements - don't guess
 - Use contextFiles from CLI output, don't assume specific file names
 
 **Fluid Workflow Integration**
 
-This skill supports the "actions on a change" model:
-
 - **Can be invoked anytime**: Before all artifacts are done (if tasks exist), after partial implementation, interleaved with other actions
-- **Allows artifact updates**: If implementation reveals design issues, suggest updating artifacts - not phase-locked, work fluidly
+- **Allows artifact updates**: If implementation reveals design issues, suggest updating artifacts — not phase-locked, work fluidly
