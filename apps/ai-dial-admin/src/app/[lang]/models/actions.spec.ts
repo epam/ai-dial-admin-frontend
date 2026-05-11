@@ -158,7 +158,11 @@ describe('Models :: server actions', () => {
 
     const result = await updateModel({ name: 'test' }, 'etag');
     expect(getUserToken).toHaveBeenCalled();
-    expect(modelsApi.updateModel).toHaveBeenCalledWith({ name: 'test', defaults: {}, responsesDefaults: {} }, TOKEN_MOCK, 'etag');
+    expect(modelsApi.updateModel).toHaveBeenCalledWith(
+      { name: 'test', defaults: {}, responsesDefaults: {} },
+      TOKEN_MOCK,
+      'etag',
+    );
     expect(result).toBe(RESPONSE_MOCK);
   });
 
