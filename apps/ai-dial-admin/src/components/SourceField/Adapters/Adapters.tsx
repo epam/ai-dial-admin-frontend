@@ -4,7 +4,7 @@ import classNames from 'classnames';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
-import ReadonlyInput from '@/src/components/Common/ReadonlyInput/ReadonlyInput';
+import ComplexInput from '@/src/components/Common/ComplexInput/ComplexInput';
 import SelectAdapterModal from '@/src/components/SourceField/Adapters/SelectAdapterModal';
 import ModelEndpoint from '@/src/components/SourceField/Endpoints/ModelEndpoint';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
@@ -15,7 +15,7 @@ import {
   EntityFieldsI18nKey,
   SourceI18nKey,
 } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -166,9 +166,10 @@ const Adapters = <T extends DialModel | DialInterceptor>({
         />
       )}
       {entity.source?.adapterName && selectedAdapter && selectedAdapter.responsesEndpoint && (
-        <ReadonlyInput
-          containerClassName={isModal ? 'w-full' : STANDARD_CONTROL_WIDTH}
+        <ComplexInput
+          copyable
           id="responsesEndpoint"
+          disabled
           label={t(EntityFieldsI18nKey.responsesEndpoint)}
           value={selectedAdapter.responsesEndpoint || ''}
         />
