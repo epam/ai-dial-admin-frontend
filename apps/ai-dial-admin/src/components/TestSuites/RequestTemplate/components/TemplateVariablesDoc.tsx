@@ -35,15 +35,15 @@ const TemplateVariablesDoc: FC = () => {
             <div className="px-6 py-4 flex flex-col gap-6">
               <span className="body text-secondary">{t(TestSuitesI18nKey.TemplateVariablesDescription)}</span>
               <div className="flex flex-col text-sm">
-                <div className="flex flex-row border-b border-primary pb-2 font-semibold">
-                  <span className="w-48 shrink-0">{t(TestSuitesI18nKey.TemplateVariablesFormat)}</span>
-                  <span className="w-48 shrink-0">{t(TestSuitesI18nKey.TemplateVariablesExample)}</span>
+                <div className="flex flex-row gap-2 border-b border-primary pb-2 font-semibold">
+                  <span className="w-1/4 shrink-0">{t(TestSuitesI18nKey.TemplateVariablesFormat)}</span>
+                  <span className="w-1/4 shrink-0">{t(TestSuitesI18nKey.TemplateVariablesExample)}</span>
                   <span>{t(TestSuitesI18nKey.TemplateVariablesDescCol)}</span>
                 </div>
                 {TEMPLATE_SYNTAX_ROWS.map((row) => (
-                  <div key={row.format} className="flex flex-row border-b border-primary last:border-0 py-2">
-                    <span className="w-48 shrink-0 font-mono text-xs">{row.format}</span>
-                    <span className="w-48 shrink-0 font-mono text-xs text-secondary">{row.example}</span>
+                  <div key={row.format} className="flex flex-row gap-2 border-b border-primary last:border-0 py-2">
+                    <span className="w-1/4 shrink-0 font-mono tiny">{row.format}</span>
+                    <span className="w-1/4 shrink-0 font-mono tiny text-secondary">{row.example}</span>
                     <span className="text-secondary">{row.description}</span>
                   </div>
                 ))}
@@ -52,7 +52,7 @@ const TemplateVariablesDoc: FC = () => {
                 <span className="text-sm font-semibold">{t(TestSuitesI18nKey.TemplateVariablesSupportedTypes)}</span>
                 <div className="flex flex-row flex-wrap gap-2">
                   {TEMPLATE_VARIABLE_TYPES.map((type) => (
-                    <span key={type} className="font-mono text-xs px-2 py-1 bg-layer-3 rounded border border-primary">
+                    <span key={type} className="font-mono tiny px-2 py-1 bg-layer-3 rounded border border-primary">
                       {type}
                     </span>
                   ))}
