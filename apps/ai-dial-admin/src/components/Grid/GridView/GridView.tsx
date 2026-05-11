@@ -32,6 +32,8 @@ const GridView = <T extends object>({
   toggleColumnsPanel,
   onGridReady,
   getIsEmptyData,
+  isLiveData,
+  getRowId,
   getHref,
 }: GridViewProps<T>) => {
   const staticPanelContainerClassName = classNames(
@@ -144,6 +146,8 @@ const GridView = <T extends object>({
             additionalGridOptions={additionalGridOptions}
             storageKey={storageKey}
             onGridReady={onGridReady}
+            isLiveData={isLiveData}
+            getRowId={getRowId}
             getHref={getHref}
           />
           {showColumnsPanel && (

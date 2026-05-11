@@ -19,7 +19,7 @@ interface Props extends DialInputProps {
   isFullWidth?: boolean;
 }
 
-const ComplexInput: FC<Props> = ({ fullValue, label, isFullWidth, copyable = true, required, ...props }) => {
+const ComplexInput: FC<Props> = ({ fullValue, label, value, isFullWidth, copyable = true, required, ...props }) => {
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const t = useI18n();
 
@@ -28,13 +28,14 @@ const ComplexInput: FC<Props> = ({ fullValue, label, isFullWidth, copyable = tru
       <div className={mergeClasses('flex items-end gap-2', isFullWidth && 'w-full')}>
         <DialInput
           labelProps={{ label, required }}
+          value={value}
           containerClassName={mergeClasses(
             isFullWidth ? 'w-full' : copyable ? CONTROL_WITH_BUTTON_WIDTH : STANDARD_CONTROL_WIDTH,
           )}
           {...props}
         />
         {copyable && !isReadOnlyAdmin && (
-          <CopyButton valueLabel={label} value={fullValue} buttonLabel={t(ButtonsI18nKey.Copy)} />
+          <CopyButton valueLabel={label} value={fullValue || value} buttonLabel={t(ButtonsI18nKey.Copy)} />
         )}
       </div>
     </div>
