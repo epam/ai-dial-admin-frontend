@@ -10,8 +10,7 @@ import { Toolset } from '@/src/models/dial/toolset';
 import { ToolsetTransport } from '@/src/types/toolset';
 
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
-import ReadonlyInput from '@/src/components/Common/ReadonlyInput/ReadonlyInput';
-import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import ComplexInput from '@/src/components/Common/ComplexInput/ComplexInput';
 import { TOOLSET_TRANSPORTS } from '@/src/constants/transport';
 
 interface Props {
@@ -30,12 +29,7 @@ const ToolsetEndpoint: FC<Props> = ({ entity, disabled, onChange, prefix, isModa
   return (
     <div className="w-full flex flex-col gap-y-8">
       {prefix ? (
-        <ReadonlyInput
-          containerClassName={STANDARD_CONTROL_WIDTH}
-          id="endpoint"
-          label={t(EntitiesI18nKey.ToolsetEndpoint)}
-          value={prefix}
-        />
+        <ComplexInput copyable id="endpoint" label={t(EntitiesI18nKey.ToolsetEndpoint)} value={prefix} />
       ) : (
         <EndpointControl
           id="endpoint"
