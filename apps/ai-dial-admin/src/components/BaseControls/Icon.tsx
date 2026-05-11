@@ -31,7 +31,7 @@ const IconControl: FC<Props> = ({ iconUrl, disabled = false, onChange }) => {
   }, [setIsModalOpen]);
 
   return (
-    <div className="flex flex-col gap-y-2">
+    <div className="flex flex-col gap-y-1">
       <DialLabel label={t(EntityFieldsI18nKey.iconUrl)} htmlFor="icon" />
       {!iconUrl ? (
         <DialInputPopup

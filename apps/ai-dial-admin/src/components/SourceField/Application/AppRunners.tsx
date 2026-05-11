@@ -144,7 +144,7 @@ const AppRunners: FC<Props> = ({
   ) : (
     <div className="flex mt-1">
       <div className="flex gap-2 items-end">
-        <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-2')}>
+        <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-1')}>
           <DialLabel label={label} required htmlFor="sourceEntity" />
           <DialInputPopup
             disabled={isFieldDisabled}

@@ -59,7 +59,7 @@ const InternalImageField: FC<Props> = ({ container, image, route, disabled }) =>
   );
 
   return (
-    <div className={`${CONTROL_WITH_BUTTON_WIDTH} flex flex-col gap-y-2`}>
+    <div className={`${CONTROL_WITH_BUTTON_WIDTH} flex flex-col gap-y-1`}>
       <DialLabel label={label} htmlFor="internalImage" />
       <DialInputPopup
         open={isModalOpen}
