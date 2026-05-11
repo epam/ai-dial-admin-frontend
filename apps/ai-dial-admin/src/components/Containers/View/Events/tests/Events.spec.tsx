@@ -41,9 +41,7 @@ const createFakeApi = () => {
       rowTop: idx * ROW_HEIGHT,
       rowHeight: ROW_HEIGHT,
     })),
-    getRowNode: vi.fn(
-      (_id: string) => null as { rowIndex: number | null; rowTop: number | null } | null,
-    ),
+    getRowNode: vi.fn((_id: string) => null as { rowIndex: number | null; rowTop: number | null } | null),
     ensureIndexVisible: vi.fn(),
     applyColumnState: vi.fn(),
     setFilterModel: vi.fn(),

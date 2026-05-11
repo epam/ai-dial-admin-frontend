@@ -24,9 +24,7 @@ const baseApi = () => {
       rowTop: idx * ROW_HEIGHT,
       rowHeight: ROW_HEIGHT,
     })),
-    getRowNode: vi.fn(
-      (_id: string) => null as { rowIndex: number | null; rowTop: number | null } | null,
-    ),
+    getRowNode: vi.fn((_id: string) => null as { rowIndex: number | null; rowTop: number | null } | null),
     ensureIndexVisible: vi.fn(),
     addEventListener: vi.fn((event: string, fn: (e?: unknown) => void) => {
       listeners[event] = listeners[event] ?? [];
