@@ -40,7 +40,7 @@ const HelpButton: FC<Props> = ({ docLink }) => {
   if (!hasHelpLink) {
     return null;
   }
-  return (
+  return dropdownItems.length > 0 ? (
     <DialDropdown menu={{ items: dropdownItems }} allowedPlacements={['bottom-end']}>
       <DialPrimaryIconButton
         appearance={ButtonAppearance.Ghost}
@@ -48,6 +48,13 @@ const HelpButton: FC<Props> = ({ docLink }) => {
         icon={<IconHelpCircle size={24} stroke={1.5} />}
       />
     </DialDropdown>
+  ) : (
+    <DialPrimaryIconButton
+      appearance={ButtonAppearance.Ghost}
+      aria-label="Help button"
+      icon={<IconHelpCircle size={24} stroke={1.5} />}
+      onClick={onClick}
+    />
   );
 };
 
