@@ -3,6 +3,7 @@ test-results
 e2e
 helm
 .next
+dist
 .env
 .env.local
 .git
