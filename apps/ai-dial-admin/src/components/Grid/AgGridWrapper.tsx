@@ -15,6 +15,7 @@ import {
   ColumnState,
   DateFilterModule,
   EventApiModule,
+  GetRowIdParams,
   GridApi,
   GridOptions,
   GridReadyEvent,
@@ -52,6 +53,11 @@ export interface AgGridProps<T> {
   additionalGridOptions?: Omit<GridOptions, 'columnDefs' | 'rowData' | 'onGridReady'>;
   storageKey?: string;
   onGridReady?: (gridApi: GridReadyEvent) => void;
+  // Opt-in for live-streaming feeds: data flows as React props and
+  // persisted state is restored on columnDefs/storageKey change rather
+  // than on every rowData tick (default keeps the imperative path).
+  isLiveData?: boolean;
+  getRowId?: (params: GetRowIdParams<T>) => string;
 }
 
 ModuleRegistry.registerModules([
@@ -77,6 +83,27 @@ ModuleRegistry.registerModules([
   PinnedRowModule,
   DateFilterModule,
 ]);
+
+const getDefaultSorts = (columnDefs: ColDef[] | undefined): ColumnState[] =>
+  columnDefs?.filter((col) => col.sort).map((col) => ({ colId: col.field, sort: col.sort }) as ColumnState) ?? [];
+
+const loadPersistedModel = (storageKey: string | undefined, defaultSorts: ColumnState[]): GridModel | null =>
+  storageKey ? getColumnsStateFromStorage(storageKey, defaultSorts) : null;
+
+const applyGridState = (gridApi: GridApi, model: GridModel | null, defaultSorts: ColumnState[]) => {
+  if (model) {
+    gridApi.setFilterModel(model.filters);
+    gridApi.applyColumnState({ state: model.columns });
+  } else {
+    gridApi.applyColumnState({ state: defaultSorts });
+  }
+};
+
+const mergeStoredColumnDefs = (columnDefs: ColDef[], stored: ColumnState[]): ColDef[] =>
+  columnDefs.map((col) => {
+    const fromStorage = stored?.find((s) => s.colId === col.colId) ?? {};
+    return { ...fromStorage, ...col, sort: undefined };
+  });
 
 const GRID_THEME_COLORS = {
   accentColor: 'var(--controls-bg-solid-primary, #3664E2)',
@@ -104,6 +131,8 @@ const AgGridWrapper = <T extends object>({
   additionalGridOptions,
   storageKey,
   onGridReady: gridReadyCb,
+  isLiveData,
+  getRowId,
 }: AgGridProps<T>) => {
   const [gridApi, setGridApi] = useState<GridApi>();
   const [contextMenu, setContextMenu] = useState<ContextMenuPosition | null>(null);
@@ -125,20 +154,11 @@ const AgGridWrapper = <T extends object>({
 
   const setGridColumnsState = useCallback(
     (defaultSorts: ColumnState[]) => {
-      if (storageKey) {
-        const model = getColumnsStateFromStorage(storageKey, defaultSorts);
-        const columns = columnDefs?.map((col) => {
-          const columnFromStorage =
-            model.columns?.find((storageCol: ColumnState) => storageCol.colId === col.colId) || {};
-          return { ...columnFromStorage, ...col, sort: undefined };
-        });
-        gridApi?.updateGridOptions({ columnDefs: columns, rowData });
-        gridApi?.setFilterModel(model.filters);
-        gridApi?.applyColumnState({ state: model.columns });
-      } else {
-        gridApi?.updateGridOptions({ columnDefs: columnDefs, rowData });
-        gridApi?.applyColumnState({ state: defaultSorts });
-      }
+      if (!gridApi) return;
+      const model = loadPersistedModel(storageKey, defaultSorts);
+      const columns = model && columnDefs ? mergeStoredColumnDefs(columnDefs, model.columns) : columnDefs;
+      gridApi.updateGridOptions({ columnDefs: columns, rowData });
+      applyGridState(gridApi, model, defaultSorts);
     },
     [columnDefs, gridApi, rowData, storageKey],
   );
@@ -150,13 +170,15 @@ const AgGridWrapper = <T extends object>({
   };
 
   useEffect(() => {
-    if (columnDefs) {
-      const defaultSorts =
-        columnDefs?.filter((col) => col.sort).map((col) => ({ colId: col.field, sort: col.sort }) as ColumnState) || [];
+    if (isLiveData || !columnDefs) return;
+    setGridColumnsState(getDefaultSorts(columnDefs));
+  }, [columnDefs, gridApi, rowData, setGridColumnsState, storageKey, isLiveData]);
 
-      setGridColumnsState(defaultSorts);
-    }
-  }, [columnDefs, gridApi, rowData, setGridColumnsState, storageKey]);
+  useEffect(() => {
+    if (!isLiveData || !columnDefs || !gridApi) return;
+    const defaultSorts = getDefaultSorts(columnDefs);
+    applyGridState(gridApi, loadPersistedModel(storageKey, defaultSorts), defaultSorts);
+  }, [columnDefs, gridApi, storageKey, isLiveData]);
 
   const tooltipRenderer = (params: { value: string }) => {
     if (typeof params.value !== 'string') {
@@ -225,6 +247,8 @@ const AgGridWrapper = <T extends object>({
     [onStateChanged],
   );
 
+  const liveDataProps = isLiveData ? { rowData, columnDefs, animateRows: false, getRowId } : {};
+
   return (
     <div className="ag-theme-balham-dark h-full overflow-x-auto" role="table">
       <AgGridReact
@@ -243,6 +267,7 @@ const AgGridWrapper = <T extends object>({
         onColumnResized={handleStateUpdated}
         onCellContextMenu={onCellContextMenu}
         preventDefaultOnContextMenu={true}
+        {...liveDataProps}
         {...additionalGridOptions}
       />
       <CellContextMenu position={contextMenu} onClose={closeContextMenu} />

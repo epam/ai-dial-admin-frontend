@@ -8,6 +8,7 @@ import { JSONSchema7 } from 'json-schema';
 import isEqual from 'lodash/isEqual';
 
 import GridView from '@/src/components/Grid/GridView/GridView';
+import { getRowIdById } from '@/src/components/Grid/utils';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
@@ -294,7 +295,7 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
         emptyDataProps={{ title: t(BasicI18nKey.NoData) }}
         onGridReady={onGridReady}
         additionalGridOptions={{
-          getRowId: (params) => params.data.id,
+          getRowId: getRowIdById,
           isFullWidthRow: (params: IsFullWidthRowParams<SchemaFieldRow>) => !!params.rowNode.data?.isAddSubFieldRow,
           fullWidthCellRenderer,
         }}
