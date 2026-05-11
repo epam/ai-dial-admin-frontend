@@ -143,13 +143,9 @@ const Containers = <T extends DialInterceptor | DialModel | DialApplication>({
                 disabled={disabled || !featureFlags.deploymentsEnabled}
                 errorText={error}
                 iconBefore={
-                  <WarningIcon
-                    warningText={
-                      currentContainer && currentContainer.status !== CONTAINER_STATUS.RUNNING
-                        ? t(ContainersI18nKey.ContainerNotRunningTooltip)
-                        : undefined
-                    }
-                  />
+                  currentContainer && currentContainer.status !== CONTAINER_STATUS.RUNNING ? (
+                    <WarningIcon warningText={t(ContainersI18nKey.ContainerNotRunningTooltip)} />
+                  ) : undefined
                 }
               >
                 <SelectContainerModal

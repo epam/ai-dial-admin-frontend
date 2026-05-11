@@ -13,6 +13,7 @@ COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
+RUN rm -rf /app/dist/apps/ai-dial-admin/.next/cache
 
 FROM base AS runner
 WORKDIR /app
@@ -24,7 +25,7 @@ RUN adduser --system --uid 1001 nextjs
 
 COPY --from=builder --chown=nextjs:nodejs /app/dist/apps/ai-dial-admin ./
 COPY --from=builder --chown=nextjs:nodejs /app/package-lock.json ./
-RUN npm install
+RUN npm ci --omit=dev --ignore-scripts
 
 USER nextjs
 

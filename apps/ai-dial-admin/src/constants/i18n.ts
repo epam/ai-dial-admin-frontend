@@ -1606,6 +1606,13 @@ export enum TestSuitesI18nKey {
   ToolCallFailed = 'TestSuites.ToolCallFailed',
   ToolOutputSchema = 'TestSuites.ToolOutputSchema',
   ToolSchema = 'TestSuites.ToolSchema',
+  TemplateVariablesDoc = 'TestSuites.TemplateVariablesDoc',
+  TemplateVariablesViewDoc = 'TestSuites.TemplateVariablesViewDoc',
+  TemplateVariablesDescription = 'TestSuites.TemplateVariablesDescription',
+  TemplateVariablesFormat = 'TestSuites.TemplateVariablesFormat',
+  TemplateVariablesExample = 'TestSuites.TemplateVariablesExample',
+  TemplateVariablesDescCol = 'TestSuites.TemplateVariablesDescCol',
+  TemplateVariablesSupportedTypes = 'TestSuites.TemplateVariablesSupportedTypes',
 }
 
 export enum RunsI18nKey {

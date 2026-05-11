@@ -1642,6 +1642,14 @@ export default {
     ToolCallFailed: 'Tool call returned an error',
     ToolOutputSchema: 'Tool Output Schema',
     ToolSchema: 'Tool Schema',
+    TemplateVariablesDoc: 'Request Template Variables',
+    TemplateVariablesViewDoc: 'View Variables Reference',
+    TemplateVariablesDescription:
+      'Use ${{...}} syntax to define variables in your request template. Variables are replaced with values from test case data, constants, or defaults when the request is executed.',
+    TemplateVariablesFormat: 'Format',
+    TemplateVariablesExample: 'Example',
+    TemplateVariablesDescCol: 'Description',
+    TemplateVariablesSupportedTypes: 'Supported Types',
   },
   FileManager: {
     SelectedItems: 'item(s) selected',
