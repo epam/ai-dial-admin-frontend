@@ -169,6 +169,7 @@ const Adapters = <T extends DialModel | DialInterceptor>({
         <ComplexInput
           copyable
           id="responsesEndpoint"
+          disabled
           label={t(EntityFieldsI18nKey.responsesEndpoint)}
           value={selectedAdapter.responsesEndpoint || ''}
         />
