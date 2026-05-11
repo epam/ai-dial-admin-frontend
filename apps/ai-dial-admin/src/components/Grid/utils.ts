@@ -7,6 +7,8 @@ export interface GridModel {
   filters: FilterModel;
 }
 
+export const getRowIdById = <T extends { id: string }>({ data }: { data: T }): string => data.id;
+
 export const saveColumnsStateToStorage = (storageKey: string, model: GridModel) => {
   setToLocalStorage(`${GRID_COLUMNS_KEY}${storageKey}`, JSON.stringify(model));
 };
