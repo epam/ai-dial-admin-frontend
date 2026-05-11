@@ -12,6 +12,7 @@ import { EntityViewTab, getTestSuiteRequestTemplateTabs } from '@/src/utils/tabs
 import TabsContent, { TabsContentRef } from './tabs/TabsContent';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import ContentTypeSelect from './components/ContentTypeSelect';
+import TemplateVariablesDoc from './components/TemplateVariablesDoc';
 
 interface Props {
   testSuite: TestSuite;
@@ -36,6 +37,7 @@ const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
     activeTab === EntityViewTab.Body && testSuite.requestTemplate?.body?.contentType !== ContentType.JSON;
 
   const showAddButton = activeTab === EntityViewTab.Parameters || activeTab === EntityViewTab.Headers || isBodyFormData;
+  const showVariablesDoc = activeTab === EntityViewTab.Body && !isBodyFormData;
 
   return (
     <div className="flex flex-col size-full gap-2 border border-primary rounded p-4">
@@ -48,6 +50,11 @@ const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
         <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
         {showAddButton && (
           <DialNeutralButton iconBefore={<IconPlus />} label={t(ButtonsI18nKey.Add)} onClick={onAddRow} />
+        )}
+        {showVariablesDoc && (
+          <div className="flex-none">
+            <TemplateVariablesDoc />
+          </div>
         )}
       </div>
 
