@@ -21,7 +21,6 @@ import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import {
   encodeToolsetRedirectState,
   isFullLoggedInToToolset,
-  isLoggedInToToolset,
   isUserLoggedInToToolset,
   isAdminLoggedInToToolset,
 } from '@/src/utils/toolset/toolset-auth';
@@ -62,10 +61,6 @@ const AuthButtons: FC<Props> = ({
   const getReqRef = useRef(useProtectedRequest());
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isLogoutConfirmationOpen, setIsLogoutConfirmationOpen] = useState(false);
-
-  const isToolsetSignedIn = useMemo(() => {
-    return isLoggedInToToolset(selectedToolset);
-  }, [selectedToolset]);
 
   const isToolsetFullSignedIn = useMemo(() => {
     return isFullLoggedInToToolset(selectedToolset);
@@ -200,7 +195,7 @@ const AuthButtons: FC<Props> = ({
       {selectedToolset.authSettings?.authenticationType &&
       selectedToolset.authSettings?.authenticationType !== ToolsetAuthType.NONE ? (
         <>
-          {isToolsetSignedIn && (
+          {(isUserLevelSignedIn || isOrgLevelSignedIn) && (
             <DialNeutralButton
               label={t(ToolsetI18nKey.LogOut)}
               iconBefore={<IconLogout {...BASE_BUTTON_ICON_PROPS} />}
@@ -220,6 +215,8 @@ const AuthButtons: FC<Props> = ({
         <LoginPopup
           type={selectedToolset.authSettings?.authenticationType}
           isModalOpen={isLoginModalOpen}
+          isLoggedInAsUser={isUserLevelSignedIn}
+          isLoggedInAsOrganization={isOrgLevelSignedIn}
           onClose={() => setIsLoginModalOpen(false)}
           onLogin={onLogin}
         />
