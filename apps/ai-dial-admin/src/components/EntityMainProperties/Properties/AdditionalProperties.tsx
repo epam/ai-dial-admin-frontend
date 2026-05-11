@@ -52,6 +52,7 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
           value={applicationRunner['dial:applicationTypeCompletionEndpoint']}
           label={t(EntityFieldsI18nKey.completionEndpoint)}
           copyable
+          disabled
         />
       ) : null}
       {view == ApplicationRoute.Toolsets && isEntityImmutable && (

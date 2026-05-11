@@ -29,7 +29,7 @@ const ToolsetEndpoint: FC<Props> = ({ entity, disabled, onChange, prefix, isModa
   return (
     <div className="w-full flex flex-col gap-y-8">
       {prefix ? (
-        <ComplexInput copyable id="endpoint" label={t(EntitiesI18nKey.ToolsetEndpoint)} value={prefix} />
+        <ComplexInput copyable disabled id="endpoint" label={t(EntitiesI18nKey.ToolsetEndpoint)} value={prefix} />
       ) : (
         <EndpointControl
           id="endpoint"
