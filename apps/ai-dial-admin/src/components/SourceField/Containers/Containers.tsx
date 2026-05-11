@@ -132,7 +132,7 @@ const Containers = <T extends DialInterceptor | DialModel | DialApplication>({
           </div>
         ) : (
           <div className="flex gap-2">
-            <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-2')}>
+            <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-1')}>
               <DialLabel label={t(SourceI18nKey.Container)} required htmlFor="containers" />
               <DialInputPopup
                 open={isModalOpen}
