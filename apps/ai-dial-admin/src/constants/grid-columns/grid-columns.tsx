@@ -829,6 +829,7 @@ export const TEST_SUITES_COLUMN: ColDef[] = [
     field: 'suiteType',
     colId: 'suiteType',
     headerName: 'Suite Type',
+    sortable: false,
     hide: false,
     ...evalStringFilter([GridFilterType.EQUALS]),
   },
