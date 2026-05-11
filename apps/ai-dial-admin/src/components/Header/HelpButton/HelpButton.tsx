@@ -48,6 +48,13 @@ const HelpButton: FC<Props> = ({ docLink }) => {
         icon={<IconHelpCircle size={24} stroke={1.5} />}
       />
     </DialDropdown>
+  ) : (
+    <DialPrimaryIconButton
+      appearance={ButtonAppearance.Ghost}
+      aria-label="Help button"
+      icon={<IconHelpCircle size={24} stroke={1.5} />}
+      onClick={onClick}
+    />
   );
 };
 
