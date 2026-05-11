@@ -132,7 +132,7 @@ const Containers = <T extends DialInterceptor | DialModel | DialApplication>({
           </div>
         ) : (
           <div className="flex gap-2">
-            <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-2')}>
+            <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-1')}>
               <DialLabel label={t(SourceI18nKey.Container)} required htmlFor="containers" />
               <DialInputPopup
                 open={isModalOpen}
@@ -143,13 +143,9 @@ const Containers = <T extends DialInterceptor | DialModel | DialApplication>({
                 disabled={disabled || !featureFlags.deploymentsEnabled}
                 errorText={error}
                 iconBefore={
-                  <WarningIcon
-                    warningText={
-                      currentContainer && currentContainer.status !== CONTAINER_STATUS.RUNNING
-                        ? t(ContainersI18nKey.ContainerNotRunningTooltip)
-                        : undefined
-                    }
-                  />
+                  currentContainer && currentContainer.status !== CONTAINER_STATUS.RUNNING ? (
+                    <WarningIcon warningText={t(ContainersI18nKey.ContainerNotRunningTooltip)} />
+                  ) : undefined
                 }
               >
                 <SelectContainerModal

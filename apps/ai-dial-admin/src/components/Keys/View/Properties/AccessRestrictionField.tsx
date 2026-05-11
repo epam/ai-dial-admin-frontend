@@ -116,7 +116,7 @@ const AccessRestrictionField = <T extends { allowedIpAddressRanges?: string[] }>
   }, [entity, originalEntity, initialize]);
 
   return (
-    <div className="flex flex-col w-full relative gap-2">
+    <div className="flex flex-col w-full relative gap-1">
       <DialLabel label={t(KeysI18nKey.RestrictionFieldLabel)} htmlFor={elementId} />
 
       <div className="flex flex-col gap-4">
