@@ -4,6 +4,7 @@ import {
   encodeToolsetRedirectState,
   getToolsetBasicBody,
   getToolsetSignInBody,
+  isFullLoggedInToToolset,
   isLoggedInToToolset,
 } from '../toolset-auth';
 
@@ -92,5 +93,52 @@ describe('isLoggedInToToolset', () => {
   test('returns false if authSettings is missing', () => {
     const toolset = {} as any;
     expect(isLoggedInToToolset(toolset)).toBe(false);
+  });
+});
+
+describe('isFullLoggedInToToolset', () => {
+  test('returns true if both user and global are SIGNED_IN', () => {
+    const toolset = {
+      authSettings: {
+        userLevelAuthStatus: ToolsetAuthStatus.SIGNED_IN,
+        globalAuthStatus: ToolsetAuthStatus.SIGNED_IN,
+      },
+    } as any;
+    expect(isFullLoggedInToToolset(toolset)).toBe(true);
+  });
+
+  test('returns false if only userLevelAuthStatus is SIGNED_IN', () => {
+    const toolset = {
+      authSettings: {
+        userLevelAuthStatus: ToolsetAuthStatus.SIGNED_IN,
+        globalAuthStatus: ToolsetAuthStatus.SIGNED_OUT,
+      },
+    } as any;
+    expect(isFullLoggedInToToolset(toolset)).toBe(false);
+  });
+
+  test('returns false if only globalAuthStatus is SIGNED_IN', () => {
+    const toolset = {
+      authSettings: {
+        userLevelAuthStatus: ToolsetAuthStatus.SIGNED_OUT,
+        globalAuthStatus: ToolsetAuthStatus.SIGNED_IN,
+      },
+    } as any;
+    expect(isFullLoggedInToToolset(toolset)).toBe(false);
+  });
+
+  test('returns false if both are SIGNED_OUT', () => {
+    const toolset = {
+      authSettings: {
+        userLevelAuthStatus: ToolsetAuthStatus.SIGNED_OUT,
+        globalAuthStatus: ToolsetAuthStatus.SIGNED_OUT,
+      },
+    } as any;
+    expect(isFullLoggedInToToolset(toolset)).toBe(false);
+  });
+
+  test('returns false if authSettings is missing', () => {
+    const toolset = {} as any;
+    expect(isFullLoggedInToToolset(toolset)).toBe(false);
   });
 });
