@@ -1155,6 +1155,8 @@ export enum EntityFieldsI18nKey {
   inputAttachmentTypes = 'EntityFields.inputAttachmentTypes',
   maxInputAttachments = 'EntityFields.maxInputAttachments',
   defaults = 'EntityFields.defaults',
+  completionDefaults = 'EntityFields.completionDefaults',
+  responsesDefaults = 'EntityFields.responsesDefaults',
   topics = 'EntityFields.topics',
   maxRetryAttempts = 'EntityFields.maxRetryAttempts',
   type = 'EntityFields.type',

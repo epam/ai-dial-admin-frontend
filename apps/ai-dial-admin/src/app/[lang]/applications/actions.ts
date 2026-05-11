@@ -36,6 +36,10 @@ export async function updateApplication(application: DialApplication, etag: stri
     ? { ...convertDefaultsToRecord(application.defaultsTemp) }
     : { ...application.defaults };
 
+  const responsesDefaults = application.responsesDefaultsTemp
+    ? { ...convertDefaultsToRecord(application.responsesDefaultsTemp) }
+    : { ...application.responsesDefaults };
+
   const applicationProperties = application.applicationPropertiesTemp
     ? { ...convertDefaultsToRecord(application.applicationPropertiesTemp) }
     : { ...application.applicationProperties };
@@ -44,9 +48,11 @@ export async function updateApplication(application: DialApplication, etag: stri
     ...application,
     routes: getAppRoutes(application.routes),
     defaults,
+    responsesDefaults,
     applicationProperties,
   };
   delete app.defaultsTemp;
+  delete app.responsesDefaultsTemp;
   delete app.applicationPropertiesTemp;
 
   return applicationsApi.updateApplication(app, token, etag);

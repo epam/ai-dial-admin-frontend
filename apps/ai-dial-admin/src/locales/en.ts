@@ -1006,6 +1006,8 @@ export default {
     inputAttachmentTypes: 'Input attachment types',
     maxInputAttachments: 'Max input attachments',
     defaults: 'Defaults',
+    completionDefaults: 'Completion Defaults',
+    responsesDefaults: 'Responses Defaults',
     topics: 'Topics',
     maxRetryAttempts: 'Max retry attempts',
     type: 'Type',

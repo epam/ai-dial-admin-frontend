@@ -96,8 +96,8 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove, disabled })
   );
 
   return (
-    <div className="flex gap-x-3 items-end">
-      <div className="flex flex-row gap-x-4 items-center">
+    <div className="flex gap-x-3 items-end w-full">
+      <div className="flex flex-1 flex-row gap-x-4 items-center">
         <div className="min-w-[187px]">
           <DialInput
             id={`entity-default-key-${index}`}
@@ -108,7 +108,17 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove, disabled })
             disabled={disabled}
           />
         </div>
-        <div className="w-[384px]">
+        <div className="min-w-[136px]">
+          <DialSelectField
+            value={item.type}
+            id={`entity-default-type-${index}`}
+            options={types}
+            label={isFirstLine ? t(EntityFieldsI18nKey.type) : ''}
+            onChange={(type) => onChangeType(type as string)}
+            disabled={disabled}
+          />
+        </div>
+        <div className="flex-1">
           {item.type === DefaultItemType.string && (
             <DialInput
               id={`entity-default-value-${index}`}
@@ -149,16 +159,6 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove, disabled })
               disabled={disabled}
             />
           )}
-        </div>
-        <div className="min-w-[136px]">
-          <DialSelectField
-            value={item.type}
-            id={`entity-default-type-${index}`}
-            options={types}
-            label={isFirstLine ? t(EntityFieldsI18nKey.type) : ''}
-            onChange={(type) => onChangeType(type as string)}
-            disabled={disabled}
-          />
         </div>
       </div>
       {!disabled && (
