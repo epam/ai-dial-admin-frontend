@@ -44,15 +44,6 @@ export const getUniqueFolderName = (siblingNames: (string | undefined)[]): strin
   return `${NEW_FOLDER_NAME} ${counter}`;
 };
 
-export const getNewFolderPath = (file: DialFile, allFiles: Asset[], mode: 'child' | 'sibling'): string => {
-  const rootItems = (allFiles as DialFile[])?.[0]?.items ?? [];
-  const parentPath = mode === 'child' ? file.path : (file.parentPath ?? file.path.replace(/[^/]+\/?$/, ''));
-  const parentFolder = findFolderByPath(rootItems, parentPath) || allFiles?.[0];
-  const existingNames = parentFolder?.items?.map((item) => item.name) ?? [];
-  const folderName = getUniqueFolderName(existingNames);
-  return parentPath + folderName;
-};
-
 const assetEntityMap: Record<string, FileManagerI18nKey> = {
   [ApplicationRoute.AssetsApplications]: FileManagerI18nKey.Applications,
   [ApplicationRoute.AssetsToolsets]: FileManagerI18nKey.Toolsets,

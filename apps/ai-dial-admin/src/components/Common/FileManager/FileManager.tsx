@@ -34,12 +34,11 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import MoveItemsModal from './MoveItemsModal';
-import { MOVE_ITEMS_INDICATOR_DELAY } from './constants';
+import { MOVE_ITEMS_INDICATOR_DELAY, NEW_FOLDER_PLACEHOLDER } from './constants';
 import {
   getBulkActionsToolbarOptions,
   getDestinationFolderPopupOptions,
   getGridOptions,
-  getNewFolderPath,
   getToolbarOptions,
   getTreeOptions,
   getValidationMessages,
@@ -205,47 +204,26 @@ const FileManager: FC<Props> = ({
     ],
   );
 
-  const handleAddChild = useCallback(
-    (files: DialFile[]) => {
-      const newPath = getNewFolderPath(files[0], filteredFiles, 'child');
-      handleCreateFolder(void 0, newPath);
-    },
-    [handleCreateFolder, filteredFiles],
-  );
-
-  const handleAddSibling = useCallback(
-    (files: DialFile[]) => {
-      const newPath = getNewFolderPath(files[0], filteredFiles, 'sibling');
-      handleCreateFolder(void 0, newPath);
-    },
-    [handleCreateFolder, filteredFiles],
-  );
-
   const handleOnPathChange = useCallback(
     (nextPath: string | undefined) => {
       if (!nextPath) {
         return;
       }
 
-      let normalizedPath = nextPath;
-      if (!normalizedPath.endsWith('/')) {
-        normalizedPath = `${normalizedPath}/`;
-      }
-
       const newExpanded = new Set(expandedFolders);
 
-      if (newExpanded.has(normalizedPath)) {
-        newExpanded.delete(normalizedPath);
+      if (newExpanded.has(nextPath)) {
+        newExpanded.delete(nextPath);
       } else {
-        newExpanded.add(normalizedPath);
+        newExpanded.add(nextPath);
       }
-      if (!loadedPaths.has(normalizedPath)) {
-        fetchFiles(normalizedPath);
+      if (!loadedPaths.has(nextPath)) {
+        fetchFiles(nextPath);
       }
-      setFilePath(normalizedPath);
-      setLoadedPaths((prev) => new Set(prev).add(normalizedPath));
+      setFilePath(nextPath);
+      setLoadedPaths((prev) => new Set(prev).add(nextPath));
       setExpandedFolders(newExpanded);
-      onPathChange?.(normalizedPath);
+      onPathChange?.(nextPath);
     },
     [expandedFolders, fetchFiles, loadedPaths, setExpandedFolders, setFilePath, onPathChange],
   );
@@ -362,6 +340,7 @@ const FileManager: FC<Props> = ({
         items={filteredFiles as []}
         rootItem={filteredFiles?.[0] as DialRootFolder}
         filesLoading={isFetchingFiles}
+        showNavigationPanel={false}
         bulkActionsToolbarOptions={getBulkActionsToolbarOptions(t)}
         toolbarOptions={getToolbarOptions(view, isReadOnlyAdmin, t)}
         treeOptions={getTreeOptions(
@@ -374,8 +353,6 @@ const FileManager: FC<Props> = ({
         )}
         gridOptions={getGridOptions(view, isReadOnlyAdmin, columnDefs, t)}
         onPathChange={handleOnPathChange}
-        onAddChild={isReadOnlyAdmin ? undefined : handleAddChild}
-        onAddSibling={isReadOnlyAdmin ? undefined : handleAddSibling}
         onCreateFolder={isReadOnlyAdmin ? undefined : handleCreateFolder}
         onDownloadFiles={handleDownloadFiles}
         onCreateFolderValidate={handleCreateFolderValidate}
@@ -393,9 +370,7 @@ const FileManager: FC<Props> = ({
         isDuplicateFolderAvailable={false}
         previewExtensions={PREVIEW_EXTENSIONS}
         customUploadFileAction={customUploadFileAction}
-        navigationPanelOptions={{
-          searchable: false,
-        }}
+        createdFolderPlaceholder={NEW_FOLDER_PLACEHOLDER}
         {...props}
       />
       <MoveItemsModal
