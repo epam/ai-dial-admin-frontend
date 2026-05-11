@@ -7,6 +7,7 @@ import IconGalleryModal from '@/src/components/IconGallery/IconGalleryModal';
 import { ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
+import { getIconPath } from '@/src/utils/themes/icon-path';
 
 interface Props {
   disabled?: boolean;
@@ -51,7 +52,7 @@ const FilledIcon: FC<Props> = ({ disabled, fileUrl, onChange }) => {
       <div className="bg-controls-enable-primary rounded-full w-[80px] group relative border border-primary hover:border-hover">
         <Image
           role="icon"
-          src={src}
+          src={getIconPath(src)}
           alt="entityImage"
           width={80}
           height={80}

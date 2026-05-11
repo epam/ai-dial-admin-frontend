@@ -19,9 +19,10 @@ interface Props {
   getData: (query: TelemetryQuery) => Promise<ServerActionResponse>;
   route: ApplicationRoute;
   isMcpView?: boolean;
+  isRouteView?: boolean;
 }
 
-const Filters: FC<Props> = ({ filters, setFilters, getData, route, isMcpView = false }) => {
+const Filters: FC<Props> = ({ filters, setFilters, getData, route, isMcpView = false, isRouteView = false }) => {
   const t = useI18n();
   const [projects, setProjects] = useState<SelectOption[]>([]);
   const [entities, setEntities] = useState<SelectOption[]>([]);
@@ -99,9 +100,16 @@ const Filters: FC<Props> = ({ filters, setFilters, getData, route, isMcpView = f
             dropdownData={{ projects, entities }}
             route={route}
             isMcpView={isMcpView}
+            isRouteView={isRouteView}
           />
         ))}
-      <AddFilter addFilter={addFilter} dropdownData={{ projects, entities }} route={route} isMcpView={isMcpView}>
+      <AddFilter
+        addFilter={addFilter}
+        dropdownData={{ projects, entities }}
+        route={route}
+        isMcpView={isMcpView}
+        isRouteView={isRouteView}
+      >
         <DialGhostButton label={t(TelemetryI18nKey.AddFilter)} iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />} />
       </AddFilter>
     </>

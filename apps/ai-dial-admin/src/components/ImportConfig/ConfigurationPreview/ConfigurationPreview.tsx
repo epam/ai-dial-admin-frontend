@@ -26,7 +26,6 @@ import { BaseEntity } from '@/src/models/dial/base-entity';
 import { FileComponentItem, FileConfiguration } from '@/src/models/import';
 import { ActivityAuditEntity } from '@/src/types/activity-audit';
 import { DeploymentImportPreviewResponse } from '@/src/models/deployments/preview';
-import { DeploymentExportEntityType } from '@/src/types/deployments/export';
 import { EntityType } from '@/src/types/entity-type';
 import { ImportFileType } from '@/src/types/import';
 import { getErrorNotification } from '@/src/utils/notification';
@@ -126,12 +125,12 @@ const ConfigurationPreview: FC<Props> = ({
         onValidationChangeRef.current?.(nextValidationSummary.totalFailed > 0);
       } else {
         showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+        onValidationChangeRef.current?.(true);
       }
     });
   }, [importBody, isDeployments, t]);
 
   const hasValidationErrors = !!isDeployments && validationSummary.totalFailed > 0;
-  const selectedTabErrors = validationSummary.errorsByTab[selectedTab as DeploymentExportEntityType] ?? 0;
   const baseImportDisabled = isDeployments ? !files?.length : isLoading || !files;
   const isImportDisabled = baseImportDisabled || hasValidationErrors;
   const isErrorOnlyDisable = !baseImportDisabled && hasValidationErrors;
@@ -162,14 +161,14 @@ const ConfigurationPreview: FC<Props> = ({
                 <DialLoader size={45} />
               </div>
             )}
+            {hasValidationErrors && (
+              <div className="mb-3">
+                <ValidationBanner count={validationSummary.totalFailed} />
+              </div>
+            )}
             <div className="mb-3">
               <DialTabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab)} />
             </div>
-            {isDeployments && selectedTabErrors > 0 && (
-              <div className="mb-3">
-                <ValidationBanner count={selectedTabErrors} />
-              </div>
-            )}
             {isDeployments ? (
               <DeploymentConfigurationGrid
                 selectedTab={selectedTab}

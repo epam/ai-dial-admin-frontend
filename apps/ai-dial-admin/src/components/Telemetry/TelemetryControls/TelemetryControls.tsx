@@ -21,6 +21,7 @@ interface Props {
   getData: (query: TelemetryQuery) => Promise<ServerActionResponse>;
   route: ApplicationRoute;
   showFilters?: boolean;
+  isRouteView?: boolean;
   isMcpView?: boolean;
   canAutoRefresh?: boolean;
 }
@@ -37,6 +38,7 @@ const TelemetryControls: FC<Props> = ({
   getData,
   route,
   showFilters = true,
+  isRouteView = false,
   isMcpView = false,
   canAutoRefresh = true,
 }) => {
@@ -52,7 +54,14 @@ const TelemetryControls: FC<Props> = ({
           maxRangeMs={telemetryMaxRangeMs}
         />
         {showFilters && (
-          <Filters filters={filters} setFilters={setFilters} getData={getData} route={route} isMcpView={isMcpView} />
+          <Filters
+            filters={filters}
+            setFilters={setFilters}
+            getData={getData}
+            route={route}
+            isMcpView={isMcpView}
+            isRouteView={isRouteView}
+          />
         )}
       </div>
       <Refresh onChange={onRefreshTimeChange} selectedValue={selectedRefreshValue} disabled={!canAutoRefresh} />

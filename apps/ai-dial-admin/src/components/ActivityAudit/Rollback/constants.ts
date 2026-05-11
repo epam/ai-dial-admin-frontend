@@ -14,7 +14,7 @@ export const SYSTEM_ROLLBACK_ENTITIES = [
   ActivityAuditResourceType.INTERCEPTOR_TEMPLATE,
 ];
 
-export const SYSTEM_ROLLBACK_TAB_NAME: Record<ActivityAuditResourceType, string> = {
+export const SYSTEM_ROLLBACK_TAB_NAME: Partial<Record<ActivityAuditResourceType, string>> = {
   [ActivityAuditResourceType.MODEL]: 'Models',
   [ActivityAuditResourceType.APPLICATION]: 'Applications',
   [ActivityAuditResourceType.ADAPTER]: 'Adapters',

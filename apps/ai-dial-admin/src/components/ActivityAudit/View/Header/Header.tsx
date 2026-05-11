@@ -41,20 +41,22 @@ const ViewHeader: FC<Props> = ({ activity, children }) => {
             text={getFormattedResourceType(activity.resourceType, t)}
           />
         )}
-        {activity.resourceId && activity.resourceType !== ActivityAuditResourceType.SYSTEM_PROPERTIES && (
-          <LabelledText label={t(ActivityAuditI18nKey.ResourceId)}>
-            <div className="flex flex-row gap-1 items-center">
-              <DialTooltip tooltip={activity.resourceId}>{activity.resourceId}</DialTooltip>
-              {activity.activityType != ActivityAuditType.Delete && (
-                <DialIconButton
-                  onClick={() => openResourceInNewTab(activity)}
-                  className="text-secondary size-auto"
-                  icon={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
-                />
-              )}
-            </div>
-          </LabelledText>
-        )}
+        {activity.resourceId &&
+          activity.resourceType !== ActivityAuditResourceType.SYSTEM_PROPERTIES &&
+          activity.resourceType !== ActivityAuditResourceType.ADMIN_PROPERTIES && (
+            <LabelledText label={t(ActivityAuditI18nKey.ResourceId)}>
+              <div className="flex flex-row gap-1 items-center">
+                <DialTooltip tooltip={activity.resourceId}>{activity.resourceId}</DialTooltip>
+                {activity.activityType != ActivityAuditType.Delete && (
+                  <DialIconButton
+                    onClick={() => openResourceInNewTab(activity)}
+                    className="text-secondary size-auto"
+                    icon={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
+                  />
+                )}
+              </div>
+            </LabelledText>
+          )}
         {activity.epochTimestampMs && (
           <LabelledText
             label={t(ActivityAuditI18nKey.Time)}

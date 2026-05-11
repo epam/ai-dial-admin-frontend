@@ -1,5 +1,5 @@
 import { DialNeutralButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
-import { IconBlocks, IconPlus, IconTrashX } from '@tabler/icons-react';
+import { IconBlocks, IconPlayerPause, IconPlus, IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { useRouter } from 'next/navigation';
 import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
@@ -189,9 +189,9 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
     onOpenModal(ModalType.install);
   }, [onOpenModal]);
 
-  // const onOpenStopModal = useCallback(() => {
-  //   onOpenModal(ModalType.stopBuild);
-  // }, [onOpenModal]);
+  const onOpenStopModal = useCallback(() => {
+    onOpenModal(ModalType.stopBuild);
+  }, [onOpenModal]);
 
   const onCreateContainer = useCallback(
     (container: Container) => {
@@ -283,14 +283,14 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
                   iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
                   onClick={onOpenDeleteModal}
                 />
-                {/* {image.buildStatus === IMAGE_STATUS.BUILDING && (
+                {image.buildStatus === IMAGE_STATUS.BUILDING && (
                   <DialNeutralButton
                     className={buttonsClassNames}
                     label={t(ButtonsI18nKey.Stop)}
                     iconBefore={<IconPlayerPause {...BASE_BUTTON_ICON_PROPS} />}
                     onClick={onOpenStopModal}
                   />
-                )} */}
+                )}
                 {image.buildStatus === IMAGE_STATUS.BUILT && (
                   <DialNeutralButton
                     className={buttonsClassNames}

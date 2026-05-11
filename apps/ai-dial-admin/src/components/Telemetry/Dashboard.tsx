@@ -128,6 +128,7 @@ const Dashboard: FC<Props> = ({ route, entity, defaultTimeFilter, onTimeFilterCh
           route={route}
           canAutoRefresh={canAutoRefresh}
           isMcpView={isMcpDashboards}
+          isRouteView={isRouteDashboards}
         />
       </div>
       {isMcpDashboards ? (

@@ -20,6 +20,7 @@ import {
   filterOperatorConfig,
   filterTypeConfig,
   mcpFilterTypeConfig,
+  routerFilterTypeConfig,
 } from '@/src/constants/telemetry/filters';
 import { USAGE_LOG_NUMERIC_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -199,8 +200,12 @@ export function prepareMultiSeriesChartData(data: Record<string, string>[], t: (
   return config;
 }
 
-export function getFilterTypeConfig(t: (key: string) => string, isMcpView = false): SelectOption[] {
-  const config = isMcpView ? mcpFilterTypeConfig : filterTypeConfig;
+export function getFilterTypeConfig(
+  t: (key: string) => string,
+  isMcpView = false,
+  isRouteView = false,
+): SelectOption[] {
+  const config = isMcpView ? mcpFilterTypeConfig : isRouteView ? routerFilterTypeConfig : filterTypeConfig;
   return getTranslatedConfig(config, t);
 }
 

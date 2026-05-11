@@ -106,13 +106,23 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
   const onChangeType = useCallback(
     (value: string, data: SchemaFieldRow) => {
       const updated = updateFieldInList(fieldsRef.current, data.id, (f) => {
+        if (value.startsWith('array:')) {
+          const itemsType = value.slice(6) as SchemaFieldRow['type'];
+          return {
+            ...f,
+            type: 'array' as SchemaFieldRow['type'],
+            itemsType,
+            children: itemsType === 'object' ? f.children : [],
+            expanded: itemsType === 'object' ? f.expanded : false,
+          };
+        }
         const newType = value as SchemaFieldRow['type'];
-        const shouldClearChildren = newType !== 'object' && newType !== 'array';
         return {
           ...f,
           type: newType,
-          children: shouldClearChildren ? [] : f.children,
-          expanded: shouldClearChildren ? false : f.expanded,
+          itemsType: undefined,
+          children: newType === 'object' ? f.children : [],
+          expanded: newType === 'object' ? f.expanded : false,
         };
       });
       updateFields(updated);

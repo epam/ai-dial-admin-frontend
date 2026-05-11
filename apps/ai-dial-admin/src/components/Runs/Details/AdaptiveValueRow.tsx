@@ -6,73 +6,89 @@ import { ElementSize } from '@epam/ai-dial-ui-kit';
 
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import { parseValue } from '@/src/utils/evaluation/detail-panel';
-
-const ARRAY_PREVIEW_COUNT = 3;
+import AdaptiveArrayValueContent from './AdaptiveArrayValueContent';
+import AdaptivePrimitiveValueContent from './AdaptivePrimitiveValueContent';
+import AdaptiveStructuredValueContent from './AdaptiveStructuredValueContent';
+import { ARRAY_PREVIEW_COUNT, LONG_VALUE_THRESHOLD } from './constants';
+import {
+  createArrayItems,
+  createStructuredObjectValue,
+  isFlatStringArray,
+  isPlainObject,
+  safeStringify,
+  toPrimitiveValue,
+} from './utils';
 
 interface Props {
   label: string;
-  value: string | string[];
+  value: unknown;
 }
 
 const AdaptiveValueRow: FC<Props> = ({ label, value }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isArrayExpanded, setIsArrayExpanded] = useState(false);
+  const [expandedArrayItems, setExpandedArrayItems] = useState<Record<number, boolean>>({});
 
   const isArray = Array.isArray(value);
-  const isArrayLong = isArray && (value as string[]).length > ARRAY_PREVIEW_COUNT;
+  const isFlatArray = isFlatStringArray(value);
+  const isObject = isPlainObject(value);
+  const isArrayLong = isArray && value.length > ARRAY_PREVIEW_COUNT;
 
-  const parsed = useMemo(() => (isArray ? null : parseValue(value as string)), [isArray, value]);
+  const parsed = useMemo(() => (typeof value === 'string' ? parseValue(value) : null), [value]);
 
-  const isLong = isArrayLong || (parsed?.isLong ?? false);
+  const arrayItems = useMemo(() => (isArray ? createArrayItems(value) : null), [isArray, value]);
+
+  const structuredValue = useMemo(() => (isObject ? createStructuredObjectValue(value) : null), [isObject, value]);
+
+  const primitiveValue = useMemo(() => toPrimitiveValue(value), [value]);
+
+  const isLong =
+    !isArray &&
+    ((structuredValue?.isLong ?? false) || (parsed?.isLong ?? false) || primitiveValue.length > LONG_VALUE_THRESHOLD);
+
+  const isRowToggleable = isArray ? isArrayLong : isLong;
 
   const onToggle = useCallback(() => {
-    if (isLong) setIsExpanded((prev) => !prev);
-  }, [isLong]);
+    if (!isRowToggleable) return;
+    if (isArray) {
+      setIsArrayExpanded((prev) => !prev);
+      return;
+    }
+    setIsExpanded((prev) => !prev);
+  }, [isArray, isRowToggleable]);
 
-  const copyValue = isArray ? (value as string[]).join('\n') : (parsed?.rawText ?? '');
+  const onToggleArrayItem = useCallback((index: number) => {
+    setExpandedArrayItems((prev) => ({ ...prev, [index]: !prev[index] }));
+  }, []);
 
-  const visibleItems = isArray
-    ? isExpanded
-      ? (value as string[])
-      : (value as string[]).slice(0, ARRAY_PREVIEW_COUNT)
-    : null;
+  const copyValue = isFlatArray
+    ? value.join('\n')
+    : isArray
+      ? safeStringify(value, true)
+      : (structuredValue?.rawText ?? parsed?.rawText ?? primitiveValue);
+
+  const visibleItems = arrayItems ? (isArrayExpanded ? arrayItems : arrayItems.slice(0, ARRAY_PREVIEW_COUNT)) : null;
 
   return (
     <div
       className="group grid grid-cols-[minmax(70px,140px)_1fr_auto] gap-3 px-2 py-3 border-b border-tertiary last:border-b-0 items-start dial-tiny-text hover:bg-layer-3"
       onClick={onToggle}
-      role={isLong ? 'button' : undefined}
+      role={isRowToggleable ? 'button' : undefined}
     >
       <span className="text-secondary break-words">{label}</span>
       <span className="font-medium min-w-0 break-words">
         {isArray ? (
-          <div className="flex flex-col gap-1">
-            {visibleItems!.map((item, i) => (
-              <span key={i}>{item}</span>
-            ))}
-            {!isExpanded && isArrayLong && (
-              <span className="text-secondary cursor-pointer hover:text-accent-primary">
-                ... and {(value as string[]).length - ARRAY_PREVIEW_COUNT} more
-              </span>
-            )}
-          </div>
+          <AdaptiveArrayValueContent
+            valueLength={value.length}
+            visibleItems={visibleItems!}
+            isArrayExpanded={isArrayExpanded}
+            expandedArrayItems={expandedArrayItems}
+            onToggleArrayItem={onToggleArrayItem}
+          />
+        ) : structuredValue ? (
+          <AdaptiveStructuredValueContent structuredValue={structuredValue} isExpanded={isExpanded} />
         ) : (
-          <>
-            {parsed?.typeChip && (
-              <span className="inline-block text-[9px] font-semibold text-accent-secondary bg-accent-secondary-alpha px-[5px] py-px rounded-sm uppercase tracking-wide mr-1 leading-[14px]">
-                {parsed.typeChip}
-              </span>
-            )}
-            {!isExpanded && (
-              <span className={parsed?.isLong ? 'line-clamp-2 cursor-pointer hover:text-accent-primary' : ''}>
-                {parsed?.displayText}
-              </span>
-            )}
-            {isExpanded && (
-              <pre className="mt-1 p-2 bg-layer-0 border border-secondary rounded font-mono text-[11px] whitespace-pre-wrap break-words max-h-[300px] overflow-auto leading-normal">
-                {parsed?.rawText}
-              </pre>
-            )}
-          </>
+          <AdaptivePrimitiveValueContent parsed={parsed} isExpanded={isExpanded} primitiveValue={primitiveValue} />
         )}
       </span>
       <CopyButton value={copyValue} valueLabel={label} size={ElementSize.Small} />
